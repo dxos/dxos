@@ -8672,6 +8672,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/lit-grid':
+        specifier: workspace:*
+        version: link:../../ui/lit-grid
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log

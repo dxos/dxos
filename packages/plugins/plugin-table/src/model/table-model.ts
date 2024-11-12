@@ -238,23 +238,36 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
 
     const addCell = (obj: T, field: FieldType, colIndex: number, displayIndex: number): void => {
       const { props } = this._projection.getFieldProjection(field.id);
-      const cell: DxGridCellValue = {
+      const value: DxGridCellValue = {
         get value() {
           const value = getValue(obj, field.path);
           if (value == null) {
             return '';
           }
 
-          return formatForDisplay({ type: props.type, format: props.format, value });
+          switch (props.format) {
+            case FormatEnum.Ref: {
+              if (!field.referencePath) {
+                return ''; // TODO(burdon): Show error.
+              }
+
+              return getValue(value, field.referencePath);
+            }
+
+            default: {
+              return formatForDisplay({ type: props.type, format: props.format, value });
+            }
+          }
         },
       };
 
       const classes = cellClassesForFieldType({ type: props.type, format: props.format });
       if (classes) {
-        cell.className = mx(classes);
+        value.className = mx(classes);
       }
 
-      values[fromGridCell({ col: colIndex, row: displayIndex })] = cell;
+      const idx = fromGridCell({ col: colIndex, row: displayIndex });
+      values[idx] = value;
     };
 
     for (let row = range.start.row; row <= range.end.row && row < this._sortedRows.value.length; row++) {
@@ -274,7 +287,6 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
   private getHeaderCells = (range: DxGridPlaneRange): DxGridPlaneCells => {
     const values: DxGridPlaneCells = {};
     const fields = this.table.view?.fields ?? [];
-
     for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
       const { field, props } = this._projection.getFieldProjection(fields[col].id);
       values[fromGridCell({ col, row: 0 })] = {
@@ -284,6 +296,7 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
         readonly: true,
       };
     }
+
     return values;
   };
 
@@ -345,14 +358,18 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
     }
 
     const { props } = this._projection.getFieldProjection(field.id);
-    if (props.format === FormatEnum.Ref) {
-      if (!field.referencePath) {
-        return ''; // TODO(burdon): Show error.
+    switch (props.format) {
+      case FormatEnum.Ref: {
+        if (!field.referencePath) {
+          return ''; // TODO(burdon): Show error.
+        }
+
+        return getValue(value, field.referencePath);
       }
 
-      return getValue(value, field.referencePath);
-    } else {
-      return formatForEditing({ type: props.type, format: props.format, value });
+      default: {
+        return formatForEditing({ type: props.type, format: props.format, value });
+      }
     }
   };
 
@@ -365,18 +382,24 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
 
     const field = fields[col];
     const { props } = this._projection.getFieldProjection(field.id);
-    if (props.format === FormatEnum.Ref) {
-      setValue(this._rows.value[rowIdx], field.path, value);
-    } else {
-      setValue(
-        this._rows.value[rowIdx],
-        field.path,
-        parseValue({
-          type: props.type,
-          format: props.format,
-          value,
-        }),
-      );
+    switch (props.format) {
+      case FormatEnum.Ref: {
+        setValue(this._rows.value[rowIdx], field.path, value);
+        break;
+      }
+
+      default: {
+        setValue(
+          this._rows.value[rowIdx],
+          field.path,
+          parseValue({
+            type: props.type,
+            format: props.format,
+            value,
+          }),
+        );
+        break;
+      }
     }
   };
 

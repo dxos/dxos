@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
+import { type DxGrid } from '@dxos/lit-grid';
 import {
   editorKeys,
   type EditorKeysProps,
@@ -25,41 +25,11 @@ export type CellEditorProps = {
   model?: TableModel;
   editing?: GridEditing;
   onEnter?: (cell: GridCell) => void;
-  // TODO(burdon): Import types (and reuse throughout file).
-  onFocus?: (increment: 'col' | 'row' | undefined, delta: 0 | 1 | -1 | undefined) => void;
+  onFocus?: DxGrid['refocus'];
   onQuery?: (field: FieldProjection, text: string) => Promise<{ label: string; data: any }[]>;
 };
 
 export const CellEditor = ({ model, editing, onEnter, onFocus, onQuery }: CellEditorProps) => {
-  const determineNavigationAxis = ({ key }: EditorKeyEvent): 'col' | 'row' | undefined => {
-    switch (key) {
-      case 'ArrowUp':
-      case 'ArrowDown':
-      case 'Enter': {
-        return 'row';
-      }
-
-      case 'ArrowLeft':
-      case 'ArrowRight':
-      case 'Tab':
-        return 'col';
-    }
-  };
-
-  const determineNavigationDelta = ({ key, shift }: EditorKeyEvent): -1 | 1 => {
-    switch (key) {
-      case 'ArrowUp':
-      case 'ArrowLeft':
-        return -1;
-
-      case 'ArrowDown':
-      case 'ArrowRight':
-        return 1;
-    }
-
-    return shift ? -1 : 1;
-  };
-
   const fieldProjection = useMemo<FieldProjection | undefined>(() => {
     if (!model || !editing) {
       return;
@@ -72,9 +42,6 @@ export const CellEditor = ({ model, editing, onEnter, onFocus, onQuery }: CellEd
     return fieldProjection;
   }, [model, editing]);
 
-  // Selected object reference.
-  const objectRef = useRef();
-
   const handleClose = useCallback<NonNullable<EditorKeysProps['onClose']> | NonNullable<EditorKeysProps['onNav']>>(
     (value, event) => {
       if (!model || !editing || !fieldProjection) {
@@ -82,24 +49,8 @@ export const CellEditor = ({ model, editing, onEnter, onFocus, onQuery }: CellEd
       }
 
       const cell = toGridCell(editing.index);
-      switch (fieldProjection.props.format) {
-        case FormatEnum.Ref: {
-          if (objectRef.current) {
-            try {
-              model.setCellData(cell, objectRef.current);
-            } catch (ex) {
-              log.catch(ex);
-            }
-          }
-          break;
-        }
-
-        default: {
-          if (value !== undefined) {
-            model.setCellData(cell, value);
-          }
-          break;
-        }
+      if (value !== undefined) {
+        model.setCellData(cell, value);
       }
 
       onEnter?.(cell);
@@ -126,7 +77,14 @@ export const CellEditor = ({ model, editing, onEnter, onFocus, onQuery }: CellEd
           extension.push([
             completion({
               onQuery: (text) => onQuery(fieldProjection, text),
-              onMatch: (data) => (objectRef.current = data),
+              onMatch: (data) => {
+                if (model && editing) {
+                  const cell = toGridCell(editing.index);
+                  model.setCellData(cell, data);
+                  onEnter?.(cell);
+                  onFocus?.();
+                }
+              },
             }),
           ]);
           break;
@@ -145,4 +103,33 @@ export const CellEditor = ({ model, editing, onEnter, onFocus, onQuery }: CellEd
   }, [model, editing]);
 
   return <GridCellEditor extension={extension} getCellContent={getCellContent} />;
+};
+
+const determineNavigationAxis = ({ key }: EditorKeyEvent): 'col' | 'row' | undefined => {
+  switch (key) {
+    case 'ArrowUp':
+    case 'ArrowDown':
+    case 'Enter': {
+      return 'row';
+    }
+
+    case 'ArrowLeft':
+    case 'ArrowRight':
+    case 'Tab':
+      return 'col';
+  }
+};
+
+const determineNavigationDelta = ({ key, shift }: EditorKeyEvent): -1 | 1 => {
+  switch (key) {
+    case 'ArrowUp':
+    case 'ArrowLeft':
+      return -1;
+
+    case 'ArrowDown':
+    case 'ArrowRight':
+      return 1;
+  }
+
+  return shift ? -1 : 1;
 };

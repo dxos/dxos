@@ -33,15 +33,21 @@ export const FieldEditor = ({ view, projection, field, registry, onClose }: Fiel
   const [props, setProps] = useState<PropertyType>(projection.getFieldProjection(field.id).props);
   useEffect(() => setProps(projection.getFieldProjection(field.id).props), [field, projection]);
 
+  console.log('>', registry);
   const [schemas, setSchemas] = useState<MutableSchema[]>([]);
   useEffect(() => {
     if (!registry) {
       return;
     }
 
+    console.log('!!!');
     const subscription = registry.subscribe(setSchemas);
     const t = setTimeout(async () => {
       const schemas = await registry.query();
+      console.log(
+        '>>>>',
+        schemas.map((s) => s.typename),
+      );
       setSchemas(schemas);
     });
     return () => {
@@ -74,6 +80,7 @@ export const FieldEditor = ({ view, projection, field, registry, onClose }: Fiel
         if (props.type !== type) {
           return { ...props, ..._props, type };
         }
+
         return props;
       });
     },
@@ -101,6 +108,8 @@ export const FieldEditor = ({ view, projection, field, registry, onClose }: Fiel
     },
     [projection, field, onClose],
   );
+
+  console.log(JSON.stringify({ props, schemas: schemas.map((s) => s.typename) }, null, 2));
 
   if (!fieldSchema) {
     log.warn('invalid format', { props });
