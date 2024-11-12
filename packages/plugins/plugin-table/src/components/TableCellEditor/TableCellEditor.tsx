@@ -11,9 +11,11 @@ import {
   editorKeys,
   type EditorKeyEvent,
   GridCellEditor,
-  type GridEditing,
   type GridCellEditorProps,
   type EditorKeyOrBlurHandler,
+  type EditorBlurHandler,
+  type GridScopedProps,
+  useGridContext,
 } from '@dxos/react-ui-grid';
 import { type FieldProjection } from '@dxos/schema';
 
@@ -21,15 +23,21 @@ import { completion } from './extension';
 import { type TableModel } from '../../model';
 import { type GridCell, toGridCell } from '../../types';
 
-export type CellEditorProps = {
+export type TableCellEditorProps = {
   model?: TableModel;
-  editing?: GridEditing;
   onEnter?: (cell: GridCell) => void;
   onFocus?: DxGrid['refocus'];
   onQuery?: (field: FieldProjection, text: string) => Promise<{ label: string; data: any }[]>;
 };
 
-export const CellEditor = ({ model, editing, onEnter, onFocus, onQuery }: CellEditorProps) => {
+export const TableCellEditor = ({
+  model,
+  onEnter,
+  onFocus,
+  onQuery,
+  __gridScope,
+}: GridScopedProps<TableCellEditorProps>) => {
+  const { editing } = useGridContext('TableCellEditor', __gridScope);
   const fieldProjection = useMemo<FieldProjection | undefined>(() => {
     if (!model || !editing) {
       return;
@@ -49,16 +57,26 @@ export const CellEditor = ({ model, editing, onEnter, onFocus, onQuery }: CellEd
       }
 
       const cell = toGridCell(editing.index);
-      if (value !== undefined) {
-        model.setCellData(cell, value);
-      }
-
       onEnter?.(cell);
       if (event && onFocus) {
         onFocus(determineNavigationAxis(event), determineNavigationDelta(event));
       }
     },
     [model, editing, onFocus, onEnter, fieldProjection, determineNavigationAxis, determineNavigationDelta],
+  );
+
+  const handleBlur = useCallback<EditorBlurHandler>(
+    (value) => {
+      if (!model || !editing) {
+        return;
+      }
+
+      const cell = toGridCell(editing.index);
+      if (value !== undefined) {
+        model.setCellData(cell, value);
+      }
+    },
+    [model, editing],
   );
 
   const extension = useMemo(() => {
@@ -104,7 +122,7 @@ export const CellEditor = ({ model, editing, onEnter, onFocus, onQuery }: CellEd
     }
   }, [model, editing]);
 
-  return <GridCellEditor extension={extension} getCellContent={getCellContent} onBlur={handleClose} />;
+  return <GridCellEditor extension={extension} getCellContent={getCellContent} onBlur={handleBlur} />;
 };
 
 const determineNavigationAxis = ({ key }: EditorKeyEvent): 'col' | 'row' | undefined => {
