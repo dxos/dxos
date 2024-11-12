@@ -103,7 +103,7 @@ export const FieldEditor = ({ view, projection, field, registry, onClose }: Fiel
   );
 
   if (!fieldSchema) {
-    log.warn('invalid format', props);
+    log.warn('invalid format', { props });
     return null;
   }
 
