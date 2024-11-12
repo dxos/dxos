@@ -12,7 +12,7 @@ import {
   updateFieldsInSchema,
 } from './manipulation';
 import { StoredSchema } from './types';
-import { type HasId, type JsonSchemaType, schemaVariance } from '../ast';
+import { type HasId, type JsonSchemaType, schemaVariance, type SchemaMeta, SchemaMetaSymbol } from '../ast';
 import { toEffectSchema, toJsonSchema } from '../json';
 
 interface MutableSchemaConstructor extends S.Schema<MutableSchema> {
@@ -58,6 +58,10 @@ export class MutableSchema extends MutableSchemaBase() implements S.Schema<any> 
 
   public get [S.TypeId]() {
     return schemaVariance;
+  }
+
+  public get [SchemaMetaSymbol](): SchemaMeta {
+    return { id: this.id, typename: this.typename, version: this._storedSchema.version };
   }
 
   public override get id() {

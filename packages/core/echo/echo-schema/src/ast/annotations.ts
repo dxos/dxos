@@ -93,6 +93,8 @@ export const getReferenceAnnotation = (schema: S.Schema<any>) =>
     Option.getOrElse(() => undefined),
   );
 
+export const SchemaMetaSymbol = Symbol.for('@dxos/schema/SchemaMeta');
+
 // TODO(burdon): Factor out.
 // TODO(burdon): Reconcile with ObjectAnnotation above.
 export type SchemaMeta = {
