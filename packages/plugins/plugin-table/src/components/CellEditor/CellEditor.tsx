@@ -6,12 +6,14 @@ import React, { useCallback, useMemo, useRef } from 'react';
 
 import { FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import {
   editorKeys,
   type EditorKeysProps,
   type EditorKeyEvent,
   GridCellEditor,
   type GridEditing,
+  type GridCellEditorProps,
 } from '@dxos/react-ui-grid';
 import { type FieldProjection } from '@dxos/schema';
 
@@ -58,9 +60,6 @@ export const CellEditor = ({ model, editing, onEnter, onFocus, onQuery }: CellEd
     return shift ? -1 : 1;
   };
 
-  // Selected object reference.
-  const objectRef = useRef();
-
   const fieldProjection = useMemo<FieldProjection | undefined>(() => {
     if (!model || !editing) {
       return;
@@ -73,17 +72,24 @@ export const CellEditor = ({ model, editing, onEnter, onFocus, onQuery }: CellEd
     return fieldProjection;
   }, [model, editing]);
 
+  // Selected object reference.
+  const objectRef = useRef();
+
   const handleClose = useCallback<NonNullable<EditorKeysProps['onClose']> | NonNullable<EditorKeysProps['onNav']>>(
     (value, event) => {
-      invariant(model);
-      invariant(editing);
-      invariant(fieldProjection);
+      if (!model || !editing || !fieldProjection) {
+        return;
+      }
 
       const cell = toGridCell(editing.index);
       switch (fieldProjection.props.format) {
         case FormatEnum.Ref: {
           if (objectRef.current) {
-            model.setCellData(cell, objectRef.current);
+            try {
+              model.setCellData(cell, objectRef.current);
+            } catch (ex) {
+              log.catch(ex);
+            }
           }
           break;
         }
@@ -131,7 +137,7 @@ export const CellEditor = ({ model, editing, onEnter, onFocus, onQuery }: CellEd
     return extension;
   }, [model, editing, fieldProjection, handleClose]);
 
-  const getCellContent = useCallback(() => {
+  const getCellContent = useCallback<GridCellEditorProps['getCellContent']>(() => {
     if (model && editing) {
       const value = model.getCellData(toGridCell(editing.index));
       return value !== undefined ? String(value) : '';

@@ -175,7 +175,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
     <>
       {/* TODO(burdon): Is this required to be unique? */}
       <Grid.Root id={model?.table.id ?? 'table-grid'}>
-        <TableCellEditor model={model} onEnter={handleEnter} onFocus={handleFocus} onComplete={handleQuery} />
+        <TableCellEditor model={model} onEnter={handleEnter} onFocus={handleFocus} onQuery={handleQuery} />
 
         <Grid.Content
           className={mx(
