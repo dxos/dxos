@@ -176,6 +176,12 @@ export const PropertySchema = S.Union(
   formatToSchema[FormatEnum.Date],
   formatToSchema[FormatEnum.Time],
   formatToSchema[FormatEnum.Duration],
+
+  //
+  // Objects
+  //
+
+  formatToSchema[FormatEnum.LatLng],
 );
 
 export interface PropertyType extends S.Simplify<S.Schema.Type<typeof PropertySchema>> {}
