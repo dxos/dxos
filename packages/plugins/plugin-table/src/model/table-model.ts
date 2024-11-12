@@ -340,7 +340,7 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
     const field = fields[col];
     const dataIndex = this._displayToDataIndex.get(row) ?? row;
     const value = getValue(this._rows.value[dataIndex], field.path);
-    if (value == undefined) {
+    if (value == null) {
       return '';
     }
 

@@ -22,13 +22,6 @@ import { type TableType } from '../types';
 // TODO(burdon): Pass in type.
 // TODO(burdon): User should determine typename.
 export const initializeTable = ({ space, table }: { space: Space; table: TableType }): MutableSchema => {
-  // const OrgSchema = TypedObject({
-  //   typename: `example.com/type/${PublicKey.random().truncate()}`,
-  //   version: '0.1.0',
-  // })({
-  //   name: S.optional(S.String),
-  // });
-
   const ContactSchema = TypedObject({
     typename: `example.com/type/${PublicKey.random().truncate()}`,
     version: '0.1.0',
@@ -40,10 +33,8 @@ export const initializeTable = ({ space, table }: { space: Space; table: TableTy
     salary: S.optional(Format.Currency()).annotations({
       [AST.TitleAnnotationId]: 'Salary',
     }), // TODO(burdon): Should default to prop name?
-    // org: S.optional(ref(OrgSchema)),
   });
 
-  // const orgSchema = space.db.schemaRegistry.addSchema(OrgSchema);
   const contactSchema = space.db.schemaRegistry.addSchema(ContactSchema);
   table.view = createView({
     typename: contactSchema.typename,
@@ -60,7 +51,6 @@ export const initializeTable = ({ space, table }: { space: Space; table: TableTy
     },
   });
 
-  // Add field with reference.
   projection.setFieldProjection({
     field: {
       id: createFieldId(),
@@ -75,10 +65,6 @@ export const initializeTable = ({ space, table }: { space: Space; table: TableTy
       title: 'Manager',
     },
   });
-
-  // TODO(burdon): Testing.
-  // const org = space.db.add(create(orgSchema, {}));
-  // const contact = space.db.add(create(contactSchema, { org }));
 
   return contactSchema;
 };
