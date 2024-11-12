@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback } from 'react';
 
 import { CellEditor, type CellEditorProps } from './CellEditor';
 import { type GridScopedProps, useGridContext } from '../Grid';
@@ -12,7 +12,15 @@ export type GridCellEditorProps = GridScopedProps<
 >;
 
 export const GridCellEditor = ({ extension, getCellContent, onBlur, __gridScope }: GridCellEditorProps) => {
-  const { id, editing, editBox } = useGridContext('GridSheetCellEditor', __gridScope);
+  const { id, editing, setEditing, editBox } = useGridContext('GridSheetCellEditor', __gridScope);
+
+  const handleBlur = useCallback(
+    (value?: string) => {
+      setEditing(null);
+      onBlur?.(value);
+    },
+    [onBlur],
+  );
 
   return editing ? (
     <CellEditor
@@ -20,7 +28,7 @@ export const GridCellEditor = ({ extension, getCellContent, onBlur, __gridScope 
       value={editing.initialContent ?? getCellContent(editing.index)}
       autoFocus
       box={editBox}
-      onBlur={onBlur}
+      onBlur={handleBlur}
       extension={extension}
       gridId={id}
     />
