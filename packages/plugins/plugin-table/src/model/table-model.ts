@@ -3,7 +3,7 @@
 //
 
 import { computed, effect, signal, type ReadonlySignal } from '@preact/signals-core';
-import sortBy from 'lodash.sortby';
+import orderBy from 'lodash.orderby';
 
 import { Resource } from '@dxos/context';
 import { FormatEnum, type JsonProp } from '@dxos/echo-schema';
@@ -171,11 +171,11 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
         return this._rows.value;
       }
 
-      const dataWithIndices = this._rows.value.map((item, index) => ({ item, index }));
-      const sorted = sortBy(dataWithIndices, [(wrapper) => getValue(wrapper.item, field.path)]);
-      if (sort.direction === 'desc') {
-        sorted.reverse();
-      }
+      const dataWithIndices = this._rows.value.map((item, index) => {
+        const value = getValue(item, field.path);
+        return { item, index, value, isEmpty: value == null || value === '' };
+      });
+      const sorted = orderBy(dataWithIndices, ['isEmpty', 'value'], ['asc', sort.direction]);
 
       for (let displayIndex = 0; displayIndex < sorted.length; displayIndex++) {
         const { index: dataIndex } = sorted[displayIndex];
