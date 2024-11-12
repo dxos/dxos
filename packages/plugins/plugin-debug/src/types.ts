@@ -13,6 +13,7 @@ import type {
 } from '@dxos/app-framework';
 import type { TimerCallback, TimerOptions } from '@dxos/async';
 import { S } from '@dxos/echo-schema';
+import { type PanelProvides } from '@dxos/plugin-deck/types';
 
 import { DEBUG_PLUGIN } from './meta';
 
@@ -47,4 +48,5 @@ export type DebugPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
   SettingsProvides<DebugSettingsProps> &
-  TranslationsProvides;
+  TranslationsProvides &
+  PanelProvides;

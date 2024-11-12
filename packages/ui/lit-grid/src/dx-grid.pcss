@@ -3,12 +3,11 @@
 
 dx-grid {
   display: contents;
+  --dx-grid-gap: 1px;
+  --dx-plane-gap: 1px;
 }
 
 .dx-grid {
-  --dx-grid-gap: 1px;
-  --dx-plane-gap: 2px;
-
   display: grid;
   gap: var(--dx-plane-gap);
   grid-template-columns: min-content 1fr min-content;
@@ -65,14 +64,11 @@ dx-grid {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    &[inert] {
-      visibility: hidden;
-    }
-    &:focus, &:focus-visible{
+    &:focus:not([aria-readonly='true']), &:focus-visible {
       z-index: 2;
       border-color: var(--dx-accentSurface);
       outline: none;
-      &:not([aria-readonly]) {
+      &:not([aria-readonly='true']) {
         cursor: text;
       }
     }
@@ -87,16 +83,30 @@ dx-grid {
       }
     }
   }
-  &[data-grid-mode="edit"]{
-    [role='gridcell'], [role='columnheader'], [role='rowheader'] {
-     &[data-dx-active] {
-       border-color: var(--dx-accentSurface);
-     }
+}
+
+.dx-grid-host:focus-within .dx-grid:not(:focus-within) {
+  [role='gridcell'], [role='columnheader'], [role='rowheader'] {
+    &[data-dx-active]:not([aria-readonly='true']) {
+      border-color: var(--dx-accentSurface);
     }
   }
 }
 
-/* todo(thure): Move this somewhere better. */
+/* TODO(thure): Finish implementation. */
+.dx-grid-layer--presentation {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  display: grid;
+  gap: var(--dx-grid-gap);
+  background: rgba(255, 0, 0, .1);
+  & .dx-grid-layer--presentation__cell {
+    background: rgba(0, 255, 0, .1);
+  }
+}
+
+/* TODO(thure): Move this somewhere better. */
 .sr-only {
   position: absolute;
   width: 1px;

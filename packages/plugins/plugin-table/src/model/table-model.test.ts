@@ -5,37 +5,28 @@
 import { computed } from '@preact/signals-core';
 import { describe, it, expect, afterEach, beforeEach } from 'vitest';
 
-import { create } from '@dxos/echo-schema';
-import { updateCounter } from '@dxos/echo-schema/testing';
+import { S, TypedObject, create } from '@dxos/echo-schema';
+import { createMutableSchema, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
+import { createView, ViewProjection } from '@dxos/schema';
 
-import { TableModel } from './table-model';
+import { TableModel, type TableModelProps } from './table-model';
+import { TableType } from '../types';
 
-// TODO(Zan): Restore this when importing the type doesn't break bundling.
-// import { TableType } from '../types';
+// TODO(burdon): Tests are disabled in project.json since they bring in plugin deps.
+//  Restore once factored out into react-ui-table.
 
 registerSignalsRuntime();
 
-const createTableModel = (): TableModel => {
-  // TODO(Zan): Restore schema specification when importing TableType doesn't break bundling.
-  const table = create({
-    view: {
-      fields: [
-        { id: 'col1', path: 'col1', label: 'Column 1', type: 'string' },
-        { id: 'col2', path: 'col2', label: 'Column 2', type: 'string' },
-        { id: 'col3', path: 'col3', label: 'Column 3', type: 'string' },
-      ],
-    },
-  });
-
-  return new TableModel({ table: table as any });
-};
-
 describe('TableModel', () => {
+  let updateCount = 0;
   let model: TableModel;
 
   beforeEach(async () => {
-    model = createTableModel();
+    updateCount = 0;
+    model = createTableModel({
+      onCellUpdate: () => updateCount++,
+    });
     await model.open();
   });
 
@@ -112,17 +103,7 @@ describe('TableModel', () => {
       let data: any[];
 
       beforeEach(async () => {
-        // TODO(Zan): Restore schema specification when importing TableType doesn't break bundling.
-        const table = create({
-          view: {
-            fields: [
-              { id: 'col1', path: 'col1', label: 'Column 1', type: 'string' },
-              { id: 'col2', path: 'col2', label: 'Column 2', type: 'string' },
-              { id: 'col3', path: 'col3', label: 'Column 3', type: 'string' },
-            ],
-          },
-        });
-
+        // TODO(burdon): Use generator.
         ({ data } = create({
           data: [
             { col1: 'A', col2: 1, col3: true },
@@ -130,23 +111,17 @@ describe('TableModel', () => {
           ],
         }));
 
-        model = new TableModel({ table: table as any });
-        model.updateData(data);
+        const model = createTableModel();
+        model.setRows(data);
         await model.open();
       });
 
       it('should update with row-level reactivity', () => {
-        let updateCount = 0;
-        model.setOnCellUpdate(() => {
-          updateCount++;
-        });
-
         // Set up visible range to include our test data
         model.getCells({ start: { row: 0, col: 0 }, end: { row: 1, col: 2 } }, 'grid');
 
         // Trigger a row update
         data[0].col1 = 'New Value';
-
         expect(updateCount).toBe(1);
 
         // Verify the new value through getCells
@@ -155,16 +130,10 @@ describe('TableModel', () => {
       });
 
       it('should update reactively when adding a new row', () => {
-        let updateCount = 0;
-        model.setOnCellUpdate(() => {
-          updateCount++;
-        });
-
         // Set up visible range to include our test data
         model.getCells({ start: { row: 0, col: 0 }, end: { row: 2, col: 2 } }, 'grid');
 
         data.push({ col1: 'C', col2: 3, col3: true });
-
         expect(updateCount).toBe(1);
 
         const cells = model.getCells({ start: { row: 0, col: 0 }, end: { row: 2, col: 2 } }, 'grid');
@@ -176,11 +145,6 @@ describe('TableModel', () => {
       });
 
       it('should handle combined operations reactively', () => {
-        let updateCount = 0;
-        model.setOnCellUpdate(() => {
-          updateCount++;
-        });
-
         // Set up visible range
         model.getCells({ start: { row: 0, col: 0 }, end: { row: 2, col: 2 } }, 'grid');
 
@@ -203,3 +167,16 @@ describe('TableModel', () => {
     });
   });
 });
+
+class Test extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+  title: S.String,
+  completed: S.Boolean,
+}) {}
+
+const createTableModel = (props: Partial<TableModelProps> = {}): TableModel => {
+  const schema = createMutableSchema(Test);
+  const view = createView({ typename: schema.typename, jsonSchema: schema.jsonSchema });
+  const projection = new ViewProjection(schema, view);
+  const table = create(TableType, { view });
+  return new TableModel({ table, projection, ...props });
+};

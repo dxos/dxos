@@ -62,6 +62,7 @@ export const performInvitation = ({
 }: PerformInvitationParams): [Promise<Result>, Promise<Result>] => {
   let guestError = false;
   let guestConnected = false;
+  let wereConnected = false;
   const hostComplete = new Trigger<Result>();
   const guestComplete = new Trigger<Result>();
   const authCode = new Trigger<string>();
@@ -72,12 +73,17 @@ export const performInvitation = ({
         switch (hostInvitation.state) {
           case Invitation.State.CONNECTING: {
             if (guestConnected) {
+              if (wereConnected) {
+                hostComplete.wake({ invitation: hostInvitation });
+              }
               break;
             }
+
             guestConnected = true;
             if (hooks?.host?.onConnecting?.(hostObservable)) {
               break;
             }
+
             const guestObservable = acceptInvitation(guest, hostInvitation, guestDeviceProfile);
             guestObservable.subscribe(
               async (guestInvitation: Invitation) => {
@@ -153,6 +159,7 @@ export const performInvitation = ({
           }
 
           case Invitation.State.CONNECTED: {
+            wereConnected = true;
             hooks?.host?.onConnected?.(hostObservable);
             break;
           }

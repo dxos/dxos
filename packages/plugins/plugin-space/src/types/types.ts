@@ -14,6 +14,7 @@ import type {
 } from '@dxos/app-framework';
 import { type Expando } from '@dxos/echo-schema';
 import { type SchemaProvides } from '@dxos/plugin-client';
+import { type PanelProvides } from '@dxos/plugin-deck/types';
 import { type PublicKey } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { type Label } from '@dxos/react-ui';
@@ -87,7 +88,8 @@ export type SpacePluginProvides = SurfaceProvides &
   MetadataRecordsProvides &
   SettingsProvides<SpaceSettingsProps> &
   TranslationsProvides &
-  SchemaProvides & {
+  SchemaProvides &
+  PanelProvides & {
     space: Readonly<PluginState>;
   };
 

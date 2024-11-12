@@ -9,7 +9,7 @@ import {
   MutableSchema,
   type ObjectAnnotation,
   ObjectAnnotationId,
-  effectToJsonSchema,
+  toJsonSchema,
   makeStaticSchema,
   StoredSchema,
   TypedObject,
@@ -20,16 +20,16 @@ import { TestSchemaType } from '@dxos/echo-schema/testing';
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
 
-const TestType: ObjectAnnotation = { typename: 'example.com/TestType', version: '1.0.0' };
+const meta: ObjectAnnotation = { typename: 'example.com/type/Test', version: '0.1.0' };
 const createTestSchemas = () => [
   create(StoredSchema, {
-    ...TestType,
-    jsonSchema: effectToJsonSchema(S.Struct({ field: S.String })),
+    ...meta,
+    jsonSchema: toJsonSchema(S.Struct({ field: S.String })),
   }),
   create(StoredSchema, {
-    ...TestType,
-    typename: TestType.typename + '2',
-    jsonSchema: effectToJsonSchema(S.Struct({ field: S.Number })),
+    ...meta,
+    typename: meta.typename + '2',
+    jsonSchema: toJsonSchema(S.Struct({ field: S.Number })),
   }),
 ];
 
@@ -46,15 +46,15 @@ describe('schema registry', () => {
 
   const setupTest = async () => {
     const { db } = await builder.createDatabase();
-    return { db, registry: db.schema };
+    return { db, registry: db.schemaRegistry };
   };
 
   test('add new schema', async () => {
     const { registry } = await setupTest();
-    class TestClass extends TypedObject(TestType)({}) {}
+    class TestClass extends TypedObject(meta)({}) {}
     const mutableSchema = registry.addSchema(TestClass);
     const expectedSchema = TestClass.annotations({
-      [ObjectAnnotationId]: { ...TestType, schemaId: mutableSchema.id },
+      [ObjectAnnotationId]: { ...meta, schemaId: mutableSchema.id },
     });
     console.log(mutableSchema.ast);
     console.log(expectedSchema.ast);
@@ -65,7 +65,7 @@ describe('schema registry', () => {
 
   test('can store the same schema multiple times', async () => {
     const { registry } = await setupTest();
-    class TestClass extends TypedObject(TestType)({}) {}
+    class TestClass extends TypedObject(meta)({}) {}
     const stored1 = registry.addSchema(TestClass);
     const stored2 = registry.addSchema(TestClass);
     expect(stored1.id).to.not.equal(stored2.id);
@@ -74,7 +74,7 @@ describe('schema registry', () => {
   test('get all dynamic schemas', async () => {
     const { db, registry } = await setupTest();
     const schemas = createTestSchemas().map((s) => db.add(s));
-    const retrieved = await registry.list();
+    const retrieved = await registry.query();
     expect(retrieved.length).to.eq(schemas.length);
     for (const schema of retrieved) {
       expect(schemas.find((s) => s.id === schema.id)).not.to.undefined;
@@ -94,8 +94,8 @@ describe('schema registry', () => {
   test('is registered if was stored in db', async () => {
     const { db, registry } = await setupTest();
     const schemaToStore = create(StoredSchema, {
-      ...TestType,
-      jsonSchema: effectToJsonSchema(S.Struct({ field: S.Number })),
+      ...meta,
+      jsonSchema: toJsonSchema(S.Struct({ field: S.Number })),
     });
     expect(registry.hasSchema(new MutableSchema(schemaToStore))).to.be.false;
     const storedSchema = db.add(schemaToStore);
@@ -105,8 +105,8 @@ describe('schema registry', () => {
   test("can't register schema if not stored in db", async () => {
     const { db, registry } = await setupTest();
     const schemaToStore = create(StoredSchema, {
-      ...TestType,
-      jsonSchema: effectToJsonSchema(S.Struct({ field: S.Number })),
+      ...meta,
+      jsonSchema: toJsonSchema(S.Struct({ field: S.Number })),
     });
     expect(() => registry.registerSchema(schemaToStore)).to.throw();
     db.add(schemaToStore);
@@ -126,7 +126,7 @@ describe('schema registry', () => {
     const { db, registry } = await setupTest();
     const storedSchema = db.add(createTestSchemas()[0]);
     db.graph.schemaRegistry.addSchema([TestSchemaType]);
-    const listed = await db.schema.listAll();
+    const listed = await db.schemaRegistry.listAll();
     expect(listed.length).to.eq(3);
     expect(listed.slice(0, 2)).to.deep.eq([makeStaticSchema(StoredSchema), makeStaticSchema(TestSchemaType)]);
     expect(listed[2]).to.deep.contain({

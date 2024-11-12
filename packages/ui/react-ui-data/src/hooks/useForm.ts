@@ -2,30 +2,48 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type ChangeEvent, type FocusEvent, useCallback, useMemo, useState } from 'react';
+import { type ChangeEvent, type FocusEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type S } from '@dxos/effect';
-import { invariant } from '@dxos/invariant';
-
-import { validateSchema, type ValidationError } from '../util';
+import { validateSchema, type ValidationError } from '@dxos/schema';
 
 type FormInputValue = string | number | readonly string[] | undefined;
 
-type BaseProps<T> = {
+type BaseProps<T, V> = {
   name: keyof T;
-  value: T[keyof T] | string;
+  value: V;
 };
 
-type InputProps<T> = BaseProps<T> & {
+type InputProps<T> = BaseProps<T, string> & {
   onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   onBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 };
 
-type SelectProps<T> = BaseProps<T> & {
-  onValueChange: (value: FormInputValue) => void;
+type SelectProps<T> = BaseProps<T, string | undefined> & {
+  onValueChange: (value: string | undefined) => void;
 };
 
-interface FormOptions<T> {
+export type FormResult<T extends object> = {
+  values: T;
+  errors: Record<keyof T, string>;
+  touched: Record<keyof T, boolean>;
+  canSubmit: boolean;
+  changed: Record<keyof T, boolean>;
+  /**
+   * Provider for props for input controls.
+   */
+  getInputProps: <InputType extends 'input' | 'select'>(
+    key: keyof T,
+    type?: InputType,
+  ) => InputType extends 'select' ? SelectProps<T> : InputProps<T>;
+  getErrorValence: (key: keyof T) => 'error' | undefined;
+  getErrorMessage: (key: keyof T) => string | undefined;
+  handleChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleSubmit: () => void;
+};
+
+export interface FormOptions<T extends object> {
   initialValues: T;
   schema?: S.Schema<T>;
   /**
@@ -33,20 +51,15 @@ interface FormOptions<T> {
    * Use this for complex validation logic that can't be expressed in the schema.
    * @returns Array of validation errors, or undefined if validation passes
    */
-  additionalValidation?: (values: T) => ValidationError[] | undefined;
-  onSubmit: (values: T) => void;
+  onValidate?: (values: T) => ValidationError[] | undefined;
+  /**
+   * Callback for value changes. Note: This is called even when values are invalid.
+   * Sometimes the parent component may want to know about changes even if the form is
+   * in an invalid state.
+   */
+  onValuesChanged?: (values: T) => void;
+  onSubmit: (values: T, meta: { changed: FormResult<T>['changed'] }) => void;
 }
-
-type Form<T> = {
-  values: T;
-  handleChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  handleSubmit: () => void;
-  errors: Record<keyof T, string>;
-  canSubmit: boolean;
-  touched: Record<keyof T, boolean>;
-  handleBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  getInputProps: (key: keyof T, type?: 'input' | 'select') => InputProps<T> | SelectProps<T>;
-};
 
 /**
  * Creates a hook for managing form state, including values, validation, and submission.
@@ -55,14 +68,18 @@ type Form<T> = {
 export const useForm = <T extends object>({
   initialValues,
   schema,
-  additionalValidation,
+  onValidate,
+  onValuesChanged,
   onSubmit,
-}: FormOptions<T>): Form<T> => {
-  invariant(additionalValidation != null || schema != null, 'useForm must be called with schema and/or validate');
-
+}: FormOptions<T>): FormResult<T> => {
   const [values, setValues] = useState<T>(initialValues);
-  const [errors, setErrors] = useState<Record<keyof T, string>>({} as Record<keyof T, string>);
+  useEffect(() => {
+    setValues(initialValues);
+  }, [initialValues]);
+
+  const [changed, setChanged] = useState<Record<keyof T, boolean>>(initialiseKeysWithValue(initialValues, false));
   const [touched, setTouched] = useState<Record<keyof T, boolean>>(initialiseKeysWithValue(initialValues, false));
+  const [errors, setErrors] = useState<Record<keyof T, string>>({} as Record<keyof T, string>);
 
   //
   // Validation.
@@ -70,25 +87,29 @@ export const useForm = <T extends object>({
 
   const validate = useCallback(
     (values: T) => {
+      let errors: ValidationError[] = [];
+
       if (schema) {
         const schemaErrors = validateSchema(schema, values) ?? [];
         if (schemaErrors.length > 0) {
-          setErrors(collapseErrorArray(schemaErrors));
-          return false;
+          errors = schemaErrors;
         }
       }
 
-      if (additionalValidation) {
-        const validateErrors = additionalValidation(values) ?? [];
-        setErrors(collapseErrorArray(validateErrors));
-        return validateErrors.length === 0;
+      if (onValidate && errors.length === 0) {
+        const validateErrors = onValidate(values) ?? [];
+        errors = validateErrors;
       }
 
-      setErrors({} as Record<keyof T, string>);
-      return true;
+      setErrors(errors.length > 0 ? collapseErrorArray(errors) : ({} as Record<keyof T, string>));
+      return errors.length === 0;
     },
-    [schema, additionalValidation],
+    [schema, onValidate],
   );
+
+  useEffect(() => {
+    validate(values);
+  }, [schema, validate, values]);
 
   //
   // Values.
@@ -98,12 +119,12 @@ export const useForm = <T extends object>({
     (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const { name: property, value, type } = event.target;
       const parsedValue = type === 'number' ? parseFloat(value) || 0 : value;
-      // TODO(ZaymonFC): Think about nesting!
       const newValues = { ...values, [property]: parsedValue };
       setValues(newValues);
-      validate(newValues);
+      setChanged((prev) => ({ ...prev, [property]: true }));
+      onValuesChanged?.(newValues);
     },
-    [values, validate],
+    [values, onValuesChanged],
   );
 
   const onValueChange = useCallback(
@@ -127,7 +148,7 @@ export const useForm = <T extends object>({
       // TODO(Zan): This should be configurable behavior.
       if (event.relatedTarget?.getAttribute('type') === 'submit') {
         // NOTE: We do this here instead of onSubmit, because the blur event is triggered before the submit event
-        //       and results in the submit button being disabled when the form is invalid.
+        //  and results in the submit button being disabled when the form is invalid.
         touchAll();
       }
 
@@ -142,7 +163,7 @@ export const useForm = <T extends object>({
 
   const handleSubmit = useCallback(() => {
     if (validate(values)) {
-      onSubmit(values);
+      onSubmit(values, { changed });
     }
   }, [values, validate, onSubmit]);
 
@@ -158,8 +179,11 @@ export const useForm = <T extends object>({
   //
 
   const getInputProps = useCallback(
-    (key: keyof T, type: 'input' | 'select' = 'input'): InputProps<T> | SelectProps<T> => {
-      const baseProps: BaseProps<T> = {
+    <InputType extends 'input' | 'select' = 'input'>(
+      key: keyof T,
+      type?: InputType,
+    ): InputType extends 'select' ? SelectProps<T> : InputProps<T> => {
+      const baseProps: BaseProps<T, any> = {
         name: key,
         value: values[key] ?? '',
       };
@@ -168,28 +192,45 @@ export const useForm = <T extends object>({
         return {
           ...baseProps,
           onValueChange: (value: FormInputValue) => onValueChange(key, value),
-        };
+        } as InputType extends 'select' ? SelectProps<T> : InputProps<T>;
       }
 
       return {
         ...baseProps,
         onChange: handleChange,
         onBlur: handleBlur,
-      };
+      } as InputType extends 'select' ? SelectProps<T> : InputProps<T>;
     },
     [values, handleChange, handleBlur, onValueChange],
   );
 
+  //
+  // Helpers
+  //
+
+  const getErrorValence = useCallback(
+    (key: keyof T) => (touched[key] && errors[key] ? 'error' : undefined),
+    [touched, errors],
+  );
+
+  const getErrorMessage = useCallback(
+    (key: keyof T) => (touched[key] && errors[key] ? errors[key] : undefined),
+    [touched, errors],
+  );
+
   return {
     values,
-    handleChange,
-    handleSubmit,
     errors,
-    canSubmit,
     touched,
-    handleBlur,
+    canSubmit,
+    changed,
     getInputProps,
-  } satisfies Form<T>;
+    getErrorValence,
+    getErrorMessage,
+    handleChange,
+    handleBlur,
+    handleSubmit,
+  } satisfies FormResult<T>;
 };
 
 //
@@ -204,11 +245,12 @@ const markAllTouched = <T extends Record<keyof T, any>>(values: T) => {
   return initialiseKeysWithValue(values, true);
 };
 
-const collapseErrorArray = <T>(errors: ValidationError[]) =>
+const collapseErrorArray = <T extends object>(errors: ValidationError[]) =>
   errors.reduce(
     (acc, { path, message }) => {
-      // TODO(Zan): This won't play well with nesting.
-      acc[path as keyof T] = message;
+      if (!(path in acc)) {
+        acc[path as keyof T] = message;
+      }
       return acc;
     },
     {} as Record<keyof T, string>,

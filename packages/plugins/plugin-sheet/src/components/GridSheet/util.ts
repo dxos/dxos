@@ -67,16 +67,18 @@ const projectCellProps = (model: SheetModel, col: number, row: number): DxGridCe
     })
     .map((thread) => fullyQualifiedId(thread!))
     .join(' ');
-  const type = model.getValueType(address);
+
+  const description = model.getValueDescription(address);
+  const type = description?.type;
+  const format = description?.format;
   const classNames = ranges?.map(cellClassNameForRange).reverse();
 
   return {
-    value: parseValue(type, rawValue),
-    className: mx(cellClassesForFieldType(type), threadRefs && commentedClassName, classNames),
+    value: parseValue({ type, format, value: rawValue }),
+    className: mx(cellClassesForFieldType({ type, format }), threadRefs && commentedClassName, classNames),
     dataRefs: threadRefs,
   };
 };
-
 const gridCellGetter = (model: SheetModel) => {
   // TODO(thure): Actually use the cache.
   const cachedGridCells: DxGridPlaneCells = {};
@@ -140,7 +142,11 @@ export const useSheetModelDxGridProps = (
       dxGrid?.requestUpdate('initialCells');
     };
     cellsAccessor.handle.addListener('change', handleCellsUpdate);
-    return () => cellsAccessor.handle.removeListener('change', handleCellsUpdate);
+    const unsubscribe = model.graph.update.on(handleCellsUpdate);
+    return () => {
+      cellsAccessor.handle.removeListener('change', handleCellsUpdate);
+      unsubscribe();
+    };
   }, [model, dxGrid]);
 
   useEffect(() => {
@@ -158,7 +164,7 @@ export const useSheetModelDxGridProps = (
       columnMetaAccessor.handle.removeListener('change', handleColumnMetaUpdate);
       rowMetaAccessor.handle.removeListener('change', handleRowMetaUpdate);
     };
-  }, [model]);
+  }, [model, dxGrid]);
 
   return { columns, rows };
 };

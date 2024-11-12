@@ -234,10 +234,10 @@ export class Connection {
       // TODO(nf): fix ErrorStream so instanceof works here
       if (err instanceof ConnectionResetError) {
         log.info('aborting due to transport ConnectionResetError');
-        this.abort().catch((err) => this.errors.raise(err));
+        this.abort(err).catch((err) => this.errors.raise(err));
       } else if (err instanceof ConnectivityError) {
         log.info('aborting due to transport ConnectivityError');
-        this.abort().catch((err) => this.errors.raise(err));
+        this.abort(err).catch((err) => this.errors.raise(err));
       }
 
       if (this._state !== ConnectionState.CLOSED && this._state !== ConnectionState.CLOSING) {

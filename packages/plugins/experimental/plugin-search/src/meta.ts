@@ -11,6 +11,7 @@ export default {
   id: SEARCH_PLUGIN,
   name: 'Search',
   description: 'Search ECHO spaces for content.',
-  tags: ['experimental'],
   icon: 'ph--magnifying-glass--regular',
+  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/experimental/plugin-search',
+  tags: ['experimental'],
 } satisfies PluginMeta;

@@ -6,6 +6,7 @@ import { type Listeners } from 'hyperformula/typings/Emitter';
 
 import { Event } from '@dxos/async';
 import { type Space, Filter, fullyQualifiedId } from '@dxos/client/echo';
+import { FQ_ID_LENGTH } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { getTypename } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -26,8 +27,7 @@ import {
 
 // TODO(burdon): Factor out compute-graph.
 
-// TODO(wittjosiah): Factor out.
-const OBJECT_ID_LENGTH = 60; // 33 (space id) + 1 (separator) + 26 (object id).
+const UNKNOWN_BINDING = '__UNKNOWN__';
 
 // TODO(burdon): Factory.
 // export type ComputeNodeGenerator = <T>(obj: T) => ComputeNode;
@@ -44,7 +44,7 @@ export const parseSheetName = (name: string): Partial<ObjectRef> => {
   return id ? { type, id } : { id: type };
 };
 
-export type ComputeGraphEvent = 'functionsUpdated';
+export type ComputeGraphEvent = 'functionsUpdated' | 'valuesUpdated';
 
 /**
  * Per-space compute and dependency graph.
@@ -64,7 +64,7 @@ export class ComputeGraph extends Resource {
   public readonly update = new Event<{ type: ComputeGraphEvent }>();
 
   // The context is passed to all functions.
-  public readonly context = new FunctionContext(this._hf, this._space, this._options);
+  public readonly context: FunctionContext;
 
   constructor(
     private readonly _hf: HyperFormula,
@@ -72,6 +72,15 @@ export class ComputeGraph extends Resource {
     private readonly _options?: Partial<FunctionContextOptions>,
   ) {
     super();
+
+    const contextOptions = {
+      ...this._options,
+      onUpdate: (update) => {
+        this._options?.onUpdate?.(update);
+        this.update.emit({ type: 'valuesUpdated' });
+      },
+    } satisfies Partial<FunctionContextOptions>;
+    this.context = new FunctionContext(this._hf, this._space, contextOptions);
     this._hf.updateConfig({ context: this.context });
 
     // TODO(burdon): If debounce then aggregate changes.
@@ -209,9 +218,9 @@ export class ComputeGraph extends Resource {
    * E.g., spaceId:objectId() => HELLO()
    */
   mapFunctionBindingFromId(formula: string) {
-    return formula.replace(/(\w+):([a-zA-Z0-9]+)\((.*)\)/g, (match, spaceId, objectId, args) => {
+    const binding = formula.replace(/(\w+):([a-zA-Z0-9]+)\((.*)\)/g, (match, spaceId, objectId, args) => {
       const id = `${spaceId}:${objectId}`;
-      if (id.length !== OBJECT_ID_LENGTH) {
+      if (id.length !== FQ_ID_LENGTH) {
         return match;
       }
 
@@ -219,9 +228,15 @@ export class ComputeGraph extends Resource {
       if (fn?.binding) {
         return `${fn.binding}(${args})`;
       } else {
-        return match;
+        return UNKNOWN_BINDING;
       }
     });
+
+    if (binding.startsWith(`=${UNKNOWN_BINDING}`)) {
+      return undefined;
+    } else {
+      return binding;
+    }
   }
 
   protected override async _open() {

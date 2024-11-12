@@ -40,7 +40,10 @@ const initialBox = {
   blockSize: 0,
 } satisfies GridEditBox;
 
-type GridEditing = { index: DxEditRequest['cellIndex']; initialContent: DxEditRequest['initialContent'] } | null;
+type GridEditing = {
+  index: DxEditRequest['cellIndex'];
+  initialContent: DxEditRequest['initialContent'];
+} | null;
 
 type GridContextValue = {
   id: string;
@@ -89,7 +92,9 @@ const GridRoot = ({
       setEditBox={setEditBox}
       scope={__gridScope}
     >
-      {children}
+      <div className='dx-grid-host' style={{ display: 'contents' }}>
+        {children}
+      </div>
     </GridProvider>
   );
 };
@@ -107,7 +112,9 @@ const GridContent = forwardRef<NaturalDxGrid, GridScopedProps<GridContentProps>>
   const { id, editing, setEditBox, setEditing } = useGridContext(GRID_CONTENT_NAME, props.__gridScope);
   const [dxGrid, setDxGridInternal] = useState<NaturalDxGrid | null>(null);
 
-  // NOTE(thure): using `useState` instead of `useRef` works with refs provided by `@lit/react` and gives us a reliable dependency for `useEffect` whereas `useLayoutEffect` does not guarantee the element will be defined.
+  // TODO(burdon): Can we use useImperativeHandle here?
+  // NOTE(thure): using `useState` instead of `useRef` works with refs provided by `@lit/react` and gives us
+  // a reliable dependency for `useEffect` whereas `useLayoutEffect` does not guarantee the element will be defined.
   const setDxGrid = useCallback(
     (nextDxGrid: NaturalDxGrid | null) => {
       setDxGridInternal(nextDxGrid);
@@ -161,4 +168,5 @@ export type {
   DxGridCellValue,
   DxGridPlane,
   DxGridPosition,
+  DxGridAxis,
 } from '@dxos/lit-grid';

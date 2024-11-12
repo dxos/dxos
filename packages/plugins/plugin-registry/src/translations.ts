@@ -15,6 +15,7 @@ export default [
         'settings section recommended label': 'Recommended',
         'settings section experimental label': 'Experimental',
         'home page label': 'Home page',
+        'source label': 'Source',
       },
     },
   },

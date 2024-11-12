@@ -5,13 +5,21 @@
 import { Table } from '@phosphor-icons/react';
 import React from 'react';
 
-import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
+import {
+  resolvePlugin,
+  type PluginDefinition,
+  parseIntentPlugin,
+  NavigationAction,
+  type IntentDispatcher,
+} from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
+import { getSpace } from '@dxos/react-client/echo';
 import { translations as dataTranslations, ViewEditor } from '@dxos/react-ui-data';
-import { addFieldToView, type FieldType, removeFieldFromView } from '@dxos/schema';
+import { type FieldProjection, ViewProjection, ViewType } from '@dxos/schema';
 
 import { TableContainer } from './components';
 import meta, { TABLE_PLUGIN } from './meta';
@@ -21,11 +29,14 @@ import { TableType } from './types';
 import { TableAction, type TablePluginProvides, isTable } from './types';
 
 export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
+  let dispatch: IntentDispatcher | undefined;
+
   return {
     meta,
     ready: async (plugins) => {
       const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
       clientPlugin?.provides.client.addTypes([TableType]);
+      dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
     },
     provides: {
       metadata: {
@@ -42,7 +53,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
       },
       translations: [...translations, ...dataTranslations],
       echo: {
-        schema: [TableType],
+        schema: [TableType, ViewType],
       },
       space: {
         onSpaceCreate: {
@@ -101,9 +112,28 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
             case 'article':
               return isTable(data.object) ? <TableContainer role={role} table={data.object} /> : null;
             case 'complementary--settings': {
-              if (data.subject instanceof TableType && data.subject.view) {
+              if (data.subject instanceof TableType) {
+                const table = data.subject;
+                if (!table.view) {
+                  return null;
+                }
+
+                const space = getSpace(table);
+                const schema = space?.db.schemaRegistry.getSchema(table.view.query.__typename);
+                const handleDelete = (fieldId: string) => {
+                  void dispatch?.({
+                    plugin: TABLE_PLUGIN,
+                    action: TableAction.DELETE_COLUMN,
+                    data: { table, fieldId },
+                  });
+                };
+
+                if (!schema) {
+                  return null;
+                }
+
                 return {
-                  node: <ViewEditor view={data.subject.view} />,
+                  node: <ViewEditor schema={schema} view={table.view} onDelete={handleDelete} />,
                 };
               }
 
@@ -138,43 +168,26 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
               };
             }
 
-            case TableAction.ADD_COLUMN: {
-              const { table, field } = intent.data as TableAction.AddColumn;
-              if (!isTable(table) || !table.schema || !table.view) {
-                return;
-              }
-              addFieldToView(table.schema, table.view, field);
-              return { data: true };
-            }
-
             case TableAction.DELETE_COLUMN: {
-              const { table, field } = intent.data as TableAction.DeleteColumn;
-              if (!isTable(table) || !table.view || !table.schema) {
-                return;
-              }
+              const { table, fieldId } = intent.data as TableAction.DeleteColumn;
+              invariant(isTable(table));
+              invariant(table.view);
+
+              const schema = getSpace(table)?.db.schemaRegistry.getSchema(table.view.query.__typename);
+              invariant(schema);
+              const projection = new ViewProjection(schema, table.view);
 
               if (!intent.undo) {
-                const fieldPosition = table.view.fields.indexOf(field);
-                if (fieldPosition === undefined) {
-                  return;
-                }
-
-                removeFieldFromView(table.schema, table.view, field);
-
+                const { deleted, index } = projection.deleteFieldProjection(fieldId);
                 return {
                   undoable: {
                     message: translations[0]['en-US'][TABLE_PLUGIN]['column deleted label'],
-                    data: { view: table.view, field, fieldPosition },
+                    data: { deleted, index },
                   },
                 };
               } else if (intent.undo) {
-                const { field, fieldPosition } = intent.data as { field: FieldType; fieldPosition: number };
-
-                try {
-                  addFieldToView(table.schema, table.view, field, fieldPosition);
-                } catch (error) {
-                  // TODO(ZaymonFC): Handle error.
-                }
+                const { deleted, index } = intent.data as { deleted: FieldProjection; index: number };
+                projection.setFieldProjection(deleted, index);
                 return { data: true };
               }
             }

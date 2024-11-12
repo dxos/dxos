@@ -1,50 +1,72 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
-import React, { type JSX, type PropsWithChildren } from 'react';
+import React from 'react';
 
-import { Input } from '@dxos/react-ui';
+import { Input, Select } from '@dxos/react-ui';
 
-type FormInputProps = {
+import { type FormResult } from '../../hooks';
+
+export type FormInputProps<T extends object> = {
+  property: keyof T;
+  type?: 'string' | 'number' | 'boolean';
   label: string;
-  description?: JSX.Element;
-  secondary?: JSX.Element;
-};
+  options?: Array<{ value: string | number; label?: string }>;
+  disabled?: boolean;
+  placeholder?: string;
+  getInputProps: (property: keyof T, type?: 'input' | 'select') => Record<string, any>;
+} & Pick<FormResult<T>, 'getErrorValence' | 'getErrorMessage'>;
 
-// TODO(burdon): Specify type.
-export const FormInput = ({ label, description, secondary, children }: PropsWithChildren<FormInputProps>) => {
-  const primary = (
-    <div role='none' className='flex w-full gap-4 py-1'>
-      <Input.Root>
-        <div role='none' className='flex flex-col w-full'>
-          {/* TODO(burdon): Consistent height for controls (e.g., Select, Textbox, and Checkbox are all different). */}
-          <Input.Label classNames='flex min-h-[40px] items-center'>{label}</Input.Label>
-          {description && (
-            <Input.DescriptionAndValidation classNames='mbs-0.5'>
-              <Input.Description>{description}</Input.Description>
-            </Input.DescriptionAndValidation>
-          )}
-        </div>
+export const FormInput = <T extends object>({
+  property,
+  type = 'string',
+  label,
+  options,
+  disabled,
+  placeholder,
+  getInputProps,
+  getErrorValence,
+  getErrorMessage,
+}: FormInputProps<T>) => {
+  const validationValence = getErrorValence(property);
+  const errorMessage = getErrorMessage(property);
 
-        <div role='none'>
-          <div role='none' className='flex min-h-[40px] items-center'>
-            {children}
-          </div>
-        </div>
-      </Input.Root>
-    </div>
-  );
-
-  if (secondary) {
-    // console.log(secondary);
+  if (options) {
     return (
-      <div role='none' className='flex flex-col w-full'>
-        {primary}
-        {secondary}
-      </div>
+      <Input.Root validationValence={validationValence}>
+        <Input.Label>{label}</Input.Label>
+        <Input.DescriptionAndValidation>
+          <Select.Root {...getInputProps(property, 'select')}>
+            {/* TODO(burdon): Placeholder not working? */}
+            <Select.TriggerButton classNames='is-full' disabled={disabled} placeholder={placeholder} />
+            <Select.Portal>
+              <Select.Content>
+                <Select.Viewport>
+                  {options.map(({ value, label }) => (
+                    <Select.Option key={String(value)} value={String(value)}>
+                      {label ?? String(value)}
+                    </Select.Option>
+                  ))}
+                </Select.Viewport>
+              </Select.Content>
+            </Select.Portal>
+          </Select.Root>
+          <Input.Validation>{errorMessage}</Input.Validation>
+        </Input.DescriptionAndValidation>
+      </Input.Root>
     );
   }
 
-  return primary;
+  // TODO(burdon): Checkbox.
+  // TODO(burdon): Restrict string pattern. Input masking based on schema?
+  return (
+    <Input.Root validationValence={validationValence}>
+      <Input.Label>{label}</Input.Label>
+      <Input.DescriptionAndValidation>
+        <Input.TextInput type={type} disabled={disabled} placeholder={placeholder} {...getInputProps(property)} />
+        <Input.Validation>{errorMessage}</Input.Validation>
+      </Input.DescriptionAndValidation>
+    </Input.Root>
+  );
 };

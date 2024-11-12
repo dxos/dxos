@@ -86,16 +86,16 @@ export class InvitationGuestExtension
     await super.onOpen(context);
 
     try {
-      log('guest acquire lock');
+      log.verbose('guest acquire lock');
       this._invitationFlowLock = await tryAcquireBeforeContextDisposed(this._ctx, this._invitationFlowMutex);
-      log('guest lock acquired');
+      log.verbose('guest lock acquired');
       await cancelWithContext(
         this._ctx,
         this.rpc.InvitationHostService.options({ role: InvitationOptions.Role.GUEST }),
       );
-      log('options sent');
+      log.verbose('options sent');
       await cancelWithContext(this._ctx, this._remoteOptionsTrigger.wait({ timeout: OPTIONS_TIMEOUT }));
-      log('options received');
+      log.verbose('options received');
       if (this._remoteOptions?.role !== InvitationOptions.Role.HOST) {
         throw new InvalidInvitationExtensionRoleError(undefined, {
           expected: InvitationOptions.Role.HOST,
@@ -128,7 +128,7 @@ export class InvitationGuestExtension
     if (this._invitationFlowLock != null) {
       this._invitationFlowLock.release();
       this._invitationFlowLock = null;
-      log('invitation flow lock released');
+      log.verbose('invitation flow lock released');
     }
   }
 }

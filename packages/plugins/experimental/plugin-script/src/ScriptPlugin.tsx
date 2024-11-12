@@ -16,7 +16,7 @@ import { loadObjectReferences } from '@dxos/react-client/echo';
 
 import { initializeBundler } from './bundler';
 import { Compiler } from './compiler';
-import { AutomationPanel, ScriptContainer, ScriptSettings } from './components';
+import { AutomationPanel, ScriptContainer, ScriptSettings, ScriptSettingsPanel } from './components';
 import meta, { SCRIPT_PLUGIN } from './meta';
 import { templates } from './templates';
 import translations from './translations';
@@ -122,12 +122,20 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
             }
 
             case 'complementary--automation': {
-              if (data.object instanceof ScriptType) {
+              if (data.subject instanceof ScriptType) {
                 return {
                   node: <AutomationPanel subject={data.subject as any} />,
                   disposition: 'hoist',
                 };
               }
+              break;
+            }
+
+            case 'complementary--settings': {
+              if (data.subject instanceof ScriptType) {
+                return <ScriptSettingsPanel script={data.subject} />;
+              }
+              break;
             }
           }
 

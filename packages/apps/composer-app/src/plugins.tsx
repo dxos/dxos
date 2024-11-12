@@ -180,6 +180,8 @@ export const plugins = ({
       ]);
 
       client.shell.onReset((target) => {
+        localStorage.clear();
+
         if (target === 'deviceInvitation') {
           window.location.assign(new URL('/?deviceInvitationCode=', window.location.origin));
         } else if (target === 'recoverIdentity') {

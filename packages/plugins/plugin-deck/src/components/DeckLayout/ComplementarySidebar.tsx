@@ -21,34 +21,20 @@ import { NodePlankHeading } from './NodePlankHeading';
 import { PlankContentError } from './PlankError';
 import { PlankLoading } from './PlankLoading';
 import { useNode, useNodeActionExpander } from '../../hooks';
-import { DECK_PLUGIN } from '../../meta';
+import { type Panel } from '../../types';
 import { useLayout } from '../LayoutContext';
 
 export type ComplementarySidebarProps = {
-  panel?: string;
+  panels: Panel[];
+  current?: string;
   flatDeck?: boolean;
 };
 
-type Panel = { id: string; icon: string };
-
-// TODO(burdon): Should be provided by plugins.
-const panels: Panel[] = [
-  { id: 'settings', icon: 'ph--gear--regular' },
-  { id: 'comments', icon: 'ph--chat-text--regular' },
-  { id: 'automation', icon: 'ph--atom--regular' },
-  { id: 'debug', icon: 'ph--bug--regular' },
-];
-
-const getPanel = (id?: string): Panel['id'] => {
-  const panel = panels.find((p) => p.id === id) ?? panels[0];
-  return panel.id;
-};
-
-export const ComplementarySidebar = ({ panel, flatDeck }: ComplementarySidebarProps) => {
+export const ComplementarySidebar = ({ panels, current, flatDeck }: ComplementarySidebarProps) => {
   const { popoverAnchorId } = useLayout();
   const attended = useAttended();
-  const part = getPanel(panel);
-  const id = attended[0] ? `${attended[0]}${SLUG_PATH_SEPARATOR}${part}` : undefined;
+  const panel = (panels.find((p) => p.id === current) ?? panels[0])?.id;
+  const id = attended[0] ? `${attended[0]}${SLUG_PATH_SEPARATOR}${panel}` : undefined;
   const { graph } = useGraph();
   const node = useNode(graph, id);
   const dispatch = useIntentDispatcher();
@@ -56,19 +42,19 @@ export const ComplementarySidebar = ({ panel, flatDeck }: ComplementarySidebarPr
 
   const actions = useMemo(
     () =>
-      panels.map(({ id, icon }) => ({
+      panels.map(({ id, label, icon }) => ({
         id: `complementary-${id}`,
         data: () => {
           void dispatch({ action: NavigationAction.OPEN, data: { activeParts: { complementary: id } } });
         },
         properties: {
-          label: [`open ${id} label`, { ns: DECK_PLUGIN }],
+          label,
           icon,
           menuItemType: 'toggle',
-          isChecked: part === id,
+          isChecked: panel === id,
         },
       })),
-    [part],
+    [panel],
   );
 
   // TODO(wittjosiah): Ensure that id is always defined.
@@ -89,7 +75,8 @@ export const ComplementarySidebar = ({ panel, flatDeck }: ComplementarySidebarPr
           {node && (
             <Surface
               key={id}
-              role={`complementary--${part}`}
+              role={`complementary--${panel}`}
+              limit={1}
               data={{ id, subject: node.properties.object ?? node.properties.space, popoverAnchorId }}
               fallback={PlankContentError}
               placeholder={<PlankLoading />}

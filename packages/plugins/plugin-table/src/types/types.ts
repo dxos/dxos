@@ -13,7 +13,6 @@ import type {
 import { type SchemaProvides } from '@dxos/plugin-client';
 import { type SpaceInitProvides } from '@dxos/plugin-space';
 import { type StackProvides } from '@dxos/plugin-stack';
-import { type FieldType } from '@dxos/schema';
 
 import { TableType } from './table';
 import { TABLE_PLUGIN } from '../meta';
@@ -22,14 +21,12 @@ const TABLE_ACTION = `${TABLE_PLUGIN}/action`;
 
 export enum TableAction {
   CREATE = `${TABLE_ACTION}/create`,
-  ADD_COLUMN = `${TABLE_ACTION}/add-column`,
   DELETE_COLUMN = `${TABLE_ACTION}/delete-column`,
 }
 
 export namespace TableAction {
   export type Create = IntentData<{ table: TableType }>;
-  export type AddColumn = IntentData<{ table: TableType; field: FieldType }>;
-  export type DeleteColumn = IntentData<{ table: TableType; field: FieldType }>;
+  export type DeleteColumn = IntentData<{ table: TableType; fieldId: string }>;
 }
 
 export type TableProvides = {};

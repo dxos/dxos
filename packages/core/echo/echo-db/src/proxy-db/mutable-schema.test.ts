@@ -42,7 +42,7 @@ describe('MutableSchema', () => {
       field: S.String,
     }) {}
 
-    instanceWithSchemaRef.schema = db.schema.addSchema(GeneratedSchema);
+    instanceWithSchemaRef.schema = db.schemaRegistry.addSchema(GeneratedSchema);
     const schemaWithId = GeneratedSchema.annotations({
       [ObjectAnnotationId]: {
         typename: 'example.com/type/Test',
@@ -63,14 +63,14 @@ describe('MutableSchema', () => {
       field: S.String,
     }) {}
 
-    const schema = db.schema.addSchema(GeneratedSchema);
+    const schema = db.schemaRegistry.addSchema(GeneratedSchema);
     const instanceWithSchemaRef = db.add(create(TestSchema, { schema }));
-    expect(instanceWithSchemaRef.schema!.serializedSchema.typename).to.eq('example.com/type/Test');
+    expect(instanceWithSchemaRef.schema!.typename).to.eq('example.com/type/Test');
   });
 
   test('can be used to create objects', async () => {
     const { db } = await setupTest();
-    const schema = db.schema.addSchema(EmptySchemaType);
+    const schema = db.schemaRegistry.addSchema(EmptySchemaType);
     const object = create(schema, {});
     schema.addFields({ field1: S.String });
     object.field1 = 'works';
@@ -93,8 +93,34 @@ describe('MutableSchema', () => {
 
   test('getTypeReference', async () => {
     const { db } = await setupTest();
-    const schema = db.schema.addSchema(EmptySchemaType);
+    const schema = db.schemaRegistry.addSchema(EmptySchemaType);
     expect(getTypeReference(schema)?.objectId).to.eq(schema.id);
+  });
+
+  // TODO(burdon): Throws Predicate refinement error.
+  test.skip('mutable schema refs', async () => {
+    const { db } = await setupTest();
+
+    const OrgSchema = TypedObject({
+      typename: 'example.com/type/org',
+      version: '0.1.0',
+    })({
+      name: S.optional(S.String),
+    });
+
+    const ContactSchema = TypedObject({
+      typename: 'example.com/type/contact',
+      version: '0.1.0',
+    })({
+      name: S.optional(S.String),
+      org: S.optional(ref(OrgSchema)),
+    });
+
+    const orgSchema = db.schemaRegistry.addSchema(OrgSchema);
+    const contactSchema = db.schemaRegistry.addSchema(ContactSchema);
+    const org = db.add(create(orgSchema, { name: 'DXOS' }));
+    const contact = db.add(create(contactSchema, { name: 'Bot', org }));
+    console.log(org, contact);
   });
 
   const setupTest = async () => {

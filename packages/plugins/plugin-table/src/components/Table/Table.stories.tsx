@@ -7,57 +7,74 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { type MutableSchema } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { Filter, useSpaces, useQuery, create, getSpace } from '@dxos/react-client/echo';
+import { faker } from '@dxos/random';
+import { Filter, useSpaces, useQuery, create } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useDefaultValue } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-data';
-import { addFieldToView, type FieldType, removeFieldFromView } from '@dxos/schema';
+import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { ViewProjection, ViewType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Table } from './Table';
-import { useTableModel } from '../../hooks';
+import { Table, type TableController } from './Table';
+import { useTableModel, type UseTableModelParams } from '../../hooks';
 import translations from '../../translations';
 import { TableType } from '../../types';
+import { initializeTable } from '../../util';
 import { Toolbar } from '../Toolbar';
-import { createEmptyTable, createItems, createTable, type SimulatorProps, useSimulator } from '../testing';
+import { createItems, createTable, type SimulatorProps, useSimulator } from '../testing';
 
 //
 // Story components.
 //
 
 const DefaultStory = () => {
-  const [table, setTable] = useState<TableType | undefined>();
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
   const tables = useQuery(space, Filter.schema(TableType));
-  const objects = useQuery(space, table?.schema ? Filter.schema(table.schema) : () => false, undefined, [
-    table?.schema,
-  ]);
-  const filteredObjects = useGlobalFilteredObjects(objects);
-
+  const [table, setTable] = useState<TableType>();
+  const [schema, setSchema] = useState<MutableSchema>();
   useEffect(() => {
-    if (tables.length > 0) {
-      setTable(tables[0]);
+    if (tables.length && !table) {
+      const table = tables[0];
+      invariant(table.view);
+      setTable(table);
+      setSchema(space.db.schemaRegistry.getSchema(table.view.query.__typename));
     }
   }, [tables]);
 
-  const handleDeleteRow = useCallback((row: any) => space.db.remove(row), [space]);
-  const handleAddColumn = useCallback(
-    (field: any) => {
-      if (table && table.schema?.schema && table.view) {
-        addFieldToView(table.schema, table.view, field);
-      }
+  const projection = useMemo(() => {
+    if (schema && table?.view) {
+      return new ViewProjection(schema, table.view);
+    }
+  }, [schema, table?.view]);
+
+  const objects = useQuery(space, schema ? Filter.schema(schema) : () => false, undefined, [schema]);
+  const filteredObjects = useGlobalFilteredObjects(objects);
+
+  const handleInsertRow = useCallback(() => {
+    if (space && schema) {
+      space.db.add(create(schema, {}));
+    }
+  }, [space, schema]);
+
+  const handleDeleteRow = useCallback(
+    (_: number, object: any) => {
+      space.db.remove(object);
     },
-    [table],
+    [space],
   );
+
   const handleDeleteColumn = useCallback(
-    (field: any) => {
-      if (table && table.schema?.schema && table.view) {
-        removeFieldFromView(table.schema, table.view, field);
+    (fieldId: string) => {
+      if (projection) {
+        projection.deleteFieldProjection(fieldId);
       }
     },
-    [table],
+    [table, projection],
   );
 
   const handleAction = useCallback(
@@ -68,49 +85,53 @@ const DefaultStory = () => {
           break;
         }
         case 'add-row': {
-          if (table) {
-            const space = getSpace(table);
-            if (table?.schema && space) {
-              space.db.add(create(table.schema, {}));
-            }
-            break;
-          }
+          handleInsertRow();
         }
       }
     },
     [table, spaces],
   );
 
+  const tableRef = useRef<TableController>(null);
   const model = useTableModel({
-    table: table!,
+    table,
+    projection,
     objects: filteredObjects,
+    onInsertRow: handleInsertRow,
     onDeleteRow: handleDeleteRow,
-    onAddColumn: handleAddColumn,
     onDeleteColumn: handleDeleteColumn,
+    onCellUpdate: (cell) => tableRef.current?.update?.(cell),
+    onRowOrderChanged: () => tableRef.current?.update?.(),
   });
 
-  if (!table) {
-    return null;
+  if (!schema || !table) {
+    return <div />;
   }
 
   return (
-    <div className='grid grid-cols-[1fr_256px] w-dvw h-dvh'>
-      <div className='flex flex-col h-full'>
-        <div className='border-b border-separator flex-none'>
-          <Toolbar.Root onAction={handleAction}>
-            <Toolbar.Separator />
-            <Toolbar.Actions />
-          </Toolbar.Root>
-        </div>
-        <div className='relative is-full max-is-max min-is-0 min-bs-0'>
-          <Table model={model} />
-        </div>
+    <div className='grow grid grid-cols-[1fr_350px]'>
+      <div className='flex flex-col h-full overflow-hidden'>
+        <Toolbar.Root classNames='border-b border-separator' onAction={handleAction}>
+          <Toolbar.Separator />
+          <Toolbar.Actions />
+        </Toolbar.Root>
+        <Table.Root>
+          <Table.Main ref={tableRef} model={model} />
+        </Table.Root>
       </div>
-      <div className='border-l border-separator -mt-px flex flex-col h-full'>
-        <div className='flex-none'>{table.view && <ViewEditor view={table?.view} />}</div>
-        <div className='flex-1 min-h-0 overflow-auto'>
-          <pre className='text-[10px] pli-2 font-mono text-wrap'>{JSON.stringify(table, null, 2)}</pre>
-        </div>
+      <div className='flex flex-col h-full border-l border-separator overflow-y-auto'>
+        {table.view && (
+          <ViewEditor
+            registry={space?.db.schemaRegistry}
+            schema={schema}
+            view={table.view}
+            onDelete={handleDeleteColumn}
+          />
+        )}
+
+        <SyntaxHighlighter language='json' className='w-full text-xs'>
+          {JSON.stringify({ view: table.view, schema }, null, 2)}
+        </SyntaxHighlighter>
       </div>
     </div>
   );
@@ -129,41 +150,34 @@ const TablePerformanceStory = (props: StoryProps) => {
   const simulatorProps = useMemo(() => ({ table, items, ...props }), [table, items, props]);
   useSimulator(simulatorProps);
 
-  const handleDeleteRow = useCallback((row: any) => {
-    itemsRef.current.splice(itemsRef.current.indexOf(row), 1);
+  const handleDeleteRow = useCallback<NonNullable<UseTableModelParams<any>['onDeleteRow']>>((row) => {
+    itemsRef.current.splice(row, 1);
   }, []);
 
-  const handleAddColumn = useCallback(
-    (field: FieldType) => {
+  const handleDeleteColumn = useCallback<NonNullable<UseTableModelParams<any>['onDeleteColumn']>>(
+    (fieldId) => {
       if (table && table.view) {
-        table.view.fields.push(field);
-      }
-    },
-    [table],
-  );
-
-  const handleDeleteColumn = useCallback(
-    (field: FieldType) => {
-      if (table && table.view) {
-        const fieldPosition = table.view.fields.indexOf(field);
+        const fieldPosition = table.view.fields.findIndex((field) => field.id === fieldId);
         table.view.fields.splice(fieldPosition, 1);
       }
     },
     [table],
   );
 
+  const tableRef = useRef<TableController>(null);
   const model = useTableModel({
     table,
-    objects: items as any,
+    objects: items as any[],
     onDeleteRow: handleDeleteRow,
-    onAddColumn: handleAddColumn,
     onDeleteColumn: handleDeleteColumn,
+    onCellUpdate: (cell) => tableRef.current?.update?.(cell),
+    onRowOrderChanged: () => tableRef.current?.update?.(),
   });
 
   return (
-    <div className='relative is-full max-is-max min-is-0 min-bs-0'>
-      <Table model={model} />
-    </div>
+    <Table.Root>
+      <Table.Main ref={tableRef} model={model} />
+    </Table.Root>
   );
 };
 
@@ -171,36 +185,26 @@ const TablePerformanceStory = (props: StoryProps) => {
 // Story definitions.
 //
 
-export const Default = {};
-
-export const Mutations: StoryObj = {
-  render: TablePerformanceStory,
-  args: {
-    rows: 1000,
-    updateInterval: 1,
-  },
-};
-
-export const RapidInsertions: StoryObj = {
-  render: TablePerformanceStory,
-  args: {
-    rows: 0,
-    insertInterval: 100,
-  },
-};
-
-const meta: Meta<typeof Table> = {
+const meta: Meta<StoryProps> = {
   title: 'plugins/plugin-table/Table',
-  component: Table,
-  render: DefaultStory as any,
+  component: Table.Main as any,
+  render: DefaultStory,
   parameters: { translations },
   decorators: [
     withClientProvider({
-      types: [TableType],
+      types: [TableType, ViewType],
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: ({ space }) => {
-        space.db.add(createEmptyTable());
+      onSpaceCreated: async ({ space }) => {
+        const table = space.db.add(create(TableType, {}));
+        const schema = initializeTable({ space, table });
+        Array.from({ length: 30 }).map(() => {
+          return space.db.add(
+            create(schema, {
+              name: faker.person.fullName(),
+            }),
+          );
+        });
       },
     }),
     withTheme,
@@ -209,3 +213,23 @@ const meta: Meta<typeof Table> = {
 };
 
 export default meta;
+
+type Story = StoryObj<StoryProps>;
+
+export const Default = {};
+
+export const Mutations: Story = {
+  render: TablePerformanceStory,
+  args: {
+    rows: 1000,
+    updateInterval: 1,
+  },
+};
+
+export const RapidInsertions: Story = {
+  render: TablePerformanceStory,
+  args: {
+    rows: 0,
+    insertInterval: 100,
+  },
+};

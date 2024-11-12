@@ -4,58 +4,49 @@
 
 import { useEffect, useState } from 'react';
 
-import { create } from '@dxos/echo-schema';
-import { type EchoReactiveObject, getSpace } from '@dxos/react-client/echo';
+import { type ReactiveObject } from '@dxos/react-client/echo';
+import { type ViewProjection } from '@dxos/schema';
 
-import { TableModel, type TableModelProps } from '../model';
+import { type BaseTableRow, TableModel, type TableModelProps } from '../model';
 import { type TableType } from '../types';
-import { createStarterSchema, createStarterView } from '../types';
 
-export type UseTableModelParams = {
-  table: TableType;
-  objects: EchoReactiveObject<any>[];
-} & Pick<TableModelProps, 'onAddColumn' | 'onDeleteColumn' | 'onDeleteRow'>;
+export type UseTableModelParams<T extends BaseTableRow = {}> = {
+  table?: TableType;
+  projection?: ViewProjection;
+  objects?: ReactiveObject<T>[];
+} & Pick<TableModelProps<T>, 'onInsertRow' | 'onDeleteRow' | 'onDeleteColumn' | 'onCellUpdate' | 'onRowOrderChanged'>;
 
-export const useTableModel = ({
-  table,
+export const useTableModel = <T extends BaseTableRow = {}>({
   objects,
-  onAddColumn,
-  onDeleteColumn,
-  onDeleteRow,
-}: UseTableModelParams): TableModel | undefined => {
-  const space = getSpace(table);
-
-  // TODO(ZaymonFC): Not sure this belongs here. Seek feeback.
+  table,
+  projection,
+  ...props
+}: UseTableModelParams<T>): TableModel<T> | undefined => {
+  const [model, setModel] = useState<TableModel<T>>();
   useEffect(() => {
-    if (space && !table?.schema && !table.view) {
-      table.schema = space.db.schema.addSchema(createStarterSchema());
-      table.view = createStarterView(table.schema);
-      space.db.add(create(table.schema, {}));
-    }
-  }, [space, table?.schema]);
-
-  const [tableModel, setTableModel] = useState<TableModel>();
-  useEffect(() => {
-    if (!table) {
+    if (!table || !projection) {
       return;
     }
 
-    let tableModel: TableModel | undefined;
+    let model: TableModel<T> | undefined;
     const t = setTimeout(async () => {
-      tableModel = new TableModel({ table, onAddColumn, onDeleteColumn, onDeleteRow });
-      await tableModel.open();
-      setTableModel(tableModel);
+      model = new TableModel<T>({ table, projection, ...props });
+      await model.open();
+      setModel(model);
     });
 
     return () => {
       clearTimeout(t);
-      void tableModel?.close();
+      void model?.close();
     };
-  }, [table, onAddColumn, onDeleteColumn, onDeleteRow]);
+  }, [table, projection]); // TODO(burdon): Trigger if callbacks change?
 
+  // Update data.
   useEffect(() => {
-    tableModel?.updateData(objects);
-  }, [objects, tableModel]);
+    if (objects) {
+      model?.setRows(objects);
+    }
+  }, [model, objects]);
 
-  return tableModel;
+  return model;
 };

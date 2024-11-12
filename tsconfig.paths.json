@@ -123,7 +123,7 @@
         "packages/plugins/experimental/plugin-wnfs/src/index.ts"
       ],
       "@dxos/plugin-wnfs/meta": [
-        "packages/plugins/experimental/plugin-wnfs/src/meta.tsx"
+        "packages/plugins/experimental/plugin-wnfs/src/meta.ts"
       ],
       "@dxos/plugin-wnfs/types": [
         "packages/plugins/experimental/plugin-wnfs/src/types/index.ts"
@@ -166,6 +166,9 @@
       ],
       "@dxos/plugin-deck/meta": [
         "packages/plugins/plugin-deck/src/meta.ts"
+      ],
+      "@dxos/plugin-deck/types": [
+        "packages/plugins/plugin-deck/src/types.ts"
       ],
       "@dxos/plugin-files": [
         "packages/plugins/plugin-files/src/index.ts"

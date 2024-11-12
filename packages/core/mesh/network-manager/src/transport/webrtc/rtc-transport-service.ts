@@ -88,8 +88,6 @@ export class RtcTransportService implements BridgeService {
         writeProcessedCallbacks: [],
       };
 
-      pushNewState(ConnectionState.CONNECTING);
-
       transport.connected.on(() => pushNewState(ConnectionState.CONNECTED));
 
       transport.errors.handle(async (err) => {
@@ -113,6 +111,10 @@ export class RtcTransportService implements BridgeService {
       });
 
       ready();
+
+      log('stream ready');
+
+      pushNewState(ConnectionState.CONNECTING);
     });
   }
 

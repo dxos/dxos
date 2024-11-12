@@ -6,9 +6,11 @@ import { signal } from '@preact/signals-core';
 import React from 'react';
 
 import {
+  type GraphProvides,
   type IntentDispatcher,
   type IntentPluginProvides,
   LayoutAction,
+  type LayoutProvides,
   type LocationProvides,
   NavigationAction,
   type Plugin,
@@ -18,6 +20,7 @@ import {
   openIds,
   parseGraphPlugin,
   parseIntentPlugin,
+  parseLayoutPlugin,
   parseMetadataResolverPlugin,
   parseNavigationPlugin,
   resolvePlugin,
@@ -48,6 +51,7 @@ import {
   isSpace,
   loadObjectReferences,
   parseId,
+  FQ_ID_LENGTH,
 } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { ClipboardProvider, InvitationManager, type InvitationManagerProps, osTranslations } from '@dxos/shell/react';
@@ -59,7 +63,6 @@ import {
   CollectionSection,
   DefaultObjectSettings,
   MenuFooter,
-  MissingObject,
   PopoverRenameObject,
   PopoverRenameSpace,
   ShareSpaceButton,
@@ -90,7 +93,6 @@ import {
 } from './util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
-const OBJECT_ID_LENGTH = 60; // 33 (space id) + 26 (object id) + 1 (separator).
 const SPACE_MAX_OBJECTS = 500;
 // https://stackoverflow.com/a/19016910
 const DIRECTORY_TYPE = 'text/directory';
@@ -137,17 +139,22 @@ export const SpacePlugin = ({
   const graphSubscriptions = new Map<string, UnsubscribeCallback>();
 
   let clientPlugin: Plugin<ClientPluginProvides> | undefined;
+  let graphPlugin: Plugin<GraphProvides> | undefined;
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
+  let layoutPlugin: Plugin<LayoutProvides> | undefined;
   let navigationPlugin: Plugin<LocationProvides> | undefined;
   let attentionPlugin: Plugin<AttentionPluginProvides> | undefined;
 
   const onSpaceReady = async () => {
-    if (!clientPlugin || !navigationPlugin || !attentionPlugin) {
+    if (!clientPlugin || !intentPlugin || !graphPlugin || !navigationPlugin || !layoutPlugin || !attentionPlugin) {
       return;
     }
 
     const client = clientPlugin.provides.client;
+    const dispatch = intentPlugin.provides.intent.dispatch;
+    const graph = graphPlugin.provides.graph;
     const location = navigationPlugin.provides.location;
+    const layout = layoutPlugin.provides.layout;
     const attention = attentionPlugin.provides.attention;
     const defaultSpace = client.spaces.default;
 
@@ -164,6 +171,26 @@ export const SpacePlugin = ({
       //  Instead, we store order as an array of space ids.
       defaultSpace.db.add(create({ key: SHARED, order: [] }));
     }
+
+    // Await missing objects.
+    subscriptions.add(
+      scheduledEffect(
+        () => ({
+          layoutMode: layout.layoutMode,
+          soloPart: location.active.solo?.[0],
+        }),
+        ({ layoutMode, soloPart }) => {
+          if (layoutMode !== 'solo' || !soloPart) {
+            return;
+          }
+
+          const node = graph.findNode(soloPart.id);
+          if (!node && soloPart.id.length === FQ_ID_LENGTH) {
+            void dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.WAIT_FOR_OBJECT, data: { id: soloPart.id } });
+          }
+        },
+      ),
+    );
 
     // Cache space names.
     subscriptions.add(
@@ -288,6 +315,8 @@ export const SpacePlugin = ({
       settings.prop({ key: 'showHidden', type: LocalStorageStore.bool({ allowUndefined: true }) });
       state.prop({ key: 'spaceNames', type: LocalStorageStore.json<Record<string, string>>() });
 
+      graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
+      layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
       navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       attentionPlugin = resolvePlugin(plugins, parseAttentionPlugin);
       clientPlugin = resolvePlugin(plugins, parseClientPlugin);
@@ -310,19 +339,20 @@ export const SpacePlugin = ({
         await onFirstRun?.({ client, dispatch });
       };
 
-      // No need to unsubscribe because this observable completes when spaces are ready.
-      client.spaces.isReady.subscribe(async (ready) => {
-        if (ready) {
-          await clientPlugin?.provides.client.spaces.default.waitUntilReady();
-          if (firstRun) {
-            void firstRun?.wait().then(handleFirstRun);
-          } else {
-            await handleFirstRun();
-          }
+      subscriptions.add(
+        client.spaces.isReady.subscribe(async (ready) => {
+          if (ready) {
+            await clientPlugin?.provides.client.spaces.default.waitUntilReady();
+            if (firstRun) {
+              void firstRun?.wait().then(handleFirstRun);
+            } else {
+              await handleFirstRun();
+            }
 
-          await onSpaceReady();
-        }
-      });
+            await onSpaceReady();
+          }
+        }).unsubscribe,
+      );
     },
     unload: async () => {
       settings.close();
@@ -335,6 +365,11 @@ export const SpacePlugin = ({
       space: state.values,
       settings: settings.values,
       translations: [...translations, osTranslations],
+      complementary: {
+        panels: [
+          { id: 'settings', label: ['open settings panel label', { ns: SPACE_PLUGIN }], icon: 'ph--gear--regular' },
+        ],
+      },
       root: () => (state.values.awaiting ? <AwaitingObject id={state.values.awaiting} /> : null),
       metadata: {
         records: {
@@ -369,8 +404,6 @@ export const SpacePlugin = ({
                   node: <CollectionMain collection={data.object} />,
                   disposition: 'fallback',
                 }
-              ) : typeof data.object === 'string' && data.object.length === OBJECT_ID_LENGTH ? (
-                <MissingObject id={data.object} />
               ) : null;
             case 'complementary--settings':
               return isSpace(data.subject) ? (

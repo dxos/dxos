@@ -8,7 +8,7 @@ import get from 'lodash.get';
 import { type Space } from '@dxos/client/echo';
 import { todo } from '@dxos/debug';
 import { Filter } from '@dxos/echo-db';
-import { type ReactiveObject, type JsonSchema } from '@dxos/echo-schema';
+import { type ReactiveObject, type JSONSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { type ChainInput, ChainInputType, ChainPromptType } from '@dxos/plugin-automation/types';
 import { type MessageType, type ThreadType } from '@dxos/plugin-space/types';
@@ -159,17 +159,17 @@ export class RequestProcessor {
         {
           name: 'output_formatter',
           description: 'Should always be used to properly format output.',
-          parameters: Array.from(context.schema?.values() ?? []).reduce<{ [name: string]: JsonSchema }>(
-            (map, schema) => {
-              map[schema.typename] = {
-                type: 'array',
-                items: schema.serializedSchema.jsonSchema,
-                description: `An array of ${schema.typename} entities.`,
-              };
-              return map;
-            },
-            {},
-          ),
+          parameters: Array.from(context.schema?.values() ?? []).reduce<{
+            [name: string]: JSONSchema.JsonSchema7Array;
+          }>((map, schema) => {
+            map[schema.typename] = {
+              type: 'array',
+              // TODO(burdon): ???
+              // items: schema.jsonSchema,
+              description: `An array of ${schema.typename} entities.`,
+            };
+            return map;
+          }, {}),
         },
       ],
     };
@@ -235,7 +235,7 @@ export class RequestProcessor {
         }
 
         // TODO(dmaretskyi): Convert to the new dynamic schema API.
-        const schemas = await space.db.schema.list();
+        const schemas = await space.db.schemaRegistry.query();
         const schema = schemas.find((schema) => schema.typename === type);
         if (schema) {
           // TODO(burdon): Use effect schema to generate JSON schema.
