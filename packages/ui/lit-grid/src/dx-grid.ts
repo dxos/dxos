@@ -240,7 +240,7 @@ export class DxGrid extends LitElement {
   frozen: DxGridFrozenAxes = {};
 
   @property({ type: String })
-  overscroll: 'inline' | 'block' | undefined = undefined;
+  overscroll: 'inline' | 'block' | 'trap' | undefined = undefined;
 
   @property({ type: String })
   activeRefs = '';
@@ -744,12 +744,15 @@ export class DxGrid extends LitElement {
   }
 
   private handleTopLevelWheel = (event: DxGridAnnotatedWheelEvent) => {
-    if (
-      (Number.isFinite(event.overscrollInline) && this.overscroll === 'inline' && event.overscrollInline === 0) ||
-      (Number.isFinite(event.overscrollBlock) && this.overscroll === 'block' && event.overscrollBlock === 0)
-    ) {
-      event.preventDefault();
-      event.stopPropagation();
+    if (event.gridId === (this.gridId ?? 'never')) {
+      if (
+        this.overscroll === 'trap' ||
+        (this.overscroll === 'inline' && event.overscrollInline === 0) ||
+        (this.overscroll === 'block' && event.overscrollBlock === 0)
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
     }
   };
 
@@ -764,6 +767,7 @@ export class DxGrid extends LitElement {
         nextPosInline <= 0 ? nextPosInline : nextPosInline > maxPosInline ? nextPosInline - maxPosInline : 0;
       event.overscrollBlock =
         nextPosBlock <= 0 ? nextPosBlock : nextPosBlock > maxPosBlock ? nextPosBlock - maxPosBlock : 0;
+      event.gridId = this.gridId;
     }
   };
 

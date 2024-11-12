@@ -319,7 +319,7 @@ export const GridSheet = () => {
         onKeyDown={handleKeyDown}
         onContextMenu={handleContextMenu}
         onClick={handleClick}
-        overscroll='inline'
+        overscroll='trap'
         className='[--dx-grid-base:var(--surface-bg)]'
         activeRefs={activeRefs}
         ref={setDxGrid}
