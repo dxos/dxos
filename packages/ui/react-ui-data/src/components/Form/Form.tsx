@@ -92,19 +92,18 @@ export const Form = <T extends object>({
         );
       })}
 
-      {/* TODO(burdon): Option. */}
-      {!readonly && (
-        <div className='flex w-full justify-center'>
-          <div className='flex gap-2'>
+      <div className='flex w-full justify-center'>
+        <div className='flex gap-2'>
+          {!readonly && (
             <Button type='submit' onClick={handleSubmit} disabled={!canSubmit}>
               <Icon icon='ph--check--regular' />
             </Button>
-            <Button onClick={onCancel}>
-              <Icon icon='ph--x--regular' />
-            </Button>
-          </div>
+          )}
+          <Button onClick={onCancel}>
+            <Icon icon='ph--x--regular' />
+          </Button>
         </div>
-      )}
+      </div>
     </div>
   );
 };

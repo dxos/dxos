@@ -7,26 +7,41 @@
 /**
  * Creates an object composed of the object properties predicate returns truthy for.
  */
-export const pick = <T extends object, U extends keyof T>(object: T, keys: U[]): Pick<T, U> =>
-  keys.reduce(
-    (obj, key) => {
-      if (object && key in object) {
-        obj[key] = object[key];
+
+export const pick = <T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> => {
+  return keys.reduce(
+    (result, key) => {
+      if (obj && key in obj) {
+        result[key] = obj[key];
       }
-      return obj;
+      return result;
     },
-    {} as Pick<T, U>,
+    {} as Pick<T, K>,
   );
+};
 
 /**
  * Creates an object composed of the object properties predicate returns truthy for.
  */
-export const pickBy = (object: Record<any, any>, predicate: (value: any) => boolean) => {
-  const obj: Record<any, any> = {};
-  for (const key in object) {
-    if (predicate(object[key])) {
-      obj[key] = object[key];
+export const pickBy = (obj: Record<any, any>, predicate: (value: any) => boolean) => {
+  const result: Record<any, any> = {};
+  for (const key in obj) {
+    if (predicate(obj[key])) {
+      result[key] = obj[key];
     }
   }
-  return obj;
+  return result;
+};
+
+/**
+ * Omit given props.
+ * @param obj
+ * @param keys
+ */
+export const omit = <T extends object, K extends keyof T>(obj: T, keys: K[]): Omit<T, K> => {
+  const result = { ...obj };
+  keys.forEach((key) => {
+    delete result[key];
+  });
+  return result;
 };
