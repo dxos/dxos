@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import React, {
   Children,
   type CSSProperties,
@@ -55,6 +56,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
     forwardedRef,
   ) => {
     const childrenCount = Children.count(children);
+    const arrowNavigationGroup = useArrowNavigationGroup({ axis: orientation });
 
     const styles: CSSProperties = {
       [orientation === 'horizontal' ? 'gridTemplateColumns' : 'gridTemplateRows']:
@@ -65,6 +67,8 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
     return (
       <StackContext.Provider value={{ orientation, rail, size, separators }}>
         <div
+          {...props}
+          {...arrowNavigationGroup}
           className={mx(
             'grid relative',
             rail
@@ -83,7 +87,6 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
           )}
           aria-orientation={orientation}
           style={styles}
-          {...props}
           ref={forwardedRef}
         >
           {children}

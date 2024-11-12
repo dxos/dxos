@@ -12,6 +12,7 @@ import {
   extractClosestEdge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { DropIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
+import { useFocusableGroup } from '@fluentui/react-tabster';
 import React, {
   useLayoutEffect,
   useState,
@@ -125,12 +126,16 @@ export const StackItem = ({
     );
   }, [orientation, item, onRearrange, selfDragHandleElement, itemElement]);
 
+  const focusGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
+
   return (
     <StackItemContext.Provider value={{ selfDragHandleRef, size, setSize }}>
       <div
         {...props}
+        tabIndex={0}
+        {...focusGroupAttrs}
         className={mx(
-          'grid relative',
+          'grid relative ch-focus-ring-inset-over-all',
           size === 'min-content' && (orientation === 'horizontal' ? 'is-min' : 'bs-min'),
           orientation === 'horizontal' ? 'grid-rows-subgrid' : 'grid-cols-subgrid',
           rail && (orientation === 'horizontal' ? 'row-span-2' : 'col-span-2'),
@@ -156,12 +161,15 @@ export type StackItemHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'di
 export const StackItemHeading = ({ children, classNames, ...props }: StackItemHeadingProps) => {
   const { orientation, separators } = useStack();
   const { selfDragHandleRef } = useStackItem();
+  const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
   return (
     <div
       role='heading'
       {...props}
+      tabIndex={0}
+      {...focusableGroupAttrs}
       className={mx(
-        'grid',
+        'grid ch-focus-ring-inset-over-all relative',
         orientation === 'horizontal' ? 'bs-[--rail-size]' : 'is-[--rail-size]',
         separators && 'bg-base',
         classNames,
@@ -229,6 +237,7 @@ export const StackItemResizeHandle = () => {
 
   return (
     <button
+      tabIndex={-1}
       ref={buttonRef}
       className={mx(
         'text-description ch-focus-ring p-px rounded',
