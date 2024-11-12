@@ -82,10 +82,10 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
     sorting = [],
     pinnedRows = { top: [], bottom: [] },
     rowSelection = [],
-    onInsertRow,
-    onDeleteRow,
-    onDeleteColumn,
     onCellUpdate,
+    onDeleteColumn,
+    onDeleteRow,
+    onInsertRow,
     onRowOrderChanged,
   }: TableModelProps<T>) {
     super();
