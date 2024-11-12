@@ -246,8 +246,8 @@ export class DxGrid extends LitElement {
   activeRefs = '';
 
   /**
-   * When this function is defined, it is used first to try to get a value for a cell, and otherwise will fall back
-   * to `cells`.
+   * When this function is defined, it is used first to try to get a value for a cell,
+   * and otherwise will fall back to `cells`.
    */
   getCells: ((nextRange: DxGridPlaneRange, plane: DxGridPlane) => DxGridPlaneCells) | null = null;
 
@@ -1018,7 +1018,7 @@ export class DxGrid extends LitElement {
   /**
    * Moves focus to the cell with actual focus, otherwise moves focus to the viewport.
    */
-  refocus(increment?: 'col' | 'row', delta: 1 | -1 | 0 = 1) {
+  refocus(increment: 'col' | 'row' | undefined = undefined, delta: 1 | -1 | 0 = 1) {
     if (increment) {
       switch (increment) {
         case 'col': {
@@ -1359,6 +1359,7 @@ export class DxGrid extends LitElement {
           .split(' ')
           .filter((value) => value)
           .map(
+            // TODO(burdon): Consistent camelCase?
             (activeRef) =>
               `[data-refs~="${activeRef}"] { background: var(--dx-grid-commented-active, var(--dx-gridCommentedActive)) !important; }`,
           )

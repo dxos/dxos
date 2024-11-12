@@ -2,16 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useIntentDispatcher, type LayoutContainerProps } from '@dxos/app-framework';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
+import { SpaceAction } from '@dxos/plugin-space';
 import { create, fullyQualifiedId, getSpace, Filter, useQuery } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 import { ViewProjection } from '@dxos/schema';
 
-import { Table } from './Table';
+import { Table, type TableController } from './Table';
 import { Toolbar, type ToolbarAction } from './Toolbar';
 import { useTableModel } from '../hooks';
 import { TableAction, type TableType } from '../types';
@@ -27,8 +28,8 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   const space = getSpace(table);
 
   useEffect(() => {
-    if (space && table) {
-      initializeTable(space, table);
+    if (space && table && !table?.view) {
+      initializeTable({ space, table });
     }
   }, [space, table]);
 
@@ -39,11 +40,17 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : () => false, undefined, [schema]);
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
-  const handleDeleteRow = useCallback((row: any) => space?.db.remove(row), [space]);
-  const handleDeleteColumn = useCallback((property: string) => {
+  const handleDeleteRow = useCallback(
+    (_row: number, object: any) => {
+      void dispatch({ action: SpaceAction.REMOVE_OBJECT, data: { object } });
+    },
+    [dispatch],
+  );
+
+  const handleDeleteColumn = useCallback((fieldId: string) => {
     void dispatch({
       action: TableAction.DELETE_COLUMN,
-      data: { table, property } satisfies TableAction.DeleteColumn,
+      data: { table, fieldId } satisfies TableAction.DeleteColumn,
     });
   }, []);
 
@@ -55,12 +62,16 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
     return new ViewProjection(schema, table.view);
   }, [schema, table.view]);
 
+  const tableRef = useRef<TableController>(null);
+
   const model = useTableModel({
     table,
     projection,
     objects: filteredObjects,
     onDeleteRow: handleDeleteRow,
     onDeleteColumn: handleDeleteColumn,
+    onCellUpdate: (cell) => tableRef.current?.update?.(cell),
+    onRowOrderChanged: () => tableRef.current?.update?.(),
   });
 
   const onThreadCreate = useCallback(() => {
@@ -81,12 +92,11 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
           onThreadCreate();
           break;
         }
-      }
-      switch (action.type) {
         case 'add-row': {
           if (schema && space) {
             space.db.add(create(schema, {}));
           }
+          break;
         }
       }
     },
@@ -106,9 +116,9 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
         <Toolbar.Separator />
         <Toolbar.Actions />
       </Toolbar.Root>
-      <Table.Viewport role={role}>
-        <Table.Table key={table.id} model={model} />
-      </Table.Viewport>
+      <Table.Root role={role}>
+        <Table.Main key={table.id} ref={tableRef} model={model} />
+      </Table.Root>
     </div>
   );
 };

@@ -120,11 +120,11 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
 
                 const space = getSpace(table);
                 const schema = space?.db.schemaRegistry.getSchema(table.view.query.__typename);
-                const handleDelete = (property: string) => {
+                const handleDelete = (fieldId: string) => {
                   void dispatch?.({
                     plugin: TABLE_PLUGIN,
                     action: TableAction.DELETE_COLUMN,
-                    data: { table, property },
+                    data: { table, fieldId },
                   });
                 };
 
@@ -169,7 +169,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
             }
 
             case TableAction.DELETE_COLUMN: {
-              const { table, property } = intent.data as TableAction.DeleteColumn;
+              const { table, fieldId } = intent.data as TableAction.DeleteColumn;
               invariant(isTable(table));
               invariant(table.view);
 
@@ -178,7 +178,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
               const projection = new ViewProjection(schema, table.view);
 
               if (!intent.undo) {
-                const { deleted, index } = projection.deleteFieldProjection(property);
+                const { deleted, index } = projection.deleteFieldProjection(fieldId);
                 return {
                   undoable: {
                     message: translations[0]['en-US'][TABLE_PLUGIN]['column deleted label'],

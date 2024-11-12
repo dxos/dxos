@@ -30,7 +30,7 @@ export type ToolbarProps = ThemedClassName<
 
 const [ToolbarContextProvider, useToolbarContext] = createContext<ToolbarProps>('Toolbar');
 
-const ToolbarRoot = ({ children, onAction, classNames }: ToolbarProps) => {
+const ToolbarRoot = ({ classNames, children, onAction }: ToolbarProps) => {
   return (
     <ToolbarContextProvider onAction={onAction}>
       <NaturalToolbar.Root classNames={['is-full shrink-0 overflow-x-auto overflow-y-hidden p-1', classNames]}>
