@@ -177,6 +177,8 @@ export class ViewProjection {
       const values: JsonSchemaType = { $id, type, format, reference, ...rest };
       this._schema.jsonSchema.properties ??= {};
       this._schema.jsonSchema.properties[property] = values;
+
+      console.log('###', JSON.stringify(values, null, 2));
     }
   }
 
