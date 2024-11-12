@@ -4,6 +4,7 @@
 
 import { createCredential, signPresentation } from '@dxos/credentials';
 import { type Signer } from '@dxos/crypto';
+import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { type Chain, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -47,7 +48,7 @@ export const createChainEdgeIdentity = async (
   signer: Signer,
   identityKey: PublicKey,
   peerKey: PublicKey,
-  chain: Chain,
+  chain: Chain | undefined,
   credentials: Credential[],
 ): Promise<EdgeIdentity> => {
   const credentialsToSign =
@@ -70,6 +71,8 @@ export const createChainEdgeIdentity = async (
     identityKey: identityKey.toHex(),
     peerKey: peerKey.toHex(),
     presentCredentials: async ({ challenge }) => {
+      // TODO: make chain required after device invitation flow update release
+      invariant(chain);
       return signPresentation({
         presentation: {
           credentials: credentialsToSign,
