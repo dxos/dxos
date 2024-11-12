@@ -1375,27 +1375,21 @@ export class DxGrid extends LitElement {
 
   override willUpdate(changedProperties: Map<string, any>) {
     if (changedProperties.has('rowDefault') || changedProperties.has('rows') || changedProperties.has('limitRows')) {
+      this.computeRowSizes();
       this.updateIntrinsicBlockSize();
       this.updatePosBlock();
       this.updateVisBlock();
     }
+
     if (
-      changedProperties.has('colDefault') ||
+      changedProperties.has('columnDefault') ||
       changedProperties.has('columns') ||
       changedProperties.has('limitColumns')
     ) {
+      this.computeColSizes();
       this.updateIntrinsicInlineSize();
       this.updatePosInline();
       this.updateVisInline();
-    }
-
-    if (changedProperties.has('columns')) {
-      this.computeColSizes();
-      this.updateIntrinsicInlineSize();
-    }
-    if (changedProperties.has('rows')) {
-      this.computeRowSizes();
-      this.updateIntrinsicBlockSize();
     }
 
     if (
