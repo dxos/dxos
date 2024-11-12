@@ -109,8 +109,6 @@ export const FieldEditor = ({ view, projection, field, registry, onClose }: Fiel
     [projection, field, onClose],
   );
 
-  console.log(JSON.stringify({ props, schemas: schemas.map((s) => s.typename) }, null, 2));
-
   if (!fieldSchema) {
     log.warn('invalid format', { props });
     return null;
