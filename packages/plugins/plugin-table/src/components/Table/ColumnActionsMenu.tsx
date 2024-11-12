@@ -9,7 +9,9 @@ import { DropdownMenu, useTranslation } from '@dxos/react-ui';
 import { TABLE_PLUGIN } from '../../meta';
 import { type TableModel } from '../../model';
 
-export const ColumnActionsMenu = ({ model }: { model?: TableModel }) => {
+type ColumnActionsMenuProps = { model?: TableModel };
+
+export const ColumnActionsMenu = ({ model }: ColumnActionsMenuProps) => {
   const { t } = useTranslation(TABLE_PLUGIN);
   const state = model?.modalController.state.value;
 

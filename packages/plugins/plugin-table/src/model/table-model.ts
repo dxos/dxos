@@ -328,7 +328,7 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
     return {
       [fromGridCell({ col: 0, row: 0 })]: {
         value: '',
-        accessoryHtml: tableButtons.newColumn.render(),
+        accessoryHtml: tableButtons.addColumn.render(),
         readonly: true,
       },
     };
@@ -343,6 +343,8 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
   };
 
   public getRowCount = (): number => this._rows.value.length;
+
+  public getColumnCount = (): number => this.table.view?.fields.length ?? 0;
 
   public insertRow = (rowIndex?: number): void => {
     const row = rowIndex !== undefined ? this._displayToDataIndex.get(rowIndex) ?? rowIndex : this._rows.value.length;

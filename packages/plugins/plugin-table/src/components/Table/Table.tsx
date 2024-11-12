@@ -168,10 +168,14 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
     [model],
   );
 
+  if (!model) {
+    return null;
+  }
+
   return (
     <>
       {/* TODO(burdon): Is this required to be unique? */}
-      <Grid.Root id={model?.table.id ?? 'table-grid'}>
+      <Grid.Root id={model.table.id ?? 'table-grid'}>
         <TableCellEditor model={model} onEnter={handleEnter} onFocus={handleFocus} onQuery={handleQuery} />
 
         <Grid.Content
@@ -181,9 +185,9 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
             blockEndLine,
           )}
           frozen={frozen}
-          columns={model?.columnMeta.value}
-          limitRows={model?.getRowCount() ?? 0}
-          limitColumns={model?.table.view?.fields?.length ?? 0}
+          columns={model.columnMeta.value}
+          limitRows={model.getRowCount() ?? 0}
+          limitColumns={model.table.view?.fields?.length ?? 0}
           onAxisResize={handleAxisResize}
           onClick={model?.handleGridClick}
           onKeyDown={handleKeyDown}

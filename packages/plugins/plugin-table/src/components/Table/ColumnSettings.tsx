@@ -10,7 +10,9 @@ import { type FieldType } from '@dxos/schema';
 
 import { type TableModel } from '../../model';
 
-export const ColumnSettings = ({ model }: { model?: TableModel }) => {
+type ColumnSettingsProps = { model?: TableModel };
+
+export const ColumnSettings = ({ model }: ColumnSettingsProps) => {
   const [newField, setNewField] = useState<FieldType>();
   const state = model?.modalController.state.value;
 

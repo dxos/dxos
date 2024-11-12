@@ -9,11 +9,13 @@ import { DropdownMenu, useTranslation } from '@dxos/react-ui';
 import { TABLE_PLUGIN } from '../../meta';
 import { type TableModel } from '../../model';
 
-export const RowActionsMenu = ({ model }: { model?: TableModel }) => {
-  const { t } = useTranslation(TABLE_PLUGIN);
-  const state = model?.modalController.state.value;
+type RowActionsMenuProps = { model: TableModel };
 
-  if (!model || state?.type !== 'row') {
+export const RowActionsMenu = ({ model }: RowActionsMenuProps) => {
+  const { t } = useTranslation(TABLE_PLUGIN);
+  const state = model.modalController.state.value;
+
+  if (state?.type !== 'row') {
     return null;
   }
 
