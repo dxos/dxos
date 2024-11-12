@@ -3,6 +3,7 @@
     "../../../tsconfig.json"
   ],
   "compilerOptions": {
+    "jsx": "react",
     "lib": [
       "DOM",
       "ESNext"

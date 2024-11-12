@@ -2703,6 +2703,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -5476,6 +5479,9 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugin-client
+      '@dxos/plugin-deck':
+        specifier: workspace:*
+        version: link:../../plugin-deck
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../../plugin-graph
@@ -6398,7 +6404,7 @@ importers:
     dependencies:
       '@codemirror/autocomplete':
         specifier: ^6.18.1
-        version: 6.18.2(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)(@lezer/common@1.2.3)
+        version: 6.18.2(@codemirror/view@6.34.2)
       '@codemirror/lang-javascript':
         specifier: ^6.2.2
         version: 6.2.2
@@ -6509,10 +6515,10 @@ importers:
         version: 1.6.0(typescript@5.6.2)
       '@valtown/codemirror-ts':
         specifier: ^2.2.0
-        version: 2.2.0(@codemirror/autocomplete@6.18.2(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)(@lezer/common@1.2.3))(@codemirror/lint@6.8.2)(@codemirror/view@6.34.2)
+        version: 2.2.0(@codemirror/autocomplete@6.18.2(@codemirror/view@6.34.2))(@codemirror/lint@6.8.2)(@codemirror/view@6.34.2)
       codemirror:
         specifier: ^6.0.1
-        version: 6.0.1(@lezer/common@1.2.3)
+        version: 6.0.1
       esbuild-wasm:
         specifier: ^0.16.14
         version: 0.16.17
@@ -6901,7 +6907,7 @@ importers:
         version: 6.6.7
       '@remix-run/cloudflare':
         specifier: 2.11.1
-        version: 2.11.1(@cloudflare/workers-types@4.20240903.0)(typescript@5.6.2)
+        version: 2.11.1(@cloudflare/workers-types@4.20241022.0)(typescript@5.6.2)
       '@remix-run/react':
         specifier: 2.11.1
         version: 2.11.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.6.2)
@@ -6925,13 +6931,13 @@ importers:
         version: 0.6.0
       drizzle-orm:
         specifier: ^0.33.0
-        version: 0.33.0(@cloudflare/workers-types@4.20240903.0)(@opentelemetry/api@1.9.0)(@types/pg@8.6.1)(@types/react@18.2.79)(better-sqlite3@11.3.0)(kysely@0.27.4)(react@18.2.0)
+        version: 0.33.0(@cloudflare/workers-types@4.20241022.0)(@opentelemetry/api@1.9.0)(@types/pg@8.6.1)(@types/react@18.2.79)(better-sqlite3@11.3.0)(kysely@0.27.4)(react@18.2.0)
       nanoid:
         specifier: ^5.0.7
         version: 5.0.7
       partyserver:
         specifier: ^0.0.51
-        version: 0.0.51(@cloudflare/workers-types@4.20240903.0)
+        version: 0.0.51(@cloudflare/workers-types@4.20241022.0)
       partysocket:
         specifier: ^1.0.1
         version: 1.0.2
@@ -6981,10 +6987,10 @@ importers:
     devDependencies:
       '@cloudflare/vitest-pool-workers':
         specifier: ^0.5.17
-        version: 0.5.24(@cloudflare/workers-types@4.20240903.0)(@vitest/runner@2.1.4)(@vitest/snapshot@2.1.4)(vitest@2.1.1(@types/node@22.5.5)(@vitest/browser@2.1.4(@types/node@22.5.5)(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.4)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2)))(@vitest/ui@2.1.4(vitest@2.1.4))(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
+        version: 0.5.24(@cloudflare/workers-types@4.20241022.0)(@vitest/runner@2.1.4)(@vitest/snapshot@2.1.4)(vitest@2.1.4(@types/node@22.5.5)(@vitest/browser@2.1.4)(@vitest/ui@2.1.4)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
       '@cloudflare/workers-types':
-        specifier: ^4.20240821.1
-        version: 4.20240903.0
+        specifier: ^4.20241018.0
+        version: 4.20241022.0
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
@@ -6996,7 +7002,7 @@ importers:
         version: 1.46.1
       '@remix-run/dev':
         specifier: 2.11.1
-        version: 2.11.1(@remix-run/react@2.11.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.6.2))(@types/node@22.5.5)(babel-plugin-macros@3.1.0)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(typescript@5.6.2))(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(wrangler@3.79.0(@cloudflare/workers-types@4.20240903.0))
+        version: 2.11.1(@remix-run/react@2.11.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.6.2))(@types/node@22.5.5)(babel-plugin-macros@3.1.0)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(typescript@5.6.2))(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(wrangler@3.79.0(@cloudflare/workers-types@4.20241022.0))
       '@remix-run/eslint-config':
         specifier: 2.11.1
         version: 2.11.1(eslint@8.57.0)(react@18.2.0)(typescript@5.6.2)
@@ -7037,11 +7043,11 @@ importers:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
       vitest:
-        specifier: ^2.1.1
-        version: 2.1.1(@types/node@22.5.5)(@vitest/browser@2.1.4(@types/node@22.5.5)(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.4)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2)))(@vitest/ui@2.1.4(vitest@2.1.4))(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
+        specifier: ^2.1.3
+        version: 2.1.4(@types/node@22.5.5)(@vitest/browser@2.1.4)(@vitest/ui@2.1.4)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
       wrangler:
         specifier: ^3.51.2
-        version: 3.79.0(@cloudflare/workers-types@4.20240903.0)
+        version: 3.79.0(@cloudflare/workers-types@4.20241022.0)
 
   packages/plugins/plugin-chess:
     dependencies:
@@ -7212,6 +7218,9 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
+      '@dxos/plugin-deck':
+        specifier: workspace:*
+        version: link:../plugin-deck
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
@@ -7497,9 +7506,15 @@ importers:
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../../sdk/app-graph
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@preact/signals-core':
+        specifier: ^1.6.0
+        version: 1.6.0
     devDependencies:
       '@dxos/react-client':
         specifier: workspace:*
@@ -8233,7 +8248,7 @@ importers:
     dependencies:
       '@codemirror/autocomplete':
         specifier: ^6.18.1
-        version: 6.18.2(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)(@lezer/common@1.2.3)
+        version: 6.18.2(@codemirror/view@6.34.2)
       '@codemirror/language':
         specifier: ^6.10.3
         version: 6.10.3
@@ -8596,6 +8611,9 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
+      '@dxos/plugin-deck':
+        specifier: workspace:*
+        version: link:../plugin-deck
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
@@ -8851,6 +8869,12 @@ importers:
 
   packages/plugins/plugin-table:
     dependencies:
+      '@codemirror/autocomplete':
+        specifier: ^6.18.1
+        version: 6.18.2(@codemirror/view@6.34.2)
+      '@codemirror/view':
+        specifier: ^6.34.1
+        version: 6.34.2
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -8866,6 +8890,9 @@ importers:
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -8893,6 +8920,9 @@ importers:
       '@dxos/react-ui-data':
         specifier: workspace:*
         version: link:../../ui/react-ui-data
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-editor
       '@dxos/react-ui-grid':
         specifier: workspace:*
         version: link:../../ui/react-ui-grid
@@ -8930,6 +8960,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-syntax-highlighter
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
@@ -9036,6 +9069,9 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
+      '@dxos/plugin-deck':
+        specifier: workspace:*
+        version: link:../plugin-deck
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
@@ -9943,6 +9979,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
@@ -9974,9 +10013,6 @@ importers:
         specifier: ^1.1.1
         version: 1.1.1
     devDependencies:
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-db
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -10745,7 +10781,7 @@ importers:
     dependencies:
       '@codemirror/autocomplete':
         specifier: ^6.18.1
-        version: 6.18.2(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)(@lezer/common@1.2.3)
+        version: 6.18.2(@codemirror/view@6.34.2)
       '@codemirror/commands':
         specifier: ^6.6.2
         version: 6.7.1
@@ -10760,7 +10796,7 @@ importers:
         version: 6.10.3
       '@codemirror/language-data':
         specifier: ^6.5.1
-        version: 6.5.1(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)(@lezer/common@1.2.3)
+        version: 6.5.1(@codemirror/view@6.34.2)
       '@codemirror/lint':
         specifier: ^6.8.2
         version: 6.8.2
@@ -10832,10 +10868,10 @@ importers:
         version: 6.2.1(@codemirror/commands@6.7.1)(@codemirror/language@6.10.3)(@codemirror/search@6.5.6)(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)
       '@replit/codemirror-vscode-keymap':
         specifier: ^6.0.2
-        version: 6.0.2(@codemirror/autocomplete@6.18.2(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)(@lezer/common@1.2.3))(@codemirror/commands@6.7.1)(@codemirror/language@6.10.3)(@codemirror/lint@6.8.2)(@codemirror/search@6.5.6)(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)
+        version: 6.0.2(@codemirror/autocomplete@6.18.2(@codemirror/view@6.34.2))(@codemirror/commands@6.7.1)(@codemirror/language@6.10.3)(@codemirror/lint@6.8.2)(@codemirror/search@6.5.6)(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)
       codemirror:
         specifier: ^6.0.1
-        version: 6.0.1(@lezer/common@1.2.3)
+        version: 6.0.1
       lib0:
         specifier: ^0.2.65
         version: 0.2.78
@@ -10953,7 +10989,7 @@ importers:
     dependencies:
       '@codemirror/autocomplete':
         specifier: ^6.18.1
-        version: 6.18.2(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)(@lezer/common@1.2.3)
+        version: 6.18.2(@codemirror/view@6.34.2)
       '@codemirror/state':
         specifier: ^6.4.1
         version: 6.4.1
@@ -14038,19 +14074,13 @@ packages:
   '@cloudflare/workers-types@4.20240320.1':
     resolution: {integrity: sha512-CiYtVpQURPgQqtBKkmOAnfPElVZuD7Xyf1IxKtKp2B4aB9gnooapwJhzeY8c4Ls4u17SgMS0MprOkrgYwzZ6xg==}
 
-  '@cloudflare/workers-types@4.20240903.0':
-    resolution: {integrity: sha512-a4mqgtVsPWg3JNNlQdLRE0Z6/mHr/uXa1ANDw6Zd7in438UCbeb+j7Z954Sf93G24jExpAn9VZ8kUUml0RwZbQ==}
-
   '@cloudflare/workers-types@4.20241022.0':
     resolution: {integrity: sha512-1zOAw5QIDKItzGatzCrEpfLOB1AuMTwVqKmbw9B9eBfCUGRFNfJYMrJxIwcse9EmKahsQt2GruqU00pY/GyXgg==}
 
   '@codemirror/autocomplete@6.18.2':
     resolution: {integrity: sha512-wJGylKtMFR/Ds6Gh01+OovXE/pncPiKZNNBKuC39pKnH+XK5d9+WsNqcrdxPjFPFTigRBqse0rfxw9UxrfyhPg==}
     peerDependencies:
-      '@codemirror/language': ^6.0.0
-      '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
-      '@lezer/common': ^1.0.0
 
   '@codemirror/commands@6.6.0':
     resolution: {integrity: sha512-qnY+b7j1UNcTS31Eenuc/5YJB6gQOzkUoNmJQc0rznwqSRpeaWWpjkWy2C/MPTcePpsKJEM26hXrOXl1+nceXg==}
@@ -21720,22 +21750,8 @@ packages:
   '@vitest/expect@2.0.5':
     resolution: {integrity: sha512-yHZtwuP7JZivj65Gxoi8upUN2OzHTi3zVfjwdpu2WrvCZPLwsJ2Ey5ILIPccoW23dd/zQBlJ4/dhi7DWNyXCpA==}
 
-  '@vitest/expect@2.1.1':
-    resolution: {integrity: sha512-YeueunS0HiHiQxk+KEOnq/QMzlUuOzbU1Go+PgAsHvvv3tUkJPm9xWt+6ITNTlzsMXUjmgm5T+U7KBPK2qQV6w==}
-
   '@vitest/expect@2.1.4':
     resolution: {integrity: sha512-DOETT0Oh1avie/D/o2sgMHGrzYUFFo3zqESB2Hn70z6QB1HrS2IQ9z5DfyTqU8sg4Bpu13zZe9V4+UTNQlUeQA==}
-
-  '@vitest/mocker@2.1.1':
-    resolution: {integrity: sha512-LNN5VwOEdJqCmJ/2XJBywB11DLlkbY0ooDJW3uRX5cZyYCrc4PI/ePX0iQhE3BiEGiQmK4GE7Q/PqCkkaiPnrA==}
-    peerDependencies:
-      msw: ^2.3.5
-      vite: ^5.0.0
-    peerDependenciesMeta:
-      msw:
-        optional: true
-      vite:
-        optional: true
 
   '@vitest/mocker@2.1.4':
     resolution: {integrity: sha512-Ky/O1Lc0QBbutJdW0rqLeFNbuLEyS+mIPiNdlVlp2/yhJ0SbyYqObS5IHdhferJud8MbbwMnexg4jordE5cCoQ==}
@@ -21751,29 +21767,17 @@ packages:
   '@vitest/pretty-format@2.0.5':
     resolution: {integrity: sha512-h8k+1oWHfwTkyTkb9egzwNMfJAEx4veaPSnMeKbVSjp4euqGSbQlm5+6VHwTr7u4FJslVVsUG5nopCaAYdOmSQ==}
 
-  '@vitest/pretty-format@2.1.1':
-    resolution: {integrity: sha512-SjxPFOtuINDUW8/UkElJYQSFtnWX7tMksSGW0vfjxMneFqxVr8YJ979QpMbDW7g+BIiq88RAGDjf7en6rvLPPQ==}
-
   '@vitest/pretty-format@2.1.4':
     resolution: {integrity: sha512-L95zIAkEuTDbUX1IsjRl+vyBSLh3PwLLgKpghl37aCK9Jvw0iP+wKwIFhfjdUtA2myLgjrG6VU6JCFLv8q/3Ww==}
 
-  '@vitest/runner@2.1.1':
-    resolution: {integrity: sha512-uTPuY6PWOYitIkLPidaY5L3t0JJITdGTSwBtwMjKzo5O6RCOEncz9PUN+0pDidX8kTHYjO0EwUIvhlGpnGpxmA==}
-
   '@vitest/runner@2.1.4':
     resolution: {integrity: sha512-sKRautINI9XICAMl2bjxQM8VfCMTB0EbsBc/EDFA57V6UQevEKY/TOPOF5nzcvCALltiLfXWbq4MaAwWx/YxIA==}
-
-  '@vitest/snapshot@2.1.1':
-    resolution: {integrity: sha512-BnSku1WFy7r4mm96ha2FzN99AZJgpZOWrAhtQfoxjUU5YMRpq1zmHRq7a5K9/NjqonebO7iVDla+VvZS8BOWMw==}
 
   '@vitest/snapshot@2.1.4':
     resolution: {integrity: sha512-3Kab14fn/5QZRog5BPj6Rs8dc4B+mim27XaKWFWHWA87R56AKjHTGcBFKpvZKDzC4u5Wd0w/qKsUIio3KzWW4Q==}
 
   '@vitest/spy@2.0.5':
     resolution: {integrity: sha512-c/jdthAhvJdpfVuaexSrnawxZz6pywlTPe84LUB2m/4t3rl2fTo9NFGBG4oWgaD+FTgDDV8hJ/nibT7IfH3JfA==}
-
-  '@vitest/spy@2.1.1':
-    resolution: {integrity: sha512-ZM39BnZ9t/xZ/nF4UwRH5il0Sw93QnZXd9NAZGRpIgj0yvVwPpLd702s/Cx955rGaMlyBQkZJ2Ir7qyY48VZ+g==}
 
   '@vitest/spy@2.1.4':
     resolution: {integrity: sha512-4JOxa+UAizJgpZfaCPKK2smq9d8mmjZVPMt2kOsg/R8QkoRzydHH1qHxIYNvr1zlEaFj4SXiaaJWxq/LPLKaLg==}
@@ -21785,9 +21789,6 @@ packages:
 
   '@vitest/utils@2.0.5':
     resolution: {integrity: sha512-d8HKbqIcya+GR67mkZbrzhS5kKhtp8dQLcmRZLGTscGVg7yImT82cIrhtn2L8+VujWcy6KZweApgNmPsTAO/UQ==}
-
-  '@vitest/utils@2.1.1':
-    resolution: {integrity: sha512-Y6Q9TsI+qJ2CC0ZKj6VBb+T8UPz593N113nnUykqwANqhgf3QkZeHFlusgKLTqrnVHbj/XDKZcDHol+dxVT+rQ==}
 
   '@vitest/utils@2.1.4':
     resolution: {integrity: sha512-MXDnZn0Awl2S86PSNIim5PWXgIAx8CIkzu35mBdSApUip6RFOGXBCf3YFyeEu8n1IHk4bWD46DeYFu9mQlFIRg==}
@@ -22144,6 +22145,11 @@ packages:
 
   ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
+    peerDependencies:
+      ajv: ^8.0.0
+    peerDependenciesMeta:
+      ajv:
+        optional: true
 
   ajv-keywords@3.5.2:
     resolution: {integrity: sha512-5p6WTN0DdTGVQk6VjcEju19IgaHudalcfabD7yhDGeA6bcQnmL+CpveLJq/3hvfwd1aof6L386Ougkx6RfyMIQ==}
@@ -33178,9 +33184,6 @@ packages:
   tinybench@2.9.0:
     resolution: {integrity: sha512-0+DUvqWMValLmha6lr4kD8iAMK1HzV0/aKnCtWb9v9641TnP/MFb7Pc2bxoxQjTXAErryXVgUOfv2YqNllqGeg==}
 
-  tinyexec@0.3.0:
-    resolution: {integrity: sha512-tVGE0mVJPGb0chKhqmsoosjsS+qUnJVGJpZgsHYQcGoPlG3B51R3PouqTgEGH2Dc9jjFyOqOpix6ZHNMXp1FZg==}
-
   tinyexec@0.3.1:
     resolution: {integrity: sha512-WiCJLEECkO18gwqIp6+hJg0//p23HXp4S+gGtAKu3mI2F2/sXC4FvHvXvB0zJVVaTPhx1/tOwdbRsa1sOBIKqQ==}
 
@@ -34082,11 +34085,6 @@ packages:
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
 
-  vite-node@2.1.1:
-    resolution: {integrity: sha512-N/mGckI1suG/5wQI35XeR9rsMsPqKXzq1CdUndzVstBj/HvyxxGctwnK6WX43NGt5L3Z5tcRf83g4TITKJhPrA==}
-    engines: {node: ^18.0.0 || >=20.0.0}
-    hasBin: true
-
   vite-node@2.1.4:
     resolution: {integrity: sha512-kqa9v+oi4HwkG6g8ufRnb5AeplcRw8jUF6/7/Qz1qRQOXHImG8YnLbB+LLszENwFnoBl9xIf9nVdCFzNd7GQEg==}
     engines: {node: ^18.0.0 || >=20.0.0}
@@ -34193,31 +34191,6 @@ packages:
       sugarss:
         optional: true
       terser:
-        optional: true
-
-  vitest@2.1.1:
-    resolution: {integrity: sha512-97We7/VC0e9X5zBVkvt7SGQMGrRtn3KtySFQG5fpaMlS+l62eeXRQO633AYhSTC3z7IMebnPPNjGXVGNRFlxBA==}
-    engines: {node: ^18.0.0 || >=20.0.0}
-    hasBin: true
-    peerDependencies:
-      '@edge-runtime/vm': '*'
-      '@types/node': 22.5.5
-      '@vitest/browser': 2.1.1
-      '@vitest/ui': 2.1.1
-      happy-dom: '*'
-      jsdom: '*'
-    peerDependenciesMeta:
-      '@edge-runtime/vm':
-        optional: true
-      '@types/node':
-        optional: true
-      '@vitest/browser':
-        optional: true
-      '@vitest/ui':
-        optional: true
-      happy-dom:
-        optional: true
-      jsdom:
         optional: true
 
   vitest@2.1.4:
@@ -38248,7 +38221,7 @@ snapshots:
     dependencies:
       mime: 3.0.0
 
-  '@cloudflare/vitest-pool-workers@0.5.24(@cloudflare/workers-types@4.20240903.0)(@vitest/runner@2.1.4)(@vitest/snapshot@2.1.4)(vitest@2.1.1(@types/node@22.5.5)(@vitest/browser@2.1.4(@types/node@22.5.5)(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.4)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2)))(@vitest/ui@2.1.4(vitest@2.1.4))(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))':
+  '@cloudflare/vitest-pool-workers@0.5.24(@cloudflare/workers-types@4.20241022.0)(@vitest/runner@2.1.4)(@vitest/snapshot@2.1.4)(vitest@2.1.4(@types/node@22.5.5)(@vitest/browser@2.1.4)(@vitest/ui@2.1.4)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))':
     dependencies:
       '@vitest/runner': 2.1.4
       '@vitest/snapshot': 2.1.4
@@ -38258,8 +38231,8 @@ snapshots:
       esbuild: 0.17.19
       miniflare: 3.20241022.0
       semver: 7.6.3
-      vitest: 2.1.1(@types/node@22.5.5)(@vitest/browser@2.1.4(@types/node@22.5.5)(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.4)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2)))(@vitest/ui@2.1.4(vitest@2.1.4))(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
-      wrangler: 3.84.1(@cloudflare/workers-types@4.20240903.0)
+      vitest: 2.1.4(@types/node@22.5.5)(@vitest/browser@2.1.4)(@vitest/ui@2.1.4)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
+      wrangler: 3.84.1(@cloudflare/workers-types@4.20241022.0)
       zod: 3.23.8
     transitivePeerDependencies:
       - '@cloudflare/workers-types'
@@ -38358,11 +38331,9 @@ snapshots:
 
   '@cloudflare/workers-types@4.20240320.1': {}
 
-  '@cloudflare/workers-types@4.20240903.0': {}
-
   '@cloudflare/workers-types@4.20241022.0': {}
 
-  '@codemirror/autocomplete@6.18.2(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)(@lezer/common@1.2.3)':
+  '@codemirror/autocomplete@6.18.2(@codemirror/view@6.34.2)':
     dependencies:
       '@codemirror/language': 6.10.3
       '@codemirror/state': 6.4.1
@@ -38399,7 +38370,7 @@ snapshots:
 
   '@codemirror/lang-css@6.2.1(@codemirror/view@6.34.2)':
     dependencies:
-      '@codemirror/autocomplete': 6.18.2(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)(@lezer/common@1.2.3)
+      '@codemirror/autocomplete': 6.18.2(@codemirror/view@6.34.2)
       '@codemirror/language': 6.10.3
       '@codemirror/state': 6.4.1
       '@lezer/common': 1.2.3
@@ -38409,7 +38380,7 @@ snapshots:
 
   '@codemirror/lang-go@6.0.1(@codemirror/view@6.34.2)':
     dependencies:
-      '@codemirror/autocomplete': 6.18.2(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)(@lezer/common@1.2.3)
+      '@codemirror/autocomplete': 6.18.2(@codemirror/view@6.34.2)
       '@codemirror/language': 6.10.3
       '@codemirror/state': 6.4.1
       '@lezer/common': 1.2.3
@@ -38419,7 +38390,7 @@ snapshots:
 
   '@codemirror/lang-html@6.4.2':
     dependencies:
-      '@codemirror/autocomplete': 6.18.2(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)(@lezer/common@1.2.3)
+      '@codemirror/autocomplete': 6.18.2(@codemirror/view@6.34.2)
       '@codemirror/lang-css': 6.2.1(@codemirror/view@6.34.2)
       '@codemirror/lang-javascript': 6.2.2
       '@codemirror/language': 6.10.3
@@ -38436,7 +38407,7 @@ snapshots:
 
   '@codemirror/lang-javascript@6.2.2':
     dependencies:
-      '@codemirror/autocomplete': 6.18.2(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)(@lezer/common@1.2.3)
+      '@codemirror/autocomplete': 6.18.2(@codemirror/view@6.34.2)
       '@codemirror/language': 6.10.3
       '@codemirror/lint': 6.8.2
       '@codemirror/state': 6.4.1
@@ -38460,7 +38431,7 @@ snapshots:
 
   '@codemirror/lang-liquid@6.2.1':
     dependencies:
-      '@codemirror/autocomplete': 6.18.2(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)(@lezer/common@1.2.3)
+      '@codemirror/autocomplete': 6.18.2(@codemirror/view@6.34.2)
       '@codemirror/lang-html': 6.4.2
       '@codemirror/language': 6.10.3
       '@codemirror/state': 6.4.1
@@ -38471,7 +38442,7 @@ snapshots:
 
   '@codemirror/lang-markdown@6.3.1':
     dependencies:
-      '@codemirror/autocomplete': 6.18.2(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)(@lezer/common@1.2.3)
+      '@codemirror/autocomplete': 6.18.2(@codemirror/view@6.34.2)
       '@codemirror/lang-html': 6.4.2
       '@codemirror/language': 6.10.3
       '@codemirror/state': 6.4.1
@@ -38487,15 +38458,13 @@ snapshots:
       '@lezer/common': 1.2.3
       '@lezer/php': 1.0.1
 
-  '@codemirror/lang-python@6.1.2(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)(@lezer/common@1.2.3)':
+  '@codemirror/lang-python@6.1.2(@codemirror/view@6.34.2)':
     dependencies:
-      '@codemirror/autocomplete': 6.18.2(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)(@lezer/common@1.2.3)
+      '@codemirror/autocomplete': 6.18.2(@codemirror/view@6.34.2)
       '@codemirror/language': 6.10.3
       '@lezer/python': 1.1.2
     transitivePeerDependencies:
-      - '@codemirror/state'
       - '@codemirror/view'
-      - '@lezer/common'
 
   '@codemirror/lang-rust@6.0.1':
     dependencies:
@@ -38512,16 +38481,15 @@ snapshots:
     transitivePeerDependencies:
       - '@codemirror/view'
 
-  '@codemirror/lang-sql@6.4.0(@codemirror/view@6.34.2)(@lezer/common@1.2.3)':
+  '@codemirror/lang-sql@6.4.0(@codemirror/view@6.34.2)':
     dependencies:
-      '@codemirror/autocomplete': 6.18.2(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)(@lezer/common@1.2.3)
+      '@codemirror/autocomplete': 6.18.2(@codemirror/view@6.34.2)
       '@codemirror/language': 6.10.3
       '@codemirror/state': 6.4.1
       '@lezer/highlight': 1.2.1
       '@lezer/lr': 1.4.2
     transitivePeerDependencies:
       - '@codemirror/view'
-      - '@lezer/common'
 
   '@codemirror/lang-vue@0.1.2':
     dependencies:
@@ -38540,7 +38508,7 @@ snapshots:
 
   '@codemirror/lang-xml@6.0.2(@codemirror/view@6.34.2)':
     dependencies:
-      '@codemirror/autocomplete': 6.18.2(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)(@lezer/common@1.2.3)
+      '@codemirror/autocomplete': 6.18.2(@codemirror/view@6.34.2)
       '@codemirror/language': 6.10.3
       '@codemirror/state': 6.4.1
       '@lezer/common': 1.2.3
@@ -38550,7 +38518,7 @@ snapshots:
 
   '@codemirror/lang-yaml@6.1.1(@codemirror/view@6.34.2)':
     dependencies:
-      '@codemirror/autocomplete': 6.18.2(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)(@lezer/common@1.2.3)
+      '@codemirror/autocomplete': 6.18.2(@codemirror/view@6.34.2)
       '@codemirror/language': 6.10.3
       '@codemirror/state': 6.4.1
       '@lezer/common': 1.2.3
@@ -38559,7 +38527,7 @@ snapshots:
     transitivePeerDependencies:
       - '@codemirror/view'
 
-  '@codemirror/language-data@6.5.1(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)(@lezer/common@1.2.3)':
+  '@codemirror/language-data@6.5.1(@codemirror/view@6.34.2)':
     dependencies:
       '@codemirror/lang-angular': 0.1.2
       '@codemirror/lang-cpp': 6.0.2
@@ -38573,10 +38541,10 @@ snapshots:
       '@codemirror/lang-liquid': 6.2.1
       '@codemirror/lang-markdown': 6.3.1
       '@codemirror/lang-php': 6.0.1
-      '@codemirror/lang-python': 6.1.2(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)(@lezer/common@1.2.3)
+      '@codemirror/lang-python': 6.1.2(@codemirror/view@6.34.2)
       '@codemirror/lang-rust': 6.0.1
       '@codemirror/lang-sass': 6.0.2(@codemirror/view@6.34.2)
-      '@codemirror/lang-sql': 6.4.0(@codemirror/view@6.34.2)(@lezer/common@1.2.3)
+      '@codemirror/lang-sql': 6.4.0(@codemirror/view@6.34.2)
       '@codemirror/lang-vue': 0.1.2
       '@codemirror/lang-wast': 6.0.1
       '@codemirror/lang-xml': 6.0.2(@codemirror/view@6.34.2)
@@ -38584,9 +38552,7 @@ snapshots:
       '@codemirror/language': 6.10.3
       '@codemirror/legacy-modes': 6.4.0
     transitivePeerDependencies:
-      - '@codemirror/state'
       - '@codemirror/view'
-      - '@lezer/common'
 
   '@codemirror/language@6.10.3':
     dependencies:
@@ -44174,15 +44140,15 @@ snapshots:
     dependencies:
       '@redis/client': 1.5.7
 
-  '@remix-run/cloudflare@2.11.1(@cloudflare/workers-types@4.20240903.0)(typescript@5.6.2)':
+  '@remix-run/cloudflare@2.11.1(@cloudflare/workers-types@4.20241022.0)(typescript@5.6.2)':
     dependencies:
       '@cloudflare/kv-asset-handler': 0.1.3
-      '@cloudflare/workers-types': 4.20240903.0
+      '@cloudflare/workers-types': 4.20241022.0
       '@remix-run/server-runtime': 2.11.1(typescript@5.6.2)
     optionalDependencies:
       typescript: 5.6.2
 
-  '@remix-run/dev@2.11.1(@remix-run/react@2.11.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.6.2))(@types/node@22.5.5)(babel-plugin-macros@3.1.0)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(typescript@5.6.2))(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(wrangler@3.79.0(@cloudflare/workers-types@4.20240903.0))':
+  '@remix-run/dev@2.11.1(@remix-run/react@2.11.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.6.2))(@types/node@22.5.5)(babel-plugin-macros@3.1.0)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(typescript@5.6.2))(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(wrangler@3.79.0(@cloudflare/workers-types@4.20241022.0))':
     dependencies:
       '@babel/core': 7.24.6
       '@babel/generator': 7.24.8
@@ -44241,7 +44207,7 @@ snapshots:
     optionalDependencies:
       typescript: 5.6.2
       vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
-      wrangler: 3.79.0(@cloudflare/workers-types@4.20240903.0)
+      wrangler: 3.79.0(@cloudflare/workers-types@4.20241022.0)
     transitivePeerDependencies:
       - '@types/node'
       - babel-plugin-macros
@@ -44362,9 +44328,9 @@ snapshots:
       '@codemirror/state': 6.4.1
       '@codemirror/view': 6.34.2
 
-  '@replit/codemirror-vscode-keymap@6.0.2(@codemirror/autocomplete@6.18.2(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)(@lezer/common@1.2.3))(@codemirror/commands@6.7.1)(@codemirror/language@6.10.3)(@codemirror/lint@6.8.2)(@codemirror/search@6.5.6)(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)':
+  '@replit/codemirror-vscode-keymap@6.0.2(@codemirror/autocomplete@6.18.2(@codemirror/view@6.34.2))(@codemirror/commands@6.7.1)(@codemirror/language@6.10.3)(@codemirror/lint@6.8.2)(@codemirror/search@6.5.6)(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)':
     dependencies:
-      '@codemirror/autocomplete': 6.18.2(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)(@lezer/common@1.2.3)
+      '@codemirror/autocomplete': 6.18.2(@codemirror/view@6.34.2)
       '@codemirror/commands': 6.7.1
       '@codemirror/language': 6.10.3
       '@codemirror/lint': 6.8.2
@@ -47516,9 +47482,9 @@ snapshots:
       '@use-gesture/core': 10.2.27
       react: 18.2.0
 
-  '@valtown/codemirror-ts@2.2.0(@codemirror/autocomplete@6.18.2(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)(@lezer/common@1.2.3))(@codemirror/lint@6.8.2)(@codemirror/view@6.34.2)':
+  '@valtown/codemirror-ts@2.2.0(@codemirror/autocomplete@6.18.2(@codemirror/view@6.34.2))(@codemirror/lint@6.8.2)(@codemirror/view@6.34.2)':
     dependencies:
-      '@codemirror/autocomplete': 6.18.2(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)(@lezer/common@1.2.3)
+      '@codemirror/autocomplete': 6.18.2(@codemirror/view@6.34.2)
       '@codemirror/lint': 6.8.2
       '@codemirror/view': 6.34.2
 
@@ -47646,13 +47612,6 @@ snapshots:
       chai: 5.1.1
       tinyrainbow: 1.2.0
 
-  '@vitest/expect@2.1.1':
-    dependencies:
-      '@vitest/spy': 2.1.1
-      '@vitest/utils': 2.1.1
-      chai: 5.1.1
-      tinyrainbow: 1.2.0
-
   '@vitest/expect@2.1.4':
     dependencies:
       '@vitest/spy': 2.1.4
@@ -47660,11 +47619,11 @@ snapshots:
       chai: 5.1.2
       tinyrainbow: 1.2.0
 
-  '@vitest/mocker@2.1.1(msw@2.4.6(typescript@5.6.2))(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))':
+  '@vitest/mocker@2.1.4(msw@2.4.6(typescript@5.6.2))(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))':
     dependencies:
       '@vitest/spy': 2.1.4
       estree-walker: 3.0.3
-      magic-string: 0.30.11
+      magic-string: 0.30.12
     optionalDependencies:
       msw: 2.4.6(typescript@5.6.2)
       vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
@@ -47682,28 +47641,13 @@ snapshots:
     dependencies:
       tinyrainbow: 1.2.0
 
-  '@vitest/pretty-format@2.1.1':
-    dependencies:
-      tinyrainbow: 1.2.0
-
   '@vitest/pretty-format@2.1.4':
     dependencies:
       tinyrainbow: 1.2.0
 
-  '@vitest/runner@2.1.1':
-    dependencies:
-      '@vitest/utils': 2.1.1
-      pathe: 1.1.2
-
   '@vitest/runner@2.1.4':
     dependencies:
       '@vitest/utils': 2.1.4
-      pathe: 1.1.2
-
-  '@vitest/snapshot@2.1.1':
-    dependencies:
-      '@vitest/pretty-format': 2.1.1
-      magic-string: 0.30.11
       pathe: 1.1.2
 
   '@vitest/snapshot@2.1.4':
@@ -47713,10 +47657,6 @@ snapshots:
       pathe: 1.1.2
 
   '@vitest/spy@2.0.5':
-    dependencies:
-      tinyspy: 3.0.2
-
-  '@vitest/spy@2.1.1':
     dependencies:
       tinyspy: 3.0.2
 
@@ -47739,12 +47679,6 @@ snapshots:
     dependencies:
       '@vitest/pretty-format': 2.0.5
       estree-walker: 3.0.3
-      loupe: 3.1.1
-      tinyrainbow: 1.2.0
-
-  '@vitest/utils@2.1.1':
-    dependencies:
-      '@vitest/pretty-format': 2.1.1
       loupe: 3.1.1
       tinyrainbow: 1.2.0
 
@@ -48391,8 +48325,8 @@ snapshots:
       clean-stack: 4.2.0
       indent-string: 5.0.0
 
-  ajv-formats@2.1.1:
-    dependencies:
+  ajv-formats@2.1.1(ajv@8.12.0):
+    optionalDependencies:
       ajv: 8.12.0
 
   ajv-keywords@3.5.2(ajv@6.12.6):
@@ -49876,17 +49810,15 @@ snapshots:
       '@lezer/highlight': 1.2.1
       '@lezer/lr': 1.4.2
 
-  codemirror@6.0.1(@lezer/common@1.2.3):
+  codemirror@6.0.1:
     dependencies:
-      '@codemirror/autocomplete': 6.18.2(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.2)(@lezer/common@1.2.3)
+      '@codemirror/autocomplete': 6.18.2(@codemirror/view@6.34.2)
       '@codemirror/commands': 6.6.0
       '@codemirror/language': 6.10.3
       '@codemirror/lint': 6.8.2
       '@codemirror/search': 6.5.6
       '@codemirror/state': 6.4.1
       '@codemirror/view': 6.34.2
-    transitivePeerDependencies:
-      - '@lezer/common'
 
   codepage@1.15.0: {}
 
@@ -50039,7 +49971,7 @@ snapshots:
   conf@12.0.0:
     dependencies:
       ajv: 8.12.0
-      ajv-formats: 2.1.1
+      ajv-formats: 2.1.1(ajv@8.12.0)
       atomically: 2.0.3
       debounce-fn: 5.1.2
       dot-prop: 8.0.2
@@ -51301,9 +51233,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.33.0(@cloudflare/workers-types@4.20240903.0)(@opentelemetry/api@1.9.0)(@types/pg@8.6.1)(@types/react@18.2.79)(better-sqlite3@11.3.0)(kysely@0.27.4)(react@18.2.0):
+  drizzle-orm@0.33.0(@cloudflare/workers-types@4.20241022.0)(@opentelemetry/api@1.9.0)(@types/pg@8.6.1)(@types/react@18.2.79)(better-sqlite3@11.3.0)(kysely@0.27.4)(react@18.2.0):
     optionalDependencies:
-      '@cloudflare/workers-types': 4.20240903.0
+      '@cloudflare/workers-types': 4.20241022.0
       '@opentelemetry/api': 1.9.0
       '@types/pg': 8.6.1
       '@types/react': 18.2.79
@@ -58264,9 +58196,9 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  partyserver@0.0.51(@cloudflare/workers-types@4.20240903.0):
+  partyserver@0.0.51(@cloudflare/workers-types@4.20241022.0):
     dependencies:
-      '@cloudflare/workers-types': 4.20240903.0
+      '@cloudflare/workers-types': 4.20241022.0
       nanoid: 5.0.7
 
   partysocket@1.0.1:
@@ -60504,7 +60436,7 @@ snapshots:
     dependencies:
       '@types/json-schema': 7.0.15
       ajv: 8.12.0
-      ajv-formats: 2.1.1
+      ajv-formats: 2.1.1(ajv@8.12.0)
       ajv-keywords: 5.1.0(ajv@8.12.0)
 
   screenfull@5.2.0: {}
@@ -61864,8 +61796,6 @@ snapshots:
 
   tinybench@2.9.0: {}
 
-  tinyexec@0.3.0: {}
-
   tinyexec@0.3.1: {}
 
   tinyglobby@0.2.10:
@@ -62869,23 +62799,6 @@ snapshots:
       - supports-color
       - terser
 
-  vite-node@2.1.1(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2):
-    dependencies:
-      cac: 6.7.14
-      debug: 4.3.7(supports-color@5.5.0)
-      pathe: 1.1.2
-      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
-    transitivePeerDependencies:
-      - '@types/node'
-      - less
-      - lightningcss
-      - sass
-      - sass-embedded
-      - stylus
-      - sugarss
-      - supports-color
-      - terser
-
   vite-node@2.1.4(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2):
     dependencies:
       cac: 6.7.14
@@ -62999,26 +62912,27 @@ snapshots:
       stylus: 0.59.0
       terser: 5.19.2
 
-  vitest@2.1.1(@types/node@22.5.5)(@vitest/browser@2.1.4(@types/node@22.5.5)(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.4)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2)))(@vitest/ui@2.1.4(vitest@2.1.4))(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2):
+  vitest@2.1.4(@types/node@22.5.5)(@vitest/browser@2.1.4)(@vitest/ui@2.1.4)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2):
     dependencies:
-      '@vitest/expect': 2.1.1
-      '@vitest/mocker': 2.1.1(msw@2.4.6(typescript@5.6.2))(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
-      '@vitest/pretty-format': 2.1.1
-      '@vitest/runner': 2.1.1
-      '@vitest/snapshot': 2.1.1
-      '@vitest/spy': 2.1.1
-      '@vitest/utils': 2.1.1
-      chai: 5.1.1
+      '@vitest/expect': 2.1.4
+      '@vitest/mocker': 2.1.4(msw@2.4.6(typescript@5.6.2))(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
+      '@vitest/pretty-format': 2.1.4
+      '@vitest/runner': 2.1.4
+      '@vitest/snapshot': 2.1.4
+      '@vitest/spy': 2.1.4
+      '@vitest/utils': 2.1.4
+      chai: 5.1.2
       debug: 4.3.7(supports-color@5.5.0)
-      magic-string: 0.30.11
+      expect-type: 1.1.0
+      magic-string: 0.30.12
       pathe: 1.1.2
       std-env: 3.7.0
       tinybench: 2.9.0
-      tinyexec: 0.3.0
+      tinyexec: 0.3.1
       tinypool: 1.0.1
       tinyrainbow: 1.2.0
       vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
-      vite-node: 2.1.1(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
+      vite-node: 2.1.4(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 22.5.5
@@ -64125,7 +64039,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  wrangler@3.79.0(@cloudflare/workers-types@4.20240903.0):
+  wrangler@3.79.0(@cloudflare/workers-types@4.20241022.0):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.3.4
       '@cloudflare/workers-shared': 0.5.4
@@ -64145,36 +64059,7 @@ snapshots:
       workerd: 1.20240925.0
       xxhash-wasm: 1.0.2
     optionalDependencies:
-      '@cloudflare/workers-types': 4.20240903.0
-      fsevents: 2.3.3
-    transitivePeerDependencies:
-      - bufferutil
-      - supports-color
-      - utf-8-validate
-
-  wrangler@3.84.1(@cloudflare/workers-types@4.20240903.0):
-    dependencies:
-      '@cloudflare/kv-asset-handler': 0.3.4
-      '@cloudflare/workers-shared': 0.7.0
-      '@esbuild-plugins/node-globals-polyfill': 0.2.3(esbuild@0.17.19)
-      '@esbuild-plugins/node-modules-polyfill': 0.2.2(esbuild@0.17.19)
-      blake3-wasm: 2.1.5
-      chokidar: 3.6.0
-      date-fns: 4.1.0
-      esbuild: 0.17.19
-      itty-time: 1.0.6
-      miniflare: 3.20241022.0
-      nanoid: 3.3.7
-      path-to-regexp: 6.3.0
-      resolve: 1.22.8
-      resolve.exports: 2.0.2
-      selfsigned: 2.4.1
-      source-map: 0.6.1
-      unenv: unenv-nightly@2.0.0-20241024-111401-d4156ac
-      workerd: 1.20241022.0
-      xxhash-wasm: 1.0.2
-    optionalDependencies:
-      '@cloudflare/workers-types': 4.20240903.0
+      '@cloudflare/workers-types': 4.20241022.0
       fsevents: 2.3.3
     transitivePeerDependencies:
       - bufferutil
