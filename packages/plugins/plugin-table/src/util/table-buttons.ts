@@ -32,7 +32,7 @@ export const tableButtons = {
     icon: ICONS.rowMenu,
     render: ({ rowIndex }: { rowIndex: number }) => createButtonHtml({ button: 'rowMenu', value: rowIndex.toString() }),
   },
-  newColumn: {
+  addColumn: {
     attr: TABLE_ATTRS.newColumn,
     icon: ICONS.newColumn,
     render: () => createButtonHtml({ button: 'newColumn' }),

@@ -21,7 +21,6 @@ import { isNotFalsy } from '@dxos/util';
 import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { ColumnSettings } from './ColumnSettings';
 import { RowActionsMenu } from './RowActionsMenu';
-import { useTableMenuController } from '../../hooks';
 import { type TableModel } from '../../model';
 import { type GridCell } from '../../types';
 import { CellEditor, type CellEditorProps } from '../CellEditor';
@@ -169,12 +168,14 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
     [model],
   );
 
-  const { state: menuState, triggerRef, handleClick, close, showColumnSettings } = useTableMenuController();
+  if (!model) {
+    return null;
+  }
 
   return (
     <>
       {/* TODO(burdon): Is this required to be unique? */}
-      <Grid.Root id={model?.table.id ?? 'table-grid'}>
+      <Grid.Root id={model.table.id ?? 'table-grid'}>
         <TableCellEditor model={model} onEnter={handleEnter} onFocus={handleFocus} onQuery={handleQuery} />
 
         <Grid.Content
@@ -184,41 +185,20 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
             blockEndLine,
           )}
           frozen={frozen}
-          columns={model?.columnMeta.value}
-          limitRows={model?.getRowCount() ?? 0}
-          limitColumns={model?.table.view?.fields?.length ?? 0}
+          columns={model.columnMeta.value}
+          limitRows={model.getRowCount() ?? 0}
+          limitColumns={model.table.view?.fields?.length ?? 0}
           onAxisResize={handleAxisResize}
-          onClick={handleClick}
+          onClick={model?.handleGridClick}
           onKeyDown={handleKeyDown}
           overscroll='trap'
           ref={setDxGrid}
         />
       </Grid.Root>
 
-      <RowActionsMenu
-        model={model}
-        rowIndex={menuState?.type === 'row' ? menuState.rowIndex : undefined}
-        open={menuState?.type === 'row'}
-        onOpenChange={close}
-        triggerRef={triggerRef}
-      />
-
-      <ColumnActionsMenu
-        model={model}
-        fieldId={menuState?.type === 'column' ? menuState.fieldId : undefined}
-        open={menuState?.type === 'column'}
-        onOpenChange={close}
-        onShowColumnSettings={showColumnSettings}
-        triggerRef={triggerRef}
-      />
-
-      <ColumnSettings
-        model={model}
-        open={menuState?.type === 'columnSettings'}
-        mode={menuState?.type === 'columnSettings' ? menuState?.mode ?? { type: 'create' } : { type: 'create' }}
-        onOpenChange={close}
-        triggerRef={triggerRef}
-      />
+      <RowActionsMenu model={model} />
+      <ColumnActionsMenu model={model} />
+      <ColumnSettings model={model} />
     </>
   );
 });
