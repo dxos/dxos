@@ -126,6 +126,12 @@ export const formatToSchema: Record<FormatEnum, S.Schema<FormatSchemaCommon>> = 
   [FormatEnum.Date]: extend(FormatEnum.Date, TypeEnum.String),
   [FormatEnum.Time]: extend(FormatEnum.Time, TypeEnum.String),
   [FormatEnum.Duration]: extend(FormatEnum.Duration, TypeEnum.String),
+
+  //
+  // Objects
+  //
+
+  [FormatEnum.LatLng]: extend(FormatEnum.LatLng, TypeEnum.Object),
 };
 
 /**
@@ -170,6 +176,12 @@ export const PropertySchema = S.Union(
   formatToSchema[FormatEnum.Date],
   formatToSchema[FormatEnum.Time],
   formatToSchema[FormatEnum.Duration],
+
+  //
+  // Objects
+  //
+
+  formatToSchema[FormatEnum.LatLng],
 );
 
 export interface PropertyType extends S.Simplify<S.Schema.Type<typeof PropertySchema>> {}
