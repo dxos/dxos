@@ -33,158 +33,33 @@ import {
   type DxGridPlaneRecord,
   type DxGridPointer,
   type DxGridPosition,
-  type DxGridPositionNullable,
   type DxGridAxis,
   type DxGridSelectionProps,
   type DxGridAnnotatedWheelEvent,
   type DxGridRange,
 } from './types';
-import { separator, toCellIndex } from './util';
-
-/**
- * The size in pixels of the gap between cells
- */
-const gap = 1;
-
-/**
- * ResizeObserver notices even subpixel changes, only respond to changes of at least 1px.
- */
-const resizeTolerance = 1;
-
-/**
- * The amount of pixels the primary pointer has to move after PointerDown to engage in selection.
- */
-const selectTolerance = 4;
-
-//
-// `defaultSize`, the final fallbacks
-//
-const defaultSizeRow = 32;
-const defaultSizeCol = 180;
-
-//
-// `size`, when suffixed with ‘row’ or ‘col’, are limits on size applied when resizing
-//
-const sizeColMin = 32;
-const sizeColMax = 1024;
-const sizeRowMin = 32;
-const sizeRowMax = 1024;
-
-const shouldSelect = (pointer: DxGridPointer, { pageX, pageY }: PointerEvent) => {
-  if (pointer?.state === 'maybeSelecting') {
-    return Math.hypot(Math.abs(pointer.pageX - pageX), Math.abs(pointer.pageY - pageY)) >= selectTolerance;
-  } else {
-    return false;
-  }
-};
-
-const selectionProps = (selectionStart: DxGridPosition, selectionEnd: DxGridPosition): DxGridSelectionProps => {
-  const colMin = Math.min(selectionStart.col, selectionEnd.col);
-  const colMax = Math.max(selectionStart.col, selectionEnd.col);
-  const rowMin = Math.min(selectionStart.row, selectionEnd.row);
-  const rowMax = Math.max(selectionStart.row, selectionEnd.row);
-  const plane = selectionStart.plane;
-  const visible = colMin !== colMax || rowMin !== rowMax;
-  return { colMin, colMax, rowMin, rowMax, plane, visible };
-};
-
-const cellSelected = (col: number, row: number, plane: DxGridPlane, selection: DxGridSelectionProps): boolean => {
-  return (
-    plane === selection.plane &&
-    col >= selection.colMin &&
-    col <= selection.colMax &&
-    row >= selection.rowMin &&
-    row <= selection.rowMax
-  );
-};
-
-const closestAction = (target: EventTarget | null): { action: string | null; actionEl: HTMLElement | null } => {
-  const actionEl: HTMLElement | null = (target as HTMLElement | null)?.closest('[data-dx-grid-action]') ?? null;
-  return { actionEl, action: actionEl?.getAttribute('data-dx-grid-action') ?? null };
-};
-
-export const closestCell = (target: EventTarget | null, actionEl?: HTMLElement | null): DxGridPositionNullable => {
-  let cellElement = actionEl;
-  if (!cellElement) {
-    const { action, actionEl } = closestAction(target);
-    if (action === 'cell') {
-      cellElement = actionEl as HTMLElement;
-    }
-  }
-  if (cellElement) {
-    const col = parseInt(cellElement.getAttribute('aria-colindex') ?? 'never');
-    const row = parseInt(cellElement.getAttribute('aria-rowindex') ?? 'never');
-    const plane = (cellElement.closest('[data-dx-grid-plane]')?.getAttribute('data-dx-grid-plane') ??
-      'grid') as DxGridPlane;
-    return { plane, col, row };
-  } else {
-    return null;
-  }
-};
-
-const targetIsPlane = (target: EventTarget | null): DxGridPlane | null => {
-  return ((target as HTMLElement | null)?.getAttribute('data-dx-grid-plane') as DxGridPlane | undefined | null) ?? null;
-};
-
-const resolveRowPlane = (plane: DxGridPlane): 'grid' | DxGridFrozenRowsPlane => {
-  switch (plane) {
-    case 'fixedStartStart':
-    case 'fixedStartEnd':
-    case 'frozenRowsStart':
-      return 'frozenRowsStart';
-    case 'fixedEndStart':
-    case 'fixedEndEnd':
-    case 'frozenRowsEnd':
-      return 'frozenRowsEnd';
-    default:
-      return 'grid';
-  }
-};
-
-const resolveColPlane = (plane: DxGridPlane): 'grid' | DxGridFrozenColsPlane => {
-  switch (plane) {
-    case 'fixedStartStart':
-    case 'fixedEndStart':
-    case 'frozenColsStart':
-      return 'frozenColsStart';
-    case 'fixedStartEnd':
-    case 'fixedEndEnd':
-    case 'frozenColsEnd':
-      return 'frozenColsEnd';
-    default:
-      return 'grid';
-  }
-};
-
-const resolveFrozenPlane = (axis: DxGridAxis, cellPlane: DxGridPlane): 'grid' | DxGridFrozenPlane => {
-  switch (cellPlane) {
-    case 'fixedStartStart':
-      return axis === 'col' ? 'frozenColsStart' : 'frozenRowsStart';
-    case 'fixedStartEnd':
-      return axis === 'col' ? 'frozenColsEnd' : 'frozenRowsStart';
-    case 'fixedEndStart':
-      return axis === 'col' ? 'frozenColsStart' : 'frozenRowsEnd';
-    case 'fixedEndEnd':
-      return axis === 'col' ? 'frozenColsEnd' : 'frozenRowsEnd';
-    case 'frozenColsStart':
-    case 'frozenColsEnd':
-      return axis === 'col' ? cellPlane : 'grid';
-    case 'frozenRowsStart':
-    case 'frozenRowsEnd':
-      return axis === 'row' ? cellPlane : 'grid';
-    default:
-      return cellPlane;
-  }
-};
-
-const isSameCell = (a: DxGridPositionNullable, b: DxGridPositionNullable) =>
-  a &&
-  b &&
-  a.plane === b.plane &&
-  Number.isFinite(a.col) &&
-  Number.isFinite(a.row) &&
-  a.col === b.col &&
-  a.row === b.row;
+import {
+  separator,
+  toCellIndex,
+  gap,
+  resizeTolerance,
+  defaultSizeCol,
+  defaultSizeRow,
+  sizeColMin,
+  sizeColMax,
+  sizeRowMin,
+  sizeRowMax,
+  shouldSelect,
+  selectionProps,
+  cellSelected,
+  closestAction,
+  closestCell,
+  targetIsPlane,
+  resolveRowPlane,
+  resolveColPlane,
+  resolveFrozenPlane,
+  isSameCell,
+} from './util';
 
 @customElement('dx-grid')
 export class DxGrid extends LitElement {
@@ -1569,6 +1444,6 @@ export class DxGrid extends LitElement {
   }
 }
 
-export { rowToA1Notation, colToA1Notation } from './util';
+export { rowToA1Notation, colToA1Notation, closestAction, closestCell } from './util';
 
 export const commentedClassName = 'dx-grid__cell--commented';
