@@ -43,7 +43,7 @@ export const isSimpleType = (node: AST.AST) => !!getSimpleType(node);
 // Branded types
 //
 
-export type JsonProp = string & { __JsonProp: true };
+export type JsonProp = string & { __JsonPath: true; __JsonProp: true };
 export type JsonPath = string & { __JsonPath: true };
 
 const PATH_REGEX = /[a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$]*)*/;
