@@ -60,8 +60,7 @@ const sheetColDefault = { frozenColsStart: { size: 48, readonly: true }, grid: {
 
 export const GridSheet = () => {
   const { t } = useTranslation(SHEET_PLUGIN);
-  const { id, model, editing, setEditing, setCursor, setRange, cursor, cursorFallbackRange, activeRefs } =
-    useSheetContext();
+  const { id, model, editing, setCursor, setRange, cursor, cursorFallbackRange, activeRefs } = useSheetContext();
   // NOTE(thure): using `useState` instead of `useRef` works with refs provided by `@lit/react` and gives us
   // a reliable dependency for `useEffect` whereas `useLayoutEffect` does not guarantee the element will be defined.
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
