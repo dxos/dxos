@@ -368,13 +368,8 @@ export class DxGrid extends LitElement {
     const deltaCol = event.key === 'ArrowLeft' ? -1 : event.key === 'ArrowRight' ? 1 : 0;
     const deltaRow = event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0;
 
-    const colPlane = resolveColPlane(current.plane);
-    const colMax = (colPlane === 'grid' ? this.limitColumns : this.frozen[colPlane]!) - 1;
-    const nextCol = Math.max(0, Math.min(colMax, current.col + deltaCol));
-
-    const rowPlane = resolveRowPlane(current.plane);
-    const rowMax = (rowPlane === 'grid' ? this.limitRows : this.frozen[rowPlane]!) - 1;
-    const nextRow = Math.max(0, Math.min(rowMax, current.row + deltaRow));
+    const nextCol = this.clampCol(current, deltaCol);
+    const nextRow = this.clampRow(current, deltaRow);
 
     if (event.shiftKey) {
       this.setSelectionEnd({ ...this.selectionEnd, col: nextCol, row: nextRow });
@@ -890,7 +885,17 @@ export class DxGrid extends LitElement {
     }
   }
 
-  private focusPlaneElement() {}
+  private clampCol(coords: DxGridPosition, deltaCol = 0) {
+    const colPlane = resolveColPlane(coords.plane);
+    const colMax = (colPlane === 'grid' ? this.limitColumns : this.frozen[colPlane]!) - 1;
+    return Math.max(0, Math.min(colMax, coords.col + deltaCol));
+  }
+
+  private clampRow(coords: DxGridPosition, deltaRow = 0) {
+    const rowPlane = resolveRowPlane(coords.plane);
+    const rowMax = (rowPlane === 'grid' ? this.limitRows : this.frozen[rowPlane]!) - 1;
+    return Math.max(0, Math.min(rowMax, coords.row + deltaRow));
+  }
 
   /**
    * Moves focus to the cell with actual focus, otherwise moves focus to the viewport.
@@ -899,11 +904,11 @@ export class DxGrid extends LitElement {
     if (increment) {
       switch (increment) {
         case 'col': {
-          this.focusedCell.col = Math.max(0, Math.min(this.limitColumns - 1, this.focusedCell.col + delta));
+          this.focusedCell.col = this.clampCol(this.focusedCell, delta);
           break;
         }
         case 'row': {
-          this.focusedCell.row = Math.max(0, Math.min(this.limitRows - 1, this.focusedCell.row + delta));
+          this.focusedCell.row = this.clampRow(this.focusedCell, delta);
           break;
         }
       }
