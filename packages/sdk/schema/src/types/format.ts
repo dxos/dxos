@@ -205,6 +205,7 @@ export const getPropertySchemaForFormat = (format?: FormatEnum): S.Schema<any> |
   return undefined;
 };
 
+// NOTE: 'a string' is the fallback annotation provided by effect.
 const noDefault = (value?: string, defaultValue?: string): string | undefined =>
   (value === 'a string' ? undefined : value) ?? defaultValue;
 
@@ -252,5 +253,8 @@ const getTypeEnum = (node: AST.AST): TypeEnum | undefined => {
   }
   if (AST.isBooleanKeyword(node)) {
     return TypeEnum.Boolean;
+  }
+  if (AST.isObjectKeyword(node)) {
+    return TypeEnum.Object;
   }
 };

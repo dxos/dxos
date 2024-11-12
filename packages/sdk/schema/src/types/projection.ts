@@ -102,7 +102,14 @@ export class ViewProjection {
       format = typeToFormat[type as TypeEnum]!;
     }
 
-    const values = { property: field.path as JsonProp, type, format, referenceSchema, ...rest };
+    const values = {
+      property: field.path as JsonProp,
+      type,
+      format,
+      referenceSchema,
+      referencePath: field.referencePath,
+      ...rest,
+    };
     const props = values.type ? this._decode(values) : values;
 
     log('getFieldProjection', { field, props });
