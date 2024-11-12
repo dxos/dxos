@@ -8,10 +8,9 @@ import { type Meta, type StoryObj } from '@storybook/react';
 import React from 'react';
 
 import { createMutableSchema } from '@dxos/echo-schema/testing';
-import { type JsonProp } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { createFieldId, ViewProjection } from '@dxos/schema';
+import { ViewProjection } from '@dxos/schema';
 import { TestSchema, testView } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -56,11 +55,8 @@ type Story = StoryObj<StoryProps>;
 
 export const Default: Story = {
   args: {
-    field: {
-      id: createFieldId(),
-      path: 'name' as JsonProp,
-    },
     projection: new ViewProjection(createMutableSchema(TestSchema), testView),
     view: testView,
+    field: testView.fields[0],
   },
 };
