@@ -4,35 +4,27 @@
 
 import React from 'react';
 
-import { DropdownMenu, type DropdownMenuRootProps, useTranslation } from '@dxos/react-ui';
+import { DropdownMenu, useTranslation } from '@dxos/react-ui';
 
 import { TABLE_PLUGIN } from '../../meta';
 import { type TableModel } from '../../model';
 
-export type RowActionsMenuProps = {
-  model?: TableModel;
-  rowIndex?: number;
-  triggerRef: React.RefObject<HTMLButtonElement>;
-} & Pick<DropdownMenuRootProps, 'open' | 'onOpenChange'>;
-
-export const RowActionsMenu = ({ model, rowIndex, open, onOpenChange, triggerRef }: RowActionsMenuProps) => {
+export const RowActionsMenu = ({ model }: { model?: TableModel }) => {
   const { t } = useTranslation(TABLE_PLUGIN);
+  const state = model?.modalController.state.value;
 
-  if (!model || rowIndex === undefined) {
+  if (!model || state?.type !== 'row') {
     return null;
   }
 
   return (
-    <DropdownMenu.Root modal={false} open={open} onOpenChange={onOpenChange}>
-      <DropdownMenu.VirtualTrigger virtualRef={triggerRef} />
-      <DropdownMenu.Portal>
-        <DropdownMenu.Content>
-          <DropdownMenu.Viewport>
-            <DropdownMenu.Item onClick={() => model.deleteRow(rowIndex)}>{t('delete row label')}</DropdownMenu.Item>
-          </DropdownMenu.Viewport>
-          <DropdownMenu.Arrow />
-        </DropdownMenu.Content>
-      </DropdownMenu.Portal>
+    <DropdownMenu.Root modal={false} open={true} onOpenChange={model.modalController.close}>
+      <DropdownMenu.VirtualTrigger virtualRef={model.modalController.trigger} />
+      <DropdownMenu.Content>
+        <DropdownMenu.Viewport>
+          <DropdownMenu.Item onClick={() => model.deleteRow(state.rowIndex)}>{t('delete row label')}</DropdownMenu.Item>
+        </DropdownMenu.Viewport>
+      </DropdownMenu.Content>
     </DropdownMenu.Root>
   );
 };
