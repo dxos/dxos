@@ -7145,12 +7145,12 @@ importers:
       '@dxos/react-ui-data':
         specifier: workspace:*
         version: link:../../ui/react-ui-data
-      '@dxos/react-ui-deck':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-deck
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-stack
       '@dxos/react-ui-text-tooltip':
         specifier: workspace:*
         version: link:../../ui/react-ui-text-tooltip
@@ -11064,6 +11064,9 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../react-ui-mosaic
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
       '@effect/schema':
         specifier: ^0.75.1
         version: 0.75.1(effect@3.9.1)
@@ -11119,9 +11122,6 @@ importers:
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)

@@ -13,11 +13,14 @@ import {
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { DropIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
 import { useFocusableGroup } from '@fluentui/react-tabster';
+import { composeRefs } from '@radix-ui/react-compose-refs';
 import React, {
+  forwardRef,
   useLayoutEffect,
   useState,
   createContext,
   type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
   useContext,
   useRef,
   useCallback,
@@ -37,9 +40,9 @@ const REM = parseFloat(getComputedStyle(document.documentElement).fontSize);
 
 export type StackItemData = { id: string; type: 'column' | 'card' };
 
-export type StackItemProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
+export type StackItemProps = ThemedClassName<ComponentPropsWithRef<'div'>> & {
   item: Omit<StackItemData, 'type'>;
-  onRearrange: (source: StackItemData, target: StackItemData, closestEdge: Edge | null) => void;
+  onRearrange?: (source: StackItemData, target: StackItemData, closestEdge: Edge | null) => void;
   size?: StackItemSize;
   onSizeChange?: (nextSize: StackItemSize) => void;
 };
@@ -58,103 +61,100 @@ const StackItemContext = createContext<StackItemContextValue>({
 
 const useStackItem = () => useContext(StackItemContext);
 
-export const StackItem = ({
-  item,
-  children,
-  classNames,
-  onRearrange,
-  size: propsSize,
-  onSizeChange,
-  style,
-  ...props
-}: StackItemProps) => {
-  const [itemElement, itemRef] = useState<HTMLDivElement | null>(null);
-  const [selfDragHandleElement, selfDragHandleRef] = useState<HTMLDivElement | null>(null);
-  const [closestEdge, setEdge] = useState<Edge | null>(null);
-  const { orientation, rail, separators } = useStack();
-  const [size = orientation === 'horizontal' ? DEFAULT_HORIZONTAL_SIZE : DEFAULT_VERTICAL_SIZE, setInternalSize] =
-    useState(propsSize);
+export const StackItem = forwardRef<HTMLDivElement, StackItemProps>(
+  ({ item, children, classNames, onRearrange, size: propsSize, onSizeChange, style, ...props }, forwardedRef) => {
+    const [itemElement, itemRef] = useState<HTMLDivElement | null>(null);
+    const [selfDragHandleElement, selfDragHandleRef] = useState<HTMLDivElement | null>(null);
+    const [closestEdge, setEdge] = useState<Edge | null>(null);
+    const { orientation, rail, separators } = useStack();
+    const [size = orientation === 'horizontal' ? DEFAULT_HORIZONTAL_SIZE : DEFAULT_VERTICAL_SIZE, setInternalSize] =
+      useState(propsSize);
 
-  const setSize = useCallback(
-    (nextSize: StackItemSize, commit?: boolean) => {
-      setInternalSize(nextSize);
-      if (commit) {
-        onSizeChange?.(nextSize);
-      }
-    },
-    [onSizeChange],
-  );
+    const composedItemRef = composeRefs<HTMLDivElement>(itemRef, forwardedRef);
 
-  const type = orientation === 'horizontal' ? 'column' : 'card';
-
-  useLayoutEffect(() => {
-    if (!itemElement || !onRearrange) {
-      return;
-    }
-    return combine(
-      draggable({
-        element: itemElement,
-        ...(selfDragHandleElement && { dragHandle: selfDragHandleElement }),
-        getInitialData: () => ({ id: item.id, type }),
-      }),
-      dropTargetForElements({
-        element: itemElement,
-        getData: ({ input, element }) => {
-          return attachClosestEdge(
-            { id: item.id, type },
-            { input, element, allowedEdges: orientation === 'horizontal' ? ['left', 'right'] : ['top', 'bottom'] },
-          );
-        },
-        onDragEnter: ({ self, source }) => {
-          if (source.data.type === self.data.type) {
-            setEdge(extractClosestEdge(self.data));
-          }
-        },
-        onDrag: ({ self, source }) => {
-          if (source.data.type === self.data.type) {
-            setEdge(extractClosestEdge(self.data));
-          }
-        },
-        onDragLeave: () => setEdge(null),
-        onDrop: ({ self, source }) => {
-          setEdge(null);
-          if (source.data.type === self.data.type) {
-            onRearrange(source.data as StackItemData, self.data as StackItemData, extractClosestEdge(self.data));
-          }
-        },
-      }),
+    const setSize = useCallback(
+      (nextSize: StackItemSize, commit?: boolean) => {
+        setInternalSize(nextSize);
+        if (commit) {
+          onSizeChange?.(nextSize);
+        }
+      },
+      [onSizeChange],
     );
-  }, [orientation, item, onRearrange, selfDragHandleElement, itemElement]);
 
-  const focusGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
+    const type = orientation === 'horizontal' ? 'column' : 'card';
 
-  return (
-    <StackItemContext.Provider value={{ selfDragHandleRef, size, setSize }}>
-      <div
-        {...props}
-        tabIndex={0}
-        {...focusGroupAttrs}
-        className={mx(
-          'grid relative ch-focus-ring-inset-over-all',
-          size === 'min-content' && (orientation === 'horizontal' ? 'is-min' : 'bs-min'),
-          orientation === 'horizontal' ? 'grid-rows-subgrid' : 'grid-cols-subgrid',
-          rail && (orientation === 'horizontal' ? 'row-span-2' : 'col-span-2'),
-          separators && 'gap-px',
-          classNames,
-        )}
-        data-dx-stack-item
-        style={{
-          ...(size !== 'min-content' && { [orientation === 'horizontal' ? 'inlineSize' : 'blockSize']: `${size}rem` }),
-          ...style,
-        }}
-        ref={itemRef}
-      >
-        {children}
-        {closestEdge && <DropIndicator edge={closestEdge} />}
-      </div>
-    </StackItemContext.Provider>
-  );
-};
+    useLayoutEffect(() => {
+      if (!itemElement || !onRearrange) {
+        return;
+      }
+      return combine(
+        draggable({
+          element: itemElement,
+          ...(selfDragHandleElement && { dragHandle: selfDragHandleElement }),
+          getInitialData: () => ({ id: item.id, type }),
+        }),
+        dropTargetForElements({
+          element: itemElement,
+          getData: ({ input, element }) => {
+            return attachClosestEdge(
+              { id: item.id, type },
+              { input, element, allowedEdges: orientation === 'horizontal' ? ['left', 'right'] : ['top', 'bottom'] },
+            );
+          },
+          onDragEnter: ({ self, source }) => {
+            if (source.data.type === self.data.type) {
+              setEdge(extractClosestEdge(self.data));
+            }
+          },
+          onDrag: ({ self, source }) => {
+            if (source.data.type === self.data.type) {
+              setEdge(extractClosestEdge(self.data));
+            }
+          },
+          onDragLeave: () => setEdge(null),
+          onDrop: ({ self, source }) => {
+            setEdge(null);
+            if (source.data.type === self.data.type) {
+              onRearrange(source.data as StackItemData, self.data as StackItemData, extractClosestEdge(self.data));
+            }
+          },
+        }),
+      );
+    }, [orientation, item, onRearrange, selfDragHandleElement, itemElement]);
+
+    const focusGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
+
+    return (
+      <StackItemContext.Provider value={{ selfDragHandleRef, size, setSize }}>
+        <div
+          {...props}
+          tabIndex={0}
+          {...focusGroupAttrs}
+          className={mx(
+            'grid relative ch-focus-ring-inset-over-all',
+            size === 'min-content' && (orientation === 'horizontal' ? 'is-min' : 'bs-min'),
+            orientation === 'horizontal' ? 'grid-rows-subgrid' : 'grid-cols-subgrid',
+            rail && (orientation === 'horizontal' ? 'row-span-2' : 'col-span-2'),
+            separators && 'gap-px',
+            classNames,
+          )}
+          data-dx-stack-item
+          style={{
+            ...(size !== 'min-content' && {
+              [orientation === 'horizontal' ? 'inlineSize' : 'blockSize']: `${size}rem`,
+            }),
+            ...style,
+          }}
+          ref={composedItemRef}
+        >
+          {children}
+          {closestEdge && <DropIndicator edge={closestEdge} />}
+        </div>
+      </StackItemContext.Provider>
+    );
+  },
+);
 
 export type StackItemHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 

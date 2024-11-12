@@ -14,7 +14,7 @@ import {
 import { useGraph } from '@dxos/plugin-graph';
 import { Main } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
-import { deckGrid } from '@dxos/react-ui-deck';
+import { railGridHorizontal } from '@dxos/react-ui-stack/next';
 import { mx } from '@dxos/react-ui-theme';
 
 import { NodePlankHeading } from './NodePlankHeading';
@@ -63,7 +63,7 @@ export const ComplementarySidebar = ({ panels, current, flatDeck }: Complementar
   // TODO(burdon): Debug panel doesn't change when switching even though id has chagned.
   return (
     <Main.ComplementarySidebar>
-      <div role='none' className={mx(deckGrid, 'grid-cols-1 bs-full')}>
+      <div role='none' className={mx(railGridHorizontal, 'grid-cols-1 bs-full')}>
         <NodePlankHeading
           coordinate={coordinate}
           node={node}
@@ -71,7 +71,7 @@ export const ComplementarySidebar = ({ panels, current, flatDeck }: Complementar
           flatDeck={flatDeck}
           actions={actions}
         />
-        <div className='row-span-2 divide-y divide-separator overflow-x-hidden overflow-y-scroll'>
+        <div className='divide-y divide-separator overflow-x-hidden overflow-y-scroll'>
           {node && (
             <Surface
               key={id}

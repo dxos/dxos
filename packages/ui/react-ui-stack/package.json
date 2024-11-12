@@ -20,6 +20,11 @@
         "require": "./dist/lib/node/testing/index.cjs",
         "default": "./dist/lib/node-esm/testing/index.mjs"
       }
+    },
+    "./next": {
+      "types": "./dist/types/src/next/index.d.ts",
+      "browser": "./dist/lib/browser/next/index.mjs",
+      "node": "./dist/lib/node-esm/next/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -27,6 +32,9 @@
     "*": {
       "testing": [
         "dist/types/src/testing/index.d.ts"
+      ],
+      "next": [
+        "dist/types/src/next/index.d.ts"
       ]
     }
   },
@@ -43,6 +51,7 @@
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-deck": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@effect/schema": "^0.75.1",
     "@fluentui/react-tabster": "^9.19.0",
     "@radix-ui/primitive": "^1.0.0",
@@ -64,7 +73,6 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
-    "@dxos/util": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",

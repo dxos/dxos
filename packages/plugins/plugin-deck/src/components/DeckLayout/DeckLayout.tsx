@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useMemo, useRef, type UIEvent } from 're
 import { type LayoutParts, Surface, type Toast as ToastSchema, firstIdInPart, usePlugin } from '@dxos/app-framework';
 import { type AttentionPluginProvides } from '@dxos/plugin-attention';
 import { Button, Dialog, Main, Popover, useOnTransition, useTranslation } from '@dxos/react-ui';
-import { Deck } from '@dxos/react-ui-deck';
+import { Stack } from '@dxos/react-ui-stack/next';
 import { getSize, mainPaddingTransitions } from '@dxos/react-ui-theme';
 
 import { ActiveNode } from './ActiveNode';
@@ -185,7 +185,8 @@ export const DeckLayout = ({
         {!isEmpty && (
           <Main.Content bounce classNames='grid block-end-[--statusbar-size]' handlesFocus>
             <div role='none' className='relative'>
-              <Deck.Root
+              <Stack
+                orientation='horizontal'
                 style={padding}
                 classNames={[
                   !flatDeck && 'bg-deck',
@@ -193,7 +194,6 @@ export const DeckLayout = ({
                   'absolute inset-0',
                   slots?.wallpaper?.classNames,
                 ]}
-                solo={layoutMode === 'solo'}
                 onScroll={handleScroll}
                 ref={deckRef}
               >
@@ -216,7 +216,7 @@ export const DeckLayout = ({
                     searchEnabled={!!searchPlugin}
                   />
                 ))}
-              </Deck.Root>
+              </Stack>
             </div>
           </Main.Content>
         )}

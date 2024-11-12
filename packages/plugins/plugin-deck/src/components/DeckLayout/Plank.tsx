@@ -2,16 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
 import React, { type KeyboardEvent, memo, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 
 import {
-  LayoutAction,
   type LayoutCoordinate,
   type LayoutEntry,
   type LayoutPart,
   type LayoutParts,
-  NavigationAction,
   Surface,
   useIntentDispatcher,
   type Layout,
@@ -20,10 +17,9 @@ import {
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { useGraph } from '@dxos/plugin-graph';
-import { Button, Tooltip, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { useAttendableAttributes } from '@dxos/react-ui-attention';
-import { Plank as NaturalPlank } from '@dxos/react-ui-deck';
-import { mainIntrinsicSize } from '@dxos/react-ui-theme';
+import { StackItem } from '@dxos/react-ui-stack/next';
 
 import { NodePlankHeading } from './NodePlankHeading';
 import { PlankContentError, PlankError } from './PlankError';
@@ -109,77 +105,31 @@ export const Plank = memo(({ entry, layoutParts, part, flatDeck, searchEnabled, 
   const placeholder = useMemo(() => <PlankLoading />, []);
 
   return (
-    <NaturalPlank.Root
+    <StackItem
+      item={{ id: entry?.id ?? 'never' }}
       size={size}
-      setSize={setSize}
+      onSizeChange={setSize}
       classNames={[isSuppressed && '!sr-only']}
       {...attendableAttrs}
       {...(isSuppressed && { inert: '' })}
       onKeyDown={handleKeyDown}
       ref={rootElement}
     >
-      <NaturalPlank.Content
-        {...(isSolo && sizeAttrs)}
-        classNames={[isSolo && mainIntrinsicSize, !flatDeck && 'bg-base']}
-        style={isSolo ? { inlineSize: '' } : {}}
-      >
-        {node ? (
-          <>
-            <NodePlankHeading
-              coordinate={coordinate}
-              node={node}
-              canIncrementStart={canIncrementStart}
-              canIncrementEnd={canIncrementEnd}
-              popoverAnchorId={popoverAnchorId}
-              flatDeck={flatDeck}
-            />
-            <Surface role='article' data={data} limit={1} fallback={PlankContentError} placeholder={placeholder} />
-          </>
-        ) : (
-          <PlankError layoutCoordinate={coordinate} flatDeck={flatDeck} />
-        )}
-      </NaturalPlank.Content>
-      {searchEnabled && resizeable ? (
-        <div role='none' className='grid grid-rows-subgrid row-span-3'>
-          <Tooltip.Root>
-            <Tooltip.Trigger asChild>
-              <Button
-                data-testid='plankHeading.open'
-                variant='ghost'
-                classNames='p-1 w-fit'
-                onClick={() =>
-                  dispatch([
-                    {
-                      action: LayoutAction.SET_LAYOUT,
-                      data: {
-                        element: 'dialog',
-                        component: 'dxos.org/plugin/search/Dialog',
-                        dialogBlockAlign: 'start',
-                        subject: {
-                          action: NavigationAction.SET,
-                          position: 'add-after',
-                          coordinate,
-                        },
-                      },
-                    },
-                  ])
-                }
-              >
-                <span className='sr-only'>{t('insert plank label')}</span>
-                <Plus />
-              </Button>
-            </Tooltip.Trigger>
-            <Tooltip.Portal>
-              <Tooltip.Content side='bottom' classNames='z-[70]'>
-                {t('insert plank label')}
-              </Tooltip.Content>
-            </Tooltip.Portal>
-          </Tooltip.Root>
-          <NaturalPlank.ResizeHandle classNames='row-start-[toolbar-start] row-end-[content-end]' />
-        </div>
-      ) : resizeable ? (
-        <NaturalPlank.ResizeHandle classNames='row-span-3' />
-      ) : null}
-    </NaturalPlank.Root>
+      {node ? (
+        <>
+          <NodePlankHeading
+            coordinate={coordinate}
+            node={node}
+            canIncrementStart={canIncrementStart}
+            canIncrementEnd={canIncrementEnd}
+            popoverAnchorId={popoverAnchorId}
+            flatDeck={flatDeck}
+          />
+          <Surface role='article' data={data} limit={1} fallback={PlankContentError} placeholder={placeholder} />
+        </>
+      ) : (
+        <PlankError layoutCoordinate={coordinate} flatDeck={flatDeck} />
+      )}
+    </StackItem>
   );
 });

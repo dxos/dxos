@@ -37,9 +37,9 @@ const StackContext = createContext<StackContextValue>({
 
 export const useStack = () => useContext(StackContext);
 
-const railGridHorizontal = 'grid-rows-[[rail-start]_var(--rail-size)_[content-start]_1fr_[content-end]]';
+export const railGridHorizontal = 'grid-rows-[[rail-start]_var(--rail-size)_[content-start]_1fr_[content-end]]';
 
-const railGridVertical = 'grid-cols-[[rail-start]_var(--rail-size)_[content-start]_1fr_[content-end]]';
+export const railGridVertical = 'grid-cols-[[rail-start]_var(--rail-size)_[content-start]_1fr_[content-end]]';
 
 export const Stack = forwardRef<HTMLDivElement, StackProps>(
   (

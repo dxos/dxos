@@ -368,6 +368,9 @@
       "@dxos/react-ui-stack": [
         "packages/ui/react-ui-stack/src/index.ts"
       ],
+      "@dxos/react-ui-stack/next": [
+        "packages/ui/react-ui-stack/src/next/index.ts"
+      ],
       "@dxos/react-ui-stack/testing": [
         "packages/ui/react-ui-stack/src/testing/index.ts"
       ],

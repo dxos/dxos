@@ -14,7 +14,7 @@ import {
 } from '@dxos/app-framework';
 import { type Node, useGraph } from '@dxos/plugin-graph';
 import { Icon, Popover, toLocalizedString, useMediaQuery, useTranslation } from '@dxos/react-ui';
-import { PlankHeading, type PlankHeadingAction } from '@dxos/react-ui-deck';
+import { PlankHeading, type PlankHeadingAction } from '@dxos/react-ui-stack/next';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 
 import { DECK_PLUGIN } from '../../meta';
