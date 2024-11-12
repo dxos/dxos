@@ -22,7 +22,7 @@ import {
   Grid,
   GridCellEditor,
   type DxGridElement,
-  type EditorKeysProps,
+  type EditorKeyOrBlurHandler,
   type GridContentProps,
   type DxGridPosition,
 } from '@dxos/react-ui-grid';
@@ -89,31 +89,24 @@ export const GridSheet = () => {
   );
 
   // TODO(burdon): Validate formula before closing: hf.validateFormula();
-  const handleClose = useCallback<NonNullable<EditorKeysProps['onClose']> | NonNullable<EditorKeysProps['onNav']>>(
-    (value, { key, shift }) => {
+  const handleClose = useCallback<EditorKeyOrBlurHandler>(
+    (value, event) => {
       if (value !== undefined) {
         model.setValue(dxGridCellIndexToSheetCellAddress(editing!.index), value);
       }
       setEditing(null);
-      const axis = ['Enter', 'ArrowUp', 'ArrowDown'].includes(key)
-        ? 'row'
-        : ['Tab', 'ArrowLeft', 'ArrowRight'].includes(key)
-          ? 'col'
-          : undefined;
-      const delta = key.startsWith('Arrow') ? (['ArrowUp', 'ArrowLeft'].includes(key) ? -1 : 1) : shift ? -1 : 1;
-      dxGrid?.refocus(axis, delta);
+      if (event) {
+        const { key, shift } = event;
+        const axis = ['Enter', 'ArrowUp', 'ArrowDown'].includes(key)
+          ? 'row'
+          : ['Tab', 'ArrowLeft', 'ArrowRight'].includes(key)
+            ? 'col'
+            : undefined;
+        const delta = key.startsWith('Arrow') ? (['ArrowUp', 'ArrowLeft'].includes(key) ? -1 : 1) : shift ? -1 : 1;
+        dxGrid?.refocus(axis, delta);
+      }
     },
     [model, editing, dxGrid],
-  );
-
-  const handleBlur = useCallback(
-    (value?: string) => {
-      if (value !== undefined) {
-        model.setValue(dxGridCellIndexToSheetCellAddress(editing!.index), value);
-      }
-      setEditing(null);
-    },
-    [model, editing],
   );
 
   const handleAxisResize = useCallback<NonNullable<GridContentProps['onAxisResize']>>(
@@ -302,7 +295,7 @@ export const GridSheet = () => {
 
   return (
     <>
-      <GridCellEditor getCellContent={getCellContent} extension={extension} onBlur={handleBlur} />
+      <GridCellEditor getCellContent={getCellContent} extension={extension} onBlur={handleClose} />
       <Grid.Content
         initialCells={initialCells}
         limitColumns={DEFAULT_COLUMNS}
