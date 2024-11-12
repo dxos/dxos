@@ -41,7 +41,7 @@ export const ColumnSettings = ({ model }: ColumnSettingsProps) => {
   }
 
   return (
-    <DropdownMenu.Root modal={false} open={state?.type === 'columnSettings'} onOpenChange={model.modalController.close}>
+    <DropdownMenu.Root modal={false} open={state?.type === 'columnSettings'}>
       <DropdownMenu.VirtualTrigger virtualRef={model.modalController.trigger} />
       <DropdownMenu.Portal>
         <DropdownMenu.Content>
