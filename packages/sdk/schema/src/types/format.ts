@@ -137,7 +137,7 @@ export const formatToSchema: Record<FormatEnum, S.Schema<FormatSchemaCommon>> = 
 /**
  * Discriminated union of schema based on format.
  * This is the schema used by the ViewEditor's Form.
- * It is mapped to/from the View's Field and Schema properties via the ViewProjection.
+ * It is mapped to/from the View's Field AND Schema properties via the ViewProjection.
  */
 export const PropertySchema = S.Union(
   formatToSchema[FormatEnum.None],
