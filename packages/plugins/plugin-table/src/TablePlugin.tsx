@@ -128,12 +128,19 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
                   });
                 };
 
-                if (!schema) {
+                if (!space || !schema) {
                   return null;
                 }
 
                 return {
-                  node: <ViewEditor schema={schema} view={table.view} onDelete={handleDelete} />,
+                  node: (
+                    <ViewEditor
+                      registry={space.db.schemaRegistry}
+                      schema={schema}
+                      view={table.view}
+                      onDelete={handleDelete}
+                    />
+                  ),
                 };
               }
 

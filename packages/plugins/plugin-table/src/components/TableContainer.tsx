@@ -31,7 +31,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
     if (space && table && !table?.view) {
       initializeTable({ space, table });
     }
-  }, [space, table]);
+  }, [space, table, table?.view]);
 
   const schema = useMemo(
     () => (table.view ? space?.db.schemaRegistry.getSchema(table.view.query.__typename) : undefined),
