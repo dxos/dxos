@@ -7,6 +7,7 @@ import { Schema as S } from '@effect/schema';
 import * as DateUtil from './date';
 import * as NumberUtil from './number';
 import { CurrencyAnnotationId } from './number';
+import * as ObjectUtil from './object';
 import * as StringUtil from './string';
 import { FormatAnnotationId } from './types';
 
@@ -43,6 +44,9 @@ export namespace Format {
   export const Date = DateUtil.DateOnly;
   export const Time = DateUtil.TimeOnly;
   export const Duration = DateUtil.Duration;
+
+  // Objects
+  export const LatLng = ObjectUtil.LatLng;
 }
 
 /**
@@ -51,8 +55,4 @@ export namespace Format {
 export const CustomAnnotations = {
   format: FormatAnnotationId,
   currency: CurrencyAnnotationId,
-
-  // TODO(burdon): Are these automatic?
-  // title: AST.TitleAnnotationId,
-  // description: AST.DescriptionAnnotationId,
 };
