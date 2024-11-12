@@ -3,7 +3,6 @@
 //
 
 export * from './array';
-export * from './assign';
 export * from './binder';
 export * from './bitfield';
 export * from './callback';
@@ -14,6 +13,7 @@ export * from './circular-buffer';
 export * from './complex';
 export * from './defer';
 export * from './defer-function';
+export * from './deep';
 export * from './entry';
 export * from './for-each-async';
 export * from './human-hash';

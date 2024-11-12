@@ -49,7 +49,7 @@ interface FormatSchemaCommon extends BaseProperty {
   multipleOf?: number;
   currency?: string;
   referenceSchema?: string;
-  referenceProperty?: string;
+  referencePath?: string;
 }
 
 /**
@@ -77,7 +77,7 @@ export const formatToSchema: Record<FormatEnum, S.Schema<FormatSchemaCommon>> = 
       [AST.TitleAnnotationId]: 'Schema',
       [AST.DescriptionAnnotationId]: 'Schema typename.',
     }),
-    referenceProperty: S.optional(
+    referencePath: S.optional(
       JsonProp.annotations({
         [AST.TitleAnnotationId]: 'Lookup property',
         [AST.DescriptionAnnotationId]: 'Referenced property.',

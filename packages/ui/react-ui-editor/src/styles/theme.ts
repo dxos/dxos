@@ -162,7 +162,7 @@ export const defaultTheme: ThemeStyles = {
     marginLeft: '-3px',
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul': {
-    maxHeight: '20em !important',
+    maxHeight: '20em',
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > li': {},
   '.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected]': {},
