@@ -381,12 +381,12 @@ export class ServiceContext extends Resource {
         identity: identity.identityKey.toHex(),
         swarms: this.networkManager.topics,
       });
-      if (params?.deviceCredential) {
+      if (params?.deviceCredential || Boolean((globalThis as any)?.DEVICE_INVITE_INTEROP)) {
         edgeIdentity = await createChainEdgeIdentity(
           identity.signer,
           identity.identityKey,
           identity.deviceKey,
-          { credential: params.deviceCredential },
+          params?.deviceCredential && { credential: params.deviceCredential },
           [], // TODO(dmaretskyi): Service access credentials.
         );
       } else {
