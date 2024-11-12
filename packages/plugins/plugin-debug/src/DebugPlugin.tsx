@@ -5,50 +5,56 @@
 import React, { type ReactNode, useEffect, useState } from 'react';
 
 import {
-  getPlugin,
+  definePlugin,
   parseGraphPlugin,
   parseIntentPlugin,
+  parseMetadataResolverPlugin,
+  parseSettingsPlugin,
   resolvePlugin,
-  type IntentPluginProvides,
-  type Plugin,
-  type PluginDefinition,
 } from '@dxos/app-framework';
 import { Timer } from '@dxos/async';
 import { Devtools } from '@dxos/devtools';
-import { LocalStorageStore } from '@dxos/local-storage';
-import { type ClientPluginProvides } from '@dxos/plugin-client';
-import { createExtension, Graph, type Node } from '@dxos/plugin-graph';
+import { invariant } from '@dxos/invariant';
+import { type ClientPluginProvides, parseClientPlugin } from '@dxos/plugin-client';
+import { createExtension, Graph, type Node, toSignal } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 import { CollectionType } from '@dxos/plugin-space/types';
 import { type Client } from '@dxos/react-client';
-import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
+import { create, getTypename, isEchoObject, isSpace, parseId, type Space, SpaceState } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import {
   baseSurface,
-  topbarBlockPaddingStart,
-  fixedInsetFlexLayout,
   bottombarBlockPaddingEnd,
+  fixedInsetFlexLayout,
+  topbarBlockPaddingStart,
 } from '@dxos/react-ui-theme';
 
-import { DebugGlobal, DebugSettings, DebugSpace, DebugStatus, Wireframe } from './components';
+import { DebugGlobal, DebugObjectPanel, DebugSettings, DebugSpace, DebugStatus, Wireframe } from './components';
 import meta, { DEBUG_PLUGIN } from './meta';
 import translations from './translations';
-import { DebugContext, type DebugSettingsProps, type DebugPluginProvides, DebugAction } from './types';
+import {
+  DebugAction,
+  DebugContext,
+  type DebugPluginProvides,
+  type DebugSettingsProps,
+  DebugSettingsSchema,
+} from './types';
 
-export const SETTINGS_KEY = DEBUG_PLUGIN + '/settings';
-
-export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
-  const settings = new LocalStorageStore<DebugSettingsProps>(DEBUG_PLUGIN, { debug: true, devtools: true });
-  let intentPlugin: Plugin<IntentPluginProvides>;
+export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
+  const settings = create<DebugSettingsProps>({
+    debug: true,
+    devtools: true,
+  });
 
   return {
     meta,
     ready: async (plugins) => {
-      intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
-      settings
-        .prop({ key: 'debug', type: LocalStorageStore.bool({ allowUndefined: true }) })
-        .prop({ key: 'devtools', type: LocalStorageStore.bool({ allowUndefined: true }) })
-        .prop({ key: 'wireframe', type: LocalStorageStore.bool({ allowUndefined: true }) });
+      context.init(plugins);
+      context.resolvePlugin(parseSettingsPlugin).provides.settingsStore.createStore({
+        schema: DebugSettingsSchema,
+        prefix: DEBUG_PLUGIN,
+        value: settings,
+      });
 
       // TODO(burdon): Remove hacky dependency on global variable.
       // Used to test how composer handles breaking protocol changes.
@@ -65,10 +71,10 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       };
     },
     unload: async () => {
-      settings.close();
+      context.dispose();
     },
     provides: {
-      settings: settings.values,
+      settings,
       translations,
       complementary: {
         panels: [{ id: 'debug', label: ['open debug panel label', { ns: DEBUG_PLUGIN }], icon: 'ph--bug--regular' }],
@@ -97,15 +103,19 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       },
       graph: {
         builder: (plugins) => {
+          const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
+          const metadataPlugin = resolvePlugin(plugins, parseMetadataResolverPlugin);
           const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-
-          // TODO(burdon): Combine nodes into single subtree.
+          const resolve = metadataPlugin?.provides.metadata.resolver;
+          const client = clientPlugin?.provides.client;
+          invariant(resolve);
+          invariant(client);
 
           return [
             // Devtools node.
             createExtension({
               id: 'dxos.org/plugin/debug/devtools',
-              filter: (node): node is Node<null> => !!settings.values.devtools && node.id === 'root',
+              filter: (node): node is Node<null> => !!settings.devtools && node.id === 'root',
               connector: () => [
                 {
                   // TODO(zan): Removed `/` because it breaks deck layout reload. Fix?
@@ -123,7 +133,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
             // Debug node.
             createExtension({
               id: 'dxos.org/plugin/debug/debug',
-              filter: (node): node is Node<null> => !!settings.values.debug && node.id === 'root',
+              filter: (node): node is Node<null> => !!settings.debug && node.id === 'root',
               connector: () => [
                 {
                   id: 'dxos.org/plugin/debug/debug',
@@ -140,12 +150,12 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
             // Space debug nodes.
             createExtension({
               id: 'dxos.org/plugin/debug/spaces',
-              filter: (node): node is Node<Space> => !!settings.values.debug && isSpace(node.data),
+              filter: (node): node is Node<Space> => !!settings.debug && isSpace(node.data),
               connector: ({ node }) => {
                 const space = node.data;
                 return [
                   {
-                    id: `${space.id}-debug`,
+                    id: `${space.id}-debug`, // TODO(burdon): Change to slashes consistently.
                     type: 'dxos.org/plugin/debug/space',
                     data: { space },
                     properties: {
@@ -156,6 +166,77 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                 ];
               },
             }),
+
+            // Create nodes for debug sidebar.
+            createExtension({
+              id: `${DEBUG_PLUGIN}/debug-for-subject`,
+              resolver: ({ id }) => {
+                // TODO(Zan): Find util (or make one).
+                if (!id.endsWith('~debug')) {
+                  return;
+                }
+
+                const type = 'orphan-settings-for-subject';
+                const icon = 'ph--bug--regular';
+
+                const [subjectId] = id.split('~');
+                const { spaceId, objectId } = parseId(subjectId);
+                const space = client.spaces.get().find((space) => space.id === spaceId);
+                if (!objectId) {
+                  // TODO(burdon): Ref SPACE_PLUGIN ns.
+                  const label = space
+                    ? space.properties.name || ['unnamed space label', { ns: DEBUG_PLUGIN }]
+                    : ['unnamed object settings label', { ns: DEBUG_PLUGIN }];
+
+                  // TODO(wittjosiah): Support comments for arbitrary subjects.
+                  //   This is to ensure that the comments panel is not stuck on an old object.
+                  return {
+                    id,
+                    type,
+                    data: null,
+                    properties: {
+                      icon,
+                      label,
+                      showResolvedThreads: false,
+                      object: null,
+                      space,
+                    },
+                  };
+                }
+
+                const object = toSignal(
+                  (onChange) => {
+                    const timeout = setTimeout(async () => {
+                      await space?.db.loadObjectById(objectId);
+                      onChange();
+                    });
+
+                    return () => clearTimeout(timeout);
+                  },
+                  () => space?.db.getObjectById(objectId),
+                  subjectId,
+                );
+                if (!object || !subjectId) {
+                  return;
+                }
+
+                const meta = resolve(getTypename(object) ?? '');
+                const label = meta.label?.(object) ||
+                  object.name ||
+                  meta.placeholder || ['unnamed object settings label', { ns: DEBUG_PLUGIN }];
+
+                return {
+                  id,
+                  type,
+                  data: null,
+                  properties: {
+                    icon,
+                    label,
+                    object,
+                  },
+                };
+              },
+            }),
           ];
         },
       },
@@ -163,7 +244,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
         resolver: async (intent, plugins) => {
           switch (intent.action) {
             case DebugAction.OPEN_DEVTOOLS: {
-              const clientPlugin = getPlugin<ClientPluginProvides>(plugins, 'dxos.org/plugin/client');
+              const clientPlugin = context.getPlugin<ClientPluginProvides>('dxos.org/plugin/client');
               const client = clientPlugin.provides.client;
               const vaultUrl = client.config.values?.runtime?.client?.remoteSource ?? 'https://halo.dxos.org';
 
@@ -188,17 +269,19 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
         component: ({ name, data, role }) => {
           switch (role) {
             case 'settings':
-              return data.plugin === meta.id ? <DebugSettings settings={settings.values} /> : null;
+              return data.plugin === meta.id ? <DebugSettings settings={settings} /> : null;
             case 'status':
               return <DebugStatus />;
+            case 'complementary--debug':
+              return isEchoObject(data.subject) ? <DebugObjectPanel object={data.subject} /> : null;
           }
 
           const primary = data.active ?? data.object;
           let component: ReactNode;
           if (role === 'main' || role === 'article') {
-            if (primary === 'devtools' && settings.values.devtools) {
+            if (primary === 'devtools' && settings.devtools) {
               component = <Devtools />;
-            } else if (!primary || typeof primary !== 'object' || !settings.values.debug) {
+            } else if (!primary || typeof primary !== 'object' || !settings.debug) {
               component = null;
             } else if ('space' in primary && isSpace(primary.space)) {
               component = (
@@ -216,7 +299,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                       return;
                     }
 
-                    void intentPlugin?.provides.intent.dispatch(
+                    void context.resolvePlugin(parseIntentPlugin).provides.intent.dispatch(
                       objects.map((object) => ({
                         action: SpaceAction.ADD_OBJECT,
                         data: { target: collection, object },
@@ -233,11 +316,18 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
           }
 
           if (!component) {
-            if (settings.values.wireframe) {
+            if (settings.wireframe) {
               if (role === 'main' || role === 'article' || role === 'section') {
                 const primary = data.active ?? data.object;
-                if (!(primary instanceof CollectionType)) {
-                  return <Wireframe label={role} data={data} className='row-span-2 overflow-hidden' />;
+                const isCollection = primary instanceof CollectionType;
+                // TODO(burdon): Move into Container abstraction.
+                if (!isCollection) {
+                  return {
+                    node: (
+                      <Wireframe label={`${role}:${name}`} object={primary} classNames='row-span-2 overflow-hidden' />
+                    ),
+                    disposition: 'hoist',
+                  };
                 }
               }
             }
@@ -267,4 +357,4 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       },
     },
   };
-};
+});
