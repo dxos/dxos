@@ -156,7 +156,6 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
             .map((obj) => {
               const value = getValue(obj, field.referencePath!);
               if (!value || typeof value !== 'string') {
-                console.log(obj, field);
                 return undefined;
               }
 
