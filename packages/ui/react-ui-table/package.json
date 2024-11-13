@@ -11,11 +11,19 @@
     ".": {
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs"
+    },
+    "./deprecated": {
+      "types": "./dist/types/src/deprecated/index.d.ts",
+      "browser": "./dist/lib/browser/deprecated/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
-    "*": {}
+    "*": {
+      "deprecated": [
+        "./dist/types/src/deprecated/index.d.ts"
+      ]
+    }
   },
   "files": [
     "dist",

@@ -15,7 +15,7 @@ import {
   type TableColumnDef,
   type TableProps,
   type ValueUpdater,
-} from '@dxos/react-ui-table';
+} from '@dxos/react-ui-table/deprecated';
 
 import type { StackSectionContent } from '../components/Section';
 

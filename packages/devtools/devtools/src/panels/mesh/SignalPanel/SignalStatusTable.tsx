@@ -12,7 +12,7 @@ import { type SubscribeToSignalStatusResponse } from '@dxos/protocols/proto/dxos
 import { SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { AnchoredOverflow } from '@dxos/react-ui';
-import { createColumnBuilder, Table, type TableColumnDef, textPadding } from '@dxos/react-ui-table';
+import { createColumnBuilder, Table, type TableColumnDef, textPadding } from '@dxos/react-ui-table/deprecated';
 
 const states = {
   [SignalState.CONNECTING]: {
