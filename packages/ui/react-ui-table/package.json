@@ -13,7 +13,7 @@
       "browser": "./dist/lib/browser/index.mjs"
     },
     "./deprecated": {
-      "types": "./dist/types/src/deprecated/index.d.ts",
+      "types": "./dist/types/src/_deprecated/index.d.ts",
       "browser": "./dist/lib/browser/deprecated/index.mjs"
     }
   },
@@ -21,7 +21,7 @@
   "typesVersions": {
     "*": {
       "deprecated": [
-        "./dist/types/src/deprecated/index.d.ts"
+        "./dist/types/src/_deprecated/index.d.ts"
       ]
     }
   },
