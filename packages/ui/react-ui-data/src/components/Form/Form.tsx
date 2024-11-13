@@ -6,7 +6,7 @@ import React, { type FC, useEffect, useMemo } from 'react';
 
 import { type S } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
-import { ButtonGroup, IconButton, type ThemedClassName } from '@dxos/react-ui';
+import { ButtonGroup, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { getSchemaProperties, type SchemaProperty, type ValidationError } from '@dxos/schema';
 

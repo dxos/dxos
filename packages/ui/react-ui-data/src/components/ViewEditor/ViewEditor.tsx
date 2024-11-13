@@ -6,7 +6,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { type SchemaResolver } from '@dxos/echo-db';
 import { type MutableSchema, S } from '@dxos/echo-schema';
-import { ButtonGroup, IconButton, Tooltip, useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { ButtonGroup, IconButton, Tooltip, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 import { FieldSchema, type FieldType, type ViewType, ViewProjection, VIEW_FIELD_LIMIT } from '@dxos/schema';
