@@ -17,7 +17,6 @@ import {
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { useGraph } from '@dxos/plugin-graph';
-import { useTranslation } from '@dxos/react-ui';
 import { useAttendableAttributes } from '@dxos/react-ui-attention';
 import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack/next';
 import { mainIntrinsicSize, mx } from '@dxos/react-ui-theme';
@@ -27,7 +26,6 @@ import { PlankContentError, PlankError } from './PlankError';
 import { PlankLoading } from './PlankLoading';
 import { DeckAction } from '../../DeckPlugin';
 import { useNode, useMainSize } from '../../hooks';
-import { DECK_PLUGIN } from '../../meta';
 import { useDeckContext } from '../DeckContext';
 import { useLayout } from '../LayoutContext';
 
@@ -43,7 +41,7 @@ export type PlankProps = {
 };
 
 export const Plank = memo(({ entry, layoutParts, part, layoutMode, order }: PlankProps) => {
-  const { t } = useTranslation(DECK_PLUGIN);
+  // const { t } = useTranslation(DECK_PLUGIN);
   const dispatch = useIntentDispatcher();
   const coordinate: LayoutCoordinate = useMemo(() => ({ part, entryId: entry?.id ?? UNKNOWN_ID }), [entry?.id, part]);
   const { popoverAnchorId, scrollIntoView } = useLayout();
