@@ -123,8 +123,17 @@ export class AppManager {
     return this.page.getByTestId('spacePlugin.presence.member');
   }
 
-  toggleSpaceCollapsed(nth = 0) {
-    return this.page.getByTestId('spacePlugin.space').nth(nth).getByRole('button').first().click();
+  async toggleSpaceCollapsed(nth = 0, nextState?: boolean) {
+    const toggle = this.page.getByTestId('spacePlugin.space').nth(nth).getByRole('button').first();
+
+    if (typeof nextState !== 'undefined') {
+      const state = await this.page.getByTestId('spacePlugin.space').nth(nth).getAttribute('aria-expanded');
+      if (state !== nextState.toString()) {
+        await toggle.click();
+      }
+    } else {
+      await toggle.click();
+    }
   }
 
   toggleCollectionCollapsed(nth = 0) {

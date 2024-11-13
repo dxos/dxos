@@ -28,8 +28,8 @@ test.describe('Collaboration tests', () => {
     test.skip(browserName === 'firefox');
     test.skip(browserName === 'webkit' && platform() !== 'darwin');
 
-    host = new AppManager(browser, true);
-    guest = new AppManager(browser, true);
+    host = new AppManager(browser, false);
+    guest = new AppManager(browser, false);
 
     await host.init();
     await guest.init();
@@ -61,9 +61,8 @@ test.describe('Collaboration tests', () => {
 
     // Guest waits for the space to be ready and confirms it has the markdown object.
     await guest.waitForSpaceReady();
-    await guest.toggleSpaceCollapsed(1);
-    await expect(guest.getObjectLinks()).toHaveCount(1);
-    await guest.getObjectLinks().last().click();
+    await guest.toggleSpaceCollapsed(1, true);
+    await expect(guest.getObjectLinks()).toHaveCount(2);
 
     {
       // Update to use plank locator
@@ -71,13 +70,8 @@ test.describe('Collaboration tests', () => {
       const guestMarkdownDoc = Markdown.getMarkdownTextboxWithLocator(plank.locator);
       await expect(guestMarkdownDoc).toHaveText('Hello from the host', { timeout: 10_000 });
 
-      // TODO(Zan): How should we handle URL comparisons now that we're in decklandia?
-
       // Verify URLs and object links match between host and guest.
-      // expect(await host.page.url()).to.equal(await guest.page.url());
-      // const hostLink = await host.getObjectLinks().last().getAttribute('data-itemid');
-      // const guestLink = await guest.getObjectLinks().last().getAttribute('data-itemid');
-      // expect(hostLink).to.equal(guestLink);
+      expect(host.page.url()).toEqual(guest.page.url());
     }
   });
 
@@ -89,11 +83,8 @@ test.describe('Collaboration tests', () => {
     await perfomInvitation(host, guest);
 
     await guest.waitForSpaceReady();
-    await guest.toggleSpaceCollapsed(1);
-    await expect(guest.getObjectLinks()).toHaveCount(1);
-
-    // Open the shared markdown plank in the guest.
-    await guest.getObjectLinks().last().click();
+    await guest.toggleSpaceCollapsed(1, true);
+    await expect(guest.getObjectLinks()).toHaveCount(2);
 
     // Find the plank in the guest.
     const guestPlank = guest.deck.plank();
@@ -130,11 +121,8 @@ test.describe('Collaboration tests', () => {
 
     // Guest waits for the space to be ready and confirms it has the markdown object
     await guest.waitForSpaceReady();
-    await guest.toggleSpaceCollapsed(1);
-    await expect(guest.getObjectLinks()).toHaveCount(1);
-
-    // Guest opens the shared markdown plank
-    await guest.getObjectLinks().last().click();
+    await guest.toggleSpaceCollapsed(1, true);
+    await expect(guest.getObjectLinks()).toHaveCount(2);
 
     // Get guest's markdown planks and find the locator for the shared document
     const guestPlank = guest.deck.plank();
@@ -179,24 +167,20 @@ test.describe('Collaboration tests', () => {
     test.setTimeout(60_000);
 
     await host.createSpace();
-    await host.getObjectLinks().last().click();
 
     const hostPlank = host.deck.plank();
-    const hostTextbox = await Markdown.getMarkdownTextboxWithLocator(hostPlank.locator);
+    const hostTextbox = Markdown.getMarkdownTextboxWithLocator(hostPlank.locator);
     await hostTextbox.waitFor();
     // TODO(thure): Autofocus not working for solo mode when creating a new document.
     await hostTextbox.focus();
 
     await perfomInvitation(host, guest);
     await guest.waitForSpaceReady();
-    await guest.toggleSpaceCollapsed(1);
-    await expect(guest.getObjectLinks()).toHaveCount(1);
-
-    // Open the last created document in the guest.
-    await guest.getObjectLinks().last().click();
+    await guest.toggleSpaceCollapsed(1, true);
+    await expect(guest.getObjectLinks()).toHaveCount(2);
 
     const guestPlank = guest.deck.plank();
-    const guestTextbox = await Markdown.getMarkdownTextboxWithLocator(guestPlank.locator);
+    const guestTextbox = Markdown.getMarkdownTextboxWithLocator(guestPlank.locator);
     await guestTextbox.waitFor();
     // TODO(thure): Autofocus not working for solo mode when creating a new document.
     await guestTextbox.focus();

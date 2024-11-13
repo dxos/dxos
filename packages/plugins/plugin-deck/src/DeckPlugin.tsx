@@ -243,14 +243,6 @@ export const DeckPlugin = ({
         ...filterPlugins(plugins, parsePanelPlugin).flatMap((plugin) => plugin.provides.complementary.panels),
       );
 
-      unsubscriptionCallbacks.push(
-        clientPlugin?.provides.client.shell.onReset(() => {
-          layout.expunge();
-          location.expunge();
-          deck.expunge();
-        }),
-      );
-
       settings
         .prop({ key: 'showHints', type: LocalStorageStore.bool() })
         .prop({ key: 'customSlots', type: LocalStorageStore.bool() })

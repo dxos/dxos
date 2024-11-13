@@ -4,8 +4,7 @@
 
 export const appKey = 'composer.dxos.org';
 
-export const INITIAL_COLLECTION_TITLE = 'README';
-export const INITIAL_DOC_TITLE = 'Welcome to Composer';
+export const INITIAL_DOC_TITLE = 'README';
 
 // TODO(wittjosiah): Translate.
 // TODO(burdon): Import MD file.

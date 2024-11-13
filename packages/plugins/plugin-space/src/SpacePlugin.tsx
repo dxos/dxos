@@ -208,7 +208,14 @@ export const SpacePlugin = ({
           const node = graph.findNode(soloPart.id);
           if (!node && soloPart.id.length === FQ_ID_LENGTH) {
             const timeout = setTimeout(async () => {
-              await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.WAIT_FOR_OBJECT, data: { id: soloPart.id } });
+              const node = graph.findNode(soloPart.id);
+              if (!node) {
+                await dispatch({
+                  plugin: SPACE_PLUGIN,
+                  action: SpaceAction.WAIT_FOR_OBJECT,
+                  data: { id: soloPart.id },
+                });
+              }
             }, WAIT_FOR_OBJECT_TIMEOUT);
 
             return () => clearTimeout(timeout);
@@ -600,15 +607,10 @@ export const SpacePlugin = ({
                 {
                   id: SpaceAction.CREATE,
                   data: async () => {
-                    await dispatch([
-                      {
-                        plugin: SPACE_PLUGIN,
-                        action: SpaceAction.CREATE,
-                      },
-                      {
-                        action: NavigationAction.OPEN,
-                      },
-                    ]);
+                    await dispatch({
+                      plugin: SPACE_PLUGIN,
+                      action: SpaceAction.CREATE,
+                    });
                   },
                   properties: {
                     label: ['create space label', { ns: SPACE_PLUGIN }],
@@ -621,15 +623,10 @@ export const SpacePlugin = ({
                 {
                   id: SpaceAction.JOIN,
                   data: async () => {
-                    await dispatch([
-                      {
-                        plugin: SPACE_PLUGIN,
-                        action: SpaceAction.JOIN,
-                      },
-                      {
-                        action: NavigationAction.OPEN,
-                      },
-                    ]);
+                    await dispatch({
+                      plugin: SPACE_PLUGIN,
+                      action: SpaceAction.JOIN,
+                    });
                   },
                   properties: {
                     label: ['join space label', { ns: SPACE_PLUGIN }],
@@ -655,27 +652,32 @@ export const SpacePlugin = ({
                   return;
                 }
 
-                const [spacesOrder] = memoizeQuery(client.spaces.default, Filter.schema(Expando, { key: SHARED }));
-                const order: string[] = spacesOrder?.order ?? [];
-                const orderMap = new Map(order.map((id, index) => [id, index]));
-                return [
-                  ...spaces
-                    .filter((space) => orderMap.has(space.id))
-                    .sort((a, b) => orderMap.get(a.id)! - orderMap.get(b.id)!),
-                  ...spaces.filter((space) => !orderMap.has(space.id)),
-                ]
-                  .filter((space) =>
-                    settings.values.showHidden ? true : space.state.get() !== SpaceState.SPACE_INACTIVE,
-                  )
-                  .map((space) =>
-                    constructSpaceNode({
-                      space,
-                      navigable: state.values.navigableCollections,
-                      personal: space === client.spaces.default,
-                      namesCache: state.values.spaceNames,
-                      resolve,
-                    }),
-                  );
+                // TODO(wittjosiah): During client reset, accessing default space throws.
+                try {
+                  const [spacesOrder] = memoizeQuery(client.spaces.default, Filter.schema(Expando, { key: SHARED }));
+                  const order: string[] = spacesOrder?.order ?? [];
+                  const orderMap = new Map(order.map((id, index) => [id, index]));
+                  return [
+                    ...spaces
+                      .filter((space) => orderMap.has(space.id))
+                      .sort((a, b) => orderMap.get(a.id)! - orderMap.get(b.id)!),
+                    ...spaces.filter((space) => !orderMap.has(space.id)),
+                  ]
+                    .filter((space) =>
+                      settings.values.showHidden ? true : space.state.get() !== SpaceState.SPACE_INACTIVE,
+                    )
+                    .map((space) =>
+                      constructSpaceNode({
+                        space,
+                        navigable: state.values.navigableCollections,
+                        personal: space === client.spaces.default,
+                        namesCache: state.values.spaceNames,
+                        resolve,
+                      }),
+                    );
+                } catch {
+                  return;
+                }
               },
             }),
 
@@ -971,6 +973,7 @@ export const SpacePlugin = ({
                         [
                           { action: settings.values.onSpaceCreate, data: { space } },
                           { action: SpaceAction.ADD_OBJECT, data: { target: space } },
+                          { action: NavigationAction.OPEN },
                           { action: NavigationAction.EXPOSE },
                         ],
                       ]
@@ -991,32 +994,30 @@ export const SpacePlugin = ({
             }
 
             case SpaceAction.JOIN: {
-              if (client) {
-                return {
-                  data: true,
-                  intents: [
-                    [
-                      {
-                        action: LayoutAction.SET_LAYOUT,
-                        data: {
-                          element: 'dialog',
-                          component: 'dxos.org/plugin/space/JoinDialog',
-                          dialogBlockAlign: 'start',
-                          subject: {
-                            initialInvitationCode: intent.data?.invitationCode,
-                          } satisfies Partial<JoinPanelProps>,
-                        },
+              return {
+                data: true,
+                intents: [
+                  [
+                    {
+                      action: LayoutAction.SET_LAYOUT,
+                      data: {
+                        element: 'dialog',
+                        component: 'dxos.org/plugin/space/JoinDialog',
+                        dialogBlockAlign: 'start',
+                        subject: {
+                          initialInvitationCode: intent.data?.invitationCode,
+                        } satisfies Partial<JoinPanelProps>,
                       },
-                    ],
+                    },
                   ],
-                };
-              }
+                ],
+              };
               break;
             }
 
             case SpaceAction.SHARE: {
               const space = intent.data?.space;
-              if (clientPlugin && isSpace(space)) {
+              if (isSpace(space)) {
                 const active = navigationPlugin?.provides.location.active;
                 const mode = layoutPlugin?.provides.layout.layoutMode;
                 const target = active ? firstIdInPart(active, mode === 'solo' ? 'solo' : 'main') : undefined;

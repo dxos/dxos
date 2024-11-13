@@ -49,7 +49,7 @@ import WildcardMeta from '@dxos/plugin-wildcard/meta';
 import WnfsMeta from '@dxos/plugin-wnfs/meta';
 import { isNotFalsy } from '@dxos/util';
 
-import { INITIAL_COLLECTION_TITLE, INITIAL_CONTENT, INITIAL_DOC_TITLE } from './constants';
+import { INITIAL_CONTENT, INITIAL_DOC_TITLE } from './constants';
 import { steps } from './help';
 import { meta as WelcomeMeta } from './plugins/welcome/meta';
 
@@ -178,18 +178,17 @@ export const plugins = ({
         LegacyTypes.TextType,
         LegacyTypes.ThreadType,
       ]);
+    },
+    onReset: async ({ target }) => {
+      localStorage.clear();
 
-      client.shell.onReset((target) => {
-        localStorage.clear();
-
-        if (target === 'deviceInvitation') {
-          window.location.assign(new URL('/?deviceInvitationCode=', window.location.origin));
-        } else if (target === 'recoverIdentity') {
-          window.location.assign(new URL('/?recoverIdentity=true', window.location.origin));
-        } else {
-          window.location.pathname = '/';
-        }
-      });
+      if (target === 'deviceInvitation') {
+        window.location.assign(new URL('/?deviceInvitationCode=', window.location.origin));
+      } else if (target === 'recoverIdentity') {
+        window.location.assign(new URL('/?recoverIdentity=true', window.location.origin));
+      } else {
+        window.location.pathname = '/';
+      }
     },
   }),
   [DebugMeta.id]: Plugin.lazy(() => import('@dxos/plugin-debug')),
@@ -242,7 +241,11 @@ export const plugins = ({
       const defaultSpaceCollection = client.spaces.default.properties[CollectionType.typename] as CollectionType;
       defaultSpaceCollection?.objects.push(readme);
 
-      void dispatch({
+      await dispatch({
+        action: NavigationAction.EXPOSE,
+        data: { id: fullyQualifiedId(readme) },
+      });
+      await dispatch({
         action: NavigationAction.OPEN,
         data: { activeParts: { main: [fullyQualifiedId(readme)] } },
       });
