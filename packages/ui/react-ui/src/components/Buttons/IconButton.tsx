@@ -8,14 +8,14 @@ import { Button, type ButtonProps } from './Button';
 import { useThemeContext } from '../../hooks';
 import { Icon, type IconProps } from '../Icon';
 
-type IconButtonProps = Omit<ButtonProps, 'children'> & Pick<IconProps, 'icon'> & { label: string };
+type IconButtonProps = Omit<ButtonProps, 'children'> & Pick<IconProps, 'icon'> & { label: string; srOnly?: boolean };
 
-const IconButton = ({ icon, label, ...props }: IconButtonProps) => {
+const IconButton = ({ icon, label, srOnly, ...props }: IconButtonProps) => {
   const { tx } = useThemeContext();
   return (
     <Button {...props} classNames={tx('iconButton.root', 'iconButton')}>
       <Icon icon={icon} />
-      {label && <span>{label}</span>}
+      <span className={srOnly ? 'sr-only' : ''}>{label}</span>
     </Button>
   );
 };
