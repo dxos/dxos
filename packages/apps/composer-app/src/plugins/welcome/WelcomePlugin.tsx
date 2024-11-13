@@ -156,10 +156,6 @@ export const WelcomePlugin = ({
           token && removeQueryParamByValue(token);
           await dispatch([
             {
-              action: LayoutAction.SET_LAYOUT_MODE,
-              data: { layoutMode: 'solo' },
-            },
-            {
               action: NavigationAction.CLOSE,
               data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
             },

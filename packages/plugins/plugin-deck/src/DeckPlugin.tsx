@@ -266,12 +266,13 @@ export const DeckPlugin = ({
           return;
         }
 
+        const startingLayout = removePart(location.values.active, 'solo');
         const layoutFromUri = uriToSoloPart(pathname);
         if (!layoutFromUri) {
+          handleSetLocation(startingLayout);
           return;
         }
 
-        const startingLayout = removePart(location.values.active, 'solo');
         handleSetLocation(mergeLayoutParts(layoutFromUri, startingLayout));
         layout.values.layoutMode = 'solo';
       };

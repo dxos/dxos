@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type HostPluginParams, NavigationAction, Plugin, type PluginMeta } from '@dxos/app-framework';
+import { type HostPluginParams, LayoutAction, NavigationAction, Plugin, type PluginMeta } from '@dxos/app-framework';
 import { type Trigger } from '@dxos/async';
 import { type Config, type ClientServicesProvider } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
@@ -164,7 +164,6 @@ export const plugins = ({
     appKey,
     config,
     services,
-    shell: './shell.html',
     onClientInitialized: async (client) => {
       const { LegacyTypes } = await import('./migrations');
       client.addTypes([
@@ -241,13 +240,19 @@ export const plugins = ({
       const defaultSpaceCollection = client.spaces.default.properties[CollectionType.typename] as CollectionType;
       defaultSpaceCollection?.objects.push(readme);
 
+      await dispatch([
+        {
+          action: LayoutAction.SET_LAYOUT_MODE,
+          data: { layoutMode: 'solo' },
+        },
+        {
+          action: NavigationAction.OPEN,
+          data: { activeParts: { main: [fullyQualifiedId(readme)] } },
+        },
+      ]);
       await dispatch({
         action: NavigationAction.EXPOSE,
         data: { id: fullyQualifiedId(readme) },
-      });
-      await dispatch({
-        action: NavigationAction.OPEN,
-        data: { activeParts: { main: [fullyQualifiedId(readme)] } },
       });
     },
   }),
