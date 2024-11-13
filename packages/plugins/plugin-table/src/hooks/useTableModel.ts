@@ -4,34 +4,33 @@
 
 import { useEffect, useState } from 'react';
 
-import { type EchoReactiveObject } from '@dxos/react-client/echo';
+import { type ReactiveObject } from '@dxos/react-client/echo';
 import { type ViewProjection } from '@dxos/schema';
 
-import { TableModel, type TableModelProps } from '../model';
+import { type BaseTableRow, TableModel, type TableModelProps } from '../model';
 import { type TableType } from '../types';
 
-export type UseTableModelParams = {
+export type UseTableModelParams<T extends BaseTableRow = {}> = {
   table?: TableType;
   projection?: ViewProjection;
-  objects?: EchoReactiveObject<any>[];
-} & Pick<TableModelProps, 'onDeleteColumn' | 'onDeleteRow'>;
+  objects?: ReactiveObject<T>[];
+} & Pick<TableModelProps<T>, 'onInsertRow' | 'onDeleteRow' | 'onDeleteColumn' | 'onCellUpdate' | 'onRowOrderChanged'>;
 
-export const useTableModel = ({
+export const useTableModel = <T extends BaseTableRow = {}>({
+  objects,
   table,
   projection,
-  objects,
-  onDeleteColumn,
-  onDeleteRow,
-}: UseTableModelParams): TableModel | undefined => {
-  const [model, setModel] = useState<TableModel>();
+  ...props
+}: UseTableModelParams<T>): TableModel<T> | undefined => {
+  const [model, setModel] = useState<TableModel<T>>();
   useEffect(() => {
     if (!table || !projection) {
       return;
     }
 
-    let model: TableModel | undefined;
+    let model: TableModel<T> | undefined;
     const t = setTimeout(async () => {
-      model = new TableModel({ table, projection, onDeleteColumn, onDeleteRow });
+      model = new TableModel<T>({ table, projection, ...props });
       await model.open();
       setModel(model);
     });
@@ -40,12 +39,12 @@ export const useTableModel = ({
       clearTimeout(t);
       void model?.close();
     };
-  }, [table, projection, onDeleteColumn, onDeleteRow]);
+  }, [table, projection]); // TODO(burdon): Trigger if callbacks change?
 
   // Update data.
   useEffect(() => {
     if (objects) {
-      model?.updateData(objects);
+      model?.setRows(objects);
     }
   }, [model, objects]);
 

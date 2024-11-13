@@ -131,7 +131,7 @@ export const useSheetModelDxGridProps = (
   model: SheetModel,
 ): Pick<GridContentProps, 'columns' | 'rows'> => {
   const [columns, setColumns] = useState<DxGridAxisMeta>(createDxGridColumns(model));
-  const [rows, setRows] = useState<DxGridAxisMeta>(createDxGridColumns(model));
+  const [rows, setRows] = useState<DxGridAxisMeta>(createDxGridRows(model));
 
   useEffect(() => {
     const cellsAccessor = createDocAccessor(model.sheet, ['cells']);

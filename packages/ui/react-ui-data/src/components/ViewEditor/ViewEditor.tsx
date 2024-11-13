@@ -22,24 +22,33 @@ export type ViewEditorProps = ThemedClassName<{
   view: ViewType;
   registry?: SchemaResolver;
   readonly?: boolean;
-  onDelete: (property: string) => void;
+  showHeading?: boolean;
+  onDelete: (fieldId: string) => void;
 }>;
 
 /**
  * Schema-based object form.
  */
-export const ViewEditor = ({ classNames, schema, view, registry, readonly, onDelete }: ViewEditorProps) => {
+export const ViewEditor = ({
+  classNames,
+  schema,
+  view,
+  registry,
+  readonly,
+  showHeading = false,
+  onDelete,
+}: ViewEditorProps) => {
   const { t } = useTranslation(translationKey);
   const projection = useMemo(() => new ViewProjection(schema, view), [schema, view]);
-  const [selectedField, setSelectedField] = useState<FieldType>();
+  const [field, setField] = useState<FieldType>();
 
   const handleSelect = useCallback((field: FieldType) => {
-    setSelectedField((f) => (f === field ? undefined : field));
+    setField((f) => (f === field ? undefined : field));
   }, []);
 
   const handleAdd = useCallback(() => {
     const field = projection.createFieldProjection();
-    setSelectedField(field);
+    setField(field);
   }, [view]);
 
   const handleMove = useCallback(
@@ -49,49 +58,50 @@ export const ViewEditor = ({ classNames, schema, view, registry, readonly, onDel
     [view.fields],
   );
 
-  const handleClose = useCallback(() => setSelectedField(undefined), []);
+  const handleClose = useCallback(() => setField(undefined), []);
 
   return (
     <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
       <List.Root<FieldType>
         items={view.fields}
         isItem={S.is(FieldSchema)}
-        getId={(field) => field.property}
+        getId={(field) => field.id}
         onMove={handleMove}
       >
-        {({ items }) => (
-          <div className='w-full'>
-            <div role='heading' className={grid}>
-              <div />
-              <div className='flex items-center text-sm'>{t('field path label')}</div>
-            </div>
+        {({ items: fields }) => (
+          <>
+            {showHeading && (
+              <div role='heading' className={grid}>
+                <div />
+                <div className='flex items-center text-sm'>{t('field path label')}</div>
+              </div>
+            )}
 
             <div role='list' className='flex flex-col w-full'>
-              {items?.map((item) => (
-                <List.Item<FieldType> key={item.property} item={item} classNames={mx(grid, ghostHover)}>
+              {fields?.map((field) => (
+                <List.Item<FieldType> key={field.id} item={field} classNames={mx(grid, ghostHover, 'cursor-pointer')}>
                   <List.ItemDragHandle />
-                  <List.ItemTitle onClick={() => handleSelect(item)}>{item.property}</List.ItemTitle>
-                  <List.ItemDeleteButton onClick={() => onDelete(item.property)} />
+                  <List.ItemTitle onClick={() => handleSelect(field)}>{field.path}</List.ItemTitle>
+                  <List.ItemDeleteButton disabled={view.fields.length <= 1} onClick={() => onDelete(field.id)} />
                 </List.Item>
               ))}
             </div>
-          </div>
+          </>
         )}
       </List.Root>
 
-      {selectedField && (
+      {field && (
         <FieldEditor
-          key={selectedField.property}
+          key={field.id}
           view={view}
           projection={projection}
-          field={selectedField}
+          field={field}
           registry={registry}
           onClose={handleClose}
         />
       )}
 
-      {/* TODO(burdon): Option. */}
-      {!readonly && (
+      {!readonly && !field && (
         <div className='flex justify-center p-2'>
           <div className='flex gap-2'>
             <Button onClick={handleAdd}>

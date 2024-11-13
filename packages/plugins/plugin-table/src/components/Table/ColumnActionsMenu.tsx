@@ -4,48 +4,37 @@
 
 import React from 'react';
 
-import { DropdownMenu, type DropdownMenuRootProps, useTranslation } from '@dxos/react-ui';
+import { DropdownMenu, useTranslation } from '@dxos/react-ui';
 
 import { TABLE_PLUGIN } from '../../meta';
 import { type TableModel } from '../../model';
 
-export type ColumnActionsMenuProps = {
-  model?: TableModel;
-  columnId?: string;
-  onShowColumnSettings: () => void;
-  triggerRef: React.RefObject<HTMLButtonElement>;
-} & Pick<DropdownMenuRootProps, 'open' | 'onOpenChange'>;
+type ColumnActionsMenuProps = { model?: TableModel };
 
-export const ColumnActionsMenu = ({
-  model,
-  columnId,
-  open,
-  onOpenChange,
-  onShowColumnSettings,
-  triggerRef,
-}: ColumnActionsMenuProps) => {
+export const ColumnActionsMenu = ({ model }: ColumnActionsMenuProps) => {
   const { t } = useTranslation(TABLE_PLUGIN);
+  const state = model?.modalController.state.value;
 
-  if (!model || !columnId) {
+  if (!model || state?.type !== 'column') {
     return null;
   }
 
-  const currentSort = model.sorting.value;
-  const isCurrentColumnSorted = currentSort?.columnId === columnId;
+  const currentSort = model.sorting;
+  const isCurrentColumnSorted = currentSort?.fieldId === state.fieldId;
 
   return (
-    <DropdownMenu.Root modal={false} open={open} onOpenChange={onOpenChange}>
-      <DropdownMenu.VirtualTrigger virtualRef={triggerRef} />
+    <DropdownMenu.Root modal={false} open={state?.type === 'column'} onOpenChange={model.modalController.close}>
+      <DropdownMenu.VirtualTrigger virtualRef={model.modalController.trigger} />
       <DropdownMenu.Portal>
         <DropdownMenu.Content>
           <DropdownMenu.Viewport>
             {(!isCurrentColumnSorted || currentSort?.direction === 'asc') && (
-              <DropdownMenu.Item onClick={() => model.setSort(columnId, 'desc')}>
+              <DropdownMenu.Item onClick={() => model.setSort(state.fieldId, 'desc')}>
                 {t('column action sort descending')}
               </DropdownMenu.Item>
             )}
             {(!isCurrentColumnSorted || currentSort?.direction === 'desc') && (
-              <DropdownMenu.Item onClick={() => model.setSort(columnId, 'asc')}>
+              <DropdownMenu.Item onClick={() => model.setSort(state.fieldId, 'asc')}>
                 {t('column action sort ascending')}
               </DropdownMenu.Item>
             )}
@@ -54,10 +43,14 @@ export const ColumnActionsMenu = ({
                 {t('column action clear sorting')}
               </DropdownMenu.Item>
             )}
-            <DropdownMenu.Item onClick={() => model.deleteColumn(columnId)}>
-              {t('column action delete')}
+            {model.getColumnCount() > 1 && (
+              <DropdownMenu.Item onClick={() => model.deleteColumn(state.fieldId)}>
+                {t('column action delete')}
+              </DropdownMenu.Item>
+            )}
+            <DropdownMenu.Item onClick={() => model.modalController.openColumnSettings()}>
+              {t('column action settings')}
             </DropdownMenu.Item>
-            <DropdownMenu.Item onClick={onShowColumnSettings}>{t('column action settings')}</DropdownMenu.Item>
           </DropdownMenu.Viewport>
           <DropdownMenu.Arrow />
         </DropdownMenu.Content>

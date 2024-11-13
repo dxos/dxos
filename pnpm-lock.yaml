@@ -8651,6 +8651,15 @@ importers:
 
   packages/plugins/plugin-table:
     dependencies:
+      '@codemirror/autocomplete':
+        specifier: ^6.18.1
+        version: 6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2)
+      '@codemirror/state':
+        specifier: ^6.4.1
+        version: 6.4.1
+      '@codemirror/view':
+        specifier: ^6.34.1
+        version: 6.34.1
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -8672,6 +8681,12 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/lit-grid':
+        specifier: workspace:*
+        version: link:../../ui/lit-grid
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -8696,6 +8711,9 @@ importers:
       '@dxos/react-ui-data':
         specifier: workspace:*
         version: link:../../ui/react-ui-data
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-editor
       '@dxos/react-ui-grid':
         specifier: workspace:*
         version: link:../../ui/react-ui-grid
@@ -8720,9 +8738,9 @@ importers:
       '@radix-ui/react-popper':
         specifier: ^1.1.2
         version: 1.2.0(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      lodash.sortby:
-        specifier: ^4.7.0
-        version: 4.7.0
+      lodash.orderby:
+        specifier: ^4.6.0
+        version: 4.6.0
     devDependencies:
       '@dxos/echo-generator':
         specifier: workspace:*
@@ -8745,6 +8763,9 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      '@types/lodash.orderby':
+        specifier: ^4.6.9
+        version: 4.6.9
       '@types/lodash.sortby':
         specifier: ^4.7.7
         version: 4.7.7
@@ -20346,6 +20367,9 @@ packages:
   '@types/lodash.omit@4.5.7':
     resolution: {integrity: sha512-6q6cNg0tQ6oTWjSM+BcYMBhan54P/gLqBldG4AuXd3nKr0oeVekWNS4VrNEu3BhCSDXtGapi7zjhnna0s03KpA==}
 
+  '@types/lodash.orderby@4.6.9':
+    resolution: {integrity: sha512-T9o2wkIJOmxXwVTPTmwJ59W6eTi2FseiLR369fxszG649Po/xe9vqFNhf/MtnvT5jrbDiyWKxPFPZbpSVK0SVQ==}
+
   '@types/lodash.pick@4.4.7':
     resolution: {integrity: sha512-HgdyKz7/1+oeoVzbpu1XiX/Bti9AUksHtOILH38T07aKvqoirzcdOsrO2+Yg3L51Hv/8m1MetvHZEUGeABiTiQ==}
 
@@ -27174,6 +27198,9 @@ packages:
 
   lodash.omit@4.5.0:
     resolution: {integrity: sha512-XeqSp49hNGmlkj2EJlfrQFIzQ6lXdNro9sddtQzcJY8QaoC2GO0DT7xaIokHeyM+mIT0mPMlPvkYzg2xCuHdZg==}
+
+  lodash.orderby@4.6.0:
+    resolution: {integrity: sha512-T0rZxKmghOOf5YPnn8EY5iLYeWCpZq8G41FfqoVHH5QDTAFaghJRmAdLiadEDq+ztgM2q5PjA+Z1fOwGrLgmtg==}
 
   lodash.pick@4.4.0:
     resolution: {integrity: sha512-hXt6Ul/5yWjfklSGvLQl8vM//l3FtyHZeuelpzK6mm99pNvN9yTDruNZPEJZD1oWrqo+izBmB7oUfWgcCX7s4Q==}
@@ -45159,6 +45186,10 @@ snapshots:
     dependencies:
       '@types/lodash': 4.14.191
 
+  '@types/lodash.orderby@4.6.9':
+    dependencies:
+      '@types/lodash': 4.17.12
+
   '@types/lodash.pick@4.4.7':
     dependencies:
       '@types/lodash': 4.14.191
@@ -53492,6 +53523,8 @@ snapshots:
   lodash.merge@4.6.2: {}
 
   lodash.omit@4.5.0: {}
+
+  lodash.orderby@4.6.0: {}
 
   lodash.pick@4.4.0: {}
 
