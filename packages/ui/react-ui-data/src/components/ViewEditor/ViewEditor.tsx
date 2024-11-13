@@ -6,10 +6,10 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { type SchemaResolver } from '@dxos/echo-db';
 import { type MutableSchema, S } from '@dxos/echo-schema';
-import { Button, Icon, useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { Button, Icon, Tooltip, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
-import { FieldSchema, type FieldType, type ViewType, ViewProjection } from '@dxos/schema';
+import { FieldSchema, type FieldType, type ViewType, ViewProjection, VIEW_FIELD_LIMIT } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
 
 import { translationKey } from '../../translations';
@@ -104,9 +104,18 @@ export const ViewEditor = ({
       {!readonly && !field && (
         <div className='flex justify-center p-2'>
           <div className='flex gap-2'>
-            <Button onClick={handleAdd}>
-              <Icon icon='ph--plus--regular' />
-            </Button>
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <Button onClick={handleAdd} disabled={view.fields.length >= VIEW_FIELD_LIMIT}>
+                  <Icon icon='ph--plus--regular' />
+                </Button>
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Content classNames='z-[12]'>
+                  {view.fields.length >= VIEW_FIELD_LIMIT ? t('field limit reached') : t('add field')} <Tooltip.Arrow />
+                </Tooltip.Content>
+              </Tooltip.Portal>
+            </Tooltip.Root>
           </div>
         </div>
       )}

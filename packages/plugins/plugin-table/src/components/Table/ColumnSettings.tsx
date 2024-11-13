@@ -44,7 +44,7 @@ export const ColumnSettings = ({ model }: ColumnSettingsProps) => {
     <DropdownMenu.Root modal={false} open={state?.type === 'columnSettings'}>
       <DropdownMenu.VirtualTrigger virtualRef={model.modalController.trigger} />
       <DropdownMenu.Portal>
-        <DropdownMenu.Content>
+        <DropdownMenu.Content classNames='md:is-64'>
           <DropdownMenu.Viewport>
             <FieldEditor
               view={model.table.view}
