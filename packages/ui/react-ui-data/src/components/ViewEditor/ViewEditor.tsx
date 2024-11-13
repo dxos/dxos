@@ -6,7 +6,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { type SchemaResolver } from '@dxos/echo-db';
 import { type MutableSchema, S } from '@dxos/echo-schema';
-import { ButtonGroup, IconButton, Tooltip, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { ButtonGroup, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 import { FieldSchema, type FieldType, type ViewType, ViewProjection, VIEW_FIELD_LIMIT } from '@dxos/schema';
@@ -89,7 +89,6 @@ export const ViewEditor = ({
           </>
         )}
       </List.Root>
-
       {field && (
         <FieldEditor
           key={field.id}
@@ -100,24 +99,15 @@ export const ViewEditor = ({
           onClose={handleClose}
         />
       )}
-
       {!readonly && !field && (
         <ButtonGroup classNames='p-2 justify-center'>
-          <Tooltip.Root>
-            <Tooltip.Trigger asChild>
-              <IconButton
-                icon='ph--plus--regular'
-                label={t('button add property')}
-                onClick={handleAdd}
-                disabled={view.fields.length >= VIEW_FIELD_LIMIT}
-              />
-            </Tooltip.Trigger>
-            <Tooltip.Portal>
-              <Tooltip.Content classNames='z-[12]'>
-                {view.fields.length >= VIEW_FIELD_LIMIT ? t('field limit reached') : t('add field')} <Tooltip.Arrow />
-              </Tooltip.Content>
-            </Tooltip.Portal>
-          </Tooltip.Root>
+          <IconButton
+            icon='ph--plus--regular'
+            label={t('button add property')}
+            onClick={handleAdd}
+            // TODO(burdon): Show field limit in ux (not tooltip).
+            disabled={view.fields.length >= VIEW_FIELD_LIMIT}
+          />
         </ButtonGroup>
       )}
     </div>
