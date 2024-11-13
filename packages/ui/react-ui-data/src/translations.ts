@@ -16,6 +16,12 @@ export default [
         'delete field': 'Delete field',
         'field limit reached': 'Maximum number of fields reached',
 
+        'button add property': 'Add property',
+
+        // TODO(burdon): Factor out?
+        'button cancel': 'Cancel',
+        'button save': 'Save',
+
         // FormatEnum
         'format boolean': 'Boolean',
         'format currency': 'Currency',
