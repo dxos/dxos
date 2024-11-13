@@ -15,7 +15,7 @@ const IconButton = ({ icon, label, srOnly, ...props }: IconButtonProps) => {
   return (
     <Button {...props} classNames={tx('iconButton.root', 'iconButton')}>
       <Icon icon={icon} />
-      <span className={srOnly ? 'sr-only' : ''}>{label}</span>
+      <span className={srOnly ? 'sr-only' : undefined}>{label}</span>
     </Button>
   );
 };
