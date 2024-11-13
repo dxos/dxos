@@ -19,7 +19,7 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { ViewProjection, ViewType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Table, type TableController } from './Table';
+import { TableMain, type TableController } from './Table';
 import { useTableModel, type UseTableModelParams } from '../../hooks';
 import translations from '../../translations';
 import { TableType } from '../../types';
@@ -115,9 +115,7 @@ const DefaultStory = () => {
           <Toolbar.Separator />
           <Toolbar.Actions />
         </Toolbar.Root>
-        <Table.Root>
-          <Table.Main ref={tableRef} model={model} />
-        </Table.Root>
+        <TableMain ref={tableRef} model={model} />
       </div>
       <div className='flex flex-col h-full border-l border-separator overflow-y-auto'>
         {table.view && (
@@ -174,11 +172,7 @@ const TablePerformanceStory = (props: StoryProps) => {
     onRowOrderChanged: () => tableRef.current?.update?.(),
   });
 
-  return (
-    <Table.Root>
-      <Table.Main ref={tableRef} model={model} />
-    </Table.Root>
-  );
+  return <TableMain ref={tableRef} model={model} />;
 };
 
 //
@@ -187,7 +181,7 @@ const TablePerformanceStory = (props: StoryProps) => {
 
 const meta: Meta<StoryProps> = {
   title: 'plugins/plugin-table/Table',
-  component: Table.Main as any,
+  component: DefaultStory,
   render: DefaultStory,
   parameters: { translations },
   decorators: [

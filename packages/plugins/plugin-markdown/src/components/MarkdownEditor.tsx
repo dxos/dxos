@@ -32,7 +32,6 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { StackItemContent } from '@dxos/react-ui-stack/next';
-import { textBlockWidth } from '@dxos/react-ui-theme';
 import { isNotFalsy, nonNullable } from '@dxos/util';
 
 import { useSelectCurrentThread } from '../hooks';
@@ -170,18 +169,10 @@ export const MarkdownEditor = ({
   };
 
   return (
-    <StackItemContent attendableId={id}>
+    <StackItemContent toolbar={toolbar}>
       {toolbar && (
         <Toolbar.Root
-          classNames={
-            role === 'section'
-              ? [
-                  textBlockWidth,
-                  'attention-surface z-[2] group-focus-within/section:opacity-1',
-                  !hasAttention && 'opacity-0.5',
-                ]
-              : [textBlockWidth, 'attention-surface']
-          }
+          classNames={['attention-surface', !hasAttention && 'opacity-0.5']}
           state={formattingState && { ...formattingState, ...commentsState }}
           onAction={handleAction}
         >

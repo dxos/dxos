@@ -32,9 +32,6 @@ export type DeckLayoutProps = {
   flatDeck?: boolean;
   overscroll: Overscroll;
   showHints: boolean;
-  slots?: {
-    wallpaper?: { classNames?: string };
-  };
   onDismissToast: (id: string) => void;
 } & Pick<ComplementarySidebarProps, 'panels'>;
 
@@ -44,7 +41,6 @@ export const DeckLayout = ({
   flatDeck,
   overscroll,
   showHints,
-  slots,
   panels,
   onDismissToast,
 }: DeckLayoutProps) => {
@@ -189,12 +185,7 @@ export const DeckLayout = ({
                 orientation='horizontal'
                 size='contain'
                 style={padding}
-                classNames={[
-                  !flatDeck && 'bg-deck',
-                  mainPaddingTransitions,
-                  'absolute inset-0',
-                  slots?.wallpaper?.classNames,
-                ]}
+                classNames={['absolute inset-0', mainPaddingTransitions]}
                 onScroll={handleScroll}
                 ref={deckRef}
               >

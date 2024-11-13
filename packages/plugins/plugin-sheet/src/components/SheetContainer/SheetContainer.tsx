@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { type Space } from '@dxos/react-client/echo';
+import { StackItemContent } from '@dxos/react-ui-stack/next';
 
 import { type SheetType } from '../../types';
 import { useComputeGraph } from '../ComputeGraph';
@@ -17,17 +18,17 @@ export const SheetContainer = ({ space, sheet, role }: { space: Space; sheet: Sh
   const graph = useComputeGraph(space);
 
   return graph ? (
-    <SheetProvider sheet={sheet} graph={graph}>
-      <Toolbar.Root role={role}>
-        <Toolbar.Styles />
-        <Toolbar.Alignment />
-        <Toolbar.Separator />
-        <Toolbar.Actions />
-      </Toolbar.Root>
-      <div role='none' className='border-bs border-separator grid cols-1 rows-[1fr_min-content] min-bs-0'>
+    <StackItemContent toolbar statusbar>
+      <SheetProvider sheet={sheet} graph={graph}>
+        <Toolbar.Root role={role}>
+          <Toolbar.Styles />
+          <Toolbar.Alignment />
+          <Toolbar.Separator />
+          <Toolbar.Actions />
+        </Toolbar.Root>
         <GridSheet />
         <FunctionEditor />
-      </div>
-    </SheetProvider>
+      </SheetProvider>
+    </StackItemContent>
   ) : null;
 };

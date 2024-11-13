@@ -53,7 +53,7 @@ type PlankRootProps = ThemedClassName<ComponentPropsWithRef<'div'>>;
 
 const PlankRoot = forwardRef<HTMLDivElement, PlankRootProps>(({ children, classNames, ...props }, forwardedRef) => {
   return (
-    <div role='none' className={mx('flex items-center', classNames)} {...props} ref={forwardedRef}>
+    <div role='none' className={mx('flex items-center bg-base', classNames)} {...props} ref={forwardedRef}>
       {children}
     </div>
   );

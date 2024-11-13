@@ -2,12 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { forwardRef, type PropsWithChildren, useCallback, useImperativeHandle, useState } from 'react';
+import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { Filter, getSpace } from '@dxos/react-client/echo';
 import { type DxGridElement, Grid, type GridContentProps, closestCell } from '@dxos/react-ui-grid';
-import { mx } from '@dxos/react-ui-theme';
 import { getValue } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
@@ -18,36 +17,7 @@ import { type TableModel } from '../../model';
 import { type GridCell } from '../../types';
 import { TableCellEditor, type TableCellEditorProps } from '../TableCellEditor';
 
-// NOTE(Zan): These fragments add border to inline-end and block-end of the grid using pseudo-elements.
-// These are offset by 1px to avoid double borders in planks.
-const inlineEndLine =
-  '[&>.dx-grid]:relative [&>.dx-grid]:after:absolute [&>.dx-grid]:after:inset-block-0 [&>.dx-grid]:after:-inline-end-px [&>.dx-grid]:after:is-px [&>.dx-grid]:after:bg-separator';
-const blockEndLine =
-  '[&>.dx-grid]:before:absolute [&>.dx-grid]:before:inset-inline-0 [&>.dx-grid]:before:-block-end-px [&>.dx-grid]:before:bs-px [&>.dx-grid]:before:bg-separator';
-
 const frozen = { frozenRowsStart: 1, frozenColsEnd: 1 };
-
-//
-// Root
-//
-
-export type TableRootProps = PropsWithChildren<{ role?: string }>;
-
-const TableRoot = ({ role = 'article', children }: TableRootProps) => {
-  // TODO(burdon): article | section | slide shouldn't be handled here; move into framework.
-  return (
-    <div
-      role={role}
-      className={mx(
-        role === 'article' && 'relative is-full max-is-max min-is-0 min-bs-0',
-        role === 'section' && 'grid cols-1 rows-[1fr_min-content] min-bs-0 !bg-[--surface-bg]',
-        role === 'slide' && 'bs-full overflow-auto grid place-items-center',
-      )}
-    >
-      {children}
-    </div>
-  );
-};
 
 //
 // Main
@@ -61,7 +31,7 @@ export type TableMainProps = {
   model?: TableModel;
 };
 
-const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwardedRef) => {
+export const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwardedRef) => {
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
 
   /**
@@ -170,13 +140,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
       {/* TODO(burdon): Is this required to be unique? */}
       <Grid.Root id={model.table.id ?? 'table-grid'}>
         <TableCellEditor model={model} onEnter={handleEnter} onFocus={handleFocus} onQuery={handleQuery} />
-
         <Grid.Content
-          className={mx(
-            '[&>.dx-grid]:min-bs-0 [&>.dx-grid]:bs-full [&>.dx-grid]:max-bs-max [--dx-grid-base:var(--surface-bg)]',
-            inlineEndLine,
-            blockEndLine,
-          )}
           frozen={frozen}
           columns={model.columnMeta.value}
           limitRows={model.getRowCount() ?? 0}
@@ -184,6 +148,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
           onAxisResize={handleAxisResize}
           onClick={model?.handleGridClick}
           onKeyDown={handleKeyDown}
+          className='[--dx-grid-base:var(--surface-bg)] [&_.dx-grid]:bs-min [&_.dx-grid]:shrink'
           overscroll='trap'
           ref={setDxGrid}
         />
@@ -195,12 +160,3 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
     </>
   );
 });
-
-//
-// CellEditor
-//
-
-export const Table = {
-  Root: TableRoot,
-  Main: TableMain,
-};

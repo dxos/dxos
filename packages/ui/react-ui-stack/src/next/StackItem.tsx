@@ -25,11 +25,9 @@ import React, {
   useRef,
   useCallback,
   useEffect,
-  Children,
 } from 'react';
 
 import { type ThemedClassName, Icon } from '@dxos/react-ui';
-import { useAttendableAttributes, useAttention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useStack } from './Stack';
@@ -134,7 +132,7 @@ export const StackItem = forwardRef<HTMLDivElement, StackItemProps>(
           tabIndex={0}
           {...focusGroupAttrs}
           className={mx(
-            'grid relative ch-focus-ring-inset-over-all',
+            'group/stack-item grid relative ch-focus-ring-inset-over-all',
             size === 'min-content' && (orientation === 'horizontal' ? 'is-min' : 'bs-min'),
             orientation === 'horizontal' ? 'grid-rows-subgrid' : 'grid-cols-subgrid',
             rail && (orientation === 'horizontal' ? 'row-span-2' : 'col-span-2'),
@@ -252,29 +250,32 @@ export const StackItemResizeHandle = () => {
   );
 };
 
-export type StackItemContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { attendableId: string };
+export type StackItemContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
+  toolbar?: boolean;
+  statusbar?: boolean;
+};
 
-export const StackItemContent = ({ children, attendableId, ...props }: StackItemContentProps) => {
-  const nChildren = Children.count(children);
+export const StackItemContent = ({
+  children,
+  toolbar = true,
+  statusbar,
+  classNames,
+  ...props
+}: StackItemContentProps) => {
   const { size } = useStack();
-  const { hasAttention } = useAttention(attendableId);
-  const attendableAttributes = useAttendableAttributes(attendableId);
 
   return (
     <div
       role='none'
       {...props}
-      {...attendableAttributes}
-      {...(hasAttention && { 'aria-current': 'location' })}
-      className={mx(
-        'group',
-        size === 'contain' && 'overflow-hidden',
-        nChildren > 2
-          ? 'flex flex-col gap-px'
-          : nChildren === 2
-            ? 'grid cols-1 grid-rows-[var(--rail-action)_1fr] gap-px'
-            : 'contents',
-      )}
+      className={mx('group grid gap-px', size === 'contain' && 'overflow-hidden', classNames)}
+      style={{
+        gridTemplateRows: [
+          ...(toolbar ? ['var(--rail-action)'] : []),
+          '1fr',
+          ...(statusbar ? ['var(--statusbar-size)'] : []),
+        ].join(' '),
+      }}
     >
       {children}
     </div>
