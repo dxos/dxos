@@ -8,7 +8,7 @@ import { Button, type ButtonProps } from './Button';
 import { useThemeContext } from '../../hooks';
 import { Icon, type IconProps } from '../Icon';
 
-type IconButtonProps = Omit<ButtonProps, 'children'> & Pick<IconProps, 'icon'> & { label?: string };
+type IconButtonProps = Omit<ButtonProps, 'children'> & Pick<IconProps, 'icon'> & { label: string };
 
 const IconButton = ({ icon, label, ...props }: IconButtonProps) => {
   const { tx } = useThemeContext();
