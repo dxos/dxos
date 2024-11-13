@@ -22,6 +22,8 @@ import { getDeep, omit, pick, setDeep } from '@dxos/util';
 import { PropertySchema, type PropertyType } from './format';
 import { type ViewType, type FieldType } from './view';
 
+export const VIEW_FIELD_LIMIT = 32;
+
 /**
  * Composite of view and schema metadata for a property.
  */
@@ -54,8 +56,10 @@ export class ViewProjection {
    * Construct a new property.
    */
   createFieldProjection(): FieldType {
+    invariant(this._view.fields.length < VIEW_FIELD_LIMIT, `Field limit reached: ${VIEW_FIELD_LIMIT}`);
+
     const field: FieldType = {
-      id: createFieldId(), // TODO(burdon): Check unique.
+      id: createFieldId(),
       path: createUniqueProperty(this._view),
     };
 
@@ -118,6 +122,7 @@ export class ViewProjection {
       const clonedField: FieldType = { ...field, ...propsValues };
       const fieldIndex = this._view.fields.findIndex((field) => field.path === sourcePropertyName);
       if (fieldIndex === -1) {
+        invariant(this._view.fields.length < VIEW_FIELD_LIMIT, `Field limit reached: ${VIEW_FIELD_LIMIT}`);
         if (index !== undefined && index >= 0 && index <= this._view.fields.length) {
           this._view.fields.splice(index, 0, clonedField);
         } else {
