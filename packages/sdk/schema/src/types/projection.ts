@@ -6,7 +6,6 @@ import {
   formatToType,
   typeToFormat,
   FormatEnum,
-  type JsonPath,
   type JsonProp,
   type MutableSchema,
   S,
@@ -17,7 +16,7 @@ import { getSchemaReference, setSchemaReference } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { getDeep, omit, pick, setDeep } from '@dxos/util';
+import { omit, pick } from '@dxos/util';
 
 import { PropertySchema, type PropertyType } from './format';
 import { type ViewType, type FieldType } from './view';
@@ -35,8 +34,6 @@ export type FieldProjection = {
 /**
  * Wrapper for View that manages Field and Format updates.
  */
-// TODO(burdon): Unit tests.
-// TODO(burdon): In the future the path could be an actual path (not property).
 export class ViewProjection {
   private readonly _encode = S.encodeSync(PropertySchema);
   private readonly _decode = S.decodeSync(PropertySchema, {});
@@ -191,7 +188,3 @@ export const createUniqueProperty = (view: ViewType): JsonProp => {
     }
   }
 };
-
-// TODO(burdon): Move to echo-schema.
-export const getValue = <T = any>(obj: any, path: JsonPath) => getDeep<T>(obj, path.split('.'));
-export const setValue = <T = any>(obj: any, path: JsonPath, value: T) => setDeep<T>(obj, path.split('.'), value);

@@ -4,6 +4,7 @@
 
 import { type EncodedReference } from '@dxos/echo-protocol';
 import { S } from '@dxos/effect';
+import { DXN } from '@dxos/keys';
 
 import { EXPANDO_TYPENAME } from './expando';
 import { type HasId, type ObjectAnnotation, getObjectAnnotation, ReferenceAnnotationId } from '../ast';
@@ -16,13 +17,10 @@ import { type Ref } from '../types';
  */
 const JSON_SCHEMA_ECHO_REF_ID = '/schemas/echo/ref';
 
-const DXN = /dxn:type:(.+)/;
-
 export const getSchemaReference = (property: any): string | undefined => {
   const { $id, reference: { schema: { $ref } = {} } = {} } = property;
   if ($id === JSON_SCHEMA_ECHO_REF_ID) {
-    const match = $ref?.match(DXN);
-    return match?.[1];
+    return DXN.parse($ref).toTypename();
   }
 };
 
@@ -31,7 +29,7 @@ export const setSchemaReference = (property: any, schema: string) => {
     $id: JSON_SCHEMA_ECHO_REF_ID,
     reference: {
       schema: {
-        $ref: `dxn:type:${schema}`,
+        $ref: DXN.fromTypename(schema),
       },
     },
   });
