@@ -55,7 +55,7 @@ export const getType = <T extends {}>(obj: T | undefined): Reference | undefined
 export const getTypename = <T extends {}>(obj: T): string | undefined => {
   const schema = getSchema(obj);
   // Special handling for MutableSchema. objectId is StoredSchema objectId, not a typename.
-  if (typeof schema === 'object' && SchemaMetaSymbol in schema) {
+  if (schema && typeof schema === 'object' && SchemaMetaSymbol in schema) {
     return (schema as any)[SchemaMetaSymbol].typename;
   }
   return getType(obj)?.objectId;
