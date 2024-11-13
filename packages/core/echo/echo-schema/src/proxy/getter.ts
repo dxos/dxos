@@ -6,7 +6,7 @@ import { Reference } from '@dxos/echo-protocol';
 import { type S } from '@dxos/effect';
 
 import { getProxyHandler, isReactiveObject } from './proxy';
-import { getObjectAnnotation } from '../ast';
+import { getObjectAnnotation, SchemaMetaSymbol } from '../ast';
 
 /**
  * Returns the schema for the given object if one is defined.
@@ -52,7 +52,14 @@ export const getType = <T extends {}>(obj: T | undefined): Reference | undefined
 };
 
 // TODO(burdon): Reconcile functions.
-export const getTypename = <T extends {}>(obj: T): string | undefined => getType(obj)?.objectId;
+export const getTypename = <T extends {}>(obj: T): string | undefined => {
+  const schema = getSchema(obj);
+  // Special handling for MutableSchema. objectId is StoredSchema objectId, not a typename.
+  if (typeof schema === 'object' && SchemaMetaSymbol in schema) {
+    return (schema as any)[SchemaMetaSymbol].typename;
+  }
+  return getType(obj)?.objectId;
+};
 export const getTypenameOrThrow = (schema: S.Schema<any>): string => requireTypeReference(schema).objectId;
 
 export const requireTypeReference = (schema: S.Schema<any>): Reference => {

@@ -49,7 +49,7 @@ interface FormatSchemaCommon extends BaseProperty {
   multipleOf?: number;
   currency?: string;
   referenceSchema?: string;
-  referenceProperty?: string;
+  referencePath?: string;
 }
 
 /**
@@ -77,7 +77,7 @@ export const formatToSchema: Record<FormatEnum, S.Schema<FormatSchemaCommon>> = 
       [AST.TitleAnnotationId]: 'Schema',
       [AST.DescriptionAnnotationId]: 'Schema typename.',
     }),
-    referenceProperty: S.optional(
+    referencePath: S.optional(
       JsonProp.annotations({
         [AST.TitleAnnotationId]: 'Lookup property',
         [AST.DescriptionAnnotationId]: 'Referenced property.',
@@ -126,12 +126,18 @@ export const formatToSchema: Record<FormatEnum, S.Schema<FormatSchemaCommon>> = 
   [FormatEnum.Date]: extend(FormatEnum.Date, TypeEnum.String),
   [FormatEnum.Time]: extend(FormatEnum.Time, TypeEnum.String),
   [FormatEnum.Duration]: extend(FormatEnum.Duration, TypeEnum.String),
+
+  //
+  // Objects
+  //
+
+  [FormatEnum.LatLng]: extend(FormatEnum.LatLng, TypeEnum.Object),
 };
 
 /**
  * Discriminated union of schema based on format.
  * This is the schema used by the ViewEditor's Form.
- * It is mapped to/from the View's Field and Schema properties via the ViewProjection.
+ * It is mapped to/from the View's Field AND Schema properties via the ViewProjection.
  */
 export const PropertySchema = S.Union(
   formatToSchema[FormatEnum.None],
@@ -170,6 +176,12 @@ export const PropertySchema = S.Union(
   formatToSchema[FormatEnum.Date],
   formatToSchema[FormatEnum.Time],
   formatToSchema[FormatEnum.Duration],
+
+  //
+  // Objects
+  //
+
+  formatToSchema[FormatEnum.LatLng],
 );
 
 export interface PropertyType extends S.Simplify<S.Schema.Type<typeof PropertySchema>> {}
@@ -193,6 +205,7 @@ export const getPropertySchemaForFormat = (format?: FormatEnum): S.Schema<any> |
   return undefined;
 };
 
+// NOTE: 'a string' is the fallback annotation provided by effect.
 const noDefault = (value?: string, defaultValue?: string): string | undefined =>
   (value === 'a string' ? undefined : value) ?? defaultValue;
 
@@ -240,5 +253,8 @@ const getTypeEnum = (node: AST.AST): TypeEnum | undefined => {
   }
   if (AST.isBooleanKeyword(node)) {
     return TypeEnum.Boolean;
+  }
+  if (AST.isObjectKeyword(node)) {
+    return TypeEnum.Object;
   }
 };

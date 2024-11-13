@@ -42,9 +42,7 @@ export type JsonSchemaReferenceInfo = {
 // TODO(burdon): Move to json schema and make private?
 export const createEchoReferenceSchema = (annotation: ObjectAnnotation): S.Schema<any> => {
   const typePredicate =
-    annotation.typename === EXPANDO_TYPENAME
-      ? () => true
-      : (obj: object) => getTypename(obj) === (annotation.schemaId ?? annotation.typename);
+    annotation.typename === EXPANDO_TYPENAME ? () => true : (obj: object) => getTypename(obj) === annotation.typename;
 
   const referenceInfo: JsonSchemaReferenceInfo = {
     schema: {
