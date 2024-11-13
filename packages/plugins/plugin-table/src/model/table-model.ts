@@ -6,7 +6,7 @@ import { computed, effect, signal, type ReadonlySignal } from '@preact/signals-c
 import orderBy from 'lodash.orderby';
 
 import { Resource } from '@dxos/context';
-import { FormatEnum, type JsonProp } from '@dxos/echo-schema';
+import { getValue, setValue, FormatEnum, type JsonProp } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/react-client';
 import { cellClassesForFieldType, formatForDisplay, formatForEditing, parseValue } from '@dxos/react-ui-data';
@@ -18,7 +18,7 @@ import {
   type DxGridPlaneRange,
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
-import { type ViewProjection, type FieldType, getValue, setValue, VIEW_FIELD_LIMIT } from '@dxos/schema';
+import { VIEW_FIELD_LIMIT, type ViewProjection, type FieldType } from '@dxos/schema';
 
 import { ModalController } from './modal-controller';
 import { fromGridCell, type GridCell, type TableType } from '../types';

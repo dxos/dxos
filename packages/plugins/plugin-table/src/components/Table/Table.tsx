@@ -4,11 +4,11 @@
 
 import React, { forwardRef, type PropsWithChildren, useCallback, useImperativeHandle, useState } from 'react';
 
+import { getValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { Filter, getSpace } from '@dxos/react-client/echo';
 import { type DxGridElement, Grid, type GridContentProps, closestCell } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
-import { getValue } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
 import { ColumnActionsMenu } from './ColumnActionsMenu';

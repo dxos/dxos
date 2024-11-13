@@ -4,9 +4,9 @@
 
 import { type Simplify } from 'effect/Types';
 
-import { AST, S } from '@dxos/effect';
+import { AST, type JsonPath, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { type Comparator, intersection } from '@dxos/util';
+import { type Comparator, getDeep, intersection, setDeep } from '@dxos/util';
 
 import { getProxyHandler } from './proxy';
 
@@ -118,3 +118,6 @@ export const foreignKey = (source: string, id: string): ForeignKey => ({ source,
 export const foreignKeyEquals = (a: ForeignKey, b: ForeignKey) => a.source === b.source && a.id === b.id;
 export const compareForeignKeys: Comparator<ReactiveObject<any>> = (a: ReactiveObject<any>, b: ReactiveObject<any>) =>
   intersection(getMeta(a).keys, getMeta(b).keys, foreignKeyEquals).length > 0;
+
+export const getValue = <T = any>(obj: any, path: JsonPath) => getDeep<T>(obj, path.split('.'));
+export const setValue = <T = any>(obj: any, path: JsonPath, value: T) => setDeep<T>(obj, path.split('.'), value);

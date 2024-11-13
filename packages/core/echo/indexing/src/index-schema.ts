@@ -79,8 +79,7 @@ export class IndexSchema extends Resource implements Index {
         results.push(...Array.from(this._index.get(null) ?? []).map((id) => ({ id, rank: 0 })));
       } else if (DXN.isDXNString(typename)) {
         const dxn = DXN.parse(typename);
-
-        if (dxn.isLocalEchoObjectDXN()) {
+        if (dxn.isLocalObjectId()) {
           const objectId = dxn.parts[1];
           results.push(...Array.from(this._index.get(objectId) ?? []).map((id) => ({ id, rank: 0 })));
         } else if (dxn.parts[0] === DXN.kind.TYPE) {
