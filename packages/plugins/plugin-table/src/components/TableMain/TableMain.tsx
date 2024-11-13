@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'react';
+import React, { forwardRef, useCallback, useImperativeHandle, useState, type WheelEvent } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { Filter, getSpace } from '@dxos/react-client/echo';
+import { useAttention } from '@dxos/react-ui-attention';
 import { type DxGridElement, Grid, type GridContentProps, closestCell } from '@dxos/react-ui-grid';
 import { getValue } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
@@ -28,19 +29,20 @@ export type TableController = {
 };
 
 export type TableMainProps = {
-  model?: TableModel;
+  model: TableModel;
+  attendableId: string;
 };
 
-export const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwardedRef) => {
+export const TableMain = forwardRef<TableController, TableMainProps>(({ model, attendableId }, forwardedRef) => {
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
-
+  const { hasAttention } = useAttention(attendableId);
   /**
    * Provides an external controller that can be called to repaint the table.
    */
   useImperativeHandle<TableController, TableController>(
     forwardedRef,
     () => {
-      if (!model || !dxGrid) {
+      if (!dxGrid) {
         return {};
       }
 
@@ -65,7 +67,7 @@ export const TableMain = forwardRef<TableController, TableMainProps>(({ model },
   const handleEnter = useCallback<NonNullable<TableCellEditorProps['onEnter']>>(
     (cell) => {
       // TODO(burdon): Insert row only if bottom row isn't completely blank already.
-      if (model && cell.row === model.getRowCount() - 1) {
+      if (cell.row === model.getRowCount() - 1) {
         model.insertRow(cell.row);
       }
     },
@@ -75,7 +77,7 @@ export const TableMain = forwardRef<TableController, TableMainProps>(({ model },
   const handleKeyDown = useCallback<NonNullable<GridContentProps['onKeyDown']>>(
     (event) => {
       const cell = closestCell(event.target);
-      if (!model || !cell) {
+      if (!cell) {
         return;
       }
 
@@ -100,10 +102,19 @@ export const TableMain = forwardRef<TableController, TableMainProps>(({ model },
     [model],
   );
 
+  const handleWheel = useCallback(
+    (event: WheelEvent) => {
+      if (!hasAttention) {
+        event.stopPropagation();
+      }
+    },
+    [hasAttention],
+  );
+
   // TODO(burdon): Factor out?
   const handleQuery = useCallback<NonNullable<TableCellEditorProps['onQuery']>>(
     async ({ field, props }, _text) => {
-      if (model && props.referenceSchema && field.referencePath) {
+      if (props.referenceSchema && field.referencePath) {
         const space = getSpace(model.table);
         invariant(space);
         const schema = space.db.schemaRegistry.getSchema(props.referenceSchema);
@@ -131,14 +142,9 @@ export const TableMain = forwardRef<TableController, TableMainProps>(({ model },
     [model],
   );
 
-  if (!model) {
-    return null;
-  }
-
   return (
     <>
-      {/* TODO(burdon): Is this required to be unique? */}
-      <Grid.Root id={model.table.id ?? 'table-grid'}>
+      <Grid.Root id={model.table.id}>
         <TableCellEditor model={model} onEnter={handleEnter} onFocus={handleFocus} onQuery={handleQuery} />
         <Grid.Content
           frozen={frozen}
@@ -148,6 +154,7 @@ export const TableMain = forwardRef<TableController, TableMainProps>(({ model },
           onAxisResize={handleAxisResize}
           onClick={model?.handleGridClick}
           onKeyDown={handleKeyDown}
+          onWheelCapture={handleWheel}
           className='[--dx-grid-base:var(--surface-bg)] [&_.dx-grid]:bs-min [&_.dx-grid]:shrink'
           overscroll='trap'
           ref={setDxGrid}

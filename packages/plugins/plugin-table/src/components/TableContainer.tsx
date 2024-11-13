@@ -12,7 +12,7 @@ import { useAttention } from '@dxos/react-ui-attention';
 import { StackItemContent } from '@dxos/react-ui-stack/next';
 import { ViewProjection } from '@dxos/schema';
 
-import { type TableController, TableMain } from './Table';
+import { type TableController, TableMain } from './TableMain';
 import { Toolbar, type ToolbarAction } from './Toolbar';
 import { useTableModel } from '../hooks';
 import { TableAction, type TableType } from '../types';
@@ -23,7 +23,8 @@ export const sectionToolbarLayout = 'bs-[--rail-action] bg-[--sticky-bg] sticky 
 
 // TODO(zantonio): Move toolbar action handling to a more appropriate location.
 const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType; role?: string }>) => {
-  const { hasAttention } = useAttention(fullyQualifiedId(table));
+  const attendableId = fullyQualifiedId(table);
+  const { hasAttention } = useAttention(attendableId);
   const dispatch = useIntentDispatcher();
   const space = getSpace(table);
 
@@ -110,7 +111,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
         <Toolbar.Actions />
       </Toolbar.Root>
       <div role='none' className='flex flex-col gap-px'>
-        <TableMain key={table.id} ref={tableRef} model={model} />
+        {model && <TableMain key={table.id} attendableId={attendableId} ref={tableRef} model={model} />}
         <span role='none' className='flex-1 min-bs-0 attention-surface' />
       </div>
     </StackItemContent>
