@@ -25,7 +25,7 @@ import { type ViewType, type FieldType } from './view';
 const DXN = /dxn:type:(.+)/;
 
 // TODO(ZaymonFC): Relax this constraint if people want more fields.
-export const VIEW_FIELD_LIMIT = 5;
+export const VIEW_FIELD_LIMIT = 32;
 
 /**
  * Composite of view and schema metadata for a property.
