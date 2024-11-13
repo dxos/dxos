@@ -66,7 +66,7 @@ const meta: Meta<typeof ViewEditor> = {
   title: 'ui/react-ui-data/ViewEditor',
   component: ViewEditor,
   render: DefaultStory,
-  decorators: [withClientProvider({ createSpace: true }), withLayout({ fullscreen: true }), withTheme],
+  decorators: [withClientProvider({ createSpace: true }), withLayout({ fullscreen: true, tooltips: true }), withTheme],
   parameters: {
     translations,
   },
