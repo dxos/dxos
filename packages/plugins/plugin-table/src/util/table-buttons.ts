@@ -16,9 +16,17 @@ const ICONS: { [K in TableButton]: string } = {
   newColumn: 'ph--plus--regular',
 } as const;
 
-const createButtonHtml = ({ button, value = '' }: { button: TableButton; value?: string }): string => {
+const createButtonHtml = ({
+  button,
+  value = '',
+  disabled = false,
+}: {
+  button: TableButton;
+  value?: string;
+  disabled?: boolean;
+}): string => {
   const buttonClasses = 'ch-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-2' as const;
-  return `<button class="${buttonClasses}" ${TABLE_ATTRS[button]}="${value}"><svg><use href="/icons.svg#${ICONS[button]}"/></svg></button>`;
+  return `<button class="${buttonClasses}" ${TABLE_ATTRS[button]}="${value}" ${disabled ? 'disabled' : ''}><svg><use href="/icons.svg#${ICONS[button]}"/></svg></button>`;
 };
 
 export const tableButtons = {
@@ -35,6 +43,6 @@ export const tableButtons = {
   addColumn: {
     attr: TABLE_ATTRS.newColumn,
     icon: ICONS.newColumn,
-    render: () => createButtonHtml({ button: 'newColumn' }),
+    render: ({ disabled }: { disabled?: boolean } = {}) => createButtonHtml({ button: 'newColumn', disabled }),
   },
 } as const;

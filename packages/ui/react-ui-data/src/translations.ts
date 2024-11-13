@@ -11,6 +11,10 @@ export default [
         'field property label': 'Property',
         'field property placeholder': 'Property name',
         'field format label': 'Type',
+        'field path label': 'Field path',
+        'add field': 'Add field',
+        'delete field': 'Delete field',
+        'field limit reached': 'Maximum number of fields reached',
 
         // FormatEnum
         'format boolean': 'Boolean',
