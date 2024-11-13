@@ -374,6 +374,9 @@
       "@dxos/react-ui-syntax-highlighter": [
         "packages/ui/react-ui-syntax-highlighter/src/index.ts"
       ],
+      "@dxos/react-ui-table/_deprecated": [
+        "packages/ui/react-ui-table/src/_deprecated/index.ts"
+      ],
       "@dxos/react-ui-table": [
         "packages/ui/react-ui-table/src/index.ts"
       ],
