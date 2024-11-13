@@ -51,13 +51,15 @@ type PlankHeadingButtonProps = Omit<ButtonProps, 'variant'> & AttendableId & Rel
 
 type PlankRootProps = ThemedClassName<ComponentPropsWithRef<'div'>>;
 
-const PlankRoot = forwardRef<HTMLDivElement, PlankRootProps>(({ children, classNames, ...props }, forwardedRef) => {
-  return (
-    <div role='none' className={mx('flex items-center bg-base', classNames)} {...props} ref={forwardedRef}>
-      {children}
-    </div>
-  );
-});
+const PlankHeadingRoot = forwardRef<HTMLDivElement, PlankRootProps>(
+  ({ children, classNames, ...props }, forwardedRef) => {
+    return (
+      <div role='none' className={mx('flex items-center bg-base', classNames)} {...props} ref={forwardedRef}>
+        {children}
+      </div>
+    );
+  },
+);
 
 const MenuSignifierHorizontal = () => (
   <svg
@@ -363,7 +365,7 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
 );
 
 export const PlankHeading = {
-  Root: PlankRoot,
+  Root: PlankHeadingRoot,
   Button: PlankHeadingButton,
   Label: PlankHeadingLabel,
   ActionsMenu: PlankHeadingActionsMenu,

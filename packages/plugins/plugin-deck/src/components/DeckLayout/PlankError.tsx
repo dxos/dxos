@@ -36,12 +36,10 @@ export const PlankError = ({
   layoutCoordinate,
   node,
   error,
-  flatDeck,
 }: {
   layoutCoordinate: LayoutCoordinate;
   node?: Node;
   error?: Error;
-  flatDeck?: boolean;
 }) => {
   const [timedOut, setTimedOut] = useState(false);
   useEffect(() => {
@@ -49,7 +47,7 @@ export const PlankError = ({
   }, []);
   return (
     <>
-      <NodePlankHeading coordinate={layoutCoordinate} node={node} pending={!timedOut} flatDeck={flatDeck} />
+      <NodePlankHeading coordinate={layoutCoordinate} node={node} pending={!timedOut} />
       {timedOut ? <PlankContentError error={error} /> : <PlankLoading />}
     </>
   );

@@ -26,6 +26,7 @@ export type NodePlankHeadingProps = {
   canIncrementEnd?: boolean;
   popoverAnchorId?: string;
   pending?: boolean;
+  resizeable?: boolean;
   actions?: PlankHeadingAction[];
 };
 
@@ -71,7 +72,7 @@ export const NodePlankHeading = memo(
     );
 
     return (
-      <PlankHeading.Root {...(layoutPart !== 'main' && { classNames: 'pie-1' })}>
+      <PlankHeading.Root {...(layoutPart !== 'main' && { classNames: 'pie-1' })} data-dx-attention-placeholder-ignore>
         <ActionRoot>
           {node ? (
             <PlankHeading.ActionsMenu

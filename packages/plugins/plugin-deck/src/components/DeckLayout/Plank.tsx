@@ -108,7 +108,7 @@ export const Plank = memo(({ entry, layoutParts, part, searchEnabled, layoutMode
       item={{ id: entry?.id ?? 'never' }}
       size={size}
       onSizeChange={setSize}
-      classNames={[isSuppressed && '!sr-only']}
+      classNames={['attention-placeholder-host', isSuppressed && '!sr-only']}
       {...attendableAttrs}
       {...(isSuppressed && { inert: '' })}
       onKeyDown={handleKeyDown}
@@ -122,6 +122,7 @@ export const Plank = memo(({ entry, layoutParts, part, searchEnabled, layoutMode
             canIncrementStart={canIncrementStart}
             canIncrementEnd={canIncrementEnd}
             popoverAnchorId={popoverAnchorId}
+            resizeable={resizeable}
           />
           <Surface role='article' data={data} limit={1} fallback={PlankContentError} placeholder={placeholder} />
         </>

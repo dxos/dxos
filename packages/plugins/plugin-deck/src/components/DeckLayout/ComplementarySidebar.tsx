@@ -27,10 +27,9 @@ import { useLayout } from '../LayoutContext';
 export type ComplementarySidebarProps = {
   panels: Panel[];
   current?: string;
-  flatDeck?: boolean;
 };
 
-export const ComplementarySidebar = ({ panels, current, flatDeck }: ComplementarySidebarProps) => {
+export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarProps) => {
   const { popoverAnchorId } = useLayout();
   const attended = useAttended();
   const panel = (panels.find((p) => p.id === current) ?? panels[0])?.id;
@@ -64,13 +63,7 @@ export const ComplementarySidebar = ({ panels, current, flatDeck }: Complementar
   return (
     <Main.ComplementarySidebar>
       <div role='none' className={mx(railGridHorizontal, 'grid-cols-1 bs-full')}>
-        <NodePlankHeading
-          coordinate={coordinate}
-          node={node}
-          popoverAnchorId={popoverAnchorId}
-          flatDeck={flatDeck}
-          actions={actions}
-        />
+        <NodePlankHeading coordinate={coordinate} node={node} popoverAnchorId={popoverAnchorId} actions={actions} />
         <div className='divide-y divide-separator overflow-x-hidden overflow-y-scroll'>
           {node && (
             <Surface

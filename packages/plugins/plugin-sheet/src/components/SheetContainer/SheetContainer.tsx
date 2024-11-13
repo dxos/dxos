@@ -30,5 +30,7 @@ export const SheetContainer = ({ space, sheet, role }: { space: Space; sheet: Sh
         <FunctionEditor />
       </SheetProvider>
     </StackItemContent>
-  ) : null;
+  ) : (
+    <span role='none' className='attention-surface' />
+  );
 };
