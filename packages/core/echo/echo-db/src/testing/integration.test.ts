@@ -363,7 +363,7 @@ describe('Integration tests', () => {
           field: S.String,
         }) {}
         const stored = db.schemaRegistry.addSchema(TestSchema);
-        schemaDxn = DXN.localEchoObjectDXN(stored.id).toString();
+        schemaDxn = DXN.fromLocalObjectId(stored.id).toString();
 
         const object = db.add(create(stored, { field: 'test' }));
         expect(getSchema(object)).to.eq(stored);
