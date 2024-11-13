@@ -18,7 +18,7 @@ import {
   type DxGridPlaneRange,
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
-import { type ViewProjection, type FieldType, getValue, setValue } from '@dxos/schema';
+import { type ViewProjection, type FieldType, getValue, setValue, VIEW_FIELD_LIMIT } from '@dxos/schema';
 
 import { ModalController } from './modal-controller';
 import { fromGridCell, type GridCell, type TableType } from '../types';
@@ -328,7 +328,9 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
     return {
       [fromGridCell({ col: 0, row: 0 })]: {
         value: '',
-        accessoryHtml: tableButtons.addColumn.render(),
+        accessoryHtml: tableButtons.addColumn.render({
+          disabled: (this._table.view?.fields?.length ?? 0) >= VIEW_FIELD_LIMIT,
+        }),
         readonly: true,
       },
     };

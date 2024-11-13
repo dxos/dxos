@@ -24,6 +24,9 @@ import { type ViewType, type FieldType } from './view';
 
 const DXN = /dxn:type:(.+)/;
 
+// TODO(ZaymonFC): Relax this constraint if people want more fields.
+export const VIEW_FIELD_LIMIT = 32;
+
 /**
  * Composite of view and schema metadata for a property.
  */
@@ -56,8 +59,10 @@ export class ViewProjection {
    * Construct a new property.
    */
   createFieldProjection(): FieldType {
+    invariant(this._view.fields.length < VIEW_FIELD_LIMIT, `Field limit reached: ${VIEW_FIELD_LIMIT}`);
+
     const field: FieldType = {
-      id: createFieldId(), // TODO(burdon): Check unique.
+      id: createFieldId(),
       path: createUniqueProperty(this._view),
     };
 
@@ -133,6 +138,7 @@ export class ViewProjection {
       const clonedField: FieldType = { ...field, ...propsValues };
       const fieldIndex = this._view.fields.findIndex((f) => f.path === sourcePropertyName);
       if (fieldIndex === -1) {
+        invariant(this._view.fields.length < VIEW_FIELD_LIMIT, `Field limit reached: ${VIEW_FIELD_LIMIT}`);
         if (index !== undefined && index >= 0 && index <= this._view.fields.length) {
           this._view.fields.splice(index, 0, clonedField);
         } else {
