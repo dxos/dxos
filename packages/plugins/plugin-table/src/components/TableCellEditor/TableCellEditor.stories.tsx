@@ -16,7 +16,7 @@ import { Grid, type GridEditing } from '@dxos/react-ui-grid';
 import { ViewProjection, ViewType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { CellEditor, type CellEditorProps } from './CellEditor';
+import { TableCellEditor, type TableCellEditorProps } from './TableCellEditor';
 import { useTableModel } from '../../hooks';
 import translations from '../../translations';
 import { TableType } from '../../types';
@@ -49,7 +49,7 @@ const DefaultStory = ({ editing }: StoryProps) => {
 
   const model = useTableModel({ table, projection });
 
-  const handleQuery: CellEditorProps['onQuery'] = async ({ field }) => {
+  const handleQuery: TableCellEditorProps['onQuery'] = async ({ field }) => {
     const { objects } = await space.db.query(schema).run();
     return objects.map((obj) => {
       const label = obj[field.referencePath ?? 'id'];
@@ -66,16 +66,16 @@ const DefaultStory = ({ editing }: StoryProps) => {
 
   return (
     <div className='flex w-[300px] h-[32px] border border-separator'>
-      <Grid.Root id='test'>
-        <CellEditor model={model} editing={editing} onQuery={handleQuery} />
+      <Grid.Root id='test' editing={editing}>
+        <TableCellEditor model={model} onQuery={handleQuery} />
       </Grid.Root>
     </div>
   );
 };
 
 const meta: Meta<StoryProps> = {
-  title: 'plugins/plugin-table/CellEditor',
-  component: CellEditor,
+  title: 'plugins/plugin-table/TableCellEditor',
+  component: DefaultStory,
   render: DefaultStory,
   parameters: { translations, layout: 'centered' },
   decorators: [

@@ -6,14 +6,7 @@ import React, { forwardRef, type PropsWithChildren, useCallback, useImperativeHa
 
 import { invariant } from '@dxos/invariant';
 import { Filter, getSpace } from '@dxos/react-client/echo';
-import {
-  type DxGridElement,
-  Grid,
-  type GridContentProps,
-  type GridScopedProps,
-  closestCell,
-  useGridContext,
-} from '@dxos/react-ui-grid';
+import { type DxGridElement, Grid, type GridContentProps, closestCell } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 import { getValue } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
@@ -23,7 +16,7 @@ import { ColumnSettings } from './ColumnSettings';
 import { RowActionsMenu } from './RowActionsMenu';
 import { type TableModel } from '../../model';
 import { type GridCell } from '../../types';
-import { CellEditor, type CellEditorProps } from '../CellEditor';
+import { TableCellEditor, type TableCellEditorProps } from '../TableCellEditor';
 
 // NOTE(Zan): These fragments add border to inline-end and block-end of the grid using pseudo-elements.
 // These are offset by 1px to avoid double borders in planks.
@@ -138,7 +131,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
   );
 
   // TODO(burdon): Factor out?
-  const handleQuery = useCallback<NonNullable<CellEditorProps['onQuery']>>(
+  const handleQuery = useCallback<NonNullable<TableCellEditorProps['onQuery']>>(
     async ({ field, props }, _text) => {
       if (model && props.referenceSchema && field.referencePath) {
         const space = getSpace(model.table);
@@ -206,18 +199,6 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
 //
 // CellEditor
 //
-
-export type TableCellEditorProps = GridScopedProps<Pick<CellEditorProps, 'model' | 'onEnter' | 'onFocus' | 'onQuery'>>;
-
-const TableCellEditor = ({ __gridScope, model, onEnter, ...props }: TableCellEditorProps) => {
-  const { editing, setEditing } = useGridContext('TableCellEditor', __gridScope);
-  const handleEnter: CellEditorProps['onEnter'] = (cell) => {
-    setEditing(null);
-    onEnter?.(cell);
-  };
-
-  return <CellEditor editing={editing} model={model} onEnter={handleEnter} {...props} />;
-};
 
 export const Table = {
   Root: TableRoot,

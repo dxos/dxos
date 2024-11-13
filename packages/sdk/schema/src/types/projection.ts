@@ -71,7 +71,7 @@ export class ViewProjection {
     invariant(this._schema.jsonSchema.properties);
     const field = this._view.fields.find((f) => f.id === fieldId);
     invariant(field, `invalid field: ${fieldId}`);
-    invariant(field.path.indexOf('.') === -1); // TODO(burdon): Paths not currently supported.
+    invariant(field.path.indexOf('.') === -1);
 
     const jsonProperty: JsonSchemaType = this._schema.jsonSchema.properties[field.path] ?? { format: FormatEnum.None };
     const { type: schemaType, format: schemaFormat = FormatEnum.None, ...rest } = jsonProperty;

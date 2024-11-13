@@ -14,7 +14,7 @@ import { type Ref } from '../types';
 /**
  * The `$id` field for an ECHO reference schema.
  */
-export const JSON_SCHEMA_ECHO_REF_ID = '/schemas/echo/ref';
+const JSON_SCHEMA_ECHO_REF_ID = '/schemas/echo/ref';
 
 const DXN = /dxn:type:(.+)/;
 
