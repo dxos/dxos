@@ -6,7 +6,7 @@ import React, { type FC, useEffect, useMemo } from 'react';
 
 import { type S } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
-import { Button, Icon, type ThemedClassName } from '@dxos/react-ui';
+import { ButtonGroup, IconButton, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { getSchemaProperties, type SchemaProperty, type ValidationError } from '@dxos/schema';
 
@@ -92,18 +92,16 @@ export const Form = <T extends object>({
         );
       })}
 
-      <div className='flex w-full justify-center'>
-        <div className='flex gap-2'>
-          {!readonly && (
-            <Button type='submit' onClick={handleSubmit} disabled={!canSubmit}>
-              <Icon icon='ph--check--regular' />
-            </Button>
-          )}
-          <Button onClick={onCancel}>
-            <Icon icon='ph--x--regular' />
-          </Button>
-        </div>
-      </div>
+      <ButtonGroup classNames='justify-center'>
+        {!readonly && <IconButton icon='ph--x--regular' label={'Cancel'} onClick={onCancel} />}
+        <IconButton
+          icon='ph--check--regular'
+          type='submit'
+          label={'Save'}
+          onClick={handleSubmit}
+          disabled={!canSubmit}
+        />
+      </ButtonGroup>
     </div>
   );
 };
