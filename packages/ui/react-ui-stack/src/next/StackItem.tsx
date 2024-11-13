@@ -153,7 +153,9 @@ export const StackItem = forwardRef<HTMLDivElement, StackItemProps>(
             ...(size !== 'min-content' && {
               [orientation === 'horizontal' ? 'inlineSize' : 'blockSize']: `${size}rem`,
             }),
-            ...(order && { [orientation === 'horizontal' ? 'grid-column-start' : 'grid-row-start']: order }),
+            ...(Number.isFinite(order) && {
+              [orientation === 'horizontal' ? 'grid-column' : 'grid-row']: `${order}`,
+            }),
             ...style,
           }}
           ref={composedItemRef}
