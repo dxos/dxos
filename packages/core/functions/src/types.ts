@@ -4,10 +4,6 @@
 
 import { RawObject, S, TypedObject } from '@dxos/echo-schema';
 
-const BaseTrigger = S.Struct({
-  label: S.String,
-});
-
 /**
  * Type discriminator for TriggerSpec.
  * Every spec has a type field of type FunctionTriggerType that we can use to understand which
