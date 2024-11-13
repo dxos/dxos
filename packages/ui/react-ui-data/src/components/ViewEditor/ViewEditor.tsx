@@ -6,7 +6,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { type SchemaResolver } from '@dxos/echo-db';
 import { type MutableSchema, S } from '@dxos/echo-schema';
-import { ButtonGroup, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 import { FieldSchema, type FieldType, type ViewType, ViewProjection, VIEW_FIELD_LIMIT } from '@dxos/schema';
@@ -100,7 +100,7 @@ export const ViewEditor = ({
         />
       )}
       {!readonly && !field && (
-        <ButtonGroup classNames='p-2 justify-center'>
+        <div className='p-2 grid'>
           <IconButton
             icon='ph--plus--regular'
             label={t('button add property')}
@@ -108,7 +108,7 @@ export const ViewEditor = ({
             // TODO(burdon): Show field limit in ux (not tooltip).
             disabled={view.fields.length >= VIEW_FIELD_LIMIT}
           />
-        </ButtonGroup>
+        </div>
       )}
     </div>
   );
