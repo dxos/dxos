@@ -16,20 +16,21 @@ const queryClient = new QueryClient();
 
 export type CallsProps = {
   roomName: string;
+  iceServers: RTCIceServer[];
   noRouter?: boolean;
 };
 
 /**
  * Entrypoint for app and extension (no direct dependency on Client).
  */
-export const Calls = ({ roomName, noRouter }: CallsProps) => {
+export const Calls = ({ roomName, noRouter, iceServers }: CallsProps) => {
   if (noRouter) {
     return <Routes />;
   }
 
   return (
     <QueryClientProvider client={queryClient}>
-      <RoomContextProvider roomName={roomName}>
+      <RoomContextProvider roomName={roomName} iceServers={iceServers}>
         <HashRouter>
           <Routes />
         </HashRouter>

@@ -5,8 +5,6 @@
 import React, { useState, useMemo, type ReactNode, useEffect } from 'react';
 import { from, of, switchMap } from 'rxjs';
 
-import { useConfig } from '@dxos/react-client';
-
 import { EnsureOnline } from '../app/components/EnsureOnline';
 import { EnsurePermissions } from '../app/components/EnsurePermissions';
 import { useStateObservable, useSubscribedState } from '../app/hooks/rxjsHooks';
@@ -34,15 +32,22 @@ interface RoomProps extends RoomData {
   children: ReactNode;
 }
 
-export const RoomContextProvider = ({ roomName, children }: { roomName: string; children: ReactNode }): JSX.Element => {
+export const RoomContextProvider = ({
+  roomName,
+  iceServers,
+  children,
+}: {
+  roomName: string;
+  iceServers: RTCIceServer[];
+  children: ReactNode;
+}): JSX.Element => {
   const [roomData, setRoomData] = useState<RoomData | null>(null);
-  const config = useConfig();
 
   // Simulate Remix loader behavior with useEffect
   useEffect(() => {
     setRoomData({
       mode: 'development',
-      iceServers: config.get('runtime.services.ice') ?? [],
+      iceServers,
       feedbackEnabled: true,
       maxWebcamFramerate: 24,
       maxWebcamBitrate: 1200000,
@@ -85,7 +90,7 @@ const Room = ({
     maxApiHistory,
     // apiExtraParams,
     iceServers,
-    apiBase: 'https://calls.dxos.workers.dev/api/calls',
+    apiBase: 'http://localhost:8787/api/calls',
   });
   const roomHistory = useRoomHistory(peer, room);
 
