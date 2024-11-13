@@ -97,8 +97,8 @@ export const Form = <T extends object>({
       <ButtonGroup classNames='justify-center'>
         {!readonly && <IconButton icon='ph--x--regular' label={t('button cancel')} onClick={onCancel} />}
         <IconButton
-          icon='ph--check--regular'
           type='submit'
+          icon='ph--check--regular'
           label={t('button save')}
           onClick={handleSubmit}
           disabled={!canSubmit}
