@@ -6,6 +6,7 @@ import usePartySocket from 'partysocket/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import type { UserMedia } from './useUserMedia';
+import { CALLS_URL } from '../../types';
 import type { ClientMessage, RoomState, ServerMessage } from '../types/Messages';
 import assertNever from '../utils/assertNever';
 
@@ -19,7 +20,7 @@ export default ({ roomName, userMedia }: { roomName: string; userMedia: UserMedi
   }, []);
 
   const websocket = usePartySocket({
-    host: 'wss://calls.dxos.workers.dev',
+    host: CALLS_URL,
     party: 'rooms',
     room: roomName,
     onMessage: (e) => {

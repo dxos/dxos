@@ -6,6 +6,7 @@ import type { GraphBuilderProvides, SurfaceProvides, TranslationsProvides } from
 
 import { CALLS_PLUGIN } from './meta';
 
+export const CALLS_URL = 'https://calls.dxos.workers.dev';
 const CALLS_ACTION = `${CALLS_PLUGIN}/action`;
 
 export enum CallsAction {

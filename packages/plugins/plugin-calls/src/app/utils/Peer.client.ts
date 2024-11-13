@@ -21,6 +21,7 @@ import type {
   TracksResponse,
 } from './callsTypes';
 import Ewma from './ewma';
+import { CALLS_URL } from '../../types';
 
 const iceGathertingTimeout = 1500; /* ms */
 const newTrackTimeout = 10000;
@@ -107,7 +108,7 @@ export default class Peer {
   #defaultParams(params: Partial<PeerParams>) {
     return {
       iceTrickleEnabled: false,
-      baseURL: 'https://calls.dxos.workers.dev/api/calls',
+      baseURL: `${CALLS_URL}/api/calls`,
       onDisconnect: () => {},
       onConnect: () => {},
       ...params,

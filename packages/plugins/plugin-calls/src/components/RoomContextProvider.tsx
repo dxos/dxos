@@ -15,6 +15,7 @@ import { useRoomHistory } from '../app/hooks/useRoomHistory';
 import { useStablePojo } from '../app/hooks/useStablePojo';
 import useUserMedia from '../app/hooks/useUserMedia';
 import { type Mode } from '../app/utils/mode';
+import { CALLS_URL } from '../types';
 
 // Types for loader function response
 interface RoomData {
@@ -90,7 +91,7 @@ const Room = ({
     maxApiHistory,
     // apiExtraParams,
     iceServers,
-    apiBase: 'http://localhost:8787/api/calls',
+    apiBase: `${CALLS_URL}/api/calls`,
   });
   const roomHistory = useRoomHistory(peer, room);
 
