@@ -105,7 +105,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   );
 
   return (
-    <StackItemContent toolbar fillNegativeSpace>
+    <StackItemContent toolbar>
       <Toolbar.Root onAction={handleAction} classNames={['attention-surface', !hasAttention && 'opacity-0.5']}>
         <Toolbar.Separator />
         <Toolbar.Actions />

@@ -26,7 +26,6 @@ export type NodePlankHeadingProps = {
   canIncrementEnd?: boolean;
   popoverAnchorId?: string;
   pending?: boolean;
-  flatDeck?: boolean;
   actions?: PlankHeadingAction[];
 };
 
@@ -38,7 +37,6 @@ export const NodePlankHeading = memo(
     canIncrementEnd,
     popoverAnchorId,
     pending,
-    flatDeck,
     actions = [],
   }: NodePlankHeadingProps) => {
     const { t } = useTranslation(DECK_PLUGIN);
@@ -73,7 +71,7 @@ export const NodePlankHeading = memo(
     );
 
     return (
-      <PlankHeading.Root {...((layoutPart !== 'main' || !flatDeck) && { classNames: 'pie-1' })}>
+      <PlankHeading.Root {...(layoutPart !== 'main' && { classNames: 'pie-1' })}>
         <ActionRoot>
           {node ? (
             <PlankHeading.ActionsMenu

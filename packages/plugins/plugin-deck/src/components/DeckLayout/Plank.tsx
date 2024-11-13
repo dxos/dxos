@@ -38,11 +38,10 @@ export type PlankProps = {
   // TODO(wittjosiah): Remove. Pass in LayoutCoordinate instead of LayoutEntry.
   part: LayoutPart;
   layoutMode: Layout['layoutMode'];
-  flatDeck?: boolean;
   searchEnabled?: boolean;
 };
 
-export const Plank = memo(({ entry, layoutParts, part, flatDeck, searchEnabled, layoutMode }: PlankProps) => {
+export const Plank = memo(({ entry, layoutParts, part, searchEnabled, layoutMode }: PlankProps) => {
   const { t } = useTranslation(DECK_PLUGIN);
   const dispatch = useIntentDispatcher();
   const coordinate: LayoutCoordinate = useMemo(() => ({ part, entryId: entry?.id ?? UNKNOWN_ID }), [entry?.id, part]);
@@ -123,12 +122,11 @@ export const Plank = memo(({ entry, layoutParts, part, flatDeck, searchEnabled, 
             canIncrementStart={canIncrementStart}
             canIncrementEnd={canIncrementEnd}
             popoverAnchorId={popoverAnchorId}
-            flatDeck={flatDeck}
           />
           <Surface role='article' data={data} limit={1} fallback={PlankContentError} placeholder={placeholder} />
         </>
       ) : (
-        <PlankError layoutCoordinate={coordinate} flatDeck={flatDeck} />
+        <PlankError layoutCoordinate={coordinate} />
       )}
     </StackItem>
   );

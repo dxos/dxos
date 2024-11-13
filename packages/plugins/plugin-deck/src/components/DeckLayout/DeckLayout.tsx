@@ -202,7 +202,6 @@ export const DeckLayout = ({
                   layoutParts={layoutParts}
                   part='solo'
                   layoutMode={layoutMode}
-                  flatDeck={flatDeck}
                   searchEnabled={!!searchPlugin}
                 />
                 {layoutParts.main?.map((layoutEntry) => (
@@ -212,7 +211,6 @@ export const DeckLayout = ({
                     layoutParts={layoutParts}
                     part='main'
                     layoutMode={layoutMode}
-                    flatDeck={flatDeck}
                     searchEnabled={!!searchPlugin}
                   />
                 ))}
