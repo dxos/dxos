@@ -1,24 +1,12 @@
 {
-  "extends": [
-    "../../../tsconfig.base.json"
-  ],
+  "extends": ["../../../tsconfig.base.json"],
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "types": [
-      "node"
-    ]
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "lib": ["DOM", "ESNext"],
+    "types": ["node"],
   },
-  "exclude": [
-    "*.t.ts",
-    "vite.config.ts"
-  ],
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/*.ts"
-  ],
-  "references": []
+  "exclude": ["*.t.ts", "vite.config.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/*.ts"],
+  "references": [],
 }

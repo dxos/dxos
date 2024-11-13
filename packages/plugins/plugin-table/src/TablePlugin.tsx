@@ -19,13 +19,13 @@ import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-g
 import { SpaceAction } from '@dxos/plugin-space';
 import { getSpace } from '@dxos/react-client/echo';
 import { translations as dataTranslations, ViewEditor } from '@dxos/react-ui-data';
+import { TableType } from '@dxos/react-ui-table';
 import { type FieldProjection, ViewProjection, ViewType } from '@dxos/schema';
 
 import { TableContainer } from './components';
 import meta, { TABLE_PLUGIN } from './meta';
 import { serializer } from './serializer';
 import translations from './translations';
-import { TableType } from './types';
 import { TableAction, type TablePluginProvides, isTable } from './types';
 
 export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {

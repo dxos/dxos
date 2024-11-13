@@ -14,10 +14,9 @@
     },
     "./deprecated": {
       "types": "./dist/types/src/_deprecated/index.d.ts",
-      "browser": "./dist/lib/browser/deprecated/index.mjs"
+      "browser": "./dist/lib/browser/_deprecated/index.mjs"
     }
   },
-  "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
       "deprecated": [
@@ -30,25 +29,38 @@
     "src"
   ],
   "dependencies": {
+    "@codemirror/autocomplete": "^6.18.1",
+    "@codemirror/state": "^6.4.1",
+    "@codemirror/view": "^6.34.1",
     "@dxos/async": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/lit-grid": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/plugin-search": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-data": "workspace:*",
+    "@dxos/react-ui-grid": "workspace:*",
     "@dxos/react-ui-searchlist": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-types": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fluentui/react-tabster": "^9.19.0",
+    "@preact/signals-core": "^1.6.0",
     "@radix-ui/react-context": "^1.0.0",
     "@radix-ui/react-primitive": "^1.0.2",
     "@radix-ui/react-slot": "^1.0.1",
     "@radix-ui/react-use-controllable-state": "^1.0.0",
     "@tanstack/react-table": "^8.13.2",
     "@tanstack/react-virtual": "^3.9.0",
-    "date-fns": "^3.3.1"
+    "date-fns": "^3.3.1",
+    "lodash.orderby": "^4.6.0"
   },
   "devDependencies": {
     "@dxos/echo-signals": "workspace:*",
@@ -57,6 +69,7 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
+    "@types/lodash.orderby": "^4.6.9",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "fast-check": "^3.19.0",
