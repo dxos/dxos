@@ -35,6 +35,8 @@ export type DeckLayoutProps = {
   onDismissToast: (id: string) => void;
 } & Pick<ComplementarySidebarProps, 'panels'>;
 
+const overscrollStyles = 'bg-deck row-span-2 transition-[inline-size] duration-200 ease-in-out-symmetric';
+
 export const DeckLayout = ({
   layoutParts,
   toasts,
@@ -184,11 +186,17 @@ export const DeckLayout = ({
               <Stack
                 orientation='horizontal'
                 size='contain'
-                style={padding}
-                classNames={['absolute inset-0', mainPaddingTransitions]}
+                classNames={[
+                  // The overscroll spans need these magic inline insets in order to compensate for the gaps.
+                  'absolute inset-block-0 -inline-start-px inline-end-[-2px]',
+                  mainPaddingTransitions,
+                ]}
                 onScroll={handleScroll}
                 ref={deckRef}
               >
+                {padding && (
+                  <span role='none' className={overscrollStyles} style={{ inlineSize: padding.paddingInlineStart }} />
+                )}
                 <Plank
                   entry={layoutParts.solo?.[0]}
                   layoutParts={layoutParts}
@@ -208,6 +216,9 @@ export const DeckLayout = ({
                     searchEnabled={!!searchPlugin}
                   />
                 ))}
+                {padding && (
+                  <span role='none' className={overscrollStyles} style={{ inlineSize: padding.paddingInlineEnd }} />
+                )}
               </Stack>
             </div>
           </Main.Content>
