@@ -107,7 +107,7 @@ export const ViewEditor = ({
             <Tooltip.Trigger asChild>
               <IconButton
                 icon='ph--plus--regular'
-                label='Add property'
+                label={t('button add property')}
                 onClick={handleAdd}
                 disabled={view.fields.length >= VIEW_FIELD_LIMIT}
               />

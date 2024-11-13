@@ -12,6 +12,7 @@ import { getSchemaProperties, type SchemaProperty, type ValidationError } from '
 
 import { FormInput, type FormInputProps } from './FormInput';
 import { useForm } from '../../hooks';
+import { translationKey } from '../../translations';
 
 export type PropsFilter<T extends Object> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
 
@@ -45,6 +46,7 @@ export const Form = <T extends object>({
   onCancel,
   Custom,
 }: FormProps<T>) => {
+  const { t } = useTranslation(translationKey);
   const { canSubmit, errors, handleSubmit, getInputProps, getErrorValence, getErrorMessage } = useForm<T>({
     schema,
     initialValues: values,
@@ -93,11 +95,11 @@ export const Form = <T extends object>({
       })}
 
       <ButtonGroup classNames='justify-center'>
-        {!readonly && <IconButton icon='ph--x--regular' label={'Cancel'} onClick={onCancel} />}
+        {!readonly && <IconButton icon='ph--x--regular' label={t('button cancel')} onClick={onCancel} />}
         <IconButton
           icon='ph--check--regular'
           type='submit'
-          label={'Save'}
+          label={t('button save')}
           onClick={handleSubmit}
           disabled={!canSubmit}
         />
