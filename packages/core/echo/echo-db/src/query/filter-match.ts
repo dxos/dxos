@@ -66,7 +66,7 @@ const filterMatchInner = (
   }
 
   if (filter.type) {
-    const type = core.getType()?.toDXN() ?? DXN.typename(EXPANDO_TYPENAME);
+    const type = core.getType()?.toDXN() ?? DXN.fromTypename(EXPANDO_TYPENAME);
     log('type compare', { type, filterType: filter.type });
     if (!filter.type.some((filterType) => DXN.equals(filterType, type))) {
       return false;
