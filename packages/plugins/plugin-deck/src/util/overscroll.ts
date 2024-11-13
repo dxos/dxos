@@ -71,7 +71,7 @@ export const calculateOverscroll = (
     // Center the plank in the content area.
     const plank = planks[0];
     const plankSize = getPlankSize(plank.id);
-    const overscrollPadding = `max(0px, calc(((100dvw - ${sidebarWidth} - ${complementarySidebarWidth} - (${plankSize} + 20px)) / 2)))`;
+    const overscrollPadding = `max(0px, calc(((100dvw - ${sidebarWidth} - ${complementarySidebarWidth} - ${plankSize}) / 2)))`;
 
     return { paddingInlineStart: overscrollPadding, paddingInlineEnd: overscrollPadding };
   } else {
@@ -83,8 +83,8 @@ export const calculateOverscroll = (
     const lastSize = getPlankSize(last.id);
 
     return {
-      paddingInlineStart: `max(0px, calc(((100dvw - (${firstSize} + 20px)) / 2) - ${sidebarWidth}))`,
-      paddingInlineEnd: `max(0px, calc(((100dvw - (${lastSize} + 20px)) / 2) - ${complementarySidebarWidth}))`,
+      paddingInlineStart: `max(0px, calc(((100dvw - ${firstSize}) / 2) - ${sidebarWidth}))`,
+      paddingInlineEnd: `max(0px, calc(((100dvw - ${lastSize}) / 2) - ${complementarySidebarWidth}))`,
     };
   }
 };

@@ -29,7 +29,6 @@ import { useLayout } from '../LayoutContext';
 export type DeckLayoutProps = {
   layoutParts: LayoutParts;
   toasts: ToastSchema[];
-  flatDeck?: boolean;
   overscroll: Overscroll;
   showHints: boolean;
   onDismissToast: (id: string) => void;
@@ -37,15 +36,7 @@ export type DeckLayoutProps = {
 
 const overscrollStyles = 'bg-deck row-span-2 transition-[inline-size] duration-200 ease-in-out-symmetric';
 
-export const DeckLayout = ({
-  layoutParts,
-  toasts,
-  flatDeck,
-  overscroll,
-  showHints,
-  panels,
-  onDismissToast,
-}: DeckLayoutProps) => {
+export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels, onDismissToast }: DeckLayoutProps) => {
   const context = useLayout();
   const {
     layoutMode,
@@ -167,7 +158,7 @@ export const DeckLayout = ({
         <Sidebar layoutParts={layoutParts} />
 
         {/* Right sidebar. */}
-        <ComplementarySidebar panels={panels} current={layoutParts.complementary?.[0].id} flatDeck={flatDeck} />
+        <ComplementarySidebar panels={panels} current={layoutParts.complementary?.[0].id} />
 
         {/* Dialog overlay to dismiss dialogs. */}
         <Main.Overlay />
@@ -182,28 +173,21 @@ export const DeckLayout = ({
         {/* Solo/deck mode. */}
         {!isEmpty && (
           <Main.Content bounce classNames='grid block-end-[--statusbar-size]' handlesFocus>
-            <div role='none' className='relative'>
+            <div
+              role='none'
+              className={layoutMode === 'deck' ? 'relative' : 'sr-only'}
+              {...(layoutMode !== 'deck' && { inert: true })}
+            >
               <Stack
                 orientation='horizontal'
                 size='contain'
-                classNames={[
-                  // The overscroll spans need these magic inline insets in order to compensate for the gaps.
-                  'absolute inset-block-0 -inline-start-px inline-end-[-2px]',
-                  mainPaddingTransitions,
-                ]}
+                classNames={['absolute inset-0', mainPaddingTransitions]}
                 onScroll={handleScroll}
                 ref={deckRef}
               >
                 {padding && (
                   <span role='none' className={overscrollStyles} style={{ inlineSize: padding.paddingInlineStart }} />
                 )}
-                <Plank
-                  entry={layoutParts.solo?.[0]}
-                  layoutParts={layoutParts}
-                  part='solo'
-                  layoutMode={layoutMode}
-                  searchEnabled={!!searchPlugin}
-                />
                 {layoutParts.main?.map((layoutEntry) => (
                   <Plank
                     key={layoutEntry.id}
@@ -218,6 +202,19 @@ export const DeckLayout = ({
                   <span role='none' className={overscrollStyles} style={{ inlineSize: padding.paddingInlineEnd }} />
                 )}
               </Stack>
+            </div>
+            <div
+              role='none'
+              className={layoutMode === 'solo' ? 'relative bg-deck' : 'sr-only'}
+              {...(layoutMode !== 'solo' && { inert: true })}
+            >
+              <Plank
+                entry={layoutParts.solo?.[0]}
+                layoutParts={layoutParts}
+                part='solo'
+                layoutMode={layoutMode}
+                searchEnabled={!!searchPlugin}
+              />
             </div>
           </Main.Content>
         )}

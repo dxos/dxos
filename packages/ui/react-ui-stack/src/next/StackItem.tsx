@@ -74,12 +74,17 @@ export const StackItem = forwardRef<HTMLDivElement, StackItemProps>(
 
     const setSize = useCallback(
       (nextSize: StackItemSize, commit?: boolean) => {
-        setInternalSize(nextSize);
         if (commit) {
           onSizeChange?.(nextSize);
         }
       },
       [onSizeChange],
+    );
+
+    useEffect(
+      () =>
+        setInternalSize(propsSize ?? orientation === 'horizontal' ? DEFAULT_HORIZONTAL_SIZE : DEFAULT_VERTICAL_SIZE),
+      [propsSize],
     );
 
     const type = orientation === 'horizontal' ? 'column' : 'card';

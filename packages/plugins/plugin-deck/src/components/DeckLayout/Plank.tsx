@@ -19,7 +19,8 @@ import { debounce } from '@dxos/async';
 import { useGraph } from '@dxos/plugin-graph';
 import { useTranslation } from '@dxos/react-ui';
 import { useAttendableAttributes } from '@dxos/react-ui-attention';
-import { StackItem } from '@dxos/react-ui-stack/next';
+import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack/next';
+import { mainIntrinsicSize, mx } from '@dxos/react-ui-theme';
 
 import { NodePlankHeading } from './NodePlankHeading';
 import { PlankContentError, PlankError } from './PlankError';
@@ -51,6 +52,7 @@ export const Plank = memo(({ entry, layoutParts, part, searchEnabled, layoutMode
   const node = useNode(graph, entry?.id);
   const rootElement = useRef<HTMLDivElement | null>(null);
   const resizeable = layoutMode === 'deck';
+  const Root = part === 'solo' ? 'div' : StackItem;
 
   const attendableAttrs = useAttendableAttributes(coordinate.entryId);
   const index = indexInPart(layoutParts, coordinate);
@@ -83,10 +85,6 @@ export const Plank = memo(({ entry, layoutParts, part, searchEnabled, layoutMode
   }, [coordinate.entryId, scrollIntoView, layoutMode]);
 
   const isSolo = layoutMode === 'solo' && part === 'solo';
-  const isSuppressed =
-    (layoutMode === 'solo' && part !== 'solo') ||
-    (layoutMode === 'deck' && part === 'solo') ||
-    coordinate.entryId === UNKNOWN_ID;
 
   const sizeAttrs = useMainSize();
 
@@ -103,14 +101,24 @@ export const Plank = memo(({ entry, layoutParts, part, searchEnabled, layoutMode
   // TODO(wittjosiah): Change prop to accept a component.
   const placeholder = useMemo(() => <PlankLoading />, []);
 
+  const className = mx(
+    'attention-placeholder-host',
+    isSolo && mainIntrinsicSize,
+    isSolo && railGridHorizontal,
+    isSolo && 'grid gap-px absolute inset-0 bg-separator',
+  );
+
   return (
-    <StackItem
-      item={{ id: entry?.id ?? 'never' }}
-      size={size}
-      onSizeChange={setSize}
-      classNames={['attention-placeholder-host', isSuppressed && '!sr-only']}
+    <Root
+      {...(part === 'solo'
+        ? ({ ...sizeAttrs, className } as any)
+        : {
+            item: { id: entry?.id ?? 'never' },
+            size,
+            onSizeChange: setSize,
+            classNames: className,
+          })}
       {...attendableAttrs}
-      {...(isSuppressed && { inert: '' })}
       onKeyDown={handleKeyDown}
       ref={rootElement}
     >
@@ -129,6 +137,6 @@ export const Plank = memo(({ entry, layoutParts, part, searchEnabled, layoutMode
       ) : (
         <PlankError layoutCoordinate={coordinate} />
       )}
-    </StackItem>
+    </Root>
   );
 });
