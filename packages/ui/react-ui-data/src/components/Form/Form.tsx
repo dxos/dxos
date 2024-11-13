@@ -6,7 +6,7 @@ import React, { type FC, useEffect, useMemo } from 'react';
 
 import { type S } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
-import { ButtonGroup, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { getSchemaProperties, type SchemaProperty, type ValidationError } from '@dxos/schema';
 
@@ -94,7 +94,7 @@ export const Form = <T extends object>({
         );
       })}
 
-      <ButtonGroup classNames='justify-center'>
+      <div className='flex gap-1 mbs-3'>
         {!readonly && <IconButton icon='ph--x--regular' label={t('button cancel')} onClick={onCancel} />}
         <IconButton
           type='submit'
@@ -102,8 +102,9 @@ export const Form = <T extends object>({
           label={t('button save')}
           onClick={handleSubmit}
           disabled={!canSubmit}
+          classNames='grow'
         />
-      </ButtonGroup>
+      </div>
     </div>
   );
 };
