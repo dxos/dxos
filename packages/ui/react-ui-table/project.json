@@ -11,6 +11,7 @@
         "platforms": ["browser"]
       }
     },
+    "build": {},
     "lint": {}
   },
   "implicitDependencies": ["esbuild", "node-std"]
