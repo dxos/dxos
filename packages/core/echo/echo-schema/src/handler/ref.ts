@@ -7,7 +7,13 @@ import { S } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
 import { EXPANDO_TYPENAME } from './expando';
-import { type HasId, type ObjectAnnotation, getObjectAnnotation, ReferenceAnnotationId } from '../ast';
+import {
+  type HasId,
+  type ObjectAnnotation,
+  getObjectAnnotation,
+  ReferenceAnnotationId,
+  type JsonSchemaType,
+} from '../ast';
 import { MutableSchema, StoredSchema } from '../mutable';
 import { getTypename, isReactiveObject } from '../proxy';
 import { type Ref } from '../types';
@@ -17,14 +23,14 @@ import { type Ref } from '../types';
  */
 const JSON_SCHEMA_ECHO_REF_ID = '/schemas/echo/ref';
 
-export const getSchemaReference = (property: any): string | undefined => {
+export const getSchemaReference = (property: JsonSchemaType): string | undefined => {
   const { $id, reference: { schema: { $ref } = {} } = {} } = property;
-  if ($id === JSON_SCHEMA_ECHO_REF_ID) {
+  if ($id === JSON_SCHEMA_ECHO_REF_ID && $ref) {
     return DXN.parse($ref).toTypename();
   }
 };
 
-export const setSchemaReference = (property: any, schema: string) => {
+export const setSchemaReference = (property: JsonSchemaType, schema: string) => {
   Object.assign(property, {
     $id: JSON_SCHEMA_ECHO_REF_ID,
     reference: {
