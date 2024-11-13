@@ -61,7 +61,7 @@ export const calculateOverscroll = (
     return { paddingInlineStart: 0, paddingInlineEnd: 0 };
   }
 
-  // TODO(Zan): Move complementary sidebar size (360px), sidebar size (270px), plank resize handle size (20px) to CSS variables.
+  // TODO(Zan): Move complementary sidebar size (360px), sidebar size (270px), size of two gaps (2px) to CSS variables.
   const sidebarWidth = sidebarOpen ? '270px' : '0px';
   const complementarySidebarWidth = complementarySidebarOpen ? '360px' : '0px';
 
@@ -71,7 +71,7 @@ export const calculateOverscroll = (
     // Center the plank in the content area.
     const plank = planks[0];
     const plankSize = getPlankSize(plank.id);
-    const overscrollPadding = `max(0px, calc(((100dvw - ${sidebarWidth} - ${complementarySidebarWidth} - ${plankSize}) / 2)))`;
+    const overscrollPadding = `max(0px, calc(((100dvw - ${sidebarWidth} - ${complementarySidebarWidth} - (${plankSize} + 2px)) / 2)))`;
 
     return { paddingInlineStart: overscrollPadding, paddingInlineEnd: overscrollPadding };
   } else {
@@ -83,8 +83,8 @@ export const calculateOverscroll = (
     const lastSize = getPlankSize(last.id);
 
     return {
-      paddingInlineStart: `max(0px, calc(((100dvw - ${firstSize}) / 2) - ${sidebarWidth}))`,
-      paddingInlineEnd: `max(0px, calc(((100dvw - ${lastSize}) / 2) - ${complementarySidebarWidth}))`,
+      paddingInlineStart: `max(0px, calc(((100dvw - (${firstSize} + 1px)) / 2) - ${sidebarWidth}))`,
+      paddingInlineEnd: `max(0px, calc(((100dvw - (${lastSize} + 1px)) / 2) - ${complementarySidebarWidth}))`,
     };
   }
 };

@@ -42,6 +42,7 @@ export type StackItemData = { id: string; type: 'column' | 'card' };
 
 export type StackItemProps = ThemedClassName<ComponentPropsWithRef<'div'>> & {
   item: Omit<StackItemData, 'type'>;
+  order?: number;
   onRearrange?: (source: StackItemData, target: StackItemData, closestEdge: Edge | null) => void;
   size?: StackItemSize;
   onSizeChange?: (nextSize: StackItemSize) => void;
@@ -62,7 +63,10 @@ const StackItemContext = createContext<StackItemContextValue>({
 const useStackItem = () => useContext(StackItemContext);
 
 export const StackItem = forwardRef<HTMLDivElement, StackItemProps>(
-  ({ item, children, classNames, onRearrange, size: propsSize, onSizeChange, style, ...props }, forwardedRef) => {
+  (
+    { item, children, classNames, onRearrange, size: propsSize, onSizeChange, order, style, ...props },
+    forwardedRef,
+  ) => {
     const [itemElement, itemRef] = useState<HTMLDivElement | null>(null);
     const [selfDragHandleElement, selfDragHandleRef] = useState<HTMLDivElement | null>(null);
     const [closestEdge, setEdge] = useState<Edge | null>(null);
@@ -149,6 +153,7 @@ export const StackItem = forwardRef<HTMLDivElement, StackItemProps>(
             ...(size !== 'min-content' && {
               [orientation === 'horizontal' ? 'inlineSize' : 'blockSize']: `${size}rem`,
             }),
+            ...(order && { [orientation === 'horizontal' ? 'grid-column-start' : 'grid-row-start']: order }),
             ...style,
           }}
           ref={composedItemRef}

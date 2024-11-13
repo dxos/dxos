@@ -39,10 +39,10 @@ export type PlankProps = {
   // TODO(wittjosiah): Remove. Pass in LayoutCoordinate instead of LayoutEntry.
   part: LayoutPart;
   layoutMode: Layout['layoutMode'];
-  searchEnabled?: boolean;
+  order?: number;
 };
 
-export const Plank = memo(({ entry, layoutParts, part, searchEnabled, layoutMode }: PlankProps) => {
+export const Plank = memo(({ entry, layoutParts, part, layoutMode, order }: PlankProps) => {
   const { t } = useTranslation(DECK_PLUGIN);
   const dispatch = useIntentDispatcher();
   const coordinate: LayoutCoordinate = useMemo(() => ({ part, entryId: entry?.id ?? UNKNOWN_ID }), [entry?.id, part]);
@@ -117,6 +117,7 @@ export const Plank = memo(({ entry, layoutParts, part, searchEnabled, layoutMode
             size,
             onSizeChange: setSize,
             classNames: className,
+            order,
           })}
       {...attendableAttrs}
       onKeyDown={handleKeyDown}

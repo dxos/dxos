@@ -19,7 +19,7 @@ export type Orientation = 'horizontal' | 'vertical';
 export type Size = 'intrinsic' | 'contain';
 
 export type StackProps = Omit<ThemedClassName<ComponentPropsWithRef<'div'>>, 'aria-orientation'> &
-  Partial<StackContextValue>;
+  Partial<StackContextValue> & { itemsCount?: number };
 
 export type StackContextValue = {
   orientation: Orientation;
@@ -51,16 +51,15 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
       rail = true,
       separators = true,
       size = 'intrinsic',
+      itemsCount = Children.count(children),
       ...props
     },
     forwardedRef,
   ) => {
-    const childrenCount = Children.count(children);
     const arrowNavigationGroup = useArrowNavigationGroup({ axis: orientation });
 
     const styles: CSSProperties = {
-      [orientation === 'horizontal' ? 'gridTemplateColumns' : 'gridTemplateRows']:
-        `repeat(${childrenCount}, min-content)`,
+      [orientation === 'horizontal' ? 'gridTemplateColumns' : 'gridTemplateRows']: `repeat(${itemsCount}, min-content)`,
       ...style,
     };
 

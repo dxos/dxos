@@ -53,7 +53,6 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
   const { plankSizing } = useDeckContext();
   // NOTE: Not `useAttended` so that the layout component is not re-rendered when the attended list changes.
   const attentionPlugin = usePlugin<AttentionPluginProvides>('dxos.org/plugin/attention');
-  const searchPlugin = usePlugin('dxos.org/plugin/search');
   const fullScreenSlug = useMemo(() => firstIdInPart(layoutParts, 'fullScreen'), [layoutParts]);
 
   const scrollLeftRef = useRef<number | null>();
@@ -175,46 +174,49 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
           <Main.Content bounce classNames='grid block-end-[--statusbar-size]' handlesFocus>
             <div
               role='none'
-              className={layoutMode === 'deck' ? 'relative' : 'sr-only'}
-              {...(layoutMode !== 'deck' && { inert: true })}
+              className={layoutMode === 'deck' ? 'relative overflow-hidden' : 'sr-only'}
+              {...(layoutMode !== 'deck' && { inert: '' })}
             >
               <Stack
                 orientation='horizontal'
                 size='contain'
-                classNames={['absolute inset-0', mainPaddingTransitions]}
+                classNames={['absolute inset-block-0 -inset-inline-px', mainPaddingTransitions]}
                 onScroll={handleScroll}
+                itemsCount={2 + (layoutParts.main?.length ?? 0)}
                 ref={deckRef}
               >
                 {padding && (
-                  <span role='none' className={overscrollStyles} style={{ inlineSize: padding.paddingInlineStart }} />
+                  <span
+                    role='none'
+                    className={overscrollStyles}
+                    style={{ inlineSize: padding.paddingInlineStart, gridColumn: 1 }}
+                  />
                 )}
-                {layoutParts.main?.map((layoutEntry) => (
+                {layoutParts.main?.map((layoutEntry, index) => (
                   <Plank
                     key={layoutEntry.id}
                     entry={layoutEntry}
                     layoutParts={layoutParts}
                     part='main'
                     layoutMode={layoutMode}
-                    searchEnabled={!!searchPlugin}
+                    order={index + 2}
                   />
                 ))}
                 {padding && (
-                  <span role='none' className={overscrollStyles} style={{ inlineSize: padding.paddingInlineEnd }} />
+                  <span
+                    role='none'
+                    className={overscrollStyles}
+                    style={{ inlineSize: padding.paddingInlineEnd, gridColumn: 2 + (layoutParts.main?.length ?? 0) }}
+                  />
                 )}
               </Stack>
             </div>
             <div
               role='none'
               className={layoutMode === 'solo' ? 'relative bg-deck' : 'sr-only'}
-              {...(layoutMode !== 'solo' && { inert: true })}
+              {...(layoutMode !== 'solo' && { inert: '' })}
             >
-              <Plank
-                entry={layoutParts.solo?.[0]}
-                layoutParts={layoutParts}
-                part='solo'
-                layoutMode={layoutMode}
-                searchEnabled={!!searchPlugin}
-              />
+              <Plank entry={layoutParts.solo?.[0]} layoutParts={layoutParts} part='solo' layoutMode={layoutMode} />
             </div>
           </Main.Content>
         )}
