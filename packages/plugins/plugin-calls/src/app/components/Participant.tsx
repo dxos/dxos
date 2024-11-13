@@ -103,7 +103,7 @@ export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div
         <Flipped flipId={flipId + pinned}>
           <div
             className={cn(
-              'h-full mx-auto overflow-hidden text-white opacity-0 animate-fadeIn',
+              'h-full mx-auto overflow-hidden text-white animate-fadeIn',
               pinned
                 ? 'absolute inset-0 h-full w-full z-10 rounded-none bg-black'
                 : 'relative max-w-[--participant-max-width] rounded-xl',
