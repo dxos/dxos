@@ -223,10 +223,10 @@ importers:
         version: 3.6.0(@swc/helpers@0.5.1)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
       '@vitest/browser':
         specifier: ^2.1.3
-        version: 2.1.3(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2))
+        version: 2.1.3(@vitest/spy@2.1.3)(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2))
       '@vitest/coverage-v8':
         specifier: ^2.1.3
-        version: 2.1.3(@vitest/browser@2.1.3(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2)))(vitest@2.1.3(@types/node@22.5.5)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
+        version: 2.1.3(@vitest/browser@2.1.3(@vitest/spy@2.1.3)(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2)))(vitest@2.1.3(@types/node@22.5.5)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
       '@vitest/expect':
         specifier: ^2.1.3
         version: 2.1.3
@@ -4733,7 +4733,7 @@ importers:
         version: 4.20241022.0
       '@vitest/browser':
         specifier: ~2.1.3
-        version: 2.1.3(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2))
+        version: 2.1.3(@vitest/spy@2.1.3)(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2))
       '@vitest/runner':
         specifier: ~2.1.3
         version: 2.1.3
@@ -6401,7 +6401,7 @@ importers:
     dependencies:
       '@codemirror/autocomplete':
         specifier: ^6.18.1
-        version: 6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2)
+        version: 6.18.1(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
       '@codemirror/lang-javascript':
         specifier: ^6.2.2
         version: 6.2.2
@@ -6512,10 +6512,10 @@ importers:
         version: 1.6.0(typescript@5.6.2)
       '@valtown/codemirror-ts':
         specifier: ^2.2.0
-        version: 2.2.0(@codemirror/autocomplete@6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2))(@codemirror/lint@6.8.2)(@codemirror/view@6.34.1)
+        version: 2.2.0(@codemirror/autocomplete@6.18.1(@codemirror/state@6.4.1)(@codemirror/view@6.34.1))(@codemirror/lint@6.8.2)(@codemirror/view@6.34.1)
       codemirror:
         specifier: ^6.0.1
-        version: 6.0.1(@lezer/common@1.2.2)
+        version: 6.0.1
       esbuild-wasm:
         specifier: ^0.16.14
         version: 0.16.17
@@ -7145,12 +7145,12 @@ importers:
       '@dxos/react-ui-data':
         specifier: workspace:*
         version: link:../../ui/react-ui-data
+      '@dxos/react-ui-deck':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-deck
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
-      '@dxos/react-ui-stack':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-stack
       '@dxos/react-ui-text-tooltip':
         specifier: workspace:*
         version: link:../../ui/react-ui-text-tooltip
@@ -8021,7 +8021,7 @@ importers:
     dependencies:
       '@codemirror/autocomplete':
         specifier: ^6.18.1
-        version: 6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2)
+        version: 6.18.1(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
       '@codemirror/language':
         specifier: ^6.10.3
         version: 6.10.3
@@ -8642,6 +8642,15 @@ importers:
 
   packages/plugins/plugin-table:
     dependencies:
+      '@codemirror/autocomplete':
+        specifier: ^6.18.1
+        version: 6.18.1(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
+      '@codemirror/state':
+        specifier: ^6.4.1
+        version: 6.4.1
+      '@codemirror/view':
+        specifier: ^6.34.1
+        version: 6.34.1
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -8663,6 +8672,12 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/lit-grid':
+        specifier: workspace:*
+        version: link:../../ui/lit-grid
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -8687,6 +8702,9 @@ importers:
       '@dxos/react-ui-data':
         specifier: workspace:*
         version: link:../../ui/react-ui-data
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-editor
       '@dxos/react-ui-grid':
         specifier: workspace:*
         version: link:../../ui/react-ui-grid
@@ -8711,9 +8729,9 @@ importers:
       '@radix-ui/react-popper':
         specifier: ^1.1.2
         version: 1.2.0(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      lodash.sortby:
-        specifier: ^4.7.0
-        version: 4.7.0
+      lodash.orderby:
+        specifier: ^4.6.0
+        version: 4.6.0
     devDependencies:
       '@dxos/echo-generator':
         specifier: workspace:*
@@ -8736,6 +8754,9 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      '@types/lodash.orderby':
+        specifier: ^4.6.9
+        version: 4.6.9
       '@types/lodash.sortby':
         specifier: ^4.7.7
         version: 4.7.7
@@ -10545,7 +10566,7 @@ importers:
     dependencies:
       '@codemirror/autocomplete':
         specifier: ^6.18.1
-        version: 6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2)
+        version: 6.18.1(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
       '@codemirror/commands':
         specifier: ^6.6.2
         version: 6.6.2
@@ -10560,7 +10581,7 @@ importers:
         version: 6.10.3
       '@codemirror/language-data':
         specifier: ^6.5.1
-        version: 6.5.1(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2)
+        version: 6.5.1(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
       '@codemirror/lint':
         specifier: ^6.8.2
         version: 6.8.2
@@ -10632,10 +10653,10 @@ importers:
         version: 6.2.1(@codemirror/commands@6.6.2)(@codemirror/language@6.10.3)(@codemirror/search@6.5.6)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
       '@replit/codemirror-vscode-keymap':
         specifier: ^6.0.2
-        version: 6.0.2(@codemirror/autocomplete@6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2))(@codemirror/commands@6.6.2)(@codemirror/language@6.10.3)(@codemirror/lint@6.8.2)(@codemirror/search@6.5.6)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
+        version: 6.0.2(@codemirror/autocomplete@6.18.1(@codemirror/state@6.4.1)(@codemirror/view@6.34.1))(@codemirror/commands@6.6.2)(@codemirror/language@6.10.3)(@codemirror/lint@6.8.2)(@codemirror/search@6.5.6)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
       codemirror:
         specifier: ^6.0.1
-        version: 6.0.1(@lezer/common@1.2.2)
+        version: 6.0.1
       lib0:
         specifier: ^0.2.65
         version: 0.2.78
@@ -10753,7 +10774,7 @@ importers:
     dependencies:
       '@codemirror/autocomplete':
         specifier: ^6.18.1
-        version: 6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2)
+        version: 6.18.1(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
       '@codemirror/state':
         specifier: ^6.4.1
         version: 6.4.1
@@ -11052,9 +11073,6 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
-      '@dxos/keyboard':
-        specifier: workspace:*
-        version: link:../../common/keyboard
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../react-ui-attention
@@ -11064,9 +11082,6 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../react-ui-mosaic
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
       '@effect/schema':
         specifier: ^0.75.1
         version: 0.75.1(effect@3.9.1)
@@ -11095,9 +11110,6 @@ importers:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
     devDependencies:
-      '@dxos/app-graph':
-        specifier: workspace:*
-        version: link:../../sdk/app-graph
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -11122,6 +11134,9 @@ importers:
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -13919,10 +13934,8 @@ packages:
   '@codemirror/autocomplete@6.18.1':
     resolution: {integrity: sha512-iWHdj/B1ethnHRTwZj+C1obmmuCzquH29EbcKr0qIjA9NfDeBDJ7vs+WOHsFeLeflE4o+dHfYndJloMKHUkWUA==}
     peerDependencies:
-      '@codemirror/language': ^6.0.0
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
-      '@lezer/common': ^1.0.0
 
   '@codemirror/commands@6.6.0':
     resolution: {integrity: sha512-qnY+b7j1UNcTS31Eenuc/5YJB6gQOzkUoNmJQc0rznwqSRpeaWWpjkWy2C/MPTcePpsKJEM26hXrOXl1+nceXg==}
@@ -19143,6 +19156,7 @@ packages:
 
   '@socketsupply/socket@0.5.4':
     resolution: {integrity: sha512-8sDIEL5cyFI4jlpZYUL4JqSgkj1XjUlbi9kA16/5DfzAYefQx38QXQaI0Hj7G1T3WwPnKN8f9xLvESMHikysrA==}
+    cpu: [arm64, x64]
     os: [linux, darwin, win32]
     hasBin: true
 
@@ -20343,6 +20357,9 @@ packages:
   '@types/lodash.omit@4.5.7':
     resolution: {integrity: sha512-6q6cNg0tQ6oTWjSM+BcYMBhan54P/gLqBldG4AuXd3nKr0oeVekWNS4VrNEu3BhCSDXtGapi7zjhnna0s03KpA==}
 
+  '@types/lodash.orderby@4.6.9':
+    resolution: {integrity: sha512-T9o2wkIJOmxXwVTPTmwJ59W6eTi2FseiLR369fxszG649Po/xe9vqFNhf/MtnvT5jrbDiyWKxPFPZbpSVK0SVQ==}
+
   '@types/lodash.pick@4.4.7':
     resolution: {integrity: sha512-HgdyKz7/1+oeoVzbpu1XiX/Bti9AUksHtOILH38T07aKvqoirzcdOsrO2+Yg3L51Hv/8m1MetvHZEUGeABiTiQ==}
 
@@ -20926,6 +20943,7 @@ packages:
   '@vitest/mocker@2.1.3':
     resolution: {integrity: sha512-eSpdY/eJDuOvuTA3ASzCjdithHa+GIF1L4PqtEELl6Qa3XafdMLBpBlZCIUCX2J+Q6sNmjmxtosAG62fK4BlqQ==}
     peerDependencies:
+      '@vitest/spy': 2.1.3
       msw: ^2.3.5
       vite: ^5.0.0
     peerDependenciesMeta:
@@ -21305,6 +21323,11 @@ packages:
 
   ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
+    peerDependencies:
+      ajv: ^8.0.0
+    peerDependenciesMeta:
+      ajv:
+        optional: true
 
   ajv-keywords@3.5.2:
     resolution: {integrity: sha512-5p6WTN0DdTGVQk6VjcEju19IgaHudalcfabD7yhDGeA6bcQnmL+CpveLJq/3hvfwd1aof6L386Ougkx6RfyMIQ==}
@@ -27166,6 +27189,9 @@ packages:
 
   lodash.omit@4.5.0:
     resolution: {integrity: sha512-XeqSp49hNGmlkj2EJlfrQFIzQ6lXdNro9sddtQzcJY8QaoC2GO0DT7xaIokHeyM+mIT0mPMlPvkYzg2xCuHdZg==}
+
+  lodash.orderby@4.6.0:
+    resolution: {integrity: sha512-T0rZxKmghOOf5YPnn8EY5iLYeWCpZq8G41FfqoVHH5QDTAFaghJRmAdLiadEDq+ztgM2q5PjA+Z1fOwGrLgmtg==}
 
   lodash.pick@4.4.0:
     resolution: {integrity: sha512-hXt6Ul/5yWjfklSGvLQl8vM//l3FtyHZeuelpzK6mm99pNvN9yTDruNZPEJZD1oWrqo+izBmB7oUfWgcCX7s4Q==}
@@ -37254,7 +37280,7 @@ snapshots:
 
   '@cloudflare/workers-types@4.20241022.0': {}
 
-  '@codemirror/autocomplete@6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2)':
+  '@codemirror/autocomplete@6.18.1(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)':
     dependencies:
       '@codemirror/language': 6.10.3
       '@codemirror/state': 6.4.1
@@ -37291,7 +37317,7 @@ snapshots:
 
   '@codemirror/lang-css@6.2.1(@codemirror/view@6.34.1)':
     dependencies:
-      '@codemirror/autocomplete': 6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2)
+      '@codemirror/autocomplete': 6.18.1(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
       '@codemirror/language': 6.10.3
       '@codemirror/state': 6.4.1
       '@lezer/common': 1.2.2
@@ -37301,7 +37327,7 @@ snapshots:
 
   '@codemirror/lang-go@6.0.1(@codemirror/view@6.34.1)':
     dependencies:
-      '@codemirror/autocomplete': 6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2)
+      '@codemirror/autocomplete': 6.18.1(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
       '@codemirror/language': 6.10.3
       '@codemirror/state': 6.4.1
       '@lezer/common': 1.2.2
@@ -37311,7 +37337,7 @@ snapshots:
 
   '@codemirror/lang-html@6.4.2':
     dependencies:
-      '@codemirror/autocomplete': 6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2)
+      '@codemirror/autocomplete': 6.18.1(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
       '@codemirror/lang-css': 6.2.1(@codemirror/view@6.34.1)
       '@codemirror/lang-javascript': 6.2.2
       '@codemirror/language': 6.10.3
@@ -37328,7 +37354,7 @@ snapshots:
 
   '@codemirror/lang-javascript@6.2.2':
     dependencies:
-      '@codemirror/autocomplete': 6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2)
+      '@codemirror/autocomplete': 6.18.1(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
       '@codemirror/language': 6.10.3
       '@codemirror/lint': 6.8.2
       '@codemirror/state': 6.4.1
@@ -37352,7 +37378,7 @@ snapshots:
 
   '@codemirror/lang-liquid@6.2.1':
     dependencies:
-      '@codemirror/autocomplete': 6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2)
+      '@codemirror/autocomplete': 6.18.1(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
       '@codemirror/lang-html': 6.4.2
       '@codemirror/language': 6.10.3
       '@codemirror/state': 6.4.1
@@ -37363,7 +37389,7 @@ snapshots:
 
   '@codemirror/lang-markdown@6.3.0':
     dependencies:
-      '@codemirror/autocomplete': 6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2)
+      '@codemirror/autocomplete': 6.18.1(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
       '@codemirror/lang-html': 6.4.2
       '@codemirror/language': 6.10.3
       '@codemirror/state': 6.4.1
@@ -37379,15 +37405,14 @@ snapshots:
       '@lezer/common': 1.2.2
       '@lezer/php': 1.0.1
 
-  '@codemirror/lang-python@6.1.2(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2)':
+  '@codemirror/lang-python@6.1.2(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)':
     dependencies:
-      '@codemirror/autocomplete': 6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2)
+      '@codemirror/autocomplete': 6.18.1(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
       '@codemirror/language': 6.10.3
       '@lezer/python': 1.1.2
     transitivePeerDependencies:
       - '@codemirror/state'
       - '@codemirror/view'
-      - '@lezer/common'
 
   '@codemirror/lang-rust@6.0.1':
     dependencies:
@@ -37404,16 +37429,15 @@ snapshots:
     transitivePeerDependencies:
       - '@codemirror/view'
 
-  '@codemirror/lang-sql@6.4.0(@codemirror/view@6.34.1)(@lezer/common@1.2.2)':
+  '@codemirror/lang-sql@6.4.0(@codemirror/view@6.34.1)':
     dependencies:
-      '@codemirror/autocomplete': 6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2)
+      '@codemirror/autocomplete': 6.18.1(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
       '@codemirror/language': 6.10.3
       '@codemirror/state': 6.4.1
       '@lezer/highlight': 1.2.1
       '@lezer/lr': 1.4.2
     transitivePeerDependencies:
       - '@codemirror/view'
-      - '@lezer/common'
 
   '@codemirror/lang-vue@0.1.2':
     dependencies:
@@ -37432,7 +37456,7 @@ snapshots:
 
   '@codemirror/lang-xml@6.0.2(@codemirror/view@6.34.1)':
     dependencies:
-      '@codemirror/autocomplete': 6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2)
+      '@codemirror/autocomplete': 6.18.1(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
       '@codemirror/language': 6.10.3
       '@codemirror/state': 6.4.1
       '@lezer/common': 1.2.2
@@ -37442,7 +37466,7 @@ snapshots:
 
   '@codemirror/lang-yaml@6.1.1(@codemirror/view@6.34.1)':
     dependencies:
-      '@codemirror/autocomplete': 6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2)
+      '@codemirror/autocomplete': 6.18.1(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
       '@codemirror/language': 6.10.3
       '@codemirror/state': 6.4.1
       '@lezer/common': 1.2.2
@@ -37451,7 +37475,7 @@ snapshots:
     transitivePeerDependencies:
       - '@codemirror/view'
 
-  '@codemirror/language-data@6.5.1(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2)':
+  '@codemirror/language-data@6.5.1(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)':
     dependencies:
       '@codemirror/lang-angular': 0.1.2
       '@codemirror/lang-cpp': 6.0.2
@@ -37465,10 +37489,10 @@ snapshots:
       '@codemirror/lang-liquid': 6.2.1
       '@codemirror/lang-markdown': 6.3.0
       '@codemirror/lang-php': 6.0.1
-      '@codemirror/lang-python': 6.1.2(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2)
+      '@codemirror/lang-python': 6.1.2(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
       '@codemirror/lang-rust': 6.0.1
       '@codemirror/lang-sass': 6.0.2(@codemirror/view@6.34.1)
-      '@codemirror/lang-sql': 6.4.0(@codemirror/view@6.34.1)(@lezer/common@1.2.2)
+      '@codemirror/lang-sql': 6.4.0(@codemirror/view@6.34.1)
       '@codemirror/lang-vue': 0.1.2
       '@codemirror/lang-wast': 6.0.1
       '@codemirror/lang-xml': 6.0.2(@codemirror/view@6.34.1)
@@ -37478,7 +37502,6 @@ snapshots:
     transitivePeerDependencies:
       - '@codemirror/state'
       - '@codemirror/view'
-      - '@lezer/common'
 
   '@codemirror/language@6.10.3':
     dependencies:
@@ -39570,21 +39593,6 @@ snapshots:
       - typescript
       - verdaccio
 
-  '@nrwl/js@19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.4.5)':
-    dependencies:
-      '@nx/js': 19.7.2(patch_hash=mavp33mumclr54vvfyyf557nvq)(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.4.5)
-    transitivePeerDependencies:
-      - '@babel/traverse'
-      - '@swc-node/register'
-      - '@swc/core'
-      - '@swc/wasm'
-      - '@types/node'
-      - debug
-      - nx
-      - supports-color
-      - typescript
-      - verdaccio
-
   '@nrwl/js@19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.6.2)':
     dependencies:
       '@nx/js': 19.7.2(patch_hash=mavp33mumclr54vvfyyf557nvq)(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.6.2)
@@ -39823,7 +39831,7 @@ snapshots:
       '@babel/preset-env': 7.24.8(@babel/core@7.25.7)
       '@babel/preset-typescript': 7.24.7(@babel/core@7.25.7)
       '@babel/runtime': 7.24.5
-      '@nrwl/js': 19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.4.5)
+      '@nrwl/js': 19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.6.2)
       '@nx/devkit': 19.7.2(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))
       '@nx/workspace': 19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))
       babel-plugin-const-enum: 1.2.0(@babel/core@7.25.7)
@@ -42726,9 +42734,9 @@ snapshots:
       '@codemirror/state': 6.4.1
       '@codemirror/view': 6.34.1
 
-  '@replit/codemirror-vscode-keymap@6.0.2(@codemirror/autocomplete@6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2))(@codemirror/commands@6.6.2)(@codemirror/language@6.10.3)(@codemirror/lint@6.8.2)(@codemirror/search@6.5.6)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)':
+  '@replit/codemirror-vscode-keymap@6.0.2(@codemirror/autocomplete@6.18.1(@codemirror/state@6.4.1)(@codemirror/view@6.34.1))(@codemirror/commands@6.6.2)(@codemirror/language@6.10.3)(@codemirror/lint@6.8.2)(@codemirror/search@6.5.6)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)':
     dependencies:
-      '@codemirror/autocomplete': 6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2)
+      '@codemirror/autocomplete': 6.18.1(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
       '@codemirror/commands': 6.6.2
       '@codemirror/language': 6.10.3
       '@codemirror/lint': 6.8.2
@@ -45151,6 +45159,10 @@ snapshots:
     dependencies:
       '@types/lodash': 4.14.191
 
+  '@types/lodash.orderby@4.6.9':
+    dependencies:
+      '@types/lodash': 4.17.12
+
   '@types/lodash.pick@4.4.7':
     dependencies:
       '@types/lodash': 4.14.191
@@ -45762,9 +45774,9 @@ snapshots:
       '@use-gesture/core': 10.2.27
       react: 18.2.0
 
-  '@valtown/codemirror-ts@2.2.0(@codemirror/autocomplete@6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2))(@codemirror/lint@6.8.2)(@codemirror/view@6.34.1)':
+  '@valtown/codemirror-ts@2.2.0(@codemirror/autocomplete@6.18.1(@codemirror/state@6.4.1)(@codemirror/view@6.34.1))(@codemirror/lint@6.8.2)(@codemirror/view@6.34.1)':
     dependencies:
-      '@codemirror/autocomplete': 6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2)
+      '@codemirror/autocomplete': 6.18.1(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
       '@codemirror/lint': 6.8.2
       '@codemirror/view': 6.34.1
 
@@ -45791,11 +45803,11 @@ snapshots:
       vite: 5.0.12(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
       vue: 3.4.15(typescript@5.6.2)
 
-  '@vitest/browser@2.1.3(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2))':
+  '@vitest/browser@2.1.3(@vitest/spy@2.1.3)(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2))':
     dependencies:
       '@testing-library/dom': 10.4.0
       '@testing-library/user-event': 14.5.2(@testing-library/dom@10.4.0)
-      '@vitest/mocker': 2.1.3(msw@2.4.6(typescript@5.6.2))(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
+      '@vitest/mocker': 2.1.3(@vitest/spy@2.1.3)(msw@2.4.6(typescript@5.6.2))(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
       '@vitest/utils': 2.1.3
       magic-string: 0.30.11
       msw: 2.4.6(typescript@5.6.2)
@@ -45807,12 +45819,13 @@ snapshots:
       playwright: 1.46.1
       webdriverio: 8.33.1(encoding@0.1.13)(typescript@5.6.2)
     transitivePeerDependencies:
+      - '@vitest/spy'
       - bufferutil
       - typescript
       - utf-8-validate
       - vite
 
-  '@vitest/coverage-v8@2.1.3(@vitest/browser@2.1.3(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2)))(vitest@2.1.3(@types/node@22.5.5)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))':
+  '@vitest/coverage-v8@2.1.3(@vitest/browser@2.1.3(@vitest/spy@2.1.3)(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2)))(vitest@2.1.3(@types/node@22.5.5)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 0.2.3
@@ -45828,7 +45841,7 @@ snapshots:
       tinyrainbow: 1.2.0
       vitest: 2.1.3(@types/node@22.5.5)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
     optionalDependencies:
-      '@vitest/browser': 2.1.3(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2))
+      '@vitest/browser': 2.1.3(@vitest/spy@2.1.3)(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2))
     transitivePeerDependencies:
       - supports-color
 
@@ -45846,7 +45859,7 @@ snapshots:
       chai: 5.1.1
       tinyrainbow: 1.2.0
 
-  '@vitest/mocker@2.1.3(msw@2.4.6(typescript@5.6.2))(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))':
+  '@vitest/mocker@2.1.3(@vitest/spy@2.1.3)(msw@2.4.6(typescript@5.6.2))(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))':
     dependencies:
       '@vitest/spy': 2.1.3
       estree-walker: 3.0.3
@@ -46531,8 +46544,8 @@ snapshots:
       clean-stack: 2.2.0
       indent-string: 4.0.0
 
-  ajv-formats@2.1.1:
-    dependencies:
+  ajv-formats@2.1.1(ajv@8.12.0):
+    optionalDependencies:
       ajv: 8.12.0
 
   ajv-keywords@3.5.2(ajv@6.12.6):
@@ -47976,17 +47989,15 @@ snapshots:
       '@lezer/highlight': 1.2.1
       '@lezer/lr': 1.4.2
 
-  codemirror@6.0.1(@lezer/common@1.2.2):
+  codemirror@6.0.1:
     dependencies:
-      '@codemirror/autocomplete': 6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2)
+      '@codemirror/autocomplete': 6.18.1(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
       '@codemirror/commands': 6.6.0
       '@codemirror/language': 6.10.3
       '@codemirror/lint': 6.8.2
       '@codemirror/search': 6.5.6
       '@codemirror/state': 6.4.1
       '@codemirror/view': 6.34.1
-    transitivePeerDependencies:
-      - '@lezer/common'
 
   codepage@1.15.0: {}
 
@@ -48139,7 +48150,7 @@ snapshots:
   conf@12.0.0:
     dependencies:
       ajv: 8.12.0
-      ajv-formats: 2.1.1
+      ajv-formats: 2.1.1(ajv@8.12.0)
       atomically: 2.0.3
       debounce-fn: 5.1.2
       dot-prop: 8.0.2
@@ -53485,6 +53496,8 @@ snapshots:
 
   lodash.omit@4.5.0: {}
 
+  lodash.orderby@4.6.0: {}
+
   lodash.pick@4.4.0: {}
 
   lodash.pickby@4.6.0: {}
@@ -57731,7 +57744,7 @@ snapshots:
     dependencies:
       '@types/json-schema': 7.0.15
       ajv: 8.12.0
-      ajv-formats: 2.1.1
+      ajv-formats: 2.1.1(ajv@8.12.0)
       ajv-keywords: 5.1.0(ajv@8.12.0)
 
   scroll@3.0.1: {}
@@ -60098,7 +60111,7 @@ snapshots:
   vitest@2.1.3(@types/node@22.5.5)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2):
     dependencies:
       '@vitest/expect': 2.1.3
-      '@vitest/mocker': 2.1.3(msw@2.4.6(typescript@5.6.2))(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
+      '@vitest/mocker': 2.1.3(@vitest/spy@2.1.3)(msw@2.4.6(typescript@5.6.2))(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
       '@vitest/pretty-format': 2.1.3
       '@vitest/runner': 2.1.3
       '@vitest/snapshot': 2.1.3
@@ -60118,7 +60131,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 22.5.5
-      '@vitest/browser': 2.1.3(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2))
+      '@vitest/browser': 2.1.3(@vitest/spy@2.1.3)(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2))
       '@vitest/ui': 2.1.3(vitest@2.1.3)
       happy-dom: 13.3.4
       jsdom: 24.0.0(canvas@2.11.2(encoding@0.1.13))

@@ -19,6 +19,7 @@ export const createRtcTransportFactory = (
         ownPeerKey: options.ownPeerKey,
         remotePeerKey: options.remotePeerKey,
         sendSignal: options.sendSignal,
+        legacyInitiator: options.initiator,
         webrtcConfig,
         iceProvider,
       });

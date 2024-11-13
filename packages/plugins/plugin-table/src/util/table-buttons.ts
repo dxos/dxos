@@ -25,14 +25,14 @@ export const tableButtons = {
   columnSettings: {
     attr: TABLE_ATTRS.columnSettings,
     icon: ICONS.columnSettings,
-    render: ({ columnId }: { columnId: string }) => createButtonHtml({ button: 'columnSettings', value: columnId }),
+    render: ({ fieldId }: { fieldId: string }) => createButtonHtml({ button: 'columnSettings', value: fieldId }),
   },
   rowMenu: {
     attr: TABLE_ATTRS.rowMenu,
     icon: ICONS.rowMenu,
     render: ({ rowIndex }: { rowIndex: number }) => createButtonHtml({ button: 'rowMenu', value: rowIndex.toString() }),
   },
-  newColumn: {
+  addColumn: {
     attr: TABLE_ATTRS.newColumn,
     icon: ICONS.newColumn,
     render: () => createButtonHtml({ button: 'newColumn' }),

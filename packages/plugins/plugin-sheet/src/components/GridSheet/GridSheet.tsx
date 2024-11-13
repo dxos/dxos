@@ -22,7 +22,8 @@ import {
   Grid,
   GridCellEditor,
   type DxGridElement,
-  type EditorKeysProps,
+  type EditorKeyHandler,
+  type EditorBlurHandler,
   type GridContentProps,
   type DxGridPosition,
 } from '@dxos/react-ui-grid';
@@ -59,9 +60,9 @@ const sheetColDefault = { frozenColsStart: { size: 48, readonly: true }, grid: {
 
 export const GridSheet = () => {
   const { t } = useTranslation(SHEET_PLUGIN);
-  const { id, model, editing, setEditing, setCursor, setRange, cursor, cursorFallbackRange, activeRefs } =
-    useSheetContext();
-  // NOTE(thure): using `useState` instead of `useRef` works with refs provided by `@lit/react` and gives us a reliable dependency for `useEffect` whereas `useLayoutEffect` does not guarantee the element will be defined.
+  const { id, model, editing, setCursor, setRange, cursor, cursorFallbackRange, activeRefs } = useSheetContext();
+  // NOTE(thure): using `useState` instead of `useRef` works with refs provided by `@lit/react` and gives us
+  // a reliable dependency for `useEffect` whereas `useLayoutEffect` does not guarantee the element will be defined.
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
   const [extraplanarFocus, setExtraplanarFocus] = useState<DxGridPosition | null>(null);
   const dispatch = useIntentDispatcher();
@@ -88,29 +89,27 @@ export const GridSheet = () => {
   );
 
   // TODO(burdon): Validate formula before closing: hf.validateFormula();
-  const handleClose = useCallback<NonNullable<EditorKeysProps['onClose']> | NonNullable<EditorKeysProps['onNav']>>(
-    (value, { key, shift }) => {
-      if (value !== undefined) {
-        model.setValue(dxGridCellIndexToSheetCellAddress(editing!.index), value);
+  const handleClose = useCallback<EditorKeyHandler>(
+    (_value, event) => {
+      if (event) {
+        const { key, shift } = event;
+        const axis = ['Enter', 'ArrowUp', 'ArrowDown'].includes(key)
+          ? 'row'
+          : ['Tab', 'ArrowLeft', 'ArrowRight'].includes(key)
+            ? 'col'
+            : undefined;
+        const delta = key.startsWith('Arrow') ? (['ArrowUp', 'ArrowLeft'].includes(key) ? -1 : 1) : shift ? -1 : 1;
+        dxGrid?.refocus(axis, delta);
       }
-      setEditing(null);
-      const axis = ['Enter', 'ArrowUp', 'ArrowDown'].includes(key)
-        ? 'row'
-        : ['Tab', 'ArrowLeft', 'ArrowRight'].includes(key)
-          ? 'col'
-          : undefined;
-      const delta = key.startsWith('Arrow') ? (['ArrowUp', 'ArrowLeft'].includes(key) ? -1 : 1) : shift ? -1 : 1;
-      dxGrid?.refocus(axis, delta);
     },
     [model, editing, dxGrid],
   );
 
-  const handleBlur = useCallback(
-    (value?: string) => {
+  const handleBlur = useCallback<EditorBlurHandler>(
+    (value) => {
       if (value !== undefined) {
         model.setValue(dxGridCellIndexToSheetCellAddress(editing!.index), value);
       }
-      setEditing(null);
     },
     [model, editing],
   );
@@ -318,7 +317,7 @@ export const GridSheet = () => {
         onKeyDown={handleKeyDown}
         onContextMenu={handleContextMenu}
         onClick={handleClick}
-        overscroll='inline'
+        overscroll='trap'
         className='[--dx-grid-base:var(--surface-bg)]'
         activeRefs={activeRefs}
         ref={setDxGrid}
