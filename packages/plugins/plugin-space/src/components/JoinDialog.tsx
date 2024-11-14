@@ -5,7 +5,6 @@
 import React, { useCallback } from 'react';
 
 import { LayoutAction, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
-import { asyncTimeout } from '@dxos/async';
 import { useGraph } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { useSpaces } from '@dxos/react-client/echo';

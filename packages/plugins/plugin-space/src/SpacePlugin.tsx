@@ -676,9 +676,7 @@ export const SpacePlugin = ({
                         resolve,
                       }),
                     );
-                } catch {
-                  return;
-                }
+                } catch {}
               },
             }),
 

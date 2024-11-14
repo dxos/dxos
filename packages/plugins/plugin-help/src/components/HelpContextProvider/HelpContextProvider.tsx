@@ -6,7 +6,6 @@ import React, { type PropsWithChildren, useState, useEffect } from 'react';
 import Joyride, { ACTIONS, EVENTS } from 'react-joyride';
 
 import { usePlugins, resolvePlugin, parseLayoutPlugin } from '@dxos/app-framework';
-import { useShellDisplay, ShellDisplay } from '@dxos/react-client';
 
 import { type Step, HelpContext } from '../../types';
 import { floaterProps, Tooltip } from '../Tooltip';

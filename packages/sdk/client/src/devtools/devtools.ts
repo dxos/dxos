@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { next as am } from '@dxos/automerge/automerge';
 import { cbor } from '@dxos/automerge/automerge-repo';
 import { type Halo, type Space } from '@dxos/client-protocol';
 import { type ClientServicesHost, type DataSpace } from '@dxos/client-services';
@@ -10,7 +11,6 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createBundledRpcServer, type RpcPeer, type RpcPort } from '@dxos/rpc';
 import { TRACE_PROCESSOR, type TraceProcessor, type DiagnosticMetadata } from '@dxos/tracing';
-import { next as am } from '@dxos/automerge/automerge';
 import { joinTables } from '@dxos/util';
 
 import { type Client } from '../client';

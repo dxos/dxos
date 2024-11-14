@@ -7,7 +7,6 @@ import React, { useState } from 'react';
 import { type PluginMeta, Surface, usePlugins } from '@dxos/app-framework';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 import { Tabs, type TabsActivePart } from '@dxos/react-ui-tabs';
-import { getSize } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { MANAGER_PLUGIN } from '../meta';
