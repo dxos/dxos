@@ -582,7 +582,7 @@ export const SpacePlugin = ({
                     icon: 'ph--plus--regular',
                     disposition: 'item',
                     testId: 'spacePlugin.createSpace',
-                    className: 'pbs-4',
+                    className: 'pt-4 border-t border-separator',
                   },
                 },
                 {

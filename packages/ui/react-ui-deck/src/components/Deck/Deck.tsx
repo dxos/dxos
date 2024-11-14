@@ -49,13 +49,17 @@ type DeckRootProps = ThemedClassName<Omit<ComponentPropsWithRef<'div'>, 'onScrol
   asChild?: boolean;
 } & DeckContextValue;
 
-const deckGrid =
-  'grid grid-rows-[var(--rail-size)_[toolbar-start]_var(--rail-action)_[content-start]_1fr_[content-end]] grid-cols-[repeat(99,min-content)]';
+const gridRows =
+  'grid grid-rows-[var(--rail-size)_[toolbar-start]_var(--rail-action)_[content-start]_1fr_[content-end]]';
 
-const deckLayout = `overflow-y-hidden overflow-x-auto snap-inline snap-proximity sm:snap-none sm:justify-center-if-no-scroll ${deckGrid}`;
+const soloLayout = [gridRows, 'grid-cols-1 overflow-hidden'];
 
-const soloLayout =
-  'grid grid-rows-[var(--rail-size)_[toolbar-start]_var(--rail-action)_[content-start]_1fr_[content-end]] grid-cols-1 overflow-hidden';
+const deckGrid = [gridRows, 'grid-cols-[repeat(99,min-content)]'];
+
+const deckLayout = [
+  'overflow-y-hidden overflow-x-auto snap-inline snap-proximity sm:snap-none sm:justify-center-if-no-scroll',
+  deckGrid,
+];
 
 const resizeButtonStyles = (...etc: ClassNameValue[]) =>
   mx(resizeHandle, resizeHandleVertical, 'hidden sm:grid row-span-3', ...etc);
