@@ -44,7 +44,7 @@ export type TableRootProps = PropsWithChildren<{ role?: string }>;
 
 const TableRoot = ({ children }: TableRootProps) => {
   return (
-    <StackItemContent toolbar contentSize='intrinsic'>
+    <StackItemContent toolbar contentSize='intrinsic' classNames='attention-surface'>
       {children}
       <span role='none' className='flex-1 attention-surface' />
     </StackItemContent>
@@ -186,7 +186,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
         <Grid.Content
           onWheelCapture={handleWheel}
           className={mx(
-            '[--dx-grid-base:var(--surface-bg)] [&_.dx-grid]:bs-min [&_.dx-grid]:shrink',
+            '[--dx-grid-base:var(--surface-bg)] [&_.dx-grid]:bs-min [&_.dx-grid]:shrink [&_.dx-grid]:max-is-max',
             inlineEndLine,
             blockEndLine,
           )}
