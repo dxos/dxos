@@ -5,8 +5,8 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type SchemaResolver } from '@dxos/echo-db';
-import { type MutableSchema, S } from '@dxos/echo-schema';
-import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { AST, type MutableSchema, S } from '@dxos/echo-schema';
+import { IconButton, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 import { FieldSchema, type FieldType, type ViewType, ViewProjection, VIEW_FIELD_LIMIT } from '@dxos/schema';
@@ -14,8 +14,19 @@ import { arrayMove } from '@dxos/util';
 
 import { translationKey } from '../../translations';
 import { FieldEditor } from '../FieldEditor';
+import { Form } from '../Form';
 
 const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem]';
+
+// TODO(burdon): Pick from ViewType.
+const ViewMetaSchema = S.Struct({
+  name: S.NonEmptyString.annotations({
+    [AST.TitleAnnotationId]: 'View name', // Translations.
+    [AST.DescriptionAnnotationId]: 'Enter view name',
+  }),
+}).pipe(S.mutable);
+
+type ViewMetaType = S.Schema.Type<typeof ViewMetaSchema>;
 
 export type ViewEditorProps = ThemedClassName<{
   schema: MutableSchema;
@@ -62,34 +73,43 @@ export const ViewEditor = ({
 
   return (
     <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
-      <div>X</div>
-      <List.Root<FieldType>
-        items={view.fields}
-        isItem={S.is(FieldSchema)}
-        getId={(field) => field.id}
-        onMove={handleMove}
-      >
-        {({ items: fields }) => (
-          <>
-            {showHeading && (
-              <div role='heading' className={grid}>
-                <div />
-                <div className='flex items-center text-sm'>{t('field path label')}</div>
-              </div>
-            )}
+      <Form<ViewMetaType> autoFocus values={{ name: '' }} schema={ViewMetaSchema} />
 
-            <div role='list' className='flex flex-col w-full'>
-              {fields?.map((field) => (
-                <List.Item<FieldType> key={field.id} item={field} classNames={mx(grid, ghostHover, 'cursor-pointer')}>
-                  <List.ItemDragHandle />
-                  <List.ItemTitle onClick={() => handleSelect(field)}>{field.path}</List.ItemTitle>
-                  <List.ItemDeleteButton disabled={view.fields.length <= 1} onClick={() => onDelete(field.id)} />
-                </List.Item>
-              ))}
-            </div>
-          </>
-        )}
-      </List.Root>
+      <div>
+        <div className='p-2'>
+          <Input.Root>
+            <Input.Label>Fields</Input.Label>
+          </Input.Root>
+        </div>
+        <List.Root<FieldType>
+          items={view.fields}
+          isItem={S.is(FieldSchema)}
+          getId={(field) => field.id}
+          onMove={handleMove}
+        >
+          {({ items: fields }) => (
+            <>
+              {showHeading && (
+                <div role='heading' className={grid}>
+                  <div />
+                  <div className='flex items-center text-sm'>{t('field path label')}</div>
+                </div>
+              )}
+
+              <div role='list' className='flex flex-col w-full'>
+                {fields?.map((field) => (
+                  <List.Item<FieldType> key={field.id} item={field} classNames={mx(grid, ghostHover, 'cursor-pointer')}>
+                    <List.ItemDragHandle />
+                    <List.ItemTitle onClick={() => handleSelect(field)}>{field.path}</List.ItemTitle>
+                    <List.ItemDeleteButton disabled={view.fields.length <= 1} onClick={() => onDelete(field.id)} />
+                  </List.Item>
+                ))}
+              </div>
+            </>
+          )}
+        </List.Root>
+      </div>
+
       {field && (
         <FieldEditor
           key={field.id}
