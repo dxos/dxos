@@ -582,7 +582,7 @@ export const SpacePlugin = ({
                     icon: 'ph--plus--regular',
                     disposition: 'item',
                     testId: 'spacePlugin.createSpace',
-                    className: 'pt-4 border-t border-separator',
+                    className: 'border-t border-separator',
                   },
                 },
                 {
@@ -603,7 +603,6 @@ export const SpacePlugin = ({
                     icon: 'ph--sign-in--regular',
                     disposition: 'item',
                     testId: 'spacePlugin.joinSpace',
-                    className: 'pbe-4',
                   },
                 },
               ],

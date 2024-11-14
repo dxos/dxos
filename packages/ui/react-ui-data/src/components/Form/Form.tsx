@@ -71,7 +71,9 @@ export const Form = <T extends object>({
       const idx = props.findIndex((p) => p === prop);
       return idx === -1 ? Infinity : idx;
     };
-    return sort ? filtered.sort((a, b) => findIndex(sort, a.property) - findIndex(sort, b.property)) : filtered;
+    return sort
+      ? filtered.sort(({ property: a }, { property: b }) => findIndex(sort, a) - findIndex(sort, b))
+      : filtered;
   }, [schema, filter]);
 
   return (
