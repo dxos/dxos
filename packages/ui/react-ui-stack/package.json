@@ -49,7 +49,6 @@
     "@dxos/echo-schema": "workspace:*",
     "@dxos/keyboard": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
-    "@dxos/react-ui-deck": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/schema": "^0.75.1",

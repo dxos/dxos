@@ -347,9 +347,6 @@
       "@dxos/react-ui-data": [
         "packages/ui/react-ui-data/src/index.ts"
       ],
-      "@dxos/react-ui-deck": [
-        "packages/ui/react-ui-deck/src/index.ts"
-      ],
       "@dxos/react-ui-editor": [
         "packages/ui/react-ui-editor/src/index.ts"
       ],

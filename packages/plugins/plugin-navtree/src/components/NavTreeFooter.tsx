@@ -25,7 +25,7 @@ import {
   Trans,
   useDefaultValue,
 } from '@dxos/react-ui';
-import { PlankHeading } from '@dxos/react-ui-deck';
+import { PlankHeading } from '@dxos/react-ui-stack/next';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { NAVTREE_PLUGIN } from '../meta';

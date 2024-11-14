@@ -7495,9 +7495,6 @@ importers:
       '@dxos/react-ui-data':
         specifier: workspace:*
         version: link:../../ui/react-ui-data
-      '@dxos/react-ui-deck':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-deck
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
@@ -7684,9 +7681,6 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
-      '@dxos/react-ui-deck':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-deck
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
@@ -7696,6 +7690,9 @@ importers:
       '@dxos/react-ui-searchlist':
         specifier: workspace:*
         version: link:../../ui/react-ui-searchlist
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-stack
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -8884,15 +8881,15 @@ importers:
       '@dxos/react-ui-data':
         specifier: workspace:*
         version: link:../../ui/react-ui-data
-      '@dxos/react-ui-deck':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-deck
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-stack
       '@dxos/react-ui-thread':
         specifier: workspace:*
         version: link:../../ui/react-ui-thread
@@ -10489,85 +10486,6 @@ importers:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
 
-  packages/ui/react-ui-deck:
-    dependencies:
-      '@dxos/keyboard':
-        specifier: workspace:*
-        version: link:../../common/keyboard
-      '@dxos/react-ui-attention':
-        specifier: workspace:*
-        version: link:../react-ui-attention
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      '@fluentui/react-tabster':
-        specifier: ^9.19.0
-        version: 9.19.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@radix-ui/primitive':
-        specifier: ^1.0.0
-        version: 1.0.1
-      '@radix-ui/react-compose-refs':
-        specifier: ^1.0.0
-        version: 1.0.1(@types/react@18.2.79)(react@18.2.0)
-      '@radix-ui/react-context':
-        specifier: ^1.0.0
-        version: 1.0.1(@types/react@18.2.79)(react@18.2.0)
-      '@radix-ui/react-menu':
-        specifier: ^2.0.6
-        version: 2.0.6(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@radix-ui/react-primitive':
-        specifier: ^1.0.2
-        version: 1.0.3(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@radix-ui/react-slot':
-        specifier: ^1.0.1
-        version: 1.0.2(@types/react@18.2.79)(react@18.2.0)
-      '@radix-ui/react-use-controllable-state':
-        specifier: ^1.0.0
-        version: 1.0.1(@types/react@18.2.79)(react@18.2.0)
-    devDependencies:
-      '@dnd-kit/core':
-        specifier: ^6.0.5
-        version: 6.0.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@dnd-kit/sortable':
-        specifier: ^7.0.1
-        version: 7.0.1(@dnd-kit/core@6.0.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)
-      '@dnd-kit/utilities':
-        specifier: ^3.2.0
-        version: 3.2.0(react@18.2.0)
-      '@dxos/app-graph':
-        specifier: workspace:*
-        version: link:../../sdk/app-graph
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../react-ui-theme
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@types/react':
-        specifier: ~18.2.0
-        version: 18.2.79
-      '@types/react-dom':
-        specifier: ~18.2.0
-        version: 18.2.25
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
-      vite:
-        specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
-
   packages/ui/react-ui-editor:
     dependencies:
       '@codemirror/autocomplete':
@@ -11085,9 +11003,6 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../react-ui-attention
-      '@dxos/react-ui-deck':
-        specifier: workspace:*
-        version: link:../react-ui-deck
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../react-ui-mosaic
