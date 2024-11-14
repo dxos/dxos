@@ -103,7 +103,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
 
   return (
     <StackItemContent toolbar>
-      <Toolbar.Root onAction={handleAction} classNames={['attention-surface', !hasAttention && 'opacity-0.5']}>
+      <Toolbar.Root onAction={handleAction} classNames={!hasAttention && 'opacity-20'}>
         <Toolbar.Editing />
         <Toolbar.Separator />
         <Toolbar.Actions />

@@ -41,7 +41,7 @@ import { parseClientPlugin, type ClientPluginProvides } from '@dxos/plugin-clien
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { translations as deckTranslations } from '@dxos/react-ui-stack/next';
+import { translations as deckTranslations } from '@dxos/react-ui-stack';
 
 import { DeckLayout, LayoutContext, LayoutSettings, NAV_ID, DeckContext, type DeckContextType } from './components';
 import {
