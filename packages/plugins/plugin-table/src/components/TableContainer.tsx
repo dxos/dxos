@@ -9,14 +9,19 @@ import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space';
 import { create, fullyQualifiedId, getSpace, Filter, useQuery } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
+import {
+  Table,
+  type TableController,
+  Toolbar,
+  type ToolbarAction,
+  useTableModel,
+  type TableType,
+  initializeTable,
+} from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 import { ViewProjection } from '@dxos/schema';
 
-import { Table, type TableController } from './Table';
-import { Toolbar, type ToolbarAction } from './Toolbar';
-import { useTableModel } from '../hooks';
-import { TableAction, type TableType } from '../types';
-import { initializeTable } from '../util';
+import { TableAction } from '../types';
 
 // TODO(zantonio): Factor out, copied this from MarkdownPlugin.
 export const sectionToolbarLayout = 'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 transition-opacity';

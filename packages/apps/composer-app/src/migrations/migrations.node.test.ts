@@ -12,7 +12,7 @@ import { FileType } from '@dxos/plugin-ipfs/types';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { DiagramType, TLDRAW_SCHEMA } from '@dxos/plugin-sketch/types';
 import { CollectionType, ChannelType, ThreadType, MessageType } from '@dxos/plugin-space/types';
-import { TableType } from '@dxos/plugin-table/types';
+import { TableType } from '@dxos/react-ui-table/types';
 import { setDeep } from '@dxos/util';
 
 import * as LegacyTypes from './legacy-types';

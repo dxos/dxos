@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { useClient } from '@dxos/react-client';
 import { Toolbar } from '@dxos/react-ui';
-import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table';
+import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table/deprecated';
 
 import { MasterDetailTable, PanelContainer, Searchbar } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';

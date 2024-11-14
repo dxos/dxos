@@ -13,8 +13,8 @@ import type {
 import { type SchemaProvides } from '@dxos/plugin-client';
 import { type SpaceInitProvides } from '@dxos/plugin-space';
 import { type StackProvides } from '@dxos/plugin-stack';
+import { TableType } from '@dxos/react-ui-table/types';
 
-import { TableType } from './table';
 import { TABLE_PLUGIN } from '../meta';
 
 const TABLE_ACTION = `${TABLE_PLUGIN}/action`;

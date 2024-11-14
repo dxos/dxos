@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { type PublicKey } from '@dxos/keys';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { AnchoredOverflow } from '@dxos/react-ui';
-import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table';
+import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table/deprecated';
 
 import { Bitbar } from '../../../components';
 import { useDevtoolsDispatch, useDevtoolsState } from '../../../hooks';

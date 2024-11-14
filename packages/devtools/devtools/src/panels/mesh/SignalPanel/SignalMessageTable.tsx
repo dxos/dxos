@@ -11,7 +11,7 @@ import { PublicKey, useClient } from '@dxos/react-client';
 import { useDevtools } from '@dxos/react-client/devtools';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { Toolbar } from '@dxos/react-ui';
-import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table';
+import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table/deprecated';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { MasterDetailTable, Searchbar, Select } from '../../../components';

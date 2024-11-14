@@ -1,7 +1,6 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
-export * from './Cell';
-export * from './ColumnMenu';
 export * from './Table';
+export * from './Toolbar';

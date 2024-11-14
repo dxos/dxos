@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './table-buttons';
+export * from './grid';
 export * from './signals';
 export * from './table';
+export * from './table-buttons';

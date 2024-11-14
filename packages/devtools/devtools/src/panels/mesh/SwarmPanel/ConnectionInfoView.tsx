@@ -6,7 +6,7 @@ import React, { type FC } from 'react';
 
 import { type ConnectionInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { AnchoredOverflow } from '@dxos/react-ui';
-import { createColumnBuilder, Table, type TableColumnDef, textPadding } from '@dxos/react-ui-table';
+import { createColumnBuilder, Table, type TableColumnDef, textPadding } from '@dxos/react-ui-table/deprecated';
 
 import { PropertiesTable, PropertySchemaFormat } from '../../../components';
 
