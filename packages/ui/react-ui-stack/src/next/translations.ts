@@ -1,8 +1,8 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
-export const translationKey = 'react-ui-deck';
+export const translationKey = 'react-ui-stack';
 
 export default [
   {

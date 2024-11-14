@@ -41,17 +41,9 @@ import { parseClientPlugin, type ClientPluginProvides } from '@dxos/plugin-clien
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { translations as deckTranslations } from '@dxos/react-ui-deck';
+import { translations as deckTranslations } from '@dxos/react-ui-stack/next';
 
-import {
-  DeckLayout,
-  type DeckLayoutProps,
-  LayoutContext,
-  LayoutSettings,
-  NAV_ID,
-  DeckContext,
-  type DeckContextType,
-} from './components';
+import { DeckLayout, LayoutContext, LayoutSettings, NAV_ID, DeckContext, type DeckContextType } from './components';
 import {
   closeEntry,
   incrementPlank,
@@ -77,14 +69,6 @@ const isSocket = !!(globalThis as any).__args;
 
 // TODO(mjamesderocher): Can we get this directly from Socket?
 const appScheme = 'composer://';
-
-// TODO(burdon): Evolve into customizable prefs.
-const customSlots: DeckLayoutProps['slots'] = {
-  wallpaper: {
-    classNames:
-      'bg-cover bg-no-repeat dark:bg-[url(https://cdn.midjourney.com/3865ba61-f98a-4d94-b91a-1763ead01f4f/0_0.jpeg)]',
-  },
-};
 
 // NOTE(Zan): When producing values with immer, we shouldn't auto-freeze them because
 // our signal implementation needs to add some hidden properties to the produced values.
@@ -352,8 +336,6 @@ export const DeckPlugin = ({
             layoutParts={location.values.active}
             showHints={settings.values.showHints}
             overscroll={settings.values.overscroll}
-            flatDeck={settings.values.flatDeck}
-            slots={settings.values.customSlots ? customSlots : undefined}
             toasts={layout.values.toasts}
             panels={panels}
             onDismissToast={(id) => {

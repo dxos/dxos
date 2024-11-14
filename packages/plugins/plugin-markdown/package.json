@@ -59,7 +59,6 @@
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-data": "workspace:*",
-    "@dxos/react-ui-deck": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",

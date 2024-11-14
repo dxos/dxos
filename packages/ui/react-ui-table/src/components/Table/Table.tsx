@@ -2,12 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { forwardRef, type PropsWithChildren, useCallback, useImperativeHandle, useState } from 'react';
+import React, {
+  forwardRef,
+  type PropsWithChildren,
+  useCallback,
+  useImperativeHandle,
+  useState,
+  type WheelEvent,
+} from 'react';
 
 import { getValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { Filter, getSpace } from '@dxos/react-client/echo';
+import { Filter, getSpace, fullyQualifiedId } from '@dxos/react-client/echo';
+import { useAttention } from '@dxos/react-ui-attention';
 import { type DxGridElement, Grid, type GridContentProps, closestCell } from '@dxos/react-ui-grid';
+import { StackItemContent } from '@dxos/react-ui-stack/next';
 import { mx } from '@dxos/react-ui-theme';
 import { isNotFalsy } from '@dxos/util';
 
@@ -33,19 +42,12 @@ const frozen = { frozenRowsStart: 1, frozenColsEnd: 1 };
 
 export type TableRootProps = PropsWithChildren<{ role?: string }>;
 
-const TableRoot = ({ role = 'article', children }: TableRootProps) => {
-  // TODO(burdon): article | section | slide shouldn't be handled here; move into framework.
+const TableRoot = ({ children }: TableRootProps) => {
   return (
-    <div
-      role={role}
-      className={mx(
-        role === 'article' && 'relative is-full max-is-max min-is-0 min-bs-0',
-        role === 'section' && 'grid cols-1 rows-[1fr_min-content] min-bs-0 !bg-[--surface-bg]',
-        role === 'slide' && 'bs-full overflow-auto grid place-items-center',
-      )}
-    >
+    <StackItemContent toolbar contentSize='intrinsic' classNames='relative attention-surface'>
       {children}
-    </div>
+      <span role='none' className='flex-1 attention-surface' />
+    </StackItemContent>
   );
 };
 
@@ -63,6 +65,8 @@ export type TableMainProps = {
 
 const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwardedRef) => {
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
+
+  const { hasAttention } = useAttention(model?.table ? fullyQualifiedId(model.table) : 'table');
 
   /**
    * Provides an external controller that can be called to repaint the table.
@@ -130,6 +134,15 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
     [model],
   );
 
+  const handleWheel = useCallback(
+    (event: WheelEvent) => {
+      if (!hasAttention) {
+        event.stopPropagation();
+      }
+    },
+    [hasAttention],
+  );
+
   // TODO(burdon): Factor out?
   const handleQuery = useCallback<NonNullable<TableCellEditorProps['onQuery']>>(
     async ({ field, props }, _text) => {
@@ -162,18 +175,18 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
   );
 
   if (!model) {
-    return null;
+    return <span role='none' className='attention-surface' />;
   }
 
   return (
     <>
-      {/* TODO(burdon): Is this required to be unique? */}
       <Grid.Root id={model.table.id ?? 'table-grid'}>
         <TableCellEditor model={model} onEnter={handleEnter} onFocus={handleFocus} onQuery={handleQuery} />
 
         <Grid.Content
+          onWheelCapture={handleWheel}
           className={mx(
-            '[&>.dx-grid]:min-bs-0 [&>.dx-grid]:bs-full [&>.dx-grid]:max-bs-max [--dx-grid-base:var(--surface-bg)]',
+            '[--dx-grid-base:var(--surface-bg)] [&_.dx-grid]:bs-min [&_.dx-grid]:shrink [&_.dx-grid]:max-is-max',
             inlineEndLine,
             blockEndLine,
           )}
