@@ -59,7 +59,9 @@ export const IdentityActionChooserImpl = ({
   onClickReset,
   ...agentProps
 }: IdentityActionChooserImplProps) => {
-  const managedDeviceAvailable = devices.find((device) => device.profile?.type === DeviceType.AGENT_MANAGED);
+  const edgeDeviceAvailable = devices.find(
+    (device) => device.profile?.type === DeviceType.AGENT_MANAGED && device.profile?.os?.toUpperCase() === 'EDGE',
+  );
   return (
     <div role='none' className='bs-40 grow overflow-y-auto overflow-x-hidden'>
       <DeviceList
@@ -71,7 +73,7 @@ export const IdentityActionChooserImpl = ({
         onClickReset={onClickReset}
         onAgentDestroy={agentProps.onAgentDestroy!}
       />
-      {!managedDeviceAvailable && agentHostingEnabled && <AgentConfig {...(agentProps as AgentFormProps)} />}
+      {!edgeDeviceAvailable && agentHostingEnabled && <AgentConfig {...(agentProps as AgentFormProps)} />}
     </div>
   );
 };
