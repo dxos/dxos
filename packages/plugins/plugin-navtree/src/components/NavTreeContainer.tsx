@@ -185,12 +185,10 @@ export const NavTreeContainer = ({ items, current, open, popoverAnchorId, ...pro
         role='none'
         className={mx(
           'grid grid-cols-1 grid-rows-[var(--rail-size)_1fr_min-content]',
-          'bs-full overflow-hidden row-span-3',
+          'bs-full overflow-hidden row-span-3 divide-y divide-separator',
         )}
       >
-        <div className='border-b border-separator'>
-          <Surface role='search-input' limit={1} />
-        </div>
+        <Surface role='search-input' limit={1} />
 
         {/* TODO(thure): What gives this an inline `overflow: initial`? */}
         <div role='none' className='!overflow-y-auto'>
