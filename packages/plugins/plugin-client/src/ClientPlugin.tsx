@@ -35,10 +35,12 @@ export type ClientPluginOptions = ClientOptions & {
   appKey: string;
 
   /**
+   * Base URL for the invitation link.
    */
   invitationUrl?: string;
 
   /**
+   * Query parameter for the invitation code.
    */
   invitationParam?: string;
 
@@ -54,6 +56,7 @@ export type ClientPluginOptions = ClientOptions & {
   onReady?: (client: Client, plugins: Plugin[]) => Promise<void>;
 
   /**
+   * Called when the client is reset.
    */
   onReset?: (params: { target?: string }) => Promise<void>;
 };

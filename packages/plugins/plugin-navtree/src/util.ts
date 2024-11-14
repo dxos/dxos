@@ -11,7 +11,6 @@ import {
   ACTION_GROUP_TYPE,
   isAction,
 } from '@dxos/app-graph';
-import { Trigger } from '@dxos/async';
 import { Path } from '@dxos/react-ui-mosaic';
 import { type MaybePromise, nonNullable } from '@dxos/util';
 
@@ -218,29 +217,4 @@ export const expandOpenGraphNodes = (graph: Graph, open: string[]) => {
       })
       .filter(nonNullable),
   );
-};
-
-// TODO(wittjosiah): Factor out to app-graph?
-export const waitForPath = async (
-  graph: Graph,
-  {
-    timeout = 1000,
-    interval = 100,
-    ...params
-  }: Parameters<Graph['getPath']>[0] & { timeout?: number; interval?: number },
-) => {
-  const path = graph.getPath(params);
-  if (path) {
-    return path;
-  }
-
-  const trigger = new Trigger<string[]>();
-  const i = setInterval(() => {
-    const path = graph.getPath(params);
-    if (path) {
-      trigger.wake(path);
-    }
-  }, interval);
-
-  return trigger.wait({ timeout }).finally(() => clearInterval(i));
 };

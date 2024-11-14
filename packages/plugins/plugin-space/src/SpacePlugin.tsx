@@ -106,10 +106,12 @@ export const parseSpacePlugin = (plugin?: Plugin) =>
 
 export type SpacePluginOptions = {
   /**
+   * Base URL for the invitation link.
    */
   invitationUrl?: string;
 
   /**
+   * Query parameter for the invitation code.
    */
   invitationParam?: string;
 
@@ -1016,7 +1018,7 @@ export const SpacePlugin = ({
 
             case SpaceAction.SHARE: {
               const space = intent.data?.space;
-              if (isSpace(space)) {
+              if (isSpace(space) && !space.properties[COMPOSER_SPACE_LOCK]) {
                 const active = navigationPlugin?.provides.location.active;
                 const mode = layoutPlugin?.provides.layout.layoutMode;
                 const target = active ? firstIdInPart(active, mode === 'solo' ? 'solo' : 'main') : undefined;

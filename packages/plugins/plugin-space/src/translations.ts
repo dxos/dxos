@@ -100,7 +100,6 @@ export default [
         'remote synced label': 'Synced with peers',
         'open settings panel label': 'Show Settings',
         'open space settings label': 'Space Settings',
-        'space settings dialog title': 'Space Settings',
         'members tab label': 'Members',
         'settings tab label': 'Settings',
       },

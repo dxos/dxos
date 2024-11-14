@@ -56,7 +56,7 @@ export const JoinDialog = ({ navigableCollections, ...props }: JoinDialogProps) 
       if (target) {
         // Wait for up to 1 second before navigating to the target node.
         // If the target has not yet replicated, this will trigger a loading toast.
-        await asyncTimeout(graph.waitForNode(target), 1000).catch(() => {});
+        await graph.waitForPath({ target }).catch(() => {});
         await Promise.all([
           dispatch({
             action: NavigationAction.OPEN,
@@ -64,7 +64,6 @@ export const JoinDialog = ({ navigableCollections, ...props }: JoinDialogProps) 
               activeParts: { main: [target] },
             },
           }),
-          // TODO(wittjosiah): This isn't working because there is no path to the object initially.
           dispatch({
             action: NavigationAction.EXPOSE,
             data: {

@@ -73,7 +73,6 @@ type DocumentEditorProps = Omit<MarkdownContainerProps, 'object' | 'extensionPro
 
 export const DocumentEditor = ({ id, document: doc, settings, viewMode, ...props }: DocumentEditorProps) => {
   const space = getSpace(doc);
-  const initialValue = useMemo(() => doc.content?.content, [doc.content]);
 
   // Migrate gradually to `fallbackName`.
   useEffect(() => {
@@ -96,7 +95,7 @@ export const DocumentEditor = ({ id, document: doc, settings, viewMode, ...props
   return (
     <MarkdownEditor
       id={id}
-      initialValue={initialValue}
+      initialValue={doc.content?.content}
       viewMode={viewMode}
       toolbar={settings.toolbar}
       inputMode={settings.editorInputMode}

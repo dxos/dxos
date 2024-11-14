@@ -45,7 +45,6 @@ import {
   getActions,
   getChildren,
   treeItemsFromRootNode,
-  waitForPath,
   type NavTreeItemGraphNode,
 } from './util';
 
@@ -262,7 +261,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
           switch (intent.action) {
             case NavigationAction.EXPOSE: {
               if (graph && intent.data?.id) {
-                const path = await waitForPath(graph, { target: intent.data.id });
+                const path = await graph.waitForPath({ target: intent.data.id });
                 const additionalOpenItems = [...Array(path.length)].reduce((acc: string[], _, index) => {
                   const itemId = Path.create(...path.slice(0, index));
                   if (itemId.length > 0 && !state.values.open.includes(itemId)) {
