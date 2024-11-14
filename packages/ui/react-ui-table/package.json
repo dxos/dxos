@@ -10,17 +10,30 @@
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs"
+      "browser": "./dist/lib/browser/index.mjs",
+      "require": "./dist/lib/node/index.cjs",
+      "import": "./dist/lib/node-esm/index.mjs"
+    },
+    "./types": {
+      "types": "./dist/types/src/types/index.d.ts",
+      "browser": "./dist/lib/browser/types/index.mjs",
+      "require": "./dist/lib/node/types/index.cjs",
+      "import": "./dist/lib/node-esm/types/index.mjs"
     },
     "./deprecated": {
       "types": "./dist/types/src/_deprecated/index.d.ts",
-      "browser": "./dist/lib/browser/_deprecated/index.mjs"
+      "browser": "./dist/lib/browser/_deprecated/index.mjs",
+      "require": "./dist/lib/node/_deprecated/index.cjs",
+      "import": "./dist/lib/node-esm/_deprecated/index.mjs"
     }
   },
   "typesVersions": {
     "*": {
       "deprecated": [
         "./dist/types/src/_deprecated/index.d.ts"
+      ],
+      "types": [
+        "./dist/types/src/types/index.d.ts"
       ]
     }
   },

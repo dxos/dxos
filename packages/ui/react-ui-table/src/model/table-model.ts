@@ -21,7 +21,8 @@ import { mx } from '@dxos/react-ui-theme';
 import { VIEW_FIELD_LIMIT, type ViewProjection, type FieldType } from '@dxos/schema';
 
 import { ModalController } from './modal-controller';
-import { fromGridCell, type GridCell, type TableType } from '../types';
+import { type TableType } from '../types';
+import { fromGridCell, type GridCell } from '../util';
 import { tableButtons, touch } from '../util';
 
 export type SortDirection = 'asc' | 'desc';

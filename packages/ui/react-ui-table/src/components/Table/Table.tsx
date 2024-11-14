@@ -15,7 +15,7 @@ import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { ColumnSettings } from './ColumnSettings';
 import { RowActionsMenu } from './RowActionsMenu';
 import { type TableModel } from '../../model';
-import { type GridCell } from '../../types';
+import { type GridCell } from '../../util';
 import { TableCellEditor, type TableCellEditorProps } from '../TableCellEditor';
 
 // NOTE(Zan): These fragments add border to inline-end and block-end of the grid using pseudo-elements.
