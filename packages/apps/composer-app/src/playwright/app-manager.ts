@@ -127,7 +127,7 @@ export class AppManager {
     const toggle = this.page.getByTestId('spacePlugin.space').nth(nth).getByRole('button').first();
 
     if (typeof nextState !== 'undefined') {
-      const state = await this.page.getByTestId('spacePlugin.space').nth(nth).getAttribute('aria-expanded');
+      const state = await toggle.getAttribute('aria-expanded');
       if (state !== nextState.toString()) {
         await toggle.click();
       }

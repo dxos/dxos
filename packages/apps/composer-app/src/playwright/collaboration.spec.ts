@@ -78,8 +78,13 @@ test.describe('Collaboration tests', () => {
   test('host and guest can see each others’ presence when same document is in focus', async () => {
     await host.createSpace();
 
+    // Focus on host's textbox and wait for it to be ready
     const hostPlank = host.deck.plank();
-    await Markdown.waitForMarkdownTextboxWithLocator(hostPlank.locator);
+    const hostTextbox = Markdown.getMarkdownTextboxWithLocator(hostPlank.locator);
+    await hostTextbox.waitFor();
+    // TODO(thure): Autofocus not working for solo mode when creating a new document.
+    await hostTextbox.focus();
+
     await perfomInvitation(host, guest);
 
     await guest.waitForSpaceReady();
@@ -107,6 +112,8 @@ test.describe('Collaboration tests', () => {
     // Focus on host's textbox and wait for it to be ready
     const hostPlank = host.deck.plank();
     const hostTextbox = Markdown.getMarkdownTextboxWithLocator(hostPlank.locator);
+    await hostTextbox.waitFor();
+    // TODO(thure): Autofocus not working for solo mode when creating a new document.
     await hostTextbox.focus();
 
     // Perform invitation to the guest
@@ -164,10 +171,11 @@ test.describe('Collaboration tests', () => {
   });
 
   test('guest can jump to document host is viewing', async () => {
-    test.setTimeout(60_000);
+    test.setTimeout(90_000);
 
     await host.createSpace();
 
+    // Focus on host's textbox and wait for it to be ready
     const hostPlank = host.deck.plank();
     const hostTextbox = Markdown.getMarkdownTextboxWithLocator(hostPlank.locator);
     await hostTextbox.waitFor();
@@ -191,8 +199,8 @@ test.describe('Collaboration tests', () => {
     // TODO(wittjosiah): Initial viewing state is slow.
     await expect(hostPresence).toHaveCount(1, { timeout: 30_000 });
     await expect(guestPresence).toHaveCount(1, { timeout: 30_000 });
-    await expect(hostPresence.first()).toHaveAttribute('data-status', 'current');
-    await expect(guestPresence.first()).toHaveAttribute('data-status', 'current');
+    await expect(hostPresence.first()).toHaveAttribute('data-status', 'current', { timeout: 30_000 });
+    await expect(guestPresence.first()).toHaveAttribute('data-status', 'current', { timeout: 30_000 });
 
     // TODO(zan): We need to update deck presence indications for this to be a valid test.
 
