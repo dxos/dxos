@@ -374,7 +374,9 @@ export class SpaceProxy implements Space {
   }
 
   async close() {
-    await this._db.flush();
+    if (this._databaseOpen) {
+      await this._db.flush();
+    }
     await this._clientServices.services.SpacesService!.updateSpace(
       { spaceKey: this.key, state: SpaceState.SPACE_INACTIVE },
       { timeout: RPC_TIMEOUT },
