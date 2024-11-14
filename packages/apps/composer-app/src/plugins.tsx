@@ -101,7 +101,6 @@ export const core = ({ isPwa, isSocket }: PluginConfig): PluginMeta[] =>
     NavTreeMeta,
     ManagerMeta,
     RegistryMeta,
-    StackMeta,
     StatusBarMeta,
     WildcardMeta,
   ].filter(isNotFalsy);
@@ -130,6 +129,7 @@ export const recommended = ({ isLabs }: PluginConfig): PluginMeta[] => [
   PresenterMeta,
   ScriptMeta,
   SearchMeta,
+  StackMeta,
   WnfsMeta,
 
   ...(isLabs
