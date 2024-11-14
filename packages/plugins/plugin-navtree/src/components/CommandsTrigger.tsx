@@ -17,7 +17,7 @@ export const CommandsTrigger = () => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
   return (
     <Button
-      classNames='w-full h-full'
+      classNames='w-full h-full !rounded-none'
       onClick={() =>
         dispatch({
           action: LayoutAction.SET_LAYOUT,
