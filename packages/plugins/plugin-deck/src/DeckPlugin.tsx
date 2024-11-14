@@ -41,7 +41,7 @@ import { parseClientPlugin, type ClientPluginProvides } from '@dxos/plugin-clien
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { translations as deckTranslations } from '@dxos/react-ui-stack/next';
+import { translations as stackTranslations } from '@dxos/react-ui-stack/next';
 
 import { DeckLayout, LayoutContext, LayoutSettings, NAV_ID, DeckContext, type DeckContextType } from './components';
 import {
@@ -293,7 +293,7 @@ export const DeckPlugin = ({
       settings: settings.values,
       layout: layout.values,
       location: location.values,
-      translations: [...translations, ...deckTranslations],
+      translations: [...translations, ...stackTranslations],
       graph: {
         builder: () => {
           // TODO(burdon): Root menu isn't visible so nothing bound.
