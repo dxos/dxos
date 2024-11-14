@@ -15,18 +15,20 @@ import { DECK_PLUGIN } from '../../meta';
 
 export const PlankContentError = ({ error }: { error?: Error }) => {
   const { t } = useTranslation(DECK_PLUGIN);
+  const errorString = error?.toString() ?? '';
   return (
-    <div role='none' className='grid place-items-center row-span-2'>
+    <div role='none' className='overflow-auto p-8 attention-surface'>
       <p
         role='alert'
         className={mx(
           descriptionText,
           // TODO(burdon): Factor out common styles for all dialogs.
           'overflow-hidden break-words',
-          'place-self-center border border-dashed border-neutral-400/50 rounded-lg text-center p-8 font-normal text-lg',
+          'place-self-center border border-dashed border-neutral-400/50 rounded-lg p-8',
+          errorString.length < 256 && 'text-lg',
         )}
       >
-        {error ? error.toString() : t('error fallback message')}
+        {error ? errorString : t('error fallback message')}
       </p>
     </div>
   );
