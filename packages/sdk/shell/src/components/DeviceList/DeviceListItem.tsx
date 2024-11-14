@@ -29,7 +29,6 @@ import {
   useTranslation,
   DropdownMenu,
   Button,
-  Tooltip,
 } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 import { keyToFallback } from '@dxos/util';
