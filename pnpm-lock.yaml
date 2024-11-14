@@ -130,13 +130,13 @@ importers:
         version: 19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(@zkochan/js-yaml@0.0.7)(eslint@8.57.0)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))
       '@nx/playwright':
         specifier: 19.7.2
-        version: 19.7.2(@babel/traverse@7.25.9)(@playwright/test@1.46.1)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(@zkochan/js-yaml@0.0.7)(esbuild@0.23.1)(eslint@8.57.0)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)
+        version: 19.7.2(@babel/traverse@7.25.9)(@playwright/test@1.46.1)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(@zkochan/js-yaml@0.0.7)(esbuild@0.23.1)(eslint@8.57.0)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3(@types/node@22.5.5)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
       '@nx/storybook':
         specifier: 19.7.2
         version: 19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(@zkochan/js-yaml@0.0.7)(eslint@8.57.0)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.6.2)
       '@nx/vite':
         specifier: 19.7.2
-        version: 19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)
+        version: 19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3(@types/node@22.5.5)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
       '@nx/web':
         specifier: 19.7.2
         version: 19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.6.2)
@@ -226,7 +226,7 @@ importers:
         version: 2.1.3(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2))
       '@vitest/coverage-v8':
         specifier: ^2.1.3
-        version: 2.1.3(@vitest/browser@2.1.3)(vitest@2.1.3)
+        version: 2.1.3(@vitest/browser@2.1.3(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2)))(vitest@2.1.3(@types/node@22.5.5)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
       '@vitest/expect':
         specifier: ^2.1.3
         version: 2.1.3
@@ -3486,9 +3486,6 @@ importers:
       '@dxos/cli-base':
         specifier: workspace:*
         version: link:../cli-base
-      '@dxos/cli-composer':
-        specifier: workspace:*
-        version: link:../cli-composer
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -3504,9 +3501,6 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../common/debug
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
@@ -3522,15 +3516,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/network-manager':
-        specifier: workspace:*
-        version: link:../../core/mesh/network-manager
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../common/node-std
-      '@dxos/observability':
-        specifier: workspace:*
-        version: link:../../sdk/observability
       '@dxos/plate':
         specifier: workspace:*
         version: link:../../common/plate
@@ -3561,21 +3546,6 @@ importers:
       '@oclif/core':
         specifier: ^4.0.30
         version: 4.0.30
-      '@oclif/plugin-autocomplete':
-        specifier: ^3.2.6
-        version: 3.2.6
-      '@oclif/plugin-help':
-        specifier: ^6.2.16
-        version: 6.2.16
-      '@oclif/plugin-plugins':
-        specifier: ^5.4.15
-        version: 5.4.15
-      '@oclif/plugin-update':
-        specifier: ^4.6.6
-        version: 4.6.6(react-devtools-core@4.26.1)
-      '@octokit/core':
-        specifier: ^4.0.4
-        version: 4.1.0(encoding@0.1.13)
       chalk:
         specifier: ^4.1.0
         version: 4.1.2
@@ -3588,9 +3558,6 @@ importers:
       do-wrapper:
         specifier: ^4.5.1
         version: 4.5.1
-      extensionless:
-        specifier: ^1.9.9
-        version: 1.9.9
       fs-extra:
         specifier: ^8.1.0
         version: 8.1.0
@@ -3624,15 +3591,6 @@ importers:
       node-clipboardy:
         specifier: ^1.0.3
         version: 1.0.3
-      node-fetch:
-        specifier: ^2.6.0
-        version: 2.6.7(encoding@0.1.13)
-      pkg-up:
-        specifier: ^3.1.0
-        version: 3.1.0
-      platform:
-        specifier: ^1.3.6
-        version: 1.3.6
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -3658,15 +3616,6 @@ importers:
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
-      '@types/node-fetch':
-        specifier: ^2.5.10
-        version: 2.6.2
-      '@types/platform':
-        specifier: ^1.3.4
-        version: 1.3.5
-      '@types/react-dom':
-        specifier: ~18.2.0
-        version: 18.2.25
       oclif:
         specifier: ^4.15.12
         version: 4.15.12
@@ -3851,208 +3800,43 @@ importers:
 
   packages/devtools/cli-composer:
     dependencies:
-      '@dxos/agent':
-        specifier: workspace:*
-        version: link:../../core/agent
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../common/async
-      '@dxos/bare-template':
-        specifier: workspace:*
-        version: link:../../apps/templates/bare-template
       '@dxos/cli-base':
         specifier: workspace:*
         version: link:../cli-base
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
-      '@dxos/client-protocol':
-        specifier: workspace:*
-        version: link:../../sdk/client-protocol
-      '@dxos/client-services':
-        specifier: workspace:*
-        version: link:../../sdk/client-services
-      '@dxos/config':
-        specifier: workspace:*
-        version: link:../../sdk/config
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../common/context
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../common/debug
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
-      '@dxos/hello-template':
-        specifier: workspace:*
-        version: link:../../apps/templates/hello-template
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/network-manager':
-        specifier: workspace:*
-        version: link:../../core/mesh/network-manager
-      '@dxos/observability':
-        specifier: workspace:*
-        version: link:../../sdk/observability
-      '@dxos/plate':
-        specifier: workspace:*
-        version: link:../../common/plate
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../../plugins/plugin-space
-      '@dxos/process':
-        specifier: workspace:*
-        version: link:../../common/process
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../core/protocols
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
-      '@dxos/rpc':
-        specifier: workspace:*
-        version: link:../../core/mesh/rpc
-      '@dxos/tasks-template':
-        specifier: workspace:*
-        version: link:../../apps/templates/tasks-template
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
       '@oclif/core':
         specifier: ^4.0.30
         version: 4.0.30
-      '@oclif/plugin-autocomplete':
-        specifier: ^3.2.6
-        version: 3.2.6
-      '@oclif/plugin-help':
-        specifier: ^6.2.16
-        version: 6.2.16
-      '@oclif/plugin-plugins':
-        specifier: ^5.4.15
-        version: 5.4.15
-      '@oclif/plugin-update':
-        specifier: ^4.6.6
-        version: 4.6.6(react-devtools-core@4.26.1)
-      '@octokit/core':
-        specifier: ^4.0.4
-        version: 4.1.0(encoding@0.1.13)
       chalk:
         specifier: ^4.1.0
         version: 4.1.2
-      cli-progress:
-        specifier: ^3.11.2
-        version: 3.12.0
-      date-fns:
-        specifier: ^3.3.1
-        version: 3.3.1
-      do-wrapper:
-        specifier: ^4.5.1
-        version: 4.5.1
-      fs-extra:
-        specifier: ^8.1.0
-        version: 8.1.0
-      get-folder-size:
-        specifier: ^2.0.1
-        version: 2.0.1
-      git-rev-sync:
-        specifier: ^3.0.2
-        version: 3.0.2
-      ink:
-        specifier: ^3.2.0
-        version: 3.2.0(@types/react@18.2.79)(react@18.2.0)
-      ink-table:
-        specifier: ~3.0.0
-        version: 3.0.0(ink@3.2.0(@types/react@18.2.79)(react@18.2.0))(react@18.2.0)
-      inquirer:
-        specifier: ^12.0.0
-        version: 12.0.0(@types/node@22.5.5)
-      isomorphic-ws:
-        specifier: ^5.0.0
-        version: 5.0.0(ws@8.17.0)
-      js-yaml:
-        specifier: ^4.1.0
-        version: 4.1.0
-      kubo-rpc-client:
-        specifier: ^4.1.1
-        version: 4.1.1(undici@6.13.0)
-      lodash.defaultsdeep:
-        specifier: ^4.6.1
-        version: 4.6.1
-      node-clipboardy:
-        specifier: ^1.0.3
-        version: 1.0.3
-      node-fetch:
-        specifier: ^2.6.0
-        version: 2.7.0(encoding@0.1.13)
-      pkg-up:
-        specifier: ^3.1.0
-        version: 3.1.0
-      platform:
-        specifier: ^1.3.6
-        version: 1.3.6
       react:
         specifier: ~18.2.0
         version: 18.2.0
-      undici:
-        specifier: '*'
-        version: 6.13.0
-      uuid:
-        specifier: ^9.0.0
-        version: 9.0.1
-      ws:
-        specifier: ^8.14.2
-        version: 8.17.0
-      wtfnode:
-        specifier: ^0.9.1
-        version: 0.9.1
     devDependencies:
-      '@oclif/test':
-        specifier: ^4.1.0
-        version: 4.1.0(@oclif/core@4.0.30)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@types/cli-progress':
-        specifier: ^3.11.0
-        version: 3.11.5
-      '@types/fs-extra':
-        specifier: ^9.0.4
-        version: 9.0.13
-      '@types/js-yaml':
-        specifier: ^4.0.5
-        version: 4.0.5
-      '@types/lodash.defaultsdeep':
-        specifier: ^4.6.6
-        version: 4.6.7
-      '@types/node-fetch':
-        specifier: ^2.5.10
-        version: 2.6.9
-      '@types/platform':
-        specifier: ^1.3.4
-        version: 1.3.5
-      '@types/react-dom':
-        specifier: ~18.2.0
-        version: 18.2.25
-      fast-check:
-        specifier: ^3.19.0
-        version: 3.19.0
-      oclif:
-        specifier: ^4.15.12
-        version: 4.15.12
-      prettier:
-        specifier: ^3.2.4
-        version: 3.2.4
-      shx:
-        specifier: ^0.3.3
-        version: 0.3.4
 
   packages/devtools/devtools:
     dependencies:
@@ -4494,9 +4278,6 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
-      '@dxos/client-services':
-        specifier: workspace:*
-        version: link:../../sdk/client-services
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -4551,9 +4332,6 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../../plugins/plugin-space
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../core/protocols
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -4563,42 +4341,21 @@ importers:
       '@langchain/core':
         specifier: ^0.1.51
         version: 0.1.62(openai@4.26.1(encoding@0.1.13))
-      '@langchain/mistralai':
-        specifier: ^0.0.16
-        version: 0.0.16(encoding@0.1.13)(openai@4.26.1(encoding@0.1.13))
       '@langchain/openai':
         specifier: ^0.0.23
         version: 0.0.23(encoding@0.1.13)
-      '@modelfusion/mathjs-tool':
-        specifier: ^0.1.1
-        version: 0.1.1(modelfusion@0.137.0)(zod@3.22.4)
       '@octokit/rest':
         specifier: ^19.0.5
         version: 19.0.5(encoding@0.1.13)
-      amadeus:
-        specifier: ^8.0.0
-        version: 8.1.0
-      assert:
-        specifier: ^2.0.0
-        version: 2.1.0
       chess.js:
         specifier: ^1.0.0-beta.8
         version: 1.0.0-beta.8
-      cross-fetch:
-        specifier: ^3.1.5
-        version: 3.1.5(encoding@0.1.13)
-      csv-parse:
-        specifier: ^5.3.6
-        version: 5.5.2
       discord.js:
         specifier: ^14.14.1
         version: 14.14.1
       effect:
         specifier: ^3.9.1
         version: 3.9.1
-      email-addresses:
-        specifier: ^5.0.0
-        version: 5.0.0
       faiss-node:
         specifier: ^0.5.1
         version: 0.5.1
@@ -4635,24 +4392,15 @@ importers:
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
-      lodash.startcase:
-        specifier: ^4.4.0
-        version: 4.4.0
       mailparser:
         specifier: ^3.6.4
         version: 3.6.5
       modelfusion:
         specifier: ^0.137.0
         version: 0.137.0
-      node-fetch:
-        specifier: ^2.6.0
-        version: 2.7.0(encoding@0.1.13)
       server-destroy:
         specifier: ^1.0.1
         version: 1.0.1
-      split2:
-        specifier: ^4.1.0
-        version: 4.2.0
       textract:
         specifier: ^2.5.0
         version: 2.5.0
@@ -4679,9 +4427,6 @@ importers:
       '@mediapipe/tasks-text':
         specifier: ^0.10.7
         version: 0.10.8
-      '@types/html-to-text':
-        specifier: ^9.0.0
-        version: 9.0.3
       '@types/imap':
         specifier: ^0.8.35
         version: 0.8.39
@@ -4694,24 +4439,15 @@ importers:
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
-      '@types/lodash.startcase':
-        specifier: ^4.4.9
-        version: 4.4.9
       '@types/mailparser':
         specifier: ^3.4.0
         version: 3.4.3
       '@types/server-destroy':
         specifier: ^1.0.3
         version: 1.0.3
-      '@types/split2':
-        specifier: ^3.2.1
-        version: 3.2.1
       '@types/textract':
         specifier: ^2.4.5
         version: 2.4.5
-      fast-check:
-        specifier: ^3.19.0
-        version: 3.19.0
       ts-node:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(typescript@5.6.2)
@@ -4730,7 +4466,7 @@ importers:
     devDependencies:
       '@cloudflare/vitest-pool-workers':
         specifier: ^0.5.17
-        version: 0.5.17(@cloudflare/workers-types@4.20241022.0)(@vitest/runner@2.1.3)(@vitest/snapshot@2.1.3)(vitest@2.1.3)
+        version: 0.5.17(@cloudflare/workers-types@4.20241022.0)(@vitest/runner@2.1.3)(@vitest/snapshot@2.1.3)(vitest@2.1.3(@types/node@22.5.5)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
       '@cloudflare/workers-types':
         specifier: ^4.20241018.0
         version: 4.20241022.0
@@ -15344,10 +15080,6 @@ packages:
     resolution: {integrity: sha512-PsBM/x0wxVvVPawKak2MFjxEneogipf212yO+rLf+2M3RDepCpYCdn1NBWgfmC+AWpmBYx/8zM7Y4QW7Kg2Wjw==}
     engines: {node: '>=18'}
 
-  '@langchain/mistralai@0.0.16':
-    resolution: {integrity: sha512-rSJ4UaxmCftOyJXdgNMXCZmVVRMlsQb2JjG1PUYeCBxQryUBJxeDcRe30Yluwo/1Zh7LVi7FfYXac5K7lhjgQw==}
-    engines: {node: '>=18'}
-
   '@langchain/openai@0.0.23':
     resolution: {integrity: sha512-H5yv2hKQ5JVa6jC1wQxiN2299lJbPc5JUv93c6IUw+0jr0kFqH48NWbcythz1UFj2rOpZdaFJSYJs2nr9bhVLg==}
     engines: {node: '>=18'}
@@ -15697,16 +15429,6 @@ packages:
 
   '@microsoft/tsdoc@0.14.2':
     resolution: {integrity: sha512-9b8mPpKrfeGRuhFH5iO1iwCLeIIsV6+H1sRfxbkoGXIyQE2BTsPd9zqSqQJ+pv5sJ/hT5M1zvOFL02MnEezFug==}
-
-  '@mistralai/mistralai@0.1.3':
-    resolution: {integrity: sha512-WUHxC2xdeqX9PTXJEqdiNY54vT2ir72WSJrZTTBKRnkfhX6zIfCYA24faRlWjUB5WTpn+wfdGsTMl3ArijlXFA==}
-
-  '@modelfusion/mathjs-tool@0.1.1':
-    resolution: {integrity: sha512-TFF+x6b6z7+8vdTm3YAokcTqOmggmWdU1tC+LOBaxbp9ytuCDH/GYH9Q9RGFeEcW9Cucpl0qBaD3j17nm2aZsQ==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      modelfusion: '>=0.106.0'
-      zod: ^3.22
 
   '@module-federation/bridge-react-webpack-plugin@0.6.6':
     resolution: {integrity: sha512-NANaSOKem+1t/Fbd1GjXnStJRe7O33ya+FR/yYkTUd1H5hmlzVDNo/lYxYuUl3O/gH9Lnlr2Gf9unyWoIW0wHw==}
@@ -19856,9 +19578,6 @@ packages:
   '@types/hast@3.0.4':
     resolution: {integrity: sha512-WPs+bbQw5aCj+x6laNGWLH3wviHtoCv/P3+otBhbOhJgG8qtpdAMlTCxLtsTWA7LH1Oh/bFCHsBn0TPS5m30EQ==}
 
-  '@types/html-to-text@9.0.3':
-    resolution: {integrity: sha512-ImzcLdHN3+zghCoZcA+vWd/t0GhM10S7lnvSq9YA6lbo4HGK10WIJ7n+NI7mbeVZeUtgrmK5fXM66kZcws1oHA==}
-
   '@types/http-assert@1.5.5':
     resolution: {integrity: sha512-4+tE/lwdAahgZT1g30Jkdm9PzFRde0xwxBNUyRsCitRvCQB90iuA2uJYdUnhnANRcqGXaWOGY4FEoxeElNAK2g==}
 
@@ -19990,9 +19709,6 @@ packages:
 
   '@types/lodash.sortby@4.7.7':
     resolution: {integrity: sha512-J/4IS+jQopGBrrRetBXDCX0KnSeXJZ0rOTmGAxR9MWGV24YdHxX8IRi9LCGAU9GKWlBov9KRSfQpuup9PReqrw==}
-
-  '@types/lodash.startcase@4.4.9':
-    resolution: {integrity: sha512-C0M4DlN1pnn2vEEhLHkTHxiRZ+3GlTegpoAEHHGXnuJkSOXyJMHGiSc+SLRzBlFZWHsBkixe6FqvEAEU04g14g==}
 
   '@types/lodash.update@4.10.7':
     resolution: {integrity: sha512-S+s8ORbtkYZl+9EfhVyRZ7TAr7wEl/YRUzNdoTbjiiL2Ef8U/4mjiFo/J5bhWLJ8b8/GCnujXRCAv8EN9BI1VA==}
@@ -20230,9 +19946,6 @@ packages:
 
   '@types/sockjs@0.3.36':
     resolution: {integrity: sha512-MK9V6NzAS1+Ud7JV9lJLFqW85VbC9dq3LmwZCuBe4wBDgKC0Kj/jd8Xl+nSviU+Qc3+m7umHHyHg//2KSa0a0Q==}
-
-  '@types/split2@3.2.1':
-    resolution: {integrity: sha512-7uz3yU+LooBq4yNOzlZD9PU9/1Eu0rTD1MjQ6apOVEoHsPrMUrFw7W8XrvWtesm2vK67SBK9AyJcOXtMpl9bgQ==}
 
   '@types/stack-utils@2.0.1':
     resolution: {integrity: sha512-Hl219/BT5fLAaz6NDkSuhzasy49dwQS/DSdu4MdggFB8zcXv7vflBI3xp7FEmkmdDkBUI2bPUNeMttp2knYdxw==}
@@ -20963,9 +20676,6 @@ packages:
 
   alea@1.0.1:
     resolution: {integrity: sha512-QU+wv+ziDXaMxRdsQg/aH7sVfWdhKps5YP97IIwFkHCsbDZA3k87JXoZ5/iuemf4ntytzIWeScrRpae8+lDrXA==}
-
-  amadeus@8.1.0:
-    resolution: {integrity: sha512-cBekfs/rqT0kqqrnHbZ5fj6BJX0XRj6+2RevvVM9mn/0dKBuIuVArrDokhPnt7hfi3oWNqk4462XVsFeVC7x/A==}
 
   ansi-align@3.0.1:
     resolution: {integrity: sha512-IOfwwBF5iczOjp/WeY4YxyjqAFMQoZufdQWDd19SEExbVLNXqvpzSJ/M7Za4/sCPmQ0+GRquoA7bGcINcxew6w==}
@@ -22673,9 +22383,6 @@ packages:
   csstype@3.1.3:
     resolution: {integrity: sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw==}
 
-  csv-parse@5.5.2:
-    resolution: {integrity: sha512-YRVtvdtUNXZCMyK5zd5Wty1W6dNTpGKdqQd4EQ8tl/c6KW1aMBB1Kg1ppky5FONKmEqGJ/8WjLlTNLPne4ioVA==}
-
   currently-unhandled@0.4.1:
     resolution: {integrity: sha512-/fITjgjGU50vjQ4FH6eUoYu+iUoUKIXws2hL15JJpIR+BbTxaXQsMuuyjtNh2WqsSBS5nsaZHFsFecyw5CCAng==}
     engines: {node: '>=0.10.0'}
@@ -23445,9 +23152,6 @@ packages:
   elliptic@6.5.4:
     resolution: {integrity: sha512-iLhC6ULemrljPZb+QutR5TQGB+pdW6KGD5RSegS+8sorOZT+rdQFbsQFJgvN3eRqNALqJer4oQ16YvJHlU8hzQ==}
 
-  email-addresses@5.0.0:
-    resolution: {integrity: sha512-4OIPYlA6JXqtVn8zpHpGiI7vE6EQOAg16aGnDMIAlZVinnoZ8208tW1hAbjWydgN/4PLTT9q+O1K6AH/vALJGw==}
-
   emittery@0.6.0:
     resolution: {integrity: sha512-6EMRGr9KzYWp8DzHFZsKVZBsMO6QhAeHMeHND8rhyBNCHKMLpgW9tZv40bwN3rAIKRS5CxcK8oLRKUJSB9h7yQ==}
     engines: {node: '>=10'}
@@ -24141,9 +23845,6 @@ packages:
   extend@3.0.2:
     resolution: {integrity: sha512-fjquC59cD7CyW6urNXK0FBufkZcoiGG80wTuPujX590cB5Ttln20E2UB4S/WARVqhXffZl2LNgS+gQdPIIim/g==}
 
-  extensionless@1.9.9:
-    resolution: {integrity: sha512-fz0cWfLA4pgc2nwmg6lc2UH+g+NlFuD63VWqp8n1wGAZSSbPNoARkA54BxXRjYCYW9LvhBnA3NyJaGS2KudkWw==}
-
   external-editor@3.1.0:
     resolution: {integrity: sha512-hMQ4CX1p1izmuLYyZqLMO/qGNw10wSv9QDCPfzXfyFrOaCSSoRfqE1Kf1s5an66J5JZC62NewG+mK49jOCtQew==}
     engines: {node: '>=4'}
@@ -24503,9 +24204,6 @@ packages:
 
   fraction.js@4.2.0:
     resolution: {integrity: sha512-MhLuK+2gUcnZe8ZHlaaINnQLl0xRIGRfcGk2yl8xoQAfHrSsL3rYu6FCmBdkdbhc9EPlwyGHewaRsvwRMJtAlA==}
-
-  fraction.js@4.3.4:
-    resolution: {integrity: sha512-pwiTgt0Q7t+GHZA4yaLjObx4vXmmdcS0iSJ19o8d/goUGgItX9UZWKWNnLHehxviD8wU2IWRsnR8cD5+yOJP2Q==}
 
   fraction.js@4.3.7:
     resolution: {integrity: sha512-ZsDfxO51wGAXREY55a7la9LScWpwv9RxIrYABrlvOFBlH/ShPnrtsXeuUIfXKKOVicNxQ+o8JTbJvjS4M89yew==}
@@ -26818,9 +26516,6 @@ packages:
   lodash.sortby@4.7.0:
     resolution: {integrity: sha512-HDWXG8isMntAyRF5vZ7xKuEvOhT4AhlRt/3czTSjvGUxjYCBVRQY48ViDHyfYz9VIoBkW4TMGQNapx+l3RUwdA==}
 
-  lodash.startcase@4.4.0:
-    resolution: {integrity: sha512-+WKqsK294HMSc2jEbNgpHpd0JfIBhp7rEV4aqXWqFr6AlXov+SlcgB1Fv01y2kGe3Gc8nMW7VA0SrGuSkRfIEg==}
-
   lodash.throttle@4.1.1:
     resolution: {integrity: sha512-wIkUCfVKpVsWo3JSZlc+8MB5it+2AN5W8J7YVMST30UrvcQNZ1Okbj+rbVniijTWE6FGYy4XJq/rHkas8qJMLQ==}
 
@@ -27065,11 +26760,6 @@ packages:
   matched@0.4.4:
     resolution: {integrity: sha512-zpasnbB5vQkvb0nfcKV0zEoGgMtV7atlWR1Vk3E8tEKh6EicMseKtVV+5vc+zsZwvDlcNMKlKK/CVOEeAalYRQ==}
     engines: {node: '>= 0.12.0'}
-
-  mathjs@12.4.2:
-    resolution: {integrity: sha512-lW14EzwAFgbNN7AZikxplmhs7wiXDhMphBOGCA3KS6T29ECEkHJsBtbEW5cnCz7sXtl4nDyvTdR+DqVsZyiiEw==}
-    engines: {node: '>= 18'}
-    hasBin: true
 
   mathjs@9.5.2:
     resolution: {integrity: sha512-c0erTq0GP503/Ch2OtDOAn50GIOsuxTMjmE00NI/vKJFSWrDaQHRjx6ai+16xYv70yBSnnpUgHZGNf9FR9IwmA==}
@@ -31508,10 +31198,6 @@ packages:
   typed-function@2.1.0:
     resolution: {integrity: sha512-bctQIOqx2iVbWGDGPWwIm18QScpu2XRmkC19D8rQGFsjKSgteq/o1hTZvIG/wuDq8fanpBDrLkLq+aEN/6y5XQ==}
     engines: {node: '>= 10'}
-
-  typed-function@4.1.1:
-    resolution: {integrity: sha512-Pq1DVubcvibmm8bYcMowjVnnMwPVMeh0DIdA8ad8NZY2sJgapANJmiigSUwlt+EgXxpfIv8MWrQXTIzkfYZLYQ==}
-    engines: {node: '>= 14'}
 
   typedarray-to-buffer@3.1.5:
     resolution: {integrity: sha512-zdu8XMNEDepKKR+XYOXAVPtWui0ly0NtohUscw+UmaHiAWT8hrV1rr//H6V+0DvJ3OQ19S979M0laLfX8rm82Q==}
@@ -36766,7 +36452,7 @@ snapshots:
     dependencies:
       mime: 3.0.0
 
-  '@cloudflare/vitest-pool-workers@0.5.17(@cloudflare/workers-types@4.20241022.0)(@vitest/runner@2.1.3)(@vitest/snapshot@2.1.3)(vitest@2.1.3)':
+  '@cloudflare/vitest-pool-workers@0.5.17(@cloudflare/workers-types@4.20241022.0)(@vitest/runner@2.1.3)(@vitest/snapshot@2.1.3)(vitest@2.1.3(@types/node@22.5.5)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))':
     dependencies:
       '@vitest/runner': 2.1.3
       '@vitest/snapshot': 2.1.3
@@ -38454,16 +38140,6 @@ snapshots:
     transitivePeerDependencies:
       - openai
 
-  '@langchain/mistralai@0.0.16(encoding@0.1.13)(openai@4.26.1(encoding@0.1.13))':
-    dependencies:
-      '@langchain/core': 0.1.62(openai@4.26.1(encoding@0.1.13))
-      '@mistralai/mistralai': 0.1.3(encoding@0.1.13)
-      zod: 3.22.4
-      zod-to-json-schema: 3.22.4(zod@3.22.4)
-    transitivePeerDependencies:
-      - encoding
-      - openai
-
   '@langchain/openai@0.0.23(encoding@0.1.13)':
     dependencies:
       '@langchain/core': 0.1.62(openai@4.26.1(encoding@0.1.13))
@@ -38888,18 +38564,6 @@ snapshots:
 
   '@microsoft/tsdoc@0.14.2': {}
 
-  '@mistralai/mistralai@0.1.3(encoding@0.1.13)':
-    dependencies:
-      node-fetch: 2.7.0(encoding@0.1.13)
-    transitivePeerDependencies:
-      - encoding
-
-  '@modelfusion/mathjs-tool@0.1.1(modelfusion@0.137.0)(zod@3.22.4)':
-    dependencies:
-      mathjs: 12.4.2
-      modelfusion: 0.137.0
-      zod: 3.22.4
-
   '@module-federation/bridge-react-webpack-plugin@0.6.6':
     dependencies:
       '@module-federation/sdk': 0.6.6
@@ -39216,9 +38880,9 @@ snapshots:
       - '@swc/core'
       - debug
 
-  '@nrwl/vite@19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)':
+  '@nrwl/vite@19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3(@types/node@22.5.5)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))':
     dependencies:
-      '@nx/vite': 19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)
+      '@nx/vite': 19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3(@types/node@22.5.5)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
     transitivePeerDependencies:
       - '@babel/traverse'
       - '@swc-node/register'
@@ -39526,12 +39190,12 @@ snapshots:
   '@nx/nx-win32-x64-msvc@19.7.2':
     optional: true
 
-  '@nx/playwright@19.7.2(@babel/traverse@7.25.9)(@playwright/test@1.46.1)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(@zkochan/js-yaml@0.0.7)(esbuild@0.23.1)(eslint@8.57.0)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)':
+  '@nx/playwright@19.7.2(@babel/traverse@7.25.9)(@playwright/test@1.46.1)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(@zkochan/js-yaml@0.0.7)(esbuild@0.23.1)(eslint@8.57.0)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3(@types/node@22.5.5)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))':
     dependencies:
       '@nx/devkit': 19.7.2(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))
       '@nx/eslint': 19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(@zkochan/js-yaml@0.0.7)(eslint@8.57.0)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))
       '@nx/js': 19.7.2(patch_hash=mavp33mumclr54vvfyyf557nvq)(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.6.2)
-      '@nx/vite': 19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)
+      '@nx/vite': 19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3(@types/node@22.5.5)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
       '@nx/webpack': 19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(esbuild@0.23.1)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.6.2)
       '@phenomnomnominal/tsquery': 5.0.1(typescript@5.6.2)
       minimatch: 9.0.3
@@ -39598,9 +39262,9 @@ snapshots:
       - typescript
       - verdaccio
 
-  '@nx/vite@19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)':
+  '@nx/vite@19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3(@types/node@22.5.5)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))':
     dependencies:
-      '@nrwl/vite': 19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)
+      '@nrwl/vite': 19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3(@types/node@22.5.5)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
       '@nx/devkit': 19.7.2(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))
       '@nx/js': 19.7.2(patch_hash=mavp33mumclr54vvfyyf557nvq)(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.6.2)
       '@phenomnomnominal/tsquery': 5.0.1(typescript@5.6.2)
@@ -44592,8 +44256,6 @@ snapshots:
     dependencies:
       '@types/unist': 3.0.3
 
-  '@types/html-to-text@9.0.3': {}
-
   '@types/http-assert@1.5.5': {}
 
   '@types/http-cache-semantics@4.0.1': {}
@@ -44744,10 +44406,6 @@ snapshots:
       '@types/lodash': 4.17.12
 
   '@types/lodash.sortby@4.7.7':
-    dependencies:
-      '@types/lodash': 4.17.0
-
-  '@types/lodash.startcase@4.4.9':
     dependencies:
       '@types/lodash': 4.17.0
 
@@ -44999,10 +44657,6 @@ snapshots:
   '@types/shimmer@1.0.5': {}
 
   '@types/sockjs@0.3.36':
-    dependencies:
-      '@types/node': 22.5.5
-
-  '@types/split2@3.2.1':
     dependencies:
       '@types/node': 22.5.5
 
@@ -45392,7 +45046,7 @@ snapshots:
       - utf-8-validate
       - vite
 
-  '@vitest/coverage-v8@2.1.3(@vitest/browser@2.1.3)(vitest@2.1.3)':
+  '@vitest/coverage-v8@2.1.3(@vitest/browser@2.1.3(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2)))(vitest@2.1.3(@types/node@22.5.5)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 0.2.3
@@ -46146,11 +45800,6 @@ snapshots:
       uri-js: 4.4.1
 
   alea@1.0.1: {}
-
-  amadeus@8.1.0:
-    dependencies:
-      bluebird: 3.7.2
-      qs: 6.11.2
 
   ansi-align@3.0.1:
     dependencies:
@@ -48129,8 +47778,6 @@ snapshots:
 
   csstype@3.1.3: {}
 
-  csv-parse@5.5.2: {}
-
   currently-unhandled@0.4.1:
     dependencies:
       array-find-index: 1.0.2
@@ -48975,8 +48622,6 @@ snapshots:
       inherits: 2.0.4
       minimalistic-assert: 1.0.1
       minimalistic-crypto-utils: 1.0.1
-
-  email-addresses@5.0.0: {}
 
   emittery@0.6.0: {}
 
@@ -49917,8 +49562,6 @@ snapshots:
 
   extend@3.0.2: {}
 
-  extensionless@1.9.9: {}
-
   external-editor@3.1.0:
     dependencies:
       chardet: 0.7.0
@@ -50322,8 +49965,6 @@ snapshots:
   frac@1.1.2: {}
 
   fraction.js@4.2.0: {}
-
-  fraction.js@4.3.4: {}
 
   fraction.js@4.3.7: {}
 
@@ -53070,8 +52711,6 @@ snapshots:
 
   lodash.sortby@4.7.0: {}
 
-  lodash.startcase@4.4.0: {}
-
   lodash.throttle@4.1.1: {}
 
   lodash.truncate@4.4.2: {}
@@ -53327,18 +52966,6 @@ snapshots:
       is-valid-glob: 0.3.0
       lazy-cache: 2.0.2
       resolve-dir: 0.1.1
-
-  mathjs@12.4.2:
-    dependencies:
-      '@babel/runtime': 7.25.9
-      complex.js: 2.1.1
-      decimal.js: 10.4.3
-      escape-latex: 1.2.0
-      fraction.js: 4.3.4
-      javascript-natural-sort: 0.7.1
-      seedrandom: 3.0.5
-      tiny-emitter: 2.1.0
-      typed-function: 4.1.1
 
   mathjs@9.5.2:
     dependencies:
@@ -58994,8 +58621,6 @@ snapshots:
   typed-assert@1.0.9: {}
 
   typed-function@2.1.0: {}
-
-  typed-function@4.1.1: {}
 
   typedarray-to-buffer@3.1.5:
     dependencies:
