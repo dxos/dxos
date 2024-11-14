@@ -58,6 +58,17 @@ export const ViewEditor = ({
   const projection = useMemo(() => new ViewProjection(schema, view), [schema, view]);
   const [field, setField] = useState<FieldType>();
 
+  // TODO(burdon): Should be reactive.
+  const viewValues = useMemo(() => {
+    return {
+      name: view.name,
+      // TODO(burdon): Should change schema's typename.
+      // TODO(burdon): Need to warn user of possible consequences of editing.
+      // TODO(burdon): Settings should have domain name owned by user.
+      type: view.query.type,
+    };
+  }, [view]);
+
   const handleSelect = useCallback((field: FieldType) => {
     setField((f) => (f === field ? undefined : field));
   }, []);
@@ -78,7 +89,7 @@ export const ViewEditor = ({
 
   return (
     <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
-      <Form<ViewMetaType> autoFocus values={{ name: '' }} schema={ViewMetaSchema} />
+      <Form<ViewMetaType> autoFocus schema={ViewMetaSchema} values={viewValues} />
 
       <div>
         {/* TODO(burdon): Clean up common form ux. */}
