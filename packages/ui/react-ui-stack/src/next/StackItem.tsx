@@ -27,10 +27,11 @@ import React, {
   useEffect,
 } from 'react';
 
-import { type ThemedClassName, Icon } from '@dxos/react-ui';
+import { type ThemedClassName, Icon, useTranslation, type ButtonProps } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useStack } from './Stack';
+import { translationKey } from './translations';
 
 export type StackItemSize = number | 'min-content';
 export const DEFAULT_HORIZONTAL_SIZE = 44 satisfies StackItemSize;
@@ -78,6 +79,7 @@ export const StackItem = forwardRef<HTMLDivElement, StackItemProps>(
 
     const setSize = useCallback(
       (nextSize: StackItemSize, commit?: boolean) => {
+        setInternalSize(nextSize);
         if (commit) {
           onSizeChange?.(nextSize);
         }
@@ -198,7 +200,8 @@ const measureStackItem = (element: HTMLButtonElement): { width: number; height: 
   return stackItemElement?.getBoundingClientRect() ?? { width: DEFAULT_EXTRINSIC_SIZE, height: DEFAULT_EXTRINSIC_SIZE };
 };
 
-export const StackItemResizeHandle = () => {
+export const StackItemResizeHandle = (props: ButtonProps) => {
+  const { t } = useTranslation(translationKey);
   const { orientation } = useStack();
   const { setSize, size } = useStackItem();
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -257,7 +260,7 @@ export const StackItemResizeHandle = () => {
       )}
     >
       <Icon icon={orientation === 'horizontal' ? 'ph--dots-six-vertical--regular' : 'ph--dots-six--regular'} />
-      <span className='sr-only'>Resize</span>
+      <span className='sr-only'>{t('resize label')}</span>
     </button>
   );
 };

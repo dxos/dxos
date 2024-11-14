@@ -24,9 +24,9 @@ export type NodePlankHeadingProps = {
   node?: Node;
   canIncrementStart?: boolean;
   canIncrementEnd?: boolean;
+  canResize?: boolean;
   popoverAnchorId?: string;
   pending?: boolean;
-  resizeable?: boolean;
   actions?: PlankHeadingAction[];
 };
 
@@ -36,6 +36,7 @@ export const NodePlankHeading = memo(
     node,
     canIncrementStart,
     canIncrementEnd,
+    canResize,
     popoverAnchorId,
     pending,
     actions = [],
@@ -67,8 +68,9 @@ export const NodePlankHeading = memo(
         solo: (layoutPart === 'solo' || layoutPart === 'main') && isNotMobile,
         incrementStart: canIncrementStart,
         incrementEnd: canIncrementEnd,
+        resize: canResize,
       }),
-      [isNotMobile, layoutPart, canIncrementStart, canIncrementEnd],
+      [isNotMobile, layoutPart, canIncrementStart, canIncrementEnd, canResize],
     );
 
     return (

@@ -30,6 +30,7 @@ import { descriptionText, mx } from '@dxos/react-ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
 import { translationKey } from '../../translations';
+import { StackItemResizeHandle } from '../StackItem';
 
 // TODO(thure): Dedupe (also in react-ui-navtree)
 export type KeyBinding = {
@@ -250,6 +251,7 @@ type PlankHeadingCapabilites = {
   incrementStart?: boolean;
   incrementEnd?: boolean;
   solo?: boolean;
+  resize?: boolean;
 };
 
 type PlankHeadingControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
@@ -357,6 +359,7 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
             }
           />
         )}
+        {can.resize && <StackItemResizeHandle classNames={buttonClassNames} />}
       </ButtonGroup>
     );
   },

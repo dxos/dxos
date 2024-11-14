@@ -49,7 +49,7 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order }: Plan
   const { graph } = useGraph();
   const node = useNode(graph, entry?.id);
   const rootElement = useRef<HTMLDivElement | null>(null);
-  const resizeable = layoutMode === 'deck';
+  const canResize = layoutMode === 'deck';
   const Root = part === 'solo' ? 'div' : StackItem;
 
   const attendableAttrs = useAttendableAttributes(coordinate.entryId);
@@ -129,7 +129,7 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order }: Plan
             canIncrementStart={canIncrementStart}
             canIncrementEnd={canIncrementEnd}
             popoverAnchorId={popoverAnchorId}
-            resizeable={resizeable}
+            canResize={canResize}
           />
           <Surface role='article' data={data} limit={1} fallback={PlankContentError} placeholder={placeholder} />
         </>
