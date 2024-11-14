@@ -19,7 +19,7 @@ import { createFieldId } from './projection';
  * Stored field metadata (e.g., for UX).
  */
 export const FieldSchema = S.Struct({
-  id: S.NonEmptyString,
+  id: S.String,
   path: JsonPath,
   visible: S.optional(S.Boolean),
   size: S.optional(S.Number),

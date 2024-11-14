@@ -7,12 +7,15 @@ import '@dxos-theme';
 import { type StoryObj } from '@storybook/react';
 import React, { type MouseEvent, type MutableRefObject, useCallback, useRef, useState } from 'react';
 
+import { defaultSizeRow } from '@dxos/lit-grid';
 import { faker } from '@dxos/random';
 import { DropdownMenu } from '@dxos/react-ui';
 import { PopoverCombobox } from '@dxos/react-ui-searchlist';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Grid, type GridContentProps, type GridRootProps } from './Grid';
+
+export { defaultSizeCol, defaultSizeRow } from '@dxos/lit-grid';
 
 type StoryGridProps = GridContentProps & Pick<GridRootProps, 'onEditingChange'>;
 
@@ -114,7 +117,7 @@ export const Basic: StoryObj<StoryGridProps> = {
     },
     rowDefault: {
       grid: {
-        size: 32,
+        size: defaultSizeRow,
         resizeable: true,
       },
     },

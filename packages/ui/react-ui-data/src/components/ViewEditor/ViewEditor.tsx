@@ -6,7 +6,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { type SchemaResolver } from '@dxos/echo-db';
 import { AST, type MutableSchema, S } from '@dxos/echo-schema';
-import { IconButton, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 import { FieldSchema, type FieldType, type ViewType, ViewProjection, VIEW_FIELD_LIMIT } from '@dxos/schema';
@@ -20,9 +20,14 @@ const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem]';
 
 // TODO(burdon): Pick from ViewType.
 const ViewMetaSchema = S.Struct({
-  name: S.NonEmptyString.annotations({
-    [AST.TitleAnnotationId]: 'View name', // Translations.
+  name: S.String.annotations({
+    [AST.TitleAnnotationId]: 'View',
     [AST.DescriptionAnnotationId]: 'Enter view name',
+  }),
+  // TODO(burdon): Define pattern.
+  type: S.NonEmptyString.annotations({
+    [AST.TitleAnnotationId]: 'Typename',
+    [AST.DescriptionAnnotationId]: 'Ex. example.com/type/MyType',
   }),
 }).pipe(S.mutable);
 
@@ -76,11 +81,11 @@ export const ViewEditor = ({
       <Form<ViewMetaType> autoFocus values={{ name: '' }} schema={ViewMetaSchema} />
 
       <div>
-        <div className='p-2'>
-          <Input.Root>
-            <Input.Label>Fields</Input.Label>
-          </Input.Root>
+        {/* TODO(burdon): Clean up common form ux. */}
+        <div role='none' className='p-2'>
+          <label>{t('fields label')}</label>
         </div>
+
         <List.Root<FieldType>
           items={view.fields}
           isItem={S.is(FieldSchema)}
