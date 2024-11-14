@@ -52,7 +52,6 @@ const Story = (args: Partial<NavTreeProps>) => {
         }
 
         const target = location.current.dropTargets[0];
-
         const instruction: Instruction | null = extractInstruction(target.data);
         if (instruction !== null) {
           updateState({

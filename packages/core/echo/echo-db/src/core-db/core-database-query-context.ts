@@ -204,7 +204,7 @@ export class CoreDatabaseQueryContext implements QueryContext {
       if (spec === true || (typeof spec === 'object' && spec !== null)) {
         if (isEncodedReference(newData[key])) {
           const dxn = DXN.parse(newData[key]['/']);
-          invariant(dxn.isLocalEchoObjectDXN());
+          invariant(dxn.isLocalObjectId());
           const core = await this._coreDatabase.loadObjectCoreById(dxn.parts[1]);
           newData[key] = core
             ? await this._recursivelyJoinFields(core.toPlainObject(), spec !== true ? spec : undefined)

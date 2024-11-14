@@ -69,6 +69,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-table": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/shell": "workspace:*",

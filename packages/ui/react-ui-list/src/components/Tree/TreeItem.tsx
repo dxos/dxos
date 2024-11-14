@@ -17,6 +17,7 @@ import { invariant } from '@dxos/invariant';
 import { Treegrid } from '@dxos/react-ui';
 import {
   focusRing,
+  ghostHover,
   hoverableControls,
   hoverableFocusedKeyboardControls,
   hoverableFocusedWithinControls,
@@ -190,11 +191,12 @@ export const RawTreeItem = <T extends ItemType = ItemType>({
       aria-labelledby={`${id}__label`}
       parentOf={parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
       classNames={mx(
-        'grid grid-cols-subgrid col-[tree-row] aria-[current]:bg-input',
+        'grid grid-cols-subgrid col-[tree-row] mt-[2px] aria-[current]:bg-input',
         hoverableControls,
         hoverableFocusedKeyboardControls,
         hoverableFocusedWithinControls,
         hoverableDescriptionIcons,
+        ghostHover,
         focusRing,
         className,
       )}

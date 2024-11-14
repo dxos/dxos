@@ -3,3 +3,6 @@
 //
 
 export * from './Stack';
+export * from './StackItem';
+export * from './PlankHeading';
+export { default as translations } from './translations';

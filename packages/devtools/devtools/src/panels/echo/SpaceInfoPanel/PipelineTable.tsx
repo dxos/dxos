@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { type Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
 import { type SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { AnchoredOverflow } from '@dxos/react-ui';
-import { Table, createColumnBuilder, textPadding, type TableColumnDef } from '@dxos/react-ui-table';
+import { Table, createColumnBuilder, textPadding, type TableColumnDef } from '@dxos/react-ui-table/deprecated';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexSet } from '@dxos/util';
 

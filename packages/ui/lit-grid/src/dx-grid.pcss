@@ -14,8 +14,6 @@ dx-grid {
   grid-template-rows: min-content 1fr min-content;
   font-variant-numeric: tabular-nums;
 
-  min-inline-size: 4rem;
-  min-block-size: 4rem;
   inline-size: 100%;
   block-size: 100%;
   max-inline-size: 100dvw;
@@ -57,7 +55,8 @@ dx-grid {
   [role='gridcell'], [role='columnheader'], [role='rowheader'] {
     position: relative;
     background: var(--dx-grid-base, var(--dx-base));
-    padding: 2px 3px;
+    /** This must match CellEditor styling in `CellEditor.tsx`. */
+    padding: 2px 4px;
     box-sizing: border-box;
     cursor: pointer;
     border: 1px solid transparent;

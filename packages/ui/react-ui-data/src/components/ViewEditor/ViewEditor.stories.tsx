@@ -33,7 +33,7 @@ const DefaultStory = () => {
       }) {}
 
       const schema = space.db.schemaRegistry.addSchema(TestSchema);
-      const view = createView({ typename: schema.typename, jsonSchema: toJsonSchema(TestSchema) });
+      const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: toJsonSchema(TestSchema) });
       const projection = new ViewProjection(schema, view);
 
       setSchema(schema);
@@ -66,7 +66,7 @@ const meta: Meta<typeof ViewEditor> = {
   title: 'ui/react-ui-data/ViewEditor',
   component: ViewEditor,
   render: DefaultStory,
-  decorators: [withClientProvider({ createSpace: true }), withLayout({ fullscreen: true }), withTheme],
+  decorators: [withClientProvider({ createSpace: true }), withLayout({ fullscreen: true, tooltips: true }), withTheme],
   parameters: {
     translations,
   },

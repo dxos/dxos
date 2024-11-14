@@ -50,7 +50,7 @@ export const TreeItemHeading = memo(
             variant='ghost'
             density='fine'
             classNames={mx(
-              'grow gap-1 !pis-0.5 hover:!bg-transparent dark:hover:!bg-transparent',
+              'grow gap-2 !pis-0.5 hover:!bg-transparent dark:hover:!bg-transparent',
               'disabled:!cursor-default disabled:!opacity-100',
               className,
             )}
