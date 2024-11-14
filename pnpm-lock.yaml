@@ -6982,12 +6982,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../common/keys
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -7012,12 +7006,6 @@ importers:
       '@dxos/plugin-status-bar':
         specifier: workspace:*
         version: link:../plugin-status-bar
-      '@dxos/plugin-table':
-        specifier: workspace:*
-        version: link:../plugin-table
-      '@dxos/plugin-theme':
-        specifier: workspace:*
-        version: link:../plugin-theme
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
@@ -7045,21 +7033,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact/signals-core':
-        specifier: ^1.6.0
-        version: 1.6.0
       '@tldraw/tldraw':
         specifier: ^3.0.0
         version: 3.0.0(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
-      react-json-tree:
-        specifier: ^0.18.0
-        version: 0.18.0(@types/react@18.2.79)(react@18.2.0)
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -7070,15 +7049,9 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -7468,9 +7441,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/plugin-attention':
-        specifier: workspace:*
-        version: link:../plugin-attention
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -7480,15 +7450,9 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
-      '@dxos/plugin-theme':
-        specifier: workspace:*
-        version: link:../plugin-theme
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
-      '@dxos/react-hooks':
-        specifier: workspace:*
-        version: link:../../ui/primitives/react-hooks
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
@@ -7501,9 +7465,6 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-mosaic
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
@@ -7513,9 +7474,6 @@ importers:
       '@effect/schema':
         specifier: ^0.75.1
         version: 0.75.1(effect@3.9.1)
-      '@preact/signals-core':
-        specifier: ^1.6.0
-        version: 1.6.0
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -8037,9 +7995,6 @@ importers:
       '@dnd-kit/modifiers':
         specifier: ^6.0.0
         version: 6.0.0(@dnd-kit/core@6.0.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)
-      '@dnd-kit/sortable':
-        specifier: ^7.0.1
-        version: 7.0.1(@dnd-kit/core@6.0.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)
       '@dnd-kit/utilities':
         specifier: ^3.2.0
         version: 3.2.0(react@18.2.0)
@@ -8073,9 +8028,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/plugin-attention':
-        specifier: workspace:*
-        version: link:../plugin-attention
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -8118,9 +8070,6 @@ importers:
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
-      '@dxos/schema':
-        specifier: workspace:*
-        version: link:../../sdk/schema
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -8133,27 +8082,15 @@ importers:
       '@lezer/highlight':
         specifier: ^1.2.1
         version: 1.2.1
-      '@lezer/lezer':
-        specifier: ^1.1.2
-        version: 1.1.2
-      '@lezer/lr':
-        specifier: ^1.4.2
-        version: 1.4.2
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
       '@radix-ui/react-context':
         specifier: ^1.0.0
         version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
-      '@tanstack/react-virtual':
-        specifier: ^3.9.0
-        version: 3.10.4(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       codemirror-lang-spreadsheet:
         specifier: ^1.3.0
         version: 1.3.0
-      date-fns:
-        specifier: ^3.3.1
-        version: 3.6.0
       hyperformula:
         specifier: ^2.7.1
         version: 2.7.1
@@ -8163,9 +8100,6 @@ importers:
       re-resizable:
         specifier: ^6.9.17
         version: 6.9.17(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      react-markdown:
-        specifier: ^8.0.5
-        version: 8.0.7(@types/react@18.2.79)(react@18.2.0)
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -15568,9 +15502,6 @@ packages:
 
   '@lezer/json@1.0.0':
     resolution: {integrity: sha512-zbAuUY09RBzCoCA3lJ1+ypKw5WSNvLqGMtasdW6HvVOqZoCpPr8eWrsGnOVWGKGn8Rh21FnrKRVlJXrGAVUqRw==}
-
-  '@lezer/lezer@1.1.2':
-    resolution: {integrity: sha512-O8yw3CxPhzYHB1hvwbdozjnAslhhR8A5BH7vfEMof0xk3p+/DFDfZkA9Tde6J+88WgtwaHy4Sy6ThZSkaI0Evw==}
 
   '@lezer/lr@1.4.2':
     resolution: {integrity: sha512-pu0K1jCIdnQ12aWNaAVU5bzi7Bd1w54J3ECgANPmYLtQKP0HBj2cE/5coBD66MT10xbtIuUr7tg0Shbsvk0mDA==}
@@ -38719,11 +38650,6 @@ snapshots:
       '@lezer/lr': 1.4.2
 
   '@lezer/json@1.0.0':
-    dependencies:
-      '@lezer/highlight': 1.2.1
-      '@lezer/lr': 1.4.2
-
-  '@lezer/lezer@1.1.2':
     dependencies:
       '@lezer/highlight': 1.2.1
       '@lezer/lr': 1.4.2
