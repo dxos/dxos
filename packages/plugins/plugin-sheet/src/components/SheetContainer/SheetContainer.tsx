@@ -18,8 +18,8 @@ export const SheetContainer = ({ space, sheet, role }: { space: Space; sheet: Sh
   const graph = useComputeGraph(space);
 
   return graph ? (
-    <StackItemContent toolbar statusbar>
-      <SheetProvider sheet={sheet} graph={graph}>
+    <SheetProvider sheet={sheet} graph={graph}>
+      <StackItemContent toolbar statusbar classNames='border-bs border-separator'>
         <Toolbar.Root role={role}>
           <Toolbar.Styles />
           <Toolbar.Alignment />
@@ -28,9 +28,7 @@ export const SheetContainer = ({ space, sheet, role }: { space: Space; sheet: Sh
         </Toolbar.Root>
         <GridSheet />
         <FunctionEditor />
-      </SheetProvider>
-    </StackItemContent>
-  ) : (
-    <span role='none' className='attention-surface' />
-  );
+      </StackItemContent>
+    </SheetProvider>
+  ) : null;
 };

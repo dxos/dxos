@@ -34,12 +34,8 @@ export type DeckLayoutProps = {
   onDismissToast: (id: string) => void;
 } & Pick<ComplementarySidebarProps, 'panels'>;
 
-const overscrollStyles = 'bg-deck row-span-2 transition-[inline-size] duration-200 ease-in-out-symmetric';
-
 const PlankSeparator = ({ index }: { index: number }) =>
-  index > 0 ? (
-    <span role='separator' className='row-span-2 bg-deck is-4' style={{ gridColumn: index * 2 + 1 }} />
-  ) : null;
+  index > 0 ? <span role='separator' className='row-span-2 bg-deck is-4' style={{ gridColumn: index * 2 }} /> : null;
 
 export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels, onDismissToast }: DeckLayoutProps) => {
   const context = useLayout();
@@ -63,10 +59,12 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
   const scrollLeftRef = useRef<number | null>();
   const deckRef = useRef<HTMLDivElement>(null);
 
+  const isSoloModeLoaded = layoutMode === 'solo' && layoutParts.solo;
+
   // Ensure the first plank is attended when the deck is first rendered.
   useEffect(() => {
     const attended = untracked(() => attentionPlugin?.provides.attention.attended ?? []);
-    const firstId = layoutMode === 'solo' ? firstIdInPart(layoutParts, 'solo') : firstIdInPart(layoutParts, 'main');
+    const firstId = isSoloModeLoaded ? firstIdInPart(layoutParts, 'solo') : firstIdInPart(layoutParts, 'main');
     if (attended.length === 0 && firstId) {
       // TODO(wittjosiah): Focusing the type button is a workaround.
       //   If the plank is directly focused on first load the focus ring appears.
@@ -146,14 +144,6 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
               <span className='sr-only'>{t('open navigation sidebar label')}</span>
               <MenuIcon weight='light' className={getSize(5)} />
             </Button>
-            <Button
-              onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}
-              variant='ghost'
-              classNames='p-1'
-            >
-              <span className='sr-only'>{t('open complementary sidebar label')}</span>
-              <MenuIcon mirrored weight='light' className={getSize(5)} />
-            </Button>
             <Surface role='notch-end' />
           </Main.Notch>
 
@@ -192,24 +182,18 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
             >
               <div
                 role='none'
-                className={layoutMode === 'deck' ? 'relative overflow-hidden' : 'sr-only'}
-                {...(layoutMode !== 'deck' && { inert: '' })}
+                className={!isSoloModeLoaded ? 'relative bg-deck overflow-hidden' : 'sr-only'}
+                {...(isSoloModeLoaded && { inert: '' })}
               >
                 <Stack
                   orientation='horizontal'
                   size='contain'
                   classNames={['absolute inset-block-0 -inset-inline-px', mainPaddingTransitions]}
                   onScroll={handleScroll}
-                  itemsCount={1 + 2 * (layoutParts.main?.length ?? 0)}
+                  itemsCount={2 * (layoutParts.main?.length ?? 0) - 1}
+                  style={padding}
                   ref={deckRef}
                 >
-                  {padding && (
-                    <span
-                      role='none'
-                      className={overscrollStyles}
-                      style={{ inlineSize: padding.paddingInlineStart, gridColumn: 1 }}
-                    />
-                  )}
                   {layoutParts.main?.map((layoutEntry, index) => (
                     <Fragment key={layoutEntry.id}>
                       <PlankSeparator index={index} />
@@ -218,26 +202,17 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
                         layoutParts={layoutParts}
                         part='main'
                         layoutMode={layoutMode}
-                        order={index * 2 + 2}
+                        order={index * 2 + 1}
+                        last={index === layoutParts.main!.length - 1}
                       />
                     </Fragment>
                   ))}
-                  {padding && (
-                    <span
-                      role='none'
-                      className={overscrollStyles}
-                      style={{
-                        inlineSize: padding.paddingInlineEnd,
-                        gridColumn: 1 + (layoutParts.main?.length ?? 0) * 2,
-                      }}
-                    />
-                  )}
                 </Stack>
               </div>
               <div
                 role='none'
-                className={layoutMode === 'solo' ? 'relative bg-deck' : 'sr-only'}
-                {...(layoutMode !== 'solo' && { inert: '' })}
+                className={isSoloModeLoaded ? 'relative bg-deck overflow-hidden' : 'sr-only'}
+                {...(!isSoloModeLoaded && { inert: '' })}
               >
                 <StackContext.Provider
                   value={{ size: 'contain', orientation: 'horizontal', separators: true, rail: true }}

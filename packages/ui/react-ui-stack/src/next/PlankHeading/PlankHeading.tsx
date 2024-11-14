@@ -295,8 +295,6 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
 
     return (
       <ButtonGroup {...props} ref={forwardedRef}>
-        {children}
-
         {pin && !isSolo && ['both', 'start'].includes(pin) && (
           <PlankHeadingControl
             label={t('pin start label')}
@@ -359,6 +357,7 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
             }
           />
         )}
+        {children}
         {can.resize && <StackItemResizeHandle classNames={buttonClassNames} />}
       </ButtonGroup>
     );
