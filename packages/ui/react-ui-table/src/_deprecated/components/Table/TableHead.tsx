@@ -5,6 +5,8 @@
 import { flexRender } from '@tanstack/react-table';
 import React from 'react';
 
+import { defaultSizeCol } from '@dxos/react-ui-grid';
+
 import { useTableContext } from './TableContext';
 import { theadResizeRoot, theadRoot, theadTh, theadTr } from '../../theme';
 
@@ -24,7 +26,7 @@ const TableHead = (_props: TableHeadProps) => {
           <tr key={headerGroup.id} className={theadTr(tableContext)}>
             {/* TODO(burdon): Calc. width. */}
             {tableContext.debug && (
-              <th className='font-mono' style={{ width: 32 }}>
+              <th className='font-mono' style={{ width: defaultSizeCol }}>
                 #
               </th>
             )}

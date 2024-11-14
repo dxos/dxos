@@ -119,7 +119,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
                 }
 
                 const space = getSpace(table);
-                const schema = space?.db.schemaRegistry.getSchema(table.view.query.__typename);
+                const schema = space?.db.schemaRegistry.getSchema(table.view.query.type);
                 const handleDelete = (fieldId: string) => {
                   void dispatch?.({
                     plugin: TABLE_PLUGIN,
@@ -180,7 +180,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
               invariant(isTable(table));
               invariant(table.view);
 
-              const schema = getSpace(table)?.db.schemaRegistry.getSchema(table.view.query.__typename);
+              const schema = getSpace(table)?.db.schemaRegistry.getSchema(table.view.query.type);
               invariant(schema);
               const projection = new ViewProjection(schema, table.view);
 

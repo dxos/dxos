@@ -39,7 +39,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   }, [space, table, table?.view]);
 
   const schema = useMemo(
-    () => (table.view ? space?.db.schemaRegistry.getSchema(table.view.query.__typename) : undefined),
+    () => (table.view ? space?.db.schemaRegistry.getSchema(table.view.query.type) : undefined),
     [space, table.view],
   );
   const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : () => false, undefined, [schema]);
