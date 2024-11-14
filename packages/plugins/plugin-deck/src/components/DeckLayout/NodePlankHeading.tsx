@@ -13,11 +13,12 @@ import {
   type LayoutCoordinate,
 } from '@dxos/app-framework';
 import { type Node, useGraph } from '@dxos/plugin-graph';
-import { Icon, Popover, toLocalizedString, useMediaQuery, useTranslation } from '@dxos/react-ui';
+import { Icon, Popover, toLocalizedString, useMediaQuery, useTranslation, IconButton } from '@dxos/react-ui';
 import { PlankHeading, type PlankHeadingAction } from '@dxos/react-ui-stack/next';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 
 import { DECK_PLUGIN } from '../../meta';
+import { useLayout } from '../LayoutContext';
 
 export type NodePlankHeadingProps = {
   coordinate: LayoutCoordinate;
@@ -41,6 +42,7 @@ export const NodePlankHeading = memo(
     pending,
     actions = [],
   }: NodePlankHeadingProps) => {
+    const layoutContext = useLayout();
     const { t } = useTranslation(DECK_PLUGIN);
     const { graph } = useGraph();
     const icon = node?.properties?.icon ?? 'ph--placeholder--regular';
@@ -154,7 +156,19 @@ export const NodePlankHeading = memo(
             }
           }}
           close={layoutPart === 'complementary' ? 'minify-end' : true}
-        />
+        >
+          {layoutPart === 'main' && (
+            <IconButton
+              iconOnly
+              onClick={() => (layoutContext.complementarySidebarOpen = !layoutContext.complementarySidebarOpen)}
+              variant='ghost'
+              label={t('open complementary sidebar label')}
+              classNames='!p-1 -scale-x-100'
+              icon='ph--sidebar--regular'
+              tooltipZIndex='70'
+            />
+          )}
+        </PlankHeading.Controls>
       </PlankHeading.Root>
     );
   },

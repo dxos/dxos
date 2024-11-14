@@ -145,14 +145,6 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
             <span className='sr-only'>{t('open navigation sidebar label')}</span>
             <MenuIcon weight='light' className={getSize(5)} />
           </Button>
-          <Button
-            onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}
-            variant='ghost'
-            classNames='p-1'
-          >
-            <span className='sr-only'>{t('open complementary sidebar label')}</span>
-            <MenuIcon mirrored weight='light' className={getSize(5)} />
-          </Button>
           <Surface role='notch-end' />
         </Main.Notch>
 

@@ -26,11 +26,11 @@ import React, {
   useCallback,
 } from 'react';
 
-import { type ThemedClassName, Icon, useTranslation, type ButtonProps } from '@dxos/react-ui';
+import { type ThemedClassName, useTranslation, type ButtonProps, IconButton } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useStack } from './Stack';
-import { translationKey } from './translations';
+import { translationKey } from '../translations';
 
 export type StackItemSize = number | 'min-content';
 export const DEFAULT_HORIZONTAL_SIZE = 44 satisfies StackItemSize;
@@ -245,17 +245,17 @@ export const StackItemResizeHandle = (props: ButtonProps) => {
   );
 
   return (
-    <button
-      tabIndex={-1}
+    <IconButton
+      iconOnly
+      variant='ghost'
       ref={buttonRef}
-      className={mx(
-        'text-description ch-focus-ring p-px rounded',
+      label={t('resize label')}
+      icon={orientation === 'horizontal' ? 'ph--dots-six-vertical--regular' : 'ph--dots-six--regular'}
+      classNames={[
+        'ch-focus-ring !p-px rounded',
         orientation === 'horizontal' ? 'self-center justify-self-end' : 'self-end justify-self-center',
-      )}
-    >
-      <Icon icon={orientation === 'horizontal' ? 'ph--dots-six-vertical--regular' : 'ph--dots-six--regular'} />
-      <span className='sr-only'>{t('resize label')}</span>
-    </button>
+      ]}
+    />
   );
 };
 
