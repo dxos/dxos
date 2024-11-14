@@ -59,6 +59,7 @@
     "@dxos/react-ui-data": "workspace:*",
     "@dxos/react-ui-grid": "workspace:*",
     "@dxos/react-ui-searchlist": "workspace:*",
+    "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-types": "workspace:*",
     "@dxos/schema": "workspace:*",

@@ -263,12 +263,14 @@ export const StackItemResizeHandle = (props: ButtonProps) => {
 export type StackItemContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
   toolbar?: boolean;
   statusbar?: boolean;
+  contentSize?: 'cover' | 'intrinsic';
 };
 
 export const StackItemContent = ({
   children,
   toolbar = true,
   statusbar,
+  contentSize = 'cover',
   classNames,
   ...props
 }: StackItemContentProps) => {
@@ -278,7 +280,12 @@ export const StackItemContent = ({
     <div
       role='none'
       {...props}
-      className={mx('group grid gap-px', size === 'contain' && 'overflow-hidden', classNames)}
+      className={mx(
+        'group gap-px',
+        contentSize === 'intrinsic' ? 'flex flex-col' : 'grid',
+        size === 'contain' && 'min-bs-0 overflow-hidden',
+        classNames,
+      )}
       style={{
         gridTemplateRows: [
           ...(toolbar ? ['var(--rail-action)'] : []),

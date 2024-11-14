@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useMemo, useRef, type UIEvent, Fragment 
 import { type LayoutParts, Surface, type Toast as ToastSchema, firstIdInPart, usePlugin } from '@dxos/app-framework';
 import { type AttentionPluginProvides } from '@dxos/plugin-attention';
 import { Button, Dialog, Main, Popover, useOnTransition, useTranslation } from '@dxos/react-ui';
-import { Stack } from '@dxos/react-ui-stack/next';
+import { Stack, StackContext } from '@dxos/react-ui-stack/next';
 import { getSize, mainPaddingTransitions } from '@dxos/react-ui-theme';
 
 import { ActiveNode } from './ActiveNode';
@@ -226,7 +226,11 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
               className={layoutMode === 'solo' ? 'relative bg-deck' : 'sr-only'}
               {...(layoutMode !== 'solo' && { inert: '' })}
             >
-              <Plank entry={layoutParts.solo?.[0]} layoutParts={layoutParts} part='solo' layoutMode={layoutMode} />
+              <StackContext.Provider
+                value={{ size: 'contain', orientation: 'horizontal', separators: true, rail: true }}
+              >
+                <Plank entry={layoutParts.solo?.[0]} layoutParts={layoutParts} part='solo' layoutMode={layoutMode} />
+              </StackContext.Provider>
             </div>
           </Main.Content>
         )}

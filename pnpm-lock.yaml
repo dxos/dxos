@@ -11104,6 +11104,9 @@ importers:
       '@dxos/react-ui-searchlist':
         specifier: workspace:*
         version: link:../react-ui-searchlist
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../react-ui-stack
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../react-ui-syntax-highlighter

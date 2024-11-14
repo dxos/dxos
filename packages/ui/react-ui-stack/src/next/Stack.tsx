@@ -28,7 +28,7 @@ export type StackContextValue = {
   size: Size;
 };
 
-const StackContext = createContext<StackContextValue>({
+export const StackContext = createContext<StackContextValue>({
   orientation: 'vertical',
   rail: true,
   size: 'intrinsic',
