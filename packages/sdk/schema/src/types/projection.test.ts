@@ -24,7 +24,7 @@ import { ViewProjection } from './projection';
 import { createView, type ViewType } from './view';
 
 const getFieldId = (view: ViewType, path: string): string => {
-  const field = view.fields.find((f) => f.path === path);
+  const field = view.fields.find((field) => field.path === path);
   invariant(field);
   return field.id;
 };
