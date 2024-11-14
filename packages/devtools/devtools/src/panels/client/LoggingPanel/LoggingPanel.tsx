@@ -10,7 +10,7 @@ import { type LogEntry, LogLevel, type QueryLogsRequest } from '@dxos/protocols/
 import { useClient } from '@dxos/react-client';
 import { useStream } from '@dxos/react-client/devtools';
 import { Toolbar } from '@dxos/react-ui';
-import { createColumnBuilder, type TableColumnDef, textPadding } from '@dxos/react-ui-table';
+import { createColumnBuilder, type TableColumnDef, textPadding } from '@dxos/react-ui-table/deprecated';
 import { getSize } from '@dxos/react-ui-theme';
 
 import { MasterDetailTable, PanelContainer, Searchbar } from '../../../components';

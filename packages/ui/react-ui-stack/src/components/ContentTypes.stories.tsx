@@ -13,15 +13,12 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import type { StackSectionContent, StackSectionItem } from './Section';
 import { Stack, type StackProps } from './Stack';
 import { EditorContent } from '../testing/EditorContent';
-import { makeColumns, createItems, TableContent, type TableContentProps } from '../testing/TableContent';
 
 faker.seed(1234);
 
 const ContentTypeDelegator: StackProps['SectionContent'] = (section: { data: StackSectionContent }) => {
   if ('content' in section.data) {
     return <EditorContent {...section} />;
-  } else if ('columns' in section.data) {
-    return <TableContent data={section.data as TableContentProps} />;
   } else {
     return null;
   }
@@ -53,50 +50,6 @@ export const Editors = {
       id: faker.string.uuid(),
       object: { id: faker.string.uuid(), content: faker.lorem.paragraphs(4) },
     })),
-  },
-  parameters: {
-    layout: 'fullscreen',
-  },
-};
-
-export const Tables = {
-  args: {
-    items: [...Array(12)].map(() => ({
-      id: faker.string.uuid(),
-      size: 'extrinsic',
-      object: {
-        id: faker.string.uuid(),
-        columns: makeColumns(),
-        data: createItems(faker.number.int({ min: 4, max: 12 })),
-      },
-    })),
-  },
-  parameters: {
-    layout: 'fullscreen',
-  },
-};
-
-export const EditorsAndTables = {
-  args: {
-    items: [...Array(12)].map(() =>
-      faker.number.float(1) < 0.5
-        ? {
-            id: faker.string.uuid(),
-            object: {
-              id: faker.string.uuid(),
-              content: faker.lorem.paragraphs(4),
-            },
-          }
-        : {
-            id: faker.string.uuid(),
-            size: 'extrinsic',
-            object: {
-              id: faker.string.uuid(),
-              columns: makeColumns(),
-              data: createItems(faker.number.int({ min: 4, max: 12 })),
-            },
-          },
-    ),
   },
   parameters: {
     layout: 'fullscreen',

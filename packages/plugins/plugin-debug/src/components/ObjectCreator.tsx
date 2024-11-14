@@ -6,7 +6,7 @@ import React, { useMemo, useState } from 'react';
 
 import { type EchoReactiveObject, type ReactiveObject, type Space } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
-import { createColumnBuilder, type TableColumnDef, Table } from '@dxos/react-ui-table';
+import { createColumnBuilder, type TableColumnDef, Table } from '@dxos/react-ui-table/deprecated';
 
 import { SchemasNames, createSpaceObjectGenerator } from '../scaffolding';
 
