@@ -4,9 +4,6 @@
 
 import type { CSSProperties } from 'react';
 
-import { type LayoutEntry } from '@dxos/app-framework';
-import { DEFAULT_HORIZONTAL_SIZE } from '@dxos/react-ui-stack/next';
-
 /**
  * ┌────────────────────────────────────────────────────────────────────────────────────────────────────┐
  * | Overscroll Padding Calculation for Centering Planks on Screen.                                     │
@@ -52,39 +49,21 @@ import { DEFAULT_HORIZONTAL_SIZE } from '@dxos/react-ui-stack/next';
  * └────────────────────────────────────────────────────────────────────────────────────────────────────┘
  */
 export const calculateOverscroll = (
-  planks: LayoutEntry[] | undefined,
-  plankSizing: Record<string, number>,
-  sidebarOpen: boolean,
-  complementarySidebarOpen: boolean,
+  planksCount: number,
 ): Pick<CSSProperties, 'paddingInlineStart' | 'paddingInlineEnd'> | undefined => {
-  if (!planks?.length) {
+  if (!planksCount) {
     return { paddingInlineStart: 0, paddingInlineEnd: 0 };
   }
-
-  // TODO(Zan): Move complementary sidebar size (360px), sidebar size (270px), size of two gaps (2px) to CSS variables.
-  const sidebarWidth = sidebarOpen ? '270px' : '0px';
-  const complementarySidebarWidth = complementarySidebarOpen ? '360px' : '0px';
-
-  const getPlankSize = (id: string) => (plankSizing[id] ?? DEFAULT_HORIZONTAL_SIZE).toFixed(2) + 'rem';
-
-  if (planks.length === 1) {
-    // Center the plank in the content area.
-    const plank = planks[0];
-    const plankSize = getPlankSize(plank.id);
-    const overscrollPadding = `max(0px, calc(((100dvw - ${sidebarWidth} - ${complementarySidebarWidth} - (${plankSize} + 2px)) / 2)))`;
-
+  if (planksCount === 1) {
+    const overscrollPadding =
+      'max(0px, calc(((100dvw - var(--dx-main-sidebarWidth) - var(--dx-main-complementaryWidth) - (var(--dx-main-contentFirstWidth) + 1px)) / 2)))';
     return { paddingInlineStart: overscrollPadding, paddingInlineEnd: overscrollPadding };
   } else {
-    // Center the plank on the screen.
-    const first = planks[0];
-    const firstSize = getPlankSize(first.id);
-
-    const last = planks[planks.length - 1];
-    const lastSize = getPlankSize(last.id);
-
     return {
-      paddingInlineStart: `max(0px, calc(((100dvw - (${firstSize} + 1px)) / 2) - ${sidebarWidth}))`,
-      paddingInlineEnd: `max(0px, calc(((100dvw - (${lastSize} + 1px)) / 2) - ${complementarySidebarWidth}))`,
+      paddingInlineStart:
+        'max(0px, calc(((100dvw - (var(--dx-main-contentFirstWidth) + 1px)) / 2) - var(--dx-main-sidebarWidth)))',
+      paddingInlineEnd:
+        'max(0px, calc(((100dvw - (var(--dx-main-contentLastWidth) + 1px)) / 2) - var(--dx-main-complementaryWidth)))',
     };
   }
 };

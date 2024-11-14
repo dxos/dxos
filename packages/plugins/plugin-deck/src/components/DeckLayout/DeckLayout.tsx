@@ -8,8 +8,8 @@ import React, { useCallback, useEffect, useMemo, useRef, type UIEvent, Fragment 
 
 import { type LayoutParts, Surface, type Toast as ToastSchema, firstIdInPart, usePlugin } from '@dxos/app-framework';
 import { type AttentionPluginProvides } from '@dxos/plugin-attention';
-import { Button, Dialog, Main, Popover, useOnTransition, useTranslation } from '@dxos/react-ui';
-import { Stack, StackContext } from '@dxos/react-ui-stack/next';
+import { Button, Dialog, Main, Popover, useOnTransition, useTranslation, type MainProps } from '@dxos/react-ui';
+import { Stack, StackContext, DEFAULT_HORIZONTAL_SIZE } from '@dxos/react-ui-stack/next';
 import { getSize, mainPaddingTransitions } from '@dxos/react-ui-theme';
 
 import { ActiveNode } from './ActiveNode';
@@ -110,10 +110,10 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
 
   const padding = useMemo(() => {
     if (layoutMode === 'deck' && overscroll === 'centering') {
-      return calculateOverscroll(layoutParts.main, plankSizing, sidebarOpen, complementarySidebarOpen);
+      return calculateOverscroll(layoutParts.main?.length ?? 0);
     }
     return {};
-  }, [layoutMode, overscroll, layoutParts.main, plankSizing, sidebarOpen, complementarySidebarOpen]);
+  }, [layoutMode, overscroll, layoutParts.main]);
 
   if (layoutMode === 'fullscreen') {
     return <Fullscreen id={fullScreenSlug} />;
@@ -176,7 +176,19 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
 
         {/* Solo/deck mode. */}
         {!isEmpty && (
-          <Main.Content bounce classNames='grid block-end-[--statusbar-size]' handlesFocus>
+          <Main.Content
+            bounce
+            classNames='grid block-end-[--statusbar-size]'
+            handlesFocus
+            style={
+              {
+                '--dx-main-sidebarWidth': sidebarOpen ? 'var(--nav-sidebar-size)' : '0px',
+                '--dx-main-complementaryWidth': complementarySidebarOpen ? 'var(--complementary-sidebar-size)' : '0px',
+                '--dx-main-contentFirstWidth': `${plankSizing[layoutParts.main?.[0]?.id ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
+                '--dx-main-contentLastWidth': `${plankSizing[layoutParts.main?.[(layoutParts.main?.length ?? 1) - 1]?.id ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
+              } as MainProps['style']
+            }
+          >
             <div
               role='none'
               className={layoutMode === 'deck' ? 'relative overflow-hidden' : 'sr-only'}
@@ -185,7 +197,7 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
               <Stack
                 orientation='horizontal'
                 size='contain'
-                classNames={['absolute inset-0', mainPaddingTransitions]}
+                classNames={['absolute inset-block-0 -inset-inline-px', mainPaddingTransitions]}
                 onScroll={handleScroll}
                 itemsCount={1 + 2 * (layoutParts.main?.length ?? 0)}
                 ref={deckRef}
