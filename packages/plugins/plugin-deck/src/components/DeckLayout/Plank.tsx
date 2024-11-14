@@ -38,9 +38,10 @@ export type PlankProps = {
   part: LayoutPart;
   layoutMode: Layout['layoutMode'];
   order?: number;
+  last?: boolean;
 };
 
-export const Plank = memo(({ entry, layoutParts, part, layoutMode, order }: PlankProps) => {
+export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }: PlankProps) => {
   // const { t } = useTranslation(DECK_PLUGIN);
   const dispatch = useIntentDispatcher();
   const coordinate: LayoutCoordinate = useMemo(() => ({ part, entryId: entry?.id ?? UNKNOWN_ID }), [entry?.id, part]);
@@ -102,6 +103,7 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order }: Plan
     isSolo && mainIntrinsicSize,
     isSolo && railGridHorizontal,
     isSolo && 'grid absolute inset-0 divide-separator divide-y',
+    last && '!border-li border-separator',
   );
 
   return (
