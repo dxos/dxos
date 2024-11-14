@@ -7,23 +7,23 @@ import { formatDistance } from 'date-fns/formatDistance';
 import React from 'react';
 
 import {
-  SettingsAction,
-  useResolvePlugin,
-  parseNavigationPlugin,
-  useIntentDispatcher,
   type LayoutPart,
+  SettingsAction,
+  parseNavigationPlugin,
+  useResolvePlugin,
+  useIntentDispatcher,
 } from '@dxos/app-framework';
 import { useConfig } from '@dxos/react-client';
 import {
   Button,
-  Tooltip,
-  Popover,
-  useSidebars,
-  useTranslation,
   Link,
   Message,
+  Popover,
+  Tooltip,
   Trans,
   useDefaultValue,
+  useSidebars,
+  useTranslation,
 } from '@dxos/react-ui';
 import { PlankHeading } from '@dxos/react-ui-deck';
 import { getSize, mx } from '@dxos/react-ui-theme';
@@ -34,6 +34,8 @@ const buttonStyles = 'pli-1.5 text-xs font-normal';
 
 const repo = 'https://github.com/dxos/dxos';
 
+const VERSION_REGEX = /([\d.]+)/;
+
 export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
   const layoutPart = useDefaultValue(props.layoutPart, () => 'sidebar');
   const config = useConfig();
@@ -42,6 +44,7 @@ export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
   const dispatch = useIntentDispatcher();
   const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};
   const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
+  const [_, v] = version?.match(VERSION_REGEX) ?? [];
 
   const releaseUrl =
     config.values.runtime?.app?.env?.DX_ENVIRONMENT === 'production'
@@ -54,14 +57,14 @@ export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
     <div
       role='none'
       className={mx(
-        'bs-[--rail-size] pbe-[env(safe-area-inset-bottom)] box-content border-separator border-bs pli-1 flex justify-end',
+        'bs-[--rail-size] pbe-[env(safe-area-inset-bottom)] box-content border-separator border-bs flex justify-end',
         layoutPart === 'complementary' && 'md:justify-end flex-row-reverse',
       )}
     >
       <Popover.Root>
         <Popover.Trigger asChild>
           <Button variant='ghost' classNames={buttonStyles} {...(!navigationSidebarOpen && { tabIndex: -1 })}>
-            v{version}
+            v{v}
           </Button>
         </Popover.Trigger>
         <Popover.Portal>
