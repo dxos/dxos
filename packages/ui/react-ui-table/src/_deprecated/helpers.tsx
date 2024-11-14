@@ -19,6 +19,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ClassNameValue, Input, Tooltip } from '@dxos/react-ui';
+import { defaultSizeRow } from '@dxos/react-ui-grid';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { CellCombobox, useTableContext } from './components';
@@ -312,7 +313,7 @@ export class ColumnBuilder<TData extends RowData> {
         : (cell) => {
             let value = cell.getValue();
             // TODO(burdon): Hack to support automerge.
-            if (typeof value === 'object' && (value as any)?.__typename === 'dxos.Text.v0') {
+            if (typeof value === 'object' && (value as any)?.type === 'dxos.Text.v0') {
               value = (value as any).content;
             }
 
@@ -435,7 +436,7 @@ export class ColumnBuilder<TData extends RowData> {
   >[0] {
     return {
       id,
-      size: 32,
+      size: defaultSizeRow,
       enableResizing: false,
       meta: { onUpdate, cell: { classNames } },
       header: ({ table }) => {
@@ -484,7 +485,7 @@ export class ColumnBuilder<TData extends RowData> {
     const IconOn = on?.Icon ?? Check;
     const IconOff = off?.Icon ?? X;
     return {
-      size: size ?? 32,
+      size: size ?? defaultSizeRow,
       // TODO(zan): Implement sort algorithm.
       enableSorting: false,
       header: (column) => <div className={'justify-center'}>{label ?? column.header.id}</div>,

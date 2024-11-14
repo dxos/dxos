@@ -58,7 +58,7 @@ describe('ViewProjection', () => {
 
     const mutable = registry.registerSchema(db.add(schema));
 
-    const view = createView({ typename: schema.typename, jsonSchema: schema.jsonSchema });
+    const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: schema.jsonSchema });
     const projection = new ViewProjection(mutable, view);
     expect(view.fields).to.have.length(3);
 
@@ -153,7 +153,7 @@ describe('ViewProjection', () => {
     });
 
     const mutable = registry.registerSchema(db.add(schema));
-    const view = createView({ typename: schema.typename, jsonSchema: schema.jsonSchema });
+    const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: schema.jsonSchema });
     const projection = new ViewProjection(mutable, view);
 
     projection.setFieldProjection({
@@ -208,7 +208,7 @@ describe('ViewProjection', () => {
     });
 
     const mutable = registry.registerSchema(db.add(schema));
-    const view = createView({ typename: schema.typename, jsonSchema: schema.jsonSchema });
+    const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: schema.jsonSchema });
     const projection = new ViewProjection(mutable, view);
 
     // Initial state.
@@ -241,10 +241,7 @@ describe('ViewProjection', () => {
     });
 
     const mutable = registry.registerSchema(db.add(schema));
-    const view = createView({
-      typename: schema.typename,
-      jsonSchema: schema.jsonSchema,
-    });
+    const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: schema.jsonSchema });
     const projection = new ViewProjection(mutable, view);
 
     // Capture initial states.
@@ -290,7 +287,7 @@ describe('ViewProjection', () => {
     });
 
     const mutable = registry.registerSchema(db.add(schema));
-    const view = createView({ typename: schema.typename, jsonSchema: schema.jsonSchema });
+    const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: schema.jsonSchema });
     const projection = new ViewProjection(mutable, view);
 
     // Capture initial state.

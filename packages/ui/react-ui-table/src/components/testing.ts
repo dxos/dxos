@@ -22,6 +22,7 @@ export const TestSchema = TypedObject({ typename: 'example.com/type/Test', versi
 export const createTable = (schema = TestSchema) => {
   return create(TableType, {
     view: createView({
+      name: 'Test',
       typename: schema.typename,
       jsonSchema: toJsonSchema(schema),
     }),
