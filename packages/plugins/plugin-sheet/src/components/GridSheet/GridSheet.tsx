@@ -18,6 +18,7 @@ import { DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   closestCell,
+  defaultSizeRow,
   editorKeys,
   Grid,
   GridCellEditor,
@@ -55,7 +56,10 @@ const frozen = {
   frozenRowsStart: 1,
 };
 
-const sheetRowDefault = { frozenRowsStart: { size: 32, readonly: true }, grid: { size: 32, resizeable: true } };
+const sheetRowDefault = {
+  frozenRowsStart: { size: defaultSizeRow, readonly: true },
+  grid: { size: defaultSizeRow, resizeable: true },
+};
 const sheetColDefault = { frozenColsStart: { size: 48, readonly: true }, grid: { size: 180, resizeable: true } };
 
 export const GridSheet = () => {
