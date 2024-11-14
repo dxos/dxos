@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type MutableSchema } from '@dxos/echo-schema';
@@ -115,7 +115,7 @@ const DefaultStory = () => {
           <Toolbar.Separator />
           <Toolbar.Actions />
         </Toolbar.Root>
-        <TableMain ref={tableRef} model={model} />
+        {model && <TableMain ref={tableRef} model={model} attendableId='table-story' />}
       </div>
       <div className='flex flex-col h-full border-l border-separator overflow-y-auto'>
         {table.view && (
@@ -172,7 +172,7 @@ const TablePerformanceStory = (props: StoryProps) => {
     onRowOrderChanged: () => tableRef.current?.update?.(),
   });
 
-  return <TableMain ref={tableRef} model={model} />;
+  return model ? <TableMain ref={tableRef} model={model} attendableId='table-story' /> : null;
 };
 
 //
@@ -208,11 +208,9 @@ const meta: Meta<StoryProps> = {
 
 export default meta;
 
-type Story = StoryObj<StoryProps>;
-
 export const Default = {};
 
-export const Mutations: Story = {
+export const Mutations = {
   render: TablePerformanceStory,
   args: {
     rows: 1000,
@@ -220,7 +218,7 @@ export const Mutations: Story = {
   },
 };
 
-export const RapidInsertions: Story = {
+export const RapidInsertions = {
   render: TablePerformanceStory,
   args: {
     rows: 0,
