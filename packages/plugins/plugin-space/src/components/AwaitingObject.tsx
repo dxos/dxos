@@ -43,7 +43,7 @@ export const AwaitingObject = ({ id }: { id: string }) => {
     if (objects.findIndex((object) => fullyQualifiedId(object) === id) > -1) {
       setFound(true);
 
-      if (navigationPlugin?.provides.location.active === id) {
+      if (navigationPlugin?.provides.location.active.solo?.[0].id === id) {
         setOpen(false);
       }
     }

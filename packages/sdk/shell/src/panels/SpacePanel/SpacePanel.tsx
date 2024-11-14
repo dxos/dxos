@@ -39,6 +39,7 @@ export const SpacePanelImpl = (props: SpacePanelImplProps) => {
     titleId,
     activeView,
     space,
+    hideHeading,
     target,
     SpaceManager: SpaceManagerComponent = SpaceManager,
     InvitationManager: InvitationManagerComponent = InvitationManager,
@@ -47,7 +48,7 @@ export const SpacePanelImpl = (props: SpacePanelImplProps) => {
 
   return (
     <>
-      <SpacePanelHeading {...rest} {...{ titleId, space }} />
+      {!hideHeading && <SpacePanelHeading {...rest} {...{ titleId, space }} />}
       <Viewport.Root activeView={activeView}>
         <Viewport.Views>
           <Viewport.View id='space manager' classNames={stepStyles}>

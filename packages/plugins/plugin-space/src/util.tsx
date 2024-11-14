@@ -239,8 +239,6 @@ export const constructSpaceActionGroups = ({
         label: ['create object in space label', { ns: SPACE_PLUGIN }],
         icon: 'ph--plus--regular',
         disposition: 'toolbar',
-        // TODO(wittjosiah): This is currently a navtree feature. Address this with cmd+k integration.
-        // mainAreaDisposition: 'in-flow',
         menuType: 'searchList',
         testId: 'spacePlugin.createObject',
       },
@@ -303,7 +301,6 @@ export const constructSpaceActions = ({
         label: ['migrate space label', { ns: SPACE_PLUGIN }],
         icon: 'ph--database--regular',
         disposition: 'toolbar',
-        mainAreaDisposition: 'in-flow',
         disabled: migrating || Migrations.running(space),
       },
     });
@@ -319,7 +316,7 @@ export const constructSpaceActions = ({
           if (locked) {
             return;
           }
-          await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SHARE, data: { spaceId: space.id } });
+          await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SHARE, data: { space } });
         },
         properties: {
           label: ['share space label', { ns: SPACE_PLUGIN }],
@@ -329,7 +326,6 @@ export const constructSpaceActions = ({
             macos: 'meta+.',
             windows: 'alt+.',
           },
-          mainAreaDisposition: 'absent',
         },
       },
       {
@@ -360,12 +356,23 @@ export const constructSpaceActions = ({
             macos: 'shift+F6',
             windows: 'shift+F6',
           },
-          mainAreaDisposition: 'absent',
+        },
+      },
+      {
+        id: getId(SpaceAction.OPEN_SETTINGS),
+        type: ACTION_TYPE,
+        data: async () => {
+          await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.OPEN_SETTINGS, data: { space } });
+        },
+        properties: {
+          label: ['open space settings label', { ns: SPACE_PLUGIN }],
+          icon: 'ph--gear--regular',
         },
       },
     );
   }
 
+  // TODO(wittjosiah): Consider moving close space into the space settings dialog.
   if (state !== SpaceState.SPACE_INACTIVE && !hasPendingMigration) {
     actions.push({
       id: getId(SpaceAction.CLOSE),
@@ -376,7 +383,6 @@ export const constructSpaceActions = ({
       properties: {
         label: ['close space label', { ns: SPACE_PLUGIN }],
         icon: 'ph--x--regular',
-        mainAreaDisposition: 'menu',
         disabled: personal,
       },
     });
@@ -393,7 +399,6 @@ export const constructSpaceActions = ({
         label: ['open space label', { ns: SPACE_PLUGIN }],
         icon: 'ph--clock-counter-clockwise--regular',
         disposition: 'toolbar',
-        mainAreaDisposition: 'in-flow',
       },
     });
   }
@@ -468,8 +473,6 @@ export const constructObjectActionGroups = ({
         label: ['create object in collection label', { ns: SPACE_PLUGIN }],
         icon: 'ph--plus--regular',
         disposition: 'toolbar',
-        // TODO(wittjosiah): This is currently a navtree feature. Address this with cmd+k integration.
-        // mainAreaDisposition: 'in-flow',
         menuType: 'searchList',
         testId: 'spacePlugin.createObject',
       },

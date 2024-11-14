@@ -69,7 +69,8 @@ const EmbeddedLayoutImpl = () => {
 
   const handleInvite = useCallback(() => {
     if (client && space) {
-      void client.shell.shareSpace({ spaceKey: space.key });
+      // TODO(wittjosiah): Use space plugin intent.
+      // void client.shell.shareSpace({ spaceKey: space.key });
     }
   }, [client, space]);
 
