@@ -7085,12 +7085,6 @@ importers:
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
-      '@dxos/keyboard':
-        specifier: workspace:*
-        version: link:../../common/keyboard
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../common/local-storage
@@ -7109,9 +7103,6 @@ importers:
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability
-      '@dxos/plugin-theme':
-        specifier: workspace:*
-        version: link:../plugin-theme
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -7130,12 +7121,6 @@ importers:
       '@dxos/react-ui-text-tooltip':
         specifier: workspace:*
         version: link:../../ui/react-ui-text-tooltip
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      '@fluentui/react-tabster':
-        specifier: ^9.19.0
-        version: 9.19.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -7709,42 +7694,21 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../common/context
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../common/local-storage
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
       '@dxos/observability':
         specifier: workspace:*
         version: link:../../sdk/observability
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../core/protocols
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../sdk/react-client
       '@dxos/react-ui-data':
         specifier: workspace:*
         version: link:../../ui/react-ui-data
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      '@preact/signals-core':
-        specifier: ^1.6.0
-        version: 1.6.0
-      localforage:
-        specifier: ^1.10.0
-        version: 1.10.0
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -7773,18 +7737,12 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../common/async
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../common/local-storage
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -7797,27 +7755,18 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
-      '@dxos/plugin-stack':
-        specifier: workspace:*
-        version: link:../plugin-stack
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
       '@dxos/react-ui-data':
         specifier: workspace:*
         version: link:../../ui/react-ui-data
-      '@preact/signals-core':
-        specifier: ^1.6.0
-        version: 1.6.0
       hastscript:
         specifier: ^7.1.0
         version: 7.1.0
       highlight.js:
         specifier: ^11.9.0
         version: 11.9.0
-      marked:
-        specifier: ^12.0.2
-        version: 12.0.2
       react-markdown:
         specifier: ^8.0.5
         version: 8.0.7(@types/react@18.2.79)(react@18.2.0)
@@ -7855,9 +7804,6 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -8282,9 +8228,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/automerge':
-        specifier: workspace:*
-        version: link:../../core/echo/automerge
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -8366,21 +8309,6 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
-      jszip:
-        specifier: ^3.10.1
-        version: 3.10.1
-      localforage:
-        specifier: ^1.10.0
-        version: 1.10.0
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
-      react-drag-drop-files:
-        specifier: ^2.3.8
-        version: 2.3.8(react-dom@18.2.0(react@18.2.0))(react-is@18.2.0)(react@18.2.0)
-      react-is:
-        specifier: ~18.2.0
-        version: 18.2.0
     devDependencies:
       '@babel/core':
         specifier: ^7.18.13
@@ -8397,9 +8325,6 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -8421,18 +8346,12 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../common/async
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../common/local-storage
@@ -8448,9 +8367,6 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../sdk/react-client
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
@@ -8478,12 +8394,6 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
-      node-fetch:
-        specifier: ^2.6.0
-        version: 2.7.0(encoding@0.1.13)
-      react-is:
-        specifier: ~18.2.0
-        version: 18.2.0
     devDependencies:
       '@babel/core':
         specifier: ^7.18.13
@@ -10140,34 +10050,13 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
-      '@radix-ui/primitive':
-        specifier: ^1.0.0
-        version: 1.0.1
-      '@radix-ui/react-compose-refs':
-        specifier: ^1.0.0
-        version: 1.0.1(@types/react@18.2.79)(react@18.2.0)
       '@radix-ui/react-context':
         specifier: ^1.0.0
         version: 1.0.1(@types/react@18.2.79)(react@18.2.0)
-      '@radix-ui/react-menu':
-        specifier: ^2.0.6
-        version: 2.0.6(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@radix-ui/react-primitive':
         specifier: ^1.0.2
         version: 1.0.3(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@radix-ui/react-slot':
-        specifier: ^1.0.1
-        version: 1.0.2(@types/react@18.2.79)(react@18.2.0)
-      '@radix-ui/react-use-controllable-state':
-        specifier: ^1.0.0
-        version: 1.0.1(@types/react@18.2.79)(react@18.2.0)
     devDependencies:
-      '@dxos/app-graph':
-        specifier: workspace:*
-        version: link:../../sdk/app-graph
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
@@ -11134,9 +11023,6 @@ importers:
       '@ch-ui/tokens':
         specifier: ^0.5.6
         version: 0.5.6
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../common/node-std
       '@fontsource-variable/inter':
         specifier: 5.0.16
         version: 5.0.16
@@ -26423,9 +26309,6 @@ packages:
   jszip@2.4.0:
     resolution: {integrity: sha512-m+yvNmYfRCaf1gr5YFT5e3fnSqLnE9McbNyRd0fNycsT0HltS19NKc18fh3Lvl/AIW/ovL6/MQ1JnfFg4G3o4A==}
 
-  jszip@3.10.1:
-    resolution: {integrity: sha512-xXDvecyTpGLrqFrvkrUSoxxfJI5AH7U8zxxtVclpsUtMCq4JQ290LY8AW5c7Ggnr/Y/oK+bQMbqK2qmtk3pN4g==}
-
   jwa@1.4.1:
     resolution: {integrity: sha512-qiLX/xhEEFKUAJ6FiBMbes3w9ATzyk5W7Hvzpa/SLYdxNtng+gcurvrI7TbACjIXlsJyr05/S1oUhZrc63evQA==}
 
@@ -27172,11 +27055,6 @@ packages:
   marked@0.6.2:
     resolution: {integrity: sha512-LqxwVH3P/rqKX4EKGz7+c2G9r98WeM/SW34ybhgNGhUQNKtf1GmmSkJ6cDGJ/t6tiyae49qRkpyTw2B9HOrgUA==}
     engines: {node: '>=0.10.0'}
-    hasBin: true
-
-  marked@12.0.2:
-    resolution: {integrity: sha512-qXUm7e/YKFoqFPYPa3Ukg9xlI5cyAtGmyEIzMfW//m6kXwCy2Ps9DYf5ioijFKQ8qyuscrHoY04iJGctu2Kg0Q==}
-    engines: {node: '>= 18'}
     hasBin: true
 
   marked@4.3.0:
@@ -28436,9 +28314,6 @@ packages:
 
   pako@0.2.9:
     resolution: {integrity: sha512-NUcwaKxUxWrZLpDG+z/xZaCgQITkA/Dv4V/T6bw7VON6l1Xz/VnrBqrYjZQ12TamKHzITTfOEIYUj48y2KXImA==}
-
-  pako@1.0.11:
-    resolution: {integrity: sha512-4hLB8Py4zZce5s4yd9XzopqwVv/yGNhV1Bl8NTmCq1763HeK2+EwVTv+leGeL13Dnh2wfbqowVPXCIO0z4taYw==}
 
   papaparse@5.4.1:
     resolution: {integrity: sha512-HipMsgJkZu8br23pW15uvo6sib6wne/4woLZPlFf3rpDyMe9ywEXUsuD7+6K9PRkJlVT51j/sCOYDKGGS3ZJrw==}
@@ -52683,13 +52558,6 @@ snapshots:
     dependencies:
       pako: 0.2.9
 
-  jszip@3.10.1:
-    dependencies:
-      lie: 3.3.0
-      pako: 1.0.11
-      readable-stream: 2.3.7
-      setimmediate: 1.0.5
-
   jwa@1.4.1:
     dependencies:
       buffer-equal-constant-time: 1.0.1
@@ -53445,8 +53313,6 @@ snapshots:
       react: 18.2.0
 
   marked@0.6.2: {}
-
-  marked@12.0.2: {}
 
   marked@4.3.0: {}
 
@@ -55284,8 +55150,6 @@ snapshots:
   package-json-from-dist@1.0.0: {}
 
   pako@0.2.9: {}
-
-  pako@1.0.11: {}
 
   papaparse@5.4.1: {}
 
