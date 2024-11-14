@@ -8,7 +8,7 @@ import { Status } from '@dxos/react-ui';
 
 export const PlankLoading = () => {
   return (
-    <div role='none' className='grid bs-[100dvh] place-items-center row-span-2'>
+    <div role='none' className='grid place-items-center attention-surface'>
       <Status indeterminate aria-label='Initializing' />
     </div>
   );

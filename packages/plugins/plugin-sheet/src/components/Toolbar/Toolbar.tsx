@@ -106,10 +106,6 @@ const [ToolbarContextProvider, useToolbarContext] = createContext<{
   onAction: (action: ToolbarActionAnnotated) => void;
 }>('Toolbar');
 
-// TODO(Zan): Factor out, copied this from MarkdownPlugin.
-const sectionToolbarLayout =
-  'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 __-block-start-px transition-opacity';
-
 type Range = SheetType['ranges'][number];
 
 const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
@@ -182,15 +178,7 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
 
   return (
     <ToolbarContextProvider onAction={handleAction}>
-      <NaturalToolbar.Root
-        classNames={[
-          'pli-0.5',
-          ...(role === 'section'
-            ? ['z-[2] group-focus-within/section:visible', !hasAttention && 'invisible', sectionToolbarLayout]
-            : ['attention-surface']),
-          classNames,
-        ]}
-      >
+      <NaturalToolbar.Root classNames={['pli-0.5 attention-surface', !hasAttention && 'opacity-0.5', classNames]}>
         {children}
       </NaturalToolbar.Root>
     </ToolbarContextProvider>

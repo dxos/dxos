@@ -9,6 +9,7 @@ import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space';
 import { create, fullyQualifiedId, getSpace, Filter, useQuery } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
+import { StackItemContent } from '@dxos/react-ui-stack/next';
 import {
   Table,
   type TableController,
@@ -18,7 +19,6 @@ import {
   type TableType,
   initializeTable,
 } from '@dxos/react-ui-table';
-import { mx } from '@dxos/react-ui-theme';
 import { ViewProjection } from '@dxos/schema';
 
 import { TableAction } from '../types';
@@ -109,22 +109,15 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   );
 
   return (
-    <div role='none' className={role === 'article' ? 'row-span-2 grid grid-rows-subgrid' : undefined}>
-      <Toolbar.Root
-        onAction={handleAction}
-        classNames={mx(
-          role === 'section'
-            ? ['z-[2] group-focus-within/section:visible', !hasAttention && 'invisible', sectionToolbarLayout]
-            : 'border-be border-separator',
-        )}
-      >
+    <StackItemContent toolbar>
+      <Toolbar.Root onAction={handleAction} classNames={['attention-surface', !hasAttention && 'opacity-0.5']}>
         <Toolbar.Separator />
         <Toolbar.Actions />
       </Toolbar.Root>
       <Table.Root role={role}>
         <Table.Main key={table.id} ref={tableRef} model={model} />
       </Table.Root>
-    </div>
+    </StackItemContent>
   );
 };
 
