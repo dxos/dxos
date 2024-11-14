@@ -10428,9 +10428,6 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../common/debug
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../common/display-name
@@ -10446,9 +10443,6 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
-      '@dxos/react-hooks':
-        specifier: workspace:*
-        version: link:../primitives/react-hooks
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -10476,9 +10470,6 @@ importers:
       '@replit/codemirror-vscode-keymap':
         specifier: ^6.0.2
         version: 6.0.2(@codemirror/autocomplete@6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2))(@codemirror/commands@6.6.2)(@codemirror/language@6.10.3)(@codemirror/lint@6.8.2)(@codemirror/search@6.5.6)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
-      codemirror:
-        specifier: ^6.0.1
-        version: 6.0.1(@lezer/common@1.2.2)
       lib0:
         specifier: ^0.2.65
         version: 0.2.78
@@ -10501,12 +10492,6 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
     devDependencies:
-      '@dxos/config':
-        specifier: workspace:*
-        version: link:../../sdk/config
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-signals
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../common/keyboard
@@ -10555,9 +10540,6 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
-      '@types/react-test-renderer':
-        specifier: ^17.0.2
-        version: 17.0.9
       chai:
         specifier: ^4.4.1
         version: 4.4.1
@@ -10577,9 +10559,6 @@ importers:
         specifier: ~18.2.0
         version: 18.2.0
       react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
-      react-test-renderer:
         specifier: ~18.2.0
         version: 18.2.0(react@18.2.0)
       vite:
@@ -20360,9 +20339,6 @@ packages:
   '@types/react-syntax-highlighter@15.5.13':
     resolution: {integrity: sha512-uLGJ87j6Sz8UaBAooU0T6lWJ0dBmjZgN1PZTrj05TNql2/XpC6+4HhMT5syIdFUUt+FASfCeLLv4kBygNU+8qA==}
 
-  '@types/react-test-renderer@17.0.9':
-    resolution: {integrity: sha512-bOfxcu5oZ+KxvACScbkTwZ4eGCtZFTz4VZCOVAIfGbThxqiXSIGipKVG8ubaYBXquUSQROzNIUzviWdSnnAlzg==}
-
   '@types/react-vis@1.11.11':
     resolution: {integrity: sha512-hmm0sPseBNp4hFqQuvR7Tte5k3QmSf2rhZmn5An31rZeuv69pyq16ZcbSS91XMgRdAfC+GA33OvCZq624d9ncg==}
 
@@ -29761,11 +29737,6 @@ packages:
     peerDependencies:
       react: ~18.2.0
 
-  react-shallow-renderer@16.15.0:
-    resolution: {integrity: sha512-oScf2FqQ9LFVQgA73vr86xl2NaOIX73rh+YFqcOp68CWj56tSfgtGKrEbyhCj0rSijyG9M1CYprTh39fBi5hzA==}
-    peerDependencies:
-      react: ~18.2.0
-
   react-style-singleton@2.2.1:
     resolution: {integrity: sha512-ZWj0fHEMyWkHzKYUr2Bs/4zU6XLmq9HsgBURm7g5pAVfyn49DgUiNgY2d4lXRlYSiCif9YBGpQleewkcqddc7g==}
     engines: {node: '>=10'}
@@ -29778,11 +29749,6 @@ packages:
 
   react-syntax-highlighter@15.5.0:
     resolution: {integrity: sha512-+zq2myprEnQmH5yw6Gqc8lD55QHnpKaU8TOcFeC/Lg/MQSs8UknEA0JC4nTZGFAXC2J2Hyj/ijJ7NlabyPi2gg==}
-    peerDependencies:
-      react: ~18.2.0
-
-  react-test-renderer@18.2.0:
-    resolution: {integrity: sha512-JWD+aQ0lh2gvh4NM3bBM42Kx+XybOxCpgYK7F8ugAlpaTSnWsX+39Z4XkOykGZAHrjwwTZT3x3KxswVWxHPUqA==}
     peerDependencies:
       react: ~18.2.0
 
@@ -45149,10 +45115,6 @@ snapshots:
     dependencies:
       '@types/react': 18.2.79
 
-  '@types/react-test-renderer@17.0.9':
-    dependencies:
-      '@types/react': 18.2.79
-
   '@types/react-vis@1.11.11':
     dependencies:
       '@types/react': 18.2.79
@@ -56723,12 +56685,6 @@ snapshots:
       '@remix-run/router': 1.0.2
       react: 18.2.0
 
-  react-shallow-renderer@16.15.0(react@18.2.0):
-    dependencies:
-      object-assign: 4.1.1
-      react: 18.2.0
-      react-is: 18.2.0
-
   react-style-singleton@2.2.1(@types/react@18.2.79)(react@18.2.0):
     dependencies:
       get-nonce: 1.0.1
@@ -56746,13 +56702,6 @@ snapshots:
       prismjs: 1.29.0
       react: 18.2.0
       refractor: 3.6.0
-
-  react-test-renderer@18.2.0(react@18.2.0):
-    dependencies:
-      react: 18.2.0
-      react-is: 18.2.0
-      react-shallow-renderer: 16.15.0(react@18.2.0)
-      scheduler: 0.23.0
 
   react-uid@2.3.3(@types/react@18.2.79)(react@18.2.0):
     dependencies:
