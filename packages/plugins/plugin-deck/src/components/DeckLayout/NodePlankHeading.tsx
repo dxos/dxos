@@ -14,7 +14,7 @@ import {
 } from '@dxos/app-framework';
 import { type Node, useGraph } from '@dxos/plugin-graph';
 import { Icon, Popover, toLocalizedString, useMediaQuery, useTranslation } from '@dxos/react-ui';
-import { PlankHeading, type PlankHeadingAction } from '@dxos/react-ui-deck';
+import { PlankHeading, type PlankHeadingAction } from '@dxos/react-ui-stack/next';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 
 import { DECK_PLUGIN } from '../../meta';
@@ -24,9 +24,9 @@ export type NodePlankHeadingProps = {
   node?: Node;
   canIncrementStart?: boolean;
   canIncrementEnd?: boolean;
+  canResize?: boolean;
   popoverAnchorId?: string;
   pending?: boolean;
-  flatDeck?: boolean;
   actions?: PlankHeadingAction[];
 };
 
@@ -36,9 +36,9 @@ export const NodePlankHeading = memo(
     node,
     canIncrementStart,
     canIncrementEnd,
+    canResize,
     popoverAnchorId,
     pending,
-    flatDeck,
     actions = [],
   }: NodePlankHeadingProps) => {
     const { t } = useTranslation(DECK_PLUGIN);
@@ -68,14 +68,13 @@ export const NodePlankHeading = memo(
         solo: (layoutPart === 'solo' || layoutPart === 'main') && isNotMobile,
         incrementStart: canIncrementStart,
         incrementEnd: canIncrementEnd,
+        resize: canResize,
       }),
-      [isNotMobile, layoutPart, canIncrementStart, canIncrementEnd],
+      [isNotMobile, layoutPart, canIncrementStart, canIncrementEnd, canResize],
     );
 
     return (
-      <PlankHeading.Root
-        {...((layoutPart !== 'main' || !flatDeck) && { classNames: 'pie-1 border-b border-separator' })}
-      >
+      <PlankHeading.Root classNames='pie-1' data-dx-attention-placeholder-ignore>
         <ActionRoot>
           {node ? (
             <PlankHeading.ActionsMenu
@@ -114,6 +113,7 @@ export const NodePlankHeading = memo(
         <PlankHeading.Controls
           capabilities={capabilities}
           isSolo={layoutPart === 'solo'}
+          classNames='mis-1'
           onClick={(eventType) => {
             if (!layoutPart) {
               return;

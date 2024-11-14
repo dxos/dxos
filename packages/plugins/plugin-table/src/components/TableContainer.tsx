@@ -9,14 +9,19 @@ import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space';
 import { create, fullyQualifiedId, getSpace, Filter, useQuery } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
-import { mx } from '@dxos/react-ui-theme';
+import { StackItemContent } from '@dxos/react-ui-stack/next';
+import {
+  Table,
+  type TableController,
+  Toolbar,
+  type ToolbarAction,
+  useTableModel,
+  type TableType,
+  initializeTable,
+} from '@dxos/react-ui-table';
 import { ViewProjection } from '@dxos/schema';
 
-import { Table, type TableController } from './Table';
-import { Toolbar, type ToolbarAction } from './Toolbar';
-import { useTableModel } from '../hooks';
-import { TableAction, type TableType } from '../types';
-import { initializeTable } from '../util';
+import { TableAction } from '../types';
 
 // TODO(zantonio): Factor out, copied this from MarkdownPlugin.
 export const sectionToolbarLayout = 'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 transition-opacity';
@@ -34,7 +39,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   }, [space, table, table?.view]);
 
   const schema = useMemo(
-    () => (table.view ? space?.db.schemaRegistry.getSchema(table.view.query.__typename) : undefined),
+    () => (table.view ? space?.db.schemaRegistry.getSchema(table.view.query.type) : undefined),
     [space, table.view],
   );
   const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : () => false, undefined, [schema]);
@@ -104,22 +109,15 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   );
 
   return (
-    <div role='none' className={role === 'article' ? 'row-span-2 grid grid-rows-subgrid' : undefined}>
-      <Toolbar.Root
-        onAction={handleAction}
-        classNames={mx(
-          role === 'section'
-            ? ['z-[2] group-focus-within/section:visible', !hasAttention && 'invisible', sectionToolbarLayout]
-            : 'border-be border-separator',
-        )}
-      >
+    <StackItemContent toolbar>
+      <Toolbar.Root onAction={handleAction} classNames={['attention-surface', !hasAttention && 'opacity-0.5']}>
         <Toolbar.Separator />
         <Toolbar.Actions />
       </Toolbar.Root>
       <Table.Root role={role}>
         <Table.Main key={table.id} ref={tableRef} model={model} />
       </Table.Root>
-    </div>
+    </StackItemContent>
   );
 };
 

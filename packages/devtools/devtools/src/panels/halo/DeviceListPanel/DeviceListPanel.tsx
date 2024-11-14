@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useDevices, Device, DeviceKind, DeviceType } from '@dxos/react-client/halo';
-import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table';
+import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table/deprecated';
 
 import { MasterDetailTable, PanelContainer } from '../../../components';
 

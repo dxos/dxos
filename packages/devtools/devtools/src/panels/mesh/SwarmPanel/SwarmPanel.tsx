@@ -10,7 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { type ConnectionInfo, type SwarmInfo } from '@dxos/protocols/proto/dxos/devtools/swarm';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { type SpaceMember, useMembers, useSpaces } from '@dxos/react-client/echo';
-import { createColumnBuilder, Table, type TableColumnDef, textPadding } from '@dxos/react-ui-table';
+import { createColumnBuilder, Table, type TableColumnDef, textPadding } from '@dxos/react-ui-table/deprecated';
 import { mx } from '@dxos/react-ui-theme';
 import { ComplexMap } from '@dxos/util';
 

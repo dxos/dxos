@@ -19,13 +19,13 @@ import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-g
 import { SpaceAction } from '@dxos/plugin-space';
 import { getSpace } from '@dxos/react-client/echo';
 import { translations as dataTranslations, ViewEditor } from '@dxos/react-ui-data';
+import { TableType, translations as tableTranslations } from '@dxos/react-ui-table';
 import { type FieldProjection, ViewProjection, ViewType } from '@dxos/schema';
 
 import { TableContainer } from './components';
 import meta, { TABLE_PLUGIN } from './meta';
 import { serializer } from './serializer';
 import translations from './translations';
-import { TableType } from './types';
 import { TableAction, type TablePluginProvides, isTable } from './types';
 
 export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
@@ -51,7 +51,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
           },
         },
       },
-      translations: [...translations, ...dataTranslations],
+      translations: [...translations, ...dataTranslations, ...tableTranslations],
       echo: {
         schema: [TableType, ViewType],
       },
@@ -119,7 +119,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
                 }
 
                 const space = getSpace(table);
-                const schema = space?.db.schemaRegistry.getSchema(table.view.query.__typename);
+                const schema = space?.db.schemaRegistry.getSchema(table.view.query.type);
                 const handleDelete = (fieldId: string) => {
                   void dispatch?.({
                     plugin: TABLE_PLUGIN,
@@ -180,7 +180,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
               invariant(isTable(table));
               invariant(table.view);
 
-              const schema = getSpace(table)?.db.schemaRegistry.getSchema(table.view.query.__typename);
+              const schema = getSpace(table)?.db.schemaRegistry.getSchema(table.view.query.type);
               invariant(schema);
               const projection = new ViewProjection(schema, table.view);
 
