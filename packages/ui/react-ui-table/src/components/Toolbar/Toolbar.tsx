@@ -40,12 +40,8 @@ const ToolbarRoot = ({ classNames, children, onAction }: ToolbarProps) => {
   );
 };
 
-//
-// Actions
-//
-
-const Actions = () => {
-  const { onAction } = useToolbarContext('Actions');
+const Editing = () => {
+  const { onAction } = useToolbarContext('Editing');
   const { t } = useTranslation(translationKey);
 
   return (
@@ -58,6 +54,16 @@ const Actions = () => {
       >
         {t('add row')}
       </ToolbarButton>
+    </>
+  );
+};
+
+const Actions = () => {
+  const { onAction } = useToolbarContext('Actions');
+  const { t } = useTranslation(translationKey);
+
+  return (
+    <>
       <ToolbarButton
         value='comment'
         Icon={ChatText}
@@ -72,8 +78,9 @@ const Actions = () => {
 
 export const Toolbar = {
   Root: ToolbarRoot,
-  Separator: ToolbarSeparator,
+  Editing,
   Actions,
+  Separator: ToolbarSeparator,
 };
 
 export { useToolbarContext };
