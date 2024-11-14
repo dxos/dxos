@@ -29,7 +29,7 @@ export const errorMessageMap = {
 
 type UserMediaError = keyof typeof errorMessageMap;
 
-export default (mode: Mode) => {
+const useUserMedia = (mode: Mode) => {
   const [blurVideo, setBlurVideo] = useLocalStorage('blur-video', false);
   const [suppressNoise, setSuppressNoise] = useLocalStorage('suppress-noise', false);
   const [audioEnabled, setAudioEnabled] = useState(mode === 'production');
@@ -77,9 +77,9 @@ export default (mode: Mode) => {
       ),
     [videoEnabled$, blurVideo$],
   );
+
   const videoTrack = useSubscribedState(videoTrack$);
   const videoDeviceId = videoTrack?.getSettings().deviceId;
-  console.log('videoTrack', videoTrack, videoTrack$, mode);
   const suppressNoiseEnabled$ = useStateObservable(suppressNoise);
   const audioTrack$ = useMemo(() => {
     return combineLatest([
@@ -202,4 +202,5 @@ export default (mode: Mode) => {
   };
 };
 
+export default useUserMedia;
 export type UserMedia = ReturnType<typeof useUserMedia>;

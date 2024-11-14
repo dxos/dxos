@@ -503,7 +503,7 @@ export default class Peer {
 
   checkStats = async (timeout: number) => {
     const baseline = await this.pc.getStats();
-    await new Promise((res) => setTimeout(res, timeout));
+    await new Promise((resolve) => setTimeout(resolve, timeout));
     const now = await this.pc.getStats();
 
     now.forEach((nowReport: Stats) => {
@@ -514,7 +514,7 @@ export default class Peer {
       if (nowReport.type !== 'remote-inbound-rtp' && nowReport.type !== 'inbound-rtp') {
         return;
       }
-      const baseReport = baseline.get(nowReport.id) as Stats;
+      const baseReport = (baseline as any).get(nowReport.id) as Stats;
       if (!baseReport) {
         return;
       }

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useMemo, type FC } from 'react'
+import React, { useMemo, type FC } from 'react';
 
 import { Option, Select } from './Select';
 import { useSubscribedState } from '../hooks/rxjsHooks';
@@ -23,7 +23,7 @@ export const VideoInputSelector: FC<{ id?: string }> = ({ id }) => {
   if (videoUnavailableReason) {
     return (
       <div className='max-w-[40ch]'>
-        <Select tooltipContent={errorMessageMap[videoUnavailableReason]} id={id} defaultValue='unavailable'>
+        <Select tooltipContent={(errorMessageMap as any)[videoUnavailableReason]} id={id} defaultValue='unavailable'>
           <Option value={'unavailable'}>(Unavailable)</Option>
         </Select>
       </div>

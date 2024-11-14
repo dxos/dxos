@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import React from 'react';
+
 import { Icon } from './Icon/Icon';
 import Toast, { Root } from '../components/Toast';
 import { useConditionForAtLeast } from '../hooks/useConditionForAtLeast';

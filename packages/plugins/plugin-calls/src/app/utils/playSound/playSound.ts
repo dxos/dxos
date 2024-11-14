@@ -4,9 +4,9 @@
 
 import invariant from 'tiny-invariant';
 
-import join from './sounds/Join.mp3';
-import leave from './sounds/Leave.mp3';
-import raiseHand from './sounds/RaiseHand.mp3';
+// import join from './sounds/Join.mp3';
+// import leave from './sounds/Leave.mp3';
+// import raiseHand from './sounds/RaiseHand.mp3';
 
 const fetchOnce = async (...args: Parameters<typeof fetch>) => {
   invariant(!args.some((a) => a instanceof Request), 'fetchOnce cannot cache with Request parameters');
@@ -22,10 +22,10 @@ const fetchOnce = async (...args: Parameters<typeof fetch>) => {
   }
 };
 
-const sounds = {
-  leave,
-  join,
-  raiseHand,
+const sounds: Record<string, any> = {
+  // leave,
+  // join,
+  // raiseHand,
 };
 
 const volumeMap = {
@@ -43,6 +43,6 @@ export const playSound = async (sound: keyof typeof sounds) => {
   source.buffer = audioBuffer;
   source.connect(gainNode);
   gainNode.connect(context.destination);
-  gainNode.gain.setValueAtTime(volumeMap[sound], context.currentTime);
+  gainNode.gain.setValueAtTime((volumeMap as any)[sound], context.currentTime);
   source.start();
 };

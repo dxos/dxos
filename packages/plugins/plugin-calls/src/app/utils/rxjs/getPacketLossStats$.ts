@@ -25,7 +25,7 @@ export const getPacketLossStats$ = (peerConnection$: Observable<RTCPeerConnectio
       let outboundPacketsLost = 0;
 
       newStatsReport.forEach((report) => {
-        const previous = previousStatsReport.get(report.id);
+        const previous = (previousStatsReport as any).get(report.id);
         if (!previous) {
           return;
         }
@@ -36,15 +36,15 @@ export const getPacketLossStats$ = (peerConnection$: Observable<RTCPeerConnectio
         } else if (report.type === 'outbound-rtp') {
           const packetsSent = report.packetsSent - previous.packetsSent;
           // Find the corresponding remote-inbound-rtp report
-          const remoteInboundReport: any = Array.from(newStatsReport.values()).find(
-            (r) => r.type === 'remote-inbound-rtp' && r.ssrc === report.ssrc,
+          const remoteInboundReport: any = Array.from((newStatsReport as any).values()).find(
+            (r: any) => r.type === 'remote-inbound-rtp' && r.ssrc === report.ssrc,
           );
-          const previousRemoteInboundReport = Array.from(previousStatsReport.values()).find(
-            (r) => r.type === 'remote-inbound-rtp' && r.ssrc === previous.ssrc,
+          const previousRemoteInboundReport = Array.from((previousStatsReport as any).values()).find(
+            (r: any) => r.type === 'remote-inbound-rtp' && r.ssrc === previous.ssrc,
           );
           if (remoteInboundReport && previousRemoteInboundReport && packetsSent > 0) {
             outboundPacketsSent += report.packetsSent - previous.packetsSent;
-            outboundPacketsLost += remoteInboundReport.packetsLost - previousRemoteInboundReport.packetsLost;
+            outboundPacketsLost += remoteInboundReport.packetsLost - (previousRemoteInboundReport as any).packetsLost;
           }
         }
       });

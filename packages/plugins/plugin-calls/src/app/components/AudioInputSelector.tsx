@@ -19,7 +19,7 @@ export const AudioInputSelector: FC<{ id?: string }> = ({ id }) => {
   if (audioUnavailableReason) {
     return (
       <div className='max-w-[40ch]'>
-        <Select tooltipContent={errorMessageMap[audioUnavailableReason]} id={id} defaultValue='unavailable'>
+        <Select tooltipContent={(errorMessageMap as any)[audioUnavailableReason]} id={id} defaultValue='unavailable'>
           <Option value={'unavailable'}>(Unavailable)</Option>
         </Select>
       </div>

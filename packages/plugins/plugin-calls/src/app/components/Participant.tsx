@@ -18,7 +18,6 @@ import { OptionalLink } from './OptionalLink';
 import { Tooltip } from './Tooltip';
 import { VideoSrcObject } from './VideoSrcObject';
 import { useSubscribedState } from '../hooks/rxjsHooks';
-import { useDeadPulledTrackMonitor } from '../hooks/useDeadPulledTrackMonitor';
 import { useRoomContext } from '../hooks/useRoomContext';
 import { useUserMetadata } from '../hooks/useUserMetadata';
 import type { User } from '../types/Messages';
@@ -75,10 +74,6 @@ export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div
     const { data } = useUserMetadata(user.name);
     const { traceLink, peer, dataSaverMode } = useRoomContext();
     const peerConnection = useSubscribedState(peer.peerConnection$);
-
-    useDeadPulledTrackMonitor(user.tracks.video, user.transceiverSessionId, !!user.tracks.video, videoTrack, user.name);
-
-    useDeadPulledTrackMonitor(user.tracks.audio, user.transceiverSessionId, !!user.tracks.audio, audioTrack, user.name);
 
     const pinned = flipId === pinnedId;
 

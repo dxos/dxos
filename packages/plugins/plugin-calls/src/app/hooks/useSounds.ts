@@ -2,8 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useEffect } from 'react'
+import { useEffect } from 'react';
 import { useMount, usePrevious, useUnmount } from 'react-use';
+
+import { log } from '@dxos/log';
 
 import type { User } from '../types/Messages';
 import { playSound } from '../utils/playSound';
@@ -16,9 +18,9 @@ export default (users: User[]) => {
       return;
     }
     if (users.length > previousUserCount) {
-      playSound('join');
+      playSound('join').catch((err) => log.catch(err));
     } else {
-      playSound('leave');
+      playSound('leave').catch((err) => log.catch(err));
     }
   }, [previousUserCount, users.length]);
 

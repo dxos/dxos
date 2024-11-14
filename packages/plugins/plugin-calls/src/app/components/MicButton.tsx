@@ -39,7 +39,7 @@ export const MicButton: FC<
 
   const isSpeaking = useIsSpeaking(audioMonitorStreamTrack);
 
-  const audioUnavailableMessage = audioUnavailableReason ? errorMessageMap[audioUnavailableReason] : null;
+  const audioUnavailableMessage = audioUnavailableReason ? (errorMessageMap as any)[audioUnavailableReason] : null;
 
   return (
     <>

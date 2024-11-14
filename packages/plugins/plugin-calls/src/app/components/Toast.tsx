@@ -65,7 +65,9 @@ export const NotificationToastsProvider = (props: { children?: ReactNode }) => {
 
 export const useDispatchToast = () => useContext(NotificationToasts)[1];
 
-export default {
+const ToastComponents: {
+  [key: string]: any;
+} = {
   ...Toast,
   Viewport: style(
     Toast.Viewport,
@@ -75,3 +77,5 @@ export default {
   Action: style(Toast.Action, 'ml-auto'),
   Provider: NotificationToastsProvider,
 };
+
+export default ToastComponents;

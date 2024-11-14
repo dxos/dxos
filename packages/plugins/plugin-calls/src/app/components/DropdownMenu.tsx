@@ -68,9 +68,15 @@ const Item = forwardRef<HTMLDivElement, DropdownMenu.DropdownMenuItemProps>(({ c
 
 Item.displayName = 'Item';
 
-export default {
+const DropdownMenuComponents: {
+  Arrow: typeof Arrow;
+  Content: typeof Content;
+  Item: typeof Item;
+} & typeof DropdownMenu = {
   ...DropdownMenu,
   Arrow,
   Content,
   Item,
 };
+
+export default DropdownMenuComponents;

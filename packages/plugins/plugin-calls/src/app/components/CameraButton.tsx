@@ -31,7 +31,7 @@ export const CameraButton: FC<ButtonProps> = ({ onClick, ...rest }) => {
     return false;
   }, toggle);
 
-  const videoUnavailableMessage = videoUnavailableReason ? errorMessageMap[videoUnavailableReason] : null;
+  const videoUnavailableMessage = videoUnavailableReason ? (errorMessageMap as any)[videoUnavailableReason] : null;
 
   return (
     <Tooltip content={videoUnavailableMessage ?? `Turn camera ${videoEnabled ? 'off' : 'on'} (${metaKey}E)`}>

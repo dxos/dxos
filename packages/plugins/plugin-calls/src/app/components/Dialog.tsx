@@ -15,6 +15,7 @@ export const DialogContent = forwardRef<HTMLDivElement, RadixDialog.DialogConten
     ref={ref}
     className={cn(
       'fixed',
+      'bg-gray-200',
       'rounded-lg',
       'top-1/2',
       'left-1/2',
@@ -25,7 +26,6 @@ export const DialogContent = forwardRef<HTMLDivElement, RadixDialog.DialogConten
       'max-h-[85vh]',
       'overflow-y-auto',
       'p-6',
-      'bg-inherit',
       'shadow-xl',
       'dark:shadow-none',
     )}

@@ -70,4 +70,12 @@ const Actions: FC<{ children: ReactNode; className?: string }> = ({ children, cl
   return <div className={cn('flex justify-end gap-4', className)}>{children}</div>;
 };
 
-export default { ...AlertDialog, Overlay, Content, Title, Description, Actions };
+const AlertDialogComponents = { ...AlertDialog, Overlay, Content, Title, Description, Actions };
+
+export default AlertDialogComponents as typeof AlertDialog & {
+  Overlay: typeof Overlay;
+  Content: typeof Content;
+  Title: typeof Title;
+  Description: typeof Description;
+  Actions: typeof Actions;
+};

@@ -11,7 +11,7 @@ export class History<T> extends EventTarget {
     this.limit = Math.max(1, limit); // Ensure the limit is at least 1
   }
 
-  addEventListener(
+  override addEventListener(
     type: 'logentry',
     callback: { handleEvent: (event: Event & { entry: T }) => void } | ((event: Event & { entry: T }) => void) | null,
     options?: boolean | AddEventListenerOptions | undefined,
@@ -19,7 +19,7 @@ export class History<T> extends EventTarget {
     return super.addEventListener(type, callback as any, options);
   }
 
-  removeEventListener(
+  override removeEventListener(
     type: 'logentry',
     callback: { handleEvent: (event: Event & { entry: T }) => void } | ((event: Event & { entry: T }) => void) | null,
     options?: boolean | AddEventListenerOptions | undefined,

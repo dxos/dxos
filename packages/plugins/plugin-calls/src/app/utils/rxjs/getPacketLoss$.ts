@@ -45,7 +45,7 @@ export const getPacketLoss$ = (
         if (!relevantMids.has(report.mid)) {
           return;
         }
-        const previous = previousStatsReport.get(report.id);
+        const previous = (previousStatsReport as any).get(report.id);
         if (!previous) {
           return;
         }
@@ -56,15 +56,16 @@ export const getPacketLoss$ = (
         } else if (report.type === 'outbound-rtp') {
           const packetsSent = report.packetsSent - previous.packetsSent;
           // Find the corresponding remote-inbound-rtp report
-          const remoteInboundReport = Array.from(newStatsReport.values()).find(
-            (r) => r.type === 'remote-inbound-rtp' && r.ssrc === report.ssrc,
+          const remoteInboundReport = Array.from((newStatsReport as any).values()).find(
+            (r: any) => r.type === 'remote-inbound-rtp' && r.ssrc === report.ssrc,
           );
-          const previousRemoteInboundReport = Array.from(previousStatsReport.values()).find(
-            (r) => r.type === 'remote-inbound-rtp' && r.ssrc === previous.ssrc,
+          const previousRemoteInboundReport = Array.from((newStatsReport as any).values()).find(
+            (r: any) => r.type === 'remote-inbound-rtp' && r.ssrc === previous.ssrc,
           );
           if (remoteInboundReport && previousRemoteInboundReport && packetsSent > 0) {
             outboundPacketsSent += report.packetsSent - previous.packetsSent;
-            outboundPacketsLost += remoteInboundReport.packetsLost - previousRemoteInboundReport.packetsLost;
+            outboundPacketsLost +=
+              (remoteInboundReport as any).packetsLost - (previousRemoteInboundReport as any).packetsLost;
           }
         }
       });
