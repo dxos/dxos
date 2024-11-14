@@ -4,12 +4,12 @@
 
 import { Sidebar as MenuIcon } from '@phosphor-icons/react';
 import { untracked } from '@preact/signals-core';
-import React, { useCallback, useEffect, useMemo, useRef, type UIEvent } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, type UIEvent, Fragment } from 'react';
 
 import { type LayoutParts, Surface, type Toast as ToastSchema, firstIdInPart, usePlugin } from '@dxos/app-framework';
 import { type AttentionPluginProvides } from '@dxos/plugin-attention';
-import { Button, Dialog, Main, Popover, useOnTransition, useTranslation } from '@dxos/react-ui';
-import { Deck } from '@dxos/react-ui-deck';
+import { Button, Dialog, Main, Popover, useOnTransition, useTranslation, type MainProps } from '@dxos/react-ui';
+import { Stack, StackContext, DEFAULT_HORIZONTAL_SIZE } from '@dxos/react-ui-stack/next';
 import { getSize, mainPaddingTransitions } from '@dxos/react-ui-theme';
 
 import { ActiveNode } from './ActiveNode';
@@ -29,25 +29,19 @@ import { useLayout } from '../LayoutContext';
 export type DeckLayoutProps = {
   layoutParts: LayoutParts;
   toasts: ToastSchema[];
-  flatDeck?: boolean;
   overscroll: Overscroll;
   showHints: boolean;
-  slots?: {
-    wallpaper?: { classNames?: string };
-  };
   onDismissToast: (id: string) => void;
 } & Pick<ComplementarySidebarProps, 'panels'>;
 
-export const DeckLayout = ({
-  layoutParts,
-  toasts,
-  flatDeck,
-  overscroll,
-  showHints,
-  slots,
-  panels,
-  onDismissToast,
-}: DeckLayoutProps) => {
+const overscrollStyles = 'bg-deck row-span-2 transition-[inline-size] duration-200 ease-in-out-symmetric';
+
+const PlankSeparator = ({ index }: { index: number }) =>
+  index > 0 ? (
+    <span role='separator' className='row-span-2 bg-deck is-4' style={{ gridColumn: index * 2 + 1 }} />
+  ) : null;
+
+export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels, onDismissToast }: DeckLayoutProps) => {
   const context = useLayout();
   const {
     layoutMode,
@@ -64,7 +58,6 @@ export const DeckLayout = ({
   const { plankSizing } = useDeckContext();
   // NOTE: Not `useAttended` so that the layout component is not re-rendered when the attended list changes.
   const attentionPlugin = usePlugin<AttentionPluginProvides>('dxos.org/plugin/attention');
-  const searchPlugin = usePlugin('dxos.org/plugin/search');
   const fullScreenSlug = useMemo(() => firstIdInPart(layoutParts, 'fullScreen'), [layoutParts]);
 
   const scrollLeftRef = useRef<number | null>();
@@ -113,14 +106,14 @@ export const DeckLayout = ({
     [layoutMode],
   );
 
-  const isEmpty = layoutParts.main?.length === 0 && layoutParts.solo?.length === 0;
+  const isEmpty = (layoutParts.main?.length ?? 0) === 0 && (layoutParts.solo?.length ?? 0) === 0;
 
   const padding = useMemo(() => {
     if (layoutMode === 'deck' && overscroll === 'centering') {
-      return calculateOverscroll(layoutParts.main, plankSizing, sidebarOpen, complementarySidebarOpen);
+      return calculateOverscroll(layoutParts.main?.length ?? 0);
     }
     return {};
-  }, [layoutMode, overscroll, layoutParts.main, plankSizing, sidebarOpen, complementarySidebarOpen]);
+  }, [layoutMode, overscroll, layoutParts.main]);
 
   return (
     <Popover.Root
@@ -168,7 +161,7 @@ export const DeckLayout = ({
           <Sidebar layoutParts={layoutParts} />
 
           {/* Right sidebar. */}
-          <ComplementarySidebar panels={panels} current={layoutParts.complementary?.[0].id} flatDeck={flatDeck} />
+          <ComplementarySidebar panels={panels} current={layoutParts.complementary?.[0].id} />
 
           {/* Dialog overlay to dismiss dialogs. */}
           <Main.Overlay />
@@ -182,40 +175,75 @@ export const DeckLayout = ({
 
           {/* Solo/deck mode. */}
           {!isEmpty && (
-            <Main.Content bounce classNames='grid block-end-[--statusbar-size]' handlesFocus>
-              <div role='none' className='relative'>
-                <Deck.Root
-                  style={padding}
-                  classNames={[
-                    !flatDeck && 'bg-deck',
-                    mainPaddingTransitions,
-                    'absolute inset-0',
-                    slots?.wallpaper?.classNames,
-                  ]}
-                  solo={layoutMode === 'solo'}
+            <Main.Content
+              bounce
+              classNames='grid block-end-[--statusbar-size]'
+              handlesFocus
+              style={
+                {
+                  '--dx-main-sidebarWidth': sidebarOpen ? 'var(--nav-sidebar-size)' : '0px',
+                  '--dx-main-complementaryWidth': complementarySidebarOpen
+                    ? 'var(--complementary-sidebar-size)'
+                    : '0px',
+                  '--dx-main-contentFirstWidth': `${plankSizing[layoutParts.main?.[0]?.id ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
+                  '--dx-main-contentLastWidth': `${plankSizing[layoutParts.main?.[(layoutParts.main?.length ?? 1) - 1]?.id ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
+                } as MainProps['style']
+              }
+            >
+              <div
+                role='none'
+                className={layoutMode === 'deck' ? 'relative overflow-hidden' : 'sr-only'}
+                {...(layoutMode !== 'deck' && { inert: '' })}
+              >
+                <Stack
+                  orientation='horizontal'
+                  size='contain'
+                  classNames={['absolute inset-block-0 -inset-inline-px', mainPaddingTransitions]}
                   onScroll={handleScroll}
+                  itemsCount={1 + 2 * (layoutParts.main?.length ?? 0)}
                   ref={deckRef}
                 >
-                  <Plank
-                    entry={layoutParts.solo?.[0]}
-                    layoutParts={layoutParts}
-                    part='solo'
-                    layoutMode={layoutMode}
-                    flatDeck={flatDeck}
-                    searchEnabled={!!searchPlugin}
-                  />
-                  {layoutParts.main?.map((layoutEntry) => (
-                    <Plank
-                      key={layoutEntry.id}
-                      entry={layoutEntry}
-                      layoutParts={layoutParts}
-                      part='main'
-                      layoutMode={layoutMode}
-                      flatDeck={flatDeck}
-                      searchEnabled={!!searchPlugin}
+                  {padding && (
+                    <span
+                      role='none'
+                      className={overscrollStyles}
+                      style={{ inlineSize: padding.paddingInlineStart, gridColumn: 1 }}
                     />
+                  )}
+                  {layoutParts.main?.map((layoutEntry, index) => (
+                    <Fragment key={layoutEntry.id}>
+                      <PlankSeparator index={index} />
+                      <Plank
+                        entry={layoutEntry}
+                        layoutParts={layoutParts}
+                        part='main'
+                        layoutMode={layoutMode}
+                        order={index * 2 + 2}
+                      />
+                    </Fragment>
                   ))}
-                </Deck.Root>
+                  {padding && (
+                    <span
+                      role='none'
+                      className={overscrollStyles}
+                      style={{
+                        inlineSize: padding.paddingInlineEnd,
+                        gridColumn: 1 + (layoutParts.main?.length ?? 0) * 2,
+                      }}
+                    />
+                  )}
+                </Stack>
+              </div>
+              <div
+                role='none'
+                className={layoutMode === 'solo' ? 'relative bg-deck' : 'sr-only'}
+                {...(layoutMode !== 'solo' && { inert: '' })}
+              >
+                <StackContext.Provider
+                  value={{ size: 'contain', orientation: 'horizontal', separators: true, rail: true }}
+                >
+                  <Plank entry={layoutParts.solo?.[0]} layoutParts={layoutParts} part='solo' layoutMode={layoutMode} />
+                </StackContext.Provider>
               </div>
             </Main.Content>
           )}

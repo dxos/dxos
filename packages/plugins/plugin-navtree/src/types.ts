@@ -41,7 +41,7 @@ export type ActionProperties = SharedProperties & {
  */
 export type KeyBinding = {
   // NOTE: Keys come from `getHostPlatform` in `@dxos/util`.
-  // TODO(thure): Dedupe (similar in react-ui-deck)
+  // TODO(thure): Dedupe (similar in react-ui-stack/next)
   windows?: string;
   macos?: string;
   ios?: string;

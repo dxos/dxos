@@ -2,16 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
 import React, { type KeyboardEvent, memo, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 
 import {
-  LayoutAction,
   type LayoutCoordinate,
   type LayoutEntry,
   type LayoutPart,
   type LayoutParts,
-  NavigationAction,
   Surface,
   useIntentDispatcher,
   type Layout,
@@ -20,17 +17,15 @@ import {
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { useGraph } from '@dxos/plugin-graph';
-import { Button, Tooltip, useTranslation } from '@dxos/react-ui';
 import { useAttendableAttributes } from '@dxos/react-ui-attention';
-import { Plank as NaturalPlank } from '@dxos/react-ui-deck';
-import { mainIntrinsicSize } from '@dxos/react-ui-theme';
+import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack/next';
+import { mainIntrinsicSize, mx } from '@dxos/react-ui-theme';
 
 import { NodePlankHeading } from './NodePlankHeading';
 import { PlankContentError, PlankError } from './PlankError';
 import { PlankLoading } from './PlankLoading';
 import { DeckAction } from '../../DeckPlugin';
 import { useNode, useMainSize } from '../../hooks';
-import { DECK_PLUGIN } from '../../meta';
 import { useDeckContext } from '../DeckContext';
 import { useLayout } from '../LayoutContext';
 
@@ -42,12 +37,11 @@ export type PlankProps = {
   // TODO(wittjosiah): Remove. Pass in LayoutCoordinate instead of LayoutEntry.
   part: LayoutPart;
   layoutMode: Layout['layoutMode'];
-  flatDeck?: boolean;
-  searchEnabled?: boolean;
+  order?: number;
 };
 
-export const Plank = memo(({ entry, layoutParts, part, flatDeck, searchEnabled, layoutMode }: PlankProps) => {
-  const { t } = useTranslation(DECK_PLUGIN);
+export const Plank = memo(({ entry, layoutParts, part, layoutMode, order }: PlankProps) => {
+  // const { t } = useTranslation(DECK_PLUGIN);
   const dispatch = useIntentDispatcher();
   const coordinate: LayoutCoordinate = useMemo(() => ({ part, entryId: entry?.id ?? UNKNOWN_ID }), [entry?.id, part]);
   const { popoverAnchorId, scrollIntoView } = useLayout();
@@ -55,7 +49,8 @@ export const Plank = memo(({ entry, layoutParts, part, flatDeck, searchEnabled, 
   const { graph } = useGraph();
   const node = useNode(graph, entry?.id);
   const rootElement = useRef<HTMLDivElement | null>(null);
-  const resizeable = layoutMode === 'deck';
+  const canResize = layoutMode === 'deck';
+  const Root = part === 'solo' ? 'div' : StackItem;
 
   const attendableAttrs = useAttendableAttributes(coordinate.entryId);
   const index = indexInPart(layoutParts, coordinate);
@@ -65,11 +60,9 @@ export const Plank = memo(({ entry, layoutParts, part, flatDeck, searchEnabled, 
 
   const size = plankSizing?.[coordinate.entryId] as number | undefined;
   const setSize = useCallback(
-    debounce(
-      (newSize: number) =>
-        dispatch({ action: DeckAction.UPDATE_PLANK_SIZE, data: { id: coordinate.entryId, size: newSize } }),
-      200,
-    ),
+    debounce((nextSize: number) => {
+      return dispatch({ action: DeckAction.UPDATE_PLANK_SIZE, data: { id: coordinate.entryId, size: nextSize } });
+    }, 200),
     [dispatch, coordinate.entryId],
   );
 
@@ -88,10 +81,6 @@ export const Plank = memo(({ entry, layoutParts, part, flatDeck, searchEnabled, 
   }, [coordinate.entryId, scrollIntoView, layoutMode]);
 
   const isSolo = layoutMode === 'solo' && part === 'solo';
-  const isSuppressed =
-    (layoutMode === 'solo' && part !== 'solo') ||
-    (layoutMode === 'deck' && part === 'solo') ||
-    coordinate.entryId === UNKNOWN_ID;
 
   const sizeAttrs = useMainSize();
 
@@ -108,78 +97,43 @@ export const Plank = memo(({ entry, layoutParts, part, flatDeck, searchEnabled, 
   // TODO(wittjosiah): Change prop to accept a component.
   const placeholder = useMemo(() => <PlankLoading />, []);
 
+  const className = mx(
+    'attention-placeholder-host',
+    isSolo && mainIntrinsicSize,
+    isSolo && railGridHorizontal,
+    isSolo && 'grid gap-px absolute inset-0 bg-separator',
+  );
+
   return (
-    <NaturalPlank.Root
-      size={size}
-      setSize={setSize}
-      classNames={[isSuppressed && '!sr-only']}
+    <Root
+      {...(part === 'solo'
+        ? ({ ...sizeAttrs, className } as any)
+        : {
+            item: { id: entry?.id ?? 'never' },
+            size,
+            onSizeChange: setSize,
+            classNames: className,
+            order,
+          })}
       {...attendableAttrs}
-      {...(isSuppressed && { inert: '' })}
       onKeyDown={handleKeyDown}
       ref={rootElement}
     >
-      <NaturalPlank.Content
-        {...(isSolo && sizeAttrs)}
-        classNames={[isSolo && mainIntrinsicSize, !flatDeck && 'bg-base']}
-        style={isSolo ? { inlineSize: '' } : {}}
-      >
-        {node ? (
-          <>
-            <NodePlankHeading
-              coordinate={coordinate}
-              node={node}
-              canIncrementStart={canIncrementStart}
-              canIncrementEnd={canIncrementEnd}
-              popoverAnchorId={popoverAnchorId}
-              flatDeck={flatDeck}
-            />
-            <Surface role='article' data={data} limit={1} fallback={PlankContentError} placeholder={placeholder} />
-          </>
-        ) : (
-          <PlankError layoutCoordinate={coordinate} flatDeck={flatDeck} />
-        )}
-      </NaturalPlank.Content>
-      {searchEnabled && resizeable ? (
-        <div role='none' className='grid grid-rows-subgrid row-span-3'>
-          <Tooltip.Root>
-            <Tooltip.Trigger asChild>
-              <Button
-                data-testid='plankHeading.open'
-                variant='ghost'
-                classNames='p-1 w-fit'
-                onClick={() =>
-                  dispatch([
-                    {
-                      action: LayoutAction.SET_LAYOUT,
-                      data: {
-                        element: 'dialog',
-                        component: 'dxos.org/plugin/search/Dialog',
-                        dialogBlockAlign: 'start',
-                        subject: {
-                          action: NavigationAction.SET,
-                          position: 'add-after',
-                          coordinate,
-                        },
-                      },
-                    },
-                  ])
-                }
-              >
-                <span className='sr-only'>{t('insert plank label')}</span>
-                <Plus />
-              </Button>
-            </Tooltip.Trigger>
-            <Tooltip.Portal>
-              <Tooltip.Content side='bottom' classNames='z-[70]'>
-                {t('insert plank label')}
-              </Tooltip.Content>
-            </Tooltip.Portal>
-          </Tooltip.Root>
-          <NaturalPlank.ResizeHandle classNames='row-start-[toolbar-start] row-end-[content-end]' />
-        </div>
-      ) : resizeable ? (
-        <NaturalPlank.ResizeHandle classNames='row-span-3' />
-      ) : null}
-    </NaturalPlank.Root>
+      {node ? (
+        <>
+          <NodePlankHeading
+            coordinate={coordinate}
+            node={node}
+            canIncrementStart={canIncrementStart}
+            canIncrementEnd={canIncrementEnd}
+            popoverAnchorId={popoverAnchorId}
+            canResize={canResize}
+          />
+          <Surface role='article' data={data} limit={1} fallback={PlankContentError} placeholder={placeholder} />
+        </>
+      ) : (
+        <PlankError layoutCoordinate={coordinate} />
+      )}
+    </Root>
   );
 });

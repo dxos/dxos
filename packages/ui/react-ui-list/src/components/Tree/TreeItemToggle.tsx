@@ -22,7 +22,7 @@ export const TreeItemToggle = memo(
         aria-expanded={open}
         variant='ghost'
         density='fine'
-        classNames={mx('!pli-1', !isBranch && 'invisible')}
+        classNames={mx('is-6 !pli-1', !isBranch && 'invisible')}
         onClick={onToggle}
       >
         <Icon

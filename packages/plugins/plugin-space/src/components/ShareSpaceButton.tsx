@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useIntentDispatcher } from '@dxos/app-framework';
 import { type Space } from '@dxos/react-client/echo';
-import { Button, useTranslation } from '@dxos/react-ui';
+import { IconButton, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN, SpaceAction } from '../meta';
 
@@ -21,8 +21,11 @@ export const ShareSpaceButtonImpl = ({ onClick }: { onClick: () => void }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
 
   return (
-    <Button data-testid='spacePlugin.shareSpaceButton' onClick={onClick} classNames='mli-1'>
-      {t('share space label')}
-    </Button>
+    <IconButton
+      data-testid='spacePlugin.shareSpaceButton'
+      icon='ph--users--regular'
+      label={t('share space label')}
+      onClick={onClick}
+    />
   );
 };
