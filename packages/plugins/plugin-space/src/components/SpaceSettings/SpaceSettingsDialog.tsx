@@ -4,17 +4,20 @@
 
 import React, { useState } from 'react';
 
-import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
+import { useClient } from '@dxos/react-client';
+import { Button, Dialog, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tabs, type TabsRootProps, type TabsActivePart } from '@dxos/react-ui-tabs';
 import { ClipboardProvider, SpacePanel, type SpacePanelProps } from '@dxos/shell/react';
 
 import { SpaceSettingsPanel, type SpaceSettingsPanelProps } from './SpaceSettingsPanel';
 import { SPACE_PLUGIN } from '../../meta';
+import { COMPOSER_SPACE_LOCK, getSpaceDisplayName } from '../../util';
 
 export type SpaceSettingsTab = 'members' | 'settings';
 
 export type SpaceSettingsDialogProps = {
   initialTab?: SpaceSettingsTab;
+  namesCache?: Record<string, string>;
 } & SpaceSettingsPanelProps &
   Pick<SpacePanelProps, 'createInvitationUrl' | 'target'>;
 
@@ -23,10 +26,14 @@ export const SpaceSettingsDialog = ({
   target,
   createInvitationUrl,
   initialTab = 'members',
+  namesCache,
 }: SpaceSettingsDialogProps) => {
   const { t } = useTranslation(SPACE_PLUGIN);
+  const client = useClient();
   const [tabsActivePart, setTabsActivePart] = useState<TabsActivePart>('list');
   const [selected, setSelected] = useState<SpaceSettingsTab>(initialTab);
+  const locked = space.properties[COMPOSER_SPACE_LOCK];
+  const name = getSpaceDisplayName(space, { personal: client.spaces.default === space, namesCache });
 
   return (
     // TODO(wittjosiah): The tablist dialog pattern is copied from @dxos/plugin-manager.
@@ -50,7 +57,7 @@ export const SpaceSettingsDialog = ({
                 : ''
             }
           >
-            {t('space settings dialog title')}
+            {toLocalizedString(name, t)}
           </span>
         </Dialog.Title>
         <Dialog.Close asChild>
@@ -59,9 +66,6 @@ export const SpaceSettingsDialog = ({
           </Button>
         </Dialog.Close>
       </div>
-      <Dialog.Description classNames='mbe-1 pis-2 pie-3 @md:pis-4 @md:pie-5 truncate'>
-        {space.properties?.name ?? t('unnamed space label')}
-      </Dialog.Description>
       <Tabs.Root
         orientation='vertical'
         value={selected}
@@ -74,21 +78,23 @@ export const SpaceSettingsDialog = ({
           <div role='none' className='overflow-y-auto pli-3 @md:pis-2 @md:pie-0 mbe-4 border-r border-separator'>
             <Tabs.Tablist classNames='flex flex-col max-bs-none min-is-[200px] gap-4 overflow-y-auto'>
               <div role='none' className='flex flex-col ml-1'>
-                <Tabs.Tab value='members'>{t('members tab label')}</Tabs.Tab>
                 <Tabs.Tab value='settings'>{t('settings tab label')}</Tabs.Tab>
+                <Tabs.Tab value='members' disabled={locked}>
+                  {t('members tab label')}
+                </Tabs.Tab>
               </div>
             </Tabs.Tablist>
           </div>
+
+          <Tabs.Tabpanel value='settings' classNames='pli-3 @md:pli-5 max-bs-dvh overflow-y-auto'>
+            <SpaceSettingsPanel space={space} />
+          </Tabs.Tabpanel>
 
           {/* TODO(wittjosiah): Weird focus ring when tabpanel is focused. */}
           <Tabs.Tabpanel value='members' classNames='pli-3 @md:pli-5 max-bs-dvh overflow-y-auto'>
             <ClipboardProvider>
               <SpacePanel space={space} hideHeading target={target} createInvitationUrl={createInvitationUrl} />
             </ClipboardProvider>
-          </Tabs.Tabpanel>
-
-          <Tabs.Tabpanel value='settings' classNames='pli-3 @md:pli-5 max-bs-dvh overflow-y-auto'>
-            <SpaceSettingsPanel space={space} />
           </Tabs.Tabpanel>
         </Tabs.Viewport>
       </Tabs.Root>
