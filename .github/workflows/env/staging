@@ -18,4 +18,4 @@ DX_LOKI_ENDPOINT=${DX_LOKI_ENDPOINT}
 AGENT_HOSTING_SERVER="https://api.prod.agenthosting.dxos.network:8082/v1alpha1/"
 AGENT_HOSTING_TYPE=AGENTHOSTING_API
 # End common vars
-DX_HUB_URL="https://hub-staging.dxos.workers.dev/"
+DX_HUB_URL="https://hub.dxos.network/"
