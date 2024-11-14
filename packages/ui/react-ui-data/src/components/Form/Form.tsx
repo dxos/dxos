@@ -96,16 +96,18 @@ export const Form = <T extends object>({
         );
       })}
 
-      <div className='flex gap-1 mbs-3'>
-        {!readonly && <IconButton icon='ph--x--regular' label={t('button cancel')} onClick={onCancel} />}
-        <IconButton
-          type='submit'
-          icon='ph--check--regular'
-          label={t('button save')}
-          onClick={handleSubmit}
-          disabled={!canSubmit}
-          classNames='grow'
-        />
+      <div role='none' className='flex justify-center'>
+        <div role='none' className={mx(!readonly && 'grid grid-cols-2 gap-2')}>
+          {!readonly && <IconButton icon='ph--x--regular' label={t('button cancel')} onClick={onCancel} />}
+          <IconButton
+            type='submit'
+            icon='ph--check--regular'
+            label={t('button save')}
+            onClick={handleSubmit}
+            disabled={!canSubmit}
+            classNames='grow'
+          />
+        </div>
       </div>
     </div>
   );
