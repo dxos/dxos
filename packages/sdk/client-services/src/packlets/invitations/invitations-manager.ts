@@ -190,7 +190,7 @@ export class InvitationsManager {
     }
   }
 
-  private _createInvitation(protocol: InvitationProtocol, options?: Partial<Invitation>): Invitation {
+  private _createInvitation(protocol: InvitationProtocol, _options?: Partial<Invitation>): Invitation {
     const {
       invitationId = PublicKey.random().toHex(),
       type = Invitation.Type.INTERACTIVE,
@@ -198,13 +198,14 @@ export class InvitationsManager {
       state = Invitation.State.INIT,
       timeout = INVITATION_TIMEOUT,
       swarmKey = PublicKey.random(),
-      persistent = options?.authMethod !== Invitation.AuthMethod.KNOWN_PUBLIC_KEY, // default no not storing keypairs
+      persistent = _options?.authMethod !== Invitation.AuthMethod.KNOWN_PUBLIC_KEY, // default no not storing keypairs
       created = new Date(),
       guestKeypair = undefined,
       role = SpaceMember.Role.ADMIN,
       lifetime = 86400, // 1 day,
       multiUse = false,
-    } = options ?? {};
+      ...options
+    } = _options ?? {};
     const authCode =
       options?.authCode ??
       (authMethod === Invitation.AuthMethod.SHARED_SECRET ? generatePasscode(AUTHENTICATION_CODE_LENGTH) : undefined);
@@ -225,6 +226,7 @@ export class InvitationsManager {
       role,
       multiUse,
       delegationCredentialId: options?.delegationCredentialId,
+      ...options,
       ...protocol.getInvitationContext(),
     } satisfies Invitation;
   }

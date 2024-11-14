@@ -37,7 +37,6 @@ import { scheduledEffect } from '@dxos/echo-signals/core';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { parseAttentionPlugin, type AttentionPluginProvides } from '@dxos/plugin-attention';
-import { parseClientPlugin, type ClientPluginProvides } from '@dxos/plugin-client';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
@@ -97,7 +96,6 @@ export const DeckPlugin = ({
   // TODO(burdon): GraphPlugin vs. IntentPluginProvides? (@wittjosiah).
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
   let attentionPlugin: Plugin<AttentionPluginProvides> | undefined;
-  let clientPlugin: Plugin<ClientPluginProvides> | undefined;
   const unsubscriptionCallbacks = [] as (UnsubscribeCallback | undefined)[];
   let currentUndoId: string | undefined;
   let handleNavigation: () => Promise<void> | undefined;
@@ -210,7 +208,6 @@ export const DeckPlugin = ({
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       attentionPlugin = resolvePlugin(plugins, parseAttentionPlugin);
-      clientPlugin = resolvePlugin(plugins, parseClientPlugin);
 
       layout
         .prop({ key: 'layoutMode', type: LocalStorageStore.enum<LayoutMode>() })
@@ -225,14 +222,6 @@ export const DeckPlugin = ({
 
       panels.push(
         ...filterPlugins(plugins, parsePanelPlugin).flatMap((plugin) => plugin.provides.complementary.panels),
-      );
-
-      unsubscriptionCallbacks.push(
-        clientPlugin?.provides.client.shell.onReset(() => {
-          layout.expunge();
-          location.expunge();
-          deck.expunge();
-        }),
       );
 
       settings
@@ -258,12 +247,13 @@ export const DeckPlugin = ({
           return;
         }
 
+        const startingLayout = removePart(location.values.active, 'solo');
         const layoutFromUri = uriToSoloPart(pathname);
         if (!layoutFromUri) {
+          handleSetLocation(startingLayout);
           return;
         }
 
-        const startingLayout = removePart(location.values.active, 'solo');
         handleSetLocation(mergeLayoutParts(layoutFromUri, startingLayout));
         layout.values.layoutMode = 'solo';
       };

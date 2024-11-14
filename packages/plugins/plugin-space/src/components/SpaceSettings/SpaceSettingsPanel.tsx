@@ -10,8 +10,9 @@ import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { DeviceType, useDevices } from '@dxos/react-client/halo';
 import { Input, useTranslation } from '@dxos/react-ui';
+import { DeprecatedFormInput } from '@dxos/react-ui-data';
 
-import { SPACE_PLUGIN } from '../meta';
+import { SPACE_PLUGIN } from '../../meta';
 
 export type SpaceSettingsPanelProps = {
   space: Space;
@@ -43,26 +44,20 @@ export const SpaceSettingsPanel = ({ space }: SpaceSettingsPanelProps) => {
   );
 
   return (
-    <div role='form' className='flex flex-col w-full p-2 gap-4'>
-      <Input.Root>
-        <div role='none' className='flex flex-col gap-1'>
-          <Input.Label>{t('name label')}</Input.Label>
-          <Input.TextInput
-            placeholder={t('name placeholder')}
-            value={space.properties.name ?? ''}
-            onChange={(event) => {
-              space.properties.name = event.target.value;
-            }}
-          />
-        </div>
-      </Input.Root>
+    <div role='form' className='flex flex-col'>
+      <DeprecatedFormInput label={t('name label')}>
+        <Input.TextInput
+          placeholder={t('unnamed space label')}
+          value={space.properties.name ?? ''}
+          onChange={(event) => {
+            space.properties.name = event.target.value;
+          }}
+        />
+      </DeprecatedFormInput>
       {edgeReplicationAvailable && (
-        <Input.Root>
-          <div role='none' className='flex justify-between'>
-            <Input.Label>{t('edge replication label')}</Input.Label>
-            <Input.Switch checked={edgeReplication} onCheckedChange={toggleEdgeReplication} />
-          </div>
-        </Input.Root>
+        <DeprecatedFormInput label={t('edge replication label')}>
+          <Input.Switch checked={edgeReplication} onCheckedChange={toggleEdgeReplication} />
+        </DeprecatedFormInput>
       )}
     </div>
   );
