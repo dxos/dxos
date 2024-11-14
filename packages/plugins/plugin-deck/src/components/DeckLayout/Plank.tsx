@@ -60,11 +60,9 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order }: Plan
 
   const size = plankSizing?.[coordinate.entryId] as number | undefined;
   const setSize = useCallback(
-    debounce(
-      (newSize: number) =>
-        dispatch({ action: DeckAction.UPDATE_PLANK_SIZE, data: { id: coordinate.entryId, size: newSize } }),
-      200,
-    ),
+    debounce((nextSize: number) => {
+      return dispatch({ action: DeckAction.UPDATE_PLANK_SIZE, data: { id: coordinate.entryId, size: nextSize } });
+    }, 200),
     [dispatch, coordinate.entryId],
   );
 

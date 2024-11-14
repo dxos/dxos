@@ -24,7 +24,6 @@ import React, {
   useContext,
   useRef,
   useCallback,
-  useEffect,
 } from 'react';
 
 import { type ThemedClassName, Icon, useTranslation, type ButtonProps } from '@dxos/react-ui';
@@ -85,12 +84,6 @@ export const StackItem = forwardRef<HTMLDivElement, StackItemProps>(
         }
       },
       [onSizeChange],
-    );
-
-    useEffect(
-      () =>
-        setInternalSize(propsSize ?? orientation === 'horizontal' ? DEFAULT_HORIZONTAL_SIZE : DEFAULT_VERTICAL_SIZE),
-      [propsSize],
     );
 
     const type = orientation === 'horizontal' ? 'column' : 'card';
@@ -208,47 +201,49 @@ export const StackItemResizeHandle = (props: ButtonProps) => {
   const dragStartSize = useRef<StackItemSize>(size);
   const client = orientation === 'horizontal' ? 'clientX' : 'clientY';
 
-  useEffect(() => {
-    if (size === 'min-content') {
-      // Update dragStartSize ref if something resets the size to `min-content`.
-      dragStartSize.current = size;
-    }
-  }, [size]);
-
-  useLayoutEffect(() => {
-    if (!buttonRef.current || buttonRef.current.hasAttribute('draggable')) {
-      return;
-    }
-    draggable({
-      element: buttonRef.current,
-      onGenerateDragPreview: ({ nativeSetDragImage }) => {
-        // we will be moving the line to indicate a drag
-        // we can disable the native drag preview
-        disableNativeDragPreview({ nativeSetDragImage });
-        // we don't want any native drop animation for when the user
-        // does not drop on a drop target. we want the drag to finish immediately
-        preventUnhandled.start();
-      },
-      onDragStart: () => {
-        dragStartSize.current =
-          dragStartSize.current === 'min-content'
-            ? measureStackItem(buttonRef.current!)[orientation === 'horizontal' ? 'width' : 'height'] / REM
-            : size;
-      },
-      onDrag: ({ location }) => {
-        if (typeof dragStartSize.current !== 'number') {
-          return;
-        }
-        setSize(dragStartSize.current + (location.current.input[client] - location.initial.input[client]) / REM);
-      },
-      onDrop: ({ location }) => {
-        if (typeof dragStartSize.current !== 'number') {
-          return;
-        }
-        setSize(dragStartSize.current + (location.current.input[client] - location.initial.input[client]) / REM, true);
-      },
-    });
-  }, []);
+  useLayoutEffect(
+    () => {
+      if (!buttonRef.current || buttonRef.current.hasAttribute('draggable')) {
+        return;
+      }
+      // TODO(thure): This should handle StackItem state vs local state better.
+      draggable({
+        element: buttonRef.current,
+        onGenerateDragPreview: ({ nativeSetDragImage }) => {
+          // we will be moving the line to indicate a drag
+          // we can disable the native drag preview
+          disableNativeDragPreview({ nativeSetDragImage });
+          // we don't want any native drop animation for when the user
+          // does not drop on a drop target. we want the drag to finish immediately
+          preventUnhandled.start();
+        },
+        onDragStart: () => {
+          dragStartSize.current =
+            dragStartSize.current === 'min-content'
+              ? measureStackItem(buttonRef.current!)[orientation === 'horizontal' ? 'width' : 'height'] / REM
+              : dragStartSize.current;
+        },
+        onDrag: ({ location }) => {
+          if (typeof dragStartSize.current !== 'number') {
+            return;
+          }
+          setSize(dragStartSize.current + (location.current.input[client] - location.initial.input[client]) / REM);
+        },
+        onDrop: ({ location }) => {
+          if (typeof dragStartSize.current !== 'number') {
+            return;
+          }
+          const nextSize =
+            dragStartSize.current + (location.current.input[client] - location.initial.input[client]) / REM;
+          setSize(nextSize, true);
+          dragStartSize.current = nextSize;
+        },
+      });
+    },
+    [
+      // Note that `size` should not be a dependency here since dragging this adjusts the size.
+    ],
+  );
 
   return (
     <button
