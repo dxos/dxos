@@ -4,7 +4,7 @@
 
 import { Sidebar as MenuIcon } from '@phosphor-icons/react';
 import { untracked } from '@preact/signals-core';
-import React, { useCallback, useEffect, useMemo, useRef, type UIEvent } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, type UIEvent, Fragment } from 'react';
 
 import { type LayoutParts, Surface, type Toast as ToastSchema, firstIdInPart, usePlugin } from '@dxos/app-framework';
 import { type AttentionPluginProvides } from '@dxos/plugin-attention';
@@ -198,17 +198,16 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
                   />
                 )}
                 {layoutParts.main?.map((layoutEntry, index) => (
-                  <>
+                  <Fragment key={layoutEntry.id}>
                     <PlankSeparator index={index} />
                     <Plank
-                      key={layoutEntry.id}
                       entry={layoutEntry}
                       layoutParts={layoutParts}
                       part='main'
                       layoutMode={layoutMode}
                       order={index * 2 + 2}
                     />
-                  </>
+                  </Fragment>
                 ))}
                 {padding && (
                   <span

@@ -17,14 +17,12 @@ export const PlankContentError = ({ error }: { error?: Error }) => {
   const { t } = useTranslation(DECK_PLUGIN);
   const errorString = error?.toString() ?? '';
   return (
-    <div role='none' className='overflow-auto p-8 attention-surface'>
+    <div role='none' className='overflow-auto p-8 attention-surface grid place-items-center'>
       <p
         role='alert'
         className={mx(
           descriptionText,
-          // TODO(burdon): Factor out common styles for all dialogs.
-          'overflow-hidden break-words',
-          'place-self-center border border-dashed border-neutral-400/50 rounded-lg p-8',
+          'break-words border border-dashed border-separator rounded-lg p-8',
           errorString.length < 256 && 'text-lg',
         )}
       >

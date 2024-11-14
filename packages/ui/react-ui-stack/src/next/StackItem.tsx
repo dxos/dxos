@@ -154,7 +154,7 @@ export const StackItem = forwardRef<HTMLDivElement, StackItemProps>(
               [orientation === 'horizontal' ? 'inlineSize' : 'blockSize']: `${size}rem`,
             }),
             ...(Number.isFinite(order) && {
-              [orientation === 'horizontal' ? 'grid-column' : 'grid-row']: `${order}`,
+              [orientation === 'horizontal' ? 'gridColumn' : 'gridRow']: `${order}`,
             }),
             ...style,
           }}
