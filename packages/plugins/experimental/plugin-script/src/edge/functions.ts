@@ -29,7 +29,7 @@ export type UserFunctionUploadResult = {
   functionVersionNumber?: number;
   meta: {
     inputSchema?: JsonSchemaType;
-  }
+  };
 };
 
 export type UploadWorkerProps = {
