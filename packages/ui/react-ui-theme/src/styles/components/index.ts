@@ -8,6 +8,7 @@ export * from './breadcrumb';
 export * from './button';
 export * from './dialog';
 export * from './icon';
+export * from './icon-button';
 export * from './input';
 export * from './link';
 export * from './list';
