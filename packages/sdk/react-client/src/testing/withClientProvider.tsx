@@ -10,6 +10,7 @@ import { Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { performInvitation, TestBuilder } from '@dxos/client/testing';
+import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';
 
@@ -18,7 +19,8 @@ import { ClientProvider, type ClientProviderProps } from '../client';
 type InitializeProps = {
   createIdentity?: boolean;
   createSpace?: boolean;
-  onSpaceCreated?: (props: { client: Client; space: Space }) => MaybePromise<void>;
+  onInitialized?: (client: Client) => MaybePromise<Record<string, any> | void>;
+  onSpaceCreated?: (props: { client: Client; space: Space }) => MaybePromise<Record<string, any> | void>;
 };
 
 /**
@@ -26,13 +28,10 @@ type InitializeProps = {
  */
 const initializeClient = async (
   client: Client,
-  {
-    createIdentity,
-    createSpace,
-    onSpaceCreated,
-    onInitialized,
-  }: InitializeProps & Pick<WithClientProviderProps, 'onInitialized'>,
-): Promise<Space | undefined> => {
+  { createIdentity, createSpace, onSpaceCreated, onInitialized }: InitializeProps,
+): Promise<StoryClientProps> => {
+  const clientData = await onInitialized?.(client);
+
   if (createIdentity || createSpace) {
     if (!client.halo.identity.get()) {
       await client.halo.createIdentity();
@@ -40,16 +39,26 @@ const initializeClient = async (
   }
 
   let space: Space | undefined;
+  let spaceData: Record<string, any> | void = {};
   if (createSpace) {
     space = await client.spaces.create({ name: 'Test Space' });
-    await onSpaceCreated?.({ client, space });
+    spaceData = await onSpaceCreated?.({ client, space });
   }
 
-  await onInitialized?.(client);
-  return space;
+  return { space, ...clientData, ...spaceData };
 };
 
-export type WithClientProviderProps = InitializeProps & ClientProviderProps;
+type StoryClientProps<T extends Record<string, any> = Record<string, unknown>> = T & { space?: Space };
+
+// TODO(wittjosiah): Add to multi-client as well.
+const StoryClientContext = createContext<StoryClientProps | undefined>(undefined);
+
+export const useStoryClientData = <T extends Record<string, any> = Record<string, unknown>>() => {
+  const data = useContext(StoryClientContext) ?? raise(new Error('Missing withClientProvider decorator.'));
+  return data as StoryClientProps<T>;
+};
+
+export type WithClientProviderProps = InitializeProps & Omit<ClientProviderProps, 'onInitialized'>;
 
 /**
  * Decorator that provides the client context.
@@ -62,14 +71,18 @@ export const withClientProvider = ({
   ...props
 }: WithClientProviderProps = {}): Decorator => {
   return (Story) => {
+    const [data, setData] = useState<StoryClientProps>({});
+
     const handleInitialized = async (client: Client) => {
-      await initializeClient(client, { createIdentity, createSpace, onSpaceCreated, onInitialized });
+      setData(await initializeClient(client, { createIdentity, createSpace, onSpaceCreated, onInitialized }));
     };
 
     return (
       <ErrorBoundary>
         <ClientProvider onInitialized={handleInitialized} {...props}>
-          <Story />
+          <StoryClientContext.Provider value={data}>
+            <Story />
+          </StoryClientContext.Provider>
         </ClientProvider>
       </ErrorBoundary>
     );
@@ -79,7 +92,8 @@ export const withClientProvider = ({
 // TODO(burdon): Implement context per client for context.
 // TODO(burdon): Callback once all invitations have completed.
 // TODO(burdon): Delay/jitter for creation of other clients.
-export type WithMultiClientProviderProps = InitializeProps & ClientProviderProps & { numClients?: number };
+export type WithMultiClientProviderProps = InitializeProps &
+  Omit<ClientProviderProps, 'onInitialized'> & { numClients?: number };
 
 const MultiClientContext = createContext<{ id: number }>({ id: 0 });
 
@@ -110,7 +124,12 @@ export const withMultiClientProvider = ({
       if (createSpace) {
         if (!hostRef.current) {
           hostRef.current = client;
-          const space = await initializeClient(client, { createIdentity, createSpace, onSpaceCreated, onInitialized });
+          const { space } = await initializeClient(client, {
+            createIdentity,
+            createSpace,
+            onSpaceCreated,
+            onInitialized,
+          });
           spaceReady.current.wake(space);
           log.info('inviting', { index });
         } else {

@@ -36,7 +36,7 @@ type SettingsSettingsProps = {
  */
 export const ManagerPlugin = (): PluginDefinition<SettingsPluginProvides> => {
   const settings = new LocalStorageStore<SettingsSettingsProps>(MANAGER_PLUGIN, {
-    selected: 'dxos.org/plugin/settings',
+    selected: 'dxos.org/plugin/registry',
   });
 
   return {

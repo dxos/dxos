@@ -56,6 +56,7 @@ export const SpaceManager = (props: SpaceManagerProps) => {
       label: t('invite one label'),
       description: t('invite one description'),
       icon: UserPlus,
+      testId: 'spaces-panel.invite-one',
       onClick: useCallback(() => {
         const invitation = space.share?.({
           type: Invitation.Type.INTERACTIVE,
@@ -68,12 +69,13 @@ export const SpaceManager = (props: SpaceManagerProps) => {
             handleInvitationEvent(invitation, subscription),
           );
         }
-      }, [space]),
+      }, [space, target]),
     },
     inviteMany: {
       label: t('invite many label'),
       description: t('invite many description'),
       icon: UsersThree,
+      testId: 'spaces-panel.invite-many',
       onClick: useCallback(() => {
         const invitation = space.share?.({
           type: Invitation.Type.DELEGATED,
@@ -86,7 +88,7 @@ export const SpaceManager = (props: SpaceManagerProps) => {
             handleInvitationEvent(invitation, subscription),
           );
         }
-      }, [space]),
+      }, [space, target]),
     },
   };
 
@@ -120,7 +122,7 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
       },
     } as Record<string, ActionMenuItem>);
 
-  const [activeAction, setInternalActiveAction] = useState(localStorage.getItem(activeActionKey) ?? 'inviteOne');
+  const [activeAction, setInternalActiveAction] = useState(localStorage.getItem(activeActionKey) ?? 'inviteMany');
 
   const setActiveAction = (nextAction: string) => {
     setInternalActiveAction(nextAction);

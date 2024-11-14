@@ -2,17 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
 import React from 'react';
 
 import { filterPlugins, type GraphProvides, type PluginDefinition, parseGraphBuilderPlugin } from '@dxos/app-framework';
 import { GraphBuilder } from '@dxos/app-graph';
-import { debounce, type UnsubscribeCallback } from '@dxos/async';
+import { type UnsubscribeCallback } from '@dxos/async';
 
 import { GraphContext } from './GraphContext';
-import meta, { GRAPH_PLUGIN } from './meta';
+import meta from './meta';
 
-const KEY = `${GRAPH_PLUGIN}/graph`;
+// const KEY = `${GRAPH_PLUGIN}/graph`;
 
 /**
  * Manages the state of the graph for the application.
@@ -20,7 +19,8 @@ const KEY = `${GRAPH_PLUGIN}/graph`;
  * This includes actions and annotation each other's nodes.
  */
 export const GraphPlugin = (): PluginDefinition<GraphProvides> => {
-  const builder = GraphBuilder.from(localStorage.getItem(KEY) ?? undefined);
+  // const builder = GraphBuilder.from(localStorage.getItem(KEY) ?? undefined);
+  const builder = new GraphBuilder();
   let unsubscribe: UnsubscribeCallback | undefined;
 
   return {
@@ -32,11 +32,13 @@ export const GraphPlugin = (): PluginDefinition<GraphProvides> => {
 
       await builder.initialize();
 
-      unsubscribe = effect(
-        debounce(() => {
-          localStorage.setItem(`${GRAPH_PLUGIN}/graph`, builder.graph.pickle());
-        }, 1000),
-      );
+      // TODO(wittjosiah): This needs better cache invalidation before it can be enabled always.
+      //   At present it's too easy to get into a state where there are partial/broken nodes in the graph.
+      // unsubscribe = effect(
+      //   debounce(() => {
+      //     localStorage.setItem(`${GRAPH_PLUGIN}/graph`, builder.graph.pickle());
+      //   }, 1000),
+      // );
 
       // Expose the graph to the window for debugging.
       const composer = (window as any).composer;

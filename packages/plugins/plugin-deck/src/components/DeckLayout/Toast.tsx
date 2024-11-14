@@ -24,7 +24,7 @@ export const Toast = ({
     <NaturalToast.Root data-testid={id} defaultOpen duration={duration} onOpenChange={onOpenChange}>
       <NaturalToast.Body>
         <NaturalToast.Title classNames='items-center'>
-          <Icon icon={icon} size={5} classNames='inline mr-1' />
+          {icon && <Icon icon={icon} size={5} classNames='inline mr-1' />}
           <span>{title}</span>
         </NaturalToast.Title>
         {description && <NaturalToast.Description>{description}</NaturalToast.Description>}

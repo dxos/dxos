@@ -16,6 +16,7 @@ export type SpacePanelImplProps = {
   titleId: string;
   activeView: string;
   send: (event: SingleOrArray<Event<any>>) => void;
+  hideHeading?: boolean;
   target?: string;
   createInvitationUrl: (invitationCode: string) => string;
   space: ErsatzSpace | Space;
