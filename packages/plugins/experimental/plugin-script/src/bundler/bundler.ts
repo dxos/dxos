@@ -78,6 +78,10 @@ export class Bundler {
                 return { path, external: true };
               });
 
+              build.onResolve({ filter: /^dxos:functions$/ }, ({ path }) => {
+                return { path: './runtime.js', external: true };
+              });
+
               build.onResolve({ filter: /^memory:/ }, ({ path }) => {
                 return { path: path.split(':')[1], namespace: 'memory' };
               });
