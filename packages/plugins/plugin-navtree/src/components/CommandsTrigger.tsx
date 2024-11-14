@@ -17,7 +17,7 @@ export const CommandsTrigger = () => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
   return (
     <Button
-      classNames='pis-3 pie-2 gap-2 mli-1 mbs-1 min-bs-0 bs-[--rail-action] justify-start'
+      classNames='w-full h-full'
       onClick={() =>
         dispatch({
           action: LayoutAction.SET_LAYOUT,

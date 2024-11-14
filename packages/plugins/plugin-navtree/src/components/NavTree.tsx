@@ -40,7 +40,6 @@ export const NavTree = ({ loadDescendents, renderPresence, popoverAnchorId, ...p
       {...props}
       draggable
       gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
-      classNames='pbs-1'
       renderColumns={renderColumns}
     />
   );
