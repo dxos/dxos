@@ -21,8 +21,10 @@ import { initializeTable } from '../util';
 // TODO(zantonio): Factor out, copied this from MarkdownPlugin.
 export const sectionToolbarLayout = 'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 transition-opacity';
 
+type TableContainerProps = LayoutContainerProps<{ table: TableType }>;
+
 // TODO(zantonio): Move toolbar action handling to a more appropriate location.
-const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType; role?: string }>) => {
+const TableContainer = ({ table }: TableContainerProps) => {
   const attendableId = fullyQualifiedId(table);
   const { hasAttention } = useAttention(attendableId);
   const dispatch = useIntentDispatcher();

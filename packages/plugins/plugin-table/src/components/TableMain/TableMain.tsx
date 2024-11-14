@@ -9,7 +9,6 @@ import { invariant } from '@dxos/invariant';
 import { Filter, getSpace } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
 import { type DxGridElement, Grid, type GridContentProps, closestCell } from '@dxos/react-ui-grid';
-import { mx } from '@dxos/react-ui-theme';
 import { isNotFalsy } from '@dxos/util';
 
 import { ColumnActionsMenu } from './ColumnActionsMenu';
@@ -30,8 +29,8 @@ export type TableController = {
 };
 
 export type TableMainProps = {
-  model: TableModel;
   attendableId: string;
+  model: TableModel;
 };
 
 export const TableMain = forwardRef<TableController, TableMainProps>(({ model, attendableId }, forwardedRef) => {

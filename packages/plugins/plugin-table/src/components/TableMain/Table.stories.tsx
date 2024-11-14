@@ -19,7 +19,7 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { ViewProjection, ViewType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { TableMain, type TableController } from './Table';
+import { TableMain, type TableController } from './TableMain';
 import { useTableModel, type UseTableModelParams } from '../../hooks';
 import translations from '../../translations';
 import { TableType } from '../../types';
@@ -104,7 +104,7 @@ const DefaultStory = () => {
     onRowOrderChanged: () => tableRef.current?.update?.(),
   });
 
-  if (!schema || !table) {
+  if (!schema || !table || !model) {
     return <div />;
   }
 
