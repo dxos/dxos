@@ -106,7 +106,7 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
     [layoutMode],
   );
 
-  const isEmpty = layoutParts.main?.length === 0 && layoutParts.solo?.length === 0;
+  const isEmpty = (layoutParts.main?.length ?? 0) === 0 && (layoutParts.solo?.length ?? 0) === 0;
 
   const padding = useMemo(() => {
     if (layoutMode === 'deck' && overscroll === 'centering') {
