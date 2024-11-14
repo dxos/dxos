@@ -53,8 +53,8 @@ describe('View', () => {
 
   test('create view from TypedObject', async ({ expect }) => {
     class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({}) {}
-    const view = createView({ typename: TestSchema.typename, jsonSchema: toJsonSchema(TestSchema) });
-    expect(view.query.__typename).to.eq(TestSchema.typename);
+    const view = createView({ name: 'Test', typename: TestSchema.typename, jsonSchema: toJsonSchema(TestSchema) });
+    expect(view.query.type).to.eq(TestSchema.typename);
   });
 
   test('dynamic schema definitions with references', async () => {
@@ -84,7 +84,11 @@ describe('View', () => {
       ),
     });
 
-    const personView = createView({ typename: personSchema.typename, jsonSchema: personSchema.jsonSchema });
+    const personView = createView({
+      name: 'Test',
+      typename: personSchema.typename,
+      jsonSchema: personSchema.jsonSchema,
+    });
     log('schema', { org: orgSchema, person: personSchema });
     log('view', { person: personView });
   });

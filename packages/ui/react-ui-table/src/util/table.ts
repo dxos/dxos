@@ -40,9 +40,10 @@ export const initializeTable = ({ space, table }: { space: Space; table: TableTy
 
   const contactSchema = space.db.schemaRegistry.addSchema(ContactSchema);
   table.view = createView({
+    name: 'Test',
     typename: contactSchema.typename,
     jsonSchema: contactSchema.jsonSchema,
-    properties: ['name', 'email', 'salary'],
+    fields: ['name', 'email', 'salary'],
   });
 
   const projection = new ViewProjection(contactSchema, table.view!);

@@ -35,7 +35,7 @@ export const setSchemaReference = (property: JsonSchemaType, schema: string) => 
     $id: JSON_SCHEMA_ECHO_REF_ID,
     reference: {
       schema: {
-        $ref: DXN.fromTypename(schema),
+        $ref: DXN.fromTypename(schema).toString(),
       },
     },
   });

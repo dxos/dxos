@@ -6,10 +6,14 @@ import type { MaybePromise } from '@dxos/util';
 
 import type { Plugin } from '../plugin-host';
 
+/**
+ * Type of data returned from an intent.
+ */
 export type IntentData<T extends Record<string, any> = Record<string, any>> = T & {
   /**
    * The data from the result of the previous intent.
    */
+  // TODO(burdon): Chainable types? (see Effect hooks).
   result?: any;
 };
 
@@ -93,4 +97,5 @@ export type IntentDispatcher = (intent: Intent | Intent[]) => Promise<IntentResu
  *
  * @returns The result of the intent.
  */
+// TODO(burdon): All graph callback should use objects.
 export type IntentResolver = (intent: Intent, plugins: Plugin[]) => MaybePromise<IntentResult | void>;

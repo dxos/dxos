@@ -207,7 +207,7 @@ export const getPropertySchemaForFormat = (format?: FormatEnum): S.Schema<any> |
 
 // NOTE: 'a string' is the fallback annotation provided by effect.
 const noDefault = (value?: string, defaultValue?: string): string | undefined =>
-  (value === 'a string' ? undefined : value) ?? defaultValue;
+  (value === 'a string' || value === 'a non empty string' ? undefined : value) ?? defaultValue;
 
 export type SchemaProperty<T> = {
   property: string & keyof T;

@@ -165,7 +165,7 @@ const TextboxBlock = ({
 
 const MessageBlockObjectTile: MosaicTileComponent<EchoReactiveObject<any>> = forwardRef(
   ({ draggableStyle, draggableProps, item, active, ref: _ref, ...props }, forwardedRef) => {
-    let title = item.name ?? item.title ?? item.__typename ?? 'Object';
+    let title = item.name ?? item.title ?? item.type ?? 'Object';
     if (typeof title !== 'string') {
       title = title?.content ?? '';
     }

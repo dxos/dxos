@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 
 import { useIntentDispatcher, type LayoutContainerProps } from '@dxos/app-framework';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
@@ -17,7 +17,6 @@ import {
   type ToolbarAction,
   useTableModel,
   type TableType,
-  initializeTable,
 } from '@dxos/react-ui-table';
 import { ViewProjection } from '@dxos/schema';
 
@@ -32,14 +31,8 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   const dispatch = useIntentDispatcher();
   const space = getSpace(table);
 
-  useEffect(() => {
-    if (space && table && !table?.view) {
-      initializeTable({ space, table });
-    }
-  }, [space, table, table?.view]);
-
   const schema = useMemo(
-    () => (table.view ? space?.db.schemaRegistry.getSchema(table.view.query.__typename) : undefined),
+    () => (table.view ? space?.db.schemaRegistry.getSchema(table.view.query.type) : undefined),
     [space, table.view],
   );
   const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : () => false, undefined, [schema]);
@@ -111,6 +104,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   return (
     <StackItemContent toolbar>
       <Toolbar.Root onAction={handleAction} classNames={!hasAttention && 'opacity-20'}>
+        <Toolbar.Editing />
         <Toolbar.Separator />
         <Toolbar.Actions />
       </Toolbar.Root>
