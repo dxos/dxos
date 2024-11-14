@@ -140,7 +140,7 @@ export const StackItem = forwardRef<HTMLDivElement, StackItemProps>(
             size === 'min-content' && (orientation === 'horizontal' ? 'is-min' : 'bs-min'),
             orientation === 'horizontal' ? 'grid-rows-subgrid' : 'grid-cols-subgrid',
             rail && (orientation === 'horizontal' ? 'row-span-2' : 'col-span-2'),
-            separators && 'gap-px',
+            separators && (orientation === 'horizontal' ? 'divide-separator divide-y' : 'divide-separator divide-x'),
             classNames,
           )}
           data-dx-stack-item
@@ -166,7 +166,7 @@ export const StackItem = forwardRef<HTMLDivElement, StackItemProps>(
 export type StackItemHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
 export const StackItemHeading = ({ children, classNames, ...props }: StackItemHeadingProps) => {
-  const { orientation, separators } = useStack();
+  const { orientation } = useStack();
   const { selfDragHandleRef } = useStackItem();
   const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
   return (
@@ -178,7 +178,6 @@ export const StackItemHeading = ({ children, classNames, ...props }: StackItemHe
       className={mx(
         'grid ch-focus-ring-inset-over-all relative',
         orientation === 'horizontal' ? 'bs-[--rail-size]' : 'is-[--rail-size]',
-        separators && 'bg-base',
         classNames,
       )}
       ref={selfDragHandleRef}
@@ -274,16 +273,17 @@ export const StackItemContent = ({
   classNames,
   ...props
 }: StackItemContentProps) => {
-  const { size } = useStack();
+  const { size, separators } = useStack();
 
   return (
     <div
       role='none'
       {...props}
       className={mx(
-        'group gap-px',
+        'group',
         contentSize === 'intrinsic' ? 'flex flex-col' : 'grid',
         size === 'contain' && 'min-bs-0 overflow-hidden',
+        separators && 'divide-separator divide-y',
         classNames,
       )}
       style={{

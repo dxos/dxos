@@ -172,7 +172,7 @@ export const MarkdownEditor = ({
     <StackItemContent toolbar={toolbar}>
       {toolbar && (
         <Toolbar.Root
-          classNames={['attention-surface', !hasAttention && 'opacity-0.5']}
+          classNames={!hasAttention && 'opacity-20'}
           state={formattingState && { ...formattingState, ...commentsState }}
           onAction={handleAction}
         >

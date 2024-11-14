@@ -63,10 +63,12 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
   const scrollLeftRef = useRef<number | null>();
   const deckRef = useRef<HTMLDivElement>(null);
 
+  const isSoloModeLoaded = layoutMode === 'solo' && layoutParts.solo;
+
   // Ensure the first plank is attended when the deck is first rendered.
   useEffect(() => {
     const attended = untracked(() => attentionPlugin?.provides.attention.attended ?? []);
-    const firstId = layoutMode === 'solo' ? firstIdInPart(layoutParts, 'solo') : firstIdInPart(layoutParts, 'main');
+    const firstId = isSoloModeLoaded ? firstIdInPart(layoutParts, 'solo') : firstIdInPart(layoutParts, 'main');
     if (attended.length === 0 && firstId) {
       // TODO(wittjosiah): Focusing the type button is a workaround.
       //   If the plank is directly focused on first load the focus ring appears.
@@ -191,8 +193,8 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
           >
             <div
               role='none'
-              className={layoutMode === 'deck' ? 'relative overflow-hidden' : 'sr-only'}
-              {...(layoutMode !== 'deck' && { inert: '' })}
+              className={!isSoloModeLoaded ? 'relative overflow-hidden' : 'sr-only'}
+              {...(isSoloModeLoaded && { inert: '' })}
             >
               <Stack
                 orientation='horizontal'
@@ -235,8 +237,8 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
             </div>
             <div
               role='none'
-              className={layoutMode === 'solo' ? 'relative bg-deck' : 'sr-only'}
-              {...(layoutMode !== 'solo' && { inert: '' })}
+              className={isSoloModeLoaded ? 'relative bg-deck' : 'sr-only'}
+              {...(!isSoloModeLoaded && { inert: '' })}
             >
               <StackContext.Provider
                 value={{ size: 'contain', orientation: 'horizontal', separators: true, rail: true }}

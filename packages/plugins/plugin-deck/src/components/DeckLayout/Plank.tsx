@@ -98,10 +98,10 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order }: Plan
   const placeholder = useMemo(() => <PlankLoading />, []);
 
   const className = mx(
-    'attention-placeholder-host',
+    'attention-surface',
     isSolo && mainIntrinsicSize,
     isSolo && railGridHorizontal,
-    isSolo && 'grid gap-px absolute inset-0 bg-separator',
+    isSolo && 'grid absolute inset-0 divide-separator divide-y',
   );
 
   return (

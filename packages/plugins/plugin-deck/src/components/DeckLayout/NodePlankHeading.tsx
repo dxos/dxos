@@ -74,7 +74,7 @@ export const NodePlankHeading = memo(
     );
 
     return (
-      <PlankHeading.Root classNames='pie-1' data-dx-attention-placeholder-ignore>
+      <PlankHeading.Root classNames='pie-1'>
         <ActionRoot>
           {node ? (
             <PlankHeading.ActionsMenu
