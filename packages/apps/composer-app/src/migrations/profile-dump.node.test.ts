@@ -19,8 +19,8 @@ import { FileType } from '@dxos/plugin-ipfs/types';
 import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
 import { DiagramType } from '@dxos/plugin-sketch/types';
 import { CollectionType, ThreadType, MessageType } from '@dxos/plugin-space/types';
-import { TableType } from '@dxos/react-ui-table/types';
 import type { Runtime } from '@dxos/protocols/proto/dxos/config';
+import { TableType } from '@dxos/react-ui-table/types';
 
 import * as LegacyTypes from './legacy-types';
 import { __COMPOSER_MIGRATIONS__ } from './migrations';
