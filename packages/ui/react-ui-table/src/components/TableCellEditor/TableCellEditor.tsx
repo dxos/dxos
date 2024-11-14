@@ -21,7 +21,7 @@ import { type FieldProjection } from '@dxos/schema';
 
 import { completion } from './extension';
 import { type TableModel } from '../../model';
-import { type GridCell, toGridCell } from '../../types';
+import { type GridCell, toGridCell } from '../../util';
 
 export type TableCellEditorProps = {
   model?: TableModel;
