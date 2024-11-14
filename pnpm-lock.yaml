@@ -10313,24 +10313,6 @@ importers:
 
   packages/ui/react-ui-data:
     dependencies:
-      '@atlaskit/pragmatic-drag-and-drop':
-        specifier: ^1.4.0
-        version: 1.4.0
-      '@atlaskit/pragmatic-drag-and-drop-flourish':
-        specifier: ^1.1.2
-        version: 1.1.2(@babel/core@7.25.9)(@types/react@18.2.79)(react@18.2.0)
-      '@atlaskit/pragmatic-drag-and-drop-hitbox':
-        specifier: ^1.0.3
-        version: 1.0.3
-      '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator':
-        specifier: ^1.1.3
-        version: 1.1.3(@babel/core@7.25.9)(@types/react@18.2.79)(react@18.2.0)
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../common/async
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../common/debug
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -10343,9 +10325,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -10367,22 +10346,10 @@ importers:
       '@effect/schema':
         specifier: ^0.75.1
         version: 0.75.1(effect@3.9.1)
-      '@radix-ui/react-context':
-        specifier: ^1.0.0
-        version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
-      date-fns:
-        specifier: ^3.3.1
-        version: 3.6.0
       effect:
         specifier: ^3.9.1
         version: 3.9.1
-      jsonpath:
-        specifier: ^1.1.1
-        version: 1.1.1
     devDependencies:
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-signals
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -10401,15 +10368,9 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@types/jsonpath':
-        specifier: ~0.2.4
-        version: 0.2.4
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
-      '@types/react-dom':
-        specifier: ~18.2.0
-        version: 18.2.25
       fast-check:
         specifier: ^3.19.0
         version: 3.22.0
