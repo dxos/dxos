@@ -108,6 +108,8 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }
 
   return (
     <Root
+      ref={rootElement}
+      data-testid='deck.plank'
       {...(part === 'solo'
         ? ({ ...sizeAttrs, className } as any)
         : {
@@ -119,7 +121,6 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }
           })}
       {...attendableAttrs}
       onKeyDown={handleKeyDown}
-      ref={rootElement}
     >
       {node ? (
         <>

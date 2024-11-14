@@ -19,6 +19,7 @@ export const TreeItemToggle = memo(
       <Button
         ref={forwardedRef}
         data-testid='treeItem.toggle'
+        aria-expanded={open}
         variant='ghost'
         density='fine'
         classNames={mx('is-6 !pli-1', !isBranch && 'invisible')}

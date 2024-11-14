@@ -113,10 +113,6 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
     return {};
   }, [layoutMode, overscroll, layoutParts.main]);
 
-  if (layoutMode === 'fullscreen') {
-    return <Fullscreen id={fullScreenSlug} />;
-  }
-
   return (
     <Popover.Root
       modal
@@ -132,137 +128,143 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
     >
       <ActiveNode />
 
-      <Main.Root
-        navigationSidebarOpen={context.sidebarOpen}
-        onNavigationSidebarOpenChange={(next) => (context.sidebarOpen = next)}
-        complementarySidebarOpen={context.complementarySidebarOpen}
-        onComplementarySidebarOpenChange={(next) => (context.complementarySidebarOpen = next)}
-      >
-        {/* Notch */}
-        <Main.Notch classNames='z-[21]'>
-          <Surface role='notch-start' />
-          <Button onClick={() => (context.sidebarOpen = !context.sidebarOpen)} variant='ghost' classNames='p-1'>
-            <span className='sr-only'>{t('open navigation sidebar label')}</span>
-            <MenuIcon weight='light' className={getSize(5)} />
-          </Button>
-          <Surface role='notch-end' />
-        </Main.Notch>
+      {layoutMode === 'fullscreen' && <Fullscreen id={fullScreenSlug} />}
 
-        {/* Left sidebar. */}
-        <Sidebar layoutParts={layoutParts} />
+      {layoutMode !== 'fullscreen' && (
+        <Main.Root
+          navigationSidebarOpen={context.sidebarOpen}
+          onNavigationSidebarOpenChange={(next) => (context.sidebarOpen = next)}
+          complementarySidebarOpen={context.complementarySidebarOpen}
+          onComplementarySidebarOpenChange={(next) => (context.complementarySidebarOpen = next)}
+        >
+          {/* Notch */}
+          <Main.Notch classNames='z-[21]'>
+            <Surface role='notch-start' />
+            <Button onClick={() => (context.sidebarOpen = !context.sidebarOpen)} variant='ghost' classNames='p-1'>
+              <span className='sr-only'>{t('open navigation sidebar label')}</span>
+              <MenuIcon weight='light' className={getSize(5)} />
+            </Button>
+            <Surface role='notch-end' />
+          </Main.Notch>
 
-        {/* Right sidebar. */}
-        <ComplementarySidebar panels={panels} current={layoutParts.complementary?.[0].id} />
+          {/* Left sidebar. */}
+          <Sidebar layoutParts={layoutParts} />
 
-        {/* Dialog overlay to dismiss dialogs. */}
-        <Main.Overlay />
+          {/* Right sidebar. */}
+          <ComplementarySidebar panels={panels} current={layoutParts.complementary?.[0].id} />
 
-        {/* No content. */}
-        {isEmpty && (
-          <Main.Content handlesFocus>
-            <ContentEmpty />
-          </Main.Content>
-        )}
+          {/* Dialog overlay to dismiss dialogs. */}
+          <Main.Overlay />
 
-        {/* Solo/deck mode. */}
-        {!isEmpty && (
-          <Main.Content
-            bounce
-            classNames='grid block-end-[--statusbar-size]'
-            handlesFocus
-            style={
-              {
-                '--dx-main-sidebarWidth': sidebarOpen ? 'var(--nav-sidebar-size)' : '0px',
-                '--dx-main-complementaryWidth': complementarySidebarOpen ? 'var(--complementary-sidebar-size)' : '0px',
-                '--dx-main-contentFirstWidth': `${plankSizing[layoutParts.main?.[0]?.id ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
-                '--dx-main-contentLastWidth': `${plankSizing[layoutParts.main?.[(layoutParts.main?.length ?? 1) - 1]?.id ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
-              } as MainProps['style']
-            }
-          >
-            <div
-              role='none'
-              className={!isSoloModeLoaded ? 'relative bg-deck overflow-hidden' : 'sr-only'}
-              {...(isSoloModeLoaded && { inert: '' })}
-            >
-              <Stack
-                orientation='horizontal'
-                size='contain'
-                classNames={['absolute inset-block-0 -inset-inline-px', mainPaddingTransitions]}
-                onScroll={handleScroll}
-                itemsCount={2 * (layoutParts.main?.length ?? 0) - 1}
-                style={padding}
-                ref={deckRef}
-              >
-                {layoutParts.main?.map((layoutEntry, index) => (
-                  <Fragment key={layoutEntry.id}>
-                    <PlankSeparator index={index} />
-                    <Plank
-                      entry={layoutEntry}
-                      layoutParts={layoutParts}
-                      part='main'
-                      layoutMode={layoutMode}
-                      order={index * 2 + 1}
-                      last={index === layoutParts.main!.length - 1}
-                    />
-                  </Fragment>
-                ))}
-              </Stack>
-            </div>
-            <div
-              role='none'
-              className={isSoloModeLoaded ? 'relative bg-deck overflow-hidden' : 'sr-only'}
-              {...(!isSoloModeLoaded && { inert: '' })}
-            >
-              <StackContext.Provider
-                value={{ size: 'contain', orientation: 'horizontal', separators: true, rail: true }}
-              >
-                <Plank entry={layoutParts.solo?.[0]} layoutParts={layoutParts} part='solo' layoutMode={layoutMode} />
-              </StackContext.Provider>
-            </div>
-          </Main.Content>
-        )}
+          {/* No content. */}
+          {isEmpty && (
+            <Main.Content handlesFocus>
+              <ContentEmpty />
+            </Main.Content>
+          )}
 
-        {/* Footer status. */}
-        <StatusBar showHints={showHints} />
-
-        {/* Global popovers. */}
-        <Popover.Portal>
-          <Popover.Content
-            classNames='z-[60]'
-            onEscapeKeyDown={() => {
-              context.popoverOpen = false;
-              context.popoverAnchorId = undefined;
-            }}
-          >
-            <Popover.Viewport>
-              <Surface role='popover' data={popoverContent} />
-            </Popover.Viewport>
-            <Popover.Arrow />
-          </Popover.Content>
-        </Popover.Portal>
-
-        {/* Global dialog. */}
-        <Dialog.Root open={dialogOpen} onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}>
-          <Dialog.Overlay blockAlign={dialogBlockAlign}>
-            <Surface role='dialog' data={dialogContent} />
-          </Dialog.Overlay>
-        </Dialog.Root>
-
-        {/* Global toasts. */}
-        {toasts?.map((toast) => (
-          <Toast
-            {...toast}
-            key={toast.id}
-            onOpenChange={(open) => {
-              if (!open) {
-                onDismissToast(toast.id);
+          {/* Solo/deck mode. */}
+          {!isEmpty && (
+            <Main.Content
+              bounce
+              classNames='grid block-end-[--statusbar-size]'
+              handlesFocus
+              style={
+                {
+                  '--dx-main-sidebarWidth': sidebarOpen ? 'var(--nav-sidebar-size)' : '0px',
+                  '--dx-main-complementaryWidth': complementarySidebarOpen
+                    ? 'var(--complementary-sidebar-size)'
+                    : '0px',
+                  '--dx-main-contentFirstWidth': `${plankSizing[layoutParts.main?.[0]?.id ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
+                  '--dx-main-contentLastWidth': `${plankSizing[layoutParts.main?.[(layoutParts.main?.length ?? 1) - 1]?.id ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
+                } as MainProps['style']
               }
+            >
+              <div
+                role='none'
+                className={!isSoloModeLoaded ? 'relative bg-deck overflow-hidden' : 'sr-only'}
+                {...(isSoloModeLoaded && { inert: '' })}
+              >
+                <Stack
+                  orientation='horizontal'
+                  size='contain'
+                  classNames={['absolute inset-block-0 -inset-inline-px', mainPaddingTransitions]}
+                  onScroll={handleScroll}
+                  itemsCount={2 * (layoutParts.main?.length ?? 0) - 1}
+                  style={padding}
+                  ref={deckRef}
+                >
+                  {layoutParts.main?.map((layoutEntry, index) => (
+                    <Fragment key={layoutEntry.id}>
+                      <PlankSeparator index={index} />
+                      <Plank
+                        entry={layoutEntry}
+                        layoutParts={layoutParts}
+                        part='main'
+                        layoutMode={layoutMode}
+                        order={index * 2 + 1}
+                        last={index === layoutParts.main!.length - 1}
+                      />
+                    </Fragment>
+                  ))}
+                </Stack>
+              </div>
+              <div
+                role='none'
+                className={isSoloModeLoaded ? 'relative bg-deck overflow-hidden' : 'sr-only'}
+                {...(!isSoloModeLoaded && { inert: '' })}
+              >
+                <StackContext.Provider
+                  value={{ size: 'contain', orientation: 'horizontal', separators: true, rail: true }}
+                >
+                  <Plank entry={layoutParts.solo?.[0]} layoutParts={layoutParts} part='solo' layoutMode={layoutMode} />
+                </StackContext.Provider>
+              </div>
+            </Main.Content>
+          )}
 
-              return open;
-            }}
-          />
-        ))}
-      </Main.Root>
+          {/* Footer status. */}
+          <StatusBar showHints={showHints} />
+        </Main.Root>
+      )}
+
+      {/* Global popovers. */}
+      <Popover.Portal>
+        <Popover.Content
+          classNames='z-[60]'
+          onEscapeKeyDown={() => {
+            context.popoverOpen = false;
+            context.popoverAnchorId = undefined;
+          }}
+        >
+          <Popover.Viewport>
+            <Surface role='popover' data={popoverContent} />
+          </Popover.Viewport>
+          <Popover.Arrow />
+        </Popover.Content>
+      </Popover.Portal>
+
+      {/* Global dialog. */}
+      <Dialog.Root open={dialogOpen} onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}>
+        <Dialog.Overlay blockAlign={dialogBlockAlign}>
+          <Surface role='dialog' data={dialogContent} />
+        </Dialog.Overlay>
+      </Dialog.Root>
+
+      {/* Global toasts. */}
+      {toasts?.map((toast) => (
+        <Toast
+          {...toast}
+          key={toast.id}
+          onOpenChange={(open) => {
+            if (!open) {
+              onDismissToast(toast.id);
+            }
+
+            return open;
+          }}
+        />
+      ))}
     </Popover.Root>
   );
 };

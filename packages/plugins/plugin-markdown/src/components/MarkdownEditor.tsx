@@ -144,7 +144,7 @@ export const MarkdownEditor = ({
         moveToEndOfLine: true,
       }),
     }),
-    [id, initialValue, formattingObserver, viewMode, themeMode, extensions, providerExtensions],
+    [id, formattingObserver, viewMode, themeMode, extensions, providerExtensions],
   );
 
   useTest(editorView);

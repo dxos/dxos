@@ -209,6 +209,10 @@ export class EchoHost extends Resource {
     const automergeRoot = this._automergeHost.createDoc<SpaceDoc>({
       version: SpaceDocVersion.CURRENT,
       access: { spaceKey: spaceKey.toHex() },
+
+      // Better to initialize them right away to avoid merge conflicts and data loss that can occur if those maps get created on the fly.
+      objects: {},
+      links: {},
     });
 
     await this._automergeHost.flush({ documentIds: [automergeRoot.documentId] });

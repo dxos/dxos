@@ -341,6 +341,29 @@ export class Graph {
   }
 
   /**
+   * Wait for the path between two nodes in the graph to be established.
+   */
+  async waitForPath(
+    params: { source?: string; target: string },
+    { timeout = 1000, interval = 100 }: { timeout?: number; interval?: number } = {},
+  ) {
+    const path = this.getPath(params);
+    if (path) {
+      return path;
+    }
+
+    const trigger = new Trigger<string[]>();
+    const i = setInterval(() => {
+      const path = this.getPath(params);
+      if (path) {
+        trigger.wake(path);
+      }
+    }, interval);
+
+    return trigger.wait({ timeout }).finally(() => clearInterval(i));
+  }
+
+  /**
    * Add nodes to the graph.
    *
    * @internal

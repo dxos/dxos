@@ -11,7 +11,7 @@ import { DeprecatedFormInput } from '@dxos/react-ui-data';
 import { SpaceAction, SPACE_PLUGIN } from '../meta';
 import { parseSpaceInitPlugin, type SpaceSettingsProps } from '../types';
 
-export const SpaceSettings = ({ settings }: { settings: SpaceSettingsProps }) => {
+export const SpacePluginSettings = ({ settings }: { settings: SpaceSettingsProps }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const dispatch = useIntentDispatcher();
   const plugins = useResolvePlugins(parseSpaceInitPlugin);
