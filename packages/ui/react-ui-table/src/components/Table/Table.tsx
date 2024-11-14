@@ -44,7 +44,7 @@ export type TableRootProps = PropsWithChildren<{ role?: string }>;
 
 const TableRoot = ({ children }: TableRootProps) => {
   return (
-    <StackItemContent toolbar contentSize='intrinsic' classNames='attention-surface'>
+    <StackItemContent toolbar contentSize='intrinsic' classNames='relative attention-surface'>
       {children}
       <span role='none' className='flex-1 attention-surface' />
     </StackItemContent>
