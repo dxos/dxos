@@ -336,7 +336,6 @@ export const DeckPlugin = ({
             layoutParts={location.values.active}
             showHints={settings.values.showHints}
             overscroll={settings.values.overscroll}
-            flatDeck={settings.values.flatDeck}
             toasts={layout.values.toasts}
             panels={panels}
             onDismissToast={(id) => {
