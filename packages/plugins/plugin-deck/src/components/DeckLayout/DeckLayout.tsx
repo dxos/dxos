@@ -185,7 +185,7 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
               <Stack
                 orientation='horizontal'
                 size='contain'
-                classNames={['absolute inset-block-0 -inset-inline-px', mainPaddingTransitions]}
+                classNames={['absolute inset-0', mainPaddingTransitions]}
                 onScroll={handleScroll}
                 itemsCount={1 + 2 * (layoutParts.main?.length ?? 0)}
                 ref={deckRef}
