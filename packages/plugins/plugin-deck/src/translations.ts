@@ -1,6 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import { DECK_PLUGIN } from './meta';
 
 export default [
