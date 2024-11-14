@@ -123,7 +123,7 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
         throw buildResult.error;
       }
 
-      const { result, functionId, functionVersionNumber, errorMessage } = await uploadWorkerFunction({
+      const { result, functionId, functionVersionNumber, errorMessage, meta } = await uploadWorkerFunction({
         clientConfig: client.config,
         halo: client.halo,
         ownerDid,
@@ -141,9 +141,15 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
 
       const deployedFunction =
         fn ?? space.db.add(create(FunctionType, { version: functionVersionNumber, source: script }));
-      const meta = getMeta(deployedFunction);
       script.changed = false;
-      setUserFunctionUrlInMetadata(meta, `/${ownerDid}/${functionId}`);
+
+      if (meta.inputSchema) {
+        deployedFunction.inputSchema = meta.inputSchema;
+      } else {
+        log.verbose('no input schema in function metadata', { functionId });
+      }
+      setUserFunctionUrlInMetadata(getMeta(deployedFunction), `/${ownerDid}/${functionId}`);
+
       setView('split');
     } catch (err: any) {
       log.catch(err);
