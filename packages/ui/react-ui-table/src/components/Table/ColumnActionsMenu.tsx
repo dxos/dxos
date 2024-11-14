@@ -6,13 +6,13 @@ import React from 'react';
 
 import { DropdownMenu, useTranslation } from '@dxos/react-ui';
 
-import { TABLE_PLUGIN } from '../../meta';
 import { type TableModel } from '../../model';
+import { translationKey } from '../../translations';
 
 type ColumnActionsMenuProps = { model?: TableModel };
 
 export const ColumnActionsMenu = ({ model }: ColumnActionsMenuProps) => {
-  const { t } = useTranslation(TABLE_PLUGIN);
+  const { t } = useTranslation(translationKey);
   const state = model?.modalController.state.value;
 
   if (!model || state?.type !== 'column') {

@@ -71,7 +71,9 @@ export const Form = <T extends object>({
       const idx = props.findIndex((p) => p === prop);
       return idx === -1 ? Infinity : idx;
     };
-    return sort ? filtered.sort((a, b) => findIndex(sort, a.property) - findIndex(sort, b.property)) : filtered;
+    return sort
+      ? filtered.sort(({ property: a }, { property: b }) => findIndex(sort, a) - findIndex(sort, b))
+      : filtered;
   }, [schema, filter]);
 
   return (
@@ -94,16 +96,18 @@ export const Form = <T extends object>({
         );
       })}
 
-      <div className='flex gap-1 mbs-3'>
-        {!readonly && <IconButton icon='ph--x--regular' label={t('button cancel')} onClick={onCancel} />}
-        <IconButton
-          type='submit'
-          icon='ph--check--regular'
-          label={t('button save')}
-          onClick={handleSubmit}
-          disabled={!canSubmit}
-          classNames='grow'
-        />
+      <div role='none' className='flex justify-center'>
+        <div role='none' className={mx(!readonly && 'grid grid-cols-2 gap-2')}>
+          {!readonly && <IconButton icon='ph--x--regular' label={t('button cancel')} onClick={onCancel} />}
+          <IconButton
+            type='submit'
+            icon='ph--check--regular'
+            label={t('button save')}
+            onClick={handleSubmit}
+            disabled={!canSubmit}
+            classNames='grow'
+          />
+        </div>
       </div>
     </div>
   );

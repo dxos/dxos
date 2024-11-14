@@ -9,24 +9,26 @@ import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space';
 import { create, fullyQualifiedId, getSpace, Filter, useQuery } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
-import { StackItemContent } from '@dxos/react-ui-stack/next';
+import {
+  Table,
+  type TableController,
+  Toolbar,
+  type ToolbarAction,
+  useTableModel,
+  type TableType,
+  initializeTable,
+} from '@dxos/react-ui-table';
+import { mx } from '@dxos/react-ui-theme';
 import { ViewProjection } from '@dxos/schema';
 
-import { type TableController, TableMain } from './TableMain';
-import { Toolbar, type ToolbarAction } from './Toolbar';
-import { useTableModel } from '../hooks';
-import { TableAction, type TableType } from '../types';
-import { initializeTable } from '../util';
+import { TableAction } from '../types';
 
 // TODO(zantonio): Factor out, copied this from MarkdownPlugin.
 export const sectionToolbarLayout = 'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 transition-opacity';
 
-type TableContainerProps = LayoutContainerProps<{ table: TableType }>;
-
 // TODO(zantonio): Move toolbar action handling to a more appropriate location.
-const TableContainer = ({ table }: TableContainerProps) => {
-  const attendableId = fullyQualifiedId(table);
-  const { hasAttention } = useAttention(attendableId);
+const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType; role?: string }>) => {
+  const { hasAttention } = useAttention(fullyQualifiedId(table));
   const dispatch = useIntentDispatcher();
   const space = getSpace(table);
 
@@ -107,16 +109,22 @@ const TableContainer = ({ table }: TableContainerProps) => {
   );
 
   return (
-    <StackItemContent toolbar>
-      <Toolbar.Root onAction={handleAction} classNames={['attention-surface', !hasAttention && 'opacity-0.5']}>
+    <div role='none' className={role === 'article' ? 'row-span-2 grid grid-rows-subgrid' : undefined}>
+      <Toolbar.Root
+        onAction={handleAction}
+        classNames={mx(
+          role === 'section'
+            ? ['z-[2] group-focus-within/section:visible', !hasAttention && 'invisible', sectionToolbarLayout]
+            : 'border-be border-separator',
+        )}
+      >
         <Toolbar.Separator />
         <Toolbar.Actions />
       </Toolbar.Root>
-      <div role='none' className='flex flex-col gap-px'>
-        {model && <TableMain key={table.id} attendableId={attendableId} ref={tableRef} model={model} />}
-        <span role='none' className='flex-1 min-bs-0 attention-surface' />
-      </div>
-    </StackItemContent>
+      <Table.Root role={role}>
+        <Table.Main key={table.id} ref={tableRef} model={model} />
+      </Table.Root>
+    </div>
   );
 };
 

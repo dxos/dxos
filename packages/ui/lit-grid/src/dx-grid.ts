@@ -8,6 +8,7 @@ import { ref, createRef, type Ref } from 'lit/directives/ref.js';
 import { styleMap } from 'lit/directives/style-map.js';
 import { unsafeStatic, html as staticHtml } from 'lit/static-html.js';
 
+import { defaultSizeCol, defaultSizeRow } from './defs';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import './dx-grid-axis-resize-handle';
 import {
@@ -43,8 +44,6 @@ import {
   toCellIndex,
   gap,
   resizeTolerance,
-  defaultSizeCol,
-  defaultSizeRow,
   sizeColMin,
   sizeColMax,
   sizeRowMin,

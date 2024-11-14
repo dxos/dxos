@@ -100,7 +100,7 @@ export const ViewEditor = ({
         />
       )}
       {!readonly && !field && (
-        <div className='p-2 grid'>
+        <div className='flex p-2 justify-center'>
           <IconButton
             icon='ph--plus--regular'
             label={t('button add property')}

@@ -9,7 +9,7 @@ import React, { type PropsWithChildren } from 'react';
 import { Toolbar as NaturalToolbar, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { ToolbarButton, ToolbarSeparator } from './common';
-import { TABLE_PLUGIN } from '../../meta';
+import { translationKey } from '../../translations';
 
 //
 // Root
@@ -46,7 +46,7 @@ const ToolbarRoot = ({ classNames, children, onAction }: ToolbarProps) => {
 
 const Actions = () => {
   const { onAction } = useToolbarContext('Actions');
-  const { t } = useTranslation(TABLE_PLUGIN);
+  const { t } = useTranslation(translationKey);
 
   return (
     <>
