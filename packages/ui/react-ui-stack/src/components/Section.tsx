@@ -29,7 +29,6 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { useAttendableAttributes } from '@dxos/react-ui-attention';
-import { DropDownMenuDragHandleTrigger, resizeHandle, resizeHandleHorizontal } from '@dxos/react-ui-deck';
 import {
   type MosaicActiveType,
   type MosaicDataItem,
@@ -48,6 +47,7 @@ import {
 
 import { CaretDownUp } from './CaretDownUp';
 import { stackColumns } from './style-fragments';
+import { DropDownMenuDragHandleTrigger } from '../next/PlankHeading';
 import { translationKey } from '../translations';
 
 const sectionActionDimensions = 'p-1 shrink-0 min-bs-0 is-[--rail-action] bs-min';
@@ -116,7 +116,7 @@ export type SectionProps = PropsWithChildren<
     Pick<Required<StackSectionItem>['metadata'], 'icon'>
 >;
 
-const resizeHandleStyles = mx(resizeHandle, resizeHandleHorizontal, 'is-full bs-[--rail-action] col-start-2');
+const resizeHandleStyles = 'is-full bs-[--rail-action] col-start-2';
 
 export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTMLLIElement>> = forwardRef<
   HTMLLIElement,

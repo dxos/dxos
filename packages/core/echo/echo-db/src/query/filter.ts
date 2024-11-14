@@ -165,7 +165,7 @@ export class Filter<T extends {} = any> {
       throw new TypeError('Dynamic schema references are not allowed.');
     }
 
-    return this._fromTypeWithPredicate(DXN.typename(typename), filter);
+    return this._fromTypeWithPredicate(DXN.fromTypename(typename), filter);
   }
 
   static typeDXN(dxn: string): Filter {

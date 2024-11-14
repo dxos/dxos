@@ -7,7 +7,7 @@ import React from 'react';
 import { PublicKey } from '@dxos/keys';
 import { type KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
-import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table';
+import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table/deprecated';
 
 import { MasterDetailTable } from '../../../components';
 

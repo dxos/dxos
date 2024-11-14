@@ -5,7 +5,7 @@
 import React, { type ReactNode, useState } from 'react';
 
 import { AnchoredOverflow } from '@dxos/react-ui';
-import { Table, type TableColumnDef } from '@dxos/react-ui-table';
+import { Table, type TableColumnDef } from '@dxos/react-ui-table/deprecated';
 import { mx } from '@dxos/react-ui-theme';
 
 import { JsonView } from './JsonView';

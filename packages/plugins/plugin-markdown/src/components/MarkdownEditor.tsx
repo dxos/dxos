@@ -8,7 +8,7 @@ import React, { useMemo, useEffect, useCallback } from 'react';
 
 import { type FileInfo, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
-import { useAttendableAttributes, useAttention } from '@dxos/react-ui-attention';
+import { useAttention } from '@dxos/react-ui-attention';
 import {
   type Action,
   type DNDOptions,
@@ -31,8 +31,7 @@ import {
   useFormattingState,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { sectionToolbarLayout } from '@dxos/react-ui-stack';
-import { textBlockWidth, focusRing, mx } from '@dxos/react-ui-theme';
+import { StackItemContent } from '@dxos/react-ui-stack/next';
 import { isNotFalsy, nonNullable } from '@dxos/util';
 
 import { useSelectCurrentThread } from '../hooks';
@@ -77,7 +76,6 @@ export const MarkdownEditor = ({
   const { themeMode } = useThemeContext();
   const dispatch = useIntentDispatcher();
   const [formattingState, formattingObserver] = useFormattingState();
-  const attendableAttributes = useAttendableAttributes(id);
   const { hasAttention } = useAttention(id);
 
   // Restore last selection and scroll point.
@@ -171,60 +169,29 @@ export const MarkdownEditor = ({
   };
 
   return (
-    <div
-      role='none'
-      {...(role === 'section'
-        ? { className: 'flex flex-col' }
-        : {
-            className: 'contents',
-            // TODO(wittjosiah): Factor out to `useAttendableAttributes`?
-            ...(hasAttention && { 'aria-current': 'location' }),
-            ...attendableAttributes,
-          })}
-    >
+    <StackItemContent toolbar={toolbar}>
       {toolbar && (
-        <div role='none' className='flex shrink-0 justify-center overflow-x-auto attention-surface'>
-          <Toolbar.Root
-            classNames={
-              role === 'section'
-                ? [
-                    textBlockWidth,
-                    'z-[2] group-focus-within/section:visible',
-                    !hasAttention && 'invisible',
-                    sectionToolbarLayout,
-                  ]
-                : [textBlockWidth]
-            }
-            state={formattingState && { ...formattingState, ...commentsState }}
-            onAction={handleAction}
-          >
-            <Toolbar.Markdown />
-            {onFileUpload && <Toolbar.Custom onUpload={onFileUpload} />}
-            <Toolbar.Separator />
-            <Toolbar.View mode={viewMode ?? DEFAULT_VIEW_MODE} />
-            <Toolbar.Actions />
-          </Toolbar.Root>
-        </div>
+        <Toolbar.Root
+          classNames={['attention-surface', !hasAttention && 'opacity-0.5']}
+          state={formattingState && { ...formattingState, ...commentsState }}
+          onAction={handleAction}
+        >
+          <Toolbar.Markdown />
+          {onFileUpload && <Toolbar.Custom onUpload={onFileUpload} />}
+          <Toolbar.Separator />
+          <Toolbar.View mode={viewMode ?? DEFAULT_VIEW_MODE} />
+          <Toolbar.Actions />
+        </Toolbar.Root>
       )}
       <div
         role='none'
         ref={parentRef}
         data-testid='composer.markdownRoot'
         data-toolbar={toolbar ? 'enabled' : 'disabled'}
-        className={
-          role === 'section'
-            ? mx('flex flex-col flex-1 min-bs-[12rem]', focusRing)
-            : mx(
-                'flex is-full bs-full overflow-hidden',
-                focusRing,
-                'focus-visible:ring-inset attention-surface',
-                'p-0.5', // TODO(burdon): Handle padding for focusRing consistently.
-                'data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2',
-              )
-        }
+        className='min-bs-0 ch-focus-ring-inset data-[toolbar=disabled]:pbs-2 attention-surface'
         {...focusAttributes}
       />
-    </div>
+    </StackItemContent>
   );
 };
 

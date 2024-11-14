@@ -20,21 +20,30 @@ import { log } from '@dxos/log';
 import { ScriptType } from '@dxos/plugin-script/types';
 import { useClient } from '@dxos/react-client';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
-import { Input, Select } from '@dxos/react-ui';
+import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { distinctBy } from '@dxos/util';
 
 import { InputRow } from './Form';
 import { invokeFunction } from './invokation-handler';
 import { getFunctionMetaExtension, state } from './meta';
+import { AUTOMATION_PLUGIN } from '../../meta';
 
 const triggerTypes: FunctionTriggerType[] = ['subscription', 'timer', 'webhook', 'websocket'];
 
 const registerTriggersMutex = new Mutex();
 
 export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: FunctionTrigger }) => {
+  const { t } = useTranslation(AUTOMATION_PLUGIN);
   const client = useClient();
   const scripts = useQuery(space, Filter.schema(ScriptType));
   const script = useMemo(() => scripts.find((script) => script.id === trigger.function), [trigger.function, scripts]);
+
+  const triggerLabels: Record<FunctionTriggerType, string> = {
+    subscription: t('trigger type subscription'),
+    timer: t('trigger type timer'),
+    webhook: t('trigger type webhook'),
+    websocket: t('trigger type websocket'),
+  };
 
   // TODO(burdon): Factor out, creating context for plugin (runs outside of component).
   const [registry] = useState(new Map<string, Context>());
@@ -166,15 +175,15 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
     <div className='flex flex-col py-1'>
       <table className='is-full table-fixed'>
         <tbody>
-          <InputRow label='Function'>
+          <InputRow label={t('function select label')}>
             <Select.Root value={script?.id} onValueChange={handleSelectFunction}>
-              <Select.TriggerButton placeholder={'Select function'} />
+              <Select.TriggerButton classNames='w-full' placeholder={t('function select placeholder')} />
               <Select.Portal>
                 <Select.Content>
                   <Select.Viewport>
                     {scripts.map(({ id, name }) => (
                       <Select.Option key={id} value={id}>
-                        {name ?? 'Unnamed'}
+                        {name ?? id}
                       </Select.Option>
                     ))}
                   </Select.Viewport>
@@ -189,15 +198,15 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
               </div>
             </InputRow>
           )}
-          <InputRow label='Type'>
+          <InputRow label={t('trigger select label')}>
             <Select.Root value={trigger.spec?.type} onValueChange={handleSelectTriggerType}>
-              <Select.TriggerButton placeholder={'Select trigger'} />
+              <Select.TriggerButton placeholder={t('trigger select placeholder')} />
               <Select.Portal>
                 <Select.Content>
                   <Select.Viewport>
                     {triggerTypes.map((trigger) => (
                       <Select.Option key={trigger} value={trigger}>
-                        {trigger}
+                        {triggerLabels[trigger]}
                       </Select.Option>
                     ))}
                   </Select.Viewport>
@@ -208,7 +217,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
         </tbody>
         <tbody>
           {trigger.spec && <TriggerSpec space={space} spec={trigger.spec} />}
-          <InputRow label='Enabled'>
+          <InputRow label={t('function enabled')}>
             {/* TODO(burdon): Hack to make the switch the same height as other controls. */}
             <div className='flex items-center h-8'>
               <Input.Switch checked={trigger.enabled} onCheckedChange={(checked) => (trigger.enabled = !!checked)} />
@@ -236,21 +245,19 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
 //
 
 const TriggerSpecSubscription = ({ spec }: TriggerSpecProps<SubscriptionTrigger>) => {
+  const { t } = useTranslation(AUTOMATION_PLUGIN);
   if (!spec.filter) {
     return null;
   }
 
-  const handleSelectSchema = (typename: string) => {
+  const handleValueChange = (typename: string) => {
     spec.filter = [{ type: typename }];
   };
 
   return (
     <>
-      <InputRow label='Filter'>
-        <Select.Root
-          value={spec.filter.length > 0 ? spec.filter[0].type : undefined}
-          onValueChange={handleSelectSchema}
-        >
+      <InputRow label={t('trigger filter')}>
+        <Select.Root value={spec.filter.length > 0 ? spec.filter[0].type : undefined} onValueChange={handleValueChange}>
           <Select.TriggerButton classNames='w-full' placeholder={'Select type'} />
           <Select.Portal>
             <Select.Content>
@@ -269,38 +276,46 @@ const TriggerSpecSubscription = ({ spec }: TriggerSpecProps<SubscriptionTrigger>
   );
 };
 
-const TriggerSpecTimer = ({ spec }: TriggerSpecProps<TimerTrigger>) => (
-  <>
-    <InputRow label='Cron'>
-      <Input.TextInput value={spec.cron} onChange={(event) => (spec.cron = event.target.value)} />
-    </InputRow>
-  </>
-);
+const TriggerSpecTimer = ({ spec }: TriggerSpecProps<TimerTrigger>) => {
+  const { t } = useTranslation(AUTOMATION_PLUGIN);
+  return (
+    <>
+      <InputRow label={t('trigger cron')}>
+        <Input.TextInput value={spec.cron} onChange={(event) => (spec.cron = event.target.value)} />
+      </InputRow>
+    </>
+  );
+};
 
 const methods = ['GET', 'POST'];
 
-const TriggerSpecWebhook = ({ spec }: TriggerSpecProps<WebhookTrigger>) => (
-  <>
-    <InputRow label='Method'>
-      <Select.Root value={spec.method} onValueChange={(value) => (spec.method = value)}>
-        <Select.TriggerButton placeholder={'type'} />
-        <Select.Portal>
-          <Select.Content>
-            <Select.Viewport>
-              {methods.map((method) => (
-                <Select.Option key={method} value={method}>
-                  {method}
-                </Select.Option>
-              ))}
-            </Select.Viewport>
-          </Select.Content>
-        </Select.Portal>
-      </Select.Root>
-    </InputRow>
-  </>
-);
+const TriggerSpecWebhook = ({ spec }: TriggerSpecProps<WebhookTrigger>) => {
+  const { t } = useTranslation(AUTOMATION_PLUGIN);
+  return (
+    <>
+      <InputRow label={t('trigger method')}>
+        <Select.Root value={spec.method} onValueChange={(value) => (spec.method = value)}>
+          <Select.TriggerButton placeholder={'type'} />
+          <Select.Portal>
+            <Select.Content>
+              <Select.Viewport>
+                {methods.map((method) => (
+                  <Select.Option key={method} value={method}>
+                    {method}
+                  </Select.Option>
+                ))}
+              </Select.Viewport>
+            </Select.Content>
+          </Select.Portal>
+        </Select.Root>
+      </InputRow>
+    </>
+  );
+};
 
 const TriggerSpecWebsocket = ({ spec }: TriggerSpecProps<WebsocketTrigger>) => {
+  const { t } = useTranslation(AUTOMATION_PLUGIN);
+
   const handleChangeInit: ChangeEventHandler<HTMLInputElement> = (event) => {
     try {
       spec.init = JSON.parse(event.target.value);
@@ -311,7 +326,7 @@ const TriggerSpecWebsocket = ({ spec }: TriggerSpecProps<WebsocketTrigger>) => {
 
   return (
     <>
-      <InputRow label='Endpoint'>
+      <InputRow label={t('trigger method')}>
         <Input.TextInput
           value={spec.url}
           onChange={(event) => (spec.url = event.target.value)}

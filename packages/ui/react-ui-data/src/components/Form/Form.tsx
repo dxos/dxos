@@ -6,12 +6,13 @@ import React, { type FC, useEffect, useMemo } from 'react';
 
 import { type S } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
-import { Button, Icon, type ThemedClassName } from '@dxos/react-ui';
+import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { getSchemaProperties, type SchemaProperty, type ValidationError } from '@dxos/schema';
 
 import { FormInput, type FormInputProps } from './FormInput';
 import { useForm } from '../../hooks';
+import { translationKey } from '../../translations';
 
 export type PropsFilter<T extends Object> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
 
@@ -45,6 +46,7 @@ export const Form = <T extends object>({
   onCancel,
   Custom,
 }: FormProps<T>) => {
+  const { t } = useTranslation(translationKey);
   const { canSubmit, errors, handleSubmit, getInputProps, getErrorValence, getErrorMessage } = useForm<T>({
     schema,
     initialValues: values,
@@ -69,7 +71,9 @@ export const Form = <T extends object>({
       const idx = props.findIndex((p) => p === prop);
       return idx === -1 ? Infinity : idx;
     };
-    return sort ? filtered.sort((a, b) => findIndex(sort, a.property) - findIndex(sort, b.property)) : filtered;
+    return sort
+      ? filtered.sort(({ property: a }, { property: b }) => findIndex(sort, a) - findIndex(sort, b))
+      : filtered;
   }, [schema, filter]);
 
   return (
@@ -92,16 +96,17 @@ export const Form = <T extends object>({
         );
       })}
 
-      <div className='flex w-full justify-center'>
-        <div className='flex gap-2'>
-          {!readonly && (
-            <Button type='submit' onClick={handleSubmit} disabled={!canSubmit}>
-              <Icon icon='ph--check--regular' />
-            </Button>
-          )}
-          <Button onClick={onCancel}>
-            <Icon icon='ph--x--regular' />
-          </Button>
+      <div role='none' className='flex justify-center'>
+        <div role='none' className={mx(!readonly && 'grid grid-cols-2 gap-2')}>
+          {!readonly && <IconButton icon='ph--x--regular' label={t('button cancel')} onClick={onCancel} />}
+          <IconButton
+            type='submit'
+            icon='ph--check--regular'
+            label={t('button save')}
+            onClick={handleSubmit}
+            disabled={!canSubmit}
+            classNames='grow'
+          />
         </div>
       </div>
     </div>
