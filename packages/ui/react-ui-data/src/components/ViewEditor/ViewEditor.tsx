@@ -62,6 +62,7 @@ export const ViewEditor = ({
 
   return (
     <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
+      <div>X</div>
       <List.Root<FieldType>
         items={view.fields}
         isItem={S.is(FieldSchema)}

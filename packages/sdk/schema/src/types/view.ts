@@ -38,6 +38,11 @@ export class ViewType extends TypedObject({
   version: '0.1.0',
 })({
   /**
+   * Human readable name.
+   */
+  name: S.NonEmptyString,
+
+  /**
    * Query used to retrieve data.
    * This includes the base type that the view schema (above) references.
    * It may include predicates that represent a persistent "drill-down" query.
@@ -59,28 +64,30 @@ export class ViewType extends TypedObject({
 }) {}
 
 type CreateViewProps = {
+  name: string;
   typename: string;
   jsonSchema?: JsonSchemaType;
-  properties?: string[];
+  fields?: string[];
 };
 
 /**
  * Create view from existing schema.
  */
 export const createView = ({
+  name,
   typename,
   jsonSchema,
-  properties: _properties,
+  fields: _fields,
 }: CreateViewProps): ReactiveObject<ViewType> => {
   // TODO(burdon): Ensure not objects.
-  const properties = _properties ?? Object.keys(jsonSchema?.properties ?? []).filter((p) => p !== 'id');
+  const fields = _fields ?? Object.keys(jsonSchema?.properties ?? []).filter((p) => p !== 'id');
   return create(ViewType, {
-    // schema: jsonSchema,
+    name,
     query: {
-      __typename: typename,
+      type: typename,
     },
     // Create initial fields.
-    fields: properties.map((property) => ({
+    fields: fields.map((property) => ({
       id: createFieldId(),
       path: property as JsonProp,
     })),
