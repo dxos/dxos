@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { AnchoredOverflow, Button, useFileDownload } from '@dxos/react-ui';
-import { Table, type TableColumnDef, createColumnBuilder, textPadding } from '@dxos/react-ui-table';
+import { Table, type TableColumnDef, createColumnBuilder, textPadding } from '@dxos/react-ui-table/deprecated';
 
 import { DialogRestoreSpace } from './DialogRestoreSpace';
 import { exportData, importData } from './backup';

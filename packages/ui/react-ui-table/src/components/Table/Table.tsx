@@ -1,301 +1,206 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
-import { type Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
-import {
-  type GroupingState,
-  type Row,
-  type RowData,
-  getCoreRowModel,
-  getExpandedRowModel,
-  getGroupedRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
-import React, {
-  type ComponentPropsWithoutRef,
-  type ReactNode,
-  Fragment,
-  memo,
-  useCallback,
-  useEffect,
-  useState,
-  useContext,
-} from 'react';
+import React, { forwardRef, type PropsWithChildren, useCallback, useImperativeHandle, useState } from 'react';
 
-import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
+import { getValue } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
+import { Filter, getSpace } from '@dxos/react-client/echo';
+import { type DxGridElement, Grid, type GridContentProps, closestCell } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
+import { isNotFalsy } from '@dxos/util';
 
-import { TableBody } from './TableBody';
-import { type TypedTableProvider, TableProvider as UntypedTableProvider, useTableContext } from './TableContext';
-import { TableHead } from './TableHead';
-import { TableRootContext, useTableRootContext } from './TableRootContext';
-import { type TableProps } from './props';
-import { useColumnResizing, useColumnSorting, usePinLastRow, useRowSelection } from '../../hooks';
-import { groupTh, tableRoot } from '../../theme';
+import { ColumnActionsMenu } from './ColumnActionsMenu';
+import { ColumnSettings } from './ColumnSettings';
+import { RowActionsMenu } from './RowActionsMenu';
+import { type TableModel } from '../../model';
+import { type GridCell } from '../../util';
+import { TableCellEditor, type TableCellEditorProps } from '../TableCellEditor';
 
-type TableRootProps = { children: ReactNode };
+// NOTE(Zan): These fragments add border to inline-end and block-end of the grid using pseudo-elements.
+// These are offset by 1px to avoid double borders in planks.
+const inlineEndLine =
+  '[&>.dx-grid]:relative [&>.dx-grid]:after:absolute [&>.dx-grid]:after:inset-block-0 [&>.dx-grid]:after:-inline-end-px [&>.dx-grid]:after:is-px [&>.dx-grid]:after:bg-separator';
+const blockEndLine =
+  '[&>.dx-grid]:before:absolute [&>.dx-grid]:before:inset-inline-0 [&>.dx-grid]:before:-block-end-px [&>.dx-grid]:before:bs-px [&>.dx-grid]:before:bg-separator';
 
-const TableRoot = ({ children }: TableRootProps) => {
-  const contextValue = useTableRootContext();
-  return <TableRootContext.Provider value={contextValue}>{children}</TableRootContext.Provider>;
-};
+const frozen = { frozenRowsStart: 1, frozenColsEnd: 1 };
 
-type TableViewportProps = ThemedClassName<ComponentPropsWithoutRef<typeof Primitive.div>> & {
-  asChild?: boolean;
-};
+//
+// Root
+//
 
-const TableViewport = ({ children, classNames, asChild, ...props }: TableViewportProps) => {
-  const { scrollContextRef } = useContext(TableRootContext);
+export type TableRootProps = PropsWithChildren<{ role?: string }>;
 
-  const classes = mx(classNames, 'overflow-auto');
-  return asChild ? (
-    <Slot ref={scrollContextRef} className={classes} {...props}>
-      {children}
-    </Slot>
-  ) : (
-    <div role='none' className={classes} ref={scrollContextRef} {...props}>
+const TableRoot = ({ role = 'article', children }: TableRootProps) => {
+  // TODO(burdon): article | section | slide shouldn't be handled here; move into framework.
+  return (
+    <div
+      role={role}
+      className={mx(
+        role === 'article' && 'relative is-full max-is-max min-is-0 min-bs-0',
+        role === 'section' && 'grid cols-1 rows-[1fr_min-content] min-bs-0 !bg-[--surface-bg]',
+        role === 'slide' && 'bs-full overflow-auto grid place-items-center',
+      )}
+    >
       {children}
     </div>
   );
 };
 
-export const TablePrimitive = <TData extends RowData>(props: TableProps<TData>) => {
-  const {
-    role,
-    header = true,
-    rowsSelectable,
-    debug,
-    pinLastRow,
-    columnVisibility,
-    onColumnResize,
-    onDataSelectionChange,
-  } = props;
+//
+// Main
+//
 
-  const columns = useDefaultValue(props.columns, () => []);
-  const incomingData = useDefaultValue(props.data, () => []);
-
-  const [data, setData] = useState([...incomingData]);
-
-  // Reactivity workaround: https://github.com/dxos/dxos/issues/6376.
-  const forceUpdate = useCallback(() => setData([...incomingData]), [incomingData]);
-  useEffect(() => forceUpdate(), [JSON.stringify(incomingData), forceUpdate]);
-
-  const TableProvider = UntypedTableProvider as TypedTableProvider<TData>;
-
-  const { columnSizing, setColumnSizing, columnSizingInfo, setColumnSizingInfo } = useColumnResizing({
-    columns,
-    onColumnResize,
-  });
-
-  const { rowSelection, handleRowSelectionChange } = useRowSelection(props);
-
-  const [grouping, handleGroupingChange] = useState<GroupingState>(props.grouping ?? []);
-  useEffect(() => handleGroupingChange(props.grouping ?? []), [handleGroupingChange, props.grouping]);
-
-  const columnSorting = useColumnSorting();
-
-  const table = useReactTable({
-    // Data
-    meta: {},
-    data,
-
-    // Columns
-    columns,
-    defaultColumn: {
-      size: 400, // Required in order remove default width.
-      maxSize: 1024,
-    },
-
-    // State
-    state: {
-      columnVisibility,
-      columnSizing,
-      columnSizingInfo,
-      sorting: columnSorting.sorting,
-      rowSelection,
-      grouping,
-    },
-
-    // Resize columns
-    columnResizeMode: 'onChange',
-    enableColumnResizing: true,
-    onColumnSizingChange: setColumnSizing,
-    onColumnSizingInfoChange: setColumnSizingInfo,
-
-    // Rows
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getExpandedRowModel: getExpandedRowModel(),
-
-    // Grouping
-    getGroupedRowModel: grouping.length > 1 ? getGroupedRowModel() : undefined,
-    onGroupingChange: handleGroupingChange,
-
-    enableMultiRowSelection: rowsSelectable === 'multi' ? true : undefined,
-    enableRowSelection: rowsSelectable === true ? true : undefined,
-
-    onRowSelectionChange: handleRowSelectionChange,
-
-    enableSorting: true,
-    enableColumnPinning: true,
-
-    // Debug
-    debugTable: debug,
-  });
-
-  useEffect(() => {
-    onDataSelectionChange?.(Object.keys(rowSelection).map((id) => table.getRowModel().rowsById[id].original));
-  }, [onDataSelectionChange, rowSelection, table]);
-
-  usePinLastRow(pinLastRow, table, data);
-
-  // Create additional expansion column if all columns have fixed width.
-  const expand = false; // columns.map((column) => column.size).filter(Boolean).length === columns?.length;
-
-  return (
-    <TableProvider
-      {...{ ...props, ...columnSorting }}
-      table={table}
-      header={header}
-      expand={expand}
-      isGrid={role === 'grid' || role === 'treegrid'}
-    >
-      <TableImpl<TData> debug={false} {...props} />
-    </TableProvider>
-  );
+export type TableController = {
+  update?: (cell?: GridCell) => void;
 };
 
-// TODO(zan): Smush this into the Table component.
-/**
- * Pure implementation of table outside of context set-up.
- */
-const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
-  const { debug, classNames, role, grouping, fullWidth } = props;
-  const { table } = useTableContext<TData>();
+export type TableMainProps = {
+  model?: TableModel;
+};
 
-  if (debug) {
-    return (
-      <pre className='font-mono text-xs text-neutral-500 m-1 p-2 ring'>
-        <code>{JSON.stringify(table.getState(), undefined, 2)}</code>
-      </pre>
-    );
+const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwardedRef) => {
+  const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
+
+  /**
+   * Provides an external controller that can be called to repaint the table.
+   */
+  useImperativeHandle<TableController, TableController>(
+    forwardedRef,
+    () => {
+      if (!model || !dxGrid) {
+        return {};
+      }
+
+      dxGrid.getCells = model.getCells.bind(model);
+      return {
+        update: (cell) => {
+          if (cell) {
+            dxGrid.updateIfWithinBounds(cell);
+          } else {
+            dxGrid.updateCells(true);
+          }
+        },
+      };
+    },
+    [model, dxGrid],
+  );
+
+  const handleFocus: TableCellEditorProps['onFocus'] = (increment, delta) => {
+    dxGrid?.refocus(increment, delta);
+  };
+
+  const handleEnter = useCallback<NonNullable<TableCellEditorProps['onEnter']>>(
+    (cell) => {
+      // TODO(burdon): Insert row only if bottom row isn't completely blank already.
+      if (model && cell.row === model.getRowCount() - 1) {
+        model.insertRow(cell.row);
+      }
+    },
+    [model],
+  );
+
+  const handleKeyDown = useCallback<NonNullable<GridContentProps['onKeyDown']>>(
+    (event) => {
+      const cell = closestCell(event.target);
+      if (!model || !cell) {
+        return;
+      }
+
+      switch (event.key) {
+        case 'Backspace':
+        case 'Delete': {
+          model.setCellData(cell, undefined);
+          break;
+        }
+      }
+    },
+    [model],
+  );
+
+  const handleAxisResize = useCallback<NonNullable<GridContentProps['onAxisResize']>>(
+    (event) => {
+      if (event.axis === 'col') {
+        const columnIndex = parseInt(event.index, 10);
+        model?.setColumnWidth(columnIndex, event.size);
+      }
+    },
+    [model],
+  );
+
+  // TODO(burdon): Factor out?
+  const handleQuery = useCallback<NonNullable<TableCellEditorProps['onQuery']>>(
+    async ({ field, props }, _text) => {
+      if (model && props.referenceSchema && field.referencePath) {
+        const space = getSpace(model.table);
+        invariant(space);
+        const schema = space.db.schemaRegistry.getSchema(props.referenceSchema);
+        if (schema) {
+          // TODO(burdon): Cache/filter.
+          const { objects } = await space.db.query(Filter.schema(schema)).run();
+          return objects
+            .map((obj) => {
+              const value = getValue(obj, field.referencePath!);
+              if (!value || typeof value !== 'string') {
+                return undefined;
+              }
+
+              return {
+                label: value,
+                data: obj,
+              };
+            })
+            .filter(isNotFalsy);
+        }
+      }
+
+      return [];
+    },
+    [model],
+  );
+
+  if (!model) {
+    return null;
   }
-
-  const isResizingColumn = table.getState().columnSizingInfo.isResizingColumn;
-
-  const TableComponent = isResizingColumn ? MemoizedVirtualizedTableContent : VirtualizedTableContent;
-
-  return (
-    <table
-      role={role}
-      className={tableRoot(props, classNames)}
-      style={{
-        // borderCollapse: 'separate',
-        borderSpacing: 0,
-        ...(!fullWidth && { width: table.getTotalSize() }),
-      }}
-    >
-      <TableHead />
-
-      {grouping?.length !== 0 ? <TableComponent /> : <GroupedTableContent />}
-    </table>
-  );
-};
-
-const VirtualizedTableContent = () => {
-  const { table } = useTableContext();
-  const { virtualizer, dispatch } = useContext(TableRootContext);
-
-  const centerRows = table.getCenterRows();
-  let pinnedRows = [] as Row<unknown>[];
-
-  useEffect(() => {
-    dispatch({ type: 'updateTableCount', count: centerRows.length });
-  }, [centerRows.length]);
-
-  try {
-    // TODO(zan): Work out how to sync the row pinning with rendering
-    // This is a hack because the first call to this function after a row is deleted will throw an error
-    // because the row index is no longer in the table
-    // The pin last row hook updates the pinned row key after the row is deleted
-    pinnedRows = table.getBottomRows();
-  } catch (_) {} // Ignore error
-
-  const { getTotalSize, getVirtualItems } = virtualizer;
-
-  const virtualRows = getVirtualItems();
-  const totalSize = getTotalSize();
-
-  const paddingTop = virtualRows.length > 0 ? virtualRows?.[0]?.start || 0 : 0;
-  const paddingBottom = virtualRows.length > 0 ? totalSize - (virtualRows?.[virtualRows.length - 1]?.end || 0) : 0;
-
-  const rowsToRender = [...virtualRows.map((virtualRow) => centerRows[virtualRow.index]), ...pinnedRows].filter(
-    (r) => !!r,
-  );
-
-  return (
-    <Fragment>
-      {paddingTop > 0 && (
-        <tbody role='none'>
-          <tr role='none'>
-            <td style={{ height: `${paddingTop}px` }} role='none' />
-          </tr>
-        </tbody>
-      )}
-      <TableBody rows={rowsToRender} />
-      {paddingBottom > 0 && (
-        <tbody role='none'>
-          <tr role='none'>
-            <td style={{ height: `${paddingBottom}px` }} role='none' />
-          </tr>
-        </tbody>
-      )}
-    </Fragment>
-  );
-};
-
-export const MemoizedVirtualizedTableContent = memo(VirtualizedTableContent);
-
-const GroupedTableContent = () => {
-  const {
-    table: { getGroupedRowModel, getHeaderGroups, getState },
-    debug,
-  } = useTableContext();
 
   return (
     <>
-      {getGroupedRowModel().rows.map((row, i) => {
-        return (
-          <Fragment key={i}>
-            {/* TODO(burdon): Customize group header renderer. */}
-            <thead>
-              <tr>
-                {debug && <th />}
-                <th
-                  // TODO(burdon): Calculate row span.
-                  colSpan={getHeaderGroups()[0].headers.length}
-                  className={groupTh({})}
-                >
-                  {getState().grouping[0]}[{String(row.getGroupingValue(getState().grouping[0]))}]
-                </th>
-              </tr>
-            </thead>
-            <TableBody rows={row.subRows} />
-          </Fragment>
-        );
-      })}
+      {/* TODO(burdon): Is this required to be unique? */}
+      <Grid.Root id={model.table.id ?? 'table-grid'}>
+        <TableCellEditor model={model} onEnter={handleEnter} onFocus={handleFocus} onQuery={handleQuery} />
+
+        <Grid.Content
+          className={mx(
+            '[&>.dx-grid]:min-bs-0 [&>.dx-grid]:bs-full [&>.dx-grid]:max-bs-max [--dx-grid-base:var(--surface-bg)]',
+            inlineEndLine,
+            blockEndLine,
+          )}
+          frozen={frozen}
+          columns={model.columnMeta.value}
+          limitRows={model.getRowCount() ?? 0}
+          limitColumns={model.table.view?.fields?.length ?? 0}
+          onAxisResize={handleAxisResize}
+          onClick={model?.handleGridClick}
+          onKeyDown={handleKeyDown}
+          overscroll='trap'
+          ref={setDxGrid}
+        />
+      </Grid.Root>
+
+      <RowActionsMenu model={model} />
+      <ColumnActionsMenu model={model} />
+      <ColumnSettings model={model} />
     </>
   );
-};
+});
 
-// TODO(burdon): Floating "add row" jumps by 1 pixel on scroll.
-// TODO(burdon): Blue focus highlight is clipped by 1px on the left.
-// TODO(burdon): Focused row and focus ring passes over the sticky header.
+//
+// CellEditor
+//
+
 export const Table = {
   Root: TableRoot,
-  Viewport: TableViewport,
-  Main: TablePrimitive,
+  Main: TableMain,
 };
