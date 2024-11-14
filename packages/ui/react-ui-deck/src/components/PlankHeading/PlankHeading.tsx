@@ -2,16 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import {
-  CaretLeft,
-  CaretLineLeft,
-  CaretLineRight,
-  CaretRight,
-  Check,
-  Minus,
-  ArrowsOut,
-  ArrowsIn,
-} from '@phosphor-icons/react';
+import { Check } from '@phosphor-icons/react';
 import React, {
   type ComponentPropsWithRef,
   Fragment,
@@ -258,13 +249,17 @@ type PlankHeadingControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
   pin?: 'start' | 'end' | 'both';
 };
 
-const PlankHeadingControl = ({ children, label, ...props }: ButtonProps & { label: string }) => {
+const PlankHeadingControl = ({
+  icon,
+  label,
+  ...props
+}: Omit<ButtonProps, 'children'> & { label: string; icon: string }) => {
   return (
     <Tooltip.Root>
       <Tooltip.Trigger asChild>
         <Button variant='ghost' {...props}>
           <span className='sr-only'>{label}</span>
-          {children}
+          <Icon icon={icon} />
         </Button>
       </Tooltip.Trigger>
       <Tooltip.Portal>
@@ -282,7 +277,7 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
     forwardedRef,
   ) => {
     const { t } = useTranslation(translationKey);
-    const buttonClassNames = variant === 'hide-disabled' ? 'disabled:hidden p-1' : 'p-1';
+    const buttonClassNames = variant === 'hide-disabled' ? 'disabled:hidden !pli-1' : '!pli-1';
 
     return (
       <ButtonGroup {...props} ref={forwardedRef}>
@@ -294,9 +289,8 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
             variant='ghost'
             classNames={buttonClassNames}
             onClick={() => onClick?.('pin-start')}
-          >
-            <CaretLineLeft className={getSize(4)} />
-          </PlankHeadingControl>
+            icon='ph--caret-line-left--regular'
+          />
         )}
 
         {can.solo && (
@@ -304,9 +298,8 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
             label={t('solo plank label')}
             classNames={buttonClassNames}
             onClick={() => onClick?.('solo')}
-          >
-            {isSolo ? <ArrowsIn className={getSize(4)} /> : <ArrowsOut className={getSize(4)} />}
-          </PlankHeadingControl>
+            icon={isSolo ? 'ph--arrows-in--regular' : 'ph--arrows-out--regular'}
+          />
         )}
 
         {!isSolo && can.solo && (
@@ -316,17 +309,15 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
               disabled={!can.incrementStart}
               classNames={buttonClassNames}
               onClick={() => onClick?.('increment-start')}
-            >
-              <CaretLeft className={getSize(4)} />
-            </PlankHeadingControl>
+              icon='ph--caret-left--regular'
+            />
             <PlankHeadingControl
               label={t('increment end label')}
               disabled={!can.incrementEnd}
               classNames={buttonClassNames}
               onClick={() => onClick?.('increment-end')}
-            >
-              <CaretRight className={getSize(4)} />
-            </PlankHeadingControl>
+              icon='ph--caret-right--regular'
+            />
           </>
         )}
 
@@ -335,9 +326,8 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
             label={t('pin end label')}
             classNames={buttonClassNames}
             onClick={() => onClick?.('pin-end')}
-          >
-            <CaretLineRight className={getSize(4)} />
-          </PlankHeadingControl>
+            icon='ph--caret-line-right--regular'
+          />
         )}
 
         {close && !isSolo && (
@@ -346,15 +336,14 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
             classNames={buttonClassNames}
             onClick={() => onClick?.('close')}
             data-testid='plankHeading.close'
-          >
-            {close === 'minify-start' ? (
-              <CaretLineLeft className={getSize(4)} />
-            ) : close === 'minify-end' ? (
-              <CaretLineRight className={getSize(4)} />
-            ) : (
-              <Minus className={getSize(4)} />
-            )}
-          </PlankHeadingControl>
+            icon={
+              close === 'minify-start'
+                ? 'ph--caret-line-left--regular'
+                : close === 'minify-end'
+                  ? 'ph--caret-line-right--regular'
+                  : 'ph--minus--regular'
+            }
+          />
         )}
       </ButtonGroup>
     );
