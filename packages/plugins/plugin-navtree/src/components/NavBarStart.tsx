@@ -6,7 +6,7 @@ import React, { Fragment } from 'react';
 
 import { getGraph, type Node } from '@dxos/app-graph';
 import { Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { PlankHeading } from '@dxos/react-ui-deck';
+import { PlankHeading } from '@dxos/react-ui-stack/next';
 
 import { KEY_BINDING, NAVTREE_PLUGIN } from '../meta';
 

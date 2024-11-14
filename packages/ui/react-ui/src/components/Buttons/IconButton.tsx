@@ -22,7 +22,7 @@ const IconOnlyButton = forwardRef<HTMLButtonElement, IconButtonProps>(
     );
     return (
       <Tooltip.Root>
-        <Tooltip.Trigger>
+        <Tooltip.Trigger asChild>
           <LabelledIconButton {...props} ref={forwardedRef} />
         </Tooltip.Trigger>
         {tooltipPortal ? <Tooltip.Portal>{content}</Tooltip.Portal> : content}

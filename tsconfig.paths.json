@@ -347,9 +347,6 @@
       "@dxos/react-ui-data": [
         "packages/ui/react-ui-data/src/index.ts"
       ],
-      "@dxos/react-ui-deck": [
-        "packages/ui/react-ui-deck/src/index.ts"
-      ],
       "@dxos/react-ui-editor": [
         "packages/ui/react-ui-editor/src/index.ts"
       ],
@@ -367,6 +364,9 @@
       ],
       "@dxos/react-ui-stack": [
         "packages/ui/react-ui-stack/src/index.ts"
+      ],
+      "@dxos/react-ui-stack/next": [
+        "packages/ui/react-ui-stack/src/next/index.ts"
       ],
       "@dxos/react-ui-stack/testing": [
         "packages/ui/react-ui-stack/src/testing/index.ts"

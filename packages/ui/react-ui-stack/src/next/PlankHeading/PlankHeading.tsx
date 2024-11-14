@@ -2,16 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import {
-  CaretLeft,
-  CaretLineLeft,
-  CaretLineRight,
-  CaretRight,
-  Check,
-  Minus,
-  ArrowsOut,
-  ArrowsIn,
-} from '@phosphor-icons/react';
 import React, {
   type ComponentPropsWithRef,
   Fragment,
@@ -21,6 +11,7 @@ import React, {
   useState,
 } from 'react';
 
+import { type ActionLike } from '@dxos/app-graph';
 import { keySymbols } from '@dxos/keyboard';
 import {
   Button,
@@ -35,12 +26,23 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
+import { descriptionText, mx } from '@dxos/react-ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
-import { plankHeadingLayout } from '../../fragments';
 import { translationKey } from '../../translations';
-import { type PlankHeadingAction } from '../../types';
+import { StackItemResizeHandle } from '../StackItem';
+
+// TODO(thure): Dedupe (also in react-ui-navtree)
+export type KeyBinding = {
+  windows?: string;
+  macos?: string;
+  ios?: string;
+  linux?: string;
+  unknown?: string;
+};
+
+// TODO(thure): Dedupe (similar in react-ui-navtree)
+type PlankHeadingAction = Pick<ActionLike, 'id' | 'properties' | 'data'>;
 
 type AttendableId = { attendableId?: string };
 
@@ -50,13 +52,15 @@ type PlankHeadingButtonProps = Omit<ButtonProps, 'variant'> & AttendableId & Rel
 
 type PlankRootProps = ThemedClassName<ComponentPropsWithRef<'div'>>;
 
-const PlankRoot = forwardRef<HTMLDivElement, PlankRootProps>(({ children, classNames, ...props }, forwardedRef) => {
-  return (
-    <div role='none' className={mx(plankHeadingLayout, classNames)} {...props} ref={forwardedRef}>
-      {children}
-    </div>
-  );
-});
+const PlankHeadingRoot = forwardRef<HTMLDivElement, PlankRootProps>(
+  ({ children, classNames, ...props }, forwardedRef) => {
+    return (
+      <div role='none' className={mx('flex items-center bg-base', classNames)} {...props} ref={forwardedRef}>
+        {children}
+      </div>
+    );
+  },
+);
 
 const MenuSignifierHorizontal = () => (
   <svg
@@ -192,7 +196,7 @@ const PlankHeadingActionsMenu = forwardRef<HTMLButtonElement, PlankHeadingAction
                             <span className='grow truncate'>{toLocalizedString(action.properties.label ?? '', t)}</span>
                             {menuItemType === 'toggle' && (
                               <DropdownMenu.ItemIndicator asChild>
-                                <Check className={getSize(4)} />
+                                <Icon icon='ph--check--regular' size={4} />
                               </DropdownMenu.ItemIndicator>
                             )}
                             {shortcut && (
@@ -247,6 +251,7 @@ type PlankHeadingCapabilites = {
   incrementStart?: boolean;
   incrementEnd?: boolean;
   solo?: boolean;
+  resize?: boolean;
 };
 
 type PlankHeadingControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
@@ -258,13 +263,17 @@ type PlankHeadingControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
   pin?: 'start' | 'end' | 'both';
 };
 
-const PlankHeadingControl = ({ children, label, ...props }: ButtonProps & { label: string }) => {
+const PlankHeadingControl = ({
+  icon,
+  label,
+  ...props
+}: Omit<ButtonProps, 'children'> & { label: string; icon: string }) => {
   return (
     <Tooltip.Root>
       <Tooltip.Trigger asChild>
         <Button variant='ghost' {...props}>
           <span className='sr-only'>{label}</span>
-          {children}
+          <Icon icon={icon} />
         </Button>
       </Tooltip.Trigger>
       <Tooltip.Portal>
@@ -282,7 +291,7 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
     forwardedRef,
   ) => {
     const { t } = useTranslation(translationKey);
-    const buttonClassNames = variant === 'hide-disabled' ? 'disabled:hidden p-1' : 'p-1';
+    const buttonClassNames = variant === 'hide-disabled' ? 'disabled:hidden !p-1' : '!p-1';
 
     return (
       <ButtonGroup {...props} ref={forwardedRef}>
@@ -294,9 +303,8 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
             variant='ghost'
             classNames={buttonClassNames}
             onClick={() => onClick?.('pin-start')}
-          >
-            <CaretLineLeft className={getSize(4)} />
-          </PlankHeadingControl>
+            icon='ph--caret-line-left--regular'
+          />
         )}
 
         {can.solo && (
@@ -304,9 +312,8 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
             label={t('solo plank label')}
             classNames={buttonClassNames}
             onClick={() => onClick?.('solo')}
-          >
-            {isSolo ? <ArrowsIn className={getSize(4)} /> : <ArrowsOut className={getSize(4)} />}
-          </PlankHeadingControl>
+            icon={isSolo ? 'ph--arrows-in--regular' : 'ph--arrows-out--regular'}
+          />
         )}
 
         {!isSolo && can.solo && (
@@ -316,17 +323,15 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
               disabled={!can.incrementStart}
               classNames={buttonClassNames}
               onClick={() => onClick?.('increment-start')}
-            >
-              <CaretLeft className={getSize(4)} />
-            </PlankHeadingControl>
+              icon='ph--caret-left--regular'
+            />
             <PlankHeadingControl
               label={t('increment end label')}
               disabled={!can.incrementEnd}
               classNames={buttonClassNames}
               onClick={() => onClick?.('increment-end')}
-            >
-              <CaretRight className={getSize(4)} />
-            </PlankHeadingControl>
+              icon='ph--caret-right--regular'
+            />
           </>
         )}
 
@@ -335,9 +340,8 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
             label={t('pin end label')}
             classNames={buttonClassNames}
             onClick={() => onClick?.('pin-end')}
-          >
-            <CaretLineRight className={getSize(4)} />
-          </PlankHeadingControl>
+            icon='ph--caret-line-right--regular'
+          />
         )}
 
         {close && !isSolo && (
@@ -346,23 +350,23 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
             classNames={buttonClassNames}
             onClick={() => onClick?.('close')}
             data-testid='plankHeading.close'
-          >
-            {close === 'minify-start' ? (
-              <CaretLineLeft className={getSize(4)} />
-            ) : close === 'minify-end' ? (
-              <CaretLineRight className={getSize(4)} />
-            ) : (
-              <Minus className={getSize(4)} />
-            )}
-          </PlankHeadingControl>
+            icon={
+              close === 'minify-start'
+                ? 'ph--caret-line-left--regular'
+                : close === 'minify-end'
+                  ? 'ph--caret-line-right--regular'
+                  : 'ph--minus--regular'
+            }
+          />
         )}
+        {can.resize && <StackItemResizeHandle classNames={buttonClassNames} />}
       </ButtonGroup>
     );
   },
 );
 
 export const PlankHeading = {
-  Root: PlankRoot,
+  Root: PlankHeadingRoot,
   Button: PlankHeadingButton,
   Label: PlankHeadingLabel,
   ActionsMenu: PlankHeadingActionsMenu,
