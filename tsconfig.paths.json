@@ -138,7 +138,10 @@
         "packages/plugins/plugin-calls/src/index.ts"
       ],
       "@dxos/plugin-calls/meta": [
-        "packages/plugins/plugin-calls/src/meta.tsx"
+        "packages/plugins/plugin-calls/src/meta.ts"
+      ],
+      "@dxos/plugin-calls/types": [
+        "packages/plugins/plugin-calls/src/types/index.ts"
       ],
       "@dxos/plugin-chess": [
         "packages/plugins/plugin-chess/src/index.ts"

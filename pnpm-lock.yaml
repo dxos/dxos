@@ -581,6 +581,9 @@ importers:
       '@dxos/plugin-automation':
         specifier: workspace:*
         version: link:../../plugins/experimental/plugin-automation
+      '@dxos/plugin-calls':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-calls
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../../plugins/plugin-chess
