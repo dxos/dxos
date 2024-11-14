@@ -26,17 +26,4 @@
       --surface-bg: var(--dx-attention);
     }
   }
-
-  .attention-placeholder-host {
-    &::before {
-      content: "";
-      display: block;
-      grid-row-start: 2;
-      background-color: var(--surface-bg);
-      flex: 1 1 0;
-    }
-    &:has(> :not([data-dx-attention-placeholder-ignore]))::before {
-      display: none;
-    }
-  }
 }

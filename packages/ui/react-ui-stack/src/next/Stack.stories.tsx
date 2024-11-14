@@ -20,7 +20,7 @@ type StoryStackItem = {
 
 const KanbanBlock = ({ item }: { item: StoryStackItem }) => {
   return (
-    <div className='bg-base overflow-hidden'>
+    <div className='overflow-hidden'>
       <p className='place-content-center p-4'>{item.title}</p>
     </div>
   );

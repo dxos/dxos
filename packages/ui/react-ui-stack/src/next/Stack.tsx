@@ -81,7 +81,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
               (orientation === 'horizontal'
                 ? 'overflow-x-auto min-bs-0 bs-full max-bs-full'
                 : 'overflow-y-auto min-is-0 is-full max-is-full'),
-            separators && 'bg-separator gap-px',
+            separators && (orientation === 'horizontal' ? 'divide-separator divide-x' : 'divide-separator divide-y'),
             classNames,
           )}
           aria-orientation={orientation}
