@@ -178,7 +178,7 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
 
   return (
     <ToolbarContextProvider onAction={handleAction}>
-      <NaturalToolbar.Root classNames={['pli-0.5 attention-surface', !hasAttention && 'opacity-0.5', classNames]}>
+      <NaturalToolbar.Root classNames={['pli-0.5', !hasAttention && 'opacity-20', classNames]}>
         {children}
       </NaturalToolbar.Root>
     </ToolbarContextProvider>
