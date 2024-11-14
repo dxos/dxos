@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { createContext, type PropsWithChildren, useContext, useState } from 'react';
+import React, { createContext, type PropsWithChildren, useContext, useMemo, useState } from 'react';
 
 import { raise } from '@dxos/debug';
 
@@ -36,6 +36,5 @@ export const useGlobalFilteredObjects = <T extends Record<string, any>>(objects?
     return objects ?? [];
   }
 
-  const matching = filterObjectsSync(objects, match);
-  return matching.map((result) => result.object);
+  return useMemo(() => filterObjectsSync(objects, match).map((result) => result.object), [objects, match]);
 };

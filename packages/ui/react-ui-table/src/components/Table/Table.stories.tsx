@@ -42,7 +42,7 @@ const DefaultStory = () => {
       const table = tables[0];
       invariant(table.view);
       setTable(table);
-      setSchema(space.db.schemaRegistry.getSchema(table.view.query.__typename));
+      setSchema(space.db.schemaRegistry.getSchema(table.view.query.type));
     }
   }, [tables]);
 
@@ -112,6 +112,7 @@ const DefaultStory = () => {
     <div className='grow grid grid-cols-[1fr_350px]'>
       <div className='flex flex-col h-full overflow-hidden'>
         <Toolbar.Root classNames='border-b border-separator' onAction={handleAction}>
+          <Toolbar.Editing />
           <Toolbar.Separator />
           <Toolbar.Actions />
         </Toolbar.Root>

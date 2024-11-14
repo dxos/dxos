@@ -66,6 +66,25 @@ export const WelcomePlugin = ({
         return;
       }
 
+      // Query for credential in HALO and skip welcome dialog if it exists.
+      const subscription = client.halo.credentials.subscribe(async (credentials) => {
+        const credential = credentials.find(matchServiceCredential(['composer:beta']));
+        if (credential) {
+          log('beta credential found', { credential });
+          await dispatch([
+            {
+              action: LayoutAction.SET_LAYOUT_MODE,
+              data: { layoutMode: 'solo' },
+            },
+            {
+              action: NavigationAction.CLOSE,
+              data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
+            },
+          ]);
+          subscription.unsubscribe();
+        }
+      });
+
       const credential = client.halo
         .queryCredentials()
         .toSorted((a, b) => b.issuanceDate.getTime() - a.issuanceDate.getTime())
@@ -156,10 +175,6 @@ export const WelcomePlugin = ({
           token && removeQueryParamByValue(token);
           await dispatch([
             {
-              action: LayoutAction.SET_LAYOUT_MODE,
-              data: { layoutMode: 'solo' },
-            },
-            {
               action: NavigationAction.CLOSE,
               data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
             },
@@ -186,25 +201,6 @@ export const WelcomePlugin = ({
           data: { name: 'welcome.presented' },
         },
       ]);
-
-      // Query for credential in HALO and skip welcome dialog if it exists.
-      const subscription = client.halo.credentials.subscribe(async (credentials) => {
-        const credential = credentials.find(matchServiceCredential(['composer:beta']));
-        if (credential) {
-          log('beta credential found', { credential });
-          await dispatch([
-            {
-              action: LayoutAction.SET_LAYOUT_MODE,
-              data: { layoutMode: 'solo' },
-            },
-            {
-              action: NavigationAction.CLOSE,
-              data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
-            },
-          ]);
-          subscription.unsubscribe();
-        }
-      });
     },
     provides: {
       surface: {

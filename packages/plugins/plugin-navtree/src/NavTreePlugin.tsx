@@ -257,21 +257,19 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
         },
       },
       intent: {
-        resolver: (intent) => {
+        resolver: async (intent) => {
           switch (intent.action) {
             case NavigationAction.EXPOSE: {
               if (graph && intent.data?.id) {
-                const path = graph.getPath({ target: intent.data.id });
-                if (Array.isArray(path)) {
-                  const additionalOpenItems = [...Array(path.length)].reduce((acc: string[], _, index) => {
-                    const itemId = Path.create(...path.slice(0, index));
-                    if (itemId.length > 0 && !state.values.open.includes(itemId)) {
-                      acc.push(itemId);
-                    }
-                    return acc;
-                  }, []);
-                  state.values.open.push(...additionalOpenItems);
-                }
+                const path = await graph.waitForPath({ target: intent.data.id });
+                const additionalOpenItems = [...Array(path.length)].reduce((acc: string[], _, index) => {
+                  const itemId = Path.create(...path.slice(0, index));
+                  if (itemId.length > 0 && !state.values.open.includes(itemId)) {
+                    acc.push(itemId);
+                  }
+                  return acc;
+                }, []);
+                state.values.open.push(...additionalOpenItems);
               }
               break;
             }

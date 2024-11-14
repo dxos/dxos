@@ -19,7 +19,7 @@ import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-g
 import { SpaceAction } from '@dxos/plugin-space';
 import { getSpace } from '@dxos/react-client/echo';
 import { translations as dataTranslations, ViewEditor } from '@dxos/react-ui-data';
-import { TableType, translations as tableTranslations } from '@dxos/react-ui-table';
+import { TableType, initializeTable, translations as tableTranslations } from '@dxos/react-ui-table';
 import { type FieldProjection, ViewProjection, ViewType } from '@dxos/schema';
 
 import { TableContainer } from './components';
@@ -87,7 +87,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
                   id: `${TABLE_PLUGIN}/create/${node.id}`,
                   data: async () => {
                     await dispatch([
-                      { plugin: TABLE_PLUGIN, action: TableAction.CREATE },
+                      { plugin: TABLE_PLUGIN, action: TableAction.CREATE, data: { space } },
                       { action: SpaceAction.ADD_OBJECT, data: { target } },
                       { action: NavigationAction.OPEN },
                     ]);
@@ -119,7 +119,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
                 }
 
                 const space = getSpace(table);
-                const schema = space?.db.schemaRegistry.getSchema(table.view.query.__typename);
+                const schema = space?.db.schemaRegistry.getSchema(table.view.query.type);
                 const handleDelete = (fieldId: string) => {
                   void dispatch?.({
                     plugin: TABLE_PLUGIN,
@@ -170,8 +170,11 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case TableAction.CREATE: {
+              const { space } = intent.data as TableAction.Create;
+              const table = create(TableType, { name: '', threads: [] });
+              initializeTable({ space, table });
               return {
-                data: create(TableType, { name: '', threads: [] }),
+                data: table,
               };
             }
 
@@ -180,7 +183,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
               invariant(isTable(table));
               invariant(table.view);
 
-              const schema = getSpace(table)?.db.schemaRegistry.getSchema(table.view.query.__typename);
+              const schema = getSpace(table)?.db.schemaRegistry.getSchema(table.view.query.type);
               invariant(schema);
               const projection = new ViewProjection(schema, table.view);
 

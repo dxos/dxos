@@ -32,6 +32,7 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { StackItemContent } from '@dxos/react-ui-stack/next';
+import { textBlockWidth } from '@dxos/react-ui-theme';
 import { isNotFalsy, nonNullable } from '@dxos/util';
 
 import { useSelectCurrentThread } from '../hooks';
@@ -143,7 +144,7 @@ export const MarkdownEditor = ({
         moveToEndOfLine: true,
       }),
     }),
-    [id, initialValue, formattingObserver, viewMode, themeMode, extensions, providerExtensions],
+    [id, formattingObserver, viewMode, themeMode, extensions, providerExtensions],
   );
 
   useTest(editorView);
@@ -172,7 +173,7 @@ export const MarkdownEditor = ({
     <StackItemContent toolbar={toolbar}>
       {toolbar && (
         <Toolbar.Root
-          classNames={['attention-surface', !hasAttention && 'opacity-0.5']}
+          classNames={[textBlockWidth, !hasAttention && 'opacity-20']}
           state={formattingState && { ...formattingState, ...commentsState }}
           onAction={handleAction}
         >

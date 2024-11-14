@@ -99,15 +99,8 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
                 return [
                   {
                     id: `${MAP_PLUGIN}/toggle`,
-                    // TODO(burdon): ???
                     data: async () => {
-                      await dispatch([
-                        {
-                          plugin: MAP_PLUGIN,
-                          action: MapAction.TOGGLE,
-                          data: { object: node.data },
-                        },
-                      ]);
+                      await dispatch([{ plugin: MAP_PLUGIN, action: MapAction.TOGGLE, data: { object: node.data } }]);
                     },
                     properties: {
                       label: ['toggle type label', { ns: MAP_PLUGIN }],

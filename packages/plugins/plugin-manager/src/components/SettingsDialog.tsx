@@ -7,7 +7,6 @@ import React, { useState } from 'react';
 import { type PluginMeta, Surface, usePlugins } from '@dxos/app-framework';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 import { Tabs, type TabsActivePart } from '@dxos/react-ui-tabs';
-import { getSize } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { MANAGER_PLUGIN } from '../meta';
@@ -59,7 +58,8 @@ export const SettingsDialog = ({ selected, onSelected }: SettingsDialogProps) =>
         >
           <Icon
             icon='ph--caret-left--regular'
-            classNames={['@md:hidden', getSize(4), tabsActivePart === 'list' && 'invisible']}
+            size={4}
+            classNames={['@md:hidden', tabsActivePart === 'list' && 'invisible']}
           />
           <span
             className={
@@ -115,7 +115,7 @@ const PluginList = ({ title, plugins }: { title: string; plugins: PluginMeta[] }
   return (
     <div role='none'>
       <Tabs.TabGroupHeading classNames={'pli-1 mlb-2 mbs-4 @md:mbs-2'}>{title}</Tabs.TabGroupHeading>
-      <div className='flex flex-col ml-1'>
+      <div role='none' className='flex flex-col ml-1'>
         {plugins.map((plugin) => (
           <Tabs.Tab key={plugin.id} value={plugin.id}>
             {plugin.name}

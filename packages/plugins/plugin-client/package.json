@@ -41,6 +41,8 @@
     "@dxos/log": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/shell": "workspace:*",
     "@phosphor-icons/react": "^2.1.5"
   },
   "devDependencies": {

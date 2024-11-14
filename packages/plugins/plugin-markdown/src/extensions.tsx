@@ -92,7 +92,7 @@ export const useExtensions = ({
 
         return acc;
       }, []),
-    [extensionProviders],
+    [extensionProviders, document],
   );
 
   //
