@@ -113,6 +113,7 @@ export const NodePlankHeading = memo(
         <PlankHeading.Controls
           capabilities={capabilities}
           isSolo={layoutPart === 'solo'}
+          classNames='mis-1'
           onClick={(eventType) => {
             if (!layoutPart) {
               return;
