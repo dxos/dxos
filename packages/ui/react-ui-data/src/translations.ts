@@ -8,6 +8,10 @@ export default [
   {
     'en-US': {
       [translationKey]: {
+        'fields label': 'Fields',
+
+        // TODO(burdon): Standardize field/property.
+        'button add property': 'Add property',
         'field property label': 'Property',
         'field property placeholder': 'Property name',
         'field format label': 'Type',
@@ -15,8 +19,6 @@ export default [
         'add field': 'Add field',
         'delete field': 'Delete field',
         'field limit reached': 'Maximum number of fields reached',
-
-        'button add property': 'Add property',
 
         // TODO(burdon): Factor out?
         'button cancel': 'Cancel',

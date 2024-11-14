@@ -12,7 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { Filter, useSpaces, useQuery, create } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Grid, type GridEditing } from '@dxos/react-ui-grid';
+import { defaultSizeRow, Grid, type GridEditing } from '@dxos/react-ui-grid';
 import { ViewProjection, ViewType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -37,7 +37,7 @@ const DefaultStory = ({ editing }: StoryProps) => {
       const table = tables[0];
       invariant(table.view);
       setTable(table);
-      setSchema(space.db.schemaRegistry.getSchema(table.view.query.__typename));
+      setSchema(space.db.schemaRegistry.getSchema(table.view.query.type));
     }
   }, [tables]);
 
@@ -65,7 +65,7 @@ const DefaultStory = ({ editing }: StoryProps) => {
   }
 
   return (
-    <div className='flex w-[300px] h-[32px] border border-separator'>
+    <div className='flex w-[300px] border border-separator' style={{ height: defaultSizeRow }}>
       <Grid.Root id='test' editing={editing}>
         <TableCellEditor model={model} onQuery={handleQuery} />
       </Grid.Root>

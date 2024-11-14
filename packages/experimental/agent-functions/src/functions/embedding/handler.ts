@@ -43,7 +43,7 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context, respon
     async (objects: EchoReactiveObject<any>[]) => {
       for (const object of objects) {
         let pageContent: string | undefined;
-        log.info('processing', { object: { id: object.id, type: object.__typename } });
+        log.info('processing', { object: { id: object.id, type: object.type } });
         if (object instanceof DocumentType) {
           pageContent = (await loadObjectReferences(object, (o) => o.content)).content?.trim();
         } else if (object instanceof FileType) {

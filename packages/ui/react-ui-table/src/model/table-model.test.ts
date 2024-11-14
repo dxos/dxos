@@ -175,7 +175,7 @@ class Test extends TypedObject({ typename: 'example.com/type/Test', version: '0.
 
 const createTableModel = (props: Partial<TableModelProps> = {}): TableModel => {
   const schema = createMutableSchema(Test);
-  const view = createView({ typename: schema.typename, jsonSchema: schema.jsonSchema });
+  const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: schema.jsonSchema });
   const projection = new ViewProjection(schema, view);
   const table = create(TableType, { view });
   return new TableModel({ table, projection, ...props });

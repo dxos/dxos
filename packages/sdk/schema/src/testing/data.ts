@@ -50,6 +50,7 @@ export const testSchema: ReactiveObject<StoredSchema> = createStoredSchema({
 });
 
 export const testView: ReactiveObject<ViewType> = createView({
+  name: 'Test',
   typename: testSchema.typename,
   jsonSchema: toJsonSchema(TestSchema),
 });
