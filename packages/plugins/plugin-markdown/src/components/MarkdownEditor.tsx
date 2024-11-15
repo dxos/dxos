@@ -31,7 +31,7 @@ import {
   useFormattingState,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { StackItemContent } from '@dxos/react-ui-stack/next';
+import { StackItem } from '@dxos/react-ui-stack';
 import { textBlockWidth } from '@dxos/react-ui-theme';
 import { isNotFalsy, nonNullable } from '@dxos/util';
 
@@ -170,7 +170,7 @@ export const MarkdownEditor = ({
   };
 
   return (
-    <StackItemContent toolbar={toolbar}>
+    <StackItem.Content toolbar={toolbar}>
       {toolbar && (
         <Toolbar.Root
           classNames={[textBlockWidth, !hasAttention && 'opacity-20']}
@@ -192,7 +192,7 @@ export const MarkdownEditor = ({
         className='min-bs-0 ch-focus-ring-inset data-[toolbar=disabled]:pbs-2 attention-surface'
         {...focusAttributes}
       />
-    </StackItemContent>
+    </StackItem.Content>
   );
 };
 

@@ -18,7 +18,7 @@ import {
 import { debounce } from '@dxos/async';
 import { useGraph } from '@dxos/plugin-graph';
 import { useAttendableAttributes } from '@dxos/react-ui-attention';
-import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack/next';
+import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mainIntrinsicSize, mx } from '@dxos/react-ui-theme';
 
 import { NodePlankHeading } from './NodePlankHeading';
@@ -51,7 +51,7 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }
   const node = useNode(graph, entry?.id);
   const rootElement = useRef<HTMLDivElement | null>(null);
   const canResize = layoutMode === 'deck';
-  const Root = part === 'solo' ? 'div' : StackItem;
+  const Root = part === 'solo' ? 'div' : StackItem.Root;
 
   const attendableAttrs = useAttendableAttributes(coordinate.entryId);
   const index = indexInPart(layoutParts, coordinate);

@@ -6,7 +6,7 @@ import React, { Fragment } from 'react';
 
 import { getGraph, type Node } from '@dxos/app-graph';
 import { Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { PlankHeading } from '@dxos/react-ui-stack/next';
+import { StackItem } from '@dxos/react-ui-stack';
 
 import { KEY_BINDING, NAVTREE_PLUGIN } from '../meta';
 
@@ -30,7 +30,7 @@ export const NavBarStart = ({ activeNode, popoverAnchorId }: { activeNode: Node;
   return (
     <>
       <ActionRoot>
-        <PlankHeading.ActionsMenu
+        <StackItem.Sigil
           icon={activeNode.properties?.icon ?? 'ph--dots-three-vertical--regular'}
           attendableId={activeNode.id}
           triggerLabel={menuTriggerLabel}
@@ -40,7 +40,7 @@ export const NavBarStart = ({ activeNode, popoverAnchorId }: { activeNode: Node;
           }
         />
       </ActionRoot>
-      <PlankHeading.Label attendableId={activeNode.id}>{label}</PlankHeading.Label>
+      <StackItem.HeadingLabel attendableId={activeNode.id}>{label}</StackItem.HeadingLabel>
     </>
   );
 };

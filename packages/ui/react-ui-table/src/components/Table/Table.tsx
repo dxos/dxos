@@ -16,7 +16,7 @@ import { invariant } from '@dxos/invariant';
 import { Filter, getSpace, fullyQualifiedId } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
 import { type DxGridElement, Grid, type GridContentProps, closestCell } from '@dxos/react-ui-grid';
-import { StackItemContent } from '@dxos/react-ui-stack/next';
+import { StackItem } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 import { isNotFalsy } from '@dxos/util';
 
@@ -44,9 +44,9 @@ export type TableRootProps = PropsWithChildren<{ role?: string }>;
 
 const TableRoot = ({ children }: TableRootProps) => {
   return (
-    <StackItemContent toolbar contentSize='intrinsic' classNames='relative'>
+    <StackItem.Content toolbar contentSize='intrinsic' classNames='relative'>
       {children}
-    </StackItemContent>
+    </StackItem.Content>
   );
 };
 

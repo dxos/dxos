@@ -14,7 +14,7 @@ import {
 import { useGraph } from '@dxos/plugin-graph';
 import { Main } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
-import { railGridHorizontal } from '@dxos/react-ui-stack/next';
+import { railGridHorizontal } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 
 import { NodePlankHeading } from './NodePlankHeading';
