@@ -117,32 +117,34 @@ export const defaults = ({ isDev }: PluginConfig): PluginMeta[] =>
   ].filter(isNotFalsy);
 
 // TODO(burdon): Use meta tags to determine default/recommended/labs.
-export const recommended = ({ isLabs }: PluginConfig): PluginMeta[] => [
-  // prettier-ignore
-  AutomationMeta,
-  ChessMeta,
-  ExcalidrawMeta,
-  ExplorerMeta,
-  IpfsMeta,
-  MapMeta,
-  MermaidMeta,
-  PresenterMeta,
-  ScriptMeta,
-  SearchMeta,
-  StackMeta,
-  WnfsMeta,
+export const recommended = ({ isDev, isLabs }: PluginConfig): PluginMeta[] =>
+  [
+    // prettier-ignore
+    !isDev && DebugMeta,
+    AutomationMeta,
+    ChessMeta,
+    ExcalidrawMeta,
+    ExplorerMeta,
+    IpfsMeta,
+    MapMeta,
+    MermaidMeta,
+    PresenterMeta,
+    ScriptMeta,
+    SearchMeta,
+    StackMeta,
+    WnfsMeta,
 
-  ...(isLabs
-    ? [
-        // prettier-ignore
-        GithubMeta,
-        GridMeta,
-        InboxMeta,
-        KanbanMeta,
-        OutlinerMeta,
-      ]
-    : []),
-];
+    ...(isLabs
+      ? [
+          // prettier-ignore
+          GithubMeta,
+          GridMeta,
+          InboxMeta,
+          KanbanMeta,
+          OutlinerMeta,
+        ]
+      : []),
+  ].filter(isNotFalsy);
 
 /**
  * Individual plugin constructors.
