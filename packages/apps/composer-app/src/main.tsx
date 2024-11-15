@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import React, { StrictMode } from 'react';
+import React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { createApp } from '@dxos/app-framework';
@@ -116,9 +116,9 @@ const main = async () => {
   const root = document.getElementById('root')!;
   if (conf.isStrict) {
     createRoot(root).render(
-      <StrictMode>
-        <App />
-      </StrictMode>,
+      // <StrictMode>
+      <App />,
+      // </StrictMode>,
     );
   } else {
     createRoot(root).render(<App />);
