@@ -253,7 +253,9 @@ export const StackItemResizeHandle = (props: ButtonProps) => {
       icon={orientation === 'horizontal' ? 'ph--dots-six-vertical--regular' : 'ph--dots-six--regular'}
       classNames={[
         'ch-focus-ring !p-px rounded',
-        orientation === 'horizontal' ? 'self-center justify-self-end' : 'self-end justify-self-center',
+        orientation === 'horizontal'
+          ? 'self-center justify-self-end cursor cursor-col-resize'
+          : 'self-end justify-self-center cursor-row-resize',
       ]}
     />
   );
