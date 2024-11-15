@@ -278,9 +278,17 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
         },
       };
 
-      const classes = cellClassesForFieldType({ type: props.type, format: props.format });
-      if (classes) {
-        value.className = mx(classes);
+      const classes = [];
+      const classesForFieldType = cellClassesForFieldType({ type: props.type, format: props.format });
+      if (classesForFieldType) {
+        classes.push(classesForFieldType);
+      }
+      if (this._selection.selection.value.has(obj.id)) {
+        classes.push('!bg-gridCellSelected');
+      }
+
+      if (classes.length > 0) {
+        value.className = mx(classes.flat());
       }
 
       const idx = fromGridCell({ col: colIndex, row: displayIndex });
@@ -308,9 +316,9 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
       const { field, props } = this._projection.getFieldProjection(fields[col].id);
       values[fromGridCell({ col, row: 0 })] = {
         value: props.title ?? field.path,
+        readonly: true,
         resizeHandle: 'col',
         accessoryHtml: tableButtons.columnSettings.render({ fieldId: field.id }),
-        readonly: true,
       };
     }
 
@@ -320,10 +328,12 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
   private getSelectionColumnCells = (range: DxGridPlaneRange): DxGridPlaneCells => {
     const values: DxGridPlaneCells = {};
     for (let row = range.start.row; row <= range.end.row && row < this._rows.value.length; row++) {
+      const isSelected = this._selection.isRowIndexSelected(row);
       values[fromGridCell({ col: 0, row })] = {
         value: '',
-        accessoryHtml: tableControls.checkbox.render({ rowIndex: row, checked: this._selection.isSelected(row) }),
         readonly: true,
+        className: isSelected ? '!bg-gridCellSelected' : undefined,
+        accessoryHtml: tableControls.checkbox.render({ rowIndex: row, checked: isSelected }),
       };
     }
 
@@ -333,10 +343,12 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
   private getActionColumnCells = (range: DxGridPlaneRange): DxGridPlaneCells => {
     const values: DxGridPlaneCells = {};
     for (let row = range.start.row; row <= range.end.row && row < this._rows.value.length; row++) {
+      const isSelected = this._selection.isRowIndexSelected(row);
       values[fromGridCell({ col: 0, row })] = {
         value: '',
-        accessoryHtml: tableButtons.rowMenu.render({ rowIndex: row }),
         readonly: true,
+        className: isSelected ? '!bg-gridCellSelected' : undefined,
+        accessoryHtml: tableButtons.rowMenu.render({ rowIndex: row }),
       };
     }
 
