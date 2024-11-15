@@ -26,6 +26,7 @@ export const RowActionsMenu = ({ model }: RowActionsMenuProps) => {
         <DropdownMenu.Viewport>
           <DropdownMenu.Item onClick={() => model.deleteRow(state.rowIndex)}>{t('delete row label')}</DropdownMenu.Item>
         </DropdownMenu.Viewport>
+        <DropdownMenu.Arrow />
       </DropdownMenu.Content>
     </DropdownMenu.Root>
   );

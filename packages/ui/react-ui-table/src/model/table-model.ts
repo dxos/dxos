@@ -150,7 +150,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
 
       return {
         grid: meta,
-        frozenColsStart: { 0: { size: 40, resizeable: false } },
+        frozenColsStart: { 0: { size: 30, resizeable: false } },
         frozenColsEnd: { 0: { size: 40, resizeable: false } },
       };
     });
