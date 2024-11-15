@@ -10,7 +10,9 @@ import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Stack } from './Stack';
-import { StackItem, type StackItemData, StackItemHeading, StackItemResizeHandle } from './StackItem';
+import { StackItem, type StackItemData } from './StackItem';
+import { StackItemHeading } from './StackItemHeading';
+import { StackItemResizeHandle } from './StackItemResizeHandle';
 
 type StoryStackItem = {
   id: string;

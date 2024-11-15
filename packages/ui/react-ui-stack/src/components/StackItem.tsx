@@ -4,8 +4,6 @@
 
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { disableNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/disable-native-drag-preview';
-import { preventUnhandled } from '@atlaskit/pragmatic-drag-and-drop/prevent-unhandled';
 import {
   attachClosestEdge,
   type Edge,
@@ -14,29 +12,17 @@ import {
 import { DropIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import { composeRefs } from '@radix-ui/react-compose-refs';
-import React, {
-  forwardRef,
-  useLayoutEffect,
-  useState,
-  createContext,
-  type ComponentPropsWithoutRef,
-  type ComponentPropsWithRef,
-  useContext,
-  useRef,
-  useCallback,
-} from 'react';
+import React, { forwardRef, useLayoutEffect, useState, type ComponentPropsWithRef, useCallback } from 'react';
 
-import { type ThemedClassName, useTranslation, type ButtonProps, IconButton } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useStack } from './Stack';
-import { translationKey } from '../translations';
+import { useStack, StackItemContext } from './StackContext';
 
 export type StackItemSize = number | 'min-content';
 export const DEFAULT_HORIZONTAL_SIZE = 44 satisfies StackItemSize;
 export const DEFAULT_VERTICAL_SIZE = 'min-content' satisfies StackItemSize;
 export const DEFAULT_EXTRINSIC_SIZE = DEFAULT_HORIZONTAL_SIZE satisfies StackItemSize;
-const REM = parseFloat(getComputedStyle(document.documentElement).fontSize);
 
 export type StackItemData = { id: string; type: 'column' | 'card' };
 
@@ -47,20 +33,6 @@ export type StackItemProps = ThemedClassName<ComponentPropsWithRef<'div'>> & {
   size?: StackItemSize;
   onSizeChange?: (nextSize: StackItemSize) => void;
 };
-
-type StackItemContextValue = {
-  selfDragHandleRef: (element: HTMLDivElement | null) => void;
-  size: StackItemSize;
-  setSize: (nextSize: StackItemSize, commit?: boolean) => void;
-};
-
-const StackItemContext = createContext<StackItemContextValue>({
-  selfDragHandleRef: () => {},
-  size: 'min-content',
-  setSize: () => {},
-});
-
-const useStackItem = () => useContext(StackItemContext);
 
 export const StackItem = forwardRef<HTMLDivElement, StackItemProps>(
   (
@@ -162,139 +134,3 @@ export const StackItem = forwardRef<HTMLDivElement, StackItemProps>(
     );
   },
 );
-
-export type StackItemHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
-
-export const StackItemHeading = ({ children, classNames, ...props }: StackItemHeadingProps) => {
-  const { orientation } = useStack();
-  const { selfDragHandleRef } = useStackItem();
-  const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
-  return (
-    <div
-      role='heading'
-      {...props}
-      tabIndex={0}
-      {...focusableGroupAttrs}
-      className={mx(
-        'grid ch-focus-ring-inset-over-all relative',
-        orientation === 'horizontal' ? 'bs-[--rail-size]' : 'is-[--rail-size]',
-        classNames,
-      )}
-      ref={selfDragHandleRef}
-    >
-      {children}
-    </div>
-  );
-};
-
-const measureStackItem = (element: HTMLButtonElement): { width: number; height: number } => {
-  const stackItemElement = element.closest('[data-dx-stack-item]');
-  return stackItemElement?.getBoundingClientRect() ?? { width: DEFAULT_EXTRINSIC_SIZE, height: DEFAULT_EXTRINSIC_SIZE };
-};
-
-export const StackItemResizeHandle = (props: ButtonProps) => {
-  const { t } = useTranslation(translationKey);
-  const { orientation } = useStack();
-  const { setSize, size } = useStackItem();
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const dragStartSize = useRef<StackItemSize>(size);
-  const client = orientation === 'horizontal' ? 'clientX' : 'clientY';
-
-  useLayoutEffect(
-    () => {
-      if (!buttonRef.current || buttonRef.current.hasAttribute('draggable')) {
-        return;
-      }
-      // TODO(thure): This should handle StackItem state vs local state better.
-      draggable({
-        element: buttonRef.current,
-        onGenerateDragPreview: ({ nativeSetDragImage }) => {
-          // we will be moving the line to indicate a drag
-          // we can disable the native drag preview
-          disableNativeDragPreview({ nativeSetDragImage });
-          // we don't want any native drop animation for when the user
-          // does not drop on a drop target. we want the drag to finish immediately
-          preventUnhandled.start();
-        },
-        onDragStart: () => {
-          dragStartSize.current =
-            dragStartSize.current === 'min-content'
-              ? measureStackItem(buttonRef.current!)[orientation === 'horizontal' ? 'width' : 'height'] / REM
-              : dragStartSize.current;
-        },
-        onDrag: ({ location }) => {
-          if (typeof dragStartSize.current !== 'number') {
-            return;
-          }
-          setSize(dragStartSize.current + (location.current.input[client] - location.initial.input[client]) / REM);
-        },
-        onDrop: ({ location }) => {
-          if (typeof dragStartSize.current !== 'number') {
-            return;
-          }
-          const nextSize =
-            dragStartSize.current + (location.current.input[client] - location.initial.input[client]) / REM;
-          setSize(nextSize, true);
-          dragStartSize.current = nextSize;
-        },
-      });
-    },
-    [
-      // Note that `size` should not be a dependency here since dragging this adjusts the size.
-    ],
-  );
-
-  return (
-    <IconButton
-      iconOnly
-      variant='ghost'
-      ref={buttonRef}
-      label={t('resize label')}
-      icon={orientation === 'horizontal' ? 'ph--dots-six-vertical--regular' : 'ph--dots-six--regular'}
-      classNames={[
-        'ch-focus-ring !p-px rounded',
-        orientation === 'horizontal' ? 'self-center justify-self-end' : 'self-end justify-self-center',
-      ]}
-    />
-  );
-};
-
-export type StackItemContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
-  toolbar?: boolean;
-  statusbar?: boolean;
-  contentSize?: 'cover' | 'intrinsic';
-};
-
-export const StackItemContent = ({
-  children,
-  toolbar = true,
-  statusbar,
-  contentSize = 'cover',
-  classNames,
-  ...props
-}: StackItemContentProps) => {
-  const { size, separators } = useStack();
-
-  return (
-    <div
-      role='none'
-      {...props}
-      className={mx(
-        'group',
-        contentSize === 'intrinsic' ? 'flex flex-col' : 'grid',
-        size === 'contain' && 'min-bs-0 overflow-hidden',
-        separators && 'divide-separator divide-y',
-        classNames,
-      )}
-      style={{
-        gridTemplateRows: [
-          ...(toolbar ? ['var(--rail-action)'] : []),
-          '1fr',
-          ...(statusbar ? ['var(--statusbar-size)'] : []),
-        ].join(' '),
-      }}
-    >
-      {children}
-    </div>
-  );
-};

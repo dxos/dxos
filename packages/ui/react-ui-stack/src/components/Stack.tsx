@@ -3,39 +3,18 @@
 //
 
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
-import React, {
-  Children,
-  type CSSProperties,
-  type ComponentPropsWithRef,
-  forwardRef,
-  createContext,
-  useContext,
-} from 'react';
+import React, { Children, type CSSProperties, type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
+
+import { type StackContextValue, StackContext } from './StackContext';
 
 export type Orientation = 'horizontal' | 'vertical';
 export type Size = 'intrinsic' | 'contain';
 
 export type StackProps = Omit<ThemedClassName<ComponentPropsWithRef<'div'>>, 'aria-orientation'> &
   Partial<StackContextValue> & { itemsCount?: number };
-
-export type StackContextValue = {
-  orientation: Orientation;
-  separators: boolean;
-  rail: boolean;
-  size: Size;
-};
-
-export const StackContext = createContext<StackContextValue>({
-  orientation: 'vertical',
-  rail: true,
-  size: 'intrinsic',
-  separators: true,
-});
-
-export const useStack = () => useContext(StackContext);
 
 export const railGridHorizontal = 'grid-rows-[[rail-start]_var(--rail-size)_[content-start]_1fr_[content-end]]';
 
