@@ -51,7 +51,7 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }
   const node = useNode(graph, entry?.id);
   const rootElement = useRef<HTMLDivElement | null>(null);
   const canResize = layoutMode === 'deck';
-  const Root = part === 'solo' ? 'div' : StackItem;
+  const Root = part === 'solo' ? 'article' : StackItem;
 
   const attendableAttrs = useAttendableAttributes(coordinate.entryId);
   const index = indexInPart(layoutParts, coordinate);
