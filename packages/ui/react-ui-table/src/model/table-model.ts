@@ -38,7 +38,7 @@ export type TableModelProps<T extends BaseTableRow = { id: string }> = {
   sorting?: SortConfig[];
   pinnedRows?: { top: number[]; bottom: number[] };
   onInsertRow?: (index?: number) => void;
-  onDeleteRow?: (index: number, obj: T) => void;
+  onDeleteRows?: (index: number, obj: T[]) => void;
   onDeleteColumn?: (fieldId: string) => void;
   onCellUpdate?: (cell: GridCell) => void;
   onRowOrderChanged?: () => void;
@@ -63,7 +63,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
   private readonly _displayToDataIndex: Map<number, number> = new Map();
 
   private readonly _onInsertRow?: TableModelProps<T>['onInsertRow'];
-  private readonly _onDeleteRow?: TableModelProps<T>['onDeleteRow'];
+  private readonly _onDeleteRows?: TableModelProps<T>['onDeleteRows'];
   private readonly _onDeleteColumn?: TableModelProps<T>['onDeleteColumn'];
   private readonly _onCellUpdate?: TableModelProps<T>['onCellUpdate'];
   private readonly _onRowOrderChanged?: TableModelProps<T>['onRowOrderChanged'];
@@ -85,7 +85,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     pinnedRows = { top: [], bottom: [] },
     onCellUpdate,
     onDeleteColumn,
-    onDeleteRow,
+    onDeleteRows,
     onInsertRow,
     onRowOrderChanged,
   }: TableModelProps<T>) {
@@ -96,7 +96,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     this._sorting.value = sorting.at(0);
     this._pinnedRows = pinnedRows;
     this._onInsertRow = onInsertRow;
-    this._onDeleteRow = onDeleteRow;
+    this._onDeleteRows = onDeleteRows;
     this._onDeleteColumn = onDeleteColumn;
     this._onCellUpdate = onCellUpdate;
     this._onRowOrderChanged = onRowOrderChanged;
@@ -389,12 +389,16 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
   public deleteRow = (rowIndex: number): void => {
     const row = this._displayToDataIndex.get(rowIndex) ?? rowIndex;
     const obj = this._rows.value[row];
+    const objectsToDelete = [];
 
     if (this._selection.hasSelection.value) {
-      console.warn('TODO: Handle bulk deletion.');
+      const selectedRows = this._selection.getSelectedRows();
+      objectsToDelete.push(...selectedRows);
+    } else {
+      objectsToDelete.push(obj);
     }
 
-    this._onDeleteRow?.(row, obj);
+    this._onDeleteRows?.(row, objectsToDelete);
   };
 
   public getCellData = ({ col, row }: GridCell): any => {

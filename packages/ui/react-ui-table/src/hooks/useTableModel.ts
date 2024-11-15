@@ -14,7 +14,7 @@ export type UseTableModelParams<T extends BaseTableRow = { id: string }> = {
   table?: TableType;
   projection?: ViewProjection;
   objects?: ReactiveObject<T>[];
-} & Pick<TableModelProps<T>, 'onInsertRow' | 'onDeleteRow' | 'onDeleteColumn' | 'onCellUpdate' | 'onRowOrderChanged'>;
+} & Pick<TableModelProps<T>, 'onInsertRow' | 'onDeleteRows' | 'onDeleteColumn' | 'onCellUpdate' | 'onRowOrderChanged'>;
 
 export const useTableModel = <T extends BaseTableRow = { id: string }>({
   objects,

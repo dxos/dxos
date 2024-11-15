@@ -1296,13 +1296,6 @@ export const SpacePlugin = ({
                 return;
               }
 
-              // All objects must be in the same collection.
-              const parentCollection = intent.data?.collection ?? space.properties[CollectionType.typename];
-              if (!intent.undo) {
-                invariant(parentCollection instanceof CollectionType);
-                invariant(objects.every((obj) => parentCollection.objects.includes(obj)));
-              }
-
               const resolve = resolvePlugin(plugins, parseMetadataResolverPlugin)?.provides.metadata.resolver;
               const activeParts = navigationPlugin?.provides.location.active;
               const openObjectIds = new Set<string>(openIds(activeParts ?? {}));
