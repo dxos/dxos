@@ -21,6 +21,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { VIEW_FIELD_LIMIT, type ViewProjection, type FieldType } from '@dxos/schema';
 
 import { ModalController } from './modal-controller';
+import { SelectionModel } from './selection-model';
 import { type TableType } from '../types';
 import { fromGridCell, type GridCell } from '../util';
 import { tableButtons, touch } from '../util';
@@ -73,15 +74,8 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
 
   private _pinnedRows: NonNullable<TableModelProps<T>['pinnedRows']>;
 
-  // TODO(ZaymonFC: Selection management should be in a standalone class
-  private readonly _rowSelection = signal<Set<string>>(new Set());
-  private readonly _hasRowSelection = computed(() => this._rowSelection.value.size > 0);
-  private readonly _allRowsSelected = computed(
-    () => this._sortedRows.value.length > 0 && this._rowSelection.value.size === this._sortedRows.value.length,
-  );
-
+  private _selection!: SelectionModel<T>;
   private _columnMeta?: ReadonlySignal<DxGridAxisMeta>;
-
   private readonly _modalController = new ModalController();
 
   constructor({
@@ -129,16 +123,12 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     return this._sorting.value;
   }
 
-  public get selection(): ReadonlySignal<Set<string>> {
-    return this._rowSelection;
-  }
-
-  public get hasRowSelection(): ReadonlySignal<boolean> {
-    return this._hasRowSelection;
-  }
-
   public get modalController() {
     return this._modalController;
+  }
+
+  public get selection() {
+    return this._selection;
   }
 
   //
@@ -149,6 +139,8 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     this.initializeColumnMeta();
     this.initializeSorting();
     this.initializeEffects();
+    this._selection = new SelectionModel(this._sortedRows, () => this._onRowOrderChanged?.());
+    await this._selection.open(this._ctx);
   }
 
   private initializeColumnMeta(): void {
@@ -224,12 +216,6 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
       return () => rowEffects.forEach((cleanup) => cleanup());
     });
     this._ctx.onDispose(rowEffectManager);
-
-    const rowSelectionWatcher = effect(() => {
-      touch(this._rowSelection.value);
-      this._onRowOrderChanged?.();
-    });
-    this._ctx.onDispose(rowSelectionWatcher);
   }
 
   //
@@ -336,7 +322,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     for (let row = range.start.row; row <= range.end.row && row < this._rows.value.length; row++) {
       values[fromGridCell({ col: 0, row })] = {
         value: '',
-        accessoryHtml: tableControls.checkbox.render({ rowIndex: row, checked: this.getRowSelectionAt(row) }),
+        accessoryHtml: tableControls.checkbox.render({ rowIndex: row, checked: this._selection.isSelected(row) }),
         readonly: true,
       };
     }
@@ -364,7 +350,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
         accessoryHtml: tableControls.checkbox.render({
           rowIndex: 0,
           header: true,
-          checked: this._allRowsSelected.value,
+          checked: this._selection.allSelected.value,
         }),
         readonly: true,
       },
@@ -404,7 +390,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     const row = this._displayToDataIndex.get(rowIndex) ?? rowIndex;
     const obj = this._rows.value[row];
 
-    if (this._hasRowSelection.value) {
+    if (this._selection.hasSelection.value) {
       console.warn('TODO: Handle bulk deletion.');
     }
 
@@ -499,14 +485,14 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
       if (selectionCheckbox) {
         const isHeader = selectionCheckbox.hasAttribute(tableControls.checkbox.attributes.header);
         if (isHeader) {
-          if (this._allRowsSelected.value) {
-            this.bulkSelectRows('none');
+          if (this._selection.allSelected.value) {
+            this._selection.bulkSelect('none');
           } else {
-            this.bulkSelectRows('all');
+            this._selection.bulkSelect('all');
           }
         } else {
           const rowIndex = Number(selectionCheckbox.getAttribute(tableControls.checkbox.attributes.checkbox));
-          this.toggleRowSelection(rowIndex);
+          this._selection.toggle(rowIndex);
         }
       }
     }
@@ -551,37 +537,5 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
   public unpinRow(rowIndex: number): void {
     this._pinnedRows.top = this._pinnedRows.top.filter((index: number) => index !== rowIndex);
     this._pinnedRows.bottom = this._pinnedRows.bottom.filter((index: number) => index !== rowIndex);
-  }
-
-  //
-  // Selection
-  //
-
-  public getRowSelectionAt(displayIndex: number): boolean {
-    const row = this._sortedRows.value[displayIndex];
-    return this._rowSelection.value.has(row.id);
-  }
-
-  public toggleRowSelection(displayIndex: number): void {
-    const row = this._sortedRows.value[displayIndex];
-    const newSelection = new Set(this._rowSelection.value);
-    if (newSelection.has(row.id)) {
-      newSelection.delete(row.id);
-    } else {
-      newSelection.add(row.id);
-    }
-    this._rowSelection.value = newSelection;
-  }
-
-  public bulkSelectRows(mode: 'all' | 'none'): void {
-    if (mode === 'all') {
-      const newSet = new Set<string>();
-      this._sortedRows.value.forEach((row) => {
-        newSet.add(row.id);
-      });
-      this._rowSelection.value = newSet;
-    } else {
-      this._rowSelection.value = new Set();
-    }
   }
 }

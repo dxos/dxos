@@ -1,0 +1,83 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import { computed, effect, signal, type ReadonlySignal } from '@preact/signals-core';
+
+import { Resource } from '@dxos/context';
+
+import { type BaseTableRow } from './table-model';
+import { touch } from '../util';
+
+export class SelectionModel<T extends BaseTableRow> extends Resource {
+  private readonly _selection = signal<Set<string>>(new Set());
+
+  private readonly _validSelectedIds = computed(() => {
+    const rows = this._rows.value;
+    if (!rows) {
+      return new Set<string>();
+    }
+
+    const validIds = new Set(rows.map((row) => row.id));
+    return new Set([...this._selection.value].filter((id) => validIds.has(id)));
+  });
+
+  private readonly _hasSelection = computed(() => this._validSelectedIds.value.size > 0);
+
+  private readonly _allSelected = computed(() => {
+    const rows = this._rows.value;
+    if (rows.length === 0) {
+      return false;
+    }
+    return rows.every((row) => this._selection.value.has(row.id));
+  });
+
+  constructor(
+    private readonly _rows: ReadonlySignal<T[]>,
+    private readonly _onSelectionChanged?: () => void,
+  ) {
+    super();
+  }
+
+  protected override async _open() {
+    const selectionWatcher = effect(() => {
+      touch(this._selection.value);
+      this._onSelectionChanged?.();
+    });
+    this._ctx.onDispose(selectionWatcher);
+  }
+
+  public get selection(): ReadonlySignal<Set<string>> {
+    return this._selection;
+  }
+
+  public get hasSelection(): ReadonlySignal<boolean> {
+    return this._hasSelection;
+  }
+
+  public get allSelected(): ReadonlySignal<boolean> {
+    return this._allSelected;
+  }
+
+  public isSelected = (rowIndex: number): boolean => {
+    const row = this._rows.value[rowIndex];
+    return this._selection.value.has(row.id);
+  };
+
+  public toggle = (rowIndex: number): void => {
+    const row = this._rows.value[rowIndex];
+    const newSelection = new Set(this._selection.value);
+
+    if (newSelection.has(row.id)) {
+      newSelection.delete(row.id);
+    } else {
+      newSelection.add(row.id);
+    }
+
+    this._selection.value = newSelection;
+  };
+
+  public bulkSelect = (mode: 'all' | 'none'): void => {
+    this._selection.value = mode === 'all' ? new Set(this._rows.value.map((row) => row.id)) : new Set();
+  };
+}
