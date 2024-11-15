@@ -64,6 +64,10 @@ export class SelectionModel<T extends BaseTableRow> extends Resource {
     return this._rows.value.filter((row) => selectedIds.has(row.id));
   };
 
+  public isObjectSelected = (object: T): boolean => {
+    return this._selection.value.has(object.id);
+  };
+
   public isRowIndexSelected = (rowIndex: number): boolean => {
     const row = this._rows.value[rowIndex];
     return this._selection.value.has(row.id);
