@@ -29,8 +29,8 @@ import { useAttention } from '@dxos/react-ui-attention';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
-import { translationKey } from '../../translations';
-import { StackItemResizeHandle } from '../StackItem';
+import { StackItemResizeHandle } from './StackItem';
+import { translationKey } from '../translations';
 
 // TODO(thure): Dedupe (also in react-ui-navtree)
 export type KeyBinding = {
