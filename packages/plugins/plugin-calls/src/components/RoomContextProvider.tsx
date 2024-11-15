@@ -29,15 +29,18 @@ interface RoomData {
 }
 
 interface RoomProps extends RoomData {
+  username: string;
   roomName: string;
   children: ReactNode;
 }
 
 export const RoomContextProvider = ({
+  username,
   roomName,
   iceServers,
   children,
 }: {
+  username: string;
   roomName: string;
   iceServers: RTCIceServer[];
   children: ReactNode;
@@ -64,7 +67,7 @@ export const RoomContextProvider = ({
   return (
     <EnsurePermissions>
       <EnsureOnline>
-        <Room roomName={roomName!} {...roomData}>
+        <Room roomName={roomName!} {...roomData} username={username}>
           {children}
         </Room>
       </EnsureOnline>
@@ -73,6 +76,7 @@ export const RoomContextProvider = ({
 };
 
 const Room = ({
+  username,
   roomName,
   mode,
   iceServers,
@@ -86,7 +90,7 @@ const Room = ({
   const [dataSaverMode, setDataSaverMode] = useState(false);
 
   const userMedia = useUserMedia(mode);
-  const room = useRoom({ roomName, userMedia });
+  const room = useRoom({ roomName, userMedia, username });
   const { peer, iceConnectionState } = usePeerConnection({
     maxApiHistory,
     // apiExtraParams,

@@ -10,7 +10,7 @@ import { CALLS_URL } from '../../types';
 import type { ClientMessage, RoomState, ServerMessage } from '../types/Messages';
 import assertNever from '../utils/assertNever';
 
-export default ({ roomName, userMedia }: { roomName: string; userMedia: UserMedia }) => {
+export default ({ roomName, userMedia, username }: { roomName: string; userMedia: UserMedia; username: string }) => {
   const [roomState, setRoomState] = useState<RoomState>({ users: [] });
 
   const userLeftFunctionRef = useRef(() => {});
@@ -23,6 +23,7 @@ export default ({ roomName, userMedia }: { roomName: string; userMedia: UserMedi
     host: CALLS_URL,
     party: 'rooms',
     room: roomName,
+    query: { username },
     onMessage: (e) => {
       const message = JSON.parse(e.data) as ServerMessage;
       switch (message.type) {

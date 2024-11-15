@@ -56,9 +56,14 @@ export const OverflowMenu: FC<{}> = () => {
           </DropdownMenu.Content>
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
-      {settingsMenuOpen && <SettingsDialog open onOpenChange={setSettingMenuOpen} />}
+      {settingsMenuOpen && <SettingsDialog open={settingsMenuOpen} onOpenChange={setSettingMenuOpen} />}
       {participantsMenuOpen && (
-        <ParticipantsDialog otherUsers={otherUsers} identity={identity} open onOpenChange={setParticipantsMenuOpen} />
+        <ParticipantsDialog
+          otherUsers={otherUsers}
+          identity={identity}
+          open={participantsMenuOpen}
+          onOpenChange={setParticipantsMenuOpen}
+        />
       )}
     </>
   );
