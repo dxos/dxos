@@ -13,7 +13,7 @@ import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
 import { type MigrateCanvas } from '@dxos/plugin-sketch/sdk';
 import { DiagramType, CanvasType, TLDRAW_SCHEMA } from '@dxos/plugin-sketch/types';
 import { CollectionType, ChannelType, ThreadType, MessageType } from '@dxos/plugin-space/types';
-import { TableType } from '@dxos/plugin-table/types';
+import { TableType } from '@dxos/react-ui-table/types';
 import { getDeep, isNode, nonNullable } from '@dxos/util';
 
 import * as LegacyTypes from './legacy-types';

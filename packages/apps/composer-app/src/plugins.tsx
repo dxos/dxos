@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type HostPluginParams, NavigationAction, Plugin, type PluginMeta } from '@dxos/app-framework';
+import { type HostPluginParams, LayoutAction, NavigationAction, Plugin, type PluginMeta } from '@dxos/app-framework';
 import { type Trigger } from '@dxos/async';
 import { type Config, type ClientServicesProvider } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
@@ -50,7 +50,7 @@ import WildcardMeta from '@dxos/plugin-wildcard/meta';
 import WnfsMeta from '@dxos/plugin-wnfs/meta';
 import { isNotFalsy } from '@dxos/util';
 
-import { INITIAL_COLLECTION_TITLE, INITIAL_CONTENT, INITIAL_DOC_TITLE } from './constants';
+import { INITIAL_CONTENT, INITIAL_DOC_TITLE } from './constants';
 import { steps } from './help';
 import { meta as WelcomeMeta } from './plugins/welcome/meta';
 
@@ -102,7 +102,6 @@ export const core = ({ isPwa, isSocket }: PluginConfig): PluginMeta[] =>
     NavTreeMeta,
     ManagerMeta,
     RegistryMeta,
-    StackMeta,
     StatusBarMeta,
     WildcardMeta,
   ].filter(isNotFalsy);
@@ -119,32 +118,35 @@ export const defaults = ({ isDev }: PluginConfig): PluginMeta[] =>
   ].filter(isNotFalsy);
 
 // TODO(burdon): Use meta tags to determine default/recommended/labs.
-export const recommended = ({ isLabs }: PluginConfig): PluginMeta[] => [
-  // prettier-ignore
-  AutomationMeta,
-  ChessMeta,
-  CallsMeta,
-  ExcalidrawMeta,
-  ExplorerMeta,
-  IpfsMeta,
-  MapMeta,
-  MermaidMeta,
-  PresenterMeta,
-  ScriptMeta,
-  SearchMeta,
-  WnfsMeta,
+export const recommended = ({ isDev, isLabs }: PluginConfig): PluginMeta[] =>
+  [
+    // prettier-ignore
+    !isDev && DebugMeta,
+    AutomationMeta,
+    ChessMeta,
+    CallsMeta,
+    ExcalidrawMeta,
+    ExplorerMeta,
+    IpfsMeta,
+    MapMeta,
+    MermaidMeta,
+    PresenterMeta,
+    ScriptMeta,
+    SearchMeta,
+    StackMeta,
+    WnfsMeta,
 
-  ...(isLabs
-    ? [
-        // prettier-ignore
-        GithubMeta,
-        GridMeta,
-        InboxMeta,
-        KanbanMeta,
-        OutlinerMeta,
-      ]
-    : []),
-];
+    ...(isLabs
+      ? [
+          // prettier-ignore
+          GithubMeta,
+          GridMeta,
+          InboxMeta,
+          KanbanMeta,
+          OutlinerMeta,
+        ]
+      : []),
+  ].filter(isNotFalsy);
 
 /**
  * Individual plugin constructors.
@@ -167,7 +169,6 @@ export const plugins = ({
     appKey,
     config,
     services,
-    shell: './shell.html',
     onClientInitialized: async (client) => {
       const { LegacyTypes } = await import('./migrations');
       client.addTypes([
@@ -181,18 +182,17 @@ export const plugins = ({
         LegacyTypes.TextType,
         LegacyTypes.ThreadType,
       ]);
+    },
+    onReset: async ({ target }) => {
+      localStorage.clear();
 
-      client.shell.onReset((target) => {
-        localStorage.clear();
-
-        if (target === 'deviceInvitation') {
-          window.location.assign(new URL('/?deviceInvitationCode=', window.location.origin));
-        } else if (target === 'recoverIdentity') {
-          window.location.assign(new URL('/?recoverIdentity=true', window.location.origin));
-        } else {
-          window.location.pathname = '/';
-        }
-      });
+      if (target === 'deviceInvitation') {
+        window.location.assign(new URL('/?deviceInvitationCode=', window.location.origin));
+      } else if (target === 'recoverIdentity') {
+        window.location.assign(new URL('/?recoverIdentity=true', window.location.origin));
+      } else {
+        window.location.pathname = '/';
+      }
     },
   }),
   [DebugMeta.id]: Plugin.lazy(() => import('@dxos/plugin-debug')),
@@ -236,23 +236,28 @@ export const plugins = ({
       const { DocumentType, TextType } = await import('@dxos/plugin-markdown/types');
       const { CollectionType } = await import('@dxos/plugin-space/types');
 
-      const readme = create(CollectionType, { name: INITIAL_COLLECTION_TITLE, objects: [], views: {} });
-      INITIAL_CONTENT.forEach((content, index) => {
-        readme.objects.push(
-          create(DocumentType, {
-            name: index === 0 ? INITIAL_DOC_TITLE : undefined,
-            content: create(TextType, { content: content + '\n' }),
-            threads: [],
-          }),
-        );
+      const readme = create(DocumentType, {
+        name: INITIAL_DOC_TITLE,
+        content: create(TextType, { content: INITIAL_CONTENT.join('\n\n') }),
+        threads: [],
       });
 
       const defaultSpaceCollection = client.spaces.default.properties[CollectionType.typename] as CollectionType;
       defaultSpaceCollection?.objects.push(readme);
 
-      void dispatch({
-        action: NavigationAction.OPEN,
-        data: { activeParts: { main: [fullyQualifiedId(readme)] } },
+      await dispatch([
+        {
+          action: LayoutAction.SET_LAYOUT_MODE,
+          data: { layoutMode: 'solo' },
+        },
+        {
+          action: NavigationAction.OPEN,
+          data: { activeParts: { main: [fullyQualifiedId(readme)] } },
+        },
+      ]);
+      await dispatch({
+        action: NavigationAction.EXPOSE,
+        data: { id: fullyQualifiedId(readme) },
       });
     },
   }),

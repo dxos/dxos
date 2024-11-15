@@ -10,7 +10,7 @@ export const THREAD_ITEM = `${THREAD_PLUGIN}/item`;
 export default {
   id: THREAD_PLUGIN,
   name: 'Threads',
-  description: 'Comment threads on documents.',
+  description: 'Add comment threads to objects.',
   icon: 'ph--chat--regular',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-thread',
 } satisfies PluginMeta;

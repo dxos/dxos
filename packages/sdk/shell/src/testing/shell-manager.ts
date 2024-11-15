@@ -94,6 +94,8 @@ export class ShellManager extends ScopedShellManager {
   async createSpaceInvitation(): Promise<string> {
     this._invitationCode = new Trigger<string>();
     this._authCode = new Trigger<string>();
+    await this.shell.getByTestId('spaces-panel.create-invitation.more').click();
+    await this.shell.getByTestId('spaces-panel.invite-one').click();
     await this.shell.getByTestId('spaces-panel.create-invitation').click();
     return await this._invitationCode.wait();
   }

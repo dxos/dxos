@@ -13,8 +13,9 @@ import type {
 import { type SchemaProvides } from '@dxos/plugin-client';
 import { type SpaceInitProvides } from '@dxos/plugin-space';
 import { type StackProvides } from '@dxos/plugin-stack';
+import { type Space } from '@dxos/react-client/echo';
+import { TableType } from '@dxos/react-ui-table/types';
 
-import { TableType } from './table';
 import { TABLE_PLUGIN } from '../meta';
 
 const TABLE_ACTION = `${TABLE_PLUGIN}/action`;
@@ -25,7 +26,7 @@ export enum TableAction {
 }
 
 export namespace TableAction {
-  export type Create = IntentData<{ table: TableType }>;
+  export type Create = IntentData<{ space: Space }>;
   export type DeleteColumn = IntentData<{ table: TableType; fieldId: string }>;
 }
 

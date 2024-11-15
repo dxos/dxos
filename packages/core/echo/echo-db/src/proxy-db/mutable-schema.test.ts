@@ -14,6 +14,7 @@ import {
   ref,
   TypedObject,
   S,
+  getTypename,
 } from '@dxos/echo-schema';
 import { EmptySchemaType } from '@dxos/echo-schema/testing';
 
@@ -84,6 +85,7 @@ describe('MutableSchema', () => {
 
     expect(getSchema(object)?.ast).to.deep.eq(schema.ast);
     expect(getType(object)?.objectId).to.be.eq(schema.id);
+    expect(getTypename(object)).to.be.eq(EmptySchemaType.typename);
 
     db.add(object);
     const queried = (await db.query(Filter.schema(schema)).run()).objects;
@@ -97,8 +99,7 @@ describe('MutableSchema', () => {
     expect(getTypeReference(schema)?.objectId).to.eq(schema.id);
   });
 
-  // TODO(burdon): Throws Predicate refinement error.
-  test.skip('mutable schema refs', async () => {
+  test('mutable schema refs', async () => {
     const { db } = await setupTest();
 
     const OrgSchema = TypedObject({
@@ -120,7 +121,7 @@ describe('MutableSchema', () => {
     const contactSchema = db.schemaRegistry.addSchema(ContactSchema);
     const org = db.add(create(orgSchema, { name: 'DXOS' }));
     const contact = db.add(create(contactSchema, { name: 'Bot', org }));
-    console.log(org, contact);
+    expect(contact.org?.id).to.eq(org.id);
   });
 
   const setupTest = async () => {

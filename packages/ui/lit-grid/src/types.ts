@@ -26,6 +26,7 @@ export type DxGridAnnotatedWheelEvent = WheelEvent &
   Partial<{
     overscrollInline: number;
     overscrollBlock: number;
+    gridId: string;
   }>;
 
 export type DxGridPlaneCells = Record<DxGridCellIndex, DxGridCellValue>;

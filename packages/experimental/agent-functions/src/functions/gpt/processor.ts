@@ -112,7 +112,7 @@ export class RequestProcessor {
   ): Promise<ModelInvocationArgs | undefined> {
     log.info('create sequence', {
       context: {
-        object: { space: space.key, id: context.object?.id, schema: context.object?.__typename },
+        object: { space: space.key, id: context.object?.id, schema: context.object?.type },
       },
       options,
     });

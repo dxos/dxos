@@ -103,7 +103,7 @@ const main = async () => {
     placeholder: (
       <ThemeProvider tx={defaultTx}>
         <div className='flex flex-col justify-end bs-dvh'>
-          <Status indeterminate aria-label='Initializing' classNames='is-full' />
+          <Status variant='main-bottom' indeterminate aria-label='Initializing' />
         </div>
       </ThemeProvider>
     ),

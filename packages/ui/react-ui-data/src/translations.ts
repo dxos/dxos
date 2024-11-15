@@ -8,9 +8,21 @@ export default [
   {
     'en-US': {
       [translationKey]: {
+        'fields label': 'Fields',
+
+        // TODO(burdon): Standardize field/property.
+        'button add property': 'Add property',
         'field property label': 'Property',
         'field property placeholder': 'Property name',
         'field format label': 'Type',
+        'field path label': 'Field path',
+        'add field': 'Add field',
+        'delete field': 'Delete field',
+        'field limit reached': 'Maximum number of fields reached',
+
+        // TODO(burdon): Factor out?
+        'button cancel': 'Cancel',
+        'button save': 'Save',
 
         // FormatEnum
         'format boolean': 'Boolean',

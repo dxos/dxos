@@ -13,20 +13,21 @@ import {
   type LayoutCoordinate,
 } from '@dxos/app-framework';
 import { type Node, useGraph } from '@dxos/plugin-graph';
-import { Icon, Popover, toLocalizedString, useMediaQuery, useTranslation } from '@dxos/react-ui';
-import { PlankHeading, type PlankHeadingAction } from '@dxos/react-ui-deck';
+import { Icon, Popover, toLocalizedString, useMediaQuery, useTranslation, IconButton } from '@dxos/react-ui';
+import { PlankHeading, type PlankHeadingAction } from '@dxos/react-ui-stack/next';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 
 import { DECK_PLUGIN } from '../../meta';
+import { useLayout } from '../LayoutContext';
 
 export type NodePlankHeadingProps = {
   coordinate: LayoutCoordinate;
   node?: Node;
   canIncrementStart?: boolean;
   canIncrementEnd?: boolean;
+  canResize?: boolean;
   popoverAnchorId?: string;
   pending?: boolean;
-  flatDeck?: boolean;
   actions?: PlankHeadingAction[];
 };
 
@@ -36,11 +37,12 @@ export const NodePlankHeading = memo(
     node,
     canIncrementStart,
     canIncrementEnd,
+    canResize,
     popoverAnchorId,
     pending,
-    flatDeck,
     actions = [],
   }: NodePlankHeadingProps) => {
+    const layoutContext = useLayout();
     const { t } = useTranslation(DECK_PLUGIN);
     const { graph } = useGraph();
     const icon = node?.properties?.icon ?? 'ph--placeholder--regular';
@@ -68,14 +70,13 @@ export const NodePlankHeading = memo(
         solo: (layoutPart === 'solo' || layoutPart === 'main') && isNotMobile,
         incrementStart: canIncrementStart,
         incrementEnd: canIncrementEnd,
+        resize: canResize,
       }),
-      [isNotMobile, layoutPart, canIncrementStart, canIncrementEnd],
+      [isNotMobile, layoutPart, canIncrementStart, canIncrementEnd, canResize],
     );
 
     return (
-      <PlankHeading.Root
-        {...((layoutPart !== 'main' || !flatDeck) && { classNames: 'pie-1 border-b border-separator' })}
-      >
+      <PlankHeading.Root classNames='pie-1'>
         <ActionRoot>
           {node ? (
             <PlankHeading.ActionsMenu
@@ -114,6 +115,7 @@ export const NodePlankHeading = memo(
         <PlankHeading.Controls
           capabilities={capabilities}
           isSolo={layoutPart === 'solo'}
+          classNames='mis-1'
           onClick={(eventType) => {
             if (!layoutPart) {
               return;
@@ -154,7 +156,19 @@ export const NodePlankHeading = memo(
             }
           }}
           close={layoutPart === 'complementary' ? 'minify-end' : true}
-        />
+        >
+          {layoutPart !== 'complementary' && (
+            <IconButton
+              iconOnly
+              onClick={() => (layoutContext.complementarySidebarOpen = !layoutContext.complementarySidebarOpen)}
+              variant='ghost'
+              label={t('open complementary sidebar label')}
+              classNames='!p-1 -scale-x-100'
+              icon='ph--sidebar--regular'
+              tooltipZIndex='70'
+            />
+          )}
+        </PlankHeading.Controls>
       </PlankHeading.Root>
     );
   },

@@ -7,7 +7,7 @@ import { type DID } from 'iso-did/types';
 import { Trigger } from '@dxos/async';
 import { type Config } from '@dxos/client';
 import { type Halo } from '@dxos/client-protocol';
-import { type ObjectMeta } from '@dxos/echo-schema';
+import { type JsonSchemaType, type ObjectMeta } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -27,6 +27,9 @@ export type UserFunctionUploadResult = {
   errorMessage?: string;
   functionId?: string;
   functionVersionNumber?: number;
+  meta: {
+    inputSchema?: JsonSchemaType;
+  };
 };
 
 export type UploadWorkerProps = {

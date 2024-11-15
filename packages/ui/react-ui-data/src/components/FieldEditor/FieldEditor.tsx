@@ -74,6 +74,7 @@ export const FieldEditor = ({ view, projection, field, registry, onClose }: Fiel
         if (props.type !== type) {
           return { ...props, ..._props, type };
         }
+
         return props;
       });
     },

@@ -20,9 +20,13 @@ import { type GridEditBox } from '../Grid';
 
 export type EditorKeyEvent = Pick<KeyboardEvent<HTMLInputElement>, 'key'> & { shift?: boolean };
 
+export type EditorKeyHandler = (value: string | undefined, event: EditorKeyEvent) => void;
+export type EditorBlurHandler = (value: string | undefined) => void;
+export type EditorKeyOrBlurHandler = (value: string | undefined, event?: EditorKeyEvent) => void;
+
 export type EditorKeysProps = {
-  onClose: (value: string | undefined, event: EditorKeyEvent) => void;
-  onNav?: (value: string | undefined, event: EditorKeyEvent) => void;
+  onClose: EditorKeyHandler;
+  onNav?: EditorKeyHandler;
 };
 
 // TODO(Zan): Should each consumer be responsible for defining these?
@@ -119,7 +123,7 @@ const editorVariants = {
     root: 'absolute z-[1]',
     editor: '[&>.cm-scroller]:scrollbar-none tabular-nums',
     // This must match cell styling in `dx-grid.pcss`.
-    content: '!border !border-transparent !pli-[3px] !plb-0.5',
+    content: '!border !border-transparent !pli-[4px] !plb-0.5',
   },
 };
 
@@ -129,7 +133,7 @@ export type CellEditorProps = {
   variant?: keyof typeof editorVariants;
   box?: GridEditBox;
   gridId?: string;
-} & Pick<UseTextEditorProps, 'autoFocus'> & { onBlur?: (value?: string) => void };
+} & Pick<UseTextEditorProps, 'autoFocus'> & { onBlur?: EditorBlurHandler };
 
 export const CellEditor = ({
   value,
@@ -177,7 +181,7 @@ export const CellEditor = ({
       className={editorVariants[variant].root}
       style={{
         ...box,
-        ...{ '--dx-gridCellWidth': box ? `${box.inlineSize}px` : undefined },
+        ...{ '--dx-gridCellWidth': `${box?.inlineSize ?? 200}px` },
       }}
       {...(gridId && { 'data-grid': gridId })}
     />

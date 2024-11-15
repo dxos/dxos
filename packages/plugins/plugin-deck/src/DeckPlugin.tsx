@@ -37,21 +37,12 @@ import { scheduledEffect } from '@dxos/echo-signals/core';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { parseAttentionPlugin, type AttentionPluginProvides } from '@dxos/plugin-attention';
-import { parseClientPlugin, type ClientPluginProvides } from '@dxos/plugin-client';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { translations as deckTranslations } from '@dxos/react-ui-deck';
+import { translations as stackTranslations } from '@dxos/react-ui-stack';
 
-import {
-  DeckLayout,
-  type DeckLayoutProps,
-  LayoutContext,
-  LayoutSettings,
-  NAV_ID,
-  DeckContext,
-  type DeckContextType,
-} from './components';
+import { DeckLayout, LayoutContext, LayoutSettings, NAV_ID, DeckContext, type DeckContextType } from './components';
 import {
   closeEntry,
   incrementPlank,
@@ -77,14 +68,6 @@ const isSocket = !!(globalThis as any).__args;
 
 // TODO(mjamesderocher): Can we get this directly from Socket?
 const appScheme = 'composer://';
-
-// TODO(burdon): Evolve into customizable prefs.
-const customSlots: DeckLayoutProps['slots'] = {
-  wallpaper: {
-    classNames:
-      'bg-cover bg-no-repeat dark:bg-[url(https://cdn.midjourney.com/3865ba61-f98a-4d94-b91a-1763ead01f4f/0_0.jpeg)]',
-  },
-};
 
 // NOTE(Zan): When producing values with immer, we shouldn't auto-freeze them because
 // our signal implementation needs to add some hidden properties to the produced values.
@@ -113,7 +96,6 @@ export const DeckPlugin = ({
   // TODO(burdon): GraphPlugin vs. IntentPluginProvides? (@wittjosiah).
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
   let attentionPlugin: Plugin<AttentionPluginProvides> | undefined;
-  let clientPlugin: Plugin<ClientPluginProvides> | undefined;
   const unsubscriptionCallbacks = [] as (UnsubscribeCallback | undefined)[];
   let currentUndoId: string | undefined;
   let handleNavigation: () => Promise<void> | undefined;
@@ -226,7 +208,6 @@ export const DeckPlugin = ({
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       attentionPlugin = resolvePlugin(plugins, parseAttentionPlugin);
-      clientPlugin = resolvePlugin(plugins, parseClientPlugin);
 
       layout
         .prop({ key: 'layoutMode', type: LocalStorageStore.enum<LayoutMode>() })
@@ -241,14 +222,6 @@ export const DeckPlugin = ({
 
       panels.push(
         ...filterPlugins(plugins, parsePanelPlugin).flatMap((plugin) => plugin.provides.complementary.panels),
-      );
-
-      unsubscriptionCallbacks.push(
-        clientPlugin?.provides.client.shell.onReset(() => {
-          layout.expunge();
-          location.expunge();
-          deck.expunge();
-        }),
       );
 
       settings
@@ -274,12 +247,13 @@ export const DeckPlugin = ({
           return;
         }
 
+        const startingLayout = removePart(location.values.active, 'solo');
         const layoutFromUri = uriToSoloPart(pathname);
         if (!layoutFromUri) {
+          handleSetLocation(startingLayout);
           return;
         }
 
-        const startingLayout = removePart(location.values.active, 'solo');
         handleSetLocation(mergeLayoutParts(layoutFromUri, startingLayout));
         layout.values.layoutMode = 'solo';
       };
@@ -309,7 +283,7 @@ export const DeckPlugin = ({
       settings: settings.values,
       layout: layout.values,
       location: location.values,
-      translations: [...translations, ...deckTranslations],
+      translations: [...translations, ...stackTranslations],
       graph: {
         builder: () => {
           // TODO(burdon): Root menu isn't visible so nothing bound.
@@ -352,8 +326,6 @@ export const DeckPlugin = ({
             layoutParts={location.values.active}
             showHints={settings.values.showHints}
             overscroll={settings.values.overscroll}
-            flatDeck={settings.values.flatDeck}
-            slots={settings.values.customSlots ? customSlots : undefined}
             toasts={layout.values.toasts}
             panels={panels}
             onDismissToast={(id) => {
