@@ -73,7 +73,9 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
 
   private _pinnedRows: NonNullable<TableModelProps<T>['pinnedRows']>;
 
+  // TODO(ZaymonFC: Selection management should be in a standalone class
   private readonly _rowSelection = signal<Set<string>>(new Set());
+  private readonly _hasRowSelection = computed(() => this._rowSelection.value.size > 0);
   private readonly _allRowsSelected = computed(
     () => this._sortedRows.value.length > 0 && this._rowSelection.value.size === this._sortedRows.value.length,
   );
@@ -125,6 +127,14 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
 
   public get sorting(): SortConfig | undefined {
     return this._sorting.value;
+  }
+
+  public get selection(): ReadonlySignal<Set<string>> {
+    return this._rowSelection;
+  }
+
+  public get hasRowSelection(): ReadonlySignal<boolean> {
+    return this._hasRowSelection;
   }
 
   public get modalController() {
@@ -326,7 +336,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     for (let row = range.start.row; row <= range.end.row && row < this._rows.value.length; row++) {
       values[fromGridCell({ col: 0, row })] = {
         value: '',
-        accessoryHtml: tableControls.checkbox.render({ rowIndex: row, checked: this.getRowSelection(row) }),
+        accessoryHtml: tableControls.checkbox.render({ rowIndex: row, checked: this.getRowSelectionAt(row) }),
         readonly: true,
       };
     }
@@ -393,6 +403,11 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
   public deleteRow = (rowIndex: number): void => {
     const row = this._displayToDataIndex.get(rowIndex) ?? rowIndex;
     const obj = this._rows.value[row];
+
+    if (this._hasRowSelection.value) {
+      console.warn('TODO: Handle bulk deletion.');
+    }
+
     this._onDeleteRow?.(row, obj);
   };
 
@@ -542,7 +557,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
   // Selection
   //
 
-  public getRowSelection(displayIndex: number): boolean {
+  public getRowSelectionAt(displayIndex: number): boolean {
     const row = this._sortedRows.value[displayIndex];
     return this._rowSelection.value.has(row.id);
   }

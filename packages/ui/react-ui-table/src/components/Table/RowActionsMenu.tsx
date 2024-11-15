@@ -14,6 +14,7 @@ type RowActionsMenuProps = { model: TableModel };
 export const RowActionsMenu = ({ model }: RowActionsMenuProps) => {
   const { t } = useTranslation(translationKey);
   const state = model.modalController.state.value;
+  const hasSelection = model.hasSelection.value;
 
   if (state?.type !== 'row') {
     return null;
@@ -24,7 +25,9 @@ export const RowActionsMenu = ({ model }: RowActionsMenuProps) => {
       <DropdownMenu.VirtualTrigger virtualRef={model.modalController.trigger} />
       <DropdownMenu.Content>
         <DropdownMenu.Viewport>
-          <DropdownMenu.Item onClick={() => model.deleteRow(state.rowIndex)}>{t('delete row label')}</DropdownMenu.Item>
+          <DropdownMenu.Item onClick={() => model.deleteRow(state.rowIndex)}>
+            {t(hasSelection ? 'bulk delete row label' : 'delete row label')}
+          </DropdownMenu.Item>
         </DropdownMenu.Viewport>
         <DropdownMenu.Arrow />
       </DropdownMenu.Content>
