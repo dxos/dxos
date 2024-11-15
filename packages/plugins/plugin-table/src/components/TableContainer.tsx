@@ -46,7 +46,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
 
   const handleDeleteRow = useCallback(
     (_row: number, object: any) => {
-      void dispatch({ action: SpaceAction.REMOVE_OBJECT, data: { object } });
+      void dispatch({ action: SpaceAction.REMOVE_OBJECTS, data: { objects: [object] } });
     },
     [dispatch],
   );
