@@ -71,16 +71,10 @@ export const WelcomePlugin = ({
         const credential = credentials.find(matchServiceCredential(['composer:beta']));
         if (credential) {
           log('beta credential found', { credential });
-          await dispatch([
-            {
-              action: LayoutAction.SET_LAYOUT_MODE,
-              data: { layoutMode: 'solo' },
-            },
-            {
-              action: NavigationAction.CLOSE,
-              data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
-            },
-          ]);
+          await dispatch({
+            action: NavigationAction.CLOSE,
+            data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
+          });
           subscription.unsubscribe();
         }
       });
