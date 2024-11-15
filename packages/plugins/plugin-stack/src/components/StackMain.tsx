@@ -20,20 +20,21 @@ import { type CollectionType } from '@dxos/plugin-space/types';
 import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { AttentionProvider } from '@dxos/react-ui-attention';
 import { type MosaicDataItem, type MosaicDropEvent, type MosaicMoveEvent, Mosaic, Path } from '@dxos/react-ui-mosaic';
-import {
-  type AddSectionPosition,
-  type CollapsedSections,
-  Stack,
-  type StackProps,
-  type StackSectionItem,
-} from '@dxos/react-ui-stack';
+import { Stack } from '@dxos/react-ui-stack';
 import { nonNullable } from '@dxos/util';
 
 import { AddSection } from './AddSection';
 import { SECTION_IDENTIFIER, STACK_PLUGIN } from '../meta';
-import { StackViewType } from '../types';
+import {
+  StackViewType,
+  type CollectionItem,
+  type CollapsedSections,
+  type StackSectionMetadata,
+  type StackSectionView,
+  type AddSectionPosition,
+} from '../types';
 
-const SectionContent: StackProps['SectionContent'] = ({ data }) => {
+const _SectionContent = ({ data }: { data: CollectionItem }) => {
   // TODO(wittjosiah): Better section placeholder.
   return <Surface role='section' data={{ object: data }} limit={1} placeholder={<></>} />;
 };
@@ -67,17 +68,17 @@ const StackMain = ({ id, collection, separation }: StackMainProps) => {
       .map((object) => {
         const metadata = metadataPlugin?.provides.metadata.resolver(
           getType(object)?.objectId ?? 'never',
-        ) as StackSectionItem['metadata'];
+        ) as StackSectionMetadata;
         const view = {
           ...stack.sections[object.id],
           collapsed: collapsedSections[fullyQualifiedId(object)],
           title:
             (object as any)?.title ?? toLocalizedString(graph.findNode(fullyQualifiedId(object))?.properties.label, t),
-        } as StackSectionItem['view'];
+        } as StackSectionView;
         return { id: fullyQualifiedId(object), object, metadata, view };
       }) ?? [];
 
-  const handleOver = ({ active, over }: MosaicMoveEvent<number>) => {
+  const _handleOver = ({ active, over }: MosaicMoveEvent<number>) => {
     // TODO(thure): Eventually Stack should handle foreign draggables.
     if (active.type !== SECTION_IDENTIFIER) {
       return 'reject';
@@ -103,7 +104,7 @@ const StackMain = ({ id, collection, separation }: StackMainProps) => {
     }
   };
 
-  const handleDrop = ({ operation, active, over }: MosaicDropEvent<number>) => {
+  const _handleDrop = ({ operation, active, over }: MosaicDropEvent<number>) => {
     if (
       (active.path === Path.create(id, active.item.id) || active.path === id) &&
       (operation !== 'copy' || over.path === Path.create(id, over.item.id) || over.path === id)
@@ -125,7 +126,7 @@ const StackMain = ({ id, collection, separation }: StackMainProps) => {
     }
   };
 
-  const handleDelete = async (path: string) => {
+  const _handleDelete = async (path: string) => {
     const index = collection.objects
       .filter(nonNullable)
       .findIndex((section) => fullyQualifiedId(section) === Path.last(path));
@@ -142,7 +143,7 @@ const StackMain = ({ id, collection, separation }: StackMainProps) => {
 
   // TODO(wittjosiah): Factor out.
 
-  const handleNavigate = async (object: MosaicDataItem) => {
+  const _handleNavigate = async (object: MosaicDataItem) => {
     const toId = fullyQualifiedId(object);
     await dispatch([
       {
@@ -156,7 +157,7 @@ const StackMain = ({ id, collection, separation }: StackMainProps) => {
     ]);
   };
 
-  const handleAddSection = (path: string, position: AddSectionPosition) => {
+  const _handleAddSection = (path: string, position: AddSectionPosition) => {
     void dispatch?.({
       action: LayoutAction.SET_LAYOUT,
       data: {
@@ -167,7 +168,7 @@ const StackMain = ({ id, collection, separation }: StackMainProps) => {
     });
   };
 
-  const handleCollapseSection = (id: string, collapsed: boolean) => {
+  const _handleCollapseSection = (id: string, collapsed: boolean) => {
     setCollapsedSections((prev) => ({ ...prev, [id]: collapsed }));
   };
 
@@ -175,21 +176,7 @@ const StackMain = ({ id, collection, separation }: StackMainProps) => {
     <AttentionProvider id={id}>
       <Mosaic.Root>
         <Mosaic.DragOverlay />
-        <Stack
-          id={id}
-          data-testid='main.stack'
-          SectionContent={SectionContent}
-          type={SECTION_IDENTIFIER}
-          items={items}
-          separation={separation}
-          emptyComponent={<span data-testid='stack.empty'></span>}
-          onDrop={handleDrop}
-          onOver={handleOver}
-          onDeleteSection={handleDelete}
-          onNavigateToSection={handleNavigate}
-          onAddSection={handleAddSection}
-          onCollapseSection={handleCollapseSection}
-        />
+        <Stack orientation='vertical' size='intrinsic' id={id} data-testid='main.stack'></Stack>
 
         {items.length === 0 ? (
           <AddSection collection={collection} />
