@@ -157,7 +157,7 @@ export const NodePlankHeading = memo(
           }}
           close={layoutPart === 'complementary' ? 'minify-end' : true}
         >
-          {layoutPart === 'main' && (
+          {layoutPart !== 'complementary' && (
             <IconButton
               iconOnly
               onClick={() => (layoutContext.complementarySidebarOpen = !layoutContext.complementarySidebarOpen)}
