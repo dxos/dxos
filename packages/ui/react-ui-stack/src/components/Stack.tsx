@@ -73,3 +73,6 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
     );
   },
 );
+
+export { StackContext };
+export type { StackContextValue };

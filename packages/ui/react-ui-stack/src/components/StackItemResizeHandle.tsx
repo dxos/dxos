@@ -7,7 +7,7 @@ import { disableNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/elem
 import { preventUnhandled } from '@atlaskit/pragmatic-drag-and-drop/prevent-unhandled';
 import React, { useLayoutEffect, useRef } from 'react';
 
-import { type ButtonProps, useTranslation, IconButton } from '@dxos/react-ui';
+import { useTranslation, IconButton } from '@dxos/react-ui';
 
 import { useStack, useStackItem } from './StackContext';
 import { DEFAULT_EXTRINSIC_SIZE, type StackItemSize } from './StackItem';
@@ -20,7 +20,7 @@ const measureStackItem = (element: HTMLButtonElement): { width: number; height: 
   return stackItemElement?.getBoundingClientRect() ?? { width: DEFAULT_EXTRINSIC_SIZE, height: DEFAULT_EXTRINSIC_SIZE };
 };
 
-export const StackItemResizeHandle = (props: ButtonProps) => {
+export const StackItemResizeHandle = () => {
   const { t } = useTranslation(translationKey);
   const { orientation } = useStack();
   const { setSize, size } = useStackItem();

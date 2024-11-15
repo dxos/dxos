@@ -18,6 +18,16 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useStack, StackItemContext } from './StackContext';
+import { StackItemContent, type StackItemContentProps } from './StackItemContent';
+import { StackItemHeading, type StackItemHeadingProps } from './StackItemHeading';
+import { StackItemResizeHandle } from './StackItemResizeHandle';
+import {
+  StackItemSigil,
+  type StackItemSigilProps,
+  type StackItemSigilAction,
+  type StackItemSigilButtonProps,
+  StackItemSigilButton,
+} from './StackItemSigil';
 
 export type StackItemSize = number | 'min-content';
 export const DEFAULT_HORIZONTAL_SIZE = 44 satisfies StackItemSize;
@@ -26,7 +36,7 @@ export const DEFAULT_EXTRINSIC_SIZE = DEFAULT_HORIZONTAL_SIZE satisfies StackIte
 
 export type StackItemData = { id: string; type: 'column' | 'card' };
 
-export type StackItemProps = ThemedClassName<ComponentPropsWithRef<'div'>> & {
+export type StackItemRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> & {
   item: Omit<StackItemData, 'type'>;
   order?: number;
   onRearrange?: (source: StackItemData, target: StackItemData, closestEdge: Edge | null) => void;
@@ -34,7 +44,7 @@ export type StackItemProps = ThemedClassName<ComponentPropsWithRef<'div'>> & {
   onSizeChange?: (nextSize: StackItemSize) => void;
 };
 
-export const StackItem = forwardRef<HTMLDivElement, StackItemProps>(
+const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
   (
     { item, children, classNames, onRearrange, size: propsSize, onSizeChange, order, style, ...props },
     forwardedRef,
@@ -134,3 +144,20 @@ export const StackItem = forwardRef<HTMLDivElement, StackItemProps>(
     );
   },
 );
+
+export const StackItem = {
+  Root: StackItemRoot,
+  Content: StackItemContent,
+  Heading: StackItemHeading,
+  ResizeHandle: StackItemResizeHandle,
+  Sigil: StackItemSigil,
+  SigilButton: StackItemSigilButton,
+};
+
+export type {
+  StackItemContentProps,
+  StackItemHeadingProps,
+  StackItemSigilProps,
+  StackItemSigilButtonProps,
+  StackItemSigilAction,
+};

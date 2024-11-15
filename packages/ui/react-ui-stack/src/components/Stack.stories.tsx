@@ -11,8 +11,6 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { Stack } from './Stack';
 import { StackItem, type StackItemData } from './StackItem';
-import { StackItemHeading } from './StackItemHeading';
-import { StackItemResizeHandle } from './StackItemResizeHandle';
 
 type StoryStackItem = {
   id: string;
@@ -97,21 +95,21 @@ const StorybookStack = () => {
     <main className='fixed inset-0'>
       <Stack orientation='horizontal' size='contain'>
         {columns.map((column) => (
-          <StackItem key={column.id} item={column} onRearrange={reorderItem}>
-            <StackItemHeading>
-              <StackItemResizeHandle />
-            </StackItemHeading>
+          <StackItem.Root key={column.id} item={column} onRearrange={reorderItem}>
+            <StackItem.Heading>
+              <StackItem.ResizeHandle />
+            </StackItem.Heading>
             <Stack orientation='vertical' size='contain'>
               {column.items?.map((card) => (
-                <StackItem key={card.id} item={card} onRearrange={reorderItem}>
-                  <StackItemHeading>
-                    <StackItemResizeHandle />
-                  </StackItemHeading>
+                <StackItem.Root key={card.id} item={card} onRearrange={reorderItem}>
+                  <StackItem.Heading>
+                    <StackItem.ResizeHandle />
+                  </StackItem.Heading>
                   <KanbanBlock item={card} />
-                </StackItem>
+                </StackItem.Root>
               ))}
             </Stack>
-          </StackItem>
+          </StackItem.Root>
         ))}
       </Stack>
     </main>

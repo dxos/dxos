@@ -19,7 +19,7 @@ import {
 } from '@dxos/react-ui-editor';
 import { focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
-import { StackItemContent, type StackItemContentProps } from '../components/StackItem';
+import { StackItem, type StackItemContentProps } from '../components';
 
 export const EditorContent = ({ data: { content = '' } }: { data: StackItemContentProps & { content?: string } }) => {
   const { themeMode } = useThemeContext();
@@ -44,7 +44,7 @@ export const EditorContent = ({ data: { content = '' } }: { data: StackItemConte
   const handleAction = useActionHandler(view);
 
   return (
-    <StackItemContent contentSize='intrinsic'>
+    <StackItem.Content contentSize='intrinsic'>
       <div {...focusAttributes} className={mx(textBlockWidth, focusRing, 'rounded-sm order-last')} ref={parentRef} />
       <Toolbar.Root
         onAction={handleAction}
@@ -54,6 +54,6 @@ export const EditorContent = ({ data: { content = '' } }: { data: StackItemConte
         <Toolbar.Markdown />
         <Toolbar.Separator />
       </Toolbar.Root>
-    </StackItemContent>
+    </StackItem.Content>
   );
 };
