@@ -52,20 +52,20 @@ describe('TableModel', () => {
     });
 
     it('should toggle row selection', () => {
-      model.selection.toggle(2);
+      model.selection.toggleSelectionForRowIndex(2);
       expect(model.selection.hasSelection.value).toBe(true);
     });
 
     it('should deselect a row', () => {
-      model.selection.toggle(2);
-      model.selection.toggle(2);
+      model.selection.toggleSelectionForRowIndex(2);
+      model.selection.toggleSelectionForRowIndex(2);
       expect(model.selection.hasSelection.value).toBe(false);
     });
 
     it('should bulk select rows', () => {
-      model.selection.bulkSelect('all');
-      expect(model.selection.allSelected.value).toBe(true);
-      model.selection.bulkSelect('none');
+      model.selection.setSelection('all');
+      expect(model.selection.allRowsSeleted.value).toBe(true);
+      model.selection.setSelection('none');
       expect(model.selection.hasSelection.value).toBe(false);
     });
   });

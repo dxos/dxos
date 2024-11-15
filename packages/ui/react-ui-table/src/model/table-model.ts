@@ -370,7 +370,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
         accessoryHtml: tableControls.checkbox.render({
           rowIndex: 0,
           header: true,
-          checked: this._selection.allSelected.value,
+          checked: this._selection.allRowsSeleted.value,
         }),
         readonly: true,
       },
@@ -509,14 +509,14 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
       if (selectionCheckbox) {
         const isHeader = selectionCheckbox.hasAttribute(tableControls.checkbox.attributes.header);
         if (isHeader) {
-          if (this._selection.allSelected.value) {
-            this._selection.bulkSelect('none');
+          if (this._selection.allRowsSeleted.value) {
+            this._selection.setSelection('none');
           } else {
-            this._selection.bulkSelect('all');
+            this._selection.setSelection('all');
           }
         } else {
           const rowIndex = Number(selectionCheckbox.getAttribute(tableControls.checkbox.attributes.checkbox));
-          this._selection.toggle(rowIndex);
+          this._selection.toggleSelectionForRowIndex(rowIndex);
         }
       }
     }
