@@ -24,18 +24,18 @@ import { ModalController } from './modal-controller';
 import { type TableType } from '../types';
 import { fromGridCell, type GridCell } from '../util';
 import { tableButtons, touch } from '../util';
+import { tableControls } from '../util/table-controls';
 
 export type SortDirection = 'asc' | 'desc';
 export type SortConfig = { fieldId: string; direction: SortDirection };
 
-export type BaseTableRow = Record<JsonProp, any>;
+export type BaseTableRow = Record<JsonProp, any> & { id: string };
 
-export type TableModelProps<T extends BaseTableRow = {}> = {
+export type TableModelProps<T extends BaseTableRow = { id: string }> = {
   table: TableType;
   projection: ViewProjection;
   sorting?: SortConfig[];
   pinnedRows?: { top: number[]; bottom: number[] };
-  rowSelection?: number[];
   onInsertRow?: (index?: number) => void;
   onDeleteRow?: (index: number, obj: T) => void;
   onDeleteColumn?: (fieldId: string) => void;
@@ -43,7 +43,7 @@ export type TableModelProps<T extends BaseTableRow = {}> = {
   onRowOrderChanged?: () => void;
 };
 
-export class TableModel<T extends BaseTableRow = {}> extends Resource {
+export class TableModel<T extends BaseTableRow = { id: string }> extends Resource {
   public readonly id = `table-model-${PublicKey.random().truncate()}`;
 
   private readonly _table: TableType;
@@ -72,7 +72,12 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
   private _rows = signal<T[]>([]);
 
   private _pinnedRows: NonNullable<TableModelProps<T>['pinnedRows']>;
-  private _rowSelection: NonNullable<TableModelProps<T>['rowSelection']>;
+
+  private readonly _rowSelection = signal<Set<string>>(new Set());
+  private readonly _allRowsSelected = computed(
+    () => this._sortedRows.value.length > 0 && this._rowSelection.value.size === this._sortedRows.value.length,
+  );
+
   private _columnMeta?: ReadonlySignal<DxGridAxisMeta>;
 
   private readonly _modalController = new ModalController();
@@ -82,7 +87,6 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
     projection,
     sorting = [],
     pinnedRows = { top: [], bottom: [] },
-    rowSelection = [],
     onCellUpdate,
     onDeleteColumn,
     onDeleteRow,
@@ -95,8 +99,6 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
 
     this._sorting.value = sorting.at(0);
     this._pinnedRows = pinnedRows;
-    this._rowSelection = rowSelection;
-
     this._onInsertRow = onInsertRow;
     this._onDeleteRow = onDeleteRow;
     this._onDeleteColumn = onDeleteColumn;
@@ -114,10 +116,6 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
 
   public get pinnedRows(): NonNullable<TableModelProps<T>['pinnedRows']> {
     return this._pinnedRows;
-  }
-
-  public get rowSelection(): NonNullable<TableModelProps<T>['rowSelection']> {
-    return this._rowSelection;
   }
 
   public get columnMeta(): ReadonlySignal<DxGridAxisMeta> {
@@ -152,9 +150,8 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
 
       return {
         grid: meta,
-        frozenColsEnd: {
-          0: { size: 40, resizeable: false },
-        },
+        frozenColsStart: { 0: { size: 40, resizeable: false } },
+        frozenColsEnd: { 0: { size: 40, resizeable: false } },
       };
     });
   }
@@ -217,6 +214,12 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
       return () => rowEffects.forEach((cleanup) => cleanup());
     });
     this._ctx.onDispose(rowEffectManager);
+
+    const rowSelectionWatcher = effect(() => {
+      touch(this._rowSelection.value);
+      this._onRowOrderChanged?.();
+    });
+    this._ctx.onDispose(rowSelectionWatcher);
   }
 
   //
@@ -232,8 +235,14 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
       case 'frozenRowsStart': {
         return this.getHeaderCells(range);
       }
+      case 'frozenColsStart': {
+        return this.getSelectionColumnCells(range);
+      }
       case 'frozenColsEnd': {
         return this.getActionColumnCells(range);
+      }
+      case 'fixedStartStart': {
+        return this.getSelectAllCell();
       }
       case 'fixedStartEnd': {
         return this.getNewColumnCell();
@@ -312,6 +321,19 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
     return values;
   };
 
+  private getSelectionColumnCells = (range: DxGridPlaneRange): DxGridPlaneCells => {
+    const values: DxGridPlaneCells = {};
+    for (let row = range.start.row; row <= range.end.row && row < this._rows.value.length; row++) {
+      values[fromGridCell({ col: 0, row })] = {
+        value: '',
+        accessoryHtml: tableControls.checkbox.render({ rowIndex: row, checked: this.getRowSelection(row) }),
+        readonly: true,
+      };
+    }
+
+    return values;
+  };
+
   private getActionColumnCells = (range: DxGridPlaneRange): DxGridPlaneCells => {
     const values: DxGridPlaneCells = {};
     for (let row = range.start.row; row <= range.end.row && row < this._rows.value.length; row++) {
@@ -323,6 +345,20 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
     }
 
     return values;
+  };
+
+  private getSelectAllCell = (): DxGridPlaneCells => {
+    return {
+      [fromGridCell({ col: 0, row: 0 })]: {
+        value: '',
+        accessoryHtml: tableControls.checkbox.render({
+          rowIndex: 0,
+          header: true,
+          checked: this._allRowsSelected.value,
+        }),
+        readonly: true,
+      },
+    };
   };
 
   private getNewColumnCell = (): DxGridPlaneCells => {
@@ -441,9 +477,24 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
   // Interactions
   //
   public handleGridClick = (event: React.MouseEvent): void => {
-    this._modalController.handleClick(event);
-    // TODO(ZaymonFC): Future cell-interaction click handling will go here. (checkboxes, toggles etc.)
-    //   _modalController.handleClick returns whether the click was handled by the modal controller.
+    if (!this._modalController.handleClick(event)) {
+      const target = event.target as HTMLElement;
+
+      const selectionCheckbox = target.closest(`input[${tableControls.checkbox.attributes.checkbox}]`);
+      if (selectionCheckbox) {
+        const isHeader = selectionCheckbox.hasAttribute(tableControls.checkbox.attributes.header);
+        if (isHeader) {
+          if (this._allRowsSelected.value) {
+            this.bulkSelectRows('none');
+          } else {
+            this.bulkSelectRows('all');
+          }
+        } else {
+          const rowIndex = Number(selectionCheckbox.getAttribute(tableControls.checkbox.attributes.checkbox));
+          this.toggleRowSelection(rowIndex);
+        }
+      }
+    }
   };
 
   //
@@ -491,18 +542,31 @@ export class TableModel<T extends BaseTableRow = {}> extends Resource {
   // Selection
   //
 
-  // TODO(burdon): Change to setSelection(on/off).
-  public selectRow(rowIndex: number) {
-    if (!this._rowSelection.includes(rowIndex)) {
-      this._rowSelection.push(rowIndex);
+  public getRowSelection(displayIndex: number): boolean {
+    const row = this._sortedRows.value[displayIndex];
+    return this._rowSelection.value.has(row.id);
+  }
+
+  public toggleRowSelection(displayIndex: number): void {
+    const row = this._sortedRows.value[displayIndex];
+    const newSelection = new Set(this._rowSelection.value);
+    if (newSelection.has(row.id)) {
+      newSelection.delete(row.id);
+    } else {
+      newSelection.add(row.id);
     }
+    this._rowSelection.value = newSelection;
   }
 
-  public deselectRow(rowIndex: number) {
-    this._rowSelection = this._rowSelection.filter((index: number) => index !== rowIndex);
-  }
-
-  public deselectAllRows() {
-    this._rowSelection = [];
+  public bulkSelectRows(mode: 'all' | 'none'): void {
+    if (mode === 'all') {
+      const newSet = new Set<string>();
+      this._sortedRows.value.forEach((row) => {
+        newSet.add(row.id);
+      });
+      this._rowSelection.value = newSet;
+    } else {
+      this._rowSelection.value = new Set();
+    }
   }
 }
