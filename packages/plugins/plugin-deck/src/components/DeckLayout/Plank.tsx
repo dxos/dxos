@@ -110,6 +110,7 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }
     <Root
       ref={rootElement}
       data-testid='deck.plank'
+      tabIndex={0}
       {...(part === 'solo'
         ? ({ ...sizeAttrs, className } as any)
         : {
