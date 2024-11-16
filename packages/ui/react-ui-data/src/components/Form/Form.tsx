@@ -18,8 +18,8 @@ import { translationKey } from '../../translations';
 export type PropsFilter<T extends Object> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
 
 export type FormProps<T extends object> = ThemedClassName<{
-  values: T;
   schema: S.Schema<T>;
+  values: T;
   autoFocus?: boolean; // TODO(burdon): Not used.
   readonly?: boolean;
   filter?: PropsFilter<T>;
@@ -36,8 +36,8 @@ export type FormProps<T extends object> = ThemedClassName<{
  */
 export const Form = <T extends object>({
   classNames,
-  values,
   schema,
+  values,
   readonly,
   filter,
   sort,
@@ -57,7 +57,6 @@ export const Form = <T extends object>({
   });
 
   // TODO(burdon): Highlight in UX.
-  // TODO(wittjosiah): Not wrapping this in useEffect causes the app to explode.
   useEffect(() => {
     if (errors && Object.keys(errors).length) {
       log.warn('validation', { errors });
@@ -90,8 +89,8 @@ export const Form = <T extends object>({
           return (
             <div key={property} role='none'>
               <PropertyInput
-                property={property}
                 type={type}
+                property={property}
                 disabled={readonly}
                 label={title ?? property}
                 placeholder={description}
