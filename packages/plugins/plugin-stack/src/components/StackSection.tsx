@@ -31,7 +31,7 @@ export const StackSection = ({
 
   return (
     <CollapsiblePrimitive.Root asChild open={!view.collapsed} onOpenChange={(nextOpen) => onCollapse?.(id, !nextOpen)}>
-      <StackItem.Root item={{ id }} {...attendableAttrs}>
+      <StackItem.Root item={{ id }} role='section' {...attendableAttrs}>
         <StackItem.Heading classNames='attention-surface'>
           <span className='sr-only'>{view.title}</span>
           <div role='none' className='sticky -block-start-px bg-[--sticky-bg]'>

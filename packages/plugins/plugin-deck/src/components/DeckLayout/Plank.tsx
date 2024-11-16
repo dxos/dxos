@@ -119,6 +119,7 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }
             onSizeChange: setSize,
             classNames: className,
             order,
+            role: 'article',
           })}
       {...attendableAttrs}
       onKeyDown={handleKeyDown}
@@ -137,7 +138,7 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }
       ) : (
         <PlankError layoutCoordinate={coordinate} />
       )}
-      {canResize && <StackItem.ResizeHandle className='!border-lb-0' />}
+      {canResize && <StackItem.ResizeHandle />}
     </Root>
   );
 });

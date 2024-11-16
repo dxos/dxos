@@ -52,7 +52,7 @@ import { type EditorViewMode, type Action, type ActionType, type Formatting, Edi
 import { translationKey } from '../../translations';
 
 const iconStyles = getSize(5);
-const buttonStyles = 'min-bs-0 p-2';
+const buttonStyles = 'min-bs-0 p-1';
 const tooltipProps = { side: 'top' as const, classNames: 'z-10' };
 
 const ToolbarSeparator = () => <div role='separator' className='grow' />;

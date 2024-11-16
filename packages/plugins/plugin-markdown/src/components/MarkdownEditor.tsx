@@ -175,7 +175,7 @@ export const MarkdownEditor = ({
         <div
           role='none'
           className={mx(
-            'attention-surface',
+            'attention-surface is-full',
             role === 'section' && 'sticky block-start-0 z-[1] border-be !border-separator -mbe-px',
           )}
         >

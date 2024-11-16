@@ -30,7 +30,7 @@ export const StackItemContent = ({
       role='none'
       {...props}
       className={mx(
-        'group',
+        'group grid-cols-[100%]',
         contentSize === 'intrinsic' ? 'flex flex-col' : 'grid',
         size === 'contain' && 'min-bs-0 overflow-hidden',
         separators && 'divide-separator divide-y',

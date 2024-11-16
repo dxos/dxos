@@ -5,6 +5,7 @@
 import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { disableNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/disable-native-drag-preview';
 import { preventUnhandled } from '@atlaskit/pragmatic-drag-and-drop/prevent-unhandled';
+import { type DragLocationHistory } from '@atlaskit/pragmatic-drag-and-drop/types';
 import React, { useLayoutEffect, useRef } from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
@@ -14,12 +15,18 @@ import { DEFAULT_EXTRINSIC_SIZE, type StackItemSize } from './StackItem';
 
 const REM = parseFloat(getComputedStyle(document.documentElement).fontSize);
 
+const MIN_SIZE = 16;
+
 const measureStackItem = (element: HTMLButtonElement): { width: number; height: number } => {
   const stackItemElement = element.closest('[data-dx-stack-item]');
   return stackItemElement?.getBoundingClientRect() ?? { width: DEFAULT_EXTRINSIC_SIZE, height: DEFAULT_EXTRINSIC_SIZE };
 };
 
-export const StackItemResizeHandle = ({ className }: { className?: string }) => {
+const getNextSize = (startSize: number, location: DragLocationHistory, client: 'clientX' | 'clientY') => {
+  return Math.max(MIN_SIZE, startSize + (location.current.input[client] - location.initial.input[client]) / REM);
+};
+
+export const StackItemResizeHandle = () => {
   const { orientation } = useStack();
   const { setSize, size } = useStackItem();
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -52,14 +59,13 @@ export const StackItemResizeHandle = ({ className }: { className?: string }) => 
           if (typeof dragStartSize.current !== 'number') {
             return;
           }
-          setSize(dragStartSize.current + (location.current.input[client] - location.initial.input[client]) / REM);
+          setSize(getNextSize(dragStartSize.current, location, client));
         },
         onDrop: ({ location }) => {
           if (typeof dragStartSize.current !== 'number') {
             return;
           }
-          const nextSize =
-            dragStartSize.current + (location.current.input[client] - location.initial.input[client]) / REM;
+          const nextSize = getNextSize(dragStartSize.current, location, client);
           setSize(nextSize, true);
           dragStartSize.current = nextSize;
         },
@@ -75,10 +81,9 @@ export const StackItemResizeHandle = ({ className }: { className?: string }) => 
       ref={buttonRef}
       className={mx(
         orientation === 'horizontal' ? 'cursor-col-resize' : 'cursor-row-resize',
-        'group absolute is-3 bs-full inline-end-[-1px]',
+        'group absolute is-3 bs-full inline-end-[-1px] !border-lb-0',
         'before:transition-opacity before:duration-100 before:ease-in-out before:opacity-0 hover:before:opacity-100 focus-visible:before:opacity-100 active:before:opacity-100',
         'before:absolute before:block before:inset-block-0 before:inline-end-0 before:is-1 before:bg-accentFocusIndicator',
-        className,
       )}
     >
       <div

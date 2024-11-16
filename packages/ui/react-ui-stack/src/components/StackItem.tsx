@@ -47,11 +47,12 @@ export type StackItemRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
   onRearrange?: (source: StackItemData, target: StackItemData, closestEdge: Edge | null) => void;
   size?: StackItemSize;
   onSizeChange?: (nextSize: StackItemSize) => void;
+  role?: 'article' | 'section';
 };
 
 const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
   (
-    { item, children, classNames, onRearrange, size: propsSize, onSizeChange, order, style, ...props },
+    { item, children, classNames, onRearrange, size: propsSize, onSizeChange, role, order, style, ...props },
     forwardedRef,
   ) => {
     const [itemElement, itemRef] = useState<HTMLDivElement | null>(null);
@@ -60,6 +61,8 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
     const { orientation, rail, separators } = useStack();
     const [size = orientation === 'horizontal' ? DEFAULT_HORIZONTAL_SIZE : DEFAULT_VERTICAL_SIZE, setInternalSize] =
       useState(propsSize);
+
+    const Root = role ?? 'div';
 
     const composedItemRef = composeRefs<HTMLDivElement>(itemRef, forwardedRef);
 
@@ -118,7 +121,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
 
     return (
       <StackItemContext.Provider value={{ selfDragHandleRef, size, setSize }}>
-        <div
+        <Root
           {...props}
           tabIndex={0}
           {...focusGroupAttrs}
@@ -144,7 +147,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
         >
           {children}
           {closestEdge && <DropIndicator edge={closestEdge} />}
-        </div>
+        </Root>
       </StackItemContext.Provider>
     );
   },
