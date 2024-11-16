@@ -99,6 +99,8 @@ const DragHandleSignifier = () => {
       fill='currentColor'
       className='shrink-0 bs-[1em] is-[1em] text-unAccent'
     >
+      {/* two pips: <path d='M256,120c-8.8,0-16-7.2-16-16v-56c0-8.8,7.2-16,16-16v88Z' />
+      <path d='M256,232c-8.8,0-16-7.2-16-16v-56c0-8.8,7.2-16,16-16v88Z' /> */}
       <path d='M256,64c-8.8,0-16-7.2-16-16s7.2-16,16-16v32Z' />
       <path d='M256,120c-8.8,0-16-7.2-16-16s7.2-16,16-16v32Z' />
       <path d='M256,176c-8.8,0-16-7.2-16-16s7.2-16,16-16v32Z' />
