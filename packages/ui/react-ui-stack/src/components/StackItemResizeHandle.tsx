@@ -15,7 +15,7 @@ import { DEFAULT_EXTRINSIC_SIZE, type StackItemSize } from './StackItem';
 
 const REM = parseFloat(getComputedStyle(document.documentElement).fontSize);
 
-const MIN_SIZE = 16;
+const MIN_SIZE = 20;
 
 const measureStackItem = (element: HTMLButtonElement): { width: number; height: number } => {
   const stackItemElement = element.closest('[data-dx-stack-item]');
