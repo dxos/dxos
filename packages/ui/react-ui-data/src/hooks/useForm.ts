@@ -138,7 +138,6 @@ export const useForm = <T extends object>({
     [touched, errors],
   );
 
-  // TODO(burdon): Check V agrees with type.
   // TODO(burdon): Use path to extract hierarchical value.
   const getValue = <V>(property: PropertyKey<T>, type: SimpleType): V => {
     return values[property] as V;

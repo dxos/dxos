@@ -4,7 +4,7 @@
 
 import React, { type JSX } from 'react';
 
-import { type FormatEnum } from '@dxos/echo-schema';
+import { FormatEnum } from '@dxos/echo-schema';
 import { type SimpleType } from '@dxos/effect';
 import { Input, Select } from '@dxos/react-ui';
 import { type PropertyKey } from '@dxos/schema';
@@ -14,16 +14,15 @@ import { type FormHandler } from '../../hooks';
 /**
  * The default FormInput can only handle the following types (subset of SimpleType).
  */
-type DefaultInputType = 'string' | 'number' | 'boolean';
-
-// TODO(burdon): Use format for objects.
-export const isDefaultInputType = (type?: SimpleType, format?: FormatEnum): type is DefaultInputType =>
-  type ? ['string', 'number', 'boolean'].includes(type) : false;
+export const isDefaultInputType = (type: SimpleType, format?: FormatEnum): boolean => {
+  return ['string', 'number', 'boolean'].includes(type) || (format ? [FormatEnum.LatLng].includes(format) : false);
+};
 
 // TODO(burdon): Use SchemaProperty.
 export type FormInputProps<T extends object = {}> = {
   property: PropertyKey<T>;
   type: SimpleType;
+  format?: FormatEnum;
   label: string;
   options?: Array<{ value: string | number; label?: string }>;
   disabled?: boolean;
@@ -37,6 +36,7 @@ export type FormInputProps<T extends object = {}> = {
 export const FormInput = <T extends object = {}>({
   property,
   type,
+  format,
   label,
   options,
   disabled,
@@ -106,6 +106,7 @@ export const FormInput = <T extends object = {}>({
 
   // TODO(burdon): Restrict string pattern (i.e., input masking based on schema).
   // TODO(burdon): Prevent negative numbers based on annotation.
+  // TODO(burdon): Don't show number picker unless bounded integer annotation.
   if (type === 'string' || type === 'number') {
     return (
       <Input.Root validationValence={errorValence}>
@@ -115,7 +116,7 @@ export const FormInput = <T extends object = {}>({
             type={type}
             disabled={disabled}
             placeholder={placeholder}
-            value={getValue(property, type)}
+            value={getValue(property, type) ?? (type === 'string' ? '' : 0)}
             onChange={(event) => onValueChange(property, type, event.target.value)}
             onBlur={onBlur}
           />
@@ -123,6 +124,47 @@ export const FormInput = <T extends object = {}>({
         </Input.DescriptionAndValidation>
       </Input.Root>
     );
+  }
+
+  //
+  // Object renderers.
+  // TODO(burdon): Create registry
+  //
+
+  if (type === 'object') {
+    if (format === FormatEnum.LatLng) {
+      return (
+        <Input.Root validationValence={errorValence}>
+          <Input.Label>{label}</Input.Label>
+          <div className='grid grid-cols-2 gap-2'>
+            <Input.DescriptionAndValidation>
+              <Input.TextInput
+                type={type}
+                disabled={disabled}
+                placeholder={'Latitude'}
+                // TODO(burdon): Path.
+                value={getValue(property, type) ?? ''}
+                onChange={(event) => onValueChange(property, type, event.target.value)}
+                onBlur={onBlur}
+              />
+              <Input.Validation>{errorMessage}</Input.Validation>
+            </Input.DescriptionAndValidation>
+            <Input.DescriptionAndValidation>
+              <Input.TextInput
+                type={type}
+                disabled={disabled}
+                placeholder={'Longitude'}
+                // TODO(burdon): Path.
+                value={getValue(property, type) ?? ''}
+                onChange={(event) => onValueChange(property, type, event.target.value)}
+                onBlur={onBlur}
+              />
+              <Input.Validation>{errorMessage}</Input.Validation>
+            </Input.DescriptionAndValidation>
+          </div>
+        </Input.Root>
+      );
+    }
   }
 
   //

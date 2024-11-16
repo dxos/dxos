@@ -13,15 +13,15 @@ import { DARK_MODE_EVENT_NAME } from 'storybook-dark-mode';
  */
 addons.setConfig({
   enableShortcuts: true,
-  showToolbar: true,
-  sidebar: {
-    showRoots: true,
-  },
+  // NOTE: Option is ignored, so we toogle the panel off below.
+  // showPanel: false,
 });
 
-addons.register('dxos', () => {
+addons.register('dxos', (api) => {
   const update = (darkMode: boolean) => {
     addons.setConfig({
+        showPanel: false,
+
       theme: create({
         base: darkMode ? 'dark' : 'light',
         brandTitle: 'DXOS',
@@ -39,4 +39,7 @@ addons.register('dxos', () => {
       update(darkMode);
     }
   });
+
+  // Hide add-on panel.
+  api.togglePanel(false);
 });

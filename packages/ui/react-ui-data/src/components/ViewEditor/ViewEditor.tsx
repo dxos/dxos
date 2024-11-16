@@ -20,10 +20,10 @@ const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem]';
 
 // TODO(burdon): Pick from ViewType.
 const ViewMetaSchema = S.Struct({
-  name: S.String.annotations({
-    [AST.TitleAnnotationId]: 'View',
-    [AST.DescriptionAnnotationId]: 'Enter view name',
-  }),
+  // name: S.String.annotations({
+  //   [AST.TitleAnnotationId]: 'View',
+  //   [AST.DescriptionAnnotationId]: 'Enter view name',
+  // }),
   // TODO(burdon): Define pattern.
   type: S.NonEmptyString.annotations({
     [AST.TitleAnnotationId]: 'Typename',

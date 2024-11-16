@@ -92,6 +92,7 @@ export const Form = <T extends object>({
           // Custom property allows for sub forms.
           const PropertyInput = Custom?.[property] ?? (isDefaultInputType(type, format) ? FormInput<T> : undefined);
           if (!PropertyInput) {
+            log.warn('no renderer for property', { property, type });
             return null;
           }
 
@@ -99,6 +100,7 @@ export const Form = <T extends object>({
             <div key={property} role='none'>
               <PropertyInput
                 type={type}
+                format={format}
                 property={property}
                 disabled={readonly}
                 label={title ?? property}

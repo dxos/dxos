@@ -7,42 +7,36 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useCallback, useState } from 'react';
 
-import { FormatEnum, type JsonProp, TypeEnum } from '@dxos/echo-schema';
-import { getFormatSchema, type PropertyType } from '@dxos/schema';
+import { AST, Format, S } from '@dxos/echo-schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Form, type FormProps } from './Form';
 import translations from '../../translations';
 import { TestLayout, TestPanel } from '../testing';
 
-type StoryProps = FormProps<PropertyType>;
+const TestSchema = S.Struct({
+  name: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Name' })),
+  active: S.optional(S.Boolean.annotations({ [AST.TitleAnnotationId]: 'Active' })),
+  rank: S.optional(S.Number.annotations({ [AST.TitleAnnotationId]: 'Rank' })),
+  website: S.optional(Format.URI.annotations({ [AST.TitleAnnotationId]: 'Website' })),
+  location: S.optional(Format.LatLng.annotations({ [AST.TitleAnnotationId]: 'Location' })),
+}).pipe(S.mutable);
 
-const DefaultStory = ({ values }: StoryProps) => {
-  const [field, setField] = useState(values);
+type TestType = S.Schema.Type<typeof TestSchema>;
 
-  // TODO(ZaymonFC): Workout why this throws if you unwrap the object.
-  const [{ schema }, setSchema] = useState({ schema: getFormatSchema(field.format) });
-  const handleValuesChanged = useCallback(
-    (values: FormProps<PropertyType>['values']) => {
-      // Update schema if format changed.
-      setSchema({ schema: getFormatSchema(values.format) });
-    },
-    [schema],
-  );
+type StoryProps = FormProps<TestType>;
 
-  const handleSave = useCallback((field: any) => {
-    console.log('handleSave', field);
-    setField(field);
+const DefaultStory = ({ values: initialValues }: StoryProps) => {
+  const [values, setValues] = useState(initialValues);
+
+  const handleSave = useCallback<NonNullable<FormProps<TestType>['onSave']>>((values) => {
+    setValues(values);
   }, []);
 
-  if (!schema) {
-    return <div>No schema found for format: {field.format}</div>;
-  }
-
   return (
-    <TestLayout json={{ field, schema: schema.ast.toJSON() }}>
+    <TestLayout json={{ values, schema: TestSchema.ast.toJSON() }}>
       <TestPanel>
-        <Form values={field} schema={schema} onValuesChanged={handleValuesChanged} onSave={handleSave} />
+        <Form<TestType> schema={TestSchema} values={values} onSave={handleSave} />
       </TestPanel>
     </TestLayout>
   );
@@ -65,21 +59,8 @@ type Story = StoryObj<StoryProps>;
 export const Default: Story = {
   args: {
     values: {
-      property: 'currency' as JsonProp,
-      format: FormatEnum.Currency,
-      type: TypeEnum.Number,
-      // TODO(burdon): Incorrect value if specified here.
-      // multipleOf: 0.01,
-    },
-  },
-};
-
-export const LatLng: Story = {
-  args: {
-    values: {
-      property: 'location' as JsonProp,
-      format: FormatEnum.LatLng,
-      type: TypeEnum.Object,
+      name: 'DXOS',
+      active: true,
     },
   },
 };

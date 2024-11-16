@@ -47,7 +47,7 @@ export const getSchemaProperties = <T extends object>(schema: S.Schema<T>): Sche
     }
 
     if (type) {
-      const format = getFormatAnnotation(prop.type);
+      const format = baseType ? getFormatAnnotation(baseType) : undefined;
       props.push({ property, type, format, title, description });
     }
 
@@ -60,4 +60,4 @@ export const getSchemaProperties = <T extends object>(schema: S.Schema<T>): Sche
  * NOTE: 'a string' is the fallback annotation provided by effect.
  */
 const noDefault = (value?: string, defaultValue?: string): string | undefined =>
-  (value === 'a string' || value === 'a non empty string' ? undefined : value) ?? defaultValue;
+  (value === 'a number' || value === 'a string' || value === 'a non empty string' ? undefined : value) ?? defaultValue;
