@@ -24,7 +24,6 @@ export type LayoutCapabilities = {
   incrementStart?: boolean;
   incrementEnd?: boolean;
   solo?: boolean;
-  resize?: boolean;
 };
 
 export type LayoutControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
@@ -127,7 +126,6 @@ export const LayoutControls = forwardRef<HTMLDivElement, LayoutControlsProps>(
           />
         )}
         {children}
-        {can.resize && <StackItem.ResizeHandle />}
       </ButtonGroup>
     );
   },
