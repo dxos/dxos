@@ -47,6 +47,13 @@ export type StackSectionMetadata = {
   viewActions?: (item: CollectionItem) => StackSectionAction;
 };
 
+export type StackSectionItem = {
+  id: string;
+  object: CollectionType['objects'][number];
+  view: StackSectionView;
+  metadata: StackSectionMetadata;
+};
+
 export type StackSectionCreator = StackSectionAction & {
   intent: Intent | Intent[];
 };
