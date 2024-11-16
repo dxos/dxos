@@ -61,9 +61,11 @@ const DefaultStory = () => {
     }
   }, [space, schema]);
 
-  const handleDeleteRow = useCallback(
-    (_: number, object: any) => {
-      space.db.remove(object);
+  const handleDeleteRows = useCallback(
+    (_: number, objects: any[]) => {
+      for (const object of objects) {
+        space.db.remove(object);
+      }
     },
     [space],
   );
@@ -98,7 +100,7 @@ const DefaultStory = () => {
     projection,
     objects: filteredObjects,
     onInsertRow: handleInsertRow,
-    onDeleteRow: handleDeleteRow,
+    onDeleteRows: handleDeleteRows,
     onDeleteColumn: handleDeleteColumn,
     onCellUpdate: (cell) => tableRef.current?.update?.(cell),
     onRowOrderChanged: () => tableRef.current?.update?.(),
@@ -151,7 +153,7 @@ const TablePerformanceStory = (props: StoryProps) => {
   const simulatorProps = useMemo(() => ({ table, items, ...props }), [table, items, props]);
   useSimulator(simulatorProps);
 
-  const handleDeleteRow = useCallback<NonNullable<UseTableModelParams<any>['onDeleteRow']>>((row) => {
+  const handleDeleteRows = useCallback<NonNullable<UseTableModelParams<any>['onDeleteRows']>>((row) => {
     itemsRef.current.splice(row, 1);
   }, []);
 
@@ -169,7 +171,7 @@ const TablePerformanceStory = (props: StoryProps) => {
   const model = useTableModel({
     table,
     objects: items as any[],
-    onDeleteRow: handleDeleteRow,
+    onDeleteRows: handleDeleteRows,
     onDeleteColumn: handleDeleteColumn,
     onCellUpdate: (cell) => tableRef.current?.update?.(cell),
     onRowOrderChanged: () => tableRef.current?.update?.(),
