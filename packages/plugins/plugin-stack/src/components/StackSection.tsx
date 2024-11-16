@@ -41,11 +41,13 @@ export const StackSection = ({
                 onOpenChange: setOptionsMenuOpen,
               }}
             >
-              <StackItem.SigilButton>
-                <Icon icon={icon} size={5} classNames='transition-opacity' />
-              </StackItem.SigilButton>
+              <DropdownMenu.Trigger asChild>
+                <StackItem.SigilButton>
+                  <Icon icon={icon} size={5} classNames='transition-opacity' />
+                </StackItem.SigilButton>
+              </DropdownMenu.Trigger>
               <DropdownMenu.Portal>
-                <DropdownMenu.Content>
+                <DropdownMenu.Content style={{ zIndex: 70 }}>
                   <DropdownMenu.Viewport>
                     {view.collapsed ? (
                       <DropdownMenu.Item onClick={() => onNavigate(id)} data-testid='section.navigate-to'>
@@ -81,6 +83,7 @@ export const StackSection = ({
               <CollapsiblePrimitive.Trigger asChild>
                 <IconButton
                   iconOnly
+                  tooltipZIndex='70'
                   variant='ghost'
                   label={t('expand label')}
                   icon='ph--caret-up-down--regular'
@@ -90,6 +93,7 @@ export const StackSection = ({
             ) : (
               <IconButton
                 iconOnly
+                tooltipZIndex='70'
                 variant='ghost'
                 onClick={() => onNavigate(id)}
                 label={t('navigate to section label')}
