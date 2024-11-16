@@ -185,9 +185,6 @@ export const PropertySchema = S.Union(
 
 export interface PropertyType extends S.Simplify<S.Schema.Type<typeof PropertySchema>> {}
 
-/**
- * Retrieves the schema definition for the given format.
- */
 export const getFormatSchema = (format?: FormatEnum): S.Schema<any> => {
   if (format === undefined) {
     return formatToSchema[FormatEnum.None];
