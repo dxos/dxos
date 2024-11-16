@@ -16,7 +16,6 @@ import { invariant } from '@dxos/invariant';
 import { Filter, getSpace, fullyQualifiedId } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
 import { type DxGridElement, Grid, type GridContentProps, closestCell } from '@dxos/react-ui-grid';
-import { StackItem } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 import { isNotFalsy } from '@dxos/util';
 
@@ -44,9 +43,9 @@ export type TableRootProps = PropsWithChildren<{ role?: string }>;
 
 const TableRoot = ({ children }: TableRootProps) => {
   return (
-    <StackItem.Content toolbar contentSize='intrinsic' classNames='relative'>
+    <div role='none' className='relative flex flex-col'>
       {children}
-    </StackItem.Content>
+    </div>
   );
 };
 
@@ -185,7 +184,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
         <Grid.Content
           onWheelCapture={handleWheel}
           className={mx(
-            '[--dx-grid-base:var(--surface-bg)] [&_.dx-grid]:bs-min [&_.dx-grid]:shrink [&_.dx-grid]:max-is-max',
+            '[--dx-grid-base:var(--surface-bg)] [&_.dx-grid]:grow [&_.dx-grid]:max-is-max [&_.dx-grid]:bs-0 [&_.dx-grid]:max-bs-max',
             inlineEndLine,
             blockEndLine,
           )}
