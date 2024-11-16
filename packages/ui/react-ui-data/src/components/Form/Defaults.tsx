@@ -8,7 +8,7 @@ import { Input, Select } from '@dxos/react-ui';
 
 import { type InputProps } from '../../hooks';
 
-export const TextField = <T extends object>({
+export const TextInput = <T extends object>({
   property,
   type,
   label,
@@ -40,7 +40,7 @@ export const TextField = <T extends object>({
   );
 };
 
-export const NumberField = <T extends object>({
+export const NumberInput = <T extends object>({
   property,
   type,
   label,
@@ -55,6 +55,7 @@ export const NumberField = <T extends object>({
   const errorValence = getErrorValence?.(property);
   const errorMessage = getErrorMessage?.(property);
 
+  // TODO(burdon): Only show stepper if bounded integer.
   return (
     <Input.Root validationValence={errorValence}>
       <Input.Label>{label}</Input.Label>
@@ -73,7 +74,7 @@ export const NumberField = <T extends object>({
   );
 };
 
-export const BooleanField = <T extends object>({
+export const BooleanInput = <T extends object>({
   property,
   type,
   label,
@@ -99,7 +100,7 @@ export const BooleanField = <T extends object>({
   );
 };
 
-export const SelectField = <T extends object>({
+export const SelectInput = <T extends object>({
   property,
   type,
   label,
@@ -125,7 +126,7 @@ export const SelectField = <T extends object>({
             <Select.Content>
               <Select.Viewport>
                 {options?.map(({ value, label }) => (
-                  // Note: Numeric values are converted to and from strings.
+                  // NOTE: Numeric values are converted to and from strings.
                   <Select.Option key={String(value)} value={String(value)}>
                     {label ?? String(value)}
                   </Select.Option>

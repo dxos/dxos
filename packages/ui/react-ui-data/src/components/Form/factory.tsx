@@ -6,13 +6,13 @@ import { FormatEnum } from '@dxos/echo-schema';
 import { type SimpleType } from '@dxos/effect';
 
 import { LatLngInput } from './Custom';
-import { BooleanField, NumberField, TextField } from './Defaults';
+import { BooleanInput, NumberInput, TextInput } from './Defaults';
 import { type InputComponent } from '../../hooks';
 
 /**
  * Get property input component.
  */
-export const getPropertyInput = <T extends object>(
+export const getInputComponent = <T extends object>(
   type: SimpleType,
   format?: FormatEnum,
 ): InputComponent<T> | undefined => {
@@ -23,10 +23,10 @@ export const getPropertyInput = <T extends object>(
 
   switch (type) {
     case 'string':
-      return TextField;
+      return TextInput;
     case 'number':
-      return NumberField;
+      return NumberInput;
     case 'boolean':
-      return BooleanField;
+      return BooleanInput;
   }
 };

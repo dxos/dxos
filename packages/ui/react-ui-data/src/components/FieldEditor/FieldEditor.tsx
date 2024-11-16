@@ -20,7 +20,7 @@ import {
 
 import { translationKey } from '../../translations';
 import { Form, type FormProps } from '../Form';
-import { SelectField } from '../Form/Defaults';
+import { SelectInput } from '../Form/Defaults';
 
 export type FieldEditorProps = {
   view: ViewType;
@@ -134,7 +134,7 @@ export const FieldEditor = ({ view, projection, field, registry, onClose, onCanc
       onCancel={handleCancel}
       Custom={{
         format: (props) => (
-          <SelectField<PropertyType>
+          <SelectInput<PropertyType>
             {...props}
             options={FormatEnums.filter((value) => value !== FormatEnum.None).map((value) => ({
               value,
@@ -143,7 +143,7 @@ export const FieldEditor = ({ view, projection, field, registry, onClose, onCanc
           />
         ),
         referenceSchema: (props) => (
-          <SelectField<PropertyType>
+          <SelectInput<PropertyType>
             {...props}
             options={schemas.map((schema) => ({
               value: schema.typename,
@@ -151,7 +151,7 @@ export const FieldEditor = ({ view, projection, field, registry, onClose, onCanc
           />
         ),
         referencePath: (props) => (
-          <SelectField<PropertyType>
+          <SelectInput<PropertyType>
             {...props}
             options={
               schema

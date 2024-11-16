@@ -11,7 +11,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { getSchemaProperties, type PropertyKey, type SchemaProperty, type ValidationError } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
-import { getPropertyInput } from './factory';
+import { getInputComponent } from './factory';
 import { type InputProps, useForm } from '../../hooks';
 import { translationKey } from '../../translations';
 
@@ -91,15 +91,15 @@ export const Form = <T extends object>({
 
           // Custom property allows for sub forms.
           // TODO(burdon): Use Select control if options are present.
-          const PropertyInput = Custom?.[property] ?? getPropertyInput<T>(type, format);
-          if (!PropertyInput) {
+          const InputComponent = Custom?.[property] ?? getInputComponent<T>(type, format);
+          if (!InputComponent) {
             log.warn('no renderer for property', { property, type });
             return null;
           }
 
           return (
             <div key={property} role='none'>
-              <PropertyInput
+              <InputComponent
                 type={type}
                 format={format}
                 property={property}

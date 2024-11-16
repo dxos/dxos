@@ -9,10 +9,6 @@ import { type SimpleType, type S } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { validateSchema, type PropertyKey, type ValidationError } from '@dxos/schema';
 
-/**
- * Field input component props.
- */
-// TODO(burdon): Rename.
 export type InputProps<T extends object = {}> = {
   property: PropertyKey<T>;
   type: SimpleType;
@@ -23,7 +19,9 @@ export type InputProps<T extends object = {}> = {
   placeholder?: string;
 } & Pick<FormHandler<T>, 'getErrorValence' | 'getErrorMessage' | 'getValue' | 'onValueChange' | 'onBlur'>;
 
-// TODO(burdon): Rename.
+/**
+ * Form input component.
+ */
 export type InputComponent<T extends object = {}> = FC<InputProps<T>>;
 
 /**
@@ -31,7 +29,7 @@ export type InputComponent<T extends object = {}> = FC<InputProps<T>>;
  */
 export type FormHandler<T extends object = {}> = {
   //
-  // State management for form.
+  // Form state management.
   //
 
   values: T;
@@ -42,7 +40,7 @@ export type FormHandler<T extends object = {}> = {
   handleSubmit: () => void;
 
   //
-  // Field input component helpers.
+  // Form input component helpers.
   //
 
   getErrorValence: (property: PropertyKey<T>) => 'error' | undefined;
