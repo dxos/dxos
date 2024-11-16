@@ -8,23 +8,19 @@ import { type Meta, type StoryObj } from '@storybook/react';
 import React from 'react';
 
 import { create } from '@dxos/echo-schema';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { testData, testView, TestSchema, type TestType } from '@dxos/schema/testing';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { type DeprecatedFormProps, DeprecatedForm } from './Form';
 import translations from '../../translations';
-import { TestPopup } from '../testing';
+import { TestLayout, TestPanel } from '../testing';
 
 const DefaultStory = (props: DeprecatedFormProps) => (
-  <div className='w-full grid grid-cols-3'>
-    <div className='flex col-span-2 w-full justify-center p-4'>
-      <TestPopup>
-        <DeprecatedForm {...props} />
-      </TestPopup>
-    </div>
-    <SyntaxHighlighter className='w-full text-xs'>{JSON.stringify(props, null, 2)}</SyntaxHighlighter>
-  </div>
+  <TestLayout json={{ props }}>
+    <TestPanel>
+      <DeprecatedForm {...props} />
+    </TestPanel>
+  </TestLayout>
 );
 
 const meta: Meta<typeof DefaultStory> = {

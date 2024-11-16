@@ -31,9 +31,9 @@ const FeedbackFormSchema = S.Struct({
   message: S.String.pipe(nonEmpty('Feedback'), maxLength('Feedback', 32_768)),
 });
 
-type FeedbackFormState = S.Schema.Type<typeof FeedbackFormSchema>;
+type FeedbackFormType = S.Schema.Type<typeof FeedbackFormSchema>;
 
-const initialValues: FeedbackFormState = { name: '', email: '', message: '' };
+const initialValues: FeedbackFormType = { name: '', email: '', message: '' };
 
 export const FeedbackForm = ({ onClose }: { onClose: () => void }) => {
   const { t } = useTranslation(STATUS_BAR_PLUGIN);
@@ -41,14 +41,14 @@ export const FeedbackForm = ({ onClose }: { onClose: () => void }) => {
   const dispatch = useIntentDispatcher();
 
   const onSubmit = useCallback(
-    (values: FeedbackFormState) => {
+    (values: FeedbackFormType) => {
       void dispatch({ action: 'dxos.org/plugin/observability/capture-feedback', data: values });
       onClose();
     },
     [dispatch, onClose],
   );
 
-  const { handleSubmit, canSubmit, getInputProps, getErrorValence, getErrorMessage } = useForm<FeedbackFormState>({
+  const { handleSubmit, canSubmit, getErrorValence, getErrorMessage, ...inputProps } = useForm<FeedbackFormType>({
     initialValues,
     schema: FeedbackFormSchema,
     onSubmit,
@@ -63,7 +63,7 @@ export const FeedbackForm = ({ onClose }: { onClose: () => void }) => {
             classNames={'text-sm'}
             placeholder={translation('name placeholder')}
             autoFocus
-            {...getInputProps('name')}
+            {...inputProps}
           />
           <Input.DescriptionAndValidation>
             <Input.Validation>{getErrorMessage('name')}</Input.Validation>
@@ -77,7 +77,7 @@ export const FeedbackForm = ({ onClose }: { onClose: () => void }) => {
           <Input.TextInput
             classNames={'text-sm'}
             placeholder={translation('email input placeholder')}
-            {...getInputProps('email')}
+            {...inputProps}
           />
           <Input.DescriptionAndValidation>
             <Input.Validation>{getErrorMessage('email')}</Input.Validation>
@@ -93,7 +93,7 @@ export const FeedbackForm = ({ onClose }: { onClose: () => void }) => {
             rows={5}
             cols={30}
             placeholder={translation('feedback text area placeholder')}
-            {...getInputProps('message')}
+            {...inputProps}
           />
           <Input.DescriptionAndValidation>
             <Input.Validation>{getErrorMessage('message')}</Input.Validation>

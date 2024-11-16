@@ -7,13 +7,8 @@ import { describe, test } from 'vitest';
 import { type JsonProp, S, TypeEnum, FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
-import {
-  formatToSchema,
-  getPropertySchemaForFormat,
-  getSchemaProperties,
-  PropertySchema,
-  type PropertyType,
-} from './format';
+import { formatToSchema, getPropertySchemaForFormat, PropertySchema, type PropertyType } from './format';
+import { getSchemaProperties } from './properties';
 
 describe('format', () => {
   test('invalid state', ({ expect }) => {
@@ -84,7 +79,7 @@ describe('format', () => {
     }
   });
 
-  test('get props', ({ expect }) => {
+  test('get properties', ({ expect }) => {
     const prop: Partial<PropertyType> = {
       property: 'org' as JsonProp,
       type: TypeEnum.Ref,

@@ -11,7 +11,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { getSchemaProperties, type SchemaProperty, type ValidationError } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
-import { FormInput, type FormInputProps, isSimplerFormInput } from './FormInput';
+import { FormInput, type FormInputProps, isDefaultInputType } from './FormInput';
 import { useForm } from '../../hooks';
 import { translationKey } from '../../translations';
 
@@ -48,7 +48,7 @@ export const Form = <T extends object>({
   Custom,
 }: FormProps<T>) => {
   const { t } = useTranslation(translationKey);
-  const { canSubmit, errors, handleSubmit, getInputProps, getErrorValence, getErrorMessage } = useForm<T>({
+  const { canSubmit, errors, handleSubmit, ...inputProps } = useForm<T>({
     schema,
     initialValues: values,
     onValuesChanged,
@@ -65,7 +65,7 @@ export const Form = <T extends object>({
 
   // Filter and sort props.
   const props = useMemo(() => {
-    const props = getSchemaProperties<T>(schema);
+    const props = getSchemaProperties<T>(schema); // TODO(burdon): Allow objects.
     const filtered = filter ? filter(props) : props;
     const findIndex = (props: (keyof T)[], prop: keyof T) => {
       const idx = props.findIndex((p) => p === prop);
@@ -80,13 +80,13 @@ export const Form = <T extends object>({
   return (
     <div className={mx('flex flex-col w-full gap-2 p-2', classNames)}>
       {props
-        .map(({ property, type, title, description }) => {
+        .map(({ property, type, format, title, description }) => {
           if (!type) {
             return null;
           }
 
           // Custom property allows for sub forms.
-          const PropertyInput = Custom?.[property] ?? isSimplerFormInput(type) ? FormInput<T> : undefined;
+          const PropertyInput = Custom?.[property] ?? (isDefaultInputType(type, format) ? FormInput<T> : undefined);
           if (!PropertyInput) {
             return null;
           }
@@ -99,9 +99,7 @@ export const Form = <T extends object>({
                 disabled={readonly}
                 label={title ?? property}
                 placeholder={description}
-                getInputProps={getInputProps}
-                getErrorValence={getErrorValence}
-                getErrorMessage={getErrorMessage}
+                {...inputProps}
               />
             </div>
           );
@@ -110,7 +108,7 @@ export const Form = <T extends object>({
 
       {(onCancel || onSave) && (
         <div role='none' className='flex justify-center'>
-          <div role='none' className={mx(!readonly && 'grid grid-cols-2 gap-2')}>
+          <div role='none' className={mx(onCancel && !readonly && 'grid grid-cols-2 gap-2')}>
             {onCancel && !readonly && (
               <IconButton icon='ph--x--regular' label={t('button cancel')} onClick={onCancel} />
             )}

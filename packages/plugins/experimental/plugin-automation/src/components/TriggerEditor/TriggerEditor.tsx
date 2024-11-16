@@ -117,7 +117,18 @@ export const TriggerEditor = ({ space, trigger }: TriggerEditorProps) => {
   // TODO(burdon): Flatten trigger.spec
   const test = true;
   if (test) {
-    return <Form<FunctionTriggerType> schema={FunctionTriggerSchema} values={{}} />;
+    return (
+      <Form<FunctionTriggerType>
+        schema={FunctionTriggerSchema}
+        values={{
+          function: 'foo',
+          spec: { type: 'timer', cron: '0 0 * * *' },
+        }}
+        Custom={{
+          spec: () => <div>spec</div>,
+        }}
+      />
+    );
   }
 
   return (

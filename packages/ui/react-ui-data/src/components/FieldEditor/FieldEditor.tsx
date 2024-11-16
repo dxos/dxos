@@ -11,6 +11,7 @@ import { useTranslation } from '@dxos/react-ui';
 import {
   getPropertySchemaForFormat,
   getSchemaProperties,
+  sortProperties,
   type FieldType,
   type PropertyType,
   type ViewType,
@@ -144,10 +145,8 @@ export const FieldEditor = ({ view, projection, field, registry, onClose }: Fiel
             options={
               schema
                 ? getSchemaProperties(schema.schema)
-                    .sort(({ property: a }, { property: b }) => a.localeCompare(b))
-                    .map((p) => ({
-                      value: p.property,
-                    }))
+                    .sort(sortProperties)
+                    .map((p) => ({ value: p.property }))
                 : []
             }
           />

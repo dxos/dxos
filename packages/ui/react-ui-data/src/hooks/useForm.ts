@@ -2,45 +2,36 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type ChangeEvent, type FocusEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { type FocusEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type S } from '@dxos/effect';
-import { validateSchema, type ValidationError } from '@dxos/schema';
+import { type SimpleType, type S } from '@dxos/effect';
+import { log } from '@dxos/log';
+import { validateSchema, type PropertyKey, type ValidationError } from '@dxos/schema';
 
-type FormInputValue = string | number | readonly string[] | undefined;
+/**
+ * Return type from `useForm` hook.
+ */
+export type FormHandler<T extends object> = {
+  //
+  // State management for form.
+  //
 
-type BaseProps<T, V> = {
-  name: keyof T;
-  value: V;
-};
-
-type InputProps<T> = BaseProps<T, string> & {
-  onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  onBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-};
-
-type SelectProps<T> = BaseProps<T, string | undefined> & {
-  onValueChange: (value: string | undefined) => void;
-};
-
-export type FormResult<T extends object> = {
   values: T;
-  errors: Record<keyof T, string>;
-  touched: Record<keyof T, boolean>;
+  errors: Record<PropertyKey<T>, string>;
+  touched: Record<PropertyKey<T>, boolean>;
+  changed: Record<PropertyKey<T>, boolean>;
   canSubmit: boolean;
-  changed: Record<keyof T, boolean>;
-  /**
-   * Provider for props for input controls.
-   */
-  getInputProps: <InputType extends 'input' | 'select'>(
-    key: keyof T,
-    type?: InputType,
-  ) => InputType extends 'select' ? SelectProps<T> : InputProps<T>;
-  getErrorValence: (key: keyof T) => 'error' | undefined;
-  getErrorMessage: (key: keyof T) => string | undefined;
-  handleChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  handleBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleSubmit: () => void;
+
+  //
+  // Property input component helpers.
+  //
+
+  getErrorValence: (property: PropertyKey<T>) => 'error' | undefined;
+  getErrorMessage: (property: PropertyKey<T>) => string | undefined;
+  getValue: <V>(property: PropertyKey<T>, type: SimpleType) => V;
+  onValueChange: <V>(property: PropertyKey<T>, type: SimpleType, value: V) => void;
+  onBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 };
 
 export interface FormOptions<T extends object> {
@@ -58,7 +49,7 @@ export interface FormOptions<T extends object> {
    * in an invalid state.
    */
   onValuesChanged?: (values: T) => void;
-  onSubmit: (values: T, meta: { changed: FormResult<T>['changed'] }) => void;
+  onSubmit: (values: T, meta: { changed: FormHandler<T>['changed'] }) => void;
 }
 
 /**
@@ -71,15 +62,19 @@ export const useForm = <T extends object>({
   onValidate,
   onValuesChanged,
   onSubmit,
-}: FormOptions<T>): FormResult<T> => {
+}: FormOptions<T>): FormHandler<T> => {
   const [values, setValues] = useState<T>(initialValues);
   useEffect(() => {
     setValues(initialValues);
   }, [initialValues]);
 
-  const [changed, setChanged] = useState<Record<keyof T, boolean>>(initialiseKeysWithValue(initialValues, false));
-  const [touched, setTouched] = useState<Record<keyof T, boolean>>(initialiseKeysWithValue(initialValues, false));
-  const [errors, setErrors] = useState<Record<keyof T, string>>({} as Record<keyof T, string>);
+  const [changed, setChanged] = useState<Record<PropertyKey<T>, boolean>>(
+    initialiseKeysWithValue(initialValues, false),
+  );
+  const [touched, setTouched] = useState<Record<PropertyKey<T>, boolean>>(
+    initialiseKeysWithValue(initialValues, false),
+  );
+  const [errors, setErrors] = useState<Record<PropertyKey<T>, string>>({} as Record<PropertyKey<T>, string>);
 
   //
   // Validation.
@@ -101,7 +96,7 @@ export const useForm = <T extends object>({
         errors = validateErrors;
       }
 
-      setErrors(errors.length > 0 ? collapseErrorArray(errors) : ({} as Record<keyof T, string>));
+      setErrors(errors.length > 0 ? collapseErrorArray(errors) : ({} as Record<PropertyKey<T>, string>));
       return errors.length === 0;
     },
     [schema, onValidate],
@@ -115,32 +110,36 @@ export const useForm = <T extends object>({
   // Values.
   //
 
-  const handleChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      const { name: property, value, type } = event.target;
-      const parsedValue = type === 'number' ? parseFloat(value) || 0 : value;
-      const newValues = { ...values, [property]: parsedValue };
-      setValues(newValues);
-      setChanged((prev) => ({ ...prev, [property]: true }));
-      onValuesChanged?.(newValues);
-    },
-    [values, onValuesChanged],
-  );
+  // TODO(burdon): Check V agrees with type.
+  // TODO(burdon): Use path to extract hierarchical value.
+  const getValue = <V>(property: PropertyKey<T>, type: SimpleType): V => {
+    return values[property] as V;
+  };
 
-  const onValueChange = useCallback(
-    (key: keyof T, value: FormInputValue) => {
-      handleChange({ target: { name: key, value } } as ChangeEvent<HTMLInputElement>);
-    },
-    [handleChange],
-  );
+  const onValueChange = (property: PropertyKey<T>, type: SimpleType, value: any) => {
+    let parsedValue = value;
+    try {
+      if (type === 'number') {
+        parsedValue = parseFloat(value as string) || 0;
+      }
+    } catch (err) {
+      log.catch(err);
+      parsedValue = undefined;
+    }
+
+    const newValues = { ...values, [property]: parsedValue };
+    setValues(newValues);
+    setChanged((prev) => ({ ...prev, [property]: true }));
+    onValuesChanged?.(newValues);
+  };
 
   //
-  //  Touch and Blur.
+  // Helpers.
   //
 
   const touchAll = useCallback(() => setTouched(markAllTouched(values)), [values, setTouched]);
 
-  const handleBlur = useCallback(
+  const onBlur = useCallback(
     (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const { name } = event.target;
       setTouched((touched) => ({ ...touched, [name]: true }));
@@ -161,97 +160,70 @@ export const useForm = <T extends object>({
   // Submission.
   //
 
+  /**
+   * NOTE: We can submit if there is no touched field that has an error.
+   * Basically, if there's a validation message visible in the form, submit should be disabled.
+   */
+  const canSubmit = useMemo(
+    () =>
+      Object.keys(values).every((key) => touched[key as PropertyKey<T>] === false || !errors[key as PropertyKey<T>]),
+    [values, touched, errors],
+  );
+
   const handleSubmit = useCallback(() => {
     if (validate(values)) {
       onSubmit(values, { changed });
     }
   }, [values, validate, onSubmit]);
 
-  const canSubmit = useMemo(
-    // NOTE: We can submit if there is no touched field that has an error.
-    // - Basically, if there's a validation message visible in the form, submit should be disabled.
-    () => Object.keys(values).every((key) => touched[key as keyof T] === false || !errors[key as keyof T]),
-    [values, touched, errors],
-  );
-
-  //
-  // Input Interface.
-  //
-
-  const getInputProps = useCallback(
-    <InputType extends 'input' | 'select' = 'input'>(
-      key: keyof T,
-      type?: InputType,
-    ): InputType extends 'select' ? SelectProps<T> : InputProps<T> => {
-      const baseProps: BaseProps<T, any> = {
-        name: key,
-        value: values[key] ?? '',
-      };
-
-      if (type === 'select') {
-        return {
-          ...baseProps,
-          onValueChange: (value: FormInputValue) => onValueChange(key, value),
-        } as InputType extends 'select' ? SelectProps<T> : InputProps<T>;
-      }
-
-      return {
-        ...baseProps,
-        onChange: handleChange,
-        onBlur: handleBlur,
-      } as InputType extends 'select' ? SelectProps<T> : InputProps<T>;
-    },
-    [values, handleChange, handleBlur, onValueChange],
-  );
-
   //
   // Helpers
   //
 
   const getErrorValence = useCallback(
-    (key: keyof T) => (touched[key] && errors[key] ? 'error' : undefined),
+    (property: PropertyKey<T>) => (touched[property] && errors[property] ? 'error' : undefined),
     [touched, errors],
   );
 
   const getErrorMessage = useCallback(
-    (key: keyof T) => (touched[key] && errors[key] ? errors[key] : undefined),
+    (property: PropertyKey<T>) => (touched[property] && errors[property] ? errors[property] : undefined),
     [touched, errors],
   );
 
   return {
+    // State.
     values,
     errors,
     touched,
-    canSubmit,
     changed,
-    getInputProps,
+    canSubmit,
+    handleSubmit,
+
+    // Field utils.
     getErrorValence,
     getErrorMessage,
-    handleChange,
-    handleBlur,
-    handleSubmit,
-  } satisfies FormResult<T>;
+    getValue,
+    onValueChange,
+    onBlur,
+  } satisfies FormHandler<T>;
 };
 
-//
-// Util. (Keeping this here until useForm gets its own library).
-//
-
-const initialiseKeysWithValue = <T extends object, V>(obj: T, value: V): Record<keyof T, V> => {
-  return Object.keys(obj).reduce((acc, key) => ({ ...acc, [key]: value }), {} as Record<keyof T, V>);
+const initialiseKeysWithValue = <T extends object, V>(obj: T, value: V): Record<PropertyKey<T>, V> => {
+  return Object.keys(obj).reduce((acc, key) => ({ ...acc, [key]: value }), {} as Record<PropertyKey<T>, V>);
 };
 
-const markAllTouched = <T extends Record<keyof T, any>>(values: T) => {
+const markAllTouched = <T extends Record<PropertyKey<T>, any>>(values: T) => {
   return initialiseKeysWithValue(values, true);
 };
 
-const collapseErrorArray = <T extends object>(errors: ValidationError[]) =>
-  errors.reduce(
-    (acc, { path, message }) => {
-      if (!(path in acc)) {
-        acc[path as keyof T] = message;
+const collapseErrorArray = <T extends object>(errors: ValidationError[]) => {
+  return errors.reduce(
+    (result, { path, message }) => {
+      if (!(path in result)) {
+        result[path as PropertyKey<T>] = message;
       }
-      return acc;
+      return result;
     },
-    {} as Record<keyof T, string>,
+    {} as Record<PropertyKey<T>, string>,
   );
+};
