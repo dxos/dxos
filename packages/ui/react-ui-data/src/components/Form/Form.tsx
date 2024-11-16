@@ -20,7 +20,7 @@ export type PropsFilter<T extends Object> = (props: SchemaProperty<T>[]) => Sche
 export type FormProps<T extends object> = ThemedClassName<{
   values: T;
   schema: S.Schema<T>;
-  autoFocus?: boolean;
+  autoFocus?: boolean; // TODO(burdon): Not used.
   readonly?: boolean;
   filter?: PropsFilter<T>;
   sort?: (keyof T)[];
@@ -41,8 +41,8 @@ export const Form = <T extends object>({
   readonly,
   filter,
   sort,
-  onValuesChanged,
   onValidate,
+  onValuesChanged,
   onSave,
   onCancel,
   Custom,
@@ -72,6 +72,7 @@ export const Form = <T extends object>({
       const idx = props.findIndex((p) => p === prop);
       return idx === -1 ? Infinity : idx;
     };
+
     return sort
       ? filtered.sort(({ property: a }, { property: b }) => findIndex(sort, a) - findIndex(sort, b))
       : filtered;
