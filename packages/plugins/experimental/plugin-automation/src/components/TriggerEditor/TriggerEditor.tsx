@@ -10,8 +10,8 @@ import {
   type FunctionTrigger,
   type SubscriptionTrigger,
   type TimerTrigger,
-  type TriggerSpec,
   type TriggerType,
+  type TriggerKind,
   type WebhookTrigger,
   type WebsocketTrigger,
 } from '@dxos/functions/types';
@@ -27,15 +27,20 @@ import { getFunctionMetaExtension, state } from './meta';
 import { useLocalTriggerManager } from '../../hooks';
 import { AUTOMATION_PLUGIN } from '../../meta';
 
-const triggerTypes: TriggerType[] = ['subscription', 'timer', 'webhook', 'websocket'];
+const triggerTypes: TriggerKind[] = ['timer', 'webhook', 'websocket', 'subscription'];
 
-export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: FunctionTrigger }) => {
+export type TriggerEditorProps = {
+  space: Space;
+  trigger: FunctionTrigger;
+};
+
+export const TriggerEditor = ({ space, trigger }: TriggerEditorProps) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
   const scripts = useQuery(space, Filter.schema(ScriptType));
   const script = useMemo(() => scripts.find((script) => script.id === trigger.function), [trigger.function, scripts]);
   useLocalTriggerManager(space);
 
-  const triggerLabels: Record<TriggerType, string> = {
+  const triggerLabels: Record<TriggerKind, string> = {
     subscription: t('trigger type subscription'),
     timer: t('trigger type timer'),
     webhook: t('trigger type webhook'),
@@ -85,7 +90,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
   };
 
   const handleSelectTriggerType = (triggerType: string) => {
-    switch (triggerType as TriggerType) {
+    switch (triggerType as TriggerKind) {
       case 'subscription': {
         trigger.spec = { type: 'subscription', filter: [] };
         break;
@@ -109,10 +114,15 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
   const TriggerMeta = getFunctionMetaExtension(trigger, script)?.component;
 
   // TODO(burdon): Query for functions.
-  // TODO(burdon): Trigger type selector (union).
+  // TODO(burdon): Flatten trigger.spec
   const test = true;
   if (test) {
-    return <Form<FunctionTriggerType> schema={FunctionTriggerSchema} values={{}} />;
+    return (
+      <>
+        <Form<FunctionTriggerType> schema={FunctionTriggerSchema} values={{}} />
+        {/* <Form<TriggerType> schema={TriggerSchema} values={{}} /> */}
+      </>
+    );
   }
 
   return (
@@ -160,7 +170,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
           </InputRow>
         </tbody>
         <tbody>
-          {trigger.spec && <TriggerSpec space={space} spec={trigger.spec} />}
+          {trigger.spec && <TriggerType space={space} spec={trigger.spec} />}
           <InputRow label={t('function enabled')}>
             {/* TODO(burdon): Hack to make the switch the same height as other controls. */}
             <div className='flex items-center h-8'>
@@ -288,10 +298,10 @@ const TriggerSpecWebsocket = ({ spec }: TriggerSpecProps<WebsocketTrigger>) => {
 // Trigger spec.
 //
 
-type TriggerSpecProps<T = TriggerSpec> = { space: Space; spec: T };
+type TriggerSpecProps<T = TriggerType> = { space: Space; spec: T };
 
 const triggerRenderers: {
-  [key in TriggerType]: FC<TriggerSpecProps<any>>;
+  [key in TriggerKind]: FC<TriggerSpecProps<any>>;
 } = {
   subscription: TriggerSpecSubscription,
   timer: TriggerSpecTimer,
@@ -299,7 +309,7 @@ const triggerRenderers: {
   websocket: TriggerSpecWebsocket,
 };
 
-const TriggerSpec = ({ space, spec }: TriggerSpecProps) => {
+const TriggerType = ({ space, spec }: TriggerSpecProps) => {
   const Component = triggerRenderers[spec.type];
   return Component ? <Component space={space} spec={spec} /> : null;
 };

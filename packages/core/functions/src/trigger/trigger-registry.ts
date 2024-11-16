@@ -13,14 +13,14 @@ import { log } from '@dxos/log';
 import { ComplexMap, diff } from '@dxos/util';
 
 import { createSubscriptionTrigger, createTimerTrigger } from './type';
-import { type FunctionManifest, FunctionTrigger, type TriggerType, type TriggerSpec } from '../types';
+import { type FunctionManifest, FunctionTrigger, type TriggerKind, type TriggerType } from '../types';
 
 type ResponseCode = number;
 
 export type TriggerCallback = (args: object) => Promise<ResponseCode>;
 
 // TODO(burdon): Make object?
-export type TriggerFactory<Spec extends TriggerSpec, Options = any> = (
+export type TriggerFactory<Spec extends TriggerType, Options = any> = (
   ctx: Context,
   space: Space,
   spec: Spec,
@@ -28,7 +28,7 @@ export type TriggerFactory<Spec extends TriggerSpec, Options = any> = (
   options?: Options,
 ) => Promise<void>;
 
-export type TriggerFactoryMap = Partial<Record<TriggerType, TriggerFactory<any>>>;
+export type TriggerFactoryMap = Partial<Record<TriggerKind, TriggerFactory<any>>>;
 
 const triggerFactory: TriggerFactoryMap = {
   timer: createTimerTrigger,

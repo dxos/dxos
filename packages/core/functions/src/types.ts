@@ -4,14 +4,6 @@
 
 import { AST, RawObject, S, TypedObject } from '@dxos/echo-schema';
 
-/**
- * Type discriminator for TriggerSpec.
- * Every spec has a type field of type TriggerType that we can use to understand which
- * type we're working with.
- * https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions
- */
-export type TriggerType = 'timer' | 'webhook' | 'websocket' | 'subscription';
-
 //
 // Timer
 //
@@ -77,32 +69,31 @@ export type SubscriptionTrigger = S.Schema.Type<typeof SubscriptionTriggerSchema
 // Union
 //
 
-const TriggerSchema = S.Union(
+export const TriggerSchema = S.Union(
   TimerTriggerSchema,
   WebhookTriggerSchema,
   WebsocketTriggerSchema,
   SubscriptionTriggerSchema,
 );
 
-export type TriggerSpec = TimerTrigger | WebhookTrigger | WebsocketTrigger | SubscriptionTrigger;
+export type TriggerType = TimerTrigger | WebhookTrigger | WebsocketTrigger | SubscriptionTrigger;
 
 /**
- * Function definition.
+ * Type discriminator for TriggerType.
+ * Every spec has a type field of type TriggerKind that we can use to understand which
+ * type we're working with.
+ * https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions
  */
-// TODO(burdon): Reconcile with edge.
-export class FunctionDef extends TypedObject({
-  typename: 'dxos.org/type/FunctionDef',
-  version: '0.1.0',
-})({
-  uri: S.String,
-  description: S.optional(S.String),
-  route: S.String,
-  handler: S.String,
-}) {}
+export type TriggerKind = 'timer' | 'webhook' | 'websocket' | 'subscription';
 
+/**
+ * Function trigger.
+ */
 export const FunctionTriggerSchema = S.Struct({
   function: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Function' })),
   enabled: S.optional(S.Boolean.annotations({ [AST.TitleAnnotationId]: 'Enabled' })),
+
+  // TODO(burdon): Create union?
   spec: S.optional(TriggerSchema),
 
   // TODO(burdon): Get meta from function.
@@ -121,6 +112,20 @@ export class FunctionTrigger extends TypedObject({
 })(FunctionTriggerSchema.fields) {}
 
 /**
+ * Function definition.
+ */
+// TODO(burdon): Reconcile with edge.
+export class FunctionDef extends TypedObject({
+  typename: 'dxos.org/type/FunctionDef',
+  version: '0.1.0',
+})({
+  uri: S.String,
+  description: S.optional(S.String),
+  route: S.String,
+  handler: S.String,
+}) {}
+
+/**
  * Function manifest file.
  */
 export const FunctionManifestSchema = S.Struct({
@@ -130,4 +135,4 @@ export const FunctionManifestSchema = S.Struct({
 
 export type FunctionManifest = S.Schema.Type<typeof FunctionManifestSchema>;
 
-export const FUNCTION_SCHEMA = [FunctionDef, FunctionTrigger];
+export const FUNCTION_TYPES = [FunctionDef, FunctionTrigger];
