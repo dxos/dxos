@@ -29,7 +29,7 @@ test.describe('Stack tests', () => {
     await host.createSpace();
     await host.createCollection(1);
     const stack = Stack.getStack(host.page);
-    await expect(stack.empty()).toBeInViewport();
+    await expect(stack.sections()).toHaveCount(0);
     await expect(host.getObjectLinks()).toHaveCount(3);
   });
 
@@ -69,7 +69,8 @@ test.describe('Stack tests', () => {
     await expect(textBox).toBeEditable();
   });
 
-  test('reorder sections', async () => {
+  // TODO(wittjosiah): This feature has been disabled.
+  test.skip('reorder sections', async () => {
     await host.createSpace();
     await host.createCollection(1);
     await host.toggleCollectionCollapsed(2);
