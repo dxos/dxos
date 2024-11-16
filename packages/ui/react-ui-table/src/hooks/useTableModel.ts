@@ -10,13 +10,13 @@ import { type ViewProjection } from '@dxos/schema';
 import { type BaseTableRow, TableModel, type TableModelProps } from '../model';
 import { type TableType } from '../types';
 
-export type UseTableModelParams<T extends BaseTableRow = {}> = {
+export type UseTableModelParams<T extends BaseTableRow = { id: string }> = {
   table?: TableType;
   projection?: ViewProjection;
   objects?: ReactiveObject<T>[];
-} & Pick<TableModelProps<T>, 'onInsertRow' | 'onDeleteRow' | 'onDeleteColumn' | 'onCellUpdate' | 'onRowOrderChanged'>;
+} & Pick<TableModelProps<T>, 'onInsertRow' | 'onDeleteRows' | 'onDeleteColumn' | 'onCellUpdate' | 'onRowOrderChanged'>;
 
-export const useTableModel = <T extends BaseTableRow = {}>({
+export const useTableModel = <T extends BaseTableRow = { id: string }>({
   objects,
   table,
   projection,

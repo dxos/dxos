@@ -44,9 +44,9 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
     }
   }, [schema, space]);
 
-  const handleDeleteRow = useCallback(
-    (_row: number, object: any) => {
-      void dispatch({ action: SpaceAction.REMOVE_OBJECT, data: { object } });
+  const handleDeleteRows = useCallback(
+    (_row: number, objects: any[]) => {
+      void dispatch({ action: SpaceAction.REMOVE_OBJECTS, data: { objects } });
     },
     [dispatch],
   );
@@ -73,7 +73,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
     projection,
     objects: filteredObjects,
     onInsertRow: handleInsertRow,
-    onDeleteRow: handleDeleteRow,
+    onDeleteRows: handleDeleteRows,
     onDeleteColumn: handleDeleteColumn,
     onCellUpdate: (cell) => tableRef.current?.update?.(cell),
     onRowOrderChanged: () => tableRef.current?.update?.(),

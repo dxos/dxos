@@ -128,6 +128,8 @@ export const cellClassesForFieldType = ({ type, format }: CellClassesForFieldTyp
   }
 };
 
+export const cellClassesForRowSelection = (selected: boolean) => (selected ? ['!bg-gridCellSelected'] : undefined);
+
 // TODO(ZaymonFC): How to do this with translations?
 export const pathNotUniqueError = (path: string): ValidationError => ({
   path: 'path',
