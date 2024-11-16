@@ -107,14 +107,14 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   );
 
   return (
-    <StackItem.Content toolbar>
+    <StackItem.Content toolbar role={role}>
       <Toolbar.Root onAction={handleAction} classNames={!hasAttention && 'opacity-20'}>
         <Toolbar.Editing />
         <Toolbar.Editing />
         <Toolbar.Separator />
         <Toolbar.Actions />
       </Toolbar.Root>
-      <Table.Root role={role}>
+      <Table.Root>
         <Table.Main key={table.id} ref={tableRef} model={model} />
       </Table.Root>
     </StackItem.Content>
