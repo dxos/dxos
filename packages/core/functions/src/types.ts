@@ -101,9 +101,8 @@ export class FunctionDef extends TypedObject({
 }) {}
 
 export const FunctionTriggerSchema = S.Struct({
-  name: S.optional(S.String),
-  function: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Function URI.' })),
-  enabled: S.optional(S.Boolean),
+  function: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Function' })),
+  enabled: S.optional(S.Boolean.annotations({ [AST.TitleAnnotationId]: 'Enabled' })),
   spec: S.optional(TriggerSchema),
 
   // TODO(burdon): Get meta from function.

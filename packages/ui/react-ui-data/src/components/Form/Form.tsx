@@ -9,8 +9,9 @@ import { log } from '@dxos/log';
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { getSchemaProperties, type SchemaProperty, type ValidationError } from '@dxos/schema';
+import { isNotFalsy } from '@dxos/util';
 
-import { FormInput, type FormInputProps } from './FormInput';
+import { FormInput, type FormInputProps, isValidFormInput } from './FormInput';
 import { useForm } from '../../hooks';
 import { translationKey } from '../../translations';
 
@@ -78,23 +79,29 @@ export const Form = <T extends object>({
 
   return (
     <div className={mx('flex flex-col w-full gap-2 p-2', classNames)}>
-      {props.map(({ property, type, title, description }) => {
-        const PropertyInput = Custom?.[property] ?? FormInput<T>;
-        return (
-          <div key={property} role='none'>
-            <PropertyInput
-              property={property}
-              type={type === 'number' ? 'number' : undefined}
-              label={title ?? property}
-              placeholder={description}
-              disabled={readonly}
-              getInputProps={getInputProps}
-              getErrorValence={getErrorValence}
-              getErrorMessage={getErrorMessage}
-            />
-          </div>
-        );
-      })}
+      {props
+        .map(({ property, type, title, description }) => {
+          if (!isValidFormInput(type)) {
+            return null;
+          }
+
+          const PropertyInput = Custom?.[property] ?? FormInput<T>;
+          return (
+            <div key={property} role='none'>
+              <PropertyInput
+                property={property}
+                type={type}
+                disabled={readonly}
+                label={title ?? property}
+                placeholder={description}
+                getInputProps={getInputProps}
+                getErrorValence={getErrorValence}
+                getErrorMessage={getErrorMessage}
+              />
+            </div>
+          );
+        })
+        .filter(isNotFalsy)}
 
       {(onCancel || onSave) && (
         <div role='none' className='flex justify-center'>

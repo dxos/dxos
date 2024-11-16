@@ -5,6 +5,8 @@
 import React, { type ChangeEventHandler, type FC, useEffect, useMemo } from 'react';
 
 import {
+  FunctionTriggerSchema,
+  type FunctionTriggerType,
   type FunctionTrigger,
   type SubscriptionTrigger,
   type TimerTrigger,
@@ -17,6 +19,7 @@ import { invariant } from '@dxos/invariant';
 import { ScriptType } from '@dxos/plugin-script/types';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-data';
 import { distinctBy } from '@dxos/util';
 
 import { InputRow } from './Form';
@@ -105,7 +108,12 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
 
   const TriggerMeta = getFunctionMetaExtension(trigger, script)?.component;
 
-  // return <Form<FunctionTriggerType> schema={FunctionTriggerSchema} values={{}} />;
+  // TODO(burdon): Query for functions.
+  // TODO(burdon): Trigger type selector (union).
+  const test = true;
+  if (test) {
+    return <Form<FunctionTriggerType> schema={FunctionTriggerSchema} values={{}} />;
+  }
 
   return (
     <div className='flex flex-col py-1'>
@@ -152,7 +160,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
           </InputRow>
         </tbody>
         <tbody>
-          {trigger.spec && <TriggerSpec space={space} spec={trigger.spec!} />}
+          {trigger.spec && <TriggerSpec space={space} spec={trigger.spec} />}
           <InputRow label={t('function enabled')}>
             {/* TODO(burdon): Hack to make the switch the same height as other controls. */}
             <div className='flex items-center h-8'>
@@ -168,7 +176,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
                 <div className='border-b border-separator' />
               </td>
             </tr>
-            <TriggerMeta meta={trigger.meta!} />
+            <TriggerMeta meta={trigger.meta} />
           </tbody>
         )}
       </table>

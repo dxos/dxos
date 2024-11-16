@@ -8,9 +8,14 @@ import { Input, Select } from '@dxos/react-ui';
 
 import { type FormResult } from '../../hooks';
 
+type FormInputType = 'string' | 'number' | 'boolean';
+
+export const isValidFormInput = (type?: string): type is FormInputType =>
+  type ? ['string', 'number', 'boolean'].includes(type) : false;
+
 export type FormInputProps<T extends object> = {
   property: keyof T;
-  type?: 'string' | 'number' | 'boolean';
+  type: FormInputType;
   label: string;
   options?: Array<{ value: string | number; label?: string }>;
   disabled?: boolean;
@@ -20,7 +25,7 @@ export type FormInputProps<T extends object> = {
 
 export const FormInput = <T extends object>({
   property,
-  type = 'string',
+  type,
   label,
   options,
   disabled,
@@ -58,8 +63,19 @@ export const FormInput = <T extends object>({
     );
   }
 
-  // TODO(burdon): Checkbox.
-  // TODO(burdon): Restrict string pattern. Input masking based on schema?
+  if (type === 'boolean') {
+    return (
+      <Input.Root validationValence={validationValence}>
+        <Input.Label>{label}</Input.Label>
+        <Input.DescriptionAndValidation>
+          <Input.Switch {...getInputProps(property)} />
+          <Input.Validation>{errorMessage}</Input.Validation>
+        </Input.DescriptionAndValidation>
+      </Input.Root>
+    );
+  }
+
+  // TODO(burdon): Restrict string pattern (i.e., input masking based on schema).
   return (
     <Input.Root validationValence={validationValence}>
       <Input.Label>{label}</Input.Label>
