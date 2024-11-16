@@ -14,7 +14,6 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 
-import { StackItem } from './StackItem';
 import { translationKey } from '../translations';
 
 export type LayoutControlEvent = 'solo' | 'close' | `${'pin' | 'increment'}-${'start' | 'end'}`;
