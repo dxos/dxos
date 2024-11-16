@@ -97,6 +97,7 @@ const StackMain = ({ id, collection }: StackMainProps) => {
   };
 
   const handleNavigate = async (id: string) => {
+    console.log('[navigate]', id);
     await dispatch([
       {
         action: NavigationAction.OPEN,
@@ -122,36 +123,37 @@ const StackMain = ({ id, collection }: StackMainProps) => {
           onDelete: handleDelete,
           onAdd: handleAdd,
         }}
-      />
-      <Stack orientation='vertical' size='intrinsic' id={id} data-testid='main.stack' classNames='divide-y-reverse'>
-        {items.map((item) => (
-          <StackSection key={item.id} {...item} />
-        ))}
-      </Stack>
+      >
+        <Stack orientation='vertical' size='intrinsic' id={id} data-testid='main.stack' classNames='divide-y-reverse'>
+          {items.map((item) => (
+            <StackSection key={item.id} {...item} />
+          ))}
+        </Stack>
 
-      {items.length === 0 ? (
-        <AddSection collection={collection} />
-      ) : (
-        <div role='none' className='flex mlb-2 pli-2 justify-center'>
-          <Button
-            data-testid='stack.createSection'
-            classNames='gap-2'
-            onClick={() =>
-              dispatch?.({
-                action: LayoutAction.SET_LAYOUT,
-                data: {
-                  element: 'dialog',
-                  component: 'dxos.org/plugin/stack/AddSectionDialog',
-                  subject: { position: 'afterAll', collection },
-                },
-              })
-            }
-          >
-            <Plus />
-            <span className='sr-only'>{t('add section label')}</span>
-          </Button>
-        </div>
-      )}
+        {items.length === 0 ? (
+          <AddSection collection={collection} />
+        ) : (
+          <div role='none' className='flex mlb-2 pli-2 justify-center'>
+            <Button
+              data-testid='stack.createSection'
+              classNames='gap-2'
+              onClick={() =>
+                dispatch?.({
+                  action: LayoutAction.SET_LAYOUT,
+                  data: {
+                    element: 'dialog',
+                    component: 'dxos.org/plugin/stack/AddSectionDialog',
+                    subject: { position: 'afterAll', collection },
+                  },
+                })
+              }
+            >
+              <Plus />
+              <span className='sr-only'>{t('add section label')}</span>
+            </Button>
+          </div>
+        )}
+      </StackContext.Provider>
     </AttentionProvider>
   );
 };
