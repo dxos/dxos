@@ -117,12 +117,7 @@ export const TriggerEditor = ({ space, trigger }: TriggerEditorProps) => {
   // TODO(burdon): Flatten trigger.spec
   const test = true;
   if (test) {
-    return (
-      <>
-        <Form<FunctionTriggerType> schema={FunctionTriggerSchema} values={{}} />
-        {/* <Form<TriggerType> schema={TriggerSchema} values={{}} /> */}
-      </>
-    );
+    return <Form<FunctionTriggerType> schema={FunctionTriggerSchema} values={{}} />;
   }
 
   return (

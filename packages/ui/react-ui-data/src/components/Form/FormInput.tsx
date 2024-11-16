@@ -4,18 +4,19 @@
 
 import React from 'react';
 
+import { type TypeEnum } from '@dxos/echo-schema';
 import { Input, Select } from '@dxos/react-ui';
 
 import { type FormResult } from '../../hooks';
 
-type FormInputType = 'string' | 'number' | 'boolean';
-
-export const isValidFormInput = (type?: string): type is FormInputType =>
+export const isSimplerFormInput = (type?: string): type is FormInputType =>
   type ? ['string', 'number', 'boolean'].includes(type) : false;
+
+export type FormInputType = 'object' | 'string' | 'number' | 'boolean';
 
 export type FormInputProps<T extends object> = {
   property: keyof T;
-  type: FormInputType;
+  type: TypeEnum;
   label: string;
   options?: Array<{ value: string | number; label?: string }>;
   disabled?: boolean;

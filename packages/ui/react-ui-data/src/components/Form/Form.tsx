@@ -11,7 +11,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { getSchemaProperties, type SchemaProperty, type ValidationError } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
-import { FormInput, type FormInputProps, isValidFormInput } from './FormInput';
+import { FormInput, type FormInputProps, isSimplerFormInput } from './FormInput';
 import { useForm } from '../../hooks';
 import { translationKey } from '../../translations';
 
@@ -81,11 +81,16 @@ export const Form = <T extends object>({
     <div className={mx('flex flex-col w-full gap-2 p-2', classNames)}>
       {props
         .map(({ property, type, title, description }) => {
-          if (!isValidFormInput(type)) {
+          if (!type) {
             return null;
           }
 
-          const PropertyInput = Custom?.[property] ?? FormInput<T>;
+          // Custom property allows for sub forms.
+          const PropertyInput = Custom?.[property] ?? isSimplerFormInput(type) ? FormInput<T> : undefined;
+          if (!PropertyInput) {
+            return null;
+          }
+
           return (
             <div key={property} role='none'>
               <PropertyInput
