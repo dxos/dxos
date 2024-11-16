@@ -2,10 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
+import { next as am } from '@dxos/automerge/automerge';
 import { cbor } from '@dxos/automerge/automerge-repo';
 import { type Halo, type Space } from '@dxos/client-protocol';
 import { type ClientServicesHost, type DataSpace } from '@dxos/client-services';
-import { importModule } from '@dxos/debug';
+import { exposeModule, importModule } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createBundledRpcServer, type RpcPeer, type RpcPort } from '@dxos/rpc';
@@ -17,6 +18,8 @@ import { SpaceState, Filter, getMeta } from '../echo';
 
 // Didn't want to add a dependency on feed store.
 type FeedWrapper = unknown;
+
+exposeModule('@automerge/automerge', am);
 
 /**
  * A hook bound to window.__DXOS__.

@@ -1251,10 +1251,10 @@ export class DxGrid extends LitElement {
         class="dx-grid"
         style=${styleMap({
           'grid-template-columns': `${this.templatefrozenColsStart ? 'min-content ' : ''}minmax(0, ${
-            Number.isFinite(this.limitColumns) ? `${this.intrinsicInlineSize}px` : '1fr'
+            Number.isFinite(this.limitColumns) ? `${Math.max(0, this.intrinsicInlineSize)}px` : '1fr'
           })${this.templatefrozenColsEnd ? ' min-content' : ''}`,
           'grid-template-rows': `${this.templatefrozenRowsStart ? 'min-content ' : ''}minmax(0, ${
-            Number.isFinite(this.limitRows) ? `${this.intrinsicBlockSize}px` : '1fr'
+            Number.isFinite(this.limitRows) ? `${Math.max(0, this.intrinsicBlockSize)}px` : '1fr'
           })${this.templatefrozenRowsEnd ? ' min-content' : ''}`,
         })}
         data-grid=${this.gridId}

@@ -38,9 +38,10 @@ export type PlankProps = {
   part: LayoutPart;
   layoutMode: Layout['layoutMode'];
   order?: number;
+  last?: boolean;
 };
 
-export const Plank = memo(({ entry, layoutParts, part, layoutMode, order }: PlankProps) => {
+export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }: PlankProps) => {
   // const { t } = useTranslation(DECK_PLUGIN);
   const dispatch = useIntentDispatcher();
   const coordinate: LayoutCoordinate = useMemo(() => ({ part, entryId: entry?.id ?? UNKNOWN_ID }), [entry?.id, part]);
@@ -50,7 +51,7 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order }: Plan
   const node = useNode(graph, entry?.id);
   const rootElement = useRef<HTMLDivElement | null>(null);
   const canResize = layoutMode === 'deck';
-  const Root = part === 'solo' ? 'div' : StackItem;
+  const Root = part === 'solo' ? 'article' : StackItem;
 
   const attendableAttrs = useAttendableAttributes(coordinate.entryId);
   const index = indexInPart(layoutParts, coordinate);
@@ -98,14 +99,18 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order }: Plan
   const placeholder = useMemo(() => <PlankLoading />, []);
 
   const className = mx(
-    'attention-placeholder-host',
+    'attention-surface',
     isSolo && mainIntrinsicSize,
     isSolo && railGridHorizontal,
-    isSolo && 'grid gap-px absolute inset-0 bg-separator',
+    isSolo && 'grid absolute inset-0 divide-separator divide-y',
+    last && '!border-li border-separator',
   );
 
   return (
     <Root
+      ref={rootElement}
+      data-testid='deck.plank'
+      tabIndex={0}
       {...(part === 'solo'
         ? ({ ...sizeAttrs, className } as any)
         : {
@@ -117,7 +122,6 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order }: Plan
           })}
       {...attendableAttrs}
       onKeyDown={handleKeyDown}
-      ref={rootElement}
     >
       {node ? (
         <>

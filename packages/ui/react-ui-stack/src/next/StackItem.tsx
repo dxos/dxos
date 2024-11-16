@@ -26,11 +26,11 @@ import React, {
   useCallback,
 } from 'react';
 
-import { type ThemedClassName, Icon, useTranslation, type ButtonProps } from '@dxos/react-ui';
+import { type ThemedClassName, useTranslation, type ButtonProps, IconButton } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useStack } from './Stack';
-import { translationKey } from './translations';
+import { translationKey } from '../translations';
 
 export type StackItemSize = number | 'min-content';
 export const DEFAULT_HORIZONTAL_SIZE = 44 satisfies StackItemSize;
@@ -140,7 +140,7 @@ export const StackItem = forwardRef<HTMLDivElement, StackItemProps>(
             size === 'min-content' && (orientation === 'horizontal' ? 'is-min' : 'bs-min'),
             orientation === 'horizontal' ? 'grid-rows-subgrid' : 'grid-cols-subgrid',
             rail && (orientation === 'horizontal' ? 'row-span-2' : 'col-span-2'),
-            separators && 'gap-px',
+            separators && (orientation === 'horizontal' ? 'divide-separator divide-y' : 'divide-separator divide-x'),
             classNames,
           )}
           data-dx-stack-item
@@ -166,7 +166,7 @@ export const StackItem = forwardRef<HTMLDivElement, StackItemProps>(
 export type StackItemHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
 export const StackItemHeading = ({ children, classNames, ...props }: StackItemHeadingProps) => {
-  const { orientation, separators } = useStack();
+  const { orientation } = useStack();
   const { selfDragHandleRef } = useStackItem();
   const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
   return (
@@ -178,7 +178,6 @@ export const StackItemHeading = ({ children, classNames, ...props }: StackItemHe
       className={mx(
         'grid ch-focus-ring-inset-over-all relative',
         orientation === 'horizontal' ? 'bs-[--rail-size]' : 'is-[--rail-size]',
-        separators && 'bg-base',
         classNames,
       )}
       ref={selfDragHandleRef}
@@ -246,17 +245,19 @@ export const StackItemResizeHandle = (props: ButtonProps) => {
   );
 
   return (
-    <button
-      tabIndex={-1}
+    <IconButton
+      iconOnly
+      variant='ghost'
       ref={buttonRef}
-      className={mx(
-        'text-description ch-focus-ring p-px rounded',
-        orientation === 'horizontal' ? 'self-center justify-self-end' : 'self-end justify-self-center',
-      )}
-    >
-      <Icon icon={orientation === 'horizontal' ? 'ph--dots-six-vertical--regular' : 'ph--dots-six--regular'} />
-      <span className='sr-only'>{t('resize label')}</span>
-    </button>
+      label={t('resize label')}
+      icon={orientation === 'horizontal' ? 'ph--dots-six-vertical--regular' : 'ph--dots-six--regular'}
+      classNames={[
+        'ch-focus-ring !p-px rounded',
+        orientation === 'horizontal'
+          ? 'self-center justify-self-end cursor cursor-col-resize'
+          : 'self-end justify-self-center cursor-row-resize',
+      ]}
+    />
   );
 };
 
@@ -274,16 +275,17 @@ export const StackItemContent = ({
   classNames,
   ...props
 }: StackItemContentProps) => {
-  const { size } = useStack();
+  const { size, separators } = useStack();
 
   return (
     <div
       role='none'
       {...props}
       className={mx(
-        'group gap-px',
+        'group',
         contentSize === 'intrinsic' ? 'flex flex-col' : 'grid',
         size === 'contain' && 'min-bs-0 overflow-hidden',
+        separators && 'divide-separator divide-y',
         classNames,
       )}
       style={{

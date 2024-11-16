@@ -107,7 +107,7 @@ export class RepoProxy extends Resource {
   }
 
   async flush() {
-    await this._sendUpdatesJob!.runBlocking();
+    await this._sendUpdatesJob?.runBlocking();
   }
 
   protected override async _open() {

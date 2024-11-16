@@ -62,7 +62,7 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
   // TODO(burdon): Debug panel doesn't change when switching even though id has chagned.
   return (
     <Main.ComplementarySidebar>
-      <div role='none' className={mx(railGridHorizontal, 'grid-cols-1 bs-full')}>
+      <div role='none' className={mx(railGridHorizontal, 'grid-cols-1 bs-full divide-y divide-separator')}>
         <NodePlankHeading coordinate={coordinate} node={node} popoverAnchorId={popoverAnchorId} actions={actions} />
         <div className='divide-y divide-separator overflow-x-hidden overflow-y-scroll'>
           {node && (

@@ -5,14 +5,16 @@ permissions:
   packages: write
 
 on:
-  push:
-    branches:
-      # TODO: enable for all branches
-      - main
-      - staging
-      - production
-      - test-github/docker
-      - nf/agent-docker
+  workflow_dispatch:
+
+  # push:
+  #   branches:
+  #     # TODO: enable for all branches
+  #     - main
+  #     - staging
+  #     - production
+  #     - test-github/docker
+  #     - nf/agent-docker
 
 jobs:
   docker_publish:
@@ -43,7 +45,7 @@ jobs:
       # TODO(nf): build for arm64 as well, build currently hangs after install
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      - name: Install doctl 
+      - name: Install doctl
         uses: digitalocean/action-doctl@v2
         with:
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
