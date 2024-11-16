@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getSpace } from '@dxos/react-client/echo';
 import { DropdownMenu } from '@dxos/react-ui';
@@ -39,6 +39,16 @@ export const ColumnSettings = ({ model }: ColumnSettingsProps) => {
 
   const field = existingField ?? newField;
 
+  const handleClose = useCallback(() => {
+    model?.modalController.close();
+  }, [model?.modalController]);
+
+  const handleCancel = useCallback(() => {
+    if (state?.type === 'columnSettings' && state.mode.type === 'create' && newField) {
+      model?.projection?.deleteFieldProjection(newField.id);
+    }
+  }, [model?.projection, state, newField]);
+
   if (!model?.table?.view || !model.projection || !field) {
     return null;
   }
@@ -54,7 +64,8 @@ export const ColumnSettings = ({ model }: ColumnSettingsProps) => {
               projection={model.projection}
               field={field}
               registry={space?.db.schemaRegistry}
-              onClose={() => model.modalController.close()}
+              onClose={handleClose}
+              onCancel={handleCancel}
             />
           </DropdownMenu.Viewport>
           <DropdownMenu.Arrow />
