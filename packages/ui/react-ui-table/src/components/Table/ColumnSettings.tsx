@@ -4,10 +4,10 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
+import { getSpace } from '@dxos/react-client/echo';
 import { DropdownMenu } from '@dxos/react-ui';
 import { FieldEditor } from '@dxos/react-ui-data';
 import { type FieldType } from '@dxos/schema';
-import { getSpace } from '@dxos/react-client/echo';
 
 import { type TableModel } from '../../model';
 
