@@ -98,14 +98,12 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
           break;
         }
         case 'add-row': {
-          if (schema && space) {
-            space.db.add(create(schema, {}));
-          }
+          handleInsertRow();
           break;
         }
       }
     },
-    [onThreadCreate, space, schema],
+    [onThreadCreate, space, schema, handleInsertRow],
   );
 
   return (
