@@ -9,7 +9,7 @@ import { Surface } from '@dxos/app-framework';
 import { DropdownMenu, Icon, useTranslation, IconButton } from '@dxos/react-ui';
 import { useAttendableAttributes } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
-import { getSize } from '@dxos/react-ui-theme';
+import { mx, getSize, textBlockWidth } from '@dxos/react-ui-theme';
 
 import { CaretDownUp } from './CaretDownUp';
 import { useStack } from './StackContext';
@@ -104,9 +104,14 @@ export const StackSection = ({
             )}
           </div>
         </StackItem.Heading>
-        <CollapsiblePrimitive.Content asChild>
+        <CollapsiblePrimitive.Content>
           <Surface role='section' data={{ object }} limit={1} placeholder={<></>} />
         </CollapsiblePrimitive.Content>
+        {view.collapsed && (
+          <StackItem.Content toolbar={false} classNames='attention-surface'>
+            <h2 className={mx('flex items-center p-4 font-medium is-full', textBlockWidth)}>{view.title}</h2>
+          </StackItem.Content>
+        )}
       </StackItem.Root>
     </CollapsiblePrimitive.Root>
   );

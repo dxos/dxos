@@ -176,7 +176,7 @@ export const MarkdownEditor = ({
           role='none'
           className={mx(
             'attention-surface',
-            role === 'section' && 'sticky block-start-0 z-10 border-be !border-separator -mbe-px',
+            role === 'section' && 'sticky block-start-0 z-[1] border-be !border-separator -mbe-px',
           )}
         >
           <Toolbar.Root
@@ -199,7 +199,7 @@ export const MarkdownEditor = ({
         data-toolbar={toolbar ? 'enabled' : 'disabled'}
         className={mx(
           'ch-focus-ring-inset data-[toolbar=disabled]:pbs-2 attention-surface',
-          role === 'article' ? 'min-bs-0' : '[&_.cm-scroller]:overflow-hidden',
+          role === 'article' ? 'min-bs-0' : '[&_.cm-scroller]:overflow-hidden [&_.cm-scroller]:min-bs-24',
         )}
         {...focusAttributes}
       />
