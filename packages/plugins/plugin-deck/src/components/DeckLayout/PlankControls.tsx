@@ -13,7 +13,6 @@ import {
   Tooltip,
   useTranslation,
 } from '@dxos/react-ui';
-import { StackItem } from '@dxos/react-ui-stack';
 
 import { DECK_PLUGIN } from '../../meta';
 

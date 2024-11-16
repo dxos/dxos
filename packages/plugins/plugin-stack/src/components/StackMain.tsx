@@ -97,7 +97,6 @@ const StackMain = ({ id, collection }: StackMainProps) => {
   };
 
   const handleNavigate = async (id: string) => {
-    console.log('[navigate]', id);
     await dispatch([
       {
         action: NavigationAction.OPEN,
