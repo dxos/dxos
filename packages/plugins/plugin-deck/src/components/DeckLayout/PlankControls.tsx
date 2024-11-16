@@ -24,7 +24,6 @@ export type PlankCapabilities = {
   incrementStart?: boolean;
   incrementEnd?: boolean;
   solo?: boolean;
-  resize?: boolean;
 };
 
 export type PlankControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
@@ -127,7 +126,6 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
           />
         )}
         {children}
-        {can.resize && <StackItem.ResizeHandle />}
       </ButtonGroup>
     );
   },

@@ -7,11 +7,10 @@ import { disableNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/elem
 import { preventUnhandled } from '@atlaskit/pragmatic-drag-and-drop/prevent-unhandled';
 import React, { useLayoutEffect, useRef } from 'react';
 
-import { useTranslation, IconButton } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 import { useStack, useStackItem } from './StackContext';
 import { DEFAULT_EXTRINSIC_SIZE, type StackItemSize } from './StackItem';
-import { translationKey } from '../translations';
 
 const REM = parseFloat(getComputedStyle(document.documentElement).fontSize);
 
@@ -20,8 +19,7 @@ const measureStackItem = (element: HTMLButtonElement): { width: number; height: 
   return stackItemElement?.getBoundingClientRect() ?? { width: DEFAULT_EXTRINSIC_SIZE, height: DEFAULT_EXTRINSIC_SIZE };
 };
 
-export const StackItemResizeHandle = () => {
-  const { t } = useTranslation(translationKey);
+export const StackItemResizeHandle = ({ className }: { className?: string }) => {
   const { orientation } = useStack();
   const { setSize, size } = useStackItem();
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -73,16 +71,38 @@ export const StackItemResizeHandle = () => {
   );
 
   return (
-    <IconButton
-      iconOnly
-      variant='ghost'
+    <button
       ref={buttonRef}
-      label={t('resize label')}
-      icon={orientation === 'horizontal' ? 'ph--dots-six-vertical--regular' : 'ph--dots-six--regular'}
-      classNames={[
-        'ch-focus-ring !p-px rounded',
-        orientation === 'horizontal' ? 'self-center justify-self-end' : 'self-end justify-self-center',
-      ]}
-    />
+      className={mx(
+        orientation === 'horizontal' ? 'cursor-col-resize' : 'cursor-row-resize',
+        'group absolute is-3 bs-full inline-end-[-1px]',
+        'before:transition-opacity duration-300 ease-in-out before:opacity-0 hover:befory-100 focus-visible:before:opacity-100 active:before:opacity-100',
+        'before:absolute before:block before:inline-end-0 before:block-start-0 before:ise:bs-full efore:bg-accentFocusIndicator',
+        className,
+      )}
+    >
+      <div
+        role='none'
+        className='absolute block-start-0 inline-end-[1px] bs-[--rail-size] flex items-coup-hover:opacity-0 roup-focus-visible:opacity-0 group-active:opacity-0'
+      >
+        <DragHandleSignifier />
+      </div>
+    </button>
+  );
+};
+
+const DragHandleSignifier = () => {
+  return (
+    <svg
+      xmlns='http://www.w3.org/2000/svg'
+      viewBox='0 0 256 256'
+      fill='currentColor'
+      className='shrink-0 bs-[1em] is-[1em] text-unAccent'
+    >
+      <path d='M256,64c-8.8,0-16-7.2-16-16s7.2-16,16-16v32Z' />
+      <path d='M256,120c-8.8,0-16-7.2-16-16s7.2-16,16-16v32Z' />
+      <path d='M256,176c-8.8,0-16-7.2-16-16s7.2-16,16-16v32Z' />
+      <path d='M256,232c-8.8,0-16-7.2-16-16s7.2-16,16-16v32Z' />
+    </svg>
   );
 };
