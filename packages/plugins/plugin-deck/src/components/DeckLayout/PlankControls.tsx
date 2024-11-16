@@ -52,6 +52,8 @@ const PlankControl = ({ icon, label, ...props }: Omit<ButtonProps, 'children'> &
   );
 };
 
+// TODO(wittjosiah): Duplicate of stack LayoutControls?
+//   Translations were to be duplicated between packages.
 export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
   (
     { onClick, variant = 'default', capabilities: can, isSolo, pin, close = false, children, ...props },
