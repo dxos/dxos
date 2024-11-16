@@ -9,7 +9,7 @@ import { FormatEnum, FormatEnums, formatToType, type MutableSchema } from '@dxos
 import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
 import {
-  getPropertySchemaForFormat,
+  getFormatSchema,
   getSchemaProperties,
   sortProperties,
   type FieldType,
@@ -61,13 +61,14 @@ export const FieldEditor = ({ view, projection, field, registry, onClose }: Fiel
 
   // TODO(burdon): Need to wrap otherwise throws error:
   //  Class constructor SchemaClass cannot be invoked without 'new'.
-  const [{ fieldSchema }, setFieldSchema] = useState({ fieldSchema: getPropertySchemaForFormat(props?.format) });
+  const [{ fieldSchema }, setFieldSchema] = useState({ fieldSchema: getFormatSchema(props?.format) });
   const handleValuesChanged = useCallback<NonNullable<FormProps<PropertyType>['onValuesChanged']>>(
     (_props) => {
       // Update schema if format changed.
       // TODO(burdon): Callback should pass `changed` to indicate which fields have changed.
       if (_props.format !== props.format) {
-        setFieldSchema({ fieldSchema: getPropertySchemaForFormat(_props.format) });
+        setFieldSchema({ fieldSchema: getFormatSchema(_props.format) });
+        console.log('::::::::::::', getFormatSchema(_props.format), _props.format);
       }
       if (_props.referenceSchema !== props.referenceSchema) {
         setSchema(schemas.find((schema) => schema.typename === _props.referenceSchema));

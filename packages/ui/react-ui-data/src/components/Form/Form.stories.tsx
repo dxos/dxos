@@ -8,7 +8,7 @@ import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useCallback, useState } from 'react';
 
 import { FormatEnum, type JsonProp, TypeEnum } from '@dxos/echo-schema';
-import { getPropertySchemaForFormat, type PropertyType } from '@dxos/schema';
+import { getFormatSchema, type PropertyType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Form, type FormProps } from './Form';
@@ -21,11 +21,11 @@ const DefaultStory = ({ values }: StoryProps) => {
   const [field, setField] = useState(values);
 
   // TODO(ZaymonFC): Workout why this throws if you unwrap the object.
-  const [{ schema }, setSchema] = useState({ schema: getPropertySchemaForFormat(field.format) });
+  const [{ schema }, setSchema] = useState({ schema: getFormatSchema(field.format) });
   const handleValuesChanged = useCallback(
     (values: FormProps<PropertyType>['values']) => {
       // Update schema if format changed.
-      setSchema({ schema: getPropertySchemaForFormat(values.format) });
+      setSchema({ schema: getFormatSchema(values.format) });
     },
     [schema],
   );

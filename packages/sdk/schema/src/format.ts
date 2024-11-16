@@ -188,18 +188,10 @@ export interface PropertyType extends S.Simplify<S.Schema.Type<typeof PropertySc
 /**
  * Retrieves the schema definition for the given format.
  */
-export const getPropertySchemaForFormat = (format?: FormatEnum): S.Schema<any> | undefined => {
+export const getFormatSchema = (format?: FormatEnum): S.Schema<any> => {
   if (format === undefined) {
     return formatToSchema[FormatEnum.None];
   }
 
-  for (const member of PropertySchema.members) {
-    for (const prop of AST.getPropertySignatures(member.ast)) {
-      if (prop.name === 'format' && prop.type._tag === 'Literal' && prop.type.literal === format) {
-        return member;
-      }
-    }
-  }
-
-  return undefined;
+  return formatToSchema[format] ?? FormatEnum.None;
 };
