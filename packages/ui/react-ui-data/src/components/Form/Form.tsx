@@ -15,6 +15,8 @@ import { getInputComponent } from './factory';
 import { type InputProps, useForm } from '../../hooks';
 import { translationKey } from '../../translations';
 
+// TODO(burdon): Rename package react-ui-form.
+
 export type PropsFilter<T extends Object> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
 
 export type FormProps<T extends object> = ThemedClassName<{

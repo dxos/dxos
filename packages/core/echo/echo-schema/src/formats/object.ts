@@ -22,3 +22,5 @@ export const LatLng = S.Struct({
   [AST.TitleAnnotationId]: 'LatLng',
   [AST.DescriptionAnnotationId]: 'LatLng coordinates',
 });
+
+export type LatLng = S.Schema.Type<typeof LatLng>;

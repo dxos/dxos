@@ -4,9 +4,11 @@
 
 import React from 'react';
 
-import { Input } from '@dxos/react-ui';
+import { type LatLng } from '@dxos/echo-schema';
+import { Input, useTranslation } from '@dxos/react-ui';
 
 import { type InputProps } from '../../hooks';
+import { translationKey } from '../../translations';
 
 //
 // Custom format components.
@@ -23,10 +25,12 @@ export const LatLngInput = <T extends object>({
   onValueChange,
   onBlur,
 }: InputProps<T>) => {
+  const { t } = useTranslation(translationKey);
   const errorValence = getErrorValence?.(property);
   const errorMessage = getErrorMessage?.(property);
 
-  // TODO(burdon): Property path.
+  const { lat = '', lng = '' } = getValue<LatLng>(property, type) ?? {};
+  console.log('::::', lat, lng);
 
   return (
     <Input.Root validationValence={errorValence}>
@@ -36,9 +40,9 @@ export const LatLngInput = <T extends object>({
           <Input.TextInput
             type={type}
             disabled={disabled}
-            placeholder={'Latitude'}
-            value={getValue(property, type) ?? ''}
-            onChange={(event) => onValueChange(property, type, event.target.value)}
+            placeholder={t('placeholder latitude')}
+            value={lat}
+            onChange={(event) => onValueChange(property, type, { lat: event.target.value, lng })}
             onBlur={onBlur}
           />
           <Input.Validation>{errorMessage}</Input.Validation>
@@ -47,9 +51,9 @@ export const LatLngInput = <T extends object>({
           <Input.TextInput
             type={type}
             disabled={disabled}
-            placeholder={'Longitude'}
-            value={getValue(property, type) ?? ''}
-            onChange={(event) => onValueChange(property, type, event.target.value)}
+            placeholder={t('placeholder longitude')}
+            value={lng}
+            onChange={(event) => onValueChange(property, type, { lat, lng: event.target.value })}
             onBlur={onBlur}
           />
           <Input.Validation>{errorMessage}</Input.Validation>
