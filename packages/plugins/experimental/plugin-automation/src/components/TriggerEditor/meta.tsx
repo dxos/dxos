@@ -71,6 +71,7 @@ export const getFunctionMetaExtension = (
       return extension;
     }
   }
+
   // TODO: try to infer by spec type?
   return trigger?.function ? metaExtensions[trigger.function] : metaExtensions['dxos.org/function/gpt'];
 };

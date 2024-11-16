@@ -8,6 +8,7 @@ import { Mutex } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { createSubscriptionTrigger, createWebsocketTrigger, type TriggerFactory } from '@dxos/functions';
 import { FunctionTrigger } from '@dxos/functions/types';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
@@ -44,6 +45,7 @@ export const useLocalTriggerManager = (space: Space) => {
             const ctx = new Context();
             registry.set(trigger.id, ctx);
             const triggerSpec = trigger.spec;
+            invariant(triggerSpec);
 
             let triggerFactory: TriggerFactory<any>;
             if (triggerSpec.type === 'subscription') {

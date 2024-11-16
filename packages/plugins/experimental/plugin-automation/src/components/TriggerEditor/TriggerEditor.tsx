@@ -4,8 +4,6 @@
 
 import React, { type ChangeEventHandler, type FC, useEffect, useMemo } from 'react';
 
-import { FunctionTriggerSchema } from '@dxos/functions';
-import { type FunctionTriggerType } from '@dxos/functions/src';
 import {
   type FunctionTrigger,
   type TriggerType,
@@ -19,7 +17,6 @@ import { invariant } from '@dxos/invariant';
 import { ScriptType } from '@dxos/plugin-script/types';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-data';
 import { distinctBy } from '@dxos/util';
 
 import { InputRow } from './Form';
@@ -108,7 +105,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
 
   const TriggerMeta = getFunctionMetaExtension(trigger, script)?.component;
 
-  return <Form<FunctionTriggerType> schema={FunctionTriggerSchema} values={{}} />;
+  // return <Form<FunctionTriggerType> schema={FunctionTriggerSchema} values={{}} />;
 
   return (
     <div className='flex flex-col py-1'>
