@@ -12,12 +12,11 @@ import { type CollectionType } from '@dxos/plugin-space/types';
 import { Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Path } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
-import { type AddSectionPosition } from '@dxos/react-ui-stack';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { STACK_PLUGIN } from '../meta';
-import { StackViewType, type StackPluginProvides } from '../types';
+import { StackViewType, type StackPluginProvides, type AddSectionPosition } from '../types';
 
 type AddSectionDialogProps = { path?: string; position: AddSectionPosition; collection: CollectionType };
 

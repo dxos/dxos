@@ -8,43 +8,38 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   LayoutAction,
   NavigationAction,
-  Surface,
   parseMetadataResolverPlugin,
   useIntentDispatcher,
   useResolvePlugin,
 } from '@dxos/app-framework';
-import { create, getType, fullyQualifiedId, isReactiveObject } from '@dxos/client/echo';
+import { create, getType, fullyQualifiedId } from '@dxos/client/echo';
 import { useGraph } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 import { type CollectionType } from '@dxos/plugin-space/types';
 import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { AttentionProvider } from '@dxos/react-ui-attention';
-import { type MosaicDataItem, type MosaicDropEvent, type MosaicMoveEvent, Mosaic, Path } from '@dxos/react-ui-mosaic';
-import {
-  type AddSectionPosition,
-  type CollapsedSections,
-  Stack,
-  type StackProps,
-  type StackSectionItem,
-} from '@dxos/react-ui-stack';
+import { Stack } from '@dxos/react-ui-stack';
 import { nonNullable } from '@dxos/util';
 
 import { AddSection } from './AddSection';
-import { SECTION_IDENTIFIER, STACK_PLUGIN } from '../meta';
-import { StackViewType } from '../types';
-
-const SectionContent: StackProps['SectionContent'] = ({ data }) => {
-  // TODO(wittjosiah): Better section placeholder.
-  return <Surface role='section' data={{ object: data }} limit={1} placeholder={<></>} />;
-};
+import { StackContext } from './StackContext';
+import { StackSection } from './StackSection';
+import { STACK_PLUGIN } from '../meta';
+import {
+  StackViewType,
+  type CollapsedSections,
+  type StackSectionMetadata,
+  type StackSectionView,
+  type StackSectionItem,
+  type AddSectionPosition,
+} from '../types';
 
 type StackMainProps = {
   id: string;
   collection: CollectionType;
-  separation?: boolean;
 };
 
-const StackMain = ({ id, collection, separation }: StackMainProps) => {
+const StackMain = ({ id, collection }: StackMainProps) => {
   const dispatch = useIntentDispatcher();
   const { graph } = useGraph();
   const { t } = useTranslation(STACK_PLUGIN);
@@ -67,72 +62,22 @@ const StackMain = ({ id, collection, separation }: StackMainProps) => {
       .map((object) => {
         const metadata = metadataPlugin?.provides.metadata.resolver(
           getType(object)?.objectId ?? 'never',
-        ) as StackSectionItem['metadata'];
+        ) as StackSectionMetadata;
         const view = {
           ...stack.sections[object.id],
           collapsed: collapsedSections[fullyQualifiedId(object)],
           title:
             (object as any)?.title ?? toLocalizedString(graph.findNode(fullyQualifiedId(object))?.properties.label, t),
-        } as StackSectionItem['view'];
-        return { id: fullyQualifiedId(object), object, metadata, view };
+        } as StackSectionView;
+        return { id: fullyQualifiedId(object), object, metadata, view } satisfies StackSectionItem;
       }) ?? [];
 
-  const handleOver = ({ active, over }: MosaicMoveEvent<number>) => {
-    // TODO(thure): Eventually Stack should handle foreign draggables.
-    if (active.type !== SECTION_IDENTIFIER) {
-      return 'reject';
-    }
-    if (Path.parent(active.path) === Path.parent(over.path)) {
-      return 'rearrange';
-    }
-
-    const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;
-    const data = parseData ? parseData(active.item, 'object') : active.item;
-
-    // TODO(wittjosiah): Prevent dropping items which don't have a section renderer?
-    //  Perhaps stack plugin should just provide a fallback section renderer.
-    if (!isReactiveObject(data)) {
-      return 'reject';
-    }
-
-    const exists = items.findIndex(({ id }) => id === active.item.id) >= 0;
-    if (!exists) {
-      return 'transfer';
-    } else {
-      return 'reject';
-    }
-  };
-
-  const handleDrop = ({ operation, active, over }: MosaicDropEvent<number>) => {
-    if (
-      (active.path === Path.create(id, active.item.id) || active.path === id) &&
-      (operation !== 'copy' || over.path === Path.create(id, over.item.id) || over.path === id)
-    ) {
-      collection.objects.splice(active.position!, 1);
-      delete stack.sections[active.item.id];
-    }
-
-    const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;
-    const object = parseData?.(active.item, 'object');
-    if (object && over.path === Path.create(id, over.item.id)) {
-      collection.objects.splice(over.position!, 0, object);
-    } else if (object && over.path === id) {
-      collection.objects.push(object);
-    }
-
-    if (!stack.sections[object.id]) {
-      stack.sections[object.id] = {};
-    }
-  };
-
-  const handleDelete = async (path: string) => {
-    const index = collection.objects
-      .filter(nonNullable)
-      .findIndex((section) => fullyQualifiedId(section) === Path.last(path));
+  const handleDelete = async (id: string) => {
+    const index = collection.objects.filter(nonNullable).findIndex((section) => fullyQualifiedId(section) === id);
     if (index >= 0) {
       await dispatch({
-        action: SpaceAction.REMOVE_OBJECT,
-        data: { object: collection.objects[index], collection },
+        action: SpaceAction.REMOVE_OBJECTS,
+        data: { objects: [collection.objects[index]], collection },
       });
 
       // TODO(wittjosiah): The section should also be removed, but needs to be restored if the action is undone.
@@ -140,56 +85,49 @@ const StackMain = ({ id, collection, separation }: StackMainProps) => {
     }
   };
 
-  // TODO(wittjosiah): Factor out.
-
-  const handleNavigate = async (object: MosaicDataItem) => {
-    const toId = fullyQualifiedId(object);
-    await dispatch([
-      {
-        action: NavigationAction.OPEN,
-        data: { activeParts: { main: [toId] } },
-      },
-      {
-        action: LayoutAction.SCROLL_INTO_VIEW,
-        data: { id: toId },
-      },
-    ]);
-  };
-
-  const handleAddSection = (path: string, position: AddSectionPosition) => {
+  const handleAdd = (id: string, position: AddSectionPosition) => {
     void dispatch?.({
       action: LayoutAction.SET_LAYOUT,
       data: {
         element: 'dialog',
         component: `${STACK_PLUGIN}/AddSectionDialog`,
-        subject: { path, position, collection },
+        subject: { path: id, position, collection },
       },
     });
   };
 
-  const handleCollapseSection = (id: string, collapsed: boolean) => {
+  const handleNavigate = async (id: string) => {
+    await dispatch([
+      {
+        action: NavigationAction.OPEN,
+        data: { activeParts: { main: [id] } },
+      },
+      {
+        action: LayoutAction.SCROLL_INTO_VIEW,
+        data: { id },
+      },
+    ]);
+  };
+
+  const handleCollapse = (id: string, collapsed: boolean) => {
     setCollapsedSections((prev) => ({ ...prev, [id]: collapsed }));
   };
 
   return (
     <AttentionProvider id={id}>
-      <Mosaic.Root>
-        <Mosaic.DragOverlay />
-        <Stack
-          id={id}
-          data-testid='main.stack'
-          SectionContent={SectionContent}
-          type={SECTION_IDENTIFIER}
-          items={items}
-          separation={separation}
-          emptyComponent={<span data-testid='stack.empty'></span>}
-          onDrop={handleDrop}
-          onOver={handleOver}
-          onDeleteSection={handleDelete}
-          onNavigateToSection={handleNavigate}
-          onAddSection={handleAddSection}
-          onCollapseSection={handleCollapseSection}
-        />
+      <StackContext.Provider
+        value={{
+          onCollapse: handleCollapse,
+          onNavigate: handleNavigate,
+          onDelete: handleDelete,
+          onAdd: handleAdd,
+        }}
+      >
+        <Stack orientation='vertical' size='intrinsic' id={id} data-testid='main.stack' classNames='divide-y-reverse'>
+          {items.map((item) => (
+            <StackSection key={item.id} {...item} />
+          ))}
+        </Stack>
 
         {items.length === 0 ? (
           <AddSection collection={collection} />
@@ -214,7 +152,7 @@ const StackMain = ({ id, collection, separation }: StackMainProps) => {
             </Button>
           </div>
         )}
-      </Mosaic.Root>
+      </StackContext.Provider>
     </AttentionProvider>
   );
 };

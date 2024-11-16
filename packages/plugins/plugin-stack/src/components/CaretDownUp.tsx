@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type IconProps } from '@phosphor-icons/react';
-import React from 'react';
+import React, { type ComponentPropsWithoutRef } from 'react';
 
-export const CaretDownUp = ({ children, weight, ...props }: IconProps) => {
+export const CaretDownUp = ({ children, ...props }: ComponentPropsWithoutRef<'svg'>) => {
   return (
     <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' {...props}>
       <rect width='256' height='256' fill='none' />

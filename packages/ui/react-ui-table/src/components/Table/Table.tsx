@@ -16,7 +16,7 @@ import { invariant } from '@dxos/invariant';
 import { Filter, getSpace, fullyQualifiedId } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
 import { type DxGridElement, Grid, type GridContentProps, closestCell } from '@dxos/react-ui-grid';
-import { StackItemContent } from '@dxos/react-ui-stack/next';
+import { StackItem } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 import { isNotFalsy } from '@dxos/util';
 
@@ -34,7 +34,7 @@ const inlineEndLine =
 const blockEndLine =
   '[&>.dx-grid]:before:absolute [&>.dx-grid]:before:inset-inline-0 [&>.dx-grid]:before:-block-end-px [&>.dx-grid]:before:bs-px [&>.dx-grid]:before:bg-separator';
 
-const frozen = { frozenRowsStart: 1, frozenColsEnd: 1 };
+const frozen = { frozenRowsStart: 1, frozenColsStart: 1, frozenColsEnd: 1 };
 
 //
 // Root
@@ -44,9 +44,9 @@ export type TableRootProps = PropsWithChildren<{ role?: string }>;
 
 const TableRoot = ({ children }: TableRootProps) => {
   return (
-    <StackItemContent toolbar contentSize='intrinsic' classNames='relative'>
+    <StackItem.Content toolbar contentSize='intrinsic' classNames='relative'>
       {children}
-    </StackItemContent>
+    </StackItem.Content>
   );
 };
 

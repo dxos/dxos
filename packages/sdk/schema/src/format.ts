@@ -193,5 +193,5 @@ export const getFormatSchema = (format?: FormatEnum): S.Schema<any> => {
     return formatToSchema[FormatEnum.None];
   }
 
-  return formatToSchema[format] ?? FormatEnum.None;
+  return formatToSchema[format] ?? formatToSchema[FormatEnum.None];
 };

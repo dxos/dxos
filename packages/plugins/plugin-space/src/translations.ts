@@ -47,6 +47,7 @@ export default [
         'delete object label': 'Delete item',
         'collection deleted label': 'Collection deleted',
         'object deleted label': 'Item deleted',
+        'objects deleted label': 'Items deleted',
         'go to object label': 'Open item',
         'found object label': 'Ready.',
         'found object description': 'The requested object is now available.',
