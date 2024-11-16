@@ -76,14 +76,14 @@ export const StackItemResizeHandle = ({ className }: { className?: string }) => 
       className={mx(
         orientation === 'horizontal' ? 'cursor-col-resize' : 'cursor-row-resize',
         'group absolute is-3 bs-full inline-end-[-1px]',
-        'before:transition-opacity duration-300 ease-in-out before:opacity-0 hover:befory-100 focus-visible:before:opacity-100 active:before:opacity-100',
-        'before:absolute before:block before:inline-end-0 before:block-start-0 before:ise:bs-full efore:bg-accentFocusIndicator',
+        'before:transition-opacity before:duration-100 before:ease-in-out before:opacity-0 hover:before:opacity-100 focus-visible:before:opacity-100 active:before:opacity-100',
+        'before:absolute before:block before:inset-block-0 before:inline-end-0 before:is-1 before:bg-accentFocusIndicator',
         className,
       )}
     >
       <div
         role='none'
-        className='absolute block-start-0 inline-end-[1px] bs-[--rail-size] flex items-coup-hover:opacity-0 roup-focus-visible:opacity-0 group-active:opacity-0'
+        className='absolute block-start-0 inline-end-[1px] bs-[--rail-size] flex items-center group-hover:opacity-0 group-focus-visible:opacity-0 group-active:opacity-0'
       >
         <DragHandleSignifier />
       </div>
