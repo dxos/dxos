@@ -176,7 +176,7 @@ export const MarkdownEditor = ({
           role='none'
           className={mx(
             'attention-surface is-full',
-            role === 'section' && 'sticky block-start-0 z-[1] border-be !border-separator -mbe-px',
+            role === 'section' && 'sticky block-start-0 z-[1] border-be !border-separator -mbe-px min-is-0',
           )}
         >
           <Toolbar.Root
