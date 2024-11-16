@@ -539,7 +539,7 @@ export const constructObjectActions = ({
       },
     },
     {
-      id: getId(SpaceAction.REMOVE_OBJECT),
+      id: getId(SpaceAction.REMOVE_OBJECTS),
       type: ACTION_TYPE,
       data: async () => {
         const graph = getGraph(node);
@@ -548,8 +548,8 @@ export const constructObjectActions = ({
           .find(({ data }) => data instanceof CollectionType)?.data;
         await dispatch([
           {
-            action: SpaceAction.REMOVE_OBJECT,
-            data: { object, collection },
+            action: SpaceAction.REMOVE_OBJECTS,
+            data: { objects: [object], collection },
           },
         ]);
       },

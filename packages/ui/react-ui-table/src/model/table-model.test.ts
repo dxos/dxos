@@ -51,22 +51,22 @@ describe('TableModel', () => {
       expect(model.pinnedRows.top).not.toContain(1);
     });
 
-    it('should select a row', () => {
-      model.selectRow(2);
-      expect(model.rowSelection).toContain(2);
+    it('should toggle row selection', () => {
+      model.selection.toggleSelectionForRowIndex(2);
+      expect(model.selection.hasSelection.value).toBe(true);
     });
 
     it('should deselect a row', () => {
-      model.selectRow(2);
-      model.deselectRow(2);
-      expect(model.rowSelection).not.toContain(2);
+      model.selection.toggleSelectionForRowIndex(2);
+      model.selection.toggleSelectionForRowIndex(2);
+      expect(model.selection.hasSelection.value).toBe(false);
     });
 
-    it('should deselect all rows', () => {
-      model.selectRow(1);
-      model.selectRow(2);
-      model.deselectAllRows();
-      expect(model.rowSelection).toHaveLength(0);
+    it('should bulk select rows', () => {
+      model.selection.setSelection('all');
+      expect(model.selection.allRowsSeleted.value).toBe(true);
+      model.selection.setSelection('none');
+      expect(model.selection.hasSelection.value).toBe(false);
     });
   });
 

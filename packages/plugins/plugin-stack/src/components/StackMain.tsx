@@ -76,8 +76,8 @@ const StackMain = ({ id, collection }: StackMainProps) => {
     const index = collection.objects.filter(nonNullable).findIndex((section) => fullyQualifiedId(section) === id);
     if (index >= 0) {
       await dispatch({
-        action: SpaceAction.REMOVE_OBJECT,
-        data: { object: collection.objects[index], collection },
+        action: SpaceAction.REMOVE_OBJECTS,
+        data: { objects: [collection.objects[index]], collection },
       });
 
       // TODO(wittjosiah): The section should also be removed, but needs to be restored if the action is undone.
