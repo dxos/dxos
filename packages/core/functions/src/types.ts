@@ -2,15 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import { RawObject, S, TypedObject } from '@dxos/echo-schema';
+import { AST, RawObject, S, TypedObject } from '@dxos/echo-schema';
 
 /**
  * Type discriminator for TriggerSpec.
- * Every spec has a type field of type FunctionTriggerType that we can use to understand which
+ * Every spec has a type field of type TriggerType that we can use to understand which
  * type we're working with.
  * https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions
  */
-export type FunctionTriggerType = 'subscription' | 'timer' | 'webhook' | 'websocket';
+export type TriggerType = 'timer' | 'webhook' | 'websocket' | 'subscription';
+
+//
+// Timer
+//
 
 const TimerTriggerSchema = S.Struct({
   type: S.Literal('timer'),
@@ -18,6 +22,10 @@ const TimerTriggerSchema = S.Struct({
 }).pipe(S.mutable);
 
 export type TimerTrigger = S.Schema.Type<typeof TimerTriggerSchema>;
+
+//
+// Webhook
+//
 
 const WebhookTriggerSchema = S.Struct({
   type: S.Literal('webhook'),
@@ -28,6 +36,10 @@ const WebhookTriggerSchema = S.Struct({
 
 export type WebhookTrigger = S.Schema.Type<typeof WebhookTriggerSchema>;
 
+//
+// Websocket
+//
+
 const WebsocketTriggerSchema = S.Struct({
   type: S.Literal('websocket'),
   url: S.String,
@@ -35,6 +47,10 @@ const WebsocketTriggerSchema = S.Struct({
 }).pipe(S.mutable);
 
 export type WebsocketTrigger = S.Schema.Type<typeof WebsocketTriggerSchema>;
+
+//
+// Subscription
+//
 
 const QuerySchema = S.Struct({
   type: S.String,
@@ -57,7 +73,11 @@ const SubscriptionTriggerSchema = S.Struct({
 
 export type SubscriptionTrigger = S.Schema.Type<typeof SubscriptionTriggerSchema>;
 
-const TriggerSpecSchema = S.Union(
+//
+// Union
+//
+
+const TriggerSchema = S.Union(
   TimerTriggerSchema,
   WebhookTriggerSchema,
   WebsocketTriggerSchema,
@@ -69,6 +89,7 @@ export type TriggerSpec = TimerTrigger | WebhookTrigger | WebsocketTrigger | Sub
 /**
  * Function definition.
  */
+// TODO(burdon): Reconcile with edge.
 export class FunctionDef extends TypedObject({
   typename: 'dxos.org/type/FunctionDef',
   version: '0.1.0',
@@ -79,20 +100,26 @@ export class FunctionDef extends TypedObject({
   handler: S.String,
 }) {}
 
+export const FunctionTriggerSchema = S.Struct({
+  name: S.optional(S.String),
+  function: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Function URI.' })),
+  enabled: S.optional(S.Boolean),
+  spec: S.optional(TriggerSchema),
+
+  // TODO(burdon): Get meta from function.
+  // The `meta` property is merged into the event data passed to the function.
+  meta: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
+});
+
+export type FunctionTriggerType = S.Schema.Type<typeof FunctionTriggerSchema>;
+
 /**
  * Function trigger.
  */
 export class FunctionTrigger extends TypedObject({
   typename: 'dxos.org/type/FunctionTrigger',
   version: '0.1.0',
-})({
-  name: S.optional(S.String),
-  enabled: S.optional(S.Boolean),
-  function: S.String.pipe(S.annotations({ description: 'Function URI.' })),
-  // The `meta` property is merged into the event data passed to the function.
-  meta: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
-  spec: TriggerSpecSchema,
-}) {}
+})(FunctionTriggerSchema.fields) {}
 
 /**
  * Function manifest file.
@@ -104,5 +131,4 @@ export const FunctionManifestSchema = S.Struct({
 
 export type FunctionManifest = S.Schema.Type<typeof FunctionManifestSchema>;
 
-// TODO(burdon): Standards?
 export const FUNCTION_SCHEMA = [FunctionDef, FunctionTrigger];

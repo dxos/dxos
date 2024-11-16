@@ -12,8 +12,8 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexMap, diff } from '@dxos/util';
 
-import { createSubscriptionTrigger, createTimerTrigger, createWebsocketTrigger } from './type';
-import { type FunctionManifest, FunctionTrigger, type FunctionTriggerType, type TriggerSpec } from '../types';
+import { createSubscriptionTrigger, createTimerTrigger } from './type';
+import { type FunctionManifest, FunctionTrigger, type TriggerType, type TriggerSpec } from '../types';
 
 type ResponseCode = number;
 
@@ -28,15 +28,13 @@ export type TriggerFactory<Spec extends TriggerSpec, Options = any> = (
   options?: Options,
 ) => Promise<void>;
 
-export type TriggerFactoryMap = Record<FunctionTriggerType, TriggerFactory<any>>;
+export type TriggerFactoryMap = Partial<Record<TriggerType, TriggerFactory<any>>>;
 
 const triggerFactory: TriggerFactoryMap = {
-  subscription: createSubscriptionTrigger,
   timer: createTimerTrigger,
   // TODO(burdon): Cannot use in browser.
   // webhook: createWebhookTrigger,
-  webhook: null as any,
-  websocket: createWebsocketTrigger,
+  subscription: createSubscriptionTrigger,
 };
 
 export type TriggerEvent = {
@@ -84,6 +82,7 @@ export class TriggerRegistry extends Resource {
 
     try {
       // Create trigger.
+      invariant(trigger.spec);
       const options = this._options?.[trigger.spec.type];
       const createTrigger = triggerFactory[trigger.spec.type];
       invariant(createTrigger, `Trigger factory not found: ${trigger.spec.type}`);
@@ -112,7 +111,7 @@ export class TriggerRegistry extends Resource {
       let keys = trigger[ECHO_ATTR_META]?.keys;
       delete trigger[ECHO_ATTR_META];
       if (!keys?.length) {
-        keys = [foreignKey('manifest', [trigger.function, trigger.spec.type].join(':'))];
+        keys = [foreignKey('manifest', [trigger.function, trigger.spec?.type].join(':'))];
       }
 
       return create(FunctionTrigger, trigger, { keys });
