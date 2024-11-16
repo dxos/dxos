@@ -8,7 +8,6 @@ import { type Meta, type StoryObj } from '@storybook/react';
 import React from 'react';
 
 import { S } from '@dxos/echo-schema';
-import { type PropertyKey } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { FormInput, type FormInputProps } from './FormInput';
@@ -53,7 +52,7 @@ type Story = StoryObj<StoryProps>;
 
 export const Default: Story = {
   args: {
-    property: 'name' as PropertyKey<TestType>,
+    property: 'name',
     type: 'string',
     label: 'Name',
     getValue: <V,>(property: keyof TestType) => obj[property] as V,

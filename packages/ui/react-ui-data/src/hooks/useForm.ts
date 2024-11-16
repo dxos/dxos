@@ -166,7 +166,9 @@ export const useForm = <T extends object>({
    */
   const canSubmit = useMemo(
     () =>
-      Object.keys(values).every((key) => touched[key as PropertyKey<T>] === false || !errors[key as PropertyKey<T>]),
+      Object.keys(values).every(
+        (property) => touched[property as PropertyKey<T>] === false || !errors[property as PropertyKey<T>],
+      ),
     [values, touched, errors],
   );
 

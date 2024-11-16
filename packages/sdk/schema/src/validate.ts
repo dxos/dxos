@@ -5,7 +5,8 @@
 import { ArrayFormatter, Schema as S } from '@effect/schema';
 import { Effect } from 'effect';
 
-import { type ValidationError } from './types';
+// TODO(ZaymonFC): This error type is anaemic.
+export type ValidationError = { path: string; message: string };
 
 export const validateSchema = <T>(schema: S.Schema<T>, data: any): ValidationError[] | undefined => {
   const validator = S.decodeUnknownEither(schema, { errors: 'all' });
