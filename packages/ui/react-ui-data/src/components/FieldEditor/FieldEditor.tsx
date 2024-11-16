@@ -29,6 +29,9 @@ export type FieldEditorProps = {
   onClose: () => void;
 };
 
+/**
+ * Displays a Form representing the metadata for a given `Field` and `View`.
+ */
 export const FieldEditor = ({ view, projection, field, registry, onClose }: FieldEditorProps) => {
   const { t } = useTranslation(translationKey);
   const [props, setProps] = useState<PropertyType>(projection.getFieldProjection(field.id).props);

@@ -8,7 +8,7 @@ import { type S } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { getSchemaProperties, type SchemaProperty, type ValidationError } from '@dxos/schema';
+import { getSchemaProperties, type PropertyKey, type SchemaProperty, type ValidationError } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
 import { FormInput, type FormInputProps, isDefaultInputType } from './FormInput';
@@ -28,11 +28,15 @@ export type FormProps<T extends object> = ThemedClassName<{
   onValuesChanged?: (values: T) => void;
   onSave?: (values: T) => void;
   onCancel?: () => void;
-  Custom?: Partial<Record<keyof T, FC<FormInputProps<T>>>>;
+
+  /**
+   * Map of custom renderers for specific properties.
+   */
+  Custom?: Partial<Record<PropertyKey<T>, FC<FormInputProps<T>>>>;
 }>;
 
 /**
- * General purpose form control that generates properties based on the schema.
+ * General purpose form component that displays field controls based on the given schema.
  */
 export const Form = <T extends object>({
   classNames,

@@ -106,9 +106,37 @@ export const useForm = <T extends object>({
     validate(values);
   }, [schema, validate, values]);
 
+  /**
+   * NOTE: We can submit if there is no touched field that has an error.
+   * Basically, if there's a validation message visible in the form, submit should be disabled.
+   */
+  const canSubmit = useMemo(
+    () =>
+      Object.keys(values).every(
+        (property) => touched[property as PropertyKey<T>] === false || !errors[property as PropertyKey<T>],
+      ),
+    [values, touched, errors],
+  );
+
+  const handleSubmit = useCallback(() => {
+    if (validate(values)) {
+      onSubmit(values, { changed });
+    }
+  }, [values, validate, onSubmit]);
+
   //
-  // Values.
+  // Fields.
   //
+
+  const getErrorValence = useCallback(
+    (property: PropertyKey<T>) => (touched[property] && errors[property] ? 'error' : undefined),
+    [touched, errors],
+  );
+
+  const getErrorMessage = useCallback(
+    (property: PropertyKey<T>) => (touched[property] && errors[property] ? errors[property] : undefined),
+    [touched, errors],
+  );
 
   // TODO(burdon): Check V agrees with type.
   // TODO(burdon): Use path to extract hierarchical value.
@@ -133,12 +161,7 @@ export const useForm = <T extends object>({
     onValuesChanged?.(newValues);
   };
 
-  //
-  // Helpers.
-  //
-
-  const touchAll = useCallback(() => setTouched(markAllTouched(values)), [values, setTouched]);
-
+  // TODO(burdon): This is a leaky abstraction: the hook ideally shouldn't get involved in UX.
   const onBlur = useCallback(
     (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const { name } = event.target;
@@ -146,50 +169,14 @@ export const useForm = <T extends object>({
 
       // TODO(Zan): This should be configurable behavior.
       if (event.relatedTarget?.getAttribute('type') === 'submit') {
-        // NOTE: We do this here instead of onSubmit, because the blur event is triggered before the submit event
+        // NOTE: We do this here instead of onSubmit because the blur event is triggered before the submit event
         //  and results in the submit button being disabled when the form is invalid.
-        touchAll();
+        setTouched(markAllTouched(values));
       }
 
       validate(values);
     },
-    [validate, values, touchAll],
-  );
-
-  //
-  // Submission.
-  //
-
-  /**
-   * NOTE: We can submit if there is no touched field that has an error.
-   * Basically, if there's a validation message visible in the form, submit should be disabled.
-   */
-  const canSubmit = useMemo(
-    () =>
-      Object.keys(values).every(
-        (property) => touched[property as PropertyKey<T>] === false || !errors[property as PropertyKey<T>],
-      ),
-    [values, touched, errors],
-  );
-
-  const handleSubmit = useCallback(() => {
-    if (validate(values)) {
-      onSubmit(values, { changed });
-    }
-  }, [values, validate, onSubmit]);
-
-  //
-  // Helpers
-  //
-
-  const getErrorValence = useCallback(
-    (property: PropertyKey<T>) => (touched[property] && errors[property] ? 'error' : undefined),
-    [touched, errors],
-  );
-
-  const getErrorMessage = useCallback(
-    (property: PropertyKey<T>) => (touched[property] && errors[property] ? errors[property] : undefined),
-    [touched, errors],
+    [validate, values],
   );
 
   return {
