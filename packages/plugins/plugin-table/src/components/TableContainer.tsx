@@ -38,6 +38,12 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : () => false, undefined, [schema]);
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
+  const handleInsertRow = useCallback(() => {
+    if (schema && space) {
+      space.db.add(create(schema, {}));
+    }
+  }, [schema, space]);
+
   const handleDeleteRow = useCallback(
     (_row: number, object: any) => {
       void dispatch({ action: SpaceAction.REMOVE_OBJECT, data: { object } });
@@ -66,6 +72,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
     table,
     projection,
     objects: filteredObjects,
+    onInsertRow: handleInsertRow,
     onDeleteRow: handleDeleteRow,
     onDeleteColumn: handleDeleteColumn,
     onCellUpdate: (cell) => tableRef.current?.update?.(cell),
