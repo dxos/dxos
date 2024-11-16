@@ -51,7 +51,7 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }
   const node = useNode(graph, entry?.id);
   const rootElement = useRef<HTMLDivElement | null>(null);
   const canResize = layoutMode === 'deck';
-  const Root = part === 'solo' ? 'div' : StackItem.Root;
+  const Root = part === 'solo' ? 'article' : StackItem.Root;
 
   const attendableAttrs = useAttendableAttributes(coordinate.entryId);
   const index = indexInPart(layoutParts, coordinate);
@@ -110,6 +110,7 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }
     <Root
       ref={rootElement}
       data-testid='deck.plank'
+      tabIndex={0}
       {...(part === 'solo'
         ? ({ ...sizeAttrs, className } as any)
         : {

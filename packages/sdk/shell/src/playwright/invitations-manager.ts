@@ -129,7 +129,14 @@ export class InvitationsManager extends ScopedShellManager {
 
     if (!options) {
       const peer = this.peer(id);
-      await peer.getByTestId(`${type}s-panel.create-invitation`).click();
+      if (type === 'space') {
+        await peer.getByTestId('spaces-panel.create-invitation.more').click();
+        // NOTE: This is a popper portal.
+        await this.page.getByTestId('spaces-panel.invite-one').click();
+        await peer.getByTestId('spaces-panel.create-invitation').click();
+      } else {
+        await peer.getByTestId(`${type}s-panel.create-invitation`).click();
+      }
       return this._invitationCode.wait();
     }
 

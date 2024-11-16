@@ -59,7 +59,7 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
   const scrollLeftRef = useRef<number | null>();
   const deckRef = useRef<HTMLDivElement>(null);
 
-  const isSoloModeLoaded = layoutMode === 'solo' && layoutParts.solo;
+  const isSoloModeLoaded = layoutMode === 'solo' && Boolean(layoutParts.solo?.[0]);
 
   // Ensure the first plank is attended when the deck is first rendered.
   useEffect(() => {
