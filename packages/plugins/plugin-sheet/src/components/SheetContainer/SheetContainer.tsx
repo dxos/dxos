@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type Space } from '@dxos/react-client/echo';
-import { StackItemContent } from '@dxos/react-ui-stack/next';
+import { StackItem } from '@dxos/react-ui-stack';
 
 import { type SheetType } from '../../types';
 import { useComputeGraph } from '../ComputeGraph';
@@ -19,7 +19,7 @@ export const SheetContainer = ({ space, sheet, role }: { space: Space; sheet: Sh
 
   return graph ? (
     <SheetProvider sheet={sheet} graph={graph}>
-      <StackItemContent toolbar statusbar classNames='border-bs border-separator'>
+      <StackItem.Content toolbar statusbar classNames='border-bs border-separator'>
         <Toolbar.Root role={role}>
           <Toolbar.Styles />
           <Toolbar.Alignment />
@@ -28,7 +28,7 @@ export const SheetContainer = ({ space, sheet, role }: { space: Space; sheet: Sh
         </Toolbar.Root>
         <GridSheet />
         <FunctionEditor />
-      </StackItemContent>
+      </StackItem.Content>
     </SheetProvider>
   ) : null;
 };

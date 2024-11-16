@@ -25,7 +25,7 @@ import {
   useSidebars,
   useTranslation,
 } from '@dxos/react-ui';
-import { PlankHeading } from '@dxos/react-ui-stack/next';
+import { LayoutControls } from '@dxos/react-ui-stack';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { NAVTREE_PLUGIN } from '../meta';
@@ -142,7 +142,7 @@ export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
 
       {/* NOTE(thure): Unpinning from the NavTree’s default position in Deck is temporarily disabled. */}
       {navigationPlugin?.meta.id === 'dxos.org/plugin/deck' && (
-        <PlankHeading.Controls
+        <LayoutControls
           variant='hide-disabled'
           capabilities={{
             incrementStart: false,
