@@ -143,6 +143,7 @@ export const useForm = <T extends object>({
     return values[property] as V;
   };
 
+  // TODO(burdon): Use path to set hierarchical value.
   const onValueChange = (property: PropertyKey<T>, type: SimpleType, value: any) => {
     let parsedValue = value;
     try {

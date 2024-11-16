@@ -20,7 +20,7 @@ addons.setConfig({
 addons.register('dxos', (api) => {
   const update = (darkMode: boolean) => {
     addons.setConfig({
-        showPanel: false,
+      showPanel: false,
 
       theme: create({
         base: darkMode ? 'dark' : 'light',
