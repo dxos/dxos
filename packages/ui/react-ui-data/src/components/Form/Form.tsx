@@ -11,8 +11,8 @@ import { mx } from '@dxos/react-ui-theme';
 import { getSchemaProperties, type PropertyKey, type SchemaProperty, type ValidationError } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
-import { FormInput, type FormInputProps, isDefaultInputType } from './FormInput';
-import { useForm } from '../../hooks';
+import { getPropertyInput } from './factory';
+import { type InputProps, useForm } from '../../hooks';
 import { translationKey } from '../../translations';
 
 export type PropsFilter<T extends Object> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
@@ -32,7 +32,7 @@ export type FormProps<T extends object> = ThemedClassName<{
   /**
    * Map of custom renderers for specific properties.
    */
-  Custom?: Partial<Record<PropertyKey<T>, FC<FormInputProps<T>>>>;
+  Custom?: Partial<Record<PropertyKey<T>, FC<InputProps<T>>>>;
 }>;
 
 /**
@@ -90,7 +90,8 @@ export const Form = <T extends object>({
           }
 
           // Custom property allows for sub forms.
-          const PropertyInput = Custom?.[property] ?? (isDefaultInputType(type, format) ? FormInput<T> : undefined);
+          // TODO(burdon): Use Select control if options are present.
+          const PropertyInput = Custom?.[property] ?? getPropertyInput<T>(type, format);
           if (!PropertyInput) {
             log.warn('no renderer for property', { property, type });
             return null;

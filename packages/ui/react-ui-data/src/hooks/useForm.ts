@@ -2,16 +2,34 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type FocusEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { type FC, type FocusEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
+import { type FormatEnum } from '@dxos/echo-schema';
 import { type SimpleType, type S } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { validateSchema, type PropertyKey, type ValidationError } from '@dxos/schema';
 
 /**
+ * Field input component props.
+ */
+// TODO(burdon): Rename.
+export type InputProps<T extends object = {}> = {
+  property: PropertyKey<T>;
+  type: SimpleType;
+  format?: FormatEnum;
+  label: string;
+  options?: Array<{ value: string | number; label?: string }>;
+  disabled?: boolean;
+  placeholder?: string;
+} & Pick<FormHandler<T>, 'getErrorValence' | 'getErrorMessage' | 'getValue' | 'onValueChange' | 'onBlur'>;
+
+// TODO(burdon): Rename.
+export type InputComponent<T extends object = {}> = FC<InputProps<T>>;
+
+/**
  * Return type from `useForm` hook.
  */
-export type FormHandler<T extends object> = {
+export type FormHandler<T extends object = {}> = {
   //
   // State management for form.
   //
@@ -24,7 +42,7 @@ export type FormHandler<T extends object> = {
   handleSubmit: () => void;
 
   //
-  // Property input component helpers.
+  // Field input component helpers.
   //
 
   getErrorValence: (property: PropertyKey<T>) => 'error' | undefined;
@@ -34,6 +52,9 @@ export type FormHandler<T extends object> = {
   onBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 };
 
+/**
+ * Hook options.
+ */
 export interface FormOptions<T extends object> {
   initialValues: T;
   schema?: S.Schema<T>;

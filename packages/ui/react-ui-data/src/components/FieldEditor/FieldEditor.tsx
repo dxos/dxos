@@ -19,7 +19,8 @@ import {
 } from '@dxos/schema';
 
 import { translationKey } from '../../translations';
-import { Form, FormInput, type FormProps } from '../Form';
+import { Form, type FormProps } from '../Form';
+import { SelectField } from '../Form/Defaults';
 
 export type FieldEditorProps = {
   view: ViewType;
@@ -133,7 +134,7 @@ export const FieldEditor = ({ view, projection, field, registry, onClose, onCanc
       onCancel={handleCancel}
       Custom={{
         format: (props) => (
-          <FormInput<PropertyType>
+          <SelectField<PropertyType>
             {...props}
             options={FormatEnums.filter((value) => value !== FormatEnum.None).map((value) => ({
               value,
@@ -142,7 +143,7 @@ export const FieldEditor = ({ view, projection, field, registry, onClose, onCanc
           />
         ),
         referenceSchema: (props) => (
-          <FormInput<PropertyType>
+          <SelectField<PropertyType>
             {...props}
             options={schemas.map((schema) => ({
               value: schema.typename,
@@ -150,7 +151,7 @@ export const FieldEditor = ({ view, projection, field, registry, onClose, onCanc
           />
         ),
         referencePath: (props) => (
-          <FormInput<PropertyType>
+          <SelectField<PropertyType>
             {...props}
             options={
               schema
