@@ -7,6 +7,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { DropdownMenu } from '@dxos/react-ui';
 import { FieldEditor } from '@dxos/react-ui-data';
 import { type FieldType } from '@dxos/schema';
+import { getSpace } from '@dxos/react-client/echo';
 
 import { type TableModel } from '../../model';
 
@@ -15,6 +16,8 @@ type ColumnSettingsProps = { model?: TableModel };
 export const ColumnSettings = ({ model }: ColumnSettingsProps) => {
   const [newField, setNewField] = useState<FieldType>();
   const state = model?.modalController.state.value;
+
+  const space = getSpace(model?.table);
 
   useEffect(() => {
     if (state?.type === 'columnSettings' && state.mode.type === 'create' && model?.projection) {
@@ -50,6 +53,7 @@ export const ColumnSettings = ({ model }: ColumnSettingsProps) => {
               view={model.table.view}
               projection={model.projection}
               field={field}
+              registry={space?.db.schemaRegistry}
               onClose={() => model.modalController.close()}
             />
           </DropdownMenu.Viewport>
