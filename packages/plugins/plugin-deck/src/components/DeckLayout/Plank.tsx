@@ -42,7 +42,6 @@ export type PlankProps = {
 };
 
 export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }: PlankProps) => {
-  // const { t } = useTranslation(DECK_PLUGIN);
   const dispatch = useIntentDispatcher();
   const coordinate: LayoutCoordinate = useMemo(() => ({ part, entryId: entry?.id ?? UNKNOWN_ID }), [entry?.id, part]);
   const { popoverAnchorId, scrollIntoView } = useLayout();
@@ -82,6 +81,7 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }
   }, [coordinate.entryId, scrollIntoView, layoutMode]);
 
   const isSolo = layoutMode === 'solo' && part === 'solo';
+  const isAttendable = isSolo || (layoutMode === 'deck' && part === 'main');
 
   const sizeAttrs = useMainSize();
 
@@ -121,7 +121,7 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }
             order,
             role: 'article',
           })}
-      {...attendableAttrs}
+      {...(isAttendable ? attendableAttrs : {})}
       onKeyDown={handleKeyDown}
     >
       {node ? (
