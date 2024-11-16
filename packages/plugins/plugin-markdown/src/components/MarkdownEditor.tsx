@@ -172,17 +172,25 @@ export const MarkdownEditor = ({
   return (
     <StackItem.Content toolbar={toolbar} contentSize={role === 'article' ? 'cover' : 'intrinsic'}>
       {toolbar && (
-        <Toolbar.Root
-          classNames={[textBlockWidth, !hasAttention && 'opacity-20']}
-          state={formattingState && { ...formattingState, ...commentsState }}
-          onAction={handleAction}
+        <div
+          role='none'
+          className={mx(
+            'attention-surface',
+            role === 'section' && 'sticky block-start-0 z-10 border-be !border-separator -mbe-px',
+          )}
         >
-          <Toolbar.Markdown />
-          {onFileUpload && <Toolbar.Custom onUpload={onFileUpload} />}
-          <Toolbar.Separator />
-          <Toolbar.View mode={viewMode ?? DEFAULT_VIEW_MODE} />
-          <Toolbar.Actions />
-        </Toolbar.Root>
+          <Toolbar.Root
+            classNames={[textBlockWidth, !hasAttention && 'opacity-20']}
+            state={formattingState && { ...formattingState, ...commentsState }}
+            onAction={handleAction}
+          >
+            <Toolbar.Markdown />
+            {onFileUpload && <Toolbar.Custom onUpload={onFileUpload} />}
+            <Toolbar.Separator />
+            <Toolbar.View mode={viewMode ?? DEFAULT_VIEW_MODE} />
+            <Toolbar.Actions />
+          </Toolbar.Root>
+        </div>
       )}
       <div
         role='none'
