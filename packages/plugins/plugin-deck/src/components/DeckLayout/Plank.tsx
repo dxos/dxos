@@ -99,7 +99,7 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }
   const placeholder = useMemo(() => <PlankLoading />, []);
 
   const className = mx(
-    'attention-surface',
+    'attention-surface relative',
     isSolo && mainIntrinsicSize,
     isSolo && railGridHorizontal,
     isSolo && 'grid absolute inset-0 divide-separator divide-y',
@@ -130,13 +130,13 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }
             canIncrementStart={canIncrementStart}
             canIncrementEnd={canIncrementEnd}
             popoverAnchorId={popoverAnchorId}
-            canResize={canResize}
           />
           <Surface role='article' data={data} limit={1} fallback={PlankContentError} placeholder={placeholder} />
         </>
       ) : (
         <PlankError layoutCoordinate={coordinate} />
       )}
+      {canResize && <StackItem.ResizeHandle className='!border-lb-0' />}
     </Root>
   );
 });

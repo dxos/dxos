@@ -26,7 +26,6 @@ export type NodePlankHeadingProps = {
   node?: Node;
   canIncrementStart?: boolean;
   canIncrementEnd?: boolean;
-  canResize?: boolean;
   popoverAnchorId?: string;
   pending?: boolean;
   actions?: StackItemSigilAction[];
@@ -38,7 +37,6 @@ export const NodePlankHeading = memo(
     node,
     canIncrementStart,
     canIncrementEnd,
-    canResize,
     popoverAnchorId,
     pending,
     actions = [],
@@ -71,9 +69,8 @@ export const NodePlankHeading = memo(
         solo: (layoutPart === 'solo' || layoutPart === 'main') && isNotMobile,
         incrementStart: canIncrementStart,
         incrementEnd: canIncrementEnd,
-        resize: canResize,
       }),
-      [isNotMobile, layoutPart, canIncrementStart, canIncrementEnd, canResize],
+      [isNotMobile, layoutPart, canIncrementStart, canIncrementEnd],
     );
 
     return (
@@ -116,7 +113,7 @@ export const NodePlankHeading = memo(
         <PlankControls
           capabilities={capabilities}
           isSolo={layoutPart === 'solo'}
-          classNames='mis-1'
+          classNames='mx-1'
           onClick={(eventType) => {
             if (!layoutPart) {
               return;
@@ -158,6 +155,7 @@ export const NodePlankHeading = memo(
           }}
           close={layoutPart === 'complementary' ? 'minify-end' : true}
         >
+          {/* TODO(wittjosiah): This doesn't behave exactly the same as the rest of the button group. */}
           {layoutPart === 'main' && (
             <IconButton
               iconOnly
