@@ -9,7 +9,7 @@ import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space';
 import { create, fullyQualifiedId, getSpace, Filter, useQuery } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
-import { StackItemContent } from '@dxos/react-ui-stack/next';
+import { StackItem } from '@dxos/react-ui-stack';
 import {
   Table,
   type TableController,
@@ -107,7 +107,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   );
 
   return (
-    <StackItemContent toolbar>
+    <StackItem.Content toolbar>
       <Toolbar.Root onAction={handleAction} classNames={!hasAttention && 'opacity-20'}>
         <Toolbar.Editing />
         <Toolbar.Separator />
@@ -116,7 +116,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
       <Table.Root role={role}>
         <Table.Main key={table.id} ref={tableRef} model={model} />
       </Table.Root>
-    </StackItemContent>
+    </StackItem.Content>
   );
 };
 

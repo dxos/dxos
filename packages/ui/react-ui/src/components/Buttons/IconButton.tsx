@@ -13,7 +13,7 @@ type IconButtonProps = Omit<ButtonProps, 'children'> &
   Pick<IconProps, 'icon'> & { label: string; iconOnly?: boolean; tooltipPortal?: boolean; tooltipZIndex?: string };
 
 const IconOnlyButton = forwardRef<HTMLButtonElement, IconButtonProps>(
-  ({ tooltipPortal, tooltipZIndex: zIndex, ...props }, forwardedRef) => {
+  ({ tooltipPortal = true, tooltipZIndex: zIndex, ...props }, forwardedRef) => {
     const content = (
       <Tooltip.Content {...(zIndex && { style: { zIndex } })}>
         {props.label}

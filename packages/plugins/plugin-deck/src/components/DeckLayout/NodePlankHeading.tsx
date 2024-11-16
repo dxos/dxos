@@ -14,9 +14,10 @@ import {
 } from '@dxos/app-framework';
 import { type Node, useGraph } from '@dxos/plugin-graph';
 import { Icon, Popover, toLocalizedString, useMediaQuery, useTranslation, IconButton } from '@dxos/react-ui';
-import { PlankHeading, type PlankHeadingAction } from '@dxos/react-ui-stack/next';
+import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 
+import { PlankControls } from './PlankControls';
 import { DECK_PLUGIN } from '../../meta';
 import { useLayout } from '../LayoutContext';
 
@@ -25,10 +26,9 @@ export type NodePlankHeadingProps = {
   node?: Node;
   canIncrementStart?: boolean;
   canIncrementEnd?: boolean;
-  canResize?: boolean;
   popoverAnchorId?: string;
   pending?: boolean;
-  actions?: PlankHeadingAction[];
+  actions?: StackItemSigilAction[];
 };
 
 export const NodePlankHeading = memo(
@@ -37,7 +37,6 @@ export const NodePlankHeading = memo(
     node,
     canIncrementStart,
     canIncrementEnd,
-    canResize,
     popoverAnchorId,
     pending,
     actions = [],
@@ -70,16 +69,15 @@ export const NodePlankHeading = memo(
         solo: (layoutPart === 'solo' || layoutPart === 'main') && isNotMobile,
         incrementStart: canIncrementStart,
         incrementEnd: canIncrementEnd,
-        resize: canResize,
       }),
-      [isNotMobile, layoutPart, canIncrementStart, canIncrementEnd, canResize],
+      [isNotMobile, layoutPart, canIncrementStart, canIncrementEnd],
     );
 
     return (
-      <PlankHeading.Root classNames='pie-1'>
+      <StackItem.Heading classNames='pie-1'>
         <ActionRoot>
           {node ? (
-            <PlankHeading.ActionsMenu
+            <StackItem.Sigil
               icon={icon}
               related={layoutPart === 'complementary'}
               attendableId={attendableId}
@@ -90,32 +88,32 @@ export const NodePlankHeading = memo(
               }
             >
               <Surface role='menu-footer' data={{ object: node.data }} />
-            </PlankHeading.ActionsMenu>
+            </StackItem.Sigil>
           ) : (
-            <PlankHeading.Button>
+            <StackItem.SigilButton>
               <span className='sr-only'>{label}</span>
               <Icon icon={icon} size={5} />
-            </PlankHeading.Button>
+            </StackItem.SigilButton>
           )}
         </ActionRoot>
         <TextTooltip text={label} onlyWhenTruncating>
-          <PlankHeading.Label
+          <StackItem.HeadingLabel
             attendableId={attendableId}
             related={layoutPart === 'complementary'}
             {...(pending && { classNames: 'text-description' })}
           >
             {label}
-          </PlankHeading.Label>
+          </StackItem.HeadingLabel>
         </TextTooltip>
         {node && layoutPart !== 'complementary' && (
           // TODO(Zan): What are we doing with layout coordinate here?
           <Surface role='navbar-end' direction='inline-reverse' data={{ object: node.data }} />
         )}
         {/* NOTE(thure): Pinning & unpinning are temporarily disabled */}
-        <PlankHeading.Controls
+        <PlankControls
           capabilities={capabilities}
           isSolo={layoutPart === 'solo'}
-          classNames='mis-1'
+          classNames='mx-1'
           onClick={(eventType) => {
             if (!layoutPart) {
               return;
@@ -157,6 +155,7 @@ export const NodePlankHeading = memo(
           }}
           close={layoutPart === 'complementary' ? 'minify-end' : true}
         >
+          {/* TODO(wittjosiah): This doesn't behave exactly the same as the rest of the button group. */}
           {layoutPart !== 'complementary' && (
             <IconButton
               iconOnly
@@ -168,8 +167,8 @@ export const NodePlankHeading = memo(
               tooltipZIndex='70'
             />
           )}
-        </PlankHeading.Controls>
-      </PlankHeading.Root>
+        </PlankControls>
+      </StackItem.Heading>
     );
   },
 );

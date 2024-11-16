@@ -14,7 +14,7 @@ import {
 import { useGraph } from '@dxos/plugin-graph';
 import { Main } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
-import { railGridHorizontal } from '@dxos/react-ui-stack/next';
+import { railGridHorizontal, StackContext } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 
 import { NodePlankHeading } from './NodePlankHeading';
@@ -62,21 +62,23 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
   // TODO(burdon): Debug panel doesn't change when switching even though id has chagned.
   return (
     <Main.ComplementarySidebar>
-      <div role='none' className={mx(railGridHorizontal, 'grid-cols-1 bs-full divide-y divide-separator')}>
-        <NodePlankHeading coordinate={coordinate} node={node} popoverAnchorId={popoverAnchorId} actions={actions} />
-        <div className='divide-y divide-separator overflow-x-hidden overflow-y-scroll'>
-          {node && (
-            <Surface
-              key={id}
-              role={`complementary--${panel}`}
-              limit={1}
-              data={{ id, subject: node.properties.object ?? node.properties.space, popoverAnchorId }}
-              fallback={PlankContentError}
-              placeholder={<PlankLoading />}
-            />
-          )}
+      <StackContext.Provider value={{ size: 'contain', orientation: 'horizontal', separators: true, rail: true }}>
+        <div role='none' className={mx(railGridHorizontal, 'grid-cols-1 bs-full divide-y divide-separator')}>
+          <NodePlankHeading coordinate={coordinate} node={node} popoverAnchorId={popoverAnchorId} actions={actions} />
+          <div className='divide-y divide-separator overflow-x-hidden overflow-y-scroll'>
+            {node && (
+              <Surface
+                key={id}
+                role={`complementary--${panel}`}
+                limit={1}
+                data={{ id, subject: node.properties.object ?? node.properties.space, popoverAnchorId }}
+                fallback={PlankContentError}
+                placeholder={<PlankLoading />}
+              />
+            )}
+          </div>
         </div>
-      </div>
+      </StackContext.Provider>
     </Main.ComplementarySidebar>
   );
 };

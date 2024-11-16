@@ -12,7 +12,6 @@
       "options": {
         "entryPoints": [
           "{projectRoot}/src/index.ts",
-          "{projectRoot}/src/next/index.ts",
           "{projectRoot}/src/testing/index.ts"
         ]
       }
