@@ -6,10 +6,10 @@ import React, { type ChangeEventHandler, type FC, useEffect, useMemo } from 'rea
 
 import {
   type FunctionTrigger,
-  type TriggerType,
   type SubscriptionTrigger,
   type TimerTrigger,
   type TriggerSpec,
+  type TriggerType,
   type WebhookTrigger,
   type WebsocketTrigger,
 } from '@dxos/functions/types';
