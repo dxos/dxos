@@ -32,7 +32,7 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
-import { textBlockWidth } from '@dxos/react-ui-theme';
+import { mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { isNotFalsy, nonNullable } from '@dxos/util';
 
 import { useSelectCurrentThread } from '../hooks';
@@ -170,7 +170,7 @@ export const MarkdownEditor = ({
   };
 
   return (
-    <StackItem.Content toolbar={toolbar}>
+    <StackItem.Content toolbar={toolbar} contentSize={role === 'article' ? 'cover' : 'intrinsic'}>
       {toolbar && (
         <Toolbar.Root
           classNames={[textBlockWidth, !hasAttention && 'opacity-20']}
@@ -189,7 +189,10 @@ export const MarkdownEditor = ({
         ref={parentRef}
         data-testid='composer.markdownRoot'
         data-toolbar={toolbar ? 'enabled' : 'disabled'}
-        className='min-bs-0 ch-focus-ring-inset data-[toolbar=disabled]:pbs-2 attention-surface'
+        className={mx(
+          'ch-focus-ring-inset data-[toolbar=disabled]:pbs-2 attention-surface',
+          role === 'article' ? 'min-bs-0' : '[&_.cm-scroller]:overflow-hidden',
+        )}
         {...focusAttributes}
       />
     </StackItem.Content>

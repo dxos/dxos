@@ -25,7 +25,7 @@ export const StackItemHeading = ({ children, classNames, ...props }: StackItemHe
       {...focusableGroupAttrs}
       className={mx(
         'flex items-center ch-focus-ring-inset-over-all relative !border-is-0',
-        orientation === 'horizontal' ? 'bs-[--rail-size]' : 'is-[--rail-size]',
+        orientation === 'horizontal' ? 'bs-[--rail-size]' : 'is-[--rail-size] flex-col',
         classNames,
       )}
       ref={selfDragHandleRef}

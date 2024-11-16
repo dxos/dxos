@@ -101,9 +101,7 @@ export const StackSection = ({
           </div>
         </StackItem.Heading>
         <CollapsiblePrimitive.Content asChild>
-          <StackItem.Content>
-            <Surface role='section' data={{ object }} limit={1} placeholder={<></>} />
-          </StackItem.Content>
+          <Surface role='section' data={{ object }} limit={1} placeholder={<></>} />
         </CollapsiblePrimitive.Content>
       </StackItem.Root>
     </CollapsiblePrimitive.Root>
