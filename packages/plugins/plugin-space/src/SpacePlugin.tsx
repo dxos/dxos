@@ -1353,6 +1353,7 @@ export const SpacePlugin = ({
                 return {
                   data: true,
                   undoable: {
+                    // TODO(ZaymonFC): Pluralize if more than one object.
                     message: translations[0]['en-US'][SPACE_PLUGIN][undoMessageKey],
                     data: deletionData,
                   },
