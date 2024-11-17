@@ -14,12 +14,20 @@ import { Form, type FormProps } from './Form';
 import translations from '../../translations';
 import { TestLayout, TestPanel } from '../testing';
 
+// TODO(burdon): Translations?
 const TestSchema = S.Struct({
   name: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Name' })),
   active: S.optional(S.Boolean.annotations({ [AST.TitleAnnotationId]: 'Active' })),
   rank: S.optional(S.Number.annotations({ [AST.TitleAnnotationId]: 'Rank' })),
   website: S.optional(Format.URI.annotations({ [AST.TitleAnnotationId]: 'Website' })),
-  location: S.optional(Format.LatLng.annotations({ [AST.TitleAnnotationId]: 'Location' })),
+  address: S.optional(
+    S.Struct({
+      street: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Street' })),
+      city: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'City' })),
+      zip: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'ZIP' })),
+      location: S.optional(Format.LatLng.annotations({ [AST.TitleAnnotationId]: 'Location' })),
+    }).annotations({ [AST.TitleAnnotationId]: 'Address' }),
+  ),
 }).pipe(S.mutable);
 
 type TestType = S.Schema.Type<typeof TestSchema>;
@@ -46,7 +54,7 @@ const meta: Meta<StoryProps> = {
   title: 'ui/react-ui-data/Form',
   component: Form,
   render: DefaultStory,
-  decorators: [withLayout({ fullscreen: true }), withTheme],
+  decorators: [withLayout({ fullscreen: true, tooltips: true }), withTheme],
   parameters: {
     translations,
   },
@@ -61,6 +69,9 @@ export const Default: Story = {
     values: {
       name: 'DXOS',
       active: true,
+      address: {
+        zip: '11205',
+      },
     },
   },
 };

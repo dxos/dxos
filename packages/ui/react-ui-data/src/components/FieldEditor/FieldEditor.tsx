@@ -126,7 +126,7 @@ export const FieldEditor = ({ view, projection, field, registry, onClose, onCanc
       autoFocus
       values={props}
       schema={fieldSchema}
-      filter={(props) => props.filter((p) => p.property !== 'type')}
+      filter={(props) => props.filter((p) => p.name !== 'type')}
       sort={['property', 'format']}
       onValuesChanged={handleValuesChanged}
       onValidate={handleValidate}
@@ -155,9 +155,9 @@ export const FieldEditor = ({ view, projection, field, registry, onClose, onCanc
             {...props}
             options={
               schema
-                ? getSchemaProperties(schema.schema)
+                ? getSchemaProperties(schema.schema.ast)
                     .sort(sortProperties)
-                    .map((p) => ({ value: p.property }))
+                    .map((p) => ({ value: p.name }))
                 : []
             }
           />

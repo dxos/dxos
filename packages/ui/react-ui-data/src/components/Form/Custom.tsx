@@ -7,6 +7,7 @@ import React from 'react';
 import { type LatLng } from '@dxos/echo-schema';
 import { Input, useTranslation } from '@dxos/react-ui';
 
+import { InputHeader } from './Defaults';
 import { type InputProps } from '../../hooks';
 import { translationKey } from '../../translations';
 
@@ -33,7 +34,9 @@ export const LatLngInput = <T extends object>({
 
   return (
     <Input.Root validationValence={errorValence}>
-      <Input.Label>{label}</Input.Label>
+      <InputHeader error={errorMessage}>
+        <Input.Label>{label}</Input.Label>
+      </InputHeader>
       <div className='grid grid-cols-2 gap-2'>
         <Input.TextInput
           type='number'
@@ -52,9 +55,6 @@ export const LatLngInput = <T extends object>({
           onBlur={onBlur}
         />
       </div>
-      <Input.DescriptionAndValidation>
-        <Input.Validation>{errorMessage}</Input.Validation>
-      </Input.DescriptionAndValidation>
     </Input.Root>
   );
 };

@@ -4,7 +4,8 @@
 
 import React, { type FC, useEffect, useMemo } from 'react';
 
-import { type S } from '@dxos/echo-schema';
+import { AST, S } from '@dxos/echo-schema';
+import { findNode } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -15,7 +16,9 @@ import { getInputComponent } from './factory';
 import { type InputProps, useForm } from '../../hooks';
 import { translationKey } from '../../translations';
 
-// TODO(burdon): Rename package react-ui-form.
+// TODO(burdon): Rename package react-ui-form; delete react-ui-card.
+
+const padding = 'px-2';
 
 export type PropsFilter<T extends Object> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
 
@@ -25,7 +28,7 @@ export type FormProps<T extends object> = ThemedClassName<{
   autoFocus?: boolean; // TODO(burdon): Not used.
   readonly?: boolean;
   filter?: PropsFilter<T>;
-  sort?: (keyof T)[];
+  sort?: PropertyKey<T>[];
   onValidate?: (values: T) => ValidationError[] | undefined;
   onValuesChanged?: (values: T) => void;
   onSave?: (values: T) => void;
@@ -71,42 +74,53 @@ export const Form = <T extends object>({
 
   // Filter and sort props.
   const props = useMemo(() => {
-    const props = getSchemaProperties<T>(schema); // TODO(burdon): Allow objects.
+    const props = getSchemaProperties<T>(schema.ast);
     const filtered = filter ? filter(props) : props;
-    const findIndex = (props: (keyof T)[], prop: keyof T) => {
+    const findIndex = (props: PropertyKey<T>[], prop: PropertyKey<T>) => {
       const idx = props.findIndex((p) => p === prop);
       return idx === -1 ? Infinity : idx;
     };
 
-    return sort
-      ? filtered.sort(({ property: a }, { property: b }) => findIndex(sort, a) - findIndex(sort, b))
-      : filtered;
+    return sort ? filtered.sort(({ name: a }, { name: b }) => findIndex(sort, a) - findIndex(sort, b)) : filtered;
   }, [schema, filter]);
 
   return (
-    <div className={mx('flex flex-col w-full gap-2 p-2', classNames)}>
+    <div className={mx('flex flex-col w-full gap-1', classNames)}>
       {props
-        .map(({ property, type, format, title, description }) => {
+        .map(({ prop, name, type, format, title, description }) => {
           if (!type) {
             return null;
           }
 
           // Custom property allows for sub forms.
-          // TODO(burdon): Use Select control if options are present.
-          const InputComponent = Custom?.[property] ?? getInputComponent<T>(type, format);
+          // TODO(burdon): Use Select control if options are present in annotation?
+          const InputComponent = Custom?.[name] ?? getInputComponent<T>(type, format);
           if (!InputComponent) {
-            log.warn('no renderer for property', { property, type });
+            // Recursively render form.
+            if (type === 'object') {
+              const typeLiteral = findNode(prop.type, AST.isTypeLiteral);
+              if (typeLiteral) {
+                return (
+                  <div key={name} role='none'>
+                    <div className={padding}>{title ?? name}</div>
+                    <Form<any> schema={S.make(typeLiteral)} values={values[name]} />
+                  </div>
+                );
+              }
+            }
+
+            log.warn('no renderer for property', { name, type });
             return null;
           }
 
           return (
-            <div key={property} role='none'>
+            <div key={name} role='none' className={padding}>
               <InputComponent
                 type={type}
                 format={format}
-                property={property}
+                property={name}
                 disabled={readonly}
-                label={title ?? property}
+                label={title ?? name}
                 placeholder={description}
                 {...inputProps}
               />

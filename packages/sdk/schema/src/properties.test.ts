@@ -18,7 +18,7 @@ const TestSchema = S.Struct({
 
 describe('properties', () => {
   test('get props', ({ expect }) => {
-    const props = getSchemaProperties(TestSchema);
+    const props = getSchemaProperties(TestSchema.ast);
     expect(props.map((p) => p.type)).to.deep.eq(['string', 'boolean', 'string', 'number', 'object']);
   });
 });

@@ -14,9 +14,10 @@ export type InputProps<T extends object = {}> = {
   type: SimpleType;
   format?: FormatEnum;
   label: string;
-  options?: Array<{ value: string | number; label?: string }>;
   disabled?: boolean;
   placeholder?: string;
+  // TODO(burdon): Provide from annotations? E.g., enum.
+  options?: Array<{ value: string | number; label?: string }>;
 } & Pick<FormHandler<T>, 'getErrorValence' | 'getErrorMessage' | 'getValue' | 'onValueChange' | 'onBlur'>;
 
 /**
@@ -54,8 +55,8 @@ export type FormHandler<T extends object = {}> = {
  * Hook options.
  */
 export interface FormOptions<T extends object> {
-  initialValues: T;
   schema?: S.Schema<T>;
+  initialValues: T;
   /**
    * Custom validation function that runs only after schema validation passes.
    * Use this for complex validation logic that can't be expressed in the schema.
@@ -76,8 +77,8 @@ export interface FormOptions<T extends object> {
  * Deeply integrated with `@dxos/schema` for schema-based validation.
  */
 export const useForm = <T extends object>({
-  initialValues,
   schema,
+  initialValues,
   onValidate,
   onValuesChanged,
   onSubmit,
@@ -87,25 +88,18 @@ export const useForm = <T extends object>({
     setValues(initialValues);
   }, [initialValues]);
 
+  const [touched, setTouched] = useState<Record<PropertyKey<T>, boolean>>(createKeySet(initialValues, false));
+  const [changed, setChanged] = useState<Record<PropertyKey<T>, boolean>>(createKeySet(initialValues, false));
   const [errors, setErrors] = useState<Record<PropertyKey<T>, string>>({} as Record<PropertyKey<T>, string>);
-
-  const [changed, setChanged] = useState<Record<PropertyKey<T>, boolean>>(
-    initialiseKeysWithValue(initialValues, false),
-  );
-
-  const [touched, setTouched] = useState<Record<PropertyKey<T>, boolean>>(
-    initialiseKeysWithValue(initialValues, false),
-  );
 
   //
   // Validation.
   //
 
+  // TODO(burdon): Validate each property separately.
   const validate = useCallback(
     (values: T) => {
       let errors: ValidationError[] = [];
-
-      // TODO(burdon): Validate each property separately.
       if (schema) {
         const schemaErrors = validateSchema(schema, values) ?? [];
         if (schemaErrors.length > 0) {
@@ -114,11 +108,10 @@ export const useForm = <T extends object>({
       }
 
       if (onValidate && errors.length === 0) {
-        const validateErrors = onValidate(values) ?? [];
-        errors = validateErrors;
+        errors = onValidate(values) ?? [];
       }
 
-      setErrors(errors.length > 0 ? collapseErrorArray(errors) : ({} as Record<PropertyKey<T>, string>));
+      setErrors(flatMap(errors));
       return errors.length === 0;
     },
     [schema, onValidate],
@@ -193,7 +186,7 @@ export const useForm = <T extends object>({
       if (event.relatedTarget?.getAttribute('type') === 'submit') {
         // NOTE: We do this here instead of onSubmit because the blur event is triggered before the submit event
         //  and results in the submit button being disabled when the form is invalid.
-        setTouched(markAllTouched(values));
+        setTouched(createKeySet(values, true));
       }
 
       validate(values);
@@ -219,15 +212,11 @@ export const useForm = <T extends object>({
   } satisfies FormHandler<T>;
 };
 
-const initialiseKeysWithValue = <T extends object, V>(obj: T, value: V): Record<PropertyKey<T>, V> => {
+const createKeySet = <T extends object, V>(obj: T, value: V): Record<PropertyKey<T>, V> => {
   return Object.keys(obj).reduce((acc, key) => ({ ...acc, [key]: value }), {} as Record<PropertyKey<T>, V>);
 };
 
-const markAllTouched = <T extends Record<PropertyKey<T>, any>>(values: T) => {
-  return initialiseKeysWithValue(values, true);
-};
-
-const collapseErrorArray = <T extends object>(errors: ValidationError[]) => {
+const flatMap = <T extends object>(errors: ValidationError[]) => {
   return errors.reduce(
     (result, { path, message }) => {
       if (!(path in result)) {
