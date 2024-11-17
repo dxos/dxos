@@ -23,6 +23,8 @@ export const TextInput = <T extends object>({
   const errorValence = getErrorValence?.(property);
   const errorMessage = getErrorMessage?.(property);
 
+  console.log({ errorValence, errorMessage });
+
   return (
     <Input.Root validationValence={errorValence}>
       <Input.Label>{label}</Input.Label>

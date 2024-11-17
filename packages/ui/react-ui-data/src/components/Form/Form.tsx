@@ -115,6 +115,8 @@ export const Form = <T extends object>({
         })
         .filter(isNotFalsy)}
 
+      {/* {errors && <div className='overflow-hidden text-sm'>{JSON.stringify(errors)}</div>} */}
+
       {(onCancel || onSave) && (
         <div role='none' className='flex justify-center'>
           <div role='none' className={mx(onCancel && !readonly && 'grid grid-cols-2 gap-2')}>

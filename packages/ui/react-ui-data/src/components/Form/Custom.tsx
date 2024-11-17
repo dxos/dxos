@@ -29,36 +29,47 @@ export const LatLngInput = <T extends object>({
   const errorValence = getErrorValence?.(property);
   const errorMessage = getErrorMessage?.(property);
 
-  const { lat = '', lng = '' } = getValue<LatLng>(property, type) ?? {};
-  console.log('::::', lat, lng);
+  const { lat = 0, lng = 0 } = getValue<LatLng>(property, type) ?? {};
 
   return (
     <Input.Root validationValence={errorValence}>
       <Input.Label>{label}</Input.Label>
       <div className='grid grid-cols-2 gap-2'>
-        <Input.DescriptionAndValidation>
-          <Input.TextInput
-            type={type}
-            disabled={disabled}
-            placeholder={t('placeholder latitude')}
-            value={lat}
-            onChange={(event) => onValueChange(property, type, { lat: event.target.value, lng })}
-            onBlur={onBlur}
-          />
-          <Input.Validation>{errorMessage}</Input.Validation>
-        </Input.DescriptionAndValidation>
-        <Input.DescriptionAndValidation>
-          <Input.TextInput
-            type={type}
-            disabled={disabled}
-            placeholder={t('placeholder longitude')}
-            value={lng}
-            onChange={(event) => onValueChange(property, type, { lat, lng: event.target.value })}
-            onBlur={onBlur}
-          />
-          <Input.Validation>{errorMessage}</Input.Validation>
-        </Input.DescriptionAndValidation>
+        <Input.TextInput
+          type='number'
+          disabled={disabled}
+          placeholder={t('placeholder latitude')}
+          value={lat}
+          onChange={(event) => onValueChange(property, type, { lat: safeParseFloat(event.target.value, 0), lng })}
+          onBlur={onBlur}
+        />
+        <Input.TextInput
+          type='number'
+          disabled={disabled}
+          placeholder={t('placeholder longitude')}
+          value={lng}
+          onChange={(event) => onValueChange(property, type, { lat, lng: safeParseFloat(event.target.value, 0) })}
+          onBlur={onBlur}
+        />
       </div>
+      <Input.DescriptionAndValidation>
+        <Input.Validation>{errorMessage}</Input.Validation>
+      </Input.DescriptionAndValidation>
     </Input.Root>
   );
+};
+
+// TODO(burdon): Utils.
+
+const safeParseInt = (str: string, defaultValue?: number): number | undefined => {
+  const value = parseInt(str);
+  return isNaN(value) ? defaultValue : value;
+};
+
+const safeParseFloat = (str: string, defaultValue?: number): number | undefined => {
+  try {
+    return parseFloat(str);
+  } catch {
+    return defaultValue ?? 0;
+  }
 };

@@ -87,13 +87,15 @@ export const useForm = <T extends object>({
     setValues(initialValues);
   }, [initialValues]);
 
+  const [errors, setErrors] = useState<Record<PropertyKey<T>, string>>({} as Record<PropertyKey<T>, string>);
+
   const [changed, setChanged] = useState<Record<PropertyKey<T>, boolean>>(
     initialiseKeysWithValue(initialValues, false),
   );
+
   const [touched, setTouched] = useState<Record<PropertyKey<T>, boolean>>(
     initialiseKeysWithValue(initialValues, false),
   );
-  const [errors, setErrors] = useState<Record<PropertyKey<T>, string>>({} as Record<PropertyKey<T>, string>);
 
   //
   // Validation.
@@ -103,6 +105,7 @@ export const useForm = <T extends object>({
     (values: T) => {
       let errors: ValidationError[] = [];
 
+      // TODO(burdon): Validate each property separately.
       if (schema) {
         const schemaErrors = validateSchema(schema, values) ?? [];
         if (schemaErrors.length > 0) {
@@ -148,12 +151,12 @@ export const useForm = <T extends object>({
   //
 
   const getErrorValence = useCallback(
-    (property: PropertyKey<T>) => (touched[property] && errors[property] ? 'error' : undefined),
+    (property: PropertyKey<T>) => (errors[property] ? 'error' : undefined),
     [touched, errors],
   );
 
   const getErrorMessage = useCallback(
-    (property: PropertyKey<T>) => (touched[property] && errors[property] ? errors[property] : undefined),
+    (property: PropertyKey<T>) => (errors[property] ? errors[property] : undefined),
     [touched, errors],
   );
 

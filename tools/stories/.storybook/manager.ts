@@ -13,8 +13,8 @@ import { DARK_MODE_EVENT_NAME } from 'storybook-dark-mode';
  */
 addons.setConfig({
   enableShortcuts: true,
-  // NOTE: Option is ignored, so we toogle the panel off below.
-  // showPanel: false,
+  // NOTE: Option is ignored, so we toggle the panel off below.
+  showPanel: false,
 });
 
 addons.register('dxos', (api) => {
@@ -41,5 +41,6 @@ addons.register('dxos', (api) => {
   });
 
   // Hide add-on panel.
-  api.togglePanel(false);
+  const { showPanel } = addons.getConfig();
+  api.togglePanel(showPanel);
 });
