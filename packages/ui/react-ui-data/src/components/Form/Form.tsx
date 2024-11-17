@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 import { AST, S } from '@dxos/echo-schema';
 import { findNode } from '@dxos/effect';
@@ -13,7 +13,7 @@ import { getSchemaProperties, type PropertyKey, type SchemaProperty, type Valida
 import { isNotFalsy } from '@dxos/util';
 
 import { getInputComponent } from './factory';
-import { type InputProps, useForm } from '../../hooks';
+import { type InputComponent, useForm } from '../../hooks';
 import { translationKey } from '../../translations';
 
 // TODO(burdon): Rename package react-ui-form; delete react-ui-card.
@@ -25,10 +25,12 @@ export type PropsFilter<T extends Object> = (props: SchemaProperty<T>[]) => Sche
 export type FormProps<T extends object> = ThemedClassName<{
   schema: S.Schema<T>;
   values: T;
-  autoFocus?: boolean; // TODO(burdon): Not used.
+  // TODO(burdon): Autofocus first input.
+  autoFocus?: boolean;
   readonly?: boolean;
   filter?: PropsFilter<T>;
   sort?: PropertyKey<T>[];
+  // TODO(burdon): Change to key x value.
   onValidate?: (values: T) => ValidationError[] | undefined;
   onValuesChanged?: (values: T) => void;
   onSave?: (values: T) => void;
@@ -37,7 +39,7 @@ export type FormProps<T extends object> = ThemedClassName<{
   /**
    * Map of custom renderers for specific properties.
    */
-  Custom?: Partial<Record<PropertyKey<T>, FC<InputProps<T>>>>;
+  Custom?: Partial<Record<PropertyKey<T>, InputComponent<T>>>;
 }>;
 
 /**
@@ -97,6 +99,7 @@ export const Form = <T extends object>({
           const InputComponent = Custom?.[name] ?? getInputComponent<T>(type, format);
           if (!InputComponent) {
             // Recursively render form.
+            // TODO(burdon): Adapt handlers (e.g., onValidate) to be recursive.
             if (type === 'object') {
               const typeLiteral = findNode(prop.type, AST.isTypeLiteral);
               if (typeLiteral) {

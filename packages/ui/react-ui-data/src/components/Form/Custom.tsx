@@ -20,21 +20,18 @@ export const LatLngInput = <T extends object>({
   type,
   label,
   disabled,
-  getErrorValence,
-  getErrorMessage,
+  getStatus,
   getValue,
   onValueChange,
   onBlur,
 }: InputProps<T>) => {
   const { t } = useTranslation(translationKey);
-  const errorValence = getErrorValence?.(property);
-  const errorMessage = getErrorMessage?.(property);
-
-  const { lat = 0, lng = 0 } = getValue<LatLng>(property, type) ?? {};
+  const { status, error } = getStatus?.(property);
+  const { lat = 0, lng = 0 } = getValue<LatLng>(property) ?? {};
 
   return (
-    <Input.Root validationValence={errorValence}>
-      <InputHeader error={errorMessage}>
+    <Input.Root validationValence={status}>
+      <InputHeader error={error}>
         <Input.Label>{label}</Input.Label>
       </InputHeader>
       <div className='grid grid-cols-2 gap-2'>

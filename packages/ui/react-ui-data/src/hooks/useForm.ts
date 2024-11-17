@@ -18,7 +18,7 @@ export type InputProps<T extends object = {}> = {
   placeholder?: string;
   // TODO(burdon): Provide from annotations? E.g., enum.
   options?: Array<{ value: string | number; label?: string }>;
-} & Pick<FormHandler<T>, 'getErrorValence' | 'getErrorMessage' | 'getValue' | 'onValueChange' | 'onBlur'>;
+} & Pick<FormHandler<T>, 'getStatus' | 'getValue' | 'onValueChange' | 'onBlur'>;
 
 /**
  * Form input component.
@@ -44,9 +44,8 @@ export type FormHandler<T extends object = {}> = {
   // Form input component helpers.
   //
 
-  getErrorValence: (property: PropertyKey<T>) => 'error' | undefined;
-  getErrorMessage: (property: PropertyKey<T>) => string | undefined;
-  getValue: <V>(property: PropertyKey<T>, type: SimpleType) => V;
+  getStatus: (property: PropertyKey<T>) => { status?: 'error'; error?: string };
+  getValue: <V>(property: PropertyKey<T>) => V;
   onValueChange: <V>(property: PropertyKey<T>, type: SimpleType, value: V) => void;
   onBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 };
@@ -143,18 +142,16 @@ export const useForm = <T extends object>({
   // Fields.
   //
 
-  const getErrorValence = useCallback(
-    (property: PropertyKey<T>) => (errors[property] ? 'error' : undefined),
-    [touched, errors],
-  );
-
-  const getErrorMessage = useCallback(
-    (property: PropertyKey<T>) => (errors[property] ? errors[property] : undefined),
+  const getStatus = useCallback<InputProps<T>['getStatus']>(
+    (property: PropertyKey<T>) => ({
+      status: errors[property] ? 'error' : undefined,
+      error: errors[property] ? errors[property] : undefined,
+    }),
     [touched, errors],
   );
 
   // TODO(burdon): Use path to extract hierarchical value.
-  const getValue = <V>(property: PropertyKey<T>, type: SimpleType): V => {
+  const getValue = <V>(property: PropertyKey<T>): V => {
     return values[property] as V;
   };
 
@@ -204,8 +201,7 @@ export const useForm = <T extends object>({
     handleSubmit,
 
     // Field utils.
-    getErrorValence,
-    getErrorMessage,
+    getStatus,
     getValue,
     onValueChange,
     onBlur,

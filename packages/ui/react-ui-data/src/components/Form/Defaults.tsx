@@ -38,24 +38,22 @@ export const TextInput = <T extends object>({
   label,
   disabled,
   placeholder,
-  getErrorValence,
-  getErrorMessage,
+  getStatus,
   getValue,
   onValueChange,
   onBlur,
 }: InputProps<T>) => {
-  const errorValence = getErrorValence?.(property);
-  const errorMessage = getErrorMessage?.(property);
+  const { status, error } = getStatus?.(property);
 
   return (
-    <Input.Root validationValence={errorValence}>
-      <InputHeader error={errorMessage}>
+    <Input.Root validationValence={status}>
+      <InputHeader error={error}>
         <Input.Label>{label}</Input.Label>
       </InputHeader>
       <Input.TextInput
         disabled={disabled}
         placeholder={placeholder}
-        value={getValue(property, type) ?? ''}
+        value={getValue(property) ?? ''}
         onChange={(event) => onValueChange(property, type, event.target.value)}
         onBlur={onBlur}
       />
@@ -69,26 +67,24 @@ export const NumberInput = <T extends object>({
   label,
   disabled,
   placeholder,
-  getErrorValence,
-  getErrorMessage,
+  getStatus,
   getValue,
   onValueChange,
   onBlur,
 }: InputProps<T>) => {
-  const errorValence = getErrorValence?.(property);
-  const errorMessage = getErrorMessage?.(property);
+  const { status, error } = getStatus?.(property);
 
   // TODO(burdon): Only show stepper if bounded integer.
   return (
-    <Input.Root validationValence={errorValence}>
-      <InputHeader error={errorMessage}>
+    <Input.Root validationValence={status}>
+      <InputHeader error={error}>
         <Input.Label>{label}</Input.Label>
       </InputHeader>
       <Input.TextInput
         type='number'
         disabled={disabled}
         placeholder={placeholder}
-        value={getValue(property, type) ?? 0}
+        value={getValue(property) ?? 0}
         onChange={(event) => onValueChange(property, type, event.target.value)}
         onBlur={onBlur}
       />
@@ -100,21 +96,19 @@ export const BooleanInput = <T extends object>({
   property,
   type,
   label,
-  getErrorValence,
-  getErrorMessage,
+  getStatus,
   getValue,
   onValueChange,
 }: InputProps<T>) => {
-  const errorValence = getErrorValence?.(property);
-  const errorMessage = getErrorMessage?.(property);
+  const { status, error } = getStatus?.(property);
 
   return (
-    <Input.Root validationValence={errorValence}>
-      <InputHeader error={errorMessage}>
+    <Input.Root validationValence={status}>
+      <InputHeader error={error}>
         <Input.Label>{label}</Input.Label>
       </InputHeader>
       <Input.Switch
-        checked={getValue<boolean>(property, type)}
+        checked={getValue<boolean>(property)}
         onCheckedChange={(value) => onValueChange(property, type, value)}
       />
     </Input.Root>
@@ -128,20 +122,18 @@ export const SelectInput = <T extends object>({
   disabled,
   placeholder,
   options,
-  getErrorValence,
-  getErrorMessage,
+  getStatus,
   getValue,
   onValueChange,
 }: InputProps<T>) => {
-  const errorValence = getErrorValence?.(property);
-  const errorMessage = getErrorMessage?.(property);
+  const { status, error } = getStatus?.(property);
 
   return (
-    <Input.Root validationValence={errorValence}>
-      <InputHeader error={errorMessage}>
+    <Input.Root validationValence={status}>
+      <InputHeader error={error}>
         <Input.Label>{label}</Input.Label>
       </InputHeader>
-      <Select.Root value={getValue(property, type)} onValueChange={(value) => onValueChange(property, type, value)}>
+      <Select.Root value={getValue(property)} onValueChange={(value) => onValueChange(property, type, value)}>
         {/* TODO(burdon): Placeholder not working? */}
         <Select.TriggerButton classNames='is-full' disabled={disabled} placeholder={placeholder} />
         <Select.Portal>
