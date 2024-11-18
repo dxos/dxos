@@ -13,9 +13,9 @@ import { EchoTestBuilder, Task } from '../testing';
 describe('Plain object format', () => {
   test('can query and mutate data', async () => {
     await using testBuilder = await new EchoTestBuilder().open();
-    const { db, crud } = await testBuilder.createDatabase();
+    const { db } = await testBuilder.createDatabase();
 
-    const { id } = await crud.insert({ kind: 'task', title: 'A' });
+    const { id } = await db.insert({ kind: 'task', title: 'A' });
     await db.flush({ indexes: true });
 
     {
@@ -33,7 +33,7 @@ describe('Plain object format', () => {
       ]);
     }
 
-    await crud.update(
+    await db.update(
       {
         id,
       },
@@ -60,9 +60,9 @@ describe('Plain object format', () => {
 
   test('query with JSON filter', async () => {
     await using testBuilder = await new EchoTestBuilder().open();
-    const { db, crud } = await testBuilder.createDatabase();
+    const { db } = await testBuilder.createDatabase();
 
-    await crud.insert([
+    await db.insert([
       { __typename: Task.typename, title: 'Task 1', completed: true },
       {
         __typename: Task.typename,
@@ -88,9 +88,9 @@ describe('Plain object format', () => {
 
   test('query by id', async () => {
     await using testBuilder = await new EchoTestBuilder().open();
-    const { db, crud } = await testBuilder.createDatabase();
+    const { db } = await testBuilder.createDatabase();
 
-    const [{ id: id1 }] = await crud.insert([
+    const [{ id: id1 }] = await db.insert([
       { __typename: Task.typename, title: 'Task 1', completed: true },
       {
         __typename: Task.typename,
@@ -114,10 +114,10 @@ describe('Plain object format', () => {
 
   test('insert typed objects & interop with proxies', async () => {
     await using testBuilder = await new EchoTestBuilder().open();
-    const { db, crud } = await testBuilder.createDatabase();
+    const { db } = await testBuilder.createDatabase();
 
-    const { id } = await crud.insert({ __typename: Task.typename, title: 'A' });
-    await crud.insert({ data: 'foo' }); // random object
+    const { id } = await db.insert({ __typename: Task.typename, title: 'A' });
+    await db.insert({ data: 'foo' }); // random object
     await db.flush({ indexes: true });
 
     {
@@ -135,10 +135,10 @@ describe('Plain object format', () => {
 
   test('references in plain object notation', async () => {
     await using testBuilder = await new EchoTestBuilder().open();
-    const { db, crud } = await testBuilder.createDatabase();
+    const { db } = await testBuilder.createDatabase();
 
-    const { id: id1 } = await crud.insert({ title: 'Inner' });
-    const { id: id2 } = await crud.insert({ title: 'Outer', inner: { '/': id1 } });
+    const { id: id1 } = await db.insert({ title: 'Inner' });
+    const { id: id2 } = await db.insert({ title: 'Outer', inner: { '/': id1 } });
     await db.flush({ indexes: true });
 
     {
@@ -167,11 +167,11 @@ describe('Plain object format', () => {
 
   test('query with join', async () => {
     await using testBuilder = await new EchoTestBuilder().open();
-    const { db, crud } = await testBuilder.createDatabase();
+    const { db } = await testBuilder.createDatabase();
 
-    const { id: id1 } = await crud.insert({ title: 'Inner' });
-    const { id: id2 } = await crud.insert({ title: 'Inner', nested: { '/': id1 } });
-    const { id: id3 } = await crud.insert({ title: 'Outer', inner: { '/': id2 } });
+    const { id: id1 } = await db.insert({ title: 'Inner' });
+    const { id: id2 } = await db.insert({ title: 'Inner', nested: { '/': id1 } });
+    const { id: id3 } = await db.insert({ title: 'Outer', inner: { '/': id2 } });
     await db.flush({ indexes: true });
 
     {
@@ -207,7 +207,7 @@ describe('Plain object format', () => {
 
   test('dynamic schema objects', async () => {
     await using testBuilder = await new EchoTestBuilder().open();
-    const { db, crud } = await testBuilder.createDatabase();
+    const { db } = await testBuilder.createDatabase();
 
     class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
       field: S.String,
