@@ -61,13 +61,11 @@ export const Form = <T extends object>({
   Custom,
 }: FormProps<T>) => {
   const { t } = useTranslation(translationKey);
-  const onValid = useCallback(() => (autosave ? onSubmit : undefined), [autosave, onSubmit]);
   const { canSubmit, errors, handleSubmit, ...inputProps } = useForm<T>({
     schema,
     initialValues: values,
-    onValuesChanged,
     onValidate,
-    onValid,
+    onValid: autosave ? onSubmit : undefined,
     onSubmit,
   });
 
@@ -109,8 +107,9 @@ export const Form = <T extends object>({
                     <Form<any>
                       schema={S.make(typeLiteral)}
                       values={values[name]}
+                      autosave={true}
                       onSubmit={(childValues) => {
-                        values[name] = childValues;
+                        inputProps.onValueChange(name, 'object', childValues);
                       }}
                     />
                   </div>
@@ -140,7 +139,7 @@ export const Form = <T extends object>({
 
       {/* {errors && <div className='overflow-hidden text-sm'>{JSON.stringify(errors)}</div>} */}
 
-      {(onCancel || onSubmit) && (
+      {(onCancel || onSubmit) && !autosave && (
         <div role='none' className='flex justify-center'>
           <div role='none' className={mx(onCancel && !readonly && 'grid grid-cols-2 gap-2')}>
             {onCancel && !readonly && (

@@ -61,7 +61,7 @@ export interface FormOptions<T extends object> {
   /**
    * Called when the form is valid.
    */
-  onValid?: (values: T) => void;
+  onValid?: (values: T, meta: { changed: FormHandler<T>['changed'] }) => void;
 
   /**
    * Called when the form is submitted and passes validation.
@@ -116,11 +116,11 @@ export const useForm = <T extends object>({
 
     if (onValid) {
       const timeout = setTimeout(() => {
-        onValid(values);
+        onValid(values, { changed });
       }, 25);
       return () => clearTimeout(timeout);
     }
-  }, [schema, validate, values, onValid]);
+  }, [schema, validate, values, onValid, changed]);
 
   /**
    * NOTE: We can submit if there is no touched field that has an error.
