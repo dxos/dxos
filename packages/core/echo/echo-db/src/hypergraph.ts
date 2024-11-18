@@ -123,7 +123,7 @@ export class Hypergraph {
     switch (resultFormat) {
       case ResultFormat.Plain: {
         const spaceIds = options?.spaceIds;
-        invariant(spaceIds && spaceIds.length == 1, 'Plain format requires a single space.');
+        invariant(spaceIds && spaceIds.length === 1, 'Plain format requires a single space.');
         return new Query(
           this._createPlainObjectQueryContext(spaceIds[0] as SpaceId),
           Filter.from(filter, optionsToProto(options ?? {})),

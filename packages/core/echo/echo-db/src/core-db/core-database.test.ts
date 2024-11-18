@@ -14,11 +14,11 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
+import { type CoreDatabase } from './core-database';
 import { type DocHandleProxy, type RepoProxy } from '../client';
 import { getObjectCore, type EchoReactiveObject } from '../echo-handler';
 import { type EchoDatabase, type EchoDatabaseImpl } from '../proxy-db';
 import { EchoTestBuilder } from '../testing';
-import { type CoreDatabase } from './core-database';
 
 describe('CoreDatabase', () => {
   describe('space fragmentation', () => {

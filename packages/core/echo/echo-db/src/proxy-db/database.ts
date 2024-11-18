@@ -20,6 +20,7 @@ import { defaultMap } from '@dxos/util';
 
 import { MutableSchemaRegistry } from './mutable-schema-registry';
 import { CoreDatabase, type FlushOptions, type LoadObjectOptions, type ObjectCore } from '../core-db';
+import type { InsertBatch, InsertData, UpdateOperation } from '../core-db/crud-api';
 import {
   EchoReactiveHandler,
   type EchoReactiveObject,
@@ -30,8 +31,7 @@ import {
   isEchoObject,
 } from '../echo-handler';
 import { type Hypergraph } from '../hypergraph';
-import { optionsToProto, type FilterSource, type PropertyFilter, type QueryFn, type QueryOptions } from '../query';
-import type { InsertBatch, InsertData, UpdateOperation } from '../core-db/crud-api';
+import { type FilterSource, type PropertyFilter, type QueryFn, type QueryOptions } from '../query';
 
 export type GetObjectByIdOptions = {
   deleted?: boolean;
@@ -227,7 +227,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    * Update objects.
    */
   async update(filter: PropertyFilter, operation: UpdateOperation) {
-    this._coreDatabase.update(filter, operation);
+    await this._coreDatabase.update(filter, operation);
   }
 
   // TODO(dmaretskyi): Support meta.
