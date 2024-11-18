@@ -14,11 +14,24 @@ const TestSchema = S.Struct({
   email: Format.Email,
   age: S.Number,
   location: Format.LatLng,
+  address: S.Struct({
+    city: S.String,
+    zip: S.String,
+  }),
+  tags: S.optional(S.Array(S.String)),
 });
 
 describe('properties', () => {
   test('get props', ({ expect }) => {
     const props = getSchemaProperties(TestSchema.ast);
-    expect(props.map((p) => p.type)).to.deep.eq(['string', 'boolean', 'string', 'number', 'object']);
+    expect(props.map((prop) => prop.type)).to.deep.eq([
+      //
+      'string',
+      'boolean',
+      'string',
+      'number',
+      'object',
+      'object',
+    ]);
   });
 });

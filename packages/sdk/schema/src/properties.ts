@@ -4,6 +4,7 @@
 
 import { AST, type FormatEnum, getFormatAnnotation } from '@dxos/echo-schema';
 import { type SimpleType, findAnnotation, findNode, isSimpleType, getSimpleType } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 
 // TODO(burdon): JsonPath?
 export type PropertyKey<T extends object> = Extract<keyof T, string>;
@@ -11,10 +12,12 @@ export type PropertyKey<T extends object> = Extract<keyof T, string>;
 /**
  * High-level UX type for schema property.
  */
+// TODO(burdon): Is there a more natural representation using Effect/AST types?
 export type SchemaProperty<T extends object> = {
   prop: AST.PropertySignature;
   name: PropertyKey<T>;
   type: SimpleType;
+  tuple?: boolean;
   format?: FormatEnum;
   title?: string;
   description?: string;
@@ -36,8 +39,15 @@ export const getSchemaProperties = <T extends object>(ast: AST.AST): SchemaPrope
       type = getSimpleType(baseType);
     } else {
       baseType = findNode(prop.type, AST.isTransformation);
-      if (baseType && AST.isTransformation(baseType)) {
+      if (baseType) {
+        invariant(AST.isTransformation(baseType));
         type = getSimpleType(baseType.from);
+      } else {
+        baseType = findNode(prop.type, AST.isTupleType);
+        if (baseType) {
+          invariant(AST.isTupleType(baseType));
+          console.log('####', stringify(prop.type), baseType, baseType.rest);
+        }
       }
     }
 
@@ -49,6 +59,8 @@ export const getSchemaProperties = <T extends object>(ast: AST.AST): SchemaPrope
     return props;
   }, []);
 };
+
+const stringify = (value: AST.AST) => JSON.stringify(value.toJSON(), null, 2);
 
 export const sortProperties = <T extends object>({ name: a }: SchemaProperty<T>, { name: b }: SchemaProperty<T>) =>
   a.localeCompare(b);
