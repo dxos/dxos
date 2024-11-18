@@ -49,12 +49,6 @@ export interface EchoDatabase {
 
   get schemaRegistry(): MutableSchemaRegistry;
 
-  /**
-   * All loaded objects.
-   * @deprecated Use query instead.
-   */
-  get objects(): EchoReactiveObject<any>[];
-
   get graph(): Hypergraph;
 
   getObjectById<T extends {} = any>(id: string, opts?: GetObjectByIdOptions): EchoReactiveObject<T> | undefined;
@@ -160,12 +154,15 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return this._coreDatabase.graph;
   }
 
-  get spaceKey(): PublicKey {
-    return this._coreDatabase.spaceKey;
-  }
-
   get spaceId(): SpaceId {
     return this._coreDatabase.spaceId;
+  }
+
+  /**
+   * @deprecated Use `spaceId`.
+   */
+  get spaceKey(): PublicKey {
+    return this._coreDatabase.spaceKey;
   }
 
   get rootUrl(): string | undefined {
@@ -317,17 +314,6 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       return object;
     });
     return objects;
-  }
-
-  /**
-   * @deprecated
-   */
-  get objects(): EchoReactiveObject<any>[] {
-    // Initialize all proxies.
-    for (const core of this._coreDatabase.allObjectCores()) {
-      defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this));
-    }
-    return Array.from(this._rootProxies.values());
   }
 
   /**
