@@ -32,6 +32,7 @@ describe('properties', () => {
       'number',
       'object',
       'object',
+      'string',
     ]);
   });
 });

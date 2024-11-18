@@ -10,9 +10,8 @@ import { invariant } from '@dxos/invariant';
 export type PropertyKey<T extends object> = Extract<keyof T, string>;
 
 /**
- * High-level UX type for schema property.
+ * Flattened representation of AST node.
  */
-// TODO(burdon): Is there a more natural representation using Effect/AST types?
 export type SchemaProperty<T extends object> = {
   prop: AST.PropertySignature;
   name: PropertyKey<T>;
@@ -24,36 +23,48 @@ export type SchemaProperty<T extends object> = {
 };
 
 /**
- * Get top-level properties from schema.
+ * Get properties from the given AST node (typically from a Schema object).
  */
-// TODO(burdon): Handle tuples?
 export const getSchemaProperties = <T extends object>(ast: AST.AST): SchemaProperty<T>[] => {
   return AST.getPropertySignatures(ast).reduce<SchemaProperty<T>[]>((props, prop) => {
     const name = prop.name.toString() as PropertyKey<T>;
+
+    // Annotations.
     const title = noDefault(findAnnotation<string>(prop.type, AST.TitleAnnotationId));
     const description = noDefault(findAnnotation<string>(prop.type, AST.DescriptionAnnotationId));
 
+    // Get type.
     let type: SimpleType | undefined;
+    let tuple = false;
     let baseType = findNode(prop.type, isSimpleType);
     if (baseType) {
       type = getSimpleType(baseType);
     } else {
+      // Transformations.
       baseType = findNode(prop.type, AST.isTransformation);
       if (baseType) {
         invariant(AST.isTransformation(baseType));
         type = getSimpleType(baseType.from);
       } else {
+        // Tuples.
         baseType = findNode(prop.type, AST.isTupleType);
         if (baseType) {
           invariant(AST.isTupleType(baseType));
-          console.log('####', stringify(prop.type), baseType, baseType.rest);
+          const [tupleType] = baseType.rest ?? []; // TODO(burdon): Is this right?
+          if (tupleType) {
+            baseType = findNode(tupleType.type, isSimpleType);
+            if (baseType) {
+              type = getSimpleType(baseType);
+              tuple = true;
+            }
+          }
         }
       }
     }
 
     if (type) {
       const format = baseType ? getFormatAnnotation(baseType) : undefined;
-      props.push({ prop, name, type, format, title, description });
+      props.push({ prop, name, type, tuple, format, title, description });
     }
 
     return props;
