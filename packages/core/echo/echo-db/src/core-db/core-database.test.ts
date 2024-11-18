@@ -91,7 +91,7 @@ describe('CoreDatabase', () => {
     test('reference access triggers document loading', async () => {
       const textObject = createTextObject('Hello, world!');
       const db = await createClientDbInSpaceWithObject(textObject);
-      await db.query({ id: textObject.id,  }).first({ timeout: 1000 });
+      await db.query({ id: textObject.id }).first({ timeout: 1000 });
     });
 
     test("separate-doc object is treated as inline if it's both linked and inline", async () => {
@@ -326,20 +326,6 @@ describe('CoreDatabase', () => {
       await db.query({ id: object.id }).first();
       const loadedObject = db.getObjectById(object.id);
       expect(loadedObject).to.deep.eq(object);
-    });
-
-    test('batch load object timeout', async () => {
-      const object = createExpando({ title: 'Hello' });
-      const db = await createClientDbInSpaceWithObject(object);
-      let threw = false;
-      try {
-        await db.batchLoadObjects(['123', object.id], {
-          inactivityTimeout: 20,
-        });
-      } catch (e) {
-        threw = true;
-      }
-      expect(threw).to.be.true;
     });
 
     describe('getAllObjectIds', () => {

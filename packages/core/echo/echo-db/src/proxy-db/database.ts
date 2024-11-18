@@ -62,14 +62,6 @@ export interface EchoDatabase {
   ): Promise<EchoReactiveObject<T> | undefined>;
 
   /**
-   * @deprecated Awaiting API review.
-   */
-  batchLoadObjects<T extends {} = any>(
-    ids: string[],
-    options?: { inactivityTimeout?: number },
-  ): Promise<Array<EchoReactiveObject<T> | undefined>>;
-
-  /**
    * Adds object to the database.
    */
   add<T extends {} = any>(obj: ReactiveObject<T>): EchoReactiveObject<T>;
@@ -277,7 +269,6 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   // Deprecated API.
   //
 
-  // TODO(Mykola): Reconcile with `getObjectById` and 'batchLoadObjects'.
   /**
    * @deprecated Awaiting API review.
    */
@@ -294,26 +285,6 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     const object = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this));
     invariant(isReactiveObject(object));
     return object;
-  }
-
-  /**
-   * @deprecated Awaiting API review.
-   */
-  async batchLoadObjects(
-    objectIds: string[],
-    { inactivityTimeout = 30000 }: { inactivityTimeout?: number } = {},
-  ): Promise<Array<EchoReactiveObject<any> | undefined>> {
-    const cores = await this._coreDatabase.batchLoadObjectCores(objectIds, { inactivityTimeout });
-    const objects = cores.map((core) => {
-      if (!core || core.isDeleted()) {
-        return undefined;
-      }
-
-      const object = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this));
-      invariant(isReactiveObject(object));
-      return object;
-    });
-    return objects;
   }
 
   /**
