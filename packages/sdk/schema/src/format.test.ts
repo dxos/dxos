@@ -7,18 +7,20 @@ import { describe, test } from 'vitest';
 import { type JsonProp, S, TypeEnum, FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
-import {
-  formatToSchema,
-  getPropertySchemaForFormat,
-  getSchemaProperties,
-  PropertySchema,
-  type PropertyType,
-} from './format';
+import { formatToSchema, getFormatSchema, PropertySchema, type PropertyType } from './format';
+import { getSchemaProperties } from './properties';
 
 describe('format', () => {
+  test('get format schema', ({ expect }) => {
+    for (const value of Object.values(FormatEnum)) {
+      const node = getFormatSchema(value);
+      expect(node, `Missing schema for: ${value}`).to.exist;
+    }
+  });
+
   test('invalid state', ({ expect }) => {
     const prop: Partial<PropertyType> = { property: 'test' as JsonProp };
-    const schema = getPropertySchemaForFormat(prop.format);
+    const schema = getFormatSchema(prop.format);
     expect(schema).to.eq(formatToSchema[FormatEnum.None]);
     const validate = S.validate(PropertySchema);
     expect(() => validate(prop)).to.throw;
@@ -36,7 +38,7 @@ describe('format', () => {
 
     // Encode and decode.
     {
-      const schema = getPropertySchemaForFormat(prop.format);
+      const schema = getFormatSchema(prop.format);
       invariant(schema);
 
       const decoded = S.decodeSync(schema)(prop);
@@ -55,7 +57,7 @@ describe('format', () => {
       const newProp: PropertyType = { property: 'amount' as JsonProp, format: FormatEnum.Percent, ...props };
       newProp.format = FormatEnum.Percent;
 
-      const schema = getPropertySchemaForFormat(newProp.format);
+      const schema = getFormatSchema(newProp.format);
       invariant(schema);
 
       const decoded = S.decodeSync(schema)(newProp);
@@ -84,17 +86,17 @@ describe('format', () => {
     }
   });
 
-  test('get props', ({ expect }) => {
+  test('get properties', ({ expect }) => {
     const prop: Partial<PropertyType> = {
       property: 'org' as JsonProp,
       type: TypeEnum.Ref,
       format: FormatEnum.Ref,
     };
 
-    const schema = getPropertySchemaForFormat(prop.format);
+    const schema = getFormatSchema(prop.format);
     invariant(schema);
 
-    const props = getSchemaProperties(schema);
+    const props = getSchemaProperties(schema.ast);
     expect(props).to.have.length(7);
   });
 });

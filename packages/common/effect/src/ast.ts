@@ -9,17 +9,22 @@ import { invariant } from '@dxos/invariant';
 
 //
 // Refs
-// https://effect.website/docs/guides/schema
+// https://effect.website/docs/schema/introduction
 // https://www.npmjs.com/package/@effect/schema
 // https://effect-ts.github.io/effect/schema/AST.ts.html
 //
 
+// TODO(burdon): Handle tuples?
 export type SimpleType = 'object' | 'string' | 'number' | 'boolean' | 'enum' | 'literal';
 
+/**
+ * Get the base type; e.g., traverse through refinements.
+ */
 export const getSimpleType = (node: AST.AST): SimpleType | undefined => {
-  if (AST.isObjectKeyword(node)) {
+  if (AST.isObjectKeyword(node) || AST.isTypeLiteral(node)) {
     return 'object';
   }
+
   if (AST.isStringKeyword(node)) {
     return 'string';
   }
@@ -29,9 +34,11 @@ export const getSimpleType = (node: AST.AST): SimpleType | undefined => {
   if (AST.isBooleanKeyword(node)) {
     return 'boolean';
   }
+
   if (AST.isEnums(node)) {
     return 'enum';
   }
+
   if (AST.isLiteral(node)) {
     return 'literal';
   }

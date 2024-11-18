@@ -2,114 +2,153 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
-import { type S } from '@dxos/echo-schema';
+import { AST, S } from '@dxos/echo-schema';
+import { findNode } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { getSchemaProperties, type SchemaProperty, type ValidationError } from '@dxos/schema';
+import { getSchemaProperties, type PropertyKey, type SchemaProperty } from '@dxos/schema';
+import { isNotFalsy } from '@dxos/util';
 
-import { FormInput, type FormInputProps } from './FormInput';
-import { useForm } from '../../hooks';
+import { type InputComponent } from './Input';
+import { getInputComponent } from './factory';
+import { type FormOptions, useForm } from '../../hooks';
 import { translationKey } from '../../translations';
+
+// TODO(burdon): Rename package react-ui-form; delete react-ui-card.
+
+const padding = 'px-2';
 
 export type PropsFilter<T extends Object> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
 
-export type FormProps<T extends object> = ThemedClassName<{
-  values: T;
-  schema: S.Schema<T>;
-  autoFocus?: boolean;
-  readonly?: boolean;
-  filter?: PropsFilter<T>;
-  sort?: (keyof T)[];
-  onValidate?: (values: T) => ValidationError[] | undefined;
-  onValuesChanged?: (values: T) => void;
-  onSave?: (values: T) => void;
-  onCancel?: () => void;
-  Custom?: Partial<Record<keyof T, FC<FormInputProps<T>>>>;
-}>;
+export type FormProps<T extends object> = ThemedClassName<
+  {
+    values: T;
+
+    // TODO(burdon): Autofocus first input.
+    autoFocus?: boolean;
+    readonly?: boolean;
+    // TODO(burdon): Change to JsonPath includes/excludes.
+    filter?: PropsFilter<T>;
+    sort?: PropertyKey<T>[];
+    onCancel?: () => void;
+
+    /**
+     * Map of custom renderers for specific properties.
+     */
+    Custom?: Partial<Record<PropertyKey<T>, InputComponent<T>>>;
+  } & Pick<FormOptions<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onSubmit'>
+>;
 
 /**
- * General purpose form control that generates properties based on the schema.
+ * General purpose form component that displays field controls based on the given schema.
  */
 export const Form = <T extends object>({
   classNames,
-  values,
   schema,
+  values,
   readonly,
   filter,
   sort,
   onValuesChanged,
   onValidate,
-  onSave,
+  onSubmit,
   onCancel,
   Custom,
 }: FormProps<T>) => {
   const { t } = useTranslation(translationKey);
-  const { canSubmit, errors, handleSubmit, getInputProps, getErrorValence, getErrorMessage } = useForm<T>({
+  const { canSubmit, errors, handleSubmit, ...inputProps } = useForm<T>({
     schema,
     initialValues: values,
     onValuesChanged,
     onValidate,
-    onSubmit: (values) => onSave?.(values),
+    onSubmit,
   });
 
+  // Filter and sort props.
+  // TODO(burdon): Move into useForm?
+  const props = useMemo(() => {
+    const props = getSchemaProperties<T>(schema.ast);
+    const filtered = filter ? filter(props) : props;
+    const findIndex = (props: PropertyKey<T>[], prop: PropertyKey<T>) => {
+      const idx = props.findIndex((p) => p === prop);
+      return idx === -1 ? Infinity : idx;
+    };
+
+    return sort ? filtered.sort(({ name: a }, { name: b }) => findIndex(sort, a) - findIndex(sort, b)) : filtered;
+  }, [schema, filter]);
+
   // TODO(burdon): Highlight in UX.
-  // TODO(wittjosiah): Not wrapping this in useEffect causes the app to explode.
   useEffect(() => {
     if (errors && Object.keys(errors).length) {
       log.warn('validation', { errors });
     }
   }, [errors]);
 
-  // Filter and sort props.
-  const props = useMemo(() => {
-    const props = getSchemaProperties<T>(schema);
-    const filtered = filter ? filter(props) : props;
-    const findIndex = (props: (keyof T)[], prop: keyof T) => {
-      const idx = props.findIndex((p) => p === prop);
-      return idx === -1 ? Infinity : idx;
-    };
-    return sort
-      ? filtered.sort(({ property: a }, { property: b }) => findIndex(sort, a) - findIndex(sort, b))
-      : filtered;
-  }, [schema, filter]);
-
   return (
-    <div className={mx('flex flex-col w-full gap-2 p-2', classNames)}>
-      {props.map(({ property, type, title, description }) => {
-        const PropertyInput = Custom?.[property] ?? FormInput<T>;
-        return (
-          <div key={property} role='none'>
-            <PropertyInput
-              property={property}
-              type={type === 'number' ? 'number' : undefined}
-              label={title ?? property}
-              placeholder={description}
-              disabled={readonly}
-              getInputProps={getInputProps}
-              getErrorValence={getErrorValence}
-              getErrorMessage={getErrorMessage}
-            />
-          </div>
-        );
-      })}
+    <div className={mx('flex flex-col w-full gap-1', classNames)}>
+      {props
+        .map(({ prop, name, type, format, title, description }) => {
+          // Custom property allows for sub forms.
+          // TODO(burdon): Use Select control if options are present in annotation?
+          const InputComponent = Custom?.[name] ?? getInputComponent<T>(type, format);
+          if (!InputComponent) {
+            // Recursively render form.
+            if (type === 'object') {
+              const typeLiteral = findNode(prop.type, AST.isTypeLiteral);
+              if (typeLiteral) {
+                return (
+                  <div key={name} role='none'>
+                    <div className={padding}>{title ?? name}</div>
+                    <Form<any>
+                      schema={S.make(typeLiteral)}
+                      values={values[name]}
+                      onSubmit={(childValues) => {
+                        values[name] = childValues;
+                      }}
+                    />
+                  </div>
+                );
+              }
+            }
 
-      {(onCancel || onSave) && (
+            log.warn('no renderer for property', { name, type });
+            return null;
+          }
+
+          return (
+            <div key={name} role='none' className={padding}>
+              <InputComponent
+                type={type}
+                format={format}
+                property={name}
+                disabled={readonly}
+                label={title ?? name}
+                placeholder={description}
+                {...inputProps}
+              />
+            </div>
+          );
+        })
+        .filter(isNotFalsy)}
+
+      {/* {errors && <div className='overflow-hidden text-sm'>{JSON.stringify(errors)}</div>} */}
+
+      {(onCancel || onSubmit) && (
         <div role='none' className='flex justify-center'>
-          <div role='none' className={mx(!readonly && 'grid grid-cols-2 gap-2')}>
+          <div role='none' className={mx(onCancel && !readonly && 'grid grid-cols-2 gap-2')}>
             {onCancel && !readonly && (
               <IconButton icon='ph--x--regular' label={t('button cancel')} onClick={onCancel} />
             )}
-            {onSave && (
+            {onSubmit && (
               <IconButton
                 type='submit'
                 icon='ph--check--regular'
                 label={t('button save')}
                 onClick={handleSubmit}
                 disabled={!canSubmit}
-                classNames='grow'
               />
             )}
           </div>

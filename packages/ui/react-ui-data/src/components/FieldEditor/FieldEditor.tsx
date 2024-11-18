@@ -9,8 +9,9 @@ import { FormatEnum, FormatEnums, formatToType, type MutableSchema } from '@dxos
 import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
 import {
-  getPropertySchemaForFormat,
+  getFormatSchema,
   getSchemaProperties,
+  sortProperties,
   type FieldType,
   type PropertyType,
   type ViewType,
@@ -18,7 +19,8 @@ import {
 } from '@dxos/schema';
 
 import { translationKey } from '../../translations';
-import { Form, FormInput, type FormProps } from '../Form';
+import { Form, type FormProps } from '../Form';
+import { SelectInput } from '../Form/Defaults';
 
 export type FieldEditorProps = {
   view: ViewType;
@@ -29,6 +31,9 @@ export type FieldEditorProps = {
   onCancel?: () => void;
 };
 
+/**
+ * Displays a Form representing the metadata for a given `Field` and `View`.
+ */
 export const FieldEditor = ({ view, projection, field, registry, onClose, onCancel }: FieldEditorProps) => {
   const { t } = useTranslation(translationKey);
   const [props, setProps] = useState<PropertyType>(projection.getFieldProjection(field.id).props);
@@ -58,13 +63,13 @@ export const FieldEditor = ({ view, projection, field, registry, onClose, onCanc
 
   // TODO(burdon): Need to wrap otherwise throws error:
   //  Class constructor SchemaClass cannot be invoked without 'new'.
-  const [{ fieldSchema }, setFieldSchema] = useState({ fieldSchema: getPropertySchemaForFormat(props?.format) });
+  const [{ fieldSchema }, setFieldSchema] = useState({ fieldSchema: getFormatSchema(props?.format) });
   const handleValuesChanged = useCallback<NonNullable<FormProps<PropertyType>['onValuesChanged']>>(
     (_props) => {
       // Update schema if format changed.
       // TODO(burdon): Callback should pass `changed` to indicate which fields have changed.
       if (_props.format !== props.format) {
-        setFieldSchema({ fieldSchema: getPropertySchemaForFormat(_props.format) });
+        setFieldSchema({ fieldSchema: getFormatSchema(_props.format) });
       }
       if (_props.referenceSchema !== props.referenceSchema) {
         setSchema(schemas.find((schema) => schema.typename === _props.referenceSchema));
@@ -96,7 +101,7 @@ export const FieldEditor = ({ view, projection, field, registry, onClose, onCanc
     [view.fields, field],
   );
 
-  const handleSave = useCallback<NonNullable<FormProps<PropertyType>['onSave']>>(
+  const handleSubmit = useCallback<NonNullable<FormProps<PropertyType>['onSubmit']>>(
     (props) => {
       projection.setFieldProjection({ field, props });
       onClose();
@@ -121,15 +126,15 @@ export const FieldEditor = ({ view, projection, field, registry, onClose, onCanc
       autoFocus
       values={props}
       schema={fieldSchema}
-      filter={(props) => props.filter((p) => p.property !== 'type')}
+      filter={(props) => props.filter((p) => p.name !== 'type')}
       sort={['property', 'format']}
       onValuesChanged={handleValuesChanged}
       onValidate={handleValidate}
-      onSave={handleSave}
+      onSubmit={handleSubmit}
       onCancel={handleCancel}
       Custom={{
         format: (props) => (
-          <FormInput<PropertyType>
+          <SelectInput<PropertyType>
             {...props}
             options={FormatEnums.filter((value) => value !== FormatEnum.None).map((value) => ({
               value,
@@ -138,7 +143,7 @@ export const FieldEditor = ({ view, projection, field, registry, onClose, onCanc
           />
         ),
         referenceSchema: (props) => (
-          <FormInput<PropertyType>
+          <SelectInput<PropertyType>
             {...props}
             options={schemas.map((schema) => ({
               value: schema.typename,
@@ -146,15 +151,13 @@ export const FieldEditor = ({ view, projection, field, registry, onClose, onCanc
           />
         ),
         referencePath: (props) => (
-          <FormInput<PropertyType>
+          <SelectInput<PropertyType>
             {...props}
             options={
               schema
-                ? getSchemaProperties(schema.schema)
-                    .sort(({ property: a }, { property: b }) => a.localeCompare(b))
-                    .map((p) => ({
-                      value: p.property,
-                    }))
+                ? getSchemaProperties(schema.schema.ast)
+                    .sort(sortProperties)
+                    .map((p) => ({ value: p.name }))
                 : []
             }
           />
