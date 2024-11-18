@@ -414,18 +414,8 @@ export class CoreDatabase {
     invariant(!this._objects.has(core.id));
     this._objects.set(core.id, core);
 
-    // TODO: create all objects as linked.
-    // This is a temporary solution to get quick benefit from lazily-loaded separate-document objects.
-    // All objects should be created linked to root space doc after query indexing is ready to make them
-    // discoverable.
-    let spaceDocHandle: DocHandleProxy<SpaceDoc>;
-    if (shouldObjectGoIntoFragmentedSpace(core)) {
-      spaceDocHandle = this._automergeDocLoader.createDocumentForObject(core.id);
-      spaceDocHandle.on('change', this._onDocumentUpdate);
-    } else {
-      spaceDocHandle = this._automergeDocLoader.getSpaceRootDocHandle();
-      this._automergeDocLoader.onObjectBoundToDocument(spaceDocHandle, core.id);
-    }
+    const spaceDocHandle = this._automergeDocLoader.createDocumentForObject(core.id);
+    spaceDocHandle.on('change', this._onDocumentUpdate);
 
     core.bind({
       db: this,
@@ -808,11 +798,7 @@ export interface ItemsUpdatedEvent {
   itemsUpdated: Array<{ id: string }>;
 }
 
-export const shouldObjectGoIntoFragmentedSpace = (core: ObjectCore) => {
-  // NOTE: We need to store properties in the root document since space-list initialization
-  // expects it to be loaded as space become available.
-  return core.getType()?.objectId !== TYPE_PROPERTIES;
-};
+
 
 export type LoadObjectOptions = {
   timeout?: number;
