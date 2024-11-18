@@ -61,11 +61,13 @@ export const Form = <T extends object>({
   Custom,
 }: FormProps<T>) => {
   const { t } = useTranslation(translationKey);
+  const onValid = useMemo(() => (autosave ? onSubmit : undefined), [autosave, onSubmit]);
   const { canSubmit, errors, handleSubmit, ...inputProps } = useForm<T>({
     schema,
     initialValues: values,
+    onValuesChanged,
     onValidate,
-    onValid: autosave ? onSubmit : undefined,
+    onValid,
     onSubmit,
   });
 
