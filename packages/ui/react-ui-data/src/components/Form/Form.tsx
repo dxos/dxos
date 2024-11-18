@@ -96,14 +96,19 @@ export const Form = <T extends object>({
           const InputComponent = Custom?.[name] ?? getInputComponent<T>(type, format);
           if (!InputComponent) {
             // Recursively render form.
-            // TODO(burdon): Adapt handlers (e.g., onValidate) to be recursive.
             if (type === 'object') {
               const typeLiteral = findNode(prop.type, AST.isTypeLiteral);
               if (typeLiteral) {
                 return (
                   <div key={name} role='none'>
                     <div className={padding}>{title ?? name}</div>
-                    <Form<any> schema={S.make(typeLiteral)} values={values[name]} />
+                    <Form<any>
+                      schema={S.make(typeLiteral)}
+                      values={values[name]}
+                      onSubmit={(childValues) => {
+                        values[name] = childValues;
+                      }}
+                    />
                   </div>
                 );
               }
