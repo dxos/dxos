@@ -109,20 +109,6 @@ export const useForm = <T extends object>({
     [schema, onValidate],
   );
 
-  useEffect(() => {
-    const isValid = validate(values);
-    if (!isValid) {
-      return;
-    }
-
-    if (onValid) {
-      const timeout = setTimeout(() => {
-        onValid(values, { changed });
-      }, 25);
-      return () => clearTimeout(timeout);
-    }
-  }, [schema, validate, values, onValid, changed]);
-
   /**
    * NOTE: We can submit if there is no touched field that has an error.
    * Basically, if there's a validation message visible in the form, submit should be disabled.
@@ -174,6 +160,14 @@ export const useForm = <T extends object>({
     setValues(newValues);
     setChanged((prev) => ({ ...prev, [property]: true }));
     onValuesChanged?.(newValues);
+
+    // Debounce validation with rAF
+    requestAnimationFrame(() => {
+      const isValid = validate(newValues);
+      if (isValid && onValid) {
+        onValid(newValues, { changed });
+      }
+    });
   };
 
   // TODO(burdon): This is a leaky abstraction: the hook ideally shouldn't get involved in UX.
