@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 import { AST, S } from '@dxos/echo-schema';
 import { findNode } from '@dxos/effect';
