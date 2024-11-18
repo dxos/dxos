@@ -124,9 +124,11 @@ export const TriggerEditor = ({ space, trigger }: TriggerEditorProps) => {
           function: 'foo',
           spec: { type: 'timer', cron: '0 0 * * *' },
         }}
-        Custom={{
-          spec: () => <div>spec!!!!!!</div>,
-        }}
+        Custom={
+          {
+            // spec: () => <div>SPEC</div>,
+          }
+        }
       />
     );
   }
