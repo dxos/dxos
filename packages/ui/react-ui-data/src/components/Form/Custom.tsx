@@ -7,8 +7,7 @@ import React from 'react';
 import { type LatLng } from '@dxos/echo-schema';
 import { Input, useTranslation } from '@dxos/react-ui';
 
-import { InputHeader } from './Defaults';
-import { type InputProps } from '../../hooks';
+import { InputHeader, type InputProps } from './Input';
 import { translationKey } from '../../translations';
 
 //

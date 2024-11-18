@@ -7,7 +7,7 @@ import { type SimpleType } from '@dxos/effect';
 
 import { LatLngInput } from './Custom';
 import { BooleanInput, NumberInput, TextInput } from './Defaults';
-import { type InputComponent } from '../../hooks';
+import { type InputComponent } from './Input';
 
 /**
  * Get property input component.

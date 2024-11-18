@@ -2,35 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type PropsWithChildren } from 'react';
+import React from 'react';
 
-import { Icon, Input, Select, Tooltip } from '@dxos/react-ui';
-import { errorText } from '@dxos/react-ui-theme';
+import { Input, Select } from '@dxos/react-ui';
 
-import { type InputProps } from '../../hooks';
-
-export type InputHeaderProps = PropsWithChildren<{
-  error?: string;
-}>;
-
-export const InputHeader = ({ children, error }: InputHeaderProps) => {
-  return (
-    <div role='none' className='flex justify-between items-center my-1'>
-      {children}
-      {error && (
-        <Tooltip.Root>
-          <Tooltip.Trigger asChild>
-            <Icon icon='ph--warning--regular' size={4} classNames={errorText} />
-          </Tooltip.Trigger>
-          <Tooltip.Content side='bottom'>
-            <Tooltip.Arrow />
-            {error}
-          </Tooltip.Content>
-        </Tooltip.Root>
-      )}
-    </div>
-  );
-};
+import { type InputProps, InputHeader } from './Input';
 
 export const TextInput = <T extends object>({
   property,

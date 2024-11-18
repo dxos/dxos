@@ -12,8 +12,9 @@ import { mx } from '@dxos/react-ui-theme';
 import { getSchemaProperties, type PropertyKey, type SchemaProperty } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
+import { type InputComponent } from './Input';
 import { getInputComponent } from './factory';
-import { type FormOptions, type InputComponent, useForm } from '../../hooks';
+import { type FormOptions, useForm } from '../../hooks';
 import { translationKey } from '../../translations';
 
 // TODO(burdon): Rename package react-ui-form; delete react-ui-card.

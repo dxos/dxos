@@ -2,28 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type FC, type FocusEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { type FocusEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type FormatEnum } from '@dxos/echo-schema';
 import { type SimpleType, type S } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { validateSchema, type PropertyKey, type ValidationError } from '@dxos/schema';
-
-export type InputProps<T extends object = {}> = {
-  property: PropertyKey<T>;
-  type: SimpleType;
-  format?: FormatEnum;
-  label: string;
-  disabled?: boolean;
-  placeholder?: string;
-  // TODO(burdon): Provide from annotations? E.g., enum.
-  options?: Array<{ value: string | number; label?: string }>;
-} & Pick<FormHandler<T>, 'getStatus' | 'getValue' | 'onValueChange' | 'onBlur'>;
-
-/**
- * Form input component.
- */
-export type InputComponent<T extends object = {}> = FC<InputProps<T>>;
 
 /**
  * Return type from `useForm` hook.
@@ -88,8 +71,8 @@ export interface FormOptions<T extends object> {
 export const useForm = <T extends object>({
   schema,
   initialValues,
-  onValidate,
   onValuesChanged,
+  onValidate,
   onSubmit,
 }: FormOptions<T>): FormHandler<T> => {
   const [values, setValues] = useState<T>(initialValues);
@@ -108,15 +91,8 @@ export const useForm = <T extends object>({
   // TODO(burdon): Validate each property separately.
   const validate = useCallback(
     (values: T) => {
-      let errors: ValidationError[] = [];
-      if (schema) {
-        const schemaErrors = validateSchema(schema, values) ?? [];
-        if (schemaErrors.length > 0) {
-          errors = schemaErrors;
-        }
-      }
-
-      if (onValidate && errors.length === 0) {
+      let errors: ValidationError[] = validateSchema(schema, values) ?? [];
+      if (errors.length === 0 && onValidate) {
         errors = onValidate(values) ?? [];
       }
 
@@ -152,7 +128,7 @@ export const useForm = <T extends object>({
   // Fields.
   //
 
-  const getStatus = useCallback<InputProps<T>['getStatus']>(
+  const getStatus = useCallback<FormHandler<T>['getStatus']>(
     (property: PropertyKey<T>) => ({
       status: errors[property] ? 'error' : undefined,
       error: errors[property] ? errors[property] : undefined,
