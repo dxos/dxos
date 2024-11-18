@@ -4,7 +4,7 @@
 
 import { asyncTimeout, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { StackTrace } from '@dxos/debug';
+import { raise, StackTrace } from '@dxos/debug';
 import { type Reference } from '@dxos/echo-protocol';
 import { RuntimeSchemaRegistry } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
@@ -16,21 +16,21 @@ import { trace } from '@dxos/tracing';
 import { ComplexMap, entry } from '@dxos/util';
 
 import { type ItemsUpdatedEvent } from './core-db';
-import { type EchoReactiveObject } from './echo-handler';
-import { getObjectCore } from './echo-handler';
+import { type EchoReactiveObject, getObjectCore } from './echo-handler';
 import { prohibitSignalActions } from './guarded-scope';
 import { type EchoDatabase, type EchoDatabaseImpl } from './proxy-db';
 import {
-  filterMatch,
-  optionsToProto,
   Filter,
+  filterMatch,
   type FilterSource,
+  optionsToProto,
   Query,
   type QueryContext,
   type QueryFn,
   type QueryOptions,
   type QueryResult,
   type QueryRunOptions,
+  ResultFormat,
 } from './query';
 
 /**
@@ -112,7 +112,33 @@ export class Hypergraph {
   private _query(filter?: FilterSource, options?: QueryOptions) {
     const spaces = options?.spaces;
     invariant(!spaces || spaces.every((space) => space instanceof PublicKey), 'Invalid spaces filter');
-    return new Query(this._createQueryContext(), Filter.from(filter, optionsToProto(options ?? {})));
+
+    // TODO(dmaretskyi): Consider plain format by default.
+    const resultFormat = options?.format ?? ResultFormat.Live;
+
+    if (typeof resultFormat !== 'string') {
+      throw new TypeError('Invalid result format');
+    }
+
+    switch (resultFormat) {
+      case ResultFormat.Plain: {
+        const spaceIds = options?.spaceIds;
+        invariant(spaceIds && spaceIds.length == 1, 'Plain format requires a single space.');
+        return new Query(
+          this._createPlainObjectQueryContext(spaceIds[0] as SpaceId),
+          Filter.from(filter, optionsToProto(options ?? {})),
+        );
+      }
+      case ResultFormat.Live: {
+        return new Query(this._createLiveObjectQueryContext(), Filter.from(filter, optionsToProto(options ?? {})));
+      }
+      case ResultFormat.AutomergeDocAccessor: {
+        throw new Error('Not implemented: ResultFormat.AutomergeDocAccessor');
+      }
+      default: {
+        throw new TypeError(`Invalid result format: ${resultFormat}`);
+      }
+    }
   }
 
   /**
@@ -208,7 +234,7 @@ export class Hypergraph {
     this._updateEvent.emit(updateEvent);
   }
 
-  private _createQueryContext(): QueryContext {
+  private _createLiveObjectQueryContext(): QueryContext {
     const context = new GraphQueryContext({
       onStart: () => {
         this._queryContexts.add(context);
@@ -225,6 +251,11 @@ export class Hypergraph {
     }
 
     return context;
+  }
+
+  private _createPlainObjectQueryContext(spaceId: SpaceId): QueryContext {
+    const space = this._databases.get(spaceId) ?? raise(new Error(`Space not found: ${spaceId}`));
+    return space._coreDatabase._createQueryContext();
   }
 }
 

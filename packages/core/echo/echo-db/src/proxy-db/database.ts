@@ -8,7 +8,6 @@ import { type ReactiveObject, getProxyTarget, getSchema, isReactiveObject } from
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { defaultMap } from '@dxos/util';
@@ -25,7 +24,7 @@ import {
   isEchoObject,
 } from '../echo-handler';
 import { type Hypergraph } from '../hypergraph';
-import { optionsToProto, type FilterSource, type QueryFn } from '../query';
+import { optionsToProto, type FilterSource, type QueryFn, type QueryOptions } from '../query';
 
 export type GetObjectByIdOptions = {
   deleted?: boolean;
@@ -278,14 +277,11 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   }
 
   private _query(filter?: FilterSource, options?: QueryOptions) {
-    return this._coreDatabase.graph.query(
-      filter,
-      optionsToProto({
-        ...options,
-        spaceIds: [this.spaceId],
-        spaces: [this.spaceKey],
-      }),
-    );
+    return this._coreDatabase.graph.query(filter, {
+      ...options,
+      spaceIds: [this.spaceId],
+      spaces: [this.spaceKey],
+    });
   }
 
   async flush(opts?: FlushOptions): Promise<void> {
