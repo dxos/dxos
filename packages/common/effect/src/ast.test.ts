@@ -13,10 +13,13 @@ import {
   findProperty,
   getAnnotation,
   getSimpleType,
+  getDiscriminatingProps,
+  isOption,
   isSimpleType,
   visit,
   type JsonPath,
   type JsonProp,
+  getDiscriminatedType,
 } from './ast';
 
 const ZipCode = S.String.pipe(
@@ -89,20 +92,21 @@ describe('AST', () => {
   });
 
   test('findAnnotation', ({ expect }) => {
-    const Type = S.NonEmptyString.pipe(S.pattern(/^\d{5}$/)).annotations({
+    const TestSchema = S.NonEmptyString.pipe(S.pattern(/^\d{5}$/)).annotations({
       [AST.TitleAnnotationId]: 'original title',
     });
-    const Contact = S.Struct({
-      p1: Type.annotations({ [AST.TitleAnnotationId]: 'new title' }),
-      p2: Type.annotations({ [AST.TitleAnnotationId]: 'new title' }).pipe(S.optional),
-      p3: S.optional(Type.annotations({ [AST.TitleAnnotationId]: 'new title' })),
+
+    const ContactSchema = S.Struct({
+      p1: TestSchema.annotations({ [AST.TitleAnnotationId]: 'new title' }),
+      p2: TestSchema.annotations({ [AST.TitleAnnotationId]: 'new title' }).pipe(S.optional),
+      p3: S.optional(TestSchema.annotations({ [AST.TitleAnnotationId]: 'new title' })),
     });
 
-    {
-      const prop = findProperty(Contact, 'p3' as JsonPath);
+    for (const p of ['p1', 'p2', 'p3']) {
+      const prop = findProperty(ContactSchema, p as JsonPath);
       invariant(prop);
       const value = findAnnotation(prop, AST.TitleAnnotationId);
-      expect(value).to.eq('new title');
+      expect(value, `invalid title for ${p}`).to.eq('new title');
     }
   });
 
@@ -119,6 +123,48 @@ describe('AST', () => {
 
     const props: string[] = [];
     visit(TestSchema.ast, (_, path) => props.push(path.join('.')));
-    console.log(JSON.stringify(props, null, 2));
+  });
+
+  test('discriminated unions', ({ expect }) => {
+    const TestUnionSchema = S.Union(
+      S.Struct({ type: S.Literal('a'), label: S.String }),
+      S.Struct({ type: S.Literal('b'), count: S.Number, active: S.Boolean }),
+    );
+
+    type TestUnionType = S.Schema.Type<typeof TestUnionSchema>;
+
+    // const TestSchema = S.Struct({
+    //   name: S.String,
+    //   spec: TestUnionSchema,
+    // });
+    //
+    // type TestType = S.Schema.Type<typeof TestSchema>;
+
+    {
+      expect(isOption(TestUnionSchema.ast)).to.be.false;
+      expect(getDiscriminatingProps(TestUnionSchema.ast)).to.deep.eq(['type']);
+
+      const node = findNode(TestUnionSchema.ast, isSimpleType);
+      expect(node).to.be.undefined;
+    }
+
+    {
+      invariant(AST.isUnion(TestUnionSchema.ast));
+      const [a, b] = TestUnionSchema.ast.types;
+
+      const obj1: TestUnionType = {
+        type: 'a',
+        label: 'test',
+      };
+
+      const obj2: TestUnionType = {
+        type: 'b',
+        count: 100,
+        active: true,
+      };
+
+      expect(getDiscriminatedType(TestUnionSchema.ast, obj1)?.toJSON()).to.deep.eq(a.toJSON());
+      expect(getDiscriminatedType(TestUnionSchema.ast, obj2)?.toJSON()).to.deep.eq(b.toJSON());
+    }
   });
 });

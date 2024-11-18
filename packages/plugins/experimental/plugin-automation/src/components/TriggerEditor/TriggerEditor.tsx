@@ -113,17 +113,22 @@ export const TriggerEditor = ({ space, trigger }: TriggerEditorProps) => {
 
   const TriggerMeta = getFunctionMetaExtension(trigger, script)?.component;
 
-  // TODO(burdon): Query for functions.
-  // TODO(burdon): Flatten trigger.spec
   const test = true;
   if (test) {
+    const object: FunctionTriggerType = {
+      spec: {
+        // type: 'timer',
+        type: 'subscription',
+        // cron: '0 0 * * *'
+        filter: [{ type: 'dxos.org/type/Event' }],
+      },
+    };
+
     return (
       <Form<FunctionTriggerType>
         schema={FunctionTriggerSchema}
-        values={{
-          function: 'foo',
-          spec: { type: 'timer', cron: '0 0 * * *' },
-        }}
+        values={object}
+        filter={(props) => props.filter((p) => p.name !== 'meta')}
         Custom={{
           ['function' satisfies keyof FunctionTriggerType]: (props) => (
             <SelectInput<FunctionTriggerType>
@@ -135,7 +140,15 @@ export const TriggerEditor = ({ space, trigger }: TriggerEditorProps) => {
               }))}
             />
           ),
-          ['spec.type' as const]: (props) => <div>TYPE</div>,
+          ['spec.type' as const]: (props) => (
+            <SelectInput<FunctionTriggerType>
+              {...props}
+              options={['timer', 'subscription'].map((value) => ({
+                value,
+                label: value,
+              }))}
+            />
+          ),
         }}
       />
     );

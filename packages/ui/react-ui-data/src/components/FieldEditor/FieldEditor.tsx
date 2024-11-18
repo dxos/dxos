@@ -19,8 +19,7 @@ import {
 } from '@dxos/schema';
 
 import { translationKey } from '../../translations';
-import { Form, type FormProps } from '../Form';
-import { SelectInput } from '../Form/Defaults';
+import { Form, type FormProps, SelectInput } from '../Form';
 
 export type FieldEditorProps = {
   view: ViewType;

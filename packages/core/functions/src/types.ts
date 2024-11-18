@@ -10,7 +10,7 @@ import { AST, RawObject, S, TypedObject } from '@dxos/echo-schema';
 
 const TimerTriggerSchema = S.Struct({
   type: S.Literal('timer'),
-  cron: S.String,
+  cron: S.String.annotations({ [AST.TitleAnnotationId]: 'Cron' }),
 }).pipe(S.mutable);
 
 export type TimerTrigger = S.Schema.Type<typeof TimerTriggerSchema>;
@@ -74,7 +74,7 @@ export const TriggerSchema = S.Union(
   WebhookTriggerSchema,
   WebsocketTriggerSchema,
   SubscriptionTriggerSchema,
-);
+).annotations({ [AST.TitleAnnotationId]: 'Trigger' });
 
 export type TriggerType = TimerTrigger | WebhookTrigger | WebsocketTrigger | SubscriptionTrigger;
 
