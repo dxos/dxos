@@ -56,6 +56,7 @@ export const LatLngInput = <T extends object>({
   );
 };
 
+// TODO(burdon): Factor out.
 const safeParseFloat = (str: string, defaultValue?: number): number | undefined => {
   try {
     return parseFloat(str);
