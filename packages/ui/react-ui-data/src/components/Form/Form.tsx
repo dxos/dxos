@@ -37,7 +37,7 @@ export type FormProps<T extends object> = ThemedClassName<
      * Map of custom renderers for specific properties.
      */
     Custom?: Partial<Record<PropertyKey<T>, InputComponent<T>>>;
-  } & Pick<FormOptions<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onValuesChanged' | 'onSubmit'>
+  } & Pick<FormOptions<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onSubmit'>
 >;
 
 /**
@@ -50,8 +50,8 @@ export const Form = <T extends object>({
   readonly,
   filter,
   sort,
-  onValidate,
   onValuesChanged,
+  onValidate,
   onSubmit,
   onCancel,
   Custom,
@@ -66,7 +66,7 @@ export const Form = <T extends object>({
   });
 
   // Filter and sort props.
-  // TODO(burdon): Move into useForm.
+  // TODO(burdon): Move into useForm?
   const props = useMemo(() => {
     const props = getSchemaProperties<T>(schema.ast);
     const filtered = filter ? filter(props) : props;

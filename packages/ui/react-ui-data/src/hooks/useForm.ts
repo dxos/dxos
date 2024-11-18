@@ -55,9 +55,17 @@ export type FormHandler<T extends object = {}> = {
  * Hook options.
  */
 export interface FormOptions<T extends object> {
-  schema?: S.Schema<T>;
+  schema: S.Schema<T>;
 
+  // TODO(burdon): Are these reactive?
   initialValues: T;
+
+  /**
+   * Callback for value changes. Note: This is called even when values are invalid.
+   * Sometimes the parent component may want to know about changes even if the form is
+   * in an invalid state.
+   */
+  onValuesChanged?: (values: T) => void;
 
   /**
    * Custom validation function that runs only after schema validation passes.
@@ -66,13 +74,6 @@ export interface FormOptions<T extends object> {
    */
   // TODO(burdon): Change to key x value.
   onValidate?: (values: T) => ValidationError[] | undefined;
-
-  /**
-   * Callback for value changes. Note: This is called even when values are invalid.
-   * Sometimes the parent component may want to know about changes even if the form is
-   * in an invalid state.
-   */
-  onValuesChanged?: (values: T) => void;
 
   /**
    * Called when the form is submitted and passes validation.
