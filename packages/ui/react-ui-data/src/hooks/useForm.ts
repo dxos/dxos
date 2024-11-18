@@ -86,7 +86,6 @@ export const useForm = <T extends object>({
     setValues(initialValues);
   }, [initialValues]);
 
-  console.log(schema, initialValues);
   const [touched, setTouched] = useState<Record<PropertyKey<T>, boolean>>(createKeySet(initialValues, false));
   const [changed, setChanged] = useState<Record<PropertyKey<T>, boolean>>(createKeySet(initialValues, false));
   const [errors, setErrors] = useState<Record<PropertyKey<T>, string>>({} as Record<PropertyKey<T>, string>);

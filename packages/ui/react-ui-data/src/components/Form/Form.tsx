@@ -39,7 +39,8 @@ export type FormProps<T extends object> = ThemedClassName<
     /**
      * Map of custom renderers for specific properties.
      */
-    Custom?: Partial<Record<PropertyKey<T>, InputComponent<T>>>;
+    Custom?: Partial<Record<string, InputComponent<T>>>;
+    path?: string[];
   } & Pick<FormOptions<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onSubmit'>
 >;
 
@@ -59,6 +60,7 @@ export const Form = <T extends object>({
   onSubmit,
   onCancel,
   Custom,
+  path = [],
 }: FormProps<T>) => {
   const { t } = useTranslation(translationKey);
   const onValid = useMemo(() => (autosave ? onSubmit : undefined), [autosave, onSubmit]);
@@ -97,18 +99,23 @@ export const Form = <T extends object>({
         .map(({ prop, name, type, format, title, description }) => {
           // Custom property allows for sub forms.
           // TODO(burdon): Use Select control if options are present in annotation?
-          const InputComponent = Custom?.[name] ?? getInputComponent<T>(type, format);
+          const key = [...path, name];
+          const InputComponent = Custom?.[key.join('.')] ?? getInputComponent<T>(type, format);
           if (!InputComponent) {
             // Recursively render form.
             if (type === 'object') {
               const typeLiteral = findNode(prop.type, AST.isTypeLiteral);
               if (typeLiteral) {
+                const schema = S.make(typeLiteral);
+                return null;
+
                 return (
                   <div key={name} role='none'>
                     <div className={padding}>{title ?? name}</div>
                     <Form<any>
                       autosave
-                      schema={S.make(typeLiteral)}
+                      schema={schema}
+                      path={key}
                       values={values[name] ?? {}}
                       onSubmit={(childValues) => {
                         inputProps.onValueChange(name, 'object', childValues);

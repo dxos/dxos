@@ -19,7 +19,7 @@ import { invariant } from '@dxos/invariant';
 import { ScriptType } from '@dxos/plugin-script/types';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-data';
+import { Form, SelectInput } from '@dxos/react-ui-data';
 import { distinctBy } from '@dxos/util';
 
 import { InputRow } from './Form';
@@ -124,11 +124,19 @@ export const TriggerEditor = ({ space, trigger }: TriggerEditorProps) => {
           function: 'foo',
           spec: { type: 'timer', cron: '0 0 * * *' },
         }}
-        Custom={
-          {
-            // spec: () => <div>SPEC</div>,
-          }
-        }
+        Custom={{
+          ['function' satisfies keyof FunctionTriggerType]: (props) => (
+            <SelectInput<FunctionTriggerType>
+              {...props}
+              // TODO(burdon): Query for functions.
+              options={['f1', 'f2', 'f3'].map((value) => ({
+                value,
+                label: value,
+              }))}
+            />
+          ),
+          ['spec.type' as const]: (props) => <div>TYPE</div>,
+        }}
       />
     );
   }

@@ -133,7 +133,7 @@ export const FieldEditor = ({ view, projection, field, registry, onClose, onCanc
       onSubmit={handleSubmit}
       onCancel={handleCancel}
       Custom={{
-        format: (props) => (
+        ['format' satisfies keyof PropertyType]: (props) => (
           <SelectInput<PropertyType>
             {...props}
             options={FormatEnums.filter((value) => value !== FormatEnum.None).map((value) => ({
@@ -142,7 +142,7 @@ export const FieldEditor = ({ view, projection, field, registry, onClose, onCanc
             }))}
           />
         ),
-        referenceSchema: (props) => (
+        ['referenceSchema' satisfies keyof PropertyType]: (props) => (
           <SelectInput<PropertyType>
             {...props}
             options={schemas.map((schema) => ({
@@ -150,7 +150,7 @@ export const FieldEditor = ({ view, projection, field, registry, onClose, onCanc
             }))}
           />
         ),
-        referencePath: (props) => (
+        ['referencePath' satisfies keyof PropertyType]: (props) => (
           <SelectInput<PropertyType>
             {...props}
             options={
