@@ -36,15 +36,14 @@ type StoryProps = FormProps<TestType>;
 
 const DefaultStory = ({ values: initialValues }: StoryProps) => {
   const [values, setValues] = useState(initialValues);
-
-  const handleSave = useCallback<NonNullable<FormProps<TestType>['onSave']>>((values) => {
+  const handleSubmit = useCallback<NonNullable<FormProps<TestType>['onSubmit']>>((values) => {
     setValues(values);
   }, []);
 
   return (
     <TestLayout json={{ values, schema: TestSchema.ast.toJSON() }}>
       <TestPanel>
-        <Form<TestType> schema={TestSchema} values={values} onSave={handleSave} />
+        <Form<TestType> schema={TestSchema} values={values} onSubmit={handleSubmit} />
       </TestPanel>
     </TestLayout>
   );

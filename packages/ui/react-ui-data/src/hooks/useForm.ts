@@ -34,6 +34,7 @@ export type FormHandler<T extends object = {}> = {
   //
 
   values: T;
+  // props: SchemaProperty<T>[];
   errors: Record<PropertyKey<T>, string>;
   touched: Record<PropertyKey<T>, boolean>;
   changed: Record<PropertyKey<T>, boolean>;
@@ -55,20 +56,28 @@ export type FormHandler<T extends object = {}> = {
  */
 export interface FormOptions<T extends object> {
   schema?: S.Schema<T>;
+
   initialValues: T;
+
   /**
    * Custom validation function that runs only after schema validation passes.
    * Use this for complex validation logic that can't be expressed in the schema.
    * @returns Array of validation errors, or undefined if validation passes
    */
+  // TODO(burdon): Change to key x value.
   onValidate?: (values: T) => ValidationError[] | undefined;
+
   /**
    * Callback for value changes. Note: This is called even when values are invalid.
    * Sometimes the parent component may want to know about changes even if the form is
    * in an invalid state.
    */
   onValuesChanged?: (values: T) => void;
-  onSubmit: (values: T, meta: { changed: FormHandler<T>['changed'] }) => void;
+
+  /**
+   * Called when the form is submitted and passes validation.
+   */
+  onSubmit?: (values: T, meta: { changed: FormHandler<T>['changed'] }) => void;
 }
 
 /**
@@ -134,7 +143,7 @@ export const useForm = <T extends object>({
 
   const handleSubmit = useCallback(() => {
     if (validate(values)) {
-      onSubmit(values, { changed });
+      onSubmit?.(values, { changed });
     }
   }, [values, validate, onSubmit]);
 

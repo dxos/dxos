@@ -9,11 +9,11 @@ import { findNode } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { getSchemaProperties, type PropertyKey, type SchemaProperty, type ValidationError } from '@dxos/schema';
+import { getSchemaProperties, type PropertyKey, type SchemaProperty } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
 import { getInputComponent } from './factory';
-import { type InputComponent, useForm } from '../../hooks';
+import { type FormOptions, type InputComponent, useForm } from '../../hooks';
 import { translationKey } from '../../translations';
 
 // TODO(burdon): Rename package react-ui-form; delete react-ui-card.
@@ -22,25 +22,23 @@ const padding = 'px-2';
 
 export type PropsFilter<T extends Object> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
 
-export type FormProps<T extends object> = ThemedClassName<{
-  schema: S.Schema<T>;
-  values: T;
-  // TODO(burdon): Autofocus first input.
-  autoFocus?: boolean;
-  readonly?: boolean;
-  filter?: PropsFilter<T>;
-  sort?: PropertyKey<T>[];
-  // TODO(burdon): Change to key x value.
-  onValidate?: (values: T) => ValidationError[] | undefined;
-  onValuesChanged?: (values: T) => void;
-  onSave?: (values: T) => void;
-  onCancel?: () => void;
+export type FormProps<T extends object> = ThemedClassName<
+  {
+    values: T;
 
-  /**
-   * Map of custom renderers for specific properties.
-   */
-  Custom?: Partial<Record<PropertyKey<T>, InputComponent<T>>>;
-}>;
+    // TODO(burdon): Autofocus first input.
+    autoFocus?: boolean;
+    readonly?: boolean;
+    filter?: PropsFilter<T>;
+    sort?: PropertyKey<T>[];
+    onCancel?: () => void;
+
+    /**
+     * Map of custom renderers for specific properties.
+     */
+    Custom?: Partial<Record<PropertyKey<T>, InputComponent<T>>>;
+  } & Pick<FormOptions<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onValuesChanged' | 'onSubmit'>
+>;
 
 /**
  * General purpose form component that displays field controls based on the given schema.
@@ -54,7 +52,7 @@ export const Form = <T extends object>({
   sort,
   onValidate,
   onValuesChanged,
-  onSave,
+  onSubmit,
   onCancel,
   Custom,
 }: FormProps<T>) => {
@@ -64,17 +62,11 @@ export const Form = <T extends object>({
     initialValues: values,
     onValuesChanged,
     onValidate,
-    onSubmit: (values) => onSave?.(values),
+    onSubmit,
   });
 
-  // TODO(burdon): Highlight in UX.
-  useEffect(() => {
-    if (errors && Object.keys(errors).length) {
-      log.warn('validation', { errors });
-    }
-  }, [errors]);
-
   // Filter and sort props.
+  // TODO(burdon): Move into useForm.
   const props = useMemo(() => {
     const props = getSchemaProperties<T>(schema.ast);
     const filtered = filter ? filter(props) : props;
@@ -85,6 +77,13 @@ export const Form = <T extends object>({
 
     return sort ? filtered.sort(({ name: a }, { name: b }) => findIndex(sort, a) - findIndex(sort, b)) : filtered;
   }, [schema, filter]);
+
+  // TODO(burdon): Highlight in UX.
+  useEffect(() => {
+    if (errors && Object.keys(errors).length) {
+      log.warn('validation', { errors });
+    }
+  }, [errors]);
 
   return (
     <div className={mx('flex flex-col w-full gap-1', classNames)}>
@@ -134,13 +133,13 @@ export const Form = <T extends object>({
 
       {/* {errors && <div className='overflow-hidden text-sm'>{JSON.stringify(errors)}</div>} */}
 
-      {(onCancel || onSave) && (
+      {(onCancel || onSubmit) && (
         <div role='none' className='flex justify-center'>
           <div role='none' className={mx(onCancel && !readonly && 'grid grid-cols-2 gap-2')}>
             {onCancel && !readonly && (
               <IconButton icon='ph--x--regular' label={t('button cancel')} onClick={onCancel} />
             )}
-            {onSave && (
+            {onSubmit && (
               <IconButton
                 type='submit'
                 icon='ph--check--regular'

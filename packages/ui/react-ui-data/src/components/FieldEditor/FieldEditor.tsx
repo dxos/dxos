@@ -101,7 +101,7 @@ export const FieldEditor = ({ view, projection, field, registry, onClose, onCanc
     [view.fields, field],
   );
 
-  const handleSave = useCallback<NonNullable<FormProps<PropertyType>['onSave']>>(
+  const handleSubmit = useCallback<NonNullable<FormProps<PropertyType>['onSubmit']>>(
     (props) => {
       projection.setFieldProjection({ field, props });
       onClose();
@@ -130,7 +130,7 @@ export const FieldEditor = ({ view, projection, field, registry, onClose, onCanc
       sort={['property', 'format']}
       onValuesChanged={handleValuesChanged}
       onValidate={handleValidate}
-      onSave={handleSave}
+      onSubmit={handleSubmit}
       onCancel={handleCancel}
       Custom={{
         format: (props) => (
