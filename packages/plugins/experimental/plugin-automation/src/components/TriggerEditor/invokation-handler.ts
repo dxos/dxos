@@ -3,7 +3,7 @@
 //
 
 import { sleep } from '@dxos/async';
-import { getObjectCore } from '@dxos/echo-db';
+import { getObjectCore, ResultFormat } from '@dxos/echo-db';
 import type { AnyObjectData } from '@dxos/echo-schema';
 import { type FunctionTrigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -51,8 +51,10 @@ export const invokeFunction = async (client: Client, space: Space, trigger: Func
       return handleEmail(space, data.data);
     }
 
-    const script = await space.crud.query({ id: trigger.function }).first();
-    const { objects: functions } = await space.crud.query({ __typename: FunctionType.typename }).run();
+    const script = await space.db.query({ id: trigger.function }, { format: ResultFormat.Plain }).first();
+    const { objects: functions } = await space.db
+      .query({ __typename: FunctionType.typename }, { format: ResultFormat.Plain })
+      .run();
     const func = functions.find((fn) => referenceEquals(fn.source, trigger.function)) as AnyObjectData | undefined;
     const funcSlug = func?.__meta.keys.find((key) => key.source === USERFUNCTIONS_META_KEY)?.id;
     if (!funcSlug) {
