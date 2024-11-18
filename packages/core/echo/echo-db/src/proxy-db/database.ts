@@ -62,6 +62,18 @@ export interface EchoDatabase {
   ): Promise<EchoReactiveObject<T> | undefined>;
 
   /**
+   * Update objects.
+   */
+  update(filter: PropertyFilter, operation: UpdateOperation): Promise<void>;
+
+  /**
+   * Insert new objects.
+   */
+  // TODO(dmaretskyi): Support meta.
+  insert(data: InsertData): Promise<AnyObjectData>;
+  insert(data: InsertBatch): Promise<AnyObjectData[]>;
+
+  /**
    * Adds object to the database.
    */
   add<T extends {} = any>(obj: ReactiveObject<T>): EchoReactiveObject<T>;
