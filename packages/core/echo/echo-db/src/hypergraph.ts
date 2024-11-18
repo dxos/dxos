@@ -15,7 +15,7 @@ import { QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/ec
 import { trace } from '@dxos/tracing';
 import { ComplexMap, entry } from '@dxos/util';
 
-import { type ItemsUpdatedEvent } from './core-db';
+import { type ItemsUpdatedEvent, type ObjectCore } from './core-db';
 import { type EchoReactiveObject, getObjectCore } from './echo-handler';
 import { prohibitSignalActions } from './guarded-scope';
 import { type EchoDatabase, type EchoDatabaseImpl } from './proxy-db';
@@ -441,6 +441,14 @@ class SpaceQuerySource implements QuerySource {
     if (!this._isValidSourceForFilter(filter)) {
       return [];
     }
+
+    if (filter.isObjectIdFilter()) {
+      const cores = (await this._database._coreDatabase.batchLoadObjectCores(filter.objectIds!)).filter(
+        (x) => x !== undefined,
+      );
+      return cores.map((core) => this._mapCoreToResult(core));
+    }
+
     let results: QueryResult<EchoReactiveObject<any>>[] = [];
     prohibitSignalActions(() => {
       results = this._query(filter);
@@ -488,16 +496,7 @@ class SpaceQuerySource implements QuerySource {
           // TODO(dmaretskyi): Cleanup proxy <-> core.
           .filter((core) => filterMatch(filter, core, this._database.getObjectById(core.id, { deleted: true })));
 
-    return filteredCores.map((core) => ({
-      id: core.id,
-      spaceId: this.spaceId,
-      spaceKey: this.spaceKey,
-      object: this._database.getObjectById(core.id, { deleted: true }),
-      resolution: {
-        source: 'local',
-        time: 0,
-      },
-    }));
+    return filteredCores.map((core) => this._mapCoreToResult(core));
   }
 
   private _isValidSourceForFilter(filter: Filter<EchoReactiveObject<any>>): boolean {
@@ -513,6 +512,19 @@ class SpaceQuerySource implements QuerySource {
       return false;
     }
     return true;
+  }
+
+  private _mapCoreToResult(core: ObjectCore): QueryResult<EchoReactiveObject<any>> {
+    return {
+      id: core.id,
+      spaceId: this.spaceId,
+      spaceKey: this.spaceKey,
+      object: this._database.getObjectById(core.id, { deleted: true }),
+      resolution: {
+        source: 'local',
+        time: 0,
+      },
+    };
   }
 }
 

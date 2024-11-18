@@ -169,7 +169,7 @@ export class Query<T extends {} = any> {
    * Execute the query once and return the results.
    * Does not subscribe to updates.
    */
-  async run(timeout: { timeout: number } = { timeout: 30_000 }): Promise<OneShotQueryResult<T>> {
+  async run(timeout: { timeout?: number } = { timeout: 30_000 }): Promise<OneShotQueryResult<T>> {
     const filteredResults = await this._queryContext.run(this._filter, { timeout: timeout.timeout });
     return {
       results: filteredResults,
@@ -177,8 +177,8 @@ export class Query<T extends {} = any> {
     };
   }
 
-  async first(): Promise<T> {
-    const { objects } = await this.run();
+  async first(opts?: { timeout?: number }): Promise<T> {
+    const { objects } = await this.run(opts);
     if (objects.length === 0) {
       throw new Error('No objects found');
     }

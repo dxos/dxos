@@ -95,7 +95,7 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
                 const object = toSignal(
                   (onChange) => {
                     const timeout = setTimeout(async () => {
-                      await space?.db.loadObjectById(objectId);
+                      await space?.db.query({ id: objectId }).first();
                       onChange();
                     });
 

@@ -183,7 +183,7 @@ describe('Reactive Object with ECHO database', () => {
       peer.client.graph.schemaRegistry.addSchema([TestType]);
       const db = await peer.openDatabase(spaceKey, root.url);
 
-      const obj = (await db.loadObjectById(id)) as EchoReactiveObject<TestSchema>;
+      const obj = (await db.query({ id: id }).first()) as EchoReactiveObject<TestSchema>;
       expect(isEchoObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
@@ -218,7 +218,7 @@ describe('Reactive Object with ECHO database', () => {
       const peer = await builder.createPeer(kv);
       const db = await peer.openDatabase(spaceKey, root.url);
 
-      const obj = (await db.loadObjectById(id)) as EchoReactiveObject<TestSchema>;
+      const obj = (await db.query({ id: id }).first()) as EchoReactiveObject<TestSchema>;
       expect(isEchoObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
@@ -549,7 +549,7 @@ describe('Reactive Object with ECHO database', () => {
       {
         const peer = await builder.createPeer(kv);
         const db = await peer.openDatabase(spaceKey, root.url);
-        const obj = (await db.loadObjectById(id)) as EchoReactiveObject<TestSchema>;
+        const obj = (await db.query({ id: id }).first()) as EchoReactiveObject<TestSchema>;
         expect(getMeta(obj).keys).to.deep.eq([metaKey]);
       }
     });
