@@ -21,6 +21,7 @@ import { CLIENT_PLUGIN, ClientAction } from '@dxos/plugin-client/meta';
 import { HELP_PLUGIN, HelpAction } from '@dxos/plugin-help/meta';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { SPACE_PLUGIN, SpaceAction } from '@dxos/plugin-space';
+import { type Credential } from '@dxos/react-client/halo';
 
 import { BetaDialog, WelcomeScreen } from './components';
 import { activateAccount, getProfile, matchServiceCredential, upgradeCredential } from './credentials';
@@ -66,21 +67,34 @@ export const WelcomePlugin = ({
         return;
       }
 
-      // Query for credential in HALO and skip welcome dialog if it exists.
-      const subscription = client.halo.credentials.subscribe(async (credentials) => {
-        const credential = credentials.find(matchServiceCredential(['composer:beta']));
-        if (credential) {
-          log('beta credential found', { credential });
-          await dispatch({
-            action: NavigationAction.CLOSE,
-            data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
-          });
-          subscription.unsubscribe();
-        }
-      });
+      // TODO(wittjosiah): Factor out to sdk.
+      //   Currently the HaloProxy.queryCredentials method is synchronous.
+      //   Since it is synchronous, it only returns credentials that are already loaded in the client.
+      //   This function ensures that all credentials on disk are loaded into the client before returning.
+      const queryAllCredentials = async () => {
+        const stream = client.services.services.SpacesService!.queryCredentials({
+          spaceKey: client.halo.identity.get()!.spaceKey!,
+          noTail: true,
+        });
+        return new Promise<Credential[]>((resolve, reject) => {
+          const credentials: Credential[] = [];
+          stream?.subscribe(
+            (credential) => {
+              credentials.push(credential);
+            },
+            (err) => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve(credentials);
+              }
+            },
+          );
+        });
+      };
 
-      const credential = client.halo
-        .queryCredentials()
+      const credentials = await queryAllCredentials();
+      const credential = credentials
         .toSorted((a, b) => b.issuanceDate.getTime() - a.issuanceDate.getTime())
         .find(matchServiceCredential(['composer:beta']));
       if (credential && hubUrl) {
@@ -179,6 +193,19 @@ export const WelcomePlugin = ({
           // No-op. This is expected for referred users who have an identity but no token yet.
         }
       }
+
+      // Query for credential in HALO and skip welcome dialog if it exists.
+      const subscription = client.halo.credentials.subscribe(async (credentials) => {
+        const credential = credentials.find(matchServiceCredential(['composer:beta']));
+        if (credential) {
+          log('beta credential found', { credential });
+          await dispatch({
+            action: NavigationAction.CLOSE,
+            data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
+          });
+          subscription.unsubscribe();
+        }
+      });
 
       await dispatch([
         {
