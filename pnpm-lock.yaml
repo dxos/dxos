@@ -2846,6 +2846,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../protocols
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -5515,6 +5518,9 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../../sdk/schema
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -8611,6 +8617,9 @@ importers:
       '@dxos/react-ui-data':
         specifier: workspace:*
         version: link:../../ui/react-ui-data
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
       '@effect/schema':
         specifier: ^0.75.1
         version: 0.75.1(effect@3.9.1)

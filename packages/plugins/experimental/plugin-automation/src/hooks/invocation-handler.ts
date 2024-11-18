@@ -47,13 +47,15 @@ const callFunction = async (funcUrl: string, trigger: any, data: any) => {
 
 export const invokeFunction = async (client: Client, space: Space, trigger: FunctionTrigger, data: any) => {
   try {
+    invariant(trigger.spec);
+    invariant(trigger.function);
     if (trigger.spec.type === 'websocket') {
       return handleEmail(space, data.data);
     }
 
     const script = await space.crud.query({ id: trigger.function }).first();
     const { objects: functions } = await space.crud.query({ __typename: FunctionType.typename }).run();
-    const func = functions.find((fn) => referenceEquals(fn.source, trigger.function)) as AnyObjectData | undefined;
+    const func = functions.find((fn) => referenceEquals(fn.source, trigger.function!)) as AnyObjectData | undefined;
     const funcSlug = func?.__meta.keys.find((key) => key.source === USERFUNCTIONS_META_KEY)?.id;
     if (!funcSlug) {
       log.warn('function not deployed', { scriptId: script.id, name: script.name });

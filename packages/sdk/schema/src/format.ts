@@ -3,7 +3,6 @@
 //
 
 import { AST, DecimalPrecision, TypeEnum, FormatEnum, S, JsonProp } from '@dxos/echo-schema';
-import { findNode, findAnnotation, isSimpleType } from '@dxos/effect';
 
 /**
  * Base schema.
@@ -37,7 +36,7 @@ const extend = (format: FormatEnum, type: TypeEnum, fields: S.Struct.Fields = {}
     S.Struct({
       type: S.Literal(type),
       format: S.Literal(format).annotations({
-        [AST.TitleAnnotationId]: 'Property format',
+        [AST.TitleAnnotationId]: 'Type format',
       }),
       ...fields,
     }),
@@ -186,75 +185,10 @@ export const PropertySchema = S.Union(
 
 export interface PropertyType extends S.Simplify<S.Schema.Type<typeof PropertySchema>> {}
 
-/**
- * Retrieves the schema definition for the given format.
- */
-export const getPropertySchemaForFormat = (format?: FormatEnum): S.Schema<any> | undefined => {
+export const getFormatSchema = (format?: FormatEnum): S.Schema<any> => {
   if (format === undefined) {
     return formatToSchema[FormatEnum.None];
   }
 
-  for (const member of PropertySchema.members) {
-    for (const prop of AST.getPropertySignatures(member.ast)) {
-      if (prop.name === 'format' && prop.type._tag === 'Literal' && prop.type.literal === format) {
-        return member;
-      }
-    }
-  }
-
-  return undefined;
-};
-
-// NOTE: 'a string' is the fallback annotation provided by effect.
-const noDefault = (value?: string, defaultValue?: string): string | undefined =>
-  (value === 'a string' || value === 'a non empty string' ? undefined : value) ?? defaultValue;
-
-export type SchemaProperty<T> = {
-  property: string & keyof T;
-  type?: TypeEnum;
-  title?: string;
-  description?: string;
-};
-
-/**
- * Get top-level properties from schema.
- */
-// TODO(burdon): Factor out (generic).
-export const getSchemaProperties = <T>(schema: S.Schema<T>): SchemaProperty<T>[] => {
-  return AST.getPropertySignatures(schema.ast).reduce<SchemaProperty<T>[]>((props, prop) => {
-    const property = prop.name.toString() as JsonProp & keyof T;
-    const title = noDefault(findAnnotation<string>(prop.type, AST.TitleAnnotationId));
-    const description = noDefault(findAnnotation<string>(prop.type, AST.DescriptionAnnotationId));
-    const baseType = findNode(prop.type, isSimpleType);
-    if (baseType) {
-      const type = getTypeEnum(baseType);
-      if (type) {
-        props.push({ property, type, title, description });
-      } else if (AST.isLiteral(baseType)) {
-        props.push({ property, title, description });
-      }
-    } else {
-      const type = findNode(prop.type, AST.isTransformation);
-      if (type && AST.isTransformation(type)) {
-        props.push({ property, type: getTypeEnum(type.from), title, description });
-      }
-    }
-
-    return props;
-  }, []);
-};
-
-const getTypeEnum = (node: AST.AST): TypeEnum | undefined => {
-  if (AST.isStringKeyword(node)) {
-    return TypeEnum.String;
-  }
-  if (AST.isNumberKeyword(node)) {
-    return TypeEnum.Number;
-  }
-  if (AST.isBooleanKeyword(node)) {
-    return TypeEnum.Boolean;
-  }
-  if (AST.isObjectKeyword(node)) {
-    return TypeEnum.Object;
-  }
+  return formatToSchema[format] ?? formatToSchema[FormatEnum.None];
 };

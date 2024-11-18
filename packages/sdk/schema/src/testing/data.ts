@@ -14,7 +14,7 @@ import {
   toJsonSchema,
 } from '@dxos/echo-schema';
 
-import { createView, type ViewType } from '../types';
+import { createView, type ViewType } from '../view';
 
 export class TestSchema extends TypedObject({
   typename: 'example.com/type/Test',
