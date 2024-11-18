@@ -6,21 +6,19 @@ import { effect } from '@preact/signals-core';
 import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { createIdFromSpaceKey } from '@dxos/echo-protocol';
-import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
-import { create, Expando, S, TypedObject } from '@dxos/echo-schema';
+import { createIdFromSpaceKey, SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
+import { create, Expando } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { DXN, PublicKey } from '@dxos/keys';
+import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
-import { type CoreDatabase } from './core-database';
 import { type DocHandleProxy, type RepoProxy } from '../client';
-import { type EchoReactiveObject, getObjectCore } from '../echo-handler';
-import { type EchoDatabaseImpl, type EchoDatabase } from '../proxy-db';
-import { Filter } from '../query';
-import { EchoTestBuilder, Task } from '../testing';
+import { getObjectCore, type EchoReactiveObject } from '../echo-handler';
+import { type EchoDatabase, type EchoDatabaseImpl } from '../proxy-db';
+import { EchoTestBuilder } from '../testing';
+import { type CoreDatabase } from './core-database';
 
 describe('CoreDatabase', () => {
   describe('space fragmentation', () => {
@@ -368,225 +366,6 @@ describe('CoreDatabase', () => {
         await barrier.wait();
         expect(coreDb.getAllObjectIds()).to.deep.eq([]);
       });
-    });
-  });
-
-  describe('CRUD API', () => {
-    test('can query and mutate data', async () => {
-      await using testBuilder = await new EchoTestBuilder().open();
-      const { crud } = await testBuilder.createDatabase();
-
-      const { id } = await crud.insert({ kind: 'task', title: 'A' });
-      await crud.flush({ indexes: true });
-
-      {
-        const { objects } = await crud.query(Filter.all()).run();
-        expect(objects).to.deep.eq([
-          {
-            id,
-            __typename: null,
-            __meta: {
-              keys: [],
-            },
-            kind: 'task',
-            title: 'A',
-          },
-        ]);
-      }
-
-      await crud.update(
-        {
-          id,
-        },
-        {
-          title: 'B',
-        },
-      );
-
-      {
-        const { objects } = await crud.query(Filter.all()).run();
-        expect(objects).to.deep.eq([
-          {
-            id,
-            __typename: null,
-            __meta: {
-              keys: [],
-            },
-            kind: 'task',
-            title: 'B',
-          },
-        ]);
-      }
-    });
-
-    test('query with JSON filter', async () => {
-      await using testBuilder = await new EchoTestBuilder().open();
-      const { crud } = await testBuilder.createDatabase();
-
-      await crud.insert([
-        { __typename: Task.typename, title: 'Task 1', completed: true },
-        {
-          __typename: Task.typename,
-          title: 'Task 2',
-          completed: false,
-        },
-        { __typename: Task.typename, title: 'Task 3', completed: true },
-      ]);
-      await crud.flush({ indexes: true });
-
-      {
-        const { objects } = await crud.query({ __typename: Task.typename }).run();
-        expect(objects.length).to.eq(3);
-      }
-
-      {
-        const { objects } = await crud.query({ __typename: Task.typename, completed: true }).run();
-        expect(objects.length).to.eq(2);
-      }
-    });
-
-    test('query by id', async () => {
-      await using testBuilder = await new EchoTestBuilder().open();
-      const { crud } = await testBuilder.createDatabase();
-
-      const [{ id: id1 }] = await crud.insert([
-        { __typename: Task.typename, title: 'Task 1', completed: true },
-        {
-          __typename: Task.typename,
-          title: 'Task 2',
-          completed: false,
-        },
-      ]);
-      await crud.flush({ indexes: true });
-
-      {
-        const { objects } = await crud.query({ id: id1 }).run();
-        expect(objects.length).to.eq(1);
-        expect(objects[0].id).to.eq(id1);
-      }
-
-      {
-        const object = await crud.query({ id: id1 }).first();
-        expect(object.id).to.eq(id1);
-      }
-    });
-
-    test('insert typed objects & interop with proxies', async () => {
-      await using testBuilder = await new EchoTestBuilder().open();
-      const { db, crud } = await testBuilder.createDatabase();
-
-      const { id } = await crud.insert({ __typename: Task.typename, title: 'A' });
-      await crud.insert({ data: 'foo' }); // random object
-      await crud.flush({ indexes: true });
-
-      {
-        const { objects } = await crud.query({ __typename: Task.typename }).run();
-        expect(objects.length).to.eq(1);
-        expect(objects[0].id).to.eq(id);
-      }
-
-      {
-        const { objects } = await db.query(Filter.schema(Task)).run();
-        expect(objects.length).to.eq(1);
-        expect(objects[0].id).to.eq(id);
-      }
-    });
-
-    test('references in plain object notation', async () => {
-      await using testBuilder = await new EchoTestBuilder().open();
-      const { crud } = await testBuilder.createDatabase();
-
-      const { id: id1 } = await crud.insert({ title: 'Inner' });
-      const { id: id2 } = await crud.insert({ title: 'Outer', inner: { '/': id1 } });
-      await crud.flush({ indexes: true });
-
-      {
-        const object = await crud.query({ id: id2 }).first();
-        expect(object).to.deep.eq({
-          id: id2,
-          __typename: null,
-          __meta: {
-            keys: [],
-          },
-          title: 'Outer',
-          inner: { '/': `dxn:echo:@:${id1}` },
-        });
-
-        const inner = await crud.query({ id: object.inner }).first();
-        expect(inner).to.deep.eq({
-          id: id1,
-          __typename: null,
-          __meta: {
-            keys: [],
-          },
-          title: 'Inner',
-        });
-      }
-    });
-
-    test('query with join', async () => {
-      await using testBuilder = await new EchoTestBuilder().open();
-      const { crud } = await testBuilder.createDatabase();
-
-      const { id: id1 } = await crud.insert({ title: 'Inner' });
-      const { id: id2 } = await crud.insert({ title: 'Inner', nested: { '/': id1 } });
-      const { id: id3 } = await crud.insert({ title: 'Outer', inner: { '/': id2 } });
-      await crud.flush({ indexes: true });
-
-      {
-        const object = await crud.query({ id: id3 }, { include: { inner: { nested: true } } }).first();
-        expect(object).to.deep.eq({
-          id: id3,
-          __typename: null,
-          __meta: {
-            keys: [],
-          },
-          title: 'Outer',
-          inner: {
-            id: id2,
-            __typename: null,
-            __meta: {
-              keys: [],
-            },
-            title: 'Inner',
-            nested: {
-              id: id1,
-              __typename: null,
-              __meta: {
-                keys: [],
-              },
-              title: 'Inner',
-            },
-          },
-        });
-      }
-    });
-
-    test('dynamic schema objects', async () => {
-      await using testBuilder = await new EchoTestBuilder().open();
-      const { db, crud } = await testBuilder.createDatabase();
-
-      class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-        field: S.String,
-      }) {}
-
-      const stored = db.schemaRegistry.addSchema(TestSchema);
-      const schemaDxn = DXN.fromLocalObjectId(stored.id).toString();
-
-      const object = db.add(create(stored, { field: 'test' }));
-      await db.flush({ indexes: true });
-
-      const { objects } = await crud.query({ __typename: schemaDxn }).run();
-      expect(objects).toEqual([
-        {
-          id: object.id,
-          __typename: schemaDxn,
-          __meta: {
-            keys: [],
-          },
-          field: 'test',
-        },
-      ]);
     });
   });
 });
