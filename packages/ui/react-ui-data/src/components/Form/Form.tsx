@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { AST, S } from '@dxos/echo-schema';
 import { findNode } from '@dxos/effect';
@@ -33,6 +33,7 @@ export type FormProps<T extends object> = ThemedClassName<
     // TODO(burdon): Change to JsonPath includes/excludes.
     filter?: PropsFilter<T>;
     sort?: PropertyKey<T>[];
+    autosave?: boolean;
     onCancel?: () => void;
 
     /**
@@ -52,6 +53,7 @@ export const Form = <T extends object>({
   readonly,
   filter,
   sort,
+  autosave,
   onValuesChanged,
   onValidate,
   onSubmit,
@@ -59,11 +61,13 @@ export const Form = <T extends object>({
   Custom,
 }: FormProps<T>) => {
   const { t } = useTranslation(translationKey);
+  const onValid = useCallback(() => (autosave ? onSubmit : undefined), [autosave, onSubmit]);
   const { canSubmit, errors, handleSubmit, ...inputProps } = useForm<T>({
     schema,
     initialValues: values,
     onValuesChanged,
     onValidate,
+    onValid,
     onSubmit,
   });
 
