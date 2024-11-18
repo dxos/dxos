@@ -168,7 +168,7 @@ describe('loadObjectReferences', () => {
 
     const restartedPeer = await testBuilder.createPeer(kv);
     const restartedDb = await restartedPeer.openDatabase(spaceKey, db.rootUrl!);
-    const loaded = await restartedDb.loadObjectById<TestSchema>(object.id);
+    const loaded = (await restartedDb.query({ id: object.id }).first()) as TestSchema;
     const loadedNested = await loadObjectReferences(loaded!, (o) => o.nested);
     const value: number = loadedNested[0].value;
     expect(value).to.eq(42);

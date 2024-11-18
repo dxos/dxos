@@ -54,12 +54,9 @@ export interface EchoDatabase {
   getObjectById<T extends {} = any>(id: string, opts?: GetObjectByIdOptions): EchoReactiveObject<T> | undefined;
 
   /**
-   * @deprecated Awaiting API review.
+   * Query objects.
    */
-  loadObjectById<T extends {} = any>(
-    id: string,
-    options?: { timeout?: number },
-  ): Promise<EchoReactiveObject<T> | undefined>;
+  query: QueryFn;
 
   /**
    * Update objects.
@@ -82,11 +79,6 @@ export interface EchoDatabase {
    * Removes object from the database.
    */
   remove<T extends EchoReactiveObject<any>>(obj: T): void;
-
-  /**
-   * Query objects.
-   */
-  query: QueryFn;
 
   /**
    * Wait for all pending changes to be saved to disk.
@@ -277,14 +269,10 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     await this._coreDatabase.flush(opts);
   }
 
-  //
-  // Deprecated API.
-  //
-
   /**
-   * @deprecated Awaiting API review.
+   * @internal
    */
-  async loadObjectById<T = any>(
+  async _loadObjectById<T = any>(
     objectId: string,
     options: LoadObjectOptions = {},
   ): Promise<EchoReactiveObject<T> | undefined> {
@@ -298,6 +286,10 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     invariant(isReactiveObject(object));
     return object;
   }
+
+  //
+  // Deprecated API.
+  //
 
   /**
    * @deprecated
