@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, type FormatEnum } from '@dxos/echo-schema';
-import { getFormatAnnotation } from '@dxos/echo-schema';
-import { findAnnotation, findNode, isSimpleType, getSimpleType } from '@dxos/effect';
-import { type SimpleType } from '@dxos/effect';
+import { AST, type FormatEnum, getFormatAnnotation } from '@dxos/echo-schema';
+import { type SimpleType, findAnnotation, findNode, isSimpleType, getSimpleType } from '@dxos/effect';
 
+// TODO(burdon): JsonPath?
 export type PropertyKey<T extends object> = Extract<keyof T, string>;
 
 /**
