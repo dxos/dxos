@@ -9,14 +9,13 @@ import React from 'react';
 
 import { createMutableSchema } from '@dxos/echo-schema/testing';
 import { log } from '@dxos/log';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { ViewProjection } from '@dxos/schema';
 import { TestSchema, testView } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { FieldEditor, type FieldEditorProps } from './FieldEditor';
 import translations from '../../translations';
-import { TestPopup } from '../testing';
+import { TestLayout, TestPanel } from '../testing';
 
 type StoryProps = FieldEditorProps;
 
@@ -26,16 +25,11 @@ const DefaultStory = (props: FieldEditorProps) => {
   };
 
   return (
-    <div className='w-full grid grid-cols-3'>
-      <div className='flex col-span-2 w-full justify-center p-4'>
-        <TestPopup>
-          <FieldEditor {...props} onClose={handleComplete} />
-        </TestPopup>
-      </div>
-      <SyntaxHighlighter language='json' className='w-full text-xs font-thin'>
-        {JSON.stringify(props, null, 2)}
-      </SyntaxHighlighter>
-    </div>
+    <TestLayout json={{ props }}>
+      <TestPanel>
+        <FieldEditor {...props} onClose={handleComplete} />
+      </TestPanel>
+    </TestLayout>
   );
 };
 

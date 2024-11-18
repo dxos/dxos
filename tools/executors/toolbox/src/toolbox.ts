@@ -150,7 +150,6 @@ export class Toolbox {
     );
 
     this.projects.sort((a: Project, b: Project) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
-    // console.log('==', this.projects.length);
   }
 
   info() {

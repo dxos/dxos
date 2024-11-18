@@ -49,6 +49,10 @@ export default [
         'format number': 'Number',
         'format uri': 'URI',
         'format uuid': 'UUID',
+
+        // Placeholders
+        'placeholder latitude': 'Latitude',
+        'placeholder longitude': 'Longitude',
       },
     },
   },

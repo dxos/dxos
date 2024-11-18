@@ -7,46 +7,45 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useCallback, useState } from 'react';
 
-import { FormatEnum, type JsonProp, TypeEnum } from '@dxos/echo-schema';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { getPropertySchemaForFormat, type PropertyType } from '@dxos/schema';
+import { AST, Format, S } from '@dxos/echo-schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Form, type FormProps } from './Form';
 import translations from '../../translations';
-import { TestPopup } from '../testing';
+import { TestLayout, TestPanel } from '../testing';
 
-type StoryProps = FormProps<PropertyType>;
+// TODO(burdon): Translations?
+const TestSchema = S.Struct({
+  name: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Name' })),
+  active: S.optional(S.Boolean.annotations({ [AST.TitleAnnotationId]: 'Active' })),
+  rank: S.optional(S.Number.annotations({ [AST.TitleAnnotationId]: 'Rank' })),
+  website: S.optional(Format.URI.annotations({ [AST.TitleAnnotationId]: 'Website' })),
+  address: S.optional(
+    S.Struct({
+      street: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Street' })),
+      city: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'City' })),
+      zip: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'ZIP' })),
+      location: S.optional(Format.LatLng.annotations({ [AST.TitleAnnotationId]: 'Location' })),
+    }).annotations({ [AST.TitleAnnotationId]: 'Address' }),
+  ),
+}).pipe(S.mutable);
 
-const DefaultStory = (props: StoryProps) => {
-  const [field, setField] = useState(props.values);
-  // TODO(ZaymonFC): Workout why this throws if you unwrap the object.
-  const [{ schema }, setSchema] = useState({ schema: getPropertySchemaForFormat(field.format) });
+type TestType = S.Schema.Type<typeof TestSchema>;
 
-  const handleValueChange = useCallback((values: FormProps<PropertyType>['values']) => {
-    setSchema({ schema: getPropertySchemaForFormat(values.format) });
+type StoryProps = FormProps<TestType>;
+
+const DefaultStory = ({ values: initialValues }: StoryProps) => {
+  const [values, setValues] = useState(initialValues);
+  const handleSubmit = useCallback<NonNullable<FormProps<TestType>['onSubmit']>>((values) => {
+    setValues(values);
   }, []);
-
-  const handleSave = useCallback((field: any) => {
-    console.log('handleSave', field);
-    setField(field);
-  }, []);
-
-  if (!schema) {
-    return <div>No schema found for format: {field.format}</div>;
-  }
 
   return (
-    <div className='w-full grid grid-cols-3'>
-      <div className='flex col-span-2 w-full justify-center p-4'>
-        <TestPopup>
-          <Form values={field} schema={schema} onValuesChanged={handleValueChange} onSave={handleSave} />
-        </TestPopup>
-      </div>
-      <SyntaxHighlighter language='json' className='w-full text-xs font-thin'>
-        {JSON.stringify(field, null, 2)}
-      </SyntaxHighlighter>
-    </div>
+    <TestLayout json={{ values, schema: TestSchema.ast.toJSON() }}>
+      <TestPanel>
+        <Form<TestType> schema={TestSchema} values={values} onSubmit={handleSubmit} />
+      </TestPanel>
+    </TestLayout>
   );
 };
 
@@ -54,7 +53,7 @@ const meta: Meta<StoryProps> = {
   title: 'ui/react-ui-data/Form',
   component: Form,
   render: DefaultStory,
-  decorators: [withLayout({ fullscreen: true }), withTheme],
+  decorators: [withLayout({ fullscreen: true, tooltips: true }), withTheme],
   parameters: {
     translations,
   },
@@ -67,9 +66,11 @@ type Story = StoryObj<StoryProps>;
 export const Default: Story = {
   args: {
     values: {
-      property: 'currency' as JsonProp,
-      format: FormatEnum.Currency,
-      type: TypeEnum.Number,
+      name: 'DXOS',
+      active: true,
+      address: {
+        zip: '11205',
+      },
     },
   },
 };

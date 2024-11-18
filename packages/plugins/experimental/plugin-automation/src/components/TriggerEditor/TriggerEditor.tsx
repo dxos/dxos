@@ -2,109 +2,50 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ChangeEventHandler, type FC, useEffect, useMemo, useState } from 'react';
+import React, { type ChangeEventHandler, type FC, useEffect, useMemo } from 'react';
 
-import { Mutex } from '@dxos/async';
-import { Context } from '@dxos/context';
-import { createSubscriptionTrigger, createWebsocketTrigger, type TriggerFactory } from '@dxos/functions';
 import {
-  FunctionTrigger,
+  FunctionTriggerSchema,
   type FunctionTriggerType,
+  type FunctionTrigger,
   type SubscriptionTrigger,
   type TimerTrigger,
-  type TriggerSpec,
+  type TriggerType,
+  type TriggerKind,
   type WebhookTrigger,
   type WebsocketTrigger,
 } from '@dxos/functions/types';
-import { log } from '@dxos/log';
+import { invariant } from '@dxos/invariant';
 import { ScriptType } from '@dxos/plugin-script/types';
-import { useClient } from '@dxos/react-client';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-data';
 import { distinctBy } from '@dxos/util';
 
 import { InputRow } from './Form';
-import { invokeFunction } from './invokation-handler';
 import { getFunctionMetaExtension, state } from './meta';
+import { useLocalTriggerManager } from '../../hooks';
 import { AUTOMATION_PLUGIN } from '../../meta';
 
-const triggerTypes: FunctionTriggerType[] = ['subscription', 'timer', 'webhook', 'websocket'];
+const triggerTypes: TriggerKind[] = ['timer', 'webhook', 'websocket', 'subscription'];
 
-const registerTriggersMutex = new Mutex();
+export type TriggerEditorProps = {
+  space: Space;
+  trigger: FunctionTrigger;
+};
 
-export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: FunctionTrigger }) => {
+export const TriggerEditor = ({ space, trigger }: TriggerEditorProps) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
-  const client = useClient();
   const scripts = useQuery(space, Filter.schema(ScriptType));
   const script = useMemo(() => scripts.find((script) => script.id === trigger.function), [trigger.function, scripts]);
+  useLocalTriggerManager(space);
 
-  const triggerLabels: Record<FunctionTriggerType, string> = {
+  const triggerLabels: Record<TriggerKind, string> = {
     subscription: t('trigger type subscription'),
     timer: t('trigger type timer'),
     webhook: t('trigger type webhook'),
     websocket: t('trigger type websocket'),
   };
-
-  // TODO(burdon): Factor out, creating context for plugin (runs outside of component).
-  const [registry] = useState(new Map<string, Context>());
-  const triggers = useQuery(space, Filter.schema(FunctionTrigger));
-  useEffect(() => {
-    setTimeout(async () => {
-      // Mark-and-sweep removing disabled triggers.
-      await registerTriggersMutex.executeSynchronized(async () => {
-        const deprecated = new Set(Array.from(registry.keys()));
-        log.info('triggers', {
-          deprecated,
-          all: triggers.map((t) => t.id),
-          enabled: triggers.filter((t) => t.enabled).map((t) => t.id),
-        });
-
-        for (const trigger of triggers) {
-          if (trigger.enabled) {
-            if (registry.has(trigger.id)) {
-              deprecated.delete(trigger.id);
-              continue;
-            }
-            log.info('activating trigger', trigger.id);
-
-            const ctx = new Context();
-            registry.set(trigger.id, ctx);
-            const triggerSpec = trigger.spec;
-
-            let triggerFactory: TriggerFactory<any>;
-            if (triggerSpec.type === 'subscription') {
-              triggerFactory = createSubscriptionTrigger;
-            } else if (triggerSpec.type === 'websocket') {
-              triggerFactory = createWebsocketTrigger;
-            } else {
-              log.info('unsupported trigger', { type: triggerSpec.type });
-              continue;
-            }
-
-            await triggerFactory(ctx, space, trigger.spec, (data: any) => {
-              return invokeFunction(client, space, trigger, data);
-            });
-          }
-        }
-
-        for (const id of deprecated) {
-          const ctx = registry.get(id);
-          if (ctx) {
-            await ctx.dispose();
-            registry.delete(id);
-          }
-        }
-      });
-    });
-  }, [JSON.stringify(triggers)]);
-
-  useEffect(() => {
-    return () => {
-      for (const ctx of registry.values()) {
-        void ctx.dispose();
-      }
-    };
-  }, []);
 
   useEffect(() => {
     void space.db.schemaRegistry
@@ -121,6 +62,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
   // Keen an enriched version of the schema in memory so we can share it with prompt editor.
   useEffect(() => {
     const spec = trigger.spec;
+    invariant(spec);
     if (spec.type === 'subscription') {
       if (spec.filter && spec.filter.length > 0) {
         const type = spec.filter[0].type;
@@ -148,7 +90,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
   };
 
   const handleSelectTriggerType = (triggerType: string) => {
-    switch (triggerType as FunctionTriggerType) {
+    switch (triggerType as TriggerKind) {
       case 'subscription': {
         trigger.spec = { type: 'subscription', filter: [] };
         break;
@@ -170,6 +112,24 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
   };
 
   const TriggerMeta = getFunctionMetaExtension(trigger, script)?.component;
+
+  // TODO(burdon): Query for functions.
+  // TODO(burdon): Flatten trigger.spec
+  const test = true;
+  if (test) {
+    return (
+      <Form<FunctionTriggerType>
+        schema={FunctionTriggerSchema}
+        values={{
+          function: 'foo',
+          spec: { type: 'timer', cron: '0 0 * * *' },
+        }}
+        Custom={{
+          spec: () => <div>spec</div>,
+        }}
+      />
+    );
+  }
 
   return (
     <div className='flex flex-col py-1'>
@@ -216,7 +176,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
           </InputRow>
         </tbody>
         <tbody>
-          {trigger.spec && <TriggerSpec space={space} spec={trigger.spec} />}
+          {trigger.spec && <TriggerType space={space} spec={trigger.spec} />}
           <InputRow label={t('function enabled')}>
             {/* TODO(burdon): Hack to make the switch the same height as other controls. */}
             <div className='flex items-center h-8'>
@@ -224,7 +184,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
             </div>
           </InputRow>
         </tbody>
-        {TriggerMeta && (
+        {TriggerMeta && trigger.meta && (
           <tbody>
             <tr>
               <td />
@@ -344,10 +304,10 @@ const TriggerSpecWebsocket = ({ spec }: TriggerSpecProps<WebsocketTrigger>) => {
 // Trigger spec.
 //
 
-type TriggerSpecProps<T = TriggerSpec> = { space: Space; spec: T };
+type TriggerSpecProps<T = TriggerType> = { space: Space; spec: T };
 
 const triggerRenderers: {
-  [key in FunctionTriggerType]: FC<TriggerSpecProps<any>>;
+  [key in TriggerKind]: FC<TriggerSpecProps<any>>;
 } = {
   subscription: TriggerSpecSubscription,
   timer: TriggerSpecTimer,
@@ -355,7 +315,7 @@ const triggerRenderers: {
   websocket: TriggerSpecWebsocket,
 };
 
-const TriggerSpec = ({ space, spec }: TriggerSpecProps) => {
+const TriggerType = ({ space, spec }: TriggerSpecProps) => {
   const Component = triggerRenderers[spec.type];
   return Component ? <Component space={space} spec={spec} /> : null;
 };
