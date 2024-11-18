@@ -13,7 +13,6 @@ export type PropertyKey<T extends object> = Extract<keyof T, string>;
  * High-level UX type for schema property.
  */
 export type SchemaProperty<T extends object> = {
-  root: AST.AST;
   prop: AST.PropertySignature;
   name: PropertyKey<T>;
   type: SimpleType;
@@ -45,7 +44,7 @@ export const getSchemaProperties = <T extends object>(ast: AST.AST): SchemaPrope
 
     if (type) {
       const format = baseType ? getFormatAnnotation(baseType) : undefined;
-      props.push({ root: ast, prop, name, type, format, title, description });
+      props.push({ prop, name, type, format, title, description });
     }
 
     return props;

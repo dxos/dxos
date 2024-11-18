@@ -30,6 +30,7 @@ export type FormProps<T extends object> = ThemedClassName<
     // TODO(burdon): Autofocus first input.
     autoFocus?: boolean;
     readonly?: boolean;
+    // TODO(burdon): Change to JsonPath includes/excludes.
     filter?: PropsFilter<T>;
     sort?: PropertyKey<T>[];
     onCancel?: () => void;
@@ -90,10 +91,6 @@ export const Form = <T extends object>({
     <div className={mx('flex flex-col w-full gap-1', classNames)}>
       {props
         .map(({ prop, name, type, format, title, description }) => {
-          if (!type) {
-            return null;
-          }
-
           // Custom property allows for sub forms.
           // TODO(burdon): Use Select control if options are present in annotation?
           const InputComponent = Custom?.[name] ?? getInputComponent<T>(type, format);
@@ -147,7 +144,6 @@ export const Form = <T extends object>({
                 label={t('button save')}
                 onClick={handleSubmit}
                 disabled={!canSubmit}
-                classNames='grow'
               />
             )}
           </div>
