@@ -88,7 +88,7 @@ export const Form = <T extends object>({
   }, [errors]);
 
   return (
-    <div className={mx('flex flex-col w-full gap-1', classNames)}>
+    <div role='form' className={mx('flex flex-col w-full gap-1', classNames)}>
       {props
         .map(({ prop, name, type, format, title, description }) => {
           // Custom property allows for sub forms.
@@ -101,10 +101,10 @@ export const Form = <T extends object>({
               if (typeLiteral) {
                 return (
                   <div key={name} role='none'>
-                    <div className={padding}>{title ?? name}</div>
+                    <div className={padding}>{title ?? name ?? 'xxx'}</div>
                     <Form<any>
                       schema={S.make(typeLiteral)}
-                      values={values[name]}
+                      values={values[name] ?? {}}
                       onSubmit={(childValues) => {
                         values[name] = childValues;
                       }}
@@ -118,6 +118,7 @@ export const Form = <T extends object>({
             return null;
           }
 
+          console.log('::::', InputComponent, name);
           return (
             <div key={name} role='none' className={padding}>
               <InputComponent

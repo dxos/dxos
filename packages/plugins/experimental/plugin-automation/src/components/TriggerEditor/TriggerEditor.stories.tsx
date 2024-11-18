@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import '@dxos-theme';
+
 import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
