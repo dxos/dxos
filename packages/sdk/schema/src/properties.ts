@@ -47,11 +47,13 @@ export const getSchemaProperties = <T extends object>(ast: AST.AST): SchemaPrope
         type = getSimpleType(baseType.from);
       } else {
         // Tuples.
+        // https://effect.website/docs/schema/basic-usage/#rest-element
         baseType = findNode(prop.type, AST.isTupleType);
         if (baseType) {
           invariant(AST.isTupleType(baseType));
-          const [tupleType] = baseType.rest ?? []; // TODO(burdon): Is this right?
+          const [tupleType] = baseType.rest ?? [];
           if (tupleType) {
+            invariant(baseType.elements.length === 0);
             baseType = findNode(tupleType.type, isSimpleType);
             if (baseType) {
               type = getSimpleType(baseType);
@@ -71,7 +73,7 @@ export const getSchemaProperties = <T extends object>(ast: AST.AST): SchemaPrope
   }, []);
 };
 
-const stringify = (value: AST.AST) => JSON.stringify(value.toJSON(), null, 2);
+export const stringify = (value: AST.AST) => JSON.stringify(value.toJSON(), null, 2);
 
 export const sortProperties = <T extends object>({ name: a }: SchemaProperty<T>, { name: b }: SchemaProperty<T>) =>
   a.localeCompare(b);

@@ -80,8 +80,7 @@ export type TriggerType = TimerTrigger | WebhookTrigger | WebsocketTrigger | Sub
 
 /**
  * Type discriminator for TriggerType.
- * Every spec has a type field of type TriggerKind that we can use to understand which
- * type we're working with.
+ * Every spec has a type field of type TriggerKind that we can use to understand which type we're working with.
  * https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions
  */
 export type TriggerKind = 'timer' | 'webhook' | 'websocket' | 'subscription';

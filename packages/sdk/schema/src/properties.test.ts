@@ -18,7 +18,7 @@ const TestSchema = S.Struct({
     city: S.String,
     zip: S.String,
   }),
-  tags: S.optional(S.Array(S.String)),
+  scores: S.optional(S.Array(S.Number)),
 });
 
 describe('properties', () => {
@@ -32,7 +32,7 @@ describe('properties', () => {
       'number',
       'object',
       'object',
-      'string',
+      'number',
     ]);
   });
 });

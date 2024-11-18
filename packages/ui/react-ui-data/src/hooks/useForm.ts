@@ -5,6 +5,7 @@
 import { type FocusEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type SimpleType, type S } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { validateSchema, type PropertyKey, type ValidationError } from '@dxos/schema';
 
@@ -17,7 +18,6 @@ export type FormHandler<T extends object = {}> = {
   //
 
   values: T;
-  // props: SchemaProperty<T>[];
   errors: Record<PropertyKey<T>, string>;
   touched: Record<PropertyKey<T>, boolean>;
   changed: Record<PropertyKey<T>, boolean>;
@@ -80,6 +80,7 @@ export const useForm = <T extends object>({
     setValues(initialValues);
   }, [initialValues]);
 
+  console.log(schema, initialValues);
   const [touched, setTouched] = useState<Record<PropertyKey<T>, boolean>>(createKeySet(initialValues, false));
   const [changed, setChanged] = useState<Record<PropertyKey<T>, boolean>>(createKeySet(initialValues, false));
   const [errors, setErrors] = useState<Record<PropertyKey<T>, string>>({} as Record<PropertyKey<T>, string>);
@@ -195,6 +196,7 @@ export const useForm = <T extends object>({
 };
 
 const createKeySet = <T extends object, V>(obj: T, value: V): Record<PropertyKey<T>, V> => {
+  invariant(obj);
   return Object.keys(obj).reduce((acc, key) => ({ ...acc, [key]: value }), {} as Record<PropertyKey<T>, V>);
 };
 

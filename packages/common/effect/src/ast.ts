@@ -183,7 +183,7 @@ export const findNode = (node: AST.AST, test: (node: AST.AST) => boolean): AST.A
     }
   }
 
-  // Array.
+  // Tuple.
   else if (AST.isTupleType(node)) {
     for (const [_, element] of node.elements.entries()) {
       const child = findNode(element.type, test);
