@@ -33,6 +33,7 @@ export type FormProps<T extends object> = ThemedClassName<
     // TODO(burdon): Change to JsonPath includes/excludes.
     filter?: PropsFilter<T>;
     sort?: PropertyKey<T>[];
+    autosave?: boolean;
     onCancel?: () => void;
 
     /**
@@ -52,6 +53,7 @@ export const Form = <T extends object>({
   readonly,
   filter,
   sort,
+  autosave,
   onValuesChanged,
   onValidate,
   onSubmit,
@@ -59,11 +61,13 @@ export const Form = <T extends object>({
   Custom,
 }: FormProps<T>) => {
   const { t } = useTranslation(translationKey);
+  const onValid = useMemo(() => (autosave ? onSubmit : undefined), [autosave, onSubmit]);
   const { canSubmit, errors, handleSubmit, ...inputProps } = useForm<T>({
     schema,
     initialValues: values,
     onValuesChanged,
     onValidate,
+    onValid,
     onSubmit,
   });
 
@@ -105,8 +109,9 @@ export const Form = <T extends object>({
                     <Form<any>
                       schema={S.make(typeLiteral)}
                       values={values[name]}
+                      autosave={true}
                       onSubmit={(childValues) => {
-                        values[name] = childValues;
+                        inputProps.onValueChange(name, 'object', childValues);
                       }}
                     />
                   </div>
@@ -136,7 +141,7 @@ export const Form = <T extends object>({
 
       {/* {errors && <div className='overflow-hidden text-sm'>{JSON.stringify(errors)}</div>} */}
 
-      {(onCancel || onSubmit) && (
+      {(onCancel || onSubmit) && !autosave && (
         <div role='none' className='flex justify-center'>
           <div role='none' className={mx(onCancel && !readonly && 'grid grid-cols-2 gap-2')}>
             {onCancel && !readonly && (

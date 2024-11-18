@@ -59,6 +59,11 @@ export interface FormOptions<T extends object> {
   onValidate?: (values: T) => ValidationError[] | undefined;
 
   /**
+   * Called when the form is valid.
+   */
+  onValid?: (values: T, meta: { changed: FormHandler<T>['changed'] }) => void;
+
+  /**
    * Called when the form is submitted and passes validation.
    */
   onSubmit?: (values: T, meta: { changed: FormHandler<T>['changed'] }) => void;
@@ -73,6 +78,7 @@ export const useForm = <T extends object>({
   initialValues,
   onValuesChanged,
   onValidate,
+  onValid,
   onSubmit,
 }: FormOptions<T>): FormHandler<T> => {
   const [values, setValues] = useState<T>(initialValues);
@@ -103,8 +109,18 @@ export const useForm = <T extends object>({
   );
 
   useEffect(() => {
-    validate(values);
-  }, [schema, validate, values]);
+    const isValid = validate(values);
+    if (!isValid) {
+      return;
+    }
+
+    if (onValid) {
+      const timeout = setTimeout(() => {
+        onValid(values, { changed });
+      }, 25);
+      return () => clearTimeout(timeout);
+    }
+  }, [schema, validate, values, onValid, changed]);
 
   /**
    * NOTE: We can submit if there is no touched field that has an error.
