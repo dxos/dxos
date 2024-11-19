@@ -160,13 +160,10 @@ export const useForm = <T extends object>({
     setChanged((prev) => ({ ...prev, [property]: true }));
     onValuesChanged?.(newValues);
 
-    // Debounce validation with rAF
-    requestAnimationFrame(() => {
-      const isValid = validate(newValues);
-      if (isValid && onValid) {
-        onValid(newValues, { changed });
-      }
-    });
+    const isValid = validate(newValues);
+    if (isValid && onValid) {
+      onValid(newValues, { changed });
+    }
   };
 
   // TODO(burdon): This is a leaky abstraction: the hook ideally shouldn't get involved in UX.
