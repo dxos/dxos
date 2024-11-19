@@ -51,7 +51,7 @@ export type FormProps<T extends object> = ThemedClassName<
 export const Form = <T extends object = {}>({
   classNames,
   schema,
-  values,
+  values: initialValues,
   path = [],
   readonly,
   filter,
@@ -65,9 +65,9 @@ export const Form = <T extends object = {}>({
 }: FormProps<T>) => {
   const { t } = useTranslation(translationKey);
   const onValid = useMemo(() => (autosave ? onSubmit : undefined), [autosave, onSubmit]);
-  const { canSubmit, errors, handleSubmit, ...inputProps } = useForm<T>({
+  const { canSubmit, values, errors, handleSubmit, ...inputProps } = useForm<T>({
     schema,
-    initialValues: values,
+    initialValues,
     onValuesChanged,
     onValidate,
     onValid,
@@ -77,7 +77,7 @@ export const Form = <T extends object = {}>({
   // Filter and sort props.
   // TODO(burdon): Move into useForm?
   const props = useMemo(() => {
-    const props = getSchemaProperties<T>(schema.ast);
+    const props = getSchemaProperties<T>(schema.ast, values);
     const filtered = filter ? filter(props) : props;
     const findIndex = (props: PropertyKey<T>[], prop: PropertyKey<T>) => {
       const idx = props.findIndex((p) => p === prop);

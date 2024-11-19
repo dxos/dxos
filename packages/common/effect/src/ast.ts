@@ -6,6 +6,7 @@ import { AST, Schema as S } from '@effect/schema';
 import { Option, pipe } from 'effect';
 
 import { invariant } from '@dxos/invariant';
+import { nonNullable } from '@dxos/util';
 
 //
 // Refs
@@ -21,7 +22,7 @@ export type SimpleType = 'object' | 'string' | 'number' | 'boolean' | 'enum' | '
  * Get the base type; e.g., traverse through refinements.
  */
 export const getSimpleType = (node: AST.AST): SimpleType | undefined => {
-  if (AST.isObjectKeyword(node) || AST.isTypeLiteral(node)) {
+  if (AST.isObjectKeyword(node) || AST.isTypeLiteral(node) || isDiscriminatedUnion(node)) {
     return 'object';
   }
 
@@ -270,11 +271,19 @@ export const findAnnotation = <T>(node: AST.AST, annotationId: symbol): T | unde
 /**
  * Effect S.optional creates a union type with undefined as the second type.
  */
-export const isOption = (node: AST.AST) =>
-  AST.isUnion(node) && node.types.length === 2 && AST.isUndefinedKeyword(node.types[1]);
+export const isOption = (node: AST.AST): boolean => {
+  return AST.isUnion(node) && node.types.length === 2 && AST.isUndefinedKeyword(node.types[1]);
+};
 
 /**
  * Determines if the node is a discriminated union.
+ */
+export const isDiscriminatedUnion = (node: AST.AST): boolean => {
+  return AST.isUnion(node) && !!getDiscriminatingProps(node)?.length;
+};
+
+/**
+ * Get the discriminating properties for the given union type.
  */
 export const getDiscriminatingProps = (node: AST.AST): string[] | undefined => {
   invariant(AST.isUnion(node));
@@ -290,7 +299,7 @@ export const getDiscriminatingProps = (node: AST.AST): string[] | undefined => {
       .map((p) => p.name.toString());
 
     // Return common literals.
-    return shared.length === 0 ? props : shared.filter((p) => props.includes(p));
+    return shared.length === 0 ? props : shared.filter((prop) => props.includes(prop));
   }, []);
 };
 
@@ -299,9 +308,15 @@ export const getDiscriminatingProps = (node: AST.AST): string[] | undefined => {
  */
 export const getDiscriminatedType = (node: AST.AST, value: any): AST.AST | undefined => {
   invariant(AST.isUnion(node));
+  invariant(value);
   const props = getDiscriminatingProps(node);
-  invariant(props?.length);
+  if (!props?.length) {
+    return;
+  }
 
+  // TODO(burdon): Iterate through props and knock-out variants that don't match.
+
+  // Match provided value.
   for (const type of node.types) {
     const match = AST.getPropertySignatures(type)
       .filter((prop) => props?.includes(prop.name.toString()))
@@ -314,4 +329,31 @@ export const getDiscriminatedType = (node: AST.AST, value: any): AST.AST | undef
       return type;
     }
   }
+
+  const p = props
+    .map((prop) => {
+      const literals = node.types
+        .map((type) => {
+          const literal = AST.getPropertySignatures(type).find((p) => p.name.toString() === prop);
+          if (literal) {
+            invariant(AST.isLiteral(literal.type));
+            return literal.type.literal;
+          } else {
+            return undefined;
+          }
+        })
+        .filter(nonNullable);
+
+      return literals.length
+        ? {
+            name: prop,
+            literals,
+          }
+        : null;
+    })
+    .filter(nonNullable);
+
+  const fields = Object.fromEntries(p.map(({ name, literals = [] }) => [name, S.Literal(...literals)]));
+  const schema = S.Struct(fields);
+  return schema.ast;
 };

@@ -3,7 +3,14 @@
 //
 
 import { AST, type FormatEnum, getFormatAnnotation } from '@dxos/echo-schema';
-import { type SimpleType, findAnnotation, findNode, isSimpleType, getSimpleType } from '@dxos/effect';
+import {
+  type SimpleType,
+  findAnnotation,
+  findNode,
+  getDiscriminatedType,
+  getSimpleType,
+  isSimpleType,
+} from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 // TODO(burdon): JsonPath?
@@ -25,7 +32,16 @@ export type SchemaProperty<T extends object> = {
 /**
  * Get properties from the given AST node (typically from a Schema object).
  */
-export const getSchemaProperties = <T extends object>(ast: AST.AST): SchemaProperty<T>[] => {
+export const getSchemaProperties = <T extends object>(ast: AST.AST, value?: any): SchemaProperty<T>[] => {
+  if (AST.isUnion(ast)) {
+    const baseType = getDiscriminatedType(ast, value);
+    if (baseType) {
+      return getSchemaProperties(baseType);
+    }
+
+    return [];
+  }
+
   return AST.getPropertySignatures(ast).reduce<SchemaProperty<T>[]>((props, prop) => {
     const name = prop.name.toString() as PropertyKey<T>;
 
@@ -41,6 +57,7 @@ export const getSchemaProperties = <T extends object>(ast: AST.AST): SchemaPrope
       type = getSimpleType(baseType);
     } else {
       // Transformations.
+      // https://effect.website/docs/schema/transformations
       baseType = findNode(prop.type, AST.isTransformation);
       if (baseType) {
         invariant(AST.isTransformation(baseType));
@@ -72,8 +89,6 @@ export const getSchemaProperties = <T extends object>(ast: AST.AST): SchemaPrope
     return props;
   }, []);
 };
-
-export const stringify = (value: AST.AST) => JSON.stringify(value.toJSON(), null, 2);
 
 export const sortProperties = <T extends object>({ name: a }: SchemaProperty<T>, { name: b }: SchemaProperty<T>) =>
   a.localeCompare(b);

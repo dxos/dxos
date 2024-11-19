@@ -127,25 +127,18 @@ describe('AST', () => {
 
   test('discriminated unions', ({ expect }) => {
     const TestUnionSchema = S.Union(
-      S.Struct({ type: S.Literal('a'), label: S.String }),
-      S.Struct({ type: S.Literal('b'), count: S.Number, active: S.Boolean }),
+      S.Struct({ kind: S.Literal('a'), label: S.String }),
+      S.Struct({ kind: S.Literal('b'), count: S.Number, active: S.Boolean }),
     );
 
     type TestUnionType = S.Schema.Type<typeof TestUnionSchema>;
 
-    // const TestSchema = S.Struct({
-    //   name: S.String,
-    //   spec: TestUnionSchema,
-    // });
-    //
-    // type TestType = S.Schema.Type<typeof TestSchema>;
-
     {
       expect(isOption(TestUnionSchema.ast)).to.be.false;
-      expect(getDiscriminatingProps(TestUnionSchema.ast)).to.deep.eq(['type']);
+      expect(getDiscriminatingProps(TestUnionSchema.ast)).to.deep.eq(['kind']);
 
       const node = findNode(TestUnionSchema.ast, isSimpleType);
-      expect(node).to.be.undefined;
+      expect(node).to.eq(TestUnionSchema.ast);
     }
 
     {
@@ -153,18 +146,24 @@ describe('AST', () => {
       const [a, b] = TestUnionSchema.ast.types;
 
       const obj1: TestUnionType = {
-        type: 'a',
+        kind: 'a',
         label: 'test',
       };
 
       const obj2: TestUnionType = {
-        type: 'b',
+        kind: 'b',
         count: 100,
         active: true,
       };
 
       expect(getDiscriminatedType(TestUnionSchema.ast, obj1)?.toJSON()).to.deep.eq(a.toJSON());
       expect(getDiscriminatedType(TestUnionSchema.ast, obj2)?.toJSON()).to.deep.eq(b.toJSON());
+
+      expect(getDiscriminatedType(TestUnionSchema.ast, {})?.toJSON()).to.deep.eq(
+        S.Struct({
+          kind: S.Literal('a', 'b'),
+        }).ast.toJSON(),
+      );
     }
   });
 });
