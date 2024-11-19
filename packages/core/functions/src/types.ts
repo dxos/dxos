@@ -4,53 +4,63 @@
 
 import { AST, RawObject, S, TypedObject } from '@dxos/echo-schema';
 
-//
-// Timer
-//
+/**
+ * Type discriminator for TriggerType.
+ * Every spec has a type field of type TriggerKind that we can use to understand which type we're working with.
+ * https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions
+ */
+export type TriggerKind = 'timer' | 'webhook' | 'websocket' | 'subscription';
 
-const TimerTriggerSchema = S.Struct({
-  type: S.Literal('timer'),
+const extend = (type: TriggerKind, fields: S.Struct.Fields = {}) =>
+  S.extend(
+    S.Struct({
+      // TODO(burdon): Rename kind.
+      type: S.Literal(type).annotations({ [AST.TitleAnnotationId]: 'Trigger type' }),
+    }),
+    S.Struct(fields),
+  ).pipe(S.mutable);
+
+/**
+ * Cron timer.
+ */
+const TimerTriggerSchema = extend('timer', {
   cron: S.String,
-}).pipe(S.mutable);
+});
 
 export type TimerTrigger = S.Schema.Type<typeof TimerTriggerSchema>;
 
-//
-// Webhook
-//
-
-const WebhookTriggerSchema = S.Struct({
-  type: S.Literal('webhook'),
+/**
+ * Webhook.
+ */
+const WebhookTriggerSchema = extend('webhook', {
   method: S.String,
   // Assigned port.
   port: S.optional(S.Number),
-}).pipe(S.mutable);
+});
 
 export type WebhookTrigger = S.Schema.Type<typeof WebhookTriggerSchema>;
 
-//
-// Websocket
-//
-
-const WebsocketTriggerSchema = S.Struct({
-  type: S.Literal('websocket'),
+/**
+ * Websocket.
+ * @deprecated
+ */
+const WebsocketTriggerSchema = extend('websocket', {
   url: S.String,
   init: S.optional(S.Record({ key: S.String, value: S.Any })),
-}).pipe(S.mutable);
+});
 
 export type WebsocketTrigger = S.Schema.Type<typeof WebsocketTriggerSchema>;
 
-//
-// Subscription
-//
-
+// TODO(burdon): Use ECHO definition.
 const QuerySchema = S.Struct({
   type: S.String,
   props: S.optional(S.Record({ key: S.String, value: S.Any })),
 });
 
-const SubscriptionTriggerSchema = S.Struct({
-  type: S.Literal('subscription'),
+/**
+ * Subscription.
+ */
+const SubscriptionTriggerSchema = extend('subscription', {
   // TODO(burdon): Define query DSL (from ECHO). Reconcile with Table.Query.
   filter: S.Array(QuerySchema),
   options: S.optional(
@@ -61,14 +71,13 @@ const SubscriptionTriggerSchema = S.Struct({
       delay: S.optional(S.Number),
     }),
   ),
-}).pipe(S.mutable);
+});
 
 export type SubscriptionTrigger = S.Schema.Type<typeof SubscriptionTriggerSchema>;
 
-//
-// Union
-//
-
+/**
+ * Trigger schema (discriminated union).
+ */
 export const TriggerSchema = S.Union(
   TimerTriggerSchema,
   WebhookTriggerSchema,
@@ -77,14 +86,6 @@ export const TriggerSchema = S.Union(
 );
 
 export type TriggerType = TimerTrigger | WebhookTrigger | WebsocketTrigger | SubscriptionTrigger;
-
-/**
- * Type discriminator for TriggerType.
- * Every spec has a type field of type TriggerKind that we can use to understand which
- * type we're working with.
- * https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions
- */
-export type TriggerKind = 'timer' | 'webhook' | 'websocket' | 'subscription';
 
 /**
  * Function trigger.
