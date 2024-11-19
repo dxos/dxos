@@ -84,37 +84,29 @@ export class OnboardingManager {
   }
 
   async initialize() {
-    console.log('fetchCredential');
     await this.fetchCredential();
     if (this._credential) {
-      console.log('upgradeCredential');
       await this._upgradeCredential();
       return;
     } else if (!this._skipAuth) {
-      console.log('showWelcome');
       await this._showWelcome();
     }
 
     if (this._deviceInvitationCode !== undefined) {
-      console.log('deviceInvitationCode');
       await this._openJoinIdentity();
     } else if (this._recoverIdentity) {
-      console.log('recoverIdentity');
       await this._openRecoverIdentity();
     } else if (!this._identity && (this._token || this._skipAuth)) {
-      console.log('createIdentity');
       await this._createIdentity();
       !this._skipAuth && (await this._startHelp());
     }
 
     if (this._skipAuth) {
-      console.log('skipAuth');
       this._spaceInvitationCode && (await this._openJoinSpace());
       return;
     }
 
     if (this._identity) {
-      console.log('activateAccount');
       await this._activateAccount();
     }
   }
