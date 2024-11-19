@@ -182,6 +182,13 @@ This will start the development server and print a URL to the console. Opening t
 * There is no need for [ORMs](https://en.wikipedia.org/wiki/Object%E2%80%93relational_mapping). ECHO objects are "plain javascript" objects that can be manipulated directly.
 * **There is no need for an API tier.** The app has everything it needs on the client.
 
+
+The following templates are available:
+
+* Hello world: `npm create @dxos@latest` or `npm create @dxos/hello@latest`
+* Bare template: `npm create @dxos/bare@latest`
+* Tasks app: `npm create @dxos/tasks@latest`
+
 :::
 
 ### Deployment
