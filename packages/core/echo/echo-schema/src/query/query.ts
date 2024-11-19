@@ -9,7 +9,7 @@ import { Schema as S } from '@effect/schema';
  */
 const QuerySchema = S.Struct({
   type: S.String,
-});
+}).pipe(S.mutable);
 
 export interface QueryType extends S.Schema.Type<typeof QuerySchema> {}
 
