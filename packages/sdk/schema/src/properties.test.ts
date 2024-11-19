@@ -85,5 +85,7 @@ describe('properties', () => {
       const props = getSchemaProperties(TestSpecSchema.ast, {});
       expect(props.length).to.eq(1);
     }
+
+    // TODO(burdon): Need to test from root.
   });
 });

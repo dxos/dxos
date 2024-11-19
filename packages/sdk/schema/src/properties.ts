@@ -9,6 +9,7 @@ import {
   findNode,
   getDiscriminatedType,
   getSimpleType,
+  isLiteralUnion,
   isSimpleType,
 } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -76,6 +77,13 @@ export const getSchemaProperties = <T extends object>(ast: AST.AST, value?: any)
               type = getSimpleType(baseType);
               tuple = true;
             }
+          }
+        } else {
+          // Union of literals.
+          // This will be returned from the head of the function when generating a discriminating type
+          baseType = findNode(prop.type, isLiteralUnion);
+          if (baseType) {
+            type = 'literal';
           }
         }
       }

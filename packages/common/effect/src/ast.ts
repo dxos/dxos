@@ -276,6 +276,13 @@ export const isOption = (node: AST.AST): boolean => {
 };
 
 /**
+ * Determines if the node is a union of literal types.
+ */
+export const isLiteralUnion = (node: AST.AST): boolean => {
+  return AST.isUnion(node) && node.types.every(AST.isLiteral);
+};
+
+/**
  * Determines if the node is a discriminated union.
  */
 export const isDiscriminatedUnion = (node: AST.AST): boolean => {
@@ -314,8 +321,6 @@ export const getDiscriminatedType = (node: AST.AST, value: any): AST.AST | undef
     return;
   }
 
-  // TODO(burdon): Iterate through props and knock-out variants that don't match.
-
   // Match provided value.
   for (const type of node.types) {
     const match = AST.getPropertySignatures(type)
@@ -330,6 +335,9 @@ export const getDiscriminatedType = (node: AST.AST, value: any): AST.AST | undef
     }
   }
 
+  // Create union of discriminating properties.
+  // NOTE: This may not work with non-overlapping variants.
+  // TODO(burdon): Iterate through props and knock-out variants that don't match.
   const p = props
     .map((prop) => {
       const literals = node.types

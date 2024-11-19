@@ -87,6 +87,8 @@ export const Form = <T extends object = {}>({
     return sort ? filtered.sort(({ name: a }, { name: b }) => findIndex(sort, a) - findIndex(sort, b)) : filtered;
   }, [schema, filter]);
 
+  console.log('props', props);
+
   // TODO(burdon): Highlight in UX.
   useEffect(() => {
     if (errors && Object.keys(errors).length) {
