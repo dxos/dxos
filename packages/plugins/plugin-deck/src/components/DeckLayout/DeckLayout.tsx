@@ -186,6 +186,7 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
                 {...(isSoloModeLoaded && { inert: '' })}
               >
                 <Stack
+                  separators={false}
                   orientation='horizontal'
                   size='contain'
                   classNames={['absolute inset-block-0 -inset-inline-px', mainPaddingTransitions]}

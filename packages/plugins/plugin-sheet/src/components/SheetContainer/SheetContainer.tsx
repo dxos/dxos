@@ -19,7 +19,7 @@ export const SheetContainer = ({ space, sheet, role }: { space: Space; sheet: Sh
 
   return graph ? (
     <SheetProvider sheet={sheet} graph={graph}>
-      <StackItem.Content toolbar statusbar classNames='border-bs border-separator'>
+      <StackItem.Content toolbar statusbar>
         <Toolbar.Root role={role}>
           <Toolbar.Styles />
           <Toolbar.Alignment />
