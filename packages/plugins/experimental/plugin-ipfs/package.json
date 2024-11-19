@@ -47,7 +47,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
-    "@effect/schema": "^0.75.1",
+    "@effect/schema": "^0.75.5",
     "kubo-rpc-client": "^4.1.1",
     "lodash.get": "^4.4.2",
     "undici": "*",

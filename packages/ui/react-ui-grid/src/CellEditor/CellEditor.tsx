@@ -112,38 +112,14 @@ export const editorKeys = ({ onNav, onClose }: EditorKeysProps): Extension => {
   ]);
 };
 
-const editorVariants = {
-  // TODO(thure): remove when legacy is no longer used.
-  legacy: {
-    root: 'flex w-full',
-    editor: 'flex w-full [&>.cm-scroller]:scrollbar-none',
-    content: '!px-2 !py-1',
-  },
-  grid: {
-    root: 'absolute z-[1]',
-    editor: '[&>.cm-scroller]:scrollbar-none tabular-nums',
-    // This must match cell styling in `dx-grid.pcss`.
-    content: '!border !border-transparent !pli-[4px] !plb-0.5',
-  },
-};
-
 export type CellEditorProps = {
   value?: string;
   extension?: Extension;
-  variant?: keyof typeof editorVariants;
   box?: GridEditBox;
   gridId?: string;
 } & Pick<UseTextEditorProps, 'autoFocus'> & { onBlur?: EditorBlurHandler };
 
-export const CellEditor = ({
-  value,
-  extension,
-  autoFocus,
-  onBlur,
-  variant = 'legacy',
-  box,
-  gridId,
-}: CellEditorProps) => {
+export const CellEditor = ({ value, extension, autoFocus, onBlur, box, gridId }: CellEditorProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
     return {
@@ -164,21 +140,21 @@ export const CellEditor = ({
           themeMode,
           slots: {
             editor: {
-              className: editorVariants[variant].editor,
+              className: '[&>.cm-scroller]:scrollbar-none tabular-nums',
             },
             content: {
-              className: editorVariants[variant].content,
+              className: '!border !border-transparent !pli-[4px] !plb-0.5',
             },
           },
         }),
       ],
     };
-  }, [extension, autoFocus, value, variant, onBlur]);
+  }, [extension, autoFocus, value, onBlur]);
 
   return (
     <div
       ref={parentRef}
-      className={editorVariants[variant].root}
+      className='absolute z-[1]'
       style={{
         ...box,
         ...{ '--dx-gridCellWidth': `${box?.inlineSize ?? 200}px` },

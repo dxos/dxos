@@ -5,7 +5,7 @@
 import React, { useEffect, useMemo } from 'react';
 
 import { AST, S } from '@dxos/echo-schema';
-import { findNode } from '@dxos/effect';
+import { findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -26,6 +26,8 @@ export type PropsFilter<T extends Object> = (props: SchemaProperty<T>[]) => Sche
 export type FormProps<T extends object> = ThemedClassName<
   {
     values: T;
+    /** Path to the current object from the root. Used with nested forms. */
+    path?: string[];
 
     // TODO(burdon): Autofocus first input.
     autoFocus?: boolean;
@@ -39,17 +41,18 @@ export type FormProps<T extends object> = ThemedClassName<
     /**
      * Map of custom renderers for specific properties.
      */
-    Custom?: Partial<Record<PropertyKey<T>, InputComponent<T>>>;
+    Custom?: Partial<Record<string, InputComponent<T>>>;
   } & Pick<FormOptions<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onSubmit'>
 >;
 
 /**
  * General purpose form component that displays field controls based on the given schema.
  */
-export const Form = <T extends object>({
+export const Form = <T extends object = {}>({
   classNames,
   schema,
-  values,
+  values: initialValues,
+  path = [],
   readonly,
   filter,
   sort,
@@ -62,9 +65,9 @@ export const Form = <T extends object>({
 }: FormProps<T>) => {
   const { t } = useTranslation(translationKey);
   const onValid = useMemo(() => (autosave ? onSubmit : undefined), [autosave, onSubmit]);
-  const { canSubmit, errors, handleSubmit, ...inputProps } = useForm<T>({
+  const { canSubmit, values, errors, handleSubmit, ...inputProps } = useForm<T>({
     schema,
-    initialValues: values,
+    initialValues,
     onValuesChanged,
     onValidate,
     onValid,
@@ -74,7 +77,7 @@ export const Form = <T extends object>({
   // Filter and sort props.
   // TODO(burdon): Move into useForm?
   const props = useMemo(() => {
-    const props = getSchemaProperties<T>(schema.ast);
+    const props = getSchemaProperties<T>(schema.ast, values);
     const filtered = filter ? filter(props) : props;
     const findIndex = (props: PropertyKey<T>[], prop: PropertyKey<T>) => {
       const idx = props.findIndex((p) => p === prop);
@@ -92,34 +95,46 @@ export const Form = <T extends object>({
   }, [errors]);
 
   return (
-    <div className={mx('flex flex-col w-full gap-1', classNames)}>
+    <div role='form' className={mx('flex flex-col w-full gap-1', classNames)}>
       {props
         .map(({ prop, name, type, format, title, description }) => {
           // Custom property allows for sub forms.
           // TODO(burdon): Use Select control if options are present in annotation?
-          const InputComponent = Custom?.[name] ?? getInputComponent<T>(type, format);
+          const key = [...path, name];
+          const InputComponent = Custom?.[key.join('.')] ?? getInputComponent<T>(type, format);
           if (!InputComponent) {
             // Recursively render form.
             if (type === 'object') {
-              const typeLiteral = findNode(prop.type, AST.isTypeLiteral);
+              let typeLiteral = findNode(prop.type, AST.isTypeLiteral);
+              if (!typeLiteral) {
+                // TODO(burdon): Change AST.isTypeLiteral test above and create test.
+                const baseNode = findNode(prop.type, isDiscriminatedUnion);
+                if (baseNode) {
+                  typeLiteral = getDiscriminatedType(baseNode, {});
+                }
+              }
+
               if (typeLiteral) {
+                const schema = S.make(typeLiteral);
                 return (
                   <div key={name} role='none'>
                     <div className={padding}>{title ?? name}</div>
                     <Form<any>
-                      schema={S.make(typeLiteral)}
-                      values={values[name]}
-                      autosave={true}
+                      autosave
+                      schema={schema}
+                      path={key}
+                      values={values[name] ?? {}}
                       onSubmit={(childValues) => {
                         inputProps.onValueChange(name, 'object', childValues);
                       }}
+                      Custom={Custom as any}
                     />
                   </div>
                 );
               }
             }
 
-            log.warn('no renderer for property', { name, type });
+            log('no renderer for property', { name, type });
             return null;
           }
 

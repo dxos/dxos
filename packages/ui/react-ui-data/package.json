@@ -39,10 +39,10 @@
     "@dxos/react-ui-types": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/schema": "^0.75.1",
+    "@effect/schema": "^0.75.5",
     "@radix-ui/react-context": "^1.0.0",
     "date-fns": "^3.3.1",
-    "effect": "^3.9.1",
+    "effect": "^3.10.15",
     "jsonpath": "^1.1.1"
   },
   "devDependencies": {
