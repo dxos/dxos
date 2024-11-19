@@ -48,7 +48,7 @@ const WebsocketTriggerSchema = S.Struct({
 
 export type WebsocketTrigger = S.Schema.Type<typeof WebsocketTriggerSchema>;
 
-// TODO(burdon): Use ECHO definition (from @dima).
+// TODO(burdon): Use ECHO definition (from https://github.com/dxos/dxos/pull/8233).
 const QuerySchema = S.Struct({
   type: S.String,
   props: S.optional(S.Record({ key: S.String, value: S.Any })),
