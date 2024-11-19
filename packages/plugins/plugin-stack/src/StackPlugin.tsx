@@ -83,7 +83,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
               ) : null;
             case 'article':
               return primary instanceof CollectionType ? (
-                <div role='none' className='row-span-2 overflow-auto' style={{ contain: 'layout' }}>
+                <div role='none' className='overflow-auto' style={{ contain: 'layout' }}>
                   <StackMain id={id ?? fullyQualifiedId(primary)} collection={primary} />
                 </div>
               ) : null;

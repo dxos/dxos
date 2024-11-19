@@ -12,7 +12,6 @@ import { useGraph } from '@dxos/plugin-graph';
 import { isEchoObject, isSpace } from '@dxos/react-client/echo';
 import { ElevationProvider, useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { isItem } from '@dxos/react-ui-list';
-import { mx } from '@dxos/react-ui-theme';
 import { arrayMove } from '@dxos/util';
 
 import { NAV_TREE_ITEM, NavTree, type NavTreeProps } from './NavTree';
@@ -183,15 +182,14 @@ export const NavTreeContainer = ({ items, current, open, popoverAnchorId, ...pro
     <ElevationProvider elevation='chrome'>
       <div
         role='none'
-        className={mx(
-          'grid grid-cols-1 grid-rows-[var(--rail-size)_1fr_min-content]',
-          'bs-full overflow-hidden row-span-3 divide-y divide-separator',
-        )}
+        className='grid grid-cols-1 grid-rows-[var(--rail-size)_1fr_min-content] bs-full overflow-hidden'
       >
-        <Surface role='search-input' limit={1} />
+        <div role='none' className='border-be border-separator'>
+          <Surface role='search-input' limit={1} />
+        </div>
 
         {/* TODO(thure): What gives this an inline `overflow: initial`? */}
-        <div role='none' className='!overflow-y-auto'>
+        <div role='none' className='border-be border-separator !overflow-y-auto'>
           <NavTree
             items={items}
             open={open}
