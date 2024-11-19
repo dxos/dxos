@@ -11,32 +11,28 @@ import { AST, RawObject, S, TypedObject } from '@dxos/echo-schema';
  */
 export type TriggerKind = 'timer' | 'webhook' | 'websocket' | 'subscription';
 
-const extend = (type: TriggerKind, fields: S.Struct.Fields = {}) =>
-  S.extend(
-    S.Struct({
-      // TODO(burdon): Rename kind.
-      type: S.Literal(type).annotations({ [AST.TitleAnnotationId]: 'Trigger type' }),
-    }),
-    S.Struct(fields),
-  ).pipe(S.mutable);
+// TODO(burdon): Rename prop kind.
+const typeLiteralAnnotations = { [AST.TitleAnnotationId]: 'Trigger type' };
 
 /**
  * Cron timer.
  */
-const TimerTriggerSchema = extend('timer', {
+const TimerTriggerSchema = S.Struct({
+  type: S.Literal('timer').annotations(typeLiteralAnnotations),
   cron: S.String,
-});
+}).pipe(S.mutable);
 
 export type TimerTrigger = S.Schema.Type<typeof TimerTriggerSchema>;
 
 /**
  * Webhook.
  */
-const WebhookTriggerSchema = extend('webhook', {
+const WebhookTriggerSchema = S.Struct({
+  type: S.Literal('webhook').annotations(typeLiteralAnnotations),
   method: S.String,
   // Assigned port.
   port: S.optional(S.Number),
-});
+}).pipe(S.mutable);
 
 export type WebhookTrigger = S.Schema.Type<typeof WebhookTriggerSchema>;
 
@@ -44,14 +40,15 @@ export type WebhookTrigger = S.Schema.Type<typeof WebhookTriggerSchema>;
  * Websocket.
  * @deprecated
  */
-const WebsocketTriggerSchema = extend('websocket', {
+const WebsocketTriggerSchema = S.Struct({
+  type: S.Literal('websocket').annotations(typeLiteralAnnotations),
   url: S.String,
   init: S.optional(S.Record({ key: S.String, value: S.Any })),
-});
+}).pipe(S.mutable);
 
 export type WebsocketTrigger = S.Schema.Type<typeof WebsocketTriggerSchema>;
 
-// TODO(burdon): Use ECHO definition.
+// TODO(burdon): Use ECHO definition from (@dima).
 const QuerySchema = S.Struct({
   type: S.String,
   props: S.optional(S.Record({ key: S.String, value: S.Any })),
@@ -60,7 +57,8 @@ const QuerySchema = S.Struct({
 /**
  * Subscription.
  */
-const SubscriptionTriggerSchema = extend('subscription', {
+const SubscriptionTriggerSchema = S.Struct({
+  type: S.Literal('subscription').annotations(typeLiteralAnnotations),
   // TODO(burdon): Define query DSL (from ECHO). Reconcile with Table.Query.
   filter: S.Array(QuerySchema),
   options: S.optional(
@@ -71,7 +69,7 @@ const SubscriptionTriggerSchema = extend('subscription', {
       delay: S.optional(S.Number),
     }),
   ),
-});
+}).pipe(S.mutable);
 
 export type SubscriptionTrigger = S.Schema.Type<typeof SubscriptionTriggerSchema>;
 
@@ -83,9 +81,9 @@ export const TriggerSchema = S.Union(
   WebhookTriggerSchema,
   WebsocketTriggerSchema,
   SubscriptionTriggerSchema,
-);
+).annotations({ [AST.TitleAnnotationId]: 'Trigger' });
 
-export type TriggerType = TimerTrigger | WebhookTrigger | WebsocketTrigger | SubscriptionTrigger;
+export type TriggerType = S.Schema.Type<typeof TriggerSchema>;
 
 /**
  * Function trigger.
@@ -94,7 +92,7 @@ export const FunctionTriggerSchema = S.Struct({
   function: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Function' })),
   enabled: S.optional(S.Boolean.annotations({ [AST.TitleAnnotationId]: 'Enabled' })),
 
-  // TODO(burdon): Create union?
+  // TODO(burdon): Flatten?
   spec: S.optional(TriggerSchema),
 
   // TODO(burdon): Get meta from function.

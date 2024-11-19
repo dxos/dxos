@@ -49,7 +49,7 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@effect/schema": "^0.75.1",
+    "@effect/schema": "^0.75.5",
     "@preact/signals-core": "^1.6.0",
     "chess.js": "^1.0.0-beta.8",
     "react-chessboard": "^4.7.1",

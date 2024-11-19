@@ -5,6 +5,7 @@
 import { type FocusEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type SimpleType, type S } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { validateSchema, type PropertyKey, type ValidationError } from '@dxos/schema';
 
@@ -17,7 +18,6 @@ export type FormHandler<T extends object = {}> = {
   //
 
   values: T;
-  // props: SchemaProperty<T>[];
   errors: Record<PropertyKey<T>, string>;
   touched: Record<PropertyKey<T>, boolean>;
   changed: Record<PropertyKey<T>, boolean>;
@@ -108,20 +108,6 @@ export const useForm = <T extends object>({
     [schema, onValidate],
   );
 
-  useEffect(() => {
-    const isValid = validate(values);
-    if (!isValid) {
-      return;
-    }
-
-    if (onValid) {
-      const timeout = setTimeout(() => {
-        onValid(values, { changed });
-      }, 25);
-      return () => clearTimeout(timeout);
-    }
-  }, [schema, validate, values, onValid, changed]);
-
   /**
    * NOTE: We can submit if there is no touched field that has an error.
    * Basically, if there's a validation message visible in the form, submit should be disabled.
@@ -173,6 +159,11 @@ export const useForm = <T extends object>({
     setValues(newValues);
     setChanged((prev) => ({ ...prev, [property]: true }));
     onValuesChanged?.(newValues);
+
+    const isValid = validate(newValues);
+    if (isValid && onValid) {
+      onValid(newValues, { changed });
+    }
   };
 
   // TODO(burdon): This is a leaky abstraction: the hook ideally shouldn't get involved in UX.
@@ -211,6 +202,7 @@ export const useForm = <T extends object>({
 };
 
 const createKeySet = <T extends object, V>(obj: T, value: V): Record<PropertyKey<T>, V> => {
+  invariant(obj);
   return Object.keys(obj).reduce((acc, key) => ({ ...acc, [key]: value }), {} as Record<PropertyKey<T>, V>);
 };
 
