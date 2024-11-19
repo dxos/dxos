@@ -46,9 +46,9 @@ const TableRoot = ({ children, role }: TableRootProps) => {
     <div
       role='none'
       className={mx(
-        'relative border-bs border-separator',
+        'relative border-bs !border-separator',
         role === 'section'
-          ? 'overflow-hidden'
+          ? 'attention-surface overflow-hidden [&_.dx-grid]:max-is-max'
           : 'flex flex-col [&_.dx-grid]:grow [&_.dx-grid]:max-is-max [&_.dx-grid]:bs-0 [&_.dx-grid]:max-bs-max',
       )}
     >
