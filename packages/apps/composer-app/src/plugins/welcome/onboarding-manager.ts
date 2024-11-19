@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type IntentDispatcher, LayoutAction, NavigationAction } from '@dxos/app-framework';
+import { type IntentDispatcher, type Layout, LayoutAction, NavigationAction } from '@dxos/app-framework';
 import { EventSubscriptions, type Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -19,6 +19,7 @@ import { removeQueryParamByValue } from '../../util';
 export type OnboardingManagerParams = {
   dispatch: IntentDispatcher;
   client: Client;
+  layout: Layout;
   firstRun?: Trigger;
   hubUrl?: string;
   token?: string;
@@ -32,6 +33,7 @@ export class OnboardingManager {
   private readonly _subscriptions = new EventSubscriptions();
   private readonly _dispatch: IntentDispatcher;
   private readonly _client: Client;
+  private readonly _layout: Layout;
   private readonly _firstRun?: Trigger;
   private readonly _hubUrl?: string;
   private readonly _skipAuth: boolean;
@@ -46,6 +48,7 @@ export class OnboardingManager {
   constructor({
     dispatch,
     client,
+    layout,
     firstRun,
     hubUrl,
     token,
@@ -57,6 +60,7 @@ export class OnboardingManager {
 
     this._dispatch = dispatch;
     this._client = client;
+    this._layout = layout;
     this._firstRun = firstRun;
     this._hubUrl = hubUrl;
     this._skipAuth = ['main', 'labs'].includes(client.config.values.runtime?.app?.env?.DX_ENVIRONMENT) || !this._hubUrl;
@@ -213,10 +217,14 @@ export class OnboardingManager {
 
   private async _closeWelcome() {
     await this._dispatch([
-      {
-        action: LayoutAction.SET_LAYOUT_MODE,
-        data: { layoutMode: 'solo' },
-      },
+      ...(this._layout.layoutMode !== 'deck'
+        ? [
+            {
+              action: LayoutAction.SET_LAYOUT_MODE,
+              data: { layoutMode: 'solo' },
+            },
+          ]
+        : []),
       {
         action: NavigationAction.CLOSE,
         data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },

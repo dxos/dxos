@@ -11,6 +11,7 @@ import {
   resolvePlugin,
   type PluginDefinition,
   LayoutAction,
+  parseLayoutPlugin,
 } from '@dxos/app-framework';
 import { type Trigger } from '@dxos/async';
 import { parseClientPlugin } from '@dxos/plugin-client';
@@ -38,7 +39,8 @@ export const WelcomePlugin = ({
     ready: async (plugins) => {
       const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
       const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
-      if (!client || !dispatch) {
+      const layout = resolvePlugin(plugins, parseLayoutPlugin)?.provides.layout;
+      if (!client || !dispatch || !layout) {
         // NOTE: This will skip the welcome dialog but app is pretty much unusable without client.
         // Generally, if the client is not available, the global error boundary should be triggered.
         return;
@@ -62,6 +64,7 @@ export const WelcomePlugin = ({
       manager = new OnboardingManager({
         dispatch,
         client,
+        layout,
         firstRun,
         hubUrl,
         token: searchParams.get('token') ?? undefined,
