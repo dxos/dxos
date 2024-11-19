@@ -108,6 +108,16 @@ export const useForm = <T extends object>({
     [schema, onValidate],
   );
 
+  // Validate on schema change.
+  const [schemaDirty, setSchemaDirty] = useState(false);
+  useEffect(() => setSchemaDirty(true), [schema]);
+  useEffect(() => {
+    if (schemaDirty) {
+      validate(values);
+      setSchemaDirty(false);
+    }
+  }, [values, schemaDirty]);
+
   /**
    * NOTE: We can submit if there is no touched field that has an error.
    * Basically, if there's a validation message visible in the form, submit should be disabled.

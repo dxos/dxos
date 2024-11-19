@@ -85,7 +85,7 @@ export const Form = <T extends object = {}>({
     };
 
     return sort ? filtered.sort(({ name: a }, { name: b }) => findIndex(sort, a) - findIndex(sort, b)) : filtered;
-  }, [schema, filter]);
+  }, [schema, filter, values]);
 
   // TODO(burdon): Highlight in UX.
   useEffect(() => {
@@ -105,14 +105,10 @@ export const Form = <T extends object = {}>({
           if (!InputComponent) {
             // Recursively render form.
             if (type === 'object') {
-              let typeLiteral = findNode(prop.type, AST.isTypeLiteral);
-              if (!typeLiteral) {
-                // TODO(burdon): Change AST.isTypeLiteral test above and create test.
-                const baseNode = findNode(prop.type, isDiscriminatedUnion);
-                if (baseNode) {
-                  typeLiteral = getDiscriminatedType(baseNode, {});
-                }
-              }
+              const baseNode = findNode(prop.type, isDiscriminatedUnion);
+              const typeLiteral = baseNode
+                ? getDiscriminatedType(baseNode, values[name] as any)
+                : findNode(prop.type, AST.isTypeLiteral);
 
               if (typeLiteral) {
                 const schema = S.make(typeLiteral);
@@ -120,11 +116,10 @@ export const Form = <T extends object = {}>({
                   <div key={name} role='none'>
                     <div className={padding}>{title ?? name}</div>
                     <Form<any>
-                      autosave
                       schema={schema}
                       path={key}
                       values={values[name] ?? {}}
-                      onSubmit={(childValues) => {
+                      onValuesChanged={(childValues) => {
                         inputProps.onValueChange(name, 'object', childValues);
                       }}
                       Custom={Custom as any}
