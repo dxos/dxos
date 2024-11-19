@@ -42,7 +42,7 @@
     "@effect/schema": "^0.75.5",
     "@radix-ui/react-context": "^1.0.0",
     "date-fns": "^3.3.1",
-    "effect": "^3.10.15",
+    "effect": "^3.9.2",
     "jsonpath": "^1.1.1"
   },
   "devDependencies": {
@@ -66,7 +66,7 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@effect/schema": "^0.75.5",
     "@phosphor-icons/react": "^2.1.5",
-    "effect": "^3.10.15",
+    "effect": "^3.9.2",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

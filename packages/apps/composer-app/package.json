@@ -78,7 +78,7 @@
     "@dxos/web-auth": "^0.4.77",
     "@effect/schema": "^0.75.5",
     "@fontsource/poiret-one": "^5.0.20",
-    "effect": "^3.10.15",
+    "effect": "^3.9.2",
     "isomorphic-fetch": "^3.0.0",
     "micromark": "^4.0.0",
     "micromark-extension-directive": "^3.0.0",

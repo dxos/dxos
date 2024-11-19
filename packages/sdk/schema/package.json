@@ -42,7 +42,7 @@
     "@dxos/util": "workspace:*",
     "@effect/schema": "^0.75.5",
     "date-fns": "^3.3.1",
-    "effect": "^3.10.15",
+    "effect": "^3.9.2",
     "jsonpath": "^1.1.1"
   },
   "devDependencies": {
@@ -55,7 +55,7 @@
   },
   "peerDependencies": {
     "@effect/schema": "^0.75.5",
-    "effect": "^3.10.15"
+    "effect": "^3.9.2"
   },
   "publishConfig": {
     "access": "public"

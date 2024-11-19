@@ -28,11 +28,11 @@
   },
   "devDependencies": {
     "@effect/schema": "^0.75.5",
-    "effect": "^3.10.15"
+    "effect": "^3.9.2"
   },
   "peerDependencies": {
     "@effect/schema": "^0.75.5",
-    "effect": "^3.10.15"
+    "effect": "^3.9.2"
   },
   "publishConfig": {
     "access": "public"

@@ -103,7 +103,7 @@
     "@vuepress/client": "2.0.0-rc.0",
     "chalk": "^4.1.0",
     "depcheck": "^1.4.7",
-    "effect": "^3.10.15",
+    "effect": "^3.9.2",
     "esbuild": "^0.23.1",
     "esbuild-plugin-raw": "^0.1.8",
     "esbuild-plugin-yaml": "^0.0.1",

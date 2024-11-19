@@ -39,7 +39,7 @@
     "@fluentui/react-tabster": "^9.19.0",
     "@preact/signals-core": "^1.6.0",
     "@radix-ui/react-slot": "^1.0.1",
-    "effect": "^3.10.15",
+    "effect": "^3.9.2",
     "react-resize-detector": "^11.0.1"
   },
   "devDependencies": {
