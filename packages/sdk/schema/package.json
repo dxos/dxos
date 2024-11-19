@@ -40,9 +40,9 @@
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/schema": "^0.75.5",
+    "@effect/schema": "^0.75.1",
     "date-fns": "^3.3.1",
-    "effect": "^3.10.15",
+    "effect": "^3.9.1",
     "jsonpath": "^1.1.1"
   },
   "devDependencies": {

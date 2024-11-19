@@ -29,7 +29,6 @@ export type InputProps<T extends object = {}> = {
 /**
  * Form input component.
  */
-// TODO(burdon): Remove generic from inputs.
 export type InputComponent<T extends object = {}> = FC<InputProps<T>>;
 
 export type InputHeaderProps = PropsWithChildren<{

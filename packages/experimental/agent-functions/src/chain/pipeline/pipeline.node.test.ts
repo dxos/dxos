@@ -21,7 +21,7 @@ import { createChainResources } from '../vendors';
 //  - Resolvers (processor.getTemplateInput)
 //  - parseMessage (create blocks)
 
-describe.skip('Pipeline', () => {
+describe('Pipeline', () => {
   test('basic', async () => {
     const resolver: Resolver = (input) => {
       switch (input.type) {
