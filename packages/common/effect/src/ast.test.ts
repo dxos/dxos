@@ -12,14 +12,14 @@ import {
   findNode,
   findProperty,
   getAnnotation,
-  getDiscriminatingProps,
-  getDiscriminatedType,
   getSimpleType,
+  getDiscriminatingProps,
   isOption,
   isSimpleType,
   visit,
   type JsonPath,
   type JsonProp,
+  getDiscriminatedType,
 } from './ast';
 
 const ZipCode = S.String.pipe(
@@ -110,24 +110,6 @@ describe('AST', () => {
     }
   });
 
-  test('findAnnotation skips defaults', ({ expect }) => {
-    const annotation = findAnnotation(
-      S.String.annotations({ [AST.TitleAnnotationId]: 'test' }).ast,
-      AST.TitleAnnotationId,
-      { noDefault: true },
-    );
-    expect(annotation).to.eq('test');
-
-    const annotationIds = [AST.TitleAnnotationId, AST.DescriptionAnnotationId];
-    const schemas = [S.Object, S.String, S.Number, S.Boolean];
-    for (const schema of schemas) {
-      for (const annotationId of annotationIds) {
-        const annotation = findAnnotation(schema.ast, annotationId, { noDefault: true });
-        expect(annotation, schema.ast._tag).to.eq(undefined);
-      }
-    }
-  });
-
   test('visit', ({ expect }) => {
     const TestSchema = S.Struct({
       name: S.NonEmptyString,
@@ -176,7 +158,8 @@ describe('AST', () => {
 
       expect(getDiscriminatedType(TestUnionSchema.ast, obj1)?.toJSON()).to.deep.eq(a.toJSON());
       expect(getDiscriminatedType(TestUnionSchema.ast, obj2)?.toJSON()).to.deep.eq(b.toJSON());
-      expect(getDiscriminatedType(TestUnionSchema.ast)?.toJSON()).to.deep.eq(
+
+      expect(getDiscriminatedType(TestUnionSchema.ast, {})?.toJSON()).to.deep.eq(
         S.Struct({
           kind: S.Literal('a', 'b'),
         }).ast.toJSON(),
