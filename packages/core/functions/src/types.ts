@@ -10,7 +10,7 @@ import { AST, RawObject, S, TypedObject } from '@dxos/echo-schema';
 
 const TimerTriggerSchema = S.Struct({
   type: S.Literal('timer'),
-  cron: S.String,
+  cron: S.String.annotations({ [AST.TitleAnnotationId]: 'Cron' }),
 }).pipe(S.mutable);
 
 export type TimerTrigger = S.Schema.Type<typeof TimerTriggerSchema>;
@@ -74,14 +74,13 @@ export const TriggerSchema = S.Union(
   WebhookTriggerSchema,
   WebsocketTriggerSchema,
   SubscriptionTriggerSchema,
-);
+).annotations({ [AST.TitleAnnotationId]: 'Trigger' });
 
 export type TriggerType = TimerTrigger | WebhookTrigger | WebsocketTrigger | SubscriptionTrigger;
 
 /**
  * Type discriminator for TriggerType.
- * Every spec has a type field of type TriggerKind that we can use to understand which
- * type we're working with.
+ * Every spec has a type field of type TriggerKind that we can use to understand which type we're working with.
  * https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions
  */
 export type TriggerKind = 'timer' | 'webhook' | 'websocket' | 'subscription';
