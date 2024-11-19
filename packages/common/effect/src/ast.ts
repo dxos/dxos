@@ -6,7 +6,6 @@ import { AST, Schema as S } from '@effect/schema';
 import { Option, pipe } from 'effect';
 
 import { invariant } from '@dxos/invariant';
-import { nonNullable } from '@dxos/util';
 
 //
 // Refs
@@ -15,13 +14,14 @@ import { nonNullable } from '@dxos/util';
 // https://effect-ts.github.io/effect/schema/AST.ts.html
 //
 
+// TODO(burdon): Handle tuples?
 export type SimpleType = 'object' | 'string' | 'number' | 'boolean' | 'enum' | 'literal';
 
 /**
  * Get the base type; e.g., traverse through refinements.
  */
 export const getSimpleType = (node: AST.AST): SimpleType | undefined => {
-  if (AST.isObjectKeyword(node) || AST.isTypeLiteral(node) || isDiscriminatedUnion(node)) {
+  if (AST.isObjectKeyword(node) || AST.isTypeLiteral(node)) {
     return 'object';
   }
 
@@ -44,7 +44,7 @@ export const getSimpleType = (node: AST.AST): SimpleType | undefined => {
   }
 };
 
-export const isSimpleType = (node: AST.AST): boolean => !!getSimpleType(node);
+export const isSimpleType = (node: AST.AST) => !!getSimpleType(node);
 
 //
 // Branded types
@@ -143,7 +143,7 @@ const visitNode = (
     }
   }
 
-  // Branching union (e.g., optional, discriminated unions).
+  // Branching union.
   else if (AST.isUnion(node)) {
     for (const type of node.types) {
       const result = visitNode(type, test, visitor, path, depth);
@@ -161,13 +161,13 @@ const visitNode = (
     }
   }
 
-  // TODO(burdon): Transforms?
+  // TODO(burdon): Transform?
 };
 
 /**
  * Recursively descend into AST to find first node that passes the test.
  */
-// TODO(burdon): Rewrite using visitNode?
+// TODO(burdon): Reuse visitor.
 export const findNode = (node: AST.AST, test: (node: AST.AST) => boolean): AST.AST | undefined => {
   if (test(node)) {
     return node;
@@ -183,7 +183,7 @@ export const findNode = (node: AST.AST, test: (node: AST.AST) => boolean): AST.A
     }
   }
 
-  // Tuple.
+  // Array.
   else if (AST.isTupleType(node)) {
     for (const [_, element] of node.elements.entries()) {
       const child = findNode(element.type, test);
@@ -193,14 +193,12 @@ export const findNode = (node: AST.AST, test: (node: AST.AST) => boolean): AST.A
     }
   }
 
-  // Branching union (e.g., optional, discriminated unions).
+  // Branching union.
   else if (AST.isUnion(node)) {
-    if (isOption(node)) {
-      for (const type of node.types) {
-        const child = findNode(type, test);
-        if (child) {
-          return child;
-        }
+    for (const type of node.types) {
+      const child = findNode(type, test);
+      if (child) {
+        return child;
       }
     }
   }
@@ -209,6 +207,8 @@ export const findNode = (node: AST.AST, test: (node: AST.AST) => boolean): AST.A
   else if (AST.isRefinement(node)) {
     return findNode(node.from, test);
   }
+
+  return undefined;
 };
 
 /**
@@ -228,143 +228,33 @@ export const findProperty = (schema: S.Schema<any>, path: JsonPath | JsonProp): 
         }
       }
     }
+
+    return undefined;
   };
 
   return getProp(schema.ast, path.split('.') as JsonProp[]);
 };
 
-//
-// Annotations
-//
-
-const defaultAnnotations: Record<string, AST.Annotated> = {
-  ['ObjectKeyword' as const]: AST.objectKeyword,
-  ['StringKeyword' as const]: AST.stringKeyword,
-  ['NumberKeyword' as const]: AST.numberKeyword,
-  ['BooleanKeyword' as const]: AST.booleanKeyword,
-};
-
 /**
- * Recursively descend into AST to find first matching annotations.
- * Optionally skips default annotations for basic types (e.g., 'a string').
+ * Recursively descend into AST to find first matching annotations
  */
-export const findAnnotation = <T>(
-  node: AST.AST,
-  annotationId: symbol,
-  options?: { noDefault: boolean },
-): T | undefined => {
+export const findAnnotation = <T>(node: AST.AST, annotationId: symbol): T | undefined => {
   const getAnnotationById = getAnnotation(annotationId);
-
   const getBaseAnnotation = (node: AST.AST): T | undefined => {
     const value = getAnnotationById(node);
     if (value !== undefined) {
-      if (options?.noDefault && value === defaultAnnotations[node._tag]?.annotations[annotationId]) {
-        return undefined;
-      }
-
       return value as T;
     }
 
     if (AST.isUnion(node)) {
-      if (isOption(node)) {
-        return getAnnotationById(node.types[0]) as T;
+      for (const type of node.types) {
+        const value = getBaseAnnotation(type);
+        if (value !== undefined) {
+          return value as T;
+        }
       }
     }
   };
 
   return getBaseAnnotation(node);
-};
-
-//
-// Unions
-//
-
-/**
- * Effect S.optional creates a union type with undefined as the second type.
- */
-export const isOption = (node: AST.AST): boolean => {
-  return AST.isUnion(node) && node.types.length === 2 && AST.isUndefinedKeyword(node.types[1]);
-};
-
-/**
- * Determines if the node is a union of literal types.
- */
-export const isLiteralUnion = (node: AST.AST): boolean => {
-  return AST.isUnion(node) && node.types.every(AST.isLiteral);
-};
-
-/**
- * Determines if the node is a discriminated union.
- */
-export const isDiscriminatedUnion = (node: AST.AST): boolean => {
-  return AST.isUnion(node) && !!getDiscriminatingProps(node)?.length;
-};
-
-/**
- * Get the discriminating properties for the given union type.
- */
-export const getDiscriminatingProps = (node: AST.AST): string[] | undefined => {
-  invariant(AST.isUnion(node));
-  if (isOption(node)) {
-    return;
-  }
-
-  // Get common literals across all types.
-  return node.types.reduce<string[]>((shared, type) => {
-    const props = AST.getPropertySignatures(type)
-      // TODO(burdon): Should check each literal is unique.
-      .filter((p) => AST.isLiteral(p.type))
-      .map((p) => p.name.toString());
-
-    // Return common literals.
-    return shared.length === 0 ? props : shared.filter((prop) => props.includes(prop));
-  }, []);
-};
-
-/**
- * Get the discriminated type for the given value.
- */
-export const getDiscriminatedType = (node: AST.AST, value: Record<string, any> = {}): AST.AST | undefined => {
-  invariant(AST.isUnion(node));
-  invariant(value);
-  const props = getDiscriminatingProps(node);
-  if (!props?.length) {
-    return;
-  }
-
-  // Match provided values.
-  for (const type of node.types) {
-    const match = AST.getPropertySignatures(type)
-      .filter((prop) => props?.includes(prop.name.toString()))
-      .every((prop) => {
-        invariant(AST.isLiteral(prop.type));
-        return prop.type.literal === value[prop.name.toString()];
-      });
-
-    if (match) {
-      return type;
-    }
-  }
-
-  // Create union of discriminating properties.
-  // NOTE: This may not work with non-overlapping variants.
-  // TODO(burdon): Iterate through props and knock-out variants that don't match.
-  const fields = Object.fromEntries(
-    props
-      .map((prop) => {
-        const literals = node.types
-          .map((type) => {
-            const literal = AST.getPropertySignatures(type).find((p) => p.name.toString() === prop)!;
-            invariant(AST.isLiteral(literal.type));
-            return literal.type.literal;
-          })
-          .filter(nonNullable);
-
-        return literals.length ? [prop, S.Literal(...literals)] : undefined;
-      })
-      .filter(nonNullable),
-  );
-
-  const schema = S.Struct(fields);
-  return schema.ast;
 };

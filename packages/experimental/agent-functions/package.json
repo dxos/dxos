@@ -64,7 +64,7 @@
     "csv-parse": "^5.3.6",
     "date-fns": "^3.3.1",
     "discord.js": "^14.14.1",
-    "effect": "^3.10.15",
+    "effect": "^3.9.1",
     "email-addresses": "^5.0.0",
     "faiss-node": "^0.5.1",
     "fast-xml-parser": "^4.3.2",
