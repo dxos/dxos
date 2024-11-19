@@ -19,7 +19,7 @@ import { invariant } from '@dxos/invariant';
 import { ScriptType } from '@dxos/plugin-script/types';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-data';
+import { Form, SelectInput } from '@dxos/react-ui-data';
 import { distinctBy } from '@dxos/util';
 
 import { InputRow } from './Form';
@@ -113,19 +113,42 @@ export const TriggerEditor = ({ space, trigger }: TriggerEditorProps) => {
 
   const TriggerMeta = getFunctionMetaExtension(trigger, script)?.component;
 
-  // TODO(burdon): Query for functions.
-  // TODO(burdon): Flatten trigger.spec
   const test = true;
   if (test) {
+    const object: FunctionTriggerType = {
+      spec: {
+        // type: 'timer',
+        type: 'subscription',
+        // cron: '0 0 * * *'
+        filter: [{ type: 'dxos.org/type/Event' }],
+      },
+    };
+
     return (
       <Form<FunctionTriggerType>
         schema={FunctionTriggerSchema}
-        values={{
-          function: 'foo',
-          spec: { type: 'timer', cron: '0 0 * * *' },
-        }}
+        values={object}
+        filter={(props) => props.filter((p) => p.name !== 'meta')}
         Custom={{
-          spec: () => <div>spec</div>,
+          ['function' satisfies keyof FunctionTriggerType]: (props) => (
+            <SelectInput<FunctionTriggerType>
+              {...props}
+              // TODO(burdon): Query for functions.
+              options={['f1', 'f2', 'f3'].map((value) => ({
+                value,
+                label: value,
+              }))}
+            />
+          ),
+          ['spec.type' as const]: (props) => (
+            <SelectInput<FunctionTriggerType>
+              {...props}
+              options={['timer', 'subscription'].map((value) => ({
+                value,
+                label: value,
+              }))}
+            />
+          ),
         }}
       />
     );
