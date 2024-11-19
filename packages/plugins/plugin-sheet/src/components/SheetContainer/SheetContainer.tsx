@@ -19,7 +19,7 @@ export const SheetContainer = ({ space, sheet, role }: { space: Space; sheet: Sh
 
   return graph ? (
     <SheetProvider sheet={sheet} graph={graph}>
-      <StackItem.Content toolbar statusbar>
+      <StackItem.Content toolbar statusbar {...(role === 'section' && { classNames: 'aspect-video' })}>
         <Toolbar.Root role={role}>
           <Toolbar.Styles />
           <Toolbar.Alignment />

@@ -102,7 +102,7 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }
     'attention-surface relative',
     isSolo && mainIntrinsicSize,
     isSolo && railGridHorizontal,
-    isSolo ? 'grid absolute inset-0 divide-separator divide-y' : '!border-separator border-li',
+    isSolo ? 'grid absolute inset-0' : '!border-separator border-li',
   );
 
   return (
