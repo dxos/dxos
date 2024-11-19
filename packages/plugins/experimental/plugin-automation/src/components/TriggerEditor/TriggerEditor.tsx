@@ -64,8 +64,8 @@ export const TriggerEditor = ({ space, trigger }: TriggerEditorProps) => {
     const spec = trigger.spec;
     invariant(spec);
     if (spec.type === 'subscription') {
-      if (spec.filter && spec.filter.length > 0) {
-        const type = spec.filter[0].type;
+      if (spec.filter) {
+        const type = spec.filter.type;
         const foundSchema = state.schemas.find((schema) => schema.typename === type);
         if (foundSchema) {
           state.selectedSchema[trigger.id] = foundSchema;
@@ -92,7 +92,7 @@ export const TriggerEditor = ({ space, trigger }: TriggerEditorProps) => {
   const handleSelectTriggerType = (triggerType: string) => {
     switch (triggerType as TriggerKind) {
       case 'subscription': {
-        trigger.spec = { type: 'subscription', filter: [] };
+        trigger.spec = { type: 'subscription', filter: {} };
         break;
       }
       case 'timer': {
@@ -120,7 +120,7 @@ export const TriggerEditor = ({ space, trigger }: TriggerEditorProps) => {
         // type: 'timer',
         type: 'subscription',
         // cron: '0 0 * * *'
-        filter: [{ type: 'dxos.org/type/Event' }],
+        filter: { type: 'dxos.org/type/Event' },
       },
     };
 
@@ -234,13 +234,13 @@ const TriggerSpecSubscription = ({ spec }: TriggerSpecProps<SubscriptionTrigger>
   }
 
   const handleValueChange = (typename: string) => {
-    spec.filter = [{ type: typename }];
+    spec.filter = { type: typename };
   };
 
   return (
     <>
       <InputRow label={t('trigger filter')}>
-        <Select.Root value={spec.filter.length > 0 ? spec.filter[0].type : undefined} onValueChange={handleValueChange}>
+        <Select.Root value={spec.filter?.type} onValueChange={handleValueChange}>
           <Select.TriggerButton classNames='w-full' placeholder={'Select type'} />
           <Select.Portal>
             <Select.Content>

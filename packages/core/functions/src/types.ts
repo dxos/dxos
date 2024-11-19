@@ -12,14 +12,17 @@ import { AST, RawObject, S, TypedObject } from '@dxos/echo-schema';
 export type TriggerKind = 'timer' | 'webhook' | 'websocket' | 'subscription';
 
 // TODO(burdon): Rename prop kind.
-const typeLiteralAnnotations = { [AST.TitleAnnotationId]: 'Trigger type' };
+const typeLiteralAnnotations = { [AST.TitleAnnotationId]: 'Type' };
 
 /**
  * Cron timer.
  */
 const TimerTriggerSchema = S.Struct({
   type: S.Literal('timer').annotations(typeLiteralAnnotations),
-  cron: S.String,
+  cron: S.NonEmptyString.annotations({
+    [AST.TitleAnnotationId]: 'Cron',
+    [AST.DescriptionAnnotationId]: 'Ex. "* * * 1"',
+  }),
 }).pipe(S.mutable);
 
 export type TimerTrigger = S.Schema.Type<typeof TimerTriggerSchema>;
@@ -50,9 +53,9 @@ export type WebsocketTrigger = S.Schema.Type<typeof WebsocketTriggerSchema>;
 
 // TODO(burdon): Use ECHO definition (from https://github.com/dxos/dxos/pull/8233).
 const QuerySchema = S.Struct({
-  type: S.String,
+  type: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Type' })),
   props: S.optional(S.Record({ key: S.String, value: S.Any })),
-});
+}).annotations({ [AST.TitleAnnotationId]: 'Query' });
 
 /**
  * Subscription.
@@ -60,14 +63,14 @@ const QuerySchema = S.Struct({
 const SubscriptionTriggerSchema = S.Struct({
   type: S.Literal('subscription').annotations(typeLiteralAnnotations),
   // TODO(burdon): Define query DSL (from ECHO). Reconcile with Table.Query.
-  filter: S.Array(QuerySchema),
+  filter: QuerySchema,
   options: S.optional(
     S.Struct({
       // Watch changes to object (not just creation).
-      deep: S.optional(S.Boolean),
+      deep: S.optional(S.Boolean.annotations({ [AST.TitleAnnotationId]: 'Nested' })),
       // Debounce changes (delay in ms).
-      delay: S.optional(S.Number),
-    }),
+      delay: S.optional(S.Number.annotations({ [AST.TitleAnnotationId]: 'Delay' })),
+    }).annotations({ [AST.TitleAnnotationId]: 'Options' }),
   ),
 }).pipe(S.mutable);
 

@@ -48,11 +48,9 @@ const manifest: FunctionManifest = {
       enabled: true,
       spec: {
         type: 'subscription',
-        filter: [
-          {
-            type: TestType.typename,
-          },
-        ],
+        filter: {
+          type: TestType.typename,
+        },
       },
     },
   ],
