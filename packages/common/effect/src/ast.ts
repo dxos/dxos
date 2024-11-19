@@ -313,7 +313,7 @@ export const getDiscriminatingProps = (node: AST.AST): string[] | undefined => {
 /**
  * Get the discriminated type for the given value.
  */
-export const getDiscriminatedType = (node: AST.AST, value: any): AST.AST | undefined => {
+export const getDiscriminatedType = (node: AST.AST, value: Record<string, any> = {}): AST.AST | undefined => {
   invariant(AST.isUnion(node));
   invariant(value);
   const props = getDiscriminatingProps(node);

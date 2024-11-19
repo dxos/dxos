@@ -5,7 +5,7 @@
 import React, { useEffect, useMemo } from 'react';
 
 import { AST, S } from '@dxos/echo-schema';
-import { findNode } from '@dxos/effect';
+import { findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -87,8 +87,6 @@ export const Form = <T extends object = {}>({
     return sort ? filtered.sort(({ name: a }, { name: b }) => findIndex(sort, a) - findIndex(sort, b)) : filtered;
   }, [schema, filter]);
 
-  console.log('props', props);
-
   // TODO(burdon): Highlight in UX.
   useEffect(() => {
     if (errors && Object.keys(errors).length) {
@@ -107,7 +105,15 @@ export const Form = <T extends object = {}>({
           if (!InputComponent) {
             // Recursively render form.
             if (type === 'object') {
-              const typeLiteral = findNode(prop.type, AST.isTypeLiteral);
+              let typeLiteral = findNode(prop.type, AST.isTypeLiteral);
+              if (!typeLiteral) {
+                // TODO(burdon): Change AST.isTypeLiteral test above and create test.
+                const baseNode = findNode(prop.type, isDiscriminatedUnion);
+                if (baseNode) {
+                  typeLiteral = getDiscriminatedType(baseNode, {});
+                }
+              }
+
               if (typeLiteral) {
                 const schema = S.make(typeLiteral);
                 return (

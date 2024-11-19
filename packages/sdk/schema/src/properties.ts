@@ -32,8 +32,9 @@ export type SchemaProperty<T extends object> = {
 
 /**
  * Get properties from the given AST node (typically from a Schema object).
+ * Handle discriminated unions.
  */
-export const getSchemaProperties = <T extends object>(ast: AST.AST, value?: any): SchemaProperty<T>[] => {
+export const getSchemaProperties = <T extends object>(ast: AST.AST, value: any = {}): SchemaProperty<T>[] => {
   if (AST.isUnion(ast)) {
     const baseType = getDiscriminatedType(ast, value);
     if (baseType) {
@@ -43,6 +44,7 @@ export const getSchemaProperties = <T extends object>(ast: AST.AST, value?: any)
     return [];
   }
 
+  invariant(AST.isTypeLiteral(ast));
   return AST.getPropertySignatures(ast).reduce<SchemaProperty<T>[]>((props, prop) => {
     const name = prop.name.toString() as PropertyKey<T>;
 

@@ -42,42 +42,26 @@ describe('properties', () => {
       S.Struct({ kind: S.Literal('b'), count: S.Number, active: S.Boolean }),
     );
 
-    const TestSchema = S.Struct({
-      name: S.String,
-      spec: TestSpecSchema,
-    });
-
-    type TestType = S.Schema.Type<typeof TestSchema>;
+    type TestSpecType = S.Schema.Type<typeof TestSpecSchema>;
 
     {
-      const props = getSchemaProperties(TestSchema.ast);
+      const obj: TestSpecType = {
+        kind: 'a',
+        label: 'test',
+      };
+
+      const props = getSchemaProperties(TestSpecSchema.ast, obj);
       expect(props.length).to.eq(2);
     }
 
     {
-      const obj: TestType = {
-        name: 'DXOS',
-        spec: {
-          kind: 'a',
-          label: 'test',
-        },
+      const obj: TestSpecType = {
+        kind: 'b',
+        count: 100,
+        active: true,
       };
 
-      const props = getSchemaProperties(TestSpecSchema.ast, obj['spec' as const]);
-      expect(props.length).to.eq(2);
-    }
-
-    {
-      const obj: TestType = {
-        name: 'DXOS',
-        spec: {
-          kind: 'b',
-          count: 100,
-          active: true,
-        },
-      };
-
-      const props = getSchemaProperties(TestSpecSchema.ast, obj['spec' as const]);
+      const props = getSchemaProperties(TestSpecSchema.ast, obj);
       expect(props.length).to.eq(3);
     }
 
@@ -86,6 +70,25 @@ describe('properties', () => {
       expect(props.length).to.eq(1);
     }
 
-    // TODO(burdon): Need to test from root.
+    {
+      const TestSchema = S.Struct({
+        name: S.String,
+        spec: S.optional(TestSpecSchema),
+      });
+
+      type TestType = S.Schema.Type<typeof TestSchema>;
+
+      const obj: TestType = {
+        name: 'DXOS',
+      };
+
+      const props = getSchemaProperties(TestSchema.ast, obj);
+      expect(props.length).to.eq(2);
+
+      {
+        const props = getSchemaProperties(TestSpecSchema.ast, {});
+        expect(props.length).to.eq(1);
+      }
+    }
   });
 });
