@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
@@ -72,7 +70,7 @@ const meta: Meta = {
         }
       },
     }),
-    withLayout({ fullscreen: true, tooltips: true, classNames: 'flex justify-center m-2' }),
+    withLayout({ fullscreen: true, classNames: 'flex justify-center m-2' }),
     withTheme,
   ],
   parameters: {

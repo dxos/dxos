@@ -54,7 +54,7 @@
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/schema": "workspace:*",
-    "@effect/schema": "^0.75.5"
+    "@effect/schema": "^0.75.1"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

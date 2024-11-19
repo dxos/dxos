@@ -37,7 +37,7 @@
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "@radix-ui/react-context": "^1.0.0",
-    "effect": "^3.10.15"
+    "effect": "^3.9.1"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
