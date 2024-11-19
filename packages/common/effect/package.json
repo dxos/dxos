@@ -31,8 +31,8 @@
     "effect": "^3.10.15"
   },
   "peerDependencies": {
-    "@effect/schema": "^0.67.16",
-    "effect": "^3.9.1"
+    "@effect/schema": "^0.75.5",
+    "effect": "^3.10.15"
   },
   "publishConfig": {
     "access": "public"
