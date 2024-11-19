@@ -24,7 +24,6 @@ export const GridCellEditor = ({ extension, getCellContent, onBlur, __gridScope 
 
   return editing ? (
     <CellEditor
-      variant='grid'
       value={editing.initialContent ?? getCellContent(editing.index)}
       autoFocus
       box={editBox}

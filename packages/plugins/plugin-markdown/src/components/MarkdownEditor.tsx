@@ -170,7 +170,7 @@ export const MarkdownEditor = ({
   };
 
   return (
-    <StackItem.Content toolbar={toolbar} contentSize={role === 'article' ? 'cover' : 'intrinsic'}>
+    <StackItem.Content toolbar={toolbar}>
       {toolbar && (
         <div
           role='none'
