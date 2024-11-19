@@ -74,7 +74,7 @@ export const NodePlankHeading = memo(
     );
 
     return (
-      <StackItem.Heading classNames='pie-1'>
+      <StackItem.Heading classNames='pie-1 border-be border-separator'>
         <ActionRoot>
           {node ? (
             <StackItem.Sigil
