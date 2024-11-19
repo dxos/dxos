@@ -303,7 +303,7 @@ export const GridSheet = () => {
   useSelectThreadOnCellFocus();
 
   return (
-    <>
+    <div role='none' className='relative min-bs-0'>
       <GridCellEditor getCellContent={getCellContent} extension={extension} onBlur={handleBlur} />
       <Grid.Content
         initialCells={initialCells}
@@ -322,7 +322,7 @@ export const GridSheet = () => {
         onContextMenu={handleContextMenu}
         onClick={handleClick}
         overscroll='trap'
-        className='[--dx-grid-base:var(--surface-bg)] [&_.dx-grid]:border-bs [&_.dx-grid]:border-separator'
+        className='[--dx-grid-base:var(--surface-bg)] [&_.dx-grid]:border-bs [&_.dx-grid]:absolute [&_.dx-grid]:inset-0 [&_.dx-grid]:border-separator'
         activeRefs={activeRefs}
         ref={setDxGrid}
       />
@@ -356,6 +356,6 @@ export const GridSheet = () => {
           <DropdownMenu.Arrow />
         </DropdownMenu.Content>
       </DropdownMenu.Root>
-    </>
+    </div>
   );
 };

@@ -41,9 +41,17 @@ const frozen = { frozenRowsStart: 1, frozenColsStart: 1, frozenColsEnd: 1 };
 
 export type TableRootProps = PropsWithChildren<{ role?: string }>;
 
-const TableRoot = ({ children }: TableRootProps) => {
+const TableRoot = ({ children, role }: TableRootProps) => {
   return (
-    <div role='none' className='relative flex flex-col'>
+    <div
+      role='none'
+      className={mx(
+        'relative border-bs border-separator',
+        role === 'section'
+          ? 'overflow-hidden'
+          : 'flex flex-col [&_.dx-grid]:grow [&_.dx-grid]:max-is-max [&_.dx-grid]:bs-0 [&_.dx-grid]:max-bs-max',
+      )}
+    >
       {children}
     </div>
   );
@@ -183,11 +191,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
 
         <Grid.Content
           onWheelCapture={handleWheel}
-          className={mx(
-            '[--dx-grid-base:var(--surface-bg)] [&_.dx-grid]:grow [&_.dx-grid]:max-is-max [&_.dx-grid]:bs-0 [&_.dx-grid]:max-bs-max',
-            inlineEndLine,
-            blockEndLine,
-          )}
+          className={mx('[--dx-grid-base:var(--surface-bg)]', inlineEndLine, blockEndLine)}
           frozen={frozen}
           columns={model.columnMeta.value}
           limitRows={model.getRowCount() ?? 0}
