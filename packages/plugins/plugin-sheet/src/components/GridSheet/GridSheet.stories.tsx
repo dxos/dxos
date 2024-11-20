@@ -38,7 +38,7 @@ const meta: Meta = {
     withClientProvider({ types: [SheetType], createSpace: true }),
     withComputeGraphDecorator(),
     withTheme,
-    withLayout({ fullscreen: true, tooltips: true }),
+    withLayout({ fullscreen: true, tooltips: true, classNames: 'grid' }),
   ],
   parameters: { translations },
 };
