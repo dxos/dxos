@@ -134,7 +134,7 @@ export const TriggerEditor = ({ space, trigger }: TriggerEditorProps) => {
             <SelectInput<FunctionTriggerType>
               {...props}
               // TODO(burdon): Query for functions.
-              options={['f1', 'f2', 'f3'].map((value) => ({
+              options={[].map((value) => ({
                 value,
                 label: value,
               }))}

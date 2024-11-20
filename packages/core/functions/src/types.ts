@@ -21,7 +21,7 @@ const TimerTriggerSchema = S.Struct({
   type: S.Literal('timer').annotations(typeLiteralAnnotations),
   cron: S.NonEmptyString.annotations({
     [AST.TitleAnnotationId]: 'Cron',
-    [AST.DescriptionAnnotationId]: 'Ex. "* * * 1"',
+    [AST.DescriptionAnnotationId]: 'Ex. "0 0 * * *"',
   }),
 }).pipe(S.mutable);
 
@@ -92,6 +92,7 @@ export type TriggerType = S.Schema.Type<typeof TriggerSchema>;
  * Function trigger.
  */
 export const FunctionTriggerSchema = S.Struct({
+  // TODO(burdon): What type does this reference.
   function: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Function' })),
   enabled: S.optional(S.Boolean.annotations({ [AST.TitleAnnotationId]: 'Enabled' })),
 
@@ -115,8 +116,9 @@ export class FunctionTrigger extends TypedObject({
 
 /**
  * Function definition.
+ * @deprecated (Use dxos.org/type/Function)
  */
-// TODO(burdon): Reconcile with edge.
+// TODO(burdon): Reconcile with FunctionType.
 export class FunctionDef extends TypedObject({
   typename: 'dxos.org/type/FunctionDef',
   version: '0.1.0',

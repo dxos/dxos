@@ -3,6 +3,7 @@
 //
 
 import {
+  AST,
   create,
   JsonPath,
   type JsonProp,
@@ -40,7 +41,10 @@ export class ViewType extends TypedObject({
   /**
    * Human readable name.
    */
-  name: S.NonEmptyString,
+  name: S.String.annotations({
+    [AST.TitleAnnotationId]: 'Name',
+    [AST.DescriptionAnnotationId]: 'Ex. "Contact"',
+  }),
 
   /**
    * Query used to retrieve data.
