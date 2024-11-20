@@ -115,6 +115,7 @@ export class FunctionTrigger extends TypedObject({
 
 /**
  * Function definition.
+ * @deprecated (Use dxos.org/type/Function)
  */
 // TODO(burdon): Reconcile with edge.
 export class FunctionDef extends TypedObject({

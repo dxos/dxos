@@ -5,17 +5,18 @@
 import { JsonSchemaType, ref, S, TypedObject } from '@dxos/echo-schema';
 import { TextType } from '@dxos/plugin-markdown/types';
 
-// TODO(burdon): Which is the outer type? I.e., in the navbar?
-
 /**
  * Source script.
  */
-export class ScriptType extends TypedObject({ typename: 'dxos.org/type/Script', version: '0.1.0' })({
+export class ScriptType extends TypedObject({
+  typename: 'dxos.org/type/Script',
+  version: '0.1.0',
+})({
   // TODO(burdon): Change to URI?
   name: S.optional(S.String),
   description: S.optional(S.String),
   source: ref(TextType),
-  // TODO(burdon): Change to has of deployed content.
+  // TODO(burdon): Change to hash of deployed content.
   // Whether source has changed since last deploy.
   changed: S.optional(S.Boolean),
 }) {}
@@ -23,7 +24,11 @@ export class ScriptType extends TypedObject({ typename: 'dxos.org/type/Script', 
 /**
  * Function deployment.
  */
-export class FunctionType extends TypedObject({ typename: 'dxos.org/type/Function', version: '0.1.0' })({
+// TODO(burdon): Reconcile with FunctionDef.
+export class FunctionType extends TypedObject({
+  typename: 'dxos.org/type/Function',
+  version: '0.1.0',
+})({
   name: S.optional(S.String),
   version: S.Number,
   // Local binding to a function name.
