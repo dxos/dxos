@@ -18,7 +18,6 @@ import { Form } from '../Form';
 
 const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem]';
 
-// TODO(burdon): Pick from ViewType.
 const ViewMetaSchema = S.Struct({
   // name: S.String.annotations({
   //   [AST.TitleAnnotationId]: 'View',
