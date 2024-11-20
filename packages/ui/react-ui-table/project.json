@@ -21,6 +21,12 @@
         ]
       }
     },
+    "e2e": {
+      "dependsOn": [
+        "^compile",
+        "stories:mkdist"
+      ]
+    },
     "lint": {}
   },
   "implicitDependencies": [
