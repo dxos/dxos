@@ -43,7 +43,7 @@ describe.skip('functions e2e', () => {
         meta: triggerMeta,
         spec: {
           type: 'subscription',
-          filter: [{ type: TestType.typename }],
+          filter: { type: TestType.typename },
         },
       }),
     );

@@ -10,6 +10,7 @@ import React, { useCallback, useState } from 'react';
 import { AST, Format, S } from '@dxos/echo-schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
+import { SelectInput } from './Defaults';
 import { Form, type FormProps } from './Form';
 import translations from '../../translations';
 import { TestLayout, TestPanel } from '../testing';
@@ -70,6 +71,66 @@ export const Default: Story = {
       active: true,
       address: {
         zip: '11205',
+      },
+    },
+  },
+};
+
+const ShapeSchema = S.Struct({
+  shape: S.optional(
+    S.Union(
+      S.Struct({
+        type: S.Literal('circle').annotations({ [AST.TitleAnnotationId]: 'Type' }),
+        radius: S.optional(S.Number.annotations({ [AST.TitleAnnotationId]: 'Radius' })),
+      }),
+      S.Struct({
+        type: S.Literal('square').annotations({ [AST.TitleAnnotationId]: 'Type' }),
+        size: S.optional(S.Number.annotations({ [AST.TitleAnnotationId]: 'Size' })),
+      }),
+    ).annotations({ [AST.TitleAnnotationId]: 'Shape' }),
+  ),
+}).pipe(S.mutable);
+
+type ShapeType = S.Schema.Type<typeof ShapeSchema>;
+type DiscriminatedUnionStoryProps = FormProps<ShapeType>;
+
+const DiscriminatedUnionStory = ({ values: initialValues }: DiscriminatedUnionStoryProps) => {
+  const [values, setValues] = useState(initialValues);
+  const handleSubmit = useCallback<NonNullable<FormProps<ShapeType>['onSubmit']>>((values) => {
+    setValues(values);
+  }, []);
+
+  return (
+    <TestLayout json={{ values, schema: ShapeSchema.ast.toJSON() }}>
+      <TestPanel>
+        <Form<ShapeType>
+          schema={ShapeSchema}
+          values={values}
+          onSubmit={handleSubmit}
+          Custom={{
+            ['shape.type' as const]: (props) => (
+              <SelectInput<ShapeType>
+                {...props}
+                options={['circle', 'square'].map((value) => ({
+                  value,
+                  label: value,
+                }))}
+              />
+            ),
+          }}
+        />
+      </TestPanel>
+    </TestLayout>
+  );
+};
+
+export const DiscriminatedShape: StoryObj<DiscriminatedUnionStoryProps> = {
+  render: DiscriminatedUnionStory,
+  args: {
+    values: {
+      shape: {
+        type: 'circle',
+        radius: 5,
       },
     },
   },
