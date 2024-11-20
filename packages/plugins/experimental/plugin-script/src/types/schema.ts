@@ -24,11 +24,11 @@ export class ScriptType extends TypedObject({
 /**
  * Function deployment.
  */
-// TODO(burdon): Reconcile with FunctionDef.
 export class FunctionType extends TypedObject({
   typename: 'dxos.org/type/Function',
   version: '0.1.0',
 })({
+  // TODO(burdon): Change to id?
   name: S.optional(S.String),
   version: S.Number,
   // Local binding to a function name.
