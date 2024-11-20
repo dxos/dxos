@@ -69,6 +69,16 @@ export const ViewEditor = ({
     };
   }, [view]);
 
+  const handleViewUpdate = useCallback(
+    ({ type }: ViewMetaType) => {
+      requestAnimationFrame(() => {
+        view.query.type = type;
+        schema.updateTypename(type);
+      });
+    },
+    [view, schema],
+  );
+
   const handleSelect = useCallback((field: FieldType) => {
     setField((f) => (f === field ? undefined : field));
   }, []);
@@ -89,7 +99,7 @@ export const ViewEditor = ({
 
   return (
     <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
-      <Form<ViewMetaType> autoFocus schema={ViewMetaSchema} values={viewValues} />
+      <Form<ViewMetaType> autoFocus autosave schema={ViewMetaSchema} values={viewValues} onSubmit={handleViewUpdate} />
 
       <div>
         {/* TODO(burdon): Clean up common form ux. */}

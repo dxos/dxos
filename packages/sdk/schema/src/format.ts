@@ -30,7 +30,7 @@ export const BasePropertySchema = S.Struct({
 
 export type BaseProperty = S.Schema.Type<typeof BasePropertySchema>;
 
-const extend = (format: FormatEnum, type: TypeEnum, fields: S.Struct.Fields = {}) =>
+const extend = <Fields extends S.Struct.Fields>(format: FormatEnum, type: TypeEnum, fields?: Fields) =>
   S.extend(
     BasePropertySchema,
     S.Struct({

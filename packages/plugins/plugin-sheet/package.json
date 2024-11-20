@@ -84,7 +84,7 @@
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/schema": "^0.75.1",
+    "@effect/schema": "^0.75.5",
     "@lezer/common": "^1.2.2",
     "@lezer/highlight": "^1.2.1",
     "@lezer/lezer": "^1.1.2",
