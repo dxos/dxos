@@ -43,6 +43,9 @@ export type SheetContextValue = {
   // Events.
   // TODO(burdon): Generalize.
   onInfo?: () => void;
+
+  // Flags
+  ignoreAttention?: boolean;
 };
 
 const SheetContext = createContext<SheetContextValue | undefined>(undefined);
@@ -56,9 +59,10 @@ export const useSheetContext = (): SheetContextValue => {
 const SheetProviderImpl = ({
   model,
   onInfo,
+  ignoreAttention,
   children,
   __gridScope,
-}: GridScopedProps<PropsWithChildren<Pick<SheetContextValue, 'onInfo' | 'model'>>>) => {
+}: GridScopedProps<PropsWithChildren<Pick<SheetContextValue, 'onInfo' | 'model' | 'ignoreAttention'>>>) => {
   const { id, editing, setEditing } = useGridContext('SheetProvider', __gridScope);
 
   const [cursor, setCursorInternal] = useState<CellAddress>();
@@ -101,6 +105,7 @@ const SheetProviderImpl = ({
         setActiveRefs,
         // TODO(burdon): Change to event.
         onInfo,
+        ignoreAttention,
       }}
     >
       {children}
@@ -112,14 +117,22 @@ export type SheetProviderProps = {
   graph: ComputeGraph;
   sheet: SheetType;
   readonly?: boolean;
+  ignoreAttention?: boolean;
 } & Pick<SheetContextValue, 'onInfo'>;
 
-export const SheetProvider = ({ children, graph, sheet, readonly, onInfo }: PropsWithChildren<SheetProviderProps>) => {
+export const SheetProvider = ({
+  children,
+  graph,
+  sheet,
+  readonly,
+  ignoreAttention,
+  onInfo,
+}: PropsWithChildren<SheetProviderProps>) => {
   const model = useSheetModel(graph, sheet, { readonly });
 
   return !model ? null : (
     <Grid.Root id={fullyQualifiedId(sheet)}>
-      <SheetProviderImpl model={model} onInfo={onInfo}>
+      <SheetProviderImpl model={model} onInfo={onInfo} ignoreAttention={ignoreAttention}>
         {children}
       </SheetProviderImpl>
     </Grid.Root>
