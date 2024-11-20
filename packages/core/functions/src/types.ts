@@ -21,7 +21,7 @@ const TimerTriggerSchema = S.Struct({
   type: S.Literal('timer').annotations(typeLiteralAnnotations),
   cron: S.NonEmptyString.annotations({
     [AST.TitleAnnotationId]: 'Cron',
-    [AST.DescriptionAnnotationId]: 'Ex. "* * * 1"',
+    [AST.DescriptionAnnotationId]: 'Ex. "0 0 * * *"',
   }),
 }).pipe(S.mutable);
 
