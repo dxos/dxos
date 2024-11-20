@@ -9,11 +9,10 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Trigger } from '@dxos/async';
 import { TestBuilder } from '@dxos/client/testing';
 import { getObjectCore } from '@dxos/echo-db';
-import { GameType } from '@dxos/plugin-chess/types';
-
 import { create } from '@dxos/echo-schema';
 import { FunctionDef, type FunctionManifest, FunctionTrigger } from '@dxos/functions';
 import { startFunctionsHost } from '@dxos/functions/testing';
+import { GameType } from '@dxos/plugin-chess/types';
 
 import { initFunctionsPlugin } from '../setup';
 
@@ -39,11 +38,9 @@ describe('Chess', () => {
           function: 'dxos.org/function/chess',
           spec: {
             type: 'subscription',
-            filter: [
-              {
-                type: 'dxos.org/type/Chess',
-              },
-            ],
+            filter: {
+              type: 'dxos.org/type/Chess',
+            },
           },
         },
       ],

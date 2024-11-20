@@ -19,7 +19,7 @@ import { invariant } from '@dxos/invariant';
 import { ScriptType } from '@dxos/plugin-script/types';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-data';
+import { Form, SelectInput } from '@dxos/react-ui-data';
 import { distinctBy } from '@dxos/util';
 
 import { InputRow } from './Form';
@@ -64,8 +64,8 @@ export const TriggerEditor = ({ space, trigger }: TriggerEditorProps) => {
     const spec = trigger.spec;
     invariant(spec);
     if (spec.type === 'subscription') {
-      if (spec.filter && spec.filter.length > 0) {
-        const type = spec.filter[0].type;
+      if (spec.filter) {
+        const type = spec.filter.type;
         const foundSchema = state.schemas.find((schema) => schema.typename === type);
         if (foundSchema) {
           state.selectedSchema[trigger.id] = foundSchema;
@@ -92,7 +92,7 @@ export const TriggerEditor = ({ space, trigger }: TriggerEditorProps) => {
   const handleSelectTriggerType = (triggerType: string) => {
     switch (triggerType as TriggerKind) {
       case 'subscription': {
-        trigger.spec = { type: 'subscription', filter: [] };
+        trigger.spec = { type: 'subscription', filter: {} };
         break;
       }
       case 'timer': {
@@ -113,19 +113,42 @@ export const TriggerEditor = ({ space, trigger }: TriggerEditorProps) => {
 
   const TriggerMeta = getFunctionMetaExtension(trigger, script)?.component;
 
-  // TODO(burdon): Query for functions.
-  // TODO(burdon): Flatten trigger.spec
   const test = true;
   if (test) {
+    const object: FunctionTriggerType = {
+      spec: {
+        // type: 'timer',
+        type: 'subscription',
+        // cron: '0 0 * * *'
+        filter: { type: 'dxos.org/type/Event' },
+      },
+    };
+
     return (
       <Form<FunctionTriggerType>
         schema={FunctionTriggerSchema}
-        values={{
-          function: 'foo',
-          spec: { type: 'timer', cron: '0 0 * * *' },
-        }}
+        values={object}
+        filter={(props) => props.filter((p) => p.name !== 'meta')}
         Custom={{
-          spec: () => <div>spec</div>,
+          ['function' satisfies keyof FunctionTriggerType]: (props) => (
+            <SelectInput<FunctionTriggerType>
+              {...props}
+              // TODO(burdon): Query for functions.
+              options={[].map((value) => ({
+                value,
+                label: value,
+              }))}
+            />
+          ),
+          ['spec.type' as const]: (props) => (
+            <SelectInput<FunctionTriggerType>
+              {...props}
+              options={['timer', 'subscription'].map((value) => ({
+                value,
+                label: value,
+              }))}
+            />
+          ),
         }}
       />
     );
@@ -211,13 +234,13 @@ const TriggerSpecSubscription = ({ spec }: TriggerSpecProps<SubscriptionTrigger>
   }
 
   const handleValueChange = (typename: string) => {
-    spec.filter = [{ type: typename }];
+    spec.filter = { type: typename };
   };
 
   return (
     <>
       <InputRow label={t('trigger filter')}>
-        <Select.Root value={spec.filter.length > 0 ? spec.filter[0].type : undefined} onValueChange={handleValueChange}>
+        <Select.Root value={spec.filter?.type} onValueChange={handleValueChange}>
           <Select.TriggerButton classNames='w-full' placeholder={'Select type'} />
           <Select.Portal>
             <Select.Content>

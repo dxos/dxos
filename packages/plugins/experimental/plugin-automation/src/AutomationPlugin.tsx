@@ -16,9 +16,6 @@ import meta, { AUTOMATION_PLUGIN } from './meta';
 import translations from './translations';
 import { AutomationAction, type AutomationPluginProvides, ChainPromptType, ChainType } from './types';
 
-// TODO(burdon): Prompt article.
-// TODO(burdon): Trigger panel.
-
 export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> => {
   return {
     meta,
