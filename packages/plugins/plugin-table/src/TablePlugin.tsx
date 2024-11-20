@@ -5,38 +5,29 @@
 import { Table } from '@phosphor-icons/react';
 import React from 'react';
 
-import {
-  resolvePlugin,
-  type PluginDefinition,
-  parseIntentPlugin,
-  NavigationAction,
-  type IntentDispatcher,
-} from '@dxos/app-framework';
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 import { getSpace } from '@dxos/react-client/echo';
-import { translations as dataTranslations, ViewEditor } from '@dxos/react-ui-data';
+import { translations as dataTranslations } from '@dxos/react-ui-data';
 import { TableType, initializeTable, translations as tableTranslations } from '@dxos/react-ui-table';
 import { type FieldProjection, ViewProjection, ViewType } from '@dxos/schema';
 
-import { TableContainer } from './components';
+import { TableContainer, TableViewEditor } from './components';
 import meta, { TABLE_PLUGIN } from './meta';
 import { serializer } from './serializer';
 import translations from './translations';
 import { TableAction, type TablePluginProvides, isTable } from './types';
 
 export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
-  let dispatch: IntentDispatcher | undefined;
-
   return {
     meta,
     ready: async (plugins) => {
       const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
       clientPlugin?.provides.client.addTypes([TableType]);
-      dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
     },
     provides: {
       metadata: {
@@ -114,34 +105,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
             case 'complementary--settings': {
               if (data.subject instanceof TableType) {
                 const table = data.subject;
-                if (!table.view) {
-                  return null;
-                }
-
-                const space = getSpace(table);
-                const schema = space?.db.schemaRegistry.getSchema(table.view.query.type);
-                const handleDelete = (fieldId: string) => {
-                  void dispatch?.({
-                    plugin: TABLE_PLUGIN,
-                    action: TableAction.DELETE_COLUMN,
-                    data: { table, fieldId },
-                  });
-                };
-
-                if (!space || !schema) {
-                  return null;
-                }
-
-                return {
-                  node: (
-                    <ViewEditor
-                      registry={space.db.schemaRegistry}
-                      schema={schema}
-                      view={table.view}
-                      onDelete={handleDelete}
-                    />
-                  ),
-                };
+                return { node: <TableViewEditor table={table} /> };
               }
 
               return null;
