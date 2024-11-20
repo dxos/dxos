@@ -5,6 +5,8 @@ dx-grid {
   display: contents;
   --dx-grid-gap: 1px;
   --dx-plane-gap: 1px;
+  touch-action: none;
+  user-select: none;
 }
 
 .dx-grid {
@@ -18,8 +20,6 @@ dx-grid {
   block-size: 100%;
   max-inline-size: 100dvw;
   max-block-size: 100dvh;
-
-  user-select: none;
 
   background: var(--dx-grid-lines, var(--dx-separator));
 }
