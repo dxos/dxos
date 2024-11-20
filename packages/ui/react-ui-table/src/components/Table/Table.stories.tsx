@@ -189,7 +189,7 @@ const TablePerformanceStory = (props: StoryProps) => {
 //
 
 const meta: Meta<StoryProps> = {
-  title: 'plugins/plugin-table/Table',
+  title: 'ui/react-ui-table/Table',
   component: Table.Main as any,
   render: DefaultStory,
   parameters: { translations },
@@ -200,8 +200,8 @@ const meta: Meta<StoryProps> = {
       createSpace: true,
       onSpaceCreated: async ({ space }) => {
         const table = space.db.add(create(TableType, {}));
-        const schema = initializeTable({ space, table });
-        Array.from({ length: 30 }).map(() => {
+        const schema = initializeTable({ space, table, initialRow: false });
+        Array.from({ length: 10 }).map(() => {
           return space.db.add(
             create(schema, {
               name: faker.person.fullName(),
