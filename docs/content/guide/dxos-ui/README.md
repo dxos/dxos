@@ -38,7 +38,6 @@ import { defineConfig } from 'vite';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 
-// https://vitejs.dev/config
 export default defineConfig({
   plugins: [
     ThemePlugin({

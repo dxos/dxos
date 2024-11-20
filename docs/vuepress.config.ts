@@ -12,7 +12,7 @@ import { hopeTheme, sidebar } from 'vuepress-theme-hope';
 
 import { apiDocRenderDirective, showcaseRenderDirective } from '@dxos/apidoc';
 
-import { apiSidebar, telemetryPlugin } from './src';
+import { telemetryPlugin } from './src';
 
 const env = (value?: string) => (value ? `'${value}'` : undefined);
 
@@ -26,6 +26,8 @@ const config: UserConfig = defineUserConfig({
     '!.vuepress',
     '!node_modules',
 
+    // TODO(wittjosiah): These are not currently maintained, once they are we can include them.
+    '!api',
     // TODO(wittjosiah): If we want to include these we need to fix links to diagrams to Vuepress can resolve them.
     '!assets',
     '!contributing',
@@ -55,7 +57,6 @@ const config: UserConfig = defineUserConfig({
     docsDir: 'docs/content',
     sidebar: sidebar({
       '/guide/': 'structure',
-      '/api/': await apiSidebar(),
       '/composer/': 'structure',
     }),
     navbarLayout: {
@@ -72,10 +73,6 @@ const config: UserConfig = defineUserConfig({
       {
         text: 'SDK',
         link: '/guide/',
-      },
-      {
-        text: 'API',
-        link: '/api/',
       },
     ],
     backToTop: false,
