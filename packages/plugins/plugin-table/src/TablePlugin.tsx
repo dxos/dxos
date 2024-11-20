@@ -28,7 +28,6 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
     ready: async (plugins) => {
       const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
       clientPlugin?.provides.client.addTypes([TableType]);
-      dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
     },
     provides: {
       metadata: {
