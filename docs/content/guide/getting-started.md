@@ -12,10 +12,10 @@ DXOS works in any Node.js or Browser environment. There is a [TypeScript API](./
 
 ::: note In this guide
 
-* Using with [TypeScript](#usage-with-typescript).
-* Using with [React](#usage-with-react).
-* Project [templates](#project-templates).
-* [Deploy](#deployment) to Netlify.
+- Using with [TypeScript](#usage-with-typescript).
+- Using with [React](#usage-with-react).
+- Project [templates](#project-templates).
+- [Deploy](#deployment) to Netlify.
 
 :::
 
@@ -172,24 +172,23 @@ This will start the development server and print a URL to the console. Opening t
 
 ::: info Why this is cool:
 
-* State is being reactively shared between all instances of the app running on the same device. If more peers join the space, all of them will see updates reactively.
-* Data is stored **locally**, in-browser, in [OPFS](https://fs.spec.whatwg.org/#origin-private-file-system) or [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API). **This enables privacy and gives end-users control over their data**.
-* Remote peers exchange data directly, **peer-to-peer** over secure [WebRTC](https://webrtc.org/) connections.
-* User identity (public/private keys) are established securely and maintained by [HALO](./halo/) for the whole device (browser profile), without a password.
-* Everything works offline.
-* Real-time collaboration is possible when online.
-* There are **no servers** that store any data.
-* There is no need for [ORMs](https://en.wikipedia.org/wiki/Object%E2%80%93relational_mapping). ECHO objects are "plain javascript" objects that can be manipulated directly.
-* **There is no need for an API tier.** The app has everything it needs on the client.
+- State is being reactively shared between all instances of the app running on the same device. If more peers join the space, all of them will see updates reactively.
+- Data is stored **locally**, in-browser, in [OPFS](https://fs.spec.whatwg.org/#origin-private-file-system) or [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API). **This enables privacy and gives end-users control over their data**.
+- Remote peers exchange data directly, **peer-to-peer** over secure [WebRTC](https://webrtc.org/) connections.
+- User identity (public/private keys) are established securely and maintained by [HALO](./halo/) for the whole device (browser profile), without a password.
+- Everything works offline.
+- Real-time collaboration is possible when online.
+- There are **no servers** that store any data.
+- There is no need for [ORMs](https://en.wikipedia.org/wiki/Object%E2%80%93relational_mapping). ECHO objects are "plain javascript" objects that can be manipulated directly.
+- **There is no need for an API tier.** The app has everything it needs on the client.
 
+:::
 
 The following templates are available:
 
-* Hello world: `npm create @dxos@latest` or `npm create @dxos/hello@latest`
-* Bare template: `npm create @dxos/bare@latest`
-* Tasks app: `npm create @dxos/tasks@latest`
-
-:::
+- Hello world: `npm create @dxos@latest` or `npm create @dxos/hello@latest`
+- Bare template: `npm create @dxos/bare@latest`
+- Tasks app: `npm create @dxos/tasks@latest`
 
 ### Deployment
 
@@ -206,15 +205,15 @@ For example, with [Netlify](https://netlify.com):
 
 ## Next steps
 
-* Step-by-step [React tutorial](./echo/tutorial.md)
-* ECHO with [React](./echo/react/)
-* ECHO with [TypeScript](./echo/typescript/)
-* ECHO with [strongly typed objects](./echo/typescript/queries.md#typed-queries)
+- Step-by-step [React tutorial](./echo/tutorial.md)
+- ECHO with [React](./echo/react/)
+- ECHO with [TypeScript](./echo/typescript/)
+- ECHO with [strongly typed objects](./echo/typescript/queries.md#typed-queries)
 
 We hope you'll find the technology useful, and we welcome your ideas and contributions:
 
-* Join the DXOS [Discord](https://dxos.org/discord)
-* DXOS [repository on GitHub](https://github.com/dxos/dxos)
-* File a bug or idea in [Issues](https://github.com/dxos/dxos/issues)
+- Join the DXOS [Discord](https://dxos.org/discord)
+- DXOS [repository on GitHub](https://github.com/dxos/dxos)
+- File a bug or idea in [Issues](https://github.com/dxos/dxos/issues)
 
 Happy building! 🚀
