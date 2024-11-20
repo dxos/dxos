@@ -14,11 +14,21 @@ import { GridSheet } from '../GridSheet';
 import { SheetProvider } from '../SheetContext';
 import { Toolbar } from '../Toolbar';
 
-export const SheetContainer = ({ space, sheet, role }: { space: Space; sheet: SheetType; role?: string }) => {
+export const SheetContainer = ({
+  space,
+  sheet,
+  role,
+  ignoreAttention,
+}: {
+  space: Space;
+  sheet: SheetType;
+  role?: string;
+  ignoreAttention?: boolean;
+}) => {
   const graph = useComputeGraph(space);
 
   return graph ? (
-    <SheetProvider sheet={sheet} graph={graph}>
+    <SheetProvider sheet={sheet} graph={graph} ignoreAttention={ignoreAttention}>
       <StackItem.Content toolbar statusbar {...(role === 'section' && { classNames: 'aspect-video' })}>
         <Toolbar.Root role={role}>
           <Toolbar.Styles />

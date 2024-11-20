@@ -67,9 +67,10 @@ export type TableController = {
 
 export type TableMainProps = {
   model?: TableModel;
+  ignoreAttention?: boolean;
 };
 
-const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwardedRef) => {
+const TableMain = forwardRef<TableController, TableMainProps>(({ model, ignoreAttention }, forwardedRef) => {
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
 
   const { hasAttention } = useAttention(model?.table ? fullyQualifiedId(model.table) : 'table');
@@ -142,11 +143,11 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
 
   const handleWheel = useCallback(
     (event: WheelEvent) => {
-      if (!hasAttention) {
+      if (!ignoreAttention && !hasAttention) {
         event.stopPropagation();
       }
     },
-    [hasAttention],
+    [hasAttention, ignoreAttention],
   );
 
   // TODO(burdon): Factor out?

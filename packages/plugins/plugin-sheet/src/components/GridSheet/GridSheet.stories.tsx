@@ -25,7 +25,7 @@ export const Basic = () => {
   }
 
   return (
-    <SheetProvider graph={graph} sheet={sheet}>
+    <SheetProvider graph={graph} sheet={sheet} ignoreAttention>
       <GridSheet />
     </SheetProvider>
   );
