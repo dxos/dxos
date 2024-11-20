@@ -22,7 +22,7 @@ import { translations as dataTranslations, ViewEditor } from '@dxos/react-ui-dat
 import { TableType, initializeTable, translations as tableTranslations } from '@dxos/react-ui-table';
 import { type FieldProjection, ViewProjection, ViewType } from '@dxos/schema';
 
-import { TableContainer } from './components';
+import { TableContainer, TableViewEditor } from './components';
 import meta, { TABLE_PLUGIN } from './meta';
 import { serializer } from './serializer';
 import translations from './translations';
@@ -114,34 +114,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
             case 'complementary--settings': {
               if (data.subject instanceof TableType) {
                 const table = data.subject;
-                if (!table.view) {
-                  return null;
-                }
-
-                const space = getSpace(table);
-                const schema = space?.db.schemaRegistry.getSchema(table.view.query.type);
-                const handleDelete = (fieldId: string) => {
-                  void dispatch?.({
-                    plugin: TABLE_PLUGIN,
-                    action: TableAction.DELETE_COLUMN,
-                    data: { table, fieldId },
-                  });
-                };
-
-                if (!space || !schema) {
-                  return null;
-                }
-
-                return {
-                  node: (
-                    <ViewEditor
-                      registry={space.db.schemaRegistry}
-                      schema={schema}
-                      view={table.view}
-                      onDelete={handleDelete}
-                    />
-                  ),
-                };
+                return { node: <TableViewEditor table={table} /> };
               }
 
               return null;
