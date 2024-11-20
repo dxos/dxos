@@ -97,7 +97,7 @@ export const Form = <T extends object = {}>({
   return (
     <div role='form' className={mx('flex flex-col w-full gap-2 py-2', classNames)}>
       {props
-        .map(({ prop, name, type, format, title, description }) => {
+        .map(({ prop, name, type, format, title, description, examples }) => {
           // Custom property allows for sub forms.
           // TODO(burdon): Use Select control if options are present in annotation?
           const key = [...path, name];
@@ -133,6 +133,8 @@ export const Form = <T extends object = {}>({
             return null;
           }
 
+          const placeholder = examples?.length ? `Example: ${examples[0]}` : description;
+
           return (
             <div key={name} role='none' className={padding}>
               <InputComponent
@@ -141,7 +143,7 @@ export const Form = <T extends object = {}>({
                 property={name}
                 disabled={readonly}
                 label={title ?? name}
-                placeholder={description}
+                placeholder={placeholder}
                 {...inputProps}
               />
             </div>
