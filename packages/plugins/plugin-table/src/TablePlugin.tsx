@@ -5,20 +5,14 @@
 import { Table } from '@phosphor-icons/react';
 import React from 'react';
 
-import {
-  resolvePlugin,
-  type PluginDefinition,
-  parseIntentPlugin,
-  NavigationAction,
-  type IntentDispatcher,
-} from '@dxos/app-framework';
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 import { getSpace } from '@dxos/react-client/echo';
-import { translations as dataTranslations, ViewEditor } from '@dxos/react-ui-data';
+import { translations as dataTranslations } from '@dxos/react-ui-data';
 import { TableType, initializeTable, translations as tableTranslations } from '@dxos/react-ui-table';
 import { type FieldProjection, ViewProjection, ViewType } from '@dxos/schema';
 
@@ -29,8 +23,6 @@ import translations from './translations';
 import { TableAction, type TablePluginProvides, isTable } from './types';
 
 export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
-  let dispatch: IntentDispatcher | undefined;
-
   return {
     meta,
     ready: async (plugins) => {

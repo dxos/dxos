@@ -12,7 +12,9 @@ import { type TableType } from '@dxos/react-ui-table';
 import { TABLE_PLUGIN } from '../meta';
 import { TableAction } from '../types';
 
-const TableViewEditor = ({ table }: { table: TableType }) => {
+type TableViewEditorProps = { table: TableType };
+
+const TableViewEditor = ({ table }: TableViewEditorProps) => {
   const dispatch = useIntentDispatcher();
   const space = getSpace(table);
 
