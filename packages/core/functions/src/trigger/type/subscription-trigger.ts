@@ -73,8 +73,8 @@ export const createSubscriptionTrigger: TriggerFactory<SubscriptionTrigger> = as
   // TODO(burdon): [Bug]: not updated when document is deleted (either top or hierarchically).
   log.info('subscription', { filter });
   // const query = triggerCtx.space.db.query(Filter.or(filter.map(({ type, props }) => Filter.typename(type, props))));
-  if (filter) {
-    const query = space.db.query(Filter.typename(filter[0].type, filter[0].props));
+  if (filter.type) {
+    const query = space.db.query(Filter.typename(filter.type, filter.props));
     subscriptions.push(query.subscribe(delay ? debounce(update, delay) : update));
   }
 

@@ -262,7 +262,7 @@ const createTrigger = (space: Space, options?: { meta?: FunctionTrigger['meta'] 
       meta: options?.meta,
       spec: {
         type: 'subscription',
-        filter: [{ type: MessageType.typename }],
+        filter: { type: MessageType.typename },
       },
     }),
   );
