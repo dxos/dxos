@@ -43,7 +43,7 @@ export class ViewType extends TypedObject({
    */
   name: S.String.annotations({
     [AST.TitleAnnotationId]: 'Name',
-    [AST.DescriptionAnnotationId]: 'Ex. "Contact"',
+    [AST.ExamplesAnnotationId]: 'Contact',
   }),
 
   /**

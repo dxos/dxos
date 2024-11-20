@@ -14,8 +14,8 @@ export const DXN = S.NonEmptyString.pipe(
   S.annotations({
     [FormatAnnotationId]: FormatEnum.DXN,
     [AST.TitleAnnotationId]: 'DXN',
-    [AST.DescriptionAnnotationId]: 'DX name',
-    [AST.ExamplesAnnotationId]: ['dxos.org/type/Contact'],
+    [AST.DescriptionAnnotationId]: 'DXN URI',
+    [AST.ExamplesAnnotationId]: ['example.com/type/MyType'],
   }),
 );
 

@@ -21,11 +21,9 @@ const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem]';
 const ViewMetaSchema = S.Struct({
   name: S.String.annotations({
     [AST.TitleAnnotationId]: 'View',
-    [AST.DescriptionAnnotationId]: 'Enter view name',
   }),
   type: Format.DXN.annotations({
     [AST.TitleAnnotationId]: 'Typename',
-    [AST.DescriptionAnnotationId]: 'Ex. example.com/type/MyType',
   }),
 }).pipe(S.mutable);
 
