@@ -5,6 +5,8 @@
 import { AST, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
+import { type ObjectAnnotation, ObjectAnnotationId } from '../ast';
+
 // TODO(ZaymonFC): Do this one at a time. This might be dangerous.
 export const addFieldsToSchema = (schema: S.Schema<any>, fields: S.Struct.Fields): S.Schema<any> => {
   const schemaExtension = S.partial(S.Struct(fields));
@@ -49,4 +51,14 @@ export const updateFieldNameInSchema = (
       ast.annotations,
     ),
   );
+};
+
+export const setTypenameInSchema = (schema: S.Schema<any>, typename: string): S.Schema<any> => {
+  const existingAnnotation = schema.ast.annotations[ObjectAnnotationId] as ObjectAnnotation;
+  invariant(existingAnnotation, `Missing ${String(ObjectAnnotationId)}`);
+
+  return schema.annotations({
+    ...schema.ast.annotations,
+    [ObjectAnnotationId]: { typename, version: existingAnnotation.version, schemaId: existingAnnotation.schemaId },
+  });
 };

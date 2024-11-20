@@ -91,4 +91,46 @@ describe('dynamic schema', () => {
     });
     expect(getPropertyMetaAnnotation(registered.getProperties()[0], metaNamespace)).to.deep.eq(metaInfo);
   });
+
+  test('updates typename', async ({ expect }) => {
+    // Create schema with some fields and annotations.
+    const registered = createMutableSchema(EmptySchemaType);
+    const originalVersion = registered.storedSchema.version;
+    registered.addFields({
+      name: S.String.pipe(PropertyMeta('test', { maxLength: 10 })),
+      age: S.Number,
+    });
+
+    // First update.
+    const newTypename1 = 'example.com/type/Individual';
+    registered.updateTypename(newTypename1);
+
+    // Basic typename update checks.
+    expect(registered.typename).toBe(newTypename1);
+    expect(registered.jsonSchema.$id).toBe(`dxn:type:${newTypename1}`);
+    expect(registered.jsonSchema.echo?.type?.typename).toBe(newTypename1);
+
+    // Version preservation check.
+    expect(registered.storedSchema.version).toBe(originalVersion);
+
+    // Field preservation check.
+    const properties = registered.getProperties();
+    expect(properties).toHaveLength(2);
+    expect(properties[0].name).toBe('name');
+
+    // Annotation preservation check.
+    const nameMeta = getPropertyMetaAnnotation(properties[0], 'test');
+    expect(nameMeta).toEqual({ maxLength: 10 });
+
+    // Second update to ensure multiple updates work.
+    const newTypename2 = 'example.com/type/Person';
+    registered.updateTypename(newTypename2);
+    expect(registered.typename).toBe(newTypename2);
+    expect(registered.jsonSchema.$id).toBe(`dxn:type:${newTypename2}`);
+    expect(registered.jsonSchema.echo?.type?.typename).toBe(newTypename2);
+    expect(getObjectAnnotation(registered)).to.deep.contain({
+      typename: 'example.com/type/Person',
+      version: '0.1.0',
+    });
+  });
 });
