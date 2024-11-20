@@ -27,6 +27,8 @@ import { initializeTable } from '../../util';
 import { Toolbar } from '../Toolbar';
 import { createItems, createTable, type SimulatorProps, useSimulator } from '../testing';
 
+faker.seed(0);
+
 //
 // Story components.
 //

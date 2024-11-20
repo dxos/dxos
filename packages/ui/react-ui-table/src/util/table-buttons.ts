@@ -20,29 +20,34 @@ const createButtonHtml = ({
   button,
   value = '',
   disabled = false,
+  testId,
 }: {
   button: TableButton;
   value?: string;
   disabled?: boolean;
+  testId: string;
 }): string => {
   const buttonClasses = 'ch-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-2' as const;
-  return `<button class="${buttonClasses}" ${TABLE_ATTRS[button]}="${value}" ${disabled ? 'disabled' : ''}><svg><use href="/icons.svg#${ICONS[button]}"/></svg></button>`;
+  return `<button class="${buttonClasses}" ${TABLE_ATTRS[button]}="${value}" data-testid="${testId}" ${disabled ? 'disabled' : ''}><svg><use href="/icons.svg#${ICONS[button]}"/></svg></button>`;
 };
 
 export const tableButtons = {
   columnSettings: {
     attr: TABLE_ATTRS.columnSettings,
     icon: ICONS.columnSettings,
-    render: ({ fieldId }: { fieldId: string }) => createButtonHtml({ button: 'columnSettings', value: fieldId }),
+    render: ({ fieldId }: { fieldId: string }) =>
+      createButtonHtml({ button: 'columnSettings', value: fieldId, testId: 'table-column-settings-button' }),
   },
   rowMenu: {
     attr: TABLE_ATTRS.rowMenu,
     icon: ICONS.rowMenu,
-    render: ({ rowIndex }: { rowIndex: number }) => createButtonHtml({ button: 'rowMenu', value: rowIndex.toString() }),
+    render: ({ rowIndex }: { rowIndex: number }) =>
+      createButtonHtml({ button: 'rowMenu', value: rowIndex.toString(), testId: 'table-row-menu-button' }),
   },
   addColumn: {
     attr: TABLE_ATTRS.newColumn,
     icon: ICONS.newColumn,
-    render: ({ disabled }: { disabled?: boolean } = {}) => createButtonHtml({ button: 'newColumn', disabled }),
+    render: ({ disabled }: { disabled?: boolean } = {}) =>
+      createButtonHtml({ button: 'newColumn', disabled, testId: 'table-new-column-button' }),
   },
 } as const;

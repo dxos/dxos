@@ -25,7 +25,7 @@ export const RowActionsMenu = ({ model }: RowActionsMenuProps) => {
       <DropdownMenu.VirtualTrigger virtualRef={model.modalController.trigger} />
       <DropdownMenu.Content>
         <DropdownMenu.Viewport>
-          <DropdownMenu.Item onClick={() => model.deleteRow(state.rowIndex)}>
+          <DropdownMenu.Item data-testid='row-menu-delete' onClick={() => model.deleteRow(state.rowIndex)}>
             {t(hasSelection ? 'bulk delete row label' : 'delete row label')}
           </DropdownMenu.Item>
         </DropdownMenu.Viewport>
