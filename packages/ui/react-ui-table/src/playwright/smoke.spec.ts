@@ -1,20 +1,15 @@
-// Copyright 2021 DXOS.org
+//
+// Copyright 2024 DXOS.org
+//
 
 import { expect, test } from '@playwright/test';
 
 import { setupPage } from '@dxos/test-utils/playwright';
 
+import { TableManager } from './TableManager';
+
 const storyId = 'ui-react-ui-table-table';
-// TODO(ZaymonFC): Factor out.
 const storyUrl = `http://localhost:9009/iframe.html?id=${storyId}&viewMode=story`;
-
-// TODO(ZaymonFC): Workout a better way to index the main grid, attributes?
-
-// const testIds = {
-//   tableColumnSettingsButton: 'table-column-settings-button',
-//   tableRowMenuButton: 'table-row-menu-button',
-//   tableNewColumnButton: 'table-new-column-button',
-// };
 
 // NOTE(ZaymonFC): This test suite relies on the faker seed being set to 0 in the story.
 test.describe('Table', () => {
@@ -28,16 +23,13 @@ test.describe('Table', () => {
 
   test('sort', async ({ browser }) => {
     const { page } = await setupPage(browser, { url: storyUrl });
-    await page.getByTestId('table-column-settings-button').nth(0).click();
-    await page.getByTestId('column-sort-descending').click();
+    const table = new TableManager(page);
 
-    // Expect the first gridcell to contain 'Uwe Øvergård'
+    await table.sortColumn(0, 'descending');
     await expect(page.getByRole('gridcell').nth(16)).toHaveText('Uwe Øvergård');
     await expect(page.getByRole('gridcell').nth(52)).toContainText('Anita');
 
-    await page.getByTestId('table-column-settings-button').nth(0).click();
-    await page.getByTestId('column-sort-ascending').click();
-
+    await table.sortColumn(0, 'ascending');
     await expect(page.getByRole('gridcell').nth(16)).toContainText('Anita');
     await expect(page.getByRole('gridcell').nth(52)).toHaveText('Uwe Øvergård');
     await page.close();
@@ -45,61 +37,48 @@ test.describe('Table', () => {
 
   test('delete row', async ({ browser }) => {
     const { page } = await setupPage(browser, { url: storyUrl });
-    await page.getByTestId('table-row-menu-button').nth(0).click();
-    await page.getByTestId('row-menu-delete').click();
+    const table = new TableManager(page);
 
+    await table.deleteRow(0);
     await expect(page.getByRole('gridcell', { name: 'Anita Mayer' })).toHaveCount(0);
-
     await page.close();
   });
 
   test('delete row--select all', async ({ browser }) => {
     const { page } = await setupPage(browser, { url: storyUrl });
+    const table = new TableManager(page);
 
-    // Select all and delete.
-    await page.getByTestId('table-selection').nth(0).click();
-    await page.getByTestId('table-row-menu-button').nth(0).click();
-    await page.getByTestId('row-menu-delete').click();
+    await table.toggleSelectAll();
+    await table.deleteRow(0);
 
-    // Check that the first and last rows have been deleted.
     await expect(page.getByRole('gridcell', { name: 'Anita Mayer' })).toHaveCount(0);
     await expect(page.getByRole('gridcell', { name: 'Phonthip Sigurjónsson' })).toHaveCount(0);
-
-    // check that there are only x gridcells left
     await expect(page.getByRole('gridcell')).toHaveCount(6);
-
     await page.close();
   });
 
   test('delete column', async ({ browser }) => {
     const { page } = await setupPage(browser, { url: storyUrl });
+    const table = new TableManager(page);
 
-    // Delete name column.
-    await page.getByTestId('table-column-settings-button').nth(0).click();
-    await page.getByTestId('column-delete').click();
-
-    // (select, email, salary, manager, actions) * (header + 10 rows).
+    await table.deleteColumn(0);
     await expect(page.getByRole('gridcell')).toHaveCount(55);
 
-    // keep deleting columns until one remains
-    await page.getByTestId('table-column-settings-button').nth(0).click();
-    await page.getByTestId('column-delete').click();
+    await table.deleteColumn(0);
     await expect(page.getByRole('gridcell')).toHaveCount(44);
 
-    await page.getByTestId('table-column-settings-button').nth(0).click();
-    await page.getByTestId('column-delete').click();
+    await table.deleteColumn(0);
     await expect(page.getByRole('gridcell')).toHaveCount(33);
 
-    // Can't delete the final column.
     await page.getByTestId('table-column-settings-button').nth(0).click();
     await expect(page.getByTestId('column-delete')).toHaveCount(0);
-
     await page.close();
   });
 
+  // Rest of add column test remains the same as it's a more complex flow
   test('add column', async ({ browser }) => {
     const { page } = await setupPage(browser, { url: storyUrl });
-
+    const table = new TableManager(page);
     const newColumnLabel = 'TEST LABEL';
 
     await page.getByTestId('table-new-column-button').click();
@@ -109,15 +88,11 @@ test.describe('Table', () => {
     await page.getByPlaceholder('Property label.').fill(newColumnLabel);
     await page.getByRole('button', { name: 'button save' }).click();
 
-    // TODO(ZaymonFC): Talk with Will about a better way to circumvent table virtualization.
-    // Delete first two columns to get the new column into view.
-    await page.getByTestId('table-column-settings-button').nth(0).click();
-    await page.getByTestId('column-delete').click();
-    await page.getByTestId('table-column-settings-button').nth(0).click();
-    await page.getByTestId('column-delete').click();
+    // Delete first two columns to get the new column into view
+    await table.deleteColumn(0);
+    await table.deleteColumn(0);
 
     await expect(page.getByRole('gridcell', { name: newColumnLabel })).toBeVisible();
-
     await page.close();
   });
 });
