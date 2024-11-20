@@ -53,7 +53,7 @@ export const updateFieldNameInSchema = (
   );
 };
 
-export const updateTypenameInSchema = (schema: S.Schema<any>, typename: string): S.Schema<any> => {
+export const setTypenameInSchema = (schema: S.Schema<any>, typename: string): S.Schema<any> => {
   const existingAnnotation = schema.ast.annotations[ObjectAnnotationId] as ObjectAnnotation;
   invariant(existingAnnotation, `Missing ${String(ObjectAnnotationId)}`);
 

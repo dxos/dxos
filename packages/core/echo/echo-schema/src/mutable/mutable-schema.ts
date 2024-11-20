@@ -10,7 +10,7 @@ import {
   removeFieldsFromSchema,
   updateFieldNameInSchema,
   updateFieldsInSchema,
-  updateTypenameInSchema,
+  setTypenameInSchema,
 } from './manipulation';
 import { StoredSchema } from './types';
 import { type HasId, type JsonSchemaType, schemaVariance, type SchemaMeta, SchemaMetaSymbol } from '../ast';
@@ -128,7 +128,7 @@ export class MutableSchema extends MutableSchemaBase() implements S.Schema<any> 
   // TODO(burdon): Deprecate direct manipulation? Use JSONSchema directly.
 
   public updateTypename(typename: string) {
-    const updated = updateTypenameInSchema(this._getSchema(), typename);
+    const updated = setTypenameInSchema(this._getSchema(), typename);
     this._storedSchema.typename = typename;
     this._storedSchema.jsonSchema = toJsonSchema(updated);
   }
