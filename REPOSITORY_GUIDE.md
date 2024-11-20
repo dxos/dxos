@@ -96,7 +96,7 @@ Once the required changes have been made, re-run `pnpm i`.
 Run `pnpm up` to update dependencies from the root directory. For example:
 
 ```bash
-pnpm up --latest -i -r "@codemirror/*"
+pnpm up --latest -i -r "effect" "@effect/*"
 ```
 
 ## Tasks in `nx` targets

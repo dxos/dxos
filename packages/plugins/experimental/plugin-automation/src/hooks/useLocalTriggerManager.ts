@@ -28,7 +28,7 @@ export const useLocalTriggerManager = (space: Space) => {
       // Mark-and-sweep removing disabled triggers.
       await registerTriggersMutex.executeSynchronized(async () => {
         const deprecated = new Set(Array.from(registry.keys()));
-        log.info('triggers', {
+        log('triggers', {
           deprecated,
           all: triggers.map((t) => t.id),
           enabled: triggers.filter((t) => t.enabled).map((t) => t.id),
