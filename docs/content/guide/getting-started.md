@@ -107,8 +107,6 @@ onconnect = async (event) => {
 
 Components will automatically re-render when the data changes. Change the data by mutating it as any regular JavaScript object.
 
-For a step-by-step walkthrough, see the [react tutorial](./echo/tutorial.md).
-
 ## Usage in a browser
 
 DXOS recommends [Vite](https://vitejs.dev/) as the bundler. Vite requires a plugin in order to serve the WebAssembly modules.
