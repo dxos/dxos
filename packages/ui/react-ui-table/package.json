@@ -81,6 +81,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
     "@types/lodash.orderby": "^4.6.9",
     "@types/react": "~18.2.0",
