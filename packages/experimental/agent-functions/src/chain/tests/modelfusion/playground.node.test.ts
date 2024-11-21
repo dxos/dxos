@@ -19,8 +19,7 @@ import {
   zodSchema,
 } from 'modelfusion';
 import { describe, expect, test } from 'vitest';
-
-import { z } from '@dxos/plate';
+import { z } from 'zod';
 
 import { mistralMultiToolCallOptions, mistralMultiToolCallPromptTemplate } from './mistral';
 import { createChatTextGenerator, functionOptions } from './util';
