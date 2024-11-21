@@ -4,8 +4,12 @@
 
 import React from 'react';
 
+import { TriggerKind } from '@dxos/functions/src';
 import { FunctionTriggerSchema, type FunctionTriggerType, type FunctionTrigger } from '@dxos/functions/types';
+import { useTranslation } from '@dxos/react-ui';
 import { Form, SelectInput } from '@dxos/react-ui-form';
+
+import { AUTOMATION_PLUGIN } from '../../meta';
 
 export type TriggerEditorProps = {
   // space: Space;
@@ -13,7 +17,7 @@ export type TriggerEditorProps = {
 };
 
 export const TriggerEditor = ({ trigger }: TriggerEditorProps) => {
-  // const { t } = useTranslation(AUTOMATION_PLUGIN);
+  const { t } = useTranslation(AUTOMATION_PLUGIN);
   // const scripts = useQuery(space, Filter.schema(ScriptType));
   // const script = useMemo(() => scripts.find((script) => script.id === trigger.function), [trigger.function, scripts]);
 
@@ -73,9 +77,9 @@ export const TriggerEditor = ({ trigger }: TriggerEditorProps) => {
         ['spec.type' as const]: (props) => (
           <SelectInput<FunctionTriggerType>
             {...props}
-            options={['timer', 'subscription'].map((value) => ({
-              value,
-              label: value,
+            options={Object.values(TriggerKind).map((kind) => ({
+              value: kind,
+              label: t(`trigger type ${kind}`),
             }))}
           />
         ),

@@ -8,7 +8,7 @@ import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
 import { create } from '@dxos/echo-schema';
-import { FunctionDef, FunctionTrigger } from '@dxos/functions/types';
+import { FunctionDef, FunctionTrigger, TriggerKind } from '@dxos/functions/types';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -42,7 +42,7 @@ const Story = () => {
       return;
     }
 
-    const trigger = space.db.add(create(FunctionTrigger, { spec: { type: 'timer' } }));
+    const trigger = space.db.add(create(FunctionTrigger, { spec: { type: TriggerKind.Timer } }));
     setTrigger(trigger);
   }, [space, setTrigger]);
   if (!space || !trigger) {

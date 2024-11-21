@@ -9,7 +9,12 @@ import { AST, RawObject, S, TypedObject } from '@dxos/echo-schema';
  * Every spec has a type field of type TriggerKind that we can use to understand which type we're working with.
  * https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions
  */
-export type TriggerKind = 'timer' | 'webhook' | 'websocket' | 'subscription';
+export enum TriggerKind {
+  Timer = 'timer',
+  Webhook = 'webhook',
+  Websocket = 'websocket',
+  Subscription = 'subscription',
+}
 
 // TODO(burdon): Rename prop kind.
 const typeLiteralAnnotations = { [AST.TitleAnnotationId]: 'Type' };
@@ -18,7 +23,7 @@ const typeLiteralAnnotations = { [AST.TitleAnnotationId]: 'Type' };
  * Cron timer.
  */
 const TimerTriggerSchema = S.Struct({
-  type: S.Literal('timer').annotations(typeLiteralAnnotations),
+  type: S.Literal(TriggerKind.Timer).annotations(typeLiteralAnnotations),
   cron: S.optional(
     S.String.annotations({
       [AST.TitleAnnotationId]: 'Cron',
@@ -33,7 +38,7 @@ export type TimerTrigger = S.Schema.Type<typeof TimerTriggerSchema>;
  * Webhook.
  */
 const WebhookTriggerSchema = S.Struct({
-  type: S.Literal('webhook').annotations(typeLiteralAnnotations),
+  type: S.Literal(TriggerKind.Webhook).annotations(typeLiteralAnnotations),
   method: S.optional(S.String),
   // Assigned port.
   port: S.optional(S.Number),
@@ -46,7 +51,7 @@ export type WebhookTrigger = S.Schema.Type<typeof WebhookTriggerSchema>;
  * @deprecated
  */
 const WebsocketTriggerSchema = S.Struct({
-  type: S.Literal('websocket').annotations(typeLiteralAnnotations),
+  type: S.Literal(TriggerKind.Websocket).annotations(typeLiteralAnnotations),
   url: S.optional(S.String),
   init: S.optional(S.Record({ key: S.String, value: S.Any })),
 }).pipe(S.mutable);
@@ -63,7 +68,7 @@ const QuerySchema = S.Struct({
  * Subscription.
  */
 const SubscriptionTriggerSchema = S.Struct({
-  type: S.Literal('subscription').annotations(typeLiteralAnnotations),
+  type: S.Literal(TriggerKind.Subscription).annotations(typeLiteralAnnotations),
   // TODO(burdon): Define query DSL (from ECHO). Reconcile with Table.Query.
   filter: S.optional(QuerySchema),
   options: S.optional(

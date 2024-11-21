@@ -15,7 +15,7 @@ import { Scheduler, type SchedulerOptions } from './scheduler';
 import { FunctionRegistry } from '../function';
 import { createInitializedClients, TestType, triggerWebhook } from '../testing';
 import { TriggerRegistry } from '../trigger';
-import { type FunctionManifest } from '../types';
+import { TriggerKind, type FunctionManifest } from '../types';
 
 // TODO(burdon): Test we can add and remove triggers.
 describe('scheduler', () => {
@@ -55,7 +55,7 @@ describe('scheduler', () => {
           function: 'example.com/function/test',
           enabled: true,
           spec: {
-            type: 'timer',
+            type: TriggerKind.Timer,
             cron: '0/1 * * * * *', // Every 1s.
           },
         },
@@ -91,7 +91,7 @@ describe('scheduler', () => {
           function: 'example.com/function/test',
           enabled: true,
           spec: {
-            type: 'webhook',
+            type: TriggerKind.Webhook,
             method: 'GET',
           },
         },
@@ -127,7 +127,7 @@ describe('scheduler', () => {
           function: 'example.com/function/test',
           enabled: true,
           spec: {
-            type: 'websocket',
+            type: TriggerKind.Websocket,
             // url: 'https://hub.dxos.network/api/mailbox/test',
             url: `http://localhost:${port}`,
             init: {
@@ -174,7 +174,7 @@ describe('scheduler', () => {
           function: 'example.com/function/test',
           enabled: true,
           spec: {
-            type: 'subscription',
+            type: TriggerKind.Subscription,
             filter: { type: TestType.typename },
           },
         },
