@@ -129,7 +129,7 @@ export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
             onClick={() => dispatch({ action: SettingsAction.OPEN })}
           >
             <span className='sr-only'>{t('open settings label')}</span>
-            <GearSix className={mx(getSize(4), 'rotate-90')} />
+            <GearSix className={mx(getSize(5), 'rotate-90')} />
           </Button>
         </Tooltip.Trigger>
         <Tooltip.Portal>
