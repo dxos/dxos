@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps, Keyboard as KeyboardIcon, Info } from '@phosphor-icons/react';
 import React from 'react';
 
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
@@ -26,12 +25,8 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
     meta,
     ready: async () => {
       settings
-        .prop({ key: 'showHints', storageKey: 'show-hints', type: LocalStorageStore.bool({ allowUndefined: true }) })
-        .prop({
-          key: 'showWelcome',
-          storageKey: 'show-welcome',
-          type: LocalStorageStore.bool({ allowUndefined: true }),
-        });
+        .prop({ key: 'showHints', type: LocalStorageStore.bool({ allowUndefined: true }) })
+        .prop({ key: 'showWelcome', type: LocalStorageStore.bool({ allowUndefined: true }) });
     },
     provides: {
       context: ({ children }) => {
@@ -70,8 +65,7 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
                 },
                 properties: {
                   label: ['open help tour', { ns: HELP_PLUGIN }],
-                  icon: (props: IconProps) => <Info {...props} />,
-                  iconSymbol: 'ph--info--regular',
+                  icon: 'ph--info--regular',
                   keyBinding: {
                     macos: 'shift+meta+/',
                     // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.
@@ -95,8 +89,7 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
                 },
                 properties: {
                   label: ['open shortcuts label', { ns: HELP_PLUGIN }],
-                  icon: (props: IconProps) => <KeyboardIcon {...props} />,
-                  iconSymbol: 'ph--keyboard--regular',
+                  icon: 'ph--keyboard--regular',
                   keyBinding: {
                     macos: 'meta+ctrl+/',
                   },
@@ -110,9 +103,7 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
         component: ({ data, role }) => {
           switch (role) {
             case 'hints':
-              return settings.values.showHints ? (
-                <ShortcutsHints onClose={() => (settings.values.showHints = false)} />
-              ) : null;
+              return <ShortcutsHints />;
             case 'keyshortcuts':
               return <ShortcutsList />;
           }

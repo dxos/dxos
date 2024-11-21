@@ -1,23 +1,31 @@
 {
   "name": "@dxos/messaging",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "description": "Messaging",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": true,
   "exports": {
     ".": {
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "default": "./dist/lib/node/index.cjs"
-      },
-      "types": "./dist/types/src/index.d.ts"
+      "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./testing": {
+      "types": "./dist/types/src/testing/index.d.ts",
+      "browser": "./dist/lib/browser/testing/index.mjs",
+      "node": "./dist/lib/node-esm/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
-    "*": {}
+    "*": {
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
+    }
   },
   "files": [
     "dist",
@@ -25,7 +33,6 @@
     "README.md"
   ],
   "dependencies": {
-    "@bufbuild/protobuf": "^2.0.0",
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
@@ -42,11 +49,9 @@
     "ws": "^8.14.2"
   },
   "devDependencies": {
+    "@dxos/keyring": "workspace:*",
     "@dxos/signal": "workspace:*",
-    "@types/node": "^18.11.9",
-    "earljs": "~0.1.10",
-    "typescript": "^5.5.4",
-    "wait-for-expect": "^3.0.2"
+    "@dxos/test-utils": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

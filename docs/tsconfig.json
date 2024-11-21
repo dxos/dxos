@@ -1,5 +1,5 @@
 {
-  "extends": "../tsconfig.json",
+  "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "lib": [
       "DOM",
@@ -20,62 +20,7 @@
     "src",
     "vuepress.config.ts"
   ],
-  "references": [
-    {
-      "path": "../packages/common/async"
-    },
-    {
-      "path": "../packages/common/keys"
-    },
-    {
-      "path": "../packages/common/log"
-    },
-    {
-      "path": "../packages/core/echo/echo-schema"
-    },
-    {
-      "path": "../packages/core/echo/echo-signals"
-    },
-    {
-      "path": "../packages/core/protocols"
-    },
-    {
-      "path": "../packages/sdk/app-framework"
-    },
-    {
-      "path": "../packages/sdk/client"
-    },
-    {
-      "path": "../packages/sdk/client-protocol"
-    },
-    {
-      "path": "../packages/sdk/client-services"
-    },
-    {
-      "path": "../packages/sdk/config"
-    },
-    {
-      "path": "../packages/sdk/examples"
-    },
-    {
-      "path": "../packages/sdk/observability"
-    },
-    {
-      "path": "../packages/sdk/react-client"
-    },
-    {
-      "path": "../packages/sdk/shell"
-    },
-    {
-      "path": "../packages/ui/react-ui"
-    },
-    {
-      "path": "../packages/ui/react-ui-theme"
-    },
-    {
-      "path": "../tools/apidoc"
-    }
-  ],
+  "references": [],
   "ts-node": {
     "compilerOptions": {
       "allowJs": true

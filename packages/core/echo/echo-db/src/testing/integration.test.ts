@@ -2,24 +2,26 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
-import waitForExpect from 'wait-for-expect';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { MeshEchoReplicator } from '@dxos/echo-pipeline/light';
+import { MeshEchoReplicator } from '@dxos/echo-pipeline';
 import {
   brokenAutomergeReplicatorFactory,
   testAutomergeReplicatorFactory,
   TestReplicationNetwork,
 } from '@dxos/echo-pipeline/testing';
-import { create, Expando } from '@dxos/echo-schema';
+import { create, Expando, getObjectAnnotation, getSchema, S, TypedObject } from '@dxos/echo-schema';
 import { updateCounter } from '@dxos/echo-schema/testing';
-import { PublicKey } from '@dxos/keys';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
+import { DXN, PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
-import { describe, test } from '@dxos/test';
 import { deferAsync } from '@dxos/util';
 
 import { createDataAssertion, EchoTestBuilder } from './echo-test-builder';
+import { Filter } from '../query';
+
+registerSignalsRuntime();
 
 describe('Integration tests', () => {
   let builder: EchoTestBuilder;
@@ -125,7 +127,7 @@ describe('Integration tests', () => {
     await dataAssertion.verify(db2);
   });
 
-  test('references are loaded lazily nad receive signal notifications', async () => {
+  test('references are loaded lazily and receive signal notifications', async () => {
     const [spaceKey] = PublicKey.randomSequence();
     await using peer = await builder.createPeer();
 
@@ -310,13 +312,103 @@ describe('Integration tests', () => {
 
       await using db2 = await peer2.openDatabase(spaceKey, rootUrl);
 
-      await waitForExpect(async () => {
-        const state = await db2.coreDatabase.getSyncState();
+      await expect
+        .poll(async () => {
+          const state = await db2.coreDatabase.getSyncState();
+          return state.peers!.length;
+        })
+        .toBe(1);
 
-        expect(state.peers!.length).to.eq(1);
-        expect(state.peers![0].documentsToReconcile).to.eq(0);
-      });
+      await expect
+        .poll(async () => {
+          const state = await db2.coreDatabase.getSyncState();
+          return state.peers![0].differentDocuments + state.peers![0].missingOnRemote + state.peers![0].missingOnLocal;
+        })
+        .toEqual(0);
     }
+  });
+
+  test('replicate and load by id', async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using network = await new TestReplicationNetwork().open();
+
+    await using peer1 = await builder.createPeer();
+    await using peer2 = await builder.createPeer();
+    await peer1.host.addReplicator(await network.createReplicator());
+    await peer2.host.addReplicator(await network.createReplicator());
+
+    await using db1 = await peer1.createDatabase(spaceKey);
+    await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
+
+    const obj1 = db1.add(
+      create({
+        content: 'test',
+      }),
+    );
+    await db1.flush();
+    await expect.poll(() => db2.getObjectById(obj1.id)).not.toEqual(undefined);
+  });
+
+  describe('dynamic schema', () => {
+    test('query object with dynamic schema', async () => {
+      const [spaceKey] = PublicKey.randomSequence();
+      await using peer = await builder.createPeer();
+
+      let rootUrl: string, schemaDxn: string;
+      {
+        await using db = await peer.createDatabase(spaceKey);
+        rootUrl = db.rootUrl!;
+
+        class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+          field: S.String,
+        }) {}
+        const stored = db.schemaRegistry.addSchema(TestSchema);
+        schemaDxn = DXN.fromLocalObjectId(stored.id).toString();
+
+        const object = db.add(create(stored, { field: 'test' }));
+        expect(getSchema(object)).to.eq(stored);
+
+        db.add({ text: 'Expando object' }); // Add Expando object to test filtering
+        await db.flush({ indexes: true });
+      }
+
+      await peer.reload();
+      {
+        // Objects with stored schema get included in queries that select all objects..
+        await using db = await peer.openDatabase(spaceKey, rootUrl);
+        await db.schemaRegistry.query(); // Have to preload schema.
+        const { objects } = await db.query().run();
+        expect(objects.length).to.eq(3);
+      }
+
+      await peer.reload();
+      {
+        // Can query by stored schema DXN.
+        await using db = await peer.openDatabase(spaceKey, rootUrl);
+        await db.schemaRegistry.query(); // Have to preload schema.
+        const { objects } = await db.query(Filter.typeDXN(schemaDxn)).run();
+        expect(objects.length).to.eq(1);
+        expect(getObjectAnnotation(getSchema(objects[0])!)).to.include({
+          typename: 'example.com/type/Test',
+          version: '0.1.0',
+        });
+      }
+
+      await peer.reload();
+      {
+        // Can query by stored schema ref.
+        await using db = await peer.openDatabase(spaceKey, rootUrl);
+        await db.schemaRegistry.query(); // Have to preload schema.
+        const schema = db.schemaRegistry.getSchema('example.com/type/Test');
+
+        const { objects } = await db.query(Filter.schema(schema!)).run();
+        expect(objects.length).to.eq(1);
+        expect(getObjectAnnotation(getSchema(objects[0])!)).to.include({
+          typename: 'example.com/type/Test',
+          version: '0.1.0',
+        });
+      }
+    });
   });
 });
 
@@ -333,7 +425,7 @@ describe('load tests', () => {
 
   const NUM_OBJECTS = 100;
 
-  test('replication', async () => {
+  test('replication', { timeout: 20_000 }, async () => {
     const [spaceKey] = PublicKey.randomSequence();
     await using network = await new TestReplicationNetwork().open();
     const dataAssertion = createDataAssertion({ numObjects: NUM_OBJECTS });

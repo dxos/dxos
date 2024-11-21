@@ -5,12 +5,10 @@
 import React, { forwardRef, type FC } from 'react';
 
 import { Surface, parseMetadataResolverPlugin, useResolvePlugin } from '@dxos/app-framework';
-import { type EchoReactiveObject } from '@dxos/echo-schema';
-import { create } from '@dxos/echo-schema';
 import { DocumentType } from '@dxos/plugin-markdown/types';
-import { getSpace, isEchoObject } from '@dxos/react-client/echo';
+import { create, type EchoReactiveObject, getSpace, isEchoObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
-import type { MosaicDropEvent, MosaicOperation, MosaicTileAction, MosaicTileComponent } from '@dxos/react-ui-mosaic';
+import type { MosaicDropEvent, MosaicOperation, MosaicTileAction } from '@dxos/react-ui-mosaic';
 import {
   baseSurface,
   topbarBlockPaddingStart,
@@ -104,7 +102,8 @@ const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
   );
 };
 
-const GridCard: MosaicTileComponent<GridDataItem> = forwardRef(({ item, ...props }, forwardRef) => {
+// TODO(wittjosiah): Surface doesn't like this forwarded ref after being memoized.
+const GridCard = forwardRef<HTMLDivElement, any>(({ item, ...props }, forwardRef) => {
   const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
   const parseData = props.type && metadataPlugin?.provides.metadata.resolver(props.type)?.parse;
   const object = parseData ? parseData(item, 'view-object') : item;

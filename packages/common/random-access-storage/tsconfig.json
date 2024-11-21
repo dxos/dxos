@@ -1,11 +1,10 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "lib": [
       "DOM",
       "es2019"
     ],
-    "outDir": "dist/types",
     "skipLibCheck": true,
     "types": [
       "@dxos/typings",
@@ -20,30 +19,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../async"
-    },
-    {
-      "path": "../context"
-    },
-    {
-      "path": "../debug"
-    },
-    {
-      "path": "../invariant"
-    },
-    {
-      "path": "../log"
-    },
-    {
-      "path": "../node-std"
-    },
-    {
-      "path": "../tracing"
-    },
-    {
-      "path": "../util"
-    }
-  ]
+  "references": []
 }

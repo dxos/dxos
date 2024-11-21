@@ -16,14 +16,10 @@
       }
     },
     "lint": {},
-    "test": {
-      "options": {
-        "forceExit": true
-      }
-    }
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild",
-    "test"
+    "node-std"
   ]
 }

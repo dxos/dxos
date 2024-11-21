@@ -13,7 +13,7 @@ import { TaskListExample } from '../examples';
 import { NetworkToggle } from '../template/src/components';
 
 export default {
-  title: 'examples/DXOS',
+  title: 'sdk/examples/DXOS',
   decorators: [withTheme],
 };
 
@@ -26,7 +26,7 @@ export const TaskList = {
 // const editor = await setupPeersInSpace({
 //   count: 2,
 //   schema: types,
-//   onCreateSpace: (space) => {
+//   onSpaceCreated: ({ space }) => {
 //     space.db.add(new Document());
 //   },
 // });

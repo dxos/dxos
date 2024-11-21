@@ -2,14 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Browser, ConsoleMessage } from '@playwright/test';
-import { expect } from 'chai';
-import waitForExpect from 'wait-for-expect';
+import { expect, type Browser, type ConsoleMessage } from '@playwright/test';
 
 import { Trigger } from '@dxos/async';
 import { type Invitation } from '@dxos/react-client/invitations';
-import { ConnectionState } from '@dxos/react-client/mesh';
-import { setupPage } from '@dxos/test/playwright';
+import { setupPage } from '@dxos/test-utils/playwright';
 
 import { ScopedShellManager } from '../testing';
 
@@ -34,12 +31,12 @@ export class InvitationsManager extends ScopedShellManager {
     }
 
     const { page } = await setupPage(this._browser, {
-      url: storybookUrl('invitations--default'),
-      waitFor: (page) => page.getByTestId('invitations.identity-header').first().isVisible(),
+      url: storybookUrl('sdk-shell-invitations--default'),
     });
 
     this.page = page;
     this.page.on('console', (message) => this._onConsoleMessage(message));
+    await this.page.getByTestId('invitations.identity-header').first().waitFor({ state: 'visible' });
     this._initialized = true;
   }
 
@@ -58,9 +55,9 @@ export class InvitationsManager extends ScopedShellManager {
 
     try {
       await selector.waitFor({ timeout: 500 });
-      return ConnectionState.OFFLINE;
+      return 0;
     } catch {
-      return ConnectionState.ONLINE;
+      return 1;
     }
   }
 
@@ -119,9 +116,7 @@ export class InvitationsManager extends ScopedShellManager {
     const createIdentity = this.peer(id).getByTestId('invitations.create-identity');
     // TODO(wittjosiah): Clicking on buttons wrapped in tooltips is flaky in webkit playwright.
     await createIdentity.click();
-    await waitForExpect(async () => {
-      expect(await createIdentity.isDisabled()).to.be.true;
-    });
+    await expect(createIdentity).toBeDisabled();
   }
 
   async createSpace(id: number) {
@@ -134,7 +129,14 @@ export class InvitationsManager extends ScopedShellManager {
 
     if (!options) {
       const peer = this.peer(id);
-      await peer.getByTestId(`${type}s-panel.create-invitation`).click();
+      if (type === 'space') {
+        await peer.getByTestId('spaces-panel.create-invitation.more').click();
+        // NOTE: This is a popper portal.
+        await this.page.getByTestId('spaces-panel.invite-one').click();
+        await peer.getByTestId('spaces-panel.create-invitation').click();
+      } else {
+        await peer.getByTestId(`${type}s-panel.create-invitation`).click();
+      }
       return this._invitationCode.wait();
     }
 
@@ -148,7 +150,8 @@ export class InvitationsManager extends ScopedShellManager {
       },
       { id, type, options },
     );
-    return this._invitationCode.wait();
+
+    return this._invitationCode.wait({ timeout: 1_000 });
   }
 
   async acceptInvitation(id: number, type: 'device' | 'space', invitation: string) {

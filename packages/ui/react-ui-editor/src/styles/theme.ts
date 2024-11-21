@@ -71,9 +71,11 @@ export const defaultTheme: ThemeStyles = {
   /**
    * Gutters
    * NOTE: Gutters should have the same top margin as the content.
+   * NOTE: They can't be transparent since the content needs to scroll below.
    */
   '.cm-gutters': {
     background: 'var(--surface-bg)',
+    borderRight: 'none',
   },
   '.cm-gutter': {},
   '.cm-gutter.cm-lineNumbers .cm-gutterElement': {
@@ -95,7 +97,7 @@ export const defaultTheme: ThemeStyles = {
     paddingInline: 0,
   },
   '.cm-activeLine': {
-    background: 'var(--dx-hoverSurface)',
+    background: 'var(--dx-cmActiveLine)',
   },
 
   /**
@@ -160,7 +162,7 @@ export const defaultTheme: ThemeStyles = {
     marginLeft: '-3px',
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul': {
-    maxHeight: '20em !important',
+    maxHeight: '20em',
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > li': {},
   '.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected]': {},

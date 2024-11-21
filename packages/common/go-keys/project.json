@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "go-keys",
-  "sourceRoot": "packages/common/go-keys",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "go-test": {

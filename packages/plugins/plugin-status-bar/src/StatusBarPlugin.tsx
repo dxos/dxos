@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type PluginDefinition, type SurfaceProvides, type TranslationsProvides } from '@dxos/app-framework';
 
-import { StatusBarImpl } from './components';
+import { StatusBarPanel } from './components';
 import meta from './meta';
 import translations from './translations';
 
@@ -21,7 +21,7 @@ export const StatusBarPlugin = (): PluginDefinition<StatusBarPluginProvides> => 
         component: ({ role }) => {
           switch (role) {
             case 'status-bar': {
-              return <StatusBarImpl />;
+              return <StatusBarPanel />;
             }
           }
 

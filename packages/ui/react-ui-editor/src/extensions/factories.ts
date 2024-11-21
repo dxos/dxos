@@ -31,7 +31,8 @@ import { type HuePalette, hueTokens } from '@dxos/react-ui-theme';
 import { hexToHue, isNotFalsy } from '@dxos/util';
 
 import { automerge } from './automerge';
-import { awareness, SpaceAwarenessProvider } from './awareness';
+import { SpaceAwarenessProvider, awareness } from './awareness';
+import { focus } from './focus';
 import { type ThemeStyles, defaultTheme } from '../styles';
 
 //
@@ -52,6 +53,7 @@ export type BasicExtensionsOptions = {
   dropCursor?: boolean;
   drawSelection?: boolean;
   editable?: boolean;
+  focus?: boolean;
   highlightActiveLine?: boolean;
   history?: boolean;
   indentWithTab?: boolean;
@@ -72,6 +74,7 @@ const defaultBasicOptions: BasicExtensionsOptions = {
   closeBrackets: true,
   drawSelection: true,
   editable: true,
+  focus: true,
   history: true,
   keymap: 'standard',
   lineWrapping: true,
@@ -98,6 +101,7 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
     props.closeBrackets && closeBrackets(),
     props.dropCursor && dropCursor(),
     props.drawSelection && drawSelection({ cursorBlinkRate: 1_200 }),
+    props.focus && focus,
     props.highlightActiveLine && highlightActiveLine(),
     props.history && history(),
     props.lineNumbers && lineNumbers(),

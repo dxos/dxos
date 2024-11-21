@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps, Info } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-core';
 import React from 'react';
 
 import {
@@ -15,7 +13,6 @@ import {
   type TranslationsProvides,
   resolvePlugin,
   parseIntentPlugin,
-  parseNavigationPlugin,
   LayoutAction,
   SettingsAction,
   parsePluginHost,
@@ -33,7 +30,6 @@ import {
 } from '@dxos/observability';
 import type { EventOptions } from '@dxos/observability/segment';
 import { parseClientPlugin } from '@dxos/plugin-client';
-import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { ObservabilitySettings, type ObservabilitySettingsProps } from './components';
 import meta, { OBSERVABILITY_PLUGIN, ObservabilityAction, type UserFeedback } from './meta';
@@ -46,7 +42,7 @@ export type ObservabilityPluginState = {
 
 export type ObservabilityPluginProvides = IntentResolverProvides &
   SurfaceProvides &
-  SettingsProvides &
+  SettingsProvides<ObservabilitySettingsProps> &
   TranslationsProvides & {
     observability: ObservabilityPluginState;
   };
@@ -68,12 +64,10 @@ export const ObservabilityPlugin = (options: {
     initialize: async () => {
       settings.enabled = !(await isObservabilityDisabled(options.namespace));
       state.values.group = await getObservabilityGroup(options.namespace);
-
       state.prop({ key: 'notified', type: LocalStorageStore.bool({ allowUndefined: true }) });
     },
     ready: async (plugins) => {
       const pluginHost = resolvePlugin(plugins, parsePluginHost);
-      const navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
       const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
@@ -85,7 +79,7 @@ export const ObservabilityPlugin = (options: {
       const sendPrivacyNotice = async () => {
         const environment = clientPlugin?.provides?.client?.config?.values.runtime?.app?.env?.DX_ENVIRONMENT;
         const notify =
-          environment && environment !== 'circleci' && !environment.endsWith('.local') && !environment.endsWith('.lan');
+          environment && environment !== 'ci' && !environment.endsWith('.local') && !environment.endsWith('.lan');
         if (!state.values.notified && notify) {
           await dispatch({
             action: LayoutAction.SET_LAYOUT,
@@ -97,10 +91,7 @@ export const ObservabilityPlugin = (options: {
                 title: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast label'],
                 description: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast description'],
                 duration: Infinity,
-                icon: (props: IconProps) => (
-                  <Info className={mx(getSize(5), props.className)} weight='duotone' {...props} />
-                ),
-                iconSymbol: 'ph--info--duotone',
+                icon: 'ph--info--regular',
                 actionLabel: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast action label'],
                 actionAlt: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast action alt'],
                 closeLabel: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast close label'],
@@ -129,17 +120,6 @@ export const ObservabilityPlugin = (options: {
         if (!client) {
           return;
         }
-
-        subscriptions.add(
-          effect(() => {
-            // Read active to subscribe to changes.
-            const _ = navigationPlugin?.provides?.location?.active;
-
-            observability?.page({
-              identityId: getTelemetryIdentifier(client),
-            });
-          }),
-        );
 
         await dispatch({
           action: ObservabilityAction.SEND_EVENT,

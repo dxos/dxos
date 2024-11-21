@@ -1,207 +1,134 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
-// NOTE(thure): This unused import resolves the “likely not portable” TS error.
-// eslint-disable-next-line unused-imports/no-unused-imports
-import { type IconProps } from '@phosphor-icons/react';
-import React, { useEffect, useRef, useState } from 'react';
+import { type Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
+import { type Meta, type StoryObj } from '@storybook/react';
+import React, { useState, useCallback } from 'react';
 
 import { faker } from '@dxos/random';
-import { Mosaic, type MosaicDropEvent, type MosaicMoveEvent, type MosaicOperation, Path } from '@dxos/react-ui-mosaic';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/storybook-utils';
 
-import { type StackSectionContent, type StackSectionItem } from './Section';
-import { Stack, type StackProps } from './Stack';
-import { TestObjectGenerator } from '../testing';
+import { Stack } from './Stack';
+import { StackItem, type StackItemData } from './StackItem';
 
-faker.seed(3);
+type StoryStackItem = {
+  id: string;
+  title: string;
+  items?: StoryStackItem[];
+};
 
-const SimpleContent = ({ data }: { data: StackSectionContent & { title?: string } }) => (
-  <div className='p-4 text-center'>{data.title ?? data.id}</div>
-);
-
-const ComplexContent = ({
-  data,
-}: StackSectionItem & { data: StackSectionContent & { title?: string; body?: string; image?: string } }) => {
-  useEffect(() => () => console.log('[ComplexContent]', 'unmount'), []);
+const KanbanBlock = ({ item }: { item: StoryStackItem }) => {
   return (
-    <div className='flex'>
-      <div className='grow p-4'>
-        <h1>{data.title ?? data.id}</h1>
-        {data.body && <p>{data.body}</p>}
-      </div>
-      {data.image && <img src={data.image} />}
+    <div className='overflow-hidden'>
+      <p className='place-content-center p-4'>{item.title}</p>
     </div>
   );
 };
 
-export default {
-  title: 'react-ui-stack/Stack',
-  component: Stack,
-  decorators: [withTheme],
-  render: ({ debug, ...args }: DemoStackProps & { debug: boolean }) => {
-    return (
-      <Mosaic.Root debug={debug}>
-        <Mosaic.DragOverlay />
-        <DemoStack {...args} />
-      </Mosaic.Root>
-    );
-  },
-};
+const StorybookStack = () => {
+  const [columns, setColumns] = useState<StoryStackItem[]>(
+    faker.helpers.multiple(
+      () =>
+        ({
+          id: faker.string.uuid(),
+          title: faker.lorem.paragraph(),
+          items: faker.helpers.multiple(
+            () =>
+              ({
+                id: faker.string.uuid(),
+                title: faker.lorem.paragraph(),
+              }) satisfies StoryStackItem,
+            { count: { min: 32, max: 64 } },
+          ),
+        }) satisfies StoryStackItem,
+      { count: 8 },
+    ),
+  );
 
-export const Empty = {
-  args: {
-    SectionContent: SimpleContent,
-    count: 0,
-  },
-};
+  const reorderItem = useCallback((source: StackItemData, target: StackItemData, closestEdge: Edge | null) => {
+    setColumns((prevColumns) => {
+      const newColumns = [...prevColumns];
+      const sourceColumn = newColumns.find(
+        (col) => col.id === source.id || col.items?.some((card) => card.id === source.id),
+      );
+      const targetColumn = newColumns.find(
+        (col) => col.id === target.id || col.items?.some((card) => card.id === target.id),
+      );
 
-export const Simple = {
-  args: {
-    SectionContent: SimpleContent,
-    types: ['document'],
-    debug: true,
-  },
-};
+      if (sourceColumn && targetColumn) {
+        if (source.type === 'column' && target.type === 'column') {
+          // Reordering columns
+          const sourceIndex = newColumns.findIndex((col) => col.id === source.id);
+          const targetIndex = newColumns.findIndex((col) => col.id === target.id);
+          const [movedColumn] = newColumns.splice(sourceIndex, 1);
+          const insertIndex = closestEdge === 'right' ? targetIndex + 1 : targetIndex;
+          newColumns.splice(insertIndex, 0, movedColumn);
+        } else {
+          // Reordering cards within a column
+          const sourceCardIndex = sourceColumn.items?.findIndex((card) => card.id === source.id);
+          const targetCardIndex = targetColumn.items?.findIndex((card) => card.id === target.id);
+          if (
+            typeof sourceCardIndex === 'number' &&
+            typeof targetCardIndex === 'number' &&
+            sourceColumn.items &&
+            targetColumn.items
+          ) {
+            const [movedCard] = sourceColumn.items.splice(sourceCardIndex, 1);
 
-export const Complex = {
-  args: {
-    SectionContent: ComplexContent,
-    types: ['document', 'image'],
-    debug: true,
-  },
-};
-
-export const Transfer = {
-  args: {
-    SectionContent: SimpleContent,
-    types: ['document'],
-    count: 8,
-    className: 'w-[400px]',
-  },
-  render: ({ debug, ...args }: DemoStackProps & { debug: boolean }) => {
-    return (
-      <Mosaic.Root debug={debug}>
-        <Mosaic.DragOverlay />
-        <div className='flex grow justify-center p-4' data-testid='stack-transfer'>
-          <div className='grid grid-cols-2 gap-4'>
-            <DemoStack {...args} id='stack-1' />
-            <DemoStack {...args} id='stack-2' />
-          </div>
-        </div>
-      </Mosaic.Root>
-    );
-  },
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-};
-
-export const Copy = {
-  args: {
-    SectionContent: SimpleContent,
-    types: ['document'],
-    className: 'w-[400px]',
-  },
-  render: ({ debug, ...args }: DemoStackProps & { debug: boolean }) => {
-    return (
-      <Mosaic.Root debug={debug}>
-        <Mosaic.DragOverlay debug={debug} />
-        <div className='flex grow justify-center p-4' data-testid='stack-copy'>
-          <div className='grid grid-cols-2 gap-4'>
-            <DemoStack {...args} id='stack-1' />
-            <DemoStack {...args} id='stack-2' operation='copy' count={0} />
-          </div>
-        </div>
-      </Mosaic.Root>
-    );
-  },
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-};
-
-export type DemoStackProps = StackProps & {
-  types?: string[];
-  count?: number;
-  operation?: MosaicOperation;
-};
-
-const DemoStack = ({
-  id = 'stack',
-  SectionContent,
-  types,
-  count = 8,
-  operation = 'transfer',
-  classNames,
-}: DemoStackProps) => {
-  const [items, setItems] = useState<StackSectionItem[]>(() => {
-    const generator = new TestObjectGenerator({ types });
-    return generator.createObjects({ length: count }).map((object) => ({
-      id: faker.string.uuid(),
-      object,
-    }));
-  });
-
-  const itemsRef = useRef(items);
-
-  const handleOver = ({ active, over }: MosaicMoveEvent<number>) => {
-    if (operation === 'reject') {
-      return 'reject';
-    }
-
-    if (Path.parent(active.path) === Path.parent(over.path)) {
-      return 'rearrange';
-    }
-
-    // TODO(wittjosiah): Items is stale here for some inexplicable reason, so ref helps.
-    const exists = itemsRef.current.findIndex((item) => item.id === active.item.id) >= 0;
-
-    if (!exists) {
-      return operation;
-    } else {
-      return 'reject';
-    }
-  };
-
-  const handleDrop = ({ operation, active, over }: MosaicDropEvent<number>) => {
-    setItems((items) => {
-      if (
-        (active.path === Path.create(id, active.item.id) || active.path === id) &&
-        (operation !== 'copy' || over.path === Path.create(id, over.item.id) || over.path === id)
-      ) {
-        items.splice(active.position!, 1);
+            let insertIndex;
+            if (sourceColumn === targetColumn && sourceCardIndex < targetCardIndex) {
+              insertIndex = closestEdge === 'bottom' ? targetCardIndex : targetCardIndex - 1;
+            } else {
+              insertIndex = closestEdge === 'bottom' ? targetCardIndex + 1 : targetCardIndex;
+            }
+            targetColumn.items.splice(insertIndex, 0, movedCard);
+          }
+        }
       }
 
-      if (over.path === Path.create(id, over.item.id)) {
-        items.splice(over.position!, 0, active.item as StackSectionItem);
-      } else if (over.path === id) {
-        items.push(active.item as StackSectionItem);
-      }
-
-      const i = [...items];
-      itemsRef.current = i;
-      return i;
+      return newColumns;
     });
-  };
-
-  const handleRemove = (path: string) => {
-    setItems((items) => {
-      const newItems = items.filter((item) => item.id !== Path.last(path));
-      itemsRef.current = newItems;
-      return newItems;
-    });
-  };
+  }, []);
 
   return (
-    <Stack
-      id={id}
-      classNames={classNames}
-      data-testid={id}
-      SectionContent={SectionContent}
-      items={items}
-      onOver={handleOver}
-      onDrop={handleDrop}
-      onDeleteSection={handleRemove}
-    />
+    <main className='fixed inset-0'>
+      <Stack orientation='horizontal' size='contain'>
+        {columns.map((column) => (
+          <StackItem.Root key={column.id} item={column} onRearrange={reorderItem}>
+            <StackItem.Heading>
+              <StackItem.ResizeHandle />
+            </StackItem.Heading>
+            <Stack orientation='vertical' size='contain'>
+              {column.items?.map((card) => (
+                <StackItem.Root key={card.id} item={card} onRearrange={reorderItem}>
+                  <StackItem.Heading>
+                    <StackItem.ResizeHandle />
+                  </StackItem.Heading>
+                  <KanbanBlock item={card} />
+                </StackItem.Root>
+              ))}
+            </Stack>
+          </StackItem.Root>
+        ))}
+      </Stack>
+    </main>
   );
 };
+
+type Story = StoryObj<typeof StorybookStack>;
+
+export const Default: Story = {
+  args: {
+    orientation: 'horizontal',
+  },
+};
+
+const meta: Meta<typeof StorybookStack> = {
+  title: 'ui/react-ui-stack-next/Stack',
+  component: StorybookStack,
+  decorators: [withTheme],
+  argTypes: { orientation: { control: 'radio', options: ['horizontal', 'vertical'] } },
+};
+
+export default meta;

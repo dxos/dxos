@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-signals",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "description": "ECHO object reactivity integration with Preact Signals",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,33 +8,25 @@
   "author": "info@dxos.org",
   "sideEffects": true,
   "exports": {
-    ".": {
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "default": "./dist/lib/node/index.cjs"
-      },
-      "types": "./dist/types/src/index.d.ts"
-    },
     "./core": {
+      "types": "./dist/types/src/core.d.ts",
       "browser": "./dist/lib/browser/core.mjs",
-      "node": {
-        "default": "./dist/lib/node/core.cjs"
-      },
-      "types": "./dist/types/src/core.d.ts"
+      "node": "./dist/lib/node-esm/core.mjs"
+    },
+    ".": {
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./react": {
+      "types": "./dist/types/src/react.d.ts",
       "browser": "./dist/lib/browser/react.mjs",
-      "node": {
-        "default": "./dist/lib/node/react.cjs"
-      },
-      "types": "./dist/types/src/react.d.ts"
+      "node": "./dist/lib/node-esm/react.mjs"
     },
     "./runtime": {
+      "types": "./dist/types/src/runtime/index.d.ts",
       "browser": "./dist/lib/browser/runtime/index.mjs",
-      "node": {
-        "default": "./dist/lib/node/runtime/index.cjs"
-      },
-      "types": "./dist/types/src/runtime/index.d.ts"
+      "node": "./dist/lib/node-esm/runtime/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

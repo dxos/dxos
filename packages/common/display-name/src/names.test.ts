@@ -2,10 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from 'chai';
+import { expect, test } from 'vitest';
 
 import { PublicKey } from '@dxos/keys';
-import { test } from '@dxos/test';
 
 import { generateName } from './names';
 

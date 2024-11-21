@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { UpdateScheduler } from '@dxos/async';
+import { Event, UpdateScheduler } from '@dxos/async';
 import { next as A } from '@dxos/automerge/automerge';
 import {
   type DocumentId,
@@ -11,7 +11,7 @@ import {
   interpretAsDocumentId,
   type AnyDocumentId,
 } from '@dxos/automerge/automerge-repo';
-import { type Stream } from '@dxos/codec-protobuf';
+import { type Stream } from '@dxos/codec-protobuf/stream';
 import { LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
@@ -64,6 +64,8 @@ export class RepoProxy extends Resource {
 
   private _sendUpdatesJob?: UpdateScheduler = undefined;
 
+  readonly saveStateChanged = new Event<SaveStateChangedEvent>();
+
   constructor(
     private readonly _dataService: DataService,
     private readonly _spaceId: SpaceId,
@@ -87,6 +89,9 @@ export class RepoProxy extends Resource {
   }
 
   find<T>(id: AnyDocumentId): DocHandleProxy<T> {
+    if (typeof id !== 'string') {
+      throw new TypeError(`Invalid documentId ${id}`);
+    }
     const documentId = interpretAsDocumentId(id);
     const handle = this._getHandle<T>({
       documentId,
@@ -102,7 +107,7 @@ export class RepoProxy extends Resource {
   }
 
   async flush() {
-    await this._sendUpdatesJob!.runBlocking();
+    await this._sendUpdatesJob?.runBlocking();
   }
 
   protected override async _open() {
@@ -184,6 +189,7 @@ export class RepoProxy extends Resource {
     const onChange = () => {
       this._pendingUpdateIds.add(documentId);
       this._sendUpdatesJob!.trigger();
+      this._emitSaveStateEvent();
     };
     handle.on('change', onChange);
 
@@ -250,6 +256,7 @@ export class RepoProxy extends Resource {
           this._handles[documentId]._confirmSync();
         }
       }
+      this._emitSaveStateEvent();
     } catch (err) {
       // Restore the state of pending updates if the RPC call failed.
       createIds.forEach((id) => this._pendingCreateIds.add(id));
@@ -260,4 +267,13 @@ export class RepoProxy extends Resource {
       this._ctx.raise(err as Error);
     }
   }
+
+  private _emitSaveStateEvent() {
+    const unsavedDocuments = [...this._pendingCreateIds, ...this._pendingUpdateIds];
+    this.saveStateChanged.emit({ unsavedDocuments });
+  }
 }
+
+export type SaveStateChangedEvent = {
+  unsavedDocuments: DocumentId[];
+};

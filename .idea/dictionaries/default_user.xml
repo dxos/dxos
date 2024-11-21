@@ -11,6 +11,7 @@
       <w>hibernatable</w>
       <w>hoverable</w>
       <w>hyperformula</w>
+      <w>hyphenize</w>
       <w>libdatachannel</w>
       <w>longtask</w>
       <w>marijn</w>
@@ -19,11 +20,13 @@
       <w>orama</w>
       <w>personalizations</w>
       <w>rivière</w>
+      <w>searchlist</w>
       <w>sememes</w>
       <w>stashpad</w>
       <w>sublevel</w>
       <w>tlui</w>
       <w>treegrid</w>
+      <w>unsynced</w>
       <w>zhenyasav</w>
     </words>
   </dictionary>

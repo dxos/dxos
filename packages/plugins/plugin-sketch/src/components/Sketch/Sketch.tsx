@@ -1,12 +1,12 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
 import '@tldraw/tldraw/tldraw.css';
 
 import { getAssetUrls } from '@tldraw/assets/selfHosted';
 import { type TLEventInfo, type TLGridProps } from '@tldraw/editor';
-import { type Editor, Tldraw } from '@tldraw/tldraw';
+import { type Editor, Tldraw, DefaultToolbar, type TLUiAssetUrlOverrides } from '@tldraw/tldraw';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
@@ -20,8 +20,10 @@ import { useStoreAdapter } from '../../hooks';
 import { type SketchGridType, type DiagramType } from '../../types';
 import { handleSnap } from '../actions';
 import { CustomMenu, CustomStylePanel, DottedGrid, MeshGrid } from '../custom';
-
 import './theme.css';
+import { DefaultToolbarContent } from '../custom/CustomToolbar';
+
+const threadToolId = 'thread';
 
 const gridComponents: Record<SketchGridType, FC<TLGridProps>> = {
   mesh: MeshGrid,
@@ -36,6 +38,7 @@ export type SketchProps = ThemedClassName<{
   hideUi?: boolean;
   grid?: SketchGridType;
   assetsBaseUrl?: string | null;
+  onThreadCreate?: () => void;
 }>;
 
 export const Sketch = ({
@@ -47,6 +50,7 @@ export const Sketch = ({
   grid,
   classNames,
   assetsBaseUrl = '/assets/plugin-sketch',
+  onThreadCreate,
 }: SketchProps) => {
   const adapter = useStoreAdapter(sketch);
   const [editor, setEditor] = useState<Editor>();
@@ -70,25 +74,6 @@ export const Sketch = ({
       editor?.off('event', handleEvent);
     };
   }, [adapter, editor]);
-
-  // NOTE: Currently copying assets to composer-app public/assets/tldraw.
-  // https://tldraw.dev/installation#Self-hosting-static-assets
-  const assetUrls = useMemo(() => {
-    if (!assetsBaseUrl) {
-      return undefined;
-    }
-
-    return defaultsDeep(
-      {
-        // Change default draw font.
-        // TODO(burdon): Change icon to match font.
-        fonts: {
-          draw: `${assetsBaseUrl}/fonts/Montserrat-Regular.woff2`,
-        },
-      },
-      getAssetUrls({ baseUrl: assetsBaseUrl }),
-    );
-  }, [assetsBaseUrl]);
 
   // UI state.
   useEffect(() => {
@@ -131,10 +116,76 @@ export const Sketch = ({
     return () => subscription?.();
   }, [editor, adapter, width, height, autoZoom]);
 
+  // NOTE: Currently copying assets to composer-app public/assets/tldraw.
+  // https://tldraw.dev/installation#Self-hosting-static-assets
+  const assetUrls: TLUiAssetUrlOverrides = useMemo(() => {
+    if (!assetsBaseUrl) {
+      return undefined;
+    }
+
+    return defaultsDeep(
+      {
+        // Change default draw font.
+        // TODO(burdon): Change icon to match font.
+        fonts: { draw: `${assetsBaseUrl}/fonts/Montserrat-Regular.woff2` },
+        icons: {
+          'thread-icon': `${assetsBaseUrl}/icons/icon/chat-teardrop-text.svg`,
+        },
+      },
+      getAssetUrls({ baseUrl: assetsBaseUrl }),
+    );
+  }, [assetsBaseUrl]);
+
+  const overrides = useMemo(
+    () => ({
+      actions: (_editor: Editor, actions: any, _helpers: any) => ({
+        ...actions,
+        snap: {
+          id: 'snap',
+          label: 'Snap',
+          kbd: 's',
+          icon: 'horizontal-align-middle',
+          onSelect: () => {
+            void handleSnap(sketch);
+          },
+        },
+      }),
+      tools: (_editor: Editor, tools: any) => {
+        const newTools = { ...tools };
+        newTools[threadToolId] = {
+          id: threadToolId,
+          icon: 'thread-icon',
+          label: 'Comment', // TODO(Zan): Use translation lookup here.
+          onSelect: () => onThreadCreate?.(),
+        };
+        return newTools;
+      },
+    }),
+    [sketch, onThreadCreate],
+  );
+
+  const components = useMemo(
+    () => ({
+      DebugPanel: null,
+      Grid: gridComponents[grid ?? 'mesh'],
+      HelpMenu: null,
+      MenuPanel: CustomMenu,
+      NavigationPanel: null,
+      StylePanel: CustomStylePanel,
+      TopPanel: null,
+      ZoomMenu: null,
+      Toolbar: (props: any) => (
+        <DefaultToolbar {...props}>
+          <DefaultToolbarContent toolsToSplice={[{ toolId: 'thread', position: 8 }]} />
+        </DefaultToolbar>
+      ),
+    }),
+    [grid],
+  );
+
   if (!adapter.store) {
     return null;
   }
-
   return (
     <div
       role='none'
@@ -142,52 +193,16 @@ export const Sketch = ({
       style={{ visibility: ready ? 'visible' : 'hidden' }}
       className={mx('is-full bs-full', classNames)}
     >
-      {/* https://tldraw.dev/docs/user-interface */}
-      {/* NOTE: Key forces unmount; otherwise throws error. */}
       <Tldraw
-        // Setting the key forces re-rendering when the content changes.
         key={fullyQualifiedId(sketch)}
         store={adapter.store}
         hideUi={hideUi}
         inferDarkMode
         className='!outline-none'
-        // https://tldraw.dev/docs/assets
         maxAssetSize={1024 * 1024}
         assetUrls={assetUrls}
-        // https://tldraw.dev/examples/ui/action-overrides
-        overrides={{
-          actions: (_editor, actions, _helpers) => {
-            return {
-              ...actions,
-              snap: {
-                id: 'snap',
-                label: 'Snap',
-                kbd: 's',
-                icon: 'horizontal-align-middle',
-                onSelect: () => {
-                  void handleSnap(sketch);
-                },
-              },
-            };
-          },
-        }}
-        // tools={customTools}
-        // https://tldraw.dev/installation#Customize-the-default-components
-        components={{
-          DebugPanel: null,
-          Grid: gridComponents[grid ?? 'mesh'],
-          HelpMenu: null,
-          MenuPanel: CustomMenu,
-          NavigationPanel: null,
-          StylePanel: CustomStylePanel,
-          // Toolbar: CustomToolbar,
-          TopPanel: null,
-          ZoomMenu: null,
-        }}
-        // https://tldraw.dev/reference/editor/defaultTldrawOptions
-        // options={{
-        //   maxShapesPerPage: 500,
-        // }}
+        overrides={overrides}
+        components={components}
         onMount={setEditor}
       />
     </div>

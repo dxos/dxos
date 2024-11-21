@@ -1,5 +1,5 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "declarationDir": "dist/types",
     "types": [
@@ -10,15 +10,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../invariant"
-    },
-    {
-      "path": "../keys"
-    },
-    {
-      "path": "../node-std"
-    }
-  ]
+  "references": []
 }

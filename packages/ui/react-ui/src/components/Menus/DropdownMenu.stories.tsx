@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import React from 'react';
+import React, { useRef, useState } from 'react';
 
 import { DropdownMenu } from './DropdownMenu';
 import { withTheme } from '../../testing';
@@ -92,8 +92,9 @@ const StorybookDropdownMenu = () => {
 };
 
 export default {
-  title: 'react-ui/Dropdown menu',
-  component: StorybookDropdownMenu,
+  title: 'ui/react-ui-core/DropdownMenu',
+  component: DropdownMenu,
+  render: StorybookDropdownMenu,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
 };
@@ -102,5 +103,44 @@ export const Default = {
   args: {},
   parameters: {
     chromatic: { delay: 1600 },
+  },
+};
+
+export const VirtualTrigger = {
+  render: () => {
+    const [menuOpen, setMenuOpen] = useState(true);
+    const buttonRef = useRef<HTMLButtonElement | null>(null);
+    return (
+      <>
+        <Button onClick={() => setMenuOpen(true)} ref={buttonRef}>
+          Customise options
+        </Button>
+        <DropdownMenu.Root open={menuOpen} onOpenChange={setMenuOpen}>
+          <DropdownMenu.VirtualTrigger virtualRef={buttonRef} />
+          <DropdownMenu.Content sideOffset={4} collisionPadding={8}>
+            <DropdownMenu.Viewport>
+              <DropdownMenu.Item>
+                <span className='grow'>New Tab</span>
+                <span className='opacity-50'>⌘+T</span>
+              </DropdownMenu.Item>
+              <DropdownMenu.Item>
+                <span className='grow'>New Window</span>
+                <span className='opacity-50'>⌘+N</span>
+              </DropdownMenu.Item>
+              <DropdownMenu.Item disabled>
+                <span className='grow'>New Private Window</span>
+                <span className='opacity-50'>⇧+⌘+N</span>
+              </DropdownMenu.Item>
+
+              <DropdownMenu.Separator />
+
+              <DropdownMenu.GroupLabel>People</DropdownMenu.GroupLabel>
+            </DropdownMenu.Viewport>
+
+            <DropdownMenu.Arrow />
+          </DropdownMenu.Content>
+        </DropdownMenu.Root>
+      </>
+    );
   },
 };

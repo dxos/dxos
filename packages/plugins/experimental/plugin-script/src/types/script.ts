@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ref, S, TypedObject } from '@dxos/echo-schema';
+import { JsonSchemaType, ref, S, TypedObject } from '@dxos/echo-schema';
 import { TextType } from '@dxos/plugin-markdown/types';
 
 // TODO(burdon): Which is the outer type? I.e., in the navbar?
@@ -31,4 +31,5 @@ export class FunctionType extends TypedObject({ typename: 'dxos.org/type/Functio
   binding: S.optional(S.String),
   // Reference to a source script if it exists within ECHO.
   source: S.optional(ref(ScriptType)),
+  inputSchema: S.optional(JsonSchemaType),
 }) {}

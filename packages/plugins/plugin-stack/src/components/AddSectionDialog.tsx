@@ -6,19 +6,17 @@ import { FilePlus } from '@phosphor-icons/react';
 import React, { useCallback, useRef, useState } from 'react';
 
 import { usePlugin, useIntent, LayoutAction, useResolvePlugin, parseFileManagerPlugin } from '@dxos/app-framework';
-import { type EchoReactiveObject, create } from '@dxos/echo-schema';
+import { type EchoReactiveObject, create, getSpace } from '@dxos/client/echo';
 import { FileType } from '@dxos/plugin-ipfs/types';
 import { type CollectionType } from '@dxos/plugin-space/types';
-import { getSpace } from '@dxos/react-client/echo';
 import { Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Path } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
-import { type AddSectionPosition } from '@dxos/react-ui-stack';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { STACK_PLUGIN } from '../meta';
-import { StackViewType, type StackPluginProvides } from '../types';
+import { StackViewType, type StackPluginProvides, type AddSectionPosition } from '../types';
 
 type AddSectionDialogProps = { path?: string; position: AddSectionPosition; collection: CollectionType };
 

@@ -1,6 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import { DECK_PLUGIN } from './meta';
 
 export default [
@@ -8,15 +9,14 @@ export default [
     'en-US': {
       [DECK_PLUGIN]: {
         'main header label': 'Main header',
-        'open navigation sidebar label': 'Open navigation sidebar.',
-        'open complementary sidebar label': 'Open complementary sidebar.',
-        'open settings label': 'Show settings',
+        'open navigation sidebar label': 'Open navigation sidebar',
+        'open complementary sidebar label': 'Open complementary sidebar',
         'plugin error message': 'Content failed to render.',
         'content fallback message': 'Unsupported',
         'content fallback description':
           'No plugin had a response for the address you navigated to. Double-check the URL, and ensure you’ve enabled a plugin that supports the object.',
         'toggle fullscreen label': 'Toggle fullscreen',
-        'settings show footer label': 'Show footer (experimental)',
+        'settings show hints label': 'Show hints',
         'settings native redirect label': 'Enable native url redirect (experimental)',
         'settings custom slots': 'Theme option (experimental)',
         'settings new plank position start label': 'Start',
@@ -27,7 +27,6 @@ export default [
         'undo action label': 'Undo',
         'undo action alt': 'Undo previous action',
         'undo close label': 'Dismiss',
-        'open comments label': 'Open comments',
         'error fallback message': 'Unable to open this item',
         'plank heading fallback label': 'Untitled',
         'actions menu label': 'Options',
@@ -35,7 +34,14 @@ export default [
         'reload required message': 'Reload required.',
         'pending heading': 'Loading…',
         'insert plank label': 'Open',
-        'solo plank label': 'Solo',
+        'resize label': 'Drag to resize',
+        'pin start label': 'Pin to the left sidebar',
+        'pin end label': 'Pin to the right sidebar',
+        'increment start label': 'Move to the left',
+        'increment end label': 'Move to the right',
+        'solo plank label': 'Toggle solo mode',
+        'close label': 'Close',
+        'minify label': 'Minify',
         'settings overscroll label': 'Plank Overscrolling',
         'select overscroll placeholder': 'Select plank overscrolling behavior',
         'settings overscroll centering label': 'Centering',

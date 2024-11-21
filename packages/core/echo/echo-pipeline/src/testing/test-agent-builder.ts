@@ -8,8 +8,8 @@ import { type FeedStore } from '@dxos/feed-store';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
-import { MemoryTransportFactory, SwarmNetworkManager, createSimplePeerTransportFactory } from '@dxos/network-manager';
-import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
+import { MemoryTransportFactory, SwarmNetworkManager, createRtcTransportFactory } from '@dxos/network-manager';
+import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { StorageType, createStorage, type Storage } from '@dxos/random-access-storage';
@@ -36,7 +36,7 @@ export const WebsocketNetworkManagerProvider =
   () =>
     new SwarmNetworkManager({
       signalManager: new WebsocketSignalManager([{ server: signalUrl }]),
-      transportFactory: createSimplePeerTransportFactory(),
+      transportFactory: createRtcTransportFactory(),
     });
 
 export type TestAgentBuilderOptions = {
@@ -127,11 +127,23 @@ export class TestAgent {
     return this._spaces.get(spaceKey);
   }
 
+  private _networkManager?: SwarmNetworkManager;
+  get networkManager() {
+    if (this._networkManager) {
+      return this._networkManager;
+    }
+
+    this._networkManager = this._networkManagerProvider();
+    this._networkManager.setPeerInfo({ peerKey: this.deviceKey.toHex(), identityKey: this.identityKey.toHex() });
+
+    return this._networkManager;
+  }
+
   private _spaceManager?: SpaceManager;
   get spaceManager() {
     return (this._spaceManager ??= new SpaceManager({
       feedStore: this.feedStore,
-      networkManager: this._networkManagerProvider(),
+      networkManager: this.networkManager,
       metadataStore: this.metadataStore,
       blobStore: this.blobStore,
     }));
@@ -205,7 +217,7 @@ export class TestAgent {
         credentialProvider: MOCK_AUTH_PROVIDER,
         credentialAuthenticator: MOCK_AUTH_VERIFIER,
       },
-      networkManager: this._networkManagerProvider(),
+      networkManager: this.networkManager,
       blobStore: this.blobStore,
       onSessionAuth: (session) => {
         session.addExtension(

@@ -11,20 +11,16 @@ export class StackManager {
     this._page = locator.page();
   }
 
-  empty() {
-    return this.locator.getByTestId('stack.empty');
-  }
-
   sections() {
-    return this.locator.locator('li');
+    return this.locator.locator('section');
   }
 
   order() {
-    return this.locator.locator('li').evaluateAll((els) => els.map((el) => el.getAttribute('id')));
+    return this.locator.locator('section').evaluateAll((els) => els.map((el) => el.getAttribute('id')));
   }
 
   section(index: number) {
-    return new SectionManager(this.locator.locator('li').nth(index));
+    return new SectionManager(this.locator.locator('section').nth(index));
   }
 }
 

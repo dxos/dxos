@@ -13,6 +13,7 @@ import {
   Power,
   Robot,
   Database,
+  FirstAidKit,
 } from '@phosphor-icons/react';
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
@@ -28,7 +29,6 @@ import {
   useTranslation,
   DropdownMenu,
   Button,
-  Tooltip,
 } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 import { keyToFallback } from '@dxos/util';
@@ -53,10 +53,11 @@ export const DeviceListItem = forwardRef<
       onClickAdd,
       onClickEdit,
       onClickReset,
+      onClickRecover,
       onClickJoinExisting,
       classNames,
       connectionState,
-      onAgentDestroy,
+      onAgentDestroy: _,
       ...props
     },
     forwardedRef,
@@ -109,7 +110,8 @@ export const DeviceListItem = forwardRef<
           </Avatar.Frame>
           <Avatar.Label classNames='flex-1 text-sm truncate'>{displayName}</Avatar.Label>
           {isCurrent && <Tag color='primary'>{t('current device tag label')}</Tag>}
-          {device.profile?.type === DeviceType.AGENT_MANAGED ? (
+          {/* TODO(wittjosiah): EDGE agents cannot current be turned off. */}
+          {/* {device.profile?.type === DeviceType.AGENT_MANAGED && (
             <Tooltip.Root>
               <Tooltip.Trigger asChild>
                 <Button
@@ -128,40 +130,42 @@ export const DeviceListItem = forwardRef<
                 </Tooltip.Content>
               </Tooltip.Portal>
             </Tooltip.Root>
-          ) : (
-            device.kind === DeviceKind.CURRENT && (
-              <DropdownMenu.Root>
-                <DropdownMenu.Trigger asChild>
-                  <Button
-                    variant='ghost'
-                    classNames='pli-0 is-[--rail-action] bs-[--rail-action]'
-                    data-testid={`device-list-item${isCurrent ? '-current' : ''}.options`}
-                  >
-                    <span className='sr-only'>{t('more options label')}</span>
-                    <DotsThree className={getSize(5)} />
-                  </Button>
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Content>
-                  <DropdownMenu.Viewport>
-                    {/* <DropdownMenu.Item disabled onClick={onClickEdit}> */}
-                    {/*  <PencilSimpleLine className={getSize(5)} /> */}
-                    {/*  {t('edit device label')} */}
-                    {/* </DropdownMenu.Item> */}
-                    <DropdownMenu.Item
-                      data-testid='device-list-item-current.join-existing'
-                      onClick={onClickJoinExisting}
-                    >
-                      <ShareFat className={getSize(5)} />
-                      {t('choose join new identity label')}
+          )} */}
+          {device.kind === DeviceKind.CURRENT && (
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <Button
+                  variant='ghost'
+                  classNames='pli-0 is-[--rail-action] bs-[--rail-action]'
+                  data-testid={`device-list-item${isCurrent ? '-current' : ''}.options`}
+                >
+                  <span className='sr-only'>{t('more options label')}</span>
+                  <DotsThree className={getSize(5)} />
+                </Button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content>
+                <DropdownMenu.Viewport>
+                  {/* <DropdownMenu.Item disabled onClick={onClickEdit}> */}
+                  {/*  <PencilSimpleLine className={getSize(5)} /> */}
+                  {/*  {t('edit device label')} */}
+                  {/* </DropdownMenu.Item> */}
+                  <DropdownMenu.Item data-testid='device-list-item-current.join-existing' onClick={onClickJoinExisting}>
+                    <ShareFat className={getSize(5)} />
+                    {t('choose join new identity label')}
+                  </DropdownMenu.Item>
+                  {onClickRecover && (
+                    <DropdownMenu.Item data-testid='device-list-item-current.recover' onClick={onClickRecover}>
+                      <FirstAidKit className={getSize(5)} />
+                      {t('choose recover identity label')}
                     </DropdownMenu.Item>
-                    <DropdownMenu.Item data-testid='device-list-item-current.reset' onClick={onClickReset}>
-                      <Power className={getSize(5)} />
-                      {t('reset device label')}
-                    </DropdownMenu.Item>
-                  </DropdownMenu.Viewport>
-                </DropdownMenu.Content>
-              </DropdownMenu.Root>
-            )
+                  )}
+                  <DropdownMenu.Item data-testid='device-list-item-current.reset' onClick={onClickReset}>
+                    <Power className={getSize(5)} />
+                    {t('reset device label')}
+                  </DropdownMenu.Item>
+                </DropdownMenu.Viewport>
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
           )}
         </Avatar.Root>
       </ListItem.Root>

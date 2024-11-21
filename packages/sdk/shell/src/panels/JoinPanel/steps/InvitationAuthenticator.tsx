@@ -4,7 +4,9 @@
 
 import React, { type ChangeEvent, useState } from 'react';
 
+import { Invitation } from '@dxos/react-client/invitations';
 import { Input, useTranslation } from '@dxos/react-ui';
+import { descriptionText } from '@dxos/react-ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
 import { Actions, Action, Emoji, StepHeading, Label } from '../../../components';
@@ -14,6 +16,7 @@ const pinLength = 6;
 
 export interface InvitationAuthenticatorProps extends JoinStepProps {
   Kind: 'Space' | 'Halo';
+  authMethod?: Invitation.AuthMethod;
   failed?: boolean;
   pending?: boolean;
   invitationId?: string;
@@ -24,6 +27,7 @@ export interface InvitationAuthenticatorProps extends JoinStepProps {
 export const InvitationAuthenticator = ({
   failed,
   Kind,
+  authMethod,
   active,
   pending,
   invitationId,
@@ -51,22 +55,31 @@ export const InvitationAuthenticator = ({
           })}
         >
           <Input.Label asChild>
-            <StepHeading>{t('auth code input label')}</StepHeading>
+            {authMethod === Invitation.AuthMethod.SHARED_SECRET ? (
+              <StepHeading>{t('auth code input label')}</StepHeading>
+            ) : (
+              <>
+                <StepHeading className={descriptionText}>{t('authenticating label')}</StepHeading>
+                <div role='none' className='grow' />
+              </>
+            )}
           </Input.Label>
-          <Input.PinInput
-            {...{
-              disabled,
-              length: pinLength,
-              onChange,
-              inputMode: 'numeric',
-              autoComplete: 'off',
-              pattern: '\\d*',
-              'data-autofocus': `connecting${Kind}Invitation inputting${Kind}VerificationCode authenticationFailing${Kind}VerificationCode authenticating${Kind}VerificationCode`,
-              'data-prevent-ios-autofocus': true,
-              'data-testid': `${invitationType}-auth-code-input`,
-              'data-1p-ignore': true,
-            }}
-          />
+          {authMethod === Invitation.AuthMethod.SHARED_SECRET && (
+            <Input.PinInput
+              {...{
+                disabled,
+                length: pinLength,
+                onChange,
+                inputMode: 'numeric',
+                autoComplete: 'off',
+                pattern: '\\d*',
+                'data-autofocus': `connecting${Kind}Invitation inputting${Kind}VerificationCode authenticationFailing${Kind}VerificationCode authenticating${Kind}VerificationCode`,
+                'data-prevent-ios-autofocus': true,
+                'data-testid': `${invitationType}-auth-code-input`,
+                'data-1p-ignore': true,
+              }}
+            />
+          )}
           {failed && (
             <Input.DescriptionAndValidation classNames='text-center'>
               <Input.Validation>{t('failed to authenticate message')}</Input.Validation>
@@ -74,7 +87,7 @@ export const InvitationAuthenticator = ({
           )}
         </Input.Root>
 
-        {invitationId && (
+        {invitationId && authMethod === Invitation.AuthMethod.SHARED_SECRET && (
           <>
             <Label>{t('auth other device emoji message')}</Label>
             <div className='flex justify-center'>

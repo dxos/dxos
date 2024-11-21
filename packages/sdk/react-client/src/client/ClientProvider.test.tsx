@@ -2,14 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-import { renderHook, screen, render, act } from '@testing-library/react';
-import expect from 'expect';
+import { renderHook, screen, render, act, cleanup } from '@testing-library/react';
 import React, { Component, type PropsWithChildren } from 'react';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
 import { Client, Config, SystemStatus, fromHost } from '@dxos/client';
 import { log } from '@dxos/log';
-import { describe, test } from '@dxos/test';
 
 import { ClientProvider } from './ClientProvider';
 import { useClient } from './useClient';
@@ -97,6 +96,10 @@ describe('ClientProvider', () => {
     await client.halo.createIdentity({ displayName: 'test-user' });
   });
 
+  afterEach(() => {
+    cleanup();
+  });
+
   test('Renders with children', async () => {
     render(
       <ClientProvider client={client}>
@@ -148,7 +151,7 @@ describe('ClientProvider', () => {
 
     await act(async () => {
       await waitForCondition({
-        condition: () => newClient.status.get() === SystemStatus.ACTIVE && !client.initialized,
+        condition: () => !client.initialized && newClient.status.get() === SystemStatus.ACTIVE,
       });
     });
     expect(client.initialized).toBe(false);

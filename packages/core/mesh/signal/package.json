@@ -1,18 +1,17 @@
 {
   "name": "@dxos/signal",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "description": "DXOS signal server.",
   "homepage": "https://github.com/dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-replicator#readme",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": true,
   "exports": {
     ".": {
-      "node": {
-        "default": "./dist/lib/node/index.cjs"
-      },
-      "types": "./dist/types/src/index.d.ts"
+      "types": "./dist/types/src/index.d.ts",
+      "node": "./dist/lib/node-esm/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -23,13 +22,12 @@
     "@dxos/async": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
+    "find-process": "^1.4.7",
     "node-fetch": "^2.6.0",
     "pkg-up": "^3.1.0"
   },
   "devDependencies": {
-    "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@types/node": "^18.11.9",
     "@types/node-fetch": "^2.5.10"
   },
   "publishConfig": {

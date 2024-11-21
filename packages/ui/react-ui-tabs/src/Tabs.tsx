@@ -58,10 +58,13 @@ const TabsRoot = ({
     defaultProp: defaultValue,
   });
 
-  const handleValueChange = useCallback((nextValue: string) => {
-    setActivePart('panel');
-    setValue(nextValue);
-  }, []);
+  const handleValueChange = useCallback(
+    (nextValue: string) => {
+      setActivePart('panel');
+      setValue(nextValue);
+    },
+    [value],
+  );
 
   const { findFirstFocusable } = useFocusFinders();
 
@@ -104,8 +107,10 @@ const TabsViewport = ({ classNames, children, ...props }: TabsViewportProps) => 
       {...props}
       data-active={activePart}
       className={mx(
-        orientation === 'vertical' &&
-          'grid is-[200%] grid-cols-2 data-[active=panel]:mis-[-100%] @md:is-auto @md:data-[active=panel]:mis-0 @md:grid-cols-[minmax(min-content,1fr)_3fr] @md:gap-1',
+        orientation === 'vertical' && [
+          'grid is-[200%] grid-cols-2 data-[active=panel]:mis-[-100%]',
+          '@md:is-auto @md:data-[active=panel]:mis-0 @md:grid-cols-[minmax(min-content,1fr)_3fr] @md:gap-1',
+        ],
         classNames,
       )}
     >
@@ -136,6 +141,7 @@ const TabsBackButton = ({ onClick, classNames, ...props }: ButtonProps) => {
     },
     [onClick, setActivePart],
   );
+
   return <Button {...props} classNames={['is-full text-start @md:hidden mbe-2', classNames]} onClick={handleClick} />;
 };
 
@@ -143,7 +149,7 @@ type TabsTabGroupHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'h2'>>;
 
 const TabsTabGroupHeading = ({ children, classNames, ...props }: ThemedClassName<TabsTabGroupHeadingProps>) => {
   return (
-    <h2 {...props} className={mx('mlb-1 pli-2 text-sm fg-unAccent', classNames)}>
+    <h2 {...props} className={mx('mlb-1 pli-2 text-sm text-unAccent', classNames)}>
       {children}
     </h2>
   );
@@ -153,14 +159,15 @@ type TabsTabProps = ButtonProps & Pick<TabsPrimitive.TabsTriggerProps, 'value'>;
 
 const TabsTab = ({ value, classNames, children, onClick, ...props }: TabsTabProps) => {
   const { setActivePart } = useTabsContext('TabsTab');
-  // NOTE: this handler is only called if the tab is *already active*.
   const handleClick = useCallback(
+    // NOTE: this handler is only called if the tab is *already active*.
     (event: MouseEvent<HTMLButtonElement>) => {
       setActivePart('panel');
       onClick?.(event);
     },
     [setActivePart, onClick],
   );
+
   return (
     <TabsPrimitive.Trigger value={value} asChild>
       <Button

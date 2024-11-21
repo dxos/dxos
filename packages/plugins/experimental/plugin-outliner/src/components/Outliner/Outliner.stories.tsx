@@ -8,7 +8,6 @@ import React, { useState } from 'react';
 
 import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
-import { DensityProvider } from '@dxos/react-ui';
 import { attentionSurface } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -17,7 +16,7 @@ import { TreeItemType } from '../../types';
 
 faker.seed(100);
 
-const Story = ({
+const DefaultStory = ({
   isTasklist,
   count = 1,
   data,
@@ -62,27 +61,15 @@ const Story = ({
   const handleDelete = () => {};
 
   return (
-    <DensityProvider density='fine'>
-      <Outliner.Root
-        className={attentionSurface}
-        root={root}
-        placeholder='Enter text...'
-        onCreate={handleCreate}
-        onDelete={handleDelete}
-        isTasklist={isTasklist}
-      />
-    </DensityProvider>
+    <Outliner.Root
+      className={attentionSurface}
+      root={root}
+      placeholder='Enter text...'
+      onCreate={handleCreate}
+      onDelete={handleDelete}
+      isTasklist={isTasklist}
+    />
   );
-};
-
-export default {
-  title: 'plugin-outliner/Outliner',
-  component: Outliner,
-  decorators: [withTheme],
-  render: Story,
-  parameters: {
-    layout: 'fullscreen',
-  },
 };
 
 export const Empty = {};
@@ -108,3 +95,14 @@ export const Checkbox = {
     isTasklist: true,
   },
 };
+
+const meta = {
+  title: 'plugins/plugin-outliner/Outliner',
+  render: DefaultStory,
+  decorators: [withTheme],
+  parameters: {
+    layout: 'fullscreen',
+  },
+};
+
+export default meta;

@@ -10,7 +10,7 @@ import { CircularBuffer, getDebugName } from '@dxos/util';
 
 import { withScope, captureException, captureMessage } from './node';
 
-const MAX_LOG_BREADCRUMBS = 80;
+const MAX_LOG_BREADCRUMBS = 150;
 
 export class SentryLogProcessor {
   private _breadcrumbs = new CircularBuffer<Breadcrumb>(MAX_LOG_BREADCRUMBS);
@@ -19,6 +19,9 @@ export class SentryLogProcessor {
     const { level, meta, error } = entry;
     // Don't forward logs from remote sessions.
     if (!shouldLog(entry, config.captureFilters) || meta?.S?.remoteSessionId) {
+      if (entry.level > LogLevel.DEBUG) {
+        this._addBreadcrumb(undefined, entry.message, convertLevel(entry.level), undefined);
+      }
       return;
     }
     if (entry.level !== LogLevel.WARN && entry.level !== LogLevel.ERROR) {
@@ -82,7 +85,7 @@ export class SentryLogProcessor {
   }
 
   private _addBreadcrumb(
-    eventId: string,
+    eventId: string | undefined,
     message: string,
     severity: SeverityLevel,
     context: { [key: string]: any } | undefined,

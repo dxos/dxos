@@ -12,7 +12,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
 import { initializeAppObservability } from '@dxos/observability';
 import { type Client, ClientProvider, Config, Defaults } from '@dxos/react-client';
-import { DensityProvider, type ThemeMode, ThemeProvider } from '@dxos/react-ui';
+import { type ThemeMode, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
@@ -30,7 +30,7 @@ void initializeAppObservability({
 
 const router = createBrowserRouter([
   {
-    path: '/',
+    path: '*',
     errorElement: <Error />,
     element: (
       <AppContainer>
@@ -60,12 +60,9 @@ const useThemeWatcher = () => {
 
 const App = withProfiler(() => {
   const themeMode = useThemeWatcher();
-
   return (
     <ThemeProvider tx={defaultTx} themeMode={themeMode} resourceExtensions={translations}>
-      <DensityProvider density='fine'>
-        <RouterProvider router={router} />
-      </DensityProvider>
+      <RouterProvider router={router} />
     </ThemeProvider>
   );
 });
@@ -104,7 +101,7 @@ const main = async () => {
     }
 
     client.addTypes([ItemType, DocumentType]);
-    await client.spaces.isReady.wait();
+    await client.spaces.waitUntilReady();
   };
 
   const root = createRoot(document.getElementById('root')!);

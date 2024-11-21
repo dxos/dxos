@@ -20,7 +20,7 @@ import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { inspectObject, raise } from '@dxos/debug';
 import { EchoClient } from '@dxos/echo-db';
-import { getEchoObjectTypename, type S } from '@dxos/echo-schema';
+import { getTypename, type S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -36,17 +36,17 @@ import { type MeshProxy } from '../mesh/mesh-proxy';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
 
-// TODO(burdon): Reconcile with ClientContextProps.
 /**
  * This options object configures the DXOS Client.
  */
+// TODO(burdon): Reconcile with ClientProviderProps.
 export type ClientOptions = {
   /** Client configuration object. */
   config?: Config;
   /** Custom services provider. */
   services?: MaybePromise<ClientServicesProvider>;
-  /** Custom model factory. @deprecated */
-  modelFactory?: any;
+  /** ECHO schema. */
+  types?: S.Schema<any>[];
   /** Shell path. */
   shell?: string;
   /** Create client worker. */
@@ -106,6 +106,7 @@ export class Client {
       typeof window !== 'undefined' &&
       typeof window.location !== 'undefined' &&
       window.location.protocol !== 'https:' &&
+      window.location.protocol !== 'chrome-extension:' &&
       window.location.protocol !== 'socket:' &&
       !window.location.hostname.endsWith('localhost')
     ) {
@@ -124,6 +125,9 @@ export class Client {
     }
 
     this._echoClient.graph.schemaRegistry.addSchema([PropertiesType]);
+    if (options.types) {
+      this.addTypes(options.types);
+    }
   }
 
   [inspect.custom]() {
@@ -221,7 +225,7 @@ export class Client {
    */
   // TODO(burdon): Check if already registered (and remove downstream checks).
   addTypes(types: S.Schema<any>[]) {
-    log('addTypes', { schema: types.map((type) => getEchoObjectTypename(type)) });
+    log('addTypes', { schema: types.map((type) => getTypename(type)) });
 
     // TODO(dmaretskyi): Uncomment after release.
     // if (!this._initialized) {
@@ -492,6 +496,9 @@ export class Client {
 
   /**
    * Resets and destroys client storage.
+   *
+   * This will currently leave the client in a closed state.
+   * Re-using the client after reset is not currently supported.
    */
   @synchronized
   async reset() {
@@ -504,8 +511,9 @@ export class Client {
     invariant(this._services?.services.SystemService, 'SystemService is not available.');
     await this._services?.services.SystemService.reset();
     await this._close();
-    await this._open();
-    this._resetting = false;
+    // TODO(wittjosiah): Re-open after reset.
+    // await this._open();
+    // this._resetting = false;
     this.reloaded.emit();
     log('reset complete');
   }

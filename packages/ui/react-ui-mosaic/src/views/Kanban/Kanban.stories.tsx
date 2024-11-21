@@ -17,7 +17,7 @@ import { ComplexCard, SimpleCard } from '../../testing';
 faker.seed(3);
 
 export default {
-  title: 'react-ui-mosaic/Kanban',
+  title: 'ui/react-ui-mosaic/Kanban',
   component: Kanban,
   render: (args: DemoKanbanProps) => {
     return (

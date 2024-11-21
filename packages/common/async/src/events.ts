@@ -43,7 +43,7 @@ export type ListenerOptions = {
 };
 
 /**
- * An EventEmitter variant that does not do event multiplexing and respresents a single event.
+ * An EventEmitter variant that does not do event multiplexing and represents a single event.
  *
  * ## Typical usage:
  * ```javascript
@@ -65,7 +65,7 @@ export type ListenerOptions = {
  * ## Advantages over traditional EventEmitter:
  * 1. User describes explicitly what events a class has as they are defined as class fields.
  * 2. User can explicitly define event visibility (public, protected, private).
- * 3. Havings events as class fields allows the compiler to check for correct event usage.
+ * 3. Having events as class fields allows the compiler to check for correct event usage.
  * 4. User can type the data that event will be emitting.
  * 5. Uses composition instead of inheritance.
  * 6. Removes the cases where event names intersect when used in cases with inheritance.
@@ -73,6 +73,9 @@ export type ListenerOptions = {
  */
 // TODO(burdon): Rename EventSink? (Event is a built-in type).
 export class Event<T = void> implements ReadOnlyEvent<T> {
+  /**
+   * Wrap objects that have on/off style event emitters.
+   */
   static wrap<T>(emitter: EventEmitterLike, eventName: string): Event<T> {
     const event = new Event<T>();
 
@@ -259,7 +262,7 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    * If event is emitted for the first time or event wasn't fired for `timeout` milliseconds,
    * the event is emitted after `timeout / 8` ms.
    */
-  // TODO(burdon): Provide function.
+  // TODO(burdon): Factor out generic function.
   debounce(timeout = 0) {
     let firing: NodeJS.Timeout | undefined;
     let lastFired: number | undefined;
@@ -343,13 +346,15 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
  */
 export interface ReadOnlyEvent<T = void> {
   /**
-   * Registers an event listener.
+   * Register an event listener.
    * If provided callback was already registered as once-listener, it is made permanent.
    *
    * @param callback
+   * @param options.weak If true, the callback will be weakly referenced and will be garbage collected if no other references to it exist.
    * @returns function that unsubscribes this event listener
    */
   on(callback: (data: T) => void): UnsubscribeCallback;
+  on(ctx: Context, callback: (data: T) => void, options?: ListenerOptions): UnsubscribeCallback;
 
   /**
    * Unsubscribes this callback from new events. Includes persistent and once-listeners.
@@ -392,6 +397,14 @@ export interface ReadOnlyEvent<T = void> {
    * Turn any variant of `Event<T>` into an `Event<void>` discarding the callback parameter.
    */
   discardParameter(): Event<void>;
+
+  /**
+   * Triggers an event with at least `timeout` milliseconds between each event.
+   * If the event is triggered more often, the event is delayed until the timeout is reached.
+   * If event is emitted for the first time or event wasn't fired for `timeout` milliseconds,
+   * the event is emitted after `timeout / 8` ms.
+   */
+  debounce(timeout?: number): Event<void>;
 }
 
 class EventListener<T> {

@@ -1,23 +1,8 @@
 {
-  "extends": "../../../tsconfig.json",
-  "compilerOptions": {
-    "outDir": "dist/types"
-  },
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {},
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/echo-signals"
-    },
-    {
-      "path": "../async"
-    },
-    {
-      "path": "../node-std"
-    }
-  ]
+  "references": []
 }

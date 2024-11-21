@@ -13,7 +13,7 @@ import {
   Reference,
   type SpaceDoc,
 } from '@dxos/echo-protocol';
-import { generateEchoId, isReactiveObject, type CommonObjectData, type ObjectMeta } from '@dxos/echo-schema';
+import { createObjectId, isReactiveObject, type CommonObjectData, type ObjectMeta } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { setDeep, defer, getDeep, throwUnhandledError, deepMapValues } from '@dxos/util';
@@ -43,15 +43,18 @@ export type ObjectCoreOptions = {
   immutable?: boolean;
 };
 
+/**
+ *
+ */
+// TODO(burdon): Comment.
 export class ObjectCore {
   // TODO(dmaretskyi): Start making some of those fields private.
+  // TODO(dmaretskyi): Create a discriminated union for the bound/not bound states.
 
   /**
    * Id of the ECHO object.
    */
-  public id = generateEchoId();
-
-  // TODO(dmaretskyi): Create a discriminated union for the bound/not bound states.
+  public id = createObjectId();
 
   /**
    * Set if when the object is bound to a database.
@@ -77,7 +80,7 @@ export class ObjectCore {
   /**
    * Handles link resolution as well as manual changes.
    */
-  public updates = new Event();
+  public readonly updates = new Event();
 
   /**
    * Create local doc with initial state from this object.

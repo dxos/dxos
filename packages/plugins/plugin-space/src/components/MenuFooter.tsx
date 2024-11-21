@@ -1,11 +1,11 @@
 //
 // Copyright 2024 DXOS.org
 //
+
 import { Planet } from '@phosphor-icons/react';
 import React from 'react';
 
-import { getSpace } from '@dxos/client/echo';
-import type { EchoReactiveObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject, getSpace } from '@dxos/client/echo';
 import { useClient } from '@dxos/react-client';
 import { DropdownMenu, toLocalizedString, useTranslation } from '@dxos/react-ui';
 

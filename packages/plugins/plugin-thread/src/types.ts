@@ -11,6 +11,7 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 import { type SchemaProvides } from '@dxos/plugin-client';
+import { type PanelProvides } from '@dxos/plugin-deck/types';
 import { type MarkdownExtensionProvides } from '@dxos/plugin-markdown';
 import { type ThreadType } from '@dxos/plugin-space/types';
 
@@ -26,12 +27,11 @@ export enum ThreadAction {
   TOGGLE_RESOLVED = `${THREAD_ACTION}/toggle-resolved`,
 }
 
-// TODO(Zan): Move this to the plugin-space plugin or another common location
-// when we implement threads in sheets.
+// TODO(Zan): Move this to the plugin-space plugin or another common location when we implement threads in sheets.
 export type ThreadProvides<T> = {
   thread: {
     predicate: (obj: any) => obj is T;
-    createSort: (obj: T) => (anchorA: string, anchorB: string) => number;
+    createSort: (obj: T) => (anchorA: string | undefined, anchorB: string | undefined) => number;
   };
 };
 
@@ -39,9 +39,10 @@ export type ThreadPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
-  SettingsProvides &
+  SettingsProvides<ThreadSettingsProps> &
   TranslationsProvides &
   SchemaProvides &
+  PanelProvides &
   MarkdownExtensionProvides;
 
 export type ThreadSettingsProps = { standalone?: boolean };
@@ -49,3 +50,9 @@ export type ThreadSettingsProps = { standalone?: boolean };
 export interface ThreadModel {
   root: ThreadType;
 }
+
+export type ThreadState = {
+  /** In-memory draft threads. */
+  drafts: Record<string, ThreadType[]>;
+  current?: string | undefined;
+};

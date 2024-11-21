@@ -20,7 +20,7 @@ export const groupSurface = 'base-surface';
 export const groupBorder = 'border-separator';
 
 // Tooltips, popovers, menus, dialogs, etc.
-export const modalSurface = 'modal-surface';
+export const modalSurface = 'modal-surface backdrop-blur-md';
 
 // Elements that actively have the user’s “attention”; prefer to select with CSS-native selectors like focus-within,
 // but may be applied by app state. ⚠️ Do not apply statically.

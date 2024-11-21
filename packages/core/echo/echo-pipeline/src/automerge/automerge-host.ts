@@ -25,7 +25,7 @@ import {
   type StorageKey,
 } from '@dxos/automerge/automerge-repo';
 import { Context, Resource, cancelWithContext, type Lifecycle } from '@dxos/context';
-import { type SpaceDoc } from '@dxos/echo-protocol';
+import { type CollectionId, type SpaceDoc } from '@dxos/echo-protocol';
 import { type IndexMetadataStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -82,6 +82,8 @@ export class AutomergeHost extends Resource {
   @trace.info()
   private _peerId!: PeerId;
 
+  public readonly collectionStateUpdated = new Event<{ collectionId: CollectionId }>();
+
   constructor({ db, indexMetadataStore, dataMonitor }: AutomergeHostParams) {
     super();
     this._db = db;
@@ -128,6 +130,7 @@ export class AutomergeHost extends Resource {
 
     this._collectionSynchronizer.remoteStateUpdated.on(this._ctx, ({ collectionId, peerId }) => {
       this._onRemoteCollectionStateUpdated(collectionId, peerId);
+      this.collectionStateUpdated.emit({ collectionId: collectionId as CollectionId });
     });
 
     await this._echoNetworkAdapter.open();
@@ -358,7 +361,10 @@ export class AutomergeHost extends Resource {
   async flush({ documentIds }: FlushRequest = {}): Promise<void> {
     // Note: Sync protocol for client and services ensures that all handles should have all changes.
 
-    await this._repo.flush(documentIds as DocumentId[] | undefined);
+    const loadedDocuments = documentIds?.filter(
+      (documentId): documentId is DocumentId => !!this._repo.handles[documentId as DocumentId],
+    );
+    await this._repo.flush(loadedDocuments);
   }
 
   async getHeads(documentIds: DocumentId[]): Promise<(Heads | undefined)[]> {
@@ -416,7 +422,11 @@ export class AutomergeHost extends Resource {
       const diff = diffCollectionState(localState, state);
       result.peers.push({
         peerId,
+        missingOnRemote: diff.missingOnRemote.length,
+        missingOnLocal: diff.missingOnLocal.length,
         differentDocuments: diff.different.length,
+        localDocumentCount: Object.keys(localState.documents).length,
+        remoteDocumentCount: Object.keys(state.documents).length,
       });
     }
 
@@ -466,30 +476,36 @@ export class AutomergeHost extends Resource {
       return;
     }
 
-    const { different } = diffCollectionState(localState, remoteState);
+    const { different, missingOnLocal, missingOnRemote } = diffCollectionState(localState, remoteState);
+    const toReplicate = [...missingOnLocal, ...missingOnRemote, ...different];
 
-    if (different.length === 0) {
+    if (toReplicate.length === 0) {
       return;
     }
 
     log.info('replication documents after collection sync', {
-      count: different.length,
+      count: toReplicate.length,
     });
 
-    // Load the documents that are different.
-    for (const documentId of different) {
+    // Load the documents so they will start syncing.
+    for (const documentId of toReplicate) {
       this._repo.find(documentId);
     }
   }
 
   private _onHeadsChanged(documentId: DocumentId, heads: Heads) {
+    const collectionsChanged = new Set<CollectionId>();
     for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds()) {
       const state = this._collectionSynchronizer.getLocalCollectionState(collectionId);
       if (state?.documents[documentId]) {
         const newState = structuredClone(state);
         newState.documents[documentId] = heads;
         this._collectionSynchronizer.setLocalCollectionState(collectionId, newState);
+        collectionsChanged.add(collectionId as CollectionId);
       }
+    }
+    for (const collectionId of collectionsChanged) {
+      this.collectionStateUpdated.emit({ collectionId });
     }
   }
 }
@@ -540,5 +556,28 @@ export type CollectionSyncState = {
 
 export type PeerSyncState = {
   peerId: PeerId;
+  /**
+   * Documents that are present locally but not on the remote peer.
+   */
+  missingOnRemote: number;
+
+  /**
+   * Documents that are present on the remote peer but not locally.
+   */
+  missingOnLocal: number;
+
+  /**
+   * Documents that are present on both peers but have different heads.
+   */
   differentDocuments: number;
+
+  /**
+   * Total number of documents locally.
+   */
+  localDocumentCount: number;
+
+  /**
+   * Total number of documents on the remote peer.
+   */
+  remoteDocumentCount: number;
 };

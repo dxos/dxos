@@ -29,18 +29,17 @@ export class TestWireProtocol {
     ({ remotePeerId, extension }) => remotePeerId.toHex() + extension,
   );
 
-  constructor(
-    public readonly peerId: PublicKey,
-    private readonly _extensionFactory: TestTeleportExtensionFactory = () => [],
-  ) {}
+  constructor(private readonly _extensionFactory: TestTeleportExtensionFactory = () => []) {}
 
   readonly factory = createTeleportProtocolFactory(async (teleport) => {
     log('create', { remotePeerId: teleport.remotePeerId });
+    const handleDisconnect = () => {
+      this.connections.delete(teleport.remotePeerId);
+      this.disconnected.emit(teleport.remotePeerId);
+    };
     const extension = new TestExtension({
-      onClose: async () => {
-        this.connections.delete(teleport.remotePeerId);
-        this.disconnected.emit(teleport.remotePeerId);
-      },
+      onClose: async () => handleDisconnect(),
+      onAbort: async () => handleDisconnect(),
     });
     this.connections.set(teleport.remotePeerId, extension);
     teleport.addExtension('test', extension);

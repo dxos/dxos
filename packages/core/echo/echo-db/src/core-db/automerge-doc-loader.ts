@@ -3,6 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
+import { next as A } from '@dxos/automerge/automerge';
 import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@dxos/automerge/automerge-repo';
 import { cancelWithContext, type Context } from '@dxos/context';
 import { warnAfterTimeout } from '@dxos/debug';
@@ -70,8 +71,8 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
   public readonly onObjectDocumentLoaded = new Event<ObjectDocumentLoaded>();
 
   constructor(
-    private readonly _spaceId: SpaceId,
     private readonly _repo: RepoProxy,
+    private readonly _spaceId: SpaceId,
     /** Legacy Id */
     private readonly _spaceKey: PublicKey,
   ) {}
@@ -118,12 +119,10 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
       if (this._objectDocumentHandles.has(objectId) || this._objectsPendingDocumentLoad.has(objectId)) {
         continue;
       }
-      const spaceRootDoc = this._spaceRootDocHandle.docSync();
-      invariant(spaceRootDoc);
-      const documentUrl = (spaceRootDoc.links ?? {})[objectId];
+      const documentUrl = this._getLinkedDocumentUrl(objectId);
       if (documentUrl == null) {
         this._objectsPendingDocumentLoad.add(objectId);
-        log.info('loading delayed until object links are initialized', { objectId });
+        log('loading delayed until object links are initialized', { objectId });
       } else {
         urlsToLoad[objectId] = documentUrl;
         hasUrlsToLoad = true;
@@ -141,8 +140,8 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     if (spaceRootDoc.objects?.[objectId]) {
       return this._spaceRootDocHandle.documentId;
     }
-    const documentUrl = (spaceRootDoc.links ?? {})[objectId];
-    return documentUrl && interpretAsDocumentId(documentUrl as AutomergeUrl);
+    const documentUrl = this._getLinkedDocumentUrl(objectId);
+    return documentUrl && interpretAsDocumentId(documentUrl.toString() as AutomergeUrl);
   }
 
   public onObjectLinksUpdated(links: SpaceDocumentLinks) {
@@ -170,7 +169,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     this.onObjectBoundToDocument(spaceDocHandle, objectId);
     this._spaceRootDocHandle.change((newDoc: SpaceDoc) => {
       newDoc.links ??= {};
-      newDoc.links[objectId] = spaceDocHandle.url;
+      newDoc.links[objectId] = new A.RawString(spaceDocHandle.url);
     });
     return spaceDocHandle;
   }
@@ -186,11 +185,18 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     return objectsWithHandles;
   }
 
+  private _getLinkedDocumentUrl(objectId: string): AutomergeUrl | undefined {
+    const spaceRootDoc = this._spaceRootDocHandle?.docSync();
+    invariant(spaceRootDoc);
+    return (spaceRootDoc.links ?? {})[objectId]?.toString() as AutomergeUrl;
+  }
+
   private _loadLinkedObjects(links: SpaceDocumentLinks) {
     if (!links) {
       return;
     }
-    for (const [objectId, automergeUrl] of Object.entries(links)) {
+    for (const [objectId, automergeUrlData] of Object.entries(links)) {
+      const automergeUrl = automergeUrlData.toString();
       const logMeta = { objectId, automergeUrl };
       const objectDocumentHandle = this._objectDocumentHandles.get(objectId);
       if (objectDocumentHandle != null && objectDocumentHandle.url !== automergeUrl) {

@@ -1,6 +1,6 @@
 {
   "extends": [
-    "../../../../tsconfig.json"
+    "../../../../tsconfig.base.json"
   ],
   "compilerOptions": {
     "allowImportingTsExtensions": true,
@@ -8,7 +8,6 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist/types",
     "types": [
       "node"
     ]
@@ -22,51 +21,5 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": [
-    {
-      "path": "../../../common/async"
-    },
-    {
-      "path": "../../../common/local-storage"
-    },
-    {
-      "path": "../../../common/util"
-    },
-    {
-      "path": "../../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../../experimental/gem-globe"
-    },
-    {
-      "path": "../../../sdk/app-framework"
-    },
-    {
-      "path": "../../../sdk/react-client"
-    },
-    {
-      "path": "../../../ui/react-ui"
-    },
-    {
-      "path": "../../../ui/react-ui-theme"
-    },
-    {
-      "path": "../../../ui/storybook-utils"
-    },
-    {
-      "path": "../../plugin-client"
-    },
-    {
-      "path": "../../plugin-graph"
-    },
-    {
-      "path": "../../plugin-space"
-    },
-    {
-      "path": "../../plugin-stack"
-    },
-    {
-      "path": "../../plugin-table"
-    }
-  ]
+  "references": []
 }

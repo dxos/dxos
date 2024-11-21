@@ -2,18 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
-import jestExpect from 'expect';
-import { inspect } from 'util';
+import { inspect } from 'node:util';
+import { describe, expect, test } from 'vitest';
 
-import { registerSignalRuntime } from '@dxos/echo-signals';
-import { describe, test } from '@dxos/test';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
+import { isNode } from '@dxos/util';
 
 import { create } from './object';
 import { TestClass, type TestSchema, TestSchemaWithClass, updateCounter } from '../testing';
 import { data, type ReactiveObject } from '../types';
 
-registerSignalRuntime();
+registerSignalsRuntime();
 
 const TEST_OBJECT: TestSchema = {
   string: 'foo',
@@ -30,7 +29,7 @@ for (const schema of [undefined, TestSchemaWithClass]) {
   };
 
   describe(`Non-echo specific proxy properties${schema == null ? '' : ' with schema'}`, () => {
-    test('inspect', () => {
+    test.skipIf(!isNode())('inspect', () => {
       const obj = createObject({ string: 'bar' });
       const str = inspect(obj, { colors: false });
       expect(str).to.eq(`${schema == null ? '' : 'Typed '}{ string: 'bar' }`);
@@ -69,7 +68,6 @@ for (const schema of [undefined, TestSchemaWithClass]) {
         const original = { classInstance: new TestClass() };
         const reactive = createObject(original);
         expect(JSON.stringify(reactive)).to.eq(JSON.stringify(original));
-
         expect(reactive).to.deep.eq(original);
         expect(reactive).to.not.deep.eq({ ...original, number: 11 });
       });
@@ -77,16 +75,14 @@ for (const schema of [undefined, TestSchemaWithClass]) {
       test('jest deep equal works', () => {
         const original = { classInstance: new TestClass() };
         const reactive = createObject(original);
-
-        jestExpect(reactive).toEqual(original);
-        jestExpect(reactive).not.toEqual({ ...original, number: 11 });
+        expect(reactive).toEqual(original);
+        expect(reactive).not.toEqual({ ...original, number: 11 });
       });
     });
 
     describe('signal updates', () => {
       test('not in nested class instances', () => {
         const obj = createObject({ classInstance: new TestClass() });
-
         using updates = updateCounter(() => {
           obj.classInstance!.field;
         });
@@ -126,7 +122,8 @@ describe('getters', () => {
     });
 
     using updates = updateCounter(() => {
-      obj.getter;
+      const value = obj.getter;
+      expect(value).to.exist;
     });
 
     innerObj.string = 'baz';

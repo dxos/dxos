@@ -1,6 +1,7 @@
 //
 // Copyright 2024 DXOS.org
 //
+
 import { type ColorSememes } from './types';
 
 export const codeMirrorSememes = {
@@ -20,6 +21,10 @@ export const codeMirrorSememes = {
   cmSelection: {
     light: ['primary', 400],
     dark: ['primary', 600],
+  },
+  cmActiveLine: {
+    light: ['neutral', 200],
+    dark: ['neutral', 800],
   },
   cmHighlight: {
     light: ['neutral', 950],

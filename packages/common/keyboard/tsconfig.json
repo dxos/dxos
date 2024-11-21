@@ -1,35 +1,15 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "jsx": "react",
     "lib": [
       "DOM",
       "ESNext"
-    ],
-    "outDir": "dist/types"
+    ]
   },
   "include": [
     "src",
     "stories"
   ],
-  "references": [
-    {
-      "path": "../../ui/react-ui"
-    },
-    {
-      "path": "../../ui/react-ui-theme"
-    },
-    {
-      "path": "../../ui/storybook-utils"
-    },
-    {
-      "path": "../invariant"
-    },
-    {
-      "path": "../node-std"
-    },
-    {
-      "path": "../util"
-    }
-  ]
+  "references": []
 }

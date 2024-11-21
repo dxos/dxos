@@ -80,17 +80,22 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
       return <StatusDialog />;
     case ShellLayout.INITIALIZE_IDENTITY:
     case ShellLayout.INITIALIZE_IDENTITY_FROM_INVITATION:
+    case ShellLayout.INITIALIZE_IDENTITY_FROM_RECOVERY:
       return (
         <JoinDialog
           mode='halo-only'
           initialDisposition={
-            layout === ShellLayout.INITIALIZE_IDENTITY_FROM_INVITATION ? 'accept-halo-invitation' : 'default'
+            layout === ShellLayout.INITIALIZE_IDENTITY_FROM_RECOVERY
+              ? 'recover-identity'
+              : layout === ShellLayout.INITIALIZE_IDENTITY_FROM_INVITATION
+                ? 'accept-halo-invitation'
+                : 'default'
           }
           initialInvitationCode={invitationCode}
           onCancelResetStorage={() => runtime.setLayout({ layout: ShellLayout.IDENTITY })}
-          onDone={() => {
+          onDone={async () => {
             blurActiveElement();
-            void runtime.setAppContext({ display: ShellDisplay.NONE });
+            await runtime.setAppContext({ display: ShellDisplay.NONE });
             runtime.setLayout({ layout: ShellLayout.DEFAULT });
           }}
         />
@@ -107,10 +112,17 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
             await client.reset();
             return runtime.setAppContext({ display: ShellDisplay.NONE, reset: true });
           }}
+          onRecover={async () => {
+            runtime.setLayout({ layout: ShellLayout.STATUS });
+            await client.reset();
+            // TODO(wittjosiah): Enter join flow without reloading.
+            return runtime.setAppContext({ display: ShellDisplay.NONE, reset: true, target: 'recoverIdentity' });
+          }}
           onJoinNewIdentity={async () => {
             runtime.setLayout({ layout: ShellLayout.STATUS });
             await client.reset();
-            return runtime.setLayout({ layout: ShellLayout.INITIALIZE_IDENTITY_FROM_INVITATION });
+            // TODO(wittjosiah): Enter join flow without reloading.
+            return runtime.setAppContext({ display: ShellDisplay.NONE, reset: true, target: 'deviceInvitation' });
           }}
           onDone={async () => {
             blurActiveElement();

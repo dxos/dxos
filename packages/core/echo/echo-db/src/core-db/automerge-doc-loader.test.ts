@@ -2,17 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { AutomergeHost, DataServiceImpl, createIdFromSpaceKey } from '@dxos/echo-pipeline/light';
+import { AutomergeHost, DataServiceImpl, createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import { type SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
-import { generateEchoId } from '@dxos/echo-schema';
+import { createObjectId } from '@dxos/echo-schema';
 import { IndexMetadataStore } from '@dxos/indexing';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { describe, openAndClose, test } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 
 import {
   type AutomergeDocumentLoader,
@@ -23,7 +23,7 @@ import { RepoProxy } from '../client';
 
 const ctx = new Context();
 const SPACE_KEY = PublicKey.random();
-const randomId = () => generateEchoId();
+const randomId = () => createObjectId();
 
 describe('AutomergeDocumentLoader', () => {
   test('space access is set on root doc handle and it is accessible', async () => {
@@ -38,7 +38,7 @@ describe('AutomergeDocumentLoader', () => {
     const objectDocHandle = loader.createDocumentForObject(objectId);
     const handle = spaceRootDocHandle.docSync();
     expect(objectDocHandle.docSync()?.access?.spaceKey).to.eq(SPACE_KEY.toHex());
-    expect(handle?.links?.[objectId]).to.eq(objectDocHandle.url);
+    expect(handle?.links?.[objectId].toString()).to.eq(objectDocHandle.url);
   });
 
   test('listener is invoked after a document is loaded', async () => {
@@ -89,7 +89,7 @@ describe('AutomergeDocumentLoader', () => {
     const repo = new RepoProxy(dataService, SpaceId.random());
     await openAndClose(repo);
 
-    const loader = new AutomergeDocumentLoaderImpl(spaceId, repo, SPACE_KEY);
+    const loader = new AutomergeDocumentLoaderImpl(repo, spaceId, SPACE_KEY);
     const spaceRootDocHandle = createRootDoc(repo);
     await loader.loadSpaceRootDocHandle(ctx, { rootUrl: spaceRootDocHandle.url });
     return { loader, spaceRootDocHandle, repo };

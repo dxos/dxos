@@ -6,7 +6,7 @@ import type { Browser, Locator, Page } from '@playwright/test';
 import os from 'node:os';
 
 import { ShellManager } from '@dxos/shell/testing';
-import { setupPage } from '@dxos/test/playwright';
+import { setupPage } from '@dxos/test-utils/playwright';
 
 import { DeckManager } from './plugins';
 
@@ -15,11 +15,11 @@ import { DeckManager } from './plugins';
 
 const isMac = os.platform() === 'darwin';
 const modifier = isMac ? 'Meta' : 'Control';
+export const INITIAL_URL = 'http://localhost:4200';
 
 export class AppManager {
   page!: Page;
   shell!: ShellManager;
-  initialUrl!: string;
   deck!: DeckManager;
 
   private readonly _inIframe: boolean | undefined = undefined;
@@ -38,9 +38,8 @@ export class AppManager {
       return;
     }
 
-    const { page, initialUrl } = await setupPage(this._browser);
+    const { page } = await setupPage(this._browser, { url: INITIAL_URL });
     this.page = page;
-    this.initialUrl = initialUrl;
 
     await this.isAuthenticated();
 
@@ -108,14 +107,12 @@ export class AppManager {
   //
 
   async createSpace(timeout = 10_000) {
-    await this.page.getByTestId('spacePlugin.createSpace').click();
+    await this.page.getByTestId('spacePlugin.createSpace').getByTestId('treeItem.heading').click();
     await this.waitForSpaceReady(timeout);
-    await this.page.getByTestId('spacePlugin.space').last().getByRole('button').first().click();
   }
 
   async joinSpace() {
-    await this.page.getByTestId('navtree.treeItem.actionsLevel0').first().click();
-    await this.page.getByTestId('spacePlugin.joinSpace').click();
+    await this.page.getByTestId('spacePlugin.joinSpace').getByTestId('treeItem.heading').click();
   }
 
   async waitForSpaceReady(timeout = 30_000) {
@@ -126,8 +123,17 @@ export class AppManager {
     return this.page.getByTestId('spacePlugin.presence.member');
   }
 
-  toggleSpaceCollapsed(nth = 0) {
-    return this.page.getByTestId('spacePlugin.space').nth(nth).getByRole('button').first().click();
+  async toggleSpaceCollapsed(nth = 0, nextState?: boolean) {
+    const toggle = this.page.getByTestId('spacePlugin.space').nth(nth).getByRole('button').first();
+
+    if (typeof nextState !== 'undefined') {
+      const state = await toggle.getAttribute('aria-expanded');
+      if (state !== nextState.toString()) {
+        await toggle.click();
+      }
+    } else {
+      await toggle.click();
+    }
   }
 
   toggleCollectionCollapsed(nth = 0) {
@@ -220,7 +226,7 @@ export class AppManager {
 
   async enablePlugin(plugin: string) {
     await this.page.getByTestId(`pluginList.${plugin}`).getByRole('switch').click();
-    await this.page.goto(this.initialUrl);
+    await this.page.goto(INITIAL_URL);
     await this.page.getByTestId('treeView.haloButton').waitFor();
   }
 

@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ChainPromptType } from '@dxos/plugin-chain/types';
-import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
-import { CollectionType, MessageType, ThreadType } from '@dxos/plugin-space/types';
 import { Filter, loadObjectReferences } from '@dxos/echo-db';
-import { create, foreignKey, getMeta, getTypename, S } from '@dxos/echo-schema';
+import { S, create, foreignKey, getMeta, getTypename } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { ChainPromptType } from '@dxos/plugin-automation/types';
+import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
+import { CollectionType, MessageType, ThreadType } from '@dxos/plugin-space/types';
 import { nonNullable } from '@dxos/util';
 
 import { RequestProcessor } from './processor';
@@ -18,7 +18,15 @@ import { ModelInvokerFactory } from '../../chain';
 
 const AI_SOURCE = 'dxos.org/service/ai';
 
-const types = [ChainPromptType, DocumentType, MessageType, CollectionType, TextType, ThreadType];
+const types = [
+  // Default types.
+  ChainPromptType,
+  CollectionType,
+  DocumentType,
+  MessageType,
+  TextType,
+  ThreadType,
+];
 
 /**
  * Trigger configuration.
@@ -113,7 +121,7 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
                 sender: { identityKey: resources.identityKey },
                 timestamp: new Date().toISOString(),
                 text,
-                parts,
+                // parts, // TODO(burdon): Type.
               },
               {
                 keys: [metaKey],
