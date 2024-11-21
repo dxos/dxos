@@ -1,5 +1,4 @@
 # @dxos/react-ui-form
 
-Common components for Schema-aware components.
+Schema-drive forms.
 
-TODO(burdon): Rename react-ui-view/-schema?
