@@ -26,6 +26,12 @@
           "{projectRoot}/src/**/*.{ts,tsx,js,jsx}"
         ]
       }
+    },
+    "e2e": {
+      "dependsOn": [
+        "^compile",
+        "stories:mkdist"
+      ]
     }
   },
   "implicitDependencies": [
