@@ -50,7 +50,7 @@
     "@dxos/plugin-stack": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
-    "@dxos/react-ui-data": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/schema": "workspace:*",

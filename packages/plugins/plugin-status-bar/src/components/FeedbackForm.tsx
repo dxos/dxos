@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 
 import { useIntentDispatcher } from '@dxos/app-framework';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
-import { useForm } from '@dxos/react-ui-data';
+import { useForm } from '@dxos/react-ui-form';
 import { getSize } from '@dxos/react-ui-theme';
 
 import { STATUS_BAR_PLUGIN } from '../meta';

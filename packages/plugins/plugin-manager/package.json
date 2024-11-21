@@ -35,7 +35,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
-    "@dxos/react-ui-data": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/util": "workspace:*"
   },

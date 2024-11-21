@@ -34,7 +34,7 @@ const DefaultStory = (props: FieldEditorProps) => {
 };
 
 const meta: Meta<StoryProps> = {
-  title: 'ui/react-ui-data/FieldEditor',
+  title: 'ui/react-ui-form/FieldEditor',
   component: FieldEditor,
   render: DefaultStory,
   decorators: [withLayout({ fullscreen: true }), withTheme],

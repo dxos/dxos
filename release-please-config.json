@@ -779,12 +779,12 @@
         },
         {
           "type": "json",
-          "path": "packages/ui/react-ui-data/package.json",
+          "path": "packages/ui/react-ui-editor/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/ui/react-ui-editor/package.json",
+          "path": "packages/ui/react-ui-form/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -15,7 +15,7 @@ type ValueFormatProps = {
  * Format value by type.
  * Used by Table, Sheet, etc.
  */
-// TODO(burdon): Move to react-ui-data.
+// TODO(burdon): Move to react-ui-form.
 // TODO(burdon): Formatting is different from kind format (e.g., percent is not a data format).
 export const formatForDisplay = ({ type, format, value, locale = undefined }: ValueFormatProps): string => {
   const formatScalar = (type: TypeEnum) => {
