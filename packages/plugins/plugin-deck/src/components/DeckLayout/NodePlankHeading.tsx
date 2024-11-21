@@ -162,9 +162,9 @@ export const NodePlankHeading = memo(
               onClick={() => (layoutContext.complementarySidebarOpen = !layoutContext.complementarySidebarOpen)}
               variant='ghost'
               label={t('open complementary sidebar label')}
-              classNames='!p-1 -scale-x-100'
+              classNames='!pli-2 !plb-3 [&>svg]:-scale-x-100'
               icon='ph--sidebar-simple--regular'
-              size={5}
+              size={4}
               tooltipZIndex='70'
             />
           )}
