@@ -20,7 +20,7 @@ const TestSchema = S.Struct({
   name: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Name' })),
   active: S.optional(S.Boolean.annotations({ [AST.TitleAnnotationId]: 'Active' })),
   rank: S.optional(S.Number.annotations({ [AST.TitleAnnotationId]: 'Rank' })),
-  website: S.optional(Format.URI.annotations({ [AST.TitleAnnotationId]: 'Website' })),
+  website: S.optional(Format.URL.annotations({ [AST.TitleAnnotationId]: 'Website' })),
   address: S.optional(
     S.Struct({
       street: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Street' })),

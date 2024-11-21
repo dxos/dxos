@@ -14,7 +14,6 @@ import {
 } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
-// TODO(burdon): JsonPath?
 export type PropertyKey<T extends object> = Extract<keyof T, string>;
 
 /**
@@ -24,10 +23,11 @@ export type SchemaProperty<T extends object> = {
   prop: AST.PropertySignature;
   name: PropertyKey<T>;
   type: SimpleType;
-  tuple?: boolean;
+  array?: boolean;
   format?: FormatEnum;
   title?: string;
   description?: string;
+  examples?: string[];
 };
 
 /**
@@ -49,12 +49,13 @@ export const getSchemaProperties = <T extends object>(ast: AST.AST, value: any =
     const name = prop.name.toString() as PropertyKey<T>;
 
     // Annotations.
-    const title = noDefault(findAnnotation<string>(prop.type, AST.TitleAnnotationId));
-    const description = noDefault(findAnnotation<string>(prop.type, AST.DescriptionAnnotationId));
+    const title = findAnnotation<string>(prop.type, AST.TitleAnnotationId, { noDefault: true });
+    const description = findAnnotation<string>(prop.type, AST.DescriptionAnnotationId, { noDefault: true });
+    const examples = findAnnotation<string[]>(prop.type, AST.ExamplesAnnotationId);
 
     // Get type.
     let type: SimpleType | undefined;
-    let tuple = false;
+    let array = false;
     let baseType = findNode(prop.type, isSimpleType);
     if (baseType) {
       type = getSimpleType(baseType);
@@ -77,7 +78,7 @@ export const getSchemaProperties = <T extends object>(ast: AST.AST, value: any =
             baseType = findNode(tupleType.type, isSimpleType);
             if (baseType) {
               type = getSimpleType(baseType);
-              tuple = true;
+              array = true;
             }
           }
         } else {
@@ -93,7 +94,7 @@ export const getSchemaProperties = <T extends object>(ast: AST.AST, value: any =
 
     if (type) {
       const format = baseType ? getFormatAnnotation(baseType) : undefined;
-      props.push({ prop, name, type, tuple, format, title, description });
+      props.push({ prop, name, type, array, format, title, description, examples });
     }
 
     return props;
@@ -102,10 +103,3 @@ export const getSchemaProperties = <T extends object>(ast: AST.AST, value: any =
 
 export const sortProperties = <T extends object>({ name: a }: SchemaProperty<T>, { name: b }: SchemaProperty<T>) =>
   a.localeCompare(b);
-
-/**
- * Ignore default title/description annotations.
- * NOTE: 'a string' is the fallback annotation provided by effect.
- */
-const noDefault = (value?: string, defaultValue?: string): string | undefined =>
-  (value === 'a number' || value === 'a string' || value === 'a non empty string' ? undefined : value) ?? defaultValue;

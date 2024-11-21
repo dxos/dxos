@@ -35,7 +35,7 @@ export type FormProps<T extends object> = ThemedClassName<
     // TODO(burdon): Change to JsonPath includes/excludes.
     filter?: PropsFilter<T>;
     sort?: PropertyKey<T>[];
-    autosave?: boolean;
+    autoSave?: boolean;
     onCancel?: () => void;
 
     /**
@@ -56,7 +56,7 @@ export const Form = <T extends object = {}>({
   readonly,
   filter,
   sort,
-  autosave,
+  autoSave,
   onValuesChanged,
   onValidate,
   onSubmit,
@@ -64,7 +64,7 @@ export const Form = <T extends object = {}>({
   Custom,
 }: FormProps<T>) => {
   const { t } = useTranslation(translationKey);
-  const onValid = useMemo(() => (autosave ? onSubmit : undefined), [autosave, onSubmit]);
+  const onValid = useMemo(() => (autoSave ? onSubmit : undefined), [autoSave, onSubmit]);
   const { canSubmit, values, errors, handleSubmit, ...inputProps } = useForm<T>({
     schema,
     initialValues,
@@ -95,9 +95,9 @@ export const Form = <T extends object = {}>({
   }, [errors]);
 
   return (
-    <div role='form' className={mx('flex flex-col w-full gap-1', classNames)}>
+    <div role='form' className={mx('flex flex-col w-full gap-2 py-2', classNames)}>
       {props
-        .map(({ prop, name, type, format, title, description }) => {
+        .map(({ prop, name, type, format, title, description, examples }) => {
           // Custom property allows for sub forms.
           // TODO(burdon): Use Select control if options are present in annotation?
           const key = [...path, name];
@@ -133,6 +133,8 @@ export const Form = <T extends object = {}>({
             return null;
           }
 
+          const placeholder = examples?.length ? `Example: ${examples[0]}` : description;
+
           return (
             <div key={name} role='none' className={padding}>
               <InputComponent
@@ -141,7 +143,7 @@ export const Form = <T extends object = {}>({
                 property={name}
                 disabled={readonly}
                 label={title ?? name}
-                placeholder={description}
+                placeholder={placeholder}
                 {...inputProps}
               />
             </div>
@@ -151,7 +153,7 @@ export const Form = <T extends object = {}>({
 
       {/* {errors && <div className='overflow-hidden text-sm'>{JSON.stringify(errors)}</div>} */}
 
-      {(onCancel || onSubmit) && !autosave && (
+      {(onCancel || onSubmit) && !autoSave && (
         <div role='none' className='flex justify-center'>
           <div role='none' className={mx(onCancel && !readonly && 'grid grid-cols-2 gap-2')}>
             {onCancel && !readonly && (
@@ -160,10 +162,10 @@ export const Form = <T extends object = {}>({
             {onSubmit && (
               <IconButton
                 type='submit'
+                disabled={!canSubmit}
                 icon='ph--check--regular'
                 label={t('button save')}
                 onClick={handleSubmit}
-                disabled={!canSubmit}
               />
             )}
           </div>

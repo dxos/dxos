@@ -38,7 +38,7 @@ export type InputHeaderProps = PropsWithChildren<{
 
 export const InputHeader = ({ children, error }: InputHeaderProps) => {
   return (
-    <div role='none' className='flex justify-between items-center my-1'>
+    <div role='none' className='flex justify-between items-center mb-1'>
       {children}
       {error && (
         <Tooltip.Root>
