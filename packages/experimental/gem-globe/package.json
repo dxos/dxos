@@ -1,25 +1,22 @@
 {
   "name": "@dxos/gem-globe",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "description": "GEM globe.",
   "homepage": "https://github.com/dxos",
   "bugs": "https://github.com/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": true,
   "exports": {
-    ".": {
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "default": "./dist/lib/node/index.cjs"
-      },
-      "types": "./dist/types/src/index.d.ts"
-    },
     "./data": {
+      "types": "./dist/types/src/data.d.ts",
       "browser": "./dist/lib/browser/data.mjs",
-      "node": {
-        "default": "./dist/lib/node/data.cjs"
-      },
-      "types": "./dist/types/src/data.d.ts"
+      "node": "./dist/lib/node-esm/data.mjs"
+    },
+    ".": {
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -76,8 +73,8 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "react": "*",
-    "react-dom": "*"
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
   },
   "publishConfig": {
     "access": "public"

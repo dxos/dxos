@@ -92,7 +92,7 @@ const Story = () => {
 };
 
 export default {
-  title: 'react-ui-editor/Automerge',
+  title: 'ui/react-ui-editor/Automerge',
   component: Editor,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   render: () => <Story />,
@@ -129,7 +129,7 @@ export const WithEcho = {
         count={2}
         component={EchoStory}
         createSpace
-        onCreateSpace={async (space) => {
+        onSpaceCreated={async ({ space }) => {
           space.db.add(
             create({
               type: 'test',

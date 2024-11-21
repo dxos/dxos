@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Compass, type IconProps } from '@phosphor-icons/react';
+import { Compass } from '@phosphor-icons/react';
 import { type LatLngLiteral } from 'leaflet';
 import React from 'react';
 
@@ -28,23 +28,28 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
     meta,
     ready: async (plugins) => {
       settings
-        .prop({ key: 'type', storageKey: 'type', type: LocalStorageStore.enum<MapControlType>() })
-        .prop({ key: 'zoom', storageKey: 'zoom', type: LocalStorageStore.number({ allowUndefined: true }) })
-        .prop({ key: 'center', storageKey: 'center', type: LocalStorageStore.json<LatLngLiteral | undefined>() });
+        .prop({ key: 'type', type: LocalStorageStore.enum<MapControlType>() })
+        .prop({ key: 'zoom', type: LocalStorageStore.number({ allowUndefined: true }) })
+        .prop({ key: 'center', type: LocalStorageStore.json<LatLngLiteral | undefined>() });
     },
     provides: {
       metadata: {
         records: {
           [MapType.typename]: {
             placeholder: ['object title placeholder', { ns: MAP_PLUGIN }],
-            icon: (props: IconProps) => <Compass {...props} />,
-            iconSymbol: 'ph--compass--regular',
+            icon: 'ph--compass--regular',
           },
         },
       },
       translations,
       echo: {
         schema: [MapType],
+      },
+      space: {
+        onSpaceCreate: {
+          label: ['create object label', { ns: MAP_PLUGIN }],
+          action: MapAction.CREATE,
+        },
       },
       graph: {
         builder: (plugins) => {
@@ -80,8 +85,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
                     },
                     properties: {
                       label: ['create object label', { ns: MAP_PLUGIN }],
-                      icon: (props: IconProps) => <Compass {...props} />,
-                      iconSymbol: 'ph--compass--regular',
+                      icon: 'ph--compass--regular',
                       testId: 'mapPlugin.createObject',
                     },
                   },
@@ -95,20 +99,12 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
                 return [
                   {
                     id: `${MAP_PLUGIN}/toggle`,
-                    // TODO(burdon): ???
                     data: async () => {
-                      await dispatch([
-                        {
-                          plugin: MAP_PLUGIN,
-                          action: MapAction.TOGGLE,
-                          data: { object: node.data },
-                        },
-                      ]);
+                      await dispatch([{ plugin: MAP_PLUGIN, action: MapAction.TOGGLE, data: { object: node.data } }]);
                     },
                     properties: {
                       label: ['toggle type label', { ns: MAP_PLUGIN }],
-                      icon: (props: IconProps) => <Compass {...props} />,
-                      iconSymbol: 'ph--compass--regular',
+                      icon: 'ph--compass--regular',
                     },
                   },
                 ];

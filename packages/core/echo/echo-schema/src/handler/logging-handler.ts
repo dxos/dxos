@@ -4,9 +4,9 @@
 
 import { type Reference } from '@dxos/echo-protocol';
 
-import { getTargetMeta } from './object';
+import { getObjectMeta } from './object';
 import { type ReactiveHandler } from '../proxy';
-import type { ObjectMeta } from '../types';
+import { type ObjectMeta } from '../types';
 
 export class LoggingReactiveHandler implements ReactiveHandler<any> {
   static symbolChangeLog = Symbol.for('ChangeLog');
@@ -39,6 +39,6 @@ export class LoggingReactiveHandler implements ReactiveHandler<any> {
   }
 
   getMeta(target: any): ObjectMeta {
-    return getTargetMeta(target);
+    return getObjectMeta(target);
   }
 }

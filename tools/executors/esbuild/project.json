@@ -1,22 +1,23 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "esbuild",
-  "sourceRoot": "tools/executors/esbuild/src",
+  "sourceRoot": "{projectRoot}/src",
   "targets": {
     "compile": {
+      "dependsOn": [
+        "^compile"
+      ],
       "executor": "@nx/js:tsc",
       "options": {
-        "main": "tools/executors/esbuild/src/index.ts",
-        "outputPath": "tools/executors/esbuild/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "tools/executors/esbuild/tsconfig.json"
+        "main": "{projectRoot}/src/index.ts",
+        "outputPath": "{projectRoot}/dist",
+        "tsConfig": "{projectRoot}/tsconfig.json"
       }
     },
     "lint": {}
   },
   "implicitDependencies": [
+    "esbuild-plugins",
     "log-hook"
   ]
 }

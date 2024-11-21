@@ -8,7 +8,7 @@ import React, { useEffect, useMemo } from 'react';
 import { log } from '@dxos/log';
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
-import { DensityProvider, useId, useTranslation } from '@dxos/react-ui';
+import { useId, useTranslation } from '@dxos/react-ui';
 
 import { type SpacePanelHeadingProps, type SpacePanelImplProps, type SpacePanelProps } from './SpacePanelProps';
 import { useSpaceMachine } from './spaceMachine';
@@ -39,6 +39,7 @@ export const SpacePanelImpl = (props: SpacePanelImplProps) => {
     titleId,
     activeView,
     space,
+    hideHeading,
     target,
     SpaceManager: SpaceManagerComponent = SpaceManager,
     InvitationManager: InvitationManagerComponent = InvitationManager,
@@ -46,8 +47,8 @@ export const SpacePanelImpl = (props: SpacePanelImplProps) => {
   } = props;
 
   return (
-    <DensityProvider density='fine'>
-      <SpacePanelHeading {...rest} {...{ titleId, space }} />
+    <>
+      {!hideHeading && <SpacePanelHeading {...rest} {...{ titleId, space }} />}
       <Viewport.Root activeView={activeView}>
         <Viewport.Views>
           <Viewport.View id='space manager' classNames={stepStyles}>
@@ -62,7 +63,7 @@ export const SpacePanelImpl = (props: SpacePanelImplProps) => {
           </Viewport.View>
         </Viewport.Views>
       </Viewport.Root>
-    </DensityProvider>
+    </>
   );
 };
 

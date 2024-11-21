@@ -89,10 +89,10 @@ export class Shell {
   /**
    * Listen for reset event.
    */
-  onReset(cb: () => void) {
+  onReset(cb: (target?: string) => void) {
     return this._shellManager.contextUpdate.on((data) => {
       if ('reset' in data && data.reset) {
-        cb();
+        cb(data.target);
       }
     });
   }
@@ -166,6 +166,28 @@ export class Shell {
         if (context.display === ShellDisplay.NONE) {
           const device = this._devices.get().find((device) => !initialDevices.has(device.deviceKey));
           resolve({ device, cancelled: !device });
+        }
+      });
+    });
+  }
+
+  /**
+   * Initialize a new device with an existing identity using a recovery code.
+   *
+   * @returns Shell result with the identity.
+   */
+  async recoverIdentity(): Promise<InitializeIdentityResult> {
+    await this._shellManager.setLayout({ layout: ShellLayout.INITIALIZE_IDENTITY_FROM_RECOVERY });
+    return new Promise((resolve) => {
+      this._shellManager.contextUpdate.on((context) => {
+        if (context.display === ShellDisplay.NONE) {
+          resolve({ cancelled: true });
+        }
+      });
+
+      this._identity.subscribe((identity) => {
+        if (identity) {
+          resolve({ identity, cancelled: false });
         }
       });
     });

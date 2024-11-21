@@ -312,10 +312,16 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
             target: '#join.choosingIdentity.acceptingHaloInvitation',
             actions: 'log',
           },
+          {
+            cond: 'initiallyRecoveringIdentity',
+            target: '#join.choosingIdentity.recoveringIdentity',
+            actions: 'log',
+          },
           { cond: 'noSelectedIdentity', target: 'choosingIdentity', actions: 'log' },
           { target: 'acceptingSpaceInvitation', actions: 'log' },
         ],
       },
+      // TODO(wittjosiah): Remove.
       choosingIdentity: {
         initial: 'unknownAuthMethod',
         states: {
@@ -343,6 +349,7 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
           deselectAuthMethod: { target: '.choosingAuthMethod', actions: 'log' },
         },
       },
+      // TODO(wittjosiah): Factor out to a machine handling recovery and device invitations.
       resettingIdentity: {},
       acceptingSpaceInvitation: acceptingInvitationTemplate('Space', '#join.finishingJoiningSpace'),
       finishingJoiningSpace: {
@@ -362,6 +369,8 @@ const joinMachine = createMachine<JoinMachineContext, JoinEvent>(
       noSelectedIdentity: ({ identity }, _event) => !identity,
       initiallyAcceptingHaloInvitation: ({ identity, initialDisposition }, _event) =>
         !identity && initialDisposition === 'accept-halo-invitation',
+      initiallyRecoveringIdentity: ({ identity, initialDisposition }, _event) =>
+        !identity && initialDisposition === 'recover-identity',
       hasHaloUnredeemedCode: ({ halo }, _event) => !!halo.unredeemedCode,
       noSpaceInvitation: ({ space }, _event) => !space.invitation && !space.unredeemedCode,
     },

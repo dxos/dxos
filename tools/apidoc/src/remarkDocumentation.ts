@@ -13,7 +13,7 @@ import remarkStringify from 'remark-stringify';
 import { unified } from 'unified';
 import { VFile } from 'vfile';
 
-import { Remark } from './apiDocDirective.js';
+// import { apiDocGenerateDirective } from './apiDocDirective.js';
 import { type Config } from './config.js';
 import { warn, info } from './log.js';
 
@@ -30,16 +30,17 @@ export const remarkDocumentation = async (config: Config) => {
         .use(remarkDirective)
         // TODO(wittjosiah): Fix remark plugin types.
         //   Our plugin types change the type of the chain such that all following plugins require arrays.
-        .use([Remark.apiDocGenerateDirective])
-        .use([codeImport as any])
+        // .use([apiDocGenerateDirective])
+        .use([codeImport])
         // .use([unifiedPrettier as any]) // TODO(burdon): Hack.
-        .use([remarkStringify as any]) // TODO(burdon): Hack.
+        .use([remarkStringify]) // TODO(burdon): Hack.
         .process(
           new VFile({
             path: file,
             value: content,
           }),
         );
+
       if (content !== processed.value && !!processed.value) {
         info('updated', file);
         // fix invalid \::: directives as a quick hack here

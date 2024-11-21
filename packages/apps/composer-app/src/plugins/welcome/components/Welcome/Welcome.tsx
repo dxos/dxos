@@ -94,7 +94,7 @@ export const Welcome = ({
                         onChange={(ev) => setEmail(ev.target.value.trim())}
                       />
                       <Input.DescriptionAndValidation>
-                        <Input.Validation classNames='flex h-4 px-2 py-1 fg-error'>
+                        <Input.Validation classNames='flex h-4 px-2 py-1 text-rose-550'>
                           {error && t('email error')}
                         </Input.Validation>
                       </Input.DescriptionAndValidation>
@@ -243,3 +243,5 @@ const _Alternate = ({ identity, onSignup, onJoinIdentity, onSpaceInvitation }: W
     </>
   );
 };
+
+export default Welcome;

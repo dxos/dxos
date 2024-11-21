@@ -10,11 +10,11 @@
     "build": {
       "options": {
         "main": "{projectRoot}/src/index.ts",
-        "outputPath": "packages/apps/testbench-app/dist",
+        "outputPath": "{projectRoot}/dist",
         "transformers": [
           "@dxos/log-hook/transformer"
         ],
-        "tsConfig": "packages/apps/testbench-app/tsconfig.json"
+        "tsConfig": "{projectRoot}/tsconfig.json"
       }
     },
     "bundle": {
@@ -25,30 +25,18 @@
       "executor": "@nx/vite:build",
       "options": {
         "generatePackageJson": false,
-        "outputPath": "packages/apps/testbench-app/out/testbench-app"
+        "outputPath": "{projectRoot}/out/testbench-app"
       },
       "outputs": [
         "{options.outputPath}"
       ]
-    },
-    "e2e": {
-      "options": {
-        "playwrightConfigPath": "{projectRoot}/src/playwright/playwright.config.ts",
-        "serve": "testbench-app:preview",
-        "testPatterns": [
-          "{projectRoot}/src/playwright/**/*.spec.{ts,js}"
-        ],
-        "watchPatterns": [
-          "{projectRoot}/src/**/*"
-        ]
-      }
     },
     "lint": {},
     "preview": {
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "testbench-app:bundle",
-        "staticFilePath": "packages/apps/testbench-app/out/testbench-app"
+        "staticFilePath": "{projectRoot}/out/testbench-app"
       }
     },
     "serve": {

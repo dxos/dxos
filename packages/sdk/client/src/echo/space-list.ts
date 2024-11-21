@@ -41,7 +41,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private _invitationProxy?: InvitationsProxy;
   private _defaultSpaceId?: SpaceId;
   private readonly _defaultSpaceAvailable = new PushStream<boolean>();
-  private _isReady = new MulticastObservable(this._defaultSpaceAvailable.observable, false);
+  private readonly _isReady = new MulticastObservable(this._defaultSpaceAvailable.observable, false);
   private readonly _spacesStream: PushStream<Space[]>;
   private readonly _spaceCreated = new Event<PublicKey>();
   private readonly _instanceId = PublicKey.random().toHex();
@@ -142,7 +142,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
           this._spaceCreated.emit(spaceProxy.key);
 
           if (this._defaultSpaceId && spaceProxy.id === this._defaultSpaceId) {
-            this._onDefaultSpaceAvailable();
+            this._defaultSpaceAvailable.next(true);
           }
 
           emitUpdate = true;
@@ -205,7 +205,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       if (defaultSpace.state.get() === SpaceState.SPACE_CLOSED) {
         this._openSpaceAsync(defaultSpace);
       }
-      this._onDefaultSpaceAvailable();
+      this._defaultSpaceAvailable.next(true);
     }
 
     return true;
@@ -238,14 +238,25 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     await this._ctx.dispose();
     await Promise.all(this.get().map((space) => (space as SpaceProxy)._destroy()));
     this._spacesStream.next([]);
-    this._isReady = new MulticastObservable(this._defaultSpaceAvailable.observable, false);
     await this._invitationProxy?.close();
     this._invitationProxy = undefined;
+    this._defaultSpaceAvailable.next(false);
     this._defaultSpaceId = undefined;
   }
 
   get isReady() {
     return this._isReady;
+  }
+
+  async waitUntilReady(): Promise<void> {
+    return new Promise((resolve) => {
+      const subscription = this._isReady.subscribe((isReady) => {
+        if (isReady) {
+          subscription.unsubscribe();
+          resolve();
+        }
+      });
+    });
   }
 
   override get(): Space[];
@@ -271,7 +282,6 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return this.get();
   }
 
-  @trace.info()
   get default(): Space {
     invariant(this._defaultSpaceId, 'Default space ID not set.');
     const space = this.get().find((space) => space.id === this._defaultSpaceId);
@@ -342,11 +352,6 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
    */
   query<T extends {} = any>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
     return this._echoClient.graph.query(filter, options);
-  }
-
-  private _onDefaultSpaceAvailable() {
-    this._defaultSpaceAvailable.next(true);
-    this._defaultSpaceAvailable.complete();
   }
 
   private _findProxy(space: SerializedSpace): SpaceProxy {

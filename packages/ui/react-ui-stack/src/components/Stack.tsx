@@ -1,173 +1,78 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
-import { useArrowNavigationGroup, useFocusableGroup } from '@fluentui/react-tabster';
-import React, { forwardRef, useCallback } from 'react';
-import { useResizeDetector } from 'react-resize-detector';
+import { useArrowNavigationGroup } from '@fluentui/react-tabster';
+import React, { Children, type CSSProperties, type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { List, useTranslation } from '@dxos/react-ui';
-import {
-  type MosaicContainerProps,
-  type MosaicTileComponent,
-  Mosaic,
-  Path,
-  useContainer,
-  useItemsWithPreview,
-  useMosaic,
-} from '@dxos/react-ui-mosaic';
-import { dropRingInner } from '@dxos/react-ui-theme';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
-import {
-  type CollapsedSections,
-  type AddSectionPosition,
-  SectionTile,
-  type StackContextValue,
-  type StackItem,
-  type StackSectionContent,
-  type StackSectionItem,
-} from './Section';
-import { stackColumns } from './style-fragments';
-import { translationKey } from '../translations';
+import { type StackContextValue, StackContext } from './StackContext';
 
-export type Direction = 'horizontal' | 'vertical';
+export type Orientation = 'horizontal' | 'vertical';
+export type Size = 'intrinsic' | 'contain';
 
-export type { CollapsedSections, AddSectionPosition };
+export type StackProps = Omit<ThemedClassName<ComponentPropsWithRef<'div'>>, 'aria-orientation'> &
+  Partial<StackContextValue> & { itemsCount?: number };
 
-export const DEFAULT_TYPE = 'stack-section';
+export const railGridHorizontal = 'grid-rows-[[rail-start]_var(--rail-size)_[content-start]_1fr_[content-end]]';
 
-export type StackProps<TData extends StackSectionContent = StackSectionContent> = Omit<
-  MosaicContainerProps<TData, number>,
-  'debug' | 'Component'
-> &
-  Omit<StackContextValue<TData>, 'setCollapsedSections'> & {
-    items?: StackSectionItem[];
-    separation?: boolean; // TODO(burdon): Style.
-    onCollapseSection?: (id: string, collapsed: boolean) => void;
-    emptyComponent?: React.ReactNode;
-  };
+export const railGridVertical = 'grid-cols-[[rail-start]_var(--rail-size)_[content-start]_1fr_[content-end]]';
 
-export const Stack = ({
-  id,
-  type = DEFAULT_TYPE,
-  SectionContent,
-  items = [],
-  separation = true,
-  transform,
-  onOver,
-  onDrop,
-  onAddSection,
-  onDeleteSection,
-  onNavigateToSection,
-  onCollapseSection,
-  ...props
-}: StackProps) => {
-  const { ref: containerRef, width = 0 } = useResizeDetector<HTMLDivElement>({ refreshRate: 200 });
-  const { operation, overItem } = useMosaic();
-  const itemsWithPreview = useItemsWithPreview({ path: id, items });
-
-  const getOverlayStyle = useCallback(() => ({ width }), [width]);
-  const getOverlayProps = useCallback(
-    () => ({ itemContext: { transform, SectionContent } }),
-    [transform, SectionContent],
-  );
-
-  // TODO(thure): The root cause of the discrepancy between `activeNodeRect.top` and `overlayNodeRect.top` in Composer
-  //  in particular is not yet known, so this solution may may backfire in unforeseeable cases.
-  const stackModifier = useCallback<Exclude<MosaicContainerProps['modifier'], undefined>>(
-    (_activeItem, { transform, activeNodeRect, overlayNodeRect }) => {
-      if (activeNodeRect && overlayNodeRect) {
-        transform.y += activeNodeRect?.top - overlayNodeRect?.top;
-      }
-      return transform;
+export const Stack = forwardRef<HTMLDivElement, StackProps>(
+  (
+    {
+      children,
+      classNames,
+      style,
+      orientation = 'vertical',
+      rail = true,
+      separators = true,
+      size = 'intrinsic',
+      itemsCount = Children.count(children),
+      ...props
     },
-    [],
-  );
+    forwardedRef,
+  ) => {
+    const arrowNavigationGroup = useArrowNavigationGroup({ axis: orientation });
 
-  return (
-    <Mosaic.Container
-      {...{
-        id,
-        type,
-        Component: SectionTile as MosaicTileComponent<StackSectionItem, HTMLDivElement>,
-        getOverlayStyle,
-        getOverlayProps,
-        onOver,
-        onDrop,
-        modifier: stackModifier,
-      }}
-    >
-      <Mosaic.DroppableTile
-        path={id}
-        type={type}
-        item={{ id, items: itemsWithPreview }}
-        // TODO(wittjosiah): Should this actually be a context?
-        itemContext={{
-          separation,
-          transform,
-          onDeleteSection,
-          onNavigateToSection,
-          onAddSection,
-          onCollapseSection,
-          SectionContent,
-        }}
-        isOver={
-          overItem &&
-          !!overItem.path &&
-          Path.hasRoot(overItem.path, id) &&
-          (operation === 'copy' || operation === 'transfer')
-        }
-        Component={StackTile}
-        {...props}
-        ref={containerRef}
-      />
-    </Mosaic.Container>
-  );
-};
+    const styles: CSSProperties = {
+      [orientation === 'horizontal' ? 'gridTemplateColumns' : 'gridTemplateRows']: `repeat(${itemsCount}, min-content)`,
+      ...style,
+    };
 
-const StackTile: MosaicTileComponent<StackItem, HTMLOListElement, Pick<StackProps, 'emptyComponent'>> = forwardRef(
-  ({ classNames, path, isOver, item: { items }, itemContext, type: _type, emptyComponent, ...props }, forwardedRef) => {
-    const { t } = useTranslation(translationKey);
-    const { Component, type } = useContainer();
-    const domAttributes = useArrowNavigationGroup({ axis: 'grid' });
-    const { activeItem } = useMosaic();
-
-    // NOTE(thure): Ensure “groupper” is available, but no need to use it here.
-    const _group = useFocusableGroup();
-
-    // NOTE: Keep outer padding the same as MarkdownMain.
     return (
-      <List
-        ref={forwardedRef}
-        classNames={['grid relative', stackColumns, isOver && dropRingInner, classNames]}
-        {...(!activeItem && domAttributes)}
-        {...props}
-      >
-        {items.length > 0 ? (
-          <Mosaic.SortableContext items={items} direction='vertical'>
-            {items.map((item, index) => (
-              <Mosaic.SortableTile
-                key={item.id}
-                item={item}
-                itemContext={itemContext}
-                path={path}
-                type={type}
-                position={index}
-                Component={Component}
-              />
-            ))}
-          </Mosaic.SortableContext>
-        ) : emptyComponent !== undefined ? (
-          <>{emptyComponent}</>
-        ) : (
-          <p
-            className='grid col-span-2 text-center p-4 border border-dashed border-neutral-500/50 rounded'
-            data-testid='stack.empty'
-          >
-            {t('empty stack message')}
-          </p>
-        )}
-      </List>
+      <StackContext.Provider value={{ orientation, rail, size, separators }}>
+        <div
+          {...props}
+          {...arrowNavigationGroup}
+          className={mx(
+            'grid relative',
+            rail
+              ? orientation === 'horizontal'
+                ? railGridHorizontal
+                : railGridVertical
+              : orientation === 'horizontal'
+                ? 'grid-rows-1'
+                : 'grid-cols-1',
+            size === 'contain' &&
+              (orientation === 'horizontal'
+                ? 'overflow-x-auto min-bs-0 bs-full max-bs-full'
+                : 'overflow-y-auto min-is-0 is-full max-is-full'),
+            separators && (orientation === 'horizontal' ? 'divide-separator divide-x' : 'divide-separator divide-y'),
+            classNames,
+          )}
+          aria-orientation={orientation}
+          style={styles}
+          ref={forwardedRef}
+        >
+          {children}
+        </div>
+      </StackContext.Provider>
     );
   },
 );
+
+export { StackContext };
+export type { StackContextValue };

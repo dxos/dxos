@@ -6,8 +6,7 @@ import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import { EchoHost } from '@dxos/echo-db';
-import { MetadataStore, SpaceManager, valueEncoding, MeshEchoReplicator } from '@dxos/echo-pipeline';
+import { EchoHost, MetadataStore, SpaceManager, valueEncoding, MeshEchoReplicator } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { type LevelDB } from '@dxos/kv-store';
@@ -54,8 +53,8 @@ export const createServiceContext = async ({
   const level = createTestLevel();
   await level.open();
 
-  return new ServiceContext(storage, level, networkManager, signalManager, undefined, {
-    invitationConnectionDefaultParams: { controlHeartbeatInterval: 200 },
+  return new ServiceContext(storage, level, networkManager, signalManager, undefined, undefined, {
+    invitationConnectionDefaultParams: { teleport: { controlHeartbeatInterval: 200 } },
     ...runtimeParams,
   });
 };
@@ -219,6 +218,10 @@ export class TestPeer {
 
   async createIdentity() {
     this._props.signingContext ??= await createSigningContext(this.keyring);
+    this.networkManager.setPeerInfo({
+      identityKey: this._props.signingContext.identityKey.toHex(),
+      peerKey: this._props.signingContext.deviceKey.toHex(),
+    });
   }
 
   async destroy() {

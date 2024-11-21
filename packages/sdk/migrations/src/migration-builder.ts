@@ -32,7 +32,7 @@ export class MigrationBuilder {
   }
 
   async findObject(id: string): Promise<ObjectStructure | undefined> {
-    const documentId = (this._rootDoc.links?.[id] || this._newLinks[id]) as AnyDocumentId | undefined;
+    const documentId = (this._rootDoc.links?.[id] || this._newLinks[id])?.toString() as AnyDocumentId | undefined;
     const docHandle = documentId && this._repo.find(documentId);
     if (!docHandle) {
       return undefined;
@@ -125,7 +125,7 @@ export class MigrationBuilder {
   }
 
   private async _findObjectContainingHandle(id: string): Promise<DocHandleProxy<SpaceDoc> | undefined> {
-    const documentId = (this._rootDoc.links?.[id] || this._newLinks[id]) as AnyDocumentId | undefined;
+    const documentId = (this._rootDoc.links?.[id] || this._newLinks[id])?.toString() as AnyDocumentId | undefined;
     const docHandle = documentId && this._repo.find(documentId);
     if (!docHandle) {
       return undefined;
@@ -136,9 +136,13 @@ export class MigrationBuilder {
   }
 
   private _buildNewRoot() {
-    const previousLinks = { ...(this._rootDoc.links ?? {}) };
+    const links = { ...(this._rootDoc.links ?? {}) };
     for (const id of this._deleteObjects) {
-      delete previousLinks[id];
+      delete links[id];
+    }
+
+    for (const [id, url] of Object.entries(this._newLinks)) {
+      links[id] = new am.RawString(url);
     }
 
     this._newRoot = this._repo.create<SpaceDoc>({
@@ -147,10 +151,7 @@ export class MigrationBuilder {
         spaceKey: this._space.key.toHex(),
       },
       objects: this._rootDoc.objects,
-      links: {
-        ...previousLinks,
-        ...this._newLinks,
-      },
+      links,
     });
     this._addHandleToFlushList(this._newRoot);
   }

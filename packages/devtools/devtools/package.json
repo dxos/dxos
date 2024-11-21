@@ -1,19 +1,18 @@
 {
   "name": "@dxos/devtools",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "private": true,
   "description": "Standalone devtool app used to inspect DXOS client state",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": true,
   "exports": {
     ".": {
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "default": "./dist/lib/node/index.cjs"
-      },
-      "types": "./dist/types/src/index.d.ts"
+      "node": "./dist/lib/node-esm/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -30,6 +29,7 @@
     "@dxos/context": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-pipeline": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/gem-core": "workspace:*",
@@ -42,10 +42,8 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/tracing": "workspace:*",
@@ -65,9 +63,7 @@
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2",
     "luxon": "^3.4.4",
-    "react": "~18.2.0",
     "react-charts": "beta",
-    "react-dom": "~18.2.0",
     "react-drag-drop-files": "^2.3.8",
     "react-is": "~18.2.0",
     "react-json-tree": "^0.18.0",
@@ -82,6 +78,7 @@
     "@babel/core": "^7.18.13",
     "@dxos/config": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@types/lodash.defaultsdeep": "^4.6.6",
@@ -93,8 +90,7 @@
     "@vitejs/plugin-react": "^4.2.1",
     "postcss": "^8.4.41",
     "tailwindcss": "~3.4.1",
-    "typescript": "^5.5.4",
-    "vite": "^5.3.4",
+    "vite": "5.4.7",
     "vite-plugin-fonts": "^0.7.0",
     "vite-plugin-pwa": "^0.18.2",
     "vite-plugin-top-level-await": "^1.4.1",
@@ -102,6 +98,10 @@
     "workbox-window": "^7.0.0"
   },
   "peerDependencies": {
-    "@babel/core": "^7.18.13"
+    "@babel/core": "^7.18.13",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
   }
 }

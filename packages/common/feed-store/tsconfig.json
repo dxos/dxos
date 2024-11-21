@@ -1,9 +1,7 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "dist/types",
     "types": [
-      "@dxos/test",
       "@dxos/typings",
       "node"
     ]
@@ -11,48 +9,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../../core/halo/keyring"
-    },
-    {
-      "path": "../async"
-    },
-    {
-      "path": "../codec-protobuf"
-    },
-    {
-      "path": "../context"
-    },
-    {
-      "path": "../crypto"
-    },
-    {
-      "path": "../debug"
-    },
-    {
-      "path": "../hypercore"
-    },
-    {
-      "path": "../invariant"
-    },
-    {
-      "path": "../keys"
-    },
-    {
-      "path": "../log"
-    },
-    {
-      "path": "../node-std"
-    },
-    {
-      "path": "../random"
-    },
-    {
-      "path": "../random-access-storage"
-    },
-    {
-      "path": "../util"
-    }
-  ]
+  "references": []
 }

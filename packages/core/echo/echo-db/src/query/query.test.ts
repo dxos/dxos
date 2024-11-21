@@ -2,29 +2,26 @@
 // Copyright 2022 DXOS.org
 //
 
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { type SpaceDoc } from '@dxos/echo-protocol';
-import { create, type EchoReactiveObject, Expando } from '@dxos/echo-schema';
+import { create, Expando } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
-import { afterAll, afterTest, beforeAll, beforeEach, describe, openAndClose, test } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { Filter } from './filter';
-import { getObjectCore } from '../core-db';
+import { type EchoReactiveObject, getObjectCore } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { Contact, EchoTestBuilder, type EchoTestPeer } from '../testing';
 
 const createTestObject = (idx: number, label?: string) => {
   return create(Expando, { idx, title: `Task ${idx}`, label });
 };
-
-chai.use(chaiAsPromised);
 
 describe('Queries', () => {
   describe('Query with different filters', () => {
@@ -154,7 +151,9 @@ describe('Queries', () => {
     const spaceKey = PublicKey.random();
 
     const builder = new EchoTestBuilder();
-    afterTest(() => builder.close());
+    onTestFinished(async () => {
+      await builder.close();
+    });
 
     let root: AutomergeUrl;
     {
@@ -181,7 +180,9 @@ describe('Queries', () => {
     const spaceKey = PublicKey.random();
 
     const builder = new EchoTestBuilder();
-    afterTest(() => builder.close());
+    onTestFinished(async () => {
+      await builder.close();
+    });
 
     let root: AutomergeUrl;
     let expectedObjectId: string;
@@ -213,7 +214,9 @@ describe('Queries', () => {
   test('objects url changes, the latest document is loaded', async () => {
     const spaceKey = PublicKey.random();
     const builder = new EchoTestBuilder();
-    afterTest(() => builder.close());
+    onTestFinished(async () => {
+      await builder.close();
+    });
 
     const peer = await builder.createPeer();
 
@@ -256,7 +259,9 @@ describe('Queries', () => {
     const spaceKey = PublicKey.random();
 
     const builder = new EchoTestBuilder();
-    afterTest(() => builder.close());
+    onTestFinished(async () => {
+      await builder.close();
+    });
 
     const peer = await builder.createPeer(kv);
 
@@ -274,7 +279,9 @@ describe('Queries', () => {
     const spaceKey = PublicKey.random();
 
     const builder = new EchoTestBuilder();
-    afterTest(() => builder.close());
+    onTestFinished(async () => {
+      await builder.close();
+    });
 
     const peer = await builder.createPeer();
 
@@ -284,7 +291,7 @@ describe('Queries', () => {
     const obj2Core = getObjectCore(obj1);
     obj2Core.docHandle!.delete(); // Deleted handle access throws an exception.
 
-    await expect(db.query().run()).to.be.rejected;
+    await expect(db.query().run()).rejects.toBeInstanceOf(Error);
   });
 });
 
@@ -396,25 +403,6 @@ describe('Query reactivity', () => {
   });
 });
 
-test.skip('query with model filters', async () => {
-  const testBuilder = new EchoTestBuilder();
-  await openAndClose(testBuilder);
-
-  const { db } = await testBuilder.createDatabase();
-
-  const obj = db.add(
-    create(Expando, {
-      title: 'title',
-      description: create(Expando, { content: 'description' }),
-    }),
-  );
-
-  expect(db.query().objects).to.have.length(1);
-  expect(db.query().objects[0]).to.eq(obj);
-
-  expect(db.query(undefined, { models: ['*'] }).objects).to.have.length(2);
-});
-
 describe('Queries with types', () => {
   test('query by typename receives updates', async () => {
     const testBuilder = new EchoTestBuilder();
@@ -425,7 +413,7 @@ describe('Queries with types', () => {
     const contact = db.add(create(Contact, {}));
     const name = 'Rich Ivanov';
 
-    const query = db.query(Filter.typename('example.test.Contact'));
+    const query = db.query(Filter.typename('example.com/type/Contact'));
     const result = await query.run();
     expect(result.objects).to.have.length(1);
     expect(result.objects[0]).to.eq(contact);
@@ -440,7 +428,7 @@ describe('Queries with types', () => {
         anotherContactAdded.wake();
       }
     });
-    afterTest(() => unsub());
+    onTestFinished(() => unsub());
 
     contact.name = name;
     db.add(create(Contact, {}));

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/docs",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,10 +10,8 @@
   "scripts": {
     "apidoc": "rm -rf content/api && NODE_OPTIONS='--loader ts-node/esm' apidoc",
     "bundle": "vuepress build content",
-    "clean:api": "rm -rf content/api",
-    "prerelease": "pnpm typedoc && pnpm clean:api && pnpm apidoc",
-    "serve": "VITE_EXAMPLE_BASE_URL=http://localhost:9009 vuepress dev content",
-    "typedoc": "typedoc"
+    "prerelease": "pnpm apidoc",
+    "serve": "VITE_EXAMPLE_BASE_URL=http://localhost:9009 vuepress dev content"
   },
   "devDependencies": {
     "@dxos/apidoc": "workspace:*",
@@ -37,9 +35,8 @@
     "@preact/signals-core": "^1.6.0",
     "@stackblitz/sdk": "^1.9.0",
     "@types/eslint": "^8.44.9",
-    "@types/markdown-it": "^12.2.3",
+    "@types/markdown-it": "12.2.3",
     "@types/markdown-it-container": "^2.0.9",
-    "@types/node": "^18.11.9",
     "@types/prettier": "^2.7.3",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
@@ -62,8 +59,8 @@
     "react-router-dom": "^6.4.0",
     "ts-node": "10.9.1",
     "typedoc": "^0.25.10",
-    "typescript": "^5.5.4",
-    "vite": "^5.3.4",
+    "typescript": "^5.6.2",
+    "vite": "5.4.7",
     "vue": "^3.3.12",
     "vue-router": "^4.2.5",
     "vuepress": "2.0.0-rc.0",

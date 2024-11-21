@@ -4,11 +4,12 @@
 
 import '@dxos-theme';
 
+import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
 import { MessageType, ThreadType } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
-import { Filter, useQuery, useSpace } from '@dxos/react-client/echo';
+import { Filter, fullyQualifiedId, useQuery, useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -30,7 +31,7 @@ const Story = ({ spaceKey }: ClientRepeatedComponentProps) => {
       const t = setTimeout(async () => {
         space.db.add(createCommentThread(identity));
         const thread = space.db.add(createCommentThread(identity));
-        setDetached([thread.id]);
+        setDetached([fullyQualifiedId(thread)]);
       });
 
       return () => clearTimeout(t);
@@ -50,12 +51,14 @@ const Story = ({ spaceKey }: ClientRepeatedComponentProps) => {
   );
 };
 
-export default {
-  title: 'plugin-thread/Comments',
-  // TODO(wittjosiah): Register schemas.
+export const Default = {};
+
+const meta: Meta = {
+  title: 'plugins/plugin-thread/Comments',
+  // TODO(wittjosiah): Use decorator.
   render: () => <ClientRepeater component={Story} createIdentity createSpace types={[ThreadType, MessageType]} />,
   decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
   parameters: { translations },
 };
 
-export const Default = {};
+export default meta;

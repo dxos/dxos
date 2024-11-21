@@ -94,7 +94,7 @@ export class FeedWrapper<T extends {}> {
   createFeedWriter(): FeedWriter<T> {
     return {
       write: async (data: T, { afterWrite } = {}) => {
-        log('write', { feed: this._key, seq: this._hypercore.length, data });
+        log('write', { feed: this._key, seq: this._hypercore.length });
         invariant(!this._closed, 'Feed closed');
         const stackTrace = new StackTrace();
 

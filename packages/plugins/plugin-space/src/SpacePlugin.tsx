@@ -2,74 +2,84 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type IconProps, Plus, SignIn, CardsThree, Warning } from '@phosphor-icons/react';
-import { effect, signal } from '@preact/signals-core';
+import { signal } from '@preact/signals-core';
 import React from 'react';
 
 import {
+  type GraphProvides,
   type IntentDispatcher,
   type IntentPluginProvides,
   LayoutAction,
-  Surface,
+  type LayoutProvides,
   type LocationProvides,
   NavigationAction,
   type Plugin,
   type PluginDefinition,
-  openIds,
+  Surface,
+  findPlugin,
   firstIdInPart,
-  parseIntentPlugin,
-  parseNavigationPlugin,
-  parseMetadataResolverPlugin,
-  resolvePlugin,
+  openIds,
   parseGraphPlugin,
+  parseIntentPlugin,
+  parseLayoutPlugin,
+  parseMetadataResolverPlugin,
+  parseNavigationPlugin,
+  resolvePlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type Trigger, type UnsubscribeCallback } from '@dxos/async';
-import { type Identifiable, isReactiveObject, type EchoReactiveObject } from '@dxos/echo-schema';
+import { type HasId, isReactiveObject } from '@dxos/echo-schema';
+import { scheduledEffect } from '@dxos/echo-signals/core';
+import { invariant } from '@dxos/invariant';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { type AttentionPluginProvides, parseAttentionPlugin } from '@dxos/plugin-attention';
 import { type ClientPluginProvides, parseClientPlugin } from '@dxos/plugin-client';
-import { createExtension, isGraphNode, memoize, type Node, toSignal } from '@dxos/plugin-graph';
+import { type Node, createExtension, memoize, toSignal } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { type Client, PublicKey } from '@dxos/react-client';
 import {
-  type PropertiesTypeProps,
-  type Space,
-  create,
+  type EchoReactiveObject,
   Expando,
   Filter,
+  type PropertiesTypeProps,
+  type Space,
+  SpaceState,
+  create,
   fullyQualifiedId,
   getSpace,
   getTypename,
   isEchoObject,
   isSpace,
   loadObjectReferences,
-  SpaceState,
+  parseId,
+  FQ_ID_LENGTH,
 } from '@dxos/react-client/echo';
-import { Dialog } from '@dxos/react-ui';
-import { InvitationManager, type InvitationManagerProps, osTranslations, ClipboardProvider } from '@dxos/shell/react';
+import { type JoinPanelProps, osTranslations } from '@dxos/shell/react';
 import { ComplexMap, nonNullable, reduceGroupBy } from '@dxos/util';
 
 import {
   AwaitingObject,
   CollectionMain,
   CollectionSection,
-  EmptySpace,
-  EmptyTree,
+  DefaultObjectSettings,
+  JoinDialog,
   MenuFooter,
-  MissingObject,
   PopoverRenameObject,
   PopoverRenameSpace,
   ShareSpaceButton,
   SmallPresence,
   SmallPresenceLive,
   SpacePresence,
-  SpaceSettings,
+  SpacePluginSettings,
+  SpaceSettingsPanel,
+  SyncStatus,
+  SpaceSettingsDialog,
+  type SpaceSettingsDialogProps,
 } from './components';
 import meta, { SPACE_PLUGIN, SpaceAction } from './meta';
 import translations from './translations';
-import { CollectionType, type SpacePluginProvides, type SpaceSettingsProps, type PluginState } from './types';
+import { CollectionType, type PluginState, type SpacePluginProvides, type SpaceSettingsProps } from './types';
 import {
   COMPOSER_SPACE_LOCK,
   SHARED,
@@ -87,7 +97,7 @@ import {
 } from './util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
-const OBJECT_ID_LENGTH = 60; // 33 (space id) + 26 (object id) + 1 (separator).
+const WAIT_FOR_OBJECT_TIMEOUT = 1000;
 const SPACE_MAX_OBJECTS = 500;
 // https://stackoverflow.com/a/19016910
 const DIRECTORY_TYPE = 'text/directory';
@@ -96,6 +106,16 @@ export const parseSpacePlugin = (plugin?: Plugin) =>
   Array.isArray((plugin?.provides as any).space?.enabled) ? (plugin as Plugin<SpacePluginProvides>) : undefined;
 
 export type SpacePluginOptions = {
+  /**
+   * Base URL for the invitation link.
+   */
+  invitationUrl?: string;
+
+  /**
+   * Query parameter for the invitation code.
+   */
+  invitationParam?: string;
+
   /**
    * Fired when first run logic should be executed.
    *
@@ -115,33 +135,50 @@ export type SpacePluginOptions = {
 };
 
 export const SpacePlugin = ({
+  invitationUrl = window.location.origin,
+  invitationParam = 'spaceInvitationCode',
   firstRun,
   onFirstRun,
 }: SpacePluginOptions = {}): PluginDefinition<SpacePluginProvides> => {
-  const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
+  const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN, {
+    onSpaceCreate: 'dxos.org/plugin/markdown/action/create',
+  });
   const state = new LocalStorageStore<PluginState>(SPACE_PLUGIN, {
     awaiting: undefined,
     spaceNames: {},
     viewersByObject: {},
+    // TODO(wittjosiah): Stop using (Complex)Map inside reactive object.
     viewersByIdentity: new ComplexMap(PublicKey.hash),
     sdkMigrationRunning: {},
+    navigableCollections: false,
   });
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
   const graphSubscriptions = new Map<string, UnsubscribeCallback>();
 
   let clientPlugin: Plugin<ClientPluginProvides> | undefined;
+  let graphPlugin: Plugin<GraphProvides> | undefined;
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
+  let layoutPlugin: Plugin<LayoutProvides> | undefined;
   let navigationPlugin: Plugin<LocationProvides> | undefined;
   let attentionPlugin: Plugin<AttentionPluginProvides> | undefined;
 
+  const createSpaceInvitationUrl = (invitationCode: string) => {
+    const baseUrl = new URL(invitationUrl);
+    baseUrl.searchParams.set(invitationParam, invitationCode);
+    return baseUrl.toString();
+  };
+
   const onSpaceReady = async () => {
-    if (!clientPlugin || !navigationPlugin || !attentionPlugin) {
+    if (!clientPlugin || !intentPlugin || !graphPlugin || !navigationPlugin || !layoutPlugin || !attentionPlugin) {
       return;
     }
 
     const client = clientPlugin.provides.client;
+    const dispatch = intentPlugin.provides.intent.dispatch;
+    const graph = graphPlugin.provides.graph;
     const location = navigationPlugin.provides.location;
+    const layout = layoutPlugin.provides.layout;
     const attention = attentionPlugin.provides.attention;
     const defaultSpace = client.spaces.default;
 
@@ -159,6 +196,37 @@ export const SpacePlugin = ({
       defaultSpace.db.add(create({ key: SHARED, order: [] }));
     }
 
+    // Await missing objects.
+    subscriptions.add(
+      scheduledEffect(
+        () => ({
+          layoutMode: layout.layoutMode,
+          soloPart: location.active.solo?.[0],
+        }),
+        ({ layoutMode, soloPart }) => {
+          if (layoutMode !== 'solo' || !soloPart) {
+            return;
+          }
+
+          const node = graph.findNode(soloPart.id);
+          if (!node && soloPart.id.length === FQ_ID_LENGTH) {
+            const timeout = setTimeout(async () => {
+              const node = graph.findNode(soloPart.id);
+              if (!node) {
+                await dispatch({
+                  plugin: SPACE_PLUGIN,
+                  action: SpaceAction.WAIT_FOR_OBJECT,
+                  data: { id: soloPart.id },
+                });
+              }
+            }, WAIT_FOR_OBJECT_TIMEOUT);
+
+            return () => clearTimeout(timeout);
+          }
+        },
+      ),
+    );
+
     // Cache space names.
     subscriptions.add(
       client.spaces.subscribe(async (spaces) => {
@@ -171,9 +239,10 @@ export const SpacePlugin = ({
           .filter((space) => space.state.get() === SpaceState.SPACE_READY)
           .forEach((space) => {
             subscriptions.add(
-              effect(() => {
-                state.values.spaceNames[space.id] = space.properties.name;
-              }),
+              scheduledEffect(
+                () => ({ name: space.properties.name }),
+                ({ name }) => (state.values.spaceNames[space.id] = name),
+              ),
             );
           });
       }).unsubscribe,
@@ -181,54 +250,56 @@ export const SpacePlugin = ({
 
     // Broadcast active node to other peers in the space.
     subscriptions.add(
-      effect(() => {
-        const send = () => {
-          const spaces = client.spaces.get();
-          const identity = client.halo.identity.get();
-          if (identity && location.active) {
-            const ids = openIds(location.active);
+      scheduledEffect(
+        () => ({
+          ids: openIds(location.active),
+          removed: location.closed ? [location.closed].flat() : [],
+        }),
+        ({ ids, removed }) => {
+          const send = () => {
+            const spaces = client.spaces.get();
+            const identity = client.halo.identity.get();
+            if (identity && location.active) {
+              // Group parts by space for efficient messaging.
+              const idsBySpace = reduceGroupBy(ids, (id) => {
+                const [spaceId] = id.split(':'); // TODO(burdon): Factor out.
+                return spaceId;
+              });
 
-            // Group parts by space for efficient messaging.
-            const idsBySpace = reduceGroupBy(ids, (id) => {
-              const [spaceId] = id.split(':'); // TODO(burdon): Factor out.
-              return spaceId;
-            });
-
-            // NOTE: Ensure all spaces are included so that we send the correct `removed` object arrays.
-            for (const space of spaces) {
-              if (!idsBySpace.has(space.id)) {
-                idsBySpace.set(space.id, []);
-              }
-            }
-
-            for (const [spaceId, ids] of idsBySpace) {
-              const space = spaces.find((space) => space.id === spaceId);
-              if (!space) {
-                continue;
+              // NOTE: Ensure all spaces are included so that we send the correct `removed` object arrays.
+              for (const space of spaces) {
+                if (!idsBySpace.has(space.id)) {
+                  idsBySpace.set(space.id, []);
+                }
               }
 
-              const removed = location.closed ? [location.closed].flat() : [];
+              for (const [spaceId, ids] of idsBySpace) {
+                const space = spaces.find((space) => space.id === spaceId);
+                if (!space) {
+                  continue;
+                }
 
-              void space
-                .postMessage('viewing', {
-                  identityKey: identity.identityKey.toHex(),
-                  attended: attention.attended ? [...attention.attended] : [],
-                  added: ids,
-                  // TODO(Zan): When we re-open a part, we should remove it from the removed list in the navigation plugin.
-                  removed: removed.filter((id) => !ids.includes(id)),
-                })
-                // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
-                .catch((err) => {
-                  log.warn('Failed to broadcast active node for presence.', { err: err.message });
-                });
+                void space
+                  .postMessage('viewing', {
+                    identityKey: identity.identityKey.toHex(),
+                    attended: attention.attended ? [...attention.attended] : [],
+                    added: ids,
+                    // TODO(Zan): When we re-open a part, we should remove it from the removed list in the navigation plugin.
+                    removed: removed.filter((id) => !ids.includes(id)),
+                  })
+                  // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
+                  .catch((err) => {
+                    log.warn('Failed to broadcast active node for presence.', { err: err.message });
+                  });
+              }
             }
-          }
-        };
+          };
 
-        send();
-        const interval = setInterval(() => send(), ACTIVE_NODE_BROADCAST_INTERVAL);
-        return () => clearInterval(interval);
-      }),
+          send();
+          const interval = setInterval(() => send(), ACTIVE_NODE_BROADCAST_INTERVAL);
+          return () => clearInterval(interval);
+        },
+      ),
     );
 
     // Listen for active nodes from other peers in the space.
@@ -276,18 +347,17 @@ export const SpacePlugin = ({
   return {
     meta,
     ready: async (plugins) => {
-      settings.prop({
-        key: 'showHidden',
-        storageKey: 'show-hidden',
-        type: LocalStorageStore.bool({ allowUndefined: true }),
-      });
+      settings.prop({ key: 'showHidden', type: LocalStorageStore.bool({ allowUndefined: true }) });
+      state.prop({ key: 'spaceNames', type: LocalStorageStore.json<Record<string, string>>() });
 
-      state.prop({
-        key: 'spaceNames',
-        storageKey: 'space-names',
-        type: LocalStorageStore.json<Record<string, string>>(),
-      });
+      // TODO(wittjosiah): Hardcoded due to circular dependency.
+      //   Should be based on a provides interface.
+      if (findPlugin(plugins, 'dxos.org/plugin/stack')) {
+        state.values.navigableCollections = true;
+      }
 
+      graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
+      layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
       navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       attentionPlugin = resolvePlugin(plugins, parseAttentionPlugin);
       clientPlugin = resolvePlugin(plugins, parseClientPlugin);
@@ -310,19 +380,20 @@ export const SpacePlugin = ({
         await onFirstRun?.({ client, dispatch });
       };
 
-      // No need to unsubscribe because this observable completes when spaces are ready.
-      client.spaces.isReady.subscribe(async (ready) => {
-        if (ready) {
-          await clientPlugin?.provides.client.spaces.default.waitUntilReady();
-          if (firstRun) {
-            void firstRun?.wait().then(handleFirstRun);
-          } else {
-            await handleFirstRun();
-          }
+      subscriptions.add(
+        client.spaces.isReady.subscribe(async (ready) => {
+          if (ready) {
+            await clientPlugin?.provides.client.spaces.default.waitUntilReady();
+            if (firstRun) {
+              void firstRun?.wait().then(handleFirstRun);
+            } else {
+              await handleFirstRun();
+            }
 
-          await onSpaceReady();
-        }
-      });
+            await onSpaceReady();
+          }
+        }).unsubscribe,
+      );
     },
     unload: async () => {
       settings.close();
@@ -335,13 +406,17 @@ export const SpacePlugin = ({
       space: state.values,
       settings: settings.values,
       translations: [...translations, osTranslations],
+      complementary: {
+        panels: [
+          { id: 'settings', label: ['open settings panel label', { ns: SPACE_PLUGIN }], icon: 'ph--gear--regular' },
+        ],
+      },
       root: () => (state.values.awaiting ? <AwaitingObject id={state.values.awaiting} /> : null),
       metadata: {
         records: {
           [CollectionType.typename]: {
             placeholder: ['unnamed collection label', { ns: SPACE_PLUGIN }],
-            icon: (props: IconProps) => <CardsThree {...props} />,
-            iconSymbol: 'ph--cards-three--regular',
+            icon: 'ph--cards-three--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (collection: CollectionType) =>
               loadObjectReferences(collection, (collection) => [
@@ -356,41 +431,40 @@ export const SpacePlugin = ({
       },
       surface: {
         component: ({ data, role, ...rest }) => {
-          const primary = data.active ?? data.object;
           switch (role) {
             case 'article':
-            case 'main':
               // TODO(wittjosiah): Need to avoid shotgun parsing space state everywhere.
-              return isSpace(primary) && primary.state.get() === SpaceState.SPACE_READY ? (
-                <Surface data={{ active: primary.properties[CollectionType.typename] }} role={role} {...rest} />
-              ) : primary instanceof CollectionType ? (
-                { node: <CollectionMain collection={primary} />, disposition: 'fallback' }
-              ) : typeof primary === 'string' && primary.length === OBJECT_ID_LENGTH ? (
-                <MissingObject id={primary} />
+              return isSpace(data.object) && data.object.state.get() === SpaceState.SPACE_READY ? (
+                <Surface
+                  data={{ object: data.object.properties[CollectionType.typename], id: data.object.id }}
+                  role={role}
+                  {...rest}
+                />
+              ) : data.object instanceof CollectionType ? (
+                {
+                  node: <CollectionMain collection={data.object} />,
+                  disposition: 'fallback',
+                }
               ) : null;
-            // TODO(burdon): Add role name syntax to minimal plugin docs.
-            case 'tree--empty':
-              switch (true) {
-                case data.plugin === SPACE_PLUGIN:
-                  return <EmptyTree />;
-                case isGraphNode(data.activeNode) && isSpace(data.activeNode.data):
-                  return <EmptySpace />;
-                default:
-                  return null;
-              }
+            case 'complementary--settings':
+              return isSpace(data.subject) ? (
+                <SpaceSettingsPanel space={data.subject} />
+              ) : isEchoObject(data.subject) ? (
+                { node: <DefaultObjectSettings object={data.subject} />, disposition: 'fallback' }
+              ) : null;
             case 'dialog':
-              if (data.component === 'dxos.org/plugin/space/InvitationManagerDialog') {
+              if (data.component === 'dxos.org/plugin/space/SpaceSettingsDialog') {
                 return (
-                  <Dialog.Content>
-                    <ClipboardProvider>
-                      <InvitationManager active {...(data.subject as InvitationManagerProps)} />
-                    </ClipboardProvider>
-                  </Dialog.Content>
+                  <SpaceSettingsDialog
+                    {...(data.subject as SpaceSettingsDialogProps)}
+                    createInvitationUrl={createSpaceInvitationUrl}
+                  />
                 );
-              } else {
-                return null;
+              } else if (data.component === 'dxos.org/plugin/space/JoinDialog') {
+                return <JoinDialog {...(data.subject as JoinPanelProps)} />;
               }
-            case 'popover':
+              return null;
+            case 'popover': {
               if (data.component === 'dxos.org/plugin/space/RenameSpacePopover' && isSpace(data.subject)) {
                 return <PopoverRenameSpace space={data.subject} />;
               }
@@ -398,11 +472,16 @@ export const SpacePlugin = ({
                 return <PopoverRenameObject object={data.subject} />;
               }
               return null;
+            }
+            // TODO(burdon): Add role name syntax to minimal plugin docs.
             case 'presence--glyph': {
               return isReactiveObject(data.object) ? (
-                <SmallPresenceLive viewers={state.values.viewersByObject[fullyQualifiedId(data.object)]} />
+                <SmallPresenceLive
+                  id={data.id as string}
+                  viewers={state.values.viewersByObject[fullyQualifiedId(data.object)]}
+                />
               ) : (
-                <SmallPresence count={0} />
+                <SmallPresence id={data.id as string} count={0} />
               );
             }
             case 'navbar-start': {
@@ -419,12 +498,13 @@ export const SpacePlugin = ({
                   ? (space?.properties[CollectionType.typename] as CollectionType)
                   : undefined
                 : data.object;
+
               return space && object
                 ? {
                     node: (
                       <>
                         <SpacePresence object={object} />
-                        {space.properties[COMPOSER_SPACE_LOCK] ? null : <ShareSpaceButton spaceId={space.id} />}
+                        {space.properties[COMPOSER_SPACE_LOCK] ? null : <ShareSpaceButton space={space} />}
                       </>
                     ),
                     disposition: 'hoist',
@@ -434,13 +514,16 @@ export const SpacePlugin = ({
             case 'section':
               return data.object instanceof CollectionType ? <CollectionSection collection={data.object} /> : null;
             case 'settings':
-              return data.plugin === meta.id ? <SpaceSettings settings={settings.values} /> : null;
+              return data.plugin === meta.id ? <SpacePluginSettings settings={settings.values} /> : null;
             case 'menu-footer':
-              if (!isEchoObject(data.object)) {
-                return null;
-              } else {
+              if (isEchoObject(data.object)) {
                 return <MenuFooter object={data.object} />;
+              } else {
+                return null;
               }
+            case 'status': {
+              return <SyncStatus />;
+            }
             default:
               return null;
           }
@@ -456,8 +539,7 @@ export const SpacePlugin = ({
           const dispatch = intentPlugin?.provides.intent.dispatch;
           const resolve = metadataPlugin?.provides.metadata.resolver;
           const graph = graphPlugin?.provides.graph;
-
-          if (!graph || !dispatch || !resolve || !client) {
+          if (!client || !dispatch || !resolve || !graph) {
             return [];
           }
 
@@ -491,9 +573,9 @@ export const SpacePlugin = ({
                     type: SPACES,
                     properties: {
                       label: ['spaces label', { ns: SPACE_PLUGIN }],
-                      palette: 'teal',
                       testId: 'spacePlugin.spaces',
                       role: 'branch',
+                      disabled: true,
                       childrenPersistenceClass: 'echo',
                       onRearrangeChildren: async (nextOrder: Space[]) => {
                         // NOTE: This is needed to ensure order is updated by next animation frame.
@@ -528,41 +610,31 @@ export const SpacePlugin = ({
                 {
                   id: SpaceAction.CREATE,
                   data: async () => {
-                    await dispatch([
-                      {
-                        plugin: SPACE_PLUGIN,
-                        action: SpaceAction.CREATE,
-                      },
-                      {
-                        action: NavigationAction.OPEN,
-                      },
-                    ]);
+                    await dispatch({
+                      plugin: SPACE_PLUGIN,
+                      action: SpaceAction.CREATE,
+                    });
                   },
                   properties: {
                     label: ['create space label', { ns: SPACE_PLUGIN }],
-                    icon: (props: IconProps) => <Plus {...props} />,
-                    iconSymbol: 'ph--plus--regular',
-                    disposition: 'toolbar',
+                    icon: 'ph--plus--regular',
+                    disposition: 'item',
                     testId: 'spacePlugin.createSpace',
+                    className: 'border-t border-separator',
                   },
                 },
                 {
                   id: SpaceAction.JOIN,
                   data: async () => {
-                    await dispatch([
-                      {
-                        plugin: SPACE_PLUGIN,
-                        action: SpaceAction.JOIN,
-                      },
-                      {
-                        action: NavigationAction.OPEN,
-                      },
-                    ]);
+                    await dispatch({
+                      plugin: SPACE_PLUGIN,
+                      action: SpaceAction.JOIN,
+                    });
                   },
                   properties: {
                     label: ['join space label', { ns: SPACE_PLUGIN }],
-                    icon: (props: IconProps) => <SignIn {...props} />,
-                    iconSymbol: 'ph--sign-in--regular',
+                    icon: 'ph--sign-in--regular',
+                    disposition: 'item',
                     testId: 'spacePlugin.joinSpace',
                   },
                 },
@@ -582,26 +654,30 @@ export const SpacePlugin = ({
                   return;
                 }
 
-                const [spacesOrder] = memoizeQuery(client.spaces.default, Filter.schema(Expando, { key: SHARED }));
-                const order: string[] = spacesOrder?.order ?? [];
-                const orderMap = new Map(order.map((id, index) => [id, index]));
-                return [
-                  ...spaces
-                    .filter((space) => orderMap.has(space.id))
-                    .sort((a, b) => orderMap.get(a.id)! - orderMap.get(b.id)!),
-                  ...spaces.filter((space) => !orderMap.has(space.id)),
-                ]
-                  .filter((space) =>
-                    settings.values.showHidden ? true : space.state.get() !== SpaceState.SPACE_INACTIVE,
-                  )
-                  .map((space) =>
-                    constructSpaceNode({
-                      space,
-                      personal: space === client.spaces.default,
-                      namesCache: state.values.spaceNames,
-                      resolve,
-                    }),
-                  );
+                // TODO(wittjosiah): During client reset, accessing default space throws.
+                try {
+                  const [spacesOrder] = memoizeQuery(client.spaces.default, Filter.schema(Expando, { key: SHARED }));
+                  const order: string[] = spacesOrder?.order ?? [];
+                  const orderMap = new Map(order.map((id, index) => [id, index]));
+                  return [
+                    ...spaces
+                      .filter((space) => orderMap.has(space.id))
+                      .sort((a, b) => orderMap.get(a.id)! - orderMap.get(b.id)!),
+                    ...spaces.filter((space) => !orderMap.has(space.id)),
+                  ]
+                    .filter((space) =>
+                      settings.values.showHidden ? true : space.state.get() !== SpaceState.SPACE_INACTIVE,
+                    )
+                    .map((space) =>
+                      constructSpaceNode({
+                        space,
+                        navigable: state.values.navigableCollections,
+                        personal: space === client.spaces.default,
+                        namesCache: state.values.spaceNames,
+                        resolve,
+                      }),
+                    );
+                } catch {}
               },
             }),
 
@@ -615,12 +691,12 @@ export const SpacePlugin = ({
                   return;
                 }
 
-                const state = toSignal(
+                const spaceState = toSignal(
                   (onChange) => space.state.subscribe(() => onChange()).unsubscribe,
                   () => space.state.get(),
                   space.id,
                 );
-                if (state !== SpaceState.SPACE_READY) {
+                if (spaceState !== SpaceState.SPACE_READY) {
                   return;
                 }
 
@@ -635,7 +711,7 @@ export const SpacePlugin = ({
                   return;
                 }
 
-                return createObjectNode({ object, space, resolve });
+                return createObjectNode({ object, space, resolve, navigable: state.values.navigableCollections });
               },
             }),
 
@@ -643,7 +719,12 @@ export const SpacePlugin = ({
             createExtension({
               id: `${SPACE_PLUGIN}/actions`,
               filter: (node): node is Node<Space> => isSpace(node.data),
-              actionGroups: ({ node }) => constructSpaceActionGroups({ space: node.data, dispatch }),
+              actionGroups: ({ node }) =>
+                constructSpaceActionGroups({
+                  space: node.data,
+                  dispatch,
+                  navigable: state.values.navigableCollections,
+                }),
               actions: ({ node }) => {
                 const space = node.data;
                 return constructSpaceActions({
@@ -661,12 +742,12 @@ export const SpacePlugin = ({
               filter: (node): node is Node<Space> => isSpace(node.data),
               connector: ({ node }) => {
                 const space = node.data;
-                const state = toSignal(
+                const spaceState = toSignal(
                   (onChange) => space.state.subscribe(() => onChange()).unsubscribe,
                   () => space.state.get(),
                   space.id,
                 );
-                if (state !== SpaceState.SPACE_READY) {
+                if (spaceState !== SpaceState.SPACE_READY) {
                   return;
                 }
 
@@ -677,7 +758,9 @@ export const SpacePlugin = ({
 
                 return collection.objects
                   .filter(nonNullable)
-                  .map((object) => createObjectNode({ object, space, resolve }))
+                  .map((object) =>
+                    createObjectNode({ object, space, resolve, navigable: state.values.navigableCollections }),
+                  )
                   .filter(nonNullable);
               },
             }),
@@ -686,7 +769,12 @@ export const SpacePlugin = ({
             createExtension({
               id: `${SPACE_PLUGIN}/object-actions`,
               filter: (node): node is Node<EchoReactiveObject<any>> => isEchoObject(node.data),
-              actionGroups: ({ node }) => constructObjectActionGroups({ object: node.data, dispatch }),
+              actionGroups: ({ node }) =>
+                constructObjectActionGroups({
+                  object: node.data,
+                  dispatch,
+                  navigable: state.values.navigableCollections,
+                }),
               actions: ({ node }) => constructObjectActions({ node, dispatch }),
             }),
 
@@ -703,8 +791,80 @@ export const SpacePlugin = ({
 
                 return collection.objects
                   .filter(nonNullable)
-                  .map((object) => createObjectNode({ object, space, resolve }))
+                  .map((object) =>
+                    createObjectNode({ object, space, resolve, navigable: state.values.navigableCollections }),
+                  )
                   .filter(nonNullable);
+              },
+            }),
+
+            // Create nodes for object settings.
+            createExtension({
+              id: `${SPACE_PLUGIN}/settings-for-subject`,
+              resolver: ({ id }) => {
+                // TODO(Zan): Find util (or make one).
+                if (!id.endsWith('~settings')) {
+                  return;
+                }
+
+                const type = 'orphan-settings-for-subject';
+                const icon = 'ph--gear--regular';
+
+                const [subjectId] = id.split('~');
+                const { spaceId, objectId } = parseId(subjectId);
+                const space = client.spaces.get().find((space) => space.id === spaceId);
+                if (!objectId) {
+                  const label = space
+                    ? space.properties.name || ['unnamed space label', { ns: SPACE_PLUGIN }]
+                    : ['unnamed object settings label', { ns: SPACE_PLUGIN }];
+
+                  // TODO(wittjosiah): Support comments for arbitrary subjects.
+                  //   This is to ensure that the comments panel is not stuck on an old object.
+                  return {
+                    id,
+                    type,
+                    data: null,
+                    properties: {
+                      icon,
+                      label,
+                      showResolvedThreads: false,
+                      object: null,
+                      space,
+                    },
+                  };
+                }
+
+                const object = toSignal(
+                  (onChange) => {
+                    const timeout = setTimeout(async () => {
+                      await space?.db.loadObjectById(objectId);
+                      onChange();
+                    });
+
+                    return () => clearTimeout(timeout);
+                  },
+                  () => space?.db.getObjectById(objectId),
+                  subjectId,
+                );
+                if (!object || !subjectId) {
+                  return;
+                }
+
+                const meta = resolve(getTypename(object) ?? '');
+                const label = meta.label?.(object) ||
+                  object.name ||
+                  meta.placeholder || ['unnamed object settings label', { ns: SPACE_PLUGIN }];
+
+                return {
+                  id,
+                  type,
+                  data: null,
+                  properties: {
+                    icon,
+                    label,
+                    object,
+                  },
+                };
               },
             }),
           ];
@@ -802,9 +962,22 @@ export const SpacePlugin = ({
               }
 
               return {
-                data: { space, id: space.id, activeParts: { main: [space.id] } },
-
+                data: {
+                  space,
+                  id: space.id,
+                  activeParts: { main: [space.id] },
+                },
                 intents: [
+                  ...(settings.values.onSpaceCreate
+                    ? [
+                        [
+                          { action: settings.values.onSpaceCreate, data: { space } },
+                          { action: SpaceAction.ADD_OBJECT, data: { target: space } },
+                          { action: NavigationAction.OPEN },
+                          { action: NavigationAction.EXPOSE },
+                        ],
+                      ]
+                    : []),
                   [
                     {
                       action: ObservabilityAction.SEND_EVENT,
@@ -821,52 +994,60 @@ export const SpacePlugin = ({
             }
 
             case SpaceAction.JOIN: {
-              if (client) {
-                const { space } = await client.shell.joinSpace({ invitationCode: intent.data?.invitationCode });
-                if (space) {
-                  return {
-                    data: { space, id: space.id, activeParts: { main: [space.id] } },
-
-                    intents: [
-                      [
-                        {
-                          action: ObservabilityAction.SEND_EVENT,
-                          data: {
-                            name: 'space.join',
-                            properties: {
-                              spaceId: space.id,
-                            },
-                          },
-                        },
-                      ],
-                    ],
-                  };
-                }
-              }
+              return {
+                data: true,
+                intents: [
+                  [
+                    {
+                      action: LayoutAction.SET_LAYOUT,
+                      data: {
+                        element: 'dialog',
+                        component: 'dxos.org/plugin/space/JoinDialog',
+                        dialogBlockAlign: 'start',
+                        subject: {
+                          initialInvitationCode: intent.data?.invitationCode,
+                        } satisfies Partial<JoinPanelProps>,
+                      },
+                    },
+                  ],
+                ],
+              };
               break;
             }
 
             case SpaceAction.SHARE: {
-              const spaceId = intent.data?.spaceId;
-              if (clientPlugin && typeof spaceId === 'string') {
-                if (!navigationPlugin?.provides.location.active) {
-                  return;
-                }
-                const target = firstIdInPart(navigationPlugin?.provides.location.active, 'main');
-                const result = await clientPlugin.provides.client.shell.shareSpace({ spaceId, target });
+              const space = intent.data?.space;
+              if (isSpace(space) && !space.properties[COMPOSER_SPACE_LOCK]) {
+                const active = navigationPlugin?.provides.location.active;
+                const mode = layoutPlugin?.provides.layout.layoutMode;
+                const target = active ? firstIdInPart(active, mode === 'solo' ? 'solo' : 'main') : undefined;
+
                 return {
-                  data: result,
+                  data: true,
                   intents: [
+                    [
+                      {
+                        action: LayoutAction.SET_LAYOUT,
+                        data: {
+                          element: 'dialog',
+                          component: 'dxos.org/plugin/space/SpaceSettingsDialog',
+                          dialogBlockAlign: 'start',
+                          subject: {
+                            space,
+                            target,
+                            initialTab: 'members',
+                            createInvitationUrl: createSpaceInvitationUrl,
+                          } satisfies Partial<SpaceSettingsDialogProps>,
+                        },
+                      },
+                    ],
                     [
                       {
                         action: ObservabilityAction.SEND_EVENT,
                         data: {
                           name: 'space.share',
                           properties: {
-                            spaceId,
-                            members: result.members?.length,
-                            error: result.error?.message,
-                            cancelled: result.cancelled,
+                            space: space.id,
                           },
                         },
                       },
@@ -938,6 +1119,33 @@ export const SpacePlugin = ({
                           anchorId: `dxos.org/ui/${caller}/${space.id}`,
                           component: 'dxos.org/plugin/space/RenameSpacePopover',
                           subject: space,
+                        },
+                      },
+                    ],
+                  ],
+                };
+              }
+              break;
+            }
+
+            case SpaceAction.OPEN_SETTINGS: {
+              const space = intent.data?.space;
+              if (isSpace(space)) {
+                return {
+                  data: true,
+                  intents: [
+                    [
+                      {
+                        action: LayoutAction.SET_LAYOUT,
+                        data: {
+                          element: 'dialog',
+                          component: 'dxos.org/plugin/space/SpaceSettingsDialog',
+                          dialogBlockAlign: 'start',
+                          subject: {
+                            space,
+                            initialTab: 'settings',
+                            createInvitationUrl: createSpaceInvitationUrl,
+                          } satisfies Partial<SpaceSettingsDialogProps>,
                         },
                       },
                     ],
@@ -1020,8 +1228,7 @@ export const SpacePlugin = ({
                             title: translations[0]['en-US'][SPACE_PLUGIN]['space limit label'],
                             description: translations[0]['en-US'][SPACE_PLUGIN]['space limit description'],
                             duration: 5_000,
-                            icon: (props: IconProps) => <Warning {...props} />,
-                            iconSymbol: 'ph--warning--regular',
+                            icon: 'ph--warning--regular',
                             actionLabel: translations[0]['en-US'][SPACE_PLUGIN]['remove deleted objects label'],
                             actionAlt: translations[0]['en-US'][SPACE_PLUGIN]['remove deleted objects alt'],
                             // TODO(wittjosiah): Use OS namespace.
@@ -1047,20 +1254,20 @@ export const SpacePlugin = ({
               }
 
               if (intent.data?.target instanceof CollectionType) {
-                intent.data?.target.objects.push(object as Identifiable);
+                intent.data?.target.objects.push(object as HasId);
               } else if (isSpace(intent.data?.target)) {
                 const collection = space.properties[CollectionType.typename];
                 if (collection instanceof CollectionType) {
-                  collection.objects.push(object as Identifiable);
+                  collection.objects.push(object as HasId);
                 } else {
                   // TODO(wittjosiah): Can't add non-echo objects by including in a collection because of types.
-                  const collection = create(CollectionType, { objects: [object as Identifiable], views: {} });
+                  const collection = create(CollectionType, { objects: [object as HasId], views: {} });
                   space.properties[CollectionType.typename] = collection;
                 }
               }
 
               return {
-                data: { id: object.id, object, activeParts: { main: [fullyQualifiedId(object)] } },
+                data: { id: fullyQualifiedId(object), object, activeParts: { main: [fullyQualifiedId(object)] } },
                 intents: [
                   [
                     {
@@ -1079,10 +1286,13 @@ export const SpacePlugin = ({
               };
             }
 
-            case SpaceAction.REMOVE_OBJECT: {
-              const object = intent.data?.object ?? intent.data?.result;
-              const space = getSpace(object);
-              if (!(isEchoObject(object) && space)) {
+            case SpaceAction.REMOVE_OBJECTS: {
+              const objects = intent.data?.objects ?? intent.data?.result;
+              invariant(Array.isArray(objects));
+
+              // All objects must be a member of the same space.
+              const space = getSpace(objects[0]);
+              if (!space || !objects.every((obj) => isEchoObject(obj) && getSpace(obj) === space)) {
                 return;
               }
 
@@ -1091,23 +1301,22 @@ export const SpacePlugin = ({
               const openObjectIds = new Set<string>(openIds(activeParts ?? {}));
 
               if (!intent.undo && resolve) {
-                // Capture the current state for undo.
                 const parentCollection = intent.data?.collection ?? space.properties[CollectionType.typename];
-                const nestedObjects = await getNestedObjects(object, resolve);
+                const nestedObjectsList = await Promise.all(objects.map((obj) => getNestedObjects(obj, resolve)));
+
                 const deletionData = {
-                  object,
+                  objects,
                   parentCollection,
-                  index:
-                    parentCollection instanceof CollectionType
-                      ? parentCollection.objects.indexOf(object as Expando)
-                      : -1,
-                  nestedObjects,
-                  wasActive: [object, ...nestedObjects]
+                  indices: objects.map((obj) =>
+                    parentCollection instanceof CollectionType ? parentCollection.objects.indexOf(obj as Expando) : -1,
+                  ),
+                  nestedObjectsList,
+                  wasActive: objects
+                    .flatMap((obj, i) => [obj, ...nestedObjectsList[i]])
                     .map((obj) => fullyQualifiedId(obj))
                     .filter((id) => openObjectIds.has(id)),
                 };
 
-                // If the item is active, navigate to "nowhere" to avoid navigating to a removed item.
                 if (deletionData.wasActive.length > 0) {
                   await intentPlugin?.provides.intent.dispatch({
                     action: NavigationAction.CLOSE,
@@ -1115,54 +1324,61 @@ export const SpacePlugin = ({
                       activeParts: {
                         main: deletionData.wasActive,
                         sidebar: deletionData.wasActive,
-                        complementary: deletionData.wasActive,
                       },
                     },
                   });
                 }
 
-                if (parentCollection instanceof CollectionType) {
-                  // TODO(Zan): Is there a nicer way to do this without casting to Expando?
-                  const index = parentCollection.objects.indexOf(object as Expando);
-                  if (index !== -1) {
-                    parentCollection.objects.splice(index, 1);
-                  }
+                if (deletionData.parentCollection instanceof CollectionType) {
+                  [...deletionData.indices]
+                    .sort((a, b) => b - a)
+                    .forEach((index: number) => {
+                      if (index !== -1) {
+                        deletionData.parentCollection.objects.splice(index, 1);
+                      }
+                    });
                 }
 
-                // If the object is a collection, also delete its nested objects.
-                deletionData.nestedObjects.forEach((obj) => {
+                deletionData.nestedObjectsList.flat().forEach((obj) => {
                   space.db.remove(obj);
                 });
-                space.db.remove(object);
+                objects.forEach((obj) => space.db.remove(obj));
 
-                const undoMessageKey =
-                  object instanceof CollectionType ? 'collection deleted label' : 'object deleted label';
+                const undoMessageKey = objects.some((obj) => obj instanceof CollectionType)
+                  ? 'collection deleted label'
+                  : objects.length > 1
+                    ? 'objects deleted label'
+                    : 'object deleted label';
 
                 return {
                   data: true,
                   undoable: {
-                    // Consider using a translation key here.
+                    // TODO(ZaymonFC): Pluralize if more than one object.
                     message: translations[0]['en-US'][SPACE_PLUGIN][undoMessageKey],
                     data: deletionData,
                   },
                 };
               } else {
                 const undoData = intent.data;
-                if (undoData && isEchoObject(undoData.object) && undoData.parentCollection instanceof CollectionType) {
+                if (
+                  undoData?.objects?.length &&
+                  undoData.objects.every(isEchoObject) &&
+                  undoData.parentCollection instanceof CollectionType
+                ) {
                   // Restore the object to the space.
-                  const restoredObject = space.db.add(undoData.object);
+                  const restoredObjects = undoData.objects.map((obj: Expando) => space.db.add(obj));
 
-                  // Restore nested objects if the object was a collection.
-                  undoData.nestedObjects.forEach((obj: Expando) => {
+                  // Restore nested objects to the space.
+                  undoData.nestedObjectsList.flat().forEach((obj: Expando) => {
                     space.db.add(obj);
                   });
 
-                  // Restore the object to its original position in the collection.
-                  if (undoData.index !== -1) {
-                    undoData.parentCollection.objects.splice(undoData.index, 0, restoredObject as Expando);
-                  }
+                  undoData.indices.forEach((index: number, i: number) => {
+                    if (index !== -1) {
+                      undoData.parentCollection.objects.splice(index, 0, restoredObjects[i] as Expando);
+                    }
+                  });
 
-                  // Restore active state if it was active before removal.
                   if (undoData.wasActive.length > 0) {
                     await intentPlugin?.provides.intent.dispatch({
                       action: NavigationAction.OPEN,
@@ -1203,11 +1419,12 @@ export const SpacePlugin = ({
             case SpaceAction.DUPLICATE_OBJECT: {
               const originalObject = intent.data?.object ?? intent.data?.result;
               const resolve = resolvePlugin(plugins, parseMetadataResolverPlugin)?.provides.metadata.resolver;
-              if (!isEchoObject(originalObject) || !resolve) {
+              const space = isSpace(intent.data?.target) ? intent.data?.target : getSpace(intent.data?.target);
+              if (!isEchoObject(originalObject) || !resolve || !space) {
                 return;
               }
 
-              const newObject = await cloneObject(originalObject, resolve);
+              const newObject = await cloneObject(originalObject, resolve, space);
               return {
                 intents: [
                   [{ action: SpaceAction.ADD_OBJECT, data: { object: newObject, target: intent.data?.target } }],

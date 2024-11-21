@@ -2,10 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
 import { expectToThrow } from '@dxos/debug';
-import { describe, test } from '@dxos/test';
 
 import { Mutex, synchronized } from './mutex';
 import { sleep } from './timeout';
@@ -139,7 +138,7 @@ describe('Mutex', () => {
 
     expect(error!.stack!.includes('throwsError')).to.be.true;
     expect(error!.stack!.includes('callmutex')).to.be.true;
-  }).skipEnvironments('webkit');
+  }); // .skipEnvironments('webkit');
 
   test('works with explicit resource management syntax', async () => {
     const mutex = new Mutex();

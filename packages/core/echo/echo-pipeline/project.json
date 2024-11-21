@@ -12,28 +12,16 @@
       "options": {
         "entryPoints": [
           "{projectRoot}/src/index.ts",
-          "{projectRoot}/src/light.ts",
           "{projectRoot}/src/testing/index.ts"
         ],
         "injectGlobals": true
       }
     },
     "lint": {},
-    "test": {
-      "options": {
-        "envVariables": {
-          "SIGNAL_PORT": 12001
-        },
-        "forceExit": true,
-        "setup": "packages/core/mesh/signal/testing/setup.js",
-        "setupOptions": {
-          "port": 12001
-        }
-      }
-    }
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild",
-    "test"
+    "node-std"
   ]
 }

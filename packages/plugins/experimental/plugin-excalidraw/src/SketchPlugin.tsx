@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CompassTool, type IconProps } from '@phosphor-icons/react';
+import { CompassTool } from '@phosphor-icons/react';
 import React from 'react';
 
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
@@ -25,7 +25,7 @@ import translations from './translations';
 import { SketchAction, type SketchGridType, type SketchPluginProvides, type SketchSettingsProps } from './types';
 
 export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
-  const settings = new LocalStorageStore<SketchSettingsProps>(SKETCH_PLUGIN, {});
+  const settings = new LocalStorageStore<Partial<SketchSettingsProps>>(SKETCH_PLUGIN);
 
   return {
     meta,
@@ -33,12 +33,10 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
       settings
         .prop({
           key: 'autoHideControls',
-          storageKey: 'auto-hide-controls',
           type: LocalStorageStore.bool({ allowUndefined: true }),
         })
         .prop({
           key: 'gridType',
-          storageKey: 'grid-type',
           type: LocalStorageStore.enum<SketchGridType>({ allowUndefined: true }),
         });
     },
@@ -47,8 +45,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
         records: {
           [DiagramType.typename]: {
             placeholder: ['object title placeholder', { ns: SKETCH_PLUGIN }],
-            icon: (props: IconProps) => <CompassTool {...props} />,
-            iconSymbol: 'ph--compass-tool--regular',
+            icon: 'ph--compass-tool--regular',
           },
         },
       },
@@ -91,8 +88,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                     },
                     properties: {
                       label: ['create object label', { ns: SKETCH_PLUGIN }],
-                      icon: (props: IconProps) => <CompassTool {...props} />,
-                      iconSymbol: 'ph--compass-tool--regular',
+                      icon: 'ph--compass-tool--regular',
                       testId: 'sketchPlugin.createObject',
                     },
                   },

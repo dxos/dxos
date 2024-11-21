@@ -3,19 +3,21 @@
 //
 
 import '@dxos-theme';
+
+import { type Meta } from '@storybook/react';
 import React, { useEffect, useMemo } from 'react';
 
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
 import { TextType } from '@dxos/plugin-markdown/types';
 import { useClient } from '@dxos/react-client';
-import { create, createEchoObject, useSpaces } from '@dxos/react-client/echo';
+import { create, createObject, useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-// @ts-ignore
-import mainUrl from './FrameContainer/frame?url';
 import { ScriptBlock } from './ScriptBlock';
 import { ScriptType } from '../../types';
+// @ts-ignore
+import mainUrl from '../FrameContainer/frame?url';
 
 const code = [
   "import { Filter, useQuery, useSpaces} from '@dxos/react-client/echo';",
@@ -29,7 +31,7 @@ const code = [
   '}',
 ].join('\n');
 
-const Story = () => {
+const DefaultStory = () => {
   const client = useClient();
   const spaces = useSpaces();
   console.log(spaces.length);
@@ -44,28 +46,27 @@ const Story = () => {
           [TestSchemaType.organization]: 20,
           [TestSchemaType.contact]: 50,
         })
-        .catch();
+        .catch(() => {});
     } catch (err) {
       console.log(err);
     }
   }, [client]);
 
   // TODO(burdon): Review what's the right way to create automerge-backed objects.
-  const object = useMemo(
-    () => createEchoObject(create(ScriptType, { source: create(TextType, { content: code }) })),
-    [],
-  );
+  const object = useMemo(() => createObject(create(ScriptType, { source: create(TextType, { content: code }) })), []);
 
   // TODO(dmaretskyi): Not sure how to provide `containerUrl` here since the html now lives in composer-app.
   // TODO(burdon): Normalize html/frame.tsx with composer-app to test locally.
   return <ScriptBlock script={object} containerUrl={mainUrl} />;
 };
 
-export default {
-  title: 'plugin-script/ScriptBlock',
+export const Default = {};
+
+const meta: Meta = {
+  title: 'plugins/plugin-script/ScriptBlock',
   component: ScriptBlock,
-  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true }), withClientProvider({ createSpace: true })],
-  render: Story,
+  render: DefaultStory,
+  decorators: [withClientProvider({ createSpace: true }), withTheme, withLayout({ fullscreen: true, tooltips: true })],
 };
 
-export const Default = {};
+export default meta;

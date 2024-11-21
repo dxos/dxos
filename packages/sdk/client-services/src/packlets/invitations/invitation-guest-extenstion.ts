@@ -12,6 +12,7 @@ import { type Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type InvitationHostService, InvitationOptions } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 
+import { type FlowLockHolder } from './invitation-state';
 import { tryAcquireBeforeContextDisposed } from './utils';
 
 const OPTIONS_TIMEOUT = 10_000;
@@ -27,10 +28,13 @@ type InvitationGuestExtensionCallbacks = {
 /**
  * Guest's side for a connection to a concrete peer in p2p network during invitation.
  */
-export class InvitationGuestExtension extends RpcExtension<
-  { InvitationHostService: InvitationHostService },
-  { InvitationHostService: InvitationHostService }
-> {
+export class InvitationGuestExtension
+  extends RpcExtension<
+    { InvitationHostService: InvitationHostService },
+    { InvitationHostService: InvitationHostService }
+  >
+  implements FlowLockHolder
+{
   private _ctx = new Context();
   private _remoteOptions?: InvitationOptions;
   private _remoteOptionsTrigger = new Trigger();
@@ -82,16 +86,16 @@ export class InvitationGuestExtension extends RpcExtension<
     await super.onOpen(context);
 
     try {
-      log('guest acquire lock');
+      log.verbose('guest acquire lock');
       this._invitationFlowLock = await tryAcquireBeforeContextDisposed(this._ctx, this._invitationFlowMutex);
-      log('guest lock acquired');
+      log.verbose('guest lock acquired');
       await cancelWithContext(
         this._ctx,
         this.rpc.InvitationHostService.options({ role: InvitationOptions.Role.GUEST }),
       );
-      log('options sent');
+      log.verbose('options sent');
       await cancelWithContext(this._ctx, this._remoteOptionsTrigger.wait({ timeout: OPTIONS_TIMEOUT }));
-      log('options received');
+      log.verbose('options received');
       if (this._remoteOptions?.role !== InvitationOptions.Role.HOST) {
         throw new InvalidInvitationExtensionRoleError(undefined, {
           expected: InvitationOptions.Role.HOST,
@@ -124,7 +128,7 @@ export class InvitationGuestExtension extends RpcExtension<
     if (this._invitationFlowLock != null) {
       this._invitationFlowLock.release();
       this._invitationFlowLock = null;
-      log('invitation flow lock released');
+      log.verbose('invitation flow lock released');
     }
   }
 }

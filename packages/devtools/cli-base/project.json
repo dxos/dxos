@@ -16,14 +16,18 @@
         "script": "bin"
       }
     },
-    "build": {
+    "build": {},
+    "compile": {
       "options": {
-        "outputPath": "{projectRoot}/dist"
+        "entryPoints": [
+          "{projectRoot}/src/index.ts"
+        ]
       }
     },
     "lint": {}
   },
   "implicitDependencies": [
-    "esbuild"
+    "esbuild",
+    "node-std"
   ]
 }

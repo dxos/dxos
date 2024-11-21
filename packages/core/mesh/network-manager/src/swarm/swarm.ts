@@ -29,7 +29,7 @@ const getClassName = (obj: any) => Object.getPrototypeOf(obj).constructor.name;
 
 /**
  * A single peer's view of the swarm.
- * Manages a set of connections implemented by simple-peer instances.
+ * Manages a set of peers subscribed on the same topic.
  * Routes signal events and maintains swarm topology.
  */
 export class Swarm {
@@ -189,8 +189,10 @@ export class Swarm {
       const peer = this._peers.get(swarmEvent.peerLeft.peer);
       if (peer) {
         peer.advertizing = false;
-        if (peer.connection?.state !== ConnectionState.CONNECTED) {
-          // Destroy peer only if there is no p2p-connection established
+        // Destroy peer only if there is no p2p-connection established. Otherwise, let peers go through
+        // the graceful shutdown protocol.
+        if (this._isConnectionEstablishmentInProgress(peer)) {
+          log(`destroying peer, state: ${peer.connection?.state}`);
           void this._destroyPeer(swarmEvent.peerLeft.peer, 'peer left').catch((err) => log.catch(err));
         }
       } else {
@@ -277,6 +279,7 @@ export class Swarm {
           },
           onDisconnected: async () => {
             if (this._isUnregistered(peer)) {
+              log.verbose('ignored onDisconnected for unregistered peer');
               return;
             }
             if (!peer!.advertizing) {
@@ -312,6 +315,7 @@ export class Swarm {
   }
 
   private async _destroyPeer(peerInfo: PeerInfo, reason?: string) {
+    log('destroy peer', { peerKey: peerInfo.peerKey, reason });
     const peer = this._peers.get(peerInfo);
     invariant(peer);
     this._peers.delete(peerInfo);
@@ -397,6 +401,15 @@ export class Swarm {
     }
 
     await peer.closeConnection();
+  }
+
+  private _isConnectionEstablishmentInProgress(peer: Peer) {
+    if (!peer.connection) {
+      return true;
+    }
+    return [ConnectionState.INITIAL, ConnectionState.CREATED, ConnectionState.CONNECTING].includes(
+      peer.connection.state,
+    );
   }
 
   private _isUnregistered(peer?: Peer): boolean {

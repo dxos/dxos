@@ -4,9 +4,16 @@
 
 import base32Decode from 'base32-decode';
 import base32Encode from 'base32-encode';
-import { inspect, type InspectOptionsStylized } from 'node:util';
+import { type inspect, type InspectOptionsStylized } from 'node:util';
 
-import { truncateKey, devtoolsFormatter, type DevtoolsFormatter, equalsSymbol, type Equatable } from '@dxos/debug';
+import {
+  devtoolsFormatter,
+  type DevtoolsFormatter,
+  equalsSymbol,
+  type Equatable,
+  inspectCustom,
+  truncateKey,
+} from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 
 import { randomBytes } from './random-bytes';
@@ -18,6 +25,12 @@ export const SECRET_KEY_LENGTH = 64;
  * All representations that can be converted to a PublicKey.
  */
 export type PublicKeyLike = PublicKey | Buffer | Uint8Array | ArrayBuffer | string;
+
+/**
+ * Vitest with JSDom causes instanceof ArrayBuffer check to fail
+ */
+const isLikeArrayBuffer = (value: any): value is ArrayBuffer =>
+  typeof value === 'object' && value !== null && Object.getPrototypeOf(value).constructor.name === 'ArrayBuffer';
 
 /**
  * The purpose of this class is to assure consistent use of keys throughout the project.
@@ -40,7 +53,7 @@ export class PublicKey implements Equatable {
       return new PublicKey(new Uint8Array(source.buffer, source.byteOffset, source.byteLength));
     } else if (source instanceof Uint8Array) {
       return new PublicKey(source);
-    } else if (source instanceof ArrayBuffer) {
+    } else if (source instanceof ArrayBuffer || isLikeArrayBuffer(source)) {
       return new PublicKey(new Uint8Array(source));
     } else if (typeof source === 'string') {
       // TODO(burdon): Check length.
@@ -222,7 +235,7 @@ export class PublicKey implements Equatable {
   /**
    * Used by Node.js to get textual representation of this object when it's printed with a `console.log` statement.
    */
-  [inspect.custom](depth: number, options: InspectOptionsStylized) {
+  [inspectCustom](depth: number, options: InspectOptionsStylized, inspectFn: typeof inspect) {
     if (!options.colors || typeof process.stdout.hasColors !== 'function' || !process.stdout.hasColors()) {
       return `<PublicKey ${this.truncate()}>`;
     }
@@ -249,8 +262,8 @@ export class PublicKey implements Equatable {
     ];
     const color = colors[this.getInsecureHash(colors.length)];
 
-    return `PublicKey(${printControlCode(inspect.colors[color]![0])}${this.truncate()}${printControlCode(
-      inspect.colors.reset![0],
+    return `PublicKey(${printControlCode(inspectFn.colors[color]![0])}${this.truncate()}${printControlCode(
+      inspectFn.colors.reset![0],
     )})`;
   }
 

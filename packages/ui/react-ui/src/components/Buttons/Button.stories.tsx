@@ -5,67 +5,17 @@
 import '@dxos-theme';
 
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
-import React, { type PropsWithChildren } from 'react';
-
-import { modalSurface, groupSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
+import React from 'react';
 
 import { Button, ButtonGroup, type ButtonProps } from './Button';
-import { withTheme } from '../../testing';
-import { DensityProvider } from '../DensityProvider';
-import { ElevationProvider } from '../ElevationProvider';
+import { withVariants, withTheme } from '../../testing';
 
-export default {
-  title: 'react-ui/Button',
-  component: Button,
-  decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
-};
-
-const Container = ({ children }: PropsWithChildren<{}>) => (
-  <>
-    <div role='group' className={mx('flex flex-col gap-4 mbe-4 p-4')}>
-      <ElevationProvider elevation='base'>
-        <div className='flex gap-4'>{children}</div>
-        <DensityProvider density='fine'>
-          <div className='flex gap-4'>{children}</div>
-        </DensityProvider>
-      </ElevationProvider>
-    </div>
-    <div
-      role='group'
-      className={mx('flex flex-col gap-4 mbe-4 p-4 rounded-lg', groupSurface, surfaceElevation({ elevation: 'group' }))}
-    >
-      <ElevationProvider elevation='group'>
-        <div className='flex gap-4'>{children}</div>
-        <DensityProvider density='fine'>
-          <div className='flex gap-4'>{children}</div>
-        </DensityProvider>
-      </ElevationProvider>
-    </div>
-    <div
-      role='group'
-      className={mx(
-        'flex flex-col gap-4 mbe-4 p-4 rounded-lg',
-        modalSurface,
-        surfaceElevation({ elevation: 'chrome' }),
-      )}
-    >
-      <ElevationProvider elevation='chrome'>
-        <div className='flex gap-4'>{children}</div>
-        <DensityProvider density='fine'>
-          <div className='flex gap-4'>{children}</div>
-        </DensityProvider>
-      </ElevationProvider>
-    </div>
-  </>
-);
-
-export const Default = {
-  render: ({ children, ...args }: Omit<ButtonProps, 'ref'>) => (
-    <Container>
+const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
+  return (
+    <div>
       <Button {...args}>{children}</Button>
       <Button {...args} disabled>
-        Disabled
+        {children}
       </Button>
       {(args.variant === 'default' || args.variant === 'primary') && (
         <ButtonGroup>
@@ -77,15 +27,36 @@ export const Default = {
           </Button>
         </ButtonGroup>
       )}
-    </Container>
-  ),
-  args: { children: 'Hello', disabled: false, variant: 'default' },
+    </div>
+  );
 };
 
-export const Primary = { ...Default, args: { variant: 'primary', children: 'Hello' } };
+const defaults = { children: 'Test' };
 
-export const Destructive = { ...Default, args: { variant: 'destructive', children: 'Delete' } };
+export const Default = {
+  args: { ...defaults, variant: 'default' },
+};
 
-export const Outline = { ...Default, args: { variant: 'outline', children: 'Hello' } };
+export const Primary = {
+  args: { ...defaults, variant: 'primary' },
+};
 
-export const Ghost = { ...Default, args: { variant: 'ghost', children: 'Hello' } };
+export const Destructive = {
+  args: { ...defaults, variant: 'destructive' },
+};
+
+export const Outline = {
+  args: { ...defaults, variant: 'outline' },
+};
+
+export const Ghost = {
+  args: { ...defaults, variant: 'ghost' },
+};
+
+export default {
+  title: 'ui/react-ui-core/Button',
+  component: Button,
+  decorators: [withVariants(), withTheme],
+  render: DefaultStory,
+  parameters: { chromatic: { disableSnapshot: false } },
+};

@@ -1,40 +1,27 @@
 {
   "name": "@dxos/echo-pipeline",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
+  "sideEffects": true,
   "exports": {
     ".": {
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "default": "./dist/lib/node/index.cjs"
-      },
-      "types": "./dist/types/src/index.d.ts"
-    },
-    "./light": {
-      "browser": "./dist/lib/browser/light.mjs",
-      "node": {
-        "default": "./dist/lib/node/light.cjs"
-      },
-      "types": "./dist/types/src/light.d.ts"
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./testing": {
+      "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": {
-        "default": "./dist/lib/node/testing/index.cjs"
-      },
-      "types": "./dist/types/src/testing/index.d.ts"
+      "node": "./dist/lib/node-esm/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "light": [
-        "dist/types/src/light.d.ts"
-      ],
       "testing": [
         "dist/types/src/testing/index.d.ts"
       ]
@@ -56,6 +43,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
     "@dxos/feed-store": "workspace:*",
     "@dxos/hypercore": "workspace:*",
     "@dxos/indexing": "workspace:*",
@@ -69,7 +57,6 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
-    "@dxos/rpc": "workspace:*",
     "@dxos/teleport": "workspace:*",
     "@dxos/teleport-extension-automerge-replicator": "workspace:*",
     "@dxos/teleport-extension-gossip": "workspace:*",
@@ -79,16 +66,14 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/typings": "workspace:*",
     "@dxos/util": "workspace:*",
-    "abstract-level": "^1.0.2",
     "crc-32": "^1.2.2",
-    "level": "^8.0.1",
-    "level-transcoder": "^1.0.1"
+    "level-transcoder": "^1.0.1",
+    "lodash.isequal": "^4.5.0"
   },
   "devDependencies": {
-    "fast-check": "^3.19.0",
-    "hypercore-protocol": "^8.0.7",
-    "source-map-support": "^0.5.12",
-    "wait-for-expect": "^3.0.2"
+    "@dxos/test-utils": "workspace:*",
+    "@types/lodash.isequal": "^4.5.0",
+    "fast-check": "^3.19.0"
   },
   "publishConfig": {
     "access": "public"

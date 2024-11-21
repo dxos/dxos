@@ -10,10 +10,10 @@ import { log } from '@dxos/log';
 import { type Migration, type MigrationBuilder, type ObjectStructure } from '@dxos/migrations';
 import { FileType } from '@dxos/plugin-ipfs/types';
 import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
-import { type MigrateCanvas } from '@dxos/plugin-sketch';
+import { type MigrateCanvas } from '@dxos/plugin-sketch/sdk';
 import { DiagramType, CanvasType, TLDRAW_SCHEMA } from '@dxos/plugin-sketch/types';
 import { CollectionType, ChannelType, ThreadType, MessageType } from '@dxos/plugin-space/types';
-import { TableType } from '@dxos/plugin-table/types';
+import { TableType } from '@dxos/react-ui-table/types';
 import { getDeep, isNode, nonNullable } from '@dxos/util';
 
 import * as LegacyTypes from './legacy-types';
@@ -176,7 +176,7 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
       // TODO(wittjosiah): Only attempting to migrate canvas content in the browser due to current esm/testing setup.
       let migrateCanvas: MigrateCanvas = async (records) => records;
       if (!isNode()) {
-        const { migrateCanvas: migrateCanvasBrowser } = await import('@dxos/plugin-sketch');
+        const { migrateCanvas: migrateCanvasBrowser } = await import('@dxos/plugin-sketch/sdk');
         migrateCanvas = migrateCanvasBrowser;
       }
 

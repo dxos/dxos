@@ -17,13 +17,12 @@ import {
   type Size,
   type ThemedClassName,
   Tooltip,
-  useDensityContext,
   useTranslation,
   List,
   ListItem,
   useDefaultValue,
 } from '@dxos/react-ui';
-import { AttentionGlyph } from '@dxos/react-ui-attention';
+import { AttentionGlyph, useAttention } from '@dxos/react-ui-attention';
 import { ComplexMap, keyToFallback } from '@dxos/util';
 
 import { SPACE_PLUGIN } from '../meta';
@@ -40,7 +39,6 @@ const noViewers = new ComplexMap<PublicKey, ObjectViewerProps>(PublicKey.hash);
 const getName = (identity: Identity) => identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
 
 export const SpacePresence = ({ object, spaceKey }: { object: Expando; spaceKey?: PublicKey }) => {
-  const density = useDensityContext();
   const spacePlugin = usePlugin<SpacePluginProvides>(SPACE_PLUGIN);
   const client = useClient();
   const identity = useIdentity();
@@ -86,11 +84,7 @@ export const SpacePresence = ({ object, spaceKey }: { object: Expando; spaceKey?
     })
     .toSorted((a, b) => a.lastSeen - b.lastSeen);
 
-  return density === 'fine' ? (
-    <SmallPresence count={membersForObject.length} />
-  ) : (
-    <FullPresence members={membersForObject} />
-  );
+  return <FullPresence members={membersForObject} />;
 };
 
 export type Member = SpaceMember & {
@@ -110,7 +104,7 @@ export type MemberPresenceProps = ThemedClassName<{
 
 export const FullPresence = (props: MemberPresenceProps) => {
   const { size = 9, onMemberClick } = props;
-  const members = useDefaultValue(props.members, []);
+  const members = useDefaultValue(props.members, () => []);
 
   if (members.length === 0) {
     return null;
@@ -200,28 +194,45 @@ const PrensenceAvatar = ({ identity, showName, match, group, index, onClick }: P
   );
 };
 
-export const SmallPresenceLive = ({ viewers }: { viewers?: ComplexMap<PublicKey, ObjectViewerProps> }) => {
-  const [moment, setMoment] = useState(Date.now());
+export const SmallPresenceLive = ({
+  id,
+  viewers,
+}: {
+  id?: string;
+  viewers?: ComplexMap<PublicKey, ObjectViewerProps>;
+}) => {
+  const getActiveViewers = (viewers: ComplexMap<PublicKey, ObjectViewerProps>): ObjectViewerProps[] => {
+    const moment = Date.now();
+    return Array.from(viewers.values()).filter(({ lastSeen }) => moment - lastSeen < ACTIVITY_DURATION);
+  };
 
-  // NOTE(thure): This is necessary so Presence updates without any underlying data updating.
+  const [activeViewers, setActiveViewers] = useState(viewers ? getActiveViewers(viewers) : []);
+
   useEffect(() => {
-    const interval = setInterval(() => setMoment(Date.now()), REFRESH_INTERVAL);
-    return () => clearInterval(interval);
-  }, []);
+    if (viewers) {
+      setActiveViewers(getActiveViewers(viewers));
+      const interval = setInterval(() => {
+        setActiveViewers(getActiveViewers(viewers));
+      }, REFRESH_INTERVAL);
+      return () => clearInterval(interval);
+    }
+  }, [viewers]);
 
-  const activeViewers = viewers
-    ? Array.from(viewers.values()).filter(({ lastSeen }) => moment - lastSeen < ACTIVITY_DURATION)
-    : [];
-
-  return <SmallPresence count={activeViewers.length} />;
+  return <SmallPresence id={id} count={activeViewers.length} />;
 };
 
-export const SmallPresence = ({ count }: { count: number }) => {
+export const SmallPresence = ({ id, count }: { id?: string; count: number }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
+  const { hasAttention, isAncestor, isRelated } = useAttention(id);
+  const attention = hasAttention || isAncestor || isRelated;
+
   return (
     <Tooltip.Root>
       <Tooltip.Trigger asChild>
-        <AttentionGlyph presence={count > 1 ? 'many' : count === 1 ? 'one' : 'none'} classNames='self-center mie-1' />
+        {/* TODO(wittjosiah): Don't depend on data attribute just pass prop to AttentionGlyph. */}
+        <div role='none' className='flex' data-attention={attention}>
+          <AttentionGlyph presence={count > 1 ? 'many' : count === 1 ? 'one' : 'none'} classNames='self-center mie-1' />
+        </div>
       </Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Content side='bottom' classNames='z-[70]'>

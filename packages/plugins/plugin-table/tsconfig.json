@@ -1,13 +1,14 @@
 {
   "extends": [
-    "../../../tsconfig.json"
+    "../../../tsconfig.base.json"
   ],
   "compilerOptions": {
     "lib": [
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist/types",
+    "module": "ES2022",
+    "moduleResolution": "bundler",
     "types": [
       "node"
     ]
@@ -21,57 +22,5 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": [
-    {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/random"
-    },
-    {
-      "path": "../../common/util"
-    },
-    {
-      "path": "../../core/echo/echo-generator"
-    },
-    {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../sdk/app-framework"
-    },
-    {
-      "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../ui/react-ui"
-    },
-    {
-      "path": "../../ui/react-ui-table"
-    },
-    {
-      "path": "../../ui/react-ui-theme"
-    },
-    {
-      "path": "../../ui/storybook-utils"
-    },
-    {
-      "path": "../experimental/plugin-search"
-    },
-    {
-      "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-graph"
-    },
-    {
-      "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-stack"
-    }
-  ]
+  "references": []
 }

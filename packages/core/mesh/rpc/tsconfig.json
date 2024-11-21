@@ -1,8 +1,6 @@
 {
-  "extends": "../../../../tsconfig.json",
-  "compilerOptions": {
-    "outDir": "dist/types"
-  },
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {},
   "exclude": [
     "node_modules"
   ],
@@ -10,30 +8,5 @@
     "src",
     "test"
   ],
-  "references": [
-    {
-      "path": "../../../common/async"
-    },
-    {
-      "path": "../../../common/codec-protobuf"
-    },
-    {
-      "path": "../../../common/debug"
-    },
-    {
-      "path": "../../../common/invariant"
-    },
-    {
-      "path": "../../../common/log"
-    },
-    {
-      "path": "../../../common/node-std"
-    },
-    {
-      "path": "../../../common/util"
-    },
-    {
-      "path": "../../protocols"
-    }
-  ]
+  "references": []
 }

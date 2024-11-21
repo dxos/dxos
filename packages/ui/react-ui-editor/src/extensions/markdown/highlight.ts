@@ -169,11 +169,6 @@ export const markdownHighlightStyle = (_options: HighlightOptions = {}) => {
       },
 
       {
-        tag: [markdownTags.QuoteMark],
-        class: theme.blockquote,
-      },
-
-      {
         tag: [markdownTags.TableCell],
         class: 'font-mono',
       },

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { ConsoleMessage, Dialog, Page } from '@playwright/test';
+import type { ConsoleMessage, Page } from '@playwright/test';
 
 import { sleep, Trigger } from '@dxos/async';
 
@@ -60,13 +60,6 @@ export class ShellManager extends ScopedShellManager {
   }
 
   async resetDevice() {
-    const handleDialog = async (dialog: Dialog) => {
-      if (dialog.type() === 'confirm') {
-        await dialog.accept();
-      }
-    };
-    this.page.on('dialog', handleDialog);
-
     await this.shell.getByTestId('device-list-item-current.options').click();
     await this.shell.getByTestId('device-list-item-current.reset').click();
     await this.shell.getByTestId('reset-storage.reset-identity-input').fill(CONFIRM_INPUT);
@@ -78,6 +71,9 @@ export class ShellManager extends ScopedShellManager {
     await this.shell.getByTestId('device-list-item-current.join-existing').click();
     await this.shell.getByTestId('join-new-identity.reset-identity-input').fill(CONFIRM_INPUT);
     await this.shell.getByTestId('join-new-identity.reset-identity-confirm').click();
+  }
+
+  async acceptDeviceInvitation(invitationCode: string) {
     await this.inputInvitation('device', invitationCode, this.shell);
   }
 
@@ -98,6 +94,8 @@ export class ShellManager extends ScopedShellManager {
   async createSpaceInvitation(): Promise<string> {
     this._invitationCode = new Trigger<string>();
     this._authCode = new Trigger<string>();
+    await this.shell.getByTestId('spaces-panel.create-invitation.more').click();
+    await this.shell.getByTestId('spaces-panel.invite-one').click();
     await this.shell.getByTestId('spaces-panel.create-invitation').click();
     return await this._invitationCode.wait();
   }
@@ -114,7 +112,6 @@ export class ShellManager extends ScopedShellManager {
     // Wait for focus to shift before typing.
     await sleep(1500);
     await this.authenticateInvitation('space', authCode, this.shell);
-    await this.doneInvitation('space', this.shell);
   }
 
   private async _onConsoleMessage(message: ConsoleMessage) {

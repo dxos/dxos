@@ -2,17 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
 import WebSocket from 'isomorphic-ws';
+import { describe, expect, test, onTestFinished } from 'vitest';
 
 import { Trigger, TriggerState } from '@dxos/async';
-import { describe, test } from '@dxos/test';
 
-import { createTestWsServer } from './test-utils';
+import { createTestEdgeWsServer } from './testing';
 
 describe('WebSocket', () => {
   test('swap `onclose` handler ', async () => {
-    const { endpoint } = await createTestWsServer();
+    const { endpoint, cleanup } = await createTestEdgeWsServer(8003);
+    onTestFinished(cleanup);
+
     const ws = new WebSocket(endpoint);
     const opened = new Trigger();
     ws.onopen = () => {

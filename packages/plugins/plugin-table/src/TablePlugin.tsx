@@ -2,27 +2,41 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps, Table } from '@phosphor-icons/react';
+import { Table } from '@phosphor-icons/react';
 import React from 'react';
 
-import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
+import {
+  resolvePlugin,
+  type PluginDefinition,
+  parseIntentPlugin,
+  NavigationAction,
+  type IntentDispatcher,
+} from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
+import { getSpace } from '@dxos/react-client/echo';
+import { translations as dataTranslations, ViewEditor } from '@dxos/react-ui-data';
+import { TableType, initializeTable, translations as tableTranslations } from '@dxos/react-ui-table';
+import { type FieldProjection, ViewProjection, ViewType } from '@dxos/schema';
 
 import { TableContainer } from './components';
 import meta, { TABLE_PLUGIN } from './meta';
+import { serializer } from './serializer';
 import translations from './translations';
-import { TableType } from './types';
 import { TableAction, type TablePluginProvides, isTable } from './types';
 
 export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
+  let dispatch: IntentDispatcher | undefined;
+
   return {
     meta,
     ready: async (plugins) => {
       const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
       clientPlugin?.provides.client.addTypes([TableType]);
+      dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
     },
     provides: {
       metadata: {
@@ -30,14 +44,23 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
           [TableType.typename]: {
             label: (object: any) => (object instanceof TableType ? object.name : undefined),
             placeholder: ['object placeholder', { ns: TABLE_PLUGIN }],
-            icon: (props: IconProps) => <Table {...props} />,
-            iconSymbol: 'ph--table--regular',
+            icon: 'ph--table--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (table: TableType) => [], // loadObjectReferences(table, (table) => [table.schema]),
+            serializer,
           },
         },
       },
-      translations,
+      translations: [...translations, ...dataTranslations, ...tableTranslations],
+      echo: {
+        schema: [TableType, ViewType],
+      },
+      space: {
+        onSpaceCreate: {
+          label: ['create object label', { ns: TABLE_PLUGIN }],
+          action: TableAction.CREATE,
+        },
+      },
       graph: {
         builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
@@ -64,15 +87,14 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
                   id: `${TABLE_PLUGIN}/create/${node.id}`,
                   data: async () => {
                     await dispatch([
-                      { plugin: TABLE_PLUGIN, action: TableAction.CREATE },
+                      { plugin: TABLE_PLUGIN, action: TableAction.CREATE, data: { space } },
                       { action: SpaceAction.ADD_OBJECT, data: { target } },
                       { action: NavigationAction.OPEN },
                     ]);
                   },
                   properties: {
                     label: ['create object label', { ns: TABLE_PLUGIN }],
-                    icon: (props: IconProps) => <Table {...props} />,
-                    iconSymbol: 'ph--table--regular',
+                    icon: 'ph--table--regular',
                     testId: 'tablePlugin.createObject',
                   },
                 },
@@ -89,6 +111,41 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
             case 'section':
             case 'article':
               return isTable(data.object) ? <TableContainer role={role} table={data.object} /> : null;
+            case 'complementary--settings': {
+              if (data.subject instanceof TableType) {
+                const table = data.subject;
+                if (!table.view) {
+                  return null;
+                }
+
+                const space = getSpace(table);
+                const schema = space?.db.schemaRegistry.getSchema(table.view.query.type);
+                const handleDelete = (fieldId: string) => {
+                  void dispatch?.({
+                    plugin: TABLE_PLUGIN,
+                    action: TableAction.DELETE_COLUMN,
+                    data: { table, fieldId },
+                  });
+                };
+
+                if (!space || !schema) {
+                  return null;
+                }
+
+                return {
+                  node: (
+                    <ViewEditor
+                      registry={space.db.schemaRegistry}
+                      schema={schema}
+                      view={table.view}
+                      onDelete={handleDelete}
+                    />
+                  ),
+                };
+              }
+
+              return null;
+            }
             default:
               return null;
           }
@@ -113,9 +170,36 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case TableAction.CREATE: {
+              const { space } = intent.data as TableAction.Create;
+              const table = create(TableType, { name: '', threads: [] });
+              initializeTable({ space, table });
               return {
-                data: create(TableType, { name: '', props: [] }),
+                data: table,
               };
+            }
+
+            case TableAction.DELETE_COLUMN: {
+              const { table, fieldId } = intent.data as TableAction.DeleteColumn;
+              invariant(isTable(table));
+              invariant(table.view);
+
+              const schema = getSpace(table)?.db.schemaRegistry.getSchema(table.view.query.type);
+              invariant(schema);
+              const projection = new ViewProjection(schema, table.view);
+
+              if (!intent.undo) {
+                const { deleted, index } = projection.deleteFieldProjection(fieldId);
+                return {
+                  undoable: {
+                    message: translations[0]['en-US'][TABLE_PLUGIN]['column deleted label'],
+                    data: { deleted, index },
+                  },
+                };
+              } else if (intent.undo) {
+                const { deleted, index } = intent.data as { deleted: FieldProjection; index: number };
+                projection.setFieldProjection(deleted, index);
+                return { data: true };
+              }
             }
           }
         },

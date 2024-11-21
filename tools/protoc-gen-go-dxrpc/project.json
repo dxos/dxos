@@ -2,7 +2,7 @@
   "name": "protoc-gen-go-dxrpc",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
-  "sourceRoot": "tools/protoc-gen-go-dxrpc",
+  "sourceRoot": "{projectRoot}/src",
   "tags": [],
   "targets": {
     "go-prebuild": {

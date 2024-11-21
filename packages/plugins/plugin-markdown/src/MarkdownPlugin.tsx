@@ -2,21 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps, TextAa } from '@phosphor-icons/react';
-import React, { type Ref } from 'react';
+import { TextAa } from '@phosphor-icons/react';
+import React from 'react';
 
 import {
-  isObject,
   parseIntentPlugin,
   resolvePlugin,
   LayoutAction,
-  type LayoutCoordinate,
   NavigationAction,
   type PluginDefinition,
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { log } from '@dxos/log';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
@@ -33,13 +30,13 @@ import {
   type EditorViewMode,
   EditorViewModes,
   translations as editorTranslations,
+  createEditorStateStore,
 } from '@dxos/react-ui-editor';
-import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
-import { type DocumentItemProps, DocumentCard, DocumentEditor, MarkdownEditor, MarkdownSettings } from './components';
+import { MarkdownContainer, MarkdownSettings } from './components';
 import meta, { MARKDOWN_PLUGIN } from './meta';
 import translations from './translations';
-import { DocumentType, TextType } from './types';
+import { DocumentType, isEditorModel, TextType } from './types';
 import {
   type MarkdownPluginProvides,
   type MarkdownSettingsProps,
@@ -48,52 +45,31 @@ import {
 } from './types';
 import { markdownExtensionPlugins, serializer } from './util';
 
-/**
- * Checks if an object conforms to the interface needed to render an editor.
- */
-const isEditorModel = (data: any): data is { id: string; text: string } => {
-  return (
-    data &&
-    typeof data === 'object' &&
-    'id' in data &&
-    typeof data.id === 'string' &&
-    'text' in data &&
-    typeof data.text === 'string'
-  );
-};
+// TODO(burdon): Normalize active/object.
+const getDoc = (object: any) => (object instanceof DocumentType ? object : undefined);
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, {
     defaultViewMode: 'preview',
     toolbar: true,
-    folding: false,
+    numberedHeadings: true,
+    folding: true,
     experimental: false,
   });
 
+  const editorStateStore = createEditorStateStore(`${MARKDOWN_PLUGIN}/editor`);
+
   const state = new LocalStorageStore<MarkdownPluginState>(MARKDOWN_PLUGIN, { extensionProviders: [], viewMode: {} });
 
-  const getViewMode = (id?: string) => {
-    return (id && state.values.viewMode[id]) || settings.values.defaultViewMode;
-  };
-
-  const setViewMode = (id: string, nextViewMode: EditorViewMode) => {
-    state.values.viewMode[id] = nextViewMode;
-  };
+  const getViewMode = (id: string) => (id && state.values.viewMode[id]) || settings.values.defaultViewMode;
+  const setViewMode = (id: string, viewMode: EditorViewMode) => (state.values.viewMode[id] = viewMode);
 
   return {
     meta,
     ready: async (plugins) => {
       settings
-        .prop({
-          key: 'defaultViewMode',
-          storageKey: 'default-view-mode',
-          type: LocalStorageStore.enum<EditorViewMode>(),
-        })
-        .prop({
-          key: 'editorInputMode',
-          storageKey: 'editor-mode',
-          type: LocalStorageStore.enum<EditorInputMode>({ allowUndefined: true }),
-        })
+        .prop({ key: 'defaultViewMode', type: LocalStorageStore.enum<EditorViewMode>() })
+        .prop({ key: 'editorInputMode', type: LocalStorageStore.enum<EditorInputMode>({ allowUndefined: true }) })
         .prop({ key: 'toolbar', type: LocalStorageStore.bool({ allowUndefined: true }) })
         .prop({ key: 'experimental', type: LocalStorageStore.bool({ allowUndefined: true }) })
         .prop({ key: 'debug', type: LocalStorageStore.bool({ allowUndefined: true }) })
@@ -101,15 +77,11 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         .prop({ key: 'numberedHeadings', type: LocalStorageStore.bool({ allowUndefined: true }) })
         .prop({ key: 'folding', type: LocalStorageStore.bool({ allowUndefined: true }) });
 
-      state.prop({
-        key: 'viewMode',
-        storageKey: 'view-mode',
-        type: LocalStorageStore.json<{ [key: string]: EditorViewMode }>(),
-      });
+      state.prop({ key: 'viewMode', type: LocalStorageStore.json<{ [key: string]: EditorViewMode }>() });
 
       markdownExtensionPlugins(plugins).forEach((plugin) => {
         const { extensions } = plugin.provides.markdown;
-        state.values.extensionProviders.push(extensions);
+        state.values.extensionProviders?.push(extensions);
       });
     },
     provides: {
@@ -117,10 +89,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       metadata: {
         records: {
           [DocumentType.typename]: {
-            label: (object: any) => (object instanceof DocumentType ? object.name ?? object.fallbackName : undefined),
+            label: (object: any) => (object instanceof DocumentType ? object.name || object.fallbackName : undefined),
             placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
-            icon: (props: IconProps) => <TextAa {...props} />,
-            iconSymbol: 'ph--text-aa--regular',
+            icon: 'ph--text-aa--regular',
             graphProps: {
               managesAutofocus: true,
             },
@@ -133,6 +104,12 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       translations: [...translations, ...editorTranslations],
       echo: {
         schema: [DocumentType, TextType],
+      },
+      space: {
+        onSpaceCreate: {
+          label: ['create document label', { ns: MARKDOWN_PLUGIN }],
+          action: MarkdownAction.CREATE,
+        },
       },
       graph: {
         builder: (plugins) => {
@@ -167,8 +144,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                   },
                   properties: {
                     label: ['create document label', { ns: MARKDOWN_PLUGIN }],
-                    icon: (props: IconProps) => <TextAa {...props} />,
-                    iconSymbol: 'ph--text-aa--regular',
+                    icon: 'ph--text-aa--regular',
                     testId: 'markdownPlugin.createObject',
                   },
                 },
@@ -241,13 +217,10 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         ],
       },
       thread: {
-        // TODO(Zan): How to better handle the type predicate?
         predicate: (obj) => obj instanceof DocumentType,
         createSort: (doc: DocumentType) => {
           const accessor = doc.content ? createDocAccessor(doc.content, ['content']) : undefined;
-
           if (!accessor) {
-            log.warn('No accessor found for document content.');
             return (_) => 0;
           }
 
@@ -256,75 +229,44 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             return range?.start ?? Number.MAX_SAFE_INTEGER;
           };
 
-          return (anchorA: string, anchorB: string) => getStartPosition(anchorA) - getStartPosition(anchorB);
+          return (anchorA: string | undefined, anchorB: string | undefined): number => {
+            if (anchorA === undefined || anchorB === undefined) {
+              return 0;
+            }
+            const posA = getStartPosition(anchorA);
+            const posB = getStartPosition(anchorB);
+            return posA - posB;
+          };
         },
       },
       surface: {
-        component: ({ data, role, ...props }, forwardedRef) => {
-          const doc =
-            data.active instanceof DocumentType
-              ? data.active
-              : data.object instanceof DocumentType
-                ? data.object
-                : undefined;
-
+        component: ({ data, role }) => {
           switch (role) {
             case 'section':
             case 'article': {
-              if (doc && doc.content) {
-                return (
-                  <DocumentEditor
-                    role={role}
-                    coordinate={data.coordinate as LayoutCoordinate}
-                    document={doc}
-                    extensionProviders={state.values.extensionProviders}
-                    settings={settings.values}
-                    scrollPastEnd
-                    viewMode={getViewMode(fullyQualifiedId(doc))}
-                    onViewModeChange={setViewMode}
-                  />
-                );
-              } else if (isEditorModel(data.object)) {
-                return (
-                  <MarkdownEditor
-                    id={data.object.id}
-                    role={role}
-                    coordinate={data.coordinate as LayoutCoordinate}
-                    initialValue={data.object.text}
-                    extensionProviders={state.values.extensionProviders}
-                    inputMode={settings.values.editorInputMode}
-                    toolbar={settings.values.toolbar}
-                    scrollPastEnd
-                    viewMode={getViewMode(data.object.id)}
-                    onViewModeChange={setViewMode}
-                  />
-                );
-              }
-              break;
-            }
+              const doc = getDoc(data.object);
+              const { id, object } = isEditorModel(data.object)
+                ? { id: data.object.id, object: data.object }
+                : doc
+                  ? { id: fullyQualifiedId(doc), object: doc }
+                  : {};
 
-            case 'card': {
-              if (
-                isObject(data.content) &&
-                typeof data.content.id === 'string' &&
-                data.content.object instanceof DocumentType
-              ) {
-                // isTileComponentProps is a type guard for these props.
-                // `props` will not pass this guard without transforming `data` into `item`.
-                const cardProps = {
-                  ...props,
-                  item: {
-                    id: data.content.id,
-                    object: data.content.object,
-                    color: typeof data.content.color === 'string' ? data.content.color : undefined,
-                  } as DocumentItemProps,
-                };
-
-                return isTileComponentProps(cardProps) ? (
-                  <DocumentCard {...cardProps} settings={settings.values} ref={forwardedRef as Ref<HTMLDivElement>} />
-                ) : null;
+              if (!id || !object) {
+                return null;
               }
-              break;
+
+              return (
+                <MarkdownContainer
+                  id={id}
+                  object={object}
+                  role={role}
+                  settings={settings.values}
+                  extensionProviders={state.values.extensionProviders}
+                  viewMode={getViewMode(id)}
+                  editorStateStore={editorStateStore}
+                  onViewModeChange={setViewMode}
+                />
+              );
             }
 
             case 'settings': {

@@ -2,17 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
-import { describe, test } from '@dxos/test';
+import { S } from '@dxos/effect';
 
 import { create } from './object';
-import { getMeta } from '../getter';
-import { ref } from '../ref-annotation';
-import { TEST_SCHEMA_TYPE } from '../testing';
-import { TypedObject } from '../typed-object-class';
-import { foreignKey } from '../types';
+import { ref } from './ref';
+import { TypedObject } from '../object';
+import { getMeta, foreignKey } from '../types';
 
 describe('complex schema validations', () => {
   const setValue = (target: any, prop: string, value: any) => {
@@ -39,14 +36,11 @@ describe('complex schema validations', () => {
   });
 
   test('references', () => {
-    class Foo extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.String }) {}
-
-    class Bar extends TypedObject(TEST_SCHEMA_TYPE)({ fooRef: ref(Foo) }) {}
-
+    class Foo extends TypedObject({ typename: 'example.com/type/Foo', version: '0.1.0' })({ field: S.String }) {}
+    class Bar extends TypedObject({ typename: 'example.com/type/Bar', version: '0.1.0' })({ fooRef: ref(Foo) }) {}
     const field = 'hello';
     expect(() => create(Bar, { fooRef: { id: '1', field } })).to.throw();
-    // unresolved reference
-    expect(() => create(Bar, { fooRef: undefined as any })).not.to.throw();
+    expect(() => create(Bar, { fooRef: undefined as any })).not.to.throw(); // Unresolved reference.
     const bar = create(Bar, { fooRef: create(Foo, { field }) });
     expect(bar.fooRef?.field).to.eq(field);
   });
@@ -55,7 +49,7 @@ describe('complex schema validations', () => {
     const schema = S.Struct({}, { key: S.String, value: S.Number });
     const object = create(schema, { unknownField: 1 });
     expect(() => setValue(object, 'field', '42')).to.throw();
-    expect(() => setValue(object, 'unknownField', 42)).not.to.throw();
+    expect(() => setValue(object, 'unknown_field', 42)).not.to.throw();
   });
 
   test('suspend', () => {

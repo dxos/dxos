@@ -34,8 +34,8 @@ package dxos.client.services;
 //
 
 enum SystemStatus {
-  ACTIVE = 0; // TODO(burdon): INACTIVE should be 0.
-  INACTIVE = 1;
+  INACTIVE = 0;
+  ACTIVE = 1;
 }
 
 message UpdateStatusRequest {
@@ -122,7 +122,11 @@ message Identity {
 }
 
 message RecoverIdentityRequest {
-  bytes recovery_key = 1;
+  string seedphrase = 1;
+}
+
+message CreateRecoveryPhraseResponse {
+  string seedphrase = 1;
 }
 
 message QueryIdentityResponse {
@@ -145,6 +149,7 @@ message CreateIdentityRequest {
 service IdentityService {
   rpc CreateIdentity(CreateIdentityRequest) returns (Identity);
   rpc RecoverIdentity(RecoverIdentityRequest) returns (Identity);
+  rpc CreateRecoveryPhrase(google.protobuf.Empty) returns (CreateRecoveryPhraseResponse);
   rpc QueryIdentity(google.protobuf.Empty) returns (stream QueryIdentityResponse);
   rpc UpdateProfile(halo.credentials.ProfileDocument) returns (Identity);
   rpc SignPresentation(SignPresentationRequest) returns (dxos.halo.credentials.Presentation);
@@ -219,6 +224,7 @@ message SpaceMember {
   dxos.halo.credentials.SpaceMember.Role role = 4;
 }
 
+
 // TODO(burdon): Rename SpaceInfo?
 message Space {
   message Metrics {
@@ -283,6 +289,7 @@ message Space {
   SpaceState state = 2;
   optional PipelineState pipeline = 3;
   optional dxos.error.Error error = 4;
+  optional dxos.echo.metadata.EdgeReplicationSetting edge_replication = 6;
 
   repeated SpaceMember members = 10;
   optional dxos.keys.PublicKey creator = 11;
@@ -298,6 +305,8 @@ message UpdateSpaceRequest {
 
   /// Allowed values: ACTIVE, INACTIVE.
   optional SpaceState state = 2;
+
+  optional dxos.echo.metadata.EdgeReplicationSetting edge_replication = 3;
 }
 
 message QuerySpacesResponse {
@@ -500,4 +509,20 @@ message UpdateConfigRequest {
 service NetworkService {
   rpc UpdateConfig(UpdateConfigRequest) returns (google.protobuf.Empty);
   rpc QueryStatus(google.protobuf.Empty) returns (stream NetworkStatus);
+}
+
+service EdgeAgentService {
+  rpc CreateAgent(google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc QueryAgentStatus(google.protobuf.Empty) returns (stream QueryAgentStatusResponse);
+}
+
+message QueryAgentStatusResponse {
+  enum AgentStatus {
+    UNKNOWN = 0;
+    ACTIVE = 1;
+    INACTIVE = 2;
+    NOT_FOUND = 3;
+  }
+
+  AgentStatus status = 1;
 }

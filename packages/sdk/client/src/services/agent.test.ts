@@ -2,9 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
-
-import { afterTest, test } from '@dxos/test';
+import { expect, onTestFinished, test } from 'vitest';
 
 import { fromAgent } from './agent';
 import { Client } from '../client';
@@ -13,7 +11,7 @@ import { Client } from '../client';
 test.skip('connect to local CLI', async () => {
   const client = new Client({ services: fromAgent() });
   await client.initialize();
-  afterTest(() => client.destroy());
+  onTestFinished(() => client.destroy());
 
   // await client.halo.createIdentity({ name: 'test' });
   // console.log({ identity: client.halo.identity.get() });

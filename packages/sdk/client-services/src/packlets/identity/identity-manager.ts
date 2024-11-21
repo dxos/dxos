@@ -5,8 +5,14 @@ import platform from 'platform';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { createCredentialSignerWithKey, CredentialGenerator } from '@dxos/credentials';
+import {
+  createCredentialSignerWithKey,
+  CredentialGenerator,
+  generateSeedPhrase,
+  keyPairFromSeedPhrase,
+} from '@dxos/credentials';
 import { type MetadataStore, type SpaceManager, type SwarmIdentity } from '@dxos/echo-pipeline';
+import { type EdgeConnection } from '@dxos/edge-client';
 import { type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -14,6 +20,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
 import { Device, DeviceKind } from '@dxos/protocols/proto/dxos/client/services';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type IdentityRecord, type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import {
@@ -21,6 +28,7 @@ import {
   type DeviceProfileDocument,
   DeviceType,
   type ProfileDocument,
+  type Credential,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';
@@ -47,6 +55,7 @@ export type JoinIdentityParams = {
   haloGenesisFeedKey: PublicKey;
   controlFeedKey: PublicKey;
   dataFeedKey: PublicKey;
+  authorizedDeviceCredential: Credential;
 
   /**
    * Latest known timeframe for the control pipeline.
@@ -63,7 +72,13 @@ export type CreateIdentityOptions = {
   deviceProfile?: DeviceProfileDocument;
 };
 
-export type IdentityManagerRuntimeParams = {
+export type IdentityManagerParams = {
+  metadataStore: MetadataStore;
+  keyring: Keyring;
+  feedStore: FeedStore<FeedMessage>;
+  spaceManager: SpaceManager;
+  edgeConnection?: EdgeConnection;
+  edgeFeatures?: Runtime.Client.EdgeFeatures;
   devicePresenceAnnounceInterval?: number;
   devicePresenceOfflineTimeout?: number;
 };
@@ -73,28 +88,27 @@ export type IdentityManagerRuntimeParams = {
 export class IdentityManager {
   readonly stateUpdate = new Event();
 
-  private _identity?: Identity;
+  private readonly _metadataStore: MetadataStore;
+  private readonly _keyring: Keyring;
+  private readonly _feedStore: FeedStore<FeedMessage>;
+  private readonly _spaceManager: SpaceManager;
   private readonly _devicePresenceAnnounceInterval: number;
   private readonly _devicePresenceOfflineTimeout: number;
+  private readonly _edgeConnection: EdgeConnection | undefined;
+  private readonly _edgeFeatures: Runtime.Client.EdgeFeatures | undefined;
 
-  // TODO(burdon): IdentityManagerParams.
+  private _identity?: Identity;
+
   // TODO(dmaretskyi): Perhaps this should take/generate the peerKey outside of an initialized identity.
-  constructor(
-    private readonly _metadataStore: MetadataStore,
-    private readonly _keyring: Keyring,
-    private readonly _feedStore: FeedStore<FeedMessage>,
-    private readonly _spaceManager: SpaceManager,
-    params?: IdentityManagerRuntimeParams,
-    private readonly _callbacks?: {
-      onIdentityConstruction?: (identity: Identity) => void;
-    },
-  ) {
-    const {
-      devicePresenceAnnounceInterval = DEVICE_PRESENCE_ANNOUNCE_INTERVAL,
-      devicePresenceOfflineTimeout = DEVICE_PRESENCE_OFFLINE_TIMEOUT,
-    } = params ?? {};
-    this._devicePresenceAnnounceInterval = devicePresenceAnnounceInterval;
-    this._devicePresenceOfflineTimeout = devicePresenceOfflineTimeout;
+  constructor(params: IdentityManagerParams) {
+    this._metadataStore = params.metadataStore;
+    this._keyring = params.keyring;
+    this._feedStore = params.feedStore;
+    this._spaceManager = params.spaceManager;
+    this._edgeConnection = params.edgeConnection;
+    this._edgeFeatures = params.edgeFeatures;
+    this._devicePresenceAnnounceInterval = params.devicePresenceAnnounceInterval ?? DEVICE_PRESENCE_ANNOUNCE_INTERVAL;
+    this._devicePresenceOfflineTimeout = params.devicePresenceOfflineTimeout ?? DEVICE_PRESENCE_OFFLINE_TIMEOUT;
   }
 
   get identity() {
@@ -184,10 +198,6 @@ export class IdentityManager {
       }
     }
 
-    // TODO(burdon): ???
-    // await this._keyring.deleteKey(identityRecord.identity_key);
-    // await this._keyring.deleteKey(identityRecord.halo_space.space_key);
-
     await this._metadataStore.setIdentityRecord(identityRecord);
     this._identity = identity;
     await this._identity.ready();
@@ -202,6 +212,7 @@ export class IdentityManager {
       deviceKey: identity.deviceKey,
       profile: identity.profileDocument,
     });
+
     return identity;
   }
 
@@ -232,9 +243,9 @@ export class IdentityManager {
   }
 
   /**
-   * Accept an existing identity. Expects its device key to be authorized (now or later).
+   * Prepare an identity object as the first step of acceptIdentity flow.
    */
-  async acceptIdentity(params: JoinIdentityParams) {
+  async prepareIdentity(params: JoinIdentityParams) {
     log('accepting identity', { params });
     invariant(!this._identity, 'Identity already exists.');
 
@@ -249,24 +260,33 @@ export class IdentityManager {
         controlTimeframe: params.controlTimeframe,
       },
     };
-
     const identity = await this._constructIdentity(identityRecord);
     await identity.open(new Context());
+    return { identity, identityRecord };
+  }
+
+  /**
+   * Accept an existing identity. Expects its device key to be authorized (now or later).
+   */
+  public async acceptIdentity(identity: Identity, identityRecord: IdentityRecord, profile?: DeviceProfileDocument) {
     this._identity = identity;
-    await this._metadataStore.setIdentityRecord(identityRecord);
+
+    // Identity becomes ready after device chain is replicated. Wait for it before storing the record.
     await this._identity.ready();
+    await this._metadataStore.setIdentityRecord(identityRecord);
+
     log.trace('dxos.halo.identity', {
-      identityKey: identityRecord.identityKey,
+      identityKey: this._identity!.identityKey,
       displayName: this._identity.profileDocument?.displayName,
     });
 
     await this.updateDeviceProfile({
       ...this.createDefaultDeviceProfile(),
-      ...params.deviceProfile,
+      ...profile,
     });
     this.stateUpdate.emit();
+
     log('accepted identity', { identityKey: identity.identityKey, deviceKey: identity.deviceKey });
-    return identity;
   }
 
   /**
@@ -315,6 +335,29 @@ export class IdentityManager {
     };
   }
 
+  async createRecoveryPhrase() {
+    const identity = this._identity;
+    invariant(identity);
+
+    const seedphrase = generateSeedPhrase();
+    const keypair = keyPairFromSeedPhrase(seedphrase);
+    const recoveryKey = PublicKey.from(keypair.publicKey);
+    const identityKey = identity.identityKey;
+    const credential = await identity.getIdentityCredentialSigner().createCredential({
+      subject: identityKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.IdentityRecovery',
+        recoveryKey,
+        identityKey,
+      },
+    });
+
+    const receipt = await identity.controlPipeline.writer.write({ credential: { credential } });
+    await identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
+
+    return { seedphrase };
+  }
+
   private async _constructIdentity(identityRecord: IdentityRecord) {
     invariant(!this._identity);
     log('constructing identity', { identityRecord });
@@ -360,9 +403,10 @@ export class IdentityManager {
       signer: this._keyring,
       identityKey: identityRecord.identityKey,
       deviceKey: identityRecord.deviceKey,
+      edgeConnection: this._edgeConnection,
+      edgeFeatures: this._edgeFeatures,
     });
     log('done', { identityKey: identityRecord.identityKey });
-    this._callbacks?.onIdentityConstruction?.(identity);
 
     // TODO(mykola): Set new timeframe on a write to a feed.
     if (identityRecord.haloSpace.controlTimeframe) {

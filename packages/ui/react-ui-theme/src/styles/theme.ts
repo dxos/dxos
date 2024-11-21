@@ -14,6 +14,7 @@ import {
   dialogTheme,
   menuTheme,
   iconTheme,
+  iconButtonTheme,
   inputTheme,
   linkTheme,
   listTheme,
@@ -41,6 +42,7 @@ export const defaultTheme: Theme<Record<string, any>> = {
   button: buttonTheme,
   dialog: dialogTheme,
   icon: iconTheme,
+  iconButton: iconButtonTheme,
   input: inputTheme,
   link: linkTheme,
   list: listTheme,
@@ -58,6 +60,7 @@ export const defaultTheme: Theme<Record<string, any>> = {
   tooltip: tooltipTheme,
   treegrid: treegridTheme,
 
+  // TODO(burdon): Is this out of order for a reason?
   hue: hueTheme,
 };
 

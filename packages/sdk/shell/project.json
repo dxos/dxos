@@ -16,7 +16,7 @@
       "executor": "@nx/vite:build",
       "options": {
         "generatePackageJson": false,
-        "outputPath": "packages/sdk/shell/dist/bundle"
+        "outputPath": "{projectRoot}/dist/bundle"
       },
       "outputs": [
         "{options.outputPath}"
@@ -27,9 +27,6 @@
         "entryPoints": [
           "{projectRoot}/src/react.ts",
           "{projectRoot}/src/testing/index.ts"
-        ],
-        "platforms": [
-          "browser"
         ]
       }
     },
@@ -37,17 +34,7 @@
       "dependsOn": [
         "^compile",
         "stories:mkdist"
-      ],
-      "options": {
-        "playwrightConfigPath": "{projectRoot}/src/playwright/playwright.config.ts",
-        "serve": "stories:storybook-e2e",
-        "testPatterns": [
-          "{projectRoot}/src/playwright/**/*.spec.{ts,js}"
-        ],
-        "watchPatterns": [
-          "{projectRoot}/src/**/*"
-        ]
-      }
+      ]
     },
     "lint": {
       "options": {
@@ -58,6 +45,7 @@
     }
   },
   "implicitDependencies": [
-    "esbuild"
+    "esbuild",
+    "node-std"
   ]
 }

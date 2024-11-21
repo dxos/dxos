@@ -6,29 +6,32 @@ import { asyncTimeout, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Reference } from '@dxos/echo-protocol';
-import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { RuntimeSchemaRegistry } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
+import { QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 import { trace } from '@dxos/tracing';
 import { ComplexMap, entry } from '@dxos/util';
 
-import { getObjectCore, type ItemsUpdatedEvent } from './core-db';
+import { type ItemsUpdatedEvent } from './core-db';
+import { type EchoReactiveObject } from './echo-handler';
+import { getObjectCore } from './echo-handler';
 import { prohibitSignalActions } from './guarded-scope';
 import { type EchoDatabase, type EchoDatabaseImpl } from './proxy-db';
 import {
-  Filter,
   filterMatch,
+  optionsToProto,
+  Filter,
   type FilterSource,
   Query,
   type QueryContext,
   type QueryFn,
+  type QueryOptions,
   type QueryResult,
   type QueryRunOptions,
 } from './query';
-import { RuntimeSchemaRegistry } from './runtime-schema-registry';
 
 /**
  * Manages cross-space database interactions.
@@ -109,7 +112,7 @@ export class Hypergraph {
   private _query(filter?: FilterSource, options?: QueryOptions) {
     const spaces = options?.spaces;
     invariant(!spaces || spaces.every((space) => space instanceof PublicKey), 'Invalid spaces filter');
-    return new Query(this._createQueryContext(), Filter.from(filter, options));
+    return new Query(this._createQueryContext(), Filter.from(filter, optionsToProto(options ?? {})));
   }
 
   /**
@@ -375,7 +378,7 @@ class SpaceQuerySource implements QuerySource {
 
   close() {
     this._results = undefined;
-    void this._ctx.dispose().catch();
+    void this._ctx.dispose().catch(() => {});
   }
 
   private _onUpdate = (updateEvent: ItemsUpdatedEvent) => {
@@ -434,7 +437,7 @@ class SpaceQuerySource implements QuerySource {
       return;
     }
 
-    void this._ctx.dispose().catch();
+    void this._ctx.dispose().catch(() => {});
     this._ctx = new Context();
     this._filter = filter;
 
@@ -445,22 +448,25 @@ class SpaceQuerySource implements QuerySource {
   }
 
   private _query(filter: Filter): QueryResult<EchoReactiveObject<any>>[] {
-    return (
-      this._database.coreDatabase
-        .allObjectCores()
-        // TODO(dmaretskyi): Cleanup proxy <-> core.
-        .filter((core) => filterMatch(filter, core, this._database.getObjectById(core.id, { deleted: true })))
-        .map((core) => ({
-          id: core.id,
-          spaceId: this.spaceId,
-          spaceKey: this.spaceKey,
-          object: this._database.getObjectById(core.id, { deleted: true }),
-          resolution: {
-            source: 'local',
-            time: 0,
-          },
-        }))
-    );
+    const filteredCores = filter.isObjectIdFilter()
+      ? filter
+          .objectIds!.map((id) => this._database.coreDatabase.getObjectCoreById(id, { load: true }))
+          .filter((core) => core !== undefined)
+      : this._database.coreDatabase
+          .allObjectCores()
+          // TODO(dmaretskyi): Cleanup proxy <-> core.
+          .filter((core) => filterMatch(filter, core, this._database.getObjectById(core.id, { deleted: true })));
+
+    return filteredCores.map((core) => ({
+      id: core.id,
+      spaceId: this.spaceId,
+      spaceKey: this.spaceKey,
+      object: this._database.getObjectById(core.id, { deleted: true }),
+      resolution: {
+        source: 'local',
+        time: 0,
+      },
+    }));
   }
 
   private _isValidSourceForFilter(filter: Filter<EchoReactiveObject<any>>): boolean {
@@ -472,7 +478,7 @@ class SpaceQuerySource implements QuerySource {
       return false;
     }
     // Disabled by dataLocation filter.
-    if (filter.options.dataLocation && filter.options.dataLocation === QueryOptions.DataLocation.REMOTE) {
+    if (filter.options.dataLocation && filter.options.dataLocation === QueryOptionsProto.DataLocation.REMOTE) {
       return false;
     }
     return true;

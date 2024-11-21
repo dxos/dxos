@@ -2,7 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import { lazy } from 'react';
 
-export const ScriptEditor = React.lazy(() => import('./ScriptEditor'));
-export const TypescriptEditor = React.lazy(() => import('./TypescriptEditor'));
+export * from './ScriptSettings';
+export * from './ScriptSettingsPanel';
+
+export const AutomationPanel = lazy(() => import('./AutomationPanel'));
+export const ScriptContainer = lazy(() => import('./ScriptContainer'));

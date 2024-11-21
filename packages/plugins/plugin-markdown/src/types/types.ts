@@ -12,6 +12,7 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 import { type SchemaProvides } from '@dxos/plugin-client';
+import { type SpaceInitProvides } from '@dxos/plugin-space';
 import { type Extension, type EditorInputMode, type EditorViewMode } from '@dxos/react-ui-editor';
 
 import { type DocumentType } from './document';
@@ -26,13 +27,15 @@ export enum MarkdownAction {
 
 export type MarkdownProperties = Record<string, any>;
 
-export type ExtensionsProvider = (props: { document?: DocumentType }) => Extension[];
+// TODO(burdon): Async.
+export type MarkdownExtensionProvider = (props: { document?: DocumentType }) => Extension | undefined;
 
 export type OnChange = (text: string) => void;
 
 export type MarkdownExtensionProvides = {
+  // TODO(burdon): Rename.
   markdown: {
-    extensions: ExtensionsProvider;
+    extensions: MarkdownExtensionProvider;
   };
 };
 
@@ -45,11 +48,11 @@ type StackProvides = {
 
 export type MarkdownPluginState = {
   // Codemirror extensions provided by other plugins.
-  extensionProviders: NonNullable<ExtensionsProvider>[];
+  extensionProviders?: MarkdownExtensionProvider[];
 
   // TODO(burdon): Extend view mode per document to include scroll position, etc.
   // View mode per document.
-  viewMode: { [key: string]: EditorViewMode };
+  viewMode: Record<string, EditorViewMode>;
 };
 
 export type MarkdownSettingsProps = {
@@ -64,12 +67,11 @@ export type MarkdownSettingsProps = {
   folding?: boolean;
 };
 
-// TODO(Zan): Move this to the plugin-space plugin or another common location
-// when we implement comments in sheets.
+// TODO(Zan): Move this to the plugin-space plugin or another common location when we implement comments in sheets.
 type ThreadProvides<T> = {
   thread: {
     predicate: (obj: any) => obj is T;
-    createSort: (obj: T) => (anchorA: string, anchorB: string) => number;
+    createSort: (obj: T) => (anchorA: string | undefined, anchorB: string | undefined) => number;
   };
 };
 
@@ -81,5 +83,6 @@ export type MarkdownPluginProvides = SurfaceProvides &
   SettingsProvides<MarkdownSettingsProps> &
   TranslationsProvides &
   SchemaProvides &
+  SpaceInitProvides &
   StackProvides &
   ThreadProvides<DocumentType>;

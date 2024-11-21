@@ -21,6 +21,7 @@ import {
 } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 
+import type { FlowLockHolder } from './invitation-state';
 import { stateToString, tryAcquireBeforeContextDisposed } from './utils';
 
 /// Timeout for the options exchange.
@@ -43,10 +44,13 @@ type InvitationHostExtensionCallbacks = {
 /**
  * Host's side for a connection to a concrete peer in p2p network during invitation.
  */
-export class InvitationHostExtension extends RpcExtension<
-  { InvitationHostService: InvitationHostService },
-  { InvitationHostService: InvitationHostService }
-> {
+export class InvitationHostExtension
+  extends RpcExtension<
+    { InvitationHostService: InvitationHostService },
+    { InvitationHostService: InvitationHostService }
+  >
+  implements FlowLockHolder
+{
   /**
    * @internal
    */
@@ -106,13 +110,11 @@ export class InvitationHostExtension extends RpcExtension<
 
         introduce: async (request) => {
           const { profile, invitationId } = request;
-
           const traceId = PublicKey.random().toHex();
           log.trace('dxos.sdk.invitation-handler.host.introduce', trace.begin({ id: traceId }));
 
           const invitation = this._requireActiveInvitation();
           this._assertInvitationState(Invitation.State.CONNECTED);
-
           if (invitationId !== invitation?.invitationId) {
             log.warn('incorrect invitationId', { expected: invitation.invitationId, actual: invitationId });
             this._callbacks.onError(new Error('Incorrect invitationId.'));
@@ -123,10 +125,9 @@ export class InvitationHostExtension extends RpcExtension<
             };
           }
 
-          log('guest introduced themselves', { guestProfile: profile });
+          log.verbose('guest introduced themselves', { guestProfile: profile });
           this.guestProfile = profile;
           this._callbacks.onStateUpdate(Invitation.State.READY_FOR_AUTHENTICATION);
-
           this._challenge =
             invitation.authMethod === Invitation.AuthMethod.KNOWN_PUBLIC_KEY ? randomBytes(32) : undefined;
 
@@ -142,7 +143,7 @@ export class InvitationHostExtension extends RpcExtension<
           log.trace('dxos.sdk.invitation-handler.host.authenticate', trace.begin({ id: traceId }));
 
           const invitation = this._requireActiveInvitation();
-          log('received authentication request', { authCode: code });
+          log.verbose('received authentication request', { authCode: code });
           let status = AuthenticationResponse.Status.OK;
 
           this._assertInvitationState([Invitation.State.AUTHENTICATING, Invitation.State.READY_FOR_AUTHENTICATION]);
@@ -235,18 +236,15 @@ export class InvitationHostExtension extends RpcExtension<
     await super.onOpen(context);
 
     try {
-      log('host acquire lock');
+      log.verbose('host acquire lock');
       this._invitationFlowLock = await tryAcquireBeforeContextDisposed(this._ctx, this._invitationFlowMutex);
-      log('host lock acquired');
-      const lastState = this._requireActiveInvitation().state;
+      log.verbose('host lock acquired');
       this._callbacks.onStateUpdate(Invitation.State.CONNECTING);
       await this.rpc.InvitationHostService.options({ role: InvitationOptions.Role.HOST });
-      log('options sent');
+      log.verbose('options sent');
       await cancelWithContext(this._ctx, this._remoteOptionsTrigger.wait({ timeout: OPTIONS_TIMEOUT }));
-      log('options received');
+      log.verbose('options received');
       if (this._remoteOptions?.role !== InvitationOptions.Role.GUEST) {
-        // we connected with another host, restore previous real invitation flow status
-        this._callbacks.onStateUpdate(lastState);
         throw new InvalidInvitationExtensionRoleError(undefined, {
           expected: InvitationOptions.Role.GUEST,
           remoteOptions: this._remoteOptions,
@@ -298,7 +296,7 @@ export class InvitationHostExtension extends RpcExtension<
     if (this._invitationFlowLock != null) {
       this._invitationFlowLock?.release();
       this._invitationFlowLock = null;
-      log('invitation flow lock released');
+      log.verbose('invitation flow lock released');
     }
   }
 }

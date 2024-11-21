@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CompassTool, type IconProps } from '@phosphor-icons/react';
+import { CompassTool } from '@phosphor-icons/react';
 import React from 'react';
 
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
@@ -21,24 +21,19 @@ import { SketchAction, type SketchGridType, type SketchPluginProvides, type Sket
 import { serializer } from './util';
 
 export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
-  const settings = new LocalStorageStore<SketchSettingsProps>(SKETCH_PLUGIN, {});
+  const settings = new LocalStorageStore<SketchSettingsProps>(SKETCH_PLUGIN);
 
   return {
     meta,
     ready: async () => {
-      settings.prop({
-        key: 'gridType',
-        storageKey: 'grid-type',
-        type: LocalStorageStore.enum<SketchGridType>({ allowUndefined: true }),
-      });
+      settings.prop({ key: 'gridType', type: LocalStorageStore.enum<SketchGridType>({ allowUndefined: true }) });
     },
     provides: {
       metadata: {
         records: {
           [DiagramType.typename]: {
             placeholder: ['object title placeholder', { ns: SKETCH_PLUGIN }],
-            icon: (props: IconProps) => <CompassTool {...props} />,
-            iconSymbol: 'ph--compass-tool--regular',
+            icon: 'ph--compass-tool--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (diagram: DiagramType) => loadObjectReferences(diagram, (diagram) => [diagram.canvas]),
             serializer,
@@ -49,6 +44,12 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
       translations,
       echo: {
         schema: [DiagramType, CanvasType],
+      },
+      space: {
+        onSpaceCreate: {
+          label: ['create object label', { ns: SKETCH_PLUGIN }],
+          action: SketchAction.CREATE,
+        },
       },
       graph: {
         builder: (plugins) => {
@@ -84,8 +85,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                     },
                     properties: {
                       label: ['create object label', { ns: SKETCH_PLUGIN }],
-                      icon: (props: IconProps) => <CompassTool {...props} />,
-                      iconSymbol: 'ph--compass-tool--regular',
+                      icon: 'ph--compass-tool--regular',
                       testId: 'sketchPlugin.createObject',
                     },
                   },

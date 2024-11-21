@@ -5,17 +5,16 @@
 import React, { useEffect } from 'react';
 import { generatePath, Navigate, Outlet, useParams } from 'react-router-dom';
 
-import { PublicKey, useClient } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
 import { useSpace, useSpaces } from '@dxos/react-client/echo';
 
 import { SpaceList } from './SpaceList';
 
 export const Main = () => {
-  const { spaceKey } = useParams();
-
+  const { spaceId } = useParams();
   const client = useClient();
-  const space = useSpace(PublicKey.safeFrom(spaceKey ?? ''));
   const spaces = useSpaces();
+  const space = useSpace(spaceId);
 
   useEffect(() => {
     const handleKeyDown = async (event: KeyboardEvent) => {
@@ -23,7 +22,7 @@ export const Main = () => {
       if (event.key === '.' && event.shiftKey && modifier) {
         await client.shell.open();
       } else if (space && event.key === '.' && modifier) {
-        await client.shell.shareSpace({ spaceKey: space.key });
+        await client.shell.shareSpace({ spaceId: space.id });
       }
     };
 
@@ -34,8 +33,8 @@ export const Main = () => {
     };
   }, [client, space]);
 
-  if (!spaceKey && spaces.length > 0) {
-    return <Navigate to={generatePath('/:spaceKey', { spaceKey: spaces[0].key.toHex() })} />;
+  if (!spaceId && spaces.length > 0) {
+    return <Navigate to={generatePath('/:spaceId', { spaceId: spaces[0].id })} />;
   }
 
   return (

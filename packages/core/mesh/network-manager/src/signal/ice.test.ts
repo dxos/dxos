@@ -2,10 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
 import fetchMock from 'fetch-mock';
-
-import { test, describe } from '@dxos/test';
+import { afterEach, test, expect, describe } from 'vitest';
 
 import { createIceProvider } from './ice';
 

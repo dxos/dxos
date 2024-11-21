@@ -6,9 +6,9 @@
     "lint": {
       "options": {
         "lintFilePatterns": [
-          "tools/lit-stories/*-stories/*.mts",
-          "tools/lit-stories/.storybook/*.ts",
-          "tools/lit-stories/config/**/*.{ts,tsx,js,jsx}"
+          "{projectRoot}/*-stories/*.mts",
+          "{projectRoot}/.storybook/*.ts",
+          "{projectRoot}/config/**/*.{ts,tsx,js,jsx}"
         ]
       }
     },
@@ -27,7 +27,7 @@
       ],
       "executor": "@nx/storybook:storybook",
       "options": {
-        "configDir": "tools/lit-stories/config/all"
+        "configDir": "{projectRoot}/config/all"
       }
     }
   }

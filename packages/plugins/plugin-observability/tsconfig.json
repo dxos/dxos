@@ -1,13 +1,12 @@
 {
   "extends": [
-    "../../../tsconfig.json"
+    "../../../tsconfig.base.json"
   ],
   "compilerOptions": {
     "lib": [
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist/types",
     "types": [
       "node"
     ]
@@ -21,51 +20,5 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": [
-    {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/context"
-    },
-    {
-      "path": "../../common/local-storage"
-    },
-    {
-      "path": "../../common/log"
-    },
-    {
-      "path": "../../common/util"
-    },
-    {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/protocols"
-    },
-    {
-      "path": "../../sdk/app-framework"
-    },
-    {
-      "path": "../../sdk/observability"
-    },
-    {
-      "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../ui/react-ui"
-    },
-    {
-      "path": "../../ui/react-ui-theme"
-    },
-    {
-      "path": "../../ui/storybook-utils"
-    },
-    {
-      "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-settings"
-    }
-  ]
+  "references": []
 }

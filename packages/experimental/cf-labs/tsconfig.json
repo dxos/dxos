@@ -1,12 +1,11 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "lib": [
       "ESNext"
     ],
     "module": "Preserve",
     "moduleResolution": "Bundler",
-    "outDir": "dist/types",
     "types": [
       "@cloudflare/workers-types"
     ]
@@ -15,15 +14,5 @@
     "src",
     "vite.config.ts"
   ],
-  "references": [
-    {
-      "path": "../../common/log"
-    },
-    {
-      "path": "../../core/halo/credentials"
-    },
-    {
-      "path": "../../core/halo/keyring"
-    }
-  ]
+  "references": []
 }

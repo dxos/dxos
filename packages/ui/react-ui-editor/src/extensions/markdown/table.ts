@@ -25,9 +25,9 @@ export type TableOptions = {};
  * https://github.github.com/gfm/#tables-extension
  */
 export const table = (options: TableOptions = {}): Extension => {
-  return StateField.define<RangeSet<any>>({
+  return StateField.define<RangeSet<Decoration>>({
     create: (state) => update(state, options),
-    update: (_: RangeSet<any>, tr: Transaction) => update(tr.state, options),
+    update: (_: RangeSet<Decoration>, tr: Transaction) => update(tr.state, options),
     provide: (field) => EditorView.decorations.from(field),
   });
 };
@@ -40,7 +40,7 @@ type Table = {
 };
 
 const update = (state: EditorState, _options: TableOptions) => {
-  const builder = new RangeSetBuilder();
+  const builder = new RangeSetBuilder<Decoration>();
   const cursor = state.selection.main.head;
 
   const tables: Table[] = [];

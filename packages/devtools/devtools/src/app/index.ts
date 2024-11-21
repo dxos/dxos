@@ -2,4 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './Devtools';
+import { lazy } from 'react';
+
+export const Devtools = lazy(() => import('./Devtools'));
+export const DevtoolsApp = lazy(() => import('./App'));

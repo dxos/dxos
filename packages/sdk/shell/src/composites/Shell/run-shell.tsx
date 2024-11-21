@@ -27,7 +27,7 @@ export const runShell = async (config: Config = new Config()) => {
     createRoot(document.getElementById('root')!).render(
       <StrictMode>
         <ThemeProvider tx={defaultTx} resourceExtensions={[osTranslations]}>
-          <ClientProvider config={config} services={services}>
+          <ClientProvider config={config} services={services} noBanner>
             <ClipboardProvider>
               <Tooltip.Provider>
                 <AgentHostingProvider>

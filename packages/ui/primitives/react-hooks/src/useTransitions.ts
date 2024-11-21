@@ -28,21 +28,18 @@ export const useDidTransition = <T>(
 
   useEffect(() => {
     const toValueValid = isFunction<T>(toValue) ? toValue(currentValue) : toValue === currentValue;
-
     const fromValueValid = isFunction<T>(fromValue)
       ? fromValue(previousValue.current)
       : fromValue === previousValue.current;
 
-    const transitioned = fromValueValid && toValueValid;
-
-    if (transitioned) {
+    if (fromValueValid && toValueValid && !hasTransitioned) {
       setHasTransitioned(true);
-    } else {
+    } else if ((!fromValueValid || !toValueValid) && hasTransitioned) {
       setHasTransitioned(false);
     }
 
     previousValue.current = currentValue;
-  }, [currentValue, fromValue, toValue, setHasTransitioned, previousValue]);
+  }, [currentValue, fromValue, toValue, hasTransitioned]);
 
   return hasTransitioned;
 };
@@ -55,7 +52,7 @@ export const useDidTransition = <T>(
 export const useOnTransition = <T>(
   currentValue: T,
   fromValue: T | ((value: T) => boolean),
-  toValue: ((value: T) => boolean) | T,
+  toValue: T | ((value: T) => boolean),
   callback: () => void,
 ) => {
   const dirty = useRef(false);

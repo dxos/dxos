@@ -1,12 +1,13 @@
 {
   "name": "@dxos/codemods",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "private": true,
   "description": "Code analyzer.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
+  "sideEffects": true,
   "main": "dist/src/index.js",
   "types": "./dist/src/index.d.ts",
   "bin": {
@@ -19,7 +20,6 @@
   "devDependencies": {
     "@babel/core": "^7.18.13",
     "@babel/preset-env": "^7.19.3",
-    "@types/jscodeshift": "^0.11.5",
-    "typescript": "^5.5.4"
+    "@types/jscodeshift": "^0.11.5"
   }
 }

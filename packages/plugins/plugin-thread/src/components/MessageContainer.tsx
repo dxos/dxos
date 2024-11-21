@@ -1,25 +1,17 @@
 //
 // Copyright 2024 DXOS.org
 //
+
 import { EditorView } from '@codemirror/view';
 import { Check, PencilSimple, X } from '@phosphor-icons/react';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { type Expando, type EchoReactiveObject } from '@dxos/echo-schema';
 import { type MessageType } from '@dxos/plugin-space/types';
 import { PublicKey } from '@dxos/react-client';
-import { type SpaceMember } from '@dxos/react-client/echo';
+import { type EchoReactiveObject, type Expando, type SpaceMember } from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
-import {
-  Button,
-  ButtonGroup,
-  DensityProvider,
-  Tooltip,
-  useOnTransition,
-  useThemeContext,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Button, ButtonGroup, Tooltip, useOnTransition, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, useTextEditor } from '@dxos/react-ui-editor';
 import { Mosaic, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import {
@@ -37,7 +29,8 @@ import { useOnEditAnalytics } from '../hooks';
 import { THREAD_ITEM, THREAD_PLUGIN } from '../meta';
 import { getMessageMetadata } from '../util';
 
-const messageControlClassNames = ['p-1 min-bs-0 transition-opacity items-start', hoverableControlItem];
+// TODO(thure): #8149
+const messageControlClassNames = ['!p-1 !min-bs-0 transition-opacity', hoverableControlItem];
 
 export const MessageContainer = ({
   message,
@@ -91,7 +84,7 @@ export const MessageContainer = ({
                   variant='ghost'
                   data-testid='thread.message.delete'
                   classNames={messageControlClassNames}
-                  onClick={handleDelete}
+                  onClick={() => handleDelete()}
                 >
                   <span className='sr-only'>{deleteLabel}</span>
                   <X className={getSize(4)} />
@@ -171,8 +164,8 @@ const TextboxBlock = ({
 };
 
 const MessageBlockObjectTile: MosaicTileComponent<EchoReactiveObject<any>> = forwardRef(
-  ({ draggableStyle, draggableProps, item, active, ...props }, forwardedRef) => {
-    let title = item.name ?? item.title ?? item.__typename ?? 'Object';
+  ({ draggableStyle, draggableProps, item, active, ref: _ref, ...props }, forwardedRef) => {
+    let title = item.name ?? item.title ?? item.type ?? 'Object';
     if (typeof title !== 'string') {
       title = title?.content ?? '';
     }
@@ -184,16 +177,14 @@ const MessageBlockObjectTile: MosaicTileComponent<EchoReactiveObject<any>> = for
         style={draggableStyle}
         ref={forwardedRef}
       >
-        <DensityProvider density='fine'>
-          <Surface
-            role='card'
-            limit={1}
-            data={{ content: item }}
-            draggableProps={draggableProps}
-            fallback={title}
-            {...props}
-          />
-        </DensityProvider>
+        <Surface
+          role='card'
+          limit={1}
+          data={{ content: item }}
+          draggableProps={draggableProps}
+          fallback={title}
+          {...props}
+        />
       </div>
     );
   },

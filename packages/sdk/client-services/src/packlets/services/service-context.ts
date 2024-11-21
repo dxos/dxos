@@ -2,13 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Trigger } from '@dxos/async';
+import { Mutex, Trigger } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { getCredentialAssertion, type CredentialProcessor } from '@dxos/credentials';
-import { failUndefined } from '@dxos/debug';
-import { EchoEdgeReplicator, EchoHost } from '@dxos/echo-db';
-import { MeshEchoReplicator, MetadataStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
-import type { EdgeConnection } from '@dxos/edge-client';
+import { failUndefined, warnAfterTimeout } from '@dxos/debug';
+import {
+  EchoEdgeReplicator,
+  EchoHost,
+  MeshEchoReplicator,
+  MetadataStore,
+  SpaceManager,
+  valueEncoding,
+} from '@dxos/echo-pipeline';
+import { createChainEdgeIdentity, createEphemeralEdgeIdentity } from '@dxos/edge-client';
+import type { EdgeHttpClient, EdgeConnection, EdgeIdentity } from '@dxos/edge-client';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
@@ -23,19 +30,21 @@ import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Storage } from '@dxos/random-access-storage';
-import type { TeleportParams } from '@dxos/teleport';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { trace as Trace } from '@dxos/tracing';
 import { safeInstanceof } from '@dxos/util';
 
+import { EdgeAgentManager } from '../agents';
 import {
   IdentityManager,
   type CreateIdentityOptions,
-  type IdentityManagerRuntimeParams,
+  type IdentityManagerParams,
   type JoinIdentityParams,
 } from '../identity';
+import { EdgeIdentityRecoveryManager } from '../identity/identity-recovery-manager';
 import {
   DeviceInvitationProtocol,
+  type InvitationConnectionParams,
   InvitationsHandler,
   InvitationsManager,
   SpaceInvitationProtocol,
@@ -43,9 +52,12 @@ import {
 } from '../invitations';
 import { DataSpaceManager, type DataSpaceManagerRuntimeParams, type SigningContext } from '../spaces';
 
-export type ServiceContextRuntimeParams = IdentityManagerRuntimeParams &
+export type ServiceContextRuntimeParams = Pick<
+  IdentityManagerParams,
+  'devicePresenceOfflineTimeout' | 'devicePresenceAnnounceInterval'
+> &
   DataSpaceManagerRuntimeParams & {
-    invitationConnectionDefaultParams?: Partial<TeleportParams>;
+    invitationConnectionDefaultParams?: InvitationConnectionParams;
     disableP2pReplication?: boolean;
   };
 /**
@@ -56,6 +68,8 @@ export type ServiceContextRuntimeParams = IdentityManagerRuntimeParams &
 @safeInstanceof('dxos.client-services.ServiceContext')
 @Trace.resource()
 export class ServiceContext extends Resource {
+  private readonly _edgeIdentityUpdateMutex = new Mutex();
+
   public readonly initialized = new Trigger();
   public readonly metadataStore: MetadataStore;
   public readonly blobStore: BlobStore;
@@ -63,6 +77,7 @@ export class ServiceContext extends Resource {
   public readonly keyring: Keyring;
   public readonly spaceManager: SpaceManager;
   public readonly identityManager: IdentityManager;
+  public readonly recoveryManager: EdgeIdentityRecoveryManager;
   public readonly invitations: InvitationsHandler;
   public readonly invitationsManager: InvitationsManager;
   public readonly echoHost: EchoHost;
@@ -71,6 +86,7 @@ export class ServiceContext extends Resource {
 
   // Initialized after identity is initialized.
   public dataSpaceManager?: DataSpaceManager;
+  public edgeAgentManager?: EdgeAgentManager;
 
   private readonly _handlerFactories = new Map<
     Invitation.Kind,
@@ -87,6 +103,7 @@ export class ServiceContext extends Resource {
     public readonly networkManager: SwarmNetworkManager,
     public readonly signalManager: SignalManager,
     private readonly _edgeConnection: EdgeConnection | undefined,
+    private readonly _edgeHttpClient: EdgeHttpClient | undefined,
     public readonly _runtimeParams?: ServiceContextRuntimeParams,
     private readonly _edgeFeatures?: Runtime.Client.EdgeFeatures,
   ) {
@@ -116,31 +133,22 @@ export class ServiceContext extends Resource {
       disableP2pReplication: this._runtimeParams?.disableP2pReplication,
     });
 
-    this.identityManager = new IdentityManager(
-      this.metadataStore,
+    this.identityManager = new IdentityManager({
+      metadataStore: this.metadataStore,
+      keyring: this.keyring,
+      feedStore: this.feedStore,
+      spaceManager: this.spaceManager,
+      devicePresenceOfflineTimeout: this._runtimeParams?.devicePresenceOfflineTimeout,
+      devicePresenceAnnounceInterval: this._runtimeParams?.devicePresenceAnnounceInterval,
+      edgeConnection: this._edgeConnection,
+      edgeFeatures: this._edgeFeatures,
+    });
+
+    this.recoveryManager = new EdgeIdentityRecoveryManager(
       this.keyring,
-      this.feedStore,
-      this.spaceManager,
-      this._runtimeParams as IdentityManagerRuntimeParams,
-      {
-        onIdentityConstruction: (identity) => {
-          if (this._edgeConnection) {
-            log.info('Setting identity on edge connection', {
-              identity: identity.identityKey.toHex(),
-              oldIdentity: this._edgeConnection.identityKey,
-              swarms: this.networkManager.topics,
-            });
-            this._edgeConnection.setIdentity({
-              peerKey: identity.deviceKey.toHex(),
-              identityKey: identity.identityKey.toHex(),
-            });
-            this.networkManager.setPeerInfo({
-              identityKey: identity.identityKey.toHex(),
-              peerKey: identity.deviceKey.toHex(),
-            });
-          }
-        },
-      },
+      this._edgeHttpClient,
+      () => this.identityManager.identity,
+      this._acceptIdentity.bind(this),
     );
 
     this.echoHost = new EchoHost({ kv: this.level });
@@ -149,6 +157,7 @@ export class ServiceContext extends Resource {
 
     this.invitations = new InvitationsHandler(
       this.networkManager, //
+      this._edgeHttpClient,
       _runtimeParams?.invitationConnectionDefaultParams,
     );
     this.invitationsManager = new InvitationsManager(
@@ -185,6 +194,11 @@ export class ServiceContext extends Resource {
 
     log('opening...');
     log.trace('dxos.sdk.service-context.open', trace.begin({ id: this._instanceId }));
+
+    await this.identityManager.open(ctx);
+
+    await this._setNetworkIdentity();
+
     await this._edgeConnection?.open();
     await this.signalManager.open();
     await this.networkManager.open();
@@ -200,9 +214,9 @@ export class ServiceContext extends Resource {
 
     await this.metadataStore.load();
     await this.spaceManager.open();
-    await this.identityManager.open(ctx);
 
     if (this.identityManager.identity) {
+      await this.identityManager.identity.joinNetwork();
       await this._initialize(ctx);
     }
 
@@ -219,6 +233,7 @@ export class ServiceContext extends Resource {
       await this.identityManager.identity.space.spaceState.removeCredentialProcessor(this._deviceSpaceSync);
     }
     await this.dataSpaceManager?.close();
+    await this.edgeAgentManager?.close();
     await this.identityManager.close();
     await this.spaceManager.close();
     await this.feedStore.close();
@@ -234,11 +249,16 @@ export class ServiceContext extends Resource {
 
   async createIdentity(params: CreateIdentityOptions = {}) {
     const identity = await this.identityManager.createIdentity(params);
+    await this._setNetworkIdentity();
+    await identity.joinNetwork();
     await this._initialize(new Context());
     return identity;
   }
 
   getInvitationHandler(invitation: Partial<Invitation> & Pick<Invitation, 'kind'>): InvitationProtocol {
+    if (this.identityManager.identity == null && invitation.kind === Invitation.Kind.SPACE) {
+      throw new Error('Identity must be created before joining a space.');
+    }
     const factory = this._handlerFactories.get(invitation.kind);
     invariant(factory, `Unknown invitation kind: ${invitation.kind}`);
     return factory(invitation);
@@ -255,7 +275,10 @@ export class ServiceContext extends Resource {
   }
 
   private async _acceptIdentity(params: JoinIdentityParams) {
-    const identity = await this.identityManager.acceptIdentity(params);
+    const { identity, identityRecord } = await this.identityManager.prepareIdentity(params);
+    await this._setNetworkIdentity({ deviceCredential: params.authorizedDeviceCredential! });
+    await identity.joinNetwork();
+    await this.identityManager.acceptIdentity(identity, identityRecord, params.deviceProfile);
     await this._initialize(new Context());
     return identity;
   }
@@ -292,12 +315,21 @@ export class ServiceContext extends Resource {
       echoHost: this.echoHost,
       invitationsManager: this.invitationsManager,
       edgeConnection: this._edgeConnection,
+      edgeHttpClient: this._edgeHttpClient,
       echoEdgeReplicator: this._echoEdgeReplicator,
       meshReplicator: this._meshReplicator,
       runtimeParams: this._runtimeParams as DataSpaceManagerRuntimeParams,
       edgeFeatures: this._edgeFeatures,
     });
     await this.dataSpaceManager.open();
+
+    this.edgeAgentManager = new EdgeAgentManager(
+      this._edgeFeatures,
+      this._edgeHttpClient,
+      this.dataSpaceManager,
+      identity,
+    );
+    await this.edgeAgentManager.open();
 
     this._handlerFactories.set(Invitation.Kind.SPACE, (invitation) => {
       invariant(this.dataSpaceManager, 'dataSpaceManager not initialized yet');
@@ -337,5 +369,51 @@ export class ServiceContext extends Resource {
     };
 
     await identity.space.spaceState.addCredentialProcessor(this._deviceSpaceSync);
+  }
+
+  private async _setNetworkIdentity(params?: { deviceCredential: Credential }) {
+    using _ = await this._edgeIdentityUpdateMutex.acquire();
+
+    let edgeIdentity: EdgeIdentity;
+    const identity = this.identityManager.identity;
+    if (identity) {
+      log.info('Setting identity on edge connection', {
+        identity: identity.identityKey.toHex(),
+        swarms: this.networkManager.topics,
+      });
+      if (params?.deviceCredential || Boolean((globalThis as any)?.DEVICE_INVITE_INTEROP)) {
+        edgeIdentity = await createChainEdgeIdentity(
+          identity.signer,
+          identity.identityKey,
+          identity.deviceKey,
+          params?.deviceCredential && { credential: params.deviceCredential },
+          [], // TODO(dmaretskyi): Service access credentials.
+        );
+      } else {
+        // TODO: throw here or from identity if device chain can't be loaded, to avoid indefinite hangup
+        await warnAfterTimeout(10_000, 'Waiting for identity to be ready for edge connection', async () => {
+          await identity.ready();
+        });
+
+        invariant(identity.deviceCredentialChain);
+
+        edgeIdentity = await createChainEdgeIdentity(
+          identity.signer,
+          identity.identityKey,
+          identity.deviceKey,
+          identity.deviceCredentialChain,
+          [], // TODO(dmaretskyi): Service access credentials.
+        );
+      }
+    } else {
+      edgeIdentity = await createEphemeralEdgeIdentity();
+    }
+
+    this._edgeConnection?.setIdentity(edgeIdentity);
+    this._edgeHttpClient?.setIdentity(edgeIdentity);
+    this.networkManager.setPeerInfo({
+      identityKey: edgeIdentity.identityKey,
+      peerKey: edgeIdentity.peerKey,
+    });
   }
 }

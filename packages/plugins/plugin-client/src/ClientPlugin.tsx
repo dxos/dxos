@@ -2,13 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AddressBook, type IconProps } from '@phosphor-icons/react';
+import { type Schema as S } from '@effect/schema';
 import React from 'react';
 
 import {
   filterPlugins,
+  LayoutAction,
   parseIntentPlugin,
   resolvePlugin,
+  type SurfaceProvides,
   type GraphBuilderProvides,
   type IntentResolverProvides,
   type Plugin,
@@ -16,13 +18,14 @@ import {
   type TranslationsProvides,
 } from '@dxos/app-framework';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
-import { type S } from '@dxos/echo-schema';
-import { registerSignalRuntime } from '@dxos/echo-signals/react';
+import { registerSignalsRuntime } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
 import { createExtension, type Node } from '@dxos/plugin-graph';
-import { Client, type ClientOptions, ClientContext, useClientStatus } from '@dxos/react-client';
+import { Client, type ClientOptions, ClientProvider } from '@dxos/react-client';
+import { type IdentityPanelProps, type JoinPanelProps } from '@dxos/shell/react';
 
-import meta, { CLIENT_PLUGIN, ClientAction } from './meta';
+import { IdentityDialog, JoinDialog } from './components';
+import meta, { CLIENT_PLUGIN, ClientAction, OBSERVABILITY_ACTION } from './meta';
 import translations from './translations';
 
 export type ClientPluginOptions = ClientOptions & {
@@ -30,6 +33,16 @@ export type ClientPluginOptions = ClientOptions & {
    * Used to track app-specific state in spaces.
    */
   appKey: string;
+
+  /**
+   * Base URL for the invitation link.
+   */
+  invitationUrl?: string;
+
+  /**
+   * Query parameter for the invitation code.
+   */
+  invitationParam?: string;
 
   /**
    * Run after the client has been initialized.
@@ -41,10 +54,16 @@ export type ClientPluginOptions = ClientOptions & {
    * Run with client during plugin ready phase.
    */
   onReady?: (client: Client, plugins: Plugin[]) => Promise<void>;
+
+  /**
+   * Called when the client is reset.
+   */
+  onReset?: (params: { target?: string }) => Promise<void>;
 };
 
 export type ClientPluginProvides = IntentResolverProvides &
   GraphBuilderProvides &
+  SurfaceProvides &
   TranslationsProvides & {
     client: Client;
   };
@@ -63,17 +82,26 @@ export const parseSchemaPlugin = (plugin?: Plugin) =>
 
 export const ClientPlugin = ({
   appKey,
+  invitationUrl = window.location.origin,
+  invitationParam = 'deviceInvitationCode',
   onClientInitialized,
   onReady,
+  onReset,
   ...options
 }: ClientPluginOptions): PluginDefinition<
   Omit<ClientPluginProvides, 'client'>,
   Pick<ClientPluginProvides, 'client'>
 > => {
-  registerSignalRuntime();
+  registerSignalsRuntime();
 
   let client: Client;
   let error: unknown = null;
+
+  const createDeviceInvitationUrl = (invitationCode: string) => {
+    const baseUrl = new URL(invitationUrl);
+    baseUrl.searchParams.set(invitationParam, invitationCode);
+    return baseUrl.toString();
+  };
 
   return {
     meta,
@@ -99,12 +127,7 @@ export const ClientPlugin = ({
 
       return {
         client,
-        context: ({ children }) => {
-          // TODO(burdon): Use ClientProvider?
-          const status = useClientStatus(client);
-          return <ClientContext.Provider value={{ client, status }}>{children}</ClientContext.Provider>;
-          // return <ClientProvider client={client}>{children}</ClientProvider>;
-        },
+        context: ({ children }) => <ClientProvider client={client}>{children}</ClientProvider>,
       };
     },
     ready: async (plugins) => {
@@ -124,6 +147,26 @@ export const ClientPlugin = ({
     },
     provides: {
       translations,
+      surface: {
+        component: ({ data, role, ...rest }) => {
+          switch (role) {
+            case 'dialog':
+              if (data.component === 'dxos.org/plugin/client/IdentityDialog') {
+                return (
+                  <IdentityDialog
+                    {...(data.subject as IdentityPanelProps)}
+                    createInvitationUrl={createDeviceInvitationUrl}
+                  />
+                );
+              } else if (data.component === 'dxos.org/plugin/client/JoinDialog') {
+                return <JoinDialog {...(data.subject as JoinPanelProps)} />;
+              }
+              break;
+          }
+
+          return null;
+        },
+      },
       graph: {
         builder: (plugins) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
@@ -137,13 +180,12 @@ export const ClientPlugin = ({
                 id,
                 data: async () => {
                   await intentPlugin?.provides.intent.dispatch([
-                    { plugin: CLIENT_PLUGIN, action: ClientAction.OPEN_SHELL },
+                    { plugin: CLIENT_PLUGIN, action: ClientAction.SHARE_IDENTITY },
                   ]);
                 },
                 properties: {
                   label: ['open shell label', { ns: CLIENT_PLUGIN }],
-                  icon: (props: IconProps) => <AddressBook {...props} />,
-                  iconSymbol: 'ph--address-book--regular',
+                  icon: 'ph--address-book--regular',
                   keyBinding: {
                     macos: 'meta+shift+.',
                     // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.
@@ -160,10 +202,6 @@ export const ClientPlugin = ({
       intent: {
         resolver: async (intent) => {
           switch (intent.action) {
-            case ClientAction.OPEN_SHELL:
-              await client.shell.open(intent.data?.layout);
-              return { data: true };
-
             case ClientAction.CREATE_IDENTITY: {
               const data = await client.halo.createIdentity();
               return {
@@ -171,10 +209,9 @@ export const ClientPlugin = ({
                 intents: [
                   [
                     {
-                      // NOTE: This action is hardcoded to avoid circular dependency with observability plugin.
-                      action: 'dxos.org/plugin/observability/send-event',
+                      action: OBSERVABILITY_ACTION,
                       data: {
-                        name: 'identity.created',
+                        name: 'identity.create',
                       },
                     },
                   ],
@@ -183,16 +220,20 @@ export const ClientPlugin = ({
             }
 
             case ClientAction.JOIN_IDENTITY: {
-              const data = await client.shell.joinIdentity({ invitationCode: intent.data?.invitationCode });
               return {
-                data,
+                data: true,
                 intents: [
                   [
                     {
-                      // NOTE: This action is hardcoded to avoid circular dependency with observability plugin.
-                      action: 'dxos.org/plugin/observability/send-event',
+                      action: LayoutAction.SET_LAYOUT,
                       data: {
-                        name: 'identity.joined',
+                        element: 'dialog',
+                        component: 'dxos.org/plugin/client/JoinDialog',
+                        dialogBlockAlign: 'start',
+                        subject: {
+                          initialInvitationCode: intent.data?.invitationCode,
+                          initialDisposition: 'accept-halo-invitation',
+                        } satisfies Partial<JoinPanelProps>,
                       },
                     },
                   ],
@@ -201,27 +242,55 @@ export const ClientPlugin = ({
             }
 
             case ClientAction.SHARE_IDENTITY: {
-              const data = await client.shell.shareIdentity();
               return {
-                data,
+                data: true,
                 intents: [
                   [
                     {
-                      // NOTE: This action is hardcoded to avoid circular dependency with observability plugin.
-                      action: 'dxos.org/plugin/observability/send-event',
+                      action: LayoutAction.SET_LAYOUT,
                       data: {
-                        name: 'identity.shared',
-                        properties: {
-                          deviceKey: data.device?.deviceKey.truncate(),
-                          deviceKind: data.device?.kind,
-                          error: data.error?.message,
-                          canceled: data.cancelled,
-                        },
+                        element: 'dialog',
+                        component: 'dxos.org/plugin/client/IdentityDialog',
+                        dialogBlockAlign: 'start',
+                      },
+                    },
+                  ],
+                  [
+                    {
+                      action: OBSERVABILITY_ACTION,
+                      data: {
+                        name: 'identity.share',
                       },
                     },
                   ],
                 ],
               };
+            }
+
+            case ClientAction.RECOVER_IDENTITY: {
+              return {
+                data: true,
+                intents: [
+                  [
+                    {
+                      action: LayoutAction.SET_LAYOUT,
+                      data: {
+                        element: 'dialog',
+                        component: 'dxos.org/plugin/client/JoinDialog',
+                        dialogBlockAlign: 'start',
+                        subject: {
+                          initialDisposition: 'recover-identity',
+                        } satisfies Partial<JoinPanelProps>,
+                      },
+                    },
+                  ],
+                ],
+              };
+            }
+
+            case ClientAction.RESET_STORAGE: {
+              await onReset?.({ target: intent.data?.target });
+              return { data: true };
             }
           }
         },
