@@ -125,7 +125,3 @@ jobs:
           GHR_PATH: artifacts/
           GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
         if: github.event_name == 'release' && github.event.action == 'published'
-
-      - name: Monitor publish
-        run: node .github/workflows/scripts/monitor.js
-        if: steps.npm-publish.outcome == 'success'
