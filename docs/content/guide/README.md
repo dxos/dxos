@@ -11,13 +11,15 @@ DXOS applications work offline, share state instantly when online, and leave end
 Composer is a collaborative productivity app where developers can build and organize knowledge, extend with custom data and UI, and run private AI against their knowledge locally.
 
 :::note
-DXOS is under development and will continue to change frequently.<br/>Your feedback is most welcome on [GitHub](https://github.com/dxos/dxos/issues) and [Discord](https://dxos.org/discord). <br/>See our [Contribution Guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md) about contributing code.
+The DXOS SDK is under active development, however our current focus is building features and functionality that enables the development of [Composer](https://dxos.org/composer). To this end, we're currently only able to provide limited support to developers using the SDK, and will prioritize suggestions and contributions that align with our work on Composer.
+
+If you are interested in working with or contributing to either the SDK or Composer please share feedback on [GitHub](https://github.com/dxos/dxos/issues) or in [Discord](https://dxos.org/discord).
 :::
 
 The DXOS SDK includes a key pair of technologies that work together:
 
-* [ECHO](echo/) - Database and reactive state container for offline-first, real-time, collaborative apps.
-* [HALO](halo/) - Identity for decentralized apps.
+- [ECHO](echo/) - Database and reactive state container for offline-first, real-time, collaborative apps.
+- [HALO](halo/) - Identity for decentralized apps.
 
 Compare DXOS applications to client-server web applications:
 | | Client-Server Web Apps | DXOS Apps |

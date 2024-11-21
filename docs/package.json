@@ -10,10 +10,8 @@
   "scripts": {
     "apidoc": "rm -rf content/api && NODE_OPTIONS='--loader ts-node/esm' apidoc",
     "bundle": "vuepress build content",
-    "clean:api": "rm -rf content/api",
-    "prerelease": "pnpm typedoc && pnpm clean:api && pnpm apidoc",
-    "serve": "VITE_EXAMPLE_BASE_URL=http://localhost:9009 vuepress dev content",
-    "typedoc": "typedoc"
+    "prerelease": "pnpm apidoc",
+    "serve": "VITE_EXAMPLE_BASE_URL=http://localhost:9009 vuepress dev content"
   },
   "devDependencies": {
     "@dxos/apidoc": "workspace:*",
