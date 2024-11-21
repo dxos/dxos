@@ -23,13 +23,14 @@ import { FormatAnnotationId } from './types';
 // TODO(burdon): Add fields for `examples`, `message`, etc.
 export namespace Format {
   // Strings
+  export const DXN = StringUtil.DXN;
   export const Email = StringUtil.Email;
   export const Formula = StringUtil.Formula;
   export const Hostname = StringUtil.Hostname;
   export const JSON = StringUtil.JSON;
   export const Markdown = StringUtil.Markdown;
   export const Regex = StringUtil.Regex;
-  export const URI = StringUtil.URI;
+  export const URL = StringUtil.URL;
   export const UUID = S.UUID;
 
   // Numbers

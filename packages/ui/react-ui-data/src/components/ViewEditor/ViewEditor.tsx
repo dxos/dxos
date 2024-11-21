@@ -5,10 +5,10 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type SchemaResolver } from '@dxos/echo-db';
-import { AST, type MutableSchema, S } from '@dxos/echo-schema';
+import { AST, Format, type MutableSchema, S } from '@dxos/echo-schema';
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
-import { ghostHover, mx } from '@dxos/react-ui-theme';
+import { ghostHover, inputTextLabel, mx } from '@dxos/react-ui-theme';
 import { FieldSchema, type FieldType, type ViewType, ViewProjection, VIEW_FIELD_LIMIT } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
 
@@ -18,16 +18,12 @@ import { Form } from '../Form';
 
 const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem]';
 
-// TODO(burdon): Pick from ViewType.
 const ViewMetaSchema = S.Struct({
-  // name: S.String.annotations({
-  //   [AST.TitleAnnotationId]: 'View',
-  //   [AST.DescriptionAnnotationId]: 'Enter view name',
-  // }),
-  // TODO(burdon): Define pattern.
-  type: S.NonEmptyString.annotations({
+  name: S.String.annotations({
+    [AST.TitleAnnotationId]: 'View',
+  }),
+  type: Format.DXN.annotations({
     [AST.TitleAnnotationId]: 'Typename',
-    [AST.DescriptionAnnotationId]: 'Ex. example.com/type/MyType',
   }),
 }).pipe(S.mutable);
 
@@ -62,7 +58,6 @@ export const ViewEditor = ({
   const viewValues = useMemo(() => {
     return {
       name: view.name,
-      // TODO(burdon): Should change schema's typename.
       // TODO(burdon): Need to warn user of possible consequences of editing.
       // TODO(burdon): Settings should have domain name owned by user.
       type: view.query.type,
@@ -70,8 +65,9 @@ export const ViewEditor = ({
   }, [view]);
 
   const handleViewUpdate = useCallback(
-    ({ type }: ViewMetaType) => {
+    ({ name, type }: ViewMetaType) => {
       requestAnimationFrame(() => {
+        view.name = name;
         view.query.type = type;
         schema.updateTypename(type);
       });
@@ -99,12 +95,12 @@ export const ViewEditor = ({
 
   return (
     <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
-      <Form<ViewMetaType> autoFocus autosave schema={ViewMetaSchema} values={viewValues} onSubmit={handleViewUpdate} />
+      <Form<ViewMetaType> autoFocus autoSave schema={ViewMetaSchema} values={viewValues} onSubmit={handleViewUpdate} />
 
       <div>
         {/* TODO(burdon): Clean up common form ux. */}
         <div role='none' className='p-2'>
-          <label>{t('fields label')}</label>
+          <label className={mx(inputTextLabel)}>{t('fields label')}</label>
         </div>
 
         <List.Root<FieldType>
