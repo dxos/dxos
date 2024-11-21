@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ChatText, RowsPlusBottom } from '@phosphor-icons/react';
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren } from 'react';
 
@@ -50,7 +49,7 @@ const Editing = () => {
     <>
       <ToolbarButton
         value='add-row'
-        Icon={RowsPlusBottom}
+        icon='plus'
         data-testid='table.toolbar.add-row'
         onClick={() => onAction?.({ type: 'add-row' })}
       >
@@ -68,7 +67,7 @@ const Actions = () => {
     <>
       <ToolbarButton
         value='comment'
-        Icon={ChatText}
+        icon='chat-text'
         data-testid='table.toolbar.comment'
         onClick={() => onAction?.({ type: 'comment' })}
       >
