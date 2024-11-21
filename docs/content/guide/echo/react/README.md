@@ -20,11 +20,11 @@ To create a space, call the `client.spaces.create()` API:
 
 Creates a new space.
 
-Returns: <code>Promise<[Space](/api/@dxos/react-client/interfaces/Space)></code>
+Returns: <code>Promise<Space></code>
 
 Arguments:
 
-`meta`: <code>[PropertiesTypeProps](/api/@dxos/react-client/types/PropertiesTypeProps)</code>
+`meta`: <code>PropertiesTypeProps</code>
 :::
 
 ```tsx{11} file=./snippets/create-spaces.tsx#L5-
@@ -64,11 +64,11 @@ The space is not guaranteed to be in the ready state.
 Returns the default space if no key is provided.
 Requires a ClientProvider somewhere in the parent tree.
 
-Returns: <code>undefined | [Space](/api/@dxos/react-client/interfaces/Space)</code>
+Returns: <code>undefined | Space</code>
 
 Arguments:
 
-`spaceKeyLike`: <code>[PublicKeyLike](/api/@dxos/react-client/types/PublicKeyLike)</code>
+`spaceKeyLike`: <code>PublicKeyLike</code>
 :::
 
 :::apidoc[@dxos/react-client.useSpaces]
@@ -78,11 +78,11 @@ Get all Spaces available to current user.
 Requires a ClientProvider somewhere in the parent tree.
 By default, only ready spaces are returned.
 
-Returns: <code>[Space](/api/@dxos/react-client/interfaces/Space)\[]</code>
+Returns: <code>Space\[]</code>
 
 Arguments:
 
-`options`: <code>[UseSpacesParams](/api/@dxos/react-client/types/UseSpacesParams)</code>
+`options`: <code>UseSpacesParams</code>
 :::
 
 ### Example

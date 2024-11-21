@@ -11,7 +11,7 @@ The following are react hooks which ensure the reactivity of the underlying data
 Hook returning instance of DXOS client.
 Requires ClientContext to be set via ClientProvider.
 
-Returns: <code>[Client](/api/@dxos/react-client/classes/Client)</code>
+Returns: <code>Client</code>
 
 Arguments: none
 :::
