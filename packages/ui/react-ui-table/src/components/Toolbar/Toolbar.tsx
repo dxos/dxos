@@ -49,7 +49,7 @@ const Editing = () => {
     <>
       <ToolbarButton
         value='add-row'
-        icon='plus'
+        icon='ph--plus--regular'
         data-testid='table.toolbar.add-row'
         onClick={() => onAction?.({ type: 'add-row' })}
       >
@@ -67,7 +67,7 @@ const Actions = () => {
     <>
       <ToolbarButton
         value='comment'
-        icon='chat-text'
+        icon='ph--chat-text--regular'
         data-testid='table.toolbar.comment'
         onClick={() => onAction?.({ type: 'comment' })}
       >
