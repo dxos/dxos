@@ -9,13 +9,13 @@
   "sideEffects": true,
   "imports": {
     "#node-datachannel": {
-      "browser": "./module-stub.js",
-      "workerd": "./module-stub.js",
+      "browser": "./module-stub.mjs",
+      "workerd": "./module-stub.mjs",
       "default": "node-datachannel"
     },
     "#node-datachannel/*": {
-      "browser": "./module-stub.js",
-      "workerd": "./module-stub.js",
+      "browser": "./module-stub.mjs",
+      "workerd": "./module-stub.mjs",
       "default": "node-datachannel/*"
     },
     "#tcp-transport": {
