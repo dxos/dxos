@@ -106,6 +106,9 @@ const config: UserConfig = defineUserConfig({
   ],
   bundler: viteBundler({
     viteOptions: {
+      build: {
+        target: ['chrome89', 'edge89', 'firefox89', 'safari15'],
+      },
       plugins: [WasmPlugin()],
       define: {
         'process.env.DX_ENVIRONMENT': env(process.env.DX_ENVIRONMENT),
