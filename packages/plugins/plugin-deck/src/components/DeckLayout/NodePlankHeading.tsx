@@ -163,7 +163,8 @@ export const NodePlankHeading = memo(
               variant='ghost'
               label={t('open complementary sidebar label')}
               classNames='!p-1 -scale-x-100'
-              icon='ph--sidebar--regular'
+              icon='ph--sidebar-simple--regular'
+              size={5}
               tooltipZIndex='70'
             />
           )}
