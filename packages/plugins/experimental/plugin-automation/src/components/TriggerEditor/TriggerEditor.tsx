@@ -19,7 +19,7 @@ import { invariant } from '@dxos/invariant';
 import { ScriptType } from '@dxos/plugin-script/types';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
-import { Form, SelectInput } from '@dxos/react-ui-data';
+import { Form, SelectInput } from '@dxos/react-ui-form';
 import { distinctBy } from '@dxos/util';
 
 import { InputRow } from './Form';

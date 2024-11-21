@@ -40,8 +40,8 @@
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-status-bar": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
-    "@dxos/react-ui-data": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "localforage": "^1.10.0"

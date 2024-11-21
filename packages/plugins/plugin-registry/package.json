@@ -33,7 +33,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
-    "@dxos/react-ui-data": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {

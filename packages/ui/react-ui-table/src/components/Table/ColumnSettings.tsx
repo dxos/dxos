@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getSpace } from '@dxos/react-client/echo';
 import { DropdownMenu } from '@dxos/react-ui';
-import { FieldEditor } from '@dxos/react-ui-data';
+import { FieldEditor } from '@dxos/react-ui-form';
 import { type FieldType } from '@dxos/schema';
 
 import { type TableModel } from '../../model';
