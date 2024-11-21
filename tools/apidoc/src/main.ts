@@ -3,14 +3,14 @@
 //
 
 import { loadConfig } from './config.js';
-import { generateApiDocs } from './generateApiDocs.js';
+// import { generateApiDocs } from './generateApiDocs.js';
 import { remarkDocumentation } from './remarkDocumentation.js';
 
 const main = async () => {
   const config = await loadConfig();
   const flags = process.argv.slice(2);
   const tasks = {
-    apidoc: generateApiDocs,
+    // apidoc: generateApiDocs,
     remark: remarkDocumentation,
   };
   const plan = flags?.length ? flags : Object.keys(tasks);

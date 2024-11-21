@@ -72,11 +72,10 @@ import { create } from '@dxos/echo-schema';
 
 import { TaskType } from './schema';
 
-const client = new Client();
+const client = new Client({ types: [TaskType] });
 
 void (async () => {
   await client.initialize();
-  client.addTypes([TaskType]);
   if (!client.halo.identity.get()) {
     await client.halo.createIdentity();
   }
