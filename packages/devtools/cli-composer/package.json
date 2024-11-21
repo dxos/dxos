@@ -1,6 +1,6 @@
 {
   "name": "@dxos/cli-composer",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "description": "DXOS CLI",
   "keywords": [
     "dxos",
