@@ -37,11 +37,6 @@ const main = async () => {
   // Namespace for global Composer test & debug hooks.
   (window as any).composer = {};
 
-  const searchParams = new URLSearchParams(window.location.search);
-  if (searchParams.get('deviceInviteInterop')) {
-    (window as any).DEVICE_INVITE_INTEROP = true;
-  }
-
   let config = await setupConfig();
   if (
     !config.values.runtime?.client?.storage?.dataStore &&
