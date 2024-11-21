@@ -19,10 +19,12 @@ const typeLiteralAnnotations = { [AST.TitleAnnotationId]: 'Type' };
  */
 const TimerTriggerSchema = S.Struct({
   type: S.Literal('timer').annotations(typeLiteralAnnotations),
-  cron: S.NonEmptyString.annotations({
-    [AST.TitleAnnotationId]: 'Cron',
-    [AST.ExamplesAnnotationId]: '0 0 * * *',
-  }),
+  cron: S.optional(
+    S.String.annotations({
+      [AST.TitleAnnotationId]: 'Cron',
+      [AST.ExamplesAnnotationId]: '0 0 * * *',
+    }),
+  ),
 }).pipe(S.mutable);
 
 export type TimerTrigger = S.Schema.Type<typeof TimerTriggerSchema>;
@@ -32,7 +34,7 @@ export type TimerTrigger = S.Schema.Type<typeof TimerTriggerSchema>;
  */
 const WebhookTriggerSchema = S.Struct({
   type: S.Literal('webhook').annotations(typeLiteralAnnotations),
-  method: S.String,
+  method: S.optional(S.String),
   // Assigned port.
   port: S.optional(S.Number),
 }).pipe(S.mutable);
@@ -45,7 +47,7 @@ export type WebhookTrigger = S.Schema.Type<typeof WebhookTriggerSchema>;
  */
 const WebsocketTriggerSchema = S.Struct({
   type: S.Literal('websocket').annotations(typeLiteralAnnotations),
-  url: S.String,
+  url: S.optional(S.String),
   init: S.optional(S.Record({ key: S.String, value: S.Any })),
 }).pipe(S.mutable);
 
@@ -63,7 +65,7 @@ const QuerySchema = S.Struct({
 const SubscriptionTriggerSchema = S.Struct({
   type: S.Literal('subscription').annotations(typeLiteralAnnotations),
   // TODO(burdon): Define query DSL (from ECHO). Reconcile with Table.Query.
-  filter: QuerySchema,
+  filter: S.optional(QuerySchema),
   options: S.optional(
     S.Struct({
       // Watch changes to object (not just creation).

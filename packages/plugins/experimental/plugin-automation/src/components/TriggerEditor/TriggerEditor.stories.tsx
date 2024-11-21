@@ -17,6 +17,7 @@ import { TriggerEditor } from './TriggerEditor';
 import translations from '../../translations';
 import { ChainPromptType } from '../../types';
 
+// TODO(burdon): Change to FunctionDeployment.
 const functions: Omit<FunctionDef, 'id'>[] = [
   {
     uri: 'dxos.org/function/email-worker',
@@ -41,7 +42,7 @@ const Story = () => {
       return;
     }
 
-    const trigger = space.db.add(create(FunctionTrigger, { function: '', spec: { type: 'timer', cron: '0 0 * * *' } }));
+    const trigger = space.db.add(create(FunctionTrigger, { spec: { type: 'timer' } }));
     setTrigger(trigger);
   }, [space, setTrigger]);
   if (!space || !trigger) {
@@ -50,7 +51,7 @@ const Story = () => {
 
   return (
     <div role='none' className='flex w-[350px] border border-separator overflow-hidden'>
-      <TriggerEditor space={space} trigger={trigger} />
+      <TriggerEditor trigger={trigger} />
     </div>
   );
 };
