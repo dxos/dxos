@@ -40,7 +40,7 @@ const PlankControl = ({ icon, label, ...props }: Omit<ButtonProps, 'children'> &
       <Tooltip.Trigger asChild>
         <Button variant='ghost' {...props}>
           <span className='sr-only'>{label}</span>
-          <Icon icon={icon} />
+          <Icon icon={icon} size={5} />
         </Button>
       </Tooltip.Trigger>
       <Tooltip.Portal>
@@ -76,10 +76,10 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
 
         {can.solo && (
           <PlankControl
-            label={t('solo plank label')}
+            label={isSolo ? t('show deck plank label') : t('show solo plank label')}
             classNames={buttonClassNames}
             onClick={() => onClick?.('solo')}
-            icon={isSolo ? 'ph--arrows-in--regular' : 'ph--arrows-out--regular'}
+            icon={isSolo ? 'ph--vibrate--regular' : 'ph--arrows-out--regular'}
           />
         )}
 
@@ -122,7 +122,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
                 ? 'ph--caret-line-left--regular'
                 : close === 'minify-end'
                   ? 'ph--caret-line-right--regular'
-                  : 'ph--minus--regular'
+                  : 'ph--x--regular'
             }
           />
         )}
