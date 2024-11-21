@@ -13,7 +13,7 @@ import {
   type ToolbarToggleGroupItemProps as NaturalToolbarToggleGroupItemProps,
 } from '@dxos/react-ui';
 
-// TODO(burdon): Factor out in common with react-ui-editor.
+// TODO(burdon): Factor out into new package (react-ui-toolbar) in common with react-ui-editor, etc.
 
 export const buttonStyles = 'min-bs-0 p-2';
 export const tooltipProps = { side: 'top' as const, classNames: 'z-10' };

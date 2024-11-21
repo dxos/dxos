@@ -57,7 +57,7 @@ const DefaultStory = () => {
 };
 
 const meta: Meta<typeof ViewEditor> = {
-  title: 'ui/react-ui-data/ViewEditor',
+  title: 'ui/react-ui-form/ViewEditor',
   component: ViewEditor,
   render: DefaultStory,
   decorators: [withClientProvider({ createSpace: true }), withLayout({ fullscreen: true, tooltips: true }), withTheme],

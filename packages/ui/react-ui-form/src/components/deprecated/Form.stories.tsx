@@ -24,7 +24,7 @@ const DefaultStory = (props: DeprecatedFormProps) => (
 );
 
 const meta: Meta<typeof DefaultStory> = {
-  title: 'ui/react-ui-data/DeprecatedForm',
+  title: 'ui/react-ui-form/DeprecatedForm',
   component: DeprecatedForm,
   render: DefaultStory,
   decorators: [withLayout({ fullscreen: true }), withTheme],

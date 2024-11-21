@@ -7,7 +7,7 @@ import React from 'react';
 
 import { useIntentDispatcher } from '@dxos/app-framework';
 import { Button, Input, Message, useTranslation } from '@dxos/react-ui';
-import { DeprecatedFormInput } from '@dxos/react-ui-data';
+import { DeprecatedFormInput } from '@dxos/react-ui-form';
 import { getSize } from '@dxos/react-ui-theme';
 
 import { FILES_PLUGIN } from '../meta';

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export const translationKey = 'react-ui-data';
+export const translationKey = 'react-ui-form';
 
 export default [
   {

@@ -56,7 +56,7 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
-    "@dxos/react-ui-data": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-grid": "workspace:*",
     "@dxos/react-ui-searchlist": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
