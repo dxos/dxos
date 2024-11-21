@@ -4,17 +4,21 @@
 
 import React from 'react';
 
-import { TriggerKind } from '@dxos/functions/src';
-import { FunctionTriggerSchema, type FunctionTriggerType, type FunctionTrigger } from '@dxos/functions/types';
+import { type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Form, SelectInput } from '@dxos/react-ui-form';
 
 import { AUTOMATION_PLUGIN } from '../../meta';
+import { FunctionTriggerSchema, type FunctionTriggerType, type FunctionTrigger, TriggerKind } from '../../types';
 
 export type TriggerEditorProps = {
-  // space: Space;
+  space: Space;
   trigger: FunctionTrigger;
 };
+
+// TODO(burdon): Functions (new def).
+// TODO(burdon): Function meta (remove meta from existing trigger def).
+// TODO(burdon): Actual integration.
 
 export const TriggerEditor = ({ trigger }: TriggerEditorProps) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
@@ -67,7 +71,6 @@ export const TriggerEditor = ({ trigger }: TriggerEditorProps) => {
         ['function' satisfies keyof FunctionTriggerType]: (props) => (
           <SelectInput<FunctionTriggerType>
             {...props}
-            // TODO(burdon): Query for functions.
             options={[].map((value) => ({
               value,
               label: value,

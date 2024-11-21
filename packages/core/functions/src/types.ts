@@ -9,12 +9,7 @@ import { AST, RawObject, S, TypedObject } from '@dxos/echo-schema';
  * Every spec has a type field of type TriggerKind that we can use to understand which type we're working with.
  * https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions
  */
-export enum TriggerKind {
-  Timer = 'timer',
-  Webhook = 'webhook',
-  Websocket = 'websocket',
-  Subscription = 'subscription',
-}
+export type TriggerKind = 'timer' | 'webhook' | 'websocket' | 'subscription';
 
 // TODO(burdon): Rename prop kind.
 const typeLiteralAnnotations = { [AST.TitleAnnotationId]: 'Type' };
@@ -23,13 +18,11 @@ const typeLiteralAnnotations = { [AST.TitleAnnotationId]: 'Type' };
  * Cron timer.
  */
 const TimerTriggerSchema = S.Struct({
-  type: S.Literal(TriggerKind.Timer).annotations(typeLiteralAnnotations),
-  cron: S.optional(
-    S.String.annotations({
-      [AST.TitleAnnotationId]: 'Cron',
-      [AST.ExamplesAnnotationId]: '0 0 * * *',
-    }),
-  ),
+  type: S.Literal('timer').annotations(typeLiteralAnnotations),
+  cron: S.NonEmptyString.annotations({
+    [AST.TitleAnnotationId]: 'Cron',
+    [AST.ExamplesAnnotationId]: '0 0 * * *',
+  }),
 }).pipe(S.mutable);
 
 export type TimerTrigger = S.Schema.Type<typeof TimerTriggerSchema>;
@@ -38,8 +31,8 @@ export type TimerTrigger = S.Schema.Type<typeof TimerTriggerSchema>;
  * Webhook.
  */
 const WebhookTriggerSchema = S.Struct({
-  type: S.Literal(TriggerKind.Webhook).annotations(typeLiteralAnnotations),
-  method: S.optional(S.String),
+  type: S.Literal('webhook').annotations(typeLiteralAnnotations),
+  method: S.String,
   // Assigned port.
   port: S.optional(S.Number),
 }).pipe(S.mutable);
@@ -51,8 +44,8 @@ export type WebhookTrigger = S.Schema.Type<typeof WebhookTriggerSchema>;
  * @deprecated
  */
 const WebsocketTriggerSchema = S.Struct({
-  type: S.Literal(TriggerKind.Websocket).annotations(typeLiteralAnnotations),
-  url: S.optional(S.String),
+  type: S.Literal('websocket').annotations(typeLiteralAnnotations),
+  url: S.String,
   init: S.optional(S.Record({ key: S.String, value: S.Any })),
 }).pipe(S.mutable);
 
@@ -68,9 +61,9 @@ const QuerySchema = S.Struct({
  * Subscription.
  */
 const SubscriptionTriggerSchema = S.Struct({
-  type: S.Literal(TriggerKind.Subscription).annotations(typeLiteralAnnotations),
+  type: S.Literal('subscription').annotations(typeLiteralAnnotations),
   // TODO(burdon): Define query DSL (from ECHO). Reconcile with Table.Query.
-  filter: S.optional(QuerySchema),
+  filter: QuerySchema,
   options: S.optional(
     S.Struct({
       // Watch changes to object (not just creation).

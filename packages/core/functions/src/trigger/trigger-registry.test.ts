@@ -15,7 +15,7 @@ import { range } from '@dxos/util';
 
 import { TriggerRegistry } from './trigger-registry';
 import { createInitializedClients, TestType, triggerWebhook } from '../testing';
-import { type FunctionManifest, FunctionTrigger, TriggerKind } from '../types';
+import { type FunctionManifest, FunctionTrigger } from '../types';
 
 const manifest: FunctionManifest = {
   triggers: [
@@ -31,7 +31,7 @@ const manifest: FunctionManifest = {
       function: 'example.com/function/webhook-test',
       enabled: true,
       spec: {
-        type: TriggerKind.Webhook,
+        type: 'webhook',
         method: 'GET',
       },
     },
@@ -47,7 +47,7 @@ const manifest: FunctionManifest = {
       function: 'example.com/function/subscription-test',
       enabled: true,
       spec: {
-        type: TriggerKind.Subscription,
+        type: 'subscription',
         filter: {
           type: TestType.typename,
         },
@@ -87,7 +87,7 @@ describe('trigger registry', () => {
       const trigger = create(FunctionTrigger, {
         function: 'example.com/function/webhook-test',
         spec: {
-          type: TriggerKind.Webhook,
+          type: 'webhook',
           method: 'GET',
         },
       });

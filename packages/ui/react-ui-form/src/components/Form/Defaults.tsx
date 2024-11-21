@@ -91,6 +91,10 @@ export const BooleanInput = <T extends object>({
   );
 };
 
+export type SelectInputOptions<T extends object> = InputProps<T> & {
+  options?: Array<{ value: string | number; label?: string }>;
+};
+
 export const SelectInput = <T extends object>({
   property,
   type,
@@ -101,7 +105,7 @@ export const SelectInput = <T extends object>({
   getStatus,
   getValue,
   onValueChange,
-}: InputProps<T>) => {
+}: SelectInputOptions<T>) => {
   const { status, error } = getStatus?.(property);
 
   return (

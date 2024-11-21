@@ -12,6 +12,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { getSchemaProperties, type PropertyKey, type SchemaProperty } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
+import { SelectInput } from './Defaults';
 import { type InputComponent } from './Input';
 import { getInputComponent } from './factory';
 import { type FormOptions, useForm } from '../../hooks';
@@ -76,7 +77,7 @@ export const Form = <T extends object = {}>({
 
   // Filter and sort props.
   // TODO(burdon): Move into useForm?
-  const props = useMemo(() => {
+  const properties = useMemo(() => {
     const props = getSchemaProperties<T>(schema.ast, values);
     const filtered = filter ? filter(props) : props;
     const findIndex = (props: PropertyKey<T>[], prop: PropertyKey<T>) => {
@@ -96,12 +97,36 @@ export const Form = <T extends object = {}>({
 
   return (
     <div role='form' className={mx('flex flex-col w-full gap-2 py-2', classNames)}>
-      {props
-        .map(({ prop, name, type, format, title, description, examples }) => {
-          // Custom property allows for sub forms.
-          // TODO(burdon): Use Select control if options are present in annotation?
+      {properties
+        .map((property) => {
+          const { prop, name, type, format, title, description, examples, options } = property;
+          const placeholder = examples?.length ? `Example: "${examples[0]}"` : description;
           const key = [...path, name];
-          const InputComponent = Custom?.[key.join('.')] ?? getInputComponent<T>(type, format);
+
+          // Get generic input.
+          let InputComponent = Custom?.[key.join('.')];
+          if (!InputComponent) {
+            // Select.
+            if (options) {
+              return (
+                <div key={name} role='none' className={padding}>
+                  <SelectInput
+                    type={type}
+                    format={format}
+                    property={name}
+                    disabled={readonly}
+                    label={title ?? name}
+                    options={options.map((option) => ({ value: option, label: String(option) }))}
+                    placeholder={placeholder}
+                    {...inputProps}
+                  />
+                </div>
+              );
+            }
+
+            InputComponent = getInputComponent<T>(type, format);
+          }
+
           if (!InputComponent) {
             // Recursively render form.
             if (type === 'object') {
@@ -133,8 +158,6 @@ export const Form = <T extends object = {}>({
             return null;
           }
 
-          const placeholder = examples?.length ? `Example: ${examples[0]}` : description;
-
           return (
             <div key={name} role='none' className={padding}>
               <InputComponent
@@ -150,8 +173,6 @@ export const Form = <T extends object = {}>({
           );
         })
         .filter(isNotFalsy)}
-
-      {/* {errors && <div className='overflow-hidden text-sm'>{JSON.stringify(errors)}</div>} */}
 
       {(onCancel || onSubmit) && !autoSave && (
         <div role='none' className='flex justify-center'>

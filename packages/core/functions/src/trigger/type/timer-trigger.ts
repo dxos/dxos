@@ -7,7 +7,6 @@ import { CronJob } from 'cron';
 import { DeferredTask } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { type Context } from '@dxos/context';
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import type { TimerTrigger } from '../../types';
@@ -19,8 +18,6 @@ export const createTimerTrigger: TriggerFactory<TimerTrigger> = async (
   spec: TimerTrigger,
   callback: TriggerCallback,
 ) => {
-  invariant(spec.cron);
-
   const task = new DeferredTask(ctx, async () => {
     await callback({});
   });

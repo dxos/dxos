@@ -8,17 +8,17 @@ import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
 import { create } from '@dxos/echo-schema';
-import { FunctionDef, FunctionTrigger, TriggerKind } from '@dxos/functions/types';
+import { type FunctionType } from '@dxos/plugin-script/types';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { TriggerEditor } from './TriggerEditor';
 import translations from '../../translations';
-import { ChainPromptType } from '../../types';
+import { FunctionTrigger, TriggerKind, ChainPromptType } from '../../types';
 
 // TODO(burdon): Change to FunctionDeployment.
-const functions: Omit<FunctionDef, 'id'>[] = [
+const functions: Omit<FunctionType, 'id'>[] = [
   {
     uri: 'dxos.org/function/email-worker',
     route: '/email',
@@ -51,7 +51,7 @@ const Story = () => {
 
   return (
     <div role='none' className='flex w-[350px] border border-separator overflow-hidden'>
-      <TriggerEditor trigger={trigger} />
+      <TriggerEditor space={space} trigger={trigger} />
     </div>
   );
 };

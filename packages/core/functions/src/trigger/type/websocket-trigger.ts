@@ -5,7 +5,6 @@
 import { sleep, Trigger } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { type Context } from '@dxos/context';
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { type WebsocketTrigger } from '../../types';
@@ -28,7 +27,6 @@ export const createWebsocketTrigger: TriggerFactory<WebsocketTrigger, WebsocketT
   options: WebsocketTriggerOptions = { retryDelay: 2, maxAttempts: 5 },
 ) => {
   const { url, init } = spec;
-  invariant(url);
 
   let wasOpen = false;
   let ws: WebSocket;
