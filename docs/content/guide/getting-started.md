@@ -28,7 +28,7 @@ If you're using a browser environment, ensure you've set up your bundler to hand
 npm install --save @dxos/client
 ```
 
-Create and initialize a [`Client`](/api/@dxos/client/classes/Client):
+Create and initialize a `Client`:
 
 ```ts file=./snippets-typescript/create-client.ts#L5-
 import { Client } from '@dxos/client';
@@ -44,7 +44,7 @@ const main = async () => {
 main();
 ```
 
-An [Options](/api/@dxos/client/types/ClientOptions) object can be passed to `Client()`. See [configuration examples](echo/typescript/config.md).
+An options object can be passed to `Client`. See [configuration examples](echo/typescript/config.md).
 
 [Spaces](./echo/#spaces) are the main units of data storage and sharing (like `collections` in other databases).
 
@@ -60,7 +60,7 @@ Use `@dxos/react-client` for `react` hooks to access and manipulate data in ECHO
 npm install --save @dxos/react-client
 ```
 
-Create a [`ClientProvider`](/api/@dxos/react-client/functions#clientprovider-options) to wrap your application. This allows nested components to use the hooks.
+Create a `ClientProvider` to wrap your application. This allows nested components to use the hooks.
 
 ```tsx file=./snippets-react/create-client-react.tsx#L5-
 import React from 'react';
