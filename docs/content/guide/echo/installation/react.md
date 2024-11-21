@@ -8,10 +8,6 @@ order: 1
 npm install --save @dxos/react-client
 ```
 
-::: note
-If using one of the DXOS application templates via [`npm init @dxos@latest`](../../tooling/app-templates.md) this is pre-installed.
-:::
-
 ## Configuration
 
 When using `react`, create a `ClientProvider` to wrap your application. This allows nested components to `useClient` and the other hooks in `@dxos/react-client`.

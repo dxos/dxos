@@ -1,6 +1,6 @@
 {
   "name": "@dxos/dxos",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "private": true,
   "description": "A decentralized alternative to the commercial cloud for privacy preserving software.",
   "homepage": "https://dxos.org",
@@ -14,7 +14,6 @@
     "build": "nx run-many --target=build",
     "changed-packages": "scripts/changed",
     "check-dependencies": "syncpack list-mismatches",
-    "conform": "conform",
     "fix-dependencies": "syncpack fix-mismatches",
     "format-package": "syncpack format",
     "postinstall": "tsx tools/executors/toolbox/src/main.ts",
@@ -32,7 +31,6 @@
     "watch-build": "./node_modules/.bin/nx watch --all -- pnpm -w nx build \"\\$NX_PROJECT_NAME\""
   },
   "dependencies": {
-    "@dxos/conform": "workspace:*",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
@@ -48,7 +46,6 @@
     "@dxos/log-hook": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/nx-protobuf-compiler": "workspace:*",
-    "@dxos/plate": "workspace:*",
     "@dxos/protobuf-compiler": "workspace:*",
     "@dxos/signal": "workspace:*",
     "@dxos/swc-log-plugin": "workspace:*",
