@@ -9,10 +9,10 @@ Composer is a collaborative productivity app where developers can build and orga
 
 Key features:
 
-- **Extensibility**: If your team is operating in a challenging problem domain you need knowledge tools specific to your work. Composer is built for customization from the ground up.
-- **Collaboration**: Composer has real-time multiplayer implemented through a local-first model. This makes a lot of things better: from meeting notes to working on airplanes.
-- **Openness**: Composer and the DXOS framework are open source. Due to the [CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type)-based implementation there's no need for a server other than for backup. DXOS provides backup services if you want them, but you can also host your own.
-- **Privacy**: Composer is built on the peer-to-peer protocols of DXOS which are designed to be private by default. The data is stored on your device and only shared with others you explicitly invite.
+* **Extensibility**: If your team is operating in a challenging problem domain you need knowledge tools specific to your work. Composer is built for customization from the ground up.
+* **Collaboration**: Composer has real-time multiplayer implemented through a local-first model. This makes a lot of things better: from meeting notes to working on airplanes.
+* **Openness**: Composer and the DXOS framework are open source. Due to the [CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type)-based implementation there's no need for a server other than for backup. DXOS provides backup services if you want them, but you can also host your own.
+* **Privacy**: Composer is built on the peer-to-peer protocols of DXOS which are designed to be private by default. The data is stored on your device and only shared with others you explicitly invite.
 
 ## Devices and Agents
 
@@ -33,8 +33,8 @@ Composer is not yet ready for production. There are bugs, and breaking changes m
 All your feedback is most welcome on [Discord](https://dxos.org/discord).
 :::
 
-- To try composer see [Quick Start](./quick-start.md)
-- For day-to-day instructions see [User Guide](./user-guide/)
-- For information on privacy, the DXOS protocols, etc. see [Key Concepts](./key-concepts.md)
-- To learn about or write your first plugin see [SDK/Composer Plugins](../guide/composer-plugins/)
-- To learn about full extensibility see the [SDK](../guide/) itself
+* To try composer see [Quick Start](./quick-start.md)
+* For day-to-day instructions see [User Guide](./user-guide/)
+* For information on privacy, the DXOS protocols, etc. see [Key Concepts](./key-concepts.md)
+* To learn about or write your first plugin see [SDK/Composer Plugins](../guide/composer-plugins/)
+* To learn about full extensibility see the [SDK](../guide/) itself
