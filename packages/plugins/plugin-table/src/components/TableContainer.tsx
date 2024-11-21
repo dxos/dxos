@@ -113,7 +113,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
         <Toolbar.Separator />
         <Toolbar.Actions />
       </Toolbar.Root>
-      <Table.Root role={role}>
+      <Table.Root>
         <Table.Main key={table.id} ref={tableRef} model={model} />
       </Table.Root>
     </StackItem.Content>

@@ -11,9 +11,9 @@ import {
   VectorIndexRetriever,
   zodSchema,
 } from 'modelfusion';
+import { z } from 'zod';
 
 import { log } from '@dxos/log';
-import { z } from '@dxos/plate';
 
 // TODO(burdon): Convert to effect schema.
 export type Contact = { name: string; team?: string };

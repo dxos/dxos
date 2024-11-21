@@ -13,7 +13,4 @@ actions:
   - text: SDK
     link: /guide/
     type: secondary
-  - text: API
-    link: /api/
-    type: discord
 ---
