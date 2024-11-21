@@ -62,7 +62,7 @@ export const mainNotch: ComponentFunction<MainStyleProps> = (_, ...etc) =>
   mx(
     'fixed z-[11] block-end-0 inline-start-0 pbe-[env(safe-area-inset-bottom)] rounded-se-lg min-bs-[var(--rail-size)] is-fit border-separator bg-base',
     'transition-[border-width] box-content border-bs border-ie data-[nav-sidebar-state=open]:border-bs-0 data-[nav-sidebar-state=open]:border-ie-0',
-    'pli-1 grid grid-cols-[repeat(auto-fit,var(--rail-action))]',
+    'pis-1 grid grid-cols-[repeat(auto-fit,var(--rail-action))]',
     'max-is-[--nav-sidebar-size] ch-focus-ring-inset focus-visible:!z-[11]',
     ...etc,
   );

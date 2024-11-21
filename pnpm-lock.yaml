@@ -46,9 +46,6 @@ importers:
 
   .:
     dependencies:
-      '@dxos/conform':
-        specifier: workspace:*
-        version: link:tools/conform
       tslib:
         specifier: ^2.3.0
         version: 2.6.0
@@ -89,9 +86,6 @@ importers:
       '@dxos/nx-protobuf-compiler':
         specifier: workspace:*
         version: link:tools/executors/nx-protobuf-compiler
-      '@dxos/plate':
-        specifier: workspace:*
-        version: link:packages/common/plate
       '@dxos/protobuf-compiler':
         specifier: workspace:*
         version: link:packages/common/protobuf-compiler
@@ -1040,81 +1034,6 @@ importers:
       workbox-window:
         specifier: ^7.0.0
         version: 7.0.0
-
-  packages/apps/templates/bare-template:
-    dependencies:
-      '@dxos/plate':
-        specifier: workspace:*
-        version: link:../../../common/plate
-      '@dxos/process':
-        specifier: workspace:*
-        version: link:../../../common/process
-      chalk:
-        specifier: ^4.1.0
-        version: 4.1.2
-      lodash.merge:
-        specifier: ^4.6.2
-        version: 4.6.2
-      sanitize-filename:
-        specifier: 1.6.3
-        version: 1.6.3
-    devDependencies:
-      '@types/lodash.merge':
-        specifier: ^4.6.6
-        version: 4.6.7
-      tmp-promise:
-        specifier: ^3.0.3
-        version: 3.0.3
-      ts-node:
-        specifier: 10.9.1
-        version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(typescript@5.6.2)
-      types-package-json:
-        specifier: ^2.0.39
-        version: 2.0.39
-
-  packages/apps/templates/hello-template:
-    dependencies:
-      '@dxos/bare-template':
-        specifier: workspace:*
-        version: link:../bare-template
-      '@dxos/plate':
-        specifier: workspace:*
-        version: link:../../../common/plate
-      tailwindcss:
-        specifier: ~3.4.1
-        version: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(typescript@5.6.2))
-    devDependencies:
-      postcss:
-        specifier: ^8.4.41
-        version: 8.4.41
-      tmp-promise:
-        specifier: ^3.0.3
-        version: 3.0.3
-      ts-node:
-        specifier: 10.9.1
-        version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(typescript@5.6.2)
-
-  packages/apps/templates/tasks-template:
-    dependencies:
-      '@dxos/bare-template':
-        specifier: workspace:*
-        version: link:../bare-template
-      '@dxos/plate':
-        specifier: workspace:*
-        version: link:../../../common/plate
-      tailwindcss:
-        specifier: ~3.4.1
-        version: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(typescript@5.6.2))
-    devDependencies:
-      postcss:
-        specifier: ^8.4.41
-        version: 8.4.41
-      tmp-promise:
-        specifier: ^3.0.3
-        version: 3.0.3
-      ts-node:
-        specifier: 10.9.1
-        version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(typescript@5.6.2)
 
   packages/apps/testbench-app:
     dependencies:
@@ -3486,9 +3405,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/bare-template':
-        specifier: workspace:*
-        version: link:../../apps/templates/bare-template
       '@dxos/cli-base':
         specifier: workspace:*
         version: link:../cli-base
@@ -3519,9 +3435,6 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
-      '@dxos/hello-template':
-        specifier: workspace:*
-        version: link:../../apps/templates/hello-template
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -3537,9 +3450,6 @@ importers:
       '@dxos/observability':
         specifier: workspace:*
         version: link:../../sdk/observability
-      '@dxos/plate':
-        specifier: workspace:*
-        version: link:../../common/plate
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../../plugins/plugin-markdown
@@ -3558,9 +3468,6 @@ importers:
       '@dxos/rpc':
         specifier: workspace:*
         version: link:../../core/mesh/rpc
-      '@dxos/tasks-template':
-        specifier: workspace:*
-        version: link:../../apps/templates/tasks-template
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -3863,9 +3770,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/bare-template':
-        specifier: workspace:*
-        version: link:../../apps/templates/bare-template
       '@dxos/cli-base':
         specifier: workspace:*
         version: link:../cli-base
@@ -3893,9 +3797,6 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
-      '@dxos/hello-template':
-        specifier: workspace:*
-        version: link:../../apps/templates/hello-template
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -3908,9 +3809,6 @@ importers:
       '@dxos/observability':
         specifier: workspace:*
         version: link:../../sdk/observability
-      '@dxos/plate':
-        specifier: workspace:*
-        version: link:../../common/plate
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../../plugins/plugin-space
@@ -3926,9 +3824,6 @@ importers:
       '@dxos/rpc':
         specifier: workspace:*
         version: link:../../core/mesh/rpc
-      '@dxos/tasks-template':
-        specifier: workspace:*
-        version: link:../../apps/templates/tasks-template
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -4404,45 +4299,6 @@ importers:
         specifier: ^3.3.0
         version: 3.3.0(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
 
-  packages/devtools/initializers/create:
-    dependencies:
-      '@dxos/hello-template':
-        specifier: workspace:*
-        version: link:../../../apps/templates/hello-template
-      minimist:
-        specifier: ^1.2.7
-        version: 1.2.8
-    devDependencies:
-      '@types/minimist':
-        specifier: ^1.2.2
-        version: 1.2.2
-
-  packages/devtools/initializers/create-bare:
-    dependencies:
-      '@dxos/bare-template':
-        specifier: workspace:*
-        version: link:../../../apps/templates/bare-template
-      minimist:
-        specifier: ^1.2.7
-        version: 1.2.8
-    devDependencies:
-      '@types/minimist':
-        specifier: ^1.2.2
-        version: 1.2.2
-
-  packages/devtools/initializers/create-tasks:
-    dependencies:
-      '@dxos/tasks-template':
-        specifier: workspace:*
-        version: link:../../../apps/templates/tasks-template
-      minimist:
-        specifier: ^1.2.7
-        version: 1.2.8
-    devDependencies:
-      '@types/minimist':
-        specifier: ^1.2.2
-        version: 1.2.2
-
   packages/e2e/rpc-tunnel-e2e:
     dependencies:
       '@dxos/async':
@@ -4679,9 +4535,6 @@ importers:
       '@dxos/agent':
         specifier: workspace:*
         version: link:../../core/agent
-      '@dxos/plate':
-        specifier: workspace:*
-        version: link:../../common/plate
       '@mediapipe/tasks-text':
         specifier: ^0.10.7
         version: 0.10.8
@@ -5515,12 +5368,12 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
-      '@dxos/react-ui-data':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-data
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-form
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../../sdk/schema
@@ -5618,9 +5471,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../../ui/react-ui-attention
-      '@dxos/react-ui-data':
+      '@dxos/react-ui-form':
         specifier: workspace:*
-        version: link:../../../ui/react-ui-data
+        version: link:../../../ui/react-ui-form
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -5818,12 +5671,12 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
-      '@dxos/react-ui-data':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-data
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-form
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -6495,12 +6348,12 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../../ui/react-ui-attention
-      '@dxos/react-ui-data':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-data
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-form
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../../ui/react-ui-syntax-highlighter
@@ -7051,9 +6904,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
-      '@dxos/react-ui-data':
+      '@dxos/react-ui-form':
         specifier: workspace:*
-        version: link:../../ui/react-ui-data
+        version: link:../../ui/react-ui-form
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
@@ -7163,9 +7016,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
-      '@dxos/react-ui-data':
+      '@dxos/react-ui-form':
         specifier: workspace:*
-        version: link:../../ui/react-ui-data
+        version: link:../../ui/react-ui-form
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
@@ -7248,12 +7101,12 @@ importers:
       '@dxos/plugin-theme':
         specifier: workspace:*
         version: link:../plugin-theme
-      '@dxos/react-ui-data':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-data
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -7425,9 +7278,9 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@dxos/react-ui-data':
+      '@dxos/react-ui-form':
         specifier: workspace:*
-        version: link:../../ui/react-ui-data
+        version: link:../../ui/react-ui-form
       '@dxos/react-ui-tabs':
         specifier: workspace:*
         version: link:../../ui/react-ui-tabs
@@ -7513,12 +7366,12 @@ importers:
       '@dxos/react-ui-card':
         specifier: workspace:*
         version: link:../../ui/react-ui-card
-      '@dxos/react-ui-data':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-data
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
@@ -7793,9 +7646,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
-      '@dxos/react-ui-data':
+      '@dxos/react-ui-form':
         specifier: workspace:*
-        version: link:../../ui/react-ui-data
+        version: link:../../ui/react-ui-form
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -7863,9 +7716,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
-      '@dxos/react-ui-data':
+      '@dxos/react-ui-form':
         specifier: workspace:*
-        version: link:../../ui/react-ui-data
+        version: link:../../ui/react-ui-form
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -7994,9 +7847,9 @@ importers:
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability
-      '@dxos/react-ui-data':
+      '@dxos/react-ui-form':
         specifier: workspace:*
-        version: link:../../ui/react-ui-data
+        version: link:../../ui/react-ui-form
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -8121,12 +7974,12 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
-      '@dxos/react-ui-data':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-data
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
       '@dxos/react-ui-grid':
         specifier: workspace:*
         version: link:../../ui/react-ui-grid
@@ -8284,9 +8137,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
-      '@dxos/react-ui-data':
+      '@dxos/react-ui-form':
         specifier: workspace:*
-        version: link:../../ui/react-ui-data
+        version: link:../../ui/react-ui-form
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -8429,12 +8282,12 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
-      '@dxos/react-ui-data':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-data
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
@@ -8541,9 +8394,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
-      '@dxos/react-ui-data':
+      '@dxos/react-ui-form':
         specifier: workspace:*
-        version: link:../../ui/react-ui-data
+        version: link:../../ui/react-ui-form
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
@@ -8617,9 +8470,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
-      '@dxos/react-ui-data':
+      '@dxos/react-ui-form':
         specifier: workspace:*
-        version: link:../../ui/react-ui-data
+        version: link:../../ui/react-ui-form
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -8702,9 +8555,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
-      '@dxos/react-ui-data':
+      '@dxos/react-ui-form':
         specifier: workspace:*
-        version: link:../../ui/react-ui-data
+        version: link:../../ui/react-ui-form
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
@@ -8842,12 +8695,12 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
-      '@dxos/react-ui-data':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-data
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
@@ -9947,10 +9800,6 @@ importers:
       lit:
         specifier: ^3.2.0
         version: 3.2.0
-    devDependencies:
-      '@dxos/test-utils':
-        specifier: workspace:*
-        version: link:../../common/test-utils
 
   packages/ui/primitives/react-hooks:
     dependencies:
@@ -10342,118 +10191,6 @@ importers:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
 
-  packages/ui/react-ui-data:
-    dependencies:
-      '@atlaskit/pragmatic-drag-and-drop':
-        specifier: ^1.4.0
-        version: 1.4.0
-      '@atlaskit/pragmatic-drag-and-drop-flourish':
-        specifier: ^1.1.2
-        version: 1.1.2(@babel/core@7.25.9)(@types/react@18.2.79)(react@18.2.0)
-      '@atlaskit/pragmatic-drag-and-drop-hitbox':
-        specifier: ^1.0.3
-        version: 1.0.3
-      '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator':
-        specifier: ^1.1.3
-        version: 1.1.3(@babel/core@7.25.9)(@types/react@18.2.79)(react@18.2.0)
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../common/async
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../common/debug
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-db
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../common/effect
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../common/keys
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../sdk/react-client
-      '@dxos/react-ui-list':
-        specifier: workspace:*
-        version: link:../react-ui-list
-      '@dxos/react-ui-types':
-        specifier: workspace:*
-        version: link:../react-ui-types
-      '@dxos/schema':
-        specifier: workspace:*
-        version: link:../../sdk/schema
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      '@effect/schema':
-        specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
-      '@radix-ui/react-context':
-        specifier: ^1.0.0
-        version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
-      date-fns:
-        specifier: ^3.3.1
-        version: 3.6.0
-      effect:
-        specifier: ^3.9.2
-        version: 3.10.15
-      jsonpath:
-        specifier: ^1.1.1
-        version: 1.1.1
-    devDependencies:
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-signals
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
-      '@dxos/react-ui-syntax-highlighter':
-        specifier: workspace:*
-        version: link:../react-ui-syntax-highlighter
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../react-ui-theme
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@types/jsonpath':
-        specifier: ~0.2.4
-        version: 0.2.4
-      '@types/react':
-        specifier: ~18.2.0
-        version: 18.2.79
-      '@types/react-dom':
-        specifier: ~18.2.0
-        version: 18.2.25
-      fast-check:
-        specifier: ^3.19.0
-        version: 3.22.0
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
-      vite:
-        specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
-
   packages/ui/react-ui-editor:
     dependencies:
       '@codemirror/autocomplete':
@@ -10661,6 +10398,118 @@ importers:
       vite-plugin-wasm:
         specifier: ^3.3.0
         version: 3.3.0(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
+
+  packages/ui/react-ui-form:
+    dependencies:
+      '@atlaskit/pragmatic-drag-and-drop':
+        specifier: ^1.4.0
+        version: 1.4.0
+      '@atlaskit/pragmatic-drag-and-drop-flourish':
+        specifier: ^1.1.2
+        version: 1.1.2(@babel/core@7.25.9)(@types/react@18.2.79)(react@18.2.0)
+      '@atlaskit/pragmatic-drag-and-drop-hitbox':
+        specifier: ^1.0.3
+        version: 1.0.3
+      '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator':
+        specifier: ^1.1.3
+        version: 1.1.3(@babel/core@7.25.9)(@types/react@18.2.79)(react@18.2.0)
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-schema
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
+      '@dxos/react-ui-list':
+        specifier: workspace:*
+        version: link:../react-ui-list
+      '@dxos/react-ui-types':
+        specifier: workspace:*
+        version: link:../react-ui-types
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@effect/schema':
+        specifier: ^0.75.5
+        version: 0.75.5(effect@3.10.15)
+      '@radix-ui/react-context':
+        specifier: ^1.0.0
+        version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
+      date-fns:
+        specifier: ^3.3.1
+        version: 3.6.0
+      effect:
+        specifier: ^3.9.2
+        version: 3.10.15
+      jsonpath:
+        specifier: ^1.1.1
+        version: 1.1.1
+    devDependencies:
+      '@dxos/echo-signals':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-signals
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../react-ui-syntax-highlighter
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      '@types/jsonpath':
+        specifier: ~0.2.4
+        version: 0.2.4
+      '@types/react':
+        specifier: ~18.2.0
+        version: 18.2.79
+      '@types/react-dom':
+        specifier: ~18.2.0
+        version: 18.2.25
+      fast-check:
+        specifier: ^3.19.0
+        version: 3.23.1
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: 5.4.7
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
 
   packages/ui/react-ui-grid:
     dependencies:
@@ -11123,9 +10972,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../react-ui-attention
-      '@dxos/react-ui-data':
+      '@dxos/react-ui-form':
         specifier: workspace:*
-        version: link:../react-ui-data
+        version: link:../react-ui-form
       '@dxos/react-ui-grid':
         specifier: workspace:*
         version: link:../react-ui-grid
@@ -11583,37 +11432,6 @@ importers:
       '@types/jscodeshift':
         specifier: ^0.11.5
         version: 0.11.5
-
-  tools/conform:
-    dependencies:
-      '@dxos/plate':
-        specifier: workspace:*
-        version: link:../../packages/common/plate
-      chalk:
-        specifier: ^4.1.0
-        version: 4.1.2
-      minimatch:
-        specifier: ^5.1.0
-        version: 5.1.0
-      recursive-readdir:
-        specifier: ^2.2.3
-        version: 2.2.3
-      yargs:
-        specifier: ~16.2.0
-        version: 16.2.0
-    devDependencies:
-      '@types/minimatch':
-        specifier: ^5.1.2
-        version: 5.1.2
-      '@types/recursive-readdir':
-        specifier: ^2.2.1
-        version: 2.2.1
-      '@types/yargs':
-        specifier: ~16.0.1
-        version: 16.0.4
-      types-package-json:
-        specifier: ^2.0.39
-        version: 2.0.39
 
   tools/executors/esbuild: {}
 
@@ -20376,9 +20194,6 @@ packages:
   '@types/minimatch@5.1.2':
     resolution: {integrity: sha512-K0VQKziLUWkVKiRVrx4a40iPaxTUefQmjtkQofBkYRcoaaL/8rhwDWww9qWbrgicNOgnpIsMxyNIUM4+n6dUIA==}
 
-  '@types/minimist@1.2.2':
-    resolution: {integrity: sha512-jhuKLIRrhvCPLqwPcx6INqmKeiA5EWrsCOPhrlFSrbrmU4ZMPjj5Ul/oLCMDO98XRUIwVm78xICz4EPCektzeQ==}
-
   '@types/mkdirp@1.0.2':
     resolution: {integrity: sha512-o0K1tSO0Dx5X6xlU5F1D6625FawhC3dU3iqr25lluNv/+/QIVH8RLNEiVokgIZo+mz+87w/3Mkg/VvQS+J51fQ==}
 
@@ -21254,6 +21069,11 @@ packages:
 
   ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
+    peerDependencies:
+      ajv: ^8.0.0
+    peerDependenciesMeta:
+      ajv:
+        optional: true
 
   ajv-keywords@3.5.2:
     resolution: {integrity: sha512-5p6WTN0DdTGVQk6VjcEju19IgaHudalcfabD7yhDGeA6bcQnmL+CpveLJq/3hvfwd1aof6L386Ougkx6RfyMIQ==}
@@ -30425,9 +30245,6 @@ packages:
   sander@0.5.1:
     resolution: {integrity: sha512-3lVqBir7WuKDHGrKRDn/1Ye3kwpXaDOMsiRP1wd6wpZW56gJhsbp5RqQpA6JG/P+pkXizygnr1dKR8vzWaVsfA==}
 
-  sanitize-filename@1.6.3:
-    resolution: {integrity: sha512-y/52Mcy7aw3gRm7IrcGDFx/bCk4AhRh2eI9luHOQM86nZsqwiRkkq2GekHXBBD+SmPidc8i2PqtYZl+pWJ8Oeg==}
-
   sass-loader@12.6.0:
     resolution: {integrity: sha512-oLTaH0YCtX4cfnJZxKSLAyglED0naiYfNG1iXfU5w1LNZ+ukoA5DtyDIN5zmKVZwYNJP4KRc5Y3hkWga+7tYfA==}
     engines: {node: '>= 12.13.0'}
@@ -31513,9 +31330,6 @@ packages:
     resolution: {integrity: sha512-1OYJQenswGZSOdRw7Bql5Qu7uf75b+F3HFBXbqnG/ifHa0fev1XcG+3pJf3pA/KC6RtHQzfKgIf1vkMlMG7mtQ==}
     hasBin: true
 
-  tmp-promise@3.0.3:
-    resolution: {integrity: sha512-RwM7MoPojPxsOBYnyd2hy0bxtIlVrihNs9pj5SUvY8Zz1sQcQG2tG1hSr8PDxfgEB8RNKDhqbIlroIarSNDNsQ==}
-
   tmp@0.0.33:
     resolution: {integrity: sha512-jRCJlojKnZ3addtTOjdIqoRuPEKBvNXcGYqzO6zWZX8KfKEpnGY5jfggJQ3EjKuu8D4bJRr0y+cYJFmYbImXGw==}
     engines: {node: '>=0.6.0'}
@@ -31646,9 +31460,6 @@ packages:
 
   trough@2.1.0:
     resolution: {integrity: sha512-AqTiAOLcj85xS7vQ8QkAV41hPDIJ71XJB4RCUrzo/1GM2CQwhkJGaf9Hgr7BOugMRpgGUrqRg/DrBDl4H40+8g==}
-
-  truncate-utf8-bytes@1.0.2:
-    resolution: {integrity: sha512-95Pu1QXQvruGEhv62XCMO3Mm90GscOCClvrIUwCM0PYOXK3kaF3l3sIHxx71ThJfcbM2O5Au6SO3AWCSEfW4mQ==}
 
   ts-api-utils@1.3.0:
     resolution: {integrity: sha512-UQMIo7pb8WRomKR1/+MFVLTroIvDVtMX3K6OUir8ynLyzB8Jeriont2bTAtmNPa1ekAgN7YPDyf6V+ygrdU+eQ==}
@@ -32222,9 +32033,6 @@ packages:
 
   utf7@1.0.2:
     resolution: {integrity: sha512-qQrPtYLLLl12NF4DrM9CvfkxkYI97xOb5dsnGZHE3teFr0tWiEZ9UdgMPczv24vl708cYMpe6mGXGHrotIp3Bw==}
-
-  utf8-byte-length@1.0.4:
-    resolution: {integrity: sha512-4+wkEYLBbWxqTahEsWrhxepcoVOJ+1z5PGIjPZxRkytcdSUaNjIjBM7Xn8E+pdSuV7SzvWovBFA54FO0JSoqhA==}
 
   utf8@2.1.2:
     resolution: {integrity: sha512-QXo+O/QkLP/x1nyi54uQiG0XrODxdysuQvE5dtVqv7F5K2Qb6FsN+qbr6KhF5wQ20tfcV3VQp0/2x1e1MRSPWg==}
@@ -33692,7 +33500,7 @@ snapshots:
     dependencies:
       '@atlaskit/motion': 1.9.2(@babel/core@7.25.9)(@types/react@18.2.79)(react@18.2.0)
       '@atlaskit/tokens': 2.0.1(@types/react@18.2.79)(react@18.2.0)
-      '@babel/runtime': 7.24.5
+      '@babel/runtime': 7.25.9
       react: 18.2.0
     transitivePeerDependencies:
       - '@babel/core'
@@ -33728,8 +33536,8 @@ snapshots:
       '@atlaskit/ds-lib': 2.7.0(@types/react@18.2.79)(react@18.2.0)
       '@atlaskit/platform-feature-flags': 0.3.0
       '@babel/runtime': 7.25.9
-      '@babel/traverse': 7.25.7(supports-color@5.5.0)
-      '@babel/types': 7.25.7
+      '@babel/traverse': 7.25.9
+      '@babel/types': 7.25.9
       bind-event-listener: 3.0.0
       react: 18.2.0
     transitivePeerDependencies:
@@ -34556,12 +34364,12 @@ snapshots:
 
   '@babel/helper-annotate-as-pure@7.24.7':
     dependencies:
-      '@babel/types': 7.25.7
+      '@babel/types': 7.25.9
 
   '@babel/helper-builder-binary-assignment-operator-visitor@7.24.7':
     dependencies:
-      '@babel/traverse': 7.25.7(supports-color@5.5.0)
-      '@babel/types': 7.25.7
+      '@babel/traverse': 7.25.9
+      '@babel/types': 7.25.9
     transitivePeerDependencies:
       - supports-color
 
@@ -34762,8 +34570,8 @@ snapshots:
 
   '@babel/helper-member-expression-to-functions@7.24.8':
     dependencies:
-      '@babel/traverse': 7.25.7(supports-color@5.5.0)
-      '@babel/types': 7.25.7
+      '@babel/traverse': 7.25.9
+      '@babel/types': 7.25.9
     transitivePeerDependencies:
       - supports-color
 
@@ -34888,7 +34696,7 @@ snapshots:
 
   '@babel/helper-optimise-call-expression@7.24.7':
     dependencies:
-      '@babel/types': 7.25.7
+      '@babel/types': 7.25.9
 
   '@babel/helper-plugin-utils@7.20.2': {}
 
@@ -34977,8 +34785,8 @@ snapshots:
 
   '@babel/helper-skip-transparent-expression-wrappers@7.24.7':
     dependencies:
-      '@babel/traverse': 7.25.7(supports-color@5.5.0)
-      '@babel/types': 7.25.7
+      '@babel/traverse': 7.25.9
+      '@babel/types': 7.25.9
     transitivePeerDependencies:
       - supports-color
 
@@ -35022,8 +34830,8 @@ snapshots:
     dependencies:
       '@babel/helper-function-name': 7.24.7
       '@babel/template': 7.25.7
-      '@babel/traverse': 7.25.7(supports-color@5.5.0)
-      '@babel/types': 7.25.7
+      '@babel/traverse': 7.25.9
+      '@babel/types': 7.25.9
     transitivePeerDependencies:
       - supports-color
 
@@ -36785,14 +36593,14 @@ snapshots:
     dependencies:
       '@babel/core': 7.22.19
       '@babel/helper-plugin-utils': 7.24.8
-      '@babel/types': 7.25.7
+      '@babel/types': 7.25.9
       esutils: 2.0.3
 
   '@babel/preset-modules@0.1.6-no-external-plugins(@babel/core@7.25.7)':
     dependencies:
       '@babel/core': 7.25.7
       '@babel/helper-plugin-utils': 7.24.8
-      '@babel/types': 7.25.7
+      '@babel/types': 7.25.9
       esutils: 2.0.3
 
   '@babel/preset-typescript@7.18.6(@babel/core@7.21.3)':
@@ -45198,8 +45006,6 @@ snapshots:
 
   '@types/minimatch@5.1.2': {}
 
-  '@types/minimist@1.2.2': {}
-
   '@types/mkdirp@1.0.2':
     dependencies:
       '@types/node': 22.5.5
@@ -46491,8 +46297,8 @@ snapshots:
       clean-stack: 2.2.0
       indent-string: 4.0.0
 
-  ajv-formats@2.1.1:
-    dependencies:
+  ajv-formats@2.1.1(ajv@8.12.0):
+    optionalDependencies:
       ajv: 8.12.0
 
   ajv-keywords@3.5.2(ajv@6.12.6):
@@ -48099,7 +47905,7 @@ snapshots:
   conf@12.0.0:
     dependencies:
       ajv: 8.12.0
-      ajv-formats: 2.1.1
+      ajv-formats: 2.1.1(ajv@8.12.0)
       atomically: 2.0.3
       debounce-fn: 5.1.2
       dot-prop: 8.0.2
@@ -57644,10 +57450,6 @@ snapshots:
       mkdirp: 0.5.6
       rimraf: 2.7.1
 
-  sanitize-filename@1.6.3:
-    dependencies:
-      truncate-utf8-bytes: 1.0.2
-
   sass-loader@12.6.0(sass@1.70.0)(webpack@5.88.2(@swc/core@1.5.7(@swc/helpers@0.5.1))(esbuild@0.23.1)):
     dependencies:
       klona: 2.0.6
@@ -57699,7 +57501,7 @@ snapshots:
     dependencies:
       '@types/json-schema': 7.0.15
       ajv: 8.12.0
-      ajv-formats: 2.1.1
+      ajv-formats: 2.1.1(ajv@8.12.0)
       ajv-keywords: 5.1.0(ajv@8.12.0)
 
   scroll@3.0.1: {}
@@ -59055,10 +58857,6 @@ snapshots:
 
   tlds@1.240.0: {}
 
-  tmp-promise@3.0.3:
-    dependencies:
-      tmp: 0.2.1
-
   tmp@0.0.33:
     dependencies:
       os-tmpdir: 1.0.2
@@ -59190,10 +58988,6 @@ snapshots:
   troika-worker-utils@0.49.0: {}
 
   trough@2.1.0: {}
-
-  truncate-utf8-bytes@1.0.2:
-    dependencies:
-      utf8-byte-length: 1.0.4
 
   ts-api-utils@1.3.0(typescript@5.6.2):
     dependencies:
@@ -59830,8 +59624,6 @@ snapshots:
   utf7@1.0.2:
     dependencies:
       semver: 5.3.0
-
-  utf8-byte-length@1.0.4: {}
 
   utf8@2.1.2: {}
 

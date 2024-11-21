@@ -74,12 +74,12 @@ export const formatToSchema: Record<FormatEnum, S.Schema<FormatSchemaCommon>> = 
   [FormatEnum.Ref]: extend(FormatEnum.Ref, TypeEnum.Ref, {
     referenceSchema: S.NonEmptyString.annotations({
       [AST.TitleAnnotationId]: 'Schema',
-      [AST.DescriptionAnnotationId]: 'Schema typename.',
+      [AST.DescriptionAnnotationId]: 'Schema typename',
     }),
     referencePath: S.optional(
       JsonProp.annotations({
         [AST.TitleAnnotationId]: 'Lookup property',
-        [AST.DescriptionAnnotationId]: 'Referenced property.',
+        [AST.DescriptionAnnotationId]: 'Referenced property',
       }),
     ),
   }),
@@ -89,13 +89,14 @@ export const formatToSchema: Record<FormatEnum, S.Schema<FormatSchemaCommon>> = 
   //
 
   [FormatEnum.DID]: extend(FormatEnum.DID, TypeEnum.String),
+  [FormatEnum.DXN]: extend(FormatEnum.DXN, TypeEnum.String),
   [FormatEnum.Email]: extend(FormatEnum.Email, TypeEnum.String),
   [FormatEnum.Formula]: extend(FormatEnum.Formula, TypeEnum.String),
   [FormatEnum.Hostname]: extend(FormatEnum.Markdown, TypeEnum.String),
   [FormatEnum.JSON]: extend(FormatEnum.JSON, TypeEnum.String),
   [FormatEnum.Markdown]: extend(FormatEnum.Markdown, TypeEnum.String),
   [FormatEnum.Regex]: extend(FormatEnum.Regex, TypeEnum.String),
-  [FormatEnum.URI]: extend(FormatEnum.URI, TypeEnum.String),
+  [FormatEnum.URL]: extend(FormatEnum.URL, TypeEnum.String),
   [FormatEnum.UUID]: extend(FormatEnum.UUID, TypeEnum.String),
 
   //
@@ -156,7 +157,7 @@ export const PropertySchema = S.Union(
   formatToSchema[FormatEnum.JSON],
   formatToSchema[FormatEnum.Markdown],
   formatToSchema[FormatEnum.Regex],
-  formatToSchema[FormatEnum.URI],
+  formatToSchema[FormatEnum.URL],
   formatToSchema[FormatEnum.UUID],
 
   //

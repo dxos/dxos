@@ -10,7 +10,7 @@ import { type ConfigProto, defs, SaveConfig, Storage } from '@dxos/config';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { useTranslation, Button, Toast, Input, useFileDownload, Select } from '@dxos/react-ui';
-import { DeprecatedFormInput } from '@dxos/react-ui-data';
+import { DeprecatedFormInput } from '@dxos/react-ui-form';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { setDeep } from '@dxos/util';
 

@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { useIntentDispatcher } from '@dxos/app-framework';
 import { getSpace } from '@dxos/react-client/echo';
-import { ViewEditor } from '@dxos/react-ui-data';
+import { ViewEditor } from '@dxos/react-ui-form';
 import { type TableType } from '@dxos/react-ui-table';
 
 import { TABLE_PLUGIN } from '../meta';
