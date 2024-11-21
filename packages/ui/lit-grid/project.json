@@ -20,18 +20,18 @@
         "tsConfig": "{projectRoot}/tsconfig.json"
       }
     },
+    "e2e": {
+      "dependsOn": [
+        "^compile",
+        "stories:mkdist"
+      ]
+    },
     "lint": {
       "options": {
         "lintFilePatterns": [
           "{projectRoot}/src/**/*.{ts,tsx,js,jsx}"
         ]
       }
-    },
-    "e2e": {
-      "dependsOn": [
-        "^compile",
-        "stories:mkdist"
-      ]
     }
   },
   "implicitDependencies": [
