@@ -29,6 +29,28 @@ class GridManager {
   async cellsWithinPlane(plane: string) {
     return this.page.locator(`.dx-grid [data-dx-grid-plane="${plane}"]`).getByRole('gridcell').all();
   }
+
+  async panByWheel(deltaX: number, deltaY: number) {
+    return this.page.locator('.dx-grid [data-dx-grid-plane="grid"]').dispatchEvent('wheel', { deltaX, deltaY });
+  }
+
+  async expectVirtualizationResult(cols: number, rows: number, minColIndex = 0, minRowIndex = 0) {
+    await this.page
+      .locator(`.dx-grid [data-dx-grid-plane="grid"] [aria-colindex="${minColIndex}"][aria-rowindex="${minRowIndex}"]`)
+      .waitFor({ state: 'visible' });
+    // Top planes
+    await expect(await this.cellsWithinPlane('fixedStartStart')).toHaveLength(4);
+    await expect(await this.cellsWithinPlane('frozenRowsStart')).toHaveLength(2 * cols);
+    await expect(await this.cellsWithinPlane('fixedStartEnd')).toHaveLength(2);
+    // Center planes
+    await expect(await this.cellsWithinPlane('frozenColsStart')).toHaveLength(2 * rows);
+    await expect(await this.cellsWithinPlane('grid')).toHaveLength(rows * cols);
+    await expect(await this.cellsWithinPlane('frozenColsEnd')).toHaveLength(rows);
+    // Bottom planes
+    await expect(await this.cellsWithinPlane('fixedEndStart')).toHaveLength(2);
+    await expect(await this.cellsWithinPlane('frozenRowsEnd')).toHaveLength(cols);
+    await expect(await this.cellsWithinPlane('fixedEndEnd')).toHaveLength(1);
+  }
 }
 
 test.describe('dx-grid', () => {
@@ -44,24 +66,19 @@ test.describe('dx-grid', () => {
     const grid = new GridManager(page);
     await grid.ready();
 
-    // There are nine planes
+    // There are nine planes in the spec story.
     await expect(await grid.planes()).toHaveLength(9);
 
-    // Each plane starts with the correct number of cells within it
+    // Each plane starts with the correct number of cells within it on initial render.
+    await grid.expectVirtualizationResult(nCols, nRows);
 
-    // Top planes
-    await expect(await grid.cellsWithinPlane('fixedStartStart')).toHaveLength(4);
-    await expect(await grid.cellsWithinPlane('frozenRowsStart')).toHaveLength(2 * nCols);
-    await expect(await grid.cellsWithinPlane('fixedStartEnd')).toHaveLength(2);
-    // Center planes
-    await expect(await grid.cellsWithinPlane('frozenColsStart')).toHaveLength(2 * nRows);
-    await expect(await grid.cellsWithinPlane('grid')).toHaveLength(nRows * nCols);
-    await expect(await grid.cellsWithinPlane('frozenColsEnd')).toHaveLength(nRows);
-    // Bottom planes
-    await expect(await grid.cellsWithinPlane('fixedEndStart')).toHaveLength(2);
-    await expect(await grid.cellsWithinPlane('frozenRowsEnd')).toHaveLength(nCols);
-    await expect(await grid.cellsWithinPlane('fixedEndEnd')).toHaveLength(1);
+    // Now pan by wheel to the center point of the cell one right and one down from the origin cell of the grid plane.
+    await grid.panByWheel(gridPlaneCellSize * 1.5 + gap, gridPlaneCellSize * 1.5 + gap);
 
+    // Confirm that the grid plane is showing only the cells that would be visible.
+    await grid.expectVirtualizationResult(nCols + 1, nRows + 1, 1, 1);
+
+    // Done.
     await page.close();
   });
 });
