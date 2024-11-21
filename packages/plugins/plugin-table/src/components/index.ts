@@ -1,8 +1,7 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import { lazy } from 'react';
 
-// Lazily load components for content surfaces.
-export const TableContainer = React.lazy(() => import('./TableContainer'));
+export const TableContainer = lazy(() => import('./TableContainer'));

@@ -5,10 +5,10 @@
 import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 
-import { getTargetMeta } from './object';
-import { createReactiveProxy, isValidProxyTarget, ReactiveArray, type ReactiveHandler } from '../proxy';
+import { getObjectMeta } from './object';
+import { defineHiddenProperty } from './utils';
+import { createProxy, isValidProxyTarget, ReactiveArray, type ReactiveHandler } from '../proxy';
 import { data, type ObjectMeta } from '../types';
-import { defineHiddenProperty } from '../utils';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');
@@ -22,7 +22,6 @@ type ProxyTarget = {
 
   /**
    * For modifying the structure of the object.
-   *
    * This is a separate signal so that getter properties are supported.
    */
   [symbolPropertySignal]: GenericSignal;
@@ -33,7 +32,7 @@ type ProxyTarget = {
  * Target can be an array or object with any type of values including other reactive proxies.
  */
 export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
-  public static instance = new UntypedReactiveHandler();
+  public static readonly instance: ReactiveHandler<any> = new UntypedReactiveHandler();
 
   private constructor() {}
 
@@ -80,8 +79,8 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const value = Reflect.get(target, prop);
 
     if (isValidProxyTarget(value)) {
-      // Note: Need to pass in `this` instance to createReactiveProxy to ensure that the same proxy is used for target.
-      return createReactiveProxy(value, this);
+      // Note: Need to pass in `this` instance to createProxy to ensure that the same proxy is used for target.
+      return createProxy(value, this);
     }
 
     return value;
@@ -124,7 +123,7 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   getMeta(target: any): ObjectMeta {
-    return getTargetMeta(target);
+    return getObjectMeta(target);
   }
 }
 

@@ -3,7 +3,7 @@
 //
 
 import { type Context, LifecycleState, Resource, ContextDisposedError } from '@dxos/context';
-import { createIdFromSpaceKey } from '@dxos/echo-pipeline/light';
+import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';

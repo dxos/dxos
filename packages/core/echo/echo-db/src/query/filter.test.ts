@@ -2,18 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-import { expect } from 'chai';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Reference } from '@dxos/echo-protocol';
-import { create, generateEchoId, TypedObject } from '@dxos/echo-schema';
-import { PublicKey } from '@dxos/keys';
+import { type Reference } from '@dxos/echo-protocol';
+import { create, S, TypedObject } from '@dxos/echo-schema';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
-import { describe, test } from '@dxos/test';
 
 import { Filter } from './filter';
-import { filterMatch, compareType } from './filter-match';
-import { getObjectCore, ObjectCore } from '../core-db';
+import { filterMatch } from './filter-match';
+import { ObjectCore } from '../core-db';
+import { getObjectCore } from '../echo-handler';
 import { EchoTestBuilder } from '../testing';
 
 describe('Filter', () => {
@@ -85,56 +83,20 @@ describe('Filter', () => {
     expect(filterMatch(Filter.not(Filter.or(filter1, filter2)), core)).to.be.true;
   });
 
-  // TODO(burdon): Test schema.
-
-  test('compare types', () => {
-    const spaceKey = PublicKey.random();
-    const objectId = generateEchoId();
-
-    expect(compareType(new Reference(objectId, undefined, spaceKey.toHex()), new Reference(objectId), spaceKey)).to.be
-      .true;
-    expect(
-      compareType(new Reference(objectId, undefined, spaceKey.toHex()), new Reference(objectId), PublicKey.random()),
-    ).to.be.false;
-
-    expect(
-      compareType(
-        Reference.fromLegacyTypename('dxos.sdk.client.Properties'),
-        Reference.fromLegacyTypename('dxos.sdk.client.Properties'),
-        spaceKey,
-      ),
-    ).to.be.true;
-    expect(
-      compareType(
-        Reference.fromLegacyTypename('dxos.sdk.client.Properties'),
-        Reference.fromLegacyTypename('dxos.sdk.client.Test'),
-        spaceKey,
-      ),
-    ).to.be.false;
-
-    // Missing host on items created on some versions.
-    expect(
-      compareType(
-        Reference.fromLegacyTypename('dxos.sdk.client.Properties'),
-        new Reference('dxos.sdk.client.Properties', 'protobuf', undefined),
-        spaceKey,
-      ),
-    ).to.be.true;
-  });
-
   test('dynamic schema', async () => {
-    class GeneratedSchema extends TypedObject({ typename: 'dynamic', version: '0.1.0' })({ title: S.String }) {}
+    class GeneratedSchema extends TypedObject({ typename: 'example.com/dynamic', version: '0.1.0' })({
+      title: S.String,
+    }) {}
     const { db } = await builder.createDatabase();
-    const schema = db.schema.addSchema(GeneratedSchema);
+    const schema = db.schemaRegistry.addSchema(GeneratedSchema);
     const obj = db.add(create(schema, { title: 'test' }));
-    const filter = Filter.typename(schema.id);
+    const filter = Filter.schema(schema);
     expect(filterMatch(filter, getObjectCore(obj))).to.be.true;
   });
 
   test('__typename', () => {
-    const filter = Filter.from({ __typename: 'dxos.org/example/Type' });
-
-    expect(filter.type!.toDXN().toString()).to.equal('dxn:type:dxos.org/example/Type');
+    const filter = Filter.from({ __typename: 'example.com/type/Type' });
+    expect(filter.type![0].toString()).to.equal('dxn:type:example.com/type/Type');
     expect(filter.properties).to.deep.equal({});
   });
 });

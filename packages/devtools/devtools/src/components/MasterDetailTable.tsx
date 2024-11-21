@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { type ReactNode, useState } from 'react';
 
 import { AnchoredOverflow } from '@dxos/react-ui';
-import { Table, type TableColumnDef } from '@dxos/react-ui-table';
+import { Table, type TableColumnDef } from '@dxos/react-ui-table/deprecated';
 import { mx } from '@dxos/react-ui-theme';
 
 import { JsonView } from './JsonView';
@@ -15,7 +15,7 @@ export type MasterTableProps<T extends {}> = {
   columns: TableColumnDef<T>[];
   data: T[];
   pinToBottom?: boolean;
-  statusBar?: React.ReactNode;
+  statusBar?: ReactNode;
   detailsTransform?: (data: T) => any;
   detailsPosition?: 'bottom' | 'right';
 };

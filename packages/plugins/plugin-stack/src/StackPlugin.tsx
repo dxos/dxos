@@ -2,12 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { StackSimple, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
 import { type Plugin, type PluginDefinition } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
-import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { create, type EchoReactiveObject, fullyQualifiedId } from '@dxos/client/echo';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { CollectionType } from '@dxos/plugin-space/types';
 import { Main } from '@dxos/react-ui';
@@ -44,8 +42,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         records: {
           [StackViewType.typename]: {
             placeholder: ['stack title placeholder', { ns: STACK_PLUGIN }],
-            icon: (props: IconProps) => <StackSimple {...props} />,
-            iconSymbol: 'ph--stack-simple--regular',
+            icon: 'ph--stack-simple--regular',
           },
           [SECTION_IDENTIFIER]: {
             parse: (section: { object: EchoReactiveObject<any> }, type: string) => {
@@ -74,17 +71,20 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           }
 
           const primary = data.active ?? data.object;
+          // This allows the id to be overridden by the surface for situations where the id of the collection
+          // is not the same as the id of what is being represented (e.g., a space with a root collection).
+          const id = typeof data.id === 'string' ? data.id : undefined;
           switch (role) {
             case 'main':
               return primary instanceof CollectionType ? (
                 <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
-                  <StackMain collection={primary} separation={settings.values.separation} />
+                  <StackMain id={id ?? fullyQualifiedId(primary)} collection={primary} />
                 </Main.Content>
               ) : null;
             case 'article':
               return primary instanceof CollectionType ? (
-                <div role='none' className='row-span-2 overflow-auto'>
-                  <StackMain collection={primary} separation={settings.values.separation} />
+                <div role='none' className='row-span-2 overflow-auto' style={{ contain: 'layout' }}>
+                  <StackMain id={id ?? fullyQualifiedId(primary)} collection={primary} />
                 </div>
               ) : null;
             case 'settings': {

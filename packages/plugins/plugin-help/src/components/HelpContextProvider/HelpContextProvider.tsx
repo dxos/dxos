@@ -6,7 +6,6 @@ import React, { type PropsWithChildren, useState, useEffect } from 'react';
 import Joyride, { ACTIONS, EVENTS } from 'react-joyride';
 
 import { usePlugins, resolvePlugin, parseLayoutPlugin } from '@dxos/app-framework';
-import { useShellDisplay, ShellDisplay } from '@dxos/react-client';
 
 import { type Step, HelpContext } from '../../types';
 import { floaterProps, Tooltip } from '../Tooltip';
@@ -58,20 +57,25 @@ const waitForTarget = async (step: Step) => {
   }
 };
 
+export type HelpContextProviderProps = PropsWithChildren<{
+  steps: Step[];
+  running?: boolean;
+  onRunningChanged?: (state: boolean) => any;
+}>;
+
 export const HelpContextProvider = ({
   children,
   steps: initialSteps,
   running: runningProp,
   onRunningChanged,
-}: PropsWithChildren<{ steps: Step[]; running?: boolean; onRunningChanged?: (state: boolean) => any }>) => {
-  const shellDisplay = useShellDisplay();
+}: HelpContextProviderProps) => {
   const { plugins } = usePlugins();
   const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
   const [running, setRunning] = useState(!!runningProp && !!getTarget(initialSteps[0]));
   const [stepIndex, _setStepIndex] = useState(0);
   const [steps, setSteps] = useState(initialSteps);
 
-  const paused = shellDisplay !== ShellDisplay.NONE || layoutPlugin?.provides.layout.dialogOpen;
+  const paused = layoutPlugin?.provides.layout.dialogOpen;
 
   const setStepIndex = (index: number) => {
     if (runningProp) {

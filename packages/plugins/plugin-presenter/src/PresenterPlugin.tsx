@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps, Presentation } from '@phosphor-icons/react';
 import React from 'react';
 
 import {
@@ -39,7 +38,7 @@ type PresenterState = {
 };
 
 export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => {
-  const settings = new LocalStorageStore<PresenterSettingsProps>(PRESENTER_PLUGIN, {});
+  const settings = new LocalStorageStore<PresenterSettingsProps>(PRESENTER_PLUGIN);
 
   // TODO(burdon): Do we need context providers if we can get the state from the plugin?
   const state = create<PresenterState>({ presenting: false });
@@ -86,8 +85,7 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
                   },
                   properties: {
                     label: ['toggle presentation label', { ns: PRESENTER_PLUGIN }],
-                    icon: (props: IconProps) => <Presentation {...props} />,
-                    iconSymbol: 'ph--presentation--regular',
+                    icon: 'ph--presentation--regular',
                     keyBinding: {
                       macos: 'shift+meta+p',
                       windows: 'shift+alt+p',

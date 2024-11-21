@@ -5,15 +5,19 @@
 import {
   asyncTimeout,
   Event,
+  runInContextAsync,
   synchronized,
   TimeoutError,
   Trigger,
   UpdateScheduler,
+  type ReadOnlyEvent,
   type UnsubscribeCallback,
 } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { interpretAsDocumentId, type AutomergeUrl, type DocumentId } from '@dxos/automerge/automerge-repo';
+import { Stream } from '@dxos/codec-protobuf';
 import { Context, ContextDisposedError } from '@dxos/context';
+import { raise } from '@dxos/debug';
 import { isEncodedReference, Reference, type SpaceDoc, type SpaceState } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES, type AnyObjectData } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
@@ -35,11 +39,11 @@ import {
 import { CoreDatabaseQueryContext } from './core-database-query-context';
 import { type UpdateOperation, type InsertBatch, type InsertData } from './crud-api';
 import { ObjectCore } from './object-core';
-import { getInlineAndLinkChanges } from './utils';
-import { RepoProxy, type ChangeEvent, type DocHandleProxy } from '../client';
+import { getInlineAndLinkChanges } from './util';
+import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChangedEvent } from '../client';
 import { DATA_NAMESPACE } from '../echo-handler/echo-handler';
 import { type Hypergraph } from '../hypergraph';
-import { Filter, Query, type FilterSource, type PropertyFilter, type QueryFn } from '../query';
+import { Filter, optionsToProto, Query, type FilterSource, type PropertyFilter, type QueryFn } from '../query';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 
@@ -56,6 +60,10 @@ export type CoreDatabaseParams = {
  */
 const THROTTLED_UPDATE_FREQUENCY = 10;
 
+/**
+ *
+ */
+// TODO(burdon): Document.
 @trace.resource()
 export class CoreDatabase {
   private readonly _hypergraph: Hypergraph;
@@ -83,14 +91,17 @@ export class CoreDatabase {
 
   readonly rootChanged = new Event<void>();
 
-  constructor(params: CoreDatabaseParams) {
-    this._hypergraph = params.graph;
-    this._dataService = params.dataService;
-    this._queryService = params.queryService;
-    this._spaceId = params.spaceId;
-    this._spaceKey = params.spaceKey;
+  readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
+
+  constructor({ graph, dataService, queryService, spaceId, spaceKey }: CoreDatabaseParams) {
+    this._hypergraph = graph;
+    this._dataService = dataService;
+    this._queryService = queryService;
+    this._spaceId = spaceId;
+    this._spaceKey = spaceKey;
     this._repoProxy = new RepoProxy(this._dataService, this._spaceId);
-    this._automergeDocLoader = new AutomergeDocumentLoaderImpl(params.spaceId, this._repoProxy, params.spaceKey);
+    this.saveStateChanged = this._repoProxy.saveStateChanged;
+    this._automergeDocLoader = new AutomergeDocumentLoaderImpl(this._repoProxy, spaceId, spaceKey);
   }
 
   get graph(): Hypergraph {
@@ -238,6 +249,10 @@ export class CoreDatabase {
   }
 
   getObjectCoreById(id: string, { load = true }: GetObjectCoreByIdOptions = {}): ObjectCore | undefined {
+    if (!this._automergeDocLoader.hasRootHandle) {
+      throw new Error('Database is not ready.');
+    }
+
     const objCore = this._objects.get(id);
     if (load && !objCore) {
       this._automergeDocLoader.loadObjectDocument(id);
@@ -266,6 +281,10 @@ export class CoreDatabase {
     objectIds: string[],
     { inactivityTimeout = 30000, returnDeleted = false }: { inactivityTimeout?: number; returnDeleted?: boolean } = {},
   ): Promise<(ObjectCore | undefined)[]> {
+    if (!this._automergeDocLoader.hasRootHandle) {
+      throw new Error('Database is not ready.');
+    }
+
     const result: (ObjectCore | undefined)[] = new Array(objectIds.length);
     const objectsToLoad: Array<{ id: string; resultIndex: number }> = [];
     for (let i = 0; i < objectIds.length; i++) {
@@ -327,7 +346,7 @@ export class CoreDatabase {
   private _query(filter?: FilterSource, options?: QueryOptions) {
     return new Query(
       new CoreDatabaseQueryContext(this, this._queryService),
-      Filter.from(filter, { ...options, spaceIds: [this.spaceId] }),
+      Filter.from(filter, optionsToProto({ ...options, spaceIds: [this.spaceId] })),
     );
   }
 
@@ -483,7 +502,9 @@ export class CoreDatabase {
 
     const headsStates = await this._dataService.getDocumentHeads(
       {
-        documentIds: Object.values(doc.links ?? {}).map((link) => interpretAsDocumentId(link as AutomergeUrl)),
+        documentIds: Object.values(doc.links ?? {}).map((link) =>
+          interpretAsDocumentId(link.toString() as AutomergeUrl),
+        ),
       },
       { timeout: RPC_TIMEOUT },
     );
@@ -546,7 +567,26 @@ export class CoreDatabase {
   }
 
   async getSyncState(): Promise<SpaceSyncState> {
-    return this._dataService.getSpaceSyncState({ spaceId: this.spaceId }, { timeout: RPC_TIMEOUT });
+    const value = await Stream.first(
+      this._dataService.subscribeSpaceSyncState({ spaceId: this.spaceId }, { timeout: RPC_TIMEOUT }),
+    );
+    return value ?? raise(new Error('Failed to get sync state'));
+  }
+
+  subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): UnsubscribeCallback {
+    const stream = this._dataService.subscribeSpaceSyncState({ spaceId: this.spaceId }, { timeout: RPC_TIMEOUT });
+    stream.subscribe(
+      (data) => {
+        void runInContextAsync(ctx, () => callback(data));
+      },
+      (err) => {
+        if (err) {
+          ctx.raise(err);
+        }
+      },
+    );
+    ctx.onDispose(() => stream.close());
+    return () => stream.close();
   }
 
   getLoadedDocumentHandles(): DocHandleProxy<any>[] {
@@ -556,7 +596,7 @@ export class CoreDatabase {
   private async _handleSpaceRootDocumentChange(spaceRootDocHandle: DocHandleProxy<SpaceDoc>, objectsToLoad: string[]) {
     const spaceRootDoc: SpaceDoc = spaceRootDocHandle.docSync();
     const inlinedObjectIds = new Set(Object.keys(spaceRootDoc.objects ?? {}));
-    const linkedObjectIds = new Map(Object.entries(spaceRootDoc.links ?? {}));
+    const linkedObjectIds = new Map(Object.entries(spaceRootDoc.links ?? {}).map(([k, v]) => [k, v.toString()]));
 
     const objectsToRebind = new Map<string, { handle: DocHandleProxy<SpaceDoc>; objectIds: string[] }>();
     objectsToRebind.set(spaceRootDocHandle.url, { handle: spaceRootDocHandle, objectIds: [] });
@@ -575,14 +615,14 @@ export class CoreDatabase {
         if (newObjectDocUrl === object.docHandle?.url) {
           continue;
         }
-        const existing = objectsToRebind.get(newObjectDocUrl);
+        const existing = objectsToRebind.get(newObjectDocUrl.toString());
         if (existing != null) {
           existing.objectIds.push(object.id);
           continue;
         }
         const newDocHandle = this._repoProxy.find(newObjectDocUrl as DocumentId);
         await newDocHandle.doc();
-        objectsToRebind.set(newObjectDocUrl, { handle: newDocHandle, objectIds: [object.id] });
+        objectsToRebind.set(newObjectDocUrl.toString(), { handle: newDocHandle, objectIds: [object.id] });
       } else {
         objectsToRemove.push(object.id);
       }
@@ -770,7 +810,7 @@ export interface ItemsUpdatedEvent {
 
 export const shouldObjectGoIntoFragmentedSpace = (core: ObjectCore) => {
   // NOTE: We need to store properties in the root document since space-list initialization
-  //       expects it to be loaded as space become available.
+  // expects it to be loaded as space become available.
   return core.getType()?.objectId !== TYPE_PROPERTIES;
 };
 
@@ -838,8 +878,8 @@ const createCoreFromInsertData = (data: InsertData): ObjectCore => {
   if ('id' in data) {
     throw new Error('Cannot insert object with id');
   }
-  const { __typename, ...rest } = data;
 
+  const { __typename, ...rest } = data;
   let type: DXN | undefined;
   if (__typename) {
     type = sanitizeTypename(__typename);

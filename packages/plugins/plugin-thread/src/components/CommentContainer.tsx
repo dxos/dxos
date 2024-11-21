@@ -3,11 +3,11 @@
 //
 
 import { CheckCircle, X } from '@phosphor-icons/react';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { create } from '@dxos/echo-schema';
 import { MessageType } from '@dxos/plugin-space/types';
-import { getSpace, useMembers } from '@dxos/react-client/echo';
+import { fullyQualifiedId, getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, Tag, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
@@ -30,6 +30,9 @@ import { getMessageMetadata } from '../util';
 
 const sizeClass = getSize(4);
 
+// TODO(thure): #8149
+const commentControlClassNames = '!p-1 !min-bs-0 transition-opacity';
+
 const ToggleResolvedButton = ({
   isResolved,
   onResolve,
@@ -46,7 +49,7 @@ const ToggleResolvedButton = ({
           variant='ghost'
           data-testid='thread.toggle-resolved'
           onClick={onResolve}
-          classNames={['min-bs-0 p-1', !isResolved && hoverableControlItem]}
+          classNames={[commentControlClassNames, !isResolved && hoverableControlItem]}
         >
           <span className='sr-only'>{label}</span>
           {isResolved ? <CheckCircle className={sizeClass} weight='fill' /> : <CheckCircle className={sizeClass} />}
@@ -72,7 +75,7 @@ const DeleteThreadButton = ({ onDelete }: { onDelete: () => void }) => {
           variant='ghost'
           data-testid='thread.delete'
           onClick={onDelete}
-          classNames={['min-bs-0 p-1', hoverableControlItem]}
+          classNames={[commentControlClassNames, hoverableControlItem]}
         >
           <span className='sr-only'>{label}</span>
           <X className={sizeClass} />
@@ -93,7 +96,6 @@ export const CommentContainer = ({
   detached,
   context,
   current,
-  autoFocusTextbox,
   onAttend,
   onThreadDelete,
   onMessageDelete,
@@ -103,13 +105,12 @@ export const CommentContainer = ({
   const identity = useIdentity()!;
   const space = getSpace(thread);
   const members = useMembers(space?.key);
-  const activity = useStatus(space, thread.id);
+  const activity = useStatus(space, fullyQualifiedId(thread));
   const { t } = useTranslation(THREAD_PLUGIN);
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
-  const [autoFocus, setAutoFocus] = useState(!!autoFocusTextbox);
   const { themeMode } = useThemeContext();
 
-  const textboxMetadata = getMessageMetadata(thread.id, identity);
+  const textboxMetadata = getMessageMetadata(fullyQualifiedId(thread), identity);
   // TODO(wittjosiah): This is a hack to reset the editor after a message is sent.
   const [_count, _setCount] = useState(0);
   const rerenderEditor = () => _setCount((count) => count + 1);
@@ -123,13 +124,6 @@ export const CommentContainer = ({
     ],
     [_count],
   );
-
-  // TODO(thure): Because of the way the `autoFocus` property is handled by TextEditor,
-  //  this is the least-bad way of moving focus at the right time, though it is an anti-pattern.
-  //  Refactor to behave more like <input/>’s `autoFocus` or `autofocus` (yes, they’re different).
-  useEffect(() => {
-    setAutoFocus(!!autoFocusTextbox);
-  }, [autoFocusTextbox]);
 
   // TODO(thure): Factor out.
   const scrollToEnd = (behavior: ScrollBehavior) =>
@@ -151,7 +145,6 @@ export const CommentContainer = ({
     onComment?.(thread);
 
     messageRef.current = '';
-    setAutoFocus(true);
     scrollToEnd('instant');
     rerenderEditor();
 
@@ -159,10 +152,8 @@ export const CommentContainer = ({
     return true;
   }, [thread, identity]);
 
-  const handleDeleteMessage = (id: string) => onMessageDelete?.(id);
-
   return (
-    <Thread onClickCapture={onAttend} onFocusCapture={onAttend} current={current} id={thread.id}>
+    <Thread onClickCapture={onAttend} onFocusCapture={onAttend} current={current} id={fullyQualifiedId(thread)}>
       <div
         role='none'
         className={mx(
@@ -174,7 +165,7 @@ export const CommentContainer = ({
         {detached ? (
           <Tooltip.Root>
             <Tooltip.Trigger asChild>
-              <ThreadHeading detached>{thread.name ?? t('thread title placeholder')}</ThreadHeading>
+              <ThreadHeading detached>{thread.name}</ThreadHeading>
             </Tooltip.Trigger>
             <Tooltip.Portal>
               <Tooltip.Content classNames='z-[21]' side='top'>
@@ -184,7 +175,7 @@ export const CommentContainer = ({
             </Tooltip.Portal>
           </Tooltip.Root>
         ) : (
-          <ThreadHeading>{thread.name ?? t('thread title placeholder')}</ThreadHeading>
+          <ThreadHeading>{thread.name}</ThreadHeading>
         )}
         <div className='flex flex-row items-center pli-1'>
           {thread.status === 'staged' && <Tag palette='neutral'>{t('draft button')}</Tag>}
@@ -195,9 +186,20 @@ export const CommentContainer = ({
         </div>
       </div>
       {thread.messages.filter(nonNullable).map((message) => (
-        <MessageContainer key={message.id} message={message} members={members} onDelete={handleDeleteMessage} />
+        <MessageContainer
+          key={message.id}
+          message={message}
+          members={members}
+          onDelete={(id: string) => onMessageDelete?.(id)}
+        />
       ))}
-      <MessageTextbox extensions={extensions} autoFocus={autoFocus} onSend={handleCreate} {...textboxMetadata} />
+      {/*
+        TODO(wittjosiah): Can't autofocus this generally.
+          There can be multiple threads with inputs and they can't all be focused.
+          Also, it steals focus from documents when first rendered.
+          Need to find a way to autofocus in one scenario only: when a new thread is created.
+      */}
+      <MessageTextbox extensions={extensions} onSend={handleCreate} {...textboxMetadata} />
       <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
       {/* NOTE(thure): This can’t also be the `overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref’d element. */}
       <div role='none' className='bs-px -mbs-px' ref={threadScrollRef} />

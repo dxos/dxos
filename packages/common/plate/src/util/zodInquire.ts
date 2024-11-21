@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import inquirer, { type Question } from 'inquirer';
+import inquirer, { type DistinctQuestion, type Question } from 'inquirer';
 import { z } from 'zod';
 
 // type MaybePromise<T> = T | Promise<T>;
@@ -11,11 +11,11 @@ import { z } from 'zod';
 
 // const promise = <T = any>(o: any): Promise<T> => (isPromise(o) ? o : Promise.resolve(o));
 
-export const getQuestion = (shape: z.ZodTypeAny): inquirer.Question | null => {
+export const getQuestion = (shape: z.ZodTypeAny): Question | null => {
   let defaultValue;
   let message = '';
   let type: string | undefined;
-  const typesToQnType: { [k: string]: inquirer.Question['type'] } = {
+  const typesToQnType: { [k: string]: Question['type'] } = {
     ZodString: 'input',
     ZodNumber: 'number',
     ZodBoolean: 'confirm',
@@ -44,7 +44,8 @@ export const getQuestion = (shape: z.ZodTypeAny): inquirer.Question | null => {
       return parsed.error.format()._errors?.join('\n');
     }
   };
-  return type ? { message, type, default: defaultValue, validate } : null;
+  // TODO(dmaretskyi): Fixme.
+  return type ? { message, type, default: defaultValue, filter: validate, name: message } : null;
 };
 
 export const unDefault = <T extends InquirableZodType = InquirableZodType>(shape: T): InquirableZodType => {
@@ -73,7 +74,7 @@ export type StripDefaults<T extends InquirableZodType> = T extends InquirablePri
 export type QuestionGenerator<T extends InquirableZodType = InquirableZodType> = (
   shape: T,
   key: string,
-) => inquirer.DistinctQuestion | undefined;
+) => DistinctQuestion | undefined;
 
 export type InquirablePrimitive = z.ZodString | z.ZodNumber | z.ZodBoolean;
 
@@ -160,12 +161,13 @@ export const inquire = async <TShape extends InquirableZodType = InquirableZodTy
   options?: InquireOptions<TShape>,
 ): Promise<z.infer<TShape>> => {
   const questions = await getQuestions(shape, options);
-  const responses = (await inquirer.prompt(questions, options?.initialAnswers)) ?? {};
+  // TODO(dmaretskyi): Fixme.
+  const responses = (await inquirer.prompt(questions as any, options?.initialAnswers)) ?? {};
   for (const key in { ...responses, ...(options?.initialAnswers ?? {}), ...(options?.questions ?? {}) }) {
     const defaultFn = options?.questions?.[key as keyof typeof options.questions]?.default;
     if (defaultFn) {
       const defaultVal = defaultFn?.(responses as z.infer<TShape>);
-      responses[key] = defaultVal;
+      responses[key] = defaultVal as any;
     }
   }
   return noUndefined(responses) as z.infer<TShape>;

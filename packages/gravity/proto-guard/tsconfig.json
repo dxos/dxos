@@ -1,5 +1,5 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "esModuleInterop": true,
     "jsx": "react",
@@ -17,39 +17,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/context"
-    },
-    {
-      "path": "../../common/debug"
-    },
-    {
-      "path": "../../common/invariant"
-    },
-    {
-      "path": "../../common/log"
-    },
-    {
-      "path": "../../common/node-std"
-    },
-    {
-      "path": "../../core/echo/echo-db"
-    },
-    {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/halo/credentials"
-    },
-    {
-      "path": "../../core/protocols"
-    },
-    {
-      "path": "../../sdk/client"
-    }
-  ]
+  "references": []
 }

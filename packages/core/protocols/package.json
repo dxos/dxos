@@ -1,11 +1,13 @@
 {
   "name": "@dxos/protocols",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "description": "Protobuf definitions for DXOS protocols.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
+  "sideEffects": true,
+  "type": "module",
   "exports": {
     ".": {
       "browser": "./dist/esm/src/index.js",
@@ -70,21 +72,20 @@
   ],
   "scripts": {
     "compile:buf": "buf generate",
-    "tsc:cjs": "rm -rf dist/cjs; tsc --module commonjs --target es2018 --outdir ./dist/cjs"
+    "tsc:cjs": "rm -rf dist/cjs; tsc --module commonjs --moduleResolution node --target es2018 --outdir ./dist/cjs && echo '{\"type\": \"commonjs\"}' > dist/cjs/package.json"
   },
   "dependencies": {
-    "@bufbuild/protobuf": "^2.0.0",
+    "@bufbuild/protobuf": "^2.1.0",
     "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/timeframe": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@effect/schema": "^0.67.16"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
-    "@bufbuild/buf": "^1.35.0",
-    "@bufbuild/protoc-gen-es": "^2.0.0",
-    "glob": "^7.2.3"
+    "@bufbuild/buf": "^1.43.0",
+    "@bufbuild/protoc-gen-es": "^2.1.0"
   },
   "publishConfig": {
     "access": "public"

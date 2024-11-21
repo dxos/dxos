@@ -11,17 +11,20 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "{projectRoot}/src/index.ts"
+          "{projectRoot}/src/_deprecated/index.ts",
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/types/index.ts"
         ],
         "platforms": [
-          "browser"
+          "browser",
+          "node"
         ]
       }
     },
-    "lint": {},
-    "test": {}
+    "lint": {}
   },
   "implicitDependencies": [
-    "esbuild"
+    "esbuild",
+    "node-std"
   ]
 }

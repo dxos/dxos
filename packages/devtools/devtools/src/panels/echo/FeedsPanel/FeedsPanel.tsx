@@ -16,7 +16,7 @@ import { type Client, useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { useContacts } from '@dxos/react-client/halo';
 import { Toolbar } from '@dxos/react-ui';
-import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table';
+import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table/deprecated';
 import { getSize } from '@dxos/react-ui-theme';
 
 import { Bitbar, MasterDetailTable, PanelContainer, PublicKeySelector } from '../../../components';

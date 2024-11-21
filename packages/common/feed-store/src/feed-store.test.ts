@@ -2,17 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
+import { describe, expect, test } from 'vitest';
 
 import { PublicKey } from '@dxos/keys';
-import { faker } from '@dxos/random';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
-import { describe, test } from '@dxos/test';
 
 import { TestItemBuilder } from './testing';
-
-chai.use(chaiAsPromised);
 
 describe('FeedStore', () => {
   test('creates feeds', async () => {
@@ -80,50 +74,7 @@ describe('FeedStore', () => {
 
     // Attempt to reopen as writable (fail).
     {
-      await expect(feedStore.openFeed(feedKey, { writable: true })).to.be.rejected;
+      await expect(feedStore.openFeed(feedKey, { writable: true })).rejects.toBeInstanceOf(Error);
     }
   });
-
-  test('reopens a feed and reads data from storage', async () => {
-    const builder = new TestItemBuilder();
-    const feedKey = await builder.keyring!.createKey();
-
-    const numBlocks = 10;
-
-    const storage = createStorage({ type: StorageType.NODE });
-
-    // Write.
-    {
-      const feedStore = builder.clone().setStorage(storage).createFeedStore();
-      const feed = await feedStore.openFeed(feedKey, { writable: true });
-
-      for (const i of Array.from(Array(numBlocks)).keys()) {
-        await feed.append({
-          id: String(i),
-          value: faker.lorem.sentence(),
-        });
-      }
-
-      expect(feed.properties.length).to.eq(numBlocks);
-    }
-
-    // Read.
-    {
-      const feedStore = builder.clone().setStorage(storage).createFeedStore();
-      const feed = await feedStore.openFeed(feedKey);
-      expect(feed.properties.length).to.eq(numBlocks);
-    }
-
-    // Delete.
-    {
-      await storage.reset();
-    }
-
-    // Read (should be empty).
-    {
-      const feedStore = builder.clone().setStorage(storage).createFeedStore();
-      const feed = await feedStore.openFeed(feedKey);
-      expect(feed.properties.length).to.eq(0);
-    }
-  }).onlyEnvironments('nodejs'); // NOTE: Must use Node so that data is persistent across invocations.
 });

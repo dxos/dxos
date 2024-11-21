@@ -8,7 +8,7 @@ import { join, resolve } from 'node:path';
 import { defineConfig } from 'vite';
 // import { VitePluginFonts } from 'vite-plugin-fonts';
 import { crx as ChromeExtensionPlugin } from '@crxjs/vite-plugin';
-import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
+import SourceMapsPlugin from 'rollup-plugin-sourcemaps';
 import WasmPlugin from 'vite-plugin-wasm';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
@@ -19,31 +19,32 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 
 // https://vitejs.dev/config
 export default defineConfig({
+  esbuild: {
+    keepNames: true,
+  },
   build: {
+    sourcemap: true,
+    target: ['chrome89', 'edge89', 'firefox89', 'safari15'],
     rollupOptions: {
       input: {
         // Everything mentioned in manifest.json will be bundled.
         // We need to specify the 'panel' entry point here because it's not mentioned in manifest.json.
         panel: resolve(__dirname, 'panel.html'),
       },
-      output: {
-        sourcemap: true,
-      },
     },
   },
   worker: {
     format: 'es',
-    plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
+    plugins: () => [WasmPlugin(), SourceMapsPlugin()],
   },
   plugins: [
+    SourceMapsPlugin(),
     ConfigPlugin(),
-
     ThemePlugin({
       root: __dirname,
       content: [resolve(__dirname, './*.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')],
     }),
 
-    TopLevelAwaitPlugin(),
     WasmPlugin(),
 
     // https://github.com/preactjs/signals/issues/269

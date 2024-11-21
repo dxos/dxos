@@ -2,27 +2,28 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect } from 'chai';
+import { onTestFinished, describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
 import { CredentialGenerator } from '@dxos/credentials';
 import { MockFeedWriter } from '@dxos/feed-store/testing';
 import { Keyring } from '@dxos/keyring';
+import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { TestBuilder, type TestConnection, TestPeer } from '@dxos/teleport/testing';
-import { afterTest, describe, test } from '@dxos/test';
 
-import { NotarizationPlugin } from './notarization-plugin';
+import { NotarizationPlugin, type NotarizationPluginParams } from './notarization-plugin';
 
 class TestAgent extends TestPeer {
   private readonly _ctx = new Context();
 
   feed = new MockFeedWriter<Credential>();
-  notarizationPlugin = new NotarizationPlugin();
+  notarizationPlugin: NotarizationPlugin;
 
-  constructor() {
+  constructor(params: NotarizationPluginParams) {
     super();
+    this.notarizationPlugin = new NotarizationPlugin(params);
     this.feed.written.on(this._ctx, async ([credential]) => {
       log('written to feed', { credential });
       await this.notarizationPlugin.processCredential(credential);
@@ -49,10 +50,12 @@ class TestAgent extends TestPeer {
 describe('NotarizationPlugin', () => {
   test('notarize single credential', async () => {
     const testBuilder = new TestBuilder();
-    afterTest(() => testBuilder.destroy());
+    onTestFinished(() => testBuilder.destroy());
+
+    const params = { spaceId: SpaceId.random() };
 
     // peer0 is there to test retries.
-    const [_peer0, peer1, peer2] = await testBuilder.createPeers({ factory: () => new TestAgent() });
+    const [_peer0, peer1, peer2] = await testBuilder.createPeers({ factory: () => new TestAgent(params) });
     peer1.enableWriting();
 
     peer1.feed.written.on(async ([credential]) => {

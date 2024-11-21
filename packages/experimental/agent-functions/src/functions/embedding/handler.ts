@@ -2,18 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Schema as S } from '@effect/schema';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import textract from 'textract';
 
-import { FileType } from '@dxos/plugin-ipfs/types';
-import { DocumentType } from '@dxos/plugin-markdown/types';
-import { Filter, hasType, loadObjectReferences } from '@dxos/echo-db';
-import { type EchoReactiveObject, S } from '@dxos/echo-schema';
+import { type EchoReactiveObject, Filter, hasType, loadObjectReferences } from '@dxos/echo-db';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { FileType } from '@dxos/plugin-ipfs/types';
+import { DocumentType } from '@dxos/plugin-markdown/types';
 
 import { type ChainDocument, type ChainVariant, createChainResources } from '../../chain';
 import { getKey } from '../../util';
@@ -43,7 +43,7 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context, respon
     async (objects: EchoReactiveObject<any>[]) => {
       for (const object of objects) {
         let pageContent: string | undefined;
-        log.info('processing', { object: { id: object.id, type: object.__typename } });
+        log.info('processing', { object: { id: object.id, type: object.type } });
         if (object instanceof DocumentType) {
           pageContent = (await loadObjectReferences(object, (o) => o.content)).content?.trim();
         } else if (object instanceof FileType) {

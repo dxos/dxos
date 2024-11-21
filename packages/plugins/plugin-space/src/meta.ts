@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type PluginMeta } from '@dxos/app-framework';
+
 export const SPACE_PLUGIN = 'dxos.org/plugin/space';
 export const SPACE_PLUGIN_SHORT_ID = 'space';
 
@@ -9,7 +11,7 @@ export default {
   id: SPACE_PLUGIN,
   shortId: SPACE_PLUGIN_SHORT_ID,
   name: 'Spaces',
-};
+} satisfies PluginMeta;
 
 const SPACE_ACTION = `${SPACE_PLUGIN}/action`;
 export enum SpaceAction {
@@ -23,9 +25,10 @@ export enum SpaceAction {
   CLOSE = `${SPACE_ACTION}/close`,
   MIGRATE = `${SPACE_ACTION}/migrate`,
   ADD_OBJECT = `${SPACE_ACTION}/add-object`,
-  REMOVE_OBJECT = `${SPACE_ACTION}/remove-object`,
+  REMOVE_OBJECTS = `${SPACE_ACTION}/remove-objects`,
   RENAME_OBJECT = `${SPACE_ACTION}/rename-object`,
   DUPLICATE_OBJECT = `${SPACE_ACTION}/duplicate-object`,
   WAIT_FOR_OBJECT = `${SPACE_ACTION}/wait-for-object`,
   TOGGLE_HIDDEN = `${SPACE_ACTION}/toggle-hidden`,
+  OPEN_SETTINGS = `${SPACE_ACTION}/open-settings`,
 }

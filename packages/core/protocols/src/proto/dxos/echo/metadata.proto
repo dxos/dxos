@@ -75,6 +75,13 @@ message SpaceMetadata {
   optional timeframe.TimeframeVector data_timeframe = 5;
 
   optional SpaceCache cache = 9;
+
+  optional EdgeReplicationSetting edge_replication = 11;
+}
+
+enum EdgeReplicationSetting {
+  DISABLED = 0;
+  ENABLED = 1;
 }
 
 message ControlPipelineSnapshot {

@@ -3,21 +3,21 @@
 //
 
 import { effect } from '@preact/signals-core';
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { createIdFromSpaceKey } from '@dxos/echo-pipeline/light';
+import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
-import { create, type EchoReactiveObject, Expando } from '@dxos/echo-schema';
-import { registerSignalRuntime } from '@dxos/echo-signals';
-import { PublicKey } from '@dxos/keys';
+import { create, Expando, S, TypedObject } from '@dxos/echo-schema';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
+import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { describe, openAndClose, test } from '@dxos/test';
+import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { type CoreDatabase } from './core-database';
-import { getObjectCore } from './types';
 import { type DocHandleProxy, type RepoProxy } from '../client';
+import { type EchoReactiveObject, getObjectCore } from '../echo-handler';
 import { type EchoDatabaseImpl, type EchoDatabase } from '../proxy-db';
 import { Filter } from '../query';
 import { EchoTestBuilder, Task } from '../testing';
@@ -49,7 +49,9 @@ describe('CoreDatabase', () => {
       expect(docHandles.linkedDocHandles.length).to.eq(1);
       const rootDoc = docHandles.spaceRootHandle.docSync();
       expect(rootDoc?.objects?.[object.id]).to.be.undefined;
-      expect(docHandles.spaceRootHandle.docSync()?.links?.[object.id]).to.eq(docHandles.linkedDocHandles[0].url);
+      expect(docHandles.spaceRootHandle.docSync()?.links?.[object.id].toString()).to.eq(
+        docHandles.linkedDocHandles[0].url,
+      );
     });
 
     test('text objects are created in a separate doc and link from the root doc is added', async () => {
@@ -60,11 +62,13 @@ describe('CoreDatabase', () => {
       db.add(object);
       const docHandles = getDocHandles(db);
       expect(docHandles.linkedDocHandles.length).to.eq(1);
-      expect(docHandles.spaceRootHandle.docSync()?.links?.[object.id]).to.eq(docHandles.linkedDocHandles[0].url);
+      expect(docHandles.spaceRootHandle.docSync()?.links?.[object.id].toString()).to.eq(
+        docHandles.linkedDocHandles[0].url,
+      );
     });
 
     test('effect nested reference access triggers document loading', async () => {
-      registerSignalRuntime();
+      registerSignalsRuntime();
 
       const document = createExpando({ text: createTextObject('Hello, world!') });
       const db = await createClientDbInSpaceWithObject(document);
@@ -144,10 +148,12 @@ describe('CoreDatabase', () => {
       });
       const beforeUpdate = (await db.loadObjectById(originalObj.id))!;
       expect(getObjectDocHandle(beforeUpdate).url).to.eq(
-        getDocHandles(db).spaceRootHandle.docSync().links?.[beforeUpdate.id],
+        getDocHandles(db).spaceRootHandle.docSync().links?.[beforeUpdate.id].toString(),
       );
       await db.coreDatabase.updateSpaceState({ rootUrl: newRootDocHandle.url });
-      expect(getObjectDocHandle(beforeUpdate).url).to.eq(newRootDocHandle.docSync().links?.[beforeUpdate.id]);
+      expect(getObjectDocHandle(beforeUpdate).url).to.eq(
+        newRootDocHandle.docSync().links?.[beforeUpdate.id].toString(),
+      );
     });
 
     test('linked objects are loaded on update only if they were loaded before', async () => {
@@ -516,6 +522,71 @@ describe('CoreDatabase', () => {
           title: 'Inner',
         });
       }
+    });
+
+    test('query with join', async () => {
+      await using testBuilder = await new EchoTestBuilder().open();
+      const { crud } = await testBuilder.createDatabase();
+
+      const { id: id1 } = await crud.insert({ title: 'Inner' });
+      const { id: id2 } = await crud.insert({ title: 'Inner', nested: { '/': id1 } });
+      const { id: id3 } = await crud.insert({ title: 'Outer', inner: { '/': id2 } });
+      await crud.flush({ indexes: true });
+
+      {
+        const object = await crud.query({ id: id3 }, { include: { inner: { nested: true } } }).first();
+        expect(object).to.deep.eq({
+          id: id3,
+          __typename: null,
+          __meta: {
+            keys: [],
+          },
+          title: 'Outer',
+          inner: {
+            id: id2,
+            __typename: null,
+            __meta: {
+              keys: [],
+            },
+            title: 'Inner',
+            nested: {
+              id: id1,
+              __typename: null,
+              __meta: {
+                keys: [],
+              },
+              title: 'Inner',
+            },
+          },
+        });
+      }
+    });
+
+    test('dynamic schema objects', async () => {
+      await using testBuilder = await new EchoTestBuilder().open();
+      const { db, crud } = await testBuilder.createDatabase();
+
+      class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+        field: S.String,
+      }) {}
+
+      const stored = db.schemaRegistry.addSchema(TestSchema);
+      const schemaDxn = DXN.fromLocalObjectId(stored.id).toString();
+
+      const object = db.add(create(stored, { field: 'test' }));
+      await db.flush({ indexes: true });
+
+      const { objects } = await crud.query({ __typename: schemaDxn }).run();
+      expect(objects).toEqual([
+        {
+          id: object.id,
+          __typename: schemaDxn,
+          __meta: {
+            keys: [],
+          },
+          field: 'test',
+        },
+      ]);
     });
   });
 });

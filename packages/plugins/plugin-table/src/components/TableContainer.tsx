@@ -2,35 +2,121 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 
-import { type LayoutContainerProps } from '@dxos/app-framework';
-import { Table } from '@dxos/react-ui-table';
-import { mx } from '@dxos/react-ui-theme';
+import { useIntentDispatcher, type LayoutContainerProps } from '@dxos/app-framework';
+import { useGlobalFilteredObjects } from '@dxos/plugin-search';
+import { SpaceAction } from '@dxos/plugin-space';
+import { create, fullyQualifiedId, getSpace, Filter, useQuery } from '@dxos/react-client/echo';
+import { useAttention } from '@dxos/react-ui-attention';
+import { StackItem } from '@dxos/react-ui-stack';
+import {
+  Table,
+  type TableController,
+  Toolbar,
+  type ToolbarAction,
+  useTableModel,
+  type TableType,
+} from '@dxos/react-ui-table';
+import { ViewProjection } from '@dxos/schema';
 
-import { ObjectTable, type ObjectTableProps } from './ObjectTable';
+import { TableAction } from '../types';
 
-// TODO(burdon): Slide
-// <div role='none' className='flex-1 min-bs-0 pli-16 plb-24'>
+// TODO(zantonio): Factor out, copied this from MarkdownPlugin.
+export const sectionToolbarLayout = 'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 transition-opacity';
 
-const TableContainer = ({ role, table }: LayoutContainerProps<Omit<ObjectTableProps, 'role' | 'getScrollElement'>>) => {
+// TODO(zantonio): Move toolbar action handling to a more appropriate location.
+const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType; role?: string }>) => {
+  const { hasAttention } = useAttention(fullyQualifiedId(table));
+  const dispatch = useIntentDispatcher();
+  const space = getSpace(table);
+
+  const schema = useMemo(
+    () => (table.view ? space?.db.schemaRegistry.getSchema(table.view.query.type) : undefined),
+    [space, table.view],
+  );
+  const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : () => false, undefined, [schema]);
+  const filteredObjects = useGlobalFilteredObjects(queriedObjects);
+
+  const handleInsertRow = useCallback(() => {
+    if (schema && space) {
+      space.db.add(create(schema, {}));
+    }
+  }, [schema, space]);
+
+  const handleDeleteRows = useCallback(
+    (_row: number, objects: any[]) => {
+      void dispatch({ action: SpaceAction.REMOVE_OBJECTS, data: { objects } });
+    },
+    [dispatch],
+  );
+
+  const handleDeleteColumn = useCallback((fieldId: string) => {
+    void dispatch({
+      action: TableAction.DELETE_COLUMN,
+      data: { table, fieldId } satisfies TableAction.DeleteColumn,
+    });
+  }, []);
+
+  const projection = useMemo(() => {
+    if (!schema || !table.view) {
+      return;
+    }
+
+    return new ViewProjection(schema, table.view);
+  }, [schema, table.view]);
+
+  const tableRef = useRef<TableController>(null);
+
+  const model = useTableModel({
+    table,
+    projection,
+    objects: filteredObjects,
+    onInsertRow: handleInsertRow,
+    onDeleteRows: handleDeleteRows,
+    onDeleteColumn: handleDeleteColumn,
+    onCellUpdate: (cell) => tableRef.current?.update?.(cell),
+    onRowOrderChanged: () => tableRef.current?.update?.(),
+  });
+
+  const onThreadCreate = useCallback(() => {
+    void dispatch({
+      // TODO(Zan): We shouldn't hardcode the action ID.
+      action: 'dxos.org/plugin/thread/action/create',
+      data: {
+        subject: table,
+        cursor: Date.now().toString(), // TODO(Zan): Consider a more appropriate anchor format.
+      },
+    });
+  }, [dispatch, table]);
+
+  const handleAction = useCallback(
+    (action: ToolbarAction) => {
+      switch (action.type) {
+        case 'comment': {
+          onThreadCreate();
+          break;
+        }
+        case 'add-row': {
+          handleInsertRow();
+          break;
+        }
+      }
+    },
+    [onThreadCreate, space, schema, handleInsertRow],
+  );
+
   return (
-    <Table.Root>
-      <Table.Viewport
-        classNames={mx(
-          role === 'article' && 'block-start-[--topbar-size] max-bs-full row-span-2 is-full sticky-top-0 -mbs-px',
-          role === 'section' && 'max-bs-96 is-full sticky-top-0 !bg-[--surface-bg] -mis-px -mbs-px',
-          role === 'slide' && 'bs-full overflow-auto grid place-items-center',
-        )}
-      >
-        <ObjectTable
-          key={table.id} // New component instance per table.
-          table={table}
-          role='grid'
-          stickyHeader
-        />
-      </Table.Viewport>
-    </Table.Root>
+    <StackItem.Content toolbar role={role}>
+      <Toolbar.Root onAction={handleAction} classNames={!hasAttention && 'opacity-20'}>
+        <Toolbar.Editing />
+        <Toolbar.Separator />
+        <Toolbar.Actions />
+      </Toolbar.Root>
+      <Table.Root>
+        <Table.Main key={table.id} ref={tableRef} model={model} />
+      </Table.Root>
+    </StackItem.Content>
   );
 };
 

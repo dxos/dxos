@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { expect } from 'chai';
+import { describe, expect, test, onTestFinished } from 'vitest';
 
 import { Context } from '@dxos/context';
 import { valueEncoding, MetadataStore, SpaceManager, AuthStatus } from '@dxos/echo-pipeline';
@@ -13,7 +13,6 @@ import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manag
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage, type Storage, StorageType } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
-import { describe, test, afterTest } from '@dxos/test';
 
 import { IdentityManager } from './identity-manager';
 
@@ -39,7 +38,7 @@ describe('identity/identity-manager', () => {
       }),
     });
 
-    afterTest(() => feedStore.close());
+    onTestFinished(() => feedStore.close());
 
     const networkManager = new SwarmNetworkManager({
       signalManager: new MemorySignalManager(signalContext),
@@ -51,9 +50,10 @@ describe('identity/identity-manager', () => {
       blobStore,
       metadataStore,
     });
-    const identityManager = new IdentityManager(metadataStore, keyring, feedStore, spaceManager);
+    const identityManager = new IdentityManager({ metadataStore, keyring, feedStore, spaceManager });
 
     return {
+      networkManager,
       metadataStore,
       identityManager,
       feedStore,
@@ -64,7 +64,7 @@ describe('identity/identity-manager', () => {
   test('creates identity', async () => {
     const { identityManager } = await setupPeer();
     await identityManager.open(new Context());
-    afterTest(() => identityManager.close());
+    onTestFinished(() => identityManager.close());
 
     const identity = await identityManager.createIdentity();
     expect(identity).to.exist;
@@ -95,7 +95,7 @@ describe('identity/identity-manager', () => {
   test('update profile', async () => {
     const { identityManager } = await setupPeer();
     await identityManager.open(new Context());
-    afterTest(() => identityManager.close());
+    onTestFinished(() => identityManager.close());
 
     const identity = await identityManager.createIdentity();
     expect(identity.profileDocument?.displayName).to.be.undefined;
@@ -108,6 +108,11 @@ describe('identity/identity-manager', () => {
 
     const peer1 = await setupPeer({ signalContext });
     const identity1 = await peer1.identityManager.createIdentity();
+    peer1.networkManager.setPeerInfo({
+      peerKey: identity1.deviceKey.toHex(),
+      identityKey: identity1.identityKey.toHex(),
+    });
+    await identity1.joinNetwork();
 
     const peer2 = await setupPeer({ signalContext });
 
@@ -115,28 +120,38 @@ describe('identity/identity-manager', () => {
     const controlFeedKey = await peer2.keyring.createKey();
     const dataFeedKey = await peer2.keyring.createKey();
 
-    await identity1.controlPipeline.writer.write({
-      credential: {
-        credential: await identity1.getIdentityCredentialSigner().createCredential({
-          subject: deviceKey,
-          assertion: {
-            '@type': 'dxos.halo.credentials.AuthorizedDevice',
-            identityKey: identity1.identityKey,
-            deviceKey,
-          },
-        }),
+    const credential = await identity1.getIdentityCredentialSigner().createCredential({
+      subject: deviceKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.AuthorizedDevice',
+        identityKey: identity1.identityKey,
+        deviceKey,
       },
     });
 
-    // Identity2 is not yet ready at this point. Peer1 needs to admit peer2 device key and feed keys.
-    const identity2 = await peer2.identityManager.acceptIdentity({
+    await identity1.controlPipeline.writer.write({
+      credential: {
+        credential,
+      },
+    });
+
+    const { identity: identity2, identityRecord } = await peer2.identityManager.prepareIdentity({
       identityKey: identity1.identityKey,
       deviceKey,
       haloSpaceKey: identity1.haloSpaceKey,
       haloGenesisFeedKey: identity1.haloGenesisFeedKey,
       controlFeedKey,
       dataFeedKey,
+      authorizedDeviceCredential: credential,
     });
+    peer2.networkManager.setPeerInfo({
+      peerKey: identity2.deviceKey.toHex(),
+      identityKey: identity2.identityKey.toHex(),
+    });
+    await identity2.joinNetwork();
+
+    // Identity2 is not yet ready at this point. Peer1 needs to admit peer2 device key and feed keys.
+    await peer2.identityManager.acceptIdentity(identity2, identityRecord);
 
     // TODO(dmaretskyi): We'd also need to admit device2's feeds otherwise messages from them won't be processed by the pipeline.
     // This would mean that peer2 has replicated it's device credential chain from peer1 and is ready to issue credentials.

@@ -3,11 +3,10 @@
 //
 
 import { create, insert, search } from '@orama/orama';
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
 import { createTestObjectGenerator, range } from '@dxos/echo-generator';
 import { faker } from '@dxos/random';
-import { describe, test } from '@dxos/test';
 
 faker.seed(1);
 

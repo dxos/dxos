@@ -4,8 +4,7 @@
 
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type Space } from '@dxos/client/echo';
-import { type EchoReactiveObject, getType } from '@dxos/echo-schema';
+import { type EchoReactiveObject, type Space, getType } from '@dxos/client/echo';
 import { createSvgContext, defaultGridStyles, Grid, SVG, SVGRoot, Zoom } from '@dxos/gem-core';
 import {
   defaultStyles,

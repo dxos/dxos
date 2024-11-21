@@ -10,10 +10,14 @@ import type {
   SettingsProvides,
   SurfaceProvides,
   TranslationsProvides,
+  Plugin,
 } from '@dxos/app-framework';
 import { type Expando } from '@dxos/echo-schema';
 import { type SchemaProvides } from '@dxos/plugin-client';
+import { type PanelProvides } from '@dxos/plugin-deck/types';
 import { type PublicKey } from '@dxos/react-client';
+import { type Space } from '@dxos/react-client/echo';
+import { type Label } from '@dxos/react-ui';
 import { type ComplexMap } from '@dxos/util';
 
 export const SPACE_DIRECTORY_HANDLE = 'dxos.org/plugin/space/directory';
@@ -51,9 +55,37 @@ export type PluginState = {
    */
   // TODO(wittjosiah): Factor out to sdk. Migration running should probably be a space state.
   sdkMigrationRunning: Record<string, boolean>;
+
+  /**
+   * Whether or not the user can navigate to collections in the graph.
+   * Determined by whether or not there is an available plugin that can render a collection.
+   */
+  navigableCollections: boolean;
 };
 
-export type SpaceSettingsProps = { showHidden?: boolean };
+export type SpaceSettingsProps = {
+  /**
+   * Show closed spaces.
+   */
+  showHidden?: boolean;
+
+  /**
+   * Action to perform when a space is created.
+   */
+  onSpaceCreate?: string;
+};
+
+export type SpaceInitProvides = {
+  space: {
+    onSpaceCreate: {
+      label: Label;
+      action: string;
+    };
+  };
+};
+
+export const parseSpaceInitPlugin = (plugin: Plugin) =>
+  typeof (plugin.provides as any).space?.onSpaceCreate === 'object' ? (plugin as Plugin<SpaceInitProvides>) : undefined;
 
 export type SpacePluginProvides = SurfaceProvides &
   IntentResolverProvides &
@@ -62,7 +94,8 @@ export type SpacePluginProvides = SurfaceProvides &
   MetadataRecordsProvides &
   SettingsProvides<SpaceSettingsProps> &
   TranslationsProvides &
-  SchemaProvides & {
+  SchemaProvides &
+  PanelProvides & {
     space: Readonly<PluginState>;
   };
 
@@ -75,7 +108,8 @@ export interface TypedObjectSerializer<T extends Expando = Expando> {
 
   /**
    * @param params.content
+   * @param params.space Space to use for deserializing schema references.
    * @param params.newId Generate new ID for deserialized object.
    */
-  deserialize(params: { content: string; newId?: boolean }): Promise<T>;
+  deserialize(params: { content: string; space: Space; newId?: boolean }): Promise<T>;
 }

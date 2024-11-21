@@ -4,8 +4,10 @@
 
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
+import { PeerSchema } from '@dxos/edge-client';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { buf } from '@dxos/protocols/buf';
 
 import { type TestBuilder } from './test-builder';
 import { expectPeerAvailable, expectPeerLeft, expectReceivedMessage } from './utils';
@@ -15,7 +17,6 @@ import { type Message, type PeerInfo } from '../signal-methods';
 
 export class TestPeer extends Resource {
   public peerId = PublicKey.random();
-  public identityKey = PublicKey.random();
   public signalManager!: SignalManager;
   public messenger!: Messenger;
   public defaultReceived = new Event<Message>();
@@ -25,10 +26,7 @@ export class TestPeer extends Resource {
   }
 
   get peerInfo(): PeerInfo {
-    return {
-      peerKey: this.peerId.toHex(),
-      identityKey: this.identityKey.toHex(),
-    };
+    return buf.create(PeerSchema, { peerKey: this.peerId.toHex(), identityKey: this.peerId.toHex() });
   }
 
   async waitTillReceive(message: Message) {
@@ -44,8 +42,8 @@ export class TestPeer extends Resource {
   }
 
   protected override async _open() {
-    this.signalManager = await this.testBuilder.createSignalManager(this.identityKey, this.peerId);
-    this.messenger = new Messenger({ signalManager: this.signalManager });
+    this.signalManager = await this.testBuilder.createSignalManager(this);
+    this.messenger = new Messenger({ signalManager: this.signalManager, retryDelay: 300 });
 
     await this.signalManager.open();
     this.messenger.open();

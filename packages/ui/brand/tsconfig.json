@@ -1,5 +1,5 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "allowJs": true,
     "lib": [
@@ -11,15 +11,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../react-ui"
-    },
-    {
-      "path": "../react-ui-theme"
-    },
-    {
-      "path": "../storybook-utils"
-    }
-  ]
+  "references": []
 }

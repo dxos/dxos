@@ -2,6 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import type { inspect, InspectOptionsStylized } from 'node:util';
+
+import { inspectCustom } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 
 /**
@@ -26,11 +29,22 @@ export class DXN {
    * Kind constants.
    */
   static kind = Object.freeze({
-    ECHO: 'echo',
     TYPE: 'type',
+    ECHO: 'echo',
   });
 
+  static equals(a: DXN, b: DXN) {
+    return a.kind === b.kind && a.parts.length === b.parts.length && a.parts.every((part, i) => part === b.parts[i]);
+  }
+
+  static isDXNString(dxn: string) {
+    return dxn.startsWith('dxn:');
+  }
+
   static parse(dxn: string): DXN {
+    if (typeof dxn !== 'string') {
+      throw new Error('Invalid DXN');
+    }
     const [prefix, kind, ...parts] = dxn.split(':');
     if (!(prefix === 'dxn')) {
       throw new Error('Invalid DXN');
@@ -41,7 +55,16 @@ export class DXN {
     if (!(parts.length > 0)) {
       throw new Error('Invalid DXN');
     }
+
     return new DXN(kind, parts);
+  }
+
+  static fromTypename(type: string) {
+    return new DXN(DXN.kind.TYPE, [type]);
+  }
+
+  static fromLocalObjectId(id: string) {
+    return new DXN(DXN.kind.ECHO, [LOCAL_SPACE_TAG, id]);
   }
 
   #kind: string;
@@ -53,11 +76,15 @@ export class DXN {
 
     // Per-type validation.
     switch (kind) {
-      case DXN.kind.ECHO:
-        invariant(parts.length === 2);
-        break;
       case DXN.kind.TYPE:
-        invariant(parts.length === 1);
+        if (parts.length !== 1) {
+          throw new Error('Invalid "type" DXN');
+        }
+        break;
+      case DXN.kind.ECHO:
+        if (parts.length !== 2) {
+          throw new Error('Invalid "echo" DXN');
+        }
         break;
     }
 
@@ -73,12 +100,34 @@ export class DXN {
     return this.#parts;
   }
 
-  isTypeDXNOf(typename: string) {
+  toTypename() {
+    invariant(this.#kind === DXN.kind.TYPE);
+    return this.#parts[0];
+  }
+
+  hasTypenameOf(typename: string) {
     return this.#kind === DXN.kind.TYPE && this.#parts.length === 1 && this.#parts[0] === typename;
+  }
+
+  isLocalObjectId() {
+    return this.#kind === DXN.kind.ECHO && this.#parts[0] === LOCAL_SPACE_TAG && this.#parts.length === 2;
   }
 
   toString() {
     return `dxn:${this.#kind}:${this.#parts.join(':')}`;
+  }
+
+  /**
+   * Used by Node.js to get textual representation of this object when it's printed with a `console.log` statement.
+   */
+  [inspectCustom](depth: number, options: InspectOptionsStylized, inspectFn: typeof inspect) {
+    const printControlCode = (code: number) => {
+      return `\x1b[${code}m`;
+    };
+
+    return (
+      printControlCode(inspectFn.colors.blueBright![0]) + this.toString() + printControlCode(inspectFn.colors.reset![0])
+    );
   }
 }
 

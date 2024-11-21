@@ -5,7 +5,13 @@
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { forwardRef } from 'react';
 
-import { Popover, type PopoverArrowProps, type PopoverContentProps, type PopoverViewportProps } from '@dxos/react-ui';
+import {
+  Popover,
+  type PopoverArrowProps,
+  type PopoverContentProps,
+  type PopoverViewportProps,
+  type PopoverVirtualTriggerProps,
+} from '@dxos/react-ui';
 
 import {
   Combobox,
@@ -120,6 +126,10 @@ const PopoverComboboxTrigger = forwardRef<HTMLButtonElement, PopoverComboboxTrig
   );
 });
 
+type PopoverComboboxVirtualTriggerProps = PopoverVirtualTriggerProps;
+
+const PopoverComboboxVirtualTrigger = Popover.VirtualTrigger;
+
 type PopoverComboboxInputProps = SearchListInputProps;
 
 const PopoverComboboxInput = SearchList.Input;
@@ -153,6 +163,7 @@ export const PopoverCombobox = {
   Root: PopoverComboboxRoot,
   Content: PopoverComboboxContent,
   Trigger: PopoverComboboxTrigger,
+  VirtualTrigger: PopoverComboboxVirtualTrigger,
   Input: PopoverComboboxInput,
   List: PopoverComboboxList,
   Item: PopoverComboboxItem,
@@ -164,6 +175,7 @@ export type {
   PopoverComboboxRootProps,
   PopoverComboboxContentProps,
   PopoverComboboxTriggerProps,
+  PopoverComboboxVirtualTriggerProps,
   PopoverComboboxInputProps,
   PopoverComboboxListProps,
   PopoverComboboxItemProps,

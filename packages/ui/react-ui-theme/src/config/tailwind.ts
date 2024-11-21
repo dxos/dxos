@@ -26,7 +26,6 @@ export const tailwindConfig = ({
   extensions?: Partial<TailwindThemeConfig>[];
 }): TailwindConfig => ({
   darkMode: 'class',
-  // TODO(burdon): Factor out theme for lib.
   theme: {
     // Configure fonts in theme.css and package.json.
     fontFamily: {
@@ -64,6 +63,9 @@ export const tailwindConfig = ({
         },
         transitionProperty: {
           'max-height': 'max-height',
+        },
+        transitionTimingFunction: {
+          'in-out-symmetric': 'cubic-bezier(0.5,0,0.5,1)',
         },
         keyframes: {
           // Popper chrome

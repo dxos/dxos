@@ -5,7 +5,7 @@
 import { Trigger } from '@dxos/async';
 import { type ClientServices } from '@dxos/client-protocol';
 import { ClientServicesHost } from '@dxos/client-services';
-import { type ServiceContextRuntimeParams } from '@dxos/client-services/src';
+import { type ServiceContextRuntimeParams } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
@@ -17,13 +17,12 @@ import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import {
   createIceProvider,
-  createLibDataChannelTransportFactory,
-  createSimplePeerTransportFactory,
+  createRtcTransportFactory,
   MemoryTransportFactory,
-  TcpTransportFactory,
   type TransportFactory,
   TransportKind,
 } from '@dxos/network-manager';
+import { TcpTransportFactory } from '@dxos/network-manager/transport/tcp';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
 import { createLinkedPorts, createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
@@ -49,6 +48,8 @@ export const testConfigWithLocalSignal = new Config({
 /**
  * Client builder supports different configurations, incl. signaling, transports, storage.
  */
+// TODO(burdon): Make extensible.
+// TODO(burdon): Implement as Resource.
 export class TestBuilder {
   private readonly _ctx = new Context({ name: 'TestBuilder' });
 
@@ -63,7 +64,7 @@ export class TestBuilder {
     config?: Config,
     public signalManagerContext = new MemorySignalManagerContext(),
     // TODO(nf): Configure better.
-    transport = process.env.MOCHA_ENV === 'nodejs' ? TransportKind.LIBDATACHANNEL : TransportKind.SIMPLE_PEER,
+    transport = TransportKind.WEB_RTC,
   ) {
     this.config = config ?? new Config();
     this._transport = transport;
@@ -73,53 +74,8 @@ export class TestBuilder {
     return this._ctx;
   }
 
-  /**
-   * Get network manager using local shared memory or remote signal manager.
-   */
-  private get networking() {
-    const signals = this.config.get('runtime.services.signaling');
-    if (signals) {
-      log.info(`using transport ${this._transport}`);
-      let transportFactory: TransportFactory;
-      switch (this._transport) {
-        case TransportKind.SIMPLE_PEER:
-          transportFactory = createSimplePeerTransportFactory(
-            { iceServers: this.config.get('runtime.services.ice') },
-            this.config.get('runtime.services.iceProviders') &&
-              createIceProvider(this.config.get('runtime.services.iceProviders')!),
-          );
-          break;
-
-        case TransportKind.LIBDATACHANNEL:
-          transportFactory = createLibDataChannelTransportFactory(
-            { iceServers: this.config.get('runtime.services.ice') },
-            this.config.get('runtime.services.iceProviders') &&
-              createIceProvider(this.config.get('runtime.services.iceProviders')!),
-          );
-          break;
-
-        case TransportKind.TCP:
-          transportFactory = TcpTransportFactory;
-          break;
-
-        default:
-          throw new Error(`Unsupported transport w/ signalling: ${this._transport}`);
-      }
-
-      return {
-        signalManager: new WebsocketSignalManager(signals),
-        transportFactory,
-      };
-    }
-    // if (this._transport !== TransportKind.MEMORY) {
-    // log.warn(`specified transport ${this._transport} but no signalling configured, using memory transport instead`);
-    // }
-
-    // Memory transport with shared context.
-    return {
-      signalManager: new MemorySignalManager(this.signalManagerContext),
-      transportFactory: MemoryTransportFactory,
-    };
+  async destroy() {
+    await this._ctx.dispose(false); // TODO(burdon): Set to true to check clean shutdown.
   }
 
   /**
@@ -151,7 +107,7 @@ export class TestBuilder {
         ...(options?.fastPeerPresenceUpdate
           ? { spaceMemberPresenceAnnounceInterval: 200, spaceMemberPresenceOfflineTimeout: 400 }
           : {}),
-        invitationConnectionDefaultParams: { controlHeartbeatInterval: 200 },
+        invitationConnectionDefaultParams: { teleport: { controlHeartbeatInterval: 200 } },
       },
       ...this.networking,
     });
@@ -177,8 +133,45 @@ export class TestBuilder {
     return [client, server];
   }
 
-  async destroy() {
-    await this._ctx.dispose(false); // TODO(burdon): Set to true to check clean shutdown.
+  /**
+   * Get network manager using local shared memory or remote signal manager.
+   */
+  private get networking() {
+    const signals = this.config.get('runtime.services.signaling');
+    if (signals) {
+      log.info(`using transport ${this._transport}`);
+      let transportFactory: TransportFactory;
+      switch (this._transport) {
+        case TransportKind.WEB_RTC:
+          transportFactory = createRtcTransportFactory(
+            { iceServers: this.config.get('runtime.services.ice') },
+            this.config.get('runtime.services.iceProviders') &&
+              createIceProvider(this.config.get('runtime.services.iceProviders')!),
+          );
+          break;
+
+        case TransportKind.TCP:
+          transportFactory = TcpTransportFactory;
+          break;
+
+        default:
+          throw new Error(`Unsupported transport w/ signalling: ${this._transport}`);
+      }
+
+      return {
+        signalManager: new WebsocketSignalManager(signals),
+        transportFactory,
+      };
+    }
+    // if (this._transport !== TransportKind.MEMORY) {
+    // log.warn(`specified transport ${this._transport} but no signalling configured, using memory transport instead`);
+    // }
+
+    // Memory transport with shared context.
+    return {
+      signalManager: new MemorySignalManager(this.signalManagerContext),
+      transportFactory: MemoryTransportFactory,
+    };
   }
 }
 

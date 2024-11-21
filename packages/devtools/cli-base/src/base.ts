@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { type Schema as S } from '@effect/schema';
 import { Args, Command, type Config as OclifConfig, Flags, type Interfaces, settings } from '@oclif/core';
 import chalk from 'chalk';
 import * as fs from 'fs-extra';
@@ -27,7 +28,6 @@ import {
 } from '@dxos/client-protocol';
 import { type ConfigProto, Remote } from '@dxos/config';
 import { raise } from '@dxos/debug';
-import { type S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { createFileProcessor, log, LogLevel, parseFilter } from '@dxos/log';
 import {
@@ -305,7 +305,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
     const configExists = await exists(configFile);
     if (!configExists) {
       const defaultConfigPath = join(
-        dirname(pkgUp.sync({ cwd: __dirname }) ?? raise(new Error('Could not find package.json'))),
+        dirname(pkgUp.sync({ cwd: import.meta.dirname }) ?? raise(new Error('Could not find package.json'))),
         DEFAULT_CONFIG,
       );
 
@@ -474,7 +474,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
       wait = true,
     }: { spaceKeys?: string[]; includeHalo?: boolean; wait?: boolean } = {},
   ): Promise<Space[]> {
-    await client.spaces.isReady.wait();
+    await client.spaces.waitUntilReady();
     const spaces = client.spaces
       .get()
       .filter(
@@ -499,7 +499,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
    * Get or select space.
    */
   async getSpace(client: Client, key?: string, wait = true): Promise<Space> {
-    await client.spaces.isReady.wait();
+    await client.spaces.waitUntilReady();
     const spaces = await this.getSpaces(client, { wait });
     if (!spaces.length) {
       throw new Error('No spaces found.');

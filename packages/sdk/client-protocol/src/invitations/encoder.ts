@@ -36,6 +36,7 @@ export class InvitationEncoder {
         state: invitation.state,
         timeout: invitation.timeout,
         guestKeypair: invitation.guestKeypair,
+        spaceId: invitation.spaceId,
         // TODO(wittjosiah): Make these optional to encode for greater privacy.
         ...(invitation.spaceKey ? { spaceKey: invitation.spaceKey } : {}),
         ...(invitation.target ? { target: invitation.target } : {}),

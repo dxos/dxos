@@ -5,7 +5,11 @@ Instructions and documentation for developer workflows in this DXOS repository.
 ## Prerequisites
 
 - Node v20.x (recommended: [Node Version Manager](https://github.com/nvm-sh/nvm); see `.node-version`).
-- Native libraries: `brew install cairo giflib git-lfs jpeg libpng librsvg pango pkg-config python-setuptools`
+- Native libraries: 
+
+```bash
+brew install cairo giflib git-lfs jpeg libpng librsvg pango pkg-config python-setuptools
+```
 
 ## Monorepo workspace
 
@@ -19,13 +23,13 @@ npm i -g pnpm
 
 Install at the repo root:
 
-```
+```bash
 pnpm i
 ```
 
 Build everything:
 
-```
+```bash
 pnpm build
 ```
 
@@ -33,13 +37,13 @@ pnpm build
 
 Run all unit tests:
 
-```
+```bash
 pnpm test
 ```
 
 Recompile any package within the monorepo when changes are detected:
 
-```
+```bash
 pnpm watch
 ```
 
@@ -177,6 +181,13 @@ The filter consists of a series of filename pattern/level tuples separated by co
 The script used to publish apps to a KUBE environment is [here](https://github.com/dxos/dxos/blob/main/.circleci/scripts/publish.sh).
 In order to include a new app in the publish loop it needs to be added to the `APPS` list in this script.
 
+## Dependencies
+
+Packages can be locked to a particular version as required by updating `pnpm.overrides` in `package.json`.
+
+Examples:
+- `"@types/node": "22.5.5"` (required by Cloudflare Workers).
+
 ## CI
 
 ### CircleCI
@@ -305,7 +316,7 @@ TODO(burdon): This doesn't work if the vault is served from a different port.
 Observations of service worker behavior related to using apps w/ DXOS vault:
 
 | Page load method                                                                     | In IFrame | Service worker behavior                                                                                 |
-|:-------------------------------------------------------------------------------------| :-------- | :------------------------------------------------------------------------------------------------------ |
+| :----------------------------------------------------------------------------------- | :-------- | :------------------------------------------------------------------------------------------------------ |
 | New tab                                                                              | N/A       | New version waiting for activation is activated                                                         |
 | Reload                                                                               | No        | New version is not activated (https://web.dev/service-worker-lifecycle/#waiting)                        |
 | Reload                                                                               | Yes       | New version waiting for activation is activated (Chrome/Firefox), new version is not activated (Webkit) |
@@ -322,3 +333,9 @@ At present the recommendation would be to avoid the [`autoUpdate` strategy](http
 
 NOTE: the [prompt for update strategy](https://vite-plugin-pwa.netlify.app/guide/prompt-for-update.html) can be used without actually providing prompts and the app will update along the lines of the table above.
 This is currently how the HALO vault's service worker is setup (though it will likely evolve later to [handle migrations](https://web.dev/service-worker-lifecycle/#activate-2)).
+
+### Detecting unused deps
+
+```bash
+pnpm -r --filter "./packages/core/**" --filter "\!@dxos/automerge" exec depcheck --quiet --skip-missing=true --oneline  --ignores=@dxos/node-std,@bufbuild/protoc-gen-es
+```

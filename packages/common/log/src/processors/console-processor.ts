@@ -14,6 +14,7 @@ import { getContextFromEntry, type LogProcessor, shouldLog } from '../context';
 const LEVEL_COLORS: Record<LogLevel, typeof chalk.ForegroundColor> = {
   [LogLevel.TRACE]: 'gray',
   [LogLevel.DEBUG]: 'gray',
+  [LogLevel.VERBOSE]: 'gray',
   [LogLevel.INFO]: 'white',
   [LogLevel.WARN]: 'yellow',
   [LogLevel.ERROR]: 'red',

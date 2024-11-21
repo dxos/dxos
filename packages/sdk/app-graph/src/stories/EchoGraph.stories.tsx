@@ -7,21 +7,21 @@ import '@dxos-theme';
 import { Pause, Play, Plus, Timer } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { type EchoReactiveObject, create } from '@dxos/echo-schema';
-import { registerSignalRuntime } from '@dxos/echo-signals';
-import { faker } from '@dxos/random';
-import { type Client, useClient } from '@dxos/react-client';
 import {
+  create,
+  type Echo,
+  type EchoReactiveObject,
+  type FilterSource,
   type Space,
   SpaceState,
   isSpace,
-  type Echo,
-  type FilterSource,
   type QueryOptions,
   type Query,
-} from '@dxos/react-client/echo';
+} from '@dxos/client/echo';
+import { faker } from '@dxos/random';
+import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Button, DensityProvider, Input, Select, useAsyncEffect } from '@dxos/react-ui';
+import { Button, Input, Select, useAsyncEffect } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 import { safeParseInt } from '@dxos/util';
@@ -34,8 +34,6 @@ import { type Node } from '../node';
 const DEFAULT_PERIOD = 500;
 
 const EMPTY_ARRAY: never[] = [];
-
-registerSignalRuntime();
 
 enum Action {
   CREATE_SPACE = 'CREATE_SPACE',
@@ -185,7 +183,7 @@ const runAction = async (client: Client, action: Action) => {
   }
 };
 
-const Story = () => {
+const DefaultStory = () => {
   const [generating, setGenerating] = useState(false);
   const [actionInterval, setActionInterval] = useState(String(DEFAULT_PERIOD));
   const [action, setAction] = useState<Action>();
@@ -211,44 +209,40 @@ const Story = () => {
   return (
     <>
       <div className='flex shrink-0 p-2 space-x-2'>
-        <DensityProvider density='fine'>
-          <Button onClick={() => setGenerating((generating) => !generating)}>
-            {generating ? <Pause /> : <Play />}
-          </Button>
-          <div className='relative' title='mutation period'>
-            <Input.Root>
-              <Input.TextInput
-                autoComplete='off'
-                size={5}
-                classNames='w-[100px] text-right pie-[22px]'
-                placeholder='Interval'
-                value={actionInterval}
-                onChange={({ target: { value } }) => setActionInterval(value)}
-              />
-            </Input.Root>
-            <Timer className={mx('absolute inline-end-1 block-start-1 mt-[6px]', getSize(3))} />
-          </div>
-          <Button onClick={() => action && runAction(client, action)}>
-            <Plus />
-          </Button>
-          <Select.Root value={action?.toString()} onValueChange={(action) => setAction(action as unknown as Action)}>
-            <Select.TriggerButton placeholder='Select value' />
-            <Select.Portal>
-              <Select.Content>
-                <Select.ScrollUpButton />
-                <Select.Viewport>
-                  {Object.keys(actionWeights).map((action) => (
-                    <Select.Option key={action} value={action}>
-                      {action}
-                    </Select.Option>
-                  ))}
-                </Select.Viewport>
-                <Select.ScrollDownButton />
-                <Select.Arrow />
-              </Select.Content>
-            </Select.Portal>
-          </Select.Root>
-        </DensityProvider>
+        <Button onClick={() => setGenerating((generating) => !generating)}>{generating ? <Pause /> : <Play />}</Button>
+        <div className='relative' title='mutation period'>
+          <Input.Root>
+            <Input.TextInput
+              autoComplete='off'
+              size={5}
+              classNames='w-[100px] text-right pie-[22px]'
+              placeholder='Interval'
+              value={actionInterval}
+              onChange={({ target: { value } }) => setActionInterval(value)}
+            />
+          </Input.Root>
+          <Timer className={mx('absolute inline-end-1 block-start-1 mt-[6px]', getSize(3))} />
+        </div>
+        <Button onClick={() => action && runAction(client, action)}>
+          <Plus />
+        </Button>
+        <Select.Root value={action?.toString()} onValueChange={(action) => setAction(action as unknown as Action)}>
+          <Select.TriggerButton placeholder='Select value' />
+          <Select.Portal>
+            <Select.Content>
+              <Select.ScrollUpButton />
+              <Select.Viewport>
+                {Object.keys(actionWeights).map((action) => (
+                  <Select.Option key={action} value={action}>
+                    {action}
+                  </Select.Option>
+                ))}
+              </Select.Viewport>
+              <Select.ScrollDownButton />
+              <Select.Arrow />
+            </Select.Content>
+          </Select.Portal>
+        </Select.Root>
       </div>
       {graph && <Tree data={graph.toJSON()} />}
     </>
@@ -256,7 +250,8 @@ const Story = () => {
 };
 
 export default {
-  title: 'app-graph/EchoGraph',
+  title: 'sdk/app-graph/EchoGraph',
+  render: DefaultStory,
   decorators: [
     withTheme,
     withClientProvider({
@@ -267,7 +262,6 @@ export default {
       },
     }),
   ],
-  render: Story,
 };
 
 export const Default = {};

@@ -2,12 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import { expect } from 'chai';
-import { setFlagsFromString } from 'node:v8';
-import { runInNewContext } from 'node:vm';
+// import { setFlagsFromString } from 'node:v8';
+// import { runInNewContext } from 'node:vm';
+import { describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { describe, test } from '@dxos/test';
 
 import { Event } from './events';
 import { sleep } from './timeout';
@@ -90,28 +89,28 @@ describe('Event', () => {
     expect(error.message).to.equal('test');
   });
 
-  test.skip('weak', async () => {
-    setFlagsFromString('--expose_gc');
-    const gc = runInNewContext('gc'); // nocommit
+  // test.skip('weak', async () => {
+  //   setFlagsFromString('--expose_gc');
+  //   const gc = runInNewContext('gc'); // nocommit
 
-    let called = 0;
-    let callback: (() => void) | null = () => {
-      called++;
-    };
+  //   let called = 0;
+  //   let callback: (() => void) | null = () => {
+  //     called++;
+  //   };
 
-    const event = new Event();
-    event.on(new Context(), callback, { weak: true });
+  //   const event = new Event();
+  //   event.on(new Context(), callback, { weak: true });
 
-    event.emit();
-    expect(called).to.equal(1);
+  //   event.emit();
+  //   expect(called).to.equal(1);
 
-    callback = null;
-    while (event.listenerCount() > 0) {
-      gc();
-      await sleep(5);
-    }
+  //   callback = null;
+  //   while (event.listenerCount() > 0) {
+  //     gc();
+  //     await sleep(5);
+  //   }
 
-    event.emit();
-    expect(called).to.equal(1);
-  });
+  //   event.emit();
+  //   expect(called).to.equal(1);
+  // });
 });

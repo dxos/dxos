@@ -19,6 +19,6 @@
   },
   "implicitDependencies": [
     "esbuild",
-    "test"
+    "node-std"
   ]
 }

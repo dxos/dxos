@@ -285,7 +285,8 @@ export class Peer {
           });
         },
         onClosed: (err) => {
-          log('connection closed', { topic: this.topic, peerId: this.localInfo, remoteId: this.remoteInfo, initiator });
+          const logMeta = { topic: this.topic, peerId: this.localInfo, remoteId: this.remoteInfo, initiator };
+          log('connection closed', logMeta);
 
           // Make sure none of the connections are stuck in the limiter.
           this._connectionLimiter.doneConnecting(sessionId);
@@ -310,11 +311,13 @@ export class Peer {
               this.availableToConnect = false;
               this._availableAfter = increaseInterval(this._availableAfter);
             }
+
             this._callbacks.onDisconnected();
 
             scheduleTask(
               this._connectionCtx!,
               () => {
+                log('peer became available', logMeta);
                 this.availableToConnect = true;
                 this._callbacks.onPeerAvailable();
               },

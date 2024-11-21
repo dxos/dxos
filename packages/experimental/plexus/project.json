@@ -15,16 +15,10 @@
         ]
       }
     },
-    "lint": {},
-    "test": {
-      "options": {
-        "ciEnvironments": [
-          "nodejs"
-        ]
-      }
-    }
+    "lint": {}
   },
   "implicitDependencies": [
-    "test"
+    "esbuild",
+    "node-std"
   ]
 }

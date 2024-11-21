@@ -7,7 +7,7 @@
       name="viewport"
       content="width=device-width,initial-scale=1,user-scalable=no,interactive-widget=resizes-content,viewport-fit=cover"
     />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="description" content="DXOS Composer Application" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
@@ -30,7 +30,7 @@
       "
     />
     <!-- TODO(wittjosiah): Add hash/nonce and remove unsafe-inline from content security policy. -->
-    <!-- TODO(nf): blob in worker-src needed for Sentry replay -->
+    <!-- TODO(nf): blob in worker-src needed for Sentry replay. -->
     <script>
       function setTheme(darkMode) {
         document.documentElement.classList[darkMode ? 'add' : 'remove']('dark');

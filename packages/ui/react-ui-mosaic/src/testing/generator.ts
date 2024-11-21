@@ -2,11 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-// TODO(burdon): Reconcile with @dxos/echo-generator.
-
-import type { EchoReactiveObject, S } from '@dxos/echo-schema';
-import { create } from '@dxos/echo-schema';
+import { create, type ReactiveObject, type S } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
+
+// TODO(burdon): Reconcile with @dxos/echo-generator.
 
 // TODO(burdon): Util.
 export const range = <T>(fn: (i: number) => T | undefined, length: number): T[] =>
@@ -21,7 +20,7 @@ type ObjectDataGenerator = {
   createData: () => any;
 };
 
-type ObjectFactory<T extends EchoReactiveObject<any>> = {
+type ObjectFactory<T extends ReactiveObject<any>> = {
   schema?: S.Schema<any>; // TODO(burdon): Support both typed and expando schema.
   createObject: () => T;
 };
@@ -61,7 +60,7 @@ const defaultGenerators: { [type: string]: ObjectDataGenerator } = {
     //   return object(StoredEchoSchema, {
     //     typename: 'Project',
     //     version: '0.1.0',
-    //     jsonSchema: effectToJsonSchema(
+    //     jsonSchema: toJsonSchema(
     //
     //     ),
     //   })

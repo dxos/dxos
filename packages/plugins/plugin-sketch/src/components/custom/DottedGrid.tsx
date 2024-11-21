@@ -1,9 +1,10 @@
 //
 // Copyright 2024 DXOS.org
 //
+
 import { type TLGridProps, useDefaultColorTheme } from '@tldraw/tldraw';
 import { modulate } from '@tldraw/utils';
-import React from 'react';
+import React, { useId } from 'react';
 
 const GRID_STEPS = [
   { min: -1, mid: 0.15, step: 64 },
@@ -23,7 +24,7 @@ const GRID_STEPS = [
 export const DottedGrid = ({ x, y, z, size }: TLGridProps) => {
   const theme = useDefaultColorTheme();
   const stroke = theme.grey.solid;
-  const id = React.useId();
+  const id = useId();
 
   return (
     <svg id={id} className='tl-grid' version='1.1' xmlns='http://www.w3.org/2000/svg'>

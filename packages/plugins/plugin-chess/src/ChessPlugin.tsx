@@ -2,11 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps, ShieldChevron } from '@phosphor-icons/react';
 import React from 'react';
 
-import { type PluginDefinition, resolvePlugin, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
-import { GameType } from '@dxos/chess-app';
+import { NavigationAction, parseIntentPlugin, type PluginDefinition, resolvePlugin } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
@@ -15,7 +13,7 @@ import { SpaceAction } from '@dxos/plugin-space';
 import ChessContainer from './components/ChessContainer';
 import meta, { CHESS_PLUGIN } from './meta';
 import translations from './translations';
-import { ChessAction, type ChessPluginProvides, isObject } from './types';
+import { ChessAction, type ChessPluginProvides, GameType, isObject } from './types';
 
 export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
   return {
@@ -25,13 +23,18 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
         records: {
           [GameType.typename]: {
             placeholder: ['game title placeholder', { ns: CHESS_PLUGIN }],
-            icon: (props: IconProps) => <ShieldChevron {...props} />,
-            iconSymbol: 'ph--shield-chevron--regular',
+            icon: 'ph--shield-chevron--regular',
           },
         },
       },
       echo: {
         schema: [GameType],
+      },
+      space: {
+        onSpaceCreate: {
+          label: ['create game label', { ns: CHESS_PLUGIN }],
+          action: ChessAction.CREATE,
+        },
       },
       graph: {
         builder: (plugins) => {
@@ -66,8 +69,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
                   },
                   properties: {
                     label: ['create game label', { ns: CHESS_PLUGIN }],
-                    icon: (props: IconProps) => <ShieldChevron {...props} />,
-                    iconSymbol: 'ph--shield-chevron--regular',
+                    icon: 'ph--shield-chevron--regular',
                     testId: 'chessPlugin.createObject',
                   },
                 },

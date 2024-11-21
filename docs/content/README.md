@@ -2,7 +2,7 @@
 home: true
 title: Documentation
 heroText: false
-heroImage: /images/logotype/dxos-hero.svg
+heroImage: /images/logotype/dxos-hero-black.svg
 heroImageDark: /images/logotype/dxos-hero-white.svg
 actions:
   - text: Composer
@@ -13,7 +13,4 @@ actions:
   - text: SDK
     link: /guide/
     type: secondary
-  - text: API
-    link: /api/
-    type: discord
 ---

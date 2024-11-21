@@ -7,16 +7,16 @@ import { Expando, ref, S, TypedObject } from '@dxos/echo-schema';
 // TODO(burdon): Copied to avoid circular dependency @dxos/client <=> @braneframe/types.
 //  Better to simplify tests and remove dependency completely.
 
-export class TextV0Type extends TypedObject({ typename: 'dxos.Text.v0', version: '0.1.0' })({
+export class TextV0Type extends TypedObject({ typename: 'dxos.org/TextV0', version: '0.1.0' })({
   content: S.String,
 }) {}
 
-export class DocumentType extends TypedObject({ typename: 'braneframe.Document', version: '0.1.0' })({
-  title: S.optional(S.String),
+export class DocumentType extends TypedObject({ typename: 'braneframe.com/Document', version: '0.1.0' })({
+  title: S.optional(S.String), // TODO(burdon): Change to name.
   content: ref(TextV0Type),
 }) {}
 
-export class ContactType extends TypedObject({ typename: 'braneframe.Contact', version: '0.1.0' })({
+export class ContactType extends TypedObject({ typename: 'braneframe.com/Contact', version: '0.1.0' })({
   name: S.optional(S.String),
   identifiers: S.mutable(
     S.Array(
@@ -37,7 +37,7 @@ const BlockSchema = S.Struct({
 export interface BlockType extends S.Schema.Type<typeof BlockSchema> {}
 export const BlockType: S.Schema<BlockType, S.Schema.Encoded<typeof BlockSchema>> = BlockSchema;
 
-export class MessageType extends TypedObject({ typename: 'braneframe.Message', version: '0.1.0' })({
+export class MessageType extends TypedObject({ typename: 'braneframe.com/Message', version: '0.1.0' })({
   type: S.optional(S.String),
   date: S.optional(S.String),
   subject: S.optional(S.String),
@@ -53,7 +53,7 @@ export class MessageType extends TypedObject({ typename: 'braneframe.Message', v
   ),
 }) {}
 
-export class ThreadType extends TypedObject({ typename: 'braneframe.Thread', version: '0.1.0' })({
+export class ThreadType extends TypedObject({ typename: 'braneframe.com/Thread', version: '0.1.0' })({
   title: S.optional(S.String),
   messages: S.mutable(S.Array(ref(MessageType))),
   context: S.optional(

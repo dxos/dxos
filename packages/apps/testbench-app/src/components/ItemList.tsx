@@ -5,8 +5,8 @@
 import { X } from '@phosphor-icons/react';
 import React from 'react';
 
-import { type EchoReactiveObject, getMeta, getSchema } from '@dxos/echo-schema';
-import { createDocAccessor } from '@dxos/react-client/echo';
+import { type EchoReactiveObject, createDocAccessor } from '@dxos/client/echo';
+import { getMeta, getSchema } from '@dxos/echo-schema';
 import { Button, Input, useThemeContext } from '@dxos/react-ui';
 import {
   automerge,
@@ -16,14 +16,11 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx, subtleHover } from '@dxos/react-ui-theme';
-
-import { classifySchemaProperties } from '../util';
+import { mapSchemaToFields } from '@dxos/schema';
 
 const MAX_RENDERED_COUNT = 80;
 
-export type ItemListProps<T> = {
-  objects: T[];
-} & Pick<ItemProps<T>, 'debug' | 'onDelete'>;
+export type ItemListProps<T> = { objects: T[] } & Pick<ItemProps<T>, 'debug' | 'onDelete'>;
 
 export const ItemList = ({ objects, debug, ...props }: ItemListProps<EchoReactiveObject<any>>) => {
   return (
@@ -62,39 +59,37 @@ export const Item = ({ object, onDelete }: ItemProps<EchoReactiveObject<any>>) =
   }
 
   // TODO(burdon): Get additional metadata.
-  const props = classifySchemaProperties(schema);
+  const props = mapSchemaToFields(schema);
 
   // TODO(burdon): [API]: Type check?
   const getValue = (object: EchoReactiveObject<any>, prop: string) => (object as any)[prop];
-  const setValue = (object: EchoReactiveObject<any>, prop: string, value: any) => {
-    (object as any)[prop] = value;
-  };
+  const setValue = (object: EchoReactiveObject<any>, prop: string, value: any) => ((object as any)[prop] = value);
 
   return (
     <div className={mx('flex m-1 p-2 border', subtleHover)}>
       <div className='flex flex-col grow overflow-hidden gap-2'>
-        {props.map(([prop, type]) => (
-          <div key={prop} className='flex'>
+        {props.map(({ property, type }) => (
+          <div key={property} className='flex'>
             {/* TODO(burdon): Check if editable or meta prop (e.g., id). */}
-            {prop === 'id' && (
+            {property === 'id' && (
               <Input.Root>
-                <Input.Label classNames={labelProps}>{prop}</Input.Label>
-                <div className='font-mono text-xs py-1'>{getValue(object, prop).slice(0, 8)}</div>
+                <Input.Label classNames={labelProps}>{property}</Input.Label>
+                <div className='font-mono text-xs py-1'>{getValue(object, property).slice(0, 8)}</div>
               </Input.Root>
             )}
             {type === 'boolean' && (
               <Input.Root>
-                <Input.Label classNames={labelProps}>{prop}</Input.Label>
+                <Input.Label classNames={labelProps}>{property}</Input.Label>
                 <Input.Checkbox
-                  checked={(object as any)[prop]}
-                  onCheckedChange={(state) => setValue(object, prop, !!state)}
+                  checked={(object as any)[property]}
+                  onCheckedChange={(state) => setValue(object, property, !!state)}
                 />
               </Input.Root>
             )}
-            {prop !== 'id' && type === 'string' && (
+            {property !== 'id' && type === 'string' && (
               <Input.Root>
-                <Input.Label classNames={labelProps}>{prop}</Input.Label>
-                <Editor object={object} prop={prop} />
+                <Input.Label classNames={labelProps}>{property}</Input.Label>
+                <Editor object={object} prop={property} />
               </Input.Root>
             )}
           </div>

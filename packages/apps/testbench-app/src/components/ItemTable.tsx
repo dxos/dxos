@@ -4,15 +4,15 @@
 
 import React, { useMemo } from 'react';
 
-import type { S, EchoReactiveObject } from '@dxos/echo-schema';
-import { Table, schemaToColumnDefs } from '@dxos/react-ui-table';
+import { type ReactiveObject, type S } from '@dxos/echo-schema';
+import { Table, schemaToColumnDefs } from '@dxos/react-ui-table/deprecated';
 
 export type ItemTableProps<T> = {
   schema: S.Schema<T>;
   objects?: T[];
 };
 
-export const ItemTable = <T extends EchoReactiveObject<any>>({ schema, objects = [] }: ItemTableProps<T>) => {
+export const ItemTable = <T extends ReactiveObject<any>>({ schema, objects = [] }: ItemTableProps<T>) => {
   const columns = useMemo(() => {
     // TODO(burdon): [API]: id is added to schema?
     const [id, ...rest] = schemaToColumnDefs(schema);
@@ -23,7 +23,7 @@ export const ItemTable = <T extends EchoReactiveObject<any>>({ schema, objects =
         size: 60,
         minSize: 60,
         maxSize: 60,
-        cell: (cell) => <span className='px-2 font-mono'>{cell.getValue().slice(0, 8)}</span>,
+        cell: (cell) => <span className='px-2 font-mono'>{cell.getValue()?.slice(0, 8)}</span>,
       },
       ...rest,
     ];

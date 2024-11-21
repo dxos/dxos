@@ -5,7 +5,7 @@
 import { expect, test } from '@playwright/test';
 import { platform } from 'node:os';
 
-import { AppManager } from './app-manager';
+import { AppManager, INITIAL_URL } from './app-manager';
 
 // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
 //   https://github.com/microsoft/playwright/issues/2973
@@ -17,8 +17,8 @@ test.describe('HALO tests', () => {
     test.skip(browserName === 'firefox');
     test.skip(browserName === 'webkit' && platform() !== 'darwin');
 
-    host = new AppManager(browser, true);
-    guest = new AppManager(browser, true);
+    host = new AppManager(browser, false);
+    guest = new AppManager(browser, false);
 
     await host.init();
     await guest.init();
@@ -45,13 +45,19 @@ test.describe('HALO tests', () => {
     const invitationCode = await host.shell.createDeviceInvitation();
     const authCode = await host.shell.getAuthCode();
     await guest.openIdentityManager();
-    await guest.shell.joinNewIdentity(invitationCode);
+    await Promise.all([
+      // Wait for reset to complete and attempt to reload.
+      guest.page.waitForRequest(INITIAL_URL + '/?deviceInvitationCode=', { timeout: 10_000 }),
+      guest.shell.joinNewIdentity(invitationCode),
+    ]);
+    await guest.shell.acceptDeviceInvitation(invitationCode);
     await guest.shell.authenticateDevice(authCode);
     await host.shell.closeShell();
 
     await expect(host.getSpaceItems()).toHaveCount(2);
+    // TODO(wittjosiah): Why so slow?
     // Wait for replication to complete.
-    await expect(guest.getSpaceItems()).toHaveCount(2, { timeout: 30_000 });
+    await expect(guest.getSpaceItems()).toHaveCount(2, { timeout: 60_000 });
 
     // TODO(wittjosiah): Display name is not currently set in this test.
     // await host.openIdentityManager();

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Facet, StateEffect, StateField } from '@codemirror/state';
+import { StateEffect, StateField } from '@codemirror/state';
 import {
   type Command,
   type EditorView,
@@ -13,14 +13,13 @@ import {
 } from '@codemirror/view';
 
 import { type CommandOptions } from './command';
+import { singleValueFacet } from '../../util';
 
 type CommandState = {
   tooltip?: Tooltip | null;
 };
 
-export const commandConfig = Facet.define<CommandOptions, Required<CommandOptions>>({
-  combine: (providers) => providers[0],
-});
+export const commandConfig = singleValueFacet<CommandOptions>();
 
 export const commandState = StateField.define<CommandState>({
   create: () => ({}),

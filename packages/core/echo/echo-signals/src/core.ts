@@ -2,23 +2,24 @@
 // Copyright 2022 DXOS.org
 //
 
-import { signal, batch, untracked } from '@preact/signals-core';
+import { signal, batch, effect, untracked } from '@preact/signals-core';
 
-import { registerSignalRuntime as registerRuntimeForEcho } from './runtime';
+import { registerSignalsRuntime as registerRuntimeForEcho } from './runtime';
 
 let registered = false;
 
-export const registerSignalRuntime = () => {
+/**
+ * Idempotent function that registers preact signals for module.
+ */
+export const registerSignalsRuntime = () => {
   if (registered) {
     return false;
   }
-  registered = true;
 
   registerRuntimeForEcho({
     createSignal: (debugInfo) => {
       const thisSignal = signal({});
       (thisSignal as any).__debugInfo = debugInfo;
-
       return {
         notifyRead: () => {
           const _ = thisSignal.value;
@@ -32,10 +33,20 @@ export const registerSignalRuntime = () => {
     untracked,
   });
 
+  registered = true;
   return true;
 };
 
 /**
- * @deprecated Use `registerSignalRuntime`.
+ * Subscribes to data and executes the effect in a timeout.
+ * Allows effects to be scheduled after the current render cycle.
  */
-export const registerSignalFactory = registerSignalRuntime;
+export const scheduledEffect = <T extends Record<string, any> = Record<string, any>>(
+  subscribeTo: () => T,
+  exec: (data: T) => void,
+) => {
+  return effect(() => {
+    const data = subscribeTo();
+    setTimeout(() => exec(data));
+  });
+};

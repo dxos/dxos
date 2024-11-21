@@ -2,27 +2,26 @@
 // Copyright 2023 DXOS.org
 //
 
-// TODO(burdon): Reconcile with @dxos/plugin-debug, @dxos/aurora/testing.
-// TODO(burdon): Bug when adding stale objects to space (e.g., static objects already added in previous story invocation).
-
 import { next as A } from '@dxos/automerge/automerge';
 import { createDocAccessor, type Space } from '@dxos/client/echo';
 import {
-  create,
-  DynamicSchema,
-  EchoObject,
-  EchoObjectAnnotationId,
-  effectToJsonSchema,
-  getEchoObjectAnnotation,
+  createStoredSchema,
+  getObjectAnnotation,
   ref,
+  toJsonSchema,
+  EchoObject,
+  MutableSchema,
+  ObjectAnnotationId,
   S,
-  StoredSchema,
 } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 
 import { SpaceObjectGenerator, TestObjectGenerator } from './generator';
 import { type TestMutationsMap, type TestGeneratorMap, type TestSchemaMap } from './types';
 import { randomText } from './util';
+
+// TODO(burdon): Reconcile with @dxos/plugin-debug, @dxos/aurora/testing.
+// TODO(burdon): Bug when adding stale objects to space (e.g., static objects already added in previous story invocation).
 
 // TODO(burdon): Handle restricted values.
 export const Status = ['pending', 'active', 'done'];
@@ -35,35 +34,31 @@ export enum TestSchemaType {
   project = 'example.com/type/project',
 }
 
-const createDynamicSchema = (typename: string, fields: S.Struct.Fields): DynamicSchema => {
+const createDynamicSchema = (typename: string, fields: S.Struct.Fields): MutableSchema => {
   const typeSchema = S.partial(S.Struct(fields)).pipe(EchoObject(typename, '1.0.0'));
-  const typeAnnotation = getEchoObjectAnnotation(typeSchema);
-  const schemaToStore = create(StoredSchema, {
-    typename,
-    version: '1.0.0',
-    jsonSchema: {},
-  });
+  const typeAnnotation = getObjectAnnotation(typeSchema);
+  const schemaToStore = createStoredSchema({ typename, version: '0.1.0' });
   const updatedSchema = typeSchema.annotations({
-    [EchoObjectAnnotationId]: { ...typeAnnotation, schemaId: schemaToStore.id },
+    [ObjectAnnotationId]: { ...typeAnnotation, schemaId: schemaToStore.id },
   });
-  schemaToStore.jsonSchema = effectToJsonSchema(updatedSchema);
-  return new DynamicSchema(schemaToStore);
+  schemaToStore.jsonSchema = toJsonSchema(updatedSchema);
+  return new MutableSchema(schemaToStore);
 };
 
 const testSchemas = (): TestSchemaMap<TestSchemaType> => {
   const document = createDynamicSchema(TestSchemaType.document, {
-    title: S.String.pipe(S.description('title of the document')),
+    title: S.String.annotations({ description: 'title of the document' }),
     content: S.String,
   });
 
   const organization = createDynamicSchema(TestSchemaType.organization, {
-    name: S.String.pipe(S.description('name of the company or organization')),
-    website: S.String.pipe(S.description('public website URL')),
-    description: S.String.pipe(S.description('short summary of the company')),
+    name: S.String.annotations({ description: 'name of the company or organization' }),
+    website: S.String.annotations({ description: 'public website URL' }),
+    description: S.String.annotations({ description: 'short summary of the company' }),
   });
 
   const contact = createDynamicSchema(TestSchemaType.contact, {
-    name: S.String.pipe(S.description('name of the person')),
+    name: S.String.annotations({ description: 'name of the person' }),
     email: S.String,
     org: ref(organization),
     lat: S.Number,
@@ -71,7 +66,7 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
   });
 
   const project = createDynamicSchema(TestSchemaType.project, {
-    name: S.String.pipe(S.description('name of the project')),
+    name: S.String.annotations({ description: 'name of the project' }),
     description: S.String,
     website: S.String,
     repo: S.String,

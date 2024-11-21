@@ -1,26 +1,8 @@
 {
-  "extends": "../../../tsconfig.json",
-  "compilerOptions": {
-    "outDir": "dist/types"
-  },
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {},
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../debug"
-    },
-    {
-      "path": "../keys"
-    },
-    {
-      "path": "../log"
-    },
-    {
-      "path": "../node-std"
-    },
-    {
-      "path": "../util"
-    }
-  ]
+  "references": []
 }

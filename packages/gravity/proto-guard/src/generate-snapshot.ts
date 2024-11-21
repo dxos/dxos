@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Schema as S } from '@effect/schema';
 import { rmSync } from 'node:fs';
 import path, { join } from 'node:path';
 import yargs from 'yargs';
@@ -9,7 +10,7 @@ import { hideBin } from 'yargs/helpers';
 
 import { Client } from '@dxos/client';
 import { create, Expando } from '@dxos/client/echo';
-import { ref, S, TypedObject } from '@dxos/echo-schema';
+import { ref, TypedObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
 import { CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
@@ -17,7 +18,7 @@ import { CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { type SnapshotDescription, SnapshotsRegistry } from './snapshots-registry';
 import { SpacesDumper } from './space-json-dump';
 import { Todo } from './types';
-import { createConfig, EXPECTED_JSON_DATA, getBaseDataDir, SNAPSHOT_DIR, SNAPSHOTS_DIR } from './util';
+import { createConfig, getBaseDataDir, EXPECTED_JSON_DATA, SNAPSHOT_DIR, SNAPSHOTS_DIR } from './util';
 
 /**
  * Generates a snapshot of encoded protocol buffers to check for backwards compatibility.
@@ -69,7 +70,7 @@ const main = async () => {
     await client.initialize();
     client.addTypes([Todo]);
     await client.halo.createIdentity();
-    await client.spaces.isReady.wait();
+    await client.spaces.waitUntilReady();
   }
 
   log.break();
@@ -113,10 +114,10 @@ const main = async () => {
 
     // TODO(burdon): Should just be example.org/type/Test
     class TestType extends TypedObject({ typename: 'example.org/type/TestType', version: '0.1.0' })({}) {}
-    const dynamicSchema = space.db.schema.addSchema(TestType);
+    const dynamicSchema = space.db.schemaRegistry.addSchema(TestType);
     client.addTypes([TestType]);
     const object = space.db.add(create(dynamicSchema, {}));
-    dynamicSchema.addColumns({ name: S.String, todo: ref(Todo) });
+    dynamicSchema.addFields({ name: S.String, todo: ref(Todo) });
     object.name = 'Test';
     object.todo = create(Todo, { name: 'Test todo' });
     await space.db.flush();

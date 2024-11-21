@@ -7,5 +7,4 @@ export * from './graph';
 export * from './layout';
 export * from './metadata';
 export * from './navigation';
-export * from './settings';
 export * from './translations';

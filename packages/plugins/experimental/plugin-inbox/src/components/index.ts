@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './Calendar';
-export * from './Contacts';
-export * from './Email';
+import { lazy } from 'react';
+
+export const EventsContainer = lazy(() => import('./Calendar'));
+export const ContactsContainer = lazy(() => import('./Contacts'));
+export const MailboxContainer = lazy(() => import('./Mailbox'));

@@ -6,7 +6,7 @@ import { Event, synchronized } from '@dxos/async';
 import { clientServiceBundle, type ClientServices } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { EdgeClient, type EdgeConnection } from '@dxos/edge-client';
+import { EdgeClient, EdgeHttpClient, createStubEdgeIdentity, type EdgeConnection } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
@@ -15,7 +15,7 @@ import { EdgeSignalManager, WebsocketSignalManager, type SignalManager } from '@
 import {
   SwarmNetworkManager,
   createIceProvider,
-  createSimplePeerTransportFactory,
+  createRtcTransportFactory,
   type TransportFactory,
 } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
@@ -26,12 +26,13 @@ import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 import { ServiceContext, type ServiceContextRuntimeParams } from './service-context';
 import { ServiceRegistry } from './service-registry';
+import { EdgeAgentServiceImpl } from '../agents';
 import { DevicesServiceImpl } from '../devices';
 import { DevtoolsHostEvents, DevtoolsServiceImpl } from '../devtools';
 import {
-  type CollectDiagnosticsBroadcastHandler,
   createCollectDiagnosticsBroadcastHandler,
   createDiagnostics,
+  type CollectDiagnosticsBroadcastHandler,
 } from '../diagnostics';
 import { IdentityServiceImpl, type CreateIdentityOptions } from '../identity';
 import { ContactsServiceImpl } from '../identity/contacts-service';
@@ -89,6 +90,7 @@ export class ClientServicesHost {
   private _callbacks?: ClientServicesHostCallbacks;
   private _devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
   private _edgeConnection?: EdgeConnection = undefined;
+  private _edgeHttpClient?: EdgeHttpClient = undefined;
 
   private _serviceContext!: ServiceContext;
   private readonly _runtimeParams: ServiceContextRuntimeParams;
@@ -99,6 +101,9 @@ export class ClientServicesHost {
 
   @Trace.info()
   private _open = false;
+
+  @Trace.info()
+  private _resetting = false;
 
   constructor({
     config,
@@ -140,7 +145,7 @@ export class ClientServicesHost {
     this._systemService = new SystemServiceImpl({
       config: () => this._config,
       statusUpdate: this._statusUpdate,
-      getCurrentStatus: () => (this.isOpen ? SystemStatus.ACTIVE : SystemStatus.INACTIVE),
+      getCurrentStatus: () => (this.isOpen && !this._resetting ? SystemStatus.ACTIVE : SystemStatus.INACTIVE),
       getDiagnostics: () => {
         return createDiagnostics(this._serviceRegistry.services, this._serviceContext, this._config!);
       },
@@ -212,13 +217,13 @@ export class ClientServicesHost {
 
     const edgeEndpoint = config?.get('runtime.services.edge.url');
     if (edgeEndpoint) {
-      const randomKey = PublicKey.random().toHex();
-      this._edgeConnection = new EdgeClient(randomKey, randomKey, { socketEndpoint: edgeEndpoint });
+      this._edgeConnection = new EdgeClient(createStubEdgeIdentity(), { socketEndpoint: edgeEndpoint });
+      this._edgeHttpClient = new EdgeHttpClient(edgeEndpoint);
     }
 
     const {
       connectionLog = true,
-      transportFactory = createSimplePeerTransportFactory(
+      transportFactory = createRtcTransportFactory(
         { iceServers: this._config?.get('runtime.services.ice') },
         this._config?.get('runtime.services.iceProviders') &&
           createIceProvider(this._config!.get('runtime.services.iceProviders')!),
@@ -278,6 +283,7 @@ export class ClientServicesHost {
       this._networkManager,
       this._signalManager,
       this._edgeConnection,
+      this._edgeHttpClient,
       this._runtimeParams,
       this._config.get('runtime.client.edgeFeatures'),
     );
@@ -287,8 +293,14 @@ export class ClientServicesHost {
       return this._serviceContext.dataSpaceManager!;
     };
 
+    const agentManagerProvider = async () => {
+      await this._serviceContext.initialized.wait();
+      return this._serviceContext.edgeAgentManager!;
+    };
+
     const identityService = new IdentityServiceImpl(
       this._serviceContext.identityManager,
+      this._serviceContext.recoveryManager,
       this._serviceContext.keyring,
       () => this._serviceContext.dataSpaceManager!,
       (params) => this._createIdentity(params),
@@ -306,7 +318,7 @@ export class ClientServicesHost {
 
       InvitationsService: new InvitationsServiceImpl(this._serviceContext.invitationsManager),
 
-      DevicesService: new DevicesServiceImpl(this._serviceContext.identityManager),
+      DevicesService: new DevicesServiceImpl(this._serviceContext.identityManager, this._edgeConnection),
 
       SpacesService: new SpacesServiceImpl(
         this._serviceContext.identityManager,
@@ -328,6 +340,8 @@ export class ClientServicesHost {
         config: this._config,
         context: this._serviceContext,
       }),
+
+      EdgeAgentService: new EdgeAgentServiceImpl(agentManagerProvider),
     });
 
     await this._serviceContext.open(ctx);
@@ -378,6 +392,10 @@ export class ClientServicesHost {
     log.trace('dxos.sdk.client-services-host.reset', trace.begin({ id: traceId }));
 
     log.info('resetting...');
+    // Emit this status update immediately so app returns to fallback.
+    // This state is never cleared because the app reloads.
+    this._resetting = true;
+    this._statusUpdate.emit();
     await this._serviceContext?.close();
     await this._storage!.reset();
     log.info('reset');

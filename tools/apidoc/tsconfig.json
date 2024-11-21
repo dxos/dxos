@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
     "esModuleInterop": true,
@@ -15,9 +15,5 @@
     "./src/**/*.ts",
     "./src/typings.d.ds"
   ],
-  "references": [
-    {
-      "path": "../../packages/common/plate"
-    }
-  ]
+  "references": []
 }

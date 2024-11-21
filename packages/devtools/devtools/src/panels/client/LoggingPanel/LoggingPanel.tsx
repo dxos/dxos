@@ -7,10 +7,10 @@ import React, { useEffect, useState } from 'react';
 
 import { levels, parseFilter } from '@dxos/log';
 import { type LogEntry, LogLevel, type QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
-import { useClientServices } from '@dxos/react-client';
+import { useClient } from '@dxos/react-client';
 import { useStream } from '@dxos/react-client/devtools';
 import { Toolbar } from '@dxos/react-ui';
-import { createColumnBuilder, type TableColumnDef, textPadding } from '@dxos/react-ui-table';
+import { createColumnBuilder, type TableColumnDef, textPadding } from '@dxos/react-ui-table/deprecated';
 import { getSize } from '@dxos/react-ui-theme';
 
 import { MasterDetailTable, PanelContainer, Searchbar } from '../../../components';
@@ -54,8 +54,9 @@ const columns: TableColumnDef<LogEntry, any>[] = [
 
 // TODO(wittjosiah): Virtualization.
 export const LoggingPanel = () => {
-  const services = useClientServices();
-  if (!services) {
+  const client = useClient();
+  const loggingService = client?.services?.services?.LoggingService;
+  if (!loggingService) {
     return null;
   }
 
@@ -72,7 +73,7 @@ export const LoggingPanel = () => {
 
   // Logs.
   // TODO(wittjosiah): `useStream` probably doesn't make sense here.
-  const logEntry = useStream(() => services.LoggingService.queryLogs(query), defaultEntry, [query]);
+  const logEntry = useStream(() => loggingService.queryLogs(query), defaultEntry, [query]);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   useEffect(() => {
     if (!logEntry.message) {

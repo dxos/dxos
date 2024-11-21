@@ -16,17 +16,17 @@ export class WeakDictionary<K, V extends object> implements Map<K, V> {
     entries?.forEach(([key, value]) => this._register(key, value));
   }
 
-  *entries(): IterableIterator<[K, V]> {
+  *entries(): SetIterator<[K, V]> {
     for (const [key, value] of this._internal) {
       yield [key, value.deref()!];
     }
   }
 
-  keys(): IterableIterator<K> {
+  keys(): SetIterator<K> {
     return this._internal.keys();
   }
 
-  *values(): IterableIterator<V> {
+  *values(): SetIterator<V> {
     for (const value of this._internal.values()) {
       const deref = value.deref();
       if (!deref) {
@@ -36,7 +36,7 @@ export class WeakDictionary<K, V extends object> implements Map<K, V> {
     }
   }
 
-  *[Symbol.iterator](): IterableIterator<[K, V]> {
+  *[Symbol.iterator](): SetIterator<[K, V]> {
     for (const [key, value] of this._internal) {
       yield [key, value.deref()!];
     }

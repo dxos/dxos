@@ -2,10 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { expect } from 'chai';
+import { describe, expect, test } from 'vitest';
 
 import { latch } from '@dxos/async';
-import { describe, test } from '@dxos/test';
 
 import { FeedIterator } from './feed-iterator';
 import { TestItemBuilder } from './testing';
@@ -54,5 +53,5 @@ describe('FeedIterator', () => {
     }
 
     expect(iterator.isRunning).to.be.false;
-  }).timeout(5_000);
+  });
 });

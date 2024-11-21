@@ -1,32 +1,27 @@
 {
   "name": "@dxos/observability",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "description": "Provides a common interface for app and platform observability",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "sideEffects": true,
   "exports": {
     ".": {
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "default": "./dist/lib/node/index.cjs"
-      },
-      "types": "./dist/types/src/index.d.ts"
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./segment": {
+      "types": "./dist/types/src/segment/index.d.ts",
       "browser": "./dist/lib/browser/segment/index.mjs",
-      "node": {
-        "default": "./dist/lib/node/segment/index.cjs"
-      },
-      "types": "./dist/types/src/segment/index.d.ts"
+      "node": "./dist/lib/node-esm/segment/index.mjs"
     },
     "./sentry": {
+      "types": "./dist/types/src/sentry/index.d.ts",
       "browser": "./dist/lib/browser/sentry/index.mjs",
-      "node": {
-        "default": "./dist/lib/node/sentry/index.cjs"
-      },
-      "types": "./dist/types/src/sentry/index.d.ts"
+      "node": "./dist/lib/node-esm/sentry/index.mjs"
     }
   },
   "browser": {

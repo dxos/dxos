@@ -4,8 +4,7 @@
 
 export const appKey = 'composer.dxos.org';
 
-export const INITIAL_COLLECTION_TITLE = 'README';
-export const INITIAL_DOC_TITLE = 'Welcome to Composer';
+export const INITIAL_DOC_TITLE = 'README';
 
 // TODO(wittjosiah): Translate.
 // TODO(burdon): Import MD file.
@@ -16,9 +15,9 @@ export const INITIAL_CONTENT = [
 
 ## What is Composer?
 
-Composer is an extensible application that includes familiar components such as documents, diagrams, and tables. It leverages DXOS — a full stack framework for building collaborative local-first applications. 
+Composer is an extensible application that includes familiar components such as documents, diagrams, and tables. It leverages DXOS — a full stack framework for building collaborative local-first applications.
 
-With our upcoming SDK, you'll be able to build custom plugins, leverage external APIs and integrate with LLMs. All inside of a private collaborative workspace. 
+With our upcoming SDK, you'll be able to build custom plugins, leverage external APIs and integrate with LLMs. All inside of a private collaborative workspace.
 
 ## Disclaimer
 
@@ -26,9 +25,10 @@ Composer is currently in Beta. We are offering an early preview of its collabora
 
 Please join our [Discord](https://dxos.org/discord) to share feature requests, bug reports, and general questions about your experience.`,
   // Section 2
-  `# Working in Composer
+  `## Working in Composer
 
 Composer is made up from plugins developed by DXOS and the community. Plugins typically manage data objects that represent different types of content.
+
 Plugins can be installed and configured from the Settings dialog. By default Composer installs the following plugins:
 
 - **Document** - Collaborative Markdown documents, with realtime comments.
@@ -38,28 +38,28 @@ Plugins can be installed and configured from the Settings dialog. By default Com
 
 Objects can be organized inside of **Collections** and **Spaces** to create dynamic documents.
 
-## Spaces
+### Spaces
 
 Think of Spaces as collaborative workspaces inside of Composer that can be used to partition content as well as restrict access to your various Objects and Collections.
 
 Your Spaces are listed in the left sidebar of your Composer window and your Objects and Collections are nested inside of these as children elements. If you look now, you will find this README collection nested inside of your first Space which was created for you by default when you entered Composer.
 
-## Collections
+### Collections
 
 Collections are a high level structure for organizing your documents inside of Composer. Collections can contain multiple "objects" which include things like documents, sketches, and more.
 
-## Collaboration
+### Collaboration
 
 Composer is a realtime collaborative environment. This means multiple people can be working inside of the same Space, Collection or Object at any given time without overwriting each others changes. This is one of the core benefits of the DXOS platform.
 
 Invite a collaborator to your shared Space by selecting the Space from the sidebar and clicking the "Share" button in the top menu. From here you can create a single or multi-use invite. That same share button will also show you who currently has access to any given Space.`,
   // Section 3
-  `# Our Promise to You
+  `## Our Promise to You
 
 We are early on our journey, but here are a few things that will always be true about Composer.
 
 **Free to use**
-Since Composer does not depend on centralized servers to operate, there is no significant overhead for running the core system. 
+Since Composer does not depend on centralized servers to operate, there is no significant overhead for running the core system.
 
 **Private by default**
 Data from Composer is stored locally on your device. This means no one else can see it unless you invite them to a shared space.

@@ -1,5 +1,5 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "esModuleInterop": true,
     "jsx": "react",
@@ -17,18 +17,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/log"
-    },
-    {
-      "path": "../../common/node-std"
-    },
-    {
-      "path": "../../devtools/cli"
-    }
-  ]
+  "references": []
 }

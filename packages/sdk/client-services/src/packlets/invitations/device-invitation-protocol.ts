@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { getCredentialAssertion } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
@@ -25,7 +26,9 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
   ) {}
 
   toJSON(): object {
-    return {};
+    return {
+      kind: 'device',
+    };
   }
 
   checkCanInviteNewMembers(): ApiError | undefined {
@@ -49,7 +52,8 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
   async admit(_: Invitation, request: AdmissionRequest): Promise<AdmissionResponse> {
     invariant(request.device);
     const identity = this._getIdentity();
-    await identity.admitDevice(request.device);
+    const credential = await identity.admitDevice(request.device);
+    invariant(getCredentialAssertion(credential)['@type'] === 'dxos.halo.credentials.AuthorizedDevice');
 
     return {
       device: {
@@ -57,6 +61,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
         haloSpaceKey: identity.haloSpaceKey,
         genesisFeedKey: identity.haloGenesisFeedKey,
         controlTimeframe: identity.controlPipeline.state.timeframe,
+        credential,
       },
     };
   }
@@ -109,6 +114,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
       dataFeedKey,
       controlTimeframe,
       deviceProfile: profile,
+      authorizedDeviceCredential: response.device.credential,
     });
 
     return { identityKey };

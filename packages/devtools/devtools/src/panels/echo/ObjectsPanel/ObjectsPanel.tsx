@@ -4,10 +4,11 @@
 
 import React, { useState } from 'react';
 
-import { type EchoReactiveObject, getType, isDeleted } from '@dxos/echo-schema';
+import { type EchoReactiveObject } from '@dxos/echo-db';
+import { getType, isDeleted } from '@dxos/echo-schema';
 import { QueryOptions, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
-import { createColumnBuilder, type TableColumnDef, textPadding } from '@dxos/react-ui-table';
+import { createColumnBuilder, type TableColumnDef, textPadding } from '@dxos/react-ui-table/deprecated';
 
 import { MasterDetailTable, PanelContainer, Searchbar } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';

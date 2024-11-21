@@ -12,58 +12,50 @@ import { RawObject, S, TypedObject } from '@dxos/echo-schema';
  */
 export type FunctionTriggerType = 'subscription' | 'timer' | 'webhook' | 'websocket';
 
-const SubscriptionTriggerSchema = S.mutable(
-  S.Struct({
-    type: S.Literal('subscription'),
-    // TODO(burdon): Define query DSL (from ECHO).
-    filter: S.Array(
-      S.Struct({
-        type: S.String,
-        props: S.optional(S.Record(S.String, S.Any)),
-      }),
-    ),
-    options: S.optional(
-      S.Struct({
-        // Watch changes to object (not just creation).
-        deep: S.optional(S.Boolean),
-        // Debounce changes (delay in ms).
-        delay: S.optional(S.Number),
-      }),
-    ),
-  }),
-);
-
-export type SubscriptionTrigger = S.Schema.Type<typeof SubscriptionTriggerSchema>;
-
-const TimerTriggerSchema = S.mutable(
-  S.Struct({
-    type: S.Literal('timer'),
-    cron: S.String,
-  }),
-);
+const TimerTriggerSchema = S.Struct({
+  type: S.Literal('timer'),
+  cron: S.String,
+}).pipe(S.mutable);
 
 export type TimerTrigger = S.Schema.Type<typeof TimerTriggerSchema>;
 
-const WebhookTriggerSchema = S.mutable(
-  S.Struct({
-    type: S.Literal('webhook'),
-    method: S.String,
-    // Assigned port.
-    port: S.optional(S.Number),
-  }),
-);
+const WebhookTriggerSchema = S.Struct({
+  type: S.Literal('webhook'),
+  method: S.String,
+  // Assigned port.
+  port: S.optional(S.Number),
+}).pipe(S.mutable);
 
 export type WebhookTrigger = S.Schema.Type<typeof WebhookTriggerSchema>;
 
-const WebsocketTriggerSchema = S.mutable(
-  S.Struct({
-    type: S.Literal('websocket'),
-    url: S.String,
-    init: S.optional(S.Record(S.String, S.Any)),
-  }),
-);
+const WebsocketTriggerSchema = S.Struct({
+  type: S.Literal('websocket'),
+  url: S.String,
+  init: S.optional(S.Record({ key: S.String, value: S.Any })),
+}).pipe(S.mutable);
 
 export type WebsocketTrigger = S.Schema.Type<typeof WebsocketTriggerSchema>;
+
+const QuerySchema = S.Struct({
+  type: S.String,
+  props: S.optional(S.Record({ key: S.String, value: S.Any })),
+});
+
+const SubscriptionTriggerSchema = S.Struct({
+  type: S.Literal('subscription'),
+  // TODO(burdon): Define query DSL (from ECHO). Reconcile with Table.Query.
+  filter: S.Array(QuerySchema),
+  options: S.optional(
+    S.Struct({
+      // Watch changes to object (not just creation).
+      deep: S.optional(S.Boolean),
+      // Debounce changes (delay in ms).
+      delay: S.optional(S.Number),
+    }),
+  ),
+}).pipe(S.mutable);
+
+export type SubscriptionTrigger = S.Schema.Type<typeof SubscriptionTriggerSchema>;
 
 const TriggerSpecSchema = S.Union(
   TimerTriggerSchema,
@@ -96,9 +88,9 @@ export class FunctionTrigger extends TypedObject({
 })({
   name: S.optional(S.String),
   enabled: S.optional(S.Boolean),
-  function: S.String.pipe(S.description('Function URI.')),
+  function: S.String.pipe(S.annotations({ description: 'Function URI.' })),
   // The `meta` property is merged into the event data passed to the function.
-  meta: S.optional(S.mutable(S.Record(S.String, S.Any))),
+  meta: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
   spec: TriggerSpecSchema,
 }) {}
 

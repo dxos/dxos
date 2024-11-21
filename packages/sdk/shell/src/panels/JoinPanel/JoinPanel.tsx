@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 import { log } from '@dxos/log';
 import { useClient, useMulticastObservable } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
-import { DensityProvider, useId, useThemeContext } from '@dxos/react-ui';
+import { useId, useThemeContext } from '@dxos/react-ui';
 
 import { JoinHeading } from './JoinHeading';
 import { type JoinPanelImplProps, type JoinPanelProps } from './JoinPanelProps';
@@ -16,7 +16,6 @@ import {
   AdditionMethodChooser,
   IdentityAdded,
   IdentityInput,
-  InvitationAccepted,
   InvitationAuthenticator,
   InvitationInput,
   InvitationRescuer,
@@ -35,11 +34,12 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
     unredeemedCodes,
     invitationIds,
     invitationStates,
+    invitationAuthMethods,
     succeededKeys,
     failReasons,
     onExit,
     onHaloDone,
-    onSpaceDone,
+    // onSpaceDone,
     exitActionParent,
     doneActionParent,
     onHaloInvitationCancel,
@@ -52,7 +52,7 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
     ConfirmReset: ConfirmResetComponent = ConfirmReset,
   } = props;
   return (
-    <DensityProvider density='fine'>
+    <>
       {mode !== 'halo-only' && <JoinHeading {...{ titleId, mode, onExit, exitActionParent }} />}
       <Viewport.Root focusManaged activeView={activeView}>
         <Viewport.Views>
@@ -105,13 +105,14 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
               send={send}
               Kind='Halo'
               invitationId={invitationIds?.Halo}
+              authMethod={invitationAuthMethods?.Halo}
               active={activeView === 'halo invitation authenticator'}
               onInvitationCancel={onHaloInvitationCancel}
               onInvitationAuthenticate={onHaloInvitationAuthenticate}
               {...(failed.has('Halo') && { failed: true })}
             />
           </Viewport.View>
-          <Viewport.View classNames={stepStyles} id='halo invitation accepted'>
+          {/* <Viewport.View classNames={stepStyles} id='halo invitation accepted'>
             <InvitationAccepted
               {...{
                 send,
@@ -121,7 +122,7 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
                 onDone: onHaloDone,
               }}
             />
-          </Viewport.View>
+          </Viewport.View> */}
           <Viewport.View classNames={stepStyles} id='identity added'>
             <IdentityAdded
               {...{ send, mode, active: activeView === 'identity added', doneActionParent, onDone: onHaloDone }}
@@ -153,13 +154,14 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
               send={send}
               Kind='Space'
               invitationId={invitationIds?.Space}
+              authMethod={invitationAuthMethods?.Space}
               active={activeView === 'space invitation authenticator'}
               onInvitationCancel={onSpaceInvitationCancel}
               onInvitationAuthenticate={onSpaceInvitationAuthenticate}
               {...(failed.has('Space') && { failed: true })}
             />
           </Viewport.View>
-          <Viewport.View classNames={stepStyles} id='space invitation accepted'>
+          {/* <Viewport.View classNames={stepStyles} id='space invitation accepted'>
             <InvitationAccepted
               {...{
                 send,
@@ -169,10 +171,10 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
                 onDone: onSpaceDone,
               }}
             />
-          </Viewport.View>
+          </Viewport.View> */}
         </Viewport.Views>
       </Viewport.Root>
-    </DensityProvider>
+    </>
   );
 };
 
@@ -315,6 +317,17 @@ export const JoinPanel = ({
     }
   }, [joinState]);
 
+  useEffect(() => {
+    switch (activeView) {
+      case 'halo invitation accepted':
+        onHaloDone();
+        break;
+      case 'space invitation accepted':
+        onSpaceDone();
+        break;
+    }
+  }, [activeView]);
+
   const failed = useMemo(() => {
     const result: JoinPanelImplProps['failed'] = new Set();
     switch (true) {
@@ -359,6 +372,14 @@ export const JoinPanel = ({
     () => ({
       Halo: joinState.context.halo.invitationObservable?.get().state,
       Space: joinState.context.space.invitationObservable?.get().state,
+    }),
+    [joinState],
+  );
+
+  const invitationAuthMethods = useMemo(
+    () => ({
+      Halo: joinState.context.halo.invitationObservable?.get().authMethod,
+      Space: joinState.context.space.invitationObservable?.get().authMethod,
     }),
     [joinState],
   );
@@ -418,6 +439,7 @@ export const JoinPanel = ({
         unredeemedCodes,
         invitationIds,
         invitationStates,
+        invitationAuthMethods,
         succeededKeys,
         identity,
         onExit,
