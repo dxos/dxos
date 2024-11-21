@@ -1,4 +1,4 @@
-# @dxos/react-ui-data
+# @dxos/react-ui-form
 
 Common components for Schema-aware components.
 
