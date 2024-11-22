@@ -23,7 +23,7 @@ class GridManager {
   private page: Page | null;
   private browser: Browser;
 
-  async ready() {
+  async open() {
     const { page } = await setupPage(this.browser, {
       url: storybookUrl('dx-grid--spec'),
       viewportSize: {
@@ -55,6 +55,17 @@ class GridManager {
 
   panByWheel(deltaX: number, deltaY: number) {
     return this.page!.locator('.dx-grid [data-dx-grid-plane="grid"]').dispatchEvent('wheel', { deltaX, deltaY });
+  }
+
+  async expectSelectionResult(fromCol: number, fromRow: number, toCol: number, toRow: number) {
+    const nCols = 1 + toCol - fromCol;
+    const nRows = 1 + toRow - fromRow;
+
+    await [...Array(nCols)].forEach(async (_, c0) => {
+      await [...Array(nRows)].forEach(async (_, r0) => {
+        await expect(this.cell(fromCol + c0, fromRow + r0, 'grid')).toHaveAttribute('aria-selected', 'true');
+      });
+    });
   }
 
   async expectVirtualizationResult(cols: number, rows: number, minColIndex = 0, minRowIndex = 0) {
@@ -91,7 +102,7 @@ class GridManager {
 test.describe('dx-grid', () => {
   test('virtualization & panning', async ({ browser }) => {
     const grid = new GridManager(browser);
-    await grid.ready();
+    await grid.open();
 
     // There are nine planes in the spec story.
     await expect(await grid.planes()).toHaveLength(9);
@@ -110,7 +121,7 @@ test.describe('dx-grid', () => {
   });
   test('mouse access', async ({ browser }) => {
     const grid = new GridManager(browser);
-    await grid.ready();
+    await grid.open();
 
     await grid.listenForSelect();
 
@@ -119,7 +130,7 @@ test.describe('dx-grid', () => {
     await cell00.click();
 
     // It should now have focus
-    expect(cell00.evaluate((node) => document.activeElement === node));
+    expect(await cell00.evaluate((node) => document.activeElement === node));
 
     // Shift-click on the cell at 1,1 and wait for the selection change custom event.
     await grid.cell(1, 1, 'grid').click({ modifiers: ['Shift'] });
@@ -130,6 +141,13 @@ test.describe('dx-grid', () => {
     expect(select).toHaveProperty('end', toPlaneCellIndex({ col: 1, row: 1 }));
 
     // The cell at 0,0 should still have focus despite the shift+click.
-    expect(cell00.evaluate((node) => document.activeElement === node));
+    expect(await cell00.evaluate((node) => document.activeElement === node));
+
+    // All the cells between 0,0 and 1,1 must have `aria-selected=true`.
+    await grid.expectSelectionResult(0, 0, 1, 1);
+
+    // …Done?
+    // TODO(thure): Why does closing here cause the tests to fail, as if it closed too early?
+    // await grid.close();
   });
 });
