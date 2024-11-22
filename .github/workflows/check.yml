@@ -39,7 +39,7 @@ jobs:
   test:
     strategy:
       matrix:
-        node-version: ['18.20.1', '20.12.1', '21.7.2']
+        node-version: ['20.12.1', '21.7.2']
     runs-on:
       group: ubuntu-large
     steps:
