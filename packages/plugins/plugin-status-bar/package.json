@@ -10,11 +10,13 @@
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs"
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./meta": {
       "types": "./dist/types/src/meta.d.ts",
-      "browser": "./dist/lib/browser/meta.mjs"
+      "browser": "./dist/lib/browser/meta.mjs",
+      "node": "./dist/lib/node-esm/meta.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

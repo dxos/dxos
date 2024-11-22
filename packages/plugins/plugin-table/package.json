@@ -31,7 +31,7 @@
         "dist/types/src/meta.d.ts"
       ],
       "types": [
-        "dist/types/src/types/types.d.ts"
+        "dist/types/src/types/index.d.ts"
       ]
     }
   },
