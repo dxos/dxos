@@ -64,6 +64,7 @@ export interface Space {
 
   /**
    * Echo database CRUD API.
+   * @deprecated Use the database api with the `plain` format.
    */
   get crud(): CoreDatabase;
 
