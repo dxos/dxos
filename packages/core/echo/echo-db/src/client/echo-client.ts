@@ -145,6 +145,6 @@ export class EchoClient extends Resource {
       return undefined;
     }
 
-    return db.loadObjectById(objectId);
+    return db._loadObjectById(objectId);
   }
 }
