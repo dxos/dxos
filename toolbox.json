@@ -36,8 +36,7 @@
         "packages/sdk/app-graph",
         "packages/sdk/app-framework",
         "packages/sdk/migrations",
-        "packages/sdk/shell",
-        "packages/ui/*"
+        "packages/sdk/shell"
       ]
     },
     "noProjectReferences": true

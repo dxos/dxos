@@ -9,7 +9,8 @@ import {
   type Edge,
   extractClosestEdge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
-import { DropIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
+// TODO(wittjosiah): Drop indicator that doesn't depend on emotion. See react-ui-list DropIndicator.
+// import { DropIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import React, { forwardRef, useLayoutEffect, useState, type ComponentPropsWithRef, useCallback } from 'react';
@@ -146,7 +147,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
           ref={composedItemRef}
         >
           {children}
-          {closestEdge && <DropIndicator edge={closestEdge} />}
+          {/* {closestEdge && <DropIndicator edge={closestEdge} />} */}
         </Root>
       </StackItemContext.Provider>
     );
