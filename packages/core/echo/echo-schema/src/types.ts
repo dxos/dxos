@@ -8,9 +8,8 @@ import { AST, type JsonPath, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type Comparator, getDeep, intersection, setDeep } from '@dxos/util';
 
-import { getProxyHandler } from './proxy';
-import { Brand } from 'effect';
 import type { SpaceId } from '@dxos/keys';
+import { getProxyHandler } from './proxy';
 
 export const data = Symbol.for('@dxos/schema/Data');
 
