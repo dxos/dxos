@@ -46,6 +46,17 @@ export const SpaceIdSchema: S.Schema<SpaceId> = S.String.annotations({
 }) as any as S.Schema<SpaceId>;
 
 //
+// DXN
+//
+
+/**
+ * NOTE: Not an actual DXN class instance, but a string representation.
+ */
+export const DXNStringSchema = S.String.pipe(S.pattern(/^dxn:/)).annotations({
+  description: 'DXN string',
+});
+
+//
 // ForeignKey
 //
 

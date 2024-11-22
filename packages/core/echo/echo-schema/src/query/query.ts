@@ -3,15 +3,11 @@
 //
 
 import { Schema as S } from '@effect/schema';
-import { ObjectIdSchema, SpaceIdSchema } from '../types';
+import { DXNStringSchema, ObjectIdSchema, SpaceIdSchema } from '../types';
 
 //
 // Inspired by filter.proto.
 //
-
-const DXNSchema = S.String.pipe(S.pattern(/^dxn:/));
-
-// TODO(dmaretskyi): Consider moving this to echo protocol.
 
 /**
  * ECHO query object.
@@ -20,7 +16,7 @@ const FilterSchema = S.Struct({
   /**
    * Matches object type.
    */
-  type: S.optional(S.Array(DXNSchema)),
+  type: S.optional(S.Array(DXNStringSchema)),
 
   /**
    * Matches specific object id.
@@ -59,6 +55,8 @@ const FilterSchema = S.Struct({
    * Additionally any criteria defined in this filter (e.g. `type`, `properties`) are also required to be satisfied.
    */
   or: S.optional(S.Array(S.suspend((): S.Schema<FilterType> => FilterSchema))),
+
+  // TODO(dmaretskyi): Consider adding a cypher query text extension.
 });
 
 interface FilterType extends S.Schema.Type<typeof FilterSchema> {}
