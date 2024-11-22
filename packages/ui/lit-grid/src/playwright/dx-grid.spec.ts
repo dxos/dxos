@@ -6,7 +6,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
-import { GridManager } from './dx-grid-manager';
+import { DxGridManager } from './dx-grid-manager';
 import { type DxGridCellsSelect } from '../types';
 import { toPlaneCellIndex } from '../util';
 
@@ -17,7 +17,7 @@ const nRows = 7;
 
 test.describe('dx-grid', () => {
   let page: Page;
-  let grid: GridManager;
+  let grid: DxGridManager;
 
   test.beforeEach(async ({ browser }) => {
     const setup = await setupPage(browser, {
@@ -28,7 +28,7 @@ test.describe('dx-grid', () => {
       }, // 336 x 272
     });
     page = setup.page;
-    grid = new GridManager(page);
+    grid = new DxGridManager(page);
     await grid.ready();
   });
 

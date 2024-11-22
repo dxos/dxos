@@ -6,7 +6,7 @@ import { expect, type Locator, type Page } from '@playwright/test';
 
 import type { DxGridPlanePosition } from '../types';
 
-export class GridManager {
+export class DxGridManager {
   constructor(page: Page, grid: Locator = page.locator('dx-grid')) {
     this.grid = grid;
     this.page = page;
