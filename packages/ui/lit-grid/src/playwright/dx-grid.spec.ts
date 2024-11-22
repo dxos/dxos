@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { expect, test, type Browser, type Page } from '@playwright/test';
+import { expect, test, type Browser, type Page, type Locator } from '@playwright/test';
 
 import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
@@ -20,8 +20,8 @@ class GridManager {
     this.page = null;
   }
 
-  private page: Page | null;
-  private browser: Browser;
+  page: Page | null;
+  browser: Browser;
 
   async open() {
     const { page } = await setupPage(this.browser, {
@@ -98,6 +98,10 @@ class GridManager {
     await expect(await this.cellsWithinPlane('fixedEndEnd')).toHaveLength(1);
   }
 
+  async expectFocus(locator: Locator) {
+    await expect(await locator.evaluate((node) => document.activeElement === node)).toBeTruthy();
+  }
+
   listenForSelect() {
     return this.page!.evaluate(() => {
       document.querySelector('dx-grid')!.addEventListener('dx-grid-cells-select', (event) => {
@@ -148,7 +152,7 @@ test.describe('dx-grid', () => {
     await cell00.click();
 
     // It should now have focus
-    expect(await cell00.evaluate((node) => document.activeElement === node));
+    await grid.expectFocus(cell00);
 
     // Shift-click on the cell at 1,1 and wait for the selection change custom event.
     await grid.cell(1, 1, 'grid').click({ modifiers: ['Shift'] });
@@ -159,7 +163,7 @@ test.describe('dx-grid', () => {
     expect(select).toHaveProperty('end', toPlaneCellIndex({ col: 1, row: 1 }));
 
     // The cell at 0,0 should still have focus despite the shift+click.
-    expect(await cell00.evaluate((node) => document.activeElement === node));
+    await grid.expectFocus(cell00);
 
     // All the cells between 0,0 and 1,1 must have `aria-selected=true`.
     await grid.expectSelectionResult({ col: 0, row: 0 }, { col: 1, row: 1 });
@@ -172,11 +176,42 @@ test.describe('dx-grid', () => {
     expect(finalSelect).toHaveProperty('start', toPlaneCellIndex({ col: 2, row: 2 }));
     expect(finalSelect).toHaveProperty('end', toPlaneCellIndex({ col: 2, row: 2 }));
 
-    expect(await cell22.evaluate((node) => document.activeElement === node));
+    await grid.expectFocus(cell22);
 
     await grid.expectSelectionResult({ col: 2, row: 2 }, { col: 2, row: 2 });
 
     // Done
     await grid.close();
+  });
+  test('keyboard access', async ({ browser }) => {
+    const grid = new GridManager(browser);
+    await grid.open();
+
+    // Tabbing to the first plane and enter to the first cell there.
+    await grid.page!.keyboard.press('Tab');
+    await grid.page!.keyboard.press('Enter');
+    await grid.expectFocus(grid.cell(0, 0, 'fixedStartStart'));
+
+    // Escape to the planes and arrow over to the grid plane, then enter to the first cell there.
+    await grid.page!.keyboard.press('Escape');
+    await grid.page!.keyboard.press('ArrowRight');
+    await grid.page!.keyboard.press('ArrowDown');
+    await grid.page!.keyboard.press('Enter');
+    await grid.expectFocus(grid.cell(0, 0, 'grid'));
+
+    // Select a range by holding shift.
+    await grid.page!.keyboard.down('Shift');
+    await grid.page!.keyboard.press('ArrowRight');
+    await grid.page!.keyboard.press('ArrowRight');
+    await grid.page!.keyboard.press('ArrowDown');
+    await grid.page!.keyboard.press('ArrowDown');
+    await grid.page!.keyboard.up('Shift');
+    await grid.expectFocus(grid.cell(0, 0, 'grid'));
+    await grid.expectSelectionResult({ col: 0, row: 0 }, { col: 2, row: 2 });
+
+    // Arrowing from there cancels selection.
+    await grid.page!.keyboard.press('ArrowRight');
+    await grid.page!.keyboard.press('ArrowDown');
+    await grid.expectFocus(grid.cell(1, 1, 'grid'));
   });
 });

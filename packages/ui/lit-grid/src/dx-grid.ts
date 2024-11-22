@@ -831,9 +831,11 @@ export class DxGrid extends LitElement {
 
   private handleFocus(event: FocusEvent) {
     const cellCoords = closestCell(event.target);
-    if (cellCoords) {
+    if (cellCoords || targetIsPlane(event.target)) {
       this.focusActive = true;
-      this.setFocusedCell(cellCoords);
+      if (cellCoords) {
+        this.setFocusedCell(cellCoords);
+      }
     }
   }
 
@@ -1439,6 +1441,11 @@ export class DxGrid extends LitElement {
       return true;
     }
     return false;
+  }
+
+  override connectedCallback() {
+    super.connectedCallback();
+    document.body.addEventListener('focus', () => console.log('[focus]', document.activeElement), { capture: true });
   }
 
   override disconnectedCallback() {
