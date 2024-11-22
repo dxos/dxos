@@ -4,12 +4,9 @@
 
 import { expect, test } from '@playwright/test';
 
-import { setupPage } from '@dxos/test-utils/playwright';
+import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
 import { StackManager } from '../testing';
-
-// TODO(wittjosiah): Factor out.
-const storybookUrl = (storyId: string) => `http://localhost:9009/iframe.html?id=${storyId}&viewMode=story`;
 
 // TODO(wittjosiah): Update for new stack.
 test.describe.skip('Stack', () => {
