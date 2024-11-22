@@ -1,8 +1,7 @@
 name: Check
 
 on:
-  # TODO(wittjosiah): Flaky.
-  # push:
+  push:
 
   # schedule:
   #   - cron: '0 4 * * 1-5'
