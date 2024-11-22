@@ -90,7 +90,8 @@ jobs:
           result: ${{ job.status }}
 
   check:
-    runs-on: ubuntu-latest
+    runs-on:
+      group: ubuntu-large
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -117,7 +118,8 @@ jobs:
         run: pnpm exec nx run-many -t lint build
 
   e2e:
-    runs-on: ubuntu-latest
+    runs-on:
+      group: ubuntu-large
     if: ${{ startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || inputs.e2e }}
     env:
       DX_ENVIRONMENT: ci
