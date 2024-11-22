@@ -8,28 +8,31 @@ import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
 import { create } from '@dxos/echo-schema';
-import { type FunctionType } from '@dxos/plugin-script/types';
+import { FunctionTrigger, TriggerKind } from '@dxos/functions';
+import { FunctionType } from '@dxos/plugin-script/types';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { TriggerEditor } from './TriggerEditor';
 import translations from '../../translations';
-import { FunctionTrigger, TriggerKind, ChainPromptType } from '../../types';
+import { ChainPromptType } from '../../types';
 
 // TODO(burdon): Change to FunctionDeployment.
 const functions: Omit<FunctionType, 'id'>[] = [
   {
-    uri: 'dxos.org/function/email-worker',
-    route: '/email',
-    handler: 'email-worker',
-    description: 'Email Sync',
+    name: 'dxos.org/function/chess',
+    version: 1,
+    // route: '/email',
+    // handler: 'email-worker',
+    // description: 'Email Sync',
   },
   {
-    uri: 'dxos.org/function/gpt',
-    route: '/gpt',
-    handler: 'gpt',
-    description: 'GPT Chat',
+    name: 'dxos.org/function/chess',
+    version: 1,
+    // route: '/gpt',
+    // handler: 'gpt',
+    // description: 'GPT Chat',
   },
 ];
 
@@ -42,7 +45,7 @@ const Story = () => {
       return;
     }
 
-    const trigger = space.db.add(create(FunctionTrigger, { spec: { type: TriggerKind.Timer } }));
+    const trigger = space.db.add(create(FunctionTrigger, { spec: { type: TriggerKind.Timer, cron: '' } }));
     setTrigger(trigger);
   }, [space, setTrigger]);
   if (!space || !trigger) {
@@ -66,10 +69,10 @@ const meta: Meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [FunctionTrigger, FunctionDef, ChainPromptType],
+      types: [FunctionType, FunctionTrigger, ChainPromptType],
       onSpaceCreated: ({ space }) => {
         for (const fn of functions) {
-          space.db.add(create(FunctionDef, fn));
+          space.db.add(create(FunctionType, fn));
         }
       },
     }),

@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { type PluginDefinition, parseMetadataResolverPlugin, resolvePlugin } from '@dxos/app-framework';
+import { FunctionTrigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { createExtension, toSignal } from '@dxos/plugin-graph';
@@ -13,7 +14,6 @@ import { getTypename, loadObjectReferences, parseId } from '@dxos/react-client/e
 import { AutomationPanel } from './components';
 import meta, { AUTOMATION_PLUGIN } from './meta';
 import translations from './translations';
-import { FunctionTrigger } from './types';
 import { AutomationAction, type AutomationPluginProvides, ChainPromptType, ChainType } from './types';
 
 export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> => {

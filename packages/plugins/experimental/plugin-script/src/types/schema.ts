@@ -24,17 +24,19 @@ export class ScriptType extends TypedObject({
 /**
  * Function deployment.
  */
+// TODO(burdon): Move to core/functions.
 export class FunctionType extends TypedObject({
   typename: 'dxos.org/type/Function',
   version: '0.1.0',
 })({
-  // TODO(burdon): Change to id?
+  // TODO(burdon): Change to uri?
   name: S.optional(S.String),
   version: S.Number,
   // Local binding to a function name.
   // TODO(burdon): Move binding to inner type.
   binding: S.optional(S.String),
   // Reference to a source script if it exists within ECHO.
+  // TODO(burdon): Don't ref ScriptType directly (core).
   source: S.optional(ref(ScriptType)),
   inputSchema: S.optional(JsonSchemaType),
 }) {}

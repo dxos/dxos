@@ -7,13 +7,13 @@ import { useEffect, useState } from 'react';
 import { Mutex } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { createSubscriptionTrigger, type TriggerFactory } from '@dxos/functions';
+import { FunctionTrigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 
 import { invokeFunction } from './invocation-handler';
-import { FunctionTrigger } from '../types';
 
 const registerTriggersMutex = new Mutex();
 

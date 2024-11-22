@@ -4,12 +4,12 @@
 
 import React from 'react';
 
+import { FunctionTriggerSchema, type FunctionTriggerType, type FunctionTrigger, TriggerKind } from '@dxos/functions';
 import { type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Form, SelectInput } from '@dxos/react-ui-form';
 
 import { AUTOMATION_PLUGIN } from '../../meta';
-import { FunctionTriggerSchema, type FunctionTriggerType, type FunctionTrigger, TriggerKind } from '../../types';
 
 export type TriggerEditorProps = {
   space: Space;
