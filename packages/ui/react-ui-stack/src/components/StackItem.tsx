@@ -58,7 +58,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
   ) => {
     const [itemElement, itemRef] = useState<HTMLDivElement | null>(null);
     const [selfDragHandleElement, selfDragHandleRef] = useState<HTMLDivElement | null>(null);
-    const [closestEdge, setEdge] = useState<Edge | null>(null);
+    const [_closestEdge, setEdge] = useState<Edge | null>(null);
     const { orientation, rail, separators } = useStack();
     const [size = orientation === 'horizontal' ? DEFAULT_HORIZONTAL_SIZE : DEFAULT_VERTICAL_SIZE, setInternalSize] =
       useState(propsSize);
