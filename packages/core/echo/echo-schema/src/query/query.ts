@@ -2,18 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SpaceId } from '@dxos/keys';
 import { Schema as S } from '@effect/schema';
+import { ObjectIdSchema, SpaceIdSchema } from '../types';
 
 //
 // Inspired by filter.proto.
 //
-
-// TODO(dmaretskyi): Move out.
-const ObjectIdSchema = S.String;
-
-// TODO(dmaretskyi): Move out.
-const SpaceIdSchema = S.String as any as S.Schema<SpaceId>;
 
 const DXNSchema = S.String.pipe(S.pattern(/^dxn:/));
 

@@ -9,6 +9,8 @@ import { invariant } from '@dxos/invariant';
 import { type Comparator, getDeep, intersection, setDeep } from '@dxos/util';
 
 import { getProxyHandler } from './proxy';
+import { Brand } from 'effect';
+import type { SpaceId } from '@dxos/keys';
 
 export const data = Symbol.for('@dxos/schema/Data');
 
@@ -19,6 +21,29 @@ export const TYPE_PROPERTIES = 'dxos.org/type/Properties';
 export const ECHO_ATTR_ID = '@id';
 export const ECHO_ATTR_TYPE = '@type';
 export const ECHO_ATTR_META = '@meta';
+
+//
+// Object ID
+//
+
+/**
+ * ID of an ECHO object.
+ * Defined as a ULID.
+ * @example 01E2XZ6QZQZQZQZQZQZQZQZQZQ
+ */
+export type ObjectId = string & { _ObjectId: never };
+
+export const ObjectIdSchema: S.Schema<ObjectId> = S.String.annotations({
+  description: 'Object ID',
+}) as any as S.Schema<ObjectId>;
+
+//
+// Space ID
+//
+
+export const SpaceIdSchema: S.Schema<SpaceId> = S.String.annotations({
+  description: 'Space ID',
+}) as any as S.Schema<SpaceId>;
 
 //
 // ForeignKey
