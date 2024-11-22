@@ -18,21 +18,14 @@ import { TriggerEditor } from './TriggerEditor';
 import translations from '../../translations';
 import { ChainPromptType } from '../../types';
 
-// TODO(burdon): Change to FunctionDeployment.
-const functions: Omit<FunctionType, 'id'>[] = [
+const functions = [
   {
     name: 'dxos.org/function/chess',
     version: 1,
-    // route: '/email',
-    // handler: 'email-worker',
-    // description: 'Email Sync',
   },
   {
-    name: 'dxos.org/function/chess',
+    name: 'dxos.org/function/forex',
     version: 1,
-    // route: '/gpt',
-    // handler: 'gpt',
-    // description: 'GPT Chat',
   },
 ];
 
