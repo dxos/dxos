@@ -16,6 +16,7 @@ import { FunctionRegistry } from '../function';
 import { createInitializedClients, TestType, triggerWebhook } from '../testing';
 import { TriggerRegistry } from '../trigger';
 import { type FunctionManifest } from '../types';
+import { DXN } from '@dxos/keys';
 
 // TODO(burdon): Test we can add and remove triggers.
 describe('scheduler', () => {
@@ -175,7 +176,9 @@ describe('scheduler', () => {
           enabled: true,
           spec: {
             type: 'subscription',
-            filter: { type: TestType.typename },
+            query: {
+              filter: { type: [DXN.fromTypename(TestType.typename).toString()] },
+            },
           },
         },
       ],

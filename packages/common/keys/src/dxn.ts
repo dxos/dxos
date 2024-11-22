@@ -59,6 +59,15 @@ export class DXN {
     return new DXN(kind, parts);
   }
 
+  static isValid(dxn: string) {
+    try {
+      DXN.parse(dxn);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   static fromTypename(type: string) {
     return new DXN(DXN.kind.TYPE, [type]);
   }

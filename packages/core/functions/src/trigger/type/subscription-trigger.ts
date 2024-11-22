@@ -51,7 +51,10 @@ export const createSubscriptionTrigger: TriggerFactory<SubscriptionTrigger> = as
   subscriptions.push(() => subscription.unsubscribe());
 
   // TODO(burdon): Disable trigger if keeps failing.
-  const { filter, options: { deep, delay } = {} } = spec;
+  const {
+    query: { filter },
+    options: { deep, delay } = {},
+  } = spec;
   const update = ({ objects }: Query) => {
     log.info('update', { objects: objects.length });
     subscription.update(objects);

@@ -15,6 +15,7 @@ import { arrayMove } from '@dxos/util';
 import { translationKey } from '../../translations';
 import { FieldEditor } from '../FieldEditor';
 import { Form } from '../Form';
+import { DXN } from '@dxos/keys';
 
 const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem]';
 
@@ -60,7 +61,7 @@ export const ViewEditor = ({
       name: view.name,
       // TODO(burdon): Need to warn user of possible consequences of editing.
       // TODO(burdon): Settings should have domain name owned by user.
-      type: view.query.type,
+      type: view.query.filter.type?.[0] ? DXN.parse(view.query.filter.type?.[0]).parts[0] : '',
     };
   }, [view]);
 
@@ -68,7 +69,7 @@ export const ViewEditor = ({
     ({ name, type }: ViewMetaType) => {
       requestAnimationFrame(() => {
         view.name = name;
-        view.query.type = type;
+        view.query.filter.type = [DXN.fromTypename(type).toString()];
         schema.updateTypename(type);
       });
     },

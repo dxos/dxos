@@ -11,15 +11,18 @@ import { DXNStringSchema, ObjectIdSchema, SpaceIdSchema } from '../types';
 
 /**
  * ECHO query object.
+ * All predicates are combined with logical `AND`.
  */
 const FilterSchema = S.Struct({
   /**
    * Matches object type.
+   * Multiple types are combined with logical `OR`.
    */
   type: S.optional(S.Array(DXNStringSchema)),
 
   /**
    * Matches specific object id.
+   * Multiple ids are combined with logical `OR`.
    */
   objectId: S.optional(S.Array(ObjectIdSchema)),
 
@@ -72,7 +75,7 @@ const FilterSchema = S.Struct({
   or: S.optional(S.Array(S.suspend((): S.Schema<FilterType> => FilterSchema))),
 
   // TODO(dmaretskyi): Consider adding a cypher query text extension.
-});
+}).pipe(S.mutable);
 
 interface FilterType extends S.Schema.Type<typeof FilterSchema> {}
 
@@ -114,7 +117,7 @@ const ResultOptionsSchema = S.Struct({
    * @example `{ org: { manager: true } }` - recursively loads data from `org` reference and then from the `manager` reference.
    */
   shape: S.optional(S.Record({ key: S.String, value: S.Any })),
-});
+}).pipe(S.mutable);
 
 const QuerySchema = S.Struct({
   /**
