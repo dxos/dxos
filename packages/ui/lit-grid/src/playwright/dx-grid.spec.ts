@@ -61,11 +61,15 @@ class GridManager {
     const nCols = 1 + toCol - fromCol;
     const nRows = 1 + toRow - fromRow;
 
-    await [...Array(nCols)].forEach(async (_, c0) => {
-      await [...Array(nRows)].forEach(async (_, r0) => {
-        await expect(this.cell(fromCol + c0, fromRow + r0, 'grid')).toHaveAttribute('aria-selected', 'true');
-      });
-    });
+    await Promise.all(
+      [...Array(nCols)].map(async (_, c0) => {
+        return Promise.all(
+          [...Array(nRows)].map(async (_, r0) => {
+            return expect(this.cell(fromCol + c0, fromRow + r0, 'grid')).toHaveAttribute('aria-selected', 'true');
+          }),
+        );
+      }),
+    );
   }
 
   async expectVirtualizationResult(cols: number, rows: number, minColIndex = 0, minRowIndex = 0) {
@@ -162,8 +166,7 @@ test.describe('dx-grid', () => {
 
     await grid.expectSelectionResult(2, 2, 2, 2);
 
-    // …Done?
-    // TODO(thure): Why does closing here cause the tests to fail, as if it closed too early?
-    // await grid.close();
+    // Done
+    await grid.close();
   });
 });
