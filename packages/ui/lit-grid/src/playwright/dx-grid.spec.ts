@@ -92,10 +92,14 @@ class GridManager {
     });
   }
 
-  waitForDxEvent() {
-    return this.page!.waitForFunction(() => {
+  async waitForDxEvent<E>(): Promise<E> {
+    const event = await this.page!.waitForFunction(() => {
       return (window as any).DX_GRID_EVENT;
     });
+    await this.page!.evaluate(() => {
+      return ((window as any).DX_GRID_EVENT = undefined);
+    });
+    return event.jsonValue();
   }
 }
 
@@ -134,7 +138,7 @@ test.describe('dx-grid', () => {
 
     // Shift-click on the cell at 1,1 and wait for the selection change custom event.
     await grid.cell(1, 1, 'grid').click({ modifiers: ['Shift'] });
-    const select: DxGridCellsSelect = await grid.waitForDxEvent().then((event) => event.jsonValue());
+    const select = await grid.waitForDxEvent<DxGridCellsSelect>();
 
     // Expect the event to have the right information.
     expect(select).toHaveProperty('start', toPlaneCellIndex({ col: 0, row: 0 }));
@@ -145,6 +149,18 @@ test.describe('dx-grid', () => {
 
     // All the cells between 0,0 and 1,1 must have `aria-selected=true`.
     await grid.expectSelectionResult(0, 0, 1, 1);
+
+    // Clicking on another cell should move focus and change selection to match that one cell.
+    const cell22 = await grid.cell(2, 2, 'grid');
+    await cell22.click();
+    const finalSelect = await grid.waitForDxEvent<DxGridCellsSelect>();
+
+    expect(finalSelect).toHaveProperty('start', toPlaneCellIndex({ col: 2, row: 2 }));
+    expect(finalSelect).toHaveProperty('end', toPlaneCellIndex({ col: 2, row: 2 }));
+
+    expect(await cell22.evaluate((node) => document.activeElement === node));
+
+    await grid.expectSelectionResult(2, 2, 2, 2);
 
     // …Done?
     // TODO(thure): Why does closing here cause the tests to fail, as if it closed too early?
