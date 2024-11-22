@@ -3,9 +3,9 @@
 //
 
 import { Tool, zodSchema } from 'modelfusion';
+import { z } from 'zod';
 
 import { log } from '@dxos/log';
-import { z } from '@dxos/plate';
 
 export const scheduler = () =>
   new Tool({

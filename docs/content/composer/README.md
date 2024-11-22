@@ -22,7 +22,7 @@ For example a running system might sync data like this:
 
 Here [device](../guide/glossary.md#device) means a running DXOS instance. One device runs per domain/browser profile combination, so users can have multiple devices running on a physical machine. Each device is associated with an [identity](./user-guide/).
 
-[Agents](../guide/tooling/cli/agent.md) are DXOS instances running without an attached user interface. A common use of agents is to run on a server and provide availability if all other devices are offline, but this is completely optional.
+Agents are DXOS instances running without an attached user interface. A common use of agents is to run on a server and provide availability if all other devices are offline, but this is completely optional.
 
 ## Read More
 

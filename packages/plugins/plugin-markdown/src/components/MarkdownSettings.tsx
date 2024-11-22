@@ -5,8 +5,8 @@
 import React from 'react';
 
 import { Input, Select, useTranslation } from '@dxos/react-ui';
-import { DeprecatedFormInput } from '@dxos/react-ui-data';
 import { type EditorInputMode, EditorInputModes, type EditorViewMode, EditorViewModes } from '@dxos/react-ui-editor';
+import { DeprecatedFormInput } from '@dxos/react-ui-form';
 
 import { MARKDOWN_PLUGIN } from '../meta';
 import { type MarkdownSettingsProps } from '../types';

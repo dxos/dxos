@@ -126,5 +126,3 @@ const { space } = await client.shell.joinSpace({
   invitationCode: '<invitation code>',
 });
 ```
-
-See more in the [API documentation](../../../api/@dxos/client/classes/Shell.md) for the Shell.

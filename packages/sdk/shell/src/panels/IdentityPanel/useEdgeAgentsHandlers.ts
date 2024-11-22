@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 
 import { type CancellableInvitation } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { QueryAgentStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
@@ -70,7 +71,7 @@ export const useEdgeAgentHandlers = ({
     setAgentStatus('creating');
     setValidationMessage('');
     try {
-      await service.createAgent();
+      await service.createAgent(null as any, { timeout: 7_500 });
       await Promise.all(
         client.spaces
           .get()
@@ -78,6 +79,7 @@ export const useEdgeAgentHandlers = ({
       );
       setAgentStatus('created');
     } catch (err: any) {
+      log.catch(err);
       setAgentStatus('error');
       setValidationMessage(`Error creating an agent: ${err.message}`);
     }

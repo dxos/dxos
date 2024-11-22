@@ -136,7 +136,7 @@ export class Scheduler {
       if (endpoint) {
         // TODO(burdon): Move out of scheduler (generalize as callback).
         const url = path.join(endpoint, def.route);
-        log.info('exec', { function: def.uri, url, triggerType: trigger.spec.type });
+        log.info('exec', { function: def.uri, url, triggerType: trigger.spec?.type });
         const response = await fetch(url, {
           method: 'POST',
           headers: {
