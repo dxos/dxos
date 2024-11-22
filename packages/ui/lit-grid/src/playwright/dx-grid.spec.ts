@@ -6,7 +6,7 @@ import { expect, test, type Browser, type Page } from '@playwright/test';
 
 import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
-import { type DxGridCellsSelect } from '../types';
+import { type DxGridCellsSelect, type DxGridPlanePosition } from '../types';
 import { toPlaneCellIndex } from '../util';
 
 const gridPlaneCellSize = 31;
@@ -57,18 +57,28 @@ class GridManager {
     return this.page!.locator('.dx-grid [data-dx-grid-plane="grid"]').dispatchEvent('wheel', { deltaX, deltaY });
   }
 
-  async expectSelectionResult(fromCol: number, fromRow: number, toCol: number, toRow: number) {
-    const nCols = 1 + toCol - fromCol;
-    const nRows = 1 + toRow - fromRow;
+  async forCellsInRange(
+    start: DxGridPlanePosition,
+    end: DxGridPlanePosition,
+    iterator: (col: number, row: number) => Promise<void>,
+  ) {
+    const nCols = 1 + end.col - start.col;
+    const nRows = 1 + end.row - start.row;
 
     await Promise.all(
       [...Array(nCols)].map(async (_, c0) => {
         return Promise.all(
           [...Array(nRows)].map(async (_, r0) => {
-            return expect(this.cell(fromCol + c0, fromRow + r0, 'grid')).toHaveAttribute('aria-selected', 'true');
+            return iterator(start.col + c0, start.row + r0);
           }),
         );
       }),
+    );
+  }
+
+  async expectSelectionResult(start: DxGridPlanePosition, end: DxGridPlanePosition) {
+    return this.forCellsInRange(start, end, (col, row) =>
+      expect(this.cell(col, row, 'grid')).toHaveAttribute('aria-selected', 'true'),
     );
   }
 
@@ -152,7 +162,7 @@ test.describe('dx-grid', () => {
     expect(await cell00.evaluate((node) => document.activeElement === node));
 
     // All the cells between 0,0 and 1,1 must have `aria-selected=true`.
-    await grid.expectSelectionResult(0, 0, 1, 1);
+    await grid.expectSelectionResult({ col: 0, row: 0 }, { col: 1, row: 1 });
 
     // Clicking on another cell should move focus and change selection to match that one cell.
     const cell22 = await grid.cell(2, 2, 'grid');
@@ -164,7 +174,7 @@ test.describe('dx-grid', () => {
 
     expect(await cell22.evaluate((node) => document.activeElement === node));
 
-    await grid.expectSelectionResult(2, 2, 2, 2);
+    await grid.expectSelectionResult({ col: 2, row: 2 }, { col: 2, row: 2 });
 
     // Done
     await grid.close();
