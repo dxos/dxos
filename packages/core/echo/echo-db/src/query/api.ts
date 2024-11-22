@@ -12,16 +12,42 @@ import { type EchoReactiveObject } from '../echo-handler';
 /**
  * `query` API function declaration.
  */
+// TODO(dmaretskyi): Type based on the result format.
 export interface QueryFn {
   (): Query;
   <F extends Filter$.Any>(filter: F, options?: QueryOptions | undefined): Query<EchoReactiveObject<Filter$.Object<F>>>;
   (filter?: FilterSource | undefined, options?: QueryOptions | undefined): Query<EchoReactiveObject<any>>;
 }
 
+/**
+ * Defines the result format of the query.
+ */
+export enum ResultFormat {
+  /**
+   * Plain javascript objects.
+   * No live updates.
+   */
+  Plain = 'plain',
+
+  /**
+   * Live objects that update automatically with mutations in the database.
+   * Support signal notifications.
+   */
+  Live = 'live',
+
+  /**
+   * Direct access to the automerge document.
+   */
+  AutomergeDocAccessor = 'automergeDocAccessor',
+}
+
 export type QueryOptions = {
+  format?: ResultFormat;
+
   /**
    * Query only in specific spaces.
    */
+  // TODO(dmaretskyi): Change this to SpaceId.
   spaceIds?: string[];
   /**
    * Controls how deleted items are filtered.

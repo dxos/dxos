@@ -703,7 +703,10 @@ export const SpacePlugin = ({
                 const store = memoize(() => signal(space.db.getObjectById(objectId)), id);
                 memoize(() => {
                   if (!store.value) {
-                    void space.db.loadObjectById(objectId).then((o) => (store.value = o));
+                    void space.db
+                      .query({ id: objectId })
+                      .first()
+                      .then((o) => (store.value = o));
                   }
                 }, id);
                 const object = store.value;
@@ -837,7 +840,7 @@ export const SpacePlugin = ({
                 const object = toSignal(
                   (onChange) => {
                     const timeout = setTimeout(async () => {
-                      await space?.db.loadObjectById(objectId);
+                      await space?.db.query({ id: objectId }).first();
                       onChange();
                     });
 

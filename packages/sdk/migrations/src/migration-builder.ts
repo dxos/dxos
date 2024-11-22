@@ -115,7 +115,7 @@ export class MigrationBuilder {
     }
     invariant(this._newRoot, 'New root not created');
 
-    await this._space.db.coreDatabase.flush();
+    await this._space.db.flush();
 
     // Create new epoch.
     await this._space.internal.createEpoch({
