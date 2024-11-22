@@ -76,7 +76,7 @@ jobs:
         run: pnpm exec nx run-many -t test
 
       - uses: codecov/codecov-action@v4
-        if: ${{ matrix.node-version == '20.12.1' }}
+        if: ${{ matrix.node-version == '20.18.1' }}
         with:
           directory: ./coverage
           fail_ci_if_error: true
@@ -142,7 +142,7 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
         with:
-          node-version: 20.12.1
+          node-version: 20.18.1
 
       - name: Install system dependencies
         run: npx playwright@1.46.0 install-deps
