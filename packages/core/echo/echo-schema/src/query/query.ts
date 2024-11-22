@@ -87,7 +87,7 @@ const QuerySchema = S.Struct({
    * @example `{ org: { manager: true } }` - recursively loads data from `org` reference and then from the `manager` reference.
    */
   include: S.optional(S.Record({ key: S.String, value: S.Any })),
-});
+}).pipe(S.mutable);
 
 export interface QueryType extends S.Schema.Type<typeof QuerySchema> {}
 

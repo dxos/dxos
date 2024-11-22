@@ -6,7 +6,7 @@ import React from 'react';
 
 import { LocalStorageStore } from '@dxos/local-storage';
 import { Button, Icon, useTranslation } from '@dxos/react-ui';
-import { DeprecatedFormInput } from '@dxos/react-ui-data';
+import { DeprecatedFormInput } from '@dxos/react-ui-form';
 
 import { MANAGER_PLUGIN } from '../meta';
 

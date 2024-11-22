@@ -14,7 +14,7 @@ export const renderCheckbox = ({
   checked = false,
   disabled = false,
 }: RenderCheckboxProps): string => {
-  const baseClasses = 'absolute inset-block-[6px] inline-end-[6px]' as const;
+  const baseClasses = 'absolute inset-block-[6px] inline-end-[6px] ch-checkbox' as const;
   const { attributes } = tableControls.checkbox;
   return `<input type="checkbox" class="${baseClasses}" ${attributes.checkbox}="${rowIndex}" ${header ? attributes.header : ''} ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''}/>`;
 };

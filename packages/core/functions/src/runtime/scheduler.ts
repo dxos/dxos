@@ -99,7 +99,7 @@ export class Scheduler {
         const meta: FunctionTrigger['meta'] = {};
         for (const [key, value] of Object.entries(trigger.meta ?? {})) {
           if (value instanceof Reference) {
-            const object = await space.db.loadObjectById(value.objectId);
+            const object = await space.db.query({ id: value.objectId }).first();
             if (object) {
               meta[key] = object;
             }
@@ -136,7 +136,7 @@ export class Scheduler {
       if (endpoint) {
         // TODO(burdon): Move out of scheduler (generalize as callback).
         const url = path.join(endpoint, def.route);
-        log.info('exec', { function: def.uri, url, triggerType: trigger.spec.type });
+        log.info('exec', { function: def.uri, url, triggerType: trigger.spec?.type });
         const response = await fetch(url, {
           method: 'POST',
           headers: {

@@ -36,7 +36,7 @@ import {
   type DxGridPosition,
   type DxGridAxis,
   type DxGridSelectionProps,
-  type DxGridAnnotatedWheelEvent,
+  type DxGridAnnotatedPanEvent,
   type DxGridRange,
 } from './types';
 import {
@@ -277,7 +277,9 @@ export class DxGrid extends LitElement {
   }
 
   private handlePointerDown = (event: PointerEvent) => {
-    if (event.isPrimary) {
+    if (this.mode === 'browse' && event.pointerType === 'touch') {
+      this.pointer = { state: 'panning', pageX: event.pageX, pageY: event.pageY };
+    } else if (event.isPrimary) {
       const { action, actionEl } = closestAction(event.target);
       if (action && action === 'cell') {
         if (event.shiftKey && this.mode === 'browse') {
@@ -308,15 +310,25 @@ export class DxGrid extends LitElement {
   };
 
   private handlePointerUp = (event: PointerEvent) => {
-    const cell = closestCell(event.target);
-    if (cell && this.pointer?.state === 'selecting') {
-      this.setSelectionEnd(cell);
+    if (this.pointer?.state === 'selecting') {
+      const cell = closestCell(event.target);
+      if (cell) {
+        this.setSelectionEnd(cell);
+      }
     }
+    // TODO(thure): If this was panning via touch, continue panning based on final velocity.
     this.pointer = null;
   };
 
   private handlePointerMove = (event: PointerEvent) => {
-    if (shouldSelect(this.pointer, event)) {
+    if (this.pointer?.state === 'panning') {
+      const panEvent = event as DxGridAnnotatedPanEvent;
+      panEvent.deltaX = this.pointer.pageX - event.pageX;
+      panEvent.deltaY = this.pointer.pageY - event.pageY;
+      this.pointer.pageX = event.pageX;
+      this.pointer.pageY = event.pageY;
+      this.handleWheel(panEvent);
+    } else if (shouldSelect(this.pointer, event)) {
       this.pointer = { state: 'selecting' };
     } else if (this.pointer?.state === 'selecting') {
       const cell = closestCell(event.target);
@@ -612,7 +624,7 @@ export class DxGrid extends LitElement {
     this.updatePosBlock(block, maxBlock);
   }
 
-  private handleTopLevelWheel = (event: DxGridAnnotatedWheelEvent) => {
+  private handleTopLevelWheel = (event: DxGridAnnotatedPanEvent) => {
     if (event.gridId === (this.gridId ?? 'never')) {
       if (
         this.overscroll === 'trap' ||
@@ -625,7 +637,7 @@ export class DxGrid extends LitElement {
     }
   };
 
-  private handleWheel = (event: DxGridAnnotatedWheelEvent) => {
+  private handleWheel = (event: DxGridAnnotatedPanEvent) => {
     if (this.mode === 'browse') {
       const nextPosInline = this.posInline + event.deltaX;
       const nextPosBlock = this.posBlock + event.deltaY;

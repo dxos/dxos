@@ -1,6 +1,6 @@
 {
   "name": "@dxos/docs",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,10 +10,8 @@
   "scripts": {
     "apidoc": "rm -rf content/api && NODE_OPTIONS='--loader ts-node/esm' apidoc",
     "bundle": "vuepress build content",
-    "clean:api": "rm -rf content/api",
-    "prerelease": "pnpm typedoc && pnpm clean:api && pnpm apidoc",
-    "serve": "VITE_EXAMPLE_BASE_URL=http://localhost:9009 vuepress dev content",
-    "typedoc": "typedoc"
+    "prerelease": "pnpm apidoc",
+    "serve": "VITE_EXAMPLE_BASE_URL=http://localhost:9009 vuepress dev content"
   },
   "devDependencies": {
     "@dxos/apidoc": "workspace:*",

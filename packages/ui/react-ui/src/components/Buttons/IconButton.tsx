@@ -10,7 +10,12 @@ import { Icon, type IconProps } from '../Icon';
 import { Tooltip } from '../Tooltip';
 
 type IconButtonProps = Omit<ButtonProps, 'children'> &
-  Pick<IconProps, 'icon'> & { label: string; iconOnly?: boolean; tooltipPortal?: boolean; tooltipZIndex?: string };
+  Pick<IconProps, 'icon' | 'size'> & {
+    label: string;
+    iconOnly?: boolean;
+    tooltipPortal?: boolean;
+    tooltipZIndex?: string;
+  };
 
 const IconOnlyButton = forwardRef<HTMLButtonElement, IconButtonProps>(
   ({ tooltipPortal = true, tooltipZIndex: zIndex, ...props }, forwardedRef) => {
@@ -32,11 +37,11 @@ const IconOnlyButton = forwardRef<HTMLButtonElement, IconButtonProps>(
 );
 
 const LabelledIconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
-  ({ icon, iconOnly, label, classNames, ...props }, forwardedRef) => {
+  ({ icon, size, iconOnly, label, classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
       <Button {...props} classNames={tx('iconButton.root', 'iconButton', {}, classNames)} ref={forwardedRef}>
-        <Icon icon={icon} />
+        <Icon icon={icon} size={size} />
         <span className={iconOnly ? 'sr-only' : undefined}>{label}</span>
       </Button>
     );

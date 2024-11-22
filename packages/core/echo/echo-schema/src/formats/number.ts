@@ -6,12 +6,19 @@ import { AST, S } from '@dxos/effect';
 
 import { FormatAnnotationId, FormatEnum } from './types';
 
+const encodeMultipleOf = (divisor: number) => 1 / Math.pow(10, divisor);
+
+const encodeMultiple =
+  <A extends number>(divisor?: number) =>
+  <I, R>(self: S.Schema<A, I, R>) =>
+    divisor === undefined || divisor === 0 ? self : self.pipe(S.multipleOf(encodeMultipleOf(divisor)));
+
 /**
  * Convert number of digits to multipleOf annotation.
  */
 export const DecimalPrecision = S.transform(S.Number, S.Number, {
   strict: true,
-  encode: (value) => 1 / Math.pow(10, value),
+  encode: (value) => encodeMultipleOf(value),
   decode: (value) => Math.log10(1 / value),
 }).annotations({
   [AST.TitleAnnotationId]: 'Number of digits',
@@ -28,7 +35,7 @@ export type CurrencyAnnotation = {
  * ISO 4217 currency code.
  */
 export const Currency = ({ decimals, code }: CurrencyAnnotation = { decimals: 2 }) =>
-  S.Number.pipe((s) => (decimals ? s.pipe(S.multipleOf(1 / Math.pow(10, decimals))) : s)).annotations({
+  S.Number.pipe(encodeMultiple(decimals)).annotations({
     [FormatAnnotationId]: FormatEnum.Currency,
     [AST.TitleAnnotationId]: 'Currency',
     [AST.DescriptionAnnotationId]: 'Currency value',
@@ -52,7 +59,7 @@ export const Integer = () =>
  */
 // TODO(burdon): Define min/max (e.g., 0, 1).
 export const Percent = ({ decimals }: PercentAnnotation = { decimals: 2 }) =>
-  S.Number.pipe((s) => (decimals ? s.pipe(S.multipleOf(Math.pow(10, -decimals))) : s)).annotations({
+  S.Number.pipe(encodeMultiple(decimals)).annotations({
     [FormatAnnotationId]: FormatEnum.Percent,
     [AST.TitleAnnotationId]: 'Percent',
     [AST.DescriptionAnnotationId]: 'Percentage value',

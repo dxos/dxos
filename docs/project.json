@@ -5,8 +5,7 @@
   "targets": {
     "apidoc": {
       "dependsOn": [
-        "^build",
-        "typedoc"
+        "^build"
       ],
       "executor": "nx:run-script",
       "options": {
@@ -68,18 +67,6 @@
     },
     "toolbox": {
       "executor": "@dxos/toolbox:exec"
-    },
-    "typedoc": {
-      "dependsOn": [
-        "^build"
-      ],
-      "executor": "nx:run-script",
-      "options": {
-        "script": "typedoc"
-      },
-      "outputs": [
-        "{projectRoot}/apidoc.json"
-      ]
     }
   }
 }

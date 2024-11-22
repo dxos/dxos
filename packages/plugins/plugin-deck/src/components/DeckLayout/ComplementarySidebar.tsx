@@ -62,8 +62,8 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
   // TODO(burdon): Debug panel doesn't change when switching even though id has chagned.
   return (
     <Main.ComplementarySidebar>
-      <StackContext.Provider value={{ size: 'contain', orientation: 'horizontal', separators: true, rail: true }}>
-        <div role='none' className={mx(railGridHorizontal, 'grid-cols-1 bs-full divide-y divide-separator')}>
+      <StackContext.Provider value={{ size: 'contain', orientation: 'horizontal', separators: false, rail: true }}>
+        <div role='none' className={mx(railGridHorizontal, 'grid-cols-1 bs-full')}>
           <NodePlankHeading coordinate={coordinate} node={node} popoverAnchorId={popoverAnchorId} actions={actions} />
           <div className='divide-y divide-separator overflow-x-hidden overflow-y-scroll'>
             {node && (

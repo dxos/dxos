@@ -34,7 +34,7 @@ const client = new Client();
 
 ## Listing spaces
 
-Obtain a list of [Space](/api/@dxos/client/interfaces/Space) objects:
+Obtain a list of `Space` objects:
 
 ```ts file=./snippets/query-spaces.ts#L5-
 import { Client } from '@dxos/client';

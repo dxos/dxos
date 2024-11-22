@@ -44,7 +44,7 @@ export const EditorContent = ({ data: { content = '' } }: { data: StackItemConte
   const handleAction = useActionHandler(view);
 
   return (
-    <StackItem.Content contentSize='intrinsic'>
+    <StackItem.Content>
       <div {...focusAttributes} className={mx(textBlockWidth, focusRing, 'rounded-sm order-last')} ref={parentRef} />
       <Toolbar.Root
         onAction={handleAction}

@@ -38,7 +38,7 @@ The open source DXOS [SDK](../guide/) provides protocols for developing local-fi
 
 ### Availability
 
-Data is available on the peer network as long as peers are online. [Agents](../guide/tooling/cli/agent.md) are personal servers that can be used to boost data availability when the user's devices are offline. They are open source and can be run on any device, or hosted by a trusted third party.
+Data is available on the peer network as long as peers are online. Agents are personal servers that can be used to boost data availability when the user's devices are offline. They are open source and can be run on any device, or hosted by a trusted third party.
 
 ### HALO decentralized identity
 

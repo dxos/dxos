@@ -1,6 +1,6 @@
 {
   "name": "@dxos/agent-functions",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "private": true,
   "description": "Experimental functions.",
   "homepage": "https://dxos.org",
@@ -64,7 +64,7 @@
     "csv-parse": "^5.3.6",
     "date-fns": "^3.3.1",
     "discord.js": "^14.14.1",
-    "effect": "^3.9.1",
+    "effect": "^3.9.2",
     "email-addresses": "^5.0.0",
     "faiss-node": "^0.5.1",
     "fast-xml-parser": "^4.3.2",
@@ -91,7 +91,6 @@
   "devDependencies": {
     "@dxos/agent": "workspace:*",
     "@dxos/echo-generator": "workspace:*",
-    "@dxos/plate": "workspace:*",
     "@dxos/random": "workspace:*",
     "@mediapipe/tasks-text": "^0.10.7",
     "@types/html-to-text": "^9.0.0",

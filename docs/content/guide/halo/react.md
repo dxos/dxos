@@ -21,7 +21,7 @@ export const MyComponent = () => {
 };
 ```
 
-The object returned is of type [`Identity`](/api/@dxos/client/interfaces/Identity).
+The object returned is of type `Identity`.
 
 By default `useIdentity` will tell HALO to log the user in using the HALO vault. The vault [shell](../glossary.md#shell) may open to allow the user to create an identity.
 

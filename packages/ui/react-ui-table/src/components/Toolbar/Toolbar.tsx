@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ChatText, RowsPlusBottom } from '@phosphor-icons/react';
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren } from 'react';
 
@@ -33,7 +32,9 @@ const [ToolbarContextProvider, useToolbarContext] = createContext<ToolbarProps>(
 const ToolbarRoot = ({ classNames, children, onAction }: ToolbarProps) => {
   return (
     <ToolbarContextProvider onAction={onAction}>
-      <NaturalToolbar.Root classNames={['is-full shrink-0 overflow-x-auto overflow-y-hidden p-1', classNames]}>
+      <NaturalToolbar.Root
+        classNames={['is-full shrink-0 overflow-x-auto overflow-y-hidden p-1 attention-surface', classNames]}
+      >
         {children}
       </NaturalToolbar.Root>
     </ToolbarContextProvider>
@@ -48,7 +49,7 @@ const Editing = () => {
     <>
       <ToolbarButton
         value='add-row'
-        Icon={RowsPlusBottom}
+        icon='ph--plus--regular'
         data-testid='table.toolbar.add-row'
         onClick={() => onAction?.({ type: 'add-row' })}
       >
@@ -66,7 +67,7 @@ const Actions = () => {
     <>
       <ToolbarButton
         value='comment'
-        Icon={ChatText}
+        icon='ph--chat-text--regular'
         data-testid='table.toolbar.comment'
         onClick={() => onAction?.({ type: 'comment' })}
       >

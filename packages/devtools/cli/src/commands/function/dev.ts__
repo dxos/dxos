@@ -14,7 +14,7 @@ import { FLAG_SPACE_KEYS } from '@dxos/cli-base';
 import { DX_DATA, getProfilePath, type Space } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import {
-  FUNCTION_SCHEMA,
+  FUNCTION_TYPES,
   DevServer,
   type FunctionManifest,
   FunctionRegistry,
@@ -51,7 +51,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
     }
 
     await this.execWithClient(async ({ client }) => {
-      client.addTypes(FUNCTION_SCHEMA);
+      client.addTypes(FUNCTION_TYPES);
 
       // TODO(dmaretskyi): Move into system service?
       const config = new Config(JSON.parse((await client.services.services.DevtoolsHost!.getConfig()).config));

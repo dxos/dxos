@@ -29,21 +29,6 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/templates/bare-template/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/templates/hello-template/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/templates/tasks-template/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/testbench-app/package.json",
           "jsonpath": "$.version"
         },
@@ -380,21 +365,6 @@
         {
           "type": "json",
           "path": "packages/devtools/devtools-extension/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/devtools/initializers/create/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/devtools/initializers/create-bare/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/devtools/initializers/create-tasks/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -779,12 +749,12 @@
         },
         {
           "type": "json",
-          "path": "packages/ui/react-ui-data/package.json",
+          "path": "packages/ui/react-ui-editor/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/ui/react-ui-editor/package.json",
+          "path": "packages/ui/react-ui-form/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -860,11 +830,6 @@
         {
           "type": "json",
           "path": "tools/codemods/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "tools/conform/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -8,7 +8,7 @@ Use subscriptions to listen for changes to objects in a [space](./README.md).
 
 ## Subscribe to a query
 
-Use the [`subscribe`](/api/@dxos/client/classes/Query#subscribe-callback-opts) method on a query to listen for changes to objects in a space. The callback will be called with an object containing the new objects that match the query. The return value of `subscribe` is a function that can be called to stop the subscription.
+Use the `subscribe` method on a query to listen for changes to objects in a space. The callback will be called with an object containing the new objects that match the query. The return value of `subscribe` is a function that can be called to stop the subscription.
 
 ```ts{14,16} file=./snippets/subscription.ts#L5-
 import { Client } from '@dxos/client';
@@ -50,7 +50,7 @@ async () => {
 
 ## Subscribe to an object
 
-Objects returned from ECHO queries are based on [ReactiveObject](/api/@dxos/client/types/ReactiveObject.md), which are a kind of [Proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) object that will trigger reactivity and subscriptions like a Preact signal. Unlike signals, the values are read and modified directly rather than through `.value`.
+Objects returned from ECHO queries are based on `ReactiveObject`, which are a kind of [Proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) object that will trigger reactivity and subscriptions like a Preact signal. Unlike signals, the values are read and modified directly rather than through `.value`.
 
 You can use the `effect` closure from `@preact/signals-core` to re-run code whenever the object changes. Any properties of ECHO objects accessed inside `effect` closures will be tracked and re-run the closure when they change.
 

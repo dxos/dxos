@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Input, useTranslation } from '@dxos/react-ui';
-import { DeprecatedFormInput } from '@dxos/react-ui-data';
+import { DeprecatedFormInput } from '@dxos/react-ui-form';
 
 import { SKETCH_PLUGIN } from '../meta';
 import { type SketchSettingsProps } from '../types';

@@ -345,7 +345,7 @@ export class Graph {
    */
   async waitForPath(
     params: { source?: string; target: string },
-    { timeout = 1000, interval = 100 }: { timeout?: number; interval?: number } = {},
+    { timeout = 5_000, interval = 500 }: { timeout?: number; interval?: number } = {},
   ) {
     const path = this.getPath(params);
     if (path) {

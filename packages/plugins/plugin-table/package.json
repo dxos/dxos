@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-table",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "description": "Table surface plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -50,11 +50,11 @@
     "@dxos/plugin-stack": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
-    "@dxos/react-ui-data": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/schema": "workspace:*",
-    "@effect/schema": "^0.75.1"
+    "@effect/schema": "^0.75.5"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

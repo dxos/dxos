@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { surfaceCadence } from './sememes-system';
 import type { ColorSememes } from './types';
 
 export const sheetSememes = {
@@ -30,11 +31,11 @@ export const sheetSememes = {
   gridCellSelected: {
     // TODO(thure): Can this not just use `attention`?
     light: ['neutral', 50],
-    dark: ['neutral', 900],
+    dark: ['neutral', 800],
   },
   gridLine: {
-    light: ['neutral', 200],
-    dark: ['neutral', 700],
+    light: ['neutral', surfaceCadence.light[4]],
+    dark: ['neutral', surfaceCadence.dark[3]],
   },
   gridOverlay: {
     light: ['primary', '500/.5'],

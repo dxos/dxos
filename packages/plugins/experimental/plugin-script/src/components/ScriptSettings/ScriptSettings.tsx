@@ -7,7 +7,7 @@ import React from 'react';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { useClient } from '@dxos/react-client';
 import { Button, useTranslation } from '@dxos/react-ui';
-import { DeprecatedFormInput } from '@dxos/react-ui-data';
+import { DeprecatedFormInput } from '@dxos/react-ui-form';
 
 import { SCRIPT_PLUGIN } from '../../meta';
 import { type ScriptSettingsProps } from '../../types';
