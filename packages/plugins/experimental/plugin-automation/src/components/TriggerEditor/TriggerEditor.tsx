@@ -24,8 +24,8 @@ export type TriggerEditorProps = {
 export const TriggerEditor = ({ space, trigger }: TriggerEditorProps) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
   const functions = useQuery(space, Filter.schema(FunctionType));
-  // const script = useMemo(() => scripts.find((script) => script.id === trigger.function), [trigger.function, scripts]);
 
+  // const script = useMemo(() => scripts.find((script) => script.id === trigger.function), [trigger.function, scripts]);
   // useLocalTriggerManager(space);
 
   // useEffect(() => {

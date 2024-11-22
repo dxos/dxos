@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { String } from 'effect';
+import { pipe } from 'effect';
+import { capitalize } from 'effect/String';
 import React, { useEffect, useMemo } from 'react';
 
 import { AST, S } from '@dxos/echo-schema';
@@ -102,7 +103,7 @@ export const Form = <T extends object = {}>({
         .map((property) => {
           const { prop, name, type, format, title, description, examples, options } = property;
           const key = [...path, name];
-          const label = title ?? String.capitalize(name);
+          const label = pipe(title ?? name, capitalize);
           const placeholder = examples?.length ? `Example: "${examples[0]}"` : description;
 
           // Get generic input.
