@@ -29,7 +29,7 @@ export const WnfsPlugin = (): PluginDefinition<WnfsPluginProvides> => {
     ready: async (plugins) => {
       const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
       invariant(client);
-      const apiHost = client.config.values.runtime?.services?.edge?.url || 'http://localhost:8787';
+      const apiHost = client?.config?.values?.runtime?.services?.edge?.url || 'http://localhost:8787';
       blockstore = Blockstore.create(apiHost);
       await blockstore.open();
     },

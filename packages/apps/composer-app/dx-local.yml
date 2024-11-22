@@ -8,6 +8,8 @@ runtime:
   services:
     edge:
       #  url: https://edge.dxos.workers.dev/
-      url: https://edge-main.dxos.workers.dev/
+      # TODO: Restore to url when done:
+      #  url: https://edge-main.dxos.workers.dev/
+      url: http://localhost:8787/
     agentHosting:
       type: LOCAL_TESTING
