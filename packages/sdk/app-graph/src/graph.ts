@@ -178,7 +178,7 @@ export class Graph {
     const edges = Object.fromEntries(
       Object.entries(this._edges)
         .map(([id, { outbound }]): [string, string[]] => [id, outbound])
-        .toSorted(([a], [b]) => a.localeCompare(b)),
+        .sort(([a], [b]) => a.localeCompare(b)),
     );
 
     return JSON.stringify({ nodes, edges });
