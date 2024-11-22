@@ -99,7 +99,7 @@ class GridManager {
   }
 
   async expectFocus(locator: Locator) {
-    await expect(await locator.evaluate((node) => document.activeElement === node)).toBeTruthy();
+    return expect(await locator.evaluate((node) => document.activeElement === node)).toBeTruthy();
   }
 
   listenForSelect() {
