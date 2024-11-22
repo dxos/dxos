@@ -10,12 +10,12 @@ import { Schema as S } from '@effect/schema';
 //
 
 // TODO(dmaretskyi): Move out.
-const EchoIdSchema = S.String;
+const ObjectIdSchema = S.String;
 
 // TODO(dmaretskyi): Move out.
 const SpaceIdSchema = S.String as any as S.Schema<SpaceId>;
 
-const DxnSchema = S.String.pipe(S.pattern(/^dxn:/));
+const DXNSchema = S.String.pipe(S.pattern(/^dxn:/));
 
 // TODO(dmaretskyi): Consider moving this to echo protocol.
 
@@ -24,14 +24,14 @@ const DxnSchema = S.String.pipe(S.pattern(/^dxn:/));
  */
 const FilterSchema = S.Struct({
   /**
-   * Matches specific object id.
-   */
-  objectId: S.optional(S.Array(EchoIdSchema)),
-
-  /**
    * Matches object type.
    */
-  type: S.optional(S.Array(DxnSchema)),
+  type: S.optional(S.Array(DXNSchema)),
+
+  /**
+   * Matches specific object id.
+   */
+  objectId: S.optional(S.Array(ObjectIdSchema)),
 
   // TODO(dmaretskyi): How do we handle matching nested properties?
   /*
@@ -52,7 +52,7 @@ const FilterSchema = S.Struct({
   /**
    * This filter should be negated.
    */
-  negated: S.optional(S.Boolean),
+  not: S.optional(S.Boolean),
 
   /**
    * All additional filters that should be satisfied for this filter to pass.
@@ -69,16 +69,36 @@ const FilterSchema = S.Struct({
 
 interface FilterType extends S.Schema.Type<typeof FilterSchema> {}
 
-const QuerySchema = S.Struct({
+/**
+ * Defines the result format of the query.
+ */
+export enum ResultFormat {
   /**
-   * Query filter.
+   * Plain javascript objects.
+   * No live updates.
    */
-  filter: FilterSchema,
+  Plain = 'plain',
 
   /**
-   * Space to query.
+   * Live objects that update automatically with mutations in the database.
+   * Support signal notifications.
    */
-  spaces: S.optional(S.Array(SpaceIdSchema)),
+  Live = 'live',
+
+  /**
+   * Direct access to the automerge document.
+   */
+  AutomergeDocAccessor = 'automergeDocAccessor',
+}
+
+const ResultFormatSchema = S.Enums(ResultFormat);
+
+const ResultOptionsSchema = S.Struct({
+  /**
+   * Format of the output data.
+   * Not every query engine supports all formats.
+   */
+  format: S.optional(ResultFormatSchema),
 
   /**
    * Eagerly load data from objects referenced by the references set in those specific properties.
@@ -86,7 +106,24 @@ const QuerySchema = S.Struct({
    * @example `{ org: true }` - loads data from the reference in the `org` property.
    * @example `{ org: { manager: true } }` - recursively loads data from `org` reference and then from the `manager` reference.
    */
-  include: S.optional(S.Record({ key: S.String, value: S.Any })),
+  shape: S.optional(S.Record({ key: S.String, value: S.Any })),
+});
+
+const QuerySchema = S.Struct({
+  /**
+   * Space to query.
+   */
+  spaces: S.optional(S.Array(SpaceIdSchema)),
+
+  /**
+   * Query filter.
+   */
+  filter: FilterSchema,
+
+  /**
+   * Result formatting options.
+   */
+  result: S.optional(ResultOptionsSchema),
 }).pipe(S.mutable);
 
 export interface QueryType extends S.Schema.Type<typeof QuerySchema> {}
