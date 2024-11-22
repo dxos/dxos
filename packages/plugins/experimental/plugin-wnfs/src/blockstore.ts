@@ -70,11 +70,16 @@ export class MixedBlockstore extends BaseBlockstore {
     }
 
     if (this.#isConnected && this.#apiHost) {
-      return await fetch(this.url(this.#apiHost, key), {
+      const block = await fetch(this.url(this.#apiHost, key), {
         method: 'GET',
       })
         .then((r) => r.arrayBuffer())
         .then((r) => new Uint8Array(r));
+
+      // Make sure it is cached locally
+      await this.#localStore.put(key, block);
+
+      return block;
     }
 
     return await this.#localStore.get(key);
