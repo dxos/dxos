@@ -54,7 +54,9 @@ describe('Serializer', () => {
         obj.title = 'Test';
         db.add(obj);
         await db.flush();
-        expect(db.objects).to.have.length(1);
+
+        const { objects } = await db.query().run();
+        expect(objects).to.have.length(1);
 
         data = await serializer.export(db);
         expect(data.objects).to.have.length(1);

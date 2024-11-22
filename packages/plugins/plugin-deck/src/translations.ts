@@ -39,7 +39,7 @@ export default [
         'pin end label': 'Pin to the right sidebar',
         'increment start label': 'Move to the left',
         'increment end label': 'Move to the right',
-        'show deck plank label': 'Show deck',
+        'show deck plank label': 'Return to deck',
         'show solo plank label': 'Maximize',
         'close label': 'Close',
         'minify label': 'Minify',

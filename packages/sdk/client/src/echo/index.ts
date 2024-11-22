@@ -39,6 +39,7 @@ export {
   type Selection,
   type Subscription,
   type SubscriptionHandle,
+  ResultFormat,
 } from '@dxos/echo-db';
 
 // TODO(dmaretskyi): Remove this export.

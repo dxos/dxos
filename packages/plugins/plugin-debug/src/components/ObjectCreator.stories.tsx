@@ -5,15 +5,20 @@
 import '@dxos-theme';
 
 import { type Meta } from '@storybook/react';
-import React, { useEffect } from 'react';
+import React, { type FC, useEffect } from 'react';
 
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { type ReactiveObject, useSpaces } from '@dxos/react-client/echo';
-import { ClientRepeater } from '@dxos/react-client/testing';
+import { withClientProvider } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { ObjectCreator, type ObjectCreatorProps } from './ObjectCreator';
 
-const Story = () => {
+const render =
+  <T,>(r: FC<T>) =>
+  (args: T) => <>{r(args) ?? <div />}</>;
+
+const DefaultStory = () => {
   const [space] = useSpaces();
   useEffect(() => {
     if (space) {
@@ -33,15 +38,16 @@ const Story = () => {
   return <ObjectCreator space={space} onAddObjects={handleCreate} />;
 };
 
-export const Default = {};
-
 const meta: Meta = {
   title: 'plugins/plugin-debug/SchemaList',
   component: ObjectCreator,
-  render: () => <ClientRepeater component={Story} createSpace />,
+  render: render(DefaultStory),
+  decorators: [withClientProvider({ createSpace: true }), withTheme],
   parameters: {
     layout: 'fullscreen',
   },
 };
 
 export default meta;
+
+export const Default = {};
