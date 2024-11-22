@@ -20,11 +20,11 @@ export class DxGridManager {
   }
 
   planes() {
-    return this.grid.locator('.dx-grid [data-dx-grid-plane]').all();
+    return this.grid.locator('.dx-grid [data-dx-grid-plane]');
   }
 
   cellsWithinPlane(plane: string) {
-    return this.grid.locator(`.dx-grid [data-dx-grid-plane="${plane}"]`).getByRole('gridcell').all();
+    return this.grid.locator(`.dx-grid [data-dx-grid-plane="${plane}"]`).getByRole('gridcell');
   }
 
   cell(col: number, row: number, plane: string) {
@@ -65,17 +65,17 @@ export class DxGridManager {
   async expectVirtualizationResult(cols: number, rows: number, minColIndex = 0, minRowIndex = 0) {
     await this.cell(minColIndex, minRowIndex, 'grid').waitFor({ state: 'visible' });
     // Top planes
-    await expect(await this.cellsWithinPlane('fixedStartStart')).toHaveLength(4);
-    await expect(await this.cellsWithinPlane('frozenRowsStart')).toHaveLength(2 * cols);
-    await expect(await this.cellsWithinPlane('fixedStartEnd')).toHaveLength(2);
+    await expect(this.cellsWithinPlane('fixedStartStart')).toHaveCount(4);
+    await expect(this.cellsWithinPlane('frozenRowsStart')).toHaveCount(2 * cols);
+    await expect(this.cellsWithinPlane('fixedStartEnd')).toHaveCount(2);
     // Center planes
-    await expect(await this.cellsWithinPlane('frozenColsStart')).toHaveLength(2 * rows);
-    await expect(await this.cellsWithinPlane('grid')).toHaveLength(rows * cols);
-    await expect(await this.cellsWithinPlane('frozenColsEnd')).toHaveLength(rows);
+    await expect(this.cellsWithinPlane('frozenColsStart')).toHaveCount(2 * rows);
+    await expect(this.cellsWithinPlane('grid')).toHaveCount(rows * cols);
+    await expect(this.cellsWithinPlane('frozenColsEnd')).toHaveCount(rows);
     // Bottom planes
-    await expect(await this.cellsWithinPlane('fixedEndStart')).toHaveLength(2);
-    await expect(await this.cellsWithinPlane('frozenRowsEnd')).toHaveLength(cols);
-    await expect(await this.cellsWithinPlane('fixedEndEnd')).toHaveLength(1);
+    await expect(this.cellsWithinPlane('fixedEndStart')).toHaveCount(2);
+    await expect(this.cellsWithinPlane('frozenRowsEnd')).toHaveCount(cols);
+    await expect(this.cellsWithinPlane('fixedEndEnd')).toHaveCount(1);
   }
 
   async expectFocus(locator: Locator) {

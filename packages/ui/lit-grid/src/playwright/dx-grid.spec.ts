@@ -38,7 +38,7 @@ test.describe('dx-grid', () => {
 
   test('virtualization & panning', async () => {
     // There are nine planes in the spec story.
-    await expect(await grid.planes()).toHaveLength(9);
+    await expect(grid.planes()).toHaveCount(9);
 
     // Each plane starts with the correct number of cells within it on initial render.
     await grid.expectVirtualizationResult(nCols, nRows);
