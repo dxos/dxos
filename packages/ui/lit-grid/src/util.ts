@@ -4,6 +4,7 @@
 
 import { defaultSizeRow } from './defs';
 import {
+  type DxGridPlaneCellIndex,
   type DxGridCellIndex,
   type DxGridPosition,
   type DxGridPointer,
@@ -14,15 +15,15 @@ import {
   type DxGridFrozenColsPlane,
   type DxGridFrozenPlane,
   type DxGridAxis,
+  type DxGridPlanePosition,
+  separator,
 } from './types';
 
-/**
- * Separator for serializing cell position vectors
- */
-export const separator = ',';
+export const toPlaneCellIndex = (cellCoords: Partial<DxGridPosition> & DxGridPlanePosition): DxGridPlaneCellIndex =>
+  `${cellCoords.col}${separator}${cellCoords.row}`;
 
 export const toCellIndex = (cellCoords: DxGridPosition): DxGridCellIndex =>
-  `${cellCoords.col}${separator}${cellCoords.row}`;
+  `${cellCoords.plane}${separator}${cellCoords.col}${separator}${cellCoords.row}`;
 
 //
 // A1 notation is the fallback for numbering columns and rows.

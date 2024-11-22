@@ -14,7 +14,7 @@ import './dx-grid-axis-resize-handle';
 import {
   type DxGridAxisMetaProps,
   type DxGridAxisSizes,
-  type DxGridCellIndex,
+  type DxGridPlaneCellIndex,
   type DxGridCellValue,
   DxAxisResize,
   type DxAxisResizeInternal,
@@ -38,10 +38,10 @@ import {
   type DxGridSelectionProps,
   type DxGridAnnotatedPanEvent,
   type DxGridRange,
+  separator,
 } from './types';
 import {
-  separator,
-  toCellIndex,
+  toPlaneCellIndex,
   gap,
   resizeTolerance,
   sizeColMin,
@@ -258,7 +258,7 @@ export class DxGrid extends LitElement {
       queueMicrotask(() =>
         this.dispatchEvent(
           new DxEditRequest({
-            cellIndex: toCellIndex(this.focusedCell),
+            cellIndex: toPlaneCellIndex(this.focusedCell),
             cellBox: this.focusedCellBox(),
             initialContent,
           }),
@@ -497,7 +497,7 @@ export class DxGrid extends LitElement {
   }
 
   private cell(c: number | string, r: number | string, plane: DxGridPlane): DxGridCellValue | undefined {
-    const index: DxGridCellIndex = `${c}${separator}${r}`;
+    const index: DxGridPlaneCellIndex = `${c}${separator}${r}`;
     return this.cells?.[plane]?.[index] ?? this.initialCells?.[plane]?.[index];
   }
 

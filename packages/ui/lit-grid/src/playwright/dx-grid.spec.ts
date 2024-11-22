@@ -2,9 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Browser, type Page } from '@playwright/test';
 
 import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
+
+import { type DxGridCellsSelect } from '../types';
+import { toPlaneCellIndex } from '../util';
 
 const gridPlaneCellSize = 31;
 const gap = 1;
@@ -12,32 +15,50 @@ const nCols = 9;
 const nRows = 7;
 
 class GridManager {
-  constructor(page: Page) {
-    this.page = page;
+  constructor(browser: Browser) {
+    this.browser = browser;
+    this.page = null;
   }
 
-  private page: Page;
+  private page: Page | null;
+  private browser: Browser;
 
   async ready() {
+    const { page } = await setupPage(this.browser, {
+      url: storybookUrl('dx-grid--spec'),
+      viewportSize: {
+        width: (gridPlaneCellSize + gap) * (nCols + 1.5),
+        height: (gridPlaneCellSize + gap) * (nRows + 1.5),
+      }, // 336 x 272
+    });
+    this.page = page;
     return this.page.locator('.dx-grid').waitFor({ state: 'visible' });
   }
 
-  async planes() {
-    return this.page.locator('.dx-grid [data-dx-grid-plane]').all();
+  close() {
+    return this.page?.close();
   }
 
-  async cellsWithinPlane(plane: string) {
-    return this.page.locator(`.dx-grid [data-dx-grid-plane="${plane}"]`).getByRole('gridcell').all();
+  planes() {
+    return this.page!.locator('.dx-grid [data-dx-grid-plane]').all();
   }
 
-  async panByWheel(deltaX: number, deltaY: number) {
-    return this.page.locator('.dx-grid [data-dx-grid-plane="grid"]').dispatchEvent('wheel', { deltaX, deltaY });
+  cellsWithinPlane(plane: string) {
+    return this.page!.locator(`.dx-grid [data-dx-grid-plane="${plane}"]`).getByRole('gridcell').all();
+  }
+
+  cell(col: number, row: number, plane: string) {
+    return this.page!.locator(
+      `.dx-grid [data-dx-grid-plane="${plane}"] [aria-colindex="${col}"][aria-rowindex="${row}"]`,
+    );
+  }
+
+  panByWheel(deltaX: number, deltaY: number) {
+    return this.page!.locator('.dx-grid [data-dx-grid-plane="grid"]').dispatchEvent('wheel', { deltaX, deltaY });
   }
 
   async expectVirtualizationResult(cols: number, rows: number, minColIndex = 0, minRowIndex = 0) {
-    await this.page
-      .locator(`.dx-grid [data-dx-grid-plane="grid"] [aria-colindex="${minColIndex}"][aria-rowindex="${minRowIndex}"]`)
-      .waitFor({ state: 'visible' });
+    await this.cell(minColIndex, minRowIndex, 'grid').waitFor({ state: 'visible' });
     // Top planes
     await expect(await this.cellsWithinPlane('fixedStartStart')).toHaveLength(4);
     await expect(await this.cellsWithinPlane('frozenRowsStart')).toHaveLength(2 * cols);
@@ -51,19 +72,25 @@ class GridManager {
     await expect(await this.cellsWithinPlane('frozenRowsEnd')).toHaveLength(cols);
     await expect(await this.cellsWithinPlane('fixedEndEnd')).toHaveLength(1);
   }
+
+  listenForSelect() {
+    return this.page!.evaluate(() => {
+      document.querySelector('dx-grid')!.addEventListener('dx-grid-cells-select', (event) => {
+        (window as any).DX_GRID_EVENT = event;
+      });
+    });
+  }
+
+  waitForDxEvent() {
+    return this.page!.waitForFunction(() => {
+      return (window as any).DX_GRID_EVENT;
+    });
+  }
 }
 
 test.describe('dx-grid', () => {
   test('virtualization & panning', async ({ browser }) => {
-    const { page } = await setupPage(browser, {
-      url: storybookUrl('dx-grid--spec'),
-      viewportSize: {
-        width: (gridPlaneCellSize + gap) * (nCols + 1.5),
-        height: (gridPlaneCellSize + gap) * (nRows + 1.5),
-      }, // 336 x 272
-    });
-
-    const grid = new GridManager(page);
+    const grid = new GridManager(browser);
     await grid.ready();
 
     // There are nine planes in the spec story.
@@ -79,6 +106,30 @@ test.describe('dx-grid', () => {
     await grid.expectVirtualizationResult(nCols + 1, nRows + 1, 1, 1);
 
     // Done.
-    await page.close();
+    await grid.close();
+  });
+  test('mouse access', async ({ browser }) => {
+    const grid = new GridManager(browser);
+    await grid.ready();
+
+    await grid.listenForSelect();
+
+    // Find and click on the cell at 0,0.
+    const cell00 = await grid.cell(0, 0, 'grid');
+    await cell00.click();
+
+    // It should now have focus
+    expect(cell00.evaluate((node) => document.activeElement === node));
+
+    // Shift-click on the cell at 1,1 and wait for the selection change custom event.
+    await grid.cell(1, 1, 'grid').click({ modifiers: ['Shift'] });
+    const select: DxGridCellsSelect = await grid.waitForDxEvent().then((event) => event.jsonValue());
+
+    // Expect the event to have the right information.
+    expect(select).toHaveProperty('start', toPlaneCellIndex({ col: 0, row: 0 }));
+    expect(select).toHaveProperty('end', toPlaneCellIndex({ col: 1, row: 1 }));
+
+    // The cell at 0,0 should still have focus despite the shift+click.
+    expect(cell00.evaluate((node) => document.activeElement === node));
   });
 });
