@@ -7,6 +7,9 @@ import { S } from '@dxos/effect';
 import { type ObjectAnnotation, ObjectAnnotationId, schemaVariance } from '../ast';
 import { getSchema, getTypeReference } from '../proxy';
 
+/**
+ * Base type.
+ */
 export interface AbstractSchema<Fields = any, I = any> extends S.Schema<Fields, I> {
   /** Fully qualified type name. */
   readonly typename: string;
@@ -16,19 +19,19 @@ export interface AbstractSchema<Fields = any, I = any> extends S.Schema<Fields, 
  * Marker interface for typed objects (for type inference).
  */
 export interface AbstractTypedObject<Fields, I> extends AbstractSchema<Fields, I> {
-  // Type constructor.
+  /** Type constructor. */
   new (): Fields;
 }
+
+const TYPENAME_REGEX = /^\w+\.\w{2,}\/[\w/]+$/;
+const VERSION_REGEX = /^\d+.\d+.\d+$/;
 
 export type TypedObjectOptions = {
   partial?: true;
   record?: true;
 };
 
-const TYPENAME_REGEX = /^\w+\.\w{2,}\/[\w/]+$/;
-const VERSION_REGEX = /^\d+.\d+.\d+$/;
-
-type TypeObjectOptions = {
+type TypedObjectProps = ObjectAnnotation & {
   // TODO(dmaretskyi): Remove after all legacy types has been removed.
   skipTypenameFormatCheck?: boolean;
 };
@@ -38,11 +41,7 @@ type TypeObjectOptions = {
  */
 // TODO(burdon): Document this and define a return type.
 // TODO(burdon): Support pipe(S.default({}))
-export const TypedObject = <ClassType>({
-  typename,
-  version,
-  skipTypenameFormatCheck,
-}: ObjectAnnotation & TypeObjectOptions) => {
+export const TypedObject = <ClassType>({ typename, version, skipTypenameFormatCheck }: TypedObjectProps) => {
   if (!skipTypenameFormatCheck) {
     if (!TYPENAME_REGEX.test(typename)) {
       throw new TypeError(`Invalid typename: ${typename}`);
@@ -68,6 +67,7 @@ export const TypedObject = <ClassType>({
     const fieldsSchema = options?.record ? S.Struct(fields, { key: S.String, value: S.Any }) : S.Struct(fields);
     // Ok to perform `as any` cast here since the types are explicitly defined.
     const schemaWithModifiers = S.mutable(options?.partial ? S.partial(fieldsSchema as any) : fieldsSchema);
+    // Set ECHO object id property.
     const typeSchema = S.extend(schemaWithModifiers, S.Struct({ id: S.String }));
     const annotatedSchema = typeSchema.annotations({
       [ObjectAnnotationId]: { typename, version },
@@ -75,11 +75,15 @@ export const TypedObject = <ClassType>({
 
     return class {
       static readonly typename = typename;
+
+      // TODO(burdon): Comment.
       static [Symbol.hasInstance](obj: unknown): obj is ClassType {
         return obj != null && getTypeReference(getSchema(obj))?.objectId === typename;
       }
 
+      // TODO(burdon): Comment.
       static readonly [S.TypeId] = schemaVariance;
+
       static readonly ast = annotatedSchema.ast;
       static readonly annotations = annotatedSchema.annotations.bind(annotatedSchema);
       static readonly pipe = annotatedSchema.pipe.bind(annotatedSchema);

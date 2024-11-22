@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { String } from 'effect';
 import React, { useEffect, useMemo } from 'react';
 
 import { AST, S } from '@dxos/echo-schema';
@@ -100,8 +101,9 @@ export const Form = <T extends object = {}>({
       {properties
         .map((property) => {
           const { prop, name, type, format, title, description, examples, options } = property;
-          const placeholder = examples?.length ? `Example: "${examples[0]}"` : description;
           const key = [...path, name];
+          const label = title ?? String.capitalize(name);
+          const placeholder = examples?.length ? `Example: "${examples[0]}"` : description;
 
           // Get generic input.
           let InputComponent = Custom?.[key.join('.')];
@@ -115,7 +117,7 @@ export const Form = <T extends object = {}>({
                     format={format}
                     property={name}
                     disabled={readonly}
-                    label={title ?? name}
+                    label={label}
                     options={options.map((option) => ({ value: option, label: String(option) }))}
                     placeholder={placeholder}
                     {...inputProps}
@@ -139,7 +141,7 @@ export const Form = <T extends object = {}>({
                 const schema = S.make(typeLiteral);
                 return (
                   <div key={name} role='none'>
-                    <div className={padding}>{title ?? name}</div>
+                    <div className={padding}>{label}</div>
                     <Form<any>
                       schema={schema}
                       path={key}
@@ -165,7 +167,7 @@ export const Form = <T extends object = {}>({
                 format={format}
                 property={name}
                 disabled={readonly}
-                label={title ?? name}
+                label={label}
                 placeholder={placeholder}
                 {...inputProps}
               />

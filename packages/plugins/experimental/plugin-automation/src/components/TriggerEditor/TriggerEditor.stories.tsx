@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
-import { create } from '@dxos/echo-schema';
+import { AST, S, create, toJsonSchema } from '@dxos/echo-schema';
 import { FunctionTrigger, TriggerKind } from '@dxos/functions';
 import { FunctionType } from '@dxos/plugin-script/types';
 import { useClient } from '@dxos/react-client';
@@ -18,14 +18,33 @@ import { TriggerEditor } from './TriggerEditor';
 import translations from '../../translations';
 import { ChainPromptType } from '../../types';
 
+// TODO(burdon): Extract type?
 const functions = [
   {
-    name: 'dxos.org/function/chess',
+    name: 'example.com/function/chess',
     version: 1,
+    inputSchema: toJsonSchema(
+      S.Struct({
+        level: S.Number.annotations({
+          [AST.TitleAnnotationId]: 'Level',
+        }),
+      }),
+    ),
   },
   {
-    name: 'dxos.org/function/forex',
+    name: 'example.com/function/forex',
     version: 1,
+    binding: 'FOREX',
+    inputSchema: toJsonSchema(
+      S.Struct({
+        from: S.String.annotations({
+          [AST.TitleAnnotationId]: 'Currency from',
+        }),
+        to: S.String.annotations({
+          [AST.TitleAnnotationId]: 'Currency to',
+        }),
+      }),
+    ),
   },
 ];
 

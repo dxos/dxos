@@ -5,7 +5,8 @@
 import React from 'react';
 
 import { FunctionTriggerSchema, type FunctionTriggerType, type FunctionTrigger, TriggerKind } from '@dxos/functions';
-import { type Space } from '@dxos/react-client/echo';
+import { FunctionType } from '@dxos/plugin-script/types';
+import { Filter, useQuery, type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Form, SelectInput } from '@dxos/react-ui-form';
 
@@ -20,9 +21,9 @@ export type TriggerEditorProps = {
 // TODO(burdon): Function meta (remove meta from existing trigger def).
 // TODO(burdon): Actual integration.
 
-export const TriggerEditor = ({ trigger }: TriggerEditorProps) => {
+export const TriggerEditor = ({ space, trigger }: TriggerEditorProps) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
-  // const scripts = useQuery(space, Filter.schema(ScriptType));
+  const functions = useQuery(space, Filter.schema(FunctionType));
   // const script = useMemo(() => scripts.find((script) => script.id === trigger.function), [trigger.function, scripts]);
 
   // useLocalTriggerManager(space);
@@ -71,9 +72,9 @@ export const TriggerEditor = ({ trigger }: TriggerEditorProps) => {
         ['function' satisfies keyof FunctionTriggerType]: (props) => (
           <SelectInput<FunctionTriggerType>
             {...props}
-            options={[].map((value) => ({
-              value,
-              label: value,
+            options={functions.map(({ name }) => ({
+              value: name,
+              label: name,
             }))}
           />
         ),

@@ -15,10 +15,10 @@ export class ScriptType extends TypedObject({
   // TODO(burdon): Change to URI?
   name: S.optional(S.String),
   description: S.optional(S.String),
-  source: ref(TextType),
   // TODO(burdon): Change to hash of deployed content.
   // Whether source has changed since last deploy.
   changed: S.optional(S.Boolean),
+  source: ref(TextType),
 }) {}
 
 /**
@@ -29,14 +29,16 @@ export class FunctionType extends TypedObject({
   typename: 'dxos.org/type/Function',
   version: '0.1.0',
 })({
-  // TODO(burdon): Change to uri?
-  name: S.optional(S.String),
+  // TODO(burdon): Rename to id/uri?
+  name: S.NonEmptyString,
   version: S.Number,
-  // Local binding to a function name.
-  // TODO(burdon): Move binding to inner type.
-  binding: S.optional(S.String),
+
   // Reference to a source script if it exists within ECHO.
   // TODO(burdon): Don't ref ScriptType directly (core).
   source: S.optional(ref(ScriptType)),
+
   inputSchema: S.optional(JsonSchemaType),
+
+  // Local binding to a function name.
+  binding: S.optional(S.String),
 }) {}
