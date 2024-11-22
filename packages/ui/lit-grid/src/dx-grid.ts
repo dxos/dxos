@@ -1443,11 +1443,6 @@ export class DxGrid extends LitElement {
     return false;
   }
 
-  override connectedCallback() {
-    super.connectedCallback();
-    document.body.addEventListener('focus', () => console.log('[focus]', document.activeElement), { capture: true });
-  }
-
   override disconnectedCallback() {
     super.disconnectedCallback();
     if (this.viewportRef.value) {
