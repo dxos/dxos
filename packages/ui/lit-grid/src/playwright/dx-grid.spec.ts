@@ -2,11 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-import { expect, test, type Browser, type Page, type Locator } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
-import { type DxGridCellsSelect, type DxGridPlanePosition } from '../types';
+import { GridManager } from './dx-grid-manager';
+import { type DxGridCellsSelect } from '../types';
 import { toPlaneCellIndex } from '../util';
 
 const gridPlaneCellSize = 31;
@@ -14,118 +15,28 @@ const gap = 1;
 const nCols = 9;
 const nRows = 7;
 
-class GridManager {
-  constructor(browser: Browser) {
-    this.browser = browser;
-    this.page = null;
-  }
+test.describe('dx-grid', () => {
+  let page: Page;
+  let grid: GridManager;
 
-  page: Page | null;
-  browser: Browser;
-
-  async open() {
-    const { page } = await setupPage(this.browser, {
+  test.beforeEach(async ({ browser }) => {
+    const setup = await setupPage(browser, {
       url: storybookUrl('dx-grid--spec'),
       viewportSize: {
         width: (gridPlaneCellSize + gap) * (nCols + 1.5),
         height: (gridPlaneCellSize + gap) * (nRows + 1.5),
       }, // 336 x 272
     });
-    this.page = page;
-    return this.page.locator('.dx-grid').waitFor({ state: 'visible' });
-  }
+    page = setup.page;
+    grid = new GridManager(page);
+    await grid.ready();
+  });
 
-  close() {
-    return this.page?.close();
-  }
+  test.afterEach(async () => {
+    await page.close();
+  });
 
-  planes() {
-    return this.page!.locator('.dx-grid [data-dx-grid-plane]').all();
-  }
-
-  cellsWithinPlane(plane: string) {
-    return this.page!.locator(`.dx-grid [data-dx-grid-plane="${plane}"]`).getByRole('gridcell').all();
-  }
-
-  cell(col: number, row: number, plane: string) {
-    return this.page!.locator(
-      `.dx-grid [data-dx-grid-plane="${plane}"] [aria-colindex="${col}"][aria-rowindex="${row}"]`,
-    );
-  }
-
-  panByWheel(deltaX: number, deltaY: number) {
-    return this.page!.locator('.dx-grid [data-dx-grid-plane="grid"]').dispatchEvent('wheel', { deltaX, deltaY });
-  }
-
-  async forCellsInRange(
-    start: DxGridPlanePosition,
-    end: DxGridPlanePosition,
-    iterator: (col: number, row: number) => Promise<void>,
-  ) {
-    const nCols = 1 + end.col - start.col;
-    const nRows = 1 + end.row - start.row;
-
-    await Promise.all(
-      [...Array(nCols)].map(async (_, c0) => {
-        return Promise.all(
-          [...Array(nRows)].map(async (_, r0) => {
-            return iterator(start.col + c0, start.row + r0);
-          }),
-        );
-      }),
-    );
-  }
-
-  async expectSelectionResult(start: DxGridPlanePosition, end: DxGridPlanePosition) {
-    return this.forCellsInRange(start, end, (col, row) =>
-      expect(this.cell(col, row, 'grid')).toHaveAttribute('aria-selected', 'true'),
-    );
-  }
-
-  async expectVirtualizationResult(cols: number, rows: number, minColIndex = 0, minRowIndex = 0) {
-    await this.cell(minColIndex, minRowIndex, 'grid').waitFor({ state: 'visible' });
-    // Top planes
-    await expect(await this.cellsWithinPlane('fixedStartStart')).toHaveLength(4);
-    await expect(await this.cellsWithinPlane('frozenRowsStart')).toHaveLength(2 * cols);
-    await expect(await this.cellsWithinPlane('fixedStartEnd')).toHaveLength(2);
-    // Center planes
-    await expect(await this.cellsWithinPlane('frozenColsStart')).toHaveLength(2 * rows);
-    await expect(await this.cellsWithinPlane('grid')).toHaveLength(rows * cols);
-    await expect(await this.cellsWithinPlane('frozenColsEnd')).toHaveLength(rows);
-    // Bottom planes
-    await expect(await this.cellsWithinPlane('fixedEndStart')).toHaveLength(2);
-    await expect(await this.cellsWithinPlane('frozenRowsEnd')).toHaveLength(cols);
-    await expect(await this.cellsWithinPlane('fixedEndEnd')).toHaveLength(1);
-  }
-
-  async expectFocus(locator: Locator) {
-    return expect(await locator.evaluate((node) => document.activeElement === node)).toBeTruthy();
-  }
-
-  listenForSelect() {
-    return this.page!.evaluate(() => {
-      document.querySelector('dx-grid')!.addEventListener('dx-grid-cells-select', (event) => {
-        (window as any).DX_GRID_EVENT = event;
-      });
-    });
-  }
-
-  async waitForDxEvent<E>(): Promise<E> {
-    const event = await this.page!.waitForFunction(() => {
-      return (window as any).DX_GRID_EVENT;
-    });
-    await this.page!.evaluate(() => {
-      return ((window as any).DX_GRID_EVENT = undefined);
-    });
-    return event.jsonValue();
-  }
-}
-
-test.describe('dx-grid', () => {
-  test('virtualization & panning', async ({ browser }) => {
-    const grid = new GridManager(browser);
-    await grid.open();
-
+  test('virtualization & panning', async () => {
     // There are nine planes in the spec story.
     await expect(await grid.planes()).toHaveLength(9);
 
@@ -137,14 +48,9 @@ test.describe('dx-grid', () => {
 
     // Confirm that the grid plane is showing only the cells that would be visible.
     await grid.expectVirtualizationResult(nCols + 1, nRows + 1, 1, 1);
-
-    // Done.
-    await grid.close();
   });
-  test('mouse access', async ({ browser }) => {
-    const grid = new GridManager(browser);
-    await grid.open();
 
+  test('mouse access', async () => {
     await grid.listenForSelect();
 
     // Find and click on the cell at 0,0.
@@ -179,39 +85,34 @@ test.describe('dx-grid', () => {
     await grid.expectFocus(cell22);
 
     await grid.expectSelectionResult({ col: 2, row: 2 }, { col: 2, row: 2 });
-
-    // Done
-    await grid.close();
   });
-  test('keyboard access', async ({ browser }) => {
-    const grid = new GridManager(browser);
-    await grid.open();
 
+  test('keyboard access', async () => {
     // Tabbing to the first plane and enter to the first cell there.
-    await grid.page!.keyboard.press('Tab');
-    await grid.page!.keyboard.press('Enter');
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Enter');
     await grid.expectFocus(grid.cell(0, 0, 'fixedStartStart'));
 
     // Escape to the planes and arrow over to the grid plane, then enter to the first cell there.
-    await grid.page!.keyboard.press('Escape');
-    await grid.page!.keyboard.press('ArrowRight');
-    await grid.page!.keyboard.press('ArrowDown');
-    await grid.page!.keyboard.press('Enter');
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Enter');
     await grid.expectFocus(grid.cell(0, 0, 'grid'));
 
     // Select a range by holding shift.
-    await grid.page!.keyboard.down('Shift');
-    await grid.page!.keyboard.press('ArrowRight');
-    await grid.page!.keyboard.press('ArrowRight');
-    await grid.page!.keyboard.press('ArrowDown');
-    await grid.page!.keyboard.press('ArrowDown');
-    await grid.page!.keyboard.up('Shift');
+    await page.keyboard.down('Shift');
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.up('Shift');
     await grid.expectFocus(grid.cell(0, 0, 'grid'));
     await grid.expectSelectionResult({ col: 0, row: 0 }, { col: 2, row: 2 });
 
     // Arrowing from there cancels selection.
-    await grid.page!.keyboard.press('ArrowRight');
-    await grid.page!.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('ArrowDown');
     await grid.expectFocus(grid.cell(1, 1, 'grid'));
   });
 });

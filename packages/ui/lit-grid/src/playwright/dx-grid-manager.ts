@@ -1,0 +1,102 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import { expect, type Locator, type Page } from '@playwright/test';
+
+import type { DxGridPlanePosition } from '../types';
+
+export class GridManager {
+  constructor(page: Page, grid: Locator = page.locator('dx-grid')) {
+    this.grid = grid;
+    this.page = page;
+  }
+
+  grid: Locator;
+  page: Page;
+
+  async ready() {
+    return this.grid.locator('.dx-grid').waitFor({ state: 'visible' });
+  }
+
+  planes() {
+    return this.grid.locator('.dx-grid [data-dx-grid-plane]').all();
+  }
+
+  cellsWithinPlane(plane: string) {
+    return this.grid.locator(`.dx-grid [data-dx-grid-plane="${plane}"]`).getByRole('gridcell').all();
+  }
+
+  cell(col: number, row: number, plane: string) {
+    return this.grid.locator(
+      `.dx-grid [data-dx-grid-plane="${plane}"] [aria-colindex="${col}"][aria-rowindex="${row}"]`,
+    );
+  }
+
+  panByWheel(deltaX: number, deltaY: number) {
+    return this.grid.locator('.dx-grid [data-dx-grid-plane="grid"]').dispatchEvent('wheel', { deltaX, deltaY });
+  }
+
+  async forCellsInRange(
+    start: DxGridPlanePosition,
+    end: DxGridPlanePosition,
+    iterator: (col: number, row: number) => Promise<void>,
+  ) {
+    const nCols = 1 + end.col - start.col;
+    const nRows = 1 + end.row - start.row;
+
+    await Promise.all(
+      [...Array(nCols)].map(async (_, c0) => {
+        return Promise.all(
+          [...Array(nRows)].map(async (_, r0) => {
+            return iterator(start.col + c0, start.row + r0);
+          }),
+        );
+      }),
+    );
+  }
+
+  async expectSelectionResult(start: DxGridPlanePosition, end: DxGridPlanePosition) {
+    return this.forCellsInRange(start, end, (col, row) =>
+      expect(this.cell(col, row, 'grid')).toHaveAttribute('aria-selected', 'true'),
+    );
+  }
+
+  async expectVirtualizationResult(cols: number, rows: number, minColIndex = 0, minRowIndex = 0) {
+    await this.cell(minColIndex, minRowIndex, 'grid').waitFor({ state: 'visible' });
+    // Top planes
+    await expect(await this.cellsWithinPlane('fixedStartStart')).toHaveLength(4);
+    await expect(await this.cellsWithinPlane('frozenRowsStart')).toHaveLength(2 * cols);
+    await expect(await this.cellsWithinPlane('fixedStartEnd')).toHaveLength(2);
+    // Center planes
+    await expect(await this.cellsWithinPlane('frozenColsStart')).toHaveLength(2 * rows);
+    await expect(await this.cellsWithinPlane('grid')).toHaveLength(rows * cols);
+    await expect(await this.cellsWithinPlane('frozenColsEnd')).toHaveLength(rows);
+    // Bottom planes
+    await expect(await this.cellsWithinPlane('fixedEndStart')).toHaveLength(2);
+    await expect(await this.cellsWithinPlane('frozenRowsEnd')).toHaveLength(cols);
+    await expect(await this.cellsWithinPlane('fixedEndEnd')).toHaveLength(1);
+  }
+
+  async expectFocus(locator: Locator) {
+    return expect(await locator.evaluate((node) => document.activeElement === node)).toBeTruthy();
+  }
+
+  listenForSelect() {
+    return this.grid.evaluate(() => {
+      document.querySelector('dx-grid')!.addEventListener('dx-grid-cells-select', (event) => {
+        (window as any).DX_GRID_EVENT = event;
+      });
+    });
+  }
+
+  async waitForDxEvent<E>(): Promise<E> {
+    const event = await this.page.waitForFunction(() => {
+      return (window as any).DX_GRID_EVENT;
+    });
+    await this.grid.evaluate(() => {
+      return ((window as any).DX_GRID_EVENT = undefined);
+    });
+    return event.jsonValue();
+  }
+}
