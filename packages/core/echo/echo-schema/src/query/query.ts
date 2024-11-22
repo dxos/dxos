@@ -23,16 +23,31 @@ const FilterSchema = S.Struct({
    */
   objectId: S.optional(S.Array(ObjectIdSchema)),
 
-  // TODO(dmaretskyi): How do we handle matching nested properties?
-  /*
-  For example if we want to match `address.city`,
-  would it be: `{ address: { city: 'Bangkok' } }` or `{ 'address.city': 'Bangkok' }`?
-
-  The second one is ambiguous because it could be a nested object or a string key.
-  The first one is not clear on whether it allows extra properties in the `address` object.
-
-  */
-  properties: S.optional(S.Record({ key: S.String, value: S.Any })),
+  /**
+   * Filtering properties.
+   *
+   * Each filter is a tuple of three elements:
+   * - Operator (e.g. `eq`, `ne`, `gt`, `lt`, `ge`, `le`).
+   * - Field path in JSONPath syntax, leading `$` not required (e.g. `address.city`).
+   * - Value to compare against.
+   *
+   * Multiple filters are combined with logical `AND`.
+   */
+  propertyFilters: S.optional(
+    S.Array(
+      S.Tuple(
+        S.String.annotations({ description: 'Operator' }),
+        S.String.annotations({ description: 'Field path' }),
+        S.Any.annotations({ description: 'Value' }),
+      ).annotations({
+        description: 'Property filters',
+        examples: [
+          ['eq', 'address.city', 'warsaw'],
+          ['ne', 'country', 'thailand'],
+        ],
+      }),
+    ),
+  ),
 
   /**
    * Full text search.
