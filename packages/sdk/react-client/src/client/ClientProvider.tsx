@@ -3,9 +3,9 @@
 //
 
 import React, {
+  forwardRef,
   type FunctionComponent,
   type PropsWithChildren,
-  forwardRef,
   useEffect,
   useImperativeHandle,
   useState,
@@ -68,8 +68,6 @@ export type ClientProviderProps = Omit<ClientOptions, 'config' | 'services'> &
 
     /**
      * Post initialization hook to enable to caller to do custom initialization.
-     *
-     * @param Client
      */
     onInitialized?: (client: Client) => MaybePromise<void>;
   }>;

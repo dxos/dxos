@@ -30,7 +30,7 @@ describe('loadObjectReferences', () => {
 
     const restartedPeer = await testBuilder.createPeer(kv);
     const restartedDb = await restartedPeer.openDatabase(spaceKey, db.rootUrl!);
-    const loaded: any = await restartedDb.loadObjectById(object.id);
+    const loaded: any = await restartedDb.query({ id: object.id }).first();
     expect(loaded.nested?.value).to.be.undefined;
     expect(await loadObjectReferences(loaded, (o) => o.nested?.value)).to.eq(nestedValue);
   });
@@ -50,7 +50,7 @@ describe('loadObjectReferences', () => {
 
     const restartedPeer = await testBuilder.createPeer(kv);
     const restartedDb = await restartedPeer.openDatabase(spaceKey, db.rootUrl!);
-    const loaded: any = await restartedDb.loadObjectById(object.id);
+    const loaded: any = await restartedDb.query({ id: object.id }).first();
     expect(loaded.nested?.value).to.be.undefined;
     const [foo, bar] = await loadObjectReferences(loaded, (o) => [o.foo, o.bar] as any[]);
     expect(foo.value + bar.value).to.eq(3);
@@ -71,7 +71,7 @@ describe('loadObjectReferences', () => {
 
     const restartedPeer = await testBuilder.createPeer(kv);
     const restartedDb = await restartedPeer.openDatabase(spaceKey, db.rootUrl!);
-    const loaded: any = await restartedDb.loadObjectById(object.id);
+    const loaded: any = await restartedDb.query({ id: object.id }).first();
     expect((loaded.nestedArray as any[]).every((v) => v == null)).to.be.true;
     const loadedArray = await loadObjectReferences(loaded, (o) => o.nestedArray as any[]);
     expect(loadedArray.every((v) => v != null)).to.be.true;
@@ -95,7 +95,7 @@ describe('loadObjectReferences', () => {
 
     const restartedPeer = await testBuilder.createPeer(kv);
     const restartedDb = await restartedPeer.openDatabase(spaceKey, db.rootUrl!);
-    const loaded: any[] = await Promise.all(objects.map((o) => restartedDb.loadObjectById(o.id)));
+    const loaded: any[] = await Promise.all(objects.map((o) => restartedDb.query({ id: o.id }).first()));
     const loadedArrays = await loadObjectReferences(loaded, (o) => o.nestedArray as any[]);
     const mergedArrays = loadedArrays.flatMap((v) => v);
     expect(mergedArrays.length).to.eq(objects[0].nestedArray.length + objects[1].nestedArray.length);
@@ -117,7 +117,7 @@ describe('loadObjectReferences', () => {
 
     const restartedPeer = await testBuilder.createPeer(kv);
     const restartedDb = await restartedPeer.openDatabase(spaceKey, db.rootUrl!);
-    const loaded: any = await restartedDb.loadObjectById(object.id);
+    const loaded: any = await restartedDb.query({ id: object.id }).first();
     expect(await loadObjectReferences([loaded], () => loaded.nestedArray)).to.deep.eq([[]]);
   });
 
@@ -136,7 +136,7 @@ describe('loadObjectReferences', () => {
 
     const restartedPeer = await testBuilder.createPeer(kv);
     const restartedDb = await restartedPeer.openDatabase(spaceKey, db.rootUrl!);
-    const loaded: any = await restartedDb.loadObjectById(object.id);
+    const loaded: any = await restartedDb.query({ id: object.id }).first();
     expect(loaded.nested?.value).to.be.undefined;
     let threw = false;
     try {
@@ -148,9 +148,9 @@ describe('loadObjectReferences', () => {
   });
 
   test('loads as array of non-nullable items', async () => {
-    class Nested extends TypedObject({ typename: 'example.com/Nested', version: '1.0.0' })({ value: S.Number }) {}
+    class Nested extends TypedObject({ typename: 'example.com/Nested', version: '0.1.0' })({ value: S.Number }) {}
 
-    class TestSchema extends TypedObject({ typename: 'example.com/Test', version: '1.0.0' })({
+    class TestSchema extends TypedObject({ typename: 'example.com/Test', version: '0.1.0' })({
       nested: S.mutable(S.Array(ref(Nested))),
     }) {}
 
@@ -168,7 +168,7 @@ describe('loadObjectReferences', () => {
 
     const restartedPeer = await testBuilder.createPeer(kv);
     const restartedDb = await restartedPeer.openDatabase(spaceKey, db.rootUrl!);
-    const loaded = await restartedDb.loadObjectById<TestSchema>(object.id);
+    const loaded = (await restartedDb.query({ id: object.id }).first()) as TestSchema;
     const loadedNested = await loadObjectReferences(loaded!, (o) => o.nested);
     const value: number = loadedNested[0].value;
     expect(value).to.eq(42);

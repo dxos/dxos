@@ -9,10 +9,10 @@ import React from 'react';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { SpaceMemberListImpl } from './SpaceMemberList';
-import { alice } from '../../testing';
+import { alice } from '../../testing/fixtures';
 
 export default {
-  title: 'sdk/react-shell/SpaceMemberList',
+  title: 'sdk/shell/SpaceMemberList',
   component: SpaceMemberListImpl,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },

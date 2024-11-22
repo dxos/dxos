@@ -1,28 +1,22 @@
 {
   "name": "@dxos/gem-globe",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "description": "GEM globe.",
   "homepage": "https://github.com/dxos",
   "bugs": "https://github.com/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": false,
+  "sideEffects": true,
   "exports": {
     "./data": {
+      "types": "./dist/types/src/data.d.ts",
       "browser": "./dist/lib/browser/data.mjs",
-      "node": {
-        "require": "./dist/lib/node/data.cjs",
-        "default": "./dist/lib/node-esm/data.mjs"
-      },
-      "types": "./dist/types/src/data.d.ts"
+      "node": "./dist/lib/node-esm/data.mjs"
     },
     ".": {
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/index.cjs",
-        "default": "./dist/lib/node-esm/index.mjs"
-      },
-      "types": "./dist/types/src/index.d.ts"
+      "node": "./dist/lib/node-esm/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

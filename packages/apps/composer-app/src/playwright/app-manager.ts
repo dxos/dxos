@@ -107,13 +107,12 @@ export class AppManager {
   //
 
   async createSpace(timeout = 10_000) {
-    await this.page.getByTestId('spacePlugin.createSpace').click();
+    await this.page.getByTestId('spacePlugin.createSpace').getByTestId('treeItem.heading').click();
     await this.waitForSpaceReady(timeout);
   }
 
   async joinSpace() {
-    await this.page.getByTestId('navtree.treeItem.actionsLevel0').first().click();
-    await this.page.getByTestId('spacePlugin.joinSpace').click();
+    await this.page.getByTestId('spacePlugin.joinSpace').getByTestId('treeItem.heading').click();
   }
 
   async waitForSpaceReady(timeout = 30_000) {
@@ -124,8 +123,17 @@ export class AppManager {
     return this.page.getByTestId('spacePlugin.presence.member');
   }
 
-  toggleSpaceCollapsed(nth = 0) {
-    return this.page.getByTestId('spacePlugin.space').nth(nth).getByRole('button').first().click();
+  async toggleSpaceCollapsed(nth = 0, nextState?: boolean) {
+    const toggle = this.page.getByTestId('spacePlugin.space').nth(nth).getByRole('button').first();
+
+    if (typeof nextState !== 'undefined') {
+      const state = await toggle.getAttribute('aria-expanded');
+      if (state !== nextState.toString()) {
+        await toggle.click();
+      }
+    } else {
+      await toggle.click();
+    }
   }
 
   toggleCollectionCollapsed(nth = 0) {

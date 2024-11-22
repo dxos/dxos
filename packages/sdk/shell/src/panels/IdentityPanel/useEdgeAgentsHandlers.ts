@@ -6,7 +6,9 @@ import { useEffect, useState } from 'react';
 
 import { type CancellableInvitation } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { QueryAgentStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
+import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
 
@@ -24,6 +26,7 @@ export const useEdgeAgentHandlers = ({
   );
   const [agentStatus, setAgentStatus] = useState<AgentFormProps['agentStatus']>('getting');
   const client = useClient();
+  // TODO(wittjosiah): This should be based on HALO credentials.
   const agentHostingEnabled = Boolean(client.config.values.runtime?.client?.edgeFeatures?.agents);
 
   const handleStatus = (status: QueryAgentStatusResponse.AgentStatus) => {
@@ -68,9 +71,15 @@ export const useEdgeAgentHandlers = ({
     setAgentStatus('creating');
     setValidationMessage('');
     try {
-      await service.createAgent();
+      await service.createAgent(null as any, { timeout: 7_500 });
+      await Promise.all(
+        client.spaces
+          .get()
+          .map((space) => space?.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED)),
+      );
       setAgentStatus('created');
     } catch (err: any) {
+      log.catch(err);
       setAgentStatus('error');
       setValidationMessage(`Error creating an agent: ${err.message}`);
     }

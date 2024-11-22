@@ -7,14 +7,19 @@ import React from 'react';
 
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
+import { getSpace } from '@dxos/react-client/echo';
+import { translations as dataTranslations } from '@dxos/react-ui-form';
+import { TableType, initializeTable, translations as tableTranslations } from '@dxos/react-ui-table';
+import { type FieldProjection, ViewProjection, ViewType } from '@dxos/schema';
 
 import { TableContainer, TableViewEditor } from './components';
 import meta, { TABLE_PLUGIN } from './meta';
+import { serializer } from './serializer';
 import translations from './translations';
-import { TableType } from './types';
 import { TableAction, type TablePluginProvides, isTable } from './types';
 
 export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
@@ -33,12 +38,13 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
             icon: 'ph--table--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (table: TableType) => [], // loadObjectReferences(table, (table) => [table.schema]),
+            serializer,
           },
         },
       },
-      translations,
+      translations: [...translations, ...dataTranslations, ...tableTranslations],
       echo: {
-        schema: [TableType],
+        schema: [TableType, ViewType],
       },
       space: {
         onSpaceCreate: {
@@ -72,7 +78,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
                   id: `${TABLE_PLUGIN}/create/${node.id}`,
                   data: async () => {
                     await dispatch([
-                      { plugin: TABLE_PLUGIN, action: TableAction.CREATE },
+                      { plugin: TABLE_PLUGIN, action: TableAction.CREATE, data: { space } },
                       { action: SpaceAction.ADD_OBJECT, data: { target } },
                       { action: NavigationAction.OPEN },
                     ]);
@@ -97,11 +103,12 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
             case 'article':
               return isTable(data.object) ? <TableContainer role={role} table={data.object} /> : null;
             case 'complementary--settings': {
-              if (!(data.subject instanceof TableType) || !data.subject.view) {
-                return null;
+              if (data.subject instanceof TableType) {
+                const table = data.subject;
+                return { node: <TableViewEditor table={table} /> };
               }
 
-              return <TableViewEditor view={data.subject.view} />;
+              return null;
             }
             default:
               return null;
@@ -127,9 +134,36 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case TableAction.CREATE: {
+              const { space } = intent.data as TableAction.Create;
+              const table = create(TableType, { name: '', threads: [] });
+              initializeTable({ space, table });
               return {
-                data: create(TableType, { name: '', threads: [] }),
+                data: table,
               };
+            }
+
+            case TableAction.DELETE_COLUMN: {
+              const { table, fieldId } = intent.data as TableAction.DeleteColumn;
+              invariant(isTable(table));
+              invariant(table.view);
+
+              const schema = getSpace(table)?.db.schemaRegistry.getSchema(table.view.query.type);
+              invariant(schema);
+              const projection = new ViewProjection(schema, table.view);
+
+              if (!intent.undo) {
+                const { deleted, index } = projection.deleteFieldProjection(fieldId);
+                return {
+                  undoable: {
+                    message: translations[0]['en-US'][TABLE_PLUGIN]['column deleted label'],
+                    data: { deleted, index },
+                  },
+                };
+              } else if (intent.undo) {
+                const { deleted, index } = intent.data as { deleted: FieldProjection; index: number };
+                projection.setFieldProjection(deleted, index);
+                return { data: true };
+              }
             }
           }
         },

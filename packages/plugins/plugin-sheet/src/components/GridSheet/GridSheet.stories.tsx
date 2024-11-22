@@ -11,6 +11,7 @@ import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { GridSheet } from './GridSheet';
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
+import translations from '../../translations';
 import { SheetType } from '../../types';
 import { useComputeGraph } from '../ComputeGraph';
 import { SheetProvider } from '../SheetContext';
@@ -24,7 +25,7 @@ export const Basic = () => {
   }
 
   return (
-    <SheetProvider graph={graph} sheet={sheet}>
+    <SheetProvider graph={graph} sheet={sheet} ignoreAttention>
       <GridSheet />
     </SheetProvider>
   );
@@ -37,8 +38,9 @@ const meta: Meta = {
     withClientProvider({ types: [SheetType], createSpace: true }),
     withComputeGraphDecorator(),
     withTheme,
-    withLayout({ fullscreen: true, tooltips: true }),
+    withLayout({ fullscreen: true, tooltips: true, classNames: 'grid' }),
   ],
+  parameters: { translations },
 };
 
 export default meta;

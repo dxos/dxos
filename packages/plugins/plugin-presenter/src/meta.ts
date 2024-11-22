@@ -11,4 +11,5 @@ export default {
   name: 'Presenter',
   description: 'Present documents as slideshows.',
   icon: 'ph--presentation--regular',
+  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-presenter',
 } satisfies PluginMeta;

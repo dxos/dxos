@@ -1,6 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import { DECK_PLUGIN } from './meta';
 
 export default [
@@ -8,8 +9,8 @@ export default [
     'en-US': {
       [DECK_PLUGIN]: {
         'main header label': 'Main header',
-        'open navigation sidebar label': 'Open navigation sidebar.',
-        'open complementary sidebar label': 'Open complementary sidebar.',
+        'open navigation sidebar label': 'Open navigation sidebar',
+        'open complementary sidebar label': 'Open sidebar',
         'plugin error message': 'Content failed to render.',
         'content fallback message': 'Unsupported',
         'content fallback description':
@@ -33,18 +34,20 @@ export default [
         'reload required message': 'Reload required.',
         'pending heading': 'Loading…',
         'insert plank label': 'Open',
-        'solo plank label': 'Solo',
+        'resize label': 'Drag to resize',
+        'pin start label': 'Pin to the left sidebar',
+        'pin end label': 'Pin to the right sidebar',
+        'increment start label': 'Move to the left',
+        'increment end label': 'Move to the right',
+        'show deck plank label': 'Show deck',
+        'show solo plank label': 'Maximize',
+        'close label': 'Close',
+        'minify label': 'Minify',
         'settings overscroll label': 'Plank Overscrolling',
         'select overscroll placeholder': 'Select plank overscrolling behavior',
         'settings overscroll centering label': 'Centering',
         'settings overscroll none label': 'None',
         'settings flat deck': 'Flatten deck appearance',
-
-        // ComplementarySidebar
-        'open settings label': 'Show settings',
-        'open comments label': 'Show Comments',
-        'open automation label': 'Show Automation',
-        'open debug label': 'Show Debug',
       },
     },
   },

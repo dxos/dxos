@@ -184,9 +184,9 @@ jobs:
     resource_class: xlarge
 
     environment:
-      DX_ENVIRONMENT: circleci
-      DX_PWA: false
-      NODE_OPTIONS: --max-old-space-size=8192
+      DX_ENVIRONMENT: 'ci'
+      DX_PWA: 'false'
+      NODE_OPTIONS: '--max-old-space-size=12288'
 
     steps:
       - checkout
@@ -208,7 +208,7 @@ jobs:
       - *codecov_upload
       - *store_test_results
       - store_artifacts:
-          path: tmp/playwright
+          path: dist/.playwright
 
   #
   # Quarantine for flaky tests.

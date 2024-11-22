@@ -1,0 +1,21 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { MANAGER_PLUGIN } from './meta';
+
+export default [
+  {
+    'en-US': {
+      [MANAGER_PLUGIN]: {
+        'open settings label': 'Show settings',
+        'settings dialog title': 'Settings',
+        'back label': 'Back',
+        'click to return to tablist description': 'Click the title to return to the settings menu',
+        'core plugins label': 'App Settings',
+        'custom plugins label': 'Plugin Settings',
+        'reset settings label': 'Reset all settings',
+      },
+    },
+  },
+];

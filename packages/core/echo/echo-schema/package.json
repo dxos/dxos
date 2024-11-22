@@ -1,28 +1,22 @@
 {
   "name": "@dxos/echo-schema",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "sideEffects": false,
+  "sideEffects": true,
   "exports": {
     ".": {
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/index.cjs",
-        "default": "./dist/lib/node-esm/index.mjs"
-      },
-      "types": "./dist/types/src/index.d.ts"
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./testing": {
+      "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/testing/index.cjs",
-        "default": "./dist/lib/node-esm/testing/index.mjs"
-      },
-      "types": "./dist/types/src/testing/index.d.ts"
+      "node": "./dist/lib/node-esm/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -42,12 +36,13 @@
     "@dxos/echo-signals": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/schema": "^0.75.1",
+    "@effect/schema": "^0.75.5",
     "@preact/signals-core": "^1.6.0",
-    "effect": "^3.9.1",
+    "effect": "^3.9.2",
     "ulidx": "^2.3.0"
   },
   "publishConfig": {

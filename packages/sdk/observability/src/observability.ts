@@ -7,7 +7,7 @@ import { PublicKey, type Client, type Config } from '@dxos/client';
 import { type ClientServices, type Space } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
+import { log, LogLevel } from '@dxos/log';
 import { ConnectionState } from '@dxos/network-manager';
 import { DeviceKind, type NetworkStatus, Platform } from '@dxos/protocols/proto/dxos/client/services';
 import { isNode } from '@dxos/util';
@@ -163,6 +163,7 @@ export class Observability {
   }
 
   async initialize() {
+    await this._initLogs();
     await this._initMetrics();
     await this._initTelemetry();
     await this._initErrorLogs();
@@ -245,6 +246,36 @@ export class Observability {
   }
 
   //
+  // Logs
+  //
+
+  private async _initLogs() {
+    if (this._secrets.OTEL_ENDPOINT && this._secrets.OTEL_AUTHORIZATION && this._mode !== 'disabled') {
+      const { OtelLogs } = await import('./otel');
+      this._otelLogs = new OtelLogs({
+        endpoint: this._secrets.OTEL_ENDPOINT,
+        authorizationHeader: this._secrets.OTEL_AUTHORIZATION,
+        serviceName: this._namespace,
+        serviceVersion: this.getTag('release')?.value ?? '0.0.0',
+        getTags: () =>
+          Object.fromEntries(
+            Array.from(this._tags)
+              .filter(([key, value]) => {
+                return value.scope === 'all' || value.scope === 'errors';
+              })
+              .map(([key, value]) => [key, value.value]),
+          ),
+        logLevel: LogLevel.VERBOSE,
+        includeSharedWorkerLogs: false,
+      });
+      this._otelLogs && log.runtimeConfig.processors.push(this._otelLogs.logProcessor);
+      log('otel logs enabled', { namespace: this._namespace });
+    } else {
+      log('otel logs disabled');
+    }
+  }
+
+  //
   // Metrics
   //
 
@@ -290,7 +321,7 @@ export class Observability {
     const updateSignalMetrics = new Event<NetworkStatus>().debounce(NETWORK_METRICS_MIN_INTERVAL);
     updateSignalMetrics.on(this._ctx, async () => {
       log('send signal metrics');
-      (this._lastNetworkStatus?.signaling as NetworkStatus.Signal[]).forEach(({ server, state }) => {
+      (this._lastNetworkStatus?.signaling as NetworkStatus.Signal[])?.forEach(({ server, state }) => {
         this.gauge('dxos.client.network.signal.connectionState', state, { server });
       });
 
@@ -437,7 +468,7 @@ export class Observability {
   //
 
   private async _initTelemetry() {
-    if (this._secrets.TELEMETRY_API_KEY && this._mode !== 'disabled') {
+    if (this._secrets.TELEMETRY_API_KEY && this._mode !== 'disabled' && typeof document !== 'undefined') {
       const { SegmentTelemetry } = await import('./segment');
       this._telemetry = new SegmentTelemetry({
         apiKey: this._secrets.TELEMETRY_API_KEY,
@@ -510,32 +541,10 @@ export class Observability {
     } else {
       log('sentry disabled');
     }
-
-    if (this._secrets.OTEL_ENDPOINT && this._secrets.OTEL_AUTHORIZATION && this._mode !== 'disabled') {
-      const { OtelLogs } = await import('./otel');
-      this._otelLogs = new OtelLogs({
-        endpoint: this._secrets.OTEL_ENDPOINT,
-        authorizationHeader: this._secrets.OTEL_AUTHORIZATION,
-        serviceName: this._namespace,
-        serviceVersion: this.getTag('release')?.value ?? '0.0.0',
-        getTags: () =>
-          Object.fromEntries(
-            Array.from(this._tags)
-              .filter(([key, value]) => {
-                return value.scope === 'all' || value.scope === 'errors';
-              })
-              .map(([key, value]) => [key, value.value]),
-          ),
-      });
-      log('otel logs enabled', { namespace: this._namespace });
-    } else {
-      log('otel logs disabled');
-    }
   }
 
   startErrorLogs() {
     this._sentryLogProcessor && log.runtimeConfig.processors.push(this._sentryLogProcessor.logProcessor);
-    this._otelLogs && log.runtimeConfig.processors.push(this._otelLogs.logProcessor);
   }
 
   startTraces() {

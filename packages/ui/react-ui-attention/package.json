@@ -1,27 +1,27 @@
 {
   "name": "@dxos/react-ui-attention",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "description": "Signifier components and providers for attention system.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": false,
+  "sideEffects": true,
   "exports": {
     ".": {
-      "browser": "./dist/lib/browser/index.mjs",
-      "types": "./dist/types/src/index.d.ts"
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs"
     },
     "./testing": {
-      "browser": "./dist/lib/browser/testing/index.mjs",
-      "types": "./dist/types/src/testing/index.d.ts"
+      "types": "./dist/types/src/testing/index.d.ts",
+      "browser": "./dist/lib/browser/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "./testing": [
-        "./dist/types/src/testing/index.d.ts"
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
       ]
     }
   },

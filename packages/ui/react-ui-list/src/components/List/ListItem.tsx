@@ -5,8 +5,11 @@
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
-import { type Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
-import { attachClosestEdge, extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
+import {
+  type Edge,
+  attachClosestEdge,
+  extractClosestEdge,
+} from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { createContext } from '@radix-ui/react-context';
 import React, {
   type ComponentProps,
@@ -22,14 +25,13 @@ import React, {
 import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
-import { type ThemedClassName } from '@dxos/react-ui';
-import { Icon } from '@dxos/react-ui';
+import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { DropIndicator } from './DropIndicator';
 import { useListContext } from './ListRoot';
 
-export type ListItemRecord = { id: string };
+export type ListItemRecord = {};
 
 export type ItemState =
   | {
@@ -191,14 +193,15 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
 export const ListItemDeleteButton = ({
   autoHide = true,
   classNames,
+  disabled,
   ...props
 }: Omit<IconButtonProps, 'icon'> & { autoHide?: boolean }) => {
   const { state } = useListContext('DELETE_BUTTON');
-  const disabled = state.type !== 'idle';
+  const isDisabled = state.type !== 'idle' || disabled;
   return (
     <IconButton
       icon='ph--x--regular'
-      disabled={disabled}
+      disabled={isDisabled}
       classNames={[classNames, autoHide && disabled && 'hidden']}
       {...props}
     />
@@ -207,7 +210,7 @@ export const ListItemDeleteButton = ({
 
 export const ListItemDragHandle = () => {
   const { dragHandleRef } = useListItemContext('DRAG_HANDLE');
-  return <IconButton ref={dragHandleRef as any} icon='ph--dots-six--regular' />;
+  return <IconButton ref={dragHandleRef as any} icon='ph--dots-six-vertical--regular' />;
 };
 
 export const ListItemDragPreview = <T extends ListItemRecord>({
@@ -220,7 +223,7 @@ export const ListItemDragPreview = <T extends ListItemRecord>({
 };
 
 export const ListItemWrapper = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => (
-  <div className={mx('flex w-full', classNames)}>{children}</div>
+  <div className={mx('flex is-full gap-2', classNames)}>{children}</div>
 );
 
 export const ListItemTitle = ({

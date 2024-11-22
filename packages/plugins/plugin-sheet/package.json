@@ -1,12 +1,12 @@
 {
   "name": "@dxos/plugin-sheet",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "description": "Braneframe sketch plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": false,
+  "sideEffects": true,
   "imports": {
     "#hyperformula": {
       "types": "hyperformula",
@@ -15,28 +15,19 @@
   },
   "exports": {
     ".": {
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/index.cjs",
-        "default": "./dist/lib/node-esm/index.mjs"
-      },
-      "types": "./dist/types/src/index.d.ts"
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./meta": {
+      "types": "./dist/types/src/meta.d.ts",
       "browser": "./dist/lib/browser/meta.mjs",
-      "node": {
-        "require": "./dist/lib/node/meta.cjs",
-        "default": "./dist/lib/node-esm/meta.mjs"
-      },
-      "types": "./dist/types/src/meta.d.ts"
+      "node": "./dist/lib/node-esm/meta.mjs"
     },
     "./types": {
+      "types": "./dist/types/src/types.d.ts",
       "browser": "./dist/lib/browser/types.mjs",
-      "node": {
-        "require": "./dist/lib/node/types.cjs",
-        "default": "./dist/lib/node-esm/types.mjs"
-      },
-      "types": "./dist/types/src/types.d.ts"
+      "node": "./dist/lib/node-esm/types.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -86,12 +77,14 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
-    "@dxos/react-ui-data": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-grid": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-stack": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/schema": "^0.75.1",
+    "@effect/schema": "^0.75.5",
     "@lezer/common": "^1.2.2",
     "@lezer/highlight": "^1.2.1",
     "@lezer/lezer": "^1.1.2",

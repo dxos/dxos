@@ -1,12 +1,12 @@
 {
   "name": "@dxos/crypto",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "description": "Basic cross-platform crypto utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": false,
+  "sideEffects": true,
   "imports": {
     "#hypercore-crypto": {
       "workerd": "./hypercore-crypto-stub.mjs",
@@ -15,12 +15,9 @@
   },
   "exports": {
     ".": {
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/index.cjs",
-        "default": "./dist/lib/node-esm/index.mjs"
-      },
-      "types": "./dist/types/src/index.d.ts"
+      "node": "./dist/lib/node-esm/index.mjs"
     }
   },
   "browser": {

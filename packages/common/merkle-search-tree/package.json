@@ -1,6 +1,6 @@
 {
   "name": "@dxos/merkle-search-tree",
-  "version": "0.6.5",
+  "version": "0.7.0",
   "description": "Merkle-Search Tree implementation and sync protocol.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,11 +8,9 @@
   "author": "DXOS.org",
   "exports": {
     ".": {
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "default": "./dist/lib/node/index.cjs"
-      },
-      "types": "./dist/types/src/index.d.ts"
+      "node": "./dist/lib/node-esm/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

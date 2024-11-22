@@ -11,6 +11,7 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 import { type SchemaProvides } from '@dxos/plugin-client';
+import { type PanelProvides } from '@dxos/plugin-deck/types';
 import { type MarkdownExtensionProvides } from '@dxos/plugin-markdown';
 import { type ThreadType } from '@dxos/plugin-space/types';
 
@@ -38,9 +39,10 @@ export type ThreadPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
-  SettingsProvides &
+  SettingsProvides<ThreadSettingsProps> &
   TranslationsProvides &
   SchemaProvides &
+  PanelProvides &
   MarkdownExtensionProvides;
 
 export type ThreadSettingsProps = { standalone?: boolean };

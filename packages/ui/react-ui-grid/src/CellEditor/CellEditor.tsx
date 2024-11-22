@@ -5,7 +5,7 @@
 import { completionStatus } from '@codemirror/autocomplete';
 import { type Extension } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
-import React, { type DOMAttributes, type KeyboardEvent } from 'react';
+import React, { type KeyboardEvent } from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
 import {
@@ -20,9 +20,13 @@ import { type GridEditBox } from '../Grid';
 
 export type EditorKeyEvent = Pick<KeyboardEvent<HTMLInputElement>, 'key'> & { shift?: boolean };
 
+export type EditorKeyHandler = (value: string | undefined, event: EditorKeyEvent) => void;
+export type EditorBlurHandler = (value: string | undefined) => void;
+export type EditorKeyOrBlurHandler = (value: string | undefined, event?: EditorKeyEvent) => void;
+
 export type EditorKeysProps = {
-  onClose: (value: string | undefined, event: EditorKeyEvent) => void;
-  onNav?: (value: string | undefined, event: EditorKeyEvent) => void;
+  onClose: EditorKeyHandler;
+  onNav?: EditorKeyHandler;
 };
 
 // TODO(Zan): Should each consumer be responsible for defining these?
@@ -111,36 +115,11 @@ export const editorKeys = ({ onNav, onClose }: EditorKeysProps): Extension => {
 export type CellEditorProps = {
   value?: string;
   extension?: Extension;
-  variant?: keyof typeof editorVariants;
   box?: GridEditBox;
   gridId?: string;
-} & Pick<UseTextEditorProps, 'autoFocus'> &
-  Pick<DOMAttributes<HTMLInputElement>, 'onBlur' | 'onKeyDown'>;
+} & Pick<UseTextEditorProps, 'autoFocus'> & { onBlur?: EditorBlurHandler };
 
-const editorVariants = {
-  // TODO(thure): remove when legacy is no longer used.
-  legacy: {
-    root: 'flex w-full',
-    editor: 'flex w-full [&>.cm-scroller]:scrollbar-none',
-    content: '!px-2 !py-1',
-  },
-  grid: {
-    root: 'absolute z-[1]',
-    editor: '[&>.cm-scroller]:scrollbar-none tabular-nums',
-    // This must match cell styling in `dx-grid.pcss`.
-    content: '!border !border-transparent !pli-[3px] !plb-0.5',
-  },
-};
-
-export const CellEditor = ({
-  value,
-  extension,
-  autoFocus,
-  onBlur,
-  variant = 'legacy',
-  box,
-  gridId,
-}: CellEditorProps) => {
+export const CellEditor = ({ value, extension, autoFocus, onBlur, box, gridId }: CellEditorProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
     return {
@@ -150,9 +129,9 @@ export const CellEditor = ({
       extensions: [
         extension ?? [],
         preventNewline,
-        EditorView.focusChangeEffect.of((_, focusing) => {
+        EditorView.focusChangeEffect.of((state, focusing) => {
           if (!focusing) {
-            onBlur?.({ type: 'blur' } as any);
+            onBlur?.(state.doc.toString());
           }
           return null;
         }),
@@ -161,22 +140,25 @@ export const CellEditor = ({
           themeMode,
           slots: {
             editor: {
-              className: editorVariants[variant].editor,
+              className: '[&>.cm-scroller]:scrollbar-none tabular-nums',
             },
             content: {
-              className: editorVariants[variant].content,
+              className: '!border !border-transparent !pli-[4px] !plb-0.5',
             },
           },
         }),
       ],
     };
-  }, [extension, autoFocus, value, variant, onBlur]);
+  }, [extension, autoFocus, value, onBlur]);
 
   return (
     <div
       ref={parentRef}
-      className={editorVariants[variant].root}
-      style={box}
+      className='absolute z-[1]'
+      style={{
+        ...box,
+        ...{ '--dx-gridCellWidth': `${box?.inlineSize ?? 200}px` },
+      }}
       {...(gridId && { 'data-grid': gridId })}
     />
   );

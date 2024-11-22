@@ -56,6 +56,7 @@ export const createGuardedInvitationState = (
     },
     // disposing context prevents any further state updates
     complete: (newState: Partial<Invitation>) => {
+      logStateUpdate(currentInvitation, undefined, invitation.state);
       currentInvitation = { ...currentInvitation, ...newState };
       stream.next(currentInvitation);
       return ctx.dispose();
@@ -72,7 +73,7 @@ export const createGuardedInvitationState = (
     },
     error: (lockHolder: FlowLockHolder | null, error: any): boolean => {
       if (isStateChangeAllowed(lockHolder)) {
-        logStateUpdate(currentInvitation, lockHolder, Invitation.State.ERROR);
+        logStateUpdate(currentInvitation, lockHolder, Invitation.State.ERROR, error);
         currentInvitation = { ...currentInvitation, state: Invitation.State.ERROR };
         stream.next(currentInvitation);
         stream.error(error);
@@ -84,19 +85,19 @@ export const createGuardedInvitationState = (
   };
 };
 
-const logStateUpdate = (invitation: Invitation, actor: any, newState: Invitation.State) => {
+const logStateUpdate = (invitation: Invitation, actor: any, newState: Invitation.State, error?: Error) => {
+  const logContext = {
+    invitationId: invitation.invitationId,
+    actor: actor?.constructor.name,
+    newState: stateToString(newState),
+    oldState: stateToString(invitation.state),
+    error: error?.message,
+    errorStack: error?.stack,
+  };
   if (isNonTerminalState(newState)) {
-    log('invitation state update', {
-      actor: actor?.constructor.name,
-      newState: stateToString(newState),
-      oldState: stateToString(invitation.state),
-    });
+    log.verbose('dxos.sdk.invitations-handler.state.update', logContext);
   } else {
-    log.info('invitation state update', {
-      actor: actor?.constructor.name,
-      newState: stateToString(newState),
-      oldState: stateToString(invitation.state),
-    });
+    log.info('dxos.sdk.invitations-handler.state.update', logContext);
   }
 };
 

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/script-toolbox",
-  "version": "0.6.10",
+  "version": "0.7.0",
   "description": "Collection of tools for writing scripts.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,8 +8,8 @@
   "author": "DXOS.org",
   "exports": {
     ".": {
-      "browser": "./dist/lib/browser/index.mjs",
-      "types": "./dist/types/src/index.d.ts"
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

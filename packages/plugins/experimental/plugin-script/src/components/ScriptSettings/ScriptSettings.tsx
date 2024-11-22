@@ -4,10 +4,10 @@
 
 import React from 'react';
 
-import { SettingsValue } from '@dxos/plugin-settings';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { useClient } from '@dxos/react-client';
 import { Button, useTranslation } from '@dxos/react-ui';
+import { DeprecatedFormInput } from '@dxos/react-ui-form';
 
 import { SCRIPT_PLUGIN } from '../../meta';
 import { type ScriptSettingsProps } from '../../types';
@@ -39,9 +39,9 @@ export const ScriptSettings = ({ settings }: { settings: ScriptSettingsProps }) 
 
   return (
     <>
-      <SettingsValue label={t('authenticate action label')}>
+      <DeprecatedFormInput label={t('authenticate action label')}>
         <Button onClick={handleAuthenticate}>{t('authenticate button label')}</Button>
-      </SettingsValue>
+      </DeprecatedFormInput>
     </>
   );
 };

@@ -6,9 +6,10 @@ import React from 'react';
 
 import { invariant } from '@dxos/invariant';
 
-import { type BootstrapPluginsParams, Plugin, PluginHost } from './plugins';
-import IntentMeta from './plugins/IntentPlugin/meta';
-import SurfaceMeta from './plugins/SurfacePlugin/meta';
+import { type HostPluginParams, Plugin, HostPlugin } from './plugins';
+import IntentMeta from './plugins/plugin-intent/meta';
+import SettingsMeta from './plugins/plugin-settings/meta';
+import SurfaceMeta from './plugins/plugin-surface/meta';
 
 /**
  * Expected usage is for this to be the entrypoint of the application.
@@ -36,21 +37,21 @@ import SurfaceMeta from './plugins/SurfacePlugin/meta';
  * @param params.defaults Default plugins are enabled by default but can be disabled by the user.
  * @param params.fallback Fallback component to render while plugins are initializing.
  */
-export const createApp = ({ meta, plugins, core, ...params }: BootstrapPluginsParams) => {
-  const host = PluginHost({
+export const createApp = ({ meta, plugins, core, ...params }: HostPluginParams) => {
+  const hostPlugin = HostPlugin({
     plugins: {
       ...plugins,
-      [SurfaceMeta.id]: Plugin.lazy(() => import('./plugins/SurfacePlugin/plugin')),
-      [IntentMeta.id]: Plugin.lazy(() => import('./plugins/IntentPlugin/plugin')),
+      [IntentMeta.id]: Plugin.lazy(() => import('./plugins/plugin-intent')),
+      [SettingsMeta.id]: Plugin.lazy(() => import('./plugins/plugin-settings')),
+      [SurfaceMeta.id]: Plugin.lazy(() => import('./plugins/plugin-surface')),
     },
-    // TODO(burdon): Why not include in core?
-    meta: [SurfaceMeta, IntentMeta, ...meta],
-    core: [SurfaceMeta.id, IntentMeta.id, ...core],
+    meta: [IntentMeta, SettingsMeta, SurfaceMeta, ...meta],
+    core: [IntentMeta.id, SettingsMeta.id, SurfaceMeta.id, ...core],
     ...params,
   });
 
-  invariant(host.provides);
-  const { context: Context, root: Root } = host.provides;
+  invariant(hostPlugin.provides);
+  const { context: Context, root: Root } = hostPlugin.provides;
   invariant(Context);
   invariant(Root);
 

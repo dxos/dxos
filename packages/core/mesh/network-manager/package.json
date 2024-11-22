@@ -1,21 +1,21 @@
 {
   "name": "@dxos/network-manager",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "description": "Network Manager",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": false,
+  "sideEffects": true,
   "imports": {
     "#node-datachannel": {
-      "browser": "./module-stub.js",
-      "workerd": "./module-stub.js",
+      "browser": "./module-stub.mjs",
+      "workerd": "./module-stub.mjs",
       "default": "node-datachannel"
     },
     "#node-datachannel/*": {
-      "browser": "./module-stub.js",
-      "workerd": "./module-stub.js",
+      "browser": "./module-stub.mjs",
+      "workerd": "./module-stub.mjs",
       "default": "node-datachannel/*"
     },
     "#tcp-transport": {
@@ -28,28 +28,19 @@
   },
   "exports": {
     ".": {
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/index.cjs",
-        "default": "./dist/lib/node-esm/index.mjs"
-      },
-      "types": "./dist/types/src/index.d.ts"
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./testing": {
+      "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/testing/index.cjs",
-        "default": "./dist/lib/node-esm/testing/index.mjs"
-      },
-      "types": "./dist/types/src/testing/index.d.ts"
+      "node": "./dist/lib/node-esm/testing/index.mjs"
     },
     "./transport/tcp": {
+      "types": "./dist/types/src/transport/tcp/index.d.ts",
       "browser": "./dist/lib/browser/transport/tcp/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/transport/tcp/index.cjs",
-        "default": "./dist/lib/node-esm/transport/tcp/index.mjs"
-      },
-      "types": "./dist/types/src/transport/tcp/index.d.ts"
+      "node": "./dist/lib/node-esm/transport/tcp/index.mjs"
     }
   },
   "browser": {

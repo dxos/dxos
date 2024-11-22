@@ -1,12 +1,12 @@
 {
   "name": "@dxos/typings",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "description": "Typescript defs for various base packages",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": false,
+  "sideEffects": true,
   "types": "./src/index.d.ts",
   "scripts": {
     "check": "tsc --noEmit"

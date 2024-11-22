@@ -5,15 +5,22 @@
 import { AST, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
+import {
+  addFieldsToSchema,
+  removeFieldsFromSchema,
+  updateFieldNameInSchema,
+  updateFieldsInSchema,
+  setTypenameInSchema,
+} from './manipulation';
 import { StoredSchema } from './types';
-import { type HasId, schemaVariance } from '../ast';
-import { effectToJsonSchema, jsonToEffectSchema } from '../json';
+import { type HasId, type JsonSchemaType, schemaVariance, type SchemaMeta, SchemaMetaSymbol } from '../ast';
+import { toEffectSchema, toJsonSchema } from '../json';
 
-export interface MutableSchemaConstructor extends S.Schema<MutableSchema> {
+interface MutableSchemaConstructor extends S.Schema<MutableSchema> {
   new (): HasId;
 }
 
-export const MutableSchemaBase = (): MutableSchemaConstructor => {
+const MutableSchemaBase = (): MutableSchemaConstructor => {
   return class {
     static get ast() {
       return this._schema.ast;
@@ -41,28 +48,42 @@ export const MutableSchemaBase = (): MutableSchemaConstructor => {
 /**
  * Schema that can be modified at runtime via the API.
  */
+// TODO(burdon): Why does this have a schema property AND implement schema.
 export class MutableSchema extends MutableSchemaBase() implements S.Schema<any> {
   private _schema: S.Schema<any> | undefined;
   private _isDirty = true;
 
-  constructor(public readonly serializedSchema: StoredSchema) {
+  constructor(private readonly _storedSchema: StoredSchema) {
     super();
   }
 
+  public get [S.TypeId]() {
+    return schemaVariance;
+  }
+
+  public get [SchemaMetaSymbol](): SchemaMeta {
+    return { id: this.id, typename: this.typename, version: this._storedSchema.version };
+  }
+
   public override get id() {
-    return this.serializedSchema.id;
+    return this._storedSchema.id;
   }
 
-  public get Type() {
-    return this.serializedSchema;
+  public get jsonSchema(): JsonSchemaType {
+    return this._storedSchema.jsonSchema;
   }
 
-  public get Encoded() {
-    return this.serializedSchema;
+  // TODO(burdon): Remove?
+  public get storedSchema(): StoredSchema {
+    return this._storedSchema;
   }
 
-  public get Context() {
-    return this._getSchema().Context;
+  public get schema(): S.Schema<any> {
+    return this._getSchema();
+  }
+
+  public get typename(): string {
+    return this._storedSchema.typename;
   }
 
   public get ast() {
@@ -79,59 +100,23 @@ export class MutableSchema extends MutableSchemaBase() implements S.Schema<any> 
     return schema.pipe.bind(schema);
   }
 
-  // TODO(burdon): Comment?
-  public get [S.TypeId]() {
-    return schemaVariance;
+  public get Type() {
+    return this._storedSchema;
   }
 
-  public get schema(): S.Schema<any> {
-    return this._getSchema();
+  public get Encoded() {
+    return this._storedSchema;
   }
 
-  public get typename(): string {
-    return this.serializedSchema.typename;
+  public get Context() {
+    return this._getSchema().Context;
   }
 
-  // TODO(burdon): Rename.
+  /**
+   * Called by MutableSchemaRegistry on update.
+   */
   invalidate() {
     this._isDirty = true;
-  }
-
-  // TODO(burdon): Rename addFields?
-  public addColumns(fields: S.Struct.Fields) {
-    const oldSchema = this._getSchema();
-    const schemaExtension = S.partial(S.Struct(fields));
-    const extended = S.extend(oldSchema, schemaExtension).annotations(
-      oldSchema.ast.annotations,
-    ) as any as S.Schema<any>;
-    this.serializedSchema.jsonSchema = effectToJsonSchema(extended);
-  }
-
-  // TODO(burdon): Rename updateFields?
-  public updateColumns(fields: S.Struct.Fields) {
-    const oldAst = this._getSchema().ast;
-    invariant(AST.isTypeLiteral(oldAst));
-    const propertiesToUpdate = (S.partial(S.Struct(fields)).ast as AST.TypeLiteral).propertySignatures;
-    const updatedProperties: AST.PropertySignature[] = [...oldAst.propertySignatures];
-    for (const property of propertiesToUpdate) {
-      const index = updatedProperties.findIndex((p) => p.name === property.name);
-      if (index !== -1) {
-        updatedProperties.splice(index, 1, property);
-      } else {
-        updatedProperties.push(property);
-      }
-    }
-
-    const newAst: any = { ...oldAst, propertySignatures: updatedProperties };
-    const schemaWithUpdatedColumns = S.make(newAst);
-    this.serializedSchema.jsonSchema = effectToJsonSchema(schemaWithUpdatedColumns);
-  }
-
-  // TODO(burdon): Rename removeFields?
-  public removeColumns(columnsNames: string[]) {
-    const oldSchema = this._getSchema();
-    const newSchema = S.make(AST.omit(oldSchema.ast, columnsNames)).annotations(oldSchema.ast.annotations);
-    this.serializedSchema.jsonSchema = effectToJsonSchema(newSchema);
   }
 
   public getProperties(): AST.PropertySignature[] {
@@ -140,21 +125,37 @@ export class MutableSchema extends MutableSchemaBase() implements S.Schema<any> 
     return [...ast.propertySignatures].filter((p) => p.name !== 'id').map(unwrapOptionality);
   }
 
-  // TODO(burdon): Rename updateProperty?
-  public updatePropertyName({ before, after }: { before: PropertyKey; after: PropertyKey }) {
-    const oldAST = this._getSchema().ast;
-    invariant(AST.isTypeLiteral(oldAST));
-    const newAst: any = {
-      ...oldAST,
-      propertySignatures: oldAST.propertySignatures.map((p) => (p.name === before ? { ...p, name: after } : p)),
-    };
-    const schemaWithUpdatedColumns = S.make(newAst);
-    this.serializedSchema.jsonSchema = effectToJsonSchema(schemaWithUpdatedColumns);
+  // TODO(burdon): Deprecate direct manipulation? Use JSONSchema directly.
+
+  public updateTypename(typename: string) {
+    const updated = setTypenameInSchema(this._getSchema(), typename);
+    this._storedSchema.typename = typename;
+    this._storedSchema.jsonSchema = toJsonSchema(updated);
+  }
+
+  public addFields(fields: S.Struct.Fields) {
+    const extended = addFieldsToSchema(this._getSchema(), fields);
+    this._storedSchema.jsonSchema = toJsonSchema(extended);
+  }
+
+  public updateFields(fields: S.Struct.Fields) {
+    const updated = updateFieldsInSchema(this._getSchema(), fields);
+    this._storedSchema.jsonSchema = toJsonSchema(updated);
+  }
+
+  public updateFieldPropertyName({ before, after }: { before: PropertyKey; after: PropertyKey }) {
+    const renamed = updateFieldNameInSchema(this._getSchema(), { before, after });
+    this._storedSchema.jsonSchema = toJsonSchema(renamed);
+  }
+
+  public removeFields(fieldNames: string[]) {
+    const removed = removeFieldsFromSchema(this._getSchema(), fieldNames);
+    this._storedSchema.jsonSchema = toJsonSchema(removed);
   }
 
   private _getSchema() {
     if (this._isDirty || this._schema == null) {
-      this._schema = jsonToEffectSchema(unwrapProxy(this.serializedSchema.jsonSchema));
+      this._schema = toEffectSchema(unwrapProxy(this._storedSchema.jsonSchema));
       this._isDirty = false;
     }
 

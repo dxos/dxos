@@ -8,8 +8,8 @@ export const MARKDOWN_PLUGIN = 'dxos.org/plugin/markdown';
 
 export default {
   id: MARKDOWN_PLUGIN,
-  name: 'Markdown Editor',
+  name: 'Markdown',
   description: 'Text editor supporting extended Markdown.',
-  homePage: 'https://github.com/dxos/dxos/tree/main/packages/apps/plugins/plugin-markdown',
+  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-markdown',
   icon: 'ph--text-aa--regular',
 } satisfies PluginMeta;

@@ -88,7 +88,7 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
           href: window.location.href,
           message: event.message,
           filename: event.filename,
-          stack: (event.error as Error).stack,
+          stack: (event.error as Error)?.stack,
         },
       }),
     );

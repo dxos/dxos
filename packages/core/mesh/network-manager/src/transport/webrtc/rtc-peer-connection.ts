@@ -26,6 +26,11 @@ export type RtcPeerChannelFactoryOptions = {
   // https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/RTCPeerConnection#iceservers
   webrtcConfig?: RTCConfiguration;
   iceProvider?: IceProvider;
+
+  /**
+   * TODO: remove after the new rtc code rollout. Used for staging interop with older version running in prod.
+   */
+  legacyInitiator?: boolean;
 };
 
 /**
@@ -327,7 +332,7 @@ export class RtcPeerConnection {
         break;
     }
 
-    log('signal processed');
+    log('signal processed', { type: data.type });
   }
 
   private async _processIceCandidate(connection: RTCPeerConnection, candidate: RTCIceCandidate) {

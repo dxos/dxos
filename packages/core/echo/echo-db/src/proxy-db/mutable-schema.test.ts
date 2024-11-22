@@ -14,6 +14,7 @@ import {
   ref,
   TypedObject,
   S,
+  getTypename,
 } from '@dxos/echo-schema';
 import { EmptySchemaType } from '@dxos/echo-schema/testing';
 
@@ -42,7 +43,7 @@ describe('MutableSchema', () => {
       field: S.String,
     }) {}
 
-    instanceWithSchemaRef.schema = db.schema.addSchema(GeneratedSchema);
+    instanceWithSchemaRef.schema = db.schemaRegistry.addSchema(GeneratedSchema);
     const schemaWithId = GeneratedSchema.annotations({
       [ObjectAnnotationId]: {
         typename: 'example.com/type/Test',
@@ -63,16 +64,16 @@ describe('MutableSchema', () => {
       field: S.String,
     }) {}
 
-    const schema = db.schema.addSchema(GeneratedSchema);
+    const schema = db.schemaRegistry.addSchema(GeneratedSchema);
     const instanceWithSchemaRef = db.add(create(TestSchema, { schema }));
-    expect(instanceWithSchemaRef.schema!.serializedSchema.typename).to.eq('example.com/type/Test');
+    expect(instanceWithSchemaRef.schema!.typename).to.eq('example.com/type/Test');
   });
 
   test('can be used to create objects', async () => {
     const { db } = await setupTest();
-    const schema = db.schema.addSchema(EmptySchemaType);
+    const schema = db.schemaRegistry.addSchema(EmptySchemaType);
     const object = create(schema, {});
-    schema.addColumns({ field1: S.String });
+    schema.addFields({ field1: S.String });
     object.field1 = 'works';
     object.field1 = undefined;
     expect(() => {
@@ -84,6 +85,7 @@ describe('MutableSchema', () => {
 
     expect(getSchema(object)?.ast).to.deep.eq(schema.ast);
     expect(getType(object)?.objectId).to.be.eq(schema.id);
+    expect(getTypename(object)).to.be.eq(EmptySchemaType.typename);
 
     db.add(object);
     const queried = (await db.query(Filter.schema(schema)).run()).objects;
@@ -93,8 +95,40 @@ describe('MutableSchema', () => {
 
   test('getTypeReference', async () => {
     const { db } = await setupTest();
-    const schema = db.schema.addSchema(EmptySchemaType);
+    const schema = db.schemaRegistry.addSchema(EmptySchemaType);
     expect(getTypeReference(schema)?.objectId).to.eq(schema.id);
+  });
+
+  test('getTypeReference on schema with updated typename', async () => {
+    const { db } = await setupTest();
+    const schema = db.schemaRegistry.addSchema(EmptySchemaType);
+    schema.updateTypename('example.com/type/Updated');
+    expect(getTypeReference(schema)?.objectId).to.eq(schema.id);
+  });
+
+  test('mutable schema refs', async () => {
+    const { db } = await setupTest();
+
+    const OrgSchema = TypedObject({
+      typename: 'example.com/type/org',
+      version: '0.1.0',
+    })({
+      name: S.optional(S.String),
+    });
+
+    const ContactSchema = TypedObject({
+      typename: 'example.com/type/contact',
+      version: '0.1.0',
+    })({
+      name: S.optional(S.String),
+      org: S.optional(ref(OrgSchema)),
+    });
+
+    const orgSchema = db.schemaRegistry.addSchema(OrgSchema);
+    const contactSchema = db.schemaRegistry.addSchema(ContactSchema);
+    const org = db.add(create(orgSchema, { name: 'DXOS' }));
+    const contact = db.add(create(contactSchema, { name: 'Bot', org }));
+    expect(contact.org?.id).to.eq(org.id);
   });
 
   const setupTest = async () => {

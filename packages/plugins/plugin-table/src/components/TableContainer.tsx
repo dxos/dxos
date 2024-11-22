@@ -2,18 +2,25 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 
 import { useIntentDispatcher, type LayoutContainerProps } from '@dxos/app-framework';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
+import { SpaceAction } from '@dxos/plugin-space';
 import { create, fullyQualifiedId, getSpace, Filter, useQuery } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
-import { mx } from '@dxos/react-ui-theme';
+import { StackItem } from '@dxos/react-ui-stack';
+import {
+  Table,
+  type TableController,
+  Toolbar,
+  type ToolbarAction,
+  useTableModel,
+  type TableType,
+} from '@dxos/react-ui-table';
+import { ViewProjection } from '@dxos/schema';
 
-import { Table } from './Table';
-import { Toolbar, type ToolbarAction } from './Toolbar';
-import { useTableModel } from '../hooks';
-import { type TableType } from '../types';
+import { TableAction } from '../types';
 
 // TODO(zantonio): Factor out, copied this from MarkdownPlugin.
 export const sectionToolbarLayout = 'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 transition-opacity';
@@ -23,12 +30,54 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   const { hasAttention } = useAttention(fullyQualifiedId(table));
   const dispatch = useIntentDispatcher();
   const space = getSpace(table);
-  const queriedObjects = useQuery(space, table.schema ? Filter.schema(table.schema) : () => false, undefined, [
-    table.schema,
-  ]);
+
+  const schema = useMemo(
+    () => (table.view ? space?.db.schemaRegistry.getSchema(table.view.query.type) : undefined),
+    [space, table.view],
+  );
+  const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : () => false, undefined, [schema]);
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
-  const onDeleteRow = useCallback((row: any) => space?.db.remove(row), [space]);
-  const model = useTableModel({ table, objects: filteredObjects, onDeleteRow });
+
+  const handleInsertRow = useCallback(() => {
+    if (schema && space) {
+      space.db.add(create(schema, {}));
+    }
+  }, [schema, space]);
+
+  const handleDeleteRows = useCallback(
+    (_row: number, objects: any[]) => {
+      void dispatch({ action: SpaceAction.REMOVE_OBJECTS, data: { objects } });
+    },
+    [dispatch],
+  );
+
+  const handleDeleteColumn = useCallback((fieldId: string) => {
+    void dispatch({
+      action: TableAction.DELETE_COLUMN,
+      data: { table, fieldId } satisfies TableAction.DeleteColumn,
+    });
+  }, []);
+
+  const projection = useMemo(() => {
+    if (!schema || !table.view) {
+      return;
+    }
+
+    return new ViewProjection(schema, table.view);
+  }, [schema, table.view]);
+
+  const tableRef = useRef<TableController>(null);
+
+  const model = useTableModel({
+    table,
+    projection,
+    objects: filteredObjects,
+    onInsertRow: handleInsertRow,
+    onDeleteRows: handleDeleteRows,
+    onDeleteColumn: handleDeleteColumn,
+    onCellUpdate: (cell) => tableRef.current?.update?.(cell),
+    onRowOrderChanged: () => tableRef.current?.update?.(),
+  });
 
   const onThreadCreate = useCallback(() => {
     void dispatch({
@@ -48,41 +97,26 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
           onThreadCreate();
           break;
         }
-      }
-      switch (action.type) {
         case 'add-row': {
-          if (table.schema && space) {
-            space.db.add(create(table.schema, {}));
-          }
+          handleInsertRow();
+          break;
         }
       }
     },
-    [onThreadCreate, table.schema, space],
+    [onThreadCreate, space, schema, handleInsertRow],
   );
 
   return (
-    <div role='none' className={role === 'article' ? 'row-span-2 grid grid-rows-subgrid' : undefined}>
-      <Toolbar.Root
-        onAction={handleAction}
-        classNames={mx(
-          role === 'section'
-            ? ['z-[2] group-focus-within/section:visible', !hasAttention && 'invisible', sectionToolbarLayout]
-            : 'border-be border-separator',
-        )}
-      >
+    <StackItem.Content toolbar role={role}>
+      <Toolbar.Root onAction={handleAction} classNames={!hasAttention && 'opacity-20'}>
+        <Toolbar.Editing />
         <Toolbar.Separator />
         <Toolbar.Actions />
       </Toolbar.Root>
-      <div
-        className={mx(
-          role === 'article' && 'relative is-full max-is-max min-is-0 min-bs-0',
-          role === 'section' && 'grid cols-1 rows-[1fr_min-content] min-bs-0 !bg-[--surface-bg]',
-          role === 'slide' && 'bs-full overflow-auto grid place-items-center',
-        )}
-      >
-        <Table key={table.id} model={model} />
-      </div>
-    </div>
+      <Table.Root role={role}>
+        <Table.Main key={table.id} ref={tableRef} model={model} />
+      </Table.Root>
+    </StackItem.Content>
   );
 };
 

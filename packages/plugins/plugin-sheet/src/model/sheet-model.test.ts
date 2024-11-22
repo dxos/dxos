@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { FunctionType } from '@dxos/plugin-script/types';
 
 import { SheetModel } from './sheet-model';
+import { TestBuilder, testFunctionPlugins } from '../compute-graph/testing';
 import { addressFromA1Notation, createSheet } from '../defs';
-import { TestBuilder, testFunctionPlugins } from '../graph/testing';
 import { type CellScalarValue } from '../types';
 
 describe('SheetModel', () => {
@@ -36,13 +36,15 @@ describe('SheetModel', () => {
     // Trigger waits for function invocation.
     const trigger = new Trigger<CellScalarValue>();
     model.setValue(addressFromA1Notation('A1'), '=TEST(100)');
-    model.update.once((update) => {
+    // TODO(wittjosiah): Currently this fires twice, once for the binding loading & once for the function invocation.
+    const unsubscribe = model.update.on((update) => {
       const { type } = update;
       if (type === 'valuesUpdated') {
         const value = model.getValue(addressFromA1Notation('A1'));
-        trigger.wake(value);
+        value && trigger.wake(value);
       }
     });
+    onTestFinished(() => unsubscribe());
 
     // Initial value will be null.
     const v1 = model.getValue(addressFromA1Notation('A1'));

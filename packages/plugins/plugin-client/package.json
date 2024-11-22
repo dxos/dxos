@@ -1,28 +1,22 @@
 {
   "name": "@dxos/plugin-client",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "description": "DXOS Surface plugin for DXOS Client",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": false,
+  "sideEffects": true,
   "exports": {
     ".": {
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/index.cjs",
-        "default": "./dist/lib/node-esm/index.mjs"
-      },
-      "types": "./dist/types/src/index.d.ts"
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./meta": {
+      "types": "./dist/types/src/meta.d.ts",
       "browser": "./dist/lib/browser/meta.mjs",
-      "node": {
-        "require": "./dist/lib/node/meta.cjs",
-        "default": "./dist/lib/node-esm/meta.mjs"
-      },
-      "types": "./dist/types/src/meta.d.ts"
+      "node": "./dist/lib/node-esm/meta.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -47,6 +41,8 @@
     "@dxos/log": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/shell": "workspace:*",
     "@phosphor-icons/react": "^2.1.5"
   },
   "devDependencies": {

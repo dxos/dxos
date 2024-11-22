@@ -29,7 +29,8 @@ import { useOnEditAnalytics } from '../hooks';
 import { THREAD_ITEM, THREAD_PLUGIN } from '../meta';
 import { getMessageMetadata } from '../util';
 
-const messageControlClassNames = ['p-1 min-bs-0 transition-opacity items-start', hoverableControlItem];
+// TODO(thure): #8149
+const messageControlClassNames = ['!p-1 !min-bs-0 transition-opacity', hoverableControlItem];
 
 export const MessageContainer = ({
   message,
@@ -164,7 +165,7 @@ const TextboxBlock = ({
 
 const MessageBlockObjectTile: MosaicTileComponent<EchoReactiveObject<any>> = forwardRef(
   ({ draggableStyle, draggableProps, item, active, ref: _ref, ...props }, forwardedRef) => {
-    let title = item.name ?? item.title ?? item.__typename ?? 'Object';
+    let title = item.name ?? item.title ?? item.type ?? 'Object';
     if (typeof title !== 'string') {
       title = title?.content ?? '';
     }

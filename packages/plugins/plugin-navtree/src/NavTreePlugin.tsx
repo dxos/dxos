@@ -18,12 +18,14 @@ import {
   type GraphProvides,
   parseGraphPlugin,
   NavigationAction,
+  parseNavigationPlugin,
 } from '@dxos/app-framework';
 import { createExtension, type Graph, isAction, isGraphNode, type Node, type NodeFilter } from '@dxos/app-graph';
 import { invariant } from '@dxos/invariant';
 import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { Path } from '@dxos/react-ui-mosaic';
+import { mx } from '@dxos/react-ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
 import {
@@ -89,6 +91,8 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
       icon: node.properties.icon,
       disabled: node.properties.disabled,
       testId: node.properties.testId,
+      className: mx(node.properties.modified && 'italic', node.properties.className),
+      headingClassName: node.properties.headingClassName,
       path,
       parentOf,
       node,
@@ -127,18 +131,21 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
   return {
     meta,
     ready: async (plugins) => {
+      state.prop({ key: 'open', type: LocalStorageStore.json<string[]>() });
+
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       graph = graphPlugin?.provides.graph;
       if (!graph) {
         return;
       }
 
+      const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
+      const soloPart = resolvePlugin(plugins, parseNavigationPlugin)?.provides.location.active.solo?.[0];
+      if (dispatch && soloPart) {
+        void dispatch({ plugin: NAVTREE_PLUGIN, action: NavigationAction.EXPOSE, data: { id: soloPart.id } });
+      }
+
       state.values.root = graph.root as NavTreeItemGraphNode;
-      getChildren(graph, state.values.root);
-      getActions(graph, state.values.root);
-
-      state.prop({ key: 'open', type: LocalStorageStore.json<string[]>() });
-
       void expandOpenGraphNodes(graph, state.values.open);
 
       // TODO(wittjosiah): Factor out.
@@ -250,21 +257,19 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
         },
       },
       intent: {
-        resolver: (intent) => {
+        resolver: async (intent) => {
           switch (intent.action) {
             case NavigationAction.EXPOSE: {
               if (graph && intent.data?.id) {
-                const path = graph.getPath({ target: intent.data.id });
-                if (Array.isArray(path)) {
-                  const additionalOpenItems = [...Array(path.length)].reduce((acc: string[], _, index) => {
-                    const itemId = Path.create(...path.slice(0, index));
-                    if (itemId.length > 0) {
-                      acc.push(itemId);
-                    }
-                    return acc;
-                  }, []);
-                  state.values.open.push(...additionalOpenItems);
-                }
+                const path = await graph.waitForPath({ target: intent.data.id });
+                const additionalOpenItems = [...Array(path.length)].reduce((acc: string[], _, index) => {
+                  const itemId = Path.create(...path.slice(0, index));
+                  if (itemId.length > 0 && !state.values.open.includes(itemId)) {
+                    acc.push(itemId);
+                  }
+                  return acc;
+                }, []);
+                state.values.open.push(...additionalOpenItems);
               }
               break;
             }

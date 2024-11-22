@@ -4,17 +4,23 @@
 
 import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
-import { type ReactiveObject, getProxyTarget, getSchema, isReactiveObject } from '@dxos/echo-schema';
+import {
+  type AnyObjectData,
+  type ReactiveObject,
+  getProxyTarget,
+  getSchema,
+  isReactiveObject,
+} from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { defaultMap } from '@dxos/util';
 
 import { MutableSchemaRegistry } from './mutable-schema-registry';
 import { CoreDatabase, type FlushOptions, type LoadObjectOptions, type ObjectCore } from '../core-db';
+import type { InsertBatch, InsertData, UpdateOperation } from '../core-db/crud-api';
 import {
   EchoReactiveHandler,
   type EchoReactiveObject,
@@ -25,7 +31,7 @@ import {
   isEchoObject,
 } from '../echo-handler';
 import { type Hypergraph } from '../hypergraph';
-import { optionsToProto, type FilterSource, type QueryFn } from '../query';
+import { type FilterSource, type PropertyFilter, type QueryFn, type QueryOptions } from '../query';
 
 export type GetObjectByIdOptions = {
   deleted?: boolean;
@@ -41,33 +47,28 @@ export interface EchoDatabase {
 
   get spaceId(): SpaceId;
 
-  get schema(): MutableSchemaRegistry;
-
-  /**
-   * All loaded objects.
-   * @deprecated Use query instead.
-   */
-  get objects(): EchoReactiveObject<any>[];
+  get schemaRegistry(): MutableSchemaRegistry;
 
   get graph(): Hypergraph;
 
   getObjectById<T extends {} = any>(id: string, opts?: GetObjectByIdOptions): EchoReactiveObject<T> | undefined;
 
   /**
-   * @deprecated Awaiting API review.
+   * Query objects.
    */
-  loadObjectById<T extends {} = any>(
-    id: string,
-    options?: { timeout?: number },
-  ): Promise<EchoReactiveObject<T> | undefined>;
+  query: QueryFn;
 
   /**
-   * @deprecated Awaiting API review.
+   * Update objects.
    */
-  batchLoadObjects<T extends {} = any>(
-    ids: string[],
-    options?: { inactivityTimeout?: number },
-  ): Promise<Array<EchoReactiveObject<T> | undefined>>;
+  update(filter: PropertyFilter, operation: UpdateOperation): Promise<void>;
+
+  /**
+   * Insert new objects.
+   */
+  // TODO(dmaretskyi): Support meta.
+  insert(data: InsertData): Promise<AnyObjectData>;
+  insert(data: InsertBatch): Promise<AnyObjectData[]>;
 
   /**
    * Adds object to the database.
@@ -78,11 +79,6 @@ export interface EchoDatabase {
    * Removes object from the database.
    */
   remove<T extends EchoReactiveObject<any>>(obj: T): void;
-
-  /**
-   * Query objects.
-   */
-  query: QueryFn;
 
   /**
    * Wait for all pending changes to be saved to disk.
@@ -104,7 +100,6 @@ export type EchoDatabaseParams = {
   graph: Hypergraph;
   dataService: DataService;
   queryService: QueryService;
-
   spaceId: SpaceId;
 
   /**
@@ -127,8 +122,6 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   _coreDatabase: CoreDatabase;
 
-  public readonly schema: MutableSchemaRegistry;
-
   private _rootUrl: string | undefined = undefined;
 
   /**
@@ -136,6 +129,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    * @internal
    */
   readonly _rootProxies = new Map<ObjectCore, EchoReactiveObject<any>>();
+
+  public readonly schemaRegistry: MutableSchemaRegistry;
 
   constructor(params: EchoDatabaseParams) {
     super();
@@ -148,19 +143,22 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       spaceKey: params.spaceKey,
     });
 
-    this.schema = new MutableSchemaRegistry(this, { reactiveQuery: params.reactiveSchemaQuery });
+    this.schemaRegistry = new MutableSchemaRegistry(this, { reactiveQuery: params.reactiveSchemaQuery });
   }
 
   get graph(): Hypergraph {
     return this._coreDatabase.graph;
   }
 
-  get spaceKey(): PublicKey {
-    return this._coreDatabase.spaceKey;
-  }
-
   get spaceId(): SpaceId {
     return this._coreDatabase.spaceId;
+  }
+
+  /**
+   * @deprecated Use `spaceId`.
+   */
+  get spaceKey(): PublicKey {
+    return this._coreDatabase.spaceKey;
   }
 
   get rootUrl(): string | undefined {
@@ -204,51 +202,43 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return object;
   }
 
-  // TODO(Mykola): Reconcile with `getObjectById` and 'batchLoadObjects'.
-  /**
-   * @deprecated Awaiting API review.
-   */
-  async loadObjectById<T = any>(
-    objectId: string,
-    options: LoadObjectOptions = {},
-  ): Promise<EchoReactiveObject<T> | undefined> {
-    const core = await this._coreDatabase.loadObjectCoreById(objectId, options);
-
-    if (!core || core?.isDeleted()) {
-      return undefined;
-    }
-
-    const object = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this));
-    invariant(isReactiveObject(object));
-    return object;
+  // Odd way to define methods types from a typedef.
+  declare query: QueryFn;
+  static {
+    this.prototype.query = this.prototype._query;
   }
 
-  /**
-   * @deprecated Awaiting API review.
-   */
-  async batchLoadObjects(
-    objectIds: string[],
-    { inactivityTimeout = 30000 }: { inactivityTimeout?: number } = {},
-  ): Promise<Array<EchoReactiveObject<any> | undefined>> {
-    const cores = await this._coreDatabase.batchLoadObjectCores(objectIds, { inactivityTimeout });
-    const objects = cores.map((core) => {
-      if (!core || core.isDeleted()) {
-        return undefined;
-      }
-
-      const object = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this));
-      invariant(isReactiveObject(object));
-      return object;
+  private _query(filter?: FilterSource, options?: QueryOptions) {
+    return this._coreDatabase.graph.query(filter, {
+      ...options,
+      spaceIds: [this.spaceId],
+      spaces: [this.spaceKey],
     });
-    return objects;
   }
 
+  /**
+   * Update objects.
+   */
+  async update(filter: PropertyFilter, operation: UpdateOperation) {
+    await this._coreDatabase.update(filter, operation);
+  }
+
+  // TODO(dmaretskyi): Support meta.
+  async insert(data: InsertData): Promise<AnyObjectData>;
+  async insert(data: InsertBatch): Promise<AnyObjectData[]>;
+  async insert(data: InsertData | InsertBatch): Promise<AnyObjectData | AnyObjectData[]> {
+    return this._coreDatabase.insert(data);
+  }
+
+  /**
+   * Add live object.
+   */
   add<T extends ReactiveObject<any>>(obj: T): EchoReactiveObject<{ [K in keyof T]: T[K] }> {
     let echoObject = obj;
     if (!isEchoObject(echoObject)) {
       const schema = getSchema(obj);
       if (schema != null) {
-        if (!this.schema.hasSchema(schema) && !this.graph.schemaRegistry.hasSchema(schema)) {
+        if (!this.schemaRegistry.hasSchema(schema) && !this.graph.schemaRegistry.hasSchema(schema)) {
           throw createSchemaNotRegisteredError(schema);
         }
       }
@@ -267,26 +257,12 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return echoObject as any;
   }
 
+  /**
+   * Remove live object.
+   */
   remove<T extends EchoReactiveObject<any>>(obj: T): void {
     invariant(isEchoObject(obj));
     return this._coreDatabase.removeCore(getObjectCore(obj));
-  }
-
-  // Odd way to define methods types from a typedef.
-  declare query: QueryFn;
-  static {
-    this.prototype.query = this.prototype._query;
-  }
-
-  private _query(filter?: FilterSource, options?: QueryOptions) {
-    return this._coreDatabase.graph.query(
-      filter,
-      optionsToProto({
-        ...options,
-        spaceIds: [this.spaceId],
-        spaces: [this.spaceKey],
-      }),
-    );
   }
 
   async flush(opts?: FlushOptions): Promise<void> {
@@ -294,15 +270,26 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   }
 
   /**
-   * @deprecated
+   * @internal
    */
-  get objects(): EchoReactiveObject<any>[] {
-    // Initialize all proxies.
-    for (const core of this._coreDatabase.allObjectCores()) {
-      defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this));
+  async _loadObjectById<T = any>(
+    objectId: string,
+    options: LoadObjectOptions = {},
+  ): Promise<EchoReactiveObject<T> | undefined> {
+    const core = await this._coreDatabase.loadObjectCoreById(objectId, options);
+
+    if (!core || core?.isDeleted()) {
+      return undefined;
     }
-    return Array.from(this._rootProxies.values());
+
+    const object = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this));
+    invariant(isReactiveObject(object));
+    return object;
   }
+
+  //
+  // Deprecated API.
+  //
 
   /**
    * @deprecated

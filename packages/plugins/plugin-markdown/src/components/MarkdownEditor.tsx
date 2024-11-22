@@ -6,9 +6,9 @@ import { openSearchPanel } from '@codemirror/search';
 import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect, useCallback } from 'react';
 
-import { type FileInfo, LayoutAction, type LayoutCoordinate, useIntentDispatcher } from '@dxos/app-framework';
+import { type FileInfo, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
-import { useAttendableAttributes, useAttention } from '@dxos/react-ui-attention';
+import { useAttention } from '@dxos/react-ui-attention';
 import {
   type Action,
   type DNDOptions,
@@ -31,8 +31,8 @@ import {
   useFormattingState,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { sectionToolbarLayout } from '@dxos/react-ui-stack';
-import { textBlockWidth, focusRing, mx } from '@dxos/react-ui-theme';
+import { StackItem } from '@dxos/react-ui-stack';
+import { mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { isNotFalsy, nonNullable } from '@dxos/util';
 
 import { useSelectCurrentThread } from '../hooks';
@@ -44,7 +44,6 @@ const DEFAULT_VIEW_MODE: EditorViewMode = 'preview';
 export type MarkdownEditorProps = {
   id: string;
   role?: string;
-  coordinate?: LayoutCoordinate;
   inputMode?: EditorInputMode;
   scrollPastEnd?: boolean;
   toolbar?: boolean;
@@ -78,7 +77,6 @@ export const MarkdownEditor = ({
   const { themeMode } = useThemeContext();
   const dispatch = useIntentDispatcher();
   const [formattingState, formattingObserver] = useFormattingState();
-  const attendableAttributes = useAttendableAttributes(id);
   const { hasAttention } = useAttention(id);
 
   // Restore last selection and scroll point.
@@ -146,7 +144,7 @@ export const MarkdownEditor = ({
         moveToEndOfLine: true,
       }),
     }),
-    [id, initialValue, formattingObserver, viewMode, themeMode, extensions, providerExtensions],
+    [id, formattingObserver, viewMode, themeMode, extensions, providerExtensions],
   );
 
   useTest(editorView);
@@ -172,30 +170,17 @@ export const MarkdownEditor = ({
   };
 
   return (
-    <div
-      role='none'
-      {...(role === 'section'
-        ? { className: 'flex flex-col' }
-        : {
-            className: 'contents',
-            // TODO(wittjosiah): Factor out to `useAttendableAttributes`?
-            ...(hasAttention && { 'aria-current': 'location' }),
-            ...attendableAttributes,
-          })}
-    >
+    <StackItem.Content toolbar={toolbar}>
       {toolbar && (
-        <div role='none' className='flex shrink-0 justify-center overflow-x-auto attention-surface'>
+        <div
+          role='none'
+          className={mx(
+            'attention-surface is-full border-be !border-separator',
+            role === 'section' && 'sticky block-start-0 z-[1] -mbe-px min-is-0',
+          )}
+        >
           <Toolbar.Root
-            classNames={
-              role === 'section'
-                ? [
-                    textBlockWidth,
-                    'z-[2] group-focus-within/section:visible',
-                    !hasAttention && 'invisible',
-                    sectionToolbarLayout,
-                  ]
-                : [textBlockWidth]
-            }
+            classNames={[textBlockWidth, !hasAttention && 'opacity-20']}
             state={formattingState && { ...formattingState, ...commentsState }}
             onAction={handleAction}
           >
@@ -212,20 +197,13 @@ export const MarkdownEditor = ({
         ref={parentRef}
         data-testid='composer.markdownRoot'
         data-toolbar={toolbar ? 'enabled' : 'disabled'}
-        className={
-          role === 'section'
-            ? mx('flex flex-col flex-1 min-bs-[12rem]', focusRing)
-            : mx(
-                'flex is-full bs-full overflow-hidden',
-                focusRing,
-                'focus-visible:ring-inset attention-surface',
-                'p-0.5', // TODO(burdon): Handle padding for focusRing consistently.
-                'data-[toolbar=disabled]:pbs-2 data-[toolbar=disabled]:row-span-2',
-              )
-        }
+        className={mx(
+          'ch-focus-ring-inset data-[toolbar=disabled]:pbs-2 attention-surface',
+          role === 'article' ? 'min-bs-0' : '[&_.cm-scroller]:overflow-hidden [&_.cm-scroller]:min-bs-24',
+        )}
         {...focusAttributes}
       />
-    </div>
+    </StackItem.Content>
   );
 };
 

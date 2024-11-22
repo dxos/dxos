@@ -130,3 +130,7 @@ export const getAttendables = (selector: string, cursor: Element, acc: string[] 
 
   return [...new Set(acc)];
 };
+
+export type AttendableId = { attendableId?: string };
+
+export type Related = { related?: boolean };

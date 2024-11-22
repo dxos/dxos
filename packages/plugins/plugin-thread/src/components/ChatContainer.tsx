@@ -9,8 +9,8 @@ import { MessageType } from '@dxos/plugin-space/types';
 import { fullyQualifiedId, getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Icon, ScrollArea, useThemeContext, useTranslation } from '@dxos/react-ui';
-import { PlankHeading } from '@dxos/react-ui-deck';
 import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
+import { StackItem } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, threadLayout } from '@dxos/react-ui-thread';
 import { nonNullable } from '@dxos/util';
@@ -26,10 +26,10 @@ export const ChatHeading = ({ attendableId }: { attendableId?: string }) => {
   const { t } = useTranslation(THREAD_PLUGIN);
   return (
     <div role='none' className='flex items-center'>
-      <PlankHeading.Button attendableId={attendableId}>
+      <StackItem.SigilButton attendableId={attendableId}>
         <Icon icon='ph--chat--regular' size={5} />
-      </PlankHeading.Button>
-      <PlankHeading.Label attendableId={attendableId}>{t('chat heading')}</PlankHeading.Label>
+      </StackItem.SigilButton>
+      <StackItem.HeadingLabel attendableId={attendableId}>{t('chat heading')}</StackItem.HeadingLabel>
     </div>
   );
 };

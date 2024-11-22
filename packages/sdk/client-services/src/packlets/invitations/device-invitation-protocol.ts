@@ -26,7 +26,9 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
   ) {}
 
   toJSON(): object {
-    return {};
+    return {
+      kind: 'device',
+    };
   }
 
   checkCanInviteNewMembers(): ApiError | undefined {

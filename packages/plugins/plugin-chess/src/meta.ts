@@ -11,4 +11,5 @@ export default {
   name: 'Chess',
   description: 'Play chess.',
   icon: 'ph--shield-chevron--regular',
+  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-chess',
 } satisfies PluginMeta;

@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import { log } from '@dxos/log';
 
 describe('Object', () => {
-  test.skip('Ulid stress test', () => {
+  test.skip('ulid stress test', () => {
     const amountToGenerate = 10_000;
 
     const generators = [ulid];

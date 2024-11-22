@@ -1,36 +1,27 @@
 {
   "name": "@dxos/plugin-map",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "description": "Map plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": false,
+  "sideEffects": true,
   "exports": {
     ".": {
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/index.cjs",
-        "default": "./dist/lib/node-esm/index.mjs"
-      },
-      "types": "./dist/types/src/index.d.ts"
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./meta": {
+      "types": "./dist/types/src/meta.d.ts",
       "browser": "./dist/lib/browser/meta.mjs",
-      "node": {
-        "require": "./dist/lib/node/meta.cjs",
-        "default": "./dist/lib/node-esm/meta.mjs"
-      },
-      "types": "./dist/types/src/meta.d.ts"
+      "node": "./dist/lib/node-esm/meta.mjs"
     },
     "./types": {
+      "types": "./dist/types/src/types/index.d.ts",
       "browser": "./dist/lib/browser/types/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/types/index.cjs",
-        "default": "./dist/lib/node-esm/types/index.mjs"
-      },
-      "types": "./dist/types/src/types/index.d.ts"
+      "node": "./dist/lib/node-esm/types/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -61,7 +52,7 @@
     "@dxos/plugin-table": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/schema": "^0.75.1",
+    "@effect/schema": "^0.75.5",
     "@preact/signals-core": "^1.6.0",
     "@react-leaflet/core": "^2.1.0",
     "leaflet": "^1.9.4",

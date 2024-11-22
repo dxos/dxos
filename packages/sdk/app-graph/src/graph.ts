@@ -7,9 +7,10 @@ import { batch, effect, untracked } from '@preact/signals-core';
 import { asyncTimeout, Trigger } from '@dxos/async';
 import { type ReactiveObject, create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
-import { type Relation, type Node, type NodeArg, type NodeFilter, isActionLike } from './node';
+import { type Relation, type Node, type NodeArg, type NodeFilter, isActionLike, actionGroupSymbol } from './node';
 
 const graphSymbol = Symbol('graph');
 type DeepWriteable<T> = { -readonly [K in keyof T]: DeepWriteable<T[K]> };
@@ -64,6 +65,15 @@ export type GraphTraversalOptions = {
   expansion?: boolean;
 };
 
+export type GraphParams = {
+  // TODO(wittjosiah): Make data optional instead of omitting.
+  nodes?: Omit<Node, 'data'>[];
+  edges?: Record<string, string[]>;
+  onInitialNode?: Graph['_onInitialNode'];
+  onInitialNodes?: Graph['_onInitialNodes'];
+  onRemoveNode?: Graph['_onRemoveNode'];
+};
+
 /**
  * The Graph represents the structure of the application constructed via plugins.
  */
@@ -85,20 +95,38 @@ export class Graph {
    */
   readonly _edges: Record<string, ReactiveObject<{ inbound: string[]; outbound: string[] }>> = {};
 
-  constructor({
-    onInitialNode,
-    onInitialNodes,
-    onRemoveNode,
-  }: {
-    onInitialNode?: Graph['_onInitialNode'];
-    onInitialNodes?: Graph['_onInitialNodes'];
-    onRemoveNode?: Graph['_onRemoveNode'];
-  } = {}) {
+  constructor({ nodes, edges, onInitialNode, onInitialNodes, onRemoveNode }: GraphParams = {}) {
+    this._nodes[ROOT_ID] = this._constructNode({ id: ROOT_ID, type: ROOT_TYPE, properties: {}, data: null });
+    if (nodes) {
+      nodes.forEach((node) => {
+        if (node.type === ACTION_TYPE) {
+          this._addNode({ ...node, data: () => log.warn('Pickled action invocation') });
+        } else if (node.type === ACTION_GROUP_TYPE) {
+          this._addNode({ ...node, data: actionGroupSymbol });
+        } else {
+          this._addNode(node);
+        }
+      });
+    }
+
+    this._edges[ROOT_ID] = create({ inbound: [], outbound: [] });
+    if (edges) {
+      Object.entries(edges).forEach(([source, edges]) => {
+        edges.forEach((target) => {
+          this._addEdge({ source, target });
+        });
+        this._sortEdges(source, 'outbound', edges);
+      });
+    }
+
     this._onInitialNode = onInitialNode;
     this._onInitialNodes = onInitialNodes;
     this._onRemoveNode = onRemoveNode;
-    this._nodes[ROOT_ID] = this._constructNode({ id: ROOT_ID, type: ROOT_TYPE, properties: {}, data: null });
-    this._edges[ROOT_ID] = create({ inbound: [], outbound: [] });
+  }
+
+  static from(pickle: string, options: Omit<GraphParams, 'nodes' | 'edges'> = {}) {
+    const { nodes, edges } = JSON.parse(pickle);
+    return new Graph({ nodes, edges, ...options });
   }
 
   /**
@@ -136,6 +164,24 @@ export class Graph {
     const root = this.findNode(id);
     invariant(root, `Node not found: ${id}`);
     return toJSON(root);
+  }
+
+  pickle() {
+    const nodes = Object.values(this._nodes).map((node) => {
+      return {
+        id: node.id,
+        type: node.type,
+        properties: node.properties,
+      };
+    });
+
+    const edges = Object.fromEntries(
+      Object.entries(this._edges)
+        .map(([id, { outbound }]): [string, string[]] => [id, outbound])
+        .toSorted(([a], [b]) => a.localeCompare(b)),
+    );
+
+    return JSON.stringify({ nodes, edges });
   }
 
   /**
@@ -292,6 +338,29 @@ export class Graph {
     });
 
     return found;
+  }
+
+  /**
+   * Wait for the path between two nodes in the graph to be established.
+   */
+  async waitForPath(
+    params: { source?: string; target: string },
+    { timeout = 5_000, interval = 500 }: { timeout?: number; interval?: number } = {},
+  ) {
+    const path = this.getPath(params);
+    if (path) {
+      return path;
+    }
+
+    const trigger = new Trigger<string[]>();
+    const i = setInterval(() => {
+      const path = this.getPath(params);
+      if (path) {
+        trigger.wake(path);
+      }
+    }, interval);
+
+    return trigger.wait({ timeout }).finally(() => clearInterval(i));
   }
 
   /**

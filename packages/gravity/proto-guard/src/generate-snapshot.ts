@@ -18,7 +18,7 @@ import { CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { type SnapshotDescription, SnapshotsRegistry } from './snapshots-registry';
 import { SpacesDumper } from './space-json-dump';
 import { Todo } from './types';
-import { createConfig, EXPECTED_JSON_DATA, getBaseDataDir, SNAPSHOT_DIR, SNAPSHOTS_DIR } from './util';
+import { createConfig, getBaseDataDir, EXPECTED_JSON_DATA, SNAPSHOT_DIR, SNAPSHOTS_DIR } from './util';
 
 /**
  * Generates a snapshot of encoded protocol buffers to check for backwards compatibility.
@@ -114,10 +114,10 @@ const main = async () => {
 
     // TODO(burdon): Should just be example.org/type/Test
     class TestType extends TypedObject({ typename: 'example.org/type/TestType', version: '0.1.0' })({}) {}
-    const dynamicSchema = space.db.schema.addSchema(TestType);
+    const dynamicSchema = space.db.schemaRegistry.addSchema(TestType);
     client.addTypes([TestType]);
     const object = space.db.add(create(dynamicSchema, {}));
-    dynamicSchema.addColumns({ name: S.String, todo: ref(Todo) });
+    dynamicSchema.addFields({ name: S.String, todo: ref(Todo) });
     object.name = 'Test';
     object.todo = create(Todo, { name: 'Test todo' });
     await space.db.flush();

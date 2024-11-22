@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { SettingsValue } from '@dxos/plugin-settings';
 import { Input, useTranslation } from '@dxos/react-ui';
+import { DeprecatedFormInput } from '@dxos/react-ui-form';
 
 import { SKETCH_PLUGIN } from '../meta';
 import { type SketchSettingsProps } from '../types';
@@ -14,11 +14,13 @@ export const SketchSettings = ({ settings }: { settings: SketchSettingsProps }) 
   const { t } = useTranslation(SKETCH_PLUGIN);
 
   return (
-    <SettingsValue label={t('settings grid type label')}>
-      <Input.Switch
-        checked={settings.gridType === 'dotted'}
-        onCheckedChange={(checked) => (settings.gridType = checked ? 'dotted' : 'mesh')}
-      />
-    </SettingsValue>
+    <>
+      <DeprecatedFormInput label={t('settings grid type label')}>
+        <Input.Switch
+          checked={settings.gridType === 'dotted'}
+          onCheckedChange={(checked) => (settings.gridType = checked ? 'dotted' : 'mesh')}
+        />
+      </DeprecatedFormInput>
+    </>
   );
 };

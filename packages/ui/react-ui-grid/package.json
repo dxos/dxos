@@ -1,16 +1,16 @@
 {
   "name": "@dxos/react-ui-grid",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "description": "React component which manages a `dx-grid` Lit web component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": false,
+  "sideEffects": true,
   "exports": {
     ".": {
-      "browser": "./dist/lib/browser/index.mjs",
-      "types": "./dist/types/src/index.d.ts"
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -34,7 +34,9 @@
     "@radix-ui/react-use-controllable-state": "^1.0.0"
   },
   "devDependencies": {
+    "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-searchlist": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@types/react": "~18.2.0",

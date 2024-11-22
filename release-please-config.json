@@ -29,21 +29,6 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/templates/bare-template/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/templates/hello-template/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/templates/tasks-template/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/testbench-app/package.json",
           "jsonpath": "$.version"
         },
@@ -384,21 +369,6 @@
         },
         {
           "type": "json",
-          "path": "packages/devtools/initializers/create/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/devtools/initializers/create-bare/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/devtools/initializers/create-tasks/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/e2e/rpc-tunnel-e2e/package.json",
           "jsonpath": "$.version"
         },
@@ -410,11 +380,6 @@
         {
           "type": "json",
           "path": "packages/experimental/cf-labs/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/chess-app/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -479,7 +444,7 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/experimental/plugin-chain/package.json",
+          "path": "packages/plugins/experimental/plugin-automation/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -490,11 +455,6 @@
         {
           "type": "json",
           "path": "packages/plugins/experimental/plugin-explorer/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-function/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -554,6 +514,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/experimental/plugin-wnfs/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-attention/package.json",
           "jsonpath": "$.version"
         },
@@ -594,6 +559,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-manager/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-markdown/package.json",
           "jsonpath": "$.version"
         },
@@ -630,11 +600,6 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-registry/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/plugin-settings/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -784,17 +749,12 @@
         },
         {
           "type": "json",
-          "path": "packages/ui/react-ui-data/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/ui/react-ui-deck/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/ui/react-ui-editor/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-form/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -870,11 +830,6 @@
         {
           "type": "json",
           "path": "tools/codemods/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "tools/conform/package.json",
           "jsonpath": "$.version"
         },
         {

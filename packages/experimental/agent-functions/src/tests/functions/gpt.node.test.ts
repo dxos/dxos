@@ -12,7 +12,7 @@ import { loadObjectReferences } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
 import { FunctionDef, FunctionTrigger } from '@dxos/functions';
 import { createInitializedClients, inviteMember, startFunctionsHost } from '@dxos/functions/testing';
-import { ChainInputType, ChainPromptType } from '@dxos/plugin-chain/types';
+import { ChainInputType, ChainPromptType } from '@dxos/plugin-automation/types';
 import { TextType } from '@dxos/plugin-markdown/types';
 import { MessageType, ThreadType } from '@dxos/plugin-space/types';
 
@@ -262,7 +262,7 @@ const createTrigger = (space: Space, options?: { meta?: FunctionTrigger['meta'] 
       meta: options?.meta,
       spec: {
         type: 'subscription',
-        filter: [{ type: MessageType.typename }],
+        filter: { type: MessageType.typename },
       },
     }),
   );

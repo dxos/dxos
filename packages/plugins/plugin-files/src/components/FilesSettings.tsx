@@ -6,8 +6,8 @@ import { FloppyDisk, Folder, FolderOpen } from '@phosphor-icons/react';
 import React from 'react';
 
 import { useIntentDispatcher } from '@dxos/app-framework';
-import { SettingsValue } from '@dxos/plugin-settings';
 import { Button, Input, Message, useTranslation } from '@dxos/react-ui';
+import { DeprecatedFormInput } from '@dxos/react-ui-form';
 import { getSize } from '@dxos/react-ui-theme';
 
 import { FILES_PLUGIN } from '../meta';
@@ -19,7 +19,7 @@ export const FilesSettings = ({ settings }: { settings: FilesSettingsProps }) =>
 
   return (
     <>
-      <SettingsValue
+      <DeprecatedFormInput
         label={t('save files to directory label')}
         secondary={
           <Message.Root valence='warning'>
@@ -31,38 +31,38 @@ export const FilesSettings = ({ settings }: { settings: FilesSettingsProps }) =>
         <Button classNames='mis-2' onClick={() => dispatch({ action: LocalFilesAction.SELECT_ROOT })}>
           <Folder className={getSize(5)} />
         </Button>
-      </SettingsValue>
-      <SettingsValue label={t('trigger export label')}>
+      </DeprecatedFormInput>
+      <DeprecatedFormInput label={t('trigger export label')}>
         <Button classNames='mis-2' onClick={() => dispatch({ action: LocalFilesAction.EXPORT })}>
           <FloppyDisk className={getSize(5)} />
         </Button>
-      </SettingsValue>
-      <SettingsValue label={t('trigger import label')}>
+      </DeprecatedFormInput>
+      <DeprecatedFormInput label={t('trigger import label')}>
         <Button classNames='mis-2' onClick={() => dispatch({ action: LocalFilesAction.IMPORT })}>
           <FolderOpen className={getSize(5)} />
         </Button>
-      </SettingsValue>
-      <SettingsValue label={t('auto export label')}>
+      </DeprecatedFormInput>
+      <DeprecatedFormInput label={t('auto export label')}>
         <Input.Switch
           disabled={!settings.rootHandle}
           checked={settings.rootHandle ? settings.autoExport : false}
           onCheckedChange={(checked) => (settings.autoExport = !!checked)}
         />
-      </SettingsValue>
-      <SettingsValue label={t('auto export interval label')}>
+      </DeprecatedFormInput>
+      <DeprecatedFormInput label={t('auto export interval label')}>
         <Input.TextInput
           type='number'
           min={1}
           value={settings.autoExportInterval / 1000}
           onInput={(event) => (settings.autoExportInterval = parseInt(event.currentTarget.value, 10) * 1000)}
         />
-      </SettingsValue>
-      <SettingsValue label={t('open local files label')}>
+      </DeprecatedFormInput>
+      <DeprecatedFormInput label={t('open local files label')}>
         <Input.Switch
           checked={settings.openLocalFiles}
           onCheckedChange={(checked) => (settings.openLocalFiles = !!checked)}
         />
-      </SettingsValue>
+      </DeprecatedFormInput>
     </>
   );
 };

@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type BootstrapPluginsParams, NavigationAction, Plugin, type PluginMeta } from '@dxos/app-framework';
+import { type HostPluginParams, LayoutAction, NavigationAction, Plugin, type PluginMeta } from '@dxos/app-framework';
 import { type Trigger } from '@dxos/async';
 import { type Config, type ClientServicesProvider } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
 import AttentionMeta from '@dxos/plugin-attention/meta';
-import ChainMeta from '@dxos/plugin-chain/meta';
+import AutomationMeta from '@dxos/plugin-automation/meta';
 import ChessMeta from '@dxos/plugin-chess/meta';
 import ClientMeta from '@dxos/plugin-client/meta';
 import DebugMeta from '@dxos/plugin-debug/meta';
@@ -15,7 +15,6 @@ import DeckMeta from '@dxos/plugin-deck/meta';
 import ExcalidrawMeta from '@dxos/plugin-excalidraw/meta';
 import ExplorerMeta from '@dxos/plugin-explorer/meta';
 import FilesMeta from '@dxos/plugin-files/meta';
-import FunctionMeta from '@dxos/plugin-function/meta';
 import GithubMeta from '@dxos/plugin-github/meta';
 import GraphMeta from '@dxos/plugin-graph/meta';
 import GridMeta from '@dxos/plugin-grid/meta';
@@ -23,6 +22,7 @@ import HelpMeta from '@dxos/plugin-help/meta';
 import InboxMeta from '@dxos/plugin-inbox/meta';
 import IpfsMeta from '@dxos/plugin-ipfs/meta';
 import KanbanMeta from '@dxos/plugin-kanban/meta';
+import ManagerMeta from '@dxos/plugin-manager/meta';
 import MapMeta from '@dxos/plugin-map/meta';
 import MarkdownMeta from '@dxos/plugin-markdown/meta';
 import MermaidMeta from '@dxos/plugin-mermaid/meta';
@@ -36,7 +36,6 @@ import PwaMeta from '@dxos/plugin-pwa/meta';
 import RegistryMeta from '@dxos/plugin-registry/meta';
 import ScriptMeta from '@dxos/plugin-script/meta';
 import SearchMeta from '@dxos/plugin-search/meta';
-import SettingsMeta from '@dxos/plugin-settings/meta';
 import SheetMeta from '@dxos/plugin-sheet/meta';
 import SketchMeta from '@dxos/plugin-sketch/meta';
 import SpaceMeta from '@dxos/plugin-space/meta';
@@ -47,9 +46,10 @@ import TableMeta from '@dxos/plugin-table/meta';
 import ThemeMeta from '@dxos/plugin-theme/meta';
 import ThreadMeta from '@dxos/plugin-thread/meta';
 import WildcardMeta from '@dxos/plugin-wildcard/meta';
+import WnfsMeta from '@dxos/plugin-wnfs/meta';
 import { isNotFalsy } from '@dxos/util';
 
-import { INITIAL_COLLECTION_TITLE, INITIAL_CONTENT, INITIAL_DOC_TITLE } from './constants';
+import { INITIAL_CONTENT, INITIAL_DOC_TITLE } from './constants';
 import { steps } from './help';
 import { meta as WelcomeMeta } from './plugins/welcome/meta';
 
@@ -83,28 +83,26 @@ export const core = ({ isPwa, isSocket }: PluginConfig): PluginMeta[] =>
     isSocket && NativeMeta,
     WelcomeMeta,
 
-    // UX
-    AttentionMeta,
-    DeckMeta,
-    StackMeta,
-    NavTreeMeta,
-    SettingsMeta,
-    StatusBarMeta,
-    WildcardMeta,
-
-    // Shell and help (client must precede help because help’s context depends on client’s)
-    ClientMeta,
-    HelpMeta,
-
     // Data integrations
+    ClientMeta,
     SpaceMeta,
+    FilesMeta,
 
     // Framework extensions
     // TODO(wittjosiah): Space plugin currently needs to be before the Graph plugin.
     //  Root folder needs to be created before the graph is built or else it's not ordered first.
     GraphMeta,
     MetadataMeta,
+
+    // UX
+    AttentionMeta,
+    DeckMeta,
+    HelpMeta,
+    NavTreeMeta,
+    ManagerMeta,
     RegistryMeta,
+    StatusBarMeta,
+    WildcardMeta,
   ].filter(isNotFalsy);
 
 export const defaults = ({ isDev }: PluginConfig): PluginMeta[] =>
@@ -119,31 +117,34 @@ export const defaults = ({ isDev }: PluginConfig): PluginMeta[] =>
   ].filter(isNotFalsy);
 
 // TODO(burdon): Use meta tags to determine default/recommended/labs.
-export const recommended = ({ isLabs }: PluginConfig): PluginMeta[] => [
-  // prettier-ignore
-  ChessMeta,
-  ExcalidrawMeta,
-  ExplorerMeta,
-  FunctionMeta,
-  IpfsMeta,
-  MapMeta,
-  MermaidMeta,
-  PresenterMeta,
-  ScriptMeta,
-  SearchMeta,
+export const recommended = ({ isDev, isLabs }: PluginConfig): PluginMeta[] =>
+  [
+    // prettier-ignore
+    !isDev && DebugMeta,
+    AutomationMeta,
+    ChessMeta,
+    ExcalidrawMeta,
+    ExplorerMeta,
+    IpfsMeta,
+    MapMeta,
+    MermaidMeta,
+    PresenterMeta,
+    ScriptMeta,
+    SearchMeta,
+    StackMeta,
+    WnfsMeta,
 
-  ...(isLabs
-    ? [
-        // prettier-ignore
-        ChainMeta,
-        GithubMeta,
-        GridMeta,
-        InboxMeta,
-        KanbanMeta,
-        OutlinerMeta,
-      ]
-    : []),
-];
+    ...(isLabs
+      ? [
+          // prettier-ignore
+          GithubMeta,
+          GridMeta,
+          InboxMeta,
+          KanbanMeta,
+          OutlinerMeta,
+        ]
+      : []),
+  ].filter(isNotFalsy);
 
 /**
  * Individual plugin constructors.
@@ -157,15 +158,14 @@ export const plugins = ({
   observability,
   isPwa,
   isSocket,
-}: PluginConfig): BootstrapPluginsParams['plugins'] => ({
+}: PluginConfig): HostPluginParams['plugins'] => ({
   [AttentionMeta.id]: Plugin.lazy(() => import('@dxos/plugin-attention')),
-  [ChainMeta.id]: Plugin.lazy(() => import('@dxos/plugin-chain')),
+  [AutomationMeta.id]: Plugin.lazy(() => import('@dxos/plugin-automation')),
   [ChessMeta.id]: Plugin.lazy(() => import('@dxos/plugin-chess')),
   [ClientMeta.id]: Plugin.lazy(() => import('@dxos/plugin-client'), {
     appKey,
     config,
     services,
-    shell: './shell.html',
     onClientInitialized: async (client) => {
       const { LegacyTypes } = await import('./migrations');
       client.addTypes([
@@ -179,21 +179,23 @@ export const plugins = ({
         LegacyTypes.TextType,
         LegacyTypes.ThreadType,
       ]);
+    },
+    onReset: async ({ target }) => {
+      localStorage.clear();
 
-      client.shell.onReset((target) => {
-        if (target === 'deviceInvitation') {
-          window.location.assign(new URL('/?deviceInvitationCode=', window.location.origin));
-        } else {
-          window.location.pathname = '/';
-        }
-      });
+      if (target === 'deviceInvitation') {
+        window.location.assign(new URL('/?deviceInvitationCode=', window.location.origin));
+      } else if (target === 'recoverIdentity') {
+        window.location.assign(new URL('/?recoverIdentity=true', window.location.origin));
+      } else {
+        window.location.pathname = '/';
+      }
     },
   }),
   [DebugMeta.id]: Plugin.lazy(() => import('@dxos/plugin-debug')),
   [ExcalidrawMeta.id]: Plugin.lazy(() => import('@dxos/plugin-excalidraw')),
   [ExplorerMeta.id]: Plugin.lazy(() => import('@dxos/plugin-explorer')),
   [FilesMeta.id]: Plugin.lazy(() => import('@dxos/plugin-files')),
-  [FunctionMeta.id]: Plugin.lazy(() => import('@dxos/plugin-function')),
   [GithubMeta.id]: Plugin.lazy(() => import('@dxos/plugin-github')),
   [GraphMeta.id]: Plugin.lazy(() => import('@dxos/plugin-graph')),
   [GridMeta.id]: Plugin.lazy(() => import('@dxos/plugin-grid')),
@@ -202,6 +204,7 @@ export const plugins = ({
   [IpfsMeta.id]: Plugin.lazy(() => import('@dxos/plugin-ipfs')),
   [KanbanMeta.id]: Plugin.lazy(() => import('@dxos/plugin-kanban')),
   [DeckMeta.id]: Plugin.lazy(() => import('@dxos/plugin-deck'), { observability: true }),
+  [ManagerMeta.id]: Plugin.lazy(() => import('@dxos/plugin-manager')),
   [MapMeta.id]: Plugin.lazy(() => import('@dxos/plugin-map')),
   [MarkdownMeta.id]: Plugin.lazy(() => import('@dxos/plugin-markdown')),
   [MermaidMeta.id]: Plugin.lazy(() => import('@dxos/plugin-mermaid')),
@@ -220,7 +223,6 @@ export const plugins = ({
     containerUrl: '/script-frame/index.html',
   }),
   [SearchMeta.id]: Plugin.lazy(() => import('@dxos/plugin-search')),
-  [SettingsMeta.id]: Plugin.lazy(() => import('@dxos/plugin-settings')),
   [SheetMeta.id]: Plugin.lazy(() => import('@dxos/plugin-sheet')),
   [SketchMeta.id]: Plugin.lazy(() => import('@dxos/plugin-sketch')),
   [SpaceMeta.id]: Plugin.lazy(() => import('@dxos/plugin-space'), {
@@ -231,23 +233,28 @@ export const plugins = ({
       const { DocumentType, TextType } = await import('@dxos/plugin-markdown/types');
       const { CollectionType } = await import('@dxos/plugin-space/types');
 
-      const readme = create(CollectionType, { name: INITIAL_COLLECTION_TITLE, objects: [], views: {} });
-      INITIAL_CONTENT.forEach((content, index) => {
-        readme.objects.push(
-          create(DocumentType, {
-            name: index === 0 ? INITIAL_DOC_TITLE : undefined,
-            content: create(TextType, { content: content + '\n' }),
-            threads: [],
-          }),
-        );
+      const readme = create(DocumentType, {
+        name: INITIAL_DOC_TITLE,
+        content: create(TextType, { content: INITIAL_CONTENT.join('\n\n') }),
+        threads: [],
       });
 
       const defaultSpaceCollection = client.spaces.default.properties[CollectionType.typename] as CollectionType;
       defaultSpaceCollection?.objects.push(readme);
 
-      void dispatch({
-        action: NavigationAction.OPEN,
-        data: { activeParts: { main: [fullyQualifiedId(readme)] } },
+      await dispatch([
+        {
+          action: LayoutAction.SET_LAYOUT_MODE,
+          data: { layoutMode: 'solo' },
+        },
+        {
+          action: NavigationAction.OPEN,
+          data: { activeParts: { main: [fullyQualifiedId(readme)] } },
+        },
+      ]);
+      await dispatch({
+        action: NavigationAction.EXPOSE,
+        data: { id: fullyQualifiedId(readme) },
       });
     },
   }),
@@ -260,4 +267,5 @@ export const plugins = ({
   [ThreadMeta.id]: Plugin.lazy(() => import('@dxos/plugin-thread')),
   [WelcomeMeta.id]: Plugin.lazy(() => import('./plugins/welcome'), { firstRun }),
   [WildcardMeta.id]: Plugin.lazy(() => import('@dxos/plugin-wildcard')),
+  [WnfsMeta.id]: Plugin.lazy(() => import('@dxos/plugin-wnfs')),
 });

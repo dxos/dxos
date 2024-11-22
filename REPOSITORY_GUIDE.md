@@ -5,7 +5,11 @@ Instructions and documentation for developer workflows in this DXOS repository.
 ## Prerequisites
 
 - Node v20.x (recommended: [Node Version Manager](https://github.com/nvm-sh/nvm); see `.node-version`).
-- Native libraries: `brew install cairo giflib git-lfs jpeg libpng librsvg pango pkg-config python-setuptools`
+- Native libraries: 
+
+```bash
+brew install cairo giflib git-lfs jpeg libpng librsvg pango pkg-config python-setuptools
+```
 
 ## Monorepo workspace
 
@@ -19,13 +23,13 @@ npm i -g pnpm
 
 Install at the repo root:
 
-```
+```bash
 pnpm i
 ```
 
 Build everything:
 
-```
+```bash
 pnpm build
 ```
 
@@ -33,13 +37,13 @@ pnpm build
 
 Run all unit tests:
 
-```
+```bash
 pnpm test
 ```
 
 Recompile any package within the monorepo when changes are detected:
 
-```
+```bash
 pnpm watch
 ```
 
@@ -92,7 +96,7 @@ Once the required changes have been made, re-run `pnpm i`.
 Run `pnpm up` to update dependencies from the root directory. For example:
 
 ```bash
-pnpm up --latest -i -r "@codemirror/*"
+pnpm up --latest -i -r "effect" "@effect/*"
 ```
 
 ## Tasks in `nx` targets

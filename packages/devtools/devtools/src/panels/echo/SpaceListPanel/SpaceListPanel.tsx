@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { AnchoredOverflow, Button, useFileDownload } from '@dxos/react-ui';
-import { Table, type TableColumnDef, createColumnBuilder, textPadding } from '@dxos/react-ui-table';
+import { Table, type TableColumnDef, createColumnBuilder, textPadding } from '@dxos/react-ui-table/deprecated';
 
 import { DialogRestoreSpace } from './DialogRestoreSpace';
 import { exportData, importData } from './backup';
@@ -126,7 +126,7 @@ export const SpaceListPanel: FC = () => {
     return {
       key: space.key,
       name: space.isOpen ? space.properties.name : undefined,
-      objects: space.db.objects.length,
+      objects: -1, // TODO(dmaretskyi): Fix this.
       members: space.members.get().length,
       startup: open && ready ? ready.getTime() - open.getTime() : -1,
       isOpen: space.isOpen,

@@ -1,28 +1,22 @@
 {
   "name": "@dxos/plugin-attention",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "description": "Plugin for attention",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": false,
+  "sideEffects": true,
   "exports": {
     ".": {
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/index.cjs",
-        "default": "./dist/lib/node-esm/index.mjs"
-      },
-      "types": "./dist/types/src/index.d.ts"
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./meta": {
+      "types": "./dist/types/src/meta.d.ts",
       "browser": "./dist/lib/browser/meta.mjs",
-      "node": {
-        "require": "./dist/lib/node/meta.cjs",
-        "default": "./dist/lib/node-esm/meta.mjs"
-      },
-      "types": "./dist/types/src/meta.d.ts"
+      "node": "./dist/lib/node-esm/meta.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

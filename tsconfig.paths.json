@@ -5,14 +5,14 @@
       "@dxos/devtools": [
         "packages/devtools/devtools/src/index.ts"
       ],
-      "@dxos/plugin-chain": [
-        "packages/plugins/experimental/plugin-chain/src/index.ts"
+      "@dxos/plugin-automation": [
+        "packages/plugins/experimental/plugin-automation/src/index.ts"
       ],
-      "@dxos/plugin-chain/meta": [
-        "packages/plugins/experimental/plugin-chain/src/meta.ts"
+      "@dxos/plugin-automation/meta": [
+        "packages/plugins/experimental/plugin-automation/src/meta.ts"
       ],
-      "@dxos/plugin-chain/types": [
-        "packages/plugins/experimental/plugin-chain/src/types/index.ts"
+      "@dxos/plugin-automation/types": [
+        "packages/plugins/experimental/plugin-automation/src/types/index.ts"
       ],
       "@dxos/plugin-excalidraw": [
         "packages/plugins/experimental/plugin-excalidraw/src/index.ts"
@@ -28,12 +28,6 @@
       ],
       "@dxos/plugin-explorer/types": [
         "packages/plugins/experimental/plugin-explorer/src/types/index.ts"
-      ],
-      "@dxos/plugin-function": [
-        "packages/plugins/experimental/plugin-function/src/index.ts"
-      ],
-      "@dxos/plugin-function/meta": [
-        "packages/plugins/experimental/plugin-function/src/meta.ts"
       ],
       "@dxos/plugin-github": [
         "packages/plugins/experimental/plugin-github/src/index.ts"
@@ -125,6 +119,15 @@
       "@dxos/plugin-template/meta": [
         "packages/plugins/experimental/plugin-template/src/meta.ts"
       ],
+      "@dxos/plugin-wnfs": [
+        "packages/plugins/experimental/plugin-wnfs/src/index.ts"
+      ],
+      "@dxos/plugin-wnfs/meta": [
+        "packages/plugins/experimental/plugin-wnfs/src/meta.ts"
+      ],
+      "@dxos/plugin-wnfs/types": [
+        "packages/plugins/experimental/plugin-wnfs/src/types/index.ts"
+      ],
       "@dxos/plugin-attention": [
         "packages/plugins/plugin-attention/src/index.ts"
       ],
@@ -136,6 +139,9 @@
       ],
       "@dxos/plugin-chess/meta": [
         "packages/plugins/plugin-chess/src/meta.ts"
+      ],
+      "@dxos/plugin-chess/types": [
+        "packages/plugins/plugin-chess/src/types/index.ts"
       ],
       "@dxos/plugin-client": [
         "packages/plugins/plugin-client/src/index.ts"
@@ -155,6 +161,9 @@
       "@dxos/plugin-deck/meta": [
         "packages/plugins/plugin-deck/src/meta.ts"
       ],
+      "@dxos/plugin-deck/types": [
+        "packages/plugins/plugin-deck/src/types.ts"
+      ],
       "@dxos/plugin-files": [
         "packages/plugins/plugin-files/src/index.ts"
       ],
@@ -172,6 +181,12 @@
       ],
       "@dxos/plugin-help/meta": [
         "packages/plugins/plugin-help/src/meta.ts"
+      ],
+      "@dxos/plugin-manager": [
+        "packages/plugins/plugin-manager/src/index.ts"
+      ],
+      "@dxos/plugin-manager/meta": [
+        "packages/plugins/plugin-manager/src/meta.ts"
       ],
       "@dxos/plugin-markdown": [
         "packages/plugins/plugin-markdown/src/index.ts"
@@ -223,12 +238,6 @@
       ],
       "@dxos/plugin-registry/meta": [
         "packages/plugins/plugin-registry/src/meta.ts"
-      ],
-      "@dxos/plugin-settings": [
-        "packages/plugins/plugin-settings/src/index.ts"
-      ],
-      "@dxos/plugin-settings/meta": [
-        "packages/plugins/plugin-settings/src/meta.ts"
       ],
       "@dxos/plugin-sheet": [
         "packages/plugins/plugin-sheet/src/index.ts"
@@ -335,14 +344,11 @@
       "@dxos/react-ui-card": [
         "packages/ui/react-ui-card/src/index.ts"
       ],
-      "@dxos/react-ui-data": [
-        "packages/ui/react-ui-data/src/index.ts"
-      ],
-      "@dxos/react-ui-deck": [
-        "packages/ui/react-ui-deck/src/index.ts"
-      ],
       "@dxos/react-ui-editor": [
         "packages/ui/react-ui-editor/src/index.ts"
+      ],
+      "@dxos/react-ui-form": [
+        "packages/ui/react-ui-form/src/index.ts"
       ],
       "@dxos/react-ui-grid": [
         "packages/ui/react-ui-grid/src/index.ts"
@@ -365,8 +371,14 @@
       "@dxos/react-ui-syntax-highlighter": [
         "packages/ui/react-ui-syntax-highlighter/src/index.ts"
       ],
+      "@dxos/react-ui-table/_deprecated": [
+        "packages/ui/react-ui-table/src/_deprecated/index.ts"
+      ],
       "@dxos/react-ui-table": [
         "packages/ui/react-ui-table/src/index.ts"
+      ],
+      "@dxos/react-ui-table/types": [
+        "packages/ui/react-ui-table/src/types/index.ts"
       ],
       "@dxos/react-ui-tabs": [
         "packages/ui/react-ui-tabs/src/index.ts"

@@ -13,11 +13,12 @@ import { SpaceAction } from '@dxos/plugin-space';
 import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 import { Icon } from '@dxos/react-ui';
 
-import { ComputeGraphContextProvider, SheetContainer, useComputeGraph } from './components';
+import { ComputeGraphContextProvider, RangeList, SheetContainer } from './components';
+import { type ComputeGraphRegistry } from './compute-graph';
 import { compareIndexPositions, createSheet } from './defs';
 import { computeGraphFacet } from './extensions';
-import { type ComputeGraphRegistry } from './graph';
 import meta, { SHEET_PLUGIN } from './meta';
+import { serializer } from './serializer';
 import translations from './translations';
 import { SheetAction, SheetType, type SheetPluginProvides } from './types';
 
@@ -37,8 +38,8 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       }
 
       // Async import removes direct dependency on hyperformula.
-      const { ComputeGraphRegistry } = await import('./graph');
-      computeGraphRegistry = new ComputeGraphRegistry({ remoteFunctionUrl });
+      const { defaultPlugins, ComputeGraphRegistry } = await import('./compute-graph');
+      computeGraphRegistry = new ComputeGraphRegistry({ plugins: defaultPlugins, remoteFunctionUrl });
     },
     provides: {
       context: ({ children }) => {
@@ -51,6 +52,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
             label: (object: any) => (object instanceof SheetType ? object.name : undefined),
             placeholder: ['sheet title placeholder', { ns: SHEET_PLUGIN }],
             icon: 'ph--grid-nine--regular',
+            serializer,
           },
         },
       },
@@ -142,14 +144,26 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       surface: {
         component: ({ data, role }) => {
           const space = isEchoObject(data.object) ? getSpace(data.object) : undefined;
-          const graph = useComputeGraph(space);
-          if (graph && data.object instanceof SheetType) {
-            switch (role) {
-              case 'article':
-              case 'section': {
-                return <SheetContainer graph={graph} sheet={data.object} role={role} />;
+          if (!space) {
+            return null;
+          }
+
+          switch (role) {
+            case 'article':
+            case 'section':
+              if (data.object instanceof SheetType) {
+                return <SheetContainer space={space} sheet={data.object} role={role} />;
               }
-            }
+
+              return null;
+            case 'complementary--settings':
+              if (data.subject instanceof SheetType) {
+                return {
+                  node: <RangeList sheet={data.subject} />,
+                };
+              }
+
+              return null;
           }
 
           return null;
@@ -160,6 +174,26 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
           switch (intent.action) {
             case SheetAction.CREATE: {
               return { data: createSheet() };
+            }
+            case SheetAction.INSERT_AXIS: {
+              const { model, axis, index, count } = intent.data as SheetAction.InsertAxis;
+              const _indices = model[axis === 'col' ? 'insertColumns' : 'insertRows'](index, count);
+              return;
+            }
+            case SheetAction.DROP_AXIS: {
+              if (!intent.undo) {
+                const { model, axis, axisIndex } = intent.data as SheetAction.DropAxis;
+                const undoData = model[axis === 'col' ? 'dropColumn' : 'dropRow'](axisIndex);
+                return {
+                  undoable: {
+                    message: translations[0]['en-US'][SHEET_PLUGIN][`${axis} dropped label`],
+                    data: { ...undoData, model },
+                  },
+                };
+              } else {
+                const { model, ...undoData } = intent.data as SheetAction.DropAxisRestore;
+                model[undoData.axis === 'col' ? 'restoreColumn' : 'restoreRow'](undoData);
+              }
             }
           }
         },

@@ -1,17 +1,28 @@
 {
   "name": "@dxos/shell",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "description": "DXOS’s OS experiences",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": false,
+  "sideEffects": true,
   "exports": {
     ".": "./dist/bundle/shell.mjs",
     "./style.css": "./dist/bundle/style.css",
-    "./react": "./dist/lib/browser/react.mjs",
-    "./testing": "./dist/lib/browser/testing/index.mjs"
+    "./react": {
+      "types": "./dist/types/src/react.d.ts",
+      "browser": "./dist/lib/browser/react.mjs",
+      "node": "./dist/lib/node-esm/react.mjs"
+    },
+    "./testing": {
+      "types": "./dist/types/src/testing/index.d.ts",
+      "browser": "./dist/lib/browser/testing/index.mjs",
+      "node": {
+        "require": "./dist/lib/node/testing/index.cjs",
+        "default": "./dist/lib/node-esm/testing/index.mjs"
+      }
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {

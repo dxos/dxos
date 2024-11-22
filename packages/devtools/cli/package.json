@@ -1,6 +1,6 @@
 {
   "name": "@dxos/cli",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "description": "DXOS CLI",
   "keywords": [
     "dxos",
@@ -26,8 +26,8 @@
   ],
   "scripts": {
     "bin": "./bin/dx.js",
-    "manifest": "oclif manifest",
-    "prepack": "oclif manifest && oclif readme --multi",
+    "manifest": "NODE_OPTIONS='--import=extensionless/register' oclif manifest",
+    "prepack": "npm run manifest && npm run readme",
     "postpack": "shx rm -f oclif.manifest.json",
     "prepublishOnly": "scripts/patch_dx_environment.sh",
     "readme": "oclif readme --multi"
@@ -35,7 +35,6 @@
   "dependencies": {
     "@dxos/agent": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/bare-template": "workspace:*",
     "@dxos/cli-base": "workspace:*",
     "@dxos/cli-composer": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -46,20 +45,17 @@
     "@dxos/debug": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/functions": "workspace:*",
-    "@dxos/hello-template": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/observability": "workspace:*",
-    "@dxos/plate": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-script": "workspace:*",
     "@dxos/process": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/rpc": "workspace:*",
-    "@dxos/tasks-template": "workspace:*",
     "@dxos/util": "workspace:*",
     "@oclif/core": "^4.0.30",
     "@oclif/plugin-autocomplete": "^3.2.6",

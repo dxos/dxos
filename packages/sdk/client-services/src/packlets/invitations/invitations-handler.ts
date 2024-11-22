@@ -80,7 +80,13 @@ export class InvitationsHandler {
     protocol: InvitationProtocol,
     invitation: Invitation,
   ): void {
-    metrics.increment('dxos.invitation.created');
+    log.verbose('dxos.sdk.invitations-handler.handleInvitationFlow', {
+      state: invitation.state,
+      invitationId: invitation.invitationId,
+      kind: invitation.kind,
+      type: invitation.type,
+    });
+    metrics.increment('dxos.invitation.host');
     const guardedState = createGuardedInvitationState(ctx, invitation, stream);
     // Called for every connecting peer.
     const createExtension = (): InvitationHostExtension => {
@@ -90,12 +96,18 @@ export class InvitationsHandler {
         },
 
         onStateUpdate: (newState: Invitation.State): Invitation => {
-          guardedState.set(extension, newState);
+          if (newState !== Invitation.State.ERROR && newState !== Invitation.State.TIMEOUT) {
+            guardedState.set(extension, newState);
+          }
           return guardedState.current;
         },
 
         admit: async (admissionRequest) => {
           try {
+            log.verbose('dxos.sdk.invitations-handler.host.admit', {
+              invitationId: invitation.invitationId,
+              ...protocol.toJSON(),
+            });
             const deviceKey = admissionRequest.device?.deviceKey ?? admissionRequest.space?.deviceKey;
             invariant(deviceKey);
             const admissionResponse = await protocol.admit(invitation, admissionRequest, extension.guestProfile);
@@ -115,7 +127,7 @@ export class InvitationsHandler {
           let admitted = false;
           connectionCtx.onDispose(() => {
             if (!admitted) {
-              guardedState.error(extension, new ContextDisposedError());
+              guardedState.set(extension, Invitation.State.CONNECTING);
             }
           });
 
@@ -123,9 +135,9 @@ export class InvitationsHandler {
             const traceId = PublicKey.random().toHex();
             try {
               log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.begin({ id: traceId }));
-              log('connected', { ...protocol.toJSON() });
+              log.verbose('connected', { ...protocol.toJSON() });
               const deviceKey = await extension.completedTrigger.wait({ timeout: invitation.timeout });
-              log('admitted guest', { guest: deviceKey, ...protocol.toJSON() });
+              log.verbose('admitted guest', { guest: deviceKey, ...protocol.toJSON() });
               guardedState.set(extension, Invitation.State.SUCCESS);
               metrics.increment('dxos.invitation.success');
               log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.end({ id: traceId }));
@@ -135,13 +147,14 @@ export class InvitationsHandler {
                 await ctx.dispose();
               }
             } catch (err: any) {
+              const stateChanged = guardedState.set(extension, Invitation.State.CONNECTING);
               if (err instanceof TimeoutError) {
-                if (guardedState.set(extension, Invitation.State.TIMEOUT)) {
+                if (stateChanged) {
                   metrics.increment('dxos.invitation.timeout');
-                  log('timeout', { ...protocol.toJSON() });
+                  log.verbose('timeout', { ...protocol.toJSON() });
                 }
               } else {
-                if (guardedState.error(extension, err)) {
+                if (stateChanged) {
                   metrics.increment('dxos.invitation.failed');
                   log.error('failed', err);
                 }
@@ -153,17 +166,18 @@ export class InvitationsHandler {
           });
         },
         onError: (err) => {
+          const stateChanged = guardedState.set(extension, Invitation.State.CONNECTING);
           if (err instanceof InvalidInvitationExtensionRoleError) {
             log('invalid role', { ...err.context });
             return;
           }
           if (err instanceof TimeoutError) {
-            if (guardedState.set(extension, Invitation.State.TIMEOUT)) {
+            if (stateChanged) {
               metrics.increment('dxos.invitation.timeout');
-              log('timeout', { err });
+              log.verbose('timeout', { err });
             }
           } else {
-            if (guardedState.error(extension, err)) {
+            if (stateChanged) {
               metrics.increment('dxos.invitation.failed');
               log.error('failed', err);
             }
@@ -177,19 +191,21 @@ export class InvitationsHandler {
     if (invitation.lifetime && invitation.created) {
       if (invitation.created.getTime() + invitation.lifetime * 1000 < Date.now()) {
         log.warn('invitation has already expired');
-      } else {
-        scheduleTask(
-          ctx,
-          async () => {
-            // ensure the swarm is closed before changing state and closing the stream.
-            await swarmConnection.close();
-            guardedState.set(null, Invitation.State.EXPIRED);
-            metrics.increment('dxos.invitation.expired');
-            await ctx.dispose();
-          },
-          invitation.created.getTime() + invitation.lifetime * 1000 - Date.now(),
-        );
+        guardedState.set(null, Invitation.State.EXPIRED);
+        void ctx.dispose().catch((err) => log.catch(err));
+        return;
       }
+      scheduleTask(
+        ctx,
+        async () => {
+          // ensure the swarm is closed before changing state and closing the stream.
+          await swarmConnection.close();
+          guardedState.set(null, Invitation.State.EXPIRED);
+          metrics.increment('dxos.invitation.expired');
+          await ctx.dispose();
+        },
+        invitation.created.getTime() + invitation.lifetime * 1000 - Date.now(),
+      );
     }
 
     let swarmConnection: SwarmConnection;
@@ -207,6 +223,12 @@ export class InvitationsHandler {
     otpEnteredTrigger: Trigger<string>,
     deviceProfile?: DeviceProfileDocument,
   ): void {
+    log.verbose('dxos.sdk.invitations-handler.acceptInvitation', {
+      state: invitation.state,
+      invitationId: invitation.invitationId,
+      kind: invitation.kind,
+      type: invitation.type,
+    });
     const { timeout = INVITATION_TIMEOUT } = invitation;
 
     if (deviceProfile) {
@@ -246,7 +268,7 @@ export class InvitationsHandler {
           }
 
           connectionCtx.onDispose(async () => {
-            log('extension disposed', { admitted, currentState: guardedState.current.state });
+            log.verbose('extension disposed', { admitted, currentState: guardedState.current.state });
             if (!admitted) {
               guardedState.error(extension, new ContextDisposedError());
               if (shouldCancelInvitationFlow(extension)) {
@@ -269,16 +291,23 @@ export class InvitationsHandler {
                 timeout,
               );
 
-              log('connected', { ...protocol.toJSON() });
+              log.verbose('dxos.sdk.invitations-handler.guest.connected', { ...protocol.toJSON() });
               guardedState.set(extension, Invitation.State.CONNECTED);
 
               // 1. Introduce guest to host.
-              log('introduce', { ...protocol.toJSON() });
+              log.verbose('dxos.sdk.invitations-handler.guest.introduce', {
+                invitationId: invitation.invitationId,
+                ...protocol.toJSON(),
+              });
               const introductionResponse = await extension.rpc.InvitationHostService.introduce({
                 invitationId: invitation.invitationId,
                 ...protocol.createIntroduction(),
               });
-              log('introduce response', { ...protocol.toJSON(), response: introductionResponse });
+              log.verbose('dxos.sdk.invitations-handler.guest.introduce-response', {
+                invitationId: invitation.invitationId,
+                ...protocol.toJSON(),
+                authMethod: introductionResponse.authMethod,
+              });
               invitation.authMethod = introductionResponse.authMethod;
 
               // 2. Get authentication code.
@@ -304,7 +333,10 @@ export class InvitationsHandler {
               }
 
               // 3. Send admission credentials to host (with local space keys).
-              log('request admission', { ...protocol.toJSON() });
+              log.verbose('dxos.sdk.invitations-handler.guest.request-admission', {
+                invitationId: invitation.invitationId,
+                ...protocol.toJSON(),
+              });
               const admissionRequest = await protocol.createAdmissionRequest(deviceProfile);
               const admissionResponse = await extension.rpc.InvitationHostService.admit(admissionRequest);
 
@@ -315,7 +347,10 @@ export class InvitationsHandler {
               const result = await protocol.accept(admissionResponse, admissionRequest);
 
               // 5. Success.
-              log('admitted by host', { ...protocol.toJSON() });
+              log.verbose('dxos.sdk.invitations-handler.guest.admitted-by-host', {
+                invitationId: invitation.invitationId,
+                ...protocol.toJSON(),
+              });
               guardedState.complete({
                 ...guardedState.current,
                 ...result,
@@ -324,10 +359,10 @@ export class InvitationsHandler {
               log.trace('dxos.sdk.invitations-handler.guest.onOpen', trace.end({ id: traceId }));
             } catch (err: any) {
               if (err instanceof TimeoutError) {
-                log('timeout', { ...protocol.toJSON() });
+                log.verbose('timeout', { ...protocol.toJSON() });
                 guardedState.set(extension, Invitation.State.TIMEOUT);
               } else {
-                log('auth failed', err);
+                log.verbose('auth failed', err);
                 guardedState.error(extension, err);
               }
               extensionCtx.close(err);
@@ -340,10 +375,10 @@ export class InvitationsHandler {
             return;
           }
           if (err instanceof TimeoutError) {
-            log('timeout', { ...protocol.toJSON() });
+            log.verbose('timeout', { ...protocol.toJSON() });
             guardedState.set(extension, Invitation.State.TIMEOUT);
           } else {
-            log('auth failed', err);
+            log.verbose('auth failed', err);
             guardedState.error(extension, err);
           }
         },

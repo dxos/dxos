@@ -1,6 +1,6 @@
 {
   "name": "@dxos/effect",
-  "version": "0.6.11",
+  "version": "0.7.0",
   "description": "Effect utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,12 +8,9 @@
   "author": "info@dxos.org",
   "exports": {
     ".": {
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/index.cjs",
-        "default": "./dist/lib/node-esm/index.mjs"
-      },
-      "types": "./dist/types/src/index.d.ts"
+      "node": "./dist/lib/node-esm/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -30,12 +27,12 @@
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
-    "@effect/schema": "^0.75.1",
-    "effect": "^3.9.1"
+    "@effect/schema": "^0.75.5",
+    "effect": "^3.9.2"
   },
   "peerDependencies": {
-    "@effect/schema": "^0.67.16",
-    "effect": "^3.9.1"
+    "@effect/schema": "^0.75.5",
+    "effect": "^3.9.2"
   },
   "publishConfig": {
     "access": "public"

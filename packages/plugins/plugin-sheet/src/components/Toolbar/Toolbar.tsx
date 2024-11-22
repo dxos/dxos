@@ -3,24 +3,24 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
+import React, { type PropsWithChildren, useCallback } from 'react';
 
 import { useIntentDispatcher } from '@dxos/app-framework';
 import {
   Icon,
-  Toolbar as NaturalToolbar,
-  useTranslation,
-  Tooltip,
-  type ToolbarToggleGroupItemProps as NaturalToolbarToggleGroupItemProps,
-  type ToolbarButtonProps as NaturalToolbarButtonProps,
-  type ToolbarToggleProps as NaturalToolbarToggleProps,
   type ThemedClassName,
+  Toolbar as NaturalToolbar,
+  type ToolbarButtonProps as NaturalToolbarButtonProps,
+  type ToolbarToggleGroupItemProps as NaturalToolbarToggleGroupItemProps,
+  type ToolbarToggleProps as NaturalToolbarToggleProps,
+  Tooltip,
+  useTranslation,
 } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { nonNullable } from '@dxos/util';
 
 import {
-  addressToIndex,
+  alignKey,
   type AlignKey,
   type AlignValue,
   type CommentKey,
@@ -28,6 +28,7 @@ import {
   inRange,
   rangeFromIndex,
   rangeToIndex,
+  styleKey,
   type StyleKey,
   type StyleValue,
 } from '../../defs';
@@ -89,10 +90,11 @@ type CommentAction = { key: CommentKey; value: CommentValue; cellContent?: strin
 type StyleAction = { key: StyleKey; value: StyleValue };
 
 export type ToolbarAction = StyleAction | AlignAction | CommentAction;
+export type ToolbarActionAnnotated = ToolbarAction & { unset?: boolean };
 
 export type ToolbarActionType = ToolbarAction['key'];
 
-export type ToolbarActionHandler = (action: ToolbarAction) => void;
+export type ToolbarActionHandler = (action: ToolbarActionAnnotated) => void;
 
 export type ToolbarProps = ThemedClassName<
   PropsWithChildren<{
@@ -100,13 +102,9 @@ export type ToolbarProps = ThemedClassName<
   }>
 >;
 
-const [ToolbarContextProvider, useToolbarContext] = createContext<{ onAction: (action: ToolbarAction) => void }>(
-  'Toolbar',
-);
-
-// TODO(Zan): Factor out, copied this from MarkdownPlugin.
-const sectionToolbarLayout =
-  'bs-[--rail-action] bg-[--sticky-bg] sticky block-start-0 __-block-start-px transition-opacity';
+const [ToolbarContextProvider, useToolbarContext] = createContext<{
+  onAction: (action: ToolbarActionAnnotated) => void;
+}>('Toolbar');
 
 type Range = SheetType['ranges'][number];
 
@@ -115,15 +113,18 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
   const { hasAttention } = useAttention(id);
   const dispatch = useIntentDispatcher();
 
-  // TODO(Zan): Centralise the toolbar action handler. Current implementation in stories.
+  // TODO(Zan): Externalize the toolbar action handler. E.g., Toolbar/keys should both fire events.
   const handleAction = useCallback(
-    (action: ToolbarAction) => {
+    (action: ToolbarActionAnnotated) => {
       switch (action.key) {
-        case 'align':
-          if (cursor && cursorFallbackRange) {
-            const index = model.sheet.ranges?.findIndex(
-              (range) => range.key === action.key && inRange(rangeFromIndex(model.sheet, range.range), cursor),
-            );
+        case 'alignment':
+          if (cursorFallbackRange) {
+            const index =
+              model.sheet.ranges?.findIndex(
+                (range) =>
+                  range.key === action.key &&
+                  inRange(rangeFromIndex(model.sheet, range.range), cursorFallbackRange.from),
+              ) ?? -1;
             const nextRangeEntity = {
               range: rangeToIndex(model.sheet, cursorFallbackRange),
               key: action.key,
@@ -131,14 +132,21 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
             };
             if (index < 0) {
               model.sheet.ranges?.push(nextRangeEntity);
+            } else if (model.sheet.ranges![index].value === action.value) {
+              model.sheet.ranges?.splice(index, 1);
             } else {
               model.sheet.ranges?.splice(index, 1, nextRangeEntity);
             }
           }
           break;
         case 'style':
-          if (action.value === 'unset') {
-            const index = model.sheet.ranges?.findIndex((range) => range.key === action.key);
+          if (action.unset) {
+            const index = model.sheet.ranges?.findIndex(
+              (range) =>
+                range.key === action.key &&
+                cursorFallbackRange &&
+                inRange(rangeFromIndex(model.sheet, range.range), cursorFallbackRange.from),
+            );
             if (index >= 0) {
               model.sheet.ranges?.splice(index, 1);
             }
@@ -170,14 +178,7 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
 
   return (
     <ToolbarContextProvider onAction={handleAction}>
-      <NaturalToolbar.Root
-        classNames={[
-          ...(role === 'section'
-            ? ['z-[2] group-focus-within/section:visible', !hasAttention && 'invisible', sectionToolbarLayout]
-            : ['attention-surface']),
-          classNames,
-        ]}
-      >
+      <NaturalToolbar.Root classNames={['pli-0.5 attention-surface', !hasAttention && 'opacity-20', classNames]}>
         {children}
       </NaturalToolbar.Root>
     </ToolbarContextProvider>
@@ -207,50 +208,55 @@ const Alignment = () => {
   const { onAction } = useToolbarContext('Alignment');
   const { t } = useTranslation(SHEET_PLUGIN);
 
-  const value = useMemo(
-    () =>
-      cursor
-        ? model.sheet.ranges?.find(
-            ({ range, key }) => key === 'alignment' && inRange(rangeFromIndex(model.sheet, range), cursor),
-          )?.value
-        : undefined,
-    [cursor, model.sheet.ranges],
-  );
+  // TODO(thure): Can this O(n) call be memoized?
+  const value = cursor
+    ? model.sheet.ranges?.findLast(
+        ({ range, key }) => key === alignKey && inRange(rangeFromIndex(model.sheet, range), cursor),
+      )?.value
+    : undefined;
 
   return (
     <NaturalToolbar.ToggleGroup
       type='single'
-      value={value}
-      onValueChange={(value: AlignValue) => onAction?.({ key: 'align', value })}
+      value={
+        // TODO(thure): providing `undefined` leaves the last item active which was active rather than showing none.
+        value ?? 'never'
+      }
+      onValueChange={(value: AlignValue) => onAction?.({ key: alignKey, value })}
     >
       {alignmentOptions.map(({ value, icon }) => (
         <ToolbarItem itemType='toggleGroupItem' key={value} value={value} icon={icon}>
-          {t(`toolbar ${value} label`)}
+          {t('toolbar action label', {
+            key: t(`range key ${alignKey} label`),
+            value: t(`range value ${value} label`),
+          })}
         </ToolbarItem>
       ))}
     </NaturalToolbar.ToggleGroup>
   );
 };
 
-const styleOptions: ButtonProps<StyleValue>[] = [{ value: 'highlight', icon: 'ph--highlighter--regular' }];
+const styleOptions: ButtonProps<StyleValue>[] = [
+  { value: 'highlight', icon: 'ph--highlighter--regular' },
+  { value: 'softwrap', icon: 'ph--paragraph--regular' },
+];
 
 const Styles = () => {
-  const { cursor, model } = useSheetContext();
+  const { cursorFallbackRange, model } = useSheetContext();
   const { onAction } = useToolbarContext('Styles');
   const { t } = useTranslation(SHEET_PLUGIN);
 
-  const activeValues = useMemo(
-    () =>
-      cursor
-        ? model.sheet.ranges
-            ?.filter(({ range, key }) => key === 'style' && inRange(rangeFromIndex(model.sheet, range), cursor))
-            .reduce((acc, { value }) => {
-              acc.add(value);
-              return acc;
-            }, new Set())
-        : undefined,
-    [cursor, model.sheet.ranges],
-  );
+  // TODO(thure): Can this O(n) call be memoized?
+  const activeValues = cursorFallbackRange
+    ? model.sheet.ranges
+        ?.filter(
+          ({ range, key }) => key === 'style' && inRange(rangeFromIndex(model.sheet, range), cursorFallbackRange.from),
+        )
+        .reduce((acc, { value }) => {
+          acc.add(value);
+          return acc;
+        }, new Set())
+    : undefined;
 
   return (
     <>
@@ -259,10 +265,15 @@ const Styles = () => {
           itemType='toggle'
           key={value}
           pressed={activeValues?.has(value)}
-          onPressedChange={(nextPressed: boolean) => onAction?.({ key: 'style', value: nextPressed ? value : 'unset' })}
+          onPressedChange={(nextPressed: boolean) => {
+            onAction?.({ key: 'style', value, unset: !nextPressed });
+          }}
           icon={icon}
         >
-          {t(`toolbar ${value} label`)}
+          {t('toolbar action label', {
+            key: t(`range key ${styleKey} label`),
+            value: t(`range value ${value} label`),
+          })}
         </ToolbarItem>
       ))}
     </>
@@ -275,29 +286,25 @@ const Styles = () => {
 
 const Actions = () => {
   const { onAction } = useToolbarContext('Actions');
-  const { cursor, range, model } = useSheetContext();
+  const { cursorFallbackRange, cursor, model } = useSheetContext();
   const { t } = useTranslation(SHEET_PLUGIN);
 
+  // TODO(thure): Can this O(n) call be memoized?
   const overlapsCommentAnchor = (model.sheet.threads ?? [])
     .filter(nonNullable)
     .filter((thread) => thread.status !== 'resolved')
     .some((thread) => {
-      if (!cursor) {
+      if (!cursorFallbackRange) {
         return false;
       }
-      return addressToIndex(model.sheet, cursor) === thread.anchor;
+      return rangeToIndex(model.sheet, cursorFallbackRange) === thread.anchor;
     });
 
-  const hasCursor = !!cursor;
-  const cursorOnly = hasCursor && !range && !overlapsCommentAnchor;
-
-  const tooltipLabelKey = !hasCursor
+  const tooltipLabelKey = !cursor
     ? 'no cursor label'
     : overlapsCommentAnchor
       ? 'selection overlaps existing comment label'
-      : range
-        ? 'comment ranges not supported label'
-        : 'comment label';
+      : 'comment label';
 
   return (
     <ToolbarItem
@@ -306,16 +313,16 @@ const Actions = () => {
       icon='ph--chat-text--regular'
       data-testid='editor.toolbar.comment'
       onClick={() => {
-        if (!cursor) {
+        if (!cursorFallbackRange) {
           return;
         }
         return onAction?.({
           key: 'comment',
-          value: addressToIndex(model.sheet, cursor),
-          cellContent: model.getCellText(cursor),
+          value: rangeToIndex(model.sheet, cursorFallbackRange),
+          cellContent: model.getCellText(cursorFallbackRange.from),
         });
       }}
-      disabled={!cursorOnly || overlapsCommentAnchor}
+      disabled={!cursorFallbackRange || overlapsCommentAnchor}
     >
       {t(tooltipLabelKey)}
     </ToolbarItem>

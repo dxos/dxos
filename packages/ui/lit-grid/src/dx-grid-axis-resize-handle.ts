@@ -29,7 +29,12 @@ export class DxGridAxisResizeHandle extends LitElement {
   private dragStartSize: number = 128;
 
   override render() {
-    return html`<button class="dx-grid__resize-handle" data-dx-grid-axis=${this.axis} ${ref(this.mount)}>
+    return html`<button
+      class="dx-grid__resize-handle"
+      data-dx-grid-axis=${this.axis}
+      data-dx-grid-action="resize"
+      ${ref(this.mount)}
+    >
       <span class="sr-only">Resize</span>
     </button>`;
   }

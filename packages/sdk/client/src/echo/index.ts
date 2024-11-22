@@ -39,6 +39,7 @@ export {
   type Selection,
   type Subscription,
   type SubscriptionHandle,
+  ResultFormat,
 } from '@dxos/echo-db';
 
 // TODO(dmaretskyi): Remove this export.
@@ -51,4 +52,13 @@ export { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/
 export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 export { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 
-export { getSpace, isSpace, fullyQualifiedId, parseFullyQualifiedId } from './util';
+export {
+  getSpace,
+  isSpace,
+  fullyQualifiedId,
+  parseFullyQualifiedId,
+  parseId,
+  FQ_ID_LENGTH,
+  OBJECT_ID_LENGTH,
+  SPACE_ID_LENGTH,
+} from './util';

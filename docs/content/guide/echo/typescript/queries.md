@@ -53,6 +53,7 @@ Consider this expression of schema declared with Effect Schema:
 
 ```ts file=./snippets/schema.ts#L5-
 import { Schema as S } from '@effect/schema';
+
 import { TypedObject } from '@dxos/echo-schema';
 
 export class TaskType extends TypedObject({
@@ -72,11 +73,10 @@ import { Filter } from '@dxos/client/echo';
 
 import { TaskType } from './schema';
 
-const client = new Client();
+const client = new Client({ types: [TaskType] });
 
 async () => {
   await client.initialize();
-  client.addTypes([TaskType]);
 
   // get a list of all spaces
   const spaces = client.spaces.get();

@@ -1,13 +1,13 @@
 {
   "name": "@dxos/stories",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "private": true,
   "description": "Storybook config package for the DXOS monorepo.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": false,
+  "sideEffects": true,
   "scripts": {
     "chromatic-examples": "chromatic --only-changed --storybook-base-dir packages/sdk/examples --project-token=\"chpt_e6606565edfbfbe\" --storybook-build-dir out/examples --exit-zero-on-changes",
     "chromatic-shell": "chromatic --only-changed --storybook-base-dir packages/sdk/react-shell --project-token=\"chpt_c4421639d5edcc4\" --storybook-build-dir out/shell --exit-zero-on-changes",
@@ -30,6 +30,7 @@
     "@storybook/react": "~8.3.6",
     "@storybook/react-vite": "~8.3.6",
     "@storybook/theming": "^8.3.6",
+    "@storybook/types": "^8.3.6",
     "@types/lodash.flatten": "^4.4.6",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",

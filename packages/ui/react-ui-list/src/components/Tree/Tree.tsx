@@ -11,31 +11,32 @@ import { TreeItem, type TreeItemProps } from './TreeItem';
 import { getMode } from './helpers';
 import { type ItemType } from './types';
 
-export type TreeProps = {
-  items: ItemType[];
+export type TreeProps<T extends ItemType = ItemType> = {
+  items: T[];
   open: string[];
   current: string[];
-} & Partial<Pick<TreegridRootProps, 'gridTemplateColumns'>> &
-  Pick<TreeItemProps, 'draggable' | 'renderColumns' | 'canDrop' | 'onOpenChange' | 'onSelect'>;
+} & Partial<Pick<TreegridRootProps, 'gridTemplateColumns' | 'classNames'>> &
+  Pick<TreeItemProps<T>, 'draggable' | 'renderColumns' | 'canDrop' | 'onOpenChange' | 'onSelect'>;
 
-export const Tree = ({
+export const Tree = <T extends ItemType = ItemType>({
   items,
   open,
   current,
   draggable = false,
   gridTemplateColumns = '[tree-row-start] 1fr min-content [tree-row-end]',
+  classNames,
   renderColumns,
   canDrop,
   onOpenChange,
   onSelect,
-}: TreeProps) => {
+}: TreeProps<T>) => {
   return (
-    <Treegrid.Root gridTemplateColumns={gridTemplateColumns}>
+    <Treegrid.Root gridTemplateColumns={gridTemplateColumns} classNames={classNames}>
       {items.map((item, i) => {
         const path = Path.create(...item.path);
 
         return (
-          <TreeItem
+          <TreeItem<T>
             key={item.id}
             item={item}
             mode={getMode(items, i)}

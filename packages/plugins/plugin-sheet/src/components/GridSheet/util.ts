@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type MutableRefObject, useEffect, useLayoutEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { createDocAccessor, fullyQualifiedId } from '@dxos/react-client/echo';
-import { parseValue, cellClassesForFieldType } from '@dxos/react-ui-data';
+import { parseValue, cellClassesForFieldType } from '@dxos/react-ui-form';
 import {
   type GridContentProps,
   type DxGridElement,
@@ -59,9 +59,6 @@ const createDxGridRows = (model: SheetModel): DxGridAxisMeta => {
 const projectCellProps = (model: SheetModel, col: number, row: number): DxGridCellValue => {
   const address = { col, row };
   const rawValue = model.getValue(address);
-  if (rawValue === undefined || rawValue === null) {
-    return { value: '' };
-  }
   const ranges = model.sheet.ranges?.filter(({ range }) => inRange(rangeFromIndex(model.sheet, range), address));
   const threadRefs = model.sheet.threads
     ?.filter((thread) => {
@@ -70,16 +67,18 @@ const projectCellProps = (model: SheetModel, col: number, row: number): DxGridCe
     })
     .map((thread) => fullyQualifiedId(thread!))
     .join(' ');
-  const type = model.getValueType(address);
+
+  const description = model.getValueDescription(address);
+  const type = description?.type;
+  const format = description?.format;
   const classNames = ranges?.map(cellClassNameForRange).reverse();
 
   return {
-    value: parseValue(type, rawValue),
-    className: mx(cellClassesForFieldType(type), threadRefs && commentedClassName, classNames),
+    value: parseValue({ type, format, value: rawValue }),
+    className: mx(cellClassesForFieldType({ type, format }), threadRefs && commentedClassName, classNames),
     dataRefs: threadRefs,
   };
 };
-
 const gridCellGetter = (model: SheetModel) => {
   // TODO(thure): Actually use the cache.
   const cachedGridCells: DxGridPlaneCells = {};
@@ -97,11 +96,15 @@ const gridCellGetter = (model: SheetModel) => {
 
 export const rowLabelCell = (row: number) => ({
   value: rowToA1Notation(row),
-  className: 'text-end !pie-1',
+  className: 'text-end !pie-1 text-subdued',
   resizeHandle: 'row',
 });
 
-export const colLabelCell = (col: number) => ({ value: colToA1Notation(col), resizeHandle: 'col' });
+export const colLabelCell = (col: number) => ({
+  value: colToA1Notation(col),
+  className: 'text-subdued',
+  resizeHandle: 'col',
+});
 
 const cellGetter = (model: SheetModel) => {
   const getGridCells = gridCellGetter(model);
@@ -128,23 +131,27 @@ const cellGetter = (model: SheetModel) => {
 };
 
 export const useSheetModelDxGridProps = (
-  dxGridRef: MutableRefObject<DxGridElement | null>,
+  dxGrid: DxGridElement | null,
   model: SheetModel,
 ): Pick<GridContentProps, 'columns' | 'rows'> => {
   const [columns, setColumns] = useState<DxGridAxisMeta>(createDxGridColumns(model));
-  const [rows, setRows] = useState<DxGridAxisMeta>(createDxGridColumns(model));
+  const [rows, setRows] = useState<DxGridAxisMeta>(createDxGridRows(model));
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const cellsAccessor = createDocAccessor(model.sheet, ['cells']);
-    if (dxGridRef.current) {
-      dxGridRef.current.getCells = cellGetter(model);
+    if (dxGrid) {
+      dxGrid.getCells = cellGetter(model);
     }
     const handleCellsUpdate = () => {
-      dxGridRef.current?.requestUpdate('initialCells');
+      dxGrid?.requestUpdate('initialCells');
     };
     cellsAccessor.handle.addListener('change', handleCellsUpdate);
-    return () => cellsAccessor.handle.removeListener('change', handleCellsUpdate);
-  }, [model]);
+    const unsubscribe = model.graph.update.on(handleCellsUpdate);
+    return () => {
+      cellsAccessor.handle.removeListener('change', handleCellsUpdate);
+      unsubscribe();
+    };
+  }, [model, dxGrid]);
 
   useEffect(() => {
     const columnMetaAccessor = createDocAccessor(model.sheet, ['columnMeta']);
@@ -161,7 +168,7 @@ export const useSheetModelDxGridProps = (
       columnMetaAccessor.handle.removeListener('change', handleColumnMetaUpdate);
       rowMetaAccessor.handle.removeListener('change', handleRowMetaUpdate);
     };
-  }, [model]);
+  }, [model, dxGrid]);
 
   return { columns, rows };
 };

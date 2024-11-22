@@ -26,7 +26,7 @@ import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { SpaceAction } from '@dxos/plugin-space';
 import { ThreadType, MessageType, ChannelType } from '@dxos/plugin-space/types';
 import { create, type EchoReactiveObject, getTypename } from '@dxos/react-client/echo';
-import { getSpace, fullyQualifiedId, loadObjectReferences, parseFullyQualifiedId } from '@dxos/react-client/echo';
+import { getSpace, fullyQualifiedId, loadObjectReferences, parseId } from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 
 import {
@@ -83,7 +83,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       metadata: {
         records: {
           [ChannelType.typename]: {
-            placeholder: ['channel title placeholder', { ns: THREAD_PLUGIN }],
+            placeholder: ['channel name placeholder', { ns: THREAD_PLUGIN }],
             icon: 'ph--chat--regular',
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: (channel: ChannelType) => loadObjectReferences(channel, (channel) => channel.threads),
@@ -112,23 +112,23 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       },
       translations: [...translations, ...threadTranslations],
       echo: { schema: [ChannelType, ThreadType, MessageType] },
+      complementary: {
+        panels: [
+          {
+            id: 'comments',
+            label: ['open comments panel label', { ns: THREAD_PLUGIN }],
+            icon: 'ph--chat-text--regular',
+          },
+        ],
+      },
       graph: {
         builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
           const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
           const metadataResolver = resolvePlugin(plugins, parseMetadataResolverPlugin)?.provides.metadata.resolver;
-
           if (!client || !dispatch || !metadataResolver) {
             return [];
           }
-
-          const safeParseFullyQualifiedId = (id: string) => {
-            try {
-              return parseFullyQualifiedId(id);
-            } catch {
-              return [id];
-            }
-          };
 
           const type = 'orphan-comments-for-subject';
           const icon = 'ph--chat-text--regular';
@@ -143,7 +143,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 }
 
                 const [subjectId] = id.split('~');
-                const [spaceId, objectId] = safeParseFullyQualifiedId(subjectId);
+                const { spaceId, objectId } = parseId(subjectId);
+                const space = client.spaces.get().find((space) => space.id === spaceId);
                 if (!objectId) {
                   // TODO(wittjosiah): Support comments for arbitrary subjects.
                   //   This is to ensure that the comments panel is not stuck on an old object.
@@ -156,15 +157,15 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                       label: ['unnamed object threads label', { ns: THREAD_PLUGIN }],
                       showResolvedThreads: false,
                       object: null,
+                      space,
                     },
                   };
                 }
 
-                const space = client.spaces.get().find((space) => space.id === spaceId);
                 const object = toSignal(
                   (onChange) => {
                     const timeout = setTimeout(async () => {
-                      await space?.db.loadObjectById(objectId);
+                      await space?.db.query({ id: objectId }).first();
                       onChange();
                     });
 
@@ -317,7 +318,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 data.subject &&
                 typeof data.subject === 'object' &&
                 'threads' in data.subject &&
-                Array.isArray(data.subject.threads)
+                Array.isArray(data.subject.threads) &&
+                !(data.subject instanceof ChannelType)
               ) {
                 const { showResolvedThreads } = getViewState(fullyQualifiedId(data.subject));
 

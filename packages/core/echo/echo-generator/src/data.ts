@@ -5,14 +5,13 @@
 import { next as A } from '@dxos/automerge/automerge';
 import { createDocAccessor, type Space } from '@dxos/client/echo';
 import {
-  create,
-  MutableSchema,
-  EchoObject,
-  ObjectAnnotationId,
-  effectToJsonSchema,
+  createStoredSchema,
   getObjectAnnotation,
   ref,
-  StoredSchema,
+  toJsonSchema,
+  EchoObject,
+  MutableSchema,
+  ObjectAnnotationId,
   S,
 } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
@@ -38,15 +37,11 @@ export enum TestSchemaType {
 const createDynamicSchema = (typename: string, fields: S.Struct.Fields): MutableSchema => {
   const typeSchema = S.partial(S.Struct(fields)).pipe(EchoObject(typename, '1.0.0'));
   const typeAnnotation = getObjectAnnotation(typeSchema);
-  const schemaToStore = create(StoredSchema, {
-    typename,
-    version: '1.0.0',
-    jsonSchema: {},
-  });
+  const schemaToStore = createStoredSchema({ typename, version: '0.1.0' });
   const updatedSchema = typeSchema.annotations({
     [ObjectAnnotationId]: { ...typeAnnotation, schemaId: schemaToStore.id },
   });
-  schemaToStore.jsonSchema = effectToJsonSchema(updatedSchema);
+  schemaToStore.jsonSchema = toJsonSchema(updatedSchema);
   return new MutableSchema(schemaToStore);
 };
 

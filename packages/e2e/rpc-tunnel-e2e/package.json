@@ -1,12 +1,12 @@
 {
   "name": "@dxos/rpc-tunnel-e2e",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": false,
+  "sideEffects": true,
   "files": [
     "dist",
     "src"

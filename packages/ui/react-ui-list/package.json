@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-list",
-  "version": "0.6.11",
+  "version": "0.7.0",
   "description": "A list component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,8 +8,9 @@
   "author": "DXOS.org",
   "exports": {
     ".": {
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "types": "./dist/types/src/index.d.ts"
+      "node": "./dist/lib/node-esm/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -36,7 +37,7 @@
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "@radix-ui/react-context": "^1.0.0",
-    "effect": "^3.9.1"
+    "effect": "^3.9.2"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
@@ -54,7 +55,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
-    "effect": "^3.9.1",
+    "effect": "^3.9.2",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

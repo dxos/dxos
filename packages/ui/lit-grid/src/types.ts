@@ -22,10 +22,10 @@ export type DxGridPlanePosition = Record<DxGridAxis, number>;
 export type DxGridPosition = DxGridPlanePosition & { plane: DxGridPlane };
 export type DxGridPositionNullable = DxGridPosition | null;
 
-export type DxGridAnnotatedWheelEvent = WheelEvent &
-  Partial<{
+export type DxGridAnnotatedPanEvent = (WheelEvent | PointerEvent) & { deltaX: number; deltaY: number } & Partial<{
     overscrollInline: number;
     overscrollBlock: number;
+    gridId: string;
   }>;
 
 export type DxGridPlaneCells = Record<DxGridCellIndex, DxGridCellValue>;
@@ -38,13 +38,14 @@ export type DxGridAxisMeta = DxGridPlaneRecord<DxGridFrozenPlane, DxGridPlaneAxi
 
 export type DxGridPointer =
   | null
-  | ({ state: 'maybeSelecting' } & Pick<PointerEvent, 'pageX' | 'pageY'>)
+  | { state: 'panning'; pageX: number; pageY: number }
+  | { state: 'maybeSelecting'; pageX: number; pageY: number }
   | { state: 'selecting' };
 
 export type DxAxisResizeProps = Pick<DxAxisResize, 'axis' | 'plane' | 'index' | 'size'>;
 export type DxAxisResizeInternalProps = DxAxisResizeProps & { delta: number; state: 'dragging' | 'dropped' };
 
-export type DxGridMode = 'browse' | 'edit';
+export type DxGridMode = 'browse' | 'edit' | 'edit-select';
 
 export type DxGridFrozenAxes = Partial<Record<DxGridFrozenPlane, number>>;
 
@@ -52,7 +53,7 @@ export type DxGridCellValue = {
   /**
    * The content value
    */
-  value: string;
+  value?: string;
   /**
    * Accessory HTML to render alongside the value.
    */

@@ -2,10 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { memo, useEffect } from 'react';
-import { addDecorator, type Preview } from '@storybook/react';
+import { type Decorator, type Preview } from '@storybook/react';
 import { themes } from '@storybook/theming';
-import { type IndexEntry } from '@storybook/types';
+import React, { memo, useEffect } from 'react';
 
 import { log, LogLevel } from '@dxos/log';
 
@@ -13,7 +12,7 @@ import { log, LogLevel } from '@dxos/log';
  * Global decorators.
  * https://storybook.js.org/docs/writing-stories/decorators
  */
-export const decorators = [
+export const decorators: Decorator[] = [
   (Story, context) => {
     // Prevent re-rendering of the story.
     const MemoizedStory = memo(Story);
@@ -24,8 +23,8 @@ export const decorators = [
       });
     }, [logLevel]);
 
-    return <MemoizedStory />
-  }
+    return <MemoizedStory />;
+  },
 ];
 
 /**
@@ -47,12 +46,13 @@ export const preview: Preview = {
           { value: LogLevel.INFO, title: 'INFO' },
           { value: LogLevel.DEBUG, title: 'DEBUG' },
           { value: LogLevel.TRACE, title: 'TRACE' },
-        ]
-      }
-    }
+        ],
+      },
+    },
   },
+
   initialGlobals: {
-    logLevel: 'en',
+    logLevel: 'INFO',
   },
 
   /**
@@ -84,15 +84,6 @@ export const preview: Preview = {
       darkClass: 'dark',
       light: { ...themes.light },
       lightClass: 'light',
-    },
-
-    // https://storybook.js.org/docs/api/parameters#options
-    options: {
-      // https://storybook.js.org/docs/writing-stories/naming-components-and-hierarchy#sorting-stories
-      // TODO(burdon): storySort isn't called.
-      storySort: (a: IndexEntry, b: IndexEntry) => {
-        return a.id === b.id ? 0 : a.id.localeCompare(b.id, undefined, { numeric: true });
-      },
     },
   },
 };

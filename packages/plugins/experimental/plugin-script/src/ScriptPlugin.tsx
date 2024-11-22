@@ -6,7 +6,7 @@
 import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import React from 'react';
 
-import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
+import { NavigationAction, parseIntentPlugin, type PluginDefinition, resolvePlugin } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
@@ -16,12 +16,11 @@ import { loadObjectReferences } from '@dxos/react-client/echo';
 
 import { initializeBundler } from './bundler';
 import { Compiler } from './compiler';
-import { AutomationPanel, ScriptContainer, ScriptSettings } from './components';
+import { AutomationPanel, ScriptContainer, ScriptSettings, ScriptSettingsPanel } from './components';
 import meta, { SCRIPT_PLUGIN } from './meta';
 import { templates } from './templates';
 import translations from './translations';
-import { FunctionType, ScriptType } from './types';
-import { ScriptAction, type ScriptPluginProvides } from './types';
+import { FunctionType, ScriptAction, type ScriptPluginProvides, ScriptType } from './types';
 
 export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
   const compiler = new Compiler();
@@ -123,9 +122,23 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
             }
 
             case 'complementary--automation': {
-              return <AutomationPanel subject={data.subject as any} />;
+              if (data.subject instanceof ScriptType) {
+                return {
+                  node: <AutomationPanel subject={data.subject as any} />,
+                  disposition: 'hoist',
+                };
+              }
+              break;
+            }
+
+            case 'complementary--settings': {
+              if (data.subject instanceof ScriptType) {
+                return <ScriptSettingsPanel script={data.subject} />;
+              }
+              break;
             }
           }
+
           return null;
         },
       },
@@ -133,7 +146,13 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case ScriptAction.CREATE: {
-              return { data: create(ScriptType, { source: create(TextType, { content: templates[0].source }) }) };
+              return {
+                data: create(ScriptType, {
+                  source: create(TextType, {
+                    content: templates[0].source,
+                  }),
+                }),
+              };
             }
           }
         },

@@ -78,21 +78,13 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
             case 'main':
               return primary instanceof CollectionType ? (
                 <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
-                  <StackMain
-                    id={id ?? fullyQualifiedId(primary)}
-                    collection={primary}
-                    separation={settings.values.separation}
-                  />
+                  <StackMain id={id ?? fullyQualifiedId(primary)} collection={primary} />
                 </Main.Content>
               ) : null;
             case 'article':
               return primary instanceof CollectionType ? (
-                <div role='none' className='row-span-2 overflow-auto'>
-                  <StackMain
-                    id={id ?? fullyQualifiedId(primary)}
-                    collection={primary}
-                    separation={settings.values.separation}
-                  />
+                <div role='none' className='overflow-auto' style={{ contain: 'layout' }}>
+                  <StackMain id={id ?? fullyQualifiedId(primary)} collection={primary} />
                 </div>
               ) : null;
             case 'settings': {

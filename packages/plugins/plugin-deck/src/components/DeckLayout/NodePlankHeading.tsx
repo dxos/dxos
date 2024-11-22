@@ -13,11 +13,13 @@ import {
   type LayoutCoordinate,
 } from '@dxos/app-framework';
 import { type Node, useGraph } from '@dxos/plugin-graph';
-import { Icon, Popover, toLocalizedString, useMediaQuery, useTranslation } from '@dxos/react-ui';
-import { PlankHeading, type PlankHeadingAction } from '@dxos/react-ui-deck';
+import { Icon, Popover, toLocalizedString, useMediaQuery, useTranslation, IconButton } from '@dxos/react-ui';
+import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 
+import { PlankControls } from './PlankControls';
 import { DECK_PLUGIN } from '../../meta';
+import { useLayout } from '../LayoutContext';
 
 export type NodePlankHeadingProps = {
   coordinate: LayoutCoordinate;
@@ -26,8 +28,7 @@ export type NodePlankHeadingProps = {
   canIncrementEnd?: boolean;
   popoverAnchorId?: string;
   pending?: boolean;
-  flatDeck?: boolean;
-  actions?: PlankHeadingAction[];
+  actions?: StackItemSigilAction[];
 };
 
 export const NodePlankHeading = memo(
@@ -38,9 +39,9 @@ export const NodePlankHeading = memo(
     canIncrementEnd,
     popoverAnchorId,
     pending,
-    flatDeck,
     actions = [],
   }: NodePlankHeadingProps) => {
+    const layoutContext = useLayout();
     const { t } = useTranslation(DECK_PLUGIN);
     const { graph } = useGraph();
     const icon = node?.properties?.icon ?? 'ph--placeholder--regular';
@@ -73,12 +74,10 @@ export const NodePlankHeading = memo(
     );
 
     return (
-      <PlankHeading.Root
-        {...((layoutPart !== 'main' || !flatDeck) && { classNames: 'pie-1 border-b border-separator' })}
-      >
+      <StackItem.Heading classNames='pie-1 border-be border-separator'>
         <ActionRoot>
           {node ? (
-            <PlankHeading.ActionsMenu
+            <StackItem.Sigil
               icon={icon}
               related={layoutPart === 'complementary'}
               attendableId={attendableId}
@@ -89,31 +88,32 @@ export const NodePlankHeading = memo(
               }
             >
               <Surface role='menu-footer' data={{ object: node.data }} />
-            </PlankHeading.ActionsMenu>
+            </StackItem.Sigil>
           ) : (
-            <PlankHeading.Button>
+            <StackItem.SigilButton>
               <span className='sr-only'>{label}</span>
               <Icon icon={icon} size={5} />
-            </PlankHeading.Button>
+            </StackItem.SigilButton>
           )}
         </ActionRoot>
         <TextTooltip text={label} onlyWhenTruncating>
-          <PlankHeading.Label
+          <StackItem.HeadingLabel
             attendableId={attendableId}
             related={layoutPart === 'complementary'}
             {...(pending && { classNames: 'text-description' })}
           >
             {label}
-          </PlankHeading.Label>
+          </StackItem.HeadingLabel>
         </TextTooltip>
         {node && layoutPart !== 'complementary' && (
           // TODO(Zan): What are we doing with layout coordinate here?
           <Surface role='navbar-end' direction='inline-reverse' data={{ object: node.data }} />
         )}
         {/* NOTE(thure): Pinning & unpinning are temporarily disabled */}
-        <PlankHeading.Controls
+        <PlankControls
           capabilities={capabilities}
           isSolo={layoutPart === 'solo'}
+          classNames='mx-1'
           onClick={(eventType) => {
             if (!layoutPart) {
               return;
@@ -154,8 +154,22 @@ export const NodePlankHeading = memo(
             }
           }}
           close={layoutPart === 'complementary' ? 'minify-end' : true}
-        />
-      </PlankHeading.Root>
+        >
+          {/* TODO(wittjosiah): This doesn't behave exactly the same as the rest of the button group. */}
+          {layoutPart !== 'complementary' && (
+            <IconButton
+              iconOnly
+              onClick={() => (layoutContext.complementarySidebarOpen = !layoutContext.complementarySidebarOpen)}
+              variant='ghost'
+              label={t('open complementary sidebar label')}
+              classNames='!pli-2 !plb-3 [&>svg]:-scale-x-100'
+              icon='ph--sidebar-simple--regular'
+              size={4}
+              tooltipZIndex='70'
+            />
+          )}
+        </PlankControls>
+      </StackItem.Heading>
     );
   },
 );

@@ -12,6 +12,8 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 import type { TimerCallback, TimerOptions } from '@dxos/async';
+import { S } from '@dxos/echo-schema';
+import { type PanelProvides } from '@dxos/plugin-deck/types';
 
 import { DEBUG_PLUGIN } from './meta';
 
@@ -32,14 +34,19 @@ export const DebugContext: Context<DebugContextType> = createContext<DebugContex
   stop: () => {},
 });
 
-export type DebugSettingsProps = {
-  devtools?: boolean;
-  debug?: boolean;
-  wireframe?: boolean;
-};
+export const DebugSettingsSchema = S.mutable(
+  S.Struct({
+    devtools: S.optional(S.Boolean),
+    debug: S.optional(S.Boolean),
+    wireframe: S.optional(S.Boolean),
+  }),
+);
+
+export interface DebugSettingsProps extends S.Schema.Type<typeof DebugSettingsSchema> {}
 
 export type DebugPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
   SettingsProvides<DebugSettingsProps> &
-  TranslationsProvides;
+  TranslationsProvides &
+  PanelProvides;

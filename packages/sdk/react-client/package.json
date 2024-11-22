@@ -1,76 +1,52 @@
 {
   "name": "@dxos/react-client",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "description": "React client API",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": false,
+  "sideEffects": true,
   "exports": {
     "./devtools": {
+      "types": "./dist/types/src/devtools/index.d.ts",
       "browser": "./dist/lib/browser/devtools/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/devtools/index.cjs",
-        "default": "./dist/lib/node-esm/devtools/index.mjs"
-      },
-      "types": "./dist/types/src/devtools/index.d.ts"
+      "node": "./dist/lib/node-esm/devtools/index.mjs"
     },
     "./echo": {
+      "types": "./dist/types/src/echo/index.d.ts",
       "browser": "./dist/lib/browser/echo/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/echo/index.cjs",
-        "default": "./dist/lib/node-esm/echo/index.mjs"
-      },
-      "types": "./dist/types/src/echo/index.d.ts"
+      "node": "./dist/lib/node-esm/echo/index.mjs"
     },
     "./halo": {
+      "types": "./dist/types/src/halo/index.d.ts",
       "browser": "./dist/lib/browser/halo/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/halo/index.cjs",
-        "default": "./dist/lib/node-esm/halo/index.mjs"
-      },
-      "types": "./dist/types/src/halo/index.d.ts"
+      "node": "./dist/lib/node-esm/halo/index.mjs"
     },
     ".": {
+      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/index.cjs",
-        "default": "./dist/lib/node-esm/index.mjs"
-      },
-      "types": "./dist/types/src/index.d.ts"
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./invitations": {
+      "types": "./dist/types/src/invitations/index.d.ts",
       "browser": "./dist/lib/browser/invitations/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/invitations/index.cjs",
-        "default": "./dist/lib/node-esm/invitations/index.mjs"
-      },
-      "types": "./dist/types/src/invitations/index.d.ts"
+      "node": "./dist/lib/node-esm/invitations/index.mjs"
     },
     "./mesh": {
+      "types": "./dist/types/src/mesh/index.d.ts",
       "browser": "./dist/lib/browser/mesh/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/mesh/index.cjs",
-        "default": "./dist/lib/node-esm/mesh/index.mjs"
-      },
-      "types": "./dist/types/src/mesh/index.d.ts"
+      "node": "./dist/lib/node-esm/mesh/index.mjs"
     },
     "./testing": {
+      "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/testing/index.cjs",
-        "default": "./dist/lib/node-esm/testing/index.mjs"
-      },
-      "types": "./dist/types/src/testing/index.d.ts"
+      "node": "./dist/lib/node-esm/testing/index.mjs"
     },
     "./worker": {
+      "types": "./dist/types/src/worker.d.ts",
       "browser": "./dist/lib/browser/worker.mjs",
-      "node": {
-        "require": "./dist/lib/node/worker.cjs",
-        "default": "./dist/lib/node-esm/worker.mjs"
-      },
-      "types": "./dist/types/src/worker.d.ts"
+      "node": "./dist/lib/node-esm/worker.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

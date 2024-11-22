@@ -4,16 +4,16 @@
 
 import { type UnsubscribeCallback } from '@dxos/async';
 import {
-  create,
+  createStoredSchema,
+  getObjectAnnotation,
+  makeStaticSchema,
+  toJsonSchema,
   MutableSchema,
   type ObjectAnnotation,
   ObjectAnnotationId,
-  effectToJsonSchema,
-  getObjectAnnotation,
-  makeStaticSchema,
+  type S,
   type StaticSchema,
   StoredSchema,
-  type S,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -22,7 +22,13 @@ import { type EchoDatabase } from './database';
 import { getObjectCore } from '../echo-handler';
 import { Filter } from '../query';
 
-type SchemaListChangedCallback = (schema: MutableSchema[]) => void;
+export type SchemaSubscriptionCallback = (schema: MutableSchema[]) => void;
+
+export interface SchemaResolver {
+  getSchema(typename: string): MutableSchema | undefined;
+  query(): Promise<MutableSchema[]>;
+  subscribe(cb: SchemaSubscriptionCallback): UnsubscribeCallback;
+}
 
 export type MutableSchemaRegistryOptions = {
   /**
@@ -35,23 +41,25 @@ export type MutableSchemaRegistryOptions = {
 /**
  * Per-space set of mutable schemas.
  */
-export class MutableSchemaRegistry {
+// TODO(burdon): Reconcile with RuntimeSchemaRegistry.
+export class MutableSchemaRegistry implements SchemaResolver {
   private readonly _schemaById: Map<string, MutableSchema> = new Map();
   private readonly _schemaByType: Map<string, MutableSchema> = new Map();
   private readonly _unsubscribeById: Map<string, UnsubscribeCallback> = new Map();
-  private readonly _schemaListChangeListeners: SchemaListChangedCallback[] = [];
+  private readonly _schemaSubscriptionCallbacks: SchemaSubscriptionCallback[] = [];
 
   constructor(
     private readonly _db: EchoDatabase,
     { reactiveQuery = true }: MutableSchemaRegistryOptions = {},
   ) {
+    // TODO(burdon): This shouldn't go here in the constructor and should be unregisterd. Open/dispose pattern.
     if (reactiveQuery) {
       this._db.query(Filter.schema(StoredSchema)).subscribe(({ objects }) => {
         const currentObjectIds = new Set(objects.map((o) => o.id));
-        const newObjects = objects.filter((o) => !this._schemaById.has(o.id));
+        const newObjects = objects.filter((object) => !this._schemaById.has(object.id));
         const removedObjects = [...this._schemaById.keys()].filter((oid) => !currentObjectIds.has(oid));
         newObjects.forEach((obj) => this._register(obj));
-        removedObjects.forEach((oid) => this._unregisterById(oid));
+        removedObjects.forEach((idoid) => this._unregister(idoid));
         if (newObjects.length > 0 || removedObjects.length > 0) {
           this._notifySchemaListChanged();
         }
@@ -64,7 +72,7 @@ export class MutableSchemaRegistry {
     return schemaId != null && this.getSchemaById(schemaId) != null;
   }
 
-  public getSchemaByTypename(typename: string): MutableSchema | undefined {
+  public getSchema(typename: string): MutableSchema | undefined {
     return this._schemaByType.get(typename);
   }
 
@@ -87,14 +95,9 @@ export class MutableSchemaRegistry {
     return this._register(typeObject);
   }
 
-  // TODO(burdon): Remove?
-  public async list(): Promise<MutableSchema[]> {
-    const { objects } = await this._db.query(Filter.schema(StoredSchema)).run();
-    return objects.map((stored) => {
-      return this._register(stored);
-    });
-  }
-
+  /**
+   * @deprecated
+   */
   // TODO(burdon): Reconcile with list.
   public async listAll(): Promise<StaticSchema[]> {
     const { objects } = await this._db.query(Filter.schema(StoredSchema)).run();
@@ -112,31 +115,34 @@ export class MutableSchemaRegistry {
     return [...runtimeSchemas, ...storedSchemas];
   }
 
-  public subscribe(callback: SchemaListChangedCallback): UnsubscribeCallback {
+  // TODO(burdon): Can this be made sync?
+  public async query(): Promise<MutableSchema[]> {
+    const { objects } = await this._db.query(Filter.schema(StoredSchema)).run();
+    return objects.map((stored) => {
+      return this._register(stored);
+    });
+  }
+
+  public subscribe(callback: SchemaSubscriptionCallback): UnsubscribeCallback {
     callback([...this._schemaById.values()]);
-    this._schemaListChangeListeners.push(callback);
+    this._schemaSubscriptionCallbacks.push(callback);
     return () => {
-      const index = this._schemaListChangeListeners.indexOf(callback);
+      const index = this._schemaSubscriptionCallbacks.indexOf(callback);
       if (index >= 0) {
-        this._schemaListChangeListeners.splice(index, 1);
+        this._schemaSubscriptionCallbacks.splice(index, 1);
       }
     };
   }
 
   public addSchema(schema: S.Schema<any>): MutableSchema {
-    const typeAnnotation = getObjectAnnotation(schema);
-    invariant(typeAnnotation, 'use S.Struct({}).pipe(EchoObject(...)) or class syntax to create a valid schema');
-    const schemaToStore = create(StoredSchema, {
-      typename: typeAnnotation.typename,
-      version: typeAnnotation.version,
-      jsonSchema: {},
-    });
-
+    const meta = getObjectAnnotation(schema);
+    invariant(meta, 'use S.Struct({}).pipe(EchoObject(...)) or class syntax to create a valid schema');
+    const schemaToStore = createStoredSchema(meta);
     const updatedSchema = schema.annotations({
-      [ObjectAnnotationId]: { ...typeAnnotation, schemaId: schemaToStore.id } satisfies ObjectAnnotation,
+      [ObjectAnnotationId]: { ...meta, schemaId: schemaToStore.id } satisfies ObjectAnnotation,
     });
 
-    schemaToStore.jsonSchema = effectToJsonSchema(updatedSchema);
+    schemaToStore.jsonSchema = toJsonSchema(updatedSchema);
     const storedSchema = this._db.add(schemaToStore);
     const result = this._register(storedSchema);
     this._notifySchemaListChanged();
@@ -160,10 +166,22 @@ export class MutableSchemaRegistry {
       return existing;
     }
 
+    let previousTypename: string | undefined;
+
     const mutableSchema = new MutableSchema(schema);
     const subscription = getObjectCore(schema).updates.on(() => {
       mutableSchema.invalidate();
     });
+
+    if (previousTypename !== undefined && schema.typename !== previousTypename) {
+      if (this._schemaByType.get(previousTypename) === mutableSchema) {
+        this._schemaByType.delete(previousTypename);
+      }
+      previousTypename = schema.typename;
+      this._schemaByType.set(schema.typename, mutableSchema);
+
+      this._notifySchemaListChanged();
+    }
 
     this._schemaById.set(schema.id, mutableSchema);
     this._schemaByType.set(schema.typename, mutableSchema);
@@ -171,7 +189,7 @@ export class MutableSchemaRegistry {
     return mutableSchema;
   }
 
-  private _unregisterById(id: string) {
+  private _unregister(id: string) {
     const schema = this._schemaById.get(id);
     if (schema != null) {
       this._schemaById.delete(id);
@@ -183,6 +201,6 @@ export class MutableSchemaRegistry {
 
   private _notifySchemaListChanged() {
     const list = [...this._schemaById.values()];
-    this._schemaListChangeListeners.forEach((s) => s(list));
+    this._schemaSubscriptionCallbacks.forEach((s) => s(list));
   }
 }

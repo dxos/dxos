@@ -386,7 +386,7 @@ export class ServiceContext extends Resource {
           identity.signer,
           identity.identityKey,
           identity.deviceKey,
-          { credential: params.deviceCredential },
+          params?.deviceCredential && { credential: params.deviceCredential },
           [], // TODO(dmaretskyi): Service access credentials.
         );
       } else {
