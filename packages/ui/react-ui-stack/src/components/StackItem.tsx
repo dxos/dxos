@@ -6,8 +6,8 @@ import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import {
   attachClosestEdge,
-  type Edge,
   extractClosestEdge,
+  type Edge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 // TODO(wittjosiah): Drop indicator that doesn't depend on emotion. See react-ui-list DropIndicator.
 // import { DropIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
