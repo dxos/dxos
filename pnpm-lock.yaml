@@ -4604,6 +4604,9 @@ importers:
       '@effect/schema':
         specifier: ^0.75.5
         version: 0.75.5(effect@3.10.15)
+      parjs:
+        specifier: ^1.3.9
+        version: 1.3.9
 
   packages/experimental/cf-labs:
     dependencies:
@@ -21917,6 +21920,9 @@ packages:
   change-case@5.4.4:
     resolution: {integrity: sha512-HRQyTk2/YPEkt9TnUPbOpr64Uw3KOicFWPVBb+xiHvd6eBx/qPr9xqfBFDT8P2vWsvvz4jbEkfDe71W3VyNu2w==}
 
+  char-info@0.3.5:
+    resolution: {integrity: sha512-gRslEBFEcuLMGLNO1EFIrdN1MMUfO+aqa7y8iWzNyAzB3mYKnTIvP+ioW3jpyeEvqA5WapVLIPINGtFjEIH4cQ==}
+
   character-entities-html4@2.1.0:
     resolution: {integrity: sha512-1v7fgQRj6hnSwFpq1Eu0ynr/CDEw0rXo2B61qXrLNdHZmPKgb7fqS1a2JwF0rISo9q77jDI8VMEHoApn8qDoZA==}
 
@@ -27636,6 +27642,10 @@ packages:
     resolution: {integrity: sha512-2iGbaQBV+ITgCz76ZEjmhUKAKVf7xfY1sRl4UiKQspfZMH2h06SyhNsnSVy50cwkFQDGLyif6m/6uFXHkOZ6rg==}
     hasBin: true
 
+  node-interval-tree@1.3.3:
+    resolution: {integrity: sha512-K9vk96HdTK5fEipJwxSvIIqwTqr4e3HRJeJrNxBSeVMNSC/JWARRaX7etOLOuTmrRMeOI/K5TCJu3aWIwZiNTw==}
+    engines: {node: '>= 7.6.0'}
+
   node-machine-id@1.1.12:
     resolution: {integrity: sha512-QNABxbrPa3qEIfrE6GOJ7BYIuignnJw7iQ2YPbc3Nla1HzRJjXzZOiikfF8m7eAMfichLt3M4VgLOetqgDmgGQ==}
 
@@ -28130,6 +28140,10 @@ packages:
   parent-module@1.0.1:
     resolution: {integrity: sha512-GQ2EWRpQV8/o+Aw8YqtfZZPfNRWZYkbidE9k5rpl/hC3vtHHBfGm2Ifi6qWV+coDGkrUKZAxE3Lot5kcsRlh+g==}
     engines: {node: '>=6'}
+
+  parjs@1.3.9:
+    resolution: {integrity: sha512-zmQhbzWM3M391tjwTGvNvvtoT8rRE/bBTjw6+54g8ANaPpnyekDF1d8q5tzN4kxmVud82cNj8zSd+uxSL4LE0A==}
+    engines: {node: '>=16.0.0'}
 
   parse-asn1@5.1.6:
     resolution: {integrity: sha512-RnZRo1EPU6JBnra2vGHj0yhp6ebyjBZpmUCLHWiFhxlzvBCCpAuZ7elsBp1PVAbQN0/04VD/19rfzlBSwLstMw==}
@@ -46782,6 +46796,10 @@ snapshots:
 
   change-case@5.4.4: {}
 
+  char-info@0.3.5:
+    dependencies:
+      node-interval-tree: 1.3.3
+
   character-entities-html4@2.1.0: {}
 
   character-entities-legacy@1.1.4: {}
@@ -53787,6 +53805,10 @@ snapshots:
 
   node-gyp-build@4.5.0: {}
 
+  node-interval-tree@1.3.3:
+    dependencies:
+      shallowequal: 1.1.0
+
   node-machine-id@1.1.12: {}
 
   node-notifier@10.0.1:
@@ -54420,6 +54442,10 @@ snapshots:
   parent-module@1.0.1:
     dependencies:
       callsites: 3.1.0
+
+  parjs@1.3.9:
+    dependencies:
+      char-info: 0.3.5
 
   parse-asn1@5.1.6:
     dependencies:
