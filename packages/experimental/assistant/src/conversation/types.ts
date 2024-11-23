@@ -8,19 +8,47 @@ import { toJsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { type JsonSchemaType } from '@dxos/echo-schema';
+import type { P } from 'vitest/dist/chunks/environment.CzISCQ7o';
 
 export type LLMMessage = {
   role: 'user' | 'assistant';
-  content: string;
-
-  // For role "assistant" only it records the tool call.
-  tool_call?: string;
-
-  /**
-   * For role 'tool' only it's the name of the selected tool.
-   */
-  name?: string;
+  content: LLMMessageContent[];
+  stopReason?: 'tool_use';
 };
+
+export type LLMMessageContent =
+  | {
+      type: 'text';
+      text: string;
+    }
+  | {
+      type: 'tool_use';
+
+      /**
+       * Result must have the same id as the tool.
+       */
+      id: string;
+
+      /**
+       * Tool name.
+       */
+      name: string;
+      input: unknown;
+    }
+  | {
+      type: 'tool_result';
+      tool_use_id: string;
+      /**
+       * Text or image types.
+       */
+      content: string;
+      is_error?: boolean;
+    };
+
+export const createUserMessage = (text: string): LLMMessage => ({
+  role: 'user',
+  content: [{ type: 'text', text }],
+});
 
 export type LLMTool = {
   name: string;

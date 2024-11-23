@@ -2,7 +2,7 @@ import { test } from 'vitest';
 import { createLLMConversation } from './conversation';
 import { AnthropicBackend } from './backend/anthropic';
 import { log } from '@dxos/log';
-import { defineTool, LLMToolResult } from './types';
+import { createUserMessage, defineTool, LLMToolResult } from './types';
 import { Schema as S } from '@effect/schema';
 
 const backend = new AnthropicBackend({
@@ -12,12 +12,7 @@ const backend = new AnthropicBackend({
 test('hello', async ({ expect }) => {
   const result = await createLLMConversation({
     model: '@anthropic/claude-3-5-sonnet-20241022',
-    messages: [
-      {
-        role: 'user',
-        content: 'Hello',
-      },
-    ],
+    messages: [createUserMessage('Hello, how are you?')],
     tools: [],
     backend,
   });
@@ -42,12 +37,7 @@ test('tool call', async ({ expect }) => {
 
   const result = await createLLMConversation({
     model: '@anthropic/claude-3-5-sonnet-20241022',
-    messages: [
-      {
-        role: 'user',
-        content: 'What is the password? Ask the custodian',
-      },
-    ],
+    messages: [createUserMessage('What is the password? Ask the custodian')],
     tools: [custodian],
     backend,
   });

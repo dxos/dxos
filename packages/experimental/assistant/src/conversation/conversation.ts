@@ -30,46 +30,58 @@ export const createLLMConversation = async (params: CreateLLMConversationParams)
       tools: params.tools as any,
     });
     log.info('llm result', { time: Date.now() - beginTs, result });
-
     invariant(!(result instanceof ReadableStream));
-    // if (result.tool_calls) {
-    //   invariant(result.tool_calls.length === 1);
-    //   const toolCall = result.tool_calls[0];
-    //   const tool = params.tools.find((t) => t.name === toolCall.name);
-    //   if (!tool) {
-    //     throw new Error(`Tool not found: ${toolCall.name}`);
-    //   }
-    //   history.push({
-    //     role: 'assistant',
-    //     content: '',
-    //     tool_call: toolCall.name,
-    //   });
-    //   const toolResult = await tool.execute(toolCall.arguments, {});
-    //   switch (toolResult.kind) {
-    //     case 'error': {
-    //       log.info('tool error', { message: toolResult.message });
-    //       history.push({
-    //         role: 'system',
-    //         content: `Tool execution errored, try fixing the error and call the tool again: ${toolResult.message}`,
-    //       });
-    //       return true;
-    //     }
-    //     case 'success': {
-    //       log.info('tool success', { result: toolResult.result });
-    //       history.push({
-    //         role: 'tool',
-    //         name: tool.name,
-    //         content: JSON.stringify(toolResult.result),
-    //       });
-    //       return true;
-    //     }
-    //     case 'break': {
-    //       log.info('tool break', { result: toolResult.result });
-    //       conversationResult = toolResult.result;
-    //       return false;
-    //     }
-    //   }
-    // }
+
+    history.push(result.message);
+
+    if (result.message.stopReason === 'tool_use') {
+      const toolCalls = result.message.content.filter((c) => c.type === 'tool_use');
+      invariant(toolCalls.length === 1);
+      const toolCall = toolCalls[0];
+      const tool = params.tools.find((t) => t.name === toolCall.name);
+      if (!tool) {
+        throw new Error(`Tool not found: ${toolCall.name}`);
+      }
+
+      history.push;
+      const toolResult = await tool.execute(toolCall.input, {});
+      switch (toolResult.kind) {
+        case 'error': {
+          log.info('tool error', { message: toolResult.message });
+          history.push({
+            role: 'user',
+            content: [
+              {
+                type: 'tool_result',
+                tool_use_id: toolCall.id,
+                content: toolResult.message,
+                is_error: true,
+              },
+            ],
+          });
+          return true;
+        }
+        case 'success': {
+          log.info('tool success', { result: toolResult.result });
+          history.push({
+            role: 'user',
+            content: [
+              {
+                type: 'tool_result',
+                tool_use_id: toolCall.id,
+                content: JSON.stringify(toolResult.result),
+              },
+            ],
+          });
+          return true;
+        }
+        case 'break': {
+          log.info('tool break', { result: toolResult.result });
+          conversationResult = toolResult.result;
+          return false;
+        }
+      }
+    }
     return false;
   };
 

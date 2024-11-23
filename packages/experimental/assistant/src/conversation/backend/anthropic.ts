@@ -23,16 +23,23 @@ export class AnthropicBackend implements AIBackend {
   }
 
   async run(params: RunParams): Promise<RunResult> {
-    const response = await this._client.messages.create({
+    const message = await this._client.messages.create({
       model: convertModel(params.model),
       messages: params.messages.map(convertMessage),
       tools: params.tools.map(convertTool),
+      tool_choice:
+        params.tools.length > 0
+          ? {
+              type: 'auto',
+              disable_parallel_tool_use: true,
+            }
+          : undefined,
       max_tokens: 1024,
     });
 
-    log.info('', { response });
-
-    return {};
+    return {
+      message: convertMessageFromAnthropic(message),
+    };
   }
 }
 
@@ -54,4 +61,10 @@ const convertTool = (tool: LLMTool): Anthropic.Messages.Tool => ({
   name: tool.name,
   description: tool.description,
   input_schema: tool.parameters as any,
+});
+
+const convertMessageFromAnthropic = (msg: Anthropic.Message): LLMMessage => ({
+  role: msg.role,
+  content: msg.content,
+  stopReason: msg.stop_reason as any,
 });
