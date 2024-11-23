@@ -217,10 +217,10 @@ importers:
         version: 3.6.0(@swc/helpers@0.5.1)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
       '@vitest/browser':
         specifier: ^2.1.3
-        version: 2.1.3(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2))
+        version: 2.1.3(@vitest/spy@2.1.3)(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2))
       '@vitest/coverage-v8':
         specifier: ^2.1.3
-        version: 2.1.3(@vitest/browser@2.1.3(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2)))(vitest@2.1.3(@types/node@22.5.5)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
+        version: 2.1.3(@vitest/browser@2.1.3(@vitest/spy@2.1.3)(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2)))(vitest@2.1.3(@types/node@22.5.5)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
       '@vitest/expect':
         specifier: ^2.1.3
         version: 2.1.3
@@ -4575,6 +4575,36 @@ importers:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(typescript@5.6.2)
 
+  packages/experimental/assistant:
+    dependencies:
+      '@anthropic-ai/sdk':
+        specifier: ^0.32.1
+        version: 0.32.1(encoding@0.1.13)
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
+      '@dxos/echo-schema':
+        specifier: ^0.7.0
+        version: 0.7.0
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@effect/schema':
+        specifier: ^0.75.5
+        version: 0.75.5(effect@3.10.15)
+
   packages/experimental/cf-labs:
     dependencies:
       '@dxos/credentials':
@@ -4595,7 +4625,7 @@ importers:
         version: 4.20241022.0
       '@vitest/browser':
         specifier: ~2.1.3
-        version: 2.1.3(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2))
+        version: 2.1.3(@vitest/spy@2.1.3)(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2))
       '@vitest/runner':
         specifier: ~2.1.3
         version: 2.1.3
@@ -11843,6 +11873,9 @@ packages:
   '@antfu/utils@0.7.7':
     resolution: {integrity: sha512-gFPqTG7otEJ8uP6wrhDv6mqwGWYZKNvAcCq6u9hOj0c+IKCEsY4L1oC9trPq2SaWIzAfHvqfBDxF591JkMf+kg==}
 
+  '@anthropic-ai/sdk@0.32.1':
+    resolution: {integrity: sha512-U9JwTrDvdQ9iWuABVsMLj8nJVwAyQz6QXvgLsVhryhCEPkLsbcP/MXxm+jYcAwLoV8ESbaTTjnD4kuAFa+Hyjg==}
+
   '@anthropic-ai/sdk@0.9.1':
     resolution: {integrity: sha512-wa1meQ2WSfoY8Uor3EdrJq0jTiZJoKoSii2ZVWRY1oN4Tlr5s59pADg9T79FTbPe1/se5c3pBeZgJL63wmuoBA==}
 
@@ -13809,29 +13842,80 @@ packages:
   '@dxos/async@0.4.9':
     resolution: {integrity: sha512-bS4s7xod4yZRL2ZS4Ylf5r21HmHjlclQRGgqecm8zbkyv/j+ii7rtJjnyjptzvYHd7awBzxgOwZq7s0twAwi6w==}
 
+  '@dxos/async@0.7.0':
+    resolution: {integrity: sha512-ZpyMNILe8RlQUtDOkZfkfwvSF/nSMl/izSdnavOr8P9f42rs+WYTCVh1TWqZSplUCqoMBMIcLrcyydXHbtE6vg==}
+
   '@dxos/automerge-wasm@0.17.1':
     resolution: {integrity: sha512-iFqAuNpoBuqXOCaB8l8uvm/8AfDMFD4HLhKKMmIeTGuLWtY3TbuyNF5XzUNE1slRBlVsg4orzCWh6IAiAPvB8A==}
+
+  '@dxos/codec-protobuf@0.7.0':
+    resolution: {integrity: sha512-FmJtqbhiIJonGYDIE/23A1K0V6NxBhMVZpc7IsB/smkfZSxdT5sgbevX/p+qXI0mjcv2uCkTbNh/auW6P9kAsg==}
 
   '@dxos/context@0.4.9':
     resolution: {integrity: sha512-4rdh3ZBnspOyiAc3pMOsRr3dhjK0bsSVM9vzLpMf+dyuKNmVurpjzJ1FOmCcEbxxs5ITottHARys6hEWm/EPww==}
 
+  '@dxos/context@0.7.0':
+    resolution: {integrity: sha512-YAvXSRhGwi/xKJ21D7GfjzQyoZU2l+6ezknHd/gJjSEQUOF1reQk8vC78C3LZqY4YQt5MxbVRw5HPduSoF/aAQ==}
+
+  '@dxos/crypto@0.7.0':
+    resolution: {integrity: sha512-u9ApEDEFwwMxcdXUkbzcH5NTp6OlnEb9g2Rv4LBbmcStD5xgfzgIQ5F43PTVXKOssH+2GGwNG/UF/LcHU5ZnVA==}
+
   '@dxos/debug@0.4.9':
     resolution: {integrity: sha512-nnnmDqII7/9LnbnVdwEzmcq9FqFTe5vaM5Qc0JvZo3/BMhPc3pFZkMqtQpGn7DQJq4/xes09c/6Vw19MjW4SIA==}
+
+  '@dxos/debug@0.7.0':
+    resolution: {integrity: sha512-azhGCCXlU3F5iWaF3GFUjq7Vq+o4ZNmBvzHeoWJVPMpy05waGO/O7H+xxteodlFZIXiJC2ESy4i26x8VZveQDg==}
+
+  '@dxos/echo-protocol@0.7.0':
+    resolution: {integrity: sha512-ZbXrVRwBsWLHzp1xrx+CkJExIMoxyrycDDRTa1X7SePB5KVRVmTljPRM6cdlL5zS/7Pxd+/6PV1kxAbhoUXFCg==}
+
+  '@dxos/echo-schema@0.7.0':
+    resolution: {integrity: sha512-l9StnbbtXTiR/217jhjN8v0260xw/H3d2HxhqXTq39Z5YxLWYOy4LybXk5hdvPPWYeRHjNVMAKlZVgLjB2+Uxw==}
+
+  '@dxos/echo-signals@0.7.0':
+    resolution: {integrity: sha512-+XYgxvaqAbsCko51x2xGwzVkRpyNbqh6LxmiIiS/tB3CADhs/1uL3RnrFVPuJstAW+XR7DpOks+ejVjcAtD/vw==}
+
+  '@dxos/effect@0.7.0':
+    resolution: {integrity: sha512-/LIim1OScIQVVZjCnUxtP1YN0RtasaMtFoRiW7YwkZfu6uedQaXUjBAWjIChuFHgKJAXVNvV7OpwQ4n0znT6VQ==}
+    peerDependencies:
+      '@effect/schema': ^0.67.16
+      effect: ^3.9.1
 
   '@dxos/invariant@0.4.9':
     resolution: {integrity: sha512-BXpmvZmX6uweggeTQW+d30/S9A1fcl8V+IfotV0TADAbgOE4LLXiNXlbDuFhlL7XQQg1AYv6efJ4OMnyur9/EA==}
 
+  '@dxos/invariant@0.7.0':
+    resolution: {integrity: sha512-zCh+QGVdeKYjxrpIeN/nhTtUCOWhBpf+ag5nP5aoVH34FQ8Qsz9aS3rLnVoymvwVYY5Nv0raavUHLEmg2dh7dg==}
+
   '@dxos/keys@0.4.9':
     resolution: {integrity: sha512-8jFH8O1gOubbHjVLMLTGdCyXzMqPIn59ez4oj/jC4DJaJ7xKLSWEd3aSAkdk+ZQ5yR8HPQX6dXTz6JPOSP9oJA==}
+
+  '@dxos/keys@0.7.0':
+    resolution: {integrity: sha512-tmbAudL1WBDQT+BQvlsY9TqIKcHFsdXjrXBnrWyVCrFG8isfhByFVWhXVnP2djC76pO1r48bEjceYPWnsqx67A==}
 
   '@dxos/log@0.4.9':
     resolution: {integrity: sha512-MOGKh7gcgO8maNnTtjtbwybqz8GvNBRaqA/huSlafg8NGOXBPy3yga00qVeA0aIp3E1NazVN4LebVVyHZlQOuA==}
 
+  '@dxos/log@0.7.0':
+    resolution: {integrity: sha512-NPwlvEdQhY0TS8Wf9hv42LOq4eIkUA1snXhNWMp9Gj2a/ShLIG85w/XC2tbNlMiE5JjEg6aGLKoi+oCOfM/DxA==}
+
   '@dxos/node-std@0.4.9':
     resolution: {integrity: sha512-mKwOT1lndx0fAperkOdz0b/DAPbYlq0bzSBBccIWXqmCdE7rC4bxU6Yudklvp0NKZkT3d7N1Z5uZyxEUg4JsKg==}
 
+  '@dxos/node-std@0.7.0':
+    resolution: {integrity: sha512-TsSImHMs+uBCjMCkGHpvko9Omv9TrMj3z+lK4HJPIDfgIieJd7oJcye6l0DEqTX/aGkeM8pgcd1++zl4lw+AuQ==}
+
+  '@dxos/protocols@0.7.0':
+    resolution: {integrity: sha512-4wXqTmEImkJHWVk3rtdbghas5Aamsyug5LWfZjn0cDTitOpJq9teuXri0BgyS3l1sxnRm/yCMiOVMfXQeZa1kQ==}
+
+  '@dxos/timeframe@0.7.0':
+    resolution: {integrity: sha512-4MC7d3HzhUFrnKG2PSupJ8JaaFh5ch84XU+vinsu8Y2/awIQzA7KfxMGl7ajtVsh//nm8BF3OSZ0n5vLrJUYvw==}
+
   '@dxos/util@0.4.9':
     resolution: {integrity: sha512-830DFvs0gHvuzHRZgFYNorKz77L6/wj4S7vyYaFe1ZedyywX4KfGDxtqP0OatT8h03NpupLU8n8ih3tRkLE/aQ==}
+
+  '@dxos/util@0.7.0':
+    resolution: {integrity: sha512-E8SAnaSw+l24z3KiNHcf94xMzBWFHzI8i0tbI3UaStGLyWtMK9N4BSMLnJtjTvyNDEHgu5kmgngYEPTC6LtfWA==}
 
   '@dxos/web-auth@0.4.80':
     resolution: {integrity: sha512-yRIGQRJd1KrNqdwZGxFvDpi2ioMy2I+RJbif1YCF9T9eKqiyJDuZe6IGBfwiY/ew1bTW0m88D4hnH81NA1iCdg==}
@@ -18783,6 +18867,7 @@ packages:
 
   '@socketsupply/socket@0.5.4':
     resolution: {integrity: sha512-8sDIEL5cyFI4jlpZYUL4JqSgkj1XjUlbi9kA16/5DfzAYefQx38QXQaI0Hj7G1T3WwPnKN8f9xLvESMHikysrA==}
+    cpu: [arm64, x64]
     os: [linux, darwin, win32]
     hasBin: true
 
@@ -20476,6 +20561,7 @@ packages:
   '@vitest/mocker@2.1.3':
     resolution: {integrity: sha512-eSpdY/eJDuOvuTA3ASzCjdithHa+GIF1L4PqtEELl6Qa3XafdMLBpBlZCIUCX2J+Q6sNmjmxtosAG62fK4BlqQ==}
     peerDependencies:
+      '@vitest/spy': 2.1.3
       msw: ^2.3.5
       vite: ^5.0.0
     peerDependenciesMeta:
@@ -20855,6 +20941,11 @@ packages:
 
   ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
+    peerDependencies:
+      ajv: ^8.0.0
+    peerDependenciesMeta:
+      ajv:
+        optional: true
 
   ajv-keywords@3.5.2:
     resolution: {integrity: sha512-5p6WTN0DdTGVQk6VjcEju19IgaHudalcfabD7yhDGeA6bcQnmL+CpveLJq/3hvfwd1aof6L386Ougkx6RfyMIQ==}
@@ -21460,6 +21551,7 @@ packages:
 
   boolean@3.2.0:
     resolution: {integrity: sha512-d0II/GO9uf9lfUHH2BQsjxzRJZBdsjgsBiW4BvhWk/3qoKwQFjIDVN19PfX8F2D/r9PCMTtLWjYVCFrpeYUzsw==}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   bottleneck@2.19.5:
     resolution: {integrity: sha512-VHiNCbI1lKdl44tGrhNfU3lup0Tj/ZBMJB5/2ZbNXRCPuRCO7ed2mgcK4r17y+KB2EfuYuRaVlwNbAeaWGSpbw==}
@@ -23769,6 +23861,7 @@ packages:
   eslint@8.57.0:
     resolution: {integrity: sha512-dZ6+mexnaTIbSBZWgou51U6OmzIhYM2VcNdtiTtI7qPNZm35Akpr0f6vtw3w1Kmn5PYo+tZVfh13WrhpS6oLqQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
 
   espree@9.6.1:
@@ -32928,6 +33021,19 @@ snapshots:
 
   '@antfu/utils@0.7.7': {}
 
+  '@anthropic-ai/sdk@0.32.1(encoding@0.1.13)':
+    dependencies:
+      '@types/node': 22.5.5
+      '@types/node-fetch': 2.6.9
+      abort-controller: 3.0.0
+      agentkeepalive: 4.2.1
+      form-data-encoder: 1.7.2
+      formdata-node: 4.4.1
+      node-fetch: 2.7.0(encoding@0.1.13)
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
+
   '@anthropic-ai/sdk@0.9.1(encoding@0.1.13)':
     dependencies:
       '@types/node': 22.5.5
@@ -36818,26 +36924,117 @@ snapshots:
       zen-observable: 0.10.0
       zen-push: 0.3.1
 
+  '@dxos/async@0.7.0':
+    dependencies:
+      '@dxos/context': 0.7.0
+      '@dxos/debug': 0.7.0
+      '@dxos/invariant': 0.7.0
+      '@dxos/log': 0.7.0
+      '@dxos/node-std': 0.7.0
+      '@dxos/util': 0.7.0
+      zen-observable: 0.10.0
+      zen-push: 0.3.1
+
   '@dxos/automerge-wasm@0.17.1': {}
+
+  '@dxos/codec-protobuf@0.7.0':
+    dependencies:
+      '@dxos/async': 0.7.0
+      '@dxos/context': 0.7.0
+      '@dxos/invariant': 0.7.0
+      '@dxos/log': 0.7.0
+      '@dxos/node-std': 0.7.0
+      '@dxos/util': 0.7.0
+      compress-json: 2.1.2
+      lodash.merge: 4.6.2
+      protobufjs: 7.3.2
 
   '@dxos/context@0.4.9':
     dependencies:
       '@dxos/log': 0.4.9
       '@dxos/util': 0.4.9
 
+  '@dxos/context@0.7.0':
+    dependencies:
+      '@dxos/debug': 0.7.0
+      '@dxos/log': 0.7.0
+      '@dxos/node-std': 0.7.0
+      '@dxos/util': 0.7.0
+
+  '@dxos/crypto@0.7.0':
+    dependencies:
+      '@dxos/invariant': 0.7.0
+      '@dxos/keys': 0.7.0
+      '@dxos/node-std': 0.7.0
+      hypercore-crypto: 2.3.2
+
   '@dxos/debug@0.4.9':
     dependencies:
       '@dxos/node-std': 0.4.9
 
+  '@dxos/debug@0.7.0':
+    dependencies:
+      '@dxos/node-std': 0.7.0
+
+  '@dxos/echo-protocol@0.7.0(@effect/schema@0.75.5(effect@3.10.15))(effect@3.10.15)':
+    dependencies:
+      '@dxos/crypto': 0.7.0
+      '@dxos/keys': 0.7.0
+      '@dxos/protocols': 0.7.0(@effect/schema@0.75.5(effect@3.10.15))(effect@3.10.15)
+      '@dxos/util': 0.7.0
+    transitivePeerDependencies:
+      - '@effect/schema'
+      - effect
+
+  '@dxos/echo-schema@0.7.0':
+    dependencies:
+      '@dxos/echo-protocol': 0.7.0(@effect/schema@0.75.5(effect@3.10.15))(effect@3.10.15)
+      '@dxos/echo-signals': 0.7.0
+      '@dxos/effect': 0.7.0(@effect/schema@0.75.5(effect@3.10.15))(effect@3.10.15)
+      '@dxos/invariant': 0.7.0
+      '@dxos/keys': 0.7.0
+      '@dxos/log': 0.7.0
+      '@dxos/node-std': 0.7.0
+      '@dxos/util': 0.7.0
+      '@effect/schema': 0.75.5(effect@3.10.15)
+      '@preact/signals-core': 1.6.0
+      effect: 3.10.15
+      ulidx: 2.3.0
+
+  '@dxos/echo-signals@0.7.0':
+    dependencies:
+      '@preact/signals': 1.2.1(preact@10.24.3)
+      '@preact/signals-core': 1.6.0
+      '@preact/signals-react': 1.3.8(react@18.2.0)
+    optionalDependencies:
+      preact: 10.24.3
+      react: 18.2.0
+
+  '@dxos/effect@0.7.0(@effect/schema@0.75.5(effect@3.10.15))(effect@3.10.15)':
+    dependencies:
+      '@dxos/invariant': 0.7.0
+      '@dxos/node-std': 0.7.0
+      '@dxos/util': 0.7.0
+      '@effect/schema': 0.75.5(effect@3.10.15)
+      effect: 3.10.15
+
   '@dxos/invariant@0.4.9':
     dependencies:
       '@dxos/node-std': 0.4.9
+
+  '@dxos/invariant@0.7.0': {}
 
   '@dxos/keys@0.4.9':
     dependencies:
       '@dxos/debug': 0.4.9
       '@dxos/invariant': 0.4.9
       '@dxos/node-std': 0.4.9
+
+  '@dxos/keys@0.7.0':
+    dependencies:
+      '@dxos/debug': 0.7.0
+      '@dxos/invariant': 0.7.0
+      '@dxos/node-std': 0.7.0
 
   '@dxos/log@0.4.9':
     dependencies:
@@ -36850,6 +37047,15 @@ snapshots:
       lodash.pick: 4.4.0
       lodash.pickby: 4.6.0
 
+  '@dxos/log@0.7.0':
+    dependencies:
+      '@dxos/node-std': 0.7.0
+      '@dxos/util': 0.7.0
+      chalk: 4.1.2
+      js-yaml: 4.1.0
+      lodash.defaultsdeep: 4.6.1
+      lodash.omit: 4.5.0
+
   '@dxos/node-std@0.4.9':
     dependencies:
       assert: 2.1.0
@@ -36858,12 +37064,48 @@ snapshots:
       readable-stream: 3.6.0
       util: 0.12.5
 
+  '@dxos/node-std@0.7.0':
+    dependencies:
+      assert: 2.1.0
+      events: 3.3.0
+      path-browserify: 1.0.1
+      readable-stream: 3.6.2
+      util: 0.12.5
+
+  '@dxos/protocols@0.7.0(@effect/schema@0.75.5(effect@3.10.15))(effect@3.10.15)':
+    dependencies:
+      '@bufbuild/protobuf': 2.1.0
+      '@dxos/codec-protobuf': 0.7.0
+      '@dxos/effect': 0.7.0(@effect/schema@0.75.5(effect@3.10.15))(effect@3.10.15)
+      '@dxos/invariant': 0.7.0
+      '@dxos/keys': 0.7.0
+      '@dxos/timeframe': 0.7.0
+      '@dxos/util': 0.7.0
+    transitivePeerDependencies:
+      - '@effect/schema'
+      - effect
+
+  '@dxos/timeframe@0.7.0':
+    dependencies:
+      '@dxos/debug': 0.7.0
+      '@dxos/keys': 0.7.0
+      '@dxos/log': 0.7.0
+      '@dxos/node-std': 0.7.0
+      '@dxos/util': 0.7.0
+
   '@dxos/util@0.4.9':
     dependencies:
       '@dxos/debug': 0.4.9
       '@dxos/invariant': 0.4.9
       '@dxos/keys': 0.4.9
       '@dxos/node-std': 0.4.9
+
+  '@dxos/util@0.7.0':
+    dependencies:
+      '@dxos/debug': 0.7.0
+      '@dxos/invariant': 0.7.0
+      '@dxos/keys': 0.7.0
+      '@dxos/node-std': 0.7.0
 
   '@dxos/web-auth@0.4.80':
     dependencies:
@@ -38573,21 +38815,6 @@ snapshots:
       - typescript
       - verdaccio
 
-  '@nrwl/js@19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.4.5)':
-    dependencies:
-      '@nx/js': 19.7.2(patch_hash=mavp33mumclr54vvfyyf557nvq)(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.4.5)
-    transitivePeerDependencies:
-      - '@babel/traverse'
-      - '@swc-node/register'
-      - '@swc/core'
-      - '@swc/wasm'
-      - '@types/node'
-      - debug
-      - nx
-      - supports-color
-      - typescript
-      - verdaccio
-
   '@nrwl/js@19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.6.2)':
     dependencies:
       '@nx/js': 19.7.2(patch_hash=mavp33mumclr54vvfyyf557nvq)(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.6.2)
@@ -38826,7 +39053,7 @@ snapshots:
       '@babel/preset-env': 7.24.8(@babel/core@7.25.7)
       '@babel/preset-typescript': 7.24.7(@babel/core@7.25.7)
       '@babel/runtime': 7.24.5
-      '@nrwl/js': 19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.4.5)
+      '@nrwl/js': 19.7.2(@babel/traverse@7.25.9)(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))(typescript@5.6.2)
       '@nx/devkit': 19.7.2(nx@19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1)))
       '@nx/workspace': 19.7.2(@swc-node/register@1.9.1(@swc/core@1.5.7(@swc/helpers@0.5.1))(@swc/types@0.1.5)(typescript@5.6.2))(@swc/core@1.5.7(@swc/helpers@0.5.1))
       babel-plugin-const-enum: 1.2.0(@babel/core@7.25.7)
@@ -44646,11 +44873,11 @@ snapshots:
       vite: 5.0.12(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
       vue: 3.4.15(typescript@5.6.2)
 
-  '@vitest/browser@2.1.3(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2))':
+  '@vitest/browser@2.1.3(@vitest/spy@2.1.3)(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2))':
     dependencies:
       '@testing-library/dom': 10.4.0
       '@testing-library/user-event': 14.5.2(@testing-library/dom@10.4.0)
-      '@vitest/mocker': 2.1.3(msw@2.4.6(typescript@5.6.2))(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
+      '@vitest/mocker': 2.1.3(@vitest/spy@2.1.3)(msw@2.4.6(typescript@5.6.2))(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
       '@vitest/utils': 2.1.3
       magic-string: 0.30.11
       msw: 2.4.6(typescript@5.6.2)
@@ -44662,12 +44889,13 @@ snapshots:
       playwright: 1.46.1
       webdriverio: 8.33.1(encoding@0.1.13)(typescript@5.6.2)
     transitivePeerDependencies:
+      - '@vitest/spy'
       - bufferutil
       - typescript
       - utf-8-validate
       - vite
 
-  '@vitest/coverage-v8@2.1.3(@vitest/browser@2.1.3(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2)))(vitest@2.1.3(@types/node@22.5.5)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))':
+  '@vitest/coverage-v8@2.1.3(@vitest/browser@2.1.3(@vitest/spy@2.1.3)(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2)))(vitest@2.1.3(@types/node@22.5.5)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 0.2.3
@@ -44683,7 +44911,7 @@ snapshots:
       tinyrainbow: 1.2.0
       vitest: 2.1.3(@types/node@22.5.5)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
     optionalDependencies:
-      '@vitest/browser': 2.1.3(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2))
+      '@vitest/browser': 2.1.3(@vitest/spy@2.1.3)(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2))
     transitivePeerDependencies:
       - supports-color
 
@@ -44701,7 +44929,7 @@ snapshots:
       chai: 5.1.1
       tinyrainbow: 1.2.0
 
-  '@vitest/mocker@2.1.3(msw@2.4.6(typescript@5.6.2))(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))':
+  '@vitest/mocker@2.1.3(@vitest/spy@2.1.3)(msw@2.4.6(typescript@5.6.2))(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))':
     dependencies:
       '@vitest/spy': 2.1.3
       estree-walker: 3.0.3
@@ -45386,8 +45614,8 @@ snapshots:
       clean-stack: 2.2.0
       indent-string: 4.0.0
 
-  ajv-formats@2.1.1:
-    dependencies:
+  ajv-formats@2.1.1(ajv@8.12.0):
+    optionalDependencies:
       ajv: 8.12.0
 
   ajv-keywords@3.5.2(ajv@6.12.6):
@@ -46984,7 +47212,7 @@ snapshots:
   conf@12.0.0:
     dependencies:
       ajv: 8.12.0
-      ajv-formats: 2.1.1
+      ajv-formats: 2.1.1(ajv@8.12.0)
       atomically: 2.0.3
       debounce-fn: 5.1.2
       dot-prop: 8.0.2
@@ -56292,7 +56520,7 @@ snapshots:
     dependencies:
       '@types/json-schema': 7.0.15
       ajv: 8.12.0
-      ajv-formats: 2.1.1
+      ajv-formats: 2.1.1(ajv@8.12.0)
       ajv-keywords: 5.1.0(ajv@8.12.0)
 
   scroll@3.0.1: {}
@@ -58588,7 +58816,7 @@ snapshots:
   vitest@2.1.3(@types/node@22.5.5)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.6.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2):
     dependencies:
       '@vitest/expect': 2.1.3
-      '@vitest/mocker': 2.1.3(msw@2.4.6(typescript@5.6.2))(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
+      '@vitest/mocker': 2.1.3(@vitest/spy@2.1.3)(msw@2.4.6(typescript@5.6.2))(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))
       '@vitest/pretty-format': 2.1.3
       '@vitest/runner': 2.1.3
       '@vitest/snapshot': 2.1.3
@@ -58608,7 +58836,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 22.5.5
-      '@vitest/browser': 2.1.3(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2))
+      '@vitest/browser': 2.1.3(@vitest/spy@2.1.3)(playwright@1.46.1)(typescript@5.6.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.5.5)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2))(vitest@2.1.3)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.6.2))
       '@vitest/ui': 2.1.3(vitest@2.1.3)
       happy-dom: 13.3.4
       jsdom: 24.0.0(canvas@2.11.2(encoding@0.1.13))

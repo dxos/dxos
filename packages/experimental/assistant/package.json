@@ -1,0 +1,38 @@
+{
+  "name": "@dxos/assistant",
+  "version": "0.7.0",
+  "private": true,
+  "description": "Natural language interface to DXOS",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "sideEffects": true,
+  "exports": {
+    ".": {
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "@dxos/async": "workspace:*",
+    "@dxos/context": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/echo-schema": "^0.7.0",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@effect/schema": "^0.75.5"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "beast": {}
+}

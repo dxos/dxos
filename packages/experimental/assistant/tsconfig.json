@@ -1,0 +1,9 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "types": ["vite/types/import-meta"],
+  },
+  "include": ["src"],
+  "references": [],
+}

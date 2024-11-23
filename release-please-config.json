@@ -379,6 +379,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/assistant/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/cf-labs/package.json",
           "jsonpath": "$.version"
         },
