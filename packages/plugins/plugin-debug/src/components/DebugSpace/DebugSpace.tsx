@@ -15,10 +15,10 @@ import { useAsyncEffect } from '@dxos/react-hooks';
 import { Icon, IconButton, Input, type IconProps, type TextInputProps, Toolbar, useFileDownload } from '@dxos/react-ui';
 import { safeParseInt } from '@dxos/util';
 
-import { DebugPanel } from './DebugPanel';
 import { ObjectCreator } from './ObjectCreator';
-import { createSpaceObjectGenerator } from '../testing';
-import { DebugContext } from '../types';
+import { createSpaceObjectGenerator } from './testing';
+import { DebugContext } from '../../types';
+import { Container } from '../Container';
 
 const DEFAULT_COUNT = 100;
 const DEFAULT_PERIOD = 500;
@@ -123,9 +123,9 @@ export const DebugSpace: FC<{
   };
 
   return (
-    <DebugPanel
-      menu={
-        <Toolbar.Root>
+    <Container
+      toolbar={
+        <Toolbar.Root classNames='p-1'>
           <CustomInput
             icon='ph--flag--regular'
             autoComplete='off'
@@ -158,7 +158,7 @@ export const DebugSpace: FC<{
           <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' size={5} onClick={handleUpdate} />
           <IconButton icon='ph--download-simple--regular' iconOnly label='Download' size={5} onClick={handleDownload} />
 
-          <div className='grow' />
+          <Toolbar.Expander />
           <IconButton
             icon='ph--flag-pennant--regular'
             iconOnly
@@ -178,8 +178,6 @@ export const DebugSpace: FC<{
       }
     >
       <ObjectCreator space={space} onAddObjects={onAddObjects} />
-    </DebugPanel>
+    </Container>
   );
 };
-
-export default DebugSpace;

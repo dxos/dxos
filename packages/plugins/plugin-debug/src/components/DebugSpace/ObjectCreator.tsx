@@ -4,11 +4,10 @@
 
 import React, { useMemo, useState } from 'react';
 
+import { TestSchemaType, createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { type EchoReactiveObject, type ReactiveObject, type Space } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { createColumnBuilder, type TableColumnDef, Table } from '@dxos/react-ui-table/deprecated';
-
-import { SchemaTypes, createSpaceObjectGenerator } from '../testing';
 
 const CREATE_OBJECTS_IN_ONE_CHUNK = 10;
 
@@ -30,8 +29,8 @@ export const ObjectCreator = ({ space, onAddObjects }: ObjectCreatorProps) => {
   const generator = useMemo(() => createSpaceObjectGenerator(space), [space]);
 
   const [objects, setObjects] = useState<CreateObjectsParams[]>(
-    SchemaTypes.map((schema) => ({
-      schema: schema.typename,
+    Object.values(TestSchemaType).map((schema) => ({
+      schema,
       enabled: true,
       objectsCount: 10,
       mutationsCount: 10,
