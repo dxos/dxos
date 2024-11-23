@@ -5,18 +5,14 @@
 import '@dxos-theme';
 
 import { type Meta } from '@storybook/react';
-import React, { type FC, useEffect } from 'react';
+import React, { useEffect } from 'react';
 
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
-import { type ReactiveObject, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/storybook-utils';
+import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { ObjectCreator, type ObjectCreatorProps } from './ObjectCreator';
-
-const render =
-  <T,>(r: FC<T>) =>
-  (args: T) => <>{r(args) ?? <div />}</>;
 
 const DefaultStory = () => {
   const [space] = useSpaces();
@@ -27,22 +23,22 @@ const DefaultStory = () => {
     }
   }, [space]);
 
+  const handleCreate: ObjectCreatorProps['onAddObjects'] = (objects) => {
+    console.log('Created:', objects);
+  };
+
   if (!space) {
     return null;
   }
-
-  const handleCreate: ObjectCreatorProps['onAddObjects'] = (objects: ReactiveObject<any>[]) => {
-    console.log('Created:', objects);
-  };
 
   return <ObjectCreator space={space} onAddObjects={handleCreate} />;
 };
 
 const meta: Meta = {
-  title: 'plugins/plugin-debug/SchemaList',
+  title: 'plugins/plugin-debug/ObjectCreator',
   component: ObjectCreator,
   render: render(DefaultStory),
-  decorators: [withClientProvider({ createSpace: true }), withTheme],
+  decorators: [withClientProvider({ createSpace: true }), withLayout({ tooltips: true }), withTheme],
   parameters: {
     layout: 'fullscreen',
   },

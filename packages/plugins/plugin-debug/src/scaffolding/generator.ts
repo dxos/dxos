@@ -29,10 +29,9 @@ import { createDocAccessor, type Space } from '@dxos/react-client/echo';
 
 // TODO(burdon): Move to echo-generator.
 
-// TODO(wittjosiah): Remove? Just use DXNs.
 export enum SchemasNames {
-  document = 'dxos.org/type/Document',
-  diagram = 'dxos.org/type/Diagram',
+  document = 'example.com/type/Document',
+  diagram = 'example.com/type/Diagram',
 }
 
 export const SchemasMap: TestSchemaMap<SchemasNames> = {
@@ -73,7 +72,7 @@ export const MutationsGenerators: TestMutationsMap<SchemasNames> = {
 
       // Release the event loop.
       if (i % 100 === 0 || i === params.count - 1) {
-        log.info('Mutation:', { mutationIdx: i });
+        log('mutation', { mutationIdx: i });
         await sleep(1);
       }
     }

@@ -9,7 +9,7 @@ export class TextType extends TypedObject({ typename: 'dxos.org/type/Text', vers
   content: S.String,
 }) {}
 
-export class DocumentType extends TypedObject({ typename: 'dxos.org/type/Document', version: '0.1.0' })({
+export class DocumentType extends TypedObject({ typename: 'example.com/type/Document', version: '0.1.0' })({
   name: S.optional(S.String),
   fallbackName: S.optional(S.String),
   content: ref(TextType),

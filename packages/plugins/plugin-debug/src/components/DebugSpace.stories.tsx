@@ -10,9 +10,9 @@ import React, { useEffect } from 'react';
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/storybook-utils';
+import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 
-import DebugSpace from './DebugSpace';
+import { DebugSpace } from './DebugSpace';
 
 const DefaultStory = () => {
   const [space] = useSpaces();
@@ -23,9 +23,8 @@ const DefaultStory = () => {
     }
   }, [space]);
 
-  console.log(space);
   if (!space) {
-    return <div />;
+    return null;
   }
 
   return <DebugSpace space={space} />;
@@ -34,8 +33,8 @@ const DefaultStory = () => {
 const meta: Meta = {
   title: 'plugins/plugin-debug/DebugSpace',
   component: DebugSpace,
-  render: DefaultStory,
-  decorators: [withClientProvider({ createSpace: true }), withTheme],
+  render: render(DefaultStory),
+  decorators: [withClientProvider({ createSpace: true }), withLayout({ tooltips: true }), withTheme],
   parameters: {
     layout: 'fullscreen',
   },

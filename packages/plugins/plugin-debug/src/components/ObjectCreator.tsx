@@ -5,7 +5,7 @@
 import React, { useMemo, useState } from 'react';
 
 import { type EchoReactiveObject, type ReactiveObject, type Space } from '@dxos/react-client/echo';
-import { Button } from '@dxos/react-ui';
+import { IconButton, Toolbar } from '@dxos/react-ui';
 import { createColumnBuilder, type TableColumnDef, Table } from '@dxos/react-ui-table/deprecated';
 
 import { SchemasNames, createSpaceObjectGenerator } from '../scaffolding';
@@ -53,6 +53,7 @@ export const ObjectCreator = ({ space, onAddObjects }: ObjectCreatorProps) => {
       if (!params.enabled) {
         continue;
       }
+
       let objectsCreated = 0;
       while (objectsCreated < params.objectsCount) {
         const objects = (await generator.createObjects({
@@ -64,13 +65,16 @@ export const ObjectCreator = ({ space, onAddObjects }: ObjectCreatorProps) => {
           mutationSize: params.mutationSize,
           maxContentLength: params.maxContentLength,
         });
+
         objectsCreated += objects.length;
         onAddObjects?.(objects);
       }
     }
+
     await space.db.flush();
   };
-  const handleChangeOnRow = (row: CreateObjectsParams, key: string, value: any) => {
+
+  const handleUpdate = (row: CreateObjectsParams, key: string, value: any) => {
     const newObjects = [...objectsToCreate];
     Object.assign(newObjects.find((object) => object.schema === row.schema)!, { [key]: value });
     setObjectsToCreate(newObjects);
@@ -78,12 +82,12 @@ export const ObjectCreator = ({ space, onAddObjects }: ObjectCreatorProps) => {
 
   const { helper, builder } = createColumnBuilder<CreateObjectsParams>();
   const columns: TableColumnDef<CreateObjectsParams>[] = [
-    helper.accessor('enabled', builder.switch({ label: 'Enabled', onUpdate: handleChangeOnRow })),
+    helper.accessor('enabled', builder.switch({ label: 'Enabled', onUpdate: handleUpdate })),
     helper.accessor('schema', builder.string({ classNames: 'font-mono', label: 'Schema' })),
-    helper.accessor('objectsCount', builder.number({ label: 'Objects', onUpdate: handleChangeOnRow })),
-    helper.accessor('mutationsCount', builder.number({ label: 'Mutations', onUpdate: handleChangeOnRow })),
-    helper.accessor('mutationSize', builder.number({ label: 'Mut. Size', onUpdate: handleChangeOnRow })),
-    helper.accessor('maxContentLength', builder.number({ label: 'Length', onUpdate: handleChangeOnRow })),
+    helper.accessor('objectsCount', builder.number({ label: 'Objects', onUpdate: handleUpdate })),
+    helper.accessor('mutationsCount', builder.number({ label: 'Mutations', onUpdate: handleUpdate })),
+    helper.accessor('mutationSize', builder.number({ label: 'Mut. Size', onUpdate: handleUpdate })),
+    helper.accessor('maxContentLength', builder.number({ label: 'Length', onUpdate: handleUpdate })),
   ];
 
   return (
@@ -93,7 +97,9 @@ export const ObjectCreator = ({ space, onAddObjects }: ObjectCreatorProps) => {
           <Table.Main<CreateObjectsParams> columns={columns} data={objectsToCreate} />
         </Table.Viewport>
       </Table.Root>
-      <Button onClick={handleCreate}>Create</Button>
+      <Toolbar.Root>
+        <IconButton icon='ph--plus--regular' label='Create' onClick={handleCreate} />
+      </Toolbar.Root>
     </>
   );
 };

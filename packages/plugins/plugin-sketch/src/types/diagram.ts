@@ -15,7 +15,7 @@ export class CanvasType extends TypedObject({ typename: 'dxos.org/type/Canvas', 
   content: S.mutable(S.Record({ key: S.String, value: S.Any })),
 }) {}
 
-export class DiagramType extends TypedObject({ typename: 'dxos.org/type/Diagram', version: '0.1.0' })({
+export class DiagramType extends TypedObject({ typename: 'example.com/type/Diagram', version: '0.1.0' })({
   name: S.optional(S.String),
   canvas: ref(CanvasType),
   // Associated threads.
