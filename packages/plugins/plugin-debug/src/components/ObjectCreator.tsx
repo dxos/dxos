@@ -97,7 +97,7 @@ export const ObjectCreator = ({ space, onAddObjects }: ObjectCreatorProps) => {
           <Table.Main<CreateObjectsParams> columns={columns} data={objectsToCreate} />
         </Table.Viewport>
       </Table.Root>
-      <Toolbar.Root>
+      <Toolbar.Root classNames='p-2'>
         <IconButton icon='ph--plus--regular' label='Create' onClick={handleCreate} />
       </Toolbar.Root>
     </>
