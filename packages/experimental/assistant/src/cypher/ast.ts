@@ -1,3 +1,7 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 export interface AstNode<Kind extends string> {
   astKind: Kind;
 }

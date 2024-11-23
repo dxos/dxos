@@ -5,10 +5,8 @@
 import { Schema as S } from '@effect/schema';
 
 import { toJsonSchema } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
-
 import { type JsonSchemaType } from '@dxos/echo-schema';
-import type { P } from 'vitest/dist/chunks/environment.CzISCQ7o';
+import { log } from '@dxos/log';
 
 export type LLMMessage = {
   role: 'user' | 'assistant';

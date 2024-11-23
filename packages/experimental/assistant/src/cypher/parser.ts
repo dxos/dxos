@@ -1,3 +1,7 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import type { CypherQuery } from './ast';
 import { cypherQuery } from './combinators';
 

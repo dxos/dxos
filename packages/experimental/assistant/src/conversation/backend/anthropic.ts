@@ -4,8 +4,6 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 
-import { log } from '@dxos/log';
-
 import { type AIBackend, type RunParams, type RunResult } from './interface';
 import type { LLMMessage, LLMModel, LLMTool } from '../types';
 

@@ -1,10 +1,16 @@
-import { test } from 'vitest';
-import { AnthropicBackend } from '../conversation/backend/anthropic';
-import { createUserMessage, defineTool, LLMToolResult } from '../conversation/types';
+//
+// Copyright 2024 DXOS.org
+//
+
 import { Schema as S } from '@effect/schema';
+import { test } from 'vitest';
+
 import { log } from '@dxos/log';
-import { parseCypherQuery } from '../cypher/parser';
+
+import { AnthropicBackend } from '../conversation/backend/anthropic';
 import { createLLMConversation } from '../conversation/conversation';
+import { createUserMessage, defineTool, LLMToolResult } from '../conversation/types';
+import { parseCypherQuery } from '../cypher/parser';
 
 test('cypher query SDK', async () => {
   const cypherTool = defineTool({

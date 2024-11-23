@@ -1,9 +1,15 @@
-import { test } from 'vitest';
-import { createLLMConversation } from './conversation';
-import { AnthropicBackend } from './backend/anthropic';
-import { log } from '@dxos/log';
-import { createUserMessage, defineTool, LLMToolResult } from './types';
+//
+// Copyright 2024 DXOS.org
+//
+
 import { Schema as S } from '@effect/schema';
+import { test } from 'vitest';
+
+import { log } from '@dxos/log';
+
+import { AnthropicBackend } from './backend/anthropic';
+import { createLLMConversation } from './conversation';
+import { createUserMessage, defineTool, LLMToolResult } from './types';
 
 const backend = new AnthropicBackend({
   apiKey: process.env.ANTHROPIC_API_KEY!,

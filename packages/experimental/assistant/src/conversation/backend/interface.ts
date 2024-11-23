@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { LLMMessage, type LLMMessageContent, type LLMModel, type LLMTool } from '../types';
+import { type LLMMessage, type LLMModel, type LLMTool } from '../types';
 
 // TODO(dmaretskyi): Multi-backend support.
 export interface AIBackend {

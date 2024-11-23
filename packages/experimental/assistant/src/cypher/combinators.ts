@@ -1,5 +1,10 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { createRequire } from 'node:module';
 import type { Parjser } from 'parjs';
+
 import type {
   CypherQuery,
   EqualsPredicate,

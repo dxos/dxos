@@ -1,4 +1,13 @@
-import { describe, test } from 'vitest';
+//
+// Copyright 2024 DXOS.org
+//
+
+import { createRequire } from 'node:module';
+import type { Parjser } from 'parjs';
+import { test } from 'vitest';
+
+import { log } from '@dxos/log';
+
 import {
   cypherQuery,
   identifier,
@@ -8,10 +17,6 @@ import {
   returnClause,
   whereClause,
 } from './combinators';
-
-import { createRequire } from 'node:module';
-import { log } from '@dxos/log';
-import type { Parjser } from 'parjs';
 
 // TODO(dmaretskyi): Must be like this or it breaks vitest.
 const require = createRequire(import.meta.url);
@@ -53,34 +58,34 @@ test('optional vairable tag', ({ expect }) => {
 });
 
 test('properties', ({ expect }) => {
-  const input = `{name: 'John'}`;
+  const input = "{name: 'John'}";
   const result = properties.parse(input);
   log.info('', { result });
   expect(result).toMatchObject({ isOk: true });
 });
 
 test('node pattern', ({ expect }) => {
-  testParser(nodePattern, `(:Person)`);
-  testParser(nodePattern, `(n:Person)`);
-  testParser(nodePattern, `(n:Person {name: 'John'})`);
+  testParser(nodePattern, '(:Person)');
+  testParser(nodePattern, '(n:Person)');
+  testParser(nodePattern, "(n:Person {name: 'John'})");
 });
 
 test('match clause', ({ expect }) => {
-  testParser(matchClause, `MATCH (n:Person)`);
-  testParser(matchClause, `MATCH (n:Person)-[r:KNOWS]->(m:Person)`);
+  testParser(matchClause, 'MATCH (n:Person)');
+  testParser(matchClause, 'MATCH (n:Person)-[r:KNOWS]->(m:Person)');
   testParser(matchClause, 'MATCH (o:Org)-[:HAS_EMPLOYEE]->(e:Employee)');
 });
 
 test('where clause', ({ expect }) => {
-  testParser(whereClause, `WHERE n.name = "John"`);
-  testParser(whereClause, `WHERE o.name = "DXOS" AND p.name = "Composer"`);
+  testParser(whereClause, 'WHERE n.name = "John"');
+  testParser(whereClause, 'WHERE o.name = "DXOS" AND p.name = "Composer"');
 });
 
 test('return clause', ({ expect }) => {
-  testParser(returnClause, `RETURN n, m`);
-  testParser(returnClause, `RETURN m.name AS employee`);
+  testParser(returnClause, 'RETURN n, m');
+  testParser(returnClause, 'RETURN m.name AS employee');
 
-  const cases = [`RETURN n, m`];
+  const cases = ['RETURN n, m'];
   for (const input of cases) {
     const result = returnClause.parse(input);
     log.info('', { result });

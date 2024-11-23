@@ -2,13 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-
-import { toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { LLMMessage, type LLMModel, type LLMTool, type LLMToolResult, type ToolExecutionContext } from './types';
+
 import type { AIBackend } from './backend/interface';
+import { type LLMMessage, type LLMModel, type LLMTool } from './types';
 
 export type CreateLLMConversationParams = {
   model: LLMModel;
