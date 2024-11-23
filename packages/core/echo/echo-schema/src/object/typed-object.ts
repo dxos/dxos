@@ -4,7 +4,14 @@
 
 import { S } from '@dxos/effect';
 
-import { type ObjectAnnotation, ObjectAnnotationId, schemaVariance, TYPENAME_REGEX, VERSION_REGEX } from '../ast';
+import {
+  type HasId,
+  type ObjectAnnotation,
+  ObjectAnnotationId,
+  schemaVariance,
+  TYPENAME_REGEX,
+  VERSION_REGEX,
+} from '../ast';
 import { getSchema, getTypeReference } from '../proxy';
 
 /**
@@ -21,7 +28,7 @@ export interface AbstractSchema<Fields = any, I = any> extends S.Schema<Fields, 
  */
 export interface AbstractTypedObject<Fields = any, I = any> extends AbstractSchema<Fields, I> {
   /** Type constructor. */
-  new (): Fields;
+  new (): HasId & Fields;
 }
 
 type TypedObjectProps = ObjectAnnotation & {
@@ -37,6 +44,7 @@ export type TypedObjectOptions = {
 /**
  *
  */
+// TODO(burdon): Comment required.
 type SimplifiedSchemaFields<
   SchemaFields extends S.Struct.Fields,
   Options extends TypedObjectOptions,
@@ -47,6 +55,7 @@ type SimplifiedSchemaFields<
 /**
  *
  */
+// TODO(burdon): Comment required.
 type TypedObjectFields<
   SchemaFields extends S.Struct.Fields,
   Options extends TypedObjectOptions,

@@ -16,12 +16,13 @@ import { StoredSchema } from './types';
 import { type HasId, type JsonSchemaType, schemaVariance, type SchemaMeta, SchemaMetaSymbol } from '../ast';
 import { toEffectSchema, toJsonSchema } from '../json';
 
+// TODO(burdon): Reconcile with AbstractSchema.
 interface MutableSchemaConstructor extends S.Schema<MutableSchema> {
   new (): HasId;
 }
 
-// TODO(burdon): Connect to AbstractSchema.
-const MutableSchemaBase = (): MutableSchemaConstructor => {
+// TODO(burdon): Reconcile with AbstractTypedObject.
+const AbstractMutableSchema = (): MutableSchemaConstructor => {
   /**
    * Return class definition satisfying S.Schema.
    */
@@ -53,7 +54,7 @@ const MutableSchemaBase = (): MutableSchemaConstructor => {
  * Schema that can be modified at runtime via the API.
  */
 // TODO(burdon): Why does this HAVE a schema property AND implement schema.
-export class MutableSchema extends MutableSchemaBase() implements S.Schema<any> {
+export class MutableSchema extends AbstractMutableSchema() implements S.Schema<any> {
   private _schema: S.Schema<any> | undefined;
   private _isDirty = true;
 
