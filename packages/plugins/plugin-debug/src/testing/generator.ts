@@ -29,23 +29,21 @@ import { createDocAccessor, type Space } from '@dxos/react-client/echo';
 
 // TODO(burdon): Move to echo-generator.
 
-export enum SchemasNames {
-  document = 'example.com/type/Document',
-  diagram = 'example.com/type/Diagram',
-}
+export const SchemaTypes = [DocumentType, DiagramType];
 
-export const SchemasMap: TestSchemaMap<SchemasNames> = {
-  [SchemasNames.document]: DocumentType,
-  [SchemasNames.diagram]: DiagramType,
+// TODO(burdon): Just list types.
+export const SchemaMap: TestSchemaMap = {
+  [DocumentType.typename]: DocumentType,
+  [DiagramType.typename]: DiagramType,
 };
 
-export const ObjectGenerators: TestGeneratorMap<SchemasNames> = {
-  [SchemasNames.document]: () => {
+export const ObjectGenerators: TestGeneratorMap = {
+  [DocumentType.typename]: () => {
     const name = faker.lorem.sentence({ min: 2, max: 3 });
     return { name, content: create(TextType, { content: '' }), threads: [] };
   },
 
-  [SchemasNames.diagram]: () => {
+  [DiagramType.typename]: () => {
     const name = faker.lorem.sentence({ min: 2, max: 3 });
     return {
       name,
@@ -54,8 +52,8 @@ export const ObjectGenerators: TestGeneratorMap<SchemasNames> = {
   },
 };
 
-export const MutationsGenerators: TestMutationsMap<SchemasNames> = {
-  [SchemasNames.document]: async (object, params) => {
+export const MutationsGenerators: TestMutationsMap = {
+  [DocumentType.typename]: async (object, params) => {
     const accessor = createDocAccessor<DocumentType>(object.content, ['content']);
 
     for (let i = 0; i < params.count; i++) {
@@ -78,7 +76,7 @@ export const MutationsGenerators: TestMutationsMap<SchemasNames> = {
     }
   },
 
-  [SchemasNames.diagram]: async (object, params) => {
+  [DiagramType.typename]: async (object, params) => {
     const store = new TLDrawStoreAdapter();
     await store.open(createDocAccessor<CanvasType>(object.canvas, ['content']));
     const app = new Editor({
@@ -142,4 +140,4 @@ export const MutationsGenerators: TestMutationsMap<SchemasNames> = {
 };
 
 export const createSpaceObjectGenerator = (space: Space) =>
-  new SpaceObjectGenerator(space, SchemasMap, ObjectGenerators, MutationsGenerators);
+  new SpaceObjectGenerator(space, SchemaMap, ObjectGenerators, MutationsGenerators);

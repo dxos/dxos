@@ -8,6 +8,7 @@ import { type Meta } from '@storybook/react';
 import React, { useEffect } from 'react';
 
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
+import { log } from '@dxos/log';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { render, withLayout, withTheme } from '@dxos/storybook-utils';
@@ -24,7 +25,7 @@ const DefaultStory = () => {
   }, [space]);
 
   const handleCreate: ObjectCreatorProps['onAddObjects'] = (objects) => {
-    console.log('Created:', objects);
+    log.info('created', { objects });
   };
 
   if (!space) {

@@ -8,18 +8,18 @@ import { type EchoReactiveObject, type ReactiveObject, type Space } from '@dxos/
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { createColumnBuilder, type TableColumnDef, Table } from '@dxos/react-ui-table/deprecated';
 
-import { SchemasNames, createSpaceObjectGenerator } from '../scaffolding';
+import { SchemaTypes, createSpaceObjectGenerator } from '../testing';
+
+const CREATE_OBJECTS_IN_ONE_CHUNK = 10;
 
 export type CreateObjectsParams = {
+  schema: string;
   enabled: boolean;
-  schema: SchemasNames;
   objectsCount: number;
   mutationsCount: number;
   maxContentLength: number;
   mutationSize: number;
 };
-
-const CREATE_OBJECTS_IN_ONE_CHUNK = 10;
 
 export type ObjectCreatorProps = {
   space: Space;
@@ -29,27 +29,19 @@ export type ObjectCreatorProps = {
 export const ObjectCreator = ({ space, onAddObjects }: ObjectCreatorProps) => {
   const generator = useMemo(() => createSpaceObjectGenerator(space), [space]);
 
-  const [objectsToCreate, setObjectsToCreate] = useState<CreateObjectsParams[]>([
-    {
+  const [objects, setObjects] = useState<CreateObjectsParams[]>(
+    SchemaTypes.map((schema) => ({
+      schema: schema.typename,
       enabled: true,
-      schema: SchemasNames.document,
       objectsCount: 10,
       mutationsCount: 10,
       mutationSize: 10,
       maxContentLength: 1000,
-    },
-    {
-      enabled: true,
-      schema: SchemasNames.diagram,
-      objectsCount: 10,
-      mutationsCount: 10,
-      mutationSize: 10,
-      maxContentLength: 1000,
-    },
-  ]);
+    })),
+  );
 
   const handleCreate = async () => {
-    for (const params of objectsToCreate) {
+    for (const params of objects) {
       if (!params.enabled) {
         continue;
       }
@@ -75,15 +67,15 @@ export const ObjectCreator = ({ space, onAddObjects }: ObjectCreatorProps) => {
   };
 
   const handleUpdate = (row: CreateObjectsParams, key: string, value: any) => {
-    const newObjects = [...objectsToCreate];
+    const newObjects = [...objects];
     Object.assign(newObjects.find((object) => object.schema === row.schema)!, { [key]: value });
-    setObjectsToCreate(newObjects);
+    setObjects(newObjects);
   };
 
   const { helper, builder } = createColumnBuilder<CreateObjectsParams>();
   const columns: TableColumnDef<CreateObjectsParams>[] = [
-    helper.accessor('enabled', builder.switch({ label: 'Enabled', onUpdate: handleUpdate })),
-    helper.accessor('schema', builder.string({ classNames: 'font-mono', label: 'Schema' })),
+    helper.accessor('enabled', builder.switch({ label: 'Live', onUpdate: handleUpdate })),
+    helper.accessor('schema', builder.string({ label: 'Schema', classNames: 'font-mono' })),
     helper.accessor('objectsCount', builder.number({ label: 'Objects', onUpdate: handleUpdate })),
     helper.accessor('mutationsCount', builder.number({ label: 'Mutations', onUpdate: handleUpdate })),
     helper.accessor('mutationSize', builder.number({ label: 'Mut. Size', onUpdate: handleUpdate })),
@@ -94,7 +86,7 @@ export const ObjectCreator = ({ space, onAddObjects }: ObjectCreatorProps) => {
     <>
       <Table.Root>
         <Table.Viewport>
-          <Table.Main<CreateObjectsParams> columns={columns} data={objectsToCreate} />
+          <Table.Main<CreateObjectsParams> columns={columns} data={objects} />
         </Table.Viewport>
       </Table.Root>
       <Toolbar.Root classNames='p-2'>

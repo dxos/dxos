@@ -17,7 +17,7 @@ import { safeParseInt } from '@dxos/util';
 
 import { DebugPanel } from './DebugPanel';
 import { ObjectCreator } from './ObjectCreator';
-import { createSpaceObjectGenerator } from '../scaffolding';
+import { createSpaceObjectGenerator } from '../testing';
 import { DebugContext } from '../types';
 
 const DEFAULT_COUNT = 100;
