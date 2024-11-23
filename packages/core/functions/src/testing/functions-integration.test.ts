@@ -8,10 +8,11 @@ import { Trigger } from '@dxos/async';
 import { create } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 
-import { initFunctionsPlugin } from './plugin-init';
-import { setTestCallHandler } from './test/handler';
+import { DXN } from '@dxos/keys';
 import { createInitializedClients, inviteMember, startFunctionsHost, TestType } from '../testing';
 import { FunctionDef, FunctionTrigger } from '../types';
+import { initFunctionsPlugin } from './plugin-init';
+import { setTestCallHandler } from './test/handler';
 
 // TODO(wittjosiah): Doesn't work in vitest.
 describe.skip('functions e2e', () => {
@@ -43,7 +44,9 @@ describe.skip('functions e2e', () => {
         meta: triggerMeta,
         spec: {
           type: 'subscription',
-          filter: { type: TestType.typename },
+          query: {
+            filter: { type: [DXN.fromTypename(TestType.typename).toString()] },
+          },
         },
       }),
     );

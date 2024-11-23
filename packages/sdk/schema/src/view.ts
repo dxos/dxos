@@ -15,6 +15,8 @@ import {
 } from '@dxos/echo-schema';
 
 import { createFieldId } from './projection';
+import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 
 /**
  * Stored field metadata (e.g., for UX).
@@ -83,12 +85,17 @@ export const createView = ({
   jsonSchema,
   fields: _fields,
 }: CreateViewProps): ReactiveObject<ViewType> => {
+  if (!DXN.isValid(typename)) {
+    throw new Error(`Typename must be a DXN`);
+  }
   // TODO(burdon): Ensure not objects.
   const fields = _fields ?? Object.keys(jsonSchema?.properties ?? []).filter((p) => p !== 'id');
   return create(ViewType, {
     name,
     query: {
-      type: typename,
+      filter: {
+        type: [typename],
+      },
     },
     // Create initial fields.
     fields: fields.map((property) => ({

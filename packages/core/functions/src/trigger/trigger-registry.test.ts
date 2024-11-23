@@ -13,9 +13,10 @@ import { Filter } from '@dxos/echo-db';
 import { create, splitMeta } from '@dxos/echo-schema';
 import { range } from '@dxos/util';
 
-import { TriggerRegistry } from './trigger-registry';
+import { DXN } from '@dxos/keys';
 import { createInitializedClients, TestType, triggerWebhook } from '../testing';
 import { type FunctionManifest, FunctionTrigger } from '../types';
+import { TriggerRegistry } from './trigger-registry';
 
 const manifest: FunctionManifest = {
   triggers: [
@@ -48,8 +49,10 @@ const manifest: FunctionManifest = {
       enabled: true,
       spec: {
         type: 'subscription',
-        filter: {
-          type: TestType.typename,
+        query: {
+          filter: {
+            type: [DXN.fromTypename(TestType.typename).toString()],
+          },
         },
       },
     },

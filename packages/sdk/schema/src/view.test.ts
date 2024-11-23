@@ -54,7 +54,7 @@ describe('View', () => {
   test('create view from TypedObject', async ({ expect }) => {
     class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({}) {}
     const view = createView({ name: 'Test', typename: TestSchema.typename, jsonSchema: toJsonSchema(TestSchema) });
-    expect(view.query.type).to.eq(TestSchema.typename);
+    expect(view.query.filter.type).to.eq([`dxn:type:${TestSchema.typename}`]);
   });
 
   test('dynamic schema definitions with references', async () => {

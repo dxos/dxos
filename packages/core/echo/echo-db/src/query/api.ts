@@ -22,6 +22,7 @@ export interface QueryFn {
 /**
  * Defines the result format of the query.
  */
+// TODO(dmaretskyi): Take from echo-schema.
 export enum ResultFormat {
   /**
    * Plain javascript objects.

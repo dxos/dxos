@@ -3,19 +3,19 @@
 //
 
 import { isEncodedReference, type EncodedReference } from '@dxos/echo-protocol';
-import { requireTypeReference, S } from '@dxos/echo-schema';
+import { requireTypeReference, S, type QueryType } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';
+import { DXN, LOCAL_SPACE_TAG, SpaceId, type PublicKey } from '@dxos/keys';
 import { createBuf } from '@dxos/protocols/buf';
 import {
-  type Filter as FilterBuf,
   FilterSchema,
+  type Filter as FilterBuf,
   type QueryOptions_DataLocation,
   type QueryOptions_ShowDeletedOption,
 } from '@dxos/protocols/buf/dxos/echo/filter_pb';
-import { type QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
+import { type Filter as FilterProto, type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { type EchoReactiveObject, getReferenceWithSpaceKey } from '../echo-handler';
+import { getReferenceWithSpaceKey, type EchoReactiveObject } from '../echo-handler';
 
 export const hasType =
   <T extends EchoReactiveObject<T>>(type: { new (): T }) =>
@@ -70,6 +70,7 @@ export namespace Filter$ {
   export type Object<F extends Any> = F extends Filter<infer T> ? T : never;
 }
 
+// TODO(dmaretskyi): Rename QuerySpec.
 export class Filter<T extends {} = any> {
   static from<T extends {}>(source?: FilterSource<T>, options?: QueryOptions): Filter<T> {
     if (source === undefined || source === null) {
@@ -133,6 +134,27 @@ export class Filter<T extends {} = any> {
       },
       options,
     );
+  }
+
+  private static fromObjectFilter(obj: QueryType['filter']): Filter {
+    return new Filter({
+      type: obj.type?.map((type) => DXN.parse(type)),
+      objectIds: obj.objectId as string[] | undefined,
+      text: obj.text,
+      and: obj.and?.map((filter) => Filter.fromObjectFilter(filter)),
+      or: obj.or?.map((filter) => Filter.fromObjectFilter(filter)),
+    });
+  }
+
+  static fromQueryType(obj: QueryType): Filter {
+    const filter = Filter.fromObjectFilter(obj.filter ?? {});
+    if (obj.spaces?.some((spaceId) => !SpaceId.isValid(spaceId))) {
+      throw new TypeError(`Invalid SpaceID`);
+    }
+    filter.options.spaceIds = (obj.spaces as SpaceId[] as string[]) ?? [];
+    filter.options.include = obj.result?.shape;
+
+    return filter;
   }
 
   static all(): Filter {
@@ -293,6 +315,10 @@ export class Filter<T extends {} = any> {
         spaces: [],
       },
     });
+  }
+
+  toQueryType(): QueryType {
+    throw new Error('Not implemented');
   }
 }
 
