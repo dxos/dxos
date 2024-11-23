@@ -38,10 +38,10 @@ export {
   type Hypergraph,
   type IDocHandle,
   Query,
+  ResultFormat,
   type Selection,
   type Subscription,
   type SubscriptionHandle,
-  ResultFormat,
 } from '@dxos/echo-db';
 
 // TODO(dmaretskyi): Remove this export.
