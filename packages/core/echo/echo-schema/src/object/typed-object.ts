@@ -85,12 +85,13 @@ export const TypedObject = <ClassType>({ typename, version, skipTypenameFormatCh
     fields: SchemaFields,
     options?: Options,
   ): AbstractTypedObject<TypedObjectFields<SchemaFields, Options>, S.Struct.Encoded<SchemaFields>> => {
-    // Ok to perform `as any` cast here since the types are explicitly defined.
-    const fieldsSchema = options?.record ? S.Struct(fields, { key: S.String, value: S.Any }) : S.Struct(fields);
-    const schemaWithModifiers = S.mutable(options?.partial ? S.partial(fieldsSchema as any) : fieldsSchema);
+    // Create schema from fields.
+    const schema: S.Schema.All = options?.record ? S.Struct(fields, { key: S.String, value: S.Any }) : S.Struct(fields);
 
     // Set ECHO object id property.
-    const typeSchema = S.extend(schemaWithModifiers, S.Struct({ id: S.String }));
+    const typeSchema = S.extend(S.mutable(options?.partial ? S.partial(schema) : schema), S.Struct({ id: S.String }));
+
+    // Set ECHO annotations.
     const annotatedSchema = typeSchema.annotations({
       [ObjectAnnotationId]: { typename, version },
     });
