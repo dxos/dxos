@@ -10,7 +10,7 @@ import { Trigger } from '@dxos/async';
 import { TestBuilder } from '@dxos/client/testing';
 import { getObjectCore } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
-import { FunctionDef, type FunctionManifest, FunctionTrigger } from '@dxos/functions';
+import { FunctionDef, type FunctionManifest, FunctionTrigger, TriggerKind } from '@dxos/functions';
 import { startFunctionsHost } from '@dxos/functions/testing';
 import { GameType } from '@dxos/plugin-chess/types';
 
@@ -37,7 +37,7 @@ describe('Chess', () => {
         {
           function: 'dxos.org/function/chess',
           spec: {
-            type: 'subscription',
+            type: TriggerKind.Subscription,
             filter: {
               type: 'dxos.org/type/Chess',
             },

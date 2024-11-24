@@ -7,13 +7,13 @@ import React, { type FC, useEffect, useState } from 'react';
 
 import { type Graph } from '@dxos/plugin-graph';
 import { useClient, useConfig } from '@dxos/react-client';
-import { Button, ToggleGroup, ToggleGroupItem } from '@dxos/react-ui';
+import { Button, ToggleGroup, ToggleGroupItem, Toolbar } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
-import { DebugPanel } from './DebugPanel';
 import { Json, Tree } from './Tree';
+import { Container } from '../Container';
 
-const DebugGlobal: FC<{ graph: Graph }> = ({ graph }) => {
+export const DebugApp: FC<{ graph: Graph }> = ({ graph }) => {
   const [view, setView] = useState<'config' | 'diagnostics' | 'graph'>('graph');
   const [data, setData] = useState<any>({});
   const client = useClient();
@@ -44,9 +44,9 @@ const DebugGlobal: FC<{ graph: Graph }> = ({ graph }) => {
   };
 
   return (
-    <DebugPanel
-      menu={
-        <>
+    <Container
+      toolbar={
+        <Toolbar.Root classNames='p-1'>
           <ToggleGroup type='single' value={view}>
             <ToggleGroupItem value={'graph'} onClick={() => setView('graph')} title={'Plugin graph'}>
               <GraphIcon className={getSize(5)} />
@@ -59,21 +59,19 @@ const DebugGlobal: FC<{ graph: Graph }> = ({ graph }) => {
             </ToggleGroupItem>
           </ToggleGroup>
 
-          <div className='grow' />
+          <Toolbar.Expander />
           <Button onClick={(event) => handleResetClient(event.shiftKey)} title='Reset client'>
             <Warning className={mx(getSize(5), 'text-red-700')} />
           </Button>
           <Button onClick={handleOpenDevtools} title='Open Devtools'>
             <Toolbox weight='duotone' className={mx(getSize(5), 'text-700')} />
           </Button>
-        </>
+        </Toolbar.Root>
       }
     >
       {view === 'graph' && <Tree data={graph.toJSON()} />}
       {view === 'config' && <Json data={data.diagnostics?.config} />}
       {view === 'diagnostics' && <Json data={data} />}
-    </DebugPanel>
+    </Container>
   );
 };
-
-export default DebugGlobal;

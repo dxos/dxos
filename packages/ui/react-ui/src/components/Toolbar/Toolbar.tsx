@@ -98,6 +98,8 @@ const ToolbarSeparator = (props: SeparatorProps) => {
   );
 };
 
+const ToolbarExpander = () => <div className={'grow'} />;
+
 export const Toolbar = {
   Root: ToolbarRoot,
   Button: ToolbarButton,
@@ -106,6 +108,7 @@ export const Toolbar = {
   ToggleGroup: ToolbarToggleGroup,
   ToggleGroupItem: ToolbarToggleGroupItem,
   Separator: ToolbarSeparator,
+  Expander: ToolbarExpander,
 };
 
 export type {

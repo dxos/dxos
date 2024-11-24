@@ -79,7 +79,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
             label={isSolo ? t('show deck plank label') : t('show solo plank label')}
             classNames={buttonClassNames}
             onClick={() => onClick?.('solo')}
-            icon={isSolo ? 'ph--vibrate--regular' : 'ph--arrows-out--regular'}
+            icon={isSolo ? 'ph--arrow-u-down-left--regular' : 'ph--arrows-out--regular'}
           />
         )}
 

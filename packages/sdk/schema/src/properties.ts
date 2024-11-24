@@ -2,7 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, type FormatEnum, getFormatAnnotation } from '@dxos/echo-schema';
+import {
+  AST,
+  type FormatEnum,
+  getFormatAnnotation,
+  type OptionsAnnotationType,
+  OptionsAnnotationId,
+} from '@dxos/echo-schema';
 import {
   type SimpleType,
   findAnnotation,
@@ -19,7 +25,7 @@ export type PropertyKey<T extends object> = Extract<keyof T, string>;
 /**
  * Flattened representation of AST node.
  */
-export type SchemaProperty<T extends object> = {
+export type SchemaProperty<T extends object, V = any> = {
   prop: AST.PropertySignature;
   name: PropertyKey<T>;
   type: SimpleType;
@@ -28,6 +34,8 @@ export type SchemaProperty<T extends object> = {
   title?: string;
   description?: string;
   examples?: string[];
+  defaultValue?: V;
+  options?: OptionsAnnotationType[];
 };
 
 /**
@@ -49,9 +57,11 @@ export const getSchemaProperties = <T extends object>(ast: AST.AST, value: any =
     const name = prop.name.toString() as PropertyKey<T>;
 
     // Annotations.
-    const title = findAnnotation<string>(prop.type, AST.TitleAnnotationId, { noDefault: true });
-    const description = findAnnotation<string>(prop.type, AST.DescriptionAnnotationId, { noDefault: true });
+    const title = findAnnotation<string>(prop.type, AST.TitleAnnotationId);
+    const description = findAnnotation<string>(prop.type, AST.DescriptionAnnotationId);
     const examples = findAnnotation<string[]>(prop.type, AST.ExamplesAnnotationId);
+    const defaultValue = findAnnotation(prop.type, AST.DefaultAnnotationId);
+    const options = findAnnotation<OptionsAnnotationType[]>(prop.type, OptionsAnnotationId);
 
     // Get type.
     let type: SimpleType | undefined;
@@ -94,7 +104,7 @@ export const getSchemaProperties = <T extends object>(ast: AST.AST, value: any =
 
     if (type) {
       const format = baseType ? getFormatAnnotation(baseType) : undefined;
-      props.push({ prop, name, type, array, format, title, description, examples });
+      props.push({ prop, name, type, array, format, title, description, examples, defaultValue, options });
     }
 
     return props;
