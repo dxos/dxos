@@ -21,7 +21,7 @@ export type CreateLLMConversationParams = {
   backend: AIBackend;
 };
 
-export const createLLMConversation = async (params: CreateLLMConversationParams) => {
+export const runLLM = async (params: CreateLLMConversationParams) => {
   const history: LLMMessage[] = [...params.messages];
   let conversationResult: any = null;
 

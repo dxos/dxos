@@ -1,11 +1,11 @@
 import { test } from 'vitest';
 import { AnthropicBackend } from '../conversation/backend/anthropic';
-import { createLLMConversation } from '../conversation/conversation';
+import { runLLM } from '../conversation/conversation';
 import { createUserMessage } from '../conversation/types';
 import { log } from '@dxos/log';
 
 test('extract objects from the DXOS explainer', async () => {
-  const result = await createLLMConversation({
+  const result = await runLLM({
     model: '@anthropic/claude-3-5-haiku-20241022',
     messages: [
       createUserMessage(`

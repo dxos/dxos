@@ -8,7 +8,7 @@ import { test } from 'vitest';
 import { log } from '@dxos/log';
 
 import { AnthropicBackend } from '../conversation/backend/anthropic';
-import { createLLMConversation } from '../conversation/conversation';
+import { runLLM } from '../conversation/conversation';
 import { createUserMessage, defineTool, LLMToolResult } from '../conversation/types';
 import { parseCypherQuery } from '../cypher/parser';
 
@@ -44,7 +44,7 @@ test('cypher query SDK', async () => {
   });
 
   // TODO(dmaretskyi): Employee -> Contact.
-  const result = await createLLMConversation({
+  const result = await runLLM({
     model: '@anthropic/claude-3-5-sonnet-20241022',
     messages: [
       createUserMessage(`

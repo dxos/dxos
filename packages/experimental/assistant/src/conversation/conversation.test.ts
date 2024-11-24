@@ -8,7 +8,7 @@ import { test } from 'vitest';
 import { log } from '@dxos/log';
 
 import { AnthropicBackend } from './backend/anthropic';
-import { createLLMConversation } from './conversation';
+import { runLLM } from './conversation';
 import { createUserMessage, defineTool, LLMToolResult } from './types';
 
 const backend = new AnthropicBackend({
@@ -16,7 +16,7 @@ const backend = new AnthropicBackend({
 });
 
 test('hello', async ({ expect }) => {
-  const result = await createLLMConversation({
+  const result = await runLLM({
     model: '@anthropic/claude-3-5-sonnet-20241022',
     messages: [createUserMessage('Hello, how are you?')],
     tools: [],
@@ -41,7 +41,7 @@ test('tool call', async ({ expect }) => {
     },
   });
 
-  const result = await createLLMConversation({
+  const result = await runLLM({
     model: '@anthropic/claude-3-5-sonnet-20241022',
     messages: [createUserMessage('What is the password? Ask the custodian')],
     tools: [custodian],
