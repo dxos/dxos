@@ -29,7 +29,6 @@ export const isValidProxyTarget = (value: any): value is object => {
 /**
  * @deprecated
  */
-// TODO(burdon): Required by echo-db/create (can we remove).
 export const getProxySlot = <T extends object>(proxy: ReactiveObject<any>): ProxyHandlerSlot<T> => {
   const value = (proxy as any)[symbolIsProxy];
   invariant(value instanceof ProxyHandlerSlot);
@@ -95,7 +94,7 @@ class ProxyHandlerSlot<T extends object> implements ProxyHandler<T> {
     return this._handler;
   }
 
-  // TODO(burdon): Document (reconcile with TODO ("in the future") above).
+  // TODO(burdon): Requires comment.
   setHandler(handler: ReactiveHandler<T>) {
     this._handler = handler;
   }

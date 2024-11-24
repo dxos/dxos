@@ -18,7 +18,11 @@ type ToMutable<T> = T extends {} ? { -readonly [K in keyof T]: T[K] extends read
  */
 export const ObjectAnnotationId = Symbol.for('@dxos/schema/annotation/Object');
 
+export const TYPENAME_REGEX = /^\w+\.\w{2,}\/[\w/]+$/;
+export const VERSION_REGEX = /^\d+.\d+.\d+$/;
+
 // TODO(burdon): Reconcile with other types.
+// TODO(burdon): Define as schema with regex patterns above.
 export type ObjectAnnotation = {
   schemaId?: string;
   typename: string;
