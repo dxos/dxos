@@ -76,7 +76,10 @@ export const LLMToolResult = Object.freeze({
   Break: (result: unknown): LLMToolResult => ({ kind: 'break', result }),
 });
 
-export type LLMModel = '@hf/nousresearch/hermes-2-pro-mistral-7b' | '@anthropic/claude-3-5-sonnet-20241022';
+export type LLMModel =
+  | '@hf/nousresearch/hermes-2-pro-mistral-7b'
+  | '@anthropic/claude-3-5-sonnet-20241022'
+  | '@anthropic/claude-3-5-haiku-20241022';
 
 export type DefineToolParams<Params extends S.Schema.AnyNoContext> = {
   name: string;

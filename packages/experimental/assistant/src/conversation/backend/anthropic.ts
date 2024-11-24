@@ -24,6 +24,9 @@ export class AnthropicBackend implements AIBackend {
     const message = await this._client.messages.create({
       model: convertModel(params.model),
       messages: params.messages.map(convertMessage),
+
+      system: params.system,
+
       tools: params.tools.map(convertTool),
       tool_choice:
         params.tools.length > 0
@@ -45,6 +48,8 @@ const convertModel = (model: LLMModel): Anthropic.Model => {
   switch (model) {
     case '@anthropic/claude-3-5-sonnet-20241022':
       return 'claude-3-5-sonnet-20241022';
+    case '@anthropic/claude-3-5-haiku-20241022':
+      return 'claude-3-5-haiku-20241022';
     default:
       throw new Error(`Unknown model: ${model}`);
   }

@@ -11,6 +11,12 @@ import { type LLMMessage, type LLMModel, type LLMTool } from './types';
 export type CreateLLMConversationParams = {
   model: LLMModel;
   messages: LLMMessage[];
+
+  /**
+   * System prompt that specifies instructions for the LLM.
+   */
+  system?: string;
+
   tools: LLMTool[];
   backend: AIBackend;
 };
@@ -25,6 +31,7 @@ export const createLLMConversation = async (params: CreateLLMConversationParams)
     const result = await params.backend.run({
       model: params.model,
       messages: history,
+      system: params.system,
       tools: params.tools as any,
     });
     log.info('llm result', { time: Date.now() - beginTs, result });

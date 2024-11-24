@@ -12,6 +12,10 @@ export interface AIBackend {
 export type RunParams = {
   model: LLMModel;
   messages: LLMMessage[];
+  /**
+   * System prompt to specify instructions for the LLM.
+   */
+  system?: string;
   tools: LLMTool[];
 };
 
