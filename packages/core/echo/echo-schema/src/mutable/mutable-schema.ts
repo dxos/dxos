@@ -12,8 +12,18 @@ import {
   updateFieldsInSchema,
   setTypenameInSchema,
 } from './manipulation';
-import { StoredSchema } from './types';
-import { type HasId, type JsonSchemaType, schemaVariance, type SchemaMeta, SchemaMetaSymbol } from '../ast';
+import { createStoredSchema, StoredSchema } from './types';
+import {
+  getObjectAnnotation,
+  schemaVariance,
+  type HasId,
+  type JsonSchemaType,
+  type SchemaMeta,
+  SchemaMetaSymbol,
+  type ObjectAnnotation,
+  EchoObject,
+  ObjectAnnotationId,
+} from '../ast';
 import { toEffectSchema, toJsonSchema } from '../json';
 
 // TODO(burdon): Reconcile with AbstractSchema.
@@ -193,4 +203,22 @@ const unwrapProxy = (jsonSchema: any): any => {
   }
 
   return result;
+};
+
+/**
+ * Create runtime representation of a schema.
+ */
+export const createMutableSchema = (
+  { typename, version }: ObjectAnnotation,
+  fields: S.Struct.Fields,
+): MutableSchema => {
+  const schema = S.partial(S.Struct(fields)).pipe(EchoObject(typename, version));
+  const objectAnnotation = getObjectAnnotation(schema);
+  const schemaObject = createStoredSchema({ typename, version });
+  const updatedSchema = schema.annotations({
+    [ObjectAnnotationId]: { ...objectAnnotation, schemaId: schemaObject.id },
+  });
+
+  schemaObject.jsonSchema = toJsonSchema(updatedSchema);
+  return new MutableSchema(schemaObject);
 };

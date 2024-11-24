@@ -6,11 +6,11 @@ import { type Space, Filter } from '@dxos/client/echo';
 import { type EchoReactiveObject } from '@dxos/echo-db';
 import {
   create,
-  MutableSchema,
-  type ReactiveObject,
   getObjectAnnotation,
   getSchema,
   isReactiveObject,
+  MutableSchema,
+  type ReactiveObject,
   type S,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';

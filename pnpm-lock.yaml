@@ -2457,6 +2457,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../../common/node-std
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../../sdk/schema
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
