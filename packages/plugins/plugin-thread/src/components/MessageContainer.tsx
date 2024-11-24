@@ -9,7 +9,7 @@ import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'rea
 import { Surface } from '@dxos/app-framework';
 import { type MessageType } from '@dxos/plugin-space/types';
 import { PublicKey } from '@dxos/react-client';
-import { type EchoReactiveObject, type Expando, type SpaceMember } from '@dxos/react-client/echo';
+import { type ReactiveEchoObject, type Expando, type SpaceMember } from '@dxos/react-client/echo';
 import { useIdentity, type Identity } from '@dxos/react-client/halo';
 import { Button, ButtonGroup, Tooltip, useOnTransition, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, useTextEditor } from '@dxos/react-ui-editor';
@@ -163,7 +163,7 @@ const TextboxBlock = ({
   return <div role='none' ref={parentRef} className='mie-4' {...focusAttributes} />;
 };
 
-const MessageBlockObjectTile: MosaicTileComponent<EchoReactiveObject<any>> = forwardRef(
+const MessageBlockObjectTile: MosaicTileComponent<ReactiveEchoObject<any>> = forwardRef(
   ({ draggableStyle, draggableProps, item, active, ref: _ref, ...props }, forwardedRef) => {
     let title = item.name ?? item.title ?? item.type ?? 'Object';
     if (typeof title !== 'string') {

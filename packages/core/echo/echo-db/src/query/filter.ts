@@ -15,11 +15,11 @@ import {
 } from '@dxos/protocols/buf/dxos/echo/filter_pb';
 import { type QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { type EchoReactiveObject, getReferenceWithSpaceKey } from '../echo-handler';
+import { type ReactiveEchoObject, getReferenceWithSpaceKey } from '../echo-handler';
 
 export const hasType =
-  <T extends EchoReactiveObject<T>>(type: { new (): T }) =>
-  (object: EchoReactiveObject<any> | undefined): object is T =>
+  <T extends ReactiveEchoObject<T>>(type: { new (): T }) =>
+  (object: ReactiveEchoObject<any> | undefined): object is T =>
     object instanceof type;
 
 // TODO(burdon): Operators (EQ, NE, GT, LT, IN, etc.)

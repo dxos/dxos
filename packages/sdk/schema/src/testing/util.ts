@@ -4,7 +4,7 @@
 
 import { Effect } from 'effect';
 
-import { type EchoDatabase, type EchoReactiveObject } from '@dxos/echo-db';
+import { type EchoDatabase, type ReactiveEchoObject } from '@dxos/echo-db';
 import { type BaseObject, type AbstractTypedObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
@@ -14,7 +14,7 @@ export const createObjects = async <T extends BaseObject>(
   db: EchoDatabase,
   type: AbstractTypedObject,
   count: number,
-): Promise<EchoReactiveObject<T>[]> => {
+): Promise<ReactiveEchoObject<T>[]> => {
   const objects = await Effect.runPromise(createObjectPipeline(count, createObject(type)));
   log('created', { type: type.typename, objects });
   return objects.map((obj) => db.add(obj));

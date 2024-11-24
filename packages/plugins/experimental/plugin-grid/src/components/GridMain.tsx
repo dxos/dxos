@@ -6,7 +6,7 @@ import React, { forwardRef, type FC } from 'react';
 
 import { Surface, parseMetadataResolverPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { DocumentType } from '@dxos/plugin-markdown/types';
-import { create, type EchoReactiveObject, getSpace, isEchoObject } from '@dxos/react-client/echo';
+import { create, type ReactiveEchoObject, getSpace, isEchoObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import type { MosaicDropEvent, MosaicOperation, MosaicTileAction } from '@dxos/react-ui-mosaic';
 import {
@@ -38,7 +38,7 @@ export const colors: Record<string, string> = {
 };
 
 // TODO(burdon): Need lenses (which should be normalized outside of card).
-export const getObject = (item: any): EchoReactiveObject<any> => item.node?.data ?? item.object ?? item;
+export const getObject = (item: any): ReactiveEchoObject<any> => item.node?.data ?? item.object ?? item;
 
 const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
   const space = getSpace(grid);

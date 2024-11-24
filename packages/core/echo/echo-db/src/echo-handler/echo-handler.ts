@@ -25,7 +25,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { setDeep, deepMapValues, defaultMap, getDeep } from '@dxos/util';
 
-import { type EchoReactiveObject, createObject, isEchoObject } from './create';
+import { type ReactiveEchoObject, createObject, isEchoObject } from './create';
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
 import {
@@ -483,7 +483,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       // Can be caused not using `object(Expando, { ... })` constructor.
       // TODO(dmaretskyi): Add better validation.
       invariant(otherObjId != null);
-      target[symbolInternals].linkCache.set(otherObjId, otherEchoObj as EchoReactiveObject<any>);
+      target[symbolInternals].linkCache.set(otherObjId, otherEchoObj as ReactiveEchoObject<any>);
       return new Reference(otherObjId);
     }
 
@@ -505,7 +505,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   /**
    * Lookup referenced object.
    */
-  lookupRef(target: ProxyTarget, ref: Reference): EchoReactiveObject<any> | undefined {
+  lookupRef(target: ProxyTarget, ref: Reference): ReactiveEchoObject<any> | undefined {
     const database = target[symbolInternals].database;
     if (database) {
       // This doesn't clean-up properly if the ref at key gets changed, but it doesn't matter since `_onLinkResolved` is idempotent.
@@ -663,8 +663,8 @@ export const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
   }
 };
 
-// TODO(burdon): Move ProxyTarget def to echo-schema and make EchoReactiveObject inherit?
-export const getObjectCore = <T extends BaseObject>(obj: EchoReactiveObject<T>): ObjectCore => {
+// TODO(burdon): Move ProxyTarget def to echo-schema and make ReactiveEchoObject inherit?
+export const getObjectCore = <T extends BaseObject>(obj: ReactiveEchoObject<T>): ObjectCore => {
   const { core } = (obj as unknown as ProxyTarget)[symbolInternals];
   return core;
 };

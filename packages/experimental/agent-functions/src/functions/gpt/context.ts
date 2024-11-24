@@ -3,7 +3,7 @@
 //
 
 import { type Space } from '@dxos/client/echo';
-import { type EchoReactiveObject, createDocAccessor, getTextInRange, loadObjectReferences } from '@dxos/echo-db';
+import { type ReactiveEchoObject, createDocAccessor, getTextInRange, loadObjectReferences } from '@dxos/echo-db';
 import { type MutableSchema, toJsonSchema } from '@dxos/echo-schema';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { type MessageType, type ThreadType } from '@dxos/plugin-space/types';
@@ -11,7 +11,7 @@ import { type MessageType, type ThreadType } from '@dxos/plugin-space/types';
 // TODO(burdon): Evolve.
 export type RequestContext = {
   schema?: Map<string, MutableSchema>;
-  object?: EchoReactiveObject<any>;
+  object?: ReactiveEchoObject<any>;
   text?: string;
 };
 
@@ -20,7 +20,7 @@ export const createContext = async (
   message: MessageType,
   thread: ThreadType | undefined,
 ): Promise<RequestContext> => {
-  let object: EchoReactiveObject<any> | undefined;
+  let object: ReactiveEchoObject<any> | undefined;
 
   const contextObjectId = message.context?.id;
   if (contextObjectId) {

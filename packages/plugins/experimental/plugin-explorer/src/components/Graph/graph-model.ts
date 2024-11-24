@@ -15,7 +15,7 @@ import {
 import { type GraphData, type GraphLink, GraphModel } from '@dxos/gem-spore';
 import { log } from '@dxos/log';
 import { CollectionType } from '@dxos/plugin-space/types';
-import { type EchoReactiveObject, type Space, type Subscription } from '@dxos/react-client/echo';
+import { type ReactiveEchoObject, type Space, type Subscription } from '@dxos/react-client/echo';
 
 export type SpaceGraphModelOptions = {
   schema?: boolean;
@@ -26,7 +26,7 @@ export type EchoGraphNode = SchemaGraphNode | EchoObjectGraphNode;
 type EchoObjectGraphNode = {
   id: string;
   type: 'echo-object';
-  object: EchoReactiveObject<any>;
+  object: ReactiveEchoObject<any>;
 };
 
 type SchemaGraphNode = {
@@ -45,7 +45,7 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
   };
 
   private _subscription?: Subscription;
-  private _objects?: EchoReactiveObject<any>[];
+  private _objects?: ReactiveEchoObject<any>[];
 
   constructor(private readonly _options: SpaceGraphModelOptions = {}) {
     super();
@@ -55,14 +55,14 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
     return this._graph;
   }
 
-  get objects(): EchoReactiveObject<any>[] {
+  get objects(): ReactiveEchoObject<any>[] {
     return this._objects ?? [];
   }
 
   open(space: Space, objectId?: string) {
     if (!this._subscription) {
       // TODO(burdon): Filter.
-      const query = space.db.query((object: EchoReactiveObject<any>) => !(object instanceof CollectionType));
+      const query = space.db.query((object: ReactiveEchoObject<any>) => !(object instanceof CollectionType));
 
       this._subscription = query.subscribe(
         ({ objects }) => {
