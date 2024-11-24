@@ -1,8 +1,7 @@
-import { JsonSchemaType, JSON_SCHEMA_ECHO_REF_ID } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
-import { trim } from '../common/q';
-import { DXN } from '@dxos/keys';
 import { raise } from '@dxos/debug';
+import { JSON_SCHEMA_ECHO_REF_ID, JsonSchemaType } from '@dxos/echo-schema';
+import { DXN } from '@dxos/keys';
+import { trim } from '../common/trim';
 
 /**
  * Formats ECHO schema to be consumed by LLM.
@@ -61,14 +60,14 @@ const formatInferredRelationships = (schema: JsonSchemaType): string[] => {
   });
 };
 
-const formatNodeLabel = (typenameDxn: string) => {
+export const formatNodeLabel = (typenameDxn: string) => {
   const {
     parts: [typename],
   } = DXN.parse(typenameDxn);
   return typename.replace(/^example\.com\/type\//g, '');
 };
 
-const formatInferredRelationshipLabel = (typenameDxn: string, property: string) => {
+export const formatInferredRelationshipLabel = (typenameDxn: string, property: string) => {
   const nodeLabel = formatNodeLabel(typenameDxn);
   return `${nodeLabel}_${property}`.toUpperCase();
 };

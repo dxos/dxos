@@ -17,11 +17,12 @@ export const Contact = S.Struct({
     },
     description: 'Contact information.',
   });
+export interface Contact extends S.Schema.Type<typeof Contact> {}
 
 export const Project = S.Struct({
   id: ObjectId,
   name: S.String.annotations({ description: 'The name of the project.' }),
-  description: S.String.annotations({ description: 'The description of the project.' }),
+  description: S.optional(S.String).annotations({ description: 'The description of the project.' }),
 })
   .pipe(S.mutable)
   .annotations({
@@ -31,11 +32,12 @@ export const Project = S.Struct({
     },
     description: 'Contact information.',
   });
+export interface Project extends S.Schema.Type<typeof Project> {}
 
 export const Task = S.Struct({
   id: ObjectId,
   name: S.String.annotations({ description: 'The name of the task.' }),
-  description: S.String.annotations({ description: 'The description of the task.' }),
+  description: S.optional(S.String).annotations({ description: 'The description of the task.' }),
   project: ref(Project),
   assignee: ref(Contact),
 })
@@ -47,6 +49,7 @@ export const Task = S.Struct({
     },
     description: 'Contact information.',
   });
+export interface Task extends S.Schema.Type<typeof Task> {}
 
 export const Org = S.Struct({
   id: ObjectId,
@@ -62,3 +65,4 @@ export const Org = S.Struct({
     },
     description: 'Contact information.',
   });
+export interface Org extends S.Schema.Type<typeof Org> {}
