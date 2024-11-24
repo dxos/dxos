@@ -10,7 +10,7 @@ import {
   type QueryResult,
   type QuerySource,
   type QuerySourceProvider,
-  type EchoReactiveObject,
+  type ReactiveEchoObject,
 } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
@@ -167,7 +167,7 @@ export class AgentQuerySource implements QuerySource {
   }
 }
 
-const getEchoObjectFromSnapshot = (objSnapshot: EchoObjectProto): EchoReactiveObject<any> | undefined => {
+const getEchoObjectFromSnapshot = (objSnapshot: EchoObjectProto): ReactiveEchoObject<any> | undefined => {
   invariant(objSnapshot.genesis, 'Genesis is undefined.');
   invariant(objSnapshot.snapshot, 'Genesis model type is undefined.');
 

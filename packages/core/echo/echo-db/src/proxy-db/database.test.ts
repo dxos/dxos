@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import {
+  type BaseObject,
   create,
   dangerouslySetProxyId,
   Expando,
@@ -42,7 +43,39 @@ describe('Database', () => {
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);
     const { db } = await testBuilder.createDatabase();
-    db.add(create(Expando, { str: 'test' }));
+
+    db.add(create(Expando, { name: 'Test' }));
+    await db.flush();
+  });
+
+  test('add object multiple times', async () => {
+    const testBuilder = new EchoTestBuilder();
+    await openAndClose(testBuilder);
+    const { db } = await testBuilder.createDatabase();
+
+    // TODO(burdon): Require create for expando?
+    const obj1 = db.add({ name: 'Test' });
+    await db.flush();
+    // TODO(burdon): Should fail?
+    const obj2 = db.add(obj1);
+    await db.flush();
+    expect(obj1).to.eq(obj2);
+    const { objects } = await db.query().run();
+    expect(objects).to.have.length(1);
+  });
+
+  test('remove object multiple times', async () => {
+    const testBuilder = new EchoTestBuilder();
+    await openAndClose(testBuilder);
+    const { db } = await testBuilder.createDatabase();
+
+    const obj = db.add({ name: 'Test' });
+    await db.flush();
+
+    db.remove(obj);
+    await db.flush();
+
+    db.remove(obj);
     await db.flush();
   });
 
@@ -52,35 +85,43 @@ describe('Database', () => {
     const task = create(Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
-      assignee: create(Expando, { name: 'Bob' }),
+      assignee: create(Expando, { name: 'Test' }),
     });
     db.add(task);
     await db.flush();
 
-    inspect(task);
+    const value = inspect(task);
+    expect(typeof value).to.eq('string');
   });
 
-  test('query all', async () => {
+  test('add and remove objects', async () => {
     const { db } = await builder.createDatabase();
 
-    const n = 10;
-    for (const _ of Array.from({ length: n })) {
-      const obj = create(Expando, {});
-      db.add(obj);
+    // Add objects.
+    const add = 10;
+    {
+      for (const _ of Array.from({ length: add })) {
+        db.add(create(Expando, {}));
+      }
+      await db.flush();
+
+      const { objects } = await db.query().run();
+      expect(objects.length).to.eq(add);
     }
-    await db.flush();
+
+    // Remove objects.
+    const remove = 3;
+    {
+      const { objects } = await db.query().run();
+      for (const obj of objects.slice(0, remove)) {
+        db.remove(obj);
+      }
+      await db.flush();
+    }
 
     {
       const { objects } = await db.query().run();
-      expect(objects.length).to.eq(n);
-    }
-
-    db.remove((await db.query().run()).objects[0]);
-    await db.flush();
-
-    {
-      const { objects } = await db.query().run();
-      expect(objects.length).to.eq(n - 1);
+      expect(objects.length).to.eq(add - remove);
     }
   });
 
@@ -385,7 +426,7 @@ describe('Database', () => {
     return { db, graph };
   };
 
-  const addToDatabase = async <T>(obj: ReactiveObject<T>) => {
+  const addToDatabase = async <T extends BaseObject>(obj: ReactiveObject<T>) => {
     const { db } = await createDbWithTypes();
     db.add(obj);
     await db.flush();

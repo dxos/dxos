@@ -11,6 +11,7 @@ import {
   getSchema,
   isReactiveObject,
   requireTypeReference,
+  type BaseObject,
   type HasId,
   MutableSchema,
   type ObjectMeta,
@@ -33,10 +34,10 @@ import {
 import { type DecodedAutomergePrimaryValue, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 
-// TODO(burdon): Rename EchoObject (clashes with proto def).
-export type EchoReactiveObject<T> = ReactiveObject<T> & HasId;
+// TODO(burdon): Rename EchoObject and reconcile with proto name.
+export type ReactiveEchoObject<T extends BaseObject> = ReactiveObject<T> & HasId;
 
-export const isEchoObject = (value: unknown): value is EchoReactiveObject<any> =>
+export const isEchoObject = (value: unknown): value is ReactiveEchoObject<any> =>
   isReactiveObject(value) && getProxyHandler(value) instanceof EchoReactiveHandler;
 
 /**
@@ -44,29 +45,28 @@ export const isEchoObject = (value: unknown): value is EchoReactiveObject<any> =
  * @internal
  */
 // TODO(burdon): Document lifecycle.
-export const createObject = <T extends {}>(props: T): EchoReactiveObject<T> => {
-  invariant(!isEchoObject(props));
-  const schema = getSchema(props);
+export const createObject = <T extends BaseObject>(obj: T): ReactiveEchoObject<T> => {
+  invariant(!isEchoObject(obj));
+  const schema = getSchema(obj);
   if (schema != null) {
     validateSchema(schema);
   }
-  validateInitialProps(props);
+  validateInitialProps(obj);
 
   const core = new ObjectCore();
-  if (isReactiveObject(props)) {
+  if (isReactiveObject(obj)) {
     // Already an echo-schema reactive object.
-    const proxy = props as any;
-    const meta = getProxyTarget<ObjectMeta>(getMeta(proxy));
+    const meta = getProxyTarget<ObjectMeta>(getMeta(obj));
 
-    // TODO(burdon): Document.
-    const slot = getProxySlot(proxy);
+    // TODO(burdon): Requires comment.
+    const slot = getProxySlot(obj);
     slot.setHandler(EchoReactiveHandler.instance);
 
     const target = slot.target as ProxyTarget;
     target[symbolInternals] = initInternals(core);
     target[symbolPath] = [];
     target[symbolNamespace] = DATA_NAMESPACE;
-    slot.handler._proxyMap.set(target, proxy);
+    slot.handler._proxyMap.set(target, obj);
 
     target[symbolInternals].subscriptions.push(core.updates.on(() => target[symbolInternals].signal.notifyWrite()));
 
@@ -81,13 +81,13 @@ export const createObject = <T extends {}>(props: T): EchoReactiveObject<T> => {
       target[symbolInternals].core.setMeta(meta);
     }
 
-    return proxy;
+    return obj as any;
   } else {
     const target: ProxyTarget = {
       [symbolInternals]: initInternals(core),
       [symbolPath]: [],
       [symbolNamespace]: DATA_NAMESPACE,
-      ...(props as any),
+      ...(obj as any),
     };
 
     target[symbolInternals].subscriptions.push(core.updates.on(() => target[symbolInternals].signal.notifyWrite()));
@@ -100,7 +100,7 @@ export const createObject = <T extends {}>(props: T): EchoReactiveObject<T> => {
 };
 
 // TODO(burdon): Call and remove subscriptions.
-export const destroyObject = <T extends {}>(proxy: EchoReactiveObject<T>) => {
+export const destroyObject = <T extends BaseObject>(proxy: ReactiveEchoObject<T>) => {
   invariant(isEchoObject(proxy));
   const target: ProxyTarget = getProxyTarget(proxy);
   const internals: ObjectInternals = target[symbolInternals];
@@ -122,7 +122,7 @@ const initCore = (core: ObjectCore, target: ProxyTarget) => {
 /**
  * @internal
  */
-export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: EchoDatabase): EchoReactiveObject<any> => {
+export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: EchoDatabase): ReactiveEchoObject<any> => {
   const target: ProxyTarget = {
     [symbolInternals]: initInternals(core, database),
     [symbolPath]: [],
@@ -182,7 +182,7 @@ const initInternals = (core: ObjectCore, database?: EchoDatabase): ObjectInterna
   core,
   targetsMap: new ComplexMap((key) => JSON.stringify(key)),
   signal: compositeRuntime.createSignal(),
-  linkCache: new Map<string, EchoReactiveObject<any>>(),
+  linkCache: new Map<string, ReactiveEchoObject<any>>(),
   database,
   subscriptions: [],
 });

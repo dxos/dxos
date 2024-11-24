@@ -17,7 +17,7 @@ class EmptySchemaType extends TypedObject({
 
 describe('dynamic schema', () => {
   test('getProperties filters out id and unwraps optionality', async () => {
-    class GeneratedSchema extends TypedObject({
+    class TestSchema extends TypedObject({
       typename: 'example.com/type/Test',
       version: '0.1.0',
     })({
@@ -25,7 +25,7 @@ describe('dynamic schema', () => {
       field2: S.Boolean,
     }) {}
 
-    const registered = createMutableSchema(GeneratedSchema);
+    const registered = createMutableSchema(TestSchema);
     expect(registered.getProperties().map((p) => [p.name, p.type])).to.deep.eq([
       ['field1', AST.stringKeyword],
       ['field2', AST.booleanKeyword],
@@ -33,14 +33,14 @@ describe('dynamic schema', () => {
   });
 
   test('addColumns', async () => {
-    class GeneratedSchema extends TypedObject({
+    class TestSchema extends TypedObject({
       typename: 'example.com/type/Test',
       version: '0.1.0',
     })({
       field1: S.String,
     }) {}
 
-    const registered = createMutableSchema(GeneratedSchema);
+    const registered = createMutableSchema(TestSchema);
     registered.addFields({ field2: S.Boolean });
     expect(registered.getProperties().map((p) => [p.name, p.type])).to.deep.eq([
       ['field1', AST.stringKeyword],

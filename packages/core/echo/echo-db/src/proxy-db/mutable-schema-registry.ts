@@ -134,6 +134,7 @@ export class MutableSchemaRegistry implements SchemaResolver {
     };
   }
 
+  // TODO(burdon): Tighten type signature to AbstractSchema?
   public addSchema(schema: S.Schema<any>): MutableSchema {
     const meta = getObjectAnnotation(schema);
     invariant(meta, 'use S.Struct({}).pipe(EchoObject(...)) or class syntax to create a valid schema');

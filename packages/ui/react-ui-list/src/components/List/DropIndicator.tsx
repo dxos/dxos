@@ -32,11 +32,16 @@ const strokeSize = 2;
 const terminalSize = 8;
 const offsetToAlignTerminalWithLine = (strokeSize - terminalSize) / 2;
 
+export type DropIndicatorProps = {
+  edge: Edge;
+  gap?: number;
+};
+
 /**
  * This is a tailwind port of `@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box`
  */
-export const DropIndicator = ({ edge, gap = '0px' }: { edge: Edge; gap?: string }) => {
-  const lineOffset = `calc(-0.5 * (${gap} + ${strokeSize}px))`;
+export const DropIndicator = ({ edge, gap = 0 }: DropIndicatorProps) => {
+  const lineOffset = `calc(-0.5 * (${gap}px + ${strokeSize}px))`;
 
   const orientation = edgeToOrientationMap[edge];
 

@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type Plugin, type PluginDefinition } from '@dxos/app-framework';
-import { create, type EchoReactiveObject, fullyQualifiedId } from '@dxos/client/echo';
+import { create, type ReactiveEchoObject, fullyQualifiedId } from '@dxos/client/echo';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { CollectionType } from '@dxos/plugin-space/types';
 import { Main } from '@dxos/react-ui';
@@ -45,7 +45,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
             icon: 'ph--stack-simple--regular',
           },
           [SECTION_IDENTIFIER]: {
-            parse: (section: { object: EchoReactiveObject<any> }, type: string) => {
+            parse: (section: { object: ReactiveEchoObject<any> }, type: string) => {
               switch (type) {
                 case 'node':
                   // TODO(wittjosiah): Remove cast.

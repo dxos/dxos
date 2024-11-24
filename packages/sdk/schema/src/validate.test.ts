@@ -6,9 +6,7 @@ import { AST, ArrayFormatter } from '@effect/schema';
 import { Either, Option } from 'effect';
 import { describe, test } from 'vitest';
 
-import { S } from '@dxos/echo-schema';
-
-import { type PropertyKey } from './properties';
+import { type PropertyKey, S } from '@dxos/echo-schema';
 
 describe('validate', () => {
   test('clamp', ({ expect }) => {
