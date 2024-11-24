@@ -35,6 +35,7 @@ See also:
       <instructions>
        Extract a list of objects that appear in the text.
        Objects can include names, places, technologies, people, concepts, etc.
+       Extracts objects that are interesting or important in the context of the text.
       </instructions>
 
       <formatting>
