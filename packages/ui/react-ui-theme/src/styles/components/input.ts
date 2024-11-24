@@ -13,30 +13,30 @@ import {
 
 import { mx } from '../../util';
 import {
-  coarseDimensions,
-  staticDisabled,
-  fineDimensions,
-  placeholderText,
-  focusRing,
-  subduedFocus,
-  fineBlockSize,
   coarseBlockSize,
-  staticFocusRing,
-  descriptionText,
-  valenceColorText,
-  getSize,
+  coarseDimensions,
   computeSize,
-  sizeValue,
+  descriptionText,
+  fineBlockSize,
+  fineDimensions,
+  focusRing,
+  getSize,
   getSizeHeight,
   getSizeWidth,
+  placeholderText,
+  sizeValue,
+  staticFocusRing,
+  staticDisabled,
+  subduedFocus,
+  valenceColorText,
 } from '../fragments';
 
 export type InputStyleProps = Partial<{
   variant: 'default' | 'subdued' | 'static';
-  disabled: boolean;
-  focused: boolean;
   density: Density;
+  disabled: boolean;
   elevation: Elevation;
+  focused: boolean;
   validationValence: MessageValence;
   size: Size;
 }>;
@@ -62,6 +62,8 @@ const booleanInputSurface =
 
 const booleanInputSurfaceHover =
   'hover:bg-unAccentHover hover:aria-checked:bg-accentSurfaceHover hover:aria-[checked=mixed]:bg-accentSurfaceHover';
+
+export const inputTextLabel = 'text-sm font-medium';
 
 export const inputValence = (valence?: MessageValence) => {
   switch (valence) {
@@ -147,7 +149,7 @@ export const inputWithSegmentsInput: ComponentFunction<InputStyleProps> = (props
   mx('font-mono selection:bg-transparent mli-auto', props.disabled && 'cursor-not-allowed', ...etc);
 
 export const inputLabel: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
-  mx('block text-sm font-medium', props.srOnly && 'sr-only', ...etc);
+  mx('block', inputTextLabel, props.srOnly && 'sr-only', ...etc);
 
 export const inputDescription: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
   mx(descriptionText, props.srOnly && 'sr-only', ...etc);

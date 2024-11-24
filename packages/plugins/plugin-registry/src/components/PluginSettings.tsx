@@ -7,7 +7,7 @@ import React, { useMemo, type PropsWithChildren } from 'react';
 import { type PluginMeta, useIntentDispatcher, usePlugins } from '@dxos/app-framework';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { Input, useTranslation } from '@dxos/react-ui';
-import { DeprecatedFormInput } from '@dxos/react-ui-data';
+import { DeprecatedFormInput } from '@dxos/react-ui-form';
 
 import { PluginList } from './PluginList';
 import { type RegistrySettingsProps } from '../RegistryPlugin';

@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react';
 
 import { createDocAccessor, fullyQualifiedId } from '@dxos/react-client/echo';
-import { parseValue, cellClassesForFieldType } from '@dxos/react-ui-data';
+import { parseValue, cellClassesForFieldType } from '@dxos/react-ui-form';
 import {
   type GridContentProps,
   type DxGridElement,

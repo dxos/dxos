@@ -3,9 +3,12 @@
 //
 
 import { type DxGrid } from './dx-grid';
-import { toCellIndex } from './util';
+import { toPlaneCellIndex } from './util';
 
-export type DxGridCellIndex = `${string},${string}`;
+export const separator = ',' as const;
+
+export type DxGridPlaneCellIndex = `${string}${typeof separator}${string}`;
+export type DxGridCellIndex = `${DxGridPlane}${typeof separator}${string}${typeof separator}${string}`;
 
 export type DxGridAxis = 'row' | 'col';
 
@@ -22,14 +25,13 @@ export type DxGridPlanePosition = Record<DxGridAxis, number>;
 export type DxGridPosition = DxGridPlanePosition & { plane: DxGridPlane };
 export type DxGridPositionNullable = DxGridPosition | null;
 
-export type DxGridAnnotatedWheelEvent = WheelEvent &
-  Partial<{
+export type DxGridAnnotatedPanEvent = (WheelEvent | PointerEvent) & { deltaX: number; deltaY: number } & Partial<{
     overscrollInline: number;
     overscrollBlock: number;
     gridId: string;
   }>;
 
-export type DxGridPlaneCells = Record<DxGridCellIndex, DxGridCellValue>;
+export type DxGridPlaneCells = Record<DxGridPlaneCellIndex, DxGridCellValue>;
 export type DxGridCells = { grid: DxGridPlaneCells } & Partial<
   Record<DxGridFixedPlane | DxGridFrozenPlane, DxGridPlaneCells>
 >;
@@ -39,7 +41,8 @@ export type DxGridAxisMeta = DxGridPlaneRecord<DxGridFrozenPlane, DxGridPlaneAxi
 
 export type DxGridPointer =
   | null
-  | ({ state: 'maybeSelecting' } & Pick<PointerEvent, 'pageX' | 'pageY'>)
+  | { state: 'panning'; pageX: number; pageY: number }
+  | { state: 'maybeSelecting'; pageX: number; pageY: number }
   | { state: 'selecting' };
 
 export type DxAxisResizeProps = Pick<DxAxisResize, 'axis' | 'plane' | 'index' | 'size'>;
@@ -151,7 +154,7 @@ export class DxAxisResizeInternal extends Event {
 export type DxEditRequestProps = Pick<DxEditRequest, 'cellIndex' | 'cellBox' | 'initialContent'>;
 
 export class DxEditRequest extends Event {
-  public readonly cellIndex: DxGridCellIndex;
+  public readonly cellIndex: DxGridPlaneCellIndex;
   public readonly cellBox: Record<'insetInlineStart' | 'insetBlockStart' | 'inlineSize' | 'blockSize', number>;
   public readonly initialContent?: string;
   constructor(props: DxEditRequestProps) {
@@ -174,8 +177,8 @@ export class DxGridCellsSelect extends Event {
   public readonly maxRow: number;
   constructor({ start, end }: DxGridRange) {
     super('dx-grid-cells-select');
-    this.start = toCellIndex(start);
-    this.end = toCellIndex(end);
+    this.start = toPlaneCellIndex(start);
+    this.end = toPlaneCellIndex(end);
     this.minCol = Math.min(start.col, end.col);
     this.maxCol = Math.max(start.col, end.col);
     this.minRow = Math.min(start.row, end.row);

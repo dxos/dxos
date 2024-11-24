@@ -145,7 +145,7 @@ describe('Integration tests', () => {
     await peer.reload();
     {
       await using db = await peer.openDatabase(spaceKey, rootUrl);
-      const outer = (await db.loadObjectById(outerId)) as any;
+      const outer = (await db.query({ id: outerId }).first()) as any;
       const loaded = new Trigger();
       using updates = updateCounter(() => {
         if (outer.inner) {

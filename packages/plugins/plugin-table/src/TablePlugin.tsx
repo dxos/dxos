@@ -12,7 +12,7 @@ import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 import { getSpace } from '@dxos/react-client/echo';
-import { translations as dataTranslations } from '@dxos/react-ui-data';
+import { translations as dataTranslations } from '@dxos/react-ui-form';
 import { TableType, initializeTable, translations as tableTranslations } from '@dxos/react-ui-table';
 import { type FieldProjection, ViewProjection, ViewType } from '@dxos/schema';
 

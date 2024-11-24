@@ -150,6 +150,9 @@ export class SpaceProxy implements Space {
     return this._db;
   }
 
+  /**
+   * @deprecated
+   */
   get crud(): CoreDatabase {
     return this._db.coreDatabase;
   }

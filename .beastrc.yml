@@ -6,6 +6,4 @@ exclude:
   - '@dxos/log'
   - '@dxos/testutils'
   - '@dxos/util'
-  - '@dxos/bare-template'
-  - '@dxos/hello-template'
   - '@dxos/docs'

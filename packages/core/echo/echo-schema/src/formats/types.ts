@@ -57,13 +57,14 @@ export enum FormatEnum {
   //
 
   DID = 'did', // Users, etc.
+  DXN = 'dxn',
   Email = 'email',
   Formula = 'formula', // Spreadsheet formula.
   Hostname = 'hostname',
   JSON = 'json',
   Markdown = 'markdown',
   Regex = 'regex',
-  URI = 'uri',
+  URL = 'url',
   UUID = 'uuid',
 
   //
@@ -119,13 +120,14 @@ export const formatToType: Record<FormatEnum, TypeEnum> = {
 
   // Strings
   [FormatEnum.DID]: TypeEnum.String,
+  [FormatEnum.DXN]: TypeEnum.String,
   [FormatEnum.Email]: TypeEnum.String,
   [FormatEnum.Formula]: TypeEnum.String,
   [FormatEnum.Hostname]: TypeEnum.String,
   [FormatEnum.JSON]: TypeEnum.String,
   [FormatEnum.Markdown]: TypeEnum.String,
   [FormatEnum.Regex]: TypeEnum.String,
-  [FormatEnum.URI]: TypeEnum.String,
+  [FormatEnum.URL]: TypeEnum.String,
   [FormatEnum.UUID]: TypeEnum.String,
 
   // Dates
@@ -143,3 +145,13 @@ export const formatToType: Record<FormatEnum, TypeEnum> = {
   // Objects
   [FormatEnum.LatLng]: TypeEnum.Object,
 };
+
+/**
+ * Allowed value options for select.
+ */
+export const OptionsAnnotationId = Symbol.for('@dxos/schema/annotation/Options');
+
+export const getOptionsAnnotation = (node: AST.AST): OptionsAnnotationType[] | undefined =>
+  pipe(AST.getAnnotation<OptionsAnnotationType[]>(OptionsAnnotationId)(node), Option.getOrUndefined);
+
+export type OptionsAnnotationType = string | number;

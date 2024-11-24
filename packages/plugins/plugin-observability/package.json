@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-observability",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "description": "DXOS app framework plugin for hooking up app observability",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,11 +10,13 @@
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs"
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./meta": {
       "types": "./dist/types/src/meta.d.ts",
-      "browser": "./dist/lib/browser/meta.mjs"
+      "browser": "./dist/lib/browser/meta.mjs",
+      "node": "./dist/lib/node-esm/meta.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -40,7 +42,7 @@
     "@dxos/plugin-client": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-ui-data": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "localforage": "^1.10.0"

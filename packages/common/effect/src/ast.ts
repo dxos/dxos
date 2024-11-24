@@ -15,7 +15,6 @@ import { nonNullable } from '@dxos/util';
 // https://effect-ts.github.io/effect/schema/AST.ts.html
 //
 
-// TODO(burdon): Handle tuples?
 export type SimpleType = 'object' | 'string' | 'number' | 'boolean' | 'enum' | 'literal';
 
 /**
@@ -45,7 +44,7 @@ export const getSimpleType = (node: AST.AST): SimpleType | undefined => {
   }
 };
 
-export const isSimpleType = (node: AST.AST) => !!getSimpleType(node);
+export const isSimpleType = (node: AST.AST): boolean => !!getSimpleType(node);
 
 //
 // Branded types
@@ -62,14 +61,6 @@ const PROP_REGEX = /\w+/;
  */
 export const JsonPath = S.NonEmptyString.pipe(S.pattern(PATH_REGEX)) as any as S.Schema<JsonPath>;
 export const JsonProp = S.NonEmptyString.pipe(S.pattern(PROP_REGEX)) as any as S.Schema<JsonProp>;
-
-/**
- * Get annotation or return undefined.
- */
-export const getAnnotation =
-  <T>(annotationId: symbol) =>
-  (node: AST.Annotated): T | undefined =>
-    pipe(AST.getAnnotation<T>(annotationId)(node), Option.getOrUndefined);
 
 export enum VisitResult {
   CONTINUE = 0,
@@ -168,7 +159,7 @@ const visitNode = (
 /**
  * Recursively descend into AST to find first node that passes the test.
  */
-// TODO(burdon): Rewrite using visitNode.
+// TODO(burdon): Rewrite using visitNode?
 export const findNode = (node: AST.AST, test: (node: AST.AST) => boolean): AST.AST | undefined => {
   if (test(node)) {
     return node;
@@ -210,8 +201,6 @@ export const findNode = (node: AST.AST, test: (node: AST.AST) => boolean): AST.A
   else if (AST.isRefinement(node)) {
     return findNode(node.from, test);
   }
-
-  return undefined;
 };
 
 /**
@@ -231,8 +220,6 @@ export const findProperty = (schema: S.Schema<any>, path: JsonPath | JsonProp): 
         }
       }
     }
-
-    return undefined;
   };
 
   return getProp(schema.ast, path.split('.') as JsonProp[]);
@@ -242,11 +229,35 @@ export const findProperty = (schema: S.Schema<any>, path: JsonPath | JsonProp): 
 // Annotations
 //
 
+const defaultAnnotations: Record<string, AST.Annotated> = {
+  ['ObjectKeyword' as const]: AST.objectKeyword,
+  ['StringKeyword' as const]: AST.stringKeyword,
+  ['NumberKeyword' as const]: AST.numberKeyword,
+  ['BooleanKeyword' as const]: AST.booleanKeyword,
+};
+
 /**
- * Recursively descend into AST to find first matching annotations
+ * Get annotation or return undefined.
+ * @param annotationId
+ * @param noDefault If true, then return undefined for effect library defined values.
  */
-export const findAnnotation = <T>(node: AST.AST, annotationId: symbol): T | undefined => {
-  const getAnnotationById = getAnnotation(annotationId);
+export const getAnnotation =
+  <T>(annotationId: symbol, noDefault = true) =>
+  (node: AST.AST): T | undefined => {
+    const value = pipe(AST.getAnnotation<T>(annotationId)(node), Option.getOrUndefined);
+    if (noDefault && value === defaultAnnotations[node._tag]?.annotations[annotationId]) {
+      return undefined;
+    }
+
+    return value;
+  };
+
+/**
+ * Recursively descend into AST to find first matching annotations.
+ * Optionally skips default annotations for basic types (e.g., 'a string').
+ */
+export const findAnnotation = <T>(node: AST.AST, annotationId: symbol, noDefault = true): T | undefined => {
+  const getAnnotationById = getAnnotation(annotationId, noDefault);
 
   const getBaseAnnotation = (node: AST.AST): T | undefined => {
     const value = getAnnotationById(node);
@@ -321,7 +332,7 @@ export const getDiscriminatedType = (node: AST.AST, value: Record<string, any> =
     return;
   }
 
-  // Match provided value.
+  // Match provided values.
   for (const type of node.types) {
     const match = AST.getPropertySignatures(type)
       .filter((prop) => props?.includes(prop.name.toString()))
@@ -338,30 +349,22 @@ export const getDiscriminatedType = (node: AST.AST, value: Record<string, any> =
   // Create union of discriminating properties.
   // NOTE: This may not work with non-overlapping variants.
   // TODO(burdon): Iterate through props and knock-out variants that don't match.
-  const p = props
-    .map((prop) => {
-      const literals = node.types
-        .map((type) => {
-          const literal = AST.getPropertySignatures(type).find((p) => p.name.toString() === prop);
-          if (literal) {
+  const fields = Object.fromEntries(
+    props
+      .map((prop) => {
+        const literals = node.types
+          .map((type) => {
+            const literal = AST.getPropertySignatures(type).find((p) => p.name.toString() === prop)!;
             invariant(AST.isLiteral(literal.type));
             return literal.type.literal;
-          } else {
-            return undefined;
-          }
-        })
-        .filter(nonNullable);
+          })
+          .filter(nonNullable);
 
-      return literals.length
-        ? {
-            name: prop,
-            literals,
-          }
-        : null;
-    })
-    .filter(nonNullable);
+        return literals.length ? [prop, S.Literal(...literals)] : undefined;
+      })
+      .filter(nonNullable),
+  );
 
-  const fields = Object.fromEntries(p.map(({ name, literals = [] }) => [name, S.Literal(...literals)]));
   const schema = S.Struct(fields);
   return schema.ast;
 };

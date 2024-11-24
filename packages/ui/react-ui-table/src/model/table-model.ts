@@ -15,7 +15,7 @@ import {
   formatForDisplay,
   formatForEditing,
   parseValue,
-} from '@dxos/react-ui-data';
+} from '@dxos/react-ui-form';
 import {
   type DxGridAxisMeta,
   type DxGridCellValue,

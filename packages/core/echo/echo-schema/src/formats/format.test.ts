@@ -16,7 +16,7 @@ describe('formats', () => {
       name: S.String,
       email: S.optional(Format.Email),
       salary: S.optional(Format.Currency({ decimals: 2, code: 'usd' })),
-      website: S.optional(Format.URI),
+      website: S.optional(Format.URL),
       birthday: S.optional(Format.Date),
       started: S.optional(Format.DateTime),
       active: S.optional(S.Boolean),

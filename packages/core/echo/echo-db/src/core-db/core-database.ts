@@ -345,9 +345,16 @@ export class CoreDatabase {
 
   private _query(filter?: FilterSource, options?: QueryOptions) {
     return new Query(
-      new CoreDatabaseQueryContext(this, this._queryService),
+      this._createQueryContext(),
       Filter.from(filter, optionsToProto({ ...options, spaceIds: [this.spaceId] })),
     );
+  }
+
+  /**
+   * @internal
+   */
+  _createQueryContext() {
+    return new CoreDatabaseQueryContext(this, this._queryService);
   }
 
   /**

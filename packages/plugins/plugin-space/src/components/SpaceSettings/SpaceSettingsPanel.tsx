@@ -10,7 +10,7 @@ import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { DeviceType, useDevices } from '@dxos/react-client/halo';
 import { Input, useTranslation } from '@dxos/react-ui';
-import { DeprecatedFormInput } from '@dxos/react-ui-data';
+import { DeprecatedFormInput } from '@dxos/react-ui-form';
 
 import { SPACE_PLUGIN } from '../../meta';
 

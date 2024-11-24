@@ -10,7 +10,7 @@ export default [
       [DECK_PLUGIN]: {
         'main header label': 'Main header',
         'open navigation sidebar label': 'Open navigation sidebar',
-        'open complementary sidebar label': 'Open complementary sidebar',
+        'open complementary sidebar label': 'Open sidebar',
         'plugin error message': 'Content failed to render.',
         'content fallback message': 'Unsupported',
         'content fallback description':
@@ -39,7 +39,8 @@ export default [
         'pin end label': 'Pin to the right sidebar',
         'increment start label': 'Move to the left',
         'increment end label': 'Move to the right',
-        'solo plank label': 'Toggle solo mode',
+        'show deck plank label': 'Return to deck',
+        'show solo plank label': 'Maximize',
         'close label': 'Close',
         'minify label': 'Minify',
         'settings overscroll label': 'Plank Overscrolling',

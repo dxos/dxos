@@ -7,7 +7,6 @@ import React, { useEffect, useMemo } from 'react';
 import { LayoutAction, type Plugin, useIntentDispatcher, useResolvePlugins } from '@dxos/app-framework';
 import { type ThreadType } from '@dxos/plugin-space';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { ScrollArea } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
 import { nonNullable } from '@dxos/util';
 
@@ -60,54 +59,44 @@ export const ThreadComplementary = ({
   const qualifiedSubjectId = fullyQualifiedId(subject);
 
   return (
-    <div role='none' className='contents'>
-      <ScrollArea.Root classNames='row-span-2'>
-        <ScrollArea.Viewport>
-          <CommentsContainer
-            threads={threads}
-            detached={detachedIds}
-            currentId={attended.includes(qualifiedSubjectId) ? current : undefined}
-            showResolvedThreads={showResolvedThreads}
-            onThreadAttend={(thread) => {
-              const threadId = fullyQualifiedId(thread);
-              if (current !== threadId) {
-                current = threadId;
+    <CommentsContainer
+      threads={threads}
+      detached={detachedIds}
+      currentId={attended.includes(qualifiedSubjectId) ? current : undefined}
+      showResolvedThreads={showResolvedThreads}
+      onThreadAttend={(thread) => {
+        const threadId = fullyQualifiedId(thread);
+        if (current !== threadId) {
+          current = threadId;
 
-                void dispatch?.([
-                  {
-                    action: LayoutAction.SCROLL_INTO_VIEW,
-                    data: {
-                      id: fullyQualifiedId(subject),
-                      thread: threadId,
-                      cursor: thread.anchor,
-                    },
-                  },
-                ]);
-              }
-            }}
-            onThreadDelete={(thread) => {
-              return dispatch({ plugin: THREAD_PLUGIN, action: ThreadAction.DELETE, data: { subject, thread } });
-            }}
-            onMessageDelete={(thread, messageId) =>
-              dispatch({
-                plugin: THREAD_PLUGIN,
-                action: ThreadAction.DELETE_MESSAGE,
-                data: { subject, thread, messageId },
-              })
-            }
-            onThreadToggleResolved={(thread) =>
-              dispatch({ plugin: THREAD_PLUGIN, action: ThreadAction.TOGGLE_RESOLVED, data: { thread } })
-            }
-            onComment={(thread) => {
-              void dispatch({ action: ThreadAction.ON_MESSAGE_ADD, data: { thread, subject } });
-            }}
-          />
-          <div role='none' className='bs-10' />
-          <ScrollArea.Scrollbar>
-            <ScrollArea.Thumb />
-          </ScrollArea.Scrollbar>
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
-    </div>
+          void dispatch?.([
+            {
+              action: LayoutAction.SCROLL_INTO_VIEW,
+              data: {
+                id: fullyQualifiedId(subject),
+                thread: threadId,
+                cursor: thread.anchor,
+              },
+            },
+          ]);
+        }
+      }}
+      onThreadDelete={(thread) => {
+        return dispatch({ plugin: THREAD_PLUGIN, action: ThreadAction.DELETE, data: { subject, thread } });
+      }}
+      onMessageDelete={(thread, messageId) =>
+        dispatch({
+          plugin: THREAD_PLUGIN,
+          action: ThreadAction.DELETE_MESSAGE,
+          data: { subject, thread, messageId },
+        })
+      }
+      onThreadToggleResolved={(thread) =>
+        dispatch({ plugin: THREAD_PLUGIN, action: ThreadAction.TOGGLE_RESOLVED, data: { thread } })
+      }
+      onComment={(thread) => {
+        void dispatch({ action: ThreadAction.ON_MESSAGE_ADD, data: { thread, subject } });
+      }}
+    />
   );
 };

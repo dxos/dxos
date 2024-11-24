@@ -126,7 +126,7 @@ export const SpaceListPanel: FC = () => {
     return {
       key: space.key,
       name: space.isOpen ? space.properties.name : undefined,
-      objects: space.db.objects.length,
+      objects: -1, // TODO(dmaretskyi): Fix this.
       members: space.members.get().length,
       startup: open && ready ? ready.getTime() - open.getTime() : -1,
       isOpen: space.isOpen,
