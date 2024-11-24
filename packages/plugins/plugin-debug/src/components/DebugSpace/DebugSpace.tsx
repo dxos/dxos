@@ -4,6 +4,7 @@
 
 import React, { type FC, useContext, useMemo, useState } from 'react';
 
+import { createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { type ReactiveObject } from '@dxos/echo-schema';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
@@ -16,7 +17,6 @@ import { Icon, IconButton, Input, type IconProps, type TextInputProps, Toolbar, 
 import { safeParseInt } from '@dxos/util';
 
 import { ObjectCreator } from './ObjectCreator';
-import { createSpaceObjectGenerator } from './testing';
 import { DebugContext } from '../../types';
 import { Container } from '../Container';
 

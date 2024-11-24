@@ -9,7 +9,7 @@ import { type EchoReactiveObject, type ReactiveObject, type Space } from '@dxos/
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { createColumnBuilder, type TableColumnDef, Table } from '@dxos/react-ui-table/deprecated';
 
-const CREATE_OBJECTS_IN_ONE_CHUNK = 10;
+const BATCH_SIZE = 10;
 
 export type CreateObjectsParams = {
   schema: string;
@@ -48,7 +48,7 @@ export const ObjectCreator = ({ space, onAddObjects }: ObjectCreatorProps) => {
       let objectsCreated = 0;
       while (objectsCreated < params.objectsCount) {
         const objects = (await generator.createObjects({
-          [params.schema]: Math.min(CREATE_OBJECTS_IN_ONE_CHUNK, params.objectsCount - objectsCreated),
+          [params.schema]: Math.min(BATCH_SIZE, params.objectsCount - objectsCreated),
         })) as EchoReactiveObject<any>[];
 
         await generator.mutateObjects(objects, {
