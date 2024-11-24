@@ -29,7 +29,7 @@ export const FieldPath = (path: string) => PropertyMeta(FIELD_PATH_ANNOTATION, p
 /**
  * @internal
  */
-// TODO(dmaretskyi): Document.
+// TODO(burdon): Comment required.
 export const schemaVariance = {
   _A: (_: any) => _,
   _I: (_: any) => _,
@@ -40,7 +40,7 @@ export const schemaVariance = {
 // JSON Schema
 //
 
-// TODO(burdon): Reuse/reconcile with ScalarTypeEnum.
+// TODO(burdon): Reuse/reconcile with ScalarTypeEnum (handle arrays).
 const SimpleTypes = S.Literal('array', 'boolean', 'integer', 'null', 'number', 'object', 'string');
 
 const NonNegativeInteger = S.Number.pipe(S.greaterThanOrEqualTo(0));
