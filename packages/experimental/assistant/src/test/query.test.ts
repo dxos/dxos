@@ -11,6 +11,9 @@ import { AnthropicBackend } from '../conversation/backend/anthropic';
 import { runLLM } from '../conversation/conversation';
 import { createUserMessage, defineTool, LLMToolResult } from '../conversation/types';
 import { parseCypherQuery } from '../cypher/parser';
+import { formatJsonSchemaForLLM } from '../cypher/schema';
+import { Contact, Org, Project, Task } from './test-schema';
+import { toJsonSchema } from '@dxos/echo-schema';
 
 test('cypher query SDK', async () => {
   const cypherTool = defineTool({
@@ -43,26 +46,19 @@ test('cypher query SDK', async () => {
     },
   });
 
-  // TODO(dmaretskyi): Employee -> Contact.
+  const schemaTypes = [Org, Project, Task, Contact];
+
   const result = await runLLM({
     model: '@anthropic/claude-3-5-sonnet-20241022',
     messages: [
       createUserMessage(`
         You have access to ECHO graph database. You can query the database to get data to satisfy user prompts.
 
-        Available schema are: Org, Employee, Project, Task.
+        Database schema is defined in pseud-cypher syntax. The schema is:
 
-        Org(name: string)
-        Employee(name: string)
-        Project(name: string)
-
-        Links:
-
-        (org:Org)-[:HAS_EMPLOYEE]->(employee:Employee)
-        (org:Org)-[:HAS_PROJECT]->(project:Project)
-        (employee:Employee)-[:WORKS_ON]->(project:Project)
-        
-        
+        <schema>
+          ${formatJsonSchemaForLLM(schemaTypes.map((schema) => toJsonSchema(schema)))}
+        <schema>
         `),
       createUserMessage(
         'If you are missing data to satisfy the user request, use the available tools to get the data.',
@@ -79,3 +75,6 @@ test('cypher query SDK', async () => {
 const backend = new AnthropicBackend({
   apiKey: process.env.ANTHROPIC_API_KEY!,
 });
+
+
+// MATCH (org:Org {name: 'DXOS'})-[:ORG_EMPLOYEES]->(c:Contact)<-[:TASK_ASSIGNEE]-(t:Task)-[:TASK_PROJECT]->(p:Project {name: 'Composer'}) RETURN c.name
