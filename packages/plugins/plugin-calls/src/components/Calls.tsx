@@ -17,8 +17,8 @@ const queryClient = new QueryClient();
 export type CallsProps = {
   roomName: string;
   iceServers: RTCIceServer[];
-  noRouter?: boolean;
   username: string;
+  noRouter?: boolean;
 };
 
 /**

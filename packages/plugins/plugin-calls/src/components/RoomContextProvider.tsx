@@ -97,7 +97,6 @@ const Room = ({
     iceServers,
     apiBase: `${CALLS_URL}/api/calls`,
   });
-  const roomHistory = useRoomHistory(peer, room);
 
   const scaleResolutionDownBy = useMemo(() => {
     const videoStreamTrack = userMedia.videoStreamTrack;
@@ -152,7 +151,6 @@ const Room = ({
     userMedia,
     userDirectoryUrl: undefined,
     peer,
-    roomHistory,
     iceConnectionState,
     room,
     pushedTracks: {

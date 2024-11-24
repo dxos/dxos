@@ -20,7 +20,7 @@ const Story = () => {
 
   return (
     <div role='none' className='flex flex-grow flex-col row-span-2 is-full overflow-hidden'>
-      <Calls roomName={'test-room'} iceServers={config.get('runtime.services.ice') ?? []} />
+      <Calls username={'stories-user'} roomName={'test-room'} iceServers={config.get('runtime.services.ice') ?? []} />
     </div>
   );
 };

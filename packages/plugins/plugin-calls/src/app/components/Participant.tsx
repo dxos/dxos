@@ -7,6 +7,8 @@ import React, { forwardRef, useEffect, useMemo } from 'react';
 import { Flipped } from 'react-flip-toolkit';
 import { combineLatest, fromEvent, map, of, switchMap } from 'rxjs';
 
+import { nonNullable } from '@dxos/util';
+
 import { AudioGlow } from './AudioGlow';
 import { AudioIndicator } from './AudioIndicator';
 import { Button } from './Button';
@@ -21,7 +23,6 @@ import { useSubscribedState } from '../hooks/rxjsHooks';
 import { useRoomContext } from '../hooks/useRoomContext';
 import { useUserMetadata } from '../hooks/useUserMetadata';
 import type { User } from '../types/Messages';
-import isNonNullable from '../utils/isNonNullable';
 import populateTraceLink from '../utils/populateTraceLink';
 import { ewma } from '../utils/rxjs/ewma';
 import { getPacketLoss$ } from '../utils/rxjs/getPacketLoss$';
@@ -84,7 +85,7 @@ export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div
     }, [flipId, isScreenShare, setPinnedId]);
 
     const packetLoss$ = useMemo(
-      () => getPacketLoss$(peer.peerConnection$, of([audioTrack, videoTrack].filter(isNonNullable))).pipe(ewma(5000)),
+      () => getPacketLoss$(peer.peerConnection$, of([audioTrack, videoTrack].filter(nonNullable))).pipe(ewma(5000)),
       [audioTrack, peer.peerConnection$, videoTrack],
     );
 

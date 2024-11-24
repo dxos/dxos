@@ -8,6 +8,8 @@ import { Flipper } from 'react-flip-toolkit';
 import { useNavigate } from 'react-router-dom';
 import { useMeasure, useMount, useWindowSize } from 'react-use';
 
+import { nonNullable } from '@dxos/util';
+
 import { Button } from '../app/components/Button';
 import { CameraButton } from '../app/components/CameraButton';
 import { CopyButton } from '../app/components/CopyButton';
@@ -30,7 +32,6 @@ import { useRoomContext } from '../app/hooks/useRoomContext';
 import useStageManager from '../app/hooks/useStageManager';
 import { useUserJoinLeaveToasts } from '../app/hooks/useUserJoinLeaveToasts';
 import { calculateLayout } from '../app/utils/calculateLayout';
-import isNonNullable from '../app/utils/isNonNullable';
 
 const useDebugEnabled = () => {
   const [enabled, setEnabled] = useState(false);
@@ -180,7 +181,7 @@ const JoinedRoom = () => {
   );
 
   return (
-    <PullAudioTracks audioTracks={otherUsers.map((u) => u.tracks.audio).filter(isNonNullable)}>
+    <PullAudioTracks audioTracks={otherUsers.map((u) => u.tracks.audio).filter(nonNullable)}>
       <div className='flex flex-col h-full bg-white dark:bg-zinc-800'>
         <Flipper flipKey={totalUsers} className='relative flex-grow overflow-hidden isolate'>
           <div

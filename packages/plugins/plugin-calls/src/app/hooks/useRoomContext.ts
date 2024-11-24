@@ -21,7 +21,6 @@ export type RoomContextType = {
   peer: RxjsPeer;
   iceConnectionState: RTCIceConnectionState;
   room: ReturnType<typeof useRoom>;
-  roomHistory: ReturnType<typeof useRoomHistory>;
   pushedTracks: {
     video?: string;
     audio?: string;

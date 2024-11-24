@@ -42,6 +42,7 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@heroicons/react": "^2.1.5",
     "@mediapipe/selfie_segmentation": "^0.1.1675465747",
     "@preact/signals-core": "^1.6.0",
