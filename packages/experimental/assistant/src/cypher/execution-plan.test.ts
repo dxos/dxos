@@ -15,6 +15,7 @@ test.only('complex query', () => {
       `MATCH (org:Org {name: 'DXOS'})-[:ORG_EMPLOYEES]->(c:Contact)<-[:TASK_ASSIGNEE]-(:Task)-[:TASK_PROJECT]->(p:Project {name: 'Composer'}) RETURN c.name`,
     ),
   );
+  log.info('', { plan });
   for (const step of plan.steps) {
     log.info('', { step });
   }

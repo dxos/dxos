@@ -53,6 +53,9 @@ export type ExecutionPlanStep =
 
 export type ExecutionPlan = {
   steps: ExecutionPlanStep[];
+  output: {
+    fields: string[];
+  };
 };
 
 export const createExecutionPlan = (query: ParsedQuery): ExecutionPlan => {
@@ -74,6 +77,9 @@ class ExecutionPlanBuilder {
         ...(query.ast.whereClause ? this.createStepsForWhereClause(query.ast.whereClause) : []),
         ...this.createStepsForReturnClause(query.ast.returnClause),
       ],
+      output: {
+        fields: this.getOutputFields(query.ast.returnClause),
+      },
     };
   }
 
@@ -176,6 +182,10 @@ class ExecutionPlanBuilder {
         })),
       },
     ];
+  }
+
+  getOutputFields(returnClause: ReturnClause): string[] {
+    return returnClause.fields.map((field) => field.path.map((p) => p.name).join('_'));
   }
 }
 
