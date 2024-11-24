@@ -304,6 +304,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   }
 }
 
+// TODO(burdon): Create APIError class.
 const createSchemaNotRegisteredError = (schema?: any) => {
   const message = 'Schema not registered';
 
