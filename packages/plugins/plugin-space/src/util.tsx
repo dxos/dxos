@@ -200,6 +200,7 @@ export const constructSpaceNode = ({
   return {
     id: space.id,
     type: SPACE_TYPE,
+    cacheable: true,
     data: space,
     properties: {
       ...partials,
@@ -435,6 +436,7 @@ export const createObjectNode = ({
   return {
     id: fullyQualifiedId(object),
     type,
+    cacheable: true,
     data: object,
     properties: {
       ...partials,

@@ -8,7 +8,7 @@ import { asyncTimeout, Trigger } from '@dxos/async';
 import { type ReactiveObject, create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { nonNullable } from '@dxos/util';
+import { type MakeOptional, nonNullable } from '@dxos/util';
 
 import { type Relation, type Node, type NodeArg, type NodeFilter, isActionLike, actionGroupSymbol } from './node';
 
@@ -66,8 +66,7 @@ export type GraphTraversalOptions = {
 };
 
 export type GraphParams = {
-  // TODO(wittjosiah): Make data optional instead of omitting.
-  nodes?: Omit<Node, 'data'>[];
+  nodes?: MakeOptional<Node, 'data' | 'cacheable'>[];
   edges?: Record<string, string[]>;
   onInitialNode?: Graph['_onInitialNode'];
   onInitialNodes?: Graph['_onInitialNodes'];
@@ -96,15 +95,25 @@ export class Graph {
   readonly _edges: Record<string, ReactiveObject<{ inbound: string[]; outbound: string[] }>> = {};
 
   constructor({ nodes, edges, onInitialNode, onInitialNodes, onRemoveNode }: GraphParams = {}) {
-    this._nodes[ROOT_ID] = this._constructNode({ id: ROOT_ID, type: ROOT_TYPE, properties: {}, data: null });
+    this._onInitialNode = onInitialNode;
+    this._onInitialNodes = onInitialNodes;
+    this._onRemoveNode = onRemoveNode;
+
+    this._nodes[ROOT_ID] = this._constructNode({
+      id: ROOT_ID,
+      type: ROOT_TYPE,
+      cacheable: true,
+      properties: {},
+      data: null,
+    });
     if (nodes) {
       nodes.forEach((node) => {
         if (node.type === ACTION_TYPE) {
-          this._addNode({ ...node, data: () => log.warn('Pickled action invocation') });
+          this._addNode({ cacheable: true, data: () => log.warn('Pickled action invocation'), ...node });
         } else if (node.type === ACTION_GROUP_TYPE) {
-          this._addNode({ ...node, data: actionGroupSymbol });
+          this._addNode({ cacheable: true, data: actionGroupSymbol, ...node });
         } else {
-          this._addNode(node);
+          this._addNode({ cacheable: true, ...node });
         }
       });
     }
@@ -118,10 +127,6 @@ export class Graph {
         this._sortEdges(source, 'outbound', edges);
       });
     }
-
-    this._onInitialNode = onInitialNode;
-    this._onInitialNodes = onInitialNodes;
-    this._onRemoveNode = onRemoveNode;
   }
 
   static from(pickle: string, options: Omit<GraphParams, 'nodes' | 'edges'> = {}) {
@@ -167,17 +172,23 @@ export class Graph {
   }
 
   pickle() {
-    const nodes = Object.values(this._nodes).map((node) => {
-      return {
-        id: node.id,
-        type: node.type,
-        properties: node.properties,
-      };
-    });
+    const nodes = Object.values(this._nodes)
+      .filter((node) => node.cacheable)
+      .map((node) => {
+        return {
+          id: node.id,
+          type: node.type,
+          properties: node.properties,
+        };
+      });
+
+    const cacheable = new Set(nodes.map((node) => node.id));
 
     const edges = Object.fromEntries(
       Object.entries(this._edges)
-        .map(([id, { outbound }]): [string, string[]] => [id, outbound])
+        .filter(([id]) => cacheable.has(id))
+        .map(([id, { outbound }]): [string, string[]] => [id, outbound.filter((nodeId) => cacheable.has(nodeId))])
+        // TODO(wittjosiah): Why sort?
         .toSorted(([a], [b]) => a.localeCompare(b)),
     );
 
@@ -381,7 +392,7 @@ export class Graph {
   }: NodeArg<TData, TProperties>): Node<TData, TProperties> {
     return untracked(() => {
       const existingNode = this._nodes[_node.id];
-      const node = existingNode ?? this._constructNode({ data: null, properties: {}, ..._node });
+      const node = existingNode ?? this._constructNode({ data: null, properties: {}, cacheable: false, ..._node });
       if (existingNode) {
         const { data, properties, type } = _node;
         if (data && data !== node.data) {
@@ -440,7 +451,7 @@ export class Graph {
 
   private _removeNode(id: string, edges = false) {
     untracked(() => {
-      const node = this.findNode(id);
+      const node = this.findNode(id, false);
       if (!node) {
         return;
       }

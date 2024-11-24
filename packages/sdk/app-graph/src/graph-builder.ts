@@ -19,7 +19,7 @@ import { type Relation, type NodeArg, type Node, type ActionData, actionGroupSym
  *
  * @param params.id The id of the node to resolve.
  */
-export type ResolverExtension = (params: { id: string }) => NodeArg<any> | undefined;
+export type ResolverExtension = (params: { id: string }) => NodeArg<any> | false | undefined;
 
 /**
  * Graph builder extension for adding nodes to the graph based on a connection to an existing node.
@@ -290,6 +290,7 @@ export class GraphBuilder {
         (arg): Node => ({
           id: arg.id,
           type: arg.type,
+          cacheable: arg.cacheable ?? false,
           data: arg.data ?? null,
           properties: arg.properties ?? {},
         }),
@@ -311,7 +312,7 @@ export class GraphBuilder {
           this._dispatcher.currentExtension = id;
           this._dispatcher.stateIndex = 0;
           BuilderInternal.currentDispatcher = this._dispatcher;
-          let node: NodeArg<any> | undefined;
+          let node: NodeArg<any> | false | undefined;
           try {
             node = resolver({ id: nodeId });
           } catch (err) {
@@ -326,6 +327,9 @@ export class GraphBuilder {
             if (this._nodeChanged[node.id]) {
               this._nodeChanged[node.id].value = {};
             }
+            break;
+          } else if (node === false) {
+            this.graph._removeNodes([nodeId]);
             break;
           }
         }
