@@ -13,8 +13,6 @@ import { FunctionType } from '@dxos/plugin-script';
 import { type Client, type Config } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 
-import { handleEmail } from './email';
-
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1_000;
 
@@ -49,9 +47,6 @@ export const invokeFunction = async (client: Client, space: Space, trigger: Func
   try {
     invariant(trigger.spec);
     invariant(trigger.function);
-    if (trigger.spec.type === 'websocket') {
-      return handleEmail(space, data.data);
-    }
 
     const script = await space.db.query({ id: trigger.function }, { format: ResultFormat.Plain }).first();
     const { objects: functions } = await space.db

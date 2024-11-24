@@ -12,8 +12,10 @@ export {
   getTypename,
   isReactiveObject,
   Expando,
+  type AbstractTypedObject,
   type ObjectMeta,
   type ReactiveObject,
+  type TypedObject,
 } from '@dxos/echo-schema';
 export {
   createDocAccessor,
@@ -36,10 +38,10 @@ export {
   type Hypergraph,
   type IDocHandle,
   Query,
+  ResultFormat,
   type Selection,
   type Subscription,
   type SubscriptionHandle,
-  ResultFormat,
 } from '@dxos/echo-db';
 
 // TODO(dmaretskyi): Remove this export.

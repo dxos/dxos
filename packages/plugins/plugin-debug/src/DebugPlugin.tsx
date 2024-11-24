@@ -29,7 +29,7 @@ import {
   topbarBlockPaddingStart,
 } from '@dxos/react-ui-theme';
 
-import { DebugGlobal, DebugObjectPanel, DebugSettings, DebugSpace, DebugStatus, Wireframe } from './components';
+import { DebugApp, DebugObjectPanel, DebugSettings, DebugSpace, DebugStatus, Wireframe } from './components';
 import meta, { DEBUG_PLUGIN } from './meta';
 import translations from './translations';
 import {
@@ -277,7 +277,7 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
           }
 
           const primary = data.active ?? data.object;
-          let component: ReactNode;
+          let component: ReactNode = null;
           if (role === 'main' || role === 'article') {
             if (primary === 'devtools' && settings.devtools) {
               component = <Devtools />;
@@ -309,9 +309,7 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
                 />
               );
             } else if ('graph' in primary && primary.graph instanceof Graph) {
-              component = <DebugGlobal graph={primary.graph} />;
-            } else {
-              component = null;
+              component = <DebugApp graph={primary.graph} />;
             }
           }
 
@@ -337,11 +335,7 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
 
           switch (role) {
             case 'article':
-              return (
-                <div role='none' className='row-span-2 rounded-t-md overflow-x-auto'>
-                  {component}
-                </div>
-              );
+              return <>{component}</>;
             case 'main':
               return (
                 <Main.Content

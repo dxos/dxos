@@ -2,14 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AST, RawObject, S, TypedObject } from '@dxos/echo-schema';
+import { AST, OptionsAnnotationId, RawObject, S, TypedObject } from '@dxos/echo-schema';
 
 /**
  * Type discriminator for TriggerType.
  * Every spec has a type field of type TriggerKind that we can use to understand which type we're working with.
  * https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions
  */
-export type TriggerKind = 'timer' | 'webhook' | 'websocket' | 'subscription';
+export enum TriggerKind {
+  Timer = 'timer',
+  Webhook = 'webhook',
+  Subscription = 'subscription',
+}
 
 // TODO(burdon): Rename prop kind.
 const typeLiteralAnnotations = { [AST.TitleAnnotationId]: 'Type' };
@@ -18,10 +22,10 @@ const typeLiteralAnnotations = { [AST.TitleAnnotationId]: 'Type' };
  * Cron timer.
  */
 const TimerTriggerSchema = S.Struct({
-  type: S.Literal('timer').annotations(typeLiteralAnnotations),
-  cron: S.NonEmptyString.annotations({
+  type: S.Literal(TriggerKind.Timer).annotations(typeLiteralAnnotations),
+  cron: S.String.annotations({
     [AST.TitleAnnotationId]: 'Cron',
-    [AST.ExamplesAnnotationId]: '0 0 * * *',
+    [AST.ExamplesAnnotationId]: ['0 0 * * *'],
   }),
 }).pipe(S.mutable);
 
@@ -31,25 +35,21 @@ export type TimerTrigger = S.Schema.Type<typeof TimerTriggerSchema>;
  * Webhook.
  */
 const WebhookTriggerSchema = S.Struct({
-  type: S.Literal('webhook').annotations(typeLiteralAnnotations),
-  method: S.String,
-  // Assigned port.
-  port: S.optional(S.Number),
+  type: S.Literal(TriggerKind.Webhook).annotations(typeLiteralAnnotations),
+  method: S.optional(
+    S.String.annotations({
+      [AST.TitleAnnotationId]: 'Method',
+      [OptionsAnnotationId]: ['GET', 'POST'],
+    }),
+  ),
+  port: S.optional(
+    S.Number.annotations({
+      [AST.TitleAnnotationId]: 'Port',
+    }),
+  ),
 }).pipe(S.mutable);
 
 export type WebhookTrigger = S.Schema.Type<typeof WebhookTriggerSchema>;
-
-/**
- * Websocket.
- * @deprecated
- */
-const WebsocketTriggerSchema = S.Struct({
-  type: S.Literal('websocket').annotations(typeLiteralAnnotations),
-  url: S.String,
-  init: S.optional(S.Record({ key: S.String, value: S.Any })),
-}).pipe(S.mutable);
-
-export type WebsocketTrigger = S.Schema.Type<typeof WebsocketTriggerSchema>;
 
 // TODO(burdon): Use ECHO definition (from https://github.com/dxos/dxos/pull/8233).
 const QuerySchema = S.Struct({
@@ -61,7 +61,7 @@ const QuerySchema = S.Struct({
  * Subscription.
  */
 const SubscriptionTriggerSchema = S.Struct({
-  type: S.Literal('subscription').annotations(typeLiteralAnnotations),
+  type: S.Literal(TriggerKind.Subscription).annotations(typeLiteralAnnotations),
   // TODO(burdon): Define query DSL (from ECHO). Reconcile with Table.Query.
   filter: QuerySchema,
   options: S.optional(
@@ -80,11 +80,13 @@ export type SubscriptionTrigger = S.Schema.Type<typeof SubscriptionTriggerSchema
  * Trigger schema (discriminated union).
  */
 export const TriggerSchema = S.Union(
+  //
   TimerTriggerSchema,
   WebhookTriggerSchema,
-  WebsocketTriggerSchema,
   SubscriptionTriggerSchema,
-).annotations({ [AST.TitleAnnotationId]: 'Trigger' });
+).annotations({
+  [AST.TitleAnnotationId]: 'Trigger',
+});
 
 export type TriggerType = S.Schema.Type<typeof TriggerSchema>;
 

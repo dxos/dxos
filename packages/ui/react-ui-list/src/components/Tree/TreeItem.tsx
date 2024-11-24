@@ -230,7 +230,7 @@ export const RawTreeItem = <T extends ItemType = ItemType>({
           />
         </div>
         {Columns && <Columns item={item} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />}
-        {instruction && <DropIndicator instruction={instruction} />}
+        {instruction && <DropIndicator instruction={instruction} gap={2} />}
       </Treegrid.Cell>
     </Treegrid.Row>
   );

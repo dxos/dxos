@@ -22,8 +22,6 @@ export type InputProps<T extends object = {}> = {
   label: string;
   disabled?: boolean;
   placeholder?: string;
-  // TODO(burdon): Provide from annotations? E.g., enum.
-  options?: Array<{ value: string | number; label?: string }>;
 } & Pick<FormHandler<T>, 'getStatus' | 'getValue' | 'onValueChange' | 'onBlur'>;
 
 /**
