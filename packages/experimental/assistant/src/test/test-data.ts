@@ -1,7 +1,13 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import { type Schema as S } from '@effect/schema';
+
 import { raise } from '@dxos/debug';
 import { JSON_SCHEMA_ECHO_REF_ID, toJsonSchema, type JsonSchemaType } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { Schema as S } from '@effect/schema';
+
 import { type DataSource, type Node, type Relationship } from '../cypher/query-executor';
 import { formatInferredRelationshipLabel, formatNodeLabel } from '../cypher/schema';
 import { Contact, Org, Project, Task } from '../test/test-schema';
@@ -121,6 +127,7 @@ export class MockDataSource implements DataSource {
       data: unknown;
     }
   > = {};
+
   schema: Record<
     string,
     {
@@ -156,7 +163,7 @@ export class MockDataSource implements DataSource {
       schema,
       id: data.id,
       typeDxn: typenameDxn,
-      data: data,
+      data,
     };
 
     return data;

@@ -1,7 +1,13 @@
-import { log } from '@dxos/log';
+//
+// Copyright 2024 DXOS.org
+//
+
 import { test } from 'vitest';
-import { createTestData } from '../test/test-data';
+
+import { log } from '@dxos/log';
+
 import { executeQuery } from './query-executor';
+import { createTestData } from '../test/test-data';
 
 test('run', async ({ expect }) => {
   const dataSource = createTestData();

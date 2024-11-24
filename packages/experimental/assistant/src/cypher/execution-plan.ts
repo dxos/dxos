@@ -1,8 +1,13 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import type { JsonPath } from '@dxos/echo-schema';
-import type { ParsedQuery } from './parser';
-import { log } from '@dxos/log';
-import type { GraphPatternConnector, MatchClause, ReturnClause, WhereClause } from './ast';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
+
+import type { GraphPatternConnector, MatchClause, ReturnClause, WhereClause } from './ast';
+import type { ParsedQuery } from './parser';
 
 export type VariableName = string & { __VariableName: never };
 

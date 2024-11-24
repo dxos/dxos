@@ -1,8 +1,13 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import type { JsonPath } from '@dxos/echo-schema';
-import { createExecutionPlan, type ExecutionPlan, type VariableName } from './execution-plan';
-import { parseCypherQuery } from './parser';
 import { log } from '@dxos/log';
 import { mapValues } from '@dxos/util';
+
+import { createExecutionPlan, type ExecutionPlan, type VariableName } from './execution-plan';
+import { parseCypherQuery } from './parser';
 
 export interface DataSource {
   getNodes: (params: { label?: string }) => Promise<Node[]>;
@@ -30,7 +35,7 @@ export const executeQueryPlan = async (
   plan: ExecutionPlan,
 ): Promise<Record<string, unknown>[]> => {
   let buffer: Record<VariableName, Node | Relationship>[] = [];
-  let results: Record<string, unknown>[] = [];
+  const results: Record<string, unknown>[] = [];
 
   for (const step of plan.steps) {
     log('begin step', { step });
@@ -108,7 +113,7 @@ export const executeQueryPlan = async (
       }
     }
 
-    log('finish step', { buffer: buffer.map((tuple) => mapValues(tuple, (x) => x.id)), results: results });
+    log('finish step', { buffer: buffer.map((tuple) => mapValues(tuple, (x) => x.id)), results });
   }
 
   return results;

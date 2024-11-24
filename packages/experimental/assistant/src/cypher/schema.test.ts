@@ -1,8 +1,13 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { test } from 'vitest';
-import { Contact, Org, Project, Task } from '../test/test-schema';
+
 import { toJsonSchema } from '@dxos/echo-schema';
+
 import { formatJsonSchemaForLLM } from './schema';
-import { log } from '@dxos/log';
+import { Contact, Org, Project, Task } from '../test/test-schema';
 
 test('Org-Project-Task-Contact schema', async ({ expect }) => {
   const jsonSchema = [Org, Project, Task, Contact].map((schema) => toJsonSchema(schema));

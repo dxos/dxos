@@ -94,7 +94,7 @@ test('return clause', ({ expect }) => {
 });
 
 test('query', async ({ expect }) => {
-  testParser(cypherQuery, `MATCH (n:Person) RETURN n`),
+  testParser(cypherQuery, 'MATCH (n:Person) RETURN n'),
     testParser(
       cypherQuery,
       `
@@ -120,7 +120,7 @@ test('query', async ({ expect }) => {
   );
   testParser(
     cypherQuery,
-    `MATCH (org:Org {name: 'DXOS'})-[:ORG_EMPLOYEES]->(c:Contact)<-[:TASK_ASSIGNEE]-(t:Task)-[:TASK_PROJECT]->(p:Project {name: 'Composer'}) RETURN c.name`,
+    "MATCH (org:Org {name: 'DXOS'})-[:ORG_EMPLOYEES]->(c:Contact)<-[:TASK_ASSIGNEE]-(t:Task)-[:TASK_PROJECT]->(p:Project {name: 'Composer'}) RETURN c.name",
   );
 });
 

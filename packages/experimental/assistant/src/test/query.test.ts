@@ -5,17 +5,16 @@
 import { Schema as S } from '@effect/schema';
 import { test } from 'vitest';
 
+import { toJsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
+import { createTestData } from './test-data';
+import { Contact, Org, Project, Task } from './test-schema';
 import { AnthropicBackend } from '../conversation/backend/anthropic';
 import { runLLM } from '../conversation/conversation';
 import { createUserMessage, defineTool, LLMToolResult } from '../conversation/types';
-import { parseCypherQuery } from '../cypher/parser';
-import { formatJsonSchemaForLLM } from '../cypher/schema';
-import { Contact, Org, Project, Task } from './test-schema';
-import { toJsonSchema } from '@dxos/echo-schema';
-import { createTestData } from './test-data';
 import { executeQuery } from '../cypher/query-executor';
+import { formatJsonSchemaForLLM } from '../cypher/schema';
 
 test('cypher query', async () => {
   const dataSource = createTestData();

@@ -1,5 +1,10 @@
-import { ObjectAnnotationId, ref } from '@dxos/echo-schema';
+//
+// Copyright 2024 DXOS.org
+//
+
 import { Schema as S } from '@effect/schema';
+
+import { ObjectAnnotationId, ref } from '@dxos/echo-schema';
 
 // TODO(dmaretskyi): Extract.
 export const ObjectId = S.String.annotations({ description: 'The unique object identifier.' });
