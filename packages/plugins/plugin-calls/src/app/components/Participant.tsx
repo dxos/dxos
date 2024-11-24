@@ -5,17 +5,12 @@
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import React, { forwardRef, useEffect, useMemo } from 'react';
 import { Flipped } from 'react-flip-toolkit';
-import { combineLatest, fromEvent, map, of, switchMap } from 'rxjs';
+import { combineLatest, fromEvent, map, switchMap } from 'rxjs';
 
-import { nonNullable } from '@dxos/util';
-
-import { AudioGlow } from './AudioGlow';
 import { AudioIndicator } from './AudioIndicator';
 import { Button } from './Button';
-import { ConnectionIndicator, getConnectionQuality } from './ConnectionIndicator';
 import { HoverFade } from './HoverFade';
 import { Icon } from './Icon/Icon';
-import { MuteUserButton } from './MuteUserButton';
 import { OptionalLink } from './OptionalLink';
 import { Tooltip } from './Tooltip';
 import { VideoSrcObject } from './VideoSrcObject';
@@ -24,8 +19,6 @@ import { useRoomContext } from '../hooks/useRoomContext';
 import { useUserMetadata } from '../hooks/useUserMetadata';
 import type { User } from '../types/Messages';
 import populateTraceLink from '../utils/populateTraceLink';
-import { ewma } from '../utils/rxjs/ewma';
-import { getPacketLoss$ } from '../utils/rxjs/getPacketLoss$';
 import { cn } from '../utils/style';
 
 const useMid = (track?: MediaStreamTrack) => {
@@ -84,13 +77,6 @@ export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div
       }
     }, [flipId, isScreenShare, setPinnedId]);
 
-    const packetLoss$ = useMemo(
-      () => getPacketLoss$(peer.peerConnection$, of([audioTrack, videoTrack].filter(nonNullable))).pipe(ewma(5000)),
-      [audioTrack, peer.peerConnection$, videoTrack],
-    );
-
-    const packetLoss = useSubscribedState(packetLoss$, 0);
-
     const audioMid = useMid(audioTrack);
     const videoMid = useMid(videoTrack);
 
@@ -105,35 +91,6 @@ export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div
                 : 'relative max-w-[--participant-max-width] rounded-xl',
             )}
           >
-            {!isScreenShare && (
-              <div className={cn('absolute inset-0 h-full w-full grid place-items-center')}>
-                <div className='h-[2em] w-[2em] grid place-items-center text-4xl md:text-6xl 2xl:text-8xl relative'>
-                  {data?.photob64 ? (
-                    <div>
-                      <AudioGlow
-                        className='absolute inset-0 w-full h-full rounded-full'
-                        audioTrack={audioTrack}
-                        type='box'
-                      ></AudioGlow>
-                      <img
-                        className='rounded-full'
-                        src={`data:image/png;base64,${data.photob64}`}
-                        alt={data.displayName}
-                      />
-                    </div>
-                  ) : (
-                    <span className='relative grid w-full h-full uppercase rounded-full place-items-center bg-zinc-500'>
-                      {user.speaking && (
-                        <AudioGlow type='text' className='absolute uppercase' audioTrack={audioTrack}>
-                          {user.name.charAt(0)}
-                        </AudioGlow>
-                      )}
-                      {user.name.charAt(0)}
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
             <VideoSrcObject
               className={cn(
                 'absolute inset-0 h-full w-full object-contain opacity-0 transition-opacity',
@@ -154,7 +111,6 @@ export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div
                     <Icon type={pinned ? 'arrowsIn' : 'arrowsOut'} />
                   </Button>
                 </Tooltip>
-                {!isScreenShare && <MuteUserButton displayType='ghost' mutedDisplayType='ghost' user={user} />}
               </div>
             </HoverFade>
             {audioTrack && (
@@ -175,7 +131,6 @@ export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div
             )}
             {data?.displayName && user.transceiverSessionId && (
               <div className='flex items-center gap-2 absolute m-2 text-shadow left-1 bottom-1'>
-                <ConnectionIndicator quality={getConnectionQuality(packetLoss)} />
                 <OptionalLink
                   className='leading-none'
                   href={populateTraceLink(user.transceiverSessionId, traceLink)}
@@ -194,19 +149,6 @@ export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div
                 </OptionalLink>
               </div>
             )}
-            <div className='absolute top-0 right-0 flex gap-4 p-4'>
-              {user.raisedHand && (
-                <Tooltip content='Hand is raised'>
-                  <div className='relative'>
-                    <div className='relative'>
-                      <Icon className='indication-shadow' type='handRaised' />
-                      <Icon className='absolute top-0 left-0 text-orange-300 animate-ping' type='handRaised' />
-                      <VisuallyHidden>Hand is raised</VisuallyHidden>
-                    </div>
-                  </div>
-                </Tooltip>
-              )}
-            </div>
             {(user.speaking || user.raisedHand) && (
               <div
                 className={cn(

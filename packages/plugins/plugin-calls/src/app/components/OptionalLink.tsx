@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { ComponentProps } from 'react'
+import React, { type ComponentProps } from 'react';
 
 import { cn } from '../utils/style';
 

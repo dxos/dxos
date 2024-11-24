@@ -5,13 +5,11 @@
 import React, { useState, useMemo, type ReactNode, useEffect } from 'react';
 import { from, of, switchMap } from 'rxjs';
 
-import { EnsureOnline } from '../app/components/EnsureOnline';
 import { EnsurePermissions } from '../app/components/EnsurePermissions';
 import { useStateObservable, useSubscribedState } from '../app/hooks/rxjsHooks';
 import { usePeerConnection } from '../app/hooks/usePeerConnection';
 import useRoom from '../app/hooks/useRoom';
 import { RoomContext, type RoomContextType } from '../app/hooks/useRoomContext';
-import { useRoomHistory } from '../app/hooks/useRoomHistory';
 import { useStablePojo } from '../app/hooks/useStablePojo';
 import useUserMedia from '../app/hooks/useUserMedia';
 import { type Mode } from '../app/utils/mode';
@@ -66,11 +64,9 @@ export const RoomContextProvider = ({
 
   return (
     <EnsurePermissions>
-      <EnsureOnline>
-        <Room roomName={roomName!} {...roomData} username={username}>
-          {children}
-        </Room>
-      </EnsureOnline>
+      <Room roomName={roomName!} {...roomData} username={username}>
+        {children}
+      </Room>
     </EnsurePermissions>
   );
 };

@@ -5,10 +5,11 @@
 import usePartySocket from 'partysocket/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { log } from '@dxos/log';
+
 import type { UserMedia } from './useUserMedia';
 import { CALLS_URL } from '../../types';
 import type { ClientMessage, RoomState, ServerMessage } from '../types/Messages';
-import assertNever from '../utils/assertNever';
 
 export default ({ roomName, userMedia, username }: { roomName: string; userMedia: UserMedia; username: string }) => {
   const [roomState, setRoomState] = useState<RoomState>({ users: [] });
@@ -35,8 +36,8 @@ export default ({ roomName, userMedia, username }: { roomName: string; userMedia
           setRoomState(message.state);
           break;
         case 'error':
-          console.error('Received error message from WebSocket');
-          console.error(message.error);
+          log.error('Received error message from WebSocket');
+          log.error(message.error ?? 'No error message provided');
           break;
         case 'directMessage':
           break;
@@ -47,8 +48,7 @@ export default ({ roomName, userMedia, username }: { roomName: string; userMedia
           // do nothing
           break;
         default:
-          assertNever(message);
-          break;
+          throw new Error('Unhandled: ' + message);
       }
     },
   });

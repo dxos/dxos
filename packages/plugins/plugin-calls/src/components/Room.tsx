@@ -12,19 +12,14 @@ import { nonNullable } from '@dxos/util';
 
 import { Button } from '../app/components/Button';
 import { CameraButton } from '../app/components/CameraButton';
-import { CopyButton } from '../app/components/CopyButton';
-import { HighPacketLossWarningsToast } from '../app/components/HighPacketLossWarningsToast';
-import { IceDisconnectedToast } from '../app/components/IceDisconnectedToast';
 import { Icon } from '../app/components/Icon/Icon';
 import { LeaveRoomButton } from '../app/components/LeaveRoomButton';
 import { MicButton } from '../app/components/MicButton';
-import { OverflowMenu } from '../app/components/OverflowMenu';
 import { Participant } from '../app/components/Participant';
-import { ParticipantsButton } from '../app/components/ParticipantsMenu';
 import { PullAudioTracks } from '../app/components/PullAudioTracks';
 import { PullVideoTrack } from '../app/components/PullVideoTrack';
-import { RaiseHandButton } from '../app/components/RaiseHandButton';
 import { ScreenshareButton } from '../app/components/ScreenshareButton';
+import { SettingsButton } from '../app/components/SettingsDialog';
 import Toast from '../app/components/Toast';
 import useBroadcastStatus from '../app/hooks/useBroadcastStatus';
 import useIsSpeaking from '../app/hooks/useIsSpeaking';
@@ -131,7 +126,6 @@ const JoinedRoom = () => {
 
   const totalUsers = 1 + fakeUsers.length + otherUsers.length;
 
-  const [raisedHand, setRaisedHand] = useState(false);
   const speaking = useIsSpeaking(userMedia.audioStreamTrack);
 
   useMount(() => {
@@ -146,7 +140,6 @@ const JoinedRoom = () => {
     websocket,
     identity,
     pushedTracks,
-    raisedHand,
     speaking,
   });
 
@@ -284,19 +277,10 @@ const JoinedRoom = () => {
           <MicButton warnWhenSpeakingWhileMuted />
           <CameraButton />
           <ScreenshareButton />
-          <RaiseHandButton raisedHand={raisedHand} onClick={() => setRaisedHand(!raisedHand)} />
-          <ParticipantsButton
-            identity={identity}
-            otherUsers={otherUsers}
-            className='hidden md:block'
-          ></ParticipantsButton>
-          <OverflowMenu />
+          <SettingsButton />
           <LeaveRoomButton meetingId={meetingId} />
-          {debugEnabled && meetingId && <CopyButton contentValue={meetingId}>Meeting Id</CopyButton>}
         </div>
       </div>
-      <HighPacketLossWarningsToast />
-      <IceDisconnectedToast />
     </PullAudioTracks>
   );
 };

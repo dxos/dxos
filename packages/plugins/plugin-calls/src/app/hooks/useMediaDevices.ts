@@ -2,8 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useEffect } from 'react'
+import { useEffect } from 'react';
 import { createGlobalState } from 'react-use';
+
+import { log } from '@dxos/log';
 
 const useMediaDevicesState = createGlobalState<MediaDeviceInfo[]>([]);
 
@@ -13,11 +15,14 @@ export default (filter: (device: MediaDeviceInfo) => boolean = () => true) => {
   useEffect(() => {
     let mounted = true;
     const requestDevices = () => {
-      navigator.mediaDevices.enumerateDevices().then((d) => {
-        if (mounted) {
-          setDevices(d);
-        }
-      });
+      navigator.mediaDevices
+        .enumerateDevices()
+        .then((d) => {
+          if (mounted) {
+            setDevices(d);
+          }
+        })
+        .catch((err) => log.catch(err));
     };
     navigator.mediaDevices.addEventListener('devicechange', requestDevices);
     requestDevices();

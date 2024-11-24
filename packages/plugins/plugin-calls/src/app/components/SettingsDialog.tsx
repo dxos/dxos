@@ -36,7 +36,7 @@ export const SettingsButton = () => {
 
 export const SettingsDialog: FC<SettingsDialogProps> = ({ onOpenChange, open, children }) => {
   const {
-    userMedia: { blurVideo, setBlurVideo, suppressNoise, setSuppressNoise },
+    userMedia: { suppressNoise, setSuppressNoise },
   } = useRoomContext()!;
 
   return (
@@ -55,12 +55,6 @@ export const SettingsDialog: FC<SettingsDialogProps> = ({ onOpenChange, open, ch
               Mic
             </Label>
             <AudioInputSelector id='mic' />
-            <Label className='text-base -mb-2 md:mb-0 text-left md:text-right' htmlFor='blurBackground'>
-              Blur Background
-            </Label>
-            <div>
-              <Toggle id='blurBackground' checked={blurVideo} onCheckedChange={setBlurVideo} />
-            </div>
             <Label className='text-base -mb-2 md:mb-0 text-left md:text-right' htmlFor='suppressNoise'>
               Suppress Noise
             </Label>

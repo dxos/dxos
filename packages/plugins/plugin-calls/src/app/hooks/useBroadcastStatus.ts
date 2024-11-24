@@ -18,11 +18,10 @@ interface Config {
   identity?: User;
   websocket: PartySocket;
   pushedTracks: RoomContextType['pushedTracks'];
-  raisedHand: boolean;
   speaking: boolean;
 }
 
-export default ({ userMedia, identity, websocket, peer, pushedTracks, raisedHand, speaking }: Config) => {
+export default ({ userMedia, identity, websocket, peer, pushedTracks, speaking }: Config) => {
   const { audioEnabled, videoEnabled, screenShareEnabled } = userMedia;
   const { audio, video, screenshare } = pushedTracks;
   const { sessionId } = useSubscribedState(peer.session$) ?? {};
@@ -35,7 +34,7 @@ export default ({ userMedia, identity, websocket, peer, pushedTracks, raisedHand
         id,
         name,
         joined: true,
-        raisedHand,
+        raisedHand: false,
         speaking,
         transceiverSessionId: sessionId,
         tracks: {
@@ -76,7 +75,6 @@ export default ({ userMedia, identity, websocket, peer, pushedTracks, raisedHand
     audioEnabled,
     videoEnabled,
     screenShareEnabled,
-    raisedHand,
     speaking,
   ]);
 
@@ -89,7 +87,7 @@ export default ({ userMedia, identity, websocket, peer, pushedTracks, raisedHand
             id,
             name,
             joined: false,
-            raisedHand,
+            raisedHand: false,
             speaking,
             transceiverSessionId: sessionId,
             tracks: {},

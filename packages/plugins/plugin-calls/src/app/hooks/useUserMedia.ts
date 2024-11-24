@@ -9,7 +9,6 @@ import invariant from 'tiny-invariant';
 
 import { useStateObservable, useSubscribedState } from './rxjsHooks';
 import { blackCanvasStreamTrack } from '../utils/blackCanvasStreamTrack';
-import blurVideoTrack from '../utils/blurVideoTrack';
 import type { Mode } from '../utils/mode';
 import noiseSuppression from '../utils/noiseSuppression';
 import { prependDeviceToPrioritizeList } from '../utils/rxjs/devicePrioritization';
@@ -30,7 +29,6 @@ export const errorMessageMap = {
 type UserMediaError = keyof typeof errorMessageMap;
 
 const useUserMedia = (mode: Mode) => {
-  const [blurVideo, setBlurVideo] = useLocalStorage('blur-video', false);
   const [suppressNoise, setSuppressNoise] = useLocalStorage('suppress-noise', false);
   const [audioEnabled, setAudioEnabled] = useState(mode === 'production');
   const [videoEnabled, setVideoEnabled] = useState(true);
@@ -45,37 +43,29 @@ const useUserMedia = (mode: Mode) => {
   const startScreenShare = () => setScreenShareEnabled(true);
   const endScreenShare = () => setScreenShareEnabled(false);
 
-  const blurVideo$ = useStateObservable(blurVideo);
   const videoEnabled$ = useStateObservable(videoEnabled);
 
   const videoTrack$ = useMemo(
     () =>
-      combineLatest([
-        videoEnabled$.pipe(
-          switchMap((enabled) =>
-            enabled
-              ? getUserMediaTrack$('videoinput').pipe(
-                  tap({
-                    error: (e) => {
-                      invariant(e instanceof Error);
-                      setVideoUnavailableReason(
-                        e.name in errorMessageMap ? (e.name as UserMediaError) : 'UnknownError',
-                      );
-                    },
-                  }),
-                )
-              : of(blackCanvasStreamTrack()),
-          ),
+      videoEnabled$.pipe(
+        switchMap((enabled) =>
+          enabled
+            ? getUserMediaTrack$('videoinput').pipe(
+                tap({
+                  error: (e) => {
+                    invariant(e instanceof Error);
+                    setVideoUnavailableReason(e.name in errorMessageMap ? (e.name as UserMediaError) : 'UnknownError');
+                  },
+                }),
+              )
+            : of(blackCanvasStreamTrack()),
         ),
-        blurVideo$,
-      ]).pipe(
-        switchMap(([track, blur]) => (blur && track ? blurVideoTrack(track) : of(track))),
         shareReplay({
           refCount: true,
           bufferSize: 1,
         }),
       ),
-    [videoEnabled$, blurVideo$],
+    [videoEnabled$],
   );
 
   const videoTrack = useSubscribedState(videoTrack$);
@@ -187,8 +177,6 @@ const useUserMedia = (mode: Mode) => {
     turnCameraOff,
     videoEnabled,
     videoUnavailableReason,
-    blurVideo,
-    setBlurVideo,
     suppressNoise,
     setSuppressNoise,
     videoTrack$,

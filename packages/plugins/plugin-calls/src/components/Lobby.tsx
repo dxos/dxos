@@ -6,15 +6,15 @@ import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { log } from '@dxos/log';
+
 import { AudioIndicator } from '../app/components/AudioIndicator'; // Replace with real components
 import { Button } from '../app/components/Button';
 import { CameraButton } from '../app/components/CameraButton';
-import { Disclaimer } from '../app/components/Disclaimer';
 import { Icon } from '../app/components/Icon/Icon';
 import { MicButton } from '../app/components/MicButton';
 import { SelfView } from '../app/components/SelfView';
 import { SettingsButton } from '../app/components/SettingsDialog';
-import { Spinner } from '../app/components/Spinner';
 import { Tooltip } from '../app/components/Tooltip';
 import { useSubscribedState } from '../app/hooks/rxjsHooks';
 import { useRoomContext } from '../app/hooks/useRoomContext';
@@ -36,7 +36,7 @@ export const Lobby: React.FC = () => {
 
   return (
     <div className='flex flex-col items-center justify-center h-full p-4'>
-      <div className='flex-1'></div>
+      <div className='flex-1' />
       <div className='space-y-4 w-96'>
         <div>
           <h1 className='text-3xl font-bold'>{roomName}</h1>
@@ -48,23 +48,19 @@ export const Lobby: React.FC = () => {
           <SelfView className='aspect-[4/3] w-full' videoTrack={videoStreamTrack} />
 
           <div className='absolute left-3 top-3'>
-            {!sessionError && !session?.sessionId ? (
-              <Spinner className='text-zinc-100' />
-            ) : (
-              audioStreamTrack && (
-                <>
-                  {audioEnabled ? (
-                    <AudioIndicator audioTrack={audioStreamTrack} />
-                  ) : (
-                    <Tooltip content='Mic is turned off'>
-                      <div className='text-white indication-shadow'>
-                        <Icon type='micOff' />
-                        <VisuallyHidden>Mic is turned off</VisuallyHidden>
-                      </div>
-                    </Tooltip>
-                  )}
-                </>
-              )
+            {audioStreamTrack && !sessionError && session?.sessionId && (
+              <>
+                {audioEnabled ? (
+                  <AudioIndicator audioTrack={audioStreamTrack} />
+                ) : (
+                  <Tooltip content='Mic is turned off'>
+                    <div className='text-white indication-shadow'>
+                      <Icon type='micOff' />
+                      <VisuallyHidden>Mic is turned off</VisuallyHidden>
+                    </div>
+                  </Tooltip>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -106,7 +102,7 @@ export const Lobby: React.FC = () => {
                 // we navigate here with javascript instead of an a
                 // tag because we don't want it to be possible to join
                 // the room without the JS having loaded
-                console.log('Navigating to room');
+                log.info('Navigating to room');
                 navigate('room');
               }}
               disabled={!session?.sessionId}
@@ -119,9 +115,7 @@ export const Lobby: React.FC = () => {
           <SettingsButton />
         </div>
       </div>
-      <div className='flex flex-col justify-end flex-1'>
-        <Disclaimer className='pt-6' />
-      </div>
+      <div className='flex-1' />
     </div>
   );
 };

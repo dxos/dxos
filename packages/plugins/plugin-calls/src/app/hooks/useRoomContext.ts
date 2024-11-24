@@ -6,7 +6,6 @@ import { createContext, useContext, type Dispatch, type SetStateAction } from 'r
 import invariant from 'tiny-invariant';
 
 import type useRoom from './useRoom';
-import type { useRoomHistory } from './useRoomHistory';
 import type { UserMedia } from '../hooks/useUserMedia';
 import type { RxjsPeer } from '../utils/rxjs/RxjsPeer.client';
 
