@@ -231,7 +231,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   }
 
   /**
-   * Add live object.
+   * Add reactive object.
    */
   add<T extends ReactiveObject<T>>(obj: T): EchoReactiveObject<T> {
     if (!isEchoObject(obj)) {
@@ -245,6 +245,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       obj = createObject(obj);
     }
 
+    // TODO(burdon): Check if already added to db?
     invariant(isEchoObject(obj));
     this._rootProxies.set(getObjectCore(obj), obj);
 
@@ -257,7 +258,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   }
 
   /**
-   * Remove live object.
+   * Remove reactive object.
    */
   remove<T extends EchoReactiveObject<T>>(obj: T): void {
     invariant(isEchoObject(obj));
