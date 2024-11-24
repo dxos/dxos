@@ -43,21 +43,39 @@ describe('Database', () => {
     await openAndClose(testBuilder);
     const { db } = await testBuilder.createDatabase();
 
-    db.add(create(Expando, { str: 'test' }));
+    db.add(create(Expando, { name: 'Test' }));
     await db.flush();
   });
 
-  // TODO(burdon): Should throw if already added?
   test('add object multiple times', async () => {
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);
     const { db } = await testBuilder.createDatabase();
 
-    const obj1 = db.add({ name: 'test' }); // TODO(burdon): Require create for expando?
-    const obj2 = db.add(obj1); // TODO(burdon): Should fail?
+    // TODO(burdon): Require create for expando?
+    const obj1 = db.add({ name: 'Test' });
+    await db.flush();
+    // TODO(burdon): Should fail?
+    const obj2 = db.add(obj1);
+    await db.flush();
     expect(obj1).to.eq(obj2);
     const { objects } = await db.query().run();
     expect(objects).to.have.length(1);
+  });
+
+  test('remove object multiple times', async () => {
+    const testBuilder = new EchoTestBuilder();
+    await openAndClose(testBuilder);
+    const { db } = await testBuilder.createDatabase();
+
+    const obj = db.add({ name: 'Test' });
+    await db.flush();
+
+    db.remove(obj);
+    await db.flush();
+
+    db.remove(obj);
+    await db.flush();
   });
 
   test('inspect', async () => {
@@ -66,7 +84,7 @@ describe('Database', () => {
     const task = create(Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
-      assignee: create(Expando, { name: 'Bob' }),
+      assignee: create(Expando, { name: 'Test' }),
     });
     db.add(task);
     await db.flush();
@@ -75,33 +93,34 @@ describe('Database', () => {
     expect(typeof value).to.eq('string');
   });
 
-  test('query all', async () => {
-    const n = 10;
+  test('add and remove objects', async () => {
     const { db } = await builder.createDatabase();
 
     // Add objects.
+    const add = 10;
     {
-      for (const _ of Array.from({ length: n })) {
+      for (const _ of Array.from({ length: add })) {
         db.add(create(Expando, {}));
       }
       await db.flush();
 
       const { objects } = await db.query().run();
-      expect(objects.length).to.eq(n);
+      expect(objects.length).to.eq(add);
     }
 
     // Remove objects.
+    const remove = 3;
     {
-      const obj = (await db.query().run()).objects[0];
-      db.remove(obj);
-      await db.flush();
-
       const { objects } = await db.query().run();
-      expect(objects.length).to.eq(n - 1);
-
-      // TODO(burdon): Should fail.
-      db.remove(obj);
+      for (const obj of objects.slice(0, remove)) {
+        db.remove(obj);
+      }
       await db.flush();
+    }
+
+    {
+      const { objects } = await db.query().run();
+      expect(objects.length).to.eq(add - remove);
     }
   });
 
