@@ -4,7 +4,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 export default (originalAudioStreamTrack: MediaStreamTrack): MediaStreamTrack => {
   const mediaStream = new MediaStream();

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 export const blackCanvasStreamTrack = (videoTrack?: MediaStreamTrack) => {
   const canvas = document.createElement('canvas');

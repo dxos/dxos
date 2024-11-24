@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import invariant from 'tiny-invariant';
+import { invariant } from '@dxos/invariant';
 
 const modes = ['production', 'development', 'test'] as const;
 export type Mode = (typeof modes)[number];

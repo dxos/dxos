@@ -3,7 +3,8 @@
 //
 
 import { Observable, shareReplay } from 'rxjs';
-import invariant from 'tiny-invariant';
+
+import { invariant } from '@dxos/invariant';
 
 export const getScreenshare$ = ({ contentHint }: { contentHint: string }) =>
   new Observable<MediaStream | undefined>((subscribe) => {

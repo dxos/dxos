@@ -20,8 +20,8 @@ import {
   tap,
   withLatestFrom,
 } from 'rxjs';
-import invariant from 'tiny-invariant';
 
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { History } from '../History';

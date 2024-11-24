@@ -5,7 +5,8 @@
 import { useMemo, useState } from 'react';
 import { useLocalStorage } from 'react-use';
 import { combineLatest, map, of, shareReplay, switchMap, tap } from 'rxjs';
-import invariant from 'tiny-invariant';
+
+import { invariant } from '@dxos/invariant';
 
 import { useStateObservable, useSubscribedState } from './rxjsHooks';
 import { blackCanvasStreamTrack } from '../utils/blackCanvasStreamTrack';

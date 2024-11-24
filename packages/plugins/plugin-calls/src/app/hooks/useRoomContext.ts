@@ -3,7 +3,8 @@
 //
 
 import { createContext, useContext, type Dispatch, type SetStateAction } from 'react';
-import invariant from 'tiny-invariant';
+
+import { invariant } from '@dxos/invariant';
 
 import type useRoom from './useRoom';
 import type { UserMedia } from '../hooks/useUserMedia';
