@@ -9,6 +9,7 @@ import {
   type OptionsAnnotationType,
   OptionsAnnotationId,
   type PropertyKey,
+  type BaseObject,
 } from '@dxos/echo-schema';
 import {
   type SimpleType,
@@ -24,7 +25,7 @@ import { invariant } from '@dxos/invariant';
 /**
  * Flattened representation of AST node.
  */
-export type SchemaProperty<T extends object, V = any> = {
+export type SchemaProperty<T extends BaseObject, V = any> = {
   prop: AST.PropertySignature;
   name: PropertyKey<T>;
   type: SimpleType;
@@ -41,7 +42,7 @@ export type SchemaProperty<T extends object, V = any> = {
  * Get properties from the given AST node (typically from a Schema object).
  * Handle discriminated unions.
  */
-export const getSchemaProperties = <T extends object>(ast: AST.AST, value: any = {}): SchemaProperty<T>[] => {
+export const getSchemaProperties = <T extends BaseObject>(ast: AST.AST, value: any = {}): SchemaProperty<T>[] => {
   if (AST.isUnion(ast)) {
     const baseType = getDiscriminatedType(ast, value);
     if (baseType) {
@@ -110,5 +111,5 @@ export const getSchemaProperties = <T extends object>(ast: AST.AST, value: any =
   }, []);
 };
 
-export const sortProperties = <T extends object>({ name: a }: SchemaProperty<T>, { name: b }: SchemaProperty<T>) =>
+export const sortProperties = <T extends BaseObject>({ name: a }: SchemaProperty<T>, { name: b }: SchemaProperty<T>) =>
   a.localeCompare(b);

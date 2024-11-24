@@ -11,6 +11,7 @@ import {
   getSchema,
   isReactiveObject,
   requireTypeReference,
+  type BaseObject,
   type HasId,
   MutableSchema,
   type ObjectMeta,
@@ -34,7 +35,7 @@ import { type DecodedAutomergePrimaryValue, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 
 // TODO(burdon): Rename ReactiveEchoObject (reconcile with proto defs).
-export type EchoReactiveObject<T> = ReactiveObject<T> & HasId;
+export type EchoReactiveObject<T extends BaseObject> = ReactiveObject<T> & HasId;
 
 export const isEchoObject = (value: unknown): value is EchoReactiveObject<any> =>
   isReactiveObject(value) && getProxyHandler(value) instanceof EchoReactiveHandler;
@@ -44,7 +45,7 @@ export const isEchoObject = (value: unknown): value is EchoReactiveObject<any> =
  * @internal
  */
 // TODO(burdon): Document lifecycle.
-export const createObject = <T extends {}>(obj: T): EchoReactiveObject<T> => {
+export const createObject = <T extends BaseObject>(obj: T): EchoReactiveObject<T> => {
   invariant(!isEchoObject(obj));
   const schema = getSchema(obj);
   if (schema != null) {
@@ -99,7 +100,7 @@ export const createObject = <T extends {}>(obj: T): EchoReactiveObject<T> => {
 };
 
 // TODO(burdon): Call and remove subscriptions.
-export const destroyObject = <T extends {}>(proxy: EchoReactiveObject<T>) => {
+export const destroyObject = <T extends BaseObject>(proxy: EchoReactiveObject<T>) => {
   invariant(isEchoObject(proxy));
   const target: ProxyTarget = getProxyTarget(proxy);
   const internals: ObjectInternals = target[symbolInternals];

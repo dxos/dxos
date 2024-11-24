@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createObjectId } from '@dxos/echo-schema';
+import { type BaseObject, createObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
 import { type EchoReactiveObject, initEchoReactiveObjectRootProxy, isEchoObject } from './create';
@@ -32,7 +32,7 @@ const requireAutomergeCore = (obj: EchoReactiveObject<any>) => {
  * Returns new unbound clone of the object.
  * @deprecated
  */
-export const clone = <T extends {}>(
+export const clone = <T extends BaseObject>(
   obj: EchoReactiveObject<T>,
   { retainId = true, additional = [] }: CloneOptions = {},
 ): T => {
@@ -67,7 +67,7 @@ export const clone = <T extends {}>(
   return clone;
 };
 
-const cloneInner = <T>(obj: EchoReactiveObject<T>, id: string): EchoReactiveObject<T> => {
+const cloneInner = <T extends BaseObject>(obj: EchoReactiveObject<T>, id: string): EchoReactiveObject<T> => {
   const core = requireAutomergeCore(obj);
   const coreClone = new ObjectCore();
   coreClone.initNewObject();

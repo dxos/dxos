@@ -6,6 +6,7 @@ import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
 import {
   type AnyObjectData,
+  type BaseObject,
   type ReactiveObject,
   getProxyTarget,
   getSchema,
@@ -51,7 +52,7 @@ export interface EchoDatabase {
 
   get graph(): Hypergraph;
 
-  getObjectById<T extends {} = any>(id: string, opts?: GetObjectByIdOptions): EchoReactiveObject<T> | undefined;
+  getObjectById<T extends BaseObject>(id: string, opts?: GetObjectByIdOptions): EchoReactiveObject<T> | undefined;
 
   /**
    * Query objects.
@@ -73,7 +74,7 @@ export interface EchoDatabase {
   /**
    * Adds object to the database.
    */
-  add<T extends {} = any>(obj: ReactiveObject<T>): EchoReactiveObject<T>;
+  add<T extends BaseObject = {}>(obj: ReactiveObject<T>): EchoReactiveObject<T>;
 
   /**
    * Removes object from the database.
@@ -272,7 +273,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * @internal
    */
-  async _loadObjectById<T = any>(
+  async _loadObjectById<T extends BaseObject = {}>(
     objectId: string,
     options: LoadObjectOptions = {},
   ): Promise<EchoReactiveObject<T> | undefined> {

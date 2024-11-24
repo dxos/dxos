@@ -155,7 +155,7 @@ export class CoreDatabase {
     }
 
     const elapsed = performance.now() - start;
-    if (elapsed > 1000) {
+    if (elapsed > 1_000) {
       log.warn('slow AM open', { docId: spaceState.rootUrl, duration: elapsed });
     }
 
@@ -279,7 +279,7 @@ export class CoreDatabase {
 
   async batchLoadObjectCores(
     objectIds: string[],
-    { inactivityTimeout = 30000, returnDeleted = false }: { inactivityTimeout?: number; returnDeleted?: boolean } = {},
+    { inactivityTimeout = 30_000, returnDeleted = false }: { inactivityTimeout?: number; returnDeleted?: boolean } = {},
   ): Promise<(ObjectCore | undefined)[]> {
     if (!this._automergeDocLoader.hasRootHandle) {
       throw new Error('Database is not ready.');

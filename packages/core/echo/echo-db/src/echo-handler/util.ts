@@ -3,7 +3,7 @@
 //
 
 import { Reference } from '@dxos/echo-protocol';
-import { type ForeignKey, type ReactiveObject, getMeta, getProxyTarget } from '@dxos/echo-schema';
+import { type BaseObject, type ForeignKey, type ReactiveObject, getMeta, getProxyTarget } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
 import { type EchoReactiveObject, isEchoObject } from './create';
@@ -28,7 +28,10 @@ export const getReferenceWithSpaceKey = (obj: EchoReactiveObject<any>): Referenc
 
 // TODO(burdon): Factor out.
 // TODO(burdon): Impl query by meta.
-export const findObjectWithForeignKey = <T>(objects: EchoReactiveObject<T>[], foreignKey: ForeignKey) => {
+export const findObjectWithForeignKey = <T extends BaseObject>(
+  objects: EchoReactiveObject<T>[],
+  foreignKey: ForeignKey,
+) => {
   return objects.find((result) => {
     return getMeta(result).keys.find(({ source, id }) => source === foreignKey.source && id === foreignKey.id);
   });

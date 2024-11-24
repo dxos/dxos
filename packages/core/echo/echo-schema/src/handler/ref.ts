@@ -16,7 +16,7 @@ import {
 } from '../ast';
 import { MutableSchema, StoredSchema } from '../mutable';
 import { getTypename, isReactiveObject } from '../proxy';
-import { type Ref } from '../types';
+import { type BaseObject, type Ref } from '../types';
 
 /**
  * The `$id` field for an ECHO reference schema.
@@ -41,7 +41,7 @@ export const setSchemaReference = (property: JsonSchemaType, schema: string) => 
   });
 };
 
-export interface ref<T extends object> extends S.Schema<Ref<T>, EncodedReference> {}
+export interface ref<T extends BaseObject> extends S.Schema<Ref<T>, EncodedReference> {}
 
 export const ref = <T extends HasId>(schema: S.Schema<T, any>): ref<T> => {
   const annotation = getObjectAnnotation(schema);

@@ -18,6 +18,7 @@ import {
   SchemaValidator,
   StoredSchema,
   symbolIsProxy,
+  type BaseObject,
 } from '@dxos/echo-schema';
 import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -663,7 +664,7 @@ export const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
 };
 
 // TODO(burdon): Move ProxyTarget def to echo-schema and make EchoReactiveObject inherit?
-export const getObjectCore = <T extends object>(obj: EchoReactiveObject<T>): ObjectCore => {
+export const getObjectCore = <T extends BaseObject>(obj: EchoReactiveObject<T>): ObjectCore => {
   const { core } = (obj as unknown as ProxyTarget)[symbolInternals];
   return core;
 };

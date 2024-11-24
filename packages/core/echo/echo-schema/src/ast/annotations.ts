@@ -10,8 +10,11 @@ import { type Primitive } from '@dxos/util';
 
 import { checkIdNotPresentOnSchema } from './schema-validator';
 import { type HasId } from './types';
+import { type BaseObject } from '../types';
 
-type ToMutable<T> = T extends {} ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] } : T;
+type ToMutable<T> = T extends BaseObject
+  ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
+  : T;
 
 /**
  * ECHO object.

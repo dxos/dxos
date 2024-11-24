@@ -3,7 +3,7 @@
 //
 
 import { isEncodedReference, type EncodedReference } from '@dxos/echo-protocol';
-import { requireTypeReference, S } from '@dxos/echo-schema';
+import { type BaseObject, requireTypeReference, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';
 import { createBuf } from '@dxos/protocols/buf';
@@ -44,13 +44,13 @@ export interface PropertyFilter {
   [key: string]: any;
 }
 
-export type OperatorFilter<T extends {} = any> = (object: T) => boolean;
+export type OperatorFilter<T extends BaseObject = any> = (object: T) => boolean;
 
-export type FilterSource<T extends {} = any> = PropertyFilter | OperatorFilter<T> | Filter<T> | string;
+export type FilterSource<T extends BaseObject = any> = PropertyFilter | OperatorFilter<T> | Filter<T> | string;
 
 // TODO(burdon): Remove class.
 // TODO(burdon): Disambiguate if multiple are defined (i.e., AND/OR).
-export type FilterParams<T extends {} = any> = {
+export type FilterParams<T extends BaseObject = any> = {
   type?: DXN[];
   properties?: Record<string, any>;
   objectIds?: string[];
@@ -70,8 +70,8 @@ export namespace Filter$ {
   export type Object<F extends Any> = F extends Filter<infer T> ? T : never;
 }
 
-export class Filter<T extends {} = any> {
-  static from<T extends {}>(source?: FilterSource<T>, options?: QueryOptions): Filter<T> {
+export class Filter<T extends BaseObject = any> {
+  static from<T extends BaseObject>(source?: FilterSource<T>, options?: QueryOptions): Filter<T> {
     if (source === undefined || source === null) {
       return new Filter({}, options);
     } else if (source instanceof Filter) {
@@ -104,7 +104,7 @@ export class Filter<T extends {} = any> {
     }
   }
 
-  static fromFilterJson<T extends {}>(source: PropertyFilter, options?: QueryOptions): Filter<T> {
+  static fromFilterJson<T extends BaseObject>(source: PropertyFilter, options?: QueryOptions): Filter<T> {
     const { id, __typename, ...properties } = source;
 
     if (typeof id === 'string' || (Array.isArray(id) && id.length > 1)) {
@@ -188,17 +188,17 @@ export class Filter<T extends {} = any> {
     }
   }
 
-  static not<T extends {} = any>(source: Filter<T>): Filter<T> {
+  static not<T extends BaseObject = any>(source: Filter<T>): Filter<T> {
     return new Filter({ ...source, not: !source.not }, source.options);
   }
 
-  static and<T extends {} = any>(...filters: FilterSource<T>[]): Filter<T> {
+  static and<T extends BaseObject = any>(...filters: FilterSource<T>[]): Filter<T> {
     return new Filter({
       and: filters.map((filter) => Filter.from(filter)),
     });
   }
 
-  static or<T extends {} = any>(...filters: FilterSource<T>[]): Filter<T> {
+  static or<T extends BaseObject = any>(...filters: FilterSource<T>[]): Filter<T> {
     return new Filter({
       or: filters.map((filter) => Filter.from(filter)),
     });

@@ -4,7 +4,7 @@
 
 import { Effect, pipe } from 'effect';
 
-import { create, type S, type ReactiveObject, type ExcludeId } from '@dxos/echo-schema';
+import { create, type S, type ReactiveObject, type ExcludeId, type BaseObject } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { faker } from '@dxos/random';
 import { getDeep } from '@dxos/util';
@@ -15,7 +15,6 @@ import { getSchemaProperties } from '../properties';
 //  - New TypedObject syntax.
 //    - Define low-level types in S.Struct (e.g., in react-table).
 //    - Type should include definition of `id`.
-//  - Change <T extends {}> to <T extends object = {}>
 //  - Audit all low-level types (e.g., ReactiveObject, AbstractTypedObject, MutableObject: see echo-schema/docs).
 //  - Implement basic "comment required" TODOs.
 
@@ -32,10 +31,11 @@ import { getSchemaProperties } from '../properties';
 
 export const GeneratorAnnotationId = Symbol.for('@dxos/schema/annotation/Generator');
 
-export type RawObject<T extends object = {}> = ExcludeId<ReactiveObject<Partial<T>>>;
+// TODO(burdon): Move to echo-schema.
+export type RawObject<T extends BaseObject = {}> = ExcludeId<ReactiveObject<Partial<T>>>;
 
 export const updateObject =
-  <T extends object = {}>(type: S.Schema<T>) =>
+  <T extends BaseObject = {}>(type: S.Schema<T>) =>
   (initial: RawObject<T> = {} as any as RawObject<T>): RawObject<T> => {
     return getSchemaProperties<T>(type.ast).reduce<RawObject<T>>((data, property) => {
       const gen = findAnnotation<string>(property.prop.type, GeneratorAnnotationId);
@@ -51,18 +51,18 @@ export const updateObject =
   };
 
 export const createReactiveObject =
-  <T extends object = {}>(type: S.Schema<T>) =>
+  <T extends BaseObject = {}>(type: S.Schema<T>) =>
   (data: RawObject<T>) => {
     return create<T>(type, data);
   };
 
-export const createObjectArray = <T extends object>(n: number) =>
+export const createObjectArray = <T extends BaseObject>(n: number) =>
   Effect.succeed(Array.from({ length: n }, () => ({}) as T));
 
 export const createObjectPipeline = <T extends RawObject>(n: number, p: (obj: T) => T) =>
   Effect.flatMap(createObjectArray<T>(n), (objects) => Effect.succeed(objects.map((obj) => pipe(obj, p))));
 
 export const createObject =
-  <T extends object>(type: S.Schema<T>) =>
+  <T extends BaseObject>(type: S.Schema<T>) =>
   (obj: RawObject<T>) =>
     pipe(obj, updateObject(type), createReactiveObject(type));

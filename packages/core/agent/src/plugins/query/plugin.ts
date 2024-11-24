@@ -58,6 +58,7 @@ export class QueryPlugin extends Plugin {
             if (!result.object) {
               return null;
             }
+
             const objectCore = getObjectCore(result.object);
             return {
               id: result.id,

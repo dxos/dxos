@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type LatLng } from '@dxos/echo-schema';
+import { type BaseObject, type LatLng } from '@dxos/echo-schema';
 import { Input, useTranslation } from '@dxos/react-ui';
 
 import { InputHeader, type InputProps } from './Input';
@@ -14,7 +14,7 @@ import { translationKey } from '../../translations';
 // Custom format components.
 //
 
-export const LatLngInput = <T extends object>({
+export const LatLngInput = <T extends BaseObject>({
   property,
   type,
   label,
