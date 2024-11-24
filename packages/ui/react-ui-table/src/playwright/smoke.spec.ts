@@ -79,14 +79,10 @@ test.describe('Table', () => {
   test('add column', async ({ browser }) => {
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
+
     const newColumnLabel = 'TEST LABEL';
 
-    await page.getByTestId('table-new-column-button').click();
-    await page.getByRole('combobox').click();
-    await page.getByLabel('format number').click();
-    await page.getByPlaceholder('Property label.').click();
-    await page.getByPlaceholder('Property label.').fill(newColumnLabel);
-    await page.getByRole('button', { name: 'button save' }).click();
+    await table.addColumn({ label: newColumnLabel, format: 'number' });
 
     // Delete first two columns to get the new column into view
     await table.deleteColumn(0);
