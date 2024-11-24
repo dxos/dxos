@@ -4,6 +4,8 @@
 
 import { type Page } from '@playwright/test';
 
+import { DxGridManager } from '@dxos/lit-grid/testing';
+
 const TABLE_SELECTORS = {
   columnSettingsButton: 'table-column-settings-button',
   rowMenuButton: 'table-row-menu-button',
@@ -16,9 +18,12 @@ const TABLE_SELECTORS = {
   columnDelete: 'column-delete',
   rowDelete: 'row-menu-delete',
 } as const;
-
 export class TableManager {
-  constructor(private readonly page: Page) {}
+  private readonly _grid: DxGridManager;
+
+  constructor(private readonly page: Page) {
+    this._grid = new DxGridManager(page);
+  }
 
   public async deleteColumn(index: number): Promise<void> {
     await this.page.getByTestId(TABLE_SELECTORS.columnSettingsButton).nth(index).click();
