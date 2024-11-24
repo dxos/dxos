@@ -77,7 +77,9 @@ test('cypher query', async () => {
       createUserMessage(
         'If you are missing data to satisfy the user request, use the available tools to get the data.',
       ),
-      createUserMessage('Query the database and give me all employees from DXOS organization that work on Composer.'),
+      createUserMessage(
+        'Query the database and give me all employees from DXOS organization that work on Composer and what their tasks are.',
+      ),
     ],
     tools: [cypherTool],
     backend,

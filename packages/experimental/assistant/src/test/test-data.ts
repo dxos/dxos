@@ -57,6 +57,12 @@ export const createTestData = (): MockDataSource => {
     project: projectComposer,
     assignee: contactJosiah,
   });
+  const taskComposer5 = dataSource.add(Task, {
+    id: 'task-8',
+    name: 'Implement community plugin',
+    project: projectComposer,
+    assignee: contactFred,
+  });
   const taskComposer4 = dataSource.add(Task, {
     id: 'task-8',
     name: 'Implement dark mode',
@@ -91,7 +97,7 @@ export const createTestData = (): MockDataSource => {
   const orgDxos = dataSource.add(Org, {
     id: 'org-dxos',
     name: 'DXOS',
-    employees: [contactRich, contactDima],
+    employees: [contactRich, contactJosiah, contactDima],
     projects: [projectEcho],
   });
   const orgBraneframe = dataSource.add(Org, {
