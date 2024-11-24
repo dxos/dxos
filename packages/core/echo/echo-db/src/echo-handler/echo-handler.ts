@@ -154,6 +154,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         array[symbolHandler] = this;
         return array;
       });
+
       return createProxy(newTarget, this);
     }
     if (typeof decoded === 'object') {
@@ -168,6 +169,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           [symbolNamespace]: namespace,
         }),
       );
+
       return createProxy(newTarget, this);
     }
 
@@ -188,6 +190,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (target instanceof EchoArray) {
       return this._arrayHas(target, p);
     }
+
     const { value } = this.getDecodedValueAtPath(target);
     return typeof value === 'object' ? Reflect.has(value, p) : false;
   }
@@ -203,7 +206,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
     const fullPath = [getNamespace(target), ...dataPath];
     let value = target[symbolInternals].core.getDecoded(fullPath);
-
     if (value instanceof Reference) {
       value = this.lookupRef(target, value);
     }
@@ -219,6 +221,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (prop !== 'length' && isNaN(parseInt(prop))) {
       return Reflect.get(target, prop);
     }
+
     const decodedValueAtPath = this.getDecodedValueAtPath(target, prop);
     return this._wrapInProxyIfRequired(target, decodedValueAtPath);
   }
@@ -233,21 +236,21 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         return parsedIndex < length;
       }
     }
+
     return Reflect.has(target, prop);
   }
 
+  // TODO(burdon): arg `receiver` not used.
   set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {
     invariant(Array.isArray(target[symbolPath]));
     invariant(typeof prop === 'string');
-
     if (target instanceof EchoArray && prop === 'length') {
       this._arraySetLength(target, target[symbolPath], value);
       return true;
     }
 
-    const validatedValue = this.validateValue(target, [...target[symbolPath], prop], value);
     const fullPath = [getNamespace(target), ...target[symbolPath], prop];
-
+    const validatedValue = this.validateValue(target, [...target[symbolPath], prop], value);
     if (validatedValue === undefined) {
       target[symbolInternals].core.delete(fullPath);
     } else {

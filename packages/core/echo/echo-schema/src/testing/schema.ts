@@ -57,6 +57,7 @@ export class TestSchemaType extends TypedObject<TestSchemaType>({
   version: '0.1.0',
 })(fields, { partial: true }) {}
 
+// TODO(burdon): Why do we use need this rather then TestSchemaType?
 export const TestType = TestSchema.pipe(EchoObject('example.com/type/Test', '0.1.0'));
 
 export class TestClass {
