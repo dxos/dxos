@@ -3,7 +3,6 @@
 //
 
 import { useMemo, useState } from 'react';
-import { useLocalStorage } from 'react-use';
 import { combineLatest, map, of, shareReplay, switchMap, tap } from 'rxjs';
 
 import { invariant } from '@dxos/invariant';
@@ -11,7 +10,6 @@ import { invariant } from '@dxos/invariant';
 import { useStateObservable, useSubscribedState } from './rxjsHooks';
 import { blackCanvasStreamTrack } from '../utils/blackCanvasStreamTrack';
 import type { Mode } from '../utils/mode';
-import noiseSuppression from '../utils/noiseSuppression';
 import { prependDeviceToPrioritizeList } from '../utils/rxjs/devicePrioritization';
 import { getScreenshare$ } from '../utils/rxjs/getScreenshare$';
 import { getUserMediaTrack$ } from '../utils/rxjs/getUserMediaTrack$';
@@ -30,7 +28,6 @@ export const errorMessageMap = {
 type UserMediaError = keyof typeof errorMessageMap;
 
 const useUserMedia = (mode: Mode) => {
-  const [suppressNoise, setSuppressNoise] = useLocalStorage('suppress-noise', false);
   const [audioEnabled, setAudioEnabled] = useState(mode === 'production');
   const [videoEnabled, setVideoEnabled] = useState(true);
   const [screenShareEnabled, setScreenShareEnabled] = useState(false);
@@ -71,9 +68,8 @@ const useUserMedia = (mode: Mode) => {
 
   const videoTrack = useSubscribedState(videoTrack$);
   const videoDeviceId = videoTrack?.getSettings().deviceId;
-  const suppressNoiseEnabled$ = useStateObservable(suppressNoise);
-  const audioTrack$ = useMemo(() => {
-    return combineLatest([
+  const audioTrack$ = useMemo(
+    () =>
       getUserMediaTrack$('audioinput').pipe(
         tap({
           error: (e) => {
@@ -81,16 +77,13 @@ const useUserMedia = (mode: Mode) => {
             setAudioUnavailableReason(e.name in errorMessageMap ? (e.name as UserMediaError) : 'UnknownError');
           },
         }),
+        shareReplay({
+          refCount: true,
+          bufferSize: 1,
+        }),
       ),
-      suppressNoiseEnabled$,
-    ]).pipe(
-      switchMap(([track, suppressNoise]) => of(suppressNoise && track ? noiseSuppression(track) : track)),
-      shareReplay({
-        refCount: true,
-        bufferSize: 1,
-      }),
-    );
-  }, [suppressNoiseEnabled$]);
+    [],
+  );
   const mutedAudioTrack$ = useMemo(() => {
     return getUserMediaTrack$('audioinput').pipe(
       tap({
@@ -178,8 +171,6 @@ const useUserMedia = (mode: Mode) => {
     turnCameraOff,
     videoEnabled,
     videoUnavailableReason,
-    suppressNoise,
-    setSuppressNoise,
     videoTrack$,
     videoStreamTrack: videoTrack,
 

@@ -9,10 +9,8 @@ import { Button } from './Button';
 import { Dialog, DialogContent, DialogOverlay, DialogTitle, Portal, Trigger } from './Dialog';
 import { Icon } from './Icon/Icon';
 import { Label } from './Label';
-import { Toggle } from './Toggle';
 import { Tooltip } from './Tooltip';
 import { VideoInputSelector } from './VideoInputSelector';
-import { useRoomContext } from '../hooks/useRoomContext';
 
 interface SettingsDialogProps {
   onOpenChange?: (open: boolean) => void;
@@ -35,10 +33,6 @@ export const SettingsButton = () => {
 };
 
 export const SettingsDialog: FC<SettingsDialogProps> = ({ onOpenChange, open, children }) => {
-  const {
-    userMedia: { suppressNoise, setSuppressNoise },
-  } = useRoomContext()!;
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {children}
@@ -55,12 +49,6 @@ export const SettingsDialog: FC<SettingsDialogProps> = ({ onOpenChange, open, ch
               Mic
             </Label>
             <AudioInputSelector id='mic' />
-            <Label className='text-base -mb-2 md:mb-0 text-left md:text-right' htmlFor='suppressNoise'>
-              Suppress Noise
-            </Label>
-            <div>
-              <Toggle id='suppressNoise' checked={suppressNoise} onCheckedChange={setSuppressNoise} />
-            </div>
           </div>
         </DialogContent>
       </Portal>
