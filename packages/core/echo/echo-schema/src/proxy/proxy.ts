@@ -47,7 +47,7 @@ export const getProxyHandler = <T extends object>(proxy: ReactiveObject<any>): R
  * Unsafe method to override id for debugging/testing and migration purposes.
  * @deprecated
  */
-export const dangerouslySetProxyId = <T>(obj: ReactiveObject<T>, id: string) => {
+export const dangerouslySetProxyId = <T extends object>(obj: ReactiveObject<T>, id: string) => {
   (getProxySlot(obj).target as any).id = id;
 };
 

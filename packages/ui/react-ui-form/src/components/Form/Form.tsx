@@ -7,11 +7,12 @@ import { capitalize } from 'effect/String';
 import React, { useEffect, useMemo } from 'react';
 
 import { AST, S } from '@dxos/echo-schema';
+import { type PropertyKey } from '@dxos/echo-schema';
 import { findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { getSchemaProperties, type PropertyKey, type SchemaProperty } from '@dxos/schema';
+import { getSchemaProperties, type SchemaProperty } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
 import { SelectInput } from './Defaults';

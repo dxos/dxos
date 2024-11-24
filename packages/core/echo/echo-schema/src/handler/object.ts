@@ -21,6 +21,7 @@ export const createObjectId = () => ulid();
  * Creates a reactive object from a plain Javascript object.
  * Optionally provides a TS-effect schema.
  */
+// TODO(burdon): T extends {} or object?
 // TODO(dmaretskyi): Deep mutability.
 // TODO(dmaretskyi): Invert generics (generic over schema) to have better error messages.
 export const create: {

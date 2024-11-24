@@ -45,7 +45,14 @@ export const ObjectMetaSchema = S.mutable(
 
 export type ObjectMeta = S.Schema.Type<typeof ObjectMetaSchema>;
 
+//
+// Objects
+//
+
 export type ExcludeId<T> = Simplify<Omit<T, 'id'>>;
+
+// TODO(burdon): Audit: replace <T extends {}> with <T extends object>.
+export type PropertyKey<T extends object> = Extract<keyof ExcludeId<T>, string>;
 
 type WithMeta = { [ECHO_ATTR_META]?: ObjectMeta };
 
@@ -61,14 +68,13 @@ export const RawObject = <S extends S.Schema<any>>(
 /**
  * Reference to another ECHO object.
  */
-export type Ref<T> = T | undefined;
+export type Ref<T extends {} = {}> = T | undefined;
 
 /**
  * Reactive object marker interface (does not change the shape of the object.)
  * Accessing properties triggers signal semantics.
  */
-// TODO(burdon): Reconcile with AbstractTypedObject.
-export type ReactiveObject<T> = { [K in keyof T]: T[K] };
+export type ReactiveObject<T extends {} = {}> = { [K in keyof T]: T[K] };
 
 //
 // Data

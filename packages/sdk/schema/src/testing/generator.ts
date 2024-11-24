@@ -2,49 +2,67 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Format, S, TypedObject } from '@dxos/echo-schema';
+import { Effect, pipe } from 'effect';
 
-// TODO(burdon): Define type in struct (since required for low-level libs like react-table).
+import { create, type S, type ReactiveObject, type ExcludeId } from '@dxos/echo-schema';
+import { findAnnotation } from '@dxos/effect';
+import { faker } from '@dxos/random';
+import { getDeep } from '@dxos/util';
+
+import { getSchemaProperties } from '../properties';
+
+// TODO(burdon): AUDIT (@dmytro)
+//  - New TypedObject syntax.
+//    - Define low-level types in S.Struct (e.g., in react-table).
+//    - Type should include definition of `id`.
+//  - Change <T extends {}> to <T extends object = {}>
+//  - Audit all low-level types (e.g., ReactiveObject, AbstractTypedObject, MutableObject: see echo-schema/docs).
+//  - Implement basic "comment required" TODOs.
+
+// TODO(burdon): Agent pipeline (@dmytro)
+//  - Generators: https://effect.website/docs/getting-started/using-generators/
+
 // TODO(burdon): Replace echo-generator.
 // TODO(burdon): Delete core/agent, experimental/agent-functions.
+// TODO(burdon): Type with address/geo; Address type.
+// TODO(burdon): Generate views, tables, and SCRIPTS/FUNCTIONS.,
 
-export const Org = S.Struct({
-  // id: S.String,
-  name: S.String,
-  website: Format.URL,
-});
+// TODO(burdon): Generate relational tables/views.
+// TODO(burdon): Generate test documents, sketches, sheets.
 
-export const Contact = S.Struct({
-  // id: S.String,
-  name: S.String,
-  // TODO(burdon): Array.
-  email: Format.Email,
-});
+export const GeneratorAnnotationId = Symbol.for('@dxos/schema/annotation/Generator');
 
-export const Project = S.Struct({
-  // id: S.String,
-  name: S.String,
-});
+export type RawObject<T extends object = {}> = ExcludeId<ReactiveObject<Partial<T>>>;
 
-// TODO(burdon): Use concrete type.
-export const Task = S.Struct({
-  // id: S.String,
-  // project: S.optional(ref(Project)), // TODO(burdon): Must be echo object.
-  name: S.String,
-  assignedTo: S.String, // TODO(burdon): Ref.
-});
+export const updateObject =
+  <T extends object = {}>(type: S.Schema<T>) =>
+  (initial: RawObject<T> = {} as any as RawObject<T>): RawObject<T> => {
+    return getSchemaProperties<T>(type.ast).reduce<RawObject<T>>((data, property) => {
+      const gen = findAnnotation<string>(property.prop.type, GeneratorAnnotationId);
+      if (gen) {
+        const fn = getDeep<() => any>({ faker }, gen.split('.'));
+        if (fn) {
+          data[property.name] = fn() as any;
+        }
+      }
 
-// TODO(burdon): Use concrete type.
-export const Message = S.Struct({
-  // id: S.String,
-  from: Format.Email,
-  to: Format.Email,
-  subject: S.String,
-  body: S.String,
-});
+      return data;
+    }, initial);
+  };
 
-// TODO(burdon): Check pattern for table.
-export class OrgType extends TypedObject({
-  typename: 'example.com/type/Org',
-  version: '0.1.0',
-})(Org.fields) {}
+export const createReactiveObject =
+  <T extends object = {}>(type: S.Schema<T>) =>
+  (data: RawObject<T>) => {
+    return create<T>(type, data);
+  };
+
+export const createObjectArray = <T extends object>(n: number) =>
+  Effect.succeed(Array.from({ length: n }, () => ({}) as T));
+
+export const createObjectPipeline = <T extends RawObject>(n: number, p: (obj: T) => T) =>
+  Effect.flatMap(createObjectArray<T>(n), (objects) => Effect.succeed(objects.map((obj) => pipe(obj, p))));
+
+export const createObject =
+  <T extends object>(type: S.Schema<T>) =>
+  (obj: RawObject<T>) =>
+    pipe(obj, updateObject(type), createReactiveObject(type));

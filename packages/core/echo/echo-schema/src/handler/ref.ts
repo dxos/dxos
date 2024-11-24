@@ -41,7 +41,7 @@ export const setSchemaReference = (property: JsonSchemaType, schema: string) => 
   });
 };
 
-export interface ref<T> extends S.Schema<Ref<T>, EncodedReference> {}
+export interface ref<T extends object> extends S.Schema<Ref<T>, EncodedReference> {}
 
 export const ref = <T extends HasId>(schema: S.Schema<T, any>): ref<T> => {
   const annotation = getObjectAnnotation(schema);

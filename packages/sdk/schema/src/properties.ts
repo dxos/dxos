@@ -8,6 +8,7 @@ import {
   getFormatAnnotation,
   type OptionsAnnotationType,
   OptionsAnnotationId,
+  type PropertyKey,
 } from '@dxos/echo-schema';
 import {
   type SimpleType,
@@ -19,8 +20,6 @@ import {
   isSimpleType,
 } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-
-export type PropertyKey<T extends object> = Extract<keyof T, string>;
 
 /**
  * Flattened representation of AST node.
