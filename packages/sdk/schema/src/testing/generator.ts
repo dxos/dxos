@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { createMutableSchema, Format, S, TypedObject } from '@dxos/echo-schema';
+import { Format, S, TypedObject } from '@dxos/echo-schema';
 
 // TODO(burdon): Replace echo-generator.
 // TODO(burdon): Delete core/agent, experimental/agent-functions.
@@ -47,5 +47,3 @@ export class OrgType extends TypedObject({
   typename: 'example.com/type/Org',
   version: '0.1.0',
 })(Org.fields) {}
-
-createMutableSchema({ typename: 'example.com/type/Org', version: '0.1.0' }, Org.fields);
