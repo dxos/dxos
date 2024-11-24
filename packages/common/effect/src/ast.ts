@@ -62,14 +62,6 @@ const PROP_REGEX = /\w+/;
 export const JsonPath = S.NonEmptyString.pipe(S.pattern(PATH_REGEX)) as any as S.Schema<JsonPath>;
 export const JsonProp = S.NonEmptyString.pipe(S.pattern(PROP_REGEX)) as any as S.Schema<JsonProp>;
 
-/**
- * Get annotation or return undefined.
- */
-export const getAnnotation =
-  <T>(annotationId: symbol) =>
-  (node: AST.Annotated): T | undefined =>
-    pipe(AST.getAnnotation<T>(annotationId)(node), Option.getOrUndefined);
-
 export enum VisitResult {
   CONTINUE = 0,
   /**
@@ -245,23 +237,31 @@ const defaultAnnotations: Record<string, AST.Annotated> = {
 };
 
 /**
+ * Get annotation or return undefined.
+ * @param annotationId
+ * @param noDefault If true, then return undefined for effect library defined values.
+ */
+export const getAnnotation =
+  <T>(annotationId: symbol, noDefault = true) =>
+  (node: AST.AST): T | undefined => {
+    const value = pipe(AST.getAnnotation<T>(annotationId)(node), Option.getOrUndefined);
+    if (noDefault && value === defaultAnnotations[node._tag]?.annotations[annotationId]) {
+      return undefined;
+    }
+
+    return value;
+  };
+
+/**
  * Recursively descend into AST to find first matching annotations.
  * Optionally skips default annotations for basic types (e.g., 'a string').
  */
-export const findAnnotation = <T>(
-  node: AST.AST,
-  annotationId: symbol,
-  options?: { noDefault: boolean },
-): T | undefined => {
-  const getAnnotationById = getAnnotation(annotationId);
+export const findAnnotation = <T>(node: AST.AST, annotationId: symbol, noDefault = true): T | undefined => {
+  const getAnnotationById = getAnnotation(annotationId, noDefault);
 
   const getBaseAnnotation = (node: AST.AST): T | undefined => {
     const value = getAnnotationById(node);
     if (value !== undefined) {
-      if (options?.noDefault && value === defaultAnnotations[node._tag]?.annotations[annotationId]) {
-        return undefined;
-      }
-
       return value as T;
     }
 

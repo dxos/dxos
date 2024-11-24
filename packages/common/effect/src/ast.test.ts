@@ -114,7 +114,6 @@ describe('AST', () => {
     const annotation = findAnnotation(
       S.String.annotations({ [AST.TitleAnnotationId]: 'test' }).ast,
       AST.TitleAnnotationId,
-      { noDefault: true },
     );
     expect(annotation).to.eq('test');
 
@@ -122,7 +121,7 @@ describe('AST', () => {
     const schemas = [S.Object, S.String, S.Number, S.Boolean];
     for (const schema of schemas) {
       for (const annotationId of annotationIds) {
-        const annotation = findAnnotation(schema.ast, annotationId, { noDefault: true });
+        const annotation = findAnnotation(schema.ast, annotationId);
         expect(annotation, schema.ast._tag).to.eq(undefined);
       }
     }

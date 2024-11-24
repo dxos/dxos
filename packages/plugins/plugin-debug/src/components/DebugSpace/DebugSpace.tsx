@@ -2,19 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  ArrowClockwise,
-  DownloadSimple,
-  Flag,
-  FlagPennant,
-  HandPalm,
-  Play,
-  PlusMinus,
-  Timer,
-  UserCirclePlus,
-} from '@phosphor-icons/react';
 import React, { type FC, useContext, useMemo, useState } from 'react';
 
+import { createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { type ReactiveObject } from '@dxos/echo-schema';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
@@ -23,26 +13,34 @@ import { useClient } from '@dxos/react-client';
 import { Filter, type Space, useSpaceInvitation } from '@dxos/react-client/echo';
 import { InvitationEncoder } from '@dxos/react-client/invitations';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { Button, Input, useFileDownload } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { Icon, IconButton, Input, type IconProps, type TextInputProps, Toolbar, useFileDownload } from '@dxos/react-ui';
 import { safeParseInt } from '@dxos/util';
 
-import { DebugPanel } from './DebugPanel';
 import { ObjectCreator } from './ObjectCreator';
-import { createSpaceObjectGenerator } from '../scaffolding';
-import { DebugContext } from '../types';
+import { DebugContext } from '../../types';
+import { Container } from '../Container';
 
 const DEFAULT_COUNT = 100;
 const DEFAULT_PERIOD = 500;
 const DEFAULT_JITTER = 50;
 
-// TODO(burdon): Factor out.
 const useRefresh = (): [any, () => void] => {
   const [update, setUpdate] = useState({});
   return [update, () => setUpdate({})];
 };
 
-const DebugSpace: FC<{
+const CustomInput = ({ icon, ...props }: Pick<IconProps, 'icon'> & TextInputProps) => {
+  return (
+    <div role='none' className='relative'>
+      <Input.Root>
+        <Input.TextInput classNames='w-[100px] text-right pie-[22px]' size={5} {...props} />
+      </Input.Root>
+      <Icon icon={icon} size={3} classNames='absolute inline-end-1 block-start-1 mt-[6px]' />
+    </div>
+  );
+};
+
+export const DebugSpace: FC<{
   space: Space;
   onAddObjects?: (objects: ReactiveObject<any>[]) => void;
 }> = ({ space, onAddObjects }) => {
@@ -66,7 +64,7 @@ const DebugSpace: FC<{
   );
 
   const download = useFileDownload();
-  const handleCopy = async () => {
+  const handleDownload = async () => {
     download(
       new Blob([JSON.stringify(data, undefined, 2)], { type: 'text/plain' }),
       `${new Date().toISOString().replace(/\W/g, '-')}.json`,
@@ -125,71 +123,61 @@ const DebugSpace: FC<{
   };
 
   return (
-    <DebugPanel
-      menu={
-        <>
-          <div className='relative' title='mutation count'>
-            <Input.Root>
-              <Input.TextInput
-                autoComplete='off'
-                size={5}
-                classNames='w-[100px] text-right pie-[22px]'
-                placeholder='Count'
-                value={mutationCount}
-                onChange={({ target: { value } }) => setMutationCount(value)}
-              />
-            </Input.Root>
-            <Flag className={mx('absolute inline-end-1 block-start-1 mt-[6px]', getSize(3))} />
-          </div>
-          <div className='relative' title='mutation period'>
-            <Input.Root>
-              <Input.TextInput
-                autoComplete='off'
-                size={5}
-                classNames='w-[100px] text-right pie-[22px]'
-                placeholder='Interval'
-                value={mutationInterval}
-                onChange={({ target: { value } }) => setMutationInterval(value)}
-              />
-            </Input.Root>
-            <Timer className={mx('absolute inline-end-1 block-start-1 mt-[6px]', getSize(3))} />
-          </div>
-          <div className='relative' title='mutation jitter'>
-            <Input.Root>
-              <Input.TextInput
-                autoComplete='off'
-                size={5}
-                classNames='w-[100px] text-right pie-[22px]'
-                placeholder='Jitter'
-                value={mutationJitter}
-                onChange={({ target: { value } }) => setMutationJitter(value)}
-              />
-            </Input.Root>
-            <PlusMinus className={mx('absolute inline-end-1 block-start-1 mt-[6px]', getSize(3))} />
-          </div>
-          <Button onClick={handleToggleRunning}>
-            {running ? <HandPalm className={getSize(5)} /> : <Play className={getSize(5)} />}
-          </Button>
-          <Button onClick={handleUpdate}>
-            <ArrowClockwise className={getSize(5)} />
-          </Button>
-          <Button onClick={handleCopy}>
-            <DownloadSimple className={getSize(5)} />
-          </Button>
+    <Container
+      toolbar={
+        <Toolbar.Root classNames='p-1'>
+          <CustomInput
+            icon='ph--flag--regular'
+            autoComplete='off'
+            placeholder='Count'
+            value={mutationCount}
+            onChange={({ target: { value } }) => setMutationCount(value)}
+          />
+          <CustomInput
+            icon='ph--timer--regular'
+            autoComplete='off'
+            placeholder='Interval'
+            value={mutationInterval}
+            onChange={({ target: { value } }) => setMutationInterval(value)}
+          />
+          <CustomInput
+            icon='ph--plus-minus--regular'
+            autoComplete='off'
+            placeholder='Jitter'
+            value={mutationJitter}
+            onChange={({ target: { value } }) => setMutationJitter(value)}
+          />
 
-          <div className='grow' />
-          <Button onClick={handleCreateEpoch} title='Create epoch'>
-            <FlagPennant className={mx(getSize(5))} />
-          </Button>
-          <Button onClick={handleCreateInvitation} title='Create Space invitation'>
-            <UserCirclePlus className={mx(getSize(5), 'text-blue-500')} />
-          </Button>
-        </>
+          <IconButton
+            icon={running ? 'ph--hand-palm--regular' : 'ph--play--regular'}
+            iconOnly
+            label='Start/stop'
+            size={5}
+            onClick={handleToggleRunning}
+          />
+          <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' size={5} onClick={handleUpdate} />
+          <IconButton icon='ph--download-simple--regular' iconOnly label='Download' size={5} onClick={handleDownload} />
+
+          <Toolbar.Expander />
+          <IconButton
+            icon='ph--flag-pennant--regular'
+            iconOnly
+            label='Create epoch'
+            size={5}
+            onClick={handleCreateEpoch}
+          />
+          <IconButton
+            icon='ph--user-circle-plus--regular'
+            iconOnly
+            iconClassNames='text-blue-500'
+            label='Create Invitation'
+            size={5}
+            onClick={handleCreateInvitation}
+          />
+        </Toolbar.Root>
       }
     >
       <ObjectCreator space={space} onAddObjects={onAddObjects} />
-    </DebugPanel>
+    </Container>
   );
 };
-
-export default DebugSpace;

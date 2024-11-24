@@ -25,10 +25,10 @@ export default [
         'trigger select label': 'Trigger',
         'trigger select placeholder': 'Trigger type',
 
-        'trigger type subscription': 'Subscription',
         'trigger type timer': 'Timer',
         'trigger type webhook': 'Webhook',
         'trigger type websocket': 'Websocket',
+        'trigger type subscription': 'Subscription',
 
         'trigger filter': 'Filter',
         'trigger cron': 'Cron',
