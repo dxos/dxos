@@ -281,9 +281,9 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       return undefined;
     }
 
-    const object = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this));
-    invariant(isReactiveObject(object));
-    return object;
+    const obj = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this));
+    invariant(isReactiveObject(obj));
+    return obj;
   }
 
   //
