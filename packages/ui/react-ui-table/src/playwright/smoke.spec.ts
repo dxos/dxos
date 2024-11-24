@@ -15,8 +15,10 @@ const storyUrl = `http://localhost:9009/iframe.html?id=${storyId}&viewMode=story
 test.describe('Table', () => {
   test('Loads', async ({ browser }) => {
     const { page } = await setupPage(browser, { url: storyUrl });
+    const table = new TableManager(page);
 
     // (select, name, email, salary, manager, actions) * (header + 10 rows).
+    await table.grid.ready();
     await expect(page.getByRole('gridcell')).toHaveCount(66);
     await page.close();
   });
@@ -25,6 +27,7 @@ test.describe('Table', () => {
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
+    await table.grid.ready();
     await table.sortColumn(0, 'descending');
     await expect(page.getByRole('gridcell').nth(16)).toHaveText('Uwe Øvergård');
     await expect(page.getByRole('gridcell').nth(52)).toContainText('Anita');
@@ -39,6 +42,7 @@ test.describe('Table', () => {
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
+    await table.grid.ready();
     await table.deleteRow(0);
     await expect(page.getByRole('gridcell', { name: 'Anita Mayer' })).toHaveCount(0);
     await page.close();
@@ -48,6 +52,7 @@ test.describe('Table', () => {
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
+    await table.grid.ready();
     await table.toggleSelectAll();
     await table.deleteRow(0);
 
@@ -61,6 +66,7 @@ test.describe('Table', () => {
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
+    await table.grid.ready();
     await table.deleteColumn(0);
     await expect(page.getByRole('gridcell')).toHaveCount(55);
 
@@ -80,6 +86,7 @@ test.describe('Table', () => {
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
+    await table.grid.ready();
     const newColumnLabel = 'TEST LABEL';
 
     await table.addColumn({ label: newColumnLabel, format: 'number' });

@@ -18,11 +18,16 @@ const TABLE_SELECTORS = {
   columnDelete: 'column-delete',
   rowDelete: 'row-menu-delete',
 } as const;
+
 export class TableManager {
   private readonly _grid: DxGridManager;
 
   constructor(private readonly page: Page) {
     this._grid = new DxGridManager(page);
+  }
+
+  public get grid(): DxGridManager {
+    return this._grid;
   }
 
   public async deleteColumn(index: number): Promise<void> {
