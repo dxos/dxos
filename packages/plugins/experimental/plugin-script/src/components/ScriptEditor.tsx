@@ -68,7 +68,6 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
   );
 
   const [view, setView] = useState<ViewType>('editor');
-  const initialValue = useMemo(() => script.source?.content, [script.source]);
   const existingFunctionUrl = fn && getUserFunctionUrlInMetadata(getMeta(fn));
   const [error, setError] = useState<string>();
 
@@ -185,7 +184,7 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
         <TypescriptEditor
           id={script.id}
           env={env}
-          initialValue={initialValue}
+          initialValue={script.source?.content}
           extensions={extensions}
           className='flex is-full bs-full overflow-hidden ch-focus-ring-inset-over-all'
         />
