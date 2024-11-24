@@ -233,9 +233,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Add live object.
    */
-  add<T extends ReactiveObject<any>>(obj: T): EchoReactiveObject<{ [K in keyof T]: T[K] }> {
-    let echoObject = obj;
-    if (!isEchoObject(echoObject)) {
+  add<T extends ReactiveObject<T>>(obj: T): EchoReactiveObject<T> {
+    if (!isEchoObject(obj)) {
       const schema = getSchema(obj);
       if (schema != null) {
         if (!this.schemaRegistry.hasSchema(schema) && !this.graph.schemaRegistry.hasSchema(schema)) {
@@ -243,24 +242,24 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
         }
       }
 
-      echoObject = createObject(obj);
+      obj = createObject(obj);
     }
 
-    invariant(isEchoObject(echoObject));
-    this._rootProxies.set(getObjectCore(echoObject), echoObject);
+    invariant(isEchoObject(obj));
+    this._rootProxies.set(getObjectCore(obj), obj);
 
-    const target = getProxyTarget(echoObject) as ProxyTarget;
+    const target = getProxyTarget(obj) as ProxyTarget;
     EchoReactiveHandler.instance.setDatabase(target, this);
     EchoReactiveHandler.instance.saveRefs(target);
-    this._coreDatabase.addCore(getObjectCore(echoObject));
+    this._coreDatabase.addCore(getObjectCore(obj));
 
-    return echoObject as any;
+    return obj;
   }
 
   /**
    * Remove live object.
    */
-  remove<T extends EchoReactiveObject<any>>(obj: T): void {
+  remove<T extends EchoReactiveObject<T>>(obj: T): void {
     invariant(isEchoObject(obj));
     return this._coreDatabase.removeCore(getObjectCore(obj));
   }

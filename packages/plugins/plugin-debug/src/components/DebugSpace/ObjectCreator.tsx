@@ -4,7 +4,7 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { TestSchemaType, createSpaceObjectGenerator } from '@dxos/echo-generator';
+import { type MutationsProviderParams, TestSchemaType, createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { type EchoReactiveObject, type ReactiveObject, type Space } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { createColumnBuilder, type TableColumnDef, Table } from '@dxos/react-ui-table/deprecated';
@@ -14,10 +14,8 @@ const BATCH_SIZE = 10;
 export type CreateObjectsParams = {
   schema: string;
   enabled: boolean;
-  objectsCount: number;
-  mutationsCount: number;
-  maxContentLength: number;
-  mutationSize: number;
+  objects: number;
+  mutations: Pick<MutationsProviderParams, 'count' | 'mutationSize' | 'maxContentLength'>;
 };
 
 export type ObjectCreatorProps = {
@@ -32,10 +30,12 @@ export const ObjectCreator = ({ space, onAddObjects }: ObjectCreatorProps) => {
     Object.values(TestSchemaType).map((schema) => ({
       schema,
       enabled: true,
-      objectsCount: 10,
-      mutationsCount: 10,
-      mutationSize: 10,
-      maxContentLength: 1000,
+      objects: 10,
+      mutations: {
+        count: 10,
+        mutationSize: 10,
+        maxContentLength: 1000,
+      },
     })),
   );
 
@@ -46,17 +46,12 @@ export const ObjectCreator = ({ space, onAddObjects }: ObjectCreatorProps) => {
       }
 
       let objectsCreated = 0;
-      while (objectsCreated < params.objectsCount) {
+      while (objectsCreated < params.objects) {
         const objects = (await generator.createObjects({
-          [params.schema]: Math.min(BATCH_SIZE, params.objectsCount - objectsCreated),
+          [params.schema]: Math.min(BATCH_SIZE, params.objects - objectsCreated),
         })) as EchoReactiveObject<any>[];
 
-        await generator.mutateObjects(objects, {
-          count: params.mutationsCount,
-          mutationSize: params.mutationSize,
-          maxContentLength: params.maxContentLength,
-        });
-
+        await generator.mutateObjects(objects, params.mutations);
         objectsCreated += objects.length;
         onAddObjects?.(objects);
       }
@@ -75,10 +70,19 @@ export const ObjectCreator = ({ space, onAddObjects }: ObjectCreatorProps) => {
   const columns: TableColumnDef<CreateObjectsParams>[] = [
     helper.accessor('enabled', builder.switch({ label: 'Live', onUpdate: handleUpdate })),
     helper.accessor('schema', builder.string({ label: 'Schema', classNames: 'font-mono' })),
-    helper.accessor('objectsCount', builder.number({ label: 'Objects', onUpdate: handleUpdate })),
-    helper.accessor('mutationsCount', builder.number({ label: 'Mutations', onUpdate: handleUpdate })),
-    helper.accessor('mutationSize', builder.number({ label: 'Mut. Size', onUpdate: handleUpdate })),
-    helper.accessor('maxContentLength', builder.number({ label: 'Length', onUpdate: handleUpdate })),
+    helper.accessor('objects', builder.number({ label: 'Objects', onUpdate: handleUpdate })),
+    helper.accessor((obj) => obj.mutations.count, {
+      id: 'mutations',
+      ...builder.number({ label: 'Mutations', onUpdate: handleUpdate }),
+    }),
+    helper.accessor((obj) => obj.mutations.mutationSize, {
+      id: 'mutationSize',
+      ...builder.number({ label: 'Mut. Size', onUpdate: handleUpdate }),
+    }),
+    helper.accessor((obj) => obj.mutations.maxContentLength, {
+      id: 'mutationMaxContentLength',
+      ...builder.number({ label: 'Length', onUpdate: handleUpdate }),
+    }),
   ];
 
   return (

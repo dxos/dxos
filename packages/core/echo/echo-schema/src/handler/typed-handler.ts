@@ -43,9 +43,9 @@ type ProxyTarget = {
 export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   public static readonly instance: ReactiveHandler<any> = new TypedReactiveHandler();
 
-  private constructor() {}
-
   readonly _proxyMap = new WeakMap<object, any>();
+
+  private constructor() {}
 
   init(target: ProxyTarget): void {
     invariant(typeof target === 'object' && target !== null);

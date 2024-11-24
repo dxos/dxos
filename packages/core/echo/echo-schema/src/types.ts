@@ -67,6 +67,7 @@ export type Ref<T> = T | undefined;
  * Reactive object marker interface (does not change the shape of the object.)
  * Accessing properties triggers signal semantics.
  */
+// TODO(burdon): Reconcile with AbstractTypedObject.
 export type ReactiveObject<T> = { [K in keyof T]: T[K] };
 
 //
