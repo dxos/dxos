@@ -31,7 +31,7 @@ const useRefresh = (): [any, () => void] => {
 
 const CustomInput = ({ icon, ...props }: Pick<IconProps, 'icon'> & TextInputProps) => {
   return (
-    <div className='relative'>
+    <div role='none' className='relative'>
       <Input.Root>
         <Input.TextInput classNames='w-[100px] text-right pie-[22px]' size={5} {...props} />
       </Input.Root>
