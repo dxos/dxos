@@ -107,7 +107,7 @@ export const defineTool = <Params extends S.Schema.AnyNoContext>({
 
 const toFunctionParameterSchema = (schema: S.Schema.All) => {
   const jsonSchema = toJsonSchema(schema);
-  log.info('tool schema', { jsonSchema });
+  log('tool schema', { jsonSchema });
   for (const key in jsonSchema.properties) {
     if (typeof jsonSchema.properties![key].description !== 'string') {
       throw new Error(`Property missing description: ${key}`);

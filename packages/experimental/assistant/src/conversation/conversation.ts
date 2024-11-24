@@ -19,14 +19,24 @@ export type CreateLLMConversationParams = {
 
   tools: LLMTool[];
   backend: AIBackend;
+
+  logger?: (event: ConversationEvent) => void;
+};
+
+export type ConversationEvent = {
+  type: 'message';
+  message: LLMMessage;
 };
 
 export const runLLM = async (params: CreateLLMConversationParams) => {
   const history: LLMMessage[] = [...params.messages];
   let conversationResult: any = null;
+  for (const message of history) {
+    params.logger?.({ type: 'message', message });
+  }
 
   const generate = async () => {
-    log.info('llm generate', { history, tools: params.tools });
+    log('llm generate', { history, tools: params.tools });
     const beginTs = Date.now();
     const result = await params.backend.run({
       model: params.model,
@@ -34,10 +44,11 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
       system: params.system,
       tools: params.tools as any,
     });
-    log.info('llm result', { time: Date.now() - beginTs, result });
+    log('llm result', { time: Date.now() - beginTs, result });
     invariant(!(result instanceof ReadableStream));
 
     history.push(result.message);
+    params.logger?.({ type: 'message', message: result.message });
 
     if (result.message.stopReason === 'tool_use') {
       const toolCalls = result.message.content.filter((c) => c.type === 'tool_use');
@@ -48,11 +59,10 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
         throw new Error(`Tool not found: ${toolCall.name}`);
       }
 
-      history.push;
       const toolResult = await tool.execute(toolCall.input, {});
       switch (toolResult.kind) {
         case 'error': {
-          log.info('tool error', { message: toolResult.message });
+          log('tool error', { message: toolResult.message });
           history.push({
             role: 'user',
             content: [
@@ -64,10 +74,12 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
               },
             ],
           });
+          params.logger?.({ type: 'message', message: history.at(-1)! });
+
           return true;
         }
         case 'success': {
-          log.info('tool success', { result: toolResult.result });
+          log('tool success', { result: toolResult.result });
           history.push({
             role: 'user',
             content: [
@@ -78,10 +90,11 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
               },
             ],
           });
+          params.logger?.({ type: 'message', message: history.at(-1)! });
           return true;
         }
         case 'break': {
-          log.info('tool break', { result: toolResult.result });
+          log('tool break', { result: toolResult.result });
           conversationResult = toolResult.result;
           return false;
         }

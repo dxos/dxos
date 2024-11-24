@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { createTestData } from './test-data';
 import { Contact, Org, Project, Task } from './test-schema';
 import { AnthropicBackend } from '../conversation/backend/anthropic';
-import { runLLM } from '../conversation/conversation';
+import { runLLM, type ConversationEvent } from '../conversation/conversation';
 import { createUserMessage, defineTool, LLMToolResult } from '../conversation/types';
 import { executeQuery } from '../cypher/query-executor';
 import { formatJsonSchemaForLLM } from '../cypher/schema';
@@ -49,9 +49,9 @@ test('cypher query', async () => {
     }),
     execute: async ({ query }) => {
       try {
-        log.info('cypher query', { query });
+        log('cypher query', { query });
         const results = await executeQuery(dataSource, query);
-        log.info('query complete', { results });
+        log('query complete', { results });
         return LLMToolResult.Success(results);
       } catch (e: any) {
         return LLMToolResult.Error(e.message);
@@ -82,6 +82,7 @@ test('cypher query', async () => {
     ],
     tools: [cypherTool],
     backend,
+    logger: prettyLogger,
   });
 
   log.info('DONE', { result: result.result });
@@ -92,3 +93,32 @@ const backend = new AnthropicBackend({
 });
 
 // MATCH (org:Org {name: 'DXOS'})-[:ORG_EMPLOYEES]->(c:Contact)<-[:TASK_ASSIGNEE]-(t:Task)-[:TASK_PROJECT]->(p:Project {name: 'Composer'}) RETURN c.name
+
+const prettyLogger = (event: ConversationEvent) => {
+  switch (event.type) {
+    case 'message':
+      console.log(`${event.message.role.toUpperCase()}\n`);
+      for (const block of event.message.content) {
+        switch (block.type) {
+          case 'text':
+            console.log(block.text);
+            break;
+          case 'tool_use':
+            console.log(`⚙️ [Tool Use] ${block.name}`);
+            console.log(`  ${JSON.stringify(block.input)}`);
+            break;
+          case 'tool_result':
+            if (block.is_error) {
+              console.log('❌ [Tool Error]');
+              console.log(block.content);
+            } else {
+              console.log('✅ [Tool Success]');
+              console.log(block.content);
+            }
+        }
+        console.log('\n');
+      }
+      break;
+  }
+  console.log('\n');
+};
