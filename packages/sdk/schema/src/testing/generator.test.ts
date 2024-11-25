@@ -9,9 +9,12 @@ import { Filter } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { getSchemaTypename, type JsonProp, type S, type JsonPath } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
+import { faker } from '@dxos/random';
 
 import { createArrayPipeline, createObjectPipeline } from './generator';
 import { ContactType, createReferenceProperty, OrgType, ProjectType } from './types';
+
+faker.seed(1);
 
 type TypeSpec = {
   type: S.Schema<any>;
