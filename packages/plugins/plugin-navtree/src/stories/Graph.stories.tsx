@@ -10,18 +10,16 @@ import { batch } from '@preact/signals-core';
 import { type Meta } from '@storybook/react';
 import React, { useEffect } from 'react';
 
-import { Graph, ROOT_ID, type NodeFilter } from '@dxos/app-graph';
-import { create } from '@dxos/echo-schema';
+import { Graph, ROOT_ID, type Node } from '@dxos/app-graph';
+import { create, type ReactiveObject } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals/react';
-import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
-import { isItem } from '@dxos/react-ui-list';
+import { isTreeData, type PropsFromTreeItem } from '@dxos/react-ui-list';
 import { Path } from '@dxos/react-ui-mosaic';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { NavTree, type NavTreeProps } from '../components';
-import { type NavTreeItem } from '../types';
-import { getActions, getChildren, type NavTreeItemGraphNode, treeItemsFromRootNode } from '../util';
+import { NavTree } from '../components';
+import { getActions, getChildren } from '../util';
 
 faker.seed(3);
 registerSignalsRuntime();
@@ -50,106 +48,80 @@ const createGraph = () => {
   return graph;
 };
 
-type State = {
-  flatTree: NavTreeItem[];
-  open: string[];
-  current: string[];
-};
-
 const graph = createGraph();
-const itemCache = new Map<string, NavTreeItem>();
-const state = create<State>({
-  get flatTree() {
-    return treeItemsFromRootNode(graph, graph.root, this.open, getItem);
-  },
-  open: [],
-  current: [],
-});
-
-const getItem = (node: NavTreeItemGraphNode, parent: readonly string[], filter?: NodeFilter) => {
-  invariant(graph);
-  const path = [...parent, node.id];
-  const { actions, groupedActions } = getActions(graph, node);
-  const children = getChildren(graph, node, filter, path);
-  const parentOf =
-    children.length > 0 ? children.map(({ id }) => id) : node.properties.role === 'branch' ? [] : undefined;
-  const item = {
-    id: node.id,
-    label: node.properties.label ?? node.id,
-    icon: node.properties.icon,
-    path,
-    parentOf,
-    node,
-    actions,
-    groupedActions,
-  } satisfies NavTreeItem;
-
-  const cachedItem = itemCache.get(node.id);
-  // TODO(wittjosiah): This is not a good enough check.
-  //   Consider better ways to doing reactive transformations which retain referential equality.
-  if (cachedItem && JSON.stringify(item) === JSON.stringify(cachedItem)) {
-    return cachedItem;
-  } else {
-    itemCache.set(node.id, item);
-    return item;
-  }
-};
-
-const Story = (args: Partial<NavTreeProps>) => {
-  // NOTE: If passed directly to args, this won't be reactive.
-  const items = state.flatTree;
-
-  useEffect(() => {
-    return monitorForElements({
-      canMonitor: ({ source }) => isItem(source.data),
-      onDrop: ({ location, source }) => {
-        // Didn't drop on anything.
-        if (!location.current.dropTargets.length) {
-          return;
-        }
-
-        const target = location.current.dropTargets[0];
-
-        const instruction: Instruction | null = extractInstruction(target.data);
-        if (instruction !== null) {
-          // TODO(wittjosiah): Implement drop logic.
-          console.log('update', instruction);
-        }
-      },
-    });
-  }, []);
-
-  return <NavTree items={items} open={state.open} current={state.current} {...args} />;
-};
+const state = new Map<string, ReactiveObject<{ open: boolean; current: boolean }>>();
 
 export const Default = {};
 
-const meta: Meta = {
+const meta: Meta<typeof NavTree> = {
   title: 'plugins/plugin-navtree/Graph',
   component: NavTree,
-  render: Story,
   decorators: [withTheme, withLayout({ tooltips: true })],
+  render: (args) => {
+    useEffect(() => {
+      return monitorForElements({
+        canMonitor: ({ source }) => isTreeData(source.data),
+        onDrop: ({ location, source }) => {
+          // Didn't drop on anything.
+          if (!location.current.dropTargets.length) {
+            return;
+          }
+
+          const target = location.current.dropTargets[0];
+
+          const instruction: Instruction | null = extractInstruction(target.data);
+          if (instruction !== null) {
+            // TODO(wittjosiah): Implement drop logic.
+            console.log('update', instruction);
+          }
+        },
+      });
+    }, []);
+
+    return <NavTree {...args} />;
+  },
   args: {
-    onOpenChange: (item: NavTreeItem, open: boolean) => {
-      const path = Path.create(...item.path);
-      if (open) {
-        state.open.push(path);
-      } else {
-        const index = state.open.indexOf(path);
-        if (index > -1) {
-          state.open.splice(index, 1);
-        }
-      }
+    id: graph.root.id,
+    getActions: (node: Node) => getActions(graph, node),
+    getItems: (node?: Node) => graph.nodes(node ?? graph.root),
+    getProps: (node: Node, path: string[]) => {
+      const children = getChildren(graph, node, undefined, path);
+      const parentOf =
+        children.length > 0 ? children.map(({ id }) => id) : node.properties.role === 'branch' ? [] : undefined;
+      return {
+        id: node.id,
+        label: node.properties.label ?? node.id,
+        icon: node.properties.icon,
+        parentOf,
+      } satisfies PropsFromTreeItem;
     },
-    onSelect: (item: NavTreeItem, current: boolean) => {
-      if (current) {
-        state.current.push(item.id);
-      } else {
-        const index = state.current.indexOf(item.id);
-        if (index > -1) {
-          state.current.splice(index, 1);
-        }
+    isOpen: (_path: string[]) => {
+      const path = Path.create(..._path);
+      const value = state.get(path) ?? create({ open: false, current: false });
+      if (!state.has(path)) {
+        state.set(path, value);
       }
+
+      return value.open;
+    },
+    isCurrent: (_path: string[]) => {
+      const path = Path.create(..._path);
+      const value = state.get(path) ?? create({ open: false, current: false });
+      if (!state.has(path)) {
+        state.set(path, value);
+      }
+
+      return value.current;
+    },
+    onOpenChange: ({ path: _path, open }) => {
+      const path = Path.create(..._path);
+      const object = state.get(path);
+      object!.open = open;
+    },
+    onSelect: ({ path: _path, current }) => {
+      const path = Path.create(..._path);
+      const object = state.get(path);
+      object!.current = current;
     },
   },
 };
