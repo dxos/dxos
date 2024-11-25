@@ -2,12 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import React, { forwardRef, useEffect, useMemo } from 'react';
 import { Flipped } from 'react-flip-toolkit';
 import { combineLatest, fromEvent, map, switchMap } from 'rxjs';
 
-import { AudioIndicator } from './AudioIndicator';
 import { Button } from './Button';
 import { HoverFade } from './HoverFade';
 import { Icon } from './Icon/Icon';
@@ -113,22 +111,6 @@ export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div
                 </Tooltip>
               </div>
             </HoverFade>
-            {audioTrack && (
-              <div className='absolute left-4 top-4'>
-                {user.tracks.audioEnabled && user.tracks.videoEnabled && user.speaking && (
-                  <AudioIndicator audioTrack={audioTrack} />
-                )}
-
-                {!user.tracks.audioEnabled && (
-                  <Tooltip content='Mic is turned off'>
-                    <div className='indication-shadow'>
-                      <Icon type='micOff' />
-                      <VisuallyHidden>Mic is turned off</VisuallyHidden>
-                    </div>
-                  </Tooltip>
-                )}
-              </div>
-            )}
             {data?.displayName && user.transceiverSessionId && (
               <div className='flex items-center gap-2 absolute m-2 text-shadow left-1 bottom-1'>
                 <OptionalLink

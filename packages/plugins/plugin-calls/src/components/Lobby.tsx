@@ -2,16 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { log } from '@dxos/log';
 
-import { AudioIndicator } from '../app/components/AudioIndicator'; // Replace with real components
 import { Button } from '../app/components/Button';
 import { CameraButton } from '../app/components/CameraButton';
-import { Icon } from '../app/components/Icon/Icon';
 import { MicButton } from '../app/components/MicButton';
 import { SelfView } from '../app/components/SelfView';
 import { SettingsButton } from '../app/components/SettingsDialog';
@@ -24,7 +21,7 @@ export const Lobby: React.FC = () => {
   const { roomName } = useParams();
   const navigate = useNavigate();
   const { setJoined, userMedia, room, peer } = useRoomContext()!;
-  const { videoStreamTrack, audioStreamTrack, audioEnabled } = userMedia;
+  const { videoStreamTrack } = userMedia;
   const session = useSubscribedState(peer.session$);
   const sessionError = useSubscribedState(peer.sessionError$);
 
@@ -46,23 +43,6 @@ export const Lobby: React.FC = () => {
         </div>
         <div className='relative'>
           <SelfView className='aspect-[4/3] w-full' videoTrack={videoStreamTrack} />
-
-          <div className='absolute left-3 top-3'>
-            {audioStreamTrack && !sessionError && session?.sessionId && (
-              <>
-                {audioEnabled ? (
-                  <AudioIndicator audioTrack={audioStreamTrack} />
-                ) : (
-                  <Tooltip content='Mic is turned off'>
-                    <div className='text-white indication-shadow'>
-                      <Icon type='micOff' />
-                      <VisuallyHidden>Mic is turned off</VisuallyHidden>
-                    </div>
-                  </Tooltip>
-                )}
-              </>
-            )}
-          </div>
         </div>
         {sessionError && (
           <div className='p-3 rounded-md text-sm text-zinc-800 bg-red-200 dark:text-zinc-200 dark:bg-red-700'>

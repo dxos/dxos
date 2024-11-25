@@ -9,9 +9,7 @@ import { useKey } from 'react-use';
 import type { ButtonProps } from './Button';
 import { Button } from './Button';
 import { Icon } from './Icon/Icon';
-import Toast from './Toast';
 import { Tooltip } from './Tooltip';
-import useIsSpeaking from '../hooks/useIsSpeaking';
 import { useRoomContext } from '../hooks/useRoomContext';
 import { errorMessageMap } from '../hooks/useUserMedia';
 import { metaKey } from '../utils/metaKey';
@@ -22,7 +20,7 @@ export const MicButton: FC<
   }
 > = ({ onClick, warnWhenSpeakingWhileMuted, ...rest }) => {
   const {
-    userMedia: { turnMicOn, turnMicOff, audioEnabled, audioUnavailableReason, audioMonitorStreamTrack },
+    userMedia: { turnMicOn, turnMicOff, audioEnabled, audioUnavailableReason },
   } = useRoomContext();
 
   const toggle = () => {
@@ -36,8 +34,6 @@ export const MicButton: FC<
     }
     return false;
   }, toggle);
-
-  const isSpeaking = useIsSpeaking(audioMonitorStreamTrack);
 
   const audioUnavailableMessage = audioUnavailableReason ? (errorMessageMap as any)[audioUnavailableReason] : null;
 
@@ -57,17 +53,6 @@ export const MicButton: FC<
           <Icon type={audioEnabled ? 'micOn' : 'micOff'} />
         </Button>
       </Tooltip>
-      {isSpeaking && !audioEnabled && warnWhenSpeakingWhileMuted && (
-        <Toast.Root className='flex items-center gap-3 text-sm' open type='foreground'>
-          <Toast.Title className='ToastTitle'>Talking while muted?</Toast.Title>
-          <Toast.Action className='ToastAction' asChild altText='Unmute to talk'>
-            <Button displayType='danger' onClick={toggle}>
-              <VisuallyHidden>Turn mic on</VisuallyHidden>
-              <Icon type='micOff' />
-            </Button>
-          </Toast.Action>
-        </Toast.Root>
-      )}
     </>
   );
 };

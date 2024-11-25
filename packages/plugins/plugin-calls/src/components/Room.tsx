@@ -20,12 +20,10 @@ import { PullAudioTracks } from '../app/components/PullAudioTracks';
 import { PullVideoTrack } from '../app/components/PullVideoTrack';
 import { ScreenshareButton } from '../app/components/ScreenshareButton';
 import { SettingsButton } from '../app/components/SettingsDialog';
-import Toast from '../app/components/Toast';
 import useBroadcastStatus from '../app/hooks/useBroadcastStatus';
 import useIsSpeaking from '../app/hooks/useIsSpeaking';
 import { useRoomContext } from '../app/hooks/useRoomContext';
 import useStageManager from '../app/hooks/useStageManager';
-import { useUserJoinLeaveToasts } from '../app/hooks/useUserJoinLeaveToasts';
 import { calculateLayout } from '../app/utils/calculateLayout';
 
 const useDebugEnabled = () => {
@@ -94,11 +92,7 @@ export default () => {
     return null;
   }
 
-  return (
-    <Toast.Provider>
-      <JoinedRoom />
-    </Toast.Provider>
-  );
+  return <JoinedRoom />;
 };
 
 const JoinedRoom = () => {
@@ -142,8 +136,6 @@ const JoinedRoom = () => {
     pushedTracks,
     speaking,
   });
-
-  useUserJoinLeaveToasts(otherUsers);
 
   const { width } = useWindowSize();
 
@@ -270,7 +262,6 @@ const JoinedRoom = () => {
                 </PullVideoTrack>
               ))}
           </div>
-          <Toast.Viewport />
         </Flipper>
         <div className='flex flex-wrap items-center justify-center gap-2 p-2 text-sm md:gap-4 md:p-5 md:text-base'>
           <GridDebugControls />
