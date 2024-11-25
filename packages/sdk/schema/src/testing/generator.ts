@@ -28,7 +28,6 @@ import { getSchemaProperties } from '../properties';
 // TODO(burdon): AUDIT (@dmytro)
 //  - New TypedObject syntax.
 //    - Define low-level types in S.Struct (e.g., in react-table).
-//    - Type should include definition of `id`.
 //  - Audit all low-level types (e.g., ReactiveObject, AbstractTypedObject, MutableObject: see echo-schema/docs).
 //  - Implement basic "comment required" TODOs.
 
