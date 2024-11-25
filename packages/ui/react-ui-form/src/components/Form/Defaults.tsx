@@ -13,6 +13,7 @@ export const TextInput = <T extends BaseObject>({
   property,
   type,
   label,
+  inputOnly,
   disabled,
   placeholder,
   getStatus,
@@ -24,9 +25,11 @@ export const TextInput = <T extends BaseObject>({
 
   return (
     <Input.Root validationValence={status}>
-      <InputHeader error={error}>
-        <Input.Label>{label}</Input.Label>
-      </InputHeader>
+      {!inputOnly && (
+        <InputHeader error={error}>
+          <Input.Label>{label}</Input.Label>
+        </InputHeader>
+      )}
       <Input.TextInput
         disabled={disabled}
         placeholder={placeholder}
@@ -42,6 +45,7 @@ export const NumberInput = <T extends BaseObject>({
   property,
   type,
   label,
+  inputOnly,
   disabled,
   placeholder,
   getStatus,
@@ -54,9 +58,11 @@ export const NumberInput = <T extends BaseObject>({
   // TODO(burdon): Only show stepper if bounded integer.
   return (
     <Input.Root validationValence={status}>
-      <InputHeader error={error}>
-        <Input.Label>{label}</Input.Label>
-      </InputHeader>
+      {!inputOnly && (
+        <InputHeader error={error}>
+          <Input.Label>{label}</Input.Label>
+        </InputHeader>
+      )}
       <Input.TextInput
         type='number'
         disabled={disabled}
@@ -73,6 +79,7 @@ export const BooleanInput = <T extends BaseObject>({
   property,
   type,
   label,
+  inputOnly,
   getStatus,
   getValue,
   onValueChange,
@@ -81,9 +88,11 @@ export const BooleanInput = <T extends BaseObject>({
 
   return (
     <Input.Root validationValence={status}>
-      <InputHeader error={error}>
-        <Input.Label>{label}</Input.Label>
-      </InputHeader>
+      {!inputOnly && (
+        <InputHeader error={error}>
+          <Input.Label>{label}</Input.Label>
+        </InputHeader>
+      )}
       <Input.Switch
         checked={getValue<boolean>(property)}
         onCheckedChange={(value) => onValueChange(property, type, value)}
@@ -100,6 +109,7 @@ export const SelectInput = <T extends BaseObject>({
   property,
   type,
   label,
+  inputOnly,
   disabled,
   placeholder,
   options,
@@ -111,9 +121,11 @@ export const SelectInput = <T extends BaseObject>({
 
   return (
     <Input.Root validationValence={status}>
-      <InputHeader error={error}>
-        <Input.Label>{label}</Input.Label>
-      </InputHeader>
+      {!inputOnly && (
+        <InputHeader error={error}>
+          <Input.Label>{label}</Input.Label>
+        </InputHeader>
+      )}
       <Select.Root value={getValue(property)} onValueChange={(value) => onValueChange(property, type, value)}>
         {/* TODO(burdon): Placeholder not working? */}
         <Select.TriggerButton classNames='is-full' disabled={disabled} placeholder={placeholder} />

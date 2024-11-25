@@ -4,10 +4,10 @@
 
 import { pipe } from 'effect';
 import { capitalize } from 'effect/String';
-import React, { useEffect, useMemo } from 'react';
+import React, { Fragment, useEffect, useMemo } from 'react';
 
 import { AST, type BaseObject, S, type PropertyKey } from '@dxos/echo-schema';
-import { findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
+import { findNode, getDiscriminatedType, isDiscriminatedUnion, SimpleType } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -15,7 +15,7 @@ import { getSchemaProperties, type SchemaProperty } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
 import { SelectInput } from './Defaults';
-import { type InputComponent } from './Input';
+import { InputHeader, type InputComponent } from './Input';
 import { getInputComponent } from './factory';
 import { type FormOptions, useForm } from '../../hooks';
 import { translationKey } from '../../translations';
@@ -106,12 +106,13 @@ export const Form = <T extends BaseObject>({
     <div role='form' className={mx('flex flex-col w-full gap-2 py-2', classNames)} data-testid={testId}>
       {properties
         .map((property) => {
-          const { ast, name, type, format, title, description, examples, options } = property;
+          const { ast, name, type, format, title, description, examples, options, array } = property;
           const key = [...path, name];
           const label = title ?? pipe(name, capitalize);
           const placeholder = examples?.length ? `Example: "${examples[0]}"` : description;
 
           // Get generic input.
+          // TODO(ZaymonFC): We might need to switch this to using globs since we're now indexing into arrays.
           let InputComponent = Custom?.[key.join('.')];
           if (!InputComponent) {
             // Select.
@@ -133,6 +134,63 @@ export const Form = <T extends BaseObject>({
             }
 
             InputComponent = getInputComponent<T>(type, format);
+
+            if (array) {
+              const arrayValues = (values[name] ?? []) as any[];
+
+              // TODO(ZaymonFC): Work with thure to build out this compound input?
+              return (
+                <div role='none' key='meta-input' className={mx(padding)}>
+                  <InputHeader>{label}</InputHeader>
+                  <div role='none' className='flex flex-col gap-1'>
+                    {arrayValues.map((_, index) => (
+                      <div key={index} role='none' className='flex items-center gap-1'>
+                        {type === 'object' ? (
+                          <div>Nested form not supported in arrays, yet.</div>
+                        ) : (
+                          InputComponent && (
+                            <>
+                              <div role='none' className='flex-1'>
+                                <InputComponent
+                                  type={type}
+                                  format={format}
+                                  label={label}
+                                  inputOnly
+                                  property={`${name}.${index}`}
+                                  disabled={readonly}
+                                  placeholder={placeholder}
+                                  {...inputProps}
+                                />
+                              </div>
+                              <IconButton
+                                icon='ph--trash--regular'
+                                iconOnly
+                                label={t('button remove')}
+                                onClick={() => {
+                                  const newValues = arrayValues.filter((_, i) => i !== index);
+                                  inputProps.onValueChange(name, type, newValues);
+                                }}
+                              />
+                            </>
+                          )
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <div role='none' className='flex justify-between items-center plb-1'>
+                    <IconButton
+                      icon='ph--plus--regular'
+                      iconOnly
+                      label={t('button add')}
+                      onClick={() => {
+                        const newValues = [...arrayValues, SimpleType.getDefaultValue(type)];
+                        inputProps.onValueChange(name, type, newValues);
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            }
           }
 
           if (!InputComponent) {

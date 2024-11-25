@@ -165,3 +165,32 @@ export const DiscriminatedShape: StoryObj<DiscriminatedUnionStoryProps> = {
     },
   },
 };
+const NamesSchema = S.Struct({
+  names: S.Array(S.String.pipe(S.nonEmptyString())),
+}).pipe(S.mutable);
+
+type NamesType = S.Schema.Type<typeof NamesSchema>;
+
+const NamesStory = ({ values: initialValues }: FormProps<NamesType>) => {
+  const [values, setValues] = useState(initialValues);
+  const handleSubmit = useCallback<NonNullable<FormProps<NamesType>['onSubmit']>>((values) => {
+    setValues(values);
+  }, []);
+
+  return (
+    <TestLayout json={{ values, schema: NamesSchema.ast.toJSON() }}>
+      <TestPanel>
+        <Form<NamesType> schema={NamesSchema} values={values} onSubmit={handleSubmit} />
+      </TestPanel>
+    </TestLayout>
+  );
+};
+
+export const Names: StoryObj<FormProps<NamesType>> = {
+  render: NamesStory,
+  args: {
+    values: {
+      names: ['Alice', 'Bob'],
+    },
+  },
+};
