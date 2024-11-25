@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { PublicKey } from '@dxos/keys';
 
-import { treeLogger, type TreeNode } from './tree';
+import { stringifyTree, type TreeNode } from './tree';
 
 describe('Tree logging', () => {
   test('simple', () => {
@@ -43,7 +43,7 @@ describe('Tree logging', () => {
     console.log('\nTests:');
     data.forEach((node, i) => {
       console.log(`Test ${i + 1}`);
-      console.log(treeLogger(node).join('\n'));
+      console.log(stringifyTree(node).join('\n'));
     });
   });
 });

@@ -26,7 +26,6 @@ import {
 } from '../ast';
 import { toEffectSchema, toJsonSchema } from '../json';
 
-// TODO(burdon): Reconcile with AbstractSchema.
 interface MutableSchemaConstructor extends S.Schema<MutableSchema> {
   new (): HasId;
 }
@@ -212,7 +211,7 @@ export const createMutableSchema = (
   { typename, version }: ObjectAnnotation,
   fields: S.Struct.Fields,
 ): MutableSchema => {
-  const schema = S.partial(S.Struct(fields)).pipe(EchoObject(typename, version));
+  const schema = S.partial(S.Struct(fields).omit('id')).pipe(EchoObject(typename, version));
   const objectAnnotation = getObjectAnnotation(schema);
   const schemaObject = createStoredSchema({ typename, version });
   const updatedSchema = schema.annotations({

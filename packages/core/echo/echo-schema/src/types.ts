@@ -55,7 +55,7 @@ export type ObjectMeta = S.Schema.Type<typeof ObjectMetaSchema>;
  * It is stricter than `T extends {}` or `T extends object`.
  */
 // TODO(burdon): Consider moving to lower-level base type lib.
-export type BaseObject = Record<string, any>;
+export type BaseObject<T = any> = Record<keyof T, any>;
 
 export type ExcludeId<T extends BaseObject> = Simplify<Omit<T, 'id'>>;
 

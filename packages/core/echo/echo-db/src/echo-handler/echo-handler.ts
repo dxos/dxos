@@ -45,6 +45,7 @@ export const DATA_NAMESPACE = 'data';
 
 /**
  * Shared for all targets within one ECHO object.
+ * @internal
  */
 export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   public static readonly instance = new EchoReactiveHandler();
