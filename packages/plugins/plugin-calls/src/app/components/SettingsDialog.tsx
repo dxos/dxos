@@ -9,7 +9,6 @@ import { Button } from './Button';
 import { Dialog, DialogContent, DialogOverlay, DialogTitle, Portal, Trigger } from './Dialog';
 import { Icon } from './Icon/Icon';
 import { Label } from './Label';
-import { Tooltip } from './Tooltip';
 import { VideoInputSelector } from './VideoInputSelector';
 
 interface SettingsDialogProps {
@@ -21,13 +20,11 @@ interface SettingsDialogProps {
 export const SettingsButton = () => {
   return (
     <SettingsDialog>
-      <Tooltip content='Settings'>
-        <Trigger asChild>
-          <Button className='text-sm' displayType='secondary'>
-            <Icon type='cog' />
-          </Button>
-        </Trigger>
-      </Tooltip>
+      <Trigger asChild>
+        <Button className='text-sm' displayType='secondary'>
+          <Icon type='cog' />
+        </Button>
+      </Trigger>
     </SettingsDialog>
   );
 };

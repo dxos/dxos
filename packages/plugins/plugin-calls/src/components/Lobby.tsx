@@ -12,7 +12,6 @@ import { CameraButton } from '../app/components/CameraButton';
 import { MicButton } from '../app/components/MicButton';
 import { SelfView } from '../app/components/SelfView';
 import { SettingsButton } from '../app/components/SettingsDialog';
-import { Tooltip } from '../app/components/Tooltip';
 import { useSubscribedState } from '../app/hooks/rxjsHooks';
 import { useRoomContext } from '../app/hooks/useRoomContext';
 import { errorMessageMap } from '../app/hooks/useUserMedia';
@@ -72,9 +71,7 @@ export const Lobby: React.FC = () => {
         )}
         <div className='flex gap-4 text-sm'>
           {audioUnavailableMessage ? (
-            <Tooltip content='Unable to join without a mic.'>
-              <Button disabled>Join</Button>
-            </Tooltip>
+            <Button disabled>Join</Button>
           ) : (
             <Button
               onClick={() => {

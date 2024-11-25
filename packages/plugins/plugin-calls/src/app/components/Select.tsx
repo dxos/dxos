@@ -6,7 +6,6 @@ import * as RadixSelect from '@radix-ui/react-select';
 import React, { type ReactNode, forwardRef } from 'react';
 
 import { Icon } from './Icon/Icon';
-import { Tooltip } from './Tooltip';
 import { cn } from '../utils/style';
 
 export const Select = forwardRef<
@@ -21,26 +20,24 @@ export const Select = forwardRef<
 >(({ id, className, placeholder, children, disabled, tooltipContent, ...rest }, ref) => {
   return (
     <RadixSelect.Root disabled={disabled} {...rest}>
-      <Tooltip content={tooltipContent}>
-        <RadixSelect.Trigger
-          ref={ref}
-          id={id}
-          className={cn(
-            'max-w-full inline-flex items-center justify-center px-8 text-sm leading-none h-8 gap-1 rounded',
-            'bg-zinc-100 text-zinc-800',
-            'dark:bg-zinc-700 dark:text-zinc-100',
-            disabled && 'opacity-70',
-            className,
-          )}
-        >
-          <span className='whitespace-nowrap overflow-hidden text-ellipsis'>
-            <RadixSelect.Value placeholder={placeholder}></RadixSelect.Value>
-          </span>
-          <RadixSelect.Icon className='text-orange-400'>
-            <Icon type='ChevronDownIcon' />
-          </RadixSelect.Icon>
-        </RadixSelect.Trigger>
-      </Tooltip>
+      <RadixSelect.Trigger
+        ref={ref}
+        id={id}
+        className={cn(
+          'max-w-full inline-flex items-center justify-center px-8 text-sm leading-none h-8 gap-1 rounded',
+          'bg-zinc-100 text-zinc-800',
+          'dark:bg-zinc-700 dark:text-zinc-100',
+          disabled && 'opacity-70',
+          className,
+        )}
+      >
+        <span className='whitespace-nowrap overflow-hidden text-ellipsis'>
+          <RadixSelect.Value placeholder={placeholder}></RadixSelect.Value>
+        </span>
+        <RadixSelect.Icon className='text-orange-400'>
+          <Icon type='ChevronDownIcon' />
+        </RadixSelect.Icon>
+      </RadixSelect.Trigger>
       <RadixSelect.Portal>
         <RadixSelect.Content className='overflow-hidden bg-zinc-50 dark:bg-zinc-700 shadow-xl rounded'>
           <RadixSelect.ScrollUpButton className='SelectScrollButton flex items-center justify-center h-6 bg-white text-orange-400 cursor-default'>

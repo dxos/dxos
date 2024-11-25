@@ -7,7 +7,6 @@ import React, { type FC, useEffect, useState } from 'react';
 
 import { Button } from './Button';
 import { Icon } from './Icon/Icon';
-import { Tooltip } from './Tooltip';
 import { useRoomContext } from '../hooks/useRoomContext';
 
 interface ScreenshareButtonProps {}
@@ -36,11 +35,9 @@ export const ScreenshareButton: FC<ScreenshareButtonProps> = () => {
   }
 
   return (
-    <Tooltip content={sharing ? 'Stop sharing' : 'Share screen'}>
-      <Button displayType={sharing ? 'danger' : 'secondary'} onClick={sharing ? endScreenShare : startScreenShare}>
-        <VisuallyHidden>Share screen</VisuallyHidden>
-        <Icon type='screenshare' />
-      </Button>
-    </Tooltip>
+    <Button displayType={sharing ? 'danger' : 'secondary'} onClick={sharing ? endScreenShare : startScreenShare}>
+      <VisuallyHidden>Share screen</VisuallyHidden>
+      <Icon type='screenshare' />
+    </Button>
   );
 };

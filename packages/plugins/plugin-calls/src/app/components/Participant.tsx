@@ -2,39 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { forwardRef, useEffect, useMemo } from 'react';
+import React, { forwardRef, useEffect } from 'react';
 import { Flipped } from 'react-flip-toolkit';
-import { combineLatest, fromEvent, map, switchMap } from 'rxjs';
 
 import { Button } from './Button';
 import { HoverFade } from './HoverFade';
 import { Icon } from './Icon/Icon';
-import { OptionalLink } from './OptionalLink';
-import { Tooltip } from './Tooltip';
 import { VideoSrcObject } from './VideoSrcObject';
-import { useSubscribedState } from '../hooks/rxjsHooks';
 import { useRoomContext } from '../hooks/useRoomContext';
 import { useUserMetadata } from '../hooks/useUserMetadata';
 import type { User } from '../types/Messages';
-import populateTraceLink from '../utils/populateTraceLink';
 import { cn } from '../utils/style';
-
-const useMid = (track?: MediaStreamTrack) => {
-  const { peer } = useRoomContext();
-  const transceivers$ = useMemo(
-    () =>
-      combineLatest([
-        peer.peerConnection$,
-        peer.peerConnection$.pipe(switchMap((peerConnection) => fromEvent(peerConnection, 'track'))),
-      ]).pipe(map(([pc]) => pc.getTransceivers())),
-    [peer.peerConnection$],
-  );
-  const transceivers = useSubscribedState(transceivers$, []);
-  if (!track) {
-    return null;
-  }
-  return transceivers.find((t) => t.sender.track === track || t.receiver.track === track)?.mid;
-};
 
 interface Props {
   flipId: string;
@@ -64,8 +42,7 @@ export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div
     ref,
   ) => {
     const { data } = useUserMetadata(user.name);
-    const { traceLink, peer, dataSaverMode } = useRoomContext();
-    const peerConnection = useSubscribedState(peer.peerConnection$);
+    const { dataSaverMode } = useRoomContext();
 
     const pinned = flipId === pinnedId;
 
@@ -74,9 +51,6 @@ export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div
         setPinnedId(flipId);
       }
     }, [flipId, isScreenShare, setPinnedId]);
-
-    const audioMid = useMid(audioTrack);
-    const videoMid = useMid(videoTrack);
 
     return (
       <div className='grow shrink text-base basis-[calc(var(--flex-container-width)_-_var(--gap)_*_3)]' ref={ref}>
@@ -104,31 +78,14 @@ export const Participant = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div
             />
             <HoverFade className='absolute inset-0 grid w-full h-full place-items-center'>
               <div className='flex gap-2 p-2 rounded bg-zinc-900/30'>
-                <Tooltip content={pinned ? 'Restore' : 'Maximize'}>
-                  <Button onClick={() => setPinnedId(pinned ? undefined : flipId)}>
-                    <Icon type={pinned ? 'arrowsIn' : 'arrowsOut'} />
-                  </Button>
-                </Tooltip>
+                <Button onClick={() => setPinnedId(pinned ? undefined : flipId)}>
+                  <Icon type={pinned ? 'arrowsIn' : 'arrowsOut'} />
+                </Button>
               </div>
             </HoverFade>
-            {data?.displayName && user.transceiverSessionId && (
-              <div className='flex items-center gap-2 absolute m-2 text-shadow left-1 bottom-1'>
-                <OptionalLink
-                  className='leading-none'
-                  href={populateTraceLink(user.transceiverSessionId, traceLink)}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                >
-                  {data.displayName}
-                  {showDebugInfo && peerConnection && (
-                    <span className='opacity-50'>
-                      {' '}
-                      {[audioMid && `audio mid: ${audioMid}`, videoMid && `video mid: ${videoMid}`]
-                        .filter(Boolean)
-                        .join(' ')}
-                    </span>
-                  )}
-                </OptionalLink>
+            {data?.displayName && (
+              <div className='flex items-center gap-2 absolute m-2 text-shadow left-1 bottom-1 leading-none noopener noreferrer'>
+                {data.displayName}
               </div>
             )}
             {(user.speaking || user.raisedHand) && (

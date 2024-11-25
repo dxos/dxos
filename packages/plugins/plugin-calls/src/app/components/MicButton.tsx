@@ -9,10 +9,8 @@ import { useKey } from 'react-use';
 import type { ButtonProps } from './Button';
 import { Button } from './Button';
 import { Icon } from './Icon/Icon';
-import { Tooltip } from './Tooltip';
 import { useRoomContext } from '../hooks/useRoomContext';
 import { errorMessageMap } from '../hooks/useUserMedia';
-import { metaKey } from '../utils/metaKey';
 
 export const MicButton: FC<
   ButtonProps & {
@@ -39,20 +37,18 @@ export const MicButton: FC<
 
   return (
     <>
-      <Tooltip content={audioUnavailableMessage ?? `Turn mic ${audioEnabled ? 'off' : 'on'} (${metaKey}D)`}>
-        <Button
-          displayType={audioEnabled ? 'secondary' : 'danger'}
-          disabled={!!audioUnavailableMessage}
-          onClick={(e) => {
-            toggle();
-            onClick && onClick(e);
-          }}
-          {...rest}
-        >
-          <VisuallyHidden>{audioEnabled ? 'Turn mic off' : 'Turn mic on'}</VisuallyHidden>
-          <Icon type={audioEnabled ? 'micOn' : 'micOff'} />
-        </Button>
-      </Tooltip>
+      <Button
+        displayType={audioEnabled ? 'secondary' : 'danger'}
+        disabled={!!audioUnavailableMessage}
+        onClick={(e) => {
+          toggle();
+          onClick && onClick(e);
+        }}
+        {...rest}
+      >
+        <VisuallyHidden>{audioEnabled ? 'Turn mic off' : 'Turn mic on'}</VisuallyHidden>
+        <Icon type={audioEnabled ? 'micOn' : 'micOff'} />
+      </Button>
     </>
   );
 };
