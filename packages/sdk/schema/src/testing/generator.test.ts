@@ -24,7 +24,7 @@ import { createView, type ViewType } from '../view';
 
 describe('Generator', () => {
   // TODO(burdon): Move to @dxos/effect.
-  test('effect', async ({ expect }) => {
+  test('effect sanity', async ({ expect }) => {
     {
       const result = pipe(
         10,
