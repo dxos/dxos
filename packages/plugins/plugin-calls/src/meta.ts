@@ -12,4 +12,5 @@ export default {
   description: 'Perform video calls.',
   icon: 'ph--phone-call--regular',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-calls',
+  tags: ['experimental'],
 } satisfies PluginMeta;
