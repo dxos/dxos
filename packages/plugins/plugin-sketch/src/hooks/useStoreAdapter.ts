@@ -6,14 +6,14 @@ import { useEffect, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type EchoReactiveObject, createDocAccessor } from '@dxos/react-client/echo';
+import { type ReactiveEchoObject, createDocAccessor } from '@dxos/react-client/echo';
 import { setDeep } from '@dxos/util';
 
 import { TLDrawStoreAdapter } from './adapter';
 import { type DiagramType, TLDRAW_SCHEMA } from '../types';
 import { getDeep } from '../util';
 
-export const useStoreAdapter = (object?: EchoReactiveObject<DiagramType>) => {
+export const useStoreAdapter = (object?: ReactiveEchoObject<DiagramType>) => {
   const [adapter] = useState(new TLDrawStoreAdapter());
   const [_, forceUpdate] = useState({});
   useEffect(() => {

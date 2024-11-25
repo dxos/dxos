@@ -11,7 +11,7 @@ import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { type Filter } from './filter';
 import { type ObjectCore } from '../core-db';
-import { type EchoReactiveObject } from '../echo-handler';
+import { type ReactiveEchoObject } from '../echo-handler';
 
 /**
  * Query logic that checks if object complaint with a filter.
@@ -21,7 +21,7 @@ export const filterMatch = (
   filter: Filter,
   core: ObjectCore | undefined,
   // TODO(mykola): Remove predicate filters from this level query. Move it to higher proxy level.
-  echoObject?: EchoReactiveObject<any> | undefined,
+  echoObject?: ReactiveEchoObject<any> | undefined,
 ): boolean => {
   if (!core) {
     return false;
@@ -36,7 +36,7 @@ export const filterMatch = (
 const filterMatchInner = (
   filter: Filter,
   core: ObjectCore,
-  echoObject?: EchoReactiveObject<any> | undefined,
+  echoObject?: ReactiveEchoObject<any> | undefined,
 ): boolean => {
   const deleted = filter.options.deleted ?? QueryOptions.ShowDeletedOption.HIDE_DELETED;
   if (core.isDeleted()) {

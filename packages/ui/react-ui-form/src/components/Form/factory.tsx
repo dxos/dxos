@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FormatEnum } from '@dxos/echo-schema';
+import { type BaseObject, FormatEnum } from '@dxos/echo-schema';
 import { type SimpleType } from '@dxos/effect';
 
 import { LatLngInput } from './Custom';
@@ -12,7 +12,7 @@ import { type InputComponent } from './Input';
 /**
  * Get property input component.
  */
-export const getInputComponent = <T extends object>(
+export const getInputComponent = <T extends BaseObject>(
   type: SimpleType,
   format?: FormatEnum,
 ): InputComponent<T> | undefined => {

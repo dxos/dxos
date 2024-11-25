@@ -32,7 +32,7 @@ export {
   toCursorRange,
   DocAccessor,
   type EchoDatabase,
-  type EchoReactiveObject,
+  type ReactiveEchoObject,
   Filter,
   type FilterSource,
   type Hypergraph,

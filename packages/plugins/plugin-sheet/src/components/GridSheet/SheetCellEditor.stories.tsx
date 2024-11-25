@@ -8,7 +8,7 @@ import { type Meta } from '@storybook/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Client } from '@dxos/client';
-import { createDocAccessor, type EchoReactiveObject } from '@dxos/client/echo';
+import { createDocAccessor, type ReactiveEchoObject } from '@dxos/client/echo';
 import { automerge } from '@dxos/react-ui-editor';
 import { CellEditor, type CellEditorProps } from '@dxos/react-ui-grid';
 import { withTheme } from '@dxos/storybook-utils';
@@ -33,7 +33,7 @@ const Story = ({ value, ...props }: StoryProps) => {
 
 const AutomergeStory = ({ value, ...props }: StoryProps) => {
   const cell = 'A1';
-  const [object, setObject] = useState<EchoReactiveObject<SheetType>>();
+  const [object, setObject] = useState<ReactiveEchoObject<SheetType>>();
   useEffect(() => {
     setTimeout(async () => {
       const client = new Client({ types: [SheetType] });

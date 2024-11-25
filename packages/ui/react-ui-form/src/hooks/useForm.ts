@@ -4,15 +4,16 @@
 
 import { type FocusEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
+import { type BaseObject, type PropertyKey } from '@dxos/echo-schema';
 import { type SimpleType, type S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { validateSchema, type PropertyKey, type ValidationError } from '@dxos/schema';
+import { validateSchema, type ValidationError } from '@dxos/schema';
 
 /**
  * Return type from `useForm` hook.
  */
-export type FormHandler<T extends object = {}> = {
+export type FormHandler<T extends BaseObject> = {
   //
   // Form state management.
   //
@@ -37,7 +38,7 @@ export type FormHandler<T extends object = {}> = {
 /**
  * Hook options.
  */
-export interface FormOptions<T extends object> {
+export interface FormOptions<T extends BaseObject> {
   schema: S.Schema<T>;
 
   // TODO(burdon): Are these reactive?
@@ -73,7 +74,7 @@ export interface FormOptions<T extends object> {
  * Creates a hook for managing form state, including values, validation, and submission.
  * Deeply integrated with `@dxos/schema` for schema-based validation.
  */
-export const useForm = <T extends object>({
+export const useForm = <T extends BaseObject>({
   schema,
   initialValues,
   onValuesChanged,
@@ -211,12 +212,12 @@ export const useForm = <T extends object>({
   } satisfies FormHandler<T>;
 };
 
-const createKeySet = <T extends object, V>(obj: T, value: V): Record<PropertyKey<T>, V> => {
+const createKeySet = <T extends BaseObject, V>(obj: T, value: V): Record<PropertyKey<T>, V> => {
   invariant(obj);
   return Object.keys(obj).reduce((acc, key) => ({ ...acc, [key]: value }), {} as Record<PropertyKey<T>, V>);
 };
 
-const flatMap = <T extends object>(errors: ValidationError[]) => {
+const flatMap = <T extends BaseObject>(errors: ValidationError[]) => {
   return errors.reduce(
     (result, { path, message }) => {
       if (!(path in result)) {

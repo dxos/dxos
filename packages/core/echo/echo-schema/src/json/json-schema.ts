@@ -10,6 +10,7 @@ import { DXN } from '@dxos/keys';
 import { removeUndefinedProperties } from '@dxos/util';
 
 import {
+  GeneratorAnnotationId,
   getObjectAnnotation,
   type JsonSchemaType,
   type ObjectAnnotation,
@@ -327,7 +328,6 @@ const refToEffectSchema = (root: any): S.Schema<any> => {
 
 //
 // Annotations
-// TODO(burdon): Pass in CustomAnnotations to keep separate.
 //
 
 /**
@@ -335,7 +335,7 @@ const refToEffectSchema = (root: any): S.Schema<any> => {
  */
 export const ECHO_REFINEMENT_KEY = 'echo';
 
-const ECHO_REFINEMENTS = [ObjectAnnotationId, PropertyMetaAnnotationId];
+const ECHO_REFINEMENTS = [ObjectAnnotationId, PropertyMetaAnnotationId, GeneratorAnnotationId];
 
 const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<symbol, any> => {
   const schemaFields: Record<string, any> = {};
@@ -372,14 +372,6 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): AST.Annotations 
       }
     }
   }
-
-  // TODO(burdon): References.
-  // if ('$id' in schema && typeof schema.$id === 'string' && schema.$id.startsWith('dxn:')) {
-  //   annotations[ObjectAnnotationId] = {
-  //     typename: DXN.parse(schema.$id).parts[0],
-  //     version: (schema as any).version,
-  //   };
-  // }
 
   // Custom (at end).
   for (const [key, annotationId] of Object.entries(CustomAnnotations)) {
