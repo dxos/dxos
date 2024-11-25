@@ -2,21 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import {
-  S,
-  Format,
-  TypedObject,
-  type ReactiveObject,
-  GeneratorAnnotationId,
-  TypeEnum,
-  FormatEnum,
-  type MutableSchema,
-  type JsonPath,
-  type JsonProp,
-} from '@dxos/echo-schema';
-
-import { ViewProjection } from '../projection';
-import { createView, type ViewType } from '../view';
+import { S, Format, TypedObject, GeneratorAnnotationId, AST } from '@dxos/echo-schema';
 
 //
 // Org
@@ -25,6 +11,7 @@ import { createView, type ViewType } from '../view';
 export const Org = S.Struct({
   id: S.String,
   name: S.NonEmptyString.annotations({
+    [AST.TitleAnnotationId]: 'Name',
     [GeneratorAnnotationId]: 'faker.company.name',
   }),
   website: S.optional(
@@ -61,40 +48,6 @@ export class ContactType extends TypedObject({
   typename: 'example.com/type/Contact',
   version: '0.1.0',
 })(Contact.fields) {}
-
-/**
- * Create a new field for the relation.
- */
-export const createReferenceProperty = (
-  schema: MutableSchema,
-  property: JsonProp,
-  referenceSchema: string,
-  referencePath: JsonPath,
-) => {
-  // TODO(burdon): Remove need for view object.
-  const contactView: ReactiveObject<ViewType> = createView({
-    name: '',
-    typename: schema.typename,
-    jsonSchema: schema.jsonSchema,
-  });
-
-  // Add relation field.
-  const contactProjection = new ViewProjection(schema, contactView);
-  // TODO(burdon): Test set before create field.
-  const field = contactProjection.createFieldProjection();
-  contactProjection.setFieldProjection({
-    field,
-    props: {
-      property,
-      type: TypeEnum.Ref,
-      format: FormatEnum.Ref,
-      referenceSchema,
-      referencePath,
-    },
-  });
-
-  return schema;
-};
 
 //
 // Project
