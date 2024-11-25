@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { getSpace } from '@dxos/react-client/echo';
 import { DropdownMenu } from '@dxos/react-ui';
-import { FieldEditor } from '@dxos/react-ui-data';
+import { FieldEditor } from '@dxos/react-ui-form';
 import { type FieldType } from '@dxos/schema';
 
 import { type TableModel } from '../../model';
@@ -15,6 +16,8 @@ type ColumnSettingsProps = { model?: TableModel };
 export const ColumnSettings = ({ model }: ColumnSettingsProps) => {
   const [newField, setNewField] = useState<FieldType>();
   const state = model?.modalController.state.value;
+
+  const space = getSpace(model?.table);
 
   useEffect(() => {
     if (state?.type === 'columnSettings' && state.mode.type === 'create' && model?.projection) {
@@ -36,6 +39,16 @@ export const ColumnSettings = ({ model }: ColumnSettingsProps) => {
 
   const field = existingField ?? newField;
 
+  const handleClose = useCallback(() => {
+    model?.modalController.close();
+  }, [model?.modalController]);
+
+  const handleCancel = useCallback(() => {
+    if (state?.type === 'columnSettings' && state.mode.type === 'create' && newField) {
+      model?.projection?.deleteFieldProjection(newField.id);
+    }
+  }, [model?.projection, state, newField]);
+
   if (!model?.table?.view || !model.projection || !field) {
     return null;
   }
@@ -50,7 +63,9 @@ export const ColumnSettings = ({ model }: ColumnSettingsProps) => {
               view={model.table.view}
               projection={model.projection}
               field={field}
-              onClose={() => model.modalController.close()}
+              registry={space?.db.schemaRegistry}
+              onClose={handleClose}
+              onCancel={handleCancel}
             />
           </DropdownMenu.Viewport>
           <DropdownMenu.Arrow />

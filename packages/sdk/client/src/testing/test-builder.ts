@@ -178,7 +178,7 @@ export class TestBuilder {
 export const testSpaceAutomerge = async (createDb: EchoDatabase, checkDb: EchoDatabase = createDb) => {
   const object = create(Expando, {});
   createDb.add(object);
-  await checkDb.loadObjectById(object.id, { timeout: 1000 });
+  await checkDb.query({ id: object.id }).first({ timeout: 1000 });
 
   return { objectId: object.id };
 };

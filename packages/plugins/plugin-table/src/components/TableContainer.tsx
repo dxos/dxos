@@ -9,7 +9,7 @@ import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space';
 import { create, fullyQualifiedId, getSpace, Filter, useQuery } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
-import { StackItemContent } from '@dxos/react-ui-stack/next';
+import { StackItem } from '@dxos/react-ui-stack';
 import {
   Table,
   type TableController,
@@ -38,9 +38,15 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : () => false, undefined, [schema]);
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
-  const handleDeleteRow = useCallback(
-    (_row: number, object: any) => {
-      void dispatch({ action: SpaceAction.REMOVE_OBJECT, data: { object } });
+  const handleInsertRow = useCallback(() => {
+    if (schema && space) {
+      space.db.add(create(schema, {}));
+    }
+  }, [schema, space]);
+
+  const handleDeleteRows = useCallback(
+    (_row: number, objects: any[]) => {
+      void dispatch({ action: SpaceAction.REMOVE_OBJECTS, data: { objects } });
     },
     [dispatch],
   );
@@ -66,7 +72,8 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
     table,
     projection,
     objects: filteredObjects,
-    onDeleteRow: handleDeleteRow,
+    onInsertRow: handleInsertRow,
+    onDeleteRows: handleDeleteRows,
     onDeleteColumn: handleDeleteColumn,
     onCellUpdate: (cell) => tableRef.current?.update?.(cell),
     onRowOrderChanged: () => tableRef.current?.update?.(),
@@ -91,18 +98,16 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
           break;
         }
         case 'add-row': {
-          if (schema && space) {
-            space.db.add(create(schema, {}));
-          }
+          handleInsertRow();
           break;
         }
       }
     },
-    [onThreadCreate, space, schema],
+    [onThreadCreate, space, schema, handleInsertRow],
   );
 
   return (
-    <StackItemContent toolbar>
+    <StackItem.Content toolbar role={role}>
       <Toolbar.Root onAction={handleAction} classNames={!hasAttention && 'opacity-20'}>
         <Toolbar.Editing />
         <Toolbar.Separator />
@@ -111,7 +116,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
       <Table.Root role={role}>
         <Table.Main key={table.id} ref={tableRef} model={model} />
       </Table.Root>
-    </StackItemContent>
+    </StackItem.Content>
   );
 };
 

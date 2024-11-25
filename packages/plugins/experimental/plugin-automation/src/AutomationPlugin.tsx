@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type PluginDefinition, parseMetadataResolverPlugin, resolvePlugin } from '@dxos/app-framework';
-import { FunctionDef, FunctionTrigger } from '@dxos/functions/types';
+import { FunctionTrigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { createExtension, toSignal } from '@dxos/plugin-graph';
@@ -15,9 +15,6 @@ import { AutomationPanel } from './components';
 import meta, { AUTOMATION_PLUGIN } from './meta';
 import translations from './translations';
 import { AutomationAction, type AutomationPluginProvides, ChainPromptType, ChainType } from './types';
-
-// TODO(burdon): Prompt article.
-// TODO(burdon): Trigger panel.
 
 export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> => {
   return {
@@ -35,7 +32,7 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
       },
       translations,
       echo: {
-        schema: [ChainType, ChainPromptType, FunctionDef, FunctionTrigger],
+        schema: [ChainType, ChainPromptType, FunctionTrigger],
       },
       complementary: {
         panels: [
@@ -95,7 +92,7 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
                 const object = toSignal(
                   (onChange) => {
                     const timeout = setTimeout(async () => {
-                      await space?.db.loadObjectById(objectId);
+                      await space?.db.query({ id: objectId }).first();
                       onChange();
                     });
 

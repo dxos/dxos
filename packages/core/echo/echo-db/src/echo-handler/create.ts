@@ -44,29 +44,28 @@ export const isEchoObject = (value: unknown): value is EchoReactiveObject<any> =
  * @internal
  */
 // TODO(burdon): Document lifecycle.
-export const createObject = <T extends {}>(props: T): EchoReactiveObject<T> => {
-  invariant(!isEchoObject(props));
-  const schema = getSchema(props);
+export const createObject = <T extends {}>(obj: T): EchoReactiveObject<T> => {
+  invariant(!isEchoObject(obj));
+  const schema = getSchema(obj);
   if (schema != null) {
     validateSchema(schema);
   }
-  validateInitialProps(props);
+  validateInitialProps(obj);
 
   const core = new ObjectCore();
-  if (isReactiveObject(props)) {
+  if (isReactiveObject(obj)) {
     // Already an echo-schema reactive object.
-    const proxy = props as any;
-    const meta = getProxyTarget<ObjectMeta>(getMeta(proxy));
+    const meta = getProxyTarget<ObjectMeta>(getMeta(obj));
 
-    // TODO(burdon): Document.
-    const slot = getProxySlot(proxy);
+    // TODO(burdon): Requires comment.
+    const slot = getProxySlot(obj);
     slot.setHandler(EchoReactiveHandler.instance);
 
     const target = slot.target as ProxyTarget;
     target[symbolInternals] = initInternals(core);
     target[symbolPath] = [];
     target[symbolNamespace] = DATA_NAMESPACE;
-    slot.handler._proxyMap.set(target, proxy);
+    slot.handler._proxyMap.set(target, obj);
 
     target[symbolInternals].subscriptions.push(core.updates.on(() => target[symbolInternals].signal.notifyWrite()));
 
@@ -76,25 +75,25 @@ export const createObject = <T extends {}>(props: T): EchoReactiveObject<T> => {
     initCore(core, target);
     slot.handler.init(target);
 
-    saveTypeInAutomerge(target[symbolInternals], schema);
+    setTypeOnObject(target[symbolInternals], schema);
     if (meta && meta.keys.length > 0) {
       target[symbolInternals].core.setMeta(meta);
     }
 
-    return proxy;
+    return obj as any;
   } else {
     const target: ProxyTarget = {
       [symbolInternals]: initInternals(core),
       [symbolPath]: [],
       [symbolNamespace]: DATA_NAMESPACE,
-      ...(props as any),
+      ...(obj as any),
     };
 
     target[symbolInternals].subscriptions.push(core.updates.on(() => target[symbolInternals].signal.notifyWrite()));
 
     initCore(core, target);
     const proxy = createProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
-    saveTypeInAutomerge(target[symbolInternals], schema);
+    setTypeOnObject(target[symbolInternals], schema);
     return proxy;
   }
 };
@@ -140,7 +139,7 @@ const validateSchema = (schema: S.Schema<any>) => {
   SchemaValidator.validateSchema(schema);
 };
 
-const saveTypeInAutomerge = (internals: ObjectInternals, schema: S.Schema<any> | undefined) => {
+const setTypeOnObject = (internals: ObjectInternals, schema: S.Schema<any> | undefined) => {
   if (schema != null) {
     internals.core.setType(requireTypeReference(schema));
   }

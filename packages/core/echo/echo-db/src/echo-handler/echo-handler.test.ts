@@ -64,7 +64,7 @@ for (const schema of [undefined, TestType, TestSchemaType]) {
     return createObject(schema ? create(schema as any, props) : create(props));
   };
 
-  describe(`Echo specific proxy properties${schema == null ? '' : ' with schema'}`, () => {
+  describe(`ECHO specific proxy properties${schema == null ? '' : ' with schema'}`, () => {
     test('has id', () => {
       const obj = createTestObject({ string: 'bar' });
       expect(obj.id).not.to.be.undefined;
@@ -138,13 +138,14 @@ describe('Reactive Object with ECHO database', () => {
   });
 
   test('existing proxy objects can be passed to create', async () => {
+    class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({ field: S.Any }) {}
+
     const { db, graph } = await builder.createDatabase();
-    class Schema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({ field: S.Any }) {}
-    graph.schemaRegistry.addSchema([Schema]);
-    const objectHost = db.add(create(Schema, { field: [] }));
-    const object = db.add(create(Schema, { field: 'foo' }));
+    graph.schemaRegistry.addSchema([TestSchema]);
+    const objectHost = db.add(create(TestSchema, { field: [] }));
+    const object = db.add(create(TestSchema, { field: 'foo' }));
     objectHost.field?.push({ hosted: object });
-    create(Schema, { field: [create(Schema, { field: objectHost })] });
+    create(TestSchema, { field: [create(TestSchema, { field: objectHost })] });
     expect(objectHost.field[0].hosted).not.to.be.undefined;
   });
 
@@ -183,7 +184,7 @@ describe('Reactive Object with ECHO database', () => {
       peer.client.graph.schemaRegistry.addSchema([TestType]);
       const db = await peer.openDatabase(spaceKey, root.url);
 
-      const obj = (await db.loadObjectById(id)) as EchoReactiveObject<TestSchema>;
+      const obj = (await db.query({ id }).first()) as EchoReactiveObject<TestSchema>;
       expect(isEchoObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
@@ -218,7 +219,7 @@ describe('Reactive Object with ECHO database', () => {
       const peer = await builder.createPeer(kv);
       const db = await peer.openDatabase(spaceKey, root.url);
 
-      const obj = (await db.loadObjectById(id)) as EchoReactiveObject<TestSchema>;
+      const obj = (await db.query({ id }).first()) as EchoReactiveObject<TestSchema>;
       expect(isEchoObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
@@ -549,7 +550,7 @@ describe('Reactive Object with ECHO database', () => {
       {
         const peer = await builder.createPeer(kv);
         const db = await peer.openDatabase(spaceKey, root.url);
-        const obj = (await db.loadObjectById(id)) as EchoReactiveObject<TestSchema>;
+        const obj = (await db.query({ id }).first()) as EchoReactiveObject<TestSchema>;
         expect(getMeta(obj).keys).to.deep.eq([metaKey]);
       }
     });

@@ -24,6 +24,7 @@ export default [
         'column action settings': 'Column Settings',
         'column action delete': 'Delete Column',
         'delete row label': 'Delete row',
+        'bulk delete row label': 'Delete selected rows',
         'column deleted label': 'Column deleted',
         'new column button label': 'Create column',
       },

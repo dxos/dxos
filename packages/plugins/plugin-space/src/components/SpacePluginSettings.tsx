@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useIntentDispatcher, useResolvePlugins } from '@dxos/app-framework';
 import { Input, Select, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { DeprecatedFormInput } from '@dxos/react-ui-data';
+import { DeprecatedFormInput } from '@dxos/react-ui-form';
 
 import { SpaceAction, SPACE_PLUGIN } from '../meta';
 import { parseSpaceInitPlugin, type SpaceSettingsProps } from '../types';

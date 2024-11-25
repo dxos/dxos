@@ -4,7 +4,7 @@
 
 import { type ColorSememes } from './types';
 
-const surfaceCadence = {
+export const surfaceCadence = {
   dark: [900, 800, 775, 710, 695, 680, 650],
   light: [25, 35, 70, 80, 90],
 };

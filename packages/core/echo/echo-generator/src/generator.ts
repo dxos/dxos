@@ -60,7 +60,6 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
     return schema ? create(schema, data) : create(data);
   }
 
-  // TODO(burdon): Create batch.
   // TODO(burdon): Based on dependencies (e.g., organization before contact).
   async createObjects(map: Partial<Record<T, number>>) {
     const tasks = Object.entries<number>(map as any)

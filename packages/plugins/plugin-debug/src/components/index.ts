@@ -4,7 +4,7 @@
 
 import { lazy } from 'react';
 
-export const DebugGlobal = lazy(() => import('./DebugGlobal'));
+export const DebugApp = lazy(() => import('./DebugApp'));
 export const DebugSpace = lazy(() => import('./DebugSpace'));
 
 export * from './DebugObjectPanel';

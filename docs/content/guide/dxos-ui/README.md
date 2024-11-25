@@ -9,22 +9,18 @@ order: 0
 
 There are several open-source packages of UI components available:
 
-| Package                 | Description                                                                                        | Audience                                           |
-| :---------------------- | :------------------------------------------------------------------------------------------------- | :------------------------------------------------- |
-| [@dxos/react-ui](https://www.npmjs.com/package/@dxos/react-ui)        | A set of lookless components in a UI system based on `radix`, `phosphor`, `react`, and `tailwind`. | Any react application.                             |
-| [@dxos/react-ui-theme](https://www.npmjs.com/package/@dxos/react-ui-theme)  | A default theme for DXOS UI                                                                        | Any react application.                             |
-| [@dxos/react-ui-types](https://www.npmjs.com/package/@dxos/react-ui-types)  | TypeScript types for the UI system.                                                                | Any react application using DXOS UI.               |
+| Package                                                                      | Description                                                                                        | Audience                                           |
+| :--------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------- | :------------------------------------------------- |
+| [@dxos/react-ui](https://www.npmjs.com/package/@dxos/react-ui)               | A set of lookless components in a UI system based on `radix`, `phosphor`, `react`, and `tailwind`. | Any react application.                             |
+| [@dxos/react-ui-theme](https://www.npmjs.com/package/@dxos/react-ui-theme)   | A default theme for DXOS UI                                                                        | Any react application.                             |
+| [@dxos/react-ui-types](https://www.npmjs.com/package/@dxos/react-ui-types)   | TypeScript types for the UI system.                                                                | Any react application using DXOS UI.               |
 | [@dxos/react-ui-editor](https://www.npmjs.com/package/@dxos/react-ui-editor) | A collaborative rich text editor component.                                                        | Any react application using DXOS UI (and/or ECHO). |
 | [@dxos/react-ui-mosaic](https://www.npmjs.com/package/@dxos/react-ui-mosaic) | Drag and drop utilities.                                                                           | Any react application using DXOS UI (and/or ECHO). |
-| [@dxos/react-ui-table](https://www.npmjs.com/package/@dxos/react-ui-table)  | A data table component.                                                                            | Any react application using DXOS UI (and/or ECHO). |
+| [@dxos/react-ui-table](https://www.npmjs.com/package/@dxos/react-ui-table)   | A data table component.                                                                            | Any react application using DXOS UI (and/or ECHO). |
 
 ## DXOS UI Installation
 
 Install the `@dxos/react-ui` package with your package manager and follow steps below.
-
-::: note
-Apps based on the DXOS [application templates](../tooling/app-templates.md) have DXOS UI configured by default, which can be turned off with `--interactive` mode.
-:::
 
 ### With [Vite](https://vitejs.dev)
 
@@ -38,7 +34,6 @@ import { defineConfig } from 'vite';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 
-// https://vitejs.dev/config
 export default defineConfig({
   plugins: [
     ThemePlugin({

@@ -16,7 +16,6 @@ import { invariant } from '@dxos/invariant';
 import { Filter, getSpace, fullyQualifiedId } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
 import { type DxGridElement, Grid, type GridContentProps, closestCell } from '@dxos/react-ui-grid';
-import { StackItemContent } from '@dxos/react-ui-stack/next';
 import { mx } from '@dxos/react-ui-theme';
 import { isNotFalsy } from '@dxos/util';
 
@@ -34,7 +33,7 @@ const inlineEndLine =
 const blockEndLine =
   '[&>.dx-grid]:before:absolute [&>.dx-grid]:before:inset-inline-0 [&>.dx-grid]:before:-block-end-px [&>.dx-grid]:before:bs-px [&>.dx-grid]:before:bg-separator';
 
-const frozen = { frozenRowsStart: 1, frozenColsEnd: 1 };
+const frozen = { frozenRowsStart: 1, frozenColsStart: 1, frozenColsEnd: 1 };
 
 //
 // Root
@@ -42,11 +41,19 @@ const frozen = { frozenRowsStart: 1, frozenColsEnd: 1 };
 
 export type TableRootProps = PropsWithChildren<{ role?: string }>;
 
-const TableRoot = ({ children }: TableRootProps) => {
+const TableRoot = ({ children, role }: TableRootProps) => {
   return (
-    <StackItemContent toolbar contentSize='intrinsic' classNames='relative'>
+    <div
+      role='none'
+      className={mx(
+        'relative border-bs !border-separator',
+        role === 'section'
+          ? 'attention-surface overflow-hidden [&_.dx-grid]:max-is-max'
+          : 'flex flex-col [&_.dx-grid]:grow [&_.dx-grid]:max-is-max [&_.dx-grid]:bs-0 [&_.dx-grid]:max-bs-max',
+      )}
+    >
       {children}
-    </StackItemContent>
+    </div>
   );
 };
 
@@ -60,9 +67,10 @@ export type TableController = {
 
 export type TableMainProps = {
   model?: TableModel;
+  ignoreAttention?: boolean;
 };
 
-const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwardedRef) => {
+const TableMain = forwardRef<TableController, TableMainProps>(({ model, ignoreAttention }, forwardedRef) => {
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
 
   const { hasAttention } = useAttention(model?.table ? fullyQualifiedId(model.table) : 'table');
@@ -135,11 +143,11 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
 
   const handleWheel = useCallback(
     (event: WheelEvent) => {
-      if (!hasAttention) {
+      if (!ignoreAttention && !hasAttention) {
         event.stopPropagation();
       }
     },
-    [hasAttention],
+    [hasAttention, ignoreAttention],
   );
 
   // TODO(burdon): Factor out?
@@ -184,11 +192,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model }, forwar
 
         <Grid.Content
           onWheelCapture={handleWheel}
-          className={mx(
-            '[--dx-grid-base:var(--surface-bg)] [&_.dx-grid]:bs-min [&_.dx-grid]:shrink [&_.dx-grid]:max-is-max',
-            inlineEndLine,
-            blockEndLine,
-          )}
+          className={mx('[--dx-grid-base:var(--surface-bg)]', inlineEndLine, blockEndLine)}
           frozen={frozen}
           columns={model.columnMeta.value}
           limitRows={model.getRowCount() ?? 0}

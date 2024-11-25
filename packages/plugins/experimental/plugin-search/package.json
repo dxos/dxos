@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-search",
-  "version": "0.6.13",
+  "version": "0.7.0",
   "description": "Braneframe sketch plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -40,7 +40,7 @@
     "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-searchlist": "workspace:*",
-    "@effect/schema": "^0.75.1",
+    "@effect/schema": "^0.75.5",
     "main-thread-scheduling": "^14.1.1"
   },
   "devDependencies": {

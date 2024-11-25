@@ -29,6 +29,7 @@ import {
 import { EventSubscriptions, type Trigger, type UnsubscribeCallback } from '@dxos/async';
 import { type HasId, isReactiveObject } from '@dxos/echo-schema';
 import { scheduledEffect } from '@dxos/echo-signals/core';
+import { invariant } from '@dxos/invariant';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
@@ -702,7 +703,10 @@ export const SpacePlugin = ({
                 const store = memoize(() => signal(space.db.getObjectById(objectId)), id);
                 memoize(() => {
                   if (!store.value) {
-                    void space.db.loadObjectById(objectId).then((o) => (store.value = o));
+                    void space.db
+                      .query({ id: objectId })
+                      .first()
+                      .then((o) => (store.value = o));
                   }
                 }, id);
                 const object = store.value;
@@ -836,7 +840,7 @@ export const SpacePlugin = ({
                 const object = toSignal(
                   (onChange) => {
                     const timeout = setTimeout(async () => {
-                      await space?.db.loadObjectById(objectId);
+                      await space?.db.query({ id: objectId }).first();
                       onChange();
                     });
 
@@ -1285,10 +1289,13 @@ export const SpacePlugin = ({
               };
             }
 
-            case SpaceAction.REMOVE_OBJECT: {
-              const object = intent.data?.object ?? intent.data?.result;
-              const space = getSpace(object);
-              if (!(isEchoObject(object) && space)) {
+            case SpaceAction.REMOVE_OBJECTS: {
+              const objects = intent.data?.objects ?? intent.data?.result;
+              invariant(Array.isArray(objects));
+
+              // All objects must be a member of the same space.
+              const space = getSpace(objects[0]);
+              if (!space || !objects.every((obj) => isEchoObject(obj) && getSpace(obj) === space)) {
                 return;
               }
 
@@ -1297,23 +1304,22 @@ export const SpacePlugin = ({
               const openObjectIds = new Set<string>(openIds(activeParts ?? {}));
 
               if (!intent.undo && resolve) {
-                // Capture the current state for undo.
                 const parentCollection = intent.data?.collection ?? space.properties[CollectionType.typename];
-                const nestedObjects = await getNestedObjects(object, resolve);
+                const nestedObjectsList = await Promise.all(objects.map((obj) => getNestedObjects(obj, resolve)));
+
                 const deletionData = {
-                  object,
+                  objects,
                   parentCollection,
-                  index:
-                    parentCollection instanceof CollectionType
-                      ? parentCollection.objects.indexOf(object as Expando)
-                      : -1,
-                  nestedObjects,
-                  wasActive: [object, ...nestedObjects]
+                  indices: objects.map((obj) =>
+                    parentCollection instanceof CollectionType ? parentCollection.objects.indexOf(obj as Expando) : -1,
+                  ),
+                  nestedObjectsList,
+                  wasActive: objects
+                    .flatMap((obj, i) => [obj, ...nestedObjectsList[i]])
                     .map((obj) => fullyQualifiedId(obj))
                     .filter((id) => openObjectIds.has(id)),
                 };
 
-                // If the item is active, navigate to "nowhere" to avoid navigating to a removed item.
                 if (deletionData.wasActive.length > 0) {
                   await intentPlugin?.provides.intent.dispatch({
                     action: NavigationAction.CLOSE,
@@ -1326,48 +1332,56 @@ export const SpacePlugin = ({
                   });
                 }
 
-                if (parentCollection instanceof CollectionType) {
-                  // TODO(Zan): Is there a nicer way to do this without casting to Expando?
-                  const index = parentCollection.objects.indexOf(object as Expando);
-                  if (index !== -1) {
-                    parentCollection.objects.splice(index, 1);
-                  }
+                if (deletionData.parentCollection instanceof CollectionType) {
+                  [...deletionData.indices]
+                    .sort((a, b) => b - a)
+                    .forEach((index: number) => {
+                      if (index !== -1) {
+                        deletionData.parentCollection.objects.splice(index, 1);
+                      }
+                    });
                 }
 
-                // If the object is a collection, also delete its nested objects.
-                deletionData.nestedObjects.forEach((obj) => {
+                deletionData.nestedObjectsList.flat().forEach((obj) => {
                   space.db.remove(obj);
                 });
-                space.db.remove(object);
+                objects.forEach((obj) => space.db.remove(obj));
 
-                const undoMessageKey =
-                  object instanceof CollectionType ? 'collection deleted label' : 'object deleted label';
+                const undoMessageKey = objects.some((obj) => obj instanceof CollectionType)
+                  ? 'collection deleted label'
+                  : objects.length > 1
+                    ? 'objects deleted label'
+                    : 'object deleted label';
 
                 return {
                   data: true,
                   undoable: {
-                    // Consider using a translation key here.
+                    // TODO(ZaymonFC): Pluralize if more than one object.
                     message: translations[0]['en-US'][SPACE_PLUGIN][undoMessageKey],
                     data: deletionData,
                   },
                 };
               } else {
                 const undoData = intent.data;
-                if (undoData && isEchoObject(undoData.object) && undoData.parentCollection instanceof CollectionType) {
+                if (
+                  undoData?.objects?.length &&
+                  undoData.objects.every(isEchoObject) &&
+                  undoData.parentCollection instanceof CollectionType
+                ) {
                   // Restore the object to the space.
-                  const restoredObject = space.db.add(undoData.object);
+                  const restoredObjects = undoData.objects.map((obj: Expando) => space.db.add(obj));
 
-                  // Restore nested objects if the object was a collection.
-                  undoData.nestedObjects.forEach((obj: Expando) => {
+                  // Restore nested objects to the space.
+                  undoData.nestedObjectsList.flat().forEach((obj: Expando) => {
                     space.db.add(obj);
                   });
 
-                  // Restore the object to its original position in the collection.
-                  if (undoData.index !== -1) {
-                    undoData.parentCollection.objects.splice(undoData.index, 0, restoredObject as Expando);
-                  }
+                  undoData.indices.forEach((index: number, i: number) => {
+                    if (index !== -1) {
+                      undoData.parentCollection.objects.splice(index, 0, restoredObjects[i] as Expando);
+                    }
+                  });
 
-                  // Restore active state if it was active before removal.
                   if (undoData.wasActive.length > 0) {
                     await intentPlugin?.provides.intent.dispatch({
                       action: NavigationAction.OPEN,

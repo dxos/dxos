@@ -10,10 +10,6 @@ import { mx } from '@dxos/react-ui-theme';
 // Tree item hitbox
 // https://github.com/atlassian/pragmatic-drag-and-drop/blob/main/packages/hitbox/constellation/index/about.mdx#tree-item
 
-export type DropIndicatorProps = {
-  instruction: Instruction;
-};
-
 type InstructionType = Exclude<Instruction, { type: 'instruction-blocked' }>['type'];
 type Orientation = 'sibling' | 'child';
 
@@ -42,14 +38,17 @@ const instructionStyles: Record<InstructionType, HTMLAttributes<HTMLElement>['cl
 const strokeSize = 2;
 const terminalSize = 8;
 const offsetToAlignTerminalWithLine = (strokeSize - terminalSize) / 2;
-const gap = '0px';
 
-export const DropIndicator = ({ instruction }: DropIndicatorProps) => {
-  const lineOffset = `calc(-0.5 * (${gap} + ${strokeSize}px))`;
+export type DropIndicatorProps = {
+  instruction: Instruction;
+  gap?: number;
+};
+
+export const DropIndicator = ({ instruction, gap = 0 }: DropIndicatorProps) => {
+  const lineOffset = `calc(-0.5 * (${gap}px + ${strokeSize}px))`;
   const isBlocked = instruction.type === 'instruction-blocked';
   const desiredInstruction = isBlocked ? instruction.desired : instruction;
   const orientation = edgeToOrientationMap[desiredInstruction.type];
-
   if (isBlocked) {
     return null;
   }

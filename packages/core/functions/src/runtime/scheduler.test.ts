@@ -2,9 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { getRandomPort } from 'get-port-please';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
-import WebSocket from 'ws';
 
 import { Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
@@ -15,7 +13,7 @@ import { Scheduler, type SchedulerOptions } from './scheduler';
 import { FunctionRegistry } from '../function';
 import { createInitializedClients, TestType, triggerWebhook } from '../testing';
 import { TriggerRegistry } from '../trigger';
-import { type FunctionManifest } from '../types';
+import { TriggerKind, type FunctionManifest } from '../types';
 
 // TODO(burdon): Test we can add and remove triggers.
 describe('scheduler', () => {
@@ -55,7 +53,7 @@ describe('scheduler', () => {
           function: 'example.com/function/test',
           enabled: true,
           spec: {
-            type: 'timer',
+            type: TriggerKind.Timer,
             cron: '0/1 * * * * *', // Every 1s.
           },
         },
@@ -91,7 +89,7 @@ describe('scheduler', () => {
           function: 'example.com/function/test',
           enabled: true,
           spec: {
-            type: 'webhook',
+            type: TriggerKind.Webhook,
             method: 'GET',
           },
         },
@@ -111,55 +109,6 @@ describe('scheduler', () => {
     await done.wait();
   });
 
-  // TODO(wittjosiah): Doesn't work in vitest.
-  test.skip('websocket', async () => {
-    const port = await getRandomPort('127.0.0.1');
-    const manifest: FunctionManifest = {
-      functions: [
-        {
-          uri: 'example.com/function/test',
-          route: '/test',
-          handler: 'test',
-        },
-      ],
-      triggers: [
-        {
-          function: 'example.com/function/test',
-          enabled: true,
-          spec: {
-            type: 'websocket',
-            // url: 'https://hub.dxos.network/api/mailbox/test',
-            url: `http://localhost:${port}`,
-            init: {
-              type: 'sync',
-            },
-          },
-        },
-      ],
-    };
-
-    const done = new Trigger();
-    const scheduler = createScheduler(async () => {
-      done.wake();
-    });
-    await scheduler.register(client.spaces.default, manifest);
-    await scheduler.start();
-
-    // Test server.
-    setTimeout(() => {
-      const wss = new WebSocket.Server({ port });
-      wss.on('connection', (ws: WebSocket) => {
-        ws.on('message', (data) => {
-          const info = JSON.parse(new TextDecoder().decode(data as ArrayBuffer));
-          expect(info.type).to.equal('sync');
-          done.wake();
-        });
-      });
-    }, 500);
-
-    await done.wait();
-  });
-
   test('subscription', async () => {
     const manifest: FunctionManifest = {
       functions: [
@@ -174,8 +123,8 @@ describe('scheduler', () => {
           function: 'example.com/function/test',
           enabled: true,
           spec: {
-            type: 'subscription',
-            filter: [{ type: TestType.typename }],
+            type: TriggerKind.Subscription,
+            filter: { type: TestType.typename },
           },
         },
       ],

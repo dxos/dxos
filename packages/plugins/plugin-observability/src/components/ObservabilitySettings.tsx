@@ -6,7 +6,7 @@ import React from 'react';
 
 import { parseIntentPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { Input, Message, useTranslation } from '@dxos/react-ui';
-import { DeprecatedFormInput } from '@dxos/react-ui-data';
+import { DeprecatedFormInput } from '@dxos/react-ui-form';
 
 import { OBSERVABILITY_PLUGIN, ObservabilityAction } from '../meta';
 

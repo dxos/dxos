@@ -31,8 +31,8 @@ import {
   useFormattingState,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { StackItemContent } from '@dxos/react-ui-stack/next';
-import { textBlockWidth } from '@dxos/react-ui-theme';
+import { StackItem } from '@dxos/react-ui-stack';
+import { mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { isNotFalsy, nonNullable } from '@dxos/util';
 
 import { useSelectCurrentThread } from '../hooks';
@@ -170,29 +170,40 @@ export const MarkdownEditor = ({
   };
 
   return (
-    <StackItemContent toolbar={toolbar}>
+    <StackItem.Content toolbar={toolbar}>
       {toolbar && (
-        <Toolbar.Root
-          classNames={[textBlockWidth, !hasAttention && 'opacity-20']}
-          state={formattingState && { ...formattingState, ...commentsState }}
-          onAction={handleAction}
+        <div
+          role='none'
+          className={mx(
+            'attention-surface is-full border-be !border-separator',
+            role === 'section' && 'sticky block-start-0 z-[1] -mbe-px min-is-0',
+          )}
         >
-          <Toolbar.Markdown />
-          {onFileUpload && <Toolbar.Custom onUpload={onFileUpload} />}
-          <Toolbar.Separator />
-          <Toolbar.View mode={viewMode ?? DEFAULT_VIEW_MODE} />
-          <Toolbar.Actions />
-        </Toolbar.Root>
+          <Toolbar.Root
+            classNames={[textBlockWidth, !hasAttention && 'opacity-20']}
+            state={formattingState && { ...formattingState, ...commentsState }}
+            onAction={handleAction}
+          >
+            <Toolbar.Markdown />
+            {onFileUpload && <Toolbar.Custom onUpload={onFileUpload} />}
+            <Toolbar.Separator />
+            <Toolbar.View mode={viewMode ?? DEFAULT_VIEW_MODE} />
+            <Toolbar.Actions />
+          </Toolbar.Root>
+        </div>
       )}
       <div
         role='none'
         ref={parentRef}
         data-testid='composer.markdownRoot'
         data-toolbar={toolbar ? 'enabled' : 'disabled'}
-        className='min-bs-0 ch-focus-ring-inset data-[toolbar=disabled]:pbs-2 attention-surface'
+        className={mx(
+          'ch-focus-ring-inset data-[toolbar=disabled]:pbs-2 attention-surface',
+          role === 'article' ? 'min-bs-0' : '[&_.cm-scroller]:overflow-hidden [&_.cm-scroller]:min-bs-24',
+        )}
         {...focusAttributes}
       />
-    </StackItemContent>
+    </StackItem.Content>
   );
 };
 

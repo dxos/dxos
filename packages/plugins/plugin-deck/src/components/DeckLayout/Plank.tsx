@@ -18,7 +18,7 @@ import {
 import { debounce } from '@dxos/async';
 import { useGraph } from '@dxos/plugin-graph';
 import { useAttendableAttributes } from '@dxos/react-ui-attention';
-import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack/next';
+import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mainIntrinsicSize, mx } from '@dxos/react-ui-theme';
 
 import { NodePlankHeading } from './NodePlankHeading';
@@ -42,7 +42,6 @@ export type PlankProps = {
 };
 
 export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }: PlankProps) => {
-  // const { t } = useTranslation(DECK_PLUGIN);
   const dispatch = useIntentDispatcher();
   const coordinate: LayoutCoordinate = useMemo(() => ({ part, entryId: entry?.id ?? UNKNOWN_ID }), [entry?.id, part]);
   const { popoverAnchorId, scrollIntoView } = useLayout();
@@ -51,7 +50,7 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }
   const node = useNode(graph, entry?.id);
   const rootElement = useRef<HTMLDivElement | null>(null);
   const canResize = layoutMode === 'deck';
-  const Root = part === 'solo' ? 'article' : StackItem;
+  const Root = part === 'solo' ? 'article' : StackItem.Root;
 
   const attendableAttrs = useAttendableAttributes(coordinate.entryId);
   const index = indexInPart(layoutParts, coordinate);
@@ -82,6 +81,7 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }
   }, [coordinate.entryId, scrollIntoView, layoutMode]);
 
   const isSolo = layoutMode === 'solo' && part === 'solo';
+  const isAttendable = isSolo || (layoutMode === 'deck' && part === 'main');
 
   const sizeAttrs = useMainSize();
 
@@ -99,17 +99,17 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }
   const placeholder = useMemo(() => <PlankLoading />, []);
 
   const className = mx(
-    'attention-surface',
+    'attention-surface relative',
     isSolo && mainIntrinsicSize,
     isSolo && railGridHorizontal,
-    isSolo && 'grid absolute inset-0 divide-separator divide-y',
-    last && '!border-li border-separator',
+    isSolo ? 'grid absolute inset-0' : '!border-separator border-li',
   );
 
   return (
     <Root
       ref={rootElement}
       data-testid='deck.plank'
+      tabIndex={0}
       {...(part === 'solo'
         ? ({ ...sizeAttrs, className } as any)
         : {
@@ -118,8 +118,9 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }
             onSizeChange: setSize,
             classNames: className,
             order,
+            role: 'article',
           })}
-      {...attendableAttrs}
+      {...(isAttendable ? attendableAttrs : {})}
       onKeyDown={handleKeyDown}
     >
       {node ? (
@@ -130,13 +131,13 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }
             canIncrementStart={canIncrementStart}
             canIncrementEnd={canIncrementEnd}
             popoverAnchorId={popoverAnchorId}
-            canResize={canResize}
           />
           <Surface role='article' data={data} limit={1} fallback={PlankContentError} placeholder={placeholder} />
         </>
       ) : (
         <PlankError layoutCoordinate={coordinate} />
       )}
+      {canResize && <StackItem.ResizeHandle />}
     </Root>
   );
 });

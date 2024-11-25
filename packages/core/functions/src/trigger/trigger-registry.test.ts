@@ -15,7 +15,7 @@ import { range } from '@dxos/util';
 
 import { TriggerRegistry } from './trigger-registry';
 import { createInitializedClients, TestType, triggerWebhook } from '../testing';
-import { type FunctionManifest, FunctionTrigger } from '../types';
+import { type FunctionManifest, FunctionTrigger, TriggerKind } from '../types';
 
 const manifest: FunctionManifest = {
   triggers: [
@@ -31,7 +31,7 @@ const manifest: FunctionManifest = {
       function: 'example.com/function/webhook-test',
       enabled: true,
       spec: {
-        type: 'webhook',
+        type: TriggerKind.Webhook,
         method: 'GET',
       },
     },
@@ -47,12 +47,10 @@ const manifest: FunctionManifest = {
       function: 'example.com/function/subscription-test',
       enabled: true,
       spec: {
-        type: 'subscription',
-        filter: [
-          {
-            type: TestType.typename,
-          },
-        ],
+        type: TriggerKind.Subscription,
+        filter: {
+          type: TestType.typename,
+        },
       },
     },
   ],
@@ -89,7 +87,7 @@ describe('trigger registry', () => {
       const trigger = create(FunctionTrigger, {
         function: 'example.com/function/webhook-test',
         spec: {
-          type: 'webhook',
+          type: TriggerKind.Webhook,
           method: 'GET',
         },
       });
@@ -111,13 +109,13 @@ describe('trigger registry', () => {
 
       const callbackInvoked = new Trigger();
       const { objects: allTriggers } = await space.db.query(Filter.schema(FunctionTrigger)).run();
-      const webhookTrigger = allTriggers.find((trigger: FunctionTrigger) => trigger.spec.type === 'webhook')!;
+      const webhookTrigger = allTriggers.find((trigger: FunctionTrigger) => trigger.spec?.type === 'webhook')!;
       await registry.activate(space, webhookTrigger, async () => {
         callbackInvoked.wake();
         return 200;
       });
 
-      setTimeout(() => triggerWebhook(space, webhookTrigger.function));
+      setTimeout(() => triggerWebhook(space, webhookTrigger.function!));
       await callbackInvoked.wait();
     });
 
@@ -150,7 +148,7 @@ describe('trigger registry', () => {
       await waitForInactiveTriggers(registry, space);
 
       const { objects: allTriggers } = await space.db.query(Filter.schema(FunctionTrigger)).run();
-      const echoTrigger = allTriggers.find((trigger: FunctionTrigger) => trigger.spec.type === 'subscription')!;
+      const echoTrigger = allTriggers.find((trigger: FunctionTrigger) => trigger.spec?.type === 'subscription')!;
       let count = 0;
       await registry.activate(space, echoTrigger, async () => {
         count++;
@@ -177,7 +175,7 @@ describe('trigger registry', () => {
       await waitForInactiveTriggers(registry, space);
 
       const { objects: allTriggers } = await space.db.query(Filter.schema(FunctionTrigger)).run();
-      const echoTrigger = allTriggers.find((trigger: FunctionTrigger) => trigger.spec.type === 'subscription')!;
+      const echoTrigger = allTriggers.find((trigger: FunctionTrigger) => trigger.spec?.type === 'subscription')!;
       let count = 0;
       await registry.activate(space, echoTrigger, async () => {
         count++;

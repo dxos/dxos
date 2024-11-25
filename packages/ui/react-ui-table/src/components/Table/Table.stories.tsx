@@ -14,7 +14,7 @@ import { faker } from '@dxos/random';
 import { Filter, useSpaces, useQuery, create } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useDefaultValue } from '@dxos/react-ui';
-import { ViewEditor } from '@dxos/react-ui-data';
+import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { ViewProjection, ViewType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -61,9 +61,11 @@ const DefaultStory = () => {
     }
   }, [space, schema]);
 
-  const handleDeleteRow = useCallback(
-    (_: number, object: any) => {
-      space.db.remove(object);
+  const handleDeleteRows = useCallback(
+    (_: number, objects: any[]) => {
+      for (const object of objects) {
+        space.db.remove(object);
+      }
     },
     [space],
   );
@@ -98,7 +100,7 @@ const DefaultStory = () => {
     projection,
     objects: filteredObjects,
     onInsertRow: handleInsertRow,
-    onDeleteRow: handleDeleteRow,
+    onDeleteRows: handleDeleteRows,
     onDeleteColumn: handleDeleteColumn,
     onCellUpdate: (cell) => tableRef.current?.update?.(cell),
     onRowOrderChanged: () => tableRef.current?.update?.(),
@@ -110,14 +112,14 @@ const DefaultStory = () => {
 
   return (
     <div className='grow grid grid-cols-[1fr_350px]'>
-      <div className='flex flex-col h-full overflow-hidden'>
+      <div className='grid grid-rows-[min-content_1fr] min-bs-0 overflow-hidden'>
         <Toolbar.Root classNames='border-b border-separator' onAction={handleAction}>
           <Toolbar.Editing />
           <Toolbar.Separator />
           <Toolbar.Actions />
         </Toolbar.Root>
         <Table.Root>
-          <Table.Main ref={tableRef} model={model} />
+          <Table.Main ref={tableRef} model={model} ignoreAttention />
         </Table.Root>
       </div>
       <div className='flex flex-col h-full border-l border-separator overflow-y-auto'>
@@ -151,7 +153,7 @@ const TablePerformanceStory = (props: StoryProps) => {
   const simulatorProps = useMemo(() => ({ table, items, ...props }), [table, items, props]);
   useSimulator(simulatorProps);
 
-  const handleDeleteRow = useCallback<NonNullable<UseTableModelParams<any>['onDeleteRow']>>((row) => {
+  const handleDeleteRows = useCallback<NonNullable<UseTableModelParams<any>['onDeleteRows']>>((row) => {
     itemsRef.current.splice(row, 1);
   }, []);
 
@@ -169,7 +171,7 @@ const TablePerformanceStory = (props: StoryProps) => {
   const model = useTableModel({
     table,
     objects: items as any[],
-    onDeleteRow: handleDeleteRow,
+    onDeleteRows: handleDeleteRows,
     onDeleteColumn: handleDeleteColumn,
     onCellUpdate: (cell) => tableRef.current?.update?.(cell),
     onRowOrderChanged: () => tableRef.current?.update?.(),

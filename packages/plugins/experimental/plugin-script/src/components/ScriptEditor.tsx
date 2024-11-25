@@ -140,7 +140,8 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
       }
 
       const deployedFunction =
-        fn ?? space.db.add(create(FunctionType, { version: functionVersionNumber, source: script }));
+        fn ?? space.db.add(create(FunctionType, { name: functionId, version: functionVersionNumber, source: script }));
+
       script.changed = false;
 
       if (meta.inputSchema) {
@@ -148,6 +149,7 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
       } else {
         log.verbose('no input schema in function metadata', { functionId });
       }
+
       setUserFunctionUrlInMetadata(getMeta(deployedFunction), `/${ownerDid}/${functionId}`);
 
       setView('split');

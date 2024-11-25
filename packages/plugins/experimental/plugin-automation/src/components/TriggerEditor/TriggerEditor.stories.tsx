@@ -2,12 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
+import '@dxos-theme';
+
 import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
-import { create } from '@dxos/echo-schema';
-import { FunctionDef, FunctionTrigger } from '@dxos/functions/types';
-import { useClient } from '@dxos/react-client';
+import { AST, S, create, toJsonSchema } from '@dxos/echo-schema';
+import { FunctionTrigger, TriggerKind } from '@dxos/functions';
+import { FunctionType } from '@dxos/plugin-script/types';
+import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -15,33 +18,49 @@ import { TriggerEditor } from './TriggerEditor';
 import translations from '../../translations';
 import { ChainPromptType } from '../../types';
 
-const functions: Omit<FunctionDef, 'id'>[] = [
+// TODO(burdon): Extract type?
+const functions = [
   {
-    uri: 'dxos.org/function/email-worker',
-    route: '/email',
-    handler: 'email-worker',
-    description: 'Email Sync',
+    name: 'example.com/function/chess',
+    version: 1,
+    inputSchema: toJsonSchema(
+      S.Struct({
+        level: S.Number.annotations({
+          [AST.TitleAnnotationId]: 'Level',
+        }),
+      }),
+    ),
   },
   {
-    uri: 'dxos.org/function/gpt',
-    route: '/gpt',
-    handler: 'gpt',
-    description: 'GPT Chat',
+    name: 'example.com/function/forex',
+    version: 1,
+    binding: 'FOREX',
+    inputSchema: toJsonSchema(
+      S.Struct({
+        from: S.String.annotations({
+          [AST.TitleAnnotationId]: 'Currency from',
+        }),
+        to: S.String.annotations({
+          [AST.TitleAnnotationId]: 'Currency to',
+        }),
+      }),
+    ),
   },
 ];
 
-const Story = () => {
+const DefaultStory = () => {
+  const spaces = useSpaces();
+  const space = spaces[1];
   const [trigger, setTrigger] = useState<FunctionTrigger>();
-  const client = useClient();
-  const space = client.spaces.default;
   useEffect(() => {
     if (!space) {
       return;
     }
 
-    const trigger = space.db.add(create(FunctionTrigger, { function: '', spec: { type: 'timer', cron: '0 0 * * *' } }));
+    const trigger = space.db.add(create(FunctionTrigger, { spec: { type: TriggerKind.Timer, cron: '' } }));
     setTrigger(trigger);
-  }, [space, setTrigger]);
+  }, [space]);
+
   if (!space || !trigger) {
     return <div />;
   }
@@ -53,25 +72,23 @@ const Story = () => {
   );
 };
 
-export const Default = {};
-
 const meta: Meta = {
   title: 'plugins/plugin-automation/TriggerEditor',
   component: TriggerEditor,
-  render: Story,
+  render: DefaultStory,
   decorators: [
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [FunctionTrigger, FunctionDef, ChainPromptType],
-      onInitialized: (client) => {
-        const space = client.spaces.default;
+      types: [FunctionType, FunctionTrigger, ChainPromptType],
+      onSpaceCreated: ({ space }) => {
+        console.log(space.id);
         for (const fn of functions) {
-          space.db.add(create(FunctionDef, fn));
+          space.db.add(create(FunctionType, fn));
         }
       },
     }),
-    withLayout({ fullscreen: true, classNames: 'flex justify-center m-2' }),
+    withLayout({ fullscreen: true, tooltips: true, classNames: 'flex justify-center m-2' }),
     withTheme,
   ],
   parameters: {
@@ -80,3 +97,5 @@ const meta: Meta = {
 };
 
 export default meta;
+
+export const Default = {};
