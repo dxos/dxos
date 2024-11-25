@@ -79,7 +79,7 @@ export const setReferences = <T extends BaseObject>(type: S.Schema<T>, db: EchoD
             invariant(typename);
             // TODO(burdon): Filter.typename doesn't work!
             const { objects } = await db.query((obj) => getTypename(obj) === typename).run();
-            if (objects.length) {
+            if (objects.length && faker.datatype.boolean()) {
               const object = faker.helpers.arrayElement(objects);
               obj[property.name] = object;
             }
