@@ -290,7 +290,7 @@ export class GraphBuilder {
         (arg): Node => ({
           id: arg.id,
           type: arg.type,
-          cacheable: arg.cacheable ?? false,
+          cacheable: arg.cacheable,
           data: arg.data ?? null,
           properties: arg.properties ?? {},
         }),

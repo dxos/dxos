@@ -573,7 +573,7 @@ export const SpacePlugin = ({
                   {
                     id: SPACES,
                     type: SPACES,
-                    cacheable: true,
+                    cacheable: ['label', 'role'],
                     properties: {
                       label: ['spaces label', { ns: SPACE_PLUGIN }],
                       testId: 'spacePlugin.spaces',

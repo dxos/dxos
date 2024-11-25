@@ -60,7 +60,6 @@ export const getItem = (arg: NodeArg<any>, parent?: readonly string[]): NavTreeI
   const node: Node = {
     id: arg.id,
     type: arg.type,
-    cacheable: false,
     properties: arg.properties ?? {},
     data: arg.data ?? null,
   };

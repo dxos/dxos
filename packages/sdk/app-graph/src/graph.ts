@@ -8,7 +8,7 @@ import { asyncTimeout, Trigger } from '@dxos/async';
 import { type ReactiveObject, create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type MakeOptional, nonNullable } from '@dxos/util';
+import { type MakeOptional, nonNullable, pick } from '@dxos/util';
 
 import { type Relation, type Node, type NodeArg, type NodeFilter, isActionLike, actionGroupSymbol } from './node';
 
@@ -102,18 +102,19 @@ export class Graph {
     this._nodes[ROOT_ID] = this._constructNode({
       id: ROOT_ID,
       type: ROOT_TYPE,
-      cacheable: true,
+      cacheable: [],
       properties: {},
       data: null,
     });
     if (nodes) {
       nodes.forEach((node) => {
+        const cacheable = Object.keys(node.properties ?? {});
         if (node.type === ACTION_TYPE) {
-          this._addNode({ cacheable: true, data: () => log.warn('Pickled action invocation'), ...node });
+          this._addNode({ cacheable, data: () => log.warn('Pickled action invocation'), ...node });
         } else if (node.type === ACTION_GROUP_TYPE) {
-          this._addNode({ cacheable: true, data: actionGroupSymbol, ...node });
+          this._addNode({ cacheable, data: actionGroupSymbol, ...node });
         } else {
-          this._addNode({ cacheable: true, ...node });
+          this._addNode({ cacheable, ...node });
         }
       });
     }
@@ -173,12 +174,12 @@ export class Graph {
 
   pickle() {
     const nodes = Object.values(this._nodes)
-      .filter((node) => node.cacheable)
+      .filter((node) => !!node.cacheable)
       .map((node) => {
         return {
           id: node.id,
           type: node.type,
-          properties: node.properties,
+          properties: pick(node.properties, node.cacheable!),
         };
       });
 
@@ -392,7 +393,7 @@ export class Graph {
   }: NodeArg<TData, TProperties>): Node<TData, TProperties> {
     return untracked(() => {
       const existingNode = this._nodes[_node.id];
-      const node = existingNode ?? this._constructNode({ data: null, properties: {}, cacheable: false, ..._node });
+      const node = existingNode ?? this._constructNode({ data: null, properties: {}, ..._node });
       if (existingNode) {
         const { data, properties, type } = _node;
         if (data && data !== node.data) {

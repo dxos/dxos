@@ -21,11 +21,11 @@ export type Node<TData = any, TProperties extends Record<string, any> = Record<s
   type: string;
 
   /**
-   * Whether the node should be included when the graph is pickled.
-   *
-   * @default false
+   * Keys in of the properties which should be cached.
+   * If defined, the node will be included in the cache.
+   * If undefined, the node will not be included in the cache.
    */
-  cacheable: boolean;
+  cacheable?: string[];
 
   /**
    * Properties of the node relevant to displaying the node.

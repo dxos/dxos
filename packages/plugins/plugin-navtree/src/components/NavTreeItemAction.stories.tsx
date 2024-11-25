@@ -13,7 +13,6 @@ import { NavTreeItemAction, type NavTreeItemActionMenuProps } from './NavTreeIte
 const parent = {
   id: faker.string.uuid(),
   type: 'node',
-  cacheable: false,
   data: null,
   properties: {
     label: faker.lorem.words(2),
@@ -27,7 +26,6 @@ const menuActions = faker.helpers.multiple(
     ({
       id: faker.string.uuid(),
       type: 'action',
-      cacheable: false,
       data: () => {
         console.log('invoke');
       },
