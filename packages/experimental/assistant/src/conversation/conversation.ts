@@ -106,7 +106,7 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
       params.logger?.(event);
     }
 
-    log.info('llm result', { time: Date.now() - beginTs, message });
+    log('llm result', { time: Date.now() - beginTs, message });
     invariant(message);
     history.push(message);
     params.logger?.({ type: 'message', message });

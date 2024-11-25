@@ -9,12 +9,13 @@ import { log } from '@dxos/log';
 
 import { AnthropicBackend } from '../conversation/backend/anthropic';
 import { runLLM } from '../conversation/conversation';
-import { createUserMessage, defineTool, LLMToolResult } from '../conversation/types';
+import { createUserMessage, defineTool, LLMToolResult, type LLMMessage } from '../conversation/types';
 import { executeQuery } from '../cypher/query-executor';
 import { formatJsonSchemaForLLM } from '../cypher/schema';
 import { createLogger } from '../test/logger';
 import { createTestData } from '../test/test-data';
 import { Contact, Org, Project, Task } from '../test/test-schema';
+import inquirer from 'inquirer';
 
 const backend = new AnthropicBackend({
   apiKey: process.env.ANTHROPIC_API_KEY!,
@@ -63,27 +64,47 @@ const cypherTool = defineTool({
 });
 
 const schemaTypes = [Org, Project, Task, Contact];
+let history: LLMMessage[] = [
+  createUserMessage(`
+    You have access to ECHO graph database. You can query the database to get data to satisfy user prompts.
 
-const result = await runLLM({
-  model: '@anthropic/claude-3-5-sonnet-20241022',
-  messages: [
-    createUserMessage(`
-        You have access to ECHO graph database. You can query the database to get data to satisfy user prompts.
+    Database schema is defined in pseud-cypher syntax. The schema is:
 
-        Database schema is defined in pseud-cypher syntax. The schema is:
+    <schema>
+      ${formatJsonSchemaForLLM(schemaTypes.map((schema) => toJsonSchema(schema)))}
+    <schema>
+    `),
+  createUserMessage('If you are missing data to satisfy the user request, use the available tools to get the data.'),
+];
 
-        <schema>
-          ${formatJsonSchemaForLLM(schemaTypes.map((schema) => toJsonSchema(schema)))}
-        <schema>
-        `),
-    createUserMessage('If you are missing data to satisfy the user request, use the available tools to get the data.'),
-    createUserMessage(
-      'Query the database and give me all employees from DXOS organization that work on Composer and what their tasks are.',
-    ),
-  ],
-  tools: [cypherTool],
-  backend,
-  logger: createLogger({ stream: true }),
-});
+while (true) {
+  const prompt = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'message',
+      message: 'Enter a message:',
+    },
+  ]);
+  history.push(createUserMessage(prompt.message));
 
-log.info('DONE', { result: result.result });
+  const skipCount = history.length - 1;
+  let skipped = 0;
+
+  const { result, history: newHistory } = await runLLM({
+    model: '@anthropic/claude-3-5-sonnet-20241022',
+    messages: history,
+    tools: [cypherTool],
+    backend,
+    logger: createLogger({
+      stream: true,
+      filter: (e) => {
+        if (e.type === 'message') {
+          skipped++;
+          return skipped > skipCount;
+        }
+        return true;
+      },
+    }),
+  });
+  history = newHistory;
+}

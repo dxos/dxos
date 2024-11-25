@@ -1,8 +1,12 @@
 import type { ConversationEvent } from '../conversation/conversation';
 
 export const createLogger =
-  ({ stream }: { stream?: boolean } = {}) =>
+  ({ stream, filter }: { stream?: boolean; filter?: (event: ConversationEvent) => boolean } = {}) =>
   (event: ConversationEvent) => {
+    if (typeof filter === 'function' && !filter(event)) {
+      return;
+    }
+
     if (stream) {
       switch (event.type) {
         case 'message_start': {
