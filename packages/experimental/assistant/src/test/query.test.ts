@@ -82,7 +82,7 @@ test('cypher query', async () => {
     ],
     tools: [cypherTool],
     backend,
-    logger: prettyLogger,
+    logger: createLogger({ stream: false }),
   });
 
   log.info('DONE', { result: result.result });
@@ -94,31 +94,79 @@ const backend = new AnthropicBackend({
 
 // MATCH (org:Org {name: 'DXOS'})-[:ORG_EMPLOYEES]->(c:Contact)<-[:TASK_ASSIGNEE]-(t:Task)-[:TASK_PROJECT]->(p:Project {name: 'Composer'}) RETURN c.name
 
-const prettyLogger = (event: ConversationEvent) => {
-  switch (event.type) {
-    case 'message':
-      console.log(`${event.message.role.toUpperCase()}\n`);
-      for (const block of event.message.content) {
-        switch (block.type) {
-          case 'text':
-            console.log(block.text);
-            break;
-          case 'tool_use':
-            console.log(`⚙️ [Tool Use] ${block.name}`);
-            console.log(`  ${JSON.stringify(block.input)}`);
-            break;
-          case 'tool_result':
-            if (block.is_error) {
-              console.log('❌ [Tool Error]');
-              console.log(block.content);
-            } else {
-              console.log('✅ [Tool Success]');
-              console.log(block.content);
-            }
+const createLogger =
+  ({ stream }: { stream?: boolean } = {}) =>
+  (event: ConversationEvent) => {
+    if (stream) {
+      switch (event.type) {
+        case 'message_start': {
+          process.stdout.write(`${event.message.role.toUpperCase()}\n\n`);
+          break;
         }
-        console.log('\n');
+        case 'content_block_start': {
+          switch (event.content.type) {
+            case 'text':
+              process.stdout.write(event.content.text);
+              break;
+            case 'tool_use':
+              process.stdout.write(`⚙️ [Tool Use] ${event.content.name}\n`);
+              break;
+          }
+          break;
+        }
+        case 'content_block_delta': {
+          switch (event.delta.type) {
+            case 'text_delta': {
+              process.stdout.write(event.delta.text);
+              break;
+            }
+            case 'input_json_delta': {
+              process.stdout.write(event.delta.partial_json);
+              break;
+            }
+          }
+          break;
+        }
+        case 'content_block_stop': {
+          process.stdout.write('\n');
+          break;
+        }
+        case 'message_delta': {
+          break;
+        }
+        case 'message_stop': {
+          process.stdout.write('\n\n');
+          break;
+        }
       }
-      break;
-  }
-  console.log('\n');
-};
+    }
+
+    switch (event.type) {
+      case 'message': {
+        if (!stream || event.message.role !== 'assistant') {
+          process.stdout.write(`${event.message.role.toUpperCase()}\n\n`);
+          for (const block of event.message.content) {
+            switch (block.type) {
+              case 'text':
+                process.stdout.write(block.text + '\n');
+                break;
+              case 'tool_use':
+                process.stdout.write(`⚙️ [Tool Use] ${block.name}\n`);
+                process.stdout.write(`  ${JSON.stringify(block.input)}\n`);
+                break;
+              case 'tool_result':
+                if (block.is_error) {
+                  process.stdout.write('❌ [Tool Error]\n');
+                  process.stdout.write(block.content + '\n');
+                } else {
+                  process.stdout.write('✅ [Tool Success]\n');
+                  process.stdout.write(block.content + '\n');
+                }
+            }
+            process.stdout.write('\n\n');
+          }
+        }
+        break;
+      }
+    }
+  };

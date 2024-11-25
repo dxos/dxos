@@ -5,7 +5,7 @@
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import type { AIBackend } from './backend/interface';
+import type { AIBackend, ResultStreamEvent } from './backend/interface';
 import { type LLMMessage, type LLMModel, type LLMTool } from './types';
 import { sleep } from '@anthropic-ai/sdk/core';
 
@@ -24,10 +24,12 @@ export type CreateLLMConversationParams = {
   logger?: (event: ConversationEvent) => void;
 };
 
-export type ConversationEvent = {
-  type: 'message';
-  message: LLMMessage;
-};
+export type ConversationEvent =
+  | {
+      type: 'message';
+      message: LLMMessage;
+    }
+  | ResultStreamEvent;
 
 export const runLLM = async (params: CreateLLMConversationParams) => {
   const history: LLMMessage[] = [...params.messages];
@@ -101,6 +103,7 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
           break;
         }
       }
+      params.logger?.(event);
     }
 
     log.info('llm result', { time: Date.now() - beginTs, message });

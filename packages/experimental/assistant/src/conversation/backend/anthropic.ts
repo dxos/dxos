@@ -53,7 +53,7 @@ export class AnthropicBackend implements AIBackend {
       return {
         stream: (async function* () {
           for await (const event of messageOrStream) {
-            log.info('event', { event });
+            log('event', { event });
             yield convertStreamEventFromAnthropic(event);
           }
         })(),
