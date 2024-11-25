@@ -5,7 +5,7 @@
 import React, { useMemo, useState } from 'react';
 
 import { type MutationsProviderParams, TestSchemaType, createSpaceObjectGenerator } from '@dxos/echo-generator';
-import { type EchoReactiveObject, type ReactiveObject, type Space } from '@dxos/react-client/echo';
+import { type ReactiveEchoObject, type ReactiveObject, type Space } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { createColumnBuilder, type TableColumnDef, Table } from '@dxos/react-ui-table/deprecated';
 
@@ -49,7 +49,7 @@ export const ObjectCreator = ({ space, onAddObjects }: ObjectCreatorProps) => {
       while (objectsCreated < params.objects) {
         const objects = (await generator.createObjects({
           [params.schema]: Math.min(BATCH_SIZE, params.objects - objectsCreated),
-        })) as EchoReactiveObject<any>[];
+        })) as ReactiveEchoObject<any>[];
 
         await generator.mutateObjects(objects, params.mutations);
         objectsCreated += objects.length;

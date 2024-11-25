@@ -27,6 +27,7 @@
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
+    "@dxos/log": "workspace:*",
     "@effect/schema": "^0.75.5",
     "effect": "^3.9.2"
   },

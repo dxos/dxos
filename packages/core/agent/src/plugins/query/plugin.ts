@@ -5,7 +5,7 @@
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { getObjectCore, QueryOptions } from '@dxos/client/echo';
-import { type EchoReactiveObject } from '@dxos/client/echo';
+import { type ReactiveEchoObject } from '@dxos/client/echo';
 import { type WithTypeUrl, type Any } from '@dxos/codec-protobuf';
 import { cancelWithContext } from '@dxos/context';
 import { Filter } from '@dxos/echo-db';
@@ -58,6 +58,7 @@ export class QueryPlugin extends Plugin {
             if (!result.object) {
               return null;
             }
+
             const objectCore = getObjectCore(result.object);
             return {
               id: result.id,
@@ -81,7 +82,7 @@ export class QueryPlugin extends Plugin {
   }
 }
 
-const createSnapshot = (item: EchoReactiveObject<any>): EchoObjectProto => {
+const createSnapshot = (item: ReactiveEchoObject<any>): EchoObjectProto => {
   // const item = getEchoObjectItem(object[base] as any)!;
   let model: WithTypeUrl<Any> | undefined;
   // if (!item?.modelMeta?.snapshotCodec) {

@@ -132,7 +132,14 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }
             canIncrementEnd={canIncrementEnd}
             popoverAnchorId={popoverAnchorId}
           />
-          <Surface role='article' data={data} limit={1} fallback={PlankContentError} placeholder={placeholder} />
+          <Surface
+            key={node.id}
+            role='article'
+            data={data}
+            limit={1}
+            fallback={PlankContentError}
+            placeholder={placeholder}
+          />
         </>
       ) : (
         <PlankError layoutCoordinate={coordinate} />

@@ -4,14 +4,14 @@
 
 import { asyncTimeout } from '@dxos/async';
 
-import { type EchoReactiveObject } from '../echo-handler';
+import { type ReactiveEchoObject } from '../echo-handler';
 import { getObjectCore } from '../echo-handler';
 
 /**
  * @param obj
  */
 // TODO(burdon): Rename/review SDK.
-export const loadObject = <T extends EchoReactiveObject<any>>(obj: T): T => {
+export const loadObject = <T extends ReactiveEchoObject<any>>(obj: T): T => {
   return getObjectCore(obj).getDecoded(['data']) as T;
 };
 
@@ -25,7 +25,7 @@ export const loadObject = <T extends EchoReactiveObject<any>>(obj: T): T => {
  */
 // TODO(burdon): Rename/review SDK.
 export const loadObjectReferences = async <
-  T extends EchoReactiveObject<any>,
+  T extends ReactiveEchoObject<any>,
   RefType,
   DerefType = RefType extends Array<infer U> ? Array<NonNullable<U>> : NonNullable<RefType>,
 >(

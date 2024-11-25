@@ -39,7 +39,7 @@ import { type Node, createExtension, memoize, toSignal } from '@dxos/plugin-grap
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { type Client, PublicKey } from '@dxos/react-client';
 import {
-  type EchoReactiveObject,
+  type ReactiveEchoObject,
   Expando,
   Filter,
   type PropertiesTypeProps,
@@ -837,7 +837,7 @@ export const SpacePlugin = ({
             // Create collection actions and action groups.
             createExtension({
               id: `${SPACE_PLUGIN}/object-actions`,
-              filter: (node): node is Node<EchoReactiveObject<any>> => isEchoObject(node.data),
+              filter: (node): node is Node<ReactiveEchoObject<any>> => isEchoObject(node.data),
               actionGroups: ({ node }) =>
                 constructObjectActionGroups({
                   object: node.data,
