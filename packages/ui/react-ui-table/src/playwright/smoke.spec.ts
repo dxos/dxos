@@ -17,9 +17,9 @@ test.describe('Table', () => {
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
-    // (select, name, email, salary, manager, actions) * (header + 10 rows).
+    // (name, email, salary, manager) * 10 rows.
     await table.grid.ready();
-    await expect(page.getByRole('gridcell')).toHaveCount(66);
+    await expect(table.grid.cellsWithinPlane('grid')).toHaveCount(40);
     await page.close();
   });
 
@@ -29,12 +29,12 @@ test.describe('Table', () => {
 
     await table.grid.ready();
     await table.sortColumn(0, 'descending');
-    await expect(page.getByRole('gridcell').nth(16)).toHaveText('Uwe Øvergård');
-    await expect(page.getByRole('gridcell').nth(52)).toContainText('Anita');
+    await expect(table.grid.cell(0, 0, 'grid')).toHaveText('Uwe Øvergård');
+    await expect(table.grid.cell(0, 9, 'grid')).toContainText('Anita');
 
     await table.sortColumn(0, 'ascending');
-    await expect(page.getByRole('gridcell').nth(16)).toContainText('Anita');
-    await expect(page.getByRole('gridcell').nth(52)).toHaveText('Uwe Øvergård');
+    await expect(table.grid.cell(0, 0, 'grid')).toContainText('Anita');
+    await expect(table.grid.cell(0, 9, 'grid')).toHaveText('Uwe Øvergård');
     await page.close();
   });
 
@@ -54,11 +54,13 @@ test.describe('Table', () => {
 
     await table.grid.ready();
     await table.toggleSelectAll();
+
+    // Delete action affects all selected rows.
     await table.deleteRow(0);
 
     await expect(page.getByRole('gridcell', { name: 'Anita Mayer' })).toHaveCount(0);
     await expect(page.getByRole('gridcell', { name: 'Phonthip Sigurjónsson' })).toHaveCount(0);
-    await expect(page.getByRole('gridcell')).toHaveCount(6);
+    await expect(table.grid.cellsWithinPlane('grid')).toHaveCount(0);
     await page.close();
   });
 
@@ -68,15 +70,17 @@ test.describe('Table', () => {
 
     await table.grid.ready();
     await table.deleteColumn(0);
-    await expect(page.getByRole('gridcell')).toHaveCount(55);
+    await expect(table.grid.cellsWithinPlane('grid')).toHaveCount(30);
 
     await table.deleteColumn(0);
-    await expect(page.getByRole('gridcell')).toHaveCount(44);
+    await expect(table.grid.cellsWithinPlane('grid')).toHaveCount(20);
 
     await table.deleteColumn(0);
-    await expect(page.getByRole('gridcell')).toHaveCount(33);
+    await expect(table.grid.cellsWithinPlane('grid')).toHaveCount(10);
 
     await page.getByTestId('table-column-settings-button').nth(0).click();
+
+    // Ensure that the delete menu item is not visible when there is only one column left.
     await expect(page.getByTestId('column-delete')).toHaveCount(0);
     await page.close();
   });

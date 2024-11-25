@@ -35,7 +35,7 @@ export class TableManager {
     await this.page.getByTestId(TABLE_SELECTORS.columnDelete).click();
   }
 
-  public async deleteRow(index: number): Promise<void> {
+  public async deleteRow(index = 0): Promise<void> {
     await this.page.getByTestId(TABLE_SELECTORS.rowMenuButton).nth(index).click();
     await this.page.getByTestId(TABLE_SELECTORS.rowDelete).click();
   }
