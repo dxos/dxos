@@ -11,8 +11,10 @@ import { log } from '@dxos/log';
 export type LLMMessage = {
   role: 'user' | 'assistant';
   content: LLMMessageContent[];
-  stopReason?: 'tool_use';
+  stopReason?: LLMStopReason;
 };
+
+export type LLMStopReason = 'tool_use' | 'end_turn';
 
 export type LLMMessageContent =
   | {
@@ -32,6 +34,10 @@ export type LLMMessageContent =
        */
       name: string;
       input: unknown;
+      /**
+       * Accumulator for the streaming JSON input.
+       */
+      inputJson?: string;
     }
   | {
       type: 'tool_result';

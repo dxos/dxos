@@ -7,6 +7,7 @@ import { log } from '@dxos/log';
 
 import type { AIBackend } from './backend/interface';
 import { type LLMMessage, type LLMModel, type LLMTool } from './types';
+import { sleep } from '@anthropic-ai/sdk/core';
 
 export type CreateLLMConversationParams = {
   model: LLMModel;
@@ -43,15 +44,72 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
       messages: history,
       system: params.system,
       tools: params.tools as any,
+      stream: true,
     });
-    log('llm result', { time: Date.now() - beginTs, result });
-    invariant(!(result instanceof ReadableStream));
+    invariant('stream' in result);
 
-    history.push(result.message);
-    params.logger?.({ type: 'message', message: result.message });
+    let message: LLMMessage | null = null;
 
-    if (result.message.stopReason === 'tool_use') {
-      const toolCalls = result.message.content.filter((c) => c.type === 'tool_use');
+    for await (const event of result.stream) {
+      switch (event.type) {
+        case 'message_start': {
+          invariant(message === null, 'Model should not send multiple messages at once');
+          message = event.message;
+          break;
+        }
+        case 'content_block_start': {
+          invariant(message);
+          if (event.content.type === 'tool_use') {
+            event.content.inputJson ??= '';
+          }
+          message.content.push(event.content);
+          break;
+        }
+        case 'content_block_delta': {
+          invariant(message);
+          const content = message.content[event.index];
+          invariant(content);
+          switch (event.delta.type) {
+            case 'text_delta': {
+              invariant(content.type === 'text');
+              content.text += event.delta.text;
+              break;
+            }
+            case 'input_json_delta': {
+              invariant(content.type === 'tool_use');
+              content.inputJson += event.delta.partial_json;
+              break;
+            }
+          }
+          break;
+        }
+        case 'content_block_stop': {
+          invariant(message);
+          const content = message.content[event.index];
+          invariant(content);
+          if (content.type === 'tool_use') {
+            content.input = JSON.parse(content.inputJson!);
+          }
+          break;
+        }
+        case 'message_delta': {
+          invariant(message);
+          message.stopReason = event.delta.stopReason;
+          break;
+        }
+        case 'message_stop': {
+          break;
+        }
+      }
+    }
+
+    log.info('llm result', { time: Date.now() - beginTs, message });
+    invariant(message);
+    history.push(message);
+    params.logger?.({ type: 'message', message });
+
+    if (message.stopReason === 'tool_use') {
+      const toolCalls = message.content.filter((c) => c.type === 'tool_use');
       invariant(toolCalls.length === 1);
       const toolCall = toolCalls[0];
       const tool = params.tools.find((t) => t.name === toolCall.name);
