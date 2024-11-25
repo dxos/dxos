@@ -58,16 +58,12 @@ export const calculateLayout = (config: { count: number; height: number; width: 
 
     const area =
       constrainingDimension === 'height'
-        ? // calculate tileWidth
-          targetTileAspectRatio *
-          tileHeight *
-          // then multiply by tileHeight
-          tileHeight
-        : // calculate tileHeight
-          (1 / targetTileAspectRatio) *
-          tileWidth *
-          // then multiply by tileWidth
-          tileWidth;
+        ? targetTileAspectRatio *
+          tileHeight * // calculate tileWidth
+          tileHeight // then multiply by tileHeight
+        : (1 / targetTileAspectRatio) *
+          tileWidth * // calculate tileHeight
+          tileWidth; // then multiply by tileWidth;
 
     if (area > largestArea) {
       largestArea = area;

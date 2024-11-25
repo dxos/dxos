@@ -2,8 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { log } from '@dxos/log';
+
 export const trackIsHealthy = async (track: MediaStreamTrack): Promise<boolean> => {
-  console.info('👩🏻‍⚕️ Checking track health...');
+  log.info('👩🏻‍⚕️ Checking track health...');
 
   if (track.enabled) {
     // TODO:
@@ -21,11 +23,11 @@ export const trackIsHealthy = async (track: MediaStreamTrack): Promise<boolean> 
   const randomFailure = randomFailuresEnabled && Math.random() < 0.2;
 
   if (randomFailure) {
-    console.log('🎲 Random track failure!');
+    log.info('🎲 Random track failure!');
   }
 
   const healthy = !track.muted && track.readyState === 'live' && !randomFailure;
 
-  console.info(`👩🏻‍⚕️ track is ${healthy ? 'healthy' : 'unhealthy'}!`);
+  log.info(`👩🏻‍⚕️ track is ${healthy ? 'healthy' : 'unhealthy'}!`);
   return healthy;
 };

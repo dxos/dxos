@@ -69,7 +69,7 @@ export class RxjsPeer {
         });
         peerConnection.addEventListener('connectionstatechange', () => {
           if (peerConnection.connectionState === 'failed' || peerConnection.connectionState === 'closed') {
-            console.debug(`💥 Peer connectionState is ${peerConnection.connectionState}`);
+            log.debug(`💥 Peer connectionState is ${peerConnection.connectionState}`);
             subscribe.next(setup());
           }
         });
@@ -78,7 +78,7 @@ export class RxjsPeer {
         peerConnection.addEventListener('iceconnectionstatechange', () => {
           clearTimeout(iceTimeout);
           if (peerConnection.iceConnectionState === 'failed' || peerConnection.iceConnectionState === 'closed') {
-            console.debug(`💥 Peer iceConnectionState is ${peerConnection.iceConnectionState}`);
+            log.debug(`💥 Peer iceConnectionState is ${peerConnection.iceConnectionState}`);
             subscribe.next(setup());
           } else if (peerConnection.iceConnectionState === 'disconnected') {
             // TODO: we should start to inspect the connection stats from here on for
@@ -89,7 +89,7 @@ export class RxjsPeer {
               if (peerConnection.iceConnectionState === 'connected') {
                 return;
               }
-              console.debug(
+              log.debug(
                 `💥 Peer iceConnectionState was ${peerConnection.iceConnectionState} for more than ${timeoutSeconds} seconds`,
               );
               subscribe.next(setup());
@@ -100,7 +100,7 @@ export class RxjsPeer {
         // TODO: Remove this
         Object.assign(window, {
           explode: () => {
-            console.debug('💥 Manually exploding connection');
+            log.debug('💥 Manually exploding connection');
             peerConnection.close();
             peerConnection.dispatchEvent(new Event('connectionstatechange'));
           },
@@ -164,7 +164,7 @@ export class RxjsPeer {
   closeTrackDispatcher = new BulkRequestDispatcher(32);
 
   async createSession(peerConnection: RTCPeerConnection) {
-    console.debug('🆕 creating new session');
+    log.debug('🆕 creating new session');
     const { apiBase } = this.config;
     const response = await this.fetchWithRecordedHistory(`${apiBase}/sessions/new?SESSION`, { method: 'POST' });
     if (response.status > 400) {
@@ -202,7 +202,7 @@ export class RxjsPeer {
       // is unsubscribed from immediately after subscribing. This will prevent
       // React's StrictMode from causing extra API calls to push/pull tracks.
       const timeout = setTimeout(() => {
-        console.debug('📤 pushing track ', trackName);
+        log.debug('📤 pushing track ', trackName);
         pushedTrackPromise = this.pushTrackDispatcher
           .doBulkRequest({ trackName, transceiver }, (tracks) =>
             this.taskScheduler.schedule(async () => {
@@ -259,12 +259,14 @@ export class RxjsPeer {
 
       return () => {
         clearTimeout(timeout);
-        pushedTrackPromise?.then(() => {
-          this.taskScheduler.schedule(async () => {
-            console.debug('🔚 Closing pushed track ', trackName);
-            return this.closeTrack(peerConnection, transceiver.mid, sessionId);
-          });
-        });
+        pushedTrackPromise
+          ?.then(async () => {
+            await this.taskScheduler.schedule(async () => {
+              log.debug('🔚 Closing pushed track ', trackName);
+              return this.closeTrack(peerConnection, transceiver.mid, sessionId);
+            });
+          })
+          .catch((err) => log.catch(err));
       };
     }).pipe(retry(2));
   }
@@ -286,7 +288,7 @@ export class RxjsPeer {
         const transceiver = session.peerConnection.addTransceiver(track, {
           direction: 'sendonly',
         });
-        console.debug('🌱 creating transceiver!');
+        log.debug('🌱 creating transceiver!');
 
         return {
           transceiver,
@@ -313,10 +315,10 @@ export class RxjsPeer {
           const existing = parameters.encodings[i];
           parameters.encodings[i] = { ...existing, ...encoding };
         });
-        transceiver.sender.setParameters(parameters);
+        transceiver.sender.setParameters(parameters).catch((err) => log.catch(err));
         if (transceiver.sender.transport !== null) {
-          console.debug('♻︎ replacing track');
-          transceiver.sender.replaceTrack(track);
+          log.debug('♻︎ replacing track');
+          transceiver.sender.replaceTrack(track).catch((err) => log.catch(err));
         }
       }),
       map(([trackData]) => trackData),
@@ -339,7 +341,7 @@ export class RxjsPeer {
       // is unsubscribed from immediately after subscribing. This will prevent
       // React's StrictMode from causing extra API calls to push/pull tracks.
       const timeout = setTimeout(() => {
-        console.debug('📥 pulling track ', trackData.trackName);
+        log.debug('📥 pulling track ', trackData.trackName);
         pulledTrackPromise = this.pullTrackDispatcher
           .doBulkRequest(trackData, (tracks) =>
             this.taskScheduler.schedule(async () => {
@@ -422,8 +424,10 @@ export class RxjsPeer {
         pulledTrackPromise
           ?.then((trackName) => {
             if (mid) {
-              console.debug('🔚 Closing pulled track ', trackName);
-              this.taskScheduler.schedule(async () => this.closeTrack(peerConnection, mid, sessionId));
+              log.debug('🔚 Closing pulled track ', trackName);
+              this.taskScheduler
+                .schedule(async () => this.closeTrack(peerConnection, mid, sessionId))
+                .catch((err) => log.catch(err));
             }
           })
           .catch((err) => log.catch(err));
@@ -500,17 +504,17 @@ const resolveTrack = async (
 
 const peerConnectionIsConnected = async (peerConnection: RTCPeerConnection) => {
   if (peerConnection.connectionState !== 'connected') {
-    const connected = new Promise((res, rej) => {
+    const connected = new Promise((resolve, reject) => {
       // timeout after 5s
       const timeout = setTimeout(() => {
         peerConnection.removeEventListener('connectionstatechange', connectionStateChangeHandler);
-        rej();
+        reject(new Error('Connection timeout'));
       }, 5000);
       const connectionStateChangeHandler = () => {
         if (peerConnection.connectionState === 'connected') {
           peerConnection.removeEventListener('connectionstatechange', connectionStateChangeHandler);
           clearTimeout(timeout);
-          res(undefined);
+          resolve(undefined);
         }
       };
       peerConnection.addEventListener('connectionstatechange', connectionStateChangeHandler);

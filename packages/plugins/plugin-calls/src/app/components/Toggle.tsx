@@ -3,7 +3,7 @@
 //
 
 import * as RadixSwitch from '@radix-ui/react-switch';
-import React, { FC } from 'react'
+import React, { type FC } from 'react';
 
 import { cn } from '../utils/style';
 
