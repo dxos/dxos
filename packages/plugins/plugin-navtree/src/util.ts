@@ -207,14 +207,3 @@ export const treeItemsFromRootNode = (
 ): NavTreeItem[] => {
   return Array.from(navTreeItemVisitor({ graph, node: rootNode, open, getItem, path, filter }));
 };
-
-export const expandOpenGraphNodes = (graph: Graph, open: string[]) => {
-  return Promise.all(
-    open
-      .map((id) => {
-        const node = graph.findNode(Path.last(id));
-        return node && expandChildrenAndActions(graph, node as NavTreeItemGraphNode);
-      })
-      .filter(nonNullable),
-  );
-};
