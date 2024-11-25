@@ -33,7 +33,7 @@ import {
   isEchoObject,
   isSpace,
   type Echo,
-  type EchoReactiveObject,
+  type ReactiveEchoObject,
   type FilterSource,
   type Query,
   type QueryOptions,
@@ -59,7 +59,7 @@ const EMPTY_ARRAY: never[] = [];
  * @param options
  * @returns
  */
-export const memoizeQuery = <T extends EchoReactiveObject<any>>(
+export const memoizeQuery = <T extends ReactiveEchoObject<any>>(
   spaceOrEcho?: Space | Echo,
   filter?: FilterSource<T>,
   options?: QueryOptions,
@@ -111,7 +111,7 @@ const getCollectionGraphNodePartials = ({
       // Change on disk.
       collection.objects = nextOrder.filter(isEchoObject);
     },
-    onTransferStart: (child: Node<EchoReactiveObject<any>>, index?: number) => {
+    onTransferStart: (child: Node<ReactiveEchoObject<any>>, index?: number) => {
       // TODO(wittjosiah): Support transfer between spaces.
       // const childSpace = getSpace(child.data);
       // if (space && childSpace && !childSpace.key.equals(space.key)) {
@@ -139,7 +139,7 @@ const getCollectionGraphNodePartials = ({
 
       // }
     },
-    onTransferEnd: (child: Node<EchoReactiveObject<any>>, destination: Node) => {
+    onTransferEnd: (child: Node<ReactiveEchoObject<any>>, destination: Node) => {
       // Remove child from origin collection.
       const index = collection.objects.indexOf(child.data);
       if (index > -1) {
@@ -155,7 +155,7 @@ const getCollectionGraphNodePartials = ({
       //   childSpace.db.remove(child.data);
       // }
     },
-    onCopy: async (child: Node<EchoReactiveObject<any>>, index?: number) => {
+    onCopy: async (child: Node<ReactiveEchoObject<any>>, index?: number) => {
       // Create clone of child and add to destination space.
       const newObject = await cloneObject(child.data, resolve, space);
       space.db.add(newObject);
@@ -412,7 +412,7 @@ export const createObjectNode = ({
   navigable = false,
   resolve,
 }: {
-  object: EchoReactiveObject<any>;
+  object: ReactiveEchoObject<any>;
   space: Space;
   navigable?: boolean;
   resolve: MetadataResolver;
@@ -454,7 +454,7 @@ export const constructObjectActionGroups = ({
   navigable,
   dispatch,
 }: {
-  object: EchoReactiveObject<any>;
+  object: ReactiveEchoObject<any>;
   navigable: boolean;
   dispatch: IntentDispatcher;
 }) => {
@@ -512,7 +512,7 @@ export const constructObjectActions = ({
   node,
   dispatch,
 }: {
-  node: Node<EchoReactiveObject<any>>;
+  node: Node<ReactiveEchoObject<any>>;
   dispatch: IntentDispatcher;
 }) => {
   const object = node.data;
@@ -601,9 +601,9 @@ export const getActiveSpace = (graph: Graph, active?: string) => {
  * @deprecated This is a temporary solution.
  */
 export const getNestedObjects = async (
-  object: EchoReactiveObject<any>,
+  object: ReactiveEchoObject<any>,
   resolve: MetadataResolver,
-): Promise<EchoReactiveObject<any>[]> => {
+): Promise<ReactiveEchoObject<any>[]> => {
   const type = getTypename(object);
   if (!type) {
     return [];
@@ -615,7 +615,7 @@ export const getNestedObjects = async (
     return [];
   }
 
-  const objects: EchoReactiveObject<any>[] = await loadReferences(object);
+  const objects: ReactiveEchoObject<any>[] = await loadReferences(object);
   const nested = await Promise.all(objects.map((object) => getNestedObjects(object, resolve)));
   return [...objects, ...nested.flat()];
 };

@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 import textract from 'textract';
 
-import { type EchoReactiveObject, Filter, hasType, loadObjectReferences } from '@dxos/echo-db';
+import { type ReactiveEchoObject, Filter, hasType, loadObjectReferences } from '@dxos/echo-db';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -40,7 +40,7 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context, respon
   const docs: ChainDocument[] = [];
   const addDocuments =
     (space: PublicKey | undefined = undefined) =>
-    async (objects: EchoReactiveObject<any>[]) => {
+    async (objects: ReactiveEchoObject<any>[]) => {
       for (const object of objects) {
         let pageContent: string | undefined;
         log.info('processing', { object: { id: object.id, type: object.type } });

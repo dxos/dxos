@@ -4,11 +4,11 @@
 
 import React from 'react';
 
-import { type EchoReactiveObject } from '@dxos/client/echo';
+import { type ReactiveEchoObject } from '@dxos/client/echo';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 export type DebugObjectPanelProps = {
-  object: EchoReactiveObject<any>;
+  object: ReactiveEchoObject<any>;
 };
 
 export const DebugObjectPanel = ({ object }: DebugObjectPanelProps) => {

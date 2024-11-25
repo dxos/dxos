@@ -13,7 +13,7 @@ import { UntypedReactiveHandler } from './untyped-handler';
 import { defineHiddenProperty } from './utils';
 import { getObjectAnnotation } from '../ast';
 import { createProxy, isValidProxyTarget } from '../proxy';
-import { type ExcludeId, type ObjectMeta, ObjectMetaSchema, type ReactiveObject } from '../types';
+import { type BaseObject, type ExcludeId, type ObjectMeta, ObjectMetaSchema, type ReactiveObject } from '../types';
 
 export const createObjectId = () => ulid();
 
@@ -24,10 +24,14 @@ export const createObjectId = () => ulid();
 // TODO(dmaretskyi): Deep mutability.
 // TODO(dmaretskyi): Invert generics (generic over schema) to have better error messages.
 export const create: {
-  <T extends {}>(obj: T): ReactiveObject<T>;
-  <T extends {}>(schema: typeof Expando, obj: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<Expando>;
-  <T extends {}>(schema: S.Schema<T, any>, obj: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<T>;
-} = <T extends {}>(objOrSchema: S.Schema<T, any> | T, obj?: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<T> => {
+  <T extends BaseObject>(obj: T): ReactiveObject<T>;
+  <T extends BaseObject>(schema: typeof Expando, obj: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<Expando>;
+  <T extends BaseObject>(schema: S.Schema<T, any>, obj: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<T>;
+} = <T extends BaseObject>(
+  objOrSchema: S.Schema<T, any> | T,
+  obj?: ExcludeId<T>,
+  meta?: ObjectMeta,
+): ReactiveObject<T> => {
   if (obj && (objOrSchema as any) !== Expando) {
     return createReactiveObject<T>({ ...obj } as T, meta, objOrSchema as S.Schema<T, any>);
   } else if (obj && (objOrSchema as any) === Expando) {
@@ -37,7 +41,7 @@ export const create: {
   }
 };
 
-const createReactiveObject = <T extends {}>(
+const createReactiveObject = <T extends BaseObject>(
   obj: T,
   meta?: ObjectMeta,
   schema?: S.Schema<T>,

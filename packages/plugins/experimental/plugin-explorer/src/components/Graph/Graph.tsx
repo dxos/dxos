@@ -4,7 +4,7 @@
 
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type EchoReactiveObject, type Space, getType } from '@dxos/client/echo';
+import { type ReactiveEchoObject, type Space, getType } from '@dxos/client/echo';
 import { createSvgContext, defaultGridStyles, Grid, SVG, SVGRoot, Zoom } from '@dxos/gem-core';
 import {
   defaultStyles,
@@ -104,7 +104,7 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
             arrows
             onSelect={(node) => setSelected(node?.data?.id)}
             labels={{
-              text: (node: GraphLayoutNode<EchoReactiveObject<any>>) => {
+              text: (node: GraphLayoutNode<ReactiveEchoObject<any>>) => {
                 if (filteredRef.current?.length && !filteredRef.current.some((object) => object.id === node.data?.id)) {
                   return undefined;
                 }
@@ -114,7 +114,7 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
               },
             }}
             attributes={{
-              node: (node: GraphLayoutNode<EchoReactiveObject<any>>) => {
+              node: (node: GraphLayoutNode<ReactiveEchoObject<any>>) => {
                 let className: string | undefined;
                 if (node.data) {
                   const typename = getType(node.data)?.objectId;

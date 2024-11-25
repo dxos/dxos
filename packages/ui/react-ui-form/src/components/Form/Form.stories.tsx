@@ -51,7 +51,7 @@ const DefaultStory = ({ values: initialValues }: StoryProps) => {
 };
 
 const meta: Meta<StoryProps> = {
-  title: 'ui/react-ui-data/Form',
+  title: 'ui/react-ui-form/Form',
   component: Form,
   render: DefaultStory,
   decorators: [withLayout({ fullscreen: true, tooltips: true }), withTheme],
