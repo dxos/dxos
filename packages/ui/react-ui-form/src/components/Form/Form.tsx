@@ -101,7 +101,7 @@ export const Form = <T extends BaseObject>({
     <div role='form' className={mx('flex flex-col w-full gap-2 py-2', classNames)}>
       {properties
         .map((property) => {
-          const { prop, name, type, format, title, description, examples, options } = property;
+          const { ast, name, type, format, title, description, examples, options } = property;
           const key = [...path, name];
           const label = pipe(title ?? name, capitalize);
           const placeholder = examples?.length ? `Example: "${examples[0]}"` : description;
@@ -133,10 +133,10 @@ export const Form = <T extends BaseObject>({
           if (!InputComponent) {
             // Recursively render form.
             if (type === 'object') {
-              const baseNode = findNode(prop.type, isDiscriminatedUnion);
+              const baseNode = findNode(ast, isDiscriminatedUnion);
               const typeLiteral = baseNode
                 ? getDiscriminatedType(baseNode, values[name] as any)
-                : findNode(prop.type, AST.isTypeLiteral);
+                : findNode(ast, AST.isTypeLiteral);
 
               if (typeLiteral) {
                 const schema = S.make(typeLiteral);

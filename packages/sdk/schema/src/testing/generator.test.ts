@@ -2,98 +2,80 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Effect, pipe } from 'effect';
+import { Effect } from 'effect';
 import { describe, test } from 'vitest';
 
 import { Filter } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import {
   createMutableSchema,
+  getSchemaTypename,
   FormatEnum,
   type JsonProp,
   TypeEnum,
   type ReactiveObject,
-  type AbstractTypedObject,
+  type S,
+  type JsonPath,
 } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { createArrayPipeline } from './generator';
-import { Contact, ContactType, Org, OrgType, ProjectType } from './types';
+import { createArrayPipeline, createObjectPipeline } from './generator';
+import { Contact, ContactType, createReferenceProperty, Org, OrgType, ProjectType } from './types';
 import { ViewProjection } from '../projection';
 import { createView, type ViewType } from '../view';
 
+type TypeSpec = {
+  type: S.Schema<any>;
+  count: number;
+};
+
 describe('Generator', () => {
-  // TODO(burdon): Move to @dxos/effect.
-  test('effect sanity', async ({ expect }) => {
-    {
-      const result = pipe(
-        10,
-        (value) => value + 3,
-        (value) => value * 2,
-      );
-      expect(result).to.eq(26);
-    }
-
-    {
-      const result = await Effect.runPromise(
-        pipe(
-          Effect.promise(() => Promise.resolve(10)),
-          Effect.tap((value) => log.info('tap', { value })),
-          Effect.map((value) => value + 3),
-          Effect.tap((value) => log.info('tap', { value })),
-          Effect.map((value) => value * 2),
-          Effect.tap((value) => log.info('tap', { value })),
-        ),
-      );
-      expect(result).to.eq(26);
-    }
-
-    {
-      const result = await Effect.runPromise(
-        pipe(
-          Effect.succeed(100),
-          Effect.tap((value) => log.info('tap', { value })),
-          Effect.map((value: number) => String(value)),
-          Effect.tap((value) => log.info('tap', { value })),
-          Effect.map((value: string) => value.length),
-          Effect.tap((value) => log.info('tap', { value })),
-        ),
-      );
-      expect(result).to.eq(3);
-    }
-
-    {
-      const result = await Effect.runPromise(
-        pipe(
-          Effect.succeed(100),
-          Effect.flatMap((value) => Effect.succeed(String(value))),
-          Effect.map((value) => value.length),
-        ),
-      );
-      expect(result).to.eq(3);
-    }
-  });
-
   test('generate objects', async ({ expect }) => {
     const builder = new EchoTestBuilder();
     const { db } = await builder.createDatabase();
     db.graph.schemaRegistry.addSchema([OrgType, ProjectType, ContactType]);
 
-    type Spec = { type: AbstractTypedObject; count: number };
-    const spec: Spec[] = [
+    const spec: TypeSpec[] = [
       { type: OrgType, count: 1 },
       { type: ProjectType, count: 1 },
-      { type: ContactType, count: 1 },
+      { type: ContactType, count: 3 },
     ];
 
     for (const { type, count } of spec) {
-      // const o = createObjectPipeline(type, db);
-      const objects = await Effect.runPromise(createArrayPipeline(count));
+      const pipeline = createObjectPipeline(type, db);
+      const objects = await Effect.runPromise(createArrayPipeline(count, pipeline));
       expect(objects).to.have.length(count);
       await db.flush();
     }
+  });
 
-    const result = await db.query(Filter.schema(ContactType)).run();
+  test.only('generate objects with references', async ({ expect }) => {
+    const builder = new EchoTestBuilder();
+    const { db } = await builder.createDatabase();
+
+    const org = db.schemaRegistry.addSchema(OrgType);
+    const contact = createReferenceProperty(
+      db.schemaRegistry.addSchema(ContactType),
+      'employer' as JsonProp,
+      org.typename,
+      'name' as JsonPath,
+    );
+
+    const spec: TypeSpec[] = [
+      { type: org, count: 5 },
+      { type: contact, count: 10 },
+    ];
+
+    for (const { type, count } of spec) {
+      const pipeline = createObjectPipeline(type, db);
+      const objects = await Effect.runPromise(createArrayPipeline(count, pipeline));
+      expect(objects).to.have.length(count);
+      await db.flush();
+      log.info('created', { type: getSchemaTypename(type), count });
+    }
+
+    // TODO(burdon): Test SOME contacts have employer.
+    const result = await db.query(Filter.schema(contact)).run();
     console.log(JSON.stringify(result.objects, null, 2));
 
     // TODO(burdon): Create tables and views.

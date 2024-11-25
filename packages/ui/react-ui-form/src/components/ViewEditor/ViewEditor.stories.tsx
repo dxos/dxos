@@ -10,8 +10,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Format, type MutableSchema, S, toJsonSchema, TypedObject } from '@dxos/echo-schema';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { ViewProjection, createView } from '@dxos/schema';
-import { type ViewType } from '@dxos/schema';
+import { type ViewType. ViewProjection, createView } from '@dxos/schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { ViewEditor } from './ViewEditor';

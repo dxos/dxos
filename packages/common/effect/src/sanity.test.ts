@@ -21,11 +21,11 @@ describe('sanity tests', () => {
     const result = await Effect.runPromise(
       pipe(
         Effect.promise(() => Promise.resolve(100)),
-        Effect.tap((value) => log.info('tap', { value })),
+        Effect.tap((value) => log('tap', { value })),
         Effect.map((value: number) => String(value)),
-        Effect.tap((value) => log.info('tap', { value })),
+        Effect.tap((value) => log('tap', { value })),
         Effect.map((value: string) => value.length),
-        Effect.tap((value) => log.info('tap', { value })),
+        Effect.tap((value) => log('tap', { value })),
       ),
     );
     expect(result).to.eq(3);
@@ -35,33 +35,35 @@ describe('sanity tests', () => {
     const result = await Effect.runPromise(
       pipe(
         Effect.succeed(100),
-        Effect.tap((value) => log.info('tap', { value })),
+        Effect.tap((value) => log('tap', { value })),
         Effect.flatMap((value) => Effect.promise(() => Promise.resolve(String(value)))),
-        Effect.tap((value) => log.info('tap', { value })),
+        Effect.tap((value) => log('tap', { value })),
         Effect.map((value) => value.length),
-        Effect.tap((value) => log.info('tap', { value })),
+        Effect.tap((value) => log('tap', { value })),
       ),
     );
     expect(result).to.eq(3);
   });
 
   test('error handling', async ({ expect }) => {
-    const result = await Effect.runPromise(
+    Effect.runPromise(
       pipe(
         Effect.succeed(10),
         Effect.map((value) => value * 2),
         Effect.flatMap((value) =>
           Effect.promise(() => {
             if (value > 10) {
-              return Promise.reject('error message');
+              return Promise.reject(new Error('error message'));
             }
 
             return Promise.resolve(value);
           }),
         ),
       ),
-    );
-
-    console.log(result);
+    )
+      .then(() => expect.fail())
+      .catch((error) => {
+        expect(error).to.be.instanceOf(Error);
+      });
   });
 });

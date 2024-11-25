@@ -4,12 +4,14 @@
 
 import {
   AST,
-  type FormatEnum,
+  FormatEnum,
   getFormatAnnotation,
   type OptionsAnnotationType,
   OptionsAnnotationId,
   type PropertyKey,
   type BaseObject,
+  getSchemaReference,
+  type JsonSchemaType,
 } from '@dxos/echo-schema';
 import {
   type SimpleType,
@@ -21,13 +23,16 @@ import {
   isSimpleType,
 } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
 /**
  * Flattened representation of AST node.
  */
 export type SchemaProperty<T extends BaseObject, V = any> = {
-  prop: AST.PropertySignature;
   name: PropertyKey<T>;
+  ast: AST.AST;
+  optional: boolean;
+  readonly: boolean;
   type: SimpleType;
   array?: boolean;
   format?: FormatEnum;
@@ -55,6 +60,10 @@ export const getSchemaProperties = <T extends BaseObject>(ast: AST.AST, value: a
   invariant(AST.isTypeLiteral(ast));
   return AST.getPropertySignatures(ast).reduce<SchemaProperty<T>[]>((props, prop) => {
     const name = prop.name.toString() as PropertyKey<T>;
+    // TODO(burdon): Detect annotation to skip?
+    if (name === 'id') {
+      return props;
+    }
 
     // Annotations.
     const title = findAnnotation<string>(prop.type, AST.TitleAnnotationId);
@@ -64,47 +73,81 @@ export const getSchemaProperties = <T extends BaseObject>(ast: AST.AST, value: a
     const options = findAnnotation<OptionsAnnotationType[]>(prop.type, OptionsAnnotationId);
 
     // Get type.
-    let type: SimpleType | undefined;
-    let array = false;
+    const property: Omit<SchemaProperty<T>, 'type' | 'array' | 'format'> = {
+      name,
+      ast: prop.type,
+      optional: prop.isOptional,
+      readonly: prop.isReadonly,
+      title,
+      description,
+      examples,
+      defaultValue,
+      options,
+    };
+
+    let type: SchemaProperty<T>['type'] | undefined;
+    let array: SchemaProperty<T>['array'] | undefined;
+    let format: SchemaProperty<T>['format'] | undefined;
+
+    // Parse AST.
+    // NOTE: findNode traverses the AST until the condition is met.
     let baseType = findNode(prop.type, isSimpleType);
-    if (baseType) {
-      type = getSimpleType(baseType);
+
+    // First check if reference.
+    const jsonSchema = findAnnotation<JsonSchemaType>(prop.type, AST.JSONSchemaAnnotationId);
+    if (jsonSchema && '$id' in jsonSchema) {
+      const typename = getSchemaReference(jsonSchema);
+      if (typename) {
+        // TODO(burdon): Special handling for refs? type = 'ref'?
+        type = 'object';
+        format = FormatEnum.Ref;
+      }
     } else {
-      // Transformations.
-      // https://effect.website/docs/schema/transformations
-      baseType = findNode(prop.type, AST.isTransformation);
       if (baseType) {
-        invariant(AST.isTransformation(baseType));
-        type = getSimpleType(baseType.from);
+        type = getSimpleType(baseType);
       } else {
-        // Tuples.
-        // https://effect.website/docs/schema/basic-usage/#rest-element
-        baseType = findNode(prop.type, AST.isTupleType);
+        // Transformations.
+        // https://effect.website/docs/schema/transformations
+        baseType = findNode(prop.type, AST.isTransformation);
         if (baseType) {
-          invariant(AST.isTupleType(baseType));
-          const [tupleType] = baseType.rest ?? [];
-          if (tupleType) {
-            invariant(baseType.elements.length === 0);
-            baseType = findNode(tupleType.type, isSimpleType);
-            if (baseType) {
-              type = getSimpleType(baseType);
-              array = true;
-            }
-          }
+          invariant(AST.isTransformation(baseType));
+          type = getSimpleType(baseType.from);
         } else {
-          // Union of literals.
-          // This will be returned from the head of the function when generating a discriminating type
-          baseType = findNode(prop.type, isLiteralUnion);
+          // Tuples.
+          // https://effect.website/docs/schema/basic-usage/#rest-element
+          baseType = findNode(prop.type, AST.isTupleType);
           if (baseType) {
-            type = 'literal';
+            invariant(AST.isTupleType(baseType));
+            const [tupleType] = baseType.rest ?? [];
+            if (tupleType) {
+              invariant(baseType.elements.length === 0);
+              baseType = findNode(tupleType.type, isSimpleType);
+              if (baseType) {
+                type = getSimpleType(baseType);
+                array = true;
+              }
+            }
+          } else {
+            // Union of literals.
+            // This will be returned from the head of the function when generating a discriminating type
+            baseType = findNode(prop.type, isLiteralUnion);
+            if (baseType) {
+              type = 'literal';
+            }
           }
         }
       }
     }
 
     if (type) {
-      const format = baseType ? getFormatAnnotation(baseType) : undefined;
-      props.push({ prop, name, type, array, format, title, description, examples, defaultValue, options });
+      props.push({
+        type,
+        array,
+        format: format ?? (baseType ? getFormatAnnotation(baseType) : undefined),
+        ...property,
+      });
+    } else {
+      log.warn('cannot process property', { prop });
     }
 
     return props;
