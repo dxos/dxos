@@ -24,7 +24,6 @@ import {
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { History } from '../History';
 import { BulkRequestDispatcher, FIFOScheduler } from '../Peer.utils';
 import type { RenegotiationResponse, TrackObject, TracksResponse } from '../callsTypes';
 
@@ -32,7 +31,6 @@ export interface PeerConfig {
   apiExtraParams?: string;
   iceServers?: RTCIceServer[];
   apiBase: string;
-  maxApiHistory?: number;
 }
 
 export type ApiHistoryEntry =
@@ -49,7 +47,6 @@ export type ApiHistoryEntry =
     };
 
 export class RxjsPeer {
-  history: History<ApiHistoryEntry>;
   peerConnection$: Observable<RTCPeerConnection>;
   session$: Observable<{
     peerConnection: RTCPeerConnection;
@@ -62,7 +59,6 @@ export class RxjsPeer {
 
   constructor(config: PeerConfig) {
     this.config = config;
-    this.history = new History<ApiHistoryEntry>(config.maxApiHistory);
     this.peerConnection$ = new Observable<RTCPeerConnection>((subscribe) => {
       let peerConnection: RTCPeerConnection;
       const setup = () => {
@@ -183,25 +179,14 @@ export class RxjsPeer {
     }
   }
 
+  // TODO(mykola): Rename, no history is being recorded here.
   async fetchWithRecordedHistory(path: string, requestInit?: RequestInit) {
-    this.history.log({
-      endpoint: path,
-      method: requestInit?.method ?? 'get',
-      type: 'request',
-      body: typeof requestInit?.body === 'string' ? JSON.parse(requestInit.body) : undefined,
-    });
     const response = await fetch(path, { ...requestInit, redirect: 'manual' });
     // handle Access redirect
     if (response.status === 0) {
       alert('Access session is expired, reloading page.');
       location.reload();
     }
-    const responseBody = await response.clone().json();
-    this.history.log({
-      endpoint: path,
-      type: 'response',
-      body: responseBody,
-    });
     return response;
   }
 

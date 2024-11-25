@@ -23,7 +23,6 @@ interface RoomData {
   maxWebcamFramerate: number;
   maxWebcamBitrate: number;
   maxWebcamQualityLevel: number;
-  maxApiHistory: number;
 }
 
 interface RoomProps extends RoomData {
@@ -54,7 +53,6 @@ export const RoomContextProvider = ({
       maxWebcamFramerate: 24,
       maxWebcamBitrate: 1200000,
       maxWebcamQualityLevel: 1080,
-      maxApiHistory: 100,
     });
   }, []);
 
@@ -79,7 +77,6 @@ const Room = ({
   maxWebcamBitrate,
   maxWebcamFramerate,
   maxWebcamQualityLevel,
-  maxApiHistory,
   children,
 }: RoomProps): JSX.Element => {
   const [joined, setJoined] = useState(false);
@@ -88,7 +85,6 @@ const Room = ({
   const userMedia = useUserMedia(mode);
   const room = useRoom({ roomName, userMedia, username });
   const { peer, iceConnectionState } = usePeerConnection({
-    maxApiHistory,
     // apiExtraParams,
     iceServers,
     apiBase: `${CALLS_URL}/api/calls`,
