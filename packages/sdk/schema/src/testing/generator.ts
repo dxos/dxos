@@ -7,15 +7,15 @@ import { Effect, pipe } from 'effect';
 import { type EchoDatabase } from '@dxos/echo-db';
 import {
   create,
-  type S,
-  type ReactiveObject,
-  type ExcludeId,
+  getSchemaReference,
+  getTypename,
   type BaseObject,
+  type ExcludeId,
   FormatEnum,
   GeneratorAnnotationId,
   type JsonSchemaType,
-  getSchemaReference,
-  getTypename,
+  type ReactiveObject,
+  type S,
 } from '@dxos/echo-schema';
 import { AST, findAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -32,7 +32,7 @@ import { getSchemaProperties } from '../properties';
 //  - Implement basic "comment required" TODOs.
 
 // TODO(burdon): Agent pipeline (@dmytro)
-//  - Generators: https://effect.website/docs/getting-started/using-generators/
+//  - Generators: https://effect.website/docs/getting-started/using-generators
 
 // TODO(burdon): Replace echo-generator.
 // TODO(burdon): Delete core/agent, experimental/agent-functions.
@@ -42,73 +42,64 @@ import { getSchemaProperties } from '../properties';
 /**
  * Set properties based on generator annotation.
  */
-export const setProps = <T extends BaseObject>(type: S.Schema<T>) => {
-  return (initial: ExcludeId<T> = {} as ExcludeId<T>): Effect.Effect<ExcludeId<T>> => {
-    const obj = getSchemaProperties<T>(type.ast).reduce<ExcludeId<T>>((data, property) => {
-      if (data[property.name] === undefined) {
+export const createProps = <T extends BaseObject>(type: S.Schema<T>) => {
+  return (initial: ExcludeId<T> = {} as ExcludeId<T>): ExcludeId<T> => {
+    return getSchemaProperties<T>(type.ast).reduce<ExcludeId<T>>((obj, property) => {
+      if (obj[property.name] === undefined) {
+        if (property.optional && faker.datatype.boolean()) {
+          return obj;
+        }
+
         const gen = findAnnotation<string>(property.ast, GeneratorAnnotationId);
-        if (gen) {
-          const fn = getDeep<() => any>({ faker }, gen.split('.'));
-          if (fn) {
-            data[property.name] = fn() as any;
-          }
+        const fn = gen && getDeep<() => any>({ faker }, gen.split('.'));
+        if (fn) {
+          obj[property.name] = fn();
         } else if (!property.optional) {
           log.warn('missing generator for required property', { property });
         }
       }
 
-      return data;
+      return obj;
     }, initial);
-
-    return Effect.succeed(obj);
   };
 };
 
 /**
  * Set references.
  */
-export const setReferences = <T extends BaseObject>(type: S.Schema<T>, db: EchoDatabase) => {
-  return (obj: BaseObject<T>) => {
-    return Effect.promise(async () => {
-      for (const property of getSchemaProperties<T>(type.ast)) {
-        if (property.format === FormatEnum.Ref) {
-          const jsonSchema = findAnnotation<JsonSchemaType>(property.ast, AST.JSONSchemaAnnotationId);
-          if (jsonSchema) {
-            const typename = getSchemaReference(jsonSchema);
-            invariant(typename);
-            // TODO(burdon): Filter.typename doesn't work!
-            const { objects } = await db.query((obj) => getTypename(obj) === typename).run();
-            if (objects.length && faker.datatype.boolean()) {
-              const object = faker.helpers.arrayElement(objects);
-              obj[property.name] = object;
-            }
+export const createReferences = <T extends BaseObject>(type: S.Schema<T>, db: EchoDatabase) => {
+  return async (obj: BaseObject<T>): Promise<BaseObject<T>> => {
+    for (const property of getSchemaProperties<T>(type.ast)) {
+      if (property.optional && faker.datatype.boolean()) {
+        return obj;
+      }
+
+      if (property.format === FormatEnum.Ref) {
+        const jsonSchema = findAnnotation<JsonSchemaType>(property.ast, AST.JSONSchemaAnnotationId);
+        if (jsonSchema) {
+          const typename = getSchemaReference(jsonSchema);
+          invariant(typename);
+          // TODO(burdon): Filter.typename doesn't work! Create unit test.
+          const { objects } = await db.query((obj) => getTypename(obj) === typename).run();
+          if (objects.length) {
+            const object = faker.helpers.arrayElement(objects);
+            obj[property.name] = object;
           }
         }
       }
+    }
 
-      return obj;
-    });
+    return obj;
   };
 };
 
 export const createReactiveObject = <T extends BaseObject<any>>(type: S.Schema<T>) => {
-  return (data: ExcludeId<T>): Effect.Effect<BaseObject<T>> => {
-    return Effect.succeed(create<T>(type, data));
-  };
+  return (data: ExcludeId<T>) => create<T>(type, data);
 };
 
 export const addToDatabase = (db: EchoDatabase) => {
-  return <T extends BaseObject<any>>(obj: ReactiveObject<T>): Effect.Effect<BaseObject<T>> => {
-    return Effect.succeed(db.add(obj));
-  };
+  return <T extends BaseObject<any>>(obj: ReactiveObject<T>) => db.add(obj);
 };
-
-//
-// Effect pipeline.
-// - Allows for mix of sync and async transformations.
-// - Consistent error processing.
-// TODO(burdon): Pass db in context?
-//
 
 export const noop = (obj: any) => obj;
 
@@ -126,35 +117,36 @@ export const createArrayPipeline = <T extends BaseObject<any>>(
 
 /**
  * Create an object creation pipeline.
+ * - Allows for mix of sync and async transformations.
+ * - Consistent error processing.
  */
 export const createObjectPipeline = <T extends BaseObject>(type: S.Schema<T>, db?: EchoDatabase) => {
-  // TODO(burdon): Keep as functions and wrap with effect here?
-  const f1 = setProps(type);
-  const f2 = createReactiveObject(type);
+  const e1 = (obj: ExcludeId<T>) => Effect.sync(() => createProps(type)(obj));
+  const e2 = (obj: ExcludeId<T>) => Effect.sync(() => createReactiveObject(type)(obj));
 
   if (!db) {
     return (obj: ExcludeId<T>): Effect.Effect<BaseObject<T>> => {
       return pipe(
         Effect.succeed(obj),
         // Effect.tap(logObject('before')),
-        Effect.flatMap(f1),
-        Effect.flatMap(f2),
+        Effect.flatMap(e1),
+        Effect.flatMap(e2),
         // Effect.tap(logObject('after')),
       );
     };
   } else {
-    const f3 = setReferences(type, db);
-    const f4 = addToDatabase(db);
+    const e3 = (obj: BaseObject<T>) => Effect.promise(() => createReferences(type, db)(obj));
+    const e4 = (obj: BaseObject<T>) => Effect.sync(() => addToDatabase(db)(obj));
 
     // TODO(burdon): Types (unify?)
     return (obj: ExcludeId<T>) => {
       return pipe(
         Effect.succeed(obj),
         // Effect.tap(logObject('before')),
-        Effect.flatMap(f1),
-        Effect.flatMap(f2),
-        Effect.flatMap(f3),
-        Effect.flatMap(f4),
+        Effect.flatMap(e1),
+        Effect.flatMap(e2),
+        Effect.flatMap(e3),
+        Effect.flatMap(e4),
         // Effect.tap(logObject('after')),
       );
     };

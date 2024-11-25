@@ -28,9 +28,9 @@ describe('Generator', () => {
     db.graph.schemaRegistry.addSchema([OrgType, ProjectType, ContactType]);
 
     const spec: TypeSpec[] = [
-      { type: OrgType, count: 1 },
-      { type: ProjectType, count: 1 },
-      { type: ContactType, count: 3 },
+      { type: OrgType, count: 5 },
+      { type: ProjectType, count: 5 },
+      { type: ContactType, count: 10 },
     ];
 
     for (const { type, count } of spec) {
@@ -55,7 +55,7 @@ describe('Generator', () => {
 
     const spec: TypeSpec[] = [
       { type: org, count: 5 },
-      { type: contact, count: 10 },
+      { type: contact, count: 20 },
     ];
 
     for (const { type, count } of spec) {
