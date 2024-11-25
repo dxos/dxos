@@ -34,6 +34,14 @@ export class OrgType extends TypedObject({
 // TODO(burdon): Address sub type with geo location.
 //
 
+export const Address = S.Struct({
+  street: S.String,
+  city: S.String,
+  state: S.String,
+  zip: S.String,
+  location: Format.GeoPoint,
+});
+
 export const Contact = S.Struct({
   id: S.String,
   name: S.NonEmptyString.annotations({
