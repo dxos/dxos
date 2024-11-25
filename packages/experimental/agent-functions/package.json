@@ -90,7 +90,6 @@
   },
   "devDependencies": {
     "@dxos/agent": "workspace:*",
-    "@dxos/echo-generator": "workspace:*",
     "@dxos/random": "workspace:*",
     "@mediapipe/tasks-text": "^0.10.7",
     "@types/html-to-text": "^9.0.0",

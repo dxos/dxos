@@ -38,6 +38,7 @@ export * from './sum';
 export * from './throw-unhandled-error';
 export * from './to-fallback';
 export * from './tracer';
+export * from './tree';
 export * from './types';
 export * from './uint8array';
 export * from './weak';

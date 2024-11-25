@@ -4,7 +4,7 @@
 
 import jp from 'jsonpath';
 
-import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
+import { type BaseObject, FormatEnum, TypeEnum } from '@dxos/echo-schema';
 import { AST, type S, visit } from '@dxos/effect';
 
 import { type FieldType } from './view';
@@ -14,7 +14,7 @@ import { type FieldType } from './view';
 /**
  * @deprecated
  */
-export const getFieldValue = <T extends object = {}, V = any>(
+export const getFieldValue = <T extends BaseObject = {}, V = any>(
   object: T,
   field: FieldType,
   defaultValue?: V,
@@ -23,7 +23,7 @@ export const getFieldValue = <T extends object = {}, V = any>(
 /**
  * @deprecated
  */
-export const setFieldValue = <T extends object = {}, V = any>(object: T, field: FieldType, value: V): V =>
+export const setFieldValue = <T extends BaseObject = {}, V = any>(object: T, field: FieldType, value: V): V =>
   jp.value(object, '$.' + field.path, value);
 
 /**

@@ -6,12 +6,12 @@ import { pipe } from 'effect';
 import { capitalize } from 'effect/String';
 import React, { useEffect, useMemo } from 'react';
 
-import { AST, S } from '@dxos/echo-schema';
+import { AST, type BaseObject, S, type PropertyKey } from '@dxos/echo-schema';
 import { findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { getSchemaProperties, type PropertyKey, type SchemaProperty } from '@dxos/schema';
+import { getSchemaProperties, type SchemaProperty } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
 import { SelectInput } from './Defaults';
@@ -24,9 +24,9 @@ import { translationKey } from '../../translations';
 
 const padding = 'px-2';
 
-export type PropsFilter<T extends Object> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
+export type PropsFilter<T extends BaseObject> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
 
-export type FormProps<T extends object> = ThemedClassName<
+export type FormProps<T extends BaseObject> = ThemedClassName<
   {
     values: T;
     /** Path to the current object from the root. Used with nested forms. */
@@ -51,7 +51,7 @@ export type FormProps<T extends object> = ThemedClassName<
 /**
  * General purpose form component that displays field controls based on the given schema.
  */
-export const Form = <T extends object = {}>({
+export const Form = <T extends BaseObject>({
   classNames,
   schema,
   values: initialValues,
@@ -101,7 +101,7 @@ export const Form = <T extends object = {}>({
     <div role='form' className={mx('flex flex-col w-full gap-2 py-2', classNames)}>
       {properties
         .map((property) => {
-          const { prop, name, type, format, title, description, examples, options } = property;
+          const { ast, name, type, format, title, description, examples, options } = property;
           const key = [...path, name];
           const label = pipe(title ?? name, capitalize);
           const placeholder = examples?.length ? `Example: "${examples[0]}"` : description;
@@ -133,10 +133,10 @@ export const Form = <T extends object = {}>({
           if (!InputComponent) {
             // Recursively render form.
             if (type === 'object') {
-              const baseNode = findNode(prop.type, isDiscriminatedUnion);
+              const baseNode = findNode(ast, isDiscriminatedUnion);
               const typeLiteral = baseNode
                 ? getDiscriminatedType(baseNode, values[name] as any)
-                : findNode(prop.type, AST.isTypeLiteral);
+                : findNode(ast, AST.isTypeLiteral);
 
               if (typeLiteral) {
                 const schema = S.make(typeLiteral);

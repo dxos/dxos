@@ -4,13 +4,13 @@
 
 import React from 'react';
 
-import { type EchoReactiveObject } from '@dxos/react-client/echo';
+import { type ReactiveEchoObject } from '@dxos/react-client/echo';
 import { Input, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
 
 export type DefaultObjectSettingsProps = {
-  object: EchoReactiveObject<any>;
+  object: ReactiveEchoObject<any>;
 };
 
 export const DefaultObjectSettings = ({ object }: DefaultObjectSettingsProps) => {
