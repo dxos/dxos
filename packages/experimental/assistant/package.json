@@ -1,6 +1,7 @@
 {
   "name": "@dxos/assistant",
   "version": "0.7.0",
+  "type": "module",
   "private": true,
   "description": "Natural language interface to DXOS",
   "homepage": "https://dxos.org",

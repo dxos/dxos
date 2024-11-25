@@ -15,6 +15,7 @@ import { runLLM, type ConversationEvent } from '../conversation/conversation';
 import { createUserMessage, defineTool, LLMToolResult } from '../conversation/types';
 import { executeQuery } from '../cypher/query-executor';
 import { formatJsonSchemaForLLM } from '../cypher/schema';
+import { createLogger } from './logger';
 
 test('cypher query', async () => {
   const dataSource = createTestData();
@@ -91,82 +92,3 @@ test('cypher query', async () => {
 const backend = new AnthropicBackend({
   apiKey: process.env.ANTHROPIC_API_KEY!,
 });
-
-// MATCH (org:Org {name: 'DXOS'})-[:ORG_EMPLOYEES]->(c:Contact)<-[:TASK_ASSIGNEE]-(t:Task)-[:TASK_PROJECT]->(p:Project {name: 'Composer'}) RETURN c.name
-
-const createLogger =
-  ({ stream }: { stream?: boolean } = {}) =>
-  (event: ConversationEvent) => {
-    if (stream) {
-      switch (event.type) {
-        case 'message_start': {
-          process.stdout.write(`${event.message.role.toUpperCase()}\n\n`);
-          break;
-        }
-        case 'content_block_start': {
-          switch (event.content.type) {
-            case 'text':
-              process.stdout.write(event.content.text);
-              break;
-            case 'tool_use':
-              process.stdout.write(`⚙️ [Tool Use] ${event.content.name}\n`);
-              break;
-          }
-          break;
-        }
-        case 'content_block_delta': {
-          switch (event.delta.type) {
-            case 'text_delta': {
-              process.stdout.write(event.delta.text);
-              break;
-            }
-            case 'input_json_delta': {
-              process.stdout.write(event.delta.partial_json);
-              break;
-            }
-          }
-          break;
-        }
-        case 'content_block_stop': {
-          process.stdout.write('\n');
-          break;
-        }
-        case 'message_delta': {
-          break;
-        }
-        case 'message_stop': {
-          process.stdout.write('\n\n');
-          break;
-        }
-      }
-    }
-
-    switch (event.type) {
-      case 'message': {
-        if (!stream || event.message.role !== 'assistant') {
-          process.stdout.write(`${event.message.role.toUpperCase()}\n\n`);
-          for (const block of event.message.content) {
-            switch (block.type) {
-              case 'text':
-                process.stdout.write(block.text + '\n');
-                break;
-              case 'tool_use':
-                process.stdout.write(`⚙️ [Tool Use] ${block.name}\n`);
-                process.stdout.write(`  ${JSON.stringify(block.input)}\n`);
-                break;
-              case 'tool_result':
-                if (block.is_error) {
-                  process.stdout.write('❌ [Tool Error]\n');
-                  process.stdout.write(block.content + '\n');
-                } else {
-                  process.stdout.write('✅ [Tool Success]\n');
-                  process.stdout.write(block.content + '\n');
-                }
-            }
-            process.stdout.write('\n\n');
-          }
-        }
-        break;
-      }
-    }
-  };
