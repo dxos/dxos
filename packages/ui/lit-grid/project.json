@@ -28,7 +28,10 @@
       "dependsOn": [
         "^compile",
         "stories:mkdist"
-      ]
+      ],
+      "options": {
+        "config": "{projectRoot}/src/testing/playwright/playwright.config.ts"
+      }
     },
     "lint": {
       "options": {
