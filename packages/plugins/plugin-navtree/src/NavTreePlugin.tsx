@@ -41,7 +41,7 @@ import meta, { KEY_BINDING, NAVTREE_PLUGIN } from './meta';
 import translations from './translations';
 import { type NavTreeItem } from './types';
 import {
-  expandOpenGraphNodes,
+  expandChildrenAndActions,
   getActions,
   getChildren,
   treeItemsFromRootNode,
@@ -124,7 +124,8 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
     }
 
     if (graph) {
-      void expandOpenGraphNodes(graph, state.values.open);
+      const node = graph.findNode(item.id);
+      return node && expandChildrenAndActions(graph, node as NavTreeItemGraphNode);
     }
   };
 
@@ -146,7 +147,6 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
       }
 
       state.values.root = graph.root as NavTreeItemGraphNode;
-      void expandOpenGraphNodes(graph, state.values.open);
 
       // TODO(wittjosiah): Factor out.
       // TODO(wittjosiah): Handle removal of actions.
