@@ -30,7 +30,6 @@ describe('Queries', () => {
 
     beforeEach(async () => {
       builder = await new EchoTestBuilder().open();
-
       const setup = await builder.createDatabase();
       db = setup.db;
 
@@ -115,7 +114,6 @@ describe('Queries', () => {
       {
         const { objects } = await db.query({ label: 'red' }).run();
         expect(objects).to.have.length(3);
-
         for (const object of objects) {
           db.remove(object);
         }
@@ -158,7 +156,6 @@ describe('Queries', () => {
     let root: AutomergeUrl;
     {
       const peer = await builder.createPeer(kv);
-
       const db = await peer.createDatabase(spaceKey);
       await createObjects(peer, db, { count: 3 });
 
@@ -168,9 +165,7 @@ describe('Queries', () => {
 
     {
       const peer = await builder.createPeer(kv);
-
       const db = await peer.openDatabase(spaceKey, root);
-
       expect((await db.query().run()).objects.length).to.eq(3);
     }
   });
@@ -188,7 +183,6 @@ describe('Queries', () => {
     let expectedObjectId: string;
     {
       const peer = await builder.createPeer(kv);
-
       const db = await peer.createDatabase(spaceKey);
       const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
@@ -264,7 +258,6 @@ describe('Queries', () => {
     });
 
     const peer = await builder.createPeer(kv);
-
     const db = await peer.createDatabase(spaceKey);
     const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
