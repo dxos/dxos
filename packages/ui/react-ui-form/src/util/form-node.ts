@@ -3,7 +3,7 @@
 //
 
 import { AST, type BaseObject } from '@dxos/echo-schema';
-import { getSimpleType, isDiscriminatedUnion, isLiteralUnion } from '@dxos/effect';
+import { getDiscriminatingProps, getSimpleType, isDiscriminatedUnion, isLiteralUnion } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 // TODO(ZaymonFC): This can be multiple fields, although I'm in favour of an invariant
@@ -49,9 +49,10 @@ export const createFormTree = <T extends BaseObject>(ast: AST.AST, value?: T): F
   // Handle discriminated unions.
   if (isDiscriminatedUnion(ast)) {
     const options = new Map<DiscriminatorValue, FormNode>();
-    const discriminatingKey = 'kind'; // TODO: Get this from AST
+    const discriminators = getDiscriminatingProps(ast);
+    invariant(discriminators?.length === 1, 'Expected exactly one discriminator');
+    const discriminatingKey = discriminators[0];
 
-    // Add all possible options
     const union = ast as AST.Union;
     for (const type of union.types) {
       const literalProp = AST.getPropertySignatures(type).find(
@@ -69,7 +70,6 @@ export const createFormTree = <T extends BaseObject>(ast: AST.AST, value?: T): F
       options,
     };
   }
-
   // Handle object types.
   if (AST.isTypeLiteral(ast)) {
     return {
