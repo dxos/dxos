@@ -89,7 +89,7 @@ export class OnboardingManager {
 
   async initialize() {
     await this.fetchCredential();
-    if (this._credential) {
+    if (this._credential && this._hubUrl) {
       await this._upgradeCredential();
       return;
     } else if (!this._skipAuth) {

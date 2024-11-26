@@ -946,7 +946,7 @@
 * **sentry:** crash reporting improvements ([#5872](https://github.com/dxos/dxos/issues/5872)) ([40a4553](https://github.com/dxos/dxos/commit/40a45538458d767a873e6077506f915a05964dbf))
 * Support getters in E.object and add a @dxos/echo-schema/schema entrypoint ([#5832](https://github.com/dxos/dxos/issues/5832)) ([33db07e](https://github.com/dxos/dxos/commit/33db07ed4bcd2994cb3ea0dd3eeef455da592ef2))
 * Support references in ECHO-effect schema ([#5867](https://github.com/dxos/dxos/issues/5867)) ([3df814a](https://github.com/dxos/dxos/commit/3df814aa407391de0d0cf9f9c55ef8d9cfbdc8f0))
-* Support storing and recalling EchoReactiveObject from the database ([#5800](https://github.com/dxos/dxos/issues/5800)) ([7b31910](https://github.com/dxos/dxos/commit/7b31910a6586c2be2b8d5168140187abcaa495e2))
+* Support storing and recalling ReactiveEchoObject from the database ([#5800](https://github.com/dxos/dxos/issues/5800)) ([7b31910](https://github.com/dxos/dxos/commit/7b31910a6586c2be2b8d5168140187abcaa495e2))
 * Typescript service for script plugin ([#5865](https://github.com/dxos/dxos/issues/5865)) ([dcb39c5](https://github.com/dxos/dxos/commit/dcb39c533210bd5bb46ce08b904a911714a3502b))
 
 

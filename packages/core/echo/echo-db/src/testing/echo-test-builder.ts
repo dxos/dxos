@@ -16,7 +16,7 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
-import { type EchoReactiveObject } from '../echo-handler';
+import { type ReactiveEchoObject } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 
 export class EchoTestBuilder extends Resource {
@@ -143,7 +143,7 @@ export const createDataAssertion = ({
   onlyObject = true,
   numObjects = 1,
 }: { referenceEquality?: boolean; onlyObject?: boolean; numObjects?: number } = {}) => {
-  let seedObjects: EchoReactiveObject<any>[];
+  let seedObjects: ReactiveEchoObject<any>[];
   const findSeedObject = async (db: EchoDatabase) => {
     const { objects } = await db.query().run();
     const received = seedObjects.map((seedObject) => objects.find((object) => object.id === seedObject.id));

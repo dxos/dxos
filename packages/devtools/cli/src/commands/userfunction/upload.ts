@@ -6,7 +6,7 @@ import { Args, Flags } from '@oclif/core';
 import fs from 'node:fs';
 
 import { type Client } from '@dxos/client';
-import { type EchoReactiveObject, Filter, loadObjectReferences } from '@dxos/client/echo';
+import { type ReactiveEchoObject, Filter, loadObjectReferences } from '@dxos/client/echo';
 import { type Space } from '@dxos/client-protocol';
 import { create, getMeta } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -57,7 +57,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
       invariant(identity, 'Identity not available');
 
       let existingFunctionId: string | undefined;
-      let existingObject: EchoReactiveObject<ScriptType> | undefined;
+      let existingObject: ReactiveEchoObject<ScriptType> | undefined;
       let functionUrlFromExistingObject: string | undefined;
       if (this.flags.functionId) {
         existingFunctionId = this.flags.functionId;
