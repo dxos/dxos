@@ -26,7 +26,7 @@ const TestSchema = S.Struct({
       street: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Street' })),
       city: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'City' })),
       zip: S.optional(S.String.pipe(S.pattern(/^\d{5}(-\d{4})?$/)).annotations({ [AST.TitleAnnotationId]: 'ZIP' })),
-      location: S.optional(Format.LatLng.annotations({ [AST.TitleAnnotationId]: 'Location' })),
+      location: S.optional(Format.GeoPoint.annotations({ [AST.TitleAnnotationId]: 'Location' })),
     }).annotations({ [AST.TitleAnnotationId]: 'Address' }),
   ),
 }).pipe(S.mutable);
