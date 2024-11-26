@@ -30,7 +30,7 @@ describe('properties', () => {
       'boolean',
       'string',
       'number',
-      'object',
+      'number',
       'object',
       'number',
     ]);
