@@ -7,9 +7,7 @@ import { Observable, combineLatest, concat, distinctUntilChanged, map, of, switc
 
 import { log } from '@dxos/log';
 
-import { appendDeviceToDeprioritizeList, removeDeviceFromDeprioritizeList } from './devicePrioritization';
-import { getSortedDeviceListObservable } from './getDeviceListObservable';
-import { trackIsHealthy } from './trackIsHealthy';
+import { getDeviceListObservable } from './getDeviceListObservable';
 
 class DevicesExhaustedError extends Error {
   constructor(message?: string) {
@@ -21,7 +19,7 @@ class DevicesExhaustedError extends Error {
 export const getUserMediaTrack$ = (
   kind: MediaDeviceKind,
   constraints$: Observable<MediaTrackConstraints> = of({}),
-  deviceList$: Observable<MediaDeviceInfo[]> = getSortedDeviceListObservable(),
+  deviceList$: Observable<MediaDeviceInfo[]> = getDeviceListObservable(),
 ): Observable<MediaStreamTrack> => {
   return combineLatest([
     deviceList$.pipe(
@@ -66,34 +64,12 @@ const acquireTrack = (
     )
     .then(async (mediaStream) => {
       const track = device.kind === 'videoinput' ? mediaStream.getVideoTracks()[0] : mediaStream.getAudioTracks()[0];
-      if (await trackIsHealthy(track)) {
-        const cleanup = () => {
-          log.info('🛑 Stopping track');
-          track.stop();
-          document.removeEventListener('visibilitychange', onVisibleHandler);
-        };
-        const onVisibleHandler = async () => {
-          if (document.visibilityState !== 'visible') {
-            return;
-          }
-          log.info('Tab is foregrounded, checking health...');
-          if (await trackIsHealthy(track)) {
-            return;
-          }
-          log.info('Reacquiring track');
-          cleanup();
-          acquireTrack(subscriber, device, constraints, cleanupRef);
-        };
-        document.addEventListener('visibilitychange', onVisibleHandler);
-        cleanupRef.current = cleanup;
-        subscriber.next(track);
-        removeDeviceFromDeprioritizeList(device);
-      } else {
-        log.info('☠️ track is not healthy, stopping');
-        appendDeviceToDeprioritizeList(device);
+      const cleanup = () => {
+        log.info('🛑 Stopping track');
         track.stop();
-        subscriber.complete();
-      }
+      };
+      cleanupRef.current = cleanup;
+      subscriber.next(track);
       track.addEventListener('ended', () => {
         log.info('🔌 Track ended abrubptly');
         subscriber.complete();
