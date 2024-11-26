@@ -138,7 +138,8 @@ export const Form = <T extends BaseObject>({
             if (array) {
               const arrayValues = (values[name] ?? []) as any[];
 
-              const tupleType = findNode(prop.type, AST.isTupleType);
+              // TODO(ZaymonFC): Should this unwrapping happen at a lower level?
+              const tupleType = findNode(ast, AST.isTupleType);
               const elementType = (tupleType as AST.TupleType | undefined)?.rest[0]?.type;
 
               if (type === 'object' && elementType) {
