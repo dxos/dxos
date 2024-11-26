@@ -15,10 +15,12 @@ import { FormatAnnotationId, FormatEnum } from './types';
  * }
  */
 export const LatLng = S.Struct({
-  lat: S.Number,
-  lng: S.Number,
+  lat: S.Number.pipe(S.clamp(-180, 180), S.multipleOf(0.00001)),
+  lng: S.Number.pipe(S.clamp(-90, 90), S.multipleOf(0.00001)),
 }).annotations({
   [FormatAnnotationId]: FormatEnum.LatLng,
   [AST.TitleAnnotationId]: 'LatLng',
   [AST.DescriptionAnnotationId]: 'LatLng coordinates',
 });
+
+export type LatLng = S.Schema.Type<typeof LatLng>;

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-stack",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "A stack component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -43,7 +43,7 @@
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/schema": "^0.75.1",
+    "@effect/schema": "^0.75.5",
     "@fluentui/react-tabster": "^9.19.0",
     "@radix-ui/primitive": "^1.0.0",
     "@radix-ui/react-compose-refs": "^1.0.0",

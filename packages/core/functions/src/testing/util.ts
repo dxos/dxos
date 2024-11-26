@@ -12,9 +12,9 @@ import { FunctionTrigger } from '../types';
 
 export const triggerWebhook = async (space: Space, uri: string) => {
   const trigger = (
-    await space.db.query(Filter.schema(FunctionTrigger, (t: FunctionTrigger) => t.function === uri)).run()
+    await space.db.query(Filter.schema(FunctionTrigger, (trigger: FunctionTrigger) => trigger.function === uri)).run()
   ).objects[0];
-  invariant(trigger.spec.type === 'webhook');
+  invariant(trigger.spec?.type === 'webhook');
   void fetch(`http://localhost:${trigger.spec.port}`);
 };
 

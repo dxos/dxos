@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-presenter",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Braneframe presenter plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -41,7 +41,7 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-stack": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/react-ui-data": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "hastscript": "^7.1.0",
     "highlight.js": "^11.9.0",

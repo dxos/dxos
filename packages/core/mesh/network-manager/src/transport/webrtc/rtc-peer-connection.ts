@@ -34,11 +34,6 @@ export type RtcPeerChannelFactoryOptions = {
 };
 
 /**
- * TODO: remove after the new rtc code rollout. Used for staging interop with older version running in prod.
- */
-const isLegacyInteropEnabled = () => Boolean((globalThis as any)?.DEVICE_INVITE_INTEROP);
-
-/**
  * A factory for rtc Transport implementations for a particular peer.
  * Contains WebRTC connection establishment logic.
  * When the first Transport is opened a connection is established and kept until all the transports are closed.
@@ -69,9 +64,7 @@ export class RtcPeerConnection {
     private readonly _factory: RtcConnectionFactory,
     private readonly _options: RtcPeerChannelFactoryOptions,
   ) {
-    this._initiator = isLegacyInteropEnabled()
-      ? Boolean(this._options.legacyInitiator)
-      : chooseInitiatorPeer(_options.ownPeerKey, _options.remotePeerKey) === _options.ownPeerKey;
+    this._initiator = chooseInitiatorPeer(_options.ownPeerKey, _options.remotePeerKey) === _options.ownPeerKey;
   }
 
   public get transportChannelCount() {
@@ -83,27 +76,25 @@ export class RtcPeerConnection {
   }
 
   public async createDataChannel(topic: string): Promise<RTCDataChannel> {
-    const channelKey = isLegacyInteropEnabled() ? 'dxos.mesh.transport' : topic;
-
     const connection = await this._openConnection();
-    if (isLegacyInteropEnabled() ? this._transportChannels.size === 0 : !this._transportChannels.has(channelKey)) {
+    if (!this._transportChannels.has(topic)) {
       if (!this._transportChannels.size) {
         this._lockAndCloseConnection();
       }
       throw new Error('Transport closed while connection was being open');
     }
     if (this._initiator) {
-      const channel = connection.createDataChannel(channelKey);
-      this._dataChannels.set(channelKey, channel);
+      const channel = connection.createDataChannel(topic);
+      this._dataChannels.set(topic, channel);
       return channel;
     } else {
-      const existingChannel = this._dataChannels.get(channelKey);
+      const existingChannel = this._dataChannels.get(topic);
       if (existingChannel) {
         return existingChannel;
       }
       log('waiting for initiator-peer to open a data channel');
       return new Promise((resolve, reject) => {
-        this._channelCreatedCallbacks.set(channelKey, { resolve, reject });
+        this._channelCreatedCallbacks.set(topic, { resolve, reject });
       });
     }
   }

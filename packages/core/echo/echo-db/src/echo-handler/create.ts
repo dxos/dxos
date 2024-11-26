@@ -76,7 +76,7 @@ export const createObject = <T extends {}>(props: T): EchoReactiveObject<T> => {
     initCore(core, target);
     slot.handler.init(target);
 
-    saveTypeInAutomerge(target[symbolInternals], schema);
+    setTypeOnObject(target[symbolInternals], schema);
     if (meta && meta.keys.length > 0) {
       target[symbolInternals].core.setMeta(meta);
     }
@@ -94,7 +94,7 @@ export const createObject = <T extends {}>(props: T): EchoReactiveObject<T> => {
 
     initCore(core, target);
     const proxy = createProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
-    saveTypeInAutomerge(target[symbolInternals], schema);
+    setTypeOnObject(target[symbolInternals], schema);
     return proxy;
   }
 };
@@ -140,7 +140,7 @@ const validateSchema = (schema: S.Schema<any>) => {
   SchemaValidator.validateSchema(schema);
 };
 
-const saveTypeInAutomerge = (internals: ObjectInternals, schema: S.Schema<any> | undefined) => {
+const setTypeOnObject = (internals: ObjectInternals, schema: S.Schema<any> | undefined) => {
   if (schema != null) {
     internals.core.setType(requireTypeReference(schema));
   }

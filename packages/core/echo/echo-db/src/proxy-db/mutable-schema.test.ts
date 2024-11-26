@@ -99,6 +99,13 @@ describe('MutableSchema', () => {
     expect(getTypeReference(schema)?.objectId).to.eq(schema.id);
   });
 
+  test('getTypeReference on schema with updated typename', async () => {
+    const { db } = await setupTest();
+    const schema = db.schemaRegistry.addSchema(EmptySchemaType);
+    schema.updateTypename('example.com/type/Updated');
+    expect(getTypeReference(schema)?.objectId).to.eq(schema.id);
+  });
+
   test('mutable schema refs', async () => {
     const { db } = await setupTest();
 
