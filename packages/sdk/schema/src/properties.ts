@@ -96,7 +96,7 @@ export const getSchemaProperties = <T extends BaseObject>(ast: AST.AST, value: a
     // First check if reference.
     const jsonSchema = findAnnotation<JsonSchemaType>(prop.type, AST.JSONSchemaAnnotationId);
     if (jsonSchema && '$id' in jsonSchema) {
-      const typename = getSchemaReference(jsonSchema);
+      const { typename } = getSchemaReference(jsonSchema) ?? {};
       if (typename) {
         // TODO(burdon): Special handling for refs? type = 'ref'?
         type = 'object';

@@ -80,10 +80,10 @@ export class ViewProjection {
 
     const jsonProperty: JsonSchemaType = this._schema.jsonSchema.properties[field.path] ?? { format: FormatEnum.None };
     const { type: schemaType, format: schemaFormat = FormatEnum.None, ...rest } = jsonProperty;
-    const referenceSchema = getSchemaReference(jsonProperty);
 
     let type: TypeEnum = schemaType as TypeEnum;
     let format: FormatEnum = schemaFormat as FormatEnum;
+    const { typename: referenceSchema } = getSchemaReference(jsonProperty) ?? {};
     if (referenceSchema) {
       type = TypeEnum.Ref;
       format = FormatEnum.Ref;

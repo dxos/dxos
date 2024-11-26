@@ -23,19 +23,20 @@ import { type BaseObject, type Ref } from '../types';
  */
 const JSON_SCHEMA_ECHO_REF_ID = '/schemas/echo/ref';
 
-export const getSchemaReference = (property: JsonSchemaType): string | undefined => {
+// TODO(burdon): Define return type.
+export const getSchemaReference = (property: JsonSchemaType): { typename: string } | undefined => {
   const { $id, reference: { schema: { $ref } = {} } = {} } = property;
   if ($id === JSON_SCHEMA_ECHO_REF_ID && $ref) {
-    return DXN.parse($ref).toTypename();
+    return { typename: DXN.parse($ref).toTypename() };
   }
 };
 
-export const createSchemaReference = (schema: string): JsonSchemaType => {
+export const createSchemaReference = (typename: string): JsonSchemaType => {
   return {
     $id: JSON_SCHEMA_ECHO_REF_ID,
     reference: {
       schema: {
-        $ref: DXN.fromTypename(schema).toString(),
+        $ref: DXN.fromTypename(typename).toString(),
       },
     },
   };

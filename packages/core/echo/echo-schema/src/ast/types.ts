@@ -263,6 +263,11 @@ export interface JsonSchemaType extends S.Schema.Type<typeof _JsonSchemaType> {}
 export const JsonSchemaType: S.Schema<JsonSchemaType> = _JsonSchemaType;
 
 // TODO(burdon): Factor out JSON schema utils.
+
+export const getSchemaProperty = (schema: JsonSchemaType, property: JsonProp): JsonSchemaType | undefined => {
+  return schema.properties?.[property];
+};
+
 export const setSchemaProperty = (schema: JsonSchemaType, property: JsonProp, value: JsonSchemaType) => {
   schema.properties ??= {};
   schema.properties[property] = value;

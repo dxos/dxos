@@ -79,7 +79,7 @@ export const createReferences = <T extends BaseObject<T>>(type: S.Schema<T>, db:
       if (property.format === FormatEnum.Ref) {
         const jsonSchema = findAnnotation<JsonSchemaType>(property.ast, AST.JSONSchemaAnnotationId);
         if (jsonSchema) {
-          const typename = getSchemaReference(jsonSchema);
+          const { typename } = getSchemaReference(jsonSchema) ?? {};
           invariant(typename);
           // TODO(burdon): Filter.typename doesn't work! Create unit test.
           const { objects } = await db.query((obj) => getTypename(obj) === typename).run();
