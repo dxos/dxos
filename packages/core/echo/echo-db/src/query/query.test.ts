@@ -284,7 +284,6 @@ describe('Queries', () => {
     });
 
     const peer = await builder.createPeer();
-
     const db = await peer.createDatabase(spaceKey);
     const [obj1] = await createObjects(peer, db, { count: 2 });
 
@@ -306,7 +305,6 @@ describe('Query reactivity', () => {
     ({ db } = await builder.createDatabase());
 
     objects = range(3).map((idx) => createTestObject(idx, 'red'));
-
     for (const object of objects) {
       db.add(object);
     }
@@ -411,9 +409,9 @@ describe('Queries with types', () => {
 
     graph.schemaRegistry.addSchema([Contact]);
     const contact = db.add(create(Contact, {}));
-    const name = 'Rich Ivanov';
+    const name = 'DXOS User';
 
-    const query = db.query(Filter.typename('example.com/type/Contact'));
+    const query = db.query(Filter.typename(Contact.typename));
     const result = await query.run();
     expect(result.objects).to.have.length(1);
     expect(result.objects[0]).to.eq(contact);
@@ -437,13 +435,28 @@ describe('Queries with types', () => {
     await asyncTimeout(anotherContactAdded.wait(), 1000);
   });
 
+  test.skip('query mutable schema objects', async () => {
+    const testBuilder = new EchoTestBuilder();
+    await openAndClose(testBuilder);
+    const { db } = await testBuilder.createDatabase();
+
+    const schema = db.schemaRegistry.addSchema(Contact);
+    // TODO(burdon): ERROR: schema has to describe an object type.
+    const contact = db.add(create(schema, {}));
+
+    const query = db.query(Filter.typename(Contact.typename));
+    const result = await query.run();
+    expect(result.objects).to.have.length(1);
+    expect(result.objects[0]).to.eq(contact);
+  });
+
   test('`instanceof` operator works', async () => {
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);
     const { graph, db } = await testBuilder.createDatabase();
 
     graph.schemaRegistry.addSchema([Contact]);
-    const name = 'Rich Ivanov';
+    const name = 'DXOS User';
     const contact = create(Contact, { name });
     db.add(contact);
     expect(contact instanceof Contact).to.be.true;
