@@ -30,8 +30,8 @@ export const getSchemaReference = (property: JsonSchemaType): string | undefined
   }
 };
 
-export const setSchemaReference = (property: JsonSchemaType, schema: string) => {
-  Object.assign(property, {
+export const setSchemaReference = (property: JsonSchemaType, schema: string): JsonSchemaType => {
+  return Object.assign(property, {
     $id: JSON_SCHEMA_ECHO_REF_ID,
     reference: {
       schema: {
