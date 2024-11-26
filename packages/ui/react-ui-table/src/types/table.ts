@@ -10,9 +10,13 @@ export const TableSchema = S.Struct({
   id: S.String,
   name: S.optional(S.String),
   view: S.optional(ref(ViewType)),
+  // TODO(burdon): Should not import from plugin. Either factor out type or use reverse deps when supported.
   threads: S.optional(S.Array(ref(ThreadType))),
 });
 
+// type TableType = S.ClassType<typeof TableSchema>;
+
+// TODO(burdon): UX should not depend on ECHO types.
 export class TableType extends TypedObject({
   typename: 'dxos.org/type/Table',
   version: '0.1.0',

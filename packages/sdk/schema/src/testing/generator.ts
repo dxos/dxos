@@ -20,7 +20,6 @@ import {
 import { AST, findAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { faker } from '@dxos/random';
 import { getDeep } from '@dxos/util';
 
 import { getSchemaProperties } from '../properties';
@@ -40,20 +39,26 @@ import { getSchemaProperties } from '../properties';
 // TODO(burdon): Generate test documents, sketches, sheets.
 
 /**
+ * Decouples from faker.
+ */
+export type ValueGenerator = Record<string, () => any>;
+
+const randomBoolean = (p = 0.5) => Math.random() < p;
+const randomElement = <T>(elements: T[]): T => elements[Math.floor(Math.random() * elements.length)];
+
+/**
  * Set properties based on generator annotation.
  */
-// TODO(burdon): Copy this generics pattern below.
-export const createProps = <T extends S.Schema.All>(type: T) => {
-  return (data: ExcludeId<S.Schema.Type<T>> = {} as ExcludeId<S.Schema.Type<T>>): ExcludeId<S.Schema.Type<T>> => {
-    return getSchemaProperties<S.Schema.Type<T>>(type.ast).reduce<ExcludeId<S.Schema.Type<T>>>((obj, property) => {
+export const createProps = <T extends BaseObject<T>>(generator: ValueGenerator, schema: S.Schema<T>) => {
+  return (data: ExcludeId<T> = {} as ExcludeId<T>): ExcludeId<T> => {
+    return getSchemaProperties<T>(schema.ast).reduce<ExcludeId<T>>((obj, property) => {
       if (obj[property.name] === undefined) {
-        if (property.optional && faker.datatype.boolean()) {
+        if (property.optional && randomBoolean()) {
           return obj;
         }
 
-        // TODO(burdon): Decouple from faker.
         const gen = findAnnotation<string>(property.ast, GeneratorAnnotationId);
-        const fn = gen && getDeep<() => any>({ faker }, gen.split('.'));
+        const fn = gen && getDeep<() => any>(generator, gen.split('.'));
         if (fn) {
           obj[property.name] = fn();
         } else if (!property.optional) {
@@ -69,10 +74,10 @@ export const createProps = <T extends S.Schema.All>(type: T) => {
 /**
  * Set references.
  */
-export const createReferences = <T extends BaseObject<T>>(type: S.Schema<T>, db: EchoDatabase) => {
-  return async (obj: BaseObject<T>): Promise<BaseObject<T>> => {
-    for (const property of getSchemaProperties<T>(type.ast)) {
-      if (property.optional && faker.datatype.boolean()) {
+export const createReferences = <T extends BaseObject<T>>(schema: S.Schema<T>, db: EchoDatabase) => {
+  return async (obj: T): Promise<T> => {
+    for (const property of getSchemaProperties<T>(schema.ast)) {
+      if (property.optional && randomBoolean()) {
         return obj;
       }
 
@@ -81,10 +86,10 @@ export const createReferences = <T extends BaseObject<T>>(type: S.Schema<T>, db:
         if (jsonSchema) {
           const { typename } = getSchemaReference(jsonSchema) ?? {};
           invariant(typename);
-          // TODO(burdon): Filter.typename doesn't work! Create unit test.
+          // TODO(burdon): Filter.typename doesn't currently work for mutable objects.
           const { objects } = await db.query((obj) => getTypename(obj) === typename).run();
           if (objects.length) {
-            const object = faker.helpers.arrayElement(objects);
+            const object = randomElement(objects);
             (obj as any)[property.name] = object;
           }
         }
@@ -108,11 +113,11 @@ export const noop = (obj: any) => obj;
 export const logObject = (message: string) => (obj: any) => log.info(message, { obj });
 
 export const createObjectArray = <T extends BaseObject<T>>(n: number): ExcludeId<T>[] =>
-  Array.from({ length: n }, () => ({}) as any);
+  Array.from({ length: n }, () => ({}) as ExcludeId<T>);
 
 export const createArrayPipeline = <T extends BaseObject<T>>(
   n: number,
-  pipeline: (obj: ExcludeId<T>) => Effect.Effect<ExcludeId<T>>,
+  pipeline: (obj: ExcludeId<T>) => Effect.Effect<BaseObject<T>>,
 ) => {
   return Effect.forEach(createObjectArray<T>(n), pipeline);
 };
@@ -123,8 +128,8 @@ export const createArrayPipeline = <T extends BaseObject<T>>(
  * - Consistent error processing.
  */
 // TODO(burdon): Use Effect.gen.
-export const createObjectPipeline = <T extends BaseObject<T>>(type: S.Schema<T>, db?: EchoDatabase) => {
-  const e1 = (obj: ExcludeId<T>) => Effect.sync(() => createProps(type)(obj));
+export const createObjectPipeline = <T extends S.Schema<T>>(generator: ValueGenerator, type: T, db?: EchoDatabase) => {
+  const e1 = (obj: ExcludeId<T>) => Effect.sync(() => createProps(generator, type)(obj));
   const e2 = (obj: ExcludeId<T>) => Effect.sync(() => createReactiveObject(type)(obj));
 
   if (!db) {

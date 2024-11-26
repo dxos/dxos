@@ -60,7 +60,7 @@ export const getSchemaProperties = <T extends BaseObject>(ast: AST.AST, value: a
   invariant(AST.isTypeLiteral(ast));
   return AST.getPropertySignatures(ast).reduce<SchemaProperty<T>[]>((props, prop) => {
     const name = prop.name.toString() as PropertyKey<T>;
-    // TODO(burdon): Detect annotation to skip?
+    // TODO(burdon): Handle special case?
     if (name === 'id') {
       return props;
     }

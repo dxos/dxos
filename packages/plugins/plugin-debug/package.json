@@ -60,10 +60,12 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "@tldraw/tldraw": "^3.0.0",
     "date-fns": "^3.3.1",
+    "effect": "^3.9.2",
     "lodash.get": "^4.4.2",
     "react-json-tree": "^0.18.0",
     "react-resize-detector": "^11.0.1"

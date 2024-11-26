@@ -2,23 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, Schema as S } from '@effect/schema';
+import { Schema as S } from '@effect/schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import {
-  FormatAnnotationId,
-  FormatEnum,
-  TypedObject,
-  create,
-  createReferenceAnnotation,
-  createStoredSchema,
-  getTypename,
-  ref,
-  toJsonSchema,
-} from '@dxos/echo-schema';
+import { FormatAnnotationId, FormatEnum, TypedObject, create, getTypename, ref, toJsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
+import { Test } from './testing';
 import { createView } from './view';
 
 describe('View', () => {
@@ -52,44 +43,9 @@ describe('View', () => {
   });
 
   test('create view from TypedObject', async ({ expect }) => {
-    class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({}) {}
-    const view = createView({ name: 'Test', typename: TestSchema.typename, jsonSchema: toJsonSchema(TestSchema) });
-    expect(view.query.type).to.eq(TestSchema.typename);
-  });
-
-  test('dynamic schema definitions with references', async () => {
-    const orgSchema = createStoredSchema({
-      typename: 'example.com/type/Org',
-      version: '0.1.0',
-      jsonSchema: toJsonSchema(
-        S.Struct({
-          name: S.String,
-        }).annotations({
-          [AST.DescriptionAnnotationId]: 'Org name',
-        }),
-      ),
-    });
-
-    const personSchema = createStoredSchema({
-      typename: 'example.com/type/Person',
-      version: '0.1.0',
-      jsonSchema: toJsonSchema(
-        S.Struct({
-          name: S.String,
-          email: S.String,
-          org: createReferenceAnnotation(orgSchema).annotations({
-            [AST.DescriptionAnnotationId]: 'Employer',
-          }),
-        }),
-      ),
-    });
-
-    const personView = createView({
-      name: 'Test',
-      typename: personSchema.typename,
-      jsonSchema: personSchema.jsonSchema,
-    });
-    log('schema', { org: orgSchema, person: personSchema });
-    log('view', { person: personView });
+    const schema = Test.ContactType;
+    const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: toJsonSchema(schema) });
+    expect(view.query.type).to.eq(schema.typename);
+    expect(view.fields).to.have.length(3);
   });
 });

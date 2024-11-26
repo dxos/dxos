@@ -111,17 +111,14 @@ export type SchemaMeta = {
   version: string;
 };
 
-export const createReferenceAnnotation = (schema: SchemaMeta): S.Schema.AnyNoContext =>
-  S.Any.annotations({
-    [ReferenceAnnotationId]: {
-      schemaId: schema.id,
-      typename: schema.typename,
-      version: schema.version,
-    } satisfies ReferenceAnnotationValue,
-  });
+// TODO(burdon): Factor out when JSON schema parser allows extensions.
 
 /**
  * Generate test data.
  */
-// TODO(burdon): Factor out when JSON schema parser allows extensions.
 export const GeneratorAnnotationId = Symbol.for('@dxos/schema/annotation/Generator');
+
+/**
+ * Default field to be used on referenced schema to lookup the value.
+ */
+export const FieldLookupAnnotationId = Symbol.for('@dxos/schema/annotation/FieldLookup');
