@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type EchoReactiveObject } from '@dxos/client/echo';
+import { type ReactiveEchoObject } from '@dxos/client/echo';
 import { type ThreadType } from '@dxos/plugin-space/types';
 import { type ThreadProps } from '@dxos/react-ui-thread';
 
@@ -20,7 +20,7 @@ import { type ThreadProps } from '@dxos/react-ui-thread';
  */
 export type ThreadContainerProps = {
   thread: ThreadType;
-  context?: EchoReactiveObject<any>;
+  context?: ReactiveEchoObject<any>;
   autoFocusTextbox?: boolean;
   onTextboxFocus?: () => void;
   detached?: boolean;

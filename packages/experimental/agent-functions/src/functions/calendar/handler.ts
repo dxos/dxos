@@ -7,7 +7,7 @@ import { google } from 'googleapis';
 import path from 'node:path';
 import process from 'node:process';
 
-import { type EchoReactiveObject, Filter } from '@dxos/echo-db';
+import { type ReactiveEchoObject, Filter } from '@dxos/echo-db';
 import { create, getMeta } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -59,7 +59,7 @@ export const handler = subscriptionHandler(async ({ event, response }) => {
   });
 
   const sourceId = 'google.com/calendar';
-  const syncer = new ObjectSyncer<EchoReactiveObject<EventType>>(Filter.schema(EventType), (object) => {
+  const syncer = new ObjectSyncer<ReactiveEchoObject<EventType>>(Filter.schema(EventType), (object) => {
     for (const { id, source } of getMeta(object).keys ?? []) {
       if (source === sourceId) {
         return id;

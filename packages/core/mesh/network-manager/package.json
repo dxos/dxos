@@ -60,6 +60,7 @@
   "files": [
     "testing.d.ts",
     "testing.js",
+    "module-stub.mjs",
     "dist",
     "src"
   ],

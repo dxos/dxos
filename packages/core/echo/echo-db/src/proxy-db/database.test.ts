@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import {
+  type BaseObject,
   create,
   dangerouslySetProxyId,
   Expando,
@@ -425,7 +426,7 @@ describe('Database', () => {
     return { db, graph };
   };
 
-  const addToDatabase = async <T>(obj: ReactiveObject<T>) => {
+  const addToDatabase = async <T extends BaseObject>(obj: ReactiveObject<T>) => {
     const { db } = await createDbWithTypes();
     db.add(obj);
     await db.flush();

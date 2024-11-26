@@ -35,7 +35,7 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 import { defer } from '@dxos/util';
 
-import { type EchoReactiveObject, createObject, isEchoObject } from './create';
+import { type ReactiveEchoObject, createObject, isEchoObject } from './create';
 import { getObjectCore } from './echo-handler';
 import { getDatabaseFromObject } from './util';
 import { loadObjectReferences } from '../proxy-db';
@@ -60,7 +60,7 @@ test('id property name is reserved', () => {
 
 // Pass undefined to test untyped proxy.
 for (const schema of [undefined, TestType, TestSchemaType]) {
-  const createTestObject = (props: Partial<TestSchemaWithClass> = {}): EchoReactiveObject<TestSchemaWithClass> => {
+  const createTestObject = (props: Partial<TestSchemaWithClass> = {}): ReactiveEchoObject<TestSchemaWithClass> => {
     return createObject(schema ? create(schema as any, props) : create(props));
   };
 
@@ -184,7 +184,7 @@ describe('Reactive Object with ECHO database', () => {
       peer.client.graph.schemaRegistry.addSchema([TestType]);
       const db = await peer.openDatabase(spaceKey, root.url);
 
-      const obj = (await db.query({ id }).first()) as EchoReactiveObject<TestSchema>;
+      const obj = (await db.query({ id }).first()) as ReactiveEchoObject<TestSchema>;
       expect(isEchoObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
@@ -219,7 +219,7 @@ describe('Reactive Object with ECHO database', () => {
       const peer = await builder.createPeer(kv);
       const db = await peer.openDatabase(spaceKey, root.url);
 
-      const obj = (await db.query({ id }).first()) as EchoReactiveObject<TestSchema>;
+      const obj = (await db.query({ id }).first()) as ReactiveEchoObject<TestSchema>;
       expect(isEchoObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
@@ -550,7 +550,7 @@ describe('Reactive Object with ECHO database', () => {
       {
         const peer = await builder.createPeer(kv);
         const db = await peer.openDatabase(spaceKey, root.url);
-        const obj = (await db.query({ id }).first()) as EchoReactiveObject<TestSchema>;
+        const obj = (await db.query({ id }).first()) as ReactiveEchoObject<TestSchema>;
         expect(getMeta(obj).keys).to.deep.eq([metaKey]);
       }
     });

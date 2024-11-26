@@ -16,6 +16,16 @@ import { SpaceObjectGenerator } from './generator';
 faker.seed(3);
 
 describe('TestObjectGenerator', () => {
+  // TODO(burdon): Use TestBuilder.
+  const setupTest = async () => {
+    const client = new Client();
+    await client.initialize();
+    onTestFinished(async () => await client.destroy());
+    await client.halo.createIdentity();
+    const space = await client.spaces.create();
+    return { client, space };
+  };
+
   test('basic', async () => {
     const generator = createTestObjectGenerator();
 
@@ -81,44 +91,34 @@ describe('TestObjectGenerator', () => {
   });
 
   test('create object with in memory schema', async () => {
-    class Todo extends TypedObject({
-      typename: 'example.org/type/Todo',
+    class Task extends TypedObject({
+      typename: 'example.org/type/Task',
       version: '0.1.0',
     })({
       name: S.optional(S.String),
     }) {}
 
     enum Types {
-      todo = 'example.org/type/Todo',
+      task = 'example.org/type/Task',
     }
 
     const { space } = await setupTest();
     const generator = new SpaceObjectGenerator<Types>(
       space,
-      { [Types.todo]: Todo },
+      { [Types.task]: Task },
       {
-        [Types.todo]: () => ({ name: 'Default' }),
+        [Types.task]: () => ({ name: 'Default' }),
       },
       {
-        [Types.todo]: async (todo, params) => {
+        [Types.task]: async (task, params) => {
           for (const _ in Array.from({ length: params.count })) {
-            todo.name = faker.lorem.sentence();
+            task.name = faker.lorem.sentence();
           }
         },
       },
     );
 
-    const todo = await generator.createObject({ types: [Types.todo] });
-
+    const todo = await generator.createObject({ types: [Types.task] });
     expect(getType(todo)).to.exist;
   });
-
-  const setupTest = async () => {
-    const client = new Client();
-    await client.initialize();
-    onTestFinished(async () => await client.destroy());
-    await client.halo.createIdentity();
-    const space = await client.spaces.create();
-    return { client, space };
-  };
 });
