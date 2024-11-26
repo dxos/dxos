@@ -4,10 +4,25 @@
 
 import { type Action, type ActionLike, type Node } from '@dxos/app-graph';
 import { type Label } from '@dxos/react-ui';
-import { type ItemType } from '@dxos/react-ui-list';
+import { type MaybePromise } from '@dxos/util';
 
-export type NavTreeItem = ItemType & {
-  node: Node;
+export type NavTreeItemGraphNode = Node<
+  any,
+  Partial<
+    NodeProperties & {
+      persistenceClass: string;
+      persistenceKey: string;
+      acceptPersistenceClass: Set<string>;
+      acceptPersistenceKey: Set<string>;
+      onRearrangeChildren: (nextOrder: NavTreeItemGraphNode[]) => MaybePromise<void>;
+      onCopy: (activeNode: NavTreeItemGraphNode, index?: number) => MaybePromise<void>;
+      onTransferStart: (activeNode: NavTreeItemGraphNode, index?: number) => MaybePromise<void>;
+      onTransferEnd: (activeNode: NavTreeItemGraphNode, destinationParent: NavTreeItemGraphNode) => MaybePromise<void>;
+    }
+  >
+>;
+
+export type FlattenedActions = {
   actions: ActionLike[];
   groupedActions: Record<string, Action[]>;
 };
