@@ -93,7 +93,6 @@ export const DeckPlugin = ({
   observability?: boolean;
 } = {}): PluginDefinition<DeckPluginProvides> => {
   let graphPlugin: Plugin<GraphProvides> | undefined;
-  // TODO(burdon): GraphPlugin vs. IntentPluginProvides? (@wittjosiah).
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
   let attentionPlugin: Plugin<AttentionPluginProvides> | undefined;
   const unsubscriptionCallbacks = [] as (UnsubscribeCallback | undefined)[];
@@ -187,12 +186,17 @@ export const DeckPlugin = ({
     if (attentionPlugin) {
       const attended = attentionPlugin.provides.attention.attended;
       const [attendedId] = Array.from(attended);
-      const ids = (layout.values.layoutMode === 'deck' ? next.main : next.solo)?.map(({ id }) => id) ?? [];
+      const part = layout.values.layoutMode === 'solo' ? 'solo' : 'main';
+      const ids = next[part]?.map(({ id }) => id) ?? [];
       const isAttendedAvailable = !!attendedId && ids.includes(attendedId);
       if (!isAttendedAvailable) {
+        const currentIds = location.values.active[part]?.map(({ id }) => id) ?? [];
+        const attendedIndex = currentIds.indexOf(attendedId);
+        // If outside of bounds, focus on the first/last plank, otherwise focus on the new plank in the same position.
+        const index = attendedIndex === -1 ? 0 : attendedIndex >= ids.length ? ids.length - 1 : attendedIndex;
+        const nextAttended = next[part]?.[index].id;
         // Allow new plank to render before focusing.
         requestAnimationFrame(() => {
-          const nextAttended = layout.values.layoutMode === 'solo' ? next.solo?.[0].id : next.main?.[0]?.id;
           const article = document.querySelector<HTMLElement>(`article[data-attendable-id="${nextAttended}"]`);
           article?.focus();
         });
