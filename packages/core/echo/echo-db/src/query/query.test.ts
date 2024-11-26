@@ -8,6 +8,7 @@ import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { create, Expando } from '@dxos/echo-schema';
+import { Contact } from '@dxos/echo-schema/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
@@ -18,8 +19,6 @@ import { Filter } from './filter';
 import { type ReactiveEchoObject, getObjectCore } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder, type EchoTestPeer } from '../testing';
-import { log } from '@dxos/log';
-import { Contact } from '@dxos/echo-schema/testing';
 
 const createTestObject = (idx: number, label?: string) => {
   return create(Expando, { idx, title: `Task ${idx}`, label });

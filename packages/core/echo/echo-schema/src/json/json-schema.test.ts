@@ -14,7 +14,6 @@ import { Email } from '../formats/string';
 import { ref } from '../handler';
 import { TypedObject } from '../object';
 import { Contact } from '../testing';
-import { log } from '@dxos/log';
 
 describe('effect-to-json', () => {
   test('type annotation', () => {

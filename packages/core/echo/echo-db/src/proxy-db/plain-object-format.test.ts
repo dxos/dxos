@@ -5,11 +5,11 @@
 import { describe, expect, test } from 'vitest';
 
 import { create, S, TypedObject } from '@dxos/echo-schema';
+import { Task } from '@dxos/echo-schema/testing';
 import { DXN } from '@dxos/keys';
 
 import { Filter, ResultFormat } from '../query';
 import { EchoTestBuilder } from '../testing';
-import { Task } from '@dxos/echo-schema/testing';
 
 describe('Plain object format', () => {
   test('can query and mutate data', async () => {

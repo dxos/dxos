@@ -5,8 +5,8 @@
 import { S } from '@dxos/effect';
 
 import { EchoObject } from '../ast';
-import { TypedObject } from '../object';
 import { Expando, ref } from '../handler';
+import { TypedObject } from '../object';
 
 // TODO(burdon): Clean up.
 

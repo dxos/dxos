@@ -189,9 +189,10 @@ const mapAst = (ast: AST.AST, f: (ast: AST.AST) => AST.AST): AST.AST => {
         ast.isReadonly,
         ast.annotations,
       );
-    case 'Suspend':
+    case 'Suspend': {
       const newAst = f(ast.f());
       return new AST.Suspend(() => newAst, ast.annotations);
+    }
     default:
       // TODO(dmaretskyi): Support more nodes.
       return ast;
