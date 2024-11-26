@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-registry",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Braneframe plugin gallery",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -33,7 +33,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
-    "@dxos/react-ui-data": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {

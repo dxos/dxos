@@ -132,5 +132,3 @@ const Component = () => {
   );
 };
 ```
-
-See more in the [API documentation](../../../api/@dxos/client/classes/Shell.md) for the Shell.

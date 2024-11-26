@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-deck",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "DXOS Surface plugin for the main application layout.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -53,7 +53,7 @@
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
-    "@dxos/react-ui-data": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-text-tooltip": "workspace:*",

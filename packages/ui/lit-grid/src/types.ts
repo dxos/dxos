@@ -22,8 +22,7 @@ export type DxGridPlanePosition = Record<DxGridAxis, number>;
 export type DxGridPosition = DxGridPlanePosition & { plane: DxGridPlane };
 export type DxGridPositionNullable = DxGridPosition | null;
 
-export type DxGridAnnotatedWheelEvent = WheelEvent &
-  Partial<{
+export type DxGridAnnotatedPanEvent = (WheelEvent | PointerEvent) & { deltaX: number; deltaY: number } & Partial<{
     overscrollInline: number;
     overscrollBlock: number;
     gridId: string;
@@ -39,7 +38,8 @@ export type DxGridAxisMeta = DxGridPlaneRecord<DxGridFrozenPlane, DxGridPlaneAxi
 
 export type DxGridPointer =
   | null
-  | ({ state: 'maybeSelecting' } & Pick<PointerEvent, 'pageX' | 'pageY'>)
+  | { state: 'panning'; pageX: number; pageY: number }
+  | { state: 'maybeSelecting'; pageX: number; pageY: number }
   | { state: 'selecting' };
 
 export type DxAxisResizeProps = Pick<DxAxisResize, 'axis' | 'plane' | 'index' | 'size'>;

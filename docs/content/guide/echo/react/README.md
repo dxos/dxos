@@ -16,15 +16,15 @@ This section describes how to create, join, and invite peers to [ECHO Spaces](..
 To create a space, call the `client.spaces.create()` API:
 
 :::apidoc[@dxos/react-client.Echo.create]
-### [create(\[meta\])]()
+### create(\[meta])
 
 Creates a new space.
 
-Returns: <code>Promise<[Space](/api/@dxos/react-client/interfaces/Space)></code>
+Returns: `Promise<Space>`
 
 Arguments:
 
-`meta`: <code>[PropertiesTypeProps](/api/@dxos/react-client/types/PropertiesTypeProps)</code>
+`meta`: <code>PropertiesTypeProps</code>
 :::
 
 ```tsx{11} file=./snippets/create-spaces.tsx#L5-
@@ -57,32 +57,32 @@ root.render(
 These hooks are available from package [`@dxos/react-client`](https://www.npmjs.com/package/@dxos/react-client) and re-render reactively.
 
 :::apidoc[@dxos/react-client.useSpace]
-### [useSpace(\[spaceKeyLike\])](https://github.com/dxos/dxos/blob/56c97ac85/packages/sdk/react-client/src/echo/useSpaces.ts#L21)
+### useSpace(\[spaceKeyLike])
 
 Get a specific Space using its key.
 The space is not guaranteed to be in the ready state.
 Returns the default space if no key is provided.
 Requires a ClientProvider somewhere in the parent tree.
 
-Returns: <code>undefined | [Space](/api/@dxos/react-client/interfaces/Space)</code>
+Returns: <code>undefined | Space</code>
 
 Arguments:
 
-`spaceKeyLike`: <code>[PublicKeyLike](/api/@dxos/react-client/types/PublicKeyLike)</code>
+`spaceKeyLike`: <code>PublicKeyLike</code>
 :::
 
 :::apidoc[@dxos/react-client.useSpaces]
-### [useSpaces(options)](https://github.com/dxos/dxos/blob/56c97ac85/packages/sdk/react-client/src/echo/useSpaces.ts#L62)
+### useSpaces(options)
 
 Get all Spaces available to current user.
 Requires a ClientProvider somewhere in the parent tree.
 By default, only ready spaces are returned.
 
-Returns: <code>[Space](/api/@dxos/react-client/interfaces/Space)\[]</code>
+Returns: <code>Space\[]</code>
 
 Arguments:
 
-`options`: <code>[UseSpacesParams](/api/@dxos/react-client/types/UseSpacesParams)</code>
+`options`: <code>UseSpacesParams</code>
 :::
 
 ### Example

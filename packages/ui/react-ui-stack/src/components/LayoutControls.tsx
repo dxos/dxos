@@ -120,7 +120,7 @@ export const LayoutControls = forwardRef<HTMLDivElement, LayoutControlsProps>(
                 ? 'ph--caret-line-left--regular'
                 : close === 'minify-end'
                   ? 'ph--caret-line-right--regular'
-                  : 'ph--minus--regular'
+                  : 'ph--x--regular'
             }
           />
         )}

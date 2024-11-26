@@ -166,10 +166,22 @@ export class MutableSchemaRegistry implements SchemaResolver {
       return existing;
     }
 
+    let previousTypename: string | undefined;
+
     const mutableSchema = new MutableSchema(schema);
     const subscription = getObjectCore(schema).updates.on(() => {
       mutableSchema.invalidate();
     });
+
+    if (previousTypename !== undefined && schema.typename !== previousTypename) {
+      if (this._schemaByType.get(previousTypename) === mutableSchema) {
+        this._schemaByType.delete(previousTypename);
+      }
+      previousTypename = schema.typename;
+      this._schemaByType.set(schema.typename, mutableSchema);
+
+      this._notifySchemaListChanged();
+    }
 
     this._schemaById.set(schema.id, mutableSchema);
     this._schemaByType.set(schema.typename, mutableSchema);

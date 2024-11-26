@@ -7,6 +7,19 @@ import { AST, S } from '@dxos/effect';
 import { FormatAnnotationId, FormatEnum } from './types';
 
 /**
+ * Decentralized name.
+ */
+export const DXN = S.NonEmptyString.pipe(
+  S.pattern(/^([a-z][\da-z.-]+)\.([a-z.]{2,6})([/\w-]*)*\/?$/),
+  S.annotations({
+    [FormatAnnotationId]: FormatEnum.DXN,
+    [AST.TitleAnnotationId]: 'DXN',
+    [AST.DescriptionAnnotationId]: 'DXN URI',
+    [AST.ExamplesAnnotationId]: ['example.com/type/MyType'],
+  }),
+);
+
+/**
  * Email address (RFC 5321)
  * https://datatracker.ietf.org/doc/html/rfc5321#section-4.1.2
  */
@@ -62,15 +75,14 @@ export const Regex = S.String.annotations({
 });
 
 /**
- * URI (RFC 3986)
- * https://datatracker.ietf.org/doc/html/rfc3986
+ * https://datatracker.ietf.org/doc/html/rfc3986#section-1.1.3
  */
-export const URI = S.String.pipe(
+export const URL = S.String.pipe(
   S.pattern(/^(\w+?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/),
   S.annotations({
-    [FormatAnnotationId]: FormatEnum.URI,
-    [AST.TitleAnnotationId]: 'URI',
-    [AST.DescriptionAnnotationId]: 'Universal resource identifier',
+    [FormatAnnotationId]: FormatEnum.URL,
+    [AST.TitleAnnotationId]: 'URL',
+    [AST.DescriptionAnnotationId]: 'URL',
   }),
 );
 
@@ -78,8 +90,7 @@ export const URI = S.String.pipe(
  * UUID (RFC 4122)
  * https://datatracker.ietf.org/doc/html/rfc4122
  */
-// TODO(burdon): Implement.
-export const UUID = S.String.annotations({
+export const UUID = S.UUID.annotations({
   [FormatAnnotationId]: FormatEnum.UUID,
-  examples: ['3e4666bf-d5e5-4aa7-b8ce-cefe41c7568a'],
+  [AST.ExamplesAnnotationId]: ['3e4666bf-d5e5-4aa7-b8ce-cefe41c7568a'],
 });

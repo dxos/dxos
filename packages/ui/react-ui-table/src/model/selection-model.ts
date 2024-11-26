@@ -28,7 +28,7 @@ export class SelectionModel<T extends BaseTableRow> extends Resource {
     if (rows.length === 0) {
       return false;
     }
-    return rows.length !== 0 || rows.every((row) => this._selection.value.has(row.id));
+    return rows.every((row) => this._selection.value.has(row.id));
   });
 
   constructor(
