@@ -251,6 +251,7 @@ export const DeckPlugin = ({
         const layoutFromUri = uriToSoloPart(pathname);
         if (!layoutFromUri) {
           handleSetLocation(startingLayout);
+          layout.values.layoutMode = 'deck';
           return;
         }
 

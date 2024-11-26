@@ -81,7 +81,6 @@ export const MyComponent = ({ data }) => {
 When multiple plugins provide components for the same data, the `<Surface />` element can render all or some of them based on other props passed to `<Surface />`.
 
 :::apidoc[@dxos/app-framework.SurfaceProps]{level="3"}
-
 ### Type `SurfaceProps`
 
 SurfaceProps are the props that are passed to the Surface component.
@@ -89,8 +88,8 @@ SurfaceProps are the props that are passed to the Surface component.
 
 ## See also
 
-- [Surface plugin source](https://github.com/dxos/dxos/blob/main/packages/sdk/app-framework/src/plugins/SurfacePlugin/plugin.tsx)
-- [Surface component props and source](https://github.com/dxos/dxos/blob/main/packages/sdk/app-framework/src/plugins/SurfacePlugin/Surface.tsx)
+* [Surface plugin source](https://github.com/dxos/dxos/blob/main/packages/sdk/app-framework/src/plugins/SurfacePlugin/plugin.tsx)
+* [Surface component props and source](https://github.com/dxos/dxos/blob/main/packages/sdk/app-framework/src/plugins/SurfacePlugin/Surface.tsx)
 
 ::: note Under Development
 
