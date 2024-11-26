@@ -20,6 +20,7 @@ export type FormNode =
   | { type: 'list'; key?: string; element: FormNode }
   | { type: 'tuple'; key?: string; elements: FormNode[] }
   | { type: 'choice'; key?: string; discriminatingKey: string; options: Map<DiscriminatorValue, FormNode> };
+
 //
 // Transformation.
 //

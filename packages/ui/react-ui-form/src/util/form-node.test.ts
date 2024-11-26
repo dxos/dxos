@@ -9,6 +9,9 @@ import { S } from '@dxos/effect';
 
 import { createFormTree } from './form-node';
 
+// TODO(ZaymonFC): Make a bunch of fields optional and use findNode to drill down to the
+//   correct underlying values.
+
 describe('FormNode', () => {
   test('creates form tree for simple types', () => {
     const schema = S.Struct({
@@ -98,27 +101,25 @@ describe('FormNode', () => {
   test('creates form tree for discriminated unions', () => {
     const schema = S.Struct({
       unionProperty: S.Union(
-        S.Struct({ kind: S.Literal('a'), value: S.String }),
-        S.Struct({ kind: S.Literal('b'), count: S.Number }),
+        S.Struct({ type: S.Literal('a'), value: S.String }),
+        S.Struct({ type: S.Literal('b'), count: S.Number }),
       ),
     });
-
     const tree = createFormTree(schema.ast);
-
     expect(tree).toEqual({
       type: 'record',
       members: [
         {
           type: 'choice',
           key: 'unionProperty',
-          discriminatingKey: 'kind',
+          discriminatingKey: 'type',
           options: new Map([
             [
               'a',
               {
                 type: 'record',
                 members: [
-                  { type: 'input', key: 'kind', valueType: 'literal', meta: {} },
+                  { type: 'input', key: 'type', valueType: 'literal', meta: {} },
                   { type: 'input', key: 'value', valueType: 'string', meta: {} },
                 ],
               },
@@ -128,7 +129,7 @@ describe('FormNode', () => {
               {
                 type: 'record',
                 members: [
-                  { type: 'input', key: 'kind', valueType: 'literal', meta: {} },
+                  { type: 'input', key: 'type', valueType: 'literal', meta: {} },
                   { type: 'input', key: 'count', valueType: 'number', meta: {} },
                 ],
               },
