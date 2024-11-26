@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { effect } from '@preact/signals-core';
 import React from 'react';
 
 import {
@@ -19,13 +20,14 @@ import {
   parseGraphPlugin,
   NavigationAction,
   parseNavigationPlugin,
+  parseLayoutPlugin,
 } from '@dxos/app-framework';
-import { createExtension, type Graph, isAction, isGraphNode, type Node, type NodeFilter } from '@dxos/app-graph';
-import { invariant } from '@dxos/invariant';
+import { createExtension, type Graph, isAction, isGraphNode, type Node } from '@dxos/app-graph';
+import { type UnsubscribeCallback } from '@dxos/async';
+import { create, type ReactiveObject } from '@dxos/echo-schema';
 import { Keyboard } from '@dxos/keyboard';
-import { LocalStorageStore } from '@dxos/local-storage';
+import { type TreeData } from '@dxos/react-ui-list';
 import { Path } from '@dxos/react-ui-mosaic';
-import { mx } from '@dxos/react-ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
 import {
@@ -39,14 +41,8 @@ import {
 import { CommandsTrigger } from './components/CommandsTrigger';
 import meta, { KEY_BINDING, NAVTREE_PLUGIN } from './meta';
 import translations from './translations';
-import { type NavTreeItem } from './types';
-import {
-  expandChildrenAndActions,
-  getActions,
-  getChildren,
-  treeItemsFromRootNode,
-  type NavTreeItemGraphNode,
-} from './util';
+import { type NavTreeItemGraphNode } from './types';
+import { expandChildrenAndActions } from './util';
 
 export type NavTreePluginProvides = SurfaceProvides &
   MetadataRecordsProvides &
@@ -54,77 +50,71 @@ export type NavTreePluginProvides = SurfaceProvides &
   TranslationsProvides &
   IntentResolverProvides;
 
-type NavTreeState = {
-  root?: NavTreeItemGraphNode;
-  flatTree: NavTreeItem[];
-  open: string[];
+const KEY = `${NAVTREE_PLUGIN}/state`;
+const getInitialState = () => {
+  const stringified = localStorage.getItem(KEY);
+  if (!stringified) {
+    return;
+  }
+
+  try {
+    const cached: [string, { open: boolean; current: boolean }][] = JSON.parse(stringified);
+    return cached.map(
+      ([key, value]): [
+        string,
+        ReactiveObject<{
+          open: boolean;
+          current: boolean;
+        }>,
+      ] => [key, create(value)],
+    );
+  } catch {}
 };
 
 export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
   let graphPlugin: Plugin<GraphProvides> | undefined;
   let graph: Graph | undefined;
-  const itemCache = new Map<string, NavTreeItem>();
+  let unsubscribe: UnsubscribeCallback | undefined;
 
-  const state = new LocalStorageStore<NavTreeState>('dxos.org/settings/navtree', {
-    root: undefined,
-    get flatTree() {
-      if (!this.root || !graph) {
-        return [];
-      }
+  // TODO(wittjosiah): This currently needs to be not a ReactiveObject at the root.
+  //   If it is a ReactiveObject then React errors when initializing new paths because of state change during render.
+  //   Ideally this could be a ReactiveObject but be able to access and update the root level without breaking render.
+  //   Wrapping accesses and updates in `untracked` didn't seem to work in all cases.
+  const state = new Map<string, ReactiveObject<{ open: boolean; current: boolean }>>(
+    getInitialState() ?? [
+      // TODO(thure): Initialize these dynamically.
+      ['root', create({ open: true, current: false })],
+      ['root~dxos.org/plugin/space-spaces', create({ open: true, current: false })],
+      ['root~dxos.org/plugin/files', create({ open: true, current: false })],
+    ],
+  );
 
-      return treeItemsFromRootNode(graph, this.root, this.open, getItem);
-    },
-    // TODO(thure): Do this dynamically.
-    open: ['root', 'root~dxos.org/plugin/space-spaces', 'root~dxos.org/plugin/files'],
-  });
-
-  const getItem = (node: NavTreeItemGraphNode, parent: readonly string[], filter?: NodeFilter) => {
-    invariant(graph);
-    const path = [...parent, node.id];
-    const { actions, groupedActions } = getActions(graph, node);
-    const children = getChildren(graph, node, filter, path);
-    const parentOf =
-      children.length > 0 ? children.map(({ id }) => id) : node.properties.role === 'branch' ? [] : undefined;
-    const item = {
-      id: node.id,
-      label: node.properties.label ?? node.id,
-      icon: node.properties.icon,
-      disabled: node.properties.disabled,
-      testId: node.properties.testId,
-      className: mx(node.properties.modified && 'italic', node.properties.className),
-      headingClassName: node.properties.headingClassName,
-      path,
-      parentOf,
-      node,
-      actions,
-      groupedActions,
-    } satisfies NavTreeItem;
-
-    const cachedItem = itemCache.get(node.id);
-    // TODO(wittjosiah): This is not a good enough check.
-    //   Consider better ways to doing reactive transformations which retain referential equality.
-    if (cachedItem && JSON.stringify(item) === JSON.stringify(cachedItem)) {
-      return cachedItem;
-    } else {
-      itemCache.set(node.id, item);
-      return item;
+  const getItem = (_path: string[]) => {
+    const path = Path.create(..._path);
+    const value = state.get(path) ?? create({ open: false, current: false });
+    if (!state.has(path)) {
+      state.set(path, value);
     }
+
+    return value;
   };
 
-  const handleOpenChange = (item: NavTreeItem, open: boolean) => {
-    const path = Path.create(...item.path);
+  const setItem = (path: string[], key: 'open' | 'current', next: boolean) => {
+    const value = getItem(path);
+    value[key] = next;
+
+    localStorage.setItem(KEY, JSON.stringify(Array.from(state.entries())));
+  };
+
+  const isOpen = (path: string[]) => getItem(path).open;
+  const isCurrent = (path: string[]) => getItem(path).current;
+
+  const handleOpenChange = ({ item: { id }, path, open }: { item: Node; path: string[]; open: boolean }) => {
     // TODO(thure): This might become a localstorage leak; openItemIds that no longer exist should be removed from this map.
-    if (open) {
-      state.values.open.push(path);
-    } else {
-      const index = state.values.open.indexOf(path);
-      if (index > -1) {
-        state.values.open.splice(index, 1);
-      }
-    }
+    setItem(path, 'open', open);
 
     if (graph) {
-      const node = graph.findNode(item.id);
+      const node = graph.findNode(id);
       return node && expandChildrenAndActions(graph, node as NavTreeItemGraphNode);
     }
   };
@@ -132,21 +122,45 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
   return {
     meta,
     ready: async (plugins) => {
-      state.prop({ key: 'open', type: LocalStorageStore.json<string[]>() });
-
+      const layout = resolvePlugin(plugins, parseLayoutPlugin)?.provides.layout;
+      const location = resolvePlugin(plugins, parseNavigationPlugin)?.provides.location;
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       graph = graphPlugin?.provides.graph;
-      if (!graph) {
+      if (!graph || !location || !layout) {
         return;
       }
 
+      const soloPart = location?.active.solo?.[0];
       const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-      const soloPart = resolvePlugin(plugins, parseNavigationPlugin)?.provides.location.active.solo?.[0];
       if (dispatch && soloPart) {
         void dispatch({ plugin: NAVTREE_PLUGIN, action: NavigationAction.EXPOSE, data: { id: soloPart.id } });
       }
 
-      state.values.root = graph.root as NavTreeItemGraphNode;
+      let previous: string[] = [];
+      unsubscribe = effect(() => {
+        const part = layout.layoutMode === 'solo' ? 'solo' : 'main';
+        const current = location.active[part]?.map(({ id }) => id) ?? [];
+        const removed = previous.filter((id) => !current.includes(id));
+        previous = current;
+
+        // TODO(wittjosiah): This is setTimeout because there's a race between the keys be initialized.
+        //   This could be avoided if the location was a path as well and not just an id.
+        setTimeout(() => {
+          removed.forEach((id) => {
+            const keys = Array.from(state.keys()).filter((key) => Path.last(key) === id);
+            keys.forEach((key) => {
+              setItem(Path.parts(key), 'current', false);
+            });
+          });
+
+          current.forEach((id) => {
+            const keys = Array.from(new Set([...state.keys(), id])).filter((key) => Path.last(key) === id);
+            keys.forEach((key) => {
+              setItem(Path.parts(key), 'current', true);
+            });
+          });
+        });
+      });
 
       // TODO(wittjosiah): Factor out.
       // TODO(wittjosiah): Handle removal of actions.
@@ -184,20 +198,21 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
       Keyboard.singleton.setCurrentContext(graphPlugin?.provides.graph.root.id);
     },
     unload: async () => {
+      unsubscribe?.();
       Keyboard.singleton.destroy();
     },
     provides: {
       metadata: {
         records: {
           [NODE_TYPE]: {
-            parse: (item: NavTreeItem, type: string) => {
+            parse: ({ item }: TreeData, type: string) => {
               switch (type) {
                 case 'node':
-                  return item.node;
+                  return item;
                 case 'object':
-                  return item.node.data;
+                  return item.data;
                 case 'view-object':
-                  return { id: `${item.id}-view`, object: item.node.data };
+                  return { id: `${item.id}-view`, object: item.data };
               }
             },
           },
@@ -216,9 +231,8 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
             case 'navigation':
               return (
                 <NavTreeContainer
-                  items={state.values.flatTree}
-                  current={data.activeIds as string[]}
-                  open={state.values.open}
+                  isOpen={isOpen}
+                  isCurrent={isCurrent}
                   onOpenChange={handleOpenChange}
                   popoverAnchorId={data.popoverAnchorId as string}
                 />
@@ -229,7 +243,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
             }
 
             case 'navbar-start': {
-              if (state.values.root && data.activeNode) {
+              if (data.activeNode) {
                 return {
                   node: (
                     <NavBarStart
@@ -262,14 +276,13 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
             case NavigationAction.EXPOSE: {
               if (graph && intent.data?.id) {
                 const path = await graph.waitForPath({ target: intent.data.id });
-                const additionalOpenItems = [...Array(path.length)].reduce((acc: string[], _, index) => {
-                  const itemId = Path.create(...path.slice(0, index));
-                  if (itemId.length > 0 && !state.values.open.includes(itemId)) {
-                    acc.push(itemId);
+                [...Array(path.length)].forEach((_, index) => {
+                  const subpath = path.slice(0, index);
+                  const value = getItem(subpath);
+                  if (!value.open) {
+                    setItem(subpath, 'open', true);
                   }
-                  return acc;
-                }, []);
-                state.values.open.push(...additionalOpenItems);
+                });
               }
               break;
             }

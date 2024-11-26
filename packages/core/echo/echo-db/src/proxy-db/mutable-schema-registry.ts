@@ -147,6 +147,7 @@ export class MutableSchemaRegistry implements SchemaResolver {
     const storedSchema = this._db.add(schemaToStore);
     const result = this._register(storedSchema);
     this._notifySchemaListChanged();
+    result.rebuild();
     return result;
   }
 
