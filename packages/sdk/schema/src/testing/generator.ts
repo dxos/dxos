@@ -50,6 +50,7 @@ export const createProps = <T extends BaseObject<T>>(type: S.Schema<T>) => {
           return obj;
         }
 
+        // TODO(burdon): Decouple from faker.
         const gen = findAnnotation<string>(property.ast, GeneratorAnnotationId);
         const fn = gen && getDeep<() => any>({ faker }, gen.split('.'));
         if (fn) {

@@ -71,4 +71,7 @@ describe('Generator', () => {
       console.log(JSON.parse(JSON.stringify({ name: obj.name, employer: obj.employer?.name })));
     }
   });
+
+  // TODO(burdon): Plugin from react-ui-table type defs.
+  test('create views', async ({ expect }) => {});
 });
