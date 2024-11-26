@@ -239,31 +239,40 @@ export const Form = <T extends BaseObject>({
           );
         })
         .filter(isNotFalsy)}
-
       {(onCancel || onSave) && !autoSave && (
-        <div role='none' className='flex justify-center'>
-          <div role='none' className={mx(onCancel && !readonly && 'grid grid-cols-2 gap-2')}>
-            {onCancel && !readonly && (
-              <IconButton
-                data-testid='cancel-button'
-                icon='ph--x--regular'
-                label={t('button cancel')}
-                onClick={onCancel}
-              />
-            )}
-            {onSave && (
-              <IconButton
-                type='submit'
-                data-testid='save-button'
-                disabled={!canSave}
-                icon='ph--check--regular'
-                label={t('button save')}
-                onClick={handleSave}
-              />
-            )}
-          </div>
-        </div>
+        <FormActions onCancel={onCancel} onSubmit={handleSave} canSubmit={canSave} readonly={readonly} />
       )}
+    </div>
+  );
+};
+
+type FormActionsProps = {
+  readonly?: boolean;
+  canSubmit: boolean;
+  onCancel?: () => void;
+  onSubmit: () => void;
+};
+
+export const FormActions = ({ onCancel, onSubmit, canSubmit, readonly }: FormActionsProps) => {
+  const { t } = useTranslation(translationKey);
+
+  return (
+    <div role='none' className='flex justify-center'>
+      <div role='none' className={mx(onCancel && !readonly && 'grid grid-cols-2 gap-2')}>
+        {onCancel && !readonly && (
+          <IconButton data-testid='cancel-button' icon='ph--x--regular' label={t('button cancel')} onClick={onCancel} />
+        )}
+        {onSubmit && (
+          <IconButton
+            type='submit'
+            data-testid='save-button'
+            disabled={!canSubmit}
+            icon='ph--check--regular'
+            label={t('button save')}
+            onClick={onSubmit}
+          />
+        )}
+      </div>
     </div>
   );
 };
