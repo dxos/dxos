@@ -167,13 +167,19 @@ export class MutableSchema extends AbstractMutableSchema() implements S.Schema<a
     this._storedSchema.jsonSchema = toJsonSchema(removed);
   }
 
-  private _getSchema() {
+  /**
+   * Rebuilds this schema if it is dirty.
+   */
+  public rebuild() {
     if (this._isDirty || this._schema == null) {
       this._schema = toEffectSchema(unwrapProxy(this._storedSchema.jsonSchema));
       this._isDirty = false;
     }
+  }
 
-    return this._schema;
+  private _getSchema() {
+    this.rebuild();
+    return this._schema!;
   }
 }
 

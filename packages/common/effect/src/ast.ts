@@ -379,3 +379,37 @@ export const getDiscriminatedType = (node: AST.AST, value: Record<string, any> =
   const schema = S.Struct(fields);
   return schema.ast;
 };
+
+/**
+ * Maps AST nodes.
+ * The user is responsible for recursively calling {@link mapAst} on the AST.
+ * NOTE: Will evaluate suspended ASTs.
+ */
+export const mapAst = (ast: AST.AST, f: (ast: AST.AST) => AST.AST): AST.AST => {
+  switch (ast._tag) {
+    case 'TypeLiteral':
+      return new AST.TypeLiteral(
+        ast.propertySignatures.map(
+          (prop) =>
+            new AST.PropertySignature(prop.name, f(prop.type), prop.isOptional, prop.isReadonly, prop.annotations),
+        ),
+        ast.indexSignatures,
+      );
+    case 'Union':
+      return AST.Union.make(ast.types.map(f), ast.annotations);
+    case 'TupleType':
+      return new AST.TupleType(
+        ast.elements.map((t) => new AST.OptionalType(f(t.type), t.isOptional, t.annotations)),
+        ast.rest.map((t) => new AST.Type(f(t.type), t.annotations)),
+        ast.isReadonly,
+        ast.annotations,
+      );
+    case 'Suspend': {
+      const newAst = f(ast.f());
+      return new AST.Suspend(() => newAst, ast.annotations);
+    }
+    default:
+      // TODO(dmaretskyi): Support more nodes.
+      return ast;
+  }
+};
