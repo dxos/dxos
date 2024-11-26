@@ -138,28 +138,39 @@ export const Form = <T extends BaseObject>({
             if (array) {
               const arrayValues = (values[name] ?? []) as any[];
 
-              // TODO(ZaymonFC): Work with thure to build out this compound input?
-              return (
-                <div role='none' key='meta-input' className={mx(padding)}>
-                  <InputHeader>{label}</InputHeader>
-                  <div role='none' className='flex flex-col gap-1'>
-                    {arrayValues.map((_, index) => (
-                      <div key={index} role='none' className='flex items-center gap-1'>
-                        {type === 'object' ? (
-                          <div>Nested form not supported in arrays, yet.</div>
-                        ) : (
-                          InputComponent && (
-                            <>
+              const tupleType = findNode(prop.type, AST.isTupleType);
+              const elementType = (tupleType as AST.TupleType | undefined)?.rest[0]?.type;
+
+              if (type === 'object' && elementType) {
+                const baseNode = findNode(elementType, isDiscriminatedUnion);
+                const typeLiteral = baseNode
+                  ? getDiscriminatedType(baseNode, values[name] as any)
+                  : findNode(elementType, AST.isTypeLiteral);
+
+                console.log(typeLiteral);
+
+                if (typeLiteral) {
+                  const schema = S.make(typeLiteral);
+
+                  return (
+                    <div key={name} role='none' className={mx(padding)}>
+                      <InputHeader>{label}</InputHeader>
+                      <div role='none' className='flex flex-col gap-1'>
+                        {arrayValues.map((value, index) => {
+                          console.log(value);
+                          return (
+                            <div key={index} role='none' className='flex items-center gap-1'>
                               <div role='none' className='flex-1'>
-                                <InputComponent
-                                  type={type}
-                                  format={format}
-                                  label={label}
-                                  inputOnly
-                                  property={`${name}.${index}`}
-                                  disabled={readonly}
-                                  placeholder={placeholder}
-                                  {...inputProps}
+                                <Form<any>
+                                  schema={schema}
+                                  path={[...key, index.toString()]}
+                                  values={value}
+                                  onValuesChanged={(childValues) => {
+                                    const newValues = [...arrayValues];
+                                    newValues[index] = childValues;
+                                    inputProps.onValueChange(name, 'object', newValues);
+                                  }}
+                                  Custom={Custom as any}
                                 />
                               </div>
                               <IconButton
@@ -171,8 +182,63 @@ export const Form = <T extends BaseObject>({
                                   inputProps.onValueChange(name, type, newValues);
                                 }}
                               />
-                            </>
-                          )
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div role='none' className='flex justify-between items-center plb-1'>
+                        <IconButton
+                          icon='ph--plus--regular'
+                          iconOnly
+                          label={t('button add')}
+                          onClick={() => {
+                            const newValues = [...arrayValues, {}];
+                            inputProps.onValueChange(name, type, newValues);
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div key={name} role='none'>
+                    Nested form not supported in arrays, yet.
+                  </div>
+                );
+              }
+
+              // TODO(ZaymonFC): Work with thure to build out this compound input?
+              return (
+                <div role='none' key='meta-input' className={mx(padding)}>
+                  <InputHeader>{label}</InputHeader>
+                  <div role='none' className='flex flex-col gap-1'>
+                    {arrayValues.map((_, index) => (
+                      <div key={index} role='none' className='flex items-center gap-1'>
+                        {InputComponent && (
+                          <>
+                            <div role='none' className='flex-1'>
+                              <InputComponent
+                                type={type}
+                                format={format}
+                                label={label}
+                                inputOnly
+                                property={`${name}.${index}`}
+                                disabled={readonly}
+                                placeholder={placeholder}
+                                {...inputProps}
+                              />
+                            </div>
+                            <IconButton
+                              icon='ph--trash--regular'
+                              iconOnly
+                              label={t('button remove')}
+                              onClick={() => {
+                                const newValues = arrayValues.filter((_, i) => i !== index);
+                                inputProps.onValueChange(name, type, newValues);
+                              }}
+                            />
+                          </>
                         )}
                       </div>
                     ))}
