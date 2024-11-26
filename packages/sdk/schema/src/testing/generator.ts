@@ -4,7 +4,7 @@
 
 import { Effect, pipe } from 'effect';
 
-import { type EchoDatabase } from '@dxos/echo-db';
+import { type EchoDatabase, type ReactiveEchoObject } from '@dxos/echo-db';
 import {
   create,
   getSchemaReference,
@@ -128,35 +128,42 @@ export const createArrayPipeline = <T extends BaseObject<T>>(
  * - Consistent error processing.
  */
 // TODO(burdon): Use Effect.gen.
-export const createObjectPipeline = <T extends S.Schema<T>>(generator: ValueGenerator, type: T, db?: EchoDatabase) => {
-  const e1 = (obj: ExcludeId<T>) => Effect.sync(() => createProps(generator, type)(obj));
-  const e2 = (obj: ExcludeId<T>) => Effect.sync(() => createReactiveObject(type)(obj));
-
+export const createObjectPipeline = <T extends S.Schema<T>>(
+  generator: ValueGenerator,
+  type: T,
+  db?: EchoDatabase,
+): Effect.Effect<T, never, never> => {
   if (!db) {
     return (obj: ExcludeId<T>): Effect.Effect<BaseObject<T>> => {
-      return pipe(
+      const a = pipe(
         Effect.succeed(obj),
         // Effect.tap(logObject('before')),
-        Effect.flatMap(e1),
-        Effect.flatMap(e2),
+        Effect.map((obj) => createProps(generator, type)(obj)),
+        Effect.map((obj) => createReactiveObject(type)(obj)),
         // Effect.tap(logObject('after')),
       );
+
+      return a;
     };
   } else {
-    const e3 = (obj: BaseObject<T>) => Effect.promise(() => createReferences(type, db)(obj));
-    const e4 = (obj: BaseObject<T>) => Effect.sync(() => addToDatabase(db)(obj));
-
     // TODO(burdon): Types (unify?)
     return (obj: ExcludeId<T>) => {
-      return pipe(
+      const a = pipe(
         Effect.succeed(obj),
         // Effect.tap(logObject('before')),
-        Effect.flatMap(e1),
-        Effect.flatMap(e2),
-        Effect.flatMap(e3),
-        Effect.flatMap(e4),
+        Effect.map((obj) => createProps(generator, type)(obj)),
+        Effect.map((obj) => createReactiveObject(type)(obj)),
+        Effect.flatMap((obj) => Effect.promise(() => createReferences(type, db)(obj))),
+        Effect.map((obj) => addToDatabase(db)(obj)),
         // Effect.tap(logObject('after')),
       );
+      return a;
     };
   }
 };
+
+type Foo = {};
+const a: ReactiveEchoObject<Foo> = {} as any;
+const b: ReactiveObject<Foo> = a;
+
+console.log(b);
