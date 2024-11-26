@@ -10,7 +10,7 @@ import React, { useEffect, useState } from 'react';
 import {
   create,
   type Echo,
-  type EchoReactiveObject,
+  type ReactiveEchoObject,
   type FilterSource,
   type Space,
   SpaceState,
@@ -54,7 +54,7 @@ const actionWeights = {
 };
 
 // TODO(wittjosiah): Factor out.
-const memoizeQuery = <T extends EchoReactiveObject<any>>(
+const memoizeQuery = <T extends ReactiveEchoObject<any>>(
   spaceOrEcho?: Space | Echo,
   filter?: FilterSource<T>,
   options?: QueryOptions,

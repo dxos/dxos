@@ -5,7 +5,7 @@
 import { X } from '@phosphor-icons/react';
 import React from 'react';
 
-import { type EchoReactiveObject, createDocAccessor } from '@dxos/client/echo';
+import { type ReactiveEchoObject, createDocAccessor } from '@dxos/client/echo';
 import { getMeta, getSchema } from '@dxos/echo-schema';
 import { Button, Input, useThemeContext } from '@dxos/react-ui';
 import {
@@ -22,7 +22,7 @@ const MAX_RENDERED_COUNT = 80;
 
 export type ItemListProps<T> = { objects: T[] } & Pick<ItemProps<T>, 'debug' | 'onDelete'>;
 
-export const ItemList = ({ objects, debug, ...props }: ItemListProps<EchoReactiveObject<any>>) => {
+export const ItemList = ({ objects, debug, ...props }: ItemListProps<ReactiveEchoObject<any>>) => {
   return (
     <div className='flex flex-col grow overflow-hidden'>
       <div className='flex flex-col overflow-y-scroll pr-2'>
@@ -52,7 +52,7 @@ export type ItemProps<T> = {
 
 // TODO(burdon): Use ui list with key nav/selection.
 // TODO(burdon): Toggle options to show deleted.
-export const Item = ({ object, onDelete }: ItemProps<EchoReactiveObject<any>>) => {
+export const Item = ({ object, onDelete }: ItemProps<ReactiveEchoObject<any>>) => {
   const schema = getSchema(object);
   if (!schema) {
     return <DebugItem object={object} onDelete={onDelete} />;
@@ -62,8 +62,8 @@ export const Item = ({ object, onDelete }: ItemProps<EchoReactiveObject<any>>) =
   const props = mapSchemaToFields(schema);
 
   // TODO(burdon): [API]: Type check?
-  const getValue = (object: EchoReactiveObject<any>, prop: string) => (object as any)[prop];
-  const setValue = (object: EchoReactiveObject<any>, prop: string, value: any) => ((object as any)[prop] = value);
+  const getValue = (object: ReactiveEchoObject<any>, prop: string) => (object as any)[prop];
+  const setValue = (object: ReactiveEchoObject<any>, prop: string, value: any) => ((object as any)[prop] = value);
 
   return (
     <div className={mx('flex m-1 p-2 border', subtleHover)}>
@@ -106,7 +106,7 @@ export const Item = ({ object, onDelete }: ItemProps<EchoReactiveObject<any>>) =
   );
 };
 
-const Editor = ({ object, prop }: { object: EchoReactiveObject<any>; prop: string }) => {
+const Editor = ({ object, prop }: { object: ReactiveEchoObject<any>; prop: string }) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
     return {
@@ -124,7 +124,7 @@ const Editor = ({ object, prop }: { object: EchoReactiveObject<any>; prop: strin
 };
 
 // TODO(burdon): Add metadata.
-export const DebugItem = ({ object, onDelete }: Pick<ItemProps<EchoReactiveObject<any>>, 'object' | 'onDelete'>) => {
+export const DebugItem = ({ object, onDelete }: Pick<ItemProps<ReactiveEchoObject<any>>, 'object' | 'onDelete'>) => {
   const meta = getMeta(object);
   const deleted = JSON.stringify(object).indexOf('@deleted') !== -1; // TODO(burdon): [API] Missing API.
   return (

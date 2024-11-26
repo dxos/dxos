@@ -4,8 +4,7 @@
 
 import { truncateKey } from '@dxos/debug';
 
-// TODO(burdon): Add chalk.
-// TODO(burdon): https://www.npmjs.com/package/object-treeify
+// TODO(burdon): See also https://www.npmjs.com/package/object-treeify
 
 export type TreeNode = {
   id: string;
@@ -16,10 +15,10 @@ export type TreeNode = {
  * Create tree using depth first traversal.
  * https://waylonwalker.com/drawing-ascii-boxes/#connectors
  */
-export const treeLogger = (node: TreeNode, ancestors: [TreeNode, number][] = [], rows: string[] = []) => {
+export const stringifyTree = (node: TreeNode, ancestors: [TreeNode, number][] = [], rows: string[] = []) => {
   if (node.children?.length) {
     node.children!.forEach((child: TreeNode, i) => {
-      treeLogger(child, [...ancestors, [node, i]], rows);
+      stringifyTree(child, [...ancestors, [node, i]], rows);
     });
   } else {
     const keyLen = 8;

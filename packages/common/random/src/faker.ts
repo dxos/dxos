@@ -22,6 +22,7 @@ import {
   seed,
 } from '@ngneat/falso';
 
+import { randAirport } from './data';
 import { type Range, getCount, multiple, toRange, uniqueArray } from './util';
 
 // Fake faker.
@@ -100,5 +101,8 @@ export const faker = {
   },
   commerce: {
     productName: () => randProductName(),
+  },
+  geo: {
+    airport: () => randAirport(),
   },
 };

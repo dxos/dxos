@@ -76,10 +76,11 @@ export enum VisitResult {
 
 export type Path = (string | number)[];
 
-export type Tester = (node: AST.AST, path: Path, depth: number) => VisitResult | undefined;
-export type Visitor = (node: AST.AST, path: Path, depth: number) => void;
+export type TestFn = (node: AST.AST, path: Path, depth: number) => VisitResult | boolean | undefined;
 
-const defaultTest: Tester = (node) => (isSimpleType(node) ? VisitResult.CONTINUE : VisitResult.SKIP);
+export type VisitorFn = (node: AST.AST, path: Path, depth: number) => void;
+
+const defaultTest: TestFn = isSimpleType;
 
 /**
  * Visit leaf nodes.
@@ -88,24 +89,33 @@ const defaultTest: Tester = (node) => (isSimpleType(node) ? VisitResult.CONTINUE
  * - https://github.com/syntax-tree/unist-util-is?tab=readme-ov-file#test
  */
 export const visit: {
-  (node: AST.AST, visitor: Visitor): void;
-  (node: AST.AST, test: Tester, visitor: Visitor): void;
-} = (node: AST.AST, testOrVisitor: Tester | Visitor, visitor?: Visitor): void => {
+  (node: AST.AST, visitor: VisitorFn): void;
+  (node: AST.AST, test: TestFn, visitor: VisitorFn): void;
+} = (node: AST.AST, testOrVisitor: TestFn | VisitorFn, visitor?: VisitorFn): void => {
   if (!visitor) {
     visitNode(node, defaultTest, testOrVisitor);
   } else {
-    visitNode(node, testOrVisitor as Tester, visitor);
+    visitNode(node, testOrVisitor as TestFn, visitor);
   }
 };
 
 const visitNode = (
   node: AST.AST,
-  test: Tester | undefined,
-  visitor: Visitor,
+  test: TestFn | undefined,
+  visitor: VisitorFn,
   path: Path = [],
   depth = 0,
 ): VisitResult | undefined => {
-  const result = test?.(node, path, depth) ?? VisitResult.CONTINUE;
+  const _result = test?.(node, path, depth);
+  const result: VisitResult =
+    _result === undefined
+      ? VisitResult.CONTINUE
+      : typeof _result === 'boolean'
+        ? _result
+          ? VisitResult.CONTINUE
+          : VisitResult.SKIP
+        : _result;
+
   if (result === VisitResult.EXIT) {
     return result;
   }
@@ -256,6 +266,7 @@ export const getAnnotation =
  * Recursively descend into AST to find first matching annotations.
  * Optionally skips default annotations for basic types (e.g., 'a string').
  */
+// TODO(burdon): Convert to effect pattern (i.e., return operator like getAnnotation).
 export const findAnnotation = <T>(node: AST.AST, annotationId: symbol, noDefault = true): T | undefined => {
   const getAnnotationById = getAnnotation(annotationId, noDefault);
 

@@ -4,18 +4,17 @@
 
 import React, { type FC, type PropsWithChildren } from 'react';
 
-import { type FormatEnum } from '@dxos/echo-schema';
+import { type BaseObject, type FormatEnum, type PropertyKey } from '@dxos/echo-schema';
 import { type SimpleType } from '@dxos/effect';
 import { Icon, Tooltip } from '@dxos/react-ui';
 import { errorText } from '@dxos/react-ui-theme';
-import { type PropertyKey } from '@dxos/schema';
 
 import { type FormHandler } from '../../hooks';
 
 /**
  * Props passed to input components.
  */
-export type InputProps<T extends object = {}> = {
+export type InputProps<T extends BaseObject> = {
   property: PropertyKey<T>;
   type: SimpleType;
   format?: FormatEnum;
@@ -27,8 +26,7 @@ export type InputProps<T extends object = {}> = {
 /**
  * Form input component.
  */
-// TODO(burdon): Remove generic from inputs.
-export type InputComponent<T extends object = {}> = FC<InputProps<T>>;
+export type InputComponent<T extends BaseObject> = FC<InputProps<T>>;
 
 export type InputHeaderProps = PropsWithChildren<{
   error?: string;
