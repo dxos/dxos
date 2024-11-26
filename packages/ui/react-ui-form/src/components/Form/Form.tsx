@@ -147,8 +147,6 @@ export const Form = <T extends BaseObject>({
                   ? getDiscriminatedType(baseNode, values[name] as any)
                   : findNode(elementType, AST.isTypeLiteral);
 
-                console.log(typeLiteral);
-
                 if (typeLiteral) {
                   const schema = S.make(typeLiteral);
 
@@ -157,7 +155,6 @@ export const Form = <T extends BaseObject>({
                       <InputHeader>{label}</InputHeader>
                       <div role='none' className='flex flex-col gap-1'>
                         {arrayValues.map((value, index) => {
-                          console.log(value);
                           return (
                             <div key={index} role='none' className='flex items-center gap-1'>
                               <div role='none' className='flex-1'>
