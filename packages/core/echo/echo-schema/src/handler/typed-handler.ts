@@ -190,6 +190,7 @@ const setSchemaProperties = (obj: any, schema: S.Schema<any>) => {
 };
 
 export const prepareTypedTarget = <T>(target: T, schema: S.Schema<T>) => {
+  // log.info('prepareTypedTarget', { target, schema });
   if (!AST.isTypeLiteral(schema.ast)) {
     throw new Error('schema has to describe an object type');
   }

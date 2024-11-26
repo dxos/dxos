@@ -8,6 +8,7 @@ import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { create, Expando } from '@dxos/echo-schema';
+import { Contact } from '@dxos/echo-schema/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
@@ -17,7 +18,7 @@ import { range } from '@dxos/util';
 import { Filter } from './filter';
 import { type ReactiveEchoObject, getObjectCore } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
-import { Contact, EchoTestBuilder, type EchoTestPeer } from '../testing';
+import { EchoTestBuilder, type EchoTestPeer } from '../testing';
 
 const createTestObject = (idx: number, label?: string) => {
   return create(Expando, { idx, title: `Task ${idx}`, label });
@@ -428,16 +429,16 @@ describe('Queries with types', () => {
     await asyncTimeout(anotherContactAdded.wait(), 1000);
   });
 
-  test.skip('query mutable schema objects', async () => {
+  test('query mutable schema objects', async () => {
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);
     const { db } = await testBuilder.createDatabase();
 
     const schema = db.schemaRegistry.addSchema(Contact);
-    // TODO(burdon): ERROR: schema has to describe an object type.
     const contact = db.add(create(schema, {}));
 
-    const query = db.query(Filter.typename(Contact.typename));
+    // NOTE: Must use `Filter.schema` with MutableSchema instance since matching is done by the object ID of the mutable schema.
+    const query = db.query(Filter.schema(schema));
     const result = await query.run();
     expect(result.objects).to.have.length(1);
     expect(result.objects[0]).to.eq(contact);

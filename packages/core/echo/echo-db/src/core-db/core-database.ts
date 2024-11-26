@@ -685,7 +685,7 @@ export class CoreDatabase {
       if (!objectCore) {
         createdObjectIds.push(updatedObject);
       } else if (objectCore?.docHandle && objectCore.docHandle.url !== event.handle.url) {
-        log.warn('object bound to incorrect document, going to rebind', {
+        log.verbose('object bound to incorrect document, going to rebind', {
           updatedObject,
           documentUrl: objectCore.docHandle.url,
           actualUrl: event.handle.url,

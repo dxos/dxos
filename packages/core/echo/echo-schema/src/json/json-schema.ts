@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Types } from 'effect';
+import { Option, type Types } from 'effect';
 
-import { AST, JSONSchema, S } from '@dxos/effect';
+import { AST, JSONSchema, S, mapAst } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { removeUndefinedProperties } from '@dxos/util';
+import { orderKeys, removeUndefinedProperties } from '@dxos/util';
 
 import {
   GeneratorAnnotationId,
@@ -17,7 +17,6 @@ import {
   ObjectAnnotationId,
   type PropertyMetaAnnotation,
   PropertyMetaAnnotationId,
-  ReferenceAnnotationId,
 } from '../ast';
 import { CustomAnnotations } from '../formats';
 import { createEchoReferenceSchema, Expando, ref, type JsonSchemaReferenceInfo } from '../handler';
@@ -37,7 +36,7 @@ export const createJsonSchema = (schema: S.Struct<any> = S.Struct({})): JsonSche
 
   // TODO(dmaretskyi): Fix those in the serializer.
   jsonSchema.type = 'object';
-  delete (jsonSchema as any).anyOf;
+  delete jsonSchema.anyOf;
   return jsonSchema;
 };
 
@@ -50,9 +49,6 @@ interface EchoRefinement {
 const annotationToRefinementKey: { [annotation: symbol]: keyof EchoRefinement } = {
   [ObjectAnnotationId]: 'type',
   [PropertyMetaAnnotationId]: 'annotations',
-
-  // TODO(dmaretskyi): Remove.
-  [ReferenceAnnotationId]: 'reference',
 };
 
 // TODO(burdon): Are these values stored (can they be changed?)
@@ -94,69 +90,55 @@ export const toPropType = (type?: PropType): string => {
 export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
   invariant(schema);
   const schemaWithRefinements = S.make(withEchoRefinements(schema.ast));
-  const jsonSchema = JSONSchema.make(schemaWithRefinements) as JsonSchemaType;
+  let jsonSchema = JSONSchema.make(schemaWithRefinements) as JsonSchemaType;
   if (jsonSchema.properties && 'id' in jsonSchema.properties) {
     // Put id first.
-    jsonSchema.properties = Object.assign({ id: undefined }, jsonSchema.properties);
+    jsonSchema.properties = orderKeys(jsonSchema.properties, ['id']);
   }
 
   const objectAnnotation = getObjectAnnotation(schema);
   if (objectAnnotation) {
-    (jsonSchema as any).$id = `dxn:type:${objectAnnotation.typename}`;
-    (jsonSchema as any).version = objectAnnotation.version;
+    jsonSchema.$id = `dxn:type:${objectAnnotation.typename}`;
+    jsonSchema.version = objectAnnotation.version;
   }
 
   // Fix field order.
   // TODO(dmaretskyi): Makes sure undefined is not left on optional fields for the resulting object .
   // TODO(dmaretskyi): `orderFields` util.
-  // jsonSchema = Object.assign(
-  //   {
-  //     $schema: undefined,
-  //     $id: undefined,
-  //     version: undefined,
-  //     type: undefined,
-  //   },
-  //   jsonSchema,
-  // );
+  jsonSchema = orderKeys(jsonSchema, [
+    '$schema',
+    '$id',
+    'version',
+    'type',
+    'properties',
+    'required',
+    'items',
+    'enum',
+    'anyOf',
+    'additionalProperties',
+  ]);
 
   return jsonSchema;
 };
 
 const withEchoRefinements = (ast: AST.AST): AST.AST => {
-  let recursiveResult: AST.AST = ast;
-  if (AST.isTypeLiteral(ast)) {
-    recursiveResult = new AST.TypeLiteral(
-      ast.propertySignatures.map(
-        (prop) =>
-          new AST.PropertySignature(
-            prop.name,
-            withEchoRefinements(prop.type),
-            prop.isOptional,
-            prop.isReadonly,
-            prop.annotations,
-          ),
-      ),
-      ast.indexSignatures,
-    );
-  } else if (AST.isUnion(ast)) {
-    recursiveResult = AST.Union.make(
-      ast.types.map((t) => withEchoRefinements(t)),
-      ast.annotations,
-    );
-  } else if (AST.isTupleType(ast)) {
-    recursiveResult = new AST.TupleType(
-      ast.elements.map((t) => new AST.OptionalType(withEchoRefinements(t.type), t.isOptional, t.annotations)),
-      ast.rest.map((t) => new AST.Type(withEchoRefinements(t.type), t.annotations)),
-      ast.isReadonly,
-      ast.annotations,
-    );
+  let recursiveResult: AST.AST;
+  if (AST.isSuspend(ast)) {
+    // Precompute JSON schema for suspended AST since effect serializer does not support it.
+    const suspendedAst = ast.f();
+    const jsonSchema = toJsonSchema(S.make(suspendedAst));
+    recursiveResult = new AST.Suspend(() => withEchoRefinements(suspendedAst), {
+      [AST.JSONSchemaAnnotationId]: jsonSchema,
+    });
+  } else {
+    recursiveResult = mapAst(ast, withEchoRefinements);
   }
 
   const annotationFields = annotationsToJsonSchemaFields(ast.annotations);
   if (Object.keys(annotationFields).length === 0) {
     return recursiveResult;
   } else {
-    return new AST.Refinement(recursiveResult, () => null as any, {
+    return makeAnnotatedRefinement(recursiveResult, {
       [AST.JSONSchemaAnnotationId]: annotationFields,
     });
   }
@@ -381,4 +363,8 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): AST.Annotations 
   }
 
   return annotations;
+};
+
+const makeAnnotatedRefinement = (ast: AST.AST, annotations: AST.Annotations): AST.Refinement => {
+  return new AST.Refinement(ast, () => Option.none(), annotations);
 };
