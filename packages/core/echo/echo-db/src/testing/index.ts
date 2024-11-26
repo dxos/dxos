@@ -3,4 +3,3 @@
 //
 
 export * from './echo-test-builder';
-export * from './schema';
