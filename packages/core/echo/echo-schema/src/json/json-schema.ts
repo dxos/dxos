@@ -4,10 +4,10 @@
 
 import { Option, type Types } from 'effect';
 
-import { AST, JSONSchema, S } from '@dxos/effect';
+import { AST, JSONSchema, S, mapAst } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { removeUndefinedProperties } from '@dxos/util';
+import { orderKeys, removeUndefinedProperties } from '@dxos/util';
 
 import {
   GeneratorAnnotationId,
@@ -97,19 +97,19 @@ export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
   let jsonSchema = JSONSchema.make(schemaWithRefinements) as JsonSchemaType;
   if (jsonSchema.properties && 'id' in jsonSchema.properties) {
     // Put id first.
-    jsonSchema.properties = orderFields(jsonSchema.properties, ['id']);
+    jsonSchema.properties = orderKeys(jsonSchema.properties, ['id']);
   }
 
   const objectAnnotation = getObjectAnnotation(schema);
   if (objectAnnotation) {
-    (jsonSchema as any).$id = `dxn:type:${objectAnnotation.typename}`;
-    (jsonSchema as any).version = objectAnnotation.version;
+    jsonSchema.$id = `dxn:type:${objectAnnotation.typename}`;
+    jsonSchema.version = objectAnnotation.version;
   }
 
   // Fix field order.
   // TODO(dmaretskyi): Makes sure undefined is not left on optional fields for the resulting object .
   // TODO(dmaretskyi): `orderFields` util.
-  jsonSchema = orderFields(jsonSchema, [
+  jsonSchema = orderKeys(jsonSchema, [
     '$schema',
     '$id',
     'version',
@@ -123,22 +123,6 @@ export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
   ]);
 
   return jsonSchema;
-};
-
-// TODO(dmaretskyi): Extract.
-const orderFields = <O extends {}>(obj: O, order: (keyof O)[]): O => {
-  const ordered: Partial<O> = {};
-  for (const key of order) {
-    if (key in obj) {
-      ordered[key] = obj[key];
-    }
-  }
-  for (const key in obj) {
-    if (!(key in ordered)) {
-      ordered[key] = obj[key];
-    }
-  }
-  return ordered as O;
 };
 
 const withEchoRefinements = (ast: AST.AST): AST.AST => {
@@ -161,41 +145,6 @@ const withEchoRefinements = (ast: AST.AST): AST.AST => {
     return makeAnnotatedRefinement(recursiveResult, {
       [AST.JSONSchemaAnnotationId]: annotationFields,
     });
-  }
-};
-
-/**
- * Maps AST nodes.
- * The user is responsible for recursively calling {@link mapAst} on the AST.
- * NOTE: Will evaluate suspended ASTs.
- */
-// TODO(dmaretskyi): Extract.
-const mapAst = (ast: AST.AST, f: (ast: AST.AST) => AST.AST): AST.AST => {
-  switch (ast._tag) {
-    case 'TypeLiteral':
-      return new AST.TypeLiteral(
-        ast.propertySignatures.map(
-          (prop) =>
-            new AST.PropertySignature(prop.name, f(prop.type), prop.isOptional, prop.isReadonly, prop.annotations),
-        ),
-        ast.indexSignatures,
-      );
-    case 'Union':
-      return AST.Union.make(ast.types.map(f), ast.annotations);
-    case 'TupleType':
-      return new AST.TupleType(
-        ast.elements.map((t) => new AST.OptionalType(f(t.type), t.isOptional, t.annotations)),
-        ast.rest.map((t) => new AST.Type(f(t.type), t.annotations)),
-        ast.isReadonly,
-        ast.annotations,
-      );
-    case 'Suspend': {
-      const newAst = f(ast.f());
-      return new AST.Suspend(() => newAst, ast.annotations);
-    }
-    default:
-      // TODO(dmaretskyi): Support more nodes.
-      return ast;
   }
 };
 
