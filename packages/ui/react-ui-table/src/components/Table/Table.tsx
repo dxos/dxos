@@ -48,8 +48,8 @@ const TableRoot = ({ children, role }: TableRootProps) => {
       className={mx(
         'relative border-bs !border-separator',
         role === 'section'
-          ? 'attention-surface overflow-hidden [&_.dx-grid]:max-is-max'
-          : 'flex flex-col [&_.dx-grid]:grow [&_.dx-grid]:max-is-max [&_.dx-grid]:bs-0 [&_.dx-grid]:max-bs-max',
+          ? 'attention-surface overflow-hidden [&_.dx-grid]:max-is-[--dx-grid-content-inline-size]'
+          : 'flex flex-col [&_.dx-grid]:grow [&_.dx-grid]:max-is-[--dx-grid-content-inline-size] [&_.dx-grid]:bs-0 [&_.dx-grid]:max-bs-[--dx-grid-content-block-size]',
       )}
     >
       {children}

@@ -4,8 +4,12 @@
 
 import { expect, type Locator, type Page } from '@playwright/test';
 
-import type { DxGridPlanePosition } from '../types';
+import type { DxGridPlanePosition } from '../../types';
 
+/**
+ * Test helper for managing dx-grid interactions and assertions in Playwright tests.
+ * Provides utilities for cell selection, grid navigation, virtualization checks and event handling.
+ */
 export class DxGridManager {
   constructor(page: Page, grid: Locator = page.locator('dx-grid')) {
     this.grid = grid;
