@@ -83,7 +83,7 @@ export const createReferences = <T extends BaseObject<T>>(type: S.Schema<T>, db:
           const { objects } = await db.query((obj) => getTypename(obj) === typename).run();
           if (objects.length) {
             const object = faker.helpers.arrayElement(objects);
-            obj[property.name] = object;
+            (obj as any)[property.name] = object;
           }
         }
       }
