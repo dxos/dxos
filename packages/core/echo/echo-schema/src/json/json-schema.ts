@@ -94,10 +94,10 @@ export const toPropType = (type?: PropType): string => {
 export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
   invariant(schema);
   const schemaWithRefinements = S.make(withEchoRefinements(schema.ast));
-  const jsonSchema = JSONSchema.make(schemaWithRefinements) as JsonSchemaType;
+  let jsonSchema = JSONSchema.make(schemaWithRefinements) as JsonSchemaType;
   if (jsonSchema.properties && 'id' in jsonSchema.properties) {
     // Put id first.
-    jsonSchema.properties = Object.assign({ id: undefined }, jsonSchema.properties);
+    jsonSchema.properties = orderFields(jsonSchema.properties, ['id']);
   }
 
   const objectAnnotation = getObjectAnnotation(schema);
@@ -109,17 +109,36 @@ export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
   // Fix field order.
   // TODO(dmaretskyi): Makes sure undefined is not left on optional fields for the resulting object .
   // TODO(dmaretskyi): `orderFields` util.
-  // jsonSchema = Object.assign(
-  //   {
-  //     $schema: undefined,
-  //     $id: undefined,
-  //     version: undefined,
-  //     type: undefined,
-  //   },
-  //   jsonSchema,
-  // );
+  jsonSchema = orderFields(jsonSchema, [
+    '$schema',
+    '$id',
+    'version',
+    'type',
+    'properties',
+    'required',
+    'items',
+    'enum',
+    'anyOf',
+    'additionalProperties',
+  ]);
 
   return jsonSchema;
+};
+
+// TODO(dmaretskyi): Extract.
+const orderFields = <O extends {}>(obj: O, order: (keyof O)[]): O => {
+  const ordered: Partial<O> = {};
+  for (const key of order) {
+    if (key in obj) {
+      ordered[key] = obj[key];
+    }
+  }
+  for (const key in obj) {
+    if (!(key in ordered)) {
+      ordered[key] = obj[key];
+    }
+  }
+  return ordered as O;
 };
 
 const withEchoRefinements = (ast: AST.AST): AST.AST => {
