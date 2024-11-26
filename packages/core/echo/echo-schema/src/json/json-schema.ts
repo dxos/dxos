@@ -123,42 +123,16 @@ export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
 };
 
 const withEchoRefinements = (ast: AST.AST): AST.AST => {
-  let recursiveResult: AST.AST = ast;
-
-  // TODO(dmaretskyi): use AST visitor/mapper.
-  if (AST.isTypeLiteral(ast)) {
-    recursiveResult = new AST.TypeLiteral(
-      ast.propertySignatures.map(
-        (prop) =>
-          new AST.PropertySignature(
-            prop.name,
-            withEchoRefinements(prop.type),
-            prop.isOptional,
-            prop.isReadonly,
-            prop.annotations,
-          ),
-      ),
-      ast.indexSignatures,
-    );
-  } else if (AST.isUnion(ast)) {
-    recursiveResult = AST.Union.make(
-      ast.types.map((t) => withEchoRefinements(t)),
-      ast.annotations,
-    );
-  } else if (AST.isTupleType(ast)) {
-    recursiveResult = new AST.TupleType(
-      ast.elements.map((t) => new AST.OptionalType(withEchoRefinements(t.type), t.isOptional, t.annotations)),
-      ast.rest.map((t) => new AST.Type(withEchoRefinements(t.type), t.annotations)),
-      ast.isReadonly,
-      ast.annotations,
-    );
-  } else if (AST.isSuspend(ast)) {
+  let recursiveResult: AST.AST;
+  if (AST.isSuspend(ast)) {
     // Precompute JSON schema for suspended AST since effect serializer does not support it.
     const suspendedAst = ast.f();
     const jsonSchema = toJsonSchema(S.make(suspendedAst));
     recursiveResult = new AST.Suspend(() => withEchoRefinements(suspendedAst), {
       [AST.JSONSchemaAnnotationId]: jsonSchema,
     });
+  } else {
+    recursiveResult = mapAst(ast, withEchoRefinements);
   }
 
   const annotationFields = annotationsToJsonSchemaFields(ast.annotations);
@@ -168,6 +142,40 @@ const withEchoRefinements = (ast: AST.AST): AST.AST => {
     return makeAnnotatedRefinement(recursiveResult, {
       [AST.JSONSchemaAnnotationId]: annotationFields,
     });
+  }
+};
+
+/**
+ * Maps AST nodes.
+ * The user is responsible for recursively calling {@link mapAst} on the AST.
+ * NOTE: Will evaluate suspended ASTs.
+ */
+// TODO(dmaretskyi): Extract.
+const mapAst = (ast: AST.AST, f: (ast: AST.AST) => AST.AST): AST.AST => {
+  switch (ast._tag) {
+    case 'TypeLiteral':
+      return new AST.TypeLiteral(
+        ast.propertySignatures.map(
+          (prop) =>
+            new AST.PropertySignature(prop.name, f(prop.type), prop.isOptional, prop.isReadonly, prop.annotations),
+        ),
+        ast.indexSignatures,
+      );
+    case 'Union':
+      return AST.Union.make(ast.types.map(f), ast.annotations);
+    case 'TupleType':
+      return new AST.TupleType(
+        ast.elements.map((t) => new AST.OptionalType(f(t.type), t.isOptional, t.annotations)),
+        ast.rest.map((t) => new AST.Type(f(t.type), t.annotations)),
+        ast.isReadonly,
+        ast.annotations,
+      );
+    case 'Suspend':
+      const newAst = f(ast.f());
+      return new AST.Suspend(() => newAst, ast.annotations);
+    default:
+      // TODO(dmaretskyi): Support more nodes.
+      return ast;
   }
 };
 
