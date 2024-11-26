@@ -37,7 +37,7 @@ export const createJsonSchema = (schema: S.Struct<any> = S.Struct({})): JsonSche
 
   // TODO(dmaretskyi): Fix those in the serializer.
   jsonSchema.type = 'object';
-  delete (jsonSchema as any).anyOf;
+  delete jsonSchema.anyOf;
   return jsonSchema;
 };
 
