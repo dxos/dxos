@@ -8,7 +8,8 @@ import { create, S, TypedObject } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 
 import { Filter, ResultFormat } from '../query';
-import { EchoTestBuilder, Task } from '../testing';
+import { EchoTestBuilder } from '../testing';
+import { Task } from '@dxos/echo-schema/testing';
 
 describe('Plain object format', () => {
   test('can query and mutate data', async () => {

@@ -13,7 +13,8 @@ import { type EchoDatabase } from './proxy-db';
 import { Filter } from './query';
 import type { SerializedSpace } from './serialized-space';
 import { Serializer } from './serializer';
-import { Contact, EchoTestBuilder, Task } from './testing';
+import { EchoTestBuilder } from './testing';
+import { Contact, Task } from '@dxos/echo-schema/testing';
 
 describe('Serializer', () => {
   let builder: EchoTestBuilder;

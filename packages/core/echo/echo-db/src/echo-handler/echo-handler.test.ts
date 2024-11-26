@@ -22,6 +22,8 @@ import {
   ref,
 } from '@dxos/echo-schema';
 import {
+  Contact,
+  Task,
   TestClass,
   TestNestedType,
   TestSchema,
@@ -40,7 +42,7 @@ import { getObjectCore } from './echo-handler';
 import { getDatabaseFromObject } from './util';
 import { loadObjectReferences } from '../proxy-db';
 import { Filter } from '../query';
-import { Contact, EchoTestBuilder, Task } from '../testing';
+import { EchoTestBuilder } from '../testing';
 
 registerSignalsRuntime();
 

@@ -17,7 +17,9 @@ import { range } from '@dxos/util';
 import { Filter } from './filter';
 import { type ReactiveEchoObject, getObjectCore } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
-import { Contact, EchoTestBuilder, type EchoTestPeer } from '../testing';
+import { EchoTestBuilder, type EchoTestPeer } from '../testing';
+import { log } from '@dxos/log';
+import { Contact } from '@dxos/echo-schema/testing';
 
 const createTestObject = (idx: number, label?: string) => {
   return create(Expando, { idx, title: `Task ${idx}`, label });
@@ -428,13 +430,12 @@ describe('Queries with types', () => {
     await asyncTimeout(anotherContactAdded.wait(), 1000);
   });
 
-  test.skip('query mutable schema objects', async () => {
+  test('query mutable schema objects', async () => {
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);
     const { db } = await testBuilder.createDatabase();
 
     const schema = db.schemaRegistry.addSchema(Contact);
-    // TODO(burdon): ERROR: schema has to describe an object type.
     const contact = db.add(create(schema, {}));
 
     const query = db.query(Filter.typename(Contact.typename));

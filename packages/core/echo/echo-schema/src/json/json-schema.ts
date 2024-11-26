@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Types } from 'effect';
+import { Option, type Types } from 'effect';
 
 import { AST, JSONSchema, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -124,6 +124,8 @@ export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
 
 const withEchoRefinements = (ast: AST.AST): AST.AST => {
   let recursiveResult: AST.AST = ast;
+
+  // TODO(dmaretskyi): use AST visitor/mapper.
   if (AST.isTypeLiteral(ast)) {
     recursiveResult = new AST.TypeLiteral(
       ast.propertySignatures.map(
@@ -150,13 +152,20 @@ const withEchoRefinements = (ast: AST.AST): AST.AST => {
       ast.isReadonly,
       ast.annotations,
     );
+  } else if (AST.isSuspend(ast)) {
+    // Precompute JSON schema for suspended AST since effect serializer does not support it.
+    const suspendedAst = ast.f();
+    const jsonSchema = toJsonSchema(S.make(suspendedAst));
+    recursiveResult = new AST.Suspend(() => withEchoRefinements(suspendedAst), {
+      [AST.JSONSchemaAnnotationId]: jsonSchema,
+    });
   }
 
   const annotationFields = annotationsToJsonSchemaFields(ast.annotations);
   if (Object.keys(annotationFields).length === 0) {
     return recursiveResult;
   } else {
-    return new AST.Refinement(recursiveResult, () => null as any, {
+    return makeAnnotatedRefinement(recursiveResult, {
       [AST.JSONSchemaAnnotationId]: annotationFields,
     });
   }
@@ -381,4 +390,8 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): AST.Annotations 
   }
 
   return annotations;
+};
+
+const makeAnnotatedRefinement = (ast: AST.AST, annotations: AST.Annotations): AST.Refinement => {
+  return new AST.Refinement(ast, () => Option.none(), annotations);
 };

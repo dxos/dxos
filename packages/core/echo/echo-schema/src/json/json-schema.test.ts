@@ -13,6 +13,8 @@ import { FormatAnnotationId } from '../formats';
 import { Email } from '../formats/string';
 import { ref } from '../handler';
 import { TypedObject } from '../object';
+import { Contact } from '../testing';
+import { log } from '@dxos/log';
 
 describe('effect-to-json', () => {
   test('type annotation', () => {
@@ -112,6 +114,11 @@ describe('effect-to-json', () => {
       },
       additionalProperties: false,
     });
+  });
+
+  test('Contact schema serialization', () => {
+    const schema = toJsonSchema(Contact);
+    expect(Object.keys(schema.properties!)).toEqual(['id', 'name', 'username', 'email', 'tasks', 'address']);
   });
 
   test('references', () => {

@@ -16,7 +16,7 @@ import {
   getType,
   type ReactiveObject,
 } from '@dxos/echo-schema';
-import { updateCounter } from '@dxos/echo-schema/testing';
+import { Contact, Container, RecordType, Task, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
@@ -24,7 +24,7 @@ import { range } from '@dxos/util';
 
 import { getObjectCore, clone } from '../echo-handler';
 import { Filter } from '../query';
-import { Contact, Container, EchoTestBuilder, RecordType, Task } from '../testing';
+import { EchoTestBuilder } from '../testing';
 
 // TODO(burdon): Normalize tests to use common graph data (see query.test.ts).
 
