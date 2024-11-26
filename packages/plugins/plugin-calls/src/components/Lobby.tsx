@@ -11,7 +11,6 @@ import { Button } from '../app/components/Button';
 import { CameraButton } from '../app/components/CameraButton';
 import { MicButton } from '../app/components/MicButton';
 import { SelfView } from '../app/components/SelfView';
-import { SettingsButton } from '../app/components/SettingsDialog';
 import { useSubscribedState } from '../app/hooks/rxjsHooks';
 import { useRoomContext } from '../app/hooks/useRoomContext';
 import { errorMessageMap } from '../app/hooks/useUserMedia';
@@ -89,7 +88,6 @@ export const Lobby: React.FC = () => {
           )}
           <MicButton />
           <CameraButton />
-          <SettingsButton />
         </div>
       </div>
       <div className='flex-1' />

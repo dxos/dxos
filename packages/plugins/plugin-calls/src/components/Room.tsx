@@ -5,8 +5,7 @@
 import { nanoid } from 'nanoid';
 import React, { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { Flipper } from 'react-flip-toolkit';
-import { useNavigate } from 'react-router-dom';
-import { useMeasure, useMount, useWindowSize } from 'react-use';
+import { useMeasure, useMount } from 'react-use';
 
 import { nonNullable } from '@dxos/util';
 
@@ -18,12 +17,8 @@ import { MicButton } from '../app/components/MicButton';
 import { Participant } from '../app/components/Participant';
 import { PullAudioTracks } from '../app/components/PullAudioTracks';
 import { PullVideoTrack } from '../app/components/PullVideoTrack';
-import { ScreenshareButton } from '../app/components/ScreenshareButton';
-import { SettingsButton } from '../app/components/SettingsDialog';
 import useBroadcastStatus from '../app/hooks/useBroadcastStatus';
-import useIsSpeaking from '../app/hooks/useIsSpeaking';
 import { useRoomContext } from '../app/hooks/useRoomContext';
-import useStageManager from '../app/hooks/useStageManager';
 import { calculateLayout } from '../app/utils/calculateLayout';
 
 const useDebugEnabled = () => {
@@ -77,21 +72,7 @@ const useGridDebugControls = ({ initialCount, enabled }: { initialCount: number;
   };
 };
 
-export default () => {
-  const mode: string = 'production';
-  const { joined } = useRoomContext()!;
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!joined && mode !== 'development') {
-      navigate('/');
-    }
-  }, [joined, mode, navigate]);
-
-  if (!joined && mode !== 'development') {
-    return null;
-  }
-
+export const Room = () => {
   return <JoinedRoom />;
 };
 
@@ -101,12 +82,7 @@ const JoinedRoom = () => {
     peer,
     dataSaverMode,
     pushedTracks,
-    room: {
-      otherUsers,
-      websocket,
-      identity,
-      roomState: { meetingId },
-    },
+    room: { otherUsers, websocket, identity },
   } = useRoomContext()!;
 
   const debugEnabled = useDebugEnabled();
@@ -120,8 +96,6 @@ const JoinedRoom = () => {
 
   const totalUsers = 1 + fakeUsers.length + otherUsers.length;
 
-  const speaking = useIsSpeaking(userMedia.audioStreamTrack);
-
   useMount(() => {
     if (otherUsers.length > 5) {
       userMedia.turnMicOff();
@@ -134,22 +108,7 @@ const JoinedRoom = () => {
     websocket,
     identity,
     pushedTracks,
-    speaking,
   });
-
-  const { width } = useWindowSize();
-
-  const stageLimit = width < 600 ? 2 : 8;
-
-  const { recordActivity, actorsOnStage } = useStageManager(otherUsers, stageLimit);
-
-  useEffect(() => {
-    otherUsers.forEach((u) => {
-      if (u.speaking || u.raisedHand || u.tracks.screenShareEnabled) {
-        recordActivity(u);
-      }
-    });
-  }, [otherUsers, recordActivity]);
 
   const [pinnedId, setPinnedId] = useState<string>();
 
@@ -196,19 +155,7 @@ const JoinedRoom = () => {
               />
             )}
 
-            {identity && userMedia.screenShareVideoTrack && userMedia.screenShareEnabled && (
-              <Participant
-                user={identity}
-                flipId={'identity user screenshare'}
-                isSelf
-                isScreenShare
-                videoTrack={userMedia.screenShareVideoTrack}
-                pinnedId={pinnedId}
-                setPinnedId={setPinnedId}
-                showDebugInfo={debugEnabled}
-              />
-            )}
-            {actorsOnStage.map((user) => (
+            {otherUsers.map((user) => (
               <Fragment key={user.id}>
                 <PullVideoTrack video={dataSaverMode ? undefined : user.tracks.video} audio={user.tracks.audio}>
                   {({ videoTrack, audioTrack }) => (
@@ -265,11 +212,9 @@ const JoinedRoom = () => {
         </Flipper>
         <div className='flex flex-wrap items-center justify-center gap-2 p-2 text-sm md:gap-4 md:p-5 md:text-base'>
           <GridDebugControls />
-          <MicButton warnWhenSpeakingWhileMuted />
+          <MicButton />
           <CameraButton />
-          <ScreenshareButton />
-          <SettingsButton />
-          <LeaveRoomButton meetingId={meetingId} />
+          <LeaveRoomButton />
         </div>
       </div>
     </PullAudioTracks>

@@ -9,9 +9,7 @@ import { invariant } from '@dxos/invariant';
 
 import { useStateObservable, useSubscribedState } from './rxjsHooks';
 import { blackCanvasStreamTrack } from '../utils/blackCanvasStreamTrack';
-import type { Mode } from '../utils/mode';
 import { prependDeviceToPrioritizeList } from '../utils/rxjs/devicePrioritization';
-import { getScreenshare$ } from '../utils/rxjs/getScreenshare$';
 import { getUserMediaTrack$ } from '../utils/rxjs/getUserMediaTrack$';
 
 // export const userRejectedPermission = 'NotAllowedError'
@@ -27,9 +25,9 @@ export const errorMessageMap = {
 
 type UserMediaError = keyof typeof errorMessageMap;
 
-const useUserMedia = (mode: Mode) => {
-  const [audioEnabled, setAudioEnabled] = useState(mode === 'production');
-  const [videoEnabled, setVideoEnabled] = useState(true);
+const useUserMedia = () => {
+  const [audioEnabled, setAudioEnabled] = useState(false);
+  const [videoEnabled, setVideoEnabled] = useState(false);
   const [screenShareEnabled, setScreenShareEnabled] = useState(false);
   const [videoUnavailableReason, setVideoUnavailableReason] = useState<UserMediaError>();
   const [audioUnavailableReason, setAudioUnavailableReason] = useState<UserMediaError>();
@@ -118,25 +116,6 @@ const useUserMedia = (mode: Mode) => {
   );
   const audioStreamTrack = useSubscribedState(publicAudioTrack$);
 
-  const screenShareVideoTrack$ = useMemo(
-    () =>
-      screenShareEnabled
-        ? getScreenshare$({ contentHint: 'text' }).pipe(
-            tap({
-              next: (ms) => {
-                if (ms === undefined) {
-                  setScreenShareEnabled(false);
-                }
-              },
-              finalize: () => setScreenShareEnabled(false),
-            }),
-            map((ms) => ms?.getVideoTracks()[0]),
-          )
-        : of(undefined),
-    [screenShareEnabled],
-  );
-  const screenShareVideoTrack = useSubscribedState(screenShareVideoTrack$);
-
   const setVideoDeviceId = (deviceId: string) =>
     navigator.mediaDevices.enumerateDevices().then((devices) => {
       const device = devices.find((d) => d.deviceId === deviceId);
@@ -176,9 +155,7 @@ const useUserMedia = (mode: Mode) => {
 
     startScreenShare,
     endScreenShare,
-    screenShareVideoTrack,
     screenShareEnabled,
-    screenShareVideoTrack$,
   };
 };
 

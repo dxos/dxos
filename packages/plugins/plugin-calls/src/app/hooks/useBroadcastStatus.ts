@@ -18,10 +18,11 @@ interface Config {
   identity?: User;
   websocket: PartySocket;
   pushedTracks: RoomContextType['pushedTracks'];
-  speaking: boolean;
+  speaking?: boolean;
+  raisedHand?: boolean;
 }
 
-export default ({ userMedia, identity, websocket, peer, pushedTracks, speaking }: Config) => {
+export default ({ userMedia, identity, websocket, peer, pushedTracks }: Config) => {
   const { audioEnabled, videoEnabled, screenShareEnabled } = userMedia;
   const { audio, video, screenshare } = pushedTracks;
   const { sessionId } = useSubscribedState(peer.session$) ?? {};
@@ -35,7 +36,7 @@ export default ({ userMedia, identity, websocket, peer, pushedTracks, speaking }
         name,
         joined: true,
         raisedHand: false,
-        speaking,
+        speaking: false,
         transceiverSessionId: sessionId,
         tracks: {
           audioEnabled,
@@ -64,19 +65,7 @@ export default ({ userMedia, identity, websocket, peer, pushedTracks, speaking }
 
       return () => websocket.removeEventListener('open', sendUserUpdate);
     }
-  }, [
-    id,
-    name,
-    websocket,
-    sessionId,
-    audio,
-    video,
-    screenshare,
-    audioEnabled,
-    videoEnabled,
-    screenShareEnabled,
-    speaking,
-  ]);
+  }, [id, name, websocket, sessionId, audio, video, screenshare, audioEnabled, videoEnabled, screenShareEnabled]);
 
   useUnmount(() => {
     if (id && name) {
@@ -88,7 +77,7 @@ export default ({ userMedia, identity, websocket, peer, pushedTracks, speaking }
             name,
             joined: false,
             raisedHand: false,
-            speaking,
+            speaking: false,
             transceiverSessionId: sessionId,
             tracks: {},
           },

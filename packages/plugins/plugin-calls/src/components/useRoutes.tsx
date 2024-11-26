@@ -6,7 +6,7 @@ import React from 'react';
 import { useRoutes as useRouterRoutes } from 'react-router-dom';
 
 import { Lobby } from './Lobby';
-import Room from './Room';
+import { Room } from './Room';
 
 export const namespace = 'devtools';
 

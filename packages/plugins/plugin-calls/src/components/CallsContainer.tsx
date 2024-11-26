@@ -10,8 +10,6 @@ import { useIdentity } from '@dxos/react-client/halo';
 
 import { Calls } from './Calls';
 
-import '../styles/tailwind.css';
-
 const CallsContainer = ({ space, role }: { space: Space; role?: string }) => {
   if (!space) {
     return null;

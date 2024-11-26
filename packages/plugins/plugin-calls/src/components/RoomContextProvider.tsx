@@ -3,21 +3,18 @@
 //
 
 import React, { useState, useMemo, type ReactNode, useEffect } from 'react';
-import { from, of, switchMap } from 'rxjs';
+import { of } from 'rxjs';
 
-import { EnsurePermissions } from '../app/components/EnsurePermissions';
 import { useStateObservable, useSubscribedState } from '../app/hooks/rxjsHooks';
 import { usePeerConnection } from '../app/hooks/usePeerConnection';
 import useRoom from '../app/hooks/useRoom';
 import { RoomContext, type RoomContextType } from '../app/hooks/useRoomContext';
 import { useStablePojo } from '../app/hooks/useStablePojo';
 import useUserMedia from '../app/hooks/useUserMedia';
-import { type Mode } from '../app/utils/mode';
 import { CALLS_URL } from '../types';
 
 // Types for loader function response
 interface RoomData {
-  mode: Mode;
   iceServers: RTCIceServer[];
   feedbackEnabled: boolean;
   maxWebcamFramerate: number;
@@ -47,7 +44,6 @@ export const RoomContextProvider = ({
   // Simulate Remix loader behavior with useEffect
   useEffect(() => {
     setRoomData({
-      mode: 'development',
       iceServers,
       feedbackEnabled: true,
       maxWebcamFramerate: 24,
@@ -61,18 +57,15 @@ export const RoomContextProvider = ({
   }
 
   return (
-    <EnsurePermissions>
-      <Room roomName={roomName!} {...roomData} username={username}>
-        {children}
-      </Room>
-    </EnsurePermissions>
+    <Room roomName={roomName!} {...roomData} username={username}>
+      {children}
+    </Room>
   );
 };
 
 const Room = ({
   username,
   roomName,
-  mode,
   iceServers,
   maxWebcamBitrate,
   maxWebcamFramerate,
@@ -82,7 +75,7 @@ const Room = ({
   const [joined, setJoined] = useState(false);
   const [dataSaverMode, setDataSaverMode] = useState(false);
 
-  const userMedia = useUserMedia(mode);
+  const userMedia = useUserMedia();
   const room = useRoom({ roomName, userMedia, username });
   const { peer, iceConnectionState } = usePeerConnection({
     // apiExtraParams,
@@ -127,13 +120,6 @@ const Room = ({
   );
   const pushedAudioTrack = useSubscribedState(pushedAudioTrack$);
 
-  const pushedScreenSharingTrack$ = useMemo(() => {
-    return userMedia.screenShareVideoTrack$.pipe(
-      switchMap((track) => (track ? from(peer.pushTrack(of(track))) : of(undefined))),
-    );
-  }, [peer, userMedia.screenShareVideoTrack$]);
-  const pushedScreenSharingTrack = useSubscribedState(pushedScreenSharingTrack$);
-
   const context: RoomContextType = {
     joined,
     setJoined,
@@ -148,7 +134,6 @@ const Room = ({
     pushedTracks: {
       video: trackObjectToString(pushedVideoTrack),
       audio: trackObjectToString(pushedAudioTrack),
-      screenshare: trackObjectToString(pushedScreenSharingTrack),
     },
   };
 
