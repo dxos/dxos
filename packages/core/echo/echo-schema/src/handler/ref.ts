@@ -30,15 +30,15 @@ export const getSchemaReference = (property: JsonSchemaType): string | undefined
   }
 };
 
-export const setSchemaReference = (property: JsonSchemaType, schema: string): JsonSchemaType => {
-  return Object.assign(property, {
+export const createSchemaReference = (schema: string): JsonSchemaType => {
+  return {
     $id: JSON_SCHEMA_ECHO_REF_ID,
     reference: {
       schema: {
         $ref: DXN.fromTypename(schema).toString(),
       },
     },
-  });
+  };
 };
 
 export interface ref<T extends BaseObject> extends S.Schema<Ref<T>, EncodedReference> {}

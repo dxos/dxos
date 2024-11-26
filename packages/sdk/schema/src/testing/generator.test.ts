@@ -7,13 +7,12 @@ import { describe, test } from 'vitest';
 
 import { Filter } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { getSchemaTypename, type JsonProp, type S } from '@dxos/echo-schema';
+import { createSchemaReference, setSchemaProperty, getSchemaTypename, type JsonProp, type S } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 
 import { createArrayPipeline, createObjectPipeline } from './generator';
 import { ContactType, OrgType, ProjectType } from './types';
-import { createReferenceProperty } from './util';
 
 faker.seed(1);
 
@@ -47,11 +46,8 @@ describe('Generator', () => {
     const { db } = await builder.createDatabase();
 
     const org = db.schemaRegistry.addSchema(OrgType);
-    const contact = createReferenceProperty(
-      db.schemaRegistry.addSchema(ContactType),
-      'employer' as JsonProp,
-      org.typename,
-    );
+    const contact = db.schemaRegistry.addSchema(ContactType);
+    setSchemaProperty(contact.jsonSchema, 'employer' as JsonProp, createSchemaReference(org.typename));
 
     const spec: TypeSpec[] = [
       { type: org, count: 5 },

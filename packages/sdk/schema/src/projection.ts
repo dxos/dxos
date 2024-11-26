@@ -12,7 +12,7 @@ import {
   TypeEnum,
   type JsonSchemaType,
 } from '@dxos/echo-schema';
-import { getSchemaReference, setSchemaReference } from '@dxos/echo-schema';
+import { getSchemaReference, createSchemaReference } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -144,7 +144,7 @@ export class ViewProjection {
 
       const jsonProperty: JsonSchemaType = {};
       if (referenceSchema) {
-        setSchemaReference(jsonProperty, referenceSchema);
+        Object.assign(jsonProperty, createSchemaReference(referenceSchema));
         type = undefined;
         format = undefined;
       } else if (format) {

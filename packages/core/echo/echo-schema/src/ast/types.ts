@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S } from '@dxos/effect';
+import { type JsonProp, S } from '@dxos/effect';
 
 import { PropertyMeta } from './annotations';
 import { FormatAnnotationId } from '../formats';
@@ -261,3 +261,10 @@ const _JsonSchemaType = S.mutable(
 export interface JsonSchemaType extends S.Schema.Type<typeof _JsonSchemaType> {}
 
 export const JsonSchemaType: S.Schema<JsonSchemaType> = _JsonSchemaType;
+
+// TODO(burdon): Factor out JSON schema utils.
+export const setSchemaProperty = (schema: JsonSchemaType, property: JsonProp, value: JsonSchemaType) => {
+  schema.properties ??= {};
+  schema.properties[property] = value;
+  return schema;
+};

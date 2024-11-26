@@ -42,9 +42,10 @@ import { getSchemaProperties } from '../properties';
 /**
  * Set properties based on generator annotation.
  */
-export const createProps = <T extends BaseObject<T>>(type: S.Schema<T>) => {
-  return (data: ExcludeId<T> = {} as ExcludeId<T>): ExcludeId<T> => {
-    return getSchemaProperties<T>(type.ast).reduce<ExcludeId<T>>((obj, property) => {
+// TODO(burdon): Copy this generics pattern below.
+export const createProps = <T extends S.Schema.All>(type: T) => {
+  return (data: ExcludeId<S.Schema.Type<T>> = {} as ExcludeId<S.Schema.Type<T>>): ExcludeId<S.Schema.Type<T>> => {
+    return getSchemaProperties<S.Schema.Type<T>>(type.ast).reduce<ExcludeId<S.Schema.Type<T>>>((obj, property) => {
       if (obj[property.name] === undefined) {
         if (property.optional && faker.datatype.boolean()) {
           return obj;
@@ -121,6 +122,7 @@ export const createArrayPipeline = <T extends BaseObject<T>>(
  * - Allows for mix of sync and async transformations.
  * - Consistent error processing.
  */
+// TODO(burdon): Use Effect.gen.
 export const createObjectPipeline = <T extends BaseObject<T>>(type: S.Schema<T>, db?: EchoDatabase) => {
   const e1 = (obj: ExcludeId<T>) => Effect.sync(() => createProps(type)(obj));
   const e2 = (obj: ExcludeId<T>) => Effect.sync(() => createReactiveObject(type)(obj));
