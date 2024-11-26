@@ -10,11 +10,10 @@ import type { ButtonProps } from './Button';
 import { Button } from './Button';
 import { Icon } from './Icon/Icon';
 import { useRoomContext } from '../hooks/useRoomContext';
-import { errorMessageMap } from '../hooks/useUserMedia';
 
 export const CameraButton: FC<ButtonProps> = ({ onClick, ...rest }) => {
   const {
-    userMedia: { turnCameraOff, turnCameraOn, videoEnabled, videoUnavailableReason },
+    userMedia: { turnCameraOff, turnCameraOn, videoEnabled },
   } = useRoomContext();
 
   const toggle = () => {
@@ -29,12 +28,9 @@ export const CameraButton: FC<ButtonProps> = ({ onClick, ...rest }) => {
     return false;
   }, toggle);
 
-  const videoUnavailableMessage = videoUnavailableReason ? (errorMessageMap as any)[videoUnavailableReason] : null;
-
   return (
     <Button
       displayType={videoEnabled ? 'secondary' : 'danger'}
-      disabled={!!videoUnavailableMessage}
       onClick={(e) => {
         toggle();
         onClick && onClick(e);

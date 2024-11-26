@@ -13,7 +13,6 @@ import { MicButton } from '../app/components/MicButton';
 import { SelfView } from '../app/components/SelfView';
 import { useSubscribedState } from '../app/hooks/rxjsHooks';
 import { useRoomContext } from '../app/hooks/useRoomContext';
-import { errorMessageMap } from '../app/hooks/useUserMedia';
 
 export const Lobby: React.FC = () => {
   const { roomName } = useParams();
@@ -24,10 +23,6 @@ export const Lobby: React.FC = () => {
   const sessionError = useSubscribedState(peer.sessionError$);
 
   const joinedUsers = new Set(room.otherUsers.filter((u) => u.tracks.audio).map((u) => u.name)).size;
-
-  const audioUnavailableMessage = userMedia.audioUnavailableReason
-    ? errorMessageMap[userMedia.audioUnavailableReason]
-    : null;
 
   return (
     <div className='flex flex-col items-center justify-center h-full p-4'>
@@ -47,45 +42,21 @@ export const Lobby: React.FC = () => {
             {sessionError}
           </div>
         )}
-        {(userMedia.audioUnavailableReason || userMedia.videoUnavailableReason) && (
-          <div className='p-3 rounded-md text-sm text-zinc-800 bg-zinc-200 dark:text-zinc-200 dark:bg-zinc-700'>
-            {userMedia.audioUnavailableReason === 'NotAllowedError' &&
-              userMedia.videoUnavailableReason === undefined && <p>Mic permission was denied.</p>}
-            {userMedia.videoUnavailableReason === 'NotAllowedError' &&
-              userMedia.audioUnavailableReason === undefined && <p>Camera permission was denied.</p>}
-            {userMedia.audioUnavailableReason === 'NotAllowedError' &&
-              userMedia.videoUnavailableReason === 'NotAllowedError' && <p>Mic and camera permissions were denied.</p>}
-            {userMedia.audioUnavailableReason === 'NotAllowedError' && (
-              <p>
-                Enable permission
-                {userMedia.audioUnavailableReason && userMedia.videoUnavailableReason ? 's' : ''} and reload the page to
-                join.
-              </p>
-            )}
-            {userMedia.audioUnavailableReason === 'DevicesExhaustedError' && <p>No working microphone found.</p>}
-            {userMedia.videoUnavailableReason === 'DevicesExhaustedError' && <p>No working webcam found.</p>}
-            {userMedia.audioUnavailableReason === 'UnknownError' && <p>Unknown microphone error.</p>}
-            {userMedia.videoUnavailableReason === 'UnknownError' && <p>Unknown webcam error.</p>}
-          </div>
-        )}
+
         <div className='flex gap-4 text-sm'>
-          {audioUnavailableMessage ? (
-            <Button disabled>Join</Button>
-          ) : (
-            <Button
-              onClick={() => {
-                setJoined(true);
-                // we navigate here with javascript instead of an a
-                // tag because we don't want it to be possible to join
-                // the room without the JS having loaded
-                log.info('Navigating to room');
-                navigate('room');
-              }}
-              disabled={!session?.sessionId}
-            >
-              Join
-            </Button>
-          )}
+          <Button
+            onClick={() => {
+              setJoined(true);
+              // we navigate here with javascript instead of an a
+              // tag because we don't want it to be possible to join
+              // the room without the JS having loaded
+              log.info('Navigating to room');
+              navigate('room');
+            }}
+            disabled={!session?.sessionId}
+          >
+            Join
+          </Button>
           <MicButton />
           <CameraButton />
         </div>

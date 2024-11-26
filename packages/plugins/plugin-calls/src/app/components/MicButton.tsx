@@ -10,7 +10,6 @@ import type { ButtonProps } from './Button';
 import { Button } from './Button';
 import { Icon } from './Icon/Icon';
 import { useRoomContext } from '../hooks/useRoomContext';
-import { errorMessageMap } from '../hooks/useUserMedia';
 
 export const MicButton: FC<
   ButtonProps & {
@@ -18,7 +17,7 @@ export const MicButton: FC<
   }
 > = ({ onClick, warnWhenSpeakingWhileMuted, ...rest }) => {
   const {
-    userMedia: { turnMicOn, turnMicOff, audioEnabled, audioUnavailableReason },
+    userMedia: { turnMicOn, turnMicOff, audioEnabled },
   } = useRoomContext();
 
   const toggle = () => {
@@ -33,13 +32,10 @@ export const MicButton: FC<
     return false;
   }, toggle);
 
-  const audioUnavailableMessage = audioUnavailableReason ? (errorMessageMap as any)[audioUnavailableReason] : null;
-
   return (
     <>
       <Button
         displayType={audioEnabled ? 'secondary' : 'danger'}
-        disabled={!!audioUnavailableMessage}
         onClick={(e) => {
           toggle();
           onClick && onClick(e);
