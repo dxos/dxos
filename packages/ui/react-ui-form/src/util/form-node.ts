@@ -71,6 +71,7 @@ export const createFormTree = <T extends BaseObject>(ast: AST.AST, value?: T): F
       options,
     };
   }
+
   // Handle object types.
   if (AST.isTypeLiteral(ast)) {
     return {
