@@ -59,7 +59,7 @@ export const SpaceGenerator = ({ space, onAddObjects }: SpaceGeneratorProps) => 
 
             // Find or create table and view.
             const { objects: tables } = await space.db.query(Filter.schema(TableType)).run();
-            const table = tables.find((table) => table.view?.query?.type === type.typename);
+            const table = tables.find((table) => table.view?.query?.typename === type.typename);
             if (!table) {
               const name = type.typename.split('/').pop() ?? type.typename;
               const table = space.db.add(

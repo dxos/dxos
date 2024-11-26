@@ -112,7 +112,7 @@ export const createView = ({
   return create(ViewType, {
     name,
     query: {
-      type: typename,
+      typename,
     },
     fields,
   });

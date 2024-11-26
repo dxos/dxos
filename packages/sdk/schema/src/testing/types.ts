@@ -12,11 +12,11 @@ export namespace Test {
   export const OrgSchema = S.Struct({
     id: S.String,
     name: S.NonEmptyString.annotations({
-      [AST.TitleAnnotationId]: 'Name',
       [GeneratorAnnotationId]: 'company.name',
     }),
     website: S.optional(
       Format.URL.annotations({
+        [AST.TitleAnnotationId]: 'Website',
         [GeneratorAnnotationId]: 'internet.url',
       }),
     ),
