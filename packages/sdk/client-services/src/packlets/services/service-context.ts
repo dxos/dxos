@@ -381,7 +381,7 @@ export class ServiceContext extends Resource {
         identity: identity.identityKey.toHex(),
         swarms: this.networkManager.topics,
       });
-      if (params?.deviceCredential || Boolean((globalThis as any)?.DEVICE_INVITE_INTEROP)) {
+      if (params?.deviceCredential) {
         edgeIdentity = await createChainEdgeIdentity(
           identity.signer,
           identity.identityKey,

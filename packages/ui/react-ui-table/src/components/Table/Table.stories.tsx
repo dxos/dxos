@@ -14,7 +14,7 @@ import { faker } from '@dxos/random';
 import { Filter, useSpaces, useQuery, create } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useDefaultValue } from '@dxos/react-ui';
-import { ViewEditor } from '@dxos/react-ui-data';
+import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { ViewProjection, ViewType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -112,14 +112,14 @@ const DefaultStory = () => {
 
   return (
     <div className='grow grid grid-cols-[1fr_350px]'>
-      <div className='flex flex-col h-full overflow-hidden'>
+      <div className='grid grid-rows-[min-content_1fr] min-bs-0 overflow-hidden'>
         <Toolbar.Root classNames='border-b border-separator' onAction={handleAction}>
           <Toolbar.Editing />
           <Toolbar.Separator />
           <Toolbar.Actions />
         </Toolbar.Root>
         <Table.Root>
-          <Table.Main ref={tableRef} model={model} />
+          <Table.Main ref={tableRef} model={model} ignoreAttention />
         </Table.Root>
       </div>
       <div className='flex flex-col h-full border-l border-separator overflow-y-auto'>

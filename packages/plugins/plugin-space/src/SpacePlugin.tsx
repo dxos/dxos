@@ -1012,7 +1012,6 @@ export const SpacePlugin = ({
                   ],
                 ],
               };
-              break;
             }
 
             case SpaceAction.SHARE: {
@@ -1020,7 +1019,8 @@ export const SpacePlugin = ({
               if (isSpace(space) && !space.properties[COMPOSER_SPACE_LOCK]) {
                 const active = navigationPlugin?.provides.location.active;
                 const mode = layoutPlugin?.provides.layout.layoutMode;
-                const target = active ? firstIdInPart(active, mode === 'solo' ? 'solo' : 'main') : undefined;
+                const current = active ? firstIdInPart(active, mode === 'solo' ? 'solo' : 'main') : undefined;
+                const target = current?.startsWith(space.id) ? current : undefined;
 
                 return {
                   data: true,

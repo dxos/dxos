@@ -74,7 +74,7 @@ export const NodePlankHeading = memo(
     );
 
     return (
-      <StackItem.Heading classNames='pie-1'>
+      <StackItem.Heading classNames='pie-1 border-be border-separator'>
         <ActionRoot>
           {node ? (
             <StackItem.Sigil
@@ -162,8 +162,9 @@ export const NodePlankHeading = memo(
               onClick={() => (layoutContext.complementarySidebarOpen = !layoutContext.complementarySidebarOpen)}
               variant='ghost'
               label={t('open complementary sidebar label')}
-              classNames='!p-1 -scale-x-100'
-              icon='ph--sidebar--regular'
+              classNames='!pli-2 !plb-3 [&>svg]:-scale-x-100'
+              icon='ph--sidebar-simple--regular'
+              size={4}
               tooltipZIndex='70'
             />
           )}

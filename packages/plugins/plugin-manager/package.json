@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-manager",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "DXOS app plugin for aggregating and rendering plugin settings.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -35,7 +35,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
-    "@dxos/react-ui-data": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/util": "workspace:*"
   },

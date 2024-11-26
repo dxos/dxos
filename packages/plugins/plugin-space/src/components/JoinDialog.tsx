@@ -51,6 +51,9 @@ export const JoinDialog = ({ navigableCollections, ...props }: JoinDialogProps) 
       }
 
       const space = spaces.find(({ key }) => result?.spaceKey?.equals(key));
+      // TODO(wittjosiah): If navigableCollections is false and there's no target,
+      //   should try to navigate to the first object of the space replicates.
+      //   Potentially this could also be done on the inviters side to ensure there's always a target.
       const target = result?.target || (navigableCollections ? space?.id : undefined);
       if (target) {
         // Wait for up to 1 second before navigating to the target node.

@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import '@dxos-theme';
+
 import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
@@ -64,14 +66,13 @@ const meta: Meta = {
       createIdentity: true,
       createSpace: true,
       types: [FunctionTrigger, FunctionDef, ChainPromptType],
-      onInitialized: (client) => {
-        const space = client.spaces.default;
+      onSpaceCreated: ({ space }) => {
         for (const fn of functions) {
           space.db.add(create(FunctionDef, fn));
         }
       },
     }),
-    withLayout({ fullscreen: true, classNames: 'flex justify-center m-2' }),
+    withLayout({ fullscreen: true, tooltips: true, classNames: 'flex justify-center m-2' }),
     withTheme,
   ],
   parameters: {

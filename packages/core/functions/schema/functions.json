@@ -48,7 +48,7 @@
         "properties": {
           "function": {
             "type": "string",
-            "description": "Function URI.",
+            "description": "Function",
             "title": "string"
           },
           "enabled": {

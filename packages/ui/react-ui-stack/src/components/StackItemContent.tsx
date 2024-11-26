@@ -12,14 +12,12 @@ import { useStack } from './StackContext';
 export type StackItemContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
   toolbar?: boolean;
   statusbar?: boolean;
-  contentSize?: 'cover' | 'intrinsic';
 };
 
 export const StackItemContent = ({
   children,
   toolbar = true,
   statusbar,
-  contentSize = 'cover',
   classNames,
   ...props
 }: StackItemContentProps) => {

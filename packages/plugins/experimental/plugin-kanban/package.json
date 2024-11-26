@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-kanban",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Kanban DXOS Surface plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -53,7 +53,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/schema": "^0.75.1",
+    "@effect/schema": "^0.75.5",
     "@preact/signals-core": "^1.6.0"
   },
   "devDependencies": {
