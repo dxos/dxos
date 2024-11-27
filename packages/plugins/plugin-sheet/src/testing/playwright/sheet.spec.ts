@@ -15,7 +15,7 @@ test.describe('plugin-sheet', () => {
 
   test.beforeEach(async ({ browser }) => {
     const setup = await setupPage(browser, {
-      url: storybookUrl('plugins-plugin-sheet-gridsheet--spec'),
+      url: storybookUrl('plugins-plugin-sheet-sheetcontainer--spec'),
     });
     page = setup.page;
     sheet = new SheetManager(page);
@@ -67,4 +67,6 @@ test.describe('plugin-sheet', () => {
     // Check sum again, it should be one cell up and reflect the updated range.
     await expect(sheet.grid.cell(0, 4, 'grid')).toHaveText(`${firstNumber + thirdNumber}`);
   });
+
+  test.skip('ranges', async () => {});
 });
