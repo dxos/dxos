@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Simplify } from 'effect/Types';
-
 import { AST, type JsonPath, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type Comparator, getDeep, intersection, setDeep } from '@dxos/util';
@@ -63,7 +61,7 @@ export type PropertyKey<T extends BaseObject<T>> = Extract<keyof ExcludeId<T>, s
 export type ExcludeId<T extends BaseObject<T>> = Omit<T, 'id'>;
 
 // TODO(burdon): Reconcile with ReactiveEchoObject.
-export type WithId = Simplify<HasId & BaseObject<any>>;
+export type WithId = HasId & BaseObject<any>;
 
 export type WithMeta = { [ECHO_ATTR_META]?: ObjectMeta };
 
