@@ -16,6 +16,7 @@ import {
   FormatEnum,
 } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
+import { stripUndefinedValues } from '@dxos/util';
 
 import { createFieldId } from './projection';
 import { getSchemaProperties } from './properties';
@@ -101,11 +102,13 @@ export const createView = ({
           ? findAnnotation<JsonPath>(property.ast, FieldLookupAnnotationId)
           : undefined;
 
-      fields.push({
-        id: createFieldId(),
-        path: property.name as JsonPath,
-        referencePath,
-      });
+      fields.push(
+        stripUndefinedValues({
+          id: createFieldId(),
+          path: property.name as JsonPath,
+          referencePath,
+        }),
+      );
     }
   }
 

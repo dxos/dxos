@@ -3,12 +3,15 @@
 //
 
 import { Schema as S } from '@effect/schema';
+import { pipe } from 'effect';
+import { capitalize } from 'effect/String';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { FormatAnnotationId, FormatEnum, TypedObject, create, getTypename, ref, toJsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
+import { getSchemaProperties } from './properties';
 import { Test } from './testing';
 import { createView } from './view';
 
@@ -47,5 +50,11 @@ describe('View', () => {
     const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: toJsonSchema(schema) });
     expect(view.query.typename).to.eq(schema.typename);
     expect(view.fields.map((f) => f.path)).to.deep.eq(['name', 'email', 'employer']);
+    console.log(view.fields);
+
+    const props = getSchemaProperties(schema.ast);
+    const labels = props.map((p) => pipe(p.title ?? p.name, capitalize));
+    console.log(props);
+    expect(labels).to.deep.eq(['Name', 'Email', 'Employer']);
   });
 });

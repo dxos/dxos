@@ -105,7 +105,7 @@ export const createReactiveObject = <T extends BaseObject<T>>(type: S.Schema<T>)
 };
 
 export const addToDatabase = (db: EchoDatabase) => {
-  return <T extends BaseObject<T>>(obj: ReactiveObject<T>) => db.add(obj);
+  return <T extends BaseObject<T>>(obj: ReactiveObject<T>): ReactiveEchoObject<T> => db.add(obj);
 };
 
 export const noop = (obj: any) => obj;
@@ -117,7 +117,7 @@ export const createObjectArray = <T extends BaseObject<T>>(n: number): ExcludeId
 
 export const createArrayPipeline = <T extends BaseObject<T>>(
   n: number,
-  pipeline: (obj: ExcludeId<T>) => Effect.Effect<BaseObject<T>>,
+  pipeline: (obj: ExcludeId<T>) => Effect.Effect<ReactiveObject<T>, never, never>,
 ) => {
   return Effect.forEach(createObjectArray<T>(n), pipeline);
 };
@@ -127,15 +127,14 @@ export const createArrayPipeline = <T extends BaseObject<T>>(
  * - Allows for mix of sync and async transformations.
  * - Consistent error processing.
  */
-// TODO(burdon): Use Effect.gen.
-export const createObjectPipeline = <T extends S.Schema<T>>(
+export const createObjectPipeline = <T extends BaseObject<T>>(
   generator: ValueGenerator,
-  type: T,
+  type: S.Schema<T>,
   db?: EchoDatabase,
-): Effect.Effect<T, never, never> => {
+): ((obj: ExcludeId<T>) => Effect.Effect<ReactiveObject<T>, never, never>) => {
   if (!db) {
-    return (obj: ExcludeId<T>): Effect.Effect<BaseObject<T>> => {
-      const a = pipe(
+    return (obj: ExcludeId<T>) => {
+      const pipeline: Effect.Effect<ReactiveObject<T>> = pipe(
         Effect.succeed(obj),
         // Effect.tap(logObject('before')),
         Effect.map((obj) => createProps(generator, type)(obj)),
@@ -143,12 +142,12 @@ export const createObjectPipeline = <T extends S.Schema<T>>(
         // Effect.tap(logObject('after')),
       );
 
-      return a;
+      return pipeline;
     };
   } else {
     // TODO(burdon): Types (unify?)
     return (obj: ExcludeId<T>) => {
-      const a = pipe(
+      const pipeline: Effect.Effect<ReactiveEchoObject<T>, never, never> = pipe(
         Effect.succeed(obj),
         // Effect.tap(logObject('before')),
         Effect.map((obj) => createProps(generator, type)(obj)),
@@ -157,13 +156,8 @@ export const createObjectPipeline = <T extends S.Schema<T>>(
         Effect.map((obj) => addToDatabase(db)(obj)),
         // Effect.tap(logObject('after')),
       );
-      return a;
+
+      return pipeline;
     };
   }
 };
-
-type Foo = {};
-const a: ReactiveEchoObject<Foo> = {} as any;
-const b: ReactiveObject<Foo> = a;
-
-console.log(b);
