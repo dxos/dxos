@@ -46,7 +46,7 @@ const queryObjects = async (db: EchoDatabase, specs: TypeSpec[]) => {
 };
 
 describe('Generator', () => {
-  test.only('create object', async ({ expect }) => {
+  test('create object', async ({ expect }) => {
     {
       const objectGenerator = createGenerator(generator, Test.OrgType);
       const object = objectGenerator.createObject();
