@@ -56,16 +56,16 @@ export type ObjectMeta = S.Schema.Type<typeof ObjectMetaSchema>;
  * It is stricter than `T extends {}` or `T extends object`.
  */
 // TODO(burdon): Consider moving to lower-level base type lib.
-export type BaseObject<T = any> = { [K in keyof T]: T[K] };
+export type BaseObject<T> = { [K in keyof T]: T[K] };
+
+export type PropertyKey<T extends BaseObject<T>> = Extract<keyof ExcludeId<T>, string>;
 
 export type ExcludeId<T extends BaseObject<T>> = Simplify<Omit<T, 'id'>>;
 
 // TODO(burdon): Reconcile with ReactiveEchoObject.
 export type WithId<T extends BaseObject<T>> = BaseObject<T> & HasId;
 
-export type PropertyKey<T extends BaseObject<T>> = Extract<keyof ExcludeId<T>, string>;
-
-type WithMeta = { [ECHO_ATTR_META]?: ObjectMeta };
+export type WithMeta = { [ECHO_ATTR_META]?: ObjectMeta };
 
 /**
  * The raw object should not include the ECHO id, but may include metadata.
