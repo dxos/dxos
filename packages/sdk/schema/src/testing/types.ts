@@ -33,6 +33,7 @@ export namespace Test {
   // TODO(burdon): Materialize link for Role (Org => [Role] => Contact).
   // TODO(burdon): Use with concrete Message type.
   // TODO(burdon): Address sub type with geo location.
+  // TODO(burdon): Reconcile with user id.
   //
 
   export const AddressSchema = S.Struct({
