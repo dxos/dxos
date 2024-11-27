@@ -16,7 +16,7 @@ export type SurfaceDebugProps = ThemedClassName<{}>;
  * Show surface info.
  * NOTE: Remove from @dxos/app-framework if removing this.
  */
-export const SurfaceDebug = ({ classNames }: SurfaceDebugProps) => {
+export const DebugSurface = ({ classNames }: SurfaceDebugProps) => {
   const context = useSurfaceRoot();
   const [surfaces, setSurfaces] = useState<DebugInfo[]>([]);
   const renderMap = useMemo(() => new Map<string, { last: number; delta: number }>(), []);

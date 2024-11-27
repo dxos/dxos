@@ -4,17 +4,22 @@
 
 import {
   AST,
+  FieldLookupAnnotationId,
   create,
   JsonPath,
-  type JsonProp,
   JsonSchemaType,
   QueryType,
   type ReactiveObject,
   S,
+  toEffectSchema,
   TypedObject,
+  FormatEnum,
 } from '@dxos/echo-schema';
+import { findAnnotation } from '@dxos/effect';
+import { stripUndefinedValues } from '@dxos/util';
 
 import { createFieldId } from './projection';
+import { getSchemaProperties } from './properties';
 
 /**
  * Stored field metadata (e.g., for UX).
@@ -81,19 +86,37 @@ export const createView = ({
   name,
   typename,
   jsonSchema,
-  fields: _fields,
+  fields: include,
 }: CreateViewProps): ReactiveObject<ViewType> => {
-  // TODO(burdon): Ensure not objects.
-  const fields = _fields ?? Object.keys(jsonSchema?.properties ?? []).filter((p) => p !== 'id');
+  const fields: FieldType[] = [];
+  if (jsonSchema) {
+    const schema = toEffectSchema(jsonSchema);
+    for (const property of getSchemaProperties(schema.ast)) {
+      // TODO(burdon): Create fields in order specified by fields property.
+      if (include && !include.includes(property.name)) {
+        continue;
+      }
+
+      const referencePath =
+        property.format === FormatEnum.Ref
+          ? findAnnotation<JsonPath>(property.ast, FieldLookupAnnotationId)
+          : undefined;
+
+      fields.push(
+        stripUndefinedValues({
+          id: createFieldId(),
+          path: property.name as JsonPath,
+          referencePath,
+        }),
+      );
+    }
+  }
+
   return create(ViewType, {
     name,
     query: {
-      type: typename,
+      typename,
     },
-    // Create initial fields.
-    fields: fields.map((property) => ({
-      id: createFieldId(),
-      path: property as JsonProp,
-    })),
+    fields,
   });
 };

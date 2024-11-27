@@ -16,9 +16,6 @@ type ToMutable<T> = T extends BaseObject
   ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
   : T;
 
-// TODO(burdon): Move to echo-schema (not preserved when generating JSONSchema).
-export const GeneratorAnnotationId = Symbol.for('@dxos/schema/annotation/Generator');
-
 /**
  * ECHO object.
  */
@@ -114,11 +111,14 @@ export type SchemaMeta = {
   version: string;
 };
 
-export const createReferenceAnnotation = (schema: SchemaMeta): S.Schema.AnyNoContext =>
-  S.Any.annotations({
-    [ReferenceAnnotationId]: {
-      schemaId: schema.id,
-      typename: schema.typename,
-      version: schema.version,
-    } satisfies ReferenceAnnotationValue,
-  });
+// TODO(burdon): Factor out when JSON schema parser allows extensions.
+
+/**
+ * Generate test data.
+ */
+export const GeneratorAnnotationId = Symbol.for('@dxos/schema/annotation/Generator');
+
+/**
+ * Default field to be used on referenced schema to lookup the value.
+ */
+export const FieldLookupAnnotationId = Symbol.for('@dxos/schema/annotation/FieldLookup');

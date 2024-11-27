@@ -11,9 +11,10 @@ export type DebugObjectPanelProps = {
   object: ReactiveEchoObject<any>;
 };
 
+// TODO(burdon): Get schema and traverse references.
 export const DebugObjectPanel = ({ object }: DebugObjectPanelProps) => {
   return (
-    <div role='form' className='flex flex-col'>
+    <div className='flex flex-col'>
       <SyntaxHighlighter classNames='flex text-xs' language='json'>
         {JSON.stringify(object, null, 2)}
       </SyntaxHighlighter>

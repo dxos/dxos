@@ -22,7 +22,7 @@ const ViewMetaSchema = S.Struct({
   name: S.String.annotations({
     [AST.TitleAnnotationId]: 'View',
   }),
-  type: Format.DXN.annotations({
+  typename: Format.DXN.annotations({
     [AST.TitleAnnotationId]: 'Typename',
   }),
 }).pipe(S.mutable);
@@ -60,16 +60,16 @@ export const ViewEditor = ({
       name: view.name,
       // TODO(burdon): Need to warn user of possible consequences of editing.
       // TODO(burdon): Settings should have domain name owned by user.
-      type: view.query.type,
+      typename: view.query.typename,
     };
   }, [view]);
 
   const handleViewUpdate = useCallback(
-    ({ name, type }: ViewMetaType) => {
+    ({ name, typename }: ViewMetaType) => {
       requestAnimationFrame(() => {
         view.name = name;
-        view.query.type = type;
-        schema.updateTypename(type);
+        view.query.typename = typename;
+        schema.updateTypename(typename);
       });
     },
     [view, schema],
@@ -142,6 +142,7 @@ export const ViewEditor = ({
           onClose={handleClose}
         />
       )}
+
       {!readonly && !field && (
         <div className='flex p-2 justify-center'>
           <IconButton

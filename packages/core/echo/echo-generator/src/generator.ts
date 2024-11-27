@@ -15,6 +15,7 @@ import {
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
+import { range } from '@dxos/util';
 
 import { type TestSchemaType } from './data';
 import {
@@ -24,7 +25,6 @@ import {
   type TestObjectProvider,
   type TestSchemaMap,
 } from './types';
-import { range } from './util';
 
 /**
  * Typed object generator.
@@ -64,7 +64,7 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
   async createObjects(map: Partial<Record<T, number>>) {
     const tasks = Object.entries<number>(map as any)
       .map(([type, count]) => {
-        return range(() => this.createObject({ types: [type as T] }), count);
+        return range(count, () => this.createObject({ types: [type as T] }));
       })
       .flatMap((t) => t);
 

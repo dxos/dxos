@@ -3,72 +3,82 @@
 //
 
 import { Effect } from 'effect';
-import { describe, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
-import { Filter } from '@dxos/echo-db';
+import { type EchoDatabase, Filter } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { getSchemaTypename, type JsonProp, type S } from '@dxos/echo-schema';
+import { type AbstractSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
+import { stripUndefinedValues } from '@dxos/util';
 
-import { createArrayPipeline, createObjectPipeline } from './generator';
-import { ContactType, OrgType, ProjectType } from './types';
-import { createReferenceProperty } from './util';
+import { type ValueGenerator, createArrayPipeline, createObjectPipeline } from './generator';
+import { Test } from './types';
 
 faker.seed(1);
 
+// TODO(burdon): Evolve dxos/random to support this directly.
+const generator: ValueGenerator = faker as any;
+
 type TypeSpec = {
-  type: S.Schema<any>;
+  type: AbstractSchema;
   count: number;
 };
 
+const createObjects = async (db: EchoDatabase, specs: TypeSpec[]) => {
+  for (const { type, count } of specs) {
+    const pipeline = createObjectPipeline(generator, type, db);
+    const objects = await Effect.runPromise(createArrayPipeline(count, pipeline));
+    expect(objects).to.have.length(count);
+    await db.flush();
+  }
+};
+
+const queryObjects = async (db: EchoDatabase, specs: TypeSpec[]) => {
+  for (const { type, count } of specs) {
+    const { objects } = await db.query(Filter.schema(type)).run();
+    expect(objects).to.have.length(count);
+    log.info('objects', {
+      typename: type.typename,
+      objects: objects.map((obj) => stripUndefinedValues({ name: obj.name, employer: obj.employer?.name })),
+    });
+  }
+};
+
 describe('Generator', () => {
-  test('generate objects', async ({ expect }) => {
+  test('generate objects for static schema', async ({ expect }) => {
     const builder = new EchoTestBuilder();
     const { db } = await builder.createDatabase();
-    db.graph.schemaRegistry.addSchema([OrgType, ProjectType, ContactType]);
+
+    // Register static schema.
+    db.graph.schemaRegistry.addSchema([Test.OrgType, Test.ProjectType, Test.ContactType]);
 
     const spec: TypeSpec[] = [
-      { type: OrgType, count: 5 },
-      { type: ProjectType, count: 5 },
-      { type: ContactType, count: 10 },
+      { type: Test.OrgType, count: 5 },
+      { type: Test.ProjectType, count: 5 },
+      { type: Test.ContactType, count: 10 },
     ];
 
-    for (const { type, count } of spec) {
-      const pipeline = createObjectPipeline(type, db);
-      const objects = await Effect.runPromise(createArrayPipeline(count, pipeline));
-      expect(objects).to.have.length(count);
-      await db.flush();
-    }
+    await createObjects(db, spec);
+    await queryObjects(db, spec);
   });
 
-  test('generate objects with references', async ({ expect }) => {
+  test('generate objects for mutable schema with references', async ({ expect }) => {
     const builder = new EchoTestBuilder();
     const { db } = await builder.createDatabase();
 
-    const org = db.schemaRegistry.addSchema(OrgType);
-    const contact = createReferenceProperty(
-      db.schemaRegistry.addSchema(ContactType),
-      'employer' as JsonProp,
-      org.typename,
-    );
+    // Register mutable schema.
+    const org = db.schemaRegistry.addSchema(Test.OrgType);
+    const project = db.schemaRegistry.addSchema(Test.ProjectType);
+    const contact = db.schemaRegistry.addSchema(Test.ContactType);
 
     const spec: TypeSpec[] = [
       { type: org, count: 5 },
-      { type: contact, count: 20 },
+      { type: project, count: 5 },
+      { type: contact, count: 10 },
     ];
 
-    for (const { type, count } of spec) {
-      const pipeline = createObjectPipeline(type, db);
-      const objects = await Effect.runPromise(createArrayPipeline(count, pipeline));
-      expect(objects).to.have.length(count);
-      await db.flush();
-      log.info('created', { type: getSchemaTypename(type), count });
-    }
-
-    const { objects } = await db.query(Filter.schema(contact)).run();
-    for (const obj of objects) {
-      console.log(JSON.parse(JSON.stringify({ name: obj.name, employer: obj.employer?.name })));
-    }
+    await createObjects(db, spec);
+    await queryObjects(db, spec);
   });
 });

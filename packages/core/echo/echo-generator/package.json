@@ -29,7 +29,8 @@
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/schema": "workspace:*"
+    "@dxos/schema": "workspace:*",
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*"
