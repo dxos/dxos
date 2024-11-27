@@ -21,12 +21,12 @@ const TableViewEditor = ({ table }: TableViewEditorProps) => {
   // TODO(ZaymonFC): The schema registry needs an API where we can query with initial value and
   // endure typename changes. We shouldn't need to manage a subscription at this layer.
   const [schema, setSchema] = useState(
-    space && table?.view?.query?.type ? space.db.schemaRegistry.getSchema(table.view.query.type) : undefined,
+    space && table?.view?.query?.typename ? space.db.schemaRegistry.getSchema(table.view.query.typename) : undefined,
   );
   useEffect(() => {
-    if (space && table?.view?.query?.type) {
+    if (space && table?.view?.query?.typename) {
       const unsubscribe = space.db.schemaRegistry.subscribe((schemas) => {
-        const schema = schemas.find((schema) => schema.typename === table?.view?.query?.type);
+        const schema = schemas.find((schema) => schema.typename === table?.view?.query?.typename);
         if (schema) {
           setSchema(schema);
         }
@@ -34,7 +34,7 @@ const TableViewEditor = ({ table }: TableViewEditorProps) => {
 
       return unsubscribe;
     }
-  }, [space, table?.view?.query?.type]);
+  }, [space, table?.view?.query?.typename]);
 
   const handleDelete = useCallback(
     (fieldId: string) => {

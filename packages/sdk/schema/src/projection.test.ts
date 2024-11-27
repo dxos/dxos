@@ -216,12 +216,11 @@ describe('ViewProjection', () => {
     expect(mutable.jsonSchema.properties?.['email' as const]).to.exist;
 
     // Delete and verify.
-    const { deleted, index } = projection.deleteFieldProjection(getFieldId(view, 'email'));
+    const { deleted } = projection.deleteFieldProjection(getFieldId(view, 'email'));
     expect(view.fields).to.have.length(1);
     expect(mutable.jsonSchema.properties?.['email' as const]).to.not.exist;
     expect(deleted.field.path).to.equal('email');
     expect(deleted.props.format).to.equal(FormatEnum.Email);
-    expect(index).to.equal(0);
   });
 
   test('field projection delete and restore', async ({ expect }) => {

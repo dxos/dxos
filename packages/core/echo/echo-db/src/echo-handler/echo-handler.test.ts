@@ -63,7 +63,11 @@ test('id property name is reserved', () => {
 // Pass undefined to test untyped proxy.
 for (const schema of [undefined, TestType, TestSchemaType]) {
   const createTestObject = (props: Partial<TestSchemaWithClass> = {}): ReactiveEchoObject<TestSchemaWithClass> => {
-    return createObject(schema ? create(schema as any, props) : create(props));
+    if (schema) {
+      return createObject(create(schema, props));
+    } else {
+      return createObject(create(props));
+    }
   };
 
   describe(`ECHO specific proxy properties${schema == null ? '' : ' with schema'}`, () => {

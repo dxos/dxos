@@ -24,6 +24,7 @@
   ],
   "dependencies": {
     "@dxos/node-std": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@orama/orama": "^2.0.8"
   },
   "devDependencies": {
