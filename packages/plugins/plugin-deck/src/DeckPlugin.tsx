@@ -195,10 +195,9 @@ export const DeckPlugin = ({
         // If outside of bounds, focus on the first/last plank, otherwise focus on the new plank in the same position.
         const index = attendedIndex === -1 ? 0 : attendedIndex >= ids.length ? ids.length - 1 : attendedIndex;
         const nextAttended = next[part]?.[index].id;
-        // Allow new plank to render before focusing.
-        requestAnimationFrame(() => {
-          const article = document.querySelector<HTMLElement>(`article[data-attendable-id="${nextAttended}"]`);
-          article?.focus();
+        void intentPlugin?.provides.intent.dispatch({
+          action: LayoutAction.SCROLL_INTO_VIEW,
+          data: { id: nextAttended },
         });
       }
     }
@@ -389,7 +388,7 @@ export const DeckPlugin = ({
 
             case LayoutAction.SCROLL_INTO_VIEW: {
               layout.values.scrollIntoView = intent.data?.id ?? undefined;
-              return undefined;
+              return { data: true };
             }
 
             case DeckAction.UPDATE_PLANK_SIZE: {
@@ -433,7 +432,7 @@ export const DeckPlugin = ({
 
                 const processLayoutEntry = (partName: string, entryString: string, currentLayout: any) => {
                   // TODO(burdon): Option to toggle?
-                  const toggle = true;
+                  const toggle = false;
                   const [id, path] = entryString.split(SLUG_PATH_SEPARATOR);
                   const layoutEntry: LayoutEntry = { id, ...(path ? { path } : {}) };
                   const effectivePart = getEffectivePart(partName as LayoutPart, layoutMode);
