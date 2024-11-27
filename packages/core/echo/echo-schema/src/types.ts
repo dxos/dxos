@@ -8,6 +8,7 @@ import { AST, type JsonPath, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type Comparator, getDeep, intersection, setDeep } from '@dxos/util';
 
+import { type HasId } from './ast';
 import { getProxyHandler } from './proxy';
 
 export const data = Symbol.for('@dxos/schema/Data');
@@ -59,6 +60,9 @@ export type BaseObject<T = any> = { [K in keyof T]: T[K] };
 
 export type ExcludeId<T extends BaseObject> = Simplify<Omit<T, 'id'>>;
 
+// TODO(burdon): Reconcile with ReactiveEchoObject.
+export type WithId<T extends BaseObject> = BaseObject<T> & HasId;
+
 export type PropertyKey<T extends BaseObject> = Extract<keyof ExcludeId<T>, string>;
 
 type WithMeta = { [ECHO_ATTR_META]?: ObjectMeta };
@@ -75,7 +79,7 @@ export const RawObject = <S extends S.Schema<any>>(
 /**
  * Reference to another ECHO object.
  */
-export type Ref<T extends BaseObject> = T | undefined;
+export type Ref<T extends WithId<T>> = T | undefined;
 
 /**
  * Reactive object marker interface (does not change the shape of the object.)

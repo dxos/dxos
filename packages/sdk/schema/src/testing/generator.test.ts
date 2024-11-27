@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 
 import { type EchoDatabase, Filter } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { type S, type AbstractSchema } from '@dxos/echo-schema';
+import { type AbstractSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { stripUndefinedValues } from '@dxos/util';
@@ -54,8 +54,7 @@ describe('Generator', () => {
     }
 
     {
-      // TODO(burdon): Types that have ref props can't be associated with their schema type.
-      const objectGenerator = createGenerator(generator, Test.ContactType as unknown as S.Schema<Test.ContactType>);
+      const objectGenerator = createGenerator(generator, Test.ContactSchema);
       const object = objectGenerator.createObject();
       expect(object.name).to.exist;
     }
