@@ -2,6 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import { pipe } from 'effect';
+import { capitalize } from 'effect/String';
+
 import {
   AST,
   FormatEnum,
@@ -78,7 +81,7 @@ export const getSchemaProperties = <T extends BaseObject>(ast: AST.AST, value: a
       ast: prop.type,
       optional: prop.isOptional,
       readonly: prop.isReadonly,
-      title,
+      title: title ?? pipe(name, capitalize),
       description,
       examples,
       defaultValue,

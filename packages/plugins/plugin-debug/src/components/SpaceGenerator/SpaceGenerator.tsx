@@ -15,11 +15,10 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { TableType } from '@dxos/react-ui-table';
 import { createView } from '@dxos/schema';
 import { createArrayPipeline, createObjectPipeline, Test, type ValueGenerator } from '@dxos/schema/testing';
-import { jsonKeyReplacer } from '@dxos/util';
+import { jsonKeyReplacer, sortKeys } from '@dxos/util';
 
 const generator: ValueGenerator = faker as any;
 
-// TODO(burdon): Infer reference.
 // TODO(burdon): Create docs.
 // TODO(burdon): Create sketches.
 // TODO(burdon): Create sheets.
@@ -92,14 +91,16 @@ export const SpaceGenerator = ({ space, onAddObjects }: SpaceGeneratorProps) => 
 
     // Create object map.
     const { objects } = await space.db.query().run();
-    const objectMap = objects.reduce<Record<string, number>>((map, obj) => {
-      const type = getTypename(obj);
-      if (type) {
-        const count = map[type] ?? 0;
-        map[type] = count + 1;
-      }
-      return map;
-    }, {});
+    const objectMap = sortKeys(
+      objects.reduce<Record<string, number>>((map, obj) => {
+        const type = getTypename(obj);
+        if (type) {
+          const count = map[type] ?? 0;
+          map[type] = count + 1;
+        }
+        return map;
+      }, {}),
+    );
 
     setInfo({
       schema: {

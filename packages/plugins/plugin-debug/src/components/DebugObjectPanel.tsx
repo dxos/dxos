@@ -11,6 +11,7 @@ export type DebugObjectPanelProps = {
   object: ReactiveEchoObject<any>;
 };
 
+// TODO(burdon): Get schema and traverse references.
 export const DebugObjectPanel = ({ object }: DebugObjectPanelProps) => {
   return (
     <div className='flex flex-col'>
