@@ -191,7 +191,7 @@ export const createAsyncGenerator = <T extends BaseObject<T>>(
   const pipeline = createObjectPipeline(generator, type, db);
 
   return {
-    createObject: async () => await Effect.runPromise(pipeline({} as ExcludeId<T>)),
-    createObjects: async (n: number) => await Effect.runPromise(createArrayPipeline(n, pipeline)),
+    createObject: () => Effect.runPromise(pipeline({} as ExcludeId<T>)),
+    createObjects: (n: number) => Effect.runPromise(createArrayPipeline(n, pipeline)),
   };
 };
