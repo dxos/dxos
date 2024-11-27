@@ -145,7 +145,6 @@ export const createObjectPipeline = <T extends BaseObject<T>>(
       return pipeline;
     };
   } else {
-    // TODO(burdon): Types (unify?)
     return (obj: ExcludeId<T>) => {
       const pipeline: Effect.Effect<ReactiveEchoObject<T>, never, never> = pipe(
         Effect.succeed(obj),
@@ -160,4 +159,16 @@ export const createObjectPipeline = <T extends BaseObject<T>>(
       return pipeline;
     };
   }
+};
+
+/**
+ * Create objects.
+ */
+export const createObjectGenerator = <T extends BaseObject<T>>(
+  generator: ValueGenerator,
+  type: S.Schema<T>,
+  db?: EchoDatabase,
+): ((n: number) => Promise<ReactiveObject<T>[]>) => {
+  const pipeline = createObjectPipeline(generator, type, db);
+  return (n: number) => Effect.runPromise(createArrayPipeline(n, pipeline));
 };

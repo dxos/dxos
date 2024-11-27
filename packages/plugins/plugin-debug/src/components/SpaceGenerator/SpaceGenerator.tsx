@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Effect } from 'effect';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { create, type ReactiveObject, type BaseObject } from '@dxos/echo-schema';
@@ -16,7 +15,8 @@ import { IconButton, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { TableType } from '@dxos/react-ui-table';
 import { createView } from '@dxos/schema';
-import { createArrayPipeline, createObjectPipeline, Test, type ValueGenerator } from '@dxos/schema/testing';
+import { createObjectGenerator } from '@dxos/schema/src/testing';
+import { Test, type ValueGenerator } from '@dxos/schema/testing';
 import { jsonKeyReplacer, sortKeys } from '@dxos/util';
 
 const generator: ValueGenerator = faker as any;
@@ -55,8 +55,8 @@ export const SpaceGenerator = ({ space, onAddObjects }: SpaceGeneratorProps) => 
               space.db.schemaRegistry.addSchema(type);
 
             // Create objects.
-            const pipeline = createObjectPipeline(generator, schema.schema, space.db);
-            const objects = await Effect.runPromise(createArrayPipeline(n, pipeline));
+            const generate = createObjectGenerator(generator, schema.schema, space.db);
+            const objects = await generate(n);
 
             // Find or create table and view.
             const { objects: tables } = await space.db.query(Filter.schema(TableType)).run();
