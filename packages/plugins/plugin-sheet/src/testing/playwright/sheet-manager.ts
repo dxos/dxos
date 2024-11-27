@@ -5,7 +5,7 @@
 import { type Locator, type Page } from '@playwright/test';
 
 import { DxGridManager } from '@dxos/lit-grid/testing';
-import { type DxGridPosition } from '@dxos/react-ui-grid';
+import { type DxGridPosition, type DxGridAxis } from '@dxos/react-ui-grid';
 
 /**
  * Test helper for managing dx-grid interactions and assertions in Playwright tests.
@@ -61,6 +61,14 @@ export class SheetManager {
     await this.page.mouse.down();
     await this.page.mouse.move(endBox!.x + endBox!.width / 2, endBox!.y + endBox!.height / 2, { steps: 10 });
     await this.page.mouse.up();
+  }
+
+  async deleteAxis(axis: DxGridAxis, position: number) {
+    const col = axis === 'row' ? 0 : position;
+    const row = axis === 'row' ? position : 0;
+    const plane = axis === 'row' ? 'frozenColsStart' : 'frozenRowsStart';
+    await this.grid.cell(col, row, plane).click({ button: 'right' });
+    await this.page.getByTestId(`grid.${axis}.drop`).click();
   }
 
   cellEditor() {

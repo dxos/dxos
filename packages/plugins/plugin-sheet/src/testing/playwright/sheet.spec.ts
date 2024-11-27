@@ -47,19 +47,24 @@ test.describe('plugin-sheet', () => {
   test('functions', async () => {
     const firstNumber = 123;
     const secondNumber = 789;
-    const sum = firstNumber + secondNumber;
+    const thirdNumber = 567;
     // Input numbers
     await sheet.grid.cell(0, 2, 'grid').click();
     await sheet.setFocusedCellValue(`${firstNumber}`, 'Enter');
     await sheet.setFocusedCellValue(`${secondNumber}`, 'Enter');
+    await sheet.setFocusedCellValue(`${thirdNumber}`, 'Enter');
 
     // Test range input
     await sheet.press('Enter');
     await sheet.type('=SUM(');
-    await sheet.selectRange({ col: 0, row: 2, plane: 'grid' }, { col: 0, row: 3, plane: 'grid' });
+    await sheet.selectRange({ col: 0, row: 2, plane: 'grid' }, { col: 0, row: 4, plane: 'grid' });
     await sheet.type(')');
     await sheet.commit('Enter');
     // Check sum
-    await expect(sheet.grid.cell(0, 4, 'grid')).toHaveText(`${sum}`);
+    await expect(sheet.grid.cell(0, 5, 'grid')).toHaveText(`${firstNumber + secondNumber + thirdNumber}`);
+    // Delete row of second number
+    await sheet.deleteAxis('row', 3);
+    // Check sum again, it should be one cell up and reflect the updated range.
+    await expect(sheet.grid.cell(0, 4, 'grid')).toHaveText(`${firstNumber + thirdNumber}`);
   });
 });
