@@ -30,18 +30,13 @@ import { getSchemaProperties } from '../properties';
 //  - Audit all low-level types (e.g., ReactiveObject, AbstractTypedObject, MutableObject: see echo-schema/docs).
 //  - Implement basic "comment required" TODOs.
 
-// TODO(burdon): Agent pipeline (@dmytro)
-//  - Generators: https://effect.website/docs/getting-started/using-generators
-
 // TODO(burdon): Replace echo-generator.
 // TODO(burdon): Delete core/agent, experimental/agent-functions.
-// TODO(burdon): Generate views, tables, and SCRIPTS/FUNCTIONS.
-// TODO(burdon): Generate test documents, sketches, sheets.
 
 /**
  * Decouples from faker.
  */
-export type ValueGenerator = Record<string, () => any>;
+export type ValueGenerator<T = any> = Record<string, () => T>;
 
 const randomBoolean = (p = 0.5) => Math.random() < p;
 const randomElement = <T>(elements: T[]): T => elements[Math.floor(Math.random() * elements.length)];
