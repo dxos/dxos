@@ -39,11 +39,27 @@ test.describe('plugin-sheet', () => {
     await expect(sheet.cellEditor()).toBeVisible();
     // Type in a value and press enter
     const testString = faker.string.uuid();
-    await page.keyboard.type(testString);
-    // TODO(thure): Why do we need to wait? Enter is ignored otherwise…
-    await page.waitForTimeout(200);
-    await page.keyboard.press('Enter');
+    await sheet.setFocusedCellValue(testString, 'Enter');
     // Expect that value to now show in the grid
     await expect(sheet.cellByText(testString)).toBeVisible();
+  });
+
+  test('functions', async () => {
+    const firstNumber = 123;
+    const secondNumber = 789;
+    const sum = firstNumber + secondNumber;
+    // Input numbers
+    await sheet.grid.cell(0, 2, 'grid').click();
+    await sheet.setFocusedCellValue(`${firstNumber}`, 'Enter');
+    await sheet.setFocusedCellValue(`${secondNumber}`, 'Enter');
+
+    // Test range input
+    await sheet.press('Enter');
+    await sheet.type('=SUM(');
+    await sheet.selectRange({ col: 0, row: 2, plane: 'grid' }, { col: 0, row: 3, plane: 'grid' });
+    await sheet.type(')');
+    await sheet.commit('Enter');
+    // Check sum
+    await expect(sheet.grid.cell(0, 4, 'grid')).toHaveText(`${sum}`);
   });
 });
