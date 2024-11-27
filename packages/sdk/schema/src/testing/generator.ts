@@ -24,15 +24,6 @@ import { getDeep } from '@dxos/util';
 
 import { getSchemaProperties } from '../properties';
 
-// TODO(burdon): AUDIT (@dmytro)
-//  - New TypedObject syntax.
-//    - Define low-level types in S.Struct (e.g., in react-table).
-//  - Audit all low-level types (e.g., ReactiveObject, AbstractTypedObject, MutableObject: see echo-schema/docs).
-//  - Implement basic "comment required" TODOs.
-
-// TODO(burdon): Replace echo-generator.
-// TODO(burdon): Delete core/agent, experimental/agent-functions.
-
 /**
  * Decouples from faker.
  */
@@ -48,16 +39,14 @@ export const createProps = <T extends BaseObject<T>>(generator: ValueGenerator, 
   return (data: ExcludeId<T> = {} as ExcludeId<T>): ExcludeId<T> => {
     return getSchemaProperties<T>(schema.ast).reduce<ExcludeId<T>>((obj, property) => {
       if (obj[property.name] === undefined) {
-        if (property.optional && randomBoolean()) {
-          return obj;
-        }
-
-        const gen = findAnnotation<string>(property.ast, GeneratorAnnotationId);
-        const fn = gen && getDeep<() => any>(generator, gen.split('.'));
-        if (fn) {
-          obj[property.name] = fn();
-        } else if (!property.optional) {
-          log.warn('missing generator for required property', { property });
+        if (!property.optional || randomBoolean()) {
+          const gen = findAnnotation<string>(property.ast, GeneratorAnnotationId);
+          const fn = gen && getDeep<() => any>(generator, gen.split('.'));
+          if (fn) {
+            obj[property.name] = fn();
+          } else if (!property.optional) {
+            log.warn('missing generator for required property', { property });
+          }
         }
       }
 
@@ -72,20 +61,18 @@ export const createProps = <T extends BaseObject<T>>(generator: ValueGenerator, 
 export const createReferences = <T extends BaseObject<T>>(schema: S.Schema<T>, db: EchoDatabase) => {
   return async (obj: T): Promise<T> => {
     for (const property of getSchemaProperties<T>(schema.ast)) {
-      if (property.optional && randomBoolean()) {
-        return obj;
-      }
-
-      if (property.format === FormatEnum.Ref) {
-        const jsonSchema = findAnnotation<JsonSchemaType>(property.ast, AST.JSONSchemaAnnotationId);
-        if (jsonSchema) {
-          const { typename } = getSchemaReference(jsonSchema) ?? {};
-          invariant(typename);
-          // TODO(burdon): Filter.typename doesn't currently work for mutable objects.
-          const { objects } = await db.query((obj) => getTypename(obj) === typename).run();
-          if (objects.length) {
-            const object = randomElement(objects);
-            (obj as any)[property.name] = object;
+      if (!property.optional || randomBoolean()) {
+        if (property.format === FormatEnum.Ref) {
+          const jsonSchema = findAnnotation<JsonSchemaType>(property.ast, AST.JSONSchemaAnnotationId);
+          if (jsonSchema) {
+            const { typename } = getSchemaReference(jsonSchema) ?? {};
+            invariant(typename);
+            // TODO(burdon): Filter.typename doesn't currently work for mutable objects.
+            const { objects } = await db.query((obj) => getTypename(obj) === typename).run();
+            if (objects.length) {
+              const object = randomElement(objects);
+              (obj as any)[property.name] = object;
+            }
           }
         }
       }

@@ -10,7 +10,7 @@ export namespace Test {
   //
 
   export const OrgSchema = S.Struct({
-    id: S.String,
+    // id: S.String,
     name: S.NonEmptyString.annotations({
       [GeneratorAnnotationId]: 'company.name',
     }),
@@ -37,21 +37,24 @@ export namespace Test {
   //
 
   export const AddressSchema = S.Struct({
-    street: S.String,
-    city: S.String,
-    state: S.String,
-    zip: S.String,
-    location: Format.GeoPoint,
+    street: S.optional(S.String),
+    city: S.optional(S.String),
+    state: S.optional(S.String),
+    zip: S.optional(S.String),
+    // TODO(burdon): Unknown error (handling tuples?)
+    // location: S.optional(Format.GeoPoint),
+    // location: S.Tuple(S.Number, S.Number),
   });
 
   export const ContactSchema = S.Struct({
-    id: S.String,
+    // id: S.String,
     name: S.NonEmptyString.annotations({
       [GeneratorAnnotationId]: 'person.fullName',
     }),
     email: Format.Email.annotations({
       [GeneratorAnnotationId]: 'internet.email',
     }),
+    address: S.optional(AddressSchema),
     employer: S.optional(
       ref(OrgType).annotations({
         [FieldLookupAnnotationId]: 'name',
@@ -70,7 +73,7 @@ export namespace Test {
   //
 
   export const ProjectSchema = S.Struct({
-    id: S.String,
+    // id: S.String,
     name: S.String.annotations({
       [GeneratorAnnotationId]: 'commerce.productName',
     }),

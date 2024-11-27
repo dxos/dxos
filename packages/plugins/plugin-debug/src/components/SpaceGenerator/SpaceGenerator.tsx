@@ -42,7 +42,7 @@ export const SpaceGenerator = ({ space, onAddObjects }: SpaceGeneratorProps) => 
   const typeMap = useMemo(() => {
     client.addTypes([DiagramType, TableType, SheetType]);
 
-    return new Map<string, (n: number) => Promise<BaseObject>>(
+    return new Map<string, (n: number) => Promise<BaseObject<any>>>(
       mutableTypes.map((type) => {
         return [
           type.typename,
