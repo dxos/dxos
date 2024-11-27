@@ -44,7 +44,7 @@ test.describe('plugin-sheet', () => {
     await expect(sheet.cellByText(testString)).toBeVisible();
   });
 
-  test('functions', async () => {
+  test('functions, row deletion, indexed positions', async () => {
     const firstNumber = 123;
     const secondNumber = 789;
     const thirdNumber = 567;
