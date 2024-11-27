@@ -15,8 +15,7 @@ import { IconButton, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { TableType } from '@dxos/react-ui-table';
 import { createView } from '@dxos/schema';
-import { createGenerator } from '@dxos/schema/src/testing';
-import { Test, type ValueGenerator } from '@dxos/schema/testing';
+import { createAsyncGenerator, Test, type ValueGenerator } from '@dxos/schema/testing';
 import { jsonKeyReplacer, sortKeys } from '@dxos/util';
 
 const generator: ValueGenerator = faker as any;
@@ -55,8 +54,8 @@ export const SpaceGenerator = ({ space, onAddObjects }: SpaceGeneratorProps) => 
               space.db.schemaRegistry.addSchema(type);
 
             // Create objects.
-            const generate = createGenerator(generator, schema.schema, space.db);
-            const objects = await generate(n);
+            const generate = createAsyncGenerator(generator, schema.schema, space.db);
+            const objects = await generate.createObjects(n);
 
             // Find or create table and view.
             const { objects: tables } = await space.db.query(Filter.schema(TableType)).run();

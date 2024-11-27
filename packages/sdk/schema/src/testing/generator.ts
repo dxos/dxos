@@ -163,6 +163,7 @@ export const createObjectPipeline = <T extends BaseObject<T>>(
 
 export type ObjectGenerator<T extends BaseObject<T>> = {
   createObject: () => ReactiveObject<T>;
+  createObjects: (n: number) => ReactiveObject<T>[];
 };
 
 export const createGenerator = <T extends BaseObject<T>>(
@@ -173,11 +174,13 @@ export const createGenerator = <T extends BaseObject<T>>(
 
   return {
     createObject: () => Effect.runSync(pipeline({} as ExcludeId<T>)),
+    createObjects: (n: number) => Effect.runSync(createArrayPipeline(n, pipeline)),
   };
 };
 
 export type AsyncObjectGenerator<T extends BaseObject<T>> = {
   createObject: () => Promise<ReactiveObject<T>>;
+  createObjects: (n: number) => Promise<ReactiveObject<T>[]>;
 };
 
 export const createAsyncGenerator = <T extends BaseObject<T>>(
@@ -189,5 +192,6 @@ export const createAsyncGenerator = <T extends BaseObject<T>>(
 
   return {
     createObject: async () => await Effect.runPromise(pipeline({} as ExcludeId<T>)),
+    createObjects: async (n: number) => await Effect.runPromise(createArrayPipeline(n, pipeline)),
   };
 };
