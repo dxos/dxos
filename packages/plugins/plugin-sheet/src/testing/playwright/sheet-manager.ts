@@ -21,6 +21,14 @@ export class SheetManager {
 
   async ready() {
     await this.grid.ready();
-    return this.grid.grid.getByText('Total').waitFor({ state: 'visible' });
+    return this.cellByText('Total').waitFor({ state: 'visible' });
+  }
+
+  cellByText(text: string) {
+    return this.grid.grid.getByText(text);
+  }
+
+  cellEditor() {
+    return this.page.getByTestId('grid.cell-editor');
   }
 }
