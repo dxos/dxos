@@ -36,9 +36,9 @@ export const createSchemaReference = (typename: string): JsonSchemaType => {
   };
 };
 
-export interface ref<T extends WithId<T>> extends S.Schema<Ref<T>, EncodedReference> {}
+export interface ref<T extends WithId> extends S.Schema<Ref<T>, EncodedReference> {}
 
-export const ref = <T extends WithId<T>>(schema: S.Schema<T, any>): ref<T> => {
+export const ref = <T extends WithId>(schema: S.Schema<T, any>): ref<T> => {
   const annotation = getObjectAnnotation(schema);
   if (annotation == null) {
     throw new Error('Reference target must be an ECHO schema.');

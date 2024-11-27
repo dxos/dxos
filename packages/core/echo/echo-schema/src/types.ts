@@ -60,10 +60,10 @@ export type BaseObject<T> = { [K in keyof T]: T[K] };
 
 export type PropertyKey<T extends BaseObject<T>> = Extract<keyof ExcludeId<T>, string>;
 
-export type ExcludeId<T extends BaseObject<T>> = Simplify<Omit<T, 'id'>>;
+export type ExcludeId<T extends BaseObject<T>> = Omit<T, 'id'>;
 
 // TODO(burdon): Reconcile with ReactiveEchoObject.
-export type WithId<T extends BaseObject<T>> = BaseObject<T> & HasId;
+export type WithId = Simplify<HasId & BaseObject<any>>;
 
 export type WithMeta = { [ECHO_ATTR_META]?: ObjectMeta };
 
@@ -79,7 +79,7 @@ export const RawObject = <S extends S.Schema<any>>(
 /**
  * Reference to another ECHO object.
  */
-export type Ref<T extends WithId<T>> = T | undefined;
+export type Ref<T extends WithId> = T | undefined;
 
 /**
  * Reactive object marker interface (does not change the shape of the object.)
