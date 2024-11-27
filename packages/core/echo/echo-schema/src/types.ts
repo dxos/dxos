@@ -81,7 +81,7 @@ export type Ref<T extends BaseObject> = T | undefined;
  * Reactive object marker interface (does not change the shape of the object.)
  * Accessing properties triggers signal semantics.
  */
-export type ReactiveObject<T extends BaseObject> = BaseObject<T>;
+export type ReactiveObject<T extends BaseObject> = { [K in keyof T]: T[K] };
 
 //
 // Data

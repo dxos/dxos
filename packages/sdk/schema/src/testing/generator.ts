@@ -161,14 +161,33 @@ export const createObjectPipeline = <T extends BaseObject<T>>(
   }
 };
 
-/**
- * Create objects.
- */
-export const createObjectGenerator = <T extends BaseObject<T>>(
+export type ObjectGenerator<T extends BaseObject<T>> = {
+  createObject: () => ReactiveObject<T>;
+};
+
+export const createGenerator = <T extends BaseObject<T>>(
   generator: ValueGenerator,
   type: S.Schema<T>,
-  db?: EchoDatabase,
-): ((n: number) => Promise<ReactiveObject<T>[]>) => {
+): ObjectGenerator<T> => {
+  const pipeline = createObjectPipeline(generator, type);
+
+  return {
+    createObject: () => Effect.runSync(pipeline({} as ExcludeId<T>)),
+  };
+};
+
+export type AsyncObjectGenerator<T extends BaseObject<T>> = {
+  createObject: () => Promise<ReactiveObject<T>>;
+};
+
+export const createAsyncGenerator = <T extends BaseObject<T>>(
+  generator: ValueGenerator,
+  type: S.Schema<T>,
+  db: EchoDatabase,
+): AsyncObjectGenerator<T> => {
   const pipeline = createObjectPipeline(generator, type, db);
-  return (n: number) => Effect.runPromise(createArrayPipeline(n, pipeline));
+
+  return {
+    createObject: async () => await Effect.runPromise(pipeline({} as ExcludeId<T>)),
+  };
 };

@@ -7,12 +7,12 @@ import { describe, expect, test } from 'vitest';
 
 import { type EchoDatabase, Filter } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { type AbstractSchema } from '@dxos/echo-schema';
+import { type S, type AbstractSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { stripUndefinedValues } from '@dxos/util';
 
-import { type ValueGenerator, createArrayPipeline, createObjectPipeline } from './generator';
+import { type ValueGenerator, createArrayPipeline, createGenerator, createObjectPipeline } from './generator';
 import { Test } from './types';
 
 faker.seed(1);
@@ -46,6 +46,21 @@ const queryObjects = async (db: EchoDatabase, specs: TypeSpec[]) => {
 };
 
 describe('Generator', () => {
+  test.only('create object', async ({ expect }) => {
+    {
+      const objectGenerator = createGenerator(generator, Test.OrgType);
+      const object = objectGenerator.createObject();
+      expect(object.name).to.exist;
+    }
+
+    {
+      // TODO(burdon): Types that have ref props can't be associated with their schema type.
+      const objectGenerator = createGenerator(generator, Test.ContactType as unknown as S.Schema<Test.ContactType>);
+      const object = objectGenerator.createObject();
+      expect(object.name).to.exist;
+    }
+  });
+
   test('generate objects for static schema', async ({ expect }) => {
     const builder = new EchoTestBuilder();
     const { db } = await builder.createDatabase();

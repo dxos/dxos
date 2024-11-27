@@ -73,6 +73,7 @@ export namespace Test {
     name: S.String.annotations({
       [GeneratorAnnotationId]: 'commerce.productName',
     }),
+    description: S.optional(S.String),
   });
 
   export class ProjectType extends TypedObject({
