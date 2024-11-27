@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.7.1](https://github.com/dxos/dxos/compare/v0.7.0...v0.7.1) (2024-11-25)
+
+
+### Bug Fixes
+
+* ensure deck is layout mode for root path ([#8276](https://github.com/dxos/dxos/issues/8276)) ([cd37da3](https://github.com/dxos/dxos/commit/cd37da3fe51c94ee5d780b9d0fdedb98ce028bc3))
+* fixed stub not included in network-manager package ([#8289](https://github.com/dxos/dxos/issues/8289)) ([8709ba7](https://github.com/dxos/dxos/commit/8709ba7421b4f5b60c3d7ebfd964df4f7484a916))
+* handle space invitation links for credentialled composer ([#8294](https://github.com/dxos/dxos/issues/8294)) ([ead1112](https://github.com/dxos/dxos/commit/ead111211ab8210ab10c871cc2d5471670588a14))
+* **plugin-table:** Restore `role` passing ([#8270](https://github.com/dxos/dxos/issues/8270)) ([5086010](https://github.com/dxos/dxos/commit/5086010f325130e3580251c7dd23cf73d7a3047c))
+
 ## [0.7.0](https://github.com/dxos/dxos/compare/v0.6.13...v0.7.0) (2024-11-19)
 
 
