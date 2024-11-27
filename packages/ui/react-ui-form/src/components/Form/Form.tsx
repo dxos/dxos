@@ -24,9 +24,9 @@ import { translationKey } from '../../translations';
 
 const padding = 'px-2';
 
-export type PropsFilter<T extends BaseObject> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
+export type PropsFilter<T extends BaseObject<T>> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
 
-export type FormProps<T extends BaseObject> = ThemedClassName<
+export type FormProps<T extends BaseObject<T>> = ThemedClassName<
   {
     values: T;
     /** Path to the current object from the root. Used with nested forms. */
@@ -51,7 +51,7 @@ export type FormProps<T extends BaseObject> = ThemedClassName<
 /**
  * General purpose form component that displays field controls based on the given schema.
  */
-export const Form = <T extends BaseObject>({
+export const Form = <T extends BaseObject<T>>({
   classNames,
   schema,
   values: initialValues,

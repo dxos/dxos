@@ -58,12 +58,12 @@ export type ObjectMeta = S.Schema.Type<typeof ObjectMetaSchema>;
 // TODO(burdon): Consider moving to lower-level base type lib.
 export type BaseObject<T = any> = { [K in keyof T]: T[K] };
 
-export type ExcludeId<T extends BaseObject> = Simplify<Omit<T, 'id'>>;
+export type ExcludeId<T extends BaseObject<T>> = Simplify<Omit<T, 'id'>>;
 
 // TODO(burdon): Reconcile with ReactiveEchoObject.
-export type WithId<T extends BaseObject> = BaseObject<T> & HasId;
+export type WithId<T extends BaseObject<T>> = BaseObject<T> & HasId;
 
-export type PropertyKey<T extends BaseObject> = Extract<keyof ExcludeId<T>, string>;
+export type PropertyKey<T extends BaseObject<T>> = Extract<keyof ExcludeId<T>, string>;
 
 type WithMeta = { [ECHO_ATTR_META]?: ObjectMeta };
 
@@ -85,7 +85,7 @@ export type Ref<T extends WithId<T>> = T | undefined;
  * Reactive object marker interface (does not change the shape of the object.)
  * Accessing properties triggers signal semantics.
  */
-export type ReactiveObject<T extends BaseObject> = { [K in keyof T]: T[K] };
+export type ReactiveObject<T extends BaseObject<T>> = { [K in keyof T]: T[K] };
 
 //
 // Data
@@ -117,7 +117,7 @@ export type ObjectData<S> = S.Schema.Encoded<S> & CommonObjectData;
 // Utils
 //
 
-export const getMeta = <T extends BaseObject>(obj: T): ObjectMeta => {
+export const getMeta = <T extends BaseObject<T>>(obj: T): ObjectMeta => {
   const meta = getProxyHandler(obj).getMeta(obj);
   invariant(meta);
   return meta;
