@@ -54,6 +54,23 @@ export const Basic = () => {
   );
 };
 
+export const Spec = () => {
+  const space = useSpace();
+  const graph = useComputeGraph(space);
+  const sheet = useTestSheet(space, graph, { cells: { A1: { value: 'Ready' } } });
+  if (!sheet || !graph) {
+    return null;
+  }
+
+  return (
+    <IntentProvider value={storybookIntentValue}>
+      <SheetProvider graph={graph} sheet={sheet} ignoreAttention>
+        <GridSheet />
+      </SheetProvider>
+    </IntentProvider>
+  );
+};
+
 const meta: Meta = {
   title: 'plugins/plugin-sheet/GridSheet',
   component: GridSheet,

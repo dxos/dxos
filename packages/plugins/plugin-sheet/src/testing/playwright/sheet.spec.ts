@@ -15,7 +15,7 @@ test.describe('plugin-sheet', () => {
 
   test.beforeEach(async ({ browser }) => {
     const setup = await setupPage(browser, {
-      url: storybookUrl('plugins-plugin-sheet-gridsheet--basic'),
+      url: storybookUrl('plugins-plugin-sheet-gridsheet--spec'),
     });
     page = setup.page;
     sheet = new SheetManager(page);

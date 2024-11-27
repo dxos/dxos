@@ -22,7 +22,7 @@ export class SheetManager {
 
   async ready() {
     await this.grid.ready();
-    return this.cellByText('Total').waitFor({ state: 'visible' });
+    return this.cellByText('Ready').waitFor({ state: 'visible' });
   }
 
   async type(text: string) {
