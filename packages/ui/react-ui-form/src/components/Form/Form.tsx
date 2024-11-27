@@ -103,7 +103,7 @@ export const Form = <T extends BaseObject>({
         .map((property) => {
           const { ast, name, type, format, title, description, examples, options } = property;
           const key = [...path, name];
-          const label = pipe(title ?? name, capitalize);
+          const label = title ?? pipe(name, capitalize);
           const placeholder = examples?.length ? `Example: "${examples[0]}"` : description;
 
           // Get generic input.
