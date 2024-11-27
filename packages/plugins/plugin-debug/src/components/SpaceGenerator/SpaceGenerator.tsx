@@ -7,6 +7,8 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { create, type ReactiveObject, type BaseObject } from '@dxos/echo-schema';
 import { DocumentType } from '@dxos/plugin-markdown/types';
+import { SheetType } from '@dxos/plugin-sheet/types';
+import { DiagramType } from '@dxos/plugin-sketch/types';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { Filter, getTypename, type Space } from '@dxos/react-client/echo';
@@ -23,7 +25,6 @@ const generator: ValueGenerator = faker as any;
 // TODO(burdon): Create sketches.
 // TODO(burdon): Create sheets.
 // TODO(burdon): Create comments.
-// TODO(burdon): Mutator running in background (factor out).
 
 export type SpaceGeneratorProps = {
   space: Space;
@@ -31,15 +32,16 @@ export type SpaceGeneratorProps = {
 };
 
 // TODO(burdon): Reuse in testbench-app.
+// TODO(burdon): Mutator running in background (factor out): from echo-generator.
 export const SpaceGenerator = ({ space, onAddObjects }: SpaceGeneratorProps) => {
   const client = useClient();
-  const staticTypes = [DocumentType]; // TODO(burdon): Plugins.
+  const staticTypes = [DocumentType, DiagramType, SheetType]; // TODO(burdon): Make extensible.
   const mutableTypes = [Test.OrgType, Test.ProjectType, Test.ContactType];
   const [info, setInfo] = useState<any>({});
 
   // Create type generators.
   const typeMap = useMemo(() => {
-    client.addTypes([TableType]);
+    client.addTypes([DiagramType, TableType, SheetType]);
 
     return new Map<string, (n: number) => Promise<BaseObject<any>>>(
       mutableTypes.map((type) => {
