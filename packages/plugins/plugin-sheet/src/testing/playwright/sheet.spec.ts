@@ -68,5 +68,16 @@ test.describe('plugin-sheet', () => {
     await expect(sheet.grid.cell(0, 4, 'grid')).toHaveText(`${firstNumber + thirdNumber}`);
   });
 
-  test.skip('ranges', async () => {});
+  test('ranges', async () => {
+    await sheet.grid.cell(1, 0, 'grid').click();
+    await sheet.setFocusedCellValue('one', 'Enter');
+    await sheet.setFocusedCellValue('two', 'Enter');
+    await sheet.selectRange({ col: 1, row: 0, plane: 'grid' }, { col: 1, row: 1, plane: 'grid' });
+    await sheet.toolbarAction('alignment', 'center').click();
+    const classNamesOne = await sheet.grid.cell(1, 0, 'grid').getAttribute('class');
+    await page.pause();
+    expect(classNamesOne).toContain('text-center');
+    expect(await sheet.grid.cell(1, 1, 'grid').getAttribute('class')).toEqual(classNamesOne);
+    await expect(sheet.rangeInList('B1:B2')).toBeVisible();
+  });
 });

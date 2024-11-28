@@ -60,7 +60,7 @@ export const Spec = () => {
     <IntentProvider value={storybookIntentValue}>
       <div role='none' className='grid grid-rows-[66%_33%] grid-cols-1'>
         <SheetContainer space={space} sheet={sheet} role='article' ignoreAttention />
-        <div role='none'>
+        <div role='none' data-testid='grid.range-list'>
           <RangeList sheet={sheet} />
         </div>
       </div>
