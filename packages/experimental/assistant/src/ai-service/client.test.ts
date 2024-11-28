@@ -32,4 +32,8 @@ test('client generation', async () => {
   for await (const event of stream) {
     log.info('event', event);
   }
+
+  log.info('full message', {
+    message: await stream.fullMessage(),
+  });
 });

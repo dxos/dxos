@@ -42,8 +42,28 @@ export const MessageTextContentBlock = S.Struct({
   text: S.String,
 }).pipe(S.mutable);
 
-export const MessageContentBlock = S.Union(MessageTextContentBlock);
-export interface MessageContentBlock extends S.Schema.Type<typeof MessageContentBlock> {}
+export const MessageToolUseContentBlock = S.Struct({
+  type: S.Literal('tool_use'),
+
+  /**
+   * Opaque service-defined ID of the tool invocation.
+   * Used to match the tool result block.
+   */
+  id: S.String,
+  /**
+   * Tool name.
+   */
+  name: S.String,
+  input: S.Unknown,
+
+  /**
+   * Used to accumulate the partial tool input JSON in streaming mode.
+   */
+  inputJson: S.String,
+}).pipe(S.mutable);
+
+export const MessageContentBlock = S.Union(MessageTextContentBlock, MessageToolUseContentBlock);
+export type MessageContentBlock = S.Schema.Type<typeof MessageContentBlock>;
 
 export const Message = S.Struct({
   id: ObjectId,
