@@ -1,0 +1,102 @@
+import type { SpaceId } from '@dxos/keys';
+import { Message, type GenerateRequest, type ResultStreamEvent } from './schema';
+import { Schema as S } from '@effect/schema';
+import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
+import { _iterSSEMessages, type ServerSentEvent } from '@anthropic-ai/sdk/streaming';
+
+export type AIServiceClientParams = {
+  endpoint: string;
+};
+
+export class AIServiceClient {
+  private readonly _endpoint: string;
+  constructor({ endpoint }: AIServiceClientParams) {
+    this._endpoint = endpoint;
+  }
+
+  getSpace(spaceId: SpaceId) {
+    throw new Error('Not implemented');
+  }
+
+  getThread(spaceId: SpaceId, threadId: string) {
+    throw new Error('Not implemented');
+  }
+
+  async getMessagesInThread(spaceId: SpaceId, threadId: string): Promise<Message[]> {
+    const res = await fetch(`${this._endpoint}/space/${spaceId}/thread/${threadId}/message`);
+    return S.decodePromise(S.Array(Message).pipe(S.mutable))(await res.json());
+  }
+
+  async insertMessages(messages: Message[]): Promise<void> {
+    const res = await fetch(`${this._endpoint}/message`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: await S.encodePromise(S.Array(Message))(messages),
+      }),
+    });
+
+    if (!res.ok) {
+      throw new Error(await res.text());
+    }
+  }
+
+  // TODO(dmaretskyi): Accept partial message schema.
+  async updateMessage(spaceId: SpaceId, threadId: string, messageId: string, message: Message): Promise<void> {
+    throw new Error('Not implemented');
+  }
+
+  async generate(request: GenerateRequest): Promise<GenerationStream> {
+    const response = await fetch(`${this._endpoint}/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request),
+    });
+    invariant(response.body instanceof ReadableStream);
+
+    const controller = new AbortController();
+    return (async function* () {
+      for await (const sse of _iterSSEMessages(response, controller)) {
+        if (sse.event === 'completion') {
+          try {
+            yield JSON.parse(sse.data);
+          } catch (e) {
+            console.error(`Could not parse message into JSON:`, sse.data);
+            console.error(`From chunk:`, sse.raw);
+            throw e;
+          }
+        }
+
+        if (
+          sse.event === 'message_start' ||
+          sse.event === 'message_delta' ||
+          sse.event === 'message_stop' ||
+          sse.event === 'content_block_start' ||
+          sse.event === 'content_block_delta' ||
+          sse.event === 'content_block_stop'
+        ) {
+          try {
+            yield JSON.parse(sse.data);
+          } catch (e) {
+            console.error(`Could not parse message into JSON:`, sse.data);
+            console.error(`From chunk:`, sse.raw);
+            throw e;
+          }
+        }
+
+        if (sse.event === 'ping') {
+          continue;
+        }
+
+        if (sse.event === 'error') {
+          throw new Error(`Message generation error: ${sse.data}`);
+        }
+      }
+    })();
+  }
+}
+
+export interface GenerationStream extends AsyncIterable<ResultStreamEvent> {
+  // TODO(dmaretskyi): Cancellation.
+}

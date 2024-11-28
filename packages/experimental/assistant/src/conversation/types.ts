@@ -85,7 +85,10 @@ export const LLMToolResult = Object.freeze({
 export type LLMModel =
   | '@hf/nousresearch/hermes-2-pro-mistral-7b'
   | '@anthropic/claude-3-5-sonnet-20241022'
-  | '@anthropic/claude-3-5-haiku-20241022';
+  | '@anthropic/claude-3-5-haiku-20241022'
+  | '@ollama/llama-3-2-3b'
+  | '@ollama/llama-3-1-nemotron-70b-instruct'
+  | '@ollama/llama-3-1-nemotron-mini-4b-instruct';
 
 export type DefineToolParams<Params extends S.Schema.AnyNoContext> = {
   name: string;
