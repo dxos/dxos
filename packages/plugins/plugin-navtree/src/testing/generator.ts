@@ -5,15 +5,10 @@
 import { type NodeArg } from '@dxos/app-graph';
 import { create, S, type ReactiveObject, TypedObject } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
+import { range } from '@dxos/util';
 
 // TODO(burdon): Reconcile with @dxos/plugin-debug, @dxos/react-ui/testing.
 // TODO(burdon): Bug when adding stale objects to space (e.g., static objects already added in previous story invocation).
-
-// TODO(burdon): Util.
-export const range = <T>(fn: (i: number) => T | undefined, length: number): T[] =>
-  Array.from({ length })
-    .map((_, i) => fn(i))
-    .filter(Boolean) as T[];
 
 // TODO(burdon): Commit to using ECHO to generate all test data? Or convert from raw data?
 export type TestItem = { id: string; type: string } & Record<string, any>;
@@ -101,7 +96,7 @@ export class TestObjectGenerator {
   }
 
   createObjects({ types, length }: { types?: string[]; length: number }) {
-    return range(() => this.createObject({ types }), length);
+    return range(length, () => this.createObject({ types }));
   }
 }
 

@@ -7,13 +7,13 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React, { type FC, useEffect, useState } from 'react';
 
-import { range } from '@dxos/echo-generator';
 import { create } from '@dxos/echo-schema';
 import { TreeItemType, TreeType } from '@dxos/plugin-outliner/types';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { range } from '@dxos/util';
 
 import { Tree, type TreeComponentProps } from './Tree';
 
@@ -24,7 +24,7 @@ import { Tree, type TreeComponentProps } from './Tree';
 faker.seed(1);
 
 const makeTreeItems = <T extends number>(count: T, items: TreeItemType[] = []) => {
-  return range(() => create(TreeItemType, { content: '', items }), count);
+  return range(count, () => create(TreeItemType, { content: '', items }));
 };
 
 const Story: FC<ClientRepeatedComponentProps & { type?: TreeComponentProps<any>['variant'] }> = ({ type }) => {

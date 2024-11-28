@@ -2463,6 +2463,9 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../../sdk/schema
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -2606,6 +2609,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../../common/node-std
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
       '@orama/orama':
         specifier: ^2.0.8
         version: 2.0.8
@@ -5568,6 +5574,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
       '@effect/schema':
         specifier: ^0.75.5
         version: 0.75.5(effect@3.10.15)
@@ -6409,9 +6418,6 @@ importers:
         specifier: ^5.6.2
         version: 5.6.2
     devDependencies:
-      '@dxos/echo-generator':
-        specifier: workspace:*
-        version: link:../../../core/echo/echo-generator
       '@dxos/random':
         specifier: workspace:*
         version: link:../../../common/random
@@ -6880,6 +6886,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
+      '@dxos/plugin-sheet':
+        specifier: workspace:*
+        version: link:../plugin-sheet
       '@dxos/plugin-sketch':
         specifier: workspace:*
         version: link:../plugin-sketch
@@ -6919,6 +6928,9 @@ importers:
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../ui/react-ui-table
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -6931,6 +6943,9 @@ importers:
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
+      effect:
+        specifier: ^3.9.2
+        version: 3.10.15
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2

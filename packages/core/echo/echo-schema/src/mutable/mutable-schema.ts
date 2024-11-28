@@ -25,12 +25,13 @@ import {
   ObjectAnnotationId,
 } from '../ast';
 import { toEffectSchema, toJsonSchema } from '../json';
+import { type AbstractSchema } from '../object';
 
-interface MutableSchemaConstructor extends S.Schema<MutableSchema> {
+// TODO(burdon): Reconcile with AbstractTypedObject. Need common base class.
+interface MutableSchemaConstructor extends AbstractSchema {
   new (): HasId;
 }
 
-// TODO(burdon): Reconcile with AbstractTypedObject.
 const AbstractMutableSchema = (): MutableSchemaConstructor => {
   /**
    * Return class definition satisfying S.Schema.

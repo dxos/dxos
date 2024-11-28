@@ -98,7 +98,7 @@ export class MutableSchemaRegistry implements SchemaResolver {
   /**
    * @deprecated
    */
-  // TODO(burdon): Reconcile with list.
+  // TODO(burdon): Reconcile with query.
   public async listAll(): Promise<StaticSchema[]> {
     const { objects } = await this._db.query(Filter.schema(StoredSchema)).run();
     const storedSchemas = objects.map((storedSchema) => {
