@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { JsonSchemaType } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 import { Schema as S } from '@effect/schema';
 import { Brand } from 'effect';
@@ -59,7 +60,7 @@ export const MessageToolUseContentBlock = S.Struct({
   /**
    * Used to accumulate the partial tool input JSON in streaming mode.
    */
-  inputJson: S.String,
+  inputJson: S.optional(S.String),
 }).pipe(S.mutable);
 
 export const MessageContentBlock = S.Union(MessageTextContentBlock, MessageToolUseContentBlock);
@@ -100,6 +101,29 @@ export const LLMModel = S.Literal(
 );
 export type LLMModel = S.Schema.Type<typeof LLMModel>;
 
+export const LLMTool = S.Struct({
+  name: S.String,
+
+  /**
+   * If the tool is implemented by the service a type should be provided.
+   * For user-implemented tools, this field should be omitted.
+   */
+  // TODO(dmaretskyi): Define tool types.
+  type: S.optional(S.String),
+
+  /**
+   * Required for user-implemented tools.
+   */
+  description: S.optional(S.String),
+
+  /**
+   * Input schema for the tool in the JSON Schema format.
+   * Required for user-implemented tools.
+   */
+  parameters: S.optional(JsonSchemaType),
+});
+export interface LLMTool extends S.Schema.Type<typeof LLMTool> {}
+
 export const GenerateRequest = S.Struct({
   model: LLMModel,
   threadId: ObjectId,
@@ -108,7 +132,11 @@ export const GenerateRequest = S.Struct({
    */
   // TODO(dmaretskyi): Should this be part of the thread?.
   systemPrompt: S.optional(S.String),
-  // tools: S.Array(...),
+
+  /**
+   * Tools available for the LLM.
+   */
+  tools: S.Array(LLMTool).pipe(S.mutable),
 });
 
 export interface GenerateRequest extends S.Schema.Type<typeof GenerateRequest> {}
