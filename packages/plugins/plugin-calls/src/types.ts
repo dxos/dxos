@@ -9,7 +9,7 @@ import { CALLS_PLUGIN } from './meta';
 /**
  * Endpoint to the calls service.
  */
-export const CALLS_URL = 'http://localhost:8787';
+export const CALLS_URL = 'https://calls.dxos.workers.dev';
 const CALLS_ACTION = `${CALLS_PLUGIN}/action`;
 
 export enum CallsAction {
