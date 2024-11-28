@@ -6,9 +6,9 @@ import React, { forwardRef, useEffect } from 'react';
 import { Flipped } from 'react-flip-toolkit';
 
 import { VideoSrcObject } from './VideoSrcObject';
-import { useRoomContext } from '../hooks/useRoomContext';
-import type { User } from '../types/Messages';
-import { cn } from '../utils/style';
+import { useRoomContext } from './hooks/useRoomContext';
+import type { User } from './types';
+import { cn } from './utils/style';
 
 interface Props {
   flipId: string;

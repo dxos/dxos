@@ -4,7 +4,7 @@
 
 import React, { forwardRef, useEffect, useRef } from 'react';
 
-import { cn } from '../utils/style';
+import { cn } from './utils/style';
 
 export type VideoSrcObjectProps = Omit<JSX.IntrinsicElements['video'], 'ref'> & {
   videoTrack?: MediaStreamTrack;

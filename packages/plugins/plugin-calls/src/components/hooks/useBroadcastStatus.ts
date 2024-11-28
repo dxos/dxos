@@ -9,7 +9,7 @@ import { useUnmount } from 'react-use';
 import { useSubscribedState } from './rxjsHooks';
 import type { RoomContextType } from './useRoomContext';
 import type { UserMedia } from './useUserMedia';
-import type { ClientMessage, User } from '../types/Messages';
+import type { ClientMessage, User } from '../types';
 import type { RxjsPeer } from '../utils/rxjs/RxjsPeer.client';
 
 interface Config {

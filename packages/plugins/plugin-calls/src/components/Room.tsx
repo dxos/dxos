@@ -2,21 +2,24 @@
 // Copyright 2024 DXOS.org
 //
 
+import { PhoneX } from '@phosphor-icons/react';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import React, { Fragment, useMemo, useState } from 'react';
 import { Flipper } from 'react-flip-toolkit';
+import { useNavigate } from 'react-router-dom';
 import { useMeasure, useMount } from 'react-use';
 
+import { Button } from '@dxos/react-ui';
 import { nonNullable } from '@dxos/util';
 
-import { CameraButton } from '../app/components/CameraButton';
-import { LeaveRoomButton } from '../app/components/LeaveRoomButton';
-import { MicButton } from '../app/components/MicButton';
-import { Participant } from '../app/components/Participant';
-import { PullAudioTracks } from '../app/components/PullAudioTracks';
-import { PullVideoTrack } from '../app/components/PullVideoTrack';
-import useBroadcastStatus from '../app/hooks/useBroadcastStatus';
-import { useRoomContext } from '../app/hooks/useRoomContext';
-import { calculateLayout } from '../app/utils/calculateLayout';
+import { CameraButton } from './CameraButton';
+import { MicButton } from './MicButton';
+import { Participant } from './Participant';
+import { PullAudioTracks } from './PullAudioTracks';
+import { PullVideoTrack } from './PullVideoTrack';
+import useBroadcastStatus from './hooks/useBroadcastStatus';
+import { useRoomContext } from './hooks/useRoomContext';
+import { calculateLayout } from './utils/calculateLayout';
 
 export const Room = () => {
   return <JoinedRoom />;
@@ -63,6 +66,7 @@ const JoinedRoom = () => {
       '%',
     [totalUsers, containerHeight, containerWidth],
   );
+  const navigate = useNavigate();
 
   return (
     <PullAudioTracks audioTracks={otherUsers.map((u) => u.tracks.audio).filter(nonNullable)}>
@@ -129,7 +133,15 @@ const JoinedRoom = () => {
         <div className='flex flex-wrap items-center justify-center gap-2 p-2 text-sm md:gap-4 md:p-5 md:text-base'>
           <MicButton />
           <CameraButton />
-          <LeaveRoomButton />
+          <Button
+            variant='destructive'
+            onClick={() => {
+              navigate('/');
+            }}
+          >
+            <VisuallyHidden>Leave</VisuallyHidden>
+            <PhoneX />
+          </Button>
         </div>
       </div>
     </PullAudioTracks>

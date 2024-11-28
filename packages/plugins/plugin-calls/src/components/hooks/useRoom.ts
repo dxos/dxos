@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 
 import type { UserMedia } from './useUserMedia';
 import { CALLS_URL } from '../../types';
-import type { ClientMessage, RoomState, ServerMessage } from '../types/Messages';
+import type { ClientMessage, RoomState, ServerMessage } from '../types';
 
 export default ({ roomName, userMedia, username }: { roomName: string; userMedia: UserMedia; username: string }) => {
   const [roomState, setRoomState] = useState<RoomState>({ users: [] });

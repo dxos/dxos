@@ -5,12 +5,12 @@
 import React, { useState, useMemo, type ReactNode, useEffect } from 'react';
 import { of } from 'rxjs';
 
-import { useStateObservable, useSubscribedState } from '../app/hooks/rxjsHooks';
-import { usePeerConnection } from '../app/hooks/usePeerConnection';
-import useRoom from '../app/hooks/useRoom';
-import { RoomContext, type RoomContextType } from '../app/hooks/useRoomContext';
-import { useStablePojo } from '../app/hooks/useStablePojo';
-import useUserMedia from '../app/hooks/useUserMedia';
+import { useStateObservable, useSubscribedState } from './hooks/rxjsHooks';
+import { usePeerConnection } from './hooks/usePeerConnection';
+import useRoom from './hooks/useRoom';
+import { RoomContext, type RoomContextType } from './hooks/useRoomContext';
+import { useStablePojo } from './hooks/useStablePojo';
+import useUserMedia from './hooks/useUserMedia';
 import { CALLS_URL } from '../types';
 
 // Types for loader function response

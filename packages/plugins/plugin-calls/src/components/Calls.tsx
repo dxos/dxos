@@ -4,13 +4,23 @@
 
 import React from 'react';
 import { QueryClient, QueryClientProvider } from 'react-query';
-import { HashRouter } from 'react-router-dom';
+import { HashRouter, useRoutes as useRouterRoutes } from 'react-router-dom';
 
+import { Lobby } from './Lobby';
+import { Room } from './Room';
 import { RoomContextProvider } from './RoomContextProvider';
-import { useRoutes } from './useRoutes';
 
 const Routes = () => {
-  return useRoutes();
+  return useRouterRoutes([
+    {
+      path: '/',
+      element: <Lobby />,
+    },
+    {
+      path: '/room',
+      element: <Room />,
+    },
+  ]);
 };
 const queryClient = new QueryClient();
 

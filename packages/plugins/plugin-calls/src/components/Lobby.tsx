@@ -5,14 +5,13 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { log } from '@dxos/log';
 import { Button } from '@dxos/react-ui';
 
-import { CameraButton } from '../app/components/CameraButton';
-import { MicButton } from '../app/components/MicButton';
-import { SelfView } from '../app/components/SelfView';
-import { useSubscribedState } from '../app/hooks/rxjsHooks';
-import { useRoomContext } from '../app/hooks/useRoomContext';
+import { CameraButton } from './CameraButton';
+import { MicButton } from './MicButton';
+import { SelfView } from './SelfView';
+import { useSubscribedState } from './hooks/rxjsHooks';
+import { useRoomContext } from './hooks/useRoomContext';
 
 export const Lobby: React.FC = () => {
   const { roomName } = useParams();
@@ -51,7 +50,6 @@ export const Lobby: React.FC = () => {
               // we navigate here with javascript instead of an a
               // tag because we don't want it to be possible to join
               // the room without the JS having loaded
-              log.info('Navigating to room');
               navigate('room');
             }}
             disabled={!session?.sessionId}

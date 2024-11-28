@@ -5,8 +5,8 @@
 import React, { type FC, useEffect, useMemo, useRef } from 'react';
 import { of } from 'rxjs';
 
-import { useSubscribedState } from '../hooks/rxjsHooks';
-import { useRoomContext } from '../hooks/useRoomContext';
+import { useSubscribedState } from './hooks/rxjsHooks';
+import { useRoomContext } from './hooks/useRoomContext';
 
 interface AudioStreamProps {
   tracksToPull: string[];
