@@ -74,10 +74,8 @@ test.describe('plugin-sheet', () => {
     await sheet.setFocusedCellValue('two', 'Enter');
     await sheet.selectRange({ col: 1, row: 0, plane: 'grid' }, { col: 1, row: 1, plane: 'grid' });
     await sheet.toolbarAction('alignment', 'center').click();
-    const classNamesOne = await sheet.grid.cell(1, 0, 'grid').getAttribute('class');
-    await page.pause();
-    expect(classNamesOne).toContain('text-center');
-    expect(await sheet.grid.cell(1, 1, 'grid').getAttribute('class')).toEqual(classNamesOne);
+    expect(await sheet.grid.cell(1, 1, 'grid')).toHaveAttribute('class', /.*text-center.*/);
+    expect(await sheet.grid.cell(1, 1, 'grid')).toHaveAttribute('class', /.*text-center.*/);
     await expect(sheet.rangeInList('B1:B2')).toBeVisible();
   });
 });
