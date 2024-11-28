@@ -63,7 +63,18 @@ export const MessageToolUseContentBlock = S.Struct({
   inputJson: S.optional(S.String),
 }).pipe(S.mutable);
 
-export const MessageContentBlock = S.Union(MessageTextContentBlock, MessageToolUseContentBlock);
+export const MessageToolResultContentBlock = S.Struct({
+  type: S.Literal('tool_result'),
+  toolUseId: S.String,
+  content: S.String,
+  isError: S.optional(S.Boolean),
+});
+
+export const MessageContentBlock = S.Union(
+  MessageTextContentBlock,
+  MessageToolUseContentBlock,
+  MessageToolResultContentBlock,
+);
 export type MessageContentBlock = S.Schema.Type<typeof MessageContentBlock>;
 
 export const Message = S.Struct({
@@ -74,6 +85,12 @@ export const Message = S.Struct({
   role: MessageRole,
 
   content: S.Array(MessageContentBlock).pipe(S.mutable),
+
+  /**
+   * ID of the message from the foreign provider.
+   */
+  // TODO(dmaretskyi): Should be in meta/keys.
+  foreignId: S.optional(S.String),
 
   // TODO(dmaretskyi): Figure out how to deal with those.
   created: S.optional(S.DateFromSelf),
@@ -126,6 +143,8 @@ export interface LLMTool extends S.Schema.Type<typeof LLMTool> {}
 
 export const GenerateRequest = S.Struct({
   model: LLMModel,
+
+  spaceId: SpaceIdSchema,
   threadId: ObjectId,
   /**
    * System instructions to the LLM.
@@ -148,8 +167,7 @@ export type ResultStreamEvent =
   | {
       // TODO(dmaretskyi): Normalize types to our schema.
       type: 'message_start';
-      // TODO(dmaretskyi): Types.
-      message: any;
+      message: Omit<Message, 'spaceId' | 'threadId'>;
     }
   | {
       type: 'message_delta';

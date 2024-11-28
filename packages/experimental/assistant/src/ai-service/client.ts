@@ -3,7 +3,7 @@ import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
 import { Schema as S } from '@effect/schema';
-import { Message, type GenerateRequest, type ResultStreamEvent } from './schema';
+import { Message, type GenerateRequest, type ObjectId, type ResultStreamEvent } from './schema';
 
 export type AIServiceClientParams = {
   endpoint: string;
@@ -55,12 +55,20 @@ export class AIServiceClient {
     });
     invariant(response.body instanceof ReadableStream);
 
-    return GenerationStream.fromSSEResponse(response);
+    return GenerationStream.fromSSEResponse({
+      spaceId: request.spaceId,
+      threadId: request.threadId,
+    }, response);
   }
 }
 
+type GenerationParams = {
+  spaceId: SpaceId;
+  threadId: ObjectId;
+};
+
 export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
-  static fromSSEResponse(response: Response) {
+  static fromSSEResponse(params: GenerationParams, response: Response) {
     const controller = new AbortController();
     const iterator = async function* () {
       for await (const sse of _iterSSEMessages(response, controller)) {
@@ -100,14 +108,17 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
         }
       }
     };
-    return new GenerationStream(iterator);
+    return new GenerationStream(params, iterator);
   }
 
   private _accumulatedMessage?: Message = undefined;
   private _messageComplete = new Trigger();
   private _iterator?: AsyncIterator<ResultStreamEvent> = undefined;
 
-  constructor(private readonly _getIterator: () => AsyncIterableIterator<ResultStreamEvent>) {}
+  constructor(
+    private readonly _params: GenerationParams,
+    private readonly _getIterator: () => AsyncIterableIterator<ResultStreamEvent>,
+  ) {}
 
   [Symbol.asyncIterator](): AsyncIterator<ResultStreamEvent> {
     return this._createIterator();
@@ -143,7 +154,11 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
         if (this._accumulatedMessage) {
           throw new Error('Cannot process more than one message in a single generation stream');
         }
-        this._accumulatedMessage = event.message;
+        this._accumulatedMessage = {
+          ...event.message,
+          threadId: this._params.threadId,
+          spaceId: this._params.spaceId,
+        };
         break;
       }
       case 'message_delta': {
