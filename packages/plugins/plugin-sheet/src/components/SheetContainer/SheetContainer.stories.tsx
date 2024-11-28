@@ -19,7 +19,7 @@ import { SheetAction, SheetType } from '../../types';
 import { useComputeGraph } from '../ComputeGraph';
 import { RangeList } from '../RangeList';
 
-// TODO(thure): Should we have a decorator for this?
+// TODO(thure via wittjosiah):  stories/components should be written such that the dependency on intents is external and provided via callback and then the story can implement it differently.
 const storybookIntentValue = create({
   dispatch: async (intents: Intent | Intent[]) => {
     const intent = Array.isArray(intents) ? intents[0] : intents;
