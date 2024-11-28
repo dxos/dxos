@@ -2,24 +2,24 @@
 // Copyright 2024 DXOS.org
 //
 
+import { PhoneX } from '@phosphor-icons/react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { Button } from './Button';
-import { Icon } from './Icon/Icon';
+import { Button } from '@dxos/react-ui';
 
 export const LeaveRoomButton = () => {
   const navigate = useNavigate();
   return (
     <Button
-      displayType='danger'
+      variant='destructive'
       onClick={() => {
         navigate('/');
       }}
     >
       <VisuallyHidden>Leave</VisuallyHidden>
-      <Icon type='phoneXMark' />
+      <PhoneX />
     </Button>
   );
 };

@@ -2,20 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Microphone, MicrophoneSlash } from '@phosphor-icons/react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import React, { type FC } from 'react';
 import { useKey } from 'react-use';
 
-import type { ButtonProps } from './Button';
-import { Button } from './Button';
-import { Icon } from './Icon/Icon';
+import { Button, type ButtonProps } from '@dxos/react-ui';
+
 import { useRoomContext } from '../hooks/useRoomContext';
 
-export const MicButton: FC<
-  ButtonProps & {
-    warnWhenSpeakingWhileMuted?: boolean;
-  }
-> = ({ onClick, warnWhenSpeakingWhileMuted, ...rest }) => {
+export const MicButton: FC<ButtonProps> = ({ onClick, ...rest }) => {
   const {
     userMedia: { turnMicOn, turnMicOff, audioEnabled },
   } = useRoomContext();
@@ -35,7 +31,7 @@ export const MicButton: FC<
   return (
     <>
       <Button
-        displayType={audioEnabled ? 'secondary' : 'danger'}
+        variant={audioEnabled ? 'default' : 'destructive'}
         onClick={(e) => {
           toggle();
           onClick && onClick(e);
@@ -43,7 +39,7 @@ export const MicButton: FC<
         {...rest}
       >
         <VisuallyHidden>{audioEnabled ? 'Turn mic off' : 'Turn mic on'}</VisuallyHidden>
-        <Icon type={audioEnabled ? 'micOn' : 'micOff'} />
+        {audioEnabled ? <Microphone /> : <MicrophoneSlash />}
       </Button>
     </>
   );

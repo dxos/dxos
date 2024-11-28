@@ -2,16 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { nanoid } from 'nanoid';
-import React, { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { Fragment, useMemo, useState } from 'react';
 import { Flipper } from 'react-flip-toolkit';
 import { useMeasure, useMount } from 'react-use';
 
 import { nonNullable } from '@dxos/util';
 
-import { Button } from '../app/components/Button';
 import { CameraButton } from '../app/components/CameraButton';
-import { Icon } from '../app/components/Icon/Icon';
 import { LeaveRoomButton } from '../app/components/LeaveRoomButton';
 import { MicButton } from '../app/components/MicButton';
 import { Participant } from '../app/components/Participant';
@@ -20,57 +17,6 @@ import { PullVideoTrack } from '../app/components/PullVideoTrack';
 import useBroadcastStatus from '../app/hooks/useBroadcastStatus';
 import { useRoomContext } from '../app/hooks/useRoomContext';
 import { calculateLayout } from '../app/utils/calculateLayout';
-
-const useDebugEnabled = () => {
-  const [enabled, setEnabled] = useState(false);
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === 'd' && e.ctrlKey) {
-        e.preventDefault();
-        setEnabled(!enabled);
-      }
-    };
-    document.addEventListener('keypress', handler);
-
-    return () => {
-      document.removeEventListener('keypress', handler);
-    };
-  }, [enabled]);
-
-  return enabled;
-};
-
-const useGridDebugControls = ({ initialCount, enabled }: { initialCount: number; enabled: boolean }) => {
-  const [fakeUsers, setFakeUsers] = useState<string[]>(Array.from({ length: initialCount }).map(() => nanoid()));
-
-  const GridDebugControls = useCallback(
-    () =>
-      enabled ? (
-        <>
-          <Button onClick={() => setFakeUsers((fu) => [...fu, nanoid(14)])}>
-            <Icon type='PlusIcon' />
-          </Button>
-          <Button
-            onClick={() => {
-              setFakeUsers((fu) => {
-                const randomLeaver = fu[Math.floor(Math.random() * fu.length)];
-                return fu.filter((x) => x !== randomLeaver);
-              });
-            }}
-          >
-            <Icon type='MinusIcon' />
-          </Button>
-        </>
-      ) : null,
-    [enabled],
-  );
-
-  return {
-    GridDebugControls,
-    fakeUsers,
-  };
-};
 
 export const Room = () => {
   return <JoinedRoom />;
@@ -85,16 +31,10 @@ const JoinedRoom = () => {
     room: { otherUsers, websocket, identity },
   } = useRoomContext()!;
 
-  const debugEnabled = useDebugEnabled();
-  const { GridDebugControls, fakeUsers } = useGridDebugControls({
-    enabled: debugEnabled,
-    initialCount: 0,
-  });
-
   const [containerRef, { width: containerWidth, height: containerHeight }] = useMeasure<HTMLDivElement>();
   const [firstFlexChildRef, { width: firstFlexChildWidth }] = useMeasure<HTMLDivElement>();
 
-  const totalUsers = 1 + fakeUsers.length + otherUsers.length;
+  const totalUsers = 1 + otherUsers.length;
 
   useMount(() => {
     if (otherUsers.length > 5) {
@@ -151,7 +91,6 @@ const JoinedRoom = () => {
                 audioTrack={userMedia.audioStreamTrack}
                 pinnedId={pinnedId}
                 setPinnedId={setPinnedId}
-                showDebugInfo={debugEnabled}
               />
             )}
 
@@ -166,7 +105,6 @@ const JoinedRoom = () => {
                       audioTrack={audioTrack}
                       pinnedId={pinnedId}
                       setPinnedId={setPinnedId}
-                      showDebugInfo={debugEnabled}
                     ></Participant>
                   )}
                 </PullVideoTrack>
@@ -180,38 +118,15 @@ const JoinedRoom = () => {
                         isScreenShare
                         pinnedId={pinnedId}
                         setPinnedId={setPinnedId}
-                        showDebugInfo={debugEnabled}
                       />
                     )}
                   </PullVideoTrack>
                 )}
               </Fragment>
             ))}
-
-            {identity &&
-              userMedia.audioStreamTrack &&
-              userMedia.videoStreamTrack &&
-              fakeUsers.map((uid) => (
-                <PullVideoTrack key={identity.id} video={identity.tracks.video} audio={identity.tracks.audio}>
-                  {({ videoTrack }) => (
-                    <Participant
-                      user={identity}
-                      isSelf
-                      videoTrack={videoTrack}
-                      audioTrack={userMedia.audioStreamTrack}
-                      key={uid}
-                      flipId={uid.toString()}
-                      pinnedId={pinnedId}
-                      setPinnedId={setPinnedId}
-                      showDebugInfo={debugEnabled}
-                    ></Participant>
-                  )}
-                </PullVideoTrack>
-              ))}
           </div>
         </Flipper>
         <div className='flex flex-wrap items-center justify-center gap-2 p-2 text-sm md:gap-4 md:p-5 md:text-base'>
-          <GridDebugControls />
           <MicButton />
           <CameraButton />
           <LeaveRoomButton />

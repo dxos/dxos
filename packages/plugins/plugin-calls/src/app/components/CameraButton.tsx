@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
+import { VideoCamera, VideoCameraSlash } from '@phosphor-icons/react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import React, { type FC } from 'react';
 import { useKey } from 'react-use';
 
-import type { ButtonProps } from './Button';
-import { Button } from './Button';
-import { Icon } from './Icon/Icon';
+import { Button, type ButtonProps } from '@dxos/react-ui';
+
 import { useRoomContext } from '../hooks/useRoomContext';
 
 export const CameraButton: FC<ButtonProps> = ({ onClick, ...rest }) => {
@@ -30,7 +30,7 @@ export const CameraButton: FC<ButtonProps> = ({ onClick, ...rest }) => {
 
   return (
     <Button
-      displayType={videoEnabled ? 'secondary' : 'danger'}
+      variant={videoEnabled ? 'default' : 'destructive'}
       onClick={(e) => {
         toggle();
         onClick && onClick(e);
@@ -38,7 +38,7 @@ export const CameraButton: FC<ButtonProps> = ({ onClick, ...rest }) => {
       {...rest}
     >
       <VisuallyHidden>{videoEnabled ? 'Turn camera off' : 'Turn camera on'}</VisuallyHidden>
-      <Icon type={videoEnabled ? 'videoOn' : 'videoOff'} />
+      {videoEnabled ? <VideoCamera /> : <VideoCameraSlash />}
     </Button>
   );
 };

@@ -13,7 +13,6 @@ import { cn } from '../utils/style';
 interface Props {
   flipId: string;
   isScreenShare?: boolean;
-  showDebugInfo?: boolean;
   user: User;
   audioTrack?: MediaStreamTrack;
   videoTrack?: MediaStreamTrack;

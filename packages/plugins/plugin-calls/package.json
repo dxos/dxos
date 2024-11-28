@@ -39,6 +39,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*",
     "@heroicons/react": "^2.1.5",
+    "@phosphor-icons/react": "^2.1.5",
     "@radix-ui/react-visually-hidden": "^1.1.0",
     "clsx": "^2.1.1",
     "nanoid": "^5.0.7",

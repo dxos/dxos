@@ -6,8 +6,8 @@ import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { log } from '@dxos/log';
+import { Button } from '@dxos/react-ui';
 
-import { Button } from '../app/components/Button';
 import { CameraButton } from '../app/components/CameraButton';
 import { MicButton } from '../app/components/MicButton';
 import { SelfView } from '../app/components/SelfView';
@@ -45,6 +45,7 @@ export const Lobby: React.FC = () => {
 
         <div className='flex gap-4 text-sm'>
           <Button
+            variant='primary'
             onClick={() => {
               setJoined(true);
               // we navigate here with javascript instead of an a

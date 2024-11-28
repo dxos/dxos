@@ -8,7 +8,7 @@ import React from 'react';
 
 import { Config, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Calls } from './Calls';
 import CallsContainer from './CallsContainer';
@@ -48,6 +48,7 @@ export default {
       }),
     }),
     withLayout({ fullscreen: true }),
+    withTheme,
   ],
 };
 
