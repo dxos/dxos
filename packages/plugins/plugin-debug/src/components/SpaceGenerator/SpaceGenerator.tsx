@@ -149,11 +149,11 @@ const SchemaTable = ({ types, objects = {}, label, onClick }: SchemaTableProps) 
   return (
     <div className='grid grid-cols-[1fr_80px_40px] gap-1 overflow-hidden'>
       <div className='grid grid-cols-subgrid col-span-3'>
-        <div className='px-2 py-1'>{label}</div>
+        <div className='px-2 py-1 text-sm text-primary-500'>{label}</div>
       </div>
       {types.map((type) => (
         <div key={type.typename} className='grid grid-cols-subgrid col-span-3 items-center'>
-          <div className='px-2 py-1 text-sm font-mono'>{type.typename}</div>
+          <div className='px-2 py-1 text-sm font-mono text-green-500'>{type.typename}</div>
           <div className='px-2 py-1 text-right font-mono'>{objects[type.typename] ?? 0}</div>
           <IconButton
             variant='ghost'

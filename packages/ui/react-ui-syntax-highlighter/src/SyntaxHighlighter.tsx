@@ -4,17 +4,16 @@
 
 import React from 'react';
 import { type SyntaxHighlighterProps as NativeSyntaxHighlighterProps } from 'react-syntax-highlighter';
+
 // Lightweight version will load specific language parsers asynchronously.
 // Using `light-async` version directly from dist to avoid any chance of the heavy one being loaded.
 // eslint-disable-next-line no-restricted-imports
 import NativeSyntaxHighlighter from 'react-syntax-highlighter/dist/esm/light-async';
-// eslint-disable-next-line no-restricted-imports
-import styleDark from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark';
-// eslint-disable-next-line no-restricted-imports
-import styleLight from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
+
+import { alabasterDark, githubLight } from './styles';
 
 const zeroWidthSpace = '\u200b';
 
@@ -36,8 +35,8 @@ export const SyntaxHighlighter = ({
   const { themeMode } = useThemeContext();
   return (
     <NativeSyntaxHighlighter
-      className={mx('w-full', classNames)}
-      style={themeMode === 'dark' ? styleDark : styleLight}
+      className={mx('w-full p-0.5', classNames)}
+      style={themeMode === 'dark' ? alabasterDark : githubLight}
       {...props}
     >
       {/* Non-empty fallback prevents collapse. */}

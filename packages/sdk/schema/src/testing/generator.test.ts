@@ -50,8 +50,8 @@ const queryObjects = async (db: EchoDatabase, specs: TypeSpec[]) => {
 };
 
 describe('Generator', () => {
+  // TODO(burdon): Type error: https://github.com/dxos/dxos/issues/8324
   test('create object', async ({ expect }) => {
-    // TODO(burdon): Type error: https://github.com/dxos/dxos/issues/8324
     {
       const objectGenerator = createGenerator(generator, Test.OrgType as any as S.Schema<Test.OrgType>);
       const object = objectGenerator.createObject();
@@ -82,7 +82,7 @@ describe('Generator', () => {
     await queryObjects(db, spec);
   });
 
-  test.only('generate objects for mutable schema with references', async ({ expect }) => {
+  test('generate objects for mutable schema with references', async ({ expect }) => {
     const builder = new EchoTestBuilder();
     const { db } = await builder.createDatabase();
 
