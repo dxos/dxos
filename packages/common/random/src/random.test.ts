@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
-describe('Random', () => {
-  test('test', () => {
-    expect(true).to.be.true;
+import { multiple } from './util';
+
+describe('random', () => {
+  test('multiple', ({ expect }) => {
+    expect(multiple((i) => i, 5)).to.deep.eq([0, 1, 2, 3, 4]);
   });
 });

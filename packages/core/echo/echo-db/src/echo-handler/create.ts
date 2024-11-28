@@ -37,7 +37,7 @@ import { type EchoDatabase } from '../proxy-db';
 // TODO(burdon): Rename EchoObject and reconcile with proto name.
 export type ReactiveEchoObject<T extends BaseObject> = ReactiveObject<T> & HasId;
 
-export const isEchoObject = (value: unknown): value is ReactiveEchoObject<any> =>
+export const isEchoObject = (value: any): value is ReactiveEchoObject<any> =>
   isReactiveObject(value) && getProxyHandler(value) instanceof EchoReactiveHandler;
 
 /**

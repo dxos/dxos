@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-debug",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "DXOS Surface plugin for testing.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -47,6 +47,7 @@
     "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-sheet": "workspace:*",
     "@dxos/plugin-sketch": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-status-bar": "workspace:*",
@@ -60,10 +61,12 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "@tldraw/tldraw": "^3.0.0",
     "date-fns": "^3.3.1",
+    "effect": "^3.9.2",
     "lodash.get": "^4.4.2",
     "react-json-tree": "^0.18.0",
     "react-resize-detector": "^11.0.1"

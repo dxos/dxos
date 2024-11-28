@@ -55,7 +55,7 @@ export type ObjectMeta = S.Schema.Type<typeof ObjectMetaSchema>;
  * It is stricter than `T extends {}` or `T extends object`.
  */
 // TODO(burdon): Consider moving to lower-level base type lib.
-export type BaseObject<T = any> = Record<keyof T, any>;
+export type BaseObject<T = any> = { [K in keyof T]: T[K] };
 
 export type ExcludeId<T extends BaseObject> = Simplify<Omit<T, 'id'>>;
 
@@ -81,7 +81,7 @@ export type Ref<T extends BaseObject> = T | undefined;
  * Reactive object marker interface (does not change the shape of the object.)
  * Accessing properties triggers signal semantics.
  */
-export type ReactiveObject<T extends BaseObject> = { [K in keyof T]: T[K] };
+export type ReactiveObject<T extends BaseObject> = BaseObject<T>;
 
 //
 // Data
