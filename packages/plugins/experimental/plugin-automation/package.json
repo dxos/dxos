@@ -67,6 +67,7 @@
     "@dxos/plugin-stack": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",

@@ -26,14 +26,14 @@ export type FieldEditorProps = {
   projection: ViewProjection;
   field: FieldType;
   registry?: SchemaResolver;
-  onClose: () => void;
+  onSave: () => void;
   onCancel?: () => void;
 };
 
 /**
  * Displays a Form representing the metadata for a given `Field` and `View`.
  */
-export const FieldEditor = ({ view, projection, field, registry, onClose, onCancel }: FieldEditorProps) => {
+export const FieldEditor = ({ view, projection, field, registry, onSave, onCancel }: FieldEditorProps) => {
   const { t } = useTranslation(translationKey);
   const [props, setProps] = useState<PropertyType>(projection.getFieldProjection(field.id).props);
   useEffect(() => setProps(projection.getFieldProjection(field.id).props), [field, projection]);
@@ -100,19 +100,19 @@ export const FieldEditor = ({ view, projection, field, registry, onClose, onCanc
     [view.fields, field],
   );
 
-  const handleSubmit = useCallback<NonNullable<FormProps<PropertyType>['onSubmit']>>(
+  const handleSave = useCallback<NonNullable<FormProps<PropertyType>['onSave']>>(
     (props) => {
       projection.setFieldProjection({ field, props });
-      onClose();
+      onSave();
     },
-    [projection, field, onClose],
+    [projection, field, onSave],
   );
 
   const handleCancel = useCallback<NonNullable<FormProps<PropertyType>['onCancel']>>(() => {
     // Need to defer to allow form to close.
     requestAnimationFrame(() => onCancel?.());
-    onClose();
-  }, [onClose]);
+    onSave();
+  }, [onSave]);
 
   if (!fieldSchema) {
     log.warn('invalid format', { props });
@@ -129,7 +129,7 @@ export const FieldEditor = ({ view, projection, field, registry, onClose, onCanc
       sort={['property', 'format']}
       onValuesChanged={handleValuesChanged}
       onValidate={handleValidate}
-      onSubmit={handleSubmit}
+      onSave={handleSave}
       onCancel={handleCancel}
       Custom={{
         ['format' satisfies keyof PropertyType]: (props) => (

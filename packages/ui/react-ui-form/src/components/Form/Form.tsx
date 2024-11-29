@@ -45,7 +45,7 @@ export type FormProps<T extends BaseObject<T>> = ThemedClassName<
      * Map of custom renderers for specific properties.
      */
     Custom?: Partial<Record<string, InputComponent<T>>>;
-  } & Pick<FormOptions<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onSubmit'>
+  } & Pick<FormOptions<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onSave'>
 >;
 
 /**
@@ -62,19 +62,19 @@ export const Form = <T extends BaseObject<T>>({
   autoSave,
   onValuesChanged,
   onValidate,
-  onSubmit,
+  onSave,
   onCancel,
   Custom,
 }: FormProps<T>) => {
   const { t } = useTranslation(translationKey);
-  const onValid = useMemo(() => (autoSave ? onSubmit : undefined), [autoSave, onSubmit]);
-  const { canSubmit, values, errors, handleSubmit, ...inputProps } = useForm<T>({
+  const onValid = useMemo(() => (autoSave ? onSave : undefined), [autoSave, onSave]);
+  const { canSave, values, errors, handleSave, ...inputProps } = useForm<T>({
     schema,
     initialValues,
     onValuesChanged,
     onValidate,
     onValid,
-    onSubmit,
+    onSave,
   });
 
   // Filter and sort props.
@@ -177,19 +177,19 @@ export const Form = <T extends BaseObject<T>>({
         })
         .filter(isNotFalsy)}
 
-      {(onCancel || onSubmit) && !autoSave && (
+      {(onCancel || onSave) && !autoSave && (
         <div role='none' className='flex justify-center'>
           <div role='none' className={mx(onCancel && !readonly && 'grid grid-cols-2 gap-2')}>
             {onCancel && !readonly && (
               <IconButton icon='ph--x--regular' label={t('button cancel')} onClick={onCancel} />
             )}
-            {onSubmit && (
+            {onSave && (
               <IconButton
                 type='submit'
-                disabled={!canSubmit}
+                disabled={!canSave}
                 icon='ph--check--regular'
                 label={t('button save')}
-                onClick={handleSubmit}
+                onClick={handleSave}
               />
             )}
           </div>

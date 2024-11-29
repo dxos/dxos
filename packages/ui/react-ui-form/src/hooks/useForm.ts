@@ -22,8 +22,8 @@ export type FormHandler<T extends BaseObject<T>> = {
   errors: Record<PropertyKey<T>, string>;
   touched: Record<PropertyKey<T>, boolean>;
   changed: Record<PropertyKey<T>, boolean>;
-  canSubmit: boolean;
-  handleSubmit: () => void;
+  canSave: boolean;
+  handleSave: () => void;
 
   //
   // Form input component helpers.
@@ -67,7 +67,7 @@ export interface FormOptions<T extends BaseObject<T>> {
   /**
    * Called when the form is submitted and passes validation.
    */
-  onSubmit?: (values: T, meta: { changed: FormHandler<T>['changed'] }) => void;
+  onSave?: (values: T, meta: { changed: FormHandler<T>['changed'] }) => void;
 }
 
 /**
@@ -80,7 +80,7 @@ export const useForm = <T extends BaseObject<T>>({
   onValuesChanged,
   onValidate,
   onValid,
-  onSubmit,
+  onSave,
 }: FormOptions<T>): FormHandler<T> => {
   const [values, setValues] = useState<T>(initialValues);
   useEffect(() => {
@@ -123,7 +123,7 @@ export const useForm = <T extends BaseObject<T>>({
    * NOTE: We can submit if there is no touched field that has an error.
    * Basically, if there's a validation message visible in the form, submit should be disabled.
    */
-  const canSubmit = useMemo(
+  const canSave = useMemo(
     () =>
       Object.keys(values).every(
         (property) => touched[property as PropertyKey<T>] === false || !errors[property as PropertyKey<T>],
@@ -131,11 +131,11 @@ export const useForm = <T extends BaseObject<T>>({
     [values, touched, errors],
   );
 
-  const handleSubmit = useCallback(() => {
+  const handleSave = useCallback(() => {
     if (validate(values)) {
-      onSubmit?.(values, { changed });
+      onSave?.(values, { changed });
     }
-  }, [values, validate, onSubmit]);
+  }, [values, validate, onSave]);
 
   //
   // Fields.
@@ -185,7 +185,7 @@ export const useForm = <T extends BaseObject<T>>({
 
       // TODO(Zan): This should be configurable behavior.
       if (event.relatedTarget?.getAttribute('type') === 'submit') {
-        // NOTE: We do this here instead of onSubmit because the blur event is triggered before the submit event
+        // NOTE: We do this here instead of onSave because the blur event is triggered before the submit event
         //  and results in the submit button being disabled when the form is invalid.
         setTouched(createKeySet(values, true));
       }
@@ -201,8 +201,8 @@ export const useForm = <T extends BaseObject<T>>({
     errors,
     touched,
     changed,
-    canSubmit,
-    handleSubmit,
+    canSave,
+    handleSave,
 
     // Field utils.
     getStatus,

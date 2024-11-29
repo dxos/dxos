@@ -16,9 +16,7 @@ import { AUTOMATION_PLUGIN } from '../meta';
 
 const AUTOMATION_ACTION = `${AUTOMATION_PLUGIN}/action`;
 
-export enum AutomationAction {
-  CREATE = `${AUTOMATION_ACTION}/create`,
-}
+export enum AutomationAction {}
 
 export type AutomationPluginProvides = SurfaceProvides &
   IntentResolverProvides &

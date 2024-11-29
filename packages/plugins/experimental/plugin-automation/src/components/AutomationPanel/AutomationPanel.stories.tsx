@@ -5,16 +5,15 @@
 import '@dxos-theme';
 
 import { type Meta } from '@storybook/react';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
-import { create } from '@dxos/echo-schema';
-import { FunctionTrigger, TriggerKind } from '@dxos/functions';
+import { FunctionTrigger } from '@dxos/functions';
 import { FunctionType } from '@dxos/plugin-script/types';
-import { useSpaces } from '@dxos/react-client/echo';
+import { create, useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { TriggerEditor } from './TriggerEditor';
+import { AutomationPanel } from './AutomationPanel';
 import { functions } from '../../testing';
 import translations from '../../translations';
 import { ChainPromptType } from '../../types';
@@ -22,30 +21,17 @@ import { ChainPromptType } from '../../types';
 const DefaultStory = () => {
   const spaces = useSpaces();
   const space = spaces[1];
-  const [trigger, setTrigger] = useState<FunctionTrigger>();
-  useEffect(() => {
-    if (!space) {
-      return;
-    }
-
-    const trigger = space.db.add(create(FunctionTrigger, { spec: { type: TriggerKind.Timer, cron: '' } }));
-    setTrigger(trigger);
-  }, [space]);
-
-  if (!space || !trigger) {
-    return <div />;
-  }
 
   return (
     <div role='none' className='flex w-[350px] border border-separator overflow-hidden'>
-      <TriggerEditor space={space} trigger={trigger} />
+      <AutomationPanel space={space} />
     </div>
   );
 };
 
 const meta: Meta = {
-  title: 'plugins/plugin-automation/TriggerEditor',
-  component: TriggerEditor,
+  title: 'plugins/plugin-automation/AutomationPanel',
+  component: AutomationPanel,
   render: DefaultStory,
   decorators: [
     withClientProvider({

@@ -164,7 +164,7 @@ export const DebugPanel = ({ classNames, functionUrl }: DebugPanelProps) => {
         <MessageThread state={state} result={result} history={history} />
       </div>
 
-      <Toolbar.Root classNames='p-2'>
+      <Toolbar.Root classNames='p-1'>
         <Input.Root>
           <Input.TextInput
             ref={inputRef}
