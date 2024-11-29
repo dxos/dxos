@@ -174,7 +174,7 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
                   {
                     id: `${space.id}-debug`, // TODO(burdon): Change to slashes consistently.
                     type: 'dxos.org/plugin/debug/space',
-                    data: { space },
+                    data: { space, type: 'dxos.org/plugin/debug/space' },
                     properties: {
                       label: ['debug label', { ns: DEBUG_PLUGIN }],
                       icon: 'ph--bug--regular',
@@ -300,7 +300,12 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
               component = <Devtools />;
             } else if (!primary || typeof primary !== 'object' || !settings.debug) {
               component = null;
-            } else if ('space' in primary && isSpace(primary.space)) {
+            } else if (
+              'type' in primary &&
+              primary.type === 'dxos.org/plugin/debug/space' &&
+              'space' in primary &&
+              isSpace(primary.space)
+            ) {
               const handleAddObject = (objects: ReactiveObject<any>[]) => {
                 if (!isSpace(primary.space)) {
                   return;
