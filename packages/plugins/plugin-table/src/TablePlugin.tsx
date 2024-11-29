@@ -44,7 +44,8 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
       },
       translations: [...translations, ...dataTranslations, ...tableTranslations],
       echo: {
-        schema: [TableType, ViewType],
+        schema: [TableType],
+        system: [ViewType],
       },
       space: {
         onSpaceCreate: {

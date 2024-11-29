@@ -103,7 +103,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       },
       translations: [...translations, ...editorTranslations],
       echo: {
-        schema: [DocumentType, TextType],
+        schema: [DocumentType],
+        system: [TextType],
       },
       space: {
         onSpaceCreate: {

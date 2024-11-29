@@ -12,8 +12,7 @@ import type {
   TranslationsProvides,
   Plugin,
 } from '@dxos/app-framework';
-import { type Expando } from '@dxos/echo-schema';
-import { type SchemaProvides } from '@dxos/plugin-client';
+import { type AbstractTypedObject, type Expando } from '@dxos/echo-schema';
 import { type PanelProvides } from '@dxos/plugin-deck/types';
 import { type PublicKey } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
@@ -86,6 +85,16 @@ export type SpaceInitProvides = {
 
 export const parseSpaceInitPlugin = (plugin: Plugin) =>
   typeof (plugin.provides as any).space?.onSpaceCreate === 'object' ? (plugin as Plugin<SpaceInitProvides>) : undefined;
+
+export type SchemaProvides = {
+  echo: {
+    schema?: AbstractTypedObject[];
+    system?: AbstractTypedObject[];
+  };
+};
+
+export const parseSchemaPlugin = (plugin?: Plugin) =>
+  Array.isArray((plugin?.provides as any).echo?.schema) ? (plugin as Plugin<SchemaProvides>) : undefined;
 
 export type SpacePluginProvides = SurfaceProvides &
   IntentResolverProvides &

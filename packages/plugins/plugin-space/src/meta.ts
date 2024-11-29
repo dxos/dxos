@@ -24,6 +24,7 @@ export enum SpaceAction {
   OPEN = `${SPACE_ACTION}/open`,
   CLOSE = `${SPACE_ACTION}/close`,
   MIGRATE = `${SPACE_ACTION}/migrate`,
+  OPEN_CREATE_OBJECT = `${SPACE_ACTION}/open-create-object`,
   ADD_OBJECT = `${SPACE_ACTION}/add-object`,
   REMOVE_OBJECTS = `${SPACE_ACTION}/remove-objects`,
   RENAME_OBJECT = `${SPACE_ACTION}/rename-object`,

@@ -32,7 +32,7 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
       },
       translations,
       echo: {
-        schema: [ChainType, ChainPromptType, FunctionTrigger],
+        system: [ChainType, ChainPromptType, FunctionTrigger],
       },
       complementary: {
         panels: [
