@@ -206,13 +206,12 @@ export const Form = <T extends BaseObject>({
                 );
               }
 
-              // TODO(ZaymonFC): Work with thure to build out this compound input?
               return (
                 <div role='none' key='meta-input' className={mx(padding)}>
                   <InputHeader>{label}</InputHeader>
                   <div role='none' className='flex flex-col gap-1'>
                     {arrayValues.map((_, index) => (
-                      <div key={index} role='none' className='flex items-center gap-1'>
+                      <div key={index} role='none' className='flex items-start gap-1'>
                         {InputComponent && (
                           <>
                             <div role='none' className='flex-1'>

@@ -37,6 +37,7 @@ export const TextInput = <T extends BaseObject>({
         onChange={(event) => onValueChange(property, type, event.target.value)}
         onBlur={onBlur}
       />
+      {inputOnly && <Input.Validation>{error}</Input.Validation>}
     </Input.Root>
   );
 };
@@ -71,6 +72,7 @@ export const NumberInput = <T extends BaseObject>({
         onChange={(event) => onValueChange(property, type, event.target.value)}
         onBlur={onBlur}
       />
+      {inputOnly && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
     </Input.Root>
   );
 };
@@ -97,6 +99,7 @@ export const BooleanInput = <T extends BaseObject>({
         checked={getValue<boolean>(property)}
         onCheckedChange={(value) => onValueChange(property, type, value)}
       />
+      {inputOnly && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
     </Input.Root>
   );
 };
@@ -142,6 +145,7 @@ export const SelectInput = <T extends BaseObject>({
           </Select.Content>
         </Select.Portal>
       </Select.Root>
+      {inputOnly && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
     </Input.Root>
   );
 };
