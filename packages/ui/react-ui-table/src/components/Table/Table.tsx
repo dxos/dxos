@@ -16,13 +16,7 @@ import { invariant } from '@dxos/invariant';
 import { Filter, getSpace, fullyQualifiedId } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import {
-  type DxGridElement,
-  Grid,
-  type GridContentProps,
-  closestCell,
-  type DxGridPlanePosition,
-} from '@dxos/react-ui-grid';
+import { type DxGridElement, Grid, type GridContentProps, closestCell, type DxGridPosition } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 import { isNotFalsy } from '@dxos/util';
 
@@ -71,7 +65,7 @@ const TableRoot = ({ children, role }: TableRootProps) => {
 //
 
 export type TableController = {
-  update?: (cell?: DxGridPlanePosition) => void;
+  update?: (cell?: DxGridPosition) => void;
 };
 
 export type TableMainProps = {
@@ -108,18 +102,28 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model, ignoreAt
     [model, dxGrid],
   );
 
-  const handleFocus: TableCellEditorProps['onFocus'] = (increment, delta) => {
-    dxGrid?.refocus(increment, delta);
-  };
+  const handleFocus = useCallback<NonNullable<TableCellEditorProps['onFocus']>>(
+    (increment, delta) => {
+      if (dxGrid) {
+        dxGrid.refocus(increment, delta);
+      }
+    },
+    [dxGrid],
+  );
 
   const handleEnter = useCallback<NonNullable<TableCellEditorProps['onEnter']>>(
     (cell) => {
       // TODO(burdon): Insert row only if bottom row isn't completely blank already.
       if (model && cell.row === model.getRowCount() - 1) {
         model.insertRow(cell.row);
+        if (dxGrid) {
+          requestAnimationFrame(() => {
+            dxGrid?.refocus('row', 1);
+          });
+        }
       }
     },
-    [model],
+    [model, dxGrid],
   );
 
   const handleKeyDown = useCallback<NonNullable<GridContentProps['onKeyDown']>>(
@@ -158,6 +162,13 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model, ignoreAt
     },
     [hasAttention, ignoreAttention],
   );
+
+  const handleNewColumn = useCallback(() => {
+    const columns = model?.getColumnCount();
+    if (dxGrid && columns) {
+      dxGrid.scrollToCoord({ col: columns - 1 });
+    }
+  }, [model, dxGrid]);
 
   // TODO(burdon): Factor out?
   // TODO(burdon): Generalize to handle other value types (e.g., enums).
@@ -220,7 +231,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model, ignoreAt
       />
       <RowActionsMenu model={model} />
       <ColumnActionsMenu model={model} />
-      <ColumnSettings model={model} />
+      <ColumnSettings model={model} onNewColumn={handleNewColumn} />
       <RefPanel model={model} />
       <CreateRefPanel model={model} />
     </Grid.Root>
