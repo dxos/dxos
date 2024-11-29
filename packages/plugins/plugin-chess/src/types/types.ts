@@ -10,8 +10,7 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 import { isReactiveObject } from '@dxos/live-object';
-import { type SchemaProvides } from '@dxos/plugin-client';
-import { type SpaceInitProvides } from '@dxos/plugin-space';
+import { type SpaceInitProvides, type SchemaProvides } from '@dxos/plugin-space';
 
 import { GameType } from './schema';
 import { CHESS_PLUGIN } from '../meta';

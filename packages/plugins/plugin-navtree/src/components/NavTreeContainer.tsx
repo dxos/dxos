@@ -47,6 +47,7 @@ export const NavTreeContainer = memo(({ isCurrent, popoverAnchorId, ...props }: 
   const { graph } = useGraph();
 
   const getActions = useCallback((node: Node) => naturalGetActions(graph, node), [graph]);
+
   const getItems = useCallback(
     (node?: Node) => {
       return graph.nodes(node ?? graph.root, {
@@ -61,6 +62,7 @@ export const NavTreeContainer = memo(({ isCurrent, popoverAnchorId, ...props }: 
     },
     [graph],
   );
+
   const getProps = useCallback(
     (node: Node, path: string[]): PropsFromTreeItem => {
       const children = getChildren(graph, node, undefined, path);
@@ -223,12 +225,17 @@ export const NavTreeContainer = memo(({ isCurrent, popoverAnchorId, ...props }: 
         role='none'
         className='grid grid-cols-1 grid-rows-[var(--rail-size)_1fr_min-content] bs-full overflow-hidden'
       >
+        {/* TODO(wittjosiah): Factor out surfaces to layout? */}
         <div role='none' className='border-be border-separator'>
           <Surface role='search-input' limit={1} />
         </div>
 
         {/* TODO(thure): What gives this an inline `overflow: initial`? */}
         <div role='none' className='border-be border-separator !overflow-y-auto'>
+          <div role='none' className='border-be border-separator'>
+            <Surface role='actions' limit={1} />
+          </div>
+
           <NavTree
             id={graph.root.id}
             getActions={getActions}

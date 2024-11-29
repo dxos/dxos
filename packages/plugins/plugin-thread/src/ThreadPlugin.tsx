@@ -119,7 +119,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         },
       },
       translations: [...translations, ...threadTranslations],
-      echo: { schema: [ChannelType, ThreadType, MessageType] },
+      echo: {
+        schema: [ChannelType],
+        system: [ThreadType, MessageType],
+      },
       complementary: {
         panels: [
           {

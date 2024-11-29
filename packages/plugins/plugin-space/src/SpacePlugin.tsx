@@ -16,6 +16,7 @@ import {
   type Plugin,
   type PluginDefinition,
   Surface,
+  filterPlugins,
   findPlugin,
   firstIdInPart,
   openIds,
@@ -27,7 +28,7 @@ import {
   resolvePlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type Trigger, type UnsubscribeCallback } from '@dxos/async';
-import { type HasId } from '@dxos/echo-schema';
+import { type AbstractTypedObject, type HasId } from '@dxos/echo-schema';
 import { scheduledEffect } from '@dxos/echo-signals/core';
 import { invariant } from '@dxos/invariant';
 import { create, isDeleted, isReactiveObject } from '@dxos/live-object';
@@ -50,6 +51,7 @@ import {
   SPACE_ID_LENGTH,
   type Space,
   SpaceState,
+  SpaceId,
   fullyQualifiedId,
   getSpace,
   getTypename,
@@ -66,8 +68,11 @@ import {
   AwaitingObject,
   CollectionMain,
   CollectionSection,
+  CreateObjectDialog,
+  CreateObjectDialogProps,
   DefaultObjectSettings,
   JoinDialog,
+  InlineSyncStatus,
   MenuFooter,
   PopoverRenameObject,
   PopoverRenameSpace,
@@ -77,23 +82,26 @@ import {
   SpacePluginSettings,
   SpacePresence,
   SpaceSettingsDialog,
-  type SpaceSettingsDialogProps,
   SpaceSettingsPanel,
   SyncStatus,
-  InlineSyncStatus,
+  type SpaceSettingsDialogProps,
 } from './components';
 import meta, { SPACE_PLUGIN, SpaceAction } from './meta';
 import translations from './translations';
-import { CollectionType, type PluginState, type SpacePluginProvides, type SpaceSettingsProps } from './types';
+import {
+  CollectionType,
+  parseSchemaPlugin,
+  type PluginState,
+  type SpacePluginProvides,
+  type SpaceSettingsProps,
+} from './types';
 import {
   COMPOSER_SPACE_LOCK,
   SHARED,
   SPACES,
   SPACE_TYPE,
   cloneObject,
-  constructObjectActionGroups,
   constructObjectActions,
-  constructSpaceActionGroups,
   constructSpaceActions,
   constructSpaceNode,
   createObjectNode,
@@ -161,6 +169,7 @@ export const SpacePlugin = ({
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
   const graphSubscriptions = new Map<string, UnsubscribeCallback>();
+  const schemas: AbstractTypedObject[] = [];
 
   let clientPlugin: Plugin<ClientPluginProvides> | undefined;
   let graphPlugin: Plugin<GraphProvides> | undefined;
@@ -408,6 +417,21 @@ export const SpacePlugin = ({
       const client = clientPlugin.provides.client;
       const dispatch = intentPlugin.provides.intent.dispatch;
 
+      schemas.push(
+        ...filterPlugins(plugins, parseSchemaPlugin)
+          .map((plugin) => plugin.provides.echo.schema)
+          .filter(nonNullable)
+          .reduce((acc, schema) => {
+            return [...acc, ...schema];
+          }),
+      );
+      client.addTypes(schemas);
+      filterPlugins(plugins, parseSchemaPlugin).forEach((plugin) => {
+        if (plugin.provides.echo.system) {
+          client.addTypes(plugin.provides.echo.system);
+        }
+      });
+
       const handleFirstRun = async () => {
         const defaultSpace = client.spaces.default;
 
@@ -503,6 +527,8 @@ export const SpacePlugin = ({
                 );
               } else if (data.component === 'dxos.org/plugin/space/JoinDialog') {
                 return <JoinDialog {...(data.subject as JoinPanelProps)} />;
+              } else if (data.component === 'dxos.org/plugin/space/CreateObjectDialog') {
+                return <CreateObjectDialog schemas={schemas} spaceId={data.spaceId as SpaceId} />;
               }
               return null;
             case 'popover': {
@@ -526,9 +552,6 @@ export const SpacePlugin = ({
                 // TODO(wittjosiah): Attention glyph for non-echo items should be handled elsewhere.
                 <SmallPresence id={data.id as string} count={0} />
               );
-            }
-            case 'navbar-start': {
-              return null;
             }
             case 'navbar-end': {
               if (!isEchoObject(data.object) && !isSpace(data.object)) {
@@ -662,9 +685,7 @@ export const SpacePlugin = ({
                   properties: {
                     label: ['create space label', { ns: SPACE_PLUGIN }],
                     icon: 'ph--plus--regular',
-                    disposition: 'item',
                     testId: 'spacePlugin.createSpace',
-                    className: 'border-t border-separator',
                   },
                 },
                 {
@@ -678,7 +699,6 @@ export const SpacePlugin = ({
                   properties: {
                     label: ['join space label', { ns: SPACE_PLUGIN }],
                     icon: 'ph--sign-in--regular',
-                    disposition: 'item',
                     testId: 'spacePlugin.joinSpace',
                   },
                 },
@@ -761,16 +781,10 @@ export const SpacePlugin = ({
               },
             }),
 
-            // Create space actions and action groups.
+            // Create space actions.
             createExtension({
               id: `${SPACE_PLUGIN}/actions`,
               filter: (node): node is Node<Space> => isSpace(node.data),
-              actionGroups: ({ node }) =>
-                constructSpaceActionGroups({
-                  space: node.data,
-                  dispatch,
-                  navigable: state.values.navigableCollections,
-                }),
               actions: ({ node }) => {
                 const space = node.data;
                 return constructSpaceActions({
@@ -880,12 +894,6 @@ export const SpacePlugin = ({
             createExtension({
               id: `${SPACE_PLUGIN}/object-actions`,
               filter: (node): node is Node<ReactiveEchoObject<any>> => isEchoObject(node.data),
-              actionGroups: ({ node }) =>
-                constructObjectActionGroups({
-                  object: node.data,
-                  dispatch,
-                  navigable: state.values.navigableCollections,
-                }),
               actions: ({ node }) => constructObjectActions({ node, dispatch }),
             }),
 
@@ -1289,6 +1297,24 @@ export const SpacePlugin = ({
                 };
               }
               break;
+            }
+
+            case SpaceAction.OPEN_CREATE_OBJECT: {
+              return {
+                data: true,
+                intents: [
+                  [
+                    {
+                      action: LayoutAction.SET_LAYOUT,
+                      data: {
+                        element: 'dialog',
+                        component: 'dxos.org/plugin/space/CreateObjectDialog',
+                        dialogBlockAlign: 'start',
+                      },
+                    },
+                  ],
+                ],
+              };
             }
 
             case SpaceAction.ADD_OBJECT: {

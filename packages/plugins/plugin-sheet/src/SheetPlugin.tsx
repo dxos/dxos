@@ -58,9 +58,10 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       },
       translations,
       echo: {
+        schema: [SheetType],
         // TODO(wittjosiah): Factor out to common package/plugin.
         //  FunctionType is currently registered here in case script plugin isn't enabled.
-        schema: [SheetType, FunctionType],
+        system: [FunctionType],
       },
       space: {
         onSpaceCreate: {

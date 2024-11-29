@@ -71,15 +71,6 @@ export type ClientPluginProvides = IntentResolverProvides &
 export const parseClientPlugin = (plugin?: Plugin) =>
   (plugin?.provides as any).client instanceof Client ? (plugin as Plugin<ClientPluginProvides>) : undefined;
 
-export type SchemaProvides = {
-  echo: {
-    schema: AbstractTypedObject[];
-  };
-};
-
-export const parseSchemaPlugin = (plugin?: Plugin) =>
-  Array.isArray((plugin?.provides as any).echo?.schema) ? (plugin as Plugin<SchemaProvides>) : undefined;
-
 export const ClientPlugin = ({
   appKey,
   invitationUrl = window.location.origin,
@@ -136,11 +127,6 @@ export const ClientPlugin = ({
       }
 
       await onReady?.(client, plugins);
-
-      filterPlugins(plugins, parseSchemaPlugin).forEach((plugin) => {
-        log('ready', { id: plugin.meta.id });
-        client.addTypes(plugin.provides.echo.schema);
-      });
     },
     unload: async () => {
       await client.destroy();
