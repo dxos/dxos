@@ -47,7 +47,7 @@ export const AutomationPanel = ({ space }: AutomationPanelProps) => {
   const handleSave: TriggerEditorProps['onSave'] = (trigger) => {
     console.log(selected, trigger);
     if (selected) {
-      Object.assign(selected, values); // TODO(burdon): Throws.
+      Object.assign(selected, trigger);
     } else {
       space.db.add(create(FunctionTrigger, trigger));
     }
