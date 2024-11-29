@@ -135,6 +135,7 @@ export const Form = <T extends BaseObject>({
 
             InputComponent = getInputComponent<T>(type, format);
 
+            // TODO(ZaymonFC): Array handling is inelegant. We need to push this complexity down into SDK/Schema.
             if (array) {
               const arrayValues = (values[name] ?? []) as any[];
 
