@@ -9,7 +9,7 @@ import { FunctionTrigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { createExtension, toSignal } from '@dxos/plugin-graph';
-import { getSpace, getTypename, loadObjectReferences, parseId } from '@dxos/react-client/echo';
+import { getSpace, getTypename, isEchoObject, loadObjectReferences, parseId } from '@dxos/react-client/echo';
 
 import { AutomationPanel } from './components';
 import meta, { AUTOMATION_PLUGIN } from './meta';
@@ -39,7 +39,7 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
           {
             id: 'automation',
             label: ['open automation panel label', { ns: AUTOMATION_PLUGIN }],
-            icon: 'ph--flow-arrow--regular',
+            icon: 'ph--magic-wand--regular',
           },
         ],
       },
@@ -62,7 +62,7 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
                 }
 
                 const type = 'orphan-settings-for-subject';
-                const icon = 'ph--flow-arrow--regular';
+                const icon = 'ph--magic-wand--regular';
 
                 const [subjectId] = id.split('~');
                 const { spaceId, objectId } = parseId(subjectId);
@@ -127,14 +127,14 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
       },
       surface: {
         component: ({ data, role }) => {
-          const space = getSpace(data);
+          const space = isEchoObject(data.subject) ? getSpace(data.subject) : undefined;
           if (!space) {
             return null;
           }
 
           switch (role) {
             case 'complementary--automation':
-              return <AutomationPanel space={space} />;
+              return <AutomationPanel space={space} object={data.subject} />;
           }
 
           return null;

@@ -4,20 +4,21 @@
 
 import React, { useState } from 'react';
 
-import { S } from '@dxos/echo-schema';
+import { type ReactiveObject, S } from '@dxos/echo-schema';
 import { FunctionTriggerSchema, FunctionTrigger, type FunctionTriggerType } from '@dxos/functions';
 import { create, Filter, useQuery, type Space } from '@dxos/react-client/echo';
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { IconButton, Input, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 
 import { AUTOMATION_PLUGIN } from '../../meta';
 import { TriggerEditor, type TriggerEditorProps } from '../TriggerEditor';
 
-const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2.5rem]';
+const grid = 'grid grid-cols-[40px_1fr_32px] min-bs-[2.5rem]';
 
 export type AutomationPanelProps = {
   space: Space;
+  object: ReactiveObject;
 };
 
 // TODO(burdon): Factor out common layout with ViewEditor.
@@ -45,7 +46,6 @@ export const AutomationPanel = ({ space }: AutomationPanelProps) => {
   };
 
   const handleSave: TriggerEditorProps['onSave'] = (trigger) => {
-    console.log(selected, trigger);
     if (selected) {
       Object.assign(selected, trigger);
     } else {
@@ -57,12 +57,11 @@ export const AutomationPanel = ({ space }: AutomationPanelProps) => {
   };
 
   const handleCancel: TriggerEditorProps['onCancel'] = () => {
-    console.log('handleCancel');
     setTrigger(undefined);
   };
 
   return (
-    <div className='flex flex-col w-full overflow-y-auto'>
+    <div className='flex flex-col w-full divide-y divide-separator overflow-y-auto'>
       <List.Root<FunctionTrigger> items={triggers} isItem={S.is(FunctionTrigger)} getId={(field) => field.id}>
         {({ items: triggers }) => (
           <div role='list' className='flex flex-col w-full'>
@@ -70,10 +69,14 @@ export const AutomationPanel = ({ space }: AutomationPanelProps) => {
               <List.Item<FunctionTrigger>
                 key={trigger.id}
                 item={trigger}
-                classNames={mx(grid, ghostHover, 'cursor-pointer')}
+                classNames={mx(grid, ghostHover, 'items-center')}
               >
-                <List.ItemDragHandle />
-                <List.ItemTitle onClick={() => handleSelect(trigger)}>{trigger.id}</List.ItemTitle>
+                <Input.Root>
+                  <Input.Switch checked={trigger.enabled} onCheckedChange={(checked) => (trigger.enabled = checked)} />
+                </Input.Root>
+                <List.ItemTitle classNames='px-2 cursor-pointer' onClick={() => handleSelect(trigger)}>
+                  {trigger.function}
+                </List.ItemTitle>
                 <List.ItemDeleteButton onClick={() => handleDelete(trigger)} />
               </List.Item>
             ))}
