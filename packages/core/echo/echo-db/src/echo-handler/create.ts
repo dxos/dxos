@@ -41,10 +41,12 @@ export const isEchoObject = (value: any): value is ReactiveEchoObject<any> => {
   if (!isReactiveObject(value)) {
     return false;
   }
+
   const handler = getProxyHandler(value);
   if (!(handler instanceof EchoReactiveHandler)) {
     return false;
   }
+
   return isRootDataObject(getProxyTarget(value));
 };
 

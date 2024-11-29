@@ -18,7 +18,7 @@ const grid = 'grid grid-cols-[40px_1fr_32px] min-bs-[2.5rem]';
 
 export type AutomationPanelProps = {
   space: Space;
-  object: ReactiveObject;
+  object?: ReactiveObject<any>;
 };
 
 // TODO(burdon): Factor out common layout with ViewEditor.

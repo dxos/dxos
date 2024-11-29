@@ -127,14 +127,16 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
       },
       surface: {
         component: ({ data, role }) => {
-          const space = isEchoObject(data.subject) ? getSpace(data.subject) : undefined;
+          const object = data.subject;
+          const space = isEchoObject(object) ? getSpace(object) : undefined;
           if (!space) {
             return null;
           }
 
+          invariant(isEchoObject(object));
           switch (role) {
             case 'complementary--automation':
-              return <AutomationPanel space={space} object={data.subject} />;
+              return <AutomationPanel space={space} object={object} />;
           }
 
           return null;
