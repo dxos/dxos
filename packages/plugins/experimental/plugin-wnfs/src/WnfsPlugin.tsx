@@ -72,6 +72,8 @@ export const WnfsPlugin = (): PluginDefinition<WnfsPluginProvides> => {
       },
       surface: {
         component: ({ data, role, ...props }, forwardedRef) => {
+          // NOT USED IN COMPOSER VIEW
+
           switch (role) {
             case 'main':
               return data.active instanceof FileType ? <FileMain file={data.active} /> : null;

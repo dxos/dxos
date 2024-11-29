@@ -6,10 +6,13 @@ import { syntaxTree } from '@codemirror/language';
 import { type EditorState, type Extension, StateField, type Range, StateEffect } from '@codemirror/state';
 import { Decoration, EditorView, WidgetType, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 import type { Blockstore } from 'interface-blockstore';
+import React from 'react';
+import { createRoot } from 'react-dom/client';
 import type { PrivateDirectory, PrivateForest } from 'wnfs';
 
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
+import { Status } from '@dxos/react-ui';
 
 import { store } from '../common';
 import { loadWnfs } from '../load';
@@ -233,12 +236,29 @@ class WnfsImageWidget extends WidgetType {
   }
 
   override toDOM(view: EditorView) {
+    const loader = document.createElement('div');
+    const root = createRoot(loader);
+
     const img = document.createElement('img');
     img.setAttribute('loading', 'lazy');
     img.setAttribute('src', this._url);
-    img.setAttribute('class', 'cm-image');
-    // Images are hidden until successfully loaded to avoid flickering effects.
-    img.onload = () => img.classList.add('cm-loaded-image');
-    return img;
+    img.setAttribute('class', 'cm-image-with-loader');
+    img.onload = () => {
+      setTimeout(() => {
+        img.classList.add('cm-loaded-image');
+        img.closest('.cm-image-wrapper')?.classList?.add('cm-loaded-image');
+        loader.parentNode?.removeChild(loader);
+      }, 0);
+    };
+
+    const imageWrapper = document.createElement('div');
+    imageWrapper.setAttribute('class', 'cm-image-wrapper');
+    imageWrapper.appendChild(loader);
+    imageWrapper.appendChild(img);
+
+    // TODO:
+    // root.render(<Status indeterminate={true} />);
+
+    return imageWrapper;
   }
 }
