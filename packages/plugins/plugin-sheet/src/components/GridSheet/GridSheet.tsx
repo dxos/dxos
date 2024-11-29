@@ -335,21 +335,30 @@ export const GridSheet = () => {
         <DropdownMenu.VirtualTrigger virtualRef={contextMenuAnchorRef} />
         <DropdownMenu.Content side={contextMenuAxis === 'col' ? 'bottom' : 'right'} sideOffset={4} collisionPadding={8}>
           <DropdownMenu.Viewport>
-            <DropdownMenu.Item onClick={() => handleAxisMenuAction('insert-before')}>
+            <DropdownMenu.Item
+              onClick={() => handleAxisMenuAction('insert-before')}
+              data-testid={`grid.${contextMenuAxis}.insert-before`}
+            >
               <Icon
                 size={5}
                 icon={contextMenuAxis === 'col' ? 'ph--columns-plus-left--regular' : 'ph--rows-plus-top--regular'}
               />
               <span>{t(`add ${contextMenuAxis} before label`)}</span>
             </DropdownMenu.Item>
-            <DropdownMenu.Item onClick={() => handleAxisMenuAction('insert-after')}>
+            <DropdownMenu.Item
+              onClick={() => handleAxisMenuAction('insert-after')}
+              data-testid={`grid.${contextMenuAxis}.insert-after`}
+            >
               <Icon
                 size={5}
                 icon={contextMenuAxis === 'col' ? 'ph--columns-plus-right--regular' : 'ph--rows-plus-bottom--regular'}
               />
               <span>{t(`add ${contextMenuAxis} after label`)}</span>
             </DropdownMenu.Item>
-            <DropdownMenu.Item onClick={() => handleAxisMenuAction('drop')}>
+            <DropdownMenu.Item
+              onClick={() => handleAxisMenuAction('drop')}
+              data-testid={`grid.${contextMenuAxis}.drop`}
+            >
               <Icon size={5} icon='ph--backspace--regular' />
               <span>{t(`delete ${contextMenuAxis} label`)}</span>
             </DropdownMenu.Item>

@@ -225,7 +225,13 @@ const Alignment = () => {
       onValueChange={(value: AlignValue) => onAction?.({ key: alignKey, value })}
     >
       {alignmentOptions.map(({ value, icon }) => (
-        <ToolbarItem itemType='toggleGroupItem' key={value} value={value} icon={icon}>
+        <ToolbarItem
+          itemType='toggleGroupItem'
+          key={value}
+          value={value}
+          icon={icon}
+          data-testid={`grid.toolbar.${alignKey}.${value}`}
+        >
           {t('toolbar action label', {
             key: t(`range key ${alignKey} label`),
             value: t(`range value ${value} label`),
