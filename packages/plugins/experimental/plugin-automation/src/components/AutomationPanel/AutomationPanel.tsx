@@ -5,8 +5,8 @@
 import React, { useState } from 'react';
 
 import { S } from '@dxos/echo-schema';
-import { FunctionTrigger } from '@dxos/functions';
-import { create, Filter, isEchoObject, useQuery, type Space } from '@dxos/react-client/echo';
+import { FunctionTriggerSchema, FunctionTrigger, type FunctionTriggerType } from '@dxos/functions';
+import { create, Filter, useQuery, type Space } from '@dxos/react-client/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
@@ -24,37 +24,40 @@ export type AutomationPanelProps = {
 export const AutomationPanel = ({ space }: AutomationPanelProps) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
   const triggers = useQuery(space, Filter.schema(FunctionTrigger));
-  const [trigger, setTrigger] = useState<FunctionTrigger>();
+  const [trigger, setTrigger] = useState<FunctionTriggerType>();
+  const [selected, setSelected] = useState<FunctionTrigger>();
 
   const handleSelect = (trigger: FunctionTrigger) => {
-    setTrigger(trigger);
+    const { id, ...values } = trigger;
+    setTrigger(values);
+    setSelected(trigger);
   };
 
   const handleAdd = () => {
-    // TODO(burdon): Why does this return an object with an `id`?
-    const trigger = create(FunctionTrigger, {});
-    setTrigger(trigger);
+    setTrigger(create(FunctionTriggerSchema, {}));
+    setSelected(undefined);
   };
 
   const handleDelete = (trigger: FunctionTrigger) => {
     space.db.remove(trigger);
+    setTrigger(undefined);
+    setSelected(undefined);
   };
 
   const handleSave: TriggerEditorProps['onSave'] = (trigger) => {
-    if (!isEchoObject(trigger)) {
-      // space.db.add(trigger); // TODO(burdon): Doesn't work.
-      space.db.flush();
-      // TODO(burdon): This doesn't trigger useQuery to update.
-      // setTimeout(async () => {
-      //   const { objects } = await space.db.query(Filter.schema(FunctionTrigger)).run();
-      //   console.log(objects.length);
-      // });
+    console.log(selected, trigger);
+    if (selected) {
+      Object.assign(selected, values); // TODO(burdon): Throws.
+    } else {
+      space.db.add(create(FunctionTrigger, trigger));
     }
 
     setTrigger(undefined);
+    setSelected(undefined);
   };
 
   const handleCancel: TriggerEditorProps['onCancel'] = () => {
+    console.log('handleCancel');
     setTrigger(undefined);
   };
 
