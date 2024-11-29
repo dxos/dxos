@@ -23,7 +23,7 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { ComplexMap, deepMapValues } from '@dxos/util';
 
-import { DATA_NAMESPACE, PROPERTY_ID, EchoReactiveHandler, throwIfCustomClass } from './echo-handler';
+import { DATA_NAMESPACE, PROPERTY_ID, EchoReactiveHandler, throwIfCustomClass, isRootDataObject } from './echo-handler';
 import {
   type ObjectInternals,
   type ProxyTarget,
@@ -37,8 +37,16 @@ import { type EchoDatabase } from '../proxy-db';
 // TODO(burdon): Rename EchoObject and reconcile with proto name.
 export type ReactiveEchoObject<T extends BaseObject<T>> = ReactiveObject<T> & HasId;
 
-export const isEchoObject = (value: any): value is ReactiveEchoObject<any> =>
-  isReactiveObject(value) && getProxyHandler(value) instanceof EchoReactiveHandler;
+export const isEchoObject = (value: any): value is ReactiveEchoObject<any> => {
+  if (!isReactiveObject(value)) {
+    return false;
+  }
+  const handler = getProxyHandler(value);
+  if (!(handler instanceof EchoReactiveHandler)) {
+    return false;
+  }
+  return isRootDataObject(getProxyTarget(value));
+};
 
 /**
  * Creates a reactive ECHO object.

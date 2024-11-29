@@ -257,7 +257,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       target[symbolInternals].core.delete(fullPath);
     } else {
       const withLinks = deepMapValues(validatedValue, (value, recurse) => {
-        if (isReactiveObject(value) as boolean) {
+        if (isEchoObject(value) as boolean) {
           return this.createRef(target, value);
         } else {
           return recurse(value);
@@ -670,7 +670,7 @@ export const getObjectCore = <T extends BaseObject<T>>(obj: ReactiveEchoObject<T
   return core;
 };
 
-const isRootDataObject = (target: ProxyTarget) => {
+export const isRootDataObject = (target: ProxyTarget) => {
   const path = target[symbolPath];
   if (!Array.isArray(path) || path.length > 0) {
     return false;
