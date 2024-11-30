@@ -10,6 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { createExtension, toSignal } from '@dxos/plugin-graph';
 import { getSpace, getTypename, isEchoObject, loadObjectReferences, parseId } from '@dxos/react-client/echo';
+import { translations as formTranslations } from '@dxos/react-ui-form';
 
 import { AutomationPanel } from './components';
 import meta, { AUTOMATION_PLUGIN } from './meta';
@@ -30,7 +31,7 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
           },
         },
       },
-      translations,
+      translations: [...translations, ...formTranslations],
       echo: {
         schema: [ChainType, ChainPromptType, FunctionTrigger],
       },
