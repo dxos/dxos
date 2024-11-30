@@ -15,6 +15,7 @@ export default {
 
 const SPACE_ACTION = `${SPACE_PLUGIN}/action`;
 export enum SpaceAction {
+  OPEN_CREATE_SPACE = `${SPACE_ACTION}/open-create-space`,
   CREATE = `${SPACE_ACTION}/create`,
   JOIN = `${SPACE_ACTION}/join`,
   SHARE = `${SPACE_ACTION}/share`,

@@ -81,7 +81,7 @@ import {
   SpaceSettingsDialog,
   type SpaceSettingsDialogProps,
   CreateObjectDialog,
-  CreateObjectDialogProps,
+  type CreateObjectDialogProps,
 } from './components';
 import meta, { SPACE_PLUGIN, SpaceAction } from './meta';
 import translations from './translations';
@@ -642,17 +642,19 @@ export const SpacePlugin = ({
               filter: (node): node is Node<null> => node.id === SPACES,
               actions: () => [
                 {
-                  id: SpaceAction.CREATE,
+                  id: SpaceAction.OPEN_CREATE_SPACE,
                   data: async () => {
                     await dispatch({
                       plugin: SPACE_PLUGIN,
-                      action: SpaceAction.CREATE,
+                      action: SpaceAction.OPEN_CREATE_SPACE,
                     });
                   },
                   properties: {
                     label: ['create space label', { ns: SPACE_PLUGIN }],
                     icon: 'ph--plus--regular',
                     testId: 'spacePlugin.createSpace',
+                    disposition: 'item',
+                    className: 'border-t border-separator',
                   },
                 },
                 {
@@ -667,6 +669,7 @@ export const SpacePlugin = ({
                     label: ['join space label', { ns: SPACE_PLUGIN }],
                     icon: 'ph--sign-in--regular',
                     testId: 'spacePlugin.joinSpace',
+                    disposition: 'item',
                   },
                 },
               ],
@@ -1274,6 +1277,7 @@ export const SpacePlugin = ({
               break;
             }
 
+            case SpaceAction.OPEN_CREATE_SPACE:
             case SpaceAction.OPEN_CREATE_OBJECT: {
               return {
                 data: true,
