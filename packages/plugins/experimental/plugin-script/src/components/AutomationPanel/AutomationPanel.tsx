@@ -41,7 +41,7 @@ export const AutomationPanel = ({ subject }: AutomationPanelProps) => {
         />
       )}
       {functionToChatWith && <ChatPanel fn={functionToChatWith} subject={subject} />}
-      {subject instanceof ScriptType && functions.length === 0 && <p>Deploy function to interact with it.</p>}
+      {subject instanceof ScriptType && functions.length === 0 && <div className='p-1'>Function not deployed.</div>}
     </div>
   );
 };
