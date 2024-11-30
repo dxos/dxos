@@ -3,3 +3,4 @@
 //
 
 export * from './CreateObjectDialog';
+export * from './CreateSpaceDialog';

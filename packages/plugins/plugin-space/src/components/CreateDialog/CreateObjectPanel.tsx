@@ -4,10 +4,10 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { type AbstractTypedObject, getObjectAnnotation } from '@dxos/echo-schema';
+import { type AbstractTypedObject, getObjectAnnotation, S } from '@dxos/echo-schema';
 import { type SpaceId, type Space, isSpace } from '@dxos/react-client/echo';
 import { IconButton, Input, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { DeprecatedFormInput } from '@dxos/react-ui-form';
+import { DeprecatedFormInput, Form } from '@dxos/react-ui-form';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { nonNullable, type MaybePromise } from '@dxos/util';
 
@@ -21,7 +21,6 @@ export type CreateObjectPanelProps = {
   typename?: string;
   target?: Space | CollectionType;
   name?: string;
-  namesCache?: Record<string, string>;
   defaultSpaceId?: SpaceId;
   onCreateObject?: (params: {
     schema: AbstractTypedObject;
@@ -36,24 +35,25 @@ export const CreateObjectPanel = ({
   typename: initialTypename,
   target: initialTarget,
   name: initialName,
-  namesCache,
   defaultSpaceId,
   onCreateObject,
 }: CreateObjectPanelProps) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
   const [target, setTarget] = useState<Space | CollectionType | undefined>(initialTarget);
-  const [name, setName] = useState<string | undefined>(initialName);
   const schema = schemas.find((schema) => getObjectAnnotation(schema)?.typename === typename);
   const options = schemas.map(getObjectAnnotation).filter(nonNullable);
 
-  const handleCreateObject = useCallback(async () => {
-    if (!schema || !target) {
-      return;
-    }
+  const handleCreateObject = useCallback(
+    async ({ name }: { name?: string }) => {
+      if (!schema || !target) {
+        return;
+      }
 
-    await onCreateObject?.({ schema, target, name });
-  }, [onCreateObject, schema, target, name]);
+      await onCreateObject?.({ schema, target, name });
+    },
+    [onCreateObject, schema, target],
+  );
 
   const schemaInput = (
     <SearchList.Root label={t('schema input label')} classNames='flex flex-col grow overflow-hidden my-2'>
@@ -85,7 +85,7 @@ export const CreateObjectPanel = ({
             classNames='flex items-center gap-2'
           >
             <span className='grow truncate'>
-              {toLocalizedString(getSpaceDisplayName(space, { namesCache, personal: space.id === defaultSpaceId }), t)}
+              {toLocalizedString(getSpaceDisplayName(space, { personal: space.id === defaultSpaceId }), t)}
             </span>
           </SearchList.Item>
         ))}
@@ -93,27 +93,12 @@ export const CreateObjectPanel = ({
     </SearchList.Root>
   );
 
-  // TODO(wittjosiah): This should use form based on schema ideally, but some fields would need to be able to be annotated for omition.
-  const nameInput = (
-    <>
-      <DeprecatedFormInput label={t('name label')}>
-        <Input.TextInput
-          autoFocus
-          placeholder={t('unnamed object label')}
-          value={name ?? ''}
-          onChange={(event) => setName(event.target.value)}
-        />
-      </DeprecatedFormInput>
-
-      <div className='flex p-2 justify-center'>
-        <IconButton
-          icon='ph--plus--regular'
-          label={t('create object label')}
-          onClick={handleCreateObject}
-          disabled={!target || !schema}
-        />
-      </div>
-    </>
+  const form = (
+    <Form
+      values={{ name: initialName }}
+      schema={S.Struct({ name: S.optional(S.String) })}
+      onSave={handleCreateObject}
+    />
   );
 
   return (
@@ -122,11 +107,11 @@ export const CreateObjectPanel = ({
       {isSpace(target) && (
         <div>
           Target:
-          {toLocalizedString(getSpaceDisplayName(target, { namesCache, personal: target.id === defaultSpaceId }), t)}
+          {toLocalizedString(getSpaceDisplayName(target, { personal: target.id === defaultSpaceId }), t)}
         </div>
       )}
       {target instanceof CollectionType && <div>Target: {target.name}</div>}
-      {!schema ? schemaInput : !target ? spaceInput : nameInput}
+      {!schema ? schemaInput : !target ? spaceInput : form}
     </div>
   );
 };

@@ -29,7 +29,7 @@ import {
   resolvePlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type Trigger, type UnsubscribeCallback } from '@dxos/async';
-import { type AbstractTypedObject, type HasId } from '@dxos/echo-schema';
+import { S, type AbstractTypedObject, type HasId } from '@dxos/echo-schema';
 import { scheduledEffect } from '@dxos/echo-signals/core';
 import { invariant } from '@dxos/invariant';
 import { create, isDeleted, isReactiveObject } from '@dxos/live-object';
@@ -71,6 +71,7 @@ import {
   CollectionSection,
   CreateObjectDialog,
   CreateObjectDialogProps,
+  CreateSpaceDialog,
   DefaultObjectSettings,
   JoinDialog,
   InlineSyncStatus,
@@ -92,6 +93,7 @@ import translations from './translations';
 import {
   CollectionType,
   parseSchemaPlugin,
+  SpaceForm,
   type PluginState,
   type SpacePluginProvides,
   type SpaceSettingsProps,
@@ -530,6 +532,8 @@ export const SpacePlugin = ({
                 );
               } else if (data.component === 'dxos.org/plugin/space/JoinDialog') {
                 return <JoinDialog {...(data.subject as JoinPanelProps)} />;
+              } else if (data.component === 'dxos.org/plugin/space/CreateSpaceDialog') {
+                return <CreateSpaceDialog />;
               } else if (data.component === 'dxos.org/plugin/space/CreateObjectDialog') {
                 return (
                   <CreateObjectDialog
@@ -684,17 +688,19 @@ export const SpacePlugin = ({
               filter: (node): node is Node<null> => node.id === SPACES,
               actions: () => [
                 {
-                  id: SpaceAction.CREATE,
+                  id: SpaceAction.OPEN_CREATE_SPACE,
                   data: async () => {
                     await dispatch({
                       plugin: SPACE_PLUGIN,
-                      action: SpaceAction.CREATE,
+                      action: SpaceAction.OPEN_CREATE_SPACE,
                     });
                   },
                   properties: {
                     label: ['create space label', { ns: SPACE_PLUGIN }],
                     icon: 'ph--plus--regular',
                     testId: 'spacePlugin.createSpace',
+                    disposition: 'item',
+                    className: 'border-t border-separator',
                   },
                 },
                 {
@@ -709,6 +715,7 @@ export const SpacePlugin = ({
                     label: ['join space label', { ns: SPACE_PLUGIN }],
                     icon: 'ph--sign-in--regular',
                     testId: 'spacePlugin.joinSpace',
+                    disposition: 'item',
                   },
                 },
               ],
@@ -1050,15 +1057,35 @@ export const SpacePlugin = ({
               return { data: true };
             }
 
+            case SpaceAction.OPEN_CREATE_SPACE: {
+              return {
+                data: true,
+                intents: [
+                  [
+                    {
+                      action: LayoutAction.SET_LAYOUT,
+                      data: {
+                        element: 'dialog',
+                        component: 'dxos.org/plugin/space/CreateSpaceDialog',
+                        dialogBlockAlign: 'start',
+                        subject: intent.data,
+                      },
+                    },
+                  ],
+                ],
+              };
+            }
+
             case SpaceAction.CREATE: {
-              if (!client) {
+              if (!client || !S.is(SpaceForm)(intent.data)) {
                 return;
               }
 
-              const space = await client.spaces.create(intent.data as PropertiesTypeProps);
+              const space = await client.spaces.create({ name: intent.data.name });
+              if (intent.data.edgeReplication) {
+                await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
+              }
               await space.waitUntilReady();
-              // TODO(wittjosiah): This should be configurable in creation flow.
-              await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
               const collection = create(CollectionType, { objects: [], views: {} });
               space.properties[CollectionType.typename] = collection;
 
@@ -1073,16 +1100,6 @@ export const SpacePlugin = ({
                   activeParts: { main: [space.id] },
                 },
                 intents: [
-                  ...(settings.values.onSpaceCreate
-                    ? [
-                        [
-                          { action: settings.values.onSpaceCreate, data: { space } },
-                          { action: SpaceAction.ADD_OBJECT, data: { target: space } },
-                          { action: NavigationAction.OPEN },
-                          { action: NavigationAction.EXPOSE },
-                        ],
-                      ]
-                    : []),
                   [
                     {
                       action: ObservabilityAction.SEND_EVENT,

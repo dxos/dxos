@@ -30,14 +30,7 @@ import { type TreeData } from '@dxos/react-ui-list';
 import { Path } from '@dxos/react-ui-mosaic';
 import { getHostPlatform } from '@dxos/util';
 
-import {
-  CommandsDialogContent,
-  NavTreeContainer,
-  NavTreeDocumentTitle,
-  NODE_TYPE,
-  NotchStart,
-  SidebarActions,
-} from './components';
+import { CommandsDialogContent, NavTreeContainer, NavTreeDocumentTitle, NODE_TYPE, NotchStart } from './components';
 import { CommandsTrigger } from './components/CommandsTrigger';
 import meta, { KEY_BINDING, NAVTREE_PLUGIN } from './meta';
 import translations from './translations';
@@ -228,9 +221,6 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
           }
 
           switch (role) {
-            case 'actions':
-              return <SidebarActions />;
-
             case 'navigation':
               return (
                 <NavTreeContainer

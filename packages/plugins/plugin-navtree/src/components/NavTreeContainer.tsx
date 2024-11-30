@@ -232,10 +232,6 @@ export const NavTreeContainer = memo(({ isCurrent, popoverAnchorId, ...props }: 
 
         {/* TODO(thure): What gives this an inline `overflow: initial`? */}
         <div role='none' className='border-be border-separator !overflow-y-auto'>
-          <div role='none' className='border-be border-separator'>
-            <Surface role='actions' limit={1} />
-          </div>
-
           <NavTree
             id={graph.root.id}
             getActions={getActions}

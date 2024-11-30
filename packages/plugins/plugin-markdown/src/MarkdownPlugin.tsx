@@ -93,10 +93,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       metadata: {
         records: {
           [DocumentType.typename]: {
-            createObject: async (data: Partial<DocumentType>) => {
-              const result = await dispatch?.({ plugin: MARKDOWN_PLUGIN, action: MarkdownAction.CREATE, data });
-              return result?.data;
-            },
+            createObject: MarkdownAction.CREATE,
             label: (object: any) => (object instanceof DocumentType ? object.name || object.fallbackName : undefined),
             placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
             icon: 'ph--text-aa--regular',
