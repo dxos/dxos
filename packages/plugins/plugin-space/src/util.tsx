@@ -250,7 +250,7 @@ export const constructSpaceActions = ({
         id: getId(SpaceAction.OPEN_CREATE_OBJECT),
         type: ACTION_TYPE,
         data: async () => {
-          await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.OPEN_CREATE_OBJECT, data: { space } });
+          await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.OPEN_CREATE_OBJECT, data: { target: space } });
         },
         properties: {
           label: ['create object in space label', { ns: SPACE_PLUGIN }],

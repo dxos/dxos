@@ -5,7 +5,6 @@
 import React from 'react';
 
 import {
-  filterPlugins,
   LayoutAction,
   parseIntentPlugin,
   resolvePlugin,
@@ -17,9 +16,7 @@ import {
   type TranslationsProvides,
 } from '@dxos/app-framework';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
-import { type AbstractTypedObject } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals/react';
-import { log } from '@dxos/log';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { Client, type ClientOptions, ClientProvider } from '@dxos/react-client';
 import { type IdentityPanelProps, type JoinPanelProps } from '@dxos/shell/react';

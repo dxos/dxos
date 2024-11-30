@@ -12,6 +12,7 @@ import {
   LayoutAction,
   type LayoutProvides,
   type LocationProvides,
+  type MetadataResolverProvides,
   NavigationAction,
   type Plugin,
   type PluginDefinition,
@@ -177,6 +178,7 @@ export const SpacePlugin = ({
   let layoutPlugin: Plugin<LayoutProvides> | undefined;
   let navigationPlugin: Plugin<LocationProvides> | undefined;
   let attentionPlugin: Plugin<AttentionPluginProvides> | undefined;
+  let metadataPlugin: Plugin<MetadataResolverProvides> | undefined;
 
   const createSpaceInvitationUrl = (invitationCode: string) => {
     const baseUrl = new URL(invitationUrl);
@@ -406,6 +408,7 @@ export const SpacePlugin = ({
 
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
+      metadataPlugin = resolvePlugin(plugins, parseMetadataResolverPlugin);
       navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       attentionPlugin = resolvePlugin(plugins, parseAttentionPlugin);
       clientPlugin = resolvePlugin(plugins, parseClientPlugin);
@@ -528,7 +531,13 @@ export const SpacePlugin = ({
               } else if (data.component === 'dxos.org/plugin/space/JoinDialog') {
                 return <JoinDialog {...(data.subject as JoinPanelProps)} />;
               } else if (data.component === 'dxos.org/plugin/space/CreateObjectDialog') {
-                return <CreateObjectDialog schemas={schemas} spaceId={data.spaceId as SpaceId} />;
+                return (
+                  <CreateObjectDialog
+                    {...(data.subject as CreateObjectDialogProps)}
+                    schemas={schemas}
+                    resolve={metadataPlugin?.provides.metadata.resolver}
+                  />
+                );
               }
               return null;
             case 'popover': {
@@ -1310,6 +1319,7 @@ export const SpacePlugin = ({
                         element: 'dialog',
                         component: 'dxos.org/plugin/space/CreateObjectDialog',
                         dialogBlockAlign: 'start',
+                        subject: intent.data,
                       },
                     },
                   ],
