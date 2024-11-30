@@ -11,6 +11,7 @@ import {
   LayoutAction,
   NavigationAction,
   type PluginDefinition,
+  type IntentDispatcher,
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -63,6 +64,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
   const getViewMode = (id: string) => (id && state.values.viewMode[id]) || settings.values.defaultViewMode;
   const setViewMode = (id: string, viewMode: EditorViewMode) => (state.values.viewMode[id] = viewMode);
+  let dispatch: IntentDispatcher | undefined;
 
   return {
     meta,
@@ -83,12 +85,18 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         const { extensions } = plugin.provides.markdown;
         state.values.extensionProviders?.push(extensions);
       });
+
+      dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
     },
     provides: {
       settings: settings.values,
       metadata: {
         records: {
           [DocumentType.typename]: {
+            createObject: async (data: Partial<DocumentType>) => {
+              const result = await dispatch?.({ plugin: MARKDOWN_PLUGIN, action: MarkdownAction.CREATE, data });
+              return result?.data;
+            },
             label: (object: any) => (object instanceof DocumentType ? object.name || object.fallbackName : undefined),
             placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
             icon: 'ph--text-aa--regular',
@@ -288,10 +296,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 threads: [],
               });
 
-              return {
-                data: doc,
-                intents: [[{ action: LayoutAction.SCROLL_INTO_VIEW, data: { id: fullyQualifiedId(doc) } }]],
-              };
+              return { data: doc };
             }
 
             case MarkdownAction.SET_VIEW_MODE: {
