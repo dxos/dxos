@@ -144,10 +144,7 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
         },
       },
       intent: {
-        resolver: (intent) => {
-          switch (intent.action) {
-          }
-        },
+        resolver: (intent) => {},
       },
     },
   };

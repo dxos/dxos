@@ -4,7 +4,6 @@
 
 import React from 'react';
 import { type SyntaxHighlighterProps as NativeSyntaxHighlighterProps } from 'react-syntax-highlighter';
-
 // Lightweight version will load specific language parsers asynchronously.
 // Using `light-async` version directly from dist to avoid any chance of the heavy one being loaded.
 // eslint-disable-next-line no-restricted-imports

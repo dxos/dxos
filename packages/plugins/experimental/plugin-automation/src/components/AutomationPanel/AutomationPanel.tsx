@@ -29,7 +29,7 @@ export const AutomationPanel = ({ space }: AutomationPanelProps) => {
   const [selected, setSelected] = useState<FunctionTrigger>();
 
   const handleSelect = (trigger: FunctionTrigger) => {
-    const { id, ...values } = trigger;
+    const { id: _, ...values } = trigger;
     setTrigger(values);
     setSelected(trigger);
   };

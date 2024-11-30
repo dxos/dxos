@@ -12,9 +12,9 @@ import type {
 import { type SchemaProvides } from '@dxos/plugin-client';
 import { type PanelProvides } from '@dxos/plugin-deck/types';
 
-import { AUTOMATION_PLUGIN } from '../meta';
+// import { AUTOMATION_PLUGIN } from '../meta';
 
-const AUTOMATION_ACTION = `${AUTOMATION_PLUGIN}/action`;
+// const AUTOMATION_ACTION = `${AUTOMATION_PLUGIN}/action`;
 
 export enum AutomationAction {}
 
