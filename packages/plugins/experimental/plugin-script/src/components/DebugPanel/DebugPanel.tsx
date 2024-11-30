@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { forwardRef, useEffect, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { Avatar, Icon, Input, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -159,10 +159,8 @@ export const DebugPanel = ({ classNames, functionUrl }: DebugPanelProps) => {
 
   return (
     <div className={mx('flex flex-col h-full overflow-hidden', classNames)}>
-      {/* TODO(burdon): Replace with Thread? */}
-      <div ref={scrollerRef} className='flex flex-col gap-6 h-full p-2 overflow-x-hidden overflow-y-auto'>
-        <MessageThread state={state} result={result} history={history} />
-      </div>
+      {/* TODO(burdon): Replace with Thread. */}
+      <MessageThread ref={scrollerRef} state={state} result={result} history={history} />
 
       <Toolbar.Root classNames='p-1'>
         <Input.Root>
@@ -189,9 +187,19 @@ export const DebugPanel = ({ classNames, functionUrl }: DebugPanelProps) => {
 // TODO(burdon): Replace with thread?
 // TODO(burdon): Button to delete individual messages.
 // TODO(burdon): Button to edit/re-run question.
-const MessageThread = ({ state, result, history }: { state: State | null; result: string; history: Message[] }) => {
+type MessageThreadProps = {
+  state: State | null;
+  history: Message[];
+  result: string;
+};
+
+const MessageThread = forwardRef(({ state, history, result }: MessageThreadProps, forwardedRef) => {
+  if (!history.length && !result.length) {
+    return null;
+  }
+
   return (
-    <>
+    <div ref={forwardedRef} className='flex flex-col gap-6 h-full p-2 overflow-x-hidden overflow-y-auto'>
       {history.map((message, i) => (
         <div key={i} className='grid grid-cols-[2rem_1fr_2rem]'>
           <div className='p-1'>{message.type === 'response' && <RobotAvatar />}</div>
@@ -200,6 +208,7 @@ const MessageThread = ({ state, result, history }: { state: State | null; result
           </div>
         </div>
       ))}
+
       {result?.length > 0 && (
         <div className='grid grid-cols-[2rem_1fr_2rem]'>
           <div className='p-1'>
@@ -212,9 +221,9 @@ const MessageThread = ({ state, result, history }: { state: State | null; result
           </div>
         </div>
       )}
-    </>
+    </div>
   );
-};
+});
 
 const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message }>) => {
   const { type, text, data, error } = message;
