@@ -8,9 +8,10 @@ import { type ReactiveEchoObject } from '@dxos/client/echo';
 import { failUndefined } from '@dxos/debug';
 import { useClient } from '@dxos/react-client';
 import { Filter, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
-import { Select } from '@dxos/react-ui';
+import { Select, useTranslation } from '@dxos/react-ui';
 
 import { getInvocationUrl, getUserFunctionUrlInMetadata } from '../../edge';
+import { SCRIPT_PLUGIN } from '../../meta';
 import { FunctionType, ScriptType } from '../../types';
 import { DebugPanel } from '../DebugPanel';
 
@@ -19,6 +20,7 @@ export interface AutomationPanelProps {
 }
 
 export const AutomationPanel = ({ subject }: AutomationPanelProps) => {
+  const { t } = useTranslation(SCRIPT_PLUGIN);
   const space = getSpace(subject);
 
   // TODO(dmaretskyi): Parametric query.
@@ -41,7 +43,7 @@ export const AutomationPanel = ({ subject }: AutomationPanelProps) => {
         />
       )}
       {functionToChatWith && <ChatPanel fn={functionToChatWith} subject={subject} />}
-      {subject instanceof ScriptType && functions.length === 0 && <div className='p-1'>Function not deployed.</div>}
+      {subject instanceof ScriptType && functions.length === 0 && <div className='p-1'>t('not deployed')</div>}
     </div>
   );
 };
