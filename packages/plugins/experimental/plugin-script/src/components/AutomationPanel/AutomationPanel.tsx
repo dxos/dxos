@@ -30,8 +30,9 @@ export const AutomationPanel = ({ subject }: AutomationPanelProps) => {
     {},
     [subject],
   );
+
   const [selectedFunction, setSelectedFunction] = useState<FunctionType | null>(null);
-  const functionToChatWith = subject instanceof ScriptType ? functions[0] : selectedFunction;
+  const chatFunction = subject instanceof ScriptType ? functions[0] : selectedFunction;
 
   return (
     <div className='h-full flex flex-col'>
@@ -42,8 +43,8 @@ export const AutomationPanel = ({ subject }: AutomationPanelProps) => {
           functions={functions}
         />
       )}
-      {functionToChatWith && <ChatPanel fn={functionToChatWith} subject={subject} />}
-      {subject instanceof ScriptType && functions.length === 0 && <div className='p-1'>t('not deployed')</div>}
+      {chatFunction && <ChatPanel fn={chatFunction} subject={subject} />}
+      {subject instanceof ScriptType && functions.length === 0 && <div className='p-1'>{t('not deployed')}</div>}
     </div>
   );
 };
