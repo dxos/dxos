@@ -9,12 +9,13 @@ import { FunctionTrigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { createExtension, toSignal } from '@dxos/plugin-graph';
-import { getTypename, loadObjectReferences, parseId } from '@dxos/react-client/echo';
+import { getSpace, getTypename, isEchoObject, loadObjectReferences, parseId } from '@dxos/react-client/echo';
+import { translations as formTranslations } from '@dxos/react-ui-form';
 
 import { AutomationPanel } from './components';
 import meta, { AUTOMATION_PLUGIN } from './meta';
 import translations from './translations';
-import { AutomationAction, type AutomationPluginProvides, ChainPromptType, ChainType } from './types';
+import { type AutomationPluginProvides, ChainPromptType, ChainType } from './types';
 
 export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> => {
   return {
@@ -30,7 +31,7 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
           },
         },
       },
-      translations,
+      translations: [...translations, ...formTranslations],
       echo: {
         schema: [ChainType, ChainPromptType, FunctionTrigger],
       },
@@ -39,7 +40,7 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
           {
             id: 'automation',
             label: ['open automation panel label', { ns: AUTOMATION_PLUGIN }],
-            icon: 'ph--flow-arrow--regular',
+            icon: 'ph--magic-wand--regular',
           },
         ],
       },
@@ -62,7 +63,7 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
                 }
 
                 const type = 'orphan-settings-for-subject';
-                const icon = 'ph--flow-arrow--regular';
+                const icon = 'ph--magic-wand--regular';
 
                 const [subjectId] = id.split('~');
                 const { spaceId, objectId } = parseId(subjectId);
@@ -127,28 +128,23 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
       },
       surface: {
         component: ({ data, role }) => {
-          switch (role) {
-            // case 'article':
-            // return data.object instanceof ChainType ? <ChainArticle chain={data.object} /> : null;
+          const object = data.subject;
+          const space = isEchoObject(object) ? getSpace(object) : undefined;
+          if (!space) {
+            return null;
+          }
 
+          invariant(isEchoObject(object));
+          switch (role) {
             case 'complementary--automation':
-              return <AutomationPanel />;
+              return <AutomationPanel space={space} object={object} />;
           }
 
           return null;
         },
       },
       intent: {
-        resolver: (intent) => {
-          switch (intent.action) {
-            case AutomationAction.CREATE: {
-              return {
-                // data: create(ChainType, { prompts: [] }),
-                // data: create(FunctionTrigger, { function: '', spec: { type: 'timer', cron: '' } }),
-              };
-            }
-          }
-        },
+        resolver: (intent) => {},
       },
     },
   };

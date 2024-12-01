@@ -80,8 +80,11 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
       test('can assign object values', async () => {
         const obj = await createObject();
 
-        obj.object = { field: 'bar' };
+        const plainObject = { field: 'bar' };
+        obj.object = plainObject;
         expect(obj.object.field).to.eq('bar');
+
+        expect(obj.object).to.deep.eq(plainObject);
 
         obj.object.field = 'baz';
         expect(obj.object.field).to.eq('baz');

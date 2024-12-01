@@ -74,5 +74,5 @@ export interface Echo extends MulticastObservable<Space[]> {
    * @param filter
    * @param options
    */
-  query<T extends BaseObject = any>(filter?: FilterSource<T>, options?: QueryOptions): Query<T>;
+  query<T extends BaseObject<T> = any>(filter?: FilterSource<T>, options?: QueryOptions): Query<T>;
 }

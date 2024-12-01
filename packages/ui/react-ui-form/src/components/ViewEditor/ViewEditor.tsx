@@ -95,7 +95,7 @@ export const ViewEditor = ({
 
   return (
     <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
-      <Form<ViewMetaType> autoFocus autoSave schema={ViewMetaSchema} values={viewValues} onSubmit={handleViewUpdate} />
+      <Form<ViewMetaType> autoFocus autoSave schema={ViewMetaSchema} values={viewValues} onSave={handleViewUpdate} />
 
       <div>
         {/* TODO(burdon): Clean up common form ux. */}
@@ -139,7 +139,7 @@ export const ViewEditor = ({
           projection={projection}
           field={field}
           registry={registry}
-          onClose={handleClose}
+          onSave={handleClose}
         />
       )}
 
