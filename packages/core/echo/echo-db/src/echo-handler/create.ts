@@ -23,7 +23,7 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { ComplexMap, deepMapValues } from '@dxos/util';
 
-import { DATA_NAMESPACE, PROPERTY_ID, EchoReactiveHandler, throwIfCustomClass } from './echo-handler';
+import { DATA_NAMESPACE, PROPERTY_ID, EchoReactiveHandler, throwIfCustomClass, isRootDataObject } from './echo-handler';
 import {
   type ObjectInternals,
   type ProxyTarget,
@@ -35,17 +35,27 @@ import { type DecodedAutomergePrimaryValue, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 
 // TODO(burdon): Rename EchoObject and reconcile with proto name.
-export type ReactiveEchoObject<T extends BaseObject> = ReactiveObject<T> & HasId;
+export type ReactiveEchoObject<T extends BaseObject<T>> = ReactiveObject<T> & HasId;
 
-export const isEchoObject = (value: any): value is ReactiveEchoObject<any> =>
-  isReactiveObject(value) && getProxyHandler(value) instanceof EchoReactiveHandler;
+export const isEchoObject = (value: any): value is ReactiveEchoObject<any> => {
+  if (!isReactiveObject(value)) {
+    return false;
+  }
+
+  const handler = getProxyHandler(value);
+  if (!(handler instanceof EchoReactiveHandler)) {
+    return false;
+  }
+
+  return isRootDataObject(getProxyTarget(value));
+};
 
 /**
  * Creates a reactive ECHO object.
  * @internal
  */
 // TODO(burdon): Document lifecycle.
-export const createObject = <T extends BaseObject>(obj: T): ReactiveEchoObject<T> => {
+export const createObject = <T extends BaseObject<T>>(obj: T): ReactiveEchoObject<T> => {
   invariant(!isEchoObject(obj));
   const schema = getSchema(obj);
   if (schema != null) {
@@ -100,7 +110,7 @@ export const createObject = <T extends BaseObject>(obj: T): ReactiveEchoObject<T
 };
 
 // TODO(burdon): Call and remove subscriptions.
-export const destroyObject = <T extends BaseObject>(proxy: ReactiveEchoObject<T>) => {
+export const destroyObject = <T extends BaseObject<T>>(proxy: ReactiveEchoObject<T>) => {
   invariant(isEchoObject(proxy));
   const target: ProxyTarget = getProxyTarget(proxy);
   const internals: ObjectInternals = target[symbolInternals];

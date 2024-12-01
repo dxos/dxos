@@ -7,16 +7,10 @@ import { S } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
 import { EXPANDO_TYPENAME } from './expando';
-import {
-  type HasId,
-  type ObjectAnnotation,
-  getObjectAnnotation,
-  ReferenceAnnotationId,
-  type JsonSchemaType,
-} from '../ast';
+import { type ObjectAnnotation, getObjectAnnotation, ReferenceAnnotationId, type JsonSchemaType } from '../ast';
 import { MutableSchema, StoredSchema } from '../mutable';
 import { getTypename, isReactiveObject } from '../proxy';
-import { type BaseObject, type Ref } from '../types';
+import { type WithId, type Ref } from '../types';
 
 /**
  * The `$id` field for an ECHO reference schema.
@@ -42,12 +36,12 @@ export const createSchemaReference = (typename: string): JsonSchemaType => {
   };
 };
 
-export interface ref<T extends BaseObject> extends S.Schema<Ref<T>, EncodedReference> {}
+export interface ref<T extends WithId> extends S.Schema<Ref<T>, EncodedReference> {}
 
-export const ref = <T extends HasId>(schema: S.Schema<T, any>): ref<T> => {
+export const ref = <T extends WithId>(schema: S.Schema<T, any>): ref<T> => {
   const annotation = getObjectAnnotation(schema);
   if (annotation == null) {
-    throw new Error('Reference target must be an ECHO object.');
+    throw new Error('Reference target must be an ECHO schema.');
   }
 
   return createEchoReferenceSchema(annotation);

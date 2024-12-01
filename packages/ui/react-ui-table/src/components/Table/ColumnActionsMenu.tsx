@@ -14,7 +14,6 @@ type ColumnActionsMenuProps = { model?: TableModel };
 export const ColumnActionsMenu = ({ model }: ColumnActionsMenuProps) => {
   const { t } = useTranslation(translationKey);
   const state = model?.modalController.state.value;
-
   if (!model || state?.type !== 'column') {
     return null;
   }
