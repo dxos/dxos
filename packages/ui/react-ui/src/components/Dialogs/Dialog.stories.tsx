@@ -26,8 +26,10 @@ const StorybookDialog = ({ title, openTrigger, description, body, closeTrigger, 
         <Button>{openTrigger}</Button>
       </Dialog.Trigger>
       <Dialog.Overlay blockAlign={blockAlign}>
-        <Dialog.Content>
-          <Dialog.Title>{title}</Dialog.Title>
+        <Dialog.Content size='md'>
+          <Dialog.Header>
+            <Dialog.Title>{title}</Dialog.Title>
+          </Dialog.Header>
           <Dialog.Description>{description}</Dialog.Description>
           <p className='mbs-2 mbe-4'>{body}</p>
           <Dialog.Close asChild>

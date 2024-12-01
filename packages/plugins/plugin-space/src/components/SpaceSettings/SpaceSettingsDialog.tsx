@@ -66,6 +66,7 @@ export const SpaceSettingsDialog = ({
           </Button>
         </Dialog.Close>
       </div>
+
       <Tabs.Root
         orientation='vertical'
         value={selected}

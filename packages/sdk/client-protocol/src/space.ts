@@ -3,7 +3,7 @@
 //
 
 import { type MulticastObservable, type UnsubscribeCallback } from '@dxos/async';
-import type { SpecificCredential } from '@dxos/credentials';
+import { type SpecificCredential } from '@dxos/credentials';
 import { type CoreDatabase, type EchoDatabase, type ReactiveEchoObject } from '@dxos/echo-db';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import {
@@ -17,7 +17,7 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import type { Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
 import { type CancellableInvitation } from './invitations';
@@ -73,6 +73,8 @@ export interface Space {
   /**
    * Properties object.
    */
+  // TODO(burdon): Use type.
+  // get properties(): ReactiveEchoObject<SpaceProperties>;
   get properties(): ReactiveEchoObject<any>;
 
   /**

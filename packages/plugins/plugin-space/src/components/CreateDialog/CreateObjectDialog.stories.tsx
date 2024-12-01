@@ -17,7 +17,7 @@ import { CreateObjectDialog, type CreateObjectDialogProps } from './CreateObject
 import translations from '../../translations';
 import { CollectionType } from '../../types';
 
-const Story = (args: CreateObjectDialogProps) => {
+const Container = (args: CreateObjectDialogProps) => {
   return (
     <Dialog.Root open>
       <Dialog.Overlay blockAlign='start'>
@@ -31,7 +31,7 @@ const Story = (args: CreateObjectDialogProps) => {
 const meta: Meta<typeof CreateObjectDialog> = {
   title: 'plugins/plugin-space/CreateObjectDialog',
   component: CreateObjectDialog,
-  render: Story,
+  render: Container,
   decorators: [
     withClientProvider({ createIdentity: true, createSpace: true, types: [CollectionType] }),
     withTheme,
@@ -45,21 +45,22 @@ const meta: Meta<typeof CreateObjectDialog> = {
 
 export default meta;
 
-export const Default: StoryObj<typeof CreateObjectDialog> = {};
+export type Story = StoryObj<typeof CreateObjectDialog>;
 
-export const Typename: StoryObj<typeof CreateObjectDialog> = {
+export const Default: Story = {};
+
+export const Typename: Story = {
   args: { typename: CollectionType.typename },
 };
 
 export const TargetSpace: StoryObj<typeof CreateObjectDialog> = {
   render: (args) => {
     const space = useSpace();
-
     if (!space) {
       return <></>;
     }
 
-    return <Story {...args} target={space} />;
+    return <Container {...args} target={space} />;
   },
 };
 
@@ -67,7 +68,6 @@ export const TargetCollection: StoryObj<typeof CreateObjectDialog> = {
   render: (args) => {
     const space = useSpace();
     const [collection] = useQuery(space, Filter.schema(CollectionType));
-
     useEffect(() => {
       if (space) {
         space.db.add(create(CollectionType, { name: 'My Collection', objects: [], views: {} }));
@@ -78,6 +78,6 @@ export const TargetCollection: StoryObj<typeof CreateObjectDialog> = {
       return <></>;
     }
 
-    return <Story {...args} target={collection} />;
+    return <Container {...args} target={collection} />;
   },
 };

@@ -1121,6 +1121,7 @@ export const SpacePlugin = ({
                         data: {
                           name: 'space.share',
                           properties: {
+                            // TODO(burdon): Change to spaceId (consistent with 'space.lock' below).
                             space: space.id,
                           },
                         },
