@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Effect } from 'effect';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { create, type ReactiveObject, type BaseObject } from '@dxos/echo-schema';
@@ -16,7 +15,7 @@ import { IconButton, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { TableType } from '@dxos/react-ui-table';
 import { createView } from '@dxos/schema';
-import { createArrayPipeline, createObjectPipeline, Test, type ValueGenerator } from '@dxos/schema/testing';
+import { createAsyncGenerator, Test, type ValueGenerator } from '@dxos/schema/testing';
 import { jsonKeyReplacer, sortKeys } from '@dxos/util';
 
 const generator: ValueGenerator = faker as any;
@@ -55,8 +54,8 @@ export const SpaceGenerator = ({ space, onAddObjects }: SpaceGeneratorProps) => 
               space.db.schemaRegistry.addSchema(type);
 
             // Create objects.
-            const pipeline = createObjectPipeline(generator, schema.schema, space.db);
-            const objects = await Effect.runPromise(createArrayPipeline(n, pipeline));
+            const generate = createAsyncGenerator(generator, schema.schema, space.db);
+            const objects = await generate.createObjects(n);
 
             // Find or create table and view.
             const { objects: tables } = await space.db.query(Filter.schema(TableType)).run();
@@ -150,11 +149,11 @@ const SchemaTable = ({ types, objects = {}, label, onClick }: SchemaTableProps) 
   return (
     <div className='grid grid-cols-[1fr_80px_40px] gap-1 overflow-hidden'>
       <div className='grid grid-cols-subgrid col-span-3'>
-        <div className='px-2 py-1'>{label}</div>
+        <div className='px-2 py-1 text-sm text-primary-500'>{label}</div>
       </div>
       {types.map((type) => (
         <div key={type.typename} className='grid grid-cols-subgrid col-span-3 items-center'>
-          <div className='px-2 py-1 text-sm font-mono'>{type.typename}</div>
+          <div className='px-2 py-1 text-sm font-mono text-green-500'>{type.typename}</div>
           <div className='px-2 py-1 text-right font-mono'>{objects[type.typename] ?? 0}</div>
           <IconButton
             variant='ghost'

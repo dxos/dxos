@@ -24,10 +24,10 @@ export const createObjectId = () => ulid();
 // TODO(dmaretskyi): Deep mutability.
 // TODO(dmaretskyi): Invert generics (generic over schema) to have better error messages.
 export const create: {
-  <T extends BaseObject>(obj: T): ReactiveObject<T>;
-  <T extends BaseObject>(schema: typeof Expando, obj: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<Expando>;
-  <T extends BaseObject>(schema: S.Schema<T, any>, obj: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<T>;
-} = <T extends BaseObject>(
+  <T extends BaseObject<T>>(obj: T): ReactiveObject<T>;
+  <T extends BaseObject<T>>(schema: typeof Expando, obj: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<Expando>;
+  <T extends BaseObject<T>>(schema: S.Schema<T, any>, obj: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<T>;
+} = <T extends BaseObject<T>>(
   objOrSchema: S.Schema<T, any> | T,
   obj?: ExcludeId<T>,
   meta?: ObjectMeta,
@@ -41,7 +41,7 @@ export const create: {
   }
 };
 
-const createReactiveObject = <T extends BaseObject>(
+const createReactiveObject = <T extends BaseObject<T>>(
   obj: T,
   meta?: ObjectMeta,
   schema?: S.Schema<T>,

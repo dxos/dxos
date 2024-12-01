@@ -40,7 +40,7 @@ export const FeedbackForm = ({ onClose }: { onClose: () => void }) => {
   const translation = mkTranslation(t);
   const dispatch = useIntentDispatcher();
 
-  const onSubmit = useCallback(
+  const onSave = useCallback(
     (values: FeedbackFormType) => {
       void dispatch({ action: 'dxos.org/plugin/observability/capture-feedback', data: values });
       onClose();
@@ -48,10 +48,10 @@ export const FeedbackForm = ({ onClose }: { onClose: () => void }) => {
     [dispatch, onClose],
   );
 
-  const { handleSubmit, canSubmit, getStatus, ...inputProps } = useForm<FeedbackFormType>({
+  const { handleSave, canSave, getStatus, ...inputProps } = useForm<FeedbackFormType>({
     initialValues,
     schema: FeedbackFormSchema,
-    onSubmit,
+    onSave,
   });
 
   return (
@@ -106,8 +106,8 @@ export const FeedbackForm = ({ onClose }: { onClose: () => void }) => {
           type='submit'
           variant='primary'
           classNames='is-full flex gap-2'
-          disabled={!canSubmit}
-          onClick={handleSubmit}
+          disabled={!canSave}
+          onClick={handleSave}
         >
           <span>{translation('send feedback label')}</span>
           <div className='grow' />
