@@ -7,18 +7,19 @@ import React from 'react';
 
 import { filterPlugins, parseTranslationsPlugin, type PluginDefinition } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
-import { type ThemeFunction, type ThemeMode, ThemeProvider, Toast, Tooltip } from '@dxos/react-ui';
+import { type ThemeMode, type ThemeContextValue, ThemeProvider, Toast, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
 import meta from './meta';
 import compositeEnUs from './translations/en-US';
 
-export type ThemePluginOptions = {
+export type ThemePluginOptions = Partial<Pick<ThemeContextValue, 'tx' | 'noCache'>> & {
   appName?: string;
-  tx?: ThemeFunction<any>;
 };
 
-export const ThemePlugin = ({ appName, tx: propsTx }: ThemePluginOptions = { appName: 'test' }): PluginDefinition => {
+export const ThemePlugin = (
+  { appName, tx: propsTx = defaultTx, ...rest }: ThemePluginOptions = { appName: 'test' },
+): PluginDefinition => {
   const resources: Resource[] = [compositeEnUs(appName)];
   const state = create<{ themeMode: ThemeMode }>({ themeMode: 'dark' });
   let modeQuery: MediaQueryList | undefined;
@@ -44,9 +45,9 @@ export const ThemePlugin = ({ appName, tx: propsTx }: ThemePluginOptions = { app
     provides: {
       context: ({ children }) => {
         return (
-          <ThemeProvider {...{ tx: propsTx ?? defaultTx, themeMode: state.themeMode, resourceExtensions: resources }}>
+          <ThemeProvider {...{ tx: propsTx, themeMode: state.themeMode, resourceExtensions: resources, ...rest }}>
             <Toast.Provider>
-              <Tooltip.Provider delayDuration={1000} skipDelayDuration={100} disableHoverableContent>
+              <Tooltip.Provider delayDuration={2_000} skipDelayDuration={100} disableHoverableContent>
                 {children}
               </Tooltip.Provider>
               <Toast.Viewport />
