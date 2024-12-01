@@ -18,6 +18,7 @@ export type ThemeContextValue = {
   tx: ThemeFunction<any>;
   themeMode: ThemeMode;
   hasIosKeyboard: boolean;
+  noCache?: boolean;
 };
 
 /**
@@ -41,6 +42,7 @@ export const ThemeProvider = ({
   themeMode = 'dark',
   rootDensity = 'fine',
   rootElevation = 'base',
+  ...rest
 }: ThemeProviderProps) => {
   useEffect(() => {
     if (document.defaultView) {
@@ -51,7 +53,7 @@ export const ThemeProvider = ({
   }, []);
 
   return (
-    <ThemeContext.Provider value={{ tx, themeMode, hasIosKeyboard: hasIosKeyboard() }}>
+    <ThemeContext.Provider value={{ tx, themeMode, hasIosKeyboard: hasIosKeyboard(), ...rest }}>
       <TranslationsProvider
         {...{
           fallback,
