@@ -24,7 +24,7 @@ const meta: Meta<typeof TypeSelector> = {
       { typename: 'Sketch', icon: 'ph--image-square--regular' },
       { typename: 'Sheet', icon: 'ph--grid-nine--regular' },
       { typename: 'Table', icon: 'ph--table--regular' },
-      { typename: 'Chess Game', icon: 'ph--crown-cross--regular' },
+      { typename: 'Should be truncated', icon: 'ph--crown-cross--regular' },
     ],
   },
 };

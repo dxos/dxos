@@ -24,13 +24,13 @@ export const TypeSelector = ({ classNames, types, onSelect }: TypeSelectorProps)
       {types.map(({ typename, icon }) => (
         <div
           key={typename}
-          className='flex w-[10rem] aspect-[4/1] overflow-hidden border border-separator rounded-md'
+          className='flex items-center h-full w-[10rem] aspect-[4/1] overflow-hidden border border-separator rounded-md'
           onClick={() => onSelect?.(typename)}
         >
-          <div className='flex items-center h-full px-2'>
+          <div className='p-2'>
             <Icon icon={icon ?? 'ph--placeholder--regular'} size={6} classNames='opacity-50' />
-            <div className='px-2 truncate'>{typename}</div>
           </div>
+          <div className='truncate pe-2'>{typename}</div>
         </div>
       ))}
     </div>
