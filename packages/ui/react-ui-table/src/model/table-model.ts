@@ -321,6 +321,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
       const { field, props } = this._projection.getFieldProjection(fields[col].id);
       values[fromGridCell({ col, row: 0 })] = {
+        // TODO(burdon): Use same logic as form for fallback title.
         value: props.title ?? field.path,
         readonly: true,
         resizeHandle: 'col',

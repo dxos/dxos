@@ -13,9 +13,8 @@ type RowActionsMenuProps = { model: TableModel };
 
 export const RowActionsMenu = ({ model }: RowActionsMenuProps) => {
   const { t } = useTranslation(translationKey);
-  const state = model.modalController.state.value;
   const hasSelection = model.selection.hasSelection.value;
-
+  const state = model.modalController.state.value;
   if (state?.type !== 'row') {
     return null;
   }

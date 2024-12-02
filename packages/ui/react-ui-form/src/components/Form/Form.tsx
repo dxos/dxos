@@ -24,9 +24,9 @@ import { translationKey } from '../../translations';
 
 const padding = 'px-2';
 
-export type PropsFilter<T extends BaseObject> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
+export type PropsFilter<T extends BaseObject<T>> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
 
-export type FormProps<T extends BaseObject> = ThemedClassName<
+export type FormProps<T extends BaseObject<T>> = ThemedClassName<
   {
     values: T;
     /** Path to the current object from the root. Used with nested forms. */
@@ -45,13 +45,13 @@ export type FormProps<T extends BaseObject> = ThemedClassName<
      * Map of custom renderers for specific properties.
      */
     Custom?: Partial<Record<string, InputComponent<T>>>;
-  } & Pick<FormOptions<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onSubmit'>
+  } & Pick<FormOptions<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onSave'>
 >;
 
 /**
  * General purpose form component that displays field controls based on the given schema.
  */
-export const Form = <T extends BaseObject>({
+export const Form = <T extends BaseObject<T>>({
   classNames,
   schema,
   values: initialValues,
@@ -62,19 +62,19 @@ export const Form = <T extends BaseObject>({
   autoSave,
   onValuesChanged,
   onValidate,
-  onSubmit,
+  onSave,
   onCancel,
   Custom,
 }: FormProps<T>) => {
   const { t } = useTranslation(translationKey);
-  const onValid = useMemo(() => (autoSave ? onSubmit : undefined), [autoSave, onSubmit]);
-  const { canSubmit, values, errors, handleSubmit, ...inputProps } = useForm<T>({
+  const onValid = useMemo(() => (autoSave ? onSave : undefined), [autoSave, onSave]);
+  const { canSave, values, errors, handleSave, ...inputProps } = useForm<T>({
     schema,
     initialValues,
     onValuesChanged,
     onValidate,
     onValid,
-    onSubmit,
+    onSave,
   });
 
   // Filter and sort props.
@@ -103,7 +103,7 @@ export const Form = <T extends BaseObject>({
         .map((property) => {
           const { ast, name, type, format, title, description, examples, options } = property;
           const key = [...path, name];
-          const label = pipe(title ?? name, capitalize);
+          const label = title ?? pipe(name, capitalize);
           const placeholder = examples?.length ? `Example: "${examples[0]}"` : description;
 
           // Get generic input.
@@ -177,19 +177,19 @@ export const Form = <T extends BaseObject>({
         })
         .filter(isNotFalsy)}
 
-      {(onCancel || onSubmit) && !autoSave && (
+      {(onCancel || onSave) && !autoSave && (
         <div role='none' className='flex justify-center'>
           <div role='none' className={mx(onCancel && !readonly && 'grid grid-cols-2 gap-2')}>
             {onCancel && !readonly && (
               <IconButton icon='ph--x--regular' label={t('button cancel')} onClick={onCancel} />
             )}
-            {onSubmit && (
+            {onSave && (
               <IconButton
                 type='submit'
-                disabled={!canSubmit}
+                disabled={!canSave}
                 icon='ph--check--regular'
                 label={t('button save')}
-                onClick={handleSubmit}
+                onClick={handleSave}
               />
             )}
           </div>

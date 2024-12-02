@@ -96,9 +96,10 @@ export type TriggerType = S.Schema.Type<typeof TriggerSchema>;
 export const FunctionTriggerSchema = S.Struct({
   // TODO(burdon): What type does this reference.
   function: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Function' })),
+
   enabled: S.optional(S.Boolean.annotations({ [AST.TitleAnnotationId]: 'Enabled' })),
 
-  // TODO(burdon): Flatten?
+  // TODO(burdon): Flatten entire schema.
   spec: S.optional(TriggerSchema),
 
   // TODO(burdon): Get meta from function.

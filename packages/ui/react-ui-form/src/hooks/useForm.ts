@@ -13,7 +13,7 @@ import { validateSchema, type ValidationError } from '@dxos/schema';
 /**
  * Return type from `useForm` hook.
  */
-export type FormHandler<T extends BaseObject> = {
+export type FormHandler<T extends BaseObject<T>> = {
   //
   // Form state management.
   //
@@ -22,8 +22,8 @@ export type FormHandler<T extends BaseObject> = {
   errors: Record<PropertyKey<T>, string>;
   touched: Record<PropertyKey<T>, boolean>;
   changed: Record<PropertyKey<T>, boolean>;
-  canSubmit: boolean;
-  handleSubmit: () => void;
+  canSave: boolean;
+  handleSave: () => void;
 
   //
   // Form input component helpers.
@@ -38,7 +38,7 @@ export type FormHandler<T extends BaseObject> = {
 /**
  * Hook options.
  */
-export interface FormOptions<T extends BaseObject> {
+export interface FormOptions<T extends BaseObject<T>> {
   schema: S.Schema<T>;
 
   // TODO(burdon): Are these reactive?
@@ -67,20 +67,20 @@ export interface FormOptions<T extends BaseObject> {
   /**
    * Called when the form is submitted and passes validation.
    */
-  onSubmit?: (values: T, meta: { changed: FormHandler<T>['changed'] }) => void;
+  onSave?: (values: T, meta: { changed: FormHandler<T>['changed'] }) => void;
 }
 
 /**
  * Creates a hook for managing form state, including values, validation, and submission.
  * Deeply integrated with `@dxos/schema` for schema-based validation.
  */
-export const useForm = <T extends BaseObject>({
+export const useForm = <T extends BaseObject<T>>({
   schema,
   initialValues,
   onValuesChanged,
   onValidate,
   onValid,
-  onSubmit,
+  onSave,
 }: FormOptions<T>): FormHandler<T> => {
   const [values, setValues] = useState<T>(initialValues);
   useEffect(() => {
@@ -123,7 +123,7 @@ export const useForm = <T extends BaseObject>({
    * NOTE: We can submit if there is no touched field that has an error.
    * Basically, if there's a validation message visible in the form, submit should be disabled.
    */
-  const canSubmit = useMemo(
+  const canSave = useMemo(
     () =>
       Object.keys(values).every(
         (property) => touched[property as PropertyKey<T>] === false || !errors[property as PropertyKey<T>],
@@ -131,11 +131,11 @@ export const useForm = <T extends BaseObject>({
     [values, touched, errors],
   );
 
-  const handleSubmit = useCallback(() => {
+  const handleSave = useCallback(() => {
     if (validate(values)) {
-      onSubmit?.(values, { changed });
+      onSave?.(values, { changed });
     }
-  }, [values, validate, onSubmit]);
+  }, [values, validate, onSave]);
 
   //
   // Fields.
@@ -185,7 +185,7 @@ export const useForm = <T extends BaseObject>({
 
       // TODO(Zan): This should be configurable behavior.
       if (event.relatedTarget?.getAttribute('type') === 'submit') {
-        // NOTE: We do this here instead of onSubmit because the blur event is triggered before the submit event
+        // NOTE: We do this here instead of onSave because the blur event is triggered before the submit event
         //  and results in the submit button being disabled when the form is invalid.
         setTouched(createKeySet(values, true));
       }
@@ -201,8 +201,8 @@ export const useForm = <T extends BaseObject>({
     errors,
     touched,
     changed,
-    canSubmit,
-    handleSubmit,
+    canSave,
+    handleSave,
 
     // Field utils.
     getStatus,
@@ -212,12 +212,12 @@ export const useForm = <T extends BaseObject>({
   } satisfies FormHandler<T>;
 };
 
-const createKeySet = <T extends BaseObject, V>(obj: T, value: V): Record<PropertyKey<T>, V> => {
+const createKeySet = <T extends BaseObject<T>, V>(obj: T, value: V): Record<PropertyKey<T>, V> => {
   invariant(obj);
   return Object.keys(obj).reduce((acc, key) => ({ ...acc, [key]: value }), {} as Record<PropertyKey<T>, V>);
 };
 
-const flatMap = <T extends BaseObject>(errors: ValidationError[]) => {
+const flatMap = <T extends BaseObject<T>>(errors: ValidationError[]) => {
   return errors.reduce(
     (result, { path, message }) => {
       if (!(path in result)) {

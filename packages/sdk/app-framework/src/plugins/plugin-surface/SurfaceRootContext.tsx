@@ -36,8 +36,7 @@ export type SurfaceResult = {
 };
 
 /**
- * Function which resolves a Surface.
- *
+ * Function that resolves a Surface.
  * If a null value is returned, the rendering is deferred to other plugins.
  */
 export type SurfaceComponent = (

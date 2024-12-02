@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { RawString } from './automerge';
+import { type RawString } from './automerge';
 import { type EncodedReference } from './reference';
-import type { SpaceDocVersion } from './space-doc-version';
+import { type SpaceDocVersion } from './space-doc-version';
 
 export type SpaceState = {
   // Url of the root automerge document.

@@ -32,7 +32,7 @@ const requireAutomergeCore = (obj: ReactiveEchoObject<any>) => {
  * Returns new unbound clone of the object.
  * @deprecated
  */
-export const clone = <T extends BaseObject>(
+export const clone = <T extends BaseObject<T>>(
   obj: ReactiveEchoObject<T>,
   { retainId = true, additional = [] }: CloneOptions = {},
 ): T => {
@@ -67,7 +67,7 @@ export const clone = <T extends BaseObject>(
   return clone;
 };
 
-const cloneInner = <T extends BaseObject>(obj: ReactiveEchoObject<T>, id: string): ReactiveEchoObject<T> => {
+const cloneInner = <T extends BaseObject<T>>(obj: ReactiveEchoObject<T>, id: string): ReactiveEchoObject<T> => {
   const core = requireAutomergeCore(obj);
   const coreClone = new ObjectCore();
   coreClone.initNewObject();

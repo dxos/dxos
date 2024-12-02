@@ -20,7 +20,16 @@ import { createExtension, Graph, type Node, toSignal } from '@dxos/plugin-graph'
 import { SpaceAction } from '@dxos/plugin-space';
 import { CollectionType } from '@dxos/plugin-space/types';
 import { type Client } from '@dxos/react-client';
-import { create, getTypename, isEchoObject, isSpace, parseId, type Space, SpaceState } from '@dxos/react-client/echo';
+import {
+  create,
+  getTypename,
+  isEchoObject,
+  isSpace,
+  parseId,
+  type ReactiveObject,
+  type Space,
+  SpaceState,
+} from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import {
   baseSurface,
@@ -29,7 +38,15 @@ import {
   topbarBlockPaddingStart,
 } from '@dxos/react-ui-theme';
 
-import { DebugApp, DebugObjectPanel, DebugSettings, DebugSpace, DebugStatus, Wireframe } from './components';
+import {
+  DebugApp,
+  DebugObjectPanel,
+  DebugSettings,
+  DebugSpace,
+  DebugStatus,
+  SpaceGenerator,
+  Wireframe,
+} from './components';
 import meta, { DEBUG_PLUGIN } from './meta';
 import translations from './translations';
 import {
@@ -157,7 +174,7 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
                   {
                     id: `${space.id}-debug`, // TODO(burdon): Change to slashes consistently.
                     type: 'dxos.org/plugin/debug/space',
-                    data: { space },
+                    data: { space, type: 'dxos.org/plugin/debug/space' },
                     properties: {
                       label: ['debug label', { ns: DEBUG_PLUGIN }],
                       icon: 'ph--bug--regular',
@@ -283,30 +300,37 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
               component = <Devtools />;
             } else if (!primary || typeof primary !== 'object' || !settings.debug) {
               component = null;
-            } else if ('space' in primary && isSpace(primary.space)) {
-              component = (
-                <DebugSpace
-                  space={primary.space}
-                  onAddObjects={(objects) => {
-                    if (!isSpace(primary.space)) {
-                      return;
-                    }
+            } else if (
+              'type' in primary &&
+              primary.type === 'dxos.org/plugin/debug/space' &&
+              'space' in primary &&
+              isSpace(primary.space)
+            ) {
+              const handleAddObject = (objects: ReactiveObject<any>[]) => {
+                if (!isSpace(primary.space)) {
+                  return;
+                }
 
-                    const collection =
-                      primary.space.state.get() === SpaceState.SPACE_READY &&
-                      primary.space.properties[CollectionType.typename];
-                    if (!(collection instanceof CollectionType)) {
-                      return;
-                    }
+                const collection =
+                  primary.space.state.get() === SpaceState.SPACE_READY &&
+                  primary.space.properties[CollectionType.typename];
+                if (!(collection instanceof CollectionType)) {
+                  return;
+                }
 
-                    void context.resolvePlugin(parseIntentPlugin).provides.intent.dispatch(
-                      objects.map((object) => ({
-                        action: SpaceAction.ADD_OBJECT,
-                        data: { target: collection, object },
-                      })),
-                    );
-                  }}
-                />
+                void context.resolvePlugin(parseIntentPlugin).provides.intent.dispatch(
+                  objects.map((object) => ({
+                    action: SpaceAction.ADD_OBJECT,
+                    data: { target: collection, object },
+                  })),
+                );
+              };
+
+              const deprecated = false;
+              component = deprecated ? (
+                <DebugSpace space={primary.space} onAddObjects={handleAddObject} />
+              ) : (
+                <SpaceGenerator space={primary.space} onAddObjects={handleAddObject} />
               );
             } else if ('graph' in primary && primary.graph instanceof Graph) {
               component = <DebugApp graph={primary.graph} />;

@@ -254,8 +254,10 @@ const defaultAnnotations: Record<string, AST.Annotated> = {
 export const getAnnotation =
   <T>(annotationId: symbol, noDefault = true) =>
   (node: AST.AST): T | undefined => {
+    // Title fallback seems to be the identifier.
+    const id = pipe(AST.getIdentifierAnnotation(node), Option.getOrUndefined);
     const value = pipe(AST.getAnnotation<T>(annotationId)(node), Option.getOrUndefined);
-    if (noDefault && value === defaultAnnotations[node._tag]?.annotations[annotationId]) {
+    if (noDefault && (value === defaultAnnotations[node._tag]?.annotations[annotationId] || value === id)) {
       return undefined;
     }
 

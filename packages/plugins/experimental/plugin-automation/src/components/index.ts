@@ -2,6 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './AutomationPanel';
-export * from './PromptEditor';
-export * from './TriggerEditor';
+import { lazy } from 'react';
+
+export const AutomationPanel = lazy(() => import('./AutomationPanel'));

@@ -10,8 +10,9 @@ import { DXN } from '@dxos/keys';
 import { orderKeys, removeUndefinedProperties } from '@dxos/util';
 
 import {
-  GeneratorAnnotationId,
   getObjectAnnotation,
+  FieldLookupAnnotationId,
+  GeneratorAnnotationId,
   type JsonSchemaType,
   type ObjectAnnotation,
   ObjectAnnotationId,
@@ -317,7 +318,7 @@ const refToEffectSchema = (root: any): S.Schema<any> => {
  */
 export const ECHO_REFINEMENT_KEY = 'echo';
 
-const ECHO_REFINEMENTS = [ObjectAnnotationId, PropertyMetaAnnotationId, GeneratorAnnotationId];
+const ECHO_REFINEMENTS = [ObjectAnnotationId, PropertyMetaAnnotationId, GeneratorAnnotationId, FieldLookupAnnotationId];
 
 const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<symbol, any> => {
   const schemaFields: Record<string, any> = {};
