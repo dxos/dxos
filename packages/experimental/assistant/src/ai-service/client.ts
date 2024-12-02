@@ -3,23 +3,39 @@ import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
 import { Schema as S } from '@effect/schema';
-import { Message, type GenerateRequest, type ObjectId, type ResultStreamEvent } from './schema';
+import {
+  Message,
+  type GenerateRequest,
+  type ObjectId,
+  type ResultStreamEvent,
+  type Space,
+  type Thread,
+} from './schema';
 
 export type AIServiceClientParams = {
   endpoint: string;
 };
 
-export class AIServiceClient {
+export interface AIServiceClient {
+  getSpace(spaceId: SpaceId): Promise<Space>;
+  getThread(spaceId: SpaceId, threadId: string): Promise<Thread>;
+  getMessagesInThread(spaceId: SpaceId, threadId: string): Promise<Message[]>;
+  insertMessages(messages: Message[]): Promise<void>;
+  updateMessage(spaceId: SpaceId, threadId: string, messageId: string, message: Message): Promise<void>;
+  generate(request: GenerateRequest): Promise<GenerationStream>;
+}
+
+export class AIServiceClientImpl implements AIServiceClient {
   private readonly _endpoint: string;
   constructor({ endpoint }: AIServiceClientParams) {
     this._endpoint = endpoint;
   }
 
-  getSpace(spaceId: SpaceId) {
+  async getSpace(spaceId: SpaceId): Promise<Space> {
     throw new Error('Not implemented');
   }
 
-  getThread(spaceId: SpaceId, threadId: string) {
+  async getThread(spaceId: SpaceId, threadId: string): Promise<Thread> {
     throw new Error('Not implemented');
   }
 
@@ -55,10 +71,13 @@ export class AIServiceClient {
     });
     invariant(response.body instanceof ReadableStream);
 
-    return GenerationStream.fromSSEResponse({
-      spaceId: request.spaceId,
-      threadId: request.threadId,
-    }, response);
+    return GenerationStream.fromSSEResponse(
+      {
+        spaceId: request.spaceId,
+        threadId: request.threadId,
+      },
+      response,
+    );
   }
 }
 

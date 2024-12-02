@@ -1,5 +1,5 @@
 import { test } from 'vitest';
-import { AIServiceClient } from './client';
+import { AIServiceClient, AIServiceClientImpl } from './client';
 import { SpaceId } from '@dxos/keys';
 import { ObjectId, type LLMTool } from './schema';
 import { log } from '@dxos/log';
@@ -45,7 +45,7 @@ test('client generation', async () => {
 });
 
 test.only('tool calls', async () => {
-  const client = new AIServiceClient({
+  const client = new AIServiceClientImpl({
     endpoint: ENDPOINT,
   });
 
