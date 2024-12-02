@@ -8,6 +8,7 @@ import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { create, Expando } from '@dxos/echo-schema';
+import { Contact } from '@dxos/echo-schema/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
@@ -15,9 +16,9 @@ import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { Filter } from './filter';
-import { type EchoReactiveObject, getObjectCore } from '../echo-handler';
+import { type ReactiveEchoObject, getObjectCore } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
-import { Contact, EchoTestBuilder, type EchoTestPeer } from '../testing';
+import { EchoTestBuilder, type EchoTestPeer } from '../testing';
 
 const createTestObject = (idx: number, label?: string) => {
   return create(Expando, { idx, title: `Task ${idx}`, label });
@@ -30,7 +31,6 @@ describe('Queries', () => {
 
     beforeEach(async () => {
       builder = await new EchoTestBuilder().open();
-
       const setup = await builder.createDatabase();
       db = setup.db;
 
@@ -115,7 +115,6 @@ describe('Queries', () => {
       {
         const { objects } = await db.query({ label: 'red' }).run();
         expect(objects).to.have.length(3);
-
         for (const object of objects) {
           db.remove(object);
         }
@@ -158,7 +157,6 @@ describe('Queries', () => {
     let root: AutomergeUrl;
     {
       const peer = await builder.createPeer(kv);
-
       const db = await peer.createDatabase(spaceKey);
       await createObjects(peer, db, { count: 3 });
 
@@ -168,9 +166,7 @@ describe('Queries', () => {
 
     {
       const peer = await builder.createPeer(kv);
-
       const db = await peer.openDatabase(spaceKey, root);
-
       expect((await db.query().run()).objects.length).to.eq(3);
     }
   });
@@ -188,7 +184,6 @@ describe('Queries', () => {
     let expectedObjectId: string;
     {
       const peer = await builder.createPeer(kv);
-
       const db = await peer.createDatabase(spaceKey);
       const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
@@ -264,7 +259,6 @@ describe('Queries', () => {
     });
 
     const peer = await builder.createPeer(kv);
-
     const db = await peer.createDatabase(spaceKey);
     const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
@@ -284,7 +278,6 @@ describe('Queries', () => {
     });
 
     const peer = await builder.createPeer();
-
     const db = await peer.createDatabase(spaceKey);
     const [obj1] = await createObjects(peer, db, { count: 2 });
 
@@ -299,14 +292,13 @@ describe('Queries', () => {
 describe('Query reactivity', () => {
   let builder: EchoTestBuilder;
   let db: EchoDatabase;
-  let objects: EchoReactiveObject<any>[];
+  let objects: ReactiveEchoObject<any>[];
 
   beforeAll(async () => {
     builder = await new EchoTestBuilder().open();
     ({ db } = await builder.createDatabase());
 
     objects = range(3).map((idx) => createTestObject(idx, 'red'));
-
     for (const object of objects) {
       db.add(object);
     }
@@ -411,9 +403,9 @@ describe('Queries with types', () => {
 
     graph.schemaRegistry.addSchema([Contact]);
     const contact = db.add(create(Contact, {}));
-    const name = 'Rich Ivanov';
+    const name = 'DXOS User';
 
-    const query = db.query(Filter.typename('example.com/type/Contact'));
+    const query = db.query(Filter.typename(Contact.typename));
     const result = await query.run();
     expect(result.objects).to.have.length(1);
     expect(result.objects[0]).to.eq(contact);
@@ -437,13 +429,28 @@ describe('Queries with types', () => {
     await asyncTimeout(anotherContactAdded.wait(), 1000);
   });
 
+  test('query mutable schema objects', async () => {
+    const testBuilder = new EchoTestBuilder();
+    await openAndClose(testBuilder);
+    const { db } = await testBuilder.createDatabase();
+
+    const schema = db.schemaRegistry.addSchema(Contact);
+    const contact = db.add(create(schema, {}));
+
+    // NOTE: Must use `Filter.schema` with MutableSchema instance since matching is done by the object ID of the mutable schema.
+    const query = db.query(Filter.schema(schema));
+    const result = await query.run();
+    expect(result.objects).to.have.length(1);
+    expect(result.objects[0]).to.eq(contact);
+  });
+
   test('`instanceof` operator works', async () => {
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);
     const { graph, db } = await testBuilder.createDatabase();
 
     graph.schemaRegistry.addSchema([Contact]);
-    const name = 'Rich Ivanov';
+    const name = 'DXOS User';
     const contact = create(Contact, { name });
     db.add(contact);
     expect(contact instanceof Contact).to.be.true;

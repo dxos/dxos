@@ -6,6 +6,7 @@ import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
 import {
   type AnyObjectData,
+  type BaseObject,
   type ReactiveObject,
   getProxyTarget,
   getSchema,
@@ -23,7 +24,7 @@ import { CoreDatabase, type FlushOptions, type LoadObjectOptions, type ObjectCor
 import type { InsertBatch, InsertData, UpdateOperation } from '../core-db/crud-api';
 import {
   EchoReactiveHandler,
-  type EchoReactiveObject,
+  type ReactiveEchoObject,
   type ProxyTarget,
   getObjectCore,
   createObject,
@@ -51,7 +52,10 @@ export interface EchoDatabase {
 
   get graph(): Hypergraph;
 
-  getObjectById<T extends {} = any>(id: string, opts?: GetObjectByIdOptions): EchoReactiveObject<T> | undefined;
+  getObjectById<T extends BaseObject<T> = any>(
+    id: string,
+    opts?: GetObjectByIdOptions,
+  ): ReactiveEchoObject<T> | undefined;
 
   /**
    * Query objects.
@@ -73,12 +77,12 @@ export interface EchoDatabase {
   /**
    * Adds object to the database.
    */
-  add<T extends {} = any>(obj: ReactiveObject<T>): EchoReactiveObject<T>;
+  add<T extends BaseObject<T>>(obj: ReactiveObject<T>): ReactiveEchoObject<T>;
 
   /**
    * Removes object from the database.
    */
-  remove<T extends EchoReactiveObject<any>>(obj: T): void;
+  remove<T extends ReactiveEchoObject<any>>(obj: T): void;
 
   /**
    * Wait for all pending changes to be saved to disk.
@@ -128,7 +132,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    * Mapping `object core` -> `root proxy` (User facing proxies).
    * @internal
    */
-  readonly _rootProxies = new Map<ObjectCore, EchoReactiveObject<any>>();
+  readonly _rootProxies = new Map<ObjectCore, ReactiveEchoObject<any>>();
 
   public readonly schemaRegistry: MutableSchemaRegistry;
 
@@ -191,7 +195,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     }
   }
 
-  getObjectById(id: string, { deleted = false } = {}): EchoReactiveObject<any> | undefined {
+  getObjectById(id: string, { deleted = false } = {}): ReactiveEchoObject<any> | undefined {
     const core = this._coreDatabase.getObjectCoreById(id);
     if (!core || (core.isDeleted() && !deleted)) {
       return undefined;
@@ -231,11 +235,10 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   }
 
   /**
-   * Add live object.
+   * Add reactive object.
    */
-  add<T extends ReactiveObject<any>>(obj: T): EchoReactiveObject<{ [K in keyof T]: T[K] }> {
-    let echoObject = obj;
-    if (!isEchoObject(echoObject)) {
+  add<T extends ReactiveObject<T>>(obj: T): ReactiveEchoObject<T> {
+    if (!isEchoObject(obj)) {
       const schema = getSchema(obj);
       if (schema != null) {
         if (!this.schemaRegistry.hasSchema(schema) && !this.graph.schemaRegistry.hasSchema(schema)) {
@@ -243,24 +246,25 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
         }
       }
 
-      echoObject = createObject(obj);
+      obj = createObject(obj);
     }
 
-    invariant(isEchoObject(echoObject));
-    this._rootProxies.set(getObjectCore(echoObject), echoObject);
+    // TODO(burdon): Check if already added to db?
+    invariant(isEchoObject(obj));
+    this._rootProxies.set(getObjectCore(obj), obj);
 
-    const target = getProxyTarget(echoObject) as ProxyTarget;
+    const target = getProxyTarget(obj) as ProxyTarget;
     EchoReactiveHandler.instance.setDatabase(target, this);
     EchoReactiveHandler.instance.saveRefs(target);
-    this._coreDatabase.addCore(getObjectCore(echoObject));
+    this._coreDatabase.addCore(getObjectCore(obj));
 
-    return echoObject as any;
+    return obj;
   }
 
   /**
-   * Remove live object.
+   * Remove reactive object.
    */
-  remove<T extends EchoReactiveObject<any>>(obj: T): void {
+  remove<T extends ReactiveEchoObject<T>>(obj: T): void {
     invariant(isEchoObject(obj));
     return this._coreDatabase.removeCore(getObjectCore(obj));
   }
@@ -272,19 +276,18 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * @internal
    */
-  async _loadObjectById<T = any>(
+  async _loadObjectById<T extends BaseObject<T>>(
     objectId: string,
     options: LoadObjectOptions = {},
-  ): Promise<EchoReactiveObject<T> | undefined> {
+  ): Promise<ReactiveEchoObject<T> | undefined> {
     const core = await this._coreDatabase.loadObjectCoreById(objectId, options);
-
     if (!core || core?.isDeleted()) {
       return undefined;
     }
 
-    const object = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this));
-    invariant(isReactiveObject(object));
-    return object;
+    const obj = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this));
+    invariant(isReactiveObject(obj));
+    return obj;
   }
 
   //
@@ -304,6 +307,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   }
 }
 
+// TODO(burdon): Create APIError class.
 const createSchemaNotRegisteredError = (schema?: any) => {
   const message = 'Schema not registered';
 

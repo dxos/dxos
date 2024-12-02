@@ -4,15 +4,16 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { type AST, S } from '@dxos/effect';
+import { type AST, type JsonProp, S } from '@dxos/effect';
 import { deepMapValues } from '@dxos/util';
 
 import { getEchoProp, toEffectSchema, toJsonSchema } from './json-schema';
-import { PropertyMeta, type JsonSchemaType } from '../ast';
+import { PropertyMeta, setSchemaProperty, type JsonSchemaType, getSchemaProperty } from '../ast';
 import { FormatAnnotationId } from '../formats';
 import { Email } from '../formats/string';
-import { ref } from '../handler';
+import { createSchemaReference, getSchemaReference, ref } from '../handler';
 import { TypedObject } from '../object';
+import { Contact } from '../testing';
 
 describe('effect-to-json', () => {
   test('type annotation', () => {
@@ -114,7 +115,12 @@ describe('effect-to-json', () => {
     });
   });
 
-  test('references', () => {
+  test('Contact schema serialization', () => {
+    const schema = toJsonSchema(Contact);
+    expect(Object.keys(schema.properties!)).toEqual(['id', 'name', 'username', 'email', 'tasks', 'address']);
+  });
+
+  test('reference property by ref', () => {
     class Org extends TypedObject({ typename: 'example.com/type/Org', version: '0.1.0' })({
       field: S.String,
     }) {}
@@ -125,7 +131,6 @@ describe('effect-to-json', () => {
     }) {}
 
     const jsonSchema = toJsonSchema(Contact);
-
     expect(jsonSchema).toEqual({
       $schema: 'http://json-schema.org/draft-07/schema#',
       $id: 'dxn:type:example.com/type/Contact',
@@ -161,6 +166,23 @@ describe('effect-to-json', () => {
       required: ['name', 'org', 'id'],
     });
   });
+
+  test('add reference property', () => {
+    class Org extends TypedObject({ typename: 'example.com/type/Org', version: '0.1.0' })({
+      field: S.String,
+    }) {}
+
+    class Contact extends TypedObject({ typename: 'example.com/type/Contact', version: '0.1.0' })({
+      name: S.String,
+      org: ref(Org).annotations({ description: 'Contact organization' }),
+    }) {}
+
+    const jsonSchema = toJsonSchema(Contact);
+    setSchemaProperty(jsonSchema, 'employer' as JsonProp, createSchemaReference(Org.typename));
+    const { typename } = getSchemaReference(getSchemaProperty(jsonSchema, 'employer' as JsonProp) ?? {}) ?? {};
+    expect(typename).to.eq(Org.typename);
+  });
+
   const expectReferenceAnnotation = (object: JsonSchemaType) => {
     expect(object.reference).to.deep.eq({
       schema: {

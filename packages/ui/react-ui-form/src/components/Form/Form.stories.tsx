@@ -26,7 +26,7 @@ const TestSchema = S.Struct({
       street: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Street' })),
       city: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'City' })),
       zip: S.optional(S.String.pipe(S.pattern(/^\d{5}(-\d{4})?$/)).annotations({ [AST.TitleAnnotationId]: 'ZIP' })),
-      location: S.optional(Format.LatLng.annotations({ [AST.TitleAnnotationId]: 'Location' })),
+      location: S.optional(Format.GeoPoint.annotations({ [AST.TitleAnnotationId]: 'Location' })),
     }).annotations({ [AST.TitleAnnotationId]: 'Address' }),
   ),
 }).pipe(S.mutable);
@@ -37,21 +37,21 @@ type StoryProps = FormProps<TestType>;
 
 const DefaultStory = ({ values: initialValues }: StoryProps) => {
   const [values, setValues] = useState(initialValues);
-  const handleSubmit = useCallback<NonNullable<FormProps<TestType>['onSubmit']>>((values) => {
+  const handleSave = useCallback<NonNullable<FormProps<TestType>['onSave']>>((values) => {
     setValues(values);
   }, []);
 
   return (
     <TestLayout json={{ values, schema: TestSchema.ast.toJSON() }}>
       <TestPanel>
-        <Form<TestType> schema={TestSchema} values={values} onSubmit={handleSubmit} />
+        <Form<TestType> schema={TestSchema} values={values} onSave={handleSave} />
       </TestPanel>
     </TestLayout>
   );
 };
 
 const meta: Meta<StoryProps> = {
-  title: 'ui/react-ui-data/Form',
+  title: 'ui/react-ui-form/Form',
   component: Form,
   render: DefaultStory,
   decorators: [withLayout({ fullscreen: true, tooltips: true }), withTheme],
@@ -96,7 +96,7 @@ type DiscriminatedUnionStoryProps = FormProps<ShapeType>;
 
 const DiscriminatedUnionStory = ({ values: initialValues }: DiscriminatedUnionStoryProps) => {
   const [values, setValues] = useState(initialValues);
-  const handleSubmit = useCallback<NonNullable<FormProps<ShapeType>['onSubmit']>>((values) => {
+  const handleSave = useCallback<NonNullable<FormProps<ShapeType>['onSave']>>((values) => {
     setValues(values);
   }, []);
 
@@ -106,7 +106,7 @@ const DiscriminatedUnionStory = ({ values: initialValues }: DiscriminatedUnionSt
         <Form<ShapeType>
           schema={ShapeSchema}
           values={values}
-          onSubmit={handleSubmit}
+          onSave={handleSave}
           Custom={{
             ['shape.type' as const]: (props) => (
               <SelectInput<ShapeType>

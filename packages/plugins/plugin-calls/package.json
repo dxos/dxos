@@ -1,0 +1,73 @@
+{
+  "name": "@dxos/plugin-calls",
+  "version": "0.6.11",
+  "description": "Video calls plugin for DXOS Composer",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "exports": {
+    ".": {
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./meta": {
+      "types": "./dist/types/src/meta.d.ts",
+      "browser": "./dist/lib/browser/meta.mjs",
+      "node": "./dist/lib/node-esm/meta.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "meta": [
+        "dist/types/src/meta.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@phosphor-icons/react": "^2.1.5",
+    "@radix-ui/react-visually-hidden": "^1.1.0",
+    "clsx": "^2.1.1",
+    "partysocket": "^1.0.1",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0",
+    "react-flip-toolkit": "^7.2.4",
+    "react-query": "^3.39.3",
+    "react-router-dom": "^6.4.0",
+    "react-use": "^17.5.1",
+    "rxjs": "^7.8.1",
+    "tailwind-merge": "^2.2.1"
+  },
+  "devDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@phosphor-icons/react": "^2.1.5",
+    "@types/react": "~18.2.0",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0",
+    "tailwindcss": "~3.4.1"
+  },
+  "optionalDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@phosphor-icons/react": "^2.1.5",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -25,7 +25,7 @@ import { type ActionGroup, createExtension, isActionGroup, toSignal } from '@dxo
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { SpaceAction } from '@dxos/plugin-space';
 import { ThreadType, MessageType, ChannelType } from '@dxos/plugin-space/types';
-import { create, type EchoReactiveObject, getTypename } from '@dxos/react-client/echo';
+import { create, type ReactiveEchoObject, getTypename } from '@dxos/react-client/echo';
 import { getSpace, fullyQualifiedId, loadObjectReferences, parseId } from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 
@@ -97,7 +97,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             loadReferences: (message: MessageType) => [], // loadObjectReferences(message, (message) => [...message.parts, message.context]),
           },
           [THREAD_ITEM]: {
-            parse: (item: EchoReactiveObject<any>, type: string) => {
+            parse: (item: ReactiveEchoObject<any>, type: string) => {
               switch (type) {
                 case 'node':
                   return { id: item.id, label: item.title, data: item };

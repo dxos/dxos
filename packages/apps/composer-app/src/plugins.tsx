@@ -8,6 +8,7 @@ import { type Config, type ClientServicesProvider } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
 import AttentionMeta from '@dxos/plugin-attention/meta';
 import AutomationMeta from '@dxos/plugin-automation/meta';
+import CallsMeta from '@dxos/plugin-calls/meta';
 import ChessMeta from '@dxos/plugin-chess/meta';
 import ClientMeta from '@dxos/plugin-client/meta';
 import DebugMeta from '@dxos/plugin-debug/meta';
@@ -123,6 +124,7 @@ export const recommended = ({ isDev, isLabs }: PluginConfig): PluginMeta[] =>
     !isDev && DebugMeta,
     AutomationMeta,
     ChessMeta,
+    CallsMeta,
     ExcalidrawMeta,
     ExplorerMeta,
     IpfsMeta,
@@ -156,11 +158,13 @@ export const plugins = ({
   services,
   firstRun,
   observability,
+  isDev,
   isPwa,
   isSocket,
 }: PluginConfig): HostPluginParams['plugins'] => ({
   [AttentionMeta.id]: Plugin.lazy(() => import('@dxos/plugin-attention')),
   [AutomationMeta.id]: Plugin.lazy(() => import('@dxos/plugin-automation')),
+  [CallsMeta.id]: Plugin.lazy(() => import('@dxos/plugin-calls')),
   [ChessMeta.id]: Plugin.lazy(() => import('@dxos/plugin-chess')),
   [ClientMeta.id]: Plugin.lazy(() => import('@dxos/plugin-client'), {
     appKey,
@@ -263,6 +267,7 @@ export const plugins = ({
   [TableMeta.id]: Plugin.lazy(() => import('@dxos/plugin-table')),
   [ThemeMeta.id]: Plugin.lazy(() => import('@dxos/plugin-theme'), {
     appName: 'Composer',
+    noCache: isDev,
   }),
   [ThreadMeta.id]: Plugin.lazy(() => import('@dxos/plugin-thread')),
   [WelcomeMeta.id]: Plugin.lazy(() => import('./plugins/welcome'), { firstRun }),

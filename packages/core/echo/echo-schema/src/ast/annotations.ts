@@ -10,15 +10,21 @@ import { type Primitive } from '@dxos/util';
 
 import { checkIdNotPresentOnSchema } from './schema-validator';
 import { type HasId } from './types';
+import { type BaseObject } from '../types';
 
-type ToMutable<T> = T extends {} ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] } : T;
+type ToMutable<T> =
+  T extends BaseObject<T> ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] } : T;
 
 /**
  * ECHO object.
  */
 export const ObjectAnnotationId = Symbol.for('@dxos/schema/annotation/Object');
 
+export const TYPENAME_REGEX = /^\w+\.\w{2,}\/[\w/]+$/;
+export const VERSION_REGEX = /^\d+.\d+.\d+$/;
+
 // TODO(burdon): Reconcile with other types.
+// TODO(burdon): Define as schema with regex patterns above.
 export type ObjectAnnotation = {
   schemaId?: string;
   typename: string;
@@ -31,6 +37,7 @@ export const getObjectAnnotation = (schema: S.Schema.All): ObjectAnnotation | un
     Option.getOrElse(() => undefined),
   );
 
+// TODO(burdon): Rename getTypename.
 export const getSchemaTypename = (schema: S.Schema.All): string | undefined => getObjectAnnotation(schema)?.typename;
 
 // TODO(burdon): Rename ObjectAnnotation.
@@ -103,11 +110,14 @@ export type SchemaMeta = {
   version: string;
 };
 
-export const createReferenceAnnotation = (schema: SchemaMeta): S.Schema.AnyNoContext =>
-  S.Any.annotations({
-    [ReferenceAnnotationId]: {
-      schemaId: schema.id,
-      typename: schema.typename,
-      version: schema.version,
-    } satisfies ReferenceAnnotationValue,
-  });
+// TODO(burdon): Factor out when JSON schema parser allows extensions.
+
+/**
+ * Generate test data.
+ */
+export const GeneratorAnnotationId = Symbol.for('@dxos/schema/annotation/Generator');
+
+/**
+ * Default field to be used on referenced schema to lookup the value.
+ */
+export const FieldLookupAnnotationId = Symbol.for('@dxos/schema/annotation/FieldLookup');

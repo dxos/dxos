@@ -27,6 +27,8 @@ import { initializeTable } from '../../util';
 import { Toolbar } from '../Toolbar';
 import { createItems, createTable, type SimulatorProps, useSimulator } from '../testing';
 
+faker.seed(0);
+
 //
 // Story components.
 //
@@ -42,7 +44,7 @@ const DefaultStory = () => {
       const table = tables[0];
       invariant(table.view);
       setTable(table);
-      setSchema(space.db.schemaRegistry.getSchema(table.view.query.type));
+      setSchema(space.db.schemaRegistry.getSchema(table.view.query.typename));
     }
   }, [tables]);
 
@@ -189,7 +191,7 @@ const TablePerformanceStory = (props: StoryProps) => {
 //
 
 const meta: Meta<StoryProps> = {
-  title: 'plugins/plugin-table/Table',
+  title: 'ui/react-ui-table/Table',
   component: Table.Main as any,
   render: DefaultStory,
   parameters: { translations },
@@ -200,8 +202,8 @@ const meta: Meta<StoryProps> = {
       createSpace: true,
       onSpaceCreated: async ({ space }) => {
         const table = space.db.add(create(TableType, {}));
-        const schema = initializeTable({ space, table });
-        Array.from({ length: 30 }).map(() => {
+        const schema = initializeTable({ space, table, initialRow: false });
+        Array.from({ length: 10 }).map(() => {
           return space.db.add(
             create(schema, {
               name: faker.person.fullName(),

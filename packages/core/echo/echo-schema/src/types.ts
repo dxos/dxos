@@ -2,12 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Simplify } from 'effect/Types';
-
 import { AST, type JsonPath, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type Comparator, getDeep, intersection, setDeep } from '@dxos/util';
 
+import { type HasId } from './ast';
 import { getProxyHandler } from './proxy';
 
 export const data = Symbol.for('@dxos/schema/Data');
@@ -45,9 +44,26 @@ export const ObjectMetaSchema = S.mutable(
 
 export type ObjectMeta = S.Schema.Type<typeof ObjectMetaSchema>;
 
-export type ExcludeId<T> = Simplify<Omit<T, 'id'>>;
+//
+// Objects
+//
 
-type WithMeta = { [ECHO_ATTR_META]?: ObjectMeta };
+/**
+ * Base type for all data objects (reactive, ECHO, and other raw objects).
+ * NOTE: This describes the base type for all database objects.
+ * It is stricter than `T extends {}` or `T extends object`.
+ */
+// TODO(burdon): Consider moving to lower-level base type lib.
+export type BaseObject<T> = { [K in keyof T]: T[K] };
+
+export type PropertyKey<T extends BaseObject<T>> = Extract<keyof ExcludeId<T>, string>;
+
+export type ExcludeId<T extends BaseObject<T>> = Omit<T, 'id'>;
+
+// TODO(burdon): Reconcile with ReactiveEchoObject.
+export type WithId = HasId & BaseObject<any>;
+
+export type WithMeta = { [ECHO_ATTR_META]?: ObjectMeta };
 
 /**
  * The raw object should not include the ECHO id, but may include metadata.
@@ -61,13 +77,13 @@ export const RawObject = <S extends S.Schema<any>>(
 /**
  * Reference to another ECHO object.
  */
-export type Ref<T> = T | undefined;
+export type Ref<T extends WithId> = T | undefined;
 
 /**
  * Reactive object marker interface (does not change the shape of the object.)
  * Accessing properties triggers signal semantics.
  */
-export type ReactiveObject<T> = { [K in keyof T]: T[K] };
+export type ReactiveObject<T extends BaseObject<T>> = { [K in keyof T]: T[K] };
 
 //
 // Data
@@ -99,7 +115,7 @@ export type ObjectData<S> = S.Schema.Encoded<S> & CommonObjectData;
 // Utils
 //
 
-export const getMeta = <T extends {}>(obj: T): ObjectMeta => {
+export const getMeta = <T extends BaseObject<T>>(obj: T): ObjectMeta => {
   const meta = getProxyHandler(obj).getMeta(obj);
   invariant(meta);
   return meta;

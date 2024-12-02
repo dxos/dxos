@@ -22,7 +22,7 @@ export class StoredSchema extends TypedObject({ typename: 'dxos.org/type/Schema'
 }) {}
 
 /**
- * Create stored schema.
+ * Create ECHO object representing schema.
  */
 export const createStoredSchema = ({
   typename,
@@ -41,7 +41,7 @@ export const createStoredSchema = ({
  * Wrapper around a schema that is stored in the database (from a type definition) but cannot be modified at runtime.
  * @deprecated
  */
-// TODO(burdon): Reconcile with StoredSchema.
+// TODO(burdon): Reconcile with StoredSchema, SchemaMeta.
 export type StaticSchema = {
   id?: string;
   typename: string;

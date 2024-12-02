@@ -165,6 +165,7 @@ export type {
   DxGridPlaneRange,
   DxGridPlaneCells,
   DxGridCellIndex,
+  DxGridPlaneCellIndex,
   DxGridCellValue,
   DxGridPlane,
   DxGridPosition,

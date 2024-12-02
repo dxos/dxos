@@ -8,42 +8,30 @@ import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
 import { create } from '@dxos/echo-schema';
-import { FunctionDef, FunctionTrigger } from '@dxos/functions/types';
-import { useClient } from '@dxos/react-client';
+import { FunctionTrigger, TriggerKind } from '@dxos/functions';
+import { FunctionType } from '@dxos/plugin-script/types';
+import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { TriggerEditor } from './TriggerEditor';
+import { functions } from '../../testing';
 import translations from '../../translations';
 import { ChainPromptType } from '../../types';
 
-const functions: Omit<FunctionDef, 'id'>[] = [
-  {
-    uri: 'dxos.org/function/email-worker',
-    route: '/email',
-    handler: 'email-worker',
-    description: 'Email Sync',
-  },
-  {
-    uri: 'dxos.org/function/gpt',
-    route: '/gpt',
-    handler: 'gpt',
-    description: 'GPT Chat',
-  },
-];
-
-const Story = () => {
+const DefaultStory = () => {
+  const spaces = useSpaces();
+  const space = spaces[1];
   const [trigger, setTrigger] = useState<FunctionTrigger>();
-  const client = useClient();
-  const space = client.spaces.default;
   useEffect(() => {
     if (!space) {
       return;
     }
 
-    const trigger = space.db.add(create(FunctionTrigger, { function: '', spec: { type: 'timer', cron: '0 0 * * *' } }));
+    const trigger = space.db.add(create(FunctionTrigger, { spec: { type: TriggerKind.Timer, cron: '' } }));
     setTrigger(trigger);
-  }, [space, setTrigger]);
+  }, [space]);
+
   if (!space || !trigger) {
     return <div />;
   }
@@ -55,20 +43,18 @@ const Story = () => {
   );
 };
 
-export const Default = {};
-
 const meta: Meta = {
   title: 'plugins/plugin-automation/TriggerEditor',
   component: TriggerEditor,
-  render: Story,
+  render: DefaultStory,
   decorators: [
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [FunctionTrigger, FunctionDef, ChainPromptType],
+      types: [FunctionType, FunctionTrigger, ChainPromptType],
       onSpaceCreated: ({ space }) => {
         for (const fn of functions) {
-          space.db.add(create(FunctionDef, fn));
+          space.db.add(create(FunctionType, fn));
         }
       },
     }),
@@ -81,3 +67,5 @@ const meta: Meta = {
 };
 
 export default meta;
+
+export const Default = {};

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-tabs",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Components for facilitating a Tabs pattern.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,7 +10,8 @@
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs"
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

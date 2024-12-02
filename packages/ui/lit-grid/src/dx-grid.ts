@@ -14,7 +14,7 @@ import './dx-grid-axis-resize-handle';
 import {
   type DxGridAxisMetaProps,
   type DxGridAxisSizes,
-  type DxGridCellIndex,
+  type DxGridPlaneCellIndex,
   type DxGridCellValue,
   DxAxisResize,
   type DxAxisResizeInternal,
@@ -38,10 +38,10 @@ import {
   type DxGridSelectionProps,
   type DxGridAnnotatedPanEvent,
   type DxGridRange,
+  separator,
 } from './types';
 import {
-  separator,
-  toCellIndex,
+  toPlaneCellIndex,
   gap,
   resizeTolerance,
   sizeColMin,
@@ -247,6 +247,12 @@ export class DxGrid extends LitElement {
   @state()
   private intrinsicBlockSize: number = Infinity;
 
+  @state()
+  private totalIntrinsicInlineSize: number = Infinity;
+
+  @state()
+  private totalIntrinsicBlockSize: number = Infinity;
+
   //
   // Primary pointer and keyboard handlers
   //
@@ -258,7 +264,7 @@ export class DxGrid extends LitElement {
       queueMicrotask(() =>
         this.dispatchEvent(
           new DxEditRequest({
-            cellIndex: toCellIndex(this.focusedCell),
+            cellIndex: toPlaneCellIndex(this.focusedCell),
             cellBox: this.focusedCellBox(),
             initialContent,
           }),
@@ -497,7 +503,7 @@ export class DxGrid extends LitElement {
   }
 
   private cell(c: number | string, r: number | string, plane: DxGridPlane): DxGridCellValue | undefined {
-    const index: DxGridCellIndex = `${c}${separator}${r}`;
+    const index: DxGridPlaneCellIndex = `${c}${separator}${r}`;
     return this.cells?.[plane]?.[index] ?? this.initialCells?.[plane]?.[index];
   }
 
@@ -831,9 +837,11 @@ export class DxGrid extends LitElement {
 
   private handleFocus(event: FocusEvent) {
     const cellCoords = closestCell(event.target);
-    if (cellCoords) {
+    if (cellCoords || targetIsPlane(event.target)) {
       this.focusActive = true;
-      this.setFocusedCell(cellCoords);
+      if (cellCoords) {
+        this.setFocusedCell(cellCoords);
+      }
     }
   }
 
@@ -1268,6 +1276,12 @@ export class DxGrid extends LitElement {
           'grid-template-rows': `${this.templatefrozenRowsStart ? 'min-content ' : ''}minmax(0, ${
             Number.isFinite(this.limitRows) ? `${Math.max(0, this.intrinsicBlockSize)}px` : '1fr'
           })${this.templatefrozenRowsEnd ? ' min-content' : ''}`,
+          '--dx-grid-content-inline-size': Number.isFinite(this.limitColumns)
+            ? `${Math.max(0, this.totalIntrinsicInlineSize)}px`
+            : 'max-content',
+          '--dx-grid-content-block-size': Number.isFinite(this.limitRows)
+            ? `${Math.max(0, this.totalIntrinsicBlockSize)}px`
+            : 'max-content',
         })}
         data-grid=${this.gridId}
         data-grid-mode=${this.mode}
@@ -1324,6 +1338,17 @@ export class DxGrid extends LitElement {
       ? [...Array(this.limitColumns)].reduce((acc, _, c0) => acc + this.colSize(c0, 'grid'), 0) +
         gap * (this.limitColumns - 1)
       : Infinity;
+    this.totalIntrinsicInlineSize =
+      this.intrinsicInlineSize +
+      (Number.isFinite(this.frozen.frozenColsStart)
+        ? [...Array(this.frozen.frozenColsStart)].reduce(
+            (acc, _, c0) => acc + gap + this.colSize(c0, 'frozenColsStart'),
+            0,
+          )
+        : 0) +
+      (Number.isFinite(this.frozen.frozenColsEnd)
+        ? [...Array(this.frozen.frozenColsEnd)].reduce((acc, _, c0) => acc + gap + this.colSize(c0, 'frozenColsEnd'), 0)
+        : 0);
   }
 
   private updateIntrinsicBlockSize() {
@@ -1331,6 +1356,17 @@ export class DxGrid extends LitElement {
       ? [...Array(this.limitRows)].reduce((acc, _, r0) => acc + this.rowSize(r0, 'grid'), 0) +
         gap * (this.limitRows - 1)
       : Infinity;
+    this.totalIntrinsicBlockSize =
+      this.intrinsicBlockSize +
+      (Number.isFinite(this.frozen.frozenRowsStart)
+        ? [...Array(this.frozen.frozenRowsStart)].reduce(
+            (acc, _, r0) => acc + gap + this.rowSize(r0, 'frozenRowsStart'),
+            0,
+          )
+        : 0) +
+      (Number.isFinite(this.frozen.frozenRowsEnd)
+        ? [...Array(this.frozen.frozenRowsEnd)].reduce((acc, _, r0) => acc + gap + this.rowSize(r0, 'frozenRowsEnd'), 0)
+        : 0);
   }
 
   private updateIntrinsicSizes() {

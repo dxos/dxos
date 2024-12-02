@@ -5,12 +5,12 @@
 import { type Reference } from '@dxos/echo-protocol';
 import { type S } from '@dxos/effect';
 
-import { type ObjectMeta } from '../types';
+import { type BaseObject, type ObjectMeta } from '../types';
 
 /**
  * Reactive object proxy.
  */
-export interface ReactiveHandler<T extends {}> extends ProxyHandler<T> {
+export interface ReactiveHandler<T extends BaseObject<T>> extends ProxyHandler<T> {
   /**
    * Target to Proxy mapping.
    */
