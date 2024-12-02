@@ -64,8 +64,8 @@ export class SheetManager {
     const startBox = await startCell.boundingBox();
     const endBox = await endCell.boundingBox();
     await startCell.dragTo(endCell, {
-      sourcePosition: { x: startBox.width / 2, y: startBox.height / 2 },
-      targetPosition: { x: endBox.width / 2, y: endBox.height / 2 },
+      sourcePosition: { x: startBox!.width / 2, y: startBox!.height / 2 },
+      targetPosition: { x: endBox!.width / 2, y: endBox!.height / 2 },
     });
   }
 
