@@ -1,3 +1,7 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import type { ConversationEvent } from '../conversation/conversation';
 
 export const createLogger =

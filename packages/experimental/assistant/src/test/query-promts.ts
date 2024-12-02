@@ -1,8 +1,12 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { Schema as S } from '@effect/schema';
 
+import { toJsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { toJsonSchema } from '@dxos/echo-schema';
 import { trim } from '../common/trim';
 import { defineTool, LLMToolResult } from '../conversation/types';
 import { executeQuery, type DataSource } from '../cypher/query-executor';

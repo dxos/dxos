@@ -1,12 +1,17 @@
-import { test } from 'vitest';
-import { AIServiceClient, AIServiceClientImpl } from './client';
-import { SpaceId } from '@dxos/keys';
-import { ObjectId, type LLMTool } from './schema';
-import { log } from '@dxos/log';
-import { defineTool } from '../conversation/types';
+//
+// Copyright 2024 DXOS.org
+//
+
 import { Schema as S } from '@effect/schema';
+import { test } from 'vitest';
+
 import { toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
+
+import { AIServiceClientImpl } from './client';
+import { ObjectId, type LLMTool } from './schema';
 
 const ENDPOINT = 'http://localhost:8787';
 

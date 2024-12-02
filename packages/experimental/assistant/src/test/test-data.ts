@@ -45,68 +45,68 @@ export const createTestData = (): MockDataSource => {
     name: 'Doodles',
   });
 
-  const taskComposer1 = dataSource.add(Task, {
+  const _taskComposer1 = dataSource.add(Task, {
     id: 'task-1',
     name: 'Optimize startup performance',
     project: projectComposer,
     assignee: contactJosiah,
   });
-  const taskComposer2 = dataSource.add(Task, {
+  const _taskComposer2 = dataSource.add(Task, {
     id: 'task-2',
     name: 'Create form builder',
     project: projectComposer,
     assignee: contactRich,
   });
-  const taskComposer3 = dataSource.add(Task, {
+  const _taskComposer3 = dataSource.add(Task, {
     id: 'task-3',
     name: 'Add support for custom themes',
     project: projectComposer,
     assignee: contactJosiah,
   });
-  const taskComposer5 = dataSource.add(Task, {
+  const _taskComposer5 = dataSource.add(Task, {
     id: 'task-8',
     name: 'Implement community plugin',
     project: projectComposer,
     assignee: contactFred,
   });
-  const taskComposer4 = dataSource.add(Task, {
+  const _taskComposer4 = dataSource.add(Task, {
     id: 'task-8',
     name: 'Implement dark mode',
     project: projectComposer,
     assignee: contactRich,
   });
-  const taskEcho1 = dataSource.add(Task, {
+  const _taskEcho1 = dataSource.add(Task, {
     id: 'task-4',
     name: 'Implement cypher query engine',
     project: projectEcho,
     assignee: contactDima,
   });
-  const taskEcho2 = dataSource.add(Task, {
+  const _taskEcho2 = dataSource.add(Task, {
     id: 'task-5',
     name: 'Add schema editor',
     project: projectEcho,
     assignee: contactRich,
   });
-  const taskDoodles1 = dataSource.add(Task, {
+  const _taskDoodles1 = dataSource.add(Task, {
     id: 'task-6',
     name: 'Add support for custom themes',
     project: projectDoodles,
     assignee: contactFred,
   });
-  const taskDoodles2 = dataSource.add(Task, {
+  const _taskDoodles2 = dataSource.add(Task, {
     id: 'task-7',
     name: 'Implement dark mode',
     project: projectDoodles,
     assignee: contactJosiah,
   });
 
-  const orgDxos = dataSource.add(Org, {
+  const _orgDxos = dataSource.add(Org, {
     id: 'org-dxos',
     name: 'DXOS',
     employees: [contactRich, contactJosiah, contactDima],
     projects: [projectEcho],
   });
-  const orgBraneframe = dataSource.add(Org, {
+  const _orgBraneframe = dataSource.add(Org, {
     id: 'org-braneframe',
     name: 'Braneframe',
     employees: [contactJosiah, contactRich],

@@ -6,9 +6,10 @@ import { Schema as S } from '@effect/schema';
 
 import { toJsonSchema } from '@dxos/echo-schema';
 import { type JsonSchemaType } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
-import { ObjectId, type Message } from '../ai-service/schema';
 import type { SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
+
+import { ObjectId, type Message } from '../ai-service/schema';
 
 export const createUserMessage = (spaceId: SpaceId, threadId: ObjectId, text: string): Message => ({
   id: ObjectId.random(),
@@ -18,7 +19,7 @@ export const createUserMessage = (spaceId: SpaceId, threadId: ObjectId, text: st
   content: [{ type: 'text', text }],
 });
 
-export type LLMTool = {
+export type LLMToolDefinition = {
   name: string;
   description: string;
   parameters: JsonSchemaType;
@@ -58,7 +59,7 @@ export const defineTool = <Params extends S.Schema.AnyNoContext>({
   description,
   schema,
   execute,
-}: DefineToolParams<Params>): LLMTool => {
+}: DefineToolParams<Params>): LLMToolDefinition => {
   return {
     name,
     description,

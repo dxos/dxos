@@ -1,11 +1,15 @@
 // Copied from anthropic SDK source
+//
+// Copyright 2024 DXOS.org
+//
+
 export async function* iterSSEMessages(
   response: Response,
   controller: AbortController,
 ): AsyncGenerator<ServerSentEvent, void, unknown> {
   if (!response.body) {
     controller.abort();
-    throw new Error(`Attempted to iterate over a response with no body`);
+    throw new Error('Attempted to iterate over a response with no body');
   }
 
   const sseDecoder = new SSEDecoder();
@@ -15,13 +19,17 @@ export async function* iterSSEMessages(
   for await (const sseChunk of iterSSEChunks(iter)) {
     for (const line of lineDecoder.decode(sseChunk)) {
       const sse = sseDecoder.decode(line);
-      if (sse) yield sse;
+      if (sse) {
+        yield sse;
+      }
     }
   }
 
   for (const line of lineDecoder.flush()) {
     const sse = sseDecoder.decode(line);
-    if (sse) yield sse;
+    if (sse) {
+      yield sse;
+    }
   }
 }
 
@@ -50,7 +58,7 @@ async function* iterSSEChunks(iterator: AsyncIterableIterator<Bytes>): AsyncGene
           ? new TextEncoder().encode(chunk)
           : chunk;
 
-    let newData = new Uint8Array(data.length + binaryChunk.length);
+    const newData = new Uint8Array(data.length + binaryChunk.length);
     newData.set(data);
     newData.set(binaryChunk, data.length);
     data = newData;
@@ -67,7 +75,7 @@ async function* iterSSEChunks(iterator: AsyncIterableIterator<Bytes>): AsyncGene
   }
 }
 
-function findDoubleNewlineIndex(buffer: Uint8Array): number {
+const findDoubleNewlineIndex = (buffer: Uint8Array): number => {
   // This function searches the buffer for the end patterns (\r\r, \n\n, \r\n\r\n)
   // and returns the index right after the first occurrence of any pattern,
   // or -1 if none of the patterns are found.
@@ -96,7 +104,7 @@ function findDoubleNewlineIndex(buffer: Uint8Array): number {
   }
 
   return -1;
-}
+};
 
 class SSEDecoder {
   private data: string[];
@@ -116,7 +124,9 @@ class SSEDecoder {
 
     if (!line) {
       // empty line and we didn't previously encounter any messages
-      if (!this.event && !this.data.length) return null;
+      if (!this.event && !this.data.length) {
+        return null;
+      }
 
       const sse: ServerSentEvent = {
         event: this.event,
@@ -154,7 +164,7 @@ class SSEDecoder {
 }
 
 /** This is an internal helper function that's just used for testing */
-export function _decodeChunks(chunks: string[]): string[] {
+export const _decodeChunks = (chunks: string[]): string[] => {
   const decoder = new LineDecoder();
   const lines: string[] = [];
   for (const chunk of chunks) {
@@ -162,16 +172,16 @@ export function _decodeChunks(chunks: string[]): string[] {
   }
 
   return lines;
-}
+};
 
-function partition(str: string, delimiter: string): [string, string, string] {
+const partition = (str: string, delimiter: string): [string, string, string] => {
   const index = str.indexOf(delimiter);
   if (index !== -1) {
     return [str.substring(0, index), delimiter, str.substring(index + delimiter.length)];
   }
 
   return [str, '', ''];
-}
+};
 
 /**
  * Most browsers don't yet have async iterable support for ReadableStream,
@@ -180,21 +190,25 @@ function partition(str: string, delimiter: string): [string, string, string] {
  * This polyfill was pulled from https://github.com/MattiasBuelens/web-streams-polyfill/pull/122#issuecomment-1627354490
  */
 export function readableStreamAsyncIterable<T>(stream: any): AsyncIterableIterator<T> {
-  if (stream[Symbol.asyncIterator]) return stream;
+  if (stream[Symbol.asyncIterator]) {
+    return stream;
+  }
 
   const reader = stream.getReader();
   return {
-    async next() {
+    next: async () => {
       try {
         const result = await reader.read();
-        if (result?.done) reader.releaseLock(); // release lock when stream becomes closed
+        if (result?.done) {
+          reader.releaseLock();
+        } // release lock when stream becomes closed
         return result;
       } catch (e) {
         reader.releaseLock(); // release lock when stream becomes errored
         throw e;
       }
     },
-    async return() {
+    return: async () => {
       const cancelPromise = reader.cancel();
       reader.releaseLock();
       await cancelPromise;
@@ -271,8 +285,12 @@ export class LineDecoder {
   }
 
   decodeText(bytes: Bytes): string {
-    if (bytes == null) return '';
-    if (typeof bytes === 'string') return bytes;
+    if (bytes == null) {
+      return '';
+    }
+    if (typeof bytes === 'string') {
+      return bytes;
+    }
 
     // Node:
     if (typeof Buffer !== 'undefined') {
@@ -302,7 +320,7 @@ export class LineDecoder {
       );
     }
 
-    throw new Error(`Unexpected: neither Buffer nor TextDecoder are available as globals. Please report this error.`);
+    throw new Error('Unexpected: neither Buffer nor TextDecoder are available as globals. Please report this error.');
   }
 
   flush(): string[] {

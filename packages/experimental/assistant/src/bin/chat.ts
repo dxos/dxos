@@ -2,8 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SpaceId } from '@dxos/keys';
 import inquirer from 'inquirer';
+
+import { SpaceId } from '@dxos/keys';
+
 import { AIServiceClientImpl } from '../ai-service/client';
 import { ObjectId } from '../ai-service/schema';
 import { runLLM } from '../conversation/conversation';

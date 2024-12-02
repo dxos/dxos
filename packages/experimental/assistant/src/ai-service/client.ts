@@ -1,8 +1,14 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { _iterSSEMessages } from '@anthropic-ai/sdk/streaming';
+import { Schema as S } from '@effect/schema';
+
 import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
-import { Schema as S } from '@effect/schema';
+
 import {
   Message,
   type GenerateRequest,
@@ -95,8 +101,8 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
           try {
             yield JSON.parse(sse.data);
           } catch (e) {
-            console.error(`Could not parse message into JSON:`, sse.data);
-            console.error(`From chunk:`, sse.raw);
+            console.error('Could not parse message into JSON:', sse.data);
+            console.error('From chunk:', sse.raw);
             throw e;
           }
         }
@@ -112,8 +118,8 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
           try {
             yield JSON.parse(sse.data);
           } catch (e) {
-            console.error(`Could not parse message into JSON:`, sse.data);
-            console.error(`From chunk:`, sse.raw);
+            console.error('Could not parse message into JSON:', sse.data);
+            console.error('From chunk:', sse.raw);
             throw e;
           }
         }

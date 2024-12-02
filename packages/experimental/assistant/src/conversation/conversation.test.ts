@@ -5,12 +5,12 @@
 import { Schema as S } from '@effect/schema';
 import { test } from 'vitest';
 
+import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { runLLM, type ConversationEvent } from './conversation';
 import { createUserMessage, defineTool, LLMToolResult } from './types';
 import { AIServiceClientImpl } from '../ai-service/client';
-import { SpaceId } from '@dxos/keys';
 import { ObjectId } from '../ai-service/schema';
 
 const ENDPOINT = 'http://localhost:8787';

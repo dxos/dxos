@@ -2,11 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema as S } from '@effect/schema';
+import { type Brand } from 'effect';
+import { ulid } from 'ulidx';
+
 import { JsonSchemaType } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
-import { Schema as S } from '@effect/schema';
-import { Brand } from 'effect';
-import { ulid } from 'ulidx';
 
 // TODO(dmaretskyi): Extract IDs to protocols.
 export const SpaceIdSchema: S.Schema<SpaceId, string> = S.String.pipe(S.filter(SpaceId.isValid));

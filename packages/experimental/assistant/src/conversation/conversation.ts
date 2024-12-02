@@ -3,12 +3,12 @@
 //
 
 import { invariant } from '@dxos/invariant';
+import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import type { SpaceId } from '@dxos/keys';
+import type { LLMToolDefinition } from './types';
 import type { AIServiceClient } from '../ai-service/client';
-import { Message, ObjectId, ResultStreamEvent } from '../ai-service/schema';
-import { type LLMModel, type LLMTool } from './types';
+import { type Message, ObjectId, type ResultStreamEvent, type LLMModel } from '../ai-service/schema';
 
 export type CreateLLMConversationParams = {
   model: LLMModel;
@@ -21,7 +21,7 @@ export type CreateLLMConversationParams = {
   spaceId: SpaceId;
   threadId: ObjectId;
 
-  tools: LLMTool[];
+  tools: LLMToolDefinition[];
 
   client: AIServiceClient;
 
