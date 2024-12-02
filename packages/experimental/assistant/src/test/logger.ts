@@ -65,7 +65,7 @@ export const createLogger =
                 process.stdout.write(`  ${JSON.stringify(block.input)}\n`);
                 break;
               case 'tool_result':
-                if (block.is_error) {
+                if (block.isError) {
                   process.stdout.write('❌ [Tool Error]\n');
                   process.stdout.write(block.content + '\n');
                 } else {

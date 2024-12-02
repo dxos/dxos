@@ -8,17 +8,26 @@ import { test } from 'vitest';
 import { toJsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { createTestData } from './test-data';
-import { Contact, Org, Project, Task } from './test-schema';
-import { AnthropicBackend } from '../conversation/backend/anthropic';
-import { runLLM, type ConversationEvent } from '../conversation/conversation';
+import { SpaceId } from '@dxos/keys';
+import { AIServiceClientImpl } from '../ai-service/client';
+import { ObjectId } from '../ai-service/schema';
+import { runLLM } from '../conversation/conversation';
 import { createUserMessage, defineTool, LLMToolResult } from '../conversation/types';
 import { executeQuery } from '../cypher/query-executor';
 import { formatJsonSchemaForLLM } from '../cypher/schema';
 import { createLogger } from './logger';
+import { createTestData } from './test-data';
+import { Contact, Org, Project, Task } from './test-schema';
+
+const ENDPOINT = 'http://localhost:8787';
+
+const client = new AIServiceClientImpl({
+  endpoint: ENDPOINT,
+});
 
 test('cypher query', async () => {
   const dataSource = createTestData();
+  const schemaTypes = [Org, Project, Task, Contact];
 
   const cypherTool = defineTool({
     name: 'graphQuery',
@@ -60,35 +69,43 @@ test('cypher query', async () => {
     },
   });
 
-  const schemaTypes = [Org, Project, Task, Contact];
+  const spaceId = SpaceId.random();
+  const threadId = ObjectId.random();
+
+  await client.insertMessages([
+    createUserMessage(
+      spaceId,
+      threadId,
+      `
+      You have access to ECHO graph database. You can query the database to get data to satisfy user prompts.
+
+      Database schema is defined in pseud-cypher syntax. The schema is:
+
+      <schema>
+        ${formatJsonSchemaForLLM(schemaTypes.map((schema) => toJsonSchema(schema)))}
+      <schema>
+      `,
+    ),
+    createUserMessage(
+      spaceId,
+      threadId,
+      'If you are missing data to satisfy the user request, use the available tools to get the data.',
+    ),
+    createUserMessage(
+      spaceId,
+      threadId,
+      'Query the database and give me all employees from DXOS organization that work on Composer and what their tasks are.',
+    ),
+  ]);
 
   const result = await runLLM({
     model: '@anthropic/claude-3-5-sonnet-20241022',
-    messages: [
-      createUserMessage(`
-        You have access to ECHO graph database. You can query the database to get data to satisfy user prompts.
-
-        Database schema is defined in pseud-cypher syntax. The schema is:
-
-        <schema>
-          ${formatJsonSchemaForLLM(schemaTypes.map((schema) => toJsonSchema(schema)))}
-        <schema>
-        `),
-      createUserMessage(
-        'If you are missing data to satisfy the user request, use the available tools to get the data.',
-      ),
-      createUserMessage(
-        'Query the database and give me all employees from DXOS organization that work on Composer and what their tasks are.',
-      ),
-    ],
     tools: [cypherTool],
-    backend,
+    spaceId,
+    threadId,
+    client,
     logger: createLogger({ stream: false }),
   });
 
   log.info('DONE', { result: result.result });
-});
-
-const backend = new AnthropicBackend({
-  apiKey: process.env.ANTHROPIC_API_KEY!,
 });
