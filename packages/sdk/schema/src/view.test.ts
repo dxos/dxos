@@ -2,11 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import { AST, Schema as S } from '@effect/schema';
 import { pipe } from 'effect';
 import { capitalize } from 'effect/String';
 import { afterEach, beforeEach, describe, test } from 'vitest';
-import { AST, Schema as S } from '@effect/schema';
 
+import { MutableSchemaRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { create, createStoredSchema, Format, getTypename, toJsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
@@ -14,7 +15,6 @@ import { log } from '@dxos/log';
 import { getSchemaProperties } from './properties';
 import { Test } from './testing';
 import { createView } from './view';
-import { MutableSchemaRegistry } from '@dxos/echo-db';
 
 describe('View', () => {
   let builder: EchoTestBuilder;
@@ -63,7 +63,7 @@ describe('View', () => {
       ),
     });
 
-    const mutable = registry.registerSchema(db.add(schema));
+    const _mutable = registry.registerSchema(db.add(schema));
     const view = createView({
       name: 'Test',
       typename: schema.typename,
