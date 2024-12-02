@@ -39,7 +39,7 @@ export const ColumnSettings = ({ model }: ColumnSettingsProps) => {
 
   const field = existingField ?? newField;
 
-  const handleClose = useCallback(() => {
+  const handleSave = useCallback(() => {
     model?.modalController.close();
   }, [model?.modalController]);
 
@@ -64,7 +64,7 @@ export const ColumnSettings = ({ model }: ColumnSettingsProps) => {
               projection={model.projection}
               field={field}
               registry={space?.db.schemaRegistry}
-              onClose={handleClose}
+              onSave={handleSave}
               onCancel={handleCancel}
             />
           </DropdownMenu.Viewport>

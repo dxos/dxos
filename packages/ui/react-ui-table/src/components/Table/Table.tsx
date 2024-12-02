@@ -72,7 +72,6 @@ export type TableMainProps = {
 
 const TableMain = forwardRef<TableController, TableMainProps>(({ model, ignoreAttention }, forwardedRef) => {
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
-
   const { hasAttention } = useAttention(model?.table ? fullyQualifiedId(model.table) : 'table');
 
   /**

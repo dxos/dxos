@@ -7,46 +7,41 @@ import { S } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
 import { EXPANDO_TYPENAME } from './expando';
-import {
-  type HasId,
-  type ObjectAnnotation,
-  getObjectAnnotation,
-  ReferenceAnnotationId,
-  type JsonSchemaType,
-} from '../ast';
+import { type ObjectAnnotation, getObjectAnnotation, ReferenceAnnotationId, type JsonSchemaType } from '../ast';
 import { MutableSchema, StoredSchema } from '../mutable';
 import { getTypename, isReactiveObject } from '../proxy';
-import { type BaseObject, type Ref } from '../types';
+import { type WithId, type Ref } from '../types';
 
 /**
  * The `$id` field for an ECHO reference schema.
  */
 const JSON_SCHEMA_ECHO_REF_ID = '/schemas/echo/ref';
 
-export const getSchemaReference = (property: JsonSchemaType): string | undefined => {
+// TODO(burdon): Define return type.
+export const getSchemaReference = (property: JsonSchemaType): { typename: string } | undefined => {
   const { $id, reference: { schema: { $ref } = {} } = {} } = property;
   if ($id === JSON_SCHEMA_ECHO_REF_ID && $ref) {
-    return DXN.parse($ref).toTypename();
+    return { typename: DXN.parse($ref).toTypename() };
   }
 };
 
-export const setSchemaReference = (property: JsonSchemaType, schema: string): JsonSchemaType => {
-  return Object.assign(property, {
+export const createSchemaReference = (typename: string): JsonSchemaType => {
+  return {
     $id: JSON_SCHEMA_ECHO_REF_ID,
     reference: {
       schema: {
-        $ref: DXN.fromTypename(schema).toString(),
+        $ref: DXN.fromTypename(typename).toString(),
       },
     },
-  });
+  };
 };
 
-export interface ref<T extends BaseObject> extends S.Schema<Ref<T>, EncodedReference> {}
+export interface ref<T extends WithId> extends S.Schema<Ref<T>, EncodedReference> {}
 
-export const ref = <T extends HasId>(schema: S.Schema<T, any>): ref<T> => {
+export const ref = <T extends WithId>(schema: S.Schema<T, any>): ref<T> => {
   const annotation = getObjectAnnotation(schema);
   if (annotation == null) {
-    throw new Error('Reference target must be an ECHO object.');
+    throw new Error('Reference target must be an ECHO schema.');
   }
 
   return createEchoReferenceSchema(annotation);

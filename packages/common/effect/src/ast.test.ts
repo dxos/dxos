@@ -122,7 +122,7 @@ describe('AST', () => {
     for (const schema of schemas) {
       for (const annotationId of annotationIds) {
         const annotation = findAnnotation(schema.ast, annotationId);
-        expect(annotation, schema.ast._tag).to.eq(undefined);
+        expect(annotation, String(annotationId) + ':' + schema).to.eq(undefined);
       }
     }
   });

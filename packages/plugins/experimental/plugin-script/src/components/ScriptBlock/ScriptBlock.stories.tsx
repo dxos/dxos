@@ -5,12 +5,10 @@
 import '@dxos-theme';
 
 import { type Meta } from '@storybook/react';
-import React, { useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
-import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
 import { TextType } from '@dxos/plugin-markdown/types';
-import { useClient } from '@dxos/react-client';
-import { create, createObject, useSpaces } from '@dxos/react-client/echo';
+import { create, createObject } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -19,6 +17,8 @@ import { ScriptType } from '../../types';
 // @ts-ignore
 import mainUrl from '../FrameContainer/frame?url';
 
+const typename = 'example.com/type/contact';
+
 const code = [
   "import { Filter, useQuery, useSpaces} from '@dxos/react-client/echo';",
   "import { Chart, Explorer, Globe } from '@dxos/plugin-explorer';",
@@ -26,32 +26,12 @@ const code = [
   'export default () => {',
   '  const spaces = useSpaces();',
   '  const space = spaces[1]',
-  "  const objects = useQuery(space, Filter.typename('example.com/type/contact'));",
+  `  const objects = useQuery(space, Filter.typename('${typename}'));`,
   '  return <Chart items={objects} accessor={object => ({ x: object.lat, y: object.lng })} />',
   '}',
 ].join('\n');
 
 const DefaultStory = () => {
-  const client = useClient();
-  const spaces = useSpaces();
-  console.log(spaces.length);
-
-  useEffect(() => {
-    try {
-      // TODO(burdon): Default not set.
-      const generator = createSpaceObjectGenerator(client.spaces.default);
-      generator.addSchemas();
-      void generator
-        .createObjects({
-          [TestSchemaType.organization]: 20,
-          [TestSchemaType.contact]: 50,
-        })
-        .catch(() => {});
-    } catch (err) {
-      console.log(err);
-    }
-  }, [client]);
-
   // TODO(burdon): Review what's the right way to create automerge-backed objects.
   const object = useMemo(() => createObject(create(ScriptType, { source: create(TextType, { content: code }) })), []);
 
