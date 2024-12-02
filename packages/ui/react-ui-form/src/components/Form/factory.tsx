@@ -2,23 +2,23 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FormatEnum } from '@dxos/echo-schema';
+import { type BaseObject, FormatEnum } from '@dxos/echo-schema';
 import { type SimpleType } from '@dxos/effect';
 
-import { LatLngInput } from './Custom';
+import { GeiPointInput } from './Custom';
 import { BooleanInput, NumberInput, TextInput } from './Defaults';
 import { type InputComponent } from './Input';
 
 /**
  * Get property input component.
  */
-export const getInputComponent = <T extends object>(
+export const getInputComponent = <T extends BaseObject<T>>(
   type: SimpleType,
   format?: FormatEnum,
 ): InputComponent<T> | undefined => {
   switch (format) {
     case FormatEnum.LatLng:
-      return LatLngInput;
+      return GeiPointInput;
   }
 
   switch (type) {

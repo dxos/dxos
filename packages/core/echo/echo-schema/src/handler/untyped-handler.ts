@@ -34,10 +34,10 @@ type ProxyTarget = {
 export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   public static readonly instance: ReactiveHandler<any> = new UntypedReactiveHandler();
 
-  private constructor() {}
-
   // TODO(dmaretskyi): Does this work? Should this be a global variable instead?
   readonly _proxyMap = new WeakMap<object, any>();
+
+  private constructor() {}
 
   init(target: ProxyTarget): void {
     invariant(typeof target === 'object' && target !== null);

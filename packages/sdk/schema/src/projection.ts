@@ -12,7 +12,7 @@ import {
   TypeEnum,
   type JsonSchemaType,
 } from '@dxos/echo-schema';
-import { getSchemaReference, setSchemaReference } from '@dxos/echo-schema';
+import { getSchemaReference, createSchemaReference } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -65,6 +65,10 @@ export class ViewProjection {
     return field;
   }
 
+  getFieldId(path: string): string | undefined {
+    return this._view.fields.find((field) => field.path === path)?.id;
+  }
+
   /**
    * Get projection of View fields and JSON schema property annotations.
    */
@@ -76,10 +80,10 @@ export class ViewProjection {
 
     const jsonProperty: JsonSchemaType = this._schema.jsonSchema.properties[field.path] ?? { format: FormatEnum.None };
     const { type: schemaType, format: schemaFormat = FormatEnum.None, ...rest } = jsonProperty;
-    const referenceSchema = getSchemaReference(jsonProperty);
 
     let type: TypeEnum = schemaType as TypeEnum;
     let format: FormatEnum = schemaFormat as FormatEnum;
+    const { typename: referenceSchema } = getSchemaReference(jsonProperty) ?? {};
     if (referenceSchema) {
       type = TypeEnum.Ref;
       format = FormatEnum.Ref;
@@ -114,6 +118,7 @@ export class ViewProjection {
     const targetPropertyName = props?.property;
     const isRename = !!(sourcePropertyName && targetPropertyName && targetPropertyName !== sourcePropertyName);
 
+    // TODO(burdon): Set field if does not exist.
     if (field) {
       const propsValues = props ? (pick(props, ['referencePath']) as Partial<FieldType>) : undefined;
       const clonedField: FieldType = { ...field, ...propsValues };
@@ -139,7 +144,7 @@ export class ViewProjection {
 
       const jsonProperty: JsonSchemaType = {};
       if (referenceSchema) {
-        setSchemaReference(jsonProperty, referenceSchema);
+        Object.assign(jsonProperty, createSchemaReference(referenceSchema));
         type = undefined;
         format = undefined;
       } else if (format) {

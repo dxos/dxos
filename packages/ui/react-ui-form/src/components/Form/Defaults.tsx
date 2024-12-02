@@ -4,11 +4,12 @@
 
 import React from 'react';
 
+import { type BaseObject } from '@dxos/echo-schema';
 import { Input, Select } from '@dxos/react-ui';
 
 import { type InputProps, InputHeader } from './Input';
 
-export const TextInput = <T extends object>({
+export const TextInput = <T extends BaseObject<T>>({
   property,
   type,
   label,
@@ -37,7 +38,7 @@ export const TextInput = <T extends object>({
   );
 };
 
-export const NumberInput = <T extends object>({
+export const NumberInput = <T extends BaseObject<T>>({
   property,
   type,
   label,
@@ -68,7 +69,7 @@ export const NumberInput = <T extends object>({
   );
 };
 
-export const BooleanInput = <T extends object>({
+export const BooleanInput = <T extends BaseObject<T>>({
   property,
   type,
   label,
@@ -91,7 +92,11 @@ export const BooleanInput = <T extends object>({
   );
 };
 
-export const SelectInput = <T extends object>({
+export type SelectInputOptions<T extends BaseObject<T>> = InputProps<T> & {
+  options?: Array<{ value: string | number; label?: string }>;
+};
+
+export const SelectInput = <T extends BaseObject<T>>({
   property,
   type,
   label,
@@ -101,7 +106,7 @@ export const SelectInput = <T extends object>({
   getStatus,
   getValue,
   onValueChange,
-}: InputProps<T>) => {
+}: SelectInputOptions<T>) => {
   const { status, error } = getStatus?.(property);
 
   return (

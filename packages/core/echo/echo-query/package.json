@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-query",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "ECHO queries.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -24,6 +24,7 @@
   ],
   "dependencies": {
     "@dxos/node-std": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@orama/orama": "^2.0.8"
   },
   "devDependencies": {

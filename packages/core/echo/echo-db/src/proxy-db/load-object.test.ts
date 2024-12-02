@@ -10,7 +10,7 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 
 import { loadObjectReferences } from './load-object';
-import { type EchoReactiveObject } from '../echo-handler';
+import { type ReactiveEchoObject } from '../echo-handler';
 import { EchoTestBuilder } from '../testing';
 
 describe('loadObjectReferences', () => {
@@ -175,6 +175,6 @@ describe('loadObjectReferences', () => {
   });
 });
 
-const createExpando = (props: any = {}): EchoReactiveObject<Expando> => {
+const createExpando = (props: any = {}): ReactiveEchoObject<Expando> => {
   return create(Expando, props);
 };

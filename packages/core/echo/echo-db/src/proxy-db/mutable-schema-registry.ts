@@ -98,7 +98,7 @@ export class MutableSchemaRegistry implements SchemaResolver {
   /**
    * @deprecated
    */
-  // TODO(burdon): Reconcile with list.
+  // TODO(burdon): Reconcile with query.
   public async listAll(): Promise<StaticSchema[]> {
     const { objects } = await this._db.query(Filter.schema(StoredSchema)).run();
     const storedSchemas = objects.map((storedSchema) => {
@@ -134,6 +134,7 @@ export class MutableSchemaRegistry implements SchemaResolver {
     };
   }
 
+  // TODO(burdon): Tighten type signature to AbstractSchema?
   public addSchema(schema: S.Schema<any>): MutableSchema {
     const meta = getObjectAnnotation(schema);
     invariant(meta, 'use S.Struct({}).pipe(EchoObject(...)) or class syntax to create a valid schema');
@@ -146,6 +147,7 @@ export class MutableSchemaRegistry implements SchemaResolver {
     const storedSchema = this._db.add(schemaToStore);
     const result = this._register(storedSchema);
     this._notifySchemaListChanged();
+    result.rebuild();
     return result;
   }
 

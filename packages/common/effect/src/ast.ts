@@ -62,14 +62,6 @@ const PROP_REGEX = /\w+/;
 export const JsonPath = S.NonEmptyString.pipe(S.pattern(PATH_REGEX)) as any as S.Schema<JsonPath>;
 export const JsonProp = S.NonEmptyString.pipe(S.pattern(PROP_REGEX)) as any as S.Schema<JsonProp>;
 
-/**
- * Get annotation or return undefined.
- */
-export const getAnnotation =
-  <T>(annotationId: symbol) =>
-  (node: AST.Annotated): T | undefined =>
-    pipe(AST.getAnnotation<T>(annotationId)(node), Option.getOrUndefined);
-
 export enum VisitResult {
   CONTINUE = 0,
   /**
@@ -84,10 +76,11 @@ export enum VisitResult {
 
 export type Path = (string | number)[];
 
-export type Tester = (node: AST.AST, path: Path, depth: number) => VisitResult | undefined;
-export type Visitor = (node: AST.AST, path: Path, depth: number) => void;
+export type TestFn = (node: AST.AST, path: Path, depth: number) => VisitResult | boolean | undefined;
 
-const defaultTest: Tester = (node) => (isSimpleType(node) ? VisitResult.CONTINUE : VisitResult.SKIP);
+export type VisitorFn = (node: AST.AST, path: Path, depth: number) => void;
+
+const defaultTest: TestFn = isSimpleType;
 
 /**
  * Visit leaf nodes.
@@ -96,24 +89,33 @@ const defaultTest: Tester = (node) => (isSimpleType(node) ? VisitResult.CONTINUE
  * - https://github.com/syntax-tree/unist-util-is?tab=readme-ov-file#test
  */
 export const visit: {
-  (node: AST.AST, visitor: Visitor): void;
-  (node: AST.AST, test: Tester, visitor: Visitor): void;
-} = (node: AST.AST, testOrVisitor: Tester | Visitor, visitor?: Visitor): void => {
+  (node: AST.AST, visitor: VisitorFn): void;
+  (node: AST.AST, test: TestFn, visitor: VisitorFn): void;
+} = (node: AST.AST, testOrVisitor: TestFn | VisitorFn, visitor?: VisitorFn): void => {
   if (!visitor) {
     visitNode(node, defaultTest, testOrVisitor);
   } else {
-    visitNode(node, testOrVisitor as Tester, visitor);
+    visitNode(node, testOrVisitor as TestFn, visitor);
   }
 };
 
 const visitNode = (
   node: AST.AST,
-  test: Tester | undefined,
-  visitor: Visitor,
+  test: TestFn | undefined,
+  visitor: VisitorFn,
   path: Path = [],
   depth = 0,
 ): VisitResult | undefined => {
-  const result = test?.(node, path, depth) ?? VisitResult.CONTINUE;
+  const _result = test?.(node, path, depth);
+  const result: VisitResult =
+    _result === undefined
+      ? VisitResult.CONTINUE
+      : typeof _result === 'boolean'
+        ? _result
+          ? VisitResult.CONTINUE
+          : VisitResult.SKIP
+        : _result;
+
   if (result === VisitResult.EXIT) {
     return result;
   }
@@ -245,23 +247,34 @@ const defaultAnnotations: Record<string, AST.Annotated> = {
 };
 
 /**
+ * Get annotation or return undefined.
+ * @param annotationId
+ * @param noDefault If true, then return undefined for effect library defined values.
+ */
+export const getAnnotation =
+  <T>(annotationId: symbol, noDefault = true) =>
+  (node: AST.AST): T | undefined => {
+    // Title fallback seems to be the identifier.
+    const id = pipe(AST.getIdentifierAnnotation(node), Option.getOrUndefined);
+    const value = pipe(AST.getAnnotation<T>(annotationId)(node), Option.getOrUndefined);
+    if (noDefault && (value === defaultAnnotations[node._tag]?.annotations[annotationId] || value === id)) {
+      return undefined;
+    }
+
+    return value;
+  };
+
+/**
  * Recursively descend into AST to find first matching annotations.
  * Optionally skips default annotations for basic types (e.g., 'a string').
  */
-export const findAnnotation = <T>(
-  node: AST.AST,
-  annotationId: symbol,
-  options?: { noDefault: boolean },
-): T | undefined => {
-  const getAnnotationById = getAnnotation(annotationId);
+// TODO(burdon): Convert to effect pattern (i.e., return operator like getAnnotation).
+export const findAnnotation = <T>(node: AST.AST, annotationId: symbol, noDefault = true): T | undefined => {
+  const getAnnotationById = getAnnotation(annotationId, noDefault);
 
   const getBaseAnnotation = (node: AST.AST): T | undefined => {
     const value = getAnnotationById(node);
     if (value !== undefined) {
-      if (options?.noDefault && value === defaultAnnotations[node._tag]?.annotations[annotationId]) {
-        return undefined;
-      }
-
       return value as T;
     }
 
@@ -367,4 +380,38 @@ export const getDiscriminatedType = (node: AST.AST, value: Record<string, any> =
 
   const schema = S.Struct(fields);
   return schema.ast;
+};
+
+/**
+ * Maps AST nodes.
+ * The user is responsible for recursively calling {@link mapAst} on the AST.
+ * NOTE: Will evaluate suspended ASTs.
+ */
+export const mapAst = (ast: AST.AST, f: (ast: AST.AST) => AST.AST): AST.AST => {
+  switch (ast._tag) {
+    case 'TypeLiteral':
+      return new AST.TypeLiteral(
+        ast.propertySignatures.map(
+          (prop) =>
+            new AST.PropertySignature(prop.name, f(prop.type), prop.isOptional, prop.isReadonly, prop.annotations),
+        ),
+        ast.indexSignatures,
+      );
+    case 'Union':
+      return AST.Union.make(ast.types.map(f), ast.annotations);
+    case 'TupleType':
+      return new AST.TupleType(
+        ast.elements.map((t) => new AST.OptionalType(f(t.type), t.isOptional, t.annotations)),
+        ast.rest.map((t) => new AST.Type(f(t.type), t.annotations)),
+        ast.isReadonly,
+        ast.annotations,
+      );
+    case 'Suspend': {
+      const newAst = f(ast.f());
+      return new AST.Suspend(() => newAst, ast.annotations);
+    }
+    default:
+      // TODO(dmaretskyi): Support more nodes.
+      return ast;
+  }
 };

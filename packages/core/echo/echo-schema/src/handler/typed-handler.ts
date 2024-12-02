@@ -43,9 +43,9 @@ type ProxyTarget = {
 export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   public static readonly instance: ReactiveHandler<any> = new TypedReactiveHandler();
 
-  private constructor() {}
-
   readonly _proxyMap = new WeakMap<object, any>();
+
+  private constructor() {}
 
   init(target: ProxyTarget): void {
     invariant(typeof target === 'object' && target !== null);
@@ -190,6 +190,7 @@ const setSchemaProperties = (obj: any, schema: S.Schema<any>) => {
 };
 
 export const prepareTypedTarget = <T>(target: T, schema: S.Schema<T>) => {
+  // log.info('prepareTypedTarget', { target, schema });
   if (!AST.isTypeLiteral(schema.ast)) {
     throw new Error('schema has to describe an object type');
   }

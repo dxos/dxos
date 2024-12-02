@@ -15,6 +15,10 @@
       ],
       "executor": "@nx/js:tsc",
       "options": {
+        "entryPoints": [
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/testing/index.ts"
+        ],
         "main": "{projectRoot}/src/index.ts",
         "outputPath": "{projectRoot}/dist",
         "tsConfig": "{projectRoot}/tsconfig.json"
@@ -22,9 +26,11 @@
     },
     "e2e": {
       "dependsOn": [
-        "^compile",
-        "stories:mkdist"
-      ]
+        "^compile"
+      ],
+      "options": {
+        "config": "{projectRoot}/src/testing/playwright/playwright.config.ts"
+      }
     },
     "lint": {
       "options": {

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/composer-app",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "private": true,
   "description": "DXOS Composer application.",
   "homepage": "https://dxos.org",
@@ -28,6 +28,7 @@
     "@dxos/observability": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-automation": "workspace:*",
+    "@dxos/plugin-calls": "workspace:*",
     "@dxos/plugin-chess": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-debug": "workspace:*",

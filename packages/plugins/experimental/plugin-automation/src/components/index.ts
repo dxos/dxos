@@ -4,9 +4,4 @@
 
 import { lazy } from 'react';
 
-export const PromptContainer = lazy(() => import('./PromptContainer'));
-
-export * from './AutomationPanel';
-export * from './Chain';
-export * from './PromptEditor';
-export * from './TriggerEditor';
+export const AutomationPanel = lazy(() => import('./AutomationPanel'));

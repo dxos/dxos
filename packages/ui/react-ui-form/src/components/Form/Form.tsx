@@ -2,16 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
+import { pipe } from 'effect';
+import { capitalize } from 'effect/String';
 import React, { useEffect, useMemo } from 'react';
 
-import { AST, S } from '@dxos/echo-schema';
+import { AST, type BaseObject, S, type PropertyKey } from '@dxos/echo-schema';
 import { findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { getSchemaProperties, type PropertyKey, type SchemaProperty } from '@dxos/schema';
+import { getSchemaProperties, type SchemaProperty } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
+import { SelectInput } from './Defaults';
 import { type InputComponent } from './Input';
 import { getInputComponent } from './factory';
 import { type FormOptions, useForm } from '../../hooks';
@@ -21,9 +24,9 @@ import { translationKey } from '../../translations';
 
 const padding = 'px-2';
 
-export type PropsFilter<T extends Object> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
+export type PropsFilter<T extends BaseObject<T>> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
 
-export type FormProps<T extends object> = ThemedClassName<
+export type FormProps<T extends BaseObject<T>> = ThemedClassName<
   {
     values: T;
     /** Path to the current object from the root. Used with nested forms. */
@@ -42,13 +45,13 @@ export type FormProps<T extends object> = ThemedClassName<
      * Map of custom renderers for specific properties.
      */
     Custom?: Partial<Record<string, InputComponent<T>>>;
-  } & Pick<FormOptions<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onSubmit'>
+  } & Pick<FormOptions<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onSave'>
 >;
 
 /**
  * General purpose form component that displays field controls based on the given schema.
  */
-export const Form = <T extends object = {}>({
+export const Form = <T extends BaseObject<T>>({
   classNames,
   schema,
   values: initialValues,
@@ -59,24 +62,24 @@ export const Form = <T extends object = {}>({
   autoSave,
   onValuesChanged,
   onValidate,
-  onSubmit,
+  onSave,
   onCancel,
   Custom,
 }: FormProps<T>) => {
   const { t } = useTranslation(translationKey);
-  const onValid = useMemo(() => (autoSave ? onSubmit : undefined), [autoSave, onSubmit]);
-  const { canSubmit, values, errors, handleSubmit, ...inputProps } = useForm<T>({
+  const onValid = useMemo(() => (autoSave ? onSave : undefined), [autoSave, onSave]);
+  const { canSave, values, errors, handleSave, ...inputProps } = useForm<T>({
     schema,
     initialValues,
     onValuesChanged,
     onValidate,
     onValid,
-    onSubmit,
+    onSave,
   });
 
   // Filter and sort props.
   // TODO(burdon): Move into useForm?
-  const props = useMemo(() => {
+  const properties = useMemo(() => {
     const props = getSchemaProperties<T>(schema.ast, values);
     const filtered = filter ? filter(props) : props;
     const findIndex = (props: PropertyKey<T>[], prop: PropertyKey<T>) => {
@@ -96,25 +99,50 @@ export const Form = <T extends object = {}>({
 
   return (
     <div role='form' className={mx('flex flex-col w-full gap-2 py-2', classNames)}>
-      {props
-        .map(({ prop, name, type, format, title, description, examples }) => {
-          // Custom property allows for sub forms.
-          // TODO(burdon): Use Select control if options are present in annotation?
+      {properties
+        .map((property) => {
+          const { ast, name, type, format, title, description, examples, options } = property;
           const key = [...path, name];
-          const InputComponent = Custom?.[key.join('.')] ?? getInputComponent<T>(type, format);
+          const label = title ?? pipe(name, capitalize);
+          const placeholder = examples?.length ? `Example: "${examples[0]}"` : description;
+
+          // Get generic input.
+          let InputComponent = Custom?.[key.join('.')];
+          if (!InputComponent) {
+            // Select.
+            if (options) {
+              return (
+                <div key={name} role='none' className={padding}>
+                  <SelectInput
+                    type={type}
+                    format={format}
+                    property={name}
+                    disabled={readonly}
+                    label={label}
+                    options={options.map((option) => ({ value: option, label: String(option) }))}
+                    placeholder={placeholder}
+                    {...inputProps}
+                  />
+                </div>
+              );
+            }
+
+            InputComponent = getInputComponent<T>(type, format);
+          }
+
           if (!InputComponent) {
             // Recursively render form.
             if (type === 'object') {
-              const baseNode = findNode(prop.type, isDiscriminatedUnion);
+              const baseNode = findNode(ast, isDiscriminatedUnion);
               const typeLiteral = baseNode
                 ? getDiscriminatedType(baseNode, values[name] as any)
-                : findNode(prop.type, AST.isTypeLiteral);
+                : findNode(ast, AST.isTypeLiteral);
 
               if (typeLiteral) {
                 const schema = S.make(typeLiteral);
                 return (
                   <div key={name} role='none'>
-                    <div className={padding}>{title ?? name}</div>
+                    <div className={padding}>{label}</div>
                     <Form<any>
                       schema={schema}
                       path={key}
@@ -133,8 +161,6 @@ export const Form = <T extends object = {}>({
             return null;
           }
 
-          const placeholder = examples?.length ? `Example: ${examples[0]}` : description;
-
           return (
             <div key={name} role='none' className={padding}>
               <InputComponent
@@ -142,7 +168,7 @@ export const Form = <T extends object = {}>({
                 format={format}
                 property={name}
                 disabled={readonly}
-                label={title ?? name}
+                label={label}
                 placeholder={placeholder}
                 {...inputProps}
               />
@@ -151,21 +177,19 @@ export const Form = <T extends object = {}>({
         })
         .filter(isNotFalsy)}
 
-      {/* {errors && <div className='overflow-hidden text-sm'>{JSON.stringify(errors)}</div>} */}
-
-      {(onCancel || onSubmit) && !autoSave && (
+      {(onCancel || onSave) && !autoSave && (
         <div role='none' className='flex justify-center'>
           <div role='none' className={mx(onCancel && !readonly && 'grid grid-cols-2 gap-2')}>
             {onCancel && !readonly && (
               <IconButton icon='ph--x--regular' label={t('button cancel')} onClick={onCancel} />
             )}
-            {onSubmit && (
+            {onSave && (
               <IconButton
                 type='submit'
-                disabled={!canSubmit}
+                disabled={!canSave}
                 icon='ph--check--regular'
                 label={t('button save')}
-                onClick={handleSubmit}
+                onClick={handleSave}
               />
             )}
           </div>

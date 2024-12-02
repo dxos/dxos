@@ -89,8 +89,9 @@ export class OnboardingManager {
 
   async initialize() {
     await this.fetchCredential();
-    if (this._credential) {
+    if (this._credential && this._hubUrl) {
       await this._upgradeCredential();
+      this._spaceInvitationCode && (await this._openJoinSpace());
       return;
     } else if (!this._skipAuth) {
       await this._showWelcome();
@@ -264,16 +265,11 @@ export class OnboardingManager {
   private async _openJoinSpace() {
     invariant(this._spaceInvitationCode);
 
-    await this._dispatch([
-      {
-        plugin: SPACE_PLUGIN,
-        action: SpaceAction.JOIN,
-        data: { invitationCode: this._spaceInvitationCode },
-      },
-      {
-        action: NavigationAction.OPEN,
-      },
-    ]);
+    await this._dispatch({
+      plugin: SPACE_PLUGIN,
+      action: SpaceAction.JOIN,
+      data: { invitationCode: this._spaceInvitationCode },
+    });
 
     removeQueryParamByValue(this._spaceInvitationCode);
   }

@@ -4,6 +4,7 @@
 
 import type { MulticastObservable } from '@dxos/async';
 import type { FilterSource, Query } from '@dxos/echo-db';
+import type { BaseObject } from '@dxos/echo-schema';
 import type { PublicKey, SpaceId } from '@dxos/keys';
 import type { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
@@ -73,5 +74,5 @@ export interface Echo extends MulticastObservable<Space[]> {
    * @param filter
    * @param options
    */
-  query<T extends {} = any>(filter?: FilterSource<T>, options?: QueryOptions): Query<T>;
+  query<T extends BaseObject<T> = any>(filter?: FilterSource<T>, options?: QueryOptions): Query<T>;
 }

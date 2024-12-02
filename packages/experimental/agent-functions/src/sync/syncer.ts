@@ -3,14 +3,14 @@
 //
 
 import { type Space, type Query } from '@dxos/client/echo';
-import { type EchoReactiveObject, type Filter, type Subscription } from '@dxos/echo-db';
+import { type ReactiveEchoObject, type Filter, type Subscription } from '@dxos/echo-db';
 
-export type ObjectIndexer<T extends EchoReactiveObject<any>> = (object: T) => string | undefined;
+export type ObjectIndexer<T extends ReactiveEchoObject<any>> = (object: T) => string | undefined;
 
 /**
  * Merge.
  */
-export class ObjectSyncer<T extends EchoReactiveObject<any>> {
+export class ObjectSyncer<T extends ReactiveEchoObject<any>> {
   private readonly _mapById = new Map<string, { indexedValue: string; object: T }>();
   private readonly _mapByIndex = new Map<string, T>();
 

@@ -12,21 +12,41 @@ import {
   updateFieldsInSchema,
   setTypenameInSchema,
 } from './manipulation';
-import { StoredSchema } from './types';
-import { type HasId, type JsonSchemaType, schemaVariance, type SchemaMeta, SchemaMetaSymbol } from '../ast';
+import { createStoredSchema, StoredSchema } from './types';
+import {
+  getObjectAnnotation,
+  schemaVariance,
+  type HasId,
+  type JsonSchemaType,
+  type SchemaMeta,
+  SchemaMetaSymbol,
+  type ObjectAnnotation,
+  EchoObject,
+  ObjectAnnotationId,
+} from '../ast';
 import { toEffectSchema, toJsonSchema } from '../json';
+import { type AbstractSchema } from '../object';
 
-interface MutableSchemaConstructor extends S.Schema<MutableSchema> {
+// TODO(burdon): Reconcile with AbstractTypedObject. Need common base class.
+interface MutableSchemaConstructor extends AbstractSchema {
   new (): HasId;
 }
 
-const MutableSchemaBase = (): MutableSchemaConstructor => {
+const AbstractMutableSchema = (): MutableSchemaConstructor => {
+  /**
+   * Return class definition satisfying S.Schema.
+   */
   return class {
-    static get ast() {
-      return this._schema.ast;
+    private static get _schema() {
+      // The field is DynamicEchoSchema in runtime, but is serialized as StoredEchoSchema in automerge.
+      return S.Union(StoredSchema, S.instanceOf(MutableSchema)).annotations(StoredSchema.ast.annotations);
     }
 
     static readonly [S.TypeId] = schemaVariance;
+
+    static get ast() {
+      return this._schema.ast;
+    }
 
     static get annotations() {
       const schema = this._schema;
@@ -37,19 +57,14 @@ const MutableSchemaBase = (): MutableSchemaConstructor => {
       const schema = this._schema;
       return schema.pipe.bind(schema);
     }
-
-    private static get _schema() {
-      // The field is DynamicEchoSchema in runtime, but is serialized as StoredEchoSchema in automerge.
-      return S.Union(StoredSchema, S.instanceOf(MutableSchema)).annotations(StoredSchema.ast.annotations);
-    }
   } as any;
 };
 
 /**
  * Schema that can be modified at runtime via the API.
  */
-// TODO(burdon): Why does this have a schema property AND implement schema.
-export class MutableSchema extends MutableSchemaBase() implements S.Schema<any> {
+// TODO(burdon): Why does this HAVE a schema property AND implement schema.
+export class MutableSchema extends AbstractMutableSchema() implements S.Schema<any> {
   private _schema: S.Schema<any> | undefined;
   private _isDirty = true;
 
@@ -153,13 +168,19 @@ export class MutableSchema extends MutableSchemaBase() implements S.Schema<any> 
     this._storedSchema.jsonSchema = toJsonSchema(removed);
   }
 
-  private _getSchema() {
+  /**
+   * Rebuilds this schema if it is dirty.
+   */
+  public rebuild() {
     if (this._isDirty || this._schema == null) {
       this._schema = toEffectSchema(unwrapProxy(this._storedSchema.jsonSchema));
       this._isDirty = false;
     }
+  }
 
-    return this._schema;
+  private _getSchema() {
+    this.rebuild();
+    return this._schema!;
   }
 }
 
@@ -188,4 +209,22 @@ const unwrapProxy = (jsonSchema: any): any => {
   }
 
   return result;
+};
+
+/**
+ * Create runtime representation of a schema.
+ */
+export const createMutableSchema = (
+  { typename, version }: ObjectAnnotation,
+  fields: S.Struct.Fields,
+): MutableSchema => {
+  const schema = S.partial(S.Struct(fields).omit('id')).pipe(EchoObject(typename, version));
+  const objectAnnotation = getObjectAnnotation(schema);
+  const schemaObject = createStoredSchema({ typename, version });
+  const updatedSchema = schema.annotations({
+    [ObjectAnnotationId]: { ...objectAnnotation, schemaId: schemaObject.id },
+  });
+
+  schemaObject.jsonSchema = toJsonSchema(updatedSchema);
+  return new MutableSchema(schemaObject);
 };

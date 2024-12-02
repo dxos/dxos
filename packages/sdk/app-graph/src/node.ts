@@ -21,6 +21,13 @@ export type Node<TData = any, TProperties extends Record<string, any> = Record<s
   type: string;
 
   /**
+   * Keys in of the properties which should be cached.
+   * If defined, the node will be included in the cache.
+   * If undefined, the node will not be included in the cache.
+   */
+  cacheable?: string[];
+
+  /**
    * Properties of the node relevant to displaying the node.
    */
   properties: Readonly<TProperties>;
@@ -47,7 +54,7 @@ export const isGraphNode = (data: unknown): data is Node =>
 
 export type NodeArg<TData, TProperties extends Record<string, any> = Record<string, any>> = MakeOptional<
   Node<TData, TProperties>,
-  'data' | 'properties'
+  'data' | 'properties' | 'cacheable'
 > & {
   /** Will automatically add nodes with an edge from this node to each. */
   nodes?: NodeArg<unknown>[];
