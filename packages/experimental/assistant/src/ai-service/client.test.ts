@@ -107,10 +107,10 @@ test.only('tool calls', async () => {
     systemPrompt: 'You are a helpful assistant.',
     tools: [custodian],
   });
-  for await (const event of stream) {
+  for await (const event of stream2) {
     log.info('event', event);
   }
-  const [message2] = await stream.complete();
+  const [message2] = await stream2.complete();
   log.info('full message', {
     message: message2,
   });
