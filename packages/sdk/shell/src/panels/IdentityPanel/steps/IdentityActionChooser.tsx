@@ -63,8 +63,7 @@ export const IdentityActionChooserImpl = ({
     (device) => device.profile?.type === DeviceType.AGENT_MANAGED && device.profile?.os?.toUpperCase() === 'EDGE',
   );
   return (
-    // TODO(burdon): Create box container to handle padding for focus indicators so they are not clipped.
-    <div role='none' className='bs-40 grow overflow-y-auto pli-1'>
+    <div role='none' className='bs-40 grow overflow-y-auto'>
       <DeviceList
         devices={devices}
         connectionState={connectionState}
