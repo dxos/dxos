@@ -4,12 +4,7 @@
 
 import React from 'react';
 
-import { Status } from '@dxos/react-ui';
-
+// TODO(burdon): Show skeleton: https://github.com/dxos/dxos/issues/8259
 export const PlankLoading = () => {
-  return (
-    <div role='none' className='grid place-items-center attention-surface'>
-      <Status indeterminate aria-label='Initializing' />
-    </div>
-  );
+  return <div role='none' className='grid place-items-center attention-surface' />;
 };

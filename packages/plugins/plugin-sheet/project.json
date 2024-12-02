@@ -21,6 +21,15 @@
         ]
       }
     },
+    "e2e": {
+      "dependsOn": [
+        "^compile",
+        "stories:mkdist"
+      ],
+      "options": {
+        "config": "{projectRoot}/src/testing/playwright/playwright.config.ts"
+      }
+    },
     "lint": {},
     "prebuild": {
       "executor": "nx:run-commands",

@@ -12,7 +12,7 @@ import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 import { getSpace } from '@dxos/react-client/echo';
-import { translations as dataTranslations } from '@dxos/react-ui-form';
+import { translations as formTranslations } from '@dxos/react-ui-form';
 import { TableType, initializeTable, translations as tableTranslations } from '@dxos/react-ui-table';
 import { type FieldProjection, ViewProjection, ViewType } from '@dxos/schema';
 
@@ -42,7 +42,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
           },
         },
       },
-      translations: [...translations, ...dataTranslations, ...tableTranslations],
+      translations: [...translations, ...formTranslations, ...tableTranslations],
       echo: {
         schema: [TableType],
         system: [ViewType],
@@ -148,7 +148,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
               invariant(isTable(table));
               invariant(table.view);
 
-              const schema = getSpace(table)?.db.schemaRegistry.getSchema(table.view.query.type);
+              const schema = getSpace(table)?.db.schemaRegistry.getSchema(table.view.query.typename);
               invariant(schema);
               const projection = new ViewProjection(schema, table.view);
 

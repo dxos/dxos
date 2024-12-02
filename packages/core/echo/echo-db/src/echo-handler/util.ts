@@ -28,7 +28,7 @@ export const getReferenceWithSpaceKey = (obj: ReactiveEchoObject<any>): Referenc
 
 // TODO(burdon): Factor out.
 // TODO(burdon): Impl query by meta.
-export const findObjectWithForeignKey = <T extends BaseObject>(
+export const findObjectWithForeignKey = <T extends BaseObject<T>>(
   objects: ReactiveEchoObject<T>[],
   foreignKey: ForeignKey,
 ) => {

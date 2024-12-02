@@ -23,6 +23,9 @@ export type ThemePluginOptions = {
   extensions?: Partial<ThemeConfig>[];
 };
 
+/**
+ * Vite plugin to configure theme.
+ */
 export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
   const config: ThemePluginOptions = {
     jit: true,

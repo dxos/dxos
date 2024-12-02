@@ -52,7 +52,10 @@ export interface EchoDatabase {
 
   get graph(): Hypergraph;
 
-  getObjectById<T extends BaseObject>(id: string, opts?: GetObjectByIdOptions): ReactiveEchoObject<T> | undefined;
+  getObjectById<T extends BaseObject<T> = any>(
+    id: string,
+    opts?: GetObjectByIdOptions,
+  ): ReactiveEchoObject<T> | undefined;
 
   /**
    * Query objects.
@@ -74,7 +77,7 @@ export interface EchoDatabase {
   /**
    * Adds object to the database.
    */
-  add<T extends BaseObject = {}>(obj: ReactiveObject<T>): ReactiveEchoObject<T>;
+  add<T extends BaseObject<T>>(obj: ReactiveObject<T>): ReactiveEchoObject<T>;
 
   /**
    * Removes object from the database.
@@ -273,7 +276,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * @internal
    */
-  async _loadObjectById<T extends BaseObject = {}>(
+  async _loadObjectById<T extends BaseObject<T>>(
     objectId: string,
     options: LoadObjectOptions = {},
   ): Promise<ReactiveEchoObject<T> | undefined> {

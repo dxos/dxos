@@ -15,8 +15,8 @@ import {
   type TableController,
   Toolbar,
   type ToolbarAction,
-  useTableModel,
   type TableType,
+  useTableModel,
 } from '@dxos/react-ui-table';
 import { ViewProjection } from '@dxos/schema';
 
@@ -32,7 +32,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   const space = getSpace(table);
 
   const schema = useMemo(
-    () => (table.view ? space?.db.schemaRegistry.getSchema(table.view.query.type) : undefined),
+    () => (table.view ? space?.db.schemaRegistry.getSchema(table.view.query.typename) : undefined),
     [space, table.view],
   );
   const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : () => false, undefined, [schema]);

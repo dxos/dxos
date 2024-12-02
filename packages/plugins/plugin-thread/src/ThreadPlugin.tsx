@@ -25,7 +25,7 @@ import { type ActionGroup, createExtension, isActionGroup, toSignal } from '@dxo
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { SpaceAction } from '@dxos/plugin-space';
 import { ThreadType, MessageType, ChannelType } from '@dxos/plugin-space/types';
-import { create, type ReactiveEchoObject, getTypename } from '@dxos/react-client/echo';
+import { create, type ReactiveEchoObject, getTypename, SpaceState } from '@dxos/react-client/echo';
 import { getSpace, fullyQualifiedId, loadObjectReferences, parseId } from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 
@@ -147,7 +147,13 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
                 const [subjectId] = id.split('~');
                 const { spaceId, objectId } = parseId(subjectId);
-                const space = client.spaces.get().find((space) => space.id === spaceId);
+                const spaces = toSignal(
+                  (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
+                  () => client.spaces.get(),
+                );
+                const space = spaces?.find(
+                  (space) => space.id === spaceId && space.state.get() === SpaceState.SPACE_READY,
+                );
                 if (!objectId) {
                   // TODO(wittjosiah): Support comments for arbitrary subjects.
                   //   This is to ensure that the comments panel is not stuck on an old object.
