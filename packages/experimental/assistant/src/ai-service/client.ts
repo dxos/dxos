@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { _iterSSEMessages } from '@anthropic-ai/sdk/streaming';
 import { Schema as S } from '@effect/schema';
 
 import { Trigger } from '@dxos/async';
@@ -17,6 +16,7 @@ import {
   type Space,
   type Thread,
 } from './schema';
+import { iterSSEMessages } from './sse';
 
 export type AIServiceClientParams = {
   endpoint: string;
@@ -47,7 +47,7 @@ export class AIServiceClientImpl implements AIServiceClient {
 
   async getMessagesInThread(spaceId: SpaceId, threadId: string): Promise<Message[]> {
     const res = await fetch(`${this._endpoint}/space/${spaceId}/thread/${threadId}/message`);
-    return S.decodePromise(S.Array(Message).pipe(S.mutable))(await res.json());
+    return S.decodePromise(S.Array(Message).pipe(S.mutable))((await res.json()).data.results);
   }
 
   async insertMessages(messages: Message[]): Promise<void> {
@@ -96,7 +96,7 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
   static fromSSEResponse(params: GenerationParams, response: Response) {
     const controller = new AbortController();
     const iterator = async function* () {
-      for await (const sse of _iterSSEMessages(response, controller)) {
+      for await (const sse of iterSSEMessages(response, controller)) {
         if (sse.event === 'completion') {
           try {
             yield JSON.parse(sse.data);
@@ -151,6 +151,11 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
 
   cancel() {
     throw new Error('Not implemented');
+  }
+
+  get accumulatedMessages(): Message[] {
+    // TODO(dmaretskyi): Support multiple accumulated messages.
+    return this._accumulatedMessage ? [this._accumulatedMessage] : [];
   }
 
   /**

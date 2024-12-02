@@ -94,8 +94,8 @@ export const Message = S.Struct({
   foreignId: S.optional(S.String),
 
   // TODO(dmaretskyi): Figure out how to deal with those.
-  created: S.optional(S.DateFromSelf),
-  updated: S.optional(S.DateFromSelf),
+  // created: S.optional(S.DateFromString),
+  // updated: S.optional(S.DateFromString),
 });
 export interface Message extends S.Schema.Type<typeof Message> {}
 
