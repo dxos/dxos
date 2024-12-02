@@ -204,7 +204,6 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
                         part='main'
                         layoutMode={layoutMode}
                         order={index * 2 + 1}
-                        last={index === layoutParts.main!.length - 1}
                       />
                     </Fragment>
                   ))}

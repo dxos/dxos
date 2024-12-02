@@ -57,7 +57,7 @@ export type TreeItemProps<T = any> = {
   renderColumns?: FC<{ item: T; path: string[]; menuOpen: boolean; setMenuOpen: (open: boolean) => void }>;
   canDrop?: (source: TreeData, target: TreeData) => boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
-  onSelect?: (params: { item: T; path: string[]; current: boolean }) => void;
+  onSelect?: (params: { item: T; path: string[]; current: boolean; option: boolean }) => void;
 };
 
 export const RawTreeItem = <T = any,>({
@@ -181,10 +181,13 @@ export const RawTreeItem = <T = any,>({
     [onOpenChange, item, path, open],
   );
 
-  const handleSelect = useCallback(() => {
-    rowRef.current?.focus();
-    onSelect?.({ item, path, current: !current });
-  }, [onSelect, item, path, current]);
+  const handleSelect = useCallback(
+    (option = false) => {
+      rowRef.current?.focus();
+      onSelect?.({ item, path, current: !current, option });
+    },
+    [onSelect, item, path, current],
+  );
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
@@ -196,7 +199,7 @@ export const RawTreeItem = <T = any,>({
           isBranch && open && handleOpenChange();
           break;
         case ' ':
-          handleSelect();
+          handleSelect(event.altKey);
           break;
       }
     },
