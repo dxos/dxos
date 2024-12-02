@@ -92,7 +92,6 @@ export const createView = ({
   if (jsonSchema) {
     const schema = toEffectSchema(jsonSchema);
     for (const property of getSchemaProperties(schema.ast)) {
-      // TODO(burdon): Create fields in order specified by fields property.
       if (include && !include.includes(property.name)) {
         continue;
       }
@@ -110,6 +109,15 @@ export const createView = ({
         }),
       );
     }
+  }
+
+  // Sort fields to match the order in the params.
+  if (include) {
+    fields.sort((a, b) => {
+      const indexA = include.indexOf(a.path);
+      const indexB = include.indexOf(b.path);
+      return indexA - indexB;
+    });
   }
 
   return create(ViewType, {
