@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 const ENDPOINT = 'http://localhost:8787';
 
 test('client generation', async () => {
-  const client = new AIServiceClient({
+  const client = new AIServiceClientImpl({
     endpoint: ENDPOINT,
   });
 

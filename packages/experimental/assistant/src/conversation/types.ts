@@ -7,49 +7,13 @@ import { Schema as S } from '@effect/schema';
 import { toJsonSchema } from '@dxos/echo-schema';
 import { type JsonSchemaType } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
+import { ObjectId, type Message } from '../ai-service/schema';
+import type { SpaceId } from '@dxos/keys';
 
-export type LLMMessage = {
-  role: 'user' | 'assistant';
-  content: LLMMessageContent[];
-  stopReason?: LLMStopReason;
-};
-
-export type LLMStopReason = 'tool_use' | 'end_turn';
-
-export type LLMMessageContent =
-  | {
-      type: 'text';
-      text: string;
-    }
-  | {
-      type: 'tool_use';
-
-      /**
-       * Result must have the same id as the tool.
-       */
-      id: string;
-
-      /**
-       * Tool name.
-       */
-      name: string;
-      input: unknown;
-      /**
-       * Accumulator for the streaming JSON input.
-       */
-      inputJson?: string;
-    }
-  | {
-      type: 'tool_result';
-      tool_use_id: string;
-      /**
-       * Text or image types.
-       */
-      content: string;
-      is_error?: boolean;
-    };
-
-export const createUserMessage = (text: string): LLMMessage => ({
+export const createUserMessage = (spaceId: SpaceId, threadId: ObjectId, text: string): Message => ({
+  id: ObjectId.random(),
+  spaceId,
+  threadId,
   role: 'user',
   content: [{ type: 'text', text }],
 });
@@ -81,14 +45,6 @@ export const LLMToolResult = Object.freeze({
    */
   Break: (result: unknown): LLMToolResult => ({ kind: 'break', result }),
 });
-
-export type LLMModel =
-  | '@hf/nousresearch/hermes-2-pro-mistral-7b'
-  | '@anthropic/claude-3-5-sonnet-20241022'
-  | '@anthropic/claude-3-5-haiku-20241022'
-  | '@ollama/llama-3-2-3b'
-  | '@ollama/llama-3-1-nemotron-70b-instruct'
-  | '@ollama/llama-3-1-nemotron-mini-4b-instruct';
 
 export type DefineToolParams<Params extends S.Schema.AnyNoContext> = {
   name: string;

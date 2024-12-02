@@ -7,25 +7,35 @@ import { test } from 'vitest';
 
 import { log } from '@dxos/log';
 
-import { AnthropicBackend } from './backend/anthropic';
-import { runLLM } from './conversation';
+import { runLLM, type ConversationEvent } from './conversation';
 import { createUserMessage, defineTool, LLMToolResult } from './types';
+import { AIServiceClientImpl } from '../ai-service/client';
+import { SpaceId } from '@dxos/keys';
+import { ObjectId } from '../ai-service/schema';
 
-const backend = new AnthropicBackend({
-  apiKey: process.env.ANTHROPIC_API_KEY!,
+const ENDPOINT = 'http://localhost:8787';
+
+const client = new AIServiceClientImpl({
+  endpoint: ENDPOINT,
 });
 
 test('hello', async ({ expect }) => {
+  const spaceId = SpaceId.random();
+  const threadId = ObjectId.random();
+
+  await client.insertMessages([createUserMessage(spaceId, threadId, 'Hello, how are you?')]);
   const result = await runLLM({
     model: '@anthropic/claude-3-5-sonnet-20241022',
-    messages: [createUserMessage('Hello, how are you?')],
+    spaceId,
+    threadId,
     tools: [],
-    backend,
+    client,
+    logger: messageLogger,
   });
   log.info('result', { result });
 });
 
-test.only('tool call', async ({ expect }) => {
+test('tool call', async ({ expect }) => {
   const custodian = defineTool({
     name: 'custodian',
     description: 'Custodian can tell you the password if you say the magic word',
@@ -41,11 +51,23 @@ test.only('tool call', async ({ expect }) => {
     },
   });
 
+  const spaceId = SpaceId.random();
+  const threadId = ObjectId.random();
+
+  await client.insertMessages([createUserMessage(spaceId, threadId, 'What is the password? Ask the custodian.')]);
   const result = await runLLM({
     model: '@anthropic/claude-3-5-sonnet-20241022',
-    messages: [createUserMessage('What is the password? Ask the custodian')],
+    spaceId,
+    threadId,
     tools: [custodian],
-    backend,
+    client,
+    logger: messageLogger,
   });
   log.info('result', { result });
 });
+
+const messageLogger = (event: ConversationEvent) => {
+  if (event.type === 'message') {
+    log.info('message', { message: event.message });
+  }
+};

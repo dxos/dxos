@@ -163,6 +163,7 @@ export interface GenerateRequest extends S.Schema.Type<typeof GenerateRequest> {
 export type LLMStopReason = 'tool_use' | 'end_turn';
 
 // TODO(dmaretskyi): Effect schema.
+// TODO(dmaretskyi): Rename GenerationStreamEvent.
 export type ResultStreamEvent =
   | {
       // TODO(dmaretskyi): Normalize types to our schema.
