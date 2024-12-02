@@ -1,10 +1,16 @@
-import { AIServiceClient, AIServiceClientImpl, ObjectId, type Message } from '@dxos/assistant';
-import { SpaceId } from '@dxos/keys';
+//
+// Copyright 2024 DXOS.org
+//
+
+import React, { useEffect, useRef, useState } from 'react';
+
+import { type AIServiceClient, AIServiceClientImpl, ObjectId, type Message } from '@dxos/assistant';
+import { type SpaceId } from '@dxos/keys';
 import type { ThemedClassName } from '@dxos/react-ui';
 import { Icon, Input, Toolbar, useTranslation } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
-import React, { useEffect, useRef, useState } from 'react';
+
 import { THREAD_PLUGIN } from '../../meta';
 
 const ENDPOINT = 'http://localhost:8787';

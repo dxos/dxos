@@ -2,10 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { test } from 'vitest';
-
-import { log } from '@dxos/log';
-
 // import { AnthropicBackend } from '../conversation/backend/anthropic';
 // import { runLLM } from '../conversation/conversation';
 // import { createUserMessage } from '../conversation/types';
