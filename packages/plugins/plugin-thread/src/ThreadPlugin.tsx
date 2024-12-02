@@ -30,6 +30,7 @@ import { getSpace, fullyQualifiedId, loadObjectReferences, parseId } from '@dxos
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 
 import {
+  AssistantComplimentary,
   ChatContainer,
   ChatHeading,
   ThreadArticle,
@@ -118,6 +119,11 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             id: 'comments',
             label: ['open comments panel label', { ns: THREAD_PLUGIN }],
             icon: 'ph--chat-text--regular',
+          },
+          {
+            id: 'assistant',
+            label: ['open assistant panel label', { ns: THREAD_PLUGIN }],
+            icon: 'ph--hand--regular',
           },
         ],
       },
@@ -335,6 +341,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               }
 
               break;
+            }
+
+            case 'complementary--assistant': {
+              return <AssistantComplimentary />;
             }
           }
 
