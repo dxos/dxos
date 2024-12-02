@@ -28,12 +28,14 @@ export const resolvedStrokeColor = (status: Invitation.State) =>
     : status === Invitation.State.CANCELLED || status === Invitation.State.TIMEOUT
       ? cancelledStrokeColor
       : successStrokeColor;
+
 export const resolvedBgColor = (status: Invitation.State) =>
   status === Invitation.State.ERROR
     ? errorBgColor
     : status === Invitation.State.CANCELLED || status === Invitation.State.TIMEOUT
       ? cancelledBgColor
       : successBgColor;
+
 export const resolvedTextColor = (status: Invitation.State) =>
   status === Invitation.State.ERROR
     ? errorTextColor
