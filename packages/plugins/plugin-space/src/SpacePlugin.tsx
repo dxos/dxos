@@ -64,7 +64,6 @@ import {
   AwaitingObject,
   CollectionMain,
   CollectionSection,
-  DefaultObjectSettings,
   JoinDialog,
   MenuFooter,
   PopoverRenameObject,
@@ -456,9 +455,9 @@ export const SpacePlugin = ({
               ) : null;
             case 'complementary--settings':
               return isSpace(data.subject) ? (
-                <SpaceSettingsPanel space={data.subject} />
-              ) : isEchoObject(data.subject) ? (
+                <SpaceSettingsPanel space={data.subject} /> /* : isEchoObject(data.subject) ? (
                 { node: <DefaultObjectSettings object={data.subject} />, disposition: 'fallback' }
+              ) */
               ) : null;
             case 'dialog':
               if (data.component === 'dxos.org/plugin/space/SpaceSettingsDialog') {
