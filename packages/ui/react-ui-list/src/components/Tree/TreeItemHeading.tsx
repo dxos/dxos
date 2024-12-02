@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type KeyboardEvent, forwardRef, memo, useCallback } from 'react';
+import React, { type KeyboardEvent, type MouseEvent, forwardRef, memo, useCallback } from 'react';
 
 import { Button, Icon, toLocalizedString, useTranslation, type Label } from '@dxos/react-ui';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
@@ -16,7 +16,7 @@ export type NavTreeItemHeadingProps = {
   className?: string;
   disabled?: boolean;
   current?: boolean;
-  onSelect?: () => void;
+  onSelect?: (option: boolean) => void;
 };
 
 export const TreeItemHeading = memo(
@@ -24,12 +24,19 @@ export const TreeItemHeading = memo(
     ({ label, icon, className, disabled, current, onSelect }, forwardedRef) => {
       const { t } = useTranslation();
 
+      const handleSelect = useCallback(
+        (event: MouseEvent) => {
+          onSelect?.(event.altKey);
+        },
+        [onSelect],
+      );
+
       const handleButtonKeydown = useCallback(
         (event: KeyboardEvent) => {
           if (event.key === ' ' || event.key === 'Enter') {
             event.preventDefault();
             event.stopPropagation();
-            onSelect?.();
+            onSelect?.(event.altKey);
           }
         },
         [onSelect],
@@ -55,12 +62,14 @@ export const TreeItemHeading = memo(
               className,
             )}
             disabled={disabled}
-            onClick={onSelect}
+            onClick={handleSelect}
             onKeyDown={handleButtonKeydown}
             {...(current && { 'aria-current': 'location' })}
           >
             {icon && <Icon icon={icon ?? 'ph--placeholder--regular'} size={4} classNames='is-[1em] bs-[1em] mlb-1' />}
-            <span className='flex-1 is-0 truncate text-start text-sm font-normal'>{toLocalizedString(label, t)}</span>
+            <span className='flex-1 is-0 truncate text-start text-sm font-normal' data-tooltip>
+              {toLocalizedString(label, t)}
+            </span>
           </Button>
         </TextTooltip>
       );
