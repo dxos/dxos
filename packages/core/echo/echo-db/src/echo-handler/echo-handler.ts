@@ -257,7 +257,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (validatedValue === undefined) {
       target[symbolInternals].core.delete(fullPath);
     } else {
-      const withLinks = this._handleLinksAssignment(target, value);
+      const withLinks = this._handleLinksAssignment(target, validatedValue);
       target[symbolInternals].core.setDecoded(fullPath, withLinks);
     }
 
