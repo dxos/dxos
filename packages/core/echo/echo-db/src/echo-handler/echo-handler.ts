@@ -19,6 +19,7 @@ import {
   StoredSchema,
   symbolIsProxy,
   type BaseObject,
+  getProxyHandler,
 } from '@dxos/echo-schema';
 import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -256,13 +257,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (validatedValue === undefined) {
       target[symbolInternals].core.delete(fullPath);
     } else {
-      const withLinks = deepMapValues(validatedValue, (value, recurse) => {
-        if (isEchoObject(value) as boolean) {
-          return this.createRef(target, value);
-        } else {
-          return recurse(value);
-        }
-      });
+      const withLinks = this._handleLinksAssignment(target, validatedValue);
       target[symbolInternals].core.setDecoded(fullPath, withLinks);
     }
 
@@ -294,6 +289,20 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     const _ = S.asserts(propertySchema)(unwrappedValue);
     return unwrappedValue;
+  }
+
+  private _handleLinksAssignment(target: ProxyTarget, value: any): any {
+    return deepMapValues(value, (value, recurse) => {
+      if (isEchoObjectField(value)) {
+        // The value is a value-object field of another echo-object. We don't want to create a reference
+        // to it or have shared mutability, we need to copy by value.
+        return recurse({ ...value });
+      } else if (isReactiveObject(value)) {
+        return this.createRef(target, value);
+      } else {
+        return recurse(value);
+      }
+    });
   }
 
   getSchema(target: ProxyTarget): S.Schema<any> | undefined {
@@ -354,9 +363,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arrayPush(target: ProxyTarget, path: KeyPath, ...items: any[]): number {
-    this._validateForArray(target, path, items, target.length);
+    const validatedItems = this._validateForArray(target, path, items, target.length);
 
-    const encodedItems = this._encodeForArray(target, items);
+    const encodedItems = this._encodeForArray(target, validatedItems);
     return target[symbolInternals].core.arrayPush([getNamespace(target), ...path], encodedItems);
   }
 
@@ -387,10 +396,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arrayUnshift(target: ProxyTarget, path: KeyPath, ...items: any[]): number {
-    this._validateForArray(target, path, items, 0);
+    const validatedItems = this._validateForArray(target, path, items, 0);
 
     const fullPath = this._getPropertyMountPath(target, path);
-    const encodedItems = this._encodeForArray(target, items);
+    const encodedItems = this._encodeForArray(target, validatedItems);
 
     let newLength: number = -1;
     target[symbolInternals].core.change((doc) => {
@@ -404,10 +413,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arraySplice(target: ProxyTarget, path: KeyPath, start: number, deleteCount?: number, ...items: any[]): any[] {
-    this._validateForArray(target, path, items, start);
+    const validatedItems = this._validateForArray(target, path, items, start);
 
     const fullPath = this._getPropertyMountPath(target, path);
-    const encodedItems = this._encodeForArray(target, items);
+    const encodedItems = this._encodeForArray(target, validatedItems);
 
     let deletedElements: any[] | undefined;
     target[symbolInternals].core.change((doc) => {
@@ -550,22 +559,14 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   private _validateForArray(target: ProxyTarget, path: KeyPath, items: any[], start: number) {
-    let index = start;
-    for (const item of items) {
-      this.validateValue(target, [...path, String(index++)], item);
-    }
+    return items.map((item, index) => {
+      return this.validateValue(target, [...path, String(start + index)], item);
+    });
   }
 
   // TODO(dmaretskyi): Change to not rely on object-core doing linking.
   private _encodeForArray(target: ProxyTarget, items: any[] | undefined): any[] {
-    const linksEncoded = deepMapValues(items, (value, recurse) => {
-      if (isReactiveObject(value) as boolean) {
-        return this.createRef(target, value);
-      } else {
-        return recurse(value);
-      }
-    });
-
+    const linksEncoded = this._handleLinksAssignment(target, items);
     return target[symbolInternals].core.encode(linksEncoded);
   }
 
@@ -677,6 +678,14 @@ export const isRootDataObject = (target: ProxyTarget) => {
   }
 
   return getNamespace(target) === DATA_NAMESPACE;
+};
+
+const isEchoObjectField = (value: any) => {
+  return (
+    isReactiveObject(value) &&
+    getProxyHandler(value) instanceof EchoReactiveHandler &&
+    !isRootDataObject(getProxyTarget(value))
+  );
 };
 
 const getNamespace = (target: ProxyTarget): string => target[symbolNamespace];

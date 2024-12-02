@@ -198,7 +198,13 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
 
                 const [subjectId] = id.split('~');
                 const { spaceId, objectId } = parseId(subjectId);
-                const space = client.spaces.get().find((space) => space.id === spaceId);
+                const spaces = toSignal(
+                  (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
+                  () => client.spaces.get(),
+                );
+                const space = spaces?.find(
+                  (space) => space.state.get() === SpaceState.SPACE_READY && space.id === spaceId,
+                );
                 if (!objectId) {
                   // TODO(burdon): Ref SPACE_PLUGIN ns.
                   const label = space

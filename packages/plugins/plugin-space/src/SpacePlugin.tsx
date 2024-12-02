@@ -64,7 +64,6 @@ import {
   AwaitingObject,
   CollectionMain,
   CollectionSection,
-  DefaultObjectSettings,
   JoinDialog,
   MenuFooter,
   PopoverRenameObject,
@@ -78,6 +77,7 @@ import {
   SyncStatus,
   SpaceSettingsDialog,
   type SpaceSettingsDialogProps,
+  DefaultObjectSettings,
 } from './components';
 import meta, { SPACE_PLUGIN, SpaceAction } from './meta';
 import translations from './translations';
@@ -314,7 +314,13 @@ export const SpacePlugin = ({
               const { added, removed, attended } = message.payload;
 
               const identityKey = PublicKey.safeFrom(message.payload.identityKey);
-              if (identityKey && Array.isArray(added) && Array.isArray(removed)) {
+              const currentIdentity = client.halo.identity.get();
+              if (
+                identityKey &&
+                !currentIdentity?.identityKey.equals(identityKey) &&
+                Array.isArray(added) &&
+                Array.isArray(removed)
+              ) {
                 added.forEach((id) => {
                   if (typeof id === 'string') {
                     if (!(id in state.values.viewersByObject)) {
