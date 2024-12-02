@@ -56,9 +56,9 @@ test.describe('plugin-sheet', () => {
 
     // Test range input
     await sheet.press('Enter');
-    await sheet.type('=SUM(');
+    await sheet.fill('=SUM(');
     await sheet.selectRange({ col: 0, row: 2, plane: 'grid' }, { col: 0, row: 4, plane: 'grid' });
-    await sheet.type(')');
+    await sheet.press(')');
     await sheet.commit('Enter');
     // Check sum
     await expect(sheet.grid.cell(0, 5, 'grid')).toHaveText(`${firstNumber + secondNumber + thirdNumber}`);
@@ -69,13 +69,10 @@ test.describe('plugin-sheet', () => {
   });
 
   test('ranges', async () => {
-    await sheet.grid.cell(1, 0, 'grid').click();
-    await sheet.setFocusedCellValue('one', 'Enter');
-    await sheet.setFocusedCellValue('two', 'Enter');
     await sheet.selectRange({ col: 1, row: 0, plane: 'grid' }, { col: 1, row: 1, plane: 'grid' });
     await sheet.toolbarAction('alignment', 'center').click();
-    expect(await sheet.grid.cell(1, 1, 'grid')).toHaveAttribute('class', /.*text-center.*/);
-    expect(await sheet.grid.cell(1, 1, 'grid')).toHaveAttribute('class', /.*text-center.*/);
+    expect(await sheet.grid.cell(1, 0, 'grid')).toHaveAttribute('class', /text-center/);
+    expect(await sheet.grid.cell(1, 1, 'grid')).toHaveAttribute('class', /text-center/);
     await expect(sheet.rangeInList('B1:B2')).toBeVisible();
   });
 });
