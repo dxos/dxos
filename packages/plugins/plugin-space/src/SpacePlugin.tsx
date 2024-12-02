@@ -78,6 +78,7 @@ import {
   SpaceSettingsDialog,
   type SpaceSettingsDialogProps,
   DefaultObjectSettings,
+  InlineSyncStatus,
 } from './components';
 import meta, { SPACE_PLUGIN, SpaceAction } from './meta';
 import translations from './translations';
@@ -454,6 +455,7 @@ export const SpacePlugin = ({
                   disposition: 'fallback',
                 }
               ) : null;
+            // TODO(burdon): Add role name syntax to minimal plugin docs.
             case 'complementary--settings':
               return isSpace(data.subject) ? (
                 <SpaceSettingsPanel space={data.subject} />
@@ -481,14 +483,16 @@ export const SpacePlugin = ({
               }
               return null;
             }
-            // TODO(burdon): Add role name syntax to minimal plugin docs.
-            case 'presence--glyph': {
+            case 'navtree-item-end': {
               return isReactiveObject(data.object) ? (
                 <SmallPresenceLive
                   id={data.id as string}
                   viewers={state.values.viewersByObject[fullyQualifiedId(data.object)]}
                 />
+              ) : isSpace(data.object) ? (
+                <InlineSyncStatus space={data.object} />
               ) : (
+                // TODO(wittjosiah): Attention glyph for non-echo items should be handled elsewhere.
                 <SmallPresence id={data.id as string} count={0} />
               );
             }
