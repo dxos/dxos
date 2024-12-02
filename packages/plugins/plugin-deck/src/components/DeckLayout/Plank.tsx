@@ -14,6 +14,7 @@ import {
   type Layout,
   indexInPart,
   partLength,
+  LayoutAction,
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { useGraph } from '@dxos/plugin-graph';
@@ -38,10 +39,9 @@ export type PlankProps = {
   part: LayoutPart;
   layoutMode: Layout['layoutMode'];
   order?: number;
-  last?: boolean;
 };
 
-export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }: PlankProps) => {
+export const Plank = memo(({ entry, layoutParts, part, layoutMode, order }: PlankProps) => {
   const dispatch = useIntentDispatcher();
   const coordinate: LayoutCoordinate = useMemo(() => ({ part, entryId: entry?.id ?? UNKNOWN_ID }), [entry?.id, part]);
   const { popoverAnchorId, scrollIntoView } = useLayout();
@@ -75,8 +75,16 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order, last }
 
   useLayoutEffect(() => {
     if (scrollIntoView === coordinate.entryId) {
-      rootElement.current?.focus({ preventScroll: true });
-      layoutMode === 'deck' && rootElement.current?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+      // TODO(wittjosiah): When focused on page load, the focus is always visible.
+      //   Forcing focus to something smaller than the plank prevents large focus ring in the interim.
+      const focusable =
+        rootElement.current?.querySelector('input') ||
+        rootElement.current?.querySelector('button') ||
+        rootElement.current;
+      focusable?.focus({ preventScroll: true });
+      layoutMode === 'deck' && focusable?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+      // Clear the scroll into view state once it has been actioned.
+      void dispatch({ action: LayoutAction.SCROLL_INTO_VIEW, data: { id: undefined } });
     }
   }, [coordinate.entryId, scrollIntoView, layoutMode]);
 
