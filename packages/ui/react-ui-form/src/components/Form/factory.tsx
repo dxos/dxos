@@ -12,7 +12,7 @@ import { type InputComponent } from './Input';
 /**
  * Get property input component.
  */
-export const getInputComponent = <T extends BaseObject>(
+export const getInputComponent = <T extends BaseObject<T>>(
   type: SimpleType,
   format?: FormatEnum,
 ): InputComponent<T> | undefined => {

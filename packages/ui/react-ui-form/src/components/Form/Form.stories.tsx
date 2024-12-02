@@ -37,14 +37,14 @@ type StoryProps = FormProps<TestType>;
 
 const DefaultStory = ({ values: initialValues }: StoryProps) => {
   const [values, setValues] = useState(initialValues);
-  const handleSubmit = useCallback<NonNullable<FormProps<TestType>['onSubmit']>>((values) => {
+  const handleSave = useCallback<NonNullable<FormProps<TestType>['onSave']>>((values) => {
     setValues(values);
   }, []);
 
   return (
     <TestLayout json={{ values, schema: TestSchema.ast.toJSON() }}>
       <TestPanel>
-        <Form<TestType> schema={TestSchema} values={values} onSubmit={handleSubmit} />
+        <Form<TestType> schema={TestSchema} values={values} onSave={handleSave} />
       </TestPanel>
     </TestLayout>
   );
@@ -96,7 +96,7 @@ type DiscriminatedUnionStoryProps = FormProps<ShapeType>;
 
 const DiscriminatedUnionStory = ({ values: initialValues }: DiscriminatedUnionStoryProps) => {
   const [values, setValues] = useState(initialValues);
-  const handleSubmit = useCallback<NonNullable<FormProps<ShapeType>['onSubmit']>>((values) => {
+  const handleSave = useCallback<NonNullable<FormProps<ShapeType>['onSave']>>((values) => {
     setValues(values);
   }, []);
 
@@ -106,7 +106,7 @@ const DiscriminatedUnionStory = ({ values: initialValues }: DiscriminatedUnionSt
         <Form<ShapeType>
           schema={ShapeSchema}
           values={values}
-          onSubmit={handleSubmit}
+          onSave={handleSave}
           Custom={{
             ['shape.type' as const]: (props) => (
               <SelectInput<ShapeType>

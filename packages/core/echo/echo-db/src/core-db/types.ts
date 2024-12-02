@@ -62,7 +62,10 @@ export const DocAccessor = {
 export const isValidKeyPath = (value: unknown): value is KeyPath =>
   Array.isArray(value) && value.every((v) => typeof v === 'string' || typeof v === 'number');
 
-export const createDocAccessor = <T extends BaseObject>(obj: ReactiveEchoObject<T>, path: KeyPath): DocAccessor<T> => {
+export const createDocAccessor = <T extends BaseObject<T>>(
+  obj: ReactiveEchoObject<T>,
+  path: KeyPath,
+): DocAccessor<T> => {
   invariant(isReactiveObject(obj));
   invariant(path === undefined || isValidKeyPath(path));
   const core = getObjectCore(obj);

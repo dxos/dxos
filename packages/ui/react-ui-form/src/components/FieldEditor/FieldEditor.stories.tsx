@@ -20,14 +20,14 @@ import { TestLayout, TestPanel } from '../testing';
 type StoryProps = FieldEditorProps;
 
 const DefaultStory = (props: FieldEditorProps) => {
-  const handleComplete: FieldEditorProps['onClose'] = () => {
+  const handleComplete: FieldEditorProps['onSave'] = () => {
     log.info('onClose', { props });
   };
 
   return (
     <TestLayout json={{ props }}>
       <TestPanel>
-        <FieldEditor {...props} onClose={handleComplete} />
+        <FieldEditor {...props} onSave={handleComplete} />
       </TestPanel>
     </TestLayout>
   );

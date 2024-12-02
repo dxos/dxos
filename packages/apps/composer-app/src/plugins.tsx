@@ -158,6 +158,7 @@ export const plugins = ({
   services,
   firstRun,
   observability,
+  isDev,
   isPwa,
   isSocket,
 }: PluginConfig): HostPluginParams['plugins'] => ({
@@ -266,6 +267,7 @@ export const plugins = ({
   [TableMeta.id]: Plugin.lazy(() => import('@dxos/plugin-table')),
   [ThemeMeta.id]: Plugin.lazy(() => import('@dxos/plugin-theme'), {
     appName: 'Composer',
+    noCache: isDev,
   }),
   [ThreadMeta.id]: Plugin.lazy(() => import('@dxos/plugin-thread')),
   [WelcomeMeta.id]: Plugin.lazy(() => import('./plugins/welcome'), { firstRun }),

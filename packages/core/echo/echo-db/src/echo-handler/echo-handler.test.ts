@@ -615,6 +615,63 @@ describe('Reactive Object with ECHO database', () => {
     obj.refMap = { ref: create(Expando, { title: 'Object 3' }) };
   });
 
+  describe('object reference assignments', () => {
+    test('object field is not an echo object', async () => {
+      const { db } = await builder.createDatabase();
+      const obj = db.add(create(Expando, { title: 'Object 1' }));
+      obj.field = { foo: 'bar' };
+      expect(isEchoObject(obj.field)).to.be.false;
+    });
+
+    test('nested reactive object is an echo object', async () => {
+      const { db } = await builder.createDatabase();
+      const obj = db.add(create(Expando, { title: 'Object 1' }));
+      obj.field = { ref: create(Expando, { title: 'Object 2' }) };
+      expect(isEchoObject(obj.field.ref)).to.be.true;
+    });
+
+    test('nested ref is an echo object', async () => {
+      const { db } = await builder.createDatabase();
+      const obj = db.add(create(Expando, { title: 'Object 1' }));
+      obj.field = { ref: db.add(create(Expando, { title: 'Object 2' })) };
+      expect(isEchoObject(obj.field.ref)).to.be.true;
+    });
+
+    test('reassign an object field', async () => {
+      const { db } = await builder.createDatabase();
+
+      const originalValue = { foo: 'bar', nested: { value: 42 } };
+      const obj1 = db.add(create(Expando, { title: 'Object 1' }));
+      obj1.field = originalValue;
+      expect(obj1.field).toEqual(originalValue);
+
+      const obj2 = db.add(create(Expando, { title: 'Object 2' }));
+      obj2.field = obj1.field;
+      expect(obj1.field).toEqual(obj2.field);
+
+      obj1.field.foo = obj1.field.foo + '_v2';
+      obj1.field.nested.value += 1;
+      expect(obj1.field.foo).not.toEqual(obj2.field.foo);
+      expect(obj1.field.nested.value).not.toEqual(obj2.field.nested.value);
+    });
+
+    test('reassign a field with nested echo object', async () => {
+      const { db } = await builder.createDatabase();
+
+      const obj1 = db.add(create(Expando, { title: 'Object 1' }));
+      const obj2 = create(Expando, { title: 'Object 2' });
+      obj1.nested = { object: { ref: obj2 } };
+      expect(obj1.nested.object.ref).toEqual(obj2);
+
+      const obj3 = db.add(create(Expando, { title: 'Object 3' }));
+      obj3.nested = obj1.nested;
+      expect(obj1.nested.object.ref).toEqual(obj3.nested.object.ref);
+
+      obj1.nested.object.ref = create(Expando, { title: 'Object 4' });
+      expect(obj1.nested.object.ref).not.toEqual(obj3.nested.object.ref);
+    });
+  });
+
   test('typed object is linked with the database on assignment to another db-linked object', async () => {
     const { db, graph } = await builder.createDatabase();
     graph.schemaRegistry.addSchema([TestSchemaType]);
