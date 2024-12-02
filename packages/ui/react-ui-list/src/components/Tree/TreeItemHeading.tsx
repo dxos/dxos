@@ -67,7 +67,9 @@ export const TreeItemHeading = memo(
             {...(current && { 'aria-current': 'location' })}
           >
             {icon && <Icon icon={icon ?? 'ph--placeholder--regular'} size={4} classNames='is-[1em] bs-[1em] mlb-1' />}
-            <span className='flex-1 is-0 truncate text-start text-sm font-normal'>{toLocalizedString(label, t)}</span>
+            <span className='flex-1 is-0 truncate text-start text-sm font-normal' data-tooltip>
+              {toLocalizedString(label, t)}
+            </span>
           </Button>
         </TextTooltip>
       );
