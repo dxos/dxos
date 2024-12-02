@@ -19,6 +19,7 @@ import {
   StoredSchema,
   symbolIsProxy,
   type BaseObject,
+  getProxyHandler,
 } from '@dxos/echo-schema';
 import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -256,13 +257,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (validatedValue === undefined) {
       target[symbolInternals].core.delete(fullPath);
     } else {
-      const withLinks = deepMapValues(validatedValue, (value, recurse) => {
-        if (isEchoObject(value) as boolean) {
-          return this.createRef(target, value);
-        } else {
-          return recurse(value);
-        }
-      });
+      const withLinks = this._handleLinksAssignment(target, value);
       target[symbolInternals].core.setDecoded(fullPath, withLinks);
     }
 
@@ -294,6 +289,20 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     const _ = S.asserts(propertySchema)(unwrappedValue);
     return unwrappedValue;
+  }
+
+  private _handleLinksAssignment(target: ProxyTarget, value: any): any {
+    return deepMapValues(value, (value, recurse) => {
+      if (isEchoObjectField(value)) {
+        // The value is a value-object field of another echo-object. We don't want to create a reference
+        // to it or have shared mutability, we need to copy by value.
+        return recurse({ ...value });
+      } else if (isReactiveObject(value)) {
+        return this.createRef(target, value);
+      } else {
+        return recurse(value);
+      }
+    });
   }
 
   getSchema(target: ProxyTarget): S.Schema<any> | undefined {
@@ -558,14 +567,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   // TODO(dmaretskyi): Change to not rely on object-core doing linking.
   private _encodeForArray(target: ProxyTarget, items: any[] | undefined): any[] {
-    const linksEncoded = deepMapValues(items, (value, recurse) => {
-      if (isReactiveObject(value) as boolean) {
-        return this.createRef(target, value);
-      } else {
-        return recurse(value);
-      }
-    });
-
+    const linksEncoded = this._handleLinksAssignment(target, items);
     return target[symbolInternals].core.encode(linksEncoded);
   }
 
@@ -677,6 +679,14 @@ export const isRootDataObject = (target: ProxyTarget) => {
   }
 
   return getNamespace(target) === DATA_NAMESPACE;
+};
+
+const isEchoObjectField = (value: any) => {
+  return (
+    isReactiveObject(value) &&
+    getProxyHandler(value) instanceof EchoReactiveHandler &&
+    !isRootDataObject(getProxyTarget(value))
+  );
 };
 
 const getNamespace = (target: ProxyTarget): string => target[symbolNamespace];
