@@ -13,7 +13,7 @@ import { SpaceAction } from '@dxos/plugin-space';
 import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 import { Icon } from '@dxos/react-ui';
 
-import { ComputeGraphContextProvider, RangeList, SheetContainer } from './components';
+import { ComputeGraphContextProvider, SheetContainer, SheetObjectSettings } from './components';
 import { type ComputeGraphRegistry } from './compute-graph';
 import { compareIndexPositions, createSheet } from './defs';
 import { computeGraphFacet } from './extensions';
@@ -150,15 +150,12 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
               if (space && data.object instanceof SheetType) {
                 return <SheetContainer space={space} sheet={data.object} role={role} />;
               }
-              return null;
+              break;
             case 'complementary--settings':
               if (data.subject instanceof SheetType) {
-                return {
-                  node: <RangeList sheet={data.subject} />,
-                };
+                return <SheetObjectSettings sheet={data.subject} />;
               }
-
-              return null;
+              break;
           }
 
           return null;

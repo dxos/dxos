@@ -64,7 +64,6 @@ import {
   AwaitingObject,
   CollectionMain,
   CollectionSection,
-  DefaultObjectSettings,
   JoinDialog,
   MenuFooter,
   PopoverRenameObject,
@@ -78,6 +77,7 @@ import {
   SyncStatus,
   SpaceSettingsDialog,
   type SpaceSettingsDialogProps,
+  DefaultObjectSettings,
 } from './components';
 import meta, { SPACE_PLUGIN, SpaceAction } from './meta';
 import translations from './translations';
