@@ -37,6 +37,7 @@ export default [
         'delete message label': 'Delete message',
         'open comments panel label': 'Show Comments',
         'open assistant panel label': 'Show Assistant',
+        'assistant panel label': 'Assistant',
       },
     },
   },

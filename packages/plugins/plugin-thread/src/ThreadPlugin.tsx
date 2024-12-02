@@ -23,9 +23,9 @@ import { log } from '@dxos/log';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup, toSignal } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
-import { SpaceAction } from '@dxos/plugin-space';
+import { memoizeQuery, SpaceAction } from '@dxos/plugin-space';
 import { ThreadType, MessageType, ChannelType } from '@dxos/plugin-space/types';
-import { create, type ReactiveEchoObject, getTypename } from '@dxos/react-client/echo';
+import { create, type ReactiveEchoObject, getTypename, type SpaceId } from '@dxos/react-client/echo';
 import { getSpace, fullyQualifiedId, loadObjectReferences, parseId } from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 
@@ -168,6 +168,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   };
                 }
 
+                // TODO(dmaretskyi): Should be: `const [object] = memoizeQuery(space, { id: objectId })`
                 const object = toSignal(
                   (onChange) => {
                     const timeout = setTimeout(async () => {
@@ -270,6 +271,62 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     },
                   },
                 ];
+              },
+            }),
+            // TODO(dmaretskyi): Very ugly code below!!!!
+            createExtension({
+              id: `${THREAD_PLUGIN}/assistant-for-subject`,
+              resolver: ({ id }) => {
+                // TODO(Zan): Find util (or make one). Effect schema!!
+                if (!id.endsWith('~assistant')) {
+                  return;
+                }
+
+                const [subjectId] = id.split('~');
+                const { spaceId, objectId } = parseId(subjectId);
+                const space = client.spaces.get(spaceId as SpaceId);
+                if (!objectId) {
+                  // TODO(wittjosiah): Support assistant for arbitrary subjects.
+                  //   This is to ensure that the assistant panel is not stuck on an old object.
+                  return {
+                    id,
+                    type,
+                    data: null,
+                    properties: {
+                      icon: 'ph--hand--regular',
+                      label: ['assistant panel label', { ns: THREAD_PLUGIN }],
+                      object: null,
+                      space,
+                    },
+                  };
+                }
+
+                // const object = toSignal(
+                //   (onChange) => {
+                //     const timeout = setTimeout(async () => {
+                //       await space?.db.query({ id: objectId }).first();
+                //       onChange();
+                //     });
+
+                //     return () => clearTimeout(timeout);
+                //   },
+                //   () => space?.db.getObjectById(objectId),
+                //   subjectId,
+                // );
+                // if (!object || !subjectId) {
+                //   return;
+                // }
+
+                return {
+                  id,
+                  type,
+                  data: null,
+                  properties: {
+                    icon: 'ph--hand--regular',
+                    label: ['assistant panel label', { ns: THREAD_PLUGIN }],
+                    object: null,
+                  },
+                };
               },
             }),
           ];

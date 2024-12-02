@@ -8797,6 +8797,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../experimental/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -8809,6 +8812,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../common/local-storage
@@ -8854,6 +8860,9 @@ importers:
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-syntax-highlighter
       '@dxos/react-ui-thread':
         specifier: workspace:*
         version: link:../../ui/react-ui-thread
