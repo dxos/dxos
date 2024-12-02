@@ -363,9 +363,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arrayPush(target: ProxyTarget, path: KeyPath, ...items: any[]): number {
-    this._validateForArray(target, path, items, target.length);
+    const validatedItems = this._validateForArray(target, path, items, target.length);
 
-    const encodedItems = this._encodeForArray(target, items);
+    const encodedItems = this._encodeForArray(target, validatedItems);
     return target[symbolInternals].core.arrayPush([getNamespace(target), ...path], encodedItems);
   }
 
@@ -396,10 +396,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arrayUnshift(target: ProxyTarget, path: KeyPath, ...items: any[]): number {
-    this._validateForArray(target, path, items, 0);
+    const validatedItems = this._validateForArray(target, path, items, 0);
 
     const fullPath = this._getPropertyMountPath(target, path);
-    const encodedItems = this._encodeForArray(target, items);
+    const encodedItems = this._encodeForArray(target, validatedItems);
 
     let newLength: number = -1;
     target[symbolInternals].core.change((doc) => {
@@ -413,10 +413,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arraySplice(target: ProxyTarget, path: KeyPath, start: number, deleteCount?: number, ...items: any[]): any[] {
-    this._validateForArray(target, path, items, start);
+    const validatedItems = this._validateForArray(target, path, items, start);
 
     const fullPath = this._getPropertyMountPath(target, path);
-    const encodedItems = this._encodeForArray(target, items);
+    const encodedItems = this._encodeForArray(target, validatedItems);
 
     let deletedElements: any[] | undefined;
     target[symbolInternals].core.change((doc) => {
@@ -559,10 +559,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   private _validateForArray(target: ProxyTarget, path: KeyPath, items: any[], start: number) {
-    let index = start;
-    for (const item of items) {
-      this.validateValue(target, [...path, String(index++)], item);
-    }
+    return items.map((item, index) => {
+      return this.validateValue(target, [...path, String(start + index)], item);
+    });
   }
 
   // TODO(dmaretskyi): Change to not rely on object-core doing linking.
