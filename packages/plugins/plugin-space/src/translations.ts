@@ -62,6 +62,7 @@ export default [
         'create collection label': 'Create collection',
         'unnamed object label': 'New object',
         'unnamed collection label': 'New collection',
+        'create object dialog title': 'Create object',
         'create object in space label': 'Add to space',
         'create object in collection label': 'Add to collection',
         'share space label': 'Share',

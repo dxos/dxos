@@ -8,7 +8,7 @@ import {
   type SurfaceProvides,
   type TranslationsProvides,
 } from '@dxos/app-framework';
-import { type SchemaProvides } from '@dxos/plugin-client';
+import { type SchemaProvides } from '@dxos/plugin-space';
 import { type MarkdownExtensionProvides } from '@dxos/plugin-markdown/types';
 
 import { WNFS_PLUGIN } from '../meta';

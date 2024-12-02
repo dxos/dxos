@@ -3,6 +3,7 @@
 //
 
 export * from './AwaitingObject';
+export * from './CreateDialog';
 export * from './CollectionMain';
 export * from './CollectionSection';
 export * from './DefaultObjectSettings';

@@ -39,6 +39,22 @@ type DialogPortalProps = DialogPortalPrimitiveProps;
 
 const DialogPortal: FunctionComponent<DialogPortalProps> = DialogPortalPrimitive;
 
+type DialogHeaderProps = ThemedClassName<DialogTitlePrimitiveProps>;
+
+const DialogHeader: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTMLHeadingElement, DialogHeaderProps>(
+  ({ classNames, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    return (
+      <div
+        role='none'
+        {...props}
+        className={tx('dialog.header', 'dialog__header', {}, classNames)}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
+
 type DialogTitleProps = ThemedClassName<DialogTitlePrimitiveProps> & { srOnly?: boolean };
 
 const DialogTitle: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTMLHeadingElement, DialogTitleProps>(
@@ -110,17 +126,17 @@ const DialogOverlay: ForwardRefExoticComponent<DialogOverlayProps> = forwardRef<
 
 DialogOverlay.displayName = DIALOG_OVERLAY_NAME;
 
-type DialogContentProps = ThemedClassName<DialogContentPrimitiveProps>;
+type DialogContentProps = ThemedClassName<DialogContentPrimitiveProps> & { size?: 'sm' | 'md' | 'lg' };
 
 const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<HTMLDivElement, DialogContentProps>(
-  ({ classNames, children, ...props }, forwardedRef) => {
+  ({ classNames, children, size, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { inOverlayLayout } = useOverlayLayoutContext(DIALOG_CONTENT_NAME);
 
     return (
       <DialogContentPrimitive
         {...props}
-        className={tx('dialog.content', 'dialog', { inOverlayLayout }, classNames)}
+        className={tx('dialog.content', 'dialog', { inOverlayLayout, size }, classNames)}
         ref={forwardedRef}
       >
         <ElevationProvider elevation='chrome'>{children}</ElevationProvider>
@@ -137,6 +153,7 @@ export const Dialog = {
   Portal: DialogPortal,
   Overlay: DialogOverlay,
   Content: DialogContent,
+  Header: DialogHeader,
   Title: DialogTitle,
   Description: DialogDescription,
   Close: DialogClose,

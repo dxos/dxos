@@ -11,6 +11,7 @@ export type DialogStyleProps = {
   srOnly?: boolean;
   inOverlayLayout?: boolean;
   elevation?: Elevation;
+  size?: 'sm' | 'md' | 'lg'; // TODO(burdon): Factor out type def.
 };
 
 const dialogLayoutFragment = 'overflow-auto grid place-items-center sm:p-2 md:p-4 lg:p-8';
@@ -18,10 +19,13 @@ const dialogLayoutFragment = 'overflow-auto grid place-items-center sm:p-2 md:p-
 export const dialogOverlay: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
   mx('fixed z-[22] inset-inline-0 block-start-0 bs-[100dvh] bg-scrim', dialogLayoutFragment, ...etc);
 
-export const dialogContent: ComponentFunction<DialogStyleProps> = ({ inOverlayLayout, elevation = 'chrome' }, ...etc) =>
+export const dialogContent: ComponentFunction<DialogStyleProps> = (
+  { inOverlayLayout, elevation = 'chrome', size },
+  ...etc
+) =>
   mx(
     // TODO(thure): `flex` should not be default.
-    'flex flex-col',
+    'flex flex-col gap-2',
     !inOverlayLayout && 'fixed z-[22] top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%]',
     '@container is-dvw sm:is-[95vw] max-is-full md:max-is-[24rem] p-4 sm:border sm:rounded-lg sm:border-separator',
     dialogMotion,
@@ -30,6 +34,9 @@ export const dialogContent: ComponentFunction<DialogStyleProps> = ({ inOverlayLa
     focusRing,
     ...etc,
   );
+
+export const dialogHeader: ComponentFunction<DialogStyleProps> = ({ srOnly }, ...etc) =>
+  mx('flex items-center justify-between', ...etc);
 
 export const dialogTitle: ComponentFunction<DialogStyleProps> = ({ srOnly }, ...etc) =>
   mx('rounded shrink-0 text-xl font-medium', srOnly && 'sr-only', ...etc);
@@ -40,6 +47,7 @@ export const dialogDescription: ComponentFunction<DialogStyleProps> = ({ srOnly 
 export const dialogTheme: Theme<DialogStyleProps> = {
   overlay: dialogOverlay,
   content: dialogContent,
+  header: dialogHeader,
   title: dialogTitle,
   description: dialogDescription,
 };

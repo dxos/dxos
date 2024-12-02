@@ -61,7 +61,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
       },
       translations,
       echo: {
-        schema: [StackViewType],
+        system: [StackViewType],
       },
       surface: {
         component: ({ data, role }) => {

@@ -47,7 +47,8 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
       },
       translations,
       echo: {
-        schema: [GridType, GridItemType],
+        schema: [GridType],
+        system: [GridItemType],
       },
       graph: {
         builder: (plugins) => {

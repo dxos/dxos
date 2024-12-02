@@ -40,7 +40,8 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
         },
       },
       echo: {
-        schema: [KanbanType, KanbanColumnType, KanbanItemType],
+        schema: [KanbanType],
+        system: [KanbanColumnType, KanbanItemType],
       },
       translations,
       graph: {

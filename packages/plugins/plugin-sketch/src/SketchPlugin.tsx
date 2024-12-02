@@ -43,7 +43,8 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
       settings: settings.values,
       translations,
       echo: {
-        schema: [DiagramType, CanvasType],
+        schema: [DiagramType],
+        system: [CanvasType],
       },
       space: {
         onSpaceCreate: {

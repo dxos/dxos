@@ -5,7 +5,6 @@
 import React from 'react';
 
 import {
-  filterPlugins,
   LayoutAction,
   parseIntentPlugin,
   resolvePlugin,
@@ -17,9 +16,7 @@ import {
   type TranslationsProvides,
 } from '@dxos/app-framework';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
-import { type AbstractTypedObject } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals/react';
-import { log } from '@dxos/log';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { Client, type ClientOptions, ClientProvider } from '@dxos/react-client';
 import { type IdentityPanelProps, type JoinPanelProps } from '@dxos/shell/react';
@@ -70,15 +67,6 @@ export type ClientPluginProvides = IntentResolverProvides &
 
 export const parseClientPlugin = (plugin?: Plugin) =>
   (plugin?.provides as any).client instanceof Client ? (plugin as Plugin<ClientPluginProvides>) : undefined;
-
-export type SchemaProvides = {
-  echo: {
-    schema: AbstractTypedObject[];
-  };
-};
-
-export const parseSchemaPlugin = (plugin?: Plugin) =>
-  Array.isArray((plugin?.provides as any).echo?.schema) ? (plugin as Plugin<SchemaProvides>) : undefined;
 
 export const ClientPlugin = ({
   appKey,
@@ -136,11 +124,6 @@ export const ClientPlugin = ({
       }
 
       await onReady?.(client, plugins);
-
-      filterPlugins(plugins, parseSchemaPlugin).forEach((plugin) => {
-        log('ready', { id: plugin.meta.id });
-        client.addTypes(plugin.provides.echo.schema);
-      });
     },
     unload: async () => {
       await client.destroy();

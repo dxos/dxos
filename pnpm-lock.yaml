@@ -5959,6 +5959,9 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugin-client
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../../plugin-space
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
@@ -6618,6 +6621,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../../plugin-markdown
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../../plugin-space
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
@@ -8395,6 +8401,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
+      '@dxos/react-ui-searchlist':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-searchlist
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
