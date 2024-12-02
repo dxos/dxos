@@ -18,6 +18,7 @@ import { formatJsonSchemaForLLM } from '../cypher/schema';
 import { createLogger } from './logger';
 import { createTestData } from './test-data';
 import { Contact, Org, Project, Task } from './test-schema';
+import { trim } from '../common/trim';
 
 const ENDPOINT = 'http://localhost:8787';
 
@@ -76,24 +77,6 @@ test('cypher query', async () => {
     createUserMessage(
       spaceId,
       threadId,
-      `
-      You have access to ECHO graph database. You can query the database to get data to satisfy user prompts.
-
-      Database schema is defined in pseud-cypher syntax. The schema is:
-
-      <schema>
-        ${formatJsonSchemaForLLM(schemaTypes.map((schema) => toJsonSchema(schema)))}
-      <schema>
-      `,
-    ),
-    createUserMessage(
-      spaceId,
-      threadId,
-      'If you are missing data to satisfy the user request, use the available tools to get the data.',
-    ),
-    createUserMessage(
-      spaceId,
-      threadId,
       'Query the database and give me all employees from DXOS organization that work on Composer and what their tasks are.',
     ),
   ]);
@@ -103,6 +86,22 @@ test('cypher query', async () => {
     tools: [cypherTool],
     spaceId,
     threadId,
+    system: trim`
+      You have access to ECHO graph database. You can query the database to get data to satisfy user prompts.
+
+      Database schema is defined in pseud-cypher syntax. The schema is:
+
+      <schema>
+        ${formatJsonSchemaForLLM(schemaTypes.map((schema) => toJsonSchema(schema)))}
+      <schema>
+
+      Before answering the user's question, decide what tools you need to use to answer the question.
+      Print your thoughts surrounded by <cot> tags: 
+
+      <example>
+        <cot>To answer the question I need to ...</cot>
+      </example>
+    `,
     client,
     logger: createLogger({ stream: false }),
   });
