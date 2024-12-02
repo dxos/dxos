@@ -5360,6 +5360,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../../experimental/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -5432,6 +5435,9 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../../ui/react-ui-list
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-syntax-highlighter
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../../sdk/schema
@@ -8797,9 +8803,6 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
-      '@dxos/assistant':
-        specifier: workspace:*
-        version: link:../../experimental/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async

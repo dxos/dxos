@@ -6,12 +6,12 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { type AIServiceClient, AIServiceClientImpl, ObjectId, type Message } from '@dxos/assistant';
 import { type SpaceId } from '@dxos/keys';
-import type { ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { Icon, Input, Toolbar, useTranslation } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
-import { THREAD_PLUGIN } from '../../meta';
+import { AUTOMATION_PLUGIN } from '../../meta';
 
 // TODO(dmaretskyi): To config.services.ai.
 const ENDPOINT = 'https://ai-service.dxos.workers.dev';
@@ -20,9 +20,10 @@ const ENDPOINT = 'https://ai-service.dxos.workers.dev';
 const spaceId = 'B6SOMMBOQ65BB5CK45NEGTHFH34LHFE3Q' as SpaceId;
 const threadId = '01JCQK4FPE5922XZZQPQPSFENX' as ObjectId;
 
-export const AssistantComplimentary = () => {
-  const { t } = useTranslation(THREAD_PLUGIN);
+export type AssistantPanelProps = ThemedClassName<{}>;
 
+export const AssistantPanel = ({ classNames }: AssistantPanelProps) => {
+  const { t } = useTranslation(AUTOMATION_PLUGIN);
   const client = useRef<AIServiceClient>();
   const [history, setHistory] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -33,6 +34,7 @@ export const AssistantComplimentary = () => {
         endpoint: ENDPOINT,
       });
     }
+
     queueMicrotask(async () => {
       const messages = await client.current!.getMessagesInThread(spaceId, threadId);
       setHistory(messages);
@@ -64,16 +66,20 @@ export const AssistantComplimentary = () => {
     for await (const _event of generationStream) {
       setHistory([...historyBefore, ...generationStream.accumulatedMessages]);
     }
+
     await client.current!.insertMessages(await generationStream.complete());
   };
 
+  // TODO(burdon): Factor out with script plugin.
   return (
-    <div className={mx('flex flex-col h-full overflow-hidden')}>
-      <div className='flex flex-col gap-6 h-full p-2 overflow-x-hidden overflow-y-auto'>
-        {history.map((message) => (
-          <MessageItem key={message.id} message={message} />
-        ))}
-      </div>
+    <div className={mx('flex flex-col h-full overflow-hidden', classNames)}>
+      {history.length > 0 && (
+        <div className='flex flex-col gap-6 h-full p-2 overflow-x-hidden overflow-y-auto'>
+          {history.map((message) => (
+            <MessageItem key={message.id} message={message} />
+          ))}
+        </div>
+      )}
 
       <Toolbar.Root classNames='p-1'>
         <Input.Root>
@@ -97,50 +103,70 @@ export const AssistantComplimentary = () => {
 };
 
 const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message }>) => {
-  const { id, role, content } = message;
-  const wrapper = 'p-1 px-2 rounded-lg bg-hoverSurface overflow-auto';
+  const { id: _, role, content } = message;
+  const styleContainer = 'flex flex-col overflow-x-hidden overflow-y-auto rounded-md gap-2 divide-y divide-separator';
+
   return (
     <div className={mx('flex', role === 'user' ? 'ml-[1rem] justify-end' : 'mr-[1rem]', classNames)}>
       {content.map((content, i) => {
         switch (content.type) {
           case 'text': {
+            const { cot, message } = parseMessage(content.text);
             return (
               <div
                 key={i}
-                className={mx(wrapper, 'whitespace-pre', role === 'user' && 'bg-primary-400 dark:bg-primary-600')}
+                role='none'
+                className={mx(
+                  styleContainer,
+                  role === 'user' ? 'bg-primary-400 dark:bg-primary-600' : 'bg-hoverSurface',
+                )}
               >
-                {content.text || '\u00D8'}
+                {cot && <div className='p-2 whitespace-pre-wrap text-xs text-subdued'>{cot}</div>}
+                <div className='p-2'>{message}</div>
               </div>
             );
           }
+
           case 'tool_use': {
             return (
-              <div key={i} className={mx(wrapper, 'px-8 py-2 text-xs')}>
-                <p>
-                  <b>Tool Use</b> {content.name} {content.id}
-                </p>
+              <div key={i} className={mx(styleContainer, 'text-xs')}>
+                <div>
+                  <span className='p-2 text-primary'>Tool use</span>: {content.name} {content.id}
+                </div>
                 <SyntaxHighlighter language='json'>{content.inputJson}</SyntaxHighlighter>
               </div>
             );
           }
+
           case 'tool_result': {
             return (
-              <div key={i} className={mx(wrapper, 'px-8 py-2 text-xs', content.isError && 'whitespace-pre text-error')}>
-                <p>
-                  <b>Tool Result</b> {content.toolUseId}
-                </p>
+              <div key={i} className={mx(styleContainer, 'text-xs', content.isError && 'text-error')}>
+                <div>
+                  <span className='p-2 text-primary'>Tool result</span>: {content.toolUseId}
+                </div>
                 <SyntaxHighlighter language='json'>{content.content}</SyntaxHighlighter>
               </div>
             );
           }
         }
+
+        return null;
       })}
     </div>
   );
 };
 
-export default AssistantComplimentary;
+// TODO(burdon): Move to server-side parsing.
+const parseMessage = (text: string): { cot?: string; message: string } => {
+  const regex = /<cot>([\s\S]*?)<\/cot>\s*([\s\S]*)/;
+  const match = text.match(regex);
+  return {
+    cot: match?.[1].trim(),
+    message: match?.[2] ?? text ?? '\u00D8',
+  };
+};
 
+// TODO(burdon): Move into echo object.
 const INSTRUCTIONS = `
   Before replying always think step-by-step on how to proceed.
   Print your thoughts inside <cot> tags.

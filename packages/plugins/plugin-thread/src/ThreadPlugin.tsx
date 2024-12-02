@@ -30,7 +30,6 @@ import { getSpace, fullyQualifiedId, loadObjectReferences, parseId } from '@dxos
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 
 import {
-  AssistantComplimentary,
   ChatContainer,
   ChatHeading,
   ThreadArticle,
@@ -123,7 +122,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
           {
             id: 'assistant',
             label: ['open assistant panel label', { ns: THREAD_PLUGIN }],
-            icon: 'ph--hand--regular',
+            icon: 'ph--atom--regular',
           },
         ],
       },
@@ -293,7 +292,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     type,
                     data: null,
                     properties: {
-                      icon: 'ph--hand--regular',
+                      icon: 'ph--atom--regular',
                       label: ['assistant panel label', { ns: THREAD_PLUGIN }],
                       object: null,
                       space,
@@ -307,7 +306,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 //       await space?.db.query({ id: objectId }).first();
                 //       onChange();
                 //     });
-
                 //     return () => clearTimeout(timeout);
                 //   },
                 //   () => space?.db.getObjectById(objectId),
@@ -322,7 +320,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   type,
                   data: null,
                   properties: {
-                    icon: 'ph--hand--regular',
+                    icon: 'ph--atom--regular',
                     label: ['assistant panel label', { ns: THREAD_PLUGIN }],
                     object: null,
                   },
@@ -385,7 +383,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 !(data.subject instanceof ChannelType)
               ) {
                 const { showResolvedThreads } = getViewState(fullyQualifiedId(data.subject));
-
                 return (
                   <ThreadComplementary
                     role={role}
@@ -398,10 +395,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               }
 
               break;
-            }
-
-            case 'complementary--assistant': {
-              return <AssistantComplimentary />;
             }
           }
 

@@ -12,7 +12,7 @@ import { createExtension, toSignal } from '@dxos/plugin-graph';
 import { getSpace, getTypename, isEchoObject, loadObjectReferences, parseId } from '@dxos/react-client/echo';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 
-import { AutomationPanel } from './components';
+import { AssistantPanel, AutomationPanel } from './components';
 import meta, { AUTOMATION_PLUGIN } from './meta';
 import translations from './translations';
 import { type AutomationPluginProvides, ChainPromptType, ChainType } from './types';
@@ -128,16 +128,18 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
       },
       surface: {
         component: ({ data, role }) => {
-          const object = data.subject;
-          const space = isEchoObject(object) ? getSpace(object) : undefined;
-          if (!space) {
-            return null;
-          }
-
-          invariant(isEchoObject(object));
           switch (role) {
-            case 'complementary--automation':
-              return <AutomationPanel space={space} object={object} />;
+            case 'complementary--assistant':
+              return <AssistantPanel />;
+            case 'complementary--automation': {
+              const object = data.subject;
+              const space = isEchoObject(object) ? getSpace(object) : undefined;
+              if (space) {
+                invariant(isEchoObject(object));
+                return <AutomationPanel space={space} object={object} />;
+              }
+              break;
+            }
           }
 
           return null;

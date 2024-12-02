@@ -44,7 +44,6 @@
     "@codemirror/state": "^6.4.1",
     "@codemirror/view": "^6.34.1",
     "@dxos/app-framework": "workspace:*",
-    "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/echo-schema": "workspace:*",

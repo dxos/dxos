@@ -6,7 +6,6 @@ import { lazy } from 'react';
 
 export const ThreadMain = lazy(() => import('./ThreadMain'));
 export const ThreadArticle = lazy(() => import('./ThreadArticle'));
-export const AssistantComplimentary = lazy(() => import('./assistant/AssistantComplimentary'));
 
 // TODO(wittjosiah): Suspense boundary for sidebar?
 export * from './CommentContainer';

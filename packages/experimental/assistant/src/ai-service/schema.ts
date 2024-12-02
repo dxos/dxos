@@ -11,7 +11,6 @@ import { SpaceId } from '@dxos/keys';
 
 // TODO(dmaretskyi): Extract IDs to protocols.
 export const SpaceIdSchema: S.Schema<SpaceId, string> = S.String.pipe(S.filter(SpaceId.isValid));
-
 export const ObjectIdBrand: unique symbol = Symbol('@dxos/echo/ObjectId');
 const ObjectIdSchema = S.ULID.pipe(S.brand(ObjectIdBrand));
 
@@ -38,6 +37,10 @@ export interface Thread extends S.Schema.Type<typeof Thread> {}
 
 export const MessageRole = S.String.pipe(S.filter((role) => role === 'user' || role === 'assistant'));
 export type MessageRole = S.Schema.Type<typeof MessageRole>;
+
+//
+// Message union
+//
 
 export const MessageTextContentBlock = S.Struct({
   type: S.Literal('text'),
@@ -78,6 +81,10 @@ export const MessageContentBlock = S.Union(
 );
 export type MessageContentBlock = S.Schema.Type<typeof MessageContentBlock>;
 
+//
+//
+//
+
 export const Message = S.Struct({
   id: ObjectId,
   threadId: ObjectId,
@@ -108,6 +115,10 @@ export const MessageFromDb = S.Struct({
     S.fromKey('contentJson'),
   ),
 });
+
+//
+//
+//
 
 export const LLMModel = S.Literal(
   '@hf/nousresearch/hermes-2-pro-mistral-7b',
@@ -142,6 +153,10 @@ export const LLMTool = S.Struct({
 });
 export interface LLMTool extends S.Schema.Type<typeof LLMTool> {}
 
+//
+//
+//
+
 export const GenerateRequest = S.Struct({
   model: LLMModel,
 
@@ -162,6 +177,10 @@ export const GenerateRequest = S.Struct({
 export interface GenerateRequest extends S.Schema.Type<typeof GenerateRequest> {}
 
 export type LLMStopReason = 'tool_use' | 'end_turn';
+
+//
+//
+//
 
 // TODO(dmaretskyi): Effect schema.
 // TODO(dmaretskyi): Rename GenerationStreamEvent.
