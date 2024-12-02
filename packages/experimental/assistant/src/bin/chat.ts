@@ -2,80 +2,31 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-
-import { toJsonSchema } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
-
-import { AnthropicBackend } from '../conversation/backend/anthropic';
+import { SpaceId } from '@dxos/keys';
+import inquirer from 'inquirer';
+import { AIServiceClientImpl } from '../ai-service/client';
+import { ObjectId } from '../ai-service/schema';
 import { runLLM } from '../conversation/conversation';
-import { createUserMessage, defineTool, LLMToolResult, type LLMMessage } from '../conversation/types';
-import { executeQuery } from '../cypher/query-executor';
-import { formatJsonSchemaForLLM } from '../cypher/schema';
+import { createUserMessage } from '../conversation/types';
 import { createLogger } from '../test/logger';
+import { createCypherTool, createSystemPrompt } from '../test/query-promts';
 import { createTestData } from '../test/test-data';
 import { Contact, Org, Project, Task } from '../test/test-schema';
-import inquirer from 'inquirer';
 
-const backend = new AnthropicBackend({
-  apiKey: process.env.ANTHROPIC_API_KEY!,
+const ENDPOINT = 'http://localhost:8787';
+
+const client = new AIServiceClientImpl({
+  endpoint: ENDPOINT,
 });
 
 const dataSource = createTestData();
 
-const cypherTool = defineTool({
-  name: 'graphQuery',
-  description: 'Query the ECHO graph database in cypher query language. Returns data from the database.',
-  schema: S.Struct({
-    query: S.String.annotations({
-      description: `
-        A valid cypher query string to execute.
-        Query must have one MATCH clause.
-        Match clause can have multiple patterns but they must all be connected via a relationship chain.
-        Query might have zero or one WHERE clauses.
-        Query must have one RETURN clause.
-        RETURN clause can have multiple expressions separated by commas.
-        DISTINCT keyword is not allowed.
-
-        <example>
-        MATCH (n:Person) RETURN n.name
-        </example>
-
-        <example>
-        MATCH (s:Studio)-[:PRODUCED]->(m:Movie)-[:PRODUCED_IN]->(c:City {name: "Las Vegas"}) RETURN s
-        </example>
-        
-        <example>
-        MATCH (a:Actor)-[:STARRED_IN]->(m:Movie)<-[:PRODUCED]-(s:Studio {name: "Cinema Pictures"}) WHERE m.name = "Once upon a time" RETURN m.name, a.name
-        </example>
-        `,
-    }),
-  }),
-  execute: async ({ query }) => {
-    try {
-      log('cypher query', { query });
-      const results = await executeQuery(dataSource, query);
-      log('query complete', { results });
-      return LLMToolResult.Success(results);
-    } catch (e: any) {
-      return LLMToolResult.Error(e.message);
-    }
-  },
-});
+const cypherTool = createCypherTool(dataSource);
 
 const schemaTypes = [Org, Project, Task, Contact];
-let history: LLMMessage[] = [
-  createUserMessage(`
-    You have access to ECHO graph database. You can query the database to get data to satisfy user prompts.
 
-    Database schema is defined in pseud-cypher syntax. The schema is:
-
-    <schema>
-      ${formatJsonSchemaForLLM(schemaTypes.map((schema) => toJsonSchema(schema)))}
-    <schema>
-    `),
-  createUserMessage('If you are missing data to satisfy the user request, use the available tools to get the data.'),
-];
+const spaceId = SpaceId.random();
+const threadId = ObjectId.random();
 
 while (true) {
   const prompt = await inquirer.prompt([
@@ -85,26 +36,20 @@ while (true) {
       message: 'Enter a message:',
     },
   ]);
-  history.push(createUserMessage(prompt.message));
+  await client.insertMessages([createUserMessage(spaceId, threadId, prompt.message)]);
 
-  const skipCount = history.length - 1;
-  let skipped = 0;
-
-  const { result, history: newHistory } = await runLLM({
+  const { result } = await runLLM({
     model: '@anthropic/claude-3-5-sonnet-20241022',
-    messages: history,
+    spaceId,
+    threadId,
+    system: createSystemPrompt(schemaTypes),
     tools: [cypherTool],
-    backend,
+    client,
     logger: createLogger({
       stream: true,
       filter: (e) => {
-        if (e.type === 'message') {
-          skipped++;
-          return skipped > skipCount;
-        }
         return true;
       },
     }),
   });
-  history = newHistory;
 }
