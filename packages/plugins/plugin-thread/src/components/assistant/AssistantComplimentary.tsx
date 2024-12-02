@@ -13,7 +13,8 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { THREAD_PLUGIN } from '../../meta';
 
-const ENDPOINT = 'http://localhost:8787';
+// TODO(dmaretskyi): To config.services.ai.
+const ENDPOINT = 'https://ai-service.dxos.workers.dev';
 
 // TODO(dmaretskyi): Store those in the space.
 const spaceId = 'B6SOMMBOQ65BB5CK45NEGTHFH34LHFE3Q' as SpaceId;
