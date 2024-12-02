@@ -25,9 +25,8 @@ export class SheetManager {
     return this.cellByText('Ready').waitFor({ state: 'visible' });
   }
 
-  async type(text: string) {
-    // TODO(thure): Why can’t the editor keep up in some cases?
-    await this.page.keyboard.type(text, { delay: 50 });
+  async fill(text: string) {
+    await this.cellEditor().fill(text);
   }
 
   async press(key: string) {
@@ -36,7 +35,7 @@ export class SheetManager {
 
   async commit(key: string) {
     // TODO(thure): Why do we need to wait? Enter is ignored otherwise…
-    await this.page.waitForTimeout(200);
+    await this.page.waitForTimeout(500);
     await this.press(key);
   }
 
@@ -45,12 +44,11 @@ export class SheetManager {
   }
 
   async setFocusedCellValue(text: string, commitKey: string) {
-    const mode = await this.grid.grid.getAttribute('data-grid-mode');
+    const mode = await this.grid.mode();
     if (mode === 'browse') {
-      await this.press('Enter');
-      await this.cellEditor().waitFor({ state: 'visible' });
+      await this.commit('Enter');
     }
-    await this.type(text);
+    await this.fill(text);
     await this.commit(commitKey);
   }
 
@@ -76,7 +74,7 @@ export class SheetManager {
   }
 
   cellEditor() {
-    return this.page.getByTestId('grid.cell-editor');
+    return this.page.getByTestId('grid.cell-editor').getByRole('textbox');
   }
 
   rangeInList(a1Coords: string) {

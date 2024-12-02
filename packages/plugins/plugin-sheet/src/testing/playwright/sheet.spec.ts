@@ -56,9 +56,9 @@ test.describe('plugin-sheet', () => {
 
     // Test range input
     await sheet.press('Enter');
-    await sheet.type('=SUM(');
+    await sheet.fill('=SUM(');
     await sheet.selectRange({ col: 0, row: 2, plane: 'grid' }, { col: 0, row: 4, plane: 'grid' });
-    await sheet.type(')');
+    await sheet.press(')');
     await sheet.commit('Enter');
     // Check sum
     await expect(sheet.grid.cell(0, 5, 'grid')).toHaveText(`${firstNumber + secondNumber + thirdNumber}`);
