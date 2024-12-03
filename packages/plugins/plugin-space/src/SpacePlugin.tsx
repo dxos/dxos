@@ -26,7 +26,7 @@ import {
   parseNavigationPlugin,
   resolvePlugin,
 } from '@dxos/app-framework';
-import { EventSubscriptions, type Trigger, type UnsubscribeCallback } from '@dxos/async';
+import { debounce, EventSubscriptions, type Trigger, type UnsubscribeCallback } from '@dxos/async';
 import { type HasId, isDeleted, isReactiveObject } from '@dxos/echo-schema';
 import { scheduledEffect } from '@dxos/echo-signals/core';
 import { invariant } from '@dxos/invariant';
@@ -254,16 +254,21 @@ export const SpacePlugin = ({
     subscriptions.add(
       scheduledEffect(
         () => ({
-          ids: openIds(location.active),
-          removed: location.closed ? [location.closed].flat() : [],
+          open: openIds(location.active, layout.layoutMode === 'solo' ? ['solo'] : ['main']),
+          closed: [...location.closed],
         }),
-        ({ ids, removed }) => {
+        ({ open, closed }) => {
           const send = () => {
             const spaces = client.spaces.get();
             const identity = client.halo.identity.get();
             if (identity && location.active) {
               // Group parts by space for efficient messaging.
-              const idsBySpace = reduceGroupBy(ids, (id) => {
+              const idsBySpace = reduceGroupBy(open, (id) => {
+                const [spaceId] = id.split(':'); // TODO(burdon): Factor out.
+                return spaceId;
+              });
+
+              const removedBySpace = reduceGroupBy(closed, (id) => {
                 const [spaceId] = id.split(':'); // TODO(burdon): Factor out.
                 return spaceId;
               });
@@ -275,7 +280,8 @@ export const SpacePlugin = ({
                 }
               }
 
-              for (const [spaceId, ids] of idsBySpace) {
+              for (const [spaceId, added] of idsBySpace) {
+                const removed = removedBySpace.get(spaceId) ?? [];
                 const space = spaces.find((space) => space.id === spaceId);
                 if (!space) {
                   continue;
@@ -285,9 +291,8 @@ export const SpacePlugin = ({
                   .postMessage('viewing', {
                     identityKey: identity.identityKey.toHex(),
                     attended: attention.attended ? [...attention.attended] : [],
-                    added: ids,
-                    // TODO(Zan): When we re-open a part, we should remove it from the removed list in the navigation plugin.
-                    removed: removed.filter((id) => !ids.includes(id)),
+                    added,
+                    removed,
                   })
                   // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
                   .catch((err) => {
@@ -298,6 +303,7 @@ export const SpacePlugin = ({
           };
 
           send();
+          // Send at interval to allow peers to expire entries if they become disconnected.
           const interval = setInterval(() => send(), ACTIVE_NODE_BROADCAST_INTERVAL);
           return () => clearInterval(interval);
         },
@@ -824,8 +830,7 @@ export const SpacePlugin = ({
                     void space.db
                       .query({ id: objectId })
                       .first()
-                      .then((o) => (store.value = o))
-                      .catch((err) => log.catch(err, { objectId }));
+                      .then((o) => (store.value = o));
                   }
                 }, id);
                 const object = store.value;
