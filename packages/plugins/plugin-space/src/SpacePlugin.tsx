@@ -26,6 +26,7 @@ import {
   parseNavigationPlugin,
   resolvePlugin,
 } from '@dxos/app-framework';
+import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { EventSubscriptions, type Trigger, type UnsubscribeCallback } from '@dxos/async';
 import { type HasId, isDeleted, isReactiveObject } from '@dxos/echo-schema';
 import { scheduledEffect } from '@dxos/echo-signals/core';
@@ -154,6 +155,7 @@ export const SpacePlugin = ({
     viewersByIdentity: new ComplexMap(PublicKey.hash),
     sdkMigrationRunning: {},
     navigableCollections: false,
+    enabledEdgeReplication: false,
   });
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
@@ -359,11 +361,27 @@ export const SpacePlugin = ({
     );
   };
 
+  const setEdgeReplicationDefault = async (client: Client) => {
+    try {
+      await Promise.all(
+        client.spaces.get().map(async (space) => {
+          await space.waitUntilReady();
+          await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
+        }),
+      );
+      state.values.enabledEdgeReplication = true;
+    } catch (err) {
+      log.catch(err);
+    }
+  };
+
   return {
     meta,
     ready: async (plugins) => {
       settings.prop({ key: 'showHidden', type: LocalStorageStore.bool({ allowUndefined: true }) });
-      state.prop({ key: 'spaceNames', type: LocalStorageStore.json<Record<string, string>>() });
+      state
+        .prop({ key: 'spaceNames', type: LocalStorageStore.json<Record<string, string>>() })
+        .prop({ key: 'enabledEdgeReplication', type: LocalStorageStore.bool() });
 
       // TODO(wittjosiah): Hardcoded due to circular dependency.
       //   Should be based on a provides interface.
@@ -406,6 +424,7 @@ export const SpacePlugin = ({
             }
 
             await onSpaceReady();
+            await setEdgeReplicationDefault(client);
           }
         }).unsubscribe,
       );
@@ -1012,6 +1031,8 @@ export const SpacePlugin = ({
 
               const space = await client.spaces.create(intent.data as PropertiesTypeProps);
               await space.waitUntilReady();
+              // TODO(wittjosiah): This should be configurable in creation flow.
+              await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
               const collection = create(CollectionType, { objects: [], views: {} });
               space.properties[CollectionType.typename] = collection;
 
