@@ -186,7 +186,7 @@ const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message
                 )}
               >
                 {cot && <div className='p-2 whitespace-pre-wrap text-xs text-subdued'>{cot}</div>}
-                <div className='p-2'>{message}</div>
+                <div className='p-2 whitespace-pre-wrap'>{message}</div>
               </div>
             );
           }
