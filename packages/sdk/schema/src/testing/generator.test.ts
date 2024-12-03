@@ -50,10 +50,17 @@ const queryObjects = async (db: EchoDatabase, specs: TypeSpec[]) => {
 };
 
 describe('Generator', () => {
+  // TODO(burdon): Test view creation.
   // TODO(burdon): Type error: https://github.com/dxos/dxos/issues/8324
   test('create object', async ({ expect }) => {
     {
       const objectGenerator = createGenerator(generator, Test.OrgType as any as S.Schema<Test.OrgType>);
+      const object = objectGenerator.createObject();
+      expect(object.name).to.exist;
+    }
+
+    {
+      const objectGenerator = createGenerator(generator, Test.ProjectType as any as S.Schema<Test.ProjectType>);
       const object = objectGenerator.createObject();
       expect(object.name).to.exist;
     }
