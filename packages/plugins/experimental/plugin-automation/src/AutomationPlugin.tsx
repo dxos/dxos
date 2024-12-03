@@ -132,7 +132,6 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
                 };
               },
             }),
-            // TODO(dmaretskyi): Very ugly code below!!!!
             createExtension({
               id: `${AUTOMATION_PLUGIN}/assistant-for-subject`,
               resolver: ({ id }) => {
