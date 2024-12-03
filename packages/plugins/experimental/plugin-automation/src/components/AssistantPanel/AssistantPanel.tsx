@@ -6,7 +6,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { type AIServiceClient, AIServiceClientImpl, ObjectId, type Message } from '@dxos/assistant';
 import { type SpaceId } from '@dxos/keys';
-import { type ThemedClassName } from '@dxos/react-ui';
+import { ContextMenu, type ThemedClassName } from '@dxos/react-ui';
 import { Icon, Input, Toolbar, useTranslation } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
@@ -15,6 +15,7 @@ import { AUTOMATION_PLUGIN } from '../../meta';
 import { useConfig } from '@dxos/react-client';
 import type { ReactiveEchoObject } from '@dxos/echo-db';
 import { getTypename } from '@dxos/echo-schema';
+import { createSystemInstructions } from './system-instructions';
 
 // TODO(dmaretskyi): Store those in the space.
 const spaceId = 'B6SOMMBOQ65BB5CK45NEGTHFH34LHFE3Q' as SpaceId;
@@ -71,7 +72,7 @@ export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => 
       spaceId,
       threadId,
       tools: [],
-      systemPrompt: createSystemInstructions({ subject }),
+      systemPrompt: await getSystemPrompt(),
     });
 
     const historyBefore = [...history, userMessage];
@@ -80,6 +81,10 @@ export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => 
     }
 
     await client.current!.insertMessages(await generationStream.complete());
+  };
+
+  const getSystemPrompt = async () => {
+    return createSystemInstructions({ subject });
   };
 
   // TODO(burdon): Factor out with script plugin.
@@ -103,9 +108,23 @@ export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => 
             onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}
           />
         </Input.Root>
-        <Toolbar.Button onClick={() => handleRequest(input)}>
-          <Icon icon='ph--play--regular' size={4} />
-        </Toolbar.Button>
+        <ContextMenu.Root>
+          <ContextMenu.Trigger asChild>
+            <Toolbar.Button onClick={() => handleRequest(input)}>
+              <Icon icon='ph--play--regular' size={4} />
+            </Toolbar.Button>
+          </ContextMenu.Trigger>
+          <ContextMenu.Portal>
+            <ContextMenu.Content classNames='z-[31]'>
+              <ContextMenu.Viewport>
+                <ContextMenu.Item onClick={async () => console.log(await getSystemPrompt())}>
+                  Print instructions to console
+                </ContextMenu.Item>
+              </ContextMenu.Viewport>
+            </ContextMenu.Content>
+          </ContextMenu.Portal>
+        </ContextMenu.Root>
+
         {/* <Toolbar.Button onClick={() => (state ? handleStop() : handleClear())}>
           <Icon icon={state ? 'ph--stop--regular' : 'ph--trash--regular'} size={4} />
         </Toolbar.Button> */}
@@ -176,47 +195,4 @@ const parseMessage = (text: string): { cot?: string; message: string } => {
     cot: match?.[1].trim(),
     message: match?.[2] ?? text ?? '\u00D8',
   };
-};
-
-// TODO(burdon): Move into assistant-protocol.
-type ThreadContext = {
-  subject?: ReactiveEchoObject<any>;
-};
-
-const createSystemInstructions = (context: ThreadContext) => {
-  let instructions = `
-    <instructions>
-      Before replying always think step-by-step on how to proceed.
-      Print your thoughts inside <cot> tags.
-
-      <example>
-        <cot>To answer the question I need to ...</cot>
-      </example>
-    </instructions>
-
-    <current_time>${new Date().toLocaleString()}</current_time>
-  `;
-
-  if (context.subject) {
-    instructions += `
-      <user_attention>
-        The user is currently interacting with an object in Composer application:
-
-        <object>
-          <type>${getTypename(context.subject)}</type>
-          <id>${context.subject.id}</id>
-          ${Object.entries(context.subject)
-            .filter(([key, value]) => ['string', 'number', 'boolean'].includes(typeof value))
-            .map(
-              ([key, value]) => `
-            <${key}>${value}</${key}>
-          `,
-            )
-            .join('')}
-        </object>
-      </user_attention>
-    `;
-  }
-
-  return instructions;
 };
