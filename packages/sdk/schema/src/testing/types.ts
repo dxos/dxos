@@ -60,7 +60,8 @@ export namespace Test {
         [GeneratorAnnotationId]: 'internet.email',
       }),
     ),
-    address: S.optional(AddressSchema),
+    // TODO(burdon): This breaks the table view.
+    // address: S.optional(AddressSchema),
     employer: S.optional(
       ref(OrgType).annotations({
         [FieldLookupAnnotationId]: 'name',
