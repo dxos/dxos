@@ -26,7 +26,7 @@ import {
   parseNavigationPlugin,
   resolvePlugin,
 } from '@dxos/app-framework';
-import { debounce, EventSubscriptions, type Trigger, type UnsubscribeCallback } from '@dxos/async';
+import { EventSubscriptions, type Trigger, type UnsubscribeCallback } from '@dxos/async';
 import { type HasId, isDeleted, isReactiveObject } from '@dxos/echo-schema';
 import { scheduledEffect } from '@dxos/echo-signals/core';
 import { invariant } from '@dxos/invariant';
