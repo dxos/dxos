@@ -8432,6 +8432,9 @@ importers:
       '@babel/core':
         specifier: ^7.18.13
         version: 7.25.7
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui

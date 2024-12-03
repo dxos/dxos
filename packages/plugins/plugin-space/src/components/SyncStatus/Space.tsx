@@ -4,11 +4,15 @@
 
 import React, { type HTMLAttributes, useEffect, useState } from 'react';
 
-import { Icon } from '@dxos/react-ui';
+import { useClient } from '@dxos/react-client';
+import { type SpaceId, useSpace } from '@dxos/react-client/echo';
+import { Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type Progress, type PeerSyncState } from './sync-state';
+import { SPACE_PLUGIN } from '../../meta';
+import { getSpaceDisplayName } from '../../util';
 
 export const SYNC_STALLED_TIMEOUT = 5_000;
 
@@ -41,24 +45,44 @@ const useActive = (count: number) => {
   return active;
 };
 
+export type SpaceRowContainerProps = Omit<SpaceRowProps, 'spaceName'>;
+
+export const SpaceRowContainer = ({ spaceId, state }: SpaceRowContainerProps) => {
+  const { t } = useTranslation(SPACE_PLUGIN);
+  const client = useClient();
+  const space = useSpace(spaceId);
+  if (!space) {
+    return null;
+  }
+
+  const spaceName = toLocalizedString(getSpaceDisplayName(space, { personal: space === client.spaces.default }), t);
+
+  return <SpaceRow spaceId={spaceId} spaceName={spaceName} state={state} />;
+};
+
+export type SpaceRowProps = {
+  spaceId: SpaceId;
+  spaceName: string;
+  state: PeerSyncState;
+};
+
 export const SpaceRow = ({
   spaceId,
+  spaceName,
   state: { localDocumentCount, remoteDocumentCount, missingOnLocal, missingOnRemote },
-}: {
-  spaceId: string;
-  state: PeerSyncState;
-}) => {
+}: SpaceRowProps) => {
   const downActive = useActive(localDocumentCount);
   const upActive = useActive(remoteDocumentCount);
 
   return (
     <div
-      className={mx('flex items-center mx-[2px] gap-[2px] cursor-pointer', styles.barHover)}
+      className='flex items-center mx-[2px] gap-[2px] cursor-pointer'
       title={spaceId}
       onClick={() => {
         void navigator.clipboard.writeText(spaceId);
       }}
     >
+      <span className='w-[50%] truncate'>{spaceName}</span>
       <Icon
         icon='ph--arrow-fat-line-left--regular'
         size={3}

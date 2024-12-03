@@ -104,6 +104,8 @@ export default [
         'open space settings label': 'Space Settings',
         'members tab label': 'Members',
         'settings tab label': 'Settings',
+        'show all label': 'Show all',
+        'no sync status label': 'No space with missing objects.',
       },
     },
   },
