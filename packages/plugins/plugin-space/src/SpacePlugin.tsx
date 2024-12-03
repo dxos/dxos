@@ -56,6 +56,7 @@ import {
   FQ_ID_LENGTH,
   SPACE_ID_LENGTH,
   OBJECT_ID_LENGTH,
+  parseFullyQualifiedId,
 } from '@dxos/react-client/echo';
 import { type JoinPanelProps, osTranslations } from '@dxos/shell/react';
 import { ComplexMap, nonNullable, reduceGroupBy } from '@dxos/util';
@@ -254,17 +255,22 @@ export const SpacePlugin = ({
     subscriptions.add(
       scheduledEffect(
         () => ({
-          ids: openIds(location.active),
-          removed: location.closed ? [location.closed].flat() : [],
+          open: openIds(location.active, layout.layoutMode === 'solo' ? ['solo'] : ['main']),
+          closed: [...location.closed],
         }),
-        ({ ids, removed }) => {
+        ({ open, closed }) => {
           const send = () => {
             const spaces = client.spaces.get();
             const identity = client.halo.identity.get();
             if (identity && location.active) {
               // Group parts by space for efficient messaging.
-              const idsBySpace = reduceGroupBy(ids, (id) => {
-                const [spaceId] = id.split(':'); // TODO(burdon): Factor out.
+              const idsBySpace = reduceGroupBy(open, (id) => {
+                const [spaceId] = parseFullyQualifiedId(id);
+                return spaceId;
+              });
+
+              const removedBySpace = reduceGroupBy(closed, (id) => {
+                const [spaceId] = parseFullyQualifiedId(id);
                 return spaceId;
               });
 
@@ -275,7 +281,8 @@ export const SpacePlugin = ({
                 }
               }
 
-              for (const [spaceId, ids] of idsBySpace) {
+              for (const [spaceId, added] of idsBySpace) {
+                const removed = removedBySpace.get(spaceId) ?? [];
                 const space = spaces.find((space) => space.id === spaceId);
                 if (!space) {
                   continue;
@@ -285,9 +292,8 @@ export const SpacePlugin = ({
                   .postMessage('viewing', {
                     identityKey: identity.identityKey.toHex(),
                     attended: attention.attended ? [...attention.attended] : [],
-                    added: ids,
-                    // TODO(Zan): When we re-open a part, we should remove it from the removed list in the navigation plugin.
-                    removed: removed.filter((id) => !ids.includes(id)),
+                    added,
+                    removed,
                   })
                   // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
                   .catch((err) => {
@@ -298,6 +304,7 @@ export const SpacePlugin = ({
           };
 
           send();
+          // Send at interval to allow peers to expire entries if they become disconnected.
           const interval = setInterval(() => send(), ACTIVE_NODE_BROADCAST_INTERVAL);
           return () => clearInterval(interval);
         },
