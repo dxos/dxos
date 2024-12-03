@@ -76,13 +76,13 @@ export const SpaceRow = ({
 
   return (
     <div
-      className='flex items-center mx-[2px] gap-[2px] cursor-pointer'
+      className='flex items-center mx-0.5 gap-0.5 cursor-pointer'
       title={spaceId}
       onClick={() => {
         void navigator.clipboard.writeText(spaceId);
       }}
     >
-      <span className='w-[50%] truncate'>{spaceName}</span>
+      <span className='is-1/2 truncate'>{spaceName}</span>
       <Icon
         icon='ph--arrow-fat-line-left--regular'
         size={3}
