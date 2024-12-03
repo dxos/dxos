@@ -31,8 +31,6 @@ export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => 
   const [history, setHistory] = useState<Message[]>([]);
   const [input, setInput] = useState('');
 
-  console.log({ subject });
-
   useEffect(() => {
     if (!client.current) {
       const endpoint = config.values.runtime?.services?.ai?.server;
