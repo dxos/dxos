@@ -122,15 +122,16 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
         throw buildResult.error;
       }
 
-      const { result, functionId, functionVersionNumber, errorMessage, meta } = await uploadWorkerFunction({
-        clientConfig: client.config,
-        halo: client.halo,
+      const { functionId, functionVersionNumber, meta } = await uploadWorkerFunction({
+        client,
         ownerDid,
         functionId: existingFunctionId,
         source: buildResult.bundle,
       });
-      if (result !== 'success' || functionId === undefined || functionVersionNumber === undefined) {
-        throw new Error(errorMessage);
+      if (functionId === undefined || functionVersionNumber === undefined) {
+        throw new Error(
+          `Upload didn't return expected data: functionId=${functionId}, version=${functionVersionNumber}`,
+        );
       }
 
       log.info('function uploaded', { functionId, functionVersionNumber });

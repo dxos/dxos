@@ -4,89 +4,43 @@
 
 import { type DID } from 'iso-did/types';
 
-import { Trigger } from '@dxos/async';
-import { type Config } from '@dxos/client';
-import { type Halo } from '@dxos/client-protocol';
-import { type JsonSchemaType, type ObjectMeta } from '@dxos/echo-schema';
+import { type Client } from '@dxos/client';
+import { type ObjectMeta } from '@dxos/echo-schema';
+import { EdgeHttpClient, type EdgeIdentity } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-
-import { codec } from './codec';
-import { matchServiceCredential } from './hub-protocol';
 
 // TODO: use URL scheme for source?
 const USERFUNCTIONS_META_KEY = 'dxos.org/service/function';
+
 export const USERFUNCTIONS_PRESET_META_KEY = 'dxos.org/service/function-preset';
-const USERFUNCTIONS_CREDENTIAL_CAPABILITY = 'composer:beta';
 
-// TODO: Synchronize API types with server
-export type UserFunctionUploadResult = {
-  result: 'success' | 'error';
-  errorMessage?: string;
-  functionId?: string;
-  functionVersionNumber?: number;
-  meta: {
-    inputSchema?: JsonSchemaType;
-  };
-};
-
-export type UploadWorkerProps = {
-  clientConfig: Config;
-  halo: Halo;
+export type UploadWorkerArgs = {
+  client: Client;
   name?: string;
   source: string;
   functionId?: string;
   ownerDid: DID;
-  credentialLoadTimeout?: number; // ms to wait for credentials to load
 };
 
-// TODO(burdon): Config.
-const defaultUserFunctionsBaseUrl = 'https://edge-main.dxos.workers.dev/functions'; // 'http://localhost:8600';
+export const uploadWorkerFunction = async ({ client, name, source, ownerDid, functionId }: UploadWorkerArgs) => {
+  const edgeUrl = client.config.values.runtime?.services?.edge?.url;
+  invariant(edgeUrl, 'Edge is not configured.');
+  const edgeClient = new EdgeHttpClient(edgeUrl);
+  const edgeIdentity = createEdgeIdentity(client);
+  edgeClient.setIdentity(edgeIdentity);
+  const response = await edgeClient.uploadFunction({ ownerDid, functionId }, { name, script: source });
 
-const getBaseUrl = (config: Config) => {
-  if (config.values.runtime?.services?.edge?.url) {
-    const url = new URL('/functions', config.values.runtime?.services?.edge?.url);
-    url.protocol = 'https';
-    return url.toString();
-  } else {
-    return defaultUserFunctionsBaseUrl;
-  }
-};
-
-export const uploadWorkerFunction = async ({
-  clientConfig,
-  halo,
-  name,
-  source,
-  ownerDid,
-  functionId,
-  credentialLoadTimeout,
-}: UploadWorkerProps) => {
-  const identity = halo.identity.get();
-  if (!identity) {
-    throw new Error('Identity not available');
-  }
-  const userFunctionsBaseUrl = getBaseUrl(clientConfig);
-
-  // TODO: codify naming convention
-  const uploadUrl = `${userFunctionsBaseUrl}/${ownerDid}` + (functionId ? `/${functionId}` : '');
-
-  log('Upload', { functionId, source, name, identityKey: identity.identityKey, uploadUrl: uploadUrl.toString() });
-  const response = await fetch(uploadUrl, {
-    method: 'PUT',
-    body: JSON.stringify({ script: source, name }),
-    headers: await presentationForIdentity({ halo, timeout: credentialLoadTimeout }),
+  log('Uploaded', {
+    functionId,
+    source,
+    name,
+    identityKey: edgeIdentity.identityKey,
+    response,
   });
-  if (!response.ok) {
-    return (await response.json()) as UserFunctionUploadResult;
-  }
 
-  const res = await response.json();
-  log('Upload response', { status: response.status, res });
-
-  return res as UserFunctionUploadResult;
+  return response;
 };
 
 export const getUserFunctionUrlInMetadata = (meta: ObjectMeta) => {
@@ -104,45 +58,6 @@ export const setUserFunctionUrlInMetadata = (meta: ObjectMeta, functionUrl: stri
   }
 };
 
-// TODO: handle team owner
-
-const presentationForIdentity = async ({ halo, timeout }: { halo: Halo; timeout?: number }) => {
-  let credential: Credential | undefined;
-
-  if (timeout) {
-    const credentialsLoaded = new Trigger();
-    halo.credentials.subscribe((c) => {
-      credential = c.find(matchServiceCredential([USERFUNCTIONS_CREDENTIAL_CAPABILITY]));
-      if (credential) {
-        credentialsLoaded.wake();
-      }
-    });
-    await credentialsLoaded.wait({
-      timeout,
-    });
-  } else {
-    credential = halo
-      .queryCredentials()
-      .toSorted((a, b) => b.issuanceDate.getTime() - a.issuanceDate.getTime())
-      .find(matchServiceCredential([USERFUNCTIONS_CREDENTIAL_CAPABILITY]));
-  }
-
-  if (!credential) {
-    throw new Error('No credential found');
-  }
-  log('credential found', { credential });
-  // TODO(wittjosiah): If id is required to present credentials, then it should always be present for queried credentials.
-  invariant(credential.id, 'beta credential missing id');
-  const presentation = await halo.presentCredentials({ ids: [credential.id] });
-
-  return { Authorization: `Bearer ${codec.encode(presentation)}` };
-};
-
-export type InvocationOptions = {
-  spaceId?: SpaceId;
-  subjectId?: string;
-};
-
 export const getInvocationUrl = (functionUrl: string, edgeUrl: string, options: InvocationOptions = {}) => {
   const baseUrl = new URL('functions/', edgeUrl);
 
@@ -153,4 +68,29 @@ export const getInvocationUrl = (functionUrl: string, edgeUrl: string, options: 
   options.subjectId && url.searchParams.set('subjectId', options.subjectId);
   url.protocol = 'https';
   return url.toString();
+};
+
+const createEdgeIdentity = (client: Client): EdgeIdentity => {
+  const identity = client.halo.identity.get();
+  const device = client.halo.device;
+  if (!identity || !device) {
+    throw new Error('Identity not available');
+  }
+  return {
+    identityKey: identity.identityKey.toHex(),
+    peerKey: device.deviceKey.toHex(),
+    presentCredentials: async ({ challenge }) => {
+      const identityService = client.services.services.IdentityService!;
+      const authCredential = await identityService.createAuthCredential();
+      return identityService.signPresentation({
+        presentation: { credentials: [authCredential] },
+        nonce: challenge,
+      });
+    },
+  };
+};
+
+export type InvocationOptions = {
+  spaceId?: SpaceId;
+  subjectId?: string;
 };
