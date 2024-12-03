@@ -137,6 +137,9 @@ const CONTEXT_OBJECT_QUERY_TIMEOUT = 5_000;
 
 const TABLE_ROWS_LIMIT = 10;
 
+/**
+ * Formats XML indentation for instructions so they are easier to read during debugging.
+ */
 const looseFormatXml = (xml: string): string => {
   let currentIndent = 0;
 
