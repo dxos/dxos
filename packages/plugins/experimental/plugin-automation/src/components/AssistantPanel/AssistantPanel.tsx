@@ -115,7 +115,7 @@ export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => 
     // setContextSpaceId(contextSpaceId);
     setThreadId(threadId);
 
-    const messages = await aiClient.current!.getMessagesInThread(contextSpaceId, threadId);
+    const messages = await aiClient.current!.getMessagesInThread(contextSpaceId!, threadId);
     setHistory(messages);
   };
 
