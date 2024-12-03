@@ -35,6 +35,8 @@ export const useSelectCurrentThread = (editorView: EditorView | undefined, docum
               effects,
               selection: selection ? { anchor: range.from } : undefined,
             });
+
+            return { data: true };
           }
         }
       }
