@@ -12,6 +12,7 @@ export type ColumnSettingsMode = { type: 'create' } | { type: 'edit'; fieldId: s
 export type ModalState =
   | { type: 'row'; rowIndex: number }
   | { type: 'column'; fieldId: string }
+  | { type: 'refPanel'; targetId: string }
   | { type: 'columnSettings'; mode: ColumnSettingsMode }
   | { type: 'closed' };
 
@@ -29,6 +30,9 @@ export class ModalController {
 
   public handleClick = (event: MouseEvent): boolean => {
     const target = event.target as HTMLElement;
+
+    // TODO(thure): why not just get the closest value of a recognized attribute and `switch` on that? Repeated querying
+    //  is more error-prone and less legible, I’d think.
 
     const rowButton = target.closest(`button[${tableButtons.rowMenu.attr}]`);
     if (rowButton) {
@@ -59,6 +63,15 @@ export class ModalController {
         mode: { type: 'create' },
       };
       return true;
+    }
+
+    const refButton = target.closest(`button[${tableButtons.referencedCell.attr}]`);
+    if (refButton) {
+      this._triggerRef.current = refButton as HTMLElement;
+      this._state.value = {
+        type: 'refPanel',
+        targetId: refButton.getAttribute(tableButtons.referencedCell.attr)!,
+      };
     }
 
     return false;

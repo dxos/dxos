@@ -21,6 +21,7 @@ import { isNotFalsy } from '@dxos/util';
 
 import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { ColumnSettings } from './ColumnSettings';
+import { RefPanel } from './RefPanel';
 import { RowActionsMenu } from './RowActionsMenu';
 import { type TableModel } from '../../model';
 import { type GridCell } from '../../util';
@@ -207,6 +208,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model, ignoreAt
       <RowActionsMenu model={model} />
       <ColumnActionsMenu model={model} />
       <ColumnSettings model={model} />
+      <RefPanel model={model} />
     </>
   );
 });

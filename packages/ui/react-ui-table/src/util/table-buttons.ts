@@ -2,15 +2,22 @@
 // Copyright 2024 DXOS.org
 //
 
-type TableButton = 'columnSettings' | 'rowMenu' | 'newColumn';
+type TableButton = 'columnSettings' | 'rowMenu' | 'newColumn' | 'referencedCell';
+
+// TODO(thure): Lots of copy-pasted business here, this could by DRYed out substantially.
+
+// TODO(thure): These unique attributes come with more caveats than e.g. applying multiple attributes – one key-value
+//  pair for identifying the button type and another for passing the fieldId.
 
 const TABLE_ATTRS: { [K in TableButton]: string } = {
+  referencedCell: 'data-table-ref-cell-button',
   columnSettings: 'data-table-column-settings-button',
   rowMenu: 'data-table-row-menu-button',
   newColumn: 'data-table-new-column-button',
 } as const;
 
 const ICONS: { [K in TableButton]: string } = {
+  referencedCell: 'ph--link-simple-horizontal--regular',
   columnSettings: 'ph--caret-down--regular',
   rowMenu: 'ph--dots-three--regular',
   newColumn: 'ph--plus--regular',
@@ -32,6 +39,16 @@ const createButtonHtml = ({
 };
 
 export const tableButtons = {
+  referencedCell: {
+    attr: TABLE_ATTRS.referencedCell,
+    icon: ICONS.referencedCell,
+    render: ({ targetId }: { targetId: string }) =>
+      createButtonHtml({
+        button: 'referencedCell',
+        value: targetId,
+        testId: 'table-ref-cell-button',
+      }),
+  },
   columnSettings: {
     attr: TABLE_ATTRS.columnSettings,
     icon: ICONS.columnSettings,

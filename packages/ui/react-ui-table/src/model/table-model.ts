@@ -256,12 +256,13 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
   };
 
   private getMainGridCells = (range: DxGridPlaneRange): DxGridPlaneCells => {
-    const values: DxGridPlaneCells = {};
+    const cells: DxGridPlaneCells = {};
     const fields = this._table.view?.fields ?? [];
 
     const addCell = (obj: T, field: FieldType, colIndex: number, displayIndex: number): void => {
       const { props } = this._projection.getFieldProjection(field.id);
-      const value: DxGridCellValue = {
+
+      const cell: DxGridCellValue = {
         get value() {
           const value = getValue(obj, field.path);
           if (value == null) {
@@ -294,11 +295,18 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
         classes.push(rowSelectionClasses);
       }
       if (classes.length > 0) {
-        value.className = mx(classes.flat());
+        cell.className = mx(classes.flat());
+      }
+
+      if (cell.value && props.format === FormatEnum.Ref) {
+        const targetObj = getValue(obj, field.path);
+        cell.accessoryHtml = tableButtons.referencedCell.render({
+          targetId: targetObj.id,
+        });
       }
 
       const idx = fromGridCell({ col: colIndex, row: displayIndex });
-      values[idx] = value;
+      cells[idx] = cell;
     };
 
     for (let row = range.start.row; row <= range.end.row && row < this._sortedRows.value.length; row++) {
@@ -312,15 +320,15 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
       }
     }
 
-    return values;
+    return cells;
   };
 
   private getHeaderCells = (range: DxGridPlaneRange): DxGridPlaneCells => {
-    const values: DxGridPlaneCells = {};
+    const cells: DxGridPlaneCells = {};
     const fields = this.table.view?.fields ?? [];
     for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
       const { field, props } = this._projection.getFieldProjection(fields[col].id);
-      values[fromGridCell({ col, row: 0 })] = {
+      cells[fromGridCell({ col, row: 0 })] = {
         // TODO(burdon): Use same logic as form for fallback title.
         value: props.title ?? field.path,
         readonly: true,
@@ -329,15 +337,15 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
       };
     }
 
-    return values;
+    return cells;
   };
 
   private getSelectionColumnCells = (range: DxGridPlaneRange): DxGridPlaneCells => {
-    const values: DxGridPlaneCells = {};
+    const cells: DxGridPlaneCells = {};
     for (let row = range.start.row; row <= range.end.row && row < this._rows.value.length; row++) {
       const isSelected = this._selection.isRowIndexSelected(row);
       const classes = cellClassesForRowSelection(isSelected);
-      values[fromGridCell({ col: 0, row })] = {
+      cells[fromGridCell({ col: 0, row })] = {
         value: '',
         readonly: true,
         className: classes ? mx(classes) : undefined,
@@ -345,15 +353,15 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
       };
     }
 
-    return values;
+    return cells;
   };
 
   private getActionColumnCells = (range: DxGridPlaneRange): DxGridPlaneCells => {
-    const values: DxGridPlaneCells = {};
+    const cells: DxGridPlaneCells = {};
     for (let row = range.start.row; row <= range.end.row && row < this._rows.value.length; row++) {
       const isSelected = this._selection.isRowIndexSelected(row);
       const classes = cellClassesForRowSelection(isSelected);
-      values[fromGridCell({ col: 0, row })] = {
+      cells[fromGridCell({ col: 0, row })] = {
         value: '',
         readonly: true,
         className: classes ? mx(classes) : undefined,
@@ -361,7 +369,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
       };
     }
 
-    return values;
+    return cells;
   };
 
   private getSelectAllCell = (): DxGridPlaneCells => {
