@@ -193,6 +193,8 @@ const createSystemInstructions = (context: ThreadContext) => {
         <cot>To answer the question I need to ...</cot>
       </example>
     </instructions>
+
+    <current_time>${new Date().toUTCString()}</current_time>
   `;
 
   if (context.subject) {
