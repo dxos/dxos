@@ -94,6 +94,19 @@ export type GetAgentStatusResponseBody = {
   };
 };
 
+export type UploadFunctionRequest = {
+  name?: string;
+  script: string;
+};
+
+export type UploadFunctionResponseBody = {
+  functionId: string;
+  functionVersionNumber?: number;
+  meta: {
+    inputSchema?: object;
+  };
+};
+
 export enum EdgeAgentStatus {
   ACTIVE = 'active',
   INACTIVE = 'inactive',
