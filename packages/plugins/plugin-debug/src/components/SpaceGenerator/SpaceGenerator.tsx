@@ -55,7 +55,7 @@ export const SpaceGenerator = ({ space, onAddObjects }: SpaceGeneratorProps) => 
 
             // Create objects.
             const generate = createAsyncGenerator(generator, schema.schema, space.db);
-            const objects = await generate.createObjects(n);
+            // const objects = await generate.createObjects(n);
 
             // Find or create table and view.
             const { objects: tables } = await space.db.query(Filter.schema(TableType)).run();
@@ -77,7 +77,8 @@ export const SpaceGenerator = ({ space, onAddObjects }: SpaceGeneratorProps) => 
               onAddObjects?.([table]);
             }
 
-            return objects;
+            // return objects;
+            return [];
           },
         ];
       }),

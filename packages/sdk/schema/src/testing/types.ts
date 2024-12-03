@@ -11,9 +11,11 @@ export namespace Test {
 
   export const OrgSchema = S.Struct({
     // id: S.String,
-    name: S.NonEmptyString.annotations({
-      [GeneratorAnnotationId]: 'company.name',
-    }),
+    name: S.optional(
+      S.String.annotations({
+        [GeneratorAnnotationId]: 'company.name',
+      }),
+    ),
     website: S.optional(
       Format.URL.annotations({
         [AST.TitleAnnotationId]: 'Website',
@@ -48,12 +50,16 @@ export namespace Test {
 
   export const ContactSchema = S.Struct({
     // id: S.String,
-    name: S.NonEmptyString.annotations({
-      [GeneratorAnnotationId]: 'person.fullName',
-    }),
-    email: Format.Email.annotations({
-      [GeneratorAnnotationId]: 'internet.email',
-    }),
+    name: S.optional(
+      S.String.annotations({
+        [GeneratorAnnotationId]: 'person.fullName',
+      }),
+    ),
+    email: S.optional(
+      Format.Email.annotations({
+        [GeneratorAnnotationId]: 'internet.email',
+      }),
+    ),
     address: S.optional(AddressSchema),
     employer: S.optional(
       ref(OrgType).annotations({
@@ -74,9 +80,11 @@ export namespace Test {
 
   export const ProjectSchema = S.Struct({
     // id: S.String,
-    name: S.String.annotations({
-      [GeneratorAnnotationId]: 'commerce.productName',
-    }),
+    name: S.optional(
+      S.String.annotations({
+        [GeneratorAnnotationId]: 'commerce.productName',
+      }),
+    ),
     description: S.optional(S.String),
   });
 
