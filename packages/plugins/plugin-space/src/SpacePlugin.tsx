@@ -830,7 +830,8 @@ export const SpacePlugin = ({
                     void space.db
                       .query({ id: objectId })
                       .first()
-                      .then((o) => (store.value = o));
+                      .then((o) => (store.value = o))
+                      .catch((err) => log.catch(err, { objectId }));
                   }
                 }, id);
                 const object = store.value;
