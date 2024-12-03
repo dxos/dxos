@@ -49,6 +49,12 @@ export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => 
   }, []);
 
   const handleRequest = async (input: string) => {
+    if (input === '') {
+      return;
+    }
+
+    setInput('');
+
     // TODO(dmaretskyi): Can we call `create(Message, { ... })` here?
     const userMessage: Message = {
       id: ObjectId.random(),
@@ -59,7 +65,6 @@ export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => 
     };
     await client.current!.insertMessages([userMessage]);
     setHistory([...history, userMessage]);
-    setInput('');
 
     const generationStream = await client.current!.generate({
       model: '@anthropic/claude-3-5-sonnet-20241022',
