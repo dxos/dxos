@@ -1,6 +1,8 @@
+import { asyncTimeout } from '@dxos/async';
 import type { ReactiveEchoObject } from '@dxos/echo-db';
 import { getTypename } from '@dxos/echo-schema';
-import { getSpace, ResultFormat } from '@dxos/react-client/echo';
+import { log } from '@dxos/log';
+import { Filter, getSpace, ResultFormat } from '@dxos/react-client/echo';
 
 // TODO(burdon): Move into assistant-protocol.
 export type ThreadContext = {
@@ -35,30 +37,76 @@ export const createSystemInstructions = async (context: ThreadContext): Promise<
 };
 
 const formatContextObject = async (object: ReactiveEchoObject<any>): Promise<string> => {
-  const data = await preprocessContextObject(object);
+  let data;
+  try {
+    data = await asyncTimeout(preprocessContextObject(object), CONTEXT_OBJECT_QUERY_TIMEOUT);
+  } catch (err: any) {
+    log.error('Failed to preprocess context object:', { err });
+    data = object;
+  }
 
-  return `
-    <object>
-      <type>${getTypename(object)}</type>
-      <id>${object.id}</id>
-      ${formatObjectAsXMLTags(data)}
-    </object>
-  `;
+  if (typeof data === 'string') {
+    return data;
+  } else {
+    return `
+      <object>
+        <type>${getTypename(object)}</type>
+        <id>${object.id}</id>
+        ${formatObjectAsXMLTags(data)}
+      </object>
+    `;
+  }
 };
 
-const preprocessContextObject = async (object: ReactiveEchoObject<any>): Promise<any> => {
+const preprocessContextObject = async (object: ReactiveEchoObject<any>): Promise<Record<string, any> | string> => {
+  const space = getSpace(object);
+  if (!space) {
+    return { ...object };
+  }
+
   // TODO(dmaretskyi): Serialize based on schema annotations.
   switch (getTypename(object)) {
     // TODO(dmaretskyi): Reference types somehow without plugin-automation depending on other plugins.
     case 'dxos.org/type/Document': {
-      const data = (await getSpace(object)
-        ?.db.query({ id: object.id }, { format: ResultFormat.Plain, include: { content: true } })
-        .first()) ?? { content: { content: '' } };
+      const data = space.db
+        .query({ id: object.id }, { format: ResultFormat.Plain, include: { content: true } })
+        .first() ?? { content: { content: '' } };
 
       return {
         ...data,
         threads: undefined,
       };
+    }
+
+    case 'dxos.org/type/Table': {
+      // TODO(dmaretskyi): Load references.
+      const schema = object.view ? space?.db.schemaRegistry.getSchema(object.view.query.typename) : undefined;
+      const { objects: rows } =
+        (schema &&
+          (await space.db
+            .query(Filter.schema(schema), { format: ResultFormat.Plain, limit: TABLE_ROWS_LIMIT })
+            .run())) ??
+        {};
+
+      // TODO(dmaretskyi): Format table schema.
+      return `
+        <object>
+          <id>${object.id}</id>
+          <type>${getTypename(object)}</type>
+          ${formatObjectAsXMLTags(object)}
+
+          <rows>
+            <!-- Limited to first ${TABLE_ROWS_LIMIT} rows. -->
+            ${rows
+              ?.map(
+                (row: any) => `<row>
+                  ${formatObjectAsXMLTags(row)}
+                </row>`,
+              )
+              .join('\n')}
+          </rows>
+
+      `;
     }
 
     default:
@@ -84,3 +132,7 @@ const formatObjectAsXMLTags = (object: any, depth = 1): string => {
     })
     .join('\n');
 };
+
+const CONTEXT_OBJECT_QUERY_TIMEOUT = 5_000;
+
+const TABLE_ROWS_LIMIT = 10;
