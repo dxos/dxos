@@ -29,12 +29,10 @@ export type ExecutionPlanStep =
       value: unknown;
     }
   | {
-      type: 'RelationshipScan';
-
       /**
        * Scans (anchor)-[relationshipInto:label]->(nodeInto).
        */
-
+      type: 'RelationshipScan';
       label: string;
       anchor: VariableName;
       relationshipInto: VariableName;
@@ -89,17 +87,18 @@ class ExecutionPlanBuilder {
   }
 
   createStepsForMatchClause(match: MatchClause): ExecutionPlanStep[] {
-    const steps: ExecutionPlanStep[] = [];
-
     invariant(match.pattern.segments.length > 0);
     const firstSegment = match.pattern.segments[0];
     invariant(firstSegment.astKind === 'NodePattern');
     let lastNodeVariable = (firstSegment.variable?.name as VariableName) ?? this.newVariable();
+
+    const steps: ExecutionPlanStep[] = [];
     steps.push({
       type: 'NodeScan',
       label: firstSegment.label.name,
       into: lastNodeVariable,
     });
+
     if (firstSegment.properties) {
       for (const property of firstSegment.properties.properties) {
         steps.push({

@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+// TODO(burdon): Why interface not type?
+
 export interface AstNode<Kind extends string> {
   astKind: Kind;
 }
