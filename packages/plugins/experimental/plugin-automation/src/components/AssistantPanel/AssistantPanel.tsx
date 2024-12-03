@@ -194,7 +194,7 @@ const createSystemInstructions = (context: ThreadContext) => {
       </example>
     </instructions>
 
-    <current_time>${new Date().toUTCString()}</current_time>
+    <current_time>${new Date().toLocaleString()}</current_time>
   `;
 
   if (context.subject) {
