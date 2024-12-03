@@ -6,7 +6,7 @@ import { raise } from '@dxos/debug';
 import { JSON_SCHEMA_ECHO_REF_ID, type JsonSchemaType } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 
-import { trim } from '../common/trim';
+import { trim } from '../util';
 
 /**
  * Formats ECHO schema to be consumed by LLM.

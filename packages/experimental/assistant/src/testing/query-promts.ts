@@ -7,9 +7,9 @@ import { Schema as S } from '@effect/schema';
 import { toJsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { trim } from '../common/trim';
 import { defineTool, LLMToolResult } from '../conversation';
 import { executeQuery, formatJsonSchemaForLLM, type DataSource } from '../cypher';
+import { trim } from '../util';
 
 export const createCypherTool = (dataSource: DataSource) =>
   defineTool({
