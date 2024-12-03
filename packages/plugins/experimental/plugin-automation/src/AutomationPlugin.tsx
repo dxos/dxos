@@ -143,7 +143,13 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
 
                 const [subjectId] = id.split('~');
                 const { spaceId, objectId } = parseId(subjectId);
-                const space = client.spaces.get(spaceId as SpaceId);
+                const spaces = toSignal(
+                  (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
+                  () => client.spaces.get(),
+                );
+                const space = spaces?.find(
+                  (space) => space.id === spaceId && space.state.get() === SpaceState.SPACE_READY,
+                );
                 if (!objectId) {
                   // TODO(wittjosiah): Support assistant for arbitrary subjects.
                   //   This is to ensure that the assistant panel is not stuck on an old object.
@@ -160,20 +166,10 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
                   };
                 }
 
-                // const object = toSignal(
-                //   (onChange) => {
-                //     const timeout = setTimeout(async () => {
-                //       await space?.db.query({ id: objectId }).first();
-                //       onChange();
-                //     });
-                //     return () => clearTimeout(timeout);
-                //   },
-                //   () => space?.db.getObjectById(objectId),
-                //   subjectId,
-                // );
-                // if (!object || !subjectId) {
-                //   return;
-                // }
+                const [object] = memoizeQuery(space, { id: objectId });
+                if (!object || !subjectId) {
+                  return;
+                }
 
                 return {
                   id,
