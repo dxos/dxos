@@ -57,7 +57,7 @@ describe('View', () => {
   });
 
   test('maintains field order during initialization', async ({ expect }) => {
-    const { db } = await builder.createDatabase();
+    // const { db } = await builder.createDatabase();
     // const registry = new MutableSchemaRegistry(db);
 
     const schema = createStoredSchema({
