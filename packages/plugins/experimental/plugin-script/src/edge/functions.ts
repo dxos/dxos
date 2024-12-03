@@ -48,7 +48,18 @@ const defaultUserFunctionsBaseUrl = 'https://edge-main.dxos.workers.dev/function
 const getBaseUrl = (config: Config) => {
   if (config.values.runtime?.services?.edge?.url) {
     const url = new URL('/functions', config.values.runtime?.services?.edge?.url);
-    url.protocol = 'https';
+    switch (url.protocol) {
+      case 'http:':
+      case 'ws:':
+        url.protocol = 'http';
+        break;
+      case 'https:':
+      case 'wss:':
+        url.protocol = 'https';
+        break;
+      default:
+        throw new Error(`Invalid protocol: ${url.protocol}`);
+    }
     return url.toString();
   } else {
     return defaultUserFunctionsBaseUrl;
