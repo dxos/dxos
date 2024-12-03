@@ -166,9 +166,6 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
                 }
 
                 const [object] = memoizeQuery(space, { id: objectId });
-                if (!object || !subjectId) {
-                  return;
-                }
 
                 return {
                   id,
@@ -177,7 +174,7 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
                   properties: {
                     icon: 'ph--atom--regular',
                     label: ['assistant panel label', { ns: AUTOMATION_PLUGIN }],
-                    object: null,
+                    object,
                   },
                 };
               },
@@ -189,7 +186,7 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
         component: ({ data, role }) => {
           switch (role) {
             case 'complementary--assistant':
-              return <AssistantPanel />;
+              return <AssistantPanel subject={data.subject as any} />;
             case 'complementary--automation': {
               const object = data.subject;
               const space = isEchoObject(object) ? getSpace(object) : undefined;

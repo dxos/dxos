@@ -13,19 +13,25 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { AUTOMATION_PLUGIN } from '../../meta';
 import { useConfig } from '@dxos/react-client';
+import type { ReactiveEchoObject } from '@dxos/echo-db';
+import { getTypename } from '@dxos/echo-schema';
 
 // TODO(dmaretskyi): Store those in the space.
 const spaceId = 'B6SOMMBOQ65BB5CK45NEGTHFH34LHFE3Q' as SpaceId;
 const threadId = '01JCQK4FPE5922XZZQPQPSFENX' as ObjectId;
 
-export type AssistantPanelProps = ThemedClassName<{}>;
+export type AssistantPanelProps = ThemedClassName<{
+  subject?: ReactiveEchoObject<any>;
+}>;
 
-export const AssistantPanel = ({ classNames }: AssistantPanelProps) => {
+export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
   const config = useConfig();
   const client = useRef<AIServiceClient>();
   const [history, setHistory] = useState<Message[]>([]);
   const [input, setInput] = useState('');
+
+  console.log({ subject });
 
   useEffect(() => {
     if (!client.current) {
@@ -62,7 +68,7 @@ export const AssistantPanel = ({ classNames }: AssistantPanelProps) => {
       spaceId,
       threadId,
       tools: [],
-      systemPrompt: INSTRUCTIONS,
+      systemPrompt: createSystemInstructions({ subject }),
     });
 
     const historyBefore = [...history, userMessage];
@@ -169,12 +175,43 @@ const parseMessage = (text: string): { cot?: string; message: string } => {
   };
 };
 
-// TODO(burdon): Move into echo object.
-const INSTRUCTIONS = `
-  Before replying always think step-by-step on how to proceed.
-  Print your thoughts inside <cot> tags.
+// TODO(burdon): Move into assistant-protocol.
+type ThreadContext = {
+  subject?: ReactiveEchoObject<any>;
+};
 
-  <example>
-    <cot>To answer the question I need to ...</cot>
-  </example>
-`;
+const createSystemInstructions = (context: ThreadContext) => {
+  let instructions = `
+    <instructions>
+      Before replying always think step-by-step on how to proceed.
+      Print your thoughts inside <cot> tags.
+
+      <example>
+        <cot>To answer the question I need to ...</cot>
+      </example>
+    </instructions>
+  `;
+
+  if (context.subject) {
+    instructions += `
+      <user_attention>
+        The user is currently interacting with an object in Composer application:
+
+        <object>
+          <type>${getTypename(context.subject)}</type>
+          <id>${context.subject.id}</id>
+          ${Object.entries(context.subject)
+            .filter(([key, value]) => ['string', 'number', 'boolean'].includes(typeof value))
+            .map(
+              ([key, value]) => `
+            <${key}>${value}</${key}>
+          `,
+            )
+            .join('')}
+        </object>
+      </user_attention>
+    `;
+  }
+
+  return instructions;
+};
