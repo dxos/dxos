@@ -69,6 +69,9 @@ export const ThreadComplementary = ({
         if (current !== threadId) {
           current = threadId;
 
+          // TODO(wittjosiah): Should this be a thread-specific intent?
+          //  The layout doesn't know about threads and this working depends on other plugins conditionally handling it.
+          //  This may be overloading this intent or highjacking its intended purpose.
           void dispatch?.([
             {
               action: LayoutAction.SCROLL_INTO_VIEW,
