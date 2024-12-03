@@ -5,6 +5,7 @@
 import { Args, Flags } from '@oclif/core';
 import fs from 'node:fs';
 
+import { asyncTimeout } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type ReactiveEchoObject, Filter, loadObjectReferences } from '@dxos/client/echo';
 import { type Space } from '@dxos/client-protocol';
@@ -16,9 +17,9 @@ import {
   publicKeyToDid,
   setUserFunctionUrlInMetadata,
   uploadWorkerFunction,
-  type UserFunctionUploadResult,
 } from '@dxos/plugin-script/edge';
 import { ScriptType } from '@dxos/plugin-script/types';
+import { type UploadFunctionResponseBody } from '@dxos/protocols';
 
 import { BaseCommand } from '../../base';
 
@@ -88,20 +89,19 @@ export default class Upload extends BaseCommand<typeof Upload> {
       }
 
       const ownerDid = publicKeyToDid(identity.identityKey);
-      let result: UserFunctionUploadResult;
+      let result: UploadFunctionResponseBody;
       try {
-        result = await uploadWorkerFunction({
-          halo: client.halo,
-          clientConfig: client.config,
-          ownerDid,
-          functionId: existingFunctionId,
-          name: this.flags.name,
-          source: scriptContent,
-          credentialLoadTimeout: 5_000,
-        });
-        if (result.result !== 'success' || result.functionId === undefined) {
-          this.error(`Upload failed: ${result.errorMessage}`);
-        }
+        result = await asyncTimeout(
+          uploadWorkerFunction({
+            client,
+            ownerDid,
+            functionId: existingFunctionId,
+            name: this.flags.name,
+            source: scriptContent,
+          }),
+          5_000,
+        );
+        invariant(result.functionId, 'Upload failed.');
         this.log(`Uploaded function: ${result.functionId}`);
       } catch (err: any) {
         this.error(err.message);
