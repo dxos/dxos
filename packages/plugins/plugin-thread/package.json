@@ -91,37 +91,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "depezndencies": {
-    "@codemirror/language": "^6.10.3",
-    "@codemirror/state": "^6.4.1",
-    "@codemirror/view": "^6.34.1",
-    "@dxos/app-framework": "workspace:*",
-    "@dxos/async": "workspace:*",
-    "@dxos/display-name": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
-    "@dxos/invariant": "workspace:*",
-    "@dxos/keys": "workspace:*",
-    "@dxos/local-storage": "workspace:*",
-    "@dxos/log": "workspace:*",
-    "@dxos/plugin-attention": "workspace:*",
-    "@dxos/plugin-client": "workspace:*",
-    "@dxos/plugin-deck": "workspace:*",
-    "@dxos/plugin-graph": "workspace:*",
-    "@dxos/plugin-markdown": "workspace:*",
-    "@dxos/plugin-observability": "workspace:*",
-    "@dxos/plugin-space": "workspace:*",
-    "@dxos/react-client": "workspace:*",
-    "@dxos/react-ui-attention": "workspace:*",
-    "@dxos/react-ui-editor": "workspace:*",
-    "@dxos/react-ui-form": "workspace:*",
-    "@dxos/react-ui-mosaic": "workspace:*",
-    "@dxos/react-ui-stack": "workspace:*",
-    "@dxos/react-ui-syntax-highlighter": "workspace:*",
-    "@dxos/react-ui-thread": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.6.0",
-    "date-fns": "^3.3.1",
-    "lodash.get": "^4.4.2"
   }
 }
