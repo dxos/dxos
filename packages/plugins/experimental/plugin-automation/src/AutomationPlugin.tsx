@@ -4,11 +4,12 @@
 
 import React from 'react';
 
-import { type PluginDefinition, parseMetadataResolverPlugin, resolvePlugin } from '@dxos/app-framework';
+import { parseMetadataResolverPlugin, type PluginDefinition, resolvePlugin } from '@dxos/app-framework';
 import { FunctionTrigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { createExtension, toSignal } from '@dxos/plugin-graph';
+import { memoizeQuery } from '@dxos/plugin-space';
 import {
   getSpace,
   getTypename,
@@ -16,6 +17,7 @@ import {
   loadObjectReferences,
   parseId,
   type SpaceId,
+  SpaceState,
 } from '@dxos/react-client/echo';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 
@@ -79,7 +81,13 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
 
                 const [subjectId] = id.split('~');
                 const { spaceId, objectId } = parseId(subjectId);
-                const space = client.spaces.get().find((space) => space.id === spaceId);
+                const spaces = toSignal(
+                  (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
+                  () => client.spaces.get(),
+                );
+                const space = spaces?.find(
+                  (space) => space.id === spaceId && space.state.get() === SpaceState.SPACE_READY,
+                );
                 if (!objectId) {
                   // TODO(burdon): Ref SPACE_PLUGIN ns.
                   const label = space
@@ -102,18 +110,7 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
                   };
                 }
 
-                const object = toSignal(
-                  (onChange) => {
-                    const timeout = setTimeout(async () => {
-                      await space?.db.query({ id: objectId }).first();
-                      onChange();
-                    });
-
-                    return () => clearTimeout(timeout);
-                  },
-                  () => space?.db.getObjectById(objectId),
-                  subjectId,
-                );
+                const [object] = memoizeQuery(space, { id: objectId });
                 if (!object || !subjectId) {
                   return;
                 }

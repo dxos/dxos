@@ -6,16 +6,16 @@ import React from 'react';
 
 import {
   type IntentPluginProvides,
+  isLayoutParts,
+  LayoutAction,
   type LocationProvides,
   NavigationAction,
+  parseIntentPlugin,
+  parseMetadataResolverPlugin,
+  parseNavigationPlugin,
   type Plugin,
   type PluginDefinition,
-  isLayoutParts,
-  parseIntentPlugin,
-  parseNavigationPlugin,
-  parseMetadataResolverPlugin,
   resolvePlugin,
-  LayoutAction,
 } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -23,10 +23,9 @@ import { log } from '@dxos/log';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup, toSignal } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
-import { SpaceAction } from '@dxos/plugin-space';
-import { ThreadType, MessageType, ChannelType } from '@dxos/plugin-space/types';
-import { create, type ReactiveEchoObject, getTypename, type SpaceId } from '@dxos/react-client/echo';
-import { getSpace, fullyQualifiedId, loadObjectReferences, parseId } from '@dxos/react-client/echo';
+import { memoizeQuery, SpaceAction } from '@dxos/plugin-space';
+import { ChannelType, MessageType, ThreadType } from '@dxos/plugin-space/types';
+import { create, fullyQualifiedId, getSpace, getTypename, loadObjectReferences, parseId, type ReactiveEchoObject, SpaceState } from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 
 import {
@@ -144,7 +143,13 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
                 const [subjectId] = id.split('~');
                 const { spaceId, objectId } = parseId(subjectId);
-                const space = client.spaces.get().find((space) => space.id === spaceId);
+                const spaces = toSignal(
+                  (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
+                  () => client.spaces.get(),
+                );
+                const space = spaces?.find(
+                  (space) => space.id === spaceId && space.state.get() === SpaceState.SPACE_READY,
+                );
                 if (!objectId) {
                   // TODO(wittjosiah): Support comments for arbitrary subjects.
                   //   This is to ensure that the comments panel is not stuck on an old object.
@@ -162,19 +167,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   };
                 }
 
-                // TODO(dmaretskyi): Should be: `const [object] = memoizeQuery(space, { id: objectId })`
-                const object = toSignal(
-                  (onChange) => {
-                    const timeout = setTimeout(async () => {
-                      await space?.db.query({ id: objectId }).first();
-                      onChange();
-                    });
-
-                    return () => clearTimeout(timeout);
-                  },
-                  () => space?.db.getObjectById(objectId),
-                  subjectId,
-                );
+                const [object] = memoizeQuery(space, { id: objectId });
                 if (!object || !subjectId) {
                   return;
                 }
