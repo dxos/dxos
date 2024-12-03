@@ -5,46 +5,61 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 import { type AIServiceClient, AIServiceClientImpl, ObjectId, type Message } from '@dxos/assistant';
-import { type SpaceId } from '@dxos/keys';
+import { SpaceId } from '@dxos/keys';
 import { ContextMenu, type ThemedClassName } from '@dxos/react-ui';
 import { Icon, Input, Toolbar, useTranslation } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
 import { AUTOMATION_PLUGIN } from '../../meta';
-import { useConfig } from '@dxos/react-client';
+import { useClient, useConfig } from '@dxos/react-client';
 import type { ReactiveEchoObject } from '@dxos/echo-db';
 import { getTypename } from '@dxos/echo-schema';
 import { createSystemInstructions } from './system-instructions';
+import type { Space } from '@dxos/react-client/echo';
 
-// TODO(dmaretskyi): Store those in the space.
-const spaceId = 'B6SOMMBOQ65BB5CK45NEGTHFH34LHFE3Q' as SpaceId;
-const threadId = '01JCQK4FPE5922XZZQPQPSFENX' as ObjectId;
+const PROPERTIES_ASSISTANT_KEY = 'dxos.assistant.beta.properties';
 
 export type AssistantPanelProps = ThemedClassName<{
+  space: Space;
   subject?: ReactiveEchoObject<any>;
 }>;
 
 export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
   const config = useConfig();
-  const client = useRef<AIServiceClient>();
+  const client = useClient();
+  const aiClient = useRef<AIServiceClient>();
+  const [contextSpaceId, setContextSpaceId] = useState<SpaceId | undefined>();
+  const [threadId, setThreadId] = useState<ObjectId | undefined>();
   const [history, setHistory] = useState<Message[]>([]);
   const [input, setInput] = useState('');
 
   useEffect(() => {
-    if (!client.current) {
+    if (!aiClient.current) {
       const endpoint = config.values.runtime?.services?.ai?.server;
       if (!endpoint) {
         throw new Error('AI service endpoint is not configured');
       }
-      client.current = new AIServiceClientImpl({
+      aiClient.current = new AIServiceClientImpl({
         endpoint,
       });
     }
 
     queueMicrotask(async () => {
-      const messages = await client.current!.getMessagesInThread(spaceId, threadId);
+      const properties = client.spaces.default.properties;
+
+      properties[PROPERTIES_ASSISTANT_KEY] ??= {};
+      properties[PROPERTIES_ASSISTANT_KEY].contextSpaceId ??= SpaceId.random();
+      properties[PROPERTIES_ASSISTANT_KEY].threadId ??= ObjectId.random();
+
+      const contextSpaceId = properties[PROPERTIES_ASSISTANT_KEY].contextSpaceId;
+      const threadId = properties[PROPERTIES_ASSISTANT_KEY].threadId;
+
+      setContextSpaceId(contextSpaceId);
+      setThreadId(threadId);
+
+      const messages = await aiClient.current!.getMessagesInThread(contextSpaceId, threadId);
       setHistory(messages);
     });
   }, []);
@@ -59,18 +74,18 @@ export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => 
     // TODO(dmaretskyi): Can we call `create(Message, { ... })` here?
     const userMessage: Message = {
       id: ObjectId.random(),
-      spaceId,
-      threadId,
+      spaceId: contextSpaceId!,
+      threadId: threadId!,
       role: 'user',
       content: [{ type: 'text', text: input }],
     };
-    await client.current!.insertMessages([userMessage]);
+    await aiClient.current!.insertMessages([userMessage]);
     setHistory([...history, userMessage]);
 
-    const generationStream = await client.current!.generate({
+    const generationStream = await aiClient.current!.generate({
       model: '@anthropic/claude-3-5-sonnet-20241022',
-      spaceId,
-      threadId,
+      spaceId: contextSpaceId!,
+      threadId: threadId!,
       tools: [],
       systemPrompt: await getSystemPrompt(),
     });
@@ -80,11 +95,28 @@ export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => 
       setHistory([...historyBefore, ...generationStream.accumulatedMessages]);
     }
 
-    await client.current!.insertMessages(await generationStream.complete());
+    await aiClient.current!.insertMessages(await generationStream.complete());
   };
 
   const getSystemPrompt = async () => {
     return createSystemInstructions({ subject });
+  };
+
+  const clearThread = async () => {
+    const properties = client.spaces.default.properties;
+
+    properties[PROPERTIES_ASSISTANT_KEY] ??= {};
+    // properties[PROPERTIES_ASSISTANT_KEY].contextSpaceId ??= SpaceId.random();
+    properties[PROPERTIES_ASSISTANT_KEY].threadId = ObjectId.random();
+
+    // const contextSpaceId = properties[PROPERTIES_ASSISTANT_KEY].contextSpaceId;
+    const threadId = properties[PROPERTIES_ASSISTANT_KEY].threadId;
+
+    // setContextSpaceId(contextSpaceId);
+    setThreadId(threadId);
+
+    const messages = await aiClient.current!.getMessagesInThread(contextSpaceId, threadId);
+    setHistory(messages);
   };
 
   // TODO(burdon): Factor out with script plugin.
@@ -117,6 +149,7 @@ export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => 
           <ContextMenu.Portal>
             <ContextMenu.Content classNames='z-[31]'>
               <ContextMenu.Viewport>
+                <ContextMenu.Item onClick={clearThread}>Clear thread</ContextMenu.Item>
                 <ContextMenu.Item onClick={async () => console.log(await getSystemPrompt())}>
                   Print instructions to console
                 </ContextMenu.Item>
