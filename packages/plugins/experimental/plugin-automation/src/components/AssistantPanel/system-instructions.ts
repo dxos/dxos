@@ -146,11 +146,12 @@ const looseFormatXml = (xml: string): string => {
   return xml
     .split('\n')
     .map((line) => {
+      if (line.match(RE_CLOSE_TAG_LINE)) {
+        currentIndent--;
+      }
       const indent = currentIndent;
       if (line.match(RE_OPEN_TAG_LINE)) {
         currentIndent++;
-      } else if (line.match(RE_CLOSE_TAG_LINE)) {
-        currentIndent--;
       }
       return ' '.repeat(indent * 2) + line.trimStart();
     })
