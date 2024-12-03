@@ -12,6 +12,7 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
 import { AUTOMATION_PLUGIN } from '../../meta';
+import { useConfig } from '@dxos/react-client';
 
 // TODO(dmaretskyi): To config.services.ai.
 const ENDPOINT = 'https://ai-service.dxos.workers.dev';
@@ -24,12 +25,17 @@ export type AssistantPanelProps = ThemedClassName<{}>;
 
 export const AssistantPanel = ({ classNames }: AssistantPanelProps) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
+  const config = useConfig();
   const client = useRef<AIServiceClient>();
   const [history, setHistory] = useState<Message[]>([]);
   const [input, setInput] = useState('');
 
   useEffect(() => {
     if (!client.current) {
+      const endpoint = config.values.runtime?.services?.ai?.server;
+      if (!endpoint) {
+        throw new Error('AI service endpoint is not configured');
+      }
       client.current = new AIServiceClientImpl({
         endpoint: ENDPOINT,
       });
