@@ -56,6 +56,7 @@ import {
   FQ_ID_LENGTH,
   SPACE_ID_LENGTH,
   OBJECT_ID_LENGTH,
+  parseFullyQualifiedId,
 } from '@dxos/react-client/echo';
 import { type JoinPanelProps, osTranslations } from '@dxos/shell/react';
 import { ComplexMap, nonNullable, reduceGroupBy } from '@dxos/util';
@@ -264,12 +265,12 @@ export const SpacePlugin = ({
             if (identity && location.active) {
               // Group parts by space for efficient messaging.
               const idsBySpace = reduceGroupBy(open, (id) => {
-                const [spaceId] = id.split(':'); // TODO(burdon): Factor out.
+                const [spaceId] = parseFullyQualifiedId(id);
                 return spaceId;
               });
 
               const removedBySpace = reduceGroupBy(closed, (id) => {
-                const [spaceId] = id.split(':'); // TODO(burdon): Factor out.
+                const [spaceId] = parseFullyQualifiedId(id);
                 return spaceId;
               });
 
