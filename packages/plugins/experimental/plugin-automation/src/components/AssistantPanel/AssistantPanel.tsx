@@ -14,9 +14,6 @@ import { mx } from '@dxos/react-ui-theme';
 import { AUTOMATION_PLUGIN } from '../../meta';
 import { useConfig } from '@dxos/react-client';
 
-// TODO(dmaretskyi): To config.services.ai.
-const ENDPOINT = 'https://ai-service.dxos.workers.dev';
-
 // TODO(dmaretskyi): Store those in the space.
 const spaceId = 'B6SOMMBOQ65BB5CK45NEGTHFH34LHFE3Q' as SpaceId;
 const threadId = '01JCQK4FPE5922XZZQPQPSFENX' as ObjectId;
@@ -37,7 +34,7 @@ export const AssistantPanel = ({ classNames }: AssistantPanelProps) => {
         throw new Error('AI service endpoint is not configured');
       }
       client.current = new AIServiceClientImpl({
-        endpoint: ENDPOINT,
+        endpoint,
       });
     }
 
