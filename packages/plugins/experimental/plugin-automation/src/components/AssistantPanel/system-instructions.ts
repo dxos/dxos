@@ -33,7 +33,7 @@ export const createSystemInstructions = async (context: ThreadContext): Promise<
     `;
   }
 
-  return instructions;
+  return looseFormatXml(instructions);
 };
 
 const formatContextObject = async (object: ReactiveEchoObject<any>): Promise<string> => {
@@ -136,3 +136,23 @@ const formatObjectAsXMLTags = (object: any, depth = 1): string => {
 const CONTEXT_OBJECT_QUERY_TIMEOUT = 5_000;
 
 const TABLE_ROWS_LIMIT = 10;
+
+const looseFormatXml = (xml: string): string => {
+  let currentIndent = 0;
+
+  return xml
+    .split('\n')
+    .map((line) => {
+      const indent = currentIndent;
+      if (line.match(RE_OPEN_TAG_LINE)) {
+        currentIndent++;
+      } else if (line.match(RE_CLOSE_TAG_LINE)) {
+        currentIndent--;
+      }
+      return ' '.repeat(indent * 2) + line.trimStart();
+    })
+    .join('\n');
+};
+
+const RE_OPEN_TAG_LINE = /^[ ]*\<[a-zA-Z0-9\-_]+>[ ]*$/;
+const RE_CLOSE_TAG_LINE = /^[ ]*\<\/[a-zA-Z0-9\-_]+>[ ]*$/;
