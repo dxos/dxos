@@ -118,12 +118,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             id: 'comments',
             label: ['open comments panel label', { ns: THREAD_PLUGIN }],
             icon: 'ph--chat-text--regular',
-          },
-          {
-            id: 'assistant',
-            label: ['open assistant panel label', { ns: THREAD_PLUGIN }],
-            icon: 'ph--atom--regular',
-          },
+          }
         ],
       },
       graph: {
@@ -270,61 +265,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     },
                   },
                 ];
-              },
-            }),
-            // TODO(dmaretskyi): Very ugly code below!!!!
-            createExtension({
-              id: `${THREAD_PLUGIN}/assistant-for-subject`,
-              resolver: ({ id }) => {
-                // TODO(Zan): Find util (or make one). Effect schema!!
-                if (!id.endsWith('~assistant')) {
-                  return;
-                }
-
-                const [subjectId] = id.split('~');
-                const { spaceId, objectId } = parseId(subjectId);
-                const space = client.spaces.get(spaceId as SpaceId);
-                if (!objectId) {
-                  // TODO(wittjosiah): Support assistant for arbitrary subjects.
-                  //   This is to ensure that the assistant panel is not stuck on an old object.
-                  return {
-                    id,
-                    type,
-                    data: null,
-                    properties: {
-                      icon: 'ph--atom--regular',
-                      label: ['assistant panel label', { ns: THREAD_PLUGIN }],
-                      object: null,
-                      space,
-                    },
-                  };
-                }
-
-                // const object = toSignal(
-                //   (onChange) => {
-                //     const timeout = setTimeout(async () => {
-                //       await space?.db.query({ id: objectId }).first();
-                //       onChange();
-                //     });
-                //     return () => clearTimeout(timeout);
-                //   },
-                //   () => space?.db.getObjectById(objectId),
-                //   subjectId,
-                // );
-                // if (!object || !subjectId) {
-                //   return;
-                // }
-
-                return {
-                  id,
-                  type,
-                  data: null,
-                  properties: {
-                    icon: 'ph--atom--regular',
-                    label: ['assistant panel label', { ns: THREAD_PLUGIN }],
-                    object: null,
-                  },
-                };
               },
             }),
           ];

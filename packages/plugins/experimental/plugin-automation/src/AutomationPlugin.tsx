@@ -9,7 +9,14 @@ import { FunctionTrigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { createExtension, toSignal } from '@dxos/plugin-graph';
-import { getSpace, getTypename, isEchoObject, loadObjectReferences, parseId } from '@dxos/react-client/echo';
+import {
+  getSpace,
+  getTypename,
+  isEchoObject,
+  loadObjectReferences,
+  parseId,
+  type SpaceId,
+} from '@dxos/react-client/echo';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 
 import { AssistantPanel, AutomationPanel } from './components';
@@ -41,6 +48,11 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
             id: 'automation',
             label: ['open automation panel label', { ns: AUTOMATION_PLUGIN }],
             icon: 'ph--magic-wand--regular',
+          },
+          {
+            id: 'assistant',
+            label: ['open assistant panel label', { ns: AUTOMATION_PLUGIN }],
+            icon: 'ph--atom--regular',
           },
         ],
       },
@@ -119,6 +131,61 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
                     icon,
                     label,
                     object,
+                  },
+                };
+              },
+            }),
+            // TODO(dmaretskyi): Very ugly code below!!!!
+            createExtension({
+              id: `${AUTOMATION_PLUGIN}/assistant-for-subject`,
+              resolver: ({ id }) => {
+                // TODO(Zan): Find util (or make one). Effect schema!!
+                if (!id.endsWith('~assistant')) {
+                  return;
+                }
+
+                const [subjectId] = id.split('~');
+                const { spaceId, objectId } = parseId(subjectId);
+                const space = client.spaces.get(spaceId as SpaceId);
+                if (!objectId) {
+                  // TODO(wittjosiah): Support assistant for arbitrary subjects.
+                  //   This is to ensure that the assistant panel is not stuck on an old object.
+                  return {
+                    id,
+                    type: 'orphan-automation-for-subject',
+                    data: null,
+                    properties: {
+                      icon: 'ph--atom--regular',
+                      label: ['assistant panel label', { ns: AUTOMATION_PLUGIN }],
+                      object: null,
+                      space,
+                    },
+                  };
+                }
+
+                // const object = toSignal(
+                //   (onChange) => {
+                //     const timeout = setTimeout(async () => {
+                //       await space?.db.query({ id: objectId }).first();
+                //       onChange();
+                //     });
+                //     return () => clearTimeout(timeout);
+                //   },
+                //   () => space?.db.getObjectById(objectId),
+                //   subjectId,
+                // );
+                // if (!object || !subjectId) {
+                //   return;
+                // }
+
+                return {
+                  id,
+                  type: 'orphan-automation-for-subject',
+                  data: null,
+                  properties: {
+                    icon: 'ph--atom--regular',
+                    label: ['assistant panel label', { ns: AUTOMATION_PLUGIN }],
+                    object: null,
                   },
                 };
               },
