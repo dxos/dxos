@@ -10,8 +10,7 @@ import { log } from '@dxos/log';
 
 import { runLLM, type ConversationEvent } from './conversation';
 import { createUserMessage, defineTool, LLMToolResult } from './types';
-import { AIServiceClientImpl } from '../ai-service/client';
-import { ObjectId } from '../ai-service/schema';
+import { AIServiceClientImpl, ObjectId } from '../ai-service';
 
 const ENDPOINT = 'http://localhost:8787';
 

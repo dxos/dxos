@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-// import { AnthropicBackend } from '../conversation/backend/anthropic';
-// import { runLLM } from '../conversation/conversation';
-// import { createUserMessage } from '../conversation/types';
+// import { AnthropicBackend } from '../conversation';
+// import { runLLM } from '../conversation';
+// import { createUserMessage } from '../conversation';
 
 // test('extract objects from the DXOS explainer', async () => {
 //   const result = await runLLM({

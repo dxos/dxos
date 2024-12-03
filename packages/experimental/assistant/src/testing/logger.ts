@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { ConversationEvent } from '../conversation/conversation';
+import type { ConversationEvent } from '../conversation';
 
 export const createLogger =
   ({ stream, filter }: { stream?: boolean; filter?: (event: ConversationEvent) => boolean } = {}) =>

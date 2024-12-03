@@ -6,14 +6,20 @@ import inquirer from 'inquirer';
 
 import { SpaceId } from '@dxos/keys';
 
-import { AIServiceClientImpl } from '../ai-service/client';
-import { ObjectId } from '../ai-service/schema';
-import { runLLM } from '../conversation/conversation';
-import { createUserMessage } from '../conversation/types';
-import { createLogger } from '../test/logger';
-import { createCypherTool, createSystemPrompt } from '../test/query-promts';
-import { createTestData } from '../test/test-data';
-import { Contact, Org, Project, Task } from '../test/test-schema';
+import { AIServiceClientImpl, ObjectId } from '../ai-service';
+import { runLLM, createUserMessage } from '../conversation';
+import {
+  createLogger,
+  createCypherTool,
+  createSystemPrompt,
+  createTestData,
+  Contact,
+  Org,
+  Project,
+  Task,
+} from '../testing';
+
+// TODO(burdon): Move out of src?
 
 const ENDPOINT = 'http://localhost:8787';
 

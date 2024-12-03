@@ -11,10 +11,8 @@ import { createLogger } from './logger';
 import { createCypherTool, createSystemPrompt } from './query-promts';
 import { createTestData } from './test-data';
 import { Contact, Org, Project, Task } from './test-schema';
-import { AIServiceClientImpl } from '../ai-service/client';
-import { ObjectId } from '../ai-service/schema';
-import { runLLM } from '../conversation/conversation';
-import { createUserMessage } from '../conversation/types';
+import { AIServiceClientImpl, ObjectId } from '../ai-service';
+import { runLLM, createUserMessage } from '../conversation';
 
 const ENDPOINT = 'http://localhost:8787';
 

@@ -7,7 +7,7 @@ import { test } from 'vitest';
 import { log } from '@dxos/log';
 
 import { executeQuery } from './query-executor';
-import { createTestData } from '../test/test-data';
+import { createTestData } from '../testing';
 
 test('run', async ({ expect }) => {
   const dataSource = createTestData();

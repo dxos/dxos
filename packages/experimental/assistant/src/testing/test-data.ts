@@ -8,10 +8,16 @@ import { raise } from '@dxos/debug';
 import { JSON_SCHEMA_ECHO_REF_ID, toJsonSchema, type JsonSchemaType } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
-import { type DataSource, type Node, type Relationship } from '../cypher/query-executor';
-import { formatInferredRelationshipLabel, formatNodeLabel } from '../cypher/schema';
-import { Contact, Org, Project, Task } from '../test/test-schema';
+import {
+  type DataSource,
+  type Node,
+  type Relationship,
+  formatInferredRelationshipLabel,
+  formatNodeLabel,
+} from '../cypher';
+import { Contact, Org, Project, Task } from '../testing';
 
+// TODO(burdon): Use schema/testing.
 export const createTestData = (): MockDataSource => {
   const dataSource = new MockDataSource();
 
@@ -29,7 +35,7 @@ export const createTestData = (): MockDataSource => {
   });
   const contactFred = dataSource.add(Contact, {
     id: 'contact-fred',
-    name: 'John',
+    name: 'Fred',
   });
 
   const projectComposer = dataSource.add(Project, {

@@ -8,9 +8,8 @@ import { toJsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { trim } from '../common/trim';
-import { defineTool, LLMToolResult } from '../conversation/types';
-import { executeQuery, type DataSource } from '../cypher/query-executor';
-import { formatJsonSchemaForLLM } from '../cypher/schema';
+import { defineTool, LLMToolResult } from '../conversation';
+import { executeQuery, formatJsonSchemaForLLM, type DataSource } from '../cypher';
 
 export const createCypherTool = (dataSource: DataSource) =>
   defineTool({
@@ -68,7 +67,6 @@ export const createSystemPrompt = (schemaTypes: S.Schema.Any[]) => trim`
   <example>
     <cot>To answer the question I need to ...</cot>
   </example>
-
 
   Before answering the user's question, decide what tools you need to use to answer the question.
 `;

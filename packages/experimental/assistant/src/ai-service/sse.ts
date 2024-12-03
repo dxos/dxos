@@ -1,6 +1,6 @@
-// Copied from anthropic SDK source
 //
 // Copyright 2024 DXOS.org
+// Copied from anthropic SDK source
 //
 
 export async function* iterSSEMessages(
