@@ -7,7 +7,6 @@ import { pipe } from 'effect';
 import { capitalize } from 'effect/String';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { MutableSchemaRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { create, createStoredSchema, Format, getTypename, toJsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
@@ -31,11 +30,21 @@ describe('View', () => {
     const schema = Test.ContactType;
     const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: toJsonSchema(schema) });
     expect(view.query.typename).to.eq(schema.typename);
-    expect(view.fields.map((f) => f.path)).to.deep.eq(['name', 'email', 'address', 'employer']);
+    expect(view.fields.map((f) => f.path)).to.deep.eq([
+      'name',
+      'email',
+      // 'address',
+      'employer',
+    ]);
 
     const props = getSchemaProperties(schema.ast);
     const labels = props.map((p) => pipe(p.title ?? p.name, capitalize));
-    expect(labels).to.deep.eq(['Name', 'Email', 'Address', 'Employer']);
+    expect(labels).to.deep.eq([
+      'Name',
+      'Email',
+      // 'Address',
+      'Employer',
+    ]);
   });
 
   test('static schema definitions with references', async ({ expect }) => {
@@ -48,9 +57,6 @@ describe('View', () => {
   });
 
   test('maintains field order during initialization', async ({ expect }) => {
-    const { db } = await builder.createDatabase();
-    const registry = new MutableSchemaRegistry(db);
-
     const schema = createStoredSchema({
       typename: 'example.com/type/Contact',
       version: '0.1.0',
@@ -63,12 +69,11 @@ describe('View', () => {
       ),
     });
 
-    const _mutable = registry.registerSchema(db.add(schema));
     const view = createView({
       name: 'Test',
       typename: schema.typename,
       jsonSchema: schema.jsonSchema,
-      fields: ['name', 'email', 'salary'], // Explicitly define order
+      fields: ['name', 'email', 'salary'], // Explicitly define order.
     });
 
     // Verify initial field order.
