@@ -17,7 +17,7 @@ import { Devtools } from '@dxos/devtools';
 import { invariant } from '@dxos/invariant';
 import { type ClientPluginProvides, parseClientPlugin } from '@dxos/plugin-client';
 import { createExtension, Graph, type Node, toSignal } from '@dxos/plugin-graph';
-import { SpaceAction } from '@dxos/plugin-space';
+import { memoizeQuery, SpaceAction } from '@dxos/plugin-space';
 import { CollectionType } from '@dxos/plugin-space/types';
 import { type Client } from '@dxos/react-client';
 import {
@@ -198,7 +198,13 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
 
                 const [subjectId] = id.split('~');
                 const { spaceId, objectId } = parseId(subjectId);
-                const space = client.spaces.get().find((space) => space.id === spaceId);
+                const spaces = toSignal(
+                  (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
+                  () => client.spaces.get(),
+                );
+                const space = spaces?.find(
+                  (space) => space.state.get() === SpaceState.SPACE_READY && space.id === spaceId,
+                );
                 if (!objectId) {
                   // TODO(burdon): Ref SPACE_PLUGIN ns.
                   const label = space
@@ -221,18 +227,7 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
                   };
                 }
 
-                const object = toSignal(
-                  (onChange) => {
-                    const timeout = setTimeout(async () => {
-                      await space?.db.query({ id: objectId }).first();
-                      onChange();
-                    });
-
-                    return () => clearTimeout(timeout);
-                  },
-                  () => space?.db.getObjectById(objectId),
-                  subjectId,
-                );
+                const [object] = memoizeQuery(space, { id: objectId });
                 if (!object || !subjectId) {
                   return;
                 }

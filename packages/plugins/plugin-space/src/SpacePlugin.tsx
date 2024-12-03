@@ -56,6 +56,7 @@ import {
   FQ_ID_LENGTH,
   SPACE_ID_LENGTH,
   OBJECT_ID_LENGTH,
+  parseFullyQualifiedId,
 } from '@dxos/react-client/echo';
 import { type JoinPanelProps, osTranslations } from '@dxos/shell/react';
 import { ComplexMap, nonNullable, reduceGroupBy } from '@dxos/util';
@@ -64,7 +65,6 @@ import {
   AwaitingObject,
   CollectionMain,
   CollectionSection,
-  DefaultObjectSettings,
   JoinDialog,
   MenuFooter,
   PopoverRenameObject,
@@ -78,6 +78,7 @@ import {
   SyncStatus,
   SpaceSettingsDialog,
   type SpaceSettingsDialogProps,
+  DefaultObjectSettings,
 } from './components';
 import meta, { SPACE_PLUGIN, SpaceAction } from './meta';
 import translations from './translations';
@@ -254,17 +255,22 @@ export const SpacePlugin = ({
     subscriptions.add(
       scheduledEffect(
         () => ({
-          ids: openIds(location.active),
-          removed: location.closed ? [location.closed].flat() : [],
+          open: openIds(location.active, layout.layoutMode === 'solo' ? ['solo'] : ['main']),
+          closed: [...location.closed],
         }),
-        ({ ids, removed }) => {
+        ({ open, closed }) => {
           const send = () => {
             const spaces = client.spaces.get();
             const identity = client.halo.identity.get();
             if (identity && location.active) {
               // Group parts by space for efficient messaging.
-              const idsBySpace = reduceGroupBy(ids, (id) => {
-                const [spaceId] = id.split(':'); // TODO(burdon): Factor out.
+              const idsBySpace = reduceGroupBy(open, (id) => {
+                const [spaceId] = parseFullyQualifiedId(id);
+                return spaceId;
+              });
+
+              const removedBySpace = reduceGroupBy(closed, (id) => {
+                const [spaceId] = parseFullyQualifiedId(id);
                 return spaceId;
               });
 
@@ -275,7 +281,8 @@ export const SpacePlugin = ({
                 }
               }
 
-              for (const [spaceId, ids] of idsBySpace) {
+              for (const [spaceId, added] of idsBySpace) {
+                const removed = removedBySpace.get(spaceId) ?? [];
                 const space = spaces.find((space) => space.id === spaceId);
                 if (!space) {
                   continue;
@@ -285,9 +292,8 @@ export const SpacePlugin = ({
                   .postMessage('viewing', {
                     identityKey: identity.identityKey.toHex(),
                     attended: attention.attended ? [...attention.attended] : [],
-                    added: ids,
-                    // TODO(Zan): When we re-open a part, we should remove it from the removed list in the navigation plugin.
-                    removed: removed.filter((id) => !ids.includes(id)),
+                    added,
+                    removed,
                   })
                   // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
                   .catch((err) => {
@@ -298,6 +304,7 @@ export const SpacePlugin = ({
           };
 
           send();
+          // Send at interval to allow peers to expire entries if they become disconnected.
           const interval = setInterval(() => send(), ACTIVE_NODE_BROADCAST_INTERVAL);
           return () => clearInterval(interval);
         },
@@ -314,7 +321,13 @@ export const SpacePlugin = ({
               const { added, removed, attended } = message.payload;
 
               const identityKey = PublicKey.safeFrom(message.payload.identityKey);
-              if (identityKey && Array.isArray(added) && Array.isArray(removed)) {
+              const currentIdentity = client.halo.identity.get();
+              if (
+                identityKey &&
+                !currentIdentity?.identityKey.equals(identityKey) &&
+                Array.isArray(added) &&
+                Array.isArray(removed)
+              ) {
                 added.forEach((id) => {
                   if (typeof id === 'string') {
                     if (!(id in state.values.viewersByObject)) {
@@ -818,7 +831,8 @@ export const SpacePlugin = ({
                     void space.db
                       .query({ id: objectId })
                       .first()
-                      .then((o) => (store.value = o));
+                      .then((o) => (store.value = o))
+                      .catch((err) => log.catch(err, { objectId }));
                   }
                 }, id);
                 const object = store.value;
@@ -889,18 +903,7 @@ export const SpacePlugin = ({
                   };
                 }
 
-                const object = toSignal(
-                  (onChange) => {
-                    const timeout = setTimeout(async () => {
-                      await space?.db.query({ id: objectId }).first();
-                      onChange();
-                    });
-
-                    return () => clearTimeout(timeout);
-                  },
-                  () => space?.db.getObjectById(objectId),
-                  subjectId,
-                );
+                const [object] = memoizeQuery(space, { id: objectId });
                 if (!object || !subjectId) {
                   return;
                 }

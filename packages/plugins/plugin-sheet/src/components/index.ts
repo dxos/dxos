@@ -8,5 +8,6 @@ export * from './ComputeGraph';
 export * from './GridSheet';
 export * from './RangeList';
 export * from './SheetContext';
+export * from './SheetObjectSettings';
 
 export const SheetContainer = lazy(() => import('./SheetContainer'));
