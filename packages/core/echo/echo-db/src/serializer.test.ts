@@ -4,10 +4,11 @@
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { create, Expando, getSchema } from '@dxos/echo-schema';
+import { Expando } from '@dxos/echo-schema';
 import { Contact, Task } from '@dxos/echo-schema/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
+import { create, getSchema } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 
 import { type EchoDatabase } from './proxy-db';

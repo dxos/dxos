@@ -6,8 +6,9 @@ import get from 'lodash.get';
 
 import type { ChangeFn, ChangeOptions, Doc, Heads } from '@dxos/automerge/automerge';
 import { type Reference } from '@dxos/echo-protocol';
-import { type BaseObject, isReactiveObject } from '@dxos/echo-schema';
+import { type BaseObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { isReactiveObject } from '@dxos/live-object';
 
 import { type ReactiveEchoObject, getObjectCore } from '../echo-handler';
 

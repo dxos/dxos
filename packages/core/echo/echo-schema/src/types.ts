@@ -93,6 +93,7 @@ export type ReactiveObject<T extends BaseObject<T>> = { [K in keyof T]: T[K] };
 export interface CommonObjectData {
   id: string;
   // TODO(dmaretskyi): Document cases when this can be null.
+  // TODO(dmaretskyi): Convert to @typename and @meta.
   __typename: string | null;
   __meta: ObjectMeta;
 }

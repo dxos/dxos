@@ -29,6 +29,7 @@ import {
 } from './types';
 import { type DocHandleProxy } from '../client';
 import { DATA_NAMESPACE } from '../echo-handler/echo-handler';
+import { isReactiveObject } from '@dxos/live-object';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 // TODO(dmaretskyi): Remove in favour of explicitly specifying this in the API/Schema.

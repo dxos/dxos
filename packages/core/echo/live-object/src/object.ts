@@ -9,13 +9,17 @@ import { invariant } from '@dxos/invariant';
 
 import { prepareTypedTarget, TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
-import { defineHiddenProperty } from '@dxos/echo-schema';
+import { createObjectId, defineHiddenProperty } from '@dxos/echo-schema';
 import { getObjectAnnotation } from '@dxos/echo-schema';
-import { type BaseObject, type ExcludeId, type ObjectMeta, ObjectMetaSchema, type ReactiveObject } from '@dxos/echo-schema';
+import {
+  type BaseObject,
+  type ExcludeId,
+  type ObjectMeta,
+  ObjectMetaSchema,
+  type ReactiveObject,
+} from '@dxos/echo-schema';
 import { Expando } from '@dxos/echo-schema';
 import { createProxy, isValidProxyTarget } from './proxy';
-
-export const createObjectId = () => ulid();
 
 /**
  * Creates a reactive object from a plain Javascript object.

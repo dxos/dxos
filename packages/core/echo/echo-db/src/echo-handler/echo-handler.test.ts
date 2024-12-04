@@ -12,15 +12,11 @@ import {
   Expando,
   TypedObject,
   S,
-  create,
   foreignKey,
-  getMeta,
-  getSchema,
-  getType,
   getTypeReference,
-  isDeleted,
   ref,
 } from '@dxos/echo-schema';
+import { getMeta, getSchema, create, getType, isDeleted } from '@dxos/live-object';
 import {
   Contact,
   Task,

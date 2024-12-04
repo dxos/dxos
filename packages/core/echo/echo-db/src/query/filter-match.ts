@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { EXPANDO_TYPENAME, isReactiveObject } from '@dxos/echo-schema';
+import { EXPANDO_TYPENAME } from '@dxos/echo-schema';
+import { getSchema, getType, create, isReactiveObject } from '@dxos/live-object';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
