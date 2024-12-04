@@ -12,6 +12,7 @@ import { getProxyHandler } from './proxy';
 export const data = Symbol.for('@dxos/schema/Data');
 
 // TODO(burdon): Move to client-protocol.
+// TODO(dmaretskyi): Only usage below SDK level is in `serializer.ts`.
 export const TYPE_PROPERTIES = 'dxos.org/type/Properties';
 
 // TODO(burdon): Use consistently (with serialization utils).

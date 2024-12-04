@@ -2,13 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  decodeReference,
-  type EncodedReference,
-  encodeReference,
-  type LegacyEncodedReferenceObject,
-  Reference,
-} from '@dxos/echo-protocol';
+import { decodeReference, type EncodedReference, encodeReference, Reference } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { deepMapValues, nonNullable, stripUndefinedValues } from '@dxos/util';
@@ -127,21 +121,9 @@ export class Serializer {
 const isEncodedReferenceJSON = (value: any): boolean =>
   typeof value === 'object' && value !== null && ('/' in value || value['@type'] === LEGACY_REFERENCE_TYPE_TAG);
 
-export const decodeReferenceJSON = (
-  encoded?: EncodedReference | LegacyEncodedReferenceObject | string,
-): Reference | undefined => {
+export const decodeReferenceJSON = (encoded?: EncodedReference | string): Reference | undefined => {
   if (typeof encoded === 'object' && encoded !== null && '/' in encoded) {
     return decodeReference(encoded);
-  } else if (
-    typeof encoded === 'object' &&
-    encoded !== null &&
-    (encoded as any)['@type'] === LEGACY_REFERENCE_TYPE_TAG
-  ) {
-    return new Reference(
-      (encoded as LegacyEncodedReferenceObject).itemId,
-      (encoded as LegacyEncodedReferenceObject).protocol,
-      (encoded as LegacyEncodedReferenceObject).host,
-    );
   } else if (typeof encoded === 'string') {
     // TODO(mykola): Never reached?
     return Reference.fromLegacyTypename(encoded);
