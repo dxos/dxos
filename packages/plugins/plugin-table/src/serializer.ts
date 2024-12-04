@@ -2,32 +2,32 @@
 // Copyright 2024 DXOS.org
 //
 
-import { StoredSchema } from '@dxos/echo-schema';
 import { type TypedObjectSerializer } from '@dxos/plugin-space/types';
 import { create, getObjectCore } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table/types';
+import { ViewType } from '@dxos/schema';
 
 export const serializer: TypedObjectSerializer<TableType> = {
   serialize: async ({ object }): Promise<string> => {
-    const table = { id: object.id, name: object.name, view: object.view };
+    const view = object.view && {
+      name: object.view.name,
+      query: object.view.query,
+      fields: object.view.fields,
+    };
+    const table = { id: object.id, name: object.name, view };
     return JSON.stringify(table, null, 2);
   },
 
-  deserialize: async ({ content, space, newId }) => {
-    const {
-      schema: { id: schemaId, ...parsedSchema },
-      ...parsed
-    } = JSON.parse(content);
-    // TODO(wittjosiah): Should the rows also be copied?
-    // TODO(wittjosiah): This is a hack to get the schema to be deserialized correctly.
-    const storedSchema = space.db.add(create(StoredSchema, parsedSchema));
-    const table = create(TableType, { name: parsed.name, view: parsed.view });
+  deserialize: async ({ content, newId }) => {
+    const parsed = JSON.parse(content);
+    const view = create(ViewType, parsed.view)
+    const table = create(TableType, { name: parsed.name, view });
+
+    console.log({parsed, view, table})
 
     if (!newId) {
       const core = getObjectCore(table);
       core.id = parsed.id;
-      const schemaCore = getObjectCore(storedSchema);
-      schemaCore.id = schemaId;
     }
 
     return table;
