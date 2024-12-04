@@ -16,7 +16,7 @@ describe('Execution Plan', () => {
     expect(plan.steps.map((step) => step.type)).toEqual(['NodeScan', 'ProduceResults']);
   });
 
-  test.only('complex query', ({ expect }) => {
+  test('complex query', ({ expect }) => {
     const plan = createExecutionPlan(
       parseCypherQuery(
         "MATCH (org:Org {name: 'DXOS'})-[:ORG_EMPLOYEES]->(c:Contact)<-[:TASK_ASSIGNEE]-(:Task)-[:TASK_PROJECT]->(p:Project {name: 'Composer'}) RETURN c.name",
