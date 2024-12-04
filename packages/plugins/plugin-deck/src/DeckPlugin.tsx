@@ -376,11 +376,11 @@ export const DeckPlugin = ({
 
             case LayoutAction.SET_LAYOUT_MODE: {
               const setMode = (mode: LayoutMode) => {
-                const next = openIds(location.values.active, mode === 'solo' ? ['solo'] : ['main']);
-                const current = openIds(
-                  location.values.active,
-                  layout.values.layoutMode === 'solo' ? ['solo'] : ['main'],
-                );
+                const main = openIds(location.values.active, ['main']);
+                const solo = openIds(location.values.active, ['solo']);
+                const current = layout.values.layoutMode === 'solo' ? solo : main;
+                // When un-soloing, the solo entry is added to the deck.
+                const next = mode === 'solo' ? solo : [...main, ...solo];
                 const removed = current.filter((id) => !next.includes(id));
                 const closed = Array.from(
                   new Set([...location.values.closed.filter((id) => !next.includes(id)), ...removed]),
@@ -616,6 +616,7 @@ export const DeckPlugin = ({
                       return {
                         data: true,
                         intents: [
+                          // NOTE: The order of these is important.
                           [
                             { action: NavigationAction.OPEN, data: { activeParts: { solo: [entryId] } } },
                             { action: LayoutAction.SET_LAYOUT_MODE, data: { layoutMode: 'solo' } },
@@ -627,13 +628,14 @@ export const DeckPlugin = ({
                       return {
                         data: true,
                         intents: [
+                          // NOTE: The order of these is important.
                           [
+                            { action: LayoutAction.SET_LAYOUT_MODE, data: { layoutMode: 'deck' } },
+                            { action: NavigationAction.CLOSE, data: { activeParts: { solo: [entryId] } } },
                             {
                               action: NavigationAction.OPEN,
                               data: { noToggle: true, activeParts: { main: [entryId] } },
                             },
-                            { action: LayoutAction.SET_LAYOUT_MODE, data: { layoutMode: 'deck' } },
-                            { action: NavigationAction.CLOSE, data: { activeParts: { solo: [entryId] } } },
                             { action: LayoutAction.SCROLL_INTO_VIEW, data: { id: entryId } },
                           ],
                         ],
