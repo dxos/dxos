@@ -1,4 +1,8 @@
-import { decodeReference, type ObjectStructure, type SpaceDoc } from "@dxos/echo-protocol";
+//
+// Copyright 2024 DXOS.org
+//
+
+import { decodeReference, type ObjectStructure, type SpaceDoc } from '@dxos/echo-protocol';
 
 /**
  * Assumes properties are at root.

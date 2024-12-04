@@ -30,10 +30,6 @@ import type { DataService, SpaceSyncState } from '@dxos/protocols/proto/dxos/ech
 import { trace } from '@dxos/tracing';
 import { chunkArray, deepMapValues, setDeep } from '@dxos/util';
 
-import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChangedEvent } from '../client';
-import { DATA_NAMESPACE } from '../echo-handler/echo-handler';
-import { type Hypergraph } from '../hypergraph';
-import { Filter, optionsToProto, Query, type FilterSource, type PropertyFilter, type QueryFn } from '../query';
 import {
   AutomergeDocumentLoaderImpl,
   type AutomergeDocumentLoader,
@@ -44,6 +40,10 @@ import { CoreDatabaseQueryContext } from './core-database-query-context';
 import { type InsertBatch, type InsertData, type UpdateOperation } from './crud-api';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './util';
+import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChangedEvent } from '../client';
+import { DATA_NAMESPACE } from '../echo-handler/echo-handler';
+import { type Hypergraph } from '../hypergraph';
+import { Filter, optionsToProto, Query, type FilterSource, type PropertyFilter, type QueryFn } from '../query';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 

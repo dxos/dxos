@@ -2,11 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { DXN, LOCAL_SPACE_TAG, PublicKey } from '@dxos/keys';
+import { DXN, LOCAL_SPACE_TAG } from '@dxos/keys';
 import { type ObjectId } from '@dxos/protocols';
 import { type Reference as ReferenceProto } from '@dxos/protocols/proto/dxos/echo/model/document';
-
-import { createIdFromSpaceKey } from './space-id';
 
 /**
  * Runtime representation of object reference.
