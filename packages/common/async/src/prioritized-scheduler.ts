@@ -85,6 +85,8 @@ const MAX_MAINTAINED_TASK_SLOTS = 1024;
 
 /**
  * Prioritized task scheduler.
+ * Based on a min-heap.
+ * Optimized to not require additional memory allocations.
  */
 export class PrioritizedScheduler {
   /**
