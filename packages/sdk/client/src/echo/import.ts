@@ -1,0 +1,26 @@
+import type { EchoDatabase, SerializedSpace } from '@dxos/echo-db';
+import { decodeReferenceJSON, Filter, Serializer } from '@dxos/echo-db';
+import { TYPE_PROPERTIES } from '@dxos/echo-schema';
+
+export const importSpace = async (database: EchoDatabase, data: SerializedSpace) => {
+  const {
+    objects: [properties],
+  } = await database.query(Filter.typename(TYPE_PROPERTIES)).run();
+
+  new Serializer().import(database, data, {
+    onObject: async (object) => {
+      const { '@type': typeEncoded, ...data } = object;
+      const type = decodeReferenceJSON(typeEncoded);
+      // Handle Space Properties
+      if (properties && type?.objectId === TYPE_PROPERTIES) {
+        Object.entries(data).forEach(([name, value]) => {
+          if (!name.startsWith('@')) {
+            properties[name] = value;
+          }
+        });
+        return false;
+      }
+      return true;
+    },
+  });
+};
