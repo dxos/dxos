@@ -298,10 +298,11 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
         cell.className = mx(classes.flat());
       }
 
-      if (cell.value && props.format === FormatEnum.Ref) {
+      if (cell.value && props.format === FormatEnum.Ref && props.referenceSchema) {
         const targetObj = getValue(obj, field.path);
         cell.accessoryHtml = tableButtons.referencedCell.render({
           targetId: targetObj.id,
+          schemaId: props.referenceSchema,
         });
       }
 

@@ -42,10 +42,10 @@ export const tableButtons = {
   referencedCell: {
     attr: TABLE_ATTRS.referencedCell,
     icon: ICONS.referencedCell,
-    render: ({ targetId }: { targetId: string }) =>
+    render: ({ targetId, schemaId }: { targetId: string; schemaId: string }) =>
       createButtonHtml({
         button: 'referencedCell',
-        value: targetId,
+        value: `${schemaId}#${targetId}`,
         testId: 'table-ref-cell-button',
       }),
   },
