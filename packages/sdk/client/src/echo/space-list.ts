@@ -2,8 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import { inspect } from 'node:util';
-
 import { Event, MulticastObservable, PushStream, scheduleMicroTask, Trigger } from '@dxos/async';
 import {
   CREATE_SPACE_TIMEOUT,
@@ -17,9 +15,11 @@ import { Context } from '@dxos/context';
 import { getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
 import { type EchoClient, type FilterSource, type Query, type QueryOptions } from '@dxos/echo-db';
-import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
+import {
+  create
+} from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ApiError, trace as Trace } from '@dxos/protocols';
 import { Invitation, SpaceState, type Space as SerializedSpace } from '@dxos/protocols/proto/dxos/client/services';
@@ -27,12 +27,13 @@ import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { trace } from '@dxos/tracing';
+import { inspect } from 'node:util';
 
-import { AgentQuerySourceProvider } from './agent-query-source-provider';
-import { SpaceProxy } from './space-proxy';
 import { RPC_TIMEOUT } from '../common';
 import { type HaloProxy } from '../halo/halo-proxy';
 import { InvitationsProxy } from '../invitations';
+import { AgentQuerySourceProvider } from './agent-query-source-provider';
+import { SpaceProxy } from './space-proxy';
 
 @trace.resource()
 export class SpaceList extends MulticastObservable<Space[]> implements Echo {

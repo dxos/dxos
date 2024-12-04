@@ -4,19 +4,8 @@
 
 export { SpaceId } from '@dxos/keys';
 export { type Echo, type Space, type PropertiesType, type PropertiesTypeProps } from '@dxos/client-protocol';
-export {
-  create,
-  getMeta,
-  getSchema,
-  getType,
-  getTypename,
-  isReactiveObject,
-  Expando,
-  type AbstractTypedObject,
-  type ObjectMeta,
-  type ReactiveObject,
-  type TypedObject,
-} from '@dxos/echo-schema';
+export { getTypename, Expando, type AbstractTypedObject, type ObjectMeta, type TypedObject } from '@dxos/echo-schema';
+export { create, getMeta, getSchema, getType, isReactiveObject, type ReactiveObject } from '@dxos/live-object';
 export {
   createDocAccessor,
   createObject,
@@ -64,4 +53,4 @@ export {
   OBJECT_ID_LENGTH,
   SPACE_ID_LENGTH,
 } from './util';
-export * from './import';
+export { importSpace } from './import';
