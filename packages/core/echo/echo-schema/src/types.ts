@@ -3,47 +3,23 @@
 //
 
 import { Reference } from '@dxos/echo-protocol';
-import { AST, type JsonPath, S } from '@dxos/effect';
+import { AST, type JsonPath } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { getDeep, setDeep } from '@dxos/util';
+import { Schema as S } from '@effect/schema';
 
 import { getObjectAnnotation, type HasId } from './ast';
+import type { ObjectMeta } from './object/meta';
 
+/**
+ * For debug-dumping the data of the object.
+ */
 export const data = Symbol.for('@dxos/schema/Data');
-
-// TODO(burdon): Move to client-protocol.
-// TODO(dmaretskyi): Only usage below SDK level is in `serializer.ts`.
-export const TYPE_PROPERTIES = 'dxos.org/type/Properties';
 
 // TODO(burdon): Use consistently (with serialization utils).
 export const ECHO_ATTR_ID = '@id';
 export const ECHO_ATTR_TYPE = '@type';
 export const ECHO_ATTR_META = '@meta';
-
-//
-// ForeignKey
-//
-
-const _ForeignKeySchema = S.Struct({
-  source: S.String,
-  id: S.String,
-});
-
-export type ForeignKey = S.Schema.Type<typeof _ForeignKeySchema>;
-
-export const ForeignKeySchema: S.Schema<ForeignKey> = _ForeignKeySchema;
-
-//
-// ObjectMeta
-//
-
-export const ObjectMetaSchema = S.mutable(
-  S.Struct({
-    keys: S.mutable(S.Array(ForeignKeySchema)),
-  }),
-);
-
-export type ObjectMeta = S.Schema.Type<typeof ObjectMetaSchema>;
 
 //
 // Objects
@@ -126,9 +102,6 @@ export const splitMeta = <T>(object: T & WithMeta): { object: T; meta?: ObjectMe
   return { meta, object };
 };
 
-export const foreignKey = (source: string, id: string): ForeignKey => ({ source, id });
-export const foreignKeyEquals = (a: ForeignKey, b: ForeignKey) => a.source === b.source && a.id === b.id;
-
 export const getValue = <T = any>(obj: any, path: JsonPath) => getDeep<T>(obj, path.split('.'));
 export const setValue = <T = any>(obj: any, path: JsonPath, value: T) => setDeep<T>(obj, path.split('.'), value);
 
@@ -186,3 +159,7 @@ export const getTypename = (obj: BaseObject<any>): string | undefined => {
   invariant(!typename.includes('@'));
   return typename;
 };
+
+// TODO(burdon): Move to client-protocol.
+// TODO(dmaretskyi): Only usage below SDK level is in `serializer.ts`.
+export const TYPE_PROPERTIES = 'dxos.org/type/Properties';
