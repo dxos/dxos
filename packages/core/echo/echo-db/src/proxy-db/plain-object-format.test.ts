@@ -87,6 +87,26 @@ describe('Plain object format', () => {
     }
   });
 
+  test('query limit', async () => {
+    await using testBuilder = await new EchoTestBuilder().open();
+    const { db } = await testBuilder.createDatabase();
+
+    await db.insert([
+      { __typename: Task.typename, title: 'Task 1' },
+      {
+        __typename: Task.typename,
+        title: 'Task 2',
+      },
+      { __typename: Task.typename, title: 'Task 3' },
+    ]);
+    await db.flush({ indexes: true });
+
+    {
+      const { objects } = await db.query(Filter.all(), { format: ResultFormat.Plain, limit: 2 }).run();
+      expect(objects).to.have.length(2);
+    }
+  });
+
   test('query by id', async () => {
     await using testBuilder = await new EchoTestBuilder().open();
     const { db } = await testBuilder.createDatabase();

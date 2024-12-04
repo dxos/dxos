@@ -6,16 +6,16 @@ import React from 'react';
 
 import {
   type IntentPluginProvides,
+  isLayoutParts,
+  LayoutAction,
   type LocationProvides,
   NavigationAction,
+  parseIntentPlugin,
+  parseMetadataResolverPlugin,
+  parseNavigationPlugin,
   type Plugin,
   type PluginDefinition,
-  isLayoutParts,
-  parseIntentPlugin,
-  parseNavigationPlugin,
-  parseMetadataResolverPlugin,
   resolvePlugin,
-  LayoutAction,
 } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -24,9 +24,17 @@ import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup, toSignal } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { memoizeQuery, SpaceAction } from '@dxos/plugin-space';
-import { ThreadType, MessageType, ChannelType } from '@dxos/plugin-space/types';
-import { create, type ReactiveEchoObject, getTypename, SpaceState } from '@dxos/react-client/echo';
-import { getSpace, fullyQualifiedId, loadObjectReferences, parseId } from '@dxos/react-client/echo';
+import { ChannelType, MessageType, ThreadType } from '@dxos/plugin-space/types';
+import {
+  create,
+  fullyQualifiedId,
+  getSpace,
+  getTypename,
+  loadObjectReferences,
+  parseId,
+  type ReactiveEchoObject,
+  SpaceState,
+} from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 
 import {
@@ -317,7 +325,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 !(data.subject instanceof ChannelType)
               ) {
                 const { showResolvedThreads } = getViewState(fullyQualifiedId(data.subject));
-
                 return (
                   <ThreadComplementary
                     role={role}
