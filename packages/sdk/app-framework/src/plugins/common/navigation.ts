@@ -5,6 +5,8 @@
 import { Schema as S } from '@effect/schema';
 import { z } from 'zod';
 
+import { pick } from '@dxos/util';
+
 import { type Plugin } from '../plugin-host';
 import { type IntentData } from '../plugin-intent';
 
@@ -95,8 +97,8 @@ export const parseNavigationPlugin = (plugin: Plugin): Plugin<LocationProvides> 
  */
 
 /** Extracts all unique IDs from the layout parts. */
-export const openIds = (layout: LayoutParts): string[] => {
-  return Object.values(layout)
+export const openIds = (layout: LayoutParts, parts?: LayoutPart[]): string[] => {
+  return Object.values(parts ? pick(layout, parts) : layout)
     .flatMap((part) => part?.map((entry) => entry.id) ?? [])
     .filter((id): id is string => id !== undefined);
 };
