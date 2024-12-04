@@ -117,6 +117,13 @@ export class PrioritizedScheduler {
     task.callback = null;
   }
 
+  highestPriorityTask(): TaskPriority | null {
+    if (this.#size === 0) {
+      return null;
+    }
+    return this.#tasks[0].priority;
+  }
+
   #pushTask(priority: TaskPriority, callback: () => void) {
     if (this.#size >= this.#tasks.length) {
       this.#tasks.push(new TaskEntry(priority, callback));
@@ -143,17 +150,31 @@ export class PrioritizedScheduler {
 }
 
 const GLOBAL_SCHEDULER = new PrioritizedScheduler();
-const runOneGlobalTask = () => GLOBAL_SCHEDULER.runTask();
+
+const EVENT_LOOP_YIELD_INTERVAL = 50;
+let lastEventLoopYieldTime = 0;
+
+const runOneGlobalTask = () => {
+  lastEventLoopYieldTime = Date.now();
+  GLOBAL_SCHEDULER.runTask();
+};
 
 /**
  * Yields until the even loop is empty and the tasks with specified priority can run.
  */
 export const yieldWithPriority = (priority: TaskPriority): Promise<void> => {
-  const promise = new Promise<void>((resolve) => {
-    GLOBAL_SCHEDULER.queueTask(priority, resolve);
-  });
-  runAfterEventLoopDrains(runOneGlobalTask);
-  return promise;
+  const now = Date.now();
+  if (now - lastEventLoopYieldTime > EVENT_LOOP_YIELD_INTERVAL) {
+    const promise = new Promise<void>((resolve) => {
+      GLOBAL_SCHEDULER.queueTask(priority, resolve);
+    });
+    // TODO(dmaretskyi): Batch yields.
+    runAfterEventLoopDrains(runOneGlobalTask);
+    return promise;
+  } else {
+    // TODO(dmaretskyi): Check if there are any higher-priority tasks in the scheduler.
+    return Promise.resolve();
+  }
 };
 
 /**
