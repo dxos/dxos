@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+/* eslint-disable no-console */
+
 import { Schema as S } from '@effect/schema';
 
 import { Trigger } from '@dxos/async';
@@ -222,8 +224,8 @@ export class GenerationStream implements AsyncIterable<ResultStreamEvent> {
           // if (jsonBuf) {
           //   snapshotContent.input = partialParse(jsonBuf);
           // }
-          break;
         }
+        break;
       }
       case 'content_block_stop': {
         invariant(this._accumulatedMessage);

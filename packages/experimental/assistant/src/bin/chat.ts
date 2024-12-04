@@ -46,7 +46,7 @@ while (true) {
   ]);
   await client.insertMessages([createUserMessage(spaceId, threadId, prompt.message)]);
 
-  const { result } = await runLLM({
+  await runLLM({
     model: '@anthropic/claude-3-5-sonnet-20241022',
     spaceId,
     threadId,

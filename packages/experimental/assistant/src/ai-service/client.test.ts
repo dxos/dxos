@@ -3,7 +3,7 @@
 //
 
 import { Schema as S } from '@effect/schema';
-import { test } from 'vitest';
+import { test, describe } from 'vitest';
 
 import { toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -12,7 +12,6 @@ import { log } from '@dxos/log';
 
 import { AIServiceClientImpl } from './client';
 import { ObjectId, type LLMTool } from './schema';
-import { describe } from 'vitest';
 
 const ENDPOINT = 'http://localhost:8787';
 

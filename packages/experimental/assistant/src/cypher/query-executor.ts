@@ -76,6 +76,8 @@ export const executeQueryPlan = async (
                 return (
                   relationship.source.id === tuple[step.anchor].id || relationship.target.id === tuple[step.anchor].id
                 );
+              default:
+                throw new Error(`Unknown direction: ${step.direction}`);
             }
           });
           for (let i = 0; i < filteredRelationships.length; i++) {

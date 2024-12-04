@@ -122,6 +122,7 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
     return false;
   };
 
+  // eslint-disable-next-line no-empty
   while (await generate()) {}
 
   return {

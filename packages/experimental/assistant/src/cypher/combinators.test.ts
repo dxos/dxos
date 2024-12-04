@@ -2,6 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+/* eslint-disable unused-imports/no-unused-vars */
+/* eslint-disable @typescript-eslint/consistent-type-imports */
+
 import { createRequire } from 'node:module';
 import type { Parjser } from 'parjs';
 import { describe, test } from 'vitest';
@@ -95,14 +98,14 @@ describe('Cypher Combinators', () => {
   });
 
   test('query', async ({ expect }) => {
-    testParser(cypherQuery, 'MATCH (n:Person) RETURN n'),
-      testParser(
-        cypherQuery,
-        `
+    testParser(cypherQuery, 'MATCH (n:Person) RETURN n');
+    testParser(
+      cypherQuery,
+      `
       MATCH (n:Person {name: 'John'})-[r:KNOWS]->(m:Person)
       RETURN n, m
     `,
-      );
+    );
     testParser(
       cypherQuery,
       `

@@ -2,6 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+/* eslint-disable unused-imports/no-unused-vars */
+/* eslint-disable @typescript-eslint/consistent-type-imports */
+
 import { createRequire } from 'node:module';
 import type { Parjser } from 'parjs';
 
