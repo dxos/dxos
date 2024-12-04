@@ -26,7 +26,6 @@ import {
   parseNavigationPlugin,
   resolvePlugin,
 } from '@dxos/app-framework';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { EventSubscriptions, type Trigger, type UnsubscribeCallback } from '@dxos/async';
 import { type HasId, isDeleted, isReactiveObject } from '@dxos/echo-schema';
 import { scheduledEffect } from '@dxos/echo-signals/core';
@@ -38,6 +37,7 @@ import { type AttentionPluginProvides, parseAttentionPlugin } from '@dxos/plugin
 import { type ClientPluginProvides, parseClientPlugin } from '@dxos/plugin-client';
 import { type Node, createExtension, memoize, toSignal } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
+import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type Client, PublicKey } from '@dxos/react-client';
 import {
   type ReactiveEchoObject,
