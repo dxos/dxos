@@ -172,7 +172,12 @@ export const TYPENAME_SYMBOL = Symbol.for('@dxos/schema/Typename');
  */
 // TODO(dmaretskyi): Convert to DXN.
 export const getTypename = (obj: BaseObject<any>): string | undefined => {
-  const typename = (obj as any)[TYPENAME_SYMBOL];
+  let typename = (obj as any)[TYPENAME_SYMBOL];
+
+  if (typename === undefined) {
+    typename == obj[ECHO_ATTR_TYPE];
+  }
+
   if (typename === undefined) {
     return undefined;
   }
