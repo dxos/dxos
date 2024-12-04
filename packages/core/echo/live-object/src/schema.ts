@@ -1,3 +1,9 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import { Schema as S } from '@effect/schema';
+
 import {
   createJsonSchema,
   EchoObject,
@@ -9,7 +15,7 @@ import {
   type ObjectAnnotation,
   type ReactiveObject,
 } from '@dxos/echo-schema';
-import { Schema as S } from '@effect/schema';
+
 import { create } from './object';
 
 /**

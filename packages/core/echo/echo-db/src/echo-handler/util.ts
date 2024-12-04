@@ -7,9 +7,9 @@ import { type BaseObject, type ForeignKey, type ReactiveObject } from '@dxos/ech
 import { invariant } from '@dxos/invariant';
 import { getMeta, getProxyTarget } from '@dxos/live-object';
 
-import { type EchoDatabase } from '../proxy-db';
 import { isEchoObject, type ReactiveEchoObject } from './create';
 import { symbolInternals, type ProxyTarget } from './echo-proxy-target';
+import { type EchoDatabase } from '../proxy-db';
 
 export const getDatabaseFromObject = (obj: ReactiveObject<any>): EchoDatabase | undefined => {
   if (!isEchoObject(obj)) {

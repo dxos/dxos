@@ -4,9 +4,10 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { AST, S } from '@dxos/effect';
-import { create } from './object';
 import { TypedObject } from '@dxos/echo-schema';
+import { S } from '@dxos/effect';
+
+import { create } from './object';
 import { getSchema } from './proxy';
 
 class OrganizationType extends TypedObject({

@@ -2,11 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Schema as S } from '@effect/schema';
+
 import { Reference } from '@dxos/echo-protocol';
 import { AST, type JsonPath } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { getDeep, setDeep } from '@dxos/util';
-import { Schema as S } from '@effect/schema';
 
 import { getObjectAnnotation, type HasId } from './ast';
 import type { ObjectMeta } from './object/meta';
@@ -148,7 +149,7 @@ export const getTypename = (obj: BaseObject<any>): string | undefined => {
   let typename = (obj as any)[TYPENAME_SYMBOL];
 
   if (typename === undefined) {
-    typename == obj[ECHO_ATTR_TYPE];
+    typename = obj[ECHO_ATTR_TYPE];
   }
 
   if (typename === undefined) {

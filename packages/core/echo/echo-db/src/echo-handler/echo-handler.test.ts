@@ -7,16 +7,7 @@ import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { decodeReference, encodeReference, Reference } from '@dxos/echo-protocol';
-import {
-  EchoObject,
-  Expando,
-  TypedObject,
-  S,
-  foreignKey,
-  getTypeReference,
-  ref,
-} from '@dxos/echo-schema';
-import { getMeta, getSchema, create, getType, isDeleted } from '@dxos/live-object';
+import { EchoObject, Expando, TypedObject, S, foreignKey, getTypeReference, ref } from '@dxos/echo-schema';
 import {
   Contact,
   Task,
@@ -30,6 +21,7 @@ import {
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
+import { getMeta, getSchema, create, getType, isDeleted } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { defer } from '@dxos/util';
 

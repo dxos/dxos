@@ -18,9 +18,9 @@ import { invariant } from '@dxos/invariant';
 import { createStoredSchema } from '@dxos/live-object';
 import { log } from '@dxos/log';
 
+import { type EchoDatabase } from './database';
 import { getObjectCore } from '../echo-handler';
 import { Filter } from '../query';
-import { type EchoDatabase } from './database';
 
 export type SchemaSubscriptionCallback = (schema: MutableSchema[]) => void;
 

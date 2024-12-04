@@ -30,8 +30,6 @@ import {
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
-import { type KeyPath, META_NAMESPACE, type ObjectCore } from '../core-db';
-import { type EchoDatabase } from '../proxy-db';
 import { createObject, isEchoObject, type ReactiveEchoObject } from './create';
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
@@ -43,6 +41,8 @@ import {
   symbolPath,
   TargetKey,
 } from './echo-proxy-target';
+import { type KeyPath, META_NAMESPACE, type ObjectCore } from '../core-db';
+import { type EchoDatabase } from '../proxy-db';
 
 export const PROPERTY_ID = 'id';
 

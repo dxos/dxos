@@ -10,9 +10,9 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { create } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 
+import { loadObjectReferences } from './load-object';
 import { type ReactiveEchoObject } from '../echo-handler';
 import { EchoTestBuilder } from '../testing';
-import { loadObjectReferences } from './load-object';
 
 describe('loadObjectReferences', () => {
   test('loads a field', async () => {

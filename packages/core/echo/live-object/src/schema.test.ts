@@ -1,7 +1,13 @@
-import { ref, toJsonSchema, TypedObject } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
+//
+// Copyright 2024 DXOS.org
+//
+
 import { Schema as S } from '@effect/schema';
 import { test } from 'vitest';
+
+import { ref, toJsonSchema, TypedObject } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
+
 import { create } from './object';
 import { getTypename } from './proxy';
 

@@ -13,8 +13,8 @@ import {
   S,
   getTypename,
 } from '@dxos/echo-schema';
-import { getSchema, getType, create} from '@dxos/live-object';
 import { EmptySchemaType } from '@dxos/echo-schema/testing';
+import { getSchema, getType, create } from '@dxos/live-object';
 
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';

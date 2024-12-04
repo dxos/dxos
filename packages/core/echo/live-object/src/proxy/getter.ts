@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Reference } from '@dxos/echo-protocol';
-import { type S } from '@dxos/effect';
-
+import { type Reference } from '@dxos/echo-protocol';
 import type { BaseObject } from '@dxos/echo-schema';
 import { SchemaMetaSymbol } from '@dxos/echo-schema';
+import { type S } from '@dxos/effect';
+
 import { getProxyHandler, isReactiveObject } from './proxy';
 
 /**

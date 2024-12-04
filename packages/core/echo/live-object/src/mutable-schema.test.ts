@@ -4,10 +4,9 @@
 
 import { describe, expect, test } from 'vitest';
 
+import { PropertyMeta, getObjectAnnotation, getPropertyMetaAnnotation, TypedObject } from '@dxos/echo-schema';
 import { AST, S } from '@dxos/effect';
 
-import { PropertyMeta, getObjectAnnotation, getPropertyMetaAnnotation } from '@dxos/echo-schema';
-import { TypedObject } from '@dxos/echo-schema';
 import { createMutableSchema } from './testing/mutable-schema';
 
 class EmptySchemaType extends TypedObject({

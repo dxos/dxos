@@ -4,11 +4,7 @@
 
 import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
-import {
-  type AnyObjectData,
-  type BaseObject,
-  type ReactiveObject,
-} from '@dxos/echo-schema';
+import { type AnyObjectData, type BaseObject, type ReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { getProxyTarget, getSchema, isReactiveObject } from '@dxos/live-object';
@@ -17,6 +13,7 @@ import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { defaultMap } from '@dxos/util';
 
+import { MutableSchemaRegistry } from './mutable-schema-registry';
 import {
   CoreDatabase,
   type FlushOptions,
@@ -36,7 +33,6 @@ import {
 } from '../echo-handler';
 import { type Hypergraph } from '../hypergraph';
 import { type FilterSource, type PropertyFilter, type QueryFn, type QueryOptions } from '../query';
-import { MutableSchemaRegistry } from './mutable-schema-registry';
 
 export type GetObjectByIdOptions = {
   deleted?: boolean;

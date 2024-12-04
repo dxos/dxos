@@ -3,10 +3,10 @@
 //
 
 import { EXPANDO_TYPENAME } from '@dxos/echo-schema';
-import { getSchema, getType, create, isReactiveObject } from '@dxos/live-object';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
+import { isReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 

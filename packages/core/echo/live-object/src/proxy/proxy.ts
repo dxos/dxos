@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type BaseObject, type ReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
 import { ReactiveArray } from './array';
 import { type ReactiveHandler } from './types';
-import { type BaseObject, type ReactiveObject } from '@dxos/echo-schema';
 
 // TODO(burdon): Need tighter tests for these.
 // TODO(burdon): Reconcile Proxy and Reactive Object names.

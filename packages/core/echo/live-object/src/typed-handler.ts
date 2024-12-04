@@ -5,16 +5,21 @@
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { type Reference } from '@dxos/echo-protocol';
+import {
+  defineHiddenProperty,
+  SchemaMetaSymbol,
+  TYPENAME_SYMBOL,
+  SchemaValidator,
+  symbolSchema,
+  getTypeReference,
+} from '@dxos/echo-schema';
+import { data, type ObjectMeta } from '@dxos/echo-schema';
 import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
 import { AST, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { getObjectMeta } from './object';
-import { defineHiddenProperty, SchemaMetaSymbol, TYPENAME_SYMBOL } from '@dxos/echo-schema';
-import { SchemaValidator, symbolSchema } from '@dxos/echo-schema';
-import { getTypeReference } from '@dxos/echo-schema';
 import { createProxy, isValidProxyTarget, ReactiveArray, type ReactiveHandler, symbolIsProxy } from './proxy';
-import { data, type ObjectMeta } from '@dxos/echo-schema';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');

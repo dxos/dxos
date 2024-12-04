@@ -2,15 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ulid } from 'ulidx';
-
-import { type S } from '@dxos/effect';
-import { invariant } from '@dxos/invariant';
-
-import { prepareTypedTarget, TypedReactiveHandler } from './typed-handler';
-import { UntypedReactiveHandler } from './untyped-handler';
-import { createObjectId, defineHiddenProperty } from '@dxos/echo-schema';
-import { getObjectAnnotation } from '@dxos/echo-schema';
+import { createObjectId, defineHiddenProperty, getObjectAnnotation, Expando } from '@dxos/echo-schema';
 import {
   type BaseObject,
   type ExcludeId,
@@ -18,8 +10,12 @@ import {
   ObjectMetaSchema,
   type ReactiveObject,
 } from '@dxos/echo-schema';
-import { Expando } from '@dxos/echo-schema';
+import { type S } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
+
 import { createProxy, isValidProxyTarget } from './proxy';
+import { prepareTypedTarget, TypedReactiveHandler } from './typed-handler';
+import { UntypedReactiveHandler } from './untyped-handler';
 
 /**
  * Creates a reactive object from a plain Javascript object.

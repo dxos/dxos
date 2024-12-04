@@ -6,9 +6,9 @@ import { type EncodedReference } from '@dxos/echo-protocol';
 import { S } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
-import { EXPANDO_TYPENAME } from '../object/expando';
 import { type ObjectAnnotation, getObjectAnnotation, ReferenceAnnotationId, type JsonSchemaType } from '.';
 import { MutableSchema, StoredSchema } from '../mutable';
+import { EXPANDO_TYPENAME } from '../object/expando';
 import { type WithId, type Ref, getTypename } from '../types';
 
 /**

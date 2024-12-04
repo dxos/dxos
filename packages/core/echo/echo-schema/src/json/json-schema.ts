@@ -18,9 +18,11 @@ import {
   ObjectAnnotationId,
   type PropertyMetaAnnotation,
   PropertyMetaAnnotationId,
+  createEchoReferenceSchema,
+  ref,
+  type JsonSchemaReferenceInfo,
 } from '../ast';
 import { CustomAnnotations } from '../formats';
-import { createEchoReferenceSchema, ref, type JsonSchemaReferenceInfo } from '../ast';
 import { Expando } from '../object';
 
 /**
