@@ -3,3 +3,4 @@
 //
 
 export * from './typed-object';
+export * from './object-id';
