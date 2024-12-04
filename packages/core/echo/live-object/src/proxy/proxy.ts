@@ -30,17 +30,17 @@ export const isValidProxyTarget = (value: any): value is object => {
 /**
  * @deprecated
  */
-export const getProxySlot = <T extends BaseObject<T>>(proxy: ReactiveObject<any>): ProxyHandlerSlot<T> => {
+export const getProxySlot = <T extends BaseObject>(proxy: ReactiveObject<any>): ProxyHandlerSlot<T> => {
   const value = (proxy as any)[symbolIsProxy];
   invariant(value instanceof ProxyHandlerSlot);
   return value;
 };
 
-export const getProxyTarget = <T extends BaseObject<T>>(proxy: ReactiveObject<any>): T => {
+export const getProxyTarget = <T extends BaseObject>(proxy: ReactiveObject<any>): T => {
   return getProxySlot<T>(proxy).target;
 };
 
-export const getProxyHandler = <T extends BaseObject<T>>(proxy: ReactiveObject<any>): ReactiveHandler<T> => {
+export const getProxyHandler = <T extends BaseObject>(proxy: ReactiveObject<any>): ReactiveHandler<T> => {
   return getProxySlot<T>(proxy).handler;
 };
 
@@ -48,7 +48,7 @@ export const getProxyHandler = <T extends BaseObject<T>>(proxy: ReactiveObject<a
  * Unsafe method to override id for debugging/testing and migration purposes.
  * @deprecated
  */
-export const dangerouslySetProxyId = <T extends BaseObject<T>>(obj: ReactiveObject<T>, id: string) => {
+export const dangerouslySetProxyId = <T extends BaseObject>(obj: ReactiveObject<T>, id: string) => {
   (getProxySlot(obj).target as any).id = id;
 };
 
@@ -61,7 +61,7 @@ export const dangerouslySetProxyId = <T extends BaseObject<T>>(obj: ReactiveObje
  */
 // TODO(burdon): Document.
 // TODO(burdon): Tests for low-level functions.
-export const createProxy = <T extends BaseObject<T>>(target: T, handler: ReactiveHandler<T>): ReactiveObject<T> => {
+export const createProxy = <T extends BaseObject>(target: T, handler: ReactiveHandler<T>): ReactiveObject<T> => {
   const existingProxy = handler._proxyMap.get(target);
   if (existingProxy) {
     return existingProxy;
@@ -80,7 +80,7 @@ export const createProxy = <T extends BaseObject<T>>(target: T, handler: Reactiv
  * Passed as the handler to the Proxy constructor.
  * Maintains a mutable slot for the actual handler.
  */
-class ProxyHandlerSlot<T extends BaseObject<T>> implements ProxyHandler<T> {
+class ProxyHandlerSlot<T extends BaseObject> implements ProxyHandler<T> {
   /**
    * @param target Original object.
    * @param _handler Handles intercepted operations.

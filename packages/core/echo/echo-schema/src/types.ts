@@ -32,14 +32,14 @@ export const ECHO_ATTR_META = '@meta';
  * It is stricter than `T extends {}` or `T extends object`.
  */
 // TODO(burdon): Consider moving to lower-level base type lib.
-export type BaseObject<T> = { [K in keyof T]: T[K] };
+export type BaseObject = { [key: string]: unknown };
 
-export type PropertyKey<T extends BaseObject<T>> = Extract<keyof ExcludeId<T>, string>;
+export type PropertyKey<T extends BaseObject> = Extract<keyof ExcludeId<T>, string>;
 
-export type ExcludeId<T extends BaseObject<T>> = Omit<T, 'id'>;
+export type ExcludeId<T extends BaseObject> = Omit<T, 'id'>;
 
 // TODO(burdon): Reconcile with ReactiveEchoObject.
-export type WithId = HasId & BaseObject<any>;
+export type WithId = HasId & BaseObject;
 
 export type WithMeta = { [ECHO_ATTR_META]?: ObjectMeta };
 
@@ -139,7 +139,7 @@ export const TYPENAME_SYMBOL = Symbol.for('@dxos/schema/Typename');
  * Sets the typename of the object without the version.
  */
 // TODO(dmaretskyi): Convert to DXN.
-export const getTypename = (obj: BaseObject<any>): string | undefined => {
+export const getTypename = (obj: BaseObject): string | undefined => {
   let typename = (obj as any)[TYPENAME_SYMBOL];
 
   if (typename === undefined) {

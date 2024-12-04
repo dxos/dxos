@@ -418,7 +418,7 @@ describe('Database', () => {
     return { db, graph };
   };
 
-  const addToDatabase = async <T extends BaseObject<T>>(obj: ReactiveObject<T>) => {
+  const addToDatabase = async <T extends BaseObject>(obj: ReactiveObject<T>) => {
     const { db } = await createDbWithTypes();
     db.add(obj);
     await db.flush();

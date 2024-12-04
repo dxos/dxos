@@ -2,7 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type BaseObject, createObjectId, defineHiddenProperty, type ExcludeId, Expando, getObjectAnnotation, type ObjectMeta, ObjectMetaSchema } from '@dxos/echo-schema';
+import {
+  type BaseObject,
+  createObjectId,
+  defineHiddenProperty,
+  type ExcludeId,
+  Expando,
+  getObjectAnnotation,
+  type ObjectMeta,
+  ObjectMetaSchema,
+} from '@dxos/echo-schema';
 import { type S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
@@ -15,7 +24,7 @@ import { UntypedReactiveHandler } from './untyped-handler';
  * Accessing properties triggers signal semantics.
  */
 // TODO(dmaretskyi): Rename LiveObject.
-export type ReactiveObject<T extends BaseObject<T>> = { [K in keyof T]: T[K] };
+export type ReactiveObject<T extends BaseObject> = { [K in keyof T]: T[K] };
 
 /**
  * Creates a reactive object from a plain Javascript object.
@@ -24,10 +33,10 @@ export type ReactiveObject<T extends BaseObject<T>> = { [K in keyof T]: T[K] };
 // TODO(dmaretskyi): Deep mutability.
 // TODO(dmaretskyi): Invert generics (generic over schema) to have better error messages.
 export const create: {
-  <T extends BaseObject<T>>(obj: T): ReactiveObject<T>;
-  <T extends BaseObject<T>>(schema: typeof Expando, obj: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<Expando>;
-  <T extends BaseObject<T>>(schema: S.Schema<T, any>, obj: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<T>;
-} = <T extends BaseObject<T>>(
+  <T extends BaseObject>(obj: T): ReactiveObject<T>;
+  <T extends BaseObject>(schema: typeof Expando, obj: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<Expando>;
+  <T extends BaseObject>(schema: S.Schema<T, any>, obj: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<T>;
+} = <T extends BaseObject>(
   objOrSchema: S.Schema<T, any> | T,
   obj?: ExcludeId<T>,
   meta?: ObjectMeta,
@@ -41,7 +50,7 @@ export const create: {
   }
 };
 
-const createReactiveObject = <T extends BaseObject<T>>(
+const createReactiveObject = <T extends BaseObject>(
   obj: T,
   meta?: ObjectMeta,
   schema?: S.Schema<T>,
