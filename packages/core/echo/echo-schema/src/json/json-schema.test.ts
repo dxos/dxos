@@ -11,9 +11,9 @@ import { getEchoProp, toEffectSchema, toJsonSchema } from './json-schema';
 import { PropertyMeta, setSchemaProperty, type JsonSchemaType, getSchemaProperty } from '../ast';
 import { FormatAnnotationId } from '../formats';
 import { Email } from '../formats/string';
-import { createSchemaReference, getSchemaReference, ref } from '../handler';
 import { TypedObject } from '../object';
 import { Contact } from '../testing';
+import { createSchemaReference, getSchemaReference, ref } from '../ast';
 
 describe('effect-to-json', () => {
   test('type annotation', () => {

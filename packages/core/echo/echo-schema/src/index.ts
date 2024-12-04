@@ -11,7 +11,6 @@ export { JsonPath, JsonProp } from '@dxos/effect';
 
 export * from './ast';
 export * from './formats';
-export * from './handler';
 export * from './json';
 export * from './mutable';
 export * from './object';
