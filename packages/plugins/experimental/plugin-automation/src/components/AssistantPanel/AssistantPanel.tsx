@@ -22,7 +22,6 @@ import { AUTOMATION_PLUGIN } from '../../meta';
 const PROPERTIES_ASSISTANT_KEY = 'dxos.assistant.beta.properties';
 
 export type AssistantPanelProps = ThemedClassName<{
-  space: Space;
   subject?: ReactiveEchoObject<any>;
 }>;
 
