@@ -300,7 +300,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     const spaceProxy = this._findProxy(space);
 
     await spaceProxy._databaseInitialized.wait({ timeout: CREATE_SPACE_TIMEOUT });
-    spaceProxy.db.add(create(PropertiesType, meta ?? {}));
+    spaceProxy.db.add(create(PropertiesType, meta ?? {}), { placeIn: 'root-doc' });
     await spaceProxy.db.flush();
     await spaceProxy._initializationComplete.wait();
 

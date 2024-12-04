@@ -20,7 +20,13 @@ import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { defaultMap } from '@dxos/util';
 
 import { MutableSchemaRegistry } from './mutable-schema-registry';
-import { CoreDatabase, type FlushOptions, type LoadObjectOptions, type ObjectCore } from '../core-db';
+import {
+  CoreDatabase,
+  type FlushOptions,
+  type LoadObjectOptions,
+  type ObjectCore,
+  type ObjectPlacement,
+} from '../core-db';
 import type { InsertBatch, InsertData, UpdateOperation } from '../core-db/crud-api';
 import {
   EchoReactiveHandler,
@@ -36,6 +42,18 @@ import { type FilterSource, type PropertyFilter, type QueryFn, type QueryOptions
 
 export type GetObjectByIdOptions = {
   deleted?: boolean;
+};
+
+export type AddOptions = {
+  /**
+   * Where to place the object in the Automerge document tree.
+   * Root document is always loaded with the space.
+   * Linked documents are loaded lazily.
+   * Placing large number of objects in the root document may slow down the initial load.
+   *
+   * @default 'linked-doc'
+   */
+  placeIn?: ObjectPlacement;
 };
 
 /**
@@ -77,7 +95,7 @@ export interface EchoDatabase {
   /**
    * Adds object to the database.
    */
-  add<T extends BaseObject<T>>(obj: ReactiveObject<T>): ReactiveEchoObject<T>;
+  add<T extends BaseObject<T>>(obj: ReactiveObject<T>, opts?: AddOptions): ReactiveEchoObject<T>;
 
   /**
    * Removes object from the database.
@@ -237,7 +255,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Add reactive object.
    */
-  add<T extends ReactiveObject<T>>(obj: T): ReactiveEchoObject<T> {
+  add<T extends ReactiveObject<T>>(obj: T, opts?: AddOptions): ReactiveEchoObject<T> {
     if (!isEchoObject(obj)) {
       const schema = getSchema(obj);
       if (schema != null) {
@@ -256,7 +274,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     const target = getProxyTarget(obj) as ProxyTarget;
     EchoReactiveHandler.instance.setDatabase(target, this);
     EchoReactiveHandler.instance.saveRefs(target);
-    this._coreDatabase.addCore(getObjectCore(obj));
+    this._coreDatabase.addCore(getObjectCore(obj), opts);
 
     return obj;
   }
