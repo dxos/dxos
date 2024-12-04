@@ -364,10 +364,7 @@ export const SpacePlugin = ({
   const setEdgeReplicationDefault = async (client: Client) => {
     try {
       await Promise.all(
-        client.spaces.get().map(async (space) => {
-          await space.waitUntilReady();
-          await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
-        }),
+        client.spaces.get().map((space) => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED)),
       );
       state.values.enabledEdgeReplication = true;
     } catch (err) {
