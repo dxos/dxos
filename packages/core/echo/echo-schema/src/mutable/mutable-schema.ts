@@ -101,6 +101,10 @@ export class MutableSchema extends AbstractMutableSchema() implements S.Schema<a
     return this._storedSchema.typename;
   }
 
+  public get version(): string {
+    return this._storedSchema.version;
+  }
+
   public get ast() {
     return this._getSchema().ast;
   }

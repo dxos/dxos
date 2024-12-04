@@ -2,28 +2,41 @@
 // Copyright 2024 DXOS.org
 //
 
+import { createStoredSchema } from '@dxos/echo-schema';
 import { type TypedObjectSerializer } from '@dxos/plugin-space/types';
 import { create, getObjectCore } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table/types';
 import { ViewType } from '@dxos/schema';
 
 export const serializer: TypedObjectSerializer<TableType> = {
-  serialize: async ({ object }): Promise<string> => {
+  serialize: async ({ object, space }): Promise<string> => {
     const view = object.view && {
       name: object.view.name,
-      query: object.view.query,
       fields: object.view.fields,
     };
-    const table = { id: object.id, name: object.name, view };
+    const typename = object.view?.query.typename;
+    // TODO(wittjosiah): Remove. Shouldn't have access to space.
+    const dbSchema = typename ? space.db.schemaRegistry.getSchema(typename) : undefined;
+    const schema = dbSchema && {
+      typename: dbSchema.typename,
+      version: dbSchema.version,
+      jsonSchema: dbSchema.jsonSchema,
+    };
+    const table = { id: object.id, name: object.name, view, schema };
     return JSON.stringify(table, null, 2);
   },
 
-  deserialize: async ({ content, newId }) => {
+  deserialize: async ({ content, space, newId }) => {
     const parsed = JSON.parse(content);
-    const view = create(ViewType, parsed.view)
+    const schema = createStoredSchema({
+      typename: parsed.schema.typename,
+      version: parsed.schema.version,
+      jsonSchema: parsed.schema.jsonSchema,
+    });
+    // TODO(wittjosiah): Remove. Shouldn't have access to space.
+    space.db.add(schema);
+    const view = create(ViewType, { ...parsed.view, query: { typename: parsed.schema.typename } });
     const table = create(TableType, { name: parsed.name, view });
-
-    console.log({parsed, view, table})
 
     if (!newId) {
       const core = getObjectCore(table);

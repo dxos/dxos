@@ -632,11 +632,12 @@ export const getNestedObjects = async (
  */
 // TODO(burdon): Remove.
 export const cloneObject = async (object: Expando, resolve: MetadataResolver, newSpace: Space): Promise<Expando> => {
+  const space = getSpace(object);
   const schema = getSchema(object);
   const typename = schema ? getObjectAnnotation(schema)?.typename ?? EXPANDO_TYPENAME : EXPANDO_TYPENAME;
   const metadata = resolve(typename);
   const serializer = metadata.serializer;
   invariant(serializer, `No serializer for type: ${typename}`);
-  const content = await serializer.serialize({ object });
+  const content = await serializer.serialize({ object, space });
   return serializer.deserialize({ content, space: newSpace, newId: true });
 };

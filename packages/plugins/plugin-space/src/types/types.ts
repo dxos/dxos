@@ -109,8 +109,9 @@ export type SpacePluginProvides = SurfaceProvides &
 
 export type SerializerMap = Record<string, TypedObjectSerializer>;
 
+// TODO(wittjosiah): Should not have access to space.
 export interface TypedObjectSerializer<T extends Expando = Expando> {
-  serialize(params: { object: T }): Promise<string>;
+  serialize(params: { object: T; space: Space }): Promise<string>;
 
   /**
    * @param params.content
