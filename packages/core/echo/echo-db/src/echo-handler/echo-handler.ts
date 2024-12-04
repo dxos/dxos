@@ -13,6 +13,7 @@ import {
   type ObjectMeta,
   ObjectMetaSchema,
   S,
+  SchemaMetaSymbol,
   SchemaValidator,
   StoredSchema,
   TYPENAME_SYMBOL,
@@ -105,6 +106,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     if (prop === TYPENAME_SYMBOL) {
+      const schema = this.getSchema(target);
+      // Special handling for MutableSchema. objectId is StoredSchema objectId, not a typename.
+      if (schema && typeof schema === 'object' && SchemaMetaSymbol in schema) {
+        return (schema as any)[SchemaMetaSymbol].typename;
+      }
       return this.getTypeReference(target)?.objectId;
     }
 

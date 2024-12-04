@@ -10,7 +10,7 @@ import { AST, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { getObjectMeta } from './object';
-import { defineHiddenProperty, TYPENAME_SYMBOL } from '@dxos/echo-schema';
+import { defineHiddenProperty, SchemaMetaSymbol, TYPENAME_SYMBOL } from '@dxos/echo-schema';
 import { SchemaValidator, symbolSchema } from '@dxos/echo-schema';
 import { getTypeReference } from '@dxos/echo-schema';
 import { createProxy, isValidProxyTarget, ReactiveArray, type ReactiveHandler, symbolIsProxy } from './proxy';
@@ -78,6 +78,11 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     if (prop === TYPENAME_SYMBOL) {
+      const schema = this.getSchema(target);
+      // Special handling for MutableSchema. objectId is StoredSchema objectId, not a typename.
+      if (schema && typeof schema === 'object' && SchemaMetaSymbol in schema) {
+        return (schema as any)[SchemaMetaSymbol].typename;
+      }
       return this.getTypeReference(target)?.objectId;
     }
 
