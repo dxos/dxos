@@ -3,6 +3,8 @@ import { scheduler } from 'node:timers/promises';
 /**
  * Waits for the event loop to complete all tasks including MessagePort events and their child async tasks.
  *
+ * NOTE: Doesn't work in Node.js.
+ *
  * @example
  * ```ts
  * const channel = new MessageChannel();
@@ -12,12 +14,21 @@ import { scheduler } from 'node:timers/promises';
  * console.log('test2')
  * // Will print 'test1' then 'test2'.
  * ```
+ *
  */
 export const yieldToEventLoop = async () => {
   if (supportsPrioritizedTaskScheduler) {
     await (scheduler as any).postTask(() => {}, { priority: 'background' });
   } else {
     await new Promise((resolve) => setTimeout(resolve));
+  }
+};
+
+const runAfterEventLoopDrains = (callback: () => void) => {
+  if (supportsPrioritizedTaskScheduler) {
+    (scheduler as any).postTask(callback, { priority: 'background' });
+  } else {
+    setTimeout(callback);
   }
 };
 
@@ -28,6 +39,33 @@ const supportsPrioritizedTaskScheduler = 'scheduler' in globalThis && typeof (sc
  */
 export type TaskPriority = number & { __TaskPriority: never };
 
+export const TaskPriority = Object.freeze({
+  Highest: 0 as TaskPriority,
+
+  Rpc: 10 as TaskPriority,
+
+  QueryExecution: 20 as TaskPriority,
+
+  /**
+   * High priority network tasks.
+   */
+  NetworkHigh: 30 as TaskPriority,
+
+  /**
+   * Network synchronization.
+   */
+  NetworkSync: 31 as TaskPriority,
+
+  /**
+   * Network low-priority tasks.
+   */
+  NetworkLow: 35 as TaskPriority,
+
+  Indexing: 50 as TaskPriority,
+
+  Background: 100 as TaskPriority,
+});
+
 class TaskEntry {
   priority: TaskPriority;
   callback: (() => void) | null;
@@ -37,6 +75,13 @@ class TaskEntry {
     this.callback = callback;
   }
 }
+
+const PREALLOCATED_TASK_SLOTS = 32;
+
+/**
+ * Maximum number of task slots to maintain even if they are not used.
+ */
+const MAX_MAINTAINED_TASK_SLOTS = 1024;
 
 /**
  * Prioritized task scheduler.
@@ -95,12 +140,19 @@ export class PrioritizedScheduler {
   }
 }
 
-const PREALLOCATED_TASK_SLOTS = 32;
+const GLOBAL_SCHEDULER = new PrioritizedScheduler();
+const runOneGlobalTask = () => GLOBAL_SCHEDULER.runTask();
 
 /**
- * Maximum number of task slots to maintain even if they are not used.
+ * Yields until the even loop is empty and the tasks with specified priority can run.
  */
-const MAX_MAINTAINED_TASK_SLOTS = 1024;
+export const yieldWithPriority = (priority: TaskPriority): Promise<void> => {
+  const promise = new Promise<void>((resolve) => {
+    GLOBAL_SCHEDULER.queueTask(priority, resolve);
+  });
+  runAfterEventLoopDrains(runOneGlobalTask);
+  return promise;
+};
 
 /**
  * Min heap insertion.
