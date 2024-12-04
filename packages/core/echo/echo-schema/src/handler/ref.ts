@@ -15,7 +15,7 @@ import { type WithId, type Ref } from '../types';
 /**
  * The `$id` field for an ECHO reference schema.
  */
-const JSON_SCHEMA_ECHO_REF_ID = '/schemas/echo/ref';
+export const JSON_SCHEMA_ECHO_REF_ID = '/schemas/echo/ref';
 
 // TODO(burdon): Define return type.
 export const getSchemaReference = (property: JsonSchemaType): { typename: string } | undefined => {

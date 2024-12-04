@@ -34,6 +34,9 @@ export default [
         'trigger cron': 'Cron',
         'trigger method': 'Method',
         'trigger endpoint': 'Endpoint',
+
+        'open assistant panel label': 'Show Assistant',
+        'assistant panel label': 'Assistant',
       },
     },
   },
