@@ -10,7 +10,6 @@ import { type AIServiceClient, AIServiceClientImpl, ObjectId, type Message } fro
 import type { ReactiveEchoObject } from '@dxos/echo-db';
 import { SpaceId } from '@dxos/keys';
 import { useClient, useConfig } from '@dxos/react-client';
-import type { Space } from '@dxos/react-client/echo';
 import { ContextMenu, type ThemedClassName } from '@dxos/react-ui';
 import { Icon, Input, Toolbar, useTranslation } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
