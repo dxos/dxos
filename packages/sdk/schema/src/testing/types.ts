@@ -11,7 +11,7 @@ export namespace Test {
 
   export const OrgSchema = S.Struct({
     // id: S.String,
-    name: S.NonEmptyString.annotations({
+    name: S.String.annotations({
       [GeneratorAnnotationId]: 'company.name',
     }),
     website: S.optional(
@@ -48,13 +48,16 @@ export namespace Test {
 
   export const ContactSchema = S.Struct({
     // id: S.String,
-    name: S.NonEmptyString.annotations({
+    name: S.String.annotations({
       [GeneratorAnnotationId]: 'person.fullName',
     }),
-    email: Format.Email.annotations({
-      [GeneratorAnnotationId]: 'internet.email',
-    }),
-    address: S.optional(AddressSchema),
+    email: S.optional(
+      Format.Email.annotations({
+        [GeneratorAnnotationId]: 'internet.email',
+      }),
+    ),
+    // TODO(burdon): This breaks the table view.
+    // address: S.optional(AddressSchema),
     employer: S.optional(
       ref(OrgType).annotations({
         [FieldLookupAnnotationId]: 'name',

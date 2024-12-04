@@ -24,8 +24,8 @@ export const DeviceList = ({
 }: DeviceListProps & Pick<AgentFormProps, 'onAgentDestroy'>) => {
   const { t } = useTranslation('os');
   return (
-    <>
-      <h2 className={mx(descriptionText, 'text-center mbs-4')}>{t('devices heading')}</h2>
+    <div role='none' className='p-1'>
+      <h2 className={mx(descriptionText, 'text-center mbs-2')}>{t('devices heading')}</h2>
       {devices.length > 0 && (
         <List>
           {devices.map((device: Device) => {
@@ -52,6 +52,6 @@ export const DeviceList = ({
         <span className='grow font-medium text-start'>{t('choose add device label')}</span>
         <CaretRight weight='bold' className={getSize(4)} />
       </Button>
-    </>
+    </div>
   );
 };

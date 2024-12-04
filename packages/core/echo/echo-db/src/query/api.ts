@@ -75,6 +75,11 @@ export type QueryOptions = {
    * @deprecated Use `spaceIds` instead.
    */
   spaces?: PublicKey[];
+
+  /**
+   * Return only the first `limit` results.
+   */
+  limit?: number;
 };
 
 export interface QueryJoinSpec extends Record<string, true | QueryJoinSpec> {}
@@ -85,6 +90,7 @@ export const optionsToProto = (options: QueryOptions): QueryOptionsProto => {
     deleted: options.deleted,
     dataLocation: options.dataLocation,
     include: options.include,
+    limit: options.limit,
     spaces: options.spaces,
   };
 };

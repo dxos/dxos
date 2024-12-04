@@ -149,7 +149,7 @@ export const DebugSpace: FC<{
           />
 
           <IconButton
-            icon={running ? 'ph--hand-palm--regular' : 'ph--play--regular'}
+            icon={running ? 'ph--pause-circle--regular' : 'ph--play-circle--regular'}
             iconOnly
             label='Start/stop'
             size={5}

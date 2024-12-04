@@ -4,11 +4,12 @@
 
 import React from 'react';
 
-import { type PluginDefinition, parseMetadataResolverPlugin, resolvePlugin } from '@dxos/app-framework';
+import { parseMetadataResolverPlugin, type PluginDefinition, resolvePlugin } from '@dxos/app-framework';
 import { FunctionTrigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { createExtension, toSignal } from '@dxos/plugin-graph';
+import { memoizeQuery } from '@dxos/plugin-space';
 import {
   getSpace,
   getTypename,
@@ -19,7 +20,7 @@ import {
 } from '@dxos/react-client/echo';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 
-import { AutomationPanel } from './components';
+import { AssistantPanel, AutomationPanel } from './components';
 import meta, { AUTOMATION_PLUGIN } from './meta';
 import translations from './translations';
 import { type AutomationPluginProvides, ChainPromptType, ChainType } from './types';
@@ -48,6 +49,11 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
             id: 'automation',
             label: ['open automation panel label', { ns: AUTOMATION_PLUGIN }],
             icon: 'ph--magic-wand--regular',
+          },
+          {
+            id: 'assistant',
+            label: ['open assistant panel label', { ns: AUTOMATION_PLUGIN }],
+            icon: 'ph--atom--regular',
           },
         ],
       },
@@ -103,18 +109,7 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
                   };
                 }
 
-                const object = toSignal(
-                  (onChange) => {
-                    const timeout = setTimeout(async () => {
-                      await space?.db.query({ id: objectId }).first();
-                      onChange();
-                    });
-
-                    return () => clearTimeout(timeout);
-                  },
-                  () => space?.db.getObjectById(objectId),
-                  subjectId,
-                );
+                const [object] = memoizeQuery(space, { id: objectId });
                 if (!object || !subjectId) {
                   return;
                 }
@@ -136,21 +131,70 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
                 };
               },
             }),
+            createExtension({
+              id: `${AUTOMATION_PLUGIN}/assistant-for-subject`,
+              resolver: ({ id }) => {
+                // TODO(Zan): Find util (or make one). Effect schema!!
+                if (!id.endsWith('~assistant')) {
+                  return;
+                }
+
+                const [subjectId] = id.split('~');
+                const { spaceId, objectId } = parseId(subjectId);
+                const spaces = toSignal(
+                  (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
+                  () => client.spaces.get(),
+                );
+                const space = spaces?.find(
+                  (space) => space.id === spaceId && space.state.get() === SpaceState.SPACE_READY,
+                );
+                if (!objectId) {
+                  // TODO(wittjosiah): Support assistant for arbitrary subjects.
+                  //   This is to ensure that the assistant panel is not stuck on an old object.
+                  return {
+                    id,
+                    type: 'orphan-automation-for-subject',
+                    data: null,
+                    properties: {
+                      icon: 'ph--atom--regular',
+                      label: ['assistant panel label', { ns: AUTOMATION_PLUGIN }],
+                      object: null,
+                      space,
+                    },
+                  };
+                }
+
+                const [object] = memoizeQuery(space, { id: objectId });
+
+                return {
+                  id,
+                  type: 'orphan-automation-for-subject',
+                  data: null,
+                  properties: {
+                    icon: 'ph--atom--regular',
+                    label: ['assistant panel label', { ns: AUTOMATION_PLUGIN }],
+                    object,
+                  },
+                };
+              },
+            }),
           ];
         },
       },
       surface: {
         component: ({ data, role }) => {
-          const object = data.subject;
-          const space = isEchoObject(object) ? getSpace(object) : undefined;
-          if (!space) {
-            return null;
-          }
-
-          invariant(isEchoObject(object));
           switch (role) {
-            case 'complementary--automation':
-              return <AutomationPanel space={space} object={object} />;
+            case 'complementary--assistant':
+              return <AssistantPanel subject={data.subject as any} />;
+            case 'complementary--automation': {
+              const object = data.subject;
+              const space = isEchoObject(object) ? getSpace(object) : undefined;
+              if (space) {
+                invariant(isEchoObject(object));
+                return <AutomationPanel space={space} object={object} />;
+              }
+              break;
+            }
           }
 
           return null;
