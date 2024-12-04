@@ -19,9 +19,9 @@ export type NavTreeProps = Omit<
   TreeProps<NavTreeItemGraphNode>,
   'draggable' | 'gridTemplateColumns' | 'renderColumns'
 > &
-  Pick<NavTreeColumnsProps, 'getActions' | 'loadDescendents' | 'renderPresence' | 'popoverAnchorId'>;
+  Pick<NavTreeColumnsProps, 'getActions' | 'loadDescendents' | 'renderItemEnd' | 'popoverAnchorId'>;
 
-export const NavTree = ({ getActions, loadDescendents, renderPresence, popoverAnchorId, ...props }: NavTreeProps) => {
+export const NavTree = ({ getActions, loadDescendents, renderItemEnd, popoverAnchorId, ...props }: NavTreeProps) => {
   const renderColumns = useCallback<NonNullable<TreeProps<NavTreeItemGraphNode>['renderColumns']>>(
     ({ item, path, menuOpen, setMenuOpen }) => {
       return (
@@ -32,12 +32,12 @@ export const NavTree = ({ getActions, loadDescendents, renderPresence, popoverAn
           menuOpen={menuOpen}
           setMenuOpen={setMenuOpen}
           loadDescendents={loadDescendents}
-          renderPresence={renderPresence}
+          renderItemEnd={renderItemEnd}
           popoverAnchorId={popoverAnchorId}
         />
       );
     },
-    [renderPresence, popoverAnchorId, loadDescendents],
+    [renderItemEnd, popoverAnchorId, loadDescendents],
   );
 
   return (
@@ -57,7 +57,7 @@ type NavTreeColumnsProps = {
   menuOpen: boolean;
   setMenuOpen: (open: boolean) => void;
   loadDescendents?: (node: Node) => MaybePromise<void>;
-  renderPresence?: FC<{ node: Node }>;
+  renderItemEnd?: FC<{ node: Node }>;
   popoverAnchorId?: string;
 };
 
@@ -68,7 +68,7 @@ const NavTreeColumns = ({
   menuOpen,
   setMenuOpen,
   loadDescendents,
-  renderPresence: Presence,
+  renderItemEnd: ItemEnd,
   popoverAnchorId,
 }: NavTreeColumnsProps) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
@@ -130,7 +130,7 @@ const NavTreeColumns = ({
           <Treegrid.Cell />
         )}
       </ActionRoot>
-      {Presence && <Presence node={node} />}
+      {ItemEnd && <ItemEnd node={node} />}
     </>
   );
 };
