@@ -8,9 +8,9 @@ import { describe, expect, test } from 'vitest';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { isNode } from '@dxos/util';
 
+import { data, type ReactiveObject } from '@dxos/echo-schema';
+import { TestClass, type TestSchema, TestSchemaWithClass, updateCounter } from '@dxos/echo-schema/testing';
 import { create } from './object';
-import { TestClass, type TestSchema, TestSchemaWithClass, updateCounter } from '../testing';
-import { data, type ReactiveObject } from '../types';
 
 registerSignalsRuntime();
 

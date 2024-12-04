@@ -5,7 +5,7 @@
 import { type Reference } from '@dxos/echo-protocol';
 import { type S } from '@dxos/effect';
 
-import { type BaseObject, type ObjectMeta } from '../types';
+import { type BaseObject, type ObjectMeta } from '@dxos/echo-schema';
 
 /**
  * Reactive object proxy.

@@ -9,8 +9,7 @@ import { DXN } from '@dxos/keys';
 import { EXPANDO_TYPENAME } from './expando';
 import { type ObjectAnnotation, getObjectAnnotation, ReferenceAnnotationId, type JsonSchemaType } from '../ast';
 import { MutableSchema, StoredSchema } from '../mutable';
-import { getTypename, isReactiveObject } from '../proxy';
-import { type WithId, type Ref } from '../types';
+import { type WithId, type Ref, getTypename } from '../types';
 
 /**
  * The `$id` field for an ECHO reference schema.
@@ -87,7 +86,7 @@ export const createEchoReferenceSchema = (annotation: ObjectAnnotation): S.Schem
             return annotation.typename === StoredSchema.typename;
           }
 
-          return isReactiveObject(obj) && typePredicate(obj);
+          return typePredicate(obj);
         },
         {
           jsonSchema: {

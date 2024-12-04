@@ -12,7 +12,7 @@ import {
   TYPENAME_REGEX,
   VERSION_REGEX,
 } from '../ast';
-import { getSchema, getTypeReference } from '../proxy';
+import { getTypename } from '../types';
 
 /**
  * Base type.
@@ -107,7 +107,7 @@ export const TypedObject = <ClassType>({ typename, version, skipTypenameFormatCh
 
       // TODO(burdon): Comment required.
       static [Symbol.hasInstance](obj: unknown): obj is ClassType {
-        return obj != null && getTypeReference(getSchema(obj))?.objectId === typename;
+        return obj != null && getTypename(obj) === typename;
       }
 
       // Implement S.Schema properties.

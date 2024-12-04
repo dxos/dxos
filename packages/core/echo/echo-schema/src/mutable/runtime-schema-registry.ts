@@ -5,7 +5,7 @@
 import { type Schema as S } from '@effect/schema';
 
 import { StoredSchema } from './types';
-import { getTypenameOrThrow } from '../proxy';
+import { getTypenameOrThrow } from '../types';
 
 /**
  * Runtime registry of static schema objects (i.e., not Dynamic .

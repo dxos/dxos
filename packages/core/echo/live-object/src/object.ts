@@ -7,13 +7,13 @@ import { ulid } from 'ulidx';
 import { type S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
-import { Expando } from './expando';
 import { prepareTypedTarget, TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
-import { defineHiddenProperty } from './utils';
-import { getObjectAnnotation } from '../ast';
-import { createProxy, isValidProxyTarget } from '../proxy';
-import { type BaseObject, type ExcludeId, type ObjectMeta, ObjectMetaSchema, type ReactiveObject } from '../types';
+import { defineHiddenProperty } from '@dxos/echo-schema';
+import { getObjectAnnotation } from '@dxos/echo-schema';
+import { type BaseObject, type ExcludeId, type ObjectMeta, ObjectMetaSchema, type ReactiveObject } from '@dxos/echo-schema';
+import { Expando } from '@dxos/echo-schema';
+import { createProxy, isValidProxyTarget } from './proxy';
 
 export const createObjectId = () => ulid();
 

@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Reference } from '@dxos/echo-protocol';
 import { AST, type JsonPath, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { type Comparator, getDeep, intersection, setDeep } from '@dxos/util';
+import { getDeep, setDeep } from '@dxos/util';
 
-import { type HasId } from './ast';
-import { getProxyHandler } from './proxy';
+import { getObjectAnnotation, type HasId } from './ast';
 
 export const data = Symbol.for('@dxos/schema/Data');
 
@@ -116,12 +116,6 @@ export type ObjectData<S> = S.Schema.Encoded<S> & CommonObjectData;
 // Utils
 //
 
-export const getMeta = <T extends BaseObject<T>>(obj: T): ObjectMeta => {
-  const meta = getProxyHandler(obj).getMeta(obj);
-  invariant(meta);
-  return meta;
-};
-
 /**
  * Utility to split meta property from raw object.
  */
@@ -133,8 +127,56 @@ export const splitMeta = <T>(object: T & WithMeta): { object: T; meta?: ObjectMe
 
 export const foreignKey = (source: string, id: string): ForeignKey => ({ source, id });
 export const foreignKeyEquals = (a: ForeignKey, b: ForeignKey) => a.source === b.source && a.id === b.id;
-export const compareForeignKeys: Comparator<ReactiveObject<any>> = (a: ReactiveObject<any>, b: ReactiveObject<any>) =>
-  intersection(getMeta(a).keys, getMeta(b).keys, foreignKeyEquals).length > 0;
 
 export const getValue = <T = any>(obj: any, path: JsonPath) => getDeep<T>(obj, path.split('.'));
 export const setValue = <T = any>(obj: any, path: JsonPath, value: T) => setDeep<T>(obj, path.split('.'), value);
+
+export const getTypenameOrThrow = (schema: S.Schema<any>): string => requireTypeReference(schema).objectId;
+
+export const getTypeReference = (schema: S.Schema<any> | undefined): Reference | undefined => {
+  if (!schema) {
+    return undefined;
+  }
+
+  const annotation = getObjectAnnotation(schema);
+  if (annotation == null) {
+    return undefined;
+  }
+  if (annotation.schemaId) {
+    return new Reference(annotation.schemaId);
+  }
+
+  return Reference.fromLegacyTypename(annotation.typename);
+};
+
+export const requireTypeReference = (schema: S.Schema<any>): Reference => {
+  const typeReference = getTypeReference(schema);
+  if (typeReference == null) {
+    // TODO(burdon): Catalog user-facing errors (this is too verbose).
+    throw new Error('Schema must be defined via TypedObject.');
+  }
+
+  return typeReference;
+};
+
+/**
+ * Querying the typename of the object.
+ * The typename is the raw string without version: `example.com/type/Contact`.
+ */
+// TODO(dmaretskyi): Convert to DXN.
+export const TYPENAME_SYMBOL = Symbol.for('@dxos/schema/Typename');
+
+/**
+ * Sets the typename of the object without the version.
+ */
+// TODO(dmaretskyi): Convert to DXN.
+export const getTypename = (obj: BaseObject<any>): string | undefined => {
+  const typename = (obj as any)[TYPENAME_SYMBOL];
+  if (typename === undefined) {
+    return undefined;
+  }
+  invariant(typeof typename === 'string');
+  invariant(!typename.startsWith('dxn:'));
+  invariant(!typename.includes('@'));
+  return typename;
+};

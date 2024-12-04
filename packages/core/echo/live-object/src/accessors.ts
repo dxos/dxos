@@ -1,0 +1,14 @@
+import { invariant } from '@dxos/invariant';
+import { type Comparator, intersection } from '@dxos/util';
+
+import { BaseObject, foreignKeyEquals, type ObjectMeta, type ReactiveObject } from '@dxos/echo-schema';
+import { getProxyHandler } from './proxy';
+
+export const getMeta = <T extends BaseObject<T>>(obj: T): ObjectMeta => {
+  const meta = getProxyHandler(obj).getMeta(obj);
+  invariant(meta);
+  return meta;
+};
+
+export const compareForeignKeys: Comparator<ReactiveObject<any>> = (a: ReactiveObject<any>, b: ReactiveObject<any>) =>
+  intersection(getMeta(a).keys, getMeta(b).keys, foreignKeyEquals).length > 0;

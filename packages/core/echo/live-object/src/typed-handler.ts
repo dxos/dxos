@@ -10,11 +10,11 @@ import { AST, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { getObjectMeta } from './object';
-import { defineHiddenProperty } from './utils';
-import { SchemaValidator, symbolSchema } from '../ast';
-import { getTypeReference } from '../proxy';
-import { createProxy, isValidProxyTarget, ReactiveArray, type ReactiveHandler, symbolIsProxy } from '../proxy';
-import { data, type ObjectMeta } from '../types';
+import { defineHiddenProperty, TYPENAME_SYMBOL } from '@dxos/echo-schema';
+import { SchemaValidator, symbolSchema } from '@dxos/echo-schema';
+import { getTypeReference } from '@dxos/echo-schema';
+import { createProxy, isValidProxyTarget, ReactiveArray, type ReactiveHandler, symbolIsProxy } from './proxy';
+import { data, type ObjectMeta } from '@dxos/echo-schema';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');
@@ -75,6 +75,10 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (prop === data) {
       target[symbolSignal].notifyRead();
       return toJSON(target);
+    }
+
+    if (prop === TYPENAME_SYMBOL) {
+      return this.getTypeReference(target)?.objectId;
     }
 
     // Handle getter properties. Will not subscribe the value signal.

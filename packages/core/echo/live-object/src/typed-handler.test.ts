@@ -7,9 +7,10 @@ import { describe, expect, test } from 'vitest';
 import { S } from '@dxos/effect';
 
 import { create } from './object';
-import { ref } from './ref';
-import { TypedObject } from '../object';
-import { getMeta, foreignKey } from '../types';
+import { ref } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo-schema';
+import { foreignKey } from '@dxos/echo-schema';
+import { getMeta } from './accessors';
 
 describe('complex schema validations', () => {
   const setValue = (target: any, prop: string, value: any) => {

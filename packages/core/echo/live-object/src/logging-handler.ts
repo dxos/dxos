@@ -5,8 +5,8 @@
 import { type Reference } from '@dxos/echo-protocol';
 
 import { getObjectMeta } from './object';
-import { type ReactiveHandler } from '../proxy';
-import { type ObjectMeta } from '../types';
+import { type ReactiveHandler } from './proxy';
+import { type ObjectMeta } from '@dxos/echo-schema';
 
 export class LoggingReactiveHandler implements ReactiveHandler<any> {
   static symbolChangeLog = Symbol.for('ChangeLog');

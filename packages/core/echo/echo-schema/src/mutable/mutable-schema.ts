@@ -8,22 +8,12 @@ import { invariant } from '@dxos/invariant';
 import {
   addFieldsToSchema,
   removeFieldsFromSchema,
+  setTypenameInSchema,
   updateFieldNameInSchema,
   updateFieldsInSchema,
-  setTypenameInSchema,
 } from './manipulation';
-import { createStoredSchema, StoredSchema } from './types';
-import {
-  getObjectAnnotation,
-  schemaVariance,
-  type HasId,
-  type JsonSchemaType,
-  type SchemaMeta,
-  SchemaMetaSymbol,
-  type ObjectAnnotation,
-  EchoObject,
-  ObjectAnnotationId,
-} from '../ast';
+import { StoredSchema } from './types';
+import { SchemaMetaSymbol, schemaVariance, type HasId, type JsonSchemaType, type SchemaMeta } from '../ast';
 import { toEffectSchema, toJsonSchema } from '../json';
 import { type AbstractSchema } from '../object';
 
@@ -209,22 +199,4 @@ const unwrapProxy = (jsonSchema: any): any => {
   }
 
   return result;
-};
-
-/**
- * Create runtime representation of a schema.
- */
-export const createMutableSchema = (
-  { typename, version }: ObjectAnnotation,
-  fields: S.Struct.Fields,
-): MutableSchema => {
-  const schema = S.partial(S.Struct(fields).omit('id')).pipe(EchoObject(typename, version));
-  const objectAnnotation = getObjectAnnotation(schema);
-  const schemaObject = createStoredSchema({ typename, version });
-  const updatedSchema = schema.annotations({
-    [ObjectAnnotationId]: { ...objectAnnotation, schemaId: schemaObject.id },
-  });
-
-  schemaObject.jsonSchema = toJsonSchema(updatedSchema);
-  return new MutableSchema(schemaObject);
 };
