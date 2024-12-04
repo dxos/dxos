@@ -39,6 +39,7 @@ import {
   type QueryOptions,
   type Space,
   SpaceState,
+  Filter,
 } from '@dxos/react-client/echo';
 
 import { SpaceAction, SPACE_PLUGIN } from './meta';
@@ -64,7 +65,11 @@ export const memoizeQuery = <T extends ReactiveEchoObject<any>>(
   filter?: FilterSource<T>,
   options?: QueryOptions,
 ): T[] => {
-  const key = isSpace(spaceOrEcho) ? spaceOrEcho.id : undefined;
+  const key = JSON.stringify({
+    space: isSpace(spaceOrEcho) ? spaceOrEcho.id : undefined,
+    filter: Filter.from(filter).toProto(),
+  });
+
   const query = memoize(
     () =>
       isSpace(spaceOrEcho)
