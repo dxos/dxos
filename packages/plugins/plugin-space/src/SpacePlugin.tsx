@@ -268,13 +268,21 @@ export const SpacePlugin = ({
             if (identity && location.active) {
               // Group parts by space for efficient messaging.
               const idsBySpace = reduceGroupBy(open, (id) => {
-                const [spaceId] = parseFullyQualifiedId(id);
-                return spaceId;
+                try {
+                  const [spaceId] = parseFullyQualifiedId(id);
+                  return spaceId;
+                } catch {
+                  return null;
+                }
               });
 
               const removedBySpace = reduceGroupBy(closed, (id) => {
-                const [spaceId] = parseFullyQualifiedId(id);
-                return spaceId;
+                try {
+                  const [spaceId] = parseFullyQualifiedId(id);
+                  return spaceId;
+                } catch {
+                  return null;
+                }
               });
 
               // NOTE: Ensure all spaces are included so that we send the correct `removed` object arrays.
