@@ -16,3 +16,4 @@ export * from './mutable';
 export * from './object';
 export * from './query';
 export * from './types';
+export * from './utils';

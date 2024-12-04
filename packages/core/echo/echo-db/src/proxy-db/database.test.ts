@@ -6,11 +6,11 @@ import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { type BaseObject, Expando, type ReactiveObject } from '@dxos/echo-schema';
+import { type BaseObject, Expando } from '@dxos/echo-schema';
 import { Contact, Container, RecordType, Task, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
-import { create, dangerouslySetProxyId, getMeta, getSchema, getType } from '@dxos/live-object';
+import { create, dangerouslySetProxyId, getMeta, getSchema, getType, type ReactiveObject } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 

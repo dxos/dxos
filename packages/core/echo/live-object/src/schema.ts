@@ -13,10 +13,9 @@ import {
   StoredSchema,
   toJsonSchema,
   type ObjectAnnotation,
-  type ReactiveObject,
 } from '@dxos/echo-schema';
 
-import { create } from './object';
+import { create, type ReactiveObject } from './object';
 
 /**
  * Create ECHO object representing schema.

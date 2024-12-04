@@ -2,11 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type BaseObject, foreignKeyEquals, type ObjectMeta, type ReactiveObject } from '@dxos/echo-schema';
+import { type BaseObject, foreignKeyEquals, type ObjectMeta} from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type Comparator, intersection } from '@dxos/util';
 
 import { getProxyHandler } from './proxy';
+import type { ReactiveObject } from './object';
 
 export const getMeta = <T extends BaseObject<T>>(obj: T): ObjectMeta => {
   const meta = getProxyHandler(obj).getMeta(obj);

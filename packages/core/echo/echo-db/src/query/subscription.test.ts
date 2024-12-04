@@ -6,13 +6,13 @@ import { effect } from '@preact/signals-core';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
-import { Expando, type ReactiveObject } from '@dxos/echo-schema';
+import { Expando } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { create } from '@dxos/live-object';
+import { create, type ReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 
-import { createSubscription } from './subscription';
 import { EchoTestBuilder } from '../testing';
+import { createSubscription } from './subscription';
 
 describe('create subscription', () => {
   let builder: EchoTestBuilder;

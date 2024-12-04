@@ -57,12 +57,6 @@ export const RawObject = <S extends S.Schema<any>>(
  */
 export type Ref<T extends WithId> = T | undefined;
 
-/**
- * Reactive object marker interface (does not change the shape of the object.)
- * Accessing properties triggers signal semantics.
- */
-export type ReactiveObject<T extends BaseObject<T>> = { [K in keyof T]: T[K] };
-
 //
 // Data
 //

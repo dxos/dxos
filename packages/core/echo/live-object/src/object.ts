@@ -2,20 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import { createObjectId, defineHiddenProperty, getObjectAnnotation, Expando } from '@dxos/echo-schema';
-import {
-  type BaseObject,
-  type ExcludeId,
-  type ObjectMeta,
-  ObjectMetaSchema,
-  type ReactiveObject,
-} from '@dxos/echo-schema';
+import { type BaseObject, createObjectId, defineHiddenProperty, type ExcludeId, Expando, getObjectAnnotation, type ObjectMeta, ObjectMetaSchema } from '@dxos/echo-schema';
 import { type S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { createProxy, isValidProxyTarget } from './proxy';
 import { prepareTypedTarget, TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
+
+/**
+ * Reactive object marker interface (does not change the shape of the object.)
+ * Accessing properties triggers signal semantics.
+ */
+// TODO(dmaretskyi): Rename LiveObject.
+export type ReactiveObject<T extends BaseObject<T>> = { [K in keyof T]: T[K] };
 
 /**
  * Creates a reactive object from a plain Javascript object.
