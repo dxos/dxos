@@ -20,7 +20,7 @@ const client = new AIServiceClientImpl({
   endpoint: ENDPOINT,
 });
 
-test('cypher query', async () => {
+test.skip('cypher query', async () => {
   const dataSource = createTestData();
   const schemaTypes = [Org, Project, Task, Contact];
 

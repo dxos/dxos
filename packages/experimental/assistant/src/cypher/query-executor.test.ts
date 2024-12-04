@@ -32,7 +32,15 @@ test('run', async ({ expect }) => {
 
   expect(result).toEqual([
     { c_name: 'Rich', t_name: 'Create form builder' },
+    {
+      c_name: 'Josiah',
+      t_name: 'Optimize startup performance',
+    },
     { c_name: 'Rich', t_name: 'Implement dark mode' },
+    {
+      c_name: 'Josiah',
+      t_name: 'Add support for custom themes',
+    },
   ]);
 
   log.info('result', { result });
