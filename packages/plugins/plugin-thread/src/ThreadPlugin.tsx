@@ -25,7 +25,16 @@ import { type ActionGroup, createExtension, isActionGroup, toSignal } from '@dxo
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { memoizeQuery, SpaceAction } from '@dxos/plugin-space';
 import { ChannelType, MessageType, ThreadType } from '@dxos/plugin-space/types';
-import { create, fullyQualifiedId, getSpace, getTypename, loadObjectReferences, parseId, type ReactiveEchoObject, SpaceState } from '@dxos/react-client/echo';
+import {
+  create,
+  fullyQualifiedId,
+  getSpace,
+  getTypename,
+  loadObjectReferences,
+  parseId,
+  type ReactiveEchoObject,
+  SpaceState,
+} from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 
 import {
@@ -117,7 +126,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
             id: 'comments',
             label: ['open comments panel label', { ns: THREAD_PLUGIN }],
             icon: 'ph--chat-text--regular',
-          }
+          },
         ],
       },
       graph: {

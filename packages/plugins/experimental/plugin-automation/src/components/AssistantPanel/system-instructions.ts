@@ -1,3 +1,7 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { asyncTimeout } from '@dxos/async';
 import type { ReactiveEchoObject } from '@dxos/echo-db';
 import { getTypename } from '@dxos/echo-schema';
@@ -158,5 +162,5 @@ const looseFormatXml = (xml: string): string => {
     .join('\n');
 };
 
-const RE_OPEN_TAG_LINE = /^[ ]*\<[a-zA-Z0-9\-_]+>[ ]*$/;
-const RE_CLOSE_TAG_LINE = /^[ ]*\<\/[a-zA-Z0-9\-_]+>[ ]*$/;
+const RE_OPEN_TAG_LINE = /^[ ]*<[a-zA-Z0-9\-_]+>[ ]*$/;
+const RE_CLOSE_TAG_LINE = /^[ ]*<\/[a-zA-Z0-9\-_]+>[ ]*$/;

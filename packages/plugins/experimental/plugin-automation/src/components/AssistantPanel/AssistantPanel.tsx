@@ -2,21 +2,22 @@
 // Copyright 2024 DXOS.org
 //
 
+/* eslint-disable no-console */
+
 import React, { useEffect, useRef, useState } from 'react';
 
 import { type AIServiceClient, AIServiceClientImpl, ObjectId, type Message } from '@dxos/assistant';
+import type { ReactiveEchoObject } from '@dxos/echo-db';
 import { SpaceId } from '@dxos/keys';
+import { useClient, useConfig } from '@dxos/react-client';
+import type { Space } from '@dxos/react-client/echo';
 import { ContextMenu, type ThemedClassName } from '@dxos/react-ui';
 import { Icon, Input, Toolbar, useTranslation } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
-import { AUTOMATION_PLUGIN } from '../../meta';
-import { useClient, useConfig } from '@dxos/react-client';
-import type { ReactiveEchoObject } from '@dxos/echo-db';
-import { getTypename } from '@dxos/echo-schema';
 import { createSystemInstructions } from './system-instructions';
-import type { Space } from '@dxos/react-client/echo';
+import { AUTOMATION_PLUGIN } from '../../meta';
 
 const PROPERTIES_ASSISTANT_KEY = 'dxos.assistant.beta.properties';
 

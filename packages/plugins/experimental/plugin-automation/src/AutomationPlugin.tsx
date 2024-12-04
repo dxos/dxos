@@ -16,7 +16,6 @@ import {
   isEchoObject,
   loadObjectReferences,
   parseId,
-  type SpaceId,
   SpaceState,
 } from '@dxos/react-client/echo';
 import { translations as formTranslations } from '@dxos/react-ui-form';
