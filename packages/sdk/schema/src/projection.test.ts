@@ -10,15 +10,15 @@ import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import {
   Format,
   FormatEnum,
-  type JsonPath,
-  type JsonProp,
   TypeEnum,
   TypedObject,
-  createStoredSchema,
   ref,
   toJsonSchema,
+  type JsonPath,
+  type JsonProp,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { createStoredSchema } from '@dxos/live-object';
 
 import { ViewProjection } from './projection';
 import { createView, type ViewType } from './view';

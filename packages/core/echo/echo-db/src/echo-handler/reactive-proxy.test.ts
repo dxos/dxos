@@ -4,8 +4,9 @@
 
 import { describe } from 'vitest';
 
-import { create, getObjectAnnotation, EchoObject } from '@dxos/echo-schema';
+import { EchoObject, getObjectAnnotation } from '@dxos/echo-schema';
 import { TestSchema } from '@dxos/echo-schema/testing';
+import { create } from '@dxos/live-object';
 
 import { reactiveProxyTests } from './reactive-proxy.blueprint-test';
 import { type EchoDatabase } from '../proxy-db';

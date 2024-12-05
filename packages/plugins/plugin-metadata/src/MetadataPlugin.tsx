@@ -4,12 +4,12 @@
 
 import {
   filterPlugins,
-  type MetadataResolverProvides,
-  type PluginDefinition,
   parseMetadataRecordsPlugin,
   type MetadataRecordsProvides,
+  type MetadataResolverProvides,
+  type PluginDefinition,
 } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 
 import meta from './meta';
 

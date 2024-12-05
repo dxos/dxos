@@ -5,11 +5,8 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import {
-  create,
   MutableSchema,
   ObjectAnnotationId,
-  getSchema,
-  getType,
   getTypeReference,
   ref,
   TypedObject,
@@ -17,6 +14,7 @@ import {
   getTypename,
 } from '@dxos/echo-schema';
 import { EmptySchemaType } from '@dxos/echo-schema/testing';
+import { getSchema, getType, create } from '@dxos/live-object';
 
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';

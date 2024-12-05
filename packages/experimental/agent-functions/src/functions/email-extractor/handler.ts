@@ -5,7 +5,7 @@
 import { TextType } from '@dxos/plugin-markdown/types';
 import { ContactType, MessageType, type ActorType } from '@dxos/plugin-space/types';
 import { Filter, hasType } from '@dxos/echo-db';
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/client/echo';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

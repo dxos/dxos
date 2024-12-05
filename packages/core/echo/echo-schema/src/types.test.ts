@@ -8,7 +8,7 @@ import { type BaseObject } from './types';
 
 describe('Types', () => {
   test('checks sanity', async ({ expect }) => {
-    const obj: BaseObject<any> = {};
+    const obj: BaseObject = {};
     expect(obj).to.exist;
   });
 });

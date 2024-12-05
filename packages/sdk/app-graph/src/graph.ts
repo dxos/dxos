@@ -5,12 +5,12 @@
 import { batch, effect, untracked } from '@preact/signals-core';
 
 import { asyncTimeout, Trigger } from '@dxos/async';
-import { type ReactiveObject, create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { type ReactiveObject, create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type MakeOptional, nonNullable, pick } from '@dxos/util';
 
-import { type Relation, type Node, type NodeArg, type NodeFilter, isActionLike, actionGroupSymbol } from './node';
+import { type Node, type NodeArg, type NodeFilter, type Relation, actionGroupSymbol, isActionLike } from './node';
 
 const graphSymbol = Symbol('graph');
 type DeepWriteable<T> = { -readonly [K in keyof T]: DeepWriteable<T[K]> };

@@ -14,7 +14,7 @@ import { translationKey } from '../../translations';
 // Custom format components.
 //
 
-export const GeiPointInput = <T extends BaseObject<T>>({
+export const GeiPointInput = <T extends BaseObject>({
   property,
   type,
   label,

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-deck",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "DXOS Surface plugin for the main application layout.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -44,6 +44,7 @@
     "@dxos/echo-signals": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keyboard": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",

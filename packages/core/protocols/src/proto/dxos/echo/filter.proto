@@ -47,6 +47,9 @@ message QueryOptions {
   /// References to inline when querying.
   optional google.protobuf.Struct include = 3;
 
+  /// Return only first `limit` results.
+  optional int32 limit = 7;
+
   //
   // Deprecated
   //

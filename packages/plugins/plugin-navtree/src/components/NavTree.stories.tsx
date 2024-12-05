@@ -10,7 +10,7 @@ import { type Meta } from '@storybook/react';
 import React, { useEffect } from 'react';
 
 import { isActionLike, type NodeArg } from '@dxos/app-graph';
-import { create, type ReactiveObject } from '@dxos/echo-schema';
+import { create, type ReactiveObject } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { isTreeData, type TreeData } from '@dxos/react-ui-list';
 import { Path } from '@dxos/react-ui-mosaic';

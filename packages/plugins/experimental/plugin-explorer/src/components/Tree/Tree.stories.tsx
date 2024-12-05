@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React, { type FC, useEffect, useState } from 'react';
 
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { TreeItemType, TreeType } from '@dxos/plugin-outliner/types';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';

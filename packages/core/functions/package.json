@@ -1,6 +1,6 @@
 {
   "name": "@dxos/functions",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "Functions API and runtime.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -52,6 +52,7 @@
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",

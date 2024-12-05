@@ -1,6 +1,6 @@
 {
   "name": "@dxos/docs",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -25,6 +25,7 @@
     "@dxos/echo-signals": "workspace:*",
     "@dxos/examples": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/observability": "workspace:*",
     "@dxos/protocols": "workspace:*",

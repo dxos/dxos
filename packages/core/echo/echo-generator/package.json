@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-generator",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "ECHO data generator for testing.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -28,6 +28,7 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*"
