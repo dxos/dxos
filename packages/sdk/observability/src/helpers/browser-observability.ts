@@ -66,8 +66,8 @@ export const initializeAppObservability = async ({
   namespace,
   config,
   mode = 'basic',
-  tracingEnable = true,
-  replayEnable = true,
+  tracingEnable = false,
+  replayEnable = false,
 }: AppObservabilityOptions): Promise<Observability> => {
   log('initializeAppObservability', { config });
 
