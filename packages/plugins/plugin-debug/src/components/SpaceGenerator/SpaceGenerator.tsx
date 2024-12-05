@@ -4,7 +4,8 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { create, type ReactiveObject, type BaseObject } from '@dxos/echo-schema';
+import { type BaseObject } from '@dxos/echo-schema';
+import { create, type ReactiveObject } from '@dxos/live-object';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { SheetType } from '@dxos/plugin-sheet/types';
 import { DiagramType } from '@dxos/plugin-sketch/types';
@@ -42,7 +43,7 @@ export const SpaceGenerator = ({ space, onAddObjects }: SpaceGeneratorProps) => 
   const typeMap = useMemo(() => {
     client.addTypes([DiagramType, TableType, SheetType]);
 
-    return new Map<string, (n: number) => Promise<BaseObject<any>>>(
+    return new Map<string, (n: number) => Promise<BaseObject>>(
       mutableTypes.map((type) => {
         return [
           type.typename,

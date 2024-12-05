@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
+import { NavigationAction, parseIntentPlugin, type PluginDefinition, resolvePlugin } from '@dxos/app-framework';
+import { create } from '@dxos/live-object';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
@@ -14,8 +14,7 @@ import { loadObjectReferences } from '@dxos/react-client/echo';
 import { ContactsContainer, EventsContainer, MailboxContainer } from './components';
 import meta, { INBOX_PLUGIN } from './meta';
 import translations from './translations';
-import { ContactsType, CalendarType, EventType, MailboxType } from './types';
-import { InboxAction, type InboxPluginProvides } from './types';
+import { CalendarType, ContactsType, EventType, InboxAction, type InboxPluginProvides, MailboxType } from './types';
 
 export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
   return {

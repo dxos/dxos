@@ -13,7 +13,7 @@ import { validateSchema, type ValidationError } from '@dxos/schema';
 /**
  * Return type from `useForm` hook.
  */
-export type FormHandler<T extends BaseObject<T>> = {
+export type FormHandler<T extends BaseObject> = {
   //
   // Form state management.
   //
@@ -38,7 +38,7 @@ export type FormHandler<T extends BaseObject<T>> = {
 /**
  * Hook options.
  */
-export interface FormOptions<T extends BaseObject<T>> {
+export interface FormOptions<T extends BaseObject> {
   schema: S.Schema<T>;
 
   // TODO(burdon): Are these reactive?
@@ -74,7 +74,7 @@ export interface FormOptions<T extends BaseObject<T>> {
  * Creates a hook for managing form state, including values, validation, and submission.
  * Deeply integrated with `@dxos/schema` for schema-based validation.
  */
-export const useForm = <T extends BaseObject<T>>({
+export const useForm = <T extends BaseObject>({
   schema,
   initialValues,
   onValuesChanged,
@@ -212,12 +212,12 @@ export const useForm = <T extends BaseObject<T>>({
   } satisfies FormHandler<T>;
 };
 
-const createKeySet = <T extends BaseObject<T>, V>(obj: T, value: V): Record<PropertyKey<T>, V> => {
+const createKeySet = <T extends BaseObject, V>(obj: T, value: V): Record<PropertyKey<T>, V> => {
   invariant(obj);
   return Object.keys(obj).reduce((acc, key) => ({ ...acc, [key]: value }), {} as Record<PropertyKey<T>, V>);
 };
 
-const flatMap = <T extends BaseObject<T>>(errors: ValidationError[]) => {
+const flatMap = <T extends BaseObject>(errors: ValidationError[]) => {
   return errors.reduce(
     (result, { path, message }) => {
       if (!(path in result)) {

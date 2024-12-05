@@ -14,7 +14,7 @@ import { type FieldType } from './view';
 /**
  * @deprecated
  */
-export const getFieldValue = <T extends BaseObject<T>, V = any>(
+export const getFieldValue = <T extends BaseObject, V = any>(
   object: T,
   field: FieldType,
   defaultValue?: V,
@@ -23,7 +23,7 @@ export const getFieldValue = <T extends BaseObject<T>, V = any>(
 /**
  * @deprecated
  */
-export const setFieldValue = <T extends BaseObject<T>, V = any>(object: T, field: FieldType, value: V): V =>
+export const setFieldValue = <T extends BaseObject, V = any>(object: T, field: FieldType, value: V): V =>
   jp.value(object, '$.' + field.path, value);
 
 /**

@@ -28,6 +28,7 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*"

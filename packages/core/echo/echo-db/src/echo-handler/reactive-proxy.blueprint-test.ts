@@ -4,10 +4,10 @@
 
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
-import { getProxyHandler, getSchema, getType, getTypeReference } from '@dxos/echo-schema';
-import { type S } from '@dxos/echo-schema';
+import { getTypeReference, type S } from '@dxos/echo-schema';
 import { TestSchema, TestSchemaType, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
+import { getProxyHandler, getSchema, getType } from '@dxos/live-object';
 
 registerSignalsRuntime();
 

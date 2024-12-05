@@ -12,7 +12,7 @@ import {
   NavigationAction,
   type PluginDefinition,
 } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';

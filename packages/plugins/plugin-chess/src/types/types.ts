@@ -9,7 +9,7 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import { isReactiveObject } from '@dxos/echo-schema';
+import { isReactiveObject } from '@dxos/live-object';
 import { type SchemaProvides } from '@dxos/plugin-client';
 import { type SpaceInitProvides } from '@dxos/plugin-space';
 

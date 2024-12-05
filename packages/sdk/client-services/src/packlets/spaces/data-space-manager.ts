@@ -5,7 +5,7 @@
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { type Doc } from '@dxos/automerge/automerge';
 import { type AutomergeUrl, type DocHandle } from '@dxos/automerge/automerge-repo';
-import { PropertiesType } from '@dxos/client-protocol';
+import { PropertiesType, TYPE_PROPERTIES } from '@dxos/client-protocol';
 import { LifecycleState, Resource, cancelWithContext } from '@dxos/context';
 import {
   createAdmissionCredentials,
@@ -15,7 +15,6 @@ import {
   type MemberInfo,
 } from '@dxos/credentials';
 import {
-  convertLegacyReferences,
   findInlineObjectOfType,
   type EchoEdgeReplicator,
   type EchoHost,
@@ -28,14 +27,8 @@ import {
   type SpaceProtocol,
   type SpaceProtocolSession,
 } from '@dxos/echo-pipeline';
-import {
-  LEGACY_TYPE_PROPERTIES,
-  SpaceDocVersion,
-  encodeReference,
-  type ObjectStructure,
-  type SpaceDoc,
-} from '@dxos/echo-protocol';
-import { TYPE_PROPERTIES, createObjectId, getTypeReference } from '@dxos/echo-schema';
+import { SpaceDocVersion, encodeReference, type ObjectStructure, type SpaceDoc } from '@dxos/echo-protocol';
+import { createObjectId, getTypeReference } from '@dxos/echo-schema';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { writeMessages, type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
@@ -269,9 +262,7 @@ export class DataSpaceManager extends Resource {
         return properties?.data?.[DEFAULT_SPACE_KEY] === this._signingContext.identityKey.toHex();
       }
       case SpaceDocVersion.LEGACY: {
-        const convertedDoc = await convertLegacyReferences(space.databaseRoot.docSync()!);
-        const [_, properties] = findInlineObjectOfType(convertedDoc, LEGACY_TYPE_PROPERTIES) ?? [];
-        return properties?.data?.[DEFAULT_SPACE_KEY] === this._signingContext.identityKey.toHex();
+        throw new Error('Legacy space version is not supported');
       }
 
       default:

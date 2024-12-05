@@ -4,9 +4,9 @@
 
 import React, { useState } from 'react';
 
-import { type ReactiveObject, S } from '@dxos/echo-schema';
+import { S } from '@dxos/echo-schema';
 import { FunctionTriggerSchema, FunctionTrigger, type FunctionTriggerType } from '@dxos/functions';
-import { create, Filter, useQuery, type Space } from '@dxos/react-client/echo';
+import { create, Filter, useQuery, type Space, type ReactiveObject } from '@dxos/react-client/echo';
 import { IconButton, Input, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';

@@ -9,7 +9,7 @@ import { type Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { Filter } from '@dxos/echo-db';
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { range } from '@dxos/util';
 
 import { FunctionRegistry } from './function-registry';

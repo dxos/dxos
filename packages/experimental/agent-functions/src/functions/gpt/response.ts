@@ -3,7 +3,8 @@
 //
 
 import { type Space } from '@dxos/client/echo';
-import { AST, create, type ReactiveObject } from '@dxos/echo-schema';
+import { AST } from '@dxos/echo-schema';
+import { create, type ReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
 import { CollectionType } from '@dxos/plugin-space/types';

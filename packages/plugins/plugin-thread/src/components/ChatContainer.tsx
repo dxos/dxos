@@ -4,7 +4,7 @@
 
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { MessageType } from '@dxos/plugin-space/types';
 import { fullyQualifiedId, getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';

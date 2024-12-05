@@ -4,6 +4,7 @@
 
 import { S } from '@dxos/effect';
 
+import { getTypename } from './typename';
 import {
   type HasId,
   type ObjectAnnotation,
@@ -12,7 +13,6 @@ import {
   TYPENAME_REGEX,
   VERSION_REGEX,
 } from '../ast';
-import { getSchema, getTypeReference } from '../proxy';
 
 /**
  * Base type.
@@ -107,7 +107,7 @@ export const TypedObject = <ClassType>({ typename, version, skipTypenameFormatCh
 
       // TODO(burdon): Comment required.
       static [Symbol.hasInstance](obj: unknown): obj is ClassType {
-        return obj != null && getTypeReference(getSchema(obj))?.objectId === typename;
+        return obj != null && getTypename(obj) === typename;
       }
 
       // Implement S.Schema properties.

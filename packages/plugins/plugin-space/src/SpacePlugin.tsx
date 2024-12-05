@@ -27,9 +27,10 @@ import {
   resolvePlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type Trigger, type UnsubscribeCallback } from '@dxos/async';
-import { type HasId, isDeleted, isReactiveObject } from '@dxos/echo-schema';
+import { type HasId } from '@dxos/echo-schema';
 import { scheduledEffect } from '@dxos/echo-signals/core';
 import { invariant } from '@dxos/invariant';
+import { create, isDeleted, isReactiveObject } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
@@ -40,24 +41,23 @@ import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type Client, PublicKey } from '@dxos/react-client';
 import {
-  type ReactiveEchoObject,
   Expando,
+  FQ_ID_LENGTH,
   Filter,
+  OBJECT_ID_LENGTH,
   type PropertiesTypeProps,
+  type ReactiveEchoObject,
+  SPACE_ID_LENGTH,
   type Space,
   SpaceState,
-  create,
   fullyQualifiedId,
   getSpace,
   getTypename,
   isEchoObject,
   isSpace,
   loadObjectReferences,
-  parseId,
-  FQ_ID_LENGTH,
-  SPACE_ID_LENGTH,
-  OBJECT_ID_LENGTH,
   parseFullyQualifiedId,
+  parseId,
 } from '@dxos/react-client/echo';
 import { type JoinPanelProps, osTranslations } from '@dxos/shell/react';
 import { ComplexMap, nonNullable, reduceGroupBy } from '@dxos/util';
@@ -66,6 +66,7 @@ import {
   AwaitingObject,
   CollectionMain,
   CollectionSection,
+  DefaultObjectSettings,
   JoinDialog,
   MenuFooter,
   PopoverRenameObject,
@@ -73,13 +74,12 @@ import {
   ShareSpaceButton,
   SmallPresence,
   SmallPresenceLive,
-  SpacePresence,
   SpacePluginSettings,
-  SpaceSettingsPanel,
-  SyncStatus,
+  SpacePresence,
   SpaceSettingsDialog,
   type SpaceSettingsDialogProps,
-  DefaultObjectSettings,
+  SpaceSettingsPanel,
+  SyncStatus,
   InlineSyncStatus,
 } from './components';
 import meta, { SPACE_PLUGIN, SpaceAction } from './meta';

@@ -11,10 +11,11 @@ import {
   testAutomergeReplicatorFactory,
   TestReplicationNetwork,
 } from '@dxos/echo-pipeline/testing';
-import { create, Expando, getObjectAnnotation, getSchema, S, TypedObject } from '@dxos/echo-schema';
+import { Expando, getObjectAnnotation, S, TypedObject } from '@dxos/echo-schema';
 import { updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';
+import { create, getSchema } from '@dxos/live-object';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
 

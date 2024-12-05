@@ -3,7 +3,8 @@
 //
 
 import { type ReactiveEchoObject } from '@dxos/echo-db';
-import { type MutableSchema, type ReactiveObject, type S } from '@dxos/echo-schema';
+import { type MutableSchema, type S } from '@dxos/echo-schema';
+import { type ReactiveObject } from '@dxos/live-object';
 
 // TODO(burdon): Use echo-schema types.
 export type TestObject = { id: string } & Record<string, any>;

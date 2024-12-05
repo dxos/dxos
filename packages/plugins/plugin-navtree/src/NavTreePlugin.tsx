@@ -7,35 +7,35 @@ import React from 'react';
 
 import {
   type GraphBuilderProvides,
-  resolvePlugin,
+  type GraphProvides,
+  type IntentResolverProvides,
+  LayoutAction,
   type MetadataRecordsProvides,
+  NavigationAction,
+  parseGraphPlugin,
+  parseIntentPlugin,
+  parseLayoutPlugin,
+  parseNavigationPlugin,
+  type Plugin,
   type PluginDefinition,
+  resolvePlugin,
   type SurfaceProvides,
   type TranslationsProvides,
-  type Plugin,
-  type IntentResolverProvides,
-  parseIntentPlugin,
-  LayoutAction,
-  type GraphProvides,
-  parseGraphPlugin,
-  NavigationAction,
-  parseNavigationPlugin,
-  parseLayoutPlugin,
 } from '@dxos/app-framework';
 import { createExtension, type Graph, isAction, isGraphNode, type Node } from '@dxos/app-graph';
 import { type UnsubscribeCallback } from '@dxos/async';
-import { create, type ReactiveObject } from '@dxos/echo-schema';
 import { Keyboard } from '@dxos/keyboard';
+import { create, type ReactiveObject } from '@dxos/live-object';
 import { type TreeData } from '@dxos/react-ui-list';
 import { Path } from '@dxos/react-ui-mosaic';
 import { getHostPlatform } from '@dxos/util';
 
 import {
   CommandsDialogContent,
-  NODE_TYPE,
   NavBarStart,
   NavTreeContainer,
   NavTreeDocumentTitle,
+  NODE_TYPE,
   NotchStart,
 } from './components';
 import { CommandsTrigger } from './components/CommandsTrigger';
