@@ -125,7 +125,3 @@ export const requireTypeReference = (schema: S.Schema<any>): Reference => {
 
   return typeReference;
 };
-
-// TODO(burdon): Move to client-protocol.
-// TODO(dmaretskyi): Only usage below SDK level is in `serializer.ts`.
-export const TYPE_PROPERTIES = 'dxos.org/type/Properties';

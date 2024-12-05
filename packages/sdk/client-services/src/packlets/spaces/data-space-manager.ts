@@ -28,7 +28,8 @@ import {
   type SpaceProtocolSession,
 } from '@dxos/echo-pipeline';
 import { SpaceDocVersion, encodeReference, type ObjectStructure, type SpaceDoc } from '@dxos/echo-protocol';
-import { TYPE_PROPERTIES, createObjectId, getTypeReference } from '@dxos/echo-schema';
+import { createObjectId, getTypeReference } from '@dxos/echo-schema';
+import { TYPE_PROPERTIES } from '@dxos/client-protocol';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { writeMessages, type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
