@@ -14,16 +14,24 @@ import React, {
 import { getValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { Filter, getSpace, fullyQualifiedId } from '@dxos/react-client/echo';
+import { useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { type DxGridElement, Grid, type GridContentProps, closestCell } from '@dxos/react-ui-grid';
+import {
+  type DxGridElement,
+  Grid,
+  type GridContentProps,
+  closestCell,
+  type DxGridPlanePosition,
+} from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 import { isNotFalsy } from '@dxos/util';
 
 import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { ColumnSettings } from './ColumnSettings';
+import { RefPanel } from './RefPanel';
 import { RowActionsMenu } from './RowActionsMenu';
 import { type TableModel } from '../../model';
-import { type GridCell } from '../../util';
+import { translationKey } from '../../translations';
 import { TableCellEditor, type TableCellEditorProps } from '../TableCellEditor';
 
 // NOTE(Zan): These fragments add border to inline-end and block-end of the grid using pseudo-elements.
@@ -62,7 +70,7 @@ const TableRoot = ({ children, role }: TableRootProps) => {
 //
 
 export type TableController = {
-  update?: (cell?: GridCell) => void;
+  update?: (cell?: DxGridPlanePosition) => void;
 };
 
 export type TableMainProps = {
@@ -73,6 +81,7 @@ export type TableMainProps = {
 const TableMain = forwardRef<TableController, TableMainProps>(({ model, ignoreAttention }, forwardedRef) => {
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
   const { hasAttention } = useAttention(model?.table ? fullyQualifiedId(model.table) : 'table');
+  const { t } = useTranslation(translationKey);
 
   /**
    * Provides an external controller that can be called to repaint the table.
@@ -159,19 +168,22 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model, ignoreAt
         if (schema) {
           // TODO(burdon): Cache/filter.
           const { objects } = await space.db.query(Filter.schema(schema)).run();
-          return objects
-            .map((obj) => {
-              const value = getValue(obj, field.referencePath!);
-              if (!value || typeof value !== 'string') {
-                return undefined;
-              }
+          return [
+            ...objects
+              .map((obj) => {
+                const value = getValue(obj, field.referencePath!);
+                if (!value || typeof value !== 'string') {
+                  return undefined;
+                }
 
-              return {
-                label: value,
-                data: obj,
-              };
-            })
-            .filter(isNotFalsy);
+                return {
+                  label: value,
+                  data: obj,
+                };
+              })
+              .filter(isNotFalsy),
+            { label: t('create new object label'), data: null },
+          ];
         }
       }
 
@@ -207,6 +219,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model, ignoreAt
       <RowActionsMenu model={model} />
       <ColumnActionsMenu model={model} />
       <ColumnSettings model={model} />
+      <RefPanel model={model} />
     </>
   );
 });
