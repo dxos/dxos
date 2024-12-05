@@ -4,7 +4,7 @@
 
 import { type Schema as S } from '@effect/schema';
 
-import { StoredSchema } from './types';
+import { StoredSchema } from './stored-schema';
 import { getTypenameOrThrow } from '../types';
 
 /**

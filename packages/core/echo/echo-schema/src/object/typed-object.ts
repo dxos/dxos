@@ -12,7 +12,7 @@ import {
   TYPENAME_REGEX,
   VERSION_REGEX,
 } from '../ast';
-import { getTypename } from '../types';
+import { getTypename } from './typename';
 
 /**
  * Base type.

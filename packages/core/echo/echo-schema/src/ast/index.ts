@@ -5,4 +5,3 @@
 export * from './annotations';
 export * from './schema-validator';
 export * from './types';
-export * from './ref';

@@ -4,19 +4,8 @@
 
 import { S } from '@dxos/effect';
 
-import { getObjectAnnotation, JsonSchemaType } from '../ast';
-import { TypedObject } from '../object';
+import { getObjectAnnotation } from '../ast';
 import { requireTypeReference } from '../types';
-
-/**
- * Stored representation of a schema.
- */
-// TODO(burdon): How to get the S.Schema object that this represents?
-export class StoredSchema extends TypedObject({ typename: 'dxos.org/type/Schema', version: '0.1.0' })({
-  typename: S.String,
-  version: S.String,
-  jsonSchema: JsonSchemaType,
-}) {}
 
 /**
  * Wrapper around a schema that is stored in the database (from a type definition) but cannot be modified at runtime.

@@ -9,7 +9,7 @@ import { deepMapValues } from '@dxos/util';
 
 import { getEchoProp, toEffectSchema, toJsonSchema } from './json-schema';
 import { PropertyMeta, setSchemaProperty, type JsonSchemaType, getSchemaProperty } from '../ast';
-import { createSchemaReference, getSchemaReference, ref } from '../ast';
+import { createSchemaReference, getSchemaReference, ref } from '../ast/ref';
 import { FormatAnnotationId } from '../formats';
 import { Email } from '../formats/string';
 import { TypedObject } from '../object';
