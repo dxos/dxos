@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.2](https://github.com/dxos/dxos/compare/v0.7.1...v0.7.2) (2024-12-05)
+
+
+### Bug Fixes
+
+* disable composer sentry tracing ([#8367](https://github.com/dxos/dxos/issues/8367)) ([3e6bf4a](https://github.com/dxos/dxos/commit/3e6bf4a3e0e4b9e32c79c6afa02460e7d20f0e99))
+
 ## [0.7.1](https://github.com/dxos/dxos/compare/v0.7.0...v0.7.1) (2024-11-25)
 
 
