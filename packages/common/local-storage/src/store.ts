@@ -4,9 +4,10 @@
 
 import { effect } from '@preact/signals-core';
 
-import { AST, create, isReactiveObject, type ReactiveObject, type S } from '@dxos/echo-schema';
+import { AST, type S } from '@dxos/echo-schema';
 import { findNode, isSimpleType, type Path } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { create, isReactiveObject, type ReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getDeep, hyphenize, setDeep } from '@dxos/util';
 

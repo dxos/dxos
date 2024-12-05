@@ -2,18 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Space, Filter } from '@dxos/client/echo';
+import { Filter, type Space } from '@dxos/client/echo';
 import { type ReactiveEchoObject } from '@dxos/echo-db';
 import {
-  create,
   getObjectAnnotation,
-  getSchema,
-  isReactiveObject,
   MutableSchema,
-  type ReactiveObject,
-  type S,
+  type S
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { create, getSchema, isReactiveObject, type ReactiveObject } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { range } from '@dxos/util';
 

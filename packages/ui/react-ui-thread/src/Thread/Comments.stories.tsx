@@ -8,31 +8,32 @@ import { Check, Trash } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { createDocAccessor, createObject } from '@dxos/echo-db';
-import { create, Expando } from '@dxos/echo-schema';
+import { Expando } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
+import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { Button, useThemeContext } from '@dxos/react-ui';
 import {
+  automerge,
+  type Comment,
   comments,
   type CommentsOptions,
-  scrollThreadIntoView,
-  useComments,
-  type Comment,
-  type Range,
-  useTextEditor,
   createBasicExtensions,
   createThemeExtensions,
-  automerge,
   listener,
+  type Range,
+  scrollThreadIntoView,
+  useComments,
+  useTextEditor,
 } from '@dxos/react-ui-editor';
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { Thread, ThreadFooter, ThreadHeading } from './Thread';
 import { MessageBody, MessageHeading, MessageRoot, MessageTextbox } from '../Message';
 import { type MessageEntity } from '../testing';
 import translations from '../translations';
+import { Thread, ThreadFooter, ThreadHeading } from './Thread';
 
 faker.seed(101);
 

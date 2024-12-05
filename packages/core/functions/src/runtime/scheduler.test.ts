@@ -7,13 +7,14 @@ import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 
-import { Scheduler, type SchedulerOptions } from './scheduler';
+
 import { FunctionRegistry } from '../function';
 import { createInitializedClients, TestType, triggerWebhook } from '../testing';
 import { TriggerRegistry } from '../trigger';
 import { TriggerKind, type FunctionManifest } from '../types';
+import { Scheduler, type SchedulerOptions } from './scheduler';
 
 // TODO(burdon): Test we can add and remove triggers.
 describe('scheduler', () => {

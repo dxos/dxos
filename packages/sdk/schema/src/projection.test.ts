@@ -7,16 +7,17 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { MutableSchemaRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { createStoredSchema } from '@dxos/live-object';
+
 import {
   Format,
   FormatEnum,
-  type JsonPath,
-  type JsonProp,
   TypeEnum,
   TypedObject,
-  createStoredSchema,
   ref,
   toJsonSchema,
+  type JsonPath,
+  type JsonProp
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 

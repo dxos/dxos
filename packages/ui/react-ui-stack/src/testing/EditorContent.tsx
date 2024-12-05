@@ -4,7 +4,8 @@
 
 import React, { useState } from 'react';
 
-import { create, Expando } from '@dxos/echo-schema';
+import { Expando } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { useThemeContext } from '@dxos/react-ui';
 import {
   createBasicExtensions,

@@ -5,7 +5,15 @@
 export { SpaceId } from '@dxos/keys';
 export { type Echo, type Space, type PropertiesType, type PropertiesTypeProps } from '@dxos/client-protocol';
 export { getTypename, Expando, type AbstractTypedObject, type ObjectMeta, type TypedObject } from '@dxos/echo-schema';
-export { create, getMeta, getSchema, getType, isReactiveObject, type ReactiveObject } from '@dxos/live-object';
+export {
+  create,
+  getMeta,
+  getSchema,
+  getType,
+  isReactiveObject,
+  type ReactiveObject,
+  compareForeignKeys,
+} from '@dxos/live-object';
 export {
   createDocAccessor,
   createObject,

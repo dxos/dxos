@@ -6,19 +6,18 @@ import { Effect, pipe } from 'effect';
 
 import { type EchoDatabase, type ReactiveEchoObject } from '@dxos/echo-db';
 import {
-  create,
+  FormatEnum,
+  GeneratorAnnotationId,
   getSchemaReference,
   getTypename,
   type BaseObject,
   type ExcludeId,
-  FormatEnum,
-  GeneratorAnnotationId,
   type JsonSchemaType,
-  type ReactiveObject,
   type S,
 } from '@dxos/echo-schema';
 import { AST, findAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { create, type ReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getDeep } from '@dxos/util';
 
@@ -128,7 +127,7 @@ export const createObjectPipeline = <T extends BaseObject>(
     };
   } else {
     return (obj: ExcludeId<T>) => {
-      const pipeline: Effect.Effect<ReactiveEchoObject<T>, never, never> = pipe(
+      const pipeline: Effect.Effect<ReactiveEchoObject<any>, never, never> = pipe(
         Effect.succeed(obj),
         // Effect.tap(logObject('before')),
         Effect.map((obj) => createProps(generator, type)(obj)),

@@ -4,13 +4,13 @@
 
 import React from 'react';
 
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 
+import { filterPlugins } from '../helpers';
+import { type PluginDefinition } from '../plugin-host';
 import { SurfaceProvider, type SurfaceRootContext } from './SurfaceRootContext';
 import SurfaceMeta from './meta';
 import { parseSurfacePlugin, type SurfacePluginProvides } from './provides';
-import { filterPlugins } from '../helpers';
-import { type PluginDefinition } from '../plugin-host';
 
 /**
  * Provides a registry of surface components.
