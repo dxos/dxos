@@ -4,9 +4,10 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { create, S, TypedObject } from '@dxos/echo-schema';
+import { S, TypedObject } from '@dxos/echo-schema';
 import { Task } from '@dxos/echo-schema/testing';
 import { DXN } from '@dxos/keys';
+import { create } from '@dxos/live-object';
 
 import { Filter, ResultFormat } from '../query';
 import { EchoTestBuilder } from '../testing';

@@ -12,7 +12,7 @@ import React, {
   useState,
 } from 'react';
 
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
 import { useMulticastObservable } from '@dxos/react-client';

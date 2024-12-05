@@ -36,6 +36,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/observability": "workspace:*",

@@ -31,7 +31,7 @@ import { log } from '@dxos/log';
 /**
  * Flattened representation of AST node.
  */
-export type SchemaProperty<T extends BaseObject<T>, V = any> = {
+export type SchemaProperty<T extends BaseObject, V = any> = {
   name: PropertyKey<T>;
   ast: AST.AST;
   optional: boolean;
@@ -50,7 +50,7 @@ export type SchemaProperty<T extends BaseObject<T>, V = any> = {
  * Get properties from the given AST node (typically from a Schema object).
  * Handle discriminated unions.
  */
-export const getSchemaProperties = <T extends BaseObject<T>>(ast: AST.AST, value: any = {}): SchemaProperty<T>[] => {
+export const getSchemaProperties = <T extends BaseObject>(ast: AST.AST, value: any = {}): SchemaProperty<T>[] => {
   if (AST.isUnion(ast)) {
     const baseType = getDiscriminatedType(ast, value);
     if (baseType) {
@@ -157,7 +157,5 @@ export const getSchemaProperties = <T extends BaseObject<T>>(ast: AST.AST, value
   }, []);
 };
 
-export const sortProperties = <T extends BaseObject<T>>(
-  { name: a }: SchemaProperty<T>,
-  { name: b }: SchemaProperty<T>,
-) => a.localeCompare(b);
+export const sortProperties = <T extends BaseObject>({ name: a }: SchemaProperty<T>, { name: b }: SchemaProperty<T>) =>
+  a.localeCompare(b);

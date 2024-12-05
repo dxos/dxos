@@ -8,7 +8,8 @@ import { capitalize } from 'effect/String';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { create, createStoredSchema, Format, getTypename, toJsonSchema } from '@dxos/echo-schema';
+import { Format, getTypename, toJsonSchema } from '@dxos/echo-schema';
+import { create, createStoredSchema } from '@dxos/live-object';
 import { log } from '@dxos/log';
 
 import { getSchemaProperties } from './properties';

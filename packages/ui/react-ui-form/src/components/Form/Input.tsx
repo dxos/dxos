@@ -14,7 +14,7 @@ import { type FormHandler } from '../../hooks';
 /**
  * Props passed to input components.
  */
-export type InputProps<T extends BaseObject<T>> = {
+export type InputProps<T extends BaseObject> = {
   property: PropertyKey<T>;
   type: SimpleType;
   format?: FormatEnum;
@@ -26,7 +26,7 @@ export type InputProps<T extends BaseObject<T>> = {
 /**
  * Form input component.
  */
-export type InputComponent<T extends BaseObject<T>> = FC<InputProps<T>>;
+export type InputComponent<T extends BaseObject> = FC<InputProps<T>>;
 
 export type InputHeaderProps = PropsWithChildren<{
   error?: string;

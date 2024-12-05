@@ -6,11 +6,13 @@ import { type EncodedReference } from '@dxos/echo-protocol';
 import { S } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
-import { EXPANDO_TYPENAME } from './expando';
-import { type ObjectAnnotation, getObjectAnnotation, ReferenceAnnotationId, type JsonSchemaType } from '../ast';
-import { MutableSchema, StoredSchema } from '../mutable';
-import { getTypename, isReactiveObject } from '../proxy';
-import { type WithId, type Ref } from '../types';
+import { getObjectAnnotation, ReferenceAnnotationId, type ObjectAnnotation } from './annotations';
+import type { JsonSchemaType } from './types';
+import { MutableSchema } from '../mutable/mutable-schema';
+import { StoredSchema } from '../mutable/stored-schema';
+import { EXPANDO_TYPENAME } from '../object/expando';
+import { getTypename } from '../object/typename';
+import { type WithId, type Ref, type BaseObject } from '../types';
 
 /**
  * The `$id` field for an ECHO reference schema.
@@ -62,7 +64,9 @@ export type JsonSchemaReferenceInfo = {
 // TODO(burdon): Move to json schema and make private?
 export const createEchoReferenceSchema = (annotation: ObjectAnnotation): S.Schema<any> => {
   const typePredicate =
-    annotation.typename === EXPANDO_TYPENAME ? () => true : (obj: object) => getTypename(obj) === annotation.typename;
+    annotation.typename === EXPANDO_TYPENAME
+      ? () => true
+      : (obj: BaseObject) => getTypename(obj) === annotation.typename;
 
   const referenceInfo: JsonSchemaReferenceInfo = {
     schema: {
@@ -87,7 +91,7 @@ export const createEchoReferenceSchema = (annotation: ObjectAnnotation): S.Schem
             return annotation.typename === StoredSchema.typename;
           }
 
-          return isReactiveObject(obj) && typePredicate(obj);
+          return typePredicate(obj);
         },
         {
           jsonSchema: {

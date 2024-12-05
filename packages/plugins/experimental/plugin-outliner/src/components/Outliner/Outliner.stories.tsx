@@ -6,7 +6,7 @@ import '@dxos-theme';
 
 import React, { useState } from 'react';
 
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { attentionSurface } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';

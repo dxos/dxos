@@ -9,7 +9,7 @@ import React, { type Ref, forwardRef, useState } from 'react';
 
 import { Surface, SurfaceProvider } from '@dxos/app-framework';
 import { type TestObjectGenerator, TestSchemaType, createTestObjectGenerator } from '@dxos/echo-generator';
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { Card } from '@dxos/react-ui-card';
 import {

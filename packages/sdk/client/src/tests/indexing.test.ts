@@ -3,14 +3,15 @@
 //
 
 import isEqual from 'lodash.isequal';
-import { describe, onTestFinished, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, Trigger, TriggerState } from '@dxos/async';
 import { type ClientServicesProvider, PropertiesType, type Space } from '@dxos/client-protocol';
-import { type ReactiveEchoObject, Filter, type Query } from '@dxos/echo-db';
-import { create, Expando } from '@dxos/echo-schema';
+import { Filter, type Query, type ReactiveEchoObject } from '@dxos/echo-db';
+import { Expando } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
+import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 

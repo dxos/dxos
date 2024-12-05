@@ -6,8 +6,8 @@ import { Table } from '@phosphor-icons/react';
 import React from 'react';
 
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { create } from '@dxos/live-object';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';

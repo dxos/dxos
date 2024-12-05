@@ -3,16 +3,16 @@
 //
 
 import { rmSync } from 'node:fs';
-import { afterEach, beforeEach, describe, expect, test, onTestFinished } from 'vitest';
+import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { Filter } from '@dxos/echo-db';
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { isNode } from '@dxos/util';
 
 import { Client } from '../client';
-import { MessageType, TextV0Type, ThreadType, TestBuilder, performInvitation } from '../testing';
+import { MessageType, TestBuilder, TextV0Type, ThreadType, performInvitation } from '../testing';
 
 describe('Client', () => {
   const dataRoot = '/tmp/dxos/client/storage';

@@ -7,26 +7,30 @@ import { inspect, type InspectOptionsStylized } from 'node:util';
 import { devtoolsFormatter, type DevtoolsFormatter } from '@dxos/debug';
 import { encodeReference, Reference } from '@dxos/echo-protocol';
 import {
-  createProxy,
+  type BaseObject,
   defineHiddenProperty,
-  getProxyTarget,
   MutableSchema,
-  isReactiveObject,
   type ObjectMeta,
   ObjectMetaSchema,
-  type ReactiveHandler,
+  S,
+  SchemaMetaSymbol,
   SchemaValidator,
   StoredSchema,
-  symbolIsProxy,
-  type BaseObject,
-  getProxyHandler,
+  TYPENAME_SYMBOL,
 } from '@dxos/echo-schema';
-import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import {
+  createProxy,
+  getProxyHandler,
+  getProxyTarget,
+  isReactiveObject,
+  type ReactiveHandler,
+  symbolIsProxy,
+} from '@dxos/live-object';
 import { log } from '@dxos/log';
-import { setDeep, deepMapValues, defaultMap, getDeep } from '@dxos/util';
+import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
-import { type ReactiveEchoObject, createObject, isEchoObject } from './create';
+import { createObject, isEchoObject, type ReactiveEchoObject } from './create';
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
 import {
@@ -37,7 +41,7 @@ import {
   symbolPath,
   TargetKey,
 } from './echo-proxy-target';
-import { META_NAMESPACE, type KeyPath, type ObjectCore } from '../core-db';
+import { type KeyPath, META_NAMESPACE, type ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 
 export const PROPERTY_ID = 'id';
@@ -99,6 +103,15 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     if (prop === devtoolsFormatter) {
       return this._getDevtoolsFormatter(target);
+    }
+
+    if (prop === TYPENAME_SYMBOL) {
+      const schema = this.getSchema(target);
+      // Special handling for MutableSchema. objectId is StoredSchema objectId, not a typename.
+      if (schema && typeof schema === 'object' && SchemaMetaSymbol in schema) {
+        return (schema as any)[SchemaMetaSymbol].typename;
+      }
+      return this.getTypeReference(target)?.objectId;
     }
 
     if (isRootDataObject(target)) {
@@ -666,7 +679,7 @@ export const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
 };
 
 // TODO(burdon): Move ProxyTarget def to echo-schema and make ReactiveEchoObject inherit?
-export const getObjectCore = <T extends BaseObject<T>>(obj: ReactiveEchoObject<T>): ObjectCore => {
+export const getObjectCore = <T extends BaseObject>(obj: ReactiveEchoObject<T>): ObjectCore => {
   const { core } = (obj as unknown as ProxyTarget)[symbolInternals];
   return core;
 };

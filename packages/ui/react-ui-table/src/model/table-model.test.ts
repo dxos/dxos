@@ -3,11 +3,13 @@
 //
 
 import { computed } from '@preact/signals-core';
-import { describe, it, expect, afterEach, beforeEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { S, TypedObject, create } from '@dxos/echo-schema';
-import { createMutableSchema, updateCounter } from '@dxos/echo-schema/testing';
+import { S, TypedObject } from '@dxos/echo-schema';
+import { updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
+import { createMutableSchema } from '@dxos/live-object/testing';
+import { create } from '@dxos/react-client/echo';
 import { createView, ViewProjection } from '@dxos/schema';
 
 import { TableModel, type TableModelProps } from './table-model';

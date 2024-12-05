@@ -2,47 +2,40 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type MetadataResolver, NavigationAction, type IntentDispatcher } from '@dxos/app-framework';
-import {
-  create,
-  isReactiveObject,
-  getTypename,
-  getSchema,
-  getObjectAnnotation,
-  type Expando,
-  EXPANDO_TYPENAME,
-} from '@dxos/echo-schema';
+import { NavigationAction, type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
+import { EXPANDO_TYPENAME, getObjectAnnotation, getTypename, type Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { create, getSchema, isReactiveObject } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
 import {
-  ACTION_TYPE,
   ACTION_GROUP_TYPE,
+  ACTION_TYPE,
   actionGroupSymbol,
+  cleanup,
+  getGraph,
+  memoize,
   type ActionData,
   type Graph,
-  type Node,
   type InvokeParams,
+  type Node,
   type NodeArg,
-  getGraph,
-  cleanup,
-  memoize,
 } from '@dxos/plugin-graph';
 import {
+  Filter,
   fullyQualifiedId,
   getSpace,
   isEchoObject,
   isSpace,
+  SpaceState,
   type Echo,
-  type ReactiveEchoObject,
   type FilterSource,
   type Query,
   type QueryOptions,
+  type ReactiveEchoObject,
   type Space,
-  SpaceState,
-  Filter,
 } from '@dxos/react-client/echo';
 
-import { SpaceAction, SPACE_PLUGIN } from './meta';
+import { SPACE_PLUGIN, SpaceAction } from './meta';
 import { CollectionType } from './types';
 
 export const SPACES = `${SPACE_PLUGIN}-spaces`;

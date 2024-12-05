@@ -3,14 +3,13 @@
 //
 
 import { type Reference } from '@dxos/echo-protocol';
+import { type BaseObject, type ObjectMeta } from '@dxos/echo-schema';
 import { type S } from '@dxos/effect';
-
-import { type BaseObject, type ObjectMeta } from '../types';
 
 /**
  * Reactive object proxy.
  */
-export interface ReactiveHandler<T extends BaseObject<T>> extends ProxyHandler<T> {
+export interface ReactiveHandler<T extends BaseObject> extends ProxyHandler<T> {
   /**
    * Target to Proxy mapping.
    */
