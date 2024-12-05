@@ -5,8 +5,7 @@
 import React, { useState } from 'react';
 
 import { type ReactiveEchoObject } from '@dxos/echo-db';
-import { isDeleted } from '@dxos/live-object';
-import { getType } from '@dxos/live-object';
+import { isDeleted, getType } from '@dxos/live-object';
 import { QueryOptions, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { createColumnBuilder, type TableColumnDef, textPadding } from '@dxos/react-ui-table/deprecated';

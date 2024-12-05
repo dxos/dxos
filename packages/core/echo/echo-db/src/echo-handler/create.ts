@@ -11,9 +11,9 @@ import {
   type S,
   SchemaValidator,
 } from '@dxos/echo-schema';
-import { type ReactiveObject } from '@dxos/live-object';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
+import { type ReactiveObject } from '@dxos/live-object';
 import {
   createProxy,
   getMeta,

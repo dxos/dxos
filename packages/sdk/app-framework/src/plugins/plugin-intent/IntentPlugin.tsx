@@ -7,8 +7,6 @@ import React from 'react';
 import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 
-import { filterPlugins, findPlugin } from '../helpers';
-import { type PluginDefinition } from '../plugin-host';
 import { type IntentContext, type IntentExecution, IntentProvider } from './IntentContext';
 import { isUndoable } from './helpers';
 import type { Intent, IntentResolver } from './intent';
@@ -19,6 +17,8 @@ import {
   type IntentResolverProvides,
   parseIntentResolverPlugin,
 } from './provides';
+import { filterPlugins, findPlugin } from '../helpers';
+import { type PluginDefinition } from '../plugin-host';
 
 const EXECUTION_LIMIT = 1000;
 const HISTORY_LIMIT = 100;

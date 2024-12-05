@@ -11,6 +11,7 @@ import { createObject } from '@dxos/echo-db';
 import { create } from '@dxos/live-object';
 import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
+
 import { SketchComponent } from './SketchComponent';
 
 const createSketch = () => {

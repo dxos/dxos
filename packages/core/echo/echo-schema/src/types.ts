@@ -6,7 +6,6 @@ import { Schema as S } from '@effect/schema';
 
 import { Reference } from '@dxos/echo-protocol';
 import { AST, type JsonPath } from '@dxos/effect';
-import { invariant } from '@dxos/invariant';
 import { getDeep, setDeep } from '@dxos/util';
 
 import { getObjectAnnotation, type HasId } from './ast';

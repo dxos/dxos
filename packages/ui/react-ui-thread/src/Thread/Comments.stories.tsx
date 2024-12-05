@@ -30,10 +30,10 @@ import {
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
+import { Thread, ThreadFooter, ThreadHeading } from './Thread';
 import { MessageBody, MessageHeading, MessageRoot, MessageTextbox } from '../Message';
 import { type MessageEntity } from '../testing';
 import translations from '../translations';
-import { Thread, ThreadFooter, ThreadHeading } from './Thread';
 
 faker.seed(101);
 

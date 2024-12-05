@@ -4,8 +4,8 @@
 
 import '@dxos-theme';
 
-import { extractInstruction, type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { extractInstruction, type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useEffect } from 'react';
 

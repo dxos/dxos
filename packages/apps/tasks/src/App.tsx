@@ -12,9 +12,8 @@ import {
   useSearchParams,
 } from 'react-router-dom';
 
-import { create } from '@dxos/react-client/echo';
 import { ClientProvider, useShell } from '@dxos/react-client';
-import { useSpace, useQuery, Filter } from '@dxos/react-client/echo';
+import { create, useSpace, useQuery, Filter } from '@dxos/react-client/echo';
 
 import { TaskList } from './TaskList';
 import { getConfig } from './config';

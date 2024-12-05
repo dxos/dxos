@@ -7,8 +7,6 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { MutableSchemaRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { createStoredSchema } from '@dxos/live-object';
-
 import {
   Format,
   FormatEnum,
@@ -17,9 +15,10 @@ import {
   ref,
   toJsonSchema,
   type JsonPath,
-  type JsonProp
+  type JsonProp,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { createStoredSchema } from '@dxos/live-object';
 
 import { ViewProjection } from './projection';
 import { createView, type ViewType } from './view';

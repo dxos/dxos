@@ -6,9 +6,7 @@
 import { type Space } from '@dxos/client-protocol';
 import { getDatabaseFromObject } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import {
-  type ReactiveObject
-} from '@dxos/live-object';
+import { type ReactiveObject } from '@dxos/live-object';
 
 import { SpaceProxy } from './space-proxy';
 

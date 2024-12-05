@@ -13,6 +13,7 @@ import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { defaultMap } from '@dxos/util';
 
+import { MutableSchemaRegistry } from './mutable-schema-registry';
 import {
   CoreDatabase,
   type FlushOptions,
@@ -32,7 +33,6 @@ import {
 } from '../echo-handler';
 import { type Hypergraph } from '../hypergraph';
 import { type FilterSource, type PropertyFilter, type QueryFn, type QueryOptions } from '../query';
-import { MutableSchemaRegistry } from './mutable-schema-registry';
 
 export type GetObjectByIdOptions = {
   deleted?: boolean;

@@ -1,3 +1,7 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import type { EchoDatabase, SerializedSpace } from '@dxos/echo-db';
 import { decodeReferenceJSON, Filter, Serializer } from '@dxos/echo-db';
 import { TYPE_PROPERTIES } from '@dxos/echo-schema';
@@ -7,7 +11,7 @@ export const importSpace = async (database: EchoDatabase, data: SerializedSpace)
     objects: [properties],
   } = await database.query(Filter.typename(TYPE_PROPERTIES)).run();
 
-  new Serializer().import(database, data, {
+  await new Serializer().import(database, data, {
     onObject: async (object) => {
       const { '@type': typeEncoded, ...data } = object;
       const type = decodeReferenceJSON(typeEncoded);

@@ -5,15 +5,15 @@
 import { computed } from '@preact/signals-core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { createMutableSchema } from '@dxos/live-object/testing';
 import { S, TypedObject } from '@dxos/echo-schema';
 import { updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
+import { createMutableSchema } from '@dxos/live-object/testing';
 import { create } from '@dxos/react-client/echo';
 import { createView, ViewProjection } from '@dxos/schema';
 
-import { TableType } from '../types';
 import { TableModel, type TableModelProps } from './table-model';
+import { TableType } from '../types';
 
 // TODO(burdon): Tests are disabled in project.json since they bring in plugin deps.
 //  Restore once factored out into react-ui-table.

@@ -9,6 +9,7 @@ import { type ReactiveObject } from '@dxos/live-object';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { getSpace } from '@dxos/react-client/echo';
 import { useOnTransition } from '@dxos/react-ui';
+
 export const useAnalyticsCallback = (spaceId: string | undefined, name: string, meta?: any) => {
   const dispatch = useIntentDispatcher();
 

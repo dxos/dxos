@@ -6,8 +6,8 @@ import { type BaseObject, foreignKeyEquals, type ObjectMeta } from '@dxos/echo-s
 import { invariant } from '@dxos/invariant';
 import { type Comparator, intersection } from '@dxos/util';
 
-import { getProxyHandler } from './proxy';
 import type { ReactiveObject } from './object';
+import { getProxyHandler } from './proxy';
 
 export const getMeta = <T extends BaseObject>(obj: T): ObjectMeta => {
   const meta = getProxyHandler(obj).getMeta(obj);

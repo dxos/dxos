@@ -6,13 +6,13 @@ import { type EncodedReference } from '@dxos/echo-protocol';
 import { S } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
+import { getObjectAnnotation, ReferenceAnnotationId, type ObjectAnnotation } from './annotations';
+import type { JsonSchemaType } from './types';
 import { MutableSchema } from '../mutable/mutable-schema';
 import { StoredSchema } from '../mutable/stored-schema';
 import { EXPANDO_TYPENAME } from '../object/expando';
-import { type WithId, type Ref, type BaseObject } from '../types';
-import type { JsonSchemaType } from './types';
-import { getObjectAnnotation, ReferenceAnnotationId, type ObjectAnnotation } from './annotations';
 import { getTypename } from '../object/typename';
+import { type WithId, type Ref, type BaseObject } from '../types';
 
 /**
  * The `$id` field for an ECHO reference schema.

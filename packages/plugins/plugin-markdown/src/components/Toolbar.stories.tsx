@@ -7,8 +7,8 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React, { type FC, useState } from 'react';
 
-import { create } from '@dxos/live-object';
 import { PublicKey } from '@dxos/keys';
+import { create } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
 import { useThemeContext } from '@dxos/react-ui';

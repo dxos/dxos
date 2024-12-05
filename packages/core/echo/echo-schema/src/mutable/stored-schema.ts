@@ -1,3 +1,7 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { S } from '@dxos/effect';
 
 import { JsonSchemaType } from '../ast';

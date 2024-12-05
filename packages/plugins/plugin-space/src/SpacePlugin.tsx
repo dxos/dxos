@@ -56,7 +56,7 @@ import {
   isSpace,
   loadObjectReferences,
   parseFullyQualifiedId,
-  parseId
+  parseId,
 } from '@dxos/react-client/echo';
 import { type JoinPanelProps, osTranslations } from '@dxos/shell/react';
 import { ComplexMap, nonNullable, reduceGroupBy } from '@dxos/util';

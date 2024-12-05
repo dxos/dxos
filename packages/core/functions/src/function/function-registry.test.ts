@@ -12,9 +12,9 @@ import { Filter } from '@dxos/echo-db';
 import { create } from '@dxos/live-object';
 import { range } from '@dxos/util';
 
+import { FunctionRegistry } from './function-registry';
 import { createInitializedClients } from '../testing';
 import { FunctionDef, type FunctionManifest } from '../types';
-import { FunctionRegistry } from './function-registry';
 
 const testManifest: FunctionManifest = {
   functions: [

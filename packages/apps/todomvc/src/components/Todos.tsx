@@ -8,11 +8,11 @@ import { generatePath, useOutletContext, useParams } from 'react-router-dom';
 import { create, SpaceState, type Space } from '@dxos/react-client/echo';
 import { nonNullable } from '@dxos/util';
 
-import { FILTER } from '../constants';
-import { TodoListType, TodoType } from '../types';
 import { Header } from './Header';
 import { TodoFooter } from './TodoFooter';
 import { TodoItem } from './TodoItem';
+import { FILTER } from '../constants';
+import { TodoListType, TodoType } from '../types';
 
 export const Todos = () => {
   const inputRef = useRef<HTMLInputElement | null>(null);

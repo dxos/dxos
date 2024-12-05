@@ -11,8 +11,8 @@ import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { create, type ReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 
-import { EchoTestBuilder } from '../testing';
 import { createSubscription } from './subscription';
+import { EchoTestBuilder } from '../testing';
 
 describe('create subscription', () => {
   let builder: EchoTestBuilder;

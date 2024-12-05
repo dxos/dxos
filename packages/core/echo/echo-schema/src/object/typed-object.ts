@@ -4,6 +4,7 @@
 
 import { S } from '@dxos/effect';
 
+import { getTypename } from './typename';
 import {
   type HasId,
   type ObjectAnnotation,
@@ -12,7 +13,6 @@ import {
   TYPENAME_REGEX,
   VERSION_REGEX,
 } from '../ast';
-import { getTypename } from './typename';
 
 /**
  * Base type.

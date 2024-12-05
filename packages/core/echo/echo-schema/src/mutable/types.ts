@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S } from '@dxos/effect';
+import { type S } from '@dxos/effect';
 
 import { getObjectAnnotation } from '../ast';
 import { requireTypeReference } from '../types';

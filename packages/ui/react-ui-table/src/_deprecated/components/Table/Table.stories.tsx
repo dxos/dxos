@@ -8,8 +8,8 @@ import { Plugs, PlugsConnected } from '@phosphor-icons/react';
 import { type StoryObj } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { create } from '@dxos/live-object';
 import { PublicKey } from '@dxos/keys';
+import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { Button } from '@dxos/react-ui';

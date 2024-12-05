@@ -1,5 +1,11 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { invariant } from '@dxos/invariant';
+
 import { type BaseObject } from '../types';
+
 export const ECHO_ATTR_TYPE = '@type';
 
 /**

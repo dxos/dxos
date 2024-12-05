@@ -3,12 +3,7 @@
 //
 
 import { NavigationAction, type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
-import {
-  EXPANDO_TYPENAME,
-  getObjectAnnotation,
-  getTypename,
-  type Expando
-} from '@dxos/echo-schema';
+import { EXPANDO_TYPENAME, getObjectAnnotation, getTypename, type Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { create, getSchema, isReactiveObject } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';

@@ -2,13 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-import { create } from '@dxos/live-object';
 import { rmSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { Filter } from '@dxos/echo-db';
+import { create } from '@dxos/live-object';
 import { isNode } from '@dxos/util';
 
 import { Client } from '../client';

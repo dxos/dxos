@@ -13,8 +13,8 @@ import { isReactiveObject } from '@dxos/live-object';
 import { type SchemaProvides } from '@dxos/plugin-client';
 import { type SpaceInitProvides } from '@dxos/plugin-space';
 
-import { CHESS_PLUGIN } from '../meta';
 import { GameType } from './schema';
+import { CHESS_PLUGIN } from '../meta';
 
 const CHESS_ACTION = `${CHESS_PLUGIN}/action`;
 
