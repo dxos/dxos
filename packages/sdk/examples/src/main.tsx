@@ -8,7 +8,7 @@ import { Airplane, Stack } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { TextType, DocumentType } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';

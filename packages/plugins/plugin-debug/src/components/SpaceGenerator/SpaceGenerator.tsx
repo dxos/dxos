@@ -4,7 +4,8 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { create, type ReactiveObject, type BaseObject } from '@dxos/echo-schema';
+import { type BaseObject } from '@dxos/echo-schema';
+import { create, type ReactiveObject } from '@dxos/live-object';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { SheetType } from '@dxos/plugin-sheet/types';
 import { DiagramType } from '@dxos/plugin-sketch/types';

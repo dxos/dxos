@@ -3,11 +3,11 @@
 //
 
 import { findObjectWithForeignKey } from '@dxos/echo-db';
-import { create, foreignKey } from '@dxos/echo-schema';
+import { foreignKey } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { MailboxType } from '@dxos/plugin-inbox/types';
 import { MessageType } from '@dxos/plugin-space/types';
-import { type Space, Filter } from '@dxos/react-client/echo';
+import { type Space, Filter, create } from '@dxos/react-client/echo';
 
 export const SOURCE_ID = 'hub.dxos.network/api/mailbox';
 

@@ -4,15 +4,15 @@
 
 import '@dxos-theme';
 
-import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { extractInstruction, type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
+import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { batch } from '@preact/signals-core';
 import { type Meta } from '@storybook/react';
 import React, { useEffect } from 'react';
 
 import { Graph, ROOT_ID, type Node } from '@dxos/app-graph';
-import { create, type ReactiveObject } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals/react';
+import { create, type ReactiveObject } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { isTreeData, type PropsFromTreeItem } from '@dxos/react-ui-list';
 import { Path } from '@dxos/react-ui-mosaic';

@@ -8,7 +8,7 @@ import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/react-client/echo';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';

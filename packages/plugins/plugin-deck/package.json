@@ -44,6 +44,7 @@
     "@dxos/echo-signals": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keyboard": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",

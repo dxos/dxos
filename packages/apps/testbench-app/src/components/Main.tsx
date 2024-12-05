@@ -2,25 +2,26 @@
 // Copyright 2024 DXOS.org
 //
 
-import { randWord, randSentence } from '@ngneat/falso'; // TODO(burdon): Reconcile with echo-generator.
+import { randSentence, randWord } from '@ngneat/falso'; // TODO(burdon): Reconcile with echo-generator.
 import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Devtools, StatsPanel, useStats } from '@dxos/devtools';
-import { create, type ReactiveObject, type S } from '@dxos/echo-schema';
+import { type S } from '@dxos/echo-schema';
+import { create, type ReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type PublicKey, useClient } from '@dxos/react-client';
-import { type Space, useQuery, Filter, useSpaces } from '@dxos/react-client/echo';
+import { Filter, type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useFileDownload } from '@dxos/react-ui';
 
+import { DocumentType, ItemType } from '../data';
+import { defs } from '../defs';
+import { exportData, importData } from '../util';
 import { AppToolbar } from './AppToolbar';
 import { DataToolbar, type DataView } from './DataToolbar';
 import { ItemList } from './ItemList';
 import { ItemTable } from './ItemTable';
 import { SpaceToolbar } from './SpaceToolbar';
 import { StatusBar } from './status';
-import { ItemType, DocumentType } from '../data';
-import { defs } from '../defs';
-import { exportData, importData } from '../util';
 
 export const Main = () => {
   const client = useClient();

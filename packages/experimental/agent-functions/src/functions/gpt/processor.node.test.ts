@@ -4,7 +4,7 @@
 
 import { onTestFinished, describe, expect, test } from 'vitest';
 
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { ChainInputType, ChainPromptType, ChainType } from '@dxos/plugin-automation/types';
 import { MessageType, ThreadType } from '@dxos/plugin-space/types';
 

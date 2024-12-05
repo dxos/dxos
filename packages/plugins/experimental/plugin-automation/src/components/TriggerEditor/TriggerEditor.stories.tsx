@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { FunctionTrigger, TriggerKind } from '@dxos/functions';
 import { FunctionType } from '@dxos/plugin-script/types';
 import { useSpaces } from '@dxos/react-client/echo';

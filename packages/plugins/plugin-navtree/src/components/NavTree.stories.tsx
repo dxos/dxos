@@ -4,20 +4,20 @@
 
 import '@dxos-theme';
 
-import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { extractInstruction, type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
+import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { type Meta } from '@storybook/react';
 import React, { useEffect } from 'react';
 
 import { isActionLike, type NodeArg } from '@dxos/app-graph';
-import { create, type ReactiveObject } from '@dxos/echo-schema';
+import { create, type ReactiveObject } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { isTreeData, type TreeData } from '@dxos/react-ui-list';
 import { Path } from '@dxos/react-ui-mosaic';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { NavTree } from './NavTree';
 import { createTree, updateState } from '../testing';
+import { NavTree } from './NavTree';
 
 faker.seed(1234);
 

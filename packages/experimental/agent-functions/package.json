@@ -41,6 +41,7 @@
     "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/plugin-automation": "workspace:*",

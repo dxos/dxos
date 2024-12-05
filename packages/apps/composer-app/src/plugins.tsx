@@ -232,8 +232,7 @@ export const plugins = ({
   [SpaceMeta.id]: Plugin.lazy(() => import('@dxos/plugin-space'), {
     firstRun,
     onFirstRun: async ({ client, dispatch }) => {
-      const { create } = await import('@dxos/echo-schema');
-      const { fullyQualifiedId } = await import('@dxos/react-client/echo');
+      const { fullyQualifiedId, create } = await import('@dxos/react-client/echo');
       const { DocumentType, TextType } = await import('@dxos/plugin-markdown/types');
       const { CollectionType } = await import('@dxos/plugin-space/types');
 

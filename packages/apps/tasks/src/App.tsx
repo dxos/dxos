@@ -12,7 +12,7 @@ import {
   useSearchParams,
 } from 'react-router-dom';
 
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/react-client/echo';
 import { ClientProvider, useShell } from '@dxos/react-client';
 import { useSpace, useQuery, Filter } from '@dxos/react-client/echo';
 

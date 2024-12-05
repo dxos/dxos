@@ -7,42 +7,43 @@ import { setAutoFreeze } from 'immer';
 import React, { type PropsWithChildren } from 'react';
 
 import {
+  filterPlugins,
   type GraphProvides,
   IntentAction,
+  type IntentData,
   type IntentPluginProvides,
+  isLayoutAdjustment,
+  isLayoutMode,
+  isLayoutParts,
   type Layout,
   LayoutAction,
+  type LayoutEntry,
+  type LayoutMode,
+  type LayoutPart,
+  type LayoutParts,
   NavigationAction,
+  openIds,
   parseGraphPlugin,
   parseIntentPlugin,
   type Plugin,
   type PluginDefinition,
   resolvePlugin,
-  Toast as ToastSchema,
   SLUG_PATH_SEPARATOR,
-  type LayoutPart,
-  type LayoutEntry,
-  type LayoutParts,
-  isLayoutParts,
-  isLayoutAdjustment,
-  isLayoutMode,
-  openIds,
-  type LayoutMode,
-  type IntentData,
-  filterPlugins,
+  Toast as ToastSchema,
 } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
-import { create, getTypename, isReactiveObject } from '@dxos/echo-schema';
+import { getTypename } from '@dxos/echo-schema';
 import { scheduledEffect } from '@dxos/echo-signals/core';
+import { create, isReactiveObject } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
-import { parseAttentionPlugin, type AttentionPluginProvides } from '@dxos/plugin-attention';
+import { type AttentionPluginProvides, parseAttentionPlugin } from '@dxos/plugin-attention';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 
-import { DeckLayout, LayoutContext, LayoutSettings, NAV_ID, DeckContext, type DeckContextType } from './components';
+import { DeckContext, type DeckContextType, DeckLayout, LayoutContext, LayoutSettings, NAV_ID } from './components';
 import {
   closeEntry,
   incrementPlank,
@@ -55,9 +56,9 @@ import {
 import meta, { DECK_PLUGIN } from './meta';
 import translations from './translations';
 import {
-  type NewPlankPositioning,
   type DeckPluginProvides,
   type DeckSettingsProps,
+  type NewPlankPositioning,
   type Overscroll,
   type Panel,
   parsePanelPlugin,

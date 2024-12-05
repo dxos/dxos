@@ -7,7 +7,7 @@ import { type LatLngLiteral } from 'leaflet';
 import React from 'react';
 
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, type Node, createExtension, isActionGroup } from '@dxos/plugin-graph';

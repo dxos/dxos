@@ -4,7 +4,8 @@
 
 import { useEffect } from 'react';
 
-import { create, setValue, toJsonSchema, S, TypeEnum, TypedObject, FormatEnum } from '@dxos/echo-schema';
+import { create } from '@dxos/react-client/echo';
+import { setValue, toJsonSchema, S, TypeEnum, TypedObject, FormatEnum } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { createView, type ViewProjection } from '@dxos/schema';
 import {} from '@dxos/schema';

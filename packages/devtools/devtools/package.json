@@ -35,6 +35,7 @@
     "@dxos/gem-core": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/messaging": "workspace:*",
     "@dxos/network-manager": "workspace:*",

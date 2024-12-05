@@ -3,7 +3,7 @@
 //
 
 import { randomBytes } from '@dxos/crypto';
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 
 import {
   addressFromA1Notation,
