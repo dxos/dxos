@@ -26,7 +26,8 @@ import {
   publicKeyToDid,
   setUserFunctionUrlInMetadata,
   uploadWorkerFunction,
-  USERFUNCTIONS_PRESET_META_KEY,
+  FUNCTIONS_PRESET_META_KEY,
+  incrementSemverPatch,
 } from '../edge';
 import { SCRIPT_PLUGIN } from '../meta';
 import { templates } from '../templates';
@@ -95,12 +96,12 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
       script.name = template.name;
       script.source!.content = template.source;
       const metaKeys = getMeta(script).keys;
-      const oldPresetIndex = metaKeys.findIndex((key) => key.source === USERFUNCTIONS_PRESET_META_KEY);
+      const oldPresetIndex = metaKeys.findIndex((key) => key.source === FUNCTIONS_PRESET_META_KEY);
       if (oldPresetIndex >= 0) {
         metaKeys.splice(oldPresetIndex, 1);
       }
       if (template.presetId) {
-        metaKeys.push({ source: USERFUNCTIONS_PRESET_META_KEY, id: template.presetId });
+        metaKeys.push({ source: FUNCTIONS_PRESET_META_KEY, id: template.presetId });
       }
     }
   };
@@ -122,25 +123,23 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
         throw buildResult.error;
       }
 
-      const { functionId, functionVersionNumber, meta } = await uploadWorkerFunction({
+      const { functionId, version, meta } = await uploadWorkerFunction({
         client,
         ownerDid,
+        version: fn ? incrementSemverPatch(fn.version) : '0.0.1',
         functionId: existingFunctionId,
         source: buildResult.bundle,
       });
-      if (functionId === undefined || functionVersionNumber === undefined) {
-        throw new Error(
-          `Upload didn't return expected data: functionId=${functionId}, version=${functionVersionNumber}`,
-        );
+      if (functionId === undefined || version === undefined) {
+        throw new Error(`Upload didn't return expected data: functionId=${functionId}, version=${version}`);
       }
 
-      log.info('function uploaded', { functionId, functionVersionNumber });
+      log.info('function uploaded', { functionId, version });
       if (fn) {
-        fn.version = functionVersionNumber;
+        fn.version = version;
       }
 
-      const deployedFunction =
-        fn ?? space.db.add(create(FunctionType, { name: functionId, version: functionVersionNumber, source: script }));
+      const deployedFunction = fn ?? space.db.add(create(FunctionType, { name: functionId, version, source: script }));
 
       script.changed = false;
 

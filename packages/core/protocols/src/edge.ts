@@ -97,11 +97,12 @@ export type GetAgentStatusResponseBody = {
 export type UploadFunctionRequest = {
   name?: string;
   script: string;
+  version: string;
 };
 
 export type UploadFunctionResponseBody = {
   functionId: string;
-  functionVersionNumber?: number;
+  version: string;
   meta: {
     inputSchema?: object;
   };
