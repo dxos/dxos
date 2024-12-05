@@ -4,6 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { StackTrace } from '@dxos/debug';
+import { type BaseObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -15,12 +16,12 @@ import { type Filter } from './filter';
 import { prohibitSignalActions } from '../guarded-scope';
 
 // TODO(burdon): Multi-sort option.
-export type Sort<T extends {}> = (a: T, b: T) => -1 | 0 | 1;
+export type Sort<T extends BaseObject> = (a: T, b: T) => -1 | 0 | 1;
 
-// TODO(burdon): Change to SubscriptionHandle.
+// TODO(burdon): Change to SubscriptionHandle (standardize with common/async utils).
 export type Subscription = () => void;
 
-export type QueryResult<T extends {} = any> = {
+export type QueryResult<T extends BaseObject = any> = {
   id: string;
 
   spaceId: SpaceId;
@@ -57,13 +58,13 @@ export type QueryResult<T extends {} = any> = {
   };
 };
 
-export type OneShotQueryResult<T extends {} = any> = {
+export type OneShotQueryResult<T extends BaseObject = any> = {
   results: QueryResult<T>[];
   objects: T[];
 };
 
-export interface QueryContext {
-  getResults(): QueryResult[];
+export interface QueryContext<T extends BaseObject = any> {
+  getResults(): QueryResult<T>[];
 
   // TODO(dmaretskyi): Update info?
   changed: Event<void>;
@@ -109,7 +110,7 @@ export type QueryRunOptions = {
 /**
  * Predicate based query.
  */
-export class Query<T extends {} = any> {
+export class Query<T extends BaseObject = any> {
   private readonly _filter: Filter;
   private readonly _signal = compositeRuntime.createSignal();
   private readonly _event = new Event<Query<T>>();
@@ -121,7 +122,7 @@ export class Query<T extends {} = any> {
   private _subscribers: number = 0;
 
   constructor(
-    private readonly _queryContext: QueryContext,
+    private readonly _queryContext: QueryContext<T>,
     filter: Filter,
   ) {
     this._filter = filter;
@@ -169,7 +170,7 @@ export class Query<T extends {} = any> {
    * Execute the query once and return the results.
    * Does not subscribe to updates.
    */
-  async run(timeout: { timeout: number } = { timeout: 30_000 }): Promise<OneShotQueryResult<T>> {
+  async run(timeout: { timeout?: number } = { timeout: 30_000 }): Promise<OneShotQueryResult<T>> {
     const filteredResults = await this._queryContext.run(this._filter, { timeout: timeout.timeout });
     return {
       results: filteredResults,
@@ -177,8 +178,8 @@ export class Query<T extends {} = any> {
     };
   }
 
-  async first(): Promise<T> {
-    const { objects } = await this.run();
+  async first(opts?: { timeout?: number }): Promise<T> {
+    const { objects } = await this.run(opts);
     if (objects.length === 0) {
       throw new Error('No objects found');
     }

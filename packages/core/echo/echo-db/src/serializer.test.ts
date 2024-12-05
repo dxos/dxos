@@ -5,6 +5,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { create, Expando, getSchema } from '@dxos/echo-schema';
+import { Contact, Task } from '@dxos/echo-schema/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
@@ -13,7 +14,7 @@ import { type EchoDatabase } from './proxy-db';
 import { Filter } from './query';
 import type { SerializedSpace } from './serialized-space';
 import { Serializer } from './serializer';
-import { Contact, EchoTestBuilder, Task } from './testing';
+import { EchoTestBuilder } from './testing';
 
 describe('Serializer', () => {
   let builder: EchoTestBuilder;
@@ -54,7 +55,9 @@ describe('Serializer', () => {
         obj.title = 'Test';
         db.add(obj);
         await db.flush();
-        expect(db.objects).to.have.length(1);
+
+        const { objects } = await db.query().run();
+        expect(objects).to.have.length(1);
 
         data = await serializer.export(db);
         expect(data.objects).to.have.length(1);

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/lit-grid",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "A grid Web Component using Lit",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,12 +10,25 @@
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
-      "import": "./dist/src/index.js"
+      "browser": "./dist/src/index.js",
+      "node": "./dist/src/index.js"
     },
-    "./dx-grid.pcss": "./src/dx-grid.pcss"
+    "./dx-grid.pcss": "./src/dx-grid.pcss",
+    "./testing": {
+      "types": "./dist/types/src/testing/index.d.ts",
+      "browser": "./dist/src/testing/index.js",
+      "node": "./dist/src/testing/index.js"
+    }
   },
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
+    }
+  },
   "files": [
     "src",
     "dist"
@@ -23,5 +36,8 @@
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "^1.4.0",
     "lit": "^3.2.0"
+  },
+  "devDependencies": {
+    "@dxos/test-utils": "workspace:*"
   }
 }

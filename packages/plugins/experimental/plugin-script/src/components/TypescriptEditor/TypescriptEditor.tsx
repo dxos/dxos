@@ -70,7 +70,7 @@ export const TypescriptEditor = ({
       selection,
       scrollTo,
     }),
-    [id, initialValue, extensions, themeMode, selection, scrollTo],
+    [id, extensions, themeMode, selection, scrollTo],
   );
 
   return <div ref={parentRef} className={className} {...focusAttributes} />;

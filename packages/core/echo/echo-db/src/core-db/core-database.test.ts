@@ -6,21 +6,19 @@ import { effect } from '@preact/signals-core';
 import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { createIdFromSpaceKey } from '@dxos/echo-protocol';
-import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
-import { create, Expando, S, TypedObject } from '@dxos/echo-schema';
+import { createIdFromSpaceKey, SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
+import { create, Expando } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { DXN, PublicKey } from '@dxos/keys';
+import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { type CoreDatabase } from './core-database';
 import { type DocHandleProxy, type RepoProxy } from '../client';
-import { type EchoReactiveObject, getObjectCore } from '../echo-handler';
-import { type EchoDatabaseImpl, type EchoDatabase } from '../proxy-db';
-import { Filter } from '../query';
-import { EchoTestBuilder, Task } from '../testing';
+import { getObjectCore, type ReactiveEchoObject } from '../echo-handler';
+import { type EchoDatabase, type EchoDatabaseImpl } from '../proxy-db';
+import { EchoTestBuilder } from '../testing';
 
 describe('CoreDatabase', () => {
   describe('space fragmentation', () => {
@@ -72,7 +70,7 @@ describe('CoreDatabase', () => {
 
       const document = createExpando({ text: createTextObject('Hello, world!') });
       const db = await createClientDbInSpaceWithObject(document);
-      const loadedDocument = (await db.loadObjectById(document.id)!) as Expando;
+      const loadedDocument = (await db.query({ id: document.id }).first()!) as Expando;
       expect(loadedDocument).not.to.be.undefined;
 
       let isFirstInvocation = true;
@@ -93,7 +91,7 @@ describe('CoreDatabase', () => {
     test('reference access triggers document loading', async () => {
       const textObject = createTextObject('Hello, world!');
       const db = await createClientDbInSpaceWithObject(textObject);
-      await db.loadObjectById(textObject.id, { timeout: 1000 });
+      await db.query({ id: textObject.id }).first({ timeout: 1000 });
     });
 
     test("separate-doc object is treated as inline if it's both linked and inline", async () => {
@@ -132,7 +130,7 @@ describe('CoreDatabase', () => {
       const oldObject = createExpando({ title: 'Hello' });
       const db = await createClientDbInSpaceWithObject(oldObject);
       const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
-      const beforeUpdate = await db.loadObjectById(oldObject.id);
+      const beforeUpdate = await db.query({ id: oldObject.id }).first();
       expect(beforeUpdate).not.to.be.undefined;
       await db.coreDatabase.updateSpaceState({ rootUrl: newRootDocHandle.url });
       const afterUpdate = db.getObjectById(oldObject.id);
@@ -146,7 +144,7 @@ describe('CoreDatabase', () => {
       newRootDocHandle.change((newDoc: any) => {
         newDoc.links = getDocHandles(db).spaceRootHandle.docSync().links;
       });
-      const beforeUpdate = (await db.loadObjectById(originalObj.id))!;
+      const beforeUpdate = (await db.query({ id: originalObj.id }).first())!;
       expect(getObjectDocHandle(beforeUpdate).url).to.eq(
         getDocHandles(db).spaceRootHandle.docSync().links?.[beforeUpdate.id].toString(),
       );
@@ -169,7 +167,7 @@ describe('CoreDatabase', () => {
         newDoc.links = getDocHandles(db).spaceRootHandle.docSync().links;
       });
 
-      await db.loadObjectById(stack.loadedDocument.id, { timeout: 1000 });
+      await db.query({ id: stack.loadedDocument.id }).run({ timeout: 1000 });
 
       // trigger loading but don't wait for it to finish
       db.getObjectById(stack.partiallyLoadedDocument.id);
@@ -190,7 +188,7 @@ describe('CoreDatabase', () => {
       const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
 
       for (const obj of [stack.text1, stack.text2, stack.text3]) {
-        await db.loadObjectById(obj.id);
+        await db.query({ id: obj.id }).run();
       }
 
       newRootDocHandle.change((newDoc: any) => {
@@ -219,7 +217,7 @@ describe('CoreDatabase', () => {
       const db = await createClientDbInSpaceWithObject(obj);
       const oldRootDocHandle = getDocHandles(db).spaceRootHandle;
       const beforeUpdate = addObjectToDoc(oldRootDocHandle, { id: '1', title: 'test' });
-      expect((await (db.loadObjectById(beforeUpdate.id) as any)).title).to.eq(beforeUpdate.title);
+      expect((await (db.query({ id: beforeUpdate.id }).first() as any)).title).to.eq(beforeUpdate.title);
 
       const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
       newRootDocHandle.change((newDoc: any) => {
@@ -248,7 +246,7 @@ describe('CoreDatabase', () => {
 
       await db.coreDatabase.updateSpaceState({ rootUrl: newRootDocHandle.url });
 
-      await db.loadObjectById(obj.id);
+      await db.query({ id: obj.id }).first();
     });
 
     test('multiple object update', async () => {
@@ -277,7 +275,7 @@ describe('CoreDatabase', () => {
 
       objectsToAdd.forEach((o) => addObjectToDoc(newRootDocHandle, o));
       for (const obj of loadedLinks) {
-        await db.loadObjectById(obj.id);
+        await db.query({ id: obj.id }).first();
       }
       for (const obj of partiallyLoadedLinks) {
         db.getObjectById(obj.id);
@@ -288,13 +286,13 @@ describe('CoreDatabase', () => {
         expect(db.getObjectById(obj.id)).to.be.undefined;
       }
       for (const obj of objectsToAdd) {
-        expect(getObjectDocHandle(await db.loadObjectById(obj.id)).url).to.eq(newRootDocHandle.url);
+        expect(getObjectDocHandle(await db.query({ id: obj.id }).first()).url).to.eq(newRootDocHandle.url);
       }
       for (const obj of [...loadedLinks]) {
-        expect(getObjectDocHandle(await db.loadObjectById(obj.id))).not.to.be.undefined;
+        expect(getObjectDocHandle(await db.query({ id: obj.id }).first())).not.to.be.undefined;
       }
       for (const obj of partiallyLoadedLinks) {
-        await db.loadObjectById(obj.id);
+        await db.query({ id: obj.id }).first();
       }
     });
 
@@ -315,7 +313,7 @@ describe('CoreDatabase', () => {
       {
         const testPeer = await testBuilder.createPeer(kv);
         const db = await testPeer.openDatabase(spaceKey, rootUrl);
-        await db.loadObjectById(objectId);
+        await db.query({ id: objectId }).first();
         const object = db.getObjectById(objectId);
         expect(object).not.to.be.undefined;
         expect((object as any).title).to.eq('first object');
@@ -325,23 +323,9 @@ describe('CoreDatabase', () => {
     test('load object', async () => {
       const object = createExpando({ title: 'Hello' });
       const db = await createClientDbInSpaceWithObject(object);
-      await db.loadObjectById(object.id);
+      await db.query({ id: object.id }).first();
       const loadedObject = db.getObjectById(object.id);
       expect(loadedObject).to.deep.eq(object);
-    });
-
-    test('batch load object timeout', async () => {
-      const object = createExpando({ title: 'Hello' });
-      const db = await createClientDbInSpaceWithObject(object);
-      let threw = false;
-      try {
-        await db.batchLoadObjects(['123', object.id], {
-          inactivityTimeout: 20,
-        });
-      } catch (e) {
-        threw = true;
-      }
-      expect(threw).to.be.true;
     });
 
     describe('getAllObjectIds', () => {
@@ -370,225 +354,6 @@ describe('CoreDatabase', () => {
       });
     });
   });
-
-  describe('CRUD API', () => {
-    test('can query and mutate data', async () => {
-      await using testBuilder = await new EchoTestBuilder().open();
-      const { crud } = await testBuilder.createDatabase();
-
-      const { id } = await crud.insert({ kind: 'task', title: 'A' });
-      await crud.flush({ indexes: true });
-
-      {
-        const { objects } = await crud.query(Filter.all()).run();
-        expect(objects).to.deep.eq([
-          {
-            id,
-            __typename: null,
-            __meta: {
-              keys: [],
-            },
-            kind: 'task',
-            title: 'A',
-          },
-        ]);
-      }
-
-      await crud.update(
-        {
-          id,
-        },
-        {
-          title: 'B',
-        },
-      );
-
-      {
-        const { objects } = await crud.query(Filter.all()).run();
-        expect(objects).to.deep.eq([
-          {
-            id,
-            __typename: null,
-            __meta: {
-              keys: [],
-            },
-            kind: 'task',
-            title: 'B',
-          },
-        ]);
-      }
-    });
-
-    test('query with JSON filter', async () => {
-      await using testBuilder = await new EchoTestBuilder().open();
-      const { crud } = await testBuilder.createDatabase();
-
-      await crud.insert([
-        { __typename: Task.typename, title: 'Task 1', completed: true },
-        {
-          __typename: Task.typename,
-          title: 'Task 2',
-          completed: false,
-        },
-        { __typename: Task.typename, title: 'Task 3', completed: true },
-      ]);
-      await crud.flush({ indexes: true });
-
-      {
-        const { objects } = await crud.query({ __typename: Task.typename }).run();
-        expect(objects.length).to.eq(3);
-      }
-
-      {
-        const { objects } = await crud.query({ __typename: Task.typename, completed: true }).run();
-        expect(objects.length).to.eq(2);
-      }
-    });
-
-    test('query by id', async () => {
-      await using testBuilder = await new EchoTestBuilder().open();
-      const { crud } = await testBuilder.createDatabase();
-
-      const [{ id: id1 }] = await crud.insert([
-        { __typename: Task.typename, title: 'Task 1', completed: true },
-        {
-          __typename: Task.typename,
-          title: 'Task 2',
-          completed: false,
-        },
-      ]);
-      await crud.flush({ indexes: true });
-
-      {
-        const { objects } = await crud.query({ id: id1 }).run();
-        expect(objects.length).to.eq(1);
-        expect(objects[0].id).to.eq(id1);
-      }
-
-      {
-        const object = await crud.query({ id: id1 }).first();
-        expect(object.id).to.eq(id1);
-      }
-    });
-
-    test('insert typed objects & interop with proxies', async () => {
-      await using testBuilder = await new EchoTestBuilder().open();
-      const { db, crud } = await testBuilder.createDatabase();
-
-      const { id } = await crud.insert({ __typename: Task.typename, title: 'A' });
-      await crud.insert({ data: 'foo' }); // random object
-      await crud.flush({ indexes: true });
-
-      {
-        const { objects } = await crud.query({ __typename: Task.typename }).run();
-        expect(objects.length).to.eq(1);
-        expect(objects[0].id).to.eq(id);
-      }
-
-      {
-        const { objects } = await db.query(Filter.schema(Task)).run();
-        expect(objects.length).to.eq(1);
-        expect(objects[0].id).to.eq(id);
-      }
-    });
-
-    test('references in plain object notation', async () => {
-      await using testBuilder = await new EchoTestBuilder().open();
-      const { crud } = await testBuilder.createDatabase();
-
-      const { id: id1 } = await crud.insert({ title: 'Inner' });
-      const { id: id2 } = await crud.insert({ title: 'Outer', inner: { '/': id1 } });
-      await crud.flush({ indexes: true });
-
-      {
-        const object = await crud.query({ id: id2 }).first();
-        expect(object).to.deep.eq({
-          id: id2,
-          __typename: null,
-          __meta: {
-            keys: [],
-          },
-          title: 'Outer',
-          inner: { '/': `dxn:echo:@:${id1}` },
-        });
-
-        const inner = await crud.query({ id: object.inner }).first();
-        expect(inner).to.deep.eq({
-          id: id1,
-          __typename: null,
-          __meta: {
-            keys: [],
-          },
-          title: 'Inner',
-        });
-      }
-    });
-
-    test('query with join', async () => {
-      await using testBuilder = await new EchoTestBuilder().open();
-      const { crud } = await testBuilder.createDatabase();
-
-      const { id: id1 } = await crud.insert({ title: 'Inner' });
-      const { id: id2 } = await crud.insert({ title: 'Inner', nested: { '/': id1 } });
-      const { id: id3 } = await crud.insert({ title: 'Outer', inner: { '/': id2 } });
-      await crud.flush({ indexes: true });
-
-      {
-        const object = await crud.query({ id: id3 }, { include: { inner: { nested: true } } }).first();
-        expect(object).to.deep.eq({
-          id: id3,
-          __typename: null,
-          __meta: {
-            keys: [],
-          },
-          title: 'Outer',
-          inner: {
-            id: id2,
-            __typename: null,
-            __meta: {
-              keys: [],
-            },
-            title: 'Inner',
-            nested: {
-              id: id1,
-              __typename: null,
-              __meta: {
-                keys: [],
-              },
-              title: 'Inner',
-            },
-          },
-        });
-      }
-    });
-
-    test('dynamic schema objects', async () => {
-      await using testBuilder = await new EchoTestBuilder().open();
-      const { db, crud } = await testBuilder.createDatabase();
-
-      class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-        field: S.String,
-      }) {}
-
-      const stored = db.schemaRegistry.addSchema(TestSchema);
-      const schemaDxn = DXN.fromLocalObjectId(stored.id).toString();
-
-      const object = db.add(create(stored, { field: 'test' }));
-      await db.flush({ indexes: true });
-
-      const { objects } = await crud.query({ __typename: schemaDxn }).run();
-      expect(objects).toEqual([
-        {
-          id: object.id,
-          __typename: schemaDxn,
-          __meta: {
-            keys: [],
-          },
-          field: 'test',
-        },
-      ]);
-    });
-  });
 });
 
 const getDocHandles = (db: EchoDatabase): DocumentHandles => ({
@@ -599,7 +364,7 @@ const getDocHandles = (db: EchoDatabase): DocumentHandles => ({
 const getObjectDocHandle = (obj: any) => getObjectCore(obj).docHandle!;
 
 const createClientDbInSpaceWithObject = async (
-  object: EchoReactiveObject<any>,
+  object: ReactiveEchoObject<any>,
   onDocumentSavedInSpace?: (handles: DocumentHandles) => void,
 ): Promise<EchoDatabaseImpl> => {
   const kv = createTestLevel();
@@ -618,12 +383,12 @@ const createClientDbInSpaceWithObject = async (
   return peer2.openDatabase(spaceKey, db1.rootUrl!);
 };
 
-const createExpando = (props: any = {}): EchoReactiveObject<Expando> => {
+const createExpando = (props: any = {}): ReactiveEchoObject<Expando> => {
   return create(Expando, props);
 };
 
-const createTextObject = (content: string = ''): EchoReactiveObject<{ content: string }> => {
-  return create(Expando, { content }) as EchoReactiveObject<{ content: string }>;
+const createTextObject = (content: string = ''): ReactiveEchoObject<{ content: string }> => {
+  return create(Expando, { content }) as ReactiveEchoObject<{ content: string }>;
 };
 
 interface DocumentHandles {

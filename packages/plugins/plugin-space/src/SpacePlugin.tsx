@@ -27,7 +27,7 @@ import {
   resolvePlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type Trigger, type UnsubscribeCallback } from '@dxos/async';
-import { type HasId, isReactiveObject } from '@dxos/echo-schema';
+import { type HasId, isDeleted, isReactiveObject } from '@dxos/echo-schema';
 import { scheduledEffect } from '@dxos/echo-signals/core';
 import { invariant } from '@dxos/invariant';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -39,7 +39,7 @@ import { type Node, createExtension, memoize, toSignal } from '@dxos/plugin-grap
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { type Client, PublicKey } from '@dxos/react-client';
 import {
-  type EchoReactiveObject,
+  type ReactiveEchoObject,
   Expando,
   Filter,
   type PropertiesTypeProps,
@@ -54,6 +54,8 @@ import {
   loadObjectReferences,
   parseId,
   FQ_ID_LENGTH,
+  SPACE_ID_LENGTH,
+  OBJECT_ID_LENGTH,
 } from '@dxos/react-client/echo';
 import { type JoinPanelProps, osTranslations } from '@dxos/shell/react';
 import { ComplexMap, nonNullable, reduceGroupBy } from '@dxos/util';
@@ -571,6 +573,7 @@ export const SpacePlugin = ({
                   {
                     id: SPACES,
                     type: SPACES,
+                    cacheable: ['label', 'role'],
                     properties: {
                       label: ['spaces label', { ns: SPACE_PLUGIN }],
                       testId: 'spacePlugin.spaces',
@@ -679,39 +682,41 @@ export const SpacePlugin = ({
                     );
                 } catch {}
               },
-            }),
-
-            // Find an object by its fully qualified id.
-            createExtension({
-              id: `${SPACE_PLUGIN}/objects`,
               resolver: ({ id }) => {
-                const [spaceId, objectId] = id.split(':');
-                const space = client.spaces.get().find((space) => space.id === spaceId);
+                if (id.length !== SPACE_ID_LENGTH) {
+                  return;
+                }
+
+                const spaces = toSignal(
+                  (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
+                  () => client.spaces.get(),
+                );
+
+                const isReady = toSignal(
+                  (onChange) => client.spaces.isReady.subscribe(() => onChange()).unsubscribe,
+                  () => client.spaces.isReady.get(),
+                );
+
+                if (!spaces || !isReady) {
+                  return;
+                }
+
+                const space = spaces.find((space) => space.id === id);
                 if (!space) {
                   return;
                 }
 
-                const spaceState = toSignal(
-                  (onChange) => space.state.subscribe(() => onChange()).unsubscribe,
-                  () => space.state.get(),
-                  space.id,
-                );
-                if (spaceState !== SpaceState.SPACE_READY) {
-                  return;
+                if (space.state.get() === SpaceState.SPACE_INACTIVE) {
+                  return false;
+                } else {
+                  return constructSpaceNode({
+                    space,
+                    navigable: state.values.navigableCollections,
+                    personal: space === client.spaces.default,
+                    namesCache: state.values.spaceNames,
+                    resolve,
+                  });
                 }
-
-                const store = memoize(() => signal(space.db.getObjectById(objectId)), id);
-                memoize(() => {
-                  if (!store.value) {
-                    void space.db.loadObjectById(objectId).then((o) => (store.value = o));
-                  }
-                }, id);
-                const object = store.value;
-                if (!object) {
-                  return;
-                }
-
-                return createObjectNode({ object, space, resolve, navigable: state.values.navigableCollections });
               },
             }),
 
@@ -765,22 +770,9 @@ export const SpacePlugin = ({
               },
             }),
 
-            // Create collection actions and action groups.
+            // Create nodes for objects in a collection or by its fully qualified id.
             createExtension({
-              id: `${SPACE_PLUGIN}/object-actions`,
-              filter: (node): node is Node<EchoReactiveObject<any>> => isEchoObject(node.data),
-              actionGroups: ({ node }) =>
-                constructObjectActionGroups({
-                  object: node.data,
-                  dispatch,
-                  navigable: state.values.navigableCollections,
-                }),
-              actions: ({ node }) => constructObjectActions({ node, dispatch }),
-            }),
-
-            // Create nodes for objects in collections.
-            createExtension({
-              id: `${SPACE_PLUGIN}/collection-objects`,
+              id: `${SPACE_PLUGIN}/objects`,
               filter: (node): node is Node<CollectionType> => node.data instanceof CollectionType,
               connector: ({ node }) => {
                 const collection = node.data;
@@ -796,6 +788,63 @@ export const SpacePlugin = ({
                   )
                   .filter(nonNullable);
               },
+              resolver: ({ id }) => {
+                if (id.length !== FQ_ID_LENGTH) {
+                  return;
+                }
+
+                const [spaceId, objectId] = id.split(':');
+                if (spaceId.length !== SPACE_ID_LENGTH && objectId.length !== OBJECT_ID_LENGTH) {
+                  return;
+                }
+
+                const space = client.spaces.get().find((space) => space.id === spaceId);
+                if (!space) {
+                  return;
+                }
+
+                const spaceState = toSignal(
+                  (onChange) => space.state.subscribe(() => onChange()).unsubscribe,
+                  () => space.state.get(),
+                  space.id,
+                );
+                if (spaceState !== SpaceState.SPACE_READY) {
+                  return;
+                }
+
+                const store = memoize(() => signal(space.db.getObjectById(objectId)), id);
+                memoize(() => {
+                  if (!store.value) {
+                    void space.db
+                      .query({ id: objectId })
+                      .first()
+                      .then((o) => (store.value = o));
+                  }
+                }, id);
+                const object = store.value;
+                if (!object) {
+                  return;
+                }
+
+                if (isDeleted(object)) {
+                  return false;
+                } else {
+                  return createObjectNode({ object, space, resolve, navigable: state.values.navigableCollections });
+                }
+              },
+            }),
+
+            // Create collection actions and action groups.
+            createExtension({
+              id: `${SPACE_PLUGIN}/object-actions`,
+              filter: (node): node is Node<ReactiveEchoObject<any>> => isEchoObject(node.data),
+              actionGroups: ({ node }) =>
+                constructObjectActionGroups({
+                  object: node.data,
+                  dispatch,
+                  navigable: state.values.navigableCollections,
+                }),
+              actions: ({ node }) => constructObjectActions({ node, dispatch }),
             }),
 
             // Create nodes for object settings.
@@ -812,7 +861,13 @@ export const SpacePlugin = ({
 
                 const [subjectId] = id.split('~');
                 const { spaceId, objectId } = parseId(subjectId);
-                const space = client.spaces.get().find((space) => space.id === spaceId);
+                const spaces = toSignal(
+                  (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
+                  () => client.spaces.get(),
+                );
+                const space = spaces?.find(
+                  (space) => space.id === spaceId && space.state.get() === SpaceState.SPACE_READY,
+                );
                 if (!objectId) {
                   const label = space
                     ? space.properties.name || ['unnamed space label', { ns: SPACE_PLUGIN }]
@@ -837,7 +892,7 @@ export const SpacePlugin = ({
                 const object = toSignal(
                   (onChange) => {
                     const timeout = setTimeout(async () => {
-                      await space?.db.loadObjectById(objectId);
+                      await space?.db.query({ id: objectId }).first();
                       onChange();
                     });
 

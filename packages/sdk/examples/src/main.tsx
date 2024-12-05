@@ -8,12 +8,12 @@ import { Airplane, Stack } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { create, type S } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { TextType, DocumentType } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
 import { Client, ClientProvider } from '@dxos/react-client';
-import { type Space } from '@dxos/react-client/echo';
+import { type Space, type AbstractTypedObject } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { TestBuilder, performInvitation } from '@dxos/react-client/testing';
 import { Input, ThemeProvider, Tooltip, Status } from '@dxos/react-ui';
@@ -28,7 +28,7 @@ const testBuilder = new TestBuilder();
 
 type PeersInSpaceProps = {
   count?: number;
-  types?: S.Schema<any>[];
+  types?: AbstractTypedObject<any>[];
   onSpaceCreated?: (props: { space: Space }) => MaybePromise<void>;
 };
 

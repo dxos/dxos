@@ -13,9 +13,6 @@
         "entryPoints": [
           "{projectRoot}/src/index.ts",
           "{projectRoot}/src/testing/index.ts"
-        ],
-        "platforms": [
-          "browser"
         ]
       }
     },

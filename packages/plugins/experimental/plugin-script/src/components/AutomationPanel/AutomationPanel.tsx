@@ -4,7 +4,7 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { type EchoReactiveObject } from '@dxos/client/echo';
+import { type ReactiveEchoObject } from '@dxos/client/echo';
 import { failUndefined } from '@dxos/debug';
 import { useClient } from '@dxos/react-client';
 import { Filter, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
@@ -15,7 +15,7 @@ import { FunctionType, ScriptType } from '../../types';
 import { DebugPanel } from '../DebugPanel';
 
 export interface AutomationPanelProps {
-  subject: EchoReactiveObject<any>;
+  subject: ReactiveEchoObject<any>;
 }
 
 export const AutomationPanel = ({ subject }: AutomationPanelProps) => {
@@ -48,7 +48,7 @@ export const AutomationPanel = ({ subject }: AutomationPanelProps) => {
 
 export interface ChatPanelProps {
   fn: FunctionType;
-  subject: EchoReactiveObject<any>;
+  subject: ReactiveEchoObject<any>;
 }
 
 const ChatPanel = ({ fn, subject }: ChatPanelProps) => {

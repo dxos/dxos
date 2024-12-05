@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-mosaic",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "An intermediate interface for drag-and-drop interactions.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,7 +10,8 @@
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs"
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

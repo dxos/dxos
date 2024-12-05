@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-table",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "A table component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,32 +8,30 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "exports": {
+    "./deprecated": {
+      "types": "./dist/types/src/_deprecated/index.d.ts",
+      "browser": "./dist/lib/browser/_deprecated/index.mjs",
+      "node": "./dist/lib/node-esm/_deprecated/index.mjs"
+    },
     ".": {
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "require": "./dist/lib/node/index.cjs",
-      "import": "./dist/lib/node-esm/index.mjs"
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./types": {
       "types": "./dist/types/src/types/index.d.ts",
       "browser": "./dist/lib/browser/types/index.mjs",
-      "require": "./dist/lib/node/types/index.cjs",
-      "import": "./dist/lib/node-esm/types/index.mjs"
-    },
-    "./deprecated": {
-      "types": "./dist/types/src/_deprecated/index.d.ts",
-      "browser": "./dist/lib/browser/_deprecated/index.mjs",
-      "require": "./dist/lib/node/_deprecated/index.cjs",
-      "import": "./dist/lib/node-esm/_deprecated/index.mjs"
+      "node": "./dist/lib/node-esm/types/index.mjs"
     }
   },
+  "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
       "deprecated": [
-        "./dist/types/src/_deprecated/index.d.ts"
+        "dist/types/src/_deprecated/index.d.ts"
       ],
       "types": [
-        "./dist/types/src/types/index.d.ts"
+        "dist/types/src/types/index.d.ts"
       ]
     }
   },
@@ -81,6 +79,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
     "@types/lodash.orderby": "^4.6.9",
     "@types/react": "~18.2.0",

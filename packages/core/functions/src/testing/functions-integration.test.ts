@@ -11,7 +11,7 @@ import { TestBuilder } from '@dxos/client/testing';
 import { initFunctionsPlugin } from './plugin-init';
 import { setTestCallHandler } from './test/handler';
 import { createInitializedClients, inviteMember, startFunctionsHost, TestType } from '../testing';
-import { FunctionDef, FunctionTrigger } from '../types';
+import { FunctionDef, FunctionTrigger, TriggerKind } from '../types';
 
 // TODO(wittjosiah): Doesn't work in vitest.
 describe.skip('functions e2e', () => {
@@ -42,7 +42,7 @@ describe.skip('functions e2e', () => {
         enabled: true,
         meta: triggerMeta,
         spec: {
-          type: 'subscription',
+          type: TriggerKind.Subscription,
           filter: { type: TestType.typename },
         },
       }),

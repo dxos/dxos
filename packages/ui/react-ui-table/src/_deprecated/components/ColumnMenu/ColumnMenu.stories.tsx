@@ -15,7 +15,7 @@ import { type ColumnSettingsProps } from './ColumnSettings';
 import { type ColumnDef } from '../../schema';
 
 export default {
-  title: 'ui/react-ui-table/ColumnMenu',
+  title: 'ui/react-ui-table/deprecated/ColumnMenu',
   component: ColumnMenu,
   decorators: [withTheme],
 };

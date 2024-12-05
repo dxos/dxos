@@ -4,7 +4,7 @@
 
 import { asyncTimeout, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { StackTrace } from '@dxos/debug';
+import { raise, StackTrace } from '@dxos/debug';
 import { type Reference } from '@dxos/echo-protocol';
 import { RuntimeSchemaRegistry } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
@@ -15,22 +15,22 @@ import { QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/ec
 import { trace } from '@dxos/tracing';
 import { ComplexMap, entry } from '@dxos/util';
 
-import { type ItemsUpdatedEvent } from './core-db';
-import { type EchoReactiveObject } from './echo-handler';
-import { getObjectCore } from './echo-handler';
+import { type ItemsUpdatedEvent, type ObjectCore } from './core-db';
+import { type ReactiveEchoObject, getObjectCore } from './echo-handler';
 import { prohibitSignalActions } from './guarded-scope';
 import { type EchoDatabase, type EchoDatabaseImpl } from './proxy-db';
 import {
-  filterMatch,
-  optionsToProto,
   Filter,
+  filterMatch,
   type FilterSource,
+  optionsToProto,
   Query,
   type QueryContext,
   type QueryFn,
   type QueryOptions,
   type QueryResult,
   type QueryRunOptions,
+  ResultFormat,
 } from './query';
 
 /**
@@ -48,7 +48,7 @@ export class Hypergraph {
   private readonly _owningObjects = new Map<SpaceId, unknown>();
   private readonly _schemaRegistry = new RuntimeSchemaRegistry();
   private readonly _updateEvent = new Event<ItemsUpdatedEvent>();
-  private readonly _resolveEvents = new Map<SpaceId, Map<string, Event<EchoReactiveObject<any>>>>();
+  private readonly _resolveEvents = new Map<SpaceId, Map<string, Event<ReactiveEchoObject<any>>>>();
 
   private readonly _queryContexts = new Set<GraphQueryContext>();
   private readonly _querySourceProviders: QuerySourceProvider[] = [];
@@ -112,7 +112,33 @@ export class Hypergraph {
   private _query(filter?: FilterSource, options?: QueryOptions) {
     const spaces = options?.spaces;
     invariant(!spaces || spaces.every((space) => space instanceof PublicKey), 'Invalid spaces filter');
-    return new Query(this._createQueryContext(), Filter.from(filter, optionsToProto(options ?? {})));
+
+    // TODO(dmaretskyi): Consider plain format by default.
+    const resultFormat = options?.format ?? ResultFormat.Live;
+
+    if (typeof resultFormat !== 'string') {
+      throw new TypeError('Invalid result format');
+    }
+
+    switch (resultFormat) {
+      case ResultFormat.Plain: {
+        const spaceIds = options?.spaceIds;
+        invariant(spaceIds && spaceIds.length === 1, 'Plain format requires a single space.');
+        return new Query(
+          this._createPlainObjectQueryContext(spaceIds[0] as SpaceId),
+          Filter.from(filter, optionsToProto(options ?? {})),
+        );
+      }
+      case ResultFormat.Live: {
+        return new Query(this._createLiveObjectQueryContext(), Filter.from(filter, optionsToProto(options ?? {})));
+      }
+      case ResultFormat.AutomergeDocAccessor: {
+        throw new Error('Not implemented: ResultFormat.AutomergeDocAccessor');
+      }
+      default: {
+        throw new TypeError(`Invalid result format: ${resultFormat}`);
+      }
+    }
   }
 
   /**
@@ -124,8 +150,8 @@ export class Hypergraph {
   _lookupRef(
     db: EchoDatabase,
     ref: Reference,
-    onResolve: (obj: EchoReactiveObject<any>) => void,
-  ): EchoReactiveObject<any> | undefined {
+    onResolve: (obj: ReactiveEchoObject<any>) => void,
+  ): ReactiveEchoObject<any> | undefined {
     if (ref.host === undefined) {
       const local = db.getObjectById(ref.objectId);
       if (local) {
@@ -208,7 +234,7 @@ export class Hypergraph {
     this._updateEvent.emit(updateEvent);
   }
 
-  private _createQueryContext(): QueryContext {
+  private _createLiveObjectQueryContext(): QueryContext {
     const context = new GraphQueryContext({
       onStart: () => {
         this._queryContexts.add(context);
@@ -225,6 +251,11 @@ export class Hypergraph {
     }
 
     return context;
+  }
+
+  private _createPlainObjectQueryContext(spaceId: SpaceId): QueryContext {
+    const space = this._databases.get(spaceId) ?? raise(new Error(`Space not found: ${spaceId}`));
+    return space._coreDatabase._createQueryContext();
   }
 }
 
@@ -362,7 +393,7 @@ class SpaceQuerySource implements QuerySource {
 
   private _ctx: Context = new Context();
   private _filter: Filter | undefined = undefined;
-  private _results?: QueryResult<EchoReactiveObject<any>>[] = undefined;
+  private _results?: QueryResult<ReactiveEchoObject<any>>[] = undefined;
 
   constructor(private readonly _database: EchoDatabaseImpl) {}
 
@@ -406,18 +437,26 @@ class SpaceQuerySource implements QuerySource {
     });
   };
 
-  async run(filter: Filter): Promise<QueryResult<EchoReactiveObject<any>>[]> {
+  async run(filter: Filter): Promise<QueryResult<ReactiveEchoObject<any>>[]> {
     if (!this._isValidSourceForFilter(filter)) {
       return [];
     }
-    let results: QueryResult<EchoReactiveObject<any>>[] = [];
+
+    if (filter.isObjectIdFilter()) {
+      const cores = (await this._database._coreDatabase.batchLoadObjectCores(filter.objectIds!)).filter(
+        (x) => x !== undefined,
+      );
+      return cores.map((core) => this._mapCoreToResult(core));
+    }
+
+    let results: QueryResult<ReactiveEchoObject<any>>[] = [];
     prohibitSignalActions(() => {
       results = this._query(filter);
     });
     return results;
   }
 
-  getResults(): QueryResult<EchoReactiveObject<any>>[] {
+  getResults(): QueryResult<ReactiveEchoObject<any>>[] {
     if (!this._filter) {
       return [];
     }
@@ -431,7 +470,7 @@ class SpaceQuerySource implements QuerySource {
     return this._results!;
   }
 
-  update(filter: Filter<EchoReactiveObject<any>>): void {
+  update(filter: Filter<ReactiveEchoObject<any>>): void {
     if (!this._isValidSourceForFilter(filter)) {
       this._filter = undefined;
       return;
@@ -447,7 +486,7 @@ class SpaceQuerySource implements QuerySource {
     this.changed.emit();
   }
 
-  private _query(filter: Filter): QueryResult<EchoReactiveObject<any>>[] {
+  private _query(filter: Filter): QueryResult<ReactiveEchoObject<any>>[] {
     const filteredCores = filter.isObjectIdFilter()
       ? filter
           .objectIds!.map((id) => this._database.coreDatabase.getObjectCoreById(id, { load: true }))
@@ -457,19 +496,10 @@ class SpaceQuerySource implements QuerySource {
           // TODO(dmaretskyi): Cleanup proxy <-> core.
           .filter((core) => filterMatch(filter, core, this._database.getObjectById(core.id, { deleted: true })));
 
-    return filteredCores.map((core) => ({
-      id: core.id,
-      spaceId: this.spaceId,
-      spaceKey: this.spaceKey,
-      object: this._database.getObjectById(core.id, { deleted: true }),
-      resolution: {
-        source: 'local',
-        time: 0,
-      },
-    }));
+    return filteredCores.map((core) => this._mapCoreToResult(core));
   }
 
-  private _isValidSourceForFilter(filter: Filter<EchoReactiveObject<any>>): boolean {
+  private _isValidSourceForFilter(filter: Filter<ReactiveEchoObject<any>>): boolean {
     // Disabled by spaces filter.
     if (filter.spaceIds !== undefined && !filter.spaceIds.some((id) => id === this.spaceId)) {
       return false;
@@ -482,6 +512,19 @@ class SpaceQuerySource implements QuerySource {
       return false;
     }
     return true;
+  }
+
+  private _mapCoreToResult(core: ObjectCore): QueryResult<ReactiveEchoObject<any>> {
+    return {
+      id: core.id,
+      spaceId: this.spaceId,
+      spaceKey: this.spaceKey,
+      object: this._database.getObjectById(core.id, { deleted: true }),
+      resolution: {
+        source: 'local',
+        time: 0,
+      },
+    };
   }
 }
 

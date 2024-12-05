@@ -155,7 +155,7 @@ export class CoreDatabase {
     }
 
     const elapsed = performance.now() - start;
-    if (elapsed > 1000) {
+    if (elapsed > 1_000) {
       log.warn('slow AM open', { docId: spaceState.rootUrl, duration: elapsed });
     }
 
@@ -279,7 +279,7 @@ export class CoreDatabase {
 
   async batchLoadObjectCores(
     objectIds: string[],
-    { inactivityTimeout = 30000, returnDeleted = false }: { inactivityTimeout?: number; returnDeleted?: boolean } = {},
+    { inactivityTimeout = 30_000, returnDeleted = false }: { inactivityTimeout?: number; returnDeleted?: boolean } = {},
   ): Promise<(ObjectCore | undefined)[]> {
     if (!this._automergeDocLoader.hasRootHandle) {
       throw new Error('Database is not ready.');
@@ -345,9 +345,16 @@ export class CoreDatabase {
 
   private _query(filter?: FilterSource, options?: QueryOptions) {
     return new Query(
-      new CoreDatabaseQueryContext(this, this._queryService),
+      this._createQueryContext(),
       Filter.from(filter, optionsToProto({ ...options, spaceIds: [this.spaceId] })),
     );
+  }
+
+  /**
+   * @internal
+   */
+  _createQueryContext() {
+    return new CoreDatabaseQueryContext(this, this._queryService);
   }
 
   /**
@@ -678,7 +685,7 @@ export class CoreDatabase {
       if (!objectCore) {
         createdObjectIds.push(updatedObject);
       } else if (objectCore?.docHandle && objectCore.docHandle.url !== event.handle.url) {
-        log.warn('object bound to incorrect document, going to rebind', {
+        log.verbose('object bound to incorrect document, going to rebind', {
           updatedObject,
           documentUrl: objectCore.docHandle.url,
           actualUrl: event.handle.url,

@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { type EchoReactiveObject } from '@dxos/echo-db';
+import { type ReactiveEchoObject } from '@dxos/echo-db';
 import { getType, isDeleted } from '@dxos/echo-schema';
 import { QueryOptions, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
@@ -21,7 +21,7 @@ const textFilter = (text?: string) => {
 
   // TODO(burdon): Structured query (e.g., "type:Text").
   const matcher = new RegExp(text, 'i');
-  return (item: EchoReactiveObject<any>) => {
+  return (item: ReactiveEchoObject<any>) => {
     let match = false;
     match ||= !!getType(item)?.objectId.match(matcher);
     match ||= !!String((item as any).title ?? '').match(matcher);
@@ -29,7 +29,7 @@ const textFilter = (text?: string) => {
   };
 };
 
-const describeContent = (obj: EchoReactiveObject<any>): string => {
+const describeContent = (obj: ReactiveEchoObject<any>): string => {
   if ('name' in obj) {
     return obj.name;
   }
@@ -40,8 +40,8 @@ const describeContent = (obj: EchoReactiveObject<any>): string => {
   return '';
 };
 
-const { helper, builder } = createColumnBuilder<EchoReactiveObject<any>>();
-const columns: TableColumnDef<EchoReactiveObject<any>, any>[] = [
+const { helper, builder } = createColumnBuilder<ReactiveEchoObject<any>>();
+const columns: TableColumnDef<ReactiveEchoObject<any>, any>[] = [
   helper.accessor('id', builder.string({ header: 'id' })),
   helper.accessor((item) => getType(item)?.objectId, {
     id: 'type',
@@ -73,7 +73,7 @@ export const ObjectsPanel = () => {
         </Toolbar.Root>
       }
     >
-      <MasterDetailTable<EchoReactiveObject<any>>
+      <MasterDetailTable<ReactiveEchoObject<any>>
         columns={columns}
         data={items.filter(textFilter(filter))}
         statusBar={<div>Objects: {items.length}</div>}

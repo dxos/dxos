@@ -30,7 +30,7 @@ describe('ComputeGraph', () => {
     // Create script.
     const trigger = new Trigger();
     graph.update.once(() => trigger.wake());
-    const functionObject = space.db.add(create(FunctionType, { version: 1, binding: 'TEST' }));
+    const functionObject = space.db.add(create(FunctionType, { name: 'test', version: 1, binding: 'TEST' }));
     await trigger.wait();
     const functions = graph.getFunctions({ echo: true });
     expect(functions).to.toHaveLength(1);

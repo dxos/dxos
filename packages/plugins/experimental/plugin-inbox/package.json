@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-inbox",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "DXOS Email inbox plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
