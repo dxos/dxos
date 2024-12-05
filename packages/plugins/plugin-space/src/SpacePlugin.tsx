@@ -38,6 +38,7 @@ import { type AttentionPluginProvides, parseAttentionPlugin } from '@dxos/plugin
 import { type ClientPluginProvides, parseClientPlugin } from '@dxos/plugin-client';
 import { type Node, createExtension, memoize, toSignal } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
+import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type Client, PublicKey } from '@dxos/react-client';
 import {
   Expando,
@@ -79,6 +80,7 @@ import {
   type SpaceSettingsDialogProps,
   SpaceSettingsPanel,
   SyncStatus,
+  InlineSyncStatus,
 } from './components';
 import meta, { SPACE_PLUGIN, SpaceAction } from './meta';
 import translations from './translations';
@@ -154,6 +156,7 @@ export const SpacePlugin = ({
     viewersByIdentity: new ComplexMap(PublicKey.hash),
     sdkMigrationRunning: {},
     navigableCollections: false,
+    enabledEdgeReplication: false,
   });
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
@@ -265,13 +268,21 @@ export const SpacePlugin = ({
             if (identity && location.active) {
               // Group parts by space for efficient messaging.
               const idsBySpace = reduceGroupBy(open, (id) => {
-                const [spaceId] = parseFullyQualifiedId(id);
-                return spaceId;
+                try {
+                  const [spaceId] = parseFullyQualifiedId(id);
+                  return spaceId;
+                } catch {
+                  return null;
+                }
               });
 
               const removedBySpace = reduceGroupBy(closed, (id) => {
-                const [spaceId] = parseFullyQualifiedId(id);
-                return spaceId;
+                try {
+                  const [spaceId] = parseFullyQualifiedId(id);
+                  return spaceId;
+                } catch {
+                  return null;
+                }
               });
 
               // NOTE: Ensure all spaces are included so that we send the correct `removed` object arrays.
@@ -359,11 +370,24 @@ export const SpacePlugin = ({
     );
   };
 
+  const setEdgeReplicationDefault = async (client: Client) => {
+    try {
+      await Promise.all(
+        client.spaces.get().map((space) => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED)),
+      );
+      state.values.enabledEdgeReplication = true;
+    } catch (err) {
+      log.catch(err);
+    }
+  };
+
   return {
     meta,
     ready: async (plugins) => {
       settings.prop({ key: 'showHidden', type: LocalStorageStore.bool({ allowUndefined: true }) });
-      state.prop({ key: 'spaceNames', type: LocalStorageStore.json<Record<string, string>>() });
+      state
+        .prop({ key: 'spaceNames', type: LocalStorageStore.json<Record<string, string>>() })
+        .prop({ key: 'enabledEdgeReplication', type: LocalStorageStore.bool() });
 
       // TODO(wittjosiah): Hardcoded due to circular dependency.
       //   Should be based on a provides interface.
@@ -406,6 +430,7 @@ export const SpacePlugin = ({
             }
 
             await onSpaceReady();
+            await setEdgeReplicationDefault(client);
           }
         }).unsubscribe,
       );
@@ -461,6 +486,7 @@ export const SpacePlugin = ({
                   disposition: 'fallback',
                 }
               ) : null;
+            // TODO(burdon): Add role name syntax to minimal plugin docs.
             case 'complementary--settings':
               return isSpace(data.subject) ? (
                 <SpaceSettingsPanel space={data.subject} />
@@ -488,14 +514,16 @@ export const SpacePlugin = ({
               }
               return null;
             }
-            // TODO(burdon): Add role name syntax to minimal plugin docs.
-            case 'presence--glyph': {
+            case 'navtree-item-end': {
               return isReactiveObject(data.object) ? (
                 <SmallPresenceLive
                   id={data.id as string}
                   viewers={state.values.viewersByObject[fullyQualifiedId(data.object)]}
                 />
+              ) : isSpace(data.object) ? (
+                <InlineSyncStatus space={data.object} />
               ) : (
+                // TODO(wittjosiah): Attention glyph for non-echo items should be handled elsewhere.
                 <SmallPresence id={data.id as string} count={0} />
               );
             }
@@ -1012,6 +1040,8 @@ export const SpacePlugin = ({
 
               const space = await client.spaces.create(intent.data as PropertiesTypeProps);
               await space.waitUntilReady();
+              // TODO(wittjosiah): This should be configurable in creation flow.
+              await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
               const collection = create(CollectionType, { objects: [], views: {} });
               space.properties[CollectionType.typename] = collection;
 
