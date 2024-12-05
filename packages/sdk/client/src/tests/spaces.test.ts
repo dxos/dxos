@@ -6,11 +6,11 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, latch, Trigger } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
+import { TYPE_PROPERTIES } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { getObjectCore } from '@dxos/echo-db';
 import { Expando, type HasId } from '@dxos/echo-schema';
-import { TYPE_PROPERTIES  } from '@dxos/client-protocol';
 import { SpaceId } from '@dxos/keys';
 import { create, type ReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';

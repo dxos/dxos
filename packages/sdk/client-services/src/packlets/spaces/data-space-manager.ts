@@ -5,7 +5,7 @@
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { type Doc } from '@dxos/automerge/automerge';
 import { type AutomergeUrl, type DocHandle } from '@dxos/automerge/automerge-repo';
-import { PropertiesType } from '@dxos/client-protocol';
+import { PropertiesType, TYPE_PROPERTIES } from '@dxos/client-protocol';
 import { LifecycleState, Resource, cancelWithContext } from '@dxos/context';
 import {
   createAdmissionCredentials,
@@ -29,7 +29,6 @@ import {
 } from '@dxos/echo-pipeline';
 import { SpaceDocVersion, encodeReference, type ObjectStructure, type SpaceDoc } from '@dxos/echo-protocol';
 import { createObjectId, getTypeReference } from '@dxos/echo-schema';
-import { TYPE_PROPERTIES } from '@dxos/client-protocol';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { writeMessages, type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';

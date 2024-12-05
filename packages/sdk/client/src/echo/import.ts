@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import { TYPE_PROPERTIES } from '@dxos/client-protocol';
 import type { EchoDatabase, SerializedSpace } from '@dxos/echo-db';
 import { decodeReferenceJSON, Filter, Serializer } from '@dxos/echo-db';
-import { TYPE_PROPERTIES } from '@dxos/client-protocol';
 
 export const importSpace = async (database: EchoDatabase, data: SerializedSpace) => {
   const {
