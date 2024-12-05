@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-table",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "Table surface plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -31,7 +31,7 @@
         "dist/types/src/meta.d.ts"
       ],
       "types": [
-        "dist/types/src/types/types.d.ts"
+        "dist/types/src/types/index.d.ts"
       ]
     }
   },

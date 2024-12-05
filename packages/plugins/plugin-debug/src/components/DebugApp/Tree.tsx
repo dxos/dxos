@@ -34,7 +34,7 @@ export const Json: FC<{ data?: object }> = ({ data }) => {
 
 export const Tree: FC<{ data?: object }> = ({ data }) => {
   return (
-    <div className='flex overflow-auto ml-2 border-l-2 border-blue-500'>
+    <div className='p-2'>
       <Node data={data} root />
     </div>
   );

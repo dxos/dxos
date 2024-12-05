@@ -1,6 +1,6 @@
 {
   "name": "@dxos/effect",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "Effect utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -27,6 +27,7 @@
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
+    "@dxos/log": "workspace:*",
     "@effect/schema": "^0.75.5",
     "effect": "^3.9.2"
   },

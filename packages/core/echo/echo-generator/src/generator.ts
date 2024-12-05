@@ -3,14 +3,14 @@
 //
 
 import { type Space, Filter } from '@dxos/client/echo';
-import { type EchoReactiveObject } from '@dxos/echo-db';
+import { type ReactiveEchoObject } from '@dxos/echo-db';
 import {
   create,
-  MutableSchema,
-  type ReactiveObject,
   getObjectAnnotation,
   getSchema,
   isReactiveObject,
+  MutableSchema,
+  type ReactiveObject,
   type S,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -60,7 +60,6 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
     return schema ? create(schema, data) : create(data);
   }
 
-  // TODO(burdon): Create batch.
   // TODO(burdon): Based on dependencies (e.g., organization before contact).
   async createObjects(map: Partial<Record<T, number>>) {
     const tasks = Object.entries<number>(map as any)
@@ -105,7 +104,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     return result;
   }
 
-  override async createObject({ types }: { types?: T[] } = {}): Promise<EchoReactiveObject<any>> {
+  override async createObject({ types }: { types?: T[] } = {}): Promise<ReactiveEchoObject<any>> {
     return this._space.db.add(await super.createObject({ types }));
   }
 
@@ -127,7 +126,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     }
   }
 
-  async mutateObject(object: EchoReactiveObject<any>, params: MutationsProviderParams) {
+  async mutateObject(object: ReactiveEchoObject<any>, params: MutationsProviderParams) {
     invariant(this._mutations, 'Mutations not defined.');
     const type = getObjectAnnotation(getSchema(object)!)!.typename as T;
     invariant(type && this._mutations?.[type], 'Invalid object type.');
@@ -135,7 +134,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     await this._mutations![type](object, params);
   }
 
-  async mutateObjects(objects: EchoReactiveObject<any>[], params: MutationsProviderParams) {
+  async mutateObjects(objects: ReactiveEchoObject<any>[], params: MutationsProviderParams) {
     for (const object of objects) {
       await this.mutateObject(object, params);
     }

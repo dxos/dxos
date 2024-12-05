@@ -38,7 +38,6 @@ describe('Composer migrations', () => {
         LegacyTypes.TableType,
         LegacyTypes.TextType,
         LegacyTypes.ThreadType,
-        Expando,
         ChannelType,
         CollectionType,
         DocumentType,

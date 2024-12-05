@@ -3,8 +3,8 @@
 //
 
 import { sleep } from '@dxos/async';
-import { getObjectCore } from '@dxos/echo-db';
-import { type AnyObjectData } from '@dxos/echo-schema';
+import { getObjectCore, ResultFormat } from '@dxos/echo-db';
+import type { AnyObjectData } from '@dxos/echo-schema';
 import { type FunctionTrigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG } from '@dxos/keys';
@@ -12,8 +12,6 @@ import { log } from '@dxos/log';
 import { FunctionType } from '@dxos/plugin-script';
 import { type Client, type Config } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-
-import { handleEmail } from './email';
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1_000;
@@ -49,12 +47,11 @@ export const invokeFunction = async (client: Client, space: Space, trigger: Func
   try {
     invariant(trigger.spec);
     invariant(trigger.function);
-    if (trigger.spec.type === 'websocket') {
-      return handleEmail(space, data.data);
-    }
 
-    const script = await space.crud.query({ id: trigger.function }).first();
-    const { objects: functions } = await space.crud.query({ __typename: FunctionType.typename }).run();
+    const script = await space.db.query({ id: trigger.function }, { format: ResultFormat.Plain }).first();
+    const { objects: functions } = await space.db
+      .query({ __typename: FunctionType.typename }, { format: ResultFormat.Plain })
+      .run();
     const func = functions.find((fn) => referenceEquals(fn.source, trigger.function!)) as AnyObjectData | undefined;
     const funcSlug = func?.__meta.keys.find((key) => key.source === USERFUNCTIONS_META_KEY)?.id;
     if (!funcSlug) {

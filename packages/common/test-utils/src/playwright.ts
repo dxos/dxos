@@ -5,7 +5,7 @@
 /* eslint-disable no-console */
 
 import { workspaceRoot } from '@nx/devkit';
-import { type Browser, type BrowserContext, type PlaywrightTestConfig } from '@playwright/test';
+import { type Browser, type BrowserContext, type PlaywrightTestConfig, type Page } from '@playwright/test';
 import { join, relative } from 'node:path';
 import pkgUp from 'pkg-up';
 
@@ -28,13 +28,18 @@ export const e2ePreset = (cwd: string): PlaywrightTestConfig => {
 export type SetupOptions = {
   url?: string;
   bridgeLogs?: boolean;
+  viewportSize?: Parameters<Page['setViewportSize']>[0];
 };
 
 export const setupPage = async (browser: Browser | BrowserContext, options: SetupOptions = {}) => {
-  const { url, bridgeLogs } = options;
+  const { url, bridgeLogs, viewportSize } = options;
 
   const context = 'newContext' in browser ? await browser.newContext() : browser;
   const page = await context.newPage();
+
+  if (viewportSize) {
+    await page.setViewportSize(viewportSize);
+  }
 
   // TODO(wittjosiah): Remove?
   if (bridgeLogs) {
@@ -71,3 +76,5 @@ export const setupPage = async (browser: Browser | BrowserContext, options: Setu
 
   return { context, page };
 };
+
+export const storybookUrl = (storyId: string) => `http://localhost:9009/iframe.html?id=${storyId}&viewMode=story`;
