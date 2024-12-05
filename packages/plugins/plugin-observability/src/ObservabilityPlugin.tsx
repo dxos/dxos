@@ -18,7 +18,7 @@ import {
   parsePluginHost,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 import {
   type Observability,

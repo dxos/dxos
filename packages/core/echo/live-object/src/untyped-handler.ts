@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
+import { defineHiddenProperty, TYPENAME_SYMBOL } from '@dxos/echo-schema';
+import { data, type ObjectMeta } from '@dxos/echo-schema';
 import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 
 import { getObjectMeta } from './object';
-import { defineHiddenProperty } from './utils';
-import { createProxy, isValidProxyTarget, ReactiveArray, type ReactiveHandler } from '../proxy';
-import { data, type ObjectMeta } from '../types';
+import { createProxy, isValidProxyTarget, ReactiveArray, type ReactiveHandler } from './proxy';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');
@@ -74,6 +74,10 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     if (prop === data) {
       return toJSON(target);
+    }
+
+    if (prop === TYPENAME_SYMBOL) {
+      return undefined;
     }
 
     const value = Reflect.get(target, prop);

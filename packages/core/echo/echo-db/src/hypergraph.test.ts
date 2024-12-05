@@ -4,8 +4,9 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { create, Expando } from '@dxos/echo-schema';
+import { Expando } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
+import { create } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 
 import { getObjectCore } from './echo-handler';

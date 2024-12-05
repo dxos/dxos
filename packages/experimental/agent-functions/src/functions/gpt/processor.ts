@@ -8,19 +8,20 @@ import get from 'lodash.get';
 import { type Space } from '@dxos/client/echo';
 import { todo } from '@dxos/debug';
 import { Filter } from '@dxos/echo-db';
-import { type ReactiveObject, type JSONSchema } from '@dxos/echo-schema';
+import { type JSONSchema } from '@dxos/echo-schema';
+import { type ReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type ChainInput, ChainInputType, ChainPromptType } from '@dxos/plugin-automation/types';
 import { type MessageType, type ThreadType } from '@dxos/plugin-space/types';
 import { nonNullable } from '@dxos/util';
 
+import { type ChainResources } from '../../chain';
+import { type ModelInvocationArgs, type ModelInvoker } from '../../chain/model-invoker';
 import { createContext, type RequestContext } from './context';
 import { parseMessage } from './parser';
 import { type ResolverMap } from './resolvers';
 import { ResponseBuilder } from './response';
 import { createStatusNotifier } from './status';
-import { type ChainResources } from '../../chain';
-import { type ModelInvocationArgs, type ModelInvoker } from '../../chain/model-invoker';
 
 export type SequenceOptions = {
   prompt?: ChainPromptType;

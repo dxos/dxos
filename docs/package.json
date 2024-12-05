@@ -25,6 +25,7 @@
     "@dxos/echo-signals": "workspace:*",
     "@dxos/examples": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/observability": "workspace:*",
     "@dxos/protocols": "workspace:*",

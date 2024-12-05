@@ -2,16 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Signal, effect, signal } from '@preact/signals-core';
+import { effect, type Signal, signal } from '@preact/signals-core';
 
 import { type UnsubscribeCallback } from '@dxos/async';
-import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { isNode, type MaybePromise, nonNullable } from '@dxos/util';
 
 import { ACTION_GROUP_TYPE, ACTION_TYPE, Graph, type GraphParams } from './graph';
-import { type Relation, type NodeArg, type Node, type ActionData, actionGroupSymbol } from './node';
+import { type ActionData, actionGroupSymbol, type Node, type NodeArg, type Relation } from './node';
 
 /**
  * Graph builder extension for adding nodes to the graph based on just the node id.

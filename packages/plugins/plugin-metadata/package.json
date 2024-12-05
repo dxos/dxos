@@ -33,7 +33,8 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
-    "@dxos/echo-schema": "workspace:*"
+    "@dxos/echo-schema": "workspace:*",
+    "@dxos/live-object": "workspace:*"
   },
   "devDependencies": {
     "@dxos/storybook-utils": "workspace:*",

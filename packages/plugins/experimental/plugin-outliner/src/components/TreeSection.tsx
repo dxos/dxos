@@ -4,7 +4,7 @@
 
 import React, { type FC } from 'react';
 
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { getSpace } from '@dxos/react-client/echo';
 
 import { Outliner } from './Outliner';

@@ -5,12 +5,12 @@
 import { inspect } from 'node:util';
 import { describe, expect, test } from 'vitest';
 
+import { data } from '@dxos/echo-schema';
+import { TestClass, type TestSchema, TestSchemaWithClass, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { isNode } from '@dxos/util';
 
-import { create } from './object';
-import { TestClass, type TestSchema, TestSchemaWithClass, updateCounter } from '../testing';
-import { data, type ReactiveObject } from '../types';
+import { create, type ReactiveObject } from './object';
 
 registerSignalsRuntime();
 

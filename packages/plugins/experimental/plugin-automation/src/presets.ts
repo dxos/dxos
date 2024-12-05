@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 
 import { ChainInputType, ChainPromptType } from './types';
 

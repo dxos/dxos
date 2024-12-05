@@ -5,16 +5,21 @@
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { type Reference } from '@dxos/echo-protocol';
+import {
+  defineHiddenProperty,
+  SchemaMetaSymbol,
+  TYPENAME_SYMBOL,
+  SchemaValidator,
+  symbolSchema,
+  getTypeReference,
+} from '@dxos/echo-schema';
+import { data, type ObjectMeta } from '@dxos/echo-schema';
 import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
 import { AST, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { getObjectMeta } from './object';
-import { defineHiddenProperty } from './utils';
-import { SchemaValidator, symbolSchema } from '../ast';
-import { getTypeReference } from '../proxy';
-import { createProxy, isValidProxyTarget, ReactiveArray, type ReactiveHandler, symbolIsProxy } from '../proxy';
-import { data, type ObjectMeta } from '../types';
+import { createProxy, isValidProxyTarget, ReactiveArray, type ReactiveHandler, symbolIsProxy } from './proxy';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');
@@ -75,6 +80,15 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (prop === data) {
       target[symbolSignal].notifyRead();
       return toJSON(target);
+    }
+
+    if (prop === TYPENAME_SYMBOL) {
+      const schema = this.getSchema(target);
+      // Special handling for MutableSchema. objectId is StoredSchema objectId, not a typename.
+      if (schema && typeof schema === 'object' && SchemaMetaSymbol in schema) {
+        return (schema as any)[SchemaMetaSymbol].typename;
+      }
+      return this.getTypeReference(target)?.objectId;
     }
 
     // Handle getter properties. Will not subscribe the value signal.

@@ -8,7 +8,7 @@ import path from 'node:path';
 import process from 'node:process';
 
 import { type ReactiveEchoObject, Filter } from '@dxos/echo-db';
-import { create, getMeta } from '@dxos/echo-schema';
+import { create, getMeta } from '@dxos/live-object';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
