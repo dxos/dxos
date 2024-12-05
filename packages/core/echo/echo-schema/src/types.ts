@@ -32,7 +32,7 @@ export const ECHO_ATTR_META = '@meta';
  * It is stricter than `T extends {}` or `T extends object`.
  */
 // TODO(burdon): Consider moving to lower-level base type lib.
-export type BaseObject = { [key: string]: unknown };
+export type BaseObject = { [key: string]: any };
 
 export type PropertyKey<T extends BaseObject> = Extract<keyof ExcludeId<T>, string>;
 
