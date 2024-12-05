@@ -10,7 +10,7 @@ import { createRoot } from 'react-dom/client';
 import { createApp } from '@dxos/app-framework';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { getObservabilityGroup, initializeAppObservability, isObservabilityDisabled } from '@dxos/observability';
-import { Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
+import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
@@ -52,7 +52,7 @@ const main = async () => {
 
   // Intentionally do not await, don't block app startup for telemetry.
   // namespace has to match the value passed to sentryVitePlugin in vite.config.ts for sourcemaps to work.
-  const observability = initializeAppObservability({ namespace: appKey, config });
+  const observability = initializeAppObservability({ namespace: appKey, config, replayEnable: true });
 
   // TODO(nf): refactor.
   const observabilityDisabled = await isObservabilityDisabled(appKey);
@@ -95,13 +95,14 @@ const main = async () => {
         </Tooltip.Provider>
       </ThemeProvider>
     ),
-    placeholder: (
-      <ThemeProvider tx={defaultTx}>
-        <div className='flex flex-col justify-end bs-dvh'>
-          <Status variant='main-bottom' indeterminate aria-label='Initializing' />
-        </div>
-      </ThemeProvider>
-    ),
+    // TODO(burdon): Create skeleton.
+    // placeholder: (
+    //   <ThemeProvider tx={defaultTx}>
+    //     <div className='flex flex-col justify-end bs-dvh'>
+    //        <Status variant='main-bottom' indeterminate aria-label='Initializing' />
+    //     </div>
+    //   </ThemeProvider>
+    // ),
     plugins: plugins(conf),
     meta: [...core(conf), ...defaults(conf), ...recommended(conf)],
     core: core(conf).map((meta) => meta.id),

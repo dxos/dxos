@@ -18,13 +18,14 @@ import {
   SchemaValidator,
   StoredSchema,
   symbolIsProxy,
+  type BaseObject,
 } from '@dxos/echo-schema';
 import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { setDeep, deepMapValues, defaultMap, getDeep } from '@dxos/util';
 
-import { type EchoReactiveObject, createObject, isEchoObject } from './create';
+import { type ReactiveEchoObject, createObject, isEchoObject } from './create';
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
 import {
@@ -44,6 +45,7 @@ export const DATA_NAMESPACE = 'data';
 
 /**
  * Shared for all targets within one ECHO object.
+ * @internal
  */
 export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   public static readonly instance = new EchoReactiveHandler();
@@ -154,6 +156,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         array[symbolHandler] = this;
         return array;
       });
+
       return createProxy(newTarget, this);
     }
     if (typeof decoded === 'object') {
@@ -168,6 +171,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           [symbolNamespace]: namespace,
         }),
       );
+
       return createProxy(newTarget, this);
     }
 
@@ -188,6 +192,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (target instanceof EchoArray) {
       return this._arrayHas(target, p);
     }
+
     const { value } = this.getDecodedValueAtPath(target);
     return typeof value === 'object' ? Reflect.has(value, p) : false;
   }
@@ -203,7 +208,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
     const fullPath = [getNamespace(target), ...dataPath];
     let value = target[symbolInternals].core.getDecoded(fullPath);
-
     if (value instanceof Reference) {
       value = this.lookupRef(target, value);
     }
@@ -219,6 +223,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (prop !== 'length' && isNaN(parseInt(prop))) {
       return Reflect.get(target, prop);
     }
+
     const decodedValueAtPath = this.getDecodedValueAtPath(target, prop);
     return this._wrapInProxyIfRequired(target, decodedValueAtPath);
   }
@@ -233,21 +238,21 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         return parsedIndex < length;
       }
     }
+
     return Reflect.has(target, prop);
   }
 
+  // TODO(burdon): arg `receiver` not used.
   set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {
     invariant(Array.isArray(target[symbolPath]));
     invariant(typeof prop === 'string');
-
     if (target instanceof EchoArray && prop === 'length') {
       this._arraySetLength(target, target[symbolPath], value);
       return true;
     }
 
-    const validatedValue = this.validateValue(target, [...target[symbolPath], prop], value);
     const fullPath = [getNamespace(target), ...target[symbolPath], prop];
-
+    const validatedValue = this.validateValue(target, [...target[symbolPath], prop], value);
     if (validatedValue === undefined) {
       target[symbolInternals].core.delete(fullPath);
     } else {
@@ -479,7 +484,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       // Can be caused not using `object(Expando, { ... })` constructor.
       // TODO(dmaretskyi): Add better validation.
       invariant(otherObjId != null);
-      target[symbolInternals].linkCache.set(otherObjId, otherEchoObj as EchoReactiveObject<any>);
+      target[symbolInternals].linkCache.set(otherObjId, otherEchoObj as ReactiveEchoObject<any>);
       return new Reference(otherObjId);
     }
 
@@ -501,7 +506,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   /**
    * Lookup referenced object.
    */
-  lookupRef(target: ProxyTarget, ref: Reference): EchoReactiveObject<any> | undefined {
+  lookupRef(target: ProxyTarget, ref: Reference): ReactiveEchoObject<any> | undefined {
     const database = target[symbolInternals].database;
     if (database) {
       // This doesn't clean-up properly if the ref at key gets changed, but it doesn't matter since `_onLinkResolved` is idempotent.
@@ -659,8 +664,8 @@ export const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
   }
 };
 
-// TODO(burdon): Move ProxyTarget def to echo-schema and make EchoReactiveObject inherit?
-export const getObjectCore = <T extends object>(obj: EchoReactiveObject<T>): ObjectCore => {
+// TODO(burdon): Move ProxyTarget def to echo-schema and make ReactiveEchoObject inherit?
+export const getObjectCore = <T extends BaseObject>(obj: ReactiveEchoObject<T>): ObjectCore => {
   const { core } = (obj as unknown as ProxyTarget)[symbolInternals];
   return core;
 };

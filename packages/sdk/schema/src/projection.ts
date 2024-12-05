@@ -65,6 +65,10 @@ export class ViewProjection {
     return field;
   }
 
+  getFieldId(path: string): string | undefined {
+    return this._view.fields.find((field) => field.path === path)?.id;
+  }
+
   /**
    * Get projection of View fields and JSON schema property annotations.
    */
@@ -114,6 +118,7 @@ export class ViewProjection {
     const targetPropertyName = props?.property;
     const isRename = !!(sourcePropertyName && targetPropertyName && targetPropertyName !== sourcePropertyName);
 
+    // TODO(burdon): Set field if does not exist.
     if (field) {
       const propsValues = props ? (pick(props, ['referencePath']) as Partial<FieldType>) : undefined;
       const clonedField: FieldType = { ...field, ...propsValues };

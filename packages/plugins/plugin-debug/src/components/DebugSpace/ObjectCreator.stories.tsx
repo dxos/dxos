@@ -8,12 +8,14 @@ import { type Meta } from '@storybook/react';
 import React, { useEffect } from 'react';
 
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
-import { type ReactiveObject, useSpaces } from '@dxos/react-client/echo';
-import { ClientRepeater } from '@dxos/react-client/testing';
+import { log } from '@dxos/log';
+import { useSpaces } from '@dxos/react-client/echo';
+import { withClientProvider } from '@dxos/react-client/testing';
+import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { ObjectCreator, type ObjectCreatorProps } from './ObjectCreator';
 
-const Story = () => {
+const DefaultStory = () => {
   const [space] = useSpaces();
   useEffect(() => {
     if (space) {
@@ -22,26 +24,27 @@ const Story = () => {
     }
   }, [space]);
 
+  const handleCreate: ObjectCreatorProps['onAddObjects'] = (objects) => {
+    log.info('created', { objects });
+  };
+
   if (!space) {
     return null;
   }
 
-  const handleCreate: ObjectCreatorProps['onAddObjects'] = (objects: ReactiveObject<any>[]) => {
-    console.log('Created:', objects);
-  };
-
   return <ObjectCreator space={space} onAddObjects={handleCreate} />;
 };
 
-export const Default = {};
-
 const meta: Meta = {
-  title: 'plugins/plugin-debug/SchemaList',
+  title: 'plugins/plugin-debug/ObjectCreator',
   component: ObjectCreator,
-  render: () => <ClientRepeater component={Story} createSpace />,
+  render: render(DefaultStory),
+  decorators: [withClientProvider({ createSpace: true }), withLayout({ tooltips: true }), withTheme],
   parameters: {
     layout: 'fullscreen',
   },
 };
 
 export default meta;
+
+export const Default = {};

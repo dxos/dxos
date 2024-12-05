@@ -20,9 +20,15 @@ import { createFieldId, createView, ViewProjection } from '@dxos/schema';
 
 import { type TableType } from '../types';
 
+type InitialiseTableProps = {
+  space: Space;
+  table: TableType;
+  initialRow?: boolean;
+};
+
 // TODO(burdon): Pass in type.
 // TODO(burdon): User should determine typename.
-export const initializeTable = ({ space, table }: { space: Space; table: TableType }): MutableSchema => {
+export const initializeTable = ({ space, table, initialRow = true }: InitialiseTableProps): MutableSchema => {
   log.info('initializeTable', { table });
 
   const ContactSchema = TypedObject({
@@ -70,8 +76,10 @@ export const initializeTable = ({ space, table }: { space: Space; table: TableTy
     },
   });
 
-  // TODO(burdon): Last (first) row should not be in db and should be managed by the model.
-  space.db.add(create(contactSchema, {}));
+  if (initialRow) {
+    // TODO(burdon): Last (first) row should not be in db and should be managed by the model.
+    space.db.add(create(contactSchema, {}));
+  }
 
   return contactSchema;
 };

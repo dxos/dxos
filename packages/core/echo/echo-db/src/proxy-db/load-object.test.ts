@@ -10,7 +10,7 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 
 import { loadObjectReferences } from './load-object';
-import { type EchoReactiveObject } from '../echo-handler';
+import { type ReactiveEchoObject } from '../echo-handler';
 import { EchoTestBuilder } from '../testing';
 
 describe('loadObjectReferences', () => {
@@ -30,7 +30,7 @@ describe('loadObjectReferences', () => {
 
     const restartedPeer = await testBuilder.createPeer(kv);
     const restartedDb = await restartedPeer.openDatabase(spaceKey, db.rootUrl!);
-    const loaded: any = await restartedDb.loadObjectById(object.id);
+    const loaded: any = await restartedDb.query({ id: object.id }).first();
     expect(loaded.nested?.value).to.be.undefined;
     expect(await loadObjectReferences(loaded, (o) => o.nested?.value)).to.eq(nestedValue);
   });
@@ -50,7 +50,7 @@ describe('loadObjectReferences', () => {
 
     const restartedPeer = await testBuilder.createPeer(kv);
     const restartedDb = await restartedPeer.openDatabase(spaceKey, db.rootUrl!);
-    const loaded: any = await restartedDb.loadObjectById(object.id);
+    const loaded: any = await restartedDb.query({ id: object.id }).first();
     expect(loaded.nested?.value).to.be.undefined;
     const [foo, bar] = await loadObjectReferences(loaded, (o) => [o.foo, o.bar] as any[]);
     expect(foo.value + bar.value).to.eq(3);
@@ -71,7 +71,7 @@ describe('loadObjectReferences', () => {
 
     const restartedPeer = await testBuilder.createPeer(kv);
     const restartedDb = await restartedPeer.openDatabase(spaceKey, db.rootUrl!);
-    const loaded: any = await restartedDb.loadObjectById(object.id);
+    const loaded: any = await restartedDb.query({ id: object.id }).first();
     expect((loaded.nestedArray as any[]).every((v) => v == null)).to.be.true;
     const loadedArray = await loadObjectReferences(loaded, (o) => o.nestedArray as any[]);
     expect(loadedArray.every((v) => v != null)).to.be.true;
@@ -95,7 +95,7 @@ describe('loadObjectReferences', () => {
 
     const restartedPeer = await testBuilder.createPeer(kv);
     const restartedDb = await restartedPeer.openDatabase(spaceKey, db.rootUrl!);
-    const loaded: any[] = await Promise.all(objects.map((o) => restartedDb.loadObjectById(o.id)));
+    const loaded: any[] = await Promise.all(objects.map((o) => restartedDb.query({ id: o.id }).first()));
     const loadedArrays = await loadObjectReferences(loaded, (o) => o.nestedArray as any[]);
     const mergedArrays = loadedArrays.flatMap((v) => v);
     expect(mergedArrays.length).to.eq(objects[0].nestedArray.length + objects[1].nestedArray.length);
@@ -117,7 +117,7 @@ describe('loadObjectReferences', () => {
 
     const restartedPeer = await testBuilder.createPeer(kv);
     const restartedDb = await restartedPeer.openDatabase(spaceKey, db.rootUrl!);
-    const loaded: any = await restartedDb.loadObjectById(object.id);
+    const loaded: any = await restartedDb.query({ id: object.id }).first();
     expect(await loadObjectReferences([loaded], () => loaded.nestedArray)).to.deep.eq([[]]);
   });
 
@@ -136,7 +136,7 @@ describe('loadObjectReferences', () => {
 
     const restartedPeer = await testBuilder.createPeer(kv);
     const restartedDb = await restartedPeer.openDatabase(spaceKey, db.rootUrl!);
-    const loaded: any = await restartedDb.loadObjectById(object.id);
+    const loaded: any = await restartedDb.query({ id: object.id }).first();
     expect(loaded.nested?.value).to.be.undefined;
     let threw = false;
     try {
@@ -168,13 +168,13 @@ describe('loadObjectReferences', () => {
 
     const restartedPeer = await testBuilder.createPeer(kv);
     const restartedDb = await restartedPeer.openDatabase(spaceKey, db.rootUrl!);
-    const loaded = await restartedDb.loadObjectById<TestSchema>(object.id);
+    const loaded = (await restartedDb.query({ id: object.id }).first()) as TestSchema;
     const loadedNested = await loadObjectReferences(loaded!, (o) => o.nested);
     const value: number = loadedNested[0].value;
     expect(value).to.eq(42);
   });
 });
 
-const createExpando = (props: any = {}): EchoReactiveObject<Expando> => {
+const createExpando = (props: any = {}): ReactiveEchoObject<Expando> => {
   return create(Expando, props);
 };

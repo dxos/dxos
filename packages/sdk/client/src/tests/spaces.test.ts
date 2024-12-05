@@ -109,7 +109,7 @@ describe('Spaces', () => {
       expect(SpaceId.isValid(space.id)).to.be.true;
       await space.waitUntilReady();
 
-      const obj = await space.db.loadObjectById(objectId)!;
+      const obj = await space.db.query({ id: objectId }).first();
       expect(obj).to.exist;
     }
 

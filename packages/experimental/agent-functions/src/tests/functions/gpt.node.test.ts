@@ -10,7 +10,7 @@ import { getMeta, type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { loadObjectReferences } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
-import { FunctionDef, FunctionTrigger } from '@dxos/functions';
+import { FunctionDef, FunctionTrigger, TriggerKind } from '@dxos/functions';
 import { createInitializedClients, inviteMember, startFunctionsHost } from '@dxos/functions/testing';
 import { ChainInputType, ChainPromptType } from '@dxos/plugin-automation/types';
 import { TextType } from '@dxos/plugin-markdown/types';
@@ -261,7 +261,7 @@ const createTrigger = (space: Space, options?: { meta?: FunctionTrigger['meta'] 
       enabled: true,
       meta: options?.meta,
       spec: {
-        type: 'subscription',
+        type: TriggerKind.Subscription,
         filter: { type: MessageType.typename },
       },
     }),

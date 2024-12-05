@@ -5,7 +5,7 @@
 import React, { type FC } from 'react';
 
 import { PublicKey } from '@dxos/react-client';
-import { type EchoReactiveObject, getSpace } from '@dxos/react-client/echo';
+import { type ReactiveEchoObject, getSpace } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import {
   baseSurface,
@@ -14,7 +14,7 @@ import {
   bottombarBlockPaddingEnd,
 } from '@dxos/react-ui-theme';
 
-export const TemplateMain: FC<{ object: EchoReactiveObject<any> }> = ({ object }) => {
+export const TemplateMain: FC<{ object: ReactiveEchoObject<any> }> = ({ object }) => {
   const space = getSpace(object);
 
   return (

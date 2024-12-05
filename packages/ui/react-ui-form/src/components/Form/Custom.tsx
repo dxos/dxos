@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type LatLng } from '@dxos/echo-schema';
+import { type BaseObject, type GeoPoint } from '@dxos/echo-schema';
 import { Input, useTranslation } from '@dxos/react-ui';
 
 import { InputHeader, type InputProps } from './Input';
@@ -14,7 +14,7 @@ import { translationKey } from '../../translations';
 // Custom format components.
 //
 
-export const LatLngInput = <T extends object>({
+export const GeiPointInput = <T extends BaseObject>({
   property,
   type,
   label,
@@ -26,7 +26,7 @@ export const LatLngInput = <T extends object>({
 }: InputProps<T>) => {
   const { t } = useTranslation(translationKey);
   const { status, error } = getStatus?.(property);
-  const { lat = 0, lng = 0 } = getValue<LatLng>(property) ?? {};
+  const [lng = 0, lat = 0] = getValue<GeoPoint>(property) ?? [];
 
   return (
     <Input.Root validationValence={status}>
@@ -37,17 +37,17 @@ export const LatLngInput = <T extends object>({
         <Input.TextInput
           type='number'
           disabled={disabled}
-          placeholder={t('placeholder latitude')}
-          value={lat}
-          onChange={(event) => onValueChange(property, type, { lat: safeParseFloat(event.target.value, 0), lng })}
+          placeholder={t('placeholder longitude')}
+          value={lng}
+          onChange={(event) => onValueChange(property, type, [lat, safeParseFloat(event.target.value, 0)])}
           onBlur={onBlur}
         />
         <Input.TextInput
           type='number'
           disabled={disabled}
-          placeholder={t('placeholder longitude')}
-          value={lng}
-          onChange={(event) => onValueChange(property, type, { lat, lng: safeParseFloat(event.target.value, 0) })}
+          placeholder={t('placeholder latitude')}
+          value={lat}
+          onChange={(event) => onValueChange(property, type, [safeParseFloat(event.target.value, 0), lng])}
           onBlur={onBlur}
         />
       </div>

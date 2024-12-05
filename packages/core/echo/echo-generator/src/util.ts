@@ -15,5 +15,6 @@ export const randomText = (length: number) => {
   for (let index = 0; index < length; index++) {
     result += characters.charAt(Math.floor(Math.random() * charactersLength));
   }
+
   return result;
 };

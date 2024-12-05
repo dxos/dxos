@@ -14,7 +14,7 @@ import {
   type EchoClient,
   type EchoDatabase,
   type EchoDatabaseImpl,
-  type EchoReactiveObject,
+  type ReactiveEchoObject,
   Filter,
 } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
@@ -96,7 +96,7 @@ export class SpaceProxy implements Space {
 
   private _databaseOpen = false;
   private _error: Error | undefined = undefined;
-  private _properties?: EchoReactiveObject<any> = undefined;
+  private _properties?: ReactiveEchoObject<any> = undefined;
 
   constructor(
     private _clientServices: ClientServicesProvider,
@@ -150,6 +150,9 @@ export class SpaceProxy implements Space {
     return this._db;
   }
 
+  /**
+   * @deprecated
+   */
   get crud(): CoreDatabase {
     return this._db.coreDatabase;
   }
@@ -160,7 +163,7 @@ export class SpaceProxy implements Space {
   }
 
   @trace.info({ depth: 2 })
-  get properties(): EchoReactiveObject<any> {
+  get properties(): ReactiveEchoObject<any> {
     this._throwIfNotInitialized();
     invariant(this._properties, 'Properties not available');
     return this._properties;

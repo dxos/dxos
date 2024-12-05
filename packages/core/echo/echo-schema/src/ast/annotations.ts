@@ -10,15 +10,25 @@ import { type Primitive } from '@dxos/util';
 
 import { checkIdNotPresentOnSchema } from './schema-validator';
 import { type HasId } from './types';
+import { type BaseObject } from '../types';
 
-type ToMutable<T> = T extends {} ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] } : T;
+type ToMutable<T> = T extends BaseObject
+  ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
+  : T;
+
+// TODO(burdon): Move to echo-schema (not preserved when generating JSONSchema).
+export const GeneratorAnnotationId = Symbol.for('@dxos/schema/annotation/Generator');
 
 /**
  * ECHO object.
  */
 export const ObjectAnnotationId = Symbol.for('@dxos/schema/annotation/Object');
 
+export const TYPENAME_REGEX = /^\w+\.\w{2,}\/[\w/]+$/;
+export const VERSION_REGEX = /^\d+.\d+.\d+$/;
+
 // TODO(burdon): Reconcile with other types.
+// TODO(burdon): Define as schema with regex patterns above.
 export type ObjectAnnotation = {
   schemaId?: string;
   typename: string;
@@ -31,6 +41,7 @@ export const getObjectAnnotation = (schema: S.Schema.All): ObjectAnnotation | un
     Option.getOrElse(() => undefined),
   );
 
+// TODO(burdon): Rename getTypename.
 export const getSchemaTypename = (schema: S.Schema.All): string | undefined => getObjectAnnotation(schema)?.typename;
 
 // TODO(burdon): Rename ObjectAnnotation.
