@@ -16,16 +16,17 @@ import {
   type EditorBlurHandler,
   type GridScopedProps,
   useGridContext,
+  type DxGridPlanePosition,
+  parseCellIndex,
 } from '@dxos/react-ui-grid';
 import { type FieldProjection } from '@dxos/schema';
 
 import { completion } from './extension';
 import { type TableModel } from '../../model';
-import { type GridCell, toGridCell } from '../../util';
 
 export type TableCellEditorProps = {
   model?: TableModel;
-  onEnter?: (cell: GridCell) => void;
+  onEnter?: (cell: DxGridPlanePosition) => void;
   onFocus?: DxGrid['refocus'];
   onQuery?: (field: FieldProjection, text: string) => Promise<{ label: string; data: any }[]>;
 };
@@ -43,7 +44,7 @@ export const TableCellEditor = ({
       return;
     }
 
-    const { col } = toGridCell(editing.index);
+    const { col } = parseCellIndex(editing.index);
     const field = model.projection.view.fields[col];
     const fieldProjection = model.projection.getFieldProjection(field.id);
     invariant(fieldProjection);
@@ -56,7 +57,7 @@ export const TableCellEditor = ({
         return;
       }
 
-      const cell = toGridCell(editing.index);
+      const cell = parseCellIndex(editing.index);
       onEnter?.(cell);
       if (event && onFocus) {
         onFocus(determineNavigationAxis(event), determineNavigationDelta(event));
@@ -71,7 +72,7 @@ export const TableCellEditor = ({
         return;
       }
 
-      const cell = toGridCell(editing.index);
+      const cell = parseCellIndex(editing.index);
       if (value !== undefined) {
         model.setCellData(cell, value);
       }
@@ -99,7 +100,7 @@ export const TableCellEditor = ({
               onQuery: (text) => onQuery(fieldProjection, text),
               onMatch: (data) => {
                 if (model && editing) {
-                  const cell = toGridCell(editing.index);
+                  const cell = parseCellIndex(editing.index);
                   model.setCellData(cell, data);
                   onEnter?.(cell);
                   onFocus?.();
@@ -117,7 +118,7 @@ export const TableCellEditor = ({
 
   const getCellContent = useCallback<GridCellEditorProps['getCellContent']>(() => {
     if (model && editing) {
-      const value = model.getCellData(toGridCell(editing.index));
+      const value = model.getCellData(parseCellIndex(editing.index));
       return value !== undefined ? String(value) : '';
     }
   }, [model, editing]);

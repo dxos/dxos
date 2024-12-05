@@ -1490,6 +1490,6 @@ export class DxGrid extends LitElement {
   }
 }
 
-export { rowToA1Notation, colToA1Notation, closestAction, closestCell } from './util';
+export { rowToA1Notation, colToA1Notation, closestAction, closestCell, parseCellIndex, toPlaneCellIndex } from './util';
 
 export const commentedClassName = 'dx-grid__cell--commented';
