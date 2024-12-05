@@ -4,30 +4,30 @@
 
 import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
-import {
-  type AnyObjectData,
-  type BaseObject,
-  type ReactiveObject,
-  getProxyTarget,
-  getSchema,
-  isReactiveObject,
-} from '@dxos/echo-schema';
+import { type AnyObjectData, type BaseObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
+import { type ReactiveObject, getProxyTarget, getSchema, isReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { defaultMap } from '@dxos/util';
 
 import { MutableSchemaRegistry } from './mutable-schema-registry';
-import { CoreDatabase, type FlushOptions, type LoadObjectOptions, type ObjectCore } from '../core-db';
+import {
+  CoreDatabase,
+  type FlushOptions,
+  type LoadObjectOptions,
+  type ObjectCore,
+  type ObjectPlacement,
+} from '../core-db';
 import type { InsertBatch, InsertData, UpdateOperation } from '../core-db/crud-api';
 import {
   EchoReactiveHandler,
-  type ReactiveEchoObject,
   type ProxyTarget,
-  getObjectCore,
+  type ReactiveEchoObject,
   createObject,
+  getObjectCore,
   initEchoReactiveObjectRootProxy,
   isEchoObject,
 } from '../echo-handler';
@@ -36,6 +36,18 @@ import { type FilterSource, type PropertyFilter, type QueryFn, type QueryOptions
 
 export type GetObjectByIdOptions = {
   deleted?: boolean;
+};
+
+export type AddOptions = {
+  /**
+   * Where to place the object in the Automerge document tree.
+   * Root document is always loaded with the space.
+   * Linked documents are loaded lazily.
+   * Placing large number of objects in the root document may slow down the initial load.
+   *
+   * @default 'linked-doc'
+   */
+  placeIn?: ObjectPlacement;
 };
 
 /**
@@ -52,10 +64,7 @@ export interface EchoDatabase {
 
   get graph(): Hypergraph;
 
-  getObjectById<T extends BaseObject<T> = any>(
-    id: string,
-    opts?: GetObjectByIdOptions,
-  ): ReactiveEchoObject<T> | undefined;
+  getObjectById<T extends BaseObject = any>(id: string, opts?: GetObjectByIdOptions): ReactiveEchoObject<T> | undefined;
 
   /**
    * Query objects.
@@ -77,7 +86,7 @@ export interface EchoDatabase {
   /**
    * Adds object to the database.
    */
-  add<T extends BaseObject<T>>(obj: ReactiveObject<T>): ReactiveEchoObject<T>;
+  add<T extends BaseObject>(obj: ReactiveObject<T>, opts?: AddOptions): ReactiveEchoObject<T>;
 
   /**
    * Removes object from the database.
@@ -237,7 +246,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Add reactive object.
    */
-  add<T extends ReactiveObject<T>>(obj: T): ReactiveEchoObject<T> {
+  add<T extends ReactiveObject<T>>(obj: T, opts?: AddOptions): ReactiveEchoObject<T> {
     if (!isEchoObject(obj)) {
       const schema = getSchema(obj);
       if (schema != null) {
@@ -256,7 +265,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     const target = getProxyTarget(obj) as ProxyTarget;
     EchoReactiveHandler.instance.setDatabase(target, this);
     EchoReactiveHandler.instance.saveRefs(target);
-    this._coreDatabase.addCore(getObjectCore(obj));
+    this._coreDatabase.addCore(getObjectCore(obj), opts);
 
     return obj;
   }
@@ -276,7 +285,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * @internal
    */
-  async _loadObjectById<T extends BaseObject<T>>(
+  async _loadObjectById<T extends BaseObject>(
     objectId: string,
     options: LoadObjectOptions = {},
   ): Promise<ReactiveEchoObject<T> | undefined> {

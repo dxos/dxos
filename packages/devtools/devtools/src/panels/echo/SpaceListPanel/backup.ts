@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { importSpace } from '@dxos/client/echo';
 import { type SerializedSpace, Serializer } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
@@ -15,7 +16,7 @@ export const exportData = async (space: Space): Promise<Blob> => {
 export const importData = async (space: Space, backup: Blob) => {
   try {
     const backupString = await backup.text();
-    await new Serializer().import(space.db, JSON.parse(backupString) as SerializedSpace);
+    await importSpace(space.db, JSON.parse(backupString) as SerializedSpace);
   } catch (err) {
     log.catch(err);
   }

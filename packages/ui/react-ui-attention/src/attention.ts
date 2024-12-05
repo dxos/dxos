@@ -4,7 +4,8 @@
 
 import { untracked } from '@preact/signals-core';
 
-import { create, type ReactiveObject, S } from '@dxos/echo-schema';
+import { S } from '@dxos/echo-schema';
+import { create, type ReactiveObject } from '@dxos/live-object';
 import { ComplexMap } from '@dxos/util';
 
 export const AttentionSchema = S.mutable(

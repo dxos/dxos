@@ -4,17 +4,16 @@
 
 import type { Config as ImapConfig } from 'imap';
 
-import { TextType } from '@dxos/plugin-markdown/types';
-import { ChannelType, MessageType } from '@dxos/plugin-space/types';
-import { getSpace, type Space } from '@dxos/client/echo';
+import { getMeta, getSpace, type Space } from '@dxos/client/echo';
 import { Filter, hasType, matchKeys } from '@dxos/echo-db';
-import { getMeta } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { TextType } from '@dxos/plugin-markdown/types';
+import { ChannelType, MessageType } from '@dxos/plugin-space/types';
 
-import { ImapProcessor } from './imap-processor';
 import { getKey } from '../../util';
+import { ImapProcessor } from './imap-processor';
 
 const types = [TextType, ChannelType, MessageType];
 

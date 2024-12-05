@@ -2,20 +2,29 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ulid } from 'ulidx';
-
+import {
+  type BaseObject,
+  createObjectId,
+  defineHiddenProperty,
+  type ExcludeId,
+  Expando,
+  getObjectAnnotation,
+  type ObjectMeta,
+  ObjectMetaSchema,
+} from '@dxos/echo-schema';
 import { type S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
-import { Expando } from './expando';
+import { createProxy, isValidProxyTarget } from './proxy';
 import { prepareTypedTarget, TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
-import { defineHiddenProperty } from './utils';
-import { getObjectAnnotation } from '../ast';
-import { createProxy, isValidProxyTarget } from '../proxy';
-import { type BaseObject, type ExcludeId, type ObjectMeta, ObjectMetaSchema, type ReactiveObject } from '../types';
 
-export const createObjectId = () => ulid();
+/**
+ * Reactive object marker interface (does not change the shape of the object.)
+ * Accessing properties triggers signal semantics.
+ */
+// TODO(dmaretskyi): Rename LiveObject.
+export type ReactiveObject<T extends BaseObject> = { [K in keyof T]: T[K] };
 
 /**
  * Creates a reactive object from a plain Javascript object.
@@ -24,10 +33,10 @@ export const createObjectId = () => ulid();
 // TODO(dmaretskyi): Deep mutability.
 // TODO(dmaretskyi): Invert generics (generic over schema) to have better error messages.
 export const create: {
-  <T extends BaseObject<T>>(obj: T): ReactiveObject<T>;
-  <T extends BaseObject<T>>(schema: typeof Expando, obj: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<Expando>;
-  <T extends BaseObject<T>>(schema: S.Schema<T, any>, obj: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<T>;
-} = <T extends BaseObject<T>>(
+  <T extends BaseObject>(obj: T): ReactiveObject<T>;
+  <T extends BaseObject>(schema: typeof Expando, obj: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<Expando>;
+  <T extends BaseObject>(schema: S.Schema<T, any>, obj: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<T>;
+} = <T extends BaseObject>(
   objOrSchema: S.Schema<T, any> | T,
   obj?: ExcludeId<T>,
   meta?: ObjectMeta,
@@ -41,7 +50,7 @@ export const create: {
   }
 };
 
-const createReactiveObject = <T extends BaseObject<T>>(
+const createReactiveObject = <T extends BaseObject>(
   obj: T,
   meta?: ObjectMeta,
   schema?: S.Schema<T>,

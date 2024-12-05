@@ -6,7 +6,7 @@ import React from 'react';
 
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { createExtension, type Node } from '@dxos/app-graph';
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 
 import { HelpContextProvider, ShortcutsDialogContent, ShortcutsHints, ShortcutsList } from './components';

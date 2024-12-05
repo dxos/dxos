@@ -4,12 +4,11 @@
 
 import { describe, expect, test } from 'vitest';
 
+import { ref, TypedObject, foreignKey } from '@dxos/echo-schema';
 import { S } from '@dxos/effect';
 
+import { getMeta } from './accessors';
 import { create } from './object';
-import { ref } from './ref';
-import { TypedObject } from '../object';
-import { getMeta, foreignKey } from '../types';
 
 describe('complex schema validations', () => {
   const setValue = (target: any, prop: string, value: any) => {

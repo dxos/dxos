@@ -5,7 +5,7 @@
 import React, { type FC, useContext, useMemo, useState } from 'react';
 
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
-import { type ReactiveObject } from '@dxos/echo-schema';
+import { type ReactiveObject } from '@dxos/live-object';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { faker } from '@dxos/random';

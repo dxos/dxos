@@ -4,9 +4,9 @@
 
 import { Event } from '@dxos/async';
 import { type Client } from '@dxos/client';
-import { create, Filter, getMeta, type Space } from '@dxos/client/echo';
+import { create, Filter, getMeta, type Space, compareForeignKeys } from '@dxos/client/echo';
 import { Context, Resource } from '@dxos/context';
-import { compareForeignKeys, ECHO_ATTR_META, foreignKey } from '@dxos/echo-schema';
+import { ECHO_ATTR_META, foreignKey } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

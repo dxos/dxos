@@ -3,5 +3,3 @@
 //
 
 export * from './mutable-schema';
-export * from './runtime-schema-registry';
-export * from './types';

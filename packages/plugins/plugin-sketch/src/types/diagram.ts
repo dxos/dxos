@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { create, ref, S, TypedObject } from '@dxos/echo-schema';
+import { ref, S, TypedObject } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { ThreadType } from '@dxos/plugin-space';
 
 // TODO(burdon): Move defs to plugin.

@@ -4,8 +4,9 @@
 
 import { Octokit, type RestEndpointMethodTypes } from '@octokit/rest';
 
+import { create, getMeta } from '@dxos/client/echo';
 import { type ReactiveEchoObject } from '@dxos/echo-db';
-import { create, type ForeignKey, getMeta } from '@dxos/echo-schema';
+import { type ForeignKey } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

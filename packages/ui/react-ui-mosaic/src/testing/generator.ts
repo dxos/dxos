@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { create, type ReactiveObject, type S } from '@dxos/echo-schema';
+import { type S } from '@dxos/echo-schema';
+import { create, type ReactiveObject } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { range } from '@dxos/util';
 
