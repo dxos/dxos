@@ -19,7 +19,14 @@ import { AST, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { getObjectMeta } from './object';
-import { createProxy, isValidProxyTarget, objectData, ReactiveArray, type ReactiveHandler, symbolIsProxy } from './proxy';
+import {
+  createProxy,
+  isValidProxyTarget,
+  objectData,
+  ReactiveArray,
+  type ReactiveHandler,
+  symbolIsProxy,
+} from './proxy';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');

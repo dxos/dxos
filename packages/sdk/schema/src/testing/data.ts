@@ -38,9 +38,11 @@ export class TestSchema extends TypedObject({
 
 export type TestType = S.Schema.Type<typeof TestSchema>;
 
-export const testSchema: ReactiveObject<StoredSchema> = createStoredSchema({
-  typename: 'example.com/type/Test',
-  version: '0.1.0'},
+export const testSchema: ReactiveObject<StoredSchema> = createStoredSchema(
+  {
+    typename: 'example.com/type/Test',
+    version: '0.1.0',
+  },
   toJsonSchema(TestSchema),
 );
 
