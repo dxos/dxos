@@ -12,8 +12,9 @@ import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { type Filter } from './filter';
 import { type ObjectCore } from '../core-db';
-import { type ReactiveEchoObject } from '../echo-handler';
+import { getObjectCore, type ReactiveEchoObject } from '../echo-handler';
 import { object } from 'effect/FastCheck';
+import { Reference } from '@dxos/echo-protocol';
 
 /**
  * Query logic that checks if object complaint with a filter.
@@ -78,11 +79,11 @@ const filterMatchInner = (
   if (filter.properties) {
     for (const key in filter.properties) {
       invariant(key !== '@type');
-      const value = filter.properties[key];
+      const value = sanitizePropertyFilter(filter.properties[key]);
 
       // TODO(dmaretskyi): Should `id` be allowed in filter.properties?
       const actualValue = key === 'id' ? core.id : core.getDecoded(['data', key]);
-      if (actualValue !== value) {
+      if (!compareValues(actualValue, value)) {
         return false;
       }
     }
@@ -111,4 +112,23 @@ const filterMatchInner = (
   }
 
   return true;
+};
+
+// TODO(dmaretskyi): Should be resolved at the DSL level.
+const sanitizePropertyFilter = (value: any) => {
+  if (isReactiveObject(value)) {
+    const core = getObjectCore(value as any);
+    return Reference.fromDXN(DXN.fromLocalObjectId(core.id));
+  }
+
+  return value;
+};
+
+// TODO(dmaretskyi): Extract to echo-protocol.
+const compareValues = (a: any, b: any) => {
+  if (a instanceof Reference) {
+    return b instanceof Reference && DXN.equals(a.toDXN(), b.toDXN());
+  }
+
+  return a === b;
 };

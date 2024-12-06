@@ -20,6 +20,7 @@ import { Filter } from './filter';
 import { type ReactiveEchoObject, getObjectCore } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder, type EchoTestPeer } from '../testing';
+import { cons } from 'effect/List';
 
 const createTestObject = (idx: number, label?: string) => {
   return create(Expando, { idx, title: `Task ${idx}`, label });
@@ -81,6 +82,11 @@ describe('Queries', () => {
       }
     });
 
+    test('filter expando', async () => {
+      const { objects } = await db.query(Filter.schema(Expando, { label: 'red' })).run();
+      expect(objects).to.have.length(3);
+    });
+
     test('filter operators', async () => {
       {
         const { objects } = await db.query(() => false).run();
@@ -100,6 +106,15 @@ describe('Queries', () => {
       }
     });
 
+    test('filter by reference', async () => {
+      const objA = db.add(create(Expando, { label: 'obj a' }));
+      const objB = db.add(create(Expando, { label: 'obj b', ref: objA }));
+      await db.flush({ indexes: true });
+
+      const { objects } = await db.query(Filter.schema(Expando, { ref: objA })).run();
+      expect(objects).toEqual([objB]);
+    });
+
     test('filter by foreign keys', async () => {
       const obj = create(Expando, { label: 'has meta' });
       getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' });
@@ -108,6 +123,11 @@ describe('Queries', () => {
 
       const { objects } = await db.query(Filter.foreignKeys([{ id: 'test-id', source: 'test-source' }])).run();
       expect(objects).toEqual([obj]);
+    });
+
+    test('filter nothing', async () => {
+      const { objects } = await db.query(Filter.nothing()).run();
+      expect(objects).toHaveLength(0);
     });
 
     test('filter chaining', async () => {
