@@ -5,12 +5,12 @@
 import { inspect } from 'node:util';
 import { describe, expect, test } from 'vitest';
 
-import { data } from '@dxos/echo-schema';
 import { TestClass, type TestSchema, TestSchemaWithClass, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { isNode } from '@dxos/util';
 
 import { create, type ReactiveObject } from './object';
+import { objectData } from './proxy';
 
 registerSignalsRuntime();
 
@@ -37,7 +37,7 @@ for (const schema of [undefined, TestSchemaWithClass]) {
 
     test('data symbol', async () => {
       const obj = createObject({ ...TEST_OBJECT });
-      const objData: any = (obj as any)[data];
+      const objData: any = (obj as any)[objectData];
       expect(objData).to.deep.contain({
         '@type': `${schema ? 'Typed' : ''}ReactiveObject`,
         ...TEST_OBJECT,
