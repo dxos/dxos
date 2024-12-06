@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-observability",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "DXOS app framework plugin for hooking up app observability",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -36,6 +36,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/observability": "workspace:*",

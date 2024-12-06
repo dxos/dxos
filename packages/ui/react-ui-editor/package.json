@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-editor",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "Document editing experience within a DXOS shell.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -44,6 +44,7 @@
     "@dxos/display-name": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-hooks": "workspace:*",

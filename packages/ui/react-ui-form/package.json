@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-form",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "Data components.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -31,6 +31,7 @@
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",

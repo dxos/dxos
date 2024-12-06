@@ -97,6 +97,9 @@ export class EchoEdgeReplicator implements EchoReplicator {
   async connectToSpace(spaceId: SpaceId) {
     using _guard = await this._mutex.acquire();
 
+    if (this._connectedSpaces.has(spaceId)) {
+      return;
+    }
     this._connectedSpaces.add(spaceId);
 
     // Check if AM-repo requested that we connect to remote peers.

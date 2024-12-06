@@ -7,11 +7,9 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React from 'react';
 
-import { SpaceId } from '@dxos/keys';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
-import { SyncStatusDetail, SyncStatusIndicator } from './SyncStatus';
-import { getSyncSummary, type SpaceSyncStateMap } from './sync-state';
+import { SyncStatusIndicator } from './SyncStatus';
 import translations from '../../translations';
 
 const DefaultStory = (props: any) => {
@@ -22,44 +20,17 @@ const DefaultStory = (props: any) => {
   );
 };
 
-const random = ({ min, max }: { min: number; max: number }) => min + Math.floor(Math.random() * (max - min));
-
-const state: SpaceSyncStateMap = Array.from({ length: 5 }).reduce<SpaceSyncStateMap>((map) => {
-  const total = random({ min: 10, max: 500 });
-  const haveLocal = random({ min: 0, max: total });
-  const haveRemote = random({ min: 0, max: total });
-  map[SpaceId.random()] = {
-    localDocumentCount: haveLocal,
-    remoteDocumentCount: haveRemote,
-    missingOnLocal: total - haveLocal,
-    missingOnRemote: total - haveRemote,
-    differentDocuments: 0,
-  };
-
-  return map;
-}, {});
-
 export const Default: StoryObj<typeof SyncStatusIndicator> = {
   args: {
-    state,
+    state: {},
     saved: true,
   },
 };
 
 export const Saving: StoryObj<typeof SyncStatusIndicator> = {
   args: {
-    state,
+    state: {},
     saved: false,
-  },
-};
-
-// TODO(wittjosiah): Separate story path for separate component.
-export const Detail: StoryObj<typeof SyncStatusDetail> = {
-  render: SyncStatusDetail,
-  args: {
-    state,
-    summary: getSyncSummary(state),
-    classNames: 'm-2 w-[200px] border border-separator rounded-md',
   },
 };
 

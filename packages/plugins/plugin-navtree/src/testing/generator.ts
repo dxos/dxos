@@ -3,7 +3,8 @@
 //
 
 import { type NodeArg } from '@dxos/app-graph';
-import { create, S, type ReactiveObject, TypedObject } from '@dxos/echo-schema';
+import { S, TypedObject } from '@dxos/echo-schema';
+import { create, type ReactiveObject } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { range } from '@dxos/util';
 

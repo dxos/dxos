@@ -61,6 +61,12 @@ export type PluginState = {
    * Determined by whether or not there is an available plugin that can render a collection.
    */
   navigableCollections: boolean;
+
+  /**
+   * Tracks whether setting edge replication as default has been run on spaces.
+   */
+  // TODO(wittjosiah): Systematic way to handle migrations of state outside of spaces.
+  enabledEdgeReplication: boolean;
 };
 
 export type SpaceSettingsProps = {

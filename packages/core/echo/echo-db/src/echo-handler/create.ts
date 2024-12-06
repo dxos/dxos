@@ -3,6 +3,18 @@
 //
 
 import {
+  type BaseObject,
+  type HasId,
+  MutableSchema,
+  type ObjectMeta,
+  requireTypeReference,
+  type S,
+  SchemaValidator,
+} from '@dxos/echo-schema';
+import { compositeRuntime } from '@dxos/echo-signals/runtime';
+import { invariant } from '@dxos/invariant';
+import { type ReactiveObject } from '@dxos/live-object';
+import {
   createProxy,
   getMeta,
   getProxyHandler,
@@ -10,20 +22,10 @@ import {
   getProxyTarget,
   getSchema,
   isReactiveObject,
-  requireTypeReference,
-  type BaseObject,
-  type HasId,
-  MutableSchema,
-  type ObjectMeta,
-  type ReactiveObject,
-  type S,
-  SchemaValidator,
-} from '@dxos/echo-schema';
-import { compositeRuntime } from '@dxos/echo-signals/runtime';
-import { invariant } from '@dxos/invariant';
+} from '@dxos/live-object';
 import { ComplexMap, deepMapValues } from '@dxos/util';
 
-import { DATA_NAMESPACE, PROPERTY_ID, EchoReactiveHandler, throwIfCustomClass, isRootDataObject } from './echo-handler';
+import { DATA_NAMESPACE, EchoReactiveHandler, isRootDataObject, PROPERTY_ID, throwIfCustomClass } from './echo-handler';
 import {
   type ObjectInternals,
   type ProxyTarget,
@@ -35,7 +37,7 @@ import { type DecodedAutomergePrimaryValue, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 
 // TODO(burdon): Rename EchoObject and reconcile with proto name.
-export type ReactiveEchoObject<T extends BaseObject<T>> = ReactiveObject<T> & HasId;
+export type ReactiveEchoObject<T extends BaseObject> = ReactiveObject<T> & HasId;
 
 export const isEchoObject = (value: any): value is ReactiveEchoObject<any> => {
   if (!isReactiveObject(value)) {
@@ -55,7 +57,7 @@ export const isEchoObject = (value: any): value is ReactiveEchoObject<any> => {
  * @internal
  */
 // TODO(burdon): Document lifecycle.
-export const createObject = <T extends BaseObject<T>>(obj: T): ReactiveEchoObject<T> => {
+export const createObject = <T extends BaseObject>(obj: T): ReactiveEchoObject<T> => {
   invariant(!isEchoObject(obj));
   const schema = getSchema(obj);
   if (schema != null) {
@@ -110,7 +112,7 @@ export const createObject = <T extends BaseObject<T>>(obj: T): ReactiveEchoObjec
 };
 
 // TODO(burdon): Call and remove subscriptions.
-export const destroyObject = <T extends BaseObject<T>>(proxy: ReactiveEchoObject<T>) => {
+export const destroyObject = <T extends BaseObject>(proxy: ReactiveEchoObject<T>) => {
   invariant(isEchoObject(proxy));
   const target: ProxyTarget = getProxyTarget(proxy);
   const internals: ObjectInternals = target[symbolInternals];

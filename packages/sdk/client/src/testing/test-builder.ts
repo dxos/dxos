@@ -4,15 +4,15 @@
 
 import { Trigger } from '@dxos/async';
 import { type ClientServices } from '@dxos/client-protocol';
-import { ClientServicesHost } from '@dxos/client-services';
-import { type ServiceContextRuntimeParams } from '@dxos/client-services';
+import { ClientServicesHost, type ServiceContextRuntimeParams } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { create, Expando } from '@dxos/echo-schema';
+import { Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
+import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import {

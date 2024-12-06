@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React from 'react';
 
-import { createMutableSchema } from '@dxos/echo-schema/testing';
+import { createMutableSchema } from '@dxos/live-object/testing';
 import { log } from '@dxos/log';
 import { ViewProjection } from '@dxos/schema';
 import { TestSchema, testView } from '@dxos/schema/testing';

@@ -19,7 +19,7 @@ import { Stream } from '@dxos/codec-protobuf';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { isEncodedReference, Reference, type SpaceDoc, type SpaceState } from '@dxos/echo-protocol';
-import { TYPE_PROPERTIES, type AnyObjectData } from '@dxos/echo-schema';
+import { type AnyObjectData } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -37,7 +37,7 @@ import {
   type ObjectDocumentLoaded,
 } from './automerge-doc-loader';
 import { CoreDatabaseQueryContext } from './core-database-query-context';
-import { type UpdateOperation, type InsertBatch, type InsertData } from './crud-api';
+import { type InsertBatch, type InsertData, type UpdateOperation } from './crud-api';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './util';
 import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChangedEvent } from '../client';
@@ -59,6 +59,20 @@ export type CoreDatabaseParams = {
  * Maximum number of remote update notifications per second.
  */
 const THROTTLED_UPDATE_FREQUENCY = 10;
+
+export type ObjectPlacement = 'root-doc' | 'linked-doc';
+
+export type AddCoreOptions = {
+  /**
+   * Where to place the object in the Automerge document tree.
+   * Root document is always loaded with the space.
+   * Linked documents are loaded lazily.
+   * Placing large number of objects in the root document may slow down the initial load.
+   *
+   * @default 'linked-doc'
+   */
+  placeIn?: ObjectPlacement;
+};
 
 /**
  *
@@ -404,7 +418,7 @@ export class CoreDatabase {
   }
 
   // TODO(dmaretskyi): Rename `addObjectCore`.
-  addCore(core: ObjectCore) {
+  addCore(core: ObjectCore, opts?: AddCoreOptions) {
     if (core.database) {
       // Already in the database.
       if (core.database !== this) {
@@ -421,17 +435,22 @@ export class CoreDatabase {
     invariant(!this._objects.has(core.id));
     this._objects.set(core.id, core);
 
-    // TODO: create all objects as linked.
-    // This is a temporary solution to get quick benefit from lazily-loaded separate-document objects.
-    // All objects should be created linked to root space doc after query indexing is ready to make them
-    // discoverable.
     let spaceDocHandle: DocHandleProxy<SpaceDoc>;
-    if (shouldObjectGoIntoFragmentedSpace(core)) {
-      spaceDocHandle = this._automergeDocLoader.createDocumentForObject(core.id);
-      spaceDocHandle.on('change', this._onDocumentUpdate);
-    } else {
-      spaceDocHandle = this._automergeDocLoader.getSpaceRootDocHandle();
-      this._automergeDocLoader.onObjectBoundToDocument(spaceDocHandle, core.id);
+    const placement = opts?.placeIn ?? 'linked-doc';
+    switch (placement) {
+      case 'linked-doc': {
+        spaceDocHandle = this._automergeDocLoader.createDocumentForObject(core.id);
+        spaceDocHandle.on('change', this._onDocumentUpdate);
+        break;
+      }
+      // TODO(dmaretskyi): In the future we should forbid object placement in the root doc.
+      case 'root-doc': {
+        spaceDocHandle = this._automergeDocLoader.getSpaceRootDocHandle();
+        this._automergeDocLoader.onObjectBoundToDocument(spaceDocHandle, core.id);
+        break;
+      }
+      default:
+        throw new TypeError(`Unknown object placement: ${placement}`);
     }
 
     core.bind({
@@ -814,12 +833,6 @@ export interface ItemsUpdatedEvent {
   spaceId: SpaceId;
   itemsUpdated: Array<{ id: string }>;
 }
-
-export const shouldObjectGoIntoFragmentedSpace = (core: ObjectCore) => {
-  // NOTE: We need to store properties in the root document since space-list initialization
-  // expects it to be loaded as space become available.
-  return core.getType()?.objectId !== TYPE_PROPERTIES;
-};
 
 export type LoadObjectOptions = {
   timeout?: number;

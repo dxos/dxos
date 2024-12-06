@@ -7,42 +7,43 @@ import { setAutoFreeze } from 'immer';
 import React, { type PropsWithChildren } from 'react';
 
 import {
+  filterPlugins,
   type GraphProvides,
   IntentAction,
+  type IntentData,
   type IntentPluginProvides,
+  isLayoutAdjustment,
+  isLayoutMode,
+  isLayoutParts,
   type Layout,
   LayoutAction,
+  type LayoutEntry,
+  type LayoutMode,
+  type LayoutPart,
+  type LayoutParts,
   NavigationAction,
+  openIds,
   parseGraphPlugin,
   parseIntentPlugin,
   type Plugin,
   type PluginDefinition,
   resolvePlugin,
-  Toast as ToastSchema,
   SLUG_PATH_SEPARATOR,
-  type LayoutPart,
-  type LayoutEntry,
-  type LayoutParts,
-  isLayoutParts,
-  isLayoutAdjustment,
-  isLayoutMode,
-  openIds,
-  type LayoutMode,
-  type IntentData,
-  filterPlugins,
+  Toast as ToastSchema,
 } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
-import { create, getTypename, isReactiveObject } from '@dxos/echo-schema';
+import { getTypename } from '@dxos/echo-schema';
 import { scheduledEffect } from '@dxos/echo-signals/core';
+import { create, isReactiveObject } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
-import { parseAttentionPlugin, type AttentionPluginProvides } from '@dxos/plugin-attention';
+import { type AttentionPluginProvides, parseAttentionPlugin } from '@dxos/plugin-attention';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 
-import { DeckLayout, LayoutContext, LayoutSettings, NAV_ID, DeckContext, type DeckContextType } from './components';
+import { DeckContext, type DeckContextType, DeckLayout, LayoutContext, LayoutSettings, NAV_ID } from './components';
 import {
   closeEntry,
   incrementPlank,
@@ -55,9 +56,9 @@ import {
 import meta, { DECK_PLUGIN } from './meta';
 import translations from './translations';
 import {
-  type NewPlankPositioning,
   type DeckPluginProvides,
   type DeckSettingsProps,
+  type NewPlankPositioning,
   type Overscroll,
   type Panel,
   parsePanelPlugin,
@@ -376,11 +377,11 @@ export const DeckPlugin = ({
 
             case LayoutAction.SET_LAYOUT_MODE: {
               const setMode = (mode: LayoutMode) => {
-                const next = openIds(location.values.active, mode === 'solo' ? ['solo'] : ['main']);
-                const current = openIds(
-                  location.values.active,
-                  layout.values.layoutMode === 'solo' ? ['solo'] : ['main'],
-                );
+                const main = openIds(location.values.active, ['main']);
+                const solo = openIds(location.values.active, ['solo']);
+                const current = layout.values.layoutMode === 'solo' ? solo : main;
+                // When un-soloing, the solo entry is added to the deck.
+                const next = mode === 'solo' ? solo : [...main, ...solo];
                 const removed = current.filter((id) => !next.includes(id));
                 const closed = Array.from(
                   new Set([...location.values.closed.filter((id) => !next.includes(id)), ...removed]),
@@ -616,6 +617,7 @@ export const DeckPlugin = ({
                       return {
                         data: true,
                         intents: [
+                          // NOTE: The order of these is important.
                           [
                             { action: NavigationAction.OPEN, data: { activeParts: { solo: [entryId] } } },
                             { action: LayoutAction.SET_LAYOUT_MODE, data: { layoutMode: 'solo' } },
@@ -627,13 +629,14 @@ export const DeckPlugin = ({
                       return {
                         data: true,
                         intents: [
+                          // NOTE: The order of these is important.
                           [
+                            { action: LayoutAction.SET_LAYOUT_MODE, data: { layoutMode: 'deck' } },
+                            { action: NavigationAction.CLOSE, data: { activeParts: { solo: [entryId] } } },
                             {
                               action: NavigationAction.OPEN,
                               data: { noToggle: true, activeParts: { main: [entryId] } },
                             },
-                            { action: LayoutAction.SET_LAYOUT_MODE, data: { layoutMode: 'deck' } },
-                            { action: NavigationAction.CLOSE, data: { activeParts: { solo: [entryId] } } },
                             { action: LayoutAction.SCROLL_INTO_VIEW, data: { id: entryId } },
                           ],
                         ],

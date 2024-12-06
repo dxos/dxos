@@ -416,6 +416,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../packages/common/keys
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../packages/core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../packages/common/log
@@ -1067,6 +1070,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -1724,6 +1730,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../invariant
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../log
@@ -2396,6 +2405,9 @@ importers:
       '@dxos/kv-store':
         specifier: workspace:*
         version: link:../../../common/kv-store
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -2460,6 +2472,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../live-object
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../../common/node-std
@@ -2748,6 +2763,48 @@ importers:
         specifier: ^4.5.0
         version: 4.5.6
 
+  packages/core/echo/live-object:
+    dependencies:
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../echo-protocol
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../echo-schema
+      '@dxos/echo-signals':
+        specifier: workspace:*
+        version: link:../echo-signals
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../../../common/node-std
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
+      '@effect/schema':
+        specifier: ^0.75.5
+        version: 0.75.5(effect@3.10.15)
+      '@preact/signals-core':
+        specifier: ^1.6.0
+        version: 1.6.0
+      effect:
+        specifier: ^3.9.2
+        version: 3.10.15
+      ulidx:
+        specifier: ^2.3.0
+        version: 2.3.0
+
   packages/core/functions:
     dependencies:
       '@dxos/async':
@@ -2774,6 +2831,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -3815,6 +3875,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -4008,6 +4071,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -4404,6 +4470,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -4589,6 +4658,46 @@ importers:
       ts-node:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.5.5)(typescript@5.6.2)
+
+  packages/experimental/assistant:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-schema
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@effect/schema':
+        specifier: ^0.75.5
+        version: 0.75.5(effect@3.10.15)
+      parjs:
+        specifier: ^1.3.9
+        version: 1.3.9
+      ulidx:
+        specifier: ^2.3.0
+        version: 2.3.0
+    devDependencies:
+      inquirer:
+        specifier: ^12.0.0
+        version: 12.0.0(@types/node@22.5.5)
 
   packages/experimental/cf-labs:
     dependencies:
@@ -5320,6 +5429,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../../experimental/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -5344,6 +5456,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -5392,6 +5507,9 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../../ui/react-ui-list
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-syntax-highlighter
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../../sdk/schema
@@ -5462,6 +5580,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../../core/echo/live-object
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage
@@ -5562,6 +5683,9 @@ importers:
       '@dxos/gem-spore':
         specifier: workspace:*
         version: link:../../../experimental/gem-spore
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -5671,6 +5795,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../../core/echo/live-object
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage
@@ -5774,6 +5901,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -5874,6 +6004,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -6038,6 +6171,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../../core/echo/live-object
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugin-client
@@ -6108,6 +6244,9 @@ importers:
       '@dxos/gem-globe':
         specifier: workspace:*
         version: link:../../../experimental/gem-globe
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../../core/echo/live-object
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage
@@ -6221,6 +6360,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../../core/echo/live-object
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugin-client
@@ -6339,6 +6481,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -6475,6 +6620,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../../core/echo/live-object
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../../plugin-graph
@@ -6802,6 +6950,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -6951,6 +7102,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../common/local-storage
@@ -7093,6 +7247,9 @@ importers:
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../common/keyboard
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../common/local-storage
@@ -7306,6 +7463,9 @@ importers:
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../common/keyboard
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../common/local-storage
@@ -7437,6 +7597,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../common/local-storage
@@ -7592,6 +7755,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
     devDependencies:
       '@dxos/storybook-utils':
         specifier: workspace:*
@@ -7635,6 +7801,9 @@ importers:
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../common/keyboard
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../common/local-storage
@@ -7732,6 +7901,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../common/local-storage
@@ -7796,6 +7968,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../common/local-storage
@@ -8045,6 +8220,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -8223,6 +8401,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../common/local-storage
@@ -8353,6 +8534,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../common/local-storage
@@ -8435,6 +8619,9 @@ importers:
       '@babel/core':
         specifier: ^7.18.13
         version: 7.25.7
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -8644,6 +8831,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -8714,6 +8904,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -8772,6 +8965,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../common/local-storage
@@ -8936,6 +9132,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../common/local-storage
@@ -8982,6 +9181,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -9085,6 +9287,9 @@ importers:
       '@dxos/kv-store':
         specifier: workspace:*
         version: link:../../common/kv-store
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -9397,6 +9602,9 @@ importers:
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../../plugins/plugin-markdown
@@ -9709,6 +9917,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -10195,6 +10406,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -10362,6 +10576,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -10543,6 +10760,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -10701,6 +10921,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -10786,6 +11009,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -10917,6 +11143,9 @@ importers:
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../common/keyboard
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../react-ui-attention
@@ -11057,6 +11286,9 @@ importers:
       '@dxos/lit-grid':
         specifier: workspace:*
         version: link:../lit-grid
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -11356,6 +11588,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -15020,10 +15255,6 @@ packages:
     resolution: {integrity: sha512-mR7JHNIvCB4o12f75KN42he7s1O9tmcSN4wJ6l04oymfXKLn+lYJFI7z9lbe4/Ald6fm8nuF38fuY5hNPl3B+A==}
     engines: {node: '>=18'}
 
-  '@inquirer/figures@1.0.3':
-    resolution: {integrity: sha512-ErXXzENMH5pJt5/ssXV0DfWUZqly8nGzf0UcBV9xTnP+KyffE2mqyxIMBrZ8ijQck2nU0TQm40EQB53YreyWHw==}
-    engines: {node: '>=18'}
-
   '@inquirer/figures@1.0.7':
     resolution: {integrity: sha512-m+Trk77mp54Zma6xLkLuY+mvanPxlE4A7yNKs2HBiyZ4UkVs28Mv5c/pgWrHeInx+USHeX/WEPzjrWrcJiQgjw==}
     engines: {node: '>=18'}
@@ -15062,10 +15293,6 @@ packages:
 
   '@inquirer/select@4.0.0':
     resolution: {integrity: sha512-XTN4AIFusWbNCBU1Xm2YDxbtH94e/FOrC27U3QargSsoDT1mRm+aLfqE+oOZnUuxwtTnInRT8UHRU3MVOu52wg==}
-    engines: {node: '>=18'}
-
-  '@inquirer/type@1.3.3':
-    resolution: {integrity: sha512-xTUt0NulylX27/zMx04ZYar/kr1raaiFTVvQ5feljQsiAgdm0WPj4S73/ye0fbslh+15QrIuDvfCXTek7pMY5A==}
     engines: {node: '>=18'}
 
   '@inquirer/type@1.5.5':
@@ -21948,6 +22175,9 @@ packages:
   change-case@5.4.4:
     resolution: {integrity: sha512-HRQyTk2/YPEkt9TnUPbOpr64Uw3KOicFWPVBb+xiHvd6eBx/qPr9xqfBFDT8P2vWsvvz4jbEkfDe71W3VyNu2w==}
 
+  char-info@0.3.5:
+    resolution: {integrity: sha512-gRslEBFEcuLMGLNO1EFIrdN1MMUfO+aqa7y8iWzNyAzB3mYKnTIvP+ioW3jpyeEvqA5WapVLIPINGtFjEIH4cQ==}
+
   character-entities-html4@2.1.0:
     resolution: {integrity: sha512-1v7fgQRj6hnSwFpq1Eu0ynr/CDEw0rXo2B61qXrLNdHZmPKgb7fqS1a2JwF0rISo9q77jDI8VMEHoApn8qDoZA==}
 
@@ -27716,6 +27946,10 @@ packages:
     resolution: {integrity: sha512-2iGbaQBV+ITgCz76ZEjmhUKAKVf7xfY1sRl4UiKQspfZMH2h06SyhNsnSVy50cwkFQDGLyif6m/6uFXHkOZ6rg==}
     hasBin: true
 
+  node-interval-tree@1.3.3:
+    resolution: {integrity: sha512-K9vk96HdTK5fEipJwxSvIIqwTqr4e3HRJeJrNxBSeVMNSC/JWARRaX7etOLOuTmrRMeOI/K5TCJu3aWIwZiNTw==}
+    engines: {node: '>= 7.6.0'}
+
   node-machine-id@1.1.12:
     resolution: {integrity: sha512-QNABxbrPa3qEIfrE6GOJ7BYIuignnJw7iQ2YPbc3Nla1HzRJjXzZOiikfF8m7eAMfichLt3M4VgLOetqgDmgGQ==}
 
@@ -28213,6 +28447,10 @@ packages:
   parent-module@1.0.1:
     resolution: {integrity: sha512-GQ2EWRpQV8/o+Aw8YqtfZZPfNRWZYkbidE9k5rpl/hC3vtHHBfGm2Ifi6qWV+coDGkrUKZAxE3Lot5kcsRlh+g==}
     engines: {node: '>=6'}
+
+  parjs@1.3.9:
+    resolution: {integrity: sha512-zmQhbzWM3M391tjwTGvNvvtoT8rRE/bBTjw6+54g8ANaPpnyekDF1d8q5tzN4kxmVud82cNj8zSd+uxSL4LE0A==}
+    engines: {node: '>=16.0.0'}
 
   parse-asn1@5.1.6:
     resolution: {integrity: sha512-RnZRo1EPU6JBnra2vGHj0yhp6ebyjBZpmUCLHWiFhxlzvBCCpAuZ7elsBp1PVAbQN0/04VD/19rfzlBSwLstMw==}
@@ -37805,7 +38043,7 @@ snapshots:
   '@inquirer/confirm@3.1.9':
     dependencies:
       '@inquirer/core': 8.2.2
-      '@inquirer/type': 1.3.3
+      '@inquirer/type': 1.5.5
 
   '@inquirer/confirm@3.2.0':
     dependencies:
@@ -37835,8 +38073,8 @@ snapshots:
 
   '@inquirer/core@8.2.2':
     dependencies:
-      '@inquirer/figures': 1.0.3
-      '@inquirer/type': 1.3.3
+      '@inquirer/figures': 1.0.7
+      '@inquirer/type': 1.5.5
       '@types/mute-stream': 0.0.4
       '@types/node': 22.5.5
       '@types/wrap-ansi': 3.0.0
@@ -37879,8 +38117,6 @@ snapshots:
       yoctocolors-cjs: 2.1.2
     transitivePeerDependencies:
       - '@types/node'
-
-  '@inquirer/figures@1.0.3': {}
 
   '@inquirer/figures@1.0.7': {}
 
@@ -37960,8 +38196,6 @@ snapshots:
       yoctocolors-cjs: 2.1.2
     transitivePeerDependencies:
       - '@types/node'
-
-  '@inquirer/type@1.3.3': {}
 
   '@inquirer/type@1.5.5':
     dependencies:
@@ -46822,6 +47056,10 @@ snapshots:
 
   change-case@5.4.4: {}
 
+  char-info@0.3.5:
+    dependencies:
+      node-interval-tree: 1.3.3
+
   character-entities-html4@2.1.0: {}
 
   character-entities-legacy@1.1.4: {}
@@ -53883,6 +54121,10 @@ snapshots:
 
   node-gyp-build@4.5.0: {}
 
+  node-interval-tree@1.3.3:
+    dependencies:
+      shallowequal: 1.1.0
+
   node-machine-id@1.1.12: {}
 
   node-notifier@10.0.1:
@@ -54518,6 +54760,10 @@ snapshots:
   parent-module@1.0.1:
     dependencies:
       callsites: 3.1.0
+
+  parjs@1.3.9:
+    dependencies:
+      char-info: 0.3.5
 
   parse-asn1@5.1.6:
     dependencies:

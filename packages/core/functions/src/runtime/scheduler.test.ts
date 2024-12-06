@@ -7,7 +7,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 
 import { Scheduler, type SchedulerOptions } from './scheduler';
 import { FunctionRegistry } from '../function';

@@ -32,8 +32,8 @@ import {
 // TODO(thure): Is NavTree truly authoritative in this regard?
 export const NODE_TYPE = 'dxos/app-graph/node';
 
-const renderPresence = ({ node }: { node: Node }) => (
-  <Surface role='presence--glyph' data={{ object: node.data, id: node.id }} />
+const renderItemEnd = ({ node }: { node: Node }) => (
+  <Surface role='navtree-item-end' data={{ object: node.data, id: node.id }} />
 );
 
 export type NavTreeContainerProps = {
@@ -236,7 +236,7 @@ export const NavTreeContainer = memo(({ isCurrent, popoverAnchorId, ...props }: 
             getProps={getProps}
             isCurrent={isCurrent}
             loadDescendents={loadDescendents}
-            renderPresence={renderPresence}
+            renderItemEnd={renderItemEnd}
             popoverAnchorId={popoverAnchorId}
             canDrop={canDrop}
             onSelect={handleSelect}

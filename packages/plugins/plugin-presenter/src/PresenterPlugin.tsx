@@ -12,7 +12,7 @@ import {
   NavigationAction,
   type Intent,
 } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { createExtension, type Node } from '@dxos/plugin-graph';

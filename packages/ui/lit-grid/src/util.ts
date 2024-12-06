@@ -22,6 +22,22 @@ import {
 export const toPlaneCellIndex = (cellCoords: Partial<DxGridPosition> & DxGridPlanePosition): DxGridPlaneCellIndex =>
   `${cellCoords.col}${separator}${cellCoords.row}`;
 
+export function parseCellIndex(index: DxGridCellIndex): DxGridPosition;
+export function parseCellIndex(index: DxGridPlaneCellIndex): DxGridPlanePosition;
+// eslint-disable-next-line @stayradiated/prefer-arrow-functions/prefer-arrow-functions
+export function parseCellIndex(index: DxGridPlaneCellIndex | DxGridCellIndex): DxGridPlanePosition | DxGridPosition {
+  const coords = index.split(separator);
+  if (coords.length === 3) {
+    return {
+      plane: coords[0] as DxGridPlane,
+      col: parseInt(coords[1]),
+      row: parseInt(coords[2]),
+    } satisfies DxGridPosition;
+  } else {
+    return { col: parseInt(coords[0]), row: parseInt(coords[1]) } satisfies DxGridPlanePosition;
+  }
+}
+
 export const toCellIndex = (cellCoords: DxGridPosition): DxGridCellIndex =>
   `${cellCoords.plane}${separator}${cellCoords.col}${separator}${cellCoords.row}`;
 

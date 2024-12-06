@@ -5,17 +5,16 @@
 import {
   AST,
   FieldLookupAnnotationId,
-  create,
+  FormatEnum,
   JsonPath,
   JsonSchemaType,
   QueryType,
-  type ReactiveObject,
   S,
   toEffectSchema,
   TypedObject,
-  FormatEnum,
 } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
+import { create, type ReactiveObject } from '@dxos/live-object';
 import { stripUndefinedValues } from '@dxos/util';
 
 import { createFieldId } from './projection';

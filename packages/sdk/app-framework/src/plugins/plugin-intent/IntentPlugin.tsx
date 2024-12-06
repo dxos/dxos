@@ -4,18 +4,18 @@
 
 import React from 'react';
 
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 
-import { type IntentContext, IntentProvider, type IntentExecution } from './IntentContext';
+import { type IntentContext, type IntentExecution, IntentProvider } from './IntentContext';
 import { isUndoable } from './helpers';
 import type { Intent, IntentResolver } from './intent';
 import IntentMeta from './meta';
 import {
+  IntentAction,
   type IntentPluginProvides,
   type IntentResolverProvides,
   parseIntentResolverPlugin,
-  IntentAction,
 } from './provides';
 import { filterPlugins, findPlugin } from '../helpers';
 import { type PluginDefinition } from '../plugin-host';

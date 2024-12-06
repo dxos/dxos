@@ -4,8 +4,9 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { S, create } from '@dxos/echo-schema';
+import { S } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
+import { create } from '@dxos/live-object';
 
 import { RootSettingsStore, SettingsStore } from './store';
 import { createLocalStorageMock } from './testing';

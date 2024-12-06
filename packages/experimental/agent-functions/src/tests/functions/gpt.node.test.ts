@@ -9,7 +9,7 @@ import { waitForCondition } from '@dxos/async';
 import { getMeta, type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { loadObjectReferences } from '@dxos/echo-db';
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { FunctionDef, FunctionTrigger, TriggerKind } from '@dxos/functions';
 import { createInitializedClients, inviteMember, startFunctionsHost } from '@dxos/functions/testing';
 import { ChainInputType, ChainPromptType } from '@dxos/plugin-automation/types';

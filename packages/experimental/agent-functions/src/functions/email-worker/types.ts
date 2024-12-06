@@ -3,7 +3,7 @@
 //
 
 import { TextType } from '@dxos/plugin-markdown/types';
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 
 export const SOURCE_ID = 'hub.dxos.network/mailbox';
 
