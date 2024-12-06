@@ -341,6 +341,10 @@ export class ObjectCore {
     this._setRaw([SYSTEM_NAMESPACE, 'type'], this.encode(reference));
   }
 
+  getMeta(): ObjectMeta {
+    return this.getDecoded([META_NAMESPACE]) as ObjectMeta;
+  }
+
   setMeta(meta: ObjectMeta) {
     this._setRaw([META_NAMESPACE], this.encode(meta));
   }

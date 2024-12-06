@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { EXPANDO_TYPENAME } from '@dxos/echo-schema';
+import { EXPANDO_TYPENAME, foreignKeyEquals } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -13,6 +13,7 @@ import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type Filter } from './filter';
 import { type ObjectCore } from '../core-db';
 import { type ReactiveEchoObject } from '../echo-handler';
+import { object } from 'effect/FastCheck';
 
 /**
  * Query logic that checks if object complaint with a filter.
@@ -84,6 +85,13 @@ const filterMatchInner = (
       if (actualValue !== value) {
         return false;
       }
+    }
+  }
+
+  if (filter.metaKeys) {
+    const keys = core.getMeta().keys;
+    if (!filter.metaKeys.some((filterKey) => keys.some((key) => foreignKeyEquals(key, filterKey)))) {
+      return false;
     }
   }
 

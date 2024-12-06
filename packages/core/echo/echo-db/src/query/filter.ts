@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { isEncodedReference, type EncodedReference } from '@dxos/echo-protocol';
+import { isEncodedReference, type EncodedReference, type ForeignKey } from '@dxos/echo-protocol';
 import { type BaseObject, requireTypeReference, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -55,7 +55,10 @@ export type FilterParams<T extends BaseObject = any> = {
   properties?: Record<string, any>;
   objectIds?: string[];
   text?: string;
+  metaKeys?: ForeignKey[];
+
   predicate?: OperatorFilter<T>;
+
   not?: boolean;
   and?: Filter[];
   or?: Filter[];
@@ -175,6 +178,12 @@ export class Filter<T extends BaseObject = any> {
     return new Filter({ type: [DXN.parse(dxn)] });
   }
 
+  static foreignKeys(keys: ForeignKey[]): Filter {
+    return new Filter({
+      metaKeys: keys,
+    });
+  }
+
   private static _fromTypeWithPredicate(type: DXN, filter?: Record<string, any> | OperatorFilter<any>) {
     switch (typeof filter) {
       case 'function':
@@ -232,6 +241,7 @@ export class Filter<T extends BaseObject = any> {
   public readonly properties?: Record<string, any>;
   public readonly objectIds?: string[];
   public readonly text?: string;
+  public readonly metaKeys?: ForeignKey[];
   public readonly predicate?: OperatorFilter<any>;
   public readonly not: boolean;
   public readonly and: Filter[];
@@ -243,6 +253,7 @@ export class Filter<T extends BaseObject = any> {
     this.properties = params.properties;
     this.objectIds = params.objectIds;
     this.text = params.text;
+    this.metaKeys = params.metaKeys;
     this.predicate = params.predicate;
     this.not = params.not ?? false;
     this.and = params.and ?? [];

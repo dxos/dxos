@@ -11,7 +11,7 @@ import { Expando } from '@dxos/echo-schema';
 import { Contact } from '@dxos/echo-schema/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { create } from '@dxos/live-object';
+import { create, getMeta } from '@dxos/live-object';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
@@ -98,6 +98,16 @@ describe('Queries', () => {
           .run();
         expect(objects).to.have.length(5);
       }
+    });
+
+    test('filter by foreign keys', async () => {
+      const obj = create(Expando, { label: 'has meta' });
+      getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' });
+      db.add(obj);
+      await db.flush({ indexes: true });
+
+      const { objects } = await db.query(Filter.foreignKeys([{ id: 'test-id', source: 'test-source' }])).run();
+      expect(objects).toEqual([obj]);
     });
 
     test('filter chaining', async () => {
