@@ -15,7 +15,7 @@ export type ModalState =
   | { type: 'row'; rowIndex: number }
   | { type: 'column'; fieldId: string }
   | { type: 'refPanel'; targetId: string; typename: string }
-  | { type: 'createRefPanel'; typename: string }
+  | { type: 'createRefPanel'; typename: string; initialValues?: Record<string, string> }
   | { type: 'columnSettings'; mode: ColumnSettingsMode }
   | { type: 'closed' };
 
@@ -95,12 +95,13 @@ export class ModalController {
     }
   };
 
-  public openCreateRef = (typename: string, anchorCell: Element | null) => {
+  public openCreateRef = (typename: string, anchorCell: Element | null, initialValues?: Record<string, string>) => {
     if (anchorCell) {
       this._triggerRef.current = anchorCell as HTMLElement;
       this._state.value = {
         type: 'createRefPanel',
         typename,
+        initialValues,
       };
     } else {
       log.warn('Anchor cell not found while creating new ref');

@@ -161,7 +161,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model, ignoreAt
 
   // TODO(burdon): Factor out?
   const handleQuery = useCallback<NonNullable<TableCellEditorProps['onQuery']>>(
-    async ({ field, props }, _text) => {
+    async ({ field, props }, text) => {
       if (model && props.referenceSchema && field.referencePath) {
         const space = getSpace(model.table);
         invariant(space);
@@ -183,7 +183,10 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model, ignoreAt
                 };
               })
               .filter(isNotFalsy),
-            { label: t('create new object label'), data: null },
+            {
+              label: t('create new object label', { text }),
+              data: { __matchIntent: 'create', referencePath: field.referencePath, value: text },
+            },
           ];
         }
       }
@@ -198,31 +201,27 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model, ignoreAt
   }
 
   return (
-    <>
-      <Grid.Root id={model.table.id ?? 'table-grid'}>
-        <TableCellEditor model={model} onEnter={handleEnter} onFocus={handleFocus} onQuery={handleQuery} />
-
-        <Grid.Content
-          onWheelCapture={handleWheel}
-          className={mx('[--dx-grid-base:var(--surface-bg)]', inlineEndLine, blockEndLine)}
-          frozen={frozen}
-          columns={model.columnMeta.value}
-          limitRows={model.getRowCount() ?? 0}
-          limitColumns={model.table.view?.fields?.length ?? 0}
-          onAxisResize={handleAxisResize}
-          onClick={model?.handleGridClick}
-          onKeyDown={handleKeyDown}
-          overscroll='trap'
-          ref={setDxGrid}
-        />
-      </Grid.Root>
-
+    <Grid.Root id={model.table.id ?? 'table-grid'}>
+      <TableCellEditor model={model} onEnter={handleEnter} onFocus={handleFocus} onQuery={handleQuery} />
+      <Grid.Content
+        onWheelCapture={handleWheel}
+        className={mx('[--dx-grid-base:var(--surface-bg)]', inlineEndLine, blockEndLine)}
+        frozen={frozen}
+        columns={model.columnMeta.value}
+        limitRows={model.getRowCount() ?? 0}
+        limitColumns={model.table.view?.fields?.length ?? 0}
+        onAxisResize={handleAxisResize}
+        onClick={model?.handleGridClick}
+        onKeyDown={handleKeyDown}
+        overscroll='trap'
+        ref={setDxGrid}
+      />
       <RowActionsMenu model={model} />
       <ColumnActionsMenu model={model} />
       <ColumnSettings model={model} />
       <RefPanel model={model} />
       <CreateRefPanel model={model} />
-    </>
+    </Grid.Root>
   );
 });
 

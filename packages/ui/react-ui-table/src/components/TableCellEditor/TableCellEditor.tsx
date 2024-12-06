@@ -102,7 +102,7 @@ export const TableCellEditor = ({
               onMatch: (data) => {
                 if (model && editing) {
                   const cell = parseCellIndex(editing.index);
-                  if (data) {
+                  if (data.__matchIntent !== 'create') {
                     model.setCellData(cell, data);
                     onEnter?.(cell);
                     onFocus?.();
@@ -110,6 +110,7 @@ export const TableCellEditor = ({
                     model.modalController.openCreateRef(
                       fieldProjection.props.referenceSchema,
                       document.querySelector(cellQuery(editing.index, gridId)),
+                      { [data.referencePath]: data.value },
                     );
                   }
                 }
