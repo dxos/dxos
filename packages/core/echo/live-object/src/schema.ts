@@ -12,6 +12,7 @@ import {
   ObjectAnnotationId,
   StoredSchema,
   toJsonSchema,
+  type JsonSchemaType,
   type ObjectAnnotation,
 } from '@dxos/echo-schema';
 
@@ -20,12 +21,10 @@ import { create, type ReactiveObject } from './object';
 /**
  * Create ECHO object representing schema.
  */
-export const createStoredSchema = ({
-  typename,
-  version,
-  jsonSchema,
-}: Pick<StoredSchema, 'typename' | 'version'> &
-  Partial<Pick<StoredSchema, 'jsonSchema'>>): ReactiveObject<StoredSchema> => {
+export const createStoredSchema = (
+  { typename, version }: ObjectAnnotation,
+  jsonSchema?: JsonSchemaType,
+): ReactiveObject<StoredSchema> => {
   return create(StoredSchema, {
     typename,
     version,
