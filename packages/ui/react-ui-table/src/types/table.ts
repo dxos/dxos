@@ -20,26 +20,3 @@ export class TableType extends TypedObject({
   typename: 'dxos.org/type/Table',
   version: '0.1.0',
 })(TableSchema.fields) {}
-
-// const task = {};
-
-// A
-// { project: ref(Project); }
-// task.project.name => proxy
-// ref(task, 'project') => ref
-
-// B
-// { project: ref(Project); }
-// ref(task.project).name => proxy
-// task.project.target.name => proxy
-// task.project.$ref?.name => proxy
-// task.$project.name => proxy
-
-// await task.project.$ref.name => proxy
-
-// const name = await ref(task.project).name = 'foo';
-
-// task.project => ref                    // Impossible? E.g., can't distinguish undefined.
-
-// query DSL?
-// toJSON?

@@ -4,8 +4,8 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { type S } from '@dxos/echo-schema';
-import { getSpace } from '@dxos/react-client/echo';
+import { S } from '@dxos/echo-schema';
+import { create, getSpace } from '@dxos/react-client/echo';
 import { Popover } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { type GridScopedProps, useGridContext } from '@dxos/react-ui-grid';
@@ -14,31 +14,38 @@ import { type TableModel } from '../../model';
 
 export type CreateRefPanelProps = { model?: TableModel };
 
+// TODO(burdon): Factor out Space dependency (to plugin?)
 export const CreateRefPanel = ({ model, __gridScope }: GridScopedProps<CreateRefPanelProps>) => {
   const { id: gridId } = useGridContext('TableCellEditor', __gridScope);
   const space = getSpace(model?.table);
   const state = model?.modalController.state.value;
-  // TODO(burdon): Remove space dependency.
-  const schema = useMemo<S.Struct<any> | undefined>(() => {
+  const schema = useMemo<S.Schema<any> | undefined>(() => {
     if (!space || state?.type !== 'createRefPanel') {
       return;
     }
 
-    // TODO(thure): Can we omit `id` so it doesn’t fail validation?
-    const schema: S.Struct<any> = space.db.schemaRegistry.getSchema(state.typename)?.schema as any;
-    return schema.omit('id');
+    const schema: S.Schema<any> | undefined = space.db.schemaRegistry.getSchema(state.typename)?.schema;
+    if (schema) {
+      const omit = S.omit<any, any, ['id']>('id');
+      return omit(schema);
+    }
   }, [space, state]);
-
-  if (!model?.table?.view || !model.projection) {
-    return null;
-  }
 
   const handleSave = useCallback(
     (values: any) => {
-      // TODO(thure): Implement (perhaps based on AutomationPanel)
-      console.log('[save]', values);
+      if (!space || state?.type !== 'createRefPanel') {
+        return;
+      }
+
+      const schema: S.Schema<any> | undefined = space.db.schemaRegistry.getSchema(state.typename)?.schema;
+      if (schema) {
+        // TODO(burdon): Set property.
+        const obj = space.db.add(create(schema, values));
+      }
+
+      void model?.close();
     },
-    [schema],
+    [model, space, state],
   );
 
   const handleCancel = useCallback(() => {
@@ -46,6 +53,10 @@ export const CreateRefPanel = ({ model, __gridScope }: GridScopedProps<CreateRef
       model.modalController.close();
     }
   }, [model?.modalController]);
+
+  if (!model?.table?.view || !model.projection) {
+    return null;
+  }
 
   return (
     <Popover.Root
@@ -61,13 +72,7 @@ export const CreateRefPanel = ({ model, __gridScope }: GridScopedProps<CreateRef
       <Popover.Portal>
         <Popover.Content classNames='md:is-64' data-grid={gridId}>
           {state?.type === 'createRefPanel' && schema && (
-            <Form
-              // TODO(burdon): ???
-              schema={schema as any}
-              values={state.initialValues ?? {}}
-              onSave={handleSave}
-              onCancel={handleCancel}
-            />
+            <Form schema={schema} values={state.initialValues ?? {}} onSave={handleSave} onCancel={handleCancel} />
           )}
           <Popover.Arrow />
         </Popover.Content>
