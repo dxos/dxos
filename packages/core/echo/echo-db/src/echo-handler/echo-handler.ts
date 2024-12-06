@@ -99,6 +99,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
     invariant(Array.isArray(target[symbolPath]));
 
+    // Internals should not cause signal read events.
+    if (prop === symbolInternals) {
+      return target[symbolInternals];
+    }
+
     target[symbolInternals].signal.notifyRead();
 
     if (prop === devtoolsFormatter) {
@@ -507,22 +512,24 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       // TODO(dmaretskyi): Add better validation.
       invariant(otherObjId != null);
       target[symbolInternals].linkCache.set(otherObjId, otherEchoObj as ReactiveEchoObject<any>);
-      return new Reference(otherObjId);
+      return Reference.localObjectReference(otherObjId);
     }
 
     // TODO(burdon): Remote?
     const foreignDatabase = (getProxyTarget(otherEchoObj) as ProxyTarget)[symbolInternals].database;
     if (!foreignDatabase) {
       database.add(otherEchoObj);
-      return new Reference(otherObjId);
+      // TODO(dmaretskyi): Is this right.
+      return Reference.localObjectReference(otherObjId);
     }
 
     // Note: If the object is in a different database, return a reference to a foreign database.
     if (foreignDatabase !== database) {
+      // TODO(dmaretskyi): FIX ME! This should be a space ID not a space key.
       return new Reference(otherObjId, undefined, foreignDatabase.spaceKey.toHex());
     }
 
-    return new Reference(otherObjId);
+    return Reference.localObjectReference(otherObjId);
   }
 
   /**

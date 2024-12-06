@@ -32,3 +32,8 @@ export interface ReactiveHandler<T extends BaseObject> extends ProxyHandler<T> {
 
   getMeta(target: T): ObjectMeta;
 }
+
+/**
+ * For debug-dumping the data of the object.
+ */
+export const objectData = Symbol.for('@dxos/live-object/objectData');

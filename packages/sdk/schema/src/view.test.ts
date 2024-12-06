@@ -58,17 +58,19 @@ describe('View', () => {
   });
 
   test('maintains field order during initialization', async ({ expect }) => {
-    const schema = createStoredSchema({
-      typename: 'example.com/type/Contact',
-      version: '0.1.0',
-      jsonSchema: toJsonSchema(
+    const schema = createStoredSchema(
+      {
+        typename: 'example.com/type/Contact',
+        version: '0.1.0',
+      },
+      toJsonSchema(
         S.Struct({
           name: S.optional(S.String).annotations({ [AST.TitleAnnotationId]: 'Name' }),
           email: S.optional(Format.Email),
           salary: S.optional(Format.Currency({ code: 'usd', decimals: 2 })),
         }),
       ),
-    });
+    );
 
     const view = createView({
       name: 'Test',

@@ -16,7 +16,7 @@ import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
 import { useMulticastObservable } from '@dxos/react-client';
-import { getMeta, type Space, SpaceState, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { Filter, type Space, SpaceState, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
 import { type DocumentResolverProps, type SpaceResolverProps } from './ResolverProps';
@@ -80,10 +80,7 @@ const DocumentResolverProviderImpl = ({
   const [document, setDocument] = useState<DocumentType | null>(null);
   const defaultDisplayName = displayName(source, id);
 
-  const documents = useQuery(space, (obj) => {
-    const keys = getMeta(obj)?.keys;
-    return keys?.find((key: any) => key.source === source && key.id === id);
-  });
+  const documents = useQuery(space, Filter.foreignKeys([{ source, id }]));
 
   useEffect(() => {
     const handler = (event: MessageEvent) => {

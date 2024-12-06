@@ -22,6 +22,8 @@ export const useMarkers = (map: MapType): MapMarker[] => {
     Filter.schema(StoredSchema, (schema) => schema && hasLocation(schema)),
   );
 
+  // TODO(dmaretskyi): I'm guessing this is a query for all objects that are from one of `latLongSchemas` schema.
+  // TODO(dmaretskyi): Rework this to use query DSL.
   const rows = useQuery(
     space,
     (obj) => {

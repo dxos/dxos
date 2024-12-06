@@ -26,7 +26,9 @@ export const AutomationPanel = ({ subject }: AutomationPanelProps) => {
   // TODO(dmaretskyi): Parametric query.
   const functions = useQuery(
     space ?? undefined,
-    Filter.schema(FunctionType, (fn) => (subject instanceof ScriptType ? fn.source === subject : fn.binding != null)),
+    subject instanceof ScriptType
+      ? Filter.schema(FunctionType, { source: subject })
+      : Filter.schema(FunctionType, (fn) => fn.binding != null),
     {},
     [subject],
   );
