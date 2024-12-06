@@ -13,13 +13,13 @@ import {
   symbolSchema,
   getTypeReference,
 } from '@dxos/echo-schema';
-import { data, type ObjectMeta } from '@dxos/echo-schema';
+import { type ObjectMeta } from '@dxos/echo-schema';
 import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
 import { AST, S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { getObjectMeta } from './object';
-import { createProxy, isValidProxyTarget, ReactiveArray, type ReactiveHandler, symbolIsProxy } from './proxy';
+import { createProxy, isValidProxyTarget, objectData, ReactiveArray, type ReactiveHandler, symbolIsProxy } from './proxy';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');
@@ -77,7 +77,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
-    if (prop === data) {
+    if (prop === objectData) {
       target[symbolSignal].notifyRead();
       return toJSON(target);
     }
