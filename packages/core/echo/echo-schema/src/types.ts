@@ -111,7 +111,7 @@ export const getTypeReference = (schema: S.Schema<any> | undefined): Reference |
     return undefined;
   }
   if (annotation.schemaId) {
-    return new Reference(annotation.schemaId);
+    return Reference.localObjectReference(annotation.schemaId);
   }
 
   return Reference.fromLegacyTypename(annotation.typename);
