@@ -171,6 +171,18 @@ export class Filter<T extends BaseObject = any> {
     return this._fromTypeWithPredicate(DXN.fromTypename(typename), filter);
   }
 
+  static typenames(typenames: string[]) {
+    const dxns = typenames.map((typename) => {
+      if (typename.startsWith('dxn:echo:')) {
+        throw new TypeError('Dynamic schema references are not allowed.');
+      }
+
+      return DXN.fromTypename(typename);
+    });
+
+    return new Filter({ type: dxns });
+  }
+
   static typeDXN(dxn: string): Filter {
     if (!dxn) {
       throw new TypeError('`dxn` parameter is required.');
