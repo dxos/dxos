@@ -10,7 +10,7 @@ export default [
   {
     'en-US': {
       [ChannelType.typename]: {
-        'typename label': 'Channel'
+        'typename label': 'Channel',
       },
       [THREAD_PLUGIN]: {
         'plugin name': 'Threads',

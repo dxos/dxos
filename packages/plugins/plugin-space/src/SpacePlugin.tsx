@@ -47,12 +47,10 @@ import {
   FQ_ID_LENGTH,
   Filter,
   OBJECT_ID_LENGTH,
-  type PropertiesTypeProps,
   type ReactiveEchoObject,
   SPACE_ID_LENGTH,
   type Space,
   SpaceState,
-  SpaceId,
   fullyQualifiedId,
   getSpace,
   getTypename,
@@ -70,7 +68,7 @@ import {
   CollectionMain,
   CollectionSection,
   CreateObjectDialog,
-  CreateObjectDialogProps,
+  type CreateObjectDialogProps,
   CreateSpaceDialog,
   DefaultObjectSettings,
   JoinDialog,
@@ -156,9 +154,7 @@ export const SpacePlugin = ({
   firstRun,
   onFirstRun,
 }: SpacePluginOptions = {}): PluginDefinition<SpacePluginProvides> => {
-  const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN, {
-    onSpaceCreate: 'dxos.org/plugin/markdown/action/create',
-  });
+  const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN, {});
   const state = new LocalStorageStore<PluginState>(SPACE_PLUGIN, {
     awaiting: undefined,
     spaceNames: {},
@@ -1577,6 +1573,16 @@ export const SpacePlugin = ({
             case SpaceAction.TOGGLE_HIDDEN: {
               settings.values.showHidden = intent.data?.state ?? !settings.values.showHidden;
               return { data: true };
+            }
+
+            case CollectionAction.CREATE: {
+              const collection = create(CollectionType, {
+                name: intent.data?.name,
+                objects: [],
+                views: {},
+              });
+
+              return { data: collection };
             }
           }
         },

@@ -6,13 +6,13 @@ import React, { useCallback, useState } from 'react';
 
 import { type AbstractTypedObject, getObjectAnnotation, S } from '@dxos/echo-schema';
 import { type SpaceId, type Space, isSpace } from '@dxos/react-client/echo';
-import { IconButton, Input, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Form, InputHeader, TextInput } from '@dxos/react-ui-form';
+import { Input, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Form, InputHeader } from '@dxos/react-ui-form';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { nonNullable, type MaybePromise } from '@dxos/util';
 
 import { SPACE_PLUGIN } from '../../meta';
-import { CollectionType } from '../../types';
+import { type CollectionType } from '../../types';
 import { getSpaceDisplayName } from '../../util';
 
 export type CreateObjectPanelProps = {

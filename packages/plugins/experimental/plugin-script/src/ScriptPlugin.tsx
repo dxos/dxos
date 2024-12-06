@@ -60,12 +60,6 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
         schema: [ScriptType],
         system: [FunctionType],
       },
-      space: {
-        onSpaceCreate: {
-          label: ['create object label', { ns: SCRIPT_PLUGIN }],
-          action: ScriptAction.CREATE,
-        },
-      },
       graph: {
         builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;

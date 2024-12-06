@@ -15,8 +15,6 @@ import { nonNullable } from '@dxos/util';
 
 import { type FlattenedActions, type NavTreeItemGraphNode } from './types';
 
-const IGNORED_ACTIONS = new Set(['dxos.org/plugin/space/action/create', 'dxos.org/plugin/space/action/join']);
-
 export const getParent = (
   graph: Graph,
   node: NavTreeItemGraphNode,
@@ -102,7 +100,7 @@ export const getChildren = (
 export const getActions = (graph: Graph, node: Node): FlattenedActions => {
   return graph.actions(node).reduce(
     (acc: FlattenedActions, arg) => {
-      if (arg.properties.disposition === 'item' || IGNORED_ACTIONS.has(arg.id)) {
+      if (arg.properties.disposition === 'item') {
         return acc;
       }
 

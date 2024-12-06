@@ -16,7 +16,6 @@ import { AST, S, type AbstractTypedObject, type Expando } from '@dxos/echo-schem
 import { type PanelProvides } from '@dxos/plugin-deck/types';
 import { type PublicKey } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { type Label } from '@dxos/react-ui';
 import { type ComplexMap } from '@dxos/util';
 
 export const SPACE_DIRECTORY_HANDLE = 'dxos.org/plugin/space/directory';
@@ -73,24 +72,7 @@ export type SpaceSettingsProps = {
    * Show closed spaces.
    */
   showHidden?: boolean;
-
-  /**
-   * Action to perform when a space is created.
-   */
-  onSpaceCreate?: string;
 };
-
-export type SpaceInitProvides = {
-  space: {
-    onSpaceCreate: {
-      label: Label;
-      action: string;
-    };
-  };
-};
-
-export const parseSpaceInitPlugin = (plugin: Plugin) =>
-  typeof (plugin.provides as any).space?.onSpaceCreate === 'object' ? (plugin as Plugin<SpaceInitProvides>) : undefined;
 
 export type SchemaProvides = {
   echo: {

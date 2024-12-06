@@ -37,4 +37,4 @@ export enum SpaceAction {
 
 export enum CollectionAction {
   CREATE = 'dxos.org/plugin/collection/action/create',
-};
+}

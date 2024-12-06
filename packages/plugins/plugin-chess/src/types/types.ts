@@ -10,7 +10,7 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 import { isReactiveObject } from '@dxos/live-object';
-import { type SpaceInitProvides, type SchemaProvides } from '@dxos/plugin-space';
+import { type SchemaProvides } from '@dxos/plugin-space';
 
 import { GameType } from './schema';
 import { CHESS_PLUGIN } from '../meta';
@@ -28,8 +28,7 @@ export type ChessPluginProvides = SurfaceProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
   TranslationsProvides &
-  SchemaProvides &
-  SpaceInitProvides;
+  SchemaProvides;
 
 export const isObject = (object: unknown): object is GameType => {
   return isReactiveObject(object) && object instanceof GameType;

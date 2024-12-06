@@ -5,14 +5,7 @@
 import { TextAa } from '@phosphor-icons/react';
 import React from 'react';
 
-import {
-  parseIntentPlugin,
-  resolvePlugin,
-  LayoutAction,
-  NavigationAction,
-  type PluginDefinition,
-  type IntentDispatcher,
-} from '@dxos/app-framework';
+import { parseIntentPlugin, resolvePlugin, NavigationAction, type PluginDefinition } from '@dxos/app-framework';
 import { create } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { parseClientPlugin } from '@dxos/plugin-client';
@@ -107,12 +100,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       echo: {
         schema: [DocumentType],
         system: [TextType],
-      },
-      space: {
-        onSpaceCreate: {
-          label: ['create document label', { ns: MARKDOWN_PLUGIN }],
-          action: MarkdownAction.CREATE,
-        },
       },
       graph: {
         builder: (plugins) => {

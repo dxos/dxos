@@ -47,12 +47,6 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
         schema: [DiagramType],
         system: [CanvasType],
       },
-      space: {
-        onSpaceCreate: {
-          label: ['create object label', { ns: SKETCH_PLUGIN }],
-          action: SketchAction.CREATE,
-        },
-      },
       graph: {
         builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;

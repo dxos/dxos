@@ -11,7 +11,6 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 import { type SchemaProvides } from '@dxos/plugin-space';
-import { type SpaceInitProvides } from '@dxos/plugin-space';
 
 import { SCRIPT_PLUGIN } from '../meta';
 
@@ -26,6 +25,5 @@ export type ScriptPluginProvides = GraphBuilderProvides &
   MetadataRecordsProvides &
   SchemaProvides &
   SettingsProvides<ScriptSettingsProps> &
-  SpaceInitProvides &
   SurfaceProvides &
   TranslationsProvides;

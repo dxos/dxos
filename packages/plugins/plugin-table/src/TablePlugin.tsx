@@ -48,12 +48,6 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
         schema: [TableType],
         system: [ViewType],
       },
-      space: {
-        onSpaceCreate: {
-          label: ['create object label', { ns: TABLE_PLUGIN }],
-          action: TableAction.CREATE,
-        },
-      },
       graph: {
         builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;

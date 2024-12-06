@@ -9,8 +9,8 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import { type SchemaProvides } from '@dxos/plugin-space';
 import { type PanelProvides } from '@dxos/plugin-deck/types';
+import { type SchemaProvides } from '@dxos/plugin-space';
 
 // import { AUTOMATION_PLUGIN } from '../meta';
 

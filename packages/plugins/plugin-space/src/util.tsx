@@ -2,15 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { NavigationAction, type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
+import { type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { EXPANDO_TYPENAME, getObjectAnnotation, getTypename, type Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { create, getSchema, isReactiveObject } from '@dxos/live-object';
+import { getSchema, isReactiveObject } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
 import {
   ACTION_GROUP_TYPE,
   ACTION_TYPE,
-  actionGroupSymbol,
   cleanup,
   getGraph,
   memoize,
@@ -398,65 +397,6 @@ export const createObjectNode = ({
       persistenceKey: space?.id,
     },
   };
-};
-
-export const constructObjectActionGroups = ({
-  object,
-  navigable,
-  dispatch,
-}: {
-  object: ReactiveEchoObject<any>;
-  navigable: boolean;
-  dispatch: IntentDispatcher;
-}) => {
-  if (!(object instanceof CollectionType)) {
-    return [];
-  }
-
-  const collection = object;
-  const getId = (id: string) => `${id}/${fullyQualifiedId(object)}`;
-  const actions: NodeArg<typeof actionGroupSymbol>[] = [
-    {
-      id: getId(SpaceAction.ADD_OBJECT),
-      type: ACTION_GROUP_TYPE,
-      data: actionGroupSymbol,
-      properties: {
-        label: ['create object in collection label', { ns: SPACE_PLUGIN }],
-        icon: 'ph--plus--regular',
-        disposition: 'toolbar',
-        menuType: 'searchList',
-        testId: 'spacePlugin.createObject',
-      },
-      nodes: [
-        {
-          id: getId(SpaceAction.ADD_OBJECT.replace('object', 'collection')),
-          type: ACTION_TYPE,
-          data: () =>
-            dispatch([
-              {
-                plugin: SPACE_PLUGIN,
-                action: SpaceAction.ADD_OBJECT,
-                data: { target: collection, object: create(CollectionType, { objects: [], views: {} }) },
-              },
-              ...(navigable
-                ? [
-                    {
-                      action: NavigationAction.OPEN,
-                    },
-                  ]
-                : []),
-            ]),
-          properties: {
-            label: ['create collection label', { ns: SPACE_PLUGIN }],
-            icon: 'ph--cards-three--regular',
-            testId: 'spacePlugin.createCollection',
-          },
-        },
-      ],
-    },
-  ];
-
-  return actions;
 };
 
 export const constructObjectActions = ({

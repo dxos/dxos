@@ -2,12 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef } from 'react';
 
-import { LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
-import { S } from '@dxos/echo-schema';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { useClient } from '@dxos/react-client';
+import { useIntentDispatcher } from '@dxos/app-framework';
+import { type S } from '@dxos/echo-schema';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 

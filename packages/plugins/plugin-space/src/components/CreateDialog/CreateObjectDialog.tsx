@@ -4,9 +4,9 @@
 
 import React, { useCallback, useRef } from 'react';
 
-import { LayoutAction, type MetadataResolver, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
+import { type MetadataResolver, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
-import { AbstractTypedObject, isReactiveObject, isSpace, useSpaces } from '@dxos/react-client/echo';
+import { type AbstractTypedObject, isReactiveObject, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 
 import { CreateObjectPanel, type CreateObjectPanelProps } from './CreateObjectPanel';

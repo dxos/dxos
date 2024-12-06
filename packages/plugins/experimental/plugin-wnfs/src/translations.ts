@@ -3,7 +3,6 @@
 //
 
 import { WNFS_PLUGIN } from './meta';
-import { FileType } from './types';
 
 export default [
   {

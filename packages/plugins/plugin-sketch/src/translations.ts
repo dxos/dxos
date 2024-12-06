@@ -3,7 +3,7 @@
 //
 
 import { SKETCH_PLUGIN } from './meta';
-import { DiagramType} from './types';
+import { DiagramType } from './types';
 
 export default [
   {

@@ -115,7 +115,7 @@ export default [
         'create object dialog title': 'Create Object',
         'schema input placeholder': 'Select object type',
         'creating object type label': 'Type',
-        'creating in space label': 'Space'
+        'creating in space label': 'Space',
       },
     },
   },
