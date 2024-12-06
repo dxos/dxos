@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Reference } from '@dxos/echo-protocol';
 import { EXPANDO_TYPENAME, foreignKeyEquals } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
@@ -13,8 +14,6 @@ import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type Filter } from './filter';
 import { type ObjectCore } from '../core-db';
 import { getObjectCore, type ReactiveEchoObject } from '../echo-handler';
-import { object } from 'effect/FastCheck';
-import { Reference } from '@dxos/echo-protocol';
 
 /**
  * Query logic that checks if object complaint with a filter.

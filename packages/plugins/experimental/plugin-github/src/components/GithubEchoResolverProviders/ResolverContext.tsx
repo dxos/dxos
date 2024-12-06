@@ -16,7 +16,7 @@ import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
 import { useMulticastObservable } from '@dxos/react-client';
-import { Filter, getMeta, type Space, SpaceState, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { Filter, type Space, SpaceState, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
 import { type DocumentResolverProps, type SpaceResolverProps } from './ResolverProps';
