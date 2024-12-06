@@ -39,6 +39,7 @@ export type FormHandler<T extends BaseObject> = {
  * Hook options.
  */
 export interface FormOptions<T extends BaseObject> {
+  // TODO(burdon): Should this be S.Struct<T>?
   schema: S.Schema<T>;
 
   // TODO(burdon): Are these reactive?

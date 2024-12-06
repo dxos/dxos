@@ -4,9 +4,11 @@
 
 import { type SpaceId } from '@dxos/keys';
 
+// TODO(burdon): Rename EdgerRouterEndpoint?
 export enum EdgeService {
   AUTOMERGE_REPLICATOR = 'automerge-replicator',
   FEED_REPLICATOR = 'feed-replicator',
+  // TODO(burdon): Rename to just SWARM, SIGNAL.
   SWARM_SERVICE_ID = 'swarm',
   SIGNAL_SERVICE_ID = 'signal',
 }
