@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 import { type AbstractTypedObject, getObjectAnnotation, S } from '@dxos/echo-schema';
 import { type SpaceId, type Space, isSpace } from '@dxos/react-client/echo';
 import { IconButton, Input, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { DeprecatedFormInput, Form } from '@dxos/react-ui-form';
+import { Form, InputHeader, TextInput } from '@dxos/react-ui-form';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { nonNullable, type MaybePromise } from '@dxos/util';
 
@@ -56,17 +56,19 @@ export const CreateObjectPanel = ({
   );
 
   const schemaInput = (
-    <SearchList.Root label={t('schema input label')} classNames='flex flex-col grow overflow-hidden my-2'>
+    <SearchList.Root label={t('schema input label')} classNames='flex flex-col grow overflow-hidden my-2 px-2'>
       <SearchList.Input autoFocus placeholder={t('schema input placeholder')} classNames='px-1 my-2' />
       <SearchList.Content classNames='max-bs-[24rem] overflow-auto'>
         {options.map((option) => (
           <SearchList.Item
             key={option.typename}
-            value={option.typename}
+            value={t('typename label', { ns: option.typename, defaultValue: option.typename })}
             onSelect={() => setTypename(option.typename)}
             classNames='flex items-center gap-2'
           >
-            <span className='grow truncate'>{option.typename}</span>
+            <span className='grow truncate'>
+              {t('typename label', { ns: option.typename, defaultValue: option.typename })}
+            </span>
           </SearchList.Item>
         ))}
       </SearchList.Content>
@@ -74,13 +76,13 @@ export const CreateObjectPanel = ({
   );
 
   const spaceInput = (
-    <SearchList.Root label={t('space input label')} classNames='flex flex-col grow overflow-hidden my-2'>
+    <SearchList.Root label={t('space input label')} classNames='flex flex-col grow overflow-hidden my-2 px-2'>
       <SearchList.Input autoFocus placeholder={t('space input placeholder')} classNames='px-1 my-2' />
       <SearchList.Content classNames='max-bs-[24rem] overflow-auto'>
         {spaces.map((space) => (
           <SearchList.Item
             key={space.id}
-            value={space.id}
+            value={toLocalizedString(getSpaceDisplayName(space, { personal: space.id === defaultSpaceId }), t)}
             onSelect={() => setTarget(space)}
             classNames='flex items-center gap-2'
           >
@@ -102,15 +104,37 @@ export const CreateObjectPanel = ({
   );
 
   return (
-    <div role='form' className='flex flex-col'>
-      {schema && <div>Type: {schema.typename}</div>}
-      {isSpace(target) && (
-        <div>
-          Target:
-          {toLocalizedString(getSpaceDisplayName(target, { personal: target.id === defaultSpaceId }), t)}
+    <div role='form' className='flex flex-col gap-2'>
+      {schema && (
+        <div role='none' className='px-2'>
+          <Input.Root>
+            <InputHeader>
+              <Input.Label>{t('creating object type label')}</Input.Label>
+            </InputHeader>
+            <Input.TextInput
+              disabled
+              value={t('typename label', { ns: schema.typename, defaultValue: schema.typename })}
+            />
+          </Input.Root>
         </div>
       )}
-      {target instanceof CollectionType && <div>Target: {target.name}</div>}
+      {target && (
+        <div role='none' className='px-2'>
+          <Input.Root>
+            <InputHeader>
+              <Input.Label>{t('creating in space label')}</Input.Label>
+            </InputHeader>
+            <Input.TextInput
+              disabled
+              value={
+                isSpace(target)
+                  ? toLocalizedString(getSpaceDisplayName(target, { personal: target.id === defaultSpaceId }), t)
+                  : target.name || t('unnamed collection label')
+              }
+            />
+          </Input.Root>
+        </div>
+      )}
       {!schema ? schemaInput : !target ? spaceInput : form}
     </div>
   );

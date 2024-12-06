@@ -12,7 +12,7 @@ import type {
   TranslationsProvides,
   Plugin,
 } from '@dxos/app-framework';
-import { S, type AbstractTypedObject, type Expando } from '@dxos/echo-schema';
+import { AST, S, type AbstractTypedObject, type Expando } from '@dxos/echo-schema';
 import { type PanelProvides } from '@dxos/plugin-deck/types';
 import { type PublicKey } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
@@ -130,6 +130,6 @@ export interface TypedObjectSerializer<T extends Expando = Expando> {
 }
 
 export const SpaceForm = S.Struct({
-  name: S.optional(S.String),
-  edgeReplication: S.Boolean,
+  name: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Name' })),
+  edgeReplication: S.Boolean.annotations({ [AST.TitleAnnotationId]: 'Enable EDGE Replication' }),
 });

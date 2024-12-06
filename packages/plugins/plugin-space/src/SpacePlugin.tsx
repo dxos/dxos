@@ -88,7 +88,7 @@ import {
   SyncStatus,
   type SpaceSettingsDialogProps,
 } from './components';
-import meta, { SPACE_PLUGIN, SpaceAction } from './meta';
+import meta, { CollectionAction, SPACE_PLUGIN, SpaceAction } from './meta';
 import translations from './translations';
 import {
   CollectionType,
@@ -484,6 +484,7 @@ export const SpacePlugin = ({
       metadata: {
         records: {
           [CollectionType.typename]: {
+            createObject: CollectionAction.CREATE,
             placeholder: ['unnamed collection label', { ns: SPACE_PLUGIN }],
             icon: 'ph--cards-three--regular',
             // TODO(wittjosiah): Move out of metadata.

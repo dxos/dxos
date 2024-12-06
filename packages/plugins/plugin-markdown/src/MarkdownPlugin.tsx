@@ -64,7 +64,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
   const getViewMode = (id: string) => (id && state.values.viewMode[id]) || settings.values.defaultViewMode;
   const setViewMode = (id: string, viewMode: EditorViewMode) => (state.values.viewMode[id] = viewMode);
-  let dispatch: IntentDispatcher | undefined;
 
   return {
     meta,
@@ -85,8 +84,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         const { extensions } = plugin.provides.markdown;
         state.values.extensionProviders?.push(extensions);
       });
-
-      dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
     },
     provides: {
       settings: settings.values,

@@ -58,7 +58,10 @@ type ViewStore = Record<SubjectId, typeof initialViewState>;
 
 // TODO(Zan): Every instance of `cursor` should be replaced with `anchor`.
 //  NOTE(burdon): Review/discuss CursorConverter semantics.
-export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
+export const ThreadPlugin = (): PluginDefinition<
+  Omit<ThreadPluginProvides, 'echo'>,
+  Pick<ThreadPluginProvides, 'echo'>
+> => {
   const settings = new LocalStorageStore<ThreadSettingsProps>(THREAD_PLUGIN);
   const state = create<ThreadState>({ drafts: {} });
 
@@ -77,9 +80,18 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
   return {
     meta,
-    ready: async (plugins) => {
+    initialize: async () => {
       settings.prop({ key: 'standalone', type: LocalStorageStore.bool({ allowUndefined: true }) });
 
+      return {
+        echo: {
+          system: [ThreadType, MessageType],
+          // TODO(wittjosiah): Requires reload.
+          ...(settings.values.standalone ? { schema: [ChannelType] } : {}),
+        },
+      };
+    },
+    ready: async (plugins) => {
       navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
     },
@@ -119,10 +131,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         },
       },
       translations: [...translations, ...threadTranslations],
-      echo: {
-        schema: [ChannelType],
-        system: [ThreadType, MessageType],
-      },
       complementary: {
         panels: [
           {

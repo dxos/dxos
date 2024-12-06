@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useRef } from 'react';
+import React, { useCallback, useRef } from 'react';
 
 import { LayoutAction, type MetadataResolver, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
-import { isReactiveObject, isSpace, useSpaces } from '@dxos/react-client/echo';
+import { AbstractTypedObject, isReactiveObject, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 
 import { CreateObjectPanel, type CreateObjectPanelProps } from './CreateObjectPanel';
@@ -23,6 +23,42 @@ export const CreateObjectDialog = ({ schemas, target, typename, name, resolve }:
   const client = useClient();
   const spaces = useSpaces();
   const dispatch = useIntentDispatcher();
+
+  const handleCreateObject = useCallback(
+    async ({
+      schema,
+      target: _target,
+      name,
+    }: {
+      schema: AbstractTypedObject;
+      target: CreateObjectPanelProps['target'];
+      name?: string;
+    }) => {
+      const target = isSpace(_target) ? (_target.properties[CollectionType.typename] as CollectionType) : _target;
+      const createObjectAction = resolve?.(schema.typename)?.createObject;
+      if (!createObjectAction || !target) {
+        // TODO(wittjosiah): UI feedback.
+        return;
+      }
+
+      // NOTE: Must close before navigating or attention won't follow object.
+      closeRef.current?.click();
+
+      const result = await dispatch({ action: createObjectAction, data: { name } });
+      const object = result?.data;
+      if (isReactiveObject(object)) {
+        await dispatch([
+          {
+            plugin: SPACE_PLUGIN,
+            action: SpaceAction.ADD_OBJECT,
+            data: { target, object },
+          },
+          { action: NavigationAction.OPEN },
+        ]);
+      }
+    },
+    [dispatch, resolve],
+  );
 
   return (
     // TODO(wittjosiah): The tablist dialog pattern is copied from @dxos/plugin-manager.
@@ -44,30 +80,7 @@ export const CreateObjectDialog = ({ schemas, target, typename, name, resolve }:
           typename={typename}
           name={name}
           defaultSpaceId={client.spaces.default.id}
-          onCreateObject={async ({ schema, target: _target, name }) => {
-            const target = isSpace(_target) ? (_target.properties[CollectionType.typename] as CollectionType) : _target;
-            const createObjectAction = resolve?.(schema.typename)?.createObject;
-            if (!createObjectAction || !target) {
-              // TODO(wittjosiah): UI feedback.
-              return;
-            }
-
-            // NOTE: Must close before navigating or attention won't follow object.
-            closeRef.current?.click();
-
-            const result = await dispatch({ action: createObjectAction, data: { name } });
-            const object = result?.data;
-            if (isReactiveObject(object)) {
-              await dispatch([
-                {
-                  plugin: SPACE_PLUGIN,
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { target, object },
-                },
-                { action: NavigationAction.OPEN },
-              ]);
-            }
-          }}
+          onCreateObject={handleCreateObject}
         />
       </div>
     </Dialog.Content>

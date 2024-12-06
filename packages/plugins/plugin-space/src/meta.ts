@@ -34,3 +34,7 @@ export enum SpaceAction {
   TOGGLE_HIDDEN = `${SPACE_ACTION}/toggle-hidden`,
   OPEN_SETTINGS = `${SPACE_ACTION}/open-settings`,
 }
+
+export enum CollectionAction {
+  CREATE = 'dxos.org/plugin/collection/action/create',
+};

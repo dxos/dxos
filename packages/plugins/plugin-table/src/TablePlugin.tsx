@@ -33,6 +33,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
       metadata: {
         records: {
           [TableType.typename]: {
+            createObject: TableAction.CREATE,
             label: (object: any) => (object instanceof TableType ? object.name : undefined),
             placeholder: ['object placeholder', { ns: TABLE_PLUGIN }],
             icon: 'ph--table--regular',
