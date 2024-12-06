@@ -38,6 +38,11 @@ export function parseCellIndex(index: DxGridPlaneCellIndex | DxGridCellIndex): D
   }
 }
 
+export const cellQuery = (index: DxGridCellIndex, gridId: string) => {
+  const { plane, col, row } = parseCellIndex(index);
+  return `[data-grid=${gridId}] [data-dx-grid-plane=${plane}] [aria-colindex="${col}"][aria-rowindex="${row}"]`;
+};
+
 export const toCellIndex = (cellCoords: DxGridPosition): DxGridCellIndex =>
   `${cellCoords.plane}${separator}${cellCoords.col}${separator}${cellCoords.row}`;
 

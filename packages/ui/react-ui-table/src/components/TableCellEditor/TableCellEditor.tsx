@@ -18,6 +18,7 @@ import {
   useGridContext,
   type DxGridPlanePosition,
   parseCellIndex,
+  cellQuery,
 } from '@dxos/react-ui-grid';
 import { type FieldProjection } from '@dxos/schema';
 
@@ -38,7 +39,7 @@ export const TableCellEditor = ({
   onQuery,
   __gridScope,
 }: GridScopedProps<TableCellEditorProps>) => {
-  const { editing } = useGridContext('TableCellEditor', __gridScope);
+  const { editing, id: gridId } = useGridContext('TableCellEditor', __gridScope);
   const fieldProjection = useMemo<FieldProjection | undefined>(() => {
     if (!model || !editing) {
       return;
@@ -101,9 +102,16 @@ export const TableCellEditor = ({
               onMatch: (data) => {
                 if (model && editing) {
                   const cell = parseCellIndex(editing.index);
-                  model.setCellData(cell, data);
-                  onEnter?.(cell);
-                  onFocus?.();
+                  if (data) {
+                    model.setCellData(cell, data);
+                    onEnter?.(cell);
+                    onFocus?.();
+                  } else if (fieldProjection.props.referenceSchema) {
+                    model.modalController.openCreateRef(
+                      fieldProjection.props.referenceSchema,
+                      document.querySelector(cellQuery(editing.index, gridId)),
+                    );
+                  }
                 }
               },
             }),
