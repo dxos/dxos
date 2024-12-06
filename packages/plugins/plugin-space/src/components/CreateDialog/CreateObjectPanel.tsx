@@ -4,9 +4,10 @@
 
 import React, { useCallback, useState } from 'react';
 
+import { MetadataResolver } from '@dxos/app-framework';
 import { type AbstractTypedObject, getObjectAnnotation, S } from '@dxos/echo-schema';
 import { type SpaceId, type Space, isSpace } from '@dxos/react-client/echo';
-import { Input, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, Input, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Form, InputHeader } from '@dxos/react-ui-form';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { nonNullable, type MaybePromise } from '@dxos/util';
@@ -22,6 +23,7 @@ export type CreateObjectPanelProps = {
   target?: Space | CollectionType;
   name?: string;
   defaultSpaceId?: SpaceId;
+  resolve?: MetadataResolver;
   onCreateObject?: (params: {
     schema: AbstractTypedObject;
     target: Space | CollectionType;
@@ -36,6 +38,7 @@ export const CreateObjectPanel = ({
   target: initialTarget,
   name: initialName,
   defaultSpaceId,
+  resolve,
   onCreateObject,
 }: CreateObjectPanelProps) => {
   const { t } = useTranslation(SPACE_PLUGIN);
@@ -43,6 +46,9 @@ export const CreateObjectPanel = ({
   const [target, setTarget] = useState<Space | CollectionType | undefined>(initialTarget);
   const schema = schemas.find((schema) => getObjectAnnotation(schema)?.typename === typename);
   const options = schemas.map(getObjectAnnotation).filter(nonNullable);
+
+  const handleClearSchema = useCallback(() => setTypename(undefined), []);
+  const handleClearTarget = useCallback(() => setTarget(undefined), []);
 
   const handleCreateObject = useCallback(
     async ({ name }: { name?: string }) => {
@@ -66,7 +72,8 @@ export const CreateObjectPanel = ({
             onSelect={() => setTypename(option.typename)}
             classNames='flex items-center gap-2'
           >
-            <span className='grow truncate'>
+            <span className='flex gap-2 items-center grow truncate'>
+              <Icon icon={resolve?.(option.typename).icon ?? 'ph--placeholder--regular'} size={5} />
               {t('typename label', { ns: option.typename, defaultValue: option.typename })}
             </span>
           </SearchList.Item>
@@ -97,6 +104,7 @@ export const CreateObjectPanel = ({
 
   const form = (
     <Form
+      autoFocus
       values={{ name: initialName }}
       schema={S.Struct({ name: S.optional(S.String) })}
       onSave={handleCreateObject}
@@ -105,33 +113,41 @@ export const CreateObjectPanel = ({
 
   return (
     <div role='form' className='flex flex-col gap-2'>
+      {target && (
+        <div role='none' className='px-2'>
+          <Input.Root>
+            <InputHeader>
+              <Input.Label>
+                {t(isSpace(target) ? 'creating in space label' : 'creating in collection label')}
+              </Input.Label>
+            </InputHeader>
+            <div role='none' className='flex gap-2'>
+              <Input.TextInput
+                disabled
+                value={
+                  isSpace(target)
+                    ? toLocalizedString(getSpaceDisplayName(target, { personal: target.id === defaultSpaceId }), t)
+                    : target.name || t('unnamed collection label')
+                }
+              />
+              <IconButton iconOnly icon='ph--x--regular' label={t('clear input label')} onClick={handleClearTarget} />
+            </div>
+          </Input.Root>
+        </div>
+      )}
       {schema && (
         <div role='none' className='px-2'>
           <Input.Root>
             <InputHeader>
               <Input.Label>{t('creating object type label')}</Input.Label>
             </InputHeader>
-            <Input.TextInput
-              disabled
-              value={t('typename label', { ns: schema.typename, defaultValue: schema.typename })}
-            />
-          </Input.Root>
-        </div>
-      )}
-      {target && (
-        <div role='none' className='px-2'>
-          <Input.Root>
-            <InputHeader>
-              <Input.Label>{t('creating in space label')}</Input.Label>
-            </InputHeader>
-            <Input.TextInput
-              disabled
-              value={
-                isSpace(target)
-                  ? toLocalizedString(getSpaceDisplayName(target, { personal: target.id === defaultSpaceId }), t)
-                  : target.name || t('unnamed collection label')
-              }
-            />
+            <div role='none' className='flex gap-2'>
+              <Input.TextInput
+                disabled
+                value={t('typename label', { ns: schema.typename, defaultValue: schema.typename })}
+              />
+              <IconButton iconOnly icon='ph--x--regular' label={t('clear input label')} onClick={handleClearSchema} />
+            </div>
           </Input.Root>
         </div>
       )}

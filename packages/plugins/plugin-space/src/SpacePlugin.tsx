@@ -536,6 +536,7 @@ export const SpacePlugin = ({
                   <CreateObjectDialog
                     {...(data.subject as CreateObjectDialogProps)}
                     schemas={schemas}
+                    navigableCollections={state.values.navigableCollections}
                     resolve={metadataPlugin?.provides.metadata.resolver}
                   />
                 );

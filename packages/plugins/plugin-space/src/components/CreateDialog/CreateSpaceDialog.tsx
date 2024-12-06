@@ -45,7 +45,7 @@ export const CreateSpaceDialog = () => {
         <Dialog.Title>{t('create space dialog title')}</Dialog.Title>
         <Dialog.Close asChild>
           <Button ref={closeRef} density='fine' variant='ghost' autoFocus>
-            <Icon icon='ph--x--regular' size={3} />
+            <Icon icon='ph--x--regular' size={4} />
           </Button>
         </Dialog.Close>
       </div>

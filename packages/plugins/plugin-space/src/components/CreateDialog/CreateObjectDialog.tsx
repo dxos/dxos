@@ -15,9 +15,17 @@ import { CollectionType } from '../../types';
 
 export type CreateObjectDialogProps = Pick<CreateObjectPanelProps, 'schemas' | 'target' | 'typename' | 'name'> & {
   resolve?: MetadataResolver;
+  navigableCollections?: boolean;
 };
 
-export const CreateObjectDialog = ({ schemas, target, typename, name, resolve }: CreateObjectDialogProps) => {
+export const CreateObjectDialog = ({
+  schemas,
+  target,
+  typename,
+  name,
+  navigableCollections,
+  resolve,
+}: CreateObjectDialogProps) => {
   const closeRef = useRef<HTMLButtonElement | null>(null);
   const { t } = useTranslation(SPACE_PLUGIN);
   const client = useClient();
@@ -53,7 +61,7 @@ export const CreateObjectDialog = ({ schemas, target, typename, name, resolve }:
             action: SpaceAction.ADD_OBJECT,
             data: { target, object },
           },
-          { action: NavigationAction.OPEN },
+          ...(!(object instanceof CollectionType) || navigableCollections ? [{ action: NavigationAction.OPEN }] : []),
         ]);
       }
     },
@@ -68,7 +76,7 @@ export const CreateObjectDialog = ({ schemas, target, typename, name, resolve }:
         <Dialog.Title>{t('create object dialog title')}</Dialog.Title>
         <Dialog.Close asChild>
           <Button ref={closeRef} density='fine' variant='ghost' autoFocus>
-            <Icon icon='ph--x--regular' size={3} />
+            <Icon icon='ph--x--regular' size={4} />
           </Button>
         </Dialog.Close>
       </div>
@@ -80,6 +88,7 @@ export const CreateObjectDialog = ({ schemas, target, typename, name, resolve }:
           typename={typename}
           name={name}
           defaultSpaceId={client.spaces.default.id}
+          resolve={resolve}
           onCreateObject={handleCreateObject}
         />
       </div>
