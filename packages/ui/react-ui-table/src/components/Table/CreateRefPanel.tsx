@@ -19,14 +19,14 @@ export const CreateRefPanel = ({ model, __gridScope }: GridScopedProps<CreateRef
   const space = getSpace(model?.table);
   const state = model?.modalController.state.value;
   // TODO(burdon): Remove space dependency.
-  const schema = useMemo<S.Schema<any> | undefined>(() => {
+  const schema = useMemo<S.Struct<any> | undefined>(() => {
     if (!space || state?.type !== 'createRefPanel') {
       return;
     }
 
     // TODO(thure): Can we omit `id` so it doesn’t fail validation?
-    const schema = space.db.schemaRegistry.getSchema(state.typename);
-    return schema?.schema;
+    const schema: S.Struct<any> = space.db.schemaRegistry.getSchema(state.typename)?.schema as any;
+    return schema.omit('id');
   }, [space, state]);
 
   if (!model?.table?.view || !model.projection) {
@@ -61,7 +61,13 @@ export const CreateRefPanel = ({ model, __gridScope }: GridScopedProps<CreateRef
       <Popover.Portal>
         <Popover.Content classNames='md:is-64' data-grid={gridId}>
           {state?.type === 'createRefPanel' && schema && (
-            <Form schema={schema} values={state.initialValues ?? {}} onSave={handleSave} onCancel={handleCancel} />
+            <Form
+              // TODO(burdon): ???
+              schema={schema as any}
+              values={state.initialValues ?? {}}
+              onSave={handleSave}
+              onCancel={handleCancel}
+            />
           )}
           <Popover.Arrow />
         </Popover.Content>

@@ -6,6 +6,9 @@ import { Schema as S } from '@effect/schema';
 
 import { ObjectAnnotationId, ref } from '@dxos/echo-schema';
 
+// TODO(burdon): Reconcile with sdk/schema/testing.
+// TODO(burdon): Convert interface to type.
+
 // TODO(dmaretskyi): Extract.
 export const ObjectId = S.String.annotations({ description: 'The unique object identifier.' });
 
