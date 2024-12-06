@@ -4,7 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { MetadataResolver } from '@dxos/app-framework';
+import { type MetadataResolver } from '@dxos/app-framework';
 import { type AbstractTypedObject, getObjectAnnotation, S } from '@dxos/echo-schema';
 import { type SpaceId, type Space, isSpace } from '@dxos/react-client/echo';
 import { Icon, IconButton, Input, toLocalizedString, useTranslation } from '@dxos/react-ui';
