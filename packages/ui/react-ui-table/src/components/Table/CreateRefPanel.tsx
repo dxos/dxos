@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
+import { type S } from '@dxos/echo-schema';
 import { getSpace } from '@dxos/react-client/echo';
 import { Popover } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -11,23 +12,22 @@ import { type GridScopedProps, useGridContext } from '@dxos/react-ui-grid';
 
 import { type TableModel } from '../../model';
 
-type CreateRefPanelProps = { model?: TableModel };
+export type CreateRefPanelProps = { model?: TableModel };
 
 export const CreateRefPanel = ({ model, __gridScope }: GridScopedProps<CreateRefPanelProps>) => {
   const { id: gridId } = useGridContext('TableCellEditor', __gridScope);
-  const state = model?.modalController.state.value;
   const space = getSpace(model?.table);
-  const schema =
-    space && state?.type === 'createRefPanel' ? space.db.schemaRegistry.getSchema(state.typename) : undefined;
+  const state = model?.modalController.state.value;
+  // TODO(burdon): Remove space dependency.
+  const schema = useMemo<S.Schema<any> | undefined>(() => {
+    if (!space || state?.type !== 'createRefPanel') {
+      return;
+    }
 
-  // TODO(thure): Can we omit `id` so it doesn’t fail validation?
-  // const editSchema = useMemo(() => {
-  //   if (schema) {
-  //     return (schema.schema as unknown as S.Struct<any>).omit('id') as unknown as S.Schema<any>;
-  //   } else {
-  //     return undefined;
-  //   }
-  // }, [schema]);
+    // TODO(thure): Can we omit `id` so it doesn’t fail validation?
+    const schema = space.db.schemaRegistry.getSchema(state.typename);
+    return schema?.schema;
+  }, [space, state]);
 
   if (!model?.table?.view || !model.projection) {
     return null;
@@ -61,7 +61,7 @@ export const CreateRefPanel = ({ model, __gridScope }: GridScopedProps<CreateRef
       <Popover.Portal>
         <Popover.Content classNames='md:is-64' data-grid={gridId}>
           {state?.type === 'createRefPanel' && schema && (
-            <Form onSave={handleSave} onCancel={handleCancel} values={state.initialValues ?? {}} schema={schema} />
+            <Form schema={schema} values={state.initialValues ?? {}} onSave={handleSave} onCancel={handleCancel} />
           )}
           <Popover.Arrow />
         </Popover.Content>

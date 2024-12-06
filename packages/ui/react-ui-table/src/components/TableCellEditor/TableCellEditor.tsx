@@ -8,17 +8,17 @@ import { FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type DxGrid } from '@dxos/lit-grid';
 import {
+  cellQuery,
   editorKeys,
-  type EditorKeyEvent,
-  GridCellEditor,
-  type GridCellEditorProps,
-  type EditorKeyOrBlurHandler,
-  type EditorBlurHandler,
-  type GridScopedProps,
+  parseCellIndex,
   useGridContext,
   type DxGridPlanePosition,
-  parseCellIndex,
-  cellQuery,
+  type EditorKeyEvent,
+  type EditorKeyOrBlurHandler,
+  type EditorBlurHandler,
+  GridCellEditor,
+  type GridCellEditorProps,
+  type GridScopedProps,
 } from '@dxos/react-ui-grid';
 import { type FieldProjection } from '@dxos/schema';
 
@@ -101,17 +101,26 @@ export const TableCellEditor = ({
               onQuery: (text) => onQuery(fieldProjection, text),
               onMatch: (data) => {
                 if (model && editing) {
-                  const cell = parseCellIndex(editing.index);
-                  if (data.__matchIntent !== 'create') {
-                    model.setCellData(cell, data);
-                    onEnter?.(cell);
-                    onFocus?.();
-                  } else if (fieldProjection.props.referenceSchema) {
-                    model.modalController.openCreateRef(
-                      fieldProjection.props.referenceSchema,
-                      document.querySelector(cellQuery(editing.index, gridId)),
-                      { [data.referencePath]: data.value },
-                    );
+                  switch (data.__matchIntent) {
+                    case 'create': {
+                      if (fieldProjection.props.referenceSchema) {
+                        model.modalController.openCreateRef(
+                          fieldProjection.props.referenceSchema,
+                          document.querySelector(cellQuery(editing.index, gridId)),
+                          {
+                            [data.referencePath]: data.value,
+                          },
+                        );
+                      }
+                      break;
+                    }
+
+                    default: {
+                      const cell = parseCellIndex(editing.index);
+                      model.setCellData(cell, data);
+                      onEnter?.(cell);
+                      onFocus?.();
+                    }
                   }
                 }
               },

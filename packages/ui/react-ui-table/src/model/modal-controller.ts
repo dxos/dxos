@@ -104,7 +104,7 @@ export class ModalController {
         initialValues,
       };
     } else {
-      log.warn('Anchor cell not found while creating new ref');
+      log.warn('anchor cell not found while creating new ref');
     }
   };
 

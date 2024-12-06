@@ -169,23 +169,30 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model, ignoreAt
         if (schema) {
           // TODO(burdon): Cache/filter.
           const { objects } = await space.db.query(Filter.schema(schema)).run();
-          return [
-            ...objects
-              .map((obj) => {
-                const value = getValue(obj, field.referencePath!);
-                if (!value || typeof value !== 'string') {
-                  return undefined;
-                }
+          const options = objects
+            .map((obj) => {
+              const value = getValue(obj, field.referencePath!);
+              if (!value || typeof value !== 'string') {
+                return undefined;
+              }
 
-                return {
-                  label: value,
-                  data: obj,
-                };
-              })
-              .filter(isNotFalsy),
+              return {
+                label: value,
+                data: obj,
+              };
+            })
+            .filter(isNotFalsy);
+
+          return [
+            ...options,
+            // TODO(burdon): Option to create new object.
             {
               label: t('create new object label', { text }),
-              data: { __matchIntent: 'create', referencePath: field.referencePath, value: text },
+              data: {
+                __matchIntent: 'create',
+                referencePath: field.referencePath,
+                value: text,
+              },
             },
           ];
         }
