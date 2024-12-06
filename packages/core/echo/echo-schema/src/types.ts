@@ -11,11 +11,6 @@ import { getDeep, setDeep } from '@dxos/util';
 import { getObjectAnnotation, type HasId } from './ast';
 import type { ObjectMeta } from './object/meta';
 
-/**
- * For debug-dumping the data of the object.
- */
-export const data = Symbol.for('@dxos/schema/Data');
-
 // TODO(burdon): Use consistently (with serialization utils).
 export const ECHO_ATTR_ID = '@id';
 export const ECHO_ATTR_META = '@meta';
@@ -98,8 +93,14 @@ export const splitMeta = <T>(object: T & WithMeta): { object: T; meta?: ObjectMe
 export const getValue = <T = any>(obj: any, path: JsonPath) => getDeep<T>(obj, path.split('.'));
 export const setValue = <T = any>(obj: any, path: JsonPath, value: T) => setDeep<T>(obj, path.split('.'), value);
 
+/**
+ * Returns a typename of a schema.
+ */
 export const getTypenameOrThrow = (schema: S.Schema<any>): string => requireTypeReference(schema).objectId;
 
+/**
+ * Returns a reference that will be used to point to a schema.
+ */
 export const getTypeReference = (schema: S.Schema<any> | undefined): Reference | undefined => {
   if (!schema) {
     return undefined;
@@ -110,12 +111,16 @@ export const getTypeReference = (schema: S.Schema<any> | undefined): Reference |
     return undefined;
   }
   if (annotation.schemaId) {
-    return new Reference(annotation.schemaId);
+    return Reference.localObjectReference(annotation.schemaId);
   }
 
   return Reference.fromLegacyTypename(annotation.typename);
 };
 
+/**
+ * Returns a reference that will be used to point to a schema.
+ * @throws If it is not possible to reference this schema.
+ */
 export const requireTypeReference = (schema: S.Schema<any>): Reference => {
   const typeReference = getTypeReference(schema);
   if (typeReference == null) {

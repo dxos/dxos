@@ -3,12 +3,12 @@
 //
 
 import { defineHiddenProperty, TYPENAME_SYMBOL } from '@dxos/echo-schema';
-import { data, type ObjectMeta } from '@dxos/echo-schema';
+import { type ObjectMeta } from '@dxos/echo-schema';
 import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 
 import { getObjectMeta } from './object';
-import { createProxy, isValidProxyTarget, ReactiveArray, type ReactiveHandler } from './proxy';
+import { createProxy, isValidProxyTarget, objectData, ReactiveArray, type ReactiveHandler } from './proxy';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');
@@ -72,7 +72,7 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     target[symbolSignal].notifyRead();
     target[symbolPropertySignal].notifyRead();
 
-    if (prop === data) {
+    if (prop === objectData) {
       return toJSON(target);
     }
 

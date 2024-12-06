@@ -11,6 +11,7 @@ import { invariant } from '@dxos/invariant';
 
 import { create } from '../object';
 
+// NOTE: Registration is done here is this is the module that calls out to `effect`.
 registerSignalsRuntime();
 
 /**
