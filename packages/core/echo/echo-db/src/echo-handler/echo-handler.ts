@@ -99,6 +99,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
     invariant(Array.isArray(target[symbolPath]));
 
+    // Internals should not cause signal read events.
+    if (prop === symbolInternals) {
+      return target[symbolInternals];
+    }
+
     target[symbolInternals].signal.notifyRead();
 
     if (prop === devtoolsFormatter) {
