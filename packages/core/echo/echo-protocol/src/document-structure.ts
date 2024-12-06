@@ -59,12 +59,12 @@ export type ForeignKey = {
    * Name of the foreign database/system.
    * E.g., `github.com`.
    */
-  source?: string;
+  readonly source: string;
 
   /**
    * Id within the foreign database.
    */
-  id?: string;
+  readonly id: string;
 };
 
 /**

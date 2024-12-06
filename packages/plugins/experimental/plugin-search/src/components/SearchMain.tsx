@@ -5,7 +5,7 @@
 import React, { type FC, useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
-import { useQuery, type Space } from '@dxos/react-client/echo';
+import { Filter, useQuery, type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { groupSurface, mx } from '@dxos/react-ui-theme';
 
@@ -22,7 +22,7 @@ export const SearchMain: FC<{ space: Space }> = ({ space }) => {
   const allSpaces = false;
 
   // TODO(burdon): Returns ALL objects (e.g., incl. Text objects that are fields of parent objects).
-  const objects = useQuery(allSpaces ? client.spaces : space);
+  const objects = useQuery(allSpaces ? client.spaces : space, Filter.all());
   const results = useGlobalSearchResults(objects);
 
   const [selected, setSelected] = useState<string>();
