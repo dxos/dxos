@@ -41,6 +41,7 @@ export const CreateRefPanel = ({ model, __gridScope }: GridScopedProps<CreateRef
       if (schema) {
         // TODO(burdon): Set property.
         const obj = space.db.add(create(schema, values));
+        console.log(state);
       }
 
       void model?.close();
