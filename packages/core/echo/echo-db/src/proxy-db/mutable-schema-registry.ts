@@ -26,7 +26,7 @@ import { Filter } from '../query';
 
 export type SchemaSubscriptionCallback = (schema: MutableSchema[]) => void;
 
-export interface SchemaResolver {
+export interface SchemaRegistry {
   query(query: SchemaRegistryQuery): SchemaRegistryLiveQuery<SchemaRecord>;
 
   /**
@@ -102,7 +102,7 @@ export interface SchemaRegistryLiveQuery<T> {
 /**
  * Input for schema registration.
  * Either one of the schema variants must be provided.
- * The typename and version is read from the schema annotations.
+ * The typename, version and schema mutability metadata is read from the schema annotations.
  */
 export type RegisterSchemaInput = {
   /**
@@ -118,6 +118,10 @@ export type RegisterSchemaInput = {
 
 export type AnyEchoObjectSchema = S.Struct<{ [key: string]: S.Schema.AnyNoContext }>;
 
+/**
+ * Record of the schema stored in the registry
+ */
+// TODO(dmaretskyi): Replaces MutableSchema, StaticSchema.
 export interface SchemaRecord {
   /**
    * String identifier for the schema.
