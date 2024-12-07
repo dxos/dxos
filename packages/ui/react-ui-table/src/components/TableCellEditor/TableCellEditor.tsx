@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 
 import { FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -40,6 +40,7 @@ export const TableCellEditor = ({
   __gridScope,
 }: GridScopedProps<TableCellEditorProps>) => {
   const { id: gridId, editing, setEditing } = useGridContext('TableCellEditor', __gridScope);
+  const suppressNextBlur = useRef(false);
 
   const fieldProjection = useMemo<FieldProjection | undefined>(() => {
     if (!model || !editing) {
@@ -68,10 +69,13 @@ export const TableCellEditor = ({
     [model, editing],
   );
 
-  // TODO(burdon): Blur is called when popover is created and cell loses focus, which triggers an error.
   const handleBlur = useCallback<EditorBlurHandler>(
     (value) => {
       if (!model || !editing) {
+        return;
+      }
+      if (suppressNextBlur.current) {
+        suppressNextBlur.current = false;
         return;
       }
 
@@ -121,6 +125,7 @@ export const TableCellEditor = ({
                   switch (data.__matchIntent) {
                     case 'create': {
                       if (fieldProjection.props.referenceSchema) {
+                        suppressNextBlur.current = true;
                         model.modalController.openCreateRef(
                           fieldProjection.props.referenceSchema,
                           document.querySelector(cellQuery(editing.index, gridId)),
