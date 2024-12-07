@@ -227,13 +227,13 @@ interface Pattern<P extends PatternInput> {
   related<R extends RelationDef.Any>(
     relation: RelationPattern<R>,
     opts?: { direction: 'left' | 'right' | 'undirected' },
-  ): UnfinishedPattern<P, R>;
+  ): UnfinishedRelatedPattern<P, R>;
 }
 
 /**
  * Cypher: `(n:Node)-[RELATION]->_`
  */
-interface UnfinishedPattern<P extends PatternInput, R extends RelationDef.Any> {
+interface UnfinishedRelatedPattern<P extends PatternInput, R extends RelationDef.Any> {
   to<N extends NodeDef.Any>(node: NodePattern<N>): Pattern<ConcatPatterns<P, R, N>>;
 }
 
