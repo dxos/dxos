@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Completion } from '@codemirror/autocomplete';
 import React, { useCallback, useMemo, useRef } from 'react';
 
 import { FormatEnum } from '@dxos/echo-schema';
@@ -25,11 +26,22 @@ import { type FieldProjection } from '@dxos/schema';
 import { completion } from './extension';
 import { type TableModel } from '../../model';
 
+const newValue = Symbol.for('newValue');
+
+/**
+ * Option to create new object/value.
+ */
+export const createOption = (text: string) => ({ [newValue]: true, text });
+
+const isCreateOption = (data: any) => typeof data === 'object' && data[newValue];
+
+export type QueryResult = Pick<Completion, 'label'> & { data: any };
+
 export type TableCellEditorProps = {
   model?: TableModel;
   onEnter?: (cell: DxGridPlanePosition) => void;
   onFocus?: DxGrid['refocus'];
-  onQuery?: (field: FieldProjection, text: string) => Promise<{ label: string; data: any }[]>;
+  onQuery?: (field: FieldProjection, text: string) => Promise<QueryResult[]>;
 };
 
 export const TableCellEditor = ({
@@ -122,27 +134,23 @@ export const TableCellEditor = ({
               onQuery: (text) => onQuery(fieldProjection, text),
               onMatch: (data) => {
                 if (model && editing) {
-                  switch (data.__matchIntent) {
-                    case 'create': {
-                      if (fieldProjection.props.referenceSchema) {
-                        suppressNextBlur.current = true;
-                        model.modalController.openCreateRef(
-                          fieldProjection.props.referenceSchema,
-                          document.querySelector(cellQuery(editing.index, gridId)),
-                          {
-                            [data.referencePath]: data.value,
-                          },
-                          (obj) => {
-                            handleEnter(obj);
-                          },
-                        );
-                      }
-                      break;
+                  if (isCreateOption(data)) {
+                    const { field, props } = fieldProjection;
+                    if (props.referenceSchema) {
+                      suppressNextBlur.current = true;
+                      model.modalController.openCreateRef(
+                        props.referenceSchema,
+                        document.querySelector(cellQuery(editing.index, gridId)),
+                        {
+                          [field.referencePath!]: data.text,
+                        },
+                        (data) => {
+                          handleEnter(data);
+                        },
+                      );
                     }
-
-                    default: {
-                      handleEnter(data);
-                    }
+                  } else {
+                    handleEnter(data);
                   }
                 }
               },

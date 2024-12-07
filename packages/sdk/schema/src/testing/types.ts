@@ -4,7 +4,7 @@
 
 import { S, Format, TypedObject, FieldLookupAnnotationId, GeneratorAnnotationId, AST, ref } from '@dxos/echo-schema';
 
-export namespace Test {
+export namespace Testing {
   //
   // Org
   //
@@ -21,6 +21,8 @@ export namespace Test {
       }),
     ),
   });
+
+  export type OrgSchemaType = S.Schema.Type<typeof OrgSchema>;
 
   export class OrgType extends TypedObject({
     typename: 'example.com/type/Org',
@@ -56,14 +58,16 @@ export namespace Test {
         [GeneratorAnnotationId]: 'internet.email',
       }),
     ),
-    // TODO(burdon): This breaks the table view.
-    // address: S.optional(AddressSchema),
     employer: S.optional(
       ref(OrgType).annotations({
         [FieldLookupAnnotationId]: 'name',
       }),
     ),
+    // TODO(burdon): This breaks the table view.
+    // address: S.optional(AddressSchema),
   });
+
+  export type ContactSchemaType = S.Schema.Type<typeof ContactSchema>;
 
   export class ContactType extends TypedObject({
     typename: 'example.com/type/Contact',
@@ -82,6 +86,8 @@ export namespace Test {
     }),
     description: S.optional(S.String),
   });
+
+  export type ProjectSchemaType = S.Schema.Type<typeof ProjectSchema>;
 
   export class ProjectType extends TypedObject({
     typename: 'example.com/type/Project',

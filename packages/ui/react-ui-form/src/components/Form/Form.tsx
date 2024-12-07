@@ -28,7 +28,9 @@ export type PropsFilter<T extends BaseObject> = (props: SchemaProperty<T>[]) => 
 
 export type FormProps<T extends BaseObject> = ThemedClassName<
   {
+    // TODO(burdon): Partial<T>?
     values: T;
+
     /** Path to the current object from the root. Used with nested forms. */
     path?: string[];
 

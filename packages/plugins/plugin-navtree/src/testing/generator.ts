@@ -56,12 +56,13 @@ export const defaultGenerators: { [type: string]: ObjectDataGenerator } = {
 
   project: {
     createSchema: () =>
-      class ProjectType extends TypedObject({ typename: 'dxos.test.Project', version: '0.1.0' })({
+      class ProjectType extends TypedObject({ typename: 'example.com/type/Project', version: '0.1.0' })({
         title: S.String,
         repo: S.String,
         status: S.String,
         priority: S.Number,
       }) {},
+
     createData: () => ({
       title: faker.commerce.productName(),
       repo: faker.datatype.boolean({ probability: 0.3 }) ? faker.internet.url() : undefined,
