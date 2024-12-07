@@ -201,8 +201,6 @@ declare namespace LValue {
   type Type<T extends LValue.Any> = T extends LValue<infer U> ? U : never;
 }
 
-type DataSelector<T> = { [K in keyof T]?: true };
-
 // TODO(dmaretskyi): Nested paths.
 type PathOf<T> = keyof T;
 
