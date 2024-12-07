@@ -9187,6 +9187,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: ^0.75.5
+        version: 0.75.5(effect@3.10.15)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
