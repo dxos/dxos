@@ -63,14 +63,12 @@ export const SpaceGenerator = ({ space, onAddObjects }: SpaceGeneratorProps) => 
             const table = tables.find((table) => table.view?.query?.typename === type.typename);
             if (!table) {
               const name = type.typename.split('/').pop() ?? type.typename;
+              const view = createView({ name, typename: type.typename, jsonSchema: schema.jsonSchema });
+              console.log(JSON.stringify(view, null, 2));
               const table = space.db.add(
                 create(TableType, {
                   name,
-                  view: createView({
-                    name,
-                    typename: type.typename,
-                    jsonSchema: schema.jsonSchema,
-                  }),
+                  view,
                 }),
               );
 
