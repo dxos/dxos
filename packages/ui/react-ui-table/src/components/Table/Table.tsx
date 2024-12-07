@@ -33,7 +33,7 @@ import { RefPanel } from './RefPanel';
 import { RowActionsMenu } from './RowActionsMenu';
 import { type TableModel } from '../../model';
 import { translationKey } from '../../translations';
-import { TableCellEditor, type TableCellEditorProps } from '../TableCellEditor';
+import { createOption, TableCellEditor, type TableCellEditorProps } from '../TableCellEditor';
 
 // NOTE(Zan): These fragments add border to inline-end and block-end of the grid using pseudo-elements.
 // These are offset by 1px to avoid double borders in planks.
@@ -160,6 +160,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model, ignoreAt
   );
 
   // TODO(burdon): Factor out?
+  // TODO(burdon): Generalize to handle other value types (e.g., enums).
   const handleQuery = useCallback<NonNullable<TableCellEditorProps['onQuery']>>(
     async ({ field, props }, text) => {
       if (model && props.referenceSchema && field.referencePath) {
@@ -167,7 +168,6 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model, ignoreAt
         invariant(space);
         const schema = space.db.schemaRegistry.getSchema(props.referenceSchema);
         if (schema) {
-          // TODO(burdon): Cache/filter.
           const { objects } = await space.db.query(Filter.schema(schema)).run();
           const options = objects
             .map((obj) => {
@@ -185,14 +185,9 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model, ignoreAt
 
           return [
             ...options,
-            // TODO(burdon): Option to create new object.
             {
               label: t('create new object label', { text }),
-              data: {
-                __matchIntent: 'create',
-                referencePath: field.referencePath,
-                value: text,
-              },
+              data: createOption(text),
             },
           ];
         }
