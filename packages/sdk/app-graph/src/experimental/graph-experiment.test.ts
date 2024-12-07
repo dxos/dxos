@@ -6,6 +6,7 @@ import { Any } from '@effect/schema/Schema';
 
 TODO:
 
+- Move to a separate package
 - More flexible return types, so that return isn't limited to being an object
 
 
