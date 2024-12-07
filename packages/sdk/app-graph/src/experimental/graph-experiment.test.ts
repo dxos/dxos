@@ -210,7 +210,9 @@ interface PropSelectable<T> {
   prop<P extends PathOf<T>>(path: P): LValue<PickProp<T, P>>;
 }
 
-type PropertyFilter<T> = Partial<T>;
+type ComparisonType<T> = T extends Ref.Any ? Ref.TargetNode<T> | Id : T;
+
+type PropertyFilter<T> = Simplify<Partial<{ [K in keyof T]: ComparisonType<T[K]> }>>;
 
 // Match
 
@@ -480,7 +482,7 @@ const allContactsThatHaveAuthoredDocuments = QB.build(() => {
 });
 
 // MATCH (d:Document) WHERE d.author.id == $authorId RETURN DISTINCT document.author AS author
-const allDocumentsByThisAuthor = (authorId: Id) =>
+const allDocumentsByThisAuthorWhere = (authorId: Id) =>
   QB.build(() => {
     const document = QB.Node(DocumentNode);
     const author = document.prop('author').target();
@@ -489,6 +491,19 @@ const allDocumentsByThisAuthor = (authorId: Id) =>
       .where(author.id().eq(QB.literal(authorId)))
       .return({
         author,
+      })
+      .distinctBy('author');
+  });
+
+// Note: this is a variation of the above query with WHERE clause, but this one might be easier for the Query Planner to optimize to use the Reverse Reference Index since the author constraint is in the pattern.
+// MATCH (d:Document { author: $authorId }) RETURN DISTINCT document.author AS author
+const allDocumentsByThisAuthorPattern = (authorId: Id) =>
+  QB.build(() => {
+    const document = QB.Node(DocumentNode).where({ author: authorId });
+
+    return QB.Match(document)
+      .return({
+        author: document.prop('author').target(),
       })
       .distinctBy('author');
   });
