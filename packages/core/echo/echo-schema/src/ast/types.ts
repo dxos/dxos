@@ -268,6 +268,7 @@ export const getSchemaProperty = (schema: JsonSchemaType, property: JsonProp): J
   return schema.properties?.[property];
 };
 
+// TODO(burdon): Properties should be ordered.
 export const setSchemaProperty = (schema: JsonSchemaType, property: JsonProp, value: JsonSchemaType) => {
   schema.properties ??= {};
   schema.properties[property] = value;

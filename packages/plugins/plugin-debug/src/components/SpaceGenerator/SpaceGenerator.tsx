@@ -16,7 +16,7 @@ import { IconButton, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { TableType } from '@dxos/react-ui-table';
 import { createView } from '@dxos/schema';
-import { createAsyncGenerator, Test, type ValueGenerator } from '@dxos/schema/testing';
+import { createAsyncGenerator, Testing, type ValueGenerator } from '@dxos/schema/testing';
 import { jsonKeyReplacer, sortKeys } from '@dxos/util';
 
 const generator: ValueGenerator = faker as any;
@@ -36,7 +36,7 @@ export type SpaceGeneratorProps = {
 export const SpaceGenerator = ({ space, onAddObjects }: SpaceGeneratorProps) => {
   const client = useClient();
   const staticTypes = [DocumentType, DiagramType, SheetType]; // TODO(burdon): Make extensible.
-  const mutableTypes = [Test.OrgType, Test.ProjectType, Test.ContactType];
+  const mutableTypes = [Testing.OrgType, Testing.ProjectType, Testing.ContactType];
   const [info, setInfo] = useState<any>({});
 
   // Create type generators.
@@ -63,14 +63,11 @@ export const SpaceGenerator = ({ space, onAddObjects }: SpaceGeneratorProps) => 
             const table = tables.find((table) => table.view?.query?.typename === type.typename);
             if (!table) {
               const name = type.typename.split('/').pop() ?? type.typename;
+              const view = createView({ name, typename: type.typename, jsonSchema: schema.jsonSchema });
               const table = space.db.add(
                 create(TableType, {
                   name,
-                  view: createView({
-                    name,
-                    typename: type.typename,
-                    jsonSchema: schema.jsonSchema,
-                  }),
+                  view,
                 }),
               );
 
