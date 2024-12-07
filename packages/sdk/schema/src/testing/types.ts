@@ -22,9 +22,9 @@ export namespace Testing {
     ),
   });
 
-  export type OrgType = S.Schema.Type<typeof OrgSchema>;
+  export type OrgSchemaType = S.Schema.Type<typeof OrgSchema>;
 
-  export class OrgTypedObject extends TypedObject({
+  export class OrgType extends TypedObject({
     typename: 'example.com/type/Org',
     version: '0.1.0',
   })(OrgSchema.fields) {}
@@ -58,14 +58,16 @@ export namespace Testing {
         [GeneratorAnnotationId]: 'internet.email',
       }),
     ),
-    // TODO(burdon): This breaks the table view.
-    // address: S.optional(AddressSchema),
     employer: S.optional(
       ref(OrgType).annotations({
         [FieldLookupAnnotationId]: 'name',
       }),
     ),
+    // TODO(burdon): This breaks the table view.
+    // address: S.optional(AddressSchema),
   });
+
+  export type ContactSchemaType = S.Schema.Type<typeof ContactSchema>;
 
   export class ContactType extends TypedObject({
     typename: 'example.com/type/Contact',
@@ -84,6 +86,8 @@ export namespace Testing {
     }),
     description: S.optional(S.String),
   });
+
+  export type ProjectSchemaType = S.Schema.Type<typeof ProjectSchema>;
 
   export class ProjectType extends TypedObject({
     typename: 'example.com/type/Project',

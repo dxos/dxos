@@ -78,16 +78,30 @@ export const Default: Story<TestType> = {
   },
 };
 
-export const Org: Story<Testing.OrgType> = {
+// TODO(burdon): Should accept partial values.
+export const Org: Story<Testing.OrgSchemaType> = {
   args: {
     schema: Testing.OrgSchema,
-    values: {},
+    values: {
+      name: 'DXOS',
+      website: 'https://dxos.org',
+    },
   },
 };
 
+// TODO(burdon): Type issue with employer reference.
+// TODO(burdon): Test table/form with compound values (e.g., address).
+// export const Contact: Story<Testing.ContactSchemaType> = {
+//   args: {
+//     schema: Testing.ContactSchema,
+//     values: {
+//       name: 'Bot',
+//     },
+//   },
+// };
+
 //
-// Experimental
-// TODO(burdon): Use actual test data.
+// TODO(burdon): Move into separate storybook and use test types.
 //
 
 const ShapeSchema = S.Struct({

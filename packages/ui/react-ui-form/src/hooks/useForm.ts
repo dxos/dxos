@@ -39,8 +39,16 @@ export type FormHandler<T extends BaseObject> = {
  * Hook options.
  */
 export interface FormOptions<T extends BaseObject> {
-  // TODO(burdon): Should this be S.Struct<T>?
+  /**
+   * Effect schema.
+   */
+  // TODO(burdon): Change to S.Struct<T>?
   schema: S.Schema<T>;
+
+  /**
+   * Initial values (which may not pass validation).
+   */
+  // TODO(burdon): Should be partial?
   initialValues: T;
 
   /**
