@@ -24,6 +24,7 @@ export const CreateRefPanel = ({ model, __gridScope }: GridScopedProps<CreateRef
       return;
     }
 
+    // TODO(burdon): Factor out.
     const schema: S.Schema<any> | undefined = space.db.schemaRegistry.getSchema(state.typename)?.schema;
     if (schema) {
       const omit = S.omit<any, any, ['id']>('id');
@@ -33,20 +34,19 @@ export const CreateRefPanel = ({ model, __gridScope }: GridScopedProps<CreateRef
 
   const handleSave = useCallback(
     (values: any) => {
-      if (!space || state?.type !== 'createRefPanel') {
+      if (!model || !space || state?.type !== 'createRefPanel') {
         return;
       }
 
       const schema: S.Schema<any> | undefined = space.db.schemaRegistry.getSchema(state.typename)?.schema;
       if (schema) {
-        // TODO(burdon): Set property.
         const obj = space.db.add(create(schema, values));
-        console.log(state);
+        state.onCreate?.(obj);
       }
 
-      void model?.close();
+      void model.modalController.close();
     },
-    [model, space, state],
+    [model?.modalController, space, state],
   );
 
   const handleCancel = useCallback(() => {

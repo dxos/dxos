@@ -39,7 +39,8 @@ export const TableCellEditor = ({
   onQuery,
   __gridScope,
 }: GridScopedProps<TableCellEditorProps>) => {
-  const { editing, id: gridId } = useGridContext('TableCellEditor', __gridScope);
+  const { id: gridId, editing, setEditing } = useGridContext('TableCellEditor', __gridScope);
+
   const fieldProjection = useMemo<FieldProjection | undefined>(() => {
     if (!model || !editing) {
       return;
@@ -51,6 +52,36 @@ export const TableCellEditor = ({
     invariant(fieldProjection);
     return fieldProjection;
   }, [model, editing]);
+
+  const handleEnter = useCallback(
+    (value: any) => {
+      if (!model || !editing) {
+        return;
+      }
+
+      const cell = parseCellIndex(editing.index);
+      model.setCellData(cell, value);
+      onEnter?.(cell);
+      onFocus?.();
+      setEditing(null);
+    },
+    [model, editing],
+  );
+
+  // TODO(burdon): Blur is called when popover is created and cell loses focus, which triggers an error.
+  const handleBlur = useCallback<EditorBlurHandler>(
+    (value) => {
+      if (!model || !editing) {
+        return;
+      }
+
+      const cell = parseCellIndex(editing.index);
+      if (value !== undefined) {
+        model.setCellData(cell, value);
+      }
+    },
+    [model, editing],
+  );
 
   const handleClose = useCallback<EditorKeyOrBlurHandler>(
     (value, event) => {
@@ -65,20 +96,6 @@ export const TableCellEditor = ({
       }
     },
     [model, editing, onFocus, onEnter, fieldProjection, determineNavigationAxis, determineNavigationDelta],
-  );
-
-  const handleBlur = useCallback<EditorBlurHandler>(
-    (value) => {
-      if (!model || !editing) {
-        return;
-      }
-
-      const cell = parseCellIndex(editing.index);
-      if (value !== undefined) {
-        model.setCellData(cell, value);
-      }
-    },
-    [model, editing],
   );
 
   const extension = useMemo(() => {
@@ -110,16 +127,16 @@ export const TableCellEditor = ({
                           {
                             [data.referencePath]: data.value,
                           },
+                          (obj) => {
+                            handleEnter(obj);
+                          },
                         );
                       }
                       break;
                     }
 
                     default: {
-                      const cell = parseCellIndex(editing.index);
-                      model.setCellData(cell, data);
-                      onEnter?.(cell);
-                      onFocus?.();
+                      handleEnter(data);
                     }
                   }
                 }
