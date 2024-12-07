@@ -28,6 +28,7 @@ import { isNotFalsy } from '@dxos/util';
 
 import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { ColumnSettings } from './ColumnSettings';
+import { CreateRefPanel } from './CreateRefPanel';
 import { RefPanel } from './RefPanel';
 import { RowActionsMenu } from './RowActionsMenu';
 import { type TableModel } from '../../model';
@@ -160,7 +161,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model, ignoreAt
 
   // TODO(burdon): Factor out?
   const handleQuery = useCallback<NonNullable<TableCellEditorProps['onQuery']>>(
-    async ({ field, props }, _text) => {
+    async ({ field, props }, text) => {
       if (model && props.referenceSchema && field.referencePath) {
         const space = getSpace(model.table);
         invariant(space);
@@ -168,21 +169,31 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model, ignoreAt
         if (schema) {
           // TODO(burdon): Cache/filter.
           const { objects } = await space.db.query(Filter.schema(schema)).run();
-          return [
-            ...objects
-              .map((obj) => {
-                const value = getValue(obj, field.referencePath!);
-                if (!value || typeof value !== 'string') {
-                  return undefined;
-                }
+          const options = objects
+            .map((obj) => {
+              const value = getValue(obj, field.referencePath!);
+              if (!value || typeof value !== 'string') {
+                return undefined;
+              }
 
-                return {
-                  label: value,
-                  data: obj,
-                };
-              })
-              .filter(isNotFalsy),
-            { label: t('create new object label'), data: null },
+              return {
+                label: value,
+                data: obj,
+              };
+            })
+            .filter(isNotFalsy);
+
+          return [
+            ...options,
+            // TODO(burdon): Option to create new object.
+            {
+              label: t('create new object label', { text }),
+              data: {
+                __matchIntent: 'create',
+                referencePath: field.referencePath,
+                value: text,
+              },
+            },
           ];
         }
       }
@@ -197,30 +208,27 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model, ignoreAt
   }
 
   return (
-    <>
-      <Grid.Root id={model.table.id ?? 'table-grid'}>
-        <TableCellEditor model={model} onEnter={handleEnter} onFocus={handleFocus} onQuery={handleQuery} />
-
-        <Grid.Content
-          onWheelCapture={handleWheel}
-          className={mx('[--dx-grid-base:var(--surface-bg)]', inlineEndLine, blockEndLine)}
-          frozen={frozen}
-          columns={model.columnMeta.value}
-          limitRows={model.getRowCount() ?? 0}
-          limitColumns={model.table.view?.fields?.length ?? 0}
-          onAxisResize={handleAxisResize}
-          onClick={model?.handleGridClick}
-          onKeyDown={handleKeyDown}
-          overscroll='trap'
-          ref={setDxGrid}
-        />
-      </Grid.Root>
-
+    <Grid.Root id={model.table.id ?? 'table-grid'}>
+      <TableCellEditor model={model} onEnter={handleEnter} onFocus={handleFocus} onQuery={handleQuery} />
+      <Grid.Content
+        onWheelCapture={handleWheel}
+        className={mx('[--dx-grid-base:var(--surface-bg)]', inlineEndLine, blockEndLine)}
+        frozen={frozen}
+        columns={model.columnMeta.value}
+        limitRows={model.getRowCount() ?? 0}
+        limitColumns={model.table.view?.fields?.length ?? 0}
+        onAxisResize={handleAxisResize}
+        onClick={model?.handleGridClick}
+        onKeyDown={handleKeyDown}
+        overscroll='trap'
+        ref={setDxGrid}
+      />
       <RowActionsMenu model={model} />
       <ColumnActionsMenu model={model} />
       <ColumnSettings model={model} />
       <RefPanel model={model} />
-    </>
+      <CreateRefPanel model={model} />
+    </Grid.Root>
   );
 });
 

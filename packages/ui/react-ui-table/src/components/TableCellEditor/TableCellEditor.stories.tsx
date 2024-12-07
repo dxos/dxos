@@ -107,7 +107,7 @@ type Story = StoryObj<StoryProps>;
 export const Default: Story = {
   args: {
     editing: {
-      index: '0,3',
+      index: 'grid,0,3',
       initialContent: 'Test',
     },
   },

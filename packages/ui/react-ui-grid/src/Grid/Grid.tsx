@@ -162,6 +162,7 @@ export {
   commentedClassName,
   toPlaneCellIndex,
   parseCellIndex,
+  cellQuery,
 } from '@dxos/lit-grid';
 
 export type {

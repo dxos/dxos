@@ -2,22 +2,23 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 
 import { FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type DxGrid } from '@dxos/lit-grid';
 import {
+  cellQuery,
   editorKeys,
-  type EditorKeyEvent,
-  GridCellEditor,
-  type GridCellEditorProps,
-  type EditorKeyOrBlurHandler,
-  type EditorBlurHandler,
-  type GridScopedProps,
+  parseCellIndex,
   useGridContext,
   type DxGridPlanePosition,
-  parseCellIndex,
+  type EditorKeyEvent,
+  type EditorKeyOrBlurHandler,
+  type EditorBlurHandler,
+  GridCellEditor,
+  type GridCellEditorProps,
+  type GridScopedProps,
 } from '@dxos/react-ui-grid';
 import { type FieldProjection } from '@dxos/schema';
 
@@ -38,7 +39,9 @@ export const TableCellEditor = ({
   onQuery,
   __gridScope,
 }: GridScopedProps<TableCellEditorProps>) => {
-  const { editing } = useGridContext('TableCellEditor', __gridScope);
+  const { id: gridId, editing, setEditing } = useGridContext('TableCellEditor', __gridScope);
+  const suppressNextBlur = useRef(false);
+
   const fieldProjection = useMemo<FieldProjection | undefined>(() => {
     if (!model || !editing) {
       return;
@@ -50,6 +53,39 @@ export const TableCellEditor = ({
     invariant(fieldProjection);
     return fieldProjection;
   }, [model, editing]);
+
+  const handleEnter = useCallback(
+    (value: any) => {
+      if (!model || !editing) {
+        return;
+      }
+
+      const cell = parseCellIndex(editing.index);
+      model.setCellData(cell, value);
+      onEnter?.(cell);
+      onFocus?.();
+      setEditing(null);
+    },
+    [model, editing],
+  );
+
+  const handleBlur = useCallback<EditorBlurHandler>(
+    (value) => {
+      if (!model || !editing) {
+        return;
+      }
+      if (suppressNextBlur.current) {
+        suppressNextBlur.current = false;
+        return;
+      }
+
+      const cell = parseCellIndex(editing.index);
+      if (value !== undefined) {
+        model.setCellData(cell, value);
+      }
+    },
+    [model, editing],
+  );
 
   const handleClose = useCallback<EditorKeyOrBlurHandler>(
     (value, event) => {
@@ -64,20 +100,6 @@ export const TableCellEditor = ({
       }
     },
     [model, editing, onFocus, onEnter, fieldProjection, determineNavigationAxis, determineNavigationDelta],
-  );
-
-  const handleBlur = useCallback<EditorBlurHandler>(
-    (value) => {
-      if (!model || !editing) {
-        return;
-      }
-
-      const cell = parseCellIndex(editing.index);
-      if (value !== undefined) {
-        model.setCellData(cell, value);
-      }
-    },
-    [model, editing],
   );
 
   const extension = useMemo(() => {
@@ -100,10 +122,28 @@ export const TableCellEditor = ({
               onQuery: (text) => onQuery(fieldProjection, text),
               onMatch: (data) => {
                 if (model && editing) {
-                  const cell = parseCellIndex(editing.index);
-                  model.setCellData(cell, data);
-                  onEnter?.(cell);
-                  onFocus?.();
+                  switch (data.__matchIntent) {
+                    case 'create': {
+                      if (fieldProjection.props.referenceSchema) {
+                        suppressNextBlur.current = true;
+                        model.modalController.openCreateRef(
+                          fieldProjection.props.referenceSchema,
+                          document.querySelector(cellQuery(editing.index, gridId)),
+                          {
+                            [data.referencePath]: data.value,
+                          },
+                          (obj) => {
+                            handleEnter(obj);
+                          },
+                        );
+                      }
+                      break;
+                    }
+
+                    default: {
+                      handleEnter(data);
+                    }
+                  }
                 }
               },
             }),

@@ -41,7 +41,7 @@ import {
   separator,
 } from './types';
 import {
-  toPlaneCellIndex,
+  toCellIndex,
   gap,
   resizeTolerance,
   sizeColMin,
@@ -264,7 +264,7 @@ export class DxGrid extends LitElement {
       queueMicrotask(() =>
         this.dispatchEvent(
           new DxEditRequest({
-            cellIndex: toPlaneCellIndex(this.focusedCell),
+            cellIndex: toCellIndex(this.focusedCell),
             cellBox: this.focusedCellBox(),
             initialContent,
           }),
@@ -1490,6 +1490,14 @@ export class DxGrid extends LitElement {
   }
 }
 
-export { rowToA1Notation, colToA1Notation, closestAction, closestCell, parseCellIndex, toPlaneCellIndex } from './util';
+export {
+  rowToA1Notation,
+  colToA1Notation,
+  closestAction,
+  closestCell,
+  parseCellIndex,
+  toPlaneCellIndex,
+  cellQuery,
+} from './util';
 
 export const commentedClassName = 'dx-grid__cell--commented';
