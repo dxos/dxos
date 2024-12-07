@@ -5,6 +5,9 @@
 import { signal } from '@preact/signals-core';
 import { type RefObject, type MouseEvent, type MutableRefObject } from 'react';
 
+import { type ReactiveObject } from '@dxos/live-object';
+import { log } from '@dxos/log';
+
 import { tableButtons } from '../util';
 
 export type ColumnSettingsMode = { type: 'create' } | { type: 'edit'; fieldId: string };
@@ -13,6 +16,12 @@ export type ModalState =
   | { type: 'row'; rowIndex: number }
   | { type: 'column'; fieldId: string }
   | { type: 'refPanel'; targetId: string; typename: string }
+  | {
+      type: 'createRefPanel';
+      typename: string;
+      initialValues?: Record<string, string>;
+      onCreate?: (obj: ReactiveObject<any>) => void;
+    }
   | { type: 'columnSettings'; mode: ColumnSettingsMode }
   | { type: 'closed' };
 
@@ -89,6 +98,25 @@ export class ModalController {
           mode: { type: 'edit', fieldId },
         };
       });
+    }
+  };
+
+  public openCreateRef = (
+    typename: string,
+    anchorCell: Element | null,
+    initialValues?: Record<string, string>,
+    onCreate?: (obj: ReactiveObject<any>) => void,
+  ) => {
+    if (anchorCell) {
+      this._triggerRef.current = anchorCell as HTMLElement;
+      this._state.value = {
+        type: 'createRefPanel',
+        typename,
+        initialValues,
+        onCreate,
+      };
+    } else {
+      log.warn('anchor cell not found while creating new ref');
     }
   };
 

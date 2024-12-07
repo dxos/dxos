@@ -51,6 +51,7 @@ export type FormProps<T extends BaseObject> = ThemedClassName<
 /**
  * General purpose form component that displays field controls based on the given schema.
  */
+// TODO(burdon): Area to show general validation errors.
 export const Form = <T extends BaseObject>({
   classNames,
   schema,
