@@ -1,9 +1,21 @@
-import { Schema } from '@effect/schema';
+import { AST, Schema } from '@effect/schema';
+import type { DXN } from '@dxos/keys';
+import { Any } from '@effect/schema/Schema';
+
+/*
+
+TODO:
+
+- Where clause
+- References
+- NodeDef<S extends Schema.AllNoContext>
+
+*/
 
 //
 // Generic utils
 //
-type Simplify<T> = { [K in keyof T]: T[K] };
+type Simplify<T> = { [K in keyof T]: T[K] } & {};
 
 type Flatten<T extends readonly any[]> = T extends [infer Head, ...infer Tail]
   ? Head extends readonly any[]
@@ -27,7 +39,7 @@ export type NodeDef<T> = {
   schema: Schema.Schema<T, any, never>;
 };
 
-const nodeDefVariance: NodeDef<any>[typeof NodeTypeId] = { _T: null };
+const nodeDefVariance: NodeDef.Any[typeof NodeTypeId] = { _T: null };
 
 export const NodeDef = <S extends Schema.Schema.AnyNoContext>(
   identifier: string,
@@ -39,7 +51,9 @@ export const NodeDef = <S extends Schema.Schema.AnyNoContext>(
 });
 
 declare namespace NodeDef {
-  type Data<T extends NodeDef<any>> = T extends NodeDef<infer U> ? U : never;
+  type Data<T extends NodeDef.Any> = T extends NodeDef<infer U> ? U : never;
+
+  type Any = NodeDef<any>;
 }
 
 export type Node<T> = {
@@ -63,7 +77,7 @@ export type RelationDef<T> = {
   schema: Schema.Schema<T, any, never>;
 };
 
-const relationDefVariance: RelationDef<any>[typeof RelationTypeId] = { _T: null };
+const relationDefVariance: RelationDef.Any[typeof RelationTypeId] = { _T: null };
 
 export const RelationDef = <S extends Schema.Schema.AnyNoContext>(
   identifier: string,
@@ -75,7 +89,9 @@ export const RelationDef = <S extends Schema.Schema.AnyNoContext>(
 });
 
 declare namespace RelationDef {
-  type Data<T extends RelationDef<any>> = T extends RelationDef<infer U> ? U : never;
+  type Data<T extends RelationDef.Any> = T extends RelationDef<infer U> ? U : never;
+
+  type Any = RelationDef<any>;
 }
 
 export type Relation<T> = {
@@ -87,7 +103,31 @@ export type Relation<T> = {
   data: T;
 };
 
-type PropertyFilter<T> = Partial<T>;
+/**
+ * Reference to a node.
+ */
+interface Ref<N extends NodeDef.Any> {
+  dxn: DXN;
+
+  readonly target: Node<NodeDef.Data<N>> | undefined;
+}
+
+declare namespace Ref {
+  export type Any = Ref<any>;
+
+  export type TargetNode<R extends Ref.Any> = R extends Ref<infer N> ? N : never;
+}
+
+/**
+ * Reference that has been resolved.
+ */
+interface ResolvedRef<N extends NodeDef.Any> extends Ref<N> {
+  readonly target: Node<NodeDef.Data<N>>;
+}
+
+interface Ref$<N extends NodeDef.Any> extends Schema.Schema<Ref<N>> {}
+
+const Ref = <N extends NodeDef.Any>(target: N): Ref$<N> => Schema.make(AST.anyKeyword);
 
 //
 // Query Language
@@ -95,12 +135,23 @@ type PropertyFilter<T> = Partial<T>;
 
 // General
 
-export const PropPatternTypeId: unique symbol = Symbol.for('@dxos/app-graph/PropPattern');
+export const LValueTypeId: unique symbol = Symbol.for('@dxos/app-graph/PropPattern');
 
-interface PropPattern<T> {
-  [PropPatternTypeId]: {
+/**
+ * LValue (from compiler terminology) is an expression that can appear on the left-hand side of an assignment operator.
+ */
+interface LValue<T> {
+  [LValueTypeId]: {
     _T: T;
   };
+
+  target(this: LValue<Ref.Any>): T extends Ref.Any ? NodePattern<Ref.TargetNode<T>> : never;
+}
+
+declare namespace LValue {
+  type Any = LValue<any>;
+
+  type Type<T extends LValue.Any> = T extends LValue<infer U> ? U : never;
 }
 
 type DataSelector<T> = { [K in keyof T]?: true };
@@ -113,25 +164,32 @@ type PathOf<T> = keyof T;
 type PickProp<T, P extends PathOf<T>> = T[P];
 
 interface PropSelectable<T> {
-  prop<P extends PathOf<T>>(path: P): PropPattern<PickProp<T, P>>;
+  prop<P extends PathOf<T>>(path: P): LValue<PickProp<T, P>>;
 }
+
+type PropertyFilter<T> = Partial<T>;
 
 // Match
 
-type PatternInput = NodeDef<any> | (NodeDef<any> | RelationDef<any>)[];
+type PatternInput = NodeDef.Any | (NodeDef.Any | RelationDef.Any)[];
 
 /**
  * Pattern of 1 node or multiple nodes connected by relations.
+ *
+ * Cypher: `(a:Node)-[RELATION]->(b:Node)`
  */
 interface Pattern<P extends PatternInput> {
-  related<R extends RelationDef<any>>(
+  related<R extends RelationDef.Any>(
     relation: RelationPattern<R>,
     opts?: { direction: 'left' | 'right' | 'undirected' },
   ): UnfinishedPattern<P, R>;
 }
 
-interface UnfinishedPattern<P extends PatternInput, R extends RelationDef<any>> {
-  to<N extends NodeDef<any>>(node: NodePattern<N>): Pattern<ConcatPatterns<P, R, N>>;
+/**
+ * Cypher: `(n:Node)-[RELATION]->_`
+ */
+interface UnfinishedPattern<P extends PatternInput, R extends RelationDef.Any> {
+  to<N extends NodeDef.Any>(node: NodePattern<N>): Pattern<ConcatPatterns<P, R, N>>;
 }
 
 export const NodePatternTypeId: unique symbol = Symbol.for('@dxos/app-graph/NodePattern');
@@ -142,7 +200,10 @@ export const NodePatternTypeId: unique symbol = Symbol.for('@dxos/app-graph/Node
  *
  * Cypher: `(n:Node)`
  */
-interface NodePattern<N extends NodeDef<any>> extends Pattern<N>, PropSelectable<NodeDef.Data<N>> {
+interface NodePattern<N extends NodeDef.Any>
+  extends Pattern<N>,
+    LValue<Node<NodeDef.Data<N>>>,
+    PropSelectable<NodeDef.Data<N>> {
   [NodePatternTypeId]: {
     _N: N;
   };
@@ -158,7 +219,12 @@ declare namespace NodePattern {
 
 export const RelationPatternTypeId: unique symbol = Symbol.for('@dxos/app-graph/RelationPattern');
 
-interface RelationPattern<R extends RelationDef<any>> extends PropSelectable<RelationDef.Data<R>> {
+/**
+ * Cypher: `[r:RELATION]`
+ */
+interface RelationPattern<R extends RelationDef.Any>
+  extends LValue<Relation<RelationDef.Data<R>>>,
+    PropSelectable<RelationDef.Data<R>> {
   [RelationPatternTypeId]: {
     _R: R;
   };
@@ -183,8 +249,11 @@ interface MatchClause<PS extends PatternInput[]> {
 
 type MatchClauseOutput<P extends Pattern<any>[]> = { [K in keyof P]: P[K] extends Pattern<infer PI> ? PI : never };
 
-type ConcatPatterns<P extends PatternInput, R extends RelationDef<any>, N extends NodeDef<any>> =
-  P extends NodeDef<any> ? [P, R, N] : P extends [...infer Elements] ? [...Elements, R, N] : never;
+type ConcatPatterns<P extends PatternInput, R extends RelationDef.Any, N extends NodeDef.Any> = P extends NodeDef.Any
+  ? [P, R, N]
+  : P extends [...infer Elements]
+    ? [...Elements, R, N]
+    : never;
 
 // Where
 
@@ -214,19 +283,25 @@ export type ReturnSpecFromPatterns<PS extends PatternInput[]> = PS extends any[]
     }
   : unknown;
 
-type AnyReturnSpec = Record<string, PropPattern<any>>;
+type AnyReturnSpec = Record<string, LValue<any>>;
 
 type ReturnSpecType<R extends AnyReturnSpec> = {
-  [K in keyof R]: R[K] extends PropPattern<infer T> ? T : unknown;
+  [K in keyof R]: R[K] extends LValue<infer T> ? T : unknown;
 };
 
 // Query builder
 
 interface CompleteQuery<R> {}
 
+declare namespace CompleteQuery {
+  export type Any = CompleteQuery<any>;
+
+  export type Result<Q extends CompleteQuery<any>> = Q extends CompleteQuery<infer R> ? R : unknown;
+}
+
 interface QueryBuilder {
-  Node<N extends NodeDef<any>>(def: N): NodePattern<N>;
-  Relation<R extends RelationDef<any>>(def: R): RelationPattern<R>;
+  Node<N extends NodeDef.Any>(def: N): NodePattern<N>;
+  Relation<R extends RelationDef.Any>(def: R): RelationPattern<R>;
 
   /**
    * All patterns must match at the same time.
@@ -243,12 +318,12 @@ interface QueryBuilder {
   //   path: P,
   // ): PropPattern<PickProp<NodePattern.Data<NP>, P>>;
 
-  // Return<N extends RelationDef<any>>(relation: RelationPattern<N>): ReturnSpecEntry<Relation<RelationDef.Data<N>>>;
-  // Return<N extends RelationDef<any>, D extends DataSelector<RelationDef.Data<N>>>(
+  // Return<N extends RelationDef.Any>(relation: RelationPattern<N>): ReturnSpecEntry<Relation<RelationDef.Data<N>>>;
+  // Return<N extends RelationDef.Any, D extends DataSelector<RelationDef.Data<N>>>(
   //   relation: RelationPattern<N>,
   //   selector: D,
   // ): ReturnSpecEntry<Relation<SelectData<RelationDef.Data<N>, D>>>;
-  // Return<N extends RelationDef<any>, P extends PathOf<RelationDef.Data<N>>>(
+  // Return<N extends RelationDef.Any, P extends PathOf<RelationDef.Data<N>>>(
   //   relation: RelationPattern<N>,
   //   path: P,
   // ): ReturnSpecEntry<PickField<RelationDef.Data<N>, P>>;
@@ -260,10 +335,17 @@ interface QueryBuilder {
 // Example schema
 //
 
+const ContactSchema = Schema.Struct({
+  name: Schema.String,
+});
+
+const ContactNode = NodeDef('Contact', ContactSchema);
+
 const DocumentSchema = Schema.Struct({
   name: Schema.String,
   kind: Schema.Literal('text', 'diagram'),
   content: Schema.String,
+  author: Ref(ContactNode),
 }).pipe(Schema.mutable);
 
 const DocumentNode = NodeDef('Document', DocumentSchema);
@@ -279,6 +361,11 @@ const ActionNode = NodeDef('Action', ActionSchema);
 const ActionForNodeSchema = Schema.Struct({});
 
 const ActionForNodeRelation = RelationDef('ActionForNode', ActionForNodeSchema);
+
+// TODO(dmaretskyi): Example for testing, actual impl will have subscriptions.
+const runQuery = <Q extends CompleteQuery.Any>(query: Q): Simplify<CompleteQuery.Result<Q>> => {
+  return null as any;
+};
 
 //
 // Example query
@@ -301,14 +388,14 @@ const getAllDocumentsMetadata = QB.build(() => {
   });
 });
 
-const getAllDocumentNamesAndTheirActions = QB.build(() => {
+const getAllDocumentNamesAndTheirAuthorsAndTheirActions = QB.build(() => {
   const document = QB.Node(DocumentNode);
   const action = QB.Node(ActionNode);
 
   return QB.Match(document.related(QB.Relation(ActionForNodeRelation)).to(action)).return({
     name: document.prop('name'),
     content: document.prop('content'),
-    actionName: action.prop('name'),
-    actionDescription: action.prop('description'),
+    authorName: document.prop('author').target().prop('name'),
+    action: action,
   });
 });
