@@ -203,8 +203,6 @@ declare namespace LValue {
 
 type DataSelector<T> = { [K in keyof T]?: true };
 
-type SelectData<T, D extends DataSelector<T>> = Pick<T, keyof D & keyof T>;
-
 // TODO(dmaretskyi): Nested paths.
 type PathOf<T> = keyof T;
 
