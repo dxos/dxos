@@ -4,7 +4,7 @@
 
 import { S, Format, TypedObject, FieldLookupAnnotationId, GeneratorAnnotationId, AST, ref } from '@dxos/echo-schema';
 
-export namespace Test {
+export namespace Testing {
   //
   // Org
   //
@@ -22,7 +22,9 @@ export namespace Test {
     ),
   });
 
-  export class OrgType extends TypedObject({
+  export type OrgType = S.Schema.Type<typeof OrgSchema>;
+
+  export class OrgTypedObject extends TypedObject({
     typename: 'example.com/type/Org',
     version: '0.1.0',
   })(OrgSchema.fields) {}
