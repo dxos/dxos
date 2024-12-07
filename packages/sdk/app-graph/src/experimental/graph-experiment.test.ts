@@ -6,10 +6,23 @@ import { Any } from '@effect/schema/Schema';
 
 TODO:
 
-- Where clause
+- More flexible return types, so that return isn't limited to being an object
+
+
 - Do we need a separate syntax to express patterns with refs (so that we can utilize the reverse reference index) or are predicates ok?
-- More flexible return types.
+e.g can we infer the scan order from the query:
+> MATCH (d:Document) WHERE d.author.id == $authorId RETURN DISTINCT document.author AS author
+
+Expected plan:
+> ScanNodeById(c:Contact, { id: $authorId })
+> ReverseReferenceScan(d, d.author == c)
+> TypeFilter(d typeof Document)
+> Map({ author: document.author })
+> Distinct(author)
+
 */
+
+type Id = string & { __Id: never };
 
 //
 // Generic utils
@@ -60,7 +73,7 @@ declare namespace NodeDef {
 
 // TODO(dmaretskyi): Take node def as parameter?
 export type Node<T> = {
-  id: string;
+  id: Id;
   kind: 'node';
   type: string;
 
@@ -101,7 +114,7 @@ declare namespace RelationDef {
 }
 
 export type Relation<T> = {
-  id: string;
+  id: Id;
   kind: 'relation';
   type: string;
 
@@ -151,8 +164,8 @@ interface RValue<T> {
     _T: T;
   };
 
-  eq(other: RValue<any>): RValue<boolean>;
-  neq(other: RValue<any>): RValue<boolean>;
+  eq(other: RValue<T>): RValue<boolean>;
+  neq(other: RValue<T>): RValue<boolean>;
 
   gt(this: RValue<number>, other: RValue<number>): RValue<boolean>;
   gte(this: RValue<number>, other: RValue<number>): RValue<boolean>;
@@ -242,6 +255,8 @@ interface NodePattern<N extends NodeDef.Any>
     _N: N;
   };
 
+  id(): RValue<Id>;
+
   where(filter: PropertyFilter<NodeDef.Properties<N>>): NodePattern<N>;
 }
 
@@ -262,6 +277,8 @@ interface RelationPattern<R extends RelationDef.Any>
   [RelationPatternTypeId]: {
     _R: R;
   };
+
+  id(): RValue<Id>;
 
   where(filter: PropertyFilter<RelationDef.Properties<R>>): RelationPattern<R>;
 }
@@ -466,14 +483,14 @@ const allContactsThatHaveAuthoredDocuments = QB.build(() => {
     .distinctBy('author');
 });
 
-// MATCH (d:Document) WHERE d.author.name == $authorName RETURN DISTINCT document.author AS author
-const allDocumentsByThisAuthor = (authorName: string) =>
+// MATCH (d:Document) WHERE d.author.id == $authorId RETURN DISTINCT document.author AS author
+const allDocumentsByThisAuthor = (authorId: Id) =>
   QB.build(() => {
     const document = QB.Node(DocumentNode);
     const author = document.prop('author').target();
 
     return QB.Match(document)
-      .where(author.prop('name').eq(QB.literal(3)))
+      .where(author.id().eq(QB.literal(authorId)))
       .return({
         author,
       })
