@@ -7,7 +7,8 @@ import { Any } from '@effect/schema/Schema';
 TODO:
 
 - Where clause
-
+- Do we need a separate syntax to express patterns with refs (so that we can utilize the reverse reference index) or are predicates ok?
+- More flexible return types.
 */
 
 //
@@ -140,14 +141,40 @@ const Ref = <N extends NodeDef.Any>(target: N): Ref$<N> => Schema.make(AST.anyKe
 
 // General
 
-// TODO(dmaretskyi): RValue.
+export const RValueTypeId: unique symbol = Symbol.for('@dxos/app-graph/RValue');
 
-export const LValueTypeId: unique symbol = Symbol.for('@dxos/app-graph/PropPattern');
+/**
+ * RValue (from compiler terminology) is an expression that can appear on the right-hand side of an assignment operator.
+ */
+interface RValue<T> {
+  [RValueTypeId]: {
+    _T: T;
+  };
+
+  eq(other: RValue<any>): RValue<boolean>;
+  neq(other: RValue<any>): RValue<boolean>;
+
+  gt(this: RValue<number>, other: RValue<number>): RValue<boolean>;
+  gte(this: RValue<number>, other: RValue<number>): RValue<boolean>;
+  lt(this: RValue<number>, other: RValue<number>): RValue<boolean>;
+  lte(this: RValue<number>, other: RValue<number>): RValue<boolean>;
+
+  and(this: RValue<boolean>, other: RValue<boolean>): RValue<boolean>;
+  or(this: RValue<boolean>, other: RValue<boolean>): RValue<boolean>;
+}
+
+declare namespace RValue {
+  type Any = RValue<any>;
+
+  type Type<T extends RValue.Any> = T extends RValue<infer U> ? U : never;
+}
+
+export const LValueTypeId: unique symbol = Symbol.for('@dxos/app-graph/LValue');
 
 /**
  * LValue (from compiler terminology) is an expression that can appear on the left-hand side of an assignment operator.
  */
-interface LValue<T> {
+interface LValue<T> extends RValue<T> {
   [LValueTypeId]: {
     _T: T;
   };
@@ -249,7 +276,7 @@ declare namespace RelationPattern {
 interface MatchClause<PS extends PatternInput[]> {
   or<PS1 extends Pattern<any>[]>(...patterns: PS1): MatchClause<PS | MatchClauseOutput<PS1>>;
 
-  where(filters: never): WhereClause<PS>;
+  where(filter: RValue<boolean>): WhereClause<PS>;
 
   return(): CompleteQuery<Simplify<ReturnSpecFromPatterns<PS>>>;
   return<R extends AnyReturnSpec>(returnSpec: R): CompleteQuery<Simplify<ReturnSpecType<R>>>;
@@ -266,6 +293,8 @@ type ConcatPatterns<P extends PatternInput, R extends RelationDef.Any, N extends
 // Where
 
 interface WhereClause<PS extends PatternInput[]> {
+  where(filter: RValue<boolean>): WhereClause<PS>;
+
   return(): CompleteQuery<Simplify<ReturnSpecFromPatterns<PS>>>;
   return<R extends AnyReturnSpec>(returnSpec: R): CompleteQuery<Simplify<ReturnSpecType<R>>>;
 }
@@ -298,7 +327,19 @@ type ReturnSpecType<R extends AnyReturnSpec> = {
 
 // Query builder
 
-interface CompleteQuery<R> {}
+type AnyQueryResult = Record<string, any>;
+
+type OrderDirection = 'ASC' | 'DESC';
+
+interface CompleteQuery<R extends AnyQueryResult> {
+  distinctBy<PS extends PathOf<R>[]>(...props: PS): CompleteQuery<R>;
+
+  orderBy<PS extends PathOf<R>[]>(...props: { [K in keyof PS]: [PS[K], OrderDirection] }): CompleteQuery<R>;
+
+  limit(rows: number): CompleteQuery<R>;
+  // TODO(dmaretskyi): Research different paging methods.
+  skip(rows: number): CompleteQuery<R>;
+}
 
 declare namespace CompleteQuery {
   export type Any = CompleteQuery<any>;
@@ -307,14 +348,34 @@ declare namespace CompleteQuery {
 }
 
 interface QueryBuilder {
+  //
+  // Patterns
+  //
   Node<N extends NodeDef.Any>(def: N): NodePattern<N>;
   Relation<R extends RelationDef.Any>(def: R): RelationPattern<R>;
+
+  //
+  // Expressions
+  //
+
+  literal<T>(value: T): RValue<T>;
+
+  not(value: RValue<boolean>): RValue<boolean>;
+  and(...values: RValue<boolean>[]): RValue<boolean>;
+  or(...values: RValue<boolean>[]): RValue<boolean>;
+
+  //
+  // Clauses
+  //
 
   /**
    * All patterns must match at the same time.
    */
   Match<PS extends Pattern<any>[]>(...patterns: PS): MatchClause<MatchClauseOutput<PS>>;
 
+  /**
+   * Helper to define scoped parameters.
+   */
   build<Q extends CompleteQuery<any>>(builderFn: () => Q): Q;
 }
 
@@ -355,34 +416,66 @@ const runQuery = <Q extends CompleteQuery.Any>(query: Q): Simplify<CompleteQuery
 };
 
 //
-// Example query
+// Example queries
 //
 
 declare const QB: QueryBuilder;
 
+// MATCH (Document { kind: 'text' })
 const getAllTextDocuments = QB.Match(QB.Node(DocumentNode).where({ kind: 'text' })).return();
 
+// MATCH (Document)-[ACTION_FOR_NODE]->(Action)
 const getAllActionsForAllDocuments = QB.Match(
   QB.Node(DocumentNode).related(QB.Relation(ActionForNodeRelation)).to(QB.Node(ActionNode)),
 ).return();
 
+// MATCH (d:Document) RETURN d.name AS name, d.kind AS kind
 const getAllDocumentsMetadata = QB.build(() => {
   const document = QB.Node(DocumentNode);
 
   return QB.Match(document).return({
     name: document.prop('name'),
-    content: document.prop('content'),
+    kind: document.prop('kind'),
   });
 });
 
+// MATCH (d:Document)-[ACTION_FOR_NODE]->(a:Action) RETURN d.name AS name, d.content AS content, d.author.name AS authorName, a AS action ORDER BY authorName DESC, name ASC LIMIT 100
 const getAllDocumentNamesAndTheirAuthorsAndTheirActions = QB.build(() => {
   const document = QB.Node(DocumentNode);
   const action = QB.Node(ActionNode);
 
-  return QB.Match(document.related(QB.Relation(ActionForNodeRelation)).to(action)).return({
-    name: document.prop('name'),
-    content: document.prop('content'),
-    authorName: document.prop('author').target().prop('name'),
-    action: action,
-  });
+  return QB.Match(document.related(QB.Relation(ActionForNodeRelation)).to(action))
+    .return({
+      name: document.prop('name'),
+      content: document.prop('content'),
+      authorName: document.prop('author').target().prop('name'),
+      action: action,
+    })
+    .orderBy(['authorName', 'DESC'], ['name', 'ASC'])
+    .limit(100);
 });
+
+// MATCH (d:Document) RETURN DISTINCT document.author AS author
+const allContactsThatHaveAuthoredDocuments = QB.build(() => {
+  const document = QB.Node(DocumentNode);
+
+  return QB.Match(document)
+    .return({
+      author: document.prop('author').target(),
+    })
+    .distinctBy('author');
+});
+
+// MATCH (d:Document) WHERE d.author.name == $authorName RETURN DISTINCT document.author AS author
+const allDocumentsByThisAuthor = (authorName: string) =>
+  QB.build(() => {
+    const document = QB.Node(DocumentNode);
+    const author = document.prop('author').target();
+
+    return QB.Match(document)
+      .where(author.prop('name').eq(QB.literal(3)))
+      .return({
+        author,
+      })
+      .distinctBy('author');
+  });
