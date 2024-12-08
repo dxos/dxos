@@ -20,17 +20,9 @@ import {
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type CellAddress, inRange, cellClassNameForRange, rangeFromIndex } from '../../defs';
+import { inRange, cellClassNameForRange, rangeFromIndex } from '../../defs';
 import { parseThreadAnchorAsCellRange } from '../../integrations';
 import { type SheetModel } from '../../model';
-
-export const dxGridCellIndexToSheetCellAddress = (index: string): CellAddress => {
-  const [colStr, rowStr] = index.split(',');
-  return {
-    col: parseInt(colStr),
-    row: parseInt(rowStr),
-  };
-};
 
 const createDxGridColumns = (model: SheetModel): DxGridAxisMeta => {
   return model.sheet.columns.reduce(
