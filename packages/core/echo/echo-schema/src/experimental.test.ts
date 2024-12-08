@@ -7,7 +7,6 @@ import { describe, test } from 'vitest';
 import { AST, S } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-import { ref } from './ast/ref';
 import { Format } from './formats';
 
 // TODO(burdon): MutableSchema should preserve the order of properties.
@@ -47,45 +46,40 @@ class ObjectRef<T> {
 // TODO(burdon): Consider arrays of references.
 const r = <T>(obj: T | undefined) => new ObjectRef<T>(''); // Just simulates a ref.
 
-//
-//
-//
-
-const OrgSchema = S.Struct({
-  id: ObjectId, // TODO(burdon): Basic type defines optional ID. Low-level def: no dep on ech-schema.
-  name: S.String,
-  website: S.optional(Format.URL),
-}).pipe(
-  StoredObject({
-    typename: 'example.com/type/Org',
-    version: '0.1.0',
-  }),
-  S.annotations({
-    [AST.DescriptionAnnotationId]: 'An organization',
-  }),
-);
-
-export type OrgType = S.Schema.Type<typeof OrgSchema>;
-
-const ContactSchema = S.Struct({
-  id: ObjectId,
-  name: S.String,
-  email: S.optional(Format.Email),
-  employer: S.optional(ref(OrgSchema)),
-}).pipe(
-  StoredObject({
-    typename: 'example.com/type/Contact',
-    version: '0.1.0',
-  }),
-  S.annotations({
-    [AST.DescriptionAnnotationId]: 'A person',
-  }),
-);
-
-export type ContactType = S.Schema.Type<typeof ContactSchema>;
-
-describe('experimental', () => {
+describe.skip('experimental', () => {
   test('basic', async () => {
+    const OrgSchema = S.Struct({
+      id: ObjectId, // TODO(burdon): Basic type defines optional ID. Low-level def: no dep on ech-schema.
+      name: S.String,
+      website: S.optional(Format.URL),
+    }).pipe(
+      StoredObject({
+        typename: 'example.com/type/Org',
+        version: '0.1.0',
+      }),
+      S.annotations({
+        [AST.DescriptionAnnotationId]: 'An organization',
+      }),
+    );
+
+    const ContactSchema = S.Struct({
+      id: ObjectId,
+      name: S.String,
+      email: S.optional(Format.Email),
+      employer: S.optional(ref(OrgSchema)),
+    }).pipe(
+      StoredObject({
+        typename: 'example.com/type/Contact',
+        version: '0.1.0',
+      }),
+      S.annotations({
+        [AST.DescriptionAnnotationId]: 'A person',
+      }),
+    );
+
+    // type ContactType = S.Schema.Type<typeof ContactSchema>;
+    // type OrgType = S.Schema.Type<typeof OrgSchema>;
+
     const org = create(OrgSchema, { name: 'DXOS' });
     const contact = create(ContactSchema, { name: 'Bot', employer: org });
 

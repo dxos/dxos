@@ -30,6 +30,8 @@
     "src"
   ],
   "dependencies": {
+    "@antv/graphlib": "^2.0.4",
+    "@antv/layout": "^1.2.13",
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/automerge": "workspace:*",
@@ -70,7 +72,8 @@
     "effect": "^3.9.2",
     "lodash.get": "^4.4.2",
     "react-json-tree": "^0.18.0",
-    "react-resize-detector": "^11.0.1"
+    "react-resize-detector": "^11.0.1",
+    "workerize-loader": "^2.0.2"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",

@@ -3,17 +3,13 @@
 //
 
 import {
-  createBindingId,
-  createShapeId,
   createTLStore,
   defaultBindingUtils,
   defaultShapeUtils,
   defaultShapeTools,
   defaultTools,
   Editor,
-  type SerializedStore,
   type TLEditorOptions,
-  type TLRecord,
 } from '@tldraw/tldraw';
 
 import { type AbstractSchema, type BaseObject } from '@dxos/echo-schema';
@@ -29,6 +25,8 @@ import { TableType } from '@dxos/react-ui-table';
 import { createView } from '@dxos/schema';
 import { createAsyncGenerator, type ValueGenerator } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
+
+import { drawGraph, generateGraph } from './draw-util';
 
 const generator: ValueGenerator = faker as any;
 
@@ -52,10 +50,14 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
     DocumentType.typename,
     async (space, n, cb) => {
       const objects = range(n).map(() => {
+        const content = range(faker.number.int({ min: 3, max: 8 }))
+          .map(() => faker.lorem.sentences(faker.number.int({ min: 3, max: 16 })))
+          .join('\n\n');
+
         const obj = space.db.add(
           create(DocumentType, {
             name: faker.commerce.productName(),
-            content: create(TextType, { content: faker.lorem.sentences(5) }),
+            content: create(TextType, { content }),
             threads: [],
           }),
         );
@@ -80,81 +82,25 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
         getContainer: () => document.body, // TODO(burdon): Fake via JSDOM?
       };
 
-      const objects = range(n).map(() => {
-        const store = createTLStore();
-        const editor = new Editor({ ...options, store });
+      const objects = await Promise.all(
+        range(n).map(async () => {
+          const store = createTLStore();
+          const editor = new Editor({ ...options, store });
+          const graph = generateGraph();
+          const content = await drawGraph(editor, graph);
+          editor.dispose();
+          store.dispose();
 
-        const a = createShapeId();
-        const b = createShapeId();
+          const obj = space.db.add(
+            create(DiagramType, {
+              name: faker.commerce.productName(),
+              canvas: create(CanvasType, { schema: TLDRAW_SCHEMA, content }),
+            }),
+          );
 
-        {
-          editor.createShape({
-            id: a,
-            type: 'geo',
-            x: -40,
-            y: -40,
-            props: { w: 80, h: 80, text: 'A' },
-          });
-
-          editor.createShape({
-            id: b,
-            type: 'geo',
-            x: 120,
-            y: -40,
-            props: { w: 80, h: 80, text: 'B' },
-          });
-        }
-
-        {
-          const arrow = createShapeId();
-          editor.createShape({ id: arrow, type: 'arrow' });
-
-          // TODO(burdon): Causes error:
-          //  Uncaught (in promise) TypeError: Cannot define property Symbol(@dxos/schema/Schema), object is not extensible
-
-          editor.createBinding({
-            id: createBindingId(),
-            type: 'arrow',
-            fromId: arrow,
-            toId: a,
-            props: {
-              terminal: 'start',
-              isExact: false,
-              isPrecise: false,
-              normalizedAnchor: { x: 0.5, y: 0.5 },
-            },
-          });
-
-          editor.createBinding({
-            id: createBindingId(),
-            type: 'arrow',
-            fromId: arrow,
-            toId: b,
-            props: {
-              terminal: 'end',
-              isExact: false,
-              isPrecise: false,
-              normalizedAnchor: { x: 0.5, y: 0.5 },
-            },
-          });
-        }
-
-        const data = store.getStoreSnapshot();
-        // TODO(burdon): Strip readonly properties (e.g., `meta`). Factor out.
-        const content: SerializedStore<TLRecord> = JSON.parse(JSON.stringify(data.store));
-
-        editor.dispose();
-        store.dispose();
-
-        const obj = space.db.add(
-          create(DiagramType, {
-            name: faker.commerce.productName(),
-            canvas: create(CanvasType, { schema: TLDRAW_SCHEMA, content }),
-          }),
-        );
-
-        return obj;
-      });
+          return obj;
+        }),
+      );
 
       cb?.(objects);
       return objects;
@@ -170,7 +116,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
         // TODO(burdon): Reconcile with plugin-sheet/testing
         const year = new Date().getFullYear();
         const cols = 4;
-        const rows = 10;
+        const rows = 20;
         const cells: Record<string, CellValue> = {};
         for (let col = 1; col <= cols; col++) {
           for (let row = 1; row <= 10; row++) {
