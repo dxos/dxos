@@ -3,10 +3,13 @@
 //
 
 import { randomBytes } from '@dxos/crypto';
+import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
 
 import {
   addressFromA1Notation,
+  addressToA1Notation,
+  isFormula,
   type CellAddress,
   type CellRange,
   type CompleteCellRange,
@@ -27,6 +30,8 @@ export class RangeException extends ApiError {
     super();
   }
 }
+
+// TODO(burdon): Factor out to types lib.
 
 /**
  * With a string length of 8, the chance of a collision is 0.02% for a sheet with 10,000 strings.
@@ -79,6 +84,10 @@ export const createSheet = ({ name, cells, ...size }: CreateSheetOptions = {}): 
   if (cells) {
     Object.entries(cells).forEach(([key, { value }]) => {
       const idx = addressToIndex(sheet, addressFromA1Notation(key));
+      if (isFormula(value)) {
+        value = mapFormulaRefsToIndices(sheet, value);
+      }
+
       sheet.cells[idx] = { value };
     });
   }
@@ -133,4 +142,26 @@ export const compareIndexPositions = (sheet: SheetType, indexA: string, indexB: 
   } else {
     return columnA - columnB;
   }
+};
+
+// TODO(burdon): Tests.
+
+/**
+ * Map from A1 notation to indices.
+ */
+export const mapFormulaRefsToIndices = (sheet: SheetType, formula: string): string => {
+  invariant(isFormula(formula));
+  return formula.replace(/([a-zA-Z]+)([0-9]+)/g, (match) => {
+    return addressToIndex(sheet, addressFromA1Notation(match));
+  });
+};
+
+/**
+ * Map from indices to A1 notation.
+ */
+export const mapFormulaIndicesToRefs = (sheet: SheetType, formula: string): string => {
+  invariant(isFormula(formula));
+  return formula.replace(/([a-zA-Z0-9]+)@([a-zA-Z0-9]+)/g, (idx) => {
+    return addressToA1Notation(addressFromIndex(sheet, idx));
+  });
 };
