@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { AST, S } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-import { ref } from './ast';
+import { ref } from './ast/ref';
 import { Format } from './formats';
 
 // TODO(burdon): MutableSchema should preserve the order of properties.
