@@ -32,8 +32,10 @@ export const cellClassNameForRange = ({ key, value }: SheetType['ranges'][number
         default:
           return undefined;
       }
+
     case commentKey:
       return 'bg-gridComment';
+
     case styleKey:
       switch (value) {
         case 'highlight':
@@ -43,6 +45,7 @@ export const cellClassNameForRange = ({ key, value }: SheetType['ranges'][number
         default:
           return undefined;
       }
+
     default:
       return undefined;
   }

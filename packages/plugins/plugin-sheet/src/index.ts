@@ -6,4 +6,7 @@ import { SheetPlugin } from './SheetPlugin';
 
 export * from './SheetPlugin';
 
+// TODO(burdon): Move to types entrypoint or create a new one.
+export * from './defs';
+
 export default SheetPlugin;

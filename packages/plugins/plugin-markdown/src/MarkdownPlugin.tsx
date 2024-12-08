@@ -157,6 +157,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           if (!dispatch) {
             return [];
           }
+
           return [
             {
               inputType: DocumentType.typename,
@@ -289,7 +290,14 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
               return {
                 data: doc,
-                intents: [[{ action: LayoutAction.SCROLL_INTO_VIEW, data: { id: fullyQualifiedId(doc) } }]],
+                intents: [
+                  [
+                    {
+                      action: LayoutAction.SCROLL_INTO_VIEW,
+                      data: { id: fullyQualifiedId(doc) },
+                    },
+                  ],
+                ],
               };
             }
 
