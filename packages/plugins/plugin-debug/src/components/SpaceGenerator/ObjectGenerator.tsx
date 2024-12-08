@@ -16,6 +16,7 @@ import { range } from '@dxos/util';
 
 const generator: ValueGenerator = faker as any;
 
+// TODO(burdon): Add objects to collections.
 // TODO(burdon): Create docs.
 // TODO(burdon): Create sketches.
 // TODO(burdon): Create sheets.
@@ -37,7 +38,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
         const obj = space.db.add(
           create(DocumentType, {
             name: faker.commerce.productName(),
-            content: create(TextType, { content: '' }),
+            content: create(TextType, { content: faker.lorem.sentences(5) }),
             threads: [],
           }),
         );
@@ -53,6 +54,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
     DiagramType.typename,
     async (space, n, cb) => {
       const objects = range(n).map(() => {
+        // TODO(burdon): Generate diagram.
         const obj = space.db.add(
           create(DiagramType, {
             name: faker.commerce.productName(),
@@ -71,6 +73,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
     SheetType.typename,
     async (space, n, cb) => {
       const objects = range(n).map(() => {
+        // TODO(burdon): Generate cells.
         const obj = space.db.add(
           create(SheetType, {
             name: faker.commerce.productName(),
