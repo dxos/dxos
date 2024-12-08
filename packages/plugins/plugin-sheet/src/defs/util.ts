@@ -144,6 +144,8 @@ export const compareIndexPositions = (sheet: SheetType, indexA: string, indexB: 
   }
 };
 
+// TODO(burdon): Tests.
+
 /**
  * Map from A1 notation to indices.
  */

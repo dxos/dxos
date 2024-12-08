@@ -71,6 +71,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
       return objects;
     },
   ],
+  // TODO(burdon): Create unit tests.
   [
     SheetType.typename,
     async (space, n, cb) => {
@@ -86,7 +87,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
               cells[cell] = { value: `${year} Q${col}` };
             } else if (row === rows) {
               const from = addressToA1Notation({ col, row: 2 });
-              const to = addressToA1Notation({ col, row: 9 });
+              const to = addressToA1Notation({ col, row: cols - 1 });
               cells[cell] = { value: `=SUM(${from}:${to})` };
             } else if (row > 2 && row < rows - 1) {
               cells[cell] = { value: Math.floor(Math.random() * 10_000) };
