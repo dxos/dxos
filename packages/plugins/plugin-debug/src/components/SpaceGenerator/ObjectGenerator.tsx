@@ -2,13 +2,27 @@
 // Copyright 2024 DXOS.org
 //
 
+import {
+  createBindingId,
+  createShapeId,
+  createTLStore,
+  defaultBindingUtils,
+  defaultShapeUtils,
+  defaultShapeTools,
+  defaultTools,
+  Editor,
+  type SerializedStore,
+  type TLEditorOptions,
+  type TLRecord,
+} from '@tldraw/tldraw';
+
 import { type AbstractSchema, type BaseObject } from '@dxos/echo-schema';
 import { create, type ReactiveObject } from '@dxos/live-object';
 import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
 import { addressToA1Notation, createSheet } from '@dxos/plugin-sheet';
 import { type CellValue } from '@dxos/plugin-sheet/types';
 import { SheetType } from '@dxos/plugin-sheet/types';
-import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
+import { TLDRAW_SCHEMA, CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
 import { faker } from '@dxos/random';
 import { Filter, type Space } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table';
@@ -19,9 +33,6 @@ import { range } from '@dxos/util';
 const generator: ValueGenerator = faker as any;
 
 // TODO(burdon): Add objects to collections.
-// TODO(burdon): Create docs.
-// TODO(burdon): Create sketches.
-// TODO(burdon): Create sheets.
 // TODO(burdon): Create comments.
 // TODO(burdon): Reuse in testbench-app.
 // TODO(burdon): Mutator running in background (factor out): from echo-generator.
@@ -32,7 +43,11 @@ export type ObjectGenerator<T extends BaseObject> = (
   cb?: (objects: ReactiveObject<any>[]) => void,
 ) => Promise<ReactiveObject<T>[]>;
 
+// TODO(burdon): Factor out and create unit tests. See "fuzz" patterns.
 export const staticGenerators = new Map<string, ObjectGenerator<any>>([
+  //
+  // DocumentType
+  //
   [
     DocumentType.typename,
     async (space, n, cb) => {
@@ -52,15 +67,89 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
       return objects;
     },
   ],
+  //
+  // DiagramType
+  //
   [
     DiagramType.typename,
     async (space, n, cb) => {
+      const options: Pick<TLEditorOptions, 'bindingUtils' | 'shapeUtils' | 'tools' | 'getContainer'> = {
+        bindingUtils: defaultBindingUtils,
+        shapeUtils: defaultShapeUtils,
+        tools: [...defaultTools, ...defaultShapeTools],
+        getContainer: () => document.body, // TODO(burdon): Fake via JSDOM?
+      };
+
       const objects = range(n).map(() => {
-        // TODO(burdon): Generate diagram.
+        const store = createTLStore();
+        const editor = new Editor({ ...options, store });
+
+        const a = createShapeId();
+        const b = createShapeId();
+
+        {
+          editor.createShape({
+            id: a,
+            type: 'geo',
+            x: -40,
+            y: -40,
+            props: { w: 80, h: 80, text: 'A' },
+          });
+
+          editor.createShape({
+            id: b,
+            type: 'geo',
+            x: 120,
+            y: -40,
+            props: { w: 80, h: 80, text: 'B' },
+          });
+        }
+
+        {
+          const arrow = createShapeId();
+          editor.createShape({ id: arrow, type: 'arrow' });
+
+          // TODO(burdon): Causes error:
+          //  Uncaught (in promise) TypeError: Cannot define property Symbol(@dxos/schema/Schema), object is not extensible
+
+          editor.createBinding({
+            id: createBindingId(),
+            type: 'arrow',
+            fromId: arrow,
+            toId: a,
+            props: {
+              terminal: 'start',
+              isExact: false,
+              isPrecise: false,
+              normalizedAnchor: { x: 0.5, y: 0.5 },
+            },
+          });
+
+          editor.createBinding({
+            id: createBindingId(),
+            type: 'arrow',
+            fromId: arrow,
+            toId: b,
+            props: {
+              terminal: 'end',
+              isExact: false,
+              isPrecise: false,
+              normalizedAnchor: { x: 0.5, y: 0.5 },
+            },
+          });
+        }
+
+        const data = store.getStoreSnapshot();
+        // TODO(burdon): Strip readonly properties (e.g., `meta`). Factor out.
+        const content: SerializedStore<TLRecord> = JSON.parse(JSON.stringify(data.store));
+
+        editor.dispose();
+        store.dispose();
+
         const obj = space.db.add(
           create(DiagramType, {
             name: faker.commerce.productName(),
-            canvas: create(CanvasType, { content: {} }),
+            canvas: create(CanvasType, { schema: TLDRAW_SCHEMA, content }),
           }),
         );
 
@@ -71,7 +160,9 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
       return objects;
     },
   ],
-  // TODO(burdon): Create unit tests.
+  //
+  // SheetType
+  //
   [
     SheetType.typename,
     async (space, n, cb) => {

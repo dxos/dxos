@@ -12,7 +12,6 @@ import { useClient } from '@dxos/react-client';
 import { getTypename, type Space } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { TableType } from '@dxos/react-ui-table';
 import { Testing } from '@dxos/schema/testing';
 import { jsonKeyReplacer, sortKeys } from '@dxos/util';
 
@@ -33,7 +32,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
 
   // Create type generators.
   const typeMap = useMemo(() => {
-    client.addTypes([DiagramType, TableType, SheetType]);
+    client.addTypes(staticTypes);
     const mutableGenerators = new Map<string, ObjectGenerator<any>>(
       mutableTypes.map((type) => [type.typename, createGenerator(type)]),
     );
