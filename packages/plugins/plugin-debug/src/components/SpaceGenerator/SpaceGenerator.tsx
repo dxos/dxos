@@ -74,7 +74,8 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
     async (typename: string) => {
       const constructor = typeMap.get(typename);
       if (constructor) {
-        await constructor(space, 10, onCreateObjects);
+        // TODO(burdon): Input to specify number of objects.
+        await constructor(space, 5, onCreateObjects);
         await updateInfo();
       }
     },

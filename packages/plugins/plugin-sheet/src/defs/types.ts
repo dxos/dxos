@@ -76,6 +76,7 @@ export const inRange = (range: CellRange | undefined, cell: CellAddress): boolea
 
   const { col: c1, row: r1 } = from;
   const { col: c2, row: r2 } = to;
+
   const cMin = Math.min(c1, c2);
   const cMax = Math.max(c1, c2);
   const rMin = Math.min(r1, r2);
