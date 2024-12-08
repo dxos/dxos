@@ -4,36 +4,27 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { type BaseObject } from '@dxos/echo-schema';
-import { create, type ReactiveObject } from '@dxos/live-object';
+import { type ReactiveObject } from '@dxos/live-object';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { SheetType } from '@dxos/plugin-sheet/types';
 import { DiagramType } from '@dxos/plugin-sketch/types';
-import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { Filter, getTypename, type Space } from '@dxos/react-client/echo';
+import { getTypename, type Space } from '@dxos/react-client/echo';
 import { IconButton, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { TableType } from '@dxos/react-ui-table';
-import { createView } from '@dxos/schema';
-import { createAsyncGenerator, Testing, type ValueGenerator } from '@dxos/schema/testing';
+import { Testing } from '@dxos/schema/testing';
 import { jsonKeyReplacer, sortKeys } from '@dxos/util';
 
-const generator: ValueGenerator = faker as any;
-
-// TODO(burdon): Create docs.
-// TODO(burdon): Create sketches.
-// TODO(burdon): Create sheets.
-// TODO(burdon): Create comments.
+import { type ObjectGenerator, createGenerator, staticGenerators } from './ObjectGenerator';
+import { SchemaTable } from './SchemaTable';
 
 export type SpaceGeneratorProps = {
   space: Space;
-  onAddObjects?: (objects: ReactiveObject<any>[]) => void;
+  onCreateObjects?: (objects: ReactiveObject<any>[]) => void;
 };
 
-// TODO(burdon): Reuse in testbench-app.
-// TODO(burdon): Mutator running in background (factor out): from echo-generator.
-export const SpaceGenerator = ({ space, onAddObjects }: SpaceGeneratorProps) => {
+export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) => {
   const client = useClient();
   const staticTypes = [DocumentType, DiagramType, SheetType]; // TODO(burdon): Make extensible.
   const mutableTypes = [Testing.OrgType, Testing.ProjectType, Testing.ContactType];
@@ -42,44 +33,11 @@ export const SpaceGenerator = ({ space, onAddObjects }: SpaceGeneratorProps) => 
   // Create type generators.
   const typeMap = useMemo(() => {
     client.addTypes([DiagramType, TableType, SheetType]);
-
-    return new Map<string, (n: number) => Promise<BaseObject>>(
-      mutableTypes.map((type) => {
-        return [
-          type.typename,
-          async (n: number) => {
-            // Find or create mutable schema.
-            const mutableSchema = await space.db.schemaRegistry.query();
-            const schema =
-              mutableSchema.find((schema) => schema.typename === type.typename) ??
-              space.db.schemaRegistry.addSchema(type);
-
-            // Create objects.
-            const generate = createAsyncGenerator(generator, schema.schema, space.db);
-            const objects = await generate.createObjects(n);
-
-            // Find or create table and view.
-            const { objects: tables } = await space.db.query(Filter.schema(TableType)).run();
-            const table = tables.find((table) => table.view?.query?.typename === type.typename);
-            if (!table) {
-              const name = type.typename.split('/').pop() ?? type.typename;
-              const view = createView({ name, typename: type.typename, jsonSchema: schema.jsonSchema });
-              const table = space.db.add(
-                create(TableType, {
-                  name,
-                  view,
-                }),
-              );
-
-              // Add to UX.
-              onAddObjects?.([table]);
-            }
-
-            return objects;
-          },
-        ];
-      }),
+    const mutableGenerators = new Map<string, ObjectGenerator<any>>(
+      mutableTypes.map((type) => [type.typename, createGenerator(type)]),
     );
+
+    return new Map([...staticGenerators, ...mutableGenerators]);
   }, [client, mutableTypes]);
 
   // Query space to get info.
@@ -114,8 +72,11 @@ export const SpaceGenerator = ({ space, onAddObjects }: SpaceGeneratorProps) => 
 
   const handleCreateData = useCallback(
     async (typename: string) => {
-      await typeMap.get(typename)?.(10);
-      await updateInfo();
+      const constructor = typeMap.get(typename);
+      if (constructor) {
+        await constructor(space, 10, onCreateObjects);
+        await updateInfo();
+      }
     },
     [typeMap],
   );
@@ -132,36 +93,6 @@ export const SpaceGenerator = ({ space, onAddObjects }: SpaceGeneratorProps) => 
       <SyntaxHighlighter classNames='flex text-xs' language='json'>
         {JSON.stringify({ space, ...info }, jsonKeyReplacer({ truncate: true }), 2)}
       </SyntaxHighlighter>
-    </div>
-  );
-};
-
-type SchemaTableProps = {
-  types: any[];
-  objects?: Record<string, number | undefined>;
-  label: string;
-  onClick: (typename: string) => void;
-};
-
-const SchemaTable = ({ types, objects = {}, label, onClick }: SchemaTableProps) => {
-  return (
-    <div className='grid grid-cols-[1fr_80px_40px] gap-1 overflow-hidden'>
-      <div className='grid grid-cols-subgrid col-span-3'>
-        <div className='px-2 py-1 text-sm text-primary-500'>{label}</div>
-      </div>
-      {types.map((type) => (
-        <div key={type.typename} className='grid grid-cols-subgrid col-span-3 items-center'>
-          <div className='px-2 py-1 text-sm font-mono text-green-500'>{type.typename}</div>
-          <div className='px-2 py-1 text-right font-mono'>{objects[type.typename] ?? 0}</div>
-          <IconButton
-            variant='ghost'
-            icon='ph--plus--regular'
-            iconOnly
-            label='Create data'
-            onClick={() => onClick(type.typename)}
-          />
-        </div>
-      ))}
     </div>
   );
 };
