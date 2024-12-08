@@ -93,6 +93,7 @@ export const Org: Story<Testing.OrgSchemaType> = {
 // TODO(burdon): Test table/form with compound values (e.g., address).
 // export const Contact: Story<Testing.ContactSchemaType> = {
 //   args: {
+//     // Property name is missing in type EncodedReference but required in type
 //     schema: Testing.ContactSchema,
 //     values: {
 //       name: 'Bot',
