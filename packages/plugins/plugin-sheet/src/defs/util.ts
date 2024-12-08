@@ -9,12 +9,12 @@ import { create } from '@dxos/live-object';
 import {
   addressFromA1Notation,
   addressToA1Notation,
+  isFormula,
   type CellAddress,
   type CellRange,
   type CompleteCellRange,
   DEFAULT_COLUMNS,
   DEFAULT_ROWS,
-  isFormula,
   MAX_COLUMNS,
   MAX_ROWS,
 } from './types';

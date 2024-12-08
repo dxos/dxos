@@ -95,6 +95,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
           }
         }
 
+        // TODO(burdon): Set width.
         return space.db.add(
           createSheet({
             name: faker.commerce.productName(),
