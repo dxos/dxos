@@ -93,7 +93,9 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
             <Input.TextInput
               type='number'
               min={1}
+              max={100}
               placeholder={'Count'}
+              classNames='w-[80px]'
               value={count}
               onChange={(ev) => setCount(parseInt(ev.target.value))}
             />
