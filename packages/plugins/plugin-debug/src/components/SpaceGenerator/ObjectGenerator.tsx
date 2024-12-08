@@ -76,10 +76,11 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
     SheetType.typename,
     async (space, n, cb) => {
       const objects = range(n).map(() => {
-        const cells: Record<string, CellValue> = {};
+        // TODO(burdon): Reconcile with plugin-sheet/testing
         const year = new Date().getFullYear();
         const cols = 4;
         const rows = 10;
+        const cells: Record<string, CellValue> = {};
         for (let col = 1; col <= cols; col++) {
           for (let row = 1; row <= 10; row++) {
             const cell = addressToA1Notation({ col, row });
@@ -87,7 +88,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
               cells[cell] = { value: `${year} Q${col}` };
             } else if (row === rows) {
               const from = addressToA1Notation({ col, row: 2 });
-              const to = addressToA1Notation({ col, row: cols - 1 });
+              const to = addressToA1Notation({ col, row: rows - 1 });
               cells[cell] = { value: `=SUM(${from}:${to})` };
             } else if (row > 2 && row < rows - 1) {
               cells[cell] = { value: Math.floor(Math.random() * 10_000) };

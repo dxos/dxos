@@ -5,6 +5,8 @@
 import { addressToA1Notation, createSheet } from '../defs';
 import type { CellValue, SheetType } from '../types';
 
+// TODO(burdon): Create testing endpoint.
+// TODO(burdon): Move to react-ui-sheet.
 export const createTestGrid = ({ cols = 4, rows = 10 }: { cols: number; rows: number }): SheetType => {
   const year = new Date().getFullYear();
 

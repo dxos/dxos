@@ -10,7 +10,7 @@ import { SheetType } from '@dxos/plugin-sheet/types';
 import { DiagramType } from '@dxos/plugin-sketch/types';
 import { useClient } from '@dxos/react-client';
 import { getTypename, type Space } from '@dxos/react-client/echo';
-import { IconButton, Toolbar, useAsyncEffect } from '@dxos/react-ui';
+import { IconButton, Input, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { TableType } from '@dxos/react-ui-table';
 import { Testing } from '@dxos/schema/testing';
@@ -28,6 +28,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
   const client = useClient();
   const staticTypes = [DocumentType, DiagramType, SheetType]; // TODO(burdon): Make extensible.
   const mutableTypes = [Testing.OrgType, Testing.ProjectType, Testing.ContactType];
+  const [count, setCount] = useState(1);
   const [info, setInfo] = useState<any>({});
 
   // Create type generators.
@@ -75,17 +76,29 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
       const constructor = typeMap.get(typename);
       if (constructor) {
         // TODO(burdon): Input to specify number of objects.
-        await constructor(space, 5, onCreateObjects);
+        await constructor(space, count, onCreateObjects);
         await updateInfo();
       }
     },
-    [typeMap],
+    [typeMap, count],
   );
 
   return (
     <div role='none' className='flex flex-col divide-y divide-separator'>
       <Toolbar.Root classNames='p-1'>
         <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={updateInfo} />
+        <Toolbar.Expander />
+        <div className='flex'>
+          <Input.Root>
+            <Input.TextInput
+              type='number'
+              min={1}
+              placeholder={'Count'}
+              value={count}
+              onChange={(ev) => setCount(parseInt(ev.target.value))}
+            />
+          </Input.Root>
+        </div>
       </Toolbar.Root>
 
       <SchemaTable types={staticTypes} objects={info.objects} label='Static Types' onClick={handleCreateData} />
