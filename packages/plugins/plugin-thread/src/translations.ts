@@ -2,11 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
+import { ChannelType } from '@dxos/plugin-space/types';
+
 import { THREAD_PLUGIN } from './meta';
 
 export default [
   {
     'en-US': {
+      [ChannelType.typename]: {
+        'typename label': 'Channel',
+      },
       [THREAD_PLUGIN]: {
         'plugin name': 'Threads',
         'channel name placeholder': 'New channel',

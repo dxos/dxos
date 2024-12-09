@@ -33,6 +33,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
       metadata: {
         records: {
           [TableType.typename]: {
+            createObject: TableAction.CREATE,
             label: (object: any) => (object instanceof TableType ? object.name : undefined),
             placeholder: ['object placeholder', { ns: TABLE_PLUGIN }],
             icon: 'ph--table--regular',
@@ -44,13 +45,8 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
       },
       translations: [...translations, ...formTranslations, ...tableTranslations],
       echo: {
-        schema: [TableType, ViewType],
-      },
-      space: {
-        onSpaceCreate: {
-          label: ['create object label', { ns: TABLE_PLUGIN }],
-          action: TableAction.CREATE,
-        },
+        schema: [TableType],
+        system: [ViewType],
       },
       graph: {
         builder: (plugins) => {
