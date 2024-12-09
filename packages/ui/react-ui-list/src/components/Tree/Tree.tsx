@@ -28,16 +28,7 @@ export const Tree = <T = any,>({
   onSelect,
 }: TreeProps<T>) => {
   const path = useMemo(() => [id], [id]);
-  const context = useMemo(
-    () => ({
-      getItems,
-      getProps,
-      isOpen,
-      isCurrent,
-    }),
-    [getItems, getProps, isOpen, isCurrent],
-  );
-
+  const context = useMemo(() => ({ getItems, getProps, isOpen, isCurrent }), [getItems, getProps, isOpen, isCurrent]);
   const items = getItems();
 
   return (
