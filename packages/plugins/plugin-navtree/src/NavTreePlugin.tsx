@@ -77,7 +77,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
     getInitialState() ?? [
       // TODO(thure): Initialize these dynamically.
       ['root', create({ open: true, current: false })],
-      ['root~dxos.org/plugin/space-spaces', create({ open: true, current: false })],
+      ['root~dxos.org/plugin/space/spaces', create({ open: true, current: false })],
       ['root~dxos.org/plugin/files', create({ open: true, current: false })],
     ],
   );

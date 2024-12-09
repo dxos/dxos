@@ -27,6 +27,7 @@ export const Tree = <T = any,>({
   onOpenChange,
   onSelect,
 }: TreeProps<T>) => {
+  const path = useMemo(() => [id], [id]);
   const context = useMemo(
     () => ({
       getItems,
@@ -36,8 +37,8 @@ export const Tree = <T = any,>({
     }),
     [getItems, getProps, isOpen, isCurrent],
   );
+
   const items = getItems();
-  const path = useMemo(() => [id], [id]);
 
   return (
     <Treegrid.Root gridTemplateColumns={gridTemplateColumns} classNames={classNames}>

@@ -16,13 +16,13 @@ import { type FlattenedActions, type NavTreeItemGraphNode } from '../types';
 export const NAV_TREE_ITEM = 'NavTreeItem';
 
 export type NavTreeProps = Omit<TreeProps<NavTreeItemGraphNode>, 'draggable' | 'gridTemplateColumns' | 'renderItem'> &
-  Pick<NavTreeRowProps, 'getActions' | 'loadDescendents' | 'renderItemEnd' | 'popoverAnchorId'>;
+  Pick<NavTreeItemProps, 'getActions' | 'loadDescendents' | 'renderItemEnd' | 'popoverAnchorId'>;
 
 export const NavTree = ({ getActions, loadDescendents, renderItemEnd, popoverAnchorId, ...props }: NavTreeProps) => {
   const renderItem = useCallback<NonNullable<TreeProps<NavTreeItemGraphNode>['renderItem']>>(
     ({ item, path, menuOpen, setMenuOpen }) => {
       return (
-        <NavTreeRow
+        <NavTreeItem
           path={path}
           node={item}
           getActions={getActions}
@@ -47,7 +47,7 @@ export const NavTree = ({ getActions, loadDescendents, renderItemEnd, popoverAnc
   );
 };
 
-type NavTreeRowProps = {
+type NavTreeItemProps = {
   path: string[];
   node: Node;
   getActions: (node: Node) => FlattenedActions;
@@ -58,7 +58,7 @@ type NavTreeRowProps = {
   popoverAnchorId?: string;
 };
 
-const NavTreeRow = ({
+const NavTreeItem = ({
   path,
   node,
   getActions,
@@ -67,7 +67,7 @@ const NavTreeRow = ({
   loadDescendents,
   renderItemEnd: ItemEnd,
   popoverAnchorId,
-}: NavTreeRowProps) => {
+}: NavTreeItemProps) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
 
   const level = path.length - 2;
@@ -83,7 +83,7 @@ const NavTreeRow = ({
 
   const ActionRoot = popoverAnchorId === `dxos.org/ui/${NAV_TREE_ITEM}/${node.id}` ? Popover.Anchor : Fragment;
 
-  // TODO(thure): Ideally this should not be necessary.
+  // TODO(thure): Ideally this should not be necessary. (Explain why it's required?)
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
       void loadDescendents?.(node);
