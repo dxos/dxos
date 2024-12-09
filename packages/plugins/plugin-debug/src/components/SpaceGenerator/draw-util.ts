@@ -19,7 +19,8 @@ import { range } from '@dxos/util';
 //    - https://github.com/dagrejs/dagre/wiki
 //  - https://www.npmjs.com/package/elkjs
 
-// TLDraw structure
+// TLDraw structure:
+//    svg tl-svg-context
 //    div tl-html-layer tl-shapes
 //      div tl-shape
 //        svg tl-svg-container
