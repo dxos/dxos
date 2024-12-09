@@ -7,7 +7,8 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useCallback, useState } from 'react';
 
-import { AST, Format, S } from '@dxos/echo-schema';
+import { AST, type BaseObject, Format, S } from '@dxos/echo-schema';
+import { Testing } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SelectInput } from './Defaults';
@@ -33,24 +34,24 @@ const TestSchema = S.Struct({
 
 type TestType = S.Schema.Type<typeof TestSchema>;
 
-type StoryProps = FormProps<TestType>;
+type StoryProps<T extends BaseObject> = { schema: S.Schema<T> } & FormProps<T>;
 
-const DefaultStory = ({ values: initialValues }: StoryProps) => {
+const DefaultStory = <T extends BaseObject>({ schema, values: initialValues }: StoryProps<T>) => {
   const [values, setValues] = useState(initialValues);
-  const handleSave = useCallback<NonNullable<FormProps<TestType>['onSave']>>((values) => {
+  const handleSave = useCallback<NonNullable<FormProps<T>['onSave']>>((values) => {
     setValues(values);
   }, []);
 
   return (
-    <TestLayout json={{ values, schema: TestSchema.ast.toJSON() }}>
+    <TestLayout json={{ values, schema: schema.ast.toJSON() }}>
       <TestPanel>
-        <Form<TestType> schema={TestSchema} values={values} onSave={handleSave} />
+        <Form<T> schema={schema} values={values} onSave={handleSave} />
       </TestPanel>
     </TestLayout>
   );
 };
 
-const meta: Meta<StoryProps> = {
+const meta: Meta<StoryProps<any>> = {
   title: 'ui/react-ui-form/Form',
   component: Form,
   render: DefaultStory,
@@ -62,10 +63,11 @@ const meta: Meta<StoryProps> = {
 
 export default meta;
 
-type Story = StoryObj<StoryProps>;
+type Story<T extends BaseObject> = StoryObj<StoryProps<T>>;
 
-export const Default: Story = {
+export const Default: Story<TestType> = {
   args: {
+    schema: TestSchema,
     values: {
       name: 'DXOS',
       active: true,
@@ -75,6 +77,33 @@ export const Default: Story = {
     },
   },
 };
+
+// TODO(burdon): Should accept partial values.
+export const Org: Story<Testing.OrgSchemaType> = {
+  args: {
+    schema: Testing.OrgSchema,
+    values: {
+      name: 'DXOS',
+      website: 'https://dxos.org',
+    },
+  },
+};
+
+// TODO(burdon): Type issue with employer reference.
+// TODO(burdon): Test table/form with compound values (e.g., address).
+// export const Contact: Story<Testing.ContactSchemaType> = {
+//   args: {
+//     // Property name is missing in type EncodedReference but required in type
+//     schema: Testing.ContactSchema,
+//     values: {
+//       name: 'Bot',
+//     },
+//   },
+// };
+
+//
+// TODO(burdon): Move into separate storybook and use test types.
+//
 
 const ShapeSchema = S.Struct({
   shape: S.optional(
@@ -92,6 +121,7 @@ const ShapeSchema = S.Struct({
 }).pipe(S.mutable);
 
 type ShapeType = S.Schema.Type<typeof ShapeSchema>;
+
 type DiscriminatedUnionStoryProps = FormProps<ShapeType>;
 
 const DiscriminatedUnionStory = ({ values: initialValues }: DiscriminatedUnionStoryProps) => {

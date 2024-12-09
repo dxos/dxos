@@ -89,6 +89,7 @@ export const createView = ({
 }: CreateViewProps): ReactiveObject<ViewType> => {
   const fields: FieldType[] = [];
   if (jsonSchema) {
+    // TODO(burdon): Property order is lost.
     const schema = toEffectSchema(jsonSchema);
     for (const property of getSchemaProperties(schema.ast)) {
       if (include && !include.includes(property.name)) {

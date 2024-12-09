@@ -39,9 +39,16 @@ export type FormHandler<T extends BaseObject> = {
  * Hook options.
  */
 export interface FormOptions<T extends BaseObject> {
+  /**
+   * Effect schema.
+   */
+  // TODO(burdon): Change to S.Struct<T>?
   schema: S.Schema<T>;
 
-  // TODO(burdon): Are these reactive?
+  /**
+   * Initial values (which may not pass validation).
+   */
+  // TODO(burdon): Should be partial?
   initialValues: T;
 
   /**
@@ -56,7 +63,7 @@ export interface FormOptions<T extends BaseObject> {
    * Use this for complex validation logic that can't be expressed in the schema.
    * @returns Array of validation errors, or undefined if validation passes
    */
-  // TODO(burdon): Change to key x value.
+  // TODO(burdon): Change to key x value?
   onValidate?: (values: T) => ValidationError[] | undefined;
 
   /**

@@ -12,6 +12,7 @@ export const ObjectIdBrand: unique symbol = Symbol('@dxos/echo/ObjectId');
 export const ObjectIdSchema = S.ULID;
 
 export type ObjectId = typeof ObjectIdSchema.Type;
+
 export const ObjectId: S.SchemaClass<ObjectId, string> & { random(): ObjectId } = class extends ObjectIdSchema {
   static random(): ObjectId {
     return ulid() as ObjectId;

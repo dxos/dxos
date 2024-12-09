@@ -35,7 +35,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
     () => (table.view ? space?.db.schemaRegistry.getSchema(table.view.query.typename) : undefined),
     [space, table.view],
   );
-  const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : () => false, undefined, [schema]);
+  const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
   const handleInsertRow = useCallback(() => {

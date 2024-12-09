@@ -147,6 +147,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           if (!dispatch) {
             return [];
           }
+
           return [
             {
               inputType: DocumentType.typename,

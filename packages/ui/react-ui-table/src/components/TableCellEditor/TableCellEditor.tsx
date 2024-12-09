@@ -2,33 +2,46 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import { type Completion } from '@codemirror/autocomplete';
+import React, { useCallback, useMemo, useRef } from 'react';
 
 import { FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type DxGrid } from '@dxos/lit-grid';
 import {
+  cellQuery,
   editorKeys,
-  type EditorKeyEvent,
-  GridCellEditor,
-  type GridCellEditorProps,
-  type EditorKeyOrBlurHandler,
-  type EditorBlurHandler,
-  type GridScopedProps,
+  parseCellIndex,
   useGridContext,
   type DxGridPlanePosition,
-  parseCellIndex,
+  type EditorKeyEvent,
+  type EditorKeyOrBlurHandler,
+  type EditorBlurHandler,
+  GridCellEditor,
+  type GridCellEditorProps,
+  type GridScopedProps,
 } from '@dxos/react-ui-grid';
 import { type FieldProjection } from '@dxos/schema';
 
 import { completion } from './extension';
 import { type TableModel } from '../../model';
 
+const newValue = Symbol.for('newValue');
+
+/**
+ * Option to create new object/value.
+ */
+export const createOption = (text: string) => ({ [newValue]: true, text });
+
+const isCreateOption = (data: any) => typeof data === 'object' && data[newValue];
+
+export type QueryResult = Pick<Completion, 'label'> & { data: any };
+
 export type TableCellEditorProps = {
   model?: TableModel;
   onEnter?: (cell: DxGridPlanePosition) => void;
   onFocus?: DxGrid['refocus'];
-  onQuery?: (field: FieldProjection, text: string) => Promise<{ label: string; data: any }[]>;
+  onQuery?: (field: FieldProjection, text: string) => Promise<QueryResult[]>;
 };
 
 export const TableCellEditor = ({
@@ -38,7 +51,9 @@ export const TableCellEditor = ({
   onQuery,
   __gridScope,
 }: GridScopedProps<TableCellEditorProps>) => {
-  const { editing } = useGridContext('TableCellEditor', __gridScope);
+  const { id: gridId, editing, setEditing } = useGridContext('TableCellEditor', __gridScope);
+  const suppressNextBlur = useRef(false);
+
   const fieldProjection = useMemo<FieldProjection | undefined>(() => {
     if (!model || !editing) {
       return;
@@ -50,6 +65,39 @@ export const TableCellEditor = ({
     invariant(fieldProjection);
     return fieldProjection;
   }, [model, editing]);
+
+  const handleEnter = useCallback(
+    (value: any) => {
+      if (!model || !editing) {
+        return;
+      }
+
+      const cell = parseCellIndex(editing.index);
+      model.setCellData(cell, value);
+      onEnter?.(cell);
+      onFocus?.();
+      setEditing(null);
+    },
+    [model, editing],
+  );
+
+  const handleBlur = useCallback<EditorBlurHandler>(
+    (value) => {
+      if (!model || !editing) {
+        return;
+      }
+      if (suppressNextBlur.current) {
+        suppressNextBlur.current = false;
+        return;
+      }
+
+      const cell = parseCellIndex(editing.index);
+      if (value !== undefined) {
+        model.setCellData(cell, value);
+      }
+    },
+    [model, editing],
+  );
 
   const handleClose = useCallback<EditorKeyOrBlurHandler>(
     (value, event) => {
@@ -64,20 +112,6 @@ export const TableCellEditor = ({
       }
     },
     [model, editing, onFocus, onEnter, fieldProjection, determineNavigationAxis, determineNavigationDelta],
-  );
-
-  const handleBlur = useCallback<EditorBlurHandler>(
-    (value) => {
-      if (!model || !editing) {
-        return;
-      }
-
-      const cell = parseCellIndex(editing.index);
-      if (value !== undefined) {
-        model.setCellData(cell, value);
-      }
-    },
-    [model, editing],
   );
 
   const extension = useMemo(() => {
@@ -100,10 +134,24 @@ export const TableCellEditor = ({
               onQuery: (text) => onQuery(fieldProjection, text),
               onMatch: (data) => {
                 if (model && editing) {
-                  const cell = parseCellIndex(editing.index);
-                  model.setCellData(cell, data);
-                  onEnter?.(cell);
-                  onFocus?.();
+                  if (isCreateOption(data)) {
+                    const { field, props } = fieldProjection;
+                    if (props.referenceSchema) {
+                      suppressNextBlur.current = true;
+                      model.modalController.openCreateRef(
+                        props.referenceSchema,
+                        document.querySelector(cellQuery(editing.index, gridId)),
+                        {
+                          [field.referencePath!]: data.text,
+                        },
+                        (data) => {
+                          handleEnter(data);
+                        },
+                      );
+                    }
+                  } else {
+                    handleEnter(data);
+                  }
                 }
               },
             }),
