@@ -9,7 +9,7 @@ export default [
     'en-US': {
       [WELCOME_PLUGIN]: {
         'welcome title': 'Join the Beta',
-        'welcome description': "Drop your email below to request early access to Composer.",
+        'welcome description': 'Drop your email below to request early access to Composer.',
         'welcome back title': 'Welcome back',
         'welcome back description':
           "Sign-up to join the beta. We'll send you a verification email that will give you immediate access.",
