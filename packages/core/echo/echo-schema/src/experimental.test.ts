@@ -5,7 +5,6 @@
 import { describe, test } from 'vitest';
 
 import { AST, S } from '@dxos/effect';
-import { log } from '@dxos/log';
 
 import { Format } from './formats';
 
@@ -28,7 +27,7 @@ const StoredObject =
   (self: A) =>
     self;
 
-const create = <A, I, R>(schema: S.Schema<A, I, R>, values: Partial<A>): A => values as A;
+const _create = <A, I, R>(schema: S.Schema<A, I, R>, values: Partial<A>): A => values as A;
 
 class ObjectRef<T> {
   constructor(private readonly id: string) {}
@@ -44,7 +43,7 @@ class ObjectRef<T> {
 }
 
 // TODO(burdon): Consider arrays of references.
-const r = <T>(obj: T | undefined) => new ObjectRef<T>(''); // Just simulates a ref.
+const _r = <T>(obj: T | undefined) => new ObjectRef<T>(''); // Just simulates a ref.
 
 describe.skip('experimental', () => {
   test('basic', async () => {
