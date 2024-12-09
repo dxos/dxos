@@ -804,12 +804,6 @@ importers:
       '@socketsupply/socket':
         specifier: ^0.5.4
         version: 0.5.4
-      '@splinetool/react-spline':
-        specifier: ^4.0.0
-        version: 4.0.0(@splinetool/runtime@1.9.2)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@splinetool/runtime':
-        specifier: ^1.9.2
-        version: 1.9.2
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -19162,20 +19156,6 @@ packages:
     os: [linux, darwin, win32]
     hasBin: true
 
-  '@splinetool/react-spline@4.0.0':
-    resolution: {integrity: sha512-FqrV7/K2q998Y0t83QUauQxsifKWAg9CFZoSb64qRuH7IfHkDs5/OgU1ACkg0aTgsEPtFlH+kATQ+8X6MrizHQ==}
-    peerDependencies:
-      '@splinetool/runtime': '*'
-      next: '>=14.2.0'
-      react: ~18.2.0
-      react-dom: ~18.2.0
-    peerDependenciesMeta:
-      next:
-        optional: true
-
-  '@splinetool/runtime@1.9.2':
-    resolution: {integrity: sha512-3VuUByimA1nQVleY9zXrVZCdgy2XVZ08khpd7ZAAUMdXo6cEQR4ucv7DuZVw/Y+WtSCeQYxC6AYySAf6vH5yVw==}
-
   '@stackblitz/sdk@1.9.0':
     resolution: {integrity: sha512-3m6C7f8pnR5KXys/Hqx2x6ylnpqOak6HtnZI6T5keEO0yT+E4Spkw37VEbdwuC+2oxmjdgq6YZEgiKX7hM1GmQ==}
 
@@ -21817,9 +21797,6 @@ packages:
 
   bluebird@3.7.2:
     resolution: {integrity: sha512-XpNj6GDQzdfW+r2Wnn7xiSAd7TM3jzkxGXBGTtWKuSXv1xUV+azxAm8jdWZN06QTQk+2N2XB9jRDkvbmQmcRtg==}
-
-  blurhash@2.0.5:
-    resolution: {integrity: sha512-cRygWd7kGBQO3VEhPiTgq4Wc43ctsM+o46urrmPOiuAe+07fzlSB9OJVdpgDL0jPqXUVQ9ht7aq7kxOeJHRK+w==}
 
   bn.js@4.12.0:
     resolution: {integrity: sha512-c98Bf3tPniI+scsdk237ku1Dc3ujXQTSgyiPUDEOe7tRkhrqridvh8klBv0HCEso1OLOYcHuCv/cS6DNxKH+ZA==}
@@ -28303,10 +28280,6 @@ packages:
   ohash@1.1.4:
     resolution: {integrity: sha512-FlDryZAahJmEF3VR3w1KogSEdWX3WhA5GPakFx4J81kEAiHyLMpdLLElS8n8dfNadMgAne/MywcvmogzscVt4g==}
 
-  on-change@4.0.2:
-    resolution: {integrity: sha512-cMtCyuJmTx/bg2HCpHo3ZLeF7FZnBOapLqZHr2AlLeJ5Ul0Zu2mUJJz051Fdwu/Et2YW04ZD+TtU+gVy0ACNCA==}
-    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
-
   on-finished@2.3.0:
     resolution: {integrity: sha512-ikqdkGAAyf/X/gPhXGvfgAytDZtDbr+bkNUJ0N9h5MI/dmdgCs3l6hoHrcUv41sRKew3jIwrp4qQDXiK99Utww==}
     engines: {node: '>= 0.8'}
@@ -29609,9 +29582,6 @@ packages:
     peerDependencies:
       '@types/react': ~18.2.0
       react: ~18.2.0
-
-  react-merge-refs@2.1.1:
-    resolution: {integrity: sha512-jLQXJ/URln51zskhgppGJ2ub7b2WFKGq3cl3NYKtlHoTG+dN2q7EzWrn3hN3EgPsTMvpR9tpq5ijdp7YwFZkag==}
 
   react-motion@0.5.2:
     resolution: {integrity: sha512-9q3YAvHoUiWlP3cK0v+w1N5Z23HXMj4IF4YuvjvWegWqNPfLXsOBE/V7UvQGpXxHFKRQQcNcVQE31g9SB/6qgQ==}
@@ -31317,9 +31287,6 @@ packages:
 
   through@2.3.8:
     resolution: {integrity: sha512-w89qg7PI8wAdvX60bMDP+bFoD5Dvhm9oLheFp5O4a2QF0cSBGsBX4qZmadPMvVqlLJBBci+WqGGOAPvcDeNSVg==}
-
-  thumbhash@0.1.1:
-    resolution: {integrity: sha512-kH5pKeIIBPQXAOni2AiY/Cu/NKdkFREdpH+TLdM0g6WA7RriCv0kPLgP731ady67MhTAqrVG/4mnEeibVuCJcg==}
 
   thunky@1.1.0:
     resolution: {integrity: sha512-eHY7nBftgThBqOyHGVN+l8gF0BucP09fMo0oO/Lb0w1OF80dJv+lDVpXG60WMQvkcxAkNybKsrEIE3ZtKGmPrA==}
@@ -43251,21 +43218,6 @@ snapshots:
       '@socketsupply/socket-linux-x64': 0.5.4
       '@socketsupply/socket-win32-x64': 0.5.4
 
-  '@splinetool/react-spline@4.0.0(@splinetool/runtime@1.9.2)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)':
-    dependencies:
-      '@splinetool/runtime': 1.9.2
-      blurhash: 2.0.5
-      lodash.debounce: 4.0.8
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-      react-merge-refs: 2.1.1
-      thumbhash: 0.1.1
-
-  '@splinetool/runtime@1.9.2':
-    dependencies:
-      on-change: 4.0.2
-      semver-compare: 1.0.0
-
   '@stackblitz/sdk@1.9.0': {}
 
   '@stayradiated/eslint-plugin-prefer-arrow-functions@4.4.0(eslint@8.57.0)':
@@ -46645,8 +46597,6 @@ snapshots:
   bluebird@3.4.7: {}
 
   bluebird@3.7.2: {}
-
-  blurhash@2.0.5: {}
 
   bn.js@4.12.0: {}
 
@@ -54640,8 +54590,6 @@ snapshots:
 
   ohash@1.1.4: {}
 
-  on-change@4.0.2: {}
-
   on-finished@2.3.0:
     dependencies:
       ee-first: 1.1.1
@@ -56079,8 +56027,6 @@ snapshots:
       vfile: 5.3.6
     transitivePeerDependencies:
       - supports-color
-
-  react-merge-refs@2.1.1: {}
 
   react-motion@0.5.2(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
     dependencies:
@@ -58304,8 +58250,6 @@ snapshots:
       xtend: 4.0.2
 
   through@2.3.8: {}
-
-  thumbhash@0.1.1: {}
 
   thunky@1.1.0: {}
 
