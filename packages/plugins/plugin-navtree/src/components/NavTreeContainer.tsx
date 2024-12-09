@@ -169,6 +169,7 @@ export const NavTreeContainer = memo(({ isCurrent, popoverAnchorId, ...props }: 
         if (!location.current.dropTargets.length) {
           return;
         }
+
         const target = location.current.dropTargets[0];
         const instruction: Instruction | null = extractInstruction(target.data);
         if (instruction !== null && instruction.type !== 'instruction-blocked') {
@@ -192,6 +193,7 @@ export const NavTreeContainer = memo(({ isCurrent, popoverAnchorId, ...props }: 
               : instruction.type === 'reorder-below'
                 ? targetIndex + 1
                 : targetIndex;
+
           switch (operation) {
             case 'rearrange': {
               const nextItems = sourceItems.map(({ data }) => data);

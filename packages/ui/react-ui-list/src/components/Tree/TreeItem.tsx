@@ -54,7 +54,7 @@ export type TreeItemProps<T = any> = {
   path: string[];
   last: boolean;
   draggable?: boolean;
-  renderColumns?: FC<{ item: T; path: string[]; menuOpen: boolean; setMenuOpen: (open: boolean) => void }>;
+  renderItem?: FC<{ item: T; path: string[]; menuOpen: boolean; setMenuOpen: (open: boolean) => void }>;
   canDrop?: (source: TreeData, target: TreeData) => boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
   onSelect?: (params: { item: T; path: string[]; current: boolean; option: boolean }) => void;
@@ -65,7 +65,7 @@ export const RawTreeItem = <T = any,>({
   path: _path,
   last,
   draggable,
-  renderColumns: Columns,
+  renderItem: Item,
   canDrop,
   onOpenChange,
   onSelect,
@@ -253,7 +253,7 @@ export const RawTreeItem = <T = any,>({
               onSelect={handleSelect}
             />
           </div>
-          {Columns && <Columns item={item} path={path} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />}
+          {Item && <Item item={item} path={path} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />}
           {instruction && <DropIndicator instruction={instruction} gap={2} />}
         </Treegrid.Cell>
       </Treegrid.Row>
@@ -265,7 +265,7 @@ export const RawTreeItem = <T = any,>({
             path={path}
             last={index === items.length - 1}
             draggable={draggable}
-            renderColumns={Columns}
+            renderItem={Item}
             canDrop={canDrop}
             onOpenChange={onOpenChange}
             onSelect={onSelect}

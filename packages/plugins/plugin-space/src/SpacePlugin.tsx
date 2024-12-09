@@ -12,6 +12,7 @@ import {
   LayoutAction,
   type LayoutProvides,
   type LocationProvides,
+  type MetadataResolver,
   type MetadataResolverProvides,
   NavigationAction,
   type Plugin,
@@ -38,7 +39,7 @@ import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { type AttentionPluginProvides, parseAttentionPlugin } from '@dxos/plugin-attention';
 import { type ClientPluginProvides, parseClientPlugin } from '@dxos/plugin-client';
-import { type Node, createExtension, memoize, toSignal } from '@dxos/plugin-graph';
+import { type Graph, type Node, createExtension, memoize, toSignal } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type Client, PublicKey } from '@dxos/react-client';
@@ -620,180 +621,31 @@ export const SpacePlugin = ({
             return [];
           }
 
+          // TODO(burdon): Good candidate for dependency injection experiment.
+          const options: CreateExtensionOptions = {
+            client,
+            graph,
+            dispatch,
+            resolve,
+            settings,
+            state,
+          };
+
           return [
-            // Create spaces group node.
-            createExtension({
-              id: `${SPACE_PLUGIN}/root`,
-              filter: (node): node is Node<null> => node.id === 'root',
-              connector: () => {
-                const isReady = toSignal(
-                  (onChange) => {
-                    let defaultSpaceUnsubscribe: UnsubscribeCallback | undefined;
-                    // No need to unsubscribe because this observable completes when spaces are ready.
-                    client.spaces.isReady.subscribe((ready) => {
-                      if (ready) {
-                        defaultSpaceUnsubscribe = client.spaces.default.state.subscribe(() => onChange()).unsubscribe;
-                      }
-                    });
+            // Create root node.
+            createRootNode(options),
 
-                    return () => defaultSpaceUnsubscribe?.();
-                  },
-                  () => client.spaces.isReady.get() && client.spaces.default.state.get() === SpaceState.SPACE_READY,
-                );
-                if (!isReady) {
-                  return [];
-                }
+            // Create spaces.
+            createSpaceNodes(options),
 
-                return [
-                  {
-                    id: SPACES,
-                    type: SPACES,
-                    cacheable: ['label', 'role'],
-                    properties: {
-                      label: ['spaces label', { ns: SPACE_PLUGIN }],
-                      testId: 'spacePlugin.spaces',
-                      role: 'branch',
-                      disabled: true,
-                      childrenPersistenceClass: 'echo',
-                      onRearrangeChildren: async (nextOrder: Space[]) => {
-                        // NOTE: This is needed to ensure order is updated by next animation frame.
-                        // TODO(wittjosiah): Is there a better way to do this?
-                        //   If not, graph should be passed as an argument to the extension.
-                        graph._sortEdges(
-                          SPACES,
-                          'outbound',
-                          nextOrder.map(({ id }) => id),
-                        );
+            // Create nodes for objects in the root collection of a space.
+            createRootObjectNodes(options),
 
-                        const {
-                          objects: [spacesOrder],
-                        } = await client.spaces.default.db.query(Filter.schema(Expando, { key: SHARED })).run();
-                        if (spacesOrder) {
-                          spacesOrder.order = nextOrder.map(({ id }) => id);
-                        } else {
-                          log.warn('spaces order object not found');
-                        }
-                      },
-                    },
-                  },
-                ];
-              },
-            }),
+            // Create nodes for objects in a collection or by its fully qualified id.
+            createObjectNodes(options),
 
-            // Create space nodes.
-            createExtension({
-              id: SPACES,
-              filter: (node): node is Node<null> => node.id === SPACES,
-              actions: () => [
-                {
-                  id: SpaceAction.OPEN_CREATE_SPACE,
-                  data: async () => {
-                    await dispatch({
-                      plugin: SPACE_PLUGIN,
-                      action: SpaceAction.OPEN_CREATE_SPACE,
-                    });
-                  },
-                  properties: {
-                    label: ['create space label', { ns: SPACE_PLUGIN }],
-                    icon: 'ph--plus--regular',
-                    testId: 'spacePlugin.createSpace',
-                    disposition: 'item',
-                    className: 'border-t border-separator',
-                  },
-                },
-                {
-                  id: SpaceAction.JOIN,
-                  data: async () => {
-                    await dispatch({
-                      plugin: SPACE_PLUGIN,
-                      action: SpaceAction.JOIN,
-                    });
-                  },
-                  properties: {
-                    label: ['join space label', { ns: SPACE_PLUGIN }],
-                    icon: 'ph--sign-in--regular',
-                    testId: 'spacePlugin.joinSpace',
-                    disposition: 'item',
-                  },
-                },
-              ],
-              connector: () => {
-                const spaces = toSignal(
-                  (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
-                  () => client.spaces.get(),
-                );
-
-                const isReady = toSignal(
-                  (onChange) => client.spaces.isReady.subscribe(() => onChange()).unsubscribe,
-                  () => client.spaces.isReady.get(),
-                );
-
-                if (!spaces || !isReady) {
-                  return;
-                }
-
-                // TODO(wittjosiah): During client reset, accessing default space throws.
-                try {
-                  const [spacesOrder] = memoizeQuery(client.spaces.default, Filter.schema(Expando, { key: SHARED }));
-                  const order: string[] = spacesOrder?.order ?? [];
-                  const orderMap = new Map(order.map((id, index) => [id, index]));
-                  return [
-                    ...spaces
-                      .filter((space) => orderMap.has(space.id))
-                      .sort((a, b) => orderMap.get(a.id)! - orderMap.get(b.id)!),
-                    ...spaces.filter((space) => !orderMap.has(space.id)),
-                  ]
-                    .filter((space) =>
-                      settings.values.showHidden ? true : space.state.get() !== SpaceState.SPACE_INACTIVE,
-                    )
-                    .map((space) =>
-                      constructSpaceNode({
-                        space,
-                        navigable: state.values.navigableCollections,
-                        personal: space === client.spaces.default,
-                        namesCache: state.values.spaceNames,
-                        resolve,
-                      }),
-                    );
-                } catch {}
-              },
-              resolver: ({ id }) => {
-                if (id.length !== SPACE_ID_LENGTH) {
-                  return;
-                }
-
-                const spaces = toSignal(
-                  (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
-                  () => client.spaces.get(),
-                );
-
-                const isReady = toSignal(
-                  (onChange) => client.spaces.isReady.subscribe(() => onChange()).unsubscribe,
-                  () => client.spaces.isReady.get(),
-                );
-
-                if (!spaces || !isReady) {
-                  return;
-                }
-
-                const space = spaces.find((space) => space.id === id);
-                if (!space) {
-                  return;
-                }
-
-                if (space.state.get() === SpaceState.SPACE_INACTIVE) {
-                  return false;
-                } else {
-                  return constructSpaceNode({
-                    space,
-                    navigable: state.values.navigableCollections,
-                    personal: space === client.spaces.default,
-                    namesCache: state.values.spaceNames,
-                    resolve,
-                  });
-                }
-              },
-            }),
+            // Create node for object settings.
+            createObjectSettingsNode(options),
 
             // Create space actions.
             createExtension({
@@ -810,170 +662,11 @@ export const SpacePlugin = ({
               },
             }),
 
-            // Create nodes for objects in the root collection of a space.
-            createExtension({
-              id: `${SPACE_PLUGIN}/root-collection`,
-              filter: (node): node is Node<Space> => isSpace(node.data),
-              connector: ({ node }) => {
-                const space = node.data;
-                const spaceState = toSignal(
-                  (onChange) => space.state.subscribe(() => onChange()).unsubscribe,
-                  () => space.state.get(),
-                  space.id,
-                );
-                if (spaceState !== SpaceState.SPACE_READY) {
-                  return;
-                }
-
-                const collection = space.properties[CollectionType.typename] as CollectionType | undefined;
-                if (!collection) {
-                  return;
-                }
-
-                return collection.objects
-                  .filter(nonNullable)
-                  .map((object) =>
-                    createObjectNode({ object, space, resolve, navigable: state.values.navigableCollections }),
-                  )
-                  .filter(nonNullable);
-              },
-            }),
-
-            // Create nodes for objects in a collection or by its fully qualified id.
-            createExtension({
-              id: `${SPACE_PLUGIN}/objects`,
-              filter: (node): node is Node<CollectionType> => node.data instanceof CollectionType,
-              connector: ({ node }) => {
-                const collection = node.data;
-                const space = getSpace(collection);
-                if (!space) {
-                  return;
-                }
-
-                return collection.objects
-                  .filter(nonNullable)
-                  .map((object) =>
-                    createObjectNode({ object, space, resolve, navigable: state.values.navigableCollections }),
-                  )
-                  .filter(nonNullable);
-              },
-              resolver: ({ id }) => {
-                if (id.length !== FQ_ID_LENGTH) {
-                  return;
-                }
-
-                const [spaceId, objectId] = id.split(':');
-                if (spaceId.length !== SPACE_ID_LENGTH && objectId.length !== OBJECT_ID_LENGTH) {
-                  return;
-                }
-
-                const space = client.spaces.get().find((space) => space.id === spaceId);
-                if (!space) {
-                  return;
-                }
-
-                const spaceState = toSignal(
-                  (onChange) => space.state.subscribe(() => onChange()).unsubscribe,
-                  () => space.state.get(),
-                  space.id,
-                );
-                if (spaceState !== SpaceState.SPACE_READY) {
-                  return;
-                }
-
-                const store = memoize(() => signal(space.db.getObjectById(objectId)), id);
-                memoize(() => {
-                  if (!store.value) {
-                    void space.db
-                      .query({ id: objectId })
-                      .first()
-                      .then((o) => (store.value = o))
-                      .catch((err) => log.catch(err, { objectId }));
-                  }
-                }, id);
-                const object = store.value;
-                if (!object) {
-                  return;
-                }
-
-                if (isDeleted(object)) {
-                  return false;
-                } else {
-                  return createObjectNode({ object, space, resolve, navigable: state.values.navigableCollections });
-                }
-              },
-            }),
-
             // Create collection actions and action groups.
             createExtension({
               id: `${SPACE_PLUGIN}/object-actions`,
               filter: (node): node is Node<ReactiveEchoObject<any>> => isEchoObject(node.data),
               actions: ({ node }) => constructObjectActions({ node, dispatch }),
-            }),
-
-            // Create nodes for object settings.
-            createExtension({
-              id: `${SPACE_PLUGIN}/settings-for-subject`,
-              resolver: ({ id }) => {
-                // TODO(Zan): Find util (or make one).
-                if (!id.endsWith('~settings')) {
-                  return;
-                }
-
-                const type = 'orphan-settings-for-subject';
-                const icon = 'ph--gear--regular';
-
-                const [subjectId] = id.split('~');
-                const { spaceId, objectId } = parseId(subjectId);
-                const spaces = toSignal(
-                  (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
-                  () => client.spaces.get(),
-                );
-                const space = spaces?.find(
-                  (space) => space.id === spaceId && space.state.get() === SpaceState.SPACE_READY,
-                );
-                if (!objectId) {
-                  const label = space
-                    ? space.properties.name || ['unnamed space label', { ns: SPACE_PLUGIN }]
-                    : ['unnamed object settings label', { ns: SPACE_PLUGIN }];
-
-                  // TODO(wittjosiah): Support comments for arbitrary subjects.
-                  //   This is to ensure that the comments panel is not stuck on an old object.
-                  return {
-                    id,
-                    type,
-                    data: null,
-                    properties: {
-                      icon,
-                      label,
-                      showResolvedThreads: false,
-                      object: null,
-                      space,
-                    },
-                  };
-                }
-
-                const [object] = memoizeQuery(space, { id: objectId });
-                if (!object || !subjectId) {
-                  return;
-                }
-
-                const meta = resolve(getTypename(object) ?? '');
-                const label = meta.label?.(object) ||
-                  object.name ||
-                  meta.placeholder || ['unnamed object settings label', { ns: SPACE_PLUGIN }];
-
-                return {
-                  id,
-                  type,
-                  data: null,
-                  properties: {
-                    icon,
-                    label,
-                    object,
-                  },
-                };
-              },
             }),
           ];
         },
@@ -1590,4 +1283,362 @@ export const SpacePlugin = ({
       },
     },
   };
+};
+
+//
+// Node factories.
+//
+
+type CreateExtensionOptions = {
+  client: Client;
+  graph: Graph;
+  dispatch: IntentDispatcher;
+  settings: LocalStorageStore<SpaceSettingsProps>;
+  state: LocalStorageStore<PluginState>;
+  resolve: MetadataResolver;
+};
+
+/**
+ * Creates the root node for the plugin.
+ */
+const createRootNode = ({ client, graph }: CreateExtensionOptions) => {
+  return createExtension({
+    id: `${SPACE_PLUGIN}/root`,
+    filter: (node): node is Node<null> => node.id === 'root',
+    connector: () => {
+      const isReady = toSignal(
+        (onChange) => {
+          let defaultSpaceUnsubscribe: UnsubscribeCallback | undefined;
+          // No need to unsubscribe because this observable completes when spaces are ready.
+          client.spaces.isReady.subscribe((ready) => {
+            if (ready) {
+              defaultSpaceUnsubscribe = client.spaces.default.state.subscribe(() => onChange()).unsubscribe;
+            }
+          });
+
+          return () => defaultSpaceUnsubscribe?.();
+        },
+        () => client.spaces.isReady.get() && client.spaces.default.state.get() === SpaceState.SPACE_READY,
+      );
+      if (!isReady) {
+        return [];
+      }
+
+      return [
+        {
+          id: SPACES,
+          type: SPACES,
+          cacheable: ['label', 'role'],
+          properties: {
+            label: ['spaces label', { ns: SPACE_PLUGIN }],
+            testId: 'spacePlugin.spaces',
+            role: 'branch',
+            disabled: true,
+            childrenPersistenceClass: 'echo',
+            onRearrangeChildren: async (nextOrder: Space[]) => {
+              // NOTE: This is needed to ensure order is updated by next animation frame.
+              // TODO(wittjosiah): Is there a better way to do this?
+              //   If not, graph should be passed as an argument to the extension.
+              graph._sortEdges(
+                SPACES,
+                'outbound',
+                nextOrder.map(({ id }) => id),
+              );
+
+              const {
+                objects: [spacesOrder],
+              } = await client.spaces.default.db.query(Filter.schema(Expando, { key: SHARED })).run();
+              if (spacesOrder) {
+                spacesOrder.order = nextOrder.map(({ id }) => id);
+              } else {
+                log.warn('spaces order object not found');
+              }
+            },
+          },
+        },
+      ];
+    },
+  });
+};
+
+/**
+ * Create nodes for each space, and for actions to create and join spaces.
+ */
+const createSpaceNodes = ({ client, dispatch, settings, state, resolve }: CreateExtensionOptions) => {
+  return createExtension({
+    id: SPACES,
+    filter: (node): node is Node<null> => node.id === SPACES,
+    actions: () => [
+      {
+        id: SpaceAction.OPEN_CREATE_SPACE,
+        data: async () => {
+          await dispatch({
+            plugin: SPACE_PLUGIN,
+            action: SpaceAction.OPEN_CREATE_SPACE,
+          });
+        },
+        properties: {
+          label: ['create space label', { ns: SPACE_PLUGIN }],
+          icon: 'ph--plus--regular',
+          testId: 'spacePlugin.createSpace',
+          disposition: 'item',
+          // className: 'border-t border-separator',
+        },
+      },
+      {
+        id: SpaceAction.JOIN,
+        data: async () => {
+          await dispatch({
+            plugin: SPACE_PLUGIN,
+            action: SpaceAction.JOIN,
+          });
+        },
+        properties: {
+          label: ['join space label', { ns: SPACE_PLUGIN }],
+          icon: 'ph--sign-in--regular',
+          testId: 'spacePlugin.joinSpace',
+          disposition: 'item',
+        },
+      },
+    ],
+    connector: () => {
+      const spaces = toSignal(
+        (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
+        () => client.spaces.get(),
+      );
+
+      const isReady = toSignal(
+        (onChange) => client.spaces.isReady.subscribe(() => onChange()).unsubscribe,
+        () => client.spaces.isReady.get(),
+      );
+
+      if (!spaces || !isReady) {
+        return;
+      }
+
+      // TODO(wittjosiah): During client reset, accessing default space throws.
+      try {
+        const [spacesOrder] = memoizeQuery(client.spaces.default, Filter.schema(Expando, { key: SHARED }));
+        const order: string[] = spacesOrder?.order ?? [];
+        const orderMap = new Map(order.map((id, index) => [id, index]));
+        return [
+          ...spaces.filter((space) => orderMap.has(space.id)).sort((a, b) => orderMap.get(a.id)! - orderMap.get(b.id)!),
+          ...spaces.filter((space) => !orderMap.has(space.id)),
+        ]
+          .filter((space) => (settings.values.showHidden ? true : space.state.get() !== SpaceState.SPACE_INACTIVE))
+          .map((space) =>
+            constructSpaceNode({
+              space,
+              navigable: state.values.navigableCollections,
+              personal: space === client.spaces.default,
+              namesCache: state.values.spaceNames,
+              resolve,
+            }),
+          );
+      } catch {
+        // Ignore.
+      }
+    },
+    resolver: ({ id }) => {
+      if (id.length !== SPACE_ID_LENGTH) {
+        return;
+      }
+
+      const spaces = toSignal(
+        (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
+        () => client.spaces.get(),
+      );
+
+      const isReady = toSignal(
+        (onChange) => client.spaces.isReady.subscribe(() => onChange()).unsubscribe,
+        () => client.spaces.isReady.get(),
+      );
+
+      if (!spaces || !isReady) {
+        return;
+      }
+
+      const space = spaces.find((space) => space.id === id);
+      if (!space) {
+        return;
+      }
+
+      if (space.state.get() === SpaceState.SPACE_INACTIVE) {
+        return false;
+      } else {
+        return constructSpaceNode({
+          space,
+          navigable: state.values.navigableCollections,
+          personal: space === client.spaces.default,
+          namesCache: state.values.spaceNames,
+          resolve,
+        });
+      }
+    },
+  });
+};
+
+/**
+ * Create nodes for objects in the root collection of a given space.
+ */
+const createRootObjectNodes = ({ state, resolve }: CreateExtensionOptions) => {
+  return createExtension({
+    id: `${SPACE_PLUGIN}/root-collection`,
+    filter: (node): node is Node<Space> => isSpace(node.data),
+    connector: ({ node }) => {
+      const space = node.data;
+      const spaceState = toSignal(
+        (onChange) => space.state.subscribe(() => onChange()).unsubscribe,
+        () => space.state.get(),
+        space.id,
+      );
+      if (spaceState !== SpaceState.SPACE_READY) {
+        return;
+      }
+
+      const collection = space.properties[CollectionType.typename] as CollectionType | undefined;
+      if (!collection) {
+        return;
+      }
+
+      return collection.objects
+        .filter(nonNullable)
+        .map((object) => createObjectNode({ object, space, resolve, navigable: state.values.navigableCollections }))
+        .filter(nonNullable);
+    },
+  });
+};
+
+/**
+ * Create nodes for objects in a collection or by its fully qualified id.
+ */
+const createObjectNodes = ({ client, resolve, state }: CreateExtensionOptions) => {
+  return createExtension({
+    id: `${SPACE_PLUGIN}/objects`,
+    filter: (node): node is Node<CollectionType> => node.data instanceof CollectionType,
+    connector: ({ node }) => {
+      const collection = node.data;
+      const space = getSpace(collection);
+      if (!space) {
+        return;
+      }
+
+      return collection.objects
+        .filter(nonNullable)
+        .map((object) => createObjectNode({ object, space, resolve, navigable: state.values.navigableCollections }))
+        .filter(nonNullable);
+    },
+    resolver: ({ id }) => {
+      if (id.length !== FQ_ID_LENGTH) {
+        return;
+      }
+
+      const [spaceId, objectId] = id.split(':');
+      if (spaceId.length !== SPACE_ID_LENGTH && objectId.length !== OBJECT_ID_LENGTH) {
+        return;
+      }
+
+      const space = client.spaces.get().find((space) => space.id === spaceId);
+      if (!space) {
+        return;
+      }
+
+      const spaceState = toSignal(
+        (onChange) => space.state.subscribe(() => onChange()).unsubscribe,
+        () => space.state.get(),
+        space.id,
+      );
+      if (spaceState !== SpaceState.SPACE_READY) {
+        return;
+      }
+
+      const store = memoize(() => signal(space.db.getObjectById(objectId)), id);
+      memoize(() => {
+        if (!store.value) {
+          void space.db
+            .query({ id: objectId })
+            .first()
+            .then((o) => (store.value = o))
+            .catch((err) => log.catch(err, { objectId }));
+        }
+      }, id);
+      const object = store.value;
+      if (!object) {
+        return;
+      }
+
+      if (isDeleted(object)) {
+        return false;
+      } else {
+        return createObjectNode({ object, space, resolve, navigable: state.values.navigableCollections });
+      }
+    },
+  });
+};
+
+/**
+ * Handles object settings.
+ */
+const createObjectSettingsNode = ({ client, resolve }: CreateExtensionOptions) => {
+  return createExtension({
+    id: `${SPACE_PLUGIN}/settings-for-subject`,
+    resolver: ({ id }) => {
+      // TODO(Zan): Find util (or make one).
+      if (!id.endsWith('~settings')) {
+        return;
+      }
+
+      const type = 'orphan-settings-for-subject';
+      const icon = 'ph--gear--regular';
+
+      const [subjectId] = id.split('~');
+      const { spaceId, objectId } = parseId(subjectId);
+      const spaces = toSignal(
+        (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
+        () => client.spaces.get(),
+      );
+      const space = spaces?.find((space) => space.id === spaceId && space.state.get() === SpaceState.SPACE_READY);
+      if (!objectId) {
+        const label = space
+          ? space.properties.name || ['unnamed space label', { ns: SPACE_PLUGIN }]
+          : ['unnamed object settings label', { ns: SPACE_PLUGIN }];
+
+        // TODO(wittjosiah): Support comments for arbitrary subjects.
+        //   This is to ensure that the comments panel is not stuck on an old object.
+        return {
+          id,
+          type,
+          data: null,
+          properties: {
+            icon,
+            label,
+            showResolvedThreads: false,
+            object: null,
+            space,
+          },
+        };
+      }
+
+      const [object] = memoizeQuery(space, { id: objectId });
+      if (!object || !subjectId) {
+        return;
+      }
+
+      const meta = resolve(getTypename(object) ?? '');
+      const label = meta.label?.(object) ||
+        object.name ||
+        meta.placeholder || ['unnamed object settings label', { ns: SPACE_PLUGIN }];
+
+      return {
+        id,
+        type,
+        data: null,
+        properties: {
+          icon,
+          label,
+          object,
+        },
+      };
+    },
+  });
 };
