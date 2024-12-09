@@ -2,15 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { NavigationAction, type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
+import { type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { EXPANDO_TYPENAME, getObjectAnnotation, getTypename, type Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { create, getSchema, isReactiveObject } from '@dxos/live-object';
+import { getSchema, isReactiveObject } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
 import {
   ACTION_GROUP_TYPE,
   ACTION_TYPE,
-  actionGroupSymbol,
   cleanup,
   getGraph,
   memoize,
@@ -211,68 +210,6 @@ export const constructSpaceNode = ({
   };
 };
 
-export const constructSpaceActionGroups = ({
-  space,
-  navigable,
-  dispatch,
-}: {
-  space: Space;
-  navigable: boolean;
-  dispatch: IntentDispatcher;
-}) => {
-  const state = space.state.get();
-  const hasPendingMigration = checkPendingMigration(space);
-  const getId = (id: string) => `${id}/${space.id}`;
-
-  if (state !== SpaceState.SPACE_READY || hasPendingMigration) {
-    return [];
-  }
-
-  const collection = space.properties[CollectionType.typename];
-  const actions: NodeArg<typeof actionGroupSymbol>[] = [
-    {
-      id: getId(SpaceAction.ADD_OBJECT),
-      type: ACTION_GROUP_TYPE,
-      data: actionGroupSymbol,
-      properties: {
-        label: ['create object in space label', { ns: SPACE_PLUGIN }],
-        icon: 'ph--plus--regular',
-        disposition: 'toolbar',
-        menuType: 'searchList',
-        testId: 'spacePlugin.createObject',
-      },
-      nodes: [
-        {
-          id: getId(SpaceAction.ADD_OBJECT.replace('object', 'collection')),
-          type: ACTION_TYPE,
-          data: () =>
-            dispatch([
-              {
-                plugin: SPACE_PLUGIN,
-                action: SpaceAction.ADD_OBJECT,
-                data: { target: collection, object: create(CollectionType, { objects: [], views: {} }) },
-              },
-              ...(navigable
-                ? [
-                    {
-                      action: NavigationAction.OPEN,
-                    },
-                  ]
-                : []),
-            ]),
-          properties: {
-            label: ['create collection label', { ns: SPACE_PLUGIN }],
-            icon: 'ph--cards-three--regular',
-            testId: 'spacePlugin.createCollection',
-          },
-        },
-      ],
-    },
-  ];
-
-  return actions;
-};
-
 export const constructSpaceActions = ({
   space,
   dispatch,
@@ -308,6 +245,19 @@ export const constructSpaceActions = ({
   if (state === SpaceState.SPACE_READY && !hasPendingMigration) {
     const locked = space.properties[COMPOSER_SPACE_LOCK];
     actions.push(
+      {
+        id: getId(SpaceAction.OPEN_CREATE_OBJECT),
+        type: ACTION_TYPE,
+        data: async () => {
+          await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.OPEN_CREATE_OBJECT, data: { target: space } });
+        },
+        properties: {
+          label: ['create object in space label', { ns: SPACE_PLUGIN }],
+          icon: 'ph--plus--regular',
+          disposition: 'toolbar',
+          testId: 'spacePlugin.createObject',
+        },
+      },
       {
         id: getId(SpaceAction.SHARE),
         type: ACTION_TYPE,
@@ -449,65 +399,6 @@ export const createObjectNode = ({
   };
 };
 
-export const constructObjectActionGroups = ({
-  object,
-  navigable,
-  dispatch,
-}: {
-  object: ReactiveEchoObject<any>;
-  navigable: boolean;
-  dispatch: IntentDispatcher;
-}) => {
-  if (!(object instanceof CollectionType)) {
-    return [];
-  }
-
-  const collection = object;
-  const getId = (id: string) => `${id}/${fullyQualifiedId(object)}`;
-  const actions: NodeArg<typeof actionGroupSymbol>[] = [
-    {
-      id: getId(SpaceAction.ADD_OBJECT),
-      type: ACTION_GROUP_TYPE,
-      data: actionGroupSymbol,
-      properties: {
-        label: ['create object in collection label', { ns: SPACE_PLUGIN }],
-        icon: 'ph--plus--regular',
-        disposition: 'toolbar',
-        menuType: 'searchList',
-        testId: 'spacePlugin.createObject',
-      },
-      nodes: [
-        {
-          id: getId(SpaceAction.ADD_OBJECT.replace('object', 'collection')),
-          type: ACTION_TYPE,
-          data: () =>
-            dispatch([
-              {
-                plugin: SPACE_PLUGIN,
-                action: SpaceAction.ADD_OBJECT,
-                data: { target: collection, object: create(CollectionType, { objects: [], views: {} }) },
-              },
-              ...(navigable
-                ? [
-                    {
-                      action: NavigationAction.OPEN,
-                    },
-                  ]
-                : []),
-            ]),
-          properties: {
-            label: ['create collection label', { ns: SPACE_PLUGIN }],
-            icon: 'ph--cards-three--regular',
-            testId: 'spacePlugin.createCollection',
-          },
-        },
-      ],
-    },
-  ];
-
-  return actions;
-};
-
 export const constructObjectActions = ({
   node,
   dispatch,
@@ -518,6 +409,27 @@ export const constructObjectActions = ({
   const object = node.data;
   const getId = (id: string) => `${id}/${fullyQualifiedId(object)}`;
   const actions: NodeArg<ActionData>[] = [
+    ...(object instanceof CollectionType
+      ? [
+          {
+            id: getId(SpaceAction.ADD_OBJECT),
+            type: ACTION_TYPE,
+            data: async () => {
+              await dispatch({
+                plugin: SPACE_PLUGIN,
+                action: SpaceAction.OPEN_CREATE_OBJECT,
+                data: { target: object },
+              });
+            },
+            properties: {
+              label: ['create object in collection label', { ns: SPACE_PLUGIN }],
+              icon: 'ph--plus--regular',
+              disposition: 'toolbar',
+              testId: 'spacePlugin.createObject',
+            },
+          },
+        ]
+      : []),
     {
       id: getId(SpaceAction.RENAME_OBJECT),
       type: ACTION_TYPE,

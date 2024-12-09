@@ -3,10 +3,14 @@
 //
 
 import { SKETCH_PLUGIN } from './meta';
+import { DiagramType } from './types';
 
 export default [
   {
     'en-US': {
+      [DiagramType.typename]: {
+        'typename label': 'Sketch',
+      },
       [SKETCH_PLUGIN]: {
         'plugin name': 'Sketch',
         'object title placeholder': 'New sketch',

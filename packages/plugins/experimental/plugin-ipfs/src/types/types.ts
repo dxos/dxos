@@ -8,7 +8,7 @@ import {
   type SurfaceProvides,
   type TranslationsProvides,
 } from '@dxos/app-framework';
-import { type SchemaProvides } from '@dxos/plugin-client';
+import { type SchemaProvides } from '@dxos/plugin-space';
 
 import { IPFS_PLUGIN } from '../meta';
 

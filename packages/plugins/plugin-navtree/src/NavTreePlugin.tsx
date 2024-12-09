@@ -30,14 +30,7 @@ import { type TreeData } from '@dxos/react-ui-list';
 import { Path } from '@dxos/react-ui-mosaic';
 import { getHostPlatform } from '@dxos/util';
 
-import {
-  CommandsDialogContent,
-  NavBarStart,
-  NavTreeContainer,
-  NavTreeDocumentTitle,
-  NODE_TYPE,
-  NotchStart,
-} from './components';
+import { CommandsDialogContent, NavTreeContainer, NavTreeDocumentTitle, NODE_TYPE, NotchStart } from './components';
 import { CommandsTrigger } from './components/CommandsTrigger';
 import meta, { KEY_BINDING, NAVTREE_PLUGIN } from './meta';
 import translations from './translations';
@@ -240,21 +233,6 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
 
             case 'document-title': {
               return <NavTreeDocumentTitle node={isGraphNode(data.activeNode) ? data.activeNode : undefined} />;
-            }
-
-            case 'navbar-start': {
-              if (data.activeNode) {
-                return {
-                  node: (
-                    <NavBarStart
-                      activeNode={data.activeNode as Node}
-                      popoverAnchorId={data.popoverAnchorId as string | undefined}
-                    />
-                  ),
-                  disposition: 'hoist',
-                };
-              }
-              break;
             }
 
             case 'notch-start':
