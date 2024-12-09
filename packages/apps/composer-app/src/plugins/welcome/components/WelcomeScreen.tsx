@@ -40,7 +40,7 @@ export const WelcomeScreen = ({ hubUrl, firstRun }: { hubUrl: string; firstRun?:
     try {
       // Prevent multiple signups.
       pendingRef.current = true;
-      await signup({ hubUrl, email, identity });
+      await signup({ hubUrl, email, identity, redirectUrl: location.origin });
       setState(WelcomeState.EMAIL_SENT);
     } catch (err) {
       log.catch(err);
