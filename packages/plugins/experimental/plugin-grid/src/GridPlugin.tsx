@@ -11,7 +11,7 @@ import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-g
 import { SpaceAction } from '@dxos/plugin-space';
 import { loadObjectReferences } from '@dxos/react-client/echo';
 
-import { GridMain } from './components';
+import { GridContainer } from './components';
 import meta, { GRID_PLUGIN } from './meta';
 import translations from './translations';
 import { GridItemType, GridType } from './types';
@@ -95,7 +95,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return data.active instanceof GridType ? <GridMain grid={data.active} /> : null;
+              return data.active instanceof GridType ? <GridContainer grid={data.active} /> : null;
           }
 
           return null;
