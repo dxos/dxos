@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type UnsubscribeCallback } from '@dxos/async';
+import { Event, type UnsubscribeCallback } from '@dxos/async';
 import {
   getObjectAnnotation,
   type JsonSchemaType,
@@ -22,179 +22,27 @@ import { log } from '@dxos/log';
 
 import { type EchoDatabase } from './database';
 import { getObjectCore, type ReactiveEchoObject } from '../echo-handler';
-import { Filter } from '../query';
-
-export type SchemaSubscriptionCallback = (schema: MutableSchema[]) => void;
-
-export interface SchemaRegistry {
-  query(query: SchemaRegistryQuery): SchemaRegistryLiveQuery<SchemaRecord>;
-
-  /**
-   * Registers the provided schema.
-   *
-   * @returns Schema records after registration.
-   *
-   * The behavior of this method depends on the state of the database. The general
-   * principle is that the schema will be upserted into the space. If an equivalent
-   * schema with the same name and version already exists, the method does nothing.
-   * If a different schema with the same name and version exists, the method throws
-   * an error. If no schema with the same name and version exists, a new schema will
-   * be inserted based on semantic versioning rules.
-   */
-  register(input: RegisterSchemaInput[]): Promise<SchemaRecord[]>;
-
-  /**
-   * @deprecated Use `query()`.
-   */
-  getSchema(typename: string): MutableSchema | undefined;
-
-  /**
-   * @deprecated Use `query()`.
-   */
-  subscribe(cb: SchemaSubscriptionCallback): UnsubscribeCallback;
-}
-
-export type SchemaRegistryQuery = {
-  /**
-   * Filter by schema ID.
-   * Schema id is a DXN with `echo` or `type` kind.
-   */
-  id?: string[];
-
-  /**
-   * One or more typenames to filter by.
-   */
-  typename?: string[];
-
-  /**
-   * [Semver Range](https://docs.npmjs.com/cli/v6/using-npm/semver#ranges) for the schema version.
-   */
-  version?: string;
-};
-
-export interface SchemaRegistryLiveQuery<T> {
-  /**
-   * Returns query results synchronously.
-   * Supports signals notifications.
-   * User must call `subscribe` for reactive notifications to be enabled.
-   */
-  get results(): T[];
-
-  /**
-   * Runs the query and returns all results.
-   */
-  run(): Promise<T[]>;
-
-  /**
-   * Runs the query and returns first result.
-   *
-   * @throws If query returns 0 entries.
-   */
-  first(): Promise<T>;
-
-  /**
-   * Subscribe to the query results reactively.
-   * Enables signals notifications for `results`.
-   */
-  subscribe(cb: (self: this) => void, opts: { fire?: boolean }): UnsubscribeCallback;
-}
-
-/**
- * Input for schema registration.
- * Either one of the schema variants must be provided.
- * The typename, version and schema mutability metadata is read from the schema annotations.
- */
-export type RegisterSchemaInput = {
-  /**
-   * Schema to register in the Effect format.
-   */
-  schema?: AnyEchoObjectSchema;
-
-  /**
-   * Schema to register in the JSON Schema format.
-   */
-  jsonSchema?: JsonSchemaType;
-};
-
-export type AnyEchoObjectSchema = S.Struct<{ [key: string]: S.Schema.AnyNoContext }>;
-
-/**
- * Record of the schema stored in the registry
- */
-// TODO(dmaretskyi): Replaces MutableSchema, StaticSchema.
-export interface SchemaRecord {
-  /**
-   * String identifier for the schema.
-   * In practice it's an `echo` or `type` DXN.
-   */
-  get id(): string;
-
-  get mutable(): boolean;
-
-  /**
-   * @returns Rendered effect schema snapshot for this entry.
-   */
-  getSchema(): AnyEchoObjectSchema;
-
-  /**
-   * @returns This schema snapshot in JSON-schema format.
-   */
-  getJsonSchema(): JsonSchemaType;
-
-  /**
-   * Get backing ECHO object for this schema.
-   */
-  getBackingObject(): Promise<ReactiveEchoObject<StoredSchema> | undefined>;
-
-  /**
-   * Updates typename.
-   *
-   * @throws Error if schema is not mutable.
-   */
-  updateTypename(typename: string): Promise<void>;
-
-  /**
-   * Adds fields.
-   *
-   * @throws Error if schema is not mutable.
-   */
-  addFields(fields: S.Struct.Fields): Promise<void>;
-
-  /**
-   * Updates fields.
-   *
-   * @throws Error if schema is not mutable.
-   */
-  updateFields(fields: S.Struct.Fields): Promise<void>;
-
-  /**
-   * Renames field.
-   *
-   * @throws Error if schema is not mutable.
-   */
-  renameField({ from, to }: { from: string; to: string }): Promise<void>;
-
-  /**
-   * Removes fields.
-   *
-   * @throws Error if schema is not mutable.
-   */
-  removeFields(fieldNames: string[]): Promise<void>;
-}
-
-export type MutableSchemaRegistryOptions = {
-  /**
-   * Run a reactive query for dynamic schemas.
-   * @default true
-   */
-  reactiveQuery?: boolean;
-};
+import { Filter, type Query } from '../query';
+import type {
+  MutableSchemaRegistryOptions,
+  RegisterSchemaInput,
+  SchemaId,
+  SchemaRecord,
+  SchemaRegistry,
+  SchemaRegistryPreparedQuery,
+  SchemaRegistryQuery,
+  SchemaSubscriptionCallback,
+} from './schema-registry-api';
+import { SchemaRegistryPreparedQueryImpl, type SchemaRegistryQueryResolver } from './schema-registry-prepared-query';
+import { Context } from '@dxos/context';
+import { SchemaRecordImpl } from './schema-record';
+import { DXN } from '@dxos/keys';
 
 /**
  * Per-space set of mutable schemas.
  */
 // TODO(burdon): Reconcile with RuntimeSchemaRegistry.
-export class MutableSchemaRegistry implements SchemaResolver {
+export class MutableSchemaRegistry implements SchemaRegistry {
   private readonly _schemaById: Map<string, MutableSchema> = new Map();
   private readonly _schemaByType: Map<string, MutableSchema> = new Map();
   private readonly _unsubscribeById: Map<string, UnsubscribeCallback> = new Map();
@@ -219,15 +67,42 @@ export class MutableSchemaRegistry implements SchemaResolver {
     }
   }
 
+  async register(input: RegisterSchemaInput[]): Promise<SchemaRecord[]> {
+    throw new Error('Method not implemented.');
+  }
+
+  // TODO(burdon): Can this be made sync?
+  // public async query(): Promise<MutableSchema[]> {
+  //   const { objects } = await this._db.query(Filter.schema(StoredSchema)).run();
+  //   return objects.map((stored) => {
+  //     return this._register(stored);
+  //   });
+  // }
+
+  query(query: SchemaRegistryQuery): SchemaRegistryPreparedQuery<SchemaRecord> {
+    return new SchemaRegistryPreparedQueryImpl(
+      new SchemaRegistryQueryResolverImpl(this._db.query(Filter.schema(StoredSchema)), query),
+    );
+  }
+
+  /**
+   * @deprecated
+   */
   public hasSchema(schema: S.Schema<any>): boolean {
     const schemaId = schema instanceof MutableSchema ? schema.id : getObjectAnnotation(schema)?.schemaId;
     return schemaId != null && this.getSchemaById(schemaId) != null;
   }
 
+  /**
+   * @deprecated
+   */
   public getSchema(typename: string): MutableSchema | undefined {
     return this._schemaByType.get(typename);
   }
 
+  /**
+   * @deprecated
+   */
   public getSchemaById(id: string): MutableSchema | undefined {
     const existing = this._schemaById.get(id);
     if (existing != null) {
@@ -267,14 +142,9 @@ export class MutableSchemaRegistry implements SchemaResolver {
     return [...runtimeSchemas, ...storedSchemas];
   }
 
-  // TODO(burdon): Can this be made sync?
-  public async query(): Promise<MutableSchema[]> {
-    const { objects } = await this._db.query(Filter.schema(StoredSchema)).run();
-    return objects.map((stored) => {
-      return this._register(stored);
-    });
-  }
-
+  /**
+   * @deprecated
+   */
   public subscribe(callback: SchemaSubscriptionCallback): UnsubscribeCallback {
     callback([...this._schemaById.values()]);
     this._schemaSubscriptionCallbacks.push(callback);
@@ -286,6 +156,9 @@ export class MutableSchemaRegistry implements SchemaResolver {
     };
   }
 
+  /**
+   * @deprecated
+   */
   // TODO(burdon): Tighten type signature to AbstractSchema?
   public addSchema(schema: S.Schema<any>): MutableSchema {
     const meta = getObjectAnnotation(schema);
@@ -303,6 +176,9 @@ export class MutableSchemaRegistry implements SchemaResolver {
     return result;
   }
 
+  /**
+   * @deprecated
+   */
   public registerSchema(schema: StoredSchema): MutableSchema {
     const existing = this._schemaById.get(schema.id);
     if (existing != null) {
@@ -358,3 +234,77 @@ export class MutableSchemaRegistry implements SchemaResolver {
     this._schemaSubscriptionCallbacks.forEach((s) => s(list));
   }
 }
+
+/**
+ * Queries the schema stored in the DB and projects the results into the SchemaRecord.
+ */
+class SchemaRegistryQueryResolverImpl implements SchemaRegistryQueryResolver<SchemaRecord> {
+  private _startCtx?: Context = undefined;
+
+  constructor(
+    private readonly _storedSchemaQuery: Query<StoredSchema>,
+    private readonly _filter: SchemaRegistryQuery,
+  ) {}
+
+  readonly changes = new Event<void>();
+
+  async start(): Promise<void> {
+    this._startCtx = Context.default();
+    this._startCtx.onDispose(this._storedSchemaQuery.subscribe());
+  }
+
+  async stop(): Promise<void> {
+    this._startCtx?.dispose();
+    this._startCtx = undefined;
+  }
+
+  async getResults(): Promise<SchemaRecord[]> {
+    const { objects } = await this._storedSchemaQuery.run();
+    return this._filterMapRecords(objects);
+  }
+
+  getResultsSync(): SchemaRecord[] {
+    const results = this._storedSchemaQuery.runSync();
+    return this._filterMapRecords(results.map((result) => result.object!));
+  }
+
+  private _filterMapRecords(objects: StoredSchema[]): SchemaRecord[] {
+    return (
+      objects
+        .filter((object) => {
+          if (this._filter.id && this._filter.id.length > 0) {
+            if (!this._filter.id.includes(getSchemaId(object))) {
+              return false;
+            }
+          }
+          if (this._filter.typename && this._filter.typename.length > 0) {
+            if (!this._filter.typename.includes(object.typename)) {
+              return false;
+            }
+          }
+          if (this._filter.version) {
+            if (!this._filter.version.match(/^[0-9\.]+$/)) {
+              throw new Error('Semver version ranges not supported.');
+            }
+
+            if (object.version !== this._filter.version) {
+              return false;
+            }
+          }
+        })
+        // TODO(dmaretskyi): Cache stored schema entries.
+        .map((object) => createSchemaRecordFromStoredSchema(object))
+    );
+  }
+}
+
+const createSchemaRecordFromStoredSchema = (storedSchema: StoredSchema): SchemaRecord => {
+  invariant(storedSchema);
+  return new SchemaRecordImpl(getSchemaId(storedSchema), storedSchema);
+};
+
+const getSchemaId = (storedSchema: StoredSchema): SchemaId => {
+  const id = storedSchema.jsonSchema.$id as SchemaId;
+  invariant(typeof id === 'string' && id.length > 0 && DXN.isDXNString(id), 'Invalid schema id');
+  return id;
+};
