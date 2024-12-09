@@ -95,10 +95,6 @@ test.describe('Table', () => {
 
     await table.addColumn({ label: newColumnLabel, format: 'number' });
 
-    // Delete first two columns to get the new column into view
-    await table.deleteColumn(0);
-    await table.deleteColumn(0);
-
     await expect(page.getByRole('gridcell', { name: newColumnLabel })).toBeVisible();
     await page.close();
   });
