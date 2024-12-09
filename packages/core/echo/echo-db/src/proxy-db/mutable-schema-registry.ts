@@ -149,35 +149,35 @@ export interface SchemaRecord {
   /**
    * Updates typename.
    *
-   * Only callable if the schema is mutable.
+   * @throws Error if schema is not mutable.
    */
   updateTypename(typename: string): Promise<void>;
 
   /**
    * Adds fields.
    *
-   * Only callable if the schema is mutable.
+   * @throws Error if schema is not mutable.
    */
   addFields(fields: S.Struct.Fields): Promise<void>;
 
   /**
    * Updates fields.
    *
-   * Only callable if the schema is mutable.
+   * @throws Error if schema is not mutable.
    */
   updateFields(fields: S.Struct.Fields): Promise<void>;
 
   /**
    * Renames field.
    *
-   * Only callable if the schema is mutable.
+   * @throws Error if schema is not mutable.
    */
   renameField({ from, to }: { from: string; to: string }): Promise<void>;
 
   /**
    * Removes fields.
    *
-   * Only callable if the schema is mutable.
+   * @throws Error if schema is not mutable.
    */
   removeFields(fieldNames: string[]): Promise<void>;
 }
