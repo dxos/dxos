@@ -81,8 +81,9 @@ export const inputValence = (valence?: MessageValence) => {
 };
 
 // TODO(burdon): Factor out color defs?
+
 const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => [
-  'is-full bg-transparent text-current',
+  'py-0 is-full bg-transparent text-current',
   props.density === 'fine' ? fineBlockSize : coarseBlockSize,
   placeholderText,
   subduedFocus,
@@ -90,7 +91,7 @@ const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => 
 ];
 
 const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => [
-  'is-full text-baseText rounded-sm text-[color:var(--surface-text)]',
+  'py-0 is-full text-baseText rounded-sm text-[color:var(--surface-text)]',
   textInputSurfaceFocus,
   placeholderText,
   props.density === 'fine' ? fineDimensions : coarseDimensions,
@@ -98,7 +99,7 @@ const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => 
 ];
 
 const sharedStaticInputStyles: ComponentFragment<InputStyleProps> = (props) => [
-  'is-full text-baseText rounded-sm text-[color:var(--surface-text)]',
+  'py-0 is-full text-baseText rounded-sm text-[color:var(--surface-text)]',
   textInputSurfaceFocus,
   textInputSurfaceHover,
   props.focused && 'bg-attention',

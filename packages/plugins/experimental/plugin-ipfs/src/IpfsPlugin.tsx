@@ -38,7 +38,7 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
         },
       },
       echo: {
-        schema: [FileType],
+        system: [FileType],
       },
       // TODO(burdon): Add intent to upload file.
       file: {

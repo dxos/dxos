@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { type CSSProperties, useEffect, useMemo, useState } from 'react';
 
 import { QueryEdgeStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -28,6 +28,13 @@ const useEdgeStatus = (): QueryEdgeStatusResponse.EdgeStatus => {
 
 export const InlineSyncStatus = ({ space }: { space: Space }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
+  const animationProps = useMemo<CSSProperties>(
+    () => ({
+      // Synchronize animations.
+      animationDelay: `-${Date.now() % 1000}ms`,
+    }),
+    [],
+  );
 
   const connectedToEdge = useEdgeStatus() === QueryEdgeStatusResponse.EdgeStatus.CONNECTED;
   // TODO(wittjosiah): This is not reactive.
@@ -39,7 +46,7 @@ export const InlineSyncStatus = ({ space }: { space: Space }) => {
 
   return (
     <div role='status' aria-label={t('syncing message')} className='flex items-center'>
-      <Icon icon='ph--arrows-clockwise--regular' size={3} classNames='animate-spin' />
+      <Icon icon='ph--arrows-clockwise--regular' size={3} style={animationProps} classNames='animate-spin' />
     </div>
   );
 };

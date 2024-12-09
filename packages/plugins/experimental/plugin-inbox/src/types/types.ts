@@ -9,7 +9,7 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import { type SchemaProvides } from '@dxos/plugin-client';
+import { type SchemaProvides } from '@dxos/plugin-space';
 
 import { INBOX_PLUGIN } from '../meta';
 

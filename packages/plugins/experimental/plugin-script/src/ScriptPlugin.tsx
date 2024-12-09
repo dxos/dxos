@@ -57,13 +57,8 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
       },
       translations,
       echo: {
-        schema: [ScriptType, FunctionType],
-      },
-      space: {
-        onSpaceCreate: {
-          label: ['create object label', { ns: SCRIPT_PLUGIN }],
-          action: ScriptAction.CREATE,
-        },
+        schema: [ScriptType],
+        system: [FunctionType],
       },
       graph: {
         builder: (plugins) => {

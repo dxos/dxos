@@ -3,10 +3,14 @@
 //
 
 import { SCRIPT_PLUGIN } from './meta';
+import { ScriptType } from './types';
 
 export default [
   {
     'en-US': {
+      [ScriptType.typename]: {
+        'typename label': 'Script',
+      },
       [SCRIPT_PLUGIN]: {
         'plugin name': 'Scripts',
         'object title placeholder': 'New script',
