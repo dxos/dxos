@@ -61,6 +61,7 @@ export const CreateObjectPanel = ({
     [onCreateObject, schema, target],
   );
 
+  // TODO(wittjosiah): All of these inputs should be rolled into a `Form` once it supports the necessary variants.
   const schemaInput = (
     <SearchList.Root label={t('schema input label')} classNames='flex flex-col grow overflow-hidden my-2 px-2'>
       <SearchList.Input autoFocus placeholder={t('schema input placeholder')} classNames='px-1 my-2' />
