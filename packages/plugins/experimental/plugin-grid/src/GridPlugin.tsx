@@ -24,6 +24,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
       metadata: {
         records: {
           [GridType.typename]: {
+            createObject: GridAction.CREATE,
             placeholder: ['grid title placeholder', { ns: GRID_PLUGIN }],
             icon: 'ph--squares-four--regular',
             // TODO(wittjosiah): Move out of metadata.

@@ -24,6 +24,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
       metadata: {
         records: {
           [KanbanType.typename]: {
+            createObject: KanbanAction.CREATE,
             placeholder: ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
             icon: 'ph--kanban--regular',
             // TODO(wittjosiah): Move out of metadata.
