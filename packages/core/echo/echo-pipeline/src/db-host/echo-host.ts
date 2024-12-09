@@ -33,6 +33,7 @@ import {
   type EchoReplicator,
   type CollectionSyncState,
   type EchoDataStats,
+  type PeerIdProvider,
 } from '../automerge';
 
 const INDEXER_CONFIG: IndexConfig = {
@@ -42,6 +43,7 @@ const INDEXER_CONFIG: IndexConfig = {
 
 export type EchoHostParams = {
   kv: LevelDB;
+  peerIdProvider?: PeerIdProvider;
 };
 
 /**
@@ -59,7 +61,7 @@ export class EchoHost extends Resource {
   private readonly _spaceStateManager = new SpaceStateManager();
   private readonly _echoDataMonitor: EchoDataMonitor;
 
-  constructor({ kv }: EchoHostParams) {
+  constructor({ kv, peerIdProvider }: EchoHostParams) {
     super();
 
     this._indexMetadataStore = new IndexMetadataStore({ db: kv.sublevel('index-metadata') });
@@ -70,6 +72,7 @@ export class EchoHost extends Resource {
       db: kv,
       dataMonitor: this._echoDataMonitor,
       indexMetadataStore: this._indexMetadataStore,
+      peerIdProvider,
     });
 
     this._indexer = new Indexer({
