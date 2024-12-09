@@ -6,8 +6,10 @@ import React, { useState } from 'react';
 
 import { S } from '@dxos/echo-schema';
 import { FunctionTriggerSchema, FunctionTrigger, type FunctionTriggerType } from '@dxos/functions';
-import { create, Filter, useQuery, type Space, type ReactiveObject } from '@dxos/react-client/echo';
-import { IconButton, Input, useTranslation } from '@dxos/react-ui';
+import { FunctionType, ScriptType } from '@dxos/plugin-script';
+import { type Client, useClient } from '@dxos/react-client';
+import { create, Filter, useQuery, type Space, type ReactiveObject, getSpace } from '@dxos/react-client/echo';
+import { IconButton, Input, useTranslation, Button } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 
@@ -24,7 +26,11 @@ export type AutomationPanelProps = {
 // TODO(burdon): Factor out common layout with ViewEditor.
 export const AutomationPanel = ({ space }: AutomationPanelProps) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
+  const client = useClient();
   const triggers = useQuery(space, Filter.schema(FunctionTrigger));
+  const functions = useQuery(space, Filter.schema(FunctionType));
+  const scripts = useQuery(space, Filter.schema(ScriptType));
+
   const [trigger, setTrigger] = useState<FunctionTriggerType>();
   const [selected, setSelected] = useState<FunctionTrigger>();
 
@@ -74,9 +80,18 @@ export const AutomationPanel = ({ space }: AutomationPanelProps) => {
                 <Input.Root>
                   <Input.Switch checked={trigger.enabled} onCheckedChange={(checked) => (trigger.enabled = checked)} />
                 </Input.Root>
-                <List.ItemTitle classNames='px-2 cursor-pointer' onClick={() => handleSelect(trigger)}>
-                  {trigger.function}
-                </List.ItemTitle>
+
+                <div className={'flex'}>
+                  <List.ItemTitle classNames='px-2 cursor-pointer w-0 shrink' onClick={() => handleSelect(trigger)}>
+                    {getFunctionName(scripts, functions, trigger)}
+                  </List.ItemTitle>
+
+                  {/* TODO: a better way to expose URL copy action */}
+                  <Button onClick={() => navigator.clipboard.writeText(getWebhookUrl(client, trigger))}>
+                    Copy URL
+                  </Button>
+                </div>
+
                 <List.ItemDeleteButton onClick={() => handleDelete(trigger)} />
               </List.Item>
             ))}
@@ -84,7 +99,15 @@ export const AutomationPanel = ({ space }: AutomationPanelProps) => {
         )}
       </List.Root>
 
-      {trigger && <TriggerEditor space={space} trigger={trigger} onSave={handleSave} onCancel={handleCancel} />}
+      {trigger && (
+        <TriggerEditor
+          space={space}
+          storedTrigger={selected}
+          trigger={trigger}
+          onSave={handleSave}
+          onCancel={handleCancel}
+        />
+      )}
 
       {!trigger && (
         <div className='flex p-2 justify-center'>
@@ -93,4 +116,20 @@ export const AutomationPanel = ({ space }: AutomationPanelProps) => {
       )}
     </div>
   );
+};
+
+const getWebhookUrl = (client: Client, trigger: FunctionTrigger) => {
+  const spaceId = getSpace(trigger)!.id;
+  const edgeUrl = new URL(client.config.values.runtime!.services!.edge!.url!);
+  const isSecure = edgeUrl.protocol.startsWith('https') || edgeUrl.protocol.startsWith('wss');
+  edgeUrl.protocol = isSecure ? 'https' : 'http';
+  return new URL(`/webhook/${spaceId}:${trigger.id}`, edgeUrl).toString();
+};
+
+const getFunctionName = (scripts: ScriptType[], functions: FunctionType[], trigger: FunctionTriggerType) => {
+  const functionObject = functions.find((fn) => fn.name === trigger.function);
+  if (!functionObject) {
+    return trigger.function;
+  }
+  return scripts.find((s) => functionObject.source?.id === s.id)?.name ?? functionObject.name;
 };
