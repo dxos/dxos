@@ -268,6 +268,7 @@ class SchemaRegistryQueryResolverImpl implements SchemaRegistryQueryResolver<Sch
     return this._filterMapRecords(results.map((result) => result.object!));
   }
 
+  // TODO(dmaretskyi): Predictable cross-peer order by latest/earliest?.
   private _filterMapRecords(objects: StoredSchema[]): SchemaRecord[] {
     return (
       objects

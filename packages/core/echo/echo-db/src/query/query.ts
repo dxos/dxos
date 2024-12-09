@@ -188,8 +188,8 @@ export class Query<T extends BaseObject = any> {
 
   /**
    * Runs the query synchronously and returns all results.
-   * WARNING: This method will only return the data already cached and may not return all results.
-   * Use `this.run()` for a complete list of results.
+   * WARNING: This method will only return the data already cached and may return incomplete results.
+   * Use `this.run()` for a complete list of results stored on-disk.
    */
   runSync(): QueryResult<T>[] {
     this._ensureCachePresent();

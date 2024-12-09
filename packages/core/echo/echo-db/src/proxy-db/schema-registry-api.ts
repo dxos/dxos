@@ -63,6 +63,13 @@ export interface SchemaRegistryPreparedQuery<T> {
   get results(): T[];
 
   /**
+   * Runs the query synchronously and returns all results.
+   * WARNING: This method will only return the data already cached and may return incomplete results.
+   * Use `this.run()` for a complete list of results stored on-disk.
+   */
+  runSync(): T[];
+
+  /**
    * Runs the query and returns all results.
    */
   run(): Promise<T[]>;
