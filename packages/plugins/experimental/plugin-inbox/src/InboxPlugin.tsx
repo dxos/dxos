@@ -23,14 +23,17 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
       metadata: {
         records: {
           [MailboxType.typename]: {
+            createObject: InboxAction.CREATE_MAILBOX,
             placeholder: ['mailbox title placeholder', { ns: INBOX_PLUGIN }],
             icon: 'ph--envelope--regular',
           },
           [ContactsType.typename]: {
+            createObject: InboxAction.CREATE_CONTACTS,
             placeholder: ['contacts title placeholder', { ns: INBOX_PLUGIN }],
             icon: 'ph--address-book--regular',
           },
           [CalendarType.typename]: {
+            createObject: InboxAction.CREATE_CALENDAR,
             placeholder: ['calendar title placeholder', { ns: INBOX_PLUGIN }],
             icon: 'ph--calendar--regular',
           },

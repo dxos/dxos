@@ -23,6 +23,7 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
       metadata: {
         records: {
           [ViewType.typename]: {
+            createObject: ExplorerAction.CREATE,
             placeholder: ['object title placeholder', { ns: EXPLORER_PLUGIN }],
             icon: 'ph--graph--regular',
           },

@@ -22,6 +22,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
       metadata: {
         records: {
           [GameType.typename]: {
+            createObject: ChessAction.CREATE,
             placeholder: ['game title placeholder', { ns: CHESS_PLUGIN }],
             icon: 'ph--shield-chevron--regular',
           },
