@@ -12,9 +12,9 @@ import { Button, Input, useTranslation, Dialog } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { CompoundButton } from '@dxos/shell/react';
 
+import { hero } from './hero-image';
 import { WelcomeState, type WelcomeScreenProps, validEmail } from './types';
 import { WELCOME_PLUGIN } from '../../meta';
-import { hero } from './hero-image';
 
 export const Welcome = ({
   state,
@@ -44,12 +44,14 @@ export const Welcome = ({
       >
         <div
           className={mx(
-            'relative grid grid-cols-1 md:w-[450px] max-w-[450px] h-full md:h-[620px] overflow-hidden',
-            'rounded-xl shadow-lg md:translate-x-[-40%]',
+            'relative grid grid-cols-1 md:w-[600px] max-w-[600px] h-full md:h-[675px] overflow-hidden',
+            'rounded-xl shadow-lg lg:translate-x-[-40%]',
           )}
-          style={{ background: 'radial-gradiant(#2D6FFF, transparent)' }}
+          style={{
+            backgroundImage: 'radial-gradient(circle farthest-corner at 50% 50%, #2d6fff80, var(--dx-neutral-950))',
+          }}
         >
-          <div className='z-10 flex flex-col gap-8 p-8'>
+          <div className='z-10 flex flex-col gap-8 p-8 md:px-16'>
             <h1 className="font-['Poiret One'] text-[80px]" style={{ fontFamily: 'Poiret One' }}>
               composer
             </h1>
@@ -79,7 +81,12 @@ export const Welcome = ({
                     </div>
                   </Input.Root>
                   <div>
-                    <Button disabled={!validEmail(email)} onClick={() => handleSignup()} data-testid='welcome.login'>
+                    <Button
+                      variant='primary'
+                      disabled={!validEmail(email)}
+                      onClick={() => handleSignup()}
+                      data-testid='welcome.login'
+                    >
                       {t('login button label')}
                     </Button>
                   </div>
@@ -131,7 +138,7 @@ export const Welcome = ({
               </div>
             )}
 
-            <div className='z-20 hidden md:flex flex-col h-full justify-end'>
+            <div className='z-20 flex flex-col h-full justify-end'>
               <a href='https://dxos.org' target='_blank' rel='noreferrer'>
                 <div className='flex justify-center items-center text-sm gap-1 pr-3 pb-1 opacity-70'>
                   <span className='text-subdued'>Powered by</span>
