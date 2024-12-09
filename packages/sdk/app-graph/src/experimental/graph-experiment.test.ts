@@ -7,7 +7,10 @@ import { Any } from '@effect/schema/Schema';
 TODO:
 
 - Move to a separate package
+- Turn methods into getters where possible.
+- orderBy(...) should use the same .prop DSL
 - More flexible return types, so that return isn't limited to being an object
+- distinctBy doesn't make sense it should be just .distinct()
 
 
 - Do we need a separate syntax to express patterns with refs (so that we can utilize the reverse reference index) or are predicates ok?
@@ -20,6 +23,8 @@ Expected plan:
 > TypeFilter(d typeof Document)
 > Map({ author: document.author })
 > Distinct(author)
+
+- Project references as relations.
 
 */
 
@@ -69,7 +74,7 @@ declare namespace NodeDef {
 
   type Properties<T extends NodeDef.Any> = T extends NodeDef<string, infer U> ? U : never;
 
-  type NodeType<N extends NodeDef.Any> = Node<NodeDef.Properties<N>>;
+  type NodeType<N extends NodeDef.Any> = Node<Simplify<NodeDef.Properties<N>>>;
 }
 
 // TODO(dmaretskyi): Take node def as parameter?
@@ -130,6 +135,8 @@ interface Ref<N extends NodeDef.Any> {
   dxn: DXN;
 
   readonly target: Node<NodeDef.Properties<N>> | undefined;
+
+  load(): Promise<Node<NodeDef.Properties<N>>>;
 }
 
 declare namespace Ref {
@@ -422,7 +429,9 @@ const ActionSchema = Schema.Struct({
 
 const ActionNode = NodeDef('Action', ActionSchema);
 
-const ActionForNodeSchema = Schema.Struct({});
+const ActionForNodeSchema = Schema.Struct({
+  kind: Schema.Any,
+});
 
 const ActionForNodeRelation = RelationDef('ActionForNode', ActionForNodeSchema);
 
@@ -435,9 +444,11 @@ const runQuery = <Q extends CompleteQuery.Any>(query: Q): Simplify<CompleteQuery
 // Example queries
 //
 
+// QB.cypher<Document>`MATCH (d:Document { kind: 'text' }) RETURN d`;
+
 declare const QB: QueryBuilder;
 
-// MATCH (Document { kind: 'text' })
+// MATCH (d:Document { kind: 'text' }) RETURN d
 const getAllTextDocuments = QB.Match(QB.Node(DocumentNode).where({ kind: 'text' })).return();
 
 // MATCH (Document)-[ACTION_FOR_NODE]->(Action)
@@ -497,14 +508,61 @@ const allDocumentsByThisAuthorWhere = (authorId: Id) =>
   });
 
 // Note: this is a variation of the above query with WHERE clause, but this one might be easier for the Query Planner to optimize to use the Reverse Reference Index since the author constraint is in the pattern.
-// MATCH (d:Document { author: $authorId }) RETURN DISTINCT document.author AS author
+// MATCH (d:Document { author: $authorId }) RETURN DISTINCT document.name AS name
 const allDocumentsByThisAuthorPattern = (authorId: Id) =>
   QB.build(() => {
     const document = QB.Node(DocumentNode).where({ author: authorId });
 
     return QB.Match(document)
       .return({
+        name: document.prop('name'),
         author: document.prop('author').target(),
       })
       .distinctBy('author');
   });
+
+// Get all documents authored by Rick
+
+// MATCH (d:Document) WHERE d.author.name == 'Rick' RETURN document.name AS name
+const allDocumentsByRicks = QB.build(() => {
+  const document = QB.Node(DocumentNode);
+
+  return QB.Match(document)
+    .where(document.prop('author').target().prop('name').eq(QB.literal('Rick')))
+    .return({
+      name: document.prop('name'),
+    });
+});
+
+// MATCH (d:Document { author: (Node { name: 'Rick' }) }) RETURN document.name AS name
+const allDocumentByRicks2 = QB.build(() => {
+  const contact = QB.Node(ContactNode).where({ name: 'Rick' });
+  const document = QB.Node(DocumentNode).where({ author: contact });
+
+  return QB.Match(document)
+    .return({
+      name: document.prop('name'),
+    })
+});
+
+// MATCH (d:Document)-[.author]->(c:Contact) WHERE c.name == 'Rick' RETURN document.name AS name
+const allDocumentByRicks2 = QB.build(() => {
+  const document = QB.Node(DocumentNode);
+  const contact = QB.Node(ContactNode).where({ name: 'Rick' });
+
+  return QB.Match(document.references('author').a(contact))
+    .return({
+      name: document.prop('name'),
+    })
+});
+
+// MATCH (c:Contact)<-[.author]-(d:Document) WHERE c.name == 'Rick' RETURN document.name AS name
+const allDocumentByRicks2 = QB.build(() => {
+  const document = QB.Node(DocumentNode);
+  const contact = QB.Node(ContactNode).where({ name: 'Rick' });
+
+  return QB.Match(contact.referenced('author').by(document))
+    .return({
+      name: document.prop('name'),
+    })
+});
