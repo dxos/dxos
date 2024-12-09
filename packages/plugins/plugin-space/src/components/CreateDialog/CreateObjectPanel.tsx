@@ -64,7 +64,12 @@ export const CreateObjectPanel = ({
   // TODO(wittjosiah): All of these inputs should be rolled into a `Form` once it supports the necessary variants.
   const schemaInput = (
     <SearchList.Root label={t('schema input label')} classNames='flex flex-col grow overflow-hidden my-2 px-2'>
-      <SearchList.Input autoFocus placeholder={t('schema input placeholder')} classNames='px-1 my-2' />
+      <SearchList.Input
+        autoFocus
+        data-testid='create-object-form.schema-input'
+        placeholder={t('schema input placeholder')}
+        classNames='px-1 my-2'
+      />
       <SearchList.Content classNames='max-bs-[24rem] overflow-auto'>
         {options.map((option) => (
           <SearchList.Item
@@ -85,7 +90,12 @@ export const CreateObjectPanel = ({
 
   const spaceInput = (
     <SearchList.Root label={t('space input label')} classNames='flex flex-col grow overflow-hidden my-2 px-2'>
-      <SearchList.Input autoFocus placeholder={t('space input placeholder')} classNames='px-1 my-2' />
+      <SearchList.Input
+        autoFocus
+        data-testid='create-object-form.space-input'
+        placeholder={t('space input placeholder')}
+        classNames='px-1 my-2'
+      />
       <SearchList.Content classNames='max-bs-[24rem] overflow-auto'>
         {spaces.map((space) => (
           <SearchList.Item
@@ -108,6 +118,7 @@ export const CreateObjectPanel = ({
       autoFocus
       values={{ name: initialName }}
       schema={S.Struct({ name: S.optional(S.String) })}
+      testId='create-object-form'
       onSave={handleCreateObject}
     />
   );

@@ -50,7 +50,7 @@ export const CreateSpaceDialog = () => {
         </Dialog.Close>
       </div>
       <div className='p-4'>
-        <Form values={initialValues} schema={SpaceForm} onSave={handleCreateSpace} />
+        <Form testId='create-space-form' values={initialValues} schema={SpaceForm} onSave={handleCreateSpace} />
       </div>
     </Dialog.Content>
   );
