@@ -216,7 +216,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
           effect(() => {
             const obj = this._sortedRows.value[row];
             this?._table?.view?.fields.forEach((field) => touch(getValue(obj, field.path)));
-            this._onCellUpdate?.({ row, col: start.col });
+            this._onCellUpdate?.({ row, col: start.col, plane: 'grid' });
           }),
         );
       }
