@@ -112,7 +112,7 @@ export class AppManager {
     timeout = 10_000,
   }: { type?: string; name?: string; timeout?: number } = {}) {
     await this.page.getByTestId('spacePlugin.createSpace').getByTestId('treeItem.heading').click();
-    await this.page.getByTestId('create-space-form').getByTestId('save-button').click();
+    await this.page.getByTestId('create-space-form').getByTestId('save-button').click({ delay: 100 });
 
     await this.page.getByTestId('create-object-form.schema-input').fill(type);
     await this.page.keyboard.press('Enter');
