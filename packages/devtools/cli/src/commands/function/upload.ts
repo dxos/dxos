@@ -14,11 +14,11 @@ import { invariant } from '@dxos/invariant';
 import { TextType } from '@dxos/plugin-markdown/types';
 import {
   getUserFunctionUrlInMetadata,
-  publicKeyToDid,
+  incrementSemverPatch,
   setUserFunctionUrlInMetadata,
   uploadWorkerFunction,
 } from '@dxos/plugin-script/edge';
-import { ScriptType } from '@dxos/plugin-script/types';
+import { FunctionType, ScriptType } from '@dxos/plugin-script/types';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
 
 import { BaseCommand } from '../../base';
@@ -32,6 +32,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
   static override flags = {
     ...BaseCommand.flags,
     name: Flags.string({ description: 'Function name.' }),
+    version: Flags.string({ description: 'Function version.' }),
     spaceKey: Flags.string({ description: 'Space key to create/update Script source in.' }),
     objectId: Flags.string({ description: 'Existing Script Object ID to update.' }),
     functionId: Flags.string({
@@ -53,6 +54,8 @@ export default class Upload extends BaseCommand<typeof Upload> {
     }
 
     const handleUpload = async ({ client, space }: { client: Client; space?: Space }) => {
+      invariant(space, 'Has to provide a space');
+
       client.addTypes([ScriptType, TextType]);
       const identity = client.halo.identity.get();
       invariant(identity, 'Identity not available');
@@ -65,7 +68,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
       }
 
       // Find existing object and functionId in metadata if it exists
-      if (space && this.flags.objectId) {
+      if (this.flags.objectId) {
         const qr = await space.db.query(Filter.schema(ScriptType)).run();
         existingObject = qr.objects.find((o) => o.id === this.flags.objectId);
         if (!existingObject) {
@@ -88,13 +91,13 @@ export default class Upload extends BaseCommand<typeof Upload> {
         }
       }
 
-      const ownerDid = publicKeyToDid(identity.identityKey);
       let result: UploadFunctionResponseBody;
       try {
         result = await asyncTimeout(
           uploadWorkerFunction({
             client,
-            ownerDid,
+            spaceId: space.id,
+            version: await this._getNextVersion(space, existingFunctionId),
             functionId: existingFunctionId,
             name: this.flags.name,
             source: scriptContent,
@@ -124,7 +127,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
           this.log(`Updated source in ${this.flags.spaceKey}/${this.flags.objectId} (${existingObject.source.id})`);
         }
         if (!functionUrlFromExistingObject) {
-          await setUserFunctionUrlInMetadata(getMeta(existingObject), `/${ownerDid}/${result.functionId}`);
+          setUserFunctionUrlInMetadata(getMeta(existingObject), `/${space.id}/${result.functionId}`);
         } else {
           if (existingFunctionId !== result.functionId) {
             this.error('functionId mismatch');
@@ -135,7 +138,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
         // TODO: make object navigable in Composer.
         const sourceObj = space.db.add(create(TextType, { content: scriptContent }));
         const obj = space.db.add(create(ScriptType, { name: this.flags.name, source: sourceObj }));
-        await setUserFunctionUrlInMetadata(getMeta(obj), result.functionId);
+        setUserFunctionUrlInMetadata(getMeta(obj), result.functionId);
         if (this.flags.verbose) {
           this.log(`Created object: ${this.flags.spaceKey}/${obj.id}`);
         }
@@ -149,5 +152,16 @@ export default class Upload extends BaseCommand<typeof Upload> {
     }
 
     return await this.execWithClient(async ({ client }) => await handleUpload({ client }));
+  }
+
+  private async _getNextVersion(space: Space, functionId: string | undefined): Promise<string> {
+    if (this.flags.version) {
+      return this.flags.version;
+    }
+    if (functionId) {
+      const { objects } = await space.db.query(Filter.schema(FunctionType, { id: functionId })).run();
+      return incrementSemverPatch(objects[0]?.version ?? '0.0.0');
+    }
+    return '0.0.1';
   }
 }
