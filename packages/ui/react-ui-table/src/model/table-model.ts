@@ -24,6 +24,7 @@ import {
   type DxGridPlaneRange,
   type DxGridPlanePosition,
   toPlaneCellIndex,
+  type DxGridPosition,
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 import { VIEW_FIELD_LIMIT, type ViewProjection, type FieldType } from '@dxos/schema';
@@ -47,7 +48,7 @@ export type TableModelProps<T extends BaseTableRow = { id: string }> = {
   onInsertRow?: (index?: number) => void;
   onDeleteRows?: (index: number, obj: T[]) => void;
   onDeleteColumn?: (fieldId: string) => void;
-  onCellUpdate?: (cell: DxGridPlanePosition) => void;
+  onCellUpdate?: (cell: DxGridPosition) => void;
   onRowOrderChanged?: () => void;
 };
 

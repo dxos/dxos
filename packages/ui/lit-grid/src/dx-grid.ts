@@ -958,7 +958,7 @@ export class DxGrid extends LitElement {
    * Calculate the pixel offset for a given column in a plane.
    * Sums all column sizes plus gaps up to the target column.
    */
-  private getInlineOffset(col: number, plane: DxGridPlane): number {
+  private inlineOffset(col: number, plane: DxGridPlane): number {
     return [...Array(col)].reduce((acc, _, c0) => {
       return acc + this.colSize(c0, plane) + gap;
     }, 0);
@@ -968,7 +968,7 @@ export class DxGrid extends LitElement {
    * Calculate the pixel offset for a given row in a plane.
    * Sums all row sizes plus gaps up to the target row.
    */
-  private getBlockOffset(row: number, plane: DxGridPlane): number {
+  private blockOffset(row: number, plane: DxGridPlane): number {
     return [...Array(row)].reduce((acc, _, r0) => {
       return acc + this.rowSize(r0, plane) + gap;
     }, 0);
@@ -981,35 +981,39 @@ export class DxGrid extends LitElement {
     const outOfVis = this.focusedCellOutOfVis();
     if (outOfVis.col < 0) {
       // align viewport start edge with focused cell start edge
-      this.posInline = this.clampPosInline(this.getInlineOffset(this.focusedCell.col, 'grid'));
+      this.posInline = this.clampPosInline(this.inlineOffset(this.focusedCell.col, 'grid'));
       this.updateVisInline();
     } else if (outOfVis.col > 0) {
       // align viewport end edge with focused cell end edge
-      this.posInline = this.clampPosInline(
-        this.getInlineOffset(this.focusedCell.col + 1, 'grid') - this.sizeInline - gap,
-      );
+      this.posInline = this.clampPosInline(this.inlineOffset(this.focusedCell.col + 1, 'grid') - this.sizeInline - gap);
       this.updateVisInline();
     }
 
     if (outOfVis.row < 0) {
       // align viewport start edge with focused cell start edge
-      this.posBlock = this.clampPosBlock(this.getBlockOffset(this.focusedCell.row, 'grid'));
+      this.posBlock = this.clampPosBlock(this.blockOffset(this.focusedCell.row, 'grid'));
       this.updateVisBlock();
     } else if (outOfVis.row > 0) {
       // align viewport end edge with focused cell end edge
-      this.posBlock = this.clampPosBlock(this.getBlockOffset(this.focusedCell.row + 1, 'grid') - this.sizeBlock - gap);
+      this.posBlock = this.clampPosBlock(this.blockOffset(this.focusedCell.row + 1, 'grid') - this.sizeBlock - gap);
       this.updateVisBlock();
     }
   }
 
-  scrollToCoord({ row, col, plane = 'grid' }: { row?: number; col?: number; plane?: DxGridPlane }) {
-    if (row !== undefined) {
-      this.updatePosBlock(this.getBlockOffset(row, plane));
-    }
+  scrollToCoord({ coords }: { coords: DxGridPosition }) {
+    const plane = coords.plane;
+    const { row, col } = coords;
 
-    if (col !== undefined) {
-      this.updatePosInline(this.getInlineOffset(col, plane));
-    }
+    this.updatePosBlock(this.blockOffset(row, plane));
+    this.updatePosInline(this.inlineOffset(col, plane));
+  }
+
+  scrollToColumn(col: number) {
+    this.updatePosInline(this.inlineOffset(col, 'grid'));
+  }
+
+  scrollToRow(row: number) {
+    this.updatePosBlock(this.blockOffset(row, 'grid'));
   }
 
   //

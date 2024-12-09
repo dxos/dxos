@@ -118,6 +118,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model, ignoreAt
         model.insertRow(cell.row);
         if (dxGrid) {
           requestAnimationFrame(() => {
+            dxGrid?.scrollToRow(cell.row + 1);
             dxGrid?.refocus('row', 1);
           });
         }
@@ -166,7 +167,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(({ model, ignoreAt
   const handleNewColumn = useCallback(() => {
     const columns = model?.getColumnCount();
     if (dxGrid && columns) {
-      dxGrid.scrollToCoord({ col: columns - 1 });
+      dxGrid.scrollToColumn(columns - 1);
     }
   }, [model, dxGrid]);
 
