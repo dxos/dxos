@@ -45,7 +45,7 @@ const Story = () => {
         setResult({ functions: { standard: f1.length, echo: f2.length } });
       });
 
-      space.db.add(create(FunctionType, { name: 'test', version: 1, binding: FUNCTION_NAME }));
+      space.db.add(create(FunctionType, { name: 'test', version: '0.0.1', binding: FUNCTION_NAME }));
     }
   }, [space, graph]);
 

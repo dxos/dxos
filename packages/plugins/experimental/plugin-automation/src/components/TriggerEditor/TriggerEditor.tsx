@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { FunctionTriggerSchema, type FunctionTriggerType, type FunctionTrigger, TriggerKind } from '@dxos/functions';
-import { FunctionType } from '@dxos/plugin-script/types';
+import { FunctionType, ScriptType } from '@dxos/plugin-script/types';
 import { Filter, useQuery, type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Form, SelectInput } from '@dxos/react-ui-form';
@@ -14,14 +14,16 @@ import { AUTOMATION_PLUGIN } from '../../meta';
 
 export type TriggerEditorProps = {
   space: Space;
-  trigger: Omit<FunctionTrigger, 'id'>;
+  trigger: FunctionTriggerType;
+  storedTrigger?: FunctionTrigger;
   onSave?: (trigger: Omit<FunctionTrigger, 'id'>) => void;
   onCancel?: () => void;
 };
 
-export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEditorProps) => {
+export const TriggerEditor = ({ space, trigger, onSave, onCancel, storedTrigger }: TriggerEditorProps) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
   const functions = useQuery(space, Filter.schema(FunctionType));
+  const scripts = useQuery(space, Filter.schema(ScriptType));
 
   const handleSave = (values: FunctionTriggerType) => {
     onSave?.(values);
@@ -38,9 +40,9 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
         ['function' satisfies keyof FunctionTriggerType]: (props) => (
           <SelectInput<FunctionTriggerType>
             {...props}
-            options={functions.map(({ name }) => ({
-              value: name,
-              label: name,
+            options={functions.map((fn) => ({
+              value: fn.name,
+              label: getFunctionName(scripts, fn),
             }))}
           />
         ),
@@ -56,4 +58,8 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
       }}
     />
   );
+};
+
+const getFunctionName = (scripts: ScriptType[], fn: FunctionType) => {
+  return scripts.find((s) => fn.source?.id === s.id)?.name ?? fn.name;
 };
