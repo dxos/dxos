@@ -25,6 +25,7 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
       metadata: {
         records: {
           [TreeType.typename]: {
+            createObject: OutlinerAction.CREATE,
             placeholder: ['object placeholder', { ns: OUTLINER_PLUGIN }],
             icon: 'ph--tree-structure--regular',
             // TODO(wittjosiah): Move out of metadata.

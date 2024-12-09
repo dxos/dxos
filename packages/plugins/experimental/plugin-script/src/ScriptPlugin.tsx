@@ -48,6 +48,7 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
       metadata: {
         records: {
           [ScriptType.typename]: {
+            createObject: ScriptAction.CREATE,
             placeholder: ['object title placeholder', { ns: SCRIPT_PLUGIN }],
             icon: 'ph--code--regular',
             // TODO(wittjosiah): Move out of metadata.

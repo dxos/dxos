@@ -36,6 +36,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
       metadata: {
         records: {
           [MapType.typename]: {
+            createObject: MapAction.CREATE,
             placeholder: ['object title placeholder', { ns: MAP_PLUGIN }],
             icon: 'ph--compass--regular',
           },
