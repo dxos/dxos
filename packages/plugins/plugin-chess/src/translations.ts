@@ -3,10 +3,14 @@
 //
 
 import { CHESS_PLUGIN } from './meta';
+import { GameType } from './types';
 
 export default [
   {
     'en-US': {
+      [GameType.typename]: {
+        'typename label': 'Game',
+      },
       [CHESS_PLUGIN]: {
         'plugin name': 'Chess',
         'game title placeholder': 'New game',

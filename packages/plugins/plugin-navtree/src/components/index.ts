@@ -3,7 +3,6 @@
 //
 
 export * from './CommandsDialog';
-export * from './NavBarStart';
 export * from './NavTree';
 export * from './NavTreeContainer';
 export * from './NavTreeDocumentTitle';

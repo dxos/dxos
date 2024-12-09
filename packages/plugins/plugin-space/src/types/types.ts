@@ -12,12 +12,10 @@ import type {
   TranslationsProvides,
   Plugin,
 } from '@dxos/app-framework';
-import { type Expando } from '@dxos/echo-schema';
-import { type SchemaProvides } from '@dxos/plugin-client';
+import { AST, S, type AbstractTypedObject, type Expando } from '@dxos/echo-schema';
 import { type PanelProvides } from '@dxos/plugin-deck/types';
 import { type PublicKey } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { type Label } from '@dxos/react-ui';
 import { type ComplexMap } from '@dxos/util';
 
 export const SPACE_DIRECTORY_HANDLE = 'dxos.org/plugin/space/directory';
@@ -74,24 +72,19 @@ export type SpaceSettingsProps = {
    * Show closed spaces.
    */
   showHidden?: boolean;
-
-  /**
-   * Action to perform when a space is created.
-   */
-  onSpaceCreate?: string;
 };
 
-export type SpaceInitProvides = {
-  space: {
-    onSpaceCreate: {
-      label: Label;
-      action: string;
-    };
+export type SchemaProvides = {
+  echo: {
+    schema?: AbstractTypedObject[];
+    system?: AbstractTypedObject[];
   };
 };
 
-export const parseSpaceInitPlugin = (plugin: Plugin) =>
-  typeof (plugin.provides as any).space?.onSpaceCreate === 'object' ? (plugin as Plugin<SpaceInitProvides>) : undefined;
+export const parseSchemaPlugin = (plugin?: Plugin) =>
+  Array.isArray((plugin?.provides as any).echo?.schema) || Array.isArray((plugin?.provides as any).echo?.system)
+    ? (plugin as Plugin<SchemaProvides>)
+    : undefined;
 
 export type SpacePluginProvides = SurfaceProvides &
   IntentResolverProvides &
@@ -119,3 +112,8 @@ export interface TypedObjectSerializer<T extends Expando = Expando> {
    */
   deserialize(params: { content: string; space: Space; newId?: boolean }): Promise<T>;
 }
+
+export const SpaceForm = S.Struct({
+  name: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Name' })),
+  edgeReplication: S.Boolean.annotations({ [AST.TitleAnnotationId]: 'Enable EDGE Replication' }),
+});

@@ -49,6 +49,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       metadata: {
         records: {
           [SheetType.typename]: {
+            createObject: SheetAction.CREATE,
             label: (object: any) => (object instanceof SheetType ? object.name : undefined),
             placeholder: ['sheet title placeholder', { ns: SHEET_PLUGIN }],
             icon: 'ph--grid-nine--regular',
@@ -58,15 +59,10 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       },
       translations,
       echo: {
+        schema: [SheetType],
         // TODO(wittjosiah): Factor out to common package/plugin.
         //  FunctionType is currently registered here in case script plugin isn't enabled.
-        schema: [SheetType, FunctionType],
-      },
-      space: {
-        onSpaceCreate: {
-          label: ['create sheet label', { ns: SHEET_PLUGIN }],
-          action: SheetAction.CREATE,
-        },
+        system: [FunctionType],
       },
       graph: {
         builder: (plugins) => {
@@ -178,7 +174,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
                 const undoData = model[axis === 'col' ? 'dropColumn' : 'dropRow'](axisIndex);
                 return {
                   undoable: {
-                    message: translations[0]['en-US'][SHEET_PLUGIN][`${axis} dropped label`],
+                    message: (translations[0]['en-US'][SHEET_PLUGIN] as any)[`${axis} dropped label`],
                     data: { ...undoData, model },
                   },
                 };

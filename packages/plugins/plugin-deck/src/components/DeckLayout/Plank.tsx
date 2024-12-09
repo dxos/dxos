@@ -77,10 +77,7 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order }: Plan
     if (scrollIntoView === coordinate.entryId) {
       // TODO(wittjosiah): When focused on page load, the focus is always visible.
       //   Forcing focus to something smaller than the plank prevents large focus ring in the interim.
-      const focusable =
-        rootElement.current?.querySelector('input') ||
-        rootElement.current?.querySelector('button') ||
-        rootElement.current;
+      const focusable = rootElement.current?.querySelector('button') || rootElement.current;
       focusable?.focus({ preventScroll: true });
       layoutMode === 'deck' && focusable?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
       // Clear the scroll into view state once it has been actioned.
