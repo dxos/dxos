@@ -9,6 +9,7 @@ import { type SimpleType, type S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { validateSchema, type ValidationError } from '@dxos/schema';
+import { type MaybePromise } from '@dxos/util';
 
 /**
  * Return type from `useForm` hook.
@@ -74,7 +75,7 @@ export interface FormOptions<T extends BaseObject> {
   /**
    * Called when the form is submitted and passes validation.
    */
-  onSave?: (values: T, meta: { changed: FormHandler<T>['changed'] }) => void;
+  onSave?: (values: T, meta: { changed: FormHandler<T>['changed'] }) => MaybePromise<void>;
 }
 
 /**
@@ -97,6 +98,7 @@ export const useForm = <T extends BaseObject>({
   const [touched, setTouched] = useState<Record<PropertyKey<T>, boolean>>(createKeySet(initialValues, false));
   const [changed, setChanged] = useState<Record<PropertyKey<T>, boolean>>(createKeySet(initialValues, false));
   const [errors, setErrors] = useState<Record<PropertyKey<T>, string>>({} as Record<PropertyKey<T>, string>);
+  const [saving, setSaving] = useState(false);
 
   //
   // Validation.
@@ -132,15 +134,21 @@ export const useForm = <T extends BaseObject>({
    */
   const canSave = useMemo(
     () =>
+      !saving &&
       Object.keys(values).every(
         (property) => touched[property as PropertyKey<T>] === false || !errors[property as PropertyKey<T>],
       ),
-    [values, touched, errors],
+    [values, touched, errors, saving],
   );
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     if (validate(values)) {
-      onSave?.(values, { changed });
+      setSaving(true);
+      try {
+        await onSave?.(values, { changed });
+      } finally {
+        setSaving(false);
+      }
     }
   }, [values, validate, onSave]);
 
