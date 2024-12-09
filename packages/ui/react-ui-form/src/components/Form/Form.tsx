@@ -41,6 +41,7 @@ export type FormProps<T extends BaseObject> = ThemedClassName<
     filter?: PropsFilter<T>;
     sort?: PropertyKey<T>[];
     autoSave?: boolean;
+    testId?: string;
     onCancel?: () => void;
 
     /**
@@ -63,6 +64,7 @@ export const Form = <T extends BaseObject>({
   filter,
   sort,
   autoSave,
+  testId,
   onValuesChanged,
   onValidate,
   onSave,
@@ -101,7 +103,7 @@ export const Form = <T extends BaseObject>({
   }, [errors]);
 
   return (
-    <div role='form' className={mx('flex flex-col w-full gap-2 py-2', classNames)}>
+    <div role='form' className={mx('flex flex-col w-full gap-2 py-2', classNames)} data-testid={testId}>
       {properties
         .map((property) => {
           const { ast, name, type, format, title, description, examples, options } = property;
@@ -184,11 +186,17 @@ export const Form = <T extends BaseObject>({
         <div role='none' className='flex justify-center'>
           <div role='none' className={mx(onCancel && !readonly && 'grid grid-cols-2 gap-2')}>
             {onCancel && !readonly && (
-              <IconButton icon='ph--x--regular' label={t('button cancel')} onClick={onCancel} />
+              <IconButton
+                data-testid='cancel-button'
+                icon='ph--x--regular'
+                label={t('button cancel')}
+                onClick={onCancel}
+              />
             )}
             {onSave && (
               <IconButton
                 type='submit'
+                data-testid='save-button'
                 disabled={!canSave}
                 icon='ph--check--regular'
                 label={t('button save')}
