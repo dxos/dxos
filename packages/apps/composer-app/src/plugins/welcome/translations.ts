@@ -9,7 +9,7 @@ export default [
     'en-US': {
       [WELCOME_PLUGIN]: {
         'welcome title': 'Join the Beta',
-        'welcome description': "Sign-up to join the beta. We'll send you an email that will give you immediate access.",
+        'welcome description': 'Drop your email below to request early access to Composer.',
         'welcome back title': 'Welcome back',
         'welcome back description':
           "Sign-up to join the beta. We'll send you a verification email that will give you immediate access.",
@@ -22,7 +22,7 @@ export default [
         'name placeholder': 'Your name',
         'email input label': 'Email',
         'email input placeholder': 'Your email',
-        'login button label': 'Get started',
+        'login button label': 'Request Access',
         'join device button label': 'Connect to existing HALO Identity',
         'join space button label': 'Join space',
         'space invitation title': "You've been invited to a space",
