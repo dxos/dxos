@@ -15,18 +15,6 @@ export class Reference {
    */
   static TYPE_PROTOCOL = 'protobuf';
 
-  static fromValue(value: ReferenceProto): Reference {
-    return new Reference(value.objectId, value.protocol, value.host);
-  }
-
-  /**
-   * @deprecated
-   */
-  // TODO(burdon): Document/remove?
-  static fromLegacyTypename(type: string): Reference {
-    return new Reference(type, Reference.TYPE_PROTOCOL, 'dxos.org');
-  }
-
   static fromDXN(dxn: DXN): Reference {
     switch (dxn.kind) {
       case DXN.kind.TYPE:
@@ -40,6 +28,25 @@ export class Reference {
       default:
         throw new Error(`Unsupported DXN kind: ${dxn.kind}`);
     }
+  }
+
+  static fromValue(value: ReferenceProto): Reference {
+    return new Reference(value.objectId, value.protocol, value.host);
+  }
+
+  /**
+   * Reference an object in the local space.
+   */
+  static localObjectReference(objectId: ObjectId): Reference {
+    return new Reference(objectId);
+  }
+
+  /**
+   * @deprecated
+   */
+  // TODO(burdon): Document/remove?
+  static fromLegacyTypename(type: string): Reference {
+    return new Reference(type, Reference.TYPE_PROTOCOL, 'dxos.org');
   }
 
   // prettier-ignore

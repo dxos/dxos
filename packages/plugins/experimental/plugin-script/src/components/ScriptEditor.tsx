@@ -43,11 +43,7 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
   const client = useClient();
   const identity = useIdentity();
   const space = getSpace(script);
-  // TODO(dmaretskyi): Parametric query.
-  const [fn] = useQuery(
-    space,
-    Filter.schema(FunctionType, (fn) => fn.source === script),
-  );
+  const [fn] = useQuery(space, Filter.schema(FunctionType, { source: script }));
 
   const extensions = useMemo(
     () => [

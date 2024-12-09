@@ -9,6 +9,7 @@ import { AST, S } from '@dxos/effect';
 
 import { createMutableSchema } from './testing/mutable-schema';
 
+// TODO(dmaretskyi): Comment.
 class EmptySchemaType extends TypedObject({
   typename: 'example.com/type/Empty',
   version: '0.1.0',

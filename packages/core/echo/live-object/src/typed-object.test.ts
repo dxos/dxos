@@ -10,15 +10,15 @@ import { S } from '@dxos/effect';
 import { create } from './object';
 import { getSchema } from './proxy';
 
-class OrganizationType extends TypedObject({
-  typename: 'example.com/type/Organization',
+class Org extends TypedObject({
+  typename: 'example.com/type/Org',
   version: '0.1.0',
 })({
   name: S.String,
 }) {}
 
-class PersonType extends TypedObject<PersonType>({
-  typename: 'example.com/type/Person',
+class Contact extends TypedObject<Contact>({
+  typename: 'example.com/type/Contact',
   version: '0.1.0',
 })(
   {
@@ -30,22 +30,22 @@ class PersonType extends TypedObject<PersonType>({
   },
 ) {}
 
-const TEST_ORG: Omit<OrganizationType, 'id'> = { name: 'Test' };
+const TEST_ORG: Omit<Org, 'id'> = { name: 'Test' };
 
 describe('EchoObject class DSL', () => {
   test('static isInstance check', async () => {
-    const obj = create(OrganizationType, TEST_ORG);
-    expect(obj instanceof OrganizationType).to.be.true;
+    const obj = create(Org, TEST_ORG);
+    expect(obj instanceof Org).to.be.true;
   });
 
   test('can get object schema', async () => {
-    const obj = create(OrganizationType, TEST_ORG);
-    expect(getSchema(obj)).to.deep.eq(OrganizationType);
+    const obj = create(Org, TEST_ORG);
+    expect(getSchema(obj)).to.deep.eq(Org);
   });
 
   describe('class options', () => {
     test('can assign undefined to partial fields', async () => {
-      const person = create(PersonType, { name: 'John' });
+      const person = create(Contact, { name: 'John' });
       person.name = undefined;
       person.recordField = 'hello';
       expect(person.name).to.be.undefined;

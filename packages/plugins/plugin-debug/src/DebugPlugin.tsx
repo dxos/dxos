@@ -301,7 +301,7 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
               'space' in primary &&
               isSpace(primary.space)
             ) {
-              const handleAddObject = (objects: ReactiveObject<any>[]) => {
+              const handleCreateObject = (objects: ReactiveObject<any>[]) => {
                 if (!isSpace(primary.space)) {
                   return;
                 }
@@ -323,9 +323,9 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
 
               const deprecated = false;
               component = deprecated ? (
-                <DebugSpace space={primary.space} onAddObjects={handleAddObject} />
+                <DebugSpace space={primary.space} onAddObjects={handleCreateObject} />
               ) : (
-                <SpaceGenerator space={primary.space} onAddObjects={handleAddObject} />
+                <SpaceGenerator space={primary.space} onCreateObjects={handleCreateObject} />
               );
             } else if ('graph' in primary && primary.graph instanceof Graph) {
               component = <DebugApp graph={primary.graph} />;

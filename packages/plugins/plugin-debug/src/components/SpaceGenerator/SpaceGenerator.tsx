@@ -4,85 +4,40 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { type BaseObject } from '@dxos/echo-schema';
-import { create, type ReactiveObject } from '@dxos/live-object';
+import { type ReactiveObject } from '@dxos/live-object';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { SheetType } from '@dxos/plugin-sheet/types';
 import { DiagramType } from '@dxos/plugin-sketch/types';
-import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { Filter, getTypename, type Space } from '@dxos/react-client/echo';
-import { IconButton, Toolbar, useAsyncEffect } from '@dxos/react-ui';
+import { getTypename, type Space } from '@dxos/react-client/echo';
+import { IconButton, Input, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { TableType } from '@dxos/react-ui-table';
-import { createView } from '@dxos/schema';
-import { createAsyncGenerator, Test, type ValueGenerator } from '@dxos/schema/testing';
+import { Testing } from '@dxos/schema/testing';
 import { jsonKeyReplacer, sortKeys } from '@dxos/util';
 
-const generator: ValueGenerator = faker as any;
-
-// TODO(burdon): Create docs.
-// TODO(burdon): Create sketches.
-// TODO(burdon): Create sheets.
-// TODO(burdon): Create comments.
+import { type ObjectGenerator, createGenerator, staticGenerators } from './ObjectGenerator';
+import { SchemaTable } from './SchemaTable';
 
 export type SpaceGeneratorProps = {
   space: Space;
-  onAddObjects?: (objects: ReactiveObject<any>[]) => void;
+  onCreateObjects?: (objects: ReactiveObject<any>[]) => void;
 };
 
-// TODO(burdon): Reuse in testbench-app.
-// TODO(burdon): Mutator running in background (factor out): from echo-generator.
-export const SpaceGenerator = ({ space, onAddObjects }: SpaceGeneratorProps) => {
+export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) => {
   const client = useClient();
   const staticTypes = [DocumentType, DiagramType, SheetType]; // TODO(burdon): Make extensible.
-  const mutableTypes = [Test.OrgType, Test.ProjectType, Test.ContactType];
+  const mutableTypes = [Testing.OrgType, Testing.ProjectType, Testing.ContactType];
+  const [count, setCount] = useState(1);
   const [info, setInfo] = useState<any>({});
 
   // Create type generators.
   const typeMap = useMemo(() => {
-    client.addTypes([DiagramType, TableType, SheetType]);
-
-    return new Map<string, (n: number) => Promise<BaseObject>>(
-      mutableTypes.map((type) => {
-        return [
-          type.typename,
-          async (n: number) => {
-            // Find or create mutable schema.
-            const mutableSchema = await space.db.schemaRegistry.query();
-            const schema =
-              mutableSchema.find((schema) => schema.typename === type.typename) ??
-              space.db.schemaRegistry.addSchema(type);
-
-            // Create objects.
-            const generate = createAsyncGenerator(generator, schema.schema, space.db);
-            const objects = await generate.createObjects(n);
-
-            // Find or create table and view.
-            const { objects: tables } = await space.db.query(Filter.schema(TableType)).run();
-            const table = tables.find((table) => table.view?.query?.typename === type.typename);
-            if (!table) {
-              const name = type.typename.split('/').pop() ?? type.typename;
-              const table = space.db.add(
-                create(TableType, {
-                  name,
-                  view: createView({
-                    name,
-                    typename: type.typename,
-                    jsonSchema: schema.jsonSchema,
-                  }),
-                }),
-              );
-
-              // Add to UX.
-              onAddObjects?.([table]);
-            }
-
-            return objects;
-          },
-        ];
-      }),
+    client.addTypes(staticTypes);
+    const mutableGenerators = new Map<string, ObjectGenerator<any>>(
+      mutableTypes.map((type) => [type.typename, createGenerator(type)]),
     );
+
+    return new Map([...staticGenerators, ...mutableGenerators]);
   }, [client, mutableTypes]);
 
   // Query space to get info.
@@ -117,16 +72,34 @@ export const SpaceGenerator = ({ space, onAddObjects }: SpaceGeneratorProps) => 
 
   const handleCreateData = useCallback(
     async (typename: string) => {
-      await typeMap.get(typename)?.(10);
-      await updateInfo();
+      const constructor = typeMap.get(typename);
+      if (constructor) {
+        // TODO(burdon): Input to specify number of objects.
+        await constructor(space, count, onCreateObjects);
+        await updateInfo();
+      }
     },
-    [typeMap],
+    [typeMap, count],
   );
 
   return (
     <div role='none' className='flex flex-col divide-y divide-separator'>
       <Toolbar.Root classNames='p-1'>
         <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={updateInfo} />
+        <Toolbar.Expander />
+        <div className='flex'>
+          <Input.Root>
+            <Input.TextInput
+              type='number'
+              min={1}
+              max={100}
+              placeholder={'Count'}
+              classNames='w-[80px]'
+              value={count}
+              onChange={(ev) => setCount(parseInt(ev.target.value))}
+            />
+          </Input.Root>
+        </div>
       </Toolbar.Root>
 
       <SchemaTable types={staticTypes} objects={info.objects} label='Static Types' onClick={handleCreateData} />
@@ -135,36 +108,6 @@ export const SpaceGenerator = ({ space, onAddObjects }: SpaceGeneratorProps) => 
       <SyntaxHighlighter classNames='flex text-xs' language='json'>
         {JSON.stringify({ space, ...info }, jsonKeyReplacer({ truncate: true }), 2)}
       </SyntaxHighlighter>
-    </div>
-  );
-};
-
-type SchemaTableProps = {
-  types: any[];
-  objects?: Record<string, number | undefined>;
-  label: string;
-  onClick: (typename: string) => void;
-};
-
-const SchemaTable = ({ types, objects = {}, label, onClick }: SchemaTableProps) => {
-  return (
-    <div className='grid grid-cols-[1fr_80px_40px] gap-1 overflow-hidden'>
-      <div className='grid grid-cols-subgrid col-span-3'>
-        <div className='px-2 py-1 text-sm text-primary-500'>{label}</div>
-      </div>
-      {types.map((type) => (
-        <div key={type.typename} className='grid grid-cols-subgrid col-span-3 items-center'>
-          <div className='px-2 py-1 text-sm font-mono text-green-500'>{type.typename}</div>
-          <div className='px-2 py-1 text-right font-mono'>{objects[type.typename] ?? 0}</div>
-          <IconButton
-            variant='ghost'
-            icon='ph--plus--regular'
-            iconOnly
-            label='Create data'
-            onClick={() => onClick(type.typename)}
-          />
-        </div>
-      ))}
     </div>
   );
 };

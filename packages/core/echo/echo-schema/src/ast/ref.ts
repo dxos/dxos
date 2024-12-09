@@ -7,11 +7,9 @@ import { S } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
 import { getObjectAnnotation, ReferenceAnnotationId, type ObjectAnnotation } from './annotations';
-import type { JsonSchemaType } from './types';
-import { MutableSchema } from '../mutable/mutable-schema';
-import { StoredSchema } from '../mutable/stored-schema';
-import { EXPANDO_TYPENAME } from '../object/expando';
-import { getTypename } from '../object/typename';
+import { type JsonSchemaType } from './types';
+import { MutableSchema, StoredSchema } from '../mutable';
+import { getTypename, EXPANDO_TYPENAME } from '../object';
 import { type WithId, type Ref, type BaseObject } from '../types';
 
 /**
