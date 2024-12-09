@@ -23,7 +23,7 @@ export type UploadWorkerArgs = {
   source: string;
   version: string;
   functionId?: string;
-  ownerDid: DID;
+  spaceId: SpaceId;
 };
 
 export const uploadWorkerFunction = async ({
@@ -31,7 +31,7 @@ export const uploadWorkerFunction = async ({
   name,
   version,
   source,
-  ownerDid,
+  spaceId,
   functionId,
 }: UploadWorkerArgs): Promise<UploadFunctionResponseBody> => {
   const edgeUrl = client.config.values.runtime?.services?.edge?.url;
@@ -39,7 +39,7 @@ export const uploadWorkerFunction = async ({
   const edgeClient = new EdgeHttpClient(edgeUrl);
   const edgeIdentity = createEdgeIdentity(client);
   edgeClient.setIdentity(edgeIdentity);
-  const response = await edgeClient.uploadFunction({ ownerDid, functionId }, { name, version, script: source });
+  const response = await edgeClient.uploadFunction({ spaceId, functionId }, { name, version, script: source });
 
   log('Uploaded', {
     functionId,

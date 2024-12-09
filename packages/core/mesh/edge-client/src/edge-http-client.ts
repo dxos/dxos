@@ -90,11 +90,11 @@ export class EdgeHttpClient {
   }
 
   public async uploadFunction(
-    pathParts: { ownerDid: string; functionId?: string },
+    pathParts: { spaceId: SpaceId; functionId?: string },
     body: UploadFunctionRequest,
     args?: EdgeHttpGetArgs,
   ): Promise<UploadFunctionResponseBody> {
-    const path = ['functions', pathParts.ownerDid, ...(pathParts.functionId ? [pathParts.functionId] : [])].join('/');
+    const path = ['functions', pathParts.spaceId, ...(pathParts.functionId ? [pathParts.functionId] : [])].join('/');
     return this._call(path, { ...args, body, method: 'PUT' });
   }
 

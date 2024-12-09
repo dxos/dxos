@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type DID } from 'iso-did/types';
 import { format } from 'prettier';
 import prettierPluginEstree from 'prettier/plugins/estree';
 import prettierPluginTypescript from 'prettier/plugins/typescript';
@@ -23,7 +22,6 @@ import { Bundler } from '../bundler';
 import {
   getInvocationUrl,
   getUserFunctionUrlInMetadata,
-  publicKeyToDid,
   setUserFunctionUrlInMetadata,
   uploadWorkerFunction,
   FUNCTIONS_PRESET_META_KEY,
@@ -111,7 +109,6 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
 
     try {
       const existingFunctionId = existingFunctionUrl?.split('/').at(-1);
-      const ownerDid = (existingFunctionUrl?.split('/').at(-2) as DID) ?? publicKeyToDid(identity.identityKey);
 
       const bundler = new Bundler({ platform: 'browser', sandboxedModules: [], remoteModules: {} });
       const buildResult = await bundler.bundle(script.source.content);
@@ -121,7 +118,7 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
 
       const { functionId, version, meta } = await uploadWorkerFunction({
         client,
-        ownerDid,
+        spaceId: space.id,
         version: fn ? incrementSemverPatch(fn.version) : '0.0.1',
         functionId: existingFunctionId,
         source: buildResult.bundle,
@@ -145,14 +142,14 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
         log.verbose('no input schema in function metadata', { functionId });
       }
 
-      setUserFunctionUrlInMetadata(getMeta(deployedFunction), `/${ownerDid}/${functionId}`);
+      setUserFunctionUrlInMetadata(getMeta(deployedFunction), `/${space.id}/${functionId}`);
 
       setView('split');
     } catch (err: any) {
       log.catch(err);
       setError(t('upload failed label'));
     }
-  }, [fn, existingFunctionUrl, script, script.name, script.source]);
+  }, [fn, existingFunctionUrl, script, script.name, script.source, space?.id ?? null]);
 
   const functionUrl = useMemo(() => {
     if (!existingFunctionUrl) {
