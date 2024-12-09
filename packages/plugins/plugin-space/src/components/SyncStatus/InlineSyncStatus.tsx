@@ -27,15 +27,6 @@ const useEdgeStatus = (): QueryEdgeStatusResponse.EdgeStatus => {
 };
 
 export const InlineSyncStatus = ({ space }: { space: Space }) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
-  const animationProps = useMemo<CSSProperties>(
-    () => ({
-      // Synchronize animations.
-      animationDelay: `-${Date.now() % 1000}ms`,
-    }),
-    [],
-  );
-
   const connectedToEdge = useEdgeStatus() === QueryEdgeStatusResponse.EdgeStatus.CONNECTED;
   // TODO(wittjosiah): This is not reactive.
   const edgeSyncEnabled = space.internal.data.edgeReplication === EdgeReplicationSetting.ENABLED;
@@ -44,9 +35,27 @@ export const InlineSyncStatus = ({ space }: { space: Space }) => {
     return null;
   }
 
+  return <InlineSyncStatusIndicator />;
+};
+
+export const InlineSyncStatusIndicator = () => {
+  const { t } = useTranslation(SPACE_PLUGIN);
+  const animationProps = useMemo<CSSProperties>(
+    () => ({
+      // Synchronize animations.
+      animationDelay: `-${Date.now() % 2_000}ms`,
+    }),
+    [],
+  );
+
   return (
     <div role='status' aria-label={t('syncing message')} className='flex items-center'>
-      <Icon icon='ph--arrows-clockwise--regular' size={3} style={animationProps} classNames='animate-spin' />
+      <Icon
+        icon='ph--circle-notch--regular'
+        size={3}
+        style={animationProps}
+        classNames='animate-[spin_2s_linear_infinite]'
+      />
     </div>
   );
 };
