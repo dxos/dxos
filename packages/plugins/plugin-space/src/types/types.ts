@@ -82,7 +82,9 @@ export type SchemaProvides = {
 };
 
 export const parseSchemaPlugin = (plugin?: Plugin) =>
-  Array.isArray((plugin?.provides as any).echo?.schema) ? (plugin as Plugin<SchemaProvides>) : undefined;
+  Array.isArray((plugin?.provides as any).echo?.schema) || Array.isArray((plugin?.provides as any).echo?.system)
+    ? (plugin as Plugin<SchemaProvides>)
+    : undefined;
 
 export type SpacePluginProvides = SurfaceProvides &
   IntentResolverProvides &
