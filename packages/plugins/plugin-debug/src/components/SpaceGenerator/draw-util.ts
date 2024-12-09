@@ -19,6 +19,14 @@ import { range } from '@dxos/util';
 //    - https://github.com/dagrejs/dagre/wiki
 //  - https://www.npmjs.com/package/elkjs
 
+// TLDraw structure
+//    div tl-html-layer tl-shapes
+//      div tl-shape
+//        svg tl-svg-container
+//        div class tl-html-container
+//    div tl-overlays
+//      svg
+
 /**
  * https://github.com/antvis/graphlib/blob/master/docs/classes/Graph.md
  */
