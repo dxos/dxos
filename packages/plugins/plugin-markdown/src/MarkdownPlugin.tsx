@@ -5,13 +5,7 @@
 import { TextAa } from '@phosphor-icons/react';
 import React from 'react';
 
-import {
-  parseIntentPlugin,
-  resolvePlugin,
-  LayoutAction,
-  NavigationAction,
-  type PluginDefinition,
-} from '@dxos/app-framework';
+import { parseIntentPlugin, resolvePlugin, NavigationAction, type PluginDefinition } from '@dxos/app-framework';
 import { create } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { parseClientPlugin } from '@dxos/plugin-client';
@@ -89,6 +83,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       metadata: {
         records: {
           [DocumentType.typename]: {
+            createObject: MarkdownAction.CREATE,
             label: (object: any) => (object instanceof DocumentType ? object.name || object.fallbackName : undefined),
             placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
             icon: 'ph--text-aa--regular',
@@ -103,13 +98,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       },
       translations: [...translations, ...editorTranslations],
       echo: {
-        schema: [DocumentType, TextType],
-      },
-      space: {
-        onSpaceCreate: {
-          label: ['create document label', { ns: MARKDOWN_PLUGIN }],
-          action: MarkdownAction.CREATE,
-        },
+        schema: [DocumentType],
+        system: [TextType],
       },
       graph: {
         builder: (plugins) => {
@@ -288,17 +278,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 threads: [],
               });
 
-              return {
-                data: doc,
-                intents: [
-                  [
-                    {
-                      action: LayoutAction.SCROLL_INTO_VIEW,
-                      data: { id: fullyQualifiedId(doc) },
-                    },
-                  ],
-                ],
-              };
+              return { data: doc };
             }
 
             case MarkdownAction.SET_VIEW_MODE: {

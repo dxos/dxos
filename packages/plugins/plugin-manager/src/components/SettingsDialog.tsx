@@ -73,7 +73,7 @@ export const SettingsDialog = ({ selected, onSelected }: SettingsDialogProps) =>
         </Dialog.Title>
         <Dialog.Close asChild>
           <Button density='fine' variant='ghost' autoFocus>
-            <Icon icon='ph--x--regular' size={3} />
+            <Icon icon='ph--x--regular' size={4} />
           </Button>
         </Dialog.Close>
       </div>

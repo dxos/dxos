@@ -42,11 +42,18 @@ import { type EchoReplicator, type RemoteDocumentExistenceCheckParams } from './
 import { HeadsStore } from './heads-store';
 import { LevelDBStorageAdapter, type BeforeSaveParams } from './leveldb-storage-adapter';
 
+export type PeerIdProvider = () => string | undefined;
+
 export type AutomergeHostParams = {
   db: LevelDB;
 
   indexMetadataStore: IndexMetadataStore;
   dataMonitor?: EchoDataMonitor;
+
+  /**
+   * Used for creating stable ids. A random key is generated on open, if no value is provided.
+   */
+  peerIdProvider?: PeerIdProvider;
 };
 
 export type LoadDocOptions = {
@@ -82,9 +89,11 @@ export class AutomergeHost extends Resource {
   @trace.info()
   private _peerId!: PeerId;
 
+  private readonly _peerIdProvider?: PeerIdProvider;
+
   public readonly collectionStateUpdated = new Event<{ collectionId: CollectionId }>();
 
-  constructor({ db, indexMetadataStore, dataMonitor }: AutomergeHostParams) {
+  constructor({ db, indexMetadataStore, dataMonitor, peerIdProvider }: AutomergeHostParams) {
     super();
     this._db = db;
     this._storage = new LevelDBStorageAdapter({
@@ -104,11 +113,11 @@ export class AutomergeHost extends Resource {
     });
     this._headsStore = new HeadsStore({ db: db.sublevel('heads') });
     this._indexMetadataStore = indexMetadataStore;
+    this._peerIdProvider = peerIdProvider;
   }
 
   protected override async _open() {
-    // TODO(burdon): Should this be stable?
-    this._peerId = `host-${PublicKey.random().toHex()}` as PeerId;
+    this._peerId = `host-${this._peerIdProvider?.() ?? PublicKey.random().toHex()}` as PeerId;
 
     await this._storage.open?.();
 

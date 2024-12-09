@@ -11,9 +11,8 @@ import type {
   IntentData,
 } from '@dxos/app-framework';
 import { ref, S, TypedObject } from '@dxos/echo-schema';
-import { type SchemaProvides } from '@dxos/plugin-client';
 import { type MarkdownExtensionProvides } from '@dxos/plugin-markdown';
-import { type SpaceInitProvides } from '@dxos/plugin-space';
+import { type SchemaProvides } from '@dxos/plugin-space';
 import { ThreadType } from '@dxos/plugin-space/types';
 import { type StackProvides } from '@dxos/plugin-stack';
 import { type DxGridAxis } from '@dxos/react-ui-grid';
@@ -61,7 +60,6 @@ export type SheetPluginProvides = SurfaceProvides &
   MetadataRecordsProvides &
   TranslationsProvides &
   SchemaProvides &
-  SpaceInitProvides &
   StackProvides &
   ThreadProvides<SheetType>;
 
