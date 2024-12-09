@@ -153,6 +153,7 @@ service IdentityService {
   rpc QueryIdentity(google.protobuf.Empty) returns (stream QueryIdentityResponse);
   rpc UpdateProfile(halo.credentials.ProfileDocument) returns (Identity);
   rpc SignPresentation(SignPresentationRequest) returns (dxos.halo.credentials.Presentation);
+  rpc CreateAuthCredential(google.protobuf.Empty) returns (dxos.halo.credentials.Credential);
 }
 
 //

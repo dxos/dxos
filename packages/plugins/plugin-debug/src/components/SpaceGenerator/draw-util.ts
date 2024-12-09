@@ -3,13 +3,20 @@
 //
 
 // TODO(burdon): workerize-loader dep.
-import { Graph, type Node, type PlainObject } from '@antv/graphlib';
-import { D3ForceLayout } from '@antv/layout';
+import { Graph, type Edge, type PlainObject } from '@antv/graphlib';
+import {
+  D3ForceLayout,
+  type D3ForceLayoutOptions,
+  GridLayout,
+  type GridLayoutOptions,
+  RadialLayout,
+  type RadialLayoutOptions,
+} from '@antv/layout';
+import { type Layout } from '@antv/layout/lib/types';
 import { createBindingId, createShapeId, type Editor, type SerializedStore, type TLRecord } from '@tldraw/tldraw';
 
-import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
-import { range } from '@dxos/util';
+import { isNotFalsy, range } from '@dxos/util';
 
 // TODO(burdon): Graph layout:
 //  - https://www.npmjs.com/package/@antv/layout (uses d3)
@@ -18,6 +25,15 @@ import { range } from '@dxos/util';
 //  - https://www.npmjs.com/package/@dagrejs/dagre
 //    - https://github.com/dagrejs/dagre/wiki
 //  - https://www.npmjs.com/package/elkjs
+
+// TLDraw structure:
+//    svg tl-svg-context
+//    div tl-html-layer tl-shapes
+//      div tl-shape
+//        svg tl-svg-container
+//        div class tl-html-container
+//    div tl-overlays
+//      svg
 
 /**
  * https://github.com/antvis/graphlib/blob/master/docs/classes/Graph.md
@@ -36,17 +52,41 @@ export const generateGraph = (): Graph<PlainObject, PlainObject> => {
     },
   }));
 
-  const edges = range(faker.number.int({ min: nodes.length, max: nodes.length * 2 })).map(() => {
-    invariant(nodes.length >= 2);
-    let source: Node<PlainObject>;
-    let target: Node<PlainObject>;
-    do {
-      source = faker.helpers.arrayElement(nodes);
-      target = faker.helpers.arrayElement(nodes);
-    } while (source.id === target.id);
+  const unlinked = new Set(nodes.map((node) => node.id));
+  const pop = () => {
+    if (unlinked.size) {
+      const id = faker.helpers.arrayElement(Array.from(unlinked));
+      unlinked.delete(id);
+      return id;
+    }
+  };
 
-    return { id: faker.string.uuid(), source: source.id, target: target.id, data: {} };
-  });
+  const edges: Edge<PlainObject>[] = [];
+  const link = (source: string, target: string) => {
+    edges.push({ id: faker.string.uuid(), source, target, data: {} });
+  };
+
+  const branching = 3;
+  const traverse = (source: string) => {
+    const targets = range(faker.number.int({ min: 1, max: branching }))
+      .map(() => {
+        const target = pop();
+        if (target) {
+          link(source, target);
+        }
+        return target;
+      })
+      .filter(isNotFalsy);
+
+    for (const target of targets) {
+      traverse(target);
+    }
+  };
+
+  const source = pop();
+  if (source) {
+    traverse(source);
+  }
 
   return new Graph<PlainObject, PlainObject>({ nodes, edges });
 };
@@ -60,14 +100,49 @@ export const drawGraph = async (
 
   const snap = (n: number) => Math.round(n / grid) * grid;
 
-  const layout = new D3ForceLayout({
+  type Intersection<Types extends readonly unknown[]> = Types extends [infer First, ...infer Rest]
+    ? First & Intersection<Rest>
+    : unknown;
+
+  const defaultOptions: Intersection<[D3ForceLayoutOptions, GridLayoutOptions, RadialLayoutOptions]> = {
     center: [0, 0],
-    preventOverlap: true,
-    collideStrength: 0.5,
+    width: grid * 20,
+    height: grid * 20,
     linkDistance: grid * 2,
     nodeSize,
     nodeSpacing: nodeSize,
-  });
+    preventOverlap: true,
+  };
+
+  const layoutType = faker.helpers.arrayElement(['d3force', 'grid', 'radial']);
+  let layout: Layout<any>;
+  switch (layoutType) {
+    case 'd3force': {
+      layout = new D3ForceLayout({
+        ...defaultOptions,
+        nodeStrength: 0.3,
+        collideStrength: 0.8,
+      });
+      break;
+    }
+
+    case 'grid': {
+      layout = new GridLayout({
+        ...defaultOptions,
+      });
+      break;
+    }
+
+    case 'radial':
+    default: {
+      layout = new RadialLayout({
+        ...defaultOptions,
+        focusNode: graph.getAllNodes()[0],
+        unitRadius: grid * 2,
+      });
+    }
+  }
+
   const { nodes, edges } = await layout.execute(graph);
 
   for (const node of nodes) {
