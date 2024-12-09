@@ -54,7 +54,7 @@ export const InlineSyncStatusIndicator = () => {
         icon='ph--circle-notch--regular'
         size={3}
         style={animationProps}
-        classNames='animate-[spin_2s_linear_infinite]'
+        classNames='text-subdued animate-[spin_2s_linear_infinite]'
       />
     </div>
   );

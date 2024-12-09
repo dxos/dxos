@@ -79,15 +79,15 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
         const cells: Record<string, CellValue> = {};
         const year = new Date().getFullYear();
         const cols = 4;
-        const rows = 10;
+        const rows = 16;
         for (let col = 1; col <= cols; col++) {
-          for (let row = 1; row <= 10; row++) {
+          for (let row = 1; row <= rows; row++) {
             const cell = addressToA1Notation({ col, row });
             if (row === 1) {
               cells[cell] = { value: `${year} Q${col}` };
             } else if (row === rows) {
               const from = addressToA1Notation({ col, row: 2 });
-              const to = addressToA1Notation({ col, row: cols - 1 });
+              const to = addressToA1Notation({ col, row: rows - 1 });
               cells[cell] = { value: `=SUM(${from}:${to})` };
             } else if (row > 2 && row < rows - 1) {
               cells[cell] = { value: Math.floor(Math.random() * 10_000) };
@@ -96,6 +96,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
         }
 
         // TODO(burdon): Set width.
+        // TODO(burdon): Set formatting for columns.
         return space.db.add(
           createSheet({
             name: faker.commerce.productName(),

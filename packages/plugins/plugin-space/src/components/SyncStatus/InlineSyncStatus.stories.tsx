@@ -24,7 +24,7 @@ const DefaultStory = () => {
         setSpaces((spaces) => {
           const space = Array.from(spaces.keys())[Math.floor(Math.random() * spaces.size)];
           spaces.set(space, !spaces.get(space));
-          return spaces;
+          return new Map(spaces);
         });
       },
       2_000 + Math.random() * 3_000,
