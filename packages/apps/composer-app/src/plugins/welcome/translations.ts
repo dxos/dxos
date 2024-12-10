@@ -13,7 +13,8 @@ export default [
         'welcome back title': 'Welcome back',
         'welcome back description':
           "Sign-up to join the beta. We'll send you a verification email that will give you immediate access.",
-        'check email': 'Please check your email for the access link.',
+        'check email access': 'Please check your email for the access link.',
+        'check email confirm': 'Please check your email for the confirmation link.',
         'email error': 'Failed to send verification email.',
         'new device': 'Existing Users',
         'new device description':

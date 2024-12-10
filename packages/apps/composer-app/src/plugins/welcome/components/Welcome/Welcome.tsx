@@ -132,8 +132,8 @@ export const Welcome = ({
             {state === WelcomeState.EMAIL_SENT && (
               <div role='none' className='flex flex-col gap-8'>
                 <div className='flex flex-col gap-2'>
-                  <h1 className='text-2xl'>{t('welcome title')}</h1>
-                  <p className='text-subdued'>{t('check email')}</p>
+                  <h1 className='text-2xl'>{t(identity ? 'welcome back title' : 'welcome title')}</h1>
+                  <p className='text-subdued'>{t(identity ? 'check email access' : 'check email confirm')}</p>
                 </div>
               </div>
             )}
