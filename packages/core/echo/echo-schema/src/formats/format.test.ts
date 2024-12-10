@@ -20,7 +20,7 @@ describe('formats', () => {
       birthday: S.optional(Format.Date),
       started: S.optional(Format.DateTime),
       active: S.optional(S.Boolean),
-      location: S.optional(Format.GeoPoint),
+      location: S.optional(Format.GeoPosition),
     }).pipe(S.mutable);
 
     type TestType = S.Schema.Type<typeof TestSchema>;
@@ -81,10 +81,8 @@ describe('formats', () => {
       expect(getTypeEnum(prop)).to.eq(TypeEnum.Array);
       expect(prop).includes({
         type: TypeEnum.Array,
-        format: FormatEnum.GeoPoint,
+        format: FormatEnum.GeoPosition,
       });
     }
-
-    const obj = create(TestSchema, data);
   });
 });

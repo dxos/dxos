@@ -103,7 +103,7 @@ export const createArrayPipeline = <T extends BaseObject>(
   return Effect.forEach(createObjectArray<T>(n), pipeline);
 };
 
-export type CreateOptions = {
+export type ObjectPipelineOptions = {
   /** Database for references. */
   db?: EchoDatabase;
   /** If true, set all optional properties, otherwise randomly set them. */
@@ -118,7 +118,7 @@ export type CreateOptions = {
 export const createObjectPipeline = <T extends BaseObject>(
   generator: ValueGenerator,
   type: S.Schema<T>,
-  { db, optional }: CreateOptions,
+  { db, optional }: ObjectPipelineOptions,
 ): ((obj: ExcludeId<T>) => Effect.Effect<ReactiveObject<T>, never, never>) => {
   if (!db) {
     return (obj: ExcludeId<T>) => {
@@ -157,7 +157,7 @@ export type ObjectGenerator<T extends BaseObject> = {
 export const createGenerator = <T extends BaseObject>(
   generator: ValueGenerator,
   type: S.Schema<T>,
-  options: CreateOptions = {},
+  options: ObjectPipelineOptions = {},
 ): ObjectGenerator<T> => {
   const pipeline = createObjectPipeline(generator, type, options);
 
@@ -175,7 +175,7 @@ export type AsyncObjectGenerator<T extends BaseObject> = {
 export const createAsyncGenerator = <T extends BaseObject>(
   generator: ValueGenerator,
   type: S.Schema<T>,
-  options: CreateOptions = {},
+  options: ObjectPipelineOptions = {},
 ): AsyncObjectGenerator<T> => {
   const pipeline = createObjectPipeline(generator, type, options);
 

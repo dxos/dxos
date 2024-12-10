@@ -45,7 +45,7 @@ export namespace Testing {
     city: S.optional(S.String),
     state: S.optional(S.String),
     zip: S.optional(S.String),
-    location: S.optional(Format.GeoPoint),
+    location: S.optional(Format.GeoPosition),
   });
 
   export const ContactSchema = S.Struct({

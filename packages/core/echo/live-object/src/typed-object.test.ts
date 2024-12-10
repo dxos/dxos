@@ -104,7 +104,7 @@ describe('EchoObject class DSL', () => {
   test('formats', ({ expect }) => {
     const schema = S.Struct({
       email: Format.Email,
-      location: Format.GeoPoint,
+      location: Format.GeoPosition,
     });
 
     const object = create(schema, {

@@ -93,7 +93,7 @@ export enum FormatEnum {
   // { type: 'object' }
   //
 
-  GeoPoint = 'geo-point', // TODO(burdon): This isn't a standard format.
+  GeoPosition = 'position', // TODO(burdon): This isn't a standard format.
 }
 
 export const FormatEnums = Object.values(FormatEnum).sort();
@@ -147,7 +147,7 @@ export const formatToType: Record<FormatEnum, TypeEnum> = {
   [FormatEnum.Timestamp]: TypeEnum.Number,
 
   // Objects
-  [FormatEnum.GeoPoint]: TypeEnum.Array,
+  [FormatEnum.GeoPosition]: TypeEnum.Array,
 };
 
 /**

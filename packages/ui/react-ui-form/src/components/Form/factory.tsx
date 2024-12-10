@@ -17,7 +17,7 @@ export const getInputComponent = <T extends BaseObject>(
   format?: FormatEnum,
 ): InputComponent<T> | undefined => {
   switch (format) {
-    case FormatEnum.GeoPoint:
+    case FormatEnum.GeoPosition:
       return GeoPointInput;
   }
 
