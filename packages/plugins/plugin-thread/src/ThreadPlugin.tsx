@@ -103,6 +103,7 @@ export const ThreadPlugin = (): PluginDefinition<
       metadata: {
         records: {
           [ChannelType.typename]: {
+            createObject: ThreadAction.CREATE,
             placeholder: ['channel name placeholder', { ns: THREAD_PLUGIN }],
             icon: 'ph--chat--regular',
             // TODO(wittjosiah): Move out of metadata.
