@@ -83,8 +83,8 @@ export const Org: Story<Testing.OrgSchemaType> = {
   args: {
     schema: Testing.OrgSchema,
     values: {
-      name: 'DXOS',
-      website: 'https://dxos.org',
+      // name: 'DXOS',
+      // website: 'https://dxos.org',
     },
   },
 };
