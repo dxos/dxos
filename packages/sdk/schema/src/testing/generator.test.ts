@@ -28,7 +28,7 @@ type TypeSpec = {
 const createObjects = async (db: EchoDatabase, specs: TypeSpec[]) => {
   for (const { type, count } of specs) {
     try {
-      const pipeline = createObjectPipeline(generator, type, db);
+      const pipeline = createObjectPipeline(generator, type, { db });
       const objects = await Effect.runPromise(createArrayPipeline(count, pipeline));
       expect(objects).to.have.length(count);
       await db.flush();
@@ -54,19 +54,22 @@ describe('Generator', () => {
   // TODO(burdon): Type error: https://github.com/dxos/dxos/issues/8324
   test('create object', async ({ expect }) => {
     {
-      const objectGenerator = createGenerator(generator, Testing.OrgType as any as S.Schema<Testing.OrgType>);
+      const schema: S.Schema<Testing.OrgType> = Testing.OrgType as any;
+      const objectGenerator = createGenerator(generator, schema, { optional: true });
       const object = objectGenerator.createObject();
       expect(object.name).to.exist;
     }
 
     {
-      const objectGenerator = createGenerator(generator, Testing.ProjectType as any as S.Schema<Testing.ProjectType>);
+      const schema: S.Schema<Testing.ProjectType> = Testing.ProjectType as any;
+      const objectGenerator = createGenerator(generator, schema, { optional: true });
       const object = objectGenerator.createObject();
       expect(object.name).to.exist;
     }
 
     {
-      const objectGenerator = createGenerator(generator, Testing.ContactSchema as any as S.Schema<Testing.ContactType>);
+      const schema: S.Schema<Testing.ContactType> = Testing.ContactType as any;
+      const objectGenerator = createGenerator(generator, schema, { optional: true });
       const object = objectGenerator.createObject();
       expect(object.name).to.exist;
     }

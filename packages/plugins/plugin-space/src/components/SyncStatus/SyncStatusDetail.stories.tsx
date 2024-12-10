@@ -17,14 +17,6 @@ import translations from '../../translations';
 
 const random = ({ min, max }: { min: number; max: number }) => min + Math.floor(Math.random() * (max - min));
 
-export const Default: StoryObj<typeof SyncStatusDetail> = {};
-
-export const Empty: StoryObj<typeof SyncStatusDetail> = {
-  render: (args) => {
-    return <SyncStatusDetail {...args} state={{}} />;
-  },
-};
-
 const meta: Meta = {
   title: 'plugins/plugin-space/SyncStatusDetail',
   component: SyncStatusDetail,
@@ -81,3 +73,13 @@ const meta: Meta = {
 };
 
 export default meta;
+
+type Story = StoryObj<typeof SyncStatusDetail>;
+
+export const Default: Story = {};
+
+export const Empty: Story = {
+  render: (args) => {
+    return <SyncStatusDetail {...args} state={{}} />;
+  },
+};

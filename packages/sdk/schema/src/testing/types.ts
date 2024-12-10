@@ -11,9 +11,11 @@ export namespace Testing {
 
   export const OrgSchema = S.Struct({
     // id: S.String,
-    name: S.String.annotations({
-      [GeneratorAnnotationId]: 'company.name',
-    }),
+    name: S.optional(
+      S.String.annotations({
+        [GeneratorAnnotationId]: 'company.name',
+      }),
+    ),
     website: S.optional(
       Format.URL.annotations({
         [AST.TitleAnnotationId]: 'Website',
@@ -50,9 +52,11 @@ export namespace Testing {
 
   export const ContactSchema = S.Struct({
     // id: S.String,
-    name: S.String.annotations({
-      [GeneratorAnnotationId]: 'person.fullName',
-    }),
+    name: S.optional(
+      S.String.annotations({
+        [GeneratorAnnotationId]: 'person.fullName',
+      }),
+    ),
     email: S.optional(
       Format.Email.annotations({
         [GeneratorAnnotationId]: 'internet.email',
@@ -81,9 +85,11 @@ export namespace Testing {
 
   export const ProjectSchema = S.Struct({
     // id: S.String,
-    name: S.String.annotations({
-      [GeneratorAnnotationId]: 'commerce.productName',
-    }),
+    name: S.optional(
+      S.String.annotations({
+        [GeneratorAnnotationId]: 'commerce.productName',
+      }),
+    ),
     description: S.optional(S.String),
   });
 
