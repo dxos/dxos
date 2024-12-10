@@ -20,6 +20,7 @@ describe('formats', () => {
       birthday: S.optional(Format.Date),
       started: S.optional(Format.DateTime),
       active: S.optional(S.Boolean),
+      location: S.optional(Format.GeoPoint),
     }).pipe(S.mutable);
 
     type TestType = S.Schema.Type<typeof TestSchema>;
@@ -30,6 +31,7 @@ describe('formats', () => {
       name: 'Alice',
       email: 'alice@example.com',
       birthday: '1999-06-11',
+      location: [-122.4194, 37.7749],
     };
 
     const validate = S.validateSync(TestSchema);
@@ -73,5 +75,16 @@ describe('formats', () => {
         format: FormatEnum.Date,
       });
     }
+
+    {
+      const prop = jsonSchema.properties!['location' as const];
+      expect(getTypeEnum(prop)).to.eq(TypeEnum.Array);
+      expect(prop).includes({
+        type: TypeEnum.Array,
+        format: FormatEnum.GeoPoint,
+      });
+    }
+
+    const obj = create(TestSchema, data);
   });
 });

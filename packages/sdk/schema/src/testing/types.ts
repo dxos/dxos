@@ -45,9 +45,7 @@ export namespace Testing {
     city: S.optional(S.String),
     state: S.optional(S.String),
     zip: S.optional(S.String),
-    // TODO(burdon): Unknown error (handling tuples?)
-    // location: S.optional(Format.GeoPoint),
-    // location: S.Tuple(S.Number, S.Number),
+    location: S.optional(Format.GeoPoint),
   });
 
   export const ContactSchema = S.Struct({

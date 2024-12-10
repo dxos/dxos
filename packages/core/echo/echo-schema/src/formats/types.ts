@@ -7,8 +7,8 @@ import { Option, pipe } from 'effect';
 
 import type { JsonSchemaType } from '../ast';
 
-// TODO(burdon): Distinguish tuple/array?
 export enum TypeEnum {
+  Array = 'array', // NOTE: Includes tuples.
   Object = 'object',
   String = 'string',
   Number = 'number',
@@ -17,6 +17,7 @@ export enum TypeEnum {
 }
 
 export type ScalarType =
+  | JSONSchema.JsonSchema7Array
   | JSONSchema.JsonSchema7Object
   | JSONSchema.JsonSchema7String
   | JSONSchema.JsonSchema7Number
@@ -26,6 +27,8 @@ export type ScalarType =
 // TODO(burdon): Ref.
 export const getTypeEnum = (property: JsonSchemaType): TypeEnum | undefined => {
   switch ((property as any).type) {
+    case 'array':
+      return TypeEnum.Array;
     case 'object':
       return TypeEnum.Object;
     case 'string':
@@ -144,7 +147,7 @@ export const formatToType: Record<FormatEnum, TypeEnum> = {
   [FormatEnum.Timestamp]: TypeEnum.Number,
 
   // Objects
-  [FormatEnum.GeoPoint]: TypeEnum.Object,
+  [FormatEnum.GeoPoint]: TypeEnum.Array,
 };
 
 /**
