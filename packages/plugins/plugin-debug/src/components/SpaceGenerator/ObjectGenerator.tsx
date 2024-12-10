@@ -123,7 +123,7 @@ export const createGenerator = <T extends BaseObject>(type: AbstractSchema<T>): 
       mutableSchema.find((schema) => schema.typename === type.typename) ?? space.db.schemaRegistry.addSchema(type);
 
     // Create objects.
-    const generate = createAsyncGenerator(generator, schema.schema, space.db);
+    const generate = createAsyncGenerator(generator, schema.schema, { db: space.db });
     const objects = await generate.createObjects(n);
 
     // Find or create table and view.
