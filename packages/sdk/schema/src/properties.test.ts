@@ -36,6 +36,15 @@ describe('properties', () => {
     ]);
   });
 
+  test('arrays', ({ expect }) => {
+    const props = getSchemaProperties(TestSchema.ast);
+    const arrayProp = props.find((prop) => prop.array);
+
+    expect(arrayProp).to.not.eq(undefined);
+    expect(arrayProp?.type).to.eq('number');
+    expect(arrayProp?.name).to.eq('scores');
+  });
+
   test('discriminated unions', ({ expect }) => {
     const TestSpecSchema = S.Union(
       S.Struct({ kind: S.Literal('a'), label: S.String }),

@@ -16,20 +16,20 @@ import { Form, type FormProps } from './Form';
 import translations from '../../translations';
 import { TestLayout, TestPanel } from '../testing';
 
+const AddressSchema = S.Struct({
+  street: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Street' })),
+  city: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'City' })),
+  zip: S.optional(S.String.pipe(S.pattern(/^\d{5}(-\d{4})?$/)).annotations({ [AST.TitleAnnotationId]: 'ZIP' })),
+  location: S.optional(Format.GeoPoint.annotations({ [AST.TitleAnnotationId]: 'Location' })),
+}).annotations({ [AST.TitleAnnotationId]: 'Address' });
+
 // TODO(burdon): Translations?
 const TestSchema = S.Struct({
   name: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Name' })),
   active: S.optional(S.Boolean.annotations({ [AST.TitleAnnotationId]: 'Active' })),
   rank: S.optional(S.Number.annotations({ [AST.TitleAnnotationId]: 'Rank' })),
   website: S.optional(Format.URL.annotations({ [AST.TitleAnnotationId]: 'Website' })),
-  address: S.optional(
-    S.Struct({
-      street: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Street' })),
-      city: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'City' })),
-      zip: S.optional(S.String.pipe(S.pattern(/^\d{5}(-\d{4})?$/)).annotations({ [AST.TitleAnnotationId]: 'ZIP' })),
-      location: S.optional(Format.GeoPoint.annotations({ [AST.TitleAnnotationId]: 'Location' })),
-    }).annotations({ [AST.TitleAnnotationId]: 'Address' }),
-  ),
+  address: S.optional(AddressSchema),
 }).pipe(S.mutable);
 
 type TestType = S.Schema.Type<typeof TestSchema>;
@@ -162,6 +162,38 @@ export const DiscriminatedShape: StoryObj<DiscriminatedUnionStoryProps> = {
         type: 'circle',
         radius: 5,
       },
+    },
+  },
+};
+
+const ArraysSchema = S.Struct({
+  names: S.Array(S.String.pipe(S.nonEmptyString())),
+  addresses: S.Array(AddressSchema),
+}).pipe(S.mutable);
+
+type ArraysType = S.Schema.Type<typeof ArraysSchema>;
+
+const ArraysStory = ({ values: initialValues }: FormProps<ArraysType>) => {
+  const [values, setValues] = useState(initialValues);
+  const handleSave = useCallback<NonNullable<FormProps<ArraysType>['onSave']>>((values) => {
+    setValues(values);
+  }, []);
+
+  return (
+    <TestLayout json={{ values, schema: ArraysSchema.ast.toJSON() }}>
+      <TestPanel>
+        <Form<ArraysType> schema={ArraysSchema} values={values} onSave={handleSave} />
+      </TestPanel>
+    </TestLayout>
+  );
+};
+
+export const Arrays: StoryObj<FormProps<ArraysType>> = {
+  render: ArraysStory,
+  args: {
+    values: {
+      names: ['Alice', 'Bob'],
+      addresses: [],
     },
   },
 };

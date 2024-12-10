@@ -11,6 +11,9 @@ import { log } from '@dxos/log';
 import { validateSchema, type ValidationError } from '@dxos/schema';
 import { type MaybePromise } from '@dxos/util';
 
+// TODO(ZaymonFC): Where should this live?
+export type FormPath<T extends object = {}> = PropertyKey<T> | `${PropertyKey<T>}.${number}`;
+
 /**
  * Return type from `useForm` hook.
  */
@@ -20,9 +23,9 @@ export type FormHandler<T extends BaseObject> = {
   //
 
   values: T;
-  errors: Record<PropertyKey<T>, string>;
-  touched: Record<PropertyKey<T>, boolean>;
-  changed: Record<PropertyKey<T>, boolean>;
+  errors: Record<FormPath<T>, string>;
+  touched: Record<FormPath<T>, boolean>;
+  changed: Record<FormPath<T>, boolean>;
   canSave: boolean;
   handleSave: () => void;
 
@@ -30,9 +33,9 @@ export type FormHandler<T extends BaseObject> = {
   // Form input component helpers.
   //
 
-  getStatus: (property: PropertyKey<T>) => { status?: 'error'; error?: string };
-  getValue: <V>(property: PropertyKey<T>) => V;
-  onValueChange: <V>(property: PropertyKey<T>, type: SimpleType, value: V) => void;
+  getStatus: (property: FormPath<T>) => { status?: 'error'; error?: string };
+  getValue: <V>(property: FormPath<T>) => V;
+  onValueChange: <V>(property: FormPath<T>, type: SimpleType, value: V) => void;
   onBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 };
 
@@ -95,9 +98,9 @@ export const useForm = <T extends BaseObject>({
     setValues(initialValues);
   }, [initialValues]);
 
-  const [touched, setTouched] = useState<Record<PropertyKey<T>, boolean>>(createKeySet(initialValues, false));
-  const [changed, setChanged] = useState<Record<PropertyKey<T>, boolean>>(createKeySet(initialValues, false));
-  const [errors, setErrors] = useState<Record<PropertyKey<T>, string>>({} as Record<PropertyKey<T>, string>);
+  const [touched, setTouched] = useState<Record<FormPath<T>, boolean>>(createKeySet(initialValues, false));
+  const [changed, setChanged] = useState<Record<FormPath<T>, boolean>>(createKeySet(initialValues, false));
+  const [errors, setErrors] = useState<Record<FormPath<T>, string>>({} as Record<FormPath<T>, string>);
   const [saving, setSaving] = useState(false);
 
   //
@@ -157,7 +160,7 @@ export const useForm = <T extends BaseObject>({
   //
 
   const getStatus = useCallback<FormHandler<T>['getStatus']>(
-    (property: PropertyKey<T>) => ({
+    (property: FormPath<T>) => ({
       status: errors[property] ? 'error' : undefined,
       error: errors[property] ? errors[property] : undefined,
     }),
@@ -165,12 +168,12 @@ export const useForm = <T extends BaseObject>({
   );
 
   // TODO(burdon): Use path to extract hierarchical value.
-  const getValue = <V>(property: PropertyKey<T>): V => {
-    return values[property] as V;
+  const getValue = <V>(property: FormPath<T>): V => {
+    return getByPath(values, property);
   };
 
   // TODO(burdon): Use path to set hierarchical value.
-  const onValueChange = (property: PropertyKey<T>, type: SimpleType, value: any) => {
+  const onValueChange = (property: FormPath<T>, type: SimpleType, value: any) => {
     let parsedValue = value;
     try {
       if (type === 'number') {
@@ -181,7 +184,7 @@ export const useForm = <T extends BaseObject>({
       parsedValue = undefined;
     }
 
-    const newValues = { ...values, [property]: parsedValue };
+    const newValues = setByPath(values, property, parsedValue);
     setValues(newValues);
     setChanged((prev) => ({ ...prev, [property]: true }));
     onValuesChanged?.(newValues);
@@ -227,19 +230,34 @@ export const useForm = <T extends BaseObject>({
   } satisfies FormHandler<T>;
 };
 
-const createKeySet = <T extends BaseObject, V>(obj: T, value: V): Record<PropertyKey<T>, V> => {
+const createKeySet = <T extends BaseObject, V>(obj: T, value: V): Record<FormPath<T>, V> => {
   invariant(obj);
-  return Object.keys(obj).reduce((acc, key) => ({ ...acc, [key]: value }), {} as Record<PropertyKey<T>, V>);
+  return Object.keys(obj).reduce((acc, key) => ({ ...acc, [key]: value }), {} as Record<FormPath<T>, V>);
 };
 
 const flatMap = <T extends BaseObject>(errors: ValidationError[]) => {
   return errors.reduce(
     (result, { path, message }) => {
       if (!(path in result)) {
-        result[path as PropertyKey<T>] = message;
+        result[path as FormPath<T>] = message;
       }
       return result;
     },
-    {} as Record<PropertyKey<T>, string>,
+    {} as Record<FormPath<T>, string>,
   );
+};
+
+// TODO(ZaymonFC): Move to util?
+const getByPath = <T extends object, V>(obj: T, path: FormPath<T>): V => {
+  const [key, index] = path.split('.');
+  return index === undefined ? (obj[key as keyof T] as V) : ((obj[key as keyof T] as any[])[parseInt(index)] as V);
+};
+
+const setByPath = <T extends object>(obj: T, path: FormPath<T>, value: any): T => {
+  const [key, index] = path.split('.');
+  const newValue =
+    index === undefined
+      ? value
+      : [...(obj[key as keyof T] as any[])].map((v, i) => (i === parseInt(index) ? value : v));
+  return { ...obj, [key]: newValue };
 };
