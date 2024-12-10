@@ -13,11 +13,19 @@ import { FormatAnnotationId, FormatEnum } from './types';
  * https://en.wikipedia.org/wiki/Geographic_coordinate_system
  * https://geojson.org
  * {
- *   "type": "Point",
- *   "coordinates": [30.0, 10.0] // [longitude, latitude]
+ *   type: 'Feature',
+ *   geometry: {
+ *     type: "Point",
+ *     coordinates: [0.1278, 51.5074],
+ *   },
+ *   properties: {
+ *     name: 'London'
+ *   }
  * }
+ *
  * Note: optional third element for altitude.
  */
+// TODO(burdon): Should we support the (more verbose/nested) GeoJSON format directly?
 export const GeoPoint = S.Tuple(
   S.Number.pipe(S.clamp(-180, 180), S.multipleOf(0.00001)).annotations({
     [AST.TitleAnnotationId]: 'Longitude',

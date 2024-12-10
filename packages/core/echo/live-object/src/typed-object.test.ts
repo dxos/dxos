@@ -2,13 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
-import { TypedObject } from '@dxos/echo-schema';
+import { Format, TypedObject } from '@dxos/echo-schema';
 import { S } from '@dxos/effect';
 
 import { create } from './object';
 import { getSchema } from './proxy';
+
+// TODO(burdon): Declare id?
 
 class Org extends TypedObject({
   typename: 'example.com/type/Org',
@@ -33,18 +35,18 @@ class Contact extends TypedObject<Contact>({
 const TEST_ORG: Omit<Org, 'id'> = { name: 'Test' };
 
 describe('EchoObject class DSL', () => {
-  test('static isInstance check', async () => {
+  test('static isInstance check', async ({ expect }) => {
     const obj = create(Org, TEST_ORG);
     expect(obj instanceof Org).to.be.true;
   });
 
-  test('can get object schema', async () => {
+  test('can get object schema', async ({ expect }) => {
     const obj = create(Org, TEST_ORG);
     expect(getSchema(obj)).to.deep.eq(Org);
   });
 
   describe('class options', () => {
-    test('can assign undefined to partial fields', async () => {
+    test('can assign undefined to partial fields', async ({ expect }) => {
       const person = create(Contact, { name: 'John' });
       person.name = undefined;
       person.recordField = 'hello';
@@ -53,7 +55,7 @@ describe('EchoObject class DSL', () => {
     });
   });
 
-  test('record', () => {
+  test('record', ({ expect }) => {
     const schema = S.mutable(
       S.Struct({
         meta: S.optional(S.mutable(S.Any)),
@@ -96,5 +98,23 @@ describe('EchoObject class DSL', () => {
       (object.meta ??= {}).test = 100;
       expect(object.meta.test).to.eq(100);
     }
+  });
+
+  // TODO(burdon): Expand. Where should these tests live?
+  test('formats', ({ expect }) => {
+    const schema = S.Struct({
+      email: Format.Email,
+      location: Format.GeoPoint,
+    });
+
+    const object = create(schema, {
+      email: 'hello@dxos.org',
+      location: [0.1278, 51.5074],
+    });
+
+    expect(object).to.deep.eq({
+      email: 'hello@dxos.org',
+      location: [0.1278, 51.5074],
+    });
   });
 });
