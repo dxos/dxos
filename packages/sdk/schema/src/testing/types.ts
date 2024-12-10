@@ -45,7 +45,9 @@ export namespace Testing {
     city: S.optional(S.String),
     state: S.optional(S.String),
     zip: S.optional(S.String),
-    location: S.optional(Format.GeoPosition),
+    // TODO(burdon): This causes the generator to explode.
+    // location: S.optional(Format.GeoPosition),
+    location: S.optional(S.Tuple(S.Number, S.Number)),
   });
 
   export const ContactSchema = S.Struct({
@@ -68,7 +70,7 @@ export namespace Testing {
       }),
     ),
     // TODO(burdon): This breaks the table view.
-    // address: S.optional(AddressSchema),
+    address: S.optional(AddressSchema),
   });
 
   export type ContactSchemaType = S.Schema.Type<typeof ContactSchema>;

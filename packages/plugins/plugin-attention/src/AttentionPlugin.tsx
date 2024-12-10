@@ -55,7 +55,7 @@ export const AttentionPlugin = (): PluginDefinition<AttentionPluginProvides> => 
         },
         getAttention: attention.get,
       },
-      context: (props: PropsWithChildren) => (
+      context: ({ children }: PropsWithChildren) => (
         <RootAttentionProvider
           attention={attention}
           onChange={(nextAttended) => {
@@ -65,7 +65,7 @@ export const AttentionPlugin = (): PluginDefinition<AttentionPluginProvides> => 
             // }
           }}
         >
-          {props.children}
+          {children}
         </RootAttentionProvider>
       ),
     },
@@ -74,7 +74,6 @@ export const AttentionPlugin = (): PluginDefinition<AttentionPluginProvides> => 
 
 const setupDevtools = (attention: AttentionManager) => {
   (globalThis as any).composer ??= {};
-
   (globalThis as any).composer.attention = {
     get attended() {
       return attention.current;

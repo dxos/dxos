@@ -37,7 +37,9 @@ const randomElement = <T>(elements: T[]): T => elements[Math.floor(Math.random()
 export const createProps = <T extends BaseObject>(generator: ValueGenerator, schema: S.Schema<T>, optional = false) => {
   return (data: ExcludeId<T> = {} as ExcludeId<T>): ExcludeId<T> => {
     return getSchemaProperties<T>(schema.ast).reduce<ExcludeId<T>>((obj, property) => {
+      // Check if currently undefined.
       if (obj[property.name] === undefined) {
+        // Check if optional.
         if (!property.optional || optional || randomBoolean()) {
           const gen = findAnnotation<string>(property.ast, GeneratorAnnotationId);
           const fn = gen && getDeep<() => any>(generator, gen.split('.'));
