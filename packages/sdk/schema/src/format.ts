@@ -6,12 +6,24 @@ import { AST, DecimalPrecision, TypeEnum, FormatEnum, S, JsonProp } from '@dxos/
 
 /**
  * Base schema.
+ *
+ * NOTE:
+ * This schema is used by the FieldEditor form to edit properties.
+ * It defines a "mixin" of properties that are common to all fields.
+ * It ALSO includes fields (like 'hidden', 'referencePath') that are not part of the schema properties,
+ * but are used by the FieldSchema.
  */
 export const BasePropertySchema = S.Struct({
   property: JsonProp.annotations({
     [AST.TitleAnnotationId]: 'Property',
     [AST.DescriptionAnnotationId]: 'Field name.',
   }),
+
+  hidden: S.optional(
+    S.Boolean.annotations({
+      [AST.TitleAnnotationId]: 'Hidden',
+    }),
+  ),
 
   title: S.optional(
     S.String.annotations({
@@ -131,7 +143,7 @@ export const formatToSchema: Record<FormatEnum, S.Schema<FormatSchemaCommon>> = 
   // Objects
   //
 
-  [FormatEnum.LatLng]: extend(FormatEnum.LatLng, TypeEnum.Object),
+  [FormatEnum.GeoPoint]: extend(FormatEnum.GeoPoint, TypeEnum.Object),
 };
 
 /**
@@ -181,7 +193,7 @@ export const PropertySchema = S.Union(
   // Objects
   //
 
-  formatToSchema[FormatEnum.LatLng],
+  formatToSchema[FormatEnum.GeoPoint],
 );
 
 export interface PropertyType extends S.Simplify<S.Schema.Type<typeof PropertySchema>> {}

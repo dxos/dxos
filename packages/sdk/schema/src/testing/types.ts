@@ -53,14 +53,12 @@ export namespace Testing {
   export const ContactSchema = S.Struct({
     // TODO(burdon): Id?
     // id: S.String,
-    name:
-      // TODO(burdon): Optional breaks SpaceGenerator.tsx.
-      // S.optional(
+    // TODO(burdon): Optional breaks SpaceGenerator.tsx.
+    name: S.optional(
       S.String.annotations({
         [GeneratorAnnotationId]: 'person.fullName',
       }),
-    // ),
-
+    ),
     email: S.optional(
       Format.Email.annotations({
         [GeneratorAnnotationId]: 'internet.email',

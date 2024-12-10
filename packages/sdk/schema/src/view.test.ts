@@ -31,21 +31,11 @@ describe('View', () => {
     const schema = Testing.ContactType;
     const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: toJsonSchema(schema) });
     expect(view.query.typename).to.eq(schema.typename);
-    expect(view.fields.map((f) => f.path)).to.deep.eq([
-      'name',
-      'email',
-      // 'address',
-      'employer',
-    ]);
+    expect(view.fields.map((f) => f.path)).to.deep.eq(['name', 'email', 'employer', 'address']);
 
     const props = getSchemaProperties(schema.ast);
     const labels = props.map((p) => pipe(p.title ?? p.name, capitalize));
-    expect(labels).to.deep.eq([
-      'Name',
-      'Email',
-      // 'Address',
-      'Employer',
-    ]);
+    expect(labels).to.deep.eq(['Name', 'Email', 'Employer', 'Address']);
   });
 
   test('static schema definitions with references', async ({ expect }) => {

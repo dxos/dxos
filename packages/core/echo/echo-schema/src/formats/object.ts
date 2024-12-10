@@ -29,7 +29,7 @@ export const GeoPoint = S.Tuple(
     [AST.TitleAnnotationId]: 'Height ASL (m)',
   }),
 ).annotations({
-  [FormatAnnotationId]: FormatEnum.LatLng,
+  [FormatAnnotationId]: FormatEnum.GeoPoint,
   [AST.TitleAnnotationId]: 'GeoPoint',
   [AST.DescriptionAnnotationId]: 'GeoJSON Position',
 });

@@ -7,6 +7,7 @@ import { Option, pipe } from 'effect';
 
 import type { JsonSchemaType } from '../ast';
 
+// TODO(burdon): Distinguish tuple/array?
 export enum TypeEnum {
   Object = 'object',
   String = 'string',
@@ -89,7 +90,7 @@ export enum FormatEnum {
   // { type: 'object' }
   //
 
-  LatLng = 'latlng',
+  GeoPoint = 'geo-point', // TODO(burdon): This isn't a standard format.
 }
 
 export const FormatEnums = Object.values(FormatEnum).sort();
@@ -143,7 +144,7 @@ export const formatToType: Record<FormatEnum, TypeEnum> = {
   [FormatEnum.Timestamp]: TypeEnum.Number,
 
   // Objects
-  [FormatEnum.LatLng]: TypeEnum.Object,
+  [FormatEnum.GeoPoint]: TypeEnum.Object,
 };
 
 /**

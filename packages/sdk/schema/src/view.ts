@@ -23,10 +23,11 @@ import { getSchemaProperties } from './properties';
 /**
  * Stored field metadata (e.g., for UX).
  */
+// TODO(burdon): Reconcile with BasePropertySchema (format.ts).
 export const FieldSchema = S.Struct({
   id: S.String,
   path: JsonPath,
-  visible: S.optional(S.Boolean),
+  hidden: S.optional(S.Boolean),
   size: S.optional(S.Number),
   referencePath: S.optional(JsonPath),
 }).pipe(S.mutable);
@@ -91,20 +92,22 @@ export const createView = ({
   if (jsonSchema) {
     // TODO(burdon): Property order is lost.
     const schema = toEffectSchema(jsonSchema);
-    for (const property of getSchemaProperties(schema.ast)) {
-      if (include && !include.includes(property.name)) {
+    for (const { ast, type, name, format } of getSchemaProperties(schema.ast)) {
+      if (include && !include.includes(name)) {
         continue;
       }
 
+      // TODO(burdon): Hide objects (e.g., address) by default to prevent tables from breaking.
+      const hidden = type === 'object' ? true : undefined;
+
       const referencePath =
-        property.format === FormatEnum.Ref
-          ? findAnnotation<JsonPath>(property.ast, FieldLookupAnnotationId)
-          : undefined;
+        format === FormatEnum.Ref ? findAnnotation<JsonPath>(ast, FieldLookupAnnotationId) : undefined;
 
       fields.push(
-        stripUndefinedValues({
+        stripUndefinedValues<FieldType>({
           id: createFieldId(),
-          path: property.name as JsonPath,
+          path: name as JsonPath,
+          hidden,
           referencePath,
         }),
       );

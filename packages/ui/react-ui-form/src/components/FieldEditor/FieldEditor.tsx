@@ -21,6 +21,8 @@ import {
 import { translationKey } from '../../translations';
 import { Form, type FormProps, SelectInput } from '../Form';
 
+// TODO(burdon): Extend schema to include "hidden" property.
+
 export type FieldEditorProps = {
   view: ViewType;
   projection: ViewProjection;
