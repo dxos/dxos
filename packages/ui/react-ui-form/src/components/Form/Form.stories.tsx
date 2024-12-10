@@ -175,14 +175,14 @@ type ArraysType = S.Schema.Type<typeof ArraysSchema>;
 
 const ArraysStory = ({ values: initialValues }: FormProps<ArraysType>) => {
   const [values, setValues] = useState(initialValues);
-  const handleSubmit = useCallback<NonNullable<FormProps<ArraysType>['onSubmit']>>((values) => {
+  const handleSave = useCallback<NonNullable<FormProps<ArraysType>['onSave']>>((values) => {
     setValues(values);
   }, []);
 
   return (
     <TestLayout json={{ values, schema: ArraysSchema.ast.toJSON() }}>
       <TestPanel>
-        <Form<ArraysType> schema={ArraysSchema} values={values} onSubmit={handleSubmit} />
+        <Form<ArraysType> schema={ArraysSchema} values={values} onSave={handleSave} />
       </TestPanel>
     </TestLayout>
   );
