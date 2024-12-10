@@ -56,7 +56,6 @@ export const NumberInput = <T extends BaseObject>({
 }: InputProps<T>) => {
   const { status, error } = getStatus?.(property);
 
-  // TODO(burdon): Only show stepper if bounded integer.
   return (
     <Input.Root validationValence={status}>
       {!inputOnly && (
