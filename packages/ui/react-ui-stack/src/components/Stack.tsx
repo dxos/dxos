@@ -28,7 +28,6 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
       style,
       orientation = 'vertical',
       rail = true,
-      separators = true,
       size = 'intrinsic',
       itemsCount = Children.count(children),
       ...props
@@ -43,7 +42,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
     };
 
     return (
-      <StackContext.Provider value={{ orientation, rail, size, separators }}>
+      <StackContext.Provider value={{ orientation, rail, size }}>
         <div
           {...props}
           {...arrowNavigationGroup}
@@ -60,7 +59,6 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
               (orientation === 'horizontal'
                 ? 'overflow-x-auto min-bs-0 bs-full max-bs-full'
                 : 'overflow-y-auto min-is-0 is-full max-is-full'),
-            separators && (orientation === 'horizontal' ? 'divide-separator divide-x' : 'divide-separator divide-y'),
             classNames,
           )}
           aria-orientation={orientation}

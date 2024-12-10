@@ -19,13 +19,13 @@ export const Kanban = ({ model, columns }: KanbanProps) => {
   return (
     <Stack orientation='horizontal' size='contain'>
       {Object.entries(itemsByColumn).map(([columnId, items]) => (
-        <StackItem.Root key={columnId} item={{ id: columnId }}>
-          <StackItem.Heading>
+        <StackItem.Root key={columnId} item={{ id: columnId }} classNames='border-ie border-separator'>
+          <StackItem.Heading classNames='border-be border-separator'>
             <h2>{columns[columnId].label}</h2>
           </StackItem.Heading>
           <Stack orientation='vertical' size='contain' rail={false}>
             {items.map((item) => (
-              <StackItem.Root key={item.id} item={item}>
+              <StackItem.Root key={item.id} item={item} classNames='border-be border-separator'>
                 <Form readonly values={item} schema={model.cardSchema()} />
               </StackItem.Root>
             ))}

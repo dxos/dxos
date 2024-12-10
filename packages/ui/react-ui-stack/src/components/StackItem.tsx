@@ -59,7 +59,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
     const [itemElement, itemRef] = useState<HTMLDivElement | null>(null);
     const [selfDragHandleElement, selfDragHandleRef] = useState<HTMLDivElement | null>(null);
     const [_closestEdge, setEdge] = useState<Edge | null>(null);
-    const { orientation, rail, separators } = useStack();
+    const { orientation, rail } = useStack();
     const [size = orientation === 'horizontal' ? DEFAULT_HORIZONTAL_SIZE : DEFAULT_VERTICAL_SIZE, setInternalSize] =
       useState(propsSize);
 
@@ -131,7 +131,6 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
             size === 'min-content' && (orientation === 'horizontal' ? 'is-min' : 'bs-min'),
             orientation === 'horizontal' ? 'grid-rows-subgrid' : 'grid-cols-subgrid',
             rail && (orientation === 'horizontal' ? 'row-span-2' : 'col-span-2'),
-            separators && (orientation === 'horizontal' ? 'divide-separator divide-y' : 'divide-separator divide-x'),
             classNames,
           )}
           data-dx-stack-item
