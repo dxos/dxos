@@ -3,3 +3,4 @@
 //
 
 export * from './kanban-manager';
+export * from './initialize-kanban';
