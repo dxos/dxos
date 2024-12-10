@@ -13,6 +13,7 @@ export const TextInput = <T extends BaseObject>({
   property,
   type,
   label,
+  inputOnly,
   disabled,
   placeholder,
   getStatus,
@@ -24,9 +25,11 @@ export const TextInput = <T extends BaseObject>({
 
   return (
     <Input.Root validationValence={status}>
-      <InputHeader error={error}>
-        <Input.Label>{label}</Input.Label>
-      </InputHeader>
+      {!inputOnly && (
+        <InputHeader error={error}>
+          <Input.Label>{label}</Input.Label>
+        </InputHeader>
+      )}
       <Input.TextInput
         disabled={disabled}
         placeholder={placeholder}
@@ -34,6 +37,7 @@ export const TextInput = <T extends BaseObject>({
         onChange={(event) => onValueChange(property, type, event.target.value)}
         onBlur={onBlur}
       />
+      {inputOnly && <Input.Validation>{error}</Input.Validation>}
     </Input.Root>
   );
 };
@@ -42,6 +46,7 @@ export const NumberInput = <T extends BaseObject>({
   property,
   type,
   label,
+  inputOnly,
   disabled,
   placeholder,
   getStatus,
@@ -51,12 +56,13 @@ export const NumberInput = <T extends BaseObject>({
 }: InputProps<T>) => {
   const { status, error } = getStatus?.(property);
 
-  // TODO(burdon): Only show stepper if bounded integer.
   return (
     <Input.Root validationValence={status}>
-      <InputHeader error={error}>
-        <Input.Label>{label}</Input.Label>
-      </InputHeader>
+      {!inputOnly && (
+        <InputHeader error={error}>
+          <Input.Label>{label}</Input.Label>
+        </InputHeader>
+      )}
       <Input.TextInput
         type='number'
         disabled={disabled}
@@ -65,6 +71,7 @@ export const NumberInput = <T extends BaseObject>({
         onChange={(event) => onValueChange(property, type, event.target.value)}
         onBlur={onBlur}
       />
+      {inputOnly && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
     </Input.Root>
   );
 };
@@ -73,6 +80,7 @@ export const BooleanInput = <T extends BaseObject>({
   property,
   type,
   label,
+  inputOnly,
   getStatus,
   getValue,
   onValueChange,
@@ -81,13 +89,16 @@ export const BooleanInput = <T extends BaseObject>({
 
   return (
     <Input.Root validationValence={status}>
-      <InputHeader error={error}>
-        <Input.Label>{label}</Input.Label>
-      </InputHeader>
+      {!inputOnly && (
+        <InputHeader error={error}>
+          <Input.Label>{label}</Input.Label>
+        </InputHeader>
+      )}
       <Input.Switch
         checked={getValue<boolean>(property)}
         onCheckedChange={(value) => onValueChange(property, type, value)}
       />
+      {inputOnly && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
     </Input.Root>
   );
 };
@@ -100,6 +111,7 @@ export const SelectInput = <T extends BaseObject>({
   property,
   type,
   label,
+  inputOnly,
   disabled,
   placeholder,
   options,
@@ -111,9 +123,11 @@ export const SelectInput = <T extends BaseObject>({
 
   return (
     <Input.Root validationValence={status}>
-      <InputHeader error={error}>
-        <Input.Label>{label}</Input.Label>
-      </InputHeader>
+      {!inputOnly && (
+        <InputHeader error={error}>
+          <Input.Label>{label}</Input.Label>
+        </InputHeader>
+      )}
       <Select.Root value={getValue(property)} onValueChange={(value) => onValueChange(property, type, value)}>
         {/* TODO(burdon): Placeholder not working? */}
         <Select.TriggerButton classNames='is-full' disabled={disabled} placeholder={placeholder} />
@@ -130,6 +144,7 @@ export const SelectInput = <T extends BaseObject>({
           </Select.Content>
         </Select.Portal>
       </Select.Root>
+      {inputOnly && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
     </Input.Root>
   );
 };
