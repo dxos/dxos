@@ -12,7 +12,7 @@ export const KanbanSchema = S.Struct({
   /**
    * The view to use to query for cards and render them.
    */
-  cardView: ref(ViewType),
+  cardView: S.optional(ref(ViewType)),
   /**
    * Manual order of cards by id.
    */
