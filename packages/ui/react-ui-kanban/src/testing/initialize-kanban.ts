@@ -2,25 +2,22 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, type MutableSchema, S, TypedObject, type JsonPath } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
+import { AST, type MutableSchema, S, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
-import { create, type Space } from '@dxos/react-client/echo';
-import { createFieldId, createView } from '@dxos/schema';
+import { type Space, create } from '@dxos/react-client/echo';
+import { createView } from '@dxos/schema';
 
-import { type KanbanType } from '../defs';
+import { KanbanType } from '../defs';
 
 type InitialiseKanbanProps = {
   space: Space;
-  kanban: KanbanType;
-  initialItem?: boolean;
 };
 
 // TODO(burdon): Pass in type.
 // TODO(burdon): User should determine typename.
-export const initializeKanban = ({ space, kanban, initialItem = true }: InitialiseKanbanProps): MutableSchema => {
-  log.info('initializeKanban', { kanban });
-
+export const initializeKanban = ({
+  space,
+}: InitialiseKanbanProps): { kanban: KanbanType; taskSchema: MutableSchema } => {
   const TaskSchema = TypedObject({
     typename: `example.com/type/${PublicKey.random().truncate()}`,
     version: '0.1.0',
@@ -38,22 +35,18 @@ export const initializeKanban = ({ space, kanban, initialItem = true }: Initiali
 
   const taskSchema = space.db.schemaRegistry.addSchema(TaskSchema);
 
-  kanban.cardView = createView({
-    name: 'Test kanban’s card view',
-    typename: taskSchema.typename,
-    jsonSchema: taskSchema.jsonSchema,
-    fields: ['title', 'description'],
-  });
+  const kanban = space.db.add(
+    create(KanbanType, {
+      cardView: createView({
+        name: 'Test kanban’s card view',
+        typename: taskSchema.typename,
+        jsonSchema: taskSchema.jsonSchema,
+        fields: ['title', 'description', 'state'],
+      }),
+      columnPivotField: 'state',
+      columnOrder: ['init', 'doing', 'done'],
+    }),
+  );
 
-  kanban.columnPivotField = {
-    id: createFieldId(),
-    path: 'state' as JsonPath,
-  };
-
-  if (initialItem) {
-    // TODO(burdon): Last (first) item should not be in db and should be managed by the model.
-    space.db.add(create(taskSchema, {}));
-  }
-
-  return taskSchema;
+  return { kanban, taskSchema };
 };

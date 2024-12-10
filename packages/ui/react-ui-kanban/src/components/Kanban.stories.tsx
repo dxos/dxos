@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type Meta } from '@storybook/react';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { type MutableSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -15,14 +15,18 @@ import { Filter, useSpaces, useQuery, create } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { ViewProjection, ViewType } from '@dxos/schema';
+import { ViewType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
+import { Kanban } from './Kanban';
 import { KanbanType, useKanbanModel } from '../defs';
 import { initializeKanban } from '../testing';
 import translations from '../translations';
 
 faker.seed(0);
+
+const stateColumns = { init: { label: 'To do' }, doing: { label: 'Doing' }, done: { label: 'Done' } };
+const states = Object.keys(stateColumns);
 
 //
 // Story components.
@@ -33,52 +37,45 @@ const StorybookKanban = () => {
   const space = spaces[spaces.length - 1];
   const kanbans = useQuery(space, Filter.schema(KanbanType));
   const [kanban, setKanban] = useState<KanbanType>();
-  const [schema, setSchema] = useState<MutableSchema>();
+  const [cardSchema, setCardSchema] = useState<MutableSchema>();
   useEffect(() => {
     if (kanbans.length && !kanban) {
       const kanban = kanbans[0];
       invariant(kanban.cardView);
       setKanban(kanban);
-      setSchema(space.db.schemaRegistry.getSchema(kanban.cardView!.query.typename));
+      setCardSchema(space.db.schemaRegistry.getSchema(kanban.cardView!.query.typename));
     }
   }, [kanbans]);
 
-  const projection = useMemo(() => {
-    if (schema && kanban?.cardView) {
-      return new ViewProjection(schema, kanban.cardView!);
-    }
-  }, [schema, kanban?.cardView]);
-
-  const objects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
+  const objects = useQuery(space, cardSchema ? Filter.schema(cardSchema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
-  const _model = useKanbanModel({
+  const model = useKanbanModel({
     kanban,
-    projection,
+    cardSchema,
     items: filteredObjects,
   });
 
-  if (!schema || !kanban) {
+  if (!cardSchema || !kanban) {
     return null;
   }
 
   return (
     <div className='grow grid grid-cols-[1fr_350px]'>
-      <div className='grid grid-rows-[min-content_1fr] min-bs-0 overflow-hidden'></div>
-      <div className='flex flex-col h-full border-l border-separator overflow-y-auto'>
+      {model ? <Kanban model={model} columns={stateColumns} /> : <div />}
+      <div className='flex flex-col bs-full border-is border-separator overflow-y-auto'>
         {kanban.cardView && (
           <ViewEditor
             registry={space?.db.schemaRegistry}
-            schema={schema}
+            schema={cardSchema}
             view={kanban.cardView}
             onDelete={(...args) => {
               console.log('[ViewEditor]', 'onDelete', args);
             }}
           />
         )}
-
         <SyntaxHighlighter language='json' className='w-full text-xs'>
-          {JSON.stringify({ view: kanban.cardView, schema }, null, 2)}
+          {JSON.stringify({ view: kanban.cardView, cardSchema }, null, 2)}
         </SyntaxHighlighter>
       </div>
     </div>
@@ -104,13 +101,13 @@ const meta: Meta<StoryProps> = {
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ space }) => {
-        // TODO(thure): Why is giving KanbanType a problem here?
-        const kanban = space.db.add(create(KanbanType as any, {})) as KanbanType;
-        const schema = initializeKanban({ space, kanban, initialItem: false });
-        Array.from({ length: 10 }).map(() => {
+        const { taskSchema } = initializeKanban({ space });
+        Array.from({ length: 24 }).map(() => {
           return space.db.add(
-            create(schema, {
-              name: faker.person.fullName(),
+            create(taskSchema, {
+              title: faker.commerce.productName(),
+              description: faker.lorem.paragraph(),
+              state: states[faker.number.int(states.length)],
             }),
           );
         });
