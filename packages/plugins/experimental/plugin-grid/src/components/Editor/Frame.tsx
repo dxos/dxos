@@ -31,7 +31,7 @@ export type HandleProps = {
  * Drag handle.
  */
 export const Handle = ({ id, pos, onMove }: HandleProps) => {
-  const [dragging, setDragging] = useState(false);
+  // const [dragging, setDragging] = useState(false);
   const [hovering, setHovering] = useState(false);
 
   const ref = useRef<HTMLDivElement>(null);
@@ -41,13 +41,13 @@ export const Handle = ({ id, pos, onMove }: HandleProps) => {
     return draggable({
       element: el,
       getInitialData: () => ({}),
-      onDragStart: () => setDragging(true),
+      // onDragStart: () => setDragging(true),
       onDrag: ({ location }) => {
-        setDragging(false);
+        // setDragging(false);
         onMove?.(id, getPoint(pos, location), 'drag');
       },
       onDrop: ({ location }) => {
-        setDragging(false);
+        // setDragging(false);
         onMove?.(id, getPoint(pos, location), 'drop');
       },
     });
