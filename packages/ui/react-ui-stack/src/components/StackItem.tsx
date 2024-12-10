@@ -20,13 +20,14 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { useStack, StackItemContext } from './StackContext';
 import { StackItemContent, type StackItemContentProps } from './StackItemContent';
+import { StackItemDragHandle, type StackItemDragHandleProps } from './StackItemDragHandle';
 import {
   StackItemHeading,
   StackItemHeadingLabel,
   type StackItemHeadingProps,
   type StackItemHeadingLabelProps,
 } from './StackItemHeading';
-import { StackItemResizeHandle } from './StackItemResizeHandle';
+import { StackItemResizeHandle, type StackItemResizeHandleProps } from './StackItemResizeHandle';
 import {
   StackItemSigil,
   type StackItemSigilProps,
@@ -159,6 +160,7 @@ export const StackItem = {
   Heading: StackItemHeading,
   HeadingLabel: StackItemHeadingLabel,
   ResizeHandle: StackItemResizeHandle,
+  DragHandle: StackItemDragHandle,
   Sigil: StackItemSigil,
   SigilButton: StackItemSigilButton,
 };
@@ -167,6 +169,8 @@ export type {
   StackItemContentProps,
   StackItemHeadingProps,
   StackItemHeadingLabelProps,
+  StackItemResizeHandleProps,
+  StackItemDragHandleProps,
   StackItemSigilProps,
   StackItemSigilButtonProps,
   StackItemSigilAction,
