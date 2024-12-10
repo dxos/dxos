@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.7.3](https://github.com/dxos/dxos/compare/v0.7.2...v0.7.3) (2024-12-10)
+
+
+### Features
+
+* graph rendering ([#8382](https://github.com/dxos/dxos/issues/8382)) ([e79d273](https://github.com/dxos/dxos/commit/e79d2733b4365645022fe3ff6279d85f30a64494))
+* **react-ui-table:** Create object when editing a cell in ref column ([#8370](https://github.com/dxos/dxos/issues/8370)) ([9ea0fb9](https://github.com/dxos/dxos/commit/9ea0fb9403a265f42d409330c65f3d0a353c52a5))
+* space/object creation flow ([#8373](https://github.com/dxos/dxos/issues/8373)) ([0b351e9](https://github.com/dxos/dxos/commit/0b351e99fc2a5b8558e55b825c38d561b2d7bc02))
+* Table ref cells display info about linked object ([#8353](https://github.com/dxos/dxos/issues/8353)) ([bbf9142](https://github.com/dxos/dxos/commit/bbf914252cc5aa69088e145d396f0f9c69f42c8f))
+
+
+### Bug Fixes
+
+* generalize option lookup ([#8377](https://github.com/dxos/dxos/issues/8377)) ([cf75978](https://github.com/dxos/dxos/commit/cf75978bd43bdb608b64fe0f38bb7d44a2cd3275))
+* make connectToSpace idempotent ([#8369](https://github.com/dxos/dxos/issues/8369)) ([0e8ce72](https://github.com/dxos/dxos/commit/0e8ce729eed5a00a2f72a8185956a44f45ab6f8e))
+* **plugin-sheet:** Sheet edit request index handling ([#8381](https://github.com/dxos/dxos/issues/8381)) ([e50d067](https://github.com/dxos/dxos/commit/e50d0672e4921049e247976c48ab72c5a1b46b67))
+* prevent duplicate form submissions ([#8387](https://github.com/dxos/dxos/issues/8387)) ([971cd8d](https://github.com/dxos/dxos/commit/971cd8d2e6ec41b9f5a07bd65c14d0c116140d9f))
+* **tables:** Scroll new row, column into view ([#8326](https://github.com/dxos/dxos/issues/8326)) ([06aff60](https://github.com/dxos/dxos/commit/06aff60296c6f70b133250175c9ce698a859e050))
+* use deviceKey for automerge peer id is identity is set ([#8384](https://github.com/dxos/dxos/issues/8384)) ([232b922](https://github.com/dxos/dxos/commit/232b9228abc4b3943c42446fac167d22d2e8f494))
+
 ## [0.7.2](https://github.com/dxos/dxos/compare/v0.7.1...v0.7.2) (2024-12-05)
 
 
