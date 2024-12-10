@@ -46,6 +46,32 @@ export const getSimpleType = (node: AST.AST): SimpleType | undefined => {
 
 export const isSimpleType = (node: AST.AST): boolean => !!getSimpleType(node);
 
+export namespace SimpleType {
+  /**
+   * Returns the default empty value for a given SimpleType.
+   * Used for initializing new array values etc.
+   */
+  export const getDefaultValue = (type: SimpleType): any => {
+    switch (type) {
+      case 'string': {
+        return '';
+      }
+      case 'number': {
+        return 0;
+      }
+      case 'boolean': {
+        return false;
+      }
+      case 'object': {
+        return {};
+      }
+      default: {
+        throw new Error(`Unsupported type for default value: ${type}`);
+      }
+    }
+  };
+}
+
 //
 // Branded types
 //
