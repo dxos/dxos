@@ -9,11 +9,17 @@ import { type CSSProperties } from 'react';
 export type Point = { x: number; y: number };
 export type Dimension = { width: number; height: number };
 
-export type Item = {
-  id: string;
-  pos: Point;
-  size: Dimension;
-};
+export type PointTransform = (pos: Point) => Point;
+
+export const round = (n: number, m: number) => Math.round(n / m) * m;
+
+export const createSnap = (snap?: Dimension): PointTransform =>
+  snap
+    ? (pos: Point): Point => ({
+        x: round(pos.x, snap.width),
+        y: round(pos.y, snap.height),
+      })
+    : (pos: Point) => pos;
 
 export const getPoint = (pos: Point, { initial, current }: DragLocationHistory): Point => {
   const ix = initial.input.clientX - pos.x;
@@ -23,6 +29,8 @@ export const getPoint = (pos: Point, { initial, current }: DragLocationHistory):
     y: current.input.clientY - iy,
   };
 };
+
+export const addPoint = (a: Point, b: Point): Point => ({ x: a.x + b.x, y: a.y + b.y });
 
 export const getPositionStyle = (pos: Point, size: Dimension): CSSProperties => ({
   left: `${pos.x - size.width / 2}px`,

@@ -2,15 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
+import '@dxos-theme';
+
 import type { Meta } from '@storybook/react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Grid, type GridProps } from './Grid';
+import { Editor, type EditorProps } from './Editor';
 
-const meta: Meta<GridProps> = {
-  title: 'plugins/plugin-grid/Grid',
-  component: Grid,
+const meta: Meta<EditorProps> = {
+  title: 'plugins/plugin-grid/Editor',
+  component: Editor,
   decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 
