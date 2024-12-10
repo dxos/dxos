@@ -5,9 +5,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type ReactiveObject } from '@dxos/live-object';
-import { DocumentType } from '@dxos/plugin-markdown/types';
-import { SheetType } from '@dxos/plugin-sheet/types';
-import { DiagramType } from '@dxos/plugin-sketch/types';
 import { useClient } from '@dxos/react-client';
 import { getTypename, type Space } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar, useAsyncEffect } from '@dxos/react-ui';
@@ -15,8 +12,10 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Testing } from '@dxos/schema/testing';
 import { jsonKeyReplacer, sortKeys } from '@dxos/util';
 
-import { type ObjectGenerator, createGenerator, staticGenerators } from './ObjectGenerator';
+import { type ObjectGenerator, createObjectGenerator, staticSchemaGenerators, staticTypes } from './ObjectGenerator';
 import { SchemaTable } from './SchemaTable';
+
+const mutableTypes = [Testing.OrgType, Testing.ProjectType, Testing.ContactType];
 
 export type SpaceGeneratorProps = {
   space: Space;
@@ -25,19 +24,18 @@ export type SpaceGeneratorProps = {
 
 export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) => {
   const client = useClient();
-  const staticTypes = [DocumentType, DiagramType, SheetType]; // TODO(burdon): Make extensible.
-  const mutableTypes = [Testing.OrgType, Testing.ProjectType, Testing.ContactType];
   const [count, setCount] = useState(1);
   const [info, setInfo] = useState<any>({});
 
   // Create type generators.
   const typeMap = useMemo(() => {
     client.addTypes(staticTypes);
-    const mutableGenerators = new Map<string, ObjectGenerator<any>>(
-      mutableTypes.map((type) => [type.typename, createGenerator(type)]),
+    const mutableSchemaGenerators = new Map<string, ObjectGenerator<any>>(
+      // TODO(burdon): Type issue here if, say, make Contact.name optional.
+      mutableTypes.map((type) => [type.typename, createObjectGenerator(type as any)]), // TODO(burdon): Hack.
     );
 
-    return new Map([...staticGenerators, ...mutableGenerators]);
+    return new Map([...staticSchemaGenerators, ...mutableSchemaGenerators]);
   }, [client, mutableTypes]);
 
   // Query space to get info.
