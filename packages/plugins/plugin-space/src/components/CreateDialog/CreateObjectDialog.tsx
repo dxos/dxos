@@ -6,7 +6,7 @@ import React, { useCallback, useRef } from 'react';
 
 import { type MetadataResolver, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
-import { type AbstractTypedObject, isReactiveObject, isSpace, useSpaces } from '@dxos/react-client/echo';
+import { type AbstractTypedObject, getSpace, isReactiveObject, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 
 import { CreateObjectPanel, type CreateObjectPanelProps } from './CreateObjectPanel';
@@ -52,7 +52,8 @@ export const CreateObjectDialog = ({
       // NOTE: Must close before navigating or attention won't follow object.
       closeRef.current?.click();
 
-      const result = await dispatch({ action: createObjectAction, data: { name } });
+      const space = isSpace(target) ? target : getSpace(target);
+      const result = await dispatch({ action: createObjectAction, data: { name, space } });
       const object = result?.data;
       if (isReactiveObject(object)) {
         await dispatch([

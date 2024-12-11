@@ -131,6 +131,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
           switch (intent.action) {
             case TableAction.CREATE: {
               const { space } = intent.data as TableAction.Create;
+              invariant(space);
               const table = create(TableType, { name: '', threads: [] });
               initializeTable({ space, table });
               return {
@@ -143,7 +144,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
               invariant(isTable(table));
               invariant(table.view);
 
-              const schema = getSpace(table)?.db.schemaRegistry.getSchema(table.view.query.typename);
+              const schema = getSpace(table)?.db.schemaRegistry.getSchema(table.view.query.type);
               invariant(schema);
               const projection = new ViewProjection(schema, table.view);
 
