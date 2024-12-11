@@ -448,7 +448,7 @@ export class Toolbox {
       const projectPath = join(project.path, 'project.json');
       const projectJson = await loadJson<ProjectJson>(projectPath);
 
-      // Skip uncatagorized projects.
+      // Skip uncategorized projects.
       const relativePath = relative(this.rootDir, project.path);
       if (!relativePath.startsWith('packages') || relativePath.split('/').length < 3) {
         continue;
