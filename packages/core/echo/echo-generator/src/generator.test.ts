@@ -39,7 +39,7 @@ describe('TestObjectGenerator', () => {
     const { space } = await setupTest();
 
     const generator = createSpaceObjectGenerator(space);
-    generator.addSchemas();
+    await generator.addSchemas();
 
     // Create org object.
     const organization = await generator.createObject({ types: [TestSchemaType.organization] });
@@ -57,14 +57,14 @@ describe('TestObjectGenerator', () => {
 
     {
       const generator = createSpaceObjectGenerator(space);
-      generator.addSchemas();
+      await generator.addSchemas();
       const organization = await generator.createObject({ types: [TestSchemaType.organization] });
       schemaId.push(getType(organization)!.objectId);
     }
 
     {
       const generator = createSpaceObjectGenerator(space);
-      generator.addSchemas();
+      await generator.addSchemas();
       const organization = await generator.createObject({ types: [TestSchemaType.organization] });
       schemaId.push(getType(organization)!.objectId);
     }
@@ -76,7 +76,7 @@ describe('TestObjectGenerator', () => {
   test('mutations', async () => {
     const { space } = await setupTest();
     const generator = createSpaceObjectGenerator(space);
-    generator.addSchemas();
+    await generator.addSchemas();
     const document = await generator.createObject({ types: [TestSchemaType.document] });
     expect(getType(document)).to.exist;
 

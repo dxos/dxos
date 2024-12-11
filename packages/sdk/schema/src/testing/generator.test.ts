@@ -97,9 +97,9 @@ describe('Generator', () => {
     const { db } = await builder.createDatabase();
 
     // Register mutable schema.
-    const org = db.schemaRegistry.addSchema(Testing.OrgType);
-    const project = db.schemaRegistry.addSchema(Testing.ProjectType);
-    const contact = db.schemaRegistry.addSchema(Testing.ContactType);
+    const [org] = await db.schemaRegistry.register([Testing.OrgType]);
+    const [project] = await db.schemaRegistry.register([Testing.ProjectType]);
+    const [contact] = await db.schemaRegistry.register([Testing.ContactType]);
 
     const spec: TypeSpec[] = [
       { type: org, count: 5 },

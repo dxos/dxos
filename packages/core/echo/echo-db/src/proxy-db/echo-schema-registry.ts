@@ -10,10 +10,10 @@ import {
   getEchoIdentifierAnnotation,
   getObjectAnnotation,
   ObjectAnnotationId,
+  S,
   StoredSchema,
   toJsonSchema,
   type ObjectId,
-  type S,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -162,18 +162,16 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     });
   }
 
+  // TODO(burdon): Tighten type signature to TypedObject?
   async register(inputs: RegisterSchemaInput[]): Promise<EchoSchema[]> {
     const results: EchoSchema[] = [];
 
     // TODO(dmaretskyi): Check for conflicts with the schema in the DB.
     for (const input of inputs) {
-      if (!input.schema && !input.jsonSchema) {
-        throw new TypeError('schema or jsonSchema is required');
+      if (!S.isSchema(input)) {
+        throw new TypeError('Invalid schema');
       }
-      if (input.jsonSchema) {
-        throw new Error('jsonSchema is not supported');
-      }
-      results.push(this.addSchema(input.schema!));
+      results.push(this._addSchema(input));
     }
     return results;
   }
@@ -183,10 +181,16 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     return schemaId != null && this.getSchemaById(schemaId) != null;
   }
 
+  /**
+   * @deprecated Use `query` instead.
+   */
   public getSchema(typename: string): EchoSchema | undefined {
     return this.query({ typename }).runSync()[0];
   }
 
+  /**
+   * @deprecated Use `query` instead.
+   */
   public getSchemaById(id: string): EchoSchema | undefined {
     const existing = this._schemaById.get(id);
     if (existing != null) {
@@ -204,39 +208,6 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     }
 
     return this._register(typeObject);
-  }
-
-  // TODO(burdon): Tighten type signature to TypedObject?
-  // TODO(dmaretskyi): Figure out how to migrate the usages to the async `register` method.
-  public addSchema(schema: S.Schema<any>): EchoSchema {
-    if (schema instanceof EchoSchema) {
-      schema = schema.getSchemaSnapshot().annotations({
-        [EchoIdentifierAnnotationId]: undefined,
-      });
-    }
-
-    const meta = getObjectAnnotation(schema);
-    invariant(meta, 'use S.Struct({}).pipe(EchoObject(...)) or class syntax to create a valid schema');
-    const schemaToStore = createStoredSchema(meta);
-    const updatedSchema = schema.annotations({
-      [ObjectAnnotationId]: meta,
-      [EchoIdentifierAnnotationId]: `dxn:echo:@:${schemaToStore.id}`,
-    });
-
-    schemaToStore.jsonSchema = toJsonSchema(updatedSchema);
-    const storedSchema = this._db.add(schemaToStore);
-    const result = this._register(storedSchema);
-    this._notifySchemaListChanged();
-    result._rebuild();
-    return result;
-  }
-
-  /**
-   * @deprecated
-   */
-  // TODO(dmaretskyi): Only used in tests -- remove.
-  public registerSchema(schema: StoredSchema): EchoSchema {
-    return this._registerSchema(schema);
   }
 
   /**
@@ -282,6 +253,31 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     this._schemaByType.set(schema.typename, echoSchema);
     this._unsubscribeById.set(schema.id, subscription);
     return echoSchema;
+  }
+
+  // TODO(burdon): Tighten type signature to TypedObject?
+  // TODO(dmaretskyi): Figure out how to migrate the usages to the async `register` method.
+  private _addSchema(schema: S.Schema<any>): EchoSchema {
+    if (schema instanceof EchoSchema) {
+      schema = schema.getSchemaSnapshot().annotations({
+        [EchoIdentifierAnnotationId]: undefined,
+      });
+    }
+
+    const meta = getObjectAnnotation(schema);
+    invariant(meta, 'use S.Struct({}).pipe(EchoObject(...)) or class syntax to create a valid schema');
+    const schemaToStore = createStoredSchema(meta);
+    const updatedSchema = schema.annotations({
+      [ObjectAnnotationId]: meta,
+      [EchoIdentifierAnnotationId]: `dxn:echo:@:${schemaToStore.id}`,
+    });
+
+    schemaToStore.jsonSchema = toJsonSchema(updatedSchema);
+    const storedSchema = this._db.add(schemaToStore);
+    const result = this._register(storedSchema);
+    this._notifySchemaListChanged();
+    result._rebuild();
+    return result;
   }
 
   private _unregister(id: string) {

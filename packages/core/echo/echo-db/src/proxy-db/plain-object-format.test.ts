@@ -235,7 +235,7 @@ describe('Plain object format', () => {
       field: S.String,
     }) {}
 
-    const stored = db.schemaRegistry.addSchema(TestSchema);
+    const [stored] = await db.schemaRegistry.register([TestSchema]);
     const schemaDxn = DXN.fromLocalObjectId(stored.id).toString();
 
     const object = db.add(create(stored, { field: 'test' }));

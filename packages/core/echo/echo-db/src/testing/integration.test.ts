@@ -363,7 +363,7 @@ describe('Integration tests', () => {
         class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
           field: S.String,
         }) {}
-        const stored = db.schemaRegistry.addSchema(TestSchema);
+        const [stored] = await db.schemaRegistry.register([TestSchema]);
         schemaDxn = DXN.fromLocalObjectId(stored.id).toString();
 
         const object = db.add(create(stored, { field: 'test' }));

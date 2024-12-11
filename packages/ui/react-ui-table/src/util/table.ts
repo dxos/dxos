@@ -28,7 +28,7 @@ type InitialiseTableProps = {
 
 // TODO(burdon): Pass in type.
 // TODO(burdon): User should determine typename.
-export const initializeTable = ({ space, table, initialRow = true }: InitialiseTableProps): EchoSchema => {
+export const initializeTable = async ({ space, table, initialRow = true }: InitialiseTableProps): Promise<EchoSchema> => {
   log.info('initializeTable', { table });
 
   const ContactSchema = TypedObject({
@@ -44,7 +44,7 @@ export const initializeTable = ({ space, table, initialRow = true }: InitialiseT
     }), // TODO(burdon): Should default to prop name?
   });
 
-  const contactSchema = space.db.schemaRegistry.addSchema(ContactSchema);
+  const [contactSchema] = await space.db.schemaRegistry.register([ContactSchema]);
   table.view = createView({
     name: 'Test',
     typename: contactSchema.typename,

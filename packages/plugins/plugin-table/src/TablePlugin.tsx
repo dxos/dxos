@@ -127,12 +127,12 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
         ],
       },
       intent: {
-        resolver: (intent) => {
+        resolver: async (intent) => {
           switch (intent.action) {
             case TableAction.CREATE: {
               const { space } = intent.data as TableAction.Create;
               const table = create(TableType, { name: '', threads: [] });
-              initializeTable({ space, table });
+              await initializeTable({ space, table });
               return {
                 data: table,
               };

@@ -48,7 +48,7 @@ describe('schema registry', () => {
 
   test('add new schema', async () => {
     const { registry } = await setupTest();
-    const echoSchema = registry.addSchema(Contact);
+    const [echoSchema] = await registry.register([Contact]);
     const expectedSchema = Contact.annotations({
       [ObjectAnnotationId]: { typename: 'example.com/type/Contact', version: '0.1.0' },
       [EchoIdentifierAnnotationId]: `dxn:echo:@:${echoSchema.id}`,
@@ -63,7 +63,7 @@ describe('schema registry', () => {
 
   test('add new schema - preserves field order', async () => {
     const { registry } = await setupTest();
-    const echoSchema = registry.addSchema(Org);
+    const [echoSchema] = await registry.register([Org]);
     const expectedSchema = Org.annotations({
       [ObjectAnnotationId]: { typename: 'example.com/type/Org', version: '0.1.0' },
       [EchoIdentifierAnnotationId]: `dxn:echo:@:${echoSchema.id}`,
@@ -77,14 +77,14 @@ describe('schema registry', () => {
 
   test('can store the same schema multiple times', async () => {
     const { registry } = await setupTest();
-    const stored1 = registry.addSchema(Org);
-    const stored2 = registry.addSchema(Org);
+    const [stored1] = await registry.register([Org]);
+    const [stored2] = await registry.register([Org]);
     expect(stored1.id).to.not.equal(stored2.id);
   });
 
   test('get all dynamic schemas', async () => {
     const { registry } = await setupTest();
-    const schemas = await registry.register([{ schema: Org }, { schema: Contact }]);
+    const schemas = await registry.register([Org, Contact]);
     const retrieved = await registry.query().run();
     expect(retrieved.length).to.eq(schemas.length);
     for (const schema of retrieved) {
@@ -94,7 +94,7 @@ describe('schema registry', () => {
 
   test('get all raw stored schemas', async () => {
     const { db, registry } = await setupTest();
-    const schemas = await registry.register([{ schema: Org }, { schema: Contact }]);
+    const schemas = await registry.register([Org, Contact]);
     const retrieved = (await db.query(Filter.schema(StoredSchema)).run()).objects;
     expect(retrieved.length).to.eq(schemas.length);
     for (const schema of retrieved) {
@@ -114,21 +114,9 @@ describe('schema registry', () => {
     expect(registry.hasSchema(new EchoSchema(storedSchema))).to.be.true;
   });
 
-  test("can't register schema if not stored in db", async () => {
-    const { db, registry } = await setupTest();
-    const schemaToStore = create(StoredSchema, {
-      typename: 'example.com/type/Test',
-      version: '0.1.0',
-      jsonSchema: toJsonSchema(S.Struct({ field: S.Number })),
-    });
-    expect(() => registry.registerSchema(schemaToStore)).to.throw();
-    db.add(schemaToStore);
-    expect(registry.registerSchema(schemaToStore)).not.to.be.undefined;
-  });
-
   test('schema is invalidated on update', async () => {
     const { registry } = await setupTest();
-    const [echoSchema] = await registry.register([{ schema: Contact }]);
+    const [echoSchema] = await registry.register([Contact]);
     expect(echoSchema.getProperties().length).to.eq(1);
     echoSchema.addFields({ newField: S.Number });
     expect(echoSchema.getProperties().length).to.eq(2);

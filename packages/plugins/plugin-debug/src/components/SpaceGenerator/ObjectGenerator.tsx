@@ -120,7 +120,7 @@ export const createGenerator = <T extends BaseObject>(type: TypedObject<T>): Obj
     // Find or create mutable schema.
     const schema =
       (await space.db.schemaRegistry.query({ typename: type.typename }).firstOrUndefined()) ??
-      space.db.schemaRegistry.addSchema(type);
+      (await space.db.schemaRegistry.register([type]))[0];
 
     // Create objects.
     const generate = createAsyncGenerator(generator, schema.getSchemaSnapshot(), { db: space.db });

@@ -80,18 +80,19 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
       return (schema && (await this._space.db.query(Filter.schema(schema)).run()).objects) ?? [];
     });
 
-    // TODO(burdon): Map initially are objects that have not been added to the space.
-    // Merge existing schema in space with defaults.
-    Object.entries<EchoSchema | S.Schema<any>>(schemaMap).forEach(([type, dynamicSchema]) => {
-      const schema = this._maybeRegisterSchema(type, dynamicSchema);
-      this.setSchema(type as T, schema);
-    });
+    // Initialize schemas asynchronously
+    (async () => {
+      for (const [type, dynamicSchema] of Object.entries<EchoSchema | S.Schema<any>>(schemaMap)) {
+        const schema = await this._maybeRegisterSchema(type, dynamicSchema);
+        this.setSchema(type as T, schema);
+      }
+    })();
   }
 
-  addSchemas() {
+  async addSchemas() {
     const result: (EchoSchema | S.Schema<any>)[] = [];
     for (const [typename, schema] of Object.entries(this._schemas)) {
-      result.push(this._maybeRegisterSchema(typename, schema as EchoSchema | S.Schema<any>));
+      result.push(await this._maybeRegisterSchema(typename, schema as EchoSchema | S.Schema<any>));
     }
 
     return result;
@@ -101,13 +102,17 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     return this._space.db.add(await super.createObject({ types }));
   }
 
-  private _maybeRegisterSchema(typename: string, schema: EchoSchema | S.Schema<any>): EchoSchema | S.Schema<any> {
+  private async _maybeRegisterSchema(
+    typename: string,
+    schema: EchoSchema | S.Schema<any>,
+  ): Promise<EchoSchema | S.Schema<any>> {
     if (schema instanceof EchoSchema) {
       const existingSchema = this._space.db.schemaRegistry.getSchema(typename);
       if (existingSchema != null) {
         return existingSchema;
       }
-      return this._space.db.schemaRegistry.addSchema(schema);
+      const [registeredSchema] = await this._space.db.schemaRegistry.register([schema]);
+      return registeredSchema;
     } else {
       const existingSchema = this._space.db.graph.schemaRegistry.getSchema(typename);
       if (existingSchema != null) {

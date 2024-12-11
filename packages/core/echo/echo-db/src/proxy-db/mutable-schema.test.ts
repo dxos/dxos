@@ -44,7 +44,8 @@ describe('EchoSchema', () => {
       field: S.String,
     }) {}
 
-    instanceWithSchemaRef.schema = db.schemaRegistry.addSchema(GeneratedSchema);
+    const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
+    instanceWithSchemaRef.schema = schema;
     const schemaWithId = GeneratedSchema.annotations({
       [ObjectAnnotationId]: {
         typename: 'example.com/type/Test',
@@ -65,7 +66,7 @@ describe('EchoSchema', () => {
       field: S.String,
     }) {}
 
-    const schema = db.schemaRegistry.addSchema(GeneratedSchema);
+    const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
     const instanceWithSchemaRef = db.add(create(TestSchema, { schema }));
     expect(instanceWithSchemaRef.schema!.typename).to.eq(GeneratedSchema.typename);
   });
@@ -76,13 +77,14 @@ describe('EchoSchema', () => {
     class GeneratedSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
       field: S.String,
     }) {}
-    instanceWithSchemaRef.schemaArray!.push(db.schemaRegistry.addSchema(GeneratedSchema));
+    const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
+    instanceWithSchemaRef.schemaArray!.push(schema);
     expect(instanceWithSchemaRef.schemaArray![0].typename).to.eq(GeneratedSchema.typename);
   });
 
   test('can be used to create objects', async () => {
     const { db } = await setupTest();
-    const schema = db.schemaRegistry.addSchema(EmptySchemaType);
+    const [schema] = await db.schemaRegistry.register([EmptySchemaType]);
     const object = create(schema, {});
     schema.addFields({ field1: S.String });
     object.field1 = 'works';
@@ -106,13 +108,13 @@ describe('EchoSchema', () => {
 
   test('getTypeReference', async () => {
     const { db } = await setupTest();
-    const schema = db.schemaRegistry.addSchema(EmptySchemaType);
+    const [schema] = await db.schemaRegistry.register([EmptySchemaType]);
     expect(getTypeReference(schema)?.objectId).to.eq(schema.id);
   });
 
   test('getTypeReference on schema with updated typename', async () => {
     const { db } = await setupTest();
-    const schema = db.schemaRegistry.addSchema(EmptySchemaType);
+    const [schema] = await db.schemaRegistry.register([EmptySchemaType]);
     schema.updateTypename('example.com/type/Updated');
     expect(getTypeReference(schema)?.objectId).to.eq(schema.id);
   });
@@ -135,8 +137,8 @@ describe('EchoSchema', () => {
       org: S.optional(ref(OrgSchema)),
     });
 
-    const orgSchema = db.schemaRegistry.addSchema(OrgSchema);
-    const contactSchema = db.schemaRegistry.addSchema(ContactSchema);
+    const [orgSchema] = await db.schemaRegistry.register([OrgSchema]);
+    const [contactSchema] = await db.schemaRegistry.register([ContactSchema]);
     const org = db.add(create(orgSchema, { name: 'DXOS' }));
     const contact = db.add(create(contactSchema, { name: 'Bot', org }));
     expect(contact.org?.id).to.eq(org.id);

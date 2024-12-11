@@ -114,7 +114,7 @@ const main = async () => {
 
     // TODO(burdon): Should just be example.org/type/Test
     class TestType extends TypedObject({ typename: 'example.org/type/TestType', version: '0.1.0' })({}) {}
-    const dynamicSchema = space.db.schemaRegistry.addSchema(TestType);
+    const [dynamicSchema] = await space.db.schemaRegistry.register([TestType]);
     client.addTypes([TestType]);
     const object = space.db.add(create(dynamicSchema, {}));
     dynamicSchema.addFields({ name: S.String, todo: ref(Todo) });

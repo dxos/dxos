@@ -202,7 +202,7 @@ const meta: Meta<StoryProps> = {
       createSpace: true,
       onSpaceCreated: async ({ space }) => {
         const table = space.db.add(create(TableType, {}));
-        const schema = initializeTable({ space, table, initialRow: false });
+        const schema = await initializeTable({ space, table, initialRow: false });
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
             create(schema, {

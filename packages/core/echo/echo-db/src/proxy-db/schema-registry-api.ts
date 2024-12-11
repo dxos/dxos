@@ -100,17 +100,6 @@ export interface SchemaRegistryPreparedQuery<T> {
 
 /**
  * Input for schema registration.
- * Either one of the schema variants must be provided.
  * The typename, version and schema mutability metadata is read from the schema annotations.
  */
-export type RegisterSchemaInput = {
-  /**
-   * Schema to register in the Effect format.
-   */
-  schema?: AnyEchoObjectSchema;
-
-  /**
-   * Schema to register in the JSON Schema format.
-   */
-  jsonSchema?: JsonSchemaType;
-};
+export type RegisterSchemaInput = AnyEchoObjectSchema;

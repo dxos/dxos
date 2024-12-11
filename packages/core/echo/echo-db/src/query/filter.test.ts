@@ -89,7 +89,7 @@ describe('Filter', () => {
       title: S.String,
     }) {}
     const { db } = await builder.createDatabase();
-    const schema = db.schemaRegistry.addSchema(GeneratedSchema);
+    const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
     const obj = db.add(create(schema, { title: 'test' }));
     const filter = Filter.schema(schema);
     expect(filterMatch(filter, getObjectCore(obj))).to.be.true;
