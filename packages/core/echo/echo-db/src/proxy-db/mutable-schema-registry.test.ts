@@ -62,6 +62,7 @@ describe('schema registry', () => {
     expect(mutableSchema.ast).to.deep.eq(expectedSchema.ast);
     expect(registry.hasSchema(mutableSchema)).to.be.true;
     expect(registry.getSchemaById(mutableSchema.id)?.ast).to.deep.eq(expectedSchema.ast);
+    expect(mutableSchema.jsonSchema.$id).toEqual(`dxn:echo:@:${mutableSchema.id}`);
   });
 
   // TODO(dmaretskyi): Fix schema field order.

@@ -90,6 +90,7 @@ describe('effect-to-json', () => {
     expect(jsonSchema).to.deep.eq({
       $schema: 'http://json-schema.org/draft-07/schema#',
       $id: 'dxn:type:example.com/type/Contact',
+      typename: 'example.com/type/Contact',
       version: '0.1.0',
 
       // TODO(dmaretskyi): Remove this.
@@ -134,7 +135,10 @@ describe('effect-to-json', () => {
     expect(jsonSchema).toEqual({
       $schema: 'http://json-schema.org/draft-07/schema#',
       $id: 'dxn:type:example.com/type/Contact',
+
+      typename: 'example.com/type/Contact',
       version: '0.1.0',
+
       type: 'object',
       additionalProperties: false,
 

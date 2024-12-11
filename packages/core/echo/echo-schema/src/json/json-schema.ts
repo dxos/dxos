@@ -100,11 +100,19 @@ export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
     jsonSchema.properties = orderKeys(jsonSchema.properties, ['id']);
   }
 
+  const echoIdentifier = getEchoIdentifierAnnotation(schema);
+  if (echoIdentifier) {
+    jsonSchema.$id = echoIdentifier;
+  }
+
   const objectAnnotation = getObjectAnnotation(schema);
   if (objectAnnotation) {
-    // TODO(dmaretskyi):  Use EchoIdentifierAnnotationId for the $id.
-    jsonSchema.$id = `dxn:type:${objectAnnotation.typename}`;
+    // EchoIdentifier annotation takes precedence but the id can also be defined by the typename.
+    if (!jsonSchema.$id) {
+      jsonSchema.$id = `dxn:type:${objectAnnotation.typename}`;
+    }
     jsonSchema.version = objectAnnotation.version;
+    jsonSchema.typename = objectAnnotation.typename;
   }
 
   // Fix field order.
@@ -364,10 +372,15 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): AST.Annotations 
         annotations[annotation] = echoRefinement[annotationToRefinementKey[annotation]];
       }
     }
+  }
 
-    if (echoRefinement.type?.schemaId) {
-      annotations[EchoIdentifierAnnotationId] = `dxn:echo:@:${echoRefinement.type.schemaId}`;
-    }
+  // Limit to dxn:echo: URIs.
+  if (schema.$id && schema.$id.startsWith('dxn:echo:')) {
+    annotations[EchoIdentifierAnnotationId] = schema.$id;
+  }
+
+  if (schema.typename) {
+    annotations[ObjectAnnotationId] ??= { typename: schema.typename, version: schema.version };
   }
 
   // Custom (at end).

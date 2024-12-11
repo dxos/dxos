@@ -4,6 +4,7 @@
 
 import { Event, type UnsubscribeCallback } from '@dxos/async';
 import {
+  EchoIdentifierAnnotationId,
   getObjectAnnotation,
   makeStaticSchema,
   MutableSchema,
@@ -215,6 +216,7 @@ export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
     const schemaToStore = createStoredSchema(meta);
     const updatedSchema = schema.annotations({
       [ObjectAnnotationId]: { ...meta, schemaId: schemaToStore.id } satisfies ObjectAnnotation,
+      [EchoIdentifierAnnotationId]: `dxn:echo:@:${schemaToStore.id}`,
     });
 
     schemaToStore.jsonSchema = toJsonSchema(updatedSchema);

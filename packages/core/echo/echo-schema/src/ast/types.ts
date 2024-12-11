@@ -80,6 +80,14 @@ const _JsonSchemaType = S.mutable(
     $comment: S.optional(S.String),
 
     /**
+     * Typename of this schema.
+     * Only on schema representing an ECHO object.
+     *
+     * @example 'example.com/type/MyType'
+     */
+    typename: S.optional(S.String),
+
+    /**
      * Version of this schema.
      * Custom dialect for ECHO.
      */

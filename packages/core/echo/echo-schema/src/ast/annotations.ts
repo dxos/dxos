@@ -34,6 +34,7 @@ export type ObjectAnnotation = {
 
 /**
  * ECHO identifier for a schema.
+ * Must be a `dxn:echo:` URI.
  */
 export const EchoIdentifierAnnotationId = Symbol.for('@dxos/schema/annotation/EchoIdentifier');
 
