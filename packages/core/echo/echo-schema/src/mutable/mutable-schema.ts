@@ -15,14 +15,19 @@ import {
 import { StoredSchema } from './stored-schema';
 import { SchemaMetaSymbol, schemaVariance, type HasId, type JsonSchemaType, type SchemaMeta } from '../ast';
 import { toEffectSchema, toJsonSchema } from '../json';
-import { type AbstractSchema } from '../object';
+import { type AbstractSchema, type ObjectId } from '../object';
 
 // TODO(burdon): Reconcile with AbstractTypedObject. Need common base class.
 interface MutableSchemaConstructor extends AbstractSchema {
   new (): HasId;
 }
 
-const AbstractMutableSchema = (): MutableSchemaConstructor => {
+/**
+ * Defines an effect-schema for the `MutableSchema` type.
+ *
+ * This is here so that `MutableSchema` class can be used as a part of another schema definition (e.g., `ref(MutableSchema)`).
+ */
+const MutableSchemaConstructor = (): MutableSchemaConstructor => {
   /**
    * Return class definition satisfying S.Schema.
    */
@@ -52,9 +57,24 @@ const AbstractMutableSchema = (): MutableSchemaConstructor => {
 
 /**
  * Schema that can be modified at runtime via the API.
+ * Is an instance of effect-schema (`Schema.Schema.AnyNoContext`) so it can be used in the same way as a regular schema.
+ * IMPORTANT: The schema AST will change reactively when the schema is updated, including synced updates from remote peers.
+ *
+ * The class constructor is a schema instance itself, and can be used in the echo object definitions:
+ *
+ * @example
+ * ```typescript
+ * export class TableType extends TypedObject({ typename: 'example.org/type/Table', version: '0.1.0', })({
+ *   title: S.String,
+ *   schema: S.optional(ref(MutableSchema)),
+ *   props: S.mutable(S.Array(TablePropSchema)),
+ * }) {}
+ * ```
+ *
+ * The ECHO API will translate any references to StoredSchema objects to be resolved as MutableSchema objects.
  */
-// TODO(burdon): Why does this HAVE a schema property AND implement schema.
-export class MutableSchema extends AbstractMutableSchema() implements S.Schema<any> {
+// TODO(dmaretskyi): Rename `EchoSchema`.
+export class MutableSchema extends MutableSchemaConstructor() implements S.Schema.AnyNoContext {
   private _schema: S.Schema<any> | undefined;
   private _isDirty = true;
 
@@ -62,47 +82,58 @@ export class MutableSchema extends AbstractMutableSchema() implements S.Schema<a
     super();
   }
 
-  public get [S.TypeId]() {
-    return schemaVariance;
-  }
-
-  public get [SchemaMetaSymbol](): SchemaMeta {
-    return { id: this.id, typename: this.typename, version: this._storedSchema.version };
-  }
-
-  public override get id() {
+  /**
+   * Id of the ECHO object containing the schema.
+   */
+  public override get id(): ObjectId {
     return this._storedSchema.id;
   }
 
-  public get jsonSchema(): JsonSchemaType {
-    return this._storedSchema.jsonSchema;
-  }
-
-  // TODO(burdon): Remove?
-  public get storedSchema(): StoredSchema {
-    return this._storedSchema;
-  }
-
-  public get schema(): S.Schema<any> {
-    return this._getSchema();
-  }
-
+  /**
+   * Schema typename.
+   *
+   * @example example.com/type/MyType
+   */
   public get typename(): string {
     return this._storedSchema.typename;
   }
 
-  public get ast() {
-    return this._getSchema().ast;
+  /**
+   * Schema version in semver format.
+   *
+   * @example 0.1.0
+   */
+  public get version(): string {
+    return this._storedSchema.version;
   }
 
-  public get annotations() {
-    const schema = this._getSchema();
-    return schema.annotations.bind(schema);
+  /**
+   * @reactive
+   */
+  public get jsonSchema(): JsonSchemaType {
+    return this._storedSchema.jsonSchema;
   }
 
-  public get pipe() {
-    const schema = this._getSchema();
-    return schema.pipe.bind(schema);
+  /**
+   * Reference to the underlying stored schema object.
+   */
+  public get storedSchema(): StoredSchema {
+    return this._storedSchema;
+  }
+
+  /**
+   * Returns an IMMUTABLE schema snapshot of the current state of the schema.
+   */
+  public get schema(): S.Schema<any> {
+    return this._getSchema();
+  }
+
+  //
+  // Effect-Specific
+  //
+
+  public get [S.TypeId]() {
+    return schemaVariance;
   }
 
   public get Type() {
@@ -115,6 +146,27 @@ export class MutableSchema extends AbstractMutableSchema() implements S.Schema<a
 
   public get Context() {
     return this._getSchema().Context;
+  }
+
+  public get [SchemaMetaSymbol](): SchemaMeta {
+    return { id: this.id, typename: this.typename, version: this._storedSchema.version };
+  }
+
+  /**
+   * Effect schema AST.
+   */
+  public get ast() {
+    return this._getSchema().ast;
+  }
+
+  public get annotations() {
+    const schema = this._getSchema();
+    return schema.annotations.bind(schema);
+  }
+
+  public get pipe() {
+    const schema = this._getSchema();
+    return schema.pipe.bind(schema);
   }
 
   /**
@@ -131,6 +183,10 @@ export class MutableSchema extends AbstractMutableSchema() implements S.Schema<a
   }
 
   // TODO(burdon): Deprecate direct manipulation? Use JSONSchema directly.
+
+  //
+  // Mutation methods.
+  //
 
   public updateTypename(typename: string) {
     const updated = setTypenameInSchema(this._getSchema(), typename);

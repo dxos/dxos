@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type UnsubscribeCallback } from '@dxos/async';
+import { Event, type UnsubscribeCallback } from '@dxos/async';
 import {
   getObjectAnnotation,
   makeStaticSchema,
@@ -21,14 +21,15 @@ import { log } from '@dxos/log';
 import { type EchoDatabase } from './database';
 import { getObjectCore } from '../echo-handler';
 import { Filter } from '../query';
+import type {
+  RegisterSchemaInput,
+  SchemaRegistry,
+  SchemaRegistryPreparedQuery,
+  SchemaRegistryQuery,
+} from './schema-registry-api';
+import { SchemaRegistryPreparedQueryImpl } from './schema-registry-prepared-query';
 
 export type SchemaSubscriptionCallback = (schema: MutableSchema[]) => void;
-
-export interface SchemaResolver {
-  getSchema(typename: string): MutableSchema | undefined;
-  query(): Promise<MutableSchema[]>;
-  subscribe(cb: SchemaSubscriptionCallback): UnsubscribeCallback;
-}
 
 export type MutableSchemaRegistryOptions = {
   /**
@@ -42,7 +43,7 @@ export type MutableSchemaRegistryOptions = {
  * Per-space set of mutable schemas.
  */
 // TODO(burdon): Reconcile with RuntimeSchemaRegistry.
-export class MutableSchemaRegistry implements SchemaResolver {
+export class MutableSchemaRegistry implements SchemaRegistry {
   private readonly _schemaById: Map<string, MutableSchema> = new Map();
   private readonly _schemaByType: Map<string, MutableSchema> = new Map();
   private readonly _unsubscribeById: Map<string, UnsubscribeCallback> = new Map();
@@ -65,6 +66,104 @@ export class MutableSchemaRegistry implements SchemaResolver {
         }
       });
     }
+  }
+
+  // TODO(burdon): Can this be made sync?
+  query(query: SchemaRegistryQuery = {}): SchemaRegistryPreparedQuery<MutableSchema> {
+    const self = this;
+
+    const filterOrderResults = (schemas: MutableSchema[]) => {
+      log.debug('Filtering schemas', { schemas, query });
+      return (
+        schemas
+          .filter((schema) => validateStoredSchemaIntegrity(schema.storedSchema))
+          .filter((object) => {
+            const idFilter = coerceArray(query.id);
+            if (idFilter.length > 0) {
+              if (object.jsonSchema.$id && !idFilter.includes(object.jsonSchema.$id)) {
+                return false;
+              }
+            }
+
+            const backingObjectIdFilter = coerceArray(query.backingObjectId);
+            if (backingObjectIdFilter.length > 0) {
+              if (!backingObjectIdFilter.includes(object.id)) {
+                return false;
+              }
+            }
+
+            const typenameFilter = coerceArray(query.typename);
+            if (typenameFilter.length > 0) {
+              if (!typenameFilter.includes(object.typename)) {
+                return false;
+              }
+            }
+
+            if (query.version) {
+              if (!query.version.match(/^[0-9\.]+$/)) {
+                throw new Error('Semver version ranges not supported.');
+              }
+
+              if (object.version !== query.version) {
+                return false;
+              }
+            }
+
+            return true;
+          })
+          // TODO(dmaretskyi): Come up with a better stable sorting method (e.g. [typename, version, id]).
+          .sort((a, b) => a.id.localeCompare(b.id))
+      );
+    };
+
+    const changes = new Event();
+    let unsubscribe: UnsubscribeCallback | undefined;
+    return new SchemaRegistryPreparedQueryImpl({
+      changes,
+      getResultsSync() {
+        return filterOrderResults([...self._schemaById.values()]);
+      },
+      async getResults() {
+        const { objects } = await self._db.query(Filter.schema(StoredSchema)).run();
+
+        // TODO(dmaretskyi): For compatibility only -- should preload schema in open.
+        objects.forEach((object) => self.registerSchema(object));
+
+        return filterOrderResults(
+          objects.map((stored) => {
+            return self._register(stored);
+          }),
+        );
+      },
+      async start() {
+        if (unsubscribe) {
+          return;
+        }
+        unsubscribe = self.subscribe(() => {
+          changes.emit();
+        });
+      },
+      async stop() {
+        unsubscribe?.();
+        unsubscribe = undefined;
+      },
+    });
+  }
+
+  async register(inputs: RegisterSchemaInput[]): Promise<MutableSchema[]> {
+    const results: MutableSchema[] = [];
+
+    // TODO(dmaretskyi): Check for conflicts with the schema in the DB.
+    for (const input of inputs) {
+      if (!input.schema && !input.jsonSchema) {
+        throw new TypeError('schema or jsonSchema is required');
+      }
+      if (input.jsonSchema) {
+        throw new Error('jsonSchema is not supported');
+      }
+      results.push(this.addSchema(input.schema!));
+    }
+    return results;
   }
 
   public hasSchema(schema: S.Schema<any>): boolean {
@@ -113,14 +212,6 @@ export class MutableSchemaRegistry implements SchemaResolver {
 
     const runtimeSchemas = this._db.graph.schemaRegistry.schemas.map(makeStaticSchema);
     return [...runtimeSchemas, ...storedSchemas];
-  }
-
-  // TODO(burdon): Can this be made sync?
-  public async query(): Promise<MutableSchema[]> {
-    const { objects } = await this._db.query(Filter.schema(StoredSchema)).run();
-    return objects.map((stored) => {
-      return this._register(stored);
-    });
   }
 
   public subscribe(callback: SchemaSubscriptionCallback): UnsubscribeCallback {
@@ -206,3 +297,30 @@ export class MutableSchemaRegistry implements SchemaResolver {
     this._schemaSubscriptionCallbacks.forEach((s) => s(list));
   }
 }
+
+const coerceArray = <T>(arr: T | T[] | undefined): T[] => {
+  if (arr === undefined) {
+    return [];
+  }
+  return Array.isArray(arr) ? arr : [arr];
+};
+
+const validateStoredSchemaIntegrity = (schema: StoredSchema) => {
+  if (!schema.jsonSchema.$id && !schema.jsonSchema.$id?.startsWith('dxn:')) {
+    log.warn('Schema is missing $id or has invalid $id', { schema });
+    return false;
+  }
+
+  if (schema.jsonSchema.type !== 'object') {
+    log.warn('Schema is not of object type', { schema });
+    return false;
+  }
+
+  // TODO(dmaretskyi): Remove.
+  if (schema.jsonSchema.echo?.type?.schemaId !== schema.id) {
+    log.warn('Schema is missing echo type schemaId', { schema });
+    return false;
+  }
+
+  return true;
+};
