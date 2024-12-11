@@ -3,7 +3,7 @@
 //
 
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import type { DragLocationHistory } from '@atlaskit/pragmatic-drag-and-drop/types';
+import { type DragLocationHistory } from '@atlaskit/pragmatic-drag-and-drop/types';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
@@ -12,11 +12,6 @@ import { mx } from '@dxos/react-ui-theme';
 import { pointAdd, type Dimension, getBoundsProperties, type Point } from './geometry';
 
 const handleSize: Dimension = { width: 11, height: 11 };
-
-const getPoint = (pos: Point, { initial, current }: DragLocationHistory): Point => ({
-  x: current.input.clientX - (initial.input.clientX - pos.x),
-  y: current.input.clientY - (initial.input.clientY - pos.y),
-});
 
 /**
  * Graph data item.
@@ -30,8 +25,8 @@ export type Item = {
 export type HandleDragEvent = {
   type: 'drag' | 'drop';
   id: string;
-  pos: Point;
   link?: Item;
+  location: DragLocationHistory;
 };
 
 export type HandleProps = {
@@ -57,12 +52,12 @@ export const Handle = ({ id, pos, onDrag }: HandleProps) => {
       // onDragStart: () => setDragging(true),
       onDrag: ({ location }) => {
         // setDragging(false);
-        onDrag?.({ type: 'drag', id, pos: getPoint(pos, location) });
+        onDrag?.({ type: 'drag', id, location });
       },
       onDrop: ({ location }) => {
         // setDragging(false);
         const link = location.current.dropTargets.find(({ data }) => data.type === 'Frame')?.data.item as Item;
-        onDrag?.({ type: 'drop', id, pos: getPoint(pos, location), link });
+        onDrag?.({ type: 'drop', id, link, location });
       },
     });
   }, [pos, onDrag]);
@@ -71,7 +66,7 @@ export const Handle = ({ id, pos, onDrag }: HandleProps) => {
     <div
       ref={ref}
       style={getBoundsProperties({ ...pos, ...handleSize })}
-      className={mx('absolute z-10 bg-black border border-teal-700', hovering && 'bg-teal-700')}
+      className={mx('absolute z-10 bg-base border border-teal-700', hovering && 'bg-teal-700')}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
     />
@@ -81,14 +76,15 @@ export const Handle = ({ id, pos, onDrag }: HandleProps) => {
 export type FrameDragEvent = {
   type: 'drag' | 'drop';
   item: Item;
-  pos: Point;
+  location: DragLocationHistory;
 };
 
+// TODO(burdon): Combine events.
 export type FrameLinkEvent = {
   type: 'drag' | 'drop';
   item: Item;
-  pos: Point;
   link?: Item;
+  location: DragLocationHistory;
 };
 
 export type FrameProps = {
@@ -116,10 +112,10 @@ export const Frame = ({ item, selected, onSelect, onDrag, onLink }: FrameProps) 
       getInitialData: () => ({ item }),
       onDragStart: () => setDragging(true),
       onDrag: ({ location }) => {
-        onDrag?.({ type: 'drag', item, pos: getPoint(item.pos, location) });
+        onDrag?.({ type: 'drag', item, location });
       },
       onDrop: ({ location }) => {
-        onDrag?.({ type: 'drop', item, pos: getPoint(item.pos, location) });
+        onDrag?.({ type: 'drop', item, location });
         setDragging(false);
       },
     });
@@ -140,8 +136,8 @@ export const Frame = ({ item, selected, onSelect, onDrag, onLink }: FrameProps) 
   });
 
   const handleDrag = useCallback<NonNullable<HandleProps['onDrag']>>(
-    ({ type, link, pos }) => onLink?.({ type, item, link, pos }),
-    [item],
+    ({ type, link, location }) => onLink?.({ type, item, link, location }),
+    [item, onLink],
   );
 
   // TODO(burdon): Surface for form content.
@@ -155,7 +151,7 @@ export const Frame = ({ item, selected, onSelect, onDrag, onLink }: FrameProps) 
         onClick={() => onSelect?.(item, !selected)}
         className={mx(
           'absolute flex justify-center items-center',
-          'bg-black border border-teal-700 rounded overflow-hidden',
+          'bg-base border border-teal-700 rounded overflow-hidden',
           selected && 'bg-neutral-500',
           dragging && 'hidden',
         )}

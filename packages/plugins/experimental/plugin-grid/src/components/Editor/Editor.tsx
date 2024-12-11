@@ -7,6 +7,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { useDynamicRef } from '@dxos/react-ui';
+import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { isNotFalsy } from '@dxos/util';
 
 import { Frame, type FrameProps } from './Frame';
@@ -17,9 +18,11 @@ import {
   createSnap,
   type Dimension,
   type Point,
-  getRelativeCoordinates,
+  boundsToModel,
   boundsContain,
   type Bounds,
+  boundToModelWithOffset,
+  getInputPoint,
 } from './geometry';
 import { GraphWrapper } from './graph';
 import { useBoundingSelection } from './hooks';
@@ -57,12 +60,15 @@ const itemSize: Dimension = { width: 128, height: 64 };
  * Layout.
  */
 export const Editor = (props: EditorProps) => {
-  const snap = createSnap({ width: itemSize.width + 64, height: itemSize.height + 64 });
-  const [graph] = useState(() => new GraphWrapper(createGraph(snap, itemSize)));
+  const snapPoint = createSnap({ width: itemSize.width + 64, height: itemSize.height + 64 });
+  const [graph] = useState(() => new GraphWrapper(createGraph(snapPoint, itemSize)));
 
   // State.
-  const [linking, setLinking] = useState<{ source: Point; target: Point }>();
+  const [debug, setDebug] = useState(false);
+  const [grid, setGrid] = useState(true);
+  const [snap, setSnap] = useState(true);
   const [dragging, setDragging] = useState<{ id: string; pos: Point }>();
+  const [linking, setLinking] = useState<{ source: Point; target: Point }>();
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const selectedRef = useDynamicRef(selected);
 
@@ -70,7 +76,9 @@ export const Editor = (props: EditorProps) => {
   const gridRef = useRef<SVGSVGElement>(null);
   const ready = !!width && !!height;
 
+  //
   // Offset and scale.
+  //
   const [{ offset, scale }, setTransform] = useState<{ offset: Point; scale: number }>({
     offset: { x: width / 2, y: height / 2 },
     scale: 1,
@@ -100,7 +108,9 @@ export const Editor = (props: EditorProps) => {
     });
   }, [containerRef.current]);
 
+  //
   // Events.
+  //
   useEffect(() => {
     if (!containerRef.current) {
       return;
@@ -150,12 +160,9 @@ export const Editor = (props: EditorProps) => {
   }, [containerRef, selectedRef, width, height]);
 
   //
-  // Selection.
+  // Curso/overlay.
   //
-
   const overlaySvgRef = useRef<SVGSVGElement>(null);
-
-  // TODO(burdon): Pos isn't right after scaling.
   const handleSelectionBounds = useCallback(
     (bounds: Bounds | null) => {
       if (!bounds) {
@@ -164,7 +171,7 @@ export const Editor = (props: EditorProps) => {
       }
 
       // Map the pointer event to the SVG coordinate system.
-      const selection = getRelativeCoordinates(containerRef.current!.getBoundingClientRect(), scale, offset, bounds);
+      const selection = boundsToModel(containerRef.current!.getBoundingClientRect(), scale, offset, bounds);
       const selected = graph.nodes.filter(
         ({ data: { pos } }) => boundsContain(selection, { ...pos, width: 0, height: 0 }), // Check center point.
       );
@@ -174,30 +181,42 @@ export const Editor = (props: EditorProps) => {
   );
 
   const selectionBounds = useBoundingSelection(overlaySvgRef.current, handleSelectionBounds);
+  const transformedSelectionBounds =
+    selectionBounds && boundsToModel(overlaySvgRef.current!.getBoundingClientRect(), scale, offset, selectionBounds);
 
-  // TODO(burdon): Formalize coordinate system. Return vanilla point
-
-  // TODO(burdon): Pos isn't right after scaling.
   const handleDrag = useCallback<NonNullable<FrameProps['onDrag']>>(
-    ({ type, item, pos }) => {
+    ({ type, item, location }) => {
+      const pos = boundToModelWithOffset(
+        overlaySvgRef.current!.getBoundingClientRect(),
+        scale,
+        offset,
+        location,
+        item.pos,
+      );
       if (type === 'drop') {
-        item.pos = snap(pos);
+        item.pos = snap ? snapPoint(pos) : pos;
         setDragging(undefined);
       } else {
         setDragging({ id: item.id, pos });
       }
     },
-    [graph, scale],
+    [overlaySvgRef, graph, snap, scale, offset],
   );
 
-  // TODO(burdon): Pos isn't right after scaling.
   const handleLink = useCallback<NonNullable<FrameProps['onLink']>>(
-    ({ type, item, link, pos }) => {
+    ({ type, item, link, location }) => {
+      const pos = boundsToModel(
+        overlaySvgRef.current!.getBoundingClientRect(),
+        scale,
+        offset,
+        getInputPoint(location.current.input),
+      );
+      console.log('!!!!!!!!!!!!!!!!!!!');
       if (type === 'drop') {
         let id = link?.id;
         if (!id) {
           id = createId();
-          graph.addNode({ id, data: { id, pos: snap(pos), size: itemSize } });
+          graph.addNode({ id, data: { id, pos: snap ? snapPoint(pos) : pos, size: itemSize } });
         }
         graph.addEdge({ id: createId(), source: item.id, target: id, data: {} });
         setLinking(undefined);
@@ -205,7 +224,7 @@ export const Editor = (props: EditorProps) => {
         setLinking({ source: item.pos, target: pos });
       }
     },
-    [graph],
+    [overlaySvgRef, graph, snap, scale, offset],
   );
 
   // TODO(burdon): SHIFT select to toggle.
@@ -220,11 +239,27 @@ export const Editor = (props: EditorProps) => {
     }
   }, []);
 
+  //
+  // Actions
+  //
   // TODO(burdon): Undo.
   const handleAction = useCallback<NonNullable<ToolbarProps['onAction']>>(
     (event) => {
       const { type } = event;
       switch (type) {
+        case 'debug': {
+          setDebug(!debug);
+          break;
+        }
+        case 'grid': {
+          setGrid(!grid);
+          break;
+        }
+        case 'snap': {
+          setSnap(!snap);
+          break;
+        }
+
         // TODO(burdon): Animate.
         case 'center': {
           setTransform({ offset: { x: width / 2, y: height / 2 }, scale: 1 });
@@ -256,7 +291,7 @@ export const Editor = (props: EditorProps) => {
         }
       }
     },
-    [graph, scale, width, height],
+    [graph, scale, width, height, debug, grid, snap],
   );
 
   // Create edges.
@@ -276,28 +311,40 @@ export const Editor = (props: EditorProps) => {
     edges.push({ id: 'link', path: createPathThroughPoints([linking.source, linking.target]) });
   }
 
-  // TODO(burdon): Currently HTML content needs to be last so that elements can be dragged.
-
   return (
     <div ref={containerRef} tabIndex={0} className='flex grow relative overflow-hidden'>
-      {/* Selection overlay. */}
-      <svg width='100%' height='100%' className='absolute left-0 top-0' ref={overlaySvgRef}>
-        <g>
-          {selectionBounds && <rect {...selectionBounds} fill='none' strokeWidth='2' className='stroke-blue-500' />}
-        </g>
-      </svg>
-
       {/* Grid. */}
-      <Grid ref={gridRef} offset={offset} scale={scale} />
+      {grid && <Grid ref={gridRef} offset={offset} scale={scale} />}
 
       {/* SVG content. */}
       {ready && (
         <>
+          {/* Selection overlay. */}
+          {/* TODO(burdon): Currently HTML content needs to be last so that elements can be dragged. */}
+          <svg width='100%' height='100%' className='absolute left-0 top-0' ref={overlaySvgRef}>
+            <g>
+              {selectionBounds && (
+                <rect {...selectionBounds} opacity={0.2} strokeWidth={2} className='stroke-blue-500' />
+              )}
+            </g>
+          </svg>
+
+          {/* SVG content. */}
           <svg width='100%' height='100%' className='absolute left-0 top-0 pointer-events-none touch-none'>
             <g style={transformStyle}>
-              {edges.map(({ id, path }) => (
-                <path key={id} d={path} fill='none' strokeWidth='1' className='stroke-teal-700' />
-              ))}
+              {/* Edges. */}
+              <g>
+                {edges.map(({ id, path }) => (
+                  <path key={id} d={path} fill='none' strokeWidth='1' className='stroke-teal-700' />
+                ))}
+              </g>
+
+              {/* TODO(burdon): Transformation of overlay for debugging. */}
+              {debug && transformedSelectionBounds && (
+                <g>
+                  <rect {...transformedSelectionBounds} fill='none' strokeWidth={4} className='stroke-red-500' />
+                </g>
+              )}
             </g>
           </svg>
 
@@ -318,8 +365,30 @@ export const Editor = (props: EditorProps) => {
       )}
 
       {/* UI. */}
-      <div className='fixed right-0 bottom-0 z-10'>
-        <Toolbar onAction={handleAction} />
+      <div>
+        <div className='fixed left-0 bottom-0 z-10'>
+          <SyntaxHighlighter language='javascript' classNames='bg-base text-xs p-2'>
+            {JSON.stringify(
+              {
+                debug,
+                grid,
+                snap,
+                scale,
+                offset,
+                rect: overlaySvgRef.current?.getBoundingClientRect(),
+                selectionBounds,
+                transformedSelectionBounds,
+                dragging,
+                linking,
+              },
+              null,
+              2,
+            )}
+          </SyntaxHighlighter>
+        </div>
+        <div className='fixed right-0 bottom-0 z-10'>
+          <Toolbar onAction={handleAction} />
+        </div>
       </div>
     </div>
   );

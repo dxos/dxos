@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type DragLocationHistory, type Input } from '@atlaskit/pragmatic-drag-and-drop/types';
 import { type CSSProperties } from 'react';
 
 // TODO(burdon): Generalize positional unit (e.g., x,y, fraction, slot).
@@ -27,8 +28,13 @@ export const createSnap = (snap?: Dimension): PointTransform =>
     : (pos: Point) => pos;
 
 export const pointAdd = (a: Point, b: Point): Point => ({ x: a.x + b.x, y: a.y + b.y });
-
+export const pointSubtract = (a: Point, b: Point): Point => ({ x: a.x - b.x, y: a.y - b.y });
 export const pointMultiply = (pos: Point, scale: number): Point => ({ x: pos.x * scale, y: pos.y * scale });
+
+export const getInputPoint = (input: Input) => ({
+  x: input.clientX,
+  y: input.clientY,
+});
 
 //
 // Bounds
@@ -49,17 +55,30 @@ export const boundsContain = (b1: Bounds, b2: Bounds): boolean =>
 
 //
 // Transform
+// Screen vs. model transforms.
 //
 
 /**
  * Maps the pointer event to the element's transformed coordinate system.
  */
-export const getRelativeCoordinates = (rect: DOMRect, scale: number, translation: Point, bounds: Partial<Bounds>) => ({
-  x: (bounds.x ?? 0 - rect.left - translation.x) / scale,
-  y: (bounds.y ?? 0 - rect.top - translation.y) / scale,
-  width: bounds.width ?? 0 / scale,
-  height: bounds.height ?? 0 / scale,
+export const boundsToModel = (rect: DOMRect, scale: number, offset: Point, bounds: Partial<Bounds>): Bounds => ({
+  x: ((bounds.x ?? 0) - rect.left - offset.x) / scale,
+  y: ((bounds.y ?? 0) - rect.top - offset.y) / scale,
+  width: (bounds.width ?? 0) / scale,
+  height: (bounds.height ?? 0) / scale,
 });
+
+export const boundToModelWithOffset = (
+  rect: DOMRect,
+  scale: number,
+  offset: Point,
+  location: DragLocationHistory,
+  center: Point,
+) => {
+  const initial = boundsToModel(rect, scale, offset, getInputPoint(location.initial.input));
+  const current = boundsToModel(rect, scale, offset, getInputPoint(location.current.input));
+  return pointAdd(current, pointSubtract(center, initial));
+};
 
 //
 // CSS
