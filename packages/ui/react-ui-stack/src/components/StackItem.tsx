@@ -4,6 +4,8 @@
 
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { disableNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/disable-native-drag-preview';
+import { preventUnhandled } from '@atlaskit/pragmatic-drag-and-drop/prevent-unhandled';
 import {
   attachClosestEdge,
   extractClosestEdge,
@@ -93,6 +95,11 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
           element: itemElement,
           ...(selfDragHandleElement && { dragHandle: selfDragHandleElement }),
           getInitialData: () => ({ id: item.id, type }),
+          // TODO(thure): tabster focus honeypots are causing the preview to render with the wrong dimensions; what do?
+          onGenerateDragPreview: ({ nativeSetDragImage }) => {
+            disableNativeDragPreview({ nativeSetDragImage });
+            preventUnhandled.start();
+          },
         }),
         dropTargetForElements({
           element: itemElement,

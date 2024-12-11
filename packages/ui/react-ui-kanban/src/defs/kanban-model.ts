@@ -60,10 +60,12 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
 
         // Categorize items
         for (const item of this.items) {
-          if (orderMap.has(item.id)) {
-            prioritizedItems.push(item);
-          } else {
-            remainingItems.push(item);
+          if (item[pivotField as keyof typeof item] === columnValue) {
+            if (orderMap.has(item.id)) {
+              prioritizedItems.push(item);
+            } else {
+              remainingItems.push(item);
+            }
           }
         }
 
@@ -112,8 +114,10 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
         ) {
           const [movedCard] = sourceColumn.cards.splice(sourceCardIndex, 1);
 
+          (movedCard[this._kanban.columnField! as keyof typeof movedCard] as any) = targetColumn.columnValue;
+
           let insertIndex;
-          if (sourceColumn === targetColumn && sourceCardIndex < targetCardIndex) {
+          if (sourceCardIndex < targetCardIndex) {
             insertIndex = closestEdge === 'bottom' ? targetCardIndex : targetCardIndex - 1;
           } else {
             insertIndex = closestEdge === 'bottom' ? targetCardIndex + 1 : targetCardIndex;
