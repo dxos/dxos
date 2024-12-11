@@ -213,7 +213,7 @@ export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
   // TODO(dmaretskyi): Figure out how to migrate the usages to the async `register` method.
   public addSchema(schema: S.Schema<any>): EchoSchema {
     if (schema instanceof EchoSchema) {
-      schema = schema.schema.annotations({
+      schema = schema.getSchemaSnapshot().annotations({
         [EchoIdentifierAnnotationId]: undefined,
       });
     }
@@ -230,7 +230,7 @@ export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
     const storedSchema = this._db.add(schemaToStore);
     const result = this._register(storedSchema);
     this._notifySchemaListChanged();
-    result.rebuild();
+    result._rebuild();
     return result;
   }
 
@@ -244,7 +244,7 @@ export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
   /**
    * @deprecated
    */
-  // TODO(burdon): Reconcile with query.
+  // TODO(burdon): Remove.
   public async listAll(): Promise<StaticSchema[]> {
     const { objects } = await this._db.query(Filter.schema(StoredSchema)).run();
     const storedSchemas = objects.map((storedSchema) => {
@@ -253,7 +253,7 @@ export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
         id: storedSchema.id,
         version: storedSchema.version,
         typename: schema.typename,
-        schema: schema.schema,
+        schema: schema.getSchemaSnapshot(),
       } satisfies StaticSchema;
     });
 
@@ -287,7 +287,7 @@ export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
 
     const mutableSchema = new EchoSchema(schema);
     const subscription = getObjectCore(schema).updates.on(() => {
-      mutableSchema.invalidate();
+      mutableSchema._invalidate();
     });
 
     if (previousTypename !== undefined && schema.typename !== previousTypename) {

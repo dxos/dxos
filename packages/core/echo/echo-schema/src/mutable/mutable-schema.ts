@@ -18,7 +18,7 @@ import { toEffectSchema, toJsonSchema } from '../json';
 import { type AbstractSchema, type ObjectId } from '../object';
 
 // TODO(burdon): Reconcile with AbstractTypedObject. Need common base class.
-interface MutableSchemaConstructor extends AbstractSchema {
+interface EchoSchemaConstructor extends AbstractSchema {
   new (): HasId;
 }
 
@@ -27,7 +27,7 @@ interface MutableSchemaConstructor extends AbstractSchema {
  *
  * This is here so that `EchoSchema` class can be used as a part of another schema definition (e.g., `ref(EchoSchema)`).
  */
-const MutableSchemaConstructor = (): MutableSchemaConstructor => {
+const EchoSchemaConstructor = (): EchoSchemaConstructor => {
   /**
    * Return class definition satisfying S.Schema.
    */
@@ -56,6 +56,9 @@ const MutableSchemaConstructor = (): MutableSchemaConstructor => {
 };
 
 /**
+ * Represents a schema that is stored in the ECHO database.
+ * Schema can me mutable or readonly (specified by the {@link EchoSchema.readonly} field).
+ *
  * Schema that can be modified at runtime via the API.
  * Is an instance of effect-schema (`Schema.Schema.AnyNoContext`) so it can be used in the same way as a regular schema.
  * IMPORTANT: The schema AST will change reactively when the schema is updated, including synced updates from remote peers.
@@ -73,8 +76,7 @@ const MutableSchemaConstructor = (): MutableSchemaConstructor => {
  *
  * The ECHO API will translate any references to StoredSchema objects to be resolved as EchoSchema objects.
  */
-// TODO(dmaretskyi): Rename `EchoSchema`.
-export class EchoSchema extends MutableSchemaConstructor() implements S.Schema.AnyNoContext {
+export class EchoSchema extends EchoSchemaConstructor() implements S.Schema.AnyNoContext {
   private _schema: S.Schema<any> | undefined;
   private _isDirty = true;
 
@@ -108,6 +110,14 @@ export class EchoSchema extends MutableSchemaConstructor() implements S.Schema.A
   }
 
   /**
+   * @returns `true` if the schema cannot be mutated.
+   */
+  public get readonly(): boolean {
+    // TODO(dmaretskyi): Implement readonly schema.
+    return false;
+  }
+
+  /**
    * @reactive
    */
   public get jsonSchema(): JsonSchemaType {
@@ -124,7 +134,7 @@ export class EchoSchema extends MutableSchemaConstructor() implements S.Schema.A
   /**
    * Returns an IMMUTABLE schema snapshot of the current state of the schema.
    */
-  public get schema(): S.Schema<any> {
+  public getSchemaSnapshot(): S.Schema<any> {
     return this._getSchema();
   }
 
@@ -169,13 +179,6 @@ export class EchoSchema extends MutableSchemaConstructor() implements S.Schema.A
     return schema.pipe.bind(schema);
   }
 
-  /**
-   * Called by MutableSchemaRegistry on update.
-   */
-  invalidate() {
-    this._isDirty = true;
-  }
-
   public getProperties(): AST.PropertySignature[] {
     const ast = this._getSchema().ast;
     invariant(AST.isTypeLiteral(ast));
@@ -188,36 +191,62 @@ export class EchoSchema extends MutableSchemaConstructor() implements S.Schema.A
   // Mutation methods.
   //
 
+  /**
+   * @throws Error if the schema is readonly.
+   */
   public updateTypename(typename: string) {
     const updated = setTypenameInSchema(this._getSchema(), typename);
     this._storedSchema.typename = typename;
     this._storedSchema.jsonSchema = toJsonSchema(updated);
   }
 
+  /**
+   * @throws Error if the schema is readonly.
+   */
   public addFields(fields: S.Struct.Fields) {
     const extended = addFieldsToSchema(this._getSchema(), fields);
     this._storedSchema.jsonSchema = toJsonSchema(extended);
   }
 
+  /**
+   * @throws Error if the schema is readonly.
+   */
   public updateFields(fields: S.Struct.Fields) {
     const updated = updateFieldsInSchema(this._getSchema(), fields);
     this._storedSchema.jsonSchema = toJsonSchema(updated);
   }
 
+  /**
+   * @throws Error if the schema is readonly.
+   */
   public updateFieldPropertyName({ before, after }: { before: PropertyKey; after: PropertyKey }) {
     const renamed = updateFieldNameInSchema(this._getSchema(), { before, after });
     this._storedSchema.jsonSchema = toJsonSchema(renamed);
   }
 
+  /**
+   * @throws Error if the schema is readonly.
+   */
   public removeFields(fieldNames: string[]) {
     const removed = removeFieldsFromSchema(this._getSchema(), fieldNames);
     this._storedSchema.jsonSchema = toJsonSchema(removed);
   }
 
+  //
+  // Internals
+  //
+
+  /**
+   * Called by MutableSchemaRegistry on update.
+   */
+  _invalidate() {
+    this._isDirty = true;
+  }
+
   /**
    * Rebuilds this schema if it is dirty.
    */
-  public rebuild() {
+  _rebuild() {
     if (this._isDirty || this._schema == null) {
       this._schema = toEffectSchema(unwrapProxy(this._storedSchema.jsonSchema));
       this._isDirty = false;
@@ -225,7 +254,7 @@ export class EchoSchema extends MutableSchemaConstructor() implements S.Schema.A
   }
 
   private _getSchema() {
-    this.rebuild();
+    this._rebuild();
     return this._schema!;
   }
 }

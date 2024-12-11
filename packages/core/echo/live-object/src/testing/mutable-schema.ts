@@ -31,7 +31,7 @@ export const createMutableSchema = (schema: AbstractSchema): EchoSchema => {
 
   effect(() => {
     const _ = mutableSchema.jsonSchema;
-    mutableSchema.invalidate();
+    mutableSchema._invalidate();
   });
 
   return mutableSchema;
