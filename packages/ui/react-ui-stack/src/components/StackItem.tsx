@@ -9,13 +9,11 @@ import {
   extractClosestEdge,
   type Edge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
-// TODO(wittjosiah): Drop indicator that doesn't depend on emotion. See react-ui-list DropIndicator.
-// import { DropIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import React, { forwardRef, useLayoutEffect, useState, type ComponentPropsWithRef, useCallback } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, ListItem } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useStack, StackItemContext } from './StackContext';
@@ -65,7 +63,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
   ) => {
     const [itemElement, itemRef] = useState<HTMLDivElement | null>(null);
     const [selfDragHandleElement, selfDragHandleRef] = useState<HTMLDivElement | null>(null);
-    const [_closestEdge, setEdge] = useState<Edge | null>(null);
+    const [closestEdge, setEdge] = useState<Edge | null>(null);
     const { orientation, rail } = useStack();
     const [size = orientation === 'horizontal' ? DEFAULT_HORIZONTAL_SIZE : DEFAULT_VERTICAL_SIZE, setInternalSize] =
       useState(propsSize);
@@ -153,7 +151,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
           ref={composedItemRef}
         >
           {children}
-          {/* {closestEdge && <DropIndicator edge={closestEdge} />} */}
+          {closestEdge && <ListItem.DropIndicator edge={closestEdge} />}
         </Root>
       </StackItemContext.Provider>
     );

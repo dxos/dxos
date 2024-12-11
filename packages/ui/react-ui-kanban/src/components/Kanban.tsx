@@ -27,10 +27,11 @@ export const Kanban = ({ model, columns }: KanbanProps) => {
           item={{ id: columnValue }}
           classNames='border-ie border-separator'
           onRearrange={model.onRearrange}
+          size={16}
         >
           <StackItem.Heading classNames='border-be border-separator'>
             <StackItem.DragHandle asChild>
-              <IconButton icon='ph--dots-six-vertical' variant='ghost' label={t('column drag handle label')} />
+              <IconButton iconOnly icon='ph--dots-six-vertical' variant='ghost' label={t('column drag handle label')} />
             </StackItem.DragHandle>
             <h2>{columns[columnValue].label}</h2>
           </StackItem.Heading>
@@ -43,7 +44,7 @@ export const Kanban = ({ model, columns }: KanbanProps) => {
                 onRearrange={model.onRearrange}
               >
                 <StackItem.DragHandle asChild>
-                  <IconButton icon='ph--dots-six' variant='ghost' label={t('card drag handle label')} />
+                  <IconButton iconOnly icon='ph--dots-six' variant='ghost' label={t('card drag handle label')} />
                 </StackItem.DragHandle>
                 <Form readonly values={card} schema={model.cardSchema} />
               </StackItem.Root>

@@ -34,7 +34,6 @@ export const initializeKanban = ({
   const taskSchema = space.db.schemaRegistry.addSchema(TaskSchema);
 
   const kanban = space.db.add(
-    // @ts-ignore
     create(KanbanType, {
       cardView: createView({
         name: 'Test kanban’s card view',
@@ -42,11 +41,11 @@ export const initializeKanban = ({
         jsonSchema: taskSchema.jsonSchema,
         fields: ['title', 'description', 'state'],
       }),
-      columnPivotField: 'state',
+      columnField: 'state',
       arrangement: [
-        { value: 'init', cards: [] },
-        { value: 'doing', cards: [] },
-        { value: 'done', cards: [] },
+        { columnValue: 'init', ids: [] },
+        { columnValue: 'doing', ids: [] },
+        { columnValue: 'done', ids: [] },
       ],
     }),
   );

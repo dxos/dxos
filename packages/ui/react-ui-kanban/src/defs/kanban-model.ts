@@ -26,11 +26,13 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   private readonly _kanban: KanbanType;
   private readonly _cardSchema: MutableSchema;
   private _items = signal<T[]>([]);
+  private _arrangement = signal<KanbanArrangement<T>>([]);
 
   constructor({ kanban, cardSchema }: KanbanModelProps) {
     super();
     this._kanban = kanban;
     this._cardSchema = cardSchema;
+    this._arrangement.value = this._computeArrangement();
   }
 
   get items() {
@@ -39,13 +41,14 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
 
   set items(items: T[]) {
     this._items.value = items;
+    this._arrangement.value = this._computeArrangement();
   }
 
   get cardSchema() {
     return this._cardSchema;
   }
 
-  get arrangement(): KanbanArrangement<T> {
+  private _computeArrangement(): KanbanArrangement<T> {
     const pivotField = this._kanban.columnField;
     const kanbanArrangement = this._kanban.arrangement;
     if (pivotField && kanbanArrangement) {
@@ -76,23 +79,27 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     return [];
   }
 
+  get arrangement() {
+    return this._arrangement.value;
+  }
+
   public onRearrange: StackItemRearrangeHandler = (source, target, closestEdge) => {
-    const arrangement = this.arrangement;
-    const sourceColumn = arrangement.find(
+    const nextArrangement = this.arrangement;
+    const sourceColumn = nextArrangement.find(
       ({ columnValue, cards }) => columnValue === source.id || cards.some((card) => card.id === source.id),
     );
-    const targetColumn = arrangement.find(
+    const targetColumn = nextArrangement.find(
       ({ columnValue, cards }) => columnValue === target.id || cards.some((card) => card.id === target.id),
     );
 
     if (sourceColumn && targetColumn) {
       if (source.type === 'column' && target.type === 'column') {
         // Reordering columns
-        const sourceIndex = arrangement.findIndex(({ columnValue }) => columnValue === source.id);
-        const targetIndex = arrangement.findIndex(({ columnValue }) => columnValue === target.id);
-        const [movedColumn] = arrangement.splice(sourceIndex, 1);
+        const sourceIndex = nextArrangement.findIndex(({ columnValue }) => columnValue === source.id);
+        const targetIndex = nextArrangement.findIndex(({ columnValue }) => columnValue === target.id);
+        const [movedColumn] = nextArrangement.splice(sourceIndex, 1);
         const insertIndex = closestEdge === 'right' ? targetIndex + 1 : targetIndex;
-        arrangement.splice(insertIndex, 0, movedColumn);
+        nextArrangement.splice(insertIndex, 0, movedColumn);
       } else {
         // Reordering cards within a column
         const sourceCardIndex = sourceColumn.cards.findIndex((card) => card.id === source.id);
@@ -115,9 +122,11 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
         }
       }
 
-      this._kanban.arrangement = arrangement.map(({ columnValue, cards }) => {
+      this._kanban.arrangement = nextArrangement.map(({ columnValue, cards }) => {
         return { columnValue, ids: cards.map(({ id }) => id) };
       });
+
+      this._arrangement.value = nextArrangement;
     }
   };
 }

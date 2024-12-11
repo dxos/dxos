@@ -18,7 +18,7 @@ import React, { memo, useCallback, useEffect, useMemo, useRef, useState, type FC
 
 import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { Treegrid } from '@dxos/react-ui';
+import { Treegrid, TreeItem as NaturalTreeItem } from '@dxos/react-ui';
 import {
   focusRing,
   ghostHover,
@@ -28,7 +28,6 @@ import {
   mx,
 } from '@dxos/react-ui-theme';
 
-import { DropIndicator } from './DropIndicator';
 import { useTree } from './TreeContext';
 import { TreeItemHeading } from './TreeItemHeading';
 import { TreeItemToggle } from './TreeItemToggle';
@@ -254,7 +253,7 @@ export const RawTreeItem = <T = any,>({
             />
           </div>
           {Columns && <Columns item={item} path={path} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />}
-          {instruction && <DropIndicator instruction={instruction} gap={2} />}
+          {instruction && <NaturalTreeItem.DropIndicator instruction={instruction} gap={2} />}
         </Treegrid.Cell>
       </Treegrid.Row>
       {open &&
