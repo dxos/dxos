@@ -131,6 +131,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
           switch (intent.action) {
             case TableAction.CREATE: {
               const { space } = intent.data as TableAction.Create;
+              invariant(space);
               const table = create(TableType, { name: '', threads: [] });
               initializeTable({ space, table });
               return {
