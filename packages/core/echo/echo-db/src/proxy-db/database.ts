@@ -130,6 +130,7 @@ export type EchoDatabaseParams = {
  * Implements EchoDatabase interface.
  */
 export class EchoDatabaseImpl extends Resource implements EchoDatabase {
+  private readonly _schemaRegistry: MutableSchemaRegistry;
   /**
    * @internal
    */
@@ -143,8 +144,6 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   readonly _rootProxies = new Map<ObjectCore, ReactiveEchoObject<any>>();
 
-  public readonly schemaRegistry: MutableSchemaRegistry;
-
   constructor(params: EchoDatabaseParams) {
     super();
 
@@ -156,11 +155,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       spaceKey: params.spaceKey,
     });
 
-    this.schemaRegistry = new MutableSchemaRegistry(this, { reactiveQuery: params.reactiveSchemaQuery });
-  }
-
-  get graph(): Hypergraph {
-    return this._coreDatabase.graph;
+    this._schemaRegistry = new MutableSchemaRegistry(this, { reactiveQuery: params.reactiveSchemaQuery });
   }
 
   get spaceId(): SpaceId {
@@ -178,15 +173,25 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return this._rootUrl;
   }
 
+  get graph(): Hypergraph {
+    return this._coreDatabase.graph;
+  }
+
+  get schemaRegistry(): MutableSchemaRegistry {
+    return this._schemaRegistry;
+  }
+
   @synchronized
   protected override async _open(): Promise<void> {
     if (this._rootUrl !== undefined) {
       await this._coreDatabase.open({ rootUrl: this._rootUrl });
     }
+    await this._schemaRegistry.open();
   }
 
   @synchronized
   protected override async _close(): Promise<void> {
+    await this._schemaRegistry.close();
     await this._coreDatabase.close();
   }
 

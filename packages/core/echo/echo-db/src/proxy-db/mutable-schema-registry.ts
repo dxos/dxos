@@ -28,6 +28,7 @@ import type {
   SchemaRegistryQuery,
 } from './schema-registry-api';
 import { SchemaRegistryPreparedQueryImpl } from './schema-registry-prepared-query';
+import { Resource, type Context } from '@dxos/context';
 
 export type SchemaSubscriptionCallback = (schema: MutableSchema[]) => void;
 
@@ -43,7 +44,9 @@ export type MutableSchemaRegistryOptions = {
  * Per-space set of mutable schemas.
  */
 // TODO(burdon): Reconcile with RuntimeSchemaRegistry.
-export class MutableSchemaRegistry implements SchemaRegistry {
+export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
+  private readonly _reactiveQuery: boolean;
+
   private readonly _schemaById: Map<string, MutableSchema> = new Map();
   private readonly _schemaByType: Map<string, MutableSchema> = new Map();
   private readonly _unsubscribeById: Map<string, UnsubscribeCallback> = new Map();
@@ -53,9 +56,17 @@ export class MutableSchemaRegistry implements SchemaRegistry {
     private readonly _db: EchoDatabase,
     { reactiveQuery = true }: MutableSchemaRegistryOptions = {},
   ) {
-    // TODO(burdon): This shouldn't go here in the constructor and should be unregisterd. Open/dispose pattern.
-    if (reactiveQuery) {
-      this._db.query(Filter.schema(StoredSchema)).subscribe(({ objects }) => {
+    super();
+    this._reactiveQuery = reactiveQuery;
+  }
+
+  protected override async _open(ctx: Context): Promise<void> {
+    // Preload schemas.
+    const { objects } = await this._db.query(Filter.schema(StoredSchema)).run();
+    objects.forEach((object) => this.registerSchema(object));
+
+    if (this._reactiveQuery) {
+      const unsubscribe = this._db.query(Filter.schema(StoredSchema)).subscribe(({ objects }) => {
         const currentObjectIds = new Set(objects.map((o) => o.id));
         const newObjects = objects.filter((object) => !this._schemaById.has(object.id));
         const removedObjects = [...this._schemaById.keys()].filter((oid) => !currentObjectIds.has(oid));
@@ -65,7 +76,12 @@ export class MutableSchemaRegistry implements SchemaRegistry {
           this._notifySchemaListChanged();
         }
       });
+      this._ctx.onDispose(unsubscribe);
     }
+  }
+
+  protected override async _close(ctx: Context): Promise<void> {
+    // Nothing to do.
   }
 
   // TODO(burdon): Can this be made sync?
