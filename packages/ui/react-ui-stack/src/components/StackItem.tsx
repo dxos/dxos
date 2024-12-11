@@ -43,10 +43,16 @@ export const DEFAULT_EXTRINSIC_SIZE = DEFAULT_HORIZONTAL_SIZE satisfies StackIte
 
 export type StackItemData = { id: string; type: 'column' | 'card' };
 
+export type StackItemRearrangeHandler = (
+  source: StackItemData,
+  target: StackItemData,
+  closestEdge: Edge | null,
+) => void;
+
 export type StackItemRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> & {
   item: Omit<StackItemData, 'type'>;
   order?: number;
-  onRearrange?: (source: StackItemData, target: StackItemData, closestEdge: Edge | null) => void;
+  onRearrange?: StackItemRearrangeHandler;
   size?: StackItemSize;
   onSizeChange?: (nextSize: StackItemSize) => void;
   role?: 'article' | 'section';

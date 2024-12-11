@@ -43,8 +43,8 @@ export const useKanbanModel = <T extends BaseKanbanItem = { id: string }>({
 
   // Update data.
   useEffect(() => {
-    if (items) {
-      model?.setItems(items);
+    if (model && items) {
+      model.items = items;
     }
   }, [model, items]);
 
