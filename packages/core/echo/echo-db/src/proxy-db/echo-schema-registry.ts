@@ -6,22 +6,22 @@ import { Event, type UnsubscribeCallback } from '@dxos/async';
 import { Resource, type Context } from '@dxos/context';
 import {
   EchoIdentifierAnnotationId,
+  EchoSchema,
   getEchoIdentifierAnnotation,
   getObjectAnnotation,
-  makeStaticSchema,
-  EchoSchema,
   ObjectAnnotationId,
-  type ObjectId,
-  type S,
-  type StaticSchema,
   StoredSchema,
   toJsonSchema,
+  type ObjectId,
+  type S
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { createStoredSchema } from '@dxos/live-object';
 import { log } from '@dxos/log';
 
+import { getObjectCore } from '../echo-handler';
+import { Filter } from '../query';
 import { type EchoDatabase } from './database';
 import type {
   RegisterSchemaInput,
@@ -31,8 +31,6 @@ import type {
   SchemaSubscriptionCallback,
 } from './schema-registry-api';
 import { SchemaRegistryPreparedQueryImpl } from './schema-registry-prepared-query';
-import { getObjectCore } from '../echo-handler';
-import { Filter } from '../query';
 
 export type EchoSchemaRegistryOptions = {
   /**
@@ -239,26 +237,6 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
    */
   public registerSchema(schema: StoredSchema): EchoSchema {
     return this._registerSchema(schema);
-  }
-
-  /**
-   * @deprecated
-   */
-  // TODO(burdon): Remove.
-  public async listAll(): Promise<StaticSchema[]> {
-    const { objects } = await this._db.query(Filter.schema(StoredSchema)).run();
-    const storedSchemas = objects.map((storedSchema) => {
-      const schema = new EchoSchema(storedSchema);
-      return {
-        id: storedSchema.id,
-        version: storedSchema.version,
-        typename: schema.typename,
-        schema: schema.getSchemaSnapshot(),
-      } satisfies StaticSchema;
-    });
-
-    const runtimeSchemas = this._db.graph.schemaRegistry.schemas.map(makeStaticSchema);
-    return [...runtimeSchemas, ...storedSchemas];
   }
 
   /**

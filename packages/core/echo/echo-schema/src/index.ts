@@ -20,7 +20,6 @@ export * from './schema/manipulation';
 export * from './schema/echo-schema';
 export * from './schema/runtime-schema-registry';
 export * from './schema/stored-schema';
-export * from './schema/types';
 export * from './object';
 export * from './query';
 export * from './types';

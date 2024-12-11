@@ -4,9 +4,8 @@
 
 import { Flags, ux } from '@oclif/core';
 
-import { FLAG_SPACE_KEYS } from '@dxos/cli-base';
-import { table, type TableFlags, TABLE_FLAGS } from '@dxos/cli-base';
-import { type StaticSchema } from '@dxos/echo-schema';
+import { FLAG_SPACE_KEYS, table, TABLE_FLAGS, type TableFlags } from '@dxos/cli-base';
+import { getObjectAnnotation } from '@dxos/echo-schema';
 
 import { BaseCommand } from '../../../base';
 
@@ -31,7 +30,20 @@ export default class List extends BaseCommand<typeof List> {
     return await this.execWithClient(async ({ client }) => {
       const space = await this.getSpace(client, key);
       const typenameFilter = createTypenameFilter(this.flags.typename);
-      const schemas = (await space.db.schemaRegistry.listAll()).filter(typenameFilter);
+
+      const echoSchema = await space.db.schemaRegistry.query().run();
+      const runtimeSchema = await space.db.graph.schemaRegistry.schemas;
+
+      const schemas = [
+        ...echoSchema.map((schema): SchemaEntry => schema),
+        ...runtimeSchema.map((schema): SchemaEntry => {
+          const schemaAnnotation = getObjectAnnotation(schema)!;
+          return {
+            typename: schemaAnnotation.typename,
+            version: schemaAnnotation.version,
+          };
+        }),
+      ].filter(typenameFilter);
       printSchema(schemas, this.flags as any);
     });
   }
@@ -42,11 +54,17 @@ const createTypenameFilter = (typenameFilter?: string) => {
     return () => true;
   }
 
-  return (schema: StaticSchema) => schema.typename.toLowerCase().includes(typenameFilter.toLowerCase());
+  return (schema: SchemaEntry) => schema.typename.toLowerCase().includes(typenameFilter.toLowerCase());
+};
+
+type SchemaEntry = {
+  id?: string;
+  typename: string;
+  version: string;
 };
 
 // TODO(burdon): Static vs. dynamic.
-const printSchema = (schemas: StaticSchema[], flags: TableFlags = {}) => {
+const printSchema = (schemas: SchemaEntry[], flags: TableFlags = {}) => {
   ux.stdout(
     table(
       schemas,
