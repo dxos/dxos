@@ -5,5 +5,9 @@
     "src",
     "test"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../node-std"
+    }
+  ]
 }

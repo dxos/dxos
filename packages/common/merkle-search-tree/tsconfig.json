@@ -4,5 +4,12 @@
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../invariant"
+    },
+    {
+      "path": "../util"
+    }
+  ]
 }

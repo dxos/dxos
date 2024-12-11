@@ -10,5 +10,15 @@
     ".storybook/*.tsx",
     "config/**/*.mts"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../packages/common/log"
+    },
+    {
+      "path": "../../packages/ui/react-ui-theme"
+    },
+    {
+      "path": "../vite-plugin-icons"
+    }
+  ]
 }
