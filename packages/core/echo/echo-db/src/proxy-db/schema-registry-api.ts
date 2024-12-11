@@ -3,7 +3,7 @@
 //
 
 import { type UnsubscribeCallback } from '@dxos/async';
-import { type JsonSchemaType, MutableSchema, type S, StoredSchema } from '@dxos/echo-schema';
+import { type JsonSchemaType, MutableSchema, type ObjectId, type S, StoredSchema } from '@dxos/echo-schema';
 
 import { type ReactiveEchoObject } from '../echo-handler';
 
@@ -26,14 +26,9 @@ export interface SchemaRegistry {
   register(input: RegisterSchemaInput[]): Promise<SchemaRecord[]>;
 
   /**
-   * @deprecated Use `query()`.
+   * Returns the record for the previously registered schema.
    */
-  getSchema(typename: string): MutableSchema | undefined;
-
-  /**
-   * @deprecated Use `query()`.
-   */
-  subscribe(cb: SchemaSubscriptionCallback): UnsubscribeCallback;
+  getRegisteredSchema(schema: AnyEchoObjectSchema): SchemaRecord | undefined;
 }
 
 export type SchemaRegistryQuery = {
@@ -41,12 +36,17 @@ export type SchemaRegistryQuery = {
    * Filter by schema ID.
    * Schema id is a DXN with `echo` or `type` kind.
    */
-  id?: string[];
+  id?: string | string[];
+
+  /**
+   * Id of the backing ECHO object.
+   */
+  backingObjectId?: ObjectId | ObjectId[];
 
   /**
    * One or more typenames to filter by.
    */
-  typename?: string[];
+  typename?: string | string[];
 
   /**
    * [Semver Range](https://docs.npmjs.com/cli/v6/using-npm/semver#ranges) for the schema version.

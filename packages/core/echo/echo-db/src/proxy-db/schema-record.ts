@@ -1,5 +1,15 @@
 import type { JsonSchemaType, StoredSchema } from '@dxos/echo-schema';
-import { toEffectSchema, S, AST } from '@dxos/echo-schema';
+import {
+  toEffectSchema,
+  S,
+  AST,
+  setTypenameInSchema,
+  toJsonSchema,
+  addFieldsToSchema,
+  updateFieldsInSchema,
+  updateFieldNameInSchema,
+  removeFieldsFromSchema,
+} from '@dxos/echo-schema';
 import type { ReactiveEchoObject } from '../echo-handler';
 import type { AnyEchoObjectSchema, SchemaId, SchemaRecord } from './schema-registry-api';
 import { invariant } from '@dxos/invariant';
@@ -34,8 +44,12 @@ export class SchemaRecordImpl implements SchemaRecord {
     return this._backingObject;
   }
 
-  updateTypename(typename: string): Promise<void> {
-    throw new Error('Method not implemented.');
+  // TODO(dmaretskyi): Do not overwrite the entire JSON-schema.
+  async updateTypename(typename: string): Promise<void> {
+    const updated = setTypenameInSchema(this.getSchema(), typename);
+    invariant(this._backingObject);
+    this._backingObject.typename = typename;
+    this._backingObject.jsonSchema = toJsonSchema(updated);
   }
 
   /**
@@ -43,8 +57,11 @@ export class SchemaRecordImpl implements SchemaRecord {
    *
    * @throws Error if schema is not mutable.
    */
-  addFields(fields: S.Struct.Fields): Promise<void> {
-    throw new Error('Method not implemented.');
+  // TODO(dmaretskyi): Do not overwrite the entire JSON-schema.
+  async addFields(fields: S.Struct.Fields): Promise<void> {
+    const extended = addFieldsToSchema(this.getSchema(), fields);
+    invariant(this._backingObject);
+    this._backingObject.jsonSchema = toJsonSchema(extended);
   }
 
   /**
@@ -52,14 +69,24 @@ export class SchemaRecordImpl implements SchemaRecord {
    *
    * @throws Error if schema is not mutable.
    */
-  updateFields(fields: S.Struct.Fields): Promise<void> {
-    throw new Error('Method not implemented.');
+  // TODO(dmaretskyi): Do not overwrite the entire JSON-schema.
+  async updateFields(fields: S.Struct.Fields): Promise<void> {
+    const updated = updateFieldsInSchema(this.getSchema(), fields);
+    invariant(this._backingObject);
+    this._backingObject.jsonSchema = toJsonSchema(updated);
   }
 
-  renameField({ from, to }: { from: string; to: string }): Promise<void> {
-    throw new Error('Method not implemented.');
+  // TODO(dmaretskyi): Do not overwrite the entire JSON-schema.
+  async renameField({ from, to }: { from: string; to: string }): Promise<void> {
+    const renamed = updateFieldNameInSchema(this.getSchema(), { before: from, after: to });
+    invariant(this._backingObject);
+    this._backingObject.jsonSchema = toJsonSchema(renamed);
   }
-  removeFields(fieldNames: string[]): Promise<void> {
-    throw new Error('Method not implemented.');
+
+  // TODO(dmaretskyi): Do not overwrite the entire JSON-schema.
+  async removeFields(fieldNames: string[]): Promise<void> {
+    const removed = removeFieldsFromSchema(this.getSchema(), fieldNames);
+    invariant(this._backingObject);
+    this._backingObject.jsonSchema = toJsonSchema(removed);
   }
 }

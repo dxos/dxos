@@ -43,6 +43,10 @@ export class SchemaRegistryPreparedQueryImpl<T> implements SchemaRegistryPrepare
     return this._resolver.getResults();
   }
 
+  runSync(): T[] {
+    return this._resolver.getResultsSync();
+  }
+
   async first(): Promise<T> {
     const results = await this._resolver.getResults();
     if (results.length === 0) {

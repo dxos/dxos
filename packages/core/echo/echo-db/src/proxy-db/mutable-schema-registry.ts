@@ -24,6 +24,7 @@ import { type EchoDatabase } from './database';
 import { getObjectCore, type ReactiveEchoObject } from '../echo-handler';
 import { Filter, type Query } from '../query';
 import type {
+  AnyEchoObjectSchema,
   MutableSchemaRegistryOptions,
   RegisterSchemaInput,
   SchemaId,
@@ -43,6 +44,8 @@ import { DXN } from '@dxos/keys';
  */
 // TODO(burdon): Reconcile with RuntimeSchemaRegistry.
 export class MutableSchemaRegistry implements SchemaRegistry {
+  private readonly _registeredSchemaCache = new WeakMap<AnyEchoObjectSchema, SchemaRecord>();
+
   private readonly _schemaById: Map<string, MutableSchema> = new Map();
   private readonly _schemaByType: Map<string, MutableSchema> = new Map();
   private readonly _unsubscribeById: Map<string, UnsubscribeCallback> = new Map();
@@ -67,8 +70,36 @@ export class MutableSchemaRegistry implements SchemaRegistry {
     }
   }
 
-  async register(input: RegisterSchemaInput[]): Promise<SchemaRecord[]> {
-    throw new Error('Method not implemented.');
+  // TODO(dmaretskyi): Check schema validity: must be an object with $id, properties.id.
+  async register(inputs: RegisterSchemaInput[]): Promise<SchemaRecord[]> {
+    const result: SchemaRecord[] = [];
+    for (const input of inputs) {
+      if (!input.schema && !input.jsonSchema) {
+        throw new TypeError('either jsonSchema or schema must be provided');
+      }
+      const jsonSchema = input.schema ? toJsonSchema(input.schema) : input.jsonSchema;
+      invariant(jsonSchema);
+      const typename = jsonSchema.echo?.type?.typename;
+      const version = jsonSchema.echo?.type?.version;
+      invariant(typename && version);
+
+      const storedSchema = createStoredSchema({ typename, version }, jsonSchema);
+      // TODO(dmaretskyi): Remove schemaId.
+      storedSchema.jsonSchema.echo!.type!.schemaId = storedSchema.id;
+
+      const existingSchema = await this.query({ typename, version }).run();
+      if (existingSchema.length > 0) {
+        // TODO(dmaretskyi): Validate and error out if we are inserting the same or incompatible version.
+        log.warn(`Schema with typename ${typename} already exists`);
+      }
+
+      invariant(validateStoredSchemaIntegrity(storedSchema));
+
+      this._db.add(storedSchema);
+      result.push(createSchemaRecordFromStoredSchema(storedSchema));
+    }
+
+    return result;
   }
 
   // TODO(burdon): Can this be made sync?
@@ -79,31 +110,40 @@ export class MutableSchemaRegistry implements SchemaRegistry {
   //   });
   // }
 
-  query(query: SchemaRegistryQuery): SchemaRegistryPreparedQuery<SchemaRecord> {
+  query(query: SchemaRegistryQuery = {}): SchemaRegistryPreparedQuery<SchemaRecord> {
     return new SchemaRegistryPreparedQueryImpl(
       new SchemaRegistryQueryResolverImpl(this._db.query(Filter.schema(StoredSchema)), query),
     );
   }
 
-  /**
-   * @deprecated
-   */
-  public hasSchema(schema: S.Schema<any>): boolean {
-    const schemaId = schema instanceof MutableSchema ? schema.id : getObjectAnnotation(schema)?.schemaId;
-    return schemaId != null && this.getSchemaById(schemaId) != null;
+  getRegisteredSchema(schema: AnyEchoObjectSchema): SchemaRecord | undefined {
+    const cachedRecord = this._registeredSchemaCache.get(schema);
+    if(cachedRecord) {
+      return cachedRecord;
+    }
+
+    const schemaId = getEchoIdentifierAnnotation(schema);
   }
 
   /**
    * @deprecated
    */
-  public getSchema(typename: string): MutableSchema | undefined {
+  public _hasSchema(schema: S.Schema<any>): boolean {
+    const schemaId = schema instanceof MutableSchema ? schema.id : getObjectAnnotation(schema)?.schemaId;
+    return schemaId != null && this._getSchemaById(schemaId) != null;
+  }
+
+  /**
+   * @deprecated
+   */
+  public _getSchema(typename: string): MutableSchema | undefined {
     return this._schemaByType.get(typename);
   }
 
   /**
    * @deprecated
    */
-  public getSchemaById(id: string): MutableSchema | undefined {
+  public _getSchemaById(id: string): MutableSchema | undefined {
     const existing = this._schemaById.get(id);
     if (existing != null) {
       return existing;
@@ -126,7 +166,7 @@ export class MutableSchemaRegistry implements SchemaRegistry {
    * @deprecated
    */
   // TODO(burdon): Reconcile with query.
-  public async listAll(): Promise<StaticSchema[]> {
+  public async _listAll(): Promise<StaticSchema[]> {
     const { objects } = await this._db.query(Filter.schema(StoredSchema)).run();
     const storedSchemas = objects.map((storedSchema) => {
       const schema = new MutableSchema(storedSchema);
@@ -145,7 +185,7 @@ export class MutableSchemaRegistry implements SchemaRegistry {
   /**
    * @deprecated
    */
-  public subscribe(callback: SchemaSubscriptionCallback): UnsubscribeCallback {
+  public _subscribe(callback: SchemaSubscriptionCallback): UnsubscribeCallback {
     callback([...this._schemaById.values()]);
     this._schemaSubscriptionCallbacks.push(callback);
     return () => {
@@ -272,17 +312,29 @@ class SchemaRegistryQueryResolverImpl implements SchemaRegistryQueryResolver<Sch
   private _filterMapRecords(objects: StoredSchema[]): SchemaRecord[] {
     return (
       objects
+        .filter((schema) => validateStoredSchemaIntegrity(schema))
         .filter((object) => {
-          if (this._filter.id && this._filter.id.length > 0) {
-            if (!this._filter.id.includes(getSchemaId(object))) {
+          const idFilter = coerceArray(this._filter.id);
+          if (idFilter.length > 0) {
+            if (!idFilter.includes(getSchemaId(object))) {
               return false;
             }
           }
-          if (this._filter.typename && this._filter.typename.length > 0) {
-            if (!this._filter.typename.includes(object.typename)) {
+
+          const backingObjectIdFilter = coerceArray(this._filter.backingObjectId);
+          if (backingObjectIdFilter.length > 0) {
+            if (!backingObjectIdFilter.includes(object.id)) {
               return false;
             }
           }
+
+          const typenameFilter = coerceArray(this._filter.typename);
+          if (typenameFilter.length > 0) {
+            if (!typenameFilter.includes(object.typename)) {
+              return false;
+            }
+          }
+
           if (this._filter.version) {
             if (!this._filter.version.match(/^[0-9\.]+$/)) {
               throw new Error('Semver version ranges not supported.');
@@ -292,9 +344,12 @@ class SchemaRegistryQueryResolverImpl implements SchemaRegistryQueryResolver<Sch
               return false;
             }
           }
+
+          return true;
         })
-        // TODO(dmaretskyi): Cache stored schema entries.
         .map((object) => createSchemaRecordFromStoredSchema(object))
+        // TODO(dmaretskyi): Come up with a better stable sorting method.
+        .sort((a, b) => a.id.localeCompare(b.id))
     );
   }
 }
@@ -308,4 +363,31 @@ const getSchemaId = (storedSchema: StoredSchema): SchemaId => {
   const id = storedSchema.jsonSchema.$id as SchemaId;
   invariant(typeof id === 'string' && id.length > 0 && DXN.isDXNString(id), 'Invalid schema id');
   return id;
+};
+
+const coerceArray = <T>(arr: T | T[] | undefined): T[] => {
+  if (arr === undefined) {
+    return [];
+  }
+  return Array.isArray(arr) ? arr : [arr];
+};
+
+const validateStoredSchemaIntegrity = (schema: StoredSchema) => {
+  if (!schema.jsonSchema.$id && !schema.jsonSchema.$id?.startsWith('dxn:')) {
+    log.warn('Schema is missing $id or has invalid $id', { schema });
+    return false;
+  }
+
+  if (schema.jsonSchema.type !== 'object') {
+    log.warn('Schema is not of object type', { schema });
+    return false;
+  }
+
+  // TODO(dmaretskyi): Remove.
+  if (schema.jsonSchema.echo?.type?.schemaId !== schema.id) {
+    log.warn('Schema is missing echo type schemaId', { schema });
+    return false;
+  }
+
+  return true;
 };
