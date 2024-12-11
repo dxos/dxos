@@ -234,6 +234,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
   /**
    * @deprecated
    */
+  // TODO(dmaretskyi): Only used in tests -- remove.
   public registerSchema(schema: StoredSchema): EchoSchema {
     return this._registerSchema(schema);
   }
