@@ -30,7 +30,7 @@ describe('View', () => {
   test('create view from TypedObject', async ({ expect }) => {
     const schema = Testing.ContactType;
     const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: toJsonSchema(schema) });
-    expect(view.query.typename).to.eq(schema.typename);
+    expect(view.query.type).to.eq(schema.typename);
     expect(view.fields.map((f) => f.path)).to.deep.eq([
       'name',
       'email',

@@ -123,7 +123,7 @@ export const createView = ({
   return create(ViewType, {
     name,
     query: {
-      typename,
+      type: typename,
     },
     fields,
   });
