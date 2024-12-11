@@ -208,6 +208,7 @@ export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
   }
 
   // TODO(burdon): Tighten type signature to AbstractSchema?
+  // TODO(dmaretskyi): Figure out how to migrate the usages to the async `register` method.
   public addSchema(schema: S.Schema<any>): MutableSchema {
     const meta = getObjectAnnotation(schema);
     invariant(meta, 'use S.Struct({}).pipe(EchoObject(...)) or class syntax to create a valid schema');
