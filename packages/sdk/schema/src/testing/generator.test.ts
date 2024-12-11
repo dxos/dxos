@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 
 import { type EchoDatabase, Filter } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { type AbstractSchema, type S } from '@dxos/echo-schema';
+import { type TypedObject, type S } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { stripUndefinedValues } from '@dxos/util';
@@ -21,7 +21,7 @@ faker.seed(1);
 const generator: ValueGenerator = faker as any;
 
 type TypeSpec = {
-  type: AbstractSchema;
+  type: TypedObject;
   count: number;
 };
 

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type AbstractSchema, type BaseObject } from '@dxos/echo-schema';
+import { type TypedObject, type BaseObject } from '@dxos/echo-schema';
 import { create, type ReactiveObject } from '@dxos/live-object';
 import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
 import { addressToA1Notation, createSheet } from '@dxos/plugin-sheet';
@@ -111,7 +111,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
   ],
 ]);
 
-export const createGenerator = <T extends BaseObject>(type: AbstractSchema<T>): ObjectGenerator<T> => {
+export const createGenerator = <T extends BaseObject>(type: TypedObject<T>): ObjectGenerator<T> => {
   return async (
     space: Space,
     n: number,

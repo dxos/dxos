@@ -12,7 +12,7 @@ import { getTypenameOrThrow } from '../types';
  */
 // TODO(burdon): Reconcile with EchoSchemaRegistry.
 export class RuntimeSchemaRegistry {
-  // TODO(burdon): Change to AbstractTypedObject
+  // TODO(burdon): Change to TypedObject
   private readonly _schema = new Map<string, S.Schema<any>>();
 
   constructor() {
@@ -24,18 +24,18 @@ export class RuntimeSchemaRegistry {
     return Array.from(this._schema.values());
   }
 
-  // TODO(burdon): AbstractTypedObject
+  // TODO(burdon): TypedObject
   hasSchema<S extends S.Schema<any>>(schema: S): boolean {
     const typename = getTypenameOrThrow(schema);
     return this._schema.has(typename);
   }
 
-  // TODO(burdon): AbstractTypedObject
+  // TODO(burdon): TypedObject
   getSchema(typename: string): S.Schema<any> | undefined {
     return this._schema.get(typename);
   }
 
-  // TODO(burdon): AbstractTypedObject
+  // TODO(burdon): TypedObject
   addSchema(types: S.Schema<any>[]) {
     types.forEach((schema) => {
       const typename = getTypenameOrThrow(schema);

@@ -15,20 +15,30 @@ import {
 } from '../ast';
 
 /**
- * Base type.
+ * Definition for an object type that can be stored in an ECHO database.
+ * Implements effect schema to define object properties.
+ * Has a typename and version.
+ *
+ * In contrast to {@link EchoSchema} this definition is not recorded in the database.
  */
-// TODO(burdon): Combine AbstractSchema with AbstractTypedObject?
-export interface AbstractSchema<Fields = any, I = any> extends S.Schema<Fields, I> {
+export interface TypedObject<A = any, I = any> extends S.Schema<A, I> {
   /** Fully qualified type name. */
   readonly typename: string;
+
+  /**
+   * Semver schema version.
+   */
+  readonly version: string;
 }
 
 /**
- * Marker interface for typed objects (for type inference).
+ * Typed object that could be used as a prototype in class definitions.
+ * This is an internal API type.
+ * Use {@link TypedObject} for the common use-cases.
  */
-export interface AbstractTypedObject<Fields = any, I = any> extends AbstractSchema<Fields, I> {
+export interface TypedObjectPrototype<A = any, I = any> extends TypedObject<A, I> {
   /** Type constructor. */
-  new (): HasId & Fields;
+  new (): HasId & A;
 }
 
 type TypedObjectProps = ObjectAnnotation & {
@@ -84,7 +94,7 @@ export const TypedObject = <ClassType>({ typename, version, skipTypenameFormatCh
   return <SchemaFields extends S.Struct.Fields, Options extends TypedObjectOptions>(
     fields: SchemaFields,
     options?: Options,
-  ): AbstractTypedObject<TypedObjectFields<SchemaFields, Options>, S.Struct.Encoded<SchemaFields>> => {
+  ): TypedObjectPrototype<TypedObjectFields<SchemaFields, Options>, S.Struct.Encoded<SchemaFields>> => {
     // Create schema from fields.
     const schema: S.Schema.All = options?.record ? S.Struct(fields, { key: S.String, value: S.Any }) : S.Struct(fields);
 
@@ -100,10 +110,12 @@ export const TypedObject = <ClassType>({ typename, version, skipTypenameFormatCh
      * Return class definition.
      * NOTE: Actual reactive ECHO objects must be created via the `create(Type)` function.
      */
-    // TODO(burdon): This is missing fields required by AbstractTypedObject (e.g., Type, Encoded, Context)?
+    // TODO(burdon): This is missing fields required by TypedObject (e.g., Type, Encoded, Context)?
     return class {
-      // Implement AbstractSchema properties.
+      // Implement TypedObject properties.
       static readonly typename = typename;
+
+      static readonly version = version;
 
       // TODO(burdon): Comment required.
       static [Symbol.hasInstance](obj: unknown): obj is ClassType {

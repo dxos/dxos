@@ -29,7 +29,7 @@ import {
   resolvePlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type Trigger, type UnsubscribeCallback } from '@dxos/async';
-import { S, type AbstractTypedObject, type HasId } from '@dxos/echo-schema';
+import { S, type TypedObject, type HasId } from '@dxos/echo-schema';
 import { scheduledEffect } from '@dxos/echo-signals/core';
 import { invariant } from '@dxos/invariant';
 import { create, isDeleted, isReactiveObject } from '@dxos/live-object';
@@ -168,7 +168,7 @@ export const SpacePlugin = ({
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
   const graphSubscriptions = new Map<string, UnsubscribeCallback>();
-  const schemas: AbstractTypedObject[] = [];
+  const schemas: TypedObject[] = [];
 
   let clientPlugin: Plugin<ClientPluginProvides> | undefined;
   let graphPlugin: Plugin<GraphProvides> | undefined;

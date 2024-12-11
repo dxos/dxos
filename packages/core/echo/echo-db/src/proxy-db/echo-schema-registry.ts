@@ -209,7 +209,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     return this._register(typeObject);
   }
 
-  // TODO(burdon): Tighten type signature to AbstractSchema?
+  // TODO(burdon): Tighten type signature to TypedObject?
   // TODO(dmaretskyi): Figure out how to migrate the usages to the async `register` method.
   public addSchema(schema: S.Schema<any>): EchoSchema {
     if (schema instanceof EchoSchema) {

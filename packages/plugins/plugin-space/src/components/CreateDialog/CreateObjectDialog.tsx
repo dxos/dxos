@@ -6,7 +6,7 @@ import React, { useCallback, useRef } from 'react';
 
 import { type MetadataResolver, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
-import { type AbstractTypedObject, isReactiveObject, isSpace, useSpaces } from '@dxos/react-client/echo';
+import { type TypedObject, isReactiveObject, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 
 import { CreateObjectPanel, type CreateObjectPanelProps } from './CreateObjectPanel';
@@ -38,7 +38,7 @@ export const CreateObjectDialog = ({
       target: _target,
       name,
     }: {
-      schema: AbstractTypedObject;
+      schema: TypedObject;
       target: CreateObjectPanelProps['target'];
       name?: string;
     }) => {

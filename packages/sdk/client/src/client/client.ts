@@ -20,7 +20,7 @@ import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { inspectObject, raise } from '@dxos/debug';
 import { EchoClient } from '@dxos/echo-db';
-import { getTypename, type AbstractTypedObject } from '@dxos/echo-schema';
+import { getTypename, type TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -46,7 +46,7 @@ export type ClientOptions = {
   /** Custom services provider. */
   services?: MaybePromise<ClientServicesProvider>;
   /** ECHO schema. */
-  types?: AbstractTypedObject[];
+  types?: TypedObject[];
   /** Shell path. */
   shell?: string;
   /** Create client worker. */
@@ -224,7 +224,7 @@ export class Client {
    * Add schema types to the client.
    */
   // TODO(burdon): Check if already registered (and remove downstream checks).
-  addTypes(types: AbstractTypedObject<any>[]) {
+  addTypes(types: TypedObject<any>[]) {
     log('addTypes', { schema: types.map((type) => getTypename(type)) });
 
     // TODO(dmaretskyi): Uncomment after release.

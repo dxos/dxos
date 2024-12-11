@@ -15,19 +15,14 @@ import {
 import { StoredSchema } from './stored-schema';
 import { SchemaMetaSymbol, schemaVariance, type HasId, type JsonSchemaType, type SchemaMeta } from '../ast';
 import { toEffectSchema, toJsonSchema } from '../json';
-import { type AbstractSchema, type ObjectId } from '../object';
-
-// TODO(burdon): Reconcile with AbstractTypedObject. Need common base class.
-interface EchoSchemaConstructor extends AbstractSchema {
-  new (): HasId;
-}
+import { type TypedObject, type ObjectId, type TypedObjectPrototype } from '../object';
 
 /**
  * Defines an effect-schema for the `EchoSchema` type.
  *
  * This is here so that `EchoSchema` class can be used as a part of another schema definition (e.g., `ref(EchoSchema)`).
  */
-const EchoSchemaConstructor = (): EchoSchemaConstructor => {
+const EchoSchemaConstructor = (): TypedObjectPrototype => {
   /**
    * Return class definition satisfying S.Schema.
    */
@@ -67,7 +62,7 @@ const EchoSchemaConstructor = (): EchoSchemaConstructor => {
  *
  * @example
  * ```typescript
- * export class TableType extends TypedObject({ typename: 'example.org/type/Table', version: '0.1.0', })({
+ * export class TableType extends TypedObject({ typename: 'example.org/type/Table', version: '0.1.0' })({
  *   title: S.String,
  *   schema: S.optional(ref(EchoSchema)),
  *   props: S.mutable(S.Array(TablePropSchema)),
@@ -76,7 +71,7 @@ const EchoSchemaConstructor = (): EchoSchemaConstructor => {
  *
  * The ECHO API will translate any references to StoredSchema objects to be resolved as EchoSchema objects.
  */
-export class EchoSchema extends EchoSchemaConstructor() implements S.Schema.AnyNoContext {
+export class EchoSchema extends EchoSchemaConstructor() implements S.Schema.AnyNoContext, TypedObject {
   private _schema: S.Schema<any> | undefined;
   private _isDirty = true;
 
@@ -87,7 +82,7 @@ export class EchoSchema extends EchoSchemaConstructor() implements S.Schema.AnyN
   /**
    * Id of the ECHO object containing the schema.
    */
-  public override get id(): ObjectId {
+  public get id(): ObjectId {
     return this._storedSchema.id;
   }
 

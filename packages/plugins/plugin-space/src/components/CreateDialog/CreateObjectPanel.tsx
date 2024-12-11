@@ -5,7 +5,7 @@
 import React, { useCallback, useState } from 'react';
 
 import { type MetadataResolver } from '@dxos/app-framework';
-import { type AbstractTypedObject, getObjectAnnotation, S } from '@dxos/echo-schema';
+import { type TypedObject, getObjectAnnotation, S } from '@dxos/echo-schema';
 import { type SpaceId, type Space, isSpace } from '@dxos/react-client/echo';
 import { Icon, IconButton, Input, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Form, InputHeader } from '@dxos/react-ui-form';
@@ -17,7 +17,7 @@ import { type CollectionType } from '../../types';
 import { getSpaceDisplayName } from '../../util';
 
 export type CreateObjectPanelProps = {
-  schemas: AbstractTypedObject[];
+  schemas: TypedObject[];
   spaces: Space[];
   typename?: string;
   target?: Space | CollectionType;
@@ -25,7 +25,7 @@ export type CreateObjectPanelProps = {
   defaultSpaceId?: SpaceId;
   resolve?: MetadataResolver;
   onCreateObject?: (params: {
-    schema: AbstractTypedObject;
+    schema: TypedObject;
     target: Space | CollectionType;
     name?: string;
   }) => MaybePromise<void>;

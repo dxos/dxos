@@ -12,7 +12,7 @@ import type {
   TranslationsProvides,
   Plugin,
 } from '@dxos/app-framework';
-import { AST, S, type AbstractTypedObject, type Expando } from '@dxos/echo-schema';
+import { AST, S, type TypedObject, type Expando } from '@dxos/echo-schema';
 import { type PanelProvides } from '@dxos/plugin-deck/types';
 import { type PublicKey } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
@@ -76,8 +76,8 @@ export type SpaceSettingsProps = {
 
 export type SchemaProvides = {
   echo: {
-    schema?: AbstractTypedObject[];
-    system?: AbstractTypedObject[];
+    schema?: TypedObject[];
+    system?: TypedObject[];
   };
 };
 

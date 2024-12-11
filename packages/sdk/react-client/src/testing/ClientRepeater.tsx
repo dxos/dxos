@@ -6,7 +6,7 @@ import React, { useState, type FC, useEffect, useRef } from 'react';
 
 import { Client, type PublicKey } from '@dxos/client';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
-import { type AbstractTypedObject } from '@dxos/echo-schema';
+import { type TypedObject } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals/react';
 import { faker } from '@dxos/random';
 
@@ -24,7 +24,7 @@ export type ClientRepeaterProps<P extends ClientRepeatedComponentProps> = {
   controls?: FC<ClientRepeaterControlsProps>;
   count?: number;
   clients?: Client[];
-  types?: AbstractTypedObject[];
+  types?: TypedObject[];
   args?: Omit<P, 'id' | 'count'>;
 } & Pick<WithClientProviderProps, 'createIdentity' | 'createSpace' | 'onSpaceCreated'>;
 
