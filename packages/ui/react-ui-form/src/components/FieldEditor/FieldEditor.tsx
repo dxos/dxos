@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { type SchemaResolver } from '@dxos/echo-db';
+import { type SchemaRegistry } from '@dxos/echo-db';
 import { FormatEnum, FormatEnums, formatToType, type MutableSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
@@ -25,7 +25,7 @@ export type FieldEditorProps = {
   view: ViewType;
   projection: ViewProjection;
   field: FieldType;
-  registry?: SchemaResolver;
+  registry?: SchemaRegistry;
   onSave: () => void;
   onCancel?: () => void;
 };
@@ -44,9 +44,11 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
       return;
     }
 
-    const subscription = registry.subscribe(setSchemas);
+    const subscription = registry.query().subscribe((query) => setSchemas(query.results), { fire: true });
+
+    // TODO(dmaretskyi): This shouldn't be needed.
     const t = setTimeout(async () => {
-      const schemas = await registry.query();
+      const schemas = await registry.query().run();
       setSchemas(schemas);
     });
     return () => {

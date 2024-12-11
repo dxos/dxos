@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { type SchemaResolver } from '@dxos/echo-db';
+import { type SchemaRegistry } from '@dxos/echo-db';
 import { AST, Format, type MutableSchema, S } from '@dxos/echo-schema';
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
@@ -32,7 +32,7 @@ type ViewMetaType = S.Schema.Type<typeof ViewMetaSchema>;
 export type ViewEditorProps = ThemedClassName<{
   schema: MutableSchema;
   view: ViewType;
-  registry?: SchemaResolver;
+  registry?: SchemaRegistry;
   readonly?: boolean;
   showHeading?: boolean;
   onDelete: (fieldId: string) => void;

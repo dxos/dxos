@@ -118,9 +118,9 @@ export const createGenerator = <T extends BaseObject>(type: AbstractSchema<T>): 
     cb?: (objects: ReactiveObject<any>[]) => void,
   ): Promise<ReactiveObject<T>[]> => {
     // Find or create mutable schema.
-    const mutableSchema = await space.db.schemaRegistry.query();
     const schema =
-      mutableSchema.find((schema) => schema.typename === type.typename) ?? space.db.schemaRegistry.addSchema(type);
+      (await space.db.schemaRegistry.query({ typename: type.typename }).firstOrUndefined()) ??
+      space.db.schemaRegistry.addSchema(type);
 
     // Create objects.
     const generate = createAsyncGenerator(generator, schema.schema, { db: space.db });

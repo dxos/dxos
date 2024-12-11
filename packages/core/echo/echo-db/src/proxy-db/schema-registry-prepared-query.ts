@@ -61,6 +61,11 @@ export class SchemaRegistryPreparedQueryImpl<T> implements SchemaRegistryPrepare
     return results[0];
   }
 
+  async firstOrUndefined(): Promise<T | undefined> {
+    const results = await this._resolver.getResults();
+    return results[0];
+  }
+
   subscribe(cb?: (self: this) => void, opts?: { fire?: boolean }): UnsubscribeCallback {
     if (cb) {
       this._changes.on(cb);

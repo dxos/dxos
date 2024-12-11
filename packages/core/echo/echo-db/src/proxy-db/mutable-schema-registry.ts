@@ -28,12 +28,11 @@ import type {
   SchemaRegistry,
   SchemaRegistryPreparedQuery,
   SchemaRegistryQuery,
+  SchemaSubscriptionCallback,
 } from './schema-registry-api';
 import { SchemaRegistryPreparedQueryImpl } from './schema-registry-prepared-query';
 import { getObjectCore } from '../echo-handler';
 import { Filter } from '../query';
-
-export type SchemaSubscriptionCallback = (schema: MutableSchema[]) => void;
 
 export type MutableSchemaRegistryOptions = {
   /**

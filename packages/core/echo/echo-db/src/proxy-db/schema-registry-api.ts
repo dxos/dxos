@@ -60,8 +60,8 @@ export type SchemaRegistryQuery = {
 export interface SchemaRegistryPreparedQuery<T> {
   /**
    * Returns query results synchronously.
-   * Supports signals notifications.
-   * User must call `subscribe` for reactive notifications to be enabled.
+   * @reactive Supports signals notifications.
+   * @throws If `subscribe` has not been called.
    */
   get results(): T[];
 
@@ -85,6 +85,13 @@ export interface SchemaRegistryPreparedQuery<T> {
   first(): Promise<T>;
 
   /**
+   * Runs the query and returns first result.
+   *
+   * @returns `undefined` if query returns 0 entries.
+   */
+  firstOrUndefined(): Promise<T | undefined>;
+
+  /**
    * Subscribe to the query results reactively.
    * Enables signals notifications for `results`.
    */
@@ -106,12 +113,4 @@ export type RegisterSchemaInput = {
    * Schema to register in the JSON Schema format.
    */
   jsonSchema?: JsonSchemaType;
-};
-
-export type MutableSchemaRegistryOptions = {
-  /**
-   * Run a reactive query for dynamic schemas.
-   * @default true
-   */
-  reactiveQuery?: boolean;
 };
