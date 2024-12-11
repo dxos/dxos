@@ -25,8 +25,8 @@ export const FieldPath = (path: string) => PropertyMeta(FIELD_PATH_ANNOTATION, p
 
 /**
  * @internal
+ * Internal Effect-schema implementation detail.
  */
-// TODO(burdon): Comment required.
 export const schemaVariance = {
   _A: (_: any) => _,
   _I: (_: any) => _,
