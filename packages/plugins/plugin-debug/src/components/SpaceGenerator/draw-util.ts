@@ -5,6 +5,7 @@
 // TODO(burdon): workerize-loader dep.
 import { Graph, type Edge, type PlainObject } from '@antv/graphlib';
 import {
+  type Layout,
   D3ForceLayout,
   type D3ForceLayoutOptions,
   GridLayout,
@@ -12,7 +13,6 @@ import {
   RadialLayout,
   type RadialLayoutOptions,
 } from '@antv/layout';
-import { type Layout } from '@antv/layout/lib/types';
 import { createBindingId, createShapeId, type Editor, type SerializedStore, type TLRecord } from '@tldraw/tldraw';
 
 import { faker } from '@dxos/random';
@@ -25,15 +25,6 @@ import { isNotFalsy, range } from '@dxos/util';
 //  - https://www.npmjs.com/package/@dagrejs/dagre
 //    - https://github.com/dagrejs/dagre/wiki
 //  - https://www.npmjs.com/package/elkjs
-
-// TLDraw structure:
-//    svg tl-svg-context
-//    div tl-html-layer tl-shapes
-//      div tl-shape
-//        svg tl-svg-container
-//        div class tl-html-container
-//    div tl-overlays
-//      svg
 
 /**
  * https://github.com/antvis/graphlib/blob/master/docs/classes/Graph.md

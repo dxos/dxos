@@ -7,10 +7,6 @@ import { createStoredSchema, type ReactiveObject } from '@dxos/live-object';
 
 import { createView, type ViewType } from '../view';
 
-/**
- * @deprecated
- */
-// TODO(burdon): Use Contact/Org, etc.
 export class TestSchema extends TypedObject({
   typename: 'example.com/type/Test',
   version: '0.1.0',
