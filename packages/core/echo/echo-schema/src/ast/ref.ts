@@ -8,8 +8,8 @@ import { DXN } from '@dxos/keys';
 
 import { getEchoIdentifierAnnotation, getObjectAnnotation, ReferenceAnnotationId } from './annotations';
 import { type JsonSchemaType } from './json-schema-type';
-import { EchoSchema, StoredSchema } from '../schema';
 import { EXPANDO_TYPENAME, getTypename } from '../object';
+import { EchoSchema, StoredSchema } from '../schema';
 import { type Ref, type WithId } from '../types';
 
 /**

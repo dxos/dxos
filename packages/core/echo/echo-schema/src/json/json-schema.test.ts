@@ -14,7 +14,6 @@ import { FormatAnnotationId } from '../formats';
 import { Email } from '../formats/string';
 import { TypedObject } from '../object';
 import { Contact } from '../testing';
-import { property } from 'effect/FastCheck';
 
 describe('effect-to-json', () => {
   test('type annotation', () => {

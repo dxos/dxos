@@ -2,10 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type JsonProp, S } from '@dxos/effect';
-
 import { PropertyMeta } from './annotations';
-import { FormatAnnotationId } from '../formats';
 
 /**
  * Marker interface for object with an `id`.

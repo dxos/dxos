@@ -13,7 +13,7 @@ import {
   updateFieldsInSchema,
 } from './manipulation';
 import { StoredSchema } from './stored-schema';
-import { SchemaMetaSymbol, schemaVariance, type HasId, type JsonSchemaType, type SchemaMeta } from '../ast';
+import { SchemaMetaSymbol, schemaVariance, type JsonSchemaType, type SchemaMeta } from '../ast';
 import { toEffectSchema, toJsonSchema } from '../json';
 import { type TypedObject, type ObjectId, type TypedObjectPrototype } from '../object';
 

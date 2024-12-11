@@ -4,7 +4,6 @@
 
 import { type JsonProp, S } from '@dxos/effect';
 
-import { PropertyMeta } from './annotations';
 import { FormatAnnotationId } from '../formats';
 //
 // JSON Schema
@@ -134,6 +133,8 @@ const _JsonSchemaType = S.mutable(
      * Non-standard JSON Schema extension.
      * Defines the order of properties in the object.
      * The unmentioned properties are placed at the end.
+     *
+     * Related: https://github.com/json-schema/json-schema/issues/119
      */
     propertyOrder: S.optional(StringArray),
 
