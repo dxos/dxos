@@ -43,7 +43,7 @@ const StorybookKanban = () => {
       const kanban = kanbans[0];
       invariant(kanban.cardView);
       setKanban(kanban);
-      setCardSchema(space.db.schemaRegistry.getSchema(kanban.cardView!.query.typename));
+      setCardSchema(space.db.schemaRegistry.getSchema(kanban.cardView!.query.type));
     }
   }, [kanbans]);
 
