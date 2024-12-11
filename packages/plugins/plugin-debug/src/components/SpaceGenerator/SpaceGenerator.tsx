@@ -43,7 +43,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
   // Query space to get info.
   const updateInfo = async () => {
     // Create schema map.
-    const mutableSchema = await space.db.schemaRegistry.query().run();
+    const echoSchema = await space.db.schemaRegistry.query().run();
     const staticSchema = space.db.graph.schemaRegistry.schemas;
 
     // Create object map.
@@ -62,7 +62,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
     setInfo({
       schema: {
         static: staticSchema.length,
-        mutable: mutableSchema.length,
+        mutable: echoSchema.length,
       },
       objects: objectMap,
     });

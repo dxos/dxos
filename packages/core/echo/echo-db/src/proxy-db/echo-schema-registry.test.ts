@@ -48,32 +48,32 @@ describe('schema registry', () => {
 
   test('add new schema', async () => {
     const { registry } = await setupTest();
-    const mutableSchema = registry.addSchema(Contact);
+    const echoSchema = registry.addSchema(Contact);
     const expectedSchema = Contact.annotations({
       [ObjectAnnotationId]: { typename: 'example.com/type/Contact', version: '0.1.0' },
-      [EchoIdentifierAnnotationId]: `dxn:echo:@:${mutableSchema.id}`,
+      [EchoIdentifierAnnotationId]: `dxn:echo:@:${echoSchema.id}`,
     });
-    console.log(mutableSchema.ast);
+    console.log(echoSchema.ast);
     console.log(expectedSchema.ast);
-    expect(mutableSchema.ast).to.deep.eq(expectedSchema.ast);
-    expect(registry.hasSchema(mutableSchema)).to.be.true;
-    expect(registry.getSchemaById(mutableSchema.id)?.ast).to.deep.eq(expectedSchema.ast);
-    expect(mutableSchema.jsonSchema.$id).toEqual(`dxn:echo:@:${mutableSchema.id}`);
+    expect(echoSchema.ast).to.deep.eq(expectedSchema.ast);
+    expect(registry.hasSchema(echoSchema)).to.be.true;
+    expect(registry.getSchemaById(echoSchema.id)?.ast).to.deep.eq(expectedSchema.ast);
+    expect(echoSchema.jsonSchema.$id).toEqual(`dxn:echo:@:${echoSchema.id}`);
   });
 
   // TODO(dmaretskyi): Fix schema field order.
   test.skip('add new schema - preserves field order', async () => {
     const { registry } = await setupTest();
-    const mutableSchema = registry.addSchema(Org);
+    const echoSchema = registry.addSchema(Org);
     const expectedSchema = Org.annotations({
       [ObjectAnnotationId]: { typename: 'example.com/type/Org', version: '0.1.0' },
-      [EchoIdentifierAnnotationId]: `dxn:echo:@:${mutableSchema.id}`,
+      [EchoIdentifierAnnotationId]: `dxn:echo:@:${echoSchema.id}`,
     });
-    console.log(mutableSchema.ast);
+    console.log(echoSchema.ast);
     console.log(expectedSchema.ast);
-    expect(mutableSchema.ast).to.deep.eq(expectedSchema.ast);
-    expect(registry.hasSchema(mutableSchema)).to.be.true;
-    expect(registry.getSchemaById(mutableSchema.id)?.ast).to.deep.eq(expectedSchema.ast);
+    expect(echoSchema.ast).to.deep.eq(expectedSchema.ast);
+    expect(registry.hasSchema(echoSchema)).to.be.true;
+    expect(registry.getSchemaById(echoSchema.id)?.ast).to.deep.eq(expectedSchema.ast);
   });
 
   test('can store the same schema multiple times', async () => {
@@ -129,9 +129,9 @@ describe('schema registry', () => {
 
   test('schema is invalidated on update', async () => {
     const { registry } = await setupTest();
-    const [mutableSchema] = await registry.register([{ schema: Contact }]);
-    expect(mutableSchema.getProperties().length).to.eq(1);
-    mutableSchema.addFields({ newField: S.Number });
-    expect(mutableSchema.getProperties().length).to.eq(2);
+    const [echoSchema] = await registry.register([{ schema: Contact }]);
+    expect(echoSchema.getProperties().length).to.eq(1);
+    echoSchema.addFields({ newField: S.Number });
+    expect(echoSchema.getProperties().length).to.eq(2);
   });
 });

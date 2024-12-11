@@ -21,7 +21,7 @@ export const createEchoSchema = (schema: AbstractSchema): EchoSchema => {
   const typeReference = getTypeReference(schema);
   invariant(typeReference, 'Type reference not found.');
 
-  const mutableSchema = new EchoSchema(
+  const echoSchema = new EchoSchema(
     create(StoredSchema, {
       typename: typeReference.objectId,
       version: '0.1.0',
@@ -30,9 +30,9 @@ export const createEchoSchema = (schema: AbstractSchema): EchoSchema => {
   );
 
   effect(() => {
-    const _ = mutableSchema.jsonSchema;
-    mutableSchema._invalidate();
+    const _ = echoSchema.jsonSchema;
+    echoSchema._invalidate();
   });
 
-  return mutableSchema;
+  return echoSchema;
 };

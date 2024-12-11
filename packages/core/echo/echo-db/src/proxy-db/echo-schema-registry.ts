@@ -285,25 +285,25 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
 
     let previousTypename: string | undefined;
 
-    const mutableSchema = new EchoSchema(schema);
+    const echoSchema = new EchoSchema(schema);
     const subscription = getObjectCore(schema).updates.on(() => {
-      mutableSchema._invalidate();
+      echoSchema._invalidate();
     });
 
     if (previousTypename !== undefined && schema.typename !== previousTypename) {
-      if (this._schemaByType.get(previousTypename) === mutableSchema) {
+      if (this._schemaByType.get(previousTypename) === echoSchema) {
         this._schemaByType.delete(previousTypename);
       }
       previousTypename = schema.typename;
-      this._schemaByType.set(schema.typename, mutableSchema);
+      this._schemaByType.set(schema.typename, echoSchema);
 
       this._notifySchemaListChanged();
     }
 
-    this._schemaById.set(schema.id, mutableSchema);
-    this._schemaByType.set(schema.typename, mutableSchema);
+    this._schemaById.set(schema.id, echoSchema);
+    this._schemaByType.set(schema.typename, echoSchema);
     this._unsubscribeById.set(schema.id, subscription);
-    return mutableSchema;
+    return echoSchema;
   }
 
   private _unregister(id: string) {
