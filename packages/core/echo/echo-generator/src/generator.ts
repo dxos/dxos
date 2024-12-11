@@ -113,7 +113,6 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
       if (existingSchema != null) {
         return existingSchema;
       }
-      console.log('add runtime', schema);
       this._space.db.graph.schemaRegistry.addSchema([schema]);
       return schema;
     }

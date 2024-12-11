@@ -3,13 +3,13 @@
 //
 
 import { Event, type UnsubscribeCallback } from '@dxos/async';
+import { Resource, type Context } from '@dxos/context';
 import {
   EchoIdentifierAnnotationId,
   getEchoIdentifierAnnotation,
   getObjectAnnotation,
   makeStaticSchema,
   MutableSchema,
-  type ObjectAnnotation,
   ObjectAnnotationId,
   type ObjectId,
   type S,
@@ -18,12 +18,11 @@ import {
   toJsonSchema,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 import { createStoredSchema } from '@dxos/live-object';
 import { log } from '@dxos/log';
 
 import { type EchoDatabase } from './database';
-import { getObjectCore } from '../echo-handler';
-import { Filter } from '../query';
 import type {
   RegisterSchemaInput,
   SchemaRegistry,
@@ -31,8 +30,8 @@ import type {
   SchemaRegistryQuery,
 } from './schema-registry-api';
 import { SchemaRegistryPreparedQueryImpl } from './schema-registry-prepared-query';
-import { Resource, type Context } from '@dxos/context';
-import { DXN } from '@dxos/keys';
+import { getObjectCore } from '../echo-handler';
+import { Filter } from '../query';
 
 export type SchemaSubscriptionCallback = (schema: MutableSchema[]) => void;
 
@@ -120,7 +119,7 @@ export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
             }
 
             if (query.version) {
-              if (!query.version.match(/^[0-9\.]+$/)) {
+              if (!query.version.match(/^[0-9.]+$/)) {
                 throw new Error('Semver version ranges not supported.');
               }
 

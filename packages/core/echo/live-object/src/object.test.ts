@@ -6,8 +6,9 @@ import { ulid } from 'ulidx';
 import { describe, test } from 'vitest';
 
 import { log } from '@dxos/log';
-import { create } from './object';
+
 import { getSnapshot } from './accessors';
+import { create } from './object';
 
 describe('Object', () => {
   test.skip('ulid stress test', () => {

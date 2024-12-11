@@ -3,9 +3,7 @@
 //
 
 import { type UnsubscribeCallback } from '@dxos/async';
-import { type JsonSchemaType, MutableSchema, type ObjectId, type S, StoredSchema } from '@dxos/echo-schema';
-
-import { type ReactiveEchoObject } from '../echo-handler';
+import { type JsonSchemaType, type MutableSchema, type ObjectId, type S } from '@dxos/echo-schema';
 
 export type SchemaSubscriptionCallback = (schema: MutableSchema[]) => void;
 

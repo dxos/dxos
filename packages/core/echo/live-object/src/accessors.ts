@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type BaseObject, foreignKeyEquals, type ObjectMeta, TYPENAME_SYMBOL } from '@dxos/echo-schema';
+import { type BaseObject, foreignKeyEquals, type ObjectMeta } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type Comparator, deepMapValues, intersection } from '@dxos/util';
 

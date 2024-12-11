@@ -7,7 +7,7 @@ import { Option, type Types } from 'effect';
 import { AST, JSONSchema, S, mapAst } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { orderKeys, removeUndefinedProperties } from '@dxos/util';
+import { orderKeys } from '@dxos/util';
 
 import {
   getObjectAnnotation,

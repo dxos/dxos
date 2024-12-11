@@ -6,11 +6,11 @@ import { type EncodedReference } from '@dxos/echo-protocol';
 import { S } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
+import { getEchoIdentifierAnnotation, getObjectAnnotation, ReferenceAnnotationId } from './annotations';
+import { type JsonSchemaType } from './types';
 import { MutableSchema, StoredSchema } from '../mutable';
 import { EXPANDO_TYPENAME, getTypename } from '../object';
 import { type Ref, type WithId } from '../types';
-import { getEchoIdentifierAnnotation, getObjectAnnotation, ReferenceAnnotationId } from './annotations';
-import { type JsonSchemaType } from './types';
 
 /**
  * The `$id` field for an ECHO reference schema.
@@ -65,7 +65,7 @@ export const createEchoReferenceSchema = (
   version: string | undefined,
 ): S.Schema<any> => {
   if (!echoId && !typename) {
-    throw new TypeError(`Either echoId or typename must be provided.`);
+    throw new TypeError('Either echoId or typename must be provided.');
   }
 
   const referenceInfo: JsonSchemaReferenceInfo = {

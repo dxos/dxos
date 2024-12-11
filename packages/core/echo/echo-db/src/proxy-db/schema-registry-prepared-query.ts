@@ -1,6 +1,11 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { Event, Mutex, type UnsubscribeCallback } from '@dxos/async';
-import type { SchemaRegistryPreparedQuery } from './schema-registry-api';
 import { log } from '@dxos/log';
+
+import type { SchemaRegistryPreparedQuery } from './schema-registry-api';
 
 export interface SchemaRegistryQueryResolver<T> {
   changes: Event<void>;
@@ -98,7 +103,7 @@ export class SchemaRegistryPreparedQueryImpl<T> implements SchemaRegistryPrepare
       }
 
       try {
-        this._resolver.start();
+        await this._resolver.start();
         this._isReactiveQueryRunning = true;
       } catch (err) {
         log.catch(err);
@@ -117,7 +122,7 @@ export class SchemaRegistryPreparedQueryImpl<T> implements SchemaRegistryPrepare
       }
 
       try {
-        this._resolver.stop();
+        await this._resolver.stop();
         this._isReactiveQueryRunning = false;
       } catch (err) {
         log.catch(err);

@@ -6,11 +6,11 @@ import { Schema as S } from '@effect/schema';
 
 import { Reference } from '@dxos/echo-protocol';
 import { AST, type JsonPath } from '@dxos/effect';
+import { DXN } from '@dxos/keys';
 import { getDeep, setDeep } from '@dxos/util';
 
 import { getEchoIdentifierAnnotation, getObjectAnnotation, type HasId } from './ast';
 import type { ObjectMeta } from './object/meta';
-import { DXN } from '@dxos/keys';
 
 // TODO(burdon): Use consistently (with serialization utils).
 export const ECHO_ATTR_ID = '@id';

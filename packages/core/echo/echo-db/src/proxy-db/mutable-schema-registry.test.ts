@@ -6,16 +6,12 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import {
   EchoIdentifierAnnotationId,
-  makeStaticSchema,
   MutableSchema,
-  type ObjectAnnotation,
   ObjectAnnotationId,
   S,
   StoredSchema,
   toJsonSchema,
-  TypedObject,
 } from '@dxos/echo-schema';
-import { TestSchemaType } from '@dxos/echo-schema/testing';
 import { create } from '@dxos/live-object';
 
 import { Filter } from '../query';
@@ -88,7 +84,7 @@ describe('schema registry', () => {
   });
 
   test('get all dynamic schemas', async () => {
-    const { db, registry } = await setupTest();
+    const { registry } = await setupTest();
     const schemas = await registry.register([{ schema: Org }, { schema: Contact }]);
     const retrieved = await registry.query().run();
     expect(retrieved.length).to.eq(schemas.length);
@@ -132,7 +128,7 @@ describe('schema registry', () => {
   });
 
   test('schema is invalidated on update', async () => {
-    const { db, registry } = await setupTest();
+    const { registry } = await setupTest();
     const [mutableSchema] = await registry.register([{ schema: Contact }]);
     expect(mutableSchema.getProperties().length).to.eq(1);
     mutableSchema.addFields({ newField: S.Number });
