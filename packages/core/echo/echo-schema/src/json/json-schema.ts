@@ -366,7 +366,7 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): AST.Annotations 
     }
 
     if (echoRefinement.type?.schemaId) {
-      annotations[ObjectAnnotationId] = `dxn:echo:@:${echoRefinement.type.schemaId}`;
+      annotations[EchoIdentifierAnnotationId] = `dxn:echo:@:${echoRefinement.type.schemaId}`;
     }
   }
 

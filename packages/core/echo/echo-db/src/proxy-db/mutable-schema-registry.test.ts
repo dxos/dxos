@@ -5,6 +5,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import {
+  EchoIdentifierAnnotationId,
   makeStaticSchema,
   MutableSchema,
   type ObjectAnnotation,
@@ -55,6 +56,7 @@ describe('schema registry', () => {
     const mutableSchema = registry.addSchema(TestClass);
     const expectedSchema = TestClass.annotations({
       [ObjectAnnotationId]: { ...meta, schemaId: mutableSchema.id },
+      [EchoIdentifierAnnotationId]: `dxn:echo:@:${mutableSchema.id}`,
     });
     console.log(mutableSchema.ast);
     console.log(expectedSchema.ast);

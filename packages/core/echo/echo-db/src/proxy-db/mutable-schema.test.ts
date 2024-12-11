@@ -12,6 +12,7 @@ import {
   TypedObject,
   S,
   getTypename,
+  EchoIdentifierAnnotationId,
 } from '@dxos/echo-schema';
 import { EmptySchemaType } from '@dxos/echo-schema/testing';
 import { getSchema, getType, create } from '@dxos/live-object';
@@ -49,6 +50,7 @@ describe('MutableSchema', () => {
         version: '0.1.0',
         schemaId: instanceWithSchemaRef.schema?.id,
       },
+      [EchoIdentifierAnnotationId]: `dxn:echo:@:${instanceWithSchemaRef.schema?.id}`,
     });
     expect(instanceWithSchemaRef.schema?.ast).to.deep.eq(schemaWithId.ast);
 
