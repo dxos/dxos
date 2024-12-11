@@ -4,7 +4,7 @@
 
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { asyncTimeout, latch, Trigger } from '@dxos/async';
+import { asyncTimeout, latch, sleep, Trigger } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { TYPE_PROPERTIES } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
@@ -358,6 +358,39 @@ describe('Spaces', () => {
     const guestSpace = await waitForSpace(guest, hostSpace2.key, { ready: true });
 
     await waitForObject(guestSpace, hostDocument);
+  });
+
+  test('peers do not gain access to documents from another space', async () => {
+    const [alice, bob] = await createInitializedClients(3);
+
+    [alice, bob].forEach(registerTypes);
+
+    const bobPersonalDoc = bob.spaces.get()[0].db.add(createDocument());
+
+    const [aliceSharedSpace, bobSharedSpace] = await createSharedSpace(alice, bob);
+    const sharedDoc = bobSharedSpace.db.add(createDocument());
+
+    await waitForObject(aliceSharedSpace, sharedDoc);
+    await sleep(50);
+    expect(aliceSharedSpace.db.getObjectById(bobPersonalDoc.id)).toBeUndefined();
+  });
+
+  test('peers do not gain transitive access to documents from another space', async () => {
+    const [alice, bob, eve] = await createInitializedClients(3);
+
+    [alice, bob, eve].forEach(registerTypes);
+
+    // Eve should not gain transitive access to the document created by bob in space A
+    const [aliceSpaceA, bobSpaceA] = await createSharedSpace(alice, bob);
+    const doc1 = bobSpaceA.db.add(createDocument());
+    const [__, eveSpaceB] = await createSharedSpace(bob, eve);
+
+    // Create a document in a space to which Eve shouldn't have access.
+    const doc2 = bobSpaceA.db.add(createDocument());
+
+    await Promise.all([doc1, doc2].map((doc) => waitForObject(aliceSpaceA, doc)));
+    await sleep(50);
+    [doc1, doc2].forEach((doc) => expect(eveSpaceB.db.getObjectById(doc.id)).toBeUndefined());
   });
 
   test('share two spaces between clients', async () => {
