@@ -4,15 +4,15 @@
 
 import { type FocusEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type BaseObject, type PropertyKey } from '@dxos/echo-schema';
-import { type SimpleType, type S } from '@dxos/effect';
+import { type BaseObject, getValue, setValue } from '@dxos/echo-schema';
+import { type SimpleType, type S, type JsonPath } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { validateSchema, type ValidationError } from '@dxos/schema';
 import { type MaybePromise } from '@dxos/util';
 
 // TODO(ZaymonFC): Where should this live?
-export type FormPath<T extends object = {}> = PropertyKey<T> | `${PropertyKey<T>}.${number}`;
+export type FormPath<T extends object = {}> = JsonPath;
 
 /**
  * Return type from `useForm` hook.
@@ -139,9 +139,7 @@ export const useForm = <T extends BaseObject>({
   const canSave = useMemo(
     () =>
       !saving &&
-      Object.keys(values).every(
-        (property) => touched[property as PropertyKey<T>] === false || !errors[property as PropertyKey<T>],
-      ),
+      Object.keys(values).every((property) => touched[property as JsonPath] === false || !errors[property as JsonPath]),
     [values, touched, errors, saving],
   );
 
@@ -169,8 +167,8 @@ export const useForm = <T extends BaseObject>({
   );
 
   // TODO(burdon): Use path to extract hierarchical value.
-  const getValue = <V>(property: FormPath<T>): V | undefined => {
-    return getByPath<T, V>(values, property);
+  const getFormValue = <V>(property: FormPath<T>): V | undefined => {
+    return getValue(values, property as JsonPath);
   };
 
   // TODO(burdon): Use path to set hierarchical value.
@@ -185,7 +183,7 @@ export const useForm = <T extends BaseObject>({
       parsedValue = undefined;
     }
 
-    const newValues = setByPath(values, property, parsedValue);
+    const newValues = { ...setValue(values, property, parsedValue) };
     setValues(newValues);
     setChanged((prev) => ({ ...prev, [property]: true }));
     onValuesChanged?.(newValues);
@@ -225,7 +223,7 @@ export const useForm = <T extends BaseObject>({
 
     // Field utils.
     getStatus,
-    getValue,
+    getValue: getFormValue,
     onValueChange,
     onBlur,
   } satisfies FormHandler<T>;
@@ -246,26 +244,4 @@ const flatMap = <T extends BaseObject>(errors: ValidationError[]) => {
     },
     {} as Record<FormPath<T>, string>,
   );
-};
-
-const getByPath = <T extends object, V>(obj: Partial<T>, path: FormPath<T>): V | undefined => {
-  const [key, index] = path.split('.');
-  const value = obj[key as keyof T];
-  if (value === undefined) {
-    return undefined;
-  }
-  return index === undefined ? (value as V) : ((value as any[])[parseInt(index)] as V);
-};
-
-const setByPath = <T extends object, V extends T[keyof T]>(
-  obj: Partial<T>,
-  path: FormPath<T>,
-  value: V,
-): Partial<T> => {
-  const [key, index] = path.split('.');
-  const newValue =
-    index === undefined
-      ? value
-      : [...((obj[key as keyof T] ?? []) as any[])].map((v, i) => (i === parseInt(index) ? value : v));
-  return { ...obj, [key]: newValue };
 };

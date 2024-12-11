@@ -90,9 +90,9 @@ export const splitMeta = <T>(object: T & WithMeta): { object: T; meta?: ObjectMe
   return { meta, object };
 };
 
-// TODO(burdon): Use jsonpath (arrays handled differently).
-export const getValue = <T = any>(obj: any, path: JsonPath) => getDeep<T>(obj, path.split('.'));
-export const setValue = <T = any>(obj: any, path: JsonPath, value: T) => setDeep<T>(obj, path.split('.'), value);
+export const getValue = <T extends object>(obj: T, path: JsonPath): any => getDeep(obj, path.split('.'));
+export const setValue = <T extends object>(obj: T, path: JsonPath, value: any): T =>
+  setDeep(obj, path.split('.'), value);
 
 /**
  * Returns a typename of a schema.
