@@ -13,15 +13,13 @@ import {
   StoredSchema,
   toJsonSchema,
   type ObjectId,
-  type S
+  type S,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { createStoredSchema } from '@dxos/live-object';
 import { log } from '@dxos/log';
 
-import { getObjectCore } from '../echo-handler';
-import { Filter } from '../query';
 import { type EchoDatabase } from './database';
 import type {
   RegisterSchemaInput,
@@ -31,6 +29,8 @@ import type {
   SchemaSubscriptionCallback,
 } from './schema-registry-api';
 import { SchemaRegistryPreparedQueryImpl } from './schema-registry-prepared-query';
+import { getObjectCore } from '../echo-handler';
+import { Filter } from '../query';
 
 export type EchoSchemaRegistryOptions = {
   /**

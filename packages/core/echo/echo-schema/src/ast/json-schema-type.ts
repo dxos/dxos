@@ -207,17 +207,17 @@ const _JsonSchemaType = S.mutable(
       ),
     ),
 
-    // TODO(dmaretskyi): Remove echo namespace.
     /**
      * @deprecated
      */
+    // TODO(dmaretskyi): Extract `annotations` and remove the namespace property.
     echo: S.optional(
       S.mutable(
         S.Struct({
           /**
            * @deprecated
            */
-          // TODO(dmaretskyi): Remove.
+          // TODO(dmaretskyi): We risk old schema not passing validation due to the extra fields. Remove when we are sure this is safe
           type: S.optional(
             S.mutable(
               S.Struct({
