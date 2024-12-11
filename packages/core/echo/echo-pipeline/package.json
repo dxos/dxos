@@ -73,7 +73,8 @@
   "devDependencies": {
     "@dxos/test-utils": "workspace:*",
     "@types/lodash.isequal": "^4.5.0",
-    "fast-check": "^3.19.0"
+    "fast-check": "^3.19.0",
+    "get-port-please": "^3.1.1"
   },
   "publishConfig": {
     "access": "public"
