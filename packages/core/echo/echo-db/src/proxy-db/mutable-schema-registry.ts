@@ -152,7 +152,7 @@ export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
         if (unsubscribe) {
           return;
         }
-        unsubscribe = self.subscribe(() => {
+        unsubscribe = self._subscribe(() => {
           changes.emit();
         });
       },
@@ -207,37 +207,6 @@ export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
     return this._register(typeObject);
   }
 
-  /**
-   * @deprecated
-   */
-  // TODO(burdon): Reconcile with query.
-  public async listAll(): Promise<StaticSchema[]> {
-    const { objects } = await this._db.query(Filter.schema(StoredSchema)).run();
-    const storedSchemas = objects.map((storedSchema) => {
-      const schema = new MutableSchema(storedSchema);
-      return {
-        id: storedSchema.id,
-        version: storedSchema.version,
-        typename: schema.typename,
-        schema: schema.schema,
-      } satisfies StaticSchema;
-    });
-
-    const runtimeSchemas = this._db.graph.schemaRegistry.schemas.map(makeStaticSchema);
-    return [...runtimeSchemas, ...storedSchemas];
-  }
-
-  public subscribe(callback: SchemaSubscriptionCallback): UnsubscribeCallback {
-    callback([...this._schemaById.values()]);
-    this._schemaSubscriptionCallbacks.push(callback);
-    return () => {
-      const index = this._schemaSubscriptionCallbacks.indexOf(callback);
-      if (index >= 0) {
-        this._schemaSubscriptionCallbacks.splice(index, 1);
-      }
-    };
-  }
-
   // TODO(burdon): Tighten type signature to AbstractSchema?
   public addSchema(schema: S.Schema<any>): MutableSchema {
     const meta = getObjectAnnotation(schema);
@@ -260,6 +229,26 @@ export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
    */
   public registerSchema(schema: StoredSchema): MutableSchema {
     return this._registerSchema(schema);
+  }
+
+  /**
+   * @deprecated
+   */
+  // TODO(burdon): Reconcile with query.
+  public async listAll(): Promise<StaticSchema[]> {
+    const { objects } = await this._db.query(Filter.schema(StoredSchema)).run();
+    const storedSchemas = objects.map((storedSchema) => {
+      const schema = new MutableSchema(storedSchema);
+      return {
+        id: storedSchema.id,
+        version: storedSchema.version,
+        typename: schema.typename,
+        schema: schema.schema,
+      } satisfies StaticSchema;
+    });
+
+    const runtimeSchemas = this._db.graph.schemaRegistry.schemas.map(makeStaticSchema);
+    return [...runtimeSchemas, ...storedSchemas];
   }
 
   /**
@@ -315,6 +304,17 @@ export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
       this._unsubscribeById.get(schema.id)?.();
       this._unsubscribeById.delete(schema.id);
     }
+  }
+
+  private _subscribe(callback: SchemaSubscriptionCallback): UnsubscribeCallback {
+    callback([...this._schemaById.values()]);
+    this._schemaSubscriptionCallbacks.push(callback);
+    return () => {
+      const index = this._schemaSubscriptionCallbacks.indexOf(callback);
+      if (index >= 0) {
+        this._schemaSubscriptionCallbacks.splice(index, 1);
+      }
+    };
   }
 
   private _notifySchemaListChanged() {

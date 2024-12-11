@@ -23,10 +23,11 @@ const TableViewEditor = ({ table }: TableViewEditorProps) => {
   const [schema, setSchema] = useState(
     space && table?.view?.query?.typename ? space.db.schemaRegistry.getSchema(table.view.query.typename) : undefined,
   );
+  // TODO(dmaretskyi): New hook for schema query.
   useEffect(() => {
     if (space && table?.view?.query?.typename) {
-      const unsubscribe = space.db.schemaRegistry.subscribe((schemas) => {
-        const schema = schemas.find((schema) => schema.typename === table?.view?.query?.typename);
+      const unsubscribe = space.db.schemaRegistry.query({ typename: table.view.query.typename }).subscribe((query) => {
+        const schema = query.results[0];
         if (schema) {
           setSchema(schema);
         }
