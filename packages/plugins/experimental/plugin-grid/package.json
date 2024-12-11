@@ -57,6 +57,7 @@
     "@dxos/util": "workspace:*",
     "@effect/schema": "^0.75.5",
     "@preact/signals-core": "^1.6.0",
+    "bind-event-listener": "^3.0.0",
     "lodash.defaultsdeep": "^4.6.1",
     "react-resize-detector": "^11.0.1"
   },

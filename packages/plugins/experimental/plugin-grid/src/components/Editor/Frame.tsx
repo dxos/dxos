@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import React, { useEffect, useRef, useState } from 'react';
+import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
-import { addPoint, type Dimension, getPoint, getPositionStyle, type Point } from './geometry';
+import { addPoint, type Dimension, getPoint, getBoundsProperties, type Point } from './geometry';
 
 const handleSize: Dimension = { width: 11, height: 11 };
 
@@ -21,16 +21,23 @@ export type Item = {
   size: Dimension;
 };
 
+export type HandleDragEvent = {
+  type: 'drag' | 'drop';
+  id: string;
+  pos: Point;
+  link?: Item;
+};
+
 export type HandleProps = {
   id: string;
   pos: Point;
-  onMove?: (id: string, pos: Point, state: 'drag' | 'drop') => void;
+  onDrag?: (event: HandleDragEvent) => void;
 };
 
 /**
  * Drag handle.
  */
-export const Handle = ({ id, pos, onMove }: HandleProps) => {
+export const Handle = ({ id, pos, onDrag }: HandleProps) => {
   // const [dragging, setDragging] = useState(false);
   const [hovering, setHovering] = useState(false);
 
@@ -44,58 +51,92 @@ export const Handle = ({ id, pos, onMove }: HandleProps) => {
       // onDragStart: () => setDragging(true),
       onDrag: ({ location }) => {
         // setDragging(false);
-        onMove?.(id, getPoint(pos, location), 'drag');
+        onDrag?.({ type: 'drag', id, pos: getPoint(pos, location) });
       },
       onDrop: ({ location }) => {
         // setDragging(false);
-        onMove?.(id, getPoint(pos, location), 'drop');
+        const link = location.current.dropTargets.find(({ data }) => data.type === 'Frame')?.data.item as Item;
+        onDrag?.({ type: 'drop', id, pos: getPoint(pos, location), link });
       },
     });
-  }, []);
+  }, [onDrag]);
 
   return (
     <div
       ref={ref}
-      style={getPositionStyle(pos, handleSize)}
-      className={mx('absolute z-10 border border-primary-500 bg-black', hovering && 'bg-blue-500')}
+      style={getBoundsProperties({ ...pos, ...handleSize })}
+      className={mx('absolute z-10 bg-black border border-teal-700', hovering && 'bg-teal-700')}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
     />
   );
 };
 
+export type FrameDragEvent = {
+  type: 'drag' | 'drop';
+  item: Item;
+  pos: Point;
+};
+
+export type FrameLinkEvent = {
+  type: 'drag' | 'drop';
+  item: Item;
+  pos: Point;
+  link?: Item;
+};
+
 export type FrameProps = {
   item: Item;
-  onMove?: (item: Item, pos: Point, state: 'drag' | 'drop') => void;
-  onHandleMove?: (item: Item, handle: string, pos: Point, state: 'drag' | 'drop') => void;
+  selected?: boolean;
+  onSelect?: (item: Item, selected: boolean) => void;
+  onDrag?: (event: FrameDragEvent) => void;
+  onLink?: (event: FrameLinkEvent) => void;
 };
 
 /**
  * Draggable Frame.
  */
-export const Frame = ({ item, onMove, onHandleMove }: FrameProps) => {
+export const Frame = ({ item, selected, onSelect, onDrag, onLink }: FrameProps) => {
   const [dragging, setDragging] = useState(false);
   // const [hovering, setHovering] = useState(false);
 
   const ref = useRef<HTMLDivElement>(null);
+
+  // Dragging.
   useEffect(() => {
-    const el = ref.current;
-    invariant(el);
+    invariant(ref.current);
     return draggable({
-      element: el,
+      element: ref.current,
       getInitialData: () => ({ item }),
       onDragStart: () => setDragging(true),
       onDrag: ({ location }) => {
-        onMove?.(item, getPoint(item.pos, location), 'drag');
+        onDrag?.({ type: 'drag', item, pos: getPoint(item.pos, location) });
       },
       onDrop: ({ location }) => {
+        onDrag?.({ type: 'drop', item, pos: getPoint(item.pos, location) });
         setDragging(false);
-        onMove?.(item, getPoint(item.pos, location), 'drop');
       },
     });
   }, [item]);
 
-  const handleHandleMove: HandleProps['onMove'] = (...props) => onHandleMove?.(item, ...props);
+  // Dropping (for link handles).
+  useEffect(() => {
+    invariant(ref.current);
+    return dropTargetForElements({
+      element: ref.current,
+      getData: () => ({ type: 'Frame', item }),
+      // onDragEnter: () => setIsDraggedOver(true),
+      // onDragLeave: () => setIsDraggedOver(false),
+      onDrop: ({ source }) => {
+        // setIsDraggedOver(false);
+      },
+    });
+  });
+
+  const handleDrag = useCallback<NonNullable<HandleProps['onDrag']>>(
+    ({ type, link, pos }) => onLink?.({ type, item, link, pos }),
+    [item],
+  );
 
   // TODO(burdon): Surface for form content.
   //  return <Surface ref={forwardRef} role='card' limit={1} data={{ content: object} />;
@@ -104,10 +145,12 @@ export const Frame = ({ item, onMove, onHandleMove }: FrameProps) => {
     <>
       <div
         ref={ref}
-        style={getPositionStyle(item.pos, item.size)}
+        style={getBoundsProperties({ ...item.pos, ...item.size })}
+        onClick={() => onSelect?.(item, !selected)}
         className={mx(
           'absolute flex justify-center items-center',
-          'bg-black border border-blue-500 rounded overflow-hidden',
+          'bg-black border border-teal-700 rounded overflow-hidden',
+          selected && 'bg-neutral-500',
           dragging && 'hidden',
         )}
         // onMouseEnter={() => setHovering(true)}
@@ -117,10 +160,10 @@ export const Frame = ({ item, onMove, onHandleMove }: FrameProps) => {
       </div>
       {!dragging && (
         <>
-          <Handle id='w' onMove={handleHandleMove} pos={addPoint(item.pos, { x: -item.size.width / 2, y: 0 })} />
-          <Handle id='e' onMove={handleHandleMove} pos={addPoint(item.pos, { x: item.size.width / 2, y: 0 })} />
-          <Handle id='n' onMove={handleHandleMove} pos={addPoint(item.pos, { x: 0, y: item.size.height / 2 })} />
-          <Handle id='s' onMove={handleHandleMove} pos={addPoint(item.pos, { x: 0, y: -item.size.height / 2 })} />
+          <Handle id='w' onDrag={handleDrag} pos={addPoint(item.pos, { x: -item.size.width / 2, y: 0 })} />
+          <Handle id='e' onDrag={handleDrag} pos={addPoint(item.pos, { x: item.size.width / 2, y: 0 })} />
+          <Handle id='n' onDrag={handleDrag} pos={addPoint(item.pos, { x: 0, y: item.size.height / 2 })} />
+          <Handle id='s' onDrag={handleDrag} pos={addPoint(item.pos, { x: 0, y: -item.size.height / 2 })} />
         </>
       )}
     </>

@@ -2,56 +2,93 @@
 // Copyright 2024 DXOS.org
 //
 
-export type Node<T extends object = any> = {
-  id: string;
-  data: T;
-};
+import { S } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 
-export type Edge<T extends object = any> = {
-  id: string;
-  source: string;
-  target: string;
-  data: T;
-};
+export const Node = S.Struct({
+  id: S.String,
+  data: S.Any,
+});
 
-export type Graph<N extends Node = Node<any>, E extends Edge = Edge<any>> = {
-  root?: string;
-  nodes?: N[];
-  edges?: E[];
-};
+export type Node = S.Schema.Type<typeof Node>;
 
-export class GraphWrapper<N extends Node = Node<any>, E extends Edge = Edge<any>> {
-  constructor(private readonly _graph: Graph<N, E> = {}) {}
+export const Edge = S.Struct({
+  id: S.String,
+  source: S.String,
+  target: S.String,
+  data: S.Any,
+});
 
-  get graph(): Graph<N, E> {
+export type Edge = S.Schema.Type<typeof Edge>;
+
+export const Graph = S.Struct({
+  id: S.String,
+  nodes: S.mutable(S.Array(Node)),
+  edges: S.mutable(S.Array(Edge)),
+});
+
+export type Graph = S.Schema.Type<typeof Graph>;
+
+/**
+ * Wrapper for graph operations.
+ */
+export class GraphWrapper {
+  private readonly _graph: Graph;
+
+  constructor(obj: Partial<Graph> = {}) {
+    this._graph = create(Graph, { id: 'test', nodes: [], edges: [], ...obj });
+  }
+
+  get graph(): Graph {
     return this._graph;
   }
 
-  get nodes(): readonly N[] {
-    return this._graph.nodes || [];
+  get nodes(): readonly Node[] {
+    return this._graph.nodes;
   }
 
-  get edges(): readonly E[] {
-    return this._graph.edges || [];
+  get edges(): readonly Edge[] {
+    return this._graph.edges;
   }
 
-  addNode(node: N): this {
-    this._graph.nodes = this._graph.nodes || [];
+  getNode(id: string): Node | undefined {
+    return this.nodes.find((node) => node.id === id);
+  }
+
+  getEdge(id: string): Edge | undefined {
+    return this.edges.find((edge) => edge.id === id);
+  }
+
+  addNode(node: Node): this {
     this._graph.nodes.push(node);
     return this;
   }
 
-  addEdge(edge: E): this {
-    this._graph.edges = this._graph.edges || [];
+  addEdge(edge: Edge): this {
     this._graph.edges.push(edge);
     return this;
   }
 
-  getNode(id: string): N | undefined {
-    return this.nodes.find((node) => node.id === id);
+  removeNode(id: string): this {
+    removeElements(this._graph.nodes, (node) => node.id === id);
+    removeElements(this._graph.edges, (edge) => edge.source === id || edge.target === id);
+    // this._graph.nodes = this.nodes.filter((node) => node.id !== id);
+    // this._graph.edges = this.edges.filter((edge) => edge.source !== id && edge.target !== id);
+    return this;
   }
 
-  getEdge(id: string): E | undefined {
-    return this.edges.find((edge) => edge.id === id);
+  removeEdge(id: string): this {
+    removeElements(this._graph.edges, (edge) => edge.id === id);
+    // this._graph.edges = this.edges.filter((edge) => edge.id !== id);
+    return this;
   }
 }
+
+// TODO(burdon): Create util to remove multiple elements.
+const removeElements = <T>(array: T[], predicate: (element: T, index: number) => boolean): void => {
+  for (let i = array.length - 1; i >= 0; i--) {
+    if (predicate(array[i], i)) {
+      array.splice(i, 1);
+    }
+  }
+};

@@ -8,8 +8,14 @@ import { type CSSProperties } from 'react';
 // TODO(burdon): Generalize positional unit (e.g., x,y, fraction, slot).
 export type Point = { x: number; y: number };
 export type Dimension = { width: number; height: number };
+export type Bounds = Point & Dimension;
+export type Range = { p1: Point; p2: Point };
 
 export type PointTransform = (pos: Point) => Point;
+
+//
+// Points
+//
 
 export const round = (n: number, m: number) => Math.round(n / m) * m;
 
@@ -21,23 +27,58 @@ export const createSnap = (snap?: Dimension): PointTransform =>
       })
     : (pos: Point) => pos;
 
-export const getPoint = (pos: Point, { initial, current }: DragLocationHistory): Point => {
-  const ix = initial.input.clientX - pos.x;
-  const iy = initial.input.clientY - pos.y;
-  return {
-    x: current.input.clientX - ix,
-    y: current.input.clientY - iy,
-  };
-};
+export const getPoint = (pos: Point, { initial, current }: DragLocationHistory): Point => ({
+  x: current.input.clientX - (initial.input.clientX - pos.x),
+  y: current.input.clientY - (initial.input.clientY - pos.y),
+});
 
 export const addPoint = (a: Point, b: Point): Point => ({ x: a.x + b.x, y: a.y + b.y });
 
-export const getPositionStyle = (pos: Point, size: Dimension): CSSProperties => ({
-  left: `${pos.x - size.width / 2}px`,
-  top: `${pos.y - size.height / 2}px`,
-  width: `${size.width}px`,
-  height: `${size.height}px`,
+//
+// Bounds
+//
+
+export const getBounds = (p1: Point, p2: Point): Bounds => ({
+  x: Math.min(p1.x, p2.x),
+  y: Math.min(p1.y, p2.y),
+  width: Math.abs(p1.x - p2.x),
+  height: Math.abs(p1.y - p2.y),
 });
+
+export const boundsOverlap = (b1: Bounds, b2: Bounds): boolean =>
+  !(b1.x + b1.width <= b2.x || b1.x >= b2.x + b2.width || b1.y + b1.height <= b2.y || b1.y >= b2.y + b2.height);
+
+export const boundsContain = (b1: Bounds, b2: Bounds): boolean =>
+  b2.x >= b1.x && b2.y >= b1.y && b2.x + b2.width <= b1.x + b1.width && b2.y + b2.height <= b1.y + b1.height;
+
+//
+// Transform
+//
+
+/**
+ * Maps the pointer event to the element's transformed coordinate system.
+ */
+export const getRelativeCoordinates = (rect: DOMRect, scale: number, translation: Point, bounds: Bounds) => ({
+  x: (bounds.x - rect.left - translation.x) / scale,
+  y: (bounds.y - rect.top - translation.y) / scale,
+  width: bounds.width / scale,
+  height: bounds.height / scale,
+});
+
+//
+// CSS
+//
+
+export const getBoundsProperties = ({ x, y, width, height }: Bounds): CSSProperties => ({
+  left: `${x - width / 2}px`,
+  top: `${y - height / 2}px`,
+  width: `${width}px`,
+  height: `${height}px`,
+});
+
+//
+// SVG Paths
+//
 
 export const createPathFromPoints = (points: Point[]): string => {
   if (points.length < 2) {

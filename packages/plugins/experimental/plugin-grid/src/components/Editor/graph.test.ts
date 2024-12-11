@@ -8,7 +8,7 @@ import { type Graph } from './graph';
 
 describe('Graph', () => {
   test('basics', ({ expect }) => {
-    const graph: Graph = {};
+    const graph: Graph = { id: 'test', nodes: [], edges: [] };
     expect(graph).to.deep.eq({});
   });
 });
