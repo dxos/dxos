@@ -5,7 +5,7 @@
 import { next as A } from '@dxos/automerge/automerge';
 import { createDocAccessor, type Space } from '@dxos/client/echo';
 import { ref, S } from '@dxos/echo-schema';
-import { createMutableSchema } from '@dxos/live-object';
+import { createEchoSchema } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 
 import { SpaceObjectGenerator, TestObjectGenerator } from './generator';
@@ -27,7 +27,7 @@ export enum TestSchemaType {
 }
 
 const testSchemas = (): TestSchemaMap<TestSchemaType> => {
-  const document = createMutableSchema(
+  const document = createEchoSchema(
     {
       typename: TestSchemaType.document,
       version: '0.1.0',
@@ -38,7 +38,7 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
     },
   );
 
-  const organization = createMutableSchema(
+  const organization = createEchoSchema(
     {
       typename: TestSchemaType.organization,
       version: '0.1.0',
@@ -50,7 +50,7 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
     },
   );
 
-  const contact = createMutableSchema(
+  const contact = createEchoSchema(
     {
       typename: TestSchemaType.contact,
       version: '0.1.0',
@@ -64,7 +64,7 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
     },
   );
 
-  const project = createMutableSchema(
+  const project = createEchoSchema(
     {
       typename: TestSchemaType.project,
       version: '0.1.0',

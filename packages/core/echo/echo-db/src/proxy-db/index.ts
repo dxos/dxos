@@ -4,5 +4,5 @@
 
 export * from './database';
 export * from './load-object';
-export * from './mutable-schema-registry';
+export * from './echo-schema-registry';
 export * from './schema-registry-api';

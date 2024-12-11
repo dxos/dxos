@@ -13,7 +13,7 @@ import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { defaultMap } from '@dxos/util';
 
-import { EchoSchemaRegistry } from './mutable-schema-registry';
+import { EchoSchemaRegistry } from './echo-schema-registry';
 import {
   CoreDatabase,
   type FlushOptions,

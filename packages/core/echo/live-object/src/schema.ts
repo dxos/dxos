@@ -35,7 +35,7 @@ export const createStoredSchema = (
 /**
  * Create runtime representation of a schema.
  */
-export const createMutableSchema = ({ typename, version }: ObjectAnnotation, fields: S.Struct.Fields): EchoSchema => {
+export const createEchoSchema = ({ typename, version }: ObjectAnnotation, fields: S.Struct.Fields): EchoSchema => {
   const schema = S.partial(S.Struct(fields).omit('id')).pipe(EchoObject(typename, version));
   const objectAnnotation = getObjectAnnotation(schema);
   const schemaObject = createStoredSchema({ typename, version });
