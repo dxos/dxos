@@ -175,7 +175,7 @@ export const Editor = (props: EditorProps) => {
 
   const selectionBounds = useBoundingSelection(overlaySvgRef.current, handleSelectionBounds);
 
-  // TODO(burdon): Formalize coordinate system.
+  // TODO(burdon): Formalize coordinate system. Return vanilla point
 
   // TODO(burdon): Pos isn't right after scaling.
   const handleDrag = useCallback<NonNullable<FrameProps['onDrag']>>(
