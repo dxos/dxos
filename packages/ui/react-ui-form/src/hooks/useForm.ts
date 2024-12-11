@@ -22,7 +22,7 @@ export type FormHandler<T extends BaseObject> = {
   // Form state management.
   //
 
-  values: T;
+  values: Partial<T>;
   errors: Record<FormPath<T>, string>;
   touched: Record<FormPath<T>, boolean>;
   changed: Record<FormPath<T>, boolean>;
@@ -34,7 +34,7 @@ export type FormHandler<T extends BaseObject> = {
   //
 
   getStatus: (property: FormPath<T>) => { status?: 'error'; error?: string };
-  getValue: <V>(property: FormPath<T>) => V;
+  getValue: <V>(property: FormPath<T>) => V | undefined;
   onValueChange: <V>(property: FormPath<T>, type: SimpleType, value: V) => void;
   onBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 };
@@ -52,15 +52,14 @@ export interface FormOptions<T extends BaseObject> {
   /**
    * Initial values (which may not pass validation).
    */
-  // TODO(burdon): Should be partial?
-  initialValues: T;
+  initialValues: Partial<T>;
 
   /**
    * Callback for value changes. Note: This is called even when values are invalid.
    * Sometimes the parent component may want to know about changes even if the form is
    * in an invalid state.
    */
-  onValuesChanged?: (values: T) => void;
+  onValuesChanged?: (values: Partial<T>) => void;
 
   /**
    * Custom validation function that runs only after schema validation passes.
@@ -93,7 +92,7 @@ export const useForm = <T extends BaseObject>({
   onValid,
   onSave,
 }: FormOptions<T>): FormHandler<T> => {
-  const [values, setValues] = useState<T>(initialValues);
+  const [values, setValues] = useState<Partial<T>>(initialValues);
   useEffect(() => {
     setValues(initialValues);
   }, [initialValues]);
@@ -109,14 +108,16 @@ export const useForm = <T extends BaseObject>({
 
   // TODO(burdon): Validate each property separately.
   const validate = useCallback(
-    (values: T) => {
+    (values: Partial<T>): values is T => {
       let errors: ValidationError[] = validateSchema(schema, values) ?? [];
       if (errors.length === 0 && onValidate) {
-        errors = onValidate(values) ?? [];
+        const validatedValues = values as T;
+        errors = onValidate(validatedValues) ?? [];
       }
 
       setErrors(flatMap(errors));
-      return errors.length === 0;
+      const valid = errors.length === 0;
+      return valid;
     },
     [schema, onValidate],
   );
@@ -153,7 +154,7 @@ export const useForm = <T extends BaseObject>({
         setSaving(false);
       }
     }
-  }, [values, validate, onSave]);
+  }, [values, validate, onSave, changed]);
 
   //
   // Fields.
@@ -168,8 +169,8 @@ export const useForm = <T extends BaseObject>({
   );
 
   // TODO(burdon): Use path to extract hierarchical value.
-  const getValue = <V>(property: FormPath<T>): V => {
-    return getByPath(values, property);
+  const getValue = <V>(property: FormPath<T>): V | undefined => {
+    return getByPath<T, V>(values, property);
   };
 
   // TODO(burdon): Use path to set hierarchical value.
@@ -247,17 +248,24 @@ const flatMap = <T extends BaseObject>(errors: ValidationError[]) => {
   );
 };
 
-// TODO(ZaymonFC): Move to util?
-const getByPath = <T extends object, V>(obj: T, path: FormPath<T>): V => {
+const getByPath = <T extends object, V>(obj: Partial<T>, path: FormPath<T>): V | undefined => {
   const [key, index] = path.split('.');
-  return index === undefined ? (obj[key as keyof T] as V) : ((obj[key as keyof T] as any[])[parseInt(index)] as V);
+  const value = obj[key as keyof T];
+  if (value === undefined) {
+    return undefined;
+  }
+  return index === undefined ? (value as V) : ((value as any[])[parseInt(index)] as V);
 };
 
-const setByPath = <T extends object>(obj: T, path: FormPath<T>, value: any): T => {
+const setByPath = <T extends object, V extends T[keyof T]>(
+  obj: Partial<T>,
+  path: FormPath<T>,
+  value: V,
+): Partial<T> => {
   const [key, index] = path.split('.');
   const newValue =
     index === undefined
       ? value
-      : [...(obj[key as keyof T] as any[])].map((v, i) => (i === parseInt(index) ? value : v));
+      : [...((obj[key as keyof T] ?? []) as any[])].map((v, i) => (i === parseInt(index) ? value : v));
   return { ...obj, [key]: newValue };
 };
