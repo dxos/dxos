@@ -72,19 +72,16 @@ export class GraphWrapper {
   removeNode(id: string): this {
     removeElements(this._graph.nodes, (node) => node.id === id);
     removeElements(this._graph.edges, (edge) => edge.source === id || edge.target === id);
-    // this._graph.nodes = this.nodes.filter((node) => node.id !== id);
-    // this._graph.edges = this.edges.filter((edge) => edge.source !== id && edge.target !== id);
     return this;
   }
 
   removeEdge(id: string): this {
     removeElements(this._graph.edges, (edge) => edge.id === id);
-    // this._graph.edges = this.edges.filter((edge) => edge.id !== id);
     return this;
   }
 }
 
-// TODO(burdon): Create util to remove multiple elements.
+// TODO(burdon): Move to live-object.
 const removeElements = <T>(array: T[], predicate: (element: T, index: number) => boolean): void => {
   for (let i = array.length - 1; i >= 0; i--) {
     if (predicate(array[i], i)) {

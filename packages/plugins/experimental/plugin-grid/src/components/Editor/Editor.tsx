@@ -32,18 +32,15 @@ import { createGraph, createId } from './testing';
 
 // TODO(burdon): Phase 1: Basic plugin.
 //  - Pan/zoom background.
-//  - Selection.
-//  - Flickers on first render (hide until ready).
-//  - Link vs. create.
-//  - Drag placeholder.
-//  - Hide drag handles unless hovering.
 //  - Nodes as objects.
 //  - Surface/form storybook.
-//  - Auto-layout (reconcile with plugin-debug).
 //  - Basic theme.
+//  - Drag placeholder.
+//  - Hide drag handles unless hovering.
 //  - Factor out react-ui-xxx vs. plugin.
 
 // TODO(burdon): Phase 2
+//  - Auto-layout (reconcile with plugin-debug).
 //  - Resize frames.
 //  - Group/collapse nodes; hierarchical editor.
 //  - Inline edit.
@@ -63,24 +60,27 @@ export const Editor = (props: EditorProps) => {
   const snap = createSnap({ width: itemSize.width + 64, height: itemSize.height + 64 });
   const [graph] = useState(() => new GraphWrapper(createGraph(snap, itemSize)));
 
-  // Drop target.
   const { ref: containerRef, width = 0, height = 0 } = useResizeDetector();
   const ready = !!width && !!height;
+  const gridRef = useRef<SVGSVGElement>(null);
+
+  useEffect(() => {
+    gridRef.current?.setAttribute('offset', `${itemSize.width / 2}px ${itemSize.height / 2}px`);
+  }, []);
+
+  // State.
+  const [linking, setLinking] = useState<{ source: Point; target: Point }>();
+  const [dragging, setDragging] = useState<{ id: string; pos: Point }>();
+  const [selected, setSelected] = useState<Record<string, boolean>>({});
+  const [offset, setOffset] = useState<Point>({ x: 0, y: 0 });
+  const selectedRef = useDynamicRef(selected);
 
   // Transform center.
-  const scale = 1;
-  const center = { x: width / 2, y: height / 2 };
+  const [scale, setScale] = useState(1);
+  const center = { x: width / 2 + offset.x, y: height / 2 + offset.y };
   const transformStyle = {
     transform: `scale(${scale}) translate(${center.x}px, ${center.y}px)`,
   };
-
-  // State.
-  const [selected, setSelected] = useState<Record<string, boolean>>({});
-  const selectedRef = useDynamicRef(selected);
-
-  const [linking, setLinking] = useState<{ source: Point; target: Point }>();
-
-  const [dragging, setDragging] = useState<{ id: string; pos: Point }>();
 
   // Dragging state.
   // const [isDraggedOver, setIsDraggedOver] = useState(false);
@@ -101,11 +101,21 @@ export const Editor = (props: EditorProps) => {
     });
   }, [containerRef.current]);
 
-  // Keys.
+  // Events.
   useEffect(() => {
     if (!containerRef.current) {
       return;
     }
+
+    const handleWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      if (event.ctrlKey) {
+        // TODO(burdon): Not working.
+        // setScale((scale) => scale * Math.exp(-event.deltaY * 0.01));
+      } else {
+        setOffset(({ x, y }) => ({ x: x - event.deltaX, y: y - event.deltaY }));
+      }
+    };
 
     const handleKeyDown = (event: KeyboardEvent) => {
       switch (event.key) {
@@ -117,8 +127,10 @@ export const Editor = (props: EditorProps) => {
       }
     };
 
+    containerRef.current.addEventListener('wheel', handleWheel);
     containerRef.current.addEventListener('keydown', handleKeyDown);
     return () => {
+      containerRef.current?.removeEventListener('wheel', handleWheel);
       containerRef.current?.removeEventListener('keydown', handleKeyDown);
     };
   }, [containerRef, selectedRef]);
@@ -141,7 +153,7 @@ export const Editor = (props: EditorProps) => {
     },
     [svgRef, scale, center],
   );
-  const bounds = useBoundingSelection(svgRef.current, callback);
+  const selectionBounds = useBoundingSelection(svgRef.current, callback);
 
   // TODO(burdon): SHIFT select to toggle.
   const handleSelect = useCallback<NonNullable<FrameProps['onSelect']>>((item, selected) => {
@@ -222,49 +234,50 @@ export const Editor = (props: EditorProps) => {
   }
 
   // TODO(burdon): Currently HTML content needs to be last so that elements can be dragged.
-  return (
-    <div ref={containerRef} tabIndex={0} className='flex grow relative'>
-      {/* SVG content. */}
-      <svg
-        width='100%'
-        height='100%'
-        viewBox={`0 0 ${width} ${height}`}
-        className='absolute inset-0 pointer-events-none touch-none'
-      >
-        <g style={transformStyle}>
-          <Grid width={width} height={height} />
+  // TODO(burdon): Dragging just moves the transform and draws/clips objects within the frustrum.
 
-          {/* Edges */}
-          {ready &&
-            edges.map(({ id, path }) => (
-              <path key={id} d={path} fill='none' strokeWidth='1' className='stroke-teal-700' />
-            ))}
+  return (
+    <div ref={containerRef} tabIndex={0} className='flex grow relative overflow-hidden'>
+      {/* Selection overlay. */}
+      <svg width='100%' height='100%' className='absolute inset-0' ref={svgRef}>
+        <g>
+          {selectionBounds && <rect {...selectionBounds} fill='none' strokeWidth='2' className='stroke-blue-500' />}
         </g>
       </svg>
 
-      {/* Toolbar. */}
-      <div className='absolute right-0 bottom-0 z-10'>
+      {/* Grid. */}
+      <Grid ref={gridRef} offset={center} />
+
+      {/* SVG content. */}
+      {ready && (
+        <>
+          <svg width='100%' height='100%' className='absolute inset-0 pointer-events-none touch-none'>
+            <g style={transformStyle}>
+              {edges.map(({ id, path }) => (
+                <path key={id} d={path} fill='none' strokeWidth='1' className='stroke-teal-700' />
+              ))}
+            </g>
+          </svg>
+
+          {/* HTML content. */}
+          <div style={transformStyle}>
+            {graph.nodes.map(({ data: item }) => (
+              <Frame
+                key={item.id}
+                item={item}
+                selected={selected[item.id]}
+                onSelect={handleSelect}
+                onDrag={handleDrag}
+                onLink={handleLink}
+              />
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* UI. */}
+      <div className='fixed right-0 bottom-0 z-10'>
         <Toolbar onAction={handleAction} />
-      </div>
-
-      {/* Selection overlay. */}
-      <svg ref={svgRef} width='100%' height='100%' className='absolute inset-0'>
-        <g>{bounds && <rect {...bounds} fill='none' strokeWidth='2' className='stroke-blue-500' />}</g>
-      </svg>
-
-      {/* HTML content. */}
-      <div style={transformStyle}>
-        {ready &&
-          graph.nodes.map(({ data: item }) => (
-            <Frame
-              key={item.id}
-              item={item}
-              selected={selected[item.id]}
-              onSelect={handleSelect}
-              onDrag={handleDrag}
-              onLink={handleLink}
-            />
-          ))}
       </div>
     </div>
   );
