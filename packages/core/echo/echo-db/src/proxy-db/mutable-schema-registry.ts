@@ -5,11 +5,13 @@
 import { Event, type UnsubscribeCallback } from '@dxos/async';
 import {
   EchoIdentifierAnnotationId,
+  getEchoIdentifierAnnotation,
   getObjectAnnotation,
   makeStaticSchema,
   MutableSchema,
   type ObjectAnnotation,
   ObjectAnnotationId,
+  type ObjectId,
   type S,
   type StaticSchema,
   StoredSchema,
@@ -30,6 +32,7 @@ import type {
 } from './schema-registry-api';
 import { SchemaRegistryPreparedQueryImpl } from './schema-registry-prepared-query';
 import { Resource, type Context } from '@dxos/context';
+import { DXN } from '@dxos/keys';
 
 export type SchemaSubscriptionCallback = (schema: MutableSchema[]) => void;
 
@@ -181,7 +184,7 @@ export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
   }
 
   public hasSchema(schema: S.Schema<any>): boolean {
-    const schemaId = schema instanceof MutableSchema ? schema.id : getObjectAnnotation(schema)?.schemaId;
+    const schemaId = schema instanceof MutableSchema ? schema.id : getObjectIdFromSchema(schema);
     return schemaId != null && this.getSchemaById(schemaId) != null;
   }
 
@@ -215,7 +218,7 @@ export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
     invariant(meta, 'use S.Struct({}).pipe(EchoObject(...)) or class syntax to create a valid schema');
     const schemaToStore = createStoredSchema(meta);
     const updatedSchema = schema.annotations({
-      [ObjectAnnotationId]: { ...meta, schemaId: schemaToStore.id } satisfies ObjectAnnotation,
+      [ObjectAnnotationId]: meta,
       [EchoIdentifierAnnotationId]: `dxn:echo:@:${schemaToStore.id}`,
     });
 
@@ -344,11 +347,16 @@ const validateStoredSchemaIntegrity = (schema: StoredSchema) => {
     return false;
   }
 
-  // TODO(dmaretskyi): Remove.
-  if (schema.jsonSchema.echo?.type?.schemaId !== schema.id) {
-    log.warn('Schema is missing echo type schemaId', { schema });
-    return false;
+  return true;
+};
+
+const getObjectIdFromSchema = (schema: S.Schema<any>): ObjectId | undefined => {
+  const echoIdentifier = getEchoIdentifierAnnotation(schema);
+  if (!echoIdentifier) {
+    return undefined;
   }
 
-  return true;
+  const dxn = DXN.parse(echoIdentifier);
+  invariant(dxn.isLocalObjectId());
+  return dxn.parts[1];
 };

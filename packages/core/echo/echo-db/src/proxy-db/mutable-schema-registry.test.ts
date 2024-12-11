@@ -54,7 +54,7 @@ describe('schema registry', () => {
     const { registry } = await setupTest();
     const mutableSchema = registry.addSchema(Contact);
     const expectedSchema = Contact.annotations({
-      [ObjectAnnotationId]: { typename: 'example.com/type/Contact', version: '0.1.0', schemaId: mutableSchema.id },
+      [ObjectAnnotationId]: { typename: 'example.com/type/Contact', version: '0.1.0' },
       [EchoIdentifierAnnotationId]: `dxn:echo:@:${mutableSchema.id}`,
     });
     console.log(mutableSchema.ast);
@@ -70,7 +70,7 @@ describe('schema registry', () => {
     const { registry } = await setupTest();
     const mutableSchema = registry.addSchema(Org);
     const expectedSchema = Org.annotations({
-      [ObjectAnnotationId]: { typename: 'example.com/type/Org', version: '0.1.0', schemaId: mutableSchema.id },
+      [ObjectAnnotationId]: { typename: 'example.com/type/Org', version: '0.1.0' },
       [EchoIdentifierAnnotationId]: `dxn:echo:@:${mutableSchema.id}`,
     });
     console.log(mutableSchema.ast);
