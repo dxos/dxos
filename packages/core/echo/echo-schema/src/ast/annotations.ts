@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Option, pipe } from 'effect';
+import { flow, Option, pipe } from 'effect';
 import { type Simplify } from 'effect/Types';
 
 import { AST, S } from '@dxos/effect';
@@ -32,14 +32,25 @@ export type ObjectAnnotation = {
   version: string;
 };
 
+/**
+ * ECHO identifier for a schema.
+ */
+export const EchoIdentifierAnnotationId = Symbol.for('@dxos/schema/annotation/EchoIdentifier');
+
 export const getObjectAnnotation = (schema: S.Schema.All): ObjectAnnotation | undefined =>
-  pipe(
-    AST.getAnnotation<ObjectAnnotation>(ObjectAnnotationId)(schema.ast),
+  flow(
+    AST.getAnnotation<ObjectAnnotation>(ObjectAnnotationId),
     Option.getOrElse(() => undefined),
-  );
+  )(schema.ast);
 
 // TODO(burdon): Rename getTypename.
 export const getSchemaTypename = (schema: S.Schema.All): string | undefined => getObjectAnnotation(schema)?.typename;
+
+export const getEchoIdentifierAnnotation = (schema: S.Schema.All) =>
+  flow(
+    AST.getAnnotation<string>(EchoIdentifierAnnotationId),
+    Option.getOrElse(() => undefined),
+  )(schema.ast);
 
 // TODO(burdon): Rename ObjectAnnotation.
 // TODO(dmaretskyi): Add `id` property to the schema type.
@@ -103,6 +114,7 @@ export const getReferenceAnnotation = (schema: S.Schema<any>) =>
 
 export const SchemaMetaSymbol = Symbol.for('@dxos/schema/SchemaMeta');
 
+// TODO(burdon): Factor out.
 // TODO(burdon): Reconcile with ObjectAnnotation above.
 export type SchemaMeta = {
   id: string;
