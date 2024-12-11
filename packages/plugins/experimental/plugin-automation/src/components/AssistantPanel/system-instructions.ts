@@ -84,7 +84,7 @@ const preprocessContextObject = async (object: ReactiveEchoObject<any>): Promise
 
     case 'dxos.org/type/Table': {
       // TODO(dmaretskyi): Load references.
-      const schema = object.view ? space?.db.schemaRegistry.getSchema(object.view.query.typename) : undefined;
+      const schema = object.view ? space?.db.schemaRegistry.getSchema(object.view.query.type) : undefined;
       const { objects: rows } =
         (schema &&
           (await space.db
