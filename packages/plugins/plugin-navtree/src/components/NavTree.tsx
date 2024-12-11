@@ -15,17 +15,14 @@ import { type FlattenedActions, type NavTreeItemGraphNode } from '../types';
 
 export const NAV_TREE_ITEM = 'NavTreeItem';
 
-export type NavTreeProps = Omit<
-  TreeProps<NavTreeItemGraphNode>,
-  'draggable' | 'gridTemplateColumns' | 'renderColumns'
-> &
-  Pick<NavTreeColumnsProps, 'getActions' | 'loadDescendents' | 'renderItemEnd' | 'popoverAnchorId'>;
+export type NavTreeProps = Omit<TreeProps<NavTreeItemGraphNode>, 'draggable' | 'gridTemplateColumns' | 'renderItem'> &
+  Pick<NavTreeItemProps, 'getActions' | 'loadDescendents' | 'renderItemEnd' | 'popoverAnchorId'>;
 
 export const NavTree = ({ getActions, loadDescendents, renderItemEnd, popoverAnchorId, ...props }: NavTreeProps) => {
-  const renderColumns = useCallback<NonNullable<TreeProps<NavTreeItemGraphNode>['renderColumns']>>(
+  const renderItem = useCallback<NonNullable<TreeProps<NavTreeItemGraphNode>['renderItem']>>(
     ({ item, path, menuOpen, setMenuOpen }) => {
       return (
-        <NavTreeColumns
+        <NavTreeItem
           path={path}
           node={item}
           getActions={getActions}
@@ -45,12 +42,12 @@ export const NavTree = ({ getActions, loadDescendents, renderItemEnd, popoverAnc
       {...props}
       draggable
       gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
-      renderColumns={renderColumns}
+      renderItem={renderItem}
     />
   );
 };
 
-type NavTreeColumnsProps = {
+type NavTreeItemProps = {
   path: string[];
   node: Node;
   getActions: (node: Node) => FlattenedActions;
@@ -61,7 +58,7 @@ type NavTreeColumnsProps = {
   popoverAnchorId?: string;
 };
 
-const NavTreeColumns = ({
+const NavTreeItem = ({
   path,
   node,
   getActions,
@@ -70,7 +67,7 @@ const NavTreeColumns = ({
   loadDescendents,
   renderItemEnd: ItemEnd,
   popoverAnchorId,
-}: NavTreeColumnsProps) => {
+}: NavTreeItemProps) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
 
   const level = path.length - 2;
@@ -86,7 +83,7 @@ const NavTreeColumns = ({
 
   const ActionRoot = popoverAnchorId === `dxos.org/ui/${NAV_TREE_ITEM}/${node.id}` ? Popover.Anchor : Fragment;
 
-  // TODO(thure): Ideally this should not be necessary.
+  // TODO(thure): Ideally this should not be necessary. (Explain why it's required?)
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
       void loadDescendents?.(node);

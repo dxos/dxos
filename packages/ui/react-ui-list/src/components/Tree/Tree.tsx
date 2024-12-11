@@ -11,7 +11,7 @@ import { TreeItem, type TreeItemProps } from './TreeItem';
 
 export type TreeProps<T = any> = { id: string } & TreeContextType &
   Partial<Pick<TreegridRootProps, 'gridTemplateColumns' | 'classNames'>> &
-  Pick<TreeItemProps<T>, 'draggable' | 'renderColumns' | 'canDrop' | 'onOpenChange' | 'onSelect'>;
+  Pick<TreeItemProps<T>, 'draggable' | 'renderItem' | 'canDrop' | 'onOpenChange' | 'onSelect'>;
 
 export const Tree = <T = any,>({
   id,
@@ -22,22 +22,14 @@ export const Tree = <T = any,>({
   draggable = false,
   gridTemplateColumns = '[tree-row-start] 1fr min-content [tree-row-end]',
   classNames,
-  renderColumns,
+  renderItem,
   canDrop,
   onOpenChange,
   onSelect,
 }: TreeProps<T>) => {
-  const context = useMemo(
-    () => ({
-      getItems,
-      getProps,
-      isOpen,
-      isCurrent,
-    }),
-    [getItems, getProps, isOpen, isCurrent],
-  );
-  const items = getItems();
   const path = useMemo(() => [id], [id]);
+  const context = useMemo(() => ({ getItems, getProps, isOpen, isCurrent }), [getItems, getProps, isOpen, isCurrent]);
+  const items = getItems();
 
   return (
     <Treegrid.Root gridTemplateColumns={gridTemplateColumns} classNames={classNames}>
@@ -49,7 +41,7 @@ export const Tree = <T = any,>({
             last={index === items.length - 1}
             path={path}
             draggable={draggable}
-            renderColumns={renderColumns}
+            renderItem={renderItem}
             canDrop={canDrop}
             onOpenChange={onOpenChange}
             onSelect={onSelect}

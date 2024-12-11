@@ -86,7 +86,7 @@ const meta: Meta<typeof Tree> = {
 
       return object.current;
     },
-    renderColumns: () => {
+    renderItem: () => {
       return (
         <div className='flex items-center'>
           <Icon icon='ph--placeholder--regular' size={5} />
