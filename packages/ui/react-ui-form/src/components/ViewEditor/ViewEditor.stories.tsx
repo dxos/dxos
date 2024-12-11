@@ -5,18 +5,18 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { Format, type EchoSchema, S, toJsonSchema, TypedObject } from '@dxos/echo-schema';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { useAsyncEffect } from '@dxos/react-ui';
 import { type ViewType, ViewProjection, createView } from '@dxos/schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { ViewEditor } from './ViewEditor';
 import translations from '../../translations';
 import { TestLayout, TestPanel } from '../testing';
-import { useAsyncEffect } from '@dxos/react-ui';
 
 const DefaultStory = () => {
   const space = useSpace();

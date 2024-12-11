@@ -13,13 +13,14 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { DebugSpace } from './DebugSpace';
+import { useAsyncEffect } from '@dxos/react-hooks';
 
 const DefaultStory = () => {
   const [space] = useSpaces();
-  useEffect(() => {
+  useAsyncEffect(async () => {
     if (space) {
       const generator = createSpaceObjectGenerator(space);
-      generator.addSchemas();
+      await generator.addSchemas();
     }
   }, [space]);
 

@@ -28,7 +28,11 @@ type InitialiseTableProps = {
 
 // TODO(burdon): Pass in type.
 // TODO(burdon): User should determine typename.
-export const initializeTable = async ({ space, table, initialRow = true }: InitialiseTableProps): Promise<EchoSchema> => {
+export const initializeTable = async ({
+  space,
+  table,
+  initialRow = true,
+}: InitialiseTableProps): Promise<EchoSchema> => {
   log.info('initializeTable', { table });
 
   const ContactSchema = TypedObject({

@@ -79,14 +79,6 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
       const schema = this.getSchema(type);
       return (schema && (await this._space.db.query(Filter.schema(schema)).run()).objects) ?? [];
     });
-
-    // Initialize schemas asynchronously
-    (async () => {
-      for (const [type, dynamicSchema] of Object.entries<EchoSchema | S.Schema<any>>(schemaMap)) {
-        const schema = await this._maybeRegisterSchema(type, dynamicSchema);
-        this.setSchema(type as T, schema);
-      }
-    })();
   }
 
   async addSchemas() {
