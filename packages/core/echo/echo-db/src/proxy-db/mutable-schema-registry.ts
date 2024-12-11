@@ -63,7 +63,7 @@ export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
   protected override async _open(ctx: Context): Promise<void> {
     // Preload schemas.
     const { objects } = await this._db.query(Filter.schema(StoredSchema)).run();
-    objects.forEach((object) => this.registerSchema(object));
+    objects.forEach((object) => this._registerSchema(object));
 
     if (this._reactiveQuery) {
       const unsubscribe = this._db.query(Filter.schema(StoredSchema)).subscribe(({ objects }) => {
@@ -141,9 +141,6 @@ export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
       },
       async getResults() {
         const { objects } = await self._db.query(Filter.schema(StoredSchema)).run();
-
-        // TODO(dmaretskyi): For compatibility only -- should preload schema in open.
-        objects.forEach((object) => self.registerSchema(object));
 
         return filterOrderResults(
           objects.map((stored) => {
@@ -258,7 +255,19 @@ export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
     return result;
   }
 
+  /**
+   * @deprecated
+   */
   public registerSchema(schema: StoredSchema): MutableSchema {
+    return this._registerSchema(schema);
+  }
+
+  /**
+   * @internal
+   *
+   * Registers a StoredSchema object if necessary and returns a MutableSchema object.
+   */
+  _registerSchema(schema: StoredSchema): MutableSchema {
     const existing = this._schemaById.get(schema.id);
     if (existing != null) {
       return existing;
