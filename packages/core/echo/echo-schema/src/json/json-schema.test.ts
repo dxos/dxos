@@ -237,7 +237,7 @@ describe('json-to-effect', () => {
       ) {}
 
       const jsonSchema = toJsonSchema(Schema);
-      // log.info('', { jsonSchema });
+      // console.log(JSON.stringify(jsonSchema, null, 2));
       const schema = toEffectSchema(jsonSchema);
 
       expect(() => expect(schema.ast).to.deep.eq(Schema.ast)).to.throw();

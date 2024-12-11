@@ -293,7 +293,8 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
 const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): S.Schema<any> => {
   const echoRefinement: EchoRefinement = (root as any)[ECHO_REFINEMENT_KEY];
   if (echoRefinement?.reference != null) {
-    return createEchoReferenceSchema(echoRefinement.reference);
+    const echoId = root.$id.startsWith('dxn:echo:') ? root.$id : undefined;
+    return createEchoReferenceSchema(echoId, echoRefinement.reference.typename, echoRefinement.reference.version);
   }
 
   return S.Any;
@@ -313,11 +314,9 @@ const refToEffectSchema = (root: any): S.Schema<any> => {
   invariant(targetSchemaDXN.kind === DXN.kind.TYPE);
 
   return createEchoReferenceSchema(
-    removeUndefinedProperties({
-      typename: targetSchemaDXN.parts[0],
-      version: reference.schemaVersion,
-      schemaId: reference.schemaObject,
-    }),
+    targetSchemaDXN.toString(),
+    targetSchemaDXN.kind === DXN.kind.TYPE ? targetSchemaDXN.parts[0] : undefined,
+    reference.schemaVersion,
   );
 };
 

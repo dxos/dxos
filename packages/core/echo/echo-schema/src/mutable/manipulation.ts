@@ -59,6 +59,6 @@ export const setTypenameInSchema = (schema: S.Schema<any>, typename: string): S.
 
   return schema.annotations({
     ...schema.ast.annotations,
-    [ObjectAnnotationId]: { typename, version: existingAnnotation.version, schemaId: existingAnnotation.schemaId },
+    [ObjectAnnotationId]: { typename, version: existingAnnotation.version },
   });
 };

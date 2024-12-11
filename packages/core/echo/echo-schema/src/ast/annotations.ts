@@ -27,7 +27,6 @@ export const VERSION_REGEX = /^\d+.\d+.\d+$/;
 // TODO(burdon): Reconcile with other types.
 // TODO(burdon): Define as schema with regex patterns above.
 export type ObjectAnnotation = {
-  schemaId?: string;
   typename: string;
   version: string;
 };

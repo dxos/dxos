@@ -8,8 +8,9 @@ import { Reference } from '@dxos/echo-protocol';
 import { AST, type JsonPath } from '@dxos/effect';
 import { getDeep, setDeep } from '@dxos/util';
 
-import { getObjectAnnotation, type HasId } from './ast';
+import { getEchoIdentifierAnnotation, getObjectAnnotation, type HasId } from './ast';
 import type { ObjectMeta } from './object/meta';
+import { DXN } from '@dxos/keys';
 
 // TODO(burdon): Use consistently (with serialization utils).
 export const ECHO_ATTR_ID = '@id';
@@ -106,12 +107,14 @@ export const getTypeReference = (schema: S.Schema<any> | undefined): Reference |
     return undefined;
   }
 
+  const echoId = getEchoIdentifierAnnotation(schema);
+  if (echoId) {
+    return Reference.fromDXN(DXN.parse(echoId));
+  }
+
   const annotation = getObjectAnnotation(schema);
   if (annotation == null) {
     return undefined;
-  }
-  if (annotation.schemaId) {
-    return Reference.localObjectReference(annotation.schemaId);
   }
 
   return Reference.fromLegacyTypename(annotation.typename);

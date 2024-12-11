@@ -6,11 +6,11 @@ import { type EncodedReference } from '@dxos/echo-protocol';
 import { S } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
-import { getObjectAnnotation, ReferenceAnnotationId, type ObjectAnnotation } from './annotations';
-import { type JsonSchemaType } from './types';
 import { MutableSchema, StoredSchema } from '../mutable';
-import { getTypename, EXPANDO_TYPENAME } from '../object';
-import { type WithId, type Ref, type BaseObject } from '../types';
+import { EXPANDO_TYPENAME, getTypename } from '../object';
+import { type Ref, type WithId } from '../types';
+import { getEchoIdentifierAnnotation, getObjectAnnotation, ReferenceAnnotationId } from './annotations';
+import { type JsonSchemaType } from './types';
 
 /**
  * The `$id` field for an ECHO reference schema.
@@ -44,7 +44,7 @@ export const ref = <T extends WithId>(schema: S.Schema<T, any>): ref<T> => {
     throw new Error('Reference target must be an ECHO schema.');
   }
 
-  return createEchoReferenceSchema(annotation);
+  return createEchoReferenceSchema(getEchoIdentifierAnnotation(schema), annotation.typename, annotation.version);
 };
 
 /**
@@ -52,29 +52,28 @@ export const ref = <T extends WithId>(schema: S.Schema<T, any>): ref<T> => {
  */
 export type JsonSchemaReferenceInfo = {
   schema: { $ref: string };
-  schemaVersion: string;
-  schemaObject?: string;
+  schemaVersion?: string;
 };
 
 /**
  * @internal
  */
 // TODO(burdon): Move to json schema and make private?
-export const createEchoReferenceSchema = (annotation: ObjectAnnotation): S.Schema<any> => {
-  const typePredicate =
-    annotation.typename === EXPANDO_TYPENAME
-      ? () => true
-      : (obj: BaseObject) => getTypename(obj) === annotation.typename;
+export const createEchoReferenceSchema = (
+  echoId: string | undefined,
+  typename: string | undefined,
+  version: string | undefined,
+): S.Schema<any> => {
+  if (!echoId && !typename) {
+    throw new TypeError(`Either echoId or typename must be provided.`);
+  }
 
   const referenceInfo: JsonSchemaReferenceInfo = {
     schema: {
-      $ref: `dxn:type:${annotation.typename}`,
+      $ref: echoId ?? `dxn:type:${typename}`,
     },
-    schemaVersion: annotation.version,
+    schemaVersion: version,
   };
-  if (annotation.schemaId) {
-    referenceInfo.schemaObject = annotation.schemaId;
-  }
 
   return S.Any.annotations({ jsonSchema: {} })
     .pipe(
@@ -85,11 +84,16 @@ export const createEchoReferenceSchema = (annotation: ObjectAnnotation): S.Schem
             return true;
           }
 
-          if (obj instanceof MutableSchema) {
-            return annotation.typename === StoredSchema.typename;
+          if (obj instanceof MutableSchema && typename) {
+            return typename === StoredSchema.typename;
           }
 
-          return typePredicate(obj);
+          // TODO(dmaretskyi): Compare by echoID.
+          if (!typename || typename === EXPANDO_TYPENAME) {
+            return true;
+          }
+
+          return getTypename(obj) === typename;
         },
         {
           jsonSchema: {
@@ -99,5 +103,11 @@ export const createEchoReferenceSchema = (annotation: ObjectAnnotation): S.Schem
         },
       ),
     )
-    .annotations({ [ReferenceAnnotationId]: annotation });
+    .annotations({
+      // TODO(dmaretskyi): Store target schema echoId.
+      [ReferenceAnnotationId]: {
+        typename: typename ?? '',
+        version,
+      },
+    });
 };
