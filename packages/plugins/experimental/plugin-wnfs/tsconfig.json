@@ -21,5 +21,54 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../../common/crypto"
+    },
+    {
+      "path": "../../../common/invariant"
+    },
+    {
+      "path": "../../../common/local-storage"
+    },
+    {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../../../common/storybook-utils"
+    },
+    {
+      "path": "../../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../../sdk/app-framework"
+    },
+    {
+      "path": "../../../sdk/react-client"
+    },
+    {
+      "path": "../../../ui/react-ui"
+    },
+    {
+      "path": "../../../ui/react-ui-card"
+    },
+    {
+      "path": "../../../ui/react-ui-editor"
+    },
+    {
+      "path": "../../../ui/react-ui-mosaic"
+    },
+    {
+      "path": "../../../ui/react-ui-theme"
+    },
+    {
+      "path": "../../plugin-client"
+    },
+    {
+      "path": "../../plugin-markdown"
+    },
+    {
+      "path": "../../plugin-space"
+    }
+  ]
 }

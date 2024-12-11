@@ -16,7 +16,29 @@
   "include": [
     "src"
   ],
-  "references": [],
+  "references": [
+    {
+      "path": "../../common/node-std"
+    },
+    {
+      "path": "../../common/random"
+    },
+    {
+      "path": "../../common/storybook-utils"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../ui/react-ui-theme"
+    },
+    {
+      "path": "../gem-core"
+    },
+    {
+      "path": "../gem-spore"
+    }
+  ],
   "ts-node": {
     "compilerOptions": {
       "module": "CommonJS"

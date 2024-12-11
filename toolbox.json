@@ -39,6 +39,6 @@
         "packages/sdk/shell"
       ]
     },
-    "noProjectReferences": true
+    "projectReferences": true
   }
 }

@@ -39,7 +39,7 @@ export type ToolboxConfig = {
        */
       include: string[];
     };
-    noProjectReferences?: boolean;
+    projectReferences?: boolean;
   };
 };
 
@@ -344,7 +344,7 @@ export class Toolbox {
         );
 
         const deps = Array.from(depsMap.entries());
-        if (!this.config.tsconfig?.noProjectReferences) {
+        if (this.config.tsconfig?.projectReferences !== false) {
           tsConfigJson.references = deps.map(([dependencyName]) => {
             const dependency = this._getProjectByPackageName(dependencyName)!;
             const path = relative(project.path, dependency.path);

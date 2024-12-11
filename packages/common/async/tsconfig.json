@@ -9,5 +9,24 @@
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../context"
+    },
+    {
+      "path": "../debug"
+    },
+    {
+      "path": "../invariant"
+    },
+    {
+      "path": "../log"
+    },
+    {
+      "path": "../node-std"
+    },
+    {
+      "path": "../util"
+    }
+  ]
 }
