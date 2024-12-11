@@ -18,8 +18,8 @@ import {
   isOption,
   isSimpleType,
   visit,
-  type JsonPath,
-  type JsonProp,
+  JsonPath,
+  JsonProp,
 } from './ast';
 
 const ZipCode = S.String.pipe(
@@ -181,5 +181,37 @@ describe('AST', () => {
         }).ast.toJSON(),
       );
     }
+  });
+
+  // TODO(ZaymonFC): Update this when we settle on the right indexing syntax for arrays.
+  test('json path validation', ({ expect }) => {
+    const validatePath = S.validateSync(JsonPath);
+    const validateProp = S.validateSync(JsonProp);
+
+    // Valid paths.
+    expect(() => validatePath('foo')).not.to.throw();
+    expect(() => validatePath('foo.bar')).not.to.throw();
+    expect(() => validatePath('foo.bar.baz')).not.to.throw();
+    expect(() => validatePath('foo.0.bar')).not.to.throw();
+    expect(() => validatePath('_foo.$bar')).not.to.throw();
+
+    // Invalid paths.
+    expect(() => validatePath('')).to.throw();
+    expect(() => validatePath('.')).to.throw();
+    expect(() => validatePath('.foo')).to.throw();
+    expect(() => validatePath('foo.')).to.throw();
+    expect(() => validatePath('foo..bar')).to.throw();
+    expect(() => validatePath('foo.#bar')).to.throw();
+
+    // Valid props.
+    expect(() => validateProp('foo')).not.to.throw();
+    expect(() => validateProp('foo123')).not.to.throw();
+    expect(() => validateProp('_foo')).not.to.throw();
+
+    // Invalid props.
+    expect(() => validateProp('')).to.throw();
+    expect(() => validateProp('foo.bar')).to.throw();
+    expect(() => validateProp('123foo')).to.throw();
+    expect(() => validateProp('#foo')).to.throw();
   });
 });

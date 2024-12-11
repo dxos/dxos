@@ -168,7 +168,6 @@ export const useForm = <T extends BaseObject>({
     return getValue(values, property as any as JsonPath);
   };
 
-  // TODO(burdon): Use path to set hierarchical value.
   const onValueChange = (property: PropertyKey<T>, type: SimpleType, value: any) => {
     let parsedValue = value;
     try {
