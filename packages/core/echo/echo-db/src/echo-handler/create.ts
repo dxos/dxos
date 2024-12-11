@@ -5,7 +5,7 @@
 import {
   type BaseObject,
   type HasId,
-  MutableSchema,
+  EchoSchema,
   type ObjectMeta,
   requireTypeReference,
   type S,
@@ -169,7 +169,7 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
     if (value === undefined) {
       delete target[key];
     } else if (typeof value === 'object') {
-      if (value instanceof MutableSchema) {
+      if (value instanceof EchoSchema) {
         target[key] = value.storedSchema;
         validateInitialProps(value.storedSchema, seen);
       } else if (!isEchoObject(value)) {

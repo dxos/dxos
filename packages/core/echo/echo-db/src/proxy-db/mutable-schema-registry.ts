@@ -9,7 +9,7 @@ import {
   getEchoIdentifierAnnotation,
   getObjectAnnotation,
   makeStaticSchema,
-  MutableSchema,
+  EchoSchema,
   ObjectAnnotationId,
   type ObjectId,
   type S,
@@ -49,8 +49,8 @@ export type MutableSchemaRegistryOptions = {
 export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
   private readonly _reactiveQuery: boolean;
 
-  private readonly _schemaById: Map<string, MutableSchema> = new Map();
-  private readonly _schemaByType: Map<string, MutableSchema> = new Map();
+  private readonly _schemaById: Map<string, EchoSchema> = new Map();
+  private readonly _schemaByType: Map<string, EchoSchema> = new Map();
   private readonly _unsubscribeById: Map<string, UnsubscribeCallback> = new Map();
   private readonly _schemaSubscriptionCallbacks: SchemaSubscriptionCallback[] = [];
 
@@ -87,10 +87,10 @@ export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
   }
 
   // TODO(burdon): Can this be made sync?
-  query(query: SchemaRegistryQuery = {}): SchemaRegistryPreparedQuery<MutableSchema> {
+  query(query: SchemaRegistryQuery = {}): SchemaRegistryPreparedQuery<EchoSchema> {
     const self = this;
 
-    const filterOrderResults = (schemas: MutableSchema[]) => {
+    const filterOrderResults = (schemas: EchoSchema[]) => {
       log.debug('Filtering schemas', { schemas, query });
       return (
         schemas
@@ -165,8 +165,8 @@ export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
     });
   }
 
-  async register(inputs: RegisterSchemaInput[]): Promise<MutableSchema[]> {
-    const results: MutableSchema[] = [];
+  async register(inputs: RegisterSchemaInput[]): Promise<EchoSchema[]> {
+    const results: EchoSchema[] = [];
 
     // TODO(dmaretskyi): Check for conflicts with the schema in the DB.
     for (const input of inputs) {
@@ -182,15 +182,15 @@ export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
   }
 
   public hasSchema(schema: S.Schema<any>): boolean {
-    const schemaId = schema instanceof MutableSchema ? schema.id : getObjectIdFromSchema(schema);
+    const schemaId = schema instanceof EchoSchema ? schema.id : getObjectIdFromSchema(schema);
     return schemaId != null && this.getSchemaById(schemaId) != null;
   }
 
-  public getSchema(typename: string): MutableSchema | undefined {
+  public getSchema(typename: string): EchoSchema | undefined {
     return this.query({ typename }).runSync()[0];
   }
 
-  public getSchemaById(id: string): MutableSchema | undefined {
+  public getSchemaById(id: string): EchoSchema | undefined {
     const existing = this._schemaById.get(id);
     if (existing != null) {
       return existing;
@@ -211,8 +211,8 @@ export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
 
   // TODO(burdon): Tighten type signature to AbstractSchema?
   // TODO(dmaretskyi): Figure out how to migrate the usages to the async `register` method.
-  public addSchema(schema: S.Schema<any>): MutableSchema {
-    if (schema instanceof MutableSchema) {
+  public addSchema(schema: S.Schema<any>): EchoSchema {
+    if (schema instanceof EchoSchema) {
       schema = schema.schema.annotations({
         [EchoIdentifierAnnotationId]: undefined,
       });
@@ -237,7 +237,7 @@ export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
   /**
    * @deprecated
    */
-  public registerSchema(schema: StoredSchema): MutableSchema {
+  public registerSchema(schema: StoredSchema): EchoSchema {
     return this._registerSchema(schema);
   }
 
@@ -248,7 +248,7 @@ export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
   public async listAll(): Promise<StaticSchema[]> {
     const { objects } = await this._db.query(Filter.schema(StoredSchema)).run();
     const storedSchemas = objects.map((storedSchema) => {
-      const schema = new MutableSchema(storedSchema);
+      const schema = new EchoSchema(storedSchema);
       return {
         id: storedSchema.id,
         version: storedSchema.version,
@@ -264,9 +264,9 @@ export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
   /**
    * @internal
    *
-   * Registers a StoredSchema object if necessary and returns a MutableSchema object.
+   * Registers a StoredSchema object if necessary and returns a EchoSchema object.
    */
-  _registerSchema(schema: StoredSchema): MutableSchema {
+  _registerSchema(schema: StoredSchema): EchoSchema {
     const existing = this._schemaById.get(schema.id);
     if (existing != null) {
       return existing;
@@ -277,7 +277,7 @@ export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
     return registered;
   }
 
-  private _register(schema: StoredSchema): MutableSchema {
+  private _register(schema: StoredSchema): EchoSchema {
     const existing = this._schemaById.get(schema.id);
     if (existing != null) {
       return existing;
@@ -285,7 +285,7 @@ export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
 
     let previousTypename: string | undefined;
 
-    const mutableSchema = new MutableSchema(schema);
+    const mutableSchema = new EchoSchema(schema);
     const subscription = getObjectCore(schema).updates.on(() => {
       mutableSchema.invalidate();
     });

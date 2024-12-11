@@ -8,7 +8,7 @@ import { DXN } from '@dxos/keys';
 
 import { getEchoIdentifierAnnotation, getObjectAnnotation, ReferenceAnnotationId } from './annotations';
 import { type JsonSchemaType } from './types';
-import { MutableSchema, StoredSchema } from '../mutable';
+import { EchoSchema, StoredSchema } from '../mutable';
 import { EXPANDO_TYPENAME, getTypename } from '../object';
 import { type Ref, type WithId } from '../types';
 
@@ -84,7 +84,7 @@ export const createEchoReferenceSchema = (
             return true;
           }
 
-          if (obj instanceof MutableSchema && typename) {
+          if (obj instanceof EchoSchema && typename) {
             return typename === StoredSchema.typename;
           }
 

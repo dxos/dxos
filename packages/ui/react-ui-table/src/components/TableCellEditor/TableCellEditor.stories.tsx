@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { type MutableSchema } from '@dxos/echo-schema';
+import { type EchoSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { Filter, useSpaces, useQuery, create } from '@dxos/react-client/echo';
@@ -31,7 +31,7 @@ const DefaultStory = ({ editing }: StoryProps) => {
   const space = spaces[spaces.length - 1];
   const tables = useQuery(space, Filter.schema(TableType));
   const [table, setTable] = useState<TableType>();
-  const [schema, setSchema] = useState<MutableSchema>();
+  const [schema, setSchema] = useState<EchoSchema>();
   useEffect(() => {
     if (tables.length && !table) {
       const table = tables[0];

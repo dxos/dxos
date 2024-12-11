@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { MutableSchema, Expando, ref, S, TypedObject } from '@dxos/echo-schema';
+import { EchoSchema, Expando, ref, S, TypedObject } from '@dxos/echo-schema';
 
 export class FolderType extends TypedObject({
   typename: 'braneframe.Folder',
@@ -103,7 +103,7 @@ export class TableType extends TypedObject({
   skipTypenameFormatCheck: true,
 })({
   title: S.String,
-  schema: S.optional(ref(MutableSchema)),
+  schema: S.optional(ref(EchoSchema)),
   props: S.mutable(S.Array(TablePropSchema)),
 }) {}
 

@@ -4,7 +4,7 @@
 
 import { Filter, type Space } from '@dxos/client/echo';
 import { type ReactiveEchoObject } from '@dxos/echo-db';
-import { getObjectAnnotation, MutableSchema, type S } from '@dxos/echo-schema';
+import { getObjectAnnotation, EchoSchema, type S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { create, getSchema, isReactiveObject, type ReactiveObject } from '@dxos/live-object';
 import { faker } from '@dxos/random';
@@ -30,15 +30,15 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
     private readonly _provider?: TestObjectProvider<T>,
   ) {}
 
-  get schemas(): (MutableSchema | S.Schema<any>)[] {
+  get schemas(): (EchoSchema | S.Schema<any>)[] {
     return Object.values(this._schemas);
   }
 
-  getSchema(type: T): MutableSchema | S.Schema<any> | undefined {
+  getSchema(type: T): EchoSchema | S.Schema<any> | undefined {
     return this.schemas.find((schema) => getObjectAnnotation(schema)!.typename === type);
   }
 
-  protected setSchema(type: T, schema: MutableSchema | S.Schema<any>) {
+  protected setSchema(type: T, schema: EchoSchema | S.Schema<any>) {
     this._schemas[type] = schema;
   }
 
@@ -82,16 +82,16 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
 
     // TODO(burdon): Map initially are objects that have not been added to the space.
     // Merge existing schema in space with defaults.
-    Object.entries<MutableSchema | S.Schema<any>>(schemaMap).forEach(([type, dynamicSchema]) => {
+    Object.entries<EchoSchema | S.Schema<any>>(schemaMap).forEach(([type, dynamicSchema]) => {
       const schema = this._maybeRegisterSchema(type, dynamicSchema);
       this.setSchema(type as T, schema);
     });
   }
 
   addSchemas() {
-    const result: (MutableSchema | S.Schema<any>)[] = [];
+    const result: (EchoSchema | S.Schema<any>)[] = [];
     for (const [typename, schema] of Object.entries(this._schemas)) {
-      result.push(this._maybeRegisterSchema(typename, schema as MutableSchema | S.Schema<any>));
+      result.push(this._maybeRegisterSchema(typename, schema as EchoSchema | S.Schema<any>));
     }
 
     return result;
@@ -101,8 +101,8 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     return this._space.db.add(await super.createObject({ types }));
   }
 
-  private _maybeRegisterSchema(typename: string, schema: MutableSchema | S.Schema<any>): MutableSchema | S.Schema<any> {
-    if (schema instanceof MutableSchema) {
+  private _maybeRegisterSchema(typename: string, schema: EchoSchema | S.Schema<any>): EchoSchema | S.Schema<any> {
+    if (schema instanceof EchoSchema) {
       const existingSchema = this._space.db.schemaRegistry.getSchema(typename);
       if (existingSchema != null) {
         return existingSchema;

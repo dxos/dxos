@@ -3,13 +3,13 @@
 //
 
 import { type ReactiveEchoObject } from '@dxos/echo-db';
-import { type MutableSchema, type S } from '@dxos/echo-schema';
+import { type EchoSchema, type S } from '@dxos/echo-schema';
 import { type ReactiveObject } from '@dxos/live-object';
 
 // TODO(burdon): Use echo-schema types.
 export type TestObject = { id: string } & Record<string, any>;
 
-export type TestSchemaMap<T extends string = string> = Record<T, MutableSchema | S.Schema<any>>;
+export type TestSchemaMap<T extends string = string> = Record<T, EchoSchema | S.Schema<any>>;
 
 export type TestObjectProvider<T extends string = string> = (type: T) => Promise<ReactiveObject<any>[]>;
 

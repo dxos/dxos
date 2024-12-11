@@ -3,9 +3,9 @@
 //
 
 import { type UnsubscribeCallback } from '@dxos/async';
-import { type JsonSchemaType, type MutableSchema, type ObjectId, type S } from '@dxos/echo-schema';
+import { type JsonSchemaType, type EchoSchema, type ObjectId, type S } from '@dxos/echo-schema';
 
-export type SchemaSubscriptionCallback = (schema: MutableSchema[]) => void;
+export type SchemaSubscriptionCallback = (schema: EchoSchema[]) => void;
 
 /**
  * String identifier for the schema.
@@ -18,7 +18,7 @@ export type AnyEchoObjectSchema = S.Schema.AnyNoContext;
 // export type AnyEchoObjectSchema = S.Struct<{ [key: string]: S.Schema.AnyNoContext }>;
 
 export interface SchemaRegistry {
-  query(query?: SchemaRegistryQuery): SchemaRegistryPreparedQuery<MutableSchema>;
+  query(query?: SchemaRegistryQuery): SchemaRegistryPreparedQuery<EchoSchema>;
 
   /**
    * Registers the provided schema.
@@ -31,7 +31,7 @@ export interface SchemaRegistry {
    * If a different schema with the same name and version exists, the method throws an error.
    * If no schema with the same name and version exists, a new schema will be inserted based on semantic versioning rules.
    */
-  register(input: RegisterSchemaInput[]): Promise<MutableSchema[]>;
+  register(input: RegisterSchemaInput[]): Promise<EchoSchema[]>;
 }
 
 export type SchemaRegistryQuery = {

@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { type SchemaRegistry } from '@dxos/echo-db';
-import { FormatEnum, FormatEnums, formatToType, type MutableSchema } from '@dxos/echo-schema';
+import { FormatEnum, FormatEnums, formatToType, type EchoSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
 import {
@@ -38,7 +38,7 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
   const [props, setProps] = useState<PropertyType>(projection.getFieldProjection(field.id).props);
   useEffect(() => setProps(projection.getFieldProjection(field.id).props), [field, projection]);
 
-  const [schemas, setSchemas] = useState<MutableSchema[]>([]);
+  const [schemas, setSchemas] = useState<EchoSchema[]>([]);
   useEffect(() => {
     if (!registry) {
       return;
@@ -57,7 +57,7 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
     };
   }, [registry]);
 
-  const [schema, setSchema] = useState<MutableSchema>();
+  const [schema, setSchema] = useState<EchoSchema>();
   useEffect(() => {
     setSchema(schemas.find((schema) => schema.typename === props?.referenceSchema));
   }, [schemas, props?.referenceSchema]);

@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { Format, type MutableSchema, S, toJsonSchema, TypedObject } from '@dxos/echo-schema';
+import { Format, type EchoSchema, S, toJsonSchema, TypedObject } from '@dxos/echo-schema';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { type ViewType, ViewProjection, createView } from '@dxos/schema';
@@ -19,7 +19,7 @@ import { TestLayout, TestPanel } from '../testing';
 
 const DefaultStory = () => {
   const space = useSpace();
-  const [schema, setSchema] = useState<MutableSchema>();
+  const [schema, setSchema] = useState<EchoSchema>();
   const [view, setView] = useState<ViewType>();
   const [projection, setProjection] = useState<ViewProjection>();
   useEffect(() => {

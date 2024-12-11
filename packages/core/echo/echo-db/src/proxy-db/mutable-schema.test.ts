@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import {
-  MutableSchema,
+  EchoSchema,
   ObjectAnnotationId,
   getTypeReference,
   ref,
@@ -22,11 +22,11 @@ import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
 
 class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-  schema: S.optional(ref(MutableSchema)),
-  schemaArray: S.optional(S.mutable(S.Array(ref(MutableSchema)))),
+  schema: S.optional(ref(EchoSchema)),
+  schemaArray: S.optional(S.mutable(S.Array(ref(EchoSchema)))),
 }) {}
 
-describe('MutableSchema', () => {
+describe('EchoSchema', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
@@ -37,7 +37,7 @@ describe('MutableSchema', () => {
     await builder.close();
   });
 
-  test('set MutableSchema as echo object field', async () => {
+  test('set EchoSchema as echo object field', async () => {
     const { db } = await setupTest();
     const instanceWithSchemaRef = db.add(create(TestSchema, {}));
     class GeneratedSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
@@ -59,7 +59,7 @@ describe('MutableSchema', () => {
     expect(() => validator({ id: instanceWithSchemaRef.id, field: 1 })).to.throw();
   });
 
-  test('create echo object with MutableSchema', async () => {
+  test('create echo object with EchoSchema', async () => {
     const { db } = await setupTest();
     class GeneratedSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
       field: S.String,
@@ -70,7 +70,7 @@ describe('MutableSchema', () => {
     expect(instanceWithSchemaRef.schema!.typename).to.eq(GeneratedSchema.typename);
   });
 
-  test('push MutableSchema to echo object schema array', async () => {
+  test('push EchoSchema to echo object schema array', async () => {
     const { db } = await setupTest();
     const instanceWithSchemaRef = db.add(create(TestSchema, { schemaArray: [] }));
     class GeneratedSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({

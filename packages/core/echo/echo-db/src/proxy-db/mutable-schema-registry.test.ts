@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import {
   EchoIdentifierAnnotationId,
-  MutableSchema,
+  EchoSchema,
   ObjectAnnotationId,
   S,
   StoredSchema,
@@ -110,9 +110,9 @@ describe('schema registry', () => {
       version: '0.1.0',
       jsonSchema: toJsonSchema(S.Struct({ field: S.Number })),
     });
-    expect(registry.hasSchema(new MutableSchema(schemaToStore))).to.be.false;
+    expect(registry.hasSchema(new EchoSchema(schemaToStore))).to.be.false;
     const storedSchema = db.add(schemaToStore);
-    expect(registry.hasSchema(new MutableSchema(storedSchema))).to.be.true;
+    expect(registry.hasSchema(new EchoSchema(storedSchema))).to.be.true;
   });
 
   test("can't register schema if not stored in db", async () => {

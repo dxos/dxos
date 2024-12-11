@@ -23,9 +23,9 @@ interface MutableSchemaConstructor extends AbstractSchema {
 }
 
 /**
- * Defines an effect-schema for the `MutableSchema` type.
+ * Defines an effect-schema for the `EchoSchema` type.
  *
- * This is here so that `MutableSchema` class can be used as a part of another schema definition (e.g., `ref(MutableSchema)`).
+ * This is here so that `EchoSchema` class can be used as a part of another schema definition (e.g., `ref(EchoSchema)`).
  */
 const MutableSchemaConstructor = (): MutableSchemaConstructor => {
   /**
@@ -34,7 +34,7 @@ const MutableSchemaConstructor = (): MutableSchemaConstructor => {
   return class {
     private static get _schema() {
       // The field is DynamicEchoSchema in runtime, but is serialized as StoredEchoSchema in automerge.
-      return S.Union(StoredSchema, S.instanceOf(MutableSchema)).annotations(StoredSchema.ast.annotations);
+      return S.Union(StoredSchema, S.instanceOf(EchoSchema)).annotations(StoredSchema.ast.annotations);
     }
 
     static readonly [S.TypeId] = schemaVariance;
@@ -66,15 +66,15 @@ const MutableSchemaConstructor = (): MutableSchemaConstructor => {
  * ```typescript
  * export class TableType extends TypedObject({ typename: 'example.org/type/Table', version: '0.1.0', })({
  *   title: S.String,
- *   schema: S.optional(ref(MutableSchema)),
+ *   schema: S.optional(ref(EchoSchema)),
  *   props: S.mutable(S.Array(TablePropSchema)),
  * }) {}
  * ```
  *
- * The ECHO API will translate any references to StoredSchema objects to be resolved as MutableSchema objects.
+ * The ECHO API will translate any references to StoredSchema objects to be resolved as EchoSchema objects.
  */
 // TODO(dmaretskyi): Rename `EchoSchema`.
-export class MutableSchema extends MutableSchemaConstructor() implements S.Schema.AnyNoContext {
+export class EchoSchema extends MutableSchemaConstructor() implements S.Schema.AnyNoContext {
   private _schema: S.Schema<any> | undefined;
   private _isDirty = true;
 

@@ -8,7 +8,7 @@ import {
   FormatEnum,
   type JsonPath,
   type JsonProp,
-  type MutableSchema,
+  type EchoSchema,
   S,
   TypedObject,
   TypeEnum,
@@ -28,7 +28,7 @@ type InitialiseTableProps = {
 
 // TODO(burdon): Pass in type.
 // TODO(burdon): User should determine typename.
-export const initializeTable = ({ space, table, initialRow = true }: InitialiseTableProps): MutableSchema => {
+export const initializeTable = ({ space, table, initialRow = true }: InitialiseTableProps): EchoSchema => {
   log.info('initializeTable', { table });
 
   const ContactSchema = TypedObject({

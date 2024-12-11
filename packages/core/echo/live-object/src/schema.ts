@@ -8,7 +8,7 @@ import {
   createJsonSchema,
   EchoObject,
   getObjectAnnotation,
-  MutableSchema,
+  EchoSchema,
   ObjectAnnotationId,
   StoredSchema,
   toJsonSchema,
@@ -35,10 +35,7 @@ export const createStoredSchema = (
 /**
  * Create runtime representation of a schema.
  */
-export const createMutableSchema = (
-  { typename, version }: ObjectAnnotation,
-  fields: S.Struct.Fields,
-): MutableSchema => {
+export const createMutableSchema = ({ typename, version }: ObjectAnnotation, fields: S.Struct.Fields): EchoSchema => {
   const schema = S.partial(S.Struct(fields).omit('id')).pipe(EchoObject(typename, version));
   const objectAnnotation = getObjectAnnotation(schema);
   const schemaObject = createStoredSchema({ typename, version });
@@ -47,5 +44,5 @@ export const createMutableSchema = (
   });
 
   schemaObject.jsonSchema = toJsonSchema(updatedSchema);
-  return new MutableSchema(schemaObject);
+  return new EchoSchema(schemaObject);
 };
