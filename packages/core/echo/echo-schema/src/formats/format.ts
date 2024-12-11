@@ -5,9 +5,9 @@
 import { Schema as S } from '@effect/schema';
 
 import * as DateUtil from './date';
+import { Geo } from './geo';
 import * as NumberUtil from './number';
 import { CurrencyAnnotationId } from './number';
-import * as ObjectUtil from './object';
 import * as StringUtil from './string';
 import { FormatAnnotationId } from './types';
 
@@ -47,7 +47,7 @@ export namespace Format {
   export const Duration = DateUtil.Duration;
 
   // Objects
-  export const GeoPoint = ObjectUtil.GeoPoint;
+  export const GeoPosition = Geo.Position;
 }
 
 /**

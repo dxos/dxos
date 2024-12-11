@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type BaseObject, type GeoPoint } from '@dxos/echo-schema';
+import { type BaseObject, type Geo } from '@dxos/echo-schema';
 import { Input, useTranslation } from '@dxos/react-ui';
 
 import { InputHeader, type InputProps } from './Input';
@@ -14,7 +14,7 @@ import { translationKey } from '../../translations';
 // Custom format components.
 //
 
-export const GeiPointInput = <T extends BaseObject>({
+export const GeoPointInput = <T extends BaseObject>({
   property,
   type,
   label,
@@ -26,7 +26,7 @@ export const GeiPointInput = <T extends BaseObject>({
 }: InputProps<T>) => {
   const { t } = useTranslation(translationKey);
   const { status, error } = getStatus?.(property);
-  const [lng = 0, lat = 0] = getValue<GeoPoint>(property) ?? [];
+  const [lng = 0, lat = 0] = getValue<Geo.Position>(property) ?? [];
 
   return (
     <Input.Root validationValence={status}>

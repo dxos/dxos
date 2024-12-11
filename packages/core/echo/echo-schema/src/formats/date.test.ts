@@ -18,14 +18,14 @@ import {
 } from './date';
 import { toJsonSchema } from '../json';
 
-describe.skip('date', () => {
+describe('date', () => {
   test('basic', () => {
     const date = new Date('2024-12-31T23:59:59Z');
     expect(toSimpleDate(date)).to.deep.eq({ year: 2024, month: 12, day: 31 });
     expect(toSimpleTime(date)).to.deep.eq({ hours: 23, minutes: 59, seconds: 59 });
   });
 
-  test('Date', ({ expect }) => {
+  test.skip('Date', ({ expect }) => {
     const jsonSchema = toJsonSchema(DateOnly);
     console.log(JSON.stringify(jsonSchema));
     const v1: SimpleDate = { year: 1999, month: 12, day: 31 };
@@ -34,7 +34,7 @@ describe.skip('date', () => {
     expect(v1).to.deep.eq(v2);
   });
 
-  test('Time', ({ expect }) => {
+  test.skip('Time', ({ expect }) => {
     const jsonSchema = toJsonSchema(TimeOnly);
     console.log(JSON.stringify(jsonSchema));
     const v1: SimpleTime = { hours: 23, minutes: 59, seconds: 59 };
@@ -43,7 +43,7 @@ describe.skip('date', () => {
     expect(v1).to.deep.eq(v2);
   });
 
-  test('DateTime', ({ expect }) => {
+  test.skip('DateTime', ({ expect }) => {
     const jsonSchema = toJsonSchema(DateTime);
     console.log(JSON.stringify(jsonSchema));
     const v1: SimpleDateTime = { year: 1999, month: 12, day: 31, hours: 23, minutes: 59, seconds: 59 };

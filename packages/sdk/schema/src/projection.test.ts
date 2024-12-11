@@ -173,6 +173,7 @@ describe('ViewProjection', () => {
     expect(field).to.deep.eq({
       id: getFieldId(view, 'org'),
       path: 'org',
+      hidden: true,
       referencePath: 'name',
     });
 

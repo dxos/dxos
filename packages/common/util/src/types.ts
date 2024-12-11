@@ -55,7 +55,7 @@ export const getAsyncProviderValue = <T, V = void>(
 /**
  * Remove keys with undefined values.
  */
-export const stripUndefinedValues = <T extends { [index: string]: any }>(obj: T): T => {
+export const stripUndefinedValues = <T extends Record<string, any>>(obj: T): T => {
   if (typeof obj === 'object') {
     Object.keys(obj).forEach((key) => {
       const value = obj[key];

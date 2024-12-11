@@ -137,8 +137,20 @@ const _JsonSchemaType = S.mutable(
     //
 
     minLength: S.optional(NonNegativeInteger),
-    items: S.optional(S.suspend(() => JsonSchemaType)),
-    additionalItems: S.optional(S.suspend(() => JsonSchemaType)),
+
+    /**
+     * For arrays, we use the meaning as defined in `Draft 4 - 2019-09` of the JSON Schema spec to allow tuple validation.
+     * Tuple elements are placed in "items" array, with the "additionalItems" property set to false.
+     * See: https://json-schema.org/understanding-json-schema/reference/array#tupleValidation
+     */
+    // TODO(dmaretskyi): This is the serialization behavior that effect/schema implements, we should migration to the newer version of JSON Schema spec and use the "prefixItems" property.
+    items: S.optional(S.suspend(() => S.Union(JsonSchemaType, S.Array(JsonSchemaType)))),
+
+    /**
+     * Set to `false` if this is a tuple type, in that case "items" should be an array.
+     * See: https://json-schema.org/understanding-json-schema/reference/array#additionalitems
+     */
+    additionalItems: S.optional(S.suspend(() => JsonSchemaOrBoolean)),
     maxItems: S.optional(NonNegativeInteger),
     minItems: S.optional(NonNegativeInteger),
     uniqueItems: S.optional(S.Boolean),

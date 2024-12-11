@@ -13,7 +13,7 @@ const TestSchema = S.Struct({
   active: S.Boolean,
   email: Format.Email,
   age: S.Number,
-  location: Format.GeoPoint,
+  location: Format.GeoPosition,
   address: S.Struct({
     city: S.String,
     zip: S.String,

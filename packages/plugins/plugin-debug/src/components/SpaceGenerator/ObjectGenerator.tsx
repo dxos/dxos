@@ -32,7 +32,40 @@ export type ObjectGenerator<T extends BaseObject> = (
   cb?: (objects: ReactiveObject<any>[]) => void,
 ) => Promise<ReactiveObject<T>[]>;
 
-export const staticGenerators = new Map<string, ObjectGenerator<any>>([
+/**
+ * Create objects for any schema.
+ */
+export const createObjectGenerator = <T extends BaseObject>(type: AbstractSchema<T>): ObjectGenerator<T> => {
+  return async (space, n, cb): Promise<ReactiveObject<T>[]> => {
+    // Find or create mutable schema.
+    const mutableSchema = await space.db.schemaRegistry.query();
+    const schema =
+      mutableSchema.find((schema) => schema.typename === type.typename) ?? space.db.schemaRegistry.addSchema(type);
+
+    // Create objects.
+    const generate = createAsyncGenerator(generator, schema.schema, { db: space.db });
+    const objects = await generate.createObjects(n);
+
+    // Find or create table and view.
+    const { objects: tables } = await space.db.query(Filter.schema(TableType)).run();
+    const table = tables.find((table) => table.view?.query?.typename === type.typename);
+    if (!table) {
+      const name = type.typename.split('/').pop() ?? type.typename;
+      const view = createView({ name, typename: type.typename, jsonSchema: schema.jsonSchema });
+      const table = space.db.add(create(TableType, { name, view }));
+      cb?.([table]);
+    }
+
+    return objects;
+  };
+};
+
+export const staticTypes = [DocumentType, DiagramType, SheetType];
+
+/**
+ * Generate objects for well-known (static) schema.
+ */
+export const staticSchemaGenerators = new Map<string, ObjectGenerator<any>>([
   [
     DocumentType.typename,
     async (space, n, cb) => {
@@ -110,32 +143,3 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
     },
   ],
 ]);
-
-export const createGenerator = <T extends BaseObject>(type: AbstractSchema<T>): ObjectGenerator<T> => {
-  return async (
-    space: Space,
-    n: number,
-    cb?: (objects: ReactiveObject<any>[]) => void,
-  ): Promise<ReactiveObject<T>[]> => {
-    // Find or create mutable schema.
-    const mutableSchema = await space.db.schemaRegistry.query();
-    const schema =
-      mutableSchema.find((schema) => schema.typename === type.typename) ?? space.db.schemaRegistry.addSchema(type);
-
-    // Create objects.
-    const generate = createAsyncGenerator(generator, schema.schema, { db: space.db });
-    const objects = await generate.createObjects(n);
-
-    // Find or create table and view.
-    const { objects: tables } = await space.db.query(Filter.schema(TableType)).run();
-    const table = tables.find((table) => table.view?.query?.typename === type.typename);
-    if (!table) {
-      const name = type.typename.split('/').pop() ?? type.typename;
-      const view = createView({ name, typename: type.typename, jsonSchema: schema.jsonSchema });
-      const table = space.db.add(create(TableType, { name, view }));
-      cb?.([table]);
-    }
-
-    return objects;
-  };
-};
