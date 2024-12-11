@@ -118,6 +118,7 @@ describe('TestObjectGenerator', () => {
         },
       },
     );
+    await generator.addSchemas();
 
     const todo = await generator.createObject({ types: [Types.task] });
     expect(getType(todo)).to.exist;

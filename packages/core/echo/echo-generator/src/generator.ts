@@ -84,7 +84,9 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
   async addSchemas() {
     const result: (EchoSchema | S.Schema<any>)[] = [];
     for (const [typename, schema] of Object.entries(this._schemas)) {
-      result.push(await this._maybeRegisterSchema(typename, schema as EchoSchema | S.Schema<any>));
+      const echoSchema = await this._maybeRegisterSchema(typename, schema as EchoSchema | S.Schema<any>);
+      this.setSchema(typename as T, echoSchema);
+      result.push(echoSchema);
     }
 
     return result;

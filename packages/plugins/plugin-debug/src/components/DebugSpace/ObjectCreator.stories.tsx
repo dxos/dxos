@@ -11,9 +11,9 @@ import { createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { log } from '@dxos/log';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { useAsyncEffect } from '@dxos/react-hooks';
 import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { useAsyncEffect } from '@dxos/react-hooks';
 import { ObjectCreator, type ObjectCreatorProps } from './ObjectCreator';
 
 const DefaultStory = () => {
