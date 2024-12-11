@@ -2,18 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { FirstAidKit, Key, Plugs, PlugsConnected } from '@phosphor-icons/react';
+import { Key, Plugs, PlugsConnected } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { generateName } from '@dxos/display-name';
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { type Identity, useIdentity, useDevices, useHaloInvitations } from '@dxos/react-client/halo';
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { useNetworkStatus, ConnectionState } from '@dxos/react-client/mesh';
-import { Avatar, Input, Toolbar, Tooltip, useId, useTranslation } from '@dxos/react-ui';
+import { Avatar, Input, Toolbar, Tooltip, useClipboard, useId, useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
 
@@ -25,14 +24,7 @@ import {
 import { useIdentityMachine } from './identityMachine';
 import { IdentityActionChooser } from './steps';
 import { useAgentHandlers } from './useAgentHandlers';
-import {
-  Viewport,
-  CloseButton,
-  EmojiPickerToolbarButton,
-  Heading,
-  HuePickerToolbarButton,
-  useClipboardContext,
-} from '../../components';
+import { Viewport, CloseButton, EmojiPickerToolbarButton, Heading, HuePickerToolbarButton } from '../../components';
 import { ConfirmReset, InvitationManager } from '../../steps';
 
 const viewStyles = 'pbs-1 pbe-3 pli-3';
@@ -47,19 +39,17 @@ const IdentityHeading = ({
   titleId,
   title,
   identity,
-  hideRecover,
   onDone,
   onUpdateProfile,
   connectionState,
   onChangeConnectionState,
 }: IdentityPanelHeadingProps) => {
-  const client = useClient();
   const fallbackValue = keyToFallback(identity.identityKey);
   const { t } = useTranslation('os');
   const [displayName, setDisplayName] = useState(identity.profile?.displayName ?? '');
   const [emoji, setEmojiDirectly] = useState<string>(getEmojiValue(identity));
   const [hue, setHueDirectly] = useState<string>(getHueValue(identity));
-  const { textValue, setTextValue } = useClipboardContext();
+  const { textValue, setTextValue } = useClipboard();
   const identityHex = identity.identityKey.toHex();
   const publicKeyCopied = textValue === identityHex;
 
@@ -71,13 +61,6 @@ const IdentityHeading = ({
   const setHue = (nextHue: string) => {
     setHueDirectly(nextHue);
     void onUpdateProfile?.({ ...identity.profile, data: { ...identity.profile?.data, hue: nextHue } });
-  };
-
-  const handleRecoveryCode = async () => {
-    invariant(client.services.services.IdentityService, 'IdentityService not available');
-    // TODO(wittjosiah): This needs a proper api.
-    const { seedphrase } = await client.services.services.IdentityService.createRecoveryPhrase();
-    void setTextValue(seedphrase);
   };
 
   const isConnected = connectionState === ConnectionState.ONLINE;
@@ -131,22 +114,6 @@ const IdentityHeading = ({
               </Tooltip.Content>
             </Tooltip.Portal>
           </Tooltip.Root>
-          {/* TODO(wittjosiah): Remove. This should have its own flow. */}
-          {!hideRecover && (
-            <Tooltip.Root>
-              <Tooltip.Trigger asChild>
-                <Toolbar.Button classNames='bs-[--rail-action]' onClick={handleRecoveryCode}>
-                  <FirstAidKit className={getSize(5)} />
-                </Toolbar.Button>
-              </Tooltip.Trigger>
-              <Tooltip.Portal>
-                <Tooltip.Content side='bottom' classNames='z-50'>
-                  {t('create recovery code label')}
-                  <Tooltip.Arrow />
-                </Tooltip.Content>
-              </Tooltip.Portal>
-            </Tooltip.Root>
-          )}
           <Tooltip.Root>
             <Tooltip.Trigger asChild>
               <Toolbar.Button
