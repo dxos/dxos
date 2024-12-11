@@ -17,6 +17,7 @@ registerSignalsRuntime();
 /**
  * Create a reactive mutable schema that updates when the JSON schema is updated.
  */
+// TODO(dmaretskyi): Should be replaced by registration of typed object.
 export const createEchoSchema = (schema: AbstractSchema): EchoSchema => {
   const typeReference = getTypeReference(schema);
   invariant(typeReference, 'Type reference not found.');
