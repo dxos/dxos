@@ -185,7 +185,7 @@ export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
   }
 
   public getSchema(typename: string): MutableSchema | undefined {
-    return this._schemaByType.get(typename);
+    return this.query({ typename }).runSync()[0];
   }
 
   public getSchemaById(id: string): MutableSchema | undefined {
