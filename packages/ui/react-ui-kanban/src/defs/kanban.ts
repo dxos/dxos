@@ -16,15 +16,11 @@ export const KanbanSchema = S.Struct({
   /**
    * The field the values by which to pivot into columns of the kanban. This should be an enum field on the referred objects, can that be enforced?
    */
-  columnPivotField: S.optional(S.String),
+  columnField: S.optional(S.String),
   /**
-   * Manual order of cards by id.
+   * Order of columns by value and cards by id, derivative of the field selected by `columnPivotField` but can that be inferred here?
    */
-  cardOrder: S.optional(S.Array(S.String)),
-  /**
-   * Manual order of columns by …id? …value? Derivative of the field selected by `columnPivotField`, but can that be inferred here?
-   */
-  columnOrder: S.optional(S.Array(S.String)),
+  arrangement: S.optional(S.Array(S.Struct({ columnValue: S.String, ids: S.Array(ObjectId) }))),
   // TODO(burdon): Should not import from plugin. Either factor out type or use reverse deps when supported.
   threads: S.optional(S.Array(ref(ThreadType))),
 });

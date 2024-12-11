@@ -13,8 +13,6 @@ type InitialiseKanbanProps = {
   space: Space;
 };
 
-// TODO(burdon): Pass in type.
-// TODO(burdon): User should determine typename.
 export const initializeKanban = ({
   space,
 }: InitialiseKanbanProps): { kanban: KanbanType; taskSchema: MutableSchema } => {
@@ -36,6 +34,7 @@ export const initializeKanban = ({
   const taskSchema = space.db.schemaRegistry.addSchema(TaskSchema);
 
   const kanban = space.db.add(
+    // @ts-ignore
     create(KanbanType, {
       cardView: createView({
         name: 'Test kanban’s card view',
@@ -44,7 +43,11 @@ export const initializeKanban = ({
         fields: ['title', 'description', 'state'],
       }),
       columnPivotField: 'state',
-      columnOrder: ['init', 'doing', 'done'],
+      arrangement: [
+        { value: 'init', cards: [] },
+        { value: 'doing', cards: [] },
+        { value: 'done', cards: [] },
+      ],
     }),
   );
 

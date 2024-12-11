@@ -21,10 +21,10 @@ export const Kanban = ({ model, columns }: KanbanProps) => {
 
   return (
     <Stack orientation='horizontal' size='contain'>
-      {Object.entries(model.arrangement).map(([columnId, items]) => (
+      {model.arrangement.map(({ columnValue, cards }) => (
         <StackItem.Root
-          key={columnId}
-          item={{ id: columnId }}
+          key={columnValue}
+          item={{ id: columnValue }}
           classNames='border-ie border-separator'
           onRearrange={model.onRearrange}
         >
@@ -32,20 +32,20 @@ export const Kanban = ({ model, columns }: KanbanProps) => {
             <StackItem.DragHandle asChild>
               <IconButton icon='ph--dots-six-vertical' variant='ghost' label={t('column drag handle label')} />
             </StackItem.DragHandle>
-            <h2>{columns[columnId].label}</h2>
+            <h2>{columns[columnValue].label}</h2>
           </StackItem.Heading>
           <Stack orientation='vertical' size='contain' rail={false}>
-            {items.map((item) => (
+            {cards.map((card) => (
               <StackItem.Root
-                key={item.id}
-                item={item}
+                key={card.id}
+                item={card}
                 classNames='border-be border-separator'
                 onRearrange={model.onRearrange}
               >
                 <StackItem.DragHandle asChild>
                   <IconButton icon='ph--dots-six' variant='ghost' label={t('card drag handle label')} />
                 </StackItem.DragHandle>
-                <Form readonly values={item} schema={model.cardSchema} />
+                <Form readonly values={card} schema={model.cardSchema} />
               </StackItem.Root>
             ))}
           </Stack>
