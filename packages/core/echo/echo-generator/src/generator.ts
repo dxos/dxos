@@ -107,13 +107,13 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
       if (existingSchema != null) {
         return existingSchema;
       }
-      this._space.db.add(schema.storedSchema);
-      return this._space.db.schemaRegistry.registerSchema(schema.storedSchema);
+      return this._space.db.schemaRegistry.addSchema(schema);
     } else {
       const existingSchema = this._space.db.graph.schemaRegistry.getSchema(typename);
       if (existingSchema != null) {
         return existingSchema;
       }
+      console.log('add runtime', schema);
       this._space.db.graph.schemaRegistry.addSchema([schema]);
       return schema;
     }
