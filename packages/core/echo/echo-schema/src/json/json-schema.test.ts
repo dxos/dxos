@@ -93,14 +93,6 @@ describe('effect-to-json', () => {
       typename: 'example.com/type/Contact',
       version: '0.1.0',
 
-      // TODO(dmaretskyi): Remove this.
-      echo: {
-        type: {
-          typename: 'example.com/type/Contact',
-          version: '0.1.0',
-        },
-      },
-
       type: 'object',
       required: ['name', 'email', 'id'],
       properties: {
@@ -143,13 +135,6 @@ describe('effect-to-json', () => {
       type: 'object',
       additionalProperties: false,
 
-      // TODO(dmaretskyi): Should remove.
-      echo: {
-        type: {
-          typename: 'example.com/type/Contact',
-          version: '0.1.0',
-        },
-      },
       properties: {
         id: {
           type: 'string',
@@ -239,7 +224,7 @@ describe('json-to-effect', () => {
       ) {}
 
       const jsonSchema = toJsonSchema(Schema);
-      console.log(JSON.stringify(jsonSchema, null, 2));
+      // console.log(JSON.stringify(jsonSchema, null, 2));
       const schema = toEffectSchema(jsonSchema);
 
       expect(() => expect(schema.ast).to.deep.eq(Schema.ast)).to.throw();

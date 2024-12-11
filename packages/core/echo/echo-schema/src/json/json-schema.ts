@@ -50,11 +50,6 @@ interface EchoRefinement {
   annotations?: PropertyMetaAnnotation;
 }
 
-const annotationToRefinementKey: { [annotation: symbol]: keyof EchoRefinement } = {
-  [ObjectAnnotationId]: 'type',
-  [PropertyMetaAnnotationId]: 'annotations',
-};
-
 // TODO(burdon): Are these values stored (can they be changed?)
 export enum PropType {
   NONE = 0,
@@ -121,14 +116,20 @@ export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
   jsonSchema = orderKeys(jsonSchema, [
     '$schema',
     '$id',
+    'typename',
     'version',
+
     'type',
+
+    'enum',
+
     'properties',
     'required',
+    'propertyOrder',
     'items',
-    'enum',
-    'anyOf',
     'additionalProperties',
+
+    'anyOf',
   ]);
 
   return jsonSchema;
@@ -342,13 +343,20 @@ export const ECHO_REFINEMENT_KEY = 'echo';
 
 const ECHO_REFINEMENTS = [ObjectAnnotationId, PropertyMetaAnnotationId, GeneratorAnnotationId, FieldLookupAnnotationId];
 
+const annotationToRefinementKey: { [annotation: symbol]: keyof EchoRefinement } = {
+  // TODO(dmaretskyi): Extract out.
+  [PropertyMetaAnnotationId]: 'annotations',
+};
+
 const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<symbol, any> => {
   const schemaFields: Record<string, any> = {};
 
   const echoRefinement: EchoRefinement = {};
   for (const annotation of ECHO_REFINEMENTS) {
     if (annotations[annotation] != null) {
-      echoRefinement[annotationToRefinementKey[annotation]] = annotations[annotation] as any;
+      if (annotationToRefinementKey[annotation]) {
+        echoRefinement[annotationToRefinementKey[annotation]] = annotations[annotation] as any;
+      }
     }
   }
   if (Object.keys(echoRefinement).length > 0) {
