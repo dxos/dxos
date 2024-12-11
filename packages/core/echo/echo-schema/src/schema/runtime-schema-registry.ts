@@ -10,7 +10,7 @@ import { getTypenameOrThrow } from '../types';
 /**
  * Runtime registry of static schema objects (i.e., not Dynamic .
  */
-// TODO(burdon): Reconcile with MutableSchemaRegistry.
+// TODO(burdon): Reconcile with EchoSchemaRegistry.
 export class RuntimeSchemaRegistry {
   // TODO(burdon): Change to AbstractTypedObject
   private readonly _schema = new Map<string, S.Schema<any>>();

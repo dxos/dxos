@@ -13,7 +13,7 @@ import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { defaultMap } from '@dxos/util';
 
-import { MutableSchemaRegistry } from './mutable-schema-registry';
+import { EchoSchemaRegistry } from './mutable-schema-registry';
 import {
   CoreDatabase,
   type FlushOptions,
@@ -60,7 +60,7 @@ export interface EchoDatabase {
 
   get spaceId(): SpaceId;
 
-  get schemaRegistry(): MutableSchemaRegistry;
+  get schemaRegistry(): EchoSchemaRegistry;
 
   get graph(): Hypergraph;
 
@@ -130,7 +130,7 @@ export type EchoDatabaseParams = {
  * Implements EchoDatabase interface.
  */
 export class EchoDatabaseImpl extends Resource implements EchoDatabase {
-  private readonly _schemaRegistry: MutableSchemaRegistry;
+  private readonly _schemaRegistry: EchoSchemaRegistry;
   /**
    * @internal
    */
@@ -155,7 +155,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       spaceKey: params.spaceKey,
     });
 
-    this._schemaRegistry = new MutableSchemaRegistry(this, { reactiveQuery: params.reactiveSchemaQuery });
+    this._schemaRegistry = new EchoSchemaRegistry(this, { reactiveQuery: params.reactiveSchemaQuery });
   }
 
   get spaceId(): SpaceId {
@@ -177,7 +177,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return this._coreDatabase.graph;
   }
 
-  get schemaRegistry(): MutableSchemaRegistry {
+  get schemaRegistry(): EchoSchemaRegistry {
     return this._schemaRegistry;
   }
 

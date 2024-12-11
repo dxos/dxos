@@ -237,7 +237,7 @@ export class EchoSchema extends EchoSchemaConstructor() implements S.Schema.AnyN
   //
 
   /**
-   * Called by MutableSchemaRegistry on update.
+   * Called by EchoSchemaRegistry on update.
    */
   _invalidate() {
     this._isDirty = true;

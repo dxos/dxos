@@ -5,7 +5,7 @@
 import { AST, Schema as S } from '@effect/schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { MutableSchemaRegistry } from '@dxos/echo-db';
+import { EchoSchemaRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import {
   Format,
@@ -42,7 +42,7 @@ describe('ViewProjection', () => {
 
   test('gets and updates projection', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new MutableSchemaRegistry(db);
+    const registry = new EchoSchemaRegistry(db);
 
     const schema = createStoredSchema(
       {
@@ -134,7 +134,7 @@ describe('ViewProjection', () => {
 
   test('gets and updates references', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new MutableSchemaRegistry(db);
+    const registry = new EchoSchemaRegistry(db);
 
     // TODO(burdon): Reconcile with createStoredSchema.
     class Org extends TypedObject({ typename: 'example.com/type/Org', version: '0.1.0' })({
@@ -198,7 +198,7 @@ describe('ViewProjection', () => {
 
   test('deletes field projections', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new MutableSchemaRegistry(db);
+    const registry = new EchoSchemaRegistry(db);
 
     const schema = createStoredSchema(
       {
@@ -231,7 +231,7 @@ describe('ViewProjection', () => {
 
   test('field projection delete and restore', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new MutableSchemaRegistry(db);
+    const registry = new EchoSchemaRegistry(db);
 
     const schema = createStoredSchema(
       {
@@ -280,7 +280,7 @@ describe('ViewProjection', () => {
 
   test('property rename', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const registry = new MutableSchemaRegistry(db);
+    const registry = new EchoSchemaRegistry(db);
 
     const schema = createStoredSchema(
       {

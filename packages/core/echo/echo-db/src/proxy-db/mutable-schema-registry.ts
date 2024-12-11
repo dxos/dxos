@@ -34,7 +34,7 @@ import { SchemaRegistryPreparedQueryImpl } from './schema-registry-prepared-quer
 import { getObjectCore } from '../echo-handler';
 import { Filter } from '../query';
 
-export type MutableSchemaRegistryOptions = {
+export type EchoSchemaRegistryOptions = {
   /**
    * Run a reactive query for dynamic schemas.
    * @default true
@@ -46,7 +46,7 @@ export type MutableSchemaRegistryOptions = {
  * Per-space set of mutable schemas.
  */
 // TODO(burdon): Reconcile with RuntimeSchemaRegistry.
-export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
+export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
   private readonly _reactiveQuery: boolean;
 
   private readonly _schemaById: Map<string, EchoSchema> = new Map();
@@ -56,7 +56,7 @@ export class MutableSchemaRegistry extends Resource implements SchemaRegistry {
 
   constructor(
     private readonly _db: EchoDatabase,
-    { reactiveQuery = true }: MutableSchemaRegistryOptions = {},
+    { reactiveQuery = true }: EchoSchemaRegistryOptions = {},
   ) {
     super();
     this._reactiveQuery = reactiveQuery;
