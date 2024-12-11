@@ -143,6 +143,13 @@ const withEchoRefinements = (ast: AST.AST): AST.AST => {
     recursiveResult = new AST.Suspend(() => withEchoRefinements(suspendedAst), {
       [AST.JSONSchemaAnnotationId]: jsonSchema,
     });
+  } else if (AST.isTypeLiteral(ast)) {
+    recursiveResult = mapAst(ast, withEchoRefinements);
+    recursiveResult = makeAnnotatedRefinement(recursiveResult, {
+      [AST.JSONSchemaAnnotationId]: {
+        propertyOrder: [...ast.propertySignatures.map((p) => p.name)] as string[],
+      } satisfies JsonSchemaType,
+    });
   } else {
     recursiveResult = mapAst(ast, withEchoRefinements);
   }
@@ -248,7 +255,7 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
   const isEchoObject =
     echoRefinement != null || ('$id' in root && typeof root.$id === 'string' && root.$id.startsWith('dxn:'));
 
-  const fields: S.Struct.Fields = {};
+  let fields: S.Struct.Fields = {};
   const propertyList = Object.entries(root.properties ?? {});
   let immutableIdField: S.Schema<any> | undefined;
   for (const [key, value] of propertyList) {
@@ -260,6 +267,10 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
         ? toEffectSchema(value, defs)
         : S.optional(toEffectSchema(value, defs));
     }
+  }
+
+  if (root.propertyOrder) {
+    fields = orderKeys(fields, root.propertyOrder as any);
   }
 
   let schema: S.Schema<any, any, unknown>;

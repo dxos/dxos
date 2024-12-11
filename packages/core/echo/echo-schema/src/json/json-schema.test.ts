@@ -14,6 +14,7 @@ import { FormatAnnotationId } from '../formats';
 import { Email } from '../formats/string';
 import { TypedObject } from '../object';
 import { Contact } from '../testing';
+import { property } from 'effect/FastCheck';
 
 describe('effect-to-json', () => {
   test('type annotation', () => {
@@ -112,6 +113,7 @@ describe('effect-to-json', () => {
           format: 'email',
         },
       },
+      propertyOrder: ['name', 'email', 'id'],
       additionalProperties: false,
     });
   });
@@ -168,6 +170,7 @@ describe('effect-to-json', () => {
         },
       },
       required: ['name', 'org', 'id'],
+      propertyOrder: ['name', 'org', 'id'],
     });
   });
 
@@ -237,7 +240,7 @@ describe('json-to-effect', () => {
       ) {}
 
       const jsonSchema = toJsonSchema(Schema);
-      // console.log(JSON.stringify(jsonSchema, null, 2));
+      console.log(JSON.stringify(jsonSchema, null, 2));
       const schema = toEffectSchema(jsonSchema);
 
       expect(() => expect(schema.ast).to.deep.eq(Schema.ast)).to.throw();

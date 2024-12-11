@@ -61,8 +61,7 @@ describe('schema registry', () => {
     expect(echoSchema.jsonSchema.$id).toEqual(`dxn:echo:@:${echoSchema.id}`);
   });
 
-  // TODO(dmaretskyi): Fix schema field order.
-  test.skip('add new schema - preserves field order', async () => {
+  test('add new schema - preserves field order', async () => {
     const { registry } = await setupTest();
     const echoSchema = registry.addSchema(Org);
     const expectedSchema = Org.annotations({

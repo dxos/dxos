@@ -129,6 +129,14 @@ const _JsonSchemaType = S.mutable(
     maxProperties: S.optional(NonNegativeInteger),
     minProperties: S.optional(NonNegativeInteger),
     required: S.optional(StringArray),
+
+    /**
+     * Non-standard JSON Schema extension.
+     * Defines the order of properties in the object.
+     * The unmentioned properties are placed at the end.
+     */
+    propertyOrder: S.optional(StringArray),
+
     additionalProperties: S.optional(JsonSchemaOrBoolean),
     properties: S.optional(
       S.mutable(
