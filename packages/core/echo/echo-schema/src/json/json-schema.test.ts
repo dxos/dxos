@@ -8,7 +8,7 @@ import { type AST, type JsonProp, S } from '@dxos/effect';
 import { deepMapValues } from '@dxos/util';
 
 import { getEchoProp, toEffectSchema, toJsonSchema } from './json-schema';
-import { PropertyMeta, setSchemaProperty, type JsonSchemaType, getSchemaProperty } from '../ast';
+import { JsonSchemaType, PropertyMeta, setSchemaProperty, getSchemaProperty } from '../ast';
 import { createSchemaReference, getSchemaReference, ref } from '../ast/ref';
 import { FormatAnnotationId } from '../formats';
 import { Email } from '../formats/string';
@@ -224,6 +224,7 @@ describe('json-to-effect', () => {
           twoDArray: S.Array(S.Array(S.String)),
           record: S.Record({ key: S.String, value: S.Number }),
           object: S.Struct({ id: S.String, field: ref(Org) }),
+          tuple: S.Tuple(S.Number, S.Number),
           echoObject: ref(Org),
           echoObjectArray: S.Array(ref(Org)),
           email: S.String.annotations({ [FormatAnnotationId]: 'email' }),
@@ -233,6 +234,10 @@ describe('json-to-effect', () => {
       ) {}
 
       const jsonSchema = toJsonSchema(Schema);
+
+      // Check that conforms to the schema schema.
+      S.decodeSync(JsonSchemaType)(jsonSchema);
+
       // log.info('', { jsonSchema });
       const schema = toEffectSchema(jsonSchema);
 
@@ -256,6 +261,12 @@ describe('json-to-effect', () => {
     const schema2 = S.String.annotations({ [FormatAnnotationId]: 'currency' });
 
     expect(prepareAstForCompare(schema1.ast)).not.to.deep.eq(prepareAstForCompare(schema2.ast));
+  });
+
+  test('tuple serialization', () => {
+    const jsonSchema = toJsonSchema(S.Tuple(S.String, S.Number));
+    // console.log(JSON.stringify(jsonSchema, null, 2));
+    S.decodeSync(JsonSchemaType)(jsonSchema);
   });
 
   const prepareAstForCompare = (obj: AST.AST): any =>
