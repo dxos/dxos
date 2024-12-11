@@ -84,7 +84,6 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     // Nothing to do.
   }
 
-  // TODO(burdon): Can this be made sync?
   query(query: SchemaRegistryQuery = {}): SchemaRegistryPreparedQuery<EchoSchema> {
     const self = this;
 
