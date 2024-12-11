@@ -235,14 +235,17 @@ const _JsonSchemaType = S.mutable(
     echo: S.optional(
       S.mutable(
         S.Struct({
+          /**
+           * @deprecated
+           */
+          // TODO(dmaretskyi): Remove.
           type: S.optional(
             S.mutable(
               S.Struct({
                 typename: S.String,
                 version: S.String,
 
-                // Note: schemaId is the id of the echo object containing the schema.
-                // This is why this annotation cannot be removed
+                // Not used.
                 schemaId: S.optional(S.String),
               }),
             ),
