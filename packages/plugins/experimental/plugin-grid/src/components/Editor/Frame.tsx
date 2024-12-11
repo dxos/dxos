@@ -3,14 +3,20 @@
 //
 
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import type { DragLocationHistory } from '@atlaskit/pragmatic-drag-and-drop/types';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
-import { addPoint, type Dimension, getPoint, getBoundsProperties, type Point } from './geometry';
+import { pointAdd, type Dimension, getBoundsProperties, type Point } from './geometry';
 
 const handleSize: Dimension = { width: 11, height: 11 };
+
+const getPoint = (pos: Point, { initial, current }: DragLocationHistory): Point => ({
+  x: current.input.clientX - (initial.input.clientX - pos.x),
+  y: current.input.clientY - (initial.input.clientY - pos.y),
+});
 
 /**
  * Graph data item.
@@ -59,7 +65,7 @@ export const Handle = ({ id, pos, onDrag }: HandleProps) => {
         onDrag?.({ type: 'drop', id, pos: getPoint(pos, location), link });
       },
     });
-  }, [onDrag]);
+  }, [pos, onDrag]);
 
   return (
     <div
@@ -160,10 +166,10 @@ export const Frame = ({ item, selected, onSelect, onDrag, onLink }: FrameProps) 
       </div>
       {!dragging && (
         <>
-          <Handle id='w' onDrag={handleDrag} pos={addPoint(item.pos, { x: -item.size.width / 2, y: 0 })} />
-          <Handle id='e' onDrag={handleDrag} pos={addPoint(item.pos, { x: item.size.width / 2, y: 0 })} />
-          <Handle id='n' onDrag={handleDrag} pos={addPoint(item.pos, { x: 0, y: item.size.height / 2 })} />
-          <Handle id='s' onDrag={handleDrag} pos={addPoint(item.pos, { x: 0, y: -item.size.height / 2 })} />
+          <Handle id='w' onDrag={handleDrag} pos={pointAdd(item.pos, { x: -item.size.width / 2, y: 0 })} />
+          <Handle id='e' onDrag={handleDrag} pos={pointAdd(item.pos, { x: item.size.width / 2, y: 0 })} />
+          <Handle id='n' onDrag={handleDrag} pos={pointAdd(item.pos, { x: 0, y: item.size.height / 2 })} />
+          <Handle id='s' onDrag={handleDrag} pos={pointAdd(item.pos, { x: 0, y: -item.size.height / 2 })} />
         </>
       )}
     </>

@@ -35,11 +35,12 @@ import { createGraph, createId } from './testing';
 //  - Nodes as objects.
 //  - Surface/form storybook.
 //  - Basic theme.
-//  - Drag placeholder.
+//  - Dragging placeholder.
 //  - Hide drag handles unless hovering.
 //  - Factor out react-ui-xxx vs. plugin.
 
 // TODO(burdon): Phase 2
+//  - Undo.
 //  - Auto-layout (reconcile with plugin-debug).
 //  - Resize frames.
 //  - Group/collapse nodes; hierarchical editor.
@@ -47,7 +48,6 @@ import { createGraph, createId } from './testing';
 //  - Grid options.
 //  - Line options (1-to-many, inherits, etc.)
 //  - Select multiple nodes.
-//  - Delete/undo.
 
 export type EditorProps = {};
 
@@ -60,26 +60,25 @@ export const Editor = (props: EditorProps) => {
   const snap = createSnap({ width: itemSize.width + 64, height: itemSize.height + 64 });
   const [graph] = useState(() => new GraphWrapper(createGraph(snap, itemSize)));
 
-  const { ref: containerRef, width = 0, height = 0 } = useResizeDetector();
-  const ready = !!width && !!height;
-  const gridRef = useRef<SVGSVGElement>(null);
-
-  useEffect(() => {
-    gridRef.current?.setAttribute('offset', `${itemSize.width / 2}px ${itemSize.height / 2}px`);
-  }, []);
-
   // State.
   const [linking, setLinking] = useState<{ source: Point; target: Point }>();
   const [dragging, setDragging] = useState<{ id: string; pos: Point }>();
   const [selected, setSelected] = useState<Record<string, boolean>>({});
-  const [offset, setOffset] = useState<Point>({ x: 0, y: 0 });
   const selectedRef = useDynamicRef(selected);
 
-  // Transform center.
-  const [scale, setScale] = useState(1);
-  const center = { x: width / 2 + offset.x, y: height / 2 + offset.y };
+  const { ref: containerRef, width = 0, height = 0 } = useResizeDetector();
+  const gridRef = useRef<SVGSVGElement>(null);
+  const ready = !!width && !!height;
+
+  // Offset and scale.
+  const [{ offset, scale }, setTransform] = useState<{ offset: Point; scale: number }>({
+    offset: { x: width / 2, y: height / 2 },
+    scale: 1,
+  });
+  useEffect(() => setTransform(({ scale }) => ({ offset: { x: width / 2, y: height / 2 }, scale })), [width, height]);
   const transformStyle = {
-    transform: `scale(${scale}) translate(${center.x}px, ${center.y}px)`,
+    // NOTE: Order is important.
+    transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
   };
 
   // Dragging state.
@@ -110,18 +109,33 @@ export const Editor = (props: EditorProps) => {
     const handleWheel = (event: WheelEvent) => {
       event.preventDefault();
       if (event.ctrlKey) {
-        // TODO(burdon): Not working.
-        // setScale((scale) => scale * Math.exp(-event.deltaY * 0.01));
+        setTransform(({ offset, scale }) => {
+          const scaleSensitivity = 0.01;
+          const newScale = scale * Math.exp(-event.deltaY * scaleSensitivity);
+          const rect = containerRef.current.getBoundingClientRect();
+          const pos = {
+            x: event.clientX - rect.left,
+            y: event.clientY - rect.top,
+          };
+          const newOffset = {
+            x: pos.x - (pos.x - offset.x) * (newScale / scale),
+            y: pos.y - (pos.y - offset.y) * (newScale / scale),
+          };
+
+          return { offset: newOffset, scale: newScale };
+        });
       } else {
-        setOffset(({ x, y }) => ({ x: x - event.deltaX, y: y - event.deltaY }));
+        setTransform(({ offset: { x, y }, scale }) => ({
+          offset: { x: x - event.deltaX, y: y - event.deltaY },
+          scale,
+        }));
       }
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
       switch (event.key) {
         case 'Backspace': {
-          handleDelete(Object.keys(selectedRef?.current));
-          setSelected({});
+          handleAction({ type: 'delete', ids: Object.keys(selectedRef?.current) });
           break;
         }
       }
@@ -133,11 +147,16 @@ export const Editor = (props: EditorProps) => {
       containerRef.current?.removeEventListener('wheel', handleWheel);
       containerRef.current?.removeEventListener('keydown', handleKeyDown);
     };
-  }, [containerRef, selectedRef]);
+  }, [containerRef, selectedRef, width, height]);
 
+  //
   // Selection.
-  const svgRef = useRef<SVGSVGElement>(null);
-  const callback = useCallback(
+  //
+
+  const overlaySvgRef = useRef<SVGSVGElement>(null);
+
+  // TODO(burdon): Pos isn't right after scaling.
+  const handleSelectionBounds = useCallback(
     (bounds: Bounds | null) => {
       if (!bounds) {
         setSelected({});
@@ -145,15 +164,54 @@ export const Editor = (props: EditorProps) => {
       }
 
       // Map the pointer event to the SVG coordinate system.
-      const selection = getRelativeCoordinates(svgRef.current!.getBoundingClientRect(), scale, center, bounds);
+      const selection = getRelativeCoordinates(containerRef.current!.getBoundingClientRect(), scale, offset, bounds);
       const selected = graph.nodes.filter(
         ({ data: { pos } }) => boundsContain(selection, { ...pos, width: 0, height: 0 }), // Check center point.
       );
       setSelected(selected.reduce((acc, { data: { id } }) => ({ ...acc, [id]: true }), {}));
     },
-    [svgRef, scale, center],
+    [overlaySvgRef, scale, offset],
   );
-  const selectionBounds = useBoundingSelection(svgRef.current, callback);
+
+  const selectionBounds = useBoundingSelection(overlaySvgRef.current, handleSelectionBounds);
+
+  // TODO(burdon): Factor out.
+  const mapCursorToTransformSpace = ({ x, y }: Point): Point => ({
+    x: (x - offset.x) / scale,
+    y: (y - offset.y) / scale,
+  });
+
+  // TODO(burdon): Pos isn't right after scaling.
+  const handleDrag = useCallback<NonNullable<FrameProps['onDrag']>>(
+    ({ type, item, pos }) => {
+      const transformPos = mapCursorToTransformSpace(pos);
+      if (type === 'drop') {
+        item.pos = snap(transformPos);
+        setDragging(undefined);
+      } else {
+        setDragging({ id: item.id, pos: transformPos });
+      }
+    },
+    [graph, scale, mapCursorToTransformSpace],
+  );
+
+  // TODO(burdon): Pos isn't right after scaling.
+  const handleLink = useCallback<NonNullable<FrameProps['onLink']>>(
+    ({ type, item, link, pos }) => {
+      if (type === 'drop') {
+        let id = link?.id;
+        if (!id) {
+          id = createId();
+          graph.addNode({ id, data: { id, pos: snap(pos), size: itemSize } });
+        }
+        graph.addEdge({ id: createId(), source: item.id, target: id, data: {} });
+        setLinking(undefined);
+      } else {
+        setLinking({ source: item.pos, target: pos });
+      }
+    },
+    [graph],
+  );
 
   // TODO(burdon): SHIFT select to toggle.
   const handleSelect = useCallback<NonNullable<FrameProps['onSelect']>>((item, selected) => {
@@ -167,50 +225,24 @@ export const Editor = (props: EditorProps) => {
     }
   }, []);
 
+  // TODO(burdon): Undo.
   const handleAction = useCallback<NonNullable<ToolbarProps['onAction']>>(
-    ({ type }) => {
+    (event) => {
+      const { type } = event;
       switch (type) {
         case 'create': {
           const id = createId();
           graph.addNode({ id, data: { id, pos: { x: 0, y: 0 }, size: itemSize } });
+          setSelected({});
           break;
         }
-      }
-    },
-    [graph],
-  );
 
-  const handleDelete = useCallback(
-    (ids: string[]) => {
-      ids.forEach((id) => graph.removeNode(id));
-    },
-    [graph],
-  );
-
-  const handleDrag = useCallback<NonNullable<FrameProps['onDrag']>>(
-    ({ type, item, pos }) => {
-      if (type === 'drop') {
-        item.pos = snap(pos);
-        setDragging(undefined);
-      } else {
-        setDragging({ id: item.id, pos });
-      }
-    },
-    [graph],
-  );
-
-  const handleLink = useCallback<NonNullable<FrameProps['onLink']>>(
-    ({ type, item, link, pos }) => {
-      if (type === 'drop') {
-        let id = link?.id;
-        if (!id) {
-          id = createId();
-          graph.addNode({ id, data: { id, pos: snap(pos), size: itemSize } });
+        case 'delete': {
+          const { ids } = event;
+          ids.forEach((id) => graph.removeNode(id));
+          setSelected({});
+          break;
         }
-        graph.addEdge({ id: createId(), source: item.id, target: id, data: {} });
-        setLinking(undefined);
-      } else {
-        setLinking({ source: item.pos, target: pos });
       }
     },
     [graph],
@@ -234,24 +266,23 @@ export const Editor = (props: EditorProps) => {
   }
 
   // TODO(burdon): Currently HTML content needs to be last so that elements can be dragged.
-  // TODO(burdon): Dragging just moves the transform and draws/clips objects within the frustrum.
 
   return (
     <div ref={containerRef} tabIndex={0} className='flex grow relative overflow-hidden'>
       {/* Selection overlay. */}
-      <svg width='100%' height='100%' className='absolute inset-0' ref={svgRef}>
+      <svg width='100%' height='100%' className='absolute left-0 top-0' ref={overlaySvgRef}>
         <g>
           {selectionBounds && <rect {...selectionBounds} fill='none' strokeWidth='2' className='stroke-blue-500' />}
         </g>
       </svg>
 
       {/* Grid. */}
-      <Grid ref={gridRef} offset={center} />
+      <Grid ref={gridRef} offset={offset} scale={scale} />
 
       {/* SVG content. */}
       {ready && (
         <>
-          <svg width='100%' height='100%' className='absolute inset-0 pointer-events-none touch-none'>
+          <svg width='100%' height='100%' className='absolute left-0 top-0 pointer-events-none touch-none'>
             <g style={transformStyle}>
               {edges.map(({ id, path }) => (
                 <path key={id} d={path} fill='none' strokeWidth='1' className='stroke-teal-700' />
@@ -260,7 +291,7 @@ export const Editor = (props: EditorProps) => {
           </svg>
 
           {/* HTML content. */}
-          <div style={transformStyle}>
+          <div style={transformStyle} className='absolute left-0 top-0'>
             {graph.nodes.map(({ data: item }) => (
               <Frame
                 key={item.id}
