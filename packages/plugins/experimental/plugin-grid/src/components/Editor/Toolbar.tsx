@@ -10,6 +10,8 @@ import { mx } from '@dxos/react-ui-theme';
 // TODO(burdon): Generalize.
 export type Action =
   | { type: 'center' }
+  | { type: 'zoom-in' }
+  | { type: 'zoom-out' }
   | {
       type: 'create';
     }
@@ -25,8 +27,16 @@ export type ToolbarProps = ThemedClassName<{
 export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
   return (
     <NaturalToolbar.Root classNames={mx('p-1', classNames)}>
-      <NaturalToolbar.Button onClick={() => onAction?.({ type: 'create' })} title='Create objects.'>
+      <NaturalToolbar.Button onClick={() => onAction?.({ type: 'center' })} title='Center canvas.'>
         <Icon icon='ph--target--regular' />
+      </NaturalToolbar.Button>
+      <NaturalToolbar.Button onClick={() => onAction?.({ type: 'zoom-in' })} title='Center canvas.'>
+        <Icon icon='ph--magnifying-glass-plus--regular' />
+      </NaturalToolbar.Button>
+      <NaturalToolbar.Button onClick={() => onAction?.({ type: 'zoom-out' })} title='Center canvas.'>
+        <Icon icon='ph--magnifying-glass-minus--regular' />
+      </NaturalToolbar.Button>
+      <NaturalToolbar.Button onClick={() => onAction?.({ type: 'create' })} title='Create objects.'>
         <Icon icon='ph--plus--regular' />
       </NaturalToolbar.Button>
     </NaturalToolbar.Root>

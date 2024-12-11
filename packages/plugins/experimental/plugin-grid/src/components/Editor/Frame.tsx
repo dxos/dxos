@@ -123,7 +123,7 @@ export const Frame = ({ item, selected, onSelect, onDrag, onLink }: FrameProps) 
         setDragging(false);
       },
     });
-  }, [item]);
+  }, [item, onDrag]);
 
   // Dropping (for link handles).
   useEffect(() => {

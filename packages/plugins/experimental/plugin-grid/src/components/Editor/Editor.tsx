@@ -175,24 +175,19 @@ export const Editor = (props: EditorProps) => {
 
   const selectionBounds = useBoundingSelection(overlaySvgRef.current, handleSelectionBounds);
 
-  // TODO(burdon): Factor out.
-  const mapCursorToTransformSpace = ({ x, y }: Point): Point => ({
-    x: (x - offset.x) / scale,
-    y: (y - offset.y) / scale,
-  });
+  // TODO(burdon): Formalize coordinate system.
 
   // TODO(burdon): Pos isn't right after scaling.
   const handleDrag = useCallback<NonNullable<FrameProps['onDrag']>>(
     ({ type, item, pos }) => {
-      const transformPos = mapCursorToTransformSpace(pos);
       if (type === 'drop') {
-        item.pos = snap(transformPos);
+        item.pos = snap(pos);
         setDragging(undefined);
       } else {
-        setDragging({ id: item.id, pos: transformPos });
+        setDragging({ id: item.id, pos });
       }
     },
-    [graph, scale, mapCursorToTransformSpace],
+    [graph, scale],
   );
 
   // TODO(burdon): Pos isn't right after scaling.
@@ -230,6 +225,22 @@ export const Editor = (props: EditorProps) => {
     (event) => {
       const { type } = event;
       switch (type) {
+        // TODO(burdon): Animate.
+        case 'center': {
+          setTransform({ offset: { x: width / 2, y: height / 2 }, scale: 1 });
+          break;
+        }
+
+        // TODO(burdon): Keep centered.
+        case 'zoom-in': {
+          setTransform({ offset: { x: width / 2, y: height / 2 }, scale: scale * 2 });
+          break;
+        }
+        case 'zoom-out': {
+          setTransform({ offset: { x: width / 2, y: height / 2 }, scale: scale / 2 });
+          break;
+        }
+
         case 'create': {
           const id = createId();
           graph.addNode({ id, data: { id, pos: { x: 0, y: 0 }, size: itemSize } });
@@ -245,7 +256,7 @@ export const Editor = (props: EditorProps) => {
         }
       }
     },
-    [graph],
+    [graph, scale, width, height],
   );
 
   // Create edges.
