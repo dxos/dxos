@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 
 import { LayoutAction, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
 import { type Trigger } from '@dxos/async';
@@ -28,31 +28,38 @@ export const WelcomeScreen = ({ hubUrl, firstRun }: { hubUrl: string; firstRun?:
   const searchParams = new URLSearchParams(window.location.search);
   const spaceInvitationCode = searchParams.get('spaceInvitationCode');
 
-  const handleSignup = async (email: string) => {
-    if (email.length === 0 || pendingRef.current) {
-      return;
-    }
+  const handleSignup = useCallback(
+    async (email: string) => {
+      if (email.length === 0 || pendingRef.current) {
+        return;
+      }
 
-    if (error) {
-      setError(false);
-    }
+      if (error) {
+        setError(false);
+      }
 
-    try {
-      // Prevent multiple signups.
-      pendingRef.current = true;
-      await signup({ hubUrl, email, identity, redirectUrl: location.origin });
-      setState(WelcomeState.EMAIL_SENT);
-    } catch (err) {
-      log.catch(err);
-      setError(true);
-    } finally {
-      pendingRef.current = false;
-    }
-  };
+      try {
+        // Prevent multiple signups.
+        pendingRef.current = true;
+        await signup({ hubUrl, email, identity, redirectUrl: location.origin });
+        setState(WelcomeState.EMAIL_SENT);
+      } catch (err) {
+        log.catch(err);
+        setError(true);
+      } finally {
+        pendingRef.current = false;
+      }
+    },
+    [hubUrl, identity],
+  );
 
-  const handleJoinIdentity = async () => {
+  const handleJoinIdentity = useCallback(async () => {
     await dispatch({ action: ClientAction.JOIN_IDENTITY });
-  };
+  }, [dispatch]);
+
+  const handleRecoverIdentity = useCallback(async () => {
+    await dispatch({ action: ClientAction.RECOVER_IDENTITY });
+  }, [dispatch]);
 
   const handleSpaceInvitation = async () => {
     const identityResult = await dispatch({ action: ClientAction.CREATE_IDENTITY });
@@ -104,6 +111,7 @@ export const WelcomeScreen = ({ hubUrl, firstRun }: { hubUrl: string; firstRun?:
       error={error}
       onSignup={handleSignup}
       onJoinIdentity={!identity && !spaceInvitationCode ? handleJoinIdentity : undefined}
+      onRecoverIdentity={!identity && !spaceInvitationCode ? handleRecoverIdentity : undefined}
       onSpaceInvitation={spaceInvitationCode ? handleSpaceInvitation : undefined}
     />
   );

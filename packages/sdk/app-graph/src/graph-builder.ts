@@ -4,13 +4,13 @@
 
 import { effect, type Signal, signal } from '@preact/signals-core';
 
-import { type UnsubscribeCallback } from '@dxos/async';
+import { Trigger, type UnsubscribeCallback } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { isNode, type MaybePromise, nonNullable } from '@dxos/util';
 
-import { ACTION_GROUP_TYPE, ACTION_TYPE, Graph, type GraphParams } from './graph';
+import { ACTION_GROUP_TYPE, ACTION_TYPE, Graph, ROOT_ID, type GraphParams } from './graph';
 import { type ActionData, actionGroupSymbol, type Node, type NodeArg, type Relation } from './node';
 
 /**
@@ -190,13 +190,14 @@ export class GraphBuilder {
   private readonly _resolverSubscriptions = new Map<string, UnsubscribeCallback>();
   private readonly _connectorSubscriptions = new Map<string, UnsubscribeCallback>();
   private readonly _nodeChanged: Record<string, Signal<{}>> = {};
+  private readonly _initialized: Record<string, Trigger> = {};
   private _graph: Graph;
 
   constructor(params: Pick<GraphParams, 'nodes' | 'edges'> = {}) {
     this._graph = new Graph({
       ...params,
-      onInitialNode: (id) => this._onInitialNode(id),
-      onInitialNodes: (node, relation, type) => this._onInitialNodes(node, relation, type),
+      onInitialNode: async (id) => this._onInitialNode(id),
+      onInitialNodes: async (node, relation, type) => this._onInitialNodes(node, relation, type),
       onRemoveNode: (id) => this._onRemoveNode(id),
     });
   }
@@ -213,9 +214,14 @@ export class GraphBuilder {
   /**
    * If graph is being restored from a pickle, the data will be null.
    * Initialize the data of each node by calling resolvers.
+   * Wait until all of the initial nodes have resolved.
    */
   async initialize() {
-    return Promise.all(Object.keys(this._graph._nodes).map((id) => this._onInitialNode(id)));
+    Object.keys(this._graph._nodes)
+      .filter((id) => id !== ROOT_ID)
+      .forEach((id) => (this._initialized[id] = new Trigger()));
+    Object.keys(this._graph._nodes).forEach((id) => this._onInitialNode(id));
+    await Promise.all(Object.values(this._initialized).map((trigger) => trigger.wait()));
   }
 
   get graph() {
@@ -299,7 +305,7 @@ export class GraphBuilder {
     await Promise.all(nodes.map((n) => this.explore({ node: n, relation, visitor }, [...path, node.id])));
   }
 
-  private async _onInitialNode(nodeId: string) {
+  private _onInitialNode(nodeId: string) {
     this._nodeChanged[nodeId] = this._nodeChanged[nodeId] ?? signal({});
     this._resolverSubscriptions.set(
       nodeId,
@@ -322,14 +328,17 @@ export class GraphBuilder {
             BuilderInternal.currentDispatcher = undefined;
           }
 
+          const trigger = this._initialized[nodeId];
           if (node) {
             this.graph._addNodes([node]);
+            trigger?.wake();
             if (this._nodeChanged[node.id]) {
               this._nodeChanged[node.id].value = {};
             }
             break;
           } else if (node === false) {
             this.graph._removeNodes([nodeId]);
+            trigger?.wake();
             break;
           }
         }
@@ -337,7 +346,7 @@ export class GraphBuilder {
     );
   }
 
-  private async _onInitialNodes(node: Node, nodesRelation: Relation, nodesType?: string) {
+  private _onInitialNodes(node: Node, nodesRelation: Relation, nodesType?: string) {
     this._nodeChanged[node.id] = this._nodeChanged[node.id] ?? signal({});
     let first = true;
     let previous: string[] = [];

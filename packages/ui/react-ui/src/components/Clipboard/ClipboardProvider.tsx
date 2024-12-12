@@ -14,7 +14,7 @@ export const ClipboardContext = createContext<ClipboardContextValue>({
   setTextValue: async (_) => {},
 });
 
-export const useClipboardContext = () => useContext(ClipboardContext);
+export const useClipboard = () => useContext(ClipboardContext);
 
 export const ClipboardProvider = ({ children }: PropsWithChildren<{}>) => {
   const [textValue, setInternalTextValue] = useState('');
