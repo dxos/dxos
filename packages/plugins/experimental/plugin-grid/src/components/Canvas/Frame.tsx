@@ -8,22 +8,14 @@ import { type DragLocationHistory } from '@atlaskit/pragmatic-drag-and-drop/type
 import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { Input } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
+import { type Item } from './Shape';
+import { TextBox, type TextBoxProps } from './TextBox';
 import { pointAdd, type Dimension, getBoundsProperties, type Point } from './geometry';
 import { useCanvasContext } from '../../hooks';
 
 const handleSize: Dimension = { width: 11, height: 11 };
-
-/**
- * Graph data item.
- */
-export type Item = {
-  id: string;
-  pos: Point;
-  size: Dimension;
-};
 
 export type HandleDragEvent = {
   type: 'drag' | 'drop';
@@ -102,8 +94,9 @@ export type FrameProps = PropsWithChildren<{
  * Draggable Frame around shapes.
  */
 export const Frame = ({ children, item, selected, onSelect, onDrag, onLink }: FrameProps) => {
-  const { dragging, setDragging } = useCanvasContext();
+  const { dragging, setDragging, editing, setEditing } = useCanvasContext();
   const isDragging = dragging?.item.id === item.id;
+  const isEditing = editing?.item.id === item.id;
 
   const [hovering, setHovering] = useState(false);
 
@@ -154,7 +147,26 @@ export const Frame = ({ children, item, selected, onSelect, onDrag, onLink }: Fr
   );
 
   // TODO(burdon): Make shape pluggable, incl. style. Create TextShape as a child of the Frame.
-  const editing = true;
+
+  const handleClick = () => {
+    if (!editing) {
+      onSelect?.(item, !selected);
+    }
+  };
+  const handleDoubleClick = () => {
+    setEditing({ item });
+  };
+
+  const handleClose: TextBoxProps['onClose'] = (value: string) => {
+    console.log('handleClose', value);
+    item.text = value;
+    setEditing(undefined);
+  };
+
+  const handleCancel: TextBoxProps['onCancel'] = () => {
+    console.log('handleCancel');
+    setEditing(undefined);
+  };
 
   return (
     // NOTE: Cannot hide while dragging.
@@ -162,7 +174,8 @@ export const Frame = ({ children, item, selected, onSelect, onDrag, onLink }: Fr
       <div
         ref={ref}
         style={getBoundsProperties({ ...item.pos, ...item.size })}
-        onClick={() => onSelect?.(item, !selected)}
+        onClick={handleClick}
+        onDoubleClick={handleDoubleClick}
         className={mx(
           'absolute flex justify-center items-center',
           'bg-base border border-teal-700 rounded overflow-hidden',
@@ -171,16 +184,23 @@ export const Frame = ({ children, item, selected, onSelect, onDrag, onLink }: Fr
         onMouseEnter={() => setHovering(true)}
         onMouseLeave={() => setTimeout(() => setHovering(false), 100)}
       >
-        {(editing && (
-          <Input.Root>
-            <Input.TextArea
-              value={item.id}
-              spellCheck={false}
-              style={{ resize: 'none' }}
-              classNames={'h-full text-center'}
-            />
-          </Input.Root>
-        )) || <div className='text-subdued truncate'>{item.id}</div>}
+        {(isEditing && (
+          //   <Input.Root>
+          //     <Input.TextArea
+          //       autoFocus
+          //       value={text}
+          //       spellCheck={false}
+          //       style={{ height: item.size.height, resize: 'none' }}
+          //       rows={1}
+          //       classNames={'text-center overflow-hidden bg-transparent !ring-0'}
+          //       onChange={handleTextChange}
+          //       onKeyDown={handleKeyDown}
+          //       onFocus={handleFocus}
+          //       onBlur={handleBlur}
+          //     />
+          //   </Input.Root>
+          <TextBox value={item.text} onClose={handleClose} onCancel={handleCancel} />
+        )) || <div className='text-subdued truncate'>{item.text ?? item.id}</div>}
       </div>
 
       {onLink && (

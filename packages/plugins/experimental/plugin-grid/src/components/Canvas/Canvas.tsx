@@ -7,7 +7,7 @@ import React, { createContext, type PropsWithChildren, useCallback, useState } f
 import { type ThemedClassName } from '@dxos/react-ui';
 
 import { Editor } from './Editor';
-import { type Item } from './Frame';
+import { type Item } from './Shape';
 import { type ActionHandler } from './actions';
 
 export type DraggingState = {
@@ -15,12 +15,18 @@ export type DraggingState = {
   container: HTMLElement;
 };
 
+export type EditingState = {
+  item: Item;
+};
+
 export type CanvasContext = {
   debug: boolean;
   showGrid: boolean;
   snapToGrid: boolean;
   dragging?: DraggingState;
+  editing?: EditingState;
   setDragging: (state: DraggingState | undefined) => void;
+  setEditing: (state: EditingState | undefined) => void;
   handleAction: ActionHandler;
 };
 
@@ -66,6 +72,7 @@ const CanvasRoot = ({ children, classNames }: CanvasRootProps) => {
   const [showGrid, setShowGrid] = useState(true);
   const [snapToGrid, setSnapToGrid] = useState(true);
   const [dragging, setDragging] = useState<DraggingState>();
+  const [editing, setEditing] = useState<EditingState>();
 
   const handleAction = useCallback<ActionHandler>(
     (action) => {
@@ -91,7 +98,9 @@ const CanvasRoot = ({ children, classNames }: CanvasRootProps) => {
   );
 
   return (
-    <CanvasContext.Provider value={{ debug, showGrid, snapToGrid, dragging, setDragging, handleAction }}>
+    <CanvasContext.Provider
+      value={{ debug, showGrid, snapToGrid, dragging, setDragging, editing, setEditing, handleAction }}
+    >
       {children}
     </CanvasContext.Provider>
   );

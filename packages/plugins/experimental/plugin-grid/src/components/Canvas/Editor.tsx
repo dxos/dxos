@@ -24,9 +24,9 @@ import {
   type Dimension,
   type Point,
 } from './geometry';
-import { GraphWrapper } from './graph';
 import { useBoundingSelection } from './hooks';
 import { createGraph, createId } from './testing';
+import { GraphWrapper } from '../../graph';
 import { useCanvasContext } from '../../hooks';
 
 const itemSize: Dimension = { width: 128, height: 64 };
