@@ -3,6 +3,7 @@
 //
 
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import { type DragLocationHistory } from '@atlaskit/pragmatic-drag-and-drop/types';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -105,11 +106,20 @@ export const Frame = ({ item, selected, onSelect, onDrag, onLink }: FrameProps) 
   const ref = useRef<HTMLDivElement>(null);
 
   // Dragging.
+  // TODO(burdon): Handle cursor dragging out of window (currently drop is lost/frozen).
   useEffect(() => {
     invariant(ref.current);
     return draggable({
       element: ref.current,
       getInitialData: () => ({ item }),
+      onGenerateDragPreview: ({ nativeSetDragImage }) => {
+        setCustomNativeDragPreview({
+          nativeSetDragImage,
+          render: ({ container }) => {
+            // TODO(burdon): Set context state.
+          },
+        });
+      },
       onDragStart: () => setDragging(true),
       onDrag: ({ location }) => {
         onDrag?.({ type: 'drag', item, location });

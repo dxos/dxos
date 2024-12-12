@@ -59,7 +59,7 @@ export const boundsContain = (b1: Bounds, b2: Bounds): boolean =>
 //
 
 /**
- * Maps the pointer event to the element's transformed coordinate system.
+ * Maps the pointer to the element's transformed coordinate system.
  */
 export const boundsToModel = (rect: DOMRect, scale: number, offset: Point, bounds: Partial<Bounds>): Bounds => ({
   x: ((bounds.x ?? 0) - rect.left - offset.x) / scale,
@@ -68,6 +68,10 @@ export const boundsToModel = (rect: DOMRect, scale: number, offset: Point, bound
   height: (bounds.height ?? 0) / scale,
 });
 
+/**
+ * Maps the pointer to the element's transformed coordinate system, taking account of the starting offset
+ * from the shape's reference point (typically the center).
+ */
 export const boundToModelWithOffset = (
   rect: DOMRect,
   scale: number,

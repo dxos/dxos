@@ -34,7 +34,6 @@ import { createGraph, createId } from './testing';
 //  - Basic processing pipeline (AI).
 
 // TODO(burdon): Phase 1: Basic plugin.
-//  - Pan/zoom background.
 //  - Nodes as objects.
 //  - Surface/form storybook.
 //  - Basic theme.
@@ -211,7 +210,6 @@ export const Editor = (props: EditorProps) => {
         offset,
         getInputPoint(location.current.input),
       );
-      console.log('!!!!!!!!!!!!!!!!!!!');
       if (type === 'drop') {
         let id = link?.id;
         if (!id) {
