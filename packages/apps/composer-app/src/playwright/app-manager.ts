@@ -42,6 +42,7 @@ export class AppManager {
     this.page = page;
 
     await this.isAuthenticated();
+    await this.confirmRecoveryCode();
 
     this.shell = new ShellManager(this.page, this._inIframe);
     this._initialized = true;
@@ -88,6 +89,11 @@ export class AppManager {
       .waitFor({ timeout })
       .then(() => true)
       .catch(() => false);
+  }
+
+  async confirmRecoveryCode() {
+    await this.page.getByTestId('recoveryCode.confirm').click();
+    await this.page.getByTestId('recoveryCode.continue').click();
   }
 
   //

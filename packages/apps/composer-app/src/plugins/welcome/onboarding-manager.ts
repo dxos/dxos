@@ -14,7 +14,7 @@ import { type Client } from '@dxos/react-client';
 import { type Credential, type Identity } from '@dxos/react-client/halo';
 
 import { activateAccount, getProfile, matchServiceCredential, upgradeCredential } from './credentials';
-import { removeQueryParamByValue } from '../../util';
+import { queryAllCredentials, removeQueryParamByValue } from '../../util';
 
 export type OnboardingManagerParams = {
   dispatch: IntentDispatcher;
@@ -103,7 +103,9 @@ export class OnboardingManager {
       await this._openRecoverIdentity();
     } else if (!this._identity && (this._token || this._skipAuth)) {
       await this._createIdentity();
+      await this._createRecoveryCode();
       !this._skipAuth && (await this._startHelp());
+      await this._createAgent();
     }
 
     if (this._skipAuth) {
@@ -121,7 +123,7 @@ export class OnboardingManager {
   }
 
   async fetchCredential() {
-    const credentials = await this._queryAllCredentials();
+    const credentials = await queryAllCredentials(this._client);
     this._setCredential(credentials);
   }
 
@@ -134,38 +136,6 @@ export class OnboardingManager {
       // Ensure that if the credential is ever found that onboarding is closed to the app is accessible.
       void this._closeWelcome();
     }
-  }
-
-  // TODO(wittjosiah): Factor out to sdk.
-  //   Currently the HaloProxy.queryCredentials method is synchronous.
-  //   Since it is synchronous, it only returns credentials that are already loaded in the client.
-  //   This function ensures that all credentials on disk are loaded into the client before returning.
-  private _queryAllCredentials() {
-    const identitySpace = this._client.halo.identity.get()?.spaceKey;
-    if (!identitySpace) {
-      return Promise.resolve([] as Credential[]);
-    }
-
-    invariant(this._client.services.services.SpacesService, 'SpacesService not available');
-    const stream = this._client.services.services.SpacesService.queryCredentials({
-      spaceKey: identitySpace,
-      noTail: true,
-    });
-    return new Promise<Credential[]>((resolve, reject) => {
-      const credentials: Credential[] = [];
-      stream?.subscribe(
-        (credential) => {
-          credentials.push(credential);
-        },
-        (err) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(credentials);
-          }
-        },
-      );
-    });
   }
 
   private async _upgradeCredential() {
@@ -239,6 +209,20 @@ export class OnboardingManager {
       action: ClientAction.CREATE_IDENTITY,
     });
     this._firstRun?.wake();
+  }
+
+  private async _createRecoveryCode() {
+    await this._dispatch({
+      plugin: CLIENT_PLUGIN,
+      action: ClientAction.CREATE_RECOVERY_CODE,
+    });
+  }
+
+  private async _createAgent() {
+    await this._dispatch({
+      plugin: CLIENT_PLUGIN,
+      action: ClientAction.CREATE_AGENT,
+    });
   }
 
   private async _openJoinIdentity() {

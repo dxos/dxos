@@ -17,13 +17,14 @@ export default [
         'email error': 'Failed to send verification email.',
         'new device': 'Existing Users',
         'new device description':
-          'If you have already signed-up, click on the button below to connect this browser or device to your HALO.',
+          'If you have already signed-up, click on a button below to connect this browser or device to your HALO identity.',
         'name label': 'Name',
         'name placeholder': 'Your name',
         'email input label': 'Email',
         'email input placeholder': 'Your email',
         'login button label': 'Request Access',
-        'join device button label': 'Connect to existing HALO Identity',
+        'join device button label': 'Connect using an existing device',
+        'recover identity button label': 'Connect using a recovery code',
         'join space button label': 'Join space',
         'space invitation title': "You've been invited to a space",
         'space invitation description':
