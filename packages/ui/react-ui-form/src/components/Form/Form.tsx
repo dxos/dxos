@@ -321,7 +321,7 @@ const ArrayField = <T extends BaseObject>({
                 format={format}
                 label={label}
                 inputOnly
-                property={`${name}.${index}`}
+                property={`${name}.${index}` as PropertyKey<T>}
                 disabled={readonly}
                 placeholder={placeholder}
                 {...inputProps}
