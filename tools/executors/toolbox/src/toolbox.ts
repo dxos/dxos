@@ -319,7 +319,12 @@ export class Toolbox {
       const packageJson = await loadJson<PackageJson>(packagePath);
       const commonKeys = pick(this.rootPackage, this.config.package?.commonKeys ?? []);
       const unsortedPackage = defaultsDeep(packageJson, commonKeys);
-      if (this.config.package?.devKeys && unsortedPackage.types !== TYPES_PATH && unsortedPackage.exports) {
+      if (
+        this.config.package?.devKeys &&
+        unsortedPackage.types !== TYPES_PATH &&
+        unsortedPackage.exports &&
+        !Object.keys(unsortedPackage.imports ?? {})?.find((key) => key.startsWith('#'))
+      ) {
         const publishConfig = unsortedPackage.publishConfig ?? {};
         this.config.package.devKeys.forEach((key) => {
           if (key === 'types') {
