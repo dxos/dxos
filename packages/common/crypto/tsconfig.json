@@ -10,5 +10,15 @@
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../invariant"
+    },
+    {
+      "path": "../keys"
+    },
+    {
+      "path": "../node-std"
+    }
+  ]
 }

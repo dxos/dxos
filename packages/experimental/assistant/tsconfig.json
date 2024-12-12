@@ -9,5 +9,30 @@
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/context"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/echo-schema"
+    }
+  ]
 }
