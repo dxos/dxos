@@ -25,10 +25,9 @@ import React, {
 import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
-import { Icon, type ThemedClassName } from '@dxos/react-ui';
+import { Icon, type ThemedClassName, ListItem as NaturalListItem } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { DropIndicator } from './DropIndicator';
 import { useListContext } from './ListRoot';
 
 export type ListItemRecord = {};
@@ -169,7 +168,9 @@ export const ListItem = <T extends ListItemRecord>({ children, classNames, item 
         <div ref={ref} role='listitem' className={mx('flex overflow-hidden', classNames, stateStyles[state.type])}>
           {children}
         </div>
-        {state.type === 'is-dragging-over' && state.closestEdge && <DropIndicator edge={state.closestEdge} />}
+        {state.type === 'is-dragging-over' && state.closestEdge && (
+          <NaturalListItem.DropIndicator edge={state.closestEdge} />
+        )}
       </div>
     </ListItemProvider>
   );

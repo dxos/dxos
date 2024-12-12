@@ -26,6 +26,8 @@ const getNextSize = (startSize: number, location: DragLocationHistory, client: '
   return Math.max(MIN_SIZE, startSize + (location.current.input[client] - location.initial.input[client]) / REM);
 };
 
+export type StackItemResizeHandleProps = {};
+
 export const StackItemResizeHandle = () => {
   const { orientation } = useStack();
   const { setSize, size } = useStackItem();
