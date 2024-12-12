@@ -320,7 +320,7 @@ export class Toolbox {
       if (this.config.package?.devKeys) {
         const publishConfig = unsortedPackage.publishConfig ?? {};
         this.config.package.devKeys.forEach((key) => {
-          if (key === 'types') {
+          if (key === 'types' && (unsortedPackage.types ?? unsortedPackage.exports?.['.']?.types)) {
             publishConfig.types =
               unsortedPackage.types ?? unsortedPackage.exports?.['.']?.types ?? './dist/types/src/index.d.ts';
             unsortedPackage.types = './src/index.ts';
@@ -329,6 +329,9 @@ export class Toolbox {
             delete unsortedPackage[key];
           }
         });
+        if (Object.keys(publishConfig).length > 0) {
+          unsortedPackage.publishConfig = publishConfig;
+        }
       }
       const updated = sortPackageJson(unsortedPackage);
       await saveJson(packagePath, updated, this.options.verbose);
