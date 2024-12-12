@@ -8,7 +8,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 
 import { Editor } from './Editor';
 import { type Item } from './Shape';
-import { type ActionHandler } from './actions';
+import { type ActionHandler } from '../../actions';
 
 export type DraggingState = {
   item: Item;
@@ -30,7 +30,7 @@ export type CanvasContext = {
   handleAction: ActionHandler;
 };
 
-// TODO(burdon): Focus
+// Scenario:
 //  - ECHO query/editor.
 //  - Basic UML (internal use; generate from GH via function).
 //  - Basic processing pipeline (AI).
@@ -46,6 +46,8 @@ export type CanvasContext = {
 //  - Basic plugin with root object.
 //  - Basic theme.
 
+// TODO(burdon): General UML of this package using Beast and mermaid.
+
 // TODO(burdon): Phase 2
 //  - Factor out react-ui-xxx vs. plugin.
 //  - Move all selected.
@@ -54,7 +56,6 @@ export type CanvasContext = {
 //  - Auto-layout (reconcile with plugin-debug).
 //  - Resize frames.
 //  - Group/collapse nodes; hierarchical editor.
-//  - Inline edit.
 //  - Grid options.
 //  - Line options (1-to-many, inherits, etc.)
 //  - Select multiple nodes.

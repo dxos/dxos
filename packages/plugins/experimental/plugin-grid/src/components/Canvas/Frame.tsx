@@ -11,9 +11,9 @@ import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type Item } from './Shape';
-import { ReadonlyTextBox, TextBox, type TextBoxProps } from './TextBox';
-import { pointAdd, type Dimension, getBoundsProperties, type Point } from './geometry';
 import { useCanvasContext } from '../../hooks';
+import { pointAdd, type Dimension, getBoundsProperties, type Point } from '../../layout';
+import { ReadonlyTextBox, TextBox, type TextBoxProps } from '../TextBox';
 
 const handleSize: Dimension = { width: 11, height: 11 };
 

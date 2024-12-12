@@ -12,8 +12,9 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { isNotFalsy } from '@dxos/util';
 
 import { Frame, FrameDragPreview, type FrameProps } from './Frame';
-import { Grid } from './Grid';
-import { Toolbar, type ToolbarProps } from './Toolbar';
+import { useBoundingSelection } from './hooks';
+import { GraphWrapper } from '../../graph';
+import { useCanvasContext } from '../../hooks';
 import {
   boundsContain,
   boundsToModel,
@@ -23,11 +24,10 @@ import {
   type Bounds,
   type Dimension,
   type Point,
-} from './geometry';
-import { useBoundingSelection } from './hooks';
-import { createGraph, createId } from './testing';
-import { GraphWrapper } from '../../graph';
-import { useCanvasContext } from '../../hooks';
+} from '../../layout';
+import { createGraph, createId } from '../../testing';
+import { Grid } from '../Grid';
+import { Toolbar, type ToolbarProps } from '../Toolbar';
 
 const itemSize: Dimension = { width: 128, height: 64 };
 

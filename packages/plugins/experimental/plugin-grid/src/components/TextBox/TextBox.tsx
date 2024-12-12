@@ -23,19 +23,6 @@ export type TextBoxProps = ThemedClassName<
   } & Pick<BasicExtensionsOptions, 'placeholder'>
 >;
 
-export const ReadonlyTextBox = ({ classNames, value }: Pick<TextBoxProps, 'value' | 'classNames'>) => {
-  const lines = value.split('\n');
-  return (
-    <div role='none' className={mx('w-full overflow-hidden', classNames)}>
-      {lines.map((line, i) => (
-        <div key={i} className='w-full text-center overflow-hidden'>
-          {line}
-        </div>
-      ))}
-    </div>
-  );
-};
-
 export const TextBox = ({ classNames, value, onClose, onCancel, ...rest }: TextBoxProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef, view, focusAttributes } = useTextEditor(() => {
@@ -93,4 +80,17 @@ export const TextBox = ({ classNames, value, onClose, onCancel, ...rest }: TextB
   }, [view]);
 
   return <div ref={parentRef} {...focusAttributes} className={mx('w-full overflow-hidden', classNames)} />;
+};
+
+export const ReadonlyTextBox = ({ classNames, value }: Pick<TextBoxProps, 'value' | 'classNames'>) => {
+  const lines = value.split('\n');
+  return (
+    <div role='none' className={mx('w-full overflow-hidden', classNames)}>
+      {lines.map((line, i) => (
+        <div key={i} className='w-full text-center overflow-hidden'>
+          {line}
+        </div>
+      ))}
+    </div>
+  );
 };

@@ -6,7 +6,7 @@ import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { bind } from 'bind-event-listener';
 import { useEffect, useState } from 'react';
 
-import { type Bounds, getBounds, type Point, type Range } from './geometry';
+import { type Bounds, getBounds, type Point, type Range } from '../../layout';
 
 /**
  * Event listener to track range bounds selection.

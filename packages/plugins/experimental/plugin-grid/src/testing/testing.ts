@@ -4,8 +4,8 @@
 
 import { range } from '@dxos/util';
 
-import type { Dimension, PointTransform } from './geometry';
-import { type Graph, GraphWrapper } from '../../graph';
+import { type Graph, GraphWrapper } from '../graph';
+import type { Dimension, PointTransform } from '../layout';
 
 export const createId = () => Math.random().toString(36).slice(2, 10);
 

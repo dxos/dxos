@@ -10,8 +10,8 @@ import React from 'react';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Canvas, type CanvasRootProps } from './Canvas';
-import { createSnap, type Dimension } from './geometry';
-import { createGraph } from './testing';
+import { createSnap, type Dimension } from '../../layout';
+import { createGraph } from '../../testing';
 
 const Render = (props: CanvasRootProps) => (
   <Canvas.Root {...props}>

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { Dimension, Point } from './geometry';
+import type { Dimension, Point } from '../../layout';
 
 /**
  * Graph data item.
