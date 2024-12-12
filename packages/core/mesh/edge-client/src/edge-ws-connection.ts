@@ -52,7 +52,7 @@ export class EdgeWsConnection extends Resource {
 
   protected override async _open() {
     this._ws = new WebSocket(
-      this._connectionInfo.url,
+      this._connectionInfo.url.toString(),
       this._connectionInfo.protocolHeader ? [this._connectionInfo.protocolHeader] : [],
     );
 

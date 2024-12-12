@@ -5,9 +5,10 @@
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import { type DragLocationHistory } from '@atlaskit/pragmatic-drag-and-drop/types';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
+import { Input } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { pointAdd, type Dimension, getBoundsProperties, type Point } from './geometry';
@@ -86,21 +87,21 @@ export type FrameLinkEvent = {
   location: DragLocationHistory;
 };
 
-export type FrameProps = {
+export type FrameProps = PropsWithChildren<{
   item: Item;
   selected?: boolean;
   onSelect?: (item: Item, selected: boolean) => void;
   onDrag?: (event: FrameDragEvent) => void;
   onLink?: (event: FrameLinkEvent) => void;
-};
+}>;
 
 // TODO(burdon): Surface for form content. Or pass in children (which may include a Surface).
 //  return <Surface ref={forwardRef} role='card' limit={1} data={{ content: object} />;
 
 /**
- * Draggable Frame.
+ * Draggable Frame around shapes.
  */
-export const Frame = ({ item, selected, onSelect, onDrag, onLink }: FrameProps) => {
+export const Frame = ({ children, item, selected, onSelect, onDrag, onLink }: FrameProps) => {
   const { dragging, setDragging } = useCanvasContext();
   const isDragging = dragging?.item.id === item.id;
 
@@ -152,6 +153,9 @@ export const Frame = ({ item, selected, onSelect, onDrag, onLink }: FrameProps) 
     [item, onLink],
   );
 
+  // TODO(burdon): Make shape pluggable, incl. style. Create TextShape as a child of the Frame.
+  const editing = true;
+
   return (
     // NOTE: Cannot hide while dragging.
     <div role='none' className={mx(isDragging && 'opacity-0')}>
@@ -167,7 +171,16 @@ export const Frame = ({ item, selected, onSelect, onDrag, onLink }: FrameProps) 
         onMouseEnter={() => setHovering(true)}
         onMouseLeave={() => setTimeout(() => setHovering(false), 100)}
       >
-        <div className='text-subdued truncate'>{item.id}</div>
+        {(editing && (
+          <Input.Root>
+            <Input.TextArea
+              value={item.id}
+              spellCheck={false}
+              style={{ resize: 'none' }}
+              classNames={'h-full text-center'}
+            />
+          </Input.Root>
+        )) || <div className='text-subdued truncate'>{item.id}</div>}
       </div>
 
       {onLink && (

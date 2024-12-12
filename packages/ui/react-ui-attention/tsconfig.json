@@ -14,5 +14,30 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../common/random"
+    },
+    {
+      "path": "../../common/storybook-utils"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../core/echo/live-object"
+    },
+    {
+      "path": "../../sdk/app-graph"
+    },
+    {
+      "path": "../react-ui"
+    },
+    {
+      "path": "../react-ui-theme"
+    }
+  ]
 }
