@@ -59,7 +59,7 @@ const getInitialState = () => {
           open: boolean;
           current: boolean;
         }>,
-      ] => [key, create(value)],
+      ] => [key, create({ open: value.open, current: false })],
     );
   } catch {}
 };
