@@ -6,6 +6,7 @@
   "package": {
     "commonKeys": ["license", "author", "homepage", "bugs"],
     "devKeys": ["main", "module", "types"],
+    "withoutDevKeys": ["@dxos/crypto", "@dxos/util", "@dxos/log"],
     "withCustomExports": [
       "@dxos/shell",
       "@dxos/node-std",
