@@ -10,7 +10,7 @@ inputs:
     required: false
 
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     - name: Install system dependencies
       run: sudo apt-get install libxtst-dev libpng++-dev

@@ -95,6 +95,12 @@ function readPackage(packageJson, context) {
       break;
     }
 
+    case 'jsdom': {
+      delete packageJson.peerDependencies['canvas'];
+      delete packageJson.peerDependenciesMeta['canvas'];
+      break;
+    }
+
     case 'ink':
     case 'ink-select-input':
     case 'ink-syntax-highlight':
