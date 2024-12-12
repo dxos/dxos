@@ -7,18 +7,10 @@ import { type Event, type SingleOrArray } from 'xstate';
 
 import { log } from '@dxos/log';
 import { type Identity } from '@dxos/react-client/halo';
-import { useTranslation } from '@dxos/react-ui';
+import { useClipboard, useTranslation } from '@dxos/react-ui';
 import { hexToEmoji, hexToHue } from '@dxos/util';
 
-import {
-  Action,
-  Actions,
-  StepHeading,
-  Input,
-  useClipboardContext,
-  EmojiPickerBlock,
-  HuePickerBlock,
-} from '../../../components';
+import { Action, Actions, StepHeading, Input, EmojiPickerBlock, HuePickerBlock } from '../../../components';
 import { type IdentityPanelStepProps } from '../IdentityPanelProps';
 import { type IdentityEvent } from '../identityMachine';
 
@@ -59,7 +51,7 @@ const ProfileFormImpl = (props: ProfileFormImplProps) => {
   const [displayName, setDisplayName] = useState(profile?.displayName ?? '');
   const [hue, setHue] = useState<string>(getHueValue(identity));
   const [emoji, setEmoji] = useState<string>(getEmojiValue(identity));
-  const { textValue, setTextValue } = useClipboardContext();
+  const { textValue, setTextValue } = useClipboard();
   const identityHex = identity?.identityKey.toHex();
   const copied = textValue === identityHex;
   return (

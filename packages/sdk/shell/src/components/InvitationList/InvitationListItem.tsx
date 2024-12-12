@@ -13,6 +13,7 @@ import {
 } from '@dxos/react-client/invitations';
 import {
   Button,
+  Clipboard,
   ListItem,
   useTranslation,
   Avatar,
@@ -26,7 +27,6 @@ import { hexToEmoji } from '@dxos/util';
 
 import { type SharedInvitationListProps } from './InvitationListProps';
 import { AuthCode } from '../AuthCode';
-import { CopyButtonIconOnly } from '../Clipboard';
 
 export type InvitationListItemProps = SharedInvitationListProps & {
   invitation: CancellableInvitationObservable;
@@ -181,7 +181,7 @@ export const InvitationListItemImpl = ({
                 <span>{t('open share panel label')}</span>
               </Button>
             </Tooltip.Trigger>
-            <CopyButtonIconOnly variant='ghost' value={invitationUrl} />
+            <Clipboard.IconButton variant='ghost' value={invitationUrl} />
           </>
           <Tooltip.Portal>
             <Tooltip.Content side='left' classNames='z-[70]'>
