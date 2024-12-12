@@ -13,5 +13,21 @@
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/node-std"
+    },
+    {
+      "path": "../../common/tracing"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/protocols"
+    }
+  ]
 }
