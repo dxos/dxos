@@ -33,7 +33,7 @@ export type ToolboxConfig = {
     commonKeys: string[];
     withCustomExports: string[];
     devKeys?: ['types', ...string[]];
-    withoutDevKeys?: string[];
+    devKeysExclude?: string[];
   };
   tsconfig?: {
     fixedKeys?: string[];
@@ -324,7 +324,7 @@ export class Toolbox {
         this.config.package?.devKeys &&
         unsortedPackage.types !== TYPES_PATH &&
         unsortedPackage.exports &&
-        !this.config.package?.withoutDevKeys?.includes(unsortedPackage.name)
+        !this.config.package?.devKeysExclude?.find((path) => project.path.includes(path))
       ) {
         const publishConfig = unsortedPackage.publishConfig ?? {};
         this.config.package.devKeys.forEach((key) => {
