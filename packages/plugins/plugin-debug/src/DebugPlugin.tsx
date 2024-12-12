@@ -170,6 +170,22 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
               filter: (node): node is Node<Space> => !!settings.debug && isSpace(node.data),
               connector: ({ node }) => {
                 const space = node.data;
+                const state = toSignal(
+                  (onChange) => space.state.subscribe(() => onChange()).unsubscribe,
+                  () => space.state.get(),
+                );
+                if (state !== SpaceState.SPACE_READY) {
+                  return;
+                }
+
+                // Not adding the debug node until the root collection is available aligns the behaviour of this
+                // extension with that of the space plugin adding objects. This ensures that the debug node is added at
+                // the same time as objects and prevents order from changing as the nodes are added.
+                const collection = space.properties[CollectionType.typename] as CollectionType | undefined;
+                if (!collection) {
+                  return;
+                }
+
                 return [
                   {
                     id: `${space.id}-debug`, // TODO(burdon): Change to slashes consistently.

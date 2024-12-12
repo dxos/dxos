@@ -10,7 +10,7 @@ import { GraphBuilder } from '@dxos/app-graph';
 import { GraphContext } from './GraphContext';
 import meta, { GRAPH_PLUGIN } from './meta';
 
-const KEY = `${GRAPH_PLUGIN}/graph`;
+const KEY = `${GRAPH_PLUGIN}/app-graph`;
 
 /**
  * Manages the state of the graph for the application.
@@ -46,7 +46,7 @@ export const GraphPlugin = (): PluginDefinition<GraphProvides> => {
     },
     provides: {
       graph: builder.graph,
-      // TODO(wittjosiah): This is janky.
+      // TODO(wittjosiah): This is janky to expose this function in this way.
       explore: (options) => builder.explore(options),
       context: ({ children }) => (
         <GraphContext.Provider value={{ graph: builder.graph }}>{children}</GraphContext.Provider>
