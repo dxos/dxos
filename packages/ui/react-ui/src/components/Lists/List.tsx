@@ -26,6 +26,7 @@ import {
 } from '@dxos/react-list';
 import { type Density } from '@dxos/react-ui-types';
 
+import { ListDropIndicator } from './ListDropIndicator';
 import { useDensityContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { DensityProvider } from '../DensityProvider';
@@ -150,6 +151,7 @@ export const ListItem: {
   OpenTrigger: ForwardRefExoticComponent<ListItemOpenTriggerProps>;
   CollapsibleContent: ForwardRefExoticComponent<ListItemCollapsibleContentProps>;
   MockOpenTrigger: FC<ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'children'>>>;
+  DropIndicator: typeof ListDropIndicator;
 } = {
   Root: ListItemRoot,
   Endcap: ListItemEndcap,
@@ -157,6 +159,7 @@ export const ListItem: {
   OpenTrigger: ListItemOpenTrigger,
   CollapsibleContent: ListItemCollapsibleContent,
   MockOpenTrigger: MockListItemOpenTrigger,
+  DropIndicator: ListDropIndicator,
 };
 
 export { List, useListContext, useListItemContext, LIST_NAME, LIST_ITEM_NAME };

@@ -4,29 +4,30 @@
 
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { disableNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/disable-native-drag-preview';
+import { preventUnhandled } from '@atlaskit/pragmatic-drag-and-drop/prevent-unhandled';
 import {
   attachClosestEdge,
   extractClosestEdge,
   type Edge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
-// TODO(wittjosiah): Drop indicator that doesn't depend on emotion. See react-ui-list DropIndicator.
-// import { DropIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import React, { forwardRef, useLayoutEffect, useState, type ComponentPropsWithRef, useCallback } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, ListItem } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useStack, StackItemContext } from './StackContext';
 import { StackItemContent, type StackItemContentProps } from './StackItemContent';
+import { StackItemDragHandle, type StackItemDragHandleProps } from './StackItemDragHandle';
 import {
   StackItemHeading,
   StackItemHeadingLabel,
   type StackItemHeadingProps,
   type StackItemHeadingLabelProps,
 } from './StackItemHeading';
-import { StackItemResizeHandle } from './StackItemResizeHandle';
+import { StackItemResizeHandle, type StackItemResizeHandleProps } from './StackItemResizeHandle';
 import {
   StackItemSigil,
   type StackItemSigilProps,
@@ -42,10 +43,16 @@ export const DEFAULT_EXTRINSIC_SIZE = DEFAULT_HORIZONTAL_SIZE satisfies StackIte
 
 export type StackItemData = { id: string; type: 'column' | 'card' };
 
+export type StackItemRearrangeHandler = (
+  source: StackItemData,
+  target: StackItemData,
+  closestEdge: Edge | null,
+) => void;
+
 export type StackItemRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> & {
   item: Omit<StackItemData, 'type'>;
   order?: number;
-  onRearrange?: (source: StackItemData, target: StackItemData, closestEdge: Edge | null) => void;
+  onRearrange?: StackItemRearrangeHandler;
   size?: StackItemSize;
   onSizeChange?: (nextSize: StackItemSize) => void;
   role?: 'article' | 'section';
@@ -58,8 +65,8 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
   ) => {
     const [itemElement, itemRef] = useState<HTMLDivElement | null>(null);
     const [selfDragHandleElement, selfDragHandleRef] = useState<HTMLDivElement | null>(null);
-    const [_closestEdge, setEdge] = useState<Edge | null>(null);
-    const { orientation, rail, separators } = useStack();
+    const [closestEdge, setEdge] = useState<Edge | null>(null);
+    const { orientation, rail } = useStack();
     const [size = orientation === 'horizontal' ? DEFAULT_HORIZONTAL_SIZE : DEFAULT_VERTICAL_SIZE, setInternalSize] =
       useState(propsSize);
 
@@ -88,6 +95,11 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
           element: itemElement,
           ...(selfDragHandleElement && { dragHandle: selfDragHandleElement }),
           getInitialData: () => ({ id: item.id, type }),
+          // TODO(thure): tabster focus honeypots are causing the preview to render with the wrong dimensions; what do?
+          onGenerateDragPreview: ({ nativeSetDragImage }) => {
+            disableNativeDragPreview({ nativeSetDragImage });
+            preventUnhandled.start();
+          },
         }),
         dropTargetForElements({
           element: itemElement,
@@ -131,7 +143,6 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
             size === 'min-content' && (orientation === 'horizontal' ? 'is-min' : 'bs-min'),
             orientation === 'horizontal' ? 'grid-rows-subgrid' : 'grid-cols-subgrid',
             rail && (orientation === 'horizontal' ? 'row-span-2' : 'col-span-2'),
-            separators && (orientation === 'horizontal' ? 'divide-separator divide-y' : 'divide-separator divide-x'),
             classNames,
           )}
           data-dx-stack-item
@@ -147,7 +158,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
           ref={composedItemRef}
         >
           {children}
-          {/* {closestEdge && <DropIndicator edge={closestEdge} />} */}
+          {closestEdge && <ListItem.DropIndicator edge={closestEdge} />}
         </Root>
       </StackItemContext.Provider>
     );
@@ -160,6 +171,7 @@ export const StackItem = {
   Heading: StackItemHeading,
   HeadingLabel: StackItemHeadingLabel,
   ResizeHandle: StackItemResizeHandle,
+  DragHandle: StackItemDragHandle,
   Sigil: StackItemSigil,
   SigilButton: StackItemSigilButton,
 };
@@ -168,6 +180,8 @@ export type {
   StackItemContentProps,
   StackItemHeadingProps,
   StackItemHeadingLabelProps,
+  StackItemResizeHandleProps,
+  StackItemDragHandleProps,
   StackItemSigilProps,
   StackItemSigilButtonProps,
   StackItemSigilAction,
