@@ -91,6 +91,12 @@ export default defineConfig({
         sandbox: {
           pages: ['sandbox.html'],
         },
+        permissions: [
+          "sidePanel"
+        ],
+        side_panel: {
+          default_path: "sidepanel.html"
+        },
         options_page: 'options.html',
         background: {
           service_worker: 'src/background.ts',
