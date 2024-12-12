@@ -25,6 +25,9 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/debug"
+    },
+    {
       "path": "../../../common/invariant"
     },
     {
@@ -59,6 +62,9 @@
     },
     {
       "path": "../../../ui/react-ui-editor"
+    },
+    {
+      "path": "../../../ui/react-ui-syntax-highlighter"
     },
     {
       "path": "../../../ui/react-ui-theme"

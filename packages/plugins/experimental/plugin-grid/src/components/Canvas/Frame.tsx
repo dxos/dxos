@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type Item } from './Shape';
-import { TextBox, type TextBoxProps } from './TextBox';
+import { ReadonlyTextBox, TextBox, type TextBoxProps } from './TextBox';
 import { pointAdd, type Dimension, getBoundsProperties, type Point } from './geometry';
 import { useCanvasContext } from '../../hooks';
 
@@ -79,6 +79,14 @@ export type FrameLinkEvent = {
   location: DragLocationHistory;
 };
 
+// TODO(burdon): Surface for form content. Or pass in children (which may include a Surface).
+//  return <Surface ref={forwardRef} role='card' limit={1} data={{ content: object} />;
+
+const containerStyles = [
+  'absolute flex p-2 justify-center items-center overflow-hidden',
+  'bg-base border border-teal-700 rounded',
+];
+
 export type FrameProps = PropsWithChildren<{
   item: Item;
   selected?: boolean;
@@ -86,9 +94,6 @@ export type FrameProps = PropsWithChildren<{
   onDrag?: (event: FrameDragEvent) => void;
   onLink?: (event: FrameLinkEvent) => void;
 }>;
-
-// TODO(burdon): Surface for form content. Or pass in children (which may include a Surface).
-//  return <Surface ref={forwardRef} role='card' limit={1} data={{ content: object} />;
 
 /**
  * Draggable Frame around shapes.
@@ -146,25 +151,22 @@ export const Frame = ({ children, item, selected, onSelect, onDrag, onLink }: Fr
     [item, onLink],
   );
 
-  // TODO(burdon): Make shape pluggable, incl. style. Create TextShape as a child of the Frame.
-
   const handleClick = () => {
     if (!editing) {
       onSelect?.(item, !selected);
     }
   };
+
   const handleDoubleClick = () => {
     setEditing({ item });
   };
 
   const handleClose: TextBoxProps['onClose'] = (value: string) => {
-    console.log('handleClose', value);
     item.text = value;
     setEditing(undefined);
   };
 
   const handleCancel: TextBoxProps['onCancel'] = () => {
-    console.log('handleCancel');
     setEditing(undefined);
   };
 
@@ -176,31 +178,13 @@ export const Frame = ({ children, item, selected, onSelect, onDrag, onLink }: Fr
         style={getBoundsProperties({ ...item.pos, ...item.size })}
         onClick={handleClick}
         onDoubleClick={handleDoubleClick}
-        className={mx(
-          'absolute flex justify-center items-center',
-          'bg-base border border-teal-700 rounded overflow-hidden',
-          selected && 'bg-neutral-700',
-        )}
+        className={mx(containerStyles, selected && 'bg-neutral-700')}
         onMouseEnter={() => setHovering(true)}
         onMouseLeave={() => setTimeout(() => setHovering(false), 100)}
       >
-        {(isEditing && (
-          //   <Input.Root>
-          //     <Input.TextArea
-          //       autoFocus
-          //       value={text}
-          //       spellCheck={false}
-          //       style={{ height: item.size.height, resize: 'none' }}
-          //       rows={1}
-          //       classNames={'text-center overflow-hidden bg-transparent !ring-0'}
-          //       onChange={handleTextChange}
-          //       onKeyDown={handleKeyDown}
-          //       onFocus={handleFocus}
-          //       onBlur={handleBlur}
-          //     />
-          //   </Input.Root>
-          <TextBox value={item.text} onClose={handleClose} onCancel={handleCancel} />
-        )) || <div className='text-subdued truncate'>{item.text ?? item.id}</div>}
+        {(isEditing && <TextBox value={item.text} onClose={handleClose} onCancel={handleCancel} />) || (
+          <ReadonlyTextBox value={item.text ?? item.id} />
+        )}
       </div>
 
       {onLink && (
@@ -215,17 +199,10 @@ export const Frame = ({ children, item, selected, onSelect, onDrag, onLink }: Fr
   );
 };
 
-// TODO(burdon): Factor out common structure.
 export const FrameDragPreview = ({ item }: FrameProps) => {
   return (
-    <div
-      style={getBoundsProperties({ ...item.pos, ...item.size })}
-      className={mx(
-        'absolute flex justify-center items-center',
-        'bg-base border border-teal-700 rounded overflow-hidden',
-      )}
-    >
-      <div className='text-subdued truncate'>{item.id}</div>
+    <div style={getBoundsProperties({ ...item.pos, ...item.size })} className={mx(containerStyles)}>
+      <ReadonlyTextBox value={item.text ?? item.id} />
     </div>
   );
 };
