@@ -198,7 +198,6 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
                 {...(isSoloModeLoaded && { inert: '' })}
               >
                 <Stack
-                  separators={false}
                   orientation='horizontal'
                   size='contain'
                   classNames={['absolute inset-block-0 -inset-inline-px', mainPaddingTransitions]}
@@ -226,9 +225,7 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
                 className={isSoloModeLoaded ? 'relative bg-deck overflow-hidden' : 'sr-only'}
                 {...(!isSoloModeLoaded && { inert: '' })}
               >
-                <StackContext.Provider
-                  value={{ size: 'contain', orientation: 'horizontal', separators: false, rail: true }}
-                >
+                <StackContext.Provider value={{ size: 'contain', orientation: 'horizontal', rail: true }}>
                   <Plank entry={layoutParts.solo?.[0]} layoutParts={layoutParts} part='solo' layoutMode={layoutMode} />
                 </StackContext.Provider>
               </div>

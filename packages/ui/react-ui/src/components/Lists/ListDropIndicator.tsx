@@ -5,8 +5,6 @@
 import { type Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/types';
 import React, { type CSSProperties, type HTMLAttributes } from 'react';
 
-import { mx } from '@dxos/react-ui-theme';
-
 type Orientation = 'horizontal' | 'vertical';
 
 const edgeToOrientationMap: Record<Edge, Orientation> = {
@@ -40,13 +38,14 @@ export type DropIndicatorProps = {
 /**
  * This is a tailwind port of `@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box`
  */
-export const DropIndicator = ({ edge, gap = 0 }: DropIndicatorProps) => {
+export const ListDropIndicator = ({ edge, gap = 0 }: DropIndicatorProps) => {
   const lineOffset = `calc(-0.5 * (${gap}px + ${strokeSize}px))`;
 
   const orientation = edgeToOrientationMap[edge];
 
   return (
     <div
+      role='none'
       style={
         {
           '--line-thickness': `${strokeSize}px`,
@@ -57,13 +56,7 @@ export const DropIndicator = ({ edge, gap = 0 }: DropIndicatorProps) => {
           '--offset-terminal': `${offsetToAlignTerminalWithLine}px`,
         } as CSSProperties
       }
-      className={mx(
-        'absolute z-10 pointer-events-none bg-blue-700',
-        "before:content-[''] before:w-[--terminal-size] before:h-[--terminal-size] box-border before:absolute",
-        'before:border-[length:--line-thickness] before:border-solid before:border-blue-700 before:rounded-full',
-        orientationStyles[orientation],
-        edgeStyles[edge],
-      )}
-    ></div>
+      className={`absolute z-10 pointer-events-none bg-accentSurface before:content-[''] before:w-[--terminal-size] before:h-[--terminal-size] box-border before:absolute before:border-[length:--line-thickness] before:border-solid before:border-accentSurface before:rounded-full ${orientationStyles[orientation]} ${edgeStyles[edge]}`}
+    />
   );
 };

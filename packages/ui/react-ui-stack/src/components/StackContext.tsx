@@ -9,7 +9,6 @@ import { type StackItemSize } from './StackItem';
 
 export type StackContextValue = {
   orientation: Orientation;
-  separators: boolean;
   rail: boolean;
   size: Size;
 };
@@ -18,7 +17,6 @@ export const StackContext = createContext<StackContextValue>({
   orientation: 'vertical',
   rail: true,
   size: 'intrinsic',
-  separators: true,
 });
 
 export const useStack = () => useContext(StackContext);

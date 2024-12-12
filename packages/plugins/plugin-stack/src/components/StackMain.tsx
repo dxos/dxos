@@ -123,7 +123,7 @@ const StackMain = ({ id, collection }: StackMainProps) => {
           onAdd: handleAdd,
         }}
       >
-        <Stack orientation='vertical' size='intrinsic' separators={false} id={id} data-testid='main.stack'>
+        <Stack orientation='vertical' size='intrinsic' id={id} data-testid='main.stack'>
           {items.map((item) => (
             <StackSection key={item.id} {...item} />
           ))}
