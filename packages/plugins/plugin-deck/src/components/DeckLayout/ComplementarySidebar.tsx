@@ -62,7 +62,7 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
   // TODO(burdon): Scroll area should be controlled by surface.
   return (
     <Main.ComplementarySidebar>
-      <StackContext.Provider value={{ size: 'contain', orientation: 'horizontal', separators: false, rail: true }}>
+      <StackContext.Provider value={{ size: 'contain', orientation: 'horizontal', rail: true }}>
         <div role='none' className={mx(railGridHorizontal, 'grid grid-cols-[100%] bs-full')}>
           <NodePlankHeading coordinate={coordinate} node={node} popoverAnchorId={popoverAnchorId} actions={actions} />
           <ScrollArea.Root>

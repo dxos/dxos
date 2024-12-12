@@ -620,64 +620,45 @@ export const SpacePlugin = ({
             return [];
           }
 
+          const spacesNode = {
+            id: SPACES,
+            type: SPACES,
+            cacheable: ['label', 'role'],
+            properties: {
+              label: ['spaces label', { ns: SPACE_PLUGIN }],
+              testId: 'spacePlugin.spaces',
+              role: 'branch',
+              disabled: true,
+              childrenPersistenceClass: 'echo',
+              onRearrangeChildren: async (nextOrder: Space[]) => {
+                // NOTE: This is needed to ensure order is updated by next animation frame.
+                // TODO(wittjosiah): Is there a better way to do this?
+                //   If not, graph should be passed as an argument to the extension.
+                graph._sortEdges(
+                  SPACES,
+                  'outbound',
+                  nextOrder.map(({ id }) => id),
+                );
+
+                const {
+                  objects: [spacesOrder],
+                } = await client.spaces.default.db.query(Filter.schema(Expando, { key: SHARED })).run();
+                if (spacesOrder) {
+                  spacesOrder.order = nextOrder.map(({ id }) => id);
+                } else {
+                  log.warn('spaces order object not found');
+                }
+              },
+            },
+          };
+
           return [
             // Create spaces group node.
             createExtension({
               id: `${SPACE_PLUGIN}/root`,
               filter: (node): node is Node<null> => node.id === 'root',
-              connector: () => {
-                const isReady = toSignal(
-                  (onChange) => {
-                    let defaultSpaceUnsubscribe: UnsubscribeCallback | undefined;
-                    // No need to unsubscribe because this observable completes when spaces are ready.
-                    client.spaces.isReady.subscribe((ready) => {
-                      if (ready) {
-                        defaultSpaceUnsubscribe = client.spaces.default.state.subscribe(() => onChange()).unsubscribe;
-                      }
-                    });
-
-                    return () => defaultSpaceUnsubscribe?.();
-                  },
-                  () => client.spaces.isReady.get() && client.spaces.default.state.get() === SpaceState.SPACE_READY,
-                );
-                if (!isReady) {
-                  return [];
-                }
-
-                return [
-                  {
-                    id: SPACES,
-                    type: SPACES,
-                    cacheable: ['label', 'role'],
-                    properties: {
-                      label: ['spaces label', { ns: SPACE_PLUGIN }],
-                      testId: 'spacePlugin.spaces',
-                      role: 'branch',
-                      disabled: true,
-                      childrenPersistenceClass: 'echo',
-                      onRearrangeChildren: async (nextOrder: Space[]) => {
-                        // NOTE: This is needed to ensure order is updated by next animation frame.
-                        // TODO(wittjosiah): Is there a better way to do this?
-                        //   If not, graph should be passed as an argument to the extension.
-                        graph._sortEdges(
-                          SPACES,
-                          'outbound',
-                          nextOrder.map(({ id }) => id),
-                        );
-
-                        const {
-                          objects: [spacesOrder],
-                        } = await client.spaces.default.db.query(Filter.schema(Expando, { key: SHARED })).run();
-                        if (spacesOrder) {
-                          spacesOrder.order = nextOrder.map(({ id }) => id);
-                        } else {
-                          log.warn('spaces order object not found');
-                        }
-                      },
-                    },
-                  },
-                ];
-              },
+              connector: () => [spacesNode],
+              resolver: ({ id }) => (id === SPACES ? spacesNode : undefined),
             }),
 
             // Create space nodes.

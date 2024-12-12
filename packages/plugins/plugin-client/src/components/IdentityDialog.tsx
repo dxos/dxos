@@ -6,8 +6,8 @@ import React, { useCallback } from 'react';
 
 import { LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
-import { Dialog } from '@dxos/react-ui';
-import { ClipboardProvider, IdentityPanel, type IdentityPanelProps } from '@dxos/shell/react';
+import { Clipboard, Dialog } from '@dxos/react-ui';
+import { IdentityPanel, type IdentityPanelProps } from '@dxos/shell/react';
 
 import { ClientAction } from '../meta';
 
@@ -44,7 +44,7 @@ export const IdentityDialog = (props: IdentityPanelProps) => {
 
   return (
     <Dialog.Content>
-      <ClipboardProvider>
+      <Clipboard.Provider>
         <IdentityPanel
           {...props}
           doneActionParent={<Dialog.Close asChild />}
@@ -53,7 +53,7 @@ export const IdentityDialog = (props: IdentityPanelProps) => {
           onRecover={handleRecover}
           onJoinNewIdentity={handleJoinNewIdentity}
         />
-      </ClipboardProvider>
+      </Clipboard.Provider>
     </Dialog.Content>
   );
 };
