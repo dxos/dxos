@@ -28,13 +28,17 @@ export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
       <p className='py-4'>{t('recovery code dialog warning')}</p>
       <div className='flex items-center gap-2 pbe-4'>
         <Input.Root>
-          <Input.Checkbox checked={confirmation} onCheckedChange={handleConfirmation} />
+          <Input.Checkbox
+            data-testid='recoveryCode.confirm'
+            checked={confirmation}
+            onCheckedChange={handleConfirmation}
+          />
           <Input.Label>{t('recovery code confirmation label')}</Input.Label>
         </Input.Root>
       </div>
       <div className='flex justify-end'>
         <AlertDialog.Action asChild>
-          <Button variant='primary' disabled={!confirmation}>
+          <Button data-testid='recoveryCode.continue' variant='primary' disabled={!confirmation}>
             {t('continue label')}
           </Button>
         </AlertDialog.Action>
