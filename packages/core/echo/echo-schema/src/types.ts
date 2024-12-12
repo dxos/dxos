@@ -90,9 +90,24 @@ export const splitMeta = <T>(object: T & WithMeta): { object: T; meta?: ObjectMe
   return { meta, object };
 };
 
-export const getValue = <T extends object>(obj: T, path: JsonPath): any => getDeep(obj, path.split('.'));
-export const setValue = <T extends object>(obj: T, path: JsonPath, value: any): T =>
-  setDeep(obj, path.split('.'), value);
+export const splitPath = (path: JsonPath): string[] => {
+  return path.match(/[a-zA-Z_$][\w$]*|\[\d+\]/g) ?? [];
+};
+
+export const getValue = <T extends object>(obj: T, path: JsonPath): any => {
+  return getDeep(
+    obj,
+    splitPath(path).map((p) => p.replace(/[[\]]/g, '')),
+  );
+};
+
+export const setValue = <T extends object>(obj: T, path: JsonPath, value: any): T => {
+  return setDeep(
+    obj,
+    splitPath(path).map((p) => p.replace(/[[\]]/g, '')),
+    value,
+  );
+};
 
 /**
  * Returns a typename of a schema.

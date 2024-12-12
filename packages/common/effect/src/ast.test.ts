@@ -3,6 +3,7 @@
 //
 
 import { AST, Schema as S } from '@effect/schema';
+import { isNone, isSome } from 'effect/Option';
 import { describe, test } from 'vitest';
 
 import { invariant } from '@dxos/invariant';
@@ -19,9 +20,8 @@ import {
   isSimpleType,
   visit,
   JsonPath,
-  JsonProp,
+  type JsonProp,
 } from './ast';
-import { isNone, isSome } from 'effect/Option';
 
 const ZipCode = S.String.pipe(
   S.pattern(/^\d{5}$/, {
