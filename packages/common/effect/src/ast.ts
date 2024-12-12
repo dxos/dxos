@@ -79,7 +79,7 @@ export namespace SimpleType {
 export type JsonProp = string & { __JsonPath: true; __JsonProp: true };
 export type JsonPath = string & { __JsonPath: true };
 
-const PATH_REGEX = /[a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$]*|\.\d+)*/;
+const PATH_REGEX = /^[a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$]*|\.\d+)*$/;
 const PROP_REGEX = /\w+/;
 
 /**

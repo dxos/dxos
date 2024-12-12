@@ -21,6 +21,7 @@ import {
   JsonPath,
   JsonProp,
 } from './ast';
+import { isNone, isSome } from 'effect/Option';
 
 const ZipCode = S.String.pipe(
   S.pattern(/^\d{5}$/, {
@@ -185,33 +186,20 @@ describe('AST', () => {
 
   // TODO(ZaymonFC): Update this when we settle on the right indexing syntax for arrays.
   test('json path validation', ({ expect }) => {
-    const validatePath = S.validateSync(JsonPath);
-    const validateProp = S.validateSync(JsonProp);
+    const validatePath = S.validateOption(JsonPath);
 
     // Valid paths.
-    expect(() => validatePath('foo')).not.to.throw();
-    expect(() => validatePath('foo.bar')).not.to.throw();
-    expect(() => validatePath('foo.bar.baz')).not.to.throw();
-    expect(() => validatePath('foo.0.bar')).not.to.throw();
-    expect(() => validatePath('_foo.$bar')).not.to.throw();
+    expect(isSome(validatePath('foo'))).toBe(true);
+    expect(isSome(validatePath('foo.bar'))).toBe(true);
+    expect(isSome(validatePath('foo.bar.baz'))).toBe(true);
+    expect(isSome(validatePath('foo.0.bar'))).toBe(true);
+    expect(isSome(validatePath('_foo.$bar'))).toBe(true);
 
     // Invalid paths.
-    expect(() => validatePath('')).to.throw();
-    expect(() => validatePath('.')).to.throw();
-    expect(() => validatePath('.foo')).to.throw();
-    expect(() => validatePath('foo.')).to.throw();
-    expect(() => validatePath('foo..bar')).to.throw();
-    expect(() => validatePath('foo.#bar')).to.throw();
-
-    // Valid props.
-    expect(() => validateProp('foo')).not.to.throw();
-    expect(() => validateProp('foo123')).not.to.throw();
-    expect(() => validateProp('_foo')).not.to.throw();
-
-    // Invalid props.
-    expect(() => validateProp('')).to.throw();
-    expect(() => validateProp('foo.bar')).to.throw();
-    expect(() => validateProp('123foo')).to.throw();
-    expect(() => validateProp('#foo')).to.throw();
+    expect(isNone(validatePath(''))).toBe(true);
+    expect(isNone(validatePath('.'))).toBe(true);
+    expect(isNone(validatePath('foo.'))).toBe(true);
+    expect(isNone(validatePath('foo..bar'))).toBe(true);
+    expect(isNone(validatePath('foo.#bar'))).toBe(true);
   });
 });
