@@ -233,10 +233,8 @@ const createKeySet = <T extends BaseObject, V>(obj: T, value: V): Record<Propert
 const flatMap = <T extends BaseObject>(errors: ValidationError[]) => {
   return errors.reduce(
     (result, { path, message }) => {
-      // Convert dot notation array indices to bracket notation.
-      const normalizedPath = path.replace(/\.(\d+)/g, '[$1]') as PropertyKey<T>;
-      if (!(normalizedPath in result)) {
-        result[normalizedPath] = message;
+      if (!(path in result)) {
+        result[path as PropertyKey<T>] = message;
       }
       return result;
     },
