@@ -30,6 +30,7 @@ export type ToolboxConfig = {
   package?: {
     commonKeys: string[];
     withCustomExports: string[];
+    devKeys?: ['types', ...string[]];
   };
   tsconfig?: {
     fixedKeys?: string[];
@@ -306,15 +307,30 @@ export class Toolbox {
   /**
    * Update package files.
    * - Sort keys.
+   * - Tidy dev keys for IDE compatibility
    */
   async updatePackages() {
+    // TODO(burdon): Investigate util: https://github.com/JamieMason/syncpack
     console.log('Updating all package.json');
     for (const project of this.projects) {
       const packagePath = join(project.path, 'package.json');
       const packageJson = await loadJson<PackageJson>(packagePath);
       const commonKeys = pick(this.rootPackage, this.config.package?.commonKeys ?? []);
-      // TODO(burdon): Investigate util: https://github.com/JamieMason/syncpack
-      const updated = sortPackageJson(defaultsDeep(packageJson, commonKeys));
+      const unsortedPackage = defaultsDeep(packageJson, commonKeys);
+      if (this.config.package?.devKeys) {
+        const publishConfig = unsortedPackage.publishConfig ?? {};
+        this.config.package.devKeys.forEach((key) => {
+          if (key === 'types') {
+            publishConfig.types =
+              unsortedPackage.types ?? unsortedPackage.exports?.['.']?.types ?? './dist/types/src/index.d.ts';
+            unsortedPackage.types = './src/index.ts';
+          } else if (unsortedPackage[key] && !publishConfig[key]) {
+            publishConfig[key] = unsortedPackage[key];
+            delete unsortedPackage[key];
+          }
+        });
+      }
+      const updated = sortPackageJson(unsortedPackage);
       await saveJson(packagePath, updated, this.options.verbose);
     }
   }
