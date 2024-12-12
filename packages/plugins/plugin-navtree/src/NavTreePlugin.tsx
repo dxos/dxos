@@ -6,6 +6,7 @@ import { effect } from '@preact/signals-core';
 import React from 'react';
 
 import {
+  createSurface,
   type GraphBuilderProvides,
   type GraphProvides,
   type IntentResolverProvides,
@@ -30,7 +31,14 @@ import { type TreeData } from '@dxos/react-ui-list';
 import { Path } from '@dxos/react-ui-mosaic';
 import { getHostPlatform } from '@dxos/util';
 
-import { CommandsDialogContent, NavTreeContainer, NavTreeDocumentTitle, NODE_TYPE, NotchStart } from './components';
+import {
+  COMMANDS_DIALOG,
+  CommandsDialogContent,
+  NavTreeContainer,
+  NavTreeDocumentTitle,
+  NODE_TYPE,
+  NotchStart,
+} from './components';
 import { CommandsTrigger } from './components/CommandsTrigger';
 import meta, { KEY_BINDING, NAVTREE_PLUGIN } from './meta';
 import translations from './translations';
@@ -114,7 +122,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
 
   return {
     meta,
-    ready: async (plugins) => {
+    ready: async ({ plugins }) => {
       const layout = resolvePlugin(plugins, parseLayoutPlugin)?.provides.layout;
       const location = resolvePlugin(plugins, parseNavigationPlugin)?.provides.location;
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
@@ -212,41 +220,44 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
         },
       },
       surface: {
-        component: ({ data, role }) => {
-          switch (data.component) {
-            case `${NAVTREE_PLUGIN}/Commands`: {
-              const selected = typeof data.subject === 'string' ? data.subject : undefined;
-              return <CommandsDialogContent selected={selected} />;
-            }
-          }
-
-          switch (role) {
-            case 'navigation':
-              return (
-                <NavTreeContainer
-                  isOpen={isOpen}
-                  isCurrent={isCurrent}
-                  onOpenChange={handleOpenChange}
-                  popoverAnchorId={data.popoverAnchorId as string}
-                />
-              );
-
-            case 'document-title': {
-              return <NavTreeDocumentTitle node={isGraphNode(data.activeNode) ? data.activeNode : undefined} />;
-            }
-
-            case 'notch-start':
-              return <NotchStart />;
-
-            case 'search-input':
-              return {
-                node: <CommandsTrigger />,
-                disposition: 'fallback',
-              };
-          }
-
-          return null;
-        },
+        definitions: () => [
+          createSurface({
+            id: COMMANDS_DIALOG,
+            role: 'dialog',
+            filter: (data): data is { subject?: string } => data.component === COMMANDS_DIALOG,
+            component: ({ data }) => <CommandsDialogContent selected={data.subject} />,
+          }),
+          createSurface({
+            id: `${NAVTREE_PLUGIN}/navigation`,
+            role: 'navigation',
+            component: ({ data }) => (
+              <NavTreeContainer
+                isOpen={isOpen}
+                isCurrent={isCurrent}
+                onOpenChange={handleOpenChange}
+                popoverAnchorId={data.popoverAnchorId as string}
+              />
+            ),
+          }),
+          createSurface({
+            id: `${NAVTREE_PLUGIN}/document-title`,
+            role: 'document-title',
+            component: ({ data }) => (
+              <NavTreeDocumentTitle node={isGraphNode(data.activeNode) ? data.activeNode : undefined} />
+            ),
+          }),
+          createSurface({
+            id: `${NAVTREE_PLUGIN}/notch-start`,
+            role: 'notch-start',
+            component: () => <NotchStart />,
+          }),
+          createSurface({
+            id: `${NAVTREE_PLUGIN}/search-input`,
+            role: 'search-input',
+            disposition: 'fallback',
+            component: () => <CommandsTrigger />,
+          }),
+        ],
       },
       intent: {
         resolver: async (intent) => {
@@ -284,7 +295,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
                       action: LayoutAction.SET_LAYOUT,
                       data: {
                         element: 'dialog',
-                        component: `${NAVTREE_PLUGIN}/Commands`,
+                        component: COMMANDS_DIALOG,
                         dialogBlockAlign: 'start',
                       },
                     });

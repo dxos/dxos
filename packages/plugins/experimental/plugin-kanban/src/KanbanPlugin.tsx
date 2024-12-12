@@ -4,7 +4,13 @@
 
 import React from 'react';
 
-import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
+import {
+  resolvePlugin,
+  type PluginDefinition,
+  parseIntentPlugin,
+  NavigationAction,
+  createSurface,
+} from '@dxos/app-framework';
 import { create } from '@dxos/live-object';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
@@ -88,14 +94,13 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
         },
       },
       surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'main':
-              return data.active instanceof KanbanType ? <KanbanMain kanban={data.active} /> : null;
-            default:
-              return null;
-          }
-        },
+        definitions: () =>
+          createSurface({
+            id: KANBAN_PLUGIN,
+            role: 'article',
+            filter: (data): data is { object: KanbanType } => data.object instanceof KanbanType,
+            component: ({ data }) => <KanbanMain kanban={data.object} />,
+          }),
       },
       intent: {
         resolver: (intent) => {

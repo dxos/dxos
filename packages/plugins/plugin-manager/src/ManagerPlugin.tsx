@@ -14,11 +14,12 @@ import {
   type TranslationsProvides,
   parseIntentPlugin,
   resolvePlugin,
+  createSurface,
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 
-import { SettingsDialog, SettingsSettings } from './components';
+import { SETTINGS_DIALOG, SettingsDialog, SettingsSettings } from './components';
 import meta, { MANAGER_PLUGIN } from './meta';
 import translations from './translations';
 
@@ -46,23 +47,25 @@ export const ManagerPlugin = (): PluginDefinition<SettingsPluginProvides> => {
     },
     provides: {
       surface: {
-        component: ({ data, role }) => {
-          if (data.component === `${MANAGER_PLUGIN}/Settings`) {
-            return (
+        definitions: () => [
+          createSurface({
+            id: SETTINGS_DIALOG,
+            role: 'dialog',
+            filter: (data): data is any => data.component === SETTINGS_DIALOG,
+            component: () => (
               <SettingsDialog
                 selected={settings.values.selected}
                 onSelected={(selected) => (settings.values.selected = selected)}
               />
-            );
-          }
-
-          switch (role) {
-            case 'settings':
-              return data.plugin === meta.id ? <SettingsSettings /> : null;
-          }
-
-          return null;
-        },
+            ),
+          }),
+          createSurface({
+            id: `${MANAGER_PLUGIN}/settings`,
+            role: 'settings',
+            filter: (data): data is any => data.plugin === MANAGER_PLUGIN,
+            component: () => <SettingsSettings />,
+          }),
+        ],
       },
       intent: {
         resolver: (intent) => {
@@ -79,7 +82,7 @@ export const ManagerPlugin = (): PluginDefinition<SettingsPluginProvides> => {
                       action: LayoutAction.SET_LAYOUT,
                       data: {
                         element: 'dialog',
-                        component: `${MANAGER_PLUGIN}/Settings`,
+                        component: SETTINGS_DIALOG,
                         dialogBlockAlign: 'start',
                       },
                     },

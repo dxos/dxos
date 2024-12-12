@@ -5,7 +5,13 @@
 import { CompassTool } from '@phosphor-icons/react';
 import React from 'react';
 
-import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
+import {
+  parseIntentPlugin,
+  type PluginDefinition,
+  resolvePlugin,
+  NavigationAction,
+  createSurface,
+} from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
@@ -154,29 +160,29 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
         ],
       },
       surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'slide':
-              return isDiagramType(data.slide, TLDRAW_SCHEMA) ? (
-                <SketchContainer sketch={data.slide} readonly autoZoom maxZoom={1.5} classNames='p-16' />
-              ) : null;
-            case 'article':
-            case 'section':
-              return isDiagramType(data.object, TLDRAW_SCHEMA) ? (
-                <SketchContainer
-                  sketch={data.object}
-                  autoZoom
-                  classNames={role === 'article' ? 'row-span-2' : 'aspect-square'}
-                  grid={settings.values.gridType}
-                />
-              ) : null;
-            case 'settings': {
-              return data.plugin === meta.id ? <SketchSettings settings={settings.values} /> : null;
-            }
-            default:
-              return null;
-          }
-        },
+        definitions: () => [
+          createSurface({
+            id: `${SKETCH_PLUGIN}/sketch`,
+            role: ['article', 'section', 'slide'],
+            filter: (data): data is { object: DiagramType } => isDiagramType(data.object, TLDRAW_SCHEMA),
+            component: ({ data, role }) => (
+              <SketchContainer
+                sketch={data.object}
+                readonly={role === 'slide'}
+                maxZoom={role === 'slide' ? 1.5 : undefined}
+                autoZoom={role === 'section'}
+                classNames={role === 'article' ? 'row-span-2' : role === 'section' ? 'aspect-square' : 'p-16'}
+                grid={settings.values.gridType}
+              />
+            ),
+          }),
+          createSurface({
+            id: `${SKETCH_PLUGIN}/settings`,
+            role: 'settings',
+            filter: (data): data is any => data.plugin === SKETCH_PLUGIN,
+            component: () => <SketchSettings settings={settings.values} />,
+          }),
+        ],
       },
       intent: {
         resolver: (intent) => {

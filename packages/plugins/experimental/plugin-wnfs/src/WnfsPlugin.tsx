@@ -3,17 +3,16 @@
 //
 
 import { FileCloud, type IconProps } from '@phosphor-icons/react';
-import React, { type Ref } from 'react';
+import React from 'react';
 
-import { type PluginDefinition, isObject, resolvePlugin } from '@dxos/app-framework';
+import { type PluginDefinition, createSurface, resolvePlugin } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type DocumentType } from '@dxos/plugin-markdown/types';
 import { type Space, getSpace } from '@dxos/react-client/echo';
-import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
 import * as Blockstore from './blockstore';
-import { FileCard, FileMain, FileSection, FileSlide } from './components';
+import { FileMain, FileSection, FileSlide } from './components';
 import { image as imageExtension } from './extensions';
 import meta, { WNFS_PLUGIN } from './meta';
 import translations from './translations';
@@ -26,7 +25,7 @@ export const WnfsPlugin = (): PluginDefinition<WnfsPluginProvides> => {
 
   return {
     meta,
-    ready: async (plugins) => {
+    ready: async ({ plugins }) => {
       const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
       invariant(client);
       const apiHost = client.config.values.runtime?.services?.edge?.url || 'http://localhost:8787';
@@ -71,31 +70,26 @@ export const WnfsPlugin = (): PluginDefinition<WnfsPluginProvides> => {
         },
       },
       surface: {
-        component: ({ data, role, ...props }, forwardedRef) => {
-          switch (role) {
-            case 'main':
-              return data.active instanceof FileType ? <FileMain file={data.active} /> : null;
-            case 'slide':
-              return data.slide instanceof FileType ? <FileSlide file={data.slide} cover={false} /> : null;
-            case 'section':
-              return data.object instanceof FileType ? <FileSection file={data.object} /> : null;
-            case 'card': {
-              if (
-                isObject(data.content) &&
-                typeof data.content.id === 'string' &&
-                data.content.object instanceof FileType
-              ) {
-                const cardProps = { ...props, item: { id: data.content.id, object: data.content.object } };
-                return isTileComponentProps(cardProps) ? (
-                  <FileCard {...cardProps} ref={forwardedRef as Ref<HTMLDivElement>} />
-                ) : null;
-              }
-              break;
-            }
-          }
-
-          return null;
-        },
+        definitions: () => [
+          createSurface({
+            id: `${WNFS_PLUGIN}/article`,
+            role: 'article',
+            filter: (data): data is { object: FileType } => data.object instanceof FileType,
+            component: ({ data }) => <FileMain file={data.object} />,
+          }),
+          createSurface({
+            id: `${WNFS_PLUGIN}/section`,
+            role: 'section',
+            filter: (data): data is { object: FileType } => data.object instanceof FileType,
+            component: ({ data }) => <FileSection file={data.object} />,
+          }),
+          createSurface({
+            id: `${WNFS_PLUGIN}/slide`,
+            role: 'slide',
+            filter: (data): data is { slide: FileType } => data.slide instanceof FileType,
+            component: ({ data }) => <FileSlide file={data.slide} cover={false} />,
+          }),
+        ],
       },
     },
   };

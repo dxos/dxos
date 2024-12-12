@@ -247,7 +247,7 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
           }}
         >
           <Popover.Viewport>
-            <Surface role='popover' data={popoverContent} />
+            <Surface role='popover' data={popoverContent} limit={1} />
           </Popover.Viewport>
           <Popover.Arrow />
         </Popover.Content>
@@ -256,7 +256,7 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
       {/* Global dialog. */}
       <Dialog.Root open={dialogOpen} onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}>
         <Dialog.Overlay blockAlign={dialogBlockAlign}>
-          <Surface role='dialog' data={dialogContent} />
+          <Surface role='dialog' data={dialogContent} limit={1} />
         </Dialog.Overlay>
       </Dialog.Root>
 

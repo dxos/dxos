@@ -4,7 +4,13 @@
 
 import React from 'react';
 
-import type { PluginDefinition, SettingsProvides, SurfaceProvides, TranslationsProvides } from '@dxos/app-framework';
+import {
+  createSurface,
+  type PluginDefinition,
+  type SettingsProvides,
+  type SurfaceProvides,
+  type TranslationsProvides,
+} from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 
 import { PluginSettings } from './components';
@@ -29,14 +35,13 @@ export const RegistryPlugin = (): PluginDefinition<RegistryPluginProvides> => {
       settings: settings.values,
       translations,
       surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'settings':
-              return data.plugin === meta.id ? <PluginSettings settings={settings.values} /> : null;
-          }
-
-          return null;
-        },
+        definitions: () =>
+          createSurface({
+            id: meta.id,
+            role: 'settings',
+            filter: (data): data is any => data.plugin === REGISTRY_PLUGIN,
+            component: () => <PluginSettings settings={settings.values} />,
+          }),
       },
     },
   };

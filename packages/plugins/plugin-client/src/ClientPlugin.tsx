@@ -14,6 +14,7 @@ import {
   type Plugin,
   type PluginDefinition,
   type TranslationsProvides,
+  createSurface,
 } from '@dxos/app-framework';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { registerSignalsRuntime } from '@dxos/echo-signals/react';
@@ -22,7 +23,15 @@ import { createExtension, type Node } from '@dxos/plugin-graph';
 import { Client, type ClientOptions, ClientProvider } from '@dxos/react-client';
 import { type IdentityPanelProps, type JoinPanelProps } from '@dxos/shell/react';
 
-import { IdentityDialog, JoinDialog, RecoveryCodeDialog, type RecoveryCodeDialogProps } from './components';
+import {
+  IDENTITY_DIALOG,
+  IdentityDialog,
+  JOIN_DIALOG,
+  JoinDialog,
+  RECOVER_CODE_DIALOG,
+  RecoveryCodeDialog,
+  type RecoveryCodeDialogProps,
+} from './components';
 import meta, { CLIENT_PLUGIN, ClientAction, OBSERVABILITY_ACTION } from './meta';
 import translations from './translations';
 
@@ -119,7 +128,7 @@ export const ClientPlugin = ({
         context: ({ children }) => <ClientProvider client={client}>{children}</ClientProvider>,
       };
     },
-    ready: async (plugins) => {
+    ready: async ({ plugins }) => {
       if (error) {
         throw error;
       }
@@ -132,26 +141,28 @@ export const ClientPlugin = ({
     provides: {
       translations,
       surface: {
-        component: ({ data, role, ...rest }) => {
-          switch (role) {
-            case 'dialog':
-              if (data.component === 'dxos.org/plugin/client/IdentityDialog') {
-                return (
-                  <IdentityDialog
-                    {...(data.subject as IdentityPanelProps)}
-                    createInvitationUrl={createDeviceInvitationUrl}
-                  />
-                );
-              } else if (data.component === 'dxos.org/plugin/client/JoinDialog') {
-                return <JoinDialog {...(data.subject as JoinPanelProps)} />;
-              } else if (data.component === 'dxos.org/plugin/client/RecoveryCodeDialog') {
-                return <RecoveryCodeDialog {...(data.subject as RecoveryCodeDialogProps)} />;
-              }
-              break;
-          }
-
-          return null;
-        },
+        definitions: () => [
+          createSurface({
+            id: IDENTITY_DIALOG,
+            role: 'dialog',
+            filter: (data): data is { subject: IdentityPanelProps } => data.component === IDENTITY_DIALOG,
+            component: ({ data }) => (
+              <IdentityDialog {...data.subject} createInvitationUrl={createDeviceInvitationUrl} />
+            ),
+          }),
+          createSurface({
+            id: JOIN_DIALOG,
+            role: 'dialog',
+            filter: (data): data is { subject: JoinPanelProps } => data.component === JOIN_DIALOG,
+            component: ({ data }) => <JoinDialog {...data.subject} />,
+          }),
+          createSurface({
+            id: RECOVER_CODE_DIALOG,
+            role: 'dialog',
+            filter: (data): data is { subject: RecoveryCodeDialogProps } => data.component === RECOVER_CODE_DIALOG,
+            component: ({ data }) => <RecoveryCodeDialog {...data.subject} />,
+          }),
+        ],
       },
       graph: {
         builder: (plugins) => {
@@ -214,7 +225,7 @@ export const ClientPlugin = ({
                       action: LayoutAction.SET_LAYOUT,
                       data: {
                         element: 'dialog',
-                        component: 'dxos.org/plugin/client/JoinDialog',
+                        component: JOIN_DIALOG,
                         dialogBlockAlign: 'start',
                         subject: {
                           initialInvitationCode: intent.data?.invitationCode,
@@ -236,7 +247,7 @@ export const ClientPlugin = ({
                       action: LayoutAction.SET_LAYOUT,
                       data: {
                         element: 'dialog',
-                        component: 'dxos.org/plugin/client/IdentityDialog',
+                        component: IDENTITY_DIALOG,
                         dialogBlockAlign: 'start',
                       },
                     },
@@ -262,7 +273,7 @@ export const ClientPlugin = ({
                       action: LayoutAction.SET_LAYOUT,
                       data: {
                         element: 'dialog',
-                        component: 'dxos.org/plugin/client/JoinDialog',
+                        component: JOIN_DIALOG,
                         dialogBlockAlign: 'start',
                         subject: {
                           initialDisposition: 'recover-identity',
@@ -300,7 +311,7 @@ export const ClientPlugin = ({
                         dialogBlockAlign: 'start',
                         dialogType: 'alert',
                         state: true,
-                        component: 'dxos.org/plugin/client/RecoveryCodeDialog',
+                        component: RECOVER_CODE_DIALOG,
                         subject: { code: seedphrase },
                       },
                     },

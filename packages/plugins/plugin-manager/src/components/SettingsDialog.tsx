@@ -11,6 +11,8 @@ import { nonNullable } from '@dxos/util';
 
 import { MANAGER_PLUGIN } from '../meta';
 
+export const SETTINGS_DIALOG = `${MANAGER_PLUGIN}/SettingsDialog`;
+
 const sortPlugin = ({ name: a }: PluginMeta, { name: b }: PluginMeta) => a?.localeCompare(b ?? '') ?? 0;
 
 // TODO(burdon): Factor out common defs?

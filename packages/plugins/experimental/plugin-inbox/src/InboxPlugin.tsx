@@ -4,7 +4,13 @@
 
 import React from 'react';
 
-import { NavigationAction, parseIntentPlugin, type PluginDefinition, resolvePlugin } from '@dxos/app-framework';
+import {
+  createSurface,
+  NavigationAction,
+  parseIntentPlugin,
+  type PluginDefinition,
+  resolvePlugin,
+} from '@dxos/app-framework';
 import { create } from '@dxos/live-object';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
@@ -117,25 +123,26 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
         },
       },
       surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'article': {
-              if (data.object instanceof MailboxType) {
-                return <MailboxContainer mailbox={data.object} />;
-              }
-              if (data.object instanceof ContactsType) {
-                return <ContactsContainer contacts={data.object} />;
-              }
-              if (data.object instanceof CalendarType) {
-                return <EventsContainer calendar={data.object} />;
-              }
-              return null;
-            }
-
-            default:
-              return null;
-          }
-        },
+        definitions: () => [
+          createSurface({
+            id: `${INBOX_PLUGIN}/mailbox`,
+            role: 'article',
+            filter: (data): data is { object: MailboxType } => data.object instanceof MailboxType,
+            component: ({ data }) => <MailboxContainer mailbox={data.object} />,
+          }),
+          createSurface({
+            id: `${INBOX_PLUGIN}/contacts`,
+            role: 'article',
+            filter: (data): data is { object: ContactsType } => data.object instanceof ContactsType,
+            component: ({ data }) => <ContactsContainer contacts={data.object} />,
+          }),
+          createSurface({
+            id: `${INBOX_PLUGIN}/calendar`,
+            role: 'article',
+            filter: (data): data is { object: CalendarType } => data.object instanceof CalendarType,
+            component: ({ data }) => <EventsContainer calendar={data.object} />,
+          }),
+        ],
       },
       intent: {
         resolver: (intent) => {

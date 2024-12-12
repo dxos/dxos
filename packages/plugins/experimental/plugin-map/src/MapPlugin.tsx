@@ -6,7 +6,13 @@ import { Compass } from '@phosphor-icons/react';
 import { type LatLngLiteral } from 'leaflet';
 import React from 'react';
 
-import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
+import {
+  parseIntentPlugin,
+  type PluginDefinition,
+  resolvePlugin,
+  NavigationAction,
+  createSurface,
+} from '@dxos/app-framework';
 import { create } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { parseClientPlugin } from '@dxos/plugin-client';
@@ -24,9 +30,14 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
     type: 'map',
   });
 
+  const handleChange: MapContainerProps['onChange'] = ({ center, zoom }) => {
+    settings.values.center = center;
+    settings.values.zoom = zoom;
+  };
+
   return {
     meta,
-    ready: async (plugins) => {
+    ready: async ({ plugins }) => {
       settings
         .prop({ key: 'type', type: LocalStorageStore.enum<MapControlType>() })
         .prop({ key: 'zoom', type: LocalStorageStore.number({ allowUndefined: true }) })
@@ -124,33 +135,22 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
         ],
       },
       surface: {
-        component: ({ data, role }) => {
-          // TODO(burdon): Store by object id.
-          const handleChange: MapContainerProps['onChange'] = ({ center, zoom }) => {
-            settings.values.center = center;
-            settings.values.zoom = zoom;
-          };
-
-          if (data.object instanceof MapType) {
-            switch (role) {
-              case 'section':
-              case 'article': {
-                return (
-                  <MapContainer
-                    role={role}
-                    type={settings.values.type}
-                    map={data.object}
-                    center={settings.values.center}
-                    zoom={settings.values.zoom}
-                    onChange={handleChange}
-                  />
-                );
-              }
-            }
-          }
-
-          return null;
-        },
+        definitions: () =>
+          createSurface({
+            id: `${MAP_PLUGIN}/map`,
+            role: ['article', 'section'],
+            filter: (data): data is { object: MapType } => data.object instanceof MapType,
+            component: ({ data, role }) => (
+              <MapContainer
+                role={role}
+                type={settings.values.type}
+                map={data.object}
+                center={settings.values.center}
+                zoom={settings.values.zoom}
+                onChange={handleChange}
+              />
+            ),
+          }),
       },
       intent: {
         resolver: (intent) => {

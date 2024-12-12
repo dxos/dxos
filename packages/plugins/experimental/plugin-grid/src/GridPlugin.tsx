@@ -4,7 +4,13 @@
 
 import React from 'react';
 
-import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
+import {
+  createSurface,
+  NavigationAction,
+  parseIntentPlugin,
+  resolvePlugin,
+  type PluginDefinition,
+} from '@dxos/app-framework';
 import { create } from '@dxos/live-object';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
@@ -94,14 +100,13 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
         },
       },
       surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'main':
-              return data.active instanceof GridType ? <GridContainer grid={data.active} /> : null;
-          }
-
-          return null;
-        },
+        definitions: () =>
+          createSurface({
+            id: GRID_PLUGIN,
+            role: 'article',
+            filter: (data): data is { object: GridType } => data.object instanceof GridType,
+            component: ({ data }) => <GridContainer grid={data.object} />,
+          }),
       },
       intent: {
         resolver: (intent) => {

@@ -15,7 +15,7 @@ import {
   parseIntentPlugin,
   LayoutAction,
   SettingsAction,
-  parsePluginHost,
+  createSurface,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { create } from '@dxos/live-object';
@@ -66,8 +66,7 @@ export const ObservabilityPlugin = (options: {
       state.values.group = await getObservabilityGroup(options.namespace);
       state.prop({ key: 'notified', type: LocalStorageStore.bool({ allowUndefined: true }) });
     },
-    ready: async (plugins) => {
-      const pluginHost = resolvePlugin(plugins, parsePluginHost);
+    ready: async ({ plugins }) => {
       const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
       const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
@@ -110,9 +109,7 @@ export const ObservabilityPlugin = (options: {
         observability = obs;
 
         // Ensure errors are tagged with enabled plugins to help with reproductions.
-        pluginHost?.provides?.plugins?.enabled?.map((plugin) =>
-          observability?.setTag(`pluginEnabled-${plugin}`, 'true', 'errors'),
-        );
+        plugins.map((plugin) => observability?.setTag(`pluginEnabled-${plugin.meta.id}`, 'true', 'errors'));
 
         // Start client observability (i.e. not running as shared worker)
         // TODO(nf): how to prevent multiple instances for single shared worker?
@@ -206,14 +203,13 @@ export const ObservabilityPlugin = (options: {
       observability: state.values,
       settings,
       surface: {
-        component: ({ role, data }) => {
-          switch (role) {
-            case 'settings':
-              return data.plugin === meta.id ? <ObservabilitySettings settings={settings} /> : null;
-          }
-
-          return null;
-        },
+        definitions: () =>
+          createSurface({
+            id: OBSERVABILITY_PLUGIN,
+            role: 'settings',
+            filter: (data): data is any => data.plugin === OBSERVABILITY_PLUGIN,
+            component: () => <ObservabilitySettings settings={settings} />,
+          }),
       },
       translations,
     },

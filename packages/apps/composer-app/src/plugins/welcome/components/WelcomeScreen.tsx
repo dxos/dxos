@@ -17,6 +17,8 @@ import { Welcome, WelcomeState } from './Welcome';
 import { removeQueryParamByValue } from '../../../util';
 import { activateAccount, signup } from '../credentials';
 
+export const WELCOME_SCREEN = 'WelcomeScreen';
+
 export const WelcomeScreen = ({ hubUrl, firstRun }: { hubUrl: string; firstRun?: Trigger }) => {
   const client = useClient();
   const identity = useIdentity();

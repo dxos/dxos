@@ -10,6 +10,9 @@ import { Button, Dialog } from '@dxos/react-ui';
 
 // @ts-ignore
 import NOTICE from './notice.md?raw';
+import { WELCOME_PLUGIN } from '../meta';
+
+export const BETA_DIALOG = `${WELCOME_PLUGIN}/BetaDialog`;
 
 // TODO(burdon): Reconcile with react-theme.
 const linkStyle = 'text-sky-700 dark:text-sky-200 hover:opacity-80';

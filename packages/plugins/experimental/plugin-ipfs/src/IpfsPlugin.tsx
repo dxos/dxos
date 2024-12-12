@@ -3,15 +3,14 @@
 //
 
 import { create as createIpfsClient } from 'kubo-rpc-client';
-import React, { type Ref } from 'react';
+import React from 'react';
 import urlJoin from 'url-join';
 
-import { type Plugin, type PluginDefinition, isObject, resolvePlugin } from '@dxos/app-framework';
+import { type Plugin, type PluginDefinition, createSurface, resolvePlugin } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { type ClientPluginProvides, parseClientPlugin } from '@dxos/plugin-client';
-import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
-import { FileCard, FileMain, FileSection, FileSlide } from './components';
+import { FileMain, FileSection, FileSlide } from './components';
 import meta, { IPFS_PLUGIN } from './meta';
 import translations from './translations';
 import { FileType } from './types';
@@ -24,7 +23,7 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
 
   return {
     meta,
-    ready: async (plugins) => {
+    ready: async ({ plugins }) => {
       clientPlugin = resolvePlugin(plugins, parseClientPlugin);
     },
     provides: {
@@ -95,31 +94,26 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
         },
       },
       surface: {
-        component: ({ data, role, ...props }, forwardedRef) => {
-          switch (role) {
-            case 'main':
-              return data.active instanceof FileType ? <FileMain file={data.active} /> : null;
-            case 'slide':
-              return data.slide instanceof FileType ? <FileSlide file={data.slide} cover={false} /> : null;
-            case 'section':
-              return data.object instanceof FileType ? <FileSection file={data.object} /> : null;
-            case 'card': {
-              if (
-                isObject(data.content) &&
-                typeof data.content.id === 'string' &&
-                data.content.object instanceof FileType
-              ) {
-                const cardProps = { ...props, item: { id: data.content.id, object: data.content.object } };
-                return isTileComponentProps(cardProps) ? (
-                  <FileCard {...cardProps} ref={forwardedRef as Ref<HTMLDivElement>} />
-                ) : null;
-              }
-              break;
-            }
-          }
-
-          return null;
-        },
+        definitions: () => [
+          createSurface({
+            id: `${IPFS_PLUGIN}/article`,
+            role: 'article',
+            filter: (data): data is { object: FileType } => data.object instanceof FileType,
+            component: ({ data }) => <FileMain file={data.object} />,
+          }),
+          createSurface({
+            id: `${IPFS_PLUGIN}/section`,
+            role: 'section',
+            filter: (data): data is { object: FileType } => data.object instanceof FileType,
+            component: ({ data }) => <FileSection file={data.object} />,
+          }),
+          createSurface({
+            id: `${IPFS_PLUGIN}/slide`,
+            role: 'slide',
+            filter: (data): data is { slide: FileType } => data.slide instanceof FileType,
+            component: ({ data }) => <FileSlide file={data.slide} cover={false} />,
+          }),
+        ],
       },
     },
   };

@@ -12,11 +12,11 @@ import {
   LayoutAction,
   type LayoutProvides,
   type LocationProvides,
-  type MetadataResolverProvides,
   NavigationAction,
   type Plugin,
   type PluginDefinition,
   Surface,
+  createSurface,
   filterPlugins,
   findPlugin,
   firstIdInPart,
@@ -85,6 +85,12 @@ import {
   SpaceSettingsPanel,
   SyncStatus,
   type SpaceSettingsDialogProps,
+  SPACE_SETTINGS_DIALOG,
+  JOIN_DIALOG,
+  CREATE_SPACE_DIALOG,
+  CREATE_OBJECT_DIALOG,
+  POPOVER_RENAME_SPACE,
+  POPOVER_RENAME_OBJECT,
 } from './components';
 import meta, { CollectionAction, SPACE_PLUGIN, SpaceAction } from './meta';
 import translations from './translations';
@@ -176,7 +182,6 @@ export const SpacePlugin = ({
   let layoutPlugin: Plugin<LayoutProvides> | undefined;
   let navigationPlugin: Plugin<LocationProvides> | undefined;
   let attentionPlugin: Plugin<AttentionPluginProvides> | undefined;
-  let metadataPlugin: Plugin<MetadataResolverProvides> | undefined;
 
   const createSpaceInvitationUrl = (invitationCode: string) => {
     const baseUrl = new URL(invitationUrl);
@@ -392,7 +397,7 @@ export const SpacePlugin = ({
 
   return {
     meta,
-    ready: async (plugins) => {
+    ready: async ({ plugins }) => {
       settings.prop({ key: 'showHidden', type: LocalStorageStore.bool({ allowUndefined: true }) });
       state
         .prop({ key: 'spaceNames', type: LocalStorageStore.json<Record<string, string>>() })
@@ -406,7 +411,6 @@ export const SpacePlugin = ({
 
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
-      metadataPlugin = resolvePlugin(plugins, parseMetadataResolverPlugin);
       navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       attentionPlugin = resolvePlugin(plugins, parseAttentionPlugin);
       clientPlugin = resolvePlugin(plugins, parseClientPlugin);
@@ -496,114 +500,161 @@ export const SpacePlugin = ({
         schema: [CollectionType],
       },
       surface: {
-        component: ({ data, role, ...rest }) => {
-          switch (role) {
-            case 'article':
-              // TODO(wittjosiah): Need to avoid shotgun parsing space state everywhere.
-              return isSpace(data.object) && data.object.state.get() === SpaceState.SPACE_READY ? (
+        definitions: ({ plugins }) => {
+          const metadataPlugin = resolvePlugin(plugins, parseMetadataResolverPlugin);
+
+          return [
+            createSurface({
+              id: `${SPACE_PLUGIN}/article`,
+              role: 'article',
+              filter: (data): data is { object: Space } =>
+                // TODO(wittjosiah): Need to avoid shotgun parsing space state everywhere.
+                isSpace(data.object) && data.object.state.get() === SpaceState.SPACE_READY,
+              component: ({ data, role, ...rest }) => (
                 <Surface
                   data={{ object: data.object.properties[CollectionType.typename], id: data.object.id }}
                   role={role}
                   {...rest}
                 />
-              ) : data.object instanceof CollectionType ? (
-                {
-                  node: <CollectionMain collection={data.object} />,
-                  disposition: 'fallback',
-                }
-              ) : null;
-            // TODO(burdon): Add role name syntax to minimal plugin docs.
-            case 'complementary--settings':
-              return isSpace(data.subject) ? (
-                <SpaceSettingsPanel space={data.subject} />
-              ) : isEchoObject(data.subject) ? (
-                { node: <DefaultObjectSettings object={data.subject} />, disposition: 'fallback' }
-              ) : null;
-            case 'dialog':
-              if (data.component === 'dxos.org/plugin/space/SpaceSettingsDialog') {
-                return (
-                  <SpaceSettingsDialog
-                    {...(data.subject as SpaceSettingsDialogProps)}
-                    createInvitationUrl={createSpaceInvitationUrl}
-                  />
-                );
-              } else if (data.component === 'dxos.org/plugin/space/JoinDialog') {
-                return <JoinDialog {...(data.subject as JoinPanelProps)} />;
-              } else if (data.component === 'dxos.org/plugin/space/CreateSpaceDialog') {
-                return <CreateSpaceDialog />;
-              } else if (data.component === 'dxos.org/plugin/space/CreateObjectDialog') {
-                return (
-                  <CreateObjectDialog
-                    {...(data.subject as CreateObjectDialogProps)}
-                    schemas={schemas}
-                    navigableCollections={state.values.navigableCollections}
-                    resolve={metadataPlugin?.provides.metadata.resolver}
-                  />
-                );
-              }
-              return null;
-            case 'popover': {
-              if (data.component === 'dxos.org/plugin/space/RenameSpacePopover' && isSpace(data.subject)) {
-                return <PopoverRenameSpace space={data.subject} />;
-              }
-              if (data.component === 'dxos.org/plugin/space/RenameObjectPopover' && isReactiveObject(data.subject)) {
-                return <PopoverRenameObject object={data.subject} />;
-              }
-              return null;
-            }
-            case 'navtree-item-end': {
-              return isReactiveObject(data.object) ? (
-                <SmallPresenceLive
-                  id={data.id as string}
-                  viewers={state.values.viewersByObject[fullyQualifiedId(data.object)]}
+              ),
+            }),
+            createSurface({
+              id: `${SPACE_PLUGIN}/collection-fallback`,
+              role: 'article',
+              disposition: 'fallback',
+              filter: (data): data is { object: CollectionType } => data.object instanceof CollectionType,
+              component: ({ data }) => <CollectionMain collection={data.object} />,
+            }),
+            createSurface({
+              id: `${SPACE_PLUGIN}/settings-panel`,
+              // TODO(burdon): Add role name syntax to minimal plugin docs.
+              role: 'complementary--settings',
+              filter: (data): data is { subject: Space } => isSpace(data.subject),
+              component: ({ data }) => <SpaceSettingsPanel space={data.subject} />,
+            }),
+            createSurface({
+              id: `${SPACE_PLUGIN}/object-settings-panel-fallback`,
+              role: 'complementary--settings',
+              disposition: 'fallback',
+              filter: (data): data is { subject: ReactiveEchoObject<any> } => isEchoObject(data.subject),
+              component: ({ data }) => <DefaultObjectSettings object={data.subject} />,
+            }),
+            createSurface({
+              id: SPACE_SETTINGS_DIALOG,
+              role: 'dialog',
+              filter: (data): data is { subject: SpaceSettingsDialogProps } => data.component === SPACE_SETTINGS_DIALOG,
+              component: ({ data }) => (
+                <SpaceSettingsDialog {...data.subject} createInvitationUrl={createSpaceInvitationUrl} />
+              ),
+            }),
+            createSurface({
+              id: JOIN_DIALOG,
+              role: 'dialog',
+              filter: (data): data is { subject: JoinPanelProps } => data.component === JOIN_DIALOG,
+              component: ({ data }) => <JoinDialog {...data.subject} />,
+            }),
+            createSurface({
+              id: CREATE_SPACE_DIALOG,
+              role: 'dialog',
+              filter: (data): data is any => data.component === CREATE_SPACE_DIALOG,
+              component: () => <CreateSpaceDialog />,
+            }),
+            createSurface({
+              id: CREATE_OBJECT_DIALOG,
+              role: 'dialog',
+              filter: (data): data is { subject: CreateObjectDialogProps } => data.component === CREATE_OBJECT_DIALOG,
+              component: ({ data }) => (
+                <CreateObjectDialog
+                  {...data.subject}
+                  schemas={schemas}
+                  navigableCollections={state.values.navigableCollections}
+                  resolve={metadataPlugin?.provides.metadata.resolver}
                 />
-              ) : isSpace(data.object) ? (
-                <InlineSyncStatus space={data.object} />
-              ) : (
-                // TODO(wittjosiah): Attention glyph for non-echo items should be handled elsewhere.
-                <SmallPresence id={data.id as string} count={0} />
-              );
-            }
-            case 'navbar-end': {
-              if (!isEchoObject(data.object) && !isSpace(data.object)) {
-                return null;
-              }
+              ),
+            }),
+            createSurface({
+              id: POPOVER_RENAME_SPACE,
+              role: 'popover',
+              filter: (data): data is { subject: Space } =>
+                data.component === POPOVER_RENAME_SPACE && isSpace(data.subject),
+              component: ({ data }) => <PopoverRenameSpace space={data.subject} />,
+            }),
+            createSurface({
+              id: POPOVER_RENAME_OBJECT,
+              role: 'popover',
+              filter: (data): data is { subject: ReactiveEchoObject<any> } =>
+                data.component === POPOVER_RENAME_OBJECT && isReactiveObject(data.subject),
+              component: ({ data }) => <PopoverRenameObject object={data.subject} />,
+            }),
+            createSurface({
+              id: `${SPACE_PLUGIN}/navtree-presence`,
+              role: 'navtree-item-end',
+              filter: (data): data is { id: string; object: ReactiveEchoObject<any> } =>
+                typeof data.id === 'string' && isEchoObject(data.object),
+              component: ({ data }) => (
+                <SmallPresenceLive id={data.id} viewers={state.values.viewersByObject[data.id]} />
+              ),
+            }),
+            createSurface({
+              // TODO(wittjosiah): Attention glyph for non-echo items should be handled elsewhere.
+              id: `${SPACE_PLUGIN}/navtree-presence-fallback`,
+              role: 'navtree-item-end',
+              disposition: 'fallback',
+              filter: (data): data is { id: string; object: ReactiveEchoObject<any> } => typeof data.id === 'string',
+              component: ({ data }) => <SmallPresence id={data.id} count={0} />,
+            }),
+            createSurface({
+              id: `${SPACE_PLUGIN}/navtree-sync-status`,
+              role: 'navtree-item-end',
+              filter: (data): data is { object: Space } => isSpace(data.object),
+              component: ({ data }) => <InlineSyncStatus space={data.object} />,
+            }),
+            createSurface({
+              id: `${SPACE_PLUGIN}/navbar-presence`,
+              role: 'navbar-end',
+              disposition: 'hoist',
+              filter: (data): data is { object: Space | ReactiveEchoObject<any> } =>
+                isSpace(data.object) || isEchoObject(data.object),
+              component: ({ data }) => {
+                const space = isSpace(data.object) ? data.object : getSpace(data.object);
+                const object = isSpace(data.object)
+                  ? data.object.state.get() === SpaceState.SPACE_READY
+                    ? (space?.properties[CollectionType.typename] as CollectionType)
+                    : undefined
+                  : data.object;
 
-              const space = isSpace(data.object) ? data.object : getSpace(data.object);
-              const object = isSpace(data.object)
-                ? data.object.state.get() === SpaceState.SPACE_READY
-                  ? (space?.properties[CollectionType.typename] as CollectionType)
-                  : undefined
-                : data.object;
-
-              return space && object
-                ? {
-                    node: (
-                      <>
-                        <SpacePresence object={object} />
-                        {space.properties[COMPOSER_SPACE_LOCK] ? null : <ShareSpaceButton space={space} />}
-                      </>
-                    ),
-                    disposition: 'hoist',
-                  }
-                : null;
-            }
-            case 'section':
-              return data.object instanceof CollectionType ? <CollectionSection collection={data.object} /> : null;
-            case 'settings':
-              return data.plugin === meta.id ? <SpacePluginSettings settings={settings.values} /> : null;
-            case 'menu-footer':
-              if (isEchoObject(data.object)) {
-                return <MenuFooter object={data.object} />;
-              } else {
-                return null;
-              }
-            case 'status': {
-              return <SyncStatus />;
-            }
-            default:
-              return null;
-          }
+                return space && object ? (
+                  <>
+                    <SpacePresence object={object} />
+                    {space.properties[COMPOSER_SPACE_LOCK] ? null : <ShareSpaceButton space={space} />}
+                  </>
+                ) : null;
+              },
+            }),
+            createSurface({
+              id: `${SPACE_PLUGIN}/collection-section`,
+              role: 'section',
+              filter: (data): data is { object: CollectionType } => data.object instanceof CollectionType,
+              component: ({ data }) => <CollectionSection collection={data.object} />,
+            }),
+            createSurface({
+              id: `${SPACE_PLUGIN}/settings`,
+              role: 'settings',
+              filter: (data): data is any => data.plugin === SPACE_PLUGIN,
+              component: () => <SpacePluginSettings settings={settings.values} />,
+            }),
+            createSurface({
+              id: `${SPACE_PLUGIN}/menu-footer`,
+              role: 'menu-footer',
+              filter: (data): data is { object: ReactiveEchoObject<any> } => isEchoObject(data.object),
+              component: ({ data }) => <MenuFooter object={data.object} />,
+            }),
+            createSurface({
+              id: `${SPACE_PLUGIN}/status`,
+              role: 'status',
+              component: () => <SyncStatus />,
+            }),
+          ];
         },
       },
       graph: {
@@ -1045,7 +1096,7 @@ export const SpacePlugin = ({
                       action: LayoutAction.SET_LAYOUT,
                       data: {
                         element: 'dialog',
-                        component: 'dxos.org/plugin/space/CreateSpaceDialog',
+                        component: CREATE_SPACE_DIALOG,
                         dialogBlockAlign: 'start',
                         subject: intent.data,
                       },
@@ -1103,7 +1154,7 @@ export const SpacePlugin = ({
                       action: LayoutAction.SET_LAYOUT,
                       data: {
                         element: 'dialog',
-                        component: 'dxos.org/plugin/space/JoinDialog',
+                        component: JOIN_DIALOG,
                         dialogBlockAlign: 'start',
                         subject: {
                           initialInvitationCode: intent.data?.invitationCode,
@@ -1131,7 +1182,7 @@ export const SpacePlugin = ({
                         action: LayoutAction.SET_LAYOUT,
                         data: {
                           element: 'dialog',
-                          component: 'dxos.org/plugin/space/SpaceSettingsDialog',
+                          component: SPACE_SETTINGS_DIALOG,
                           dialogBlockAlign: 'start',
                           subject: {
                             space,
@@ -1218,7 +1269,7 @@ export const SpacePlugin = ({
                         data: {
                           element: 'popover',
                           anchorId: `dxos.org/ui/${caller}/${space.id}`,
-                          component: 'dxos.org/plugin/space/RenameSpacePopover',
+                          component: POPOVER_RENAME_SPACE,
                           subject: space,
                         },
                       },
@@ -1240,7 +1291,7 @@ export const SpacePlugin = ({
                         action: LayoutAction.SET_LAYOUT,
                         data: {
                           element: 'dialog',
-                          component: 'dxos.org/plugin/space/SpaceSettingsDialog',
+                          component: SPACE_SETTINGS_DIALOG,
                           dialogBlockAlign: 'start',
                           subject: {
                             space,
@@ -1313,7 +1364,7 @@ export const SpacePlugin = ({
                       action: LayoutAction.SET_LAYOUT,
                       data: {
                         element: 'dialog',
-                        component: 'dxos.org/plugin/space/CreateObjectDialog',
+                        component: CREATE_OBJECT_DIALOG,
                         dialogBlockAlign: 'start',
                         subject: intent.data,
                       },
@@ -1525,7 +1576,7 @@ export const SpacePlugin = ({
                         data: {
                           element: 'popover',
                           anchorId: `dxos.org/ui/${caller}/${fullyQualifiedId(object)}`,
-                          component: 'dxos.org/plugin/space/RenameObjectPopover',
+                          component: POPOVER_RENAME_OBJECT,
                           subject: object,
                         },
                       },

@@ -107,7 +107,7 @@ export const NodePlankHeading = memo(
         </TextTooltip>
         {node && layoutPart !== 'complementary' && (
           // TODO(Zan): What are we doing with layout coordinate here?
-          <Surface role='navbar-end' direction='inline-reverse' data={{ object: node.data }} />
+          <Surface role='navbar-end' data={{ object: node.data }} />
         )}
         {/* NOTE(thure): Pinning & unpinning are temporarily disabled */}
         <PlankControls

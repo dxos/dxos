@@ -4,7 +4,13 @@
 
 import React from 'react';
 
-import { NavigationAction, parseIntentPlugin, type PluginDefinition, resolvePlugin } from '@dxos/app-framework';
+import {
+  createSurface,
+  NavigationAction,
+  parseIntentPlugin,
+  type PluginDefinition,
+  resolvePlugin,
+} from '@dxos/app-framework';
 import { create } from '@dxos/live-object';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
@@ -75,15 +81,13 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
       },
       translations,
       surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'article':
-            case 'section':
-              return isObject(data.object) ? <ChessContainer game={data.object} role={role} /> : null;
-            default:
-              return null;
-          }
-        },
+        definitions: () =>
+          createSurface({
+            id: CHESS_PLUGIN,
+            role: ['article', 'section'],
+            filter: (data): data is { object: GameType } => isObject(data.object),
+            component: ({ data, role }) => <ChessContainer game={data.object} role={role} />,
+          }),
       },
       intent: {
         resolver: (intent) => {
