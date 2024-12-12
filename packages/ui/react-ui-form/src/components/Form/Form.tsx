@@ -260,7 +260,7 @@ const ArrayField = <T extends BaseObject>({
                   <div role='none' className='flex-1'>
                     <Form<any>
                       schema={schema}
-                      path={[...key, index.toString()]}
+                      path={[...key, `[${index}]`]}
                       values={value}
                       onValuesChanged={(childValues) => {
                         const newValues = [...arrayValues];
@@ -321,7 +321,7 @@ const ArrayField = <T extends BaseObject>({
                 format={format}
                 label={label}
                 inputOnly
-                property={`${name}.${index}` as PropertyKey<T>}
+                property={`${name}[${index}]` as PropertyKey<T>}
                 disabled={readonly}
                 placeholder={placeholder}
                 {...inputProps}
