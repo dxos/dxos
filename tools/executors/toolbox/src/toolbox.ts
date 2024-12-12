@@ -22,6 +22,8 @@ const raise = (err: Error) => {
 
 const JS_EXTENSIONS = ['.js', '.jsx', '.ts', '.tsx', '.mjs', '.cjs', '.mts', '.cts'];
 
+const TYPES_PATH = './src/index.ts';
+
 export type ToolboxConfig = {
   project?: {
     ignored?: string[];
@@ -317,13 +319,12 @@ export class Toolbox {
       const packageJson = await loadJson<PackageJson>(packagePath);
       const commonKeys = pick(this.rootPackage, this.config.package?.commonKeys ?? []);
       const unsortedPackage = defaultsDeep(packageJson, commonKeys);
-      const packageTypes = unsortedPackage.types ?? unsortedPackage.exports?.['.']?.types;
-      if (this.config.package?.devKeys && packageTypes) {
+      if (this.config.package?.devKeys && unsortedPackage.types !== TYPES_PATH) {
         const publishConfig = unsortedPackage.publishConfig ?? {};
         this.config.package.devKeys.forEach((key) => {
           if (key === 'types') {
-            publishConfig.types = packageTypes;
-            unsortedPackage.types = './src/index.ts';
+            publishConfig.types = unsortedPackage.type ?? unsortedPackage.exports?.['.']?.types;
+            unsortedPackage.types = TYPES_PATH;
           } else if (unsortedPackage[key] && !publishConfig[key]) {
             publishConfig[key] = unsortedPackage[key];
             delete unsortedPackage[key];
