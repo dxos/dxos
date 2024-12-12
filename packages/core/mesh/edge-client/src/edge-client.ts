@@ -122,6 +122,14 @@ export class EdgeClient extends Resource implements EdgeConnection {
     return () => this._reconnectListeners.delete(listener);
   }
 
+  async waitForConnection(ctx: Context): Promise<void> {
+    if (this.isConnected) {
+      return;
+    }
+
+    await this._ready.wait(ctx);
+  }
+
   /**
    * Open connection to messaging service.
    */
