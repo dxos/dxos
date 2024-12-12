@@ -118,6 +118,7 @@ export const DeckPlugin = ({
     dialogContent: null,
     dialogOpen: false,
     dialogBlockAlign: undefined,
+    dialogType: undefined,
     popoverContent: null,
     popoverAnchorId: undefined,
     popoverOpen: false,
@@ -147,6 +148,7 @@ export const DeckPlugin = ({
     subject,
     anchorId,
     dialogBlockAlign,
+    dialogType,
   }: LayoutAction.SetLayout) => {
     switch (element) {
       case 'sidebar': {
@@ -165,6 +167,7 @@ export const DeckPlugin = ({
         layout.values.dialogOpen = state ?? Boolean(component);
         layout.values.dialogContent = component ? { component, subject } : null;
         layout.values.dialogBlockAlign = dialogBlockAlign ?? 'center';
+        layout.values.dialogType = dialogType;
         return { data: true };
       }
 
