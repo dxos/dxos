@@ -192,7 +192,7 @@ describe('AST', () => {
     expect(isSome(validatePath('foo'))).toBe(true);
     expect(isSome(validatePath('foo.bar'))).toBe(true);
     expect(isSome(validatePath('foo.bar.baz'))).toBe(true);
-    expect(isSome(validatePath('foo.0.bar'))).toBe(true);
+    expect(isSome(validatePath('foo[1].bar'))).toBe(true);
     expect(isSome(validatePath('_foo.$bar'))).toBe(true);
 
     // Invalid paths.
@@ -201,5 +201,7 @@ describe('AST', () => {
     expect(isNone(validatePath('foo.'))).toBe(true);
     expect(isNone(validatePath('foo..bar'))).toBe(true);
     expect(isNone(validatePath('foo.#bar'))).toBe(true);
+    expect(isNone(validatePath('[1].bar'))).toBe(true);
+    expect(isNone(validatePath('test.[1].bar[1]'))).toBe(true);
   });
 });
