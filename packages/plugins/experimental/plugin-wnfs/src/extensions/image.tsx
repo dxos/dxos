@@ -12,7 +12,8 @@ import type { PrivateDirectory, PrivateForest } from 'wnfs';
 
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
-import { Status } from '@dxos/react-ui';
+import { Status, ThemeProvider } from '@dxos/react-ui';
+import { defaultTx } from '@dxos/react-ui-theme';
 
 import { store } from '../common';
 import { loadWnfs } from '../load';
@@ -207,16 +208,18 @@ const buildDecorations = async ({
       const wnfsStore = store(options.blockstore);
 
       // Load image contents into memory blob
-      const { result } = await directory.read(path, true, forest, wnfsStore);
-      const blob = new Blob([result]);
-      const blobUrl = URL.createObjectURL(blob);
+      const blobUrlPromise = (async () => {
+        const { result } = await directory.read(path, true, forest, wnfsStore);
+        const blob = new Blob([result]);
+        return URL.createObjectURL(blob);
+      })();
 
       // Create decoration
       return [
         ...array,
         Decoration.replace({
           block: true, // Prevent cursor from entering.
-          widget: new WnfsImageWidget(blobUrl),
+          widget: new WnfsImageWidget(node.url, blobUrlPromise),
         }).range(node.hide ? node.from : node.to, node.to),
       ];
     },
@@ -227,37 +230,55 @@ const buildDecorations = async ({
 };
 
 class WnfsImageWidget extends WidgetType {
-  constructor(readonly _url: string) {
+  constructor(
+    readonly _wnfsUrl: string,
+    readonly _urlPromise: Promise<string>,
+  ) {
     super();
   }
 
   override eq(other: this) {
-    return this._url === (other as any as WnfsImageWidget)._url;
+    return this._wnfsUrl === (other as any as WnfsImageWidget)._wnfsUrl;
   }
 
   override toDOM(view: EditorView) {
+    return this._toDOM();
+  }
+
+  _toDOM() {
     const loader = document.createElement('div');
+    loader.className = 'mx-auto transition-opacity';
+
     const root = createRoot(loader);
-
-    const img = document.createElement('img');
-    img.setAttribute('loading', 'lazy');
-    img.setAttribute('src', this._url);
-    img.setAttribute('class', 'cm-image-with-loader');
-    img.onload = () => {
-      setTimeout(() => {
-        img.classList.add('cm-loaded-image');
-        img.closest('.cm-image-wrapper')?.classList?.add('cm-loaded-image');
-        loader.parentNode?.removeChild(loader);
-      }, 0);
-    };
-
     const imageWrapper = document.createElement('div');
     imageWrapper.setAttribute('class', 'cm-image-wrapper');
-    imageWrapper.appendChild(loader);
-    imageWrapper.appendChild(img);
 
-    // TODO:
-    // root.render(<Status indeterminate={true} />);
+    const timeoutId = setTimeout(() => {
+      imageWrapper.appendChild(loader);
+    }, 1500);
+
+    this._urlPromise.then((blobUrl) => {
+      const img = document.createElement('img');
+      img.setAttribute('loading', 'lazy');
+      img.setAttribute('src', blobUrl);
+      img.setAttribute('class', 'cm-image-with-loader');
+      img.onload = () => {
+        setTimeout(() => {
+          clearTimeout(timeoutId);
+          img.classList.add('cm-loaded-image');
+          img.closest('.cm-image-wrapper')?.classList?.add('cm-loaded-image');
+          loader.classList.add('opacity-0');
+        }, 0);
+      };
+
+      imageWrapper.appendChild(img);
+    });
+
+    root.render(
+      <ThemeProvider tx={defaultTx}>
+        <Status indeterminate />
+      </ThemeProvider>,
+    );
 
     return imageWrapper;
   }

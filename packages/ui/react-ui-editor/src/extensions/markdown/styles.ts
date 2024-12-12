@@ -120,16 +120,15 @@ export const formattingStyles = EditorView.theme({
     opacity: '1',
   },
   '.cm-image-wrapper': {
-    // background: 'light-dark(rgb(0 0 0 / 5%), rgb(255 255 255 / 5%))',
-    // height: '1px',
-    height: 0,
+    'grid-template-columns': '1fr',
+    display: 'grid',
     margin: '0.5rem 0',
     overflow: 'hidden',
     transitionDuration: '350ms',
     transitionProperty: 'height',
-  },
-  '.cm-image-wrapper.cm-loaded-image': {
-    height: 'auto',
-    '&': { height: 'calc-size(auto)' },
+    '& > *': {
+      'grid-row-start': 1,
+      'grid-column-start': 1,
+    },
   },
 });
