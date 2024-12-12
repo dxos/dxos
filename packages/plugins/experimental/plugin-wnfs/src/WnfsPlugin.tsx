@@ -29,7 +29,7 @@ export const WnfsPlugin = (): PluginDefinition<WnfsPluginProvides> => {
     ready: async (plugins) => {
       const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
       invariant(client);
-      const apiHost = client.config.values.runtime?.services?.edge?.url || 'http://localhost:8787';
+      const apiHost = client?.config?.values?.runtime?.services?.edge?.url || 'http://localhost:8787';
       blockstore = Blockstore.create(apiHost);
       await blockstore.open();
     },
@@ -72,6 +72,8 @@ export const WnfsPlugin = (): PluginDefinition<WnfsPluginProvides> => {
       },
       surface: {
         component: ({ data, role, ...props }, forwardedRef) => {
+          // NOT USED IN COMPOSER VIEW
+
           switch (role) {
             case 'main':
               return data.active instanceof FileType ? <FileMain file={data.active} /> : null;

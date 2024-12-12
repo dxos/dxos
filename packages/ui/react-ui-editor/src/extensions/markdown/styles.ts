@@ -110,4 +110,25 @@ export const formattingStyles = EditorView.theme({
     borderTop: '0.5rem solid transparent',
     borderBottom: '0.5rem solid transparent',
   },
+  '.cm-image-with-loader': {
+    display: 'block',
+    opacity: '0',
+    transitionDuration: '350ms',
+    transitionProperty: 'opacity',
+  },
+  '.cm-image-with-loader.cm-loaded-image': {
+    opacity: '1',
+  },
+  '.cm-image-wrapper': {
+    'grid-template-columns': '1fr',
+    display: 'grid',
+    margin: '0.5rem 0',
+    overflow: 'hidden',
+    transitionDuration: '350ms',
+    transitionProperty: 'height',
+    '& > *': {
+      'grid-row-start': 1,
+      'grid-column-start': 1,
+    },
+  },
 });
