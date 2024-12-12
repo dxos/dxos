@@ -5,8 +5,6 @@
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import React, { type HTMLAttributes, type CSSProperties } from 'react';
 
-import { mx } from '@dxos/react-ui-theme';
-
 // Tree item hitbox
 // https://github.com/atlassian/pragmatic-drag-and-drop/blob/main/packages/hitbox/constellation/index/about.mdx#tree-item
 
@@ -44,7 +42,7 @@ export type DropIndicatorProps = {
   gap?: number;
 };
 
-export const DropIndicator = ({ instruction, gap = 0 }: DropIndicatorProps) => {
+export const TreeDropIndicator = ({ instruction, gap = 0 }: DropIndicatorProps) => {
   const lineOffset = `calc(-0.5 * (${gap}px + ${strokeSize}px))`;
   const isBlocked = instruction.type === 'instruction-blocked';
   const desiredInstruction = isBlocked ? instruction.desired : instruction;
@@ -66,13 +64,7 @@ export const DropIndicator = ({ instruction, gap = 0 }: DropIndicatorProps) => {
           '--horizontal-indent': `${desiredInstruction.currentLevel * desiredInstruction.indentPerLevel + 4}px`,
         } as CSSProperties
       }
-      className={mx(
-        'absolute z-10 pointer-events-none',
-        'before:is-[--terminal-size] before:bs-[--terminal-size] box-border before:absolute',
-        'before:border-[length:--line-thickness] before:border-solid before:border-accentSurface before:rounded-full',
-        orientationStyles[orientation],
-        instructionStyles[desiredInstruction.type],
-      )}
+      className={`absolute z-10 pointer-events-none before:is-[--terminal-size] before:bs-[--terminal-size] box-border before:absolute before:border-[length:--line-thickness] before:border-solid before:border-accentSurface before:rounded-full ${orientationStyles[orientation]} ${instructionStyles[desiredInstruction.type]}`}
     ></div>
   );
 };
