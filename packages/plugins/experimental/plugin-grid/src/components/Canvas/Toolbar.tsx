@@ -7,21 +7,7 @@ import React from 'react';
 import { Icon, Toolbar as NaturalToolbar, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-// TODO(burdon): Generalize.
-export type Action =
-  | { type: 'debug' }
-  | { type: 'snap' }
-  | { type: 'grid' }
-  | { type: 'center' }
-  | { type: 'zoom-in' }
-  | { type: 'zoom-out' }
-  | {
-      type: 'create';
-    }
-  | {
-      type: 'delete';
-      ids: string[];
-    };
+import { type Action } from './actions';
 
 export type ToolbarProps = ThemedClassName<{
   onAction?: (action: Action) => void;
@@ -31,7 +17,7 @@ export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
   return (
     <NaturalToolbar.Root classNames={mx('p-1', classNames)}>
       <NaturalToolbar.Button onClick={() => onAction?.({ type: 'debug' })} title='Toggle debug.'>
-        <Icon icon='ph--debug--regular' />
+        <Icon icon='ph--bug--regular' />
       </NaturalToolbar.Button>
       <NaturalToolbar.Button onClick={() => onAction?.({ type: 'grid' })} title='Toggle snap.'>
         <Icon icon='ph--dots-nine--regular' />

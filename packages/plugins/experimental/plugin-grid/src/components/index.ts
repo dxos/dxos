@@ -4,4 +4,6 @@
 
 import { lazy } from 'react';
 
+export * from './Canvas';
+
 export const GridContainer = lazy(() => import('./GridContainer'));

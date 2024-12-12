@@ -11,6 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
 import { pointAdd, type Dimension, getBoundsProperties, type Point } from './geometry';
+import { useCanvasContext } from '../../hooks';
 
 const handleSize: Dimension = { width: 11, height: 11 };
 
@@ -40,9 +41,9 @@ export type HandleProps = {
  * Drag handle.
  */
 export const Handle = ({ id, pos, onDrag }: HandleProps) => {
-  // const [dragging, setDragging] = useState(false);
   const [hovering, setHovering] = useState(false);
 
+  // Dragging.
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = ref.current;
@@ -50,13 +51,10 @@ export const Handle = ({ id, pos, onDrag }: HandleProps) => {
     return draggable({
       element: el,
       getInitialData: () => ({}),
-      // onDragStart: () => setDragging(true),
       onDrag: ({ location }) => {
-        // setDragging(false);
         onDrag?.({ type: 'drag', id, location });
       },
       onDrop: ({ location }) => {
-        // setDragging(false);
         const link = location.current.dropTargets.find(({ data }) => data.type === 'Frame')?.data.item as Item;
         onDrag?.({ type: 'drop', id, link, location });
       },
@@ -67,7 +65,7 @@ export const Handle = ({ id, pos, onDrag }: HandleProps) => {
     <div
       ref={ref}
       style={getBoundsProperties({ ...pos, ...handleSize })}
-      className={mx('absolute z-10 bg-base border border-teal-700', hovering && 'bg-teal-700')}
+      className={mx('absolute z-10 bg-base rounded border border-teal-700', hovering && 'bg-teal-700')}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
     />
@@ -80,7 +78,7 @@ export type FrameDragEvent = {
   location: DragLocationHistory;
 };
 
-// TODO(burdon): Combine events.
+// TODO(burdon): Combine event types?
 export type FrameLinkEvent = {
   type: 'drag' | 'drop';
   item: Item;
@@ -96,17 +94,21 @@ export type FrameProps = {
   onLink?: (event: FrameLinkEvent) => void;
 };
 
+// TODO(burdon): Surface for form content. Or pass in children (which may include a Surface).
+//  return <Surface ref={forwardRef} role='card' limit={1} data={{ content: object} />;
+
 /**
  * Draggable Frame.
  */
 export const Frame = ({ item, selected, onSelect, onDrag, onLink }: FrameProps) => {
-  const [dragging, setDragging] = useState(false);
-  // const [hovering, setHovering] = useState(false);
+  const { dragging, setDragging } = useCanvasContext();
+  const isDragging = dragging?.item.id === item.id;
 
-  const ref = useRef<HTMLDivElement>(null);
+  const [hovering, setHovering] = useState(false);
 
   // Dragging.
   // TODO(burdon): Handle cursor dragging out of window (currently drop is lost/frozen).
+  const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     invariant(ref.current);
     return draggable({
@@ -115,18 +117,22 @@ export const Frame = ({ item, selected, onSelect, onDrag, onLink }: FrameProps) 
       onGenerateDragPreview: ({ nativeSetDragImage }) => {
         setCustomNativeDragPreview({
           nativeSetDragImage,
+          // TODO(burdon): Calc offset.
+          getOffset: ({ container }) => {
+            return { x: item.size.width / 2, y: item.size.height / 2 };
+          },
           render: ({ container }) => {
-            // TODO(burdon): Set context state.
+            setDragging({ item, container });
           },
         });
       },
-      onDragStart: () => setDragging(true),
+      // TODO(burdon): Remove interim callbacks; use monitor?
       onDrag: ({ location }) => {
         onDrag?.({ type: 'drag', item, location });
       },
       onDrop: ({ location }) => {
         onDrag?.({ type: 'drop', item, location });
-        setDragging(false);
+        setDragging(undefined);
       },
     });
   }, [item, onDrag]);
@@ -137,24 +143,18 @@ export const Frame = ({ item, selected, onSelect, onDrag, onLink }: FrameProps) 
     return dropTargetForElements({
       element: ref.current,
       getData: () => ({ type: 'Frame', item }),
-      // onDragEnter: () => setIsDraggedOver(true),
-      // onDragLeave: () => setIsDraggedOver(false),
-      onDrop: ({ source }) => {
-        // setIsDraggedOver(false);
-      },
     });
   });
 
+  // TODO(burdon): Manage state and handle visibility.
   const handleDrag = useCallback<NonNullable<HandleProps['onDrag']>>(
     ({ type, link, location }) => onLink?.({ type, item, link, location }),
     [item, onLink],
   );
 
-  // TODO(burdon): Surface for form content.
-  //  return <Surface ref={forwardRef} role='card' limit={1} data={{ content: object} />;
-
   return (
-    <>
+    // NOTE: Cannot hide while dragging.
+    <div role='none' className={mx(isDragging && 'opacity-0')}>
       <div
         ref={ref}
         style={getBoundsProperties({ ...item.pos, ...item.size })}
@@ -162,22 +162,37 @@ export const Frame = ({ item, selected, onSelect, onDrag, onLink }: FrameProps) 
         className={mx(
           'absolute flex justify-center items-center',
           'bg-base border border-teal-700 rounded overflow-hidden',
-          selected && 'bg-neutral-500',
-          dragging && 'hidden',
+          selected && 'bg-neutral-700',
         )}
-        // onMouseEnter={() => setHovering(true)}
-        // onMouseLeave={() => setHovering(false)}
+        onMouseEnter={() => setHovering(true)}
+        onMouseLeave={() => setTimeout(() => setHovering(false), 100)}
       >
         <div className='text-subdued truncate'>{item.id}</div>
       </div>
-      {!dragging && (
-        <>
+
+      {onLink && (
+        <div>
           <Handle id='w' onDrag={handleDrag} pos={pointAdd(item.pos, { x: -item.size.width / 2, y: 0 })} />
           <Handle id='e' onDrag={handleDrag} pos={pointAdd(item.pos, { x: item.size.width / 2, y: 0 })} />
           <Handle id='n' onDrag={handleDrag} pos={pointAdd(item.pos, { x: 0, y: item.size.height / 2 })} />
           <Handle id='s' onDrag={handleDrag} pos={pointAdd(item.pos, { x: 0, y: -item.size.height / 2 })} />
-        </>
+        </div>
       )}
-    </>
+    </div>
+  );
+};
+
+// TODO(burdon): Factor out common structure.
+export const FrameDragPreview = ({ item }: FrameProps) => {
+  return (
+    <div
+      style={getBoundsProperties({ ...item.pos, ...item.size })}
+      className={mx(
+        'absolute flex justify-center items-center',
+        'bg-base border border-teal-700 rounded overflow-hidden',
+      )}
+    >
+      <div className='text-subdued truncate'>{item.id}</div>
+    </div>
   );
 };

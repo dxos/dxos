@@ -9,7 +9,7 @@ import { type Graph, GraphWrapper } from './graph';
 
 export const createId = () => Math.random().toString(36).slice(2, 10);
 
-export const createGraph = (snap: PointTransform, size: Dimension): Graph => {
+export const createGraph = (size: Dimension, snap: PointTransform): Graph => {
   const wrapper = new GraphWrapper();
   range(1).forEach((i) => {
     const a = createId();
