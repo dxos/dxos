@@ -5,7 +5,7 @@
 import { createContext, useContext, type JSX, type ForwardedRef, type PropsWithChildren, type ReactNode } from 'react';
 
 import { raise } from '@dxos/debug';
-import { type MakeOptional } from '@dxos/util';
+import { GuardedType, type MakeOptional } from '@dxos/util';
 
 import { type ErrorBoundary } from './ErrorBoundary';
 
@@ -61,7 +61,7 @@ type SurfaceComponentProps<T extends Record<string, any> = Record<string, unknow
 >;
 
 /**
- *
+ * React component used to render a surface once is has matched.
  */
 export type SurfaceComponent<T extends Record<string, any> = Record<string, unknown>> = (
   props: SurfaceComponentProps<T>,
@@ -73,10 +73,8 @@ export type SurfaceComponent<T extends Record<string, any> = Record<string, unkn
  */
 export type SurfaceDisposition = 'default' | 'hoist' | 'fallback';
 
-type GuardedType<T> = T extends (value: any) => value is infer R ? R : never;
-
 /**
- *
+ * Definition of when a SurfaceComponent should be rendered.
  */
 export type SurfaceDefinition<T extends Record<string, any> = any> = {
   id: string;
@@ -100,10 +98,6 @@ export type DebugInfo = {
 
 export type SurfaceContextValue = {
   surfaces: Record<string, SurfaceDefinition>;
-
-  /**
-   * Debug info.
-   */
   debugInfo?: Map<string, DebugInfo>;
 };
 

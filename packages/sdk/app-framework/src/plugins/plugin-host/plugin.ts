@@ -5,7 +5,7 @@
 import type { FC, PropsWithChildren } from 'react';
 
 /**
- *
+ * Application context to be provided to plugin callbacks.
  */
 export type HostContext = {
   plugins: Plugin[];

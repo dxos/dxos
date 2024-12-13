@@ -12,6 +12,8 @@ export type MaybePromise<T> = T | Promise<T>;
 
 export type MakeOptional<Type, Key extends keyof Type> = Omit<Type, Key> & Partial<Pick<Type, Key>>;
 
+export type GuardedType<T> = T extends (value: any) => value is infer R ? R : never;
+
 /**
  * All types that evaluate to false when cast to a boolean.
  */
