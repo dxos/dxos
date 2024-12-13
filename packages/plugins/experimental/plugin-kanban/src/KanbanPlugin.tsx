@@ -9,9 +9,9 @@ import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 import { KanbanType } from '@dxos/react-ui-kanban';
-import { initializeKanban } from '@dxos/react-ui-kanban/testing';
 
 import { KanbanContainer } from './components';
+import { createKanban } from './components/create-kanban';
 import meta, { KANBAN_PLUGIN } from './meta';
 import translations from './translations';
 import { KanbanAction, type KanbanPluginProvides } from './types';
@@ -91,9 +91,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
           switch (intent.action) {
             case KanbanAction.CREATE: {
               if (intent.data?.space) {
-                const { kanban } = initializeKanban({ space: intent.data.space });
-                console.log('[create kanban]', kanban);
-                return { data: kanban };
+                return { data: createKanban(intent.data.space) };
               }
             }
           }

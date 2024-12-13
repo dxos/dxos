@@ -6233,6 +6233,9 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../../plugin-space
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
@@ -6252,9 +6255,6 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0
     devDependencies:
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui

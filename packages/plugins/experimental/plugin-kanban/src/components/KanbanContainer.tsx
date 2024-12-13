@@ -10,7 +10,7 @@ import { Filter, useQuery, getSpace } from '@dxos/react-client/echo';
 import { type KanbanType, useKanbanModel, Kanban } from '@dxos/react-ui-kanban';
 import { StackItem } from '@dxos/react-ui-stack';
 
-const stateColumns = { init: { label: 'To do' }, doing: { label: 'Doing' }, done: { label: 'Done' } };
+import { stateColumns } from './create-kanban';
 
 export const KanbanContainer = ({ kanban, role }: { kanban: KanbanType; role: string }) => {
   const [cardSchema, setCardSchema] = useState<MutableSchema>();

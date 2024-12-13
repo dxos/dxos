@@ -47,6 +47,7 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-search": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
+    "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-kanban": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
@@ -55,7 +56,6 @@
     "@preact/signals-core": "^1.6.0"
   },
   "devDependencies": {
-    "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
