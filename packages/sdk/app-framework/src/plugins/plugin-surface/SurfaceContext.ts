@@ -5,7 +5,7 @@
 import { createContext, useContext, type JSX, type ForwardedRef, type PropsWithChildren, type ReactNode } from 'react';
 
 import { raise } from '@dxos/debug';
-import { GuardedType, type MakeOptional } from '@dxos/util';
+import { type GuardedType, type MakeOptional } from '@dxos/util';
 
 import { type ErrorBoundary } from './ErrorBoundary';
 
