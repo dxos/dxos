@@ -2,8 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { CarBufferWriter } from '@ipld/car';
 import { BaseBlockstore } from 'blockstore-core';
 import { IDBBlockstore } from 'blockstore-idb';
+import debounce from 'debounce';
 import * as IDB from 'idb-keyval';
 import { CID } from 'multiformats';
 
@@ -22,6 +24,7 @@ export class MixedBlockstore extends BaseBlockstore {
   readonly #localStore: IDBBlockstore;
 
   #isConnected: boolean;
+  #flushQueue: () => void;
   #queue: string[];
 
   constructor(apiHost?: string) {
@@ -31,6 +34,8 @@ export class MixedBlockstore extends BaseBlockstore {
     this.#localStore = new IDBBlockstore(storeName());
     this.#isConnected = navigator.onLine;
     this.#queue = [];
+
+    this.#flushQueue = debounce(this.#flushQueueInt, 10000);
   }
 
   async open() {
@@ -43,7 +48,7 @@ export class MixedBlockstore extends BaseBlockstore {
 
     window.addEventListener('online', async () => {
       this.#isConnected = true;
-      await this.#flushQueue();
+      this.#flushQueue();
     });
   }
 
@@ -103,7 +108,7 @@ export class MixedBlockstore extends BaseBlockstore {
     await this.#localStore.put(key, val);
 
     await this.#addToQueue(key);
-    await this.#flushQueue();
+    this.#flushQueue();
 
     return key;
   }
@@ -123,6 +128,18 @@ export class MixedBlockstore extends BaseBlockstore {
     }
   }
 
+  async putCarRemote(car: Uint8Array) {
+    if (this.#apiHost) {
+      await fetch(this.url(this.#apiHost), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/vnd.ipld.car',
+        },
+        body: car,
+      });
+    }
+  }
+
   // QUEUE
 
   readonly queueCacheName = `${storeName()}/state/queue`;
@@ -131,39 +148,35 @@ export class MixedBlockstore extends BaseBlockstore {
     await this.#saveQueue([...this.#queue, key.toString()]);
   }
 
-  async #flushQueue() {
+  async #flushQueueInt() {
     if (!this.#isConnected || !this.#apiHost) {
       return;
     }
 
     const keys = [...this.#queue];
 
-    // Try to put each key on the remote sequentially
-    const state = await keys.reduce(
-      async (
-        acc: Promise<{ failed: string[]; succeeded: string[] }>,
-        key: string,
-      ): Promise<{ failed: string[]; succeeded: string[] }> => {
-        const obj = await acc;
+    // Create CAR file
+    const blocks = await Promise.all(
+      keys.map(async (key) => {
         const cid = CID.parse(key);
-        const val = await this.#localStore.get(cid);
-
-        try {
-          await this.putRemote(cid, val);
-          return { ...obj, succeeded: [...obj.succeeded, key] };
-        } catch (err) {
-          return { ...obj, failed: [...obj.failed, key] };
-        }
-      },
-      Promise.resolve({
-        succeeded: [],
-        failed: [],
+        const bytes = await this.#localStore.get(cid);
+        return { cid, bytes };
       }),
     );
 
+    const totalBytes = blocks.reduce((sum, block) => sum + block.bytes.length, 0);
+    const writer = CarBufferWriter.createWriter(new ArrayBuffer(totalBytes));
+
+    blocks.forEach((block) => {
+      writer.write(block);
+    });
+
+    const carBytes = writer.close();
+    await this.putCarRemote(carBytes);
+
     // Adjust queue
     const queue = [...this.#queue].filter((k) => {
-      if (state.succeeded.includes(k)) return false;
+      if (keys.includes(k)) return false;
       return true;
     });
 
@@ -174,7 +187,7 @@ export class MixedBlockstore extends BaseBlockstore {
     const fromCache = await IDB.get(this.queueCacheName);
     if (fromCache && Array.isArray(fromCache)) {
       this.#queue = fromCache;
-      await this.#flushQueue();
+      this.#flushQueue();
     }
   }
 
