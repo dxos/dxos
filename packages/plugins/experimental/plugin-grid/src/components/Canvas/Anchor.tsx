@@ -25,12 +25,13 @@ export type AnchorProps = {
   pos: Point;
   size?: Dimension;
   scale?: number;
+  onMouseLeave?: () => void;
 };
 
 /**
  * Anchor points for attaching links.
  */
-export const Anchor = ({ id, item, pos, size = defaultSize, scale = 1 }: AnchorProps) => {
+export const Anchor = ({ id, item, pos, size = defaultSize, scale = 1, onMouseLeave }: AnchorProps) => {
   const { linking, setLinking } = useCanvasContext();
   const isLinking = linking?.item.id === item.id && linking?.anchor === id;
 
@@ -68,6 +69,7 @@ export const Anchor = ({ id, item, pos, size = defaultSize, scale = 1 }: AnchorP
         {...{ [DATA_ITEM_ID]: item.id }}
         style={getBoundsProperties({ ...pos, ...size })}
         className={mx('absolute z-10', styles.anchor, isLinking && 'opacity-0')}
+        onMouseLeave={() => onMouseLeave?.()}
       />
 
       {isLinking &&

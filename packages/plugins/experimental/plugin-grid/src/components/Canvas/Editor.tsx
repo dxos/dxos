@@ -40,7 +40,15 @@ export type EditorProps = {};
 
 // TODO(burdon): Rename Canvas.
 export const Editor = (_: EditorProps) => {
-  const { debug, showGrid, snapToGrid, dragging, handleAction: handleDefaultAction } = useCanvasContext();
+  const {
+    debug,
+    showGrid,
+    snapToGrid,
+    dragging,
+    setDragging,
+    setLinking,
+    handleAction: handleDefaultAction,
+  } = useCanvasContext();
   const snapPoint = createSnap({ width: itemSize.width + 64, height: itemSize.height + 64 });
   const [graph] = useState(() => new GraphWrapper(createGraph(itemSize, snapPoint)));
   const { ref: containerRef, width = 0, height = 0 } = useResizeDetector();
@@ -222,6 +230,7 @@ export const Editor = (_: EditorProps) => {
             // const pos = boundsToModelWithOffset(rect, scale, offset, item.pos, location.initial, location.current);
             item.pos = snapToGrid ? snapPoint(pos) : pos;
             setItemDragging(undefined);
+            setDragging(undefined);
             break;
           }
 
@@ -234,6 +243,7 @@ export const Editor = (_: EditorProps) => {
             }
             graph.addEdge({ id: createId(), source: item.id, target: id, data: {} });
             setItemLinking(undefined);
+            setLinking(undefined);
             break;
           }
         }
@@ -244,7 +254,6 @@ export const Editor = (_: EditorProps) => {
   //
   // Actions
   //
-  // TODO(burdon): Undo.
   const handleAction = useCallback<NonNullable<ToolbarProps['onAction']>>(
     (action) => {
       if (handleDefaultAction(action)) {
@@ -267,6 +276,7 @@ export const Editor = (_: EditorProps) => {
           break;
         }
 
+        // TODO(burdon): Factor out graph handlers. Undo.
         case 'create': {
           const id = createId();
           graph.addNode({ id, data: { id, pos: { x: 0, y: 0 }, size: itemSize } });
@@ -301,20 +311,31 @@ export const Editor = (_: EditorProps) => {
       {/* Grid. */}
       {ready && showGrid && <Grid offset={offset} scale={scale} />}
 
+      {/* Selection overlay. */}
+      <svg ref={overlaySvgRef} width='100%' height='100%' className='absolute left-0 top-0 cursor-crosshair'>
+        <g>
+          {selectionBounds && <rect {...selectionBounds} opacity={0.2} strokeWidth={2} className={styles.cursor} />}
+        </g>
+      </svg>
+
       {/* SVG content. */}
       {ready && (
         <>
-          {/* Selection overlay. */}
-          {/* TODO(burdon): Focus issue for dragging. */}
-          {/* TODO(burdon): Currently HTML content needs to be last so that elements can be dragged. */}
-          <svg width='100%' height='100%' className='absolute left-0 top-0 cursor-crosshair' ref={overlaySvgRef}>
-            <g>
-              {selectionBounds && <rect {...selectionBounds} opacity={0.2} strokeWidth={2} className={styles.cursor} />}
-            </g>
-          </svg>
+          {/* HTML content. */}
+          <div style={transformStyles} className='absolute left-0 top-0'>
+            {graph.nodes.map(({ data: item }) => (
+              <Frame
+                key={item.id}
+                item={item}
+                scale={scale}
+                selected={selectedNodes[item.id]}
+                onSelect={handleSelectNode}
+              />
+            ))}
+          </div>
 
           {/* SVG content. */}
-          <svg width='100%' height='100%' className='absolute left-0 top-0'>
+          <svg width='100%' height='100%' className='absolute left-0 top-0 pointer-events-none'>
             <defs>
               <Markers />
             </defs>
@@ -328,7 +349,7 @@ export const Editor = (_: EditorProps) => {
                       d={path}
                       fill='none'
                       strokeWidth={8}
-                      className={'stroke-transparent'}
+                      className={'stroke-transparent pointer-events-auto'}
                       onClick={(ev) => handleSelectEdge(id, ev.shiftKey)}
                     />
                     <path
@@ -352,19 +373,6 @@ export const Editor = (_: EditorProps) => {
               )}
             </g>
           </svg>
-
-          {/* HTML content. */}
-          <div style={transformStyles} className='absolute left-0 top-0'>
-            {graph.nodes.map(({ data: item }) => (
-              <Frame
-                key={item.id}
-                item={item}
-                scale={scale}
-                selected={selectedNodes[item.id]}
-                onSelect={handleSelectNode}
-              />
-            ))}
-          </div>
 
           {/* Drag preview. */}
           {/* TODO(burdon): Move to frame? */}

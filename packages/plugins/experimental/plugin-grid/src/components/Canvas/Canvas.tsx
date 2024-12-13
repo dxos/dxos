@@ -39,25 +39,29 @@ export type CanvasContext = {
 //  - Basic processing pipeline (AI).
 
 // TODO(burdon): Phase 1: Basic plugin.
-//  - Bounding box/hierarchy; graph ontology.
+//  - Bounding box/hierarchy.
 //  - Canvas ontology (e.g., what is Item vs Layout, etc.)
 //  - Nodes as objects.
 //  - Surface/form storybook; auto-size.
 //  - Basic plugin with root object.
 //  - Initial dragging offset.
-//  - Show hovering style when linking.
 
 // TODO(burdon): General UML of this package using Beast and mermaid.
 
 // TODO(burdon): Phase 2
-//  - Factor out react-ui-xxx vs. plugin.
-//  - Move all selected.
+//  - Auto-layout (reconcile with plugin-debug).
+//  - Spline.
 //  - Drop/snap visualization.
 //  - Undo.
-//  - Auto-layout (reconcile with plugin-debug).
 //  - Resize frames.
 //  - Group/collapse nodes; hierarchical editor.
 //  - Line options (1-to-many, inherits, etc.)
+//  - Factor out react-ui-xxx vs. plugin.
+
+// TODO(burdon): Misc.
+//  - Selection model.
+//  - Order of rendering layers.
+//  - Move all selected.
 
 /**
  * @internal

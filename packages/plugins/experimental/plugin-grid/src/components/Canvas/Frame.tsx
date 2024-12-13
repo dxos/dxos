@@ -135,7 +135,7 @@ export const Frame = ({ item, scale, selected, showAnchors, onSelect }: FramePro
         {/* Anchors. */}
         <div>
           {anchors.map(({ id, pos }) => (
-            <Anchor key={id} id={id} item={item} scale={scale} pos={pos} />
+            <Anchor key={id} id={id} item={item} scale={scale} pos={pos} onMouseLeave={() => setHovering(false)} />
           ))}
         </div>
       </div>
