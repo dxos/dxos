@@ -368,7 +368,7 @@ export const DeckPlugin = ({
           createSurface({
             id: DECK_PLUGIN,
             role: 'settings',
-            filter: (data): data is any => data.plugin === DECK_PLUGIN,
+            filter: (data): data is any => data.subject === DECK_PLUGIN,
             component: () => <LayoutSettings settings={settings.values} />,
           }),
       },

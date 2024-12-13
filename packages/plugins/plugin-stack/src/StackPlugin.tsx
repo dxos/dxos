@@ -80,14 +80,14 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           createSurface({
             id: `${STACK_PLUGIN}/article`,
             role: 'article',
-            filter: (data): data is { id?: string; object: CollectionType } => data.object instanceof CollectionType,
+            filter: (data): data is { id?: string; subject: CollectionType } => data.subject instanceof CollectionType,
             component: ({ data }) => {
               // This allows the id to be overridden by the surface for situations where the id of the collection
               // is not the same as the id of what is being represented (e.g., a space with a root collection).
               const id = typeof data.id === 'string' ? data.id : undefined;
               return (
                 <div role='none' className='overflow-auto' style={{ contain: 'layout' }}>
-                  <StackMain id={id ?? fullyQualifiedId(data.object)} collection={data.object} />
+                  <StackMain id={id ?? fullyQualifiedId(data.subject)} collection={data.subject} />
                 </div>
               );
             },

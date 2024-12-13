@@ -93,7 +93,8 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order }: Plan
   const data = useMemo(
     () =>
       node && {
-        ...(entry?.path ? { subject: node.data, path: entry.path } : { object: node.data }),
+        subject: node.data,
+        path: entry?.path,
         coordinate,
         popoverAnchorId,
       },

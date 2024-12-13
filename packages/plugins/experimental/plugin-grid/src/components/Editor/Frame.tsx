@@ -98,7 +98,7 @@ export const Frame = ({ item, onMove, onHandleMove }: FrameProps) => {
   const handleHandleMove: HandleProps['onMove'] = (...props) => onHandleMove?.(item, ...props);
 
   // TODO(burdon): Surface for form content.
-  //  return <Surface ref={forwardRef} role='card' limit={1} data={{ content: object} />;
+  //  return <Surface ref={forwardRef} role='card' limit={1} data={{ subject: object }} />;
 
   return (
     <>

@@ -507,12 +507,12 @@ export const SpacePlugin = ({
             createSurface({
               id: `${SPACE_PLUGIN}/article`,
               role: 'article',
-              filter: (data): data is { object: Space } =>
+              filter: (data): data is { subject: Space } =>
                 // TODO(wittjosiah): Need to avoid shotgun parsing space state everywhere.
-                isSpace(data.object) && data.object.state.get() === SpaceState.SPACE_READY,
+                isSpace(data.subject) && data.subject.state.get() === SpaceState.SPACE_READY,
               component: ({ data, role, ...rest }) => (
                 <Surface
-                  data={{ object: data.object.properties[CollectionType.typename], id: data.object.id }}
+                  data={{ id: data.subject.id, subject: data.subject.properties[CollectionType.typename] }}
                   role={role}
                   {...rest}
                 />
@@ -522,8 +522,8 @@ export const SpacePlugin = ({
               id: `${SPACE_PLUGIN}/collection-fallback`,
               role: 'article',
               disposition: 'fallback',
-              filter: (data): data is { object: CollectionType } => data.object instanceof CollectionType,
-              component: ({ data }) => <CollectionMain collection={data.object} />,
+              filter: (data): data is { subject: CollectionType } => data.subject instanceof CollectionType,
+              component: ({ data }) => <CollectionMain collection={data.subject} />,
             }),
             createSurface({
               id: `${SPACE_PLUGIN}/settings-panel`,
@@ -589,8 +589,8 @@ export const SpacePlugin = ({
             createSurface({
               id: `${SPACE_PLUGIN}/navtree-presence`,
               role: 'navtree-item-end',
-              filter: (data): data is { id: string; object: ReactiveEchoObject<any> } =>
-                typeof data.id === 'string' && isEchoObject(data.object),
+              filter: (data): data is { id: string; subject: ReactiveEchoObject<any> } =>
+                typeof data.id === 'string' && isEchoObject(data.subject),
               component: ({ data }) => (
                 <SmallPresenceLive id={data.id} viewers={state.values.viewersByObject[data.id]} />
               ),
@@ -600,28 +600,28 @@ export const SpacePlugin = ({
               id: `${SPACE_PLUGIN}/navtree-presence-fallback`,
               role: 'navtree-item-end',
               disposition: 'fallback',
-              filter: (data): data is { id: string; object: ReactiveEchoObject<any> } => typeof data.id === 'string',
+              filter: (data): data is { id: string; subject: ReactiveEchoObject<any> } => typeof data.id === 'string',
               component: ({ data }) => <SmallPresence id={data.id} count={0} />,
             }),
             createSurface({
               id: `${SPACE_PLUGIN}/navtree-sync-status`,
               role: 'navtree-item-end',
-              filter: (data): data is { object: Space } => isSpace(data.object),
-              component: ({ data }) => <InlineSyncStatus space={data.object} />,
+              filter: (data): data is { subject: Space } => isSpace(data.subject),
+              component: ({ data }) => <InlineSyncStatus space={data.subject} />,
             }),
             createSurface({
               id: `${SPACE_PLUGIN}/navbar-presence`,
               role: 'navbar-end',
               disposition: 'hoist',
-              filter: (data): data is { object: Space | ReactiveEchoObject<any> } =>
-                isSpace(data.object) || isEchoObject(data.object),
+              filter: (data): data is { subject: Space | ReactiveEchoObject<any> } =>
+                isSpace(data.subject) || isEchoObject(data.subject),
               component: ({ data }) => {
-                const space = isSpace(data.object) ? data.object : getSpace(data.object);
-                const object = isSpace(data.object)
-                  ? data.object.state.get() === SpaceState.SPACE_READY
+                const space = isSpace(data.subject) ? data.subject : getSpace(data.subject);
+                const object = isSpace(data.subject)
+                  ? data.subject.state.get() === SpaceState.SPACE_READY
                     ? (space?.properties[CollectionType.typename] as CollectionType)
                     : undefined
-                  : data.object;
+                  : data.subject;
 
                 return space && object ? (
                   <>
@@ -634,20 +634,20 @@ export const SpacePlugin = ({
             createSurface({
               id: `${SPACE_PLUGIN}/collection-section`,
               role: 'section',
-              filter: (data): data is { object: CollectionType } => data.object instanceof CollectionType,
-              component: ({ data }) => <CollectionSection collection={data.object} />,
+              filter: (data): data is { subject: CollectionType } => data.subject instanceof CollectionType,
+              component: ({ data }) => <CollectionSection collection={data.subject} />,
             }),
             createSurface({
               id: `${SPACE_PLUGIN}/settings`,
               role: 'settings',
-              filter: (data): data is any => data.plugin === SPACE_PLUGIN,
+              filter: (data): data is any => data.subject === SPACE_PLUGIN,
               component: () => <SpacePluginSettings settings={settings.values} />,
             }),
             createSurface({
               id: `${SPACE_PLUGIN}/menu-footer`,
               role: 'menu-footer',
-              filter: (data): data is { object: ReactiveEchoObject<any> } => isEchoObject(data.object),
-              component: ({ data }) => <MenuFooter object={data.object} />,
+              filter: (data): data is { subject: ReactiveEchoObject<any> } => isEchoObject(data.subject),
+              component: ({ data }) => <MenuFooter object={data.subject} />,
             }),
             createSurface({
               id: `${SPACE_PLUGIN}/status`,

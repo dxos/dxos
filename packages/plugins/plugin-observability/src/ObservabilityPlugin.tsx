@@ -207,7 +207,7 @@ export const ObservabilityPlugin = (options: {
           createSurface({
             id: OBSERVABILITY_PLUGIN,
             role: 'settings',
-            filter: (data): data is any => data.plugin === OBSERVABILITY_PLUGIN,
+            filter: (data): data is any => data.subject === OBSERVABILITY_PLUGIN,
             component: () => <ObservabilitySettings settings={settings} />,
           }),
       },

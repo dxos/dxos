@@ -104,8 +104,8 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
           createSurface({
             id: GRID_PLUGIN,
             role: 'article',
-            filter: (data): data is { object: GridType } => data.object instanceof GridType,
-            component: ({ data }) => <GridContainer grid={data.object} />,
+            filter: (data): data is { subject: GridType } => data.subject instanceof GridType,
+            component: ({ data }) => <GridContainer grid={data.subject} />,
           }),
       },
       intent: {

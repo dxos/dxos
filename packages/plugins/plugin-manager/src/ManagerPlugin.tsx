@@ -62,7 +62,7 @@ export const ManagerPlugin = (): PluginDefinition<SettingsPluginProvides> => {
           createSurface({
             id: `${MANAGER_PLUGIN}/settings`,
             role: 'settings',
-            filter: (data): data is any => data.plugin === MANAGER_PLUGIN,
+            filter: (data): data is any => data.subject === MANAGER_PLUGIN,
             component: () => <SettingsSettings />,
           }),
         ],

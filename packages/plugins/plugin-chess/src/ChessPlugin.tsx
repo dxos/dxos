@@ -85,8 +85,8 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
           createSurface({
             id: CHESS_PLUGIN,
             role: ['article', 'section'],
-            filter: (data): data is { object: GameType } => isObject(data.object),
-            component: ({ data, role }) => <ChessContainer game={data.object} role={role} />,
+            filter: (data): data is { subject: GameType } => isObject(data.subject),
+            component: ({ data, role }) => <ChessContainer game={data.subject} role={role} />,
           }),
       },
       intent: {

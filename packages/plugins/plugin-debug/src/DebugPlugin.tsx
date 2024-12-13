@@ -305,7 +305,7 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
           createSurface({
             id: `${DEBUG_PLUGIN}/settings`,
             role: 'settings',
-            filter: (data): data is any => data.plugin === DEBUG_PLUGIN,
+            filter: (data): data is any => data.subject === DEBUG_PLUGIN,
             component: () => <DebugSettings settings={settings} />,
           }),
           createSurface({
@@ -322,23 +322,23 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
           createSurface({
             id: `${DEBUG_PLUGIN}/devtools`,
             role: 'article',
-            filter: (data): data is any => data.object === 'devtools' && !!settings.devtools,
+            filter: (data): data is any => data.subject === 'devtools' && !!settings.devtools,
             component: () => <Devtools />,
           }),
           createSurface({
             id: `${DEBUG_PLUGIN}/space`,
             role: 'article',
-            filter: (data): data is { object: SpaceDebug } => isSpaceDebug(data.object),
+            filter: (data): data is { subject: SpaceDebug } => isSpaceDebug(data.subject),
             component: ({ data }) => {
               const handleCreateObject = useCallback(
                 (objects: ReactiveObject<any>[]) => {
-                  if (!isSpace(data.object.space)) {
+                  if (!isSpace(data.subject.space)) {
                     return;
                   }
 
                   const collection =
-                    data.object.space.state.get() === SpaceState.SPACE_READY &&
-                    data.object.space.properties[CollectionType.typename];
+                    data.subject.space.state.get() === SpaceState.SPACE_READY &&
+                    data.subject.space.properties[CollectionType.typename];
                   if (!(collection instanceof CollectionType)) {
                     return;
                   }
@@ -350,30 +350,31 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
                     })),
                   );
                 },
-                [data.object.space],
+                [data.subject.space],
               );
 
               const deprecated = false;
               return deprecated ? (
-                <DebugSpace space={data.object.space} onAddObjects={handleCreateObject} />
+                <DebugSpace space={data.subject.space} onAddObjects={handleCreateObject} />
               ) : (
-                <SpaceGenerator space={data.object.space} onCreateObjects={handleCreateObject} />
+                <SpaceGenerator space={data.subject.space} onCreateObjects={handleCreateObject} />
               );
             },
           }),
           createSurface({
             id: `${DEBUG_PLUGIN}/graph`,
             role: 'article',
-            filter: (data): data is { object: GraphDebug } => isGraphDebug(data.object),
-            component: ({ data }) => <DebugApp graph={data.object.graph} />,
+            filter: (data): data is { subject: GraphDebug } => isGraphDebug(data.subject),
+            component: ({ data }) => <DebugApp graph={data.subject.graph} />,
           }),
           createSurface({
             id: `${DEBUG_PLUGIN}/wireframe`,
             role: ['article', 'section'],
             disposition: 'hoist',
-            filter: (data): data is { object: any } => !!data.object && !!settings.wireframe,
+            filter: (data): data is { subject: ReactiveEchoObject<any> } =>
+              isEchoObject(data.subject) && !!settings.wireframe,
             component: ({ data, role }) => (
-              <Wireframe label={`${role}:${name}`} object={data.object} classNames='row-span-2 overflow-hidden' />
+              <Wireframe label={`${role}:${name}`} object={data.subject} classNames='row-span-2 overflow-hidden' />
             ),
           }),
         ],

@@ -126,11 +126,11 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
           createSurface({
             id: `${SKETCH_PLUGIN}/sketch`,
             role: ['article', 'section', 'slide'],
-            filter: (data): data is { object: DiagramType } => isDiagramType(data.object, EXCALIDRAW_SCHEMA),
+            filter: (data): data is { subject: DiagramType } => isDiagramType(data.subject, EXCALIDRAW_SCHEMA),
             component: ({ data, role }) => (
               <SketchComponent
-                key={fullyQualifiedId(data.object)} // Force instance per sketch object. Otherwise, sketch shares the same instance.
-                sketch={data.object}
+                key={fullyQualifiedId(data.subject)} // Force instance per sketch object. Otherwise, sketch shares the same instance.
+                sketch={data.subject}
                 readonly={role === 'slide'}
                 maxZoom={role === 'slide' ? 1.5 : undefined}
                 autoZoom={role === 'section'}
@@ -143,7 +143,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
           createSurface({
             id: `${SKETCH_PLUGIN}/settings`,
             role: 'settings',
-            filter: (data): data is any => data.plugin === SKETCH_PLUGIN,
+            filter: (data): data is any => data.subject === SKETCH_PLUGIN,
             component: () => <SketchSettings settings={settings.values} />,
           }),
         ],

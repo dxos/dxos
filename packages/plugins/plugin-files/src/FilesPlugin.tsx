@@ -246,13 +246,13 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
           createSurface({
             id: `${FILES_PLUGIN}/article`,
             role: 'article',
-            filter: (data): data is { object: LocalFile } => isLocalFile(data.object),
-            component: ({ data }) => <LocalFileContainer file={data.object} />,
+            filter: (data): data is { subject: LocalFile } => isLocalFile(data.subject),
+            component: ({ data }) => <LocalFileContainer file={data.subject} />,
           }),
           createSurface({
             id: `${FILES_PLUGIN}/settings`,
             role: 'settings',
-            filter: (data): data is any => data.plugin === meta.id,
+            filter: (data): data is any => data.subject === meta.id,
             component: () => <FilesSettings settings={settings.values} />,
           }),
           createSurface({

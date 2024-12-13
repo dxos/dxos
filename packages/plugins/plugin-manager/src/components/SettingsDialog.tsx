@@ -98,13 +98,13 @@ export const SettingsDialog = ({ selected, onSelected }: SettingsDialogProps) =>
 
           {corePlugins.map((plugin) => (
             <Tabs.Tabpanel key={plugin.id} value={plugin.id} classNames='pli-3 @md:pli-5 max-bs-dvh overflow-y-auto'>
-              <Surface role='settings' data={{ plugin: plugin.id }} />
+              <Surface role='settings' data={{ subject: plugin.id }} />
             </Tabs.Tabpanel>
           ))}
 
           {filteredPlugins.map((plugin) => (
             <Tabs.Tabpanel key={plugin.id} value={plugin.id} classNames='pli-3 @md:pli-5 max-bs-dvh overflow-y-auto'>
-              <Surface role='settings' data={{ plugin: plugin.id }} />
+              <Surface role='settings' data={{ subject: plugin.id }} />
             </Tabs.Tabpanel>
           ))}
         </Tabs.Viewport>

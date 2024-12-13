@@ -235,7 +235,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
                 isOpen={isOpen}
                 isCurrent={isCurrent}
                 onOpenChange={handleOpenChange}
-                popoverAnchorId={data.popoverAnchorId as string}
+                popoverAnchorId={data.popoverAnchorId as string | undefined}
               />
             ),
           }),
@@ -243,7 +243,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
             id: `${NAVTREE_PLUGIN}/document-title`,
             role: 'document-title',
             component: ({ data }) => (
-              <NavTreeDocumentTitle node={isGraphNode(data.activeNode) ? data.activeNode : undefined} />
+              <NavTreeDocumentTitle node={isGraphNode(data.subject) ? data.subject : undefined} />
             ),
           }),
           createSurface({

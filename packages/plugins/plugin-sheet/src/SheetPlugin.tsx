@@ -148,10 +148,10 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
           createSurface({
             id: `${SHEET_PLUGIN}/sheet`,
             role: ['article', 'section'],
-            filter: (data): data is { object: SheetType } =>
-              data.object instanceof SheetType && !!getSpace(data.object),
+            filter: (data): data is { subject: SheetType } =>
+              data.subject instanceof SheetType && !!getSpace(data.subject),
             component: ({ data, role }) => (
-              <SheetContainer space={getSpace(data.object)!} sheet={data.object} role={role} />
+              <SheetContainer space={getSpace(data.subject)!} sheet={data.subject} role={role} />
             ),
           }),
           createSurface({

@@ -114,14 +114,14 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
           createSurface({
             id: `${SCRIPT_PLUGIN}/settings`,
             role: 'settings',
-            filter: (data): data is any => data.plugin === SCRIPT_PLUGIN,
+            filter: (data): data is any => data.subject === SCRIPT_PLUGIN,
             component: () => <ScriptSettings settings={{}} />,
           }),
           createSurface({
             id: `${SCRIPT_PLUGIN}/article`,
             role: 'article',
-            filter: (data): data is { object: ScriptType } => data.object instanceof ScriptType,
-            component: ({ data }) => <ScriptContainer script={data.object} env={compiler.environment} />,
+            filter: (data): data is { subject: ScriptType } => data.subject instanceof ScriptType,
+            component: ({ data }) => <ScriptContainer script={data.subject} env={compiler.environment} />,
           }),
           createSurface({
             id: `${SCRIPT_PLUGIN}/automation`,

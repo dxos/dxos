@@ -39,7 +39,7 @@ export const RegistryPlugin = (): PluginDefinition<RegistryPluginProvides> => {
           createSurface({
             id: meta.id,
             role: 'settings',
-            filter: (data): data is any => data.plugin === REGISTRY_PLUGIN,
+            filter: (data): data is any => data.subject === REGISTRY_PLUGIN,
             component: () => <PluginSettings settings={settings.values} />,
           }),
       },

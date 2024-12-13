@@ -164,10 +164,10 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
           createSurface({
             id: `${SKETCH_PLUGIN}/sketch`,
             role: ['article', 'section', 'slide'],
-            filter: (data): data is { object: DiagramType } => isDiagramType(data.object, TLDRAW_SCHEMA),
+            filter: (data): data is { subject: DiagramType } => isDiagramType(data.subject, TLDRAW_SCHEMA),
             component: ({ data, role }) => (
               <SketchContainer
-                sketch={data.object}
+                sketch={data.subject}
                 readonly={role === 'slide'}
                 maxZoom={role === 'slide' ? 1.5 : undefined}
                 autoZoom={role === 'section'}
@@ -179,7 +179,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
           createSurface({
             id: `${SKETCH_PLUGIN}/settings`,
             role: 'settings',
-            filter: (data): data is any => data.plugin === SKETCH_PLUGIN,
+            filter: (data): data is any => data.subject === SKETCH_PLUGIN,
             component: () => <SketchSettings settings={settings.values} />,
           }),
         ],

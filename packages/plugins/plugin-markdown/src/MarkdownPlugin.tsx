@@ -238,15 +238,15 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           createSurface({
             id: `${MARKDOWN_PLUGIN}/document`,
             role: ['article', 'section'],
-            filter: (data): data is { object: DocumentType } => data.object instanceof DocumentType,
+            filter: (data): data is { subject: DocumentType } => data.subject instanceof DocumentType,
             component: ({ data, role }) => (
               <MarkdownContainer
-                id={fullyQualifiedId(data.object)}
-                object={data.object}
+                id={fullyQualifiedId(data.subject)}
+                object={data.subject}
                 role={role}
                 settings={settings.values}
                 extensionProviders={state.values.extensionProviders}
-                viewMode={getViewMode(fullyQualifiedId(data.object))}
+                viewMode={getViewMode(fullyQualifiedId(data.subject))}
                 editorStateStore={editorStateStore}
                 onViewModeChange={setViewMode}
               />
@@ -255,15 +255,15 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           createSurface({
             id: `${MARKDOWN_PLUGIN}/editor`,
             role: ['article', 'section'],
-            filter: (data): data is { object: { id: string; text: string } } => isEditorModel(data.object),
+            filter: (data): data is { subject: { id: string; text: string } } => isEditorModel(data.subject),
             component: ({ data, role }) => (
               <MarkdownContainer
-                id={data.object.id}
-                object={data.object}
+                id={data.subject.id}
+                object={data.subject}
                 role={role}
                 settings={settings.values}
                 extensionProviders={state.values.extensionProviders}
-                viewMode={getViewMode(data.object.id)}
+                viewMode={getViewMode(data.subject.id)}
                 editorStateStore={editorStateStore}
                 onViewModeChange={setViewMode}
               />
@@ -272,7 +272,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           createSurface({
             id: `${MARKDOWN_PLUGIN}/settings`,
             role: 'settings',
-            filter: (data): data is any => data.plugin === MARKDOWN_PLUGIN,
+            filter: (data): data is any => data.subject === MARKDOWN_PLUGIN,
             component: () => <MarkdownSettings settings={settings.values} />,
           }),
         ],

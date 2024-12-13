@@ -101,8 +101,8 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
           createSurface({
             id: `${TABLE_PLUGIN}/table`,
             role: ['article', 'section', 'slide'],
-            filter: (data): data is { object: TableType } => data.object instanceof TableType,
-            component: ({ data, role }) => <TableContainer table={data.object} role={role} />,
+            filter: (data): data is { subject: TableType } => data.subject instanceof TableType,
+            component: ({ data, role }) => <TableContainer table={data.subject} role={role} />,
           }),
           createSurface({
             id: `${TABLE_PLUGIN}/settings-panel`,

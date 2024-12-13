@@ -83,8 +83,8 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
           createSurface({
             id: TEMPLATE_PLUGIN,
             role: 'article',
-            filter: (data): data is { object: ReactiveEchoObject<any> } => isObject(data.object),
-            component: ({ data }) => <TemplateMain object={data.object} />,
+            filter: (data): data is { subject: ReactiveEchoObject<any> } => isObject(data.subject),
+            component: ({ data }) => <TemplateMain object={data.subject} />,
           }),
       },
       intent: {

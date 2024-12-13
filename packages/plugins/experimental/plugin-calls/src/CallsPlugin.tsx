@@ -55,8 +55,8 @@ export const CallsPlugin = (): PluginDefinition<CallsPluginProvides> => {
           createSurface({
             id: meta.id,
             role: 'article',
-            filter: (data): data is { object: Call } => isCall(data.object),
-            component: ({ data, role }) => <CallsContainer space={data.object.space} role={role} />,
+            filter: (data): data is { subject: Call } => isCall(data.subject),
+            component: ({ data, role }) => <CallsContainer space={data.subject.space} role={role} />,
           }),
       },
     },

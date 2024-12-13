@@ -32,7 +32,7 @@ export const WildcardPlugin = (): PluginDefinition<WildcardPluginProvides> => {
             disposition: 'fallback',
             // TODO(wittjosiah): Should there be a props predicate filter as well?
             component: ({ data, role, ...props }, forwardedRef) => {
-              const object = data?.content;
+              const object = data?.subject;
               const cardProps = { ...props, item: (object as any)?.object ?? object };
               return isTileComponentProps(cardProps) ? (
                 <Wildcard {...cardProps} ref={forwardedRef as Ref<HTMLDivElement>} />

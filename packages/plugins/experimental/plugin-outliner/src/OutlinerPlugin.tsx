@@ -110,14 +110,14 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
           createSurface({
             id: `${OUTLINER_PLUGIN}/article`,
             role: 'article',
-            filter: (data): data is { object: TreeType } => data.object instanceof TreeType,
-            component: ({ data }) => <OutlinerMain tree={data.object} />,
+            filter: (data): data is { subject: TreeType } => data.subject instanceof TreeType,
+            component: ({ data }) => <OutlinerMain tree={data.subject} />,
           }),
           createSurface({
             id: `${OUTLINER_PLUGIN}/section`,
             role: 'section',
-            filter: (data): data is { object: TreeType } => data.object instanceof TreeType,
-            component: ({ data }) => <TreeSection tree={data.object} />,
+            filter: (data): data is { subject: TreeType } => data.subject instanceof TreeType,
+            component: ({ data }) => <TreeSection tree={data.subject} />,
           }),
         ],
       },

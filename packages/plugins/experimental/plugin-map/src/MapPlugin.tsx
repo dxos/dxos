@@ -139,12 +139,12 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
           createSurface({
             id: `${MAP_PLUGIN}/map`,
             role: ['article', 'section'],
-            filter: (data): data is { object: MapType } => data.object instanceof MapType,
+            filter: (data): data is { subject: MapType } => data.subject instanceof MapType,
             component: ({ data, role }) => (
               <MapContainer
                 role={role}
                 type={settings.values.type}
-                map={data.object}
+                map={data.subject}
                 center={settings.values.center}
                 zoom={settings.values.zoom}
                 onChange={handleChange}

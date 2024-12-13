@@ -98,8 +98,8 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
           createSurface({
             id: KANBAN_PLUGIN,
             role: 'article',
-            filter: (data): data is { object: KanbanType } => data.object instanceof KanbanType,
-            component: ({ data }) => <KanbanMain kanban={data.object} />,
+            filter: (data): data is { subject: KanbanType } => data.subject instanceof KanbanType,
+            component: ({ data }) => <KanbanMain kanban={data.subject} />,
           }),
       },
       intent: {

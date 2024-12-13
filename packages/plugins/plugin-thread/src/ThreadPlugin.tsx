@@ -282,10 +282,10 @@ export const ThreadPlugin = (): PluginDefinition<
             createSurface({
               id: `${THREAD_PLUGIN}/channel`,
               role: 'article',
-              filter: (data): data is { object: ChannelType } =>
-                data.object instanceof ChannelType && !!data.object.threads[0],
+              filter: (data): data is { subject: ChannelType } =>
+                data.subject instanceof ChannelType && !!data.subject.threads[0],
               component: ({ data }) => {
-                const channel = data.object;
+                const channel = data.subject;
                 const thread = channel.threads[0]!;
                 // TODO(zan): Maybe we should have utility for positional main object ids.
                 if (isLayoutParts(location?.active) && location.active.main) {
