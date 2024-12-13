@@ -90,7 +90,6 @@
     "node": ">=18.0.0"
   },
   "publishConfig": {
-    "access": "public",
-    "types": "module"
+    "access": "public"
   }
 }
