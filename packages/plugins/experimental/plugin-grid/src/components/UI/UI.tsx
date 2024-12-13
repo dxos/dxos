@@ -5,28 +5,30 @@
 import React from 'react';
 
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { mx } from '@dxos/react-ui-theme';
 
 import { useEditorContext } from '../../hooks';
 import { Toolbar } from '../Toolbar';
+import { eventsNone } from '../styles';
 import { testId } from '../util';
 
 /**
- *
+ * UI components.
  */
 export const UI = () => {
-  const { debug, handleAction } = useEditorContext();
-  const info = { debug };
+  const { debug, width, height, showGrid, snapToGrid, dragging, linking, handleAction } = useEditorContext();
+  const info = { debug, width, height, showGrid, snapToGrid, dragging, linking };
 
   return (
-    <div {...testId('ui')} className='relative w-full grid grid-rows-[1fr_40px]'>
+    <div {...testId('dx-ui')} className={mx('absolute h-full inset-0', eventsNone)}>
       <div></div>
       <div>
-        <div className='z-10 absolute left-0 bottom-0'>
+        <div className='z-[300] absolute bottom-0 left-0'>
           <SyntaxHighlighter language='javascript' classNames='w-[300px] bg-base text-xs p-2 opacity-70'>
             {JSON.stringify(info, null, 2)}
           </SyntaxHighlighter>
         </div>
-        <div className='z-10 flex w-full justify-center'>
+        <div className='z-[300] absolute bottom-0 left-0 right-0 flex justify-center'>
           <div>
             <Toolbar onAction={handleAction} />
           </div>

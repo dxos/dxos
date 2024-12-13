@@ -3,8 +3,10 @@
 //
 
 import React, { createContext, type PropsWithChildren, useCallback, useState } from 'react';
+import { useResizeDetector } from 'react-resize-detector';
 
 import { type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 import { type ActionHandler } from '../../actions';
 import { Canvas, type Item } from '../Canvas';
@@ -23,6 +25,8 @@ export type EditingState = {
 
 export type EditorContextType = {
   debug: boolean;
+  width: number;
+  height: number;
   showGrid: boolean;
   snapToGrid: boolean;
   dragging?: DraggingState;
@@ -75,6 +79,7 @@ export const EditorContext = createContext<EditorContextType | undefined>(undefi
 type EditorRootProps = ThemedClassName<PropsWithChildren>;
 
 const EditorRoot = ({ children, classNames }: EditorRootProps) => {
+  const { ref, width = 0, height = 0 } = useResizeDetector();
   const [debug, setDebug] = useState(false);
   const [showGrid, setShowGrid] = useState(true);
   const [snapToGrid, setSnapToGrid] = useState(false);
@@ -106,10 +111,16 @@ const EditorRoot = ({ children, classNames }: EditorRootProps) => {
   );
 
   return (
-    <div {...testId('editor')}>
+    <div
+      {...testId('dx-editor')}
+      className={mx('relative inset-0 w-full h-full overflow-hidden', classNames)}
+      ref={ref}
+    >
       <EditorContext.Provider
         value={{
           debug,
+          width,
+          height,
           showGrid,
           snapToGrid,
           dragging,

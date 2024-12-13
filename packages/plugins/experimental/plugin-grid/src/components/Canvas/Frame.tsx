@@ -7,6 +7,7 @@ import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/el
 import React, { type MouseEventHandler, type PropsWithChildren, useEffect, useRef, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
+import { type ThemedClassName } from '@dxos/react-ui/src';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Anchor, DATA_ITEM_ID } from './Anchor';
@@ -19,18 +20,20 @@ import { styles } from '../styles';
 // TODO(burdon): Surface for form content. Or pass in children (which may include a Surface).
 //  return <Surface ref={forwardRef} role='card' limit={1} data={{ content: object} />;
 
-export type FrameProps = PropsWithChildren<{
-  item: Item;
-  scale?: number;
-  selected?: boolean;
-  showAnchors?: boolean;
-  onSelect?: (item: Item, shift: boolean) => void;
-}>;
+export type FrameProps = PropsWithChildren<
+  ThemedClassName<{
+    item: Item;
+    scale?: number;
+    selected?: boolean;
+    showAnchors?: boolean;
+    onSelect?: (item: Item, shift: boolean) => void;
+  }>
+>;
 
 /**
  * Draggable Frame around shapes.
  */
-export const Frame = ({ item, scale, selected, showAnchors, onSelect }: FrameProps) => {
+export const Frame = ({ classNames, item, scale, selected, showAnchors, onSelect }: FrameProps) => {
   const { linking, dragging, setDragging, editing, setEditing } = useEditorContext();
   const isDragging = dragging?.item.id === item.id;
   const isEditing = editing?.item.id === item.id;
@@ -108,38 +111,36 @@ export const Frame = ({ item, scale, selected, showAnchors, onSelect }: FramePro
   };
 
   return (
-    <>
-      <div role='none' className={mx(isDragging && 'opacity-0')}>
-        <div
-          ref={ref}
-          style={getBoundsProperties({ ...item.pos, ...item.size })}
-          className={mx(styles.frameContainer, styles.frameBorder, selected && styles.frameSelected)}
-          onClick={handleClick}
-          onDoubleClick={handleDoubleClick}
-          onMouseEnter={() => setHovering(true)}
-          onMouseLeave={(ev) => {
-            // TODO(burdon): Need to detech if mouse leaves anchor.
-            // We need to keep rendering the anchor that is being dragged.
-            const related = ev.relatedTarget as HTMLElement;
-            if (related?.getAttribute(DATA_ITEM_ID) !== item.id) {
-              setHovering(false);
-            }
-          }}
-        >
-          {/* TODO(burdon): Auto-expand height? Trigger layout? */}
-          {(isEditing && <TextBox value={item.text} onClose={handleClose} onCancel={handleCancel} />) || (
-            <ReadonlyTextBox value={item.text ?? item.id} />
-          )}
-        </div>
-
-        {/* Anchors. */}
-        <div>
-          {anchors.map(({ id, pos }) => (
-            <Anchor key={id} id={id} item={item} scale={scale} pos={pos} onMouseLeave={() => setHovering(false)} />
-          ))}
-        </div>
+    <div className={mx(isDragging && 'opacity-0')}>
+      <div
+        ref={ref}
+        style={getBoundsProperties({ ...item.pos, ...item.size })}
+        className={mx(styles.frameContainer, styles.frameBorder, selected && styles.frameSelected, classNames)}
+        onClick={handleClick}
+        onDoubleClick={handleDoubleClick}
+        onMouseEnter={() => setHovering(true)}
+        onMouseLeave={(ev) => {
+          // TODO(burdon): Need to detech if mouse leaves anchor.
+          // We need to keep rendering the anchor that is being dragged.
+          const related = ev.relatedTarget as HTMLElement;
+          if (related?.getAttribute(DATA_ITEM_ID) !== item.id) {
+            setHovering(false);
+          }
+        }}
+      >
+        {/* TODO(burdon): Auto-expand height? Trigger layout? */}
+        {(isEditing && <TextBox value={item.text} onClose={handleClose} onCancel={handleCancel} />) || (
+          <ReadonlyTextBox value={item.text ?? item.id} />
+        )}
       </div>
-    </>
+
+      {/* Anchors. */}
+      <div>
+        {anchors.map(({ id, pos }) => (
+          <Anchor key={id} id={id} item={item} scale={scale} pos={pos} onMouseLeave={() => setHovering(false)} />
+        ))}
+      </div>
+    </div>
   );
 };
 

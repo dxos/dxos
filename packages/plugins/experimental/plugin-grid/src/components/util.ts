@@ -2,8 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-const DATA_TEST_ID = 'data-test-id';
+export type TestId =
+  | 'dx-editor'
+  | 'dx-canvas'
+  | 'dx-html-content'
+  | 'dx-svg-content'
+  | 'dx-grid'
+  | 'dx-background'
+  | 'dx-overlays'
+  | 'dx-ui';
 
-export type TestId = 'editor' | 'canvas' | 'grid' | 'background' | 'layer' | 'ui';
+export const testId = (id: TestId) => ({ 'data-test-id': id });
 
-export const testId = (id: TestId) => ({ [DATA_TEST_ID]: id });
+// TODO(burdon): z-index.

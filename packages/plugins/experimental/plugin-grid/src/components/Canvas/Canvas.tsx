@@ -5,22 +5,21 @@
 import { monitorForElements, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useResizeDetector } from 'react-resize-detector';
 
+import { invariant } from '@dxos/invariant';
 import { useDynamicRef } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { isNotFalsy, stripUndefined } from '@dxos/util';
 
 import { Frame, FrameDragPreview, type FrameProps } from './Frame';
 import { type DragPayloadData, type Item } from './Shape';
-import { useBoundingSelection } from './hooks';
+import { useBoundingSelection, useSnap, useTransform } from './hooks';
 import { GraphWrapper } from '../../graph';
 import { useEditorContext } from '../../hooks';
 import {
   boundsContain,
   boundsToModel,
   createPathThroughPoints,
-  createSnap,
   getBounds,
   getInputPoint,
   findClosestIntersection,
@@ -31,16 +30,19 @@ import {
 import { createGraph, createId } from '../../testing';
 import { Grid } from '../Grid';
 import { type ToolbarProps } from '../Toolbar';
-import { Markers, noEvents, styles } from '../styles';
+import { Markers, eventsNone, styles } from '../styles';
 import { testId } from '../util';
 
 const itemSize: Dimension = { width: 128, height: 64 };
+const snapSize = { width: itemSize.width + 64, height: itemSize.height + 64 };
 
 export type CanvasProps = {};
 
 export const Canvas = (_: CanvasProps) => {
   const {
     debug,
+    width,
+    height,
     showGrid,
     snapToGrid,
     dragging,
@@ -48,9 +50,10 @@ export const Canvas = (_: CanvasProps) => {
     setLinking,
     handleAction: handleDefaultAction,
   } = useEditorContext();
-  const snapPoint = createSnap({ width: itemSize.width + 64, height: itemSize.height + 64 });
+  const canvasRef = useRef<HTMLDivElement>(null);
+
+  const snapPoint = useSnap(snapSize);
   const [graph] = useState(() => new GraphWrapper(createGraph(itemSize, snapPoint)));
-  const { ref: canvasRef, width = 0, height = 0 } = useResizeDetector();
 
   // TODO(burdon): Replace with context state.
   const [itemDragging, setItemDragging] = useState<Pick<Item, 'id' | 'pos'>>();
@@ -82,22 +85,7 @@ export const Canvas = (_: CanvasProps) => {
   //
   // Offset and scale.
   //
-  const [{ scale, offset }, setTransform] = useState<{ scale: number; offset: Point }>({
-    scale: 1,
-    offset: { x: 0, y: 0 },
-  });
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    if (width && height) {
-      setReady(true);
-    }
-
-    setTransform(({ scale }) => ({ scale, offset: { x: width / 2, y: height / 2 } }));
-  }, [width, height]);
-  const transformStyles = {
-    // NOTE: Order is important.
-    transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
-  };
+  const { ready, scale, offset, styles: transformStyles, setTransform } = useTransform();
 
   //
   // Dragging state.
@@ -117,6 +105,7 @@ export const Canvas = (_: CanvasProps) => {
   //
   // Events.
   //
+  // TODO(burdon): Factor out.
   useEffect(() => {
     if (!canvasRef.current) {
       return;
@@ -125,10 +114,14 @@ export const Canvas = (_: CanvasProps) => {
     const handleWheel = (event: WheelEvent) => {
       event.preventDefault();
       if (event.ctrlKey) {
+        if (!canvasRef.current) {
+          return;
+        }
+
         setTransform(({ scale, offset }) => {
           const scaleSensitivity = 0.01;
           const newScale = scale * Math.exp(-event.deltaY * scaleSensitivity);
-
+          invariant(canvasRef.current);
           const rect = canvasRef.current.getBoundingClientRect();
           const pos = {
             x: event.clientX - rect.left,
@@ -142,9 +135,9 @@ export const Canvas = (_: CanvasProps) => {
           return { scale: newScale, offset: newOffset };
         });
       } else {
-        setTransform(({ offset: { x, y }, scale }) => ({
-          offset: { x: x - event.deltaX, y: y - event.deltaY },
+        setTransform(({ scale, offset: { x, y } }) => ({
           scale,
+          offset: { x: x - event.deltaX, y: y - event.deltaY },
         }));
       }
     };
@@ -307,27 +300,20 @@ export const Canvas = (_: CanvasProps) => {
     edges.push({ id: 'link', path: createPathThroughPoints([i1, i2]) });
   }
 
-  /**
-   *
-   */
+  // TODO(burdon): Which div should have the events?
   return (
-    <div
-      ref={canvasRef}
-      tabIndex={0}
-      className={mx('absolute inset-0 overflow-hidden', noEvents)}
-      {...testId('canvas')}
-    >
+    <div ref={canvasRef} tabIndex={0} className={mx('absolute inset-0 overflow-hidden')} {...testId('dx-canvas')}>
       {/* Background. */}
       <Background />
 
       {/* Grid. */}
       {ready && showGrid && <Grid offset={offset} scale={scale} />}
 
-      {/* SVG content. */}
+      {/* Content. */}
       {ready && (
         <>
           {/* HTML content. */}
-          <div style={transformStyles} className='absolute left-0 top-0'>
+          <div {...testId('dx-html-content')} style={transformStyles} className='absolute left-0 top-0'>
             {graph.nodes.map(({ data: item }) => (
               <Frame
                 key={item.id}
@@ -335,12 +321,19 @@ export const Canvas = (_: CanvasProps) => {
                 scale={scale}
                 selected={selectedNodes[item.id]}
                 onSelect={handleSelectNode}
+                classNames={'z-[500]'} // TODO(burdon): Specify via vars (e.g., for anchors also).
               />
             ))}
           </div>
 
           {/* SVG content. */}
-          <svg width='100%' height='100%' className='absolute left-0 top-0 pointer-events-none'>
+          {/* TODO(burdon): Need events for line click. Move into HTML content. */}
+          <svg
+            {...testId('dx-svg-content')}
+            width='100%'
+            height='100%'
+            className={mx('absolute top-0 left-0', eventsNone)}
+          >
             <defs>
               <Markers />
             </defs>
@@ -354,7 +347,7 @@ export const Canvas = (_: CanvasProps) => {
                       d={path}
                       fill='none'
                       strokeWidth={8}
-                      className={'stroke-transparent pointer-events-auto'}
+                      className={'stroke-transparent'}
                       onClick={(ev) => handleSelectEdge(id, ev.shiftKey)}
                     />
                     <path
@@ -378,31 +371,34 @@ export const Canvas = (_: CanvasProps) => {
               )}
             </g>
           </svg>
-
-          {/* Drag preview. */}
-          {/* TODO(burdon): Move to frame? */}
-          {dragging &&
-            createPortal(
-              <div style={transformStyles}>
-                <FrameDragPreview item={dragging.item} />
-              </div>,
-              dragging.container,
-            )}
         </>
       )}
 
-      {/* Selection overlay. */}
-      <svg ref={overlaySvgRef} width='100%' height='100%' className='absolute left-0 top-0 cursor-crosshair'>
-        <g>
-          {selectionBounds && <rect {...selectionBounds} opacity={0.2} strokeWidth={2} className={styles.cursor} />}
-        </g>
-      </svg>
+      {/* Overlays. */}
+      <div {...testId('dx-overlays')} className={mx('z-[300] absolute top-0 left-0 w-full h-full', eventsNone)}>
+        {/* Selection overlay. */}
+        <svg ref={overlaySvgRef} width='100%' height='100%' className={mx('absolute top-0 left-0 cursor-crosshair')}>
+          <g>
+            {selectionBounds && <rect {...selectionBounds} opacity={0.2} strokeWidth={2} className={styles.cursor} />}
+          </g>
+        </svg>
+
+        {/* Drag preview. */}
+        {/* TODO(burdon): Move to frame? */}
+        {dragging &&
+          createPortal(
+            <div style={transformStyles}>
+              <FrameDragPreview item={dragging.item} />
+            </div>,
+            dragging.container,
+          )}
+      </div>
     </div>
   );
 };
 
 const Background = () => {
-  return <div {...testId('background')} className={mx('absolute inset-0 bg-base', noEvents)} />;
+  return <div {...testId('dx-background')} className={mx('absolute inset-0 bg-base', eventsNone)} />;
 };
 
 // TODO(burdon): Factor out.

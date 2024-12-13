@@ -8,7 +8,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type Point } from '../../layout';
-import { noEvents } from '../styles';
+import { eventsNone } from '../styles';
 import { testId } from '../util';
 
 const gridSize = 16;
@@ -21,8 +21,8 @@ export const Grid = forwardRef<SVGSVGElement, GridProps>(
 
     return (
       <svg
-        {...testId('grid')}
-        className={mx('absolute inset-0', noEvents, classNames)}
+        {...testId('dx-grid')}
+        className={mx('absolute inset-0', eventsNone, classNames)}
         width='100%'
         height='100%'
         ref={forwardedRef}

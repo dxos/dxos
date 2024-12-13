@@ -4,9 +4,64 @@
 
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { bind } from 'bind-event-listener';
-import { useEffect, useState } from 'react';
+import { type CSSProperties, type Dispatch, type SetStateAction, useEffect, useMemo, useState } from 'react';
 
-import { type Rect, getRect, type Point, type Range } from '../../layout';
+import { useEditorContext } from '../../hooks';
+import {
+  createSnap,
+  getRect,
+  type Rect,
+  type Point,
+  type Range,
+  type PointTransform,
+  type Dimension,
+} from '../../layout';
+
+export type TransformState = { scale: number; offset: Point };
+export type TransformResult = TransformState & {
+  ready: boolean;
+  styles: CSSProperties;
+  setTransform: Dispatch<SetStateAction<TransformState>>;
+};
+
+const defaults: TransformState = { scale: 1, offset: { x: 0, y: 0 } };
+
+/**
+ *
+ */
+export const useTransform = (initial: TransformState = defaults): TransformResult => {
+  const { width, height } = useEditorContext();
+  const [ready, setReady] = useState(false);
+
+  // TODO(burdon): Move into context?
+  const [{ scale, offset }, setTransform] = useState<TransformState>(initial);
+  useEffect(() => setTransform(initial), [initial]);
+  useEffect(() => {
+    if (!width || !height) {
+      return;
+    }
+
+    setTransform(({ scale }) => ({ scale, offset: { x: width / 2, y: height / 2 } }));
+    setReady(true);
+  }, [width, height]);
+
+  const styles = useMemo(
+    () => ({
+      // NOTE: Order is important.
+      transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
+    }),
+    [scale, offset],
+  );
+
+  return { ready, scale, offset, styles, setTransform };
+};
+
+/**
+ *
+ */
+export const useSnap = (size: Dimension): PointTransform => {
+  return useMemo(() => createSnap(size), [size]);
+};
 
 /**
  * Event listener to track range bounds selection.
