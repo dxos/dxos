@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Check, type IconWeight, Minus, IconProps } from '@phosphor-icons/react';
+import { Check, type IconWeight, Minus } from '@phosphor-icons/react';
 import {
   Root as CheckboxPrimitive,
   type CheckboxProps as CheckboxPrimitiveProps,
@@ -281,10 +281,11 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
       >
         <CheckboxIndicatorPrimitive asChild>
           <Icon
-            {...(checked && ({
-              weight,
-              className: tx('input.checkboxIndicator', 'input--checkbox__indicator', { size }),
-            } as any))}
+            {...(checked &&
+              ({
+                weight,
+                className: tx('input.checkboxIndicator', 'input--checkbox__indicator', { size }),
+              } as any))}
           />
         </CheckboxIndicatorPrimitive>
       </CheckboxPrimitive>

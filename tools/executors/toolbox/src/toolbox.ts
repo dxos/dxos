@@ -322,13 +322,12 @@ export class Toolbox {
       const unsortedPackage = defaultsDeep(packageJson, commonKeys);
       if (
         this.config.package?.devKeys &&
-        unsortedPackage.types !== TYPES_PATH &&
         unsortedPackage.exports &&
         !this.config.package?.devKeysExclude?.find((path) => project.path.includes(path))
       ) {
         const publishConfig = unsortedPackage.publishConfig ?? {};
         this.config.package.devKeys.forEach((key) => {
-          if (key === 'types') {
+          if (key === 'types' && unsortedPackage.types !== TYPES_PATH) {
             publishConfig.types = unsortedPackage.type ?? unsortedPackage.exports?.['.']?.types;
             unsortedPackage.types = TYPES_PATH;
             unsortedPackage.type = 'module';
@@ -337,6 +336,9 @@ export class Toolbox {
             delete unsortedPackage[key];
           }
         });
+        if (fs.existsSync(join(project.path, '.eslintrc.js'))) {
+          fs.renameSync(join(project.path, '.eslintrc.js'), join(project.path, '.eslintrc.cjs'));
+        }
         if (Object.keys(publishConfig).length > 0) {
           unsortedPackage.publishConfig = publishConfig;
         }
