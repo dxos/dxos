@@ -28,7 +28,9 @@
       "packages/common",
       "packages/core",
       "packages/sdk",
-      "packages/experimental"
+      "packages/experimental",
+      "packages/plugins/plugin-presenter",
+      "packages/plugins/plugin-sheet"
     ],
     "withCustomExports": [
       "@dxos/shell",
