@@ -7,10 +7,10 @@ import React from 'react';
 import { Icon, Toolbar as NaturalToolbar, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type Action } from '../../actions';
+import { type ActionHandler } from '../../actions';
 
 export type ToolbarProps = ThemedClassName<{
-  onAction?: (action: Action) => void;
+  onAction?: ActionHandler;
 }>;
 
 // TODO(burdon): Generalize state management.

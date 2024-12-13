@@ -16,6 +16,8 @@ export const styles = {
   cursor: 'stroke-primary-500',
 };
 
+export const noEvents = 'pointer-none touch-none select-none';
+
 export const Markers = () => {
   return (
     <>

@@ -8,6 +8,8 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type Point } from '../../layout';
+import { noEvents } from '../styles';
+import { testId } from '../util';
 
 const gridSize = 16;
 
@@ -19,9 +21,10 @@ export const Grid = forwardRef<SVGSVGElement, GridProps>(
 
     return (
       <svg
+        {...testId('grid')}
+        className={mx('absolute inset-0', noEvents, classNames)}
         width='100%'
         height='100%'
-        className={mx('absolute inset-0 pointer-events-none touch-none', classNames)}
         ref={forwardedRef}
       >
         {/* NOTE: The pattern needs to be offset so that the middle of the pattern aligns with the grid. */}

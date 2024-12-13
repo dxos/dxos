@@ -9,19 +9,20 @@ import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Canvas, type CanvasRootProps } from './Canvas';
+import { Editor, type EditorRootProps } from './Editor';
 import { createSnap, type Dimension } from '../../layout';
 import { createGraph } from '../../testing';
 
-const Render = (props: CanvasRootProps) => (
-  <Canvas.Root {...props}>
-    <Canvas.Editor />
-  </Canvas.Root>
+const Render = (props: EditorRootProps) => (
+  <Editor.Root {...props}>
+    <Editor.Canvas />
+    <Editor.UI />
+  </Editor.Root>
 );
 
-const meta: Meta<CanvasRootProps> = {
-  title: 'plugins/plugin-grid/Canvas',
-  component: Canvas.Root,
+const meta: Meta<EditorRootProps> = {
+  title: 'plugins/plugin-grid/Editor',
+  component: Editor.Root,
   render: Render,
   decorators: [withTheme, withLayout({ fullscreen: true })],
 };

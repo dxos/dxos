@@ -11,10 +11,10 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { Anchor, DATA_ITEM_ID } from './Anchor';
 import { type DragPayloadData, type Item } from './Shape';
-import { styles } from './styles';
-import { useCanvasContext } from '../../hooks';
+import { useEditorContext } from '../../hooks';
 import { pointAdd, getBoundsProperties } from '../../layout';
 import { ReadonlyTextBox, TextBox, type TextBoxProps } from '../TextBox';
+import { styles } from '../styles';
 
 // TODO(burdon): Surface for form content. Or pass in children (which may include a Surface).
 //  return <Surface ref={forwardRef} role='card' limit={1} data={{ content: object} />;
@@ -31,7 +31,7 @@ export type FrameProps = PropsWithChildren<{
  * Draggable Frame around shapes.
  */
 export const Frame = ({ item, scale, selected, showAnchors, onSelect }: FrameProps) => {
-  const { linking, dragging, setDragging, editing, setEditing } = useCanvasContext();
+  const { linking, dragging, setDragging, editing, setEditing } = useEditorContext();
   const isDragging = dragging?.item.id === item.id;
   const isEditing = editing?.item.id === item.id;
   const [hovering, setHovering] = useState(false);

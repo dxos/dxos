@@ -11,9 +11,9 @@ import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type DragPayloadData, type Item } from './Shape';
-import { styles } from './styles';
-import { useCanvasContext } from '../../hooks';
+import { useEditorContext } from '../../hooks';
 import { type Dimension, getBoundsProperties, type Point } from '../../layout';
+import { styles } from '../styles';
 
 export const DATA_ITEM_ID = 'data-item-id';
 
@@ -32,7 +32,7 @@ export type AnchorProps = {
  * Anchor points for attaching links.
  */
 export const Anchor = ({ id, item, pos, size = defaultSize, scale = 1, onMouseLeave }: AnchorProps) => {
-  const { linking, setLinking } = useCanvasContext();
+  const { linking, setLinking } = useEditorContext();
   const isLinking = linking?.item.id === item.id && linking?.anchor === id;
 
   // Dragging.
