@@ -15,7 +15,7 @@ const Label = forwardRef<HTMLLabelElement, LabelProps>(
     const { id } = useInputContext(INPUT_NAME, __inputScope);
     const Root = asChild ? Slot : Primitive.label;
     return (
-      <Root {...props} htmlFor={id} ref={forwardedRef}>
+      <Root {...props} {...({ htmlFor: id } as any)} ref={forwardedRef}>
         {children}
       </Root>
     );

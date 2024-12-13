@@ -331,6 +331,7 @@ export class Toolbox {
           if (key === 'types') {
             publishConfig.types = unsortedPackage.type ?? unsortedPackage.exports?.['.']?.types;
             unsortedPackage.types = TYPES_PATH;
+            unsortedPackage.type = 'module';
           } else if (unsortedPackage[key] && !publishConfig[key]) {
             publishConfig[key] = unsortedPackage[key];
             delete unsortedPackage[key];

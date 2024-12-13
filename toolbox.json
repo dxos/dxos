@@ -27,7 +27,8 @@
     "devKeysExclude": [
       "packages/common",
       "packages/core",
-      "packages/sdk"
+      "packages/sdk",
+      "packages/experimental"
     ],
     "withCustomExports": [
       "@dxos/shell",
