@@ -15,7 +15,8 @@ export type Action =
     }
   | {
       type: 'delete';
-      ids: string[];
+      nodes?: string[];
+      edges?: string[];
     };
 
 export type ActionHandler = (action: Action) => boolean;

@@ -14,6 +14,15 @@ export type Item = {
   text: string;
 };
 
+/**
+ * Data associated with a drag event.
+ */
+export type DragPayloadData = {
+  type: 'frame' | 'anchor';
+  item: Item;
+  anchor?: string;
+};
+
 export abstract class Shape {}
 
 export class CircleShape implements Shape {}

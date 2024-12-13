@@ -1,0 +1,82 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
+import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
+
+import { invariant } from '@dxos/invariant';
+import { mx } from '@dxos/react-ui-theme';
+
+import { type DragPayloadData, type Item } from './Shape';
+import { styles } from './styles';
+import { useCanvasContext } from '../../hooks';
+import { type Dimension, getBoundsProperties, type Point } from '../../layout';
+
+export const DATA_ITEM_ID = 'data-item-id';
+
+const defaultSize: Dimension = { width: 12, height: 12 };
+
+export type AnchorProps = {
+  id: string;
+  item: Item;
+  pos: Point;
+  size?: Dimension;
+  scale?: number;
+};
+
+/**
+ * Anchor points for attaching links.
+ */
+export const Anchor = ({ id, item, pos, size = defaultSize, scale = 1 }: AnchorProps) => {
+  const { linking, setLinking } = useCanvasContext();
+  const isLinking = linking?.item.id === item.id && linking?.anchor === id;
+
+  // Dragging.
+  // TODO(burdon): ESC to cancel dragging.
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    invariant(el);
+    return draggable({
+      element: el,
+      getInitialData: () => ({ type: 'anchor', item, anchor: id }) satisfies DragPayloadData,
+      onGenerateDragPreview: ({ nativeSetDragImage }) => {
+        setCustomNativeDragPreview({
+          nativeSetDragImage,
+          getOffset: () => {
+            return { x: (scale * size.width) / 2, y: (scale * size.height) / 2 };
+          },
+          render: ({ container }) => {
+            setLinking({ item, container, anchor: id });
+            return () => {};
+          },
+        });
+      },
+      onDrop: () => {
+        setLinking(undefined);
+      },
+    });
+  }, [pos]);
+
+  return (
+    <>
+      <div
+        ref={ref}
+        {...{ [DATA_ITEM_ID]: item.id }}
+        style={getBoundsProperties({ ...pos, ...size })}
+        className={mx('absolute z-10', styles.anchor, isLinking && 'opacity-0')}
+      />
+
+      {isLinking &&
+        createPortal(
+          <div style={scale ? { transform: `scale(${scale})` } : undefined}>
+            <div style={getBoundsProperties({ ...pos, ...size })} className={mx('absolute z-20', styles.anchor)} />
+          </div>,
+          linking.container,
+        )}
+    </>
+  );
+};

@@ -2,18 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { monitorForElements, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { useDynamicRef } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { isNotFalsy } from '@dxos/util';
+import { mx } from '@dxos/react-ui-theme';
+import { isNotFalsy, stripUndefined } from '@dxos/util';
 
 import { Frame, FrameDragPreview, type FrameProps } from './Frame';
-import { type Item } from './Shape';
+import { type DragPayloadData, type Item } from './Shape';
 import { useBoundingSelection } from './hooks';
+import { Markers, styles } from './styles';
 import { GraphWrapper } from '../../graph';
 import { useCanvasContext } from '../../hooks';
 import {
@@ -47,9 +49,28 @@ export const Editor = (_: EditorProps) => {
   const [itemDragging, setItemDragging] = useState<Pick<Item, 'id' | 'pos'>>();
   const [itemLinking, setItemLinking] = useState<{ source: { center: Point; bounds: Rect }; target: Point }>();
 
-  // Selection.
-  const [selected, setSelected] = useState<Record<string, boolean>>({});
-  const selectedRef = useDynamicRef(selected);
+  // TODO(burdon): Create selection model.
+  const [selectedNodes, setSelectedNodes] = useState<Record<string, boolean | undefined>>({});
+  const [selectedEdges, setSelectedEdges] = useState<Record<string, boolean | undefined>>({});
+  const selectedRef = useDynamicRef({ selectedNodes, selectedEdges });
+
+  const handleSelectNode = useCallback<NonNullable<FrameProps['onSelect']>>((item, shift) => {
+    if (shift) {
+      setSelectedNodes((selected) => stripUndefined({ ...selected, [item.id]: selected[item.id] ? undefined : true }));
+    } else {
+      setSelectedNodes((selected) => stripUndefined({ [item.id]: selected[item.id] ? undefined : true }));
+      setSelectedEdges({});
+    }
+  }, []);
+
+  const handleSelectEdge = useCallback((id: string, shift: boolean) => {
+    if (shift) {
+      setSelectedEdges((selected) => stripUndefined({ ...selected, [id]: selected[id] ? undefined : true }));
+    } else {
+      setSelectedEdges((selected) => stripUndefined({ [id]: selected[id] ? undefined : true }));
+      setSelectedNodes({});
+    }
+  }, []);
 
   //
   // Offset and scale.
@@ -66,7 +87,7 @@ export const Editor = (_: EditorProps) => {
 
     setTransform(({ scale }) => ({ scale, offset: { x: width / 2, y: height / 2 } }));
   }, [width, height]);
-  const transformStyle = {
+  const transformStyles = {
     // NOTE: Order is important.
     transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
   };
@@ -124,7 +145,11 @@ export const Editor = (_: EditorProps) => {
     const handleKeyDown = (event: KeyboardEvent) => {
       switch (event.key) {
         case 'Backspace': {
-          handleAction({ type: 'delete', ids: Object.keys(selectedRef?.current) });
+          handleAction({
+            type: 'delete',
+            nodes: Object.keys(selectedRef?.current.selectedNodes),
+            edges: Object.keys(selectedRef?.current.selectedEdges),
+          });
           break;
         }
       }
@@ -145,7 +170,7 @@ export const Editor = (_: EditorProps) => {
   const handleSelectionBounds = useCallback(
     (bounds: Rect | null) => {
       if (!bounds) {
-        setSelected({});
+        setSelectedNodes({});
         return;
       }
 
@@ -154,7 +179,7 @@ export const Editor = (_: EditorProps) => {
       const selected = graph.nodes.filter(
         ({ data: { pos } }) => boundsContain(selection, { ...pos, width: 0, height: 0 }), // Check center point.
       );
-      setSelected(selected.reduce((acc, { data: { id } }) => ({ ...acc, [id]: true }), {}));
+      setSelectedNodes(selected.reduce((acc, { data: { id } }) => ({ ...acc, [id]: true }), {}));
     },
     [overlaySvgRef, scale, offset],
   );
@@ -165,51 +190,56 @@ export const Editor = (_: EditorProps) => {
     selectionBounds &&
     boundsToModel(overlaySvgRef.current!.getBoundingClientRect(), scale, offset, selectionBounds);
 
-  const handleDrag = useCallback<NonNullable<FrameProps['onDrag']>>(
-    ({ type, item, location }) => {
-      const rect = overlaySvgRef.current!.getBoundingClientRect();
-      const pos = boundsToModel(rect, scale, offset, getInputPoint(location.current.input));
-      // const pos = boundsToModelWithOffset(rect, scale, offset, item.pos, location.initial, location.current);
-      if (type === 'drop') {
-        item.pos = snapToGrid ? snapPoint(pos) : pos;
-        setItemDragging(undefined);
-      } else {
-        setItemDragging({ id: item.id, pos });
-      }
-    },
-    [overlaySvgRef, graph, snapToGrid, scale, offset],
-  );
+  //
+  // Monitor dragging and linking.
+  //
+  useEffect(() => {
+    return monitorForElements({
+      onDrag: ({ source, location }) => {
+        const rect = overlaySvgRef.current!.getBoundingClientRect();
+        const pos = boundsToModel(rect, scale, offset, getInputPoint(location.current.input));
+        const { type, item } = source.data as DragPayloadData;
+        switch (type) {
+          case 'frame': {
+            setItemDragging({ id: item.id, pos });
+            break;
+          }
 
-  const handleLink = useCallback<NonNullable<FrameProps['onLink']>>(
-    ({ type, item, link, location }) => {
-      const rect = overlaySvgRef.current!.getBoundingClientRect();
-      const pos = boundsToModel(rect, scale, offset, getInputPoint(location.current.input));
-      if (type === 'drop') {
-        let id = link?.id;
-        if (!id) {
-          id = createId();
-          graph.addNode({ id, data: { id, pos: snapToGrid ? snapPoint(pos) : pos, size: itemSize } });
+          case 'anchor': {
+            setItemLinking({ source: { center: item.pos, bounds: getBounds(item.pos, item.size) }, target: pos });
+            break;
+          }
         }
-        graph.addEdge({ id: createId(), source: item.id, target: id, data: {} });
-        setItemLinking(undefined);
-      } else {
-        setItemLinking({ source: { center: item.pos, bounds: getBounds(item.pos, item.size) }, target: pos });
-      }
-    },
-    [overlaySvgRef, graph, snapToGrid, scale, offset],
-  );
+      },
+      onDrop: ({ source, location }) => {
+        const rect = overlaySvgRef.current!.getBoundingClientRect();
+        const pos = boundsToModel(rect, scale, offset, getInputPoint(location.current.input));
+        const { type, item } = source.data as DragPayloadData;
+        switch (type) {
+          case 'frame': {
+            const item = source.data.item as Item;
+            // TODO(burdon): Adjust for offset.
+            // const pos = boundsToModelWithOffset(rect, scale, offset, item.pos, location.initial, location.current);
+            item.pos = snapToGrid ? snapPoint(pos) : pos;
+            setItemDragging(undefined);
+            break;
+          }
 
-  // TODO(burdon): SHIFT select to toggle.
-  const handleSelect = useCallback<NonNullable<FrameProps['onSelect']>>((item, selected) => {
-    if (selected) {
-      setSelected((selected) => ({ ...selected, [item.id]: true }));
-    } else {
-      setSelected((selected) => {
-        const { [item.id]: _, ...rest } = selected;
-        return rest;
-      });
-    }
-  }, []);
+          case 'anchor': {
+            const target = location.current.dropTargets.find(({ data }) => data.type === 'frame')?.data.item as Item;
+            let id = target?.id;
+            if (!id) {
+              id = createId();
+              graph.addNode({ id, data: { id, pos: snapToGrid ? snapPoint(pos) : pos, size: itemSize } });
+            }
+            graph.addEdge({ id: createId(), source: item.id, target: id, data: {} });
+            setItemLinking(undefined);
+            break;
+          }
+        }
+      },
+    });
+  }, [overlaySvgRef, scale, offset, graph]);
 
   //
   // Actions
@@ -240,13 +270,14 @@ export const Editor = (_: EditorProps) => {
         case 'create': {
           const id = createId();
           graph.addNode({ id, data: { id, pos: { x: 0, y: 0 }, size: itemSize } });
-          setSelected({});
+          setSelectedNodes({});
           break;
         }
         case 'delete': {
-          const { ids } = action;
-          ids.forEach((id) => graph.removeNode(id));
-          setSelected({});
+          const { nodes, edges } = action;
+          nodes?.forEach((node) => graph.removeNode(node));
+          edges?.forEach((edge) => graph.removeEdge(edge));
+          setSelectedNodes({});
           break;
         }
       }
@@ -278,54 +309,38 @@ export const Editor = (_: EditorProps) => {
           {/* TODO(burdon): Currently HTML content needs to be last so that elements can be dragged. */}
           <svg width='100%' height='100%' className='absolute left-0 top-0 cursor-crosshair' ref={overlaySvgRef}>
             <g>
-              {selectionBounds && (
-                <rect {...selectionBounds} opacity={0.2} strokeWidth={2} className='stroke-blue-500' />
-              )}
+              {selectionBounds && <rect {...selectionBounds} opacity={0.2} strokeWidth={2} className={styles.cursor} />}
             </g>
           </svg>
 
           {/* SVG content. */}
-          <svg width='100%' height='100%' className='absolute left-0 top-0 pointer-events-none touch-none'>
+          <svg width='100%' height='100%' className='absolute left-0 top-0'>
             <defs>
-              <marker
-                id='arrow'
-                markerWidth='10'
-                markerHeight='10'
-                refX='10'
-                refY='5'
-                orient='auto'
-                markerUnits='strokeWidth'
-                className='stroke-teal-700 fill-teal-700'
-              >
-                <path d='M0,0 L0,10 L10,5 z' />
-              </marker>
-              <marker
-                id='circle'
-                markerWidth='12'
-                markerHeight='12'
-                refX='6'
-                refY='6'
-                orient='auto'
-                markerUnits='strokeWidth'
-                className='stroke-teal-700 fill-teal-700'
-              >
-                <circle cx={6} cy={6} r={5} />
-              </marker>
+              <Markers />
             </defs>
-            <g style={transformStyle}>
+            <g style={transformStyles}>
               {/* Edges. */}
-              {/* TODO(burdon): Find edge of shape. */}
               <g>
                 {edges.map(({ id, path }) => (
-                  <path
-                    key={id}
-                    d={path}
-                    fill='none'
-                    strokeWidth='1'
-                    className='stroke-teal-700'
-                    markerStart='url(#circle)'
-                    markerEnd='url(#circle)'
-                  />
+                  <g key={id}>
+                    {/* Hit area. */}
+                    <path
+                      d={path}
+                      fill='none'
+                      strokeWidth={8}
+                      className={'stroke-transparent'}
+                      onClick={(ev) => handleSelectEdge(id, ev.shiftKey)}
+                    />
+                    <path
+                      d={path}
+                      fill='none'
+                      strokeWidth={1}
+                      className={mx(styles.edge, selectedEdges[id] && styles.edgeSelected)}
+                      // TODO(burdon): Edge style.
+                      markerStart={id !== 'link' ? 'url(#circle)' : ''}
+                      markerEnd={id !== 'link' ? 'url(#circle)' : ''}
+                    />
+                  </g>
                 ))}
               </g>
 
@@ -339,23 +354,23 @@ export const Editor = (_: EditorProps) => {
           </svg>
 
           {/* HTML content. */}
-          <div style={transformStyle} className='absolute left-0 top-0'>
+          <div style={transformStyles} className='absolute left-0 top-0'>
             {graph.nodes.map(({ data: item }) => (
               <Frame
                 key={item.id}
                 item={item}
-                selected={selected[item.id]}
-                onSelect={handleSelect}
-                onDrag={handleDrag}
-                onLink={handleLink}
+                scale={scale}
+                selected={selectedNodes[item.id]}
+                onSelect={handleSelectNode}
               />
             ))}
           </div>
 
           {/* Drag preview. */}
+          {/* TODO(burdon): Move to frame? */}
           {dragging &&
             createPortal(
-              <div style={transformStyle}>
+              <div style={transformStyles}>
                 <FrameDragPreview item={dragging.item} />
               </div>,
               dragging.container,
@@ -376,6 +391,8 @@ export const Editor = (_: EditorProps) => {
                 offset,
                 rect: overlaySvgRef.current?.getBoundingClientRect(),
                 selectionBounds,
+                selectedNodes,
+                selectedEdges,
                 dragging: itemDragging,
                 linking: itemLinking,
               },
@@ -392,6 +409,7 @@ export const Editor = (_: EditorProps) => {
   );
 };
 
+// TODO(burdon): Factor out.
 export const getEdges = (graph: GraphWrapper, dragging?: Pick<Item, 'id' | 'pos'>): { id: string; path: string }[] => {
   const getPos = (id: string): { center: Point; bounds: Rect } | undefined => {
     const node = graph.getNode(id);
@@ -406,7 +424,6 @@ export const getEdges = (graph: GraphWrapper, dragging?: Pick<Item, 'id' | 'pos'
     return undefined;
   };
 
-  // TODO(burdon): Factor out.
   return graph.edges
     .map(({ id, source, target }) => {
       const { center: p1, bounds: r1 } = getPos(source) ?? {};
@@ -417,7 +434,6 @@ export const getEdges = (graph: GraphWrapper, dragging?: Pick<Item, 'id' | 'pos'
 
       const i1 = r1 ? findClosestIntersection([p2, p1], r1) ?? p1 : p1;
       const i2 = r2 ? findClosestIntersection([p1, p2], r2) ?? p2 : p2;
-
       return { id, path: createPathThroughPoints([i1, i2]) };
     })
     .filter(isNotFalsy);

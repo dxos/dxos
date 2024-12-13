@@ -4,105 +4,36 @@
 
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
-import { type DragLocationHistory } from '@atlaskit/pragmatic-drag-and-drop/types';
-import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
+import React, { type MouseEventHandler, type PropsWithChildren, useEffect, useRef, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type Item } from './Shape';
+import { Anchor, DATA_ITEM_ID } from './Anchor';
+import { type DragPayloadData, type Item } from './Shape';
+import { styles } from './styles';
 import { useCanvasContext } from '../../hooks';
-import { pointAdd, type Dimension, getBoundsProperties, type Point } from '../../layout';
+import { pointAdd, getBoundsProperties } from '../../layout';
 import { ReadonlyTextBox, TextBox, type TextBoxProps } from '../TextBox';
-
-const handleSize: Dimension = { width: 11, height: 11 };
-
-export type HandleDragEvent = {
-  type: 'drag' | 'drop';
-  id: string;
-  link?: Item;
-  location: DragLocationHistory;
-};
-
-export type HandleProps = {
-  id: string;
-  pos: Point;
-  onDrag?: (event: HandleDragEvent) => void;
-};
-
-/**
- * Drag handle.
- */
-export const Handle = ({ id, pos, onDrag }: HandleProps) => {
-  const [hovering, setHovering] = useState(false);
-
-  // Dragging.
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = ref.current;
-    invariant(el);
-    return draggable({
-      element: el,
-      getInitialData: () => ({}),
-      onDrag: ({ location }) => {
-        onDrag?.({ type: 'drag', id, location });
-      },
-      onDrop: ({ location }) => {
-        const link = location.current.dropTargets.find(({ data }) => data.type === 'Frame')?.data.item as Item;
-        onDrag?.({ type: 'drop', id, link, location });
-      },
-    });
-  }, [pos, onDrag]);
-
-  return (
-    <div
-      ref={ref}
-      style={getBoundsProperties({ ...pos, ...handleSize })}
-      className={mx('absolute z-10 bg-base rounded border border-teal-700', hovering && 'bg-teal-700')}
-      onMouseEnter={() => setHovering(true)}
-      onMouseLeave={() => setHovering(false)}
-    />
-  );
-};
-
-export type FrameDragEvent = {
-  type: 'drag' | 'drop';
-  item: Item;
-  location: DragLocationHistory;
-};
-
-// TODO(burdon): Combine event types?
-export type FrameLinkEvent = {
-  type: 'drag' | 'drop';
-  item: Item;
-  link?: Item;
-  location: DragLocationHistory;
-};
 
 // TODO(burdon): Surface for form content. Or pass in children (which may include a Surface).
 //  return <Surface ref={forwardRef} role='card' limit={1} data={{ content: object} />;
 
-const containerStyles = [
-  'absolute flex p-2 justify-center items-center overflow-hidden',
-  '__bg-base border border-teal-700 rounded',
-];
-
 export type FrameProps = PropsWithChildren<{
   item: Item;
+  scale?: number;
   selected?: boolean;
-  onSelect?: (item: Item, selected: boolean) => void;
-  onDrag?: (event: FrameDragEvent) => void;
-  onLink?: (event: FrameLinkEvent) => void;
+  showAnchors?: boolean;
+  onSelect?: (item: Item, shift: boolean) => void;
 }>;
 
 /**
  * Draggable Frame around shapes.
  */
-export const Frame = ({ children, item, selected, onSelect, onDrag, onLink }: FrameProps) => {
-  const { dragging, setDragging, editing, setEditing } = useCanvasContext();
+export const Frame = ({ item, scale, selected, showAnchors, onSelect }: FrameProps) => {
+  const { linking, dragging, setDragging, editing, setEditing } = useCanvasContext();
   const isDragging = dragging?.item.id === item.id;
   const isEditing = editing?.item.id === item.id;
-
   const [hovering, setHovering] = useState(false);
 
   // Dragging.
@@ -112,52 +43,58 @@ export const Frame = ({ children, item, selected, onSelect, onDrag, onLink }: Fr
     invariant(ref.current);
     return draggable({
       element: ref.current,
-      getInitialData: () => ({ item }),
+      getInitialData: () => ({ type: 'frame', item }) satisfies DragPayloadData,
       onGenerateDragPreview: ({ nativeSetDragImage }) => {
         setCustomNativeDragPreview({
           nativeSetDragImage,
-          // TODO(burdon): Calc offset.
-          getOffset: ({ container }) => {
+          getOffset: () => {
+            // TODO(burdon): Calc offset.
             return { x: item.size.width / 2, y: item.size.height / 2 };
           },
           render: ({ container }) => {
             setDragging({ item, container });
+            return () => {};
           },
         });
       },
-      // TODO(burdon): Remove interim callbacks; use monitor?
-      onDrag: ({ location }) => {
-        onDrag?.({ type: 'drag', item, location });
-      },
-      onDrop: ({ location }) => {
-        onDrag?.({ type: 'drop', item, location });
+      onDrop: () => {
         setDragging(undefined);
       },
     });
-  }, [item, onDrag]);
+  }, [item]);
 
-  // Dropping (for link handles).
+  // Drop targets for linking.
   useEffect(() => {
     invariant(ref.current);
     return dropTargetForElements({
       element: ref.current,
-      getData: () => ({ type: 'Frame', item }),
+      getData: () => ({ type: 'frame', item }) satisfies DragPayloadData,
     });
   });
 
-  // TODO(burdon): Manage state and handle visibility.
-  const handleDrag = useCallback<NonNullable<HandleProps['onDrag']>>(
-    ({ type, link, location }) => onLink?.({ type, item, link, location }),
-    [item, onLink],
-  );
+  // Reset hovering state once dragging ends.
+  useEffect(() => {
+    setHovering(false);
+  }, [linking]);
 
-  const handleClick = () => {
+  // TODO(burdon): Generalize anchor points.
+  const anchors =
+    showAnchors !== false && hovering
+      ? [
+          { id: 'w', pos: pointAdd(item.pos, { x: -item.size.width / 2, y: 0 }) },
+          { id: 'e', pos: pointAdd(item.pos, { x: item.size.width / 2, y: 0 }) },
+          { id: 'n', pos: pointAdd(item.pos, { x: 0, y: item.size.height / 2 }) },
+          { id: 's', pos: pointAdd(item.pos, { x: 0, y: -item.size.height / 2 }) },
+        ].filter(({ id }) => !linking || linking.anchor === id)
+      : [];
+
+  const handleClick: MouseEventHandler<HTMLDivElement> = (ev) => {
     if (!editing) {
-      onSelect?.(item, !selected);
+      onSelect?.(item, ev.shiftKey);
     }
   };
 
-  const handleDoubleClick = () => {
+  const handleDoubleClick: MouseEventHandler<HTMLDivElement> = () => {
     setEditing({ item });
   };
 
@@ -171,37 +108,47 @@ export const Frame = ({ children, item, selected, onSelect, onDrag, onLink }: Fr
   };
 
   return (
-    // NOTE: Cannot hide while dragging.
-    <div role='none' className={mx(isDragging && 'opacity-0')}>
-      <div
-        ref={ref}
-        style={getBoundsProperties({ ...item.pos, ...item.size })}
-        onClick={handleClick}
-        onDoubleClick={handleDoubleClick}
-        className={mx(containerStyles, selected && 'bg-neutral-700')}
-        onMouseEnter={() => setHovering(true)}
-        onMouseLeave={() => setTimeout(() => setHovering(false), 100)}
-      >
-        {(isEditing && <TextBox value={item.text} onClose={handleClose} onCancel={handleCancel} />) || (
-          <ReadonlyTextBox value={item.text ?? item.id} />
-        )}
-      </div>
-
-      {onLink && (
-        <div>
-          <Handle id='w' onDrag={handleDrag} pos={pointAdd(item.pos, { x: -item.size.width / 2, y: 0 })} />
-          <Handle id='e' onDrag={handleDrag} pos={pointAdd(item.pos, { x: item.size.width / 2, y: 0 })} />
-          <Handle id='n' onDrag={handleDrag} pos={pointAdd(item.pos, { x: 0, y: item.size.height / 2 })} />
-          <Handle id='s' onDrag={handleDrag} pos={pointAdd(item.pos, { x: 0, y: -item.size.height / 2 })} />
+    <>
+      <div role='none' className={mx(isDragging && 'opacity-0')}>
+        <div
+          ref={ref}
+          style={getBoundsProperties({ ...item.pos, ...item.size })}
+          className={mx(styles.frameContainer, styles.frameBorder, selected && styles.frameSelected)}
+          onClick={handleClick}
+          onDoubleClick={handleDoubleClick}
+          onMouseEnter={() => setHovering(true)}
+          onMouseLeave={(ev) => {
+            // TODO(burdon): Need to detech if mouse leaves anchor.
+            // We need to keep rendering the anchor that is being dragged.
+            const related = ev.relatedTarget as HTMLElement;
+            if (related?.getAttribute(DATA_ITEM_ID) !== item.id) {
+              setHovering(false);
+            }
+          }}
+        >
+          {/* TODO(burdon): Auto-expand height? Trigger layout? */}
+          {(isEditing && <TextBox value={item.text} onClose={handleClose} onCancel={handleCancel} />) || (
+            <ReadonlyTextBox value={item.text ?? item.id} />
+          )}
         </div>
-      )}
-    </div>
+
+        {/* Anchors. */}
+        <div>
+          {anchors.map(({ id, pos }) => (
+            <Anchor key={id} id={id} item={item} scale={scale} pos={pos} />
+          ))}
+        </div>
+      </div>
+    </>
   );
 };
 
 export const FrameDragPreview = ({ item }: FrameProps) => {
   return (
-    <div style={getBoundsProperties({ ...item.pos, ...item.size })} className={mx(containerStyles)}>
+    <div
+      style={getBoundsProperties({ ...item.pos, ...item.size })}
+      className={mx(styles.frameContainer, styles.frameBorder)}
+    >
       <ReadonlyTextBox value={item.text ?? item.id} />
     </div>
   );

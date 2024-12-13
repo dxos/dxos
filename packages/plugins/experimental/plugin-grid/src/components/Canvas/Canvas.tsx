@@ -11,8 +11,9 @@ import { type Item } from './Shape';
 import { type ActionHandler } from '../../actions';
 
 export type DraggingState = {
-  item: Item;
   container: HTMLElement;
+  item: Item;
+  anchor?: string;
 };
 
 export type EditingState = {
@@ -24,8 +25,10 @@ export type CanvasContext = {
   showGrid: boolean;
   snapToGrid: boolean;
   dragging?: DraggingState;
+  linking?: DraggingState;
   editing?: EditingState;
   setDragging: (state: DraggingState | undefined) => void;
+  setLinking: (state: DraggingState | undefined) => void;
   setEditing: (state: EditingState | undefined) => void;
   handleAction: ActionHandler;
 };
@@ -37,14 +40,12 @@ export type CanvasContext = {
 
 // TODO(burdon): Phase 1: Basic plugin.
 //  - Bounding box/hierarchy; graph ontology.
-//  - Reconcile drag handlers.
+//  - Canvas ontology (e.g., what is Item vs Layout, etc.)
 //  - Nodes as objects.
-//  - Select/delete edges.
 //  - Surface/form storybook; auto-size.
-//  - Hide drag handles unless hovering; preview for handles (scale!).
-//  - Dragging offset.
 //  - Basic plugin with root object.
-//  - Basic theme.
+//  - Initial dragging offset.
+//  - Show hovering style when linking.
 
 // TODO(burdon): General UML of this package using Beast and mermaid.
 
@@ -56,9 +57,7 @@ export type CanvasContext = {
 //  - Auto-layout (reconcile with plugin-debug).
 //  - Resize frames.
 //  - Group/collapse nodes; hierarchical editor.
-//  - Grid options.
 //  - Line options (1-to-many, inherits, etc.)
-//  - Select multiple nodes.
 
 /**
  * @internal
@@ -73,6 +72,7 @@ const CanvasRoot = ({ children, classNames }: CanvasRootProps) => {
   const [showGrid, setShowGrid] = useState(true);
   const [snapToGrid, setSnapToGrid] = useState(false);
   const [dragging, setDragging] = useState<DraggingState>();
+  const [linking, setLinking] = useState<DraggingState>();
   const [editing, setEditing] = useState<EditingState>();
 
   const handleAction = useCallback<ActionHandler>(
@@ -100,7 +100,18 @@ const CanvasRoot = ({ children, classNames }: CanvasRootProps) => {
 
   return (
     <CanvasContext.Provider
-      value={{ debug, showGrid, snapToGrid, dragging, setDragging, editing, setEditing, handleAction }}
+      value={{
+        debug,
+        showGrid,
+        snapToGrid,
+        dragging,
+        setDragging,
+        linking,
+        setLinking,
+        editing,
+        setEditing,
+        handleAction,
+      }}
     >
       {children}
     </CanvasContext.Provider>
