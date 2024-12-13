@@ -312,33 +312,18 @@ export const Canvas = (_: CanvasProps) => {
       {/* Content. */}
       {ready && (
         <>
-          {/* HTML content. */}
-          <div {...testId('dx-html-content')} style={transformStyles} className='absolute left-0 top-0'>
-            {graph.nodes.map(({ data: item }) => (
-              <Frame
-                key={item.id}
-                item={item}
-                scale={scale}
-                selected={selectedNodes[item.id]}
-                onSelect={handleSelectNode}
-                classNames={'z-[500]'} // TODO(burdon): Specify via vars (e.g., for anchors also).
-              />
-            ))}
-          </div>
-
           {/* SVG content. */}
-          {/* TODO(burdon): Need events for line click. Move into HTML content. */}
           <svg
+            ref={overlaySvgRef}
             {...testId('dx-svg-content')}
             width='100%'
             height='100%'
-            className={mx('absolute top-0 left-0', eventsNone)}
+            className={mx('absolute top-0 left-0')}
           >
             <defs>
               <Markers />
             </defs>
             <g style={transformStyles}>
-              {/* Edges. */}
               <g>
                 {edges.map(({ id, path }) => (
                   <g key={id}>
@@ -371,20 +356,32 @@ export const Canvas = (_: CanvasProps) => {
               )}
             </g>
           </svg>
+
+          {/* HTML content. */}
+          <div {...testId('dx-html-content')} style={transformStyles} className='absolute left-0 top-0'>
+            {graph.nodes.map(({ data: item }) => (
+              <Frame
+                key={item.id}
+                item={item}
+                scale={scale}
+                selected={selectedNodes[item.id]}
+                onSelect={handleSelectNode}
+              />
+            ))}
+          </div>
         </>
       )}
 
       {/* Overlays. */}
-      <div {...testId('dx-overlays')} className={mx('z-[300] absolute top-0 left-0 w-full h-full', eventsNone)}>
+      <div {...testId('dx-overlays')} className={mx('absolute top-0 left-0 w-full h-full', eventsNone)}>
         {/* Selection overlay. */}
-        <svg ref={overlaySvgRef} width='100%' height='100%' className={mx('absolute top-0 left-0 cursor-crosshair')}>
+        <svg width='100%' height='100%' className={mx('absolute top-0 left-0 cursor-crosshair')}>
           <g>
             {selectionBounds && <rect {...selectionBounds} opacity={0.2} strokeWidth={2} className={styles.cursor} />}
           </g>
         </svg>
 
         {/* Drag preview. */}
-        {/* TODO(burdon): Move to frame? */}
         {dragging &&
           createPortal(
             <div style={transformStyles}>
