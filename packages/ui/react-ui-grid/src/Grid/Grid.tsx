@@ -18,6 +18,8 @@ import React, {
 
 import { type DxAxisResize, type DxEditRequest, type DxGridCellsSelect, DxGrid as NaturalDxGrid } from '@dxos/lit-grid';
 
+type DxGridElement = NaturalDxGrid;
+
 const DxGrid = createComponent({
   tagName: 'dx-grid',
   elementClass: NaturalDxGrid,
@@ -151,7 +153,7 @@ export const Grid = {
 
 export { GridRoot, GridContent, useGridContext, createGridScope };
 
-export type { GridRootProps, GridContentProps, GridEditing, GridEditBox, GridScopedProps };
+export type { GridRootProps, GridContentProps, GridEditing, GridEditBox, GridScopedProps, DxGridElement };
 
 export {
   colToA1Notation,
