@@ -30,7 +30,8 @@
       "packages/sdk",
       "packages/experimental",
       "packages/plugins/plugin-presenter",
-      "packages/plugins/plugin-sheet"
+      "packages/plugins/plugin-sheet",
+      "tools/"
     ],
     "withCustomExports": [
       "@dxos/shell",
