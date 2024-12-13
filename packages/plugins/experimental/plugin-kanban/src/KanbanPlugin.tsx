@@ -5,16 +5,15 @@
 import React from 'react';
 
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
-import { loadObjectReferences } from '@dxos/react-client/echo';
+import { KanbanType } from '@dxos/react-ui-kanban';
+import { initializeKanban } from '@dxos/react-ui-kanban/testing';
 
 import { KanbanMain } from './components';
 import meta, { KANBAN_PLUGIN } from './meta';
 import translations from './translations';
-import { KanbanColumnType, KanbanItemType, KanbanType } from './types';
 import { KanbanAction, type KanbanPluginProvides } from './types';
 
 export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
@@ -27,22 +26,11 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
             createObject: KanbanAction.CREATE,
             placeholder: ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
             icon: 'ph--kanban--regular',
-            // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (kanban: KanbanType) => loadObjectReferences(kanban, (kanban) => kanban.columns),
-          },
-          [KanbanColumnType.typename]: {
-            // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (column: KanbanColumnType) => loadObjectReferences(column, (column) => column.items),
-          },
-          [KanbanItemType.typename]: {
-            // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (item: KanbanItemType) => [], // loadObjectReferences(item, (item) => item.object),
           },
         },
       },
       echo: {
         schema: [KanbanType],
-        system: [KanbanColumnType, KanbanItemType],
       },
       translations,
       graph: {
@@ -101,7 +89,10 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case KanbanAction.CREATE: {
-              return { data: create(KanbanType, { columns: [] }) };
+              if (intent.data?.space) {
+                const { kanban } = initializeKanban({ space: intent.data.space });
+                return { data: kanban };
+              }
             }
           }
         },

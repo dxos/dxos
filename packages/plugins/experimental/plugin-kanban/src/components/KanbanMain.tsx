@@ -1,37 +1,37 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
-import React, { type FC } from 'react';
+import React, { useEffect, useState } from 'react';
 
-import { create } from '@dxos/live-object';
-import { getSpace } from '@dxos/react-client/echo';
-import { Main } from '@dxos/react-ui';
-import { topbarBlockPaddingStart, fixedInsetFlexLayout, bottombarBlockPaddingEnd } from '@dxos/react-ui-theme';
+import { type MutableSchema } from '@dxos/echo-schema';
+import { useGlobalFilteredObjects } from '@dxos/plugin-search';
+import { Filter, useQuery, getSpace } from '@dxos/react-client/echo';
+import { type KanbanType, useKanbanModel, Kanban } from '@dxos/react-ui-kanban';
 
-import { KanbanBoard } from './KanbanBoard';
-import { type KanbanType, KanbanColumnType, KanbanItemType, type KanbanModel } from '../types';
+const stateColumns = { init: { label: 'To do' }, doing: { label: 'Doing' }, done: { label: 'Done' } };
 
-const KanbanMain: FC<{ kanban: KanbanType }> = ({ kanban }) => {
-  // const { t } = useTranslation(KANBAN_PLUGIN);
+export const KanbanMain = ({ kanban }: { kanban: KanbanType }) => {
+  const [cardSchema, setCardSchema] = useState<MutableSchema>();
   const space = getSpace(kanban);
-  if (!space) {
+  useEffect(() => {
+    if (kanban.cardView && space) {
+      setCardSchema(space.db.schemaRegistry.getSchema(kanban.cardView!.query.type));
+    }
+  }, [kanban.cardView, space]);
+
+  const objects = useQuery(space, cardSchema ? Filter.schema(cardSchema) : Filter.nothing());
+  const filteredObjects = useGlobalFilteredObjects(objects);
+
+  const model = useKanbanModel({
+    kanban,
+    cardSchema,
+    items: filteredObjects,
+  });
+
+  if (!model) {
     return null;
   }
 
-  // TODO(burdon): Should plugin create and pass in model?
-  const model: KanbanModel = {
-    root: kanban, // TODO(burdon): How to keep pure?
-    createColumn: () => space.db.add(create(KanbanColumnType, { items: [] })),
-    // TODO(burdon): Add metadata from column in the case of projections.
-    createItem: (column) => space.db.add(create(KanbanItemType, { name: '' })),
-  };
-
-  return (
-    <Main.Content classNames={[fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
-      <KanbanBoard model={model} />
-    </Main.Content>
-  );
+  return <Kanban model={model} columns={stateColumns} />;
 };
-
-export default KanbanMain;
