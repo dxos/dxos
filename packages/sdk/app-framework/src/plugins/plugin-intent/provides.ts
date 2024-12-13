@@ -3,12 +3,16 @@
 //
 
 import { type IntentContext } from './IntentContext';
-import { type IntentResolver } from './intent';
-import { type Plugin } from '../plugin-host';
+import { type AnyIntentResolver, type IntentDispatcher } from './intent';
+import { type HostContext, type Plugin } from '../plugin-host';
+
+type Context = HostContext & { dispatch: IntentDispatcher };
+
+type ResolverDefinitions = AnyIntentResolver | AnyIntentResolver[] | ResolverDefinitions[];
 
 export type IntentResolverProvides = {
   intent: {
-    resolver: IntentResolver;
+    resolver: (context: Context) => ResolverDefinitions;
   };
 };
 

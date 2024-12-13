@@ -34,6 +34,7 @@
     "@effect/schema": "^0.75.5",
     "@phosphor-icons/react": "^2.1.5",
     "@preact/signals-core": "^1.6.0",
+    "effect": "^3.9.2",
     "zod": "^3.22.4"
   },
   "devDependencies": {

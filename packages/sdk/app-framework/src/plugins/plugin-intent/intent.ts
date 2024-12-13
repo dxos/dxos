@@ -2,26 +2,44 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { MaybePromise } from '@dxos/util';
+import { type S } from '@dxos/echo-schema';
 
-import type { Plugin } from '../plugin-host';
+export type IntentParams = S.Struct.Fields;
+// TODO(wittjosiah): Specifying this further causes a type error.
+// {
+//   readonly input: S.Schema<{ readonly [key: string]: unknown }>;
+//   readonly output: S.Schema<{ readonly [key: string]: unknown }>;
+// };
 
-/**
- * Type of data returned from an intent.
- */
-export type IntentData<T extends Record<string, any> = Record<string, any>> = T & {
-  /**
-   * The data from the result of the previous intent.
-   */
-  // TODO(burdon): Chainable types? (see Effect hooks).
-  result?: any;
-};
+export type IntentData<T extends IntentParams> =
+  S.Schema.Type<S.Struct<T>> extends { input: any } ? S.Schema.Type<S.Struct<T>>['input'] : never;
+
+export type IntentResultData<T extends IntentParams> =
+  S.Schema.Type<S.Struct<T>> extends { output: any } ? S.Schema.Type<S.Struct<T>>['output'] : never;
+
+export type IntentSchema<Class, Tag extends string, Fields extends IntentParams> = S.TaggedClass<Class, Tag, Fields>;
 
 /**
  * An intent is an abstract description of an operation to be performed.
  * Intents allow actions to be performed across plugins.
  */
-export type Intent = {
+export type Intent<
+  Tag extends string,
+  Fields extends IntentParams,
+  Schema extends IntentSchema<any, Tag, Fields> = IntentSchema<any, Tag, Fields>,
+> = {
+  _schema: Schema;
+
+  /**
+   * The action to perform.
+   */
+  action: Tag;
+
+  /**
+   * Any data needed to perform the desired action.
+   */
+  data: IntentData<Fields>;
+
   /**
    * Plugin ID.
    * If specified, the intent will be sent explicitly to the plugin.
@@ -30,72 +48,29 @@ export type Intent = {
   plugin?: string;
 
   /**
-   * The action to perform.
-   */
-  action: string;
-
-  /**
    * Whether or not the intent is being undone.
    */
   undo?: boolean;
-
-  /**
-   * Any data needed to perform the desired action.
-   */
-  // TODO(burdon): Typed intents.
-  data?: IntentData;
 };
 
-export type IntentResult = {
-  /**
-   * The output of the action that was performed.
-   *
-   * If the intent is apart of a chain of intents, the data will be passed to the next intent.
-   */
-  data?: any;
+export type AnyIntent = Intent<any, any>;
 
-  /**
-   * If provided, the action will be undoable.
-   */
-  undoable?: {
-    /**
-     * Message to display to the user when indicating that the action can be undone.
-     */
-    message: string;
-
-    /**
-     * Will be merged with the original intent data when firing the undo intent.
-     */
-    data?: IntentData;
+/**
+ * Creates a typed intent.
+ * @param schema Schema of the intent. Must be a tagged class with input and output schemas.
+ * @param data Data fulfilling the input schema of the intent.
+ * @param params.plugin Optional plugin ID to send the intent to.
+ * @param params.undo Optional flag to indicate that the intent is being undone. Generally not set manually.
+ */
+export const createIntent = <_, Tag extends string, Fields extends IntentParams>(
+  schema: IntentSchema<_, Tag, Fields>,
+  data: IntentData<Fields>,
+  params: Pick<Intent<any, any, any>, 'plugin' | 'undo'> = {},
+): Intent<Tag, Fields, IntentSchema<_, Tag, Fields>> => {
+  return {
+    ...params,
+    _schema: schema,
+    action: schema._tag,
+    data,
   };
-
-  /**
-   * An error that occurred while performing the action.
-   *
-   * If the intent is apart of a chain of intents and an error occurs, the chain will be aborted.
-   */
-  error?: Error;
-
-  /**
-   * Other intent chains to be triggered.
-   */
-  intents?: Intent[][];
 };
-
-/**
- * Trigger one or more intents to be sent.
- * If multiple intents are specified, the result of each will be merged with the data to the next.
- *
- * @returns The result of the last intent.
- */
-// TODO(burdon): Generic/typed intents.
-export type IntentDispatcher = (intent: Intent | Intent[]) => Promise<IntentResult | void>;
-
-/**
- * Resolves an intent that was dispatched.
- * If the intent is not handled, nothing should be returned.
- *
- * @returns The result of the intent.
- */
-// TODO(burdon): All graph callback should use objects.
-export type IntentResolver = (intent: Intent, plugins: Plugin[]) => MaybePromise<IntentResult | void>;
