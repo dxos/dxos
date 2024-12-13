@@ -8,10 +8,11 @@ import { type MutableSchema } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { Filter, useQuery, getSpace } from '@dxos/react-client/echo';
 import { type KanbanType, useKanbanModel, Kanban } from '@dxos/react-ui-kanban';
+import { StackItem } from '@dxos/react-ui-stack';
 
 const stateColumns = { init: { label: 'To do' }, doing: { label: 'Doing' }, done: { label: 'Done' } };
 
-export const KanbanMain = ({ kanban }: { kanban: KanbanType }) => {
+export const KanbanContainer = ({ kanban, role }: { kanban: KanbanType; role: string }) => {
   const [cardSchema, setCardSchema] = useState<MutableSchema>();
   const space = getSpace(kanban);
   useEffect(() => {
@@ -29,9 +30,9 @@ export const KanbanMain = ({ kanban }: { kanban: KanbanType }) => {
     items: filteredObjects,
   });
 
-  if (!model) {
-    return null;
-  }
-
-  return <Kanban model={model} columns={stateColumns} />;
+  return (
+    <StackItem.Content toolbar={false}>
+      {model ? <Kanban model={model} columns={stateColumns} /> : <span>Loading</span>}
+    </StackItem.Content>
+  );
 };

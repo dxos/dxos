@@ -11,7 +11,7 @@ import { SpaceAction } from '@dxos/plugin-space';
 import { KanbanType } from '@dxos/react-ui-kanban';
 import { initializeKanban } from '@dxos/react-ui-kanban/testing';
 
-import { KanbanMain } from './components';
+import { KanbanContainer } from './components';
 import meta, { KANBAN_PLUGIN } from './meta';
 import translations from './translations';
 import { KanbanAction, type KanbanPluginProvides } from './types';
@@ -78,8 +78,9 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
       surface: {
         component: ({ data, role }) => {
           switch (role) {
-            case 'main':
-              return data.active instanceof KanbanType ? <KanbanMain kanban={data.active} /> : null;
+            case 'section':
+            case 'article':
+              return data.object instanceof KanbanType ? <KanbanContainer kanban={data.object} role={role} /> : null;
             default:
               return null;
           }
@@ -91,6 +92,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
             case KanbanAction.CREATE: {
               if (intent.data?.space) {
                 const { kanban } = initializeKanban({ space: intent.data.space });
+                console.log('[create kanban]', kanban);
                 return { data: kanban };
               }
             }
