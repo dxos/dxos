@@ -149,7 +149,7 @@ export const Welcome = ({
               <div role='none' className='flex flex-col gap-8'>
                 <div className='flex flex-col gap-2'>
                   <h1 className='text-2xl'>{t('welcome title')}</h1>
-                  <p className='text-subdued'>{t('check email')}</p>
+                  <p className='text-subdued'>{identity ? t('check email for access') : t('check email to confirm')}</p>
                 </div>
               </div>
             )}
