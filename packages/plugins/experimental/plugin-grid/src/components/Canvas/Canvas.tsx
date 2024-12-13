@@ -71,7 +71,7 @@ type CanvasRootProps = ThemedClassName<PropsWithChildren>;
 const CanvasRoot = ({ children, classNames }: CanvasRootProps) => {
   const [debug, setDebug] = useState(false);
   const [showGrid, setShowGrid] = useState(true);
-  const [snapToGrid, setSnapToGrid] = useState(true);
+  const [snapToGrid, setSnapToGrid] = useState(false);
   const [dragging, setDragging] = useState<DraggingState>();
   const [editing, setEditing] = useState<EditingState>();
 

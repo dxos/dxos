@@ -12,6 +12,7 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { isNotFalsy } from '@dxos/util';
 
 import { Frame, FrameDragPreview, type FrameProps } from './Frame';
+import { type Item } from './Shape';
 import { useBoundingSelection } from './hooks';
 import { GraphWrapper } from '../../graph';
 import { useCanvasContext } from '../../hooks';
@@ -20,8 +21,10 @@ import {
   boundsToModel,
   createPathThroughPoints,
   createSnap,
+  getBounds,
   getInputPoint,
-  type Bounds,
+  findClosestIntersection,
+  type Rect,
   type Dimension,
   type Point,
 } from '../../layout';
@@ -41,8 +44,8 @@ export const Editor = (_: EditorProps) => {
   const { ref: containerRef, width = 0, height = 0 } = useResizeDetector();
 
   // TODO(burdon): Replace with context state.
-  const [itemDragging, setItemDragging] = useState<{ id: string; pos: Point }>();
-  const [itemLinking, setItemLinking] = useState<{ source: Point; target: Point }>();
+  const [itemDragging, setItemDragging] = useState<Pick<Item, 'id' | 'pos'>>();
+  const [itemLinking, setItemLinking] = useState<{ source: { center: Point; bounds: Rect }; target: Point }>();
 
   // Selection.
   const [selected, setSelected] = useState<Record<string, boolean>>({});
@@ -140,7 +143,7 @@ export const Editor = (_: EditorProps) => {
   //
   const overlaySvgRef = useRef<SVGSVGElement>(null);
   const handleSelectionBounds = useCallback(
-    (bounds: Bounds | null) => {
+    (bounds: Rect | null) => {
       if (!bounds) {
         setSelected({});
         return;
@@ -166,7 +169,7 @@ export const Editor = (_: EditorProps) => {
     ({ type, item, location }) => {
       const rect = overlaySvgRef.current!.getBoundingClientRect();
       const pos = boundsToModel(rect, scale, offset, getInputPoint(location.current.input));
-      // const pos = boundsToModelWithOffset(rect, scale, offset, location, item.pos);
+      // const pos = boundsToModelWithOffset(rect, scale, offset, item.pos, location.initial, location.current);
       if (type === 'drop') {
         item.pos = snapToGrid ? snapPoint(pos) : pos;
         setItemDragging(undefined);
@@ -190,7 +193,7 @@ export const Editor = (_: EditorProps) => {
         graph.addEdge({ id: createId(), source: item.id, target: id, data: {} });
         setItemLinking(undefined);
       } else {
-        setItemLinking({ source: item.pos, target: pos });
+        setItemLinking({ source: { center: item.pos, bounds: getBounds(item.pos, item.size) }, target: pos });
       }
     },
     [overlaySvgRef, graph, snapToGrid, scale, offset],
@@ -251,21 +254,15 @@ export const Editor = (_: EditorProps) => {
     [handleDefaultAction, graph, scale, width, height],
   );
 
-  // Create edges.
-  const edges = graph.edges
-    .map(({ id, source, target }) => {
-      const getPos = (id: string) => (itemDragging?.id === id ? itemDragging.pos : graph.getNode(id)?.data.pos);
-      const p1 = getPos(source);
-      const p2 = getPos(target);
-      if (!p1 || !p2) {
-        return null;
-      }
-
-      return { id, path: createPathThroughPoints([p1, p2]) };
-    })
-    .filter(isNotFalsy);
+  // Edges.
+  const edges = getEdges(graph, itemDragging);
   if (itemLinking) {
-    edges.push({ id: 'link', path: createPathThroughPoints([itemLinking.source, itemLinking.target]) });
+    // TODO(burdon): Factor out with getEdges.
+    const { center: p1, bounds: r1 } = itemLinking.source;
+    const p2 = itemLinking.target;
+    const i1 = r1 ? findClosestIntersection([p2, p1], r1) ?? p1 : p1;
+    const i2 = p2;
+    edges.push({ id: 'link', path: createPathThroughPoints([i1, i2]) });
   }
 
   return (
@@ -277,6 +274,7 @@ export const Editor = (_: EditorProps) => {
       {ready && (
         <>
           {/* Selection overlay. */}
+          {/* TODO(burdon): Focus issue for dragging. */}
           {/* TODO(burdon): Currently HTML content needs to be last so that elements can be dragged. */}
           <svg width='100%' height='100%' className='absolute left-0 top-0 cursor-crosshair' ref={overlaySvgRef}>
             <g>
@@ -288,11 +286,46 @@ export const Editor = (_: EditorProps) => {
 
           {/* SVG content. */}
           <svg width='100%' height='100%' className='absolute left-0 top-0 pointer-events-none touch-none'>
+            <defs>
+              <marker
+                id='arrow'
+                markerWidth='10'
+                markerHeight='10'
+                refX='10'
+                refY='5'
+                orient='auto'
+                markerUnits='strokeWidth'
+                className='stroke-teal-700 fill-teal-700'
+              >
+                <path d='M0,0 L0,10 L10,5 z' />
+              </marker>
+              <marker
+                id='circle'
+                markerWidth='12'
+                markerHeight='12'
+                refX='6'
+                refY='6'
+                orient='auto'
+                markerUnits='strokeWidth'
+                className='stroke-teal-700 fill-teal-700'
+              >
+                <circle cx={6} cy={6} r={5} />
+              </marker>
+            </defs>
             <g style={transformStyle}>
               {/* Edges. */}
+              {/* TODO(burdon): Find edge of shape. */}
               <g>
                 {edges.map(({ id, path }) => (
-                  <path key={id} d={path} fill='none' strokeWidth='1' className='stroke-teal-700' />
+                  <path
+                    key={id}
+                    d={path}
+                    fill='none'
+                    strokeWidth='1'
+                    className='stroke-teal-700'
+                    markerStart='url(#circle)'
+                    markerEnd='url(#circle)'
+                  />
                 ))}
               </g>
 
@@ -343,7 +376,6 @@ export const Editor = (_: EditorProps) => {
                 offset,
                 rect: overlaySvgRef.current?.getBoundingClientRect(),
                 selectionBounds,
-                transformedSelectionBounds: debugSelectionBounds,
                 dragging: itemDragging,
                 linking: itemLinking,
               },
@@ -358,4 +390,35 @@ export const Editor = (_: EditorProps) => {
       </div>
     </div>
   );
+};
+
+export const getEdges = (graph: GraphWrapper, dragging?: Pick<Item, 'id' | 'pos'>): { id: string; path: string }[] => {
+  const getPos = (id: string): { center: Point; bounds: Rect } | undefined => {
+    const node = graph.getNode(id);
+    if (dragging?.id === id) {
+      return { center: dragging.pos, bounds: getBounds(dragging.pos, node?.data.size) };
+    }
+
+    if (node) {
+      return { center: node.data.pos, bounds: getBounds(node.data.pos, node.data.size) };
+    }
+
+    return undefined;
+  };
+
+  // TODO(burdon): Factor out.
+  return graph.edges
+    .map(({ id, source, target }) => {
+      const { center: p1, bounds: r1 } = getPos(source) ?? {};
+      const { center: p2, bounds: r2 } = getPos(target) ?? {};
+      if (!p1 || !p2) {
+        return null;
+      }
+
+      const i1 = r1 ? findClosestIntersection([p2, p1], r1) ?? p1 : p1;
+      const i2 = r2 ? findClosestIntersection([p1, p2], r2) ?? p2 : p2;
+
+      return { id, path: createPathThroughPoints([i1, i2]) };
+    })
+    .filter(isNotFalsy);
 };

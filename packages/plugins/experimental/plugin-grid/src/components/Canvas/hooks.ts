@@ -6,15 +6,12 @@ import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { bind } from 'bind-event-listener';
 import { useEffect, useState } from 'react';
 
-import { type Bounds, getBounds, type Point, type Range } from '../../layout';
+import { type Rect, getRect, type Point, type Range } from '../../layout';
 
 /**
  * Event listener to track range bounds selection.
  */
-export const useBoundingSelection = (
-  svg: SVGSVGElement | null,
-  cb?: (bounds: Bounds | null) => void,
-): Bounds | null => {
+export const useBoundingSelection = (svg: SVGSVGElement | null, cb?: (bounds: Rect | null) => void): Rect | null => {
   const [range, setRange] = useState<Partial<Range>>();
   useEffect(() => {
     if (!svg) {
@@ -41,7 +38,7 @@ export const useBoundingSelection = (
         listener: (event) => {
           setRange((range) => {
             if (range?.p1 && range?.p2) {
-              const bounds = getBounds(range.p1, range.p2);
+              const bounds = getRect(range.p1, range.p2);
               cb?.(bounds);
             } else {
               cb?.(null);
@@ -54,5 +51,5 @@ export const useBoundingSelection = (
     );
   }, [svg, cb]);
 
-  return range?.p1 && range?.p2 ? getBounds(range.p1, range.p2) : null;
+  return range?.p1 && range?.p2 ? getRect(range.p1, range.p2) : null;
 };

@@ -40,7 +40,7 @@ export const TextBox = ({ classNames, value, onClose, onCancel, ...rest }: TextB
         }),
         EditorView.focusChangeEffect.of((state, focusing) => {
           if (!focusing) {
-            // onClose?.(state.doc.toString());
+            onClose?.(state.doc.toString());
           }
           return null;
         }),

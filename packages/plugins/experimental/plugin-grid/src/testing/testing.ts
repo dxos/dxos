@@ -20,6 +20,7 @@ export const createGraph = (size: Dimension, snap: PointTransform): Graph => {
       id: a,
       data: {
         id: a,
+        text: 'A',
         pos: snap({ x: 0, y: 0 }),
         size,
       },
@@ -29,6 +30,7 @@ export const createGraph = (size: Dimension, snap: PointTransform): Graph => {
       id: b,
       data: {
         id: b,
+        text: 'B',
         pos: snap({ x: -128, y: 0 }),
         size,
       },
@@ -38,6 +40,7 @@ export const createGraph = (size: Dimension, snap: PointTransform): Graph => {
       id: c,
       data: {
         id: c,
+        text: 'C',
         pos: snap({ x: 128, y: 0 }),
         size,
       },

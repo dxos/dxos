@@ -7,7 +7,7 @@ import { create } from '@dxos/live-object';
 
 export const Node = S.Struct({
   id: S.String,
-  data: S.Any,
+  data: S.Any, // TODO(burdon): Type (Item).
 });
 
 export type Node = S.Schema.Type<typeof Node>;

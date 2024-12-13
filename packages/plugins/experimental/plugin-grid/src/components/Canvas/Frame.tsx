@@ -84,7 +84,7 @@ export type FrameLinkEvent = {
 
 const containerStyles = [
   'absolute flex p-2 justify-center items-center overflow-hidden',
-  'bg-base border border-teal-700 rounded',
+  '__bg-base border border-teal-700 rounded',
 ];
 
 export type FrameProps = PropsWithChildren<{
