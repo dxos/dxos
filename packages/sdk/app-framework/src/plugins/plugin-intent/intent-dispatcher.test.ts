@@ -61,12 +61,14 @@ const concatResolver = createResolver(Concat, async (data) => {
 describe('Intent dispatcher', () => {
   test('throws error if no resolver found', async () => {
     const { dispatchPromise } = createDispatcher([]);
+
     await expect(dispatchPromise(createIntent(ToString, { value: 1 }))).rejects.toThrow();
   });
 
   test('matches intent to resolver and executes', async () => {
     const { dispatchPromise } = createDispatcher([toStringResolver]);
     const { data } = await dispatchPromise(createIntent(ToString, { value: 1 }));
+
     expect(data.string).toBe('1');
   });
 
@@ -105,6 +107,7 @@ describe('Intent dispatcher', () => {
 
     const a = await dispatchPromise(createIntent(Compute, { value: 2 }));
     const b = await dispatchPromise(createIntent(ToString, { value: a.data.value }));
+
     expect(b.data.string).toBe('4');
   });
 
@@ -112,8 +115,11 @@ describe('Intent dispatcher', () => {
     const { dispatch, undo } = createDispatcher([computeResolver]);
     const program = Effect.gen(function* () {
       const a = yield* dispatch(createIntent(Compute, { value: 2 }));
+
       expect(a.data.value).toBe(4);
+
       const b = yield* undo();
+
       expect(b?.data.value).toBe(2);
     });
 
@@ -123,6 +129,7 @@ describe('Intent dispatcher', () => {
   test('chain intents', async () => {
     const { dispatch } = createDispatcher([computeResolver, toStringResolver, concatResolver]);
     const intent = pipe(createIntent(Compute, { value: 1 }), chain(ToString, {}), chain(Concat, { plus: '!' }));
+
     expect(intent.first.action).toBe(Compute._tag);
     expect(intent.last.action).toBe(Concat._tag);
     expect(intent.all.length).toBe(3);
@@ -140,8 +147,11 @@ describe('Intent dispatcher', () => {
     const intent = pipe(createIntent(Compute, { value: 1 }), chain(Compute, {}), chain(Compute, {}));
     const program = Effect.gen(function* () {
       const a = yield* dispatch(intent);
+
       expect(a.data.value).toBe(8);
+
       const b = yield* undo();
+
       expect(b?.data.value).toBe(1);
     });
 

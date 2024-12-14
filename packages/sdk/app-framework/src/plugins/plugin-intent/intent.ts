@@ -56,6 +56,23 @@ export type Intent<
 export type AnyIntent = Intent<any, any>;
 
 /**
+ * Chain of intents to be executed together.
+ * The result of each intent is merged into the next intent's input data.
+ */
+export type IntentChain<
+  FirstTag extends string,
+  LastTag extends string,
+  FirstFields extends IntentParams,
+  LastFields extends IntentParams,
+> = {
+  first: Intent<FirstTag, FirstFields>;
+  last: Intent<LastTag, LastFields>;
+  all: AnyIntent[];
+};
+
+export type AnyIntentChain = IntentChain<any, any, any, any>;
+
+/**
  * Creates a typed intent.
  * @param schema Schema of the intent. Must be a tagged class with input and output schemas.
  * @param data Data fulfilling the input schema of the intent.
@@ -82,33 +99,23 @@ export const createIntent = <Tag extends string, Fields extends IntentParams>(
 };
 
 /**
- * Chain of intents to be executed together.
- * The result of each intent is merged into the next intent's input data.
- */
-export type IntentChain<
-  FirstTag extends string,
-  LastTag extends string,
-  FirstFields extends IntentParams,
-  LastFields extends IntentParams,
-> = {
-  first: Intent<FirstTag, FirstFields>;
-  last: Intent<LastTag, LastFields>;
-  all: AnyIntent[];
-};
-
-export type AnyIntentChain = IntentChain<any, any, any, any>;
-
-/**
  * Chain two intents together.
  */
-// TODO(wittjosiah): Chain data is not strict.
 export const chain =
-  <TagA extends string, TagB extends string, FieldsA extends IntentParams, FieldsB extends IntentParams>(
-    schema: IntentSchema<TagB, FieldsB>,
-    data: Omit<IntentData<FieldsB>, keyof IntentResultData<FieldsA>>,
+  <
+    FirstTag extends string,
+    NextTag extends string,
+    FirstFields extends IntentParams,
+    LastFields extends IntentParams,
+    NextFields extends IntentParams,
+  >(
+    schema: IntentSchema<NextTag, NextFields>,
+    data: Omit<IntentData<NextFields>, keyof IntentResultData<LastFields>>,
     params: Pick<AnyIntent, 'plugin' | 'undo'> = {},
   ) =>
-  (intent: Intent<TagA, FieldsA> | IntentChain<TagA, any, any, any>): IntentChain<TagA, TagB, FieldsA, FieldsB> => {
+  (
+    intent: IntentChain<FirstTag, any, FirstFields, LastFields>,
+  ): IntentChain<FirstTag, NextTag, FirstFields, NextFields> => {
     const intents = 'all' in intent ? intent.all : [intent];
     const first = intents[0];
     const last = {
@@ -116,7 +123,7 @@ export const chain =
       _schema: schema,
       action: schema._tag,
       data,
-    } satisfies Intent<TagB, FieldsB>;
+    } satisfies Intent<NextTag, NextFields>;
 
     return {
       first,
