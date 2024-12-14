@@ -2,17 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IntentContext } from './IntentContext';
-import { type AnyIntentResolver, type IntentDispatcher } from './intent-dispatcher';
+import { type IntentContext, type AnyIntentResolver, type IntentDispatcher } from './intent-dispatcher';
 import { type HostContext, type Plugin } from '../plugin-host';
 
 type Context = HostContext & { dispatch: IntentDispatcher };
 
-type ResolverDefinitions = AnyIntentResolver | AnyIntentResolver[] | ResolverDefinitions[];
+export type ResolverDefinitions = AnyIntentResolver | AnyIntentResolver[] | ResolverDefinitions[];
 
 export type IntentResolverProvides = {
   intent: {
-    resolver: (context: Context) => ResolverDefinitions;
+    resolvers: (context: Context) => ResolverDefinitions;
   };
 };
 
@@ -24,7 +23,7 @@ export const parseIntentPlugin = (plugin: Plugin) =>
   (plugin.provides as any).intent?.dispatch ? (plugin as Plugin<IntentPluginProvides>) : undefined;
 
 export const parseIntentResolverPlugin = (plugin: Plugin) =>
-  (plugin.provides as any).intent?.resolver ? (plugin as Plugin<IntentResolverProvides>) : undefined;
+  (plugin.provides as any).intent?.resolvers ? (plugin as Plugin<IntentResolverProvides>) : undefined;
 
 //
 // Intents

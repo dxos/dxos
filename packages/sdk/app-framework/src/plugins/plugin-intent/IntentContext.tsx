@@ -3,47 +3,17 @@
 //
 
 import { type Context, createContext, useContext, type Provider } from 'react';
-import { useEffect } from 'react';
 
-import type { UnsubscribeCallback } from '@dxos/async';
+import { raise } from '@dxos/debug';
+import { pick } from '@dxos/util';
 
-import type { Intent, IntentDispatcher, IntentResolver, IntentResult } from './intent';
+import { type IntentContext } from './intent-dispatcher';
 
-export type IntentExecution = {
-  intent: Intent;
-  result: IntentResult;
+const IntentContext: Context<IntentContext | undefined> = createContext<IntentContext | undefined>(undefined);
+
+export const useIntentDispatcher = (): Pick<IntentContext, 'dispatch' | 'dispatchPromise'> => {
+  const context = useContext(IntentContext) ?? raise(new Error('IntentContext not found'));
+  return pick(context, ['dispatch', 'dispatchPromise']);
 };
 
-export type IntentContext = {
-  dispatch: IntentDispatcher;
-  undo: () => Promise<IntentResult | void>;
-  history: IntentExecution[][];
-  registerResolver: (pluginId: string, resolver: IntentResolver) => UnsubscribeCallback;
-};
-
-const IntentContext: Context<IntentContext> = createContext<IntentContext>({
-  dispatch: async () => ({}),
-  undo: async () => ({}),
-  history: [],
-  registerResolver: () => () => {},
-});
-
-/**
- * @deprecated Prefer granular hooks.
- */
-// TODO(burdon): Remove. Use useIntentDispatcher.
-export const useIntent = () => useContext(IntentContext);
-
-export const useIntentDispatcher = (): IntentDispatcher => {
-  const { dispatch } = useIntent();
-  return dispatch;
-};
-
-export const useIntentResolver = (plugin: string, resolver: IntentResolver) => {
-  const { registerResolver } = useIntent();
-  useEffect(() => {
-    return registerResolver(plugin, resolver);
-  }, [plugin, resolver]);
-};
-
-export const IntentProvider: Provider<IntentContext> = IntentContext.Provider;
+export const IntentProvider: Provider<IntentContext | undefined> = IntentContext.Provider;

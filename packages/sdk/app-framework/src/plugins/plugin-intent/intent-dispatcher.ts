@@ -148,6 +148,13 @@ export type IntentUndo = () => Effect.Effect<IntentDispatcherResult<any> | undef
 const isUndoable = (historyEntry: AnyIntentResult[]): boolean =>
   historyEntry.length > 0 && historyEntry.every(({ undoable }) => !!undoable);
 
+export type IntentContext = {
+  dispatch: IntentDispatcher;
+  dispatchPromise: PromiseIntentDispatcher;
+  undo: IntentUndo;
+  undoPromise: PromiseIntentUndo;
+};
+
 /**
  * Sets of an intent dispatcher.
  *
@@ -158,7 +165,7 @@ const isUndoable = (historyEntry: AnyIntentResult[]): boolean =>
 export const createDispatcher = (
   resolvers: Record<string, AnyIntentResolver[]>,
   { executionLimit = EXECUTION_LIMIT, historyLimit = HISTORY_LIMIT } = {},
-) => {
+): IntentContext => {
   const historyRef = Effect.runSync(Ref.make<AnyIntentResult[][]>([]));
 
   const handleIntent = (intent: AnyIntent) => {
