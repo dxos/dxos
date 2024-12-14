@@ -66,12 +66,18 @@ export const createIntent = <Tag extends string, Fields extends IntentParams>(
   schema: IntentSchema<Tag, Fields>,
   data: IntentData<Fields>,
   params: Pick<AnyIntent, 'plugin' | 'undo'> = {},
-): Intent<Tag, Fields> => {
-  return {
+): IntentChain<Tag, Tag, Fields, Fields> => {
+  const intent = {
     ...params,
     _schema: schema,
     action: schema._tag,
     data,
+  } satisfies Intent<Tag, Fields>;
+
+  return {
+    first: intent,
+    last: intent,
+    all: [intent],
   };
 };
 
@@ -90,9 +96,12 @@ export type IntentChain<
   all: AnyIntent[];
 };
 
+export type AnyIntentChain = IntentChain<any, any, any, any>;
+
 /**
  * Chain two intents together.
  */
+// TODO(wittjosiah): Chain data is not strict.
 export const chain =
   <TagA extends string, TagB extends string, FieldsA extends IntentParams, FieldsB extends IntentParams>(
     schema: IntentSchema<TagB, FieldsB>,

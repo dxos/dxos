@@ -121,18 +121,31 @@ describe('Intent dispatcher', () => {
   });
 
   test('chain intents', async () => {
-    const { dispatchChain } = createDispatcher([computeResolver, toStringResolver, concatResolver]);
+    const { dispatch } = createDispatcher([computeResolver, toStringResolver, concatResolver]);
     const intent = pipe(createIntent(Compute, { value: 1 }), chain(ToString, {}), chain(Concat, { plus: '!' }));
     expect(intent.first.action).toBe(Compute._tag);
     expect(intent.last.action).toBe(Concat._tag);
     expect(intent.all.length).toBe(3);
 
     const program = Effect.gen(function* () {
-      const { data } = yield* dispatchChain(intent);
+      const { data } = yield* dispatch(intent);
       return data.string;
     });
 
     expect(await Effect.runPromise(program)).toBe('2!');
+  });
+
+  test('undo chained intent', async () => {
+    const { dispatch, undo } = createDispatcher([computeResolver, toStringResolver, concatResolver]);
+    const intent = pipe(createIntent(Compute, { value: 1 }), chain(Compute, {}), chain(Compute, {}));
+    const program = Effect.gen(function* () {
+      const a = yield* dispatch(intent);
+      expect(a.data.value).toBe(8);
+      const b = yield* undo();
+      expect(b?.data.value).toBe(1);
+    });
+
+    await Effect.runPromise(program);
   });
 
   test.todo('follow up intents');
