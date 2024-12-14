@@ -2,22 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type S } from '@dxos/echo-schema';
+import { S } from '@dxos/echo-schema';
 
-export type IntentParams = S.Struct.Fields;
-// TODO(wittjosiah): Specifying this further causes a type error.
-// {
-//   readonly input: S.Schema<{ readonly [key: string]: unknown }>;
-//   readonly output: S.Schema<{ readonly [key: string]: unknown }>;
-// };
+export type IntentParams = {
+  readonly input: S.Schema.All;
+  readonly output: S.Schema.All;
+};
 
-// TODO(wittjosiah): Could input/output types be allowed to be primitives and not strictly structs?
-//   This would allow for simpler code with less destructuring, particularly for single value outputs.
-export type IntentData<T extends IntentParams> =
-  S.Schema.Type<S.Struct<T>> extends { input: any } ? S.Schema.Type<S.Struct<T>>['input'] : any;
+export type IntentData<Fields extends IntentParams> =
+  S.Schema.Type<S.Struct<Fields>> extends { readonly input: any } ? S.Schema.Type<S.Struct<Fields>>['input'] : any;
 
-export type IntentResultData<T extends IntentParams> =
-  S.Schema.Type<S.Struct<T>> extends { output: any } ? S.Schema.Type<S.Struct<T>>['output'] : any;
+export type IntentResultData<Fields extends IntentParams> =
+  S.Schema.Type<S.Struct<Fields>> extends { readonly output: any } ? S.Schema.Type<S.Struct<Fields>>['output'] : any;
 
 export type IntentSchema<Tag extends string, Fields extends IntentParams> = S.TaggedClass<any, Tag, Fields>;
 
@@ -25,12 +21,8 @@ export type IntentSchema<Tag extends string, Fields extends IntentParams> = S.Ta
  * An intent is an abstract description of an operation to be performed.
  * Intents allow actions to be performed across plugins.
  */
-export type Intent<
-  Tag extends string,
-  Fields extends IntentParams,
-  Schema extends IntentSchema<Tag, Fields> = IntentSchema<Tag, Fields>,
-> = {
-  _schema: Schema;
+export type Intent<Tag extends string, Fields extends IntentParams> = {
+  _schema: IntentSchema<Tag, Fields>;
 
   /**
    * The action to perform.
@@ -83,14 +75,15 @@ export type AnyIntentChain = IntentChain<any, any, any, any>;
  */
 export const createIntent = <Tag extends string, Fields extends IntentParams>(
   schema: IntentSchema<Tag, Fields>,
-  data: IntentData<Fields>,
+  data?: IntentData<Fields>,
   params: Pick<AnyIntent, 'plugin' | 'undo'> = {},
 ): IntentChain<Tag, Tag, Fields, Fields> => {
   const intent = {
     ...params,
     _schema: schema,
     action: schema._tag,
-    data,
+    // TODO(wittjosiah): Is there a better way to make theses types align?
+    data: S.validateSync(schema.fields.input as S.Schema<any, any, unknown>)(data),
   } satisfies Intent<Tag, Fields>;
 
   return {
@@ -102,6 +95,8 @@ export const createIntent = <Tag extends string, Fields extends IntentParams>(
 
 /**
  * Chain two intents together.
+ *
+ * NOTE: Chaining of intents depends on the data inputs and outputs being structs.
  */
 export const chain =
   <

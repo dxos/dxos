@@ -10,54 +10,6 @@ import { S } from '@dxos/echo-schema';
 import { chain, createIntent } from './intent';
 import { createDispatcher, createResolver } from './intent-dispatcher';
 
-class ToString extends S.TaggedClass<ToString>()('ToString', {
-  input: S.Struct({
-    value: S.Number,
-  }),
-  output: S.Struct({
-    string: S.String,
-  }),
-}) {}
-
-const toStringResolver = createResolver(ToString, async (data) => {
-  return { data: { string: data.value.toString() } };
-});
-
-class Compute extends S.TaggedClass<Compute>()('Compute', {
-  input: S.Struct({
-    value: S.Number,
-  }),
-  output: S.Struct({
-    value: S.Number,
-  }),
-}) {}
-
-const computeResolver = createResolver(Compute, (data, undo) => {
-  return Effect.gen(function* () {
-    if (undo) {
-      return { data: { value: data.value / 2 } };
-    }
-
-    yield* Effect.sleep(data.value * 10);
-    const value = data.value * 2;
-    return { data: { value }, undoable: { message: 'test', data: { value } } };
-  });
-});
-
-class Concat extends S.TaggedClass<Concat>()('Concat', {
-  input: S.Struct({
-    string: S.String,
-    plus: S.String,
-  }),
-  output: S.Struct({
-    string: S.String,
-  }),
-}) {}
-
-const concatResolver = createResolver(Concat, async (data) => {
-  return { data: { string: data.string + data.plus } };
-});
-
 describe('Intent dispatcher', () => {
   test('throws error if no resolver found', async () => {
     const { dispatchPromise } = createDispatcher({});
@@ -222,5 +174,83 @@ describe('Intent dispatcher', () => {
     await Effect.runPromise(program);
   });
 
+  test('non-struct inputs & outputs', async () => {
+    const { dispatchPromise } = createDispatcher({ test: [addResolver] });
+    const { data } = await dispatchPromise(createIntent(Add, [1, 1]));
+    expect(data).toBe(2);
+  });
+
+  test('empty inputs & outputs', async () => {
+    const { dispatchPromise } = createDispatcher({ test: [sideEffectResolver] });
+    const { data } = await dispatchPromise(createIntent(SideEffect));
+    expect(data).toBe(undefined);
+  });
+
   test.todo('follow up intents');
+});
+
+class ToString extends S.TaggedClass<ToString>()('ToString', {
+  input: S.Struct({
+    value: S.Number,
+  }),
+  output: S.Struct({
+    string: S.String,
+  }),
+}) {}
+
+const toStringResolver = createResolver(ToString, async (data) => {
+  return { data: { string: data.value.toString() } };
+});
+
+class Compute extends S.TaggedClass<Compute>()('Compute', {
+  input: S.Struct({
+    value: S.Number,
+  }),
+  output: S.Struct({
+    value: S.Number,
+  }),
+}) {}
+
+const computeResolver = createResolver(Compute, (data, undo) => {
+  return Effect.gen(function* () {
+    if (undo) {
+      return { data: { value: data.value / 2 } };
+    }
+
+    yield* Effect.sleep(data.value * 10);
+    const value = data.value * 2;
+    return { data: { value }, undoable: { message: 'test', data: { value } } };
+  });
+});
+
+class Concat extends S.TaggedClass<Concat>()('Concat', {
+  input: S.Struct({
+    string: S.String,
+    plus: S.String,
+  }),
+  output: S.Struct({
+    string: S.String,
+  }),
+}) {}
+
+const concatResolver = createResolver(Concat, async (data) => {
+  return { data: { string: data.string + data.plus } };
+});
+
+class Add extends S.TaggedClass<Add>()('Add', {
+  input: S.Tuple(S.Number, S.Number),
+  output: S.Number,
+}) {}
+
+const addResolver = createResolver(Add, async (data) => {
+  return { data: data[0] + data[1] };
+});
+
+class SideEffect extends S.TaggedClass<SideEffect>()('SideEffect', {
+  input: S.Void,
+  output: S.Void,
+}) {}
+
+const sideEffectResolver = createResolver(SideEffect, async () => {
+  return { data: undefined };
 });
