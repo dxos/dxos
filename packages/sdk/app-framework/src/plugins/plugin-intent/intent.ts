@@ -11,6 +11,8 @@ export type IntentParams = S.Struct.Fields;
 //   readonly output: S.Schema<{ readonly [key: string]: unknown }>;
 // };
 
+// TODO(wittjosiah): Could input/output types be allowed to be primitives and not strictly structs?
+//   This would allow for simpler code with less destructuring, particularly for single value outputs.
 export type IntentData<T extends IntentParams> =
   S.Schema.Type<S.Struct<T>> extends { input: any } ? S.Schema.Type<S.Struct<T>>['input'] : any;
 

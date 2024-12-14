@@ -60,20 +60,20 @@ const concatResolver = createResolver(Concat, async (data) => {
 
 describe('Intent dispatcher', () => {
   test('throws error if no resolver found', async () => {
-    const { dispatchPromise } = createDispatcher([]);
+    const { dispatchPromise } = createDispatcher({});
 
     await expect(dispatchPromise(createIntent(ToString, { value: 1 }))).rejects.toThrow();
   });
 
   test('matches intent to resolver and executes', async () => {
-    const { dispatchPromise } = createDispatcher([toStringResolver]);
+    const { dispatchPromise } = createDispatcher({ test: [toStringResolver] });
     const { data } = await dispatchPromise(createIntent(ToString, { value: 1 }));
 
     expect(data.string).toBe('1');
   });
 
   test('compose intent effects', async () => {
-    const { dispatch } = createDispatcher([computeResolver]);
+    const { dispatch } = createDispatcher({ test: [computeResolver] });
     const program = Effect.gen(function* () {
       const a = yield* dispatch(createIntent(Compute, { value: 1 }));
       const b = yield* dispatch(createIntent(Compute, { value: 2 }));
@@ -84,7 +84,7 @@ describe('Intent dispatcher', () => {
   });
 
   test('concurrent intent effects', async () => {
-    const { dispatch } = createDispatcher([computeResolver]);
+    const { dispatch } = createDispatcher({ test: [computeResolver] });
     const program = Effect.gen(function* () {
       const fiberA = yield* Effect.fork(dispatch(createIntent(Compute, { value: 5 })));
       const fiberB = yield* Effect.fork(dispatch(createIntent(Compute, { value: 2 })));
@@ -95,8 +95,8 @@ describe('Intent dispatcher', () => {
     expect(await Effect.runPromise(program)).toBe(-6);
   });
 
-  test('mix & match intent effects', async () => {
-    const { dispatch, dispatchPromise } = createDispatcher([toStringResolver, computeResolver]);
+  test('mix & match intent effects with promises', async () => {
+    const { dispatch, dispatchPromise } = createDispatcher({ test: [toStringResolver, computeResolver] });
     const program = Effect.gen(function* () {
       const a = yield* dispatch(createIntent(Compute, { value: 2 }));
       const b = yield* dispatch(createIntent(ToString, { value: a.data.value }));
@@ -112,7 +112,7 @@ describe('Intent dispatcher', () => {
   });
 
   test('undo intent', async () => {
-    const { dispatch, undo } = createDispatcher([computeResolver]);
+    const { dispatch, undo } = createDispatcher({ test: [computeResolver] });
     const program = Effect.gen(function* () {
       const a = yield* dispatch(createIntent(Compute, { value: 2 }));
 
@@ -127,7 +127,7 @@ describe('Intent dispatcher', () => {
   });
 
   test('chain intents', async () => {
-    const { dispatch } = createDispatcher([computeResolver, toStringResolver, concatResolver]);
+    const { dispatch } = createDispatcher({ test: [computeResolver, toStringResolver, concatResolver] });
     const intent = pipe(createIntent(Compute, { value: 1 }), chain(ToString, {}), chain(Concat, { plus: '!' }));
 
     expect(intent.first.action).toBe(Compute._tag);
@@ -143,7 +143,7 @@ describe('Intent dispatcher', () => {
   });
 
   test('undo chained intent', async () => {
-    const { dispatch, undo } = createDispatcher([computeResolver, toStringResolver, concatResolver]);
+    const { dispatch, undo } = createDispatcher({ test: [computeResolver, toStringResolver, concatResolver] });
     const intent = pipe(createIntent(Compute, { value: 1 }), chain(Compute, {}), chain(Compute, {}));
     const program = Effect.gen(function* () {
       const a = yield* dispatch(intent);
@@ -153,6 +153,70 @@ describe('Intent dispatcher', () => {
       const b = yield* undo();
 
       expect(b?.data.value).toBe(1);
+    });
+
+    await Effect.runPromise(program);
+  });
+
+  test('filter resolvers by plugin', async () => {
+    const otherComputeResolver = createResolver(Compute, async (data) => ({ data: { value: data.value * 3 } }));
+    const { dispatch } = createDispatcher({ test: [computeResolver], other: [otherComputeResolver] });
+    const program = Effect.gen(function* () {
+      const a = yield* dispatch(createIntent(Compute, { value: 1 }));
+
+      expect(a.data.value).toBe(2);
+
+      const b = yield* dispatch(createIntent(Compute, { value: 1 }, { plugin: 'other' }));
+
+      expect(b.data.value).toBe(3);
+    });
+
+    await Effect.runPromise(program);
+  });
+
+  test('filter resolvers by predicate', async () => {
+    const conditionalComputeResolver = createResolver(Compute, async (data) => ({ data: { value: data.value * 3 } }), {
+      filter: (data) => data.value > 1,
+    });
+    const { dispatch } = createDispatcher({ test: [conditionalComputeResolver, computeResolver] });
+    const program = Effect.gen(function* () {
+      const a = yield* dispatch(createIntent(Compute, { value: 1 }));
+
+      expect(a.data.value).toBe(2);
+
+      const b = yield* dispatch(createIntent(Compute, { value: 2 }));
+
+      expect(b.data.value).toBe(6);
+    });
+
+    await Effect.runPromise(program);
+  });
+
+  test('hoist resolvers', async () => {
+    const hoistedComputeResolver = createResolver(Compute, async (data) => ({ data: { value: data.value * 3 } }), {
+      disposition: 'hoist',
+    });
+    const { dispatchPromise } = createDispatcher({ test: [computeResolver, hoistedComputeResolver] });
+    const { data } = await dispatchPromise(createIntent(Compute, { value: 1 }));
+    expect(data.value).toBe(3);
+  });
+
+  test('fallback resolvers', async () => {
+    const conditionalComputeResolver = createResolver(Compute, async (data) => ({ data: { value: data.value * 2 } }), {
+      filter: (data) => data.value === 1,
+    });
+    const fallbackComputeResolver = createResolver(Compute, async (data) => ({ data: { value: data.value * 3 } }), {
+      disposition: 'fallback',
+    });
+    const { dispatch } = createDispatcher({ test: [fallbackComputeResolver, conditionalComputeResolver] });
+    const program = Effect.gen(function* () {
+      const a = yield* dispatch(createIntent(Compute, { value: 1 }));
+
+      expect(a.data.value).toBe(2);
+
+      const b = yield* dispatch(createIntent(Compute, { value: 2 }));
+
+      expect(b.data.value).toBe(6);
     });
 
     await Effect.runPromise(program);

@@ -7,14 +7,14 @@ import { Effect, Ref } from 'effect';
 import { pick } from '@dxos/util';
 
 import {
-  type IntentChain,
   type AnyIntent,
+  type AnyIntentChain,
   type Intent,
+  type IntentChain,
   type IntentData,
   type IntentParams,
   type IntentResultData,
   type IntentSchema,
-  type AnyIntentChain,
 } from './intent';
 
 const EXECUTION_LIMIT = 100;
@@ -145,7 +145,7 @@ export type IntentUndo = () => Effect.Effect<IntentDispatcherResult<any> | undef
 /**
  * Check if a chain of results is undoable.
  */
-export const isUndoable = (historyEntry: AnyIntentResult[]): boolean =>
+const isUndoable = (historyEntry: AnyIntentResult[]): boolean =>
   historyEntry.length > 0 && historyEntry.every(({ undoable }) => !!undoable);
 
 /**
@@ -156,24 +156,23 @@ export const isUndoable = (historyEntry: AnyIntentResult[]): boolean =>
  * @param params.executionLimit The maximum recursion depth of intent chains.
  */
 export const createDispatcher = (
-  resolvers: AnyIntentResolver[],
+  resolvers: Record<string, AnyIntentResolver[]>,
   { executionLimit = EXECUTION_LIMIT, historyLimit = HISTORY_LIMIT } = {},
 ) => {
   const historyRef = Effect.runSync(Ref.make<AnyIntentResult[][]>([]));
 
-  const dispatch = (intent: AnyIntent) => {
+  const handleIntent = (intent: AnyIntent) => {
     return Effect.gen(function* () {
-      if (intent.plugin) {
-        // TODO(wittjosiah): Dispatch to a specific plugin.
-      }
-
-      const candidates = resolvers
+      const candidates = Object.entries(resolvers)
+        .filter(([id, _]) => (intent.plugin ? id === intent.plugin : true))
+        .flatMap(([_, resolvers]) => resolvers)
         .filter((r) => r.action === intent.action)
+        .filter((r) => !r.filter || r.filter(intent.data))
         .toSorted(({ disposition: a = 'default' }, { disposition: b = 'default' }) => {
           return a === b ? 0 : a === 'hoist' || b === 'fallback' ? -1 : b === 'hoist' || a === 'fallback' ? 1 : 0;
         });
       if (candidates.length === 0) {
-        throw new Error(`No resolver found for action: ${intent.action}`);
+        yield* Effect.fail(new Error(`No resolver found for action: ${intent.action}`));
       }
 
       const effect = candidates[0].effect(intent.data, intent.undo ?? false);
@@ -182,7 +181,7 @@ export const createDispatcher = (
     });
   };
 
-  const dispatchChain: IntentDispatcher = (intentChain, depth = 0) => {
+  const dispatch: IntentDispatcher = (intentChain, depth = 0) => {
     return Effect.gen(function* () {
       if (depth > executionLimit) {
         yield* Effect.fail(
@@ -193,7 +192,7 @@ export const createDispatcher = (
       const resultsRef = yield* Ref.make<AnyIntentResult[]>([]);
       for (const intent of intentChain.all) {
         const { data: prev } = (yield* resultsRef.get)[0] ?? {};
-        const result = yield* dispatch({ ...intent, data: { ...intent.data, ...prev } });
+        const result = yield* handleIntent({ ...intent, data: { ...intent.data, ...prev } });
         yield* Ref.update(resultsRef, (results) => [result, ...results]);
         if (result.error) {
           break;
@@ -202,7 +201,7 @@ export const createDispatcher = (
           for (const intent of result.intents) {
             // Returned intents are dispatched but not yielded into results,
             // as such they cannot be undone.
-            void dispatchChain(intent, depth + 1);
+            void dispatch(intent, depth + 1);
           }
         }
       }
@@ -225,8 +224,8 @@ export const createDispatcher = (
     });
   };
 
-  const dispatchPromise: PromiseIntentDispatcher = async (intentChain) => {
-    const program = dispatchChain(intentChain);
+  const dispatchPromise: PromiseIntentDispatcher = (intentChain) => {
+    const program = dispatch(intentChain);
     return Effect.runPromise(program);
   };
 
@@ -243,15 +242,15 @@ export const createDispatcher = (
         });
         const intent = { first: all[0], last: all.at(-1)!, all } satisfies AnyIntentChain;
         yield* Ref.update(historyRef, (h) => h.filter((_, index) => index !== last));
-        return yield* dispatchChain(intent);
+        return yield* dispatch(intent);
       }
     });
   };
 
-  const undoPromise = async () => {
+  const undoPromise: PromiseIntentUndo = () => {
     const program = undo();
     return Effect.runPromise(program);
   };
 
-  return { dispatch: dispatchChain, dispatchPromise, undo, undoPromise, history: historyRef };
+  return { dispatch, dispatchPromise, undo, undoPromise };
 };
