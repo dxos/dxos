@@ -126,16 +126,16 @@ export type IntentDispatcher = <Tag extends string, Fields extends IntentParams>
 /**
  * Invokes an intent chain and returns the result.
  */
-export type PromiseIntentChainDispatcher = <FieldsB extends IntentParams>(
-  intent: IntentChain<any, any, any, FieldsB>,
-) => Promise<IntentDispatcherResult<FieldsB>>;
+export type PromiseIntentChainDispatcher = <Fields extends IntentParams>(
+  intent: IntentChain<any, any, any, Fields>,
+) => Promise<IntentDispatcherResult<Fields>>;
 
 /**
  * Creates an effect for an intent.
  */
-export type IntentChainDispatcher = <FieldsB extends IntentParams>(
-  intent: IntentChain<any, any, any, FieldsB>,
-) => Effect.Effect<IntentDispatcherResult<FieldsB>>;
+export type IntentChainDispatcher = <Fields extends IntentParams>(
+  intent: IntentChain<any, any, any, Fields>,
+) => Effect.Effect<IntentDispatcherResult<Fields>>;
 
 type IntentResult<Tag extends string, Fields extends IntentParams> = IntentEffectResult<Fields> & {
   _intent: Intent<Tag, Fields>;

@@ -99,9 +99,7 @@ export const chain =
     data: Omit<IntentData<FieldsB>, keyof IntentResultData<FieldsA>>,
     params: Pick<AnyIntent, 'plugin' | 'undo'> = {},
   ) =>
-  (
-    intent: Intent<TagA, FieldsA> | IntentChain<TagA, any, any, any>,
-  ): IntentChain<TagA, TagB, IntentData<FieldsA>, IntentResultData<FieldsB>> => {
+  (intent: Intent<TagA, FieldsA> | IntentChain<TagA, any, any, any>): IntentChain<TagA, TagB, FieldsA, FieldsB> => {
     const intents = 'all' in intent ? intent.all : [intent];
     const first = intents[0];
     const last = {

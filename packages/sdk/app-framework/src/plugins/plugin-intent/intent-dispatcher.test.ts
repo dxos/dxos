@@ -128,8 +128,7 @@ describe('Intent dispatcher', () => {
     expect(intent.all.length).toBe(3);
 
     const program = Effect.gen(function* () {
-      // TODO(wittjosiah): Fix type inference for dispatchChain.
-      const { data } = yield* dispatchChain(intent as any);
+      const { data } = yield* dispatchChain(intent);
       return data.string;
     });
 
