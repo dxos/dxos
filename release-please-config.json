@@ -464,6 +464,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/experimental/plugin-canvas/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/experimental/plugin-excalidraw/package.json",
           "jsonpath": "$.version"
         },
@@ -475,11 +480,6 @@
         {
           "type": "json",
           "path": "packages/plugins/experimental/plugin-github/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/experimental/plugin-grid/package.json",
           "jsonpath": "$.version"
         },
         {
