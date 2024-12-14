@@ -3,7 +3,7 @@
 //
 
 import { type IntentContext } from './IntentContext';
-import { type AnyIntentResolver, type IntentDispatcher } from './intent';
+import { type AnyIntentResolver, type IntentDispatcher } from './intent-dispatcher';
 import { type HostContext, type Plugin } from '../plugin-host';
 
 type Context = HostContext & { dispatch: IntentDispatcher };

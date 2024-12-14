@@ -12,10 +12,10 @@ export type IntentParams = S.Struct.Fields;
 // };
 
 export type IntentData<T extends IntentParams> =
-  S.Schema.Type<S.Struct<T>> extends { input: any } ? S.Schema.Type<S.Struct<T>>['input'] : never;
+  S.Schema.Type<S.Struct<T>> extends { input: any } ? S.Schema.Type<S.Struct<T>>['input'] : any;
 
 export type IntentResultData<T extends IntentParams> =
-  S.Schema.Type<S.Struct<T>> extends { output: any } ? S.Schema.Type<S.Struct<T>>['output'] : never;
+  S.Schema.Type<S.Struct<T>> extends { output: any } ? S.Schema.Type<S.Struct<T>>['output'] : any;
 
 export type IntentSchema<Class, Tag extends string, Fields extends IntentParams> = S.TaggedClass<Class, Tag, Fields>;
 

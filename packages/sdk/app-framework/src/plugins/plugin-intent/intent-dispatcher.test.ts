@@ -32,10 +32,15 @@ class Compute extends S.TaggedClass<Compute>()('Compute', {
   }),
 }) {}
 
-const computeResolver = createResolver(Compute, (data) => {
+const computeResolver = createResolver(Compute, (data, undo) => {
   return Effect.gen(function* () {
+    if (undo) {
+      return { data: { result: data.value / 2 } };
+    }
+
     yield* Effect.sleep(data.value * 10);
-    return { data: { result: data.value * 2 } };
+    const result = data.value * 2;
+    return { data: { result }, undoable: { message: 'test', data: { value: result } } };
   });
 });
 
@@ -88,4 +93,18 @@ describe('Intent dispatcher', () => {
     const b = await dispatchPromise(createIntent(ToString, { value: a.data.result }));
     expect(b.data.string).toBe('4');
   });
+
+  test('undo intent', async () => {
+    const { dispatch, undo } = createDispatcher([computeResolver]);
+    const program = Effect.gen(function* () {
+      const a = yield* dispatch(createIntent(Compute, { value: 2 }));
+      expect(a.data.result).toBe(4);
+      const b = yield* undo();
+      expect(b?.data.result).toBe(2);
+    });
+
+    await Effect.runPromise(program);
+  });
+
+  test.todo('follow up intents');
 });

@@ -4,6 +4,8 @@
 
 import { Effect, Ref } from 'effect';
 
+import { pick } from '@dxos/util';
+
 import {
   type AnyIntent,
   type Intent,
@@ -57,6 +59,8 @@ export type IntentEffectResult<Fields extends IntentParams> = {
   intents?: AnyIntent[];
 };
 
+export type AnyIntentEffectResult = IntentEffectResult<any>;
+
 /**
  * The result of an intent dispatcher.
  */
@@ -72,6 +76,7 @@ export type IntentDisposition = 'default' | 'hoist' | 'fallback';
  */
 export type IntentEffectDefinition<Fields extends IntentParams> = (
   data: IntentData<Fields>,
+  undo: boolean,
 ) => Promise<IntentEffectResult<Fields>> | Effect.Effect<IntentEffectResult<Fields>>;
 
 /**
@@ -126,12 +131,12 @@ type AnyIntentResult = IntentResult<any, any>;
 /**
  * Invokes the most recent undoable intent with undo flags.
  */
-export type PromiseIntentUndo = () => Promise<IntentDispatcherResult<any>>;
+export type PromiseIntentUndo = () => Promise<IntentDispatcherResult<any> | undefined>;
 
 /**
  * Creates an effect which undoes the last intent.
  */
-export type IntentUndo = () => Effect.Effect<IntentDispatcherResult<any>>;
+export type IntentUndo = () => Effect.Effect<IntentDispatcherResult<any> | undefined>;
 
 /**
  * Sets of an intent dispatcher.
@@ -140,14 +145,10 @@ export type IntentUndo = () => Effect.Effect<IntentDispatcherResult<any>>;
  * @param params.historyLimit The maximum number of intent results to keep in history.
  */
 export const createDispatcher = (resolvers: AnyIntentResolver[], { historyLimit = HISTORY_LIMIT } = {}) => {
-  const history = Ref.make<AnyIntentResult[]>([]);
-  const undoPromise = async () => {};
-  const undo = () => {};
+  const historyRef = Effect.runSync(Ref.make<AnyIntentResult[]>([]));
 
   const dispatch: IntentDispatcher = (intent) => {
     return Effect.gen(function* () {
-      const historyRef = yield* history;
-
       if (intent.plugin) {
         // TODO(wittjosiah): Dispatch to a specific plugin.
       }
@@ -161,19 +162,22 @@ export const createDispatcher = (resolvers: AnyIntentResolver[], { historyLimit 
         throw new Error(`No resolver found for action: ${intent.action}`);
       }
 
-      const effect: Promise<AnyIntentResult> | Effect.Effect<AnyIntentResult> = (candidates[0].effect as any)(
-        intent.data,
-      );
+      const effect = candidates[0].effect(intent.data, intent.undo ?? false);
       const result = Effect.isEffect(effect) ? yield* effect : yield* Effect.promise(() => effect);
-      Ref.update(historyRef, (h) => {
-        const next = [...h, result];
+      yield* Ref.update(historyRef, (h) => {
+        const next = [...h, { _intent: intent, ...result }];
         if (next.length > historyLimit) {
           next.splice(0, next.length - historyLimit);
         }
         return next;
       });
+      if (result.intents) {
+        for (const intent of result.intents) {
+          yield* dispatch(intent);
+        }
+      }
 
-      return result;
+      return pick(result, ['data', 'error']);
     });
   };
 
@@ -182,5 +186,26 @@ export const createDispatcher = (resolvers: AnyIntentResolver[], { historyLimit 
     return Effect.runPromise(program);
   };
 
-  return { dispatch, dispatchPromise, undo, undoPromise, history };
+  // TODO(wittjosiah): Without chains, undo is less effective because some intents should be undone together.
+  const undo: IntentUndo = () => {
+    return Effect.gen(function* () {
+      const history = yield* historyRef.get;
+      const last = history.findLastIndex((r) => !!r.undoable);
+      const result = last !== -1 ? history[last] : undefined;
+      if (result) {
+        const data = result._intent.data;
+        const undoData = result.undoable?.data ?? {};
+        const intent = { ...result._intent, data: { ...data, ...undoData }, undo: true } satisfies AnyIntent;
+        yield* Ref.update(historyRef, (h) => h.filter((_, index) => index !== last));
+        return yield* dispatch(intent);
+      }
+    });
+  };
+
+  const undoPromise = async () => {
+    const program = undo();
+    return Effect.runPromise(program);
+  };
+
+  return { dispatch, dispatchPromise, undo, undoPromise, history: historyRef };
 };
