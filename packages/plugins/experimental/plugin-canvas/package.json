@@ -66,6 +66,7 @@
     "@radix-ui/react-context": "^1.0.0",
     "bind-event-listener": "^3.0.0",
     "lodash.defaultsdeep": "^4.6.1",
+    "react-fps-stats": "^0.3.1",
     "react-resize-detector": "^11.0.1"
   },
   "devDependencies": {

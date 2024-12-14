@@ -15,7 +15,7 @@ export type Action =
     }
   | {
       type: 'delete';
-      ids?: string[];
+      ids?: readonly string[];
     };
 
 export type ActionHandler = (action: Action) => boolean;

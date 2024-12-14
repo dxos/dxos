@@ -18,7 +18,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { type ActionHandler } from '../../actions';
 import { SelectionModel } from '../../hooks';
-import { type Point } from '../../layout';
+import { type Dimension, type Point } from '../../layout';
 import { Canvas, type Item } from '../Canvas';
 import { UI } from '../UI';
 import { testId } from '../util';
@@ -40,7 +40,7 @@ import { testId } from '../util';
 //  - Nodes as objects.
 //  - Surface/form storybook; auto-size.
 //  - Basic plugin with root object.
-//  - Context/CSS Variables.
+//  - Hover select.
 
 // TODO(burdon): Phase 2
 //  - Auto-layout (reconcile with plugin-debug).
@@ -53,6 +53,7 @@ import { testId } from '../util';
 //  - Line options (1-to-many, inherits, etc.)
 
 // TODO(burdon): Misc.
+//  - Context/CSS Variables.
 //  - Selection model.
 //  - Order of rendering layers.
 //  - Move all selected.
@@ -77,16 +78,21 @@ export type EditingState = {
 
 export type EditorContextType = {
   debug: boolean;
+
   width: number;
   height: number;
   scale: number;
   offset: Point;
+
+  gridSize: Dimension;
   showGrid: boolean;
   snapToGrid: boolean;
   selection: SelectionModel;
   dragging?: DraggingState;
   linking?: DraggingState;
   editing?: EditingState;
+
+  setGridSize: Dispatch<SetStateAction<Dimension>>;
   setTransform: Dispatch<SetStateAction<TransformState>>;
   setDragging: Dispatch<SetStateAction<DraggingState | undefined>>;
   setLinking: Dispatch<SetStateAction<DraggingState | undefined>>;
@@ -107,8 +113,9 @@ const EditorRoot = ({ children, classNames, scale: initialScale = 1, offset: ini
   const [debug, setDebug] = useState(false);
 
   // Canvas state.
+  const [gridSize, setGridSize] = useState({ width: 32, height: 32 });
   const [showGrid, setShowGrid] = useState(true);
-  const [snapToGrid, setSnapToGrid] = useState(false);
+  const [snapToGrid, setSnapToGrid] = useState(true);
   const [{ scale, offset }, setTransform] = useState<TransformState>({
     scale: initialScale,
     offset: (initialOffset = { x: 0, y: 0 }),
@@ -159,6 +166,8 @@ const EditorRoot = ({ children, classNames, scale: initialScale = 1, offset: ini
           scale,
           offset,
           setTransform,
+          gridSize,
+          setGridSize,
           showGrid,
           snapToGrid,
 

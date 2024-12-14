@@ -6,3 +6,5 @@ export * from './hooks';
 
 export * from './useEditorContext';
 export * from './useSelected';
+export * from './useSnap';
+export * from './useTranform';

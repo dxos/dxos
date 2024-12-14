@@ -20,14 +20,6 @@ export type PointTransform = (pos: Point) => Point;
 
 export const round = (n: number, m: number) => Math.round(n / m) * m;
 
-export const createSnap = (snap?: Dimension): PointTransform =>
-  snap
-    ? (pos: Point): Point => ({
-        x: round(pos.x, snap.width),
-        y: round(pos.y, snap.height),
-      })
-    : (pos: Point) => pos;
-
 export const pointAdd = (a: Point, b: Point): Point => ({ x: a.x + b.x, y: a.y + b.y });
 export const pointSubtract = (a: Point, b: Point): Point => ({ x: a.x - b.x, y: a.y - b.y });
 export const pointMultiply = (pos: Point, scale: number): Point => ({ x: pos.x * scale, y: pos.y * scale });

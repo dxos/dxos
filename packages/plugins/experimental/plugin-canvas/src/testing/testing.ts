@@ -31,7 +31,7 @@ export const createGraph = (size: Dimension, snap: PointTransform): Graph => {
       data: {
         id: b,
         text: 'B',
-        pos: snap({ x: -128, y: 0 }),
+        pos: snap({ x: -size.width * 2, y: 0 }),
         size,
       },
     });
@@ -41,7 +41,7 @@ export const createGraph = (size: Dimension, snap: PointTransform): Graph => {
       data: {
         id: c,
         text: 'C',
-        pos: snap({ x: 128, y: 0 }),
+        pos: snap({ x: size.width * 2, y: 0 }),
         size,
       },
     });

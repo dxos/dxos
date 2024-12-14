@@ -3,11 +3,12 @@
 //
 
 import React from 'react';
+import FPSStats from 'react-fps-stats';
 
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useEditorContext } from '../../hooks';
+import { useEditorContext, useSelected } from '../../hooks';
 import { Toolbar } from '../Toolbar';
 import { eventsAuto, eventsNone } from '../styles';
 import { testId } from '../util';
@@ -17,11 +18,16 @@ import { testId } from '../util';
  */
 export const UI = () => {
   const { debug, width, height, showGrid, snapToGrid, dragging, linking, handleAction } = useEditorContext();
-  const info = { debug, width, height, showGrid, snapToGrid, dragging, linking };
+  const selected = useSelected();
+  const info = { debug, selected, width, height, showGrid, snapToGrid, dragging, linking };
 
   return (
     <div {...testId('dx-ui')} className={mx('absolute h-full inset-0', eventsNone)}>
-      <div></div>
+      <div>
+        <div className='absolute top-0 left-0'>
+          <FPSStats />
+        </div>
+      </div>
       <div>
         <div className='absolute bottom-0 left-0'>
           <SyntaxHighlighter language='javascript' classNames={mx('w-[300px] bg-base text-xs p-2 opacity-70')}>

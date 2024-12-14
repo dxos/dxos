@@ -13,7 +13,13 @@ import { isNotFalsy } from '@dxos/util';
 import { Frame, FrameDragPreview } from './Frame';
 import { type DragPayloadData, type Item } from './Shape';
 import { GraphWrapper } from '../../graph';
-import { useBoundingSelection, useSelected, useSnap, useTransform, useEditorContext } from '../../hooks';
+import {
+  useBoundingSelection,
+  useSnap,
+  useTransform,
+  useEditorContext,
+  type SelectionBoundsCallback,
+} from '../../hooks';
 import {
   boundsContain,
   boundsToModel,
@@ -32,7 +38,6 @@ import { Markers, eventsNone, styles } from '../styles';
 import { testId } from '../util';
 
 const itemSize: Dimension = { width: 128, height: 64 };
-const snapSize = { width: itemSize.width + 64, height: itemSize.height + 64 };
 
 export type CanvasProps = {};
 
@@ -44,7 +49,6 @@ export const Canvas = (_: CanvasProps) => {
     scale,
     offset,
     showGrid,
-    snapToGrid,
     selection,
     dragging,
     setTransform,
@@ -52,12 +56,11 @@ export const Canvas = (_: CanvasProps) => {
     setLinking,
     handleAction: handleDefaultAction,
   } = useEditorContext();
-  const canvasRef = useRef<HTMLDivElement>(null);
-  const overlaySvgRef = useRef<SVGSVGElement>(null);
-
-  const snapPoint = useSnap(snapSize);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasSvgRef = useRef<SVGSVGElement>(null);
 
   // TODO(burdon): Generalize model.
+  const snapPoint = useSnap();
   const [graph] = useState(() => new GraphWrapper(createGraph(itemSize, snapPoint)));
 
   // Canvas scale.
@@ -66,13 +69,12 @@ export const Canvas = (_: CanvasProps) => {
   // TODO(burdon): Replace with context state.
   const [itemDragging, setItemDragging] = useState<Pick<Item, 'id' | 'pos'>>();
   const [itemLinking, setItemLinking] = useState<{ source: { center: Point; bounds: Rect }; target: Point }>();
-  const selected = useSelected();
 
   //
   // Drop target.
   //
   useEffect(() => {
-    const el = canvasRef.current;
+    const el = containerRef.current;
     if (!el) {
       return;
     }
@@ -81,29 +83,29 @@ export const Canvas = (_: CanvasProps) => {
       element: el,
       getData: () => ({ type: 'Canvas' }),
     });
-  }, [canvasRef.current]);
+  }, [containerRef.current]);
 
   //
   // Events.
   //
   // TODO(burdon): Factor out.
   useEffect(() => {
-    if (!canvasRef.current) {
+    if (!containerRef.current) {
       return;
     }
 
     const handleWheel = (event: WheelEvent) => {
       event.preventDefault();
       if (event.ctrlKey) {
-        if (!canvasRef.current) {
+        if (!containerRef.current) {
           return;
         }
 
         setTransform(({ scale, offset }) => {
           const scaleSensitivity = 0.01;
           const newScale = scale * Math.exp(-event.deltaY * scaleSensitivity);
-          invariant(canvasRef.current);
-          const rect = canvasRef.current.getBoundingClientRect();
+          invariant(containerRef.current);
+          const rect = containerRef.current.getBoundingClientRect();
           const pos = {
             x: event.clientX - rect.left,
             y: event.clientY - rect.top,
@@ -135,41 +137,40 @@ export const Canvas = (_: CanvasProps) => {
       }
     };
 
-    canvasRef.current.addEventListener('wheel', handleWheel);
-    canvasRef.current.addEventListener('keydown', handleKeyDown);
+    containerRef.current.addEventListener('wheel', handleWheel);
+    containerRef.current.addEventListener('keydown', handleKeyDown);
     return () => {
-      canvasRef.current?.removeEventListener('wheel', handleWheel);
-      canvasRef.current?.removeEventListener('keydown', handleKeyDown);
+      containerRef.current?.removeEventListener('wheel', handleWheel);
+      containerRef.current?.removeEventListener('keydown', handleKeyDown);
     };
-  }, [canvasRef, selection, width, height]);
+  }, [containerRef, selection, width, height]);
 
   //
   // Cursor/overlay.
   //
-  const handleSelectionBounds = useCallback(
-    (bounds: Rect | null) => {
+  const handleSelectionBounds = useCallback<SelectionBoundsCallback>(
+    (bounds, shift) => {
       if (!bounds) {
         selection.clear();
         return;
       }
 
       // Map the pointer event to the SVG coordinate system.
-      const selectionBounds = boundsToModel(canvasRef.current!.getBoundingClientRect(), scale, offset, bounds);
+      const selectionBounds = boundsToModel(containerRef.current!.getBoundingClientRect(), scale, offset, bounds);
       const selected = graph.nodes
         .filter(
           ({ data: { pos } }) => boundsContain(selectionBounds, { ...pos, width: 0, height: 0 }), // Check center point.
         )
         .map(({ id }) => id);
-      selection.setSelected(selected);
+      selection.setSelected(selected, shift);
     },
-    [overlaySvgRef, selection, scale, offset],
+    [canvasSvgRef, selection, scale, offset],
   );
-
-  const selectionBounds = useBoundingSelection(overlaySvgRef.current, handleSelectionBounds);
+  const selectionBounds = useBoundingSelection(canvasSvgRef.current, handleSelectionBounds);
   const debugSelectionBounds =
     debug &&
     selectionBounds &&
-    boundsToModel(overlaySvgRef.current!.getBoundingClientRect(), scale, offset, selectionBounds);
+    boundsToModel(canvasSvgRef.current!.getBoundingClientRect(), scale, offset, selectionBounds);
 
   //
   // Monitor dragging and linking.
@@ -177,7 +178,7 @@ export const Canvas = (_: CanvasProps) => {
   useEffect(() => {
     return monitorForElements({
       onDrag: ({ source, location }) => {
-        const rect = overlaySvgRef.current!.getBoundingClientRect();
+        const rect = canvasSvgRef.current!.getBoundingClientRect();
         const pos = boundsToModel(rect, scale, offset, getInputPoint(location.current.input));
         const { type, item } = source.data as DragPayloadData;
         switch (type) {
@@ -194,7 +195,7 @@ export const Canvas = (_: CanvasProps) => {
       },
 
       onDrop: ({ source, location }) => {
-        const rect = overlaySvgRef.current!.getBoundingClientRect();
+        const rect = canvasSvgRef.current!.getBoundingClientRect();
         const pos = boundsToModel(rect, scale, offset, getInputPoint(location.current.input));
         const { type, item } = source.data as DragPayloadData;
         switch (type) {
@@ -202,7 +203,7 @@ export const Canvas = (_: CanvasProps) => {
             const item = source.data.item as Item;
             // TODO(burdon): Adjust for offset.
             // const pos = boundsToModelWithOffset(rect, scale, offset, item.pos, location.initial, location.current);
-            item.pos = snapToGrid ? snapPoint(pos) : pos;
+            item.pos = snapPoint(pos);
             setItemDragging(undefined);
             setDragging(undefined);
             break;
@@ -213,7 +214,7 @@ export const Canvas = (_: CanvasProps) => {
             let id = target?.id;
             if (!id) {
               id = createId();
-              graph.addNode({ id, data: { id, pos: snapToGrid ? snapPoint(pos) : pos, size: itemSize } });
+              graph.addNode({ id, data: { id, pos: snapPoint(pos), size: itemSize } });
             }
             graph.addEdge({ id: createId(), source: item.id, target: id, data: {} });
             setItemLinking(undefined);
@@ -223,7 +224,7 @@ export const Canvas = (_: CanvasProps) => {
         }
       },
     });
-  }, [overlaySvgRef, scale, offset, graph]);
+  }, [canvasSvgRef, snapPoint, scale, offset, graph]);
 
   //
   // Actions
@@ -286,7 +287,7 @@ export const Canvas = (_: CanvasProps) => {
   }
 
   return (
-    <div ref={canvasRef} tabIndex={0} className={mx('absolute inset-0 overflow-hidden')} {...testId('dx-canvas')}>
+    <div ref={containerRef} tabIndex={0} className={mx('absolute inset-0 overflow-hidden')} {...testId('dx-canvas')}>
       {/* Background. */}
       <Background />
 
@@ -298,7 +299,7 @@ export const Canvas = (_: CanvasProps) => {
         <>
           {/* SVG content. */}
           <svg
-            ref={overlaySvgRef}
+            ref={canvasSvgRef}
             {...testId('dx-svg-content')}
             width='100%'
             height='100%'
@@ -308,8 +309,57 @@ export const Canvas = (_: CanvasProps) => {
               <Markers />
             </defs>
             <g style={transformStyles}>
-              <g>
-                {edges.map(({ id, path }) => (
+              {/* <g> */}
+              {/*  {edges.map(({ id, path }) => ( */}
+              {/*    <g key={id}> */}
+              {/*      /!* Hit area. *!/ */}
+              {/*      <path */}
+              {/*        d={path} */}
+              {/*        fill='none' */}
+              {/*        strokeWidth={8} */}
+              {/*        className={'stroke-transparent'} */}
+              {/*        onClick={(ev) => selection.toggleSelected([id], ev.shiftKey)} */}
+              {/*      /> */}
+              {/*      <path */}
+              {/*        d={path} */}
+              {/*        fill='none' */}
+              {/*        strokeWidth={1} */}
+              {/*        className={mx(styles.edge, selection.contains(id) && styles.edgeSelected)} */}
+              {/*        // TODO(burdon): Edge style. */}
+              {/*        markerStart={id !== 'link' ? 'url(#circle)' : ''} */}
+              {/*        markerEnd={id !== 'link' ? 'url(#circle)' : ''} */}
+              {/*      /> */}
+              {/*    </g> */}
+              {/*  ))} */}
+              {/* </g> */}
+
+              {/* Debugging. */}
+              {debugSelectionBounds && (
+                <g>
+                  <rect {...debugSelectionBounds} fill='none' strokeWidth={4} className='stroke-red-500' />
+                </g>
+              )}
+            </g>
+          </svg>
+
+          {/* HTML content. */}
+          <div {...testId('dx-html-content')}>
+            {graph.nodes.map(({ data: item }) => (
+              <div className={mx('absolute')} style={transformStyles} key={item.id}>
+                <Frame
+                  item={item}
+                  scale={scale}
+                  selected={selection.contains(item.id)}
+                  onSelect={(id, shift) => selection.toggleSelected([id], shift)}
+                />
+              </div>
+            ))}
+            {edges.map(({ id, path }) => (
+              <div className={mx('absolute')} style={transformStyles} key={id}>
+                <svg width='100%' height='100%' __className={mx('absolute top-0 left-0')}>
+                  <defs>
+                    <Markers />
+                  </defs>
                   <g key={id}>
                     {/* Hit area. */}
                     <path
@@ -329,28 +379,8 @@ export const Canvas = (_: CanvasProps) => {
                       markerEnd={id !== 'link' ? 'url(#circle)' : ''}
                     />
                   </g>
-                ))}
-              </g>
-
-              {/* Debugging. */}
-              {debugSelectionBounds && (
-                <g>
-                  <rect {...debugSelectionBounds} fill='none' strokeWidth={4} className='stroke-red-500' />
-                </g>
-              )}
-            </g>
-          </svg>
-
-          {/* HTML content. */}
-          <div {...testId('dx-html-content')} style={transformStyles} className='absolute left-0 top-0'>
-            {graph.nodes.map(({ data: item }) => (
-              <Frame
-                key={item.id}
-                item={item}
-                scale={scale}
-                selected={selection.contains(item.id)}
-                onSelect={() => selection.toggleSelected([item.id])}
-              />
+                </svg>
+              </div>
             ))}
           </div>
         </>

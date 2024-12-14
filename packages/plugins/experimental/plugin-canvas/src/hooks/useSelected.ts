@@ -8,17 +8,20 @@ import { useMemo } from 'react';
 import { useEditorContext } from './useEditorContext';
 
 /**
- *
+ * Reactive selection model.
  */
 export class SelectionModel {
   private readonly _selected: Signal<Record<string, boolean>> = signal({});
 
-  get ids(): string[] {
-    return Object.keys(this._selected.value);
-  }
-
+  /**
+   * Reactive selection.
+   */
   get selected(): ReadonlySignal<Record<string, boolean>> {
     return this._selected;
+  }
+
+  get ids(): readonly string[] {
+    return Object.keys(this._selected.value);
   }
 
   contains(id: string) {
@@ -30,22 +33,19 @@ export class SelectionModel {
   }
 
   setSelected(ids: string[], shift = false) {
-    if (!shift) {
-      this.clear();
-    }
-    ids.forEach((id) => (this._selected.value[id] = true));
+    this._selected.value = ids.reduce((acc, id) => ({ ...acc, [id]: true }), shift ? this._selected.value : {});
   }
 
   toggleSelected(ids: string[], shift = false) {
-    if (!shift) {
-      this.clear();
-    }
-    ids.forEach((id) => (this.contains(id) ? delete this._selected.value[id] : (this._selected.value[id] = true)));
+    this._selected.value = ids.reduce(
+      (acc, id) => ({ ...acc, [id]: !this._selected.value[id] }),
+      shift ? this._selected.value : {},
+    );
   }
 }
 
 /**
- *
+ * Reactive selection model.
  */
 export const useSelected = (): ReadonlySignal<Record<string, boolean>> => {
   const { selection } = useEditorContext();
