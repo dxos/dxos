@@ -7,6 +7,7 @@ import { Effect, Ref } from 'effect';
 import { pick } from '@dxos/util';
 
 import {
+  type IntentChain,
   type AnyIntent,
   type Intent,
   type IntentData,
@@ -99,7 +100,7 @@ export type AnyIntentResolver = IntentResolver<any, any>;
  * @param params.filter Optional filter to determine if the resolver should be used.
  */
 export const createResolver = <Tag extends string, Fields extends IntentParams>(
-  schema: IntentSchema<any, Tag, Fields>,
+  schema: IntentSchema<Tag, Fields>,
   effect: IntentEffectDefinition<Fields>,
   params: Pick<IntentResolver<Tag, Fields>, 'disposition' | 'filter'> = {},
 ): IntentResolver<Tag, Fields> => ({
@@ -121,6 +122,20 @@ export type PromiseIntentDispatcher = <Tag extends string, Fields extends Intent
 export type IntentDispatcher = <Tag extends string, Fields extends IntentParams>(
   intent: Intent<Tag, Fields>,
 ) => Effect.Effect<IntentDispatcherResult<Fields>>;
+
+/**
+ * Invokes an intent chain and returns the result.
+ */
+export type PromiseIntentChainDispatcher = <FieldsB extends IntentParams>(
+  intent: IntentChain<any, any, any, FieldsB>,
+) => Promise<IntentDispatcherResult<FieldsB>>;
+
+/**
+ * Creates an effect for an intent.
+ */
+export type IntentChainDispatcher = <FieldsB extends IntentParams>(
+  intent: IntentChain<any, any, any, FieldsB>,
+) => Effect.Effect<IntentDispatcherResult<FieldsB>>;
 
 type IntentResult<Tag extends string, Fields extends IntentParams> = IntentEffectResult<Fields> & {
   _intent: Intent<Tag, Fields>;
@@ -186,7 +201,33 @@ export const createDispatcher = (resolvers: AnyIntentResolver[], { historyLimit 
     return Effect.runPromise(program);
   };
 
-  // TODO(wittjosiah): Without chains, undo is less effective because some intents should be undone together.
+  const dispatchChain: IntentChainDispatcher = (intentChain) => {
+    return Effect.gen(function* () {
+      const prevRef = yield* Ref.make<IntentDispatcherResult<any> | undefined>(undefined);
+      for (const intent of intentChain.all) {
+        const prev = (yield* prevRef.get)?.data ?? {};
+        const result = yield* dispatch({ ...intent, data: { ...intent.data, ...prev } });
+        if (result.error) {
+          return result;
+        }
+        yield* Ref.update(prevRef, () => result);
+      }
+
+      const result = yield* prevRef.get;
+      if (result) {
+        return result;
+      } else {
+        return { data: {}, error: new Error('No results') };
+      }
+    });
+  };
+
+  const dispatchChainPromise: PromiseIntentChainDispatcher = async (intentChain) => {
+    const program = dispatchChain(intentChain);
+    return Effect.runPromise(program);
+  };
+
+  // TODO(wittjosiah): History needs to track chains so that they can be undone as a unit.
   const undo: IntentUndo = () => {
     return Effect.gen(function* () {
       const history = yield* historyRef.get;
@@ -207,5 +248,5 @@ export const createDispatcher = (resolvers: AnyIntentResolver[], { historyLimit 
     return Effect.runPromise(program);
   };
 
-  return { dispatch, dispatchPromise, undo, undoPromise, history: historyRef };
+  return { dispatch, dispatchPromise, dispatchChain, dispatchChainPromise, undo, undoPromise, history: historyRef };
 };

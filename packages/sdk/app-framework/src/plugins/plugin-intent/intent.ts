@@ -17,7 +17,7 @@ export type IntentData<T extends IntentParams> =
 export type IntentResultData<T extends IntentParams> =
   S.Schema.Type<S.Struct<T>> extends { output: any } ? S.Schema.Type<S.Struct<T>>['output'] : any;
 
-export type IntentSchema<Class, Tag extends string, Fields extends IntentParams> = S.TaggedClass<Class, Tag, Fields>;
+export type IntentSchema<Tag extends string, Fields extends IntentParams> = S.TaggedClass<any, Tag, Fields>;
 
 /**
  * An intent is an abstract description of an operation to be performed.
@@ -26,7 +26,7 @@ export type IntentSchema<Class, Tag extends string, Fields extends IntentParams>
 export type Intent<
   Tag extends string,
   Fields extends IntentParams,
-  Schema extends IntentSchema<any, Tag, Fields> = IntentSchema<any, Tag, Fields>,
+  Schema extends IntentSchema<Tag, Fields> = IntentSchema<Tag, Fields>,
 > = {
   _schema: Schema;
 
@@ -62,11 +62,11 @@ export type AnyIntent = Intent<any, any>;
  * @param params.plugin Optional plugin ID to send the intent to.
  * @param params.undo Optional flag to indicate that the intent is being undone. Generally not set manually.
  */
-export const createIntent = <_, Tag extends string, Fields extends IntentParams>(
-  schema: IntentSchema<_, Tag, Fields>,
+export const createIntent = <Tag extends string, Fields extends IntentParams>(
+  schema: IntentSchema<Tag, Fields>,
   data: IntentData<Fields>,
-  params: Pick<Intent<any, any, any>, 'plugin' | 'undo'> = {},
-): Intent<Tag, Fields, IntentSchema<_, Tag, Fields>> => {
+  params: Pick<AnyIntent, 'plugin' | 'undo'> = {},
+): Intent<Tag, Fields> => {
   return {
     ...params,
     _schema: schema,
@@ -74,3 +74,46 @@ export const createIntent = <_, Tag extends string, Fields extends IntentParams>
     data,
   };
 };
+
+/**
+ * Chain of intents to be executed together.
+ * The result of each intent is merged into the next intent's input data.
+ */
+export type IntentChain<
+  FirstTag extends string,
+  LastTag extends string,
+  FirstFields extends IntentParams,
+  LastFields extends IntentParams,
+> = {
+  first: Intent<FirstTag, FirstFields>;
+  last: Intent<LastTag, LastFields>;
+  all: AnyIntent[];
+};
+
+/**
+ * Chain two intents together.
+ */
+export const chain =
+  <TagA extends string, TagB extends string, FieldsA extends IntentParams, FieldsB extends IntentParams>(
+    schema: IntentSchema<TagB, FieldsB>,
+    data: Omit<IntentData<FieldsB>, keyof IntentResultData<FieldsA>>,
+    params: Pick<AnyIntent, 'plugin' | 'undo'> = {},
+  ) =>
+  (
+    intent: Intent<TagA, FieldsA> | IntentChain<TagA, any, any, any>,
+  ): IntentChain<TagA, TagB, IntentData<FieldsA>, IntentResultData<FieldsB>> => {
+    const intents = 'all' in intent ? intent.all : [intent];
+    const first = intents[0];
+    const last = {
+      ...params,
+      _schema: schema,
+      action: schema._tag,
+      data,
+    } satisfies Intent<TagB, FieldsB>;
+
+    return {
+      first,
+      last,
+      all: [...intents, last],
+    };
+  };

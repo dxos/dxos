@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Effect, Fiber } from 'effect';
+import { Effect, Fiber, pipe } from 'effect';
 import { describe, expect, test } from 'vitest';
 
 import { S } from '@dxos/echo-schema';
 
-import { createIntent } from './intent';
+import { chain, createIntent } from './intent';
 import { createDispatcher, createResolver } from './intent-dispatcher';
 
 class ToString extends S.TaggedClass<ToString>()('ToString', {
@@ -28,20 +28,34 @@ class Compute extends S.TaggedClass<Compute>()('Compute', {
     value: S.Number,
   }),
   output: S.Struct({
-    result: S.Number,
+    value: S.Number,
   }),
 }) {}
 
 const computeResolver = createResolver(Compute, (data, undo) => {
   return Effect.gen(function* () {
     if (undo) {
-      return { data: { result: data.value / 2 } };
+      return { data: { value: data.value / 2 } };
     }
 
     yield* Effect.sleep(data.value * 10);
-    const result = data.value * 2;
-    return { data: { result }, undoable: { message: 'test', data: { value: result } } };
+    const value = data.value * 2;
+    return { data: { value }, undoable: { message: 'test', data: { value } } };
   });
+});
+
+class Concat extends S.TaggedClass<Concat>()('Concat', {
+  input: S.Struct({
+    string: S.String,
+    plus: S.String,
+  }),
+  output: S.Struct({
+    string: S.String,
+  }),
+}) {}
+
+const concatResolver = createResolver(Concat, async (data) => {
+  return { data: { string: data.string + data.plus } };
 });
 
 describe('Intent dispatcher', () => {
@@ -61,7 +75,7 @@ describe('Intent dispatcher', () => {
     const program = Effect.gen(function* () {
       const a = yield* dispatch(createIntent(Compute, { value: 1 }));
       const b = yield* dispatch(createIntent(Compute, { value: 2 }));
-      return b.data.result - a.data.result;
+      return b.data.value - a.data.value;
     });
 
     expect(await Effect.runPromise(program)).toBe(2);
@@ -73,7 +87,7 @@ describe('Intent dispatcher', () => {
       const fiberA = yield* Effect.fork(dispatch(createIntent(Compute, { value: 5 })));
       const fiberB = yield* Effect.fork(dispatch(createIntent(Compute, { value: 2 })));
       const [a, b] = yield* Fiber.join(Fiber.zip(fiberA, fiberB));
-      return b.data.result - a.data.result;
+      return b.data.value - a.data.value;
     });
 
     expect(await Effect.runPromise(program)).toBe(-6);
@@ -83,14 +97,14 @@ describe('Intent dispatcher', () => {
     const { dispatch, dispatchPromise } = createDispatcher([toStringResolver, computeResolver]);
     const program = Effect.gen(function* () {
       const a = yield* dispatch(createIntent(Compute, { value: 2 }));
-      const b = yield* dispatch(createIntent(ToString, { value: a.data.result }));
+      const b = yield* dispatch(createIntent(ToString, { value: a.data.value }));
       return b.data.string;
     });
 
     expect(await Effect.runPromise(program)).toBe('4');
 
     const a = await dispatchPromise(createIntent(Compute, { value: 2 }));
-    const b = await dispatchPromise(createIntent(ToString, { value: a.data.result }));
+    const b = await dispatchPromise(createIntent(ToString, { value: a.data.value }));
     expect(b.data.string).toBe('4');
   });
 
@@ -98,12 +112,28 @@ describe('Intent dispatcher', () => {
     const { dispatch, undo } = createDispatcher([computeResolver]);
     const program = Effect.gen(function* () {
       const a = yield* dispatch(createIntent(Compute, { value: 2 }));
-      expect(a.data.result).toBe(4);
+      expect(a.data.value).toBe(4);
       const b = yield* undo();
-      expect(b?.data.result).toBe(2);
+      expect(b?.data.value).toBe(2);
     });
 
     await Effect.runPromise(program);
+  });
+
+  test('chain intents', async () => {
+    const { dispatchChain } = createDispatcher([computeResolver, toStringResolver, concatResolver]);
+    const intent = pipe(createIntent(Compute, { value: 1 }), chain(ToString, {}), chain(Concat, { plus: '!' }));
+    expect(intent.first.action).toBe(Compute._tag);
+    expect(intent.last.action).toBe(Concat._tag);
+    expect(intent.all.length).toBe(3);
+
+    const program = Effect.gen(function* () {
+      // TODO(wittjosiah): Fix type inference for dispatchChain.
+      const { data } = yield* dispatchChain(intent as any);
+      return data.string;
+    });
+
+    expect(await Effect.runPromise(program)).toBe('2!');
   });
 
   test.todo('follow up intents');
