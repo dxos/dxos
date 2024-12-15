@@ -4,11 +4,12 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { ref, TypedObject, foreignKey } from '@dxos/echo-schema';
+import { Ref, TypedObject, foreignKey } from '@dxos/echo-schema';
 import { S } from '@dxos/effect';
 
 import { getMeta } from './accessors';
 import { create } from './object';
+import { makeRef } from './ref';
 
 describe('complex schema validations', () => {
   const setValue = (target: any, prop: string, value: any) => {
@@ -36,12 +37,12 @@ describe('complex schema validations', () => {
 
   test('references', () => {
     class Foo extends TypedObject({ typename: 'example.com/type/Foo', version: '0.1.0' })({ field: S.String }) {}
-    class Bar extends TypedObject({ typename: 'example.com/type/Bar', version: '0.1.0' })({ fooRef: ref(Foo) }) {}
+    class Bar extends TypedObject({ typename: 'example.com/type/Bar', version: '0.1.0' })({ fooRef: Ref(Foo) }) {}
     const field = 'hello';
-    expect(() => create(Bar, { fooRef: { id: '1', field } })).to.throw();
+    expect(() => create(Bar, { fooRef: { id: '1', field } as any })).to.throw();
     expect(() => create(Bar, { fooRef: undefined as any })).not.to.throw(); // Unresolved reference.
-    const bar = create(Bar, { fooRef: create(Foo, { field }) });
-    expect(bar.fooRef?.field).to.eq(field);
+    const bar = create(Bar, { fooRef: makeRef(create(Foo, { field })) });
+    expect(bar.fooRef.target?.field).to.eq(field);
   });
 
   test('index signatures', () => {

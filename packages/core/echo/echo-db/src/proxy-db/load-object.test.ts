@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Expando, ref, S, TypedObject } from '@dxos/echo-schema';
+import { Expando, Ref, S, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { create } from '@dxos/live-object';
@@ -152,7 +152,7 @@ describe('loadObjectReferences', () => {
     class Nested extends TypedObject({ typename: 'example.com/Nested', version: '0.1.0' })({ value: S.Number }) {}
 
     class TestSchema extends TypedObject({ typename: 'example.com/Test', version: '0.1.0' })({
-      nested: S.mutable(S.Array(ref(Nested))),
+      nested: S.mutable(S.Array(Ref(Nested))),
     }) {}
 
     const testBuilder = new EchoTestBuilder();

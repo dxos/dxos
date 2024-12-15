@@ -5,7 +5,7 @@
 import { S } from '@dxos/effect';
 
 import { EchoObject } from '../ast';
-import { Ref } from '../ast/ref';
+import { Ref, type Ref$ } from '../ast/ref';
 import { TypedObject, Expando } from '../object';
 
 // TODO(burdon): Clean up.
@@ -90,7 +90,7 @@ export class Contact extends TypedObject<Contact>({
     name: S.String,
     username: S.String,
     email: S.String,
-    tasks: S.suspend((): S.mutable<S.Array$<ref<Task>>> => S.mutable(S.Array(Ref(Task)))),
+    tasks: S.suspend((): S.mutable<S.Array$<Ref$<Task>>> => S.mutable(S.Array(Ref(Task)))),
     address: S.Struct({
       city: S.optional(S.String),
       state: S.optional(S.String),
@@ -111,9 +111,9 @@ export class Task extends TypedObject({
   title: S.optional(S.String),
   completed: S.optional(S.Boolean),
   assignee: S.optional(Contact),
-  previous: S.optional(S.suspend((): ref<Task> => Ref(Task))),
+  previous: S.optional(S.suspend((): Ref$<Task> => Ref(Task))),
   // TODO(burdon): Document S.suspend.
-  subTasks: S.optional(S.mutable(S.Array(S.suspend((): ref<Task> => Ref(Task))))),
+  subTasks: S.optional(S.mutable(S.Array(S.suspend((): Ref$<Task> => Ref(Task))))),
   description: S.optional(S.String),
 }) {}
 
