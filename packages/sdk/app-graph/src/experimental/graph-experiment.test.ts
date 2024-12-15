@@ -1,7 +1,5 @@
-import { AST, Schema } from '@effect/schema';
 import type { DXN } from '@dxos/keys';
-import { Any } from '@effect/schema/Schema';
-import { Types } from 'effect';
+import { AST, Schema } from '@effect/schema';
 
 /*
 
@@ -567,7 +565,7 @@ const allDocumentsByRicks = QB.build(() => {
     });
 });
 
-// MATCH (d:Document { author: (Node { name: 'Rick' }) }) RETURN document.name AS name
+// MATCH (d:Document { author: (Contact { name: 'Rick' }) }) RETURN document.name AS name
 const allDocumentByRicks2 = QB.build(() => {
   const contact = QB.Node(ContactNode).where({ name: 'Rick' });
   const document = QB.Node(DocumentNode).where({ author: contact });
@@ -577,7 +575,7 @@ const allDocumentByRicks2 = QB.build(() => {
   });
 });
 
-// MATCH (d:Document)-[.author]->(c:Contact) WHERE c.name == 'Rick' RETURN document.name AS name
+// MATCH (d:Document)-[.author]->(c:Contact { name: 'Rick }) RETURN document.name AS name
 const allDocumentByRicks3 = QB.build(() => {
   const document = QB.Node(DocumentNode);
   const contact = QB.Node(ContactNode).where({ name: 'Rick' });
@@ -587,7 +585,7 @@ const allDocumentByRicks3 = QB.build(() => {
   });
 });
 
-// MATCH (c:Contact)<-[.author]-(d:Document) WHERE c.name == 'Rick' RETURN document.name AS name
+// MATCH (c:Contact { name: 'Rick })<-[.author]-(d:Document) RETURN document.name AS name
 const allDocumentByRicks4 = QB.build(() => {
   const document = QB.Node(DocumentNode);
   const contact = QB.Node(ContactNode).where({ name: 'Rick' });
