@@ -11,6 +11,7 @@ export const styles = {
   frameBorder: 'border border-neutral-500 rounded',
   frameSelected: '!bg-sky-300 !dark:bg-sky-700',
   frameHover: 'hover:bg-neutral-200 hover:dark:bg-neutral-800',
+  frameGuide: '!border-green-500 border-dashed !opacity-50 !bg-transparent',
   anchor: 'bg-base border border-neutral-500 rounded hover:bg-orange-500',
   line: 'stroke-neutral-500 fill-neutral-500 dark:stroke-neutral-500 dark:fill-neutral-500',
   lineSelected: 'stroke-sky-300 dark:stroke-sky-700',

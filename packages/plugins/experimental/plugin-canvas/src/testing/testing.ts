@@ -66,7 +66,7 @@ export const createGraph = (snap: PointTransform): Graph => {
       id: d,
       data: createRect({
         id: d,
-        pos: snap({ x: 0, y: -128 }),
+        pos: snap({ x: 0, y: 128 }),
         size: itemSize,
         text: 'D',
       }),

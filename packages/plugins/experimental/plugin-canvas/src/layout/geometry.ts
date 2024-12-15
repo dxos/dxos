@@ -37,6 +37,11 @@ export const getBounds = (center: Point, size: Dimension): Rect => ({
   ...size,
 });
 
+export const getCenter = (rect: Rect): Point => ({
+  x: rect.x + rect.width / 2,
+  y: rect.y + rect.height / 2,
+});
+
 export const getRect = (p1: Point, p2: Point): Rect => ({
   x: Math.min(p1.x, p2.x),
   y: Math.min(p1.y, p2.y),
@@ -65,31 +70,34 @@ export const findClosestIntersection = ([p1, p2]: Line, rect: Rect): Point | nul
 };
 
 export const findLineRectangleIntersections = (line: Line, rect: Rect): Point[] => {
-  const { x, y, width, height } = rect;
-
   // Rectangle sides represented as lines.
-  const rectSides: Line[] = [
+  const { x, y, width, height } = rect;
+  const sides: Line[] = [
+    // Top.
     [
       { x, y },
       { x: x + width, y },
     ],
+    // Right.
     [
       { x: x + width, y },
       { x: x + width, y: y + height },
     ],
+    // Bottom.
     [
+      { x, y: y + height },
       { x: x + width, y: y + height },
-      { x, y: y + height },
     ],
+    // Left.
     [
-      { x, y: y + height },
       { x, y },
+      { x, y: y + height },
     ],
   ];
 
   // Find intersections with each rectangle side.
   const intersections: Point[] = [];
-  for (const side of rectSides) {
+  for (const side of sides) {
     const intersection = findLineIntersection(line, side);
     if (intersection) {
       intersections.push(intersection);
@@ -99,36 +107,33 @@ export const findLineRectangleIntersections = (line: Line, rect: Rect): Point[] 
   return intersections;
 };
 
+/**
+ * Line1 is represented as: a + t(b-a), where t is between 0 and 1.
+ * Line2 is represented as: c + s(d-c), where s is between 0 and 1.
+ */
 export const findLineIntersection = ([p1, p2]: Line, [q1, q2]: Line): Point | null => {
-  const a1 = p2.y - p1.y;
-  const b1 = p1.x - p2.x;
-  const c1 = a1 * p1.x + b1 * p1.y;
+  // Calculate denominator first to check if lines are parallel.
+  const denominator = (p2.x - p1.x) * (q2.y - q1.y) - (p2.y - p1.y) * (q2.x - q1.x);
 
-  const a2 = q2.y - q1.y;
-  const b2 = q1.x - q2.x;
-  const c2 = a2 * q1.x + b2 * q1.y;
-
-  // Check if parallel or coincident.
-  const determinant = a1 * b2 - a2 * b1;
-  if (determinant === 0) {
+  // If denominator is 0, lines are parallel.
+  if (Math.abs(denominator) < 1e-10) {
     return null;
   }
 
-  const x = (b2 * c1 - b1 * c2) / determinant;
-  const y = (a1 * c2 - a2 * c1) / determinant;
+  // Calculate intersection parameters.
+  const t = ((q1.x - p1.x) * (q2.y - q1.y) - (q1.y - p1.y) * (q2.x - q1.x)) / denominator;
+  const s = ((q1.x - p1.x) * (p2.y - p1.y) - (q1.y - p1.y) * (p2.x - p1.x)) / denominator;
 
-  // Check if the intersection point lies on both line segments.
-  if (isPointOnSegment({ x, y }, [p1, p2]) && isPointOnSegment({ x, y }, [q1, q2])) {
-    return { x, y };
+  // Check if intersection occurs within both line segments.
+  if (t < 0 || t > 1 || s < 0 || s > 1) {
+    return null;
   }
 
-  return null;
-};
-
-export const isPointOnSegment = ({ x, y }: Point, [p1, p2]: Line): boolean => {
-  return (
-    Math.min(p1.x, p2.x) <= x && x <= Math.max(p1.x, p2.x) && Math.min(p1.y, p2.y) <= y && y <= Math.max(p1.y, p2.y)
-  );
+  // Calculate intersection point.
+  return {
+    x: p1.x + t * (p2.x - p1.x),
+    y: p1.y + t * (p2.y - p1.y),
+  };
 };
 
 //

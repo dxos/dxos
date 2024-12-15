@@ -85,7 +85,7 @@ export const Shapes = ({ shapes }: { shapes: Shape[] }) => {
  * Generate shapes.
  */
 // TODO(burdon): Create memoized layout.
-export const useShapes = (graph: GraphModel, dragging?: Shape): Shape[] => {
+export const useShapes = (graph: GraphModel, dragging?: Shape, debug?: boolean): Shape[] => {
   const getPos = (id: string): { center: Point; bounds: Rect } | undefined => {
     const node = graph.getNode(id);
     if (node) {
@@ -117,7 +117,9 @@ export const useShapes = (graph: GraphModel, dragging?: Shape): Shape[] => {
       return;
     }
 
-    shapes.push(createLine({ id, p1, p2, guide: true }));
+    if (debug) {
+      shapes.push(createLine({ id: `${id}-guide`, p1, p2, guide: true }));
+    }
 
     invariant(r1 && r2);
     const i1 = findClosestIntersection([p2, p1], r1) ?? p1;

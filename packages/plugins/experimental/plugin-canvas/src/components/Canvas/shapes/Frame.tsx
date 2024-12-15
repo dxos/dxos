@@ -128,6 +128,7 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
           styles.frameBorder,
           selected && styles.frameSelected,
           over && styles.frameSelected,
+          shape.guide && styles.frameGuide,
           classNames,
         )}
         onClick={handleClick}

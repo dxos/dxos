@@ -24,7 +24,7 @@ import { testId } from '../util';
  * Main canvas component.
  */
 export const Canvas = () => {
-  const { width, height, scale, offset, graph, showGrid, dragging, setTransform } = useEditorContext();
+  const { debug, width, height, scale, offset, graph, showGrid, dragging, setTransform } = useEditorContext();
 
   // Canvas.
   const containerRef = useRef<HTMLDivElement>(null);
@@ -51,7 +51,7 @@ export const Canvas = () => {
   const { frameDragging, overlay } = useDragMonitor(containerRef.current);
 
   // Shapes.
-  const shapes = useShapes(graph, frameDragging);
+  const shapes = useShapes(graph, frameDragging, debug);
   const selectionRect = useSelectionHandler(containerRef.current, shapes);
 
   return (
@@ -110,7 +110,8 @@ const useDragMonitor = (el: HTMLElement | null) => {
       onDrag: ({ source, location }) => {
         invariant(el);
         const rect = el.getBoundingClientRect();
-        const pos = boundsToModel(rect, scale, offset, getInputPoint(location.current.input));
+        const { x, y } = boundsToModel(rect, scale, offset, getInputPoint(location.current.input));
+        const pos = { x, y };
         const { type, shape } = source.data as DragPayloadData;
         invariant(shape.type === 'rect'); // TODO(burdon): Handle lines?
 
