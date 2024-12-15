@@ -9,7 +9,7 @@ import { useDynamicRef } from '@dxos/react-ui';
 
 import { Frame } from './Frame';
 import { Line } from './Line';
-import { createLine, type GraphModel, type Shape } from '../../../graph';
+import { createLine, type GraphModel, type Shape, type ShapeType } from '../../../graph';
 import { type SelectionEvent, useEditorContext, useSelectionEvents } from '../../../hooks';
 import {
   boundsContain,
@@ -30,10 +30,10 @@ import { testId } from '../../util';
 /**
  * Data associated with a drag event.
  */
-export type DragPayloadData<S extends Pick<Shape, 'type'> = Shape> = {
+export type DragPayloadData<S extends ShapeType> = {
   type: 'frame' | 'anchor';
   anchor?: string;
-  shape: Shape & S;
+  shape: S;
 };
 
 export const Component = ({ shape }: { shape: Shape }) => {

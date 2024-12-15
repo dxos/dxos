@@ -6,12 +6,12 @@ import React from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
 
-import { type Shape } from '../../../graph';
+import { type ShapeType } from '../../../graph';
 import { eventsAuto, eventsNone, Markers, styles } from '../../styles';
 
 // TODO(burdon): Reconcile with Frame.
 export type LineProps = {
-  shape: Shape & { type: 'line' };
+  shape: ShapeType<'line'>;
   selected?: boolean;
   onSelect?: (id: string, shift: boolean) => void;
 };

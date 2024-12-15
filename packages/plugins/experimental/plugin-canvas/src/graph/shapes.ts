@@ -4,9 +4,11 @@
 
 import { createPathThroughPoints, type Dimension, getBounds, getRect, type Point, type Rect } from '../layout';
 
+export type ShapeKind = 'rect' | 'line';
+
 type BaseShape = {
   id: string;
-  type: 'rect' | 'line';
+  type: ShapeKind;
   rect: Rect;
 
   // TODO(burdon): Display kind.
@@ -26,6 +28,8 @@ export type Shape =
       path: string;
     });
 
+export type ShapeType<K = ShapeKind> = Shape & { type: K };
+
 type CommonProps = Pick<BaseShape, 'id' | 'guide'>;
 
 type RectProps = CommonProps & {
@@ -34,7 +38,7 @@ type RectProps = CommonProps & {
   text?: string;
 };
 
-export const createRect = ({ id, pos, size, text, guide }: RectProps): Shape & { type: 'rect' } => ({
+export const createRect = ({ id, pos, size, text, guide }: RectProps): ShapeType<'rect'> => ({
   id,
   type: 'rect',
   rect: getBounds(pos, size),
@@ -49,7 +53,7 @@ type LineProps = CommonProps & {
   p2: Point;
 };
 
-export const createLine = ({ id, p1, p2, guide }: LineProps): Shape & { type: 'line' } => ({
+export const createLine = ({ id, p1, p2, guide }: LineProps): ShapeType<'line'> => ({
   id,
   type: 'line',
   rect: getRect(p1, p2),

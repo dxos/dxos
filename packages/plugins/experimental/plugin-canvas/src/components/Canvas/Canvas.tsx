@@ -11,7 +11,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { Background } from './Background';
 import { type DragPayloadData, FrameDragPreview, Line, Shapes, useShapes, useSelectionHandler } from './shapes';
-import { createLine, createRect, type Shape } from '../../graph';
+import { createLine, createRect, type Shape, type ShapeType } from '../../graph';
 import { useActionHandler, useEditorContext, useShortcuts, useSnap, useTransform } from '../../hooks';
 import { useWheel } from '../../hooks/useWheel';
 import { boundsToModel, findClosestIntersection, getBounds, getInputPoint, type Point } from '../../layout';
@@ -102,7 +102,7 @@ const useDragMonitor = (el: HTMLElement | null) => {
   const snapPoint = useSnap();
 
   const [frameDragging, setFrameDragging] = useState<Shape>();
-  const [overlay, setOverlay] = useState<Shape & { type: 'line' }>();
+  const [overlay, setOverlay] = useState<ShapeType<'line'>>();
   const cancelled = useRef(false);
 
   useEffect(() => {
@@ -112,7 +112,7 @@ const useDragMonitor = (el: HTMLElement | null) => {
         const rect = el.getBoundingClientRect();
         const { x, y } = boundsToModel(rect, scale, offset, getInputPoint(location.current.input));
         const pos = { x, y };
-        const { type, shape } = source.data as DragPayloadData<{ type: 'rect' }>;
+        const { type, shape } = source.data as DragPayloadData<ShapeType<'rect'>>;
 
         switch (type) {
           case 'frame': {
@@ -140,7 +140,7 @@ const useDragMonitor = (el: HTMLElement | null) => {
           // TODO(burdon): Adjust for offset?
           // const pos = boundsToModelWithOffset(rect, scale, offset, shape.pos, location.initial, location.current);
           const pos = boundsToModel(rect, scale, offset, getInputPoint(location.current.input));
-          const { type, shape } = source.data as DragPayloadData<{ type: 'rect' }>;
+          const { type, shape } = source.data as DragPayloadData<ShapeType<'rect'>>;
 
           switch (type) {
             case 'frame': {
@@ -176,7 +176,7 @@ const useDragMonitor = (el: HTMLElement | null) => {
   return { frameDragging, overlay };
 };
 
-const createLineOverlay = (source: Shape, p2: Point): (Shape & { type: 'line' }) | undefined => {
+const createLineOverlay = (source: Shape, p2: Point): ShapeType<'line'> | undefined => {
   if (source.type === 'rect') {
     const { pos, rect } = source;
     const p1 = findClosestIntersection([p2, pos], rect) ?? pos;
