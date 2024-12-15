@@ -1,19 +1,26 @@
-import { type EncodedReference } from '@dxos/echo-protocol';
+import { Reference } from '@dxos/echo-protocol';
+import { ObjectId, type BaseObject, type Ref } from '@dxos/echo-schema';
+import { compositeRuntime } from '@dxos/echo-signals/runtime';
+import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { type BaseObject, type WithId, type Ref } from '@dxos/echo-schema';
 
 /**
  * Constructs a reference that points to the given object.
  */
 export const makeRef = <T extends BaseObject>(obj: T): Ref<T> => {
-  throw new Error('Method not implemented.');
+  // TODO(dmaretskyi): Extract to `getObjectDXN` function.
+  const id = obj.id;
+  invariant(ObjectId.isValid(id), 'Invalid object ID');
+  const dxn = Reference.localObjectReference(id).toDXN();
+
+  return new RefImpl(dxn, obj);
 };
 
 /**
  * Constructs a reference that points to the object specified by the provided DXN.
  */
 export const refFromDXN = (dxn: DXN): Ref<any> => {
-  throw new Error('Method not implemented.');
+  return new RefImpl(dxn);
 };
 
 export interface RefResolver {
@@ -35,28 +42,93 @@ export interface RefResolver {
 export class RefImpl<T> implements Ref<T> {
   #dxn: DXN;
   #resolver?: RefResolver = undefined;
+  #signal = compositeRuntime.createSignal();
 
-  constructor(dxn: DXN) {
+  /**
+   * Target is set when the reference is created from a specific object.
+   * In this case, the target might not be in the database.
+   */
+  #target: T | undefined = undefined;
+
+  /**
+   * Callback to issue a reactive notification when object is resolved.
+   */
+  #resolverCallback = () => {
+    this.#signal.notifyWrite();
+  };
+
+  constructor(dxn: DXN, target?: T) {
     this.#dxn = dxn;
+    this.#target = target;
   }
 
+  /**
+   * @inheritdoc
+   */
   get dxn(): DXN {
-    throw new Error('Method not implemented.');
+    return this.#dxn;
   }
 
+  /**
+   * @inheritdoc
+   */
   get target(): T | undefined {
-    throw new Error('Method not implemented.');
+    invariant(this.#resolver, 'Resolver is not set');
+    this.#signal.notifyRead();
+
+    return this.#resolver.resolveSync(this.#dxn, true, this.#resolverCallback) as T | undefined;
   }
 
-  load(): Promise<T> {
-    throw new Error('Method not implemented.');
+  /**
+   * @inheritdoc
+   */
+  async load(): Promise<T> {
+    invariant(this.#resolver, 'Resolver is not set');
+    const obj = await this.#resolver.resolve(this.#dxn);
+    if (obj == null) {
+      throw new Error('Object not found');
+    }
+    return obj as T;
   }
 
-  tryLoad(): Promise<T | undefined> {
-    throw new Error('Method not implemented.');
+  /**
+   * @inheritdoc
+   */
+  async tryLoad(): Promise<T | undefined> {
+    invariant(this.#resolver, 'Resolver is not set');
+    return (await this.#resolver.resolve(this.#dxn)) as T | undefined;
   }
 
+  /**
+   * Internal method to set the resolver.
+   * @internal
+   */
   _setResolver(resolver: RefResolver) {
     this.#resolver = resolver;
   }
+
+  /**
+   * Internal method to get the saved target.
+   * Not the same as `target` which is resolved from the resolver.
+   * @internal
+   */
+  _getSavedTarget() {
+    return this.#target;
+  }
 }
+
+/**
+ * Internal API for setting the reference resolver.
+ */
+export const setRefResolver = (ref: Ref<any>, resolver: RefResolver) => {
+  invariant(ref instanceof RefImpl, 'Ref is not an instance of RefImpl');
+  ref._setResolver(resolver);
+};
+
+/**
+ * Internal API for getting the saved target on a reference.
+ */
+export const getRefSavedTarget = (ref: Ref<any>): BaseObject | undefined => {
+  invariant(ref instanceof RefImpl, 'Ref is not an instance of RefImpl');
+  return ref._getSavedTarget();
+};

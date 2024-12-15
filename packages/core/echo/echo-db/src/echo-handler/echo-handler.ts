@@ -176,7 +176,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         return array;
       });
 
-      return createProxy(newTarget, this);
+      return internProxy(newTarget, this);
     }
     if (typeof decoded === 'object') {
       const targetKey = TargetKey.new(dataPath, namespace, 'record');
