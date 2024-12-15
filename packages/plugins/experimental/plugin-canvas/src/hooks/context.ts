@@ -15,7 +15,7 @@ export type TransformState = {
 
 export type DraggingState = {
   container: HTMLElement;
-  shape: Shape;
+  shape: Shape & { type: 'rect' };
   anchor?: string;
 };
 

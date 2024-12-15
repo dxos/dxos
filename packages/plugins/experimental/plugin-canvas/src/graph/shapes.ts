@@ -34,7 +34,7 @@ type RectProps = CommonProps & {
   text?: string;
 };
 
-export const createRect = ({ id, pos, size, text, guide }: RectProps): Shape => ({
+export const createRect = ({ id, pos, size, text, guide }: RectProps): Shape & { type: 'rect' } => ({
   id,
   type: 'rect',
   rect: getBounds(pos, size),
@@ -49,7 +49,7 @@ type LineProps = CommonProps & {
   p2: Point;
 };
 
-export const createLine = ({ id, p1, p2, guide }: LineProps): Shape => ({
+export const createLine = ({ id, p1, p2, guide }: LineProps): Shape & { type: 'line' } => ({
   id,
   type: 'line',
   rect: getRect(p1, p2),

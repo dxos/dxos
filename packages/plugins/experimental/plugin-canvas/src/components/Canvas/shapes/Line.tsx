@@ -4,7 +4,6 @@
 
 import React from 'react';
 
-import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type Shape } from '../../../graph';
@@ -12,7 +11,7 @@ import { eventsAuto, eventsNone, Markers, styles } from '../../styles';
 
 // TODO(burdon): Reconcile with Frame.
 export type LineProps = {
-  shape: Shape;
+  shape: Shape & { type: 'line' };
   selected?: boolean;
   onSelect?: (id: string, shift: boolean) => void;
 };
@@ -21,8 +20,6 @@ export type LineProps = {
  * Line shapes.
  */
 export const Line = ({ shape, selected, onSelect }: LineProps) => {
-  invariant(shape.type === 'line'); // TODO(burdon): ???
-
   return (
     <svg className={mx('absolute overflow-visible', eventsNone)}>
       <defs>
@@ -45,8 +42,8 @@ export const Line = ({ shape, selected, onSelect }: LineProps) => {
           strokeWidth={1}
           className={mx(styles.line, selected && styles.lineSelected, shape.guide && styles.lineGuide)}
           // TODO(burdon): Edge style.
-          markerStart={shape.id !== 'link' ? 'url(#circle)' : ''}
-          markerEnd={shape.id !== 'link' ? 'url(#circle)' : ''}
+          markerStart={!shape.guide && shape.id !== 'link' ? 'url(#circle)' : ''}
+          markerEnd={!shape.guide && shape.id !== 'link' ? 'url(#circle)' : ''}
         />
       </g>
     </svg>

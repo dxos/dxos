@@ -25,11 +25,13 @@ export const useWheel = (
 
     const handleWheel = (event: WheelEvent) => {
       event.preventDefault();
+      // Zoom or pan.
       if (event.ctrlKey) {
         if (!el) {
           return;
         }
 
+        // Keep centered.
         setTransform(({ scale, offset }) => {
           const scaleSensitivity = 0.01;
           const newScale = scale * Math.exp(-event.deltaY * scaleSensitivity);

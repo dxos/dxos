@@ -102,7 +102,7 @@ const useDragMonitor = (el: HTMLElement | null) => {
   const snapPoint = useSnap();
 
   const [frameDragging, setFrameDragging] = useState<Shape>();
-  const [overlay, setOverlay] = useState<Shape>();
+  const [overlay, setOverlay] = useState<Shape & { type: 'line' }>();
   const cancelled = useRef(false);
 
   useEffect(() => {
@@ -112,8 +112,7 @@ const useDragMonitor = (el: HTMLElement | null) => {
         const rect = el.getBoundingClientRect();
         const { x, y } = boundsToModel(rect, scale, offset, getInputPoint(location.current.input));
         const pos = { x, y };
-        const { type, shape } = source.data as DragPayloadData;
-        invariant(shape.type === 'rect'); // TODO(burdon): Handle lines?
+        const { type, shape } = source.data as DragPayloadData<{ type: 'rect' }>;
 
         switch (type) {
           case 'frame': {
@@ -141,8 +140,7 @@ const useDragMonitor = (el: HTMLElement | null) => {
           // TODO(burdon): Adjust for offset?
           // const pos = boundsToModelWithOffset(rect, scale, offset, shape.pos, location.initial, location.current);
           const pos = boundsToModel(rect, scale, offset, getInputPoint(location.current.input));
-          const { type, shape } = source.data as DragPayloadData;
-          invariant(shape.type === 'rect'); // TODO(burdon): Handle lines?
+          const { type, shape } = source.data as DragPayloadData<{ type: 'rect' }>;
 
           switch (type) {
             case 'frame': {
@@ -178,7 +176,7 @@ const useDragMonitor = (el: HTMLElement | null) => {
   return { frameDragging, overlay };
 };
 
-const createLineOverlay = (source: Shape, p2: Point): Shape | undefined => {
+const createLineOverlay = (source: Shape, p2: Point): (Shape & { type: 'line' }) | undefined => {
   if (source.type === 'rect') {
     const { pos, rect } = source;
     const p1 = findClosestIntersection([p2, pos], rect) ?? pos;

@@ -30,10 +30,10 @@ import { testId } from '../../util';
 /**
  * Data associated with a drag event.
  */
-export type DragPayloadData = {
+export type DragPayloadData<S extends Pick<Shape, 'type'> = Shape> = {
   type: 'frame' | 'anchor';
   anchor?: string;
-  shape: Shape;
+  shape: Shape & S;
 };
 
 export const Component = ({ shape }: { shape: Shape }) => {

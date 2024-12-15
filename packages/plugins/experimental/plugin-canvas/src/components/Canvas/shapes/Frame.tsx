@@ -23,7 +23,7 @@ import { DATA_ITEM_ID, Anchor } from '../Anchor';
 
 export type FrameProps = PropsWithChildren<
   ThemedClassName<{
-    shape: Shape;
+    shape: Shape & { type: 'rect' };
     scale: number;
     selected?: boolean;
     showAnchors?: boolean;
@@ -35,9 +35,7 @@ export type FrameProps = PropsWithChildren<
  * Draggable Frame around shapes.
  */
 export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelect }: FrameProps) => {
-  invariant(shape.type === 'rect'); // TODO(burdon): ???
-
-  const { linking, dragging, setDragging, editing, setEditing } = useEditorContext();
+  const { debug, linking, dragging, setDragging, editing, setEditing } = useEditorContext();
   const isDragging = dragging?.shape.id === shape.id;
   const isEditing = editing?.shape.id === shape.id;
   const [hovering, setHovering] = useState(false);
@@ -144,7 +142,7 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
       >
         {/* TODO(burdon): Auto-expand height? Trigger layout? */}
         {(isEditing && <TextBox value={shape.text} onClose={handleClose} onCancel={handleCancel} />) || (
-          <ReadonlyTextBox value={shape.text ?? shape.id} />
+          <ReadonlyTextBox classNames={mx(debug && 'font-mono text-xs')} value={getLabel(shape, debug)} />
         )}
       </div>
 
@@ -158,9 +156,11 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
   );
 };
 
-export const FrameDragPreview = ({ shape }: FrameProps) => {
-  invariant(shape.type === 'rect'); // TODO(burdon): ???
+const getLabel = (shape: Shape & { type: 'rect' }, debug = false) => {
+  return debug ? shape.id + `\n(${shape.pos.x},${shape.pos.y})` : shape.text ?? shape.id;
+};
 
+export const FrameDragPreview = ({ shape }: FrameProps) => {
   return (
     <div
       style={getBoundsProperties({ ...shape.pos, ...shape.size })}
