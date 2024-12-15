@@ -44,9 +44,11 @@ export const UI = () => {
       </div>
       <div>
         <div className='absolute bottom-0 left-0'>
-          <SyntaxHighlighter language='javascript' classNames={mx('w-[300px] bg-base text-xs p-2 opacity-70')}>
-            {JSON.stringify(info, null, 2)}
-          </SyntaxHighlighter>
+          {debug && (
+            <SyntaxHighlighter language='javascript' classNames={mx('w-[300px] bg-base text-xs p-2 opacity-70')}>
+              {JSON.stringify(info, null, 2)}
+            </SyntaxHighlighter>
+          )}
         </div>
         <div className='absolute bottom-0 left-0 right-0 flex justify-center'>
           <div>

@@ -125,7 +125,7 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
         onMouseLeave={(ev) => {
           // We need to keep rendering the anchor that is being dragged.
           const related = ev.relatedTarget as HTMLElement;
-          if (related?.getAttribute(DATA_ITEM_ID) !== shape.id) {
+          if (related?.getAttribute?.(DATA_ITEM_ID) !== shape.id) {
             setHovering(false);
           }
         }}

@@ -4,7 +4,7 @@
 
 import { range } from '@dxos/util';
 
-import { type Graph, GraphModel, type Shape } from '../graph';
+import { createRect, type Graph, GraphModel } from '../graph';
 import type { Dimension, PointTransform } from '../layout';
 
 /**
@@ -33,35 +33,32 @@ export const createGraph = (snap: PointTransform): Graph => {
 
     wrapper.addNode({
       id: a,
-      data: {
+      data: createRect({
         id: a,
-        type: 'rect',
-        text: 'A',
         pos: snap({ x: 0, y: 0 }),
         size: itemSize,
-      } satisfies Shape,
+        text: 'A',
+      }),
     });
 
     wrapper.addNode({
       id: b,
-      data: {
+      data: createRect({
         id: b,
-        type: 'rect',
-        text: 'B',
         pos: snap({ x: -itemSize.width * 2, y: 0 }),
         size: itemSize,
-      } satisfies Shape,
+        text: 'B',
+      }),
     });
 
     wrapper.addNode({
       id: c,
-      data: {
+      data: createRect({
         id: c,
-        type: 'rect',
-        text: 'C',
         pos: snap({ x: itemSize.width * 2, y: 0 }),
         size: itemSize,
-      } satisfies Shape,
+        text: 'C',
+      }),
     });
 
     wrapper.addEdge({

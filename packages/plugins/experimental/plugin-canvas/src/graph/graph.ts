@@ -6,22 +6,52 @@ import { S } from '@dxos/echo-schema';
 import { create } from '@dxos/live-object';
 
 import { removeElements } from './util';
-import { type Dimension, type Point } from '../layout';
+import { createPathThroughPoints, type Dimension, getBounds, getRect, type Point, type Rect } from '../layout';
+
+type ShapeCommon = {
+  id: string;
+  type: 'rect' | 'line';
+  rect: Rect;
+};
 
 // TODO(burdon): Define schema for persistent objects.
 export type Shape =
-  | {
-      id: string;
+  | (ShapeCommon & {
       type: 'rect';
       text?: string;
       pos: Point;
       size: Dimension;
-    }
-  | {
-      id: string;
+    })
+  | (ShapeCommon & {
       type: 'line';
       path: string;
-    };
+    });
+
+export const createRect = ({
+  id,
+  pos,
+  size,
+  text,
+}: {
+  id: string;
+  pos: Point;
+  size: Dimension;
+  text?: string;
+}): Shape => ({
+  id,
+  type: 'rect',
+  rect: getBounds(pos, size),
+  pos,
+  size,
+  text,
+});
+
+export const createLine = ({ id, p1, p2 }: { id: string; p1: Point; p2: Point }): Shape => ({
+  id,
+  type: 'line',
+  rect: getRect(p1, p2),
+  path: createPathThroughPoints([p1, p2]),
+});
 
 export const Node = S.Struct({
   id: S.String,

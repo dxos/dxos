@@ -6,7 +6,7 @@ import { useCallback } from 'react';
 
 import { useEditorContext } from './useEditorContext';
 import { type ActionHandler } from '../actions';
-import { type Shape } from '../graph';
+import { createRect } from '../graph';
 import { createId, itemSize } from '../testing';
 
 /**
@@ -50,7 +50,7 @@ export const useActionHandler = (): ActionHandler => {
         // TODO(burdon): Factor out graph handlers. Undo.
         case 'create': {
           const id = createId();
-          graph.addNode({ id, data: { id, type: 'rect', pos: { x: 0, y: 0 }, size: itemSize } satisfies Shape });
+          graph.addNode({ id, data: createRect({ id, pos: { x: 0, y: 0 }, size: itemSize }) });
           selection.clear();
           return true;
         }

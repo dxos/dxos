@@ -24,6 +24,13 @@ export const useShortcuts = (el: HTMLElement | null) => {
       type: 'keydown',
       listener: (ev: KeyboardEvent) => {
         switch (ev.key) {
+          case 'd': {
+            handleAction({
+              type: 'debug',
+            });
+            break;
+          }
+
           case 'Backspace': {
             handleAction({
               type: 'delete',
