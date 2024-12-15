@@ -35,6 +35,7 @@ import { testId } from '../util';
 
 // TODO(burdon): Phase 2
 //  - Auto-layout (reconcile with plugin-debug).
+//    - AI generated layout from mermaid.
 //    - UML of this package using Beast and mermaid.
 //  - Spline.
 //  - Drop/snap visualization.
