@@ -24,7 +24,7 @@ import { styles } from '../styles';
 export type FrameProps = PropsWithChildren<
   ThemedClassName<{
     shape: Shape;
-    scale?: number;
+    scale: number;
     selected?: boolean;
     showAnchors?: boolean;
     onSelect?: (id: string, shift: boolean) => void;
@@ -55,7 +55,7 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
           nativeSetDragImage,
           getOffset: () => {
             // TODO(burdon): Calc offset.
-            return { x: shape.size.width / 2, y: shape.size.height / 2 };
+            return { x: (scale * shape.size.width) / 2, y: (scale * shape.size.height) / 2 };
           },
           render: ({ container }) => {
             setDragging({ shape, container });
@@ -67,7 +67,7 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
         setDragging(undefined);
       },
     });
-  }, [shape]);
+  }, [scale, shape]);
 
   // Drop targets for linking.
   useEffect(() => {

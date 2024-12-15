@@ -87,7 +87,7 @@ export const Canvas = () => {
         {dragging &&
           createPortal(
             <div style={transformStyles}>
-              <FrameDragPreview shape={dragging.shape} />
+              <FrameDragPreview scale={scale} shape={dragging.shape} />
             </div>,
             dragging.container,
           )}
@@ -113,8 +113,8 @@ const useDragMonitor = (el: HTMLElement | null) => {
         const rect = el.getBoundingClientRect();
         const pos = boundsToModel(rect, scale, offset, getInputPoint(location.current.input));
         const { type, shape } = source.data as DragPayloadData;
-
         invariant(shape.type === 'rect'); // TODO(burdon): Handle lines?
+
         switch (type) {
           case 'frame': {
             setFrameDragging({ ...shape, pos });
@@ -134,14 +134,14 @@ const useDragMonitor = (el: HTMLElement | null) => {
       onDrop: ({ source, location }) => {
         invariant(el);
         const rect = el.getBoundingClientRect();
+        // TODO(burdon): Adjust for offset?
+        // const pos = boundsToModelWithOffset(rect, scale, offset, shape.pos, location.initial, location.current);
         const pos = boundsToModel(rect, scale, offset, getInputPoint(location.current.input));
         const { type, shape } = source.data as DragPayloadData;
-
         invariant(shape.type === 'rect'); // TODO(burdon): Handle lines?
+
         switch (type) {
           case 'frame': {
-            // TODO(burdon): Adjust for offset?
-            // const pos = boundsToModelWithOffset(rect, scale, offset, shape.pos, location.initial, location.current);
             shape.pos = snapPoint(pos);
             setFrameDragging(undefined);
             setDragging(undefined);
