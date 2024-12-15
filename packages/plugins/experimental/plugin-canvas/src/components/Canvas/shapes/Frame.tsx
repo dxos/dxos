@@ -10,13 +10,13 @@ import { invariant } from '@dxos/invariant';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { DATA_ITEM_ID, Anchor } from './Anchor';
 import { type DragPayloadData } from './Shape';
-import { type Shape } from '../../graph';
-import { useEditorContext } from '../../hooks';
-import { pointAdd, getBoundsProperties } from '../../layout';
-import { ReadonlyTextBox, TextBox, type TextBoxProps } from '../TextBox';
-import { styles } from '../styles';
+import { type Shape } from '../../../graph';
+import { useEditorContext } from '../../../hooks';
+import { pointAdd, getBoundsProperties } from '../../../layout';
+import { ReadonlyTextBox, TextBox, type TextBoxProps } from '../../TextBox';
+import { styles } from '../../styles';
+import { DATA_ITEM_ID, Anchor } from '../Anchor';
 
 // TODO(burdon): Surface for form content. Or pass in children (which may include a Surface).
 //  return <Surface ref={forwardRef} role='card' limit={1} data={{ content: object} />;

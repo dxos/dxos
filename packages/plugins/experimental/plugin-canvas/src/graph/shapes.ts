@@ -4,47 +4,55 @@
 
 import { createPathThroughPoints, type Dimension, getBounds, getRect, type Point, type Rect } from '../layout';
 
-type ShapeCommon = {
+type BaseShape = {
   id: string;
   type: 'rect' | 'line';
   rect: Rect;
+
+  // TODO(burdon): Display kind.
+  guide?: boolean;
 };
 
 // TODO(burdon): Define schema for persistent objects.
 export type Shape =
-  | (ShapeCommon & {
+  | (BaseShape & {
       type: 'rect';
       text?: string;
       pos: Point;
       size: Dimension;
     })
-  | (ShapeCommon & {
+  | (BaseShape & {
       type: 'line';
       path: string;
     });
 
-export const createRect = ({
-  id,
-  pos,
-  size,
-  text,
-}: {
-  id: string;
+type CommonProps = Pick<BaseShape, 'id' | 'guide'>;
+
+type RectProps = CommonProps & {
   pos: Point;
   size: Dimension;
   text?: string;
-}): Shape => ({
+};
+
+export const createRect = ({ id, pos, size, text, guide }: RectProps): Shape => ({
   id,
   type: 'rect',
   rect: getBounds(pos, size),
   pos,
   size,
   text,
+  guide,
 });
 
-export const createLine = ({ id, p1, p2 }: { id: string; p1: Point; p2: Point }): Shape => ({
+type LineProps = CommonProps & {
+  p1: Point;
+  p2: Point;
+};
+
+export const createLine = ({ id, p1, p2, guide }: LineProps): Shape => ({
   id,
   type: 'line',
   rect: getRect(p1, p2),
   path: createPathThroughPoints([p1, p2]),
+  guide,
 });

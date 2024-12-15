@@ -6,14 +6,20 @@ import React, { useCallback } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { useDynamicRef } from '@dxos/react-ui';
-import { isNotFalsy } from '@dxos/util';
 
 import { Frame } from './Frame';
 import { Line } from './Line';
-import { createLine, type GraphModel, type Shape } from '../../graph';
-import { type SelectionEvent, useEditorContext, useSelectionEvents, useTransform } from '../../hooks';
-import { boundsContain, boundsToModel, findClosestIntersection, getBounds, type Point, type Rect } from '../../layout';
-import { testId } from '../util';
+import { createLine, type GraphModel, type Shape } from '../../../graph';
+import { type SelectionEvent, useEditorContext, useSelectionEvents, useTransform } from '../../../hooks';
+import {
+  boundsContain,
+  boundsToModel,
+  findClosestIntersection,
+  getBounds,
+  type Point,
+  type Rect,
+} from '../../../layout';
+import { testId } from '../../util';
 
 // Ontology:
 // TODO(burdon): Separate shapes/layout from data graph.
@@ -75,6 +81,10 @@ export const Shapes = ({ shapes }: { shapes: Shape[] }) => {
   );
 };
 
+/**
+ * Generate shapes.
+ */
+// TODO(burdon): Create memoized layout.
 export const useShapes = (graph: GraphModel, dragging?: Shape): Shape[] => {
   const getPos = (id: string): { center: Point; bounds: Rect } | undefined => {
     const node = graph.getNode(id);
@@ -94,24 +104,29 @@ export const useShapes = (graph: GraphModel, dragging?: Shape): Shape[] => {
     }
   };
 
-  const rects: Shape[] = graph.nodes.map(({ data: shape }) => shape);
+  const shapes: Shape[] = [];
 
-  const lines: Shape[] = graph.edges
-    .map(({ id, source, target }) => {
-      const { center: p1, bounds: r1 } = getPos(source) ?? {};
-      const { center: p2, bounds: r2 } = getPos(target) ?? {};
-      if (!p1 || !p2) {
-        return null;
-      }
+  graph.nodes.forEach(({ data: shape }) => {
+    shapes.push(shape);
+  });
 
-      invariant(r1 && r2);
-      const i1 = findClosestIntersection([p2, p1], r1) ?? p1;
-      const i2 = findClosestIntersection([p1, p2], r2) ?? p2;
-      return createLine({ id, p1: i1, p2: i2 });
-    })
-    .filter(isNotFalsy);
+  graph.edges.forEach(({ id, source, target }) => {
+    const { center: p1, bounds: r1 } = getPos(source) ?? {};
+    const { center: p2, bounds: r2 } = getPos(target) ?? {};
+    if (!p1 || !p2) {
+      return;
+    }
 
-  return [...rects, ...lines];
+    shapes.push(createLine({ id, p1, p2, guide: true }));
+
+    invariant(r1 && r2);
+    const i1 = findClosestIntersection([p2, p1], r1) ?? p1;
+    const i2 = findClosestIntersection([p1, p2], r2) ?? p2;
+    const line = createLine({ id, p1: i1, p2: i2 });
+    shapes.push(line);
+  });
+
+  return shapes;
 };
 
 /**

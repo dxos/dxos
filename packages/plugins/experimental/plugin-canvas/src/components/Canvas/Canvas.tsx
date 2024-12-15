@@ -10,9 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Background } from './Background';
-import { FrameDragPreview } from './Frame';
-import { Line } from './Line';
-import { type DragPayloadData, useShapes, Shapes, useSelectionHandler } from './Shape';
+import { type DragPayloadData, FrameDragPreview, Line, Shapes, useShapes, useSelectionHandler } from './shapes';
 import { createLine, createRect, type Shape } from '../../graph';
 import { useActionHandler, useEditorContext, useShortcuts, useSnap, useTransform } from '../../hooks';
 import { useWheel } from '../../hooks/useWheel';

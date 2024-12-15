@@ -14,6 +14,7 @@ export const styles = {
   anchor: 'bg-base border border-neutral-500 rounded hover:bg-orange-500',
   line: 'stroke-neutral-500 fill-neutral-500 dark:stroke-neutral-500 dark:fill-neutral-500',
   lineSelected: 'stroke-sky-300 dark:stroke-sky-700',
+  lineGuide: '!stroke-green-500 [stroke-dasharray:6_6]',
   cursor: 'stroke-primary-500 opacity-30',
 };
 
