@@ -7,6 +7,7 @@ import { DXN } from '@dxos/keys';
 /**
  * Constructs a reference that points to the given object.
  */
+// TODO(dmaretskyi): Should be `Ref.make` but that's not possible because of the circular dependency.
 export const makeRef = <T extends BaseObject>(obj: T): Ref<T> => {
   // TODO(dmaretskyi): Extract to `getObjectDXN` function.
   const id = obj.id;
@@ -19,6 +20,7 @@ export const makeRef = <T extends BaseObject>(obj: T): Ref<T> => {
 /**
  * Constructs a reference that points to the object specified by the provided DXN.
  */
+// TODO(dmaretskyi): Should be `Ref.fromDXN` but that's not possible because of the circular dependency.
 export const refFromDXN = (dxn: DXN): Ref<any> => {
   return new RefImpl(dxn);
 };
