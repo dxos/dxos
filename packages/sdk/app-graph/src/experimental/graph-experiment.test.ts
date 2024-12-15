@@ -9,10 +9,7 @@ TODO:
 
 - Move to a separate package
 - Turn methods into getters where possible.
-- orderBy(...) should use the same .prop DSL
 - More flexible return types, so that return isn't limited to being an object
-- distinctBy doesn't make sense it should be just .distinct()
-
 
 - Do we need a separate syntax to express patterns with refs (so that we can utilize the reverse reference index) or are predicates ok?
 e.g can we infer the scan order from the query:
@@ -382,9 +379,9 @@ type AnyQueryResult = Record<string, any>;
 type OrderDirection = 'ASC' | 'DESC';
 
 interface CompleteQuery<R extends AnyQueryResult> {
-  distinctBy<PS extends PathOf<R>[]>(...props: PS): CompleteQuery<R>;
+  distinct(): CompleteQuery<R>;
 
-  orderBy<PS extends PathOf<R>[]>(...props: { [K in keyof PS]: [PS[K], OrderDirection] }): CompleteQuery<R>;
+  orderBy(...props: [RValue<any>, OrderDirection][]): CompleteQuery<R>;
 
   limit(rows: number): CompleteQuery<R>;
   // TODO(dmaretskyi): Research different paging methods.
@@ -498,14 +495,16 @@ const getAllDocumentNamesAndTheirAuthorsAndTheirActions = QB.build(() => {
   const document = QB.Node(DocumentNode);
   const action = QB.Node(ActionNode);
 
+  const authorName = document.prop('author').target().prop('name');
+
   return QB.Match(document.related(QB.Relation(ActionForNodeRelation)).to(action))
     .return({
       name: document.prop('name'),
       content: document.prop('content'),
-      authorName: document.prop('author').target().prop('name'),
+      authorName,
       action: action,
     })
-    .orderBy(['authorName', 'DESC'], ['name', 'ASC'])
+    .orderBy([authorName, 'DESC'], [document.prop('name'), 'ASC'])
     .limit(100);
 });
 
@@ -517,7 +516,7 @@ const allContactsThatHaveAuthoredDocuments = QB.build(() => {
     .return({
       author: document.prop('author').target(),
     })
-    .distinctBy('author');
+    .distinct();
 });
 
 // MATCH (d:Document) WHERE d.author.id == $authorId RETURN DISTINCT document.author AS author
@@ -531,7 +530,7 @@ const allDocumentsByThisAuthorWhere = (authorId: Id) =>
       .return({
         author,
       })
-      .distinctBy('author');
+      .distinct();
   });
 
 // Note: this is a variation of the above query with WHERE clause, but this one might be easier for the Query Planner to optimize to use the Reverse Reference Index since the author constraint is in the pattern.
@@ -545,7 +544,7 @@ const allDocumentsByThisAuthorPattern = (authorId: Id) =>
         name: document.prop('name'),
         author: document.prop('author').target(),
       })
-      .distinctBy('author');
+      .distinct();
   });
 
 // Get all documents authored by Rick
