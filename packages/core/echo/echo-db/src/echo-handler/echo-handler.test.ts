@@ -7,7 +7,7 @@ import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { decodeReference, encodeReference, Reference } from '@dxos/echo-protocol';
-import { EchoObject, Expando, TypedObject, S, foreignKey, getTypeReference, ref } from '@dxos/echo-schema';
+import { EchoObject, Expando, TypedObject, S, foreignKey, getTypeReference, Ref } from '@dxos/echo-schema';
 import {
   Contact,
   Task,
@@ -316,8 +316,8 @@ describe('Reactive Object with ECHO database', () => {
 
     const Person = S.Struct({
       name: S.String,
-      worksAt: ref(Org),
-      previousEmployment: S.optional(S.Array(ref(Org))),
+      worksAt: Ref(Org),
+      previousEmployment: S.optional(S.Array(Ref(Org))),
     }).pipe(EchoObject('example.Person', '0.1.0'));
 
     test('references', async () => {
@@ -326,10 +326,10 @@ describe('Reactive Object with ECHO database', () => {
 
       const orgName = 'DXOS';
       const org = db.add(create(Org, { name: orgName }));
-      const person = db.add(create(Person, { name: 'John', worksAt: org }));
+      const person = db.add(create(Person, { name: 'John', worksAt: makeRef(org) }));
 
-      expect(person.worksAt).to.deep.eq(org);
-      expect(person.worksAt?.name).to.eq(orgName);
+      expect(person.worksAt.target).to.deep.eq(org);
+      expect(person.worksAt.target?.name).to.eq(orgName);
     });
 
     test('serialized references', async () => {
@@ -372,10 +372,10 @@ describe('Reactive Object with ECHO database', () => {
       const { db, graph } = await builder.createDatabase();
       graph.schemaRegistry.addSchema([Org, Person]);
 
-      const person = db.add(create(Person, { name: 'John', worksAt: create(Org, { name: 'DXOS' }) }));
+      const person = db.add(create(Person, { name: 'John', worksAt: makeRef(create(Org, { name: 'DXOS' })) }));
 
-      expect(person.worksAt?.name).to.eq('DXOS');
-      expect(person.worksAt?.id).to.be.a('string');
+      expect(person.worksAt.target?.name).to.eq('DXOS');
+      expect(person.worksAt.target?.id).to.be.a('string');
     });
 
     test('adding objects with nested arrays to DB', async () => {
@@ -384,10 +384,14 @@ describe('Reactive Object with ECHO database', () => {
 
       const dxos = create(Org, { name: 'DXOS' });
       const braneframe = create(Org, { name: 'Braneframe' });
-      const person = db.add(create(Person, { name: 'John', worksAt: dxos, previousEmployment: [dxos, braneframe] }));
+      const person = db.add(create(Person, { 
+        name: 'John', 
+        worksAt: makeRef(dxos), 
+        previousEmployment: [makeRef(dxos), makeRef(braneframe)] 
+      }));
 
-      expect(person.previousEmployment![0]!.name).to.eq('DXOS');
-      expect(person.previousEmployment![1]!.name).to.eq('Braneframe');
+      expect(person.previousEmployment![0]!.target!.name).to.eq('DXOS');
+      expect(person.previousEmployment![1]!.target!.name).to.eq('Braneframe');
     });
 
     test('adding untyped objects with nested arrays to DB', async () => {
@@ -489,7 +493,7 @@ describe('Reactive Object with ECHO database', () => {
         field: S.Number,
       }) {}
       class TestType extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-        objects: S.mutable(S.Array(ref(NestedType))),
+        objects: S.mutable(S.Array(Ref(NestedType))),
       }) {}
 
       const key = foreignKey('example.com', '123');
