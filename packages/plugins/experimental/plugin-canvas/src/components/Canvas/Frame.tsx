@@ -35,12 +35,12 @@ export type FrameProps = PropsWithChildren<
  * Draggable Frame around shapes.
  */
 export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelect }: FrameProps) => {
+  invariant(shape.type === 'rect'); // TODO(burdon): ???
+
   const { linking, dragging, setDragging, editing, setEditing } = useEditorContext();
   const isDragging = dragging?.shape.id === shape.id;
   const isEditing = editing?.shape.id === shape.id;
   const [hovering, setHovering] = useState(false);
-
-  invariant(shape.type === 'rect'); // TODO(burdon): ???
 
   // Dragging.
   // TODO(burdon): Handle cursor dragging out of window (currently drop is lost/frozen).

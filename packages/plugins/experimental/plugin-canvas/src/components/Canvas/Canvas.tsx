@@ -11,9 +11,10 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { Background } from './Background';
 import { FrameDragPreview } from './Frame';
+import { Line } from './Line';
 import { type DragPayloadData, useShapes, Shapes, useSelectionHandler } from './Shape';
 import { type Shape } from '../../graph';
-import { useActionHandler, useEditorContext, useGraph, useShortcuts, useSnap, useTransform } from '../../hooks';
+import { useActionHandler, useEditorContext, useShortcuts, useSnap, useTransform } from '../../hooks';
 import { useWheel } from '../../hooks/useWheel';
 import {
   boundsToModel,
@@ -34,11 +35,8 @@ import { testId } from '../util';
  */
 export const Canvas = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { width, height, scale, offset, showGrid, dragging, setTransform, setDragging, setLinking } =
+  const { width, height, scale, offset, graph, showGrid, dragging, setTransform, setDragging, setLinking } =
     useEditorContext();
-
-  // Data model.
-  const graph = useGraph();
 
   // Canvas.
   const { ready, styles: transformStyles } = useTransform();
@@ -63,8 +61,8 @@ export const Canvas = () => {
     });
   }, [containerRef.current]);
 
-  const [itemDragging, setItemDragging] = useState<Shape>();
-  const [itemLinking, setItemLinking] = useState<{ source: { center: Point; bounds: Rect }; target: Point }>();
+  const [frameDragging, setFrameDragging] = useState<Shape>();
+  const [anchorDragging, setAnchorDragging] = useState<{ source: { center: Point; bounds: Rect }; target: Point }>();
 
   // Monitor dragging and linking.
   useEffect(() => {
@@ -76,12 +74,12 @@ export const Canvas = () => {
         invariant(shape.type === 'rect'); // TODO(burdon): ???
         switch (type) {
           case 'frame': {
-            setItemDragging(shape);
+            setFrameDragging({ ...shape, pos });
             break;
           }
 
           case 'anchor': {
-            setItemLinking({ source: { center: shape.pos, bounds: getBounds(shape.pos, shape.size) }, target: pos });
+            setAnchorDragging({ source: { center: shape.pos, bounds: getBounds(shape.pos, shape.size) }, target: pos });
             break;
           }
         }
@@ -97,7 +95,7 @@ export const Canvas = () => {
             // TODO(burdon): Adjust for offset.
             // const pos = boundsToModelWithOffset(rect, scale, offset, shape.pos, location.initial, location.current);
             shape.pos = snapPoint(pos);
-            setItemDragging(undefined);
+            setFrameDragging(undefined);
             setDragging(undefined);
             break;
           }
@@ -106,30 +104,32 @@ export const Canvas = () => {
             const target = location.current.dropTargets.find(({ data }) => data.type === 'frame')?.data.item as Shape;
             let id = target?.id;
             if (!id) {
+              // TODO(burdon): Use action handler to reuse undo.
               id = createId();
-              graph.addNode({ id, data: { id, pos: snapPoint(pos), size: itemSize } });
+              graph.addNode({ id, data: { id, type: 'rect', pos: snapPoint(pos), size: itemSize } satisfies Shape });
             }
             graph.addEdge({ id: createId(), source: shape.id, target: id, data: {} });
-            setItemLinking(undefined);
+            setAnchorDragging(undefined);
             setLinking(undefined);
             break;
           }
         }
       },
     });
-  }, [containerRef, snapPoint, scale, offset, graph]);
+  }, [containerRef, graph, snapPoint, scale, offset]);
 
-  // Shapes
-  const shapes = useShapes(graph, itemDragging);
-
-  // TODO(burdon): Overlay.
-  if (itemLinking) {
-    const { center: p1, bounds: r1 } = itemLinking.source;
-    const p2 = itemLinking.target;
+  // Linking.
+  let link: Shape | undefined;
+  if (anchorDragging) {
+    const { center: p1, bounds: r1 } = anchorDragging.source;
+    const p2 = anchorDragging.target;
     const i1 = r1 ? findClosestIntersection([p2, p1], r1) ?? p1 : p1;
     const i2 = p2;
-    shapes.push({ id: 'link', type: 'line', path: createPathThroughPoints([i1, i2]) });
+    link = { id: 'link', type: 'line', path: createPathThroughPoints([i1, i2]) };
   }
+
+  // Shapes
+  const shapes = useShapes(graph, frameDragging);
 
   return (
     <div {...testId('dx-canvas')} ref={containerRef} tabIndex={0} className={mx('absolute inset-0 overflow-hidden')}>
@@ -150,6 +150,13 @@ export const Canvas = () => {
             {selectionBounds && <rect {...selectionBounds} opacity={0.2} strokeWidth={2} className={styles.cursor} />}
           </g>
         </svg>
+
+        {/* Linking overlay. */}
+        {link && (
+          <div className='absolute' style={transformStyles}>
+            <Line shape={link} />
+          </div>
+        )}
 
         {/* Drag preview. */}
         {dragging &&

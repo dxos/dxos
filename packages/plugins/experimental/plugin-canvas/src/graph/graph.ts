@@ -52,7 +52,7 @@ export const emptyGraph: Graph = { id: 'test', nodes: [], edges: [] };
 /**
  * Wrapper for graph operations.
  */
-export class GraphWrapper {
+export class GraphModel {
   private readonly _graph: Graph;
 
   constructor(obj: Partial<Graph> = {}) {

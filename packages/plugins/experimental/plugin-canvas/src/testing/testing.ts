@@ -4,7 +4,7 @@
 
 import { range } from '@dxos/util';
 
-import { type Graph, GraphWrapper, type Shape } from '../graph';
+import { type Graph, GraphModel, type Shape } from '../graph';
 import type { Dimension, PointTransform } from '../layout';
 
 /**
@@ -25,7 +25,7 @@ export const itemSize: Dimension = { width: 128, height: 64 };
 export const createId = () => Math.random().toString(36).slice(2, 10);
 
 export const createGraph = (snap: PointTransform): Graph => {
-  const wrapper = new GraphWrapper();
+  const wrapper = new GraphModel();
   range(1).forEach((i) => {
     const a = createId();
     const b = createId();

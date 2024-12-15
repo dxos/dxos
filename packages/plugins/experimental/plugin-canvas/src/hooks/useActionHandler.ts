@@ -5,16 +5,16 @@
 import { useCallback } from 'react';
 
 import { useEditorContext } from './useEditorContext';
-import { useGraph } from './useGraph';
 import { type ActionHandler } from '../actions';
+import { type Shape } from '../graph';
 import { createId, itemSize } from '../testing';
 
 /**
  * Handle actions.
  */
 export const useActionHandler = (): ActionHandler => {
-  const { width, height, scale, selection, setTransform, setDebug, setShowGrid, setSnapToGrid } = useEditorContext();
-  const graph = useGraph();
+  const { width, height, scale, graph, selection, setTransform, setDebug, setShowGrid, setSnapToGrid } =
+    useEditorContext();
 
   return useCallback<ActionHandler>(
     (action) => {
@@ -50,7 +50,7 @@ export const useActionHandler = (): ActionHandler => {
         // TODO(burdon): Factor out graph handlers. Undo.
         case 'create': {
           const id = createId();
-          graph.addNode({ id, data: { id, pos: { x: 0, y: 0 }, size: itemSize } });
+          graph.addNode({ id, data: { id, type: 'rect', pos: { x: 0, y: 0 }, size: itemSize } satisfies Shape });
           selection.clear();
           return true;
         }
@@ -61,9 +61,10 @@ export const useActionHandler = (): ActionHandler => {
           selection.clear();
           return true;
         }
-      }
 
-      return false;
+        default:
+          return false;
+      }
     },
     [width, height, scale],
   );

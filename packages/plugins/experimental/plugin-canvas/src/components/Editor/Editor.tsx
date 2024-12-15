@@ -8,7 +8,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { emptyGraph, type Graph } from '../../graph';
+import { emptyGraph, type Graph, GraphModel } from '../../graph';
 import { type DraggingState, type EditingState, EditorContext, SelectionModel, type TransformState } from '../../hooks';
 import { Canvas } from '../Canvas';
 import { UI } from '../UI';
@@ -56,7 +56,7 @@ const EditorRoot = ({
   classNames,
   scale: initialScale = 1,
   offset: initialOffset = defaultOffset,
-  graph = emptyGraph,
+  graph: initialGraph = emptyGraph,
 }: EditorRootProps) => {
   // Canvas state.
   const { ref, width = 0, height = 0 } = useResizeDetector();
@@ -66,6 +66,9 @@ const EditorRoot = ({
   const [snapToGrid, setSnapToGrid] = useState(true);
   const [{ scale, offset }, setTransform] = useState<TransformState>({ scale: initialScale, offset: initialOffset });
   useEffect(() => setTransform({ scale: initialScale, offset: initialOffset }), [initialScale, initialOffset]);
+
+  // Data state.
+  const graph = useMemo(() => new GraphModel(initialGraph), [initialGraph]);
 
   // Editor state.
   const selection = useMemo(() => new SelectionModel(), []);

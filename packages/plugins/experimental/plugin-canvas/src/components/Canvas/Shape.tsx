@@ -4,11 +4,12 @@
 
 import React, { useCallback } from 'react';
 
-import { mx } from '@dxos/react-ui-theme';
+import { invariant } from '@dxos/invariant';
 import { isNotFalsy } from '@dxos/util';
 
 import { Frame } from './Frame';
-import { type GraphWrapper, type Shape } from '../../graph';
+import { Line } from './Line';
+import { type GraphModel, type Shape } from '../../graph';
 import { type SelectionEvent, useEditorContext, useSelectionEvents, useTransform } from '../../hooks';
 import {
   boundsContain,
@@ -19,7 +20,6 @@ import {
   type Point,
   type Rect,
 } from '../../layout';
-import { eventsAuto, eventsNone, Markers, styles } from '../styles';
 import { testId } from '../util';
 
 /**
@@ -35,8 +35,6 @@ export type DragPayloadData = {
 // export class CircleShape implements Shape {}
 // export class RectangleShape implements Shape {}
 
-// TODO(burdon): pass in shapes (not graph).
-
 export const Shapes = ({ shapes }: { shapes: Shape[] }) => {
   const { ready, styles: transformStyles } = useTransform();
   const { scale, selection } = useEditorContext();
@@ -45,10 +43,9 @@ export const Shapes = ({ shapes }: { shapes: Shape[] }) => {
   }
 
   return (
-    <div {...testId('dx-shapes')} style={transformStyles}>
+    <div {...testId('dx-shapes')} className='absolute' style={transformStyles}>
       {shapes.map((shape) => {
         const { id, type } = shape;
-        // TODO(burdon): Factor out shapes.
         switch (type) {
           case 'rect': {
             return (
@@ -63,34 +60,13 @@ export const Shapes = ({ shapes }: { shapes: Shape[] }) => {
           }
 
           case 'line': {
-            const { path } = shape;
             return (
-              <div key={id}>
-                <svg className={mx('absolute overflow-visible', eventsNone)}>
-                  <defs>
-                    <Markers />
-                  </defs>
-                  <g key={id}>
-                    {/* Hit area. */}
-                    <path
-                      d={path}
-                      fill='none'
-                      strokeWidth={8}
-                      className={mx('stroke-transparent', eventsAuto)}
-                      onClick={(ev) => selection.toggleSelected([id], ev.shiftKey)}
-                    />
-                    <path
-                      d={path}
-                      fill='none'
-                      strokeWidth={1}
-                      className={mx(styles.edge, selection.contains(id) && styles.edgeSelected)}
-                      // TODO(burdon): Edge style.
-                      markerStart={id !== 'link' ? 'url(#circle)' : ''}
-                      markerEnd={id !== 'link' ? 'url(#circle)' : ''}
-                    />
-                  </g>
-                </svg>
-              </div>
+              <Line
+                key={id}
+                shape={shape}
+                selected={selection.contains(id)}
+                onSelect={(id, shift) => selection.toggleSelected([id], shift)}
+              />
             );
           }
 
@@ -108,18 +84,23 @@ export const Shapes = ({ shapes }: { shapes: Shape[] }) => {
 //  - Shapes are the visual representation of the layout.
 
 // TODO(burdon): Separate shapes/layout from data graph.
-export const useShapes = (graph: GraphWrapper, dragging?: Shape): Shape[] => {
+export const useShapes = (graph: GraphModel, dragging?: Shape): Shape[] => {
   const getPos = (id: string): { center: Point; bounds: Rect } | undefined => {
     const node = graph.getNode(id);
-    // if (dragging?.id === id) {
-    //   return { center: dragging.pos, bounds: getBounds(dragging.pos, node?.data.size) };
-    // }
-
     if (node) {
-      return { center: node.data.pos, bounds: getBounds(node.data.pos, node.data.size) };
+      if (dragging?.id === id) {
+        invariant(dragging.type === 'rect');
+        return {
+          center: dragging.pos,
+          bounds: getBounds(dragging.pos, dragging.size),
+        };
+      } else {
+        return {
+          center: node.data.pos,
+          bounds: getBounds(node.data.pos, node.data.size),
+        };
+      }
     }
-
-    return undefined;
   };
 
   const rects: Shape[] = graph.nodes.map(({ data: shape }) => shape);
@@ -132,8 +113,9 @@ export const useShapes = (graph: GraphWrapper, dragging?: Shape): Shape[] => {
         return null;
       }
 
-      const i1 = r1 ? findClosestIntersection([p2, p1], r1) ?? p1 : p1;
-      const i2 = r2 ? findClosestIntersection([p1, p2], r2) ?? p2 : p2;
+      invariant(r1 && r2);
+      const i1 = findClosestIntersection([p2, p1], r1) ?? p1;
+      const i2 = findClosestIntersection([p1, p2], r2) ?? p2;
       return { id, type: 'line', path: createPathThroughPoints([i1, i2]) } satisfies Shape;
     })
     .filter(isNotFalsy);
@@ -144,7 +126,7 @@ export const useShapes = (graph: GraphWrapper, dragging?: Shape): Shape[] => {
 /**
  * Event listener to track range bounds selection.
  */
-export const useSelectionHandler = (el: HTMLElement | null, graph: GraphWrapper) => {
+export const useSelectionHandler = (el: HTMLElement | null, graph: GraphModel) => {
   const { scale, offset, selection } = useEditorContext();
 
   const handleSelectionBounds = useCallback<SelectionEvent>(

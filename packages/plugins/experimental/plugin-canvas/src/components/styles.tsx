@@ -12,8 +12,8 @@ export const styles = {
   frameBorder: 'border border-neutral-500 rounded',
   frameHover: 'hover:bg-sky-300 dark:hover:bg-sky-700',
   anchor: 'bg-base border border-neutral-500 rounded hover:bg-orange-500',
-  edge: 'stroke-neutral-500 fill-neutral-500 dark:stroke-neutral-500 dark:fill-neutral-500',
-  edgeSelected: 'stroke-sky-300 dark:stroke-sky-700',
+  line: 'stroke-neutral-500 fill-neutral-500 dark:stroke-neutral-500 dark:fill-neutral-500',
+  lineSelected: 'stroke-sky-300 dark:stroke-sky-700',
   cursor: 'stroke-primary-500',
 };
 
@@ -31,7 +31,7 @@ export const Markers = () => {
         refY={6}
         orient='auto'
         markerUnits='strokeWidth'
-        className={styles.edge}
+        className={styles.line}
       >
         <path d='M0,0 L0,12 L12,6 z' />
       </marker>
@@ -43,7 +43,7 @@ export const Markers = () => {
         refY={6}
         orient='auto'
         markerUnits='strokeWidth'
-        className={styles.edge}
+        className={styles.line}
       >
         <circle cx={6} cy={6} r={5} />
       </marker>
