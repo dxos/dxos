@@ -319,7 +319,6 @@ export class Graph {
 
       const nodes = this._getNodes({ node, relation, expansion });
       const nodeSubscriptions = nodes.map((n) => this.subscribeTraverse({ node: n, visitor, expansion }, path));
-
       return () => {
         nodeSubscriptions.forEach((unsubscribe) => unsubscribe());
       };
