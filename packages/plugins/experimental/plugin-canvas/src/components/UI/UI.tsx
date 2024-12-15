@@ -38,9 +38,7 @@ export const UI = () => {
   return (
     <div {...testId('dx-ui')} className={mx('absolute h-full inset-0', eventsNone)}>
       <div>
-        <div className='absolute top-0 left-0'>
-          <FPSStats />
-        </div>
+        <div className='absolute top-0 left-0'>{debug && <FPSStats />}</div>
       </div>
       <div>
         <div className='absolute bottom-0 left-0'>

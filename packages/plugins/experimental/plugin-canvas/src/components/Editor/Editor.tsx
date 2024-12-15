@@ -20,13 +20,13 @@ import { testId } from '../util';
 //  - Basic processing pipeline (AI).
 
 // TODO(burdon): Phase 1: Basic plugin.
-//  - Property panels (e.g. line style). Form.
 //  - Bounding box/hierarchy. [DIFFERENTIATOR]
+//  - Property panels (e.g. line style). Shape schema.
 //  - Canvas ontology (e.g., what is Item vs Layout, etc.)
 //  - Nodes as objects.
 //  - Surface/form storybook; auto-size.
 //  - Basic plugin with root object.
-//  - Hover select.
+//  - Reactive wrapper for graph.
 
 // TODO(burdon): Phase 2
 //  - Auto-layout (reconcile with plugin-debug).

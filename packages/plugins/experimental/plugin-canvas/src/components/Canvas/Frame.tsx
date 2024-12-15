@@ -41,6 +41,20 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
   const isDragging = dragging?.shape.id === shape.id;
   const isEditing = editing?.shape.id === shape.id;
   const [hovering, setHovering] = useState(false);
+  const [over, setOver] = useState(false);
+
+  // Drop targets for linking.
+  useEffect(() => {
+    invariant(ref.current);
+    return dropTargetForElements({
+      element: ref.current,
+      getData: () => ({ type: 'frame', shape }) satisfies DragPayloadData,
+      // TODO(burdon): Flickers.
+      onDragEnter: () => setOver(true),
+      onDragLeave: () => setOver(false),
+      // getIsSticky: () => true,
+    });
+  });
 
   // Dragging.
   // TODO(burdon): Handle cursor dragging out of window (currently drop is lost/frozen).
@@ -54,12 +68,10 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
         setCustomNativeDragPreview({
           nativeSetDragImage,
           getOffset: () => {
-            // TODO(burdon): Calc offset.
             return { x: (scale * shape.size.width) / 2, y: (scale * shape.size.height) / 2 };
           },
           render: ({ container }) => {
             setDragging({ shape, container });
-            return () => {};
           },
         });
       },
@@ -69,18 +81,10 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
     });
   }, [scale, shape]);
 
-  // Drop targets for linking.
-  useEffect(() => {
-    invariant(ref.current);
-    return dropTargetForElements({
-      element: ref.current,
-      getData: () => ({ type: 'frame', shape }) satisfies DragPayloadData,
-    });
-  });
-
   // Reset hovering state once dragging ends.
   useEffect(() => {
     setHovering(false);
+    setOver(false);
   }, [linking]);
 
   // TODO(burdon): Generalize anchor points.
@@ -118,7 +122,14 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
       <div
         ref={ref}
         style={getBoundsProperties({ ...shape.pos, ...shape.size })}
-        className={mx(styles.frameContainer, styles.frameBorder, selected && styles.frameSelected, classNames)}
+        className={mx(
+          styles.frameContainer,
+          styles.frameHover,
+          styles.frameBorder,
+          selected && styles.frameSelected,
+          over && styles.frameSelected,
+          classNames,
+        )}
         onClick={handleClick}
         onDoubleClick={handleDoubleClick}
         onMouseEnter={() => setHovering(true)}

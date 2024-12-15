@@ -30,6 +30,7 @@ export const createGraph = (snap: PointTransform): Graph => {
     const a = createId();
     const b = createId();
     const c = createId();
+    const d = createId();
 
     wrapper.addNode({
       id: a,
@@ -61,6 +62,16 @@ export const createGraph = (snap: PointTransform): Graph => {
       }),
     });
 
+    wrapper.addNode({
+      id: d,
+      data: createRect({
+        id: d,
+        pos: snap({ x: 0, y: -128 }),
+        size: itemSize,
+        text: 'D',
+      }),
+    });
+
     wrapper.addEdge({
       id: createId(),
       source: a,
@@ -72,6 +83,13 @@ export const createGraph = (snap: PointTransform): Graph => {
       id: createId(),
       source: a,
       target: c,
+      data: {},
+    });
+
+    wrapper.addEdge({
+      id: createId(),
+      source: a,
+      target: d,
       data: {},
     });
   });

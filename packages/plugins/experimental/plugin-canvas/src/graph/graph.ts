@@ -6,52 +6,6 @@ import { S } from '@dxos/echo-schema';
 import { create } from '@dxos/live-object';
 
 import { removeElements } from './util';
-import { createPathThroughPoints, type Dimension, getBounds, getRect, type Point, type Rect } from '../layout';
-
-type ShapeCommon = {
-  id: string;
-  type: 'rect' | 'line';
-  rect: Rect;
-};
-
-// TODO(burdon): Define schema for persistent objects.
-export type Shape =
-  | (ShapeCommon & {
-      type: 'rect';
-      text?: string;
-      pos: Point;
-      size: Dimension;
-    })
-  | (ShapeCommon & {
-      type: 'line';
-      path: string;
-    });
-
-export const createRect = ({
-  id,
-  pos,
-  size,
-  text,
-}: {
-  id: string;
-  pos: Point;
-  size: Dimension;
-  text?: string;
-}): Shape => ({
-  id,
-  type: 'rect',
-  rect: getBounds(pos, size),
-  pos,
-  size,
-  text,
-});
-
-export const createLine = ({ id, p1, p2 }: { id: string; p1: Point; p2: Point }): Shape => ({
-  id,
-  type: 'line',
-  rect: getRect(p1, p2),
-  path: createPathThroughPoints([p1, p2]),
-});
 
 export const Node = S.Struct({
   id: S.String,
@@ -82,6 +36,7 @@ export const emptyGraph: Graph = { id: 'test', nodes: [], edges: [] };
 /**
  * Wrapper for graph operations.
  */
+// TODO(burdon): Create reactive wrapper.
 export class GraphModel {
   private readonly _graph: Graph;
 

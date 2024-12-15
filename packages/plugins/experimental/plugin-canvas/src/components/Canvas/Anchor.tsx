@@ -40,10 +40,9 @@ export const Anchor = ({ id, shape, pos, size = defaultSize, scale = 1, onMouseL
   // TODO(burdon): ESC to cancel dragging.
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const el = ref.current;
-    invariant(el);
+    invariant(ref.current);
     return draggable({
-      element: el,
+      element: ref.current,
       getInitialData: () => ({ type: 'anchor', shape, anchor: id }) satisfies DragPayloadData,
       onGenerateDragPreview: ({ nativeSetDragImage }) => {
         setCustomNativeDragPreview({
@@ -53,11 +52,10 @@ export const Anchor = ({ id, shape, pos, size = defaultSize, scale = 1, onMouseL
           },
           render: ({ container }) => {
             setLinking({ shape, container, anchor: id });
-            return () => {};
           },
         });
       },
-      onDrop: () => {
+      onDrop: ({ location }) => {
         setLinking(undefined);
       },
     });

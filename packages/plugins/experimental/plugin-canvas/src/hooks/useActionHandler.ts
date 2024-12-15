@@ -51,7 +51,7 @@ export const useActionHandler = (): ActionHandler => {
         case 'create': {
           const id = createId();
           graph.addNode({ id, data: createRect({ id, pos: { x: 0, y: 0 }, size: itemSize }) });
-          selection.clear();
+          selection.setSelected([id]);
           return true;
         }
         case 'delete': {

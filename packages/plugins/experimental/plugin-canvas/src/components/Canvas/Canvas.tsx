@@ -16,7 +16,7 @@ import { type DragPayloadData, useShapes, Shapes, useSelectionHandler } from './
 import { createLine, createRect, type Shape } from '../../graph';
 import { useActionHandler, useEditorContext, useShortcuts, useSnap, useTransform } from '../../hooks';
 import { useWheel } from '../../hooks/useWheel';
-import { boundsToModel, findClosestIntersection, getBounds, getInputPoint, type Point, type Rect } from '../../layout';
+import { boundsToModel, findClosestIntersection, getBounds, getInputPoint, type Point } from '../../layout';
 import { createId, itemSize } from '../../testing';
 import { Grid } from '../Grid';
 import { eventsNone, styles } from '../styles';
@@ -100,11 +100,12 @@ export const Canvas = () => {
  * Monitor frames and anchors being dragged.
  */
 const useDragMonitor = (el: HTMLElement | null) => {
-  const { scale, offset, graph, setDragging, setLinking } = useEditorContext();
+  const { scale, offset, graph, selection, setDragging, setLinking } = useEditorContext();
   const snapPoint = useSnap();
 
   const [frameDragging, setFrameDragging] = useState<Shape>();
-  const [anchorDragging, setAnchorDragging] = useState<{ source: { center: Point; bounds: Rect }; target: Point }>();
+  const [overlay, setOverlay] = useState<Shape>();
+  const cancelled = useRef(false);
 
   useEffect(() => {
     return monitorForElements({
@@ -122,57 +123,66 @@ const useDragMonitor = (el: HTMLElement | null) => {
           }
 
           case 'anchor': {
-            setAnchorDragging({
-              source: { center: shape.pos, bounds: getBounds(shape.pos, shape.size) },
-              target: pos,
-            });
+            setOverlay(createLineOverlay(shape, pos));
             break;
           }
         }
+      },
+
+      // Dragging cancelled if user presses Esc.
+      // https://atlassian.design/components/pragmatic-drag-and-drop/core-package/events#cancelling
+      onDropTargetChange: ({ source, location }) => {
+        cancelled.current = location.current.dropTargets.length === 0;
       },
 
       onDrop: ({ source, location }) => {
-        invariant(el);
-        const rect = el.getBoundingClientRect();
-        // TODO(burdon): Adjust for offset?
-        // const pos = boundsToModelWithOffset(rect, scale, offset, shape.pos, location.initial, location.current);
-        const pos = boundsToModel(rect, scale, offset, getInputPoint(location.current.input));
-        const { type, shape } = source.data as DragPayloadData;
-        invariant(shape.type === 'rect'); // TODO(burdon): Handle lines?
+        if (!cancelled.current) {
+          invariant(el);
+          const rect = el.getBoundingClientRect();
+          // TODO(burdon): Adjust for offset?
+          // const pos = boundsToModelWithOffset(rect, scale, offset, shape.pos, location.initial, location.current);
+          const pos = boundsToModel(rect, scale, offset, getInputPoint(location.current.input));
+          const { type, shape } = source.data as DragPayloadData;
+          invariant(shape.type === 'rect'); // TODO(burdon): Handle lines?
 
-        switch (type) {
-          case 'frame': {
-            shape.pos = snapPoint(pos);
-            setFrameDragging(undefined);
-            setDragging(undefined);
-            break;
-          }
-
-          case 'anchor': {
-            const target = location.current.dropTargets.find(({ data }) => data.type === 'frame')?.data.item as Shape;
-            let id = target?.id;
-            if (!id) {
-              // TODO(burdon): Use action handler to reuse undo.
-              id = createId();
-              graph.addNode({ id, data: createRect({ id, pos: snapPoint(pos), size: itemSize }) });
+          switch (type) {
+            case 'frame': {
+              shape.pos = snapPoint(pos);
+              shape.rect = getBounds(shape.pos, shape.size);
+              break;
             }
-            graph.addEdge({ id: createId(), source: shape.id, target: id, data: {} });
-            setAnchorDragging(undefined);
-            setLinking(undefined);
-            break;
+
+            case 'anchor': {
+              const target = location.current.dropTargets.find(({ data }) => data.type === 'frame')?.data
+                .shape as Shape;
+              let id = target?.id;
+              if (!id) {
+                // TODO(burdon): Use action handler to reuse undo.
+                id = createId();
+                graph.addNode({ id, data: createRect({ id, pos: snapPoint(pos), size: itemSize }) });
+                selection.setSelected([id]);
+              }
+              graph.addEdge({ id: createId(), source: shape.id, target: id, data: {} });
+              break;
+            }
           }
         }
+
+        setDragging(undefined);
+        setLinking(undefined);
+        setFrameDragging(undefined);
+        setOverlay(undefined);
       },
     });
-  }, [el, graph, scale, offset, snapPoint]);
-
-  let overlay: Shape | undefined;
-  if (anchorDragging) {
-    const { center: p1, bounds: r1 } = anchorDragging.source;
-    const i2 = anchorDragging.target;
-    const i1 = r1 ? findClosestIntersection([i2, p1], r1) ?? p1 : p1;
-    overlay = createLine({ id: createId(), p1: i1, p2: i2 });
-  }
+  }, [el, graph, selection, scale, offset, snapPoint]);
 
   return { frameDragging, overlay };
+};
+
+const createLineOverlay = (source: Shape, p2: Point): Shape | undefined => {
+  if (source.type === 'rect') {
+    const { pos, rect } = source;
+    const p1 = findClosestIntersection([p2, pos], rect) ?? pos;
+    return createLine({ id: 'link', p1, p2 });
+  }
 };

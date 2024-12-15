@@ -5,6 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { invariant } from '@dxos/invariant';
+import { useDynamicRef } from '@dxos/react-ui';
 import { isNotFalsy } from '@dxos/util';
 
 import { Frame } from './Frame';
@@ -118,6 +119,7 @@ export const useShapes = (graph: GraphModel, dragging?: Shape): Shape[] => {
  */
 export const useSelectionHandler = (el: HTMLElement | null, shapes: Shape[]) => {
   const { scale, offset, selection } = useEditorContext();
+  const shapesRef = useDynamicRef(shapes);
 
   const handleSelectionBounds = useCallback<SelectionEvent>(
     (bounds, shift) => {
@@ -128,7 +130,7 @@ export const useSelectionHandler = (el: HTMLElement | null, shapes: Shape[]) => 
 
       // Map the pointer event to the SVG coordinate system.
       const selectionBounds = boundsToModel(el.getBoundingClientRect(), scale, offset, bounds);
-      const selected = shapes
+      const selected = shapesRef.current
         .filter((shape) => {
           switch (shape.type) {
             case 'rect':

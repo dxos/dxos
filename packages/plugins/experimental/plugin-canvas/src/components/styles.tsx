@@ -8,9 +8,9 @@ import React from 'react';
 export const styles = {
   gridLine: 'stroke-neutral-500',
   frameContainer: 'absolute flex p-2 justify-center items-center overflow-hidden bg-base',
-  frameSelected: 'bg-sky-300 dark:bg-sky-700',
   frameBorder: 'border border-neutral-500 rounded',
-  frameHover: 'hover:bg-sky-300 dark:hover:bg-sky-700',
+  frameSelected: '!bg-sky-300 !dark:bg-sky-700',
+  frameHover: 'hover:bg-neutral-200 hover:dark:bg-neutral-800',
   anchor: 'bg-base border border-neutral-500 rounded hover:bg-orange-500',
   line: 'stroke-neutral-500 fill-neutral-500 dark:stroke-neutral-500 dark:fill-neutral-500',
   lineSelected: 'stroke-sky-300 dark:stroke-sky-700',
