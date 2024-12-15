@@ -1,6 +1,7 @@
 import { AST, Schema } from '@effect/schema';
 import type { DXN } from '@dxos/keys';
 import { Any } from '@effect/schema/Schema';
+import { Types } from 'effect';
 
 /*
 
@@ -40,6 +41,8 @@ type Flatten<T extends readonly any[]> = T extends [infer Head, ...infer Tail]
     ? [...Head, ...Flatten<Tail>]
     : [Head, ...Flatten<Tail>]
   : [];
+
+type Last<T extends any[]> = T extends [...infer _, infer L] ? L : never;
 
 //
 // Schema Definition Language
@@ -218,13 +221,23 @@ interface PropSelectable<T> {
   prop<P extends PathOf<T>>(path: P): LValue<PickProp<T, P>>;
 }
 
-type ComparisonType<T> = T extends Ref.Any ? Ref.TargetNode<T> | Id : T;
+type ComparisonType<T> = T extends Ref.Any ? Ref.TargetNode<T> | NodePattern<Ref.TargetNode<T>> | Id : T;
 
 type PropertyFilter<T> = Simplify<Partial<{ [K in keyof T]: ComparisonType<T[K]> }>>;
 
 // Match
 
 type PatternInput = NodeDef.Any | (NodeDef.Any | RelationDef.Any)[];
+
+namespace PatternInput {
+  export type RightNode<P extends PatternInput> = P extends any[]
+    ? Last<P> extends NodeDef.Any
+      ? Last<P>
+      : unknown
+    : P extends NodeDef.Any
+      ? P
+      : unknown;
+}
 
 /**
  * Pattern of 1 node or multiple nodes connected by relations.
@@ -236,6 +249,16 @@ interface Pattern<P extends PatternInput> {
     relation: RelationPattern<R>,
     opts?: { direction: 'left' | 'right' | 'undirected' },
   ): UnfinishedRelatedPattern<P, R>;
+
+  references<K extends PathOf<NodeDef.Properties<PatternInput.RightNode<P>>>>(
+    key: K,
+  ): UnfinishedOutgoingReferencePattern<P>;
+
+  // TODO(dmaretskyi): Has to be a single method that takes a key and a node to type the key correctly.
+  referencedBy<N extends NodeDef.Any>(
+    key: PathOf<NodeDef.Properties<N>>,
+    node: NodePattern<N>,
+  ): Pattern<ConcatPatterns<P, never, N>>;
 }
 
 /**
@@ -243,6 +266,10 @@ interface Pattern<P extends PatternInput> {
  */
 interface UnfinishedRelatedPattern<P extends PatternInput, R extends RelationDef.Any> {
   to<N extends NodeDef.Any>(node: NodePattern<N>): Pattern<ConcatPatterns<P, R, N>>;
+}
+
+interface UnfinishedOutgoingReferencePattern<P extends PatternInput> {
+  a<N extends NodeDef.Any>(node: NodePattern<N>): Pattern<ConcatPatterns<P, never, N>>;
 }
 
 export const NodePatternTypeId: unique symbol = Symbol.for('@dxos/app-graph/NodePattern');
@@ -539,30 +566,27 @@ const allDocumentByRicks2 = QB.build(() => {
   const contact = QB.Node(ContactNode).where({ name: 'Rick' });
   const document = QB.Node(DocumentNode).where({ author: contact });
 
-  return QB.Match(document)
-    .return({
-      name: document.prop('name'),
-    })
+  return QB.Match(document).return({
+    name: document.prop('name'),
+  });
 });
 
 // MATCH (d:Document)-[.author]->(c:Contact) WHERE c.name == 'Rick' RETURN document.name AS name
-const allDocumentByRicks2 = QB.build(() => {
+const allDocumentByRicks3 = QB.build(() => {
   const document = QB.Node(DocumentNode);
   const contact = QB.Node(ContactNode).where({ name: 'Rick' });
 
-  return QB.Match(document.references('author').a(contact))
-    .return({
-      name: document.prop('name'),
-    })
+  return QB.Match(document.references('author').a(contact)).return({
+    name: document.prop('name'),
+  });
 });
 
 // MATCH (c:Contact)<-[.author]-(d:Document) WHERE c.name == 'Rick' RETURN document.name AS name
-const allDocumentByRicks2 = QB.build(() => {
+const allDocumentByRicks4 = QB.build(() => {
   const document = QB.Node(DocumentNode);
   const contact = QB.Node(ContactNode).where({ name: 'Rick' });
 
-  return QB.Match(contact.referenced('author').by(document))
-    .return({
-      name: document.prop('name'),
-    })
+  return QB.Match(contact.referencedBy('author', document)).return({
+    name: document.prop('name'),
+  });
 });
