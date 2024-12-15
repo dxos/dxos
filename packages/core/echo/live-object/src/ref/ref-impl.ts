@@ -1,8 +1,12 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { Reference } from '@dxos/echo-protocol';
 import { ObjectId, type BaseObject, type Ref } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { type DXN } from '@dxos/keys';
 
 /**
  * Constructs a reference that points to the given object.

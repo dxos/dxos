@@ -384,11 +384,13 @@ describe('Reactive Object with ECHO database', () => {
 
       const dxos = create(Org, { name: 'DXOS' });
       const braneframe = create(Org, { name: 'Braneframe' });
-      const person = db.add(create(Person, { 
-        name: 'John', 
-        worksAt: makeRef(dxos), 
-        previousEmployment: [makeRef(dxos), makeRef(braneframe)] 
-      }));
+      const person = db.add(
+        create(Person, {
+          name: 'John',
+          worksAt: makeRef(dxos),
+          previousEmployment: [makeRef(dxos), makeRef(braneframe)],
+        }),
+      );
 
       expect(person.previousEmployment![0]!.target!.name).to.eq('DXOS');
       expect(person.previousEmployment![1]!.target!.name).to.eq('Braneframe');
