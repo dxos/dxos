@@ -203,6 +203,10 @@ interface LValue<T> extends RValue<T> {
   target(this: LValue<Ref.Any>): T extends Ref.Any ? NodePattern<Ref.TargetNode<T>> : never;
 }
 
+interface RefLValue<N extends NodeDef.Any> extends LValue<Ref<N>> {
+  target(): NodePattern<N>;
+}
+
 declare namespace LValue {
   type Any = LValue<any>;
 
@@ -214,8 +218,12 @@ type PathOf<T> = keyof T;
 
 type PickProp<T, P extends PathOf<T>> = T[P];
 
+type SelectProp<T, P extends PathOf<T>, U = PickProp<T, P>> = U extends Ref.Any
+  ? RefLValue<Ref.TargetNode<U>>
+  : LValue<U>;
+
 interface PropSelectable<T> {
-  prop<P extends PathOf<T>>(path: P): LValue<PickProp<T, P>>;
+  prop<P extends PathOf<T>>(path: P): SelectProp<T, P>;
 }
 
 type ComparisonType<T> = T extends Ref.Any ? Ref.TargetNode<T> | NodePattern<Ref.TargetNode<T>> | Id : T;
