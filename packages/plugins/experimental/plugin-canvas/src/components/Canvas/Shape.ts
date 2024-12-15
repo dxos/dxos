@@ -2,17 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { Dimension, Point } from '../../layout';
-
-/**
- * Graph data item.
- */
-export type Item = {
-  id: string;
-  pos: Point;
-  size: Dimension;
-  text: string;
-};
+import { type Item } from '../../graph';
 
 /**
  * Data associated with a drag event.

@@ -8,7 +8,7 @@ import FPSStats from 'react-fps-stats';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useEditorContext, useSelected } from '../../hooks';
+import { useActionHandler, useEditorContext, useSelected } from '../../hooks';
 import { Toolbar } from '../Toolbar';
 import { eventsAuto, eventsNone } from '../styles';
 import { testId } from '../util';
@@ -17,7 +17,8 @@ import { testId } from '../util';
  * UI components.
  */
 export const UI = () => {
-  const { debug, width, height, showGrid, snapToGrid, dragging, linking, handleAction } = useEditorContext();
+  const { debug, width, height, showGrid, snapToGrid, dragging, linking } = useEditorContext();
+  const handleAction = useActionHandler();
   const selected = useSelected();
   const info = { debug, selected, width, height, showGrid, snapToGrid, dragging, linking };
 

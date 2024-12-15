@@ -5,6 +5,16 @@
 import { S } from '@dxos/echo-schema';
 import { create } from '@dxos/live-object';
 
+import { type Dimension, type Point } from '../layout';
+
+// TODO(burdon): Create model.
+export type Item = {
+  id: string;
+  pos: Point;
+  size: Dimension;
+  text: string;
+};
+
 export const Node = S.Struct({
   id: S.String,
   data: S.Any, // TODO(burdon): Type (Item).

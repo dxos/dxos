@@ -10,7 +10,8 @@ import { createPortal } from 'react-dom';
 import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type DragPayloadData, type Item } from './Shape';
+import { type DragPayloadData } from './Shape';
+import { type Item } from '../../graph';
 import { useEditorContext } from '../../hooks';
 import { type Dimension, getBoundsProperties, type Point } from '../../layout';
 import { styles } from '../styles';

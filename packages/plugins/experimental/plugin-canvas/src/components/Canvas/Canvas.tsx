@@ -6,20 +6,22 @@ import { monitorForElements, dropTargetForElements } from '@atlaskit/pragmatic-d
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 import { isNotFalsy } from '@dxos/util';
 
 import { Frame, FrameDragPreview } from './Frame';
-import { type DragPayloadData, type Item } from './Shape';
-import { GraphWrapper } from '../../graph';
+import { type DragPayloadData } from './Shape';
+import { GraphWrapper, type Item } from '../../graph';
 import {
   useBoundingSelection,
   useSnap,
   useTransform,
   useEditorContext,
-  type SelectionBoundsCallback,
+  useShortcuts,
+  useActionHandler,
+  type BoundingSelectionCallback,
 } from '../../hooks';
+import { useWheel } from '../../hooks/useWheel';
 import {
   boundsContain,
   boundsToModel,
@@ -31,10 +33,9 @@ import {
   type Dimension,
   type Point,
 } from '../../layout';
-import { createGraph, createId } from '../../testing';
+import { createGraph, createId, testElement } from '../../testing';
 import { Grid } from '../Grid';
-import { type ToolbarProps } from '../Toolbar';
-import { Markers, eventsNone, styles } from '../styles';
+import { Markers, eventsNone, styles, eventsAuto } from '../styles';
 import { testId } from '../util';
 
 const itemSize: Dimension = { width: 128, height: 64 };
@@ -42,22 +43,9 @@ const itemSize: Dimension = { width: 128, height: 64 };
 export type CanvasProps = {};
 
 export const Canvas = (_: CanvasProps) => {
-  const {
-    debug,
-    width,
-    height,
-    scale,
-    offset,
-    showGrid,
-    selection,
-    dragging,
-    setTransform,
-    setDragging,
-    setLinking,
-    handleAction: handleDefaultAction,
-  } = useEditorContext();
+  const { width, height, scale, offset, showGrid, selection, dragging, setTransform, setDragging, setLinking } =
+    useEditorContext();
   const containerRef = useRef<HTMLDivElement>(null);
-  const canvasSvgRef = useRef<SVGSVGElement>(null);
 
   // TODO(burdon): Generalize model.
   const snapPoint = useSnap();
@@ -65,10 +53,6 @@ export const Canvas = (_: CanvasProps) => {
 
   // Canvas scale.
   const { ready, styles: transformStyles } = useTransform();
-
-  // TODO(burdon): Replace with context state.
-  const [itemDragging, setItemDragging] = useState<Pick<Item, 'id' | 'pos'>>();
-  const [itemLinking, setItemLinking] = useState<{ source: { center: Point; bounds: Rect }; target: Point }>();
 
   //
   // Drop target.
@@ -86,69 +70,20 @@ export const Canvas = (_: CanvasProps) => {
   }, [containerRef.current]);
 
   //
-  // Events.
+  // Event handlers.
   //
-  // TODO(burdon): Factor out.
-  useEffect(() => {
-    if (!containerRef.current) {
-      return;
-    }
+  useWheel(containerRef.current, width, height, setTransform);
+  useShortcuts(containerRef.current);
+  useActionHandler();
 
-    const handleWheel = (event: WheelEvent) => {
-      event.preventDefault();
-      if (event.ctrlKey) {
-        if (!containerRef.current) {
-          return;
-        }
-
-        setTransform(({ scale, offset }) => {
-          const scaleSensitivity = 0.01;
-          const newScale = scale * Math.exp(-event.deltaY * scaleSensitivity);
-          invariant(containerRef.current);
-          const rect = containerRef.current.getBoundingClientRect();
-          const pos = {
-            x: event.clientX - rect.left,
-            y: event.clientY - rect.top,
-          };
-          const newOffset = {
-            x: pos.x - (pos.x - offset.x) * (newScale / scale),
-            y: pos.y - (pos.y - offset.y) * (newScale / scale),
-          };
-
-          return { scale: newScale, offset: newOffset };
-        });
-      } else {
-        setTransform(({ scale, offset: { x, y } }) => ({
-          scale,
-          offset: { x: x - event.deltaX, y: y - event.deltaY },
-        }));
-      }
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      switch (event.key) {
-        case 'Backspace': {
-          handleAction({
-            type: 'delete',
-            ids: selection.ids,
-          });
-          break;
-        }
-      }
-    };
-
-    containerRef.current.addEventListener('wheel', handleWheel);
-    containerRef.current.addEventListener('keydown', handleKeyDown);
-    return () => {
-      containerRef.current?.removeEventListener('wheel', handleWheel);
-      containerRef.current?.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [containerRef, selection, width, height]);
+  // TODO(burdon): Replace with context state.
+  const [itemDragging, setItemDragging] = useState<Pick<Item, 'id' | 'pos'>>();
+  const [itemLinking, setItemLinking] = useState<{ source: { center: Point; bounds: Rect }; target: Point }>();
 
   //
   // Cursor/overlay.
   //
-  const handleSelectionBounds = useCallback<SelectionBoundsCallback>(
+  const handleSelectionBounds = useCallback<BoundingSelectionCallback>(
     (bounds, shift) => {
       if (!bounds) {
         selection.clear();
@@ -164,13 +99,9 @@ export const Canvas = (_: CanvasProps) => {
         .map(({ id }) => id);
       selection.setSelected(selected, shift);
     },
-    [canvasSvgRef, selection, scale, offset],
+    [containerRef, selection, scale, offset],
   );
-  const selectionBounds = useBoundingSelection(canvasSvgRef.current, handleSelectionBounds);
-  const debugSelectionBounds =
-    debug &&
-    selectionBounds &&
-    boundsToModel(canvasSvgRef.current!.getBoundingClientRect(), scale, offset, selectionBounds);
+  const selectionBounds = useBoundingSelection(containerRef.current, handleSelectionBounds);
 
   //
   // Monitor dragging and linking.
@@ -178,7 +109,7 @@ export const Canvas = (_: CanvasProps) => {
   useEffect(() => {
     return monitorForElements({
       onDrag: ({ source, location }) => {
-        const rect = canvasSvgRef.current!.getBoundingClientRect();
+        const rect = containerRef.current!.getBoundingClientRect();
         const pos = boundsToModel(rect, scale, offset, getInputPoint(location.current.input));
         const { type, item } = source.data as DragPayloadData;
         switch (type) {
@@ -195,7 +126,7 @@ export const Canvas = (_: CanvasProps) => {
       },
 
       onDrop: ({ source, location }) => {
-        const rect = canvasSvgRef.current!.getBoundingClientRect();
+        const rect = containerRef.current!.getBoundingClientRect();
         const pos = boundsToModel(rect, scale, offset, getInputPoint(location.current.input));
         const { type, item } = source.data as DragPayloadData;
         switch (type) {
@@ -224,56 +155,7 @@ export const Canvas = (_: CanvasProps) => {
         }
       },
     });
-  }, [canvasSvgRef, snapPoint, scale, offset, graph]);
-
-  //
-  // Actions
-  //
-  const handleAction = useCallback<NonNullable<ToolbarProps['onAction']>>(
-    (action) => {
-      if (handleDefaultAction(action)) {
-        return true;
-      }
-
-      const { type } = action;
-      switch (type) {
-        // TODO(burdon): Animate.
-        case 'center': {
-          setTransform({ offset: { x: width / 2, y: height / 2 }, scale: 1 });
-          return true;
-        }
-        case 'zoom-in': {
-          setTransform({ offset: { x: width / 2, y: height / 2 }, scale: scale * 1.5 });
-          return true;
-        }
-        case 'zoom-out': {
-          setTransform({ offset: { x: width / 2, y: height / 2 }, scale: scale / 1.5 });
-          return true;
-        }
-
-        // TODO(burdon): Factor out graph handlers. Undo.
-        case 'create': {
-          const id = createId();
-          graph.addNode({ id, data: { id, pos: { x: 0, y: 0 }, size: itemSize } });
-          selection.clear();
-          return true;
-        }
-        case 'delete': {
-          const { ids } = action;
-          ids?.forEach((id) => graph.removeNode(id));
-          ids?.forEach((id) => graph.removeEdge(id));
-          selection.clear();
-          return true;
-        }
-      }
-
-      return false;
-    },
-    [handleDefaultAction, graph, scale, width, height, selection],
-  );
-
-  // TODO(burdon): Edges should be shapes also.
-  // TODO(burdon): Perf monitor.
+  }, [containerRef, snapPoint, scale, offset, graph]);
 
   // Edges.
   // TODO(burdon): Factor out.
@@ -286,6 +168,10 @@ export const Canvas = (_: CanvasProps) => {
     edges.push({ id: 'link', path: createPathThroughPoints([i1, i2]) });
   }
 
+  // TODO(burdon): Factor out rendering (consider making pluggable).
+  // TODO(burdon): Rendering notes.
+  //  - svg.transform-origin
+
   return (
     <div ref={containerRef} tabIndex={0} className={mx('absolute inset-0 overflow-hidden')} {...testId('dx-canvas')}>
       {/* Background. */}
@@ -296,94 +182,45 @@ export const Canvas = (_: CanvasProps) => {
 
       {/* Content. */}
       {ready && (
-        <>
-          {/* SVG content. */}
-          <svg
-            ref={canvasSvgRef}
-            {...testId('dx-svg-content')}
-            width='100%'
-            height='100%'
-            className={mx('absolute top-0 left-0')}
-          >
-            <defs>
-              <Markers />
-            </defs>
-            <g style={transformStyles}>
-              {/* <g> */}
-              {/*  {edges.map(({ id, path }) => ( */}
-              {/*    <g key={id}> */}
-              {/*      /!* Hit area. *!/ */}
-              {/*      <path */}
-              {/*        d={path} */}
-              {/*        fill='none' */}
-              {/*        strokeWidth={8} */}
-              {/*        className={'stroke-transparent'} */}
-              {/*        onClick={(ev) => selection.toggleSelected([id], ev.shiftKey)} */}
-              {/*      /> */}
-              {/*      <path */}
-              {/*        d={path} */}
-              {/*        fill='none' */}
-              {/*        strokeWidth={1} */}
-              {/*        className={mx(styles.edge, selection.contains(id) && styles.edgeSelected)} */}
-              {/*        // TODO(burdon): Edge style. */}
-              {/*        markerStart={id !== 'link' ? 'url(#circle)' : ''} */}
-              {/*        markerEnd={id !== 'link' ? 'url(#circle)' : ''} */}
-              {/*      /> */}
-              {/*    </g> */}
-              {/*  ))} */}
-              {/* </g> */}
-
-              {/* Debugging. */}
-              {debugSelectionBounds && (
-                <g>
-                  <rect {...debugSelectionBounds} fill='none' strokeWidth={4} className='stroke-red-500' />
+        <div {...testId('dx-html-content')} style={transformStyles}>
+          {graph.nodes.map(({ data: item }) => (
+            <Frame
+              key={item.id}
+              item={item}
+              scale={scale}
+              selected={selection.contains(item.id)}
+              onSelect={(id, shift) => selection.toggleSelected([id], shift)}
+            />
+          ))}
+          {edges.map(({ id, path }) => (
+            <div className={mx('')} key={id}>
+              <svg {...testElement()} className={mx('absolute overflow-visible', eventsNone)}>
+                <defs>
+                  <Markers />
+                </defs>
+                <g key={id}>
+                  {/* Hit area. */}
+                  <path
+                    d={path}
+                    fill='none'
+                    strokeWidth={8}
+                    className={mx('stroke-transparent', eventsAuto)}
+                    onClick={(ev) => selection.toggleSelected([id], ev.shiftKey)}
+                  />
+                  <path
+                    d={path}
+                    fill='none'
+                    strokeWidth={1}
+                    className={mx(styles.edge, selection.contains(id) && styles.edgeSelected)}
+                    // TODO(burdon): Edge style.
+                    markerStart={id !== 'link' ? 'url(#circle)' : ''}
+                    markerEnd={id !== 'link' ? 'url(#circle)' : ''}
+                  />
                 </g>
-              )}
-            </g>
-          </svg>
-
-          {/* HTML content. */}
-          <div {...testId('dx-html-content')}>
-            {graph.nodes.map(({ data: item }) => (
-              <div className={mx('absolute')} style={transformStyles} key={item.id}>
-                <Frame
-                  item={item}
-                  scale={scale}
-                  selected={selection.contains(item.id)}
-                  onSelect={(id, shift) => selection.toggleSelected([id], shift)}
-                />
-              </div>
-            ))}
-            {edges.map(({ id, path }) => (
-              <div className={mx('absolute')} style={transformStyles} key={id}>
-                <svg width='100%' height='100%' __className={mx('absolute top-0 left-0')}>
-                  <defs>
-                    <Markers />
-                  </defs>
-                  <g key={id}>
-                    {/* Hit area. */}
-                    <path
-                      d={path}
-                      fill='none'
-                      strokeWidth={8}
-                      className={'stroke-transparent'}
-                      onClick={(ev) => selection.toggleSelected([id], ev.shiftKey)}
-                    />
-                    <path
-                      d={path}
-                      fill='none'
-                      strokeWidth={1}
-                      className={mx(styles.edge, selection.contains(id) && styles.edgeSelected)}
-                      // TODO(burdon): Edge style.
-                      markerStart={id !== 'link' ? 'url(#circle)' : ''}
-                      markerEnd={id !== 'link' ? 'url(#circle)' : ''}
-                    />
-                  </g>
-                </svg>
-              </div>
-            ))}
-          </div>
-        </>
+              </svg>
+            </div>
+          ))}
+        </div>
       )}
 
       {/* Overlays. */}

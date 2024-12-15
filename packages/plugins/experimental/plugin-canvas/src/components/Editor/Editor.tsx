@@ -2,24 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, {
-  createContext,
-  type Dispatch,
-  type PropsWithChildren,
-  type SetStateAction,
-  useCallback,
-  useMemo,
-  useState,
-} from 'react';
+import React, { type PropsWithChildren, useMemo, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type ActionHandler } from '../../actions';
-import { SelectionModel } from '../../hooks';
-import { type Dimension, type Point } from '../../layout';
-import { Canvas, type Item } from '../Canvas';
+import { type DraggingState, type EditingState, EditorContext, SelectionModel, type TransformState } from '../../hooks';
+import { Canvas } from '../Canvas';
 import { UI } from '../UI';
 import { testId } from '../util';
 
@@ -28,10 +18,7 @@ import { testId } from '../util';
 //  - Basic UML (internal use; generate from GH via function).
 //  - Basic processing pipeline (AI).
 
-//  - TODO(burdon): Factor out selection.
-//  - TODO(burdon): Factor out selection bounds.
 //  - TODO(burdon): Factor out action handling.
-//  - TODO(burdon): Factor out key handling (move to UI).
 
 // TODO(burdon): Phase 1: Basic plugin.
 //  - Property panels (e.g. line style). Form.
@@ -61,51 +48,6 @@ import { testId } from '../util';
 //  - Factor out react-ui-xxx vs. plugin.
 //  - Factor out common Toolbar pattern (with state observers).
 
-export type TransformState = {
-  scale: number;
-  offset: Point;
-};
-
-export type DraggingState = {
-  container: HTMLElement;
-  item: Item;
-  anchor?: string;
-};
-
-export type EditingState = {
-  item: Item;
-};
-
-export type EditorContextType = {
-  debug: boolean;
-
-  width: number;
-  height: number;
-  scale: number;
-  offset: Point;
-
-  gridSize: Dimension;
-  showGrid: boolean;
-  snapToGrid: boolean;
-  selection: SelectionModel;
-  dragging?: DraggingState;
-  linking?: DraggingState;
-  editing?: EditingState;
-
-  setGridSize: Dispatch<SetStateAction<Dimension>>;
-  setTransform: Dispatch<SetStateAction<TransformState>>;
-  setDragging: Dispatch<SetStateAction<DraggingState | undefined>>;
-  setLinking: Dispatch<SetStateAction<DraggingState | undefined>>;
-  setEditing: Dispatch<SetStateAction<EditingState | undefined>>;
-  handleAction: ActionHandler;
-};
-
-/**
- * @internal
- */
-// TODO(burdon): Use Radix.
-export const EditorContext = createContext<EditorContextType | undefined>(undefined);
-
 type EditorRootProps = ThemedClassName<PropsWithChildren<Partial<TransformState>>>;
 
 const EditorRoot = ({ children, classNames, scale: initialScale = 1, offset: initialOffset }: EditorRootProps) => {
@@ -127,29 +69,6 @@ const EditorRoot = ({ children, classNames, scale: initialScale = 1, offset: ini
   const [linking, setLinking] = useState<DraggingState>();
   const [editing, setEditing] = useState<EditingState>();
 
-  const handleAction = useCallback<ActionHandler>(
-    (action) => {
-      const { type } = action;
-      switch (type) {
-        case 'debug': {
-          setDebug(!debug);
-          return true;
-        }
-        case 'grid': {
-          setShowGrid(action?.on ?? !showGrid);
-          return true;
-        }
-        case 'snap': {
-          setSnapToGrid(action?.on ?? !snapToGrid);
-          return true;
-        }
-      }
-
-      return false;
-    },
-    [debug, showGrid, snapToGrid],
-  );
-
   return (
     <div
       {...testId('dx-editor')}
@@ -159,27 +78,34 @@ const EditorRoot = ({ children, classNames, scale: initialScale = 1, offset: ini
       <EditorContext.Provider
         value={{
           debug,
+          setDebug,
 
-          // Canvas state.
           width,
           height,
+
           scale,
           offset,
           setTransform,
+
           gridSize,
           setGridSize,
-          showGrid,
-          snapToGrid,
 
-          // Editor state.
+          showGrid,
+          setShowGrid,
+
+          snapToGrid,
+          setSnapToGrid,
+
           selection,
+
           dragging,
           setDragging,
+
           linking,
           setLinking,
+
           editing,
           setEditing,
-          handleAction,
         }}
       >
         {children}

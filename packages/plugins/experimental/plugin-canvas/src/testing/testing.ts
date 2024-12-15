@@ -7,6 +7,18 @@ import { range } from '@dxos/util';
 import { type Graph, GraphWrapper } from '../graph';
 import type { Dimension, PointTransform } from '../layout';
 
+/**
+ * Add to Devtools > Sources > Snippets
+ * @param id
+ */
+export const testElement = (id = '__TEST__') => {
+  (window as any).INSPECT = () => {
+    (window as any).inspect(document.getElementById(id));
+  };
+
+  return { id };
+};
+
 export const createId = () => Math.random().toString(36).slice(2, 10);
 
 export const createGraph = (size: Dimension, snap: PointTransform): Graph => {
@@ -36,15 +48,15 @@ export const createGraph = (size: Dimension, snap: PointTransform): Graph => {
       },
     });
 
-    wrapper.addNode({
-      id: c,
-      data: {
-        id: c,
-        text: 'C',
-        pos: snap({ x: size.width * 2, y: 0 }),
-        size,
-      },
-    });
+    // wrapper.addNode({
+    //   id: c,
+    //   data: {
+    //     id: c,
+    //     text: 'C',
+    //     pos: snap({ x: size.width * 2, y: 0 }),
+    //     size,
+    //   },
+    // });
 
     wrapper.addEdge({
       id: createId(),
@@ -53,12 +65,12 @@ export const createGraph = (size: Dimension, snap: PointTransform): Graph => {
       data: {},
     });
 
-    wrapper.addEdge({
-      id: createId(),
-      source: a,
-      target: c,
-      data: {},
-    });
+    // wrapper.addEdge({
+    //   id: createId(),
+    //   source: a,
+    //   target: c,
+    //   data: {},
+    // });
   });
 
   return wrapper.graph;

@@ -7,11 +7,12 @@ import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/el
 import React, { type MouseEventHandler, type PropsWithChildren, useEffect, useRef, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { type ThemedClassName } from '@dxos/react-ui/src';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Anchor, DATA_ITEM_ID } from './Anchor';
-import { type DragPayloadData, type Item } from './Shape';
+import { type DragPayloadData } from './Shape';
+import { type Item } from '../../graph';
 import { useEditorContext } from '../../hooks';
 import { pointAdd, getBoundsProperties } from '../../layout';
 import { ReadonlyTextBox, TextBox, type TextBoxProps } from '../TextBox';

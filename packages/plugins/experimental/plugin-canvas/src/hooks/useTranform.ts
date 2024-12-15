@@ -9,7 +9,7 @@ import { useEditorContext } from '../hooks';
 export type TransformResult = { ready: boolean; styles: CSSProperties };
 
 /**
- *
+ * Creates the 2D transformation matrix based on the current offset and scale.
  */
 export const useTransform = (): TransformResult => {
   const { width, height, scale, offset, setTransform } = useEditorContext();

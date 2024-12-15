@@ -6,7 +6,7 @@ import { useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 
-import { EditorContext, type EditorContextType } from '../components';
+import { EditorContext, type EditorContextType } from './context';
 
 export const useEditorContext = (): EditorContextType => {
   return useContext(EditorContext) ?? raise(new Error('Missing EditorContext'));
