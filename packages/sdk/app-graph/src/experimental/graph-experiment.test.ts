@@ -565,6 +565,7 @@ const allDocumentsByRicks = QB.build(() => {
     });
 });
 
+// TODO(dmaretskyi): Drop support for this since its difficult to express in the serialized query.
 // MATCH (d:Document { author: (Contact { name: 'Rick' }) }) RETURN document.name AS name
 const allDocumentByRicks2 = QB.build(() => {
   const contact = QB.Node(ContactNode).where({ name: 'Rick' });
@@ -593,4 +594,72 @@ const allDocumentByRicks4 = QB.build(() => {
   return QB.Match(contact.referencedBy('author', document)).return({
     name: document.prop('name'),
   });
+});
+
+//
+// Serialized schema def
+//
+
+export const IdentifierSchema = Schema.String;
+
+export const Expression = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal('literal'),
+    value: Schema.Any,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal('unary-operator'),
+    operator: Schema.Literal('not'),
+    value: Schema.suspend((): Schema.Schema.AnyNoContext => Expression),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal('binary-operator'),
+    operator: Schema.Literal('and', 'or', 'eq', 'neq', 'gt', 'gte', 'lt', 'lte'),
+    left: Schema.suspend((): Schema.Schema.AnyNoContext => Expression),
+    right: Schema.suspend((): Schema.Schema.AnyNoContext => Expression),
+  }),
+);
+export type Expression = Schema.Schema.Type<typeof Expression>;
+
+export const Query = Schema.Struct({
+  match: Schema.Struct({
+    alternatives: Schema.mutable(
+      Schema.Array(
+        Schema.Struct({
+          elements: Schema.Union(
+            Schema.Struct({
+              kind: Schema.Literal('node'),
+              identifier: IdentifierSchema,
+              type: Schema.String,
+              properties: Schema.optional(Schema.Record({ key: Schema.String, value: Expression })),
+            }),
+            Schema.Struct({
+              kind: Schema.Literal('relation'),
+              identifier: IdentifierSchema,
+              type: Schema.String,
+
+              source: IdentifierSchema,
+              target: IdentifierSchema,
+              properties: Schema.optional(Schema.Record({ key: Schema.String, value: Expression })),
+            }),
+            Schema.Struct({
+              kind: Schema.Literal('reference'),
+
+              source: IdentifierSchema,
+              target: IdentifierSchema,
+              prop: Schema.String,
+            }),
+          ),
+        }),
+      ),
+    ),
+  }),
+
+  where: Schema.optional(
+    Schema.Struct({
+      predicates: Schema.Array(Expression),
+    }),
+  ),
+
+  return: Schema.Any, // TODO(dmaretskyi): .
 });
