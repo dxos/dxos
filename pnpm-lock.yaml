@@ -5687,6 +5687,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../../ui/react-ui-form
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-stack
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../../ui/react-ui-syntax-highlighter
