@@ -9,6 +9,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { Editor } from './Editor';
 import { type CanvasType } from '../types';
 
+// TODO(burdon): Attention.
 export const CanvasContainer = ({ canvas }: { canvas: CanvasType }) => {
   return (
     <StackItem.Content toolbar={false}>

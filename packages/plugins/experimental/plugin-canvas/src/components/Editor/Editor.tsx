@@ -20,13 +20,18 @@ import { testId } from '../util';
 //  - Basic processing pipeline (AI).
 
 // TODO(burdon): Phase 1: Basic plugin.
-//  - Bounding box/hierarchy. [DIFFERENTIATOR]
+//  - Group/collapse nodes; hierarchical editor.
+//    - Bounding box/hierarchy. [DIFFERENTIATOR]
 //  - Property panels (e.g. line style). Shape schema.
+//    - Line options (1-to-many, inherits, etc.)
 //  - Canvas ontology (e.g., what is Item vs Layout, etc.)
 //  - Nodes as objects.
 //  - Surface/form storybook; auto-size.
 //  - Basic plugin with root object.
 //  - Reactive wrapper for graph.
+
+// TODO(burdon): Bugs.
+//  - Offset when not fullscreen.
 
 // TODO(burdon): Phase 2
 //  - Auto-layout (reconcile with plugin-debug).
@@ -35,16 +40,12 @@ import { testId } from '../util';
 //  - Drop/snap visualization.
 //  - Undo.
 //  - Resize frames.
-//  - Group/collapse nodes; hierarchical editor.
-//  - Line options (1-to-many, inherits, etc.)
-
-// TODO(burdon): Misc.
 //  - Context/CSS Variables.
-//  - Selection model.
-//  - Order of rendering layers.
 //  - Move all selected.
-//  - Initial dragging offset.
 //  - Factor out react-ui-xxx vs. plugin.
+
+// TODO(burdon): Debt:
+//  - Factor out common key shortcuts pattern.
 //  - Factor out common Toolbar pattern (with state observers).
 
 const defaultOffset = { x: 0, y: 0 };
