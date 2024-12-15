@@ -8,7 +8,6 @@ import { Types } from 'effect';
 TODO:
 
 - Move to a separate package
-- Turn methods into getters where possible.
 - More flexible return types, so that return isn't limited to being an object
 
 - Do we need a separate syntax to express patterns with refs (so that we can utilize the reverse reference index) or are predicates ok?
@@ -199,12 +198,10 @@ interface LValue<T> extends RValue<T> {
   [LValueTypeId]: {
     _T: T;
   };
-
-  target(this: LValue<Ref.Any>): T extends Ref.Any ? NodePattern<Ref.TargetNode<T>> : never;
 }
 
 interface RefLValue<N extends NodeDef.Any> extends LValue<Ref<N>> {
-  target(): NodePattern<N>;
+  get target(): NodePattern<N>;
 }
 
 declare namespace LValue {
@@ -224,6 +221,10 @@ type SelectProp<T, P extends PathOf<T>, U = PickProp<T, P>> = U extends Ref.Any
 
 interface PropSelectable<T> {
   prop<P extends PathOf<T>>(path: P): SelectProp<T, P>;
+}
+
+interface HasId {
+  get id(): RValue<Id>;
 }
 
 type ComparisonType<T> = T extends Ref.Any ? Ref.TargetNode<T> | NodePattern<Ref.TargetNode<T>> | Id : T;
@@ -288,12 +289,11 @@ export const NodePatternTypeId: unique symbol = Symbol.for('@dxos/app-graph/Node
 interface NodePattern<N extends NodeDef.Any>
   extends Pattern<N>,
     LValue<Node<NodeDef.Properties<N>>>,
-    PropSelectable<NodeDef.Properties<N>> {
+    PropSelectable<NodeDef.Properties<N>>,
+    HasId {
   [NodePatternTypeId]: {
     _N: N;
   };
-
-  id(): RValue<Id>;
 
   where(filter: PropertyFilter<NodeDef.Properties<N>>): NodePattern<N>;
 }
@@ -311,12 +311,11 @@ export const RelationPatternTypeId: unique symbol = Symbol.for('@dxos/app-graph/
  */
 interface RelationPattern<R extends RelationDef.Any>
   extends LValue<Relation<RelationDef.Properties<R>>>,
-    PropSelectable<RelationDef.Properties<R>> {
+    PropSelectable<RelationDef.Properties<R>>,
+    HasId {
   [RelationPatternTypeId]: {
     _R: R;
   };
-
-  id(): RValue<Id>;
 
   where(filter: PropertyFilter<RelationDef.Properties<R>>): RelationPattern<R>;
 }
@@ -503,7 +502,7 @@ const getAllDocumentNamesAndTheirAuthorsAndTheirActions = QB.build(() => {
   const document = QB.Node(DocumentNode);
   const action = QB.Node(ActionNode);
 
-  const authorName = document.prop('author').target().prop('name');
+  const authorName = document.prop('author').target.prop('name');
 
   return QB.Match(document.related(QB.Relation(ActionForNodeRelation)).to(action))
     .return({
@@ -522,7 +521,7 @@ const allContactsThatHaveAuthoredDocuments = QB.build(() => {
 
   return QB.Match(document)
     .return({
-      author: document.prop('author').target(),
+      author: document.prop('author').target,
     })
     .distinct();
 });
@@ -531,10 +530,10 @@ const allContactsThatHaveAuthoredDocuments = QB.build(() => {
 const allDocumentsByThisAuthorWhere = (authorId: Id) =>
   QB.build(() => {
     const document = QB.Node(DocumentNode);
-    const author = document.prop('author').target();
+    const author = document.prop('author').target;
 
     return QB.Match(document)
-      .where(author.id().eq(QB.literal(authorId)))
+      .where(author.id.eq(QB.literal(authorId)))
       .return({
         author,
       })
@@ -550,7 +549,7 @@ const allDocumentsByThisAuthorPattern = (authorId: Id) =>
     return QB.Match(document)
       .return({
         name: document.prop('name'),
-        author: document.prop('author').target(),
+        author: document.prop('author').target,
       })
       .distinct();
   });
@@ -562,7 +561,7 @@ const allDocumentsByRicks = QB.build(() => {
   const document = QB.Node(DocumentNode);
 
   return QB.Match(document)
-    .where(document.prop('author').target().prop('name').eq(QB.literal('Rick')))
+    .where(document.prop('author').target.prop('name').eq(QB.literal('Rick')))
     .return({
       name: document.prop('name'),
     });
