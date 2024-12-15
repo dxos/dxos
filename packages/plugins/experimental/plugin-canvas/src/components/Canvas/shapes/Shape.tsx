@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { type CSSProperties, useCallback } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { useDynamicRef } from '@dxos/react-ui';
@@ -10,7 +10,7 @@ import { useDynamicRef } from '@dxos/react-ui';
 import { Frame } from './Frame';
 import { Line } from './Line';
 import { createLine, type GraphModel, type Shape } from '../../../graph';
-import { type SelectionEvent, useEditorContext, useSelectionEvents, useTransform } from '../../../hooks';
+import { type SelectionEvent, useEditorContext, useSelectionEvents } from '../../../hooks';
 import {
   boundsContain,
   boundsToModel,
@@ -66,14 +66,12 @@ export const Component = ({ shape }: { shape: Shape }) => {
   }
 };
 
-export const Shapes = ({ shapes }: { shapes: Shape[] }) => {
-  const { ready, styles: transformStyles } = useTransform();
-  if (!ready) {
-    return null;
-  }
-
+/**
+ * Render shapes.
+ */
+export const Shapes = ({ shapes, style }: { shapes: Shape[]; style: CSSProperties }) => {
   return (
-    <div {...testId('dx-shapes')} className='absolute' style={transformStyles}>
+    <div {...testId('dx-shapes')} className='absolute' style={style}>
       {shapes.map((shape) => (
         <Component key={shape.id} shape={shape} />
       ))}

@@ -5708,6 +5708,9 @@ importers:
       bind-event-listener:
         specifier: ^3.0.0
         version: 3.0.0
+      d3:
+        specifier: ^7.9.0
+        version: 7.9.0
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -5733,6 +5736,9 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../common/storybook-utils
+      '@types/d3':
+        specifier: ^7.4.3
+        version: 7.4.3
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7

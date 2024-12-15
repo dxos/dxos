@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as d3 from 'd3';
 import { useCallback } from 'react';
 
 import { useEditorContext } from './useEditorContext';
@@ -9,11 +10,13 @@ import { type ActionHandler } from '../actions';
 import { createRect } from '../graph';
 import { createId, itemSize } from '../testing';
 
+const scaleFactor = 2;
+
 /**
  * Handle actions.
  */
 export const useActionHandler = (): ActionHandler => {
-  const { width, height, scale, graph, selection, setTransform, setDebug, setShowGrid, setSnapToGrid } =
+  const { width, height, scale, offset, graph, selection, setTransform, setDebug, setShowGrid, setSnapToGrid } =
     useEditorContext();
 
   return useCallback<ActionHandler>(
@@ -33,17 +36,28 @@ export const useActionHandler = (): ActionHandler => {
           return true;
         }
 
-        // TODO(burdon): Animate.
         case 'center': {
-          setTransform({ offset: { x: width / 2, y: height / 2 }, scale: 1 });
+          const is = d3.interpolate(offset, { x: width / 2, y: height / 2 });
+          d3.transition()
+            .ease(d3.easeSinOut)
+            .duration(200)
+            .tween('scale', () => (t) => setTransform({ scale, offset: { ...is(t) } }));
           return true;
         }
         case 'zoom-in': {
-          setTransform({ offset: { x: width / 2, y: height / 2 }, scale: scale * 1.5 });
+          const is = d3.interpolateNumber(scale, scale * scaleFactor);
+          d3.transition()
+            .ease(d3.easeSinOut)
+            .duration(200)
+            .tween('scale', () => (t) => setTransform({ scale: is(t), offset }));
           return true;
         }
         case 'zoom-out': {
-          setTransform({ offset: { x: width / 2, y: height / 2 }, scale: scale / 1.5 });
+          const is = d3.interpolateNumber(scale, scale / scaleFactor);
+          d3.transition()
+            .ease(d3.easeSinOut)
+            .duration(200)
+            .tween('scale', () => (t) => setTransform({ scale: is(t), offset }));
           return true;
         }
 
@@ -66,6 +80,6 @@ export const useActionHandler = (): ActionHandler => {
           return false;
       }
     },
-    [width, height, scale],
+    [width, height, scale, offset],
   );
 };

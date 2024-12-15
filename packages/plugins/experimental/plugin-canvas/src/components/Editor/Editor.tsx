@@ -65,7 +65,11 @@ const EditorRoot = ({
   const [showGrid, setShowGrid] = useState(true);
   const [snapToGrid, setSnapToGrid] = useState(true);
   const [{ scale, offset }, setTransform] = useState<TransformState>({ scale: initialScale, offset: initialOffset });
-  useEffect(() => setTransform({ scale: initialScale, offset: initialOffset }), [initialScale, initialOffset]);
+  useEffect(() => {
+    if (width && height && offset === defaultOffset) {
+      setTransform({ scale, offset: { x: width / 2, y: height / 2 } });
+    }
+  }, [scale, offset, width, height]);
 
   // Data state.
   const graph = useMemo(() => new GraphModel(initialGraph), [initialGraph]);

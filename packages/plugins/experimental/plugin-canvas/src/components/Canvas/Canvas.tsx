@@ -28,7 +28,7 @@ export const Canvas = () => {
 
   // Canvas.
   const containerRef = useRef<HTMLDivElement>(null);
-  const { ready, styles: transformStyles } = useTransform();
+  const { styles: transformStyles } = useTransform();
 
   // Event handlers.
   useWheel(containerRef.current, width, height, setTransform);
@@ -60,10 +60,10 @@ export const Canvas = () => {
       <Background />
 
       {/* Grid. */}
-      {ready && showGrid && <Grid offset={offset} scale={scale} />}
+      {showGrid && <Grid offset={offset} scale={scale} />}
 
       {/* Content. */}
-      <Shapes shapes={shapes} />
+      {<Shapes shapes={shapes} style={transformStyles} />}
 
       {/* Overlays. */}
       <div {...testId('dx-overlays')} className={mx('absolute', eventsNone)}>
