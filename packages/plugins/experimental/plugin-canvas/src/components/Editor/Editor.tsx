@@ -2,12 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type PropsWithChildren, useMemo, useState } from 'react';
+import React, { type PropsWithChildren, useEffect, useMemo, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
+import { emptyGraph, type Graph } from '../../graph';
 import { type DraggingState, type EditingState, EditorContext, SelectionModel, type TransformState } from '../../hooks';
 import { Canvas } from '../Canvas';
 import { UI } from '../UI';
@@ -17,8 +18,6 @@ import { testId } from '../util';
 //  - ECHO query/editor.
 //  - Basic UML (internal use; generate from GH via function).
 //  - Basic processing pipeline (AI).
-
-//  - TODO(burdon): Factor out action handling.
 
 // TODO(burdon): Phase 1: Basic plugin.
 //  - Property panels (e.g. line style). Form.
@@ -48,20 +47,25 @@ import { testId } from '../util';
 //  - Factor out react-ui-xxx vs. plugin.
 //  - Factor out common Toolbar pattern (with state observers).
 
-type EditorRootProps = ThemedClassName<PropsWithChildren<Partial<TransformState>>>;
+const defaultOffset = { x: 0, y: 0 };
 
-const EditorRoot = ({ children, classNames, scale: initialScale = 1, offset: initialOffset }: EditorRootProps) => {
+type EditorRootProps = ThemedClassName<PropsWithChildren<Partial<TransformState & { graph: Graph }>>>;
+
+const EditorRoot = ({
+  children,
+  classNames,
+  scale: initialScale = 1,
+  offset: initialOffset = defaultOffset,
+  graph = emptyGraph,
+}: EditorRootProps) => {
+  // Canvas state.
   const { ref, width = 0, height = 0 } = useResizeDetector();
   const [debug, setDebug] = useState(false);
-
-  // Canvas state.
   const [gridSize, setGridSize] = useState({ width: 32, height: 32 });
   const [showGrid, setShowGrid] = useState(true);
   const [snapToGrid, setSnapToGrid] = useState(true);
-  const [{ scale, offset }, setTransform] = useState<TransformState>({
-    scale: initialScale,
-    offset: (initialOffset = { x: 0, y: 0 }),
-  });
+  const [{ scale, offset }, setTransform] = useState<TransformState>({ scale: initialScale, offset: initialOffset });
+  useEffect(() => setTransform({ scale: initialScale, offset: initialOffset }), [initialScale, initialOffset]);
 
   // Editor state.
   const selection = useMemo(() => new SelectionModel(), []);
@@ -70,11 +74,7 @@ const EditorRoot = ({ children, classNames, scale: initialScale = 1, offset: ini
   const [editing, setEditing] = useState<EditingState>();
 
   return (
-    <div
-      {...testId('dx-editor')}
-      className={mx('relative inset-0 w-full h-full overflow-hidden', classNames)}
-      ref={ref}
-    >
+    <div {...testId('dx-editor')} ref={ref} className={mx('relative w-full h-full overflow-hidden', classNames)}>
       <EditorContext.Provider
         value={{
           debug,
@@ -96,6 +96,7 @@ const EditorRoot = ({ children, classNames, scale: initialScale = 1, offset: ini
           snapToGrid,
           setSnapToGrid,
 
+          graph,
           selection,
 
           dragging,

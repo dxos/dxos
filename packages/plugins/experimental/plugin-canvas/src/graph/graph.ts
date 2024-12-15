@@ -5,19 +5,27 @@
 import { S } from '@dxos/echo-schema';
 import { create } from '@dxos/live-object';
 
+import { removeElements } from './util';
 import { type Dimension, type Point } from '../layout';
 
-// TODO(burdon): Create model.
-export type Item = {
-  id: string;
-  pos: Point;
-  size: Dimension;
-  text: string;
-};
+// TODO(burdon): Define schema for persistent objects.
+export type Shape =
+  | {
+      id: string;
+      type: 'rect';
+      text?: string;
+      pos: Point;
+      size: Dimension;
+    }
+  | {
+      id: string;
+      type: 'line';
+      path: string;
+    };
 
 export const Node = S.Struct({
   id: S.String,
-  data: S.Any, // TODO(burdon): Type (Item).
+  data: S.Any,
 });
 
 export type Node = S.Schema.Type<typeof Node>;
@@ -38,6 +46,8 @@ export const Graph = S.Struct({
 });
 
 export type Graph = S.Schema.Type<typeof Graph>;
+
+export const emptyGraph: Graph = { id: 'test', nodes: [], edges: [] };
 
 /**
  * Wrapper for graph operations.
@@ -90,12 +100,3 @@ export class GraphWrapper {
     return this;
   }
 }
-
-// TODO(burdon): Move to live-object.
-const removeElements = <T>(array: T[], predicate: (element: T, index: number) => boolean): void => {
-  for (let i = array.length - 1; i >= 0; i--) {
-    if (predicate(array[i], i)) {
-      array.splice(i, 1);
-    }
-  }
-};

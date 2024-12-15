@@ -17,13 +17,13 @@ import { mx } from '@dxos/react-ui-theme';
 
 export type TextBoxProps = ThemedClassName<
   {
-    value: string;
+    value?: string;
     onClose?: (value: string) => void;
     onCancel?: () => void;
   } & Pick<BasicExtensionsOptions, 'placeholder'>
 >;
 
-export const TextBox = ({ classNames, value, onClose, onCancel, ...rest }: TextBoxProps) => {
+export const TextBox = ({ classNames, value = '', onClose, onCancel, ...rest }: TextBoxProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef, view, focusAttributes } = useTextEditor(() => {
     return {
@@ -82,7 +82,7 @@ export const TextBox = ({ classNames, value, onClose, onCancel, ...rest }: TextB
   return <div ref={parentRef} {...focusAttributes} className={mx('w-full overflow-hidden', classNames)} />;
 };
 
-export const ReadonlyTextBox = ({ classNames, value }: Pick<TextBoxProps, 'value' | 'classNames'>) => {
+export const ReadonlyTextBox = ({ classNames, value = '' }: Pick<TextBoxProps, 'value' | 'classNames'>) => {
   const lines = value.split('\n');
   return (
     <div role='none' className={mx('w-full overflow-hidden', classNames)}>

@@ -8,12 +8,12 @@ import { useEffect, useState } from 'react';
 
 import { getRect, type Rect, type Point, type Range } from '../layout';
 
-export type BoundingSelectionCallback = (bounds: Rect | null, shift?: boolean) => void;
+export type SelectionEvent = (rect: Rect | null, shift?: boolean) => void;
 
 /**
  * Event listener to track range bounds selection.
  */
-export const useBoundingSelection = (el: HTMLElement | null, cb?: BoundingSelectionCallback): Rect | null => {
+export const useSelectionEvents = (el: HTMLElement | null, cb?: SelectionEvent): Rect | null => {
   const [range, setRange] = useState<Partial<Range>>();
   useEffect(() => {
     if (!el) {

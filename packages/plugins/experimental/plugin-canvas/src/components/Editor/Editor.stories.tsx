@@ -11,7 +11,6 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Editor, type EditorRootProps } from './Editor';
 import { createSnap } from '../../hooks';
-import { type Dimension } from '../../layout';
 import { createGraph } from '../../testing';
 
 const Render = (props: EditorRootProps) => (
@@ -30,11 +29,10 @@ const meta: Meta<EditorRootProps> = {
 
 export default meta;
 
-const itemSize: Dimension = { width: 128, height: 64 };
 const snapPoint = createSnap({ width: 64, height: 64 });
 
 export const Default = {
   args: {
-    graph: createGraph(itemSize, snapPoint),
+    graph: createGraph(snapPoint),
   },
 };

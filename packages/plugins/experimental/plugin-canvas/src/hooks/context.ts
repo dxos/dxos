@@ -5,12 +5,8 @@
 import { createContext, type Dispatch, type SetStateAction } from 'react';
 
 import { type SelectionModel } from './useSelected';
-import { type Item } from '../graph';
+import { type Graph, type Shape } from '../graph';
 import type { Dimension, Point } from '../layout';
-
-/**
- * Graph data item.
- */
 
 export type TransformState = {
   scale: number;
@@ -19,12 +15,12 @@ export type TransformState = {
 
 export type DraggingState = {
   container: HTMLElement;
-  item: Item;
+  shape: Shape;
   anchor?: string;
 };
 
 export type EditingState = {
-  item: Item;
+  shape: Shape;
 };
 
 export type EditorContextType = {
@@ -44,6 +40,7 @@ export type EditorContextType = {
   showGrid: boolean;
   setShowGrid: Dispatch<SetStateAction<boolean>>;
 
+  graph: Graph;
   selection: SelectionModel;
 
   snapToGrid: boolean;

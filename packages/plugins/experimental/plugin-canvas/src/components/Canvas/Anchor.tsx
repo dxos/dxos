@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type DragPayloadData } from './Shape';
-import { type Item } from '../../graph';
+import { type Shape } from '../../graph';
 import { useEditorContext } from '../../hooks';
 import { type Dimension, getBoundsProperties, type Point } from '../../layout';
 import { styles } from '../styles';
@@ -22,7 +22,7 @@ const defaultSize: Dimension = { width: 12, height: 12 };
 
 export type AnchorProps = {
   id: string;
-  item: Item;
+  shape: Shape;
   pos: Point;
   size?: Dimension;
   scale?: number;
@@ -32,9 +32,9 @@ export type AnchorProps = {
 /**
  * Anchor points for attaching links.
  */
-export const Anchor = ({ id, item, pos, size = defaultSize, scale = 1, onMouseLeave }: AnchorProps) => {
+export const Anchor = ({ id, shape, pos, size = defaultSize, scale = 1, onMouseLeave }: AnchorProps) => {
   const { linking, setLinking } = useEditorContext();
-  const isLinking = linking?.item.id === item.id && linking?.anchor === id;
+  const isLinking = linking?.shape.id === shape.id && linking?.anchor === id;
 
   // Dragging.
   // TODO(burdon): ESC to cancel dragging.
@@ -44,7 +44,7 @@ export const Anchor = ({ id, item, pos, size = defaultSize, scale = 1, onMouseLe
     invariant(el);
     return draggable({
       element: el,
-      getInitialData: () => ({ type: 'anchor', item, anchor: id }) satisfies DragPayloadData,
+      getInitialData: () => ({ type: 'anchor', shape, anchor: id }) satisfies DragPayloadData,
       onGenerateDragPreview: ({ nativeSetDragImage }) => {
         setCustomNativeDragPreview({
           nativeSetDragImage,
@@ -52,7 +52,7 @@ export const Anchor = ({ id, item, pos, size = defaultSize, scale = 1, onMouseLe
             return { x: (scale * size.width) / 2, y: (scale * size.height) / 2 };
           },
           render: ({ container }) => {
-            setLinking({ item, container, anchor: id });
+            setLinking({ shape, container, anchor: id });
             return () => {};
           },
         });
@@ -67,7 +67,7 @@ export const Anchor = ({ id, item, pos, size = defaultSize, scale = 1, onMouseLe
     <>
       <div
         ref={ref}
-        {...{ [DATA_ITEM_ID]: item.id }}
+        {...{ [DATA_ITEM_ID]: shape.id }}
         style={getBoundsProperties({ ...pos, ...size })}
         className={mx('absolute z-10', styles.anchor, isLinking && 'opacity-0')}
         onMouseLeave={() => onMouseLeave?.()}

@@ -2,15 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-export type TestId =
-  | 'dx-editor'
-  | 'dx-canvas'
-  | 'dx-html-content'
-  | 'dx-svg-content'
-  | 'dx-grid'
-  | 'dx-background'
-  | 'dx-overlays'
-  | 'dx-ui';
+export type TestId = 'dx-editor' | 'dx-canvas' | 'dx-shapes' | 'dx-grid' | 'dx-background' | 'dx-overlays' | 'dx-ui';
 
 // TODO(burdon): z-index.
 

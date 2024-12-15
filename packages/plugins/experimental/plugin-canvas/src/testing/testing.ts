@@ -4,7 +4,7 @@
 
 import { range } from '@dxos/util';
 
-import { type Graph, GraphWrapper } from '../graph';
+import { type Graph, GraphWrapper, type Shape } from '../graph';
 import type { Dimension, PointTransform } from '../layout';
 
 /**
@@ -19,9 +19,12 @@ export const testElement = (id = '__TEST__') => {
   return { id };
 };
 
+// TODO(burdon): Layout.
+export const itemSize: Dimension = { width: 128, height: 64 };
+
 export const createId = () => Math.random().toString(36).slice(2, 10);
 
-export const createGraph = (size: Dimension, snap: PointTransform): Graph => {
+export const createGraph = (snap: PointTransform): Graph => {
   const wrapper = new GraphWrapper();
   range(1).forEach((i) => {
     const a = createId();
@@ -32,31 +35,34 @@ export const createGraph = (size: Dimension, snap: PointTransform): Graph => {
       id: a,
       data: {
         id: a,
+        type: 'rect',
         text: 'A',
         pos: snap({ x: 0, y: 0 }),
-        size,
-      },
+        size: itemSize,
+      } satisfies Shape,
     });
 
     wrapper.addNode({
       id: b,
       data: {
         id: b,
+        type: 'rect',
         text: 'B',
-        pos: snap({ x: -size.width * 2, y: 0 }),
-        size,
-      },
+        pos: snap({ x: -itemSize.width * 2, y: 0 }),
+        size: itemSize,
+      } satisfies Shape,
     });
 
-    // wrapper.addNode({
-    //   id: c,
-    //   data: {
-    //     id: c,
-    //     text: 'C',
-    //     pos: snap({ x: size.width * 2, y: 0 }),
-    //     size,
-    //   },
-    // });
+    wrapper.addNode({
+      id: c,
+      data: {
+        id: c,
+        type: 'rect',
+        text: 'C',
+        pos: snap({ x: itemSize.width * 2, y: 0 }),
+        size: itemSize,
+      } satisfies Shape,
+    });
 
     wrapper.addEdge({
       id: createId(),
@@ -65,12 +71,12 @@ export const createGraph = (size: Dimension, snap: PointTransform): Graph => {
       data: {},
     });
 
-    // wrapper.addEdge({
-    //   id: createId(),
-    //   source: a,
-    //   target: c,
-    //   data: {},
-    // });
+    wrapper.addEdge({
+      id: createId(),
+      source: a,
+      target: c,
+      data: {},
+    });
   });
 
   return wrapper.graph;
