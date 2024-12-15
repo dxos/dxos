@@ -6,6 +6,7 @@ import * as d3 from 'd3';
 import { useCallback } from 'react';
 
 import { useEditorContext } from './useEditorContext';
+import { getZoomTransform } from './useWheel';
 import { type ActionHandler } from '../actions';
 import { createRect } from '../graph';
 import { createId, itemSize } from '../testing';
@@ -46,18 +47,20 @@ export const useActionHandler = (): ActionHandler => {
         }
         case 'zoom-in': {
           const is = d3.interpolateNumber(scale, scale * scaleFactor);
+          const pos = { x: width / 2, y: height / 2 };
           d3.transition()
             .ease(d3.easeSinOut)
             .duration(200)
-            .tween('scale', () => (t) => setTransform({ scale: is(t), offset }));
+            .tween('scale', () => (t) => setTransform(getZoomTransform({ scale, newScale: is(t), offset, pos })));
           return true;
         }
         case 'zoom-out': {
           const is = d3.interpolateNumber(scale, scale / scaleFactor);
+          const pos = { x: width / 2, y: height / 2 };
           d3.transition()
             .ease(d3.easeSinOut)
             .duration(200)
-            .tween('scale', () => (t) => setTransform({ scale: is(t), offset }));
+            .tween('scale', () => (t) => setTransform(getZoomTransform({ scale, newScale: is(t), offset, pos })));
           return true;
         }
 
