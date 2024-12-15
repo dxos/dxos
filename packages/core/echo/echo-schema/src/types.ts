@@ -45,11 +45,6 @@ export const RawObject = <S extends S.Schema<any>>(
   return S.make(AST.omit(schema.ast, ['id']));
 };
 
-/**
- * Reference to another ECHO object.
- */
-export type Ref<T extends WithId> = T | undefined;
-
 //
 // Data
 //

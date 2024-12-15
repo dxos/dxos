@@ -10,7 +10,7 @@ import { getObjectAnnotation, ReferenceAnnotationId, type ObjectAnnotation } fro
 import { type JsonSchemaType } from './types';
 import { MutableSchema, StoredSchema } from '../mutable';
 import { getTypename, EXPANDO_TYPENAME } from '../object';
-import { type WithId, type Ref, type BaseObject } from '../types';
+import { type WithId, type BaseObject } from '../types';
 
 /**
  * The `$id` field for an ECHO reference schema.
@@ -36,9 +36,20 @@ export const createSchemaReference = (typename: string): JsonSchemaType => {
   };
 };
 
-export interface ref<T extends WithId> extends S.Schema<Ref<T>, EncodedReference> {}
+/**
+ * Reference Schema.
+ */
+//  Naming pattern (Ref$) is borrowed from effect-schema.
+export interface Ref$<T extends WithId> extends S.Schema<Ref<T>, EncodedReference> {}
 
-export const ref = <T extends WithId>(schema: S.Schema<T, any>): ref<T> => {
+interface RefFn {
+  <T extends WithId>(schema: S.Schema<T, any>): Ref$<T>;
+}
+
+/**
+ * Schema builder for references.
+ */
+export const Ref: RefFn = <T extends WithId>(schema: S.Schema<T, any>): Ref$<T> => {
   const annotation = getObjectAnnotation(schema);
   if (annotation == null) {
     throw new Error('Reference target must be an ECHO schema.');
@@ -46,6 +57,38 @@ export const ref = <T extends WithId>(schema: S.Schema<T, any>): ref<T> => {
 
   return createEchoReferenceSchema(annotation);
 };
+
+/**
+ * Represents materialized reference to a target.
+ * This is the data type for the fields marked as ref.
+ */
+export interface Ref<T> {
+  /**
+   * Target object DXN.
+   */
+  get dxn(): DXN;
+
+  /**
+   * @returns The reference target.
+   * May return `undefined` if the object is not loaded in the working set.
+   * Accessing this property, even if it returns `undefined` will trigger the object to be loaded to the working set.
+   *
+   * @reactive Supports signal subscriptions.
+   */
+  get target(): T | undefined;
+
+  /**
+   * @returns Promise that will resolves with the target object.
+   * Will load the object from disk if it is not present in the working set.
+   * @throws If the object is not available locally.
+   */
+  load(): Promise<T>;
+
+  /**
+   * @returns Promise that will resolves with the target object or undefined if the object is not loaded locally.
+   */
+  tryLoad(): Promise<T | undefined>;
+}
 
 /**
  * `reference` field on the schema object.

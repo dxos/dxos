@@ -5,7 +5,7 @@
 import { S } from '@dxos/effect';
 
 import { EchoObject } from '../ast';
-import { ref } from '../ast/ref';
+import { Ref } from '../ast/ref';
 import { TypedObject, Expando } from '../object';
 
 // TODO(burdon): Clean up.
@@ -90,7 +90,7 @@ export class Contact extends TypedObject<Contact>({
     name: S.String,
     username: S.String,
     email: S.String,
-    tasks: S.suspend((): S.mutable<S.Array$<ref<Task>>> => S.mutable(S.Array(ref(Task)))),
+    tasks: S.suspend((): S.mutable<S.Array$<ref<Task>>> => S.mutable(S.Array(Ref(Task)))),
     address: S.Struct({
       city: S.optional(S.String),
       state: S.optional(S.String),
@@ -111,9 +111,9 @@ export class Task extends TypedObject({
   title: S.optional(S.String),
   completed: S.optional(S.Boolean),
   assignee: S.optional(Contact),
-  previous: S.optional(S.suspend((): ref<Task> => ref(Task))),
+  previous: S.optional(S.suspend((): ref<Task> => Ref(Task))),
   // TODO(burdon): Document S.suspend.
-  subTasks: S.optional(S.mutable(S.Array(S.suspend((): ref<Task> => ref(Task))))),
+  subTasks: S.optional(S.mutable(S.Array(S.suspend((): ref<Task> => Ref(Task))))),
   description: S.optional(S.String),
 }) {}
 
@@ -128,14 +128,14 @@ export class Container extends TypedObject({
   version: '0.1.0',
 })(
   {
-    objects: S.mutable(S.Array(ref(Expando))),
+    objects: S.mutable(S.Array(Ref(Expando))),
     records: S.mutable(
       S.Array(
         S.partial(
           S.Struct({
             title: S.String,
             description: S.String,
-            contacts: S.mutable(S.Array(ref(Contact))),
+            contacts: S.mutable(S.Array(Ref(Contact))),
             type: S.Enums(RecordType),
           }),
         ),
