@@ -96,8 +96,9 @@ export const CanvasPlugin = (): PluginDefinition<CanvasPluginProvides> => {
       surface: {
         component: ({ data, role }) => {
           switch (role) {
-            case 'main':
-              return data.active instanceof CanvasType ? <CanvasContainer canvas={data.active} /> : null;
+            case 'article': {
+              return data.object instanceof CanvasType ? <CanvasContainer canvas={data.object} /> : null;
+            }
           }
 
           return null;
@@ -107,7 +108,7 @@ export const CanvasPlugin = (): PluginDefinition<CanvasPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case CanvasAction.CREATE: {
-              return { data: create(CanvasType) };
+              return { data: create(CanvasType, { items: [] }) };
             }
           }
         },

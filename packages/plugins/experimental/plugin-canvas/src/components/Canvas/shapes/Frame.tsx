@@ -10,20 +10,20 @@ import { invariant } from '@dxos/invariant';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { DATA_ITEM_ID, Anchor } from './Anchor';
 import { type DragPayloadData } from './Shape';
-import { type Shape } from '../../graph';
-import { useEditorContext } from '../../hooks';
-import { pointAdd, getBoundsProperties } from '../../layout';
-import { ReadonlyTextBox, TextBox, type TextBoxProps } from '../TextBox';
-import { styles } from '../styles';
+import { type ShapeType } from '../../../graph';
+import { useEditorContext } from '../../../hooks';
+import { pointAdd, getBoundsProperties } from '../../../layout';
+import { ReadonlyTextBox, TextBox, type TextBoxProps } from '../../TextBox';
+import { styles } from '../../styles';
+import { DATA_ITEM_ID, Anchor } from '../Anchor';
 
 // TODO(burdon): Surface for form content. Or pass in children (which may include a Surface).
 //  return <Surface ref={forwardRef} role='card' limit={1} data={{ content: object} />;
 
 export type FrameProps = PropsWithChildren<
   ThemedClassName<{
-    shape: Shape;
+    shape: ShapeType<'rect'>;
     scale: number;
     selected?: boolean;
     showAnchors?: boolean;
@@ -35,9 +35,7 @@ export type FrameProps = PropsWithChildren<
  * Draggable Frame around shapes.
  */
 export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelect }: FrameProps) => {
-  invariant(shape.type === 'rect'); // TODO(burdon): ???
-
-  const { linking, dragging, setDragging, editing, setEditing } = useEditorContext();
+  const { debug, linking, dragging, setDragging, editing, setEditing } = useEditorContext();
   const isDragging = dragging?.shape.id === shape.id;
   const isEditing = editing?.shape.id === shape.id;
   const [hovering, setHovering] = useState(false);
@@ -48,7 +46,7 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
     invariant(ref.current);
     return dropTargetForElements({
       element: ref.current,
-      getData: () => ({ type: 'frame', shape }) satisfies DragPayloadData,
+      getData: () => ({ type: 'frame', shape }) satisfies DragPayloadData<ShapeType<'rect'>>,
       // TODO(burdon): Flickers.
       onDragEnter: () => setOver(true),
       onDragLeave: () => setOver(false),
@@ -63,7 +61,7 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
     invariant(ref.current);
     return draggable({
       element: ref.current,
-      getInitialData: () => ({ type: 'frame', shape }) satisfies DragPayloadData,
+      getInitialData: () => ({ type: 'frame', shape }) satisfies DragPayloadData<ShapeType<'rect'>>,
       onGenerateDragPreview: ({ nativeSetDragImage }) => {
         setCustomNativeDragPreview({
           nativeSetDragImage,
@@ -128,6 +126,7 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
           styles.frameBorder,
           selected && styles.frameSelected,
           over && styles.frameSelected,
+          shape.guide && styles.frameGuide,
           classNames,
         )}
         onClick={handleClick}
@@ -143,7 +142,7 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
       >
         {/* TODO(burdon): Auto-expand height? Trigger layout? */}
         {(isEditing && <TextBox value={shape.text} onClose={handleClose} onCancel={handleCancel} />) || (
-          <ReadonlyTextBox value={shape.text ?? shape.id} />
+          <ReadonlyTextBox classNames={mx(debug && 'font-mono text-xs')} value={getLabel(shape, debug)} />
         )}
       </div>
 
@@ -157,9 +156,11 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
   );
 };
 
-export const FrameDragPreview = ({ shape }: FrameProps) => {
-  invariant(shape.type === 'rect'); // TODO(burdon): ???
+const getLabel = (shape: ShapeType<'rect'>, debug = false) => {
+  return debug ? shape.id + `\n(${shape.pos.x},${shape.pos.y})` : shape.text ?? shape.id;
+};
 
+export const FrameDragPreview = ({ shape }: FrameProps) => {
   return (
     <div
       style={getBoundsProperties({ ...shape.pos, ...shape.size })}
