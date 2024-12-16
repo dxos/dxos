@@ -100,7 +100,7 @@ export const IdentityInputImpl = (props: IdentityInputImplProps) => {
           onClick={handleConfirm}
           data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-continue`}
         >
-          {pending ? t('continue label') : t('pending label')}
+          {pending ? t('pending label') : t('continue label')}
         </Action>
       </Actions>
     </>
