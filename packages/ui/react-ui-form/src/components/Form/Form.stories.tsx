@@ -197,3 +197,35 @@ export const Arrays: StoryObj<FormProps<ArraysType>> = {
     },
   },
 };
+
+const ColorSchema = S.Struct({
+  color: S.Union(S.Literal('red'), S.Literal('green'), S.Literal('blue')).annotations({
+    [AST.TitleAnnotationId]: 'Color',
+  }),
+}).pipe(S.mutable);
+
+type ColorType = S.Schema.Type<typeof ColorSchema>;
+
+const EnumStory = ({ values: initialValues }: FormProps<ColorType>) => {
+  const [values, setValues] = useState(initialValues);
+  const handleSave = useCallback<NonNullable<FormProps<ColorType>['onSave']>>((values) => {
+    setValues(values);
+  }, []);
+
+  return (
+    <TestLayout json={{ values, schema: ColorSchema.ast.toJSON() }}>
+      <TestPanel>
+        <Form<ColorType> schema={ColorSchema} values={values} onSave={handleSave} />
+      </TestPanel>
+    </TestLayout>
+  );
+};
+
+export const Enum: StoryObj<FormProps<ColorType>> = {
+  render: EnumStory,
+  args: {
+    values: {
+      color: 'red',
+    },
+  },
+};
