@@ -4,7 +4,7 @@
 
 import { next as A } from '@dxos/automerge/automerge';
 import { createDocAccessor, type Space } from '@dxos/client/echo';
-import { ref, S } from '@dxos/echo-schema';
+import { Ref, S } from '@dxos/echo-schema';
 import { createMutableSchema } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 
@@ -58,7 +58,7 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
     {
       name: S.String.annotations({ description: 'name of the person' }),
       email: S.String,
-      org: ref(organization),
+      org: Ref(organization),
       lat: S.Number,
       lng: S.Number,
     },
@@ -77,7 +77,7 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
       status: S.String,
       priority: S.Number,
       active: S.Boolean,
-      org: ref(organization),
+      org: Ref(organization),
     },
   );
 
