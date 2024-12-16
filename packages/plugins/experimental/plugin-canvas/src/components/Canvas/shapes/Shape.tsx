@@ -122,7 +122,7 @@ export const useShapes = (graph: GraphModel, dragging?: Shape, debug?: boolean):
     invariant(r1 && r2);
     const i1 = findClosestIntersection([p2, p1], r1) ?? p1;
     const i2 = findClosestIntersection([p1, p2], r2) ?? p2;
-    const line = createLine({ id, p1: i1, p2: i2 });
+    const line = createLine({ id, p1: i1, p2: i2, start: 'dx-circle', end: 'dx-arrow-end' });
     shapes.push(line);
   });
 

@@ -26,6 +26,8 @@ export type Shape =
   | (BaseShape & {
       type: 'line';
       path: string;
+      start?: string;
+      end?: string;
     });
 
 export type ShapeType<K = ShapeKind> = Shape & { type: K };
@@ -38,25 +40,26 @@ type RectProps = CommonProps & {
   text?: string;
 };
 
-export const createRect = ({ id, pos, size, text, guide }: RectProps): ShapeType<'rect'> => ({
+export const createRect = ({ id, pos, size, ...rest }: RectProps): ShapeType<'rect'> => ({
   id,
   type: 'rect',
   rect: getBounds(pos, size),
   pos,
   size,
-  text,
-  guide,
+  ...rest,
 });
 
 type LineProps = CommonProps & {
   p1: Point;
   p2: Point;
+  start?: string;
+  end?: string;
 };
 
-export const createLine = ({ id, p1, p2, guide }: LineProps): ShapeType<'line'> => ({
+export const createLine = ({ id, p1, p2, ...rest }: LineProps): ShapeType<'line'> => ({
   id,
   type: 'line',
   rect: getRect(p1, p2),
   path: createPathThroughPoints([p1, p2]),
-  guide,
+  ...rest,
 });
