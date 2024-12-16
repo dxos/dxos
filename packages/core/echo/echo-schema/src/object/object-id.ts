@@ -23,7 +23,7 @@ export const ObjectId: ObjectIdClass = class extends ObjectIdSchema {
     try {
       S.decodeSync(ObjectId)(id);
       return true;
-    } catch (e) {
+    } catch (err) {
       return false;
     }
   }
