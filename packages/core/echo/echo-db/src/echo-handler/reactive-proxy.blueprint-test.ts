@@ -8,7 +8,6 @@ import { getTypeReference, type S } from '@dxos/echo-schema';
 import { TestSchema, TestSchemaType, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { getProxyHandler, getSchema, getType } from '@dxos/live-object';
-import { all } from 'effect/Equivalence';
 
 registerSignalsRuntime();
 

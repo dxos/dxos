@@ -30,7 +30,6 @@ import {
   isReactiveObject,
   type ReactiveHandler,
   RefImpl,
-  type RefResolver,
   symbolIsProxy,
 } from '@dxos/live-object';
 import { log } from '@dxos/log';
@@ -232,7 +231,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       dataPath.push(prop);
     }
     const fullPath = [getNamespace(target), ...dataPath];
-    let value: any = target[symbolInternals].core.getDecoded(fullPath);
+    const value: any = target[symbolInternals].core.getDecoded(fullPath);
     // if (value instanceof Reference) {
     //   value = this.lookupRef(target, value);
     // }

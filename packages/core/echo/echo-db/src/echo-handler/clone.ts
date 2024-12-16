@@ -4,12 +4,12 @@
 
 import { type BaseObject, createObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { assertParameter } from '@dxos/protocols';
 
 import { type ReactiveEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from './create';
 import { getObjectCore } from './echo-handler';
 import { symbolInternals } from './echo-proxy-target';
 import { ObjectCore } from '../core-db';
-import { assertParameter } from '@dxos/protocols';
 
 export type CloneOptions = {
   /**

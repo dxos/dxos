@@ -31,8 +31,6 @@ import { getDatabaseFromObject } from './util';
 import { loadObjectReferences } from '../proxy-db';
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
-import { log } from '@dxos/log';
-import { createDocAccessor, DocAccessor } from '../core-db';
 
 registerSignalsRuntime();
 

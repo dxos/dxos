@@ -20,7 +20,6 @@ import { type DocHandleProxy, type RepoProxy } from '../client';
 import { getObjectCore, type ReactiveEchoObject } from '../echo-handler';
 import { type EchoDatabase, type EchoDatabaseImpl } from '../proxy-db';
 import { EchoTestBuilder } from '../testing';
-import { log } from '@dxos/log';
 
 describe('CoreDatabase', () => {
   describe('space fragmentation', () => {

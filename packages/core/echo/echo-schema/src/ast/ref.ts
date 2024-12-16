@@ -2,18 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
+import { getDescriptionAnnotation, getIdentifierAnnotation, type Annotated } from '@effect/schema/AST';
+import { getTitleAnnotation } from '@effect/schema/AST';
+import { Option } from 'effect';
+
 import { type EncodedReference } from '@dxos/echo-protocol';
 import { S } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
 import { getObjectAnnotation, ReferenceAnnotationId, type ObjectAnnotation } from './annotations';
 import { type JsonSchemaType } from './types';
-import { MutableSchema, StoredSchema } from '../mutable';
-import { getTypename, EXPANDO_TYPENAME } from '../object';
-import { type WithId, type BaseObject } from '../types';
-import { getDescriptionAnnotation, getIdentifierAnnotation, type Annotated } from '@effect/schema/AST';
-import { getTitleAnnotation } from '@effect/schema/AST';
-import { Option } from 'effect';
+import { type WithId } from '../types';
 
 /**
  * The `$id` field for an ECHO reference schema.

@@ -10,6 +10,7 @@ import { RuntimeSchemaRegistry, type BaseObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
+import type { RefResolver } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 import { trace } from '@dxos/tracing';
@@ -32,7 +33,6 @@ import {
   type QueryRunOptions,
   ResultFormat,
 } from './query';
-import type { RefResolver } from '@dxos/live-object';
 
 /**
  * Manages cross-space database interactions.

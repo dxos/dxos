@@ -7,7 +7,6 @@ import { ObjectId, RefTypeId, type BaseObject, type Ref } from '@dxos/echo-schem
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
-import { log } from '@dxos/log';
 
 /**
  * Constructs a reference that points to the given object.
