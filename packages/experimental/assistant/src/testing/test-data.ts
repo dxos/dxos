@@ -7,6 +7,7 @@ import { type Schema as S } from '@effect/schema';
 import { raise } from '@dxos/debug';
 import { JSON_SCHEMA_ECHO_REF_ID, toJsonSchema, type JsonSchemaType } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { makeRef } from '@dxos/live-object';
 
 import {
   type DataSource,
@@ -54,69 +55,69 @@ export const createTestData = (): MockDataSource => {
   const _taskComposer1 = dataSource.add(Task, {
     id: 'task-1',
     name: 'Optimize startup performance',
-    project: projectComposer,
-    assignee: contactJosiah,
+    project: makeRef(projectComposer),
+    assignee: makeRef(contactJosiah),
   });
   const _taskComposer2 = dataSource.add(Task, {
     id: 'task-2',
     name: 'Create form builder',
-    project: projectComposer,
-    assignee: contactRich,
+    project: makeRef(projectComposer),
+    assignee: makeRef(contactRich),
   });
   const _taskComposer3 = dataSource.add(Task, {
     id: 'task-3',
     name: 'Add support for custom themes',
-    project: projectComposer,
-    assignee: contactJosiah,
+    project: makeRef(projectComposer),
+    assignee: makeRef(contactJosiah),
   });
   const _taskComposer5 = dataSource.add(Task, {
     id: 'task-8',
     name: 'Implement community plugin',
-    project: projectComposer,
-    assignee: contactFred,
+    project: makeRef(projectComposer),
+    assignee: makeRef(contactFred),
   });
   const _taskComposer4 = dataSource.add(Task, {
     id: 'task-8',
     name: 'Implement dark mode',
-    project: projectComposer,
-    assignee: contactRich,
+    project: makeRef(projectComposer),
+    assignee: makeRef(contactRich),
   });
   const _taskEcho1 = dataSource.add(Task, {
     id: 'task-4',
     name: 'Implement cypher query engine',
-    project: projectEcho,
-    assignee: contactDima,
+    project: makeRef(projectEcho),
+    assignee: makeRef(contactDima),
   });
   const _taskEcho2 = dataSource.add(Task, {
     id: 'task-5',
     name: 'Add schema editor',
-    project: projectEcho,
-    assignee: contactRich,
+    project: makeRef(projectEcho),
+    assignee: makeRef(contactRich),
   });
   const _taskDoodles1 = dataSource.add(Task, {
     id: 'task-6',
     name: 'Add support for custom themes',
-    project: projectDoodles,
-    assignee: contactFred,
+    project: makeRef(projectDoodles),
+    assignee: makeRef(contactFred),
   });
   const _taskDoodles2 = dataSource.add(Task, {
     id: 'task-7',
     name: 'Implement dark mode',
-    project: projectDoodles,
-    assignee: contactJosiah,
+    project: makeRef(projectDoodles),
+    assignee: makeRef(contactJosiah),
   });
 
   const _orgDxos = dataSource.add(Org, {
     id: 'org-dxos',
     name: 'DXOS',
-    employees: [contactRich, contactJosiah, contactDima],
-    projects: [projectEcho],
+    employees: [makeRef(contactRich), makeRef(contactJosiah), makeRef(contactDima)],
+    projects: [makeRef(projectEcho)],
   });
   const _orgBraneframe = dataSource.add(Org, {
     id: 'org-braneframe',
     name: 'Braneframe',
-    employees: [contactJosiah, contactRich],
-    projects: [projectComposer],
+    employees: [makeRef(contactJosiah), makeRef(contactRich)],
+    projects: [makeRef(projectComposer)],
   });
   dataSource.computeGraph();
 

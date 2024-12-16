@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S, Format, TypedObject, FieldLookupAnnotationId, GeneratorAnnotationId, AST, ref } from '@dxos/echo-schema';
+import { S, Format, TypedObject, FieldLookupAnnotationId, GeneratorAnnotationId, AST, Ref } from '@dxos/echo-schema';
 
 export namespace Testing {
   //
@@ -63,7 +63,7 @@ export namespace Testing {
       }),
     ),
     employer: S.optional(
-      ref(OrgType).annotations({
+      Ref(OrgType).annotations({
         [FieldLookupAnnotationId]: 'name',
       }),
     ),

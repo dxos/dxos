@@ -4676,6 +4676,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log

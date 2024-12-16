@@ -31,6 +31,7 @@ import {
   type ReactiveHandler,
   RefImpl,
   symbolIsProxy,
+  setRefResolver,
 } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
@@ -553,7 +554,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (database) {
       // TODO(dmaretskyi): Put refs into proxy cache.
       const refImpl = new RefImpl(ref.toDXN());
-      refImpl._setResolver(database.graph.getRefResolver(database, (obj) => this._handleStoredSchema(target, obj)));
+      setRefResolver(refImpl, database.graph.getRefResolver(database, (obj) => this._handleStoredSchema(target, obj)));
       return refImpl;
     } else {
       invariant(target[symbolInternals].linkCache);

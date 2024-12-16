@@ -16,6 +16,7 @@ import {
   toJsonSchema,
   type JsonPath,
   type JsonProp,
+  Ref,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { createStoredSchema } from '@dxos/live-object';
