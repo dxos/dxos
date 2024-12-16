@@ -10,9 +10,9 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 import { type SchemaProvides } from '@dxos/plugin-space';
+import { type KanbanType } from '@dxos/react-ui-kanban';
 
-import { type KanbanColumnType, type KanbanItemType, type KanbanType } from './kanban';
-import { KANBAN_PLUGIN } from '../meta';
+import { KANBAN_PLUGIN } from './meta';
 
 /**
  * Kanban data model.
@@ -46,12 +46,8 @@ export type KanbanPluginProvides = SurfaceProvides &
 // TODO(burdon): Extend model for moving items (in and across columns).
 export interface KanbanModel {
   root: KanbanType;
-  createColumn(): KanbanColumnType;
-  createItem(column: KanbanColumnType): KanbanItemType;
 }
 
 export type Location = {
-  column: KanbanColumnType;
-  item?: KanbanItemType;
   idx?: number;
 };
