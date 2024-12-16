@@ -129,6 +129,7 @@ describe('Integration tests', () => {
   });
 
   // TODO(dmaretskyi): Test Ref.load() too.
+  // TODO(dmaretskyi): Test that accessing the ref DXN doesn't load the target.
   test('references are loaded lazily and receive signal notifications', async () => {
     const [spaceKey] = PublicKey.randomSequence();
     await using peer = await builder.createPeer();
@@ -150,7 +151,7 @@ describe('Integration tests', () => {
       const outer = (await db.query({ id: outerId }).first()) as any;
       const loaded = new Trigger();
       using updates = updateCounter(() => {
-        if (outer.inner) {
+        if (outer.inner.target) {
           loaded.wake();
         }
       });
