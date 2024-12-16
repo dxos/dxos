@@ -3,7 +3,7 @@
 //
 
 import { Reference } from '@dxos/echo-protocol';
-import { ObjectId, type BaseObject, type Ref } from '@dxos/echo-schema';
+import { ObjectId, RefTypeId, type BaseObject, type Ref } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
@@ -79,8 +79,13 @@ export class RefImpl<T> implements Ref<T> {
    * @inheritdoc
    */
   get target(): T | undefined {
-    invariant(this.#resolver, 'Resolver is not set');
     this.#signal.notifyRead();
+
+    if (this.#target) {
+      return this.#target;
+    }
+
+    invariant(this.#resolver, 'Resolver is not set');
 
     return this.#resolver.resolveSync(this.#dxn, true, this.#resolverCallback) as T | undefined;
   }
@@ -104,6 +109,8 @@ export class RefImpl<T> implements Ref<T> {
     invariant(this.#resolver, 'Resolver is not set');
     return (await this.#resolver.resolve(this.#dxn)) as T | undefined;
   }
+
+  [RefTypeId] = refVariance;
 
   /**
    * Internal method to set the resolver.
@@ -137,4 +144,9 @@ export const setRefResolver = (ref: Ref<any>, resolver: RefResolver) => {
 export const getRefSavedTarget = (ref: Ref<any>): BaseObject | undefined => {
   invariant(ref instanceof RefImpl, 'Ref is not an instance of RefImpl');
   return ref._getSavedTarget();
+};
+
+// Used to validate reference target type.
+const refVariance: Ref<any>[typeof RefTypeId] = {
+  _T: null as any,
 };

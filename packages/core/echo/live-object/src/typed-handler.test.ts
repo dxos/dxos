@@ -40,7 +40,7 @@ describe('complex schema validations', () => {
     class Bar extends TypedObject({ typename: 'example.com/type/Bar', version: '0.1.0' })({ fooRef: Ref(Foo) }) {}
     const field = 'hello';
     expect(() => create(Bar, { fooRef: { id: '1', field } as any })).to.throw();
-    expect(() => create(Bar, { fooRef: undefined as any })).not.to.throw(); // Unresolved reference.
+    expect(() => create(Bar, { fooRef: undefined as any })).to.throw(); // Unresolved reference.
     const bar = create(Bar, { fooRef: makeRef(create(Foo, { field })) });
     expect(bar.fooRef.target?.field).to.eq(field);
   });

@@ -11,6 +11,9 @@ import { type JsonSchemaType } from './types';
 import { MutableSchema, StoredSchema } from '../mutable';
 import { getTypename, EXPANDO_TYPENAME } from '../object';
 import { type WithId, type BaseObject } from '../types';
+import { getDescriptionAnnotation, getIdentifierAnnotation, type Annotated } from '@effect/schema/AST';
+import { getTitleAnnotation } from '@effect/schema/AST';
+import { Option } from 'effect';
 
 /**
  * The `$id` field for an ECHO reference schema.
@@ -55,8 +58,10 @@ export const Ref: RefFn = <T extends WithId>(schema: S.Schema<T, any>): Ref$<T> 
     throw new Error('Reference target must be an ECHO schema.');
   }
 
-  return createEchoReferenceSchema(annotation);
+  return createEchoReferenceSchema(annotation, getSchemaExpectedName(schema.ast));
 };
+
+export const RefTypeId: unique symbol = Symbol('@dxos/echo-schema/Ref');
 
 /**
  * Represents materialized reference to a target.
@@ -88,7 +93,15 @@ export interface Ref<T> {
    * @returns Promise that will resolves with the target object or undefined if the object is not loaded locally.
    */
   tryLoad(): Promise<T | undefined>;
+
+  [RefTypeId]: {
+    _T: T;
+  };
 }
+
+const isRef = (obj: any): obj is Ref<any> => {
+  return obj && typeof obj === 'object' && RefTypeId in obj;
+};
 
 /**
  * `reference` field on the schema object.
@@ -103,11 +116,11 @@ export type JsonSchemaReferenceInfo = {
  * @internal
  */
 // TODO(burdon): Move to json schema and make private?
-export const createEchoReferenceSchema = (annotation: ObjectAnnotation): S.Schema<any> => {
-  const typePredicate =
-    annotation.typename === EXPANDO_TYPENAME
-      ? () => true
-      : (obj: BaseObject) => getTypename(obj) === annotation.typename;
+export const createEchoReferenceSchema = (annotation: ObjectAnnotation, schemaName?: string): S.Schema.AnyNoContext => {
+  // const typePredicate =
+  //   annotation.typename === EXPANDO_TYPENAME
+  //     ? () => true
+  //     : (obj: BaseObject) => getTypename(obj) === annotation.typename;
 
   const referenceInfo: JsonSchemaReferenceInfo = {
     schema: {
@@ -119,28 +132,37 @@ export const createEchoReferenceSchema = (annotation: ObjectAnnotation): S.Schem
     referenceInfo.schemaObject = annotation.schemaId;
   }
 
-  return S.Any.annotations({ jsonSchema: {} })
-    .pipe(
-      S.filter(
-        (obj) => {
-          if (obj === undefined) {
-            // Unresolved reference.
-            return true;
-          }
+  return S.Any.annotations({ jsonSchema: {} }).pipe(
+    S.filter(
+      (obj) => {
+        if (!isRef(obj)) {
+          return false;
+        }
 
-          if (obj instanceof MutableSchema) {
-            return annotation.typename === StoredSchema.typename;
-          }
+        // TODO(dmaretskyi): Validate reference target.
+        // if (obj instanceof MutableSchema) {
+        //   return annotation.typename === StoredSchema.typename;
+        // }
 
-          return typePredicate(obj);
+        // return typePredicate(obj);
+        return true;
+      },
+      {
+        jsonSchema: {
+          $id: JSON_SCHEMA_ECHO_REF_ID,
+          reference: referenceInfo,
         },
-        {
-          jsonSchema: {
-            $id: JSON_SCHEMA_ECHO_REF_ID,
-            reference: referenceInfo,
-          },
-        },
-      ),
-    )
-    .annotations({ [ReferenceAnnotationId]: annotation });
+        title: schemaName ? `Reference of ${schemaName}` : 'Reference',
+        [ReferenceAnnotationId]: annotation,
+      },
+    ),
+  );
+};
+
+const getSchemaExpectedName = (ast: Annotated): string | undefined => {
+  return getIdentifierAnnotation(ast).pipe(
+    Option.orElse(() => getTitleAnnotation(ast)),
+    Option.orElse(() => getDescriptionAnnotation(ast)),
+    Option.getOrElse(() => undefined),
+  );
 };
