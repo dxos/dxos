@@ -15,7 +15,7 @@ export type GraphOptions = {
 };
 
 /**
- * Map objects onto graph.
+ * Maps an ECHO object graph onto a layout graph.
  */
 // TODO(burdon): GraphBuilder? With subscriptions?
 export const createGraph = (

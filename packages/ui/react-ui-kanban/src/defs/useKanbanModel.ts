@@ -39,7 +39,7 @@ export const useKanbanModel = <T extends BaseKanbanItem = { id: string }>({
       clearTimeout(t);
       void model?.close();
     };
-  }, [kanban]);
+  }, [kanban, cardSchema]);
 
   // Update data.
   useEffect(() => {
