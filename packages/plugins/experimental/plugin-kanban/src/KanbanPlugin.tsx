@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { getSpace } from '@dxos/client/src/echo';
+import { getSpace } from '@dxos/react-client/echo';
 import { type FieldProjection, ViewProjection } from '@dxos/schema';
 import React from 'react';
 
