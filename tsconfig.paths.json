@@ -75,7 +75,7 @@
         "packages/plugins/experimental/plugin-kanban/src/meta.ts"
       ],
       "@dxos/plugin-kanban/types": [
-        "packages/plugins/experimental/plugin-kanban/src/types/index.ts"
+        "packages/plugins/experimental/plugin-kanban/src/types.ts"
       ],
       "@dxos/plugin-map": [
         "packages/plugins/experimental/plugin-map/src/index.ts"
