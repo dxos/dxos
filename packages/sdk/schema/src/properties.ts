@@ -73,7 +73,10 @@ export const getSchemaProperties = <T extends BaseObject>(ast: AST.AST, value: a
     const description = findAnnotation<string>(prop.type, AST.DescriptionAnnotationId);
     const examples = findAnnotation<string[]>(prop.type, AST.ExamplesAnnotationId);
     const defaultValue = findAnnotation(prop.type, AST.DefaultAnnotationId);
-    const options = findAnnotation<OptionsAnnotationType[]>(prop.type, OptionsAnnotationId);
+    let options: (string | number)[] | undefined = findAnnotation<OptionsAnnotationType[]>(
+      prop.type,
+      OptionsAnnotationId,
+    );
 
     // Get type.
     const property: Omit<SchemaProperty<T>, 'type' | 'array' | 'format'> = {
@@ -136,6 +139,13 @@ export const getSchemaProperties = <T extends BaseObject>(ast: AST.AST, value: a
             baseType = findNode(prop.type, isLiteralUnion);
             if (baseType) {
               type = 'literal';
+              if (AST.isUnion(baseType)) {
+                const x = baseType.types
+                  .map((type) => (AST.isLiteral(type) ? type.literal : null))
+                  .filter((v): v is string | number => v !== null);
+
+                options = x;
+              }
             }
           }
         }
@@ -148,6 +158,7 @@ export const getSchemaProperties = <T extends BaseObject>(ast: AST.AST, value: a
         array,
         format: format ?? (baseType ? getFormatAnnotation(baseType) : undefined),
         ...property,
+        options,
       });
     } else {
       log.warn('cannot process property', { prop });

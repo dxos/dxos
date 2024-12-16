@@ -100,4 +100,17 @@ describe('properties', () => {
       }
     }
   });
+
+  test('literal unions', ({ expect }) => {
+    const ColorSchema = S.Struct({
+      color: S.Union(S.Literal('red'), S.Literal('green'), S.Literal('blue')),
+    });
+
+    const props = getSchemaProperties(ColorSchema.ast);
+    expect(props[0]).to.deep.include({
+      name: 'color',
+      type: 'literal',
+      options: ['red', 'green', 'blue'],
+    });
+  });
 });
