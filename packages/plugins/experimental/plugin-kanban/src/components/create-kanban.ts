@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+// TODO(thure): Move these functions into testing, if they’re needed anymore, when resolving #8361.
+
 import { faker } from '@dxos/random';
 import { type Space, create } from '@dxos/react-client/echo';
 import { initializeKanban } from '@dxos/react-ui-kanban/testing';
