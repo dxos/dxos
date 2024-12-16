@@ -3,18 +3,19 @@
 //
 
 import { Filter, loadObjectReferences } from '@dxos/echo-db';
-import { S, create, foreignKey, getMeta, getTypename } from '@dxos/echo-schema';
+import { S, foreignKey, getTypename } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
+import { create, getMeta } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ChainPromptType } from '@dxos/plugin-automation/types';
 import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
 import { CollectionType, MessageType, ThreadType } from '@dxos/plugin-space/types';
 import { nonNullable } from '@dxos/util';
 
+import { ModelInvokerFactory } from '../../chain';
 import { RequestProcessor } from './processor';
 import { createResolvers } from './resolvers';
-import { ModelInvokerFactory } from '../../chain';
 
 const AI_SOURCE = 'dxos.org/service/ai';
 

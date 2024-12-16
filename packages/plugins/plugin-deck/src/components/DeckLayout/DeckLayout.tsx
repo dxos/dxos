@@ -8,7 +8,16 @@ import React, { useCallback, useEffect, useMemo, useRef, type UIEvent, Fragment 
 
 import { type LayoutParts, Surface, type Toast as ToastSchema, firstIdInPart, usePlugin } from '@dxos/app-framework';
 import { type AttentionPluginProvides } from '@dxos/plugin-attention';
-import { Button, Dialog, Main, Popover, useOnTransition, useTranslation, type MainProps } from '@dxos/react-ui';
+import {
+  AlertDialog,
+  Button,
+  Dialog as NaturalDialog,
+  Main,
+  Popover,
+  useOnTransition,
+  useTranslation,
+  type MainProps,
+} from '@dxos/react-ui';
 import { Stack, StackContext, DEFAULT_HORIZONTAL_SIZE } from '@dxos/react-ui-stack';
 import { getSize, mainPaddingTransitions } from '@dxos/react-ui-theme';
 
@@ -46,6 +55,7 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
     dialogOpen,
     dialogContent,
     dialogBlockAlign,
+    dialogType,
     popoverOpen,
     popoverContent,
     popoverAnchorId,
@@ -112,6 +122,8 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
     }
     return {};
   }, [layoutMode, overscroll, layoutParts.main]);
+
+  const Dialog = dialogType === 'alert' ? AlertDialog : NaturalDialog;
 
   return (
     <Popover.Root
@@ -204,7 +216,6 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
                         part='main'
                         layoutMode={layoutMode}
                         order={index * 2 + 1}
-                        last={index === layoutParts.main!.length - 1}
                       />
                     </Fragment>
                   ))}

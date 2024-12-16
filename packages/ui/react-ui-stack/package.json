@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-stack",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "A stack component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -39,6 +39,7 @@
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.0.3",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/keyboard": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/util": "workspace:*",

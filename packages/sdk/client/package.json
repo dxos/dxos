@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "Core DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -99,6 +99,7 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/kv-store": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/messaging": "workspace:*",
     "@dxos/network-manager": "workspace:*",

@@ -2,14 +2,23 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type HostPluginParams, LayoutAction, NavigationAction, Plugin, type PluginMeta } from '@dxos/app-framework';
+import {
+  type HostPluginParams,
+  LayoutAction,
+  NavigationAction,
+  parseIntentPlugin,
+  Plugin,
+  type PluginMeta,
+  resolvePlugin,
+} from '@dxos/app-framework';
 import { type Trigger } from '@dxos/async';
 import { type Config, type ClientServicesProvider } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
 import AttentionMeta from '@dxos/plugin-attention/meta';
 import AutomationMeta from '@dxos/plugin-automation/meta';
+import CallsMeta from '@dxos/plugin-calls/meta';
 import ChessMeta from '@dxos/plugin-chess/meta';
-import ClientMeta from '@dxos/plugin-client/meta';
+import ClientMeta, { CLIENT_PLUGIN, ClientAction } from '@dxos/plugin-client/meta';
 import DebugMeta from '@dxos/plugin-debug/meta';
 import DeckMeta from '@dxos/plugin-deck/meta';
 import ExcalidrawMeta from '@dxos/plugin-excalidraw/meta';
@@ -47,11 +56,13 @@ import ThemeMeta from '@dxos/plugin-theme/meta';
 import ThreadMeta from '@dxos/plugin-thread/meta';
 import WildcardMeta from '@dxos/plugin-wildcard/meta';
 import WnfsMeta from '@dxos/plugin-wnfs/meta';
+import { DeviceType } from '@dxos/react-client/halo';
 import { isNotFalsy } from '@dxos/util';
 
 import { INITIAL_CONTENT, INITIAL_DOC_TITLE } from './constants';
 import { steps } from './help';
 import { meta as WelcomeMeta } from './plugins/welcome/meta';
+import { queryAllCredentials } from './util';
 
 export type State = {
   appKey: string;
@@ -123,6 +134,7 @@ export const recommended = ({ isDev, isLabs }: PluginConfig): PluginMeta[] =>
     !isDev && DebugMeta,
     AutomationMeta,
     ChessMeta,
+    CallsMeta,
     ExcalidrawMeta,
     ExplorerMeta,
     IpfsMeta,
@@ -156,11 +168,13 @@ export const plugins = ({
   services,
   firstRun,
   observability,
+  isDev,
   isPwa,
   isSocket,
 }: PluginConfig): HostPluginParams['plugins'] => ({
   [AttentionMeta.id]: Plugin.lazy(() => import('@dxos/plugin-attention')),
   [AutomationMeta.id]: Plugin.lazy(() => import('@dxos/plugin-automation')),
+  [CallsMeta.id]: Plugin.lazy(() => import('@dxos/plugin-calls')),
   [ChessMeta.id]: Plugin.lazy(() => import('@dxos/plugin-chess')),
   [ClientMeta.id]: Plugin.lazy(() => import('@dxos/plugin-client'), {
     appKey,
@@ -179,6 +193,35 @@ export const plugins = ({
         LegacyTypes.TextType,
         LegacyTypes.ThreadType,
       ]);
+    },
+    onReady: async (client, plugins) => {
+      const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
+      if (!dispatch) {
+        return;
+      }
+
+      const identity = client.halo.identity.get();
+      const credentials = await queryAllCredentials(client);
+      const recoveryCredential = credentials.find(
+        (credential) => credential.subject.assertion['@type'] === 'dxos.halo.credentials.IdentityRecovery',
+      );
+      if (identity && !recoveryCredential) {
+        await dispatch({
+          plugin: CLIENT_PLUGIN,
+          action: ClientAction.CREATE_RECOVERY_CODE,
+        });
+      }
+
+      const devices = client.halo.devices.get();
+      const edgeAgent = devices.find(
+        (device) => device.profile?.type === DeviceType.AGENT_MANAGED && device.profile?.os?.toUpperCase() === 'EDGE',
+      );
+      if (identity && !edgeAgent) {
+        await dispatch({
+          plugin: CLIENT_PLUGIN,
+          action: ClientAction.CREATE_AGENT,
+        });
+      }
     },
     onReset: async ({ target }) => {
       localStorage.clear();
@@ -228,8 +271,7 @@ export const plugins = ({
   [SpaceMeta.id]: Plugin.lazy(() => import('@dxos/plugin-space'), {
     firstRun,
     onFirstRun: async ({ client, dispatch }) => {
-      const { create } = await import('@dxos/echo-schema');
-      const { fullyQualifiedId } = await import('@dxos/react-client/echo');
+      const { fullyQualifiedId, create } = await import('@dxos/react-client/echo');
       const { DocumentType, TextType } = await import('@dxos/plugin-markdown/types');
       const { CollectionType } = await import('@dxos/plugin-space/types');
 
@@ -263,6 +305,7 @@ export const plugins = ({
   [TableMeta.id]: Plugin.lazy(() => import('@dxos/plugin-table')),
   [ThemeMeta.id]: Plugin.lazy(() => import('@dxos/plugin-theme'), {
     appName: 'Composer',
+    noCache: isDev,
   }),
   [ThreadMeta.id]: Plugin.lazy(() => import('@dxos/plugin-thread')),
   [WelcomeMeta.id]: Plugin.lazy(() => import('./plugins/welcome'), { firstRun }),

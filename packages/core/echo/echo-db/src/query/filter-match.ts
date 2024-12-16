@@ -2,16 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import { EXPANDO_TYPENAME, isReactiveObject } from '@dxos/echo-schema';
+import { Reference } from '@dxos/echo-protocol';
+import { EXPANDO_TYPENAME, foreignKeyEquals } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
+import { isReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { type Filter } from './filter';
 import { type ObjectCore } from '../core-db';
-import { type ReactiveEchoObject } from '../echo-handler';
+import { getObjectCore, type ReactiveEchoObject } from '../echo-handler';
 
 /**
  * Query logic that checks if object complaint with a filter.
@@ -76,13 +78,20 @@ const filterMatchInner = (
   if (filter.properties) {
     for (const key in filter.properties) {
       invariant(key !== '@type');
-      const value = filter.properties[key];
+      const value = sanitizePropertyFilter(filter.properties[key]);
 
       // TODO(dmaretskyi): Should `id` be allowed in filter.properties?
       const actualValue = key === 'id' ? core.id : core.getDecoded(['data', key]);
-      if (actualValue !== value) {
+      if (!compareValues(actualValue, value)) {
         return false;
       }
+    }
+  }
+
+  if (filter.metaKeys) {
+    const keys = core.getMeta().keys;
+    if (!filter.metaKeys.some((filterKey) => keys.some((key) => foreignKeyEquals(key, filterKey)))) {
+      return false;
     }
   }
 
@@ -102,4 +111,23 @@ const filterMatchInner = (
   }
 
   return true;
+};
+
+// TODO(dmaretskyi): Should be resolved at the DSL level.
+const sanitizePropertyFilter = (value: any) => {
+  if (isReactiveObject(value)) {
+    const core = getObjectCore(value as any);
+    return Reference.fromDXN(DXN.fromLocalObjectId(core.id));
+  }
+
+  return value;
+};
+
+// TODO(dmaretskyi): Extract to echo-protocol.
+const compareValues = (a: any, b: any) => {
+  if (a instanceof Reference) {
+    return b instanceof Reference && DXN.equals(a.toDXN(), b.toDXN());
+  }
+
+  return a === b;
 };

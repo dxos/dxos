@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-debug",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "DXOS Surface plugin for testing.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -30,6 +30,8 @@
     "src"
   ],
   "dependencies": {
+    "@antv/graphlib": "^2.0.4",
+    "@antv/layout": "^1.2.13",
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/automerge": "workspace:*",
@@ -41,12 +43,14 @@
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-sheet": "workspace:*",
     "@dxos/plugin-sketch": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-status-bar": "workspace:*",
@@ -60,13 +64,16 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "@tldraw/tldraw": "^3.0.0",
     "date-fns": "^3.3.1",
+    "effect": "^3.9.2",
     "lodash.get": "^4.4.2",
     "react-json-tree": "^0.18.0",
-    "react-resize-detector": "^11.0.1"
+    "react-resize-detector": "^11.0.1",
+    "workerize-loader": "^2.0.2"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",

@@ -17,10 +17,19 @@ import { Devtools } from '@dxos/devtools';
 import { invariant } from '@dxos/invariant';
 import { type ClientPluginProvides, parseClientPlugin } from '@dxos/plugin-client';
 import { createExtension, Graph, type Node, toSignal } from '@dxos/plugin-graph';
-import { SpaceAction } from '@dxos/plugin-space';
+import { memoizeQuery, SpaceAction } from '@dxos/plugin-space';
 import { CollectionType } from '@dxos/plugin-space/types';
 import { type Client } from '@dxos/react-client';
-import { create, getTypename, isEchoObject, isSpace, parseId, type Space, SpaceState } from '@dxos/react-client/echo';
+import {
+  create,
+  getTypename,
+  isEchoObject,
+  isSpace,
+  parseId,
+  type ReactiveObject,
+  type Space,
+  SpaceState,
+} from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import {
   baseSurface,
@@ -29,7 +38,15 @@ import {
   topbarBlockPaddingStart,
 } from '@dxos/react-ui-theme';
 
-import { DebugApp, DebugObjectPanel, DebugSettings, DebugSpace, DebugStatus, Wireframe } from './components';
+import {
+  DebugApp,
+  DebugObjectPanel,
+  DebugSettings,
+  DebugSpace,
+  DebugStatus,
+  SpaceGenerator,
+  Wireframe,
+} from './components';
 import meta, { DEBUG_PLUGIN } from './meta';
 import translations from './translations';
 import {
@@ -153,11 +170,27 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
               filter: (node): node is Node<Space> => !!settings.debug && isSpace(node.data),
               connector: ({ node }) => {
                 const space = node.data;
+                const state = toSignal(
+                  (onChange) => space.state.subscribe(() => onChange()).unsubscribe,
+                  () => space.state.get(),
+                );
+                if (state !== SpaceState.SPACE_READY) {
+                  return;
+                }
+
+                // Not adding the debug node until the root collection is available aligns the behaviour of this
+                // extension with that of the space plugin adding objects. This ensures that the debug node is added at
+                // the same time as objects and prevents order from changing as the nodes are added.
+                const collection = space.properties[CollectionType.typename] as CollectionType | undefined;
+                if (!collection) {
+                  return;
+                }
+
                 return [
                   {
                     id: `${space.id}-debug`, // TODO(burdon): Change to slashes consistently.
                     type: 'dxos.org/plugin/debug/space',
-                    data: { space },
+                    data: { space, type: 'dxos.org/plugin/debug/space' },
                     properties: {
                       label: ['debug label', { ns: DEBUG_PLUGIN }],
                       icon: 'ph--bug--regular',
@@ -181,7 +214,13 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
 
                 const [subjectId] = id.split('~');
                 const { spaceId, objectId } = parseId(subjectId);
-                const space = client.spaces.get().find((space) => space.id === spaceId);
+                const spaces = toSignal(
+                  (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
+                  () => client.spaces.get(),
+                );
+                const space = spaces?.find(
+                  (space) => space.state.get() === SpaceState.SPACE_READY && space.id === spaceId,
+                );
                 if (!objectId) {
                   // TODO(burdon): Ref SPACE_PLUGIN ns.
                   const label = space
@@ -204,18 +243,7 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
                   };
                 }
 
-                const object = toSignal(
-                  (onChange) => {
-                    const timeout = setTimeout(async () => {
-                      await space?.db.query({ id: objectId }).first();
-                      onChange();
-                    });
-
-                    return () => clearTimeout(timeout);
-                  },
-                  () => space?.db.getObjectById(objectId),
-                  subjectId,
-                );
+                const [object] = memoizeQuery(space, { id: objectId });
                 if (!object || !subjectId) {
                   return;
                 }
@@ -283,30 +311,37 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
               component = <Devtools />;
             } else if (!primary || typeof primary !== 'object' || !settings.debug) {
               component = null;
-            } else if ('space' in primary && isSpace(primary.space)) {
-              component = (
-                <DebugSpace
-                  space={primary.space}
-                  onAddObjects={(objects) => {
-                    if (!isSpace(primary.space)) {
-                      return;
-                    }
+            } else if (
+              'type' in primary &&
+              primary.type === 'dxos.org/plugin/debug/space' &&
+              'space' in primary &&
+              isSpace(primary.space)
+            ) {
+              const handleCreateObject = (objects: ReactiveObject<any>[]) => {
+                if (!isSpace(primary.space)) {
+                  return;
+                }
 
-                    const collection =
-                      primary.space.state.get() === SpaceState.SPACE_READY &&
-                      primary.space.properties[CollectionType.typename];
-                    if (!(collection instanceof CollectionType)) {
-                      return;
-                    }
+                const collection =
+                  primary.space.state.get() === SpaceState.SPACE_READY &&
+                  primary.space.properties[CollectionType.typename];
+                if (!(collection instanceof CollectionType)) {
+                  return;
+                }
 
-                    void context.resolvePlugin(parseIntentPlugin).provides.intent.dispatch(
-                      objects.map((object) => ({
-                        action: SpaceAction.ADD_OBJECT,
-                        data: { target: collection, object },
-                      })),
-                    );
-                  }}
-                />
+                void context.resolvePlugin(parseIntentPlugin).provides.intent.dispatch(
+                  objects.map((object) => ({
+                    action: SpaceAction.ADD_OBJECT,
+                    data: { target: collection, object },
+                  })),
+                );
+              };
+
+              const deprecated = false;
+              component = deprecated ? (
+                <DebugSpace space={primary.space} onAddObjects={handleCreateObject} />
+              ) : (
+                <SpaceGenerator space={primary.space} onCreateObjects={handleCreateObject} />
               );
             } else if ('graph' in primary && primary.graph instanceof Graph) {
               component = <DebugApp graph={primary.graph} />;

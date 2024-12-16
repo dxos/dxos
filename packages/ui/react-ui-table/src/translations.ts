@@ -27,6 +27,7 @@ export default [
         'bulk delete row label': 'Delete selected rows',
         'column deleted label': 'Column deleted',
         'new column button label': 'Create column',
+        'create new object label': 'Create new object “{{text}}”',
       },
     },
   },

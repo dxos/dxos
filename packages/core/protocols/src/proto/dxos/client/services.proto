@@ -153,6 +153,7 @@ service IdentityService {
   rpc QueryIdentity(google.protobuf.Empty) returns (stream QueryIdentityResponse);
   rpc UpdateProfile(halo.credentials.ProfileDocument) returns (Identity);
   rpc SignPresentation(SignPresentationRequest) returns (dxos.halo.credentials.Presentation);
+  rpc CreateAuthCredential(google.protobuf.Empty) returns (dxos.halo.credentials.Credential);
 }
 
 //
@@ -512,8 +513,18 @@ service NetworkService {
 }
 
 service EdgeAgentService {
+  rpc QueryEdgeStatus(google.protobuf.Empty) returns (stream QueryEdgeStatusResponse);
   rpc CreateAgent(google.protobuf.Empty) returns (google.protobuf.Empty);
   rpc QueryAgentStatus(google.protobuf.Empty) returns (stream QueryAgentStatusResponse);
+}
+
+message QueryEdgeStatusResponse {
+  enum EdgeStatus {
+    NOT_CONNECTED = 0;
+    CONNECTED = 1;
+  }
+
+  EdgeStatus status = 1;
 }
 
 message QueryAgentStatusResponse {

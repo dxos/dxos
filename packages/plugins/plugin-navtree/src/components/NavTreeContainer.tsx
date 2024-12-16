@@ -7,7 +7,7 @@ import { extractInstruction, type Instruction } from '@atlaskit/pragmatic-drag-a
 import { untracked } from '@preact/signals-core';
 import React, { memo, useCallback, useEffect } from 'react';
 
-import { NavigationAction, Surface, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, NavigationAction, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { isAction, isActionLike, type Node } from '@dxos/app-graph';
 import { useGraph } from '@dxos/plugin-graph';
 import { isEchoObject, isSpace } from '@dxos/react-client/echo';
@@ -32,21 +32,22 @@ import {
 // TODO(thure): Is NavTree truly authoritative in this regard?
 export const NODE_TYPE = 'dxos/app-graph/node';
 
-const renderPresence = ({ node }: { node: Node }) => (
-  <Surface role='presence--glyph' data={{ object: node.data, id: node.id }} />
+const renderItemEnd = ({ node }: { node: Node }) => (
+  <Surface role='navtree-item-end' data={{ object: node.data, id: node.id }} />
 );
 
 export type NavTreeContainerProps = {
   popoverAnchorId?: string;
 } & Pick<NavTreeProps, 'isOpen' | 'isCurrent' | 'onOpenChange'>;
 
-export const NavTreeContainer = memo(({ popoverAnchorId, ...props }: NavTreeContainerProps) => {
+export const NavTreeContainer = memo(({ isCurrent, popoverAnchorId, ...props }: NavTreeContainerProps) => {
   const { closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
   const [isLg] = useMediaQuery('lg', { ssr: false });
   const dispatch = useIntentDispatcher();
   const { graph } = useGraph();
 
   const getActions = useCallback((node: Node) => naturalGetActions(graph, node), [graph]);
+
   const getItems = useCallback(
     (node?: Node) => {
       return graph.nodes(node ?? graph.root, {
@@ -61,6 +62,7 @@ export const NavTreeContainer = memo(({ popoverAnchorId, ...props }: NavTreeCont
     },
     [graph],
   );
+
   const getProps = useCallback(
     (node: Node, path: string[]): PropsFromTreeItem => {
       const children = getChildren(graph, node, undefined, path);
@@ -109,7 +111,7 @@ export const NavTreeContainer = memo(({ popoverAnchorId, ...props }: NavTreeCont
   }, []);
 
   const handleSelect = useCallback(
-    ({ item: node }: { item: Node }) => {
+    ({ item: node, path, option }: { item: Node; path: string[]; option: boolean }) => {
       if (!node.data) {
         return;
       }
@@ -120,15 +122,31 @@ export const NavTreeContainer = memo(({ popoverAnchorId, ...props }: NavTreeCont
         return;
       }
 
-      // TODO(thure): Refactor opening related planks (comments in this case) to a generalized approach.
-      void dispatch({
-        action: NavigationAction.OPEN,
-        data: {
-          activeParts: {
-            main: [node.id],
+      const current = isCurrent(path, node);
+      if (!current) {
+        void dispatch({
+          action: NavigationAction.OPEN,
+          data: {
+            activeParts: {
+              main: [node.id],
+            },
           },
-        },
-      });
+        });
+      } else if (option) {
+        void dispatch({
+          action: NavigationAction.CLOSE,
+          data: {
+            activeParts: {
+              main: [node.id],
+            },
+          },
+        });
+      } else {
+        void dispatch({
+          action: LayoutAction.SCROLL_INTO_VIEW,
+          data: { id: node.id },
+        });
+      }
 
       const defaultAction = graph.actions(node).find((action) => action.properties?.disposition === 'default');
       if (isAction(defaultAction)) {
@@ -139,7 +157,7 @@ export const NavTreeContainer = memo(({ popoverAnchorId, ...props }: NavTreeCont
         closeNavigationSidebar();
       }
     },
-    [graph, dispatch, isLg, closeNavigationSidebar],
+    [graph, dispatch, isCurrent, isLg, closeNavigationSidebar],
   );
 
   // TODO(wittjosiah): Factor out hook.
@@ -207,6 +225,7 @@ export const NavTreeContainer = memo(({ popoverAnchorId, ...props }: NavTreeCont
         role='none'
         className='grid grid-cols-1 grid-rows-[var(--rail-size)_1fr_min-content] bs-full overflow-hidden'
       >
+        {/* TODO(wittjosiah): Factor out surfaces to layout? */}
         <div role='none' className='border-be border-separator'>
           <Surface role='search-input' limit={1} />
         </div>
@@ -218,8 +237,9 @@ export const NavTreeContainer = memo(({ popoverAnchorId, ...props }: NavTreeCont
             getActions={getActions}
             getItems={getItems}
             getProps={getProps}
+            isCurrent={isCurrent}
             loadDescendents={loadDescendents}
-            renderPresence={renderPresence}
+            renderItemEnd={renderItemEnd}
             popoverAnchorId={popoverAnchorId}
             canDrop={canDrop}
             onSelect={handleSelect}

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-help",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "Help plugin.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -35,6 +35,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/keyboard": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",

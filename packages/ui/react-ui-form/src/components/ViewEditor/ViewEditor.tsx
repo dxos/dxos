@@ -22,7 +22,7 @@ const ViewMetaSchema = S.Struct({
   name: S.String.annotations({
     [AST.TitleAnnotationId]: 'View',
   }),
-  type: Format.DXN.annotations({
+  typename: Format.DXN.annotations({
     [AST.TitleAnnotationId]: 'Typename',
   }),
 }).pipe(S.mutable);
@@ -60,16 +60,16 @@ export const ViewEditor = ({
       name: view.name,
       // TODO(burdon): Need to warn user of possible consequences of editing.
       // TODO(burdon): Settings should have domain name owned by user.
-      type: view.query.type,
+      typename: view.query.type,
     };
   }, [view]);
 
   const handleViewUpdate = useCallback(
-    ({ name, type }: ViewMetaType) => {
+    ({ name, typename }: ViewMetaType) => {
       requestAnimationFrame(() => {
         view.name = name;
-        view.query.type = type;
-        schema.updateTypename(type);
+        view.query.type = typename;
+        schema.updateTypename(typename);
       });
     },
     [view, schema],
@@ -95,7 +95,7 @@ export const ViewEditor = ({
 
   return (
     <div role='none' className={mx('flex flex-col w-full divide-y divide-separator', classNames)}>
-      <Form<ViewMetaType> autoFocus autoSave schema={ViewMetaSchema} values={viewValues} onSubmit={handleViewUpdate} />
+      <Form<ViewMetaType> autoFocus autoSave schema={ViewMetaSchema} values={viewValues} onSave={handleViewUpdate} />
 
       <div>
         {/* TODO(burdon): Clean up common form ux. */}
@@ -139,9 +139,10 @@ export const ViewEditor = ({
           projection={projection}
           field={field}
           registry={registry}
-          onClose={handleClose}
+          onSave={handleClose}
         />
       )}
+
       {!readonly && !field && (
         <div className='flex p-2 justify-center'>
           <IconButton

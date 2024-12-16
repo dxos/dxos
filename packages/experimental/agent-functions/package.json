@@ -1,6 +1,6 @@
 {
   "name": "@dxos/agent-functions",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "private": true,
   "description": "Experimental functions.",
   "homepage": "https://dxos.org",
@@ -41,6 +41,7 @@
     "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/plugin-automation": "workspace:*",

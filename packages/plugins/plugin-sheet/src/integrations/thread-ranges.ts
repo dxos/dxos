@@ -43,6 +43,8 @@ export const useUpdateFocusedCellOnThreadSelection = (grid: DxGridElement | null
           // TODO(Zan): Everywhere we refer to the cursor in a thread context should change to `anchor`.
           const range = parseThreadAnchorAsCellRange(data.cursor);
           range && grid?.setFocus({ ...range.to, plane: 'grid' }, true);
+
+          return { data: true };
         }
       }
     },

@@ -7,42 +7,43 @@ import { setAutoFreeze } from 'immer';
 import React, { type PropsWithChildren } from 'react';
 
 import {
+  filterPlugins,
   type GraphProvides,
   IntentAction,
+  type IntentData,
   type IntentPluginProvides,
+  isLayoutAdjustment,
+  isLayoutMode,
+  isLayoutParts,
   type Layout,
   LayoutAction,
+  type LayoutEntry,
+  type LayoutMode,
+  type LayoutPart,
+  type LayoutParts,
   NavigationAction,
+  openIds,
   parseGraphPlugin,
   parseIntentPlugin,
   type Plugin,
   type PluginDefinition,
   resolvePlugin,
-  Toast as ToastSchema,
   SLUG_PATH_SEPARATOR,
-  type LayoutPart,
-  type LayoutEntry,
-  type LayoutParts,
-  isLayoutParts,
-  isLayoutAdjustment,
-  isLayoutMode,
-  openIds,
-  type LayoutMode,
-  type IntentData,
-  filterPlugins,
+  Toast as ToastSchema,
 } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
-import { create, getTypename, isReactiveObject } from '@dxos/echo-schema';
+import { getTypename } from '@dxos/echo-schema';
 import { scheduledEffect } from '@dxos/echo-signals/core';
+import { create, isReactiveObject } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
-import { parseAttentionPlugin, type AttentionPluginProvides } from '@dxos/plugin-attention';
+import { type AttentionPluginProvides, parseAttentionPlugin } from '@dxos/plugin-attention';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/meta';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 
-import { DeckLayout, LayoutContext, LayoutSettings, NAV_ID, DeckContext, type DeckContextType } from './components';
+import { DeckContext, type DeckContextType, DeckLayout, LayoutContext, LayoutSettings, NAV_ID } from './components';
 import {
   closeEntry,
   incrementPlank,
@@ -55,9 +56,9 @@ import {
 import meta, { DECK_PLUGIN } from './meta';
 import translations from './translations';
 import {
-  type NewPlankPositioning,
   type DeckPluginProvides,
   type DeckSettingsProps,
+  type NewPlankPositioning,
   type Overscroll,
   type Panel,
   parsePanelPlugin,
@@ -93,7 +94,6 @@ export const DeckPlugin = ({
   observability?: boolean;
 } = {}): PluginDefinition<DeckPluginProvides> => {
   let graphPlugin: Plugin<GraphProvides> | undefined;
-  // TODO(burdon): GraphPlugin vs. IntentPluginProvides? (@wittjosiah).
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
   let attentionPlugin: Plugin<AttentionPluginProvides> | undefined;
   const unsubscriptionCallbacks = [] as (UnsubscribeCallback | undefined)[];
@@ -118,6 +118,7 @@ export const DeckPlugin = ({
     dialogContent: null,
     dialogOpen: false,
     dialogBlockAlign: undefined,
+    dialogType: undefined,
     popoverContent: null,
     popoverAnchorId: undefined,
     popoverOpen: false,
@@ -128,6 +129,10 @@ export const DeckPlugin = ({
     plankSizing: {},
   });
 
+  // TODO(wittjosiah): This active state is not a generic navigation state but quite deck specific.
+  //   It is also closely tied to the layout mode state (which also seems quite deck specific).
+  //   The layout and navigation interfaces need to be revisited and cleaned up.
+  //   Doing this cleanup should also help simplify some of the convoluted logic for managing it.
   const location = new LocalStorageStore<{ active: LayoutParts; closed: string[] }>('dxos.org/state/layout', {
     active: { sidebar: [{ id: NAV_ID }] },
     closed: [],
@@ -143,6 +148,7 @@ export const DeckPlugin = ({
     subject,
     anchorId,
     dialogBlockAlign,
+    dialogType,
   }: LayoutAction.SetLayout) => {
     switch (element) {
       case 'sidebar': {
@@ -161,6 +167,7 @@ export const DeckPlugin = ({
         layout.values.dialogOpen = state ?? Boolean(component);
         layout.values.dialogContent = component ? { component, subject } : null;
         layout.values.dialogBlockAlign = dialogBlockAlign ?? 'center';
+        layout.values.dialogType = dialogType;
         return { data: true };
       }
 
@@ -184,21 +191,31 @@ export const DeckPlugin = ({
    * Update the active state and ensure that attention is on an active element.
    */
   const handleSetLocation = (next: LayoutParts) => {
+    const part = layout.values.layoutMode === 'solo' ? 'solo' : 'main';
+    const ids = openIds(next, [part]);
+
     if (attentionPlugin) {
       const attended = attentionPlugin.provides.attention.attended;
       const [attendedId] = Array.from(attended);
-      const ids = (layout.values.layoutMode === 'deck' ? next.main : next.solo)?.map(({ id }) => id) ?? [];
       const isAttendedAvailable = !!attendedId && ids.includes(attendedId);
       if (!isAttendedAvailable) {
-        // Allow new plank to render before focusing.
-        requestAnimationFrame(() => {
-          const nextAttended = layout.values.layoutMode === 'solo' ? next.solo?.[0].id : next.main?.[0]?.id;
-          const article = document.querySelector<HTMLElement>(`article[data-attendable-id="${nextAttended}"]`);
-          article?.focus();
+        const currentIds = location.values.active[part]?.map(({ id }) => id) ?? [];
+        const attendedIndex = currentIds.indexOf(attendedId);
+        // If outside of bounds, focus on the first/last plank, otherwise focus on the new plank in the same position.
+        const index = attendedIndex === -1 ? 0 : attendedIndex >= ids.length ? ids.length - 1 : attendedIndex;
+        const nextAttended = next[part]?.[index].id;
+        void intentPlugin?.provides.intent.dispatch({
+          action: LayoutAction.SCROLL_INTO_VIEW,
+          data: { id: nextAttended },
         });
       }
     }
 
+    const current = openIds(location.values.active, [part]);
+    const removed = current.filter((id) => !ids.includes(id));
+    const closed = Array.from(new Set([...location.values.closed.filter((id) => !ids.includes(id)), ...removed]));
+
+    location.values.closed = closed;
     location.values.active = next;
   };
 
@@ -362,19 +379,35 @@ export const DeckPlugin = ({
             }
 
             case LayoutAction.SET_LAYOUT_MODE: {
+              const setMode = (mode: LayoutMode) => {
+                const main = openIds(location.values.active, ['main']);
+                const solo = openIds(location.values.active, ['solo']);
+                const current = layout.values.layoutMode === 'solo' ? solo : main;
+                // When un-soloing, the solo entry is added to the deck.
+                const next = mode === 'solo' ? solo : [...main, ...solo];
+                const removed = current.filter((id) => !next.includes(id));
+                const closed = Array.from(
+                  new Set([...location.values.closed.filter((id) => !next.includes(id)), ...removed]),
+                );
+
+                location.values.closed = closed;
+                layout.values.layoutMode = mode;
+              };
+
+              // TODO(wittjosiah): Update closed state.
               return batch(() => {
                 if (!intent.data) {
                   return;
                 }
 
                 if (intent.data?.revert) {
-                  layout.values.layoutMode = layoutModeHistory.values.pop() ?? 'solo';
+                  setMode(layoutModeHistory.values.pop() ?? 'solo');
                   return { data: true };
                 }
 
                 if (isLayoutMode(intent?.data?.layoutMode)) {
                   layoutModeHistory.values.push(layout.values.layoutMode);
-                  layout.values.layoutMode = intent.data.layoutMode;
+                  setMode(intent.data.layoutMode);
                 } else {
                   log.warn('Invalid layout mode', intent?.data?.layoutMode);
                 }
@@ -385,7 +418,7 @@ export const DeckPlugin = ({
 
             case LayoutAction.SCROLL_INTO_VIEW: {
               layout.values.scrollIntoView = intent.data?.id ?? undefined;
-              return undefined;
+              return { data: true };
             }
 
             case DeckAction.UPDATE_PLANK_SIZE: {
@@ -429,7 +462,7 @@ export const DeckPlugin = ({
 
                 const processLayoutEntry = (partName: string, entryString: string, currentLayout: any) => {
                   // TODO(burdon): Option to toggle?
-                  const toggle = true;
+                  const toggle = false;
                   const [id, path] = entryString.split(SLUG_PATH_SEPARATOR);
                   const layoutEntry: LayoutEntry = { id, ...(path ? { path } : {}) };
                   const effectivePart = getEffectivePart(partName as LayoutPart, layoutMode);
@@ -553,10 +586,6 @@ export const DeckPlugin = ({
                 });
 
                 handleSetLocation(newLayout);
-                // TODO(wittjosiah): This needs to also set the closed state.
-                //   The closed state should be the existing closed state plus the newly closed ids.
-                //   The closed state should also be updated when opening entries to remove the id from closed.
-                //   When SET is called the closed ids should also be calculated and set.
                 return { data: true };
               });
             }
@@ -591,9 +620,10 @@ export const DeckPlugin = ({
                       return {
                         data: true,
                         intents: [
+                          // NOTE: The order of these is important.
                           [
-                            { action: LayoutAction.SET_LAYOUT_MODE, data: { layoutMode: 'solo' } },
                             { action: NavigationAction.OPEN, data: { activeParts: { solo: [entryId] } } },
+                            { action: LayoutAction.SET_LAYOUT_MODE, data: { layoutMode: 'solo' } },
                           ],
                         ],
                       };
@@ -602,6 +632,7 @@ export const DeckPlugin = ({
                       return {
                         data: true,
                         intents: [
+                          // NOTE: The order of these is important.
                           [
                             { action: LayoutAction.SET_LAYOUT_MODE, data: { layoutMode: 'deck' } },
                             { action: NavigationAction.CLOSE, data: { activeParts: { solo: [entryId] } } },

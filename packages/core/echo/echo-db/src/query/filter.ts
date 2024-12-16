@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { isEncodedReference, type EncodedReference } from '@dxos/echo-protocol';
+import { isEncodedReference, type EncodedReference, type ForeignKey } from '@dxos/echo-protocol';
 import { type BaseObject, requireTypeReference, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -55,7 +55,10 @@ export type FilterParams<T extends BaseObject = any> = {
   properties?: Record<string, any>;
   objectIds?: string[];
   text?: string;
+  metaKeys?: ForeignKey[];
+
   predicate?: OperatorFilter<T>;
+
   not?: boolean;
   and?: Filter[];
   or?: Filter[];
@@ -139,6 +142,10 @@ export class Filter<T extends BaseObject = any> {
     return new Filter({});
   }
 
+  static nothing(): Filter {
+    return new Filter({ not: true });
+  }
+
   // TODO(burdon): Tighten to AbstractTypedObject.
   static schema<S extends S.Schema.All>(
     schema: S,
@@ -154,7 +161,7 @@ export class Filter<T extends BaseObject = any> {
     // TODO(dmaretskyi): Make `getReferenceWithSpaceKey` work over abstract handlers to not depend on EchoHandler directly.
     const typeReference = S.isSchema(schema) ? requireTypeReference(schema) : getReferenceWithSpaceKey(schema);
     invariant(typeReference, 'Invalid schema; check persisted in the database.');
-    return this._fromTypeWithPredicate(typeReference.toDXN(), filter);
+    return Filter._fromTypeWithPredicate(typeReference.toDXN(), filter);
   }
 
   static typename(typename: string, filter?: Record<string, any> | OperatorFilter<any>): Filter<any> {
@@ -165,7 +172,19 @@ export class Filter<T extends BaseObject = any> {
       throw new TypeError('Dynamic schema references are not allowed.');
     }
 
-    return this._fromTypeWithPredicate(DXN.fromTypename(typename), filter);
+    return Filter._fromTypeWithPredicate(DXN.fromTypename(typename), filter);
+  }
+
+  static typenames(typenames: string[]) {
+    const dxns = typenames.map((typename) => {
+      if (typename.startsWith('dxn:echo:')) {
+        throw new TypeError('Dynamic schema references are not allowed.');
+      }
+
+      return DXN.fromTypename(typename);
+    });
+
+    return new Filter({ type: dxns });
   }
 
   static typeDXN(dxn: string): Filter {
@@ -173,6 +192,12 @@ export class Filter<T extends BaseObject = any> {
       throw new TypeError('`dxn` parameter is required.');
     }
     return new Filter({ type: [DXN.parse(dxn)] });
+  }
+
+  static foreignKeys(keys: ForeignKey[]): Filter {
+    return new Filter({
+      metaKeys: keys,
+    });
   }
 
   private static _fromTypeWithPredicate(type: DXN, filter?: Record<string, any> | OperatorFilter<any>) {
@@ -232,6 +257,7 @@ export class Filter<T extends BaseObject = any> {
   public readonly properties?: Record<string, any>;
   public readonly objectIds?: string[];
   public readonly text?: string;
+  public readonly metaKeys?: ForeignKey[];
   public readonly predicate?: OperatorFilter<any>;
   public readonly not: boolean;
   public readonly and: Filter[];
@@ -243,6 +269,7 @@ export class Filter<T extends BaseObject = any> {
     this.properties = params.properties;
     this.objectIds = params.objectIds;
     this.text = params.text;
+    this.metaKeys = params.metaKeys;
     this.predicate = params.predicate;
     this.not = params.not ?? false;
     this.and = params.and ?? [];

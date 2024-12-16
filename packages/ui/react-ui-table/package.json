@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-table",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "A table component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -49,6 +49,7 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/lit-grid": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-search": "workspace:*",
     "@dxos/plugin-space": "workspace:*",

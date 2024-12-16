@@ -13,8 +13,9 @@ import {
   Reference,
   type SpaceDoc,
 } from '@dxos/echo-protocol';
-import { createObjectId, isReactiveObject, type CommonObjectData, type ObjectMeta } from '@dxos/echo-schema';
+import { createObjectId, type CommonObjectData, type ObjectMeta } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
+import { isReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { setDeep, defer, getDeep, throwUnhandledError, deepMapValues } from '@dxos/util';
 
@@ -338,6 +339,10 @@ export class ObjectCore {
 
   setType(reference: Reference) {
     this._setRaw([SYSTEM_NAMESPACE, 'type'], this.encode(reference));
+  }
+
+  getMeta(): ObjectMeta {
+    return this.getDecoded([META_NAMESPACE]) as ObjectMeta;
   }
 
   setMeta(meta: ObjectMeta) {

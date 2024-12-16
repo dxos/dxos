@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-wnfs",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "WNFS file management plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -47,6 +47,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",

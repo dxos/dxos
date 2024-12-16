@@ -50,7 +50,7 @@ export const ResetDialog = ({
   open,
   onOpenChange,
 }: FatalErrorProps) => {
-  const { t } = useTranslation('composer');
+  const { t } = useTranslation('composer'); // TODO(burdon): Const.
   const error = propsError && parseError(t, propsError);
   const {
     needRefresh: [needRefresh, _setNeedRefresh],

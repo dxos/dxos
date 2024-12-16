@@ -9,7 +9,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Trigger } from '@dxos/async';
 import { TestBuilder } from '@dxos/client/testing';
 import { getObjectCore } from '@dxos/echo-db';
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { FunctionDef, type FunctionManifest, FunctionTrigger, TriggerKind } from '@dxos/functions';
 import { startFunctionsHost } from '@dxos/functions/testing';
 import { GameType } from '@dxos/plugin-chess/types';

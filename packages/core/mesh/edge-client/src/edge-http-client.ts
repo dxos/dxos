@@ -19,6 +19,8 @@ import {
   type GetAgentStatusResponseBody,
   type RecoverIdentityRequest,
   type RecoverIdentityResponseBody,
+  type UploadFunctionRequest,
+  type UploadFunctionResponseBody,
 } from '@dxos/protocols';
 
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
@@ -85,6 +87,15 @@ export class EdgeHttpClient {
     args?: EdgeHttpGetArgs,
   ): Promise<RecoverIdentityResponseBody> {
     return this._call('/identity/recover', { ...args, body, method: 'POST' });
+  }
+
+  public async uploadFunction(
+    pathParts: { spaceId: SpaceId; functionId?: string },
+    body: UploadFunctionRequest,
+    args?: EdgeHttpGetArgs,
+  ): Promise<UploadFunctionResponseBody> {
+    const path = ['functions', pathParts.spaceId, ...(pathParts.functionId ? [pathParts.functionId] : [])].join('/');
+    return this._call(path, { ...args, body, method: 'PUT' });
   }
 
   private async _call<T>(path: string, args: EdgeHttpCallArgs): Promise<T> {

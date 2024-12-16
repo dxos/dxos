@@ -31,7 +31,7 @@ export class FunctionType extends TypedObject({
 })({
   // TODO(burdon): Rename to id/uri?
   name: S.NonEmptyString,
-  version: S.Number,
+  version: S.String,
 
   // Reference to a source script if it exists within ECHO.
   // TODO(burdon): Don't ref ScriptType directly (core).

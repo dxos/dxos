@@ -7,7 +7,8 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React, { useCallback, useState } from 'react';
 
-import { AST, Format, S } from '@dxos/echo-schema';
+import { AST, type BaseObject, Format, S } from '@dxos/echo-schema';
+import { Testing } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SelectInput } from './Defaults';
@@ -15,42 +16,42 @@ import { Form, type FormProps } from './Form';
 import translations from '../../translations';
 import { TestLayout, TestPanel } from '../testing';
 
+const AddressSchema = S.Struct({
+  street: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Street' })),
+  city: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'City' })),
+  zip: S.optional(S.String.pipe(S.pattern(/^\d{5}(-\d{4})?$/)).annotations({ [AST.TitleAnnotationId]: 'ZIP' })),
+  location: S.optional(Format.GeoPoint.annotations({ [AST.TitleAnnotationId]: 'Location' })),
+}).annotations({ [AST.TitleAnnotationId]: 'Address' });
+
 // TODO(burdon): Translations?
 const TestSchema = S.Struct({
   name: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Name' })),
   active: S.optional(S.Boolean.annotations({ [AST.TitleAnnotationId]: 'Active' })),
   rank: S.optional(S.Number.annotations({ [AST.TitleAnnotationId]: 'Rank' })),
   website: S.optional(Format.URL.annotations({ [AST.TitleAnnotationId]: 'Website' })),
-  address: S.optional(
-    S.Struct({
-      street: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'Street' })),
-      city: S.optional(S.String.annotations({ [AST.TitleAnnotationId]: 'City' })),
-      zip: S.optional(S.String.pipe(S.pattern(/^\d{5}(-\d{4})?$/)).annotations({ [AST.TitleAnnotationId]: 'ZIP' })),
-      location: S.optional(Format.GeoPoint.annotations({ [AST.TitleAnnotationId]: 'Location' })),
-    }).annotations({ [AST.TitleAnnotationId]: 'Address' }),
-  ),
+  address: S.optional(AddressSchema),
 }).pipe(S.mutable);
 
 type TestType = S.Schema.Type<typeof TestSchema>;
 
-type StoryProps = FormProps<TestType>;
+type StoryProps<T extends BaseObject> = { schema: S.Schema<T> } & FormProps<T>;
 
-const DefaultStory = ({ values: initialValues }: StoryProps) => {
+const DefaultStory = <T extends BaseObject>({ schema, values: initialValues }: StoryProps<T>) => {
   const [values, setValues] = useState(initialValues);
-  const handleSubmit = useCallback<NonNullable<FormProps<TestType>['onSubmit']>>((values) => {
+  const handleSave = useCallback<NonNullable<FormProps<T>['onSave']>>((values) => {
     setValues(values);
   }, []);
 
   return (
-    <TestLayout json={{ values, schema: TestSchema.ast.toJSON() }}>
+    <TestLayout json={{ values, schema: schema.ast.toJSON() }}>
       <TestPanel>
-        <Form<TestType> schema={TestSchema} values={values} onSubmit={handleSubmit} />
+        <Form<T> schema={schema} values={values} onSave={handleSave} />
       </TestPanel>
     </TestLayout>
   );
 };
 
-const meta: Meta<StoryProps> = {
+const meta: Meta<StoryProps<any>> = {
   title: 'ui/react-ui-form/Form',
   component: Form,
   render: DefaultStory,
@@ -62,10 +63,11 @@ const meta: Meta<StoryProps> = {
 
 export default meta;
 
-type Story = StoryObj<StoryProps>;
+type Story<T extends BaseObject> = StoryObj<StoryProps<T>>;
 
-export const Default: Story = {
+export const Default: Story<TestType> = {
   args: {
+    schema: TestSchema,
     values: {
       name: 'DXOS',
       active: true,
@@ -75,6 +77,33 @@ export const Default: Story = {
     },
   },
 };
+
+// TODO(burdon): Should accept partial values.
+export const Org: Story<Testing.OrgSchemaType> = {
+  args: {
+    schema: Testing.OrgSchema,
+    values: {
+      // name: 'DXOS',
+      // website: 'https://dxos.org',
+    },
+  },
+};
+
+// TODO(burdon): Type issue with employer reference.
+// TODO(burdon): Test table/form with compound values (e.g., address).
+// export const Contact: Story<Testing.ContactSchemaType> = {
+//   args: {
+//     // Property name is missing in type EncodedReference but required in type
+//     schema: Testing.ContactSchema,
+//     values: {
+//       name: 'Bot',
+//     },
+//   },
+// };
+
+//
+// TODO(burdon): Move into separate storybook and use test types.
+//
 
 const ShapeSchema = S.Struct({
   shape: S.optional(
@@ -92,11 +121,12 @@ const ShapeSchema = S.Struct({
 }).pipe(S.mutable);
 
 type ShapeType = S.Schema.Type<typeof ShapeSchema>;
+
 type DiscriminatedUnionStoryProps = FormProps<ShapeType>;
 
 const DiscriminatedUnionStory = ({ values: initialValues }: DiscriminatedUnionStoryProps) => {
   const [values, setValues] = useState(initialValues);
-  const handleSubmit = useCallback<NonNullable<FormProps<ShapeType>['onSubmit']>>((values) => {
+  const handleSave = useCallback<NonNullable<FormProps<ShapeType>['onSave']>>((values) => {
     setValues(values);
   }, []);
 
@@ -106,7 +136,7 @@ const DiscriminatedUnionStory = ({ values: initialValues }: DiscriminatedUnionSt
         <Form<ShapeType>
           schema={ShapeSchema}
           values={values}
-          onSubmit={handleSubmit}
+          onSave={handleSave}
           Custom={{
             ['shape.type' as const]: (props) => (
               <SelectInput<ShapeType>
@@ -132,6 +162,38 @@ export const DiscriminatedShape: StoryObj<DiscriminatedUnionStoryProps> = {
         type: 'circle',
         radius: 5,
       },
+    },
+  },
+};
+
+const ArraysSchema = S.Struct({
+  names: S.Array(S.String.pipe(S.nonEmptyString())),
+  addresses: S.Array(AddressSchema),
+}).pipe(S.mutable);
+
+type ArraysType = S.Schema.Type<typeof ArraysSchema>;
+
+const ArraysStory = ({ values: initialValues }: FormProps<ArraysType>) => {
+  const [values, setValues] = useState(initialValues);
+  const handleSave = useCallback<NonNullable<FormProps<ArraysType>['onSave']>>((values) => {
+    setValues(values);
+  }, []);
+
+  return (
+    <TestLayout json={{ values, schema: ArraysSchema.ast.toJSON() }}>
+      <TestPanel>
+        <Form<ArraysType> schema={ArraysSchema} values={values} onSave={handleSave} />
+      </TestPanel>
+    </TestLayout>
+  );
+};
+
+export const Arrays: StoryObj<FormProps<ArraysType>> = {
+  render: ArraysStory,
+  args: {
+    values: {
+      names: ['Alice', 'Bob'],
+      addresses: [],
     },
   },
 };

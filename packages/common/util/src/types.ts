@@ -71,6 +71,17 @@ export const stripUndefinedValues = <T extends { [index: string]: any }>(obj: T)
 };
 
 /**
+ * Return new object with sorted keys.
+ */
+export const sortKeys = <T extends object>(obj: T): T =>
+  Object.keys(obj)
+    .sort()
+    .reduce<T>((sorted, key) => {
+      (sorted as any)[key] = (obj as any)[key];
+      return sorted;
+    }, {} as T);
+
+/**
  * Swap position of element within array.
  */
 export const arrayMove = <T>(array: T[], from: number, to: number): Array<T> => {

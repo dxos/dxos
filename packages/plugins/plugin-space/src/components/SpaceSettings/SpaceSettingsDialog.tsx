@@ -5,9 +5,9 @@
 import React, { useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
-import { Button, Dialog, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Button, Clipboard, Dialog, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tabs, type TabsRootProps, type TabsActivePart } from '@dxos/react-ui-tabs';
-import { ClipboardProvider, SpacePanel, type SpacePanelProps } from '@dxos/shell/react';
+import { SpacePanel, type SpacePanelProps } from '@dxos/shell/react';
 
 import { SpaceSettingsPanel, type SpaceSettingsPanelProps } from './SpaceSettingsPanel';
 import { SPACE_PLUGIN } from '../../meta';
@@ -62,7 +62,7 @@ export const SpaceSettingsDialog = ({
         </Dialog.Title>
         <Dialog.Close asChild>
           <Button density='fine' variant='ghost' autoFocus>
-            <Icon icon='ph--x--regular' size={3} />
+            <Icon icon='ph--x--regular' size={4} />
           </Button>
         </Dialog.Close>
       </div>
@@ -92,9 +92,9 @@ export const SpaceSettingsDialog = ({
 
           {/* TODO(wittjosiah): Weird focus ring when tabpanel is focused. */}
           <Tabs.Tabpanel value='members' classNames='pli-3 @md:pli-5 max-bs-dvh overflow-y-auto'>
-            <ClipboardProvider>
+            <Clipboard.Provider>
               <SpacePanel space={space} hideHeading target={target} createInvitationUrl={createInvitationUrl} />
-            </ClipboardProvider>
+            </Clipboard.Provider>
           </Tabs.Tabpanel>
         </Tabs.Viewport>
       </Tabs.Root>

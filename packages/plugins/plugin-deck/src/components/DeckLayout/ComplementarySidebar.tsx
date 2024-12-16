@@ -59,7 +59,7 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
   // TODO(wittjosiah): Ensure that id is always defined.
   const coordinate: LayoutCoordinate = useMemo(() => ({ entryId: id ?? 'unknown', part: 'complementary' }), [id]);
 
-  // TODO(burdon): Debug panel doesn't change when switching even though id has chagned.
+  // TODO(burdon): Scroll area should be controlled by surface.
   return (
     <Main.ComplementarySidebar>
       <StackContext.Provider value={{ size: 'contain', orientation: 'horizontal', separators: false, rail: true }}>

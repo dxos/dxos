@@ -44,7 +44,7 @@ export const WnfsPlugin = (): PluginDefinition<WnfsPluginProvides> => {
         },
       },
       echo: {
-        schema: [FileType],
+        system: [FileType],
       },
       // TODO(burdon): Add intent to upload file.
       file: {

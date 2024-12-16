@@ -2,27 +2,26 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  decodeReference,
-  type EncodedReference,
-  encodeReference,
-  type LegacyEncodedReferenceObject,
-  Reference,
-} from '@dxos/echo-protocol';
-import { TYPE_PROPERTIES } from '@dxos/echo-schema';
+import { decodeReference, type EncodedReference, encodeReference, Reference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { deepMapValues, nonNullable, stripUndefinedValues } from '@dxos/util';
 
 import { ObjectCore } from './core-db';
-import { type ReactiveEchoObject } from './echo-handler';
-import { getObjectCore } from './echo-handler';
+import { getObjectCore, type ReactiveEchoObject } from './echo-handler';
 import { type EchoDatabase } from './proxy-db';
-import { Filter } from './query';
 import type { SerializedObject, SerializedSpace } from './serialized-space';
 
 const MAX_LOAD_OBJECT_CHUNK_SIZE = 30;
 
 const LEGACY_REFERENCE_TYPE_TAG = 'dxos.echo.model.document.Reference';
+
+export type ImportOptions = {
+  /**
+   * Called for each object before importing.
+   * @returns true to import the object, false to skip.
+   */
+  onObject?: (object: SerializedObject) => Promise<boolean>;
+};
 
 // TODO(burdon): Schema not present when reloaded from persistent store.
 // TODO(burdon): Option to decode JSON/protobuf.
@@ -52,29 +51,16 @@ export class Serializer {
     return data;
   }
 
-  async import(database: EchoDatabase, data: SerializedSpace) {
+  async import(database: EchoDatabase, data: SerializedSpace, opts?: ImportOptions) {
     invariant(data.version === Serializer.version, `Invalid version: ${data.version}`);
-    const {
-      objects: [properties],
-    } = await database.query(Filter.typename(TYPE_PROPERTIES)).run();
 
     const { objects } = data;
     for (const object of objects) {
-      const { '@type': typeEncoded, ...data } = object;
+      const shouldImport = opts?.onObject ? await opts.onObject(object) : true;
 
-      const type = decodeReferenceJSON(typeEncoded);
-
-      // Handle Space Properties
-      if (properties && type?.objectId === TYPE_PROPERTIES) {
-        Object.entries(data).forEach(([name, value]) => {
-          if (!name.startsWith('@')) {
-            properties[name] = value;
-          }
-        });
-        continue;
+      if (shouldImport) {
+        this._importObject(database, object);
       }
-
-      this._importObject(database, object);
     }
     await database.flush();
   }
@@ -127,21 +113,9 @@ export class Serializer {
 const isEncodedReferenceJSON = (value: any): boolean =>
   typeof value === 'object' && value !== null && ('/' in value || value['@type'] === LEGACY_REFERENCE_TYPE_TAG);
 
-export const decodeReferenceJSON = (
-  encoded?: EncodedReference | LegacyEncodedReferenceObject | string,
-): Reference | undefined => {
+export const decodeReferenceJSON = (encoded?: EncodedReference | string): Reference | undefined => {
   if (typeof encoded === 'object' && encoded !== null && '/' in encoded) {
     return decodeReference(encoded);
-  } else if (
-    typeof encoded === 'object' &&
-    encoded !== null &&
-    (encoded as any)['@type'] === LEGACY_REFERENCE_TYPE_TAG
-  ) {
-    return new Reference(
-      (encoded as LegacyEncodedReferenceObject).itemId,
-      (encoded as LegacyEncodedReferenceObject).protocol,
-      (encoded as LegacyEncodedReferenceObject).host,
-    );
   } else if (typeof encoded === 'string') {
     // TODO(mykola): Never reached?
     return Reference.fromLegacyTypename(encoded);
