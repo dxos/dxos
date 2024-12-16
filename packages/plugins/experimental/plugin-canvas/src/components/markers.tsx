@@ -5,7 +5,7 @@
 import React, { type SVGProps, type PropsWithChildren } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme/src';
+import { mx } from '@dxos/react-ui-theme';
 
 import { type Dimension, type Point } from '../layout';
 
