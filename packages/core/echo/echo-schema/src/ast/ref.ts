@@ -152,6 +152,7 @@ export const createEchoReferenceSchema = (annotation: ObjectAnnotation, schemaNa
         jsonSchema: {
           $id: JSON_SCHEMA_ECHO_REF_ID,
           reference: referenceInfo,
+          title: undefined, // Remove title from the output json schema.
         },
         title: schemaName ? `Ref to ${schemaName}` : 'Ref',
         [ReferenceAnnotationId]: annotation,
