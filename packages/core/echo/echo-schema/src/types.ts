@@ -12,7 +12,6 @@ import { getObjectAnnotation, type HasId } from './ast';
 import type { ObjectMeta } from './object/meta';
 
 // TODO(burdon): Use consistently (with serialization utils).
-export const ECHO_ATTR_ID = '@id';
 export const ECHO_ATTR_META = '@meta';
 
 //

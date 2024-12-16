@@ -47,6 +47,8 @@ export interface Ref$<T extends WithId> extends S.Schema<Ref<T>, EncodedReferenc
 
 interface RefFn {
   <T extends WithId>(schema: S.Schema<T, any>): Ref$<T>;
+
+  isRef: (obj: any) => obj is Ref<any>;
 }
 
 /**
@@ -99,7 +101,7 @@ export interface Ref<T> {
   };
 }
 
-const isRef = (obj: any): obj is Ref<any> => {
+Ref.isRef = (obj: any): obj is Ref<any> => {
   return obj && typeof obj === 'object' && RefTypeId in obj;
 };
 
@@ -135,7 +137,7 @@ export const createEchoReferenceSchema = (annotation: ObjectAnnotation, schemaNa
   return S.Any.annotations({ jsonSchema: {} }).pipe(
     S.filter(
       (obj) => {
-        if (!isRef(obj)) {
+        if (!Ref.isRef(obj)) {
           return false;
         }
 
@@ -152,7 +154,7 @@ export const createEchoReferenceSchema = (annotation: ObjectAnnotation, schemaNa
           $id: JSON_SCHEMA_ECHO_REF_ID,
           reference: referenceInfo,
         },
-        title: schemaName ? `Reference of ${schemaName}` : 'Reference',
+        title: schemaName ? `Ref to ${schemaName}` : 'Ref',
         [ReferenceAnnotationId]: annotation,
       },
     ),

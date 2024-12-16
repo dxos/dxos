@@ -5,8 +5,8 @@
 import { asyncTimeout, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { raise, StackTrace } from '@dxos/debug';
-import { type Reference } from '@dxos/echo-protocol';
-import { RuntimeSchemaRegistry } from '@dxos/echo-schema';
+import { Reference } from '@dxos/echo-protocol';
+import { RuntimeSchemaRegistry, type BaseObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
@@ -32,6 +32,7 @@ import {
   type QueryRunOptions,
   ResultFormat,
 } from './query';
+import type { RefResolver } from '@dxos/live-object';
 
 /**
  * Manages cross-space database interactions.
@@ -139,6 +140,41 @@ export class Hypergraph {
         throw new TypeError(`Invalid result format: ${resultFormat}`);
       }
     }
+  }
+
+  /**
+   * @param hostDb Host database for reference resolution.
+   * @param middleware Called with the loaded object. The caller may change the object.
+   * @returns Result of `onLoad`.
+   */
+  getRefResolver(hostDb: EchoDatabase, middleware: (obj: BaseObject) => BaseObject = (obj) => obj): RefResolver {
+    // TODO(dmaretskyi): Cache per hostDb.
+    return {
+      // TODO(dmaretskyi): Respect `load` flag.
+      resolveSync: (dxn, load, onLoad) => {
+        const ref = Reference.fromDXN(dxn);
+        const res = this._lookupRef(hostDb, ref, onLoad ?? (() => {}));
+
+        if (res) {
+          return middleware(res);
+        } else {
+          return undefined;
+        }
+      },
+      resolve: async (dxn) => {
+        if (!dxn.isLocalObjectId()) {
+          throw new Error('Cross-space references are not supported');
+        }
+        const {
+          objects: [obj],
+        } = await hostDb.query({ id: dxn.parts[1] }).run();
+        if (obj) {
+          return middleware(obj);
+        } else {
+          return undefined;
+        }
+      },
+    };
   }
 
   /**

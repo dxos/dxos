@@ -46,7 +46,7 @@ const fields = {
   twoDimNumberArray: S.mutable(S.Array(S.mutable(S.Array(S.Number)))),
   object: TestNestedSchema,
   objectArray: S.mutable(S.Array(TestNestedSchema)),
-  nested: S.optional(TestNestedType),
+  nested: S.optional(Ref(TestNestedType)),
   other: S.Any,
 };
 

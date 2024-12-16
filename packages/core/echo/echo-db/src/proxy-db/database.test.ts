@@ -10,7 +10,7 @@ import { type BaseObject, Expando } from '@dxos/echo-schema';
 import { Contact, Container, RecordType, Task, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
-import { create, dangerouslySetProxyId, getMeta, getSchema, getType, type ReactiveObject } from '@dxos/live-object';
+import { create, dangerouslySetProxyId, getMeta, getSchema, getType, makeRef, type ReactiveObject } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
@@ -228,16 +228,16 @@ describe('Database', () => {
       const container = db.add(create(Container, { objects: [] }));
       await db.flush();
 
-      container.objects!.push(create(Expando, { foo: 100 }));
-      container.objects!.push(create(Expando, { bar: 200 }));
+      container.objects!.push(makeRef(create(Expando, { foo: 100 })));
+      container.objects!.push(makeRef(create(Expando, { bar: 200 })));
     }
 
     {
       const { objects } = await db.query(Filter.schema(Container)).run();
       const [container] = objects;
       expect(container.objects).to.have.length(2);
-      expect(container.objects![0]!.foo).to.equal(100);
-      expect(container.objects![1]!.bar).to.equal(200);
+      expect(container.objects![0].target!.foo).to.equal(100);
+      expect(container.objects![1].target!.bar).to.equal(200);
     }
   });
 
@@ -248,16 +248,16 @@ describe('Database', () => {
       const container = db.add(create(Container, { objects: [] }));
       await db.flush();
 
-      container.objects!.push(create(Task, {}));
-      container.objects!.push(create(Contact, {}));
+      container.objects!.push(makeRef(create(Task, {})));
+      container.objects!.push(makeRef(create(Contact, {})));
     }
 
     {
       const { objects } = await db.query(Filter.schema(Container)).run();
       const [container] = objects;
       expect(container.objects).to.have.length(2);
-      expect(getType(container.objects![0]!)?.objectId).to.equal(Task.typename);
-      expect(getType(container.objects![1]!)?.objectId).to.equal(Contact.typename);
+      expect(getType(container.objects![0].target!)?.objectId).to.equal(Task.typename);
+      expect(getType(container.objects![1].target!)?.objectId).to.equal(Contact.typename);
     }
   });
 
@@ -324,15 +324,15 @@ describe('Database', () => {
     test('add with a reference to echo reactive proxy', async () => {
       const { db } = await createDbWithTypes();
       const firstTask = db.add(create(Task, { title: 'foo' }));
-      const secondTask = db.add(create(Task, { title: 'bar', previous: firstTask }));
+      const secondTask = db.add(create(Task, { title: 'bar', previous: makeRef(firstTask) }));
       expect(secondTask.previous).to.eq(firstTask);
     });
 
     test('add with a reference to a reactive proxy', async () => {
       const { db } = await createDbWithTypes();
-      const task = db.add(create(Task, { title: 'first', previous: create(Task, { title: 'second' }) }));
+      const task = db.add(create(Task, { title: 'first', previous: makeRef(create(Task, { title: 'second' })) }));
       expect(task.title).to.eq('first');
-      expect(task.previous?.id).to.be.a('string');
+      expect(task.previous?.target?.id).to.be.a('string');
     });
   });
 
@@ -341,7 +341,7 @@ describe('Database', () => {
     const task = db.add(
       create(Task, {
         title: 'Main task',
-        subTasks: [create(Task, { title: 'Sub task' })],
+        subTasks: [makeRef(create(Task, { title: 'Sub task' }))],
       }),
     );
 
@@ -354,19 +354,19 @@ describe('Database', () => {
       const root = newTask();
       expect(root.subTasks).to.have.length(0);
 
-      range(3).forEach(() => root.subTasks!.push(newTask()));
-      root.subTasks!.push(newTask(), newTask());
+      range(3).forEach(() => root.subTasks!.push(makeRef(newTask())));
+      root.subTasks!.push(makeRef(newTask()), makeRef(newTask()));
 
       expect(root.subTasks).to.have.length(5);
       expect(root.subTasks!.length).to.eq(5);
       expect(JSON.parse(JSON.stringify(root, undefined, 2)).subTasks).to.have.length(5);
 
       // Iterators.
-      const ids = root.subTasks!.map((task) => task!.id);
-      root.subTasks!.forEach((task, i) => expect(task!.id).to.eq(ids[i]));
+      const ids = root.subTasks!.map((task) => task.target!.id);
+      root.subTasks!.forEach((task, i) => expect(task.target!.id).to.eq(ids[i]));
       expect(Array.from(root.subTasks!.values())).to.have.length(5);
 
-      root.subTasks = [create(Task, {}), create(Task, {}), create(Task, {})];
+      root.subTasks = [makeRef(create(Task, {})), makeRef(create(Task, {})), makeRef(create(Task, {}))];
       expect(root.subTasks.length).to.eq(3);
 
       await addToDatabase(root);
@@ -374,8 +374,8 @@ describe('Database', () => {
 
     test('splice', async () => {
       const root = newTask();
-      root.subTasks = range(3).map(newTask);
-      root.subTasks.splice(0, 2, newTask());
+      root.subTasks = range(3).map((i) => makeRef(newTask()));
+      root.subTasks.splice(0, 2, makeRef(newTask()));
       expect(root.subTasks).to.have.length(2);
       await addToDatabase(root);
     });
@@ -384,14 +384,14 @@ describe('Database', () => {
       const root = create(Container, { records: [] });
       root.records!.push({
         title: 'test',
-        contacts: [create(Contact, { name: 'tester' })],
+        contacts: [makeRef(create(Contact, { name: 'tester' }))],
       });
       const { db } = await addToDatabase(root);
 
       expect(root.records).to.have.length(1);
       const queriedContainer = (await db.query(Filter.schema(Container)).run()).objects[0]!;
       expect(queriedContainer.records!.length).to.equal(1);
-      expect(queriedContainer.records![0]!.contacts![0]!.name).to.equal('tester');
+      expect(queriedContainer.records![0]!.contacts![0]!.target!.name).to.equal('tester');
     });
 
     test('reset array', async () => {

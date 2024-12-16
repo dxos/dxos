@@ -7,6 +7,7 @@ import { ObjectId, RefTypeId, type BaseObject, type Ref } from '@dxos/echo-schem
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 /**
  * Constructs a reference that points to the given object.
@@ -108,6 +109,19 @@ export class RefImpl<T> implements Ref<T> {
   async tryLoad(): Promise<T | undefined> {
     invariant(this.#resolver, 'Resolver is not set');
     return (await this.#resolver.resolve(this.#dxn)) as T | undefined;
+  }
+
+  /**
+   * Serializes the reference to a JSON object.
+   * The serialization format is compatible with the IPLD-style encoded references.
+   * When a reference has a saved target (i.e. the target or object holding the reference is not in the database),
+   * the target is included in the serialized object.
+   */
+  toJSON() {
+    return {
+      '/': this.#dxn.toString(),
+      ...(this.#target ? { target: this.#target } : {}),
+    };
   }
 
   [RefTypeId] = refVariance;
