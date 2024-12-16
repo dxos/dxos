@@ -3,14 +3,16 @@
 //
 
 import type {
+  IntentData,
   GraphBuilderProvides,
   IntentResolverProvides,
   MetadataRecordsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
+import {Space} from '@dxos/react-client/echo'
 import { type SchemaProvides } from '@dxos/plugin-space';
-import { type KanbanType } from '@dxos/react-ui-kanban';
+import { KanbanType } from '@dxos/react-ui-kanban';
 
 import { KANBAN_PLUGIN } from './meta';
 
@@ -27,7 +29,14 @@ const KANBAN_ACTION = `${KANBAN_PLUGIN}/action`;
 
 export enum KanbanAction {
   CREATE = `${KANBAN_ACTION}/create`,
+  DELETE_CARD_FIELD = `${KANBAN_ACTION}/delete-card-field`,
 }
+
+export namespace KanbanAction {
+  export type Create = IntentData<{ space: Space }>;
+  export type DeleteColumn = IntentData<{ kanban: KanbanType; fieldId: string }>;
+}
+
 
 export type KanbanPluginProvides = SurfaceProvides &
   IntentResolverProvides &
@@ -51,3 +60,6 @@ export interface KanbanModel {
 export type Location = {
   idx?: number;
 };
+
+export const isKanban = (object: unknown): object is KanbanType => object != null && object instanceof KanbanType;
+

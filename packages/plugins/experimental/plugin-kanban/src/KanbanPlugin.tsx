@@ -2,9 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { getSpace } from '@dxos/client/src/echo';
+import { type FieldProjection, ViewProjection } from '@dxos/schema';
 import React from 'react';
 
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
+import { invariant } from '@dxos/invariant';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
@@ -12,9 +15,10 @@ import { KanbanType } from '@dxos/react-ui-kanban';
 
 import { KanbanContainer } from './components';
 import { createKanban } from './components/create-kanban';
+import KanbanViewEditor from './components/KanbanViewEditor';
 import meta, { KANBAN_PLUGIN } from './meta';
 import translations from './translations';
-import { KanbanAction, type KanbanPluginProvides } from './types';
+import { isKanban, KanbanAction, type KanbanPluginProvides } from './types';
 
 export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
   return {
@@ -80,7 +84,9 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
           switch (role) {
             case 'section':
             case 'article':
-              return data.object instanceof KanbanType ? <KanbanContainer kanban={data.object} role={role} /> : null;
+              return isKanban(data.object) ? <KanbanContainer kanban={data.object} role={role} /> : null;
+            case 'complementary--settings':
+              return isKanban(data.subject) ? { node: <KanbanViewEditor kanban={data.subject} /> } : null;
             default:
               return null;
           }
@@ -90,8 +96,32 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case KanbanAction.CREATE: {
-              if (intent.data?.space) {
-                return { data: createKanban(intent.data.space) };
+              const { space } = intent.data as KanbanAction.Create;
+              invariant(space);
+              const kanban = createKanban(space);
+              return {data: kanban}
+            }
+            case KanbanAction.DELETE_CARD_FIELD: {
+              const { kanban, fieldId } = intent.data as KanbanAction.DeleteColumn;
+              invariant(isKanban(kanban));
+              invariant(kanban.cardView);
+
+              const schema = kanban.cardView && getSpace(kanban)?.db.schemaRegistry.getSchema(kanban.cardView.query.type);
+              invariant(schema);
+              const projection = new ViewProjection(schema, kanban.cardView);
+
+              if (!intent.undo) {
+                const { deleted, index } = projection.deleteFieldProjection(fieldId);
+                return {
+                  undoable: {
+                    message: translations[0]['en-US'][KANBAN_PLUGIN]['card field deleted label'],
+                    data: { deleted, index },
+                  },
+                };
+              } else if (intent.undo) {
+                const { deleted, index } = intent.data as { deleted: FieldProjection; index: number };
+                projection.setFieldProjection(deleted, index);
+                return { data: true };
               }
             }
           }
