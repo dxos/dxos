@@ -23,8 +23,8 @@ import {
   type DxGridPlaneCells,
   type DxGridPlaneRange,
   type DxGridPlanePosition,
-  toPlaneCellIndex,
   type DxGridPosition,
+  toPlaneCellIndex,
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 import { VIEW_FIELD_LIMIT, type ViewProjection, type FieldType } from '@dxos/schema';
