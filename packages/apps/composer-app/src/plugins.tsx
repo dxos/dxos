@@ -138,6 +138,7 @@ export const recommended = ({ isDev, isLabs }: PluginConfig): PluginMeta[] =>
     ExcalidrawMeta,
     ExplorerMeta,
     IpfsMeta,
+    KanbanMeta,
     MapMeta,
     MermaidMeta,
     PresenterMeta,
@@ -152,7 +153,6 @@ export const recommended = ({ isDev, isLabs }: PluginConfig): PluginMeta[] =>
           CanvasMeta,
           GithubMeta,
           InboxMeta,
-          KanbanMeta,
           OutlinerMeta,
         ]
       : []),

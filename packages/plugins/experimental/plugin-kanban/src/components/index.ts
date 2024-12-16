@@ -1,7 +1,5 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
-import { lazy } from 'react';
-
-export const KanbanMain = lazy(() => import('./KanbanMain'));
+export * from './KanbanContainer';
