@@ -23,11 +23,11 @@ import {
   Grid,
   GridCellEditor,
   type DxGridElement,
+  type DxGridPosition,
+  type DxGridCellIndex,
   type EditorKeyHandler,
   type EditorBlurHandler,
   type GridContentProps,
-  type DxGridPosition,
-  type DxGridCellIndex,
   parseCellIndex,
 } from '@dxos/react-ui-grid';
 

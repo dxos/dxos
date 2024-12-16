@@ -78,6 +78,9 @@
       "path": "../../plugins/experimental/plugin-calls"
     },
     {
+      "path": "../../plugins/experimental/plugin-canvas"
+    },
+    {
       "path": "../../plugins/experimental/plugin-excalidraw"
     },
     {
@@ -85,9 +88,6 @@
     },
     {
       "path": "../../plugins/experimental/plugin-github"
-    },
-    {
-      "path": "../../plugins/experimental/plugin-grid"
     },
     {
       "path": "../../plugins/experimental/plugin-inbox"
