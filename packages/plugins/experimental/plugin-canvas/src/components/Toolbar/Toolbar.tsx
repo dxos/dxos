@@ -27,7 +27,7 @@ export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
         <Icon icon='ph--arrows-in-line-horizontal--regular' />
       </NaturalToolbar.Button>
       <NaturalToolbar.Button onClick={() => onAction?.({ type: 'center' })} title='Center canvas.'>
-        <Icon icon='ph--target--regular' />
+        <Icon icon='ph--crosshair-simple--regular' />
       </NaturalToolbar.Button>
       <NaturalToolbar.Button onClick={() => onAction?.({ type: 'zoom-in' })} title='Center canvas.'>
         <Icon icon='ph--magnifying-glass-plus--regular' />

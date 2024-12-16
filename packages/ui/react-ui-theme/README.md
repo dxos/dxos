@@ -8,6 +8,12 @@ A set of design system tokens to use with DXOS UI.
 pnpm i @dxos/react-ui-theme
 ```
 
+To view the interactive Tailwind CSS configuration viewer, run the following command:
+
+```bash
+pnpm nx run tailwind-config-viewer
+```
+
 ## Documentation
 
 - [📖 Developer Guide](https://docs.dxos.org/guide/react/aurora/)

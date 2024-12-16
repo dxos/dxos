@@ -5,7 +5,7 @@
 import { createContext, type Dispatch, type SetStateAction } from 'react';
 
 import { type SelectionModel } from './useSelected';
-import { type GraphModel, type Shape } from '../graph';
+import { type GraphModel, type Shape, type ShapeType } from '../graph';
 import type { Dimension, Point } from '../layout';
 
 export type TransformState = {
@@ -15,7 +15,7 @@ export type TransformState = {
 
 export type DraggingState = {
   container: HTMLElement;
-  shape: Shape;
+  shape: ShapeType<'rect'>;
   anchor?: string;
 };
 

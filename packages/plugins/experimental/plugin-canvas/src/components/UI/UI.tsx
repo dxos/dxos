@@ -17,18 +17,22 @@ import { testId } from '../util';
  * UI components.
  */
 export const UI = () => {
-  const { debug, width, height, graph, showGrid, snapToGrid, dragging, linking } = useEditorContext();
+  const { debug, width, height, scale, offset, graph, showGrid, snapToGrid, dragging, linking } = useEditorContext();
   const handleAction = useActionHandler();
   const selected = useSelected();
   const info = {
     debug,
+    bounds: {
+      width,
+      height,
+    },
+    scale,
+    offset,
     graph: {
       nodes: graph.nodes.length,
       edges: graph.edges.length,
     },
     selected,
-    width,
-    height,
     showGrid,
     snapToGrid,
     dragging,
