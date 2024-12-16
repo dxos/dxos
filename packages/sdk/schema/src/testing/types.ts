@@ -2,26 +2,36 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S, Format, TypedObject, FieldLookupAnnotationId, GeneratorAnnotationId, AST, ref } from '@dxos/echo-schema';
+import {
+  S,
+  Format,
+  TypedObject,
+  FieldLookupAnnotationId,
+  GeneratorAnnotationId,
+  LabelAnnotationId,
+  AST,
+  ref,
+} from '@dxos/echo-schema';
 
 export namespace Testing {
   //
   // Org
   //
 
+  // TODO(burdon): Fix when id can be defined.
   export const OrgSchema = S.Struct({
     // id: S.String,
-    name: S.optional(
-      S.String.annotations({
-        [GeneratorAnnotationId]: 'company.name',
-      }),
-    ),
+    name: S.String.annotations({
+      [GeneratorAnnotationId]: 'company.name',
+    }),
     website: S.optional(
       Format.URL.annotations({
         [AST.TitleAnnotationId]: 'Website',
         [GeneratorAnnotationId]: 'internet.url',
       }),
     ),
+  }).annotations({
+    [LabelAnnotationId]: 'name',
   });
 
   export type OrgSchemaType = S.Schema.Type<typeof OrgSchema>;
@@ -52,11 +62,9 @@ export namespace Testing {
 
   export const ContactSchema = S.Struct({
     // id: S.String,
-    name: S.optional(
-      S.String.annotations({
-        [GeneratorAnnotationId]: 'person.fullName',
-      }),
-    ),
+    name: S.String.annotations({
+      [GeneratorAnnotationId]: 'person.fullName',
+    }),
     email: S.optional(
       Format.Email.annotations({
         [GeneratorAnnotationId]: 'internet.email',
@@ -69,6 +77,8 @@ export namespace Testing {
     ),
     // TODO(burdon): This breaks the table view.
     // address: S.optional(AddressSchema),
+  }).annotations({
+    [LabelAnnotationId]: 'name',
   });
 
   export type ContactSchemaType = S.Schema.Type<typeof ContactSchema>;
@@ -85,12 +95,12 @@ export namespace Testing {
 
   export const ProjectSchema = S.Struct({
     // id: S.String,
-    name: S.optional(
-      S.String.annotations({
-        [GeneratorAnnotationId]: 'commerce.productName',
-      }),
-    ),
+    name: S.String.annotations({
+      [GeneratorAnnotationId]: 'commerce.productName',
+    }),
     description: S.optional(S.String),
+  }).annotations({
+    [LabelAnnotationId]: 'name',
   });
 
   export type ProjectSchemaType = S.Schema.Type<typeof ProjectSchema>;

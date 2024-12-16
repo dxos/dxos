@@ -31,15 +31,15 @@ export const distance = (p1: Point, p2: Point): number =>
 // Bounds
 //
 
+export const getCenter = (rect: Rect): Point => ({
+  x: rect.x + rect.width / 2,
+  y: rect.y + rect.height / 2,
+});
+
 export const getBounds = (center: Point, size: Dimension): Rect => ({
   x: center.x - size.width / 2,
   y: center.y - size.height / 2,
   ...size,
-});
-
-export const getCenter = (rect: Rect): Point => ({
-  x: rect.x + rect.width / 2,
-  y: rect.y + rect.height / 2,
 });
 
 export const getRect = (p1: Point, p2: Point): Rect => ({

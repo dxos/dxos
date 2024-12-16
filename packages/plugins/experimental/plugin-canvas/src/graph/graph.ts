@@ -7,15 +7,15 @@ import { create } from '@dxos/live-object';
 
 import { removeElements } from './util';
 
-export const Node = S.Struct({
+export const BaseNode = S.Struct({
   id: S.String,
   type: S.optional(S.String),
   data: S.optional(S.Any),
 });
 
-export type Node = S.Schema.Type<typeof Node>;
+export type BaseNode = S.Schema.Type<typeof BaseNode>;
 
-export const Edge = S.Struct({
+export const BaseEdge = S.Struct({
   id: S.String,
   type: S.optional(S.String),
   source: S.String,
@@ -23,58 +23,59 @@ export const Edge = S.Struct({
   data: S.optional(S.Any),
 });
 
-export type Edge = S.Schema.Type<typeof Edge>;
+export type BaseEdge = S.Schema.Type<typeof BaseEdge>;
 
 /**
  * Generic graph abstraction.
  */
 export const Graph = S.Struct({
-  id: S.String,
-  nodes: S.mutable(S.Array(Node)),
-  edges: S.mutable(S.Array(Edge)),
+  nodes: S.mutable(S.Array(BaseNode)),
+  edges: S.mutable(S.Array(BaseEdge)),
 });
 
 export type Graph = S.Schema.Type<typeof Graph>;
 
-export const emptyGraph: Graph = { id: 'test', nodes: [], edges: [] };
+export const emptyGraph: Graph = { nodes: [], edges: [] };
+
+export type Node<T extends object | void = void> = BaseNode & { data: T };
+export type Edge<T extends object | void = void> = BaseEdge & { data: T };
 
 /**
- * Wrapper for graph operations.
+ * Reactive typed graph object.
  */
-// TODO(burdon): Create reactive wrapper.
-export class GraphModel {
+export class GraphModel<GraphNode extends Node = any, GraphEdge extends Edge = any> {
   private readonly _graph: Graph;
 
   constructor(obj: Partial<Graph> = {}) {
-    this._graph = create(Graph, { id: 'test', nodes: [], edges: [], ...obj });
+    this._graph = create(Graph, { nodes: [], edges: [], ...obj });
   }
 
   get graph(): Graph {
     return this._graph;
   }
 
-  get nodes(): readonly Node[] {
-    return this._graph.nodes;
+  get nodes(): readonly GraphNode[] {
+    return this._graph.nodes as GraphNode[];
   }
 
-  get edges(): readonly Edge[] {
-    return this._graph.edges;
+  get edges(): readonly GraphEdge[] {
+    return this._graph.edges as GraphEdge[];
   }
 
-  getNode(id: string): Node | undefined {
+  getNode(id: string): GraphNode | undefined {
     return this.nodes.find((node) => node.id === id);
   }
 
-  getEdge(id: string): Edge | undefined {
+  getEdge(id: string): GraphEdge | undefined {
     return this.edges.find((edge) => edge.id === id);
   }
 
-  addNode(node: Node): this {
+  addNode(node: GraphNode): this {
     this._graph.nodes.push(node);
     return this;
   }
 
-  addEdge(edge: Edge): this {
+  addEdge(edge: GraphEdge): this {
     this._graph.edges.push(edge);
     return this;
   }

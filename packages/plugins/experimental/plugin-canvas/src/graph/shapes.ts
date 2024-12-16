@@ -6,10 +6,11 @@ import { createPathThroughPoints, type Dimension, getBounds, getRect, type Point
 
 export type ShapeKind = 'rect' | 'line';
 
-type BaseShape = {
+export type BaseShape<T extends object = any> = {
   id: string;
   type: ShapeKind;
   rect: Rect;
+  data?: T;
 
   // TODO(burdon): Display kind.
   guide?: boolean;
@@ -30,7 +31,7 @@ export type Shape =
       end?: string;
     });
 
-export type ShapeType<K = ShapeKind> = Shape & { type: K };
+export type ShapeType<K = ShapeKind, T extends object = any> = BaseShape<T> & Shape & { type: K };
 
 type CommonProps = Pick<BaseShape, 'id' | 'guide'>;
 

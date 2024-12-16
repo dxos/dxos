@@ -4,11 +4,12 @@
 
 import { describe, test } from 'vitest';
 
-import { type Graph } from './graph';
+import { GraphModel } from './graph';
 
 describe('Graph', () => {
-  test('basics', ({ expect }) => {
-    const graph: Graph = { id: 'test', nodes: [], edges: [] };
-    expect(graph).to.deep.eq({});
+  test('empty', ({ expect }) => {
+    const { graph } = new GraphModel();
+    expect(graph.nodes).to.have.length(0);
+    expect(graph.edges).to.have.length(0);
   });
 });

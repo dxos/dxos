@@ -5,43 +5,42 @@
 import '@dxos-theme';
 
 import type { Meta, StoryObj } from '@storybook/react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { type ReactiveEchoObject } from '@dxos/echo-db';
-import { log } from '@dxos/log';
-import { CollectionType } from '@dxos/plugin-space';
+import { getTypename } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { useAsyncEffect } from '@dxos/react-ui';
 import { createObjectFactory, type ValueGenerator, Testing, type TypeSpec } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Editor, type EditorRootProps } from './Editor';
-import { mapObjects, type Graph, GraphModel } from '../../graph';
-import { toLayoutGraph, doLayout, updateLayout } from '../../layout';
+import { createGraph, type Graph } from '../../graph';
+import { doLayout } from '../../layout';
 
 const generator: ValueGenerator = faker as any;
+
+const types = [Testing.OrgType, Testing.ProjectType, Testing.ContactType];
 
 const Render = (props: EditorRootProps) => {
   const [graph, setGraph] = useState<Graph>();
   const [_, space] = useSpaces(); // TODO(burdon): Get created space.
-  console.log(space);
-  useAsyncEffect(async () => {
+  useEffect(() => {
     if (!space) {
       return;
     }
 
-    const { objects } = await space.db
-      .query((object: ReactiveEchoObject<any>) => !(object instanceof CollectionType))
-      .run();
+    const t = setTimeout(async () => {
+      const { objects } = await space.db
+        .query((object: ReactiveEchoObject<any>) => types.some((t) => t.typename === getTypename(object)))
+        .run();
 
-    log.info('query', { objects: objects.length });
-    const model = mapObjects(new GraphModel(), space, objects);
-    const layout = await doLayout(toLayoutGraph(model.graph));
-    updateLayout(model, layout);
-    log.info('graph', { nodes: model.graph.nodes });
-    setGraph(model.graph);
+      const model = await doLayout(createGraph(objects));
+      setGraph(model.graph);
+    });
+
+    return () => clearTimeout(t);
   }, [space]);
 
   return (
@@ -61,7 +60,7 @@ const meta: Meta<EditorRootProps> = {
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ space }) => {
-        space.db.graph.schemaRegistry.addSchema([Testing.OrgType, Testing.ProjectType, Testing.ContactType]);
+        space.db.graph.schemaRegistry.addSchema(types);
         const createObjects = createObjectFactory(space.db, generator);
         const spec: TypeSpec[] = [
           { type: Testing.OrgType, count: 5 },
@@ -83,7 +82,7 @@ type Story = StoryObj<EditorRootProps>;
 
 export const Default: Story = {
   args: {
-    debug: true,
-    scale: 1,
+    // debug: true,
+    // scale: 1,
   },
 };

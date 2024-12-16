@@ -113,11 +113,16 @@ export type SchemaMeta = {
 // TODO(burdon): Factor out when JSON schema parser allows extensions.
 
 /**
- * Generate test data.
+ * Identifies label property or JSON path expression.
  */
-export const GeneratorAnnotationId = Symbol.for('@dxos/schema/annotation/Generator');
+export const LabelAnnotationId = Symbol.for('@dxos/schema/annotation/Label');
 
 /**
  * Default field to be used on referenced schema to lookup the value.
  */
 export const FieldLookupAnnotationId = Symbol.for('@dxos/schema/annotation/FieldLookup');
+
+/**
+ * Generate test data.
+ */
+export const GeneratorAnnotationId = Symbol.for('@dxos/schema/annotation/Generator');
