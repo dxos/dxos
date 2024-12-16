@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import type { Meta } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react';
 import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -31,8 +31,11 @@ export default meta;
 
 const snapPoint = createSnap({ width: 64, height: 64 });
 
-export const Default = {
+type Story = StoryObj<EditorRootProps>;
+
+export const Default: Story = {
   args: {
     graph: createGraph(snapPoint),
+    scale: 1,
   },
 };

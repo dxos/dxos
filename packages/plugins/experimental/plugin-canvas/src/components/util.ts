@@ -2,8 +2,27 @@
 // Copyright 2024 DXOS.org
 //
 
-export type TestId = 'dx-editor' | 'dx-canvas' | 'dx-shapes' | 'dx-grid' | 'dx-background' | 'dx-overlays' | 'dx-ui';
+export type TestId =
+  | 'dx-storybook'
+  | 'dx-editor'
+  | 'dx-canvas'
+  | 'dx-shapes'
+  | 'dx-grid'
+  | 'dx-background'
+  | 'dx-overlays'
+  | 'dx-ui';
 
-// TODO(burdon): z-index.
+export const testId = (id: TestId, inspect = false) => {
+  if (inspect) {
+    // eslint-disable-next-line no-console
+    console.log('Open storybook in expanded window;\nthen run INSPECT()');
+    (window as any).INSPECT = () => {
+      const el = document.querySelector(`[data-test-id="${id}"]`);
+      (window as any).inspect(el);
+      // eslint-disable-next-line no-console
+      console.log(el);
+    };
+  }
 
-export const testId = (id: TestId) => ({ 'data-test-id': id });
+  return { 'data-test-id': id };
+};

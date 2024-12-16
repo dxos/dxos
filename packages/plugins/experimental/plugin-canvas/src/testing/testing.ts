@@ -7,18 +7,6 @@ import { range } from '@dxos/util';
 import { createRect, type Graph, GraphModel } from '../graph';
 import type { Dimension, PointTransform } from '../layout';
 
-/**
- * Add to Devtools > Sources > Snippets
- * @param id
- */
-export const testElement = (id = '__TEST__') => {
-  (window as any).INSPECT = () => {
-    (window as any).inspect(document.getElementById(id));
-  };
-
-  return { id };
-};
-
 // TODO(burdon): Layout.
 export const itemSize: Dimension = { width: 128, height: 64 };
 
@@ -66,7 +54,7 @@ export const createGraph = (snap: PointTransform): Graph => {
       id: d,
       data: createRect({
         id: d,
-        pos: snap({ x: 0, y: -128 }),
+        pos: snap({ x: 0, y: 128 }),
         size: itemSize,
         text: 'D',
       }),

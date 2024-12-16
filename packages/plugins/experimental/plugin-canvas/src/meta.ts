@@ -8,7 +8,7 @@ export const CANVAS_PLUGIN = 'dxos.org/plugin/canvas';
 
 export default {
   id: CANVAS_PLUGIN,
-  name: 'Grid',
+  name: 'Canvas',
   description: 'Place objects as cards on a grid.',
   icon: 'ph--infinity--regular',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/experimental/plugin-canvas',

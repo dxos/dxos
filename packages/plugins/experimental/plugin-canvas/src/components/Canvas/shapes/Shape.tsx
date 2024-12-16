@@ -2,18 +2,24 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { type CSSProperties, useCallback } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { useDynamicRef } from '@dxos/react-ui';
-import { isNotFalsy } from '@dxos/util';
 
 import { Frame } from './Frame';
 import { Line } from './Line';
-import { createLine, type GraphModel, type Shape } from '../../graph';
-import { type SelectionEvent, useEditorContext, useSelectionEvents, useTransform } from '../../hooks';
-import { boundsContain, boundsToModel, findClosestIntersection, getBounds, type Point, type Rect } from '../../layout';
-import { testId } from '../util';
+import { createLine, type GraphModel, type Shape, type ShapeType } from '../../../graph';
+import { type SelectionEvent, useEditorContext, useSelectionEvents } from '../../../hooks';
+import {
+  boundsContain,
+  boundsToModel,
+  findClosestIntersection,
+  getBounds,
+  type Point,
+  type Rect,
+} from '../../../layout';
+import { testId } from '../../util';
 
 // Ontology:
 // TODO(burdon): Separate shapes/layout from data graph.
@@ -24,10 +30,10 @@ import { testId } from '../util';
 /**
  * Data associated with a drag event.
  */
-export type DragPayloadData = {
+export type DragPayloadData<S extends ShapeType> = {
   type: 'frame' | 'anchor';
   anchor?: string;
-  shape: Shape;
+  shape: S;
 };
 
 export const Component = ({ shape }: { shape: Shape }) => {
@@ -60,14 +66,12 @@ export const Component = ({ shape }: { shape: Shape }) => {
   }
 };
 
-export const Shapes = ({ shapes }: { shapes: Shape[] }) => {
-  const { ready, styles: transformStyles } = useTransform();
-  if (!ready) {
-    return null;
-  }
-
+/**
+ * Render shapes.
+ */
+export const Shapes = ({ shapes, style }: { shapes: Shape[]; style: CSSProperties }) => {
   return (
-    <div {...testId('dx-shapes')} className='absolute' style={transformStyles}>
+    <div {...testId('dx-shapes')} className='absolute' style={style}>
       {shapes.map((shape) => (
         <Component key={shape.id} shape={shape} />
       ))}
@@ -75,7 +79,11 @@ export const Shapes = ({ shapes }: { shapes: Shape[] }) => {
   );
 };
 
-export const useShapes = (graph: GraphModel, dragging?: Shape): Shape[] => {
+/**
+ * Generate shapes.
+ */
+// TODO(burdon): Create memoized layout.
+export const useShapes = (graph: GraphModel, dragging?: Shape, debug?: boolean): Shape[] => {
   const getPos = (id: string): { center: Point; bounds: Rect } | undefined => {
     const node = graph.getNode(id);
     if (node) {
@@ -94,24 +102,31 @@ export const useShapes = (graph: GraphModel, dragging?: Shape): Shape[] => {
     }
   };
 
-  const rects: Shape[] = graph.nodes.map(({ data: shape }) => shape);
+  const shapes: Shape[] = [];
 
-  const lines: Shape[] = graph.edges
-    .map(({ id, source, target }) => {
-      const { center: p1, bounds: r1 } = getPos(source) ?? {};
-      const { center: p2, bounds: r2 } = getPos(target) ?? {};
-      if (!p1 || !p2) {
-        return null;
-      }
+  graph.nodes.forEach(({ data: shape }) => {
+    shapes.push(shape);
+  });
 
-      invariant(r1 && r2);
-      const i1 = findClosestIntersection([p2, p1], r1) ?? p1;
-      const i2 = findClosestIntersection([p1, p2], r2) ?? p2;
-      return createLine({ id, p1: i1, p2: i2 });
-    })
-    .filter(isNotFalsy);
+  graph.edges.forEach(({ id, source, target }) => {
+    const { center: p1, bounds: r1 } = getPos(source) ?? {};
+    const { center: p2, bounds: r2 } = getPos(target) ?? {};
+    if (!p1 || !p2) {
+      return;
+    }
 
-  return [...rects, ...lines];
+    if (debug) {
+      shapes.push(createLine({ id: `${id}-guide`, p1, p2, guide: true }));
+    }
+
+    invariant(r1 && r2);
+    const i1 = findClosestIntersection([p2, p1], r1) ?? p1;
+    const i2 = findClosestIntersection([p1, p2], r2) ?? p2;
+    const line = createLine({ id, p1: i1, p2: i2, start: 'dx-circle', end: 'dx-arrow-end' });
+    shapes.push(line);
+  });
+
+  return shapes;
 };
 
 /**

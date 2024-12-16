@@ -10,10 +10,8 @@ import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Background } from './Background';
-import { FrameDragPreview } from './Frame';
-import { Line } from './Line';
-import { type DragPayloadData, useShapes, Shapes, useSelectionHandler } from './Shape';
-import { createLine, createRect, type Shape } from '../../graph';
+import { type DragPayloadData, FrameDragPreview, Line, Shapes, useShapes, useSelectionHandler } from './shapes';
+import { createLine, createRect, type Shape, type ShapeType } from '../../graph';
 import { useActionHandler, useEditorContext, useShortcuts, useSnap, useTransform } from '../../hooks';
 import { useWheel } from '../../hooks/useWheel';
 import { boundsToModel, findClosestIntersection, getBounds, getInputPoint, type Point } from '../../layout';
@@ -26,11 +24,11 @@ import { testId } from '../util';
  * Main canvas component.
  */
 export const Canvas = () => {
-  const { width, height, scale, offset, graph, showGrid, dragging, setTransform } = useEditorContext();
+  const { debug, width, height, scale, offset, graph, showGrid, dragging, setTransform } = useEditorContext();
 
   // Canvas.
   const containerRef = useRef<HTMLDivElement>(null);
-  const { ready, styles: transformStyles } = useTransform();
+  const { styles: transformStyles } = useTransform();
 
   // Event handlers.
   useWheel(containerRef.current, width, height, setTransform);
@@ -53,7 +51,7 @@ export const Canvas = () => {
   const { frameDragging, overlay } = useDragMonitor(containerRef.current);
 
   // Shapes.
-  const shapes = useShapes(graph, frameDragging);
+  const shapes = useShapes(graph, frameDragging, debug);
   const selectionRect = useSelectionHandler(containerRef.current, shapes);
 
   return (
@@ -62,10 +60,10 @@ export const Canvas = () => {
       <Background />
 
       {/* Grid. */}
-      {ready && showGrid && <Grid offset={offset} scale={scale} />}
+      {showGrid && <Grid offset={offset} scale={scale} />}
 
       {/* Content. */}
-      <Shapes shapes={shapes} />
+      {<Shapes shapes={shapes} style={transformStyles} />}
 
       {/* Overlays. */}
       <div {...testId('dx-overlays')} className={mx('absolute', eventsNone)}>
@@ -104,7 +102,7 @@ const useDragMonitor = (el: HTMLElement | null) => {
   const snapPoint = useSnap();
 
   const [frameDragging, setFrameDragging] = useState<Shape>();
-  const [overlay, setOverlay] = useState<Shape>();
+  const [overlay, setOverlay] = useState<ShapeType<'line'>>();
   const cancelled = useRef(false);
 
   useEffect(() => {
@@ -112,9 +110,9 @@ const useDragMonitor = (el: HTMLElement | null) => {
       onDrag: ({ source, location }) => {
         invariant(el);
         const rect = el.getBoundingClientRect();
-        const pos = boundsToModel(rect, scale, offset, getInputPoint(location.current.input));
-        const { type, shape } = source.data as DragPayloadData;
-        invariant(shape.type === 'rect'); // TODO(burdon): Handle lines?
+        const { x, y } = boundsToModel(rect, scale, offset, getInputPoint(location.current.input));
+        const pos = { x, y };
+        const { type, shape } = source.data as DragPayloadData<ShapeType<'rect'>>;
 
         switch (type) {
           case 'frame': {
@@ -142,8 +140,7 @@ const useDragMonitor = (el: HTMLElement | null) => {
           // TODO(burdon): Adjust for offset?
           // const pos = boundsToModelWithOffset(rect, scale, offset, shape.pos, location.initial, location.current);
           const pos = boundsToModel(rect, scale, offset, getInputPoint(location.current.input));
-          const { type, shape } = source.data as DragPayloadData;
-          invariant(shape.type === 'rect'); // TODO(burdon): Handle lines?
+          const { type, shape } = source.data as DragPayloadData<ShapeType<'rect'>>;
 
           switch (type) {
             case 'frame': {
@@ -179,7 +176,7 @@ const useDragMonitor = (el: HTMLElement | null) => {
   return { frameDragging, overlay };
 };
 
-const createLineOverlay = (source: Shape, p2: Point): Shape | undefined => {
+const createLineOverlay = (source: Shape, p2: Point): ShapeType<'line'> | undefined => {
   if (source.type === 'rect') {
     const { pos, rect } = source;
     const p1 = findClosestIntersection([p2, pos], rect) ?? pos;

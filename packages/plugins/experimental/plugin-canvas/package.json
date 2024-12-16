@@ -58,6 +58,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -65,6 +66,7 @@
     "@preact/signals-core": "^1.6.0",
     "@radix-ui/react-context": "^1.0.0",
     "bind-event-listener": "^3.0.0",
+    "d3": "^7.9.0",
     "lodash.defaultsdeep": "^4.6.1",
     "react-fps-stats": "^0.3.1",
     "react-resize-detector": "^11.0.1"
@@ -75,6 +77,7 @@
     "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
+    "@types/d3": "^7.4.3",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
