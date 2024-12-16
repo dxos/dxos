@@ -3,6 +3,7 @@
 //
 
 import { AST, Schema as S } from '@effect/schema';
+import { isNone, isSome } from 'effect/Option';
 import { describe, test } from 'vitest';
 
 import { invariant } from '@dxos/invariant';
@@ -18,7 +19,7 @@ import {
   isOption,
   isSimpleType,
   visit,
-  type JsonPath,
+  JsonPath,
   type JsonProp,
 } from './ast';
 
@@ -181,5 +182,26 @@ describe('AST', () => {
         }).ast.toJSON(),
       );
     }
+  });
+
+  // TODO(ZaymonFC): Update this when we settle on the right indexing syntax for arrays.
+  test('json path validation', ({ expect }) => {
+    const validatePath = S.validateOption(JsonPath);
+
+    // Valid paths.
+    expect(isSome(validatePath('foo'))).toBe(true);
+    expect(isSome(validatePath('foo.bar'))).toBe(true);
+    expect(isSome(validatePath('foo.bar.baz'))).toBe(true);
+    expect(isSome(validatePath('foo[1].bar'))).toBe(true);
+    expect(isSome(validatePath('_foo.$bar'))).toBe(true);
+
+    // Invalid paths.
+    expect(isNone(validatePath(''))).toBe(true);
+    expect(isNone(validatePath('.'))).toBe(true);
+    expect(isNone(validatePath('foo.'))).toBe(true);
+    expect(isNone(validatePath('foo..bar'))).toBe(true);
+    expect(isNone(validatePath('foo.#bar'))).toBe(true);
+    expect(isNone(validatePath('[1].bar'))).toBe(true);
+    expect(isNone(validatePath('test.[1].bar[1]'))).toBe(true);
   });
 });

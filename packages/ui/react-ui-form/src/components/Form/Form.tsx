@@ -28,8 +28,7 @@ export type PropsFilter<T extends BaseObject> = (props: SchemaProperty<T>[]) => 
 
 export type FormProps<T extends BaseObject> = ThemedClassName<
   {
-    // TODO(burdon): Partial<T>?
-    values: T;
+    values: Partial<T>;
 
     /** Path to the current object from the root. Used with nested forms. */
     path?: string[];
@@ -261,7 +260,7 @@ const ArrayField = <T extends BaseObject>({
                   <div role='none' className='flex-1'>
                     <Form<any>
                       schema={schema}
-                      path={[...key, index.toString()]}
+                      path={[...key, `[${index}]`]}
                       values={value}
                       onValuesChanged={(childValues) => {
                         const newValues = [...arrayValues];
@@ -322,7 +321,7 @@ const ArrayField = <T extends BaseObject>({
                 format={format}
                 label={label}
                 inputOnly
-                property={`${name}.${index}`}
+                property={`${name}[${index}]` as PropertyKey<T>}
                 disabled={readonly}
                 placeholder={placeholder}
                 {...inputProps}
