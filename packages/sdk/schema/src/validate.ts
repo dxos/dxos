@@ -13,7 +13,16 @@ export const validateSchema = <T>(schema: S.Schema<T>, values: any): ValidationE
   const result = validator(values);
   if (Either.isLeft(result)) {
     const errors = Effect.runSync(ArrayFormatter.formatError(result.left));
-    return errors.map(({ message, path }) => ({ message, path: path.join('.') }));
+    return errors.map(({ message, path }) => ({
+      message,
+      path: path
+        .map((segment) => {
+          // If segment is a number, wrap in brackets, otherwise return as-is.
+          const str = String(segment);
+          return /^\d+$/.test(str) ? `[${str}]` : str;
+        })
+        .join('.'),
+    }));
   }
 
   return undefined;
