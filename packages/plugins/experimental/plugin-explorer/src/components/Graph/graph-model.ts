@@ -2,20 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  AST,
-  getSchema,
-  getType,
-  MutableSchema,
-  ReferenceAnnotationId,
-  type S,
-  SchemaValidator,
-  StoredSchema,
-} from '@dxos/echo-schema';
+import { AST, MutableSchema, ReferenceAnnotationId, type S, SchemaValidator, StoredSchema } from '@dxos/echo-schema';
 import { type GraphData, type GraphLink, GraphModel } from '@dxos/gem-spore';
 import { log } from '@dxos/log';
 import { CollectionType } from '@dxos/plugin-space/types';
-import { type ReactiveEchoObject, type Space, type Subscription } from '@dxos/react-client/echo';
+import { type ReactiveEchoObject, type Space, type Subscription, getSchema, getType } from '@dxos/react-client/echo';
 
 export type SpaceGraphModelOptions = {
   schema?: boolean;

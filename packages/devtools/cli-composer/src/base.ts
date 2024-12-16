@@ -6,9 +6,10 @@ import { type Command } from '@oclif/core';
 
 import { AbstractBaseCommand } from '@dxos/cli-base';
 import { type Client } from '@dxos/client';
-import { create, ECHO_ATTR_META, ECHO_ATTR_TYPE, getObjectAnnotation, type ObjectMeta, S } from '@dxos/echo-schema';
+import { ECHO_ATTR_META, ECHO_ATTR_TYPE, getObjectAnnotation, type ObjectMeta, S } from '@dxos/echo-schema';
 import { FUNCTION_TYPES } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
+import { create } from '@dxos/live-object';
 import { nonNullable } from '@dxos/util';
 
 /**

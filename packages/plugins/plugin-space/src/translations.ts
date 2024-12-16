@@ -3,10 +3,14 @@
 //
 
 import { SPACE_PLUGIN } from './meta';
+import { CollectionType } from './types';
 
 export default [
   {
     'en-US': {
+      [CollectionType.typename]: {
+        'typename label': 'Collection',
+      },
       [SPACE_PLUGIN]: {
         'plugin name': 'Spaces',
         'first run message': 'Nothing selected.',
@@ -104,6 +108,17 @@ export default [
         'open space settings label': 'Space Settings',
         'members tab label': 'Members',
         'settings tab label': 'Settings',
+        'syncing message': 'Space syncing',
+        'show all label': 'Show all',
+        'no sync status label': 'No space with missing objects.',
+        'create space dialog title': 'Create Space',
+        'create object dialog title': 'Create Object',
+        'space input placeholder': 'Select space',
+        'schema input placeholder': 'Select object type',
+        'creating object type label': 'Type',
+        'creating in space label': 'In Space',
+        'creating in collection label': 'In Collection',
+        'clear input label': 'Clear',
       },
     },
   },

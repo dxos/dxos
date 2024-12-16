@@ -28,6 +28,8 @@ import {
   ReadonlyException,
   MAX_COLUMNS,
   MAX_ROWS,
+  mapFormulaIndicesToRefs,
+  mapFormulaRefsToIndices,
 } from '../defs';
 import { type CellScalarValue, type CellValue, type SheetType, type RestoreAxis } from '../types';
 
@@ -142,7 +144,7 @@ export class SheetModel extends Resource {
       invariant(this._node);
       const { col, row } = addressFromIndex(this._sheet, key);
       if (isFormula(value)) {
-        const binding = this._graph.mapFunctionBindingFromId(this.mapFormulaIndicesToRefs(value));
+        const binding = this._graph.mapFunctionBindingFromId(mapFormulaIndicesToRefs(this._sheet, value));
         if (binding) {
           value = this._graph.mapFormulaToNative(binding);
         } else {
@@ -315,7 +317,7 @@ export class SheetModel extends Resource {
     }
 
     if (isFormula(value)) {
-      return this._graph.mapFunctionBindingFromId(this.mapFormulaIndicesToRefs(value));
+      return this._graph.mapFunctionBindingFromId(mapFormulaIndicesToRefs(this._sheet, value));
     } else {
       return String(value);
     }
@@ -391,7 +393,7 @@ export class SheetModel extends Resource {
       delete this._sheet.cells[idx];
     } else {
       if (isFormula(value)) {
-        value = this._graph.mapFunctionBindingToId(this.mapFormulaRefsToIndices(value));
+        value = this._graph.mapFunctionBindingToId(mapFormulaRefsToIndices(this._sheet, value));
       }
 
       this._sheet.cells[idx] = { value };
@@ -438,20 +440,6 @@ export class SheetModel extends Resource {
   // TODO(burdon): Move. Cannot use fractional without changing. Switch back to using unique IDs?
   private _moveIndices(indices: string[], i: number, j: number, n: number) {
     throw new Error('Not implemented');
-  }
-
-  //
-  // Indices.
-  //
-
-  /**
-   * Map from A1 notation to indices.
-   */
-  mapFormulaRefsToIndices(formula: string): string {
-    invariant(isFormula(formula));
-    return formula.replace(/([a-zA-Z]+)([0-9]+)/g, (match) => {
-      return addressToIndex(this._sheet, addressFromA1Notation(match));
-    });
   }
 
   /**

@@ -5,9 +5,9 @@
 import { effect } from '@preact/signals-core';
 
 import { type UnsubscribeCallback } from '@dxos/async';
-import { type ReactiveObject, create } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { invariant } from '@dxos/invariant';
+import { create, type ReactiveObject } from '@dxos/live-object';
 import { hyphenize } from '@dxos/util';
 
 type PropType<T> = {

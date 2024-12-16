@@ -5,11 +5,8 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import {
-  create,
   MutableSchema,
   ObjectAnnotationId,
-  getSchema,
-  getType,
   getTypeReference,
   ref,
   TypedObject,
@@ -17,12 +14,14 @@ import {
   getTypename,
 } from '@dxos/echo-schema';
 import { EmptySchemaType } from '@dxos/echo-schema/testing';
+import { getSchema, getType, create } from '@dxos/live-object';
 
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
 
 class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
   schema: S.optional(ref(MutableSchema)),
+  schemaArray: S.optional(S.mutable(S.Array(ref(MutableSchema)))),
 }) {}
 
 describe('MutableSchema', () => {
@@ -66,7 +65,17 @@ describe('MutableSchema', () => {
 
     const schema = db.schemaRegistry.addSchema(GeneratedSchema);
     const instanceWithSchemaRef = db.add(create(TestSchema, { schema }));
-    expect(instanceWithSchemaRef.schema!.typename).to.eq('example.com/type/Test');
+    expect(instanceWithSchemaRef.schema!.typename).to.eq(GeneratedSchema.typename);
+  });
+
+  test('push MutableSchema to echo object schema array', async () => {
+    const { db } = await setupTest();
+    const instanceWithSchemaRef = db.add(create(TestSchema, { schemaArray: [] }));
+    class GeneratedSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+      field: S.String,
+    }) {}
+    instanceWithSchemaRef.schemaArray!.push(db.schemaRegistry.addSchema(GeneratedSchema));
+    expect(instanceWithSchemaRef.schemaArray![0].typename).to.eq(GeneratedSchema.typename);
   });
 
   test('can be used to create objects', async () => {

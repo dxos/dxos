@@ -5,13 +5,13 @@
 import React from 'react';
 
 import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 import { loadObjectReferences } from '@dxos/react-client/echo';
 
-import { GridMain } from './components';
+import { GridContainer } from './components';
 import meta, { GRID_PLUGIN } from './meta';
 import translations from './translations';
 import { GridItemType, GridType } from './types';
@@ -24,6 +24,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
       metadata: {
         records: {
           [GridType.typename]: {
+            createObject: GridAction.CREATE,
             placeholder: ['grid title placeholder', { ns: GRID_PLUGIN }],
             icon: 'ph--squares-four--regular',
             // TODO(wittjosiah): Move out of metadata.
@@ -47,7 +48,8 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
       },
       translations,
       echo: {
-        schema: [GridType, GridItemType],
+        schema: [GridType],
+        system: [GridItemType],
       },
       graph: {
         builder: (plugins) => {
@@ -95,7 +97,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return data.active instanceof GridType ? <GridMain grid={data.active} /> : null;
+              return data.active instanceof GridType ? <GridContainer grid={data.active} /> : null;
           }
 
           return null;

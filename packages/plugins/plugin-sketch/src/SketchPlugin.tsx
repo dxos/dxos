@@ -32,6 +32,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
       metadata: {
         records: {
           [DiagramType.typename]: {
+            createObject: SketchAction.CREATE,
             placeholder: ['object title placeholder', { ns: SKETCH_PLUGIN }],
             icon: 'ph--compass-tool--regular',
             // TODO(wittjosiah): Move out of metadata.
@@ -43,13 +44,8 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
       settings: settings.values,
       translations,
       echo: {
-        schema: [DiagramType, CanvasType],
-      },
-      space: {
-        onSpaceCreate: {
-          label: ['create object label', { ns: SKETCH_PLUGIN }],
-          action: SketchAction.CREATE,
-        },
+        schema: [DiagramType],
+        system: [CanvasType],
       },
       graph: {
         builder: (plugins) => {

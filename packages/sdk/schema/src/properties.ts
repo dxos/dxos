@@ -2,6 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import { pipe } from 'effect';
+import { capitalize } from 'effect/String';
+
 import {
   AST,
   FormatEnum,
@@ -60,7 +63,7 @@ export const getSchemaProperties = <T extends BaseObject>(ast: AST.AST, value: a
   invariant(AST.isTypeLiteral(ast));
   return AST.getPropertySignatures(ast).reduce<SchemaProperty<T>[]>((props, prop) => {
     const name = prop.name.toString() as PropertyKey<T>;
-    // TODO(burdon): Detect annotation to skip?
+    // TODO(burdon): Handle special case?
     if (name === 'id') {
       return props;
     }
@@ -78,7 +81,7 @@ export const getSchemaProperties = <T extends BaseObject>(ast: AST.AST, value: a
       ast: prop.type,
       optional: prop.isOptional,
       readonly: prop.isReadonly,
-      title,
+      title: title ?? pipe(name, capitalize),
       description,
       examples,
       defaultValue,
@@ -96,7 +99,7 @@ export const getSchemaProperties = <T extends BaseObject>(ast: AST.AST, value: a
     // First check if reference.
     const jsonSchema = findAnnotation<JsonSchemaType>(prop.type, AST.JSONSchemaAnnotationId);
     if (jsonSchema && '$id' in jsonSchema) {
-      const typename = getSchemaReference(jsonSchema);
+      const { typename } = getSchemaReference(jsonSchema) ?? {};
       if (typename) {
         // TODO(burdon): Special handling for refs? type = 'ref'?
         type = 'object';

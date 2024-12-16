@@ -5,7 +5,7 @@
 import { Trigger, sleep } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Resource } from '@dxos/context';
-import { signPresentation } from '@dxos/credentials';
+import { createCredential, signPresentation } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { log } from '@dxos/log';
@@ -108,6 +108,21 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
       signerKey: this._identityManager.identity.deviceKey,
       chain: this._identityManager.identity.deviceCredentialChain,
       nonce,
+    });
+  }
+
+  async createAuthCredential() {
+    const identity = this._identityManager.identity;
+
+    invariant(identity, 'Identity not initialized.');
+
+    return await createCredential({
+      assertion: { '@type': 'dxos.halo.credentials.Auth' },
+      issuer: identity.identityKey,
+      subject: identity.identityKey,
+      chain: identity.deviceCredentialChain,
+      signingKey: identity.deviceKey,
+      signer: this._keyring,
     });
   }
 

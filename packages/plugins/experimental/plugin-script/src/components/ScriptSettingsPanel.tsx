@@ -20,11 +20,7 @@ export const ScriptSettingsPanel = ({ script }: ScriptSettingsPanelProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
   const client = useClient();
   const space = getSpace(script);
-  // TODO(dmaretskyi): Parametric query.
-  const [fn] = useQuery(
-    space,
-    Filter.schema(FunctionType, (fn) => fn.source === script),
-  );
+  const [fn] = useQuery(space, Filter.schema(FunctionType, { source: script }));
 
   const handleNameChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {

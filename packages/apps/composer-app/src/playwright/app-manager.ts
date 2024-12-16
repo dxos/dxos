@@ -42,6 +42,7 @@ export class AppManager {
     this.page = page;
 
     await this.isAuthenticated();
+    await this.confirmRecoveryCode();
 
     this.shell = new ShellManager(this.page, this._inIframe);
     this._initialized = true;
@@ -90,6 +91,11 @@ export class AppManager {
       .catch(() => false);
   }
 
+  async confirmRecoveryCode() {
+    await this.page.getByTestId('recoveryCode.confirm').click();
+    await this.page.getByTestId('recoveryCode.continue').click();
+  }
+
   //
   // Toasts
   //
@@ -106,8 +112,23 @@ export class AppManager {
   // Spaces
   //
 
-  async createSpace(timeout = 10_000) {
+  async createSpace({
+    type = 'Document',
+    name,
+    timeout = 10_000,
+  }: { type?: string; name?: string; timeout?: number } = {}) {
     await this.page.getByTestId('spacePlugin.createSpace').getByTestId('treeItem.heading').click();
+    await this.page.getByTestId('create-space-form').getByTestId('save-button').click({ delay: 100 });
+
+    await this.page.getByTestId('create-object-form.schema-input').fill(type);
+    await this.page.keyboard.press('Enter');
+
+    const objectForm = this.page.getByTestId('create-object-form');
+    if (name) {
+      await objectForm.getByLabel('Name').fill(name);
+    }
+    await objectForm.getByTestId('save-button').click();
+
     await this.waitForSpaceReady(timeout);
   }
 
@@ -140,18 +161,18 @@ export class AppManager {
     return this.page.getByTestId('spacePlugin.object').nth(nth).getByRole('button').first().click();
   }
 
-  // TODO(wittjosiah): Last for backwards compatibility. Default to first object.
-  async createObject(plugin: string, nth?: number) {
+  async createObject({ type, name, nth = 0 }: { type: string; name?: string; nth?: number }) {
     const object = this.page.getByTestId('spacePlugin.createObject');
-    await (nth ? object.nth(nth) : object.last()).click();
-    return this.page.getByTestId(`${plugin}.createObject`).click();
-  }
+    await object.nth(nth).click();
 
-  // TODO(wittjosiah): Last for backwards compatibility. Default to first object.
-  async createCollection(nth?: number) {
-    const object = this.page.getByTestId('spacePlugin.createObject');
-    await (nth ? object.nth(nth) : object.last()).click();
-    return this.page.getByTestId('spacePlugin.createCollection').click();
+    await this.page.getByTestId('create-object-form.schema-input').fill(type);
+    await this.page.keyboard.press('Enter');
+
+    const objectForm = this.page.getByTestId('create-object-form');
+    if (name) {
+      await objectForm.getByLabel('Name').fill(name);
+    }
+    await objectForm.getByTestId('save-button').click();
   }
 
   async renameObject(newName: string, nth = 0) {

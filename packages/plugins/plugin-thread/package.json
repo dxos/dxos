@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-thread",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "DXOS Threads Surface plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -48,6 +48,7 @@
     "@dxos/display-name": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",

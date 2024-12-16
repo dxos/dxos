@@ -11,12 +11,14 @@ import { log } from '@dxos/log';
 import { EdgeAgentStatus, EdgeCallFailedError } from '@dxos/protocols';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
+import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
 import { type Identity } from '../identity';
 import { type DataSpaceManager } from '../spaces';
 
 const AGENT_STATUS_QUERY_RETRY_INTERVAL = 5000;
 const AGENT_STATUS_QUERY_RETRY_JITTER = 1000;
+const AGENT_FEED_ADDED_CHECK_INTERVAL_MS = 3000;
 
 export type EdgeAgentManagerConfig = {};
 
@@ -138,16 +140,28 @@ export class EdgeAgentManager extends Resource {
    * Instead, we stay in active polling mode while there are spaces where we don't see our agent's feed.
    */
   protected _ensureAgentIsInSpaces(agentDeviceKey: PublicKey) {
+    let activePollingEnabled = false;
     for (const space of this._dataSpaceManager.spaces.values()) {
+      if (space.getEdgeReplicationSetting() === EdgeReplicationSetting.DISABLED) {
+        space.notarizationPlugin.setActiveEdgePollingEnabled(false);
+        continue;
+      }
       if ([SpaceState.SPACE_INACTIVE, SpaceState.SPACE_CLOSED].includes(space.state)) {
+        space.notarizationPlugin.setActiveEdgePollingEnabled(false);
         continue;
       }
       const agentFeedNeedsNotarization = ![...space.inner.spaceState.feeds.values()].some((feed) =>
         feed.assertion.deviceKey.equals(agentDeviceKey),
       );
       space.notarizationPlugin.setActiveEdgePollingEnabled(agentFeedNeedsNotarization);
+      activePollingEnabled = activePollingEnabled || agentFeedNeedsNotarization;
 
       log.info('set active edge polling', { enabled: agentFeedNeedsNotarization, spaceId: space.id });
+    }
+
+    if (activePollingEnabled) {
+      // Check again to see if active edge polling can be disabled (agent feed is notarized in all the spaces)
+      scheduleTask(this._ctx, () => this._ensureAgentIsInSpaces(agentDeviceKey), AGENT_FEED_ADDED_CHECK_INTERVAL_MS);
     }
   }
 

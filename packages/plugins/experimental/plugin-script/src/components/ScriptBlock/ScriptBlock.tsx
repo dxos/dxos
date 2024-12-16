@@ -8,7 +8,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { createDocAccessor, DocAccessor } from '@dxos/react-client/echo';
 import { Toolbar, Button, Icon } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 
 import { Bundler, type BundlerResult, initializeBundler } from '../../bundler';
 import { type ScriptType } from '../../types';
@@ -28,10 +27,6 @@ const PROVIDED_MODULES = [
 export type ScriptBlockProps = {
   script: ScriptType;
   hideSelector?: boolean;
-  classes?: {
-    root?: string;
-    toolbar?: string;
-  };
 
   // Url to the page used to host the script in the iframe.
   containerUrl: string;
@@ -41,7 +36,7 @@ export type ScriptBlockProps = {
  * @deprecated
  */
 // TODO(burdon): Cache compiled results in context.
-export const ScriptBlock = ({ script, hideSelector, classes, containerUrl }: ScriptBlockProps) => {
+export const ScriptBlock = ({ script, hideSelector, containerUrl }: ScriptBlockProps) => {
   const source = useMemo(() => script.source && createDocAccessor(script.source, ['content']), [script.source]);
   const [result, setResult] = useState<BundlerResult>();
   const bundler = useMemo(
@@ -78,9 +73,9 @@ export const ScriptBlock = ({ script, hideSelector, classes, containerUrl }: Scr
   );
 
   return (
-    <div className={mx('flex flex-col grow overflow-hidden', classes?.root)}>
+    <div className='flex flex-col grow overflow-hidden'>
       {!hideSelector && (
-        <Toolbar.Root classNames={mx('mb-2', classes?.toolbar)}>
+        <Toolbar.Root>
           <div className='grow' />
           {result?.bundle && !result?.error && (
             <div title={String(result.error)}>

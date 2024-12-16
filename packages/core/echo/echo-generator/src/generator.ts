@@ -2,19 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Space, Filter } from '@dxos/client/echo';
+import { Filter, type Space } from '@dxos/client/echo';
 import { type ReactiveEchoObject } from '@dxos/echo-db';
-import {
-  create,
-  getObjectAnnotation,
-  getSchema,
-  isReactiveObject,
-  MutableSchema,
-  type ReactiveObject,
-  type S,
-} from '@dxos/echo-schema';
+import { getObjectAnnotation, MutableSchema, type S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { create, getSchema, isReactiveObject, type ReactiveObject } from '@dxos/live-object';
 import { faker } from '@dxos/random';
+import { range } from '@dxos/util';
 
 import { type TestSchemaType } from './data';
 import {
@@ -24,7 +18,6 @@ import {
   type TestObjectProvider,
   type TestSchemaMap,
 } from './types';
-import { range } from './util';
 
 /**
  * Typed object generator.
@@ -64,7 +57,7 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
   async createObjects(map: Partial<Record<T, number>>) {
     const tasks = Object.entries<number>(map as any)
       .map(([type, count]) => {
-        return range(() => this.createObject({ types: [type as T] }), count);
+        return range(count, () => this.createObject({ types: [type as T] }));
       })
       .flatMap((t) => t);
 

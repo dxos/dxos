@@ -154,7 +154,7 @@ export class DxAxisResizeInternal extends Event {
 export type DxEditRequestProps = Pick<DxEditRequest, 'cellIndex' | 'cellBox' | 'initialContent'>;
 
 export class DxEditRequest extends Event {
-  public readonly cellIndex: DxGridPlaneCellIndex;
+  public readonly cellIndex: DxGridCellIndex;
   public readonly cellBox: Record<'insetInlineStart' | 'insetBlockStart' | 'inlineSize' | 'blockSize', number>;
   public readonly initialContent?: string;
   constructor(props: DxEditRequestProps) {

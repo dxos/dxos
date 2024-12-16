@@ -8,9 +8,10 @@ import { type ReactiveEchoObject } from '@dxos/client/echo';
 import { failUndefined } from '@dxos/debug';
 import { useClient } from '@dxos/react-client';
 import { Filter, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
-import { Select } from '@dxos/react-ui';
+import { Select, useTranslation } from '@dxos/react-ui';
 
 import { getInvocationUrl, getUserFunctionUrlInMetadata } from '../../edge';
+import { SCRIPT_PLUGIN } from '../../meta';
 import { FunctionType, ScriptType } from '../../types';
 import { DebugPanel } from '../DebugPanel';
 
@@ -19,17 +20,21 @@ export interface AutomationPanelProps {
 }
 
 export const AutomationPanel = ({ subject }: AutomationPanelProps) => {
+  const { t } = useTranslation(SCRIPT_PLUGIN);
   const space = getSpace(subject);
 
   // TODO(dmaretskyi): Parametric query.
   const functions = useQuery(
     space ?? undefined,
-    Filter.schema(FunctionType, (fn) => (subject instanceof ScriptType ? fn.source === subject : fn.binding != null)),
+    subject instanceof ScriptType
+      ? Filter.schema(FunctionType, { source: subject })
+      : Filter.schema(FunctionType, (fn) => fn.binding != null),
     {},
     [subject],
   );
+
   const [selectedFunction, setSelectedFunction] = useState<FunctionType | null>(null);
-  const functionToChatWith = subject instanceof ScriptType ? functions[0] : selectedFunction;
+  const chatFunction = subject instanceof ScriptType ? functions[0] : selectedFunction;
 
   return (
     <div className='h-full flex flex-col'>
@@ -40,8 +45,8 @@ export const AutomationPanel = ({ subject }: AutomationPanelProps) => {
           functions={functions}
         />
       )}
-      {functionToChatWith && <ChatPanel fn={functionToChatWith} subject={subject} />}
-      {subject instanceof ScriptType && functions.length === 0 && <p>Deploy function to interact with it.</p>}
+      {chatFunction && <ChatPanel fn={chatFunction} subject={subject} />}
+      {subject instanceof ScriptType && functions.length === 0 && <div className='p-1'>{t('not deployed')}</div>}
     </div>
   );
 };

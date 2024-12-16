@@ -44,6 +44,7 @@ const MarkdownContainer = ({
         role={role}
         document={doc}
         extensions={extensions}
+        viewMode={viewMode}
         settings={settings}
         scrollPastEnd={scrollPastEnd}
         onViewModeChange={onViewModeChange}

@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React from 'react';
 
-import { createMutableSchema } from '@dxos/echo-schema/testing';
+import { createMutableSchema } from '@dxos/live-object/testing';
 import { log } from '@dxos/log';
 import { ViewProjection } from '@dxos/schema';
 import { TestSchema, testView } from '@dxos/schema/testing';
@@ -20,14 +20,14 @@ import { TestLayout, TestPanel } from '../testing';
 type StoryProps = FieldEditorProps;
 
 const DefaultStory = (props: FieldEditorProps) => {
-  const handleComplete: FieldEditorProps['onClose'] = () => {
+  const handleComplete: FieldEditorProps['onSave'] = () => {
     log.info('onClose', { props });
   };
 
   return (
     <TestLayout json={{ props }}>
       <TestPanel>
-        <FieldEditor {...props} onClose={handleComplete} />
+        <FieldEditor {...props} onSave={handleComplete} />
       </TestPanel>
     </TestLayout>
   );

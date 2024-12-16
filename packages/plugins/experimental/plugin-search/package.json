@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-search",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "Braneframe sketch plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -33,6 +33,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",

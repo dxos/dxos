@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S } from '@dxos/effect';
+import { type JsonProp, S } from '@dxos/effect';
 
 import { PropertyMeta } from './annotations';
 import { FormatAnnotationId } from '../formats';
@@ -23,7 +23,7 @@ export const FIELD_PATH_ANNOTATION = 'path';
  * Sets the path for the field.
  * @param path Data source path in the json path format. This is the field path in the source object.
  */
-// TODO(burdon): Field, vs. path vs. property
+// TODO(burdon): Field, vs. path vs. property.
 export const FieldPath = (path: string) => PropertyMeta(FIELD_PATH_ANNOTATION, path);
 
 /**
@@ -261,3 +261,16 @@ const _JsonSchemaType = S.mutable(
 export interface JsonSchemaType extends S.Schema.Type<typeof _JsonSchemaType> {}
 
 export const JsonSchemaType: S.Schema<JsonSchemaType> = _JsonSchemaType;
+
+// TODO(burdon): Factor out JSON schema utils.
+
+export const getSchemaProperty = (schema: JsonSchemaType, property: JsonProp): JsonSchemaType | undefined => {
+  return schema.properties?.[property];
+};
+
+// TODO(burdon): Properties should be ordered.
+export const setSchemaProperty = (schema: JsonSchemaType, property: JsonProp, value: JsonSchemaType) => {
+  schema.properties ??= {};
+  schema.properties[property] = value;
+  return schema;
+};

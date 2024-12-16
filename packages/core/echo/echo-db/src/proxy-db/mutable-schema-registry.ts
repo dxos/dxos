@@ -4,18 +4,18 @@
 
 import { type UnsubscribeCallback } from '@dxos/async';
 import {
-  createStoredSchema,
   getObjectAnnotation,
   makeStaticSchema,
-  toJsonSchema,
   MutableSchema,
   type ObjectAnnotation,
   ObjectAnnotationId,
   type S,
   type StaticSchema,
   StoredSchema,
+  toJsonSchema,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { createStoredSchema } from '@dxos/live-object';
 import { log } from '@dxos/log';
 
 import { type EchoDatabase } from './database';
@@ -98,7 +98,7 @@ export class MutableSchemaRegistry implements SchemaResolver {
   /**
    * @deprecated
    */
-  // TODO(burdon): Reconcile with list.
+  // TODO(burdon): Reconcile with query.
   public async listAll(): Promise<StaticSchema[]> {
     const { objects } = await this._db.query(Filter.schema(StoredSchema)).run();
     const storedSchemas = objects.map((storedSchema) => {

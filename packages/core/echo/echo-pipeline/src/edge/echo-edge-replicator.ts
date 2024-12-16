@@ -97,6 +97,9 @@ export class EchoEdgeReplicator implements EchoReplicator {
   async connectToSpace(spaceId: SpaceId) {
     using _guard = await this._mutex.acquire();
 
+    if (this._connectedSpaces.has(spaceId)) {
+      return;
+    }
     this._connectedSpaces.add(spaceId);
 
     // Check if AM-repo requested that we connect to remote peers.
@@ -264,9 +267,20 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     }
     const spaceId = await this._context.getContainingSpaceIdForDocument(params.documentId);
     if (!spaceId) {
-      // There's no spaceId if the document is not present locally. This means the sharePolicy check is being
-      // performed on message reception, so spaceId check was already performed in _onMessage.
-      return true;
+      const remoteDocumentExists = await this._context.isDocumentInRemoteCollection({
+        documentId: params.documentId,
+        peerId: this._remotePeerId as PeerId,
+      });
+
+      log.info('document not found locally for share policy check, accepting the remote document', {
+        documentId: params.documentId,
+        remoteDocumentExists,
+      });
+
+      // If a document is not present locally return true only if it already exists on edge.
+      // Simply returning true will add edge to "generous peers list" for this document which will
+      // start replication of the document after we receive it potentially pushing it to replicator of the wrong space.
+      return remoteDocumentExists;
     }
     return spaceId === this._spaceId;
   }

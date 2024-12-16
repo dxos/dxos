@@ -20,6 +20,7 @@ type InitializeProps = {
   createIdentity?: boolean;
   createSpace?: boolean;
   onInitialized?: (client: Client) => MaybePromise<Record<string, any> | void>;
+  onIdentityCreated?: (props: { client: Client }) => MaybePromise<Record<string, any> | void>;
   onSpaceCreated?: (props: { client: Client; space: Space }) => MaybePromise<Record<string, any> | void>;
 };
 
@@ -28,13 +29,15 @@ type InitializeProps = {
  */
 const initializeClient = async (
   client: Client,
-  { createIdentity, createSpace, onSpaceCreated, onInitialized }: InitializeProps,
+  { createIdentity, createSpace, onSpaceCreated, onIdentityCreated, onInitialized }: InitializeProps,
 ): Promise<StoryClientProps> => {
   const clientData = await onInitialized?.(client);
 
+  let identityData: Record<string, any> | void = {};
   if (createIdentity || createSpace) {
     if (!client.halo.identity.get()) {
       await client.halo.createIdentity();
+      identityData = await onIdentityCreated?.({ client });
     }
   }
 
@@ -45,7 +48,7 @@ const initializeClient = async (
     spaceData = await onSpaceCreated?.({ client, space });
   }
 
-  return { space, ...clientData, ...spaceData };
+  return { space, ...clientData, ...identityData, ...spaceData };
 };
 
 type StoryClientProps<T extends Record<string, any> = Record<string, unknown>> = T & { space?: Space };
@@ -67,6 +70,7 @@ export const withClientProvider = ({
   createIdentity,
   createSpace,
   onSpaceCreated,
+  onIdentityCreated,
   onInitialized,
   ...props
 }: WithClientProviderProps = {}): Decorator => {
@@ -74,7 +78,15 @@ export const withClientProvider = ({
     const [data, setData] = useState<StoryClientProps>({});
 
     const handleInitialized = async (client: Client) => {
-      setData(await initializeClient(client, { createIdentity, createSpace, onSpaceCreated, onInitialized }));
+      setData(
+        await initializeClient(client, {
+          createIdentity,
+          createSpace,
+          onSpaceCreated,
+          onIdentityCreated,
+          onInitialized,
+        }),
+      );
     };
 
     return (
@@ -109,6 +121,7 @@ export const withMultiClientProvider = ({
   createIdentity,
   createSpace,
   onSpaceCreated,
+  onIdentityCreated,
   onInitialized,
   ...props
 }: WithMultiClientProviderProps): Decorator => {
@@ -128,6 +141,7 @@ export const withMultiClientProvider = ({
             createIdentity,
             createSpace,
             onSpaceCreated,
+            onIdentityCreated,
             onInitialized,
           });
           spaceReady.current.wake(space);

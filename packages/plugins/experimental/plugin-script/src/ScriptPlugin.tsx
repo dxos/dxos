@@ -7,7 +7,7 @@ import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import React from 'react';
 
 import { NavigationAction, parseIntentPlugin, type PluginDefinition, resolvePlugin } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { TextType } from '@dxos/plugin-markdown/types';
@@ -48,6 +48,7 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
       metadata: {
         records: {
           [ScriptType.typename]: {
+            createObject: ScriptAction.CREATE,
             placeholder: ['object title placeholder', { ns: SCRIPT_PLUGIN }],
             icon: 'ph--code--regular',
             // TODO(wittjosiah): Move out of metadata.
@@ -57,13 +58,8 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
       },
       translations,
       echo: {
-        schema: [ScriptType, FunctionType],
-      },
-      space: {
-        onSpaceCreate: {
-          label: ['create object label', { ns: SCRIPT_PLUGIN }],
-          action: ScriptAction.CREATE,
-        },
+        schema: [ScriptType],
+        system: [FunctionType],
       },
       graph: {
         builder: (plugins) => {

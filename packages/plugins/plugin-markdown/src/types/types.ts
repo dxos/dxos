@@ -11,8 +11,7 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import { type SchemaProvides } from '@dxos/plugin-client';
-import { type SpaceInitProvides } from '@dxos/plugin-space';
+import { type SchemaProvides } from '@dxos/plugin-space';
 import { type Extension, type EditorInputMode, type EditorViewMode } from '@dxos/react-ui-editor';
 
 import { type DocumentType } from './document';
@@ -83,6 +82,5 @@ export type MarkdownPluginProvides = SurfaceProvides &
   SettingsProvides<MarkdownSettingsProps> &
   TranslationsProvides &
   SchemaProvides &
-  SpaceInitProvides &
   StackProvides &
   ThreadProvides<DocumentType>;

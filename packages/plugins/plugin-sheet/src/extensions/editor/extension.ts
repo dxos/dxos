@@ -64,6 +64,7 @@ const highlightStyles = HighlightStyle.define([
 const languageFacet = singleValueFacet<Language>();
 
 export type SheetExtensionOptions = {
+  debug?: boolean;
   functions?: FunctionDefinition[];
 };
 
@@ -74,7 +75,7 @@ export type SheetExtensionOptions = {
  * https://github.com/codemirror/lang-example
  * https://hyperformula.handsontable.com/guide/key-concepts.html#grammar
  */
-export const sheetExtension = ({ functions = [] }: SheetExtensionOptions): Extension => {
+export const sheetExtension = ({ debug, functions = [] }: SheetExtensionOptions): Extension => {
   const { extension, language } = spreadsheet({ idiom: 'en-US', decimalSeparator: '.' });
 
   const createCompletion = (name: string) => {
@@ -162,8 +163,7 @@ export const sheetExtension = ({ functions = [] }: SheetExtensionOptions): Exten
       aboveCursor: false,
       defaultKeymap: true,
       activateOnTyping: true,
-      // NOTE: Useful for debugging.
-      closeOnBlur: false,
+      closeOnBlur: !debug,
       icons: false,
       tooltipClass: () =>
         mx(

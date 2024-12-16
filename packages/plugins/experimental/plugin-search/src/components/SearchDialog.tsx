@@ -16,7 +16,7 @@ import {
 } from '@dxos/app-framework';
 import { type Node } from '@dxos/plugin-graph';
 import { useClient } from '@dxos/react-client';
-import { fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
+import { Filter, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
 import { Button, Dialog, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { SearchList, type SearchListItemProps } from '@dxos/react-ui-searchlist';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
@@ -61,7 +61,7 @@ export const SearchDialog = ({
   const active = navigationPlugin?.provides.location.active;
   const [queryString, setQueryString] = useState('');
   const client = useClient();
-  const dangerouslyLoadAllObjects = useQuery(client.spaces);
+  const dangerouslyLoadAllObjects = useQuery(client.spaces, Filter.all());
   const [pending, results] = useSearchResults(queryString, dangerouslyLoadAllObjects);
   const resultObjects = Array.from(results.keys());
   const dispatch = useIntentDispatcher();

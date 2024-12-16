@@ -5,7 +5,8 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { type Reference } from '@dxos/echo-protocol';
-import { create, S, TypedObject } from '@dxos/echo-schema';
+import { S, TypedObject } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { Filter } from './filter';

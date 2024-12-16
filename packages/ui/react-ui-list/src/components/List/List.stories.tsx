@@ -7,9 +7,10 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React from 'react';
 
-import { create, S } from '@dxos/echo-schema';
+import { S } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { arrayMove } from '@dxos/util';
 
 import { List, type ListRootProps } from './List';

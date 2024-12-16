@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React, { useState } from 'react';
 
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';

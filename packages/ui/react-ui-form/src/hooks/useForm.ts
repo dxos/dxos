@@ -9,6 +9,10 @@ import { type SimpleType, type S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { validateSchema, type ValidationError } from '@dxos/schema';
+import { type MaybePromise } from '@dxos/util';
+
+// TODO(ZaymonFC): Where should this live?
+export type FormPath<T extends object = {}> = PropertyKey<T> | `${PropertyKey<T>}.${number}`;
 
 /**
  * Return type from `useForm` hook.
@@ -19,19 +23,19 @@ export type FormHandler<T extends BaseObject> = {
   //
 
   values: T;
-  errors: Record<PropertyKey<T>, string>;
-  touched: Record<PropertyKey<T>, boolean>;
-  changed: Record<PropertyKey<T>, boolean>;
-  canSubmit: boolean;
-  handleSubmit: () => void;
+  errors: Record<FormPath<T>, string>;
+  touched: Record<FormPath<T>, boolean>;
+  changed: Record<FormPath<T>, boolean>;
+  canSave: boolean;
+  handleSave: () => void;
 
   //
   // Form input component helpers.
   //
 
-  getStatus: (property: PropertyKey<T>) => { status?: 'error'; error?: string };
-  getValue: <V>(property: PropertyKey<T>) => V;
-  onValueChange: <V>(property: PropertyKey<T>, type: SimpleType, value: V) => void;
+  getStatus: (property: FormPath<T>) => { status?: 'error'; error?: string };
+  getValue: <V>(property: FormPath<T>) => V;
+  onValueChange: <V>(property: FormPath<T>, type: SimpleType, value: V) => void;
   onBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 };
 
@@ -39,9 +43,16 @@ export type FormHandler<T extends BaseObject> = {
  * Hook options.
  */
 export interface FormOptions<T extends BaseObject> {
+  /**
+   * Effect schema.
+   */
+  // TODO(burdon): Change to S.Struct<T>?
   schema: S.Schema<T>;
 
-  // TODO(burdon): Are these reactive?
+  /**
+   * Initial values (which may not pass validation).
+   */
+  // TODO(burdon): Should be partial?
   initialValues: T;
 
   /**
@@ -56,7 +67,7 @@ export interface FormOptions<T extends BaseObject> {
    * Use this for complex validation logic that can't be expressed in the schema.
    * @returns Array of validation errors, or undefined if validation passes
    */
-  // TODO(burdon): Change to key x value.
+  // TODO(burdon): Change to key x value?
   onValidate?: (values: T) => ValidationError[] | undefined;
 
   /**
@@ -67,7 +78,7 @@ export interface FormOptions<T extends BaseObject> {
   /**
    * Called when the form is submitted and passes validation.
    */
-  onSubmit?: (values: T, meta: { changed: FormHandler<T>['changed'] }) => void;
+  onSave?: (values: T, meta: { changed: FormHandler<T>['changed'] }) => MaybePromise<void>;
 }
 
 /**
@@ -80,16 +91,17 @@ export const useForm = <T extends BaseObject>({
   onValuesChanged,
   onValidate,
   onValid,
-  onSubmit,
+  onSave,
 }: FormOptions<T>): FormHandler<T> => {
   const [values, setValues] = useState<T>(initialValues);
   useEffect(() => {
     setValues(initialValues);
   }, [initialValues]);
 
-  const [touched, setTouched] = useState<Record<PropertyKey<T>, boolean>>(createKeySet(initialValues, false));
-  const [changed, setChanged] = useState<Record<PropertyKey<T>, boolean>>(createKeySet(initialValues, false));
-  const [errors, setErrors] = useState<Record<PropertyKey<T>, string>>({} as Record<PropertyKey<T>, string>);
+  const [touched, setTouched] = useState<Record<FormPath<T>, boolean>>(createKeySet(initialValues, false));
+  const [changed, setChanged] = useState<Record<FormPath<T>, boolean>>(createKeySet(initialValues, false));
+  const [errors, setErrors] = useState<Record<FormPath<T>, string>>({} as Record<FormPath<T>, string>);
+  const [saving, setSaving] = useState(false);
 
   //
   // Validation.
@@ -123,26 +135,32 @@ export const useForm = <T extends BaseObject>({
    * NOTE: We can submit if there is no touched field that has an error.
    * Basically, if there's a validation message visible in the form, submit should be disabled.
    */
-  const canSubmit = useMemo(
+  const canSave = useMemo(
     () =>
+      !saving &&
       Object.keys(values).every(
         (property) => touched[property as PropertyKey<T>] === false || !errors[property as PropertyKey<T>],
       ),
-    [values, touched, errors],
+    [values, touched, errors, saving],
   );
 
-  const handleSubmit = useCallback(() => {
+  const handleSave = useCallback(async () => {
     if (validate(values)) {
-      onSubmit?.(values, { changed });
+      setSaving(true);
+      try {
+        await onSave?.(values, { changed });
+      } finally {
+        setSaving(false);
+      }
     }
-  }, [values, validate, onSubmit]);
+  }, [values, validate, onSave]);
 
   //
   // Fields.
   //
 
   const getStatus = useCallback<FormHandler<T>['getStatus']>(
-    (property: PropertyKey<T>) => ({
+    (property: FormPath<T>) => ({
       status: errors[property] ? 'error' : undefined,
       error: errors[property] ? errors[property] : undefined,
     }),
@@ -150,12 +168,12 @@ export const useForm = <T extends BaseObject>({
   );
 
   // TODO(burdon): Use path to extract hierarchical value.
-  const getValue = <V>(property: PropertyKey<T>): V => {
-    return values[property] as V;
+  const getValue = <V>(property: FormPath<T>): V => {
+    return getByPath(values, property);
   };
 
   // TODO(burdon): Use path to set hierarchical value.
-  const onValueChange = (property: PropertyKey<T>, type: SimpleType, value: any) => {
+  const onValueChange = (property: FormPath<T>, type: SimpleType, value: any) => {
     let parsedValue = value;
     try {
       if (type === 'number') {
@@ -166,7 +184,7 @@ export const useForm = <T extends BaseObject>({
       parsedValue = undefined;
     }
 
-    const newValues = { ...values, [property]: parsedValue };
+    const newValues = setByPath(values, property, parsedValue);
     setValues(newValues);
     setChanged((prev) => ({ ...prev, [property]: true }));
     onValuesChanged?.(newValues);
@@ -185,7 +203,7 @@ export const useForm = <T extends BaseObject>({
 
       // TODO(Zan): This should be configurable behavior.
       if (event.relatedTarget?.getAttribute('type') === 'submit') {
-        // NOTE: We do this here instead of onSubmit because the blur event is triggered before the submit event
+        // NOTE: We do this here instead of onSave because the blur event is triggered before the submit event
         //  and results in the submit button being disabled when the form is invalid.
         setTouched(createKeySet(values, true));
       }
@@ -201,8 +219,8 @@ export const useForm = <T extends BaseObject>({
     errors,
     touched,
     changed,
-    canSubmit,
-    handleSubmit,
+    canSave,
+    handleSave,
 
     // Field utils.
     getStatus,
@@ -212,19 +230,34 @@ export const useForm = <T extends BaseObject>({
   } satisfies FormHandler<T>;
 };
 
-const createKeySet = <T extends BaseObject, V>(obj: T, value: V): Record<PropertyKey<T>, V> => {
+const createKeySet = <T extends BaseObject, V>(obj: T, value: V): Record<FormPath<T>, V> => {
   invariant(obj);
-  return Object.keys(obj).reduce((acc, key) => ({ ...acc, [key]: value }), {} as Record<PropertyKey<T>, V>);
+  return Object.keys(obj).reduce((acc, key) => ({ ...acc, [key]: value }), {} as Record<FormPath<T>, V>);
 };
 
 const flatMap = <T extends BaseObject>(errors: ValidationError[]) => {
   return errors.reduce(
     (result, { path, message }) => {
       if (!(path in result)) {
-        result[path as PropertyKey<T>] = message;
+        result[path as FormPath<T>] = message;
       }
       return result;
     },
-    {} as Record<PropertyKey<T>, string>,
+    {} as Record<FormPath<T>, string>,
   );
+};
+
+// TODO(ZaymonFC): Move to util?
+const getByPath = <T extends object, V>(obj: T, path: FormPath<T>): V => {
+  const [key, index] = path.split('.');
+  return index === undefined ? (obj[key as keyof T] as V) : ((obj[key as keyof T] as any[])[parseInt(index)] as V);
+};
+
+const setByPath = <T extends object>(obj: T, path: FormPath<T>, value: any): T => {
+  const [key, index] = path.split('.');
+  const newValue =
+    index === undefined
+      ? value
+      : [...(obj[key as keyof T] as any[])].map((v, i) => (i === parseInt(index) ? value : v));
+  return { ...obj, [key]: newValue };
 };

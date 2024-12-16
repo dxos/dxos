@@ -13,7 +13,7 @@ import { SpaceAction } from '@dxos/plugin-space';
 import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 import { Icon } from '@dxos/react-ui';
 
-import { ComputeGraphContextProvider, RangeList, SheetContainer } from './components';
+import { ComputeGraphContextProvider, SheetContainer, SheetObjectSettings } from './components';
 import { type ComputeGraphRegistry } from './compute-graph';
 import { compareIndexPositions, createSheet } from './defs';
 import { computeGraphFacet } from './extensions';
@@ -49,6 +49,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       metadata: {
         records: {
           [SheetType.typename]: {
+            createObject: SheetAction.CREATE,
             label: (object: any) => (object instanceof SheetType ? object.name : undefined),
             placeholder: ['sheet title placeholder', { ns: SHEET_PLUGIN }],
             icon: 'ph--grid-nine--regular',
@@ -58,15 +59,10 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       },
       translations,
       echo: {
+        schema: [SheetType],
         // TODO(wittjosiah): Factor out to common package/plugin.
         //  FunctionType is currently registered here in case script plugin isn't enabled.
-        schema: [SheetType, FunctionType],
-      },
-      space: {
-        onSpaceCreate: {
-          label: ['create sheet label', { ns: SHEET_PLUGIN }],
-          action: SheetAction.CREATE,
-        },
+        system: [FunctionType],
       },
       graph: {
         builder: (plugins) => {
@@ -144,26 +140,18 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       surface: {
         component: ({ data, role }) => {
           const space = isEchoObject(data.object) ? getSpace(data.object) : undefined;
-          if (!space) {
-            return null;
-          }
-
           switch (role) {
             case 'article':
             case 'section':
-              if (data.object instanceof SheetType) {
+              if (space && data.object instanceof SheetType) {
                 return <SheetContainer space={space} sheet={data.object} role={role} />;
               }
-
-              return null;
+              break;
             case 'complementary--settings':
               if (data.subject instanceof SheetType) {
-                return {
-                  node: <RangeList sheet={data.subject} />,
-                };
+                return <SheetObjectSettings sheet={data.subject} />;
               }
-
-              return null;
+              break;
           }
 
           return null;
@@ -186,7 +174,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
                 const undoData = model[axis === 'col' ? 'dropColumn' : 'dropRow'](axisIndex);
                 return {
                   undoable: {
-                    message: translations[0]['en-US'][SHEET_PLUGIN][`${axis} dropped label`],
+                    message: (translations[0]['en-US'][SHEET_PLUGIN] as any)[`${axis} dropped label`],
                     data: { ...undoData, model },
                   },
                 };

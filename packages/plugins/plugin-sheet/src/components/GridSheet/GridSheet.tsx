@@ -27,9 +27,11 @@ import {
   type EditorBlurHandler,
   type GridContentProps,
   type DxGridPosition,
+  type DxGridCellIndex,
+  parseCellIndex,
 } from '@dxos/react-ui-grid';
 
-import { colLabelCell, dxGridCellIndexToSheetCellAddress, rowLabelCell, useSheetModelDxGridProps } from './util';
+import { colLabelCell, rowLabelCell, useSheetModelDxGridProps } from './util';
 import { DEFAULT_COLUMNS, DEFAULT_ROWS, rangeToA1Notation, type CellRange } from '../../defs';
 import { rangeExtension, sheetExtension, type RangeController } from '../../extensions';
 import { useSelectThreadOnCellFocus, useUpdateFocusedCellOnThreadSelection } from '../../integrations';
@@ -113,7 +115,7 @@ export const GridSheet = () => {
   const handleBlur = useCallback<EditorBlurHandler>(
     (value) => {
       if (value !== undefined) {
-        model.setValue(dxGridCellIndexToSheetCellAddress(editing!.index), value);
+        model.setValue(parseCellIndex(editing!.index), value);
       }
     },
     [model, editing],
@@ -293,9 +295,8 @@ export const GridSheet = () => {
   );
 
   const getCellContent = useCallback(
-    (index: string) => {
-      const cell = dxGridCellIndexToSheetCellAddress(index);
-      return model.getCellText(cell);
+    (index: DxGridCellIndex) => {
+      return model.getCellText(parseCellIndex(index));
     },
     [model],
   );
@@ -335,21 +336,30 @@ export const GridSheet = () => {
         <DropdownMenu.VirtualTrigger virtualRef={contextMenuAnchorRef} />
         <DropdownMenu.Content side={contextMenuAxis === 'col' ? 'bottom' : 'right'} sideOffset={4} collisionPadding={8}>
           <DropdownMenu.Viewport>
-            <DropdownMenu.Item onClick={() => handleAxisMenuAction('insert-before')}>
+            <DropdownMenu.Item
+              onClick={() => handleAxisMenuAction('insert-before')}
+              data-testid={`grid.${contextMenuAxis}.insert-before`}
+            >
               <Icon
                 size={5}
                 icon={contextMenuAxis === 'col' ? 'ph--columns-plus-left--regular' : 'ph--rows-plus-top--regular'}
               />
               <span>{t(`add ${contextMenuAxis} before label`)}</span>
             </DropdownMenu.Item>
-            <DropdownMenu.Item onClick={() => handleAxisMenuAction('insert-after')}>
+            <DropdownMenu.Item
+              onClick={() => handleAxisMenuAction('insert-after')}
+              data-testid={`grid.${contextMenuAxis}.insert-after`}
+            >
               <Icon
                 size={5}
                 icon={contextMenuAxis === 'col' ? 'ph--columns-plus-right--regular' : 'ph--rows-plus-bottom--regular'}
               />
               <span>{t(`add ${contextMenuAxis} after label`)}</span>
             </DropdownMenu.Item>
-            <DropdownMenu.Item onClick={() => handleAxisMenuAction('drop')}>
+            <DropdownMenu.Item
+              onClick={() => handleAxisMenuAction('drop')}
+              data-testid={`grid.${contextMenuAxis}.drop`}
+            >
               <Icon size={5} icon='ph--backspace--regular' />
               <span>{t(`delete ${contextMenuAxis} label`)}</span>
             </DropdownMenu.Item>
