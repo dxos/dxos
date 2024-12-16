@@ -7,11 +7,11 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, onTestFin
 import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { type SpaceDoc } from '@dxos/echo-protocol';
-import { Expando } from '@dxos/echo-schema';
+import { Expando, type Ref } from '@dxos/echo-schema';
 import { Contact } from '@dxos/echo-schema/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { create, getMeta } from '@dxos/live-object';
+import { create, getMeta, makeRef } from '@dxos/live-object';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
@@ -107,7 +107,7 @@ describe('Queries', () => {
 
     test('filter by reference', async () => {
       const objA = db.add(create(Expando, { label: 'obj a' }));
-      const objB = db.add(create(Expando, { label: 'obj b', ref: objA }));
+      const objB = db.add(create(Expando, { label: 'obj b', ref: makeRef(objA) }));
       await db.flush({ indexes: true });
 
       const { objects } = await db.query(Filter.schema(Expando, { ref: objA })).run();
@@ -500,11 +500,11 @@ test('map over refs in query result', async () => {
   const folder = db.add(create(Expando, { name: 'folder', objects: [] as any[] }));
   const objects = range(3).map((idx) => createTestObject(idx));
   for (const object of objects) {
-    folder.objects.push(object);
+    folder.objects.push(makeRef(object));
   }
 
   const queryResult = await db.query({ name: 'folder' }).run();
-  const result = queryResult.objects.flatMap(({ objects }) => objects);
+  const result = queryResult.objects.flatMap(({ objects }) => objects.map((o: Ref<any>) => o.target));
 
   for (const i in objects) {
     expect(result[i]).to.eq(objects[i]);

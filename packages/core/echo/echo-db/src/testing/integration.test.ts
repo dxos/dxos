@@ -15,7 +15,7 @@ import { Expando, getObjectAnnotation, S, TypedObject } from '@dxos/echo-schema'
 import { updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';
-import { create, getSchema } from '@dxos/live-object';
+import { create, getSchema, makeRef } from '@dxos/live-object';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
 
@@ -128,6 +128,7 @@ describe('Integration tests', () => {
     await dataAssertion.verify(db2);
   });
 
+  // TODO(dmaretskyi): Test Ref.load() too.
   test('references are loaded lazily and receive signal notifications', async () => {
     const [spaceKey] = PublicKey.randomSequence();
     await using peer = await builder.createPeer();
@@ -138,7 +139,7 @@ describe('Integration tests', () => {
       await using db = await peer.createDatabase(spaceKey);
       rootUrl = db.rootUrl!;
       const inner = db.add({ name: 'inner' });
-      const outer = db.add({ inner });
+      const outer = db.add({ inner: makeRef(inner) });
       outerId = outer.id;
       await db.flush();
     }
@@ -153,10 +154,10 @@ describe('Integration tests', () => {
           loaded.wake();
         }
       });
-      expect(outer.inner).to.eq(undefined);
+      expect(outer.inner.target).to.eq(undefined);
 
       await loaded.wait();
-      expect(outer.inner).to.include({ name: 'inner' });
+      expect(outer.inner.target).to.include({ name: 'inner' });
       expect(updates.count).to.eq(1);
     }
   });

@@ -10,7 +10,15 @@ import { type BaseObject, Expando } from '@dxos/echo-schema';
 import { Contact, Container, RecordType, Task, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
-import { create, dangerouslySetProxyId, getMeta, getSchema, getType, makeRef, type ReactiveObject } from '@dxos/live-object';
+import {
+  create,
+  dangerouslySetProxyId,
+  getMeta,
+  getSchema,
+  getType,
+  makeRef,
+  type ReactiveObject,
+} from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
@@ -325,7 +333,7 @@ describe('Database', () => {
       const { db } = await createDbWithTypes();
       const firstTask = db.add(create(Task, { title: 'foo' }));
       const secondTask = db.add(create(Task, { title: 'bar', previous: makeRef(firstTask) }));
-      expect(secondTask.previous).to.eq(firstTask);
+      expect(secondTask.previous?.target).to.eq(firstTask);
     });
 
     test('add with a reference to a reactive proxy', async () => {
