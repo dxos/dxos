@@ -86,20 +86,21 @@ export const drawGraph = async (
   editor: Editor,
   graph: Graph<PlainObject, PlainObject>,
 ): Promise<SerializedStore<TLRecord>> => {
-  const grid = 40;
+  const gridSize = 40;
   const nodeSize = 80;
 
-  const snap = (n: number) => Math.round(n / grid) * grid;
+  const snap = (n: number) => Math.round(n / gridSize) * gridSize;
 
+  // TODO(burdon): Util.
   type Intersection<Types extends readonly unknown[]> = Types extends [infer First, ...infer Rest]
     ? First & Intersection<Rest>
     : unknown;
 
   const defaultOptions: Intersection<[D3ForceLayoutOptions, GridLayoutOptions, RadialLayoutOptions]> = {
     center: [0, 0],
-    width: grid * 20,
-    height: grid * 20,
-    linkDistance: grid * 2,
+    width: gridSize * 20,
+    height: gridSize * 20,
+    linkDistance: gridSize * 2,
     nodeSize,
     nodeSpacing: nodeSize,
     preventOverlap: true,
@@ -129,7 +130,7 @@ export const drawGraph = async (
       layout = new RadialLayout({
         ...defaultOptions,
         focusNode: graph.getAllNodes()[0],
-        unitRadius: grid * 2,
+        unitRadius: gridSize * 2,
       });
     }
   }

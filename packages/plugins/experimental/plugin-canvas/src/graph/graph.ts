@@ -9,20 +9,25 @@ import { removeElements } from './util';
 
 export const Node = S.Struct({
   id: S.String,
-  data: S.Any,
+  type: S.optional(S.String),
+  data: S.optional(S.Any),
 });
 
 export type Node = S.Schema.Type<typeof Node>;
 
 export const Edge = S.Struct({
   id: S.String,
+  type: S.optional(S.String),
   source: S.String,
   target: S.String,
-  data: S.Any,
+  data: S.optional(S.Any),
 });
 
 export type Edge = S.Schema.Type<typeof Edge>;
 
+/**
+ * Generic graph abstraction.
+ */
 export const Graph = S.Struct({
   id: S.String,
   nodes: S.mutable(S.Array(Node)),
