@@ -5,7 +5,7 @@
 import React, { useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react';
 import { generatePath, useOutletContext, useParams } from 'react-router-dom';
 
-import { create, SpaceState, type Space } from '@dxos/react-client/echo';
+import { create, SpaceState, type Space, makeRef } from '@dxos/react-client/echo';
 import { nonNullable } from '@dxos/util';
 
 import { Header } from './Header';
@@ -23,7 +23,7 @@ export const Todos = () => {
   // TODO(wittjosiah): Support multiple lists in a single space.
   const list: TodoListType | undefined =
     space?.state.get() === SpaceState.SPACE_READY ? space?.properties[TodoListType.typename] : undefined;
-  const allTodos = list?.todos.filter(nonNullable) ?? [];
+  const allTodos = list?.todos.map((todo) => todo.target).filter(nonNullable) ?? [];
   const todos = allTodos.filter((todo) => (completed !== undefined ? completed === !!todo?.completed : true));
 
   const handleNewTodoKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -35,7 +35,7 @@ export const Todos = () => {
 
     const title = inputRef.current?.value.trim();
     if (title && list) {
-      list.todos.push(create(TodoType, { title, completed: false }));
+      list.todos.push(makeRef(create(TodoType, { title, completed: false })));
       inputRef.current!.value = '';
     }
   };
@@ -49,6 +49,7 @@ export const Todos = () => {
 
   const handleClearCompleted = () => {
     list?.todos
+      .map((todo) => todo.target)
       .filter(nonNullable)
       .filter((item) => item.completed)
       .forEach((item) => space?.db.remove(item));

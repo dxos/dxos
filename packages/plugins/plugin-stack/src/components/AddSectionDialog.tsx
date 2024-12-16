@@ -6,7 +6,7 @@ import { FilePlus } from '@phosphor-icons/react';
 import React, { useCallback, useRef, useState } from 'react';
 
 import { usePlugin, useIntent, LayoutAction, useResolvePlugin, parseFileManagerPlugin } from '@dxos/app-framework';
-import { type ReactiveEchoObject, create, getSpace } from '@dxos/client/echo';
+import { type ReactiveEchoObject, create, getSpace, makeRef } from '@dxos/client/echo';
 import { FileType } from '@dxos/plugin-ipfs/types';
 import { type CollectionType } from '@dxos/plugin-space/types';
 import { Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -48,10 +48,10 @@ export const AddSectionDialog = ({ path, position, collection }: AddSectionDialo
           ? 0
           : position === 'afterAll'
             ? collection.objects.length
-            : collection.objects.filter(nonNullable).findIndex((section) => section.id === Path.last(path!));
+            : collection.objects.filter(nonNullable).findIndex((section) => section.target?.id === Path.last(path!));
 
-      collection.objects.splice(index + (position === 'after' ? 1 : 0), 0, sectionObject);
-      const stack = collection.views[StackViewType.typename];
+      collection.objects.splice(index + (position === 'after' ? 1 : 0), 0, makeRef(sectionObject));
+      const stack = collection.views[StackViewType.typename].target;
       if (stack) {
         stack.sections[sectionObject.id] = {};
       }

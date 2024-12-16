@@ -71,7 +71,7 @@ export const AddSection = ({ collection }: { collection: CollectionType }) => {
     async (creator: StackSectionCreator) => {
       const { data: section } = (await dispatch(creator.intent)) ?? {};
       collection.objects = [section];
-      const stack = collection.views[StackViewType.typename];
+      const stack = collection.views[StackViewType.typename].target;
       if (stack) {
         stack.sections[section.id] = {};
       }

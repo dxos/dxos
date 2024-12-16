@@ -5,7 +5,7 @@
 import { type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { EXPANDO_TYPENAME, getObjectAnnotation, getTypename, type Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { getSchema, isReactiveObject } from '@dxos/live-object';
+import { getSchema, isReactiveObject, makeRef } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
 import {
   ACTION_GROUP_TYPE,
@@ -106,7 +106,7 @@ const getCollectionGraphNodePartials = ({
     role: 'branch',
     onRearrangeChildren: (nextOrder: unknown[]) => {
       // Change on disk.
-      collection.objects = nextOrder.filter(isEchoObject);
+      collection.objects = nextOrder.map((object) => makeRef(object as Expando));
     },
     onTransferStart: (child: Node<ReactiveEchoObject<any>>, index?: number) => {
       // TODO(wittjosiah): Support transfer between spaces.
@@ -126,11 +126,12 @@ const getCollectionGraphNodePartials = ({
       // } else {
 
       // Add child to destination collection.
-      if (!collection.objects.includes(child.data)) {
+      // TODO(dmaretskyi): Compare by id.
+      if (!collection.objects.find((object) => object.target === child.data)) {
         if (typeof index !== 'undefined') {
-          collection.objects.splice(index, 0, child.data);
+          collection.objects.splice(index, 0, makeRef(child.data));
         } else {
-          collection.objects.push(child.data);
+          collection.objects.push(makeRef(child.data));
         }
       }
 
@@ -138,7 +139,7 @@ const getCollectionGraphNodePartials = ({
     },
     onTransferEnd: (child: Node<ReactiveEchoObject<any>>, destination: Node) => {
       // Remove child from origin collection.
-      const index = collection.objects.indexOf(child.data);
+      const index = collection.objects.findIndex((object) => object.target === child.data);
       if (index > -1) {
         collection.objects.splice(index, 1);
       }
@@ -157,9 +158,9 @@ const getCollectionGraphNodePartials = ({
       const newObject = await cloneObject(child.data, resolve, space);
       space.db.add(newObject);
       if (typeof index !== 'undefined') {
-        collection.objects.splice(index, 0, newObject);
+        collection.objects.splice(index, 0, makeRef(newObject));
       } else {
-        collection.objects.push(newObject);
+        collection.objects.push(makeRef(newObject));
       }
     },
   };

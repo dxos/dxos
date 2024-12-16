@@ -32,7 +32,7 @@ import { EventSubscriptions, type Trigger, type UnsubscribeCallback } from '@dxo
 import { S, type AbstractTypedObject, type HasId } from '@dxos/echo-schema';
 import { scheduledEffect } from '@dxos/echo-signals/core';
 import { invariant } from '@dxos/invariant';
-import { create, isDeleted, isReactiveObject } from '@dxos/live-object';
+import { create, isDeleted, isReactiveObject, makeRef } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
@@ -812,6 +812,7 @@ export const SpacePlugin = ({
                 }
 
                 return collection.objects
+                  .map(object => object.target)
                   .filter(nonNullable)
                   .map((object) =>
                     createObjectNode({ object, space, resolve, navigable: state.values.navigableCollections }),
@@ -832,6 +833,7 @@ export const SpacePlugin = ({
                 }
 
                 return collection.objects
+                  .map(object => object.target)
                   .filter(nonNullable)
                   .map((object) =>
                     createObjectNode({ object, space, resolve, navigable: state.values.navigableCollections }),
@@ -1374,15 +1376,15 @@ export const SpacePlugin = ({
               }
 
               if (intent.data?.target instanceof CollectionType) {
-                intent.data?.target.objects.push(object as HasId);
+                intent.data?.target.objects.push(makeRef(object as HasId));
               } else if (isSpace(intent.data?.target)) {
                 const collection = space.properties[CollectionType.typename];
                 if (collection instanceof CollectionType) {
-                  collection.objects.push(object as HasId);
+                  collection.objects.push(makeRef(object as HasId));
                 } else {
                   // TODO(wittjosiah): Can't add non-echo objects by including in a collection because of types.
-                  const collection = create(CollectionType, { objects: [object as HasId], views: {} });
-                  space.properties[CollectionType.typename] = collection;
+                  const collection = create(CollectionType, { objects: [makeRef(object as HasId)], views: {} });
+                  space.properties[CollectionType.typename] = makeRef(collection);
                 }
               }
 
@@ -1428,7 +1430,7 @@ export const SpacePlugin = ({
                   objects,
                   parentCollection,
                   indices: objects.map((obj) =>
-                    parentCollection instanceof CollectionType ? parentCollection.objects.indexOf(obj as Expando) : -1,
+                    parentCollection instanceof CollectionType ? parentCollection.objects.findIndex(object => object.target === obj) : -1,
                   ),
                   nestedObjectsList,
                   wasActive: objects
