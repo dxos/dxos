@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { NavigationAction, parseIntentPlugin, type PluginDefinition, resolvePlugin } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
@@ -22,6 +22,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
       metadata: {
         records: {
           [GameType.typename]: {
+            createObject: ChessAction.CREATE,
             placeholder: ['game title placeholder', { ns: CHESS_PLUGIN }],
             icon: 'ph--shield-chevron--regular',
           },
@@ -29,12 +30,6 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
       },
       echo: {
         schema: [GameType],
-      },
-      space: {
-        onSpaceCreate: {
-          label: ['create game label', { ns: CHESS_PLUGIN }],
-          action: ChessAction.CREATE,
-        },
       },
       graph: {
         builder: (plugins) => {

@@ -54,7 +54,7 @@ const DefaultStory = () => {
     }
   }, [schema, table?.view]);
 
-  const objects = useQuery(space, schema ? Filter.schema(schema) : () => false, undefined, [schema]);
+  const objects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
   const handleInsertRow = useCallback(() => {

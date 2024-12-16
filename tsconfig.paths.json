@@ -14,6 +14,12 @@
       "@dxos/plugin-automation/types": [
         "packages/plugins/experimental/plugin-automation/src/types/index.ts"
       ],
+      "@dxos/plugin-calls": [
+        "packages/plugins/experimental/plugin-calls/src/index.ts"
+      ],
+      "@dxos/plugin-calls/meta": [
+        "packages/plugins/experimental/plugin-calls/src/meta.ts"
+      ],
       "@dxos/plugin-excalidraw": [
         "packages/plugins/experimental/plugin-excalidraw/src/index.ts"
       ],

@@ -264,6 +264,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/echo/live-object/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/functions/package.json",
           "jsonpath": "$.version"
         },
@@ -379,6 +384,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/assistant/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/cf-labs/package.json",
           "jsonpath": "$.version"
         },
@@ -445,6 +455,11 @@
         {
           "type": "json",
           "path": "packages/plugins/experimental/plugin-automation/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/experimental/plugin-calls/package.json",
           "jsonpath": "$.version"
         },
         {

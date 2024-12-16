@@ -104,5 +104,6 @@ export const faker = {
   },
   geo: {
     airport: () => randAirport(),
+    location: () => randAirport().location,
   },
 };

@@ -6,8 +6,8 @@ import { pipe } from 'effect';
 import { capitalize } from 'effect/String';
 import React, { useEffect, useMemo } from 'react';
 
-import { AST, type BaseObject, S, type PropertyKey } from '@dxos/echo-schema';
-import { findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
+import { AST, type BaseObject, S, type PropertyKey, type FormatEnum } from '@dxos/echo-schema';
+import { findNode, getDiscriminatedType, isDiscriminatedUnion, SimpleType } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -15,9 +15,9 @@ import { getSchemaProperties, type SchemaProperty } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
 import { SelectInput } from './Defaults';
-import { type InputComponent } from './Input';
+import { InputHeader, type InputComponent } from './Input';
 import { getInputComponent } from './factory';
-import { type FormOptions, useForm } from '../../hooks';
+import { type FormHandler, type FormOptions, useForm } from '../../hooks';
 import { translationKey } from '../../translations';
 
 // TODO(burdon): Rename package react-ui-form; delete react-ui-card.
@@ -28,7 +28,9 @@ export type PropsFilter<T extends BaseObject> = (props: SchemaProperty<T>[]) => 
 
 export type FormProps<T extends BaseObject> = ThemedClassName<
   {
+    // TODO(burdon): Partial<T>?
     values: T;
+
     /** Path to the current object from the root. Used with nested forms. */
     path?: string[];
 
@@ -39,18 +41,20 @@ export type FormProps<T extends BaseObject> = ThemedClassName<
     filter?: PropsFilter<T>;
     sort?: PropertyKey<T>[];
     autoSave?: boolean;
+    testId?: string;
     onCancel?: () => void;
 
     /**
      * Map of custom renderers for specific properties.
      */
     Custom?: Partial<Record<string, InputComponent<T>>>;
-  } & Pick<FormOptions<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onSubmit'>
+  } & Pick<FormOptions<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onSave'>
 >;
 
 /**
  * General purpose form component that displays field controls based on the given schema.
  */
+// TODO(burdon): Area to show general validation errors.
 export const Form = <T extends BaseObject>({
   classNames,
   schema,
@@ -60,21 +64,21 @@ export const Form = <T extends BaseObject>({
   filter,
   sort,
   autoSave,
+  testId,
   onValuesChanged,
   onValidate,
-  onSubmit,
+  onSave,
   onCancel,
   Custom,
 }: FormProps<T>) => {
-  const { t } = useTranslation(translationKey);
-  const onValid = useMemo(() => (autoSave ? onSubmit : undefined), [autoSave, onSubmit]);
-  const { canSubmit, values, errors, handleSubmit, ...inputProps } = useForm<T>({
+  const onValid = useMemo(() => (autoSave ? onSave : undefined), [autoSave, onSave]);
+  const { canSave, values, errors, handleSave, ...inputProps } = useForm<T>({
     schema,
     initialValues,
     onValuesChanged,
     onValidate,
     onValid,
-    onSubmit,
+    onSave,
   });
 
   // Filter and sort props.
@@ -98,15 +102,16 @@ export const Form = <T extends BaseObject>({
   }, [errors]);
 
   return (
-    <div role='form' className={mx('flex flex-col w-full gap-2 py-2', classNames)}>
+    <div role='form' className={mx('flex flex-col w-full gap-2 py-2', classNames)} data-testid={testId}>
       {properties
         .map((property) => {
-          const { ast, name, type, format, title, description, examples, options } = property;
+          const { ast, name, type, format, title, description, examples, options, array } = property;
           const key = [...path, name];
-          const label = pipe(title ?? name, capitalize);
+          const label = title ?? pipe(name, capitalize);
           const placeholder = examples?.length ? `Example: "${examples[0]}"` : description;
 
           // Get generic input.
+          // TODO(ZaymonFC): We might need to switch this to using globs since we're now indexing into arrays.
           let InputComponent = Custom?.[key.join('.')];
           if (!InputComponent) {
             // Select.
@@ -128,6 +133,26 @@ export const Form = <T extends BaseObject>({
             }
 
             InputComponent = getInputComponent<T>(type, format);
+
+            // TODO(ZaymonFC): Array handling is inelegant. We need to push this complexity down into SDK/Schema.
+            if (array) {
+              return (
+                <ArrayField
+                  key={name}
+                  name={name}
+                  type={type}
+                  array={true}
+                  label={label}
+                  ast={ast}
+                  values={values}
+                  format={format}
+                  readonly={readonly}
+                  placeholder={placeholder}
+                  inputProps={inputProps}
+                  Custom={Custom}
+                />
+              );
+            }
           }
 
           if (!InputComponent) {
@@ -176,25 +201,187 @@ export const Form = <T extends BaseObject>({
           );
         })
         .filter(isNotFalsy)}
+      {(onCancel || onSave) && !autoSave && (
+        <FormActions onCancel={onCancel} onSubmit={handleSave} canSubmit={canSave} readonly={readonly} />
+      )}
+    </div>
+  );
+};
 
-      {(onCancel || onSubmit) && !autoSave && (
-        <div role='none' className='flex justify-center'>
-          <div role='none' className={mx(onCancel && !readonly && 'grid grid-cols-2 gap-2')}>
-            {onCancel && !readonly && (
-              <IconButton icon='ph--x--regular' label={t('button cancel')} onClick={onCancel} />
-            )}
-            {onSubmit && (
-              <IconButton
-                type='submit'
-                disabled={!canSubmit}
-                icon='ph--check--regular'
-                label={t('button save')}
-                onClick={handleSubmit}
-              />
-            )}
+type ArrayFieldProps<T extends BaseObject> = {
+  name: PropertyKey<T>;
+  type: SimpleType;
+  array: true;
+  label: string;
+  ast: AST.AST;
+  values: Record<string, any>;
+  format?: FormatEnum;
+  readonly?: boolean;
+  placeholder?: string;
+  inputProps: Pick<FormHandler<T>, 'getStatus' | 'getValue' | 'onValueChange' | 'onBlur'>;
+  Custom?: Partial<Record<string, InputComponent<T>>>;
+};
+
+const ArrayField = <T extends BaseObject>({
+  name,
+  type,
+  label,
+  ast,
+  values,
+  format,
+  readonly,
+  placeholder,
+  inputProps,
+  Custom,
+}: ArrayFieldProps<T>) => {
+  const { t } = useTranslation(translationKey);
+  const arrayValues = (values[name] ?? []) as any[];
+  const key = [name];
+
+  // TODO(ZaymonFC): Should this unwrapping happen at a lower level?
+  const tupleType = findNode(ast, AST.isTupleType);
+  const elementType = (tupleType as AST.TupleType | undefined)?.rest[0]?.type;
+
+  if (type === 'object' && elementType) {
+    const baseNode = findNode(elementType, isDiscriminatedUnion);
+    const typeLiteral = baseNode
+      ? getDiscriminatedType(baseNode, values[name] as any)
+      : findNode(elementType, AST.isTypeLiteral);
+
+    if (typeLiteral) {
+      const schema = S.make(typeLiteral);
+
+      return (
+        <div key={name} role='none' className={mx(padding)}>
+          <InputHeader>{label}</InputHeader>
+          <div role='none' className='flex flex-col gap-1'>
+            {arrayValues.map((value, index) => {
+              return (
+                <div key={index} role='none' className='flex items-center gap-1'>
+                  <div role='none' className='flex-1'>
+                    <Form<any>
+                      schema={schema}
+                      path={[...key, index.toString()]}
+                      values={value}
+                      onValuesChanged={(childValues) => {
+                        const newValues = [...arrayValues];
+                        newValues[index] = childValues;
+                        inputProps.onValueChange(name, 'object', newValues);
+                      }}
+                      Custom={Custom as any}
+                    />
+                  </div>
+                  <IconButton
+                    icon='ph--trash--regular'
+                    iconOnly
+                    label={t('button remove')}
+                    onClick={() => {
+                      const newValues = arrayValues.filter((_, i) => i !== index);
+                      inputProps.onValueChange(name, type, newValues);
+                    }}
+                  />
+                </div>
+              );
+            })}
+          </div>
+          <div role='none' className='flex justify-between items-center plb-1'>
+            <IconButton
+              icon='ph--plus--regular'
+              iconOnly
+              label={t('button add')}
+              onClick={() => {
+                const newValues = [...arrayValues, {}];
+                inputProps.onValueChange(name, type, newValues);
+              }}
+            />
           </div>
         </div>
-      )}
+      );
+    }
+    return (
+      <div key={name} role='none'>
+        Nested form not supported in arrays, yet.
+      </div>
+    );
+  }
+
+  const InputComponent = getInputComponent<T>(type, format);
+  if (!InputComponent) {
+    return null;
+  }
+
+  return (
+    <div role='none' key='meta-input' className={mx(padding)}>
+      <InputHeader>{label}</InputHeader>
+      <div role='none' className='flex flex-col gap-1'>
+        {arrayValues.map((_, index) => (
+          <div key={index} role='none' className='flex items-start gap-1'>
+            <div role='none' className='flex-1'>
+              <InputComponent
+                type={type}
+                format={format}
+                label={label}
+                inputOnly
+                property={`${name}.${index}`}
+                disabled={readonly}
+                placeholder={placeholder}
+                {...inputProps}
+              />
+            </div>
+            <IconButton
+              icon='ph--trash--regular'
+              iconOnly
+              label={t('button remove')}
+              onClick={() => {
+                const newValues = arrayValues.filter((_, i) => i !== index);
+                inputProps.onValueChange(name, type, newValues);
+              }}
+            />
+          </div>
+        ))}
+      </div>
+      <div role='none' className='flex justify-between items-center plb-1'>
+        <IconButton
+          icon='ph--plus--regular'
+          iconOnly
+          label={t('button add')}
+          onClick={() => {
+            const newValues = [...arrayValues, SimpleType.getDefaultValue(type)];
+            inputProps.onValueChange(name, type, newValues);
+          }}
+        />
+      </div>
+    </div>
+  );
+};
+
+type FormActionsProps = {
+  readonly?: boolean;
+  canSubmit: boolean;
+  onCancel?: () => void;
+  onSubmit: () => void;
+};
+
+export const FormActions = ({ onCancel, onSubmit, canSubmit, readonly }: FormActionsProps) => {
+  const { t } = useTranslation(translationKey);
+
+  return (
+    <div role='none' className='flex justify-center'>
+      <div role='none' className={mx(onCancel && !readonly && 'grid grid-cols-2 gap-2')}>
+        {onCancel && !readonly && (
+          <IconButton data-testid='cancel-button' icon='ph--x--regular' label={t('button cancel')} onClick={onCancel} />
+        )}
+        {onSubmit && (
+          <IconButton
+            type='submit'
+            data-testid='save-button'
+            disabled={!canSubmit}
+            icon='ph--check--regular'
+            label={t('button save')}
+            onClick={onSubmit}
+          />
+        )}
+      </div>
     </div>
   );
 };

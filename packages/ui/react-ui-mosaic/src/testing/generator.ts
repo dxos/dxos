@@ -2,16 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { create, type ReactiveObject, type S } from '@dxos/echo-schema';
+import { type S } from '@dxos/echo-schema';
+import { create, type ReactiveObject } from '@dxos/live-object';
 import { faker } from '@dxos/random';
-
-// TODO(burdon): Reconcile with @dxos/echo-generator.
-
-// TODO(burdon): Util.
-export const range = <T>(fn: (i: number) => T | undefined, length: number): T[] =>
-  Array.from({ length })
-    .map((_, i) => fn(i))
-    .filter(Boolean) as T[];
+import { range } from '@dxos/util';
 
 export type TestItem = { id: string; type: string } & Record<string, any>;
 
@@ -119,7 +113,7 @@ export class TestObjectGenerator {
   }
 
   createObjects({ types, length }: { types?: string[]; length: number }) {
-    return range(() => this.createObject({ types }), length);
+    return range(length, () => this.createObject({ types }));
   }
 }
 

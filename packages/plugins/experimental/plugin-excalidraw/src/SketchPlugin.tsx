@@ -44,6 +44,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
       metadata: {
         records: {
           [DiagramType.typename]: {
+            createObject: SketchAction.CREATE,
             placeholder: ['object title placeholder', { ns: SKETCH_PLUGIN }],
             icon: 'ph--compass-tool--regular',
           },
@@ -52,7 +53,8 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
       settings: settings.values,
       translations,
       echo: {
-        schema: [DiagramType, CanvasType],
+        schema: [DiagramType],
+        system: [CanvasType],
       },
       graph: {
         builder: (plugins) => {

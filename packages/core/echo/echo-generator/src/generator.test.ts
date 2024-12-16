@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { next as A } from '@dxos/automerge/automerge';
 import { Client } from '@dxos/client';
 import { getObjectCore } from '@dxos/echo-db';
-import { getType, S, TypedObject } from '@dxos/echo-schema';
+import { S, TypedObject } from '@dxos/echo-schema';
+import { getType } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 
 import { createSpaceObjectGenerator, createTestObjectGenerator, TestSchemaType } from './data';

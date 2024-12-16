@@ -2,12 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { DXN, LOCAL_SPACE_TAG, PublicKey } from '@dxos/keys';
+import { DXN, LOCAL_SPACE_TAG } from '@dxos/keys';
 import { type ObjectId } from '@dxos/protocols';
 import { type Reference as ReferenceProto } from '@dxos/protocols/proto/dxos/echo/model/document';
-
-import type { LegacyEncodedReferenceObject } from './legacy';
-import { createIdFromSpaceKey } from './space-id';
 
 /**
  * Runtime representation of object reference.
@@ -17,18 +14,6 @@ export class Reference {
    * Protocol references to runtime registered types.
    */
   static TYPE_PROTOCOL = 'protobuf';
-
-  static fromValue(value: ReferenceProto): Reference {
-    return new Reference(value.objectId, value.protocol, value.host);
-  }
-
-  /**
-   * @deprecated
-   */
-  // TODO(burdon): Document/remove?
-  static fromLegacyTypename(type: string): Reference {
-    return new Reference(type, Reference.TYPE_PROTOCOL, 'dxos.org');
-  }
 
   static fromDXN(dxn: DXN): Reference {
     switch (dxn.kind) {
@@ -43,6 +28,25 @@ export class Reference {
       default:
         throw new Error(`Unsupported DXN kind: ${dxn.kind}`);
     }
+  }
+
+  static fromValue(value: ReferenceProto): Reference {
+    return new Reference(value.objectId, value.protocol, value.host);
+  }
+
+  /**
+   * Reference an object in the local space.
+   */
+  static localObjectReference(objectId: ObjectId): Reference {
+    return new Reference(objectId);
+  }
+
+  /**
+   * @deprecated
+   */
+  // TODO(burdon): Document/remove?
+  static fromLegacyTypename(type: string): Reference {
+    return new Reference(type, Reference.TYPE_PROTOCOL, 'dxos.org');
   }
 
   // prettier-ignore
@@ -89,16 +93,3 @@ export const decodeReference = (value: any) => Reference.fromDXN(DXN.parse(value
 
 export const isEncodedReference = (value: any): value is EncodedReference =>
   typeof value === 'object' && value !== null && Object.keys(value).length === 1 && typeof value['/'] === 'string';
-
-export const convertLegacyReference = async (reference: LegacyEncodedReferenceObject): Promise<EncodedReference> => {
-  if (reference.protocol === Reference.TYPE_PROTOCOL) {
-    return encodeReference(Reference.fromLegacyTypename(reference.itemId));
-  }
-  if (!reference.itemId) {
-    throw new Error('Invalid reference');
-  }
-
-  const spaceKey = reference.host;
-  const spaceId = spaceKey != null ? await createIdFromSpaceKey(PublicKey.fromHex(spaceKey)) : undefined;
-  return encodeReference(new Reference(reference.itemId, reference.protocol ?? undefined, spaceId));
-};

@@ -2,12 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
 import type { Space } from '@dxos/client-protocol';
-import { create } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
+import { create } from '@dxos/live-object';
 import { Invitation, type Contact } from '@dxos/protocols/proto/dxos/client/services';
 import { range } from '@dxos/util';
 

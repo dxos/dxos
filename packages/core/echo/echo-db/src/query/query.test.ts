@@ -7,10 +7,11 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, onTestFin
 import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { type SpaceDoc } from '@dxos/echo-protocol';
-import { create, Expando } from '@dxos/echo-schema';
+import { Expando } from '@dxos/echo-schema';
 import { Contact } from '@dxos/echo-schema/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
+import { create, getMeta } from '@dxos/live-object';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
@@ -80,6 +81,11 @@ describe('Queries', () => {
       }
     });
 
+    test('filter expando', async () => {
+      const { objects } = await db.query(Filter.schema(Expando, { label: 'red' })).run();
+      expect(objects).to.have.length(3);
+    });
+
     test('filter operators', async () => {
       {
         const { objects } = await db.query(() => false).run();
@@ -97,6 +103,30 @@ describe('Queries', () => {
           .run();
         expect(objects).to.have.length(5);
       }
+    });
+
+    test('filter by reference', async () => {
+      const objA = db.add(create(Expando, { label: 'obj a' }));
+      const objB = db.add(create(Expando, { label: 'obj b', ref: objA }));
+      await db.flush({ indexes: true });
+
+      const { objects } = await db.query(Filter.schema(Expando, { ref: objA })).run();
+      expect(objects).toEqual([objB]);
+    });
+
+    test('filter by foreign keys', async () => {
+      const obj = create(Expando, { label: 'has meta' });
+      getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' });
+      db.add(obj);
+      await db.flush({ indexes: true });
+
+      const { objects } = await db.query(Filter.foreignKeys([{ id: 'test-id', source: 'test-source' }])).run();
+      expect(objects).toEqual([obj]);
+    });
+
+    test('filter nothing', async () => {
+      const { objects } = await db.query(Filter.nothing()).run();
+      expect(objects).toHaveLength(0);
     });
 
     test('filter chaining', async () => {

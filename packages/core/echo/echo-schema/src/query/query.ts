@@ -8,6 +8,8 @@ import { Schema as S } from '@effect/schema';
  * ECHO query object.
  */
 const QuerySchema = S.Struct({
+  // TODO(burdon): Rename to typename.
+  // typename: S.String,
   type: S.String,
 }).pipe(S.mutable);
 

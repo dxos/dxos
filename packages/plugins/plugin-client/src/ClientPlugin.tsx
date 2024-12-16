@@ -5,7 +5,6 @@
 import React from 'react';
 
 import {
-  filterPlugins,
   LayoutAction,
   parseIntentPlugin,
   resolvePlugin,
@@ -17,14 +16,13 @@ import {
   type TranslationsProvides,
 } from '@dxos/app-framework';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
-import { type AbstractTypedObject } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals/react';
-import { log } from '@dxos/log';
+import { invariant } from '@dxos/invariant';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { Client, type ClientOptions, ClientProvider } from '@dxos/react-client';
 import { type IdentityPanelProps, type JoinPanelProps } from '@dxos/shell/react';
 
-import { IdentityDialog, JoinDialog } from './components';
+import { IdentityDialog, JoinDialog, RecoveryCodeDialog, type RecoveryCodeDialogProps } from './components';
 import meta, { CLIENT_PLUGIN, ClientAction, OBSERVABILITY_ACTION } from './meta';
 import translations from './translations';
 
@@ -70,15 +68,6 @@ export type ClientPluginProvides = IntentResolverProvides &
 
 export const parseClientPlugin = (plugin?: Plugin) =>
   (plugin?.provides as any).client instanceof Client ? (plugin as Plugin<ClientPluginProvides>) : undefined;
-
-export type SchemaProvides = {
-  echo: {
-    schema: AbstractTypedObject[];
-  };
-};
-
-export const parseSchemaPlugin = (plugin?: Plugin) =>
-  Array.isArray((plugin?.provides as any).echo?.schema) ? (plugin as Plugin<SchemaProvides>) : undefined;
 
 export const ClientPlugin = ({
   appKey,
@@ -136,11 +125,6 @@ export const ClientPlugin = ({
       }
 
       await onReady?.(client, plugins);
-
-      filterPlugins(plugins, parseSchemaPlugin).forEach((plugin) => {
-        log('ready', { id: plugin.meta.id });
-        client.addTypes(plugin.provides.echo.schema);
-      });
     },
     unload: async () => {
       await client.destroy();
@@ -160,6 +144,8 @@ export const ClientPlugin = ({
                 );
               } else if (data.component === 'dxos.org/plugin/client/JoinDialog') {
                 return <JoinDialog {...(data.subject as JoinPanelProps)} />;
+              } else if (data.component === 'dxos.org/plugin/client/RecoveryCodeDialog') {
+                return <RecoveryCodeDialog {...(data.subject as RecoveryCodeDialogProps)} />;
               }
               break;
           }
@@ -291,6 +277,36 @@ export const ClientPlugin = ({
             case ClientAction.RESET_STORAGE: {
               await onReset?.({ target: intent.data?.target });
               return { data: true };
+            }
+
+            case ClientAction.CREATE_AGENT: {
+              invariant(client.services.services.EdgeAgentService, 'Missing EdgeAgentService');
+              await client.services.services.EdgeAgentService.createAgent(null as any, { timeout: 10_000 });
+              return { data: true };
+            }
+
+            case ClientAction.CREATE_RECOVERY_CODE: {
+              invariant(client.services.services.IdentityService, 'IdentityService not available');
+              // TODO(wittjosiah): This needs a proper api. Rename property.
+              const { seedphrase } = await client.services.services.IdentityService.createRecoveryPhrase();
+              return {
+                data: true,
+                intents: [
+                  [
+                    {
+                      action: LayoutAction.SET_LAYOUT,
+                      data: {
+                        element: 'dialog',
+                        dialogBlockAlign: 'start',
+                        dialogType: 'alert',
+                        state: true,
+                        component: 'dxos.org/plugin/client/RecoveryCodeDialog',
+                        subject: { code: seedphrase },
+                      },
+                    },
+                  ],
+                ],
+              };
             }
           }
         },

@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
@@ -24,6 +24,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
       metadata: {
         records: {
           [KanbanType.typename]: {
+            createObject: KanbanAction.CREATE,
             placeholder: ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
             icon: 'ph--kanban--regular',
             // TODO(wittjosiah): Move out of metadata.
@@ -40,7 +41,8 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
         },
       },
       echo: {
-        schema: [KanbanType, KanbanColumnType, KanbanItemType],
+        schema: [KanbanType],
+        system: [KanbanColumnType, KanbanItemType],
       },
       translations,
       graph: {

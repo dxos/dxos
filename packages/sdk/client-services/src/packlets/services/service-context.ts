@@ -151,7 +151,10 @@ export class ServiceContext extends Resource {
       this._acceptIdentity.bind(this),
     );
 
-    this.echoHost = new EchoHost({ kv: this.level });
+    this.echoHost = new EchoHost({
+      kv: this.level,
+      peerIdProvider: () => this.identityManager.identity?.deviceKey?.toHex(),
+    });
 
     this._meshReplicator = new MeshEchoReplicator();
 

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/examples",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "private": true,
   "description": "Example stories used by the docs.",
   "homepage": "https://dxos.org",
@@ -12,6 +12,7 @@
   "dependencies": {
     "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",

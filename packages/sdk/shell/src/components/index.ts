@@ -3,7 +3,6 @@
 //
 
 export * from './AgentConfig';
-export * from './Clipboard';
 export * from './CompoundButton';
 export * from './EmojiPicker';
 export * from './HuePicker';

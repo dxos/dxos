@@ -6,7 +6,7 @@ import { TreeStructure, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
 import { resolvePlugin, parseIntentPlugin, type PluginDefinition, NavigationAction } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
@@ -25,6 +25,7 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
       metadata: {
         records: {
           [TreeType.typename]: {
+            createObject: OutlinerAction.CREATE,
             placeholder: ['object placeholder', { ns: OUTLINER_PLUGIN }],
             icon: 'ph--tree-structure--regular',
             // TODO(wittjosiah): Move out of metadata.
@@ -37,7 +38,8 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
         },
       },
       echo: {
-        schema: [TreeItemType, TreeType],
+        schema: [TreeType],
+        system: [TreeItemType],
       },
       translations,
       graph: {

@@ -4,9 +4,10 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { create, Expando, ref, TypedObject, S } from '@dxos/echo-schema';
+import { Expando, ref, S, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
+import { create } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 
 import { loadObjectReferences } from './load-object';

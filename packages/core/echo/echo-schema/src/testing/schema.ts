@@ -5,8 +5,8 @@
 import { S } from '@dxos/effect';
 
 import { EchoObject } from '../ast';
-import { Expando, ref } from '../handler';
-import { TypedObject } from '../object';
+import { ref } from '../ast/ref';
+import { TypedObject, Expando } from '../object';
 
 // TODO(burdon): Clean up.
 
@@ -70,7 +70,14 @@ export class TestClass {
 
 // TODO(dmaretskyi): Another top-level S.mutable call as a workaround for the regression in the last minor.
 export const TestSchemaWithClass = S.mutable(
-  S.extend(TestSchema, S.mutable(S.Struct({ classInstance: S.optional(S.instanceOf(TestClass)) }))),
+  S.extend(
+    TestSchema,
+    S.mutable(
+      S.Struct({
+        classInstance: S.optional(S.instanceOf(TestClass)),
+      }),
+    ),
+  ),
 );
 
 export type TestSchemaWithClass = S.Schema.Type<typeof TestSchemaWithClass>;

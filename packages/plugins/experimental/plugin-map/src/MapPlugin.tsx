@@ -7,7 +7,7 @@ import { type LatLngLiteral } from 'leaflet';
 import React from 'react';
 
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, type Node, createExtension, isActionGroup } from '@dxos/plugin-graph';
@@ -36,6 +36,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
       metadata: {
         records: {
           [MapType.typename]: {
+            createObject: MapAction.CREATE,
             placeholder: ['object title placeholder', { ns: MAP_PLUGIN }],
             icon: 'ph--compass--regular',
           },
@@ -44,12 +45,6 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
       translations,
       echo: {
         schema: [MapType],
-      },
-      space: {
-        onSpaceCreate: {
-          label: ['create object label', { ns: MAP_PLUGIN }],
-          action: MapAction.CREATE,
-        },
       },
       graph: {
         builder: (plugins) => {

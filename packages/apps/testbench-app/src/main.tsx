@@ -61,7 +61,7 @@ const useThemeWatcher = () => {
 const App = withProfiler(() => {
   const themeMode = useThemeWatcher();
   return (
-    <ThemeProvider tx={defaultTx} themeMode={themeMode} resourceExtensions={translations}>
+    <ThemeProvider tx={defaultTx} themeMode={themeMode} resourceExtensions={translations} noCache>
       <RouterProvider router={router} />
     </ThemeProvider>
   );

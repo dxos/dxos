@@ -4,11 +4,12 @@
 
 import { next as A } from '@dxos/automerge/automerge';
 import { createDocAccessor, type Space } from '@dxos/client/echo';
-import { createMutableSchema, ref, S } from '@dxos/echo-schema';
+import { ref, S } from '@dxos/echo-schema';
+import { createMutableSchema } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 
 import { SpaceObjectGenerator, TestObjectGenerator } from './generator';
-import { type TestMutationsMap, type TestGeneratorMap, type TestSchemaMap } from './types';
+import { type TestGeneratorMap, type TestMutationsMap, type TestSchemaMap } from './types';
 import { randomText } from './util';
 
 // TODO(burdon): Reconcile with @dxos/plugin-debug, @dxos/aurora/testing.

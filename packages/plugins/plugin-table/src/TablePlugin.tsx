@@ -6,13 +6,13 @@ import { Table } from '@phosphor-icons/react';
 import React from 'react';
 
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { create } from '@dxos/live-object';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 import { getSpace } from '@dxos/react-client/echo';
-import { translations as dataTranslations } from '@dxos/react-ui-form';
+import { translations as formTranslations } from '@dxos/react-ui-form';
 import { TableType, initializeTable, translations as tableTranslations } from '@dxos/react-ui-table';
 import { type FieldProjection, ViewProjection, ViewType } from '@dxos/schema';
 
@@ -33,6 +33,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
       metadata: {
         records: {
           [TableType.typename]: {
+            createObject: TableAction.CREATE,
             label: (object: any) => (object instanceof TableType ? object.name : undefined),
             placeholder: ['object placeholder', { ns: TABLE_PLUGIN }],
             icon: 'ph--table--regular',
@@ -42,15 +43,10 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
           },
         },
       },
-      translations: [...translations, ...dataTranslations, ...tableTranslations],
+      translations: [...translations, ...formTranslations, ...tableTranslations],
       echo: {
-        schema: [TableType, ViewType],
-      },
-      space: {
-        onSpaceCreate: {
-          label: ['create object label', { ns: TABLE_PLUGIN }],
-          action: TableAction.CREATE,
-        },
+        schema: [TableType],
+        system: [ViewType],
       },
       graph: {
         builder: (plugins) => {
@@ -135,6 +131,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
           switch (intent.action) {
             case TableAction.CREATE: {
               const { space } = intent.data as TableAction.Create;
+              invariant(space);
               const table = create(TableType, { name: '', threads: [] });
               initializeTable({ space, table });
               return {

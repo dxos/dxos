@@ -2,74 +2,101 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S, Format, TypedObject, GeneratorAnnotationId, AST } from '@dxos/echo-schema';
+import { S, Format, TypedObject, FieldLookupAnnotationId, GeneratorAnnotationId, AST, ref } from '@dxos/echo-schema';
 
-//
-// Org
-//
+export namespace Testing {
+  //
+  // Org
+  //
 
-export const Org = S.Struct({
-  id: S.String,
-  name: S.NonEmptyString.annotations({
-    [AST.TitleAnnotationId]: 'Name',
-    [GeneratorAnnotationId]: 'faker.company.name',
-  }),
-  website: S.optional(
-    Format.URL.annotations({
-      [GeneratorAnnotationId]: 'faker.internet.url',
-    }),
-  ),
-});
+  export const OrgSchema = S.Struct({
+    // id: S.String,
+    name: S.optional(
+      S.String.annotations({
+        [GeneratorAnnotationId]: 'company.name',
+      }),
+    ),
+    website: S.optional(
+      Format.URL.annotations({
+        [AST.TitleAnnotationId]: 'Website',
+        [GeneratorAnnotationId]: 'internet.url',
+      }),
+    ),
+  });
 
-export class OrgType extends TypedObject({
-  typename: 'example.com/type/Org',
-  version: '0.1.0',
-})(Org.fields) {}
+  export type OrgSchemaType = S.Schema.Type<typeof OrgSchema>;
 
-//
-// Contact
-// TODO(burdon): Array of emails.
-// TODO(burdon): Materialize link for Role (Org => [Role] => Contact).
-// TODO(burdon): Use with concrete Message type.
-// TODO(burdon): Address sub type with geo location.
-//
+  export class OrgType extends TypedObject({
+    typename: 'example.com/type/Org',
+    version: '0.1.0',
+  })(OrgSchema.fields) {}
 
-export const Address = S.Struct({
-  street: S.String,
-  city: S.String,
-  state: S.String,
-  zip: S.String,
-  location: Format.GeoPoint,
-});
+  //
+  // Contact
+  // TODO(burdon): Array of emails.
+  // TODO(burdon): Materialize link for Role (Org => [Role] => Contact).
+  // TODO(burdon): Use with concrete Message type.
+  // TODO(burdon): Address sub type with geo location.
+  // TODO(burdon): Reconcile with user id.
+  //
 
-export const Contact = S.Struct({
-  id: S.String,
-  name: S.NonEmptyString.annotations({
-    [GeneratorAnnotationId]: 'faker.person.fullName',
-  }),
-  email: Format.Email.annotations({
-    [GeneratorAnnotationId]: 'faker.internet.email',
-  }),
-});
+  export const AddressSchema = S.Struct({
+    street: S.optional(S.String),
+    city: S.optional(S.String),
+    state: S.optional(S.String),
+    zip: S.optional(S.String),
+    // TODO(burdon): Unknown error (handling tuples?)
+    // location: S.optional(Format.GeoPoint),
+    // location: S.Tuple(S.Number, S.Number),
+  });
 
-export class ContactType extends TypedObject({
-  typename: 'example.com/type/Contact',
-  version: '0.1.0',
-})(Contact.fields) {}
+  export const ContactSchema = S.Struct({
+    // id: S.String,
+    name: S.optional(
+      S.String.annotations({
+        [GeneratorAnnotationId]: 'person.fullName',
+      }),
+    ),
+    email: S.optional(
+      Format.Email.annotations({
+        [GeneratorAnnotationId]: 'internet.email',
+      }),
+    ),
+    employer: S.optional(
+      ref(OrgType).annotations({
+        [FieldLookupAnnotationId]: 'name',
+      }),
+    ),
+    // TODO(burdon): This breaks the table view.
+    // address: S.optional(AddressSchema),
+  });
 
-//
-// Project
-// TODO(burdon): Use with concrete Task type.
-//
+  export type ContactSchemaType = S.Schema.Type<typeof ContactSchema>;
 
-export const Project = S.Struct({
-  id: S.String,
-  name: S.String.annotations({
-    [GeneratorAnnotationId]: 'faker.commerce.productName',
-  }),
-});
+  export class ContactType extends TypedObject({
+    typename: 'example.com/type/Contact',
+    version: '0.1.0',
+  })(ContactSchema.fields) {}
 
-export class ProjectType extends TypedObject({
-  typename: 'example.com/type/Project',
-  version: '0.1.0',
-})(Project.fields) {}
+  //
+  // Project
+  // TODO(burdon): Use with concrete Task type.
+  //
+
+  export const ProjectSchema = S.Struct({
+    // id: S.String,
+    name: S.optional(
+      S.String.annotations({
+        [GeneratorAnnotationId]: 'commerce.productName',
+      }),
+    ),
+    description: S.optional(S.String),
+  });
+
+  export type ProjectSchemaType = S.Schema.Type<typeof ProjectSchema>;
+
+  export class ProjectType extends TypedObject({
+    typename: 'example.com/type/Project',
+    version: '0.1.0',
+  })(ProjectSchema.fields) {}
+}

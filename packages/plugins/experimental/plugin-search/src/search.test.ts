@@ -5,7 +5,8 @@
 import { describe, expect, test } from 'vitest';
 
 import { Client } from '@dxos/client';
-import { create, Expando } from '@dxos/echo-schema';
+import { Expando } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 
 import { filterObjectsSync } from './search-sync';

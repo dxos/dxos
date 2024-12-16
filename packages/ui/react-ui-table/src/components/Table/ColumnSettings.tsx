@@ -11,9 +11,9 @@ import { type FieldType } from '@dxos/schema';
 
 import { type TableModel } from '../../model';
 
-type ColumnSettingsProps = { model?: TableModel };
+type ColumnSettingsProps = { model?: TableModel; onNewColumn: () => void };
 
-export const ColumnSettings = ({ model }: ColumnSettingsProps) => {
+export const ColumnSettings = ({ model, onNewColumn }: ColumnSettingsProps) => {
   const [newField, setNewField] = useState<FieldType>();
   const state = model?.modalController.state.value;
 
@@ -22,6 +22,9 @@ export const ColumnSettings = ({ model }: ColumnSettingsProps) => {
   useEffect(() => {
     if (state?.type === 'columnSettings' && state.mode.type === 'create' && model?.projection) {
       setNewField(model.projection.createFieldProjection());
+      requestAnimationFrame(() => {
+        onNewColumn();
+      });
     } else {
       setNewField(undefined);
     }
@@ -39,7 +42,7 @@ export const ColumnSettings = ({ model }: ColumnSettingsProps) => {
 
   const field = existingField ?? newField;
 
-  const handleClose = useCallback(() => {
+  const handleSave = useCallback(() => {
     model?.modalController.close();
   }, [model?.modalController]);
 
@@ -64,7 +67,7 @@ export const ColumnSettings = ({ model }: ColumnSettingsProps) => {
               projection={model.projection}
               field={field}
               registry={space?.db.schemaRegistry}
-              onClose={handleClose}
+              onSave={handleSave}
               onCancel={handleCancel}
             />
           </DropdownMenu.Viewport>

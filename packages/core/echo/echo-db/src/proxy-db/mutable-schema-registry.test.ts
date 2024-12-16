@@ -5,17 +5,17 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import {
-  create,
+  makeStaticSchema,
   MutableSchema,
   type ObjectAnnotation,
   ObjectAnnotationId,
-  toJsonSchema,
-  makeStaticSchema,
+  S,
   StoredSchema,
+  toJsonSchema,
   TypedObject,
 } from '@dxos/echo-schema';
-import { S } from '@dxos/echo-schema';
 import { TestSchemaType } from '@dxos/echo-schema/testing';
+import { create } from '@dxos/live-object';
 
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';

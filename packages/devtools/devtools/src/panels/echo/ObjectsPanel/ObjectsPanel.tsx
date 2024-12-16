@@ -4,8 +4,8 @@
 
 import React, { useState } from 'react';
 
-import { type ReactiveEchoObject } from '@dxos/echo-db';
-import { getType, isDeleted } from '@dxos/echo-schema';
+import { Filter, type ReactiveEchoObject } from '@dxos/echo-db';
+import { isDeleted, getType } from '@dxos/live-object';
 import { QueryOptions, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { createColumnBuilder, type TableColumnDef, textPadding } from '@dxos/react-ui-table/deprecated';
@@ -61,7 +61,7 @@ const columns: TableColumnDef<ReactiveEchoObject<any>, any>[] = [
 export const ObjectsPanel = () => {
   const { space } = useDevtoolsState();
   // TODO(burdon): Sort by type?
-  const items = useQuery(space, {}, { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED });
+  const items = useQuery(space, Filter.all(), { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED });
   const [filter, setFilter] = useState('');
 
   return (

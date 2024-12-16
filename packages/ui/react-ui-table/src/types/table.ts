@@ -2,19 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ref, S, TypedObject } from '@dxos/echo-schema';
+import { ref, ObjectId, S, TypedObject } from '@dxos/echo-schema';
 import { ThreadType } from '@dxos/plugin-space';
 import { ViewType } from '@dxos/schema';
 
-// TODO(burdon): Factor out echo dependency and define pattern for react-ui-xxx.
-const TableSchema = S.Struct({
-  id: S.String,
+export const TableSchema = S.Struct({
+  id: ObjectId, // TODO(burdon): Where should this be?
   name: S.optional(S.String),
   view: S.optional(ref(ViewType)),
+  // TODO(burdon): Should not import from plugin. Either factor out type or use reverse deps when supported.
   threads: S.optional(S.Array(ref(ThreadType))),
 });
 
-type _TableType = S.Schema.Type<typeof TableSchema>;
+// type TableType = S.Schema.Type<typeof TableSchema>;
 
 export class TableType extends TypedObject({
   typename: 'dxos.org/type/Table',

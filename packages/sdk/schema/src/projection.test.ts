@@ -10,15 +10,15 @@ import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import {
   Format,
   FormatEnum,
-  type JsonPath,
-  type JsonProp,
   TypeEnum,
   TypedObject,
-  createStoredSchema,
   ref,
   toJsonSchema,
+  type JsonPath,
+  type JsonProp,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { createStoredSchema } from '@dxos/live-object';
 
 import { ViewProjection } from './projection';
 import { createView, type ViewType } from './view';
@@ -44,17 +44,19 @@ describe('ViewProjection', () => {
     const { db } = await builder.createDatabase();
     const registry = new MutableSchemaRegistry(db);
 
-    const schema = createStoredSchema({
-      typename: 'example.com/type/Person',
-      version: '0.1.0',
-      jsonSchema: toJsonSchema(
+    const schema = createStoredSchema(
+      {
+        typename: 'example.com/type/Person',
+        version: '0.1.0',
+      },
+      toJsonSchema(
         S.Struct({
           name: S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }),
           email: Format.Email,
           salary: Format.Currency({ code: 'usd', decimals: 2 }),
         }),
       ),
-    });
+    );
 
     const mutable = registry.registerSchema(db.add(schema));
 
@@ -139,10 +141,12 @@ describe('ViewProjection', () => {
       name: S.String,
     }) {}
 
-    const schema = createStoredSchema({
-      typename: 'example.com/type/Person',
-      version: '0.1.0',
-      jsonSchema: toJsonSchema(
+    const schema = createStoredSchema(
+      {
+        typename: 'example.com/type/Person',
+        version: '0.1.0',
+      },
+      toJsonSchema(
         S.Struct({
           name: S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }),
           email: Format.Email,
@@ -150,7 +154,7 @@ describe('ViewProjection', () => {
           org: ref(Org),
         }),
       ),
-    });
+    );
 
     const mutable = registry.registerSchema(db.add(schema));
     const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: schema.jsonSchema });
@@ -196,16 +200,18 @@ describe('ViewProjection', () => {
     const { db } = await builder.createDatabase();
     const registry = new MutableSchemaRegistry(db);
 
-    const schema = createStoredSchema({
-      typename: 'example.com/type/Person',
-      version: '0.1.0',
-      jsonSchema: toJsonSchema(
+    const schema = createStoredSchema(
+      {
+        typename: 'example.com/type/Person',
+        version: '0.1.0',
+      },
+      toJsonSchema(
         S.Struct({
           name: S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }),
           email: Format.Email,
         }),
       ),
-    });
+    );
 
     const mutable = registry.registerSchema(db.add(schema));
     const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: schema.jsonSchema });
@@ -216,29 +222,30 @@ describe('ViewProjection', () => {
     expect(mutable.jsonSchema.properties?.['email' as const]).to.exist;
 
     // Delete and verify.
-    const { deleted, index } = projection.deleteFieldProjection(getFieldId(view, 'email'));
+    const { deleted } = projection.deleteFieldProjection(getFieldId(view, 'email'));
     expect(view.fields).to.have.length(1);
     expect(mutable.jsonSchema.properties?.['email' as const]).to.not.exist;
     expect(deleted.field.path).to.equal('email');
     expect(deleted.props.format).to.equal(FormatEnum.Email);
-    expect(index).to.equal(0);
   });
 
   test('field projection delete and restore', async ({ expect }) => {
     const { db } = await builder.createDatabase();
     const registry = new MutableSchemaRegistry(db);
 
-    const schema = createStoredSchema({
-      typename: 'example.com/type/Person',
-      version: '0.1.0',
-      jsonSchema: toJsonSchema(
+    const schema = createStoredSchema(
+      {
+        typename: 'example.com/type/Person',
+        version: '0.1.0',
+      },
+      toJsonSchema(
         S.Struct({
           name: S.optional(S.Number),
           email: S.optional(S.Number),
           description: S.optional(S.String),
         }),
       ),
-    });
+    );
 
     const mutable = registry.registerSchema(db.add(schema));
     const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: schema.jsonSchema });
@@ -275,16 +282,18 @@ describe('ViewProjection', () => {
     const { db } = await builder.createDatabase();
     const registry = new MutableSchemaRegistry(db);
 
-    const schema = createStoredSchema({
-      typename: 'example.com/type/Person',
-      version: '0.1.0',
-      jsonSchema: toJsonSchema(
+    const schema = createStoredSchema(
+      {
+        typename: 'example.com/type/Person',
+        version: '0.1.0',
+      },
+      toJsonSchema(
         S.Struct({
           name: S.String,
           email: Format.Email,
         }),
       ),
-    });
+    );
 
     const mutable = registry.registerSchema(db.add(schema));
     const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: schema.jsonSchema });

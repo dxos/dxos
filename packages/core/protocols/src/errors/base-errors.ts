@@ -12,12 +12,16 @@ export class BaseError extends Error {
     message?: string,
     readonly context?: Record<string, any>,
   ) {
+    // TODO(dmaretskyi): Error.cause.
     super(message ?? code);
     this.name = code;
     // NOTE: Restores prototype chain (https://stackoverflow.com/a/48342359).
     Object.setPrototypeOf(this, new.target.prototype);
   }
 }
+
+// TODO(dmaretskyi): Consider common error classes with error codes:
+// throw new SystemError(ERROR_CODE_OUT_OF_MEMORY, 'Out of memory', { a: 1, b: 2 });
 
 /**
  * User facing API Errors.

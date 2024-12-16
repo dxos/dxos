@@ -3,6 +3,7 @@
 //
 
 import { invariant } from '@dxos/invariant';
+import { type DxGridPlanePosition } from '@dxos/react-ui-grid';
 
 export const DEFAULT_ROWS = 50;
 export const DEFAULT_COLUMNS = 26;
@@ -10,7 +11,7 @@ export const DEFAULT_COLUMNS = 26;
 export const MAX_ROWS = 500;
 export const MAX_COLUMNS = 26 * 2;
 
-export type CellAddress = { col: number; row: number };
+export type CellAddress = DxGridPlanePosition;
 
 export type CellRange = { from: CellAddress; to?: CellAddress };
 export type CompleteCellRange = { from: CellAddress; to: CellAddress };
@@ -76,6 +77,7 @@ export const inRange = (range: CellRange | undefined, cell: CellAddress): boolea
 
   const { col: c1, row: r1 } = from;
   const { col: c2, row: r2 } = to;
+
   const cMin = Math.min(c1, c2);
   const cMax = Math.max(c1, c2);
   const rMin = Math.min(r1, r2);

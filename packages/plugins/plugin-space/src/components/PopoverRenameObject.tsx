@@ -4,7 +4,7 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { type ReactiveObject } from '@dxos/echo-schema';
+import { type ReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 

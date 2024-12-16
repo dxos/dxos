@@ -3,17 +3,13 @@
 //
 
 import { type NodeArg } from '@dxos/app-graph';
-import { create, S, type ReactiveObject, TypedObject } from '@dxos/echo-schema';
+import { S, TypedObject } from '@dxos/echo-schema';
+import { create, type ReactiveObject } from '@dxos/live-object';
 import { faker } from '@dxos/random';
+import { range } from '@dxos/util';
 
 // TODO(burdon): Reconcile with @dxos/plugin-debug, @dxos/react-ui/testing.
 // TODO(burdon): Bug when adding stale objects to space (e.g., static objects already added in previous story invocation).
-
-// TODO(burdon): Util.
-export const range = <T>(fn: (i: number) => T | undefined, length: number): T[] =>
-  Array.from({ length })
-    .map((_, i) => fn(i))
-    .filter(Boolean) as T[];
 
 // TODO(burdon): Commit to using ECHO to generate all test data? Or convert from raw data?
 export type TestItem = { id: string; type: string } & Record<string, any>;
@@ -60,12 +56,13 @@ export const defaultGenerators: { [type: string]: ObjectDataGenerator } = {
 
   project: {
     createSchema: () =>
-      class ProjectType extends TypedObject({ typename: 'dxos.test.Project', version: '0.1.0' })({
+      class ProjectType extends TypedObject({ typename: 'example.com/type/Project', version: '0.1.0' })({
         title: S.String,
         repo: S.String,
         status: S.String,
         priority: S.Number,
       }) {},
+
     createData: () => ({
       title: faker.commerce.productName(),
       repo: faker.datatype.boolean({ probability: 0.3 }) ? faker.internet.url() : undefined,
@@ -101,7 +98,7 @@ export class TestObjectGenerator {
   }
 
   createObjects({ types, length }: { types?: string[]; length: number }) {
-    return range(() => this.createObject({ types }), length);
+    return range(length, () => this.createObject({ types }));
   }
 }
 
