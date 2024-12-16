@@ -11,7 +11,7 @@ import { Expando } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { create } from '@dxos/live-object';
+import { create, makeRef } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
@@ -69,7 +69,7 @@ describe('CoreDatabase', () => {
     test('effect nested reference access triggers document loading', async () => {
       registerSignalsRuntime();
 
-      const document = createExpando({ text: createTextObject('Hello, world!') });
+      const document = createExpando({ text: makeRef(createTextObject('Hello, world!')) });
       const db = await createClientDbInSpaceWithObject(document);
       const loadedDocument = (await db.query({ id: document.id }).first()!) as Expando;
       expect(loadedDocument).not.to.be.undefined;
@@ -157,9 +157,9 @@ describe('CoreDatabase', () => {
 
     test('linked objects are loaded on update only if they were loaded before', async () => {
       const stack = createExpando({
-        notLoadedDocument: createTextObject('text1'),
-        loadedDocument: createTextObject('text2'),
-        partiallyLoadedDocument: createTextObject('text3'),
+        notLoadedDocument: makeRef(createTextObject('text1')),
+        loadedDocument: makeRef(createTextObject('text2')),
+        partiallyLoadedDocument: makeRef(createTextObject('text3')),
       });
       const db = await createClientDbInSpaceWithObject(stack);
       const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
@@ -181,9 +181,9 @@ describe('CoreDatabase', () => {
 
     test('linked objects can be remapped', async () => {
       const stack = createExpando({
-        text1: createTextObject('text1'),
-        text2: createTextObject('text2'),
-        text3: createTextObject('text3'),
+        text1: makeRef(createTextObject('text1')),
+        text2: makeRef(createTextObject('text2')),
+        text3: makeRef(createTextObject('text3')),
       });
       const db = await createClientDbInSpaceWithObject(stack);
       const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
