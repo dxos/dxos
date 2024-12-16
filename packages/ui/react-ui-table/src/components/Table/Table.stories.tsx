@@ -21,6 +21,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table, type TableController } from './Table';
 import { useTableModel, type UseTableModelParams } from '../../hooks';
+import { TableControls, TablePresentation } from '../../model';
 import translations from '../../translations';
 import { TableType } from '../../types';
 import { initializeTable } from '../../util';
@@ -108,6 +109,17 @@ const DefaultStory = () => {
     onRowOrderChanged: () => tableRef.current?.update?.(),
   });
 
+  const { controls, presentation } = useMemo(() => {
+    if (model) {
+      return {
+        controls: new TableControls(model),
+        presentation: new TablePresentation(model),
+      };
+    }
+
+    return {};
+  }, [model]);
+
   if (!schema || !table) {
     return <div />;
   }
@@ -121,7 +133,7 @@ const DefaultStory = () => {
           <Toolbar.Actions />
         </Toolbar.Root>
         <Table.Root>
-          <Table.Main ref={tableRef} model={model} ignoreAttention />
+          <Table.Main ref={tableRef} model={model} controls={controls} presentation={presentation} ignoreAttention />
         </Table.Root>
       </div>
       <div className='flex flex-col h-full border-l border-separator overflow-y-auto'>

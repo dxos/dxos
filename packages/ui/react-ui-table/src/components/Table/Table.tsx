@@ -25,7 +25,7 @@ import { ColumnSettings } from './ColumnSettings';
 import { CreateRefPanel } from './CreateRefPanel';
 import { RefPanel } from './RefPanel';
 import { RowActionsMenu } from './RowActionsMenu';
-import { type TableModel } from '../../model';
+import { type TableModel, type TableControls, type TablePresentation } from '../../model';
 import { translationKey } from '../../translations';
 import { createOption, TableCellEditor, type TableCellEditorProps } from '../TableCellEditor';
 
@@ -70,174 +70,184 @@ export type TableController = {
 
 export type TableMainProps = {
   model?: TableModel;
+  controls?: TableControls;
+  presentation?: TablePresentation;
   ignoreAttention?: boolean;
 };
 
-const TableMain = forwardRef<TableController, TableMainProps>(({ model, ignoreAttention }, forwardedRef) => {
-  const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
-  const { hasAttention } = useAttention(model?.table ? fullyQualifiedId(model.table) : 'table');
-  const { t } = useTranslation(translationKey);
+const TableMain = forwardRef<TableController, TableMainProps>(
+  ({ model, controls, presentation, ignoreAttention }, forwardedRef) => {
+    const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
+    const { hasAttention } = useAttention(model?.table ? fullyQualifiedId(model.table) : 'table');
+    const { t } = useTranslation(translationKey);
 
-  /**
-   * Provides an external controller that can be called to repaint the table.
-   */
-  useImperativeHandle<TableController, TableController>(
-    forwardedRef,
-    () => {
-      if (!model || !dxGrid) {
-        return {};
-      }
+    /**
+     * Provides an external controller that can be called to repaint the table.
+     */
+    useImperativeHandle<TableController, TableController>(
+      forwardedRef,
+      () => {
+        if (!presentation || !dxGrid) {
+          return {};
+        }
 
-      dxGrid.getCells = model.getCells.bind(model);
-      return {
-        update: (cell) => {
-          if (cell) {
-            dxGrid.updateIfWithinBounds(cell);
-          } else {
-            dxGrid.updateCells(true);
-          }
-        },
-      };
-    },
-    [model, dxGrid],
-  );
+        dxGrid.getCells = presentation.getCells.bind(model);
+        return {
+          update: (cell) => {
+            if (cell) {
+              dxGrid.updateIfWithinBounds(cell);
+            } else {
+              dxGrid.updateCells(true);
+            }
+          },
+        };
+      },
+      [presentation, dxGrid],
+    );
 
-  const handleFocus = useCallback<NonNullable<TableCellEditorProps['onFocus']>>(
-    (increment, delta) => {
-      if (dxGrid) {
-        dxGrid.refocus(increment, delta);
-      }
-    },
-    [dxGrid],
-  );
-
-  const handleEnter = useCallback<NonNullable<TableCellEditorProps['onEnter']>>(
-    (cell) => {
-      // TODO(burdon): Insert row only if bottom row isn't completely blank already.
-      if (model && cell.row === model.getRowCount() - 1) {
-        model.insertRow(cell.row);
+    const handleFocus = useCallback<NonNullable<TableCellEditorProps['onFocus']>>(
+      (increment, delta) => {
         if (dxGrid) {
-          requestAnimationFrame(() => {
-            dxGrid?.scrollToRow(cell.row + 1);
-            dxGrid?.refocus('row', 1);
-          });
+          dxGrid.refocus(increment, delta);
         }
-      }
-    },
-    [model, dxGrid],
-  );
+      },
+      [dxGrid],
+    );
 
-  const handleKeyDown = useCallback<NonNullable<GridContentProps['onKeyDown']>>(
-    (event) => {
-      const cell = closestCell(event.target);
-      if (!model || !cell) {
-        return;
-      }
-
-      switch (event.key) {
-        case 'Backspace':
-        case 'Delete': {
-          model.setCellData(cell, undefined);
-          break;
+    const handleEnter = useCallback<NonNullable<TableCellEditorProps['onEnter']>>(
+      (cell) => {
+        // TODO(burdon): Insert row only if bottom row isn't completely blank already.
+        if (model && cell.row === model.getRowCount() - 1) {
+          model.insertRow(cell.row);
+          if (dxGrid) {
+            requestAnimationFrame(() => {
+              dxGrid?.scrollToRow(cell.row + 1);
+              dxGrid?.refocus('row', 1);
+            });
+          }
         }
-      }
-    },
-    [model],
-  );
+      },
+      [model, dxGrid],
+    );
 
-  const handleAxisResize = useCallback<NonNullable<GridContentProps['onAxisResize']>>(
-    (event) => {
-      if (event.axis === 'col') {
-        const columnIndex = parseInt(event.index, 10);
-        model?.setColumnWidth(columnIndex, event.size);
-      }
-    },
-    [model],
-  );
+    const handleKeyDown = useCallback<NonNullable<GridContentProps['onKeyDown']>>(
+      (event) => {
+        const cell = closestCell(event.target);
+        if (!model || !cell) {
+          return;
+        }
 
-  const handleWheel = useCallback(
-    (event: WheelEvent) => {
-      if (!ignoreAttention && !hasAttention) {
-        event.stopPropagation();
-      }
-    },
-    [hasAttention, ignoreAttention],
-  );
+        switch (event.key) {
+          case 'Backspace':
+          case 'Delete': {
+            model.setCellData(cell, undefined);
+            break;
+          }
+        }
+      },
+      [model],
+    );
 
-  const handleNewColumn = useCallback(() => {
-    const columns = model?.getColumnCount();
-    if (dxGrid && columns) {
-      dxGrid.scrollToColumn(columns - 1);
+    const handleAxisResize = useCallback<NonNullable<GridContentProps['onAxisResize']>>(
+      (event) => {
+        if (event.axis === 'col') {
+          const columnIndex = parseInt(event.index, 10);
+          model?.setColumnWidth(columnIndex, event.size);
+        }
+      },
+      [model],
+    );
+
+    const handleWheel = useCallback(
+      (event: WheelEvent) => {
+        if (!ignoreAttention && !hasAttention) {
+          event.stopPropagation();
+        }
+      },
+      [hasAttention, ignoreAttention],
+    );
+
+    const handleNewColumn = useCallback(() => {
+      const columns = model?.getColumnCount();
+      if (dxGrid && columns) {
+        dxGrid.scrollToColumn(columns - 1);
+      }
+    }, [model, dxGrid]);
+
+    // TODO(burdon): Factor out?
+    // TODO(burdon): Generalize to handle other value types (e.g., enums).
+    const handleQuery = useCallback<NonNullable<TableCellEditorProps['onQuery']>>(
+      async ({ field, props }, text) => {
+        if (model && props.referenceSchema && field.referencePath) {
+          const space = getSpace(model.table);
+          invariant(space);
+          const schema = space.db.schemaRegistry.getSchema(props.referenceSchema);
+          if (schema) {
+            const { objects } = await space.db.query(Filter.schema(schema)).run();
+            const options = objects
+              .map((obj) => {
+                const value = getValue(obj, field.referencePath!);
+                if (!value || typeof value !== 'string') {
+                  return undefined;
+                }
+
+                return {
+                  label: value,
+                  data: obj,
+                };
+              })
+              .filter(isNotFalsy);
+
+            return [
+              ...options,
+              {
+                label: t('create new object label', { text }),
+                data: createOption(text),
+              },
+            ];
+          }
+        }
+
+        return [];
+      },
+      [model],
+    );
+
+    if (!model || !controls) {
+      return <span role='none' className='attention-surface' />;
     }
-  }, [model, dxGrid]);
 
-  // TODO(burdon): Factor out?
-  // TODO(burdon): Generalize to handle other value types (e.g., enums).
-  const handleQuery = useCallback<NonNullable<TableCellEditorProps['onQuery']>>(
-    async ({ field, props }, text) => {
-      if (model && props.referenceSchema && field.referencePath) {
-        const space = getSpace(model.table);
-        invariant(space);
-        const schema = space.db.schemaRegistry.getSchema(props.referenceSchema);
-        if (schema) {
-          const { objects } = await space.db.query(Filter.schema(schema)).run();
-          const options = objects
-            .map((obj) => {
-              const value = getValue(obj, field.referencePath!);
-              if (!value || typeof value !== 'string') {
-                return undefined;
-              }
-
-              return {
-                label: value,
-                data: obj,
-              };
-            })
-            .filter(isNotFalsy);
-
-          return [
-            ...options,
-            {
-              label: t('create new object label', { text }),
-              data: createOption(text),
-            },
-          ];
-        }
-      }
-
-      return [];
-    },
-    [model],
-  );
-
-  if (!model) {
-    return <span role='none' className='attention-surface' />;
-  }
-
-  return (
-    <Grid.Root id={model.table.id ?? 'table-grid'}>
-      <TableCellEditor model={model} onEnter={handleEnter} onFocus={handleFocus} onQuery={handleQuery} />
-      <Grid.Content
-        onWheelCapture={handleWheel}
-        className={mx('[--dx-grid-base:var(--surface-bg)]', inlineEndLine, blockEndLine)}
-        frozen={frozen}
-        columns={model.columnMeta.value}
-        limitRows={model.getRowCount() ?? 0}
-        limitColumns={model.table.view?.fields?.length ?? 0}
-        onAxisResize={handleAxisResize}
-        onClick={model?.handleGridClick}
-        onKeyDown={handleKeyDown}
-        overscroll='trap'
-        ref={setDxGrid}
-      />
-      <RowActionsMenu model={model} />
-      <ColumnActionsMenu model={model} />
-      <ColumnSettings model={model} onNewColumn={handleNewColumn} />
-      <RefPanel model={model} />
-      <CreateRefPanel model={model} />
-    </Grid.Root>
-  );
-});
+    return (
+      <Grid.Root id={model.table.id ?? 'table-grid'}>
+        <TableCellEditor
+          model={model}
+          controls={controls}
+          onEnter={handleEnter}
+          onFocus={handleFocus}
+          onQuery={handleQuery}
+        />
+        <Grid.Content
+          onWheelCapture={handleWheel}
+          className={mx('[--dx-grid-base:var(--surface-bg)]', inlineEndLine, blockEndLine)}
+          frozen={frozen}
+          columns={model.columnMeta.value}
+          limitRows={model.getRowCount() ?? 0}
+          limitColumns={model.table.view?.fields?.length ?? 0}
+          onAxisResize={handleAxisResize}
+          onClick={controls?.handleClick}
+          onKeyDown={handleKeyDown}
+          overscroll='trap'
+          ref={setDxGrid}
+        />
+        <RowActionsMenu model={model} controls={controls} />
+        <ColumnActionsMenu model={model} controls={controls} />
+        <ColumnSettings model={model} controls={controls} onNewColumn={handleNewColumn} />
+        <RefPanel model={model} controls={controls} />
+        <CreateRefPanel model={model} controls={controls} />
+      </Grid.Root>
+    );
+  },
+);
 
 //
 // CellEditor

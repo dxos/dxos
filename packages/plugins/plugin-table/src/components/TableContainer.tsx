@@ -13,6 +13,8 @@ import { StackItem } from '@dxos/react-ui-stack';
 import {
   Table,
   type TableController,
+  TableControls,
+  TablePresentation,
   Toolbar,
   type ToolbarAction,
   type TableType,
@@ -79,6 +81,16 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
     onRowOrderChanged: () => tableRef.current?.update?.(),
   });
 
+  const { controls, presentation } = useMemo(() => {
+    if (model) {
+      return {
+        controls: new TableControls(model),
+        presentation: new TablePresentation(model),
+      };
+    }
+    return {};
+  }, [model]);
+
   const onThreadCreate = useCallback(() => {
     void dispatch({
       // TODO(Zan): We shouldn't hardcode the action ID.
@@ -114,7 +126,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
         <Toolbar.Actions />
       </Toolbar.Root>
       <Table.Root role={role}>
-        <Table.Main key={table.id} ref={tableRef} model={model} />
+        <Table.Main key={table.id} ref={tableRef} model={model} controls={controls} presentation={presentation} />
       </Table.Root>
     </StackItem.Content>
   );

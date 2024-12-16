@@ -9,31 +9,18 @@ import { Resource } from '@dxos/context';
 import { getValue, setValue, FormatEnum, type JsonProp } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/react-client';
-import {
-  cellClassesForFieldType,
-  cellClassesForRowSelection,
-  formatForDisplay,
-  formatForEditing,
-  parseValue,
-} from '@dxos/react-ui-form';
+import { formatForEditing, parseValue } from '@dxos/react-ui-form';
 import {
   type DxGridAxisMeta,
-  type DxGridCellValue,
-  type DxGridPlane,
-  type DxGridPlaneCells,
   type DxGridPlaneRange,
   type DxGridPlanePosition,
-  toPlaneCellIndex,
   type DxGridPosition,
 } from '@dxos/react-ui-grid';
-import { mx } from '@dxos/react-ui-theme';
-import { VIEW_FIELD_LIMIT, type ViewProjection, type FieldType } from '@dxos/schema';
+import { type ViewProjection } from '@dxos/schema';
 
-import { ModalController } from './modal-controller';
 import { SelectionModel } from './selection-model';
 import { type TableType } from '../types';
-import { tableButtons, touch } from '../util';
-import { tableControls } from '../util/table-controls';
+import { touch } from '../util';
 
 export type SortDirection = 'asc' | 'desc';
 export type SortConfig = { fieldId: string; direction: SortDirection };
@@ -84,7 +71,6 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
 
   private _selection!: SelectionModel<T>;
   private _columnMeta?: ReadonlySignal<DxGridAxisMeta>;
-  private readonly _modalController = new ModalController();
 
   constructor({
     table,
@@ -118,6 +104,10 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     return this._projection;
   }
 
+  public get rows(): ReadonlySignal<T[]> {
+    return this._sortedRows;
+  }
+
   public get pinnedRows(): NonNullable<TableModelProps<T>['pinnedRows']> {
     return this._pinnedRows;
   }
@@ -129,10 +119,6 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
 
   public get sorting(): SortConfig | undefined {
     return this._sorting.value;
-  }
-
-  public get modalController() {
-    return this._modalController;
   }
 
   public get selection() {
@@ -225,181 +211,6 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     });
     this._ctx.onDispose(rowEffectManager);
   }
-
-  //
-  // Get Cells
-  //
-
-  public getCells = (range: DxGridPlaneRange, plane: DxGridPlane): DxGridPlaneCells => {
-    switch (plane) {
-      case 'grid': {
-        this._visibleRange.value = range;
-        return this.getMainGridCells(range);
-      }
-      case 'frozenRowsStart': {
-        return this.getHeaderCells(range);
-      }
-      case 'frozenColsStart': {
-        return this.getSelectionColumnCells(range);
-      }
-      case 'frozenColsEnd': {
-        return this.getActionColumnCells(range);
-      }
-      case 'fixedStartStart': {
-        return this.getSelectAllCell();
-      }
-      case 'fixedStartEnd': {
-        return this.getNewColumnCell();
-      }
-      default: {
-        return {};
-      }
-    }
-  };
-
-  private getMainGridCells = (range: DxGridPlaneRange): DxGridPlaneCells => {
-    const cells: DxGridPlaneCells = {};
-    const fields = this._table.view?.fields ?? [];
-
-    const addCell = (obj: T, field: FieldType, colIndex: number, displayIndex: number): void => {
-      const { props } = this._projection.getFieldProjection(field.id);
-
-      const cell: DxGridCellValue = {
-        get value() {
-          const value = getValue(obj, field.path);
-          if (value == null) {
-            return '';
-          }
-
-          switch (props.format) {
-            case FormatEnum.Ref: {
-              if (!field.referencePath) {
-                return ''; // TODO(burdon): Show error.
-              }
-
-              return getValue(value, field.referencePath);
-            }
-
-            default: {
-              return formatForDisplay({ type: props.type, format: props.format, value });
-            }
-          }
-        },
-      };
-
-      const classes = [];
-      const formatClasses = cellClassesForFieldType({ type: props.type, format: props.format });
-      if (formatClasses) {
-        classes.push(formatClasses);
-      }
-      const rowSelectionClasses = cellClassesForRowSelection(this._selection.isObjectSelected(obj));
-      if (rowSelectionClasses) {
-        classes.push(rowSelectionClasses);
-      }
-      if (classes.length > 0) {
-        cell.className = mx(classes.flat());
-      }
-
-      if (cell.value && props.format === FormatEnum.Ref && props.referenceSchema) {
-        const targetObj = getValue(obj, field.path);
-        cell.accessoryHtml = tableButtons.referencedCell.render({
-          targetId: targetObj.id,
-          schemaId: props.referenceSchema,
-        });
-      }
-
-      const idx = toPlaneCellIndex({ col: colIndex, row: displayIndex });
-      cells[idx] = cell;
-    };
-
-    for (let row = range.start.row; row <= range.end.row && row < this._sortedRows.value.length; row++) {
-      for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
-        const field = fields[col];
-        if (!field) {
-          continue;
-        }
-
-        addCell(this._sortedRows.value[row], field, col, row);
-      }
-    }
-
-    return cells;
-  };
-
-  private getHeaderCells = (range: DxGridPlaneRange): DxGridPlaneCells => {
-    const cells: DxGridPlaneCells = {};
-    const fields = this.table.view?.fields ?? [];
-    for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
-      const { field, props } = this._projection.getFieldProjection(fields[col].id);
-      cells[toPlaneCellIndex({ col, row: 0 })] = {
-        // TODO(burdon): Use same logic as form for fallback title.
-        value: props.title ?? field.path,
-        readonly: true,
-        resizeHandle: 'col',
-        accessoryHtml: tableButtons.columnSettings.render({ fieldId: field.id }),
-      };
-    }
-
-    return cells;
-  };
-
-  private getSelectionColumnCells = (range: DxGridPlaneRange): DxGridPlaneCells => {
-    const cells: DxGridPlaneCells = {};
-    for (let row = range.start.row; row <= range.end.row && row < this._rows.value.length; row++) {
-      const isSelected = this._selection.isRowIndexSelected(row);
-      const classes = cellClassesForRowSelection(isSelected);
-      cells[toPlaneCellIndex({ col: 0, row })] = {
-        value: '',
-        readonly: true,
-        className: classes ? mx(classes) : undefined,
-        accessoryHtml: tableControls.checkbox.render({ rowIndex: row, checked: isSelected }),
-      };
-    }
-
-    return cells;
-  };
-
-  private getActionColumnCells = (range: DxGridPlaneRange): DxGridPlaneCells => {
-    const cells: DxGridPlaneCells = {};
-    for (let row = range.start.row; row <= range.end.row && row < this._rows.value.length; row++) {
-      const isSelected = this._selection.isRowIndexSelected(row);
-      const classes = cellClassesForRowSelection(isSelected);
-      cells[toPlaneCellIndex({ col: 0, row })] = {
-        value: '',
-        readonly: true,
-        className: classes ? mx(classes) : undefined,
-        accessoryHtml: tableButtons.rowMenu.render({ rowIndex: row }),
-      };
-    }
-
-    return cells;
-  };
-
-  private getSelectAllCell = (): DxGridPlaneCells => {
-    return {
-      [toPlaneCellIndex({ col: 0, row: 0 })]: {
-        value: '',
-        accessoryHtml: tableControls.checkbox.render({
-          rowIndex: 0,
-          header: true,
-          checked: this._selection.allRowsSeleted.value,
-        }),
-        readonly: true,
-      },
-    };
-  };
-
-  private getNewColumnCell = (): DxGridPlaneCells => {
-    return {
-      [toPlaneCellIndex({ col: 0, row: 0 })]: {
-        value: '',
-        accessoryHtml: tableButtons.addColumn.render({
-          disabled: (this._table.view?.fields?.length ?? 0) >= VIEW_FIELD_LIMIT,
-        }),
-        readonly: true,
-      },
-    };
-  };
 
   //
   // Data
@@ -509,30 +320,6 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
       this._onDeleteColumn(field.id);
     }
   }
-
-  //
-  // Interactions
-  //
-  public handleGridClick = (event: React.MouseEvent): void => {
-    if (!this._modalController.handleClick(event)) {
-      const target = event.target as HTMLElement;
-
-      const selectionCheckbox = target.closest(`input[${tableControls.checkbox.attributes.checkbox}]`);
-      if (selectionCheckbox) {
-        const isHeader = selectionCheckbox.hasAttribute(tableControls.checkbox.attributes.header);
-        if (isHeader) {
-          if (this._selection.allRowsSeleted.value) {
-            this._selection.setSelection('none');
-          } else {
-            this._selection.setSelection('all');
-          }
-        } else {
-          const rowIndex = Number(selectionCheckbox.getAttribute(tableControls.checkbox.attributes.checkbox));
-          this._selection.toggleSelectionForRowIndex(rowIndex);
-        }
-      }
-    }
-  };
 
   //
   // Resize
