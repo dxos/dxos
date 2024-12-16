@@ -36,6 +36,6 @@ type Story = StoryObj<EditorRootProps>;
 export const Default: Story = {
   args: {
     graph: createGraph(snapPoint),
-    scale: 4,
+    scale: 2,
   },
 };
