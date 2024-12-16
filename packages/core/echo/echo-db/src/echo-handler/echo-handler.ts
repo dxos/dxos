@@ -512,7 +512,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    * @param proxy - the proxy that was passed to the method
    */
   createRef(target: ProxyTarget, proxy: any): Reference {
-    const otherEchoObj = !isEchoObject(proxy) ? createObject(proxy) : proxy;
+    let otherEchoObj = proxy instanceof MutableSchema ? proxy.storedSchema : proxy;
+    otherEchoObj = !isEchoObject(otherEchoObj) ? createObject(otherEchoObj) : otherEchoObj;
     const otherObjId = otherEchoObj.id;
     invariant(typeof otherObjId === 'string' && otherObjId.length > 0);
 
@@ -708,7 +709,10 @@ export const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
 
 // TODO(burdon): Move ProxyTarget def to echo-schema and make ReactiveEchoObject inherit?
 export const getObjectCore = <T extends BaseObject>(obj: ReactiveEchoObject<T>): ObjectCore => {
-  const { core } = (obj as unknown as ProxyTarget)[symbolInternals];
+  if (!(obj as any as ProxyTarget)[symbolInternals]) {
+    throw new Error('object is not an EchoObject');
+  }
+  const { core } = (obj as any as ProxyTarget)[symbolInternals];
   return core;
 };
 

@@ -20,6 +20,7 @@ import { type DocHandleProxy, type RepoProxy } from '../client';
 import { getObjectCore, type ReactiveEchoObject } from '../echo-handler';
 import { type EchoDatabase, type EchoDatabaseImpl } from '../proxy-db';
 import { EchoTestBuilder } from '../testing';
+import { log } from '@dxos/log';
 
 describe('CoreDatabase', () => {
   describe('space fragmentation', () => {
@@ -78,9 +79,9 @@ describe('CoreDatabase', () => {
       const onPropertyLoaded = new Trigger();
       const clearEffect = effect(() => {
         if (isFirstInvocation) {
-          expect(loadedDocument.text).to.be.undefined;
+          expect(loadedDocument.text.target).to.be.undefined;
         } else {
-          expect(loadedDocument.text.content).to.eq(document.text.content);
+          expect(loadedDocument.text.target?.content).to.eq(document.text.target?.content);
           onPropertyLoaded.wake();
         }
         isFirstInvocation = false;
@@ -168,15 +169,15 @@ describe('CoreDatabase', () => {
         newDoc.links = getDocHandles(db).spaceRootHandle.docSync().links;
       });
 
-      await db.query({ id: stack.loadedDocument.id }).run({ timeout: 1000 });
+      await db.query({ id: stack.loadedDocument.target?.id }).run({ timeout: 1000 });
 
       // trigger loading but don't wait for it to finish
-      db.getObjectById(stack.partiallyLoadedDocument.id);
+      db.getObjectById(stack.partiallyLoadedDocument.target?.id);
 
       await db.setSpaceRoot(newRootDocHandle.url);
-      db.getObjectById(stack.partiallyLoadedDocument.id);
-      expect(db.getObjectById(stack.loadedDocument.id)).not.to.be.undefined;
-      expect(db.getObjectById(stack.notLoadedDocument.id)).to.be.undefined;
+      db.getObjectById(stack.partiallyLoadedDocument.target?.id);
+      expect(db.getObjectById(stack.loadedDocument.target?.id)).not.to.be.undefined;
+      expect(db.getObjectById(stack.notLoadedDocument.target?.id)).to.be.undefined;
     });
 
     test('linked objects can be remapped', async () => {
@@ -188,28 +189,32 @@ describe('CoreDatabase', () => {
       const db = await createClientDbInSpaceWithObject(stack);
       const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
 
-      for (const obj of [stack.text1, stack.text2, stack.text3]) {
+      for (const obj of [stack.text1.target, stack.text2.target, stack.text3.target]) {
         await db.query({ id: obj.id }).run();
       }
 
       newRootDocHandle.change((newDoc: any) => {
         newDoc.links = getDocHandles(db).spaceRootHandle.docSync().links;
-        newDoc.links[stack.text2.id] = newDoc.links[stack.text1.id];
-        newDoc.links[stack.text3.id] = newDoc.links[stack.text1.id];
+        newDoc.links[stack.text2.target?.id] = newDoc.links[stack.text1.target?.id];
+        newDoc.links[stack.text3.target?.id] = newDoc.links[stack.text1.target?.id];
       });
 
-      getObjectDocHandle(db.getObjectById(stack.text1.id)).change((newDoc: any) => {
-        newDoc.objects[stack.text2.id] = getObjectDocHandle(stack.text2).docSync()?.objects?.[stack.text2.id];
-        newDoc.objects[stack.text3.id] = getObjectDocHandle(stack.text3).docSync()?.objects?.[stack.text3.id];
+      getObjectDocHandle(db.getObjectById(stack.text1.target?.id)).change((newDoc: any) => {
+        newDoc.objects[stack.text2.target?.id] = getObjectDocHandle(stack.text2.target).docSync()?.objects?.[
+          stack.text2.target?.id
+        ];
+        newDoc.objects[stack.text3.target?.id] = getObjectDocHandle(stack.text3.target).docSync()?.objects?.[
+          stack.text3.target?.id
+        ];
       });
 
       await db.coreDatabase.updateSpaceState({ rootUrl: newRootDocHandle.url });
 
-      expect((db.getObjectById(stack.text1.id) as any).content).to.eq(stack.text1.content);
-      for (const obj of [stack.text1, stack.text2, stack.text3]) {
+      expect((db.getObjectById(stack.text1.target?.id) as any).content).to.eq(stack.text1.target?.content);
+      for (const obj of [stack.text1.target, stack.text2.target, stack.text3.target]) {
         const dbObject: any = db.getObjectById(obj.id);
         expect(dbObject.content).to.eq(obj.content);
-        expect(getObjectDocHandle(dbObject).url).to.eq(getObjectDocHandle(stack.text1).url);
+        expect(getObjectDocHandle(dbObject).url).to.eq(getObjectDocHandle(stack.text1.target).url);
       }
     });
 
@@ -258,7 +263,7 @@ describe('CoreDatabase', () => {
       const rootObject = [linksToRemove, loadedLinks, partiallyLoadedLinks]
         .flatMap((v: any[]) => v)
         .reduce((acc: Expando, obj: any) => {
-          acc[obj.id] = obj;
+          acc[obj.id] = makeRef(obj);
           return acc;
         }, createExpando());
 

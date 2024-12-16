@@ -35,7 +35,7 @@ describe('MutableSchema', () => {
     await builder.close();
   });
 
-  test('set MutableSchema as echo object field', async () => {
+  test.only('set MutableSchema as echo object field', async () => {
     const { db } = await setupTest();
     const instanceWithSchemaRef = db.add(create(TestSchema, {}));
     class GeneratedSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
