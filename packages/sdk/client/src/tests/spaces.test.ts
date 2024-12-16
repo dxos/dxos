@@ -523,7 +523,7 @@ describe('Spaces', () => {
   };
 
   const getDocumentText = (space: Space, documentId: string): string => {
-    return (space.db.getObjectById(documentId) as DocumentType).content?.target?.content;
+    return (space.db.getObjectById(documentId) as DocumentType).content.target!.content;
   };
 
   const registerTypes = (client: Client) => {
