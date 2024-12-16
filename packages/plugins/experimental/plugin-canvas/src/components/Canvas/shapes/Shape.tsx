@@ -21,12 +21,6 @@ import {
 } from '../../../layout';
 import { testId } from '../../util';
 
-// Ontology:
-// TODO(burdon): Separate shapes/layout from data graph.
-//  - Graph is a view-like projection of underlying objects.
-//  - Layout is a static or dynamic layout of shapes associated with graph nodes.
-//  - Shapes are the visual representation of the layout.
-
 /**
  * Data associated with a drag event.
  */
@@ -36,7 +30,7 @@ export type DragPayloadData<S extends ShapeType> = {
   shape: S;
 };
 
-export const Component = ({ shape }: { shape: Shape }) => {
+export const ShapeComponent = ({ shape }: { shape: Shape }) => {
   const { scale, selection } = useEditorContext();
   const { id, type } = shape;
   switch (type) {
@@ -73,17 +67,21 @@ export const Shapes = ({ shapes, style }: { shapes: Shape[]; style: CSSPropertie
   return (
     <div {...testId('dx-shapes')} className='absolute' style={style}>
       {shapes.map((shape) => (
-        <Component key={shape.id} shape={shape} />
+        <ShapeComponent key={shape.id} shape={shape} />
       ))}
     </div>
   );
 };
 
+export type Layout = {
+  shapes: Shape[];
+};
+
 /**
- * Generate shapes.
+ * Generate layout.
  */
-// TODO(burdon): Create memoized layout.
-export const useShapes = (graph: GraphModel, dragging?: Shape, debug?: boolean): Shape[] => {
+// TODO(burdon): Graph hierarchy?
+export const useLayout = (graph: GraphModel, dragging?: Shape, debug?: boolean): Layout => {
   const getPos = (id: string): { center: Point; bounds: Rect } | undefined => {
     const node = graph.getNode(id);
     if (node) {
@@ -126,7 +124,7 @@ export const useShapes = (graph: GraphModel, dragging?: Shape, debug?: boolean):
     shapes.push(line);
   });
 
-  return shapes;
+  return { shapes };
 };
 
 /**

@@ -7,6 +7,7 @@ import '@dxos-theme';
 import type { Meta, StoryObj } from '@storybook/react';
 import React from 'react';
 
+import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Editor, type EditorRootProps } from './Editor';
@@ -24,7 +25,11 @@ const meta: Meta<EditorRootProps> = {
   title: 'plugins/plugin-canvas/Editor',
   component: Editor.Root,
   render: Render,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  decorators: [
+    withClientProvider({ createIdentity: true, createSpace: true }),
+    withTheme,
+    withLayout({ fullscreen: true }),
+  ],
 };
 
 export default meta;
@@ -35,6 +40,7 @@ type Story = StoryObj<EditorRootProps>;
 
 export const Default: Story = {
   args: {
+    debug: true,
     graph: createGraph(snapPoint),
     scale: 1,
   },

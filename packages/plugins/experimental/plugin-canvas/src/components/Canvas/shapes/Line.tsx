@@ -7,8 +7,8 @@ import React from 'react';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type ShapeType } from '../../../graph';
-import { Markers } from '../../markers';
 import { eventsAuto, eventsNone, styles } from '../../styles';
+import { Markers } from '../../svg';
 
 // TODO(burdon): Reconcile with Frame.
 export type LineProps = {

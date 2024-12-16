@@ -9,7 +9,14 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { emptyGraph, type Graph, GraphModel } from '../../graph';
-import { type DraggingState, type EditingState, EditorContext, SelectionModel, type TransformState } from '../../hooks';
+import {
+  type DraggingState,
+  type EditingState,
+  EditorContext,
+  type EditorContextType,
+  SelectionModel,
+  type TransformState,
+} from '../../hooks';
 import { Canvas } from '../Canvas';
 import { UI } from '../UI';
 import { testId } from '../util';
@@ -45,28 +52,37 @@ import { testId } from '../util';
 //  - Move all selected.
 //  - Factor out react-ui-xxx vs. plugin.
 
+// Ontology:
+// TODO(burdon): Separate shapes/layout from data graph.
+//  - Graph is a view-like projection of underlying objects.
+//  - Layout is a static or dynamic layout of shapes associated with graph nodes.
+//  - Shapes are the visual representation of the layout.
+
 // TODO(burdon): Debt:
 //  - Factor out common key shortcuts pattern.
 //  - Factor out common Toolbar pattern (with state observers).
 
 const defaultOffset = { x: 0, y: 0 };
 
-type EditorRootProps = ThemedClassName<PropsWithChildren<Partial<TransformState & { graph: Graph }>>>;
+type EditorRootProps = ThemedClassName<
+  PropsWithChildren<Partial<Pick<EditorContextType, 'debug' | 'scale' | 'offset'> & { graph: Graph }>>
+>;
 
 const EditorRoot = ({
   children,
   classNames,
-  scale: initialScale = 1,
-  offset: initialOffset = defaultOffset,
-  graph: initialGraph = emptyGraph,
+  debug: _debug = false,
+  scale: _scale = 1,
+  offset: _offset = defaultOffset,
+  graph: _graph = emptyGraph,
 }: EditorRootProps) => {
   // Canvas state.
   const { ref, width = 0, height = 0 } = useResizeDetector();
-  const [debug, setDebug] = useState(false);
+  const [debug, setDebug] = useState(_debug);
   const [gridSize, setGridSize] = useState({ width: 32, height: 32 });
   const [showGrid, setShowGrid] = useState(true);
   const [snapToGrid, setSnapToGrid] = useState(true);
-  const [{ scale, offset }, setTransform] = useState<TransformState>({ scale: initialScale, offset: initialOffset });
+  const [{ scale, offset }, setTransform] = useState<TransformState>({ scale: _scale, offset: _offset });
   useEffect(() => {
     if (width && height && offset === defaultOffset) {
       setTransform({ scale, offset: { x: width / 2, y: height / 2 } });
@@ -74,7 +90,7 @@ const EditorRoot = ({
   }, [scale, offset, width, height]);
 
   // Data state.
-  const graph = useMemo(() => new GraphModel(initialGraph), [initialGraph]);
+  const graph = useMemo(() => new GraphModel(_graph), [_graph]);
 
   // Editor state.
   const selection = useMemo(() => new SelectionModel(), []);

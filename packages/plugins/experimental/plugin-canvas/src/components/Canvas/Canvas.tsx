@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Background } from './Background';
-import { type DragPayloadData, FrameDragPreview, Line, Shapes, useShapes, useSelectionHandler } from './shapes';
+import { type DragPayloadData, FrameDragPreview, Line, Shapes, useLayout, useSelectionHandler } from './shapes';
 import { createLine, createRect, type Shape, type ShapeType } from '../../graph';
 import { useActionHandler, useEditorContext, useShortcuts, useSnap, useTransform } from '../../hooks';
 import { useWheel } from '../../hooks/useWheel';
@@ -51,7 +51,8 @@ export const Canvas = () => {
   const { frameDragging, overlay } = useDragMonitor(containerRef.current);
 
   // Shapes.
-  const shapes = useShapes(graph, frameDragging, debug);
+  const layout = useLayout(graph, frameDragging, debug);
+  const { shapes } = layout;
   const selectionRect = useSelectionHandler(containerRef.current, shapes);
 
   return (

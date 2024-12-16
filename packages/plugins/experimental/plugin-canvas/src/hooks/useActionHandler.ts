@@ -20,9 +20,19 @@ export const useActionHandler = (): ActionHandler => {
   const { width, height, scale, offset, graph, selection, setTransform, setDebug, setShowGrid, setSnapToGrid } =
     useEditorContext();
 
+  const zoom = (scale: number, newScale: number) => {
+    const is = d3.interpolateNumber(scale, newScale);
+    const pos = { x: width / 2, y: height / 2 };
+    d3.transition()
+      .ease(d3.easeSinOut)
+      .duration(200)
+      .tween('scale', () => (t) => setTransform(getZoomTransform({ scale, newScale: is(t), offset, pos })));
+  };
+
   return useCallback<ActionHandler>(
     (action) => {
       const { type } = action;
+
       switch (type) {
         case 'debug': {
           setDebug((debug) => !debug);
@@ -46,21 +56,19 @@ export const useActionHandler = (): ActionHandler => {
           return true;
         }
         case 'zoom-in': {
-          const is = d3.interpolateNumber(scale, scale * scaleFactor);
-          const pos = { x: width / 2, y: height / 2 };
-          d3.transition()
-            .ease(d3.easeSinOut)
-            .duration(200)
-            .tween('scale', () => (t) => setTransform(getZoomTransform({ scale, newScale: is(t), offset, pos })));
+          const newScale = Math.round(scale) * scaleFactor;
+          if (newScale > 16) {
+            return false;
+          }
+          zoom(scale, newScale);
           return true;
         }
         case 'zoom-out': {
-          const is = d3.interpolateNumber(scale, scale / scaleFactor);
-          const pos = { x: width / 2, y: height / 2 };
-          d3.transition()
-            .ease(d3.easeSinOut)
-            .duration(200)
-            .tween('scale', () => (t) => setTransform(getZoomTransform({ scale, newScale: is(t), offset, pos })));
+          const newScale = Math.round(scale) / scaleFactor;
+          if (Math.round(scale) === 0) {
+            return false;
+          }
+          zoom(scale, newScale);
           return true;
         }
 

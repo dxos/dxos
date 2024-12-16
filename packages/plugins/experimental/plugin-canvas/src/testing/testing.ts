@@ -2,6 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type EchoDatabase } from '@dxos/echo-db';
+import { faker } from '@dxos/random';
+import { createObjectFactory, Testing, type ValueGenerator } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
 
 import { createRect, type Graph, GraphModel } from '../graph';
@@ -11,6 +14,15 @@ import type { Dimension, PointTransform } from '../layout';
 export const itemSize: Dimension = { width: 128, height: 64 };
 
 export const createId = () => Math.random().toString(36).slice(2, 10);
+
+const generator: ValueGenerator = faker as any;
+
+export const createG = async (db: EchoDatabase) => {
+  const org = db.schemaRegistry.addSchema(Testing.OrgType);
+  const createObjects = createObjectFactory(db, generator);
+  const data = await createObjects([{ type: org, count: 10 }]);
+  console.log(data);
+};
 
 export const createGraph = (snap: PointTransform): Graph => {
   const wrapper = new GraphModel();

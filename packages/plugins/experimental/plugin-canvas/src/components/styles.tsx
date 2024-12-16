@@ -4,7 +4,7 @@
 
 // TODO(burdon): Theme.
 export const styles = {
-  gridLine: 'stroke-neutral-500',
+  gridLine: 'stroke-neutral-500 opacity-5',
   frameContainer: 'absolute flex p-2 justify-center items-center overflow-hidden bg-base',
   frameBorder: 'border border-neutral-500 rounded',
   frameSelected: '!bg-sky-300 !dark:bg-sky-700',

@@ -7,6 +7,7 @@ import React, { type SVGProps, type PropsWithChildren } from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
+import { styles } from './styles';
 import { type Dimension, type Point } from '../layout';
 
 /**
@@ -35,6 +36,28 @@ export const createPath = (points: Point[], join = false) => {
   return ['M', points.map(({ x, y }) => `${x},${y}`).join(' L '), join ? 'Z' : ''].join(' ');
 };
 
+export const GridPattern = ({
+  classNames,
+  id,
+  size,
+  offset,
+}: ThemedClassName<{ id: string; size: number; offset: Point }>) => (
+  <pattern
+    id={id}
+    x={(size / 2 + offset.x) % size}
+    y={(size / 2 + offset.y) % size}
+    width={size}
+    height={size}
+    patternUnits='userSpaceOnUse'
+  >
+    {/* TODO(burdon): vars. */}
+    <g className={mx(styles.gridLine, classNames)}>
+      <line x1={0} y1={size / 2} x2={size} y2={size / 2} />
+      <line x1={size / 2} y1={0} x2={size / 2} y2={size} />
+    </g>
+  </pattern>
+);
+
 export const Marker = ({
   id,
   children,
@@ -54,12 +77,12 @@ export const Marker = ({
     id={id}
     fill={fill ? 'fill' : 'none'}
     {...{
-      orient: 'auto',
-      markerUnits: 'strokeWidth',
       refX,
       refY,
       markerWidth,
       markerHeight,
+      markerUnits: 'strokeWidth',
+      orient: 'auto',
       ...rest,
     }}
     style={{
