@@ -36,7 +36,7 @@ export const useSelectionEvents = (el: HTMLElement | null, cb?: SelectionEvent):
             return false;
           }
 
-          const p1: Point = { x: ev.clientX, y: ev.clientY };
+          const p1: Point = { x: ev.offsetX, y: ev.offsetY };
           setRange({ p1 });
         },
       }),
@@ -47,7 +47,7 @@ export const useSelectionEvents = (el: HTMLElement | null, cb?: SelectionEvent):
             return false;
           }
 
-          const p2: Point = { x: ev.clientX, y: ev.clientY };
+          const p2: Point = { x: ev.offsetX, y: ev.offsetY };
           setRange((range) => (range ? { ...range, p2 } : undefined));
         },
       }),

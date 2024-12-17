@@ -31,7 +31,7 @@ export const Line = ({ shape, selected, onSelect }: LineProps) => {
         </defs>
         <g>
           {/* Hit area. */}
-          {!shape.guide && (
+          {!shape.guide && onSelect && (
             <path
               d={shape.path}
               strokeWidth={8}

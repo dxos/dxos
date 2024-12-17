@@ -24,10 +24,10 @@ export const useWheel = (
       return;
     }
 
-    const handleWheel = (event: WheelEvent) => {
-      event.preventDefault();
+    const handleWheel = (ev: WheelEvent) => {
+      ev.preventDefault();
       // Zoom or pan.
-      if (event.ctrlKey) {
+      if (ev.ctrlKey) {
         if (!el) {
           return;
         }
@@ -35,12 +35,12 @@ export const useWheel = (
         // Keep centered.
         setTransform(({ scale, offset }) => {
           const scaleSensitivity = 0.01;
-          const newScale = scale * Math.exp(-event.deltaY * scaleSensitivity);
+          const newScale = scale * Math.exp(-ev.deltaY * scaleSensitivity);
           invariant(el);
           const rect = el.getBoundingClientRect();
           const pos = {
-            x: event.clientX - rect.left,
-            y: event.clientY - rect.top,
+            x: ev.offsetX - rect.left,
+            y: ev.offsetY - rect.top,
           };
 
           return getZoomTransform({ offset, scale, pos, newScale });
@@ -48,7 +48,7 @@ export const useWheel = (
       } else {
         setTransform(({ scale, offset: { x, y } }) => ({
           scale,
-          offset: { x: x - event.deltaX, y: y - event.deltaY },
+          offset: { x: x - ev.deltaX, y: y - ev.deltaY },
         }));
       }
     };

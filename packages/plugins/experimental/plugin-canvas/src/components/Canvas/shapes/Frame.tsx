@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import React, { type MouseEventHandler, useEffect, useMemo, useRef, useState } from 'react';
@@ -33,43 +34,39 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
   const [hovering, setHovering] = useState(false);
   const [over, setOver] = useState(false);
 
-  // Drop targets for linking.
-  useEffect(() => {
-    invariant(ref.current);
-    return dropTargetForElements({
-      element: ref.current,
-      getData: () => ({ type: 'frame', shape }) satisfies DragPayloadData<ShapeType<'rect'>>,
-      // TODO(burdon): Flickers.
-      onDragEnter: () => setOver(true),
-      onDragLeave: () => setOver(false),
-      // getIsSticky: () => true,
-      // canDrop: () => true,
-    });
-  }, []);
-
   // Dragging.
   // TODO(burdon): Handle cursor dragging out of window (currently drop is lost/frozen).
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     invariant(ref.current);
-    return draggable({
-      element: ref.current,
-      getInitialData: () => ({ type: 'frame', shape }) satisfies DragPayloadData<ShapeType<'rect'>>,
-      onGenerateDragPreview: ({ nativeSetDragImage }) => {
-        setCustomNativeDragPreview({
-          nativeSetDragImage,
-          getOffset: () => {
-            return { x: (scale * shape.size.width) / 2, y: (scale * shape.size.height) / 2 };
-          },
-          render: ({ container }) => {
-            setDragging({ shape, container });
-          },
-        });
-      },
-      onDrop: () => {
-        setDragging(undefined);
-      },
-    });
+    return combine(
+      dropTargetForElements({
+        element: ref.current,
+        getData: () => ({ type: 'frame', shape }) satisfies DragPayloadData<ShapeType<'rect'>>,
+        onDragEnter: () => setOver(true),
+        onDragLeave: () => setOver(false),
+        // getIsSticky: () => true,
+        // canDrop: () => true,
+      }),
+      draggable({
+        element: ref.current,
+        getInitialData: () => ({ type: 'frame', shape }) satisfies DragPayloadData<ShapeType<'rect'>>,
+        onGenerateDragPreview: ({ nativeSetDragImage }) => {
+          setCustomNativeDragPreview({
+            nativeSetDragImage,
+            getOffset: () => {
+              return { x: (scale * shape.size.width) / 2, y: (scale * shape.size.height) / 2 };
+            },
+            render: ({ container }) => {
+              setDragging({ shape, container });
+            },
+          });
+        },
+        onDrop: () => {
+          setDragging(undefined);
+        },
+      }),
+    );
   }, [scale, shape]);
 
   // Reset hovering state once dragging ends.
