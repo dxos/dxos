@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ref, ObjectId, S, TypedObject } from '@dxos/echo-schema';
+import { ref, ObjectId, S, TypedObject, AST } from '@dxos/echo-schema';
 import { ThreadType } from '@dxos/plugin-space/types';
 import { ViewType } from '@dxos/schema';
 
@@ -31,7 +31,11 @@ export const KanbanSchema = S.Struct({
   threads: S.optional(S.Array(ref(ThreadType))),
 });
 
-export const KanbanPropsSchema = S.Struct({ columnField: S.String });
+export const KanbanPropsSchema = S.Struct({
+  columnField: S.String.annotations({
+    [AST.TitleAnnotationId]: 'Column field',
+  }),
+});
 
 export class KanbanType extends TypedObject({
   typename: 'dxos.org/type/Kanban',

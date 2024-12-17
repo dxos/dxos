@@ -12,7 +12,10 @@ export const computeArrangement = <T extends BaseKanbanItem = { id: string }>(ka
       kanbanArrangement ??
       Array.from(
         items.reduce((acc, item) => {
-          acc.add(`${item[pivotField as keyof typeof item]}`);
+          const columnValue = item[pivotField as keyof typeof item];
+          if (columnValue) {
+            acc.add(`${columnValue}`);
+          }
           return acc;
         }, new Set<string>()),
       ).map((columnValue) => ({ columnValue, ids: [] }))

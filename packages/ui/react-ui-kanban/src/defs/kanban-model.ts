@@ -54,8 +54,11 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   }
 
   public addEmptyColumn(columnValue: string) {
+    // TODO(thure): Fix readonly.
     // @ts-ignore
-    this._kanban.arrangement!.push({ columnValue, ids: [] });
+    this._kanban.arrangement ??= [];
+    // @ts-ignore
+    this._kanban.arrangement.push({ columnValue, ids: [] });
     this._arrangement.value = this._computeArrangement();
   }
 
