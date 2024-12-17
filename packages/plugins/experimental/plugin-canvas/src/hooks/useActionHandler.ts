@@ -93,8 +93,9 @@ export const useActionHandler = (): ActionHandler => {
           return true;
         }
         case 'zoom-to-fit': {
-          const rect = rectUnion(graph.nodes.filter((node) => node.data.type === 'rect').map((node) => node.data.rect));
-          const center = getCenter(rect);
+          const center = getCenter(
+            rectUnion(graph.nodes.filter((node) => node.data.type === 'rect').map((node) => node.data.rect)),
+          );
           const [newCenter] = modelToScreen(scale, { x: width / 2, y: height / 2 }, [{ x: -center.x, y: -center.y }]);
           const is = d3.interpolate(offset, newCenter);
           // TODO(burdon): Scale to fit.

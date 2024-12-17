@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import type { Meta, StoryObj } from '@storybook/react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { type ReactiveEchoObject } from '@dxos/echo-db';
 import { getTypename } from '@dxos/echo-schema';
@@ -17,7 +17,7 @@ import { mx } from '@dxos/react-ui-theme/src';
 import { createObjectFactory, type ValueGenerator, Testing, type TypeSpec } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Editor, type EditorRootProps } from './Editor';
+import { Editor, type EditorController, type EditorRootProps } from './Editor';
 import { createGraph, type Graph } from '../../graph';
 import { doLayout } from '../../layout';
 
@@ -28,6 +28,7 @@ const types = [Testing.OrgType, Testing.ProjectType, Testing.ContactType];
 type RenderProps = EditorRootProps & { init?: boolean; sidebar?: boolean };
 
 const Render = ({ init, sidebar, ...props }: RenderProps) => {
+  const editorRef = useRef<EditorController>(null);
   const [graph, setGraph] = useState<Graph>();
   const [_, space] = useSpaces(); // TODO(burdon): Get created space.
   useEffect(() => {
@@ -47,10 +48,16 @@ const Render = ({ init, sidebar, ...props }: RenderProps) => {
     return () => clearTimeout(t);
   }, [space, init]);
 
+  useEffect(() => {
+    if (graph) {
+      void editorRef.current?.zoomToFit();
+    }
+  }, [graph]);
+
   return (
     <div className='grid grid-cols-[1fr,400px] w-full h-full'>
       <div className={mx('flex w-full h-full', !sidebar && 'col-span-2')}>
-        <Editor.Root graph={graph} {...props}>
+        <Editor.Root ref={editorRef} graph={graph} {...props}>
           <Editor.Canvas />
           <Editor.UI />
         </Editor.Root>

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type PropsWithChildren, useEffect, useMemo, useState } from 'react';
+import React, { forwardRef, type PropsWithChildren, useEffect, useImperativeHandle, useMemo, useState } from 'react';
 import { HotkeysProvider } from 'react-hotkeys-hook';
 import { useResizeDetector } from 'react-resize-detector';
 
@@ -66,6 +66,10 @@ export const defaultEditorOptions: EditorOptions = {
   zoomFactor: 2,
 };
 
+interface EditorController {
+  zoomToFit(): Promise<void>;
+}
+
 type EditorRootProps = ThemedClassName<
   PropsWithChildren<
     Partial<Pick<EditorContextType, 'options' | 'debug' | 'scale' | 'offset'> & { graph: Graph }> & {
@@ -74,91 +78,107 @@ type EditorRootProps = ThemedClassName<
   >
 >;
 
-const EditorRoot = ({
-  children,
-  classNames,
-  id,
-  options: _options = defaultEditorOptions,
-  debug: _debug = false,
-  scale: _scale = 1,
-  offset: _offset = defaultOffset,
-  graph: _graph = emptyGraph,
-}: EditorRootProps) => {
-  // Canvas state.
-  const { ref, width = 0, height = 0 } = useResizeDetector();
-  const attendableAttrs = useAttendableAttributes(id);
-  const options = useMemo(() => Object.assign({}, defaultEditorOptions, _options), [_options]);
-  const [debug, setDebug] = useState(_debug);
-  const [gridSize, setGridSize] = useState({ width: 32, height: 32 });
-  const [showGrid, setShowGrid] = useState(true);
-  const [snapToGrid, setSnapToGrid] = useState(true);
-  const [{ scale, offset }, setTransform] = useState<TransformState>({ scale: _scale, offset: _offset });
-  useEffect(() => {
-    if (width && height && offset === defaultOffset) {
-      setTransform({ scale, offset: { x: width / 2, y: height / 2 } });
-    }
-  }, [scale, offset, width, height]);
+const EditorRoot = forwardRef<EditorController, EditorRootProps>(
+  (
+    {
+      children,
+      classNames,
+      id,
+      options: _options = defaultEditorOptions,
+      debug: _debug = false,
+      scale: _scale = 1,
+      offset: _offset = defaultOffset,
+      graph: _graph = emptyGraph,
+    },
+    forwardedRef,
+  ) => {
+    // Canvas state.
+    const { ref, width = 0, height = 0 } = useResizeDetector();
+    const attendableAttrs = useAttendableAttributes(id);
+    const options = useMemo(() => Object.assign({}, defaultEditorOptions, _options), [_options]);
+    const [debug, setDebug] = useState(_debug);
+    const [gridSize, setGridSize] = useState({ width: 32, height: 32 });
+    const [showGrid, setShowGrid] = useState(true);
+    const [snapToGrid, setSnapToGrid] = useState(true);
+    const [{ scale, offset }, setTransform] = useState<TransformState>({ scale: _scale, offset: _offset });
+    useEffect(() => {
+      if (width && height && offset === defaultOffset) {
+        setTransform({ scale, offset: { x: width / 2, y: height / 2 } });
+      }
+    }, [scale, offset, width, height]);
 
-  // Data state.
-  const graph = useMemo(() => new GraphModel<Node<Shape>>(_graph), [_graph]);
+    // Controller.
+    useImperativeHandle(
+      forwardedRef,
+      () => ({
+        zoomToFit: async () => {
+          console.log('zoom', graph);
+        },
+      }),
+      [],
+    );
 
-  // Editor state.
-  const selection = useMemo(() => new SelectionModel(), []);
-  const [dragging, setDragging] = useState<DraggingState>();
-  const [linking, setLinking] = useState<DraggingState>();
-  const [editing, setEditing] = useState<EditingState>();
+    // Data state.
+    const graph = useMemo(() => new GraphModel<Node<Shape>>(_graph), [_graph]);
 
-  return (
-    <div
-      {...testId('dx-editor')}
-      {...attendableAttrs}
-      ref={ref}
-      className={mx('relative w-full h-full overflow-hidden', classNames)}
-    >
-      {/* TODO(burdon): Change scope based on attention. */}
-      <HotkeysProvider initiallyActiveScopes={['attention']}>
-        <EditorContext.Provider
-          value={{
-            id,
-            options,
-            debug,
-            setDebug,
+    // Editor state.
+    const selection = useMemo(() => new SelectionModel(), []);
+    const [dragging, setDragging] = useState<DraggingState>();
+    const [linking, setLinking] = useState<DraggingState>();
+    const [editing, setEditing] = useState<EditingState>();
 
-            width,
-            height,
+    return (
+      <div
+        {...testId('dx-editor')}
+        {...attendableAttrs}
+        ref={ref}
+        className={mx('relative w-full h-full overflow-hidden', classNames)}
+      >
+        {/* TODO(burdon): Change scope based on attention. */}
+        <HotkeysProvider initiallyActiveScopes={['attention']}>
+          <EditorContext.Provider
+            value={{
+              id,
+              options,
+              debug,
+              setDebug,
 
-            scale,
-            offset,
-            setTransform,
+              width,
+              height,
 
-            gridSize,
-            setGridSize,
+              scale,
+              offset,
+              setTransform,
 
-            showGrid,
-            setShowGrid,
+              gridSize,
+              setGridSize,
 
-            snapToGrid,
-            setSnapToGrid,
+              showGrid,
+              setShowGrid,
 
-            graph,
-            selection,
+              snapToGrid,
+              setSnapToGrid,
 
-            dragging,
-            setDragging,
+              graph,
+              selection,
 
-            linking,
-            setLinking,
+              dragging,
+              setDragging,
 
-            editing,
-            setEditing,
-          }}
-        >
-          {children}
-        </EditorContext.Provider>
-      </HotkeysProvider>
-    </div>
-  );
-};
+              linking,
+              setLinking,
+
+              editing,
+              setEditing,
+            }}
+          >
+            {children}
+          </EditorContext.Provider>
+        </HotkeysProvider>
+      </div>
+    );
+  },
+);
 
 export const Editor = {
   Root: EditorRoot,
@@ -166,4 +186,4 @@ export const Editor = {
   UI,
 };
 
-export type { EditorRootProps };
+export type { EditorRootProps, EditorController };
