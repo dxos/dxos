@@ -163,6 +163,34 @@ describe('Integration tests', () => {
     }
   });
 
+  test('references can be loaded explicitly using ref.load()', async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using peer = await builder.createPeer();
+
+    let rootUrl: string;
+    let outerId: string;
+    {
+      await using db = await peer.createDatabase(spaceKey);
+      rootUrl = db.rootUrl!;
+      const inner = db.add({ name: 'inner' });
+      const outer = db.add({ inner: makeRef(inner) });
+      outerId = outer.id;
+      await db.flush();
+    }
+
+    await peer.reload();
+    {
+      await using db = await peer.openDatabase(spaceKey, rootUrl);
+      const outer = (await db.query({ id: outerId }).first()) as any;
+      expect(outer.inner.target).to.eq(undefined);
+
+      const target = await outer.inner.load();
+      expect(target).to.include({ name: 'inner' });
+      expect(outer.inner.target).to.include({ name: 'inner' });
+      expect(outer.inner.target === target).to.be.true;
+    }
+  });
+
   test('replication', async () => {
     const [spaceKey] = PublicKey.randomSequence();
     await using network = await new TestReplicationNetwork().open();
