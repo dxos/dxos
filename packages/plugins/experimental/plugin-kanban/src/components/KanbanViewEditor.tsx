@@ -6,8 +6,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { useIntentDispatcher } from '@dxos/app-framework';
 import { getSpace } from '@dxos/react-client/echo';
-import { ViewEditor } from '@dxos/react-ui-form';
-import { type KanbanType } from '@dxos/react-ui-kanban';
+import { ViewEditor, Form } from '@dxos/react-ui-form';
+import { type KanbanType, KanbanPropsSchema } from '@dxos/react-ui-kanban';
 
 import { KANBAN_PLUGIN } from '../meta';
 import { KanbanAction } from '../types';
@@ -23,6 +23,7 @@ const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
   const [schema, setSchema] = useState(
     space && kanban?.cardView?.query?.type ? space.db.schemaRegistry.getSchema(kanban.cardView.query.type) : undefined,
   );
+
   useEffect(() => {
     if (space && kanban?.cardView?.query?.type) {
       const unsubscribe = space.db.schemaRegistry.subscribe((schemas) => {
@@ -52,7 +53,17 @@ const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
   }
 
   return (
-    <ViewEditor registry={space.db.schemaRegistry} schema={schema} view={kanban.cardView} onDelete={handleDelete} />
+    <>
+      <Form
+        schema={KanbanPropsSchema}
+        values={{ columnField: kanban.columnField }}
+        onSave={({ columnField }) => {
+          kanban.columnField = columnField;
+          kanban.arrangement = undefined;
+        }}
+      />
+      <ViewEditor registry={space.db.schemaRegistry} schema={schema} view={kanban.cardView} onDelete={handleDelete} />
+    </>
   );
 };
 

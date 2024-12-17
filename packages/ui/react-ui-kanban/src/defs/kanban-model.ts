@@ -8,6 +8,7 @@ import { type JsonProp, type MutableSchema } from '@dxos/echo-schema';
 import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 
 import { type KanbanType } from './kanban';
+import { computeArrangement } from '../util';
 
 export type BaseKanbanItem = Record<JsonProp, any> & { id: string };
 
@@ -28,6 +29,10 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   private _items = signal<T[]>([]);
   private _arrangement = signal<KanbanArrangement<T>>([]);
 
+  private _computeArrangement(): KanbanArrangement<T> {
+    return computeArrangement<T>(this._kanban, this._items.value);
+  }
+
   constructor({ kanban, cardSchema }: KanbanModelProps) {
     super();
     this._kanban = kanban;
@@ -46,39 +51,6 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
 
   get cardSchema() {
     return this._cardSchema;
-  }
-
-  private _computeArrangement(): KanbanArrangement<T> {
-    const pivotField = this._kanban.columnField;
-    const kanbanArrangement = this._kanban.arrangement;
-    if (pivotField && kanbanArrangement) {
-      return kanbanArrangement.map(({ columnValue, ids }) => {
-        const orderMap = new Map(ids.map((id, index) => [id, index]));
-
-        const prioritizedItems: T[] = [];
-        const remainingItems: T[] = [];
-
-        // Categorize items
-        for (const item of this.items) {
-          if (item[pivotField as keyof typeof item] === columnValue) {
-            if (orderMap.has(item.id)) {
-              prioritizedItems.push(item);
-            } else {
-              remainingItems.push(item);
-            }
-          }
-        }
-
-        prioritizedItems.sort((a, b) => {
-          const indexA = orderMap.get(a.id) ?? Infinity;
-          const indexB = orderMap.get(b.id) ?? Infinity;
-          return indexA - indexB;
-        });
-
-        return { columnValue, cards: [...prioritizedItems, ...remainingItems] };
-      });
-    }
-    return [];
   }
 
   get arrangement() {

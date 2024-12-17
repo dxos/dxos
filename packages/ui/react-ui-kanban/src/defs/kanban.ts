@@ -31,6 +31,8 @@ export const KanbanSchema = S.Struct({
   threads: S.optional(S.Array(ref(ThreadType))),
 });
 
+export const KanbanPropsSchema = S.Struct({ columnField: S.String });
+
 export class KanbanType extends TypedObject({
   typename: 'dxos.org/type/Kanban',
   version: '0.1.0',
