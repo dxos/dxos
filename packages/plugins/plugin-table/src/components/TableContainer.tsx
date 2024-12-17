@@ -32,7 +32,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   const space = getSpace(table);
 
   const schema = useMemo(
-    () => (table.view ? space?.db.schemaRegistry.getSchema(table.view.query.type) : undefined),
+    () => (table.view ? space?.db.schemaRegistry.getSchema(table.view.target!.query.type) : undefined),
     [space, table.view],
   );
   const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
@@ -63,7 +63,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
       return;
     }
 
-    return new ViewProjection(schema, table.view);
+    return new ViewProjection(schema, table.view.target!);
   }, [schema, table.view]);
 
   const tableRef = useRef<TableController>(null);

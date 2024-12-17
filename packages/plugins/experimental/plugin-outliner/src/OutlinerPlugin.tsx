@@ -6,7 +6,7 @@ import { TreeStructure, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
 import { resolvePlugin, parseIntentPlugin, type PluginDefinition, NavigationAction } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
+import { create, makeRef } from '@dxos/live-object';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
@@ -117,10 +117,11 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
             case OutlinerAction.CREATE: {
               return {
                 data: create(TreeType, {
-                  root: create(TreeItemType, {
+                  root: makeRef(create(TreeItemType, {
                     content: '',
-                    items: [create(TreeItemType, { content: '', items: [] })],
-                  }),
+                      items: [makeRef(create(TreeItemType, { content: '', items: [] }))],
+                    }),
+                  ),
                 }),
               };
             }

@@ -153,7 +153,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
 
   private initializeColumnMeta(): void {
     this._columnMeta = computed(() => {
-      const fields = this._table.view?.fields ?? [];
+      const fields = this._table.view?.target?.fields ?? [];
       const meta = Object.fromEntries(
         fields.map((field, index: number) => [index, { size: field?.size ?? 256, resizeable: true }]),
       );
@@ -174,7 +174,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
         return this._rows.value;
       }
 
-      const field = this._table.view?.fields.find((field) => field.id === sort.fieldId);
+      const field = this._table.view?.target?.fields.find((field) => field.id === sort.fieldId);
       if (!field) {
         return this._rows.value;
       }
@@ -215,7 +215,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
         rowEffects.push(
           effect(() => {
             const obj = this._sortedRows.value[row];
-            this?._table?.view?.fields.forEach((field) => touch(getValue(obj, field.path)));
+            this?._table?.view?.target?.fields.forEach((field) => touch(getValue(obj, field.path)));
             this._onCellUpdate?.({ row, col: start.col, plane: 'grid' });
           }),
         );
@@ -259,7 +259,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
 
   private getMainGridCells = (range: DxGridPlaneRange): DxGridPlaneCells => {
     const cells: DxGridPlaneCells = {};
-    const fields = this._table.view?.fields ?? [];
+    const fields = this._table.view?.target?.fields ?? [];
 
     const addCell = (obj: T, field: FieldType, colIndex: number, displayIndex: number): void => {
       const { props } = this._projection.getFieldProjection(field.id);
@@ -328,7 +328,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
 
   private getHeaderCells = (range: DxGridPlaneRange): DxGridPlaneCells => {
     const cells: DxGridPlaneCells = {};
-    const fields = this.table.view?.fields ?? [];
+    const fields = this.table.view?.target?.fields ?? [];
     for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
       const { field, props } = this._projection.getFieldProjection(fields[col].id);
       cells[toPlaneCellIndex({ col, row: 0 })] = {
@@ -394,7 +394,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
       [toPlaneCellIndex({ col: 0, row: 0 })]: {
         value: '',
         accessoryHtml: tableButtons.addColumn.render({
-          disabled: (this._table.view?.fields?.length ?? 0) >= VIEW_FIELD_LIMIT,
+          disabled: (this._table.view?.target?.fields?.length ?? 0) >= VIEW_FIELD_LIMIT,
         }),
         readonly: true,
       },
@@ -411,7 +411,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
 
   public getRowCount = (): number => this._rows.value.length;
 
-  public getColumnCount = (): number => this.table.view?.fields.length ?? 0;
+  public getColumnCount = (): number => this.table.view?.target?.fields.length ?? 0;
 
   public insertRow = (rowIndex?: number): void => {
     const row = rowIndex !== undefined ? this._displayToDataIndex.get(rowIndex) ?? rowIndex : this._rows.value.length;
@@ -434,7 +434,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
   };
 
   public getCellData = ({ col, row }: DxGridPlanePosition): any => {
-    const fields = this.table.view?.fields ?? [];
+    const fields = this.table.view?.target?.fields ?? [];
     if (col < 0 || col >= fields.length) {
       return undefined;
     }
@@ -464,7 +464,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
 
   public setCellData = ({ col, row }: DxGridPlanePosition, value: any): void => {
     const rowIdx = this._displayToDataIndex.get(row) ?? row;
-    const fields = this.table.view?.fields ?? [];
+    const fields = this.table.view?.target?.fields ?? [];
     if (col < 0 || col >= fields.length) {
       return;
     }
@@ -501,7 +501,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
       return;
     }
 
-    const field = this.table.view.fields.find((field) => field.id === fieldId);
+    const field = this.table.view.target?.fields.find((field) => field.id === fieldId);
     if (field && this._onDeleteColumn) {
       if (this._sorting.value?.fieldId === fieldId) {
         this.clearSort();
@@ -539,7 +539,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
   //
 
   public setColumnWidth(columnIndex: number, width: number): void {
-    const fields = this.table.view?.fields ?? [];
+    const fields = this.table.view?.target?.fields ?? [];
     if (columnIndex < fields.length) {
       const newWidth = Math.max(0, width);
       const field = fields[columnIndex];

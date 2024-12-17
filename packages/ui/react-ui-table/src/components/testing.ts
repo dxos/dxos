@@ -73,7 +73,7 @@ export const useSimulator = ({ items, table, insertInterval, updateInterval }: S
 
     const i = setInterval(() => {
       const rowIdx = Math.floor(Math.random() * items.length);
-      const fields = table.view?.fields ?? [];
+      const fields = table.view?.target?.fields ?? [];
       const columnIdx = Math.floor(Math.random() * fields.length);
       const projection: ViewProjection = (table as any)._projection;
       const field = fields[columnIdx];
@@ -113,5 +113,5 @@ export const useSimulator = ({ items, table, insertInterval, updateInterval }: S
     }, updateInterval);
 
     return () => clearInterval(i);
-  }, [items, table.view?.fields, updateInterval]);
+  }, [items, table.view?.target?.fields, updateInterval]);
 };

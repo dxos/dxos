@@ -31,6 +31,7 @@ import {
   getSpace,
   getTypename,
   loadObjectReferences,
+  makeRef,
   parseId,
   type ReactiveEchoObject,
   SpaceState,
@@ -289,7 +290,7 @@ export const ThreadPlugin = (): PluginDefinition<
           switch (role) {
             case 'main': {
               return data.active instanceof ChannelType && data.active.threads[0] ? (
-                <ThreadMain thread={data.active.threads[0]} />
+                <ThreadMain thread={data.active.threads[0].target!} />
               ) : null;
             }
 
@@ -309,11 +310,11 @@ export const ThreadPlugin = (): PluginDefinition<
                   if (currentPosition > 0) {
                     const objectToTheLeft = layoutEntries[currentPosition - 1];
                     const context = getSpace(data.object)?.db.getObjectById(objectToTheLeft.id);
-                    return <ThreadArticle thread={data.object.threads[0]} context={context} />;
+                    return <ThreadArticle thread={data.object.threads[0].target!} context={context} />;
                   }
                 }
 
-                return <ThreadArticle thread={data.object.threads[0]} />;
+                return <ThreadArticle thread={data.object.threads[0].target!} />;
               }
 
               if (data.subject instanceof ThreadType) {
@@ -413,7 +414,7 @@ export const ThreadPlugin = (): PluginDefinition<
               } else {
                 // NOTE: This is the standalone thread creation case.
                 return {
-                  data: create(ChannelType, { threads: [create(ThreadType, { messages: [] })] }),
+                  data: create(ChannelType, { threads: [makeRef(create(ThreadType, { messages: [] }))] }),
                 };
               }
             }
@@ -585,8 +586,8 @@ export const ThreadPlugin = (): PluginDefinition<
               }
 
               if (!intent.undo) {
-                const message = thread.messages.find((m) => m?.id === messageId);
-                const messageIndex = thread.messages.findIndex((m) => m?.id === messageId);
+                const message = thread.messages.find((m) => m?.target?.id === messageId);
+                const messageIndex = thread.messages.findIndex((m) => m?.target?.id === messageId);
                 if (messageIndex === -1 || !message) {
                   return undefined;
                 }
@@ -624,7 +625,7 @@ export const ThreadPlugin = (): PluginDefinition<
                   return;
                 }
 
-                thread.messages.splice(messageIndex, 0, message);
+                thread.messages.splice(messageIndex, 0, makeRef(message));
                 return {
                   data: true,
                   intents: [

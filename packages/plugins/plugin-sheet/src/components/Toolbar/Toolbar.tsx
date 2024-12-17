@@ -36,6 +36,7 @@ import { completeCellRangeToThreadCursor } from '../../integrations';
 import { SHEET_PLUGIN } from '../../meta';
 import { type SheetType } from '../../types';
 import { useSheetContext } from '../SheetContext';
+import { RefArray } from '@dxos/live-object';
 
 //
 // Buttons
@@ -296,8 +297,7 @@ const Actions = () => {
   const { t } = useTranslation(SHEET_PLUGIN);
 
   // TODO(thure): Can this O(n) call be memoized?
-  const overlapsCommentAnchor = (model.sheet.threads ?? [])
-    .filter(nonNullable)
+  const overlapsCommentAnchor = RefArray.allResolvedTargets(model.sheet.threads ?? [])
     .filter((thread) => thread.status !== 'resolved')
     .some((thread) => {
       if (!cursorFallbackRange) {

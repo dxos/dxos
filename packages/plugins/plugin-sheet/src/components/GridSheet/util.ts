@@ -54,7 +54,7 @@ const projectCellProps = (model: SheetModel, col: number, row: number): DxGridCe
   const ranges = model.sheet.ranges?.filter(({ range }) => inRange(rangeFromIndex(model.sheet, range), address));
   const threadRefs = model.sheet.threads
     ?.filter((thread) => {
-      const range = thread?.anchor && parseThreadAnchorAsCellRange(thread!.anchor);
+      const range = thread.target?.anchor && parseThreadAnchorAsCellRange(thread.target!.anchor);
       return thread && range ? inRange(range, address) : false;
     })
     .map((thread) => fullyQualifiedId(thread!))

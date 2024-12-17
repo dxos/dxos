@@ -121,7 +121,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
         if (!existingObject.source) {
           this.error('Object source not found');
         }
-        existingObject.source.content = scriptContent;
+        existingObject.source.target!.content = scriptContent;
 
         if (this.flags.verbose) {
           this.log(`Updated source in ${this.flags.spaceKey}/${this.flags.objectId} (${existingObject.source.id})`);

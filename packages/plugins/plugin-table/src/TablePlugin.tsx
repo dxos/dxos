@@ -144,9 +144,9 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
               invariant(isTable(table));
               invariant(table.view);
 
-              const schema = getSpace(table)?.db.schemaRegistry.getSchema(table.view.query.type);
+              const schema = getSpace(table)?.db.schemaRegistry.getSchema(table.view.target!.query.type);
               invariant(schema);
-              const projection = new ViewProjection(schema, table.view);
+              const projection = new ViewProjection(schema, table.view.target!);
 
               if (!intent.undo) {
                 const { deleted, index } = projection.deleteFieldProjection(fieldId);

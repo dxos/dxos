@@ -9,7 +9,7 @@ import { S, TypedObject } from '@dxos/echo-schema';
 import { updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { createMutableSchema } from '@dxos/live-object/testing';
-import { create } from '@dxos/react-client/echo';
+import { create, makeRef } from '@dxos/react-client/echo';
 import { createView, ViewProjection } from '@dxos/schema';
 
 import { TableModel, type TableModelProps } from './table-model';
@@ -179,6 +179,6 @@ const createTableModel = (props: Partial<TableModelProps> = {}): TableModel => {
   const schema = createMutableSchema(Test);
   const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: schema.jsonSchema });
   const projection = new ViewProjection(schema, view);
-  const table = create(TableType, { view });
+  const table = create(TableType, { view: makeRef(view) });
   return new TableModel({ table, projection, ...props });
 };

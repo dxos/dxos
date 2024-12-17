@@ -7,7 +7,7 @@ import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import React from 'react';
 
 import { NavigationAction, parseIntentPlugin, type PluginDefinition, resolvePlugin } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
+import { create, makeRef } from '@dxos/live-object';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { TextType } from '@dxos/plugin-markdown/types';
@@ -144,9 +144,11 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
             case ScriptAction.CREATE: {
               return {
                 data: create(ScriptType, {
-                  source: create(TextType, {
-                    content: templates[0].source,
-                  }),
+                  source: makeRef(
+                    create(TextType, {
+                      content: templates[0].source,
+                    }),
+                  ),
                 }),
               };
             }

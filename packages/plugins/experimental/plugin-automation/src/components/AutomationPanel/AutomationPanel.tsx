@@ -131,5 +131,5 @@ const getFunctionName = (scripts: ScriptType[], functions: FunctionType[], trigg
   if (!functionObject) {
     return trigger.function;
   }
-  return scripts.find((s) => functionObject.source?.id === s.id)?.name ?? functionObject.name;
+  return scripts.find((s) => functionObject.source.target?.id === s.id)?.name ?? functionObject.name;
 };

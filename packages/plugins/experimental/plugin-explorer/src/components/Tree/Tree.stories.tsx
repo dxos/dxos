@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React, { type FC, useEffect, useState } from 'react';
 
-import { create } from '@dxos/live-object';
+import { create, makeRef } from '@dxos/live-object';
 import { TreeItemType, TreeType } from '@dxos/plugin-outliner/types';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
@@ -24,7 +24,7 @@ import { Tree, type TreeComponentProps } from './Tree';
 faker.seed(1);
 
 const makeTreeItems = <T extends number>(count: T, items: TreeItemType[] = []) => {
-  return range(count, () => create(TreeItemType, { content: '', items }));
+  return range(count, () => create(TreeItemType, { content: '', items: items.map((item) => makeRef(item)) }));
 };
 
 const Story: FC<ClientRepeatedComponentProps & { type?: TreeComponentProps<any>['variant'] }> = ({ type }) => {
@@ -34,7 +34,7 @@ const Story: FC<ClientRepeatedComponentProps & { type?: TreeComponentProps<any>[
   useEffect(() => {
     setTimeout(() => {
       const tree = create(TreeType, {
-        root: makeTreeItems(1, [
+        root: makeRef(makeTreeItems(1, [
           ...makeTreeItems(7),
           ...makeTreeItems(1, [
             ...makeTreeItems(1),
@@ -54,7 +54,7 @@ const Story: FC<ClientRepeatedComponentProps & { type?: TreeComponentProps<any>[
             ...makeTreeItems(1),
           ]),
           ...makeTreeItems(2),
-        ])[0],
+        ])[0]),
       });
 
       space.db.add(tree);
