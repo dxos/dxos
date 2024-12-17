@@ -20,7 +20,7 @@ export const RefArray = Object.freeze({
    * @returns index of the ref with the given id.
    */
   findIndexById: (refs: Ref<BaseObject>[], id: ObjectId): number => {
-    return refs.findIndex((ref) => ref.target?.id === id);
+    return refs.findIndex((ref) => ref.dxn.isLocalObjectId() && ref.dxn.parts[1] === id);
   },
 
   /**
