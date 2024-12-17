@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
-import { SurfaceProvider } from '@dxos/app-framework';
+import { createSurface, SurfaceProvider } from '@dxos/app-framework';
 import { ThreadType } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
@@ -48,10 +48,12 @@ const Story = () => {
   return (
     <SurfaceProvider
       value={{
-        components: {
-          ObjectMessage: ({ role }) => {
-            return <span>{JSON.stringify({ role })}</span>;
-          },
+        surfaces: {
+          ObjectMessage: createSurface({
+            id: 'test',
+            role: 'card',
+            component: ({ role }) => <span>{JSON.stringify({ role })}</span>,
+          }),
         },
       }}
     >

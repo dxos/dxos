@@ -6,20 +6,18 @@ import React from 'react';
 
 import {
   type PluginDefinition,
-  type LocationProvides,
-  type GraphProvides,
-  type Plugin,
   resolvePlugin,
   parseIntentPlugin,
   parseGraphPlugin,
   parseNavigationPlugin,
   LayoutAction,
   firstIdInPart,
+  createSurface,
 } from '@dxos/app-framework';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { getActiveSpace } from '@dxos/plugin-space';
 
-import { SearchDialog, SearchMain } from './components';
+import { SEARCH_DIALOG, SearchDialog, type SearchDialogProps, SearchMain } from './components';
 import { SearchContextProvider } from './context';
 import meta, { SEARCH_PLUGIN, SEARCH_RESULT } from './meta';
 import type { SearchResult } from './search-sync';
@@ -27,15 +25,8 @@ import translations from './translations';
 import { SearchAction, type SearchPluginProvides } from './types';
 
 export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
-  let navigationPlugin: Plugin<LocationProvides> | undefined;
-  let graphPlugin: Plugin<GraphProvides> | undefined;
-
   return {
     meta,
-    ready: async (plugins) => {
-      navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
-      graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-    },
     provides: {
       translations,
       metadata: {
@@ -85,21 +76,27 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
       },
       context: ({ children }) => <SearchContextProvider>{children}</SearchContextProvider>,
       surface: {
-        component: ({ data, role }) => {
-          const location = navigationPlugin?.provides.location;
-          const graph = graphPlugin?.provides.graph;
-          const space = graph && location ? getActiveSpace(graph, firstIdInPart(location.active, 'main')) : undefined;
+        definitions: ({ plugins }) => {
+          const location = resolvePlugin(plugins, parseNavigationPlugin)?.provides.location;
+          const graph = resolvePlugin(plugins, parseGraphPlugin)?.provides.graph;
 
-          switch (role) {
-            case 'dialog':
-              return data.component === `${SEARCH_PLUGIN}/Dialog` ? (
-                <SearchDialog subject={data.subject as any} />
-              ) : null;
-            case 'search-input':
-              return space ? <SearchMain space={space} /> : null;
-          }
-
-          return null;
+          return [
+            createSurface({
+              id: SEARCH_DIALOG,
+              role: 'dialog',
+              filter: (data): data is { subject: SearchDialogProps } => data.component === SEARCH_DIALOG,
+              component: ({ data }) => <SearchDialog {...data.subject} />,
+            }),
+            createSurface({
+              id: 'search-input',
+              role: 'search-input',
+              component: () => {
+                const space =
+                  graph && location ? getActiveSpace(graph, firstIdInPart(location.active, 'main')) : undefined;
+                return space ? <SearchMain space={space} /> : null;
+              },
+            }),
+          ];
         },
       },
       intent: {

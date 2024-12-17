@@ -4,13 +4,19 @@
 
 import React from 'react';
 
-import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
+import {
+  createSurface,
+  NavigationAction,
+  parseIntentPlugin,
+  resolvePlugin,
+  type PluginDefinition,
+} from '@dxos/app-framework';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 import { create } from '@dxos/react-client/echo';
 
-import { ExplorerArticle, ExplorerMain } from './components';
+import { ExplorerArticle } from './components';
 import meta, { EXPLORER_PLUGIN } from './meta';
 import translations from './translations';
 import { ViewType } from './types';
@@ -76,16 +82,13 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
         },
       },
       surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'main':
-              return data.active instanceof ViewType ? <ExplorerMain view={data.active} /> : null;
-            case 'article':
-              return data.object instanceof ViewType ? <ExplorerArticle view={data.object} /> : null;
-            default:
-              return null;
-          }
-        },
+        definitions: () =>
+          createSurface({
+            id: `${EXPLORER_PLUGIN}/article`,
+            role: 'article',
+            filter: (data): data is { subject: ViewType } => data.subject instanceof ViewType,
+            component: ({ data }) => <ExplorerArticle view={data.subject} />,
+          }),
       },
       intent: {
         resolver: (intent) => {

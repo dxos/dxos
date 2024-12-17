@@ -5,6 +5,13 @@
 import type { FC, PropsWithChildren } from 'react';
 
 /**
+ * Application context to be provided to plugin callbacks.
+ */
+export type HostContext = {
+  plugins: Plugin[];
+};
+
+/**
  * Capabilities provided by a plugin.
  * The base surface capabilities are always included.
  */
@@ -105,7 +112,7 @@ export type PluginDefinition<TProvides = {}, TInitializeProvides = {}> = Omit<Pl
    * @param plugins All plugins which successfully initialized.
    */
   // TODO(wittjosiah): Rename `ready` to a verb?
-  ready?: (plugins: Plugin[]) => Promise<void>;
+  ready?: (context: HostContext) => Promise<void>;
 
   /**
    * Called when the plugin is unloaded.

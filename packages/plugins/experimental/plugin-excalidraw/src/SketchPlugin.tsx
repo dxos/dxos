@@ -5,7 +5,13 @@
 import { CompassTool } from '@phosphor-icons/react';
 import React from 'react';
 
-import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
+import {
+  parseIntentPlugin,
+  type PluginDefinition,
+  resolvePlugin,
+  NavigationAction,
+  createSurface,
+} from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
@@ -19,7 +25,7 @@ import {
 import { SpaceAction } from '@dxos/plugin-space';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 
-import { SketchComponent, SketchMain, SketchSettings } from './components';
+import { SketchComponent, SketchSettings } from './components';
 import meta, { SKETCH_PLUGIN } from './meta';
 import translations from './translations';
 import { SketchAction, type SketchGridType, type SketchPluginProvides, type SketchSettingsProps } from './types';
@@ -116,49 +122,31 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
         ],
       },
       surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'main':
-              return isDiagramType(data.active, EXCALIDRAW_SCHEMA) ? (
-                <SketchMain
-                  sketch={data.active}
-                  autoHideControls={settings.values.autoHideControls}
-                  grid={settings.values.gridType}
-                />
-              ) : null;
-            case 'slide':
-              return isDiagramType(data.slide, EXCALIDRAW_SCHEMA) ? (
-                <SketchComponent
-                  key={fullyQualifiedId(data.slide)} // Force instance per sketch object. Otherwise, sketch shares the same instance.
-                  sketch={data.slide}
-                  readonly
-                  autoZoom
-                  maxZoom={1.5}
-                  className='p-16'
-                  autoHideControls={settings.values.autoHideControls}
-                  grid={settings.values.gridType}
-                />
-              ) : null;
-            case 'article':
-            case 'section':
-              // NOTE: Min 500px height (for tools palette).
-              return isDiagramType(data.object, EXCALIDRAW_SCHEMA) ? (
-                <SketchComponent
-                  key={fullyQualifiedId(data.object)} // Force instance per sketch object. Otherwise, sketch shares the same instance.
-                  sketch={data.object}
-                  autoZoom={role === 'section'}
-                  className={role === 'article' ? 'row-span-2' : 'aspect-square'}
-                  autoHideControls={settings.values.autoHideControls}
-                  grid={settings.values.gridType}
-                />
-              ) : null;
-            case 'settings': {
-              return data.plugin === meta.id ? <SketchSettings settings={settings.values} /> : null;
-            }
-            default:
-              return null;
-          }
-        },
+        definitions: () => [
+          createSurface({
+            id: `${SKETCH_PLUGIN}/sketch`,
+            role: ['article', 'section', 'slide'],
+            filter: (data): data is { subject: DiagramType } => isDiagramType(data.subject, EXCALIDRAW_SCHEMA),
+            component: ({ data, role }) => (
+              <SketchComponent
+                key={fullyQualifiedId(data.subject)} // Force instance per sketch object. Otherwise, sketch shares the same instance.
+                sketch={data.subject}
+                readonly={role === 'slide'}
+                maxZoom={role === 'slide' ? 1.5 : undefined}
+                autoZoom={role === 'section'}
+                autoHideControls={settings.values.autoHideControls}
+                className={role === 'article' ? 'row-span-2' : role === 'section' ? 'aspect-square' : 'p-16'}
+                grid={settings.values.gridType}
+              />
+            ),
+          }),
+          createSurface({
+            id: `${SKETCH_PLUGIN}/settings`,
+            role: 'settings',
+            filter: (data): data is any => data.subject === SKETCH_PLUGIN,
+            component: () => <SketchSettings settings={settings.values} />,
+          }),
+        ],
       },
       intent: {
         resolver: (intent) => {

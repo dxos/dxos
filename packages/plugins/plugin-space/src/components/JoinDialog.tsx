@@ -14,6 +14,8 @@ import { JoinPanel, type JoinPanelProps } from '@dxos/shell/react';
 
 import { SPACE_PLUGIN } from '../meta';
 
+export const JOIN_DIALOG = `${SPACE_PLUGIN}/JoinDialog`;
+
 export type JoinDialogProps = JoinPanelProps & {
   navigableCollections?: boolean;
 };
