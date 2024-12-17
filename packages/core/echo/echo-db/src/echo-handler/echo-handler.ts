@@ -348,7 +348,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return undefined;
     }
 
-    return target[symbolInternals].database.schemaRegistry.getSchemaById(typeReference.objectId);
+    return target[symbolInternals].database.schemaRegistry
+      .query({ backingObjectId: typeReference.objectId })
+      .runSync()[0]
+      ?.getSchema();
   }
 
   getTypeReference(target: ProxyTarget): Reference | undefined {

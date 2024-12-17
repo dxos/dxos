@@ -6,6 +6,8 @@ import { ulid } from 'ulidx';
 import { describe, test } from 'vitest';
 
 import { log } from '@dxos/log';
+import { create } from './object';
+import { getSnapshot } from './accessors';
 
 describe('Object', () => {
   test.skip('ulid stress test', () => {
@@ -20,5 +22,29 @@ describe('Object', () => {
       const end = Date.now();
       log.info(`Generated ${amountToGenerate} ULIDs in ${end - start}ms`);
     }
+  });
+
+  test('getSnapshot', ({ expect }) => {
+    const data = {
+      str: 'foo',
+      number: 20,
+      arr: [
+        {
+          title: 'foo',
+        },
+        {
+          title: 'bar',
+        },
+        {
+          title: 'baz',
+        },
+      ],
+    };
+    // NOTE: create doesn't clone `data`!!!!
+    const obj = create(structuredClone(data));
+    const snapshot = getSnapshot(obj);
+    expect(snapshot).toEqual(data);
+    obj.arr = [];
+    expect(snapshot).toEqual(data);
   });
 });

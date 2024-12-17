@@ -4,7 +4,7 @@
 
 import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
-import { type AnyObjectData, type BaseObject } from '@dxos/echo-schema';
+import { getObjectAnnotation, MutableSchema, type AnyObjectData, type BaseObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type ReactiveObject, getProxyTarget, getSchema, isReactiveObject } from '@dxos/live-object';
@@ -250,7 +250,12 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     if (!isEchoObject(obj)) {
       const schema = getSchema(obj);
       if (schema != null) {
-        if (!this.schemaRegistry.hasSchema(schema) && !this.graph.schemaRegistry.hasSchema(schema)) {
+        const schemaId = schema instanceof MutableSchema ? schema.id : getObjectAnnotation(schema)?.schemaId;
+        // TODO(dmaretskyi): Change so all schema must be stored in the database.
+        if (
+          this.schemaRegistry.query({ backingObjectId: schemaId }).runSync().length === 0 &&
+          !this.graph.schemaRegistry.hasSchema(schema)
+        ) {
           throw createSchemaNotRegisteredError(schema);
         }
       }

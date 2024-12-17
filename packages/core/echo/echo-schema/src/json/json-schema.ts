@@ -18,6 +18,8 @@ import {
   ObjectAnnotationId,
   type PropertyMetaAnnotation,
   PropertyMetaAnnotationId,
+  getEchoIdentifierAnnotation,
+  EchoIdentifierAnnotationId,
 } from '../ast';
 import { createEchoReferenceSchema, ref, type JsonSchemaReferenceInfo } from '../ast/ref';
 import { CustomAnnotations } from '../formats';
@@ -100,6 +102,7 @@ export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
 
   const objectAnnotation = getObjectAnnotation(schema);
   if (objectAnnotation) {
+    // TODO(dmaretskyi):  Use EchoIdentifierAnnotationId for the $id.
     jsonSchema.$id = `dxn:type:${objectAnnotation.typename}`;
     jsonSchema.version = objectAnnotation.version;
   }
@@ -334,6 +337,12 @@ const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<sym
     schemaFields[ECHO_REFINEMENT_KEY] = echoRefinement;
   }
 
+  const echoIdentifier = annotations[EchoIdentifierAnnotationId];
+  if (echoIdentifier) {
+    schemaFields[ECHO_REFINEMENT_KEY] ??= {};
+    schemaFields[ECHO_REFINEMENT_KEY].schemaId = echoIdentifier;
+  }
+
   // Custom (at end).
   for (const [key, annotationId] of Object.entries(CustomAnnotations)) {
     const value = annotations[annotationId];
@@ -354,6 +363,10 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): AST.Annotations 
       if (echoRefinement[annotationToRefinementKey[annotation]]) {
         annotations[annotation] = echoRefinement[annotationToRefinementKey[annotation]];
       }
+    }
+
+    if (echoRefinement.type?.schemaId) {
+      annotations[ObjectAnnotationId] = `dxn:echo:@:${echoRefinement.type.schemaId}`;
     }
   }
 

@@ -185,6 +185,7 @@ const unwrapOptionality = (property: AST.PropertySignature): AST.PropertySignatu
   } as any;
 };
 
+// TODO(dmaretskyi): Change to `getSnapshot`.
 const unwrapProxy = (jsonSchema: any): any => {
   if (typeof jsonSchema !== 'object') {
     return jsonSchema;
