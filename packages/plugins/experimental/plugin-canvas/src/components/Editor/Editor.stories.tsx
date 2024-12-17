@@ -85,7 +85,7 @@ const meta: Meta<EditorRootProps> = {
         const spec: TypeSpec[] = [
           { type: Testing.OrgType, count: 8 },
           { type: Testing.ProjectType, count: 0 },
-          { type: Testing.ContactType, count: 32 },
+          { type: Testing.ContactType, count: 16 },
         ];
 
         await createObjects(spec);

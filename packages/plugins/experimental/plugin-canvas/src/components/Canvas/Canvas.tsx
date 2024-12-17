@@ -6,6 +6,7 @@ import { monitorForElements, dropTargetForElements } from '@atlaskit/pragmatic-d
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Background } from './Background';
@@ -23,7 +24,8 @@ import { testId } from '../util';
  * Main canvas component.
  */
 export const Canvas = () => {
-  const { options, debug, width, height, scale, offset, graph, showGrid, dragging, setTransform } = useEditorContext();
+  const { id, options, debug, width, height, scale, offset, graph, showGrid, dragging, setTransform } =
+    useEditorContext();
 
   // Canvas.
   const containerRef = useRef<HTMLDivElement>(null);
@@ -59,7 +61,7 @@ export const Canvas = () => {
       <Background />
 
       {/* Grid. */}
-      {showGrid && <Grid size={options.gridSize} offset={offset} scale={scale} />}
+      {showGrid && <Grid id={id} size={options.gridSize} offset={offset} scale={scale} />}
 
       {/* Content. */}
       {<Shapes shapes={shapes} style={transformStyles} />}
@@ -97,7 +99,7 @@ export const Canvas = () => {
  * Monitor frames and anchors being dragged.
  */
 const useDragMonitor = (el: HTMLElement | null) => {
-  const { scale, offset, selection, setDragging, setLinking } = useEditorContext();
+  const { graph, scale, offset, selection, setDragging, setLinking } = useEditorContext();
   const actionHandler = useActionHandler();
   const snapPoint = useSnap();
 
@@ -110,7 +112,8 @@ const useDragMonitor = (el: HTMLElement | null) => {
     return monitorForElements({
       // NOTE: This seems to be continually called.
       onDrag: ({ source, location }) => {
-        const [{ x, y }] = screenToModel(scale, offset, [getInputPoint(location.current.input)]);
+        invariant(el);
+        const [{ x, y }] = screenToModel(scale, offset, [getInputPoint(el, location.current.input)]);
         const pos = { x, y };
         const { type, shape } = source.data as DragPayloadData<ShapeType<'rect'>>;
         if (x !== lastPointRef.current?.x || y !== lastPointRef.current?.y) {
@@ -138,13 +141,19 @@ const useDragMonitor = (el: HTMLElement | null) => {
       onDrop: ({ source, location }) => {
         if (!cancelled.current) {
           // TODO(burdon): Adjust for offset on drag?
-          const [pos] = screenToModel(scale, offset, [getInputPoint(location.current.input)]);
+          invariant(el);
+          const [pos] = screenToModel(scale, offset, [getInputPoint(el, location.current.input)]);
           const { type, shape } = source.data as DragPayloadData<ShapeType<'rect'>>;
 
           switch (type) {
             case 'frame': {
               shape.pos = snapPoint(pos);
               shape.rect = getRect(shape.pos, shape.size);
+
+              // TODO(burdon): Copy.
+              if (!graph.getNode(shape.id)) {
+                graph.addNode({ id: shape.id, data: { ...shape } });
+              }
               break;
             }
 

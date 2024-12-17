@@ -11,9 +11,10 @@ import { Editor } from './Editor';
 import { type CanvasType } from '../types';
 
 export const CanvasContainer = ({ canvas }: { canvas: CanvasType }) => {
+  const id = fullyQualifiedId(canvas);
   return (
-    <StackItem.Content id={fullyQualifiedId(canvas)} toolbar={false}>
-      <Editor.Root id={fullyQualifiedId(canvas)}>
+    <StackItem.Content id={id} toolbar={false}>
+      <Editor.Root id={id}>
         <Editor.Canvas />
         <Editor.UI />
       </Editor.Root>

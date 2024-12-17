@@ -63,7 +63,6 @@ import { testId } from '../util';
 const defaultOffset = { x: 0, y: 0 };
 
 export const defaultEditorOptions: EditorOptions = {
-  scope: 'plugin-canvas',
   gridSize: 16,
   zoomFactor: 2,
 };
