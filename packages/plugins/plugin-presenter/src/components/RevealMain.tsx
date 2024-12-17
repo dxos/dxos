@@ -27,7 +27,7 @@ const PresenterMain: FC<{ document: DocumentType }> = ({ document }) => {
       ]}
     >
       <RevealPlayer
-        content={document.content?.content ?? ''}
+        content={document.content.target?.content ?? ''}
         onExit={() => {
           void dispatch([
             {

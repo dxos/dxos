@@ -28,6 +28,7 @@ import { command } from './command-extension';
 import { useOnEditAnalytics } from '../hooks';
 import { THREAD_ITEM, THREAD_PLUGIN } from '../meta';
 import { getMessageMetadata } from '../util';
+import { RefArray } from '@dxos/live-object';
 
 // TODO(thure): #8149
 const messageControlClassNames = ['!p-1 !min-bs-0 transition-opacity', hoverableControlItem];
@@ -101,7 +102,9 @@ export const MessageContainer = ({
         </ButtonGroup>
       </MessageHeading>
       <TextboxBlock message={message} isAuthor={userIsAuthor} editing={editing} />
-      {message.parts?.filter(nonNullable).map((part, index) => <MessagePart key={index} part={part} />)}
+      {RefArray.allResolvedTargets(message.parts ?? []).map((part, index) => (
+        <MessagePart key={index} part={part} />
+      ))}
     </MessageRoot>
   );
 };

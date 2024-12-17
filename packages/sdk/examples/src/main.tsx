@@ -54,7 +54,7 @@ const main = async () => {
     onSpaceCreated: ({ space }) => {
       space.db.add(
         create(DocumentType, {
-          content: create(TextType, { content: '## Type here...\n\ntry the airplane mode switch.' }),
+          content: makeRef(create(TextType, { content: '## Type here...\n\ntry the airplane mode switch.' })),
           threads: [],
         }),
       );

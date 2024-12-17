@@ -14,12 +14,14 @@ import { comments, createExternalCommentSync } from '@dxos/react-ui-editor';
 import { nonNullable } from '@dxos/util';
 
 import { ThreadAction, type ThreadState } from '../types';
+import { RefArray } from '@dxos/live-object';
+import { Ref } from '@dxos/echo-schema';
 
 // TODO(burdon): Factor out.
 const getName = (doc: DocumentType, anchor: string): string | undefined => {
   if (doc.content) {
     const [start, end] = anchor.split(':');
-    return getTextInRange(createDocAccessor(doc.content, ['content']), start, end);
+    return getTextInRange(createDocAccessor(doc.content.target!, ['content']), start, end);
   }
 };
 
@@ -36,7 +38,7 @@ export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: Inten
 
   // TODO(Zan): When we have the deepsignal specific equivalent of this we should use that instead.
   const threads = computed(() =>
-    [...doc.threads.filter(nonNullable), ...(state.drafts[fullyQualifiedId(doc)] ?? [])].filter(
+    [...RefArray.allResolvedTargets(doc.threads), ...(state.drafts[fullyQualifiedId(doc)] ?? [])].filter(
       (thread) => !(thread?.status === 'resolved'),
     ),
   );
@@ -44,8 +46,8 @@ export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: Inten
   return [
     EditorView.updateListener.of((update) => {
       if (update.docChanged) {
-        doc.threads.forEach((thread) => {
-          if (thread?.anchor) {
+        RefArray.allResolvedTargets(doc.threads).forEach((thread) => {
+          if (thread.anchor) {
             // Only update if the name has changed, otherwise this will cause an infinite loop.
             // Skip if the name is empty; this means comment text was deleted, but thread name should remain.
             const name = getName(doc, thread.anchor);
@@ -88,7 +90,7 @@ export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: Inten
           }
         }
 
-        const thread = doc.threads.find((thread) => thread?.id === id);
+        const thread = doc.threads.find(Ref.hasObjectId(id))?.target;
         if (thread) {
           thread.anchor = undefined;
         }
@@ -96,7 +98,7 @@ export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: Inten
       onUpdate: ({ id, cursor }) => {
         const thread =
           state.drafts[fullyQualifiedId(doc)]?.find((thread) => fullyQualifiedId(thread) === id) ??
-          doc.threads.find((thread) => thread?.id === id);
+          doc.threads.find(Ref.hasObjectId(id))?.target;
 
         if (thread instanceof ThreadType && thread.anchor) {
           thread.name = getName(doc, thread.anchor);
