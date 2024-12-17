@@ -20,6 +20,15 @@
       "@dxos/plugin-calls/meta": [
         "packages/plugins/experimental/plugin-calls/src/meta.ts"
       ],
+      "@dxos/plugin-canvas": [
+        "packages/plugins/experimental/plugin-canvas/src/index.ts"
+      ],
+      "@dxos/plugin-canvas/meta": [
+        "packages/plugins/experimental/plugin-canvas/src/meta.ts"
+      ],
+      "@dxos/plugin-canvas/types": [
+        "packages/plugins/experimental/plugin-canvas/src/types/index.ts"
+      ],
       "@dxos/plugin-excalidraw": [
         "packages/plugins/experimental/plugin-excalidraw/src/index.ts"
       ],
@@ -34,15 +43,6 @@
       ],
       "@dxos/plugin-explorer/types": [
         "packages/plugins/experimental/plugin-explorer/src/types/index.ts"
-      ],
-      "@dxos/plugin-grid": [
-        "packages/plugins/experimental/plugin-grid/src/index.ts"
-      ],
-      "@dxos/plugin-grid/meta": [
-        "packages/plugins/experimental/plugin-grid/src/meta.ts"
-      ],
-      "@dxos/plugin-grid/types": [
-        "packages/plugins/experimental/plugin-grid/src/types/index.ts"
       ],
       "@dxos/plugin-inbox": [
         "packages/plugins/experimental/plugin-inbox/src/index.ts"
@@ -69,7 +69,7 @@
         "packages/plugins/experimental/plugin-kanban/src/meta.ts"
       ],
       "@dxos/plugin-kanban/types": [
-        "packages/plugins/experimental/plugin-kanban/src/types/index.ts"
+        "packages/plugins/experimental/plugin-kanban/src/types.ts"
       ],
       "@dxos/plugin-map": [
         "packages/plugins/experimental/plugin-map/src/index.ts"

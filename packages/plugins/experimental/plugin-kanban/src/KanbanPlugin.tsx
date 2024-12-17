@@ -11,16 +11,15 @@ import {
   NavigationAction,
   createSurface,
 } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
-import { loadObjectReferences } from '@dxos/react-client/echo';
+import { KanbanType } from '@dxos/react-ui-kanban';
 
-import { KanbanMain } from './components';
+import { KanbanContainer } from './components';
+import { createKanban } from './components/create-kanban';
 import meta, { KANBAN_PLUGIN } from './meta';
 import translations from './translations';
-import { KanbanColumnType, KanbanItemType, KanbanType } from './types';
 import { KanbanAction, type KanbanPluginProvides } from './types';
 
 export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
@@ -33,22 +32,11 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
             createObject: KanbanAction.CREATE,
             placeholder: ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
             icon: 'ph--kanban--regular',
-            // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (kanban: KanbanType) => loadObjectReferences(kanban, (kanban) => kanban.columns),
-          },
-          [KanbanColumnType.typename]: {
-            // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (column: KanbanColumnType) => loadObjectReferences(column, (column) => column.items),
-          },
-          [KanbanItemType.typename]: {
-            // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (item: KanbanItemType) => [], // loadObjectReferences(item, (item) => item.object),
           },
         },
       },
       echo: {
         schema: [KanbanType],
-        system: [KanbanColumnType, KanbanItemType],
       },
       translations,
       graph: {
@@ -97,16 +85,18 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
         definitions: () =>
           createSurface({
             id: KANBAN_PLUGIN,
-            role: 'article',
+            role: ['article', 'section'],
             filter: (data): data is { subject: KanbanType } => data.subject instanceof KanbanType,
-            component: ({ data }) => <KanbanMain kanban={data.subject} />,
+            component: ({ data, role }) => <KanbanContainer kanban={data.subject} role={role} />,
           }),
       },
       intent: {
         resolver: (intent) => {
           switch (intent.action) {
             case KanbanAction.CREATE: {
-              return { data: create(KanbanType, { columns: [] }) };
+              if (intent.data?.space) {
+                return { data: createKanban(intent.data.space) };
+              }
             }
           }
         },

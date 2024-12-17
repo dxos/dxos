@@ -12,13 +12,15 @@ export const setDeep = <T>(obj: any, path: readonly (string | number)[], value: 
   invariant(path.length > 0);
   let parent = obj;
   for (const key of path.slice(0, -1)) {
-    parent[key] ??= {};
+    if (parent[key] === undefined) {
+      const isArrayIndex = !isNaN(Number(key));
+      parent[key] = isArrayIndex ? [] : {};
+    }
     parent = parent[key];
   }
 
   parent[path.at(-1)!] = value;
-  // NOTE: We can't just return value here since doc's getter might return a different object.
-  return parent[path.at(-1)!];
+  return obj;
 };
 
 /**

@@ -17,6 +17,7 @@ import { type Observability } from '@dxos/observability';
 import AttentionMeta from '@dxos/plugin-attention/meta';
 import AutomationMeta from '@dxos/plugin-automation/meta';
 import CallsMeta from '@dxos/plugin-calls/meta';
+import CanvasMeta from '@dxos/plugin-canvas/meta';
 import ChessMeta from '@dxos/plugin-chess/meta';
 import ClientMeta, { CLIENT_PLUGIN, ClientAction } from '@dxos/plugin-client/meta';
 import DebugMeta from '@dxos/plugin-debug/meta';
@@ -25,7 +26,6 @@ import ExcalidrawMeta from '@dxos/plugin-excalidraw/meta';
 import ExplorerMeta from '@dxos/plugin-explorer/meta';
 import FilesMeta from '@dxos/plugin-files/meta';
 import GraphMeta from '@dxos/plugin-graph/meta';
-import GridMeta from '@dxos/plugin-grid/meta';
 import HelpMeta from '@dxos/plugin-help/meta';
 import InboxMeta from '@dxos/plugin-inbox/meta';
 import IpfsMeta from '@dxos/plugin-ipfs/meta';
@@ -137,6 +137,7 @@ export const recommended = ({ isDev, isLabs }: PluginConfig): PluginMeta[] =>
     ExcalidrawMeta,
     ExplorerMeta,
     IpfsMeta,
+    KanbanMeta,
     MapMeta,
     MermaidMeta,
     PresenterMeta,
@@ -148,9 +149,8 @@ export const recommended = ({ isDev, isLabs }: PluginConfig): PluginMeta[] =>
     ...(isLabs
       ? [
           // prettier-ignore
-          GridMeta,
+          CanvasMeta,
           InboxMeta,
-          KanbanMeta,
           OutlinerMeta,
         ]
       : []),
@@ -173,6 +173,7 @@ export const plugins = ({
   [AttentionMeta.id]: Plugin.lazy(() => import('@dxos/plugin-attention')),
   [AutomationMeta.id]: Plugin.lazy(() => import('@dxos/plugin-automation')),
   [CallsMeta.id]: Plugin.lazy(() => import('@dxos/plugin-calls')),
+  [CanvasMeta.id]: Plugin.lazy(() => import('@dxos/plugin-canvas')),
   [ChessMeta.id]: Plugin.lazy(() => import('@dxos/plugin-chess')),
   [ClientMeta.id]: Plugin.lazy(() => import('@dxos/plugin-client'), {
     appKey,
@@ -238,7 +239,6 @@ export const plugins = ({
   [ExplorerMeta.id]: Plugin.lazy(() => import('@dxos/plugin-explorer')),
   [FilesMeta.id]: Plugin.lazy(() => import('@dxos/plugin-files')),
   [GraphMeta.id]: Plugin.lazy(() => import('@dxos/plugin-graph')),
-  [GridMeta.id]: Plugin.lazy(() => import('@dxos/plugin-grid')),
   [HelpMeta.id]: Plugin.lazy(() => import('@dxos/plugin-help'), { steps }),
   [InboxMeta.id]: Plugin.lazy(() => import('@dxos/plugin-inbox')),
   [IpfsMeta.id]: Plugin.lazy(() => import('@dxos/plugin-ipfs')),

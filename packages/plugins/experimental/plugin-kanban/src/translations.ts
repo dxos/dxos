@@ -2,11 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
+import { KanbanType } from '@dxos/react-ui-kanban';
+
 import { KANBAN_PLUGIN } from './meta';
 
 export default [
   {
     'en-US': {
+      [KanbanType.typename]: {
+        'typename label': 'Kanban',
+      },
       [KANBAN_PLUGIN]: {
         'plugin name': 'Kanban',
         'kanban title label': 'Title',
