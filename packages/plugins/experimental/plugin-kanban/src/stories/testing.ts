@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { create } from '@dxos/live-object';
+import { create, makeRef } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 
 import { KanbanColumnType, KanbanItemType, KanbanType } from '../types';
@@ -13,16 +13,20 @@ export const createKanban = () => {
     name: faker.lorem.words(3),
     columns: faker.helpers.multiple(
       () =>
-        create(KanbanColumnType, {
-          name: faker.lorem.words(3),
-          items: faker.helpers.multiple(
-            () =>
-              create(KanbanItemType, {
-                name: faker.lorem.words(faker.number.int({ min: 3, max: 24 })) + '.',
-              }),
-            { count: faker.number.int(8) },
-          ),
-        }),
+        makeRef(
+          create(KanbanColumnType, {
+            name: faker.lorem.words(3),
+            items: faker.helpers.multiple(
+              () =>
+                makeRef(
+                  create(KanbanItemType, {
+                    name: faker.lorem.words(faker.number.int({ min: 3, max: 24 })) + '.',
+                  }),
+                ),
+              { count: faker.number.int(8) },
+            ),
+          }),
+        ),
       { count: { min: 2, max: 8 } },
     ),
   });

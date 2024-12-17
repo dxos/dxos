@@ -5,8 +5,8 @@
 import { useEffect, useState } from 'react';
 
 import { createSubscription } from '@dxos/react-client/echo';
-import { nonNullable } from '@dxos/util';
 
+import { Ref } from '@dxos/echo-schema';
 import { type KanbanColumnType, type Location } from '../types';
 
 // TODO(burdon): Factor out.
@@ -29,9 +29,9 @@ export const findLocation = (columns: KanbanColumnType[], id: string): Location 
     if (column.id === id) {
       return { column };
     } else {
-      const idx = column.items.filter(nonNullable).findIndex((item) => item.id === id);
+      const idx = column.items.findIndex(Ref.hasObjectId(id));
       if (idx !== -1) {
-        return { column, item: column.items![idx], idx };
+        return { column, item: column.items![idx].target, idx };
       }
     }
   }
