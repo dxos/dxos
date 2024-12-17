@@ -14,10 +14,11 @@ import { translationKey } from '../translations';
 
 export type KanbanProps = {
   model: KanbanModel;
-  columns: Record<string, { label: string }>;
+  onAddColumn?: () => void;
+  onAddCard?: (columnValue: string) => void;
 };
 
-export const Kanban = ({ model, columns }: KanbanProps) => {
+export const Kanban = ({ model, onAddColumn, onAddCard }: KanbanProps) => {
   const { t } = useTranslation(translationKey);
 
   return (
@@ -40,7 +41,7 @@ export const Kanban = ({ model, columns }: KanbanProps) => {
                   label={t('column drag handle label')}
                 />
               </StackItem.DragHandle>
-              <h2>{columns[columnValue].label}</h2>
+              <h2>{columnValue}</h2>
             </StackItem.Heading>
             <Stack orientation='vertical' size='contain' rail={false} classNames='pbe-1'>
               {cards.map((card) => (
@@ -53,10 +54,27 @@ export const Kanban = ({ model, columns }: KanbanProps) => {
                   </div>
                 </StackItem.Root>
               ))}
+              {onAddCard && (
+                <IconButton
+                  icon='ph--plus--regular'
+                  label={t('add card label')}
+                  onClick={() => onAddCard(columnValue)}
+                />
+              )}
             </Stack>
           </div>
         </StackItem.Root>
       ))}
+      {onAddColumn && (
+        <StackItem.Root
+          item={{ id: 'new-column-cta' }}
+          onRearrange={model.onRearrange}
+          size={20}
+          classNames='pli-1 plb-2'
+        >
+          <IconButton icon='ph--plus--regular' label={t('add column label')} onClick={onAddColumn} />
+        </StackItem.Root>
+      )}
     </Stack>
   );
 };
