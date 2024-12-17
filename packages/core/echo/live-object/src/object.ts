@@ -34,8 +34,7 @@ export type ReactiveObject<T extends BaseObject> = { [K in keyof T]: T[K] };
 // TODO(dmaretskyi): Invert generics (generic over schema) to have better error messages.
 export const create: {
   <T extends BaseObject>(obj: T): ReactiveObject<T>;
-  <T extends BaseObject>(schema: typeof Expando, obj: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<Expando>;
-  <T extends BaseObject>(schema: S.Schema<T, any>, obj: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<T>;
+  <T extends BaseObject>(schema: S.Schema<T, any, never>, obj: NoInfer<ExcludeId<T>>, meta?: ObjectMeta): ReactiveObject<T>;
 } = <T extends BaseObject>(
   objOrSchema: S.Schema<T, any> | T,
   obj?: ExcludeId<T>,

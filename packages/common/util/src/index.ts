@@ -47,3 +47,4 @@ export * from './chunk-array';
 export * from './array-to-hex';
 export * from './remove-undefined-keys';
 export * from './order-keys';
+export * from './no-infer';
