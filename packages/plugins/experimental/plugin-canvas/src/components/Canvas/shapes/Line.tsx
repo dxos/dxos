@@ -34,7 +34,7 @@ export const Line = ({ shape, selected, onSelect }: LineProps) => {
           )}
           <path
             d={shape.path}
-            stroke={'red'}
+            // stroke={'red'}
             markerStart={createUrl(!shape.guide && shape.id !== 'link' && shape.start)}
             markerEnd={createUrl(!shape.guide && shape.id !== 'link' && shape.end)}
             className={mx(

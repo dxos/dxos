@@ -12,7 +12,7 @@ import { Line } from './Line';
 import { type BaseShapeProps } from './base';
 import { createLine, type GraphModel, type Shape, type ShapeType } from '../../../graph';
 import { type SelectionEvent, useEditorContext, useSelectionEvents } from '../../../hooks';
-import { rectContains, boundsToModel, findClosestIntersection, getRect, type Point, type Rect } from '../../../layout';
+import { rectContains, screenToModel, findClosestIntersection, getRect, type Point, type Rect } from '../../../layout';
 import { testId } from '../../util';
 
 /**
@@ -97,10 +97,6 @@ export const useLayout = (graph: GraphModel, dragging?: Shape, debug?: boolean):
 
   const shapes: Shape[] = [];
 
-  graph.nodes.forEach(({ data: shape }) => {
-    shapes.push(shape);
-  });
-
   graph.edges.forEach(({ id, source, target }) => {
     const { center: p1, bounds: r1 } = getPos(source) ?? {};
     const { center: p2, bounds: r2 } = getPos(target) ?? {};
@@ -119,6 +115,10 @@ export const useLayout = (graph: GraphModel, dragging?: Shape, debug?: boolean):
     shapes.push(line);
   });
 
+  graph.nodes.forEach(({ data: shape }) => {
+    shapes.push(shape);
+  });
+
   return { shapes };
 };
 
@@ -131,13 +131,13 @@ export const useSelectionHandler = (el: HTMLElement | null, shapes: Shape[]) => 
 
   const handleSelectionBounds = useCallback<SelectionEvent>(
     (bounds, shift) => {
-      if (!el || !bounds) {
+      if (!bounds) {
         selection.clear();
         return;
       }
 
       // Map the pointer event to the SVG coordinate system.
-      const selectionBounds = boundsToModel(el.getBoundingClientRect(), scale, offset, bounds);
+      const selectionBounds = screenToModel(scale, offset, bounds);
       const selected = shapesRef.current
         .filter((shape) => {
           switch (shape.type) {
@@ -153,7 +153,7 @@ export const useSelectionHandler = (el: HTMLElement | null, shapes: Shape[]) => 
 
       selection.setSelected(selected, shift);
     },
-    [el, scale, offset, selection],
+    [scale, offset, selection],
   );
 
   return useSelectionEvents(el, handleSelectionBounds);

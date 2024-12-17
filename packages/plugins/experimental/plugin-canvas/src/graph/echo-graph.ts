@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AST, ReferenceAnnotationId, SchemaValidator } from '@dxos/echo-schema';
+import { FormatEnum } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { type ReactiveEchoObject, getSchema } from '@dxos/react-client/echo';
+import { getSchemaProperties } from '@dxos/schema';
 
 import { GraphModel, type Node } from './graph';
 
@@ -38,28 +39,19 @@ export const createGraph = (
     }
 
     // Parse schema to follow referenced objects.
-    AST.getPropertySignatures(schema.ast).forEach((prop) => {
-      // TODO(burdon): No references.
-      if (!SchemaValidator.hasTypeAnnotation(schema, prop.name.toString(), ReferenceAnnotationId)) {
-        return;
-      }
-
-      const value = object[String(prop.name)];
-      if (value) {
-        const refs = Array.isArray(value) ? value : [value];
-        for (const ref of refs) {
-          const source = object;
-          const target = graph.getNode(ref.id);
-          if (target) {
-            graph.addEdge({
-              id: `${source.id}-${String(prop.name)}-${target.id}`,
-              source: source.id,
-              target: target.id,
-            });
-          }
+    for (const prop of getSchemaProperties(schema.ast, object)) {
+      if (prop.format === FormatEnum.Ref) {
+        const source = object;
+        const target = object[prop.name];
+        if (target) {
+          graph.addEdge({
+            id: `${source.id}-${String(prop.name)}-${target.id}`,
+            source: source.id,
+            target: target.id,
+          });
         }
       }
-    });
+    }
   });
 
   return graph;

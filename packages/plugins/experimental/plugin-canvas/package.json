@@ -74,7 +74,8 @@
     "d3": "^7.9.0",
     "lodash.defaultsdeep": "^4.6.1",
     "react-hotkeys-hook": "^4.6.1",
-    "react-resize-detector": "^11.0.1"
+    "react-resize-detector": "^11.0.1",
+    "transformation-matrix": "^2.16.1"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

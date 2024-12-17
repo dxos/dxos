@@ -6,7 +6,6 @@ import { monitorForElements, dropTargetForElements } from '@atlaskit/pragmatic-d
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Background } from './Background';
@@ -14,7 +13,7 @@ import { type DragPayloadData, FrameDragPreview, Line, Shapes, useLayout, useSel
 import { createLine, createRect, type Shape, type ShapeType } from '../../graph';
 import { useActionHandler, useEditorContext, useShortcuts, useSnap, useTransform } from '../../hooks';
 import { useWheel } from '../../hooks/useWheel';
-import { boundsToModel, findClosestIntersection, getRect, getInputPoint, type Point } from '../../layout';
+import { screenToModel, findClosestIntersection, getRect, getInputPoint, type Point } from '../../layout';
 import { createId, itemSize } from '../../testing';
 import { Grid } from '../Grid';
 import { eventsNone, styles } from '../styles';
@@ -111,9 +110,7 @@ const useDragMonitor = (el: HTMLElement | null) => {
     return monitorForElements({
       // NOTE: This seems to be continually called.
       onDrag: ({ source, location }) => {
-        invariant(el);
-        const rect = el.getBoundingClientRect();
-        const { x, y } = boundsToModel(rect, scale, offset, getInputPoint(location.current.input));
+        const { x, y } = screenToModel(scale, offset, getInputPoint(location.current.input));
         const pos = { x, y };
         const { type, shape } = source.data as DragPayloadData<ShapeType<'rect'>>;
         if (x !== lastPointRef.current?.x || y !== lastPointRef.current?.y) {
@@ -140,11 +137,9 @@ const useDragMonitor = (el: HTMLElement | null) => {
 
       onDrop: ({ source, location }) => {
         if (!cancelled.current) {
-          invariant(el);
-          const rect = el.getBoundingClientRect();
           // TODO(burdon): Adjust for offset?
-          // const pos = boundsToModelWithOffset(rect, scale, offset, shape.pos, location.initial, location.current);
-          const pos = boundsToModel(rect, scale, offset, getInputPoint(location.current.input));
+          // const pos = boundsToModelWithOffset(scale, offset, shape.pos, location.initial, location.current);
+          const pos = screenToModel(scale, offset, getInputPoint(location.current.input));
           const { type, shape } = source.data as DragPayloadData<ShapeType<'rect'>>;
 
           switch (type) {

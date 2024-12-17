@@ -9,12 +9,12 @@ import {
   AST,
   FormatEnum,
   getFormatAnnotation,
+  getSchemaReference,
+  type BaseObject,
+  type JsonSchemaType,
   type OptionsAnnotationType,
   OptionsAnnotationId,
   type PropertyKey,
-  type BaseObject,
-  getSchemaReference,
-  type JsonSchemaType,
 } from '@dxos/echo-schema';
 import {
   type SimpleType,

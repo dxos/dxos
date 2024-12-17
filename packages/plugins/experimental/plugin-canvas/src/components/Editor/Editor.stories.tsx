@@ -12,6 +12,8 @@ import { getTypename } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { mx } from '@dxos/react-ui-theme/src';
 import { createObjectFactory, type ValueGenerator, Testing, type TypeSpec } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -23,11 +25,13 @@ const generator: ValueGenerator = faker as any;
 
 const types = [Testing.OrgType, Testing.ProjectType, Testing.ContactType];
 
-const Render = (props: EditorRootProps) => {
+type RenderProps = EditorRootProps & { init?: boolean; sidebar?: boolean };
+
+const Render = ({ init, sidebar, ...props }: RenderProps) => {
   const [graph, setGraph] = useState<Graph>();
   const [_, space] = useSpaces(); // TODO(burdon): Get created space.
   useEffect(() => {
-    if (!space) {
+    if (!space || !init) {
       return;
     }
 
@@ -41,13 +45,22 @@ const Render = (props: EditorRootProps) => {
     });
 
     return () => clearTimeout(t);
-  }, [space]);
+  }, [space, init]);
 
   return (
-    <Editor.Root graph={graph} {...props}>
-      <Editor.Canvas />
-      <Editor.UI />
-    </Editor.Root>
+    <div className='grid grid-cols-[1fr,400px] w-full h-full'>
+      <div className={mx('flex w-full h-full', !sidebar && 'col-span-2')}>
+        <Editor.Root graph={graph} {...props}>
+          <Editor.Canvas />
+          <Editor.UI />
+        </Editor.Root>
+      </div>
+      {sidebar && (
+        <SyntaxHighlighter language='json' classNames='text-xs'>
+          {JSON.stringify({ graph }, null, 2)}
+        </SyntaxHighlighter>
+      )}
+    </div>
   );
 };
 
@@ -63,9 +76,9 @@ const meta: Meta<EditorRootProps> = {
         space.db.graph.schemaRegistry.addSchema(types);
         const createObjects = createObjectFactory(space.db, generator);
         const spec: TypeSpec[] = [
-          { type: Testing.OrgType, count: 5 },
-          { type: Testing.ProjectType, count: 5 },
-          { type: Testing.ContactType, count: 10 },
+          { type: Testing.OrgType, count: 4 },
+          { type: Testing.ProjectType, count: 0 },
+          { type: Testing.ContactType, count: 12 },
         ];
 
         await createObjects(spec);
@@ -78,12 +91,14 @@ const meta: Meta<EditorRootProps> = {
 
 export default meta;
 
-type Story = StoryObj<EditorRootProps>;
+type Story = StoryObj<RenderProps>;
 
 export const Default: Story = {
   args: {
+    sidebar: true,
+    init: true,
     id: 'test',
-    // debug: true,
-    // scale: 1,
+    debug: true,
+    scale: 1,
   },
 };

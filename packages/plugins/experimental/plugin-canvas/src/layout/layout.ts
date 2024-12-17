@@ -33,6 +33,7 @@ export const doLayout = async <N extends object>(
   const graph = new GraphModel<Node<BaseShape<N>>>();
 
   const defaultOptions: Intersection<[D3ForceLayoutOptions, GridLayoutOptions, RadialLayoutOptions]> = {
+    center: [0, 0],
     width: gridSize * 20,
     height: gridSize * 20,
     linkDistance: gridSize * 2,

@@ -11,6 +11,7 @@ import { useEditorContext } from './useEditorContext';
 import { getZoomTransform } from './useWheel';
 import { type ActionHandler } from '../actions';
 import { createRect } from '../graph';
+import { getCenter, modelToScreen, rectUnion } from '../layout';
 import { createId, itemSize } from '../testing';
 
 /**
@@ -91,18 +92,15 @@ export const useActionHandler = (): ActionHandler => {
           zoom(scale, newScale);
           return true;
         }
-        case 'expand': {
-          const node = graph.getNode(selection.ids?.[0]);
-          if (node?.data.type === 'rect') {
-            // TODO(burdon): Map to screen.
-            const pos = node.data.pos;
-            const is = d3.interpolate(offset, pos);
-            d3.transition()
-              .ease(d3.easeSinOut)
-              .duration(200)
-              .tween('scale', () => (t) => setTransform({ scale, offset: { ...is(t) } }));
-            // zoom(scale, 16, 800);
-          }
+        case 'bounds': {
+          const rect = rectUnion(graph.nodes.filter((node) => node.data.type === 'rect').map((node) => node.data.rect));
+          const center = getCenter(rect);
+          const newCenter = modelToScreen(scale, { x: width / 2, y: height / 2 }, { x: -center.x, y: -center.y });
+          const is = d3.interpolate(offset, newCenter);
+          d3.transition()
+            .ease(d3.easeSinOut)
+            .duration(200)
+            .tween('scale', () => (t) => setTransform({ scale, offset: { ...is(t) } }));
           return true;
         }
 

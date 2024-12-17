@@ -4,13 +4,22 @@
 
 import { type CSSProperties } from 'react';
 
+import { invariant } from '@dxos/invariant';
+
+// TODO(burdon): Utils?
+//  - https://www.npmjs.com/package/@antv/coord
+//  - https://github.com/antvis/G6
+//  - https://observablehq.com/@antv/wow-antv-coord
+//  - https://github.com/antvis/coord/blob/master/docs/api/README.md
+//  - https://www.npmjs.com/package/geometric
+
 // TODO(burdon): Generalize positional unit (e.g., x,y, fraction, slot).
+
 export type Point = { x: number; y: number };
-export type Line = [Point, Point];
-export type Range = { p1: Point; p2: Point };
-export type Bounds = { center: Point; size: Dimension };
 export type Dimension = { width: number; height: number };
 export type Rect = Point & Dimension;
+export type Line = [Point, Point];
+export type Range = { p1: Point; p2: Point }; // TODO(burdon): Array.
 
 export type PointTransform = (pos: Point) => Point;
 
@@ -22,7 +31,6 @@ export const round = (n: number, m: number) => Math.round(n / m) * m;
 
 export const pointAdd = (a: Point, b: Point): Point => ({ x: a.x + b.x, y: a.y + b.y });
 export const pointSubtract = (a: Point, b: Point): Point => ({ x: a.x - b.x, y: a.y - b.y });
-export const pointMultiply = (pos: Point, scale: number): Point => ({ x: pos.x * scale, y: pos.y * scale });
 
 export const distance = (p1: Point, p2: Point): number =>
   Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
@@ -49,11 +57,24 @@ export const getBounds = (p1: Point, p2: Point): Rect => ({
   height: Math.abs(p1.y - p2.y),
 });
 
+export const rectUnion = (rect: Rect[]): Rect => {
+  invariant(rect.length > 0);
+  const x = Math.min(...rect.map((b) => b.x));
+  const y = Math.min(...rect.map((b) => b.y));
+  const width = Math.max(...rect.map((b) => b.x + b.width)) - x;
+  const height = Math.max(...rect.map((b) => b.y + b.height)) - y;
+  return { x, y, width, height };
+};
+
 export const rectOverlaps = (b1: Rect, b2: Rect): boolean =>
   !(b1.x + b1.width <= b2.x || b1.x >= b2.x + b2.width || b1.y + b1.height <= b2.y || b1.y >= b2.y + b2.height);
 
 export const rectContains = (b1: Rect, b2: Rect): boolean =>
   b2.x >= b1.x && b2.y >= b1.y && b2.x + b2.width <= b1.x + b1.width && b2.y + b2.height <= b1.y + b1.height;
+
+//
+// Intersections
+//
 
 export const findClosestIntersection = ([p1, p2]: Line, rect: Rect): Point | null => {
   const intersections = findLineRectangleIntersections([p1, p2], rect);
@@ -134,50 +155,6 @@ export const findLineIntersection = ([p1, p2]: Line, [q1, q2]: Line): Point | nu
     x: p1.x + t * (p2.x - p1.x),
     y: p1.y + t * (p2.y - p1.y),
   };
-};
-
-//
-// Transform
-// Screen vs. model transforms.
-//
-
-/**
- * Maps the pointer to the element's transformed coordinate system.
- */
-export const boundsToModel = (
-  rect: DOMRect,
-  scale: number,
-  offset: Point,
-  { x = 0, y = 0, width = 0, height = 0 }: Partial<Rect>,
-): Rect => ({
-  x: (x - rect.left - offset.x) / scale,
-  y: (y - rect.top - offset.y) / scale,
-  width: width / scale,
-  height: height / scale,
-});
-
-/**
- * Maps the pointer to the element's transformed coordinate system, taking account of the starting offset
- * from the shape's reference point (typically the center).
- *
- * @param rect Bounds of container
- * @param scale Container scale.
- * @param offset Container offset.
- * @param center Center point of shape.
- * @param initial Cursor position on start of drag.
- * @param current Current position.
- */
-export const boundsToModelWithOffset = (
-  rect: DOMRect,
-  scale: number,
-  offset: Point,
-  center: Point,
-  initial: Point,
-  current: Point,
-) => {
-  const initialPoint = boundsToModel(rect, scale, offset, initial);
-  const currentPoint = boundsToModel(rect, scale, offset, current);
-  return pointAdd(currentPoint, pointSubtract(center, initialPoint));
 };
 
 //

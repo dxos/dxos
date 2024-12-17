@@ -56,11 +56,11 @@ export class GraphModel<GraphNode extends Node = any, GraphEdge extends Edge = a
     return this._graph;
   }
 
-  get nodes(): readonly GraphNode[] {
+  get nodes(): GraphNode[] {
     return this._graph.nodes as GraphNode[];
   }
 
-  get edges(): readonly GraphEdge[] {
+  get edges(): GraphEdge[] {
     return this._graph.edges as GraphEdge[];
   }
 
