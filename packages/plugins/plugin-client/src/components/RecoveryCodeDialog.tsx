@@ -8,6 +8,8 @@ import { AlertDialog, Button, Clipboard, Input, useTranslation } from '@dxos/rea
 
 import { CLIENT_PLUGIN } from '../meta';
 
+export const RECOVER_CODE_DIALOG = `${CLIENT_PLUGIN}/RecoveryCodeDialog`;
+
 export type RecoveryCodeDialogProps = {
   code: string;
 };

@@ -5,7 +5,13 @@
 import { TreeStructure, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { resolvePlugin, parseIntentPlugin, type PluginDefinition, NavigationAction } from '@dxos/app-framework';
+import {
+  resolvePlugin,
+  parseIntentPlugin,
+  type PluginDefinition,
+  NavigationAction,
+  createSurface,
+} from '@dxos/app-framework';
 import { create } from '@dxos/live-object';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
@@ -100,16 +106,20 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
         ],
       },
       surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'main':
-              return data.active instanceof TreeType ? <OutlinerMain tree={data.active} /> : null;
-            case 'section':
-              return data.object instanceof TreeType ? <TreeSection tree={data.object} /> : null;
-          }
-
-          return null;
-        },
+        definitions: () => [
+          createSurface({
+            id: `${OUTLINER_PLUGIN}/article`,
+            role: 'article',
+            filter: (data): data is { subject: TreeType } => data.subject instanceof TreeType,
+            component: ({ data }) => <OutlinerMain tree={data.subject} />,
+          }),
+          createSurface({
+            id: `${OUTLINER_PLUGIN}/section`,
+            role: 'section',
+            filter: (data): data is { subject: TreeType } => data.subject instanceof TreeType,
+            component: ({ data }) => <TreeSection tree={data.subject} />,
+          }),
+        ],
       },
       intent: {
         resolver: (intent) => {

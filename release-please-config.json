@@ -479,11 +479,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/experimental/plugin-github/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/experimental/plugin-inbox/package.json",
           "jsonpath": "$.version"
         },

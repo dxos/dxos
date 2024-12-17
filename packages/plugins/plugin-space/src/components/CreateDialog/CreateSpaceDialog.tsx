@@ -12,6 +12,8 @@ import { Form } from '@dxos/react-ui-form';
 import { SPACE_PLUGIN, SpaceAction } from '../../meta';
 import { SpaceForm } from '../../types';
 
+export const CREATE_SPACE_DIALOG = `${SPACE_PLUGIN}/CreateSpaceDialog`;
+
 type FormValues = S.Schema.Type<typeof SpaceForm>;
 const initialValues: FormValues = { edgeReplication: true };
 

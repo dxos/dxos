@@ -21,7 +21,7 @@ import { type LocalFile, type LocalEntity, LocalFilesAction } from '../types';
 
 const LocalFileContainer: FC<{ file: LocalFile }> = ({ file }) => {
   const transformedData = useMemo(
-    () => (file.text ? { object: { id: file.id, text: file.text } } : { file }),
+    () => ({ subject: file.text ? { id: file.id, text: file.text } : file }),
     [file.id, Boolean(file.text)],
   );
 

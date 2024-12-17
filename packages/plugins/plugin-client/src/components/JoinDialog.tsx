@@ -11,6 +11,8 @@ import { JoinPanel, type JoinPanelProps } from '@dxos/shell/react';
 
 import { CLIENT_PLUGIN, ClientAction, OBSERVABILITY_ACTION } from '../meta';
 
+export const JOIN_DIALOG = `${CLIENT_PLUGIN}/JoinDialog`;
+
 export const JoinDialog = (props: JoinPanelProps) => {
   const dispatch = useIntentDispatcher();
 

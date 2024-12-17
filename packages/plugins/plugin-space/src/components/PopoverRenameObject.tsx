@@ -10,6 +10,8 @@ import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
 
+export const POPOVER_RENAME_OBJECT = `${SPACE_PLUGIN}/PopoverRenameObject`;
+
 export const PopoverRenameObject = ({ object: obj }: { object: ReactiveObject<any> }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const doneButton = useRef<HTMLButtonElement>(null);

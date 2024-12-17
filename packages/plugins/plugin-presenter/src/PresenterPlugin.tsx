@@ -11,6 +11,7 @@ import {
   LayoutAction,
   NavigationAction,
   type Intent,
+  createSurface,
 } from '@dxos/app-framework';
 import { create } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -111,28 +112,34 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
         );
       },
       surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'main': {
-              if (state.presenting) {
-                if (data.active instanceof CollectionType) {
-                  return { node: <PresenterMain collection={data.active} />, disposition: 'hoist' };
-                } else if (data.active instanceof DocumentType) {
-                  return { node: <RevealMain document={data.active} />, disposition: 'hoist' };
-                }
-              }
-              return null;
-            }
-            case 'slide': {
-              return data.slide instanceof DocumentType ? <MarkdownSlide document={data.slide} /> : null;
-            }
-            case 'settings': {
-              return data.plugin === meta.id ? <PresenterSettings settings={settings.values} /> : null;
-            }
-          }
-
-          return null;
-        },
+        definitions: () => [
+          createSurface({
+            id: `${PRESENTER_PLUGIN}/document`,
+            role: 'main',
+            disposition: 'hoist',
+            filter: (data): data is { subject: DocumentType } => data.subject instanceof DocumentType,
+            component: ({ data }) => <RevealMain document={data.subject} />,
+          }),
+          createSurface({
+            id: `${PRESENTER_PLUGIN}/collection`,
+            role: 'main',
+            disposition: 'hoist',
+            filter: (data): data is { subject: CollectionType } => data.subject instanceof CollectionType,
+            component: ({ data }) => <PresenterMain collection={data.subject} />,
+          }),
+          createSurface({
+            id: `${PRESENTER_PLUGIN}/slide`,
+            role: 'slide',
+            filter: (data): data is { subject: DocumentType } => data.subject instanceof DocumentType,
+            component: ({ data }) => <MarkdownSlide document={data.subject} />,
+          }),
+          createSurface({
+            id: `${PRESENTER_PLUGIN}/settings`,
+            role: 'settings',
+            filter: (data): data is any => data.subject === PRESENTER_PLUGIN,
+            component: () => <PresenterSettings settings={settings.values} />,
+          }),
+        ],
       },
       intent: {
         resolver: (intent) => {

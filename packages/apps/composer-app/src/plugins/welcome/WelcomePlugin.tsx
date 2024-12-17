@@ -12,12 +12,13 @@ import {
   type PluginDefinition,
   LayoutAction,
   parseLayoutPlugin,
+  createSurface,
 } from '@dxos/app-framework';
 import { type Trigger } from '@dxos/async';
 import { parseClientPlugin } from '@dxos/plugin-client';
 
-import { BetaDialog, WelcomeScreen } from './components';
-import { meta } from './meta';
+import { BETA_DIALOG, BetaDialog, WELCOME_SCREEN, WelcomeScreen } from './components';
+import { meta, WELCOME_PLUGIN } from './meta';
 import { OnboardingManager } from './onboarding-manager';
 import translations from './translations';
 
@@ -36,7 +37,7 @@ export const WelcomePlugin = ({
 
   return {
     meta,
-    ready: async (plugins) => {
+    ready: async ({ plugins }) => {
       const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
       const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
       const layout = resolvePlugin(plugins, parseLayoutPlugin)?.provides.layout;
@@ -52,7 +53,7 @@ export const WelcomePlugin = ({
           data: {
             element: 'dialog',
             state: true,
-            component: `${meta.id}/BetaDialog`,
+            component: BETA_DIALOG,
           },
         });
 
@@ -79,17 +80,20 @@ export const WelcomePlugin = ({
     },
     provides: {
       surface: {
-        component: ({ data, role }) => {
-          if (role === 'dialog' && data.component === `${meta.id}/BetaDialog`) {
-            return <BetaDialog />;
-          }
-
-          if (role === 'main' && data.component === 'WelcomeScreen' && hubUrl) {
-            return <WelcomeScreen hubUrl={hubUrl} firstRun={firstRun} />;
-          }
-
-          return null;
-        },
+        definitions: () => [
+          createSurface({
+            id: BETA_DIALOG,
+            role: 'dialog',
+            filter: (data): data is any => data.component === BETA_DIALOG,
+            component: () => <BetaDialog />,
+          }),
+          createSurface({
+            id: `${WELCOME_PLUGIN}/welcome`,
+            role: 'main',
+            filter: (data): data is any => data.component === WELCOME_SCREEN,
+            component: () => <WelcomeScreen hubUrl={hubUrl!} firstRun={firstRun} />,
+          }),
+        ],
       },
       translations,
     },

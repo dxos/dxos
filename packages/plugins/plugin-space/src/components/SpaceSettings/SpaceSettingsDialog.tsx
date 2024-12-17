@@ -13,6 +13,8 @@ import { SpaceSettingsPanel, type SpaceSettingsPanelProps } from './SpaceSetting
 import { SPACE_PLUGIN } from '../../meta';
 import { COMPOSER_SPACE_LOCK, getSpaceDisplayName } from '../../util';
 
+export const SPACE_SETTINGS_DIALOG = `${SPACE_PLUGIN}/SpaceSettingsDialog`;
+
 export type SpaceSettingsTab = 'members' | 'settings';
 
 export type SpaceSettingsDialogProps = {

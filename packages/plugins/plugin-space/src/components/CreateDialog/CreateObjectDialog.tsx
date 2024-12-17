@@ -13,6 +13,8 @@ import { CreateObjectPanel, type CreateObjectPanelProps } from './CreateObjectPa
 import { SPACE_PLUGIN, SpaceAction } from '../../meta';
 import { CollectionType } from '../../types';
 
+export const CREATE_OBJECT_DIALOG = `${SPACE_PLUGIN}/CreateObjectDialog`;
+
 export type CreateObjectDialogProps = Pick<CreateObjectPanelProps, 'schemas' | 'target' | 'typename' | 'name'> & {
   resolve?: MetadataResolver;
   navigableCollections?: boolean;

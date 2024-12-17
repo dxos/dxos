@@ -105,7 +105,7 @@ export const StackSection = ({
           </div>
         </StackItem.Heading>
         <CollapsiblePrimitive.Content>
-          <Surface role='section' data={{ object }} limit={1} placeholder={<></>} />
+          <Surface role='section' data={{ subject: object }} limit={1} placeholder={<></>} />
         </CollapsiblePrimitive.Content>
         {view.collapsed && (
           <StackItem.Content toolbar={false} classNames='attention-surface'>
