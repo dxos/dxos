@@ -16,7 +16,7 @@ import { KanbanCardComponent } from './KanbanCard';
 import { useSubscription } from './util';
 import { KANBAN_PLUGIN } from '../meta';
 import { type KanbanColumnType, type KanbanItemType } from '../types';
-import { makeRef } from '@dxos/live-object';
+import { makeRef, RefArray } from '@dxos/live-object';
 
 export type ItemsMapper = (column: string, items: KanbanItemType[]) => KanbanItemType[];
 
@@ -64,7 +64,8 @@ export const KanbanColumnComponent: FC<{
 
   // TODO(wittjosiah): Remove?
   useSubscription([column.items]);
-  const items = itemMapper?.(column.id!, column.items.map((item) => item.target).filter(nonNullable)) ?? column.items!;
+  const items =
+    itemMapper?.(column.id!, RefArray.allResolvedTargets(column.items)) ?? RefArray.allResolvedTargets(column.items);
 
   const { setNodeRef: setDroppableNodeRef } = useDroppable({ id: column.id! });
   const { isDragging, attributes, listeners, transform, transition, setNodeRef } = useSortable({
@@ -81,10 +82,7 @@ export const KanbanColumnComponent: FC<{
     : undefined;
 
   const handleDeleteItem = (id: string) => {
-    const index = column.items.map((item) => item.target).filter(nonNullable).findIndex((column) => column.id === id);
-    if (index >= 0) {
-      column.items!.splice(index, 1);
-    }
+    RefArray.removeById(column.items!, id);
   };
 
   return (
@@ -121,7 +119,7 @@ export const KanbanColumnComponent: FC<{
         </div>
 
         {/* TODO(burdon): Scrolling (radix; see kai/mosaic). */}
-        <SortableContext strategy={verticalListSortingStrategy} items={items.filter(nonNullable).map(({ id }) => id)}>
+        <SortableContext strategy={verticalListSortingStrategy} items={items.map(({ id }) => id)}>
           <div ref={setDroppableNodeRef} className='flex flex-col grow overflow-y-scroll space-y-2 pr-4'>
             {items.filter(nonNullable).map((item) => (
               <div key={item.id} id={item.id} className='flex pl-2'>
