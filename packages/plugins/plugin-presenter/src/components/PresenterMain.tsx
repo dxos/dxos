@@ -76,7 +76,7 @@ const PresenterMain: FC<{ collection: CollectionType }> = ({ collection }) => {
         }
       >
         {/* TODO(wittjosiah): Better slide placeholder. */}
-        <Surface role='slide' data={{ slide: collection.objects[slide] }} placeholder={<></>} />
+        <Surface role='slide' data={{ subject: collection.objects[slide] }} placeholder={<></>} />
       </Layout>
     </Main.Content>
   );

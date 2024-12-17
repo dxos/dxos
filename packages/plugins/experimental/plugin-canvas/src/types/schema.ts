@@ -15,6 +15,7 @@ export class CanvasItemType extends TypedObject({ typename: 'dxos.org/type/Canva
   color: S.optional(S.String),
 }) {}
 
+// TODO(wittjosiah): This conflicts with the canvas types that are used for diagrams.
 export class CanvasType extends TypedObject({ typename: 'dxos.org/type/Canvas', version: '0.1.0' })({
   name: S.optional(S.String),
   items: S.mutable(S.Array(ref(CanvasItemType))),

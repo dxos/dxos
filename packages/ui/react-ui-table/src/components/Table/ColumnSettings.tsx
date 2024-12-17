@@ -9,13 +9,13 @@ import { DropdownMenu } from '@dxos/react-ui';
 import { FieldEditor } from '@dxos/react-ui-form';
 import { type FieldType } from '@dxos/schema';
 
-import { type TableModel } from '../../model';
+import { type TableModel, type ModalController } from '../../model';
 
-type ColumnSettingsProps = { model?: TableModel; onNewColumn: () => void };
+type ColumnSettingsProps = { model?: TableModel; modals: ModalController; onNewColumn: () => void };
 
-export const ColumnSettings = ({ model, onNewColumn }: ColumnSettingsProps) => {
+export const ColumnSettings = ({ model, modals, onNewColumn }: ColumnSettingsProps) => {
   const [newField, setNewField] = useState<FieldType>();
-  const state = model?.modalController.state.value;
+  const state = modals.state.value;
 
   const space = getSpace(model?.table);
 
@@ -43,8 +43,8 @@ export const ColumnSettings = ({ model, onNewColumn }: ColumnSettingsProps) => {
   const field = existingField ?? newField;
 
   const handleSave = useCallback(() => {
-    model?.modalController.close();
-  }, [model?.modalController]);
+    modals.close();
+  }, [modals]);
 
   const handleCancel = useCallback(() => {
     if (state?.type === 'columnSettings' && state.mode.type === 'create' && newField) {
@@ -58,7 +58,7 @@ export const ColumnSettings = ({ model, onNewColumn }: ColumnSettingsProps) => {
 
   return (
     <DropdownMenu.Root modal={false} open={state?.type === 'columnSettings'}>
-      <DropdownMenu.VirtualTrigger virtualRef={model.modalController.trigger} />
+      <DropdownMenu.VirtualTrigger virtualRef={modals.trigger} />
       <DropdownMenu.Portal>
         <DropdownMenu.Content classNames='md:is-64'>
           <DropdownMenu.Viewport>

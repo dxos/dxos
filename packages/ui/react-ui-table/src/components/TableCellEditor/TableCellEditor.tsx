@@ -24,7 +24,7 @@ import {
 import { type FieldProjection } from '@dxos/schema';
 
 import { completion } from './extension';
-import { type TableModel } from '../../model';
+import { type TableModel, type ModalController } from '../../model';
 
 const newValue = Symbol.for('newValue');
 
@@ -39,6 +39,7 @@ export type QueryResult = Pick<Completion, 'label'> & { data: any };
 
 export type TableCellEditorProps = {
   model?: TableModel;
+  modals?: ModalController;
   onEnter?: (cell: DxGridPlanePosition) => void;
   onFocus?: DxGrid['refocus'];
   onQuery?: (field: FieldProjection, text: string) => Promise<QueryResult[]>;
@@ -46,6 +47,7 @@ export type TableCellEditorProps = {
 
 export const TableCellEditor = ({
   model,
+  modals,
   onEnter,
   onFocus,
   onQuery,
@@ -133,12 +135,12 @@ export const TableCellEditor = ({
             completion({
               onQuery: (text) => onQuery(fieldProjection, text),
               onMatch: (data) => {
-                if (model && editing) {
+                if (model && editing && modals) {
                   if (isCreateOption(data)) {
                     const { field, props } = fieldProjection;
                     if (props.referenceSchema) {
                       suppressNextBlur.current = true;
-                      model.modalController.openCreateRef(
+                      modals.openCreateRef(
                         props.referenceSchema,
                         document.querySelector(cellQuery(editing.index, gridId)),
                         {
@@ -162,7 +164,7 @@ export const TableCellEditor = ({
     }
 
     return extension;
-  }, [model, editing, fieldProjection, handleClose]);
+  }, [model, modals, editing, fieldProjection, handleClose]);
 
   const getCellContent = useCallback<GridCellEditorProps['getCellContent']>(() => {
     if (model && editing) {

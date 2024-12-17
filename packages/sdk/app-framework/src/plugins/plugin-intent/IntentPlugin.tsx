@@ -39,7 +39,7 @@ export const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
 
   return {
     meta: IntentMeta,
-    ready: async (plugins) => {
+    ready: async ({ plugins }) => {
       // Dispatch intent to associated plugin.
       const dispatch = async (intent: Intent) => {
         log('dispatch', { action: intent.action, intent });

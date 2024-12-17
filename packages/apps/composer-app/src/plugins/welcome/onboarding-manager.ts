@@ -13,6 +13,7 @@ import { SPACE_PLUGIN, SpaceAction } from '@dxos/plugin-space';
 import { type Client } from '@dxos/react-client';
 import { type Credential, type Identity } from '@dxos/react-client/halo';
 
+import { WELCOME_SCREEN } from './components';
 import { activateAccount, getProfile, matchServiceCredential, upgradeCredential } from './credentials';
 import { queryAllCredentials, removeQueryParamByValue } from '../../util';
 
@@ -181,7 +182,7 @@ export class OnboardingManager {
       {
         action: NavigationAction.OPEN,
         // NOTE: Active parts cannot contain '/' characters currently.
-        data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
+        data: { activeParts: { fullScreen: `surface:${WELCOME_SCREEN}` } },
       },
     ]);
   }
@@ -198,7 +199,7 @@ export class OnboardingManager {
         : []),
       {
         action: NavigationAction.CLOSE,
-        data: { activeParts: { fullScreen: 'surface:WelcomeScreen' } },
+        data: { activeParts: { fullScreen: `surface:${WELCOME_SCREEN}` } },
       },
     ]);
   }

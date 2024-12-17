@@ -2,25 +2,26 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type SurfaceComponent, type SurfaceRootContext } from './SurfaceRootContext';
-import { type Plugin } from '../plugin-host';
+import { type SurfaceDefinition, type SurfaceContextValue } from './SurfaceContext';
+import { type HostContext, type Plugin } from '../plugin-host';
 
-// TODO(burdon): Predicate based providers?
+export type SurfaceDefinitions = SurfaceDefinition | SurfaceDefinition[] | SurfaceDefinitions[];
+
 export type SurfaceProvides = {
   surface: {
     /**
      * Used by the `Surface` resolver to find a component to render.
      */
-    component: SurfaceComponent;
+    definitions: (context: HostContext) => SurfaceDefinitions;
   };
 };
 
 export type SurfacePluginProvides = {
-  surface: SurfaceRootContext;
+  surface: SurfaceContextValue;
 };
 
 export const parseRootSurfacePlugin = (plugin?: Plugin) =>
-  (plugin?.provides as any)?.surface?.components ? (plugin as Plugin<SurfacePluginProvides>) : undefined;
+  (plugin?.provides as any)?.surface?.surfaces ? (plugin as Plugin<SurfacePluginProvides>) : undefined;
 
 export const parseSurfacePlugin = (plugin?: Plugin) =>
-  (plugin?.provides as any)?.surface?.component ? (plugin as Plugin<SurfaceProvides>) : undefined;
+  (plugin?.provides as any)?.surface?.definitions ? (plugin as Plugin<SurfaceProvides>) : undefined;

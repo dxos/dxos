@@ -6,9 +6,9 @@ import React from 'react';
 
 import { create } from '@dxos/live-object';
 
-import { SurfaceProvider, type SurfaceRootContext } from './SurfaceRootContext';
+import { SurfaceProvider, type SurfaceContextValue } from './SurfaceContext';
 import SurfaceMeta from './meta';
-import { parseSurfacePlugin, type SurfacePluginProvides } from './provides';
+import { parseSurfacePlugin, type SurfacePluginProvides, type SurfaceDefinitions } from './provides';
 import { filterPlugins } from '../helpers';
 import { type PluginDefinition } from '../plugin-host';
 
@@ -16,18 +16,30 @@ import { type PluginDefinition } from '../plugin-host';
  * Provides a registry of surface components.
  */
 export const SurfacePlugin = (): PluginDefinition<SurfacePluginProvides> => {
-  const state = create<SurfaceRootContext>({ components: {}, debugInfo: new Map() });
+  const state = create<SurfaceContextValue>({ surfaces: {}, debugInfo: new Map() });
 
   return {
     meta: SurfaceMeta,
-    ready: async (plugins) => {
-      state.components = filterPlugins(plugins, parseSurfacePlugin).reduce((acc, plugin) => {
-        return { ...acc, [plugin.meta.id]: plugin.provides.surface.component };
-      }, {});
+    ready: async (context) => {
+      state.surfaces = filterPlugins(context.plugins, parseSurfacePlugin).reduce(
+        (acc, plugin) => reduceSurfaces(plugin.provides.surface.definitions(context), acc),
+        {},
+      );
     },
     provides: {
       surface: state,
       context: ({ children }) => <SurfaceProvider value={state}>{children}</SurfaceProvider>,
     },
   };
+};
+
+const reduceSurfaces = (
+  definitions: SurfaceDefinitions,
+  surfaces: SurfaceContextValue['surfaces'] = {},
+): SurfaceContextValue['surfaces'] => {
+  if (Array.isArray(definitions)) {
+    return definitions.reduce((acc, definition) => reduceSurfaces(definition, acc), surfaces);
+  }
+
+  return { ...surfaces, [definitions.id]: definitions };
 };

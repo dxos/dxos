@@ -44,12 +44,6 @@
       "@dxos/plugin-explorer/types": [
         "packages/plugins/experimental/plugin-explorer/src/types/index.ts"
       ],
-      "@dxos/plugin-github": [
-        "packages/plugins/experimental/plugin-github/src/index.ts"
-      ],
-      "@dxos/plugin-github/meta": [
-        "packages/plugins/experimental/plugin-github/src/meta.ts"
-      ],
       "@dxos/plugin-inbox": [
         "packages/plugins/experimental/plugin-inbox/src/index.ts"
       ],

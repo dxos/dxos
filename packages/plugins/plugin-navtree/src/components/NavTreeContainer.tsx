@@ -33,7 +33,7 @@ import {
 export const NODE_TYPE = 'dxos/app-graph/node';
 
 const renderItemEnd = ({ node }: { node: Node }) => (
-  <Surface role='navtree-item-end' data={{ object: node.data, id: node.id }} />
+  <Surface role='navtree-item-end' data={{ id: node.id, subject: node.data }} limit={1} />
 );
 
 export type NavTreeContainerProps = {

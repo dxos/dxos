@@ -4,7 +4,13 @@
 
 import React from 'react';
 
-import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
+import {
+  resolvePlugin,
+  type PluginDefinition,
+  parseIntentPlugin,
+  NavigationAction,
+  createSurface,
+} from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
@@ -79,17 +85,19 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
         },
       },
       surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'section':
-            case 'article':
-              return isKanban(data.object) ? <KanbanContainer kanban={data.object} role={role} /> : null;
-            case 'complementary--settings':
-              return isKanban(data.subject) ? { node: <KanbanViewEditor kanban={data.subject} /> } : null;
-            default:
-              return null;
-          }
-        },
+        definitions: () =>
+          ([createSurface({
+            id: KANBAN_PLUGIN,
+            role: ['article', 'section'],
+            filter: (data): data is { subject: KanbanType } => isKanban(data.subject),
+            component: ({ data, role }) => <KanbanContainer kanban={data.subject} role={role} />,
+          }),
+            createSurface({
+            id: KANBAN_PLUGIN,
+            role: 'complementary--settings',
+            filter: (data): data is { subject: KanbanType } => isKanban(data.subject),
+            component: ({ data, role }) => <KanbanViewEditor kanban={data.subject} />,
+          })])
       },
       intent: {
         resolver: (intent) => {
