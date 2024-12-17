@@ -6,7 +6,7 @@ import { TextAa } from '@phosphor-icons/react';
 import React from 'react';
 
 import { parseIntentPlugin, resolvePlugin, NavigationAction, type PluginDefinition } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
+import { create, makeRef } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
@@ -210,7 +210,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       thread: {
         predicate: (obj) => obj instanceof DocumentType,
         createSort: (doc: DocumentType) => {
-          const accessor = doc.content ? createDocAccessor(doc.content, ['content']) : undefined;
+          const accessor = doc.content.target ? createDocAccessor(doc.content.target, ['content']) : undefined;
           if (!accessor) {
             return (_) => 0;
           }
@@ -274,7 +274,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             case MarkdownAction.CREATE: {
               const doc = create(DocumentType, {
                 name: data?.name,
-                content: create(TextType, { content: data?.content ?? '' }),
+                content: makeRef(create(TextType, { content: data?.content ?? '' })),
                 threads: [],
               });
 

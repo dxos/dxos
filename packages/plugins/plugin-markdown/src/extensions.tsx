@@ -105,7 +105,7 @@ export const useExtensions = ({
         document &&
           createDataExtensions({
             id: document.id,
-            text: document.content && createDocAccessor(document.content, ['content']),
+            text: document.content.target && createDocAccessor(document.content.target, ['content']),
             space,
             identity,
           }),
