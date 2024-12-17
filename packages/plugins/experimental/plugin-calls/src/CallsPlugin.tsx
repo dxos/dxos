@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type PluginDefinition } from '@dxos/app-framework';
+import { createSurface, type PluginDefinition } from '@dxos/app-framework';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { type Space, isSpace } from '@dxos/react-client/echo';
 
@@ -12,6 +12,13 @@ import CallsContainer from './components/CallsContainer';
 import meta, { CALLS_PLUGIN } from './meta';
 import translations from './translations';
 import { type CallsPluginProvides } from './types';
+
+type Call = {
+  type: string;
+  space: Space;
+};
+
+const isCall = (data: any): data is Call => data.type === `${CALLS_PLUGIN}/space` && isSpace(data.space);
 
 export const CallsPlugin = (): PluginDefinition<CallsPluginProvides> => {
   return {
@@ -44,20 +51,13 @@ export const CallsPlugin = (): PluginDefinition<CallsPluginProvides> => {
       },
       translations,
       surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'article':
-            case 'section': {
-              const primary: any = data.active ?? data.object;
-              if (primary.type === `${CALLS_PLUGIN}/space` && 'space' in primary && isSpace(primary.space)) {
-                return <CallsContainer space={primary.space} role={role} />;
-              }
-              return null;
-            }
-            default:
-              return null;
-          }
-        },
+        definitions: () =>
+          createSurface({
+            id: meta.id,
+            role: 'article',
+            filter: (data): data is { subject: Call } => isCall(data.subject),
+            component: ({ data, role }) => <CallsContainer space={data.subject.space} role={role} />,
+          }),
       },
     },
   };

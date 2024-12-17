@@ -13,7 +13,7 @@ import translations from './translations';
 
 export const PwaPlugin = (): PluginDefinition => ({
   meta,
-  ready: async (plugins) => {
+  ready: async ({ plugins }) => {
     const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
 
     const updateSW = registerSW({

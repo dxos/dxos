@@ -4,7 +4,12 @@
 
 import React from 'react';
 
-import { type PluginDefinition, type SurfaceProvides, type TranslationsProvides } from '@dxos/app-framework';
+import {
+  createSurface,
+  type PluginDefinition,
+  type SurfaceProvides,
+  type TranslationsProvides,
+} from '@dxos/app-framework';
 
 import { StatusBarPanel } from './components';
 import meta from './meta';
@@ -18,15 +23,12 @@ export const StatusBarPlugin = (): PluginDefinition<StatusBarPluginProvides> => 
     provides: {
       translations,
       surface: {
-        component: ({ role }) => {
-          switch (role) {
-            case 'status-bar': {
-              return <StatusBarPanel />;
-            }
-          }
-
-          return null;
-        },
+        definitions: () =>
+          createSurface({
+            id: meta.id,
+            role: 'status-bar',
+            component: () => <StatusBarPanel />,
+          }),
       },
     },
   };

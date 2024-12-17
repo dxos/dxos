@@ -49,7 +49,7 @@ export const PluginContainer = ({ plugins: definitions, core, state, placeholder
         const initialized = plugins.filter((plugin): plugin is Plugin => Boolean(plugin));
         log('plugins initialized', { plugins: initialized });
 
-        await Promise.all(enabled.map((plugin) => plugin.ready?.(initialized)));
+        await Promise.all(enabled.map((plugin) => plugin.ready?.({ plugins: initialized })));
         log('plugins ready', { plugins: initialized });
 
         state.plugins = initialized;

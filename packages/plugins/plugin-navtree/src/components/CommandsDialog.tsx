@@ -15,6 +15,8 @@ import { getHostPlatform } from '@dxos/util';
 
 import { KEY_BINDING, NAVTREE_PLUGIN } from '../meta';
 
+export const COMMANDS_DIALOG = `${NAVTREE_PLUGIN}/CommandsDialog`;
+
 // TODO(wittjosiah): This probably deserves its own plugin but for now it lives here w/ other navigation UI.
 export const CommandsDialogContent = ({ selected: initial }: { selected?: string }) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);

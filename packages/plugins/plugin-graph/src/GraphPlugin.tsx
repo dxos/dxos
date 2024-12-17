@@ -23,7 +23,7 @@ export const GraphPlugin = (): PluginDefinition<GraphProvides> => {
 
   return {
     meta,
-    ready: async (plugins) => {
+    ready: async ({ plugins }) => {
       interval = setInterval(() => {
         localStorage.setItem(`${GRAPH_PLUGIN}/graph`, builder.graph.pickle());
       }, 5_000);
