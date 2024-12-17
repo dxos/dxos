@@ -24,6 +24,8 @@ import { descriptionText, mx } from '@dxos/react-ui-theme';
 import { SEARCH_PLUGIN } from '../meta';
 import { useSearchResults } from '../search';
 
+export const SEARCH_DIALOG = `${SEARCH_PLUGIN}/SearchDialog`;
+
 type SearchListResultProps = {
   node: Node;
 } & Pick<SearchListItemProps, 'onSelect'>;
@@ -45,11 +47,13 @@ const SearchListResult = forwardRef<HTMLDivElement, SearchListResultProps>(({ no
   );
 });
 
-export const SearchDialog = ({
-  subject,
-}: {
-  subject: { action: NavigationAction; layoutCoordinate: LayoutCoordinate; position: 'add-after' | 'add-before' };
-}) => {
+export type SearchDialogProps = {
+  action: NavigationAction;
+  layoutCoordinate: LayoutCoordinate;
+  position: 'add-after' | 'add-before';
+};
+
+export const SearchDialog = ({ action, layoutCoordinate, position }: SearchDialogProps) => {
   const { t } = useTranslation(SEARCH_PLUGIN);
   const graphPlugin = useResolvePlugin(parseGraphPlugin);
   const graph = graphPlugin?.provides.graph;
@@ -82,9 +86,9 @@ export const SearchDialog = ({
           {
             action: NavigationAction.ADD_TO_ACTIVE,
             data: {
-              part: subject.layoutCoordinate.part,
+              part: layoutCoordinate.part,
               id: nodeId,
-              pivotId: subject.layoutCoordinate.entryId,
+              pivotId: layoutCoordinate.entryId,
               positioning: 'end',
             },
           },
@@ -93,7 +97,7 @@ export const SearchDialog = ({
         ]);
       }
     },
-    [subject, dispatch, active],
+    [layoutCoordinate, dispatch, active],
   );
 
   return (

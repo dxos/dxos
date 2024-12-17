@@ -45,6 +45,9 @@
       "path": "../../core/echo/live-object"
     },
     {
+      "path": "../../ui/primitives/react-hooks"
+    },
+    {
       "path": "../app-graph"
     },
     {

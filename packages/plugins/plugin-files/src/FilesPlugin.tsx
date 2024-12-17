@@ -17,6 +17,7 @@ import {
   SettingsAction,
   filterPlugins,
   parseGraphSerializerPlugin,
+  createSurface,
 } from '@dxos/app-framework';
 import { EventSubscriptions, Trigger } from '@dxos/async';
 import { scheduledEffect } from '@dxos/echo-signals/core';
@@ -39,6 +40,7 @@ import {
   type LocalDirectory,
   type FilesState,
   type FilesSettingsProps,
+  type LocalFile,
 } from './types';
 import {
   PREFIX,
@@ -175,7 +177,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
         },
       };
     },
-    ready: async (plugins) => {
+    ready: async ({ plugins }) => {
       const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
       subscriptions.add(
         effect(() => {
@@ -240,25 +242,26 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
       settings: settings.values,
       translations,
       surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'article': {
-              return isLocalFile(data.object) ? <LocalFileContainer file={data.object} /> : null;
-            }
-
-            case 'settings': {
-              return data.plugin === meta.id ? <FilesSettings settings={settings.values} /> : null;
-            }
-
-            case 'status': {
-              return settings.values.autoExport ? (
-                <ExportStatus running={state.values.exportRunning} lastExport={state.values.lastExport} />
-              ) : null;
-            }
-          }
-
-          return null;
-        },
+        definitions: () => [
+          createSurface({
+            id: `${FILES_PLUGIN}/article`,
+            role: 'article',
+            filter: (data): data is { subject: LocalFile } => isLocalFile(data.subject),
+            component: ({ data }) => <LocalFileContainer file={data.subject} />,
+          }),
+          createSurface({
+            id: `${FILES_PLUGIN}/settings`,
+            role: 'settings',
+            filter: (data): data is any => data.subject === meta.id,
+            component: () => <FilesSettings settings={settings.values} />,
+          }),
+          createSurface({
+            id: `${FILES_PLUGIN}/status`,
+            role: 'status',
+            filter: (data): data is any => settings.values.autoExport,
+            component: () => <ExportStatus running={state.values.exportRunning} lastExport={state.values.lastExport} />,
+          }),
+        ],
       },
       graph: {
         builder: (plugins) => {

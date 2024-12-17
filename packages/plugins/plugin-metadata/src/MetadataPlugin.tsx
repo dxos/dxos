@@ -21,7 +21,7 @@ export const MetadataPlugin = (): PluginDefinition<MetadataResolverProvides> => 
 
   return {
     meta,
-    ready: async (plugins) => {
+    ready: async ({ plugins }) => {
       filterPlugins(plugins, parseMetadataRecordsPlugin).forEach((plugin) => {
         Object.entries(plugin.provides.metadata.records).forEach(([key, value]) => {
           state.records[key] = value;

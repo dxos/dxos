@@ -23,7 +23,7 @@ export const Fullscreen = ({ id }: { id?: string }) => {
         limit={1}
         fallback={Fallback}
         data={{
-          active: fullScreenNode?.data,
+          subject: fullScreenNode?.data,
           component: id?.startsWith(SURFACE_PREFIX) ? id.slice(SURFACE_PREFIX.length) : undefined,
         }}
       />

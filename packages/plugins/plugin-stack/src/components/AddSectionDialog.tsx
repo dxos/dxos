@@ -18,7 +18,9 @@ import { nonNullable } from '@dxos/util';
 import { STACK_PLUGIN } from '../meta';
 import { StackViewType, type StackPluginProvides, type AddSectionPosition } from '../types';
 
-type AddSectionDialogProps = { path?: string; position: AddSectionPosition; collection: CollectionType };
+export const ADD_SECTION_DIALOG = `${STACK_PLUGIN}/AddSectionDialog`;
+
+export type AddSectionDialogProps = { path?: string; position: AddSectionPosition; collection: CollectionType };
 
 export const dataHasAddSectionDialogProps = (data: any): data is { subject: AddSectionDialogProps } => {
   return (
