@@ -38,7 +38,7 @@ export const Surface = memo(
             Array.isArray(definition.role) ? definition.role.includes(role) : definition.role === role,
           )
           .filter(({ filter }) => (filter ? filter(data) : true))
-          .toSorted(({ disposition: a = 'default' }, { disposition: b = 'default' }) => {
+          .toSorted(({ disposition: a = 'static' }, { disposition: b = 'static' }) => {
             return a === b ? 0 : a === 'hoist' || b === 'fallback' ? -1 : b === 'hoist' || a === 'fallback' ? 1 : 0;
           });
         return limit ? definitions.slice(0, limit) : definitions;
