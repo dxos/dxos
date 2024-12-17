@@ -3,12 +3,10 @@
 //
 
 import { signal } from '@preact/signals-core';
-import { type RefObject, type MouseEvent, type MutableRefObject } from 'react';
+import { type RefObject, type MutableRefObject } from 'react';
 
 import { type ReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
-
-import { tableButtons } from '../util';
 
 export type ColumnSettingsMode = { type: 'create' } | { type: 'edit'; fieldId: string };
 
@@ -37,55 +35,24 @@ export class ModalController {
     return this._triggerRef as RefObject<HTMLButtonElement>;
   }
 
-  public handleClick = (event: MouseEvent): boolean => {
-    const target = event.target as HTMLElement;
+  public setTrigger = (trigger: HTMLElement) => {
+    this._triggerRef.current = trigger;
+  };
 
-    // TODO(thure): why not just get the value of the closest recognized attribute and `switch` on that?
-    //  Repeated querying is more error-prone and less legible, I’d think.
+  public showRowMenu = (rowIndex: number) => {
+    this._state.value = { type: 'row', rowIndex };
+  };
 
-    const rowButton = target.closest(`button[${tableButtons.rowMenu.attr}]`);
-    if (rowButton) {
-      this._triggerRef.current = rowButton as HTMLElement;
-      this._state.value = {
-        type: 'row',
-        rowIndex: Number(rowButton.getAttribute(tableButtons.rowMenu.attr)),
-      };
-      return true;
-    }
+  public showColumnMenu = (fieldId: string) => {
+    this._state.value = { type: 'column', fieldId };
+  };
 
-    const columnButton = target.closest(`button[${tableButtons.columnSettings.attr}]`);
-    if (columnButton) {
-      const fieldId = columnButton.getAttribute(tableButtons.columnSettings.attr)!;
-      this._triggerRef.current = columnButton as HTMLElement;
-      this._state.value = {
-        type: 'column',
-        fieldId,
-      };
-      return true;
-    }
+  public showColumnCreator = () => {
+    this._state.value = { type: 'columnSettings', mode: { type: 'create' } };
+  };
 
-    const addColumnButton = target.closest(`button[${tableButtons.addColumn.attr}]`);
-    if (addColumnButton) {
-      this._triggerRef.current = addColumnButton as HTMLElement;
-      this._state.value = {
-        type: 'columnSettings',
-        mode: { type: 'create' },
-      };
-      return true;
-    }
-
-    const refButton = target.closest(`button[${tableButtons.referencedCell.attr}]`);
-    if (refButton) {
-      this._triggerRef.current = refButton as HTMLElement;
-      const [schemaId, targetId] = refButton.getAttribute(tableButtons.referencedCell.attr)!.split('#');
-      this._state.value = {
-        type: 'refPanel',
-        targetId,
-        typename: schemaId,
-      };
-    }
-
-    return false;
+  public showReferencePanel = (targetId: string, schemaId: string) => {
+    this._state.value = { type: 'refPanel', targetId, typename: schemaId };
   };
 
   public openColumnSettings = () => {
