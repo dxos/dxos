@@ -17,6 +17,7 @@ import {
   EditorContext,
   type EditorContextType,
   type EditorOptions,
+  handleAction,
   SelectionModel,
   type TransformState,
 } from '../../hooks';
@@ -107,17 +108,6 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
       }
     }, [scale, offset, width, height]);
 
-    // Controller.
-    useImperativeHandle(
-      forwardedRef,
-      () => ({
-        zoomToFit: async () => {
-          console.log('zoom', graph);
-        },
-      }),
-      [],
-    );
-
     // Data state.
     const graph = useMemo(() => new GraphModel<Node<Shape>>(_graph), [_graph]);
 
@@ -126,6 +116,53 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
     const [dragging, setDragging] = useState<DraggingState>();
     const [linking, setLinking] = useState<DraggingState>();
     const [editing, setEditing] = useState<EditingState>();
+
+    const context: EditorContextType = {
+      id,
+      options,
+      debug,
+      setDebug,
+
+      width,
+      height,
+
+      scale,
+      offset,
+      setTransform,
+
+      gridSize,
+      setGridSize,
+
+      showGrid,
+      setShowGrid,
+
+      snapToGrid,
+      setSnapToGrid,
+
+      graph,
+      selection,
+
+      dragging,
+      setDragging,
+
+      linking,
+      setLinking,
+
+      editing,
+      setEditing,
+    };
+
+    // Controller.
+    useImperativeHandle(
+      forwardedRef,
+      () => ({
+        zoomToFit: async () => {
+          const handler = handleAction(context);
+          handler({ type: 'zoom-to-fit', duration: 0 });
+        },
+      }),
+      [context], // TODO(burdon): Is this right?
+    );
 
     return (
       <div
@@ -136,44 +173,7 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
       >
         {/* TODO(burdon): Change scope based on attention. */}
         <HotkeysProvider initiallyActiveScopes={['attention']}>
-          <EditorContext.Provider
-            value={{
-              id,
-              options,
-              debug,
-              setDebug,
-
-              width,
-              height,
-
-              scale,
-              offset,
-              setTransform,
-
-              gridSize,
-              setGridSize,
-
-              showGrid,
-              setShowGrid,
-
-              snapToGrid,
-              setSnapToGrid,
-
-              graph,
-              selection,
-
-              dragging,
-              setDragging,
-
-              linking,
-              setLinking,
-
-              editing,
-              setEditing,
-            }}
-          >
-            {children}
-          </EditorContext.Provider>
+          <EditorContext.Provider value={context}>{children}</EditorContext.Provider>
         </HotkeysProvider>
       </div>
     );

@@ -8,7 +8,7 @@ import { type Dispatch, type SetStateAction, useEffect } from 'react';
 import { invariant } from '@dxos/invariant';
 
 import { type TransformState } from './context';
-import { type Point } from '../layout';
+import { getZoomTransform } from '../layout';
 
 /**
  * Handle wheel events to update the transform state (zoom and offset).
@@ -61,21 +61,4 @@ export const useWheel = (
       },
     });
   }, [el, setTransform, width, height]);
-};
-
-/**
- * Maintain position while zooming.
- */
-export const getZoomTransform = ({
-  scale,
-  offset,
-  pos,
-  newScale,
-}: TransformState & { pos: Point; newScale: number }): TransformState => {
-  const newOffset = {
-    x: pos.x - (pos.x - offset.x) * (newScale / scale),
-    y: pos.y - (pos.y - offset.y) * (newScale / scale),
-  };
-
-  return { scale: newScale, offset: newOffset };
 };
