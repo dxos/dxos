@@ -100,13 +100,14 @@ export const CanvasPlugin = (): PluginDefinition<CanvasPluginProvides> => {
         },
       },
       surface: {
-        definitions: () =>
+        definitions: () => [
           createSurface({
             id: CANVAS_PLUGIN,
             role: 'article',
             filter: (data): data is { subject: CanvasType } => data.subject instanceof CanvasType,
             component: ({ data }) => <CanvasContainer canvas={data.subject} />,
           }),
+        ],
       },
       intent: {
         resolver: (intent) => {
