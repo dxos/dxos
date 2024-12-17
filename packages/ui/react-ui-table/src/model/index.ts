@@ -5,4 +5,3 @@
 export * from './table-model';
 export * from './modal-controller';
 export * from './table-presentation';
-export * from './table-controls';

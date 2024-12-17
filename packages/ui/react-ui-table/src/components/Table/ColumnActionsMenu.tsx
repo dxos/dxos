@@ -6,14 +6,14 @@ import React from 'react';
 
 import { DropdownMenu, useTranslation } from '@dxos/react-ui';
 
-import { type TableModel, type TableControls } from '../../model';
+import { type TableModel, type ModalController } from '../../model';
 import { translationKey } from '../../translations';
 
-type ColumnActionsMenuProps = { model: TableModel; controls: TableControls };
+type ColumnActionsMenuProps = { model: TableModel; modals: ModalController };
 
-export const ColumnActionsMenu = ({ model, controls }: ColumnActionsMenuProps) => {
+export const ColumnActionsMenu = ({ model, modals }: ColumnActionsMenuProps) => {
   const { t } = useTranslation(translationKey);
-  const state = controls.modals.state.value;
+  const state = modals.state.value;
   if (state?.type !== 'column') {
     return null;
   }
@@ -22,8 +22,8 @@ export const ColumnActionsMenu = ({ model, controls }: ColumnActionsMenuProps) =
   const isCurrentColumnSorted = currentSort?.fieldId === state.fieldId;
 
   return (
-    <DropdownMenu.Root modal={false} open={true} onOpenChange={controls.modals.close}>
-      <DropdownMenu.VirtualTrigger virtualRef={controls.modals.trigger} />
+    <DropdownMenu.Root modal={false} open={true} onOpenChange={modals.close}>
+      <DropdownMenu.VirtualTrigger virtualRef={modals.trigger} />
       <DropdownMenu.Portal>
         <DropdownMenu.Content>
           <DropdownMenu.Viewport>
@@ -53,7 +53,7 @@ export const ColumnActionsMenu = ({ model, controls }: ColumnActionsMenuProps) =
                 {t('column action delete')}
               </DropdownMenu.Item>
             )}
-            <DropdownMenu.Item data-testid='column-settings' onClick={() => controls.modals.openColumnSettings()}>
+            <DropdownMenu.Item data-testid='column-settings' onClick={() => modals.openColumnSettings()}>
               {t('column action settings')}
             </DropdownMenu.Item>
           </DropdownMenu.Viewport>

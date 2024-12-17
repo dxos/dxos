@@ -9,6 +9,8 @@ import React, {
   useImperativeHandle,
   useState,
   type WheelEvent,
+  type MouseEvent,
+  useMemo,
 } from 'react';
 
 import { getValue } from '@dxos/echo-schema';
@@ -25,8 +27,10 @@ import { ColumnSettings } from './ColumnSettings';
 import { CreateRefPanel } from './CreateRefPanel';
 import { RefPanel } from './RefPanel';
 import { RowActionsMenu } from './RowActionsMenu';
-import { type TableModel, type TableControls, type TablePresentation } from '../../model';
+import { ModalController, type TableModel, type TablePresentation } from '../../model';
 import { translationKey } from '../../translations';
+import { tableButtons } from '../../util';
+import { tableControls } from '../../util/table-controls';
 import { createOption, TableCellEditor, type TableCellEditorProps } from '../TableCellEditor';
 
 // NOTE(Zan): These fragments add border to inline-end and block-end of the grid using pseudo-elements.
@@ -70,16 +74,16 @@ export type TableController = {
 
 export type TableMainProps = {
   model?: TableModel;
-  controls?: TableControls;
   presentation?: TablePresentation;
   ignoreAttention?: boolean;
 };
 
 const TableMain = forwardRef<TableController, TableMainProps>(
-  ({ model, controls, presentation, ignoreAttention }, forwardedRef) => {
+  ({ model, presentation, ignoreAttention }, forwardedRef) => {
     const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
     const { hasAttention } = useAttention(model?.table ? fullyQualifiedId(model.table) : 'table');
     const { t } = useTranslation(translationKey);
+    const modals = useMemo(() => new ModalController(), []);
 
     /**
      * Provides an external controller that can be called to repaint the table.
@@ -103,6 +107,63 @@ const TableMain = forwardRef<TableController, TableMainProps>(
         };
       },
       [presentation, dxGrid],
+    );
+
+    const handleGridClick = useCallback(
+      (event: MouseEvent) => {
+        if (!modals) {
+          return;
+        }
+
+        const selector = Object.values(tableButtons)
+          .map((button) => `button[${button.attr}]`)
+          .join(',');
+
+        const matchedElement = (event.target as HTMLElement).closest(selector) as HTMLElement;
+        if (matchedElement) {
+          const button = Object.values(tableButtons).find((btn) => matchedElement.hasAttribute(btn.attr));
+          if (!button) {
+            return;
+          }
+
+          modals.setTrigger(matchedElement);
+          const data = button.getData(matchedElement);
+          switch (data.type) {
+            case 'rowMenu': {
+              modals.showRowMenu(data.rowIndex);
+              break;
+            }
+            case 'columnSettings': {
+              modals.showColumnMenu(data.fieldId);
+              break;
+            }
+            case 'newColumn': {
+              modals.showColumnCreator();
+              break;
+            }
+            case 'referencedCell': {
+              modals.showReferencePanel(data.targetId, data.schemaId);
+              break;
+            }
+          }
+          return;
+        }
+
+        const selectionCheckbox = (event.target as HTMLElement).closest(
+          `input[${tableControls.checkbox.attributes.checkbox}]`,
+        ) as HTMLElement | null;
+
+        if (selectionCheckbox) {
+          const isHeader = selectionCheckbox.hasAttribute(tableControls.checkbox.attributes.header);
+          if (isHeader) {
+            model?.selection.setSelection(model.selection.allRowsSeleted.value ? 'none' : 'all');
+          } else {
+            const rowIndex = Number(selectionCheckbox.getAttribute(tableControls.checkbox.attributes.checkbox));
+            model?.selection.toggleSelectionForRowIndex(rowIndex);
+          }
+        }
+      },
+      [model, modals],
     );
 
     const handleFocus = useCallback<NonNullable<TableCellEditorProps['onFocus']>>(
@@ -213,7 +274,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
       [model],
     );
 
-    if (!model || !controls) {
+    if (!model || !modals) {
       return <span role='none' className='attention-surface' />;
     }
 
@@ -221,7 +282,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
       <Grid.Root id={model.table.id ?? 'table-grid'}>
         <TableCellEditor
           model={model}
-          controls={controls}
+          modals={modals}
           onEnter={handleEnter}
           onFocus={handleFocus}
           onQuery={handleQuery}
@@ -234,16 +295,16 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           limitRows={model.getRowCount() ?? 0}
           limitColumns={model.table.view?.fields?.length ?? 0}
           onAxisResize={handleAxisResize}
-          onClick={controls?.handleClick}
+          onClick={handleGridClick}
           onKeyDown={handleKeyDown}
           overscroll='trap'
           ref={setDxGrid}
         />
-        <RowActionsMenu model={model} controls={controls} />
-        <ColumnActionsMenu model={model} controls={controls} />
-        <ColumnSettings model={model} controls={controls} onNewColumn={handleNewColumn} />
-        <RefPanel model={model} controls={controls} />
-        <CreateRefPanel model={model} controls={controls} />
+        <RowActionsMenu model={model} modals={modals} />
+        <ColumnActionsMenu model={model} modals={modals} />
+        <ColumnSettings model={model} modals={modals} onNewColumn={handleNewColumn} />
+        <RefPanel model={model} modals={modals} />
+        <CreateRefPanel model={model} modals={modals} />
       </Grid.Root>
     );
   },

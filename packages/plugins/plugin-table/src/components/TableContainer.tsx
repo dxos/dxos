@@ -13,7 +13,6 @@ import { StackItem } from '@dxos/react-ui-stack';
 import {
   Table,
   type TableController,
-  TableControls,
   TablePresentation,
   Toolbar,
   type ToolbarAction,
@@ -81,15 +80,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
     onRowOrderChanged: () => tableRef.current?.update?.(),
   });
 
-  const { controls, presentation } = useMemo(() => {
-    if (model) {
-      return {
-        controls: new TableControls(model),
-        presentation: new TablePresentation(model),
-      };
-    }
-    return {};
-  }, [model]);
+  const presentation = useMemo(() => (model ? new TablePresentation(model) : undefined), [model]);
 
   const onThreadCreate = useCallback(() => {
     void dispatch({
@@ -126,7 +117,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
         <Toolbar.Actions />
       </Toolbar.Root>
       <Table.Root role={role}>
-        <Table.Main key={table.id} ref={tableRef} model={model} controls={controls} presentation={presentation} />
+        <Table.Main key={table.id} ref={tableRef} model={model} presentation={presentation} />
       </Table.Root>
     </StackItem.Content>
   );
