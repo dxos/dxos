@@ -44,10 +44,11 @@ export const Kanban = ({ model, onAddColumn, onAddCard, onRemoveCard, onRemoveEm
                   label={t('column drag handle label')}
                 />
               </StackItem.DragHandle>
-              <h2>{columnValue}</h2>
+              <h2 className='flex-1'>{columnValue}</h2>
               {onRemoveEmptyColumn && cards.length < 1 && (
                 <IconButton
                   iconOnly
+                  variant='ghost'
                   icon='ph--x--regular'
                   label={t('remove empty column label')}
                   onClick={() => onRemoveEmptyColumn(columnValue)}
@@ -58,17 +59,23 @@ export const Kanban = ({ model, onAddColumn, onAddCard, onRemoveCard, onRemoveEm
               {cards.map((card) => (
                 <StackItem.Root key={card.id} item={card} onRearrange={model.onRearrange} classNames='plb-1 pli-2'>
                   <div role='none' className='rounded bg-[--surface-bg]'>
-                    <StackItem.DragHandle asChild>
-                      <IconButton iconOnly icon='ph--dots-six' variant='ghost' label={t('card drag handle label')} />
-                    </StackItem.DragHandle>
-                    {onRemoveCard && (
-                      <IconButton
-                        iconOnly
-                        icon='ph--x--regular'
-                        label={t('remove card label')}
-                        onClick={() => onRemoveCard(card)}
-                      />
-                    )}
+                    <div role='none' className='flex items-center'>
+                      <StackItem.DragHandle asChild>
+                        <IconButton iconOnly icon='ph--dots-six' variant='ghost' label={t('card drag handle label')} />
+                      </StackItem.DragHandle>
+                      {onRemoveCard && (
+                        <>
+                          <span role='separator' className='grow' />
+                          <IconButton
+                            iconOnly
+                            variant='ghost'
+                            icon='ph--x--regular'
+                            label={t('remove card label')}
+                            onClick={() => onRemoveCard(card)}
+                          />
+                        </>
+                      )}
+                    </div>
                     <Form readonly values={card} schema={model.cardSchema} />
                   </div>
                 </StackItem.Root>

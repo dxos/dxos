@@ -10,7 +10,7 @@ import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 import { getSpace } from '@dxos/react-client/echo';
-import { KanbanType } from '@dxos/react-ui-kanban';
+import { KanbanType, translations as kanbanTranslations } from '@dxos/react-ui-kanban';
 import { type FieldProjection, ViewProjection } from '@dxos/schema';
 
 import { KanbanContainer } from './components';
@@ -35,7 +35,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
       echo: {
         schema: [KanbanType],
       },
-      translations,
+      translations: [...translations, ...kanbanTranslations],
       graph: {
         builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
