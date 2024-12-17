@@ -102,7 +102,7 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
       if (cell.value && props.format === FormatEnum.Ref && props.referenceSchema) {
         const targetObj = getValue(obj, field.path);
         cell.accessoryHtml = tableButtons.referencedCell.render({
-          targetId: targetObj.id,
+          targetId: targetObj.id as any as string,
           schemaId: props.referenceSchema,
         });
       }

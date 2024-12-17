@@ -15,7 +15,6 @@ export class TableControls {
 
   public handleClick = (event: MouseEvent): void => {
     const modalHandledClick = this.modals.handleClick(event);
-
     if (!modalHandledClick) {
       const target = event.target as HTMLElement;
 

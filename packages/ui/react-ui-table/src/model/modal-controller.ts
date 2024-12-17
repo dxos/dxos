@@ -38,54 +38,40 @@ export class ModalController {
   }
 
   public handleClick = (event: MouseEvent): boolean => {
-    const target = event.target as HTMLElement;
+    const selector = Object.values(tableButtons)
+      .map((button) => `button[${button.attr}]`)
+      .join(',');
 
-    // TODO(thure): why not just get the value of the closest recognized attribute and `switch` on that?
-    //  Repeated querying is more error-prone and less legible, I’d think.
-
-    const rowButton = target.closest(`button[${tableButtons.rowMenu.attr}]`);
-    if (rowButton) {
-      this._triggerRef.current = rowButton as HTMLElement;
-      this._state.value = {
-        type: 'row',
-        rowIndex: Number(rowButton.getAttribute(tableButtons.rowMenu.attr)),
-      };
-      return true;
+    const matchedElement = (event.target as HTMLElement).closest(selector) as HTMLElement;
+    if (!matchedElement) {
+      return false;
     }
 
-    const columnButton = target.closest(`button[${tableButtons.columnSettings.attr}]`);
-    if (columnButton) {
-      const fieldId = columnButton.getAttribute(tableButtons.columnSettings.attr)!;
-      this._triggerRef.current = columnButton as HTMLElement;
-      this._state.value = {
-        type: 'column',
-        fieldId,
-      };
-      return true;
+    const button = Object.values(tableButtons).find((btn) => matchedElement.hasAttribute(btn.attr))!;
+
+    this._triggerRef.current = matchedElement;
+    const data = button.getData(matchedElement);
+
+    switch (data.type) {
+      case 'rowMenu': {
+        this._state.value = { type: 'row', rowIndex: data.rowIndex };
+        break;
+      }
+      case 'columnSettings': {
+        this._state.value = { type: 'column', fieldId: data.fieldId };
+        break;
+      }
+      case 'newColumn': {
+        this._state.value = { type: 'columnSettings', mode: { type: 'create' } };
+        break;
+      }
+      case 'referencedCell': {
+        this._state.value = { type: 'refPanel', targetId: data.targetId, typename: data.schemaId };
+        break;
+      }
     }
 
-    const addColumnButton = target.closest(`button[${tableButtons.addColumn.attr}]`);
-    if (addColumnButton) {
-      this._triggerRef.current = addColumnButton as HTMLElement;
-      this._state.value = {
-        type: 'columnSettings',
-        mode: { type: 'create' },
-      };
-      return true;
-    }
-
-    const refButton = target.closest(`button[${tableButtons.referencedCell.attr}]`);
-    if (refButton) {
-      this._triggerRef.current = refButton as HTMLElement;
-      const [schemaId, targetId] = refButton.getAttribute(tableButtons.referencedCell.attr)!.split('#');
-      this._state.value = {
-        type: 'refPanel',
-        targetId,
-        typename: schemaId,
-      };
-    }
-
-    return false;
+    return true;
   };
 
   public openColumnSettings = () => {
