@@ -17,10 +17,6 @@ export type KanbanModelProps = {
   cardSchema: MutableSchema;
 };
 
-export type ColumnProps = {
-  label: string;
-};
-
 export type KanbanArrangement<T extends BaseKanbanItem = { id: string }> = { columnValue: string; cards: T[] }[];
 
 export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Resource {
