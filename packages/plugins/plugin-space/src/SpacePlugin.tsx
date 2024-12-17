@@ -1109,6 +1109,7 @@ export const SpacePlugin = ({
                         dialogBlockAlign: 'start',
                         subject: {
                           initialInvitationCode: intent.data?.invitationCode,
+                          onDone: intent.data?.onDone,
                         } satisfies Partial<JoinPanelProps>,
                       },
                     },
