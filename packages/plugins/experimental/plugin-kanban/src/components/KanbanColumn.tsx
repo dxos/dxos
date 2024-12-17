@@ -16,6 +16,7 @@ import { KanbanCardComponent } from './KanbanCard';
 import { useSubscription } from './util';
 import { KANBAN_PLUGIN } from '../meta';
 import { type KanbanColumnType, type KanbanItemType } from '../types';
+import { makeRef } from '@dxos/live-object';
 
 export type ItemsMapper = (column: string, items: KanbanItemType[]) => KanbanItemType[];
 
@@ -63,7 +64,7 @@ export const KanbanColumnComponent: FC<{
 
   // TODO(wittjosiah): Remove?
   useSubscription([column.items]);
-  const items = itemMapper?.(column.id!, column.items.filter(nonNullable)) ?? column.items!;
+  const items = itemMapper?.(column.id!, column.items.map((item) => item.target).filter(nonNullable)) ?? column.items!;
 
   const { setNodeRef: setDroppableNodeRef } = useDroppable({ id: column.id! });
   const { isDragging, attributes, listeners, transform, transition, setNodeRef } = useSortable({
@@ -75,12 +76,12 @@ export const KanbanColumnComponent: FC<{
   const handleAddItem = onCreate
     ? () => {
         const item = onCreate(column);
-        column.items!.splice(column.items!.length, 0, item);
+        column.items!.splice(column.items!.length, 0, makeRef(item));
       }
     : undefined;
 
   const handleDeleteItem = (id: string) => {
-    const index = column.items.filter(nonNullable).findIndex((column) => column.id === id);
+    const index = column.items.map((item) => item.target).filter(nonNullable).findIndex((column) => column.id === id);
     if (index >= 0) {
       column.items!.splice(index, 1);
     }

@@ -12,7 +12,7 @@ import {
   useIntentDispatcher,
   useResolvePlugin,
 } from '@dxos/app-framework';
-import { create, getType, fullyQualifiedId } from '@dxos/client/echo';
+import { create, getType, fullyQualifiedId, makeRef } from '@dxos/client/echo';
 import { useGraph } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 import { type CollectionType } from '@dxos/plugin-space/types';
@@ -45,12 +45,12 @@ const StackMain = ({ id, collection }: StackMainProps) => {
   const { t } = useTranslation(STACK_PLUGIN);
   const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
   const defaultStack = useMemo(() => create(StackViewType, { sections: {} }), [collection]);
-  const stack = (collection.views[StackViewType.typename] as StackViewType) ?? defaultStack;
+  const stack = (collection.views[StackViewType.typename].target as StackViewType) ?? defaultStack;
   const [collapsedSections, setCollapsedSections] = useState<CollapsedSections>({});
 
   useEffect(() => {
     if (!collection.views[StackViewType.typename]) {
-      collection.views[StackViewType.typename] = stack;
+      collection.views[StackViewType.typename] = makeRef(stack);
     }
   }, [collection, stack]);
 
@@ -58,6 +58,7 @@ const StackMain = ({ id, collection }: StackMainProps) => {
     collection.objects
       // TODO(wittjosiah): Should the database handle this differently?
       // TODO(wittjosiah): Render placeholders for missing objects so they can be removed from the stack?
+      .map((object) => object.target)
       .filter(nonNullable)
       .map((object) => {
         const metadata = metadataPlugin?.provides.metadata.resolver(
@@ -69,11 +70,11 @@ const StackMain = ({ id, collection }: StackMainProps) => {
           title:
             (object as any)?.title ?? toLocalizedString(graph.findNode(fullyQualifiedId(object))?.properties.label, t),
         } as StackSectionView;
-        return { id: fullyQualifiedId(object), object, metadata, view } satisfies StackSectionItem;
+        return { id: fullyQualifiedId(object), object: makeRef(object), metadata, view } satisfies StackSectionItem;
       }) ?? [];
 
   const handleDelete = async (id: string) => {
-    const index = collection.objects.filter(nonNullable).findIndex((section) => fullyQualifiedId(section) === id);
+    const index = collection.objects.map((object) => object.target).filter(nonNullable).findIndex((section) => fullyQualifiedId(section) === id);
     if (index >= 0) {
       await dispatch({
         action: SpaceAction.REMOVE_OBJECTS,
