@@ -9,7 +9,7 @@ export default [
   {
     'en-US': {
       [MapType.typename]: {
-        'typename label': 'Canvas',
+        'typename label': 'Map',
       },
       [MAP_PLUGIN]: {
         'plugin name': 'Maps',
