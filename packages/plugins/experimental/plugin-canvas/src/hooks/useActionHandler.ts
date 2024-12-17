@@ -68,7 +68,8 @@ export const handleAction = ({
         const { duration = 200 } = action;
         const bounds = rectUnion(graph.nodes.filter((node) => node.data.type === 'rect').map((node) => node.data.rect));
         const center = getCenter(bounds);
-        const newScale = Math.min(width / bounds.width, height / bounds.height);
+        const padding = 64;
+        const newScale = Math.min(1, Math.min(width / (bounds.width + padding), height / (bounds.height + padding)));
         const [newOffset] = modelToScreen(newScale, { x: width / 2, y: height / 2 }, [{ x: -center.x, y: -center.y }]);
         if (duration) {
           zoomTo(setTransform, { scale, offset }, { scale: newScale, offset: newOffset }, duration);
