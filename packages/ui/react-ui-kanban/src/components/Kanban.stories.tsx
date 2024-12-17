@@ -43,7 +43,7 @@ const StorybookKanban = () => {
       const kanban = kanbans[0];
       invariant(kanban.cardView);
       setKanban(kanban);
-      setCardSchema(space.db.schemaRegistry.getSchema(kanban.cardView!.query.type));
+      setCardSchema(space.db.schemaRegistry.getSchema(kanban.cardView.target!.query.type));
     }
   }, [kanbans]);
 
@@ -68,7 +68,7 @@ const StorybookKanban = () => {
           <ViewEditor
             registry={space?.db.schemaRegistry}
             schema={cardSchema}
-            view={kanban.cardView}
+            view={kanban.cardView.target!}
             onDelete={(...args) => {
               console.log('[ViewEditor]', 'onDelete', args);
             }}

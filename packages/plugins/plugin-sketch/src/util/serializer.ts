@@ -3,7 +3,7 @@
 //
 
 import { type TypedObjectSerializer } from '@dxos/plugin-space/types';
-import { create, createObject, getObjectCore, loadObjectReferences } from '@dxos/react-client/echo';
+import { create, createObject, getObjectCore, loadObjectReferences, makeRef } from '@dxos/react-client/echo';
 
 import { CanvasType, DiagramType } from '../types';
 
@@ -17,7 +17,7 @@ export const serializer: TypedObjectSerializer<DiagramType> = {
   deserialize: async ({ content, newId }) => {
     const parsed = JSON.parse(content);
     const canvas = create(CanvasType, { content: {} });
-    const diagram = createObject(create(DiagramType, { name: parsed.name, canvas }));
+    const diagram = createObject(create(DiagramType, { name: parsed.name, canvas: makeRef(canvas) }));
 
     if (!newId) {
       const core = getObjectCore(diagram);

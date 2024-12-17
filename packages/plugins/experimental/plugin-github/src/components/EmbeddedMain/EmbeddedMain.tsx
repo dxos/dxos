@@ -61,7 +61,7 @@ const EmbeddedLayoutImpl = () => {
 
   const handleSaveAndCloseEmbed = useCallback(() => {
     document &&
-      window.parent.postMessage({ type: 'save-data', content: document.content?.content }, 'https://github.com');
+      window.parent.postMessage({ type: 'save-data', content: document.content.target?.content }, 'https://github.com');
   }, [document]);
 
   const handleCreateSpace = () => dispatch({ action: SpaceAction.CREATE });

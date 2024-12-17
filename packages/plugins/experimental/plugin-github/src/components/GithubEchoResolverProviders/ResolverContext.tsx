@@ -12,7 +12,7 @@ import React, {
   useState,
 } from 'react';
 
-import { create } from '@dxos/live-object';
+import { create, makeRef } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
 import { useMulticastObservable } from '@dxos/react-client';
@@ -94,7 +94,7 @@ const DocumentResolverProviderImpl = ({
             DocumentType,
             {
               name: defaultDisplayName,
-              content: create(TextType, { content: event.data.content }),
+              content: makeRef(create(TextType, { content: event.data.content })),
               threads: [],
             },
             {

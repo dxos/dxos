@@ -5,9 +5,9 @@
 import { CheckCircle, X } from '@phosphor-icons/react';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { create } from '@dxos/live-object';
+import { create, makeRef, RefArray } from '@dxos/live-object';
 import { MessageType } from '@dxos/plugin-space/types';
-import { fullyQualifiedId, getSpace, useMembers } from '@dxos/react-client/echo';
+import { fullyQualifiedId, getSpace, useMembers, type Expando } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, Tag, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
@@ -135,12 +135,14 @@ export const CommentContainer = ({
     }
 
     thread.messages.push(
-      create(MessageType, {
-        sender: { identityKey: identity.identityKey.toHex() },
-        timestamp: new Date().toISOString(),
-        text: messageRef.current,
-        context,
-      }),
+      makeRef(
+        create(MessageType, {
+          sender: { identityKey: identity.identityKey.toHex() },
+          timestamp: new Date().toISOString(),
+          text: messageRef.current,
+          context: makeRef(context as Expando),
+        }),
+      ),
     );
     onComment?.(thread);
 
@@ -185,7 +187,7 @@ export const CommentContainer = ({
           {onThreadDelete && <DeleteThreadButton onDelete={onThreadDelete} />}
         </div>
       </div>
-      {thread.messages.filter(nonNullable).map((message) => (
+      {RefArray.allResolvedTargets(thread.messages).map((message) => (
         <MessageContainer
           key={message.id}
           message={message}
