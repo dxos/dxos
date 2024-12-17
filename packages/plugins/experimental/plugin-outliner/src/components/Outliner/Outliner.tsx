@@ -8,7 +8,7 @@ import { ArrowSquareOut, Circle, DotsThreeVertical, X } from '@phosphor-icons/re
 import React, { type ComponentPropsWithoutRef, StrictMode, useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { createDocAccessor } from '@dxos/react-client/echo';
+import { createDocAccessor, makeRef } from '@dxos/react-client/echo';
 import { Button, DropdownMenu, Input, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type CursorInfo,
@@ -26,6 +26,8 @@ import { nonNullable } from '@dxos/util';
 import { getNext, getParent, getPrevious, getItems, getLastDescendent } from './types';
 import { OUTLINER_PLUGIN } from '../../meta';
 import { type TreeItemType } from '../../types';
+import { RefArray } from '@dxos/live-object';
+import { Ref } from '@dxos/echo-schema';
 
 type CursorSelection = {
   itemId: string;
@@ -342,7 +344,8 @@ const OutlinerBranch = ({
   return (
     <div className={className}>
       {root.items
-        ?.filter((item): item is TreeItemType => item?.content != null)
+        ?.map((ref) => ref.target)
+        .filter((item): item is TreeItemType => item?.content != null)
         .map((item) => (
           <div key={item.id}>
             <OutlinerItem
@@ -414,7 +417,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
       // }
 
       if (current.items?.length) {
-        current.items.splice(0, 0, item);
+        current.items.splice(0, 0, makeRef(item));
       } else {
         items.splice(idx + 1, 0, item);
       }
@@ -441,7 +444,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
     }
 
     // Remove and add children.
-    const children = item.items.filter(nonNullable);
+    const children = RefArray.allResolvedTargets(item.items);
     items.splice(idx, 1);
     onDelete!(item);
 
@@ -506,12 +509,12 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
   // Move lines.
   //
   const handleShift: OutlinerBranchProps['onItemShift'] = (parent, item, direction) => {
-    const idx = parent.items.filter(nonNullable).findIndex(({ id }) => id === item.id) ?? -1;
+    const idx = parent.items.findIndex(Ref.hasObjectId(item.id));
     switch (direction) {
       case 'up': {
         if (idx > 0) {
           const previous = parent.items![idx - 1];
-          parent.items!.splice(idx - 1, 2, item, previous);
+          parent.items!.splice(idx - 1, 2, makeRef(item), previous);
         }
         break;
       }
@@ -519,7 +522,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
       case 'down':
         if (idx < parent.items!.length - 1) {
           const next = parent.items![idx + 1];
-          parent.items!.splice(idx, 2, next, item);
+          parent.items!.splice(idx, 2, next, makeRef(item));
         }
         break;
     }
@@ -531,12 +534,12 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
   const handleCursor: OutlinerBranchProps['onItemCursor'] = (parent, item, direction, anchor) => {
     switch (direction) {
       case 'home': {
-        setActive({ itemId: root.items[0]!.id, anchor: 0 });
+        setActive({ itemId: root.items[0]!.target!.id, anchor: 0 });
         break;
       }
 
       case 'end': {
-        const last = getLastDescendent(root.items[root.items.length - 1]!);
+        const last = getLastDescendent(root.items[root.items.length - 1]!.target!);
         if (last) {
           setActive({ itemId: last.id, anchor: 0 });
         }

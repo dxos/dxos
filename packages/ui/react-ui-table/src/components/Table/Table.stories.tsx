@@ -44,13 +44,13 @@ const DefaultStory = () => {
       const table = tables[0];
       invariant(table.view);
       setTable(table);
-      setSchema(space.db.schemaRegistry.getSchema(table.view.query.type));
+      setSchema(space.db.schemaRegistry.getSchema(table.view.target!.query.type));
     }
   }, [tables]);
 
   const projection = useMemo(() => {
     if (schema && table?.view) {
-      return new ViewProjection(schema, table.view);
+      return new ViewProjection(schema, table.view.target!);
     }
   }, [schema, table?.view]);
 
@@ -129,7 +129,7 @@ const DefaultStory = () => {
           <ViewEditor
             registry={space?.db.schemaRegistry}
             schema={schema}
-            view={table.view}
+            view={table.view.target!}
             onDelete={handleDeleteColumn}
           />
         )}
@@ -162,8 +162,8 @@ const TablePerformanceStory = (props: StoryProps) => {
   const handleDeleteColumn = useCallback<NonNullable<UseTableModelParams<any>['onDeleteColumn']>>(
     (fieldId) => {
       if (table && table.view) {
-        const fieldPosition = table.view.fields.findIndex((field) => field.id === fieldId);
-        table.view.fields.splice(fieldPosition, 1);
+        const fieldPosition = table.view.target!.fields.findIndex((field) => field.id === fieldId);
+        table.view.target!.fields.splice(fieldPosition, 1);
       }
     },
     [table],
