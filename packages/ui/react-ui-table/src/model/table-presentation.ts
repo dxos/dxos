@@ -17,9 +17,13 @@ import { mx } from '@dxos/react-ui-theme';
 import { VIEW_FIELD_LIMIT, type FieldType } from '@dxos/schema';
 
 import { type BaseTableRow, type TableModel } from './table-model';
-import { tableButtons } from '../util';
-import { tableControls } from '../util/table-controls';
+import { tableButtons, tableControls } from '../util';
 
+/**
+ * Presentation layer for a table component, handling cell rendering and grid display logic.
+ * Manages rendering of table cells, headers, selection columns, and action columns across
+ * different grid planes.
+ */
 export class TablePresentation<T extends BaseTableRow = { id: string }> {
   constructor(
     private readonly model: TableModel<T>,
@@ -29,34 +33,27 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
     }),
   ) {}
 
-  public getCells = (range: DxGridPlaneRange, plane: DxGridPlane): DxGridPlaneCells => {
+  public getCells(range: DxGridPlaneRange, plane: DxGridPlane): DxGridPlaneCells {
     switch (plane) {
-      case 'grid': {
+      case 'grid':
         this._visibleRange.value = range;
         return this.getMainGridCells(range);
-      }
-      case 'frozenRowsStart': {
+      case 'frozenRowsStart':
         return this.getHeaderCells(range);
-      }
-      case 'frozenColsStart': {
+      case 'frozenColsStart':
         return this.getSelectionColumnCells(range);
-      }
-      case 'frozenColsEnd': {
+      case 'frozenColsEnd':
         return this.getActionColumnCells(range);
-      }
-      case 'fixedStartStart': {
+      case 'fixedStartStart':
         return this.getSelectAllCell();
-      }
-      case 'fixedStartEnd': {
+      case 'fixedStartEnd':
         return this.getNewColumnCell();
-      }
-      default: {
+      default:
         return {};
-      }
     }
-  };
+  }
 
-  private getMainGridCells = (range: DxGridPlaneRange): DxGridPlaneCells => {
+  private getMainGridCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
     const fields = this.model.table.view?.fields ?? [];
 
@@ -123,9 +120,9 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
     }
 
     return cells;
-  };
+  }
 
-  private getHeaderCells = (range: DxGridPlaneRange): DxGridPlaneCells => {
+  private getHeaderCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
     const fields = this.model.table.view?.fields ?? [];
     for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
@@ -140,9 +137,9 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
     }
 
     return cells;
-  };
+  }
 
-  private getSelectionColumnCells = (range: DxGridPlaneRange): DxGridPlaneCells => {
+  private getSelectionColumnCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
     for (let row = range.start.row; row <= range.end.row && row < this.model.getRowCount(); row++) {
       const isSelected = this.model.selection.isRowIndexSelected(row);
@@ -156,9 +153,9 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
     }
 
     return cells;
-  };
+  }
 
-  private getActionColumnCells = (range: DxGridPlaneRange): DxGridPlaneCells => {
+  private getActionColumnCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
     for (let row = range.start.row; row <= range.end.row && row < this.model.getRowCount(); row++) {
       const isSelected = this.model.selection.isRowIndexSelected(row);
@@ -172,9 +169,9 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
     }
 
     return cells;
-  };
+  }
 
-  private getSelectAllCell = (): DxGridPlaneCells => {
+  private getSelectAllCell(): DxGridPlaneCells {
     return {
       [toPlaneCellIndex({ col: 0, row: 0 })]: {
         value: '',
@@ -186,9 +183,9 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
         readonly: true,
       },
     };
-  };
+  }
 
-  private getNewColumnCell = (): DxGridPlaneCells => {
+  private getNewColumnCell(): DxGridPlaneCells {
     return {
       [toPlaneCellIndex({ col: 0, row: 0 })]: {
         value: '',
@@ -198,5 +195,5 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
         readonly: true,
       },
     };
-  };
+  }
 }

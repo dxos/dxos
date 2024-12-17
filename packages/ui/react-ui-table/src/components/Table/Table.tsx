@@ -29,8 +29,7 @@ import { RefPanel } from './RefPanel';
 import { RowActionsMenu } from './RowActionsMenu';
 import { ModalController, type TableModel, type TablePresentation } from '../../model';
 import { translationKey } from '../../translations';
-import { tableButtons } from '../../util';
-import { tableControls } from '../../util/table-controls';
+import { tableButtons, tableControls } from '../../util';
 import { createOption, TableCellEditor, type TableCellEditorProps } from '../TableCellEditor';
 
 // NOTE(Zan): These fragments add border to inline-end and block-end of the grid using pseudo-elements.
