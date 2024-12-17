@@ -137,8 +137,7 @@ const useDragMonitor = (el: HTMLElement | null) => {
 
       onDrop: ({ source, location }) => {
         if (!cancelled.current) {
-          // TODO(burdon): Adjust for offset?
-          // const pos = boundsToModelWithOffset(scale, offset, shape.pos, location.initial, location.current);
+          // TODO(burdon): Adjust for offset on drag?
           const [pos] = screenToModel(scale, offset, [getInputPoint(location.current.input)]);
           const { type, shape } = source.data as DragPayloadData<ShapeType<'rect'>>;
 
