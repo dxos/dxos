@@ -43,9 +43,9 @@ export const initializeKanban = ({
       }),
       columnField: 'state',
       arrangement: [
-        { columnValue: 'init', ids: [] },
-        { columnValue: 'doing', ids: [] },
-        { columnValue: 'done', ids: [] },
+        { columnValue: 'To do', ids: [] },
+        { columnValue: 'Doing', ids: [] },
+        { columnValue: 'Done', ids: [] },
       ],
     }),
   );

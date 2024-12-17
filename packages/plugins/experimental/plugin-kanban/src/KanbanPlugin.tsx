@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { getSpace } from '@dxos/react-client/echo';
-import { type FieldProjection, ViewProjection } from '@dxos/schema';
 import React from 'react';
 
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
@@ -11,14 +9,15 @@ import { invariant } from '@dxos/invariant';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
+import { getSpace } from '@dxos/react-client/echo';
 import { KanbanType } from '@dxos/react-ui-kanban';
+import { type FieldProjection, ViewProjection } from '@dxos/schema';
 
 import { KanbanContainer } from './components';
-import { createKanban } from './components/create-kanban';
 import KanbanViewEditor from './components/KanbanViewEditor';
 import meta, { KANBAN_PLUGIN } from './meta';
 import translations from './translations';
-import { isKanban, KanbanAction, type KanbanPluginProvides } from './types';
+import { isKanban, KanbanAction, type KanbanPluginProvides, createKanban } from './types';
 
 export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
   return {
@@ -99,14 +98,15 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
               const { space } = intent.data as KanbanAction.Create;
               invariant(space);
               const kanban = createKanban(space);
-              return {data: kanban}
+              return { data: kanban };
             }
             case KanbanAction.DELETE_CARD_FIELD: {
               const { kanban, fieldId } = intent.data as KanbanAction.DeleteColumn;
               invariant(isKanban(kanban));
               invariant(kanban.cardView);
 
-              const schema = kanban.cardView && getSpace(kanban)?.db.schemaRegistry.getSchema(kanban.cardView.query.type);
+              const schema =
+                kanban.cardView && getSpace(kanban)?.db.schemaRegistry.getSchema(kanban.cardView.query.type);
               invariant(schema);
               const projection = new ViewProjection(schema, kanban.cardView);
 

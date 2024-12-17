@@ -10,9 +10,10 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import {Space} from '@dxos/react-client/echo'
 import { type SchemaProvides } from '@dxos/plugin-space';
+import { type Space } from '@dxos/react-client/echo';
 import { KanbanType } from '@dxos/react-ui-kanban';
+import { initializeKanban } from '@dxos/react-ui-kanban/testing';
 
 import { KANBAN_PLUGIN } from './meta';
 
@@ -36,7 +37,6 @@ export namespace KanbanAction {
   export type Create = IntentData<{ space: Space }>;
   export type DeleteColumn = IntentData<{ kanban: KanbanType; fieldId: string }>;
 }
-
 
 export type KanbanPluginProvides = SurfaceProvides &
   IntentResolverProvides &
@@ -63,3 +63,7 @@ export type Location = {
 
 export const isKanban = (object: unknown): object is KanbanType => object != null && object instanceof KanbanType;
 
+export const createKanban = (space: Space) => {
+  const { kanban } = initializeKanban({ space });
+  return kanban;
+};
