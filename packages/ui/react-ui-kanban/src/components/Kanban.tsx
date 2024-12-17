@@ -9,16 +9,18 @@ import { Form } from '@dxos/react-ui-form';
 import { Stack, StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type KanbanModel } from '../defs';
+import { type BaseKanbanItem, type KanbanModel } from '../defs';
 import { translationKey } from '../translations';
 
-export type KanbanProps = {
+export type KanbanProps<T extends BaseKanbanItem = { id: string }> = {
   model: KanbanModel;
   onAddColumn?: (columnValue: string) => void;
   onAddCard?: (columnValue: string) => void;
+  onRemoveCard?: (card: T) => void;
+  onRemoveEmptyColumn?: (columnValue: string) => void;
 };
 
-export const Kanban = ({ model, onAddColumn, onAddCard }: KanbanProps) => {
+export const Kanban = ({ model, onAddColumn, onAddCard, onRemoveCard, onRemoveEmptyColumn }: KanbanProps) => {
   const { t } = useTranslation(translationKey);
   const [namingColumn, setNamingColumn] = useState(false);
 
@@ -43,6 +45,14 @@ export const Kanban = ({ model, onAddColumn, onAddCard }: KanbanProps) => {
                 />
               </StackItem.DragHandle>
               <h2>{columnValue}</h2>
+              {onRemoveEmptyColumn && cards.length < 1 && (
+                <IconButton
+                  iconOnly
+                  icon='ph--x--regular'
+                  label={t('remove empty column label')}
+                  onClick={() => onRemoveEmptyColumn(columnValue)}
+                />
+              )}
             </StackItem.Heading>
             <Stack orientation='vertical' size='contain' rail={false} classNames='pbe-1'>
               {cards.map((card) => (
@@ -51,6 +61,14 @@ export const Kanban = ({ model, onAddColumn, onAddCard }: KanbanProps) => {
                     <StackItem.DragHandle asChild>
                       <IconButton iconOnly icon='ph--dots-six' variant='ghost' label={t('card drag handle label')} />
                     </StackItem.DragHandle>
+                    {onRemoveCard && (
+                      <IconButton
+                        iconOnly
+                        icon='ph--x--regular'
+                        label={t('remove card label')}
+                        onClick={() => onRemoveCard(card)}
+                      />
+                    )}
                     <Form readonly values={card} schema={model.cardSchema} />
                   </div>
                 </StackItem.Root>

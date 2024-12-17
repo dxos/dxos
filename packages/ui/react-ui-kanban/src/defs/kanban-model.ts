@@ -91,6 +91,15 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     this._arrangement.value = this._computeArrangement();
   }
 
+  public removeColumnFromArrangement(columnValue: string) {
+    const columnIndex = this._kanban.arrangement?.findIndex((column) => column.columnValue === columnValue);
+    if (this._kanban.arrangement && Number.isFinite(columnIndex) && columnIndex! >= 0) {
+      // @ts-ignore
+      this._kanban.arrangement.splice(columnIndex, 1);
+      this._arrangement.value = this._computeArrangement();
+    }
+  }
+
   public onRearrange: StackItemRearrangeHandler = (source, target, closestEdge) => {
     const nextArrangement = this.arrangement;
     const sourceColumn = nextArrangement.find(
