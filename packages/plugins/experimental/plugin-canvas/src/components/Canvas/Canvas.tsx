@@ -32,8 +32,7 @@ export const Canvas = () => {
 
   // Event handlers.
   useWheel(containerRef.current, width, height, setTransform);
-  useShortcuts(containerRef.current);
-  useActionHandler();
+  useShortcuts();
 
   // Drop target.
   useEffect(() => {
@@ -56,7 +55,7 @@ export const Canvas = () => {
   const selectionRect = useSelectionHandler(containerRef.current, shapes);
 
   return (
-    <div {...testId('dx-canvas')} ref={containerRef} tabIndex={0} className={mx('absolute inset-0 overflow-hidden')}>
+    <div {...testId('dx-canvas')} ref={containerRef} className={mx('absolute inset-0 overflow-hidden')}>
       {/* Background. */}
       <Background />
 

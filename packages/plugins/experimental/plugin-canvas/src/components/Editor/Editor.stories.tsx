@@ -44,7 +44,7 @@ const Render = (props: EditorRootProps) => {
   }, [space]);
 
   return (
-    <Editor.Root graph={graph} {...props}>
+    <Editor.Root id='test' graph={graph} {...props}>
       <Editor.Canvas />
       <Editor.UI />
     </Editor.Root>

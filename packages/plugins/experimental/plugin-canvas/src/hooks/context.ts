@@ -23,9 +23,15 @@ export type EditingState = {
   shape: Shape;
 };
 
+export type EditorOptions = {
+  zoomFactor: number;
+};
+
 export type EditorContextType = {
+  id: string;
   debug: boolean;
   setDebug: Dispatch<SetStateAction<boolean>>;
+  options: EditorOptions;
 
   width: number;
   height: number;

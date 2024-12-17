@@ -27,7 +27,7 @@ export const Grid = forwardRef<SVGSVGElement, GridProps>(
 
     return (
       <svg
-        {...testId('dx-grid')}
+        {...testId('dx-canvas-grid')}
         className={mx('absolute inset-0', eventsNone, classNames)}
         width='100%'
         height='100%'
@@ -36,11 +36,11 @@ export const Grid = forwardRef<SVGSVGElement, GridProps>(
         {/* NOTE: The pattern needs to be offset so that the middle of the pattern aligns with the grid. */}
         <defs>
           {grids.map(({ id, size }) => (
-            <GridPattern key={id} id={`dx-grid-${id}`} offset={offset} size={size} />
+            <GridPattern key={id} id={`dx-canvas-grid-${id}`} offset={offset} size={size} />
           ))}
         </defs>
         {grids.map(({ id, size }, i) => (
-          <rect key={id} fill={`url(#dx-grid-${id})`} width='100%' height='100%' />
+          <rect key={id} width='100%' height='100%' fill={`url(#dx-canvas-grid-${id})`} />
         ))}
       </svg>
     );

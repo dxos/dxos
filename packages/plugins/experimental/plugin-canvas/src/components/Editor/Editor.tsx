@@ -3,9 +3,11 @@
 //
 
 import React, { type PropsWithChildren, useEffect, useMemo, useState } from 'react';
+import { HotkeysProvider } from 'react-hotkeys-hook';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { type ThemedClassName } from '@dxos/react-ui';
+import { useAttendableAttributes } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
 import { emptyGraph, type Graph, GraphModel, type Node, type Shape } from '../../graph';
@@ -14,6 +16,7 @@ import {
   type EditingState,
   EditorContext,
   type EditorContextType,
+  type EditorOptions,
   SelectionModel,
   type TransformState,
 } from '../../hooks';
@@ -31,14 +34,8 @@ import { testId } from '../util';
 //    - Bounding box/hierarchy. [DIFFERENTIATOR]
 //  - Property panels (e.g. line style). Shape schema.
 //    - Line options (1-to-many, inherits, etc.)
-//  - Canvas ontology (e.g., what is Item vs Layout, etc.)
-//  - Nodes as objects.
 //  - Surface/form storybook; auto-size.
-//  - Basic plugin with root object.
 //  - Reactive wrapper for graph.
-
-// TODO(burdon): Bugs.
-//  - Offset when not fullscreen.
 
 // TODO(burdon): Phase 2
 //  - Auto-layout (reconcile with plugin-debug).
@@ -64,13 +61,23 @@ import { testId } from '../util';
 
 const defaultOffset = { x: 0, y: 0 };
 
+export const defaultEditorOptions: EditorOptions = {
+  zoomFactor: 2,
+};
+
 type EditorRootProps = ThemedClassName<
-  PropsWithChildren<Partial<Pick<EditorContextType, 'debug' | 'scale' | 'offset'> & { graph: Graph }>>
+  PropsWithChildren<
+    Partial<Pick<EditorContextType, 'options' | 'debug' | 'scale' | 'offset'> & { graph: Graph }> & {
+      id: string;
+    }
+  >
 >;
 
 const EditorRoot = ({
   children,
   classNames,
+  id,
+  options = defaultEditorOptions,
   debug: _debug = false,
   scale: _scale = 1,
   offset: _offset = defaultOffset,
@@ -78,6 +85,7 @@ const EditorRoot = ({
 }: EditorRootProps) => {
   // Canvas state.
   const { ref, width = 0, height = 0 } = useResizeDetector();
+  const attendableAttrs = useAttendableAttributes(id);
   const [debug, setDebug] = useState(_debug);
   const [gridSize, setGridSize] = useState({ width: 32, height: 32 });
   const [showGrid, setShowGrid] = useState(true);
@@ -99,43 +107,53 @@ const EditorRoot = ({
   const [editing, setEditing] = useState<EditingState>();
 
   return (
-    <div {...testId('dx-editor')} ref={ref} className={mx('relative w-full h-full overflow-hidden', classNames)}>
-      <EditorContext.Provider
-        value={{
-          debug,
-          setDebug,
+    <div
+      {...testId('dx-editor')}
+      {...attendableAttrs}
+      ref={ref}
+      className={mx('relative w-full h-full overflow-hidden', classNames)}
+    >
+      {/* TODO(burdon): Change scope based on attention. */}
+      <HotkeysProvider initiallyActiveScopes={['attention']}>
+        <EditorContext.Provider
+          value={{
+            id,
+            options,
+            debug,
+            setDebug,
 
-          width,
-          height,
+            width,
+            height,
 
-          scale,
-          offset,
-          setTransform,
+            scale,
+            offset,
+            setTransform,
 
-          gridSize,
-          setGridSize,
+            gridSize,
+            setGridSize,
 
-          showGrid,
-          setShowGrid,
+            showGrid,
+            setShowGrid,
 
-          snapToGrid,
-          setSnapToGrid,
+            snapToGrid,
+            setSnapToGrid,
 
-          graph,
-          selection,
+            graph,
+            selection,
 
-          dragging,
-          setDragging,
+            dragging,
+            setDragging,
 
-          linking,
-          setLinking,
+            linking,
+            setLinking,
 
-          editing,
-          setEditing,
-        }}
-      >
-        {children}
-      </EditorContext.Provider>
+            editing,
+            setEditing,
+          }}
+        >
+          {children}
+        </EditorContext.Provider>
+      </HotkeysProvider>
     </div>
   );
 };

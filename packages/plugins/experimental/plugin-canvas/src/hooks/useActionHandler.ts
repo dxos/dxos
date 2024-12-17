@@ -13,14 +13,23 @@ import { type ActionHandler } from '../actions';
 import { createRect } from '../graph';
 import { createId, itemSize } from '../testing';
 
-const scaleFactor = 2;
-
 /**
  * Handle actions.
  */
 export const useActionHandler = (): ActionHandler => {
-  const { width, height, scale, offset, graph, selection, setTransform, setDebug, setShowGrid, setSnapToGrid } =
-    useEditorContext();
+  const {
+    options,
+    width,
+    height,
+    scale,
+    offset,
+    graph,
+    selection,
+    setTransform,
+    setDebug,
+    setShowGrid,
+    setSnapToGrid,
+  } = useEditorContext();
 
   const zoom = (scale: number, newScale: number) => {
     const is = d3.interpolateNumber(scale, newScale);
@@ -48,7 +57,16 @@ export const useActionHandler = (): ActionHandler => {
           setSnapToGrid((snapToGrid) => action?.on ?? !snapToGrid);
           return true;
         }
+        case 'select': {
+          const { ids, shift } = action;
+          selection.setSelected(ids, shift);
+          return true;
+        }
 
+        case 'home': {
+          setTransform({ scale: 1, offset: { x: width / 2, y: height / 2 } });
+          return true;
+        }
         case 'center': {
           const is = d3.interpolate(offset, { x: width / 2, y: height / 2 });
           d3.transition()
@@ -58,7 +76,7 @@ export const useActionHandler = (): ActionHandler => {
           return true;
         }
         case 'zoom-in': {
-          const newScale = Math.round(scale) * scaleFactor;
+          const newScale = Math.round(scale) * options.zoomFactor;
           if (newScale > 16) {
             return false;
           }
@@ -66,7 +84,7 @@ export const useActionHandler = (): ActionHandler => {
           return true;
         }
         case 'zoom-out': {
-          const newScale = Math.round(scale) / scaleFactor;
+          const newScale = Math.round(scale) / options.zoomFactor;
           if (Math.round(scale) === 0) {
             return false;
           }

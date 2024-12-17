@@ -24,36 +24,42 @@ export const useWheel = (
       return;
     }
 
-    const handleWheel = (ev: WheelEvent) => {
-      ev.preventDefault();
-      // Zoom or pan.
-      if (ev.ctrlKey) {
-        if (!el) {
-          return;
+    return bind(el, {
+      type: 'wheel',
+      listener: (ev: WheelEvent) => {
+        ev.preventDefault();
+        // Zoom or pan.
+        if (ev.ctrlKey) {
+          if (!el) {
+            return;
+          }
+
+          // Keep centered.
+          setTransform(({ scale, offset }) => {
+            const scaleSensitivity = 0.01;
+            const newScale = scale * Math.exp(-ev.deltaY * scaleSensitivity);
+            invariant(el);
+            const rect = el.getBoundingClientRect();
+            const pos = {
+              x: ev.offsetX - rect.left,
+              y: ev.offsetY - rect.top,
+            };
+
+            return getZoomTransform({ offset, scale, newScale, pos });
+          });
+        } else {
+          setTransform(({ scale, offset: { x, y } }) => {
+            return {
+              scale,
+              offset: {
+                x: x - ev.deltaX,
+                y: y - ev.deltaY,
+              },
+            };
+          });
         }
-
-        // Keep centered.
-        setTransform(({ scale, offset }) => {
-          const scaleSensitivity = 0.01;
-          const newScale = scale * Math.exp(-ev.deltaY * scaleSensitivity);
-          invariant(el);
-          const rect = el.getBoundingClientRect();
-          const pos = {
-            x: ev.offsetX - rect.left,
-            y: ev.offsetY - rect.top,
-          };
-
-          return getZoomTransform({ offset, scale, pos, newScale });
-        });
-      } else {
-        setTransform(({ scale, offset: { x, y } }) => ({
-          scale,
-          offset: { x: x - ev.deltaX, y: y - ev.deltaY },
-        }));
-      }
-    };
-
-    return bind(el, { type: 'wheel', listener: handleWheel });
+      },
+    });
   }, [el, setTransform, width, height]);
 };
 
