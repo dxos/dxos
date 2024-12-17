@@ -11,24 +11,5 @@
     "src",
     "stories"
   ],
-  "references": [
-    {
-      "path": "../../ui/react-ui"
-    },
-    {
-      "path": "../../ui/react-ui-theme"
-    },
-    {
-      "path": "../invariant"
-    },
-    {
-      "path": "../node-std"
-    },
-    {
-      "path": "../storybook-utils"
-    },
-    {
-      "path": "../util"
-    }
-  ]
+  "references": []
 }

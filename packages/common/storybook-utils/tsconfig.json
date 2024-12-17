@@ -14,18 +14,5 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": [
-    {
-      "path": "../../core/echo/echo-signals"
-    },
-    {
-      "path": "../../ui/react-ui"
-    },
-    {
-      "path": "../../ui/react-ui-theme"
-    },
-    {
-      "path": "../log"
-    }
-  ]
+  "references": []
 }

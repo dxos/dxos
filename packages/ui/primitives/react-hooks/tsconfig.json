@@ -14,12 +14,5 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": [
-    {
-      "path": "../../../common/async"
-    },
-    {
-      "path": "../../../common/log"
-    }
-  ]
+  "references": []
 }

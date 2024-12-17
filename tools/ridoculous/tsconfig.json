@@ -18,12 +18,5 @@
     "src/**/*",
     "testing/**/*"
   ],
-  "references": [
-    {
-      "path": "../../packages/common/esbuild-plugins"
-    },
-    {
-      "path": "../../packages/common/protobuf-compiler"
-    }
-  ]
+  "references": []
 }

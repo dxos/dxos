@@ -20,33 +20,5 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": [
-    {
-      "path": "../../../common/async"
-    },
-    {
-      "path": "../../../common/storybook-utils"
-    },
-    {
-      "path": "../../../sdk/app-framework"
-    },
-    {
-      "path": "../../../sdk/react-client"
-    },
-    {
-      "path": "../../../ui/react-ui"
-    },
-    {
-      "path": "../../../ui/react-ui-theme"
-    },
-    {
-      "path": "../../plugin-client"
-    },
-    {
-      "path": "../../plugin-graph"
-    },
-    {
-      "path": "../../plugin-space"
-    }
-  ]
+  "references": []
 }

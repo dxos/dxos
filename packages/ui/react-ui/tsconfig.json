@@ -18,33 +18,5 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": [
-    {
-      "path": "../../common/debug"
-    },
-    {
-      "path": "../../common/log"
-    },
-    {
-      "path": "../../common/random"
-    },
-    {
-      "path": "../../common/util"
-    },
-    {
-      "path": "../primitives/react-hooks"
-    },
-    {
-      "path": "../primitives/react-input"
-    },
-    {
-      "path": "../primitives/react-list"
-    },
-    {
-      "path": "../react-ui-theme"
-    },
-    {
-      "path": "../react-ui-types"
-    }
-  ]
+  "references": []
 }

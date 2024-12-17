@@ -9,12 +9,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../../../common/log"
-    },
-    {
-      "path": "../rpc"
-    }
-  ]
+  "references": []
 }

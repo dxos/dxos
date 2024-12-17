@@ -11,57 +11,5 @@
     "src",
     "tests-setup.js"
   ],
-  "references": [
-    {
-      "path": "../../../common/async"
-    },
-    {
-      "path": "../../../common/codec-protobuf"
-    },
-    {
-      "path": "../../../common/context"
-    },
-    {
-      "path": "../../../common/debug"
-    },
-    {
-      "path": "../../../common/invariant"
-    },
-    {
-      "path": "../../../common/keys"
-    },
-    {
-      "path": "../../../common/log"
-    },
-    {
-      "path": "../../../common/node-std"
-    },
-    {
-      "path": "../../../common/tracing"
-    },
-    {
-      "path": "../../../common/util"
-    },
-    {
-      "path": "../../halo/keyring"
-    },
-    {
-      "path": "../../protocols"
-    },
-    {
-      "path": "../edge-client"
-    },
-    {
-      "path": "../messaging"
-    },
-    {
-      "path": "../rpc"
-    },
-    {
-      "path": "../signal"
-    },
-    {
-      "path": "../teleport"
-    }
-  ]
+  "references": []
 }

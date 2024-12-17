@@ -16,41 +16,7 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/context"
-    },
-    {
-      "path": "../../common/debug"
-    },
-    {
-      "path": "../../common/invariant"
-    },
-    {
-      "path": "../../common/local-storage"
-    },
-    {
-      "path": "../../common/log"
-    },
-    {
-      "path": "../../common/util"
-    },
-    {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/live-object"
-    },
-    {
-      "path": "../app-graph"
-    },
-    {
-      "path": "../client-protocol"
-    }
-  ],
+  "references": [],
   "ts-node": {
     "compilerOptions": {
       "module": "CommonJS"

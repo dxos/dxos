@@ -20,57 +20,5 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": [
-    {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/local-storage"
-    },
-    {
-      "path": "../../common/log"
-    },
-    {
-      "path": "../../common/random"
-    },
-    {
-      "path": "../../common/storybook-utils"
-    },
-    {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/echo/live-object"
-    },
-    {
-      "path": "../../sdk/app-framework"
-    },
-    {
-      "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../ui/react-ui"
-    },
-    {
-      "path": "../../ui/react-ui-form"
-    },
-    {
-      "path": "../../ui/react-ui-theme"
-    },
-    {
-      "path": "../plugin-client"
-    },
-    {
-      "path": "../plugin-graph"
-    },
-    {
-      "path": "../plugin-markdown"
-    },
-    {
-      "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-stack"
-    }
-  ]
+  "references": []
 }
