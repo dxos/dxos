@@ -17,9 +17,9 @@ import {
   EditorContext,
   type EditorContextType,
   type EditorOptions,
-  handleAction,
   SelectionModel,
   type TransformState,
+  handleAction,
 } from '../../hooks';
 import { Canvas } from '../Canvas';
 import { UI } from '../UI';
@@ -63,6 +63,7 @@ import { testId } from '../util';
 const defaultOffset = { x: 0, y: 0 };
 
 export const defaultEditorOptions: EditorOptions = {
+  scope: 'plugin-canvas',
   gridSize: 16,
   zoomFactor: 2,
 };
@@ -172,7 +173,7 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
         className={mx('relative w-full h-full overflow-hidden', classNames)}
       >
         {/* TODO(burdon): Change scope based on attention. */}
-        <HotkeysProvider initiallyActiveScopes={['plugin-canvas']}>
+        <HotkeysProvider initiallyActiveScopes={[id]}>
           <EditorContext.Provider value={context}>{children}</EditorContext.Provider>
         </HotkeysProvider>
       </div>
