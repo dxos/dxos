@@ -5,7 +5,7 @@
 import { createContext, type Dispatch, type SetStateAction } from 'react';
 
 import { type SelectionModel } from './useSelected';
-import { type GraphModel, type Shape, type ShapeType } from '../graph';
+import { type GraphModel, type Node, type Shape, type ShapeType } from '../graph';
 import type { Dimension, Point } from '../layout';
 
 export type TransformState = {
@@ -40,7 +40,7 @@ export type EditorContextType = {
   showGrid: boolean;
   setShowGrid: Dispatch<SetStateAction<boolean>>;
 
-  graph: GraphModel;
+  graph: GraphModel<Node<Shape>>;
   selection: SelectionModel;
 
   snapToGrid: boolean;

@@ -8,7 +8,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { emptyGraph, type Graph, GraphModel } from '../../graph';
+import { emptyGraph, type Graph, GraphModel, type Node, type Shape } from '../../graph';
 import {
   type DraggingState,
   type EditingState,
@@ -90,7 +90,7 @@ const EditorRoot = ({
   }, [scale, offset, width, height]);
 
   // Data state.
-  const graph = useMemo(() => new GraphModel(_graph), [_graph]);
+  const graph = useMemo(() => new GraphModel<Node<Shape>>(_graph), [_graph]);
 
   // Editor state.
   const selection = useMemo(() => new SelectionModel(), []);

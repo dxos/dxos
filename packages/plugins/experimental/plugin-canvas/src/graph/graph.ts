@@ -41,8 +41,10 @@ export type Node<T extends object | void = void> = BaseNode & { data: T };
 export type Edge<T extends object | void = void> = BaseEdge & { data: T };
 
 /**
- * Reactive typed graph object.
+ * Typed object graph.
  */
+// TODO(burdon): Factor out.
+// TODO(burdon): Make reactive using signals.
 export class GraphModel<GraphNode extends Node = any, GraphEdge extends Edge = any> {
   private readonly _graph: Graph;
 

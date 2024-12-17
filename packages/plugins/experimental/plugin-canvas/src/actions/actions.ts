@@ -3,6 +3,8 @@
 //
 
 // TODO(burdon): Generalize.
+import { type Shape } from '../graph';
+
 export type Action =
   | { type: 'debug' }
   | { type: 'grid'; on?: boolean }
@@ -12,6 +14,12 @@ export type Action =
   | { type: 'zoom-out' }
   | {
       type: 'create';
+      shape?: Shape;
+    }
+  | {
+      type: 'link';
+      source: string;
+      target: string;
     }
   | {
       type: 'delete';

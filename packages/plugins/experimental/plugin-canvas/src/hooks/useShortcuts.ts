@@ -24,6 +24,7 @@ export const useShortcuts = (el: HTMLElement | null) => {
       type: 'keydown',
       listener: (ev: KeyboardEvent) => {
         // TODO(burdon): Util for keys.
+        // TODO(burdon): Make all shortcuts actions.
         switch (ev.key) {
           case 'a': {
             if (ev.metaKey) {
@@ -36,6 +37,15 @@ export const useShortcuts = (el: HTMLElement | null) => {
             handleAction({
               type: 'debug',
             });
+            break;
+          }
+
+          case "'": {
+            if (ev.metaKey) {
+              handleAction({
+                type: 'grid',
+              });
+            }
             break;
           }
 

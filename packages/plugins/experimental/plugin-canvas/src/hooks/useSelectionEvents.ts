@@ -6,7 +6,7 @@ import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { bind } from 'bind-event-listener';
 import { useEffect, useState } from 'react';
 
-import { getRect, type Rect, type Point, type Range } from '../layout';
+import { getBounds, type Rect, type Point, type Range } from '../layout';
 
 export type SelectionEvent = (rect: Rect | null, shift?: boolean) => void;
 
@@ -60,7 +60,7 @@ export const useSelectionEvents = (el: HTMLElement | null, cb?: SelectionEvent):
 
           setRange((range) => {
             if (range?.p1 && range?.p2) {
-              const bounds = getRect(range.p1, range.p2);
+              const bounds = getBounds(range.p1, range.p2);
               cb?.(bounds, ev.shiftKey);
             } else {
               cb?.(null);
@@ -73,5 +73,5 @@ export const useSelectionEvents = (el: HTMLElement | null, cb?: SelectionEvent):
     );
   }, [el, cb]);
 
-  return range?.p1 && range?.p2 ? getRect(range.p1, range.p2) : null;
+  return range?.p1 && range?.p2 ? getBounds(range.p1, range.p2) : null;
 };

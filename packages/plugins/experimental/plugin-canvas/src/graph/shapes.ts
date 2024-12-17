@@ -2,13 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { createPathThroughPoints, type Dimension, getBounds, getRect, type Point, type Rect } from '../layout';
+import { createPathThroughPoints, type Dimension, getRect, getBounds, type Point, type Rect } from '../layout';
 
 export type ShapeKind = 'rect' | 'line';
 
 export type BaseShape<T extends object = any> = {
   id: string;
   type: ShapeKind;
+  // TODO(burdon): Optional (in which case calculate).
   rect: Rect;
   data?: T;
 
@@ -44,7 +45,7 @@ type RectProps = CommonProps & {
 export const createRect = ({ id, pos, size, ...rest }: RectProps): ShapeType<'rect'> => ({
   id,
   type: 'rect',
-  rect: getBounds(pos, size),
+  rect: getRect(pos, size),
   pos,
   size,
   ...rest,
@@ -60,7 +61,7 @@ type LineProps = CommonProps & {
 export const createLine = ({ id, p1, p2, ...rest }: LineProps): ShapeType<'line'> => ({
   id,
   type: 'line',
-  rect: getRect(p1, p2),
+  rect: getBounds(p1, p2),
   path: createPathThroughPoints([p1, p2]),
   ...rest,
 });

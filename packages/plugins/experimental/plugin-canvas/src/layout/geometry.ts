@@ -36,23 +36,23 @@ export const getCenter = (rect: Rect): Point => ({
   y: rect.y + rect.height / 2,
 });
 
-export const getBounds = (center: Point, size: Dimension): Rect => ({
+export const getRect = (center: Point, size: Dimension): Rect => ({
   x: center.x - size.width / 2,
   y: center.y - size.height / 2,
   ...size,
 });
 
-export const getRect = (p1: Point, p2: Point): Rect => ({
+export const getBounds = (p1: Point, p2: Point): Rect => ({
   x: Math.min(p1.x, p2.x),
   y: Math.min(p1.y, p2.y),
   width: Math.abs(p1.x - p2.x),
   height: Math.abs(p1.y - p2.y),
 });
 
-export const rectOverlap = (b1: Rect, b2: Rect): boolean =>
+export const rectOverlaps = (b1: Rect, b2: Rect): boolean =>
   !(b1.x + b1.width <= b2.x || b1.x >= b2.x + b2.width || b1.y + b1.height <= b2.y || b1.y >= b2.y + b2.height);
 
-export const boundsContain = (b1: Rect, b2: Rect): boolean =>
+export const rectContains = (b1: Rect, b2: Rect): boolean =>
   b2.x >= b1.x && b2.y >= b1.y && b2.x + b2.width <= b1.x + b1.width && b2.y + b2.height <= b1.y + b1.height;
 
 export const findClosestIntersection = ([p1, p2]: Line, rect: Rect): Point | null => {

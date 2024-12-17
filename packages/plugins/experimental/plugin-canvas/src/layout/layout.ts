@@ -5,7 +5,7 @@
 import { Graph as NativeGraph, type PlainObject } from '@antv/graphlib';
 import { type D3ForceLayoutOptions, GridLayout, type GridLayoutOptions, type RadialLayoutOptions } from '@antv/layout';
 
-import { type Dimension, getBounds } from './geometry';
+import { type Dimension, getRect } from './geometry';
 import { type BaseShape, type Graph, GraphModel, type Node } from '../graph';
 
 // TODO(burdon): Util.
@@ -65,7 +65,7 @@ export const doLayout = async <N extends object>(
           text: label,
           pos: { x, y },
           size: shapeSize,
-          rect: getBounds({ x, y }, shapeSize),
+          rect: getRect({ x, y }, shapeSize),
           data: node.data,
         },
       });

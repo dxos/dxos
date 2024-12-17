@@ -5,6 +5,8 @@
 import * as d3 from 'd3';
 import { useCallback } from 'react';
 
+import { invariant } from '@dxos/invariant';
+
 import { useEditorContext } from './useEditorContext';
 import { getZoomTransform } from './useWheel';
 import { type ActionHandler } from '../actions';
@@ -29,10 +31,10 @@ export const useActionHandler = (): ActionHandler => {
       .tween('scale', () => (t) => setTransform(getZoomTransform({ scale, newScale: is(t), offset, pos })));
   };
 
+  // TODO(burdon): Handle multiple.
   return useCallback<ActionHandler>(
     (action) => {
       const { type } = action;
-
       switch (type) {
         case 'debug': {
           setDebug((debug) => !debug);
@@ -74,9 +76,19 @@ export const useActionHandler = (): ActionHandler => {
 
         // TODO(burdon): Factor out graph handlers. Undo.
         case 'create': {
-          const id = createId();
-          graph.addNode({ id, data: createRect({ id, pos: { x: 0, y: 0 }, size: itemSize }) });
-          selection.setSelected([id]);
+          let { shape } = action;
+          if (!shape) {
+            const id = createId();
+            shape = createRect({ id, pos: { x: 0, y: 0 }, size: itemSize });
+          }
+          invariant(shape);
+          graph.addNode({ id: shape.id, data: shape });
+          selection.setSelected([shape.id]);
+          return true;
+        }
+        case 'link': {
+          const { source, target } = action;
+          graph.addEdge({ id: createId(), source, target });
           return true;
         }
         case 'delete': {

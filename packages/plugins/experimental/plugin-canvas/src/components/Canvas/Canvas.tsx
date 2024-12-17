@@ -14,7 +14,7 @@ import { type DragPayloadData, FrameDragPreview, Line, Shapes, useLayout, useSel
 import { createLine, createRect, type Shape, type ShapeType } from '../../graph';
 import { useActionHandler, useEditorContext, useShortcuts, useSnap, useTransform } from '../../hooks';
 import { useWheel } from '../../hooks/useWheel';
-import { boundsToModel, findClosestIntersection, getBounds, getInputPoint, type Point } from '../../layout';
+import { boundsToModel, findClosestIntersection, getRect, getInputPoint, type Point } from '../../layout';
 import { createId, itemSize } from '../../testing';
 import { Grid } from '../Grid';
 import { eventsNone, styles } from '../styles';
@@ -78,7 +78,7 @@ export const Canvas = () => {
         {/* Linking overlay. */}
         {overlay && (
           <div className='absolute' style={transformStyles}>
-            <Line shape={overlay} />
+            <Line scale={scale} shape={overlay} />
           </div>
         )}
 
@@ -99,31 +99,36 @@ export const Canvas = () => {
  * Monitor frames and anchors being dragged.
  */
 const useDragMonitor = (el: HTMLElement | null) => {
-  const { scale, offset, graph, selection, setDragging, setLinking } = useEditorContext();
+  const { scale, offset, selection, setDragging, setLinking } = useEditorContext();
+  const actionHandler = useActionHandler();
   const snapPoint = useSnap();
 
   const [frameDragging, setFrameDragging] = useState<Shape>();
   const [overlay, setOverlay] = useState<ShapeType<'line'>>();
   const cancelled = useRef(false);
 
+  const lastPointRef = useRef<Point>();
   useEffect(() => {
     return monitorForElements({
+      // NOTE: This seems to be continually called.
       onDrag: ({ source, location }) => {
         invariant(el);
         const rect = el.getBoundingClientRect();
         const { x, y } = boundsToModel(rect, scale, offset, getInputPoint(location.current.input));
         const pos = { x, y };
         const { type, shape } = source.data as DragPayloadData<ShapeType<'rect'>>;
+        if (x !== lastPointRef.current?.x || y !== lastPointRef.current?.y) {
+          lastPointRef.current = pos;
+          switch (type) {
+            case 'frame': {
+              setFrameDragging({ ...shape, pos });
+              break;
+            }
 
-        switch (type) {
-          case 'frame': {
-            setFrameDragging({ ...shape, pos });
-            break;
-          }
-
-          case 'anchor': {
-            setOverlay(createLineOverlay(shape, pos));
-            break;
+            case 'anchor': {
+              setOverlay(createLineOverlay(shape, pos));
+              break;
+            }
           }
         }
       },
@@ -146,7 +151,7 @@ const useDragMonitor = (el: HTMLElement | null) => {
           switch (type) {
             case 'frame': {
               shape.pos = snapPoint(pos);
-              shape.rect = getBounds(shape.pos, shape.size);
+              shape.rect = getRect(shape.pos, shape.size);
               break;
             }
 
@@ -155,12 +160,11 @@ const useDragMonitor = (el: HTMLElement | null) => {
                 .shape as Shape;
               let id = target?.id;
               if (!id) {
-                // TODO(burdon): Use action handler to reuse undo.
                 id = createId();
-                graph.addNode({ id, data: createRect({ id, pos: snapPoint(pos), size: itemSize }) });
-                selection.setSelected([id]);
+                const shape = createRect({ id, pos: snapPoint(pos), size: itemSize });
+                actionHandler({ type: 'create', shape });
               }
-              graph.addEdge({ id: createId(), source: shape.id, target: id, data: {} });
+              actionHandler({ type: 'link', source: shape.id, target: id });
               break;
             }
           }
@@ -172,7 +176,7 @@ const useDragMonitor = (el: HTMLElement | null) => {
         setOverlay(undefined);
       },
     });
-  }, [el, graph, selection, scale, offset, snapPoint]);
+  }, [el, actionHandler, selection, scale, offset, snapPoint]);
 
   return { frameDragging, overlay };
 };

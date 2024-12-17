@@ -9,16 +9,10 @@ import { useDynamicRef } from '@dxos/react-ui';
 
 import { Frame } from './Frame';
 import { Line } from './Line';
+import { type BaseShapeProps } from './base';
 import { createLine, type GraphModel, type Shape, type ShapeType } from '../../../graph';
 import { type SelectionEvent, useEditorContext, useSelectionEvents } from '../../../hooks';
-import {
-  boundsContain,
-  boundsToModel,
-  findClosestIntersection,
-  getBounds,
-  type Point,
-  type Rect,
-} from '../../../layout';
+import { rectContains, boundsToModel, findClosestIntersection, getRect, type Point, type Rect } from '../../../layout';
 import { testId } from '../../util';
 
 /**
@@ -30,29 +24,18 @@ export type DragPayloadData<S extends ShapeType> = {
   shape: S;
 };
 
-export const ShapeComponent = ({ shape }: { shape: Shape }) => {
-  const { scale, selection } = useEditorContext();
-  const { id, type } = shape;
+// TODO(burdon): Create factory.
+export const ShapeComponent = (props: BaseShapeProps<any>) => {
+  const {
+    shape: { type },
+  } = props;
   switch (type) {
     case 'rect': {
-      return (
-        <Frame
-          shape={shape}
-          scale={scale}
-          selected={selection.contains(id)}
-          onSelect={(id, shift) => selection.toggleSelected([id], shift)}
-        />
-      );
+      return <Frame {...(props as BaseShapeProps<'rect'>)} />;
     }
 
     case 'line': {
-      return (
-        <Line
-          shape={shape}
-          selected={selection.contains(id)}
-          onSelect={(id, shift) => selection.toggleSelected([id], shift)}
-        />
-      );
+      return <Line {...(props as BaseShapeProps<'line'>)} />;
     }
 
     default:
@@ -64,10 +47,22 @@ export const ShapeComponent = ({ shape }: { shape: Shape }) => {
  * Render shapes.
  */
 export const Shapes = ({ shapes, style }: { shapes: Shape[]; style: CSSProperties }) => {
+  const { scale, selection } = useEditorContext();
+  const handleSelection = useCallback(
+    (id: string, shift: boolean) => selection.toggleSelected([id], shift),
+    [selection],
+  );
+
   return (
     <div {...testId('dx-shapes')} className='absolute' style={style}>
       {shapes.map((shape) => (
-        <ShapeComponent key={shape.id} shape={shape} />
+        <ShapeComponent
+          key={shape.id}
+          shape={shape}
+          scale={scale}
+          selected={selection.contains(shape.id)}
+          onSelect={handleSelection}
+        />
       ))}
     </div>
   );
@@ -89,12 +84,12 @@ export const useLayout = (graph: GraphModel, dragging?: Shape, debug?: boolean):
         invariant(dragging.type === 'rect');
         return {
           center: dragging.pos,
-          bounds: getBounds(dragging.pos, dragging.size),
+          bounds: getRect(dragging.pos, dragging.size),
         };
       } else {
         return {
           center: node.data.pos,
-          bounds: getBounds(node.data.pos, node.data.size),
+          bounds: getRect(node.data.pos, node.data.size),
         };
       }
     }
@@ -148,7 +143,7 @@ export const useSelectionHandler = (el: HTMLElement | null, shapes: Shape[]) => 
           switch (shape.type) {
             case 'rect':
             case 'line':
-              return boundsContain(selectionBounds, shape.rect);
+              return rectContains(selectionBounds, shape.rect);
 
             default:
               return false;

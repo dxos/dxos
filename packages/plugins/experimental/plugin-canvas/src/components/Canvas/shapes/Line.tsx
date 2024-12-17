@@ -6,16 +6,11 @@ import React from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
 
-import { type ShapeType } from '../../../graph';
+import type { BaseShapeProps } from './base';
 import { eventsAuto, eventsNone, styles } from '../../styles';
 import { Markers } from '../../svg';
 
-// TODO(burdon): Reconcile with Frame.
-export type LineProps = {
-  shape: ShapeType<'line'>;
-  selected?: boolean;
-  onSelect?: (id: string, shift: boolean) => void;
-};
+export type LineProps = BaseShapeProps<'line'>;
 
 /**
  * Line shapes.
