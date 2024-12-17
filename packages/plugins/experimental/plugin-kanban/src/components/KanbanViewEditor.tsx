@@ -10,7 +10,7 @@ import { ViewEditor } from '@dxos/react-ui-form';
 import { type KanbanType } from '@dxos/react-ui-kanban';
 
 import { KANBAN_PLUGIN } from '../meta';
-import {KanbanAction} from '../types';
+import { KanbanAction } from '../types';
 
 type KanbanViewEditorProps = { kanban: KanbanType };
 
@@ -51,7 +51,9 @@ const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
     return null;
   }
 
-  return <ViewEditor registry={space.db.schemaRegistry} schema={schema} view={kanban.cardView} onDelete={handleDelete} />;
+  return (
+    <ViewEditor registry={space.db.schemaRegistry} schema={schema} view={kanban.cardView} onDelete={handleDelete} />
+  );
 };
 
 export default KanbanViewEditor;
