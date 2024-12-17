@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type Meta } from '@storybook/react';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { type MutableSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -56,13 +56,30 @@ const StorybookKanban = () => {
     items: filteredObjects,
   });
 
+  const handleAddColumn = useCallback((columnValue: string) => model?.addEmptyColumn(columnValue), [model]);
+
+  const handleAddCard = useCallback(
+    async (columnValue: string) => {
+      if (space && cardSchema) {
+        space.db.add(
+          create(cardSchema, {
+            title: faker.commerce.productName(),
+            description: faker.lorem.paragraph(),
+            state: columnValue,
+          }),
+        );
+      }
+    },
+    [space, cardSchema],
+  );
+
   if (!cardSchema || !kanban) {
     return null;
   }
 
   return (
     <div className='grow grid grid-cols-[1fr_350px]'>
-      {model ? <Kanban model={model} columns={stateColumns} /> : <div />}
+      {model ? <Kanban model={model} onAddCard={handleAddCard} onAddColumn={handleAddColumn} /> : <div />}
       <div className='flex flex-col bs-full border-is border-separator overflow-y-auto'>
         {kanban.cardView && (
           <ViewEditor

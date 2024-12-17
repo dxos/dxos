@@ -10,6 +10,7 @@ export default [
       [translationKey]: {
         'add card label': 'Add new card',
         'add column label': 'Add new column',
+        'new column name label': 'New column name',
       },
     },
   },

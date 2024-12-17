@@ -85,6 +85,12 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     return this._arrangement.value;
   }
 
+  public addEmptyColumn(columnValue: string) {
+    // @ts-ignore
+    this._kanban.arrangement!.push({ columnValue, ids: [] });
+    this._arrangement.value = this._computeArrangement();
+  }
+
   public onRearrange: StackItemRearrangeHandler = (source, target, closestEdge) => {
     const nextArrangement = this.arrangement;
     const sourceColumn = nextArrangement.find(
