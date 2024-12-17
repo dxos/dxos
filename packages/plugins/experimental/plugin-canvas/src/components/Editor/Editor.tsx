@@ -172,7 +172,7 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
         className={mx('relative w-full h-full overflow-hidden', classNames)}
       >
         {/* TODO(burdon): Change scope based on attention. */}
-        <HotkeysProvider initiallyActiveScopes={['attention']}>
+        <HotkeysProvider initiallyActiveScopes={['plugin-canvas']}>
           <EditorContext.Provider value={context}>{children}</EditorContext.Provider>
         </HotkeysProvider>
       </div>

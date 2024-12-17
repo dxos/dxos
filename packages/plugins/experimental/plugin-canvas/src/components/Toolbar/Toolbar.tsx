@@ -13,7 +13,6 @@ export type ToolbarProps = ThemedClassName<{
   onAction?: ActionHandler;
 }>;
 
-// TODO(burdon): Generalize state management.
 export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
   const handleAction: ActionHandler = (action) => {
     return onAction?.(action) ?? false;

@@ -7,6 +7,8 @@ import { useHotkeys } from 'react-hotkeys-hook';
 import { useActionHandler } from './useActionHandler';
 import { useEditorContext } from './useEditorContext';
 
+const options = { scopes: 'plugin-canvas' };
+
 /**
  * Handle keyboard shortcuts.
  */
@@ -20,7 +22,7 @@ export const useShortcuts = () => {
       handleAction({
         type: 'debug',
       }),
-    { scopes: 'attention' },
+    options,
   );
   useHotkeys(
     'meta+a',
@@ -29,7 +31,7 @@ export const useShortcuts = () => {
         type: 'select',
         ids: [...graph.nodes.map((node) => node.id), ...graph.edges.map((edge) => edge.id)],
       }),
-    { scopes: 'attention' },
+    options,
   );
   useHotkeys(
     "meta+'",
@@ -37,7 +39,7 @@ export const useShortcuts = () => {
       handleAction({
         type: 'grid',
       }),
-    { scopes: 'attention' },
+    options,
   );
   useHotkeys(
     'Home',
@@ -45,7 +47,7 @@ export const useShortcuts = () => {
       handleAction({
         type: 'home',
       }),
-    { scopes: 'attention' },
+    options,
   );
   useHotkeys(
     'Backspace',
@@ -54,6 +56,6 @@ export const useShortcuts = () => {
         type: 'delete',
         ids: [...selection.ids],
       }),
-    { scopes: 'attention' },
+    options,
   );
 };
