@@ -10,7 +10,7 @@ import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { type AbstractSchema, type S } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { stripUndefinedValues } from '@dxos/util';
+import { stripUndefined } from '@dxos/util';
 
 import { type ValueGenerator, createArrayPipeline, createGenerator, createObjectPipeline } from './generator';
 import { Testing } from './types';
@@ -44,7 +44,7 @@ const queryObjects = async (db: EchoDatabase, specs: TypeSpec[]) => {
     expect(objects).to.have.length(count);
     log.info('objects', {
       typename: type.typename,
-      objects: objects.map((obj) => stripUndefinedValues({ name: obj.name, employer: obj.employer?.name })),
+      objects: objects.map((obj) => stripUndefined({ name: obj.name, employer: obj.employer?.name })),
     });
   }
 };

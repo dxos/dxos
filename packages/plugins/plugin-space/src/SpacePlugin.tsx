@@ -7,7 +7,6 @@ import React from 'react';
 
 import {
   type GraphProvides,
-  type IntentDispatcher,
   type IntentPluginProvides,
   LayoutAction,
   type LayoutProvides,
@@ -15,6 +14,7 @@ import {
   NavigationAction,
   type Plugin,
   type PluginDefinition,
+  PromiseIntentDispatcher,
   Surface,
   createIntent,
   createResolver,
@@ -155,7 +155,7 @@ export type SpacePluginOptions = {
    * @param params.client DXOS Client
    * @param params.dispatch Function to dispatch intents
    */
-  onFirstRun?: (params: { client: Client; dispatch: IntentDispatcher }) => Promise<void>;
+  onFirstRun?: (params: { client: Client; dispatch: PromiseIntentDispatcher }) => Promise<void>;
 };
 
 export const SpacePlugin = ({
@@ -420,7 +420,7 @@ export const SpacePlugin = ({
       }
 
       const client = clientPlugin.provides.client;
-      const dispatch = intentPlugin.provides.intent.dispatch;
+      const dispatch = intentPlugin.provides.intent.dispatchPromise;
 
       schemas.push(
         ...filterPlugins(plugins, parseSchemaPlugin)

@@ -112,6 +112,7 @@ export const ListItem = <T extends ListItemRecord>({ children, classNames, item 
                   container.style.width = rect.width + 'px';
                   setState({ type: 'preview', container });
                   setRootState({ type: 'preview', container, item });
+                  return () => {}; // TODO(burdon): Cleanup.
                 },
               });
             }

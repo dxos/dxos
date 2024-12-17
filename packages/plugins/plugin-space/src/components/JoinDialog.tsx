@@ -20,7 +20,7 @@ export type JoinDialogProps = JoinPanelProps & {
   navigableCollections?: boolean;
 };
 
-export const JoinDialog = ({ navigableCollections, ...props }: JoinDialogProps) => {
+export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialogProps) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const spaces = useSpaces();
@@ -64,6 +64,8 @@ export const JoinDialog = ({ navigableCollections, ...props }: JoinDialogProps) 
           dispatch(createIntent(NavigationAction.Expose, { id: target })),
         ]);
       }
+
+      await onDone?.(result);
 
       if (space) {
         await dispatch(

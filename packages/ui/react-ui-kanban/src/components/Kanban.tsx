@@ -45,7 +45,7 @@ export const Kanban = ({ model, columns }: KanbanProps) => {
             <Stack orientation='vertical' size='contain' rail={false} classNames='pbe-1'>
               {cards.map((card) => (
                 <StackItem.Root key={card.id} item={card} onRearrange={model.onRearrange} classNames='plb-1 pli-2'>
-                  <div role='none' className='rounded bg-base'>
+                  <div role='none' className='rounded bg-[--surface-bg]'>
                     <StackItem.DragHandle asChild>
                       <IconButton iconOnly icon='ph--dots-six' variant='ghost' label={t('card drag handle label')} />
                     </StackItem.DragHandle>

@@ -5,13 +5,13 @@
 import React from 'react';
 
 import { type PluginDefinition, createSurface, createIntent, createResolver } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
-import { loadObjectReferences } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
+import { KanbanType } from '@dxos/react-ui-kanban';
 
-import { KanbanMain } from './components';
+import { KanbanContainer } from './components';
+import { createKanban } from './components/create-kanban';
 import meta, { KANBAN_PLUGIN } from './meta';
 import translations from './translations';
-import { KanbanColumnType, KanbanItemType, KanbanType } from './types';
 import { KanbanAction, type KanbanPluginProvides } from './types';
 
 export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
@@ -21,25 +21,14 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
       metadata: {
         records: {
           [KanbanType.typename]: {
-            createObject: (props: { name?: string }) => createIntent(KanbanAction.Create, props),
+            createObject: (props: { name?: string, space: Space }) => createIntent(KanbanAction.Create, props),
             placeholder: ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
             icon: 'ph--kanban--regular',
-            // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (kanban: KanbanType) => loadObjectReferences(kanban, (kanban) => kanban.columns),
-          },
-          [KanbanColumnType.typename]: {
-            // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (column: KanbanColumnType) => loadObjectReferences(column, (column) => column.items),
-          },
-          [KanbanItemType.typename]: {
-            // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (item: KanbanItemType) => [], // loadObjectReferences(item, (item) => item.object),
           },
         },
       },
       echo: {
         schema: [KanbanType],
-        system: [KanbanColumnType, KanbanItemType],
       },
       translations,
       surface: {
@@ -48,13 +37,13 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
             id: KANBAN_PLUGIN,
             role: 'article',
             filter: (data): data is { subject: KanbanType } => data.subject instanceof KanbanType,
-            component: ({ data }) => <KanbanMain kanban={data.subject} />,
+            component: ({ data, role }) => <KanbanContainer kanban={data.subject} role={role} />,
           }),
       },
       intent: {
         resolvers: () =>
-          createResolver(KanbanAction.Create, ({ name }) => ({
-            data: { object: create(KanbanType, { name, columns: [] }) },
+          createResolver(KanbanAction.Create, ({ space }) => ({
+            data: { object: createKanban(space) },
           })),
       },
     },

@@ -9,5 +9,30 @@
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../async"
+    },
+    {
+      "path": "../codec-protobuf"
+    },
+    {
+      "path": "../context"
+    },
+    {
+      "path": "../invariant"
+    },
+    {
+      "path": "../log"
+    },
+    {
+      "path": "../node-std"
+    },
+    {
+      "path": "../util"
+    }
+  ]
 }

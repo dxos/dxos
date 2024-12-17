@@ -70,8 +70,12 @@ export type SurfaceComponent<T extends Record<string, any> = Record<string, unkn
 
 /**
  * Determines the priority of the surface when multiple components are resolved.
+ *
+ * - `static` - The component is rendered in the order it was resolved.
+ * - `hoist` - The component is rendered before `static` components.
+ * - `fallback` - The component is rendered after `static` components.
  */
-export type SurfaceDisposition = 'default' | 'hoist' | 'fallback';
+export type SurfaceDisposition = 'static' | 'hoist' | 'fallback';
 
 /**
  * Definition of when a SurfaceComponent should be rendered.

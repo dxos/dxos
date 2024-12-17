@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protobuf-compiler",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -40,10 +40,10 @@
     "expect": "^27.0.2",
     "mocha": "^10.6.0",
     "ts-node": "10.9.1",
-    "typescript": "^5.6.2"
+    "typescript": "^5.7.2"
   },
   "peerDependencies": {
-    "typescript": "^5.6.2"
+    "typescript": "^5.7.2"
   },
   "publishConfig": {
     "access": "public"

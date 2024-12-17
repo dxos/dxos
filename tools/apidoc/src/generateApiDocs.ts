@@ -3,6 +3,7 @@
 //
 
 import * as url from 'url';
+import { URL } from 'url';
 
 import { type Config } from './config.js';
 import { loadTypedocJson } from './loadTypedocJson.js';

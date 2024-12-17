@@ -143,6 +143,7 @@ export namespace SpaceAction {
   export class Join extends S.TaggedClass<Join>()(`${SPACE_ACTION}/join`, {
     input: S.Struct({
       invitationCode: S.optional(S.String),
+      onDone: S.optional(S.Any),
     }),
     output: S.Void,
   }) {}

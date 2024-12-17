@@ -10,5 +10,9 @@
     "scripts",
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../keys"
+    }
+  ]
 }

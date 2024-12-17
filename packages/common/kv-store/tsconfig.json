@@ -5,5 +5,15 @@
     "src",
     "test"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../keys"
+    },
+    {
+      "path": "../node-std"
+    },
+    {
+      "path": "../test-utils"
+    }
+  ]
 }
