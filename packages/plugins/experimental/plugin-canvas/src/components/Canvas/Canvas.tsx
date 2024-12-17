@@ -99,7 +99,7 @@ export const Canvas = () => {
  * Monitor frames and anchors being dragged.
  */
 const useDragMonitor = (el: HTMLElement | null) => {
-  const { graph, scale, offset, selection, setDragging, setLinking } = useEditorContext();
+  const { graph, scale, offset, selection, dragging, setDragging, linking, setLinking } = useEditorContext();
   const actionHandler = useActionHandler();
   const snapPoint = useSnap();
 
@@ -120,12 +120,16 @@ const useDragMonitor = (el: HTMLElement | null) => {
           lastPointRef.current = pos;
           switch (type) {
             case 'frame': {
-              setFrameDragging({ ...shape, pos });
+              if (dragging) {
+                setFrameDragging({ ...shape, pos });
+              }
               break;
             }
 
             case 'anchor': {
-              setOverlay(createLineOverlay(shape, pos));
+              if (linking) {
+                setOverlay(createLineOverlay(shape, pos));
+              }
               break;
             }
           }
@@ -178,7 +182,7 @@ const useDragMonitor = (el: HTMLElement | null) => {
         setOverlay(undefined);
       },
     });
-  }, [el, actionHandler, selection, scale, offset, snapPoint]);
+  }, [el, actionHandler, selection, scale, offset, snapPoint, dragging, linking]);
 
   return { frameDragging, overlay };
 };
