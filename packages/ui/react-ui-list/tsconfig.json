@@ -14,5 +14,48 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/random"
+    },
+    {
+      "path": "../../common/storybook-utils"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../core/echo/live-object"
+    },
+    {
+      "path": "../react-ui"
+    },
+    {
+      "path": "../react-ui-attention"
+    },
+    {
+      "path": "../react-ui-mosaic"
+    },
+    {
+      "path": "../react-ui-text-tooltip"
+    },
+    {
+      "path": "../react-ui-theme"
+    },
+    {
+      "path": "../react-ui-types"
+    }
+  ]
 }
