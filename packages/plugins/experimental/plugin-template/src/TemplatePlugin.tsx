@@ -4,11 +4,17 @@
 
 import React from 'react';
 
-import { resolvePlugin, parseIntentPlugin, type PluginDefinition, NavigationAction } from '@dxos/app-framework';
+import {
+  resolvePlugin,
+  parseIntentPlugin,
+  type PluginDefinition,
+  NavigationAction,
+  createSurface,
+} from '@dxos/app-framework';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
-import { create } from '@dxos/react-client/echo';
+import { create, type ReactiveEchoObject } from '@dxos/react-client/echo';
 
 import { TemplateMain } from './components';
 import meta, { TEMPLATE_PLUGIN } from './meta';
@@ -73,15 +79,13 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
         },
       },
       surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'main': {
-              return isObject(data.active) ? <TemplateMain object={data.active} /> : null;
-            }
-          }
-
-          return null;
-        },
+        definitions: () =>
+          createSurface({
+            id: TEMPLATE_PLUGIN,
+            role: 'article',
+            filter: (data): data is { subject: ReactiveEchoObject<any> } => isObject(data.subject),
+            component: ({ data }) => <TemplateMain object={data.subject} />,
+          }),
       },
       intent: {
         resolver: (intent) => {

@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type ReactNode, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import {
+  createSurface,
   definePlugin,
   parseGraphPlugin,
   parseIntentPlugin,
@@ -26,17 +27,11 @@ import {
   isEchoObject,
   isSpace,
   parseId,
+  type ReactiveEchoObject,
   type ReactiveObject,
   type Space,
   SpaceState,
 } from '@dxos/react-client/echo';
-import { Main } from '@dxos/react-ui';
-import {
-  baseSurface,
-  bottombarBlockPaddingEnd,
-  fixedInsetFlexLayout,
-  topbarBlockPaddingStart,
-} from '@dxos/react-ui-theme';
 
 import {
   DebugApp,
@@ -57,6 +52,18 @@ import {
   DebugSettingsSchema,
 } from './types';
 
+type SpaceDebug = {
+  type: string;
+  space: Space;
+};
+
+type GraphDebug = {
+  graph: Graph;
+};
+
+const isSpaceDebug = (data: any): data is SpaceDebug => data.type === `${DEBUG_PLUGIN}/space` && isSpace(data.space);
+const isGraphDebug = (data: any): data is GraphDebug => data.graph instanceof Graph;
+
 export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
   const settings = create<DebugSettingsProps>({
     debug: true,
@@ -65,7 +72,7 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
 
   return {
     meta,
-    ready: async (plugins) => {
+    ready: async ({ plugins }) => {
       context.init(plugins);
       context.resolvePlugin(parseSettingsPlugin).provides.settingsStore.createStore({
         schema: DebugSettingsSchema,
@@ -294,95 +301,83 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
         },
       },
       surface: {
-        component: ({ name, data, role }) => {
-          switch (role) {
-            case 'settings':
-              return data.plugin === meta.id ? <DebugSettings settings={settings} /> : null;
-            case 'status':
-              return <DebugStatus />;
-            case 'complementary--debug':
-              return isEchoObject(data.subject) ? <DebugObjectPanel object={data.subject} /> : null;
-          }
+        definitions: () => [
+          createSurface({
+            id: `${DEBUG_PLUGIN}/settings`,
+            role: 'settings',
+            filter: (data): data is any => data.subject === DEBUG_PLUGIN,
+            component: () => <DebugSettings settings={settings} />,
+          }),
+          createSurface({
+            id: `${DEBUG_PLUGIN}/status`,
+            role: 'status',
+            component: () => <DebugStatus />,
+          }),
+          createSurface({
+            id: `${DEBUG_PLUGIN}/complementary`,
+            role: 'complementary--debug',
+            filter: (data): data is { subject: ReactiveEchoObject<any> } => isEchoObject(data.subject),
+            component: ({ data }) => <DebugObjectPanel object={data.subject} />,
+          }),
+          createSurface({
+            id: `${DEBUG_PLUGIN}/devtools`,
+            role: 'article',
+            filter: (data): data is any => data.subject === 'devtools' && !!settings.devtools,
+            component: () => <Devtools />,
+          }),
+          createSurface({
+            id: `${DEBUG_PLUGIN}/space`,
+            role: 'article',
+            filter: (data): data is { subject: SpaceDebug } => isSpaceDebug(data.subject),
+            component: ({ data }) => {
+              const handleCreateObject = useCallback(
+                (objects: ReactiveObject<any>[]) => {
+                  if (!isSpace(data.subject.space)) {
+                    return;
+                  }
 
-          const primary = data.active ?? data.object;
-          let component: ReactNode = null;
-          if (role === 'main' || role === 'article') {
-            if (primary === 'devtools' && settings.devtools) {
-              component = <Devtools />;
-            } else if (!primary || typeof primary !== 'object' || !settings.debug) {
-              component = null;
-            } else if (
-              'type' in primary &&
-              primary.type === 'dxos.org/plugin/debug/space' &&
-              'space' in primary &&
-              isSpace(primary.space)
-            ) {
-              const handleCreateObject = (objects: ReactiveObject<any>[]) => {
-                if (!isSpace(primary.space)) {
-                  return;
-                }
+                  const collection =
+                    data.subject.space.state.get() === SpaceState.SPACE_READY &&
+                    data.subject.space.properties[CollectionType.typename];
+                  if (!(collection instanceof CollectionType)) {
+                    return;
+                  }
 
-                const collection =
-                  primary.space.state.get() === SpaceState.SPACE_READY &&
-                  primary.space.properties[CollectionType.typename];
-                if (!(collection instanceof CollectionType)) {
-                  return;
-                }
-
-                void context.resolvePlugin(parseIntentPlugin).provides.intent.dispatch(
-                  objects.map((object) => ({
-                    action: SpaceAction.ADD_OBJECT,
-                    data: { target: collection, object },
-                  })),
-                );
-              };
+                  void context.resolvePlugin(parseIntentPlugin).provides.intent.dispatch(
+                    objects.map((object) => ({
+                      action: SpaceAction.ADD_OBJECT,
+                      data: { target: collection, object },
+                    })),
+                  );
+                },
+                [data.subject.space],
+              );
 
               const deprecated = false;
-              component = deprecated ? (
-                <DebugSpace space={primary.space} onAddObjects={handleCreateObject} />
+              return deprecated ? (
+                <DebugSpace space={data.subject.space} onAddObjects={handleCreateObject} />
               ) : (
-                <SpaceGenerator space={primary.space} onCreateObjects={handleCreateObject} />
+                <SpaceGenerator space={data.subject.space} onCreateObjects={handleCreateObject} />
               );
-            } else if ('graph' in primary && primary.graph instanceof Graph) {
-              component = <DebugApp graph={primary.graph} />;
-            }
-          }
-
-          if (!component) {
-            if (settings.wireframe) {
-              if (role === 'main' || role === 'article' || role === 'section') {
-                const primary = data.active ?? data.object;
-                const isCollection = primary instanceof CollectionType;
-                // TODO(burdon): Move into Container abstraction.
-                if (!isCollection) {
-                  return {
-                    node: (
-                      <Wireframe label={`${role}:${name}`} object={primary} classNames='row-span-2 overflow-hidden' />
-                    ),
-                    disposition: 'hoist',
-                  };
-                }
-              }
-            }
-
-            return null;
-          }
-
-          switch (role) {
-            case 'article':
-              return <>{component}</>;
-            case 'main':
-              return (
-                <Main.Content
-                  classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}
-                >
-                  {component}
-                </Main.Content>
-              );
-          }
-
-          return null;
-        },
+            },
+          }),
+          createSurface({
+            id: `${DEBUG_PLUGIN}/graph`,
+            role: 'article',
+            filter: (data): data is { subject: GraphDebug } => isGraphDebug(data.subject),
+            component: ({ data }) => <DebugApp graph={data.subject.graph} />,
+          }),
+          createSurface({
+            id: `${DEBUG_PLUGIN}/wireframe`,
+            role: ['article', 'section'],
+            disposition: 'hoist',
+            filter: (data): data is { subject: ReactiveEchoObject<any> } =>
+              isEchoObject(data.subject) && !!settings.wireframe,
+            component: ({ data, role }) => (
+              <Wireframe label={`${role}:${name}`} object={data.subject} classNames='row-span-2 overflow-hidden' />
+            ),
+          }),
+        ],
       },
     },
   };

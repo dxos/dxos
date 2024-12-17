@@ -4,12 +4,24 @@
 
 import React from 'react';
 
-import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import {
+  resolvePlugin,
+  type PluginDefinition,
+  parseIntentPlugin,
+  LayoutAction,
+  createSurface,
+} from '@dxos/app-framework';
 import { createExtension, type Node } from '@dxos/app-graph';
 import { create } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 
-import { HelpContextProvider, ShortcutsDialogContent, ShortcutsHints, ShortcutsList } from './components';
+import {
+  HelpContextProvider,
+  SHORTCUTS_DIALOG,
+  ShortcutsDialogContent,
+  ShortcutsHints,
+  ShortcutsList,
+} from './components';
 import meta, { HelpAction, HELP_PLUGIN } from './meta';
 import translations from './translations';
 import { type Step, type HelpPluginProvides } from './types';
@@ -83,7 +95,7 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
                     action: LayoutAction.SET_LAYOUT,
                     data: {
                       element: 'dialog',
-                      component: `${HELP_PLUGIN}/Shortcuts`,
+                      component: SHORTCUTS_DIALOG,
                     },
                   });
                 },
@@ -100,21 +112,24 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
         },
       },
       surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'hints':
-              return <ShortcutsHints />;
-            case 'keyshortcuts':
-              return <ShortcutsList />;
-          }
-
-          switch (data.component) {
-            case `${HELP_PLUGIN}/Shortcuts`:
-              return <ShortcutsDialogContent />;
-          }
-
-          return null;
-        },
+        definitions: () => [
+          createSurface({
+            id: `${HELP_PLUGIN}/hints`,
+            role: 'hints',
+            component: () => <ShortcutsHints />,
+          }),
+          createSurface({
+            id: `${HELP_PLUGIN}/keyshortcuts`,
+            role: 'keyshortcuts',
+            component: () => <ShortcutsList />,
+          }),
+          createSurface({
+            id: SHORTCUTS_DIALOG,
+            role: 'dialog',
+            filter: (data): data is any => data.component === SHORTCUTS_DIALOG,
+            component: () => <ShortcutsDialogContent />,
+          }),
+        ],
       },
       intent: {
         resolver: async (intent) => {

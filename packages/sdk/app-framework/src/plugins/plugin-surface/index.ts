@@ -9,6 +9,6 @@ export * from './provides';
 
 export * from './ErrorBoundary';
 export * from './Surface';
-export * from './SurfaceRootContext';
+export * from './SurfaceContext';
 
 export default SurfacePlugin;

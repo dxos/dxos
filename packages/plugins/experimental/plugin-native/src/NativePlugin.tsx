@@ -166,7 +166,7 @@ const initializeNativeApp = async (plugins: Plugin[]) => {
 // TODO(burdon): Initial url has index.html, which must be caught/redirected.
 export const NativePlugin = (): PluginDefinition => ({
   meta,
-  ready: async (plugins) => {
+  ready: async ({ plugins }) => {
     await initializeNativeApp(plugins);
   },
 });

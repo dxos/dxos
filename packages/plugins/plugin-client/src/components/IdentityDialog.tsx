@@ -9,7 +9,9 @@ import { useClient } from '@dxos/react-client';
 import { Clipboard, Dialog } from '@dxos/react-ui';
 import { IdentityPanel, type IdentityPanelProps } from '@dxos/shell/react';
 
-import { ClientAction } from '../meta';
+import { CLIENT_PLUGIN, ClientAction } from '../meta';
+
+export const IDENTITY_DIALOG = `${CLIENT_PLUGIN}/IdentityDialog`;
 
 export const IdentityDialog = (props: IdentityPanelProps) => {
   const dispatch = useIntentDispatcher();

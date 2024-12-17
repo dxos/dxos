@@ -37,9 +37,9 @@ export const DebugSurface = ({ classNames }: SurfaceDebugProps) => {
   return (
     <div className={mx('flex flex-col border border-separator overflow-hidden bg-modalSurface', classNames)}>
       <div className='flex flex-col h-full w-full p-2'>
-        {surfaces.map(({ id, name, renderCount }) => (
+        {surfaces.map(({ id, role, renderCount }) => (
           <div key={id} className='grid grid-cols-[1fr_3rem_3rem] items-center text-xs font-mono whitespace-nowrap'>
-            <span className='px-1 truncate'>{name}</span>
+            <span className='px-1 truncate'>{role}</span>
             <span className='px-1 text-right'>{renderCount}</span>
             <span className='px-1 text-right'>{renderMap.get(id)?.delta}</span>
           </div>

@@ -37,7 +37,6 @@
     "@dxos/plugin-excalidraw": "workspace:*",
     "@dxos/plugin-explorer": "workspace:*",
     "@dxos/plugin-files": "workspace:*",
-    "@dxos/plugin-github": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-help": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
