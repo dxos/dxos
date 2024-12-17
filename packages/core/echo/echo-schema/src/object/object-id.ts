@@ -13,7 +13,7 @@ export const ObjectIdSchema = S.ULID;
 
 export type ObjectId = typeof ObjectIdSchema.Type;
 
-interface ObjectIdClass extends S.SchemaClass<ObjectId, string> {
+export interface ObjectIdClass extends S.SchemaClass<ObjectId, string> {
   isValid(id: string): id is ObjectId;
   random(): ObjectId;
 }

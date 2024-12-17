@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { BaseObject, ObjectId, Ref } from '@dxos/echo-schema';
+import { BaseObject, ObjectId, Ref } from '@dxos/echo-schema';
 import { nonNullable } from '@dxos/util';
 
 /**
@@ -17,17 +17,10 @@ export const RefArray = Object.freeze({
   },
 
   /**
-   * @returns index of the ref with the given id.
-   */
-  findIndexById: (refs: Ref<BaseObject>[], id: ObjectId): number => {
-    return refs.findIndex((ref) => ref.dxn.isLocalObjectId() && ref.dxn.parts[1] === id);
-  },
-
-  /**
    * Removes the ref with the given id.
    */
   removeById: (refs: Ref<BaseObject>[], id: ObjectId) => {
-    const index = RefArray.findIndexById(refs, id);
+    const index = refs.findIndex(Ref.hasObjectId(id));
     if (index >= 0) {
       refs.splice(index, 1);
     }

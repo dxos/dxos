@@ -13,6 +13,7 @@ import { nonNullable } from '@dxos/util';
 
 import { MessageList, type MessageListProps } from './MessageList';
 import { createInbox } from '../../testing';
+import { RefArray } from '@dxos/live-object';
 
 const DefaultStory = () => {
   const [inbox] = useState(() => createInbox(100));
@@ -24,7 +25,7 @@ const DefaultStory = () => {
 
   return (
     <MessageList
-      messages={inbox.messages.filter(nonNullable)}
+      messages={RefArray.allResolvedTargets(inbox.messages)}
       selected={selected}
       onSelect={setSelected}
       onAction={handleAction}

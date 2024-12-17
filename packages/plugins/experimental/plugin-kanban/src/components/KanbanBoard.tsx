@@ -23,6 +23,7 @@ import { KanbanCardComponent } from './KanbanCard';
 import { type ItemsMapper, KanbanColumnComponent, KanbanColumnComponentPlaceholder } from './KanbanColumn';
 import { findLocation, useSubscription } from './util';
 import type { KanbanColumnType, KanbanItemType, Location, KanbanModel } from '../types';
+import { Ref } from '@dxos/echo-schema';
 
 // TODO(burdon): Touch sensors.
 // TODO(burdon): Prevent browser nav back when swiping left/right.
@@ -113,14 +114,8 @@ export const KanbanBoard: FC<{ model: KanbanModel }> = ({ model }) => {
   const handleDragEnd = (event: DragEndEvent) => {
     if (draggingColumn) {
       const { active, over } = event;
-      const oldIndex = kanban.columns
-        .map((column) => column.target)
-        .filter(nonNullable)
-        .findIndex((column) => column.id === active.id);
-      const newIndex = kanban.columns
-        .map((column) => column.target)
-        .filter(nonNullable)
-        .findIndex((column) => column.id === over?.id);
+      const oldIndex = kanban.columns.findIndex(Ref.hasObjectId(active.id as string));
+      const newIndex = kanban.columns.findIndex(Ref.hasObjectId(over?.id as string));
       arrayMove(kanban.columns, oldIndex, newIndex);
     } else if (draggingItem) {
       const { source, target } = draggingItem;

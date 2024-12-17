@@ -13,6 +13,7 @@ import { DXN } from '@dxos/keys';
 import { getObjectAnnotation, ReferenceAnnotationId, type ObjectAnnotation } from './annotations';
 import { type JsonSchemaType } from './types';
 import { type WithId } from '../types';
+import type { ObjectId } from '../object';
 
 /**
  * The `$id` field for an ECHO reference schema.
@@ -48,6 +49,8 @@ interface RefFn {
   <T extends WithId>(schema: S.Schema<T, any>): Ref$<T>;
 
   isRef: (obj: any) => obj is Ref<any>;
+
+  hasObjectId: (id: ObjectId) => (ref: Ref<any>) => boolean;
 }
 
 /**
@@ -103,6 +106,8 @@ export interface Ref<T> {
 Ref.isRef = (obj: any): obj is Ref<any> => {
   return obj && typeof obj === 'object' && RefTypeId in obj;
 };
+
+Ref.hasObjectId = (id: ObjectId) => (ref: Ref<any>) => ref.dxn.isLocalObjectId() && ref.dxn.parts[1] === id;
 
 /**
  * `reference` field on the schema object.
