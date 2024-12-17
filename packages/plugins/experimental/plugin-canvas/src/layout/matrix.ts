@@ -4,7 +4,7 @@
 
 import { applyToPoints, inverse, translate, compose, scale } from 'transformation-matrix';
 
-import { type Point, pointAdd, pointSubtract, type Rect } from './geometry';
+import { type Point, pointAdd, pointSubtract } from './geometry';
 
 //
 // Transform
@@ -15,43 +15,28 @@ import { type Point, pointAdd, pointSubtract, type Rect } from './geometry';
 /**
  * Maps the model space to the screen offset (from the top-left of the element).
  */
-export const modelToScreen = (
-  s: number,
-  offset: Point,
-  { x = 0, y = 0, width = 0, height = 0 }: Partial<Rect>,
-): Rect => {
+export const modelToScreen = (s: number, offset: Point, points: Point[]): Point[] => {
   const m = compose(translate(offset.x, offset.y), scale(s));
-  const [{ x: x1, y: y1 }, { x: width1, y: height1 }] = applyToPoints(m, [
-    { x, y },
-    { x: x + width, y: y + height },
-  ]);
-
-  return { x: x1, y: y1, width: width1 - x1, height: height1 - y1 };
-
-  // return {
-  //   x: x * scale,
-  //   y: y * scale,
-  //   width: width * scale,
-  //   height: height * scale,
-  // };
+  return applyToPoints(m, points);
 };
 
 /**
  * Maps the pointer coordinate (from the top-left of the element) to the model space.
  */
-export const screenToModel = (
-  s: number,
-  offset: Point,
-  { x = 0, y = 0, width = 0, height = 0 }: Partial<Rect>,
-): Rect => {
+export const screenToModel = (s: number, offset: Point, points: Point[]): Point[] => {
   const m = inverse(compose(translate(offset.x, offset.y), scale(s)));
-  const [{ x: x1, y: y1 }, { x: width1, y: height1 }] = applyToPoints(m, [
-    { x, y },
-    { x: x + width, y: y + height },
-  ]);
-
-  return { x: x1, y: y1, width: width1 - x1, height: height1 - y1 };
+  return applyToPoints(m, points);
 };
+
+// export const screenToModel = (s: number, offset: Point, points: Point[]): Rect => {
+//   const m = inverse(compose(translate(offset.x, offset.y), scale(s)));
+//   const [{ x: x1, y: y1 }, { x: width1, y: height1 }] = applyToPoints(m, [
+//     { x, y },
+//     { x: x + width, y: y + height },
+//   ]);
+//
+//   return { x: x1, y: y1, width: width1 - x1, height: height1 - y1 };
+// };
 
 /**
  * Maps the pointer to the element's transformed coordinate system, taking account of the starting offset

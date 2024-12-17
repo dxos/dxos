@@ -110,7 +110,7 @@ const useDragMonitor = (el: HTMLElement | null) => {
     return monitorForElements({
       // NOTE: This seems to be continually called.
       onDrag: ({ source, location }) => {
-        const { x, y } = screenToModel(scale, offset, getInputPoint(location.current.input));
+        const [{ x, y }] = screenToModel(scale, offset, [getInputPoint(location.current.input)]);
         const pos = { x, y };
         const { type, shape } = source.data as DragPayloadData<ShapeType<'rect'>>;
         if (x !== lastPointRef.current?.x || y !== lastPointRef.current?.y) {
@@ -139,7 +139,7 @@ const useDragMonitor = (el: HTMLElement | null) => {
         if (!cancelled.current) {
           // TODO(burdon): Adjust for offset?
           // const pos = boundsToModelWithOffset(scale, offset, shape.pos, location.initial, location.current);
-          const pos = screenToModel(scale, offset, getInputPoint(location.current.input));
+          const [pos] = screenToModel(scale, offset, [getInputPoint(location.current.input)]);
           const { type, shape } = source.data as DragPayloadData<ShapeType<'rect'>>;
 
           switch (type) {

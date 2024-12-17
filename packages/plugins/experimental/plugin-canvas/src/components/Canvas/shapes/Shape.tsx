@@ -12,7 +12,16 @@ import { Line } from './Line';
 import { type BaseShapeProps } from './base';
 import { createLine, type GraphModel, type Shape, type ShapeType } from '../../../graph';
 import { type SelectionEvent, useEditorContext, useSelectionEvents } from '../../../hooks';
-import { rectContains, screenToModel, findClosestIntersection, getRect, type Point, type Rect } from '../../../layout';
+import {
+  type Point,
+  type Rect,
+  findClosestIntersection,
+  getRect,
+  pointsToRect,
+  rectToPoints,
+  rectContains,
+  screenToModel,
+} from '../../../layout';
 import { testId } from '../../util';
 
 /**
@@ -137,7 +146,7 @@ export const useSelectionHandler = (el: HTMLElement | null, shapes: Shape[]) => 
       }
 
       // Map the pointer event to the SVG coordinate system.
-      const selectionBounds = screenToModel(scale, offset, bounds);
+      const selectionBounds = pointsToRect(screenToModel(scale, offset, rectToPoints(bounds)));
       const selected = shapesRef.current
         .filter((shape) => {
           switch (shape.type) {

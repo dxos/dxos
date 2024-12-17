@@ -39,7 +39,7 @@ export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
       <NaturalToolbar.Button onClick={() => handleAction({ type: 'zoom-out' })} title='Center canvas.'>
         <Icon icon='ph--magnifying-glass-minus--regular' />
       </NaturalToolbar.Button>
-      <NaturalToolbar.Button onClick={() => handleAction({ type: 'bounds' })} title='Expand selected.'>
+      <NaturalToolbar.Button onClick={() => handleAction({ type: 'zoom-to-fit' })} title='Expand selected.'>
         <Icon icon='ph--arrows-out--regular' />
       </NaturalToolbar.Button>
       <NaturalToolbar.Button onClick={() => handleAction({ type: 'create' })} title='Create objects.'>

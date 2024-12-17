@@ -23,8 +23,10 @@ export type Range = { p1: Point; p2: Point }; // TODO(burdon): Array.
 
 export type PointTransform = (pos: Point) => Point;
 
+// TODO(burdon): Namespace for functions?
+
 //
-// Points
+// Point
 //
 
 export const round = (n: number, m: number) => Math.round(n / m) * m;
@@ -36,7 +38,7 @@ export const distance = (p1: Point, p2: Point): number =>
   Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
 
 //
-// Bounds
+// Rect
 //
 
 export const getCenter = (rect: Rect): Point => ({
@@ -56,6 +58,15 @@ export const getBounds = (p1: Point, p2: Point): Rect => ({
   width: Math.abs(p1.x - p2.x),
   height: Math.abs(p1.y - p2.y),
 });
+
+export const pointsToRect = ([p1, p2]: Point[]): Rect => {
+  return getBounds(p1, p2);
+};
+
+export const rectToPoints = (rect: Rect): Point[] => [
+  { x: rect.x, y: rect.y },
+  { x: rect.x + rect.width, y: rect.y + rect.height },
+];
 
 export const rectUnion = (rect: Rect[]): Rect => {
   invariant(rect.length > 0);

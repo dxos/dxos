@@ -92,11 +92,12 @@ export const useActionHandler = (): ActionHandler => {
           zoom(scale, newScale);
           return true;
         }
-        case 'bounds': {
+        case 'zoom-to-fit': {
           const rect = rectUnion(graph.nodes.filter((node) => node.data.type === 'rect').map((node) => node.data.rect));
           const center = getCenter(rect);
-          const newCenter = modelToScreen(scale, { x: width / 2, y: height / 2 }, { x: -center.x, y: -center.y });
+          const [newCenter] = modelToScreen(scale, { x: width / 2, y: height / 2 }, [{ x: -center.x, y: -center.y }]);
           const is = d3.interpolate(offset, newCenter);
+          // TODO(burdon): Scale to fit.
           d3.transition()
             .ease(d3.easeSinOut)
             .duration(200)

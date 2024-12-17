@@ -13,7 +13,7 @@ export type Action =
   | { type: 'center' }
   | { type: 'zoom-in' }
   | { type: 'zoom-out' }
-  | { type: 'bounds' }
+  | { type: 'zoom-to-fit' }
   | { type: 'create'; shape?: Shape }
   | { type: 'link'; source: string; target: string }
   | { type: 'delete'; ids?: string[] };
