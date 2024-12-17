@@ -62,6 +62,7 @@ import { testId } from '../util';
 const defaultOffset = { x: 0, y: 0 };
 
 export const defaultEditorOptions: EditorOptions = {
+  gridSize: 16,
   zoomFactor: 2,
 };
 
@@ -77,7 +78,7 @@ const EditorRoot = ({
   children,
   classNames,
   id,
-  options = defaultEditorOptions,
+  options: _options = defaultEditorOptions,
   debug: _debug = false,
   scale: _scale = 1,
   offset: _offset = defaultOffset,
@@ -86,6 +87,7 @@ const EditorRoot = ({
   // Canvas state.
   const { ref, width = 0, height = 0 } = useResizeDetector();
   const attendableAttrs = useAttendableAttributes(id);
+  const options = useMemo(() => Object.assign({}, defaultEditorOptions, _options), [_options]);
   const [debug, setDebug] = useState(_debug);
   const [gridSize, setGridSize] = useState({ width: 32, height: 32 });
   const [showGrid, setShowGrid] = useState(true);

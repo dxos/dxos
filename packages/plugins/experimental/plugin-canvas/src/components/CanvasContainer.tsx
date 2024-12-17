@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { fullyQualifiedId } from '@dxos/client/echo';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { Editor } from './Editor';
@@ -13,7 +13,7 @@ import { type CanvasType } from '../types';
 export const CanvasContainer = ({ canvas }: { canvas: CanvasType }) => {
   return (
     <StackItem.Content id={fullyQualifiedId(canvas)} toolbar={false}>
-      <Editor.Root>
+      <Editor.Root id={fullyQualifiedId(canvas)}>
         <Editor.Canvas />
         <Editor.UI />
       </Editor.Root>

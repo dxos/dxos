@@ -18,14 +18,7 @@ export type LineProps = BaseShapeProps<'line'>;
 export const Line = ({ shape, selected, onSelect }: LineProps) => {
   return (
     <div>
-      <svg
-        className={mx('absolute overflow-visible', eventsNone)}
-        style={
-          {
-            // ...({ '--dx-marker-fill': 'bg-blue-500' } as any),
-          }
-        }
-      >
+      <svg className={mx('absolute overflow-visible', eventsNone, styles.line, selected && styles.lineSelected)}>
         <defs>
           <Markers />
         </defs>
@@ -41,9 +34,14 @@ export const Line = ({ shape, selected, onSelect }: LineProps) => {
           )}
           <path
             d={shape.path}
-            className={mx(styles.line, selected && styles.lineSelected, shape.guide && styles.lineGuide)}
+            stroke={'red'}
             markerStart={createUrl(!shape.guide && shape.id !== 'link' && shape.start)}
             markerEnd={createUrl(!shape.guide && shape.id !== 'link' && shape.end)}
+            className={mx(
+              'stroke-[var(--dx-stroke-color)]',
+              selected && styles.lineSelected,
+              shape.guide && styles.lineGuide,
+            )}
           />
         </g>
       </svg>

@@ -121,6 +121,8 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
           over && styles.frameActive,
           shape.guide && styles.frameGuide,
           classNames,
+          'transition',
+          scale >= 16 && 'duration-500 opacity-0',
         )}
         onClick={handleClick}
         onDoubleClick={handleDoubleClick}
@@ -133,6 +135,7 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
           }
         }}
       >
+        {/* TODO(burdon): Transition text when full zoomed. */}
         {/* TODO(burdon): Auto-expand height? Trigger layout? */}
         {(isEditing && <TextBox value={shape.text} onClose={handleClose} onCancel={handleCancel} />) || (
           <ReadonlyTextBox classNames={mx(debug && 'font-mono text-xs')} value={getLabel(shape, debug)} />
@@ -149,10 +152,6 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
   );
 };
 
-const getLabel = (shape: ShapeType<'rect'>, debug = false) => {
-  return debug ? shape.id + `\n(${shape.pos.x},${shape.pos.y})` : shape.text ?? shape.id;
-};
-
 export const FrameDragPreview = ({ shape }: FrameProps) => {
   return (
     <div
@@ -162,4 +161,8 @@ export const FrameDragPreview = ({ shape }: FrameProps) => {
       <ReadonlyTextBox value={shape.text ?? shape.id} />
     </div>
   );
+};
+
+const getLabel = (shape: ShapeType<'rect'>, debug = false) => {
+  return debug ? shape.id + `\n(${shape.pos.x},${shape.pos.y})` : shape.text ?? shape.id;
 };

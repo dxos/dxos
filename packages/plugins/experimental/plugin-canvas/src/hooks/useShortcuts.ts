@@ -10,7 +10,7 @@ import { useEditorContext } from './useEditorContext';
 /**
  * Handle keyboard shortcuts.
  */
-export const useShortcuts = (el: HTMLElement | null) => {
+export const useShortcuts = () => {
   const { graph, selection } = useEditorContext();
   const handleAction = useActionHandler();
 

@@ -24,7 +24,7 @@ import { testId } from '../util';
  * Main canvas component.
  */
 export const Canvas = () => {
-  const { debug, width, height, scale, offset, graph, showGrid, dragging, setTransform } = useEditorContext();
+  const { options, debug, width, height, scale, offset, graph, showGrid, dragging, setTransform } = useEditorContext();
 
   // Canvas.
   const containerRef = useRef<HTMLDivElement>(null);
@@ -60,7 +60,7 @@ export const Canvas = () => {
       <Background />
 
       {/* Grid. */}
-      {showGrid && <Grid offset={offset} scale={scale} />}
+      {showGrid && <Grid size={options.gridSize} offset={offset} scale={scale} />}
 
       {/* Content. */}
       {<Shapes shapes={shapes} style={transformStyles} />}

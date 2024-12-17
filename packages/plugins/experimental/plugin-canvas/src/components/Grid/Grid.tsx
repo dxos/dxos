@@ -12,26 +12,25 @@ import { eventsNone } from '../styles';
 import { GridPattern } from '../svg';
 import { testId } from '../util';
 
-const defaultGridSize = 16;
+const gridRations = [1 / 2, 1, 2, 8];
 
-const gridSizes = [1 / 2, 1, 2, 8];
-
-export type GridProps = ThemedClassName<{ size?: number; offset?: Point; scale?: number }>;
+export type GridProps = ThemedClassName<{ size: number; offset?: Point; scale?: number }>;
 
 export const Grid = forwardRef<SVGSVGElement, GridProps>(
-  ({ size = defaultGridSize, offset = { x: 0, y: 0 }, scale = 1, classNames }, forwardedRef) => {
+  ({ size, offset = { x: 0, y: 0 }, scale = 1, classNames }, forwardedRef) => {
     const grids = useMemo(
-      () => gridSizes.map((s) => ({ id: s, size: s * size * scale })).filter(({ size }) => size >= 16 && size <= 128),
+      () =>
+        gridRations
+          .map((ratio) => ({ id: ratio, size: ratio * size * scale }))
+          .filter(({ size }) => size >= 16 && size <= 128),
       [size, scale],
     );
 
     return (
       <svg
         {...testId('dx-canvas-grid')}
-        className={mx('absolute inset-0', eventsNone, classNames)}
-        width='100%'
-        height='100%'
         ref={forwardedRef}
+        className={mx('absolute inset-0 w-full h-full', eventsNone, classNames)}
       >
         {/* NOTE: The pattern needs to be offset so that the middle of the pattern aligns with the grid. */}
         <defs>
@@ -40,7 +39,7 @@ export const Grid = forwardRef<SVGSVGElement, GridProps>(
           ))}
         </defs>
         {grids.map(({ id, size }, i) => (
-          <rect key={id} width='100%' height='100%' fill={`url(#dx-canvas-grid-${id})`} />
+          <rect key={id} fill={`url(#dx-canvas-grid-${id})`} width='100%' height='100%' />
         ))}
       </svg>
     );

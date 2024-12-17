@@ -31,12 +31,12 @@ export const useActionHandler = (): ActionHandler => {
     setSnapToGrid,
   } = useEditorContext();
 
-  const zoom = (scale: number, newScale: number) => {
+  const zoom = (scale: number, newScale: number, delay = 200) => {
     const is = d3.interpolateNumber(scale, newScale);
     const pos = { x: width / 2, y: height / 2 };
     d3.transition()
       .ease(d3.easeSinOut)
-      .duration(200)
+      .duration(delay)
       .tween('scale', () => (t) => setTransform(getZoomTransform({ scale, newScale: is(t), offset, pos })));
   };
 
@@ -89,6 +89,20 @@ export const useActionHandler = (): ActionHandler => {
             return false;
           }
           zoom(scale, newScale);
+          return true;
+        }
+        case 'expand': {
+          const node = graph.getNode(selection.ids?.[0]);
+          if (node?.data.type === 'rect') {
+            // TODO(burdon): Map to screen.
+            const pos = node.data.pos;
+            const is = d3.interpolate(offset, pos);
+            d3.transition()
+              .ease(d3.easeSinOut)
+              .duration(200)
+              .tween('scale', () => (t) => setTransform({ scale, offset: { ...is(t) } }));
+            // zoom(scale, 16, 800);
+          }
           return true;
         }
 

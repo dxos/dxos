@@ -44,7 +44,7 @@ const Render = (props: EditorRootProps) => {
   }, [space]);
 
   return (
-    <Editor.Root id='test' graph={graph} {...props}>
+    <Editor.Root graph={graph} {...props}>
       <Editor.Canvas />
       <Editor.UI />
     </Editor.Root>
@@ -82,6 +82,7 @@ type Story = StoryObj<EditorRootProps>;
 
 export const Default: Story = {
   args: {
+    id: 'test',
     // debug: true,
     // scale: 1,
   },
