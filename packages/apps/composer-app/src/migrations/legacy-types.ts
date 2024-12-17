@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { MutableSchema, Expando, ref, S, TypedObject } from '@dxos/echo-schema';
+import { MutableSchema, Expando, Ref, S, TypedObject } from '@dxos/echo-schema';
 
 export class FolderType extends TypedObject({
   typename: 'braneframe.Folder',
@@ -10,7 +10,7 @@ export class FolderType extends TypedObject({
   skipTypenameFormatCheck: true,
 })({
   name: S.optional(S.String),
-  objects: S.mutable(S.Array(ref(Expando))),
+  objects: S.mutable(S.Array(Ref(Expando))),
 }) {}
 
 export class SectionType extends TypedObject({
@@ -18,7 +18,7 @@ export class SectionType extends TypedObject({
   version: '0.1.0',
   skipTypenameFormatCheck: true,
 })({
-  object: ref(Expando),
+  object: Ref(Expando),
 }) {}
 
 export class StackType extends TypedObject({
@@ -27,7 +27,7 @@ export class StackType extends TypedObject({
   skipTypenameFormatCheck: true,
 })({
   title: S.optional(S.String),
-  sections: S.mutable(S.Array(ref(SectionType))),
+  sections: S.mutable(S.Array(Ref(SectionType))),
 }) {}
 
 export class FileType extends TypedObject({
@@ -48,7 +48,7 @@ export class SketchType extends TypedObject({
   skipTypenameFormatCheck: true,
 })({
   title: S.optional(S.String),
-  data: ref(Expando),
+  data: Ref(Expando),
 }) {}
 
 //
@@ -65,7 +65,7 @@ export class TextType extends TypedObject({
 
 const CommentSchema = S.mutable(
   S.Struct({
-    thread: S.optional(ref(Expando)),
+    thread: S.optional(Ref(Expando)),
     cursor: S.optional(S.String),
   }),
 );
@@ -76,7 +76,7 @@ export class DocumentType extends TypedObject({
   skipTypenameFormatCheck: true,
 })({
   title: S.optional(S.String),
-  content: ref(TextType),
+  content: Ref(TextType),
   comments: S.optional(S.mutable(S.Array(CommentSchema))),
 }) {}
 
@@ -90,8 +90,8 @@ const TablePropSchema = S.partial(
       id: S.String,
       prop: S.String,
       label: S.String,
-      ref: S.String,
-      refProp: S.String,
+      Ref: S.String,
+      RefProp: S.String,
       size: S.Number,
     }),
   ),
@@ -103,7 +103,7 @@ export class TableType extends TypedObject({
   skipTypenameFormatCheck: true,
 })({
   title: S.String,
-  schema: S.optional(ref(MutableSchema)),
+  schema: S.optional(Ref(MutableSchema)),
   props: S.mutable(S.Array(TablePropSchema)),
 }) {}
 
@@ -124,8 +124,8 @@ export interface RecipientType extends S.Schema.Type<typeof RecipientSchema> {}
 const BlockSchema = S.Struct({
   timestamp: S.String,
   // TODO(burdon): Should not be a separate object.
-  content: S.optional(ref(TextType)),
-  object: S.optional(ref(Expando)),
+  content: S.optional(Ref(TextType)),
+  object: S.optional(Ref(Expando)),
 });
 
 export interface BlockType extends S.Schema.Type<typeof BlockSchema> {}
@@ -142,7 +142,7 @@ export class MessageType extends TypedObject({
   cc: S.optional(S.Array(RecipientSchema)),
   subject: S.optional(S.String),
   blocks: S.mutable(S.Array(BlockSchema)),
-  links: S.optional(S.Array(ref(Expando))),
+  links: S.optional(S.Array(Ref(Expando))),
   read: S.optional(S.Boolean),
   context: S.optional(
     S.Struct({
@@ -159,7 +159,7 @@ export class ThreadType extends TypedObject({
   skipTypenameFormatCheck: true,
 })({
   title: S.optional(S.String),
-  messages: S.mutable(S.Array(ref(MessageType))),
+  messages: S.mutable(S.Array(Ref(MessageType))),
   context: S.optional(
     S.Struct({
       space: S.optional(S.String),

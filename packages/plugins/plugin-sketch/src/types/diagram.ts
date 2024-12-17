@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ref, S, TypedObject } from '@dxos/echo-schema';
+import { Ref, S, TypedObject } from '@dxos/echo-schema';
 import { create } from '@dxos/live-object';
 import { ThreadType } from '@dxos/plugin-space';
 
@@ -18,8 +18,8 @@ export class CanvasType extends TypedObject({ typename: 'dxos.org/type/Canvas', 
 
 export class DiagramType extends TypedObject({ typename: 'dxos.org/type/Diagram', version: '0.1.0' })({
   name: S.optional(S.String),
-  canvas: ref(CanvasType),
-  threads: S.optional(S.mutable(S.Array(ref(ThreadType)))),
+  canvas: Ref(CanvasType),
+  threads: S.optional(S.mutable(S.Array(Ref(ThreadType)))),
 }) {}
 
 export const isDiagramType = (object: any, schema: string): object is DiagramType =>

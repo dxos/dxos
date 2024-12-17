@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Expando, ref, S, TypedObject } from '@dxos/echo-schema';
+import { Expando, Ref, S, TypedObject } from '@dxos/echo-schema';
 
 export class CanvasItemType extends TypedObject({ typename: 'dxos.org/type/CanvasItem', version: '0.1.0' })({
-  object: ref(Expando),
+  object: Ref(Expando),
   position: S.mutable(
     S.Struct({
       x: S.Number,
@@ -17,5 +17,5 @@ export class CanvasItemType extends TypedObject({ typename: 'dxos.org/type/Canva
 
 export class CanvasType extends TypedObject({ typename: 'dxos.org/type/Canvas', version: '0.1.0' })({
   name: S.optional(S.String),
-  items: S.mutable(S.Array(ref(CanvasItemType))),
+  items: S.mutable(S.Array(Ref(CanvasItemType))),
 }) {}
