@@ -2,27 +2,75 @@
 // Copyright 2023 DXOS.org
 //
 
-import type {
-  GraphBuilderProvides,
-  GraphSerializerProvides,
-  IntentResolverProvides,
-  SettingsProvides,
-  SurfaceProvides,
-  TranslationsProvides,
+import {
+  ActiveParts,
+  type GraphBuilderProvides,
+  type GraphSerializerProvides,
+  type IntentResolverProvides,
+  type SettingsProvides,
+  type SurfaceProvides,
+  type TranslationsProvides,
 } from '@dxos/app-framework';
+import { S } from '@dxos/echo-schema';
 
 import { FILES_PLUGIN } from './meta';
 
-const FILES_ACTION = `${FILES_PLUGIN}/action`;
-export enum LocalFilesAction {
-  OPEN_FILE = `${FILES_ACTION}/open-file`,
-  OPEN_DIRECTORY = `${FILES_ACTION}/open-directory`,
-  RECONNECT = `${FILES_ACTION}/reconnect`,
-  CLOSE = `${FILES_ACTION}/close`,
-  SAVE = `${FILES_ACTION}/save`,
-  SELECT_ROOT = `${FILES_ACTION}/select-root`,
-  EXPORT = `${FILES_ACTION}/export`,
-  IMPORT = `${FILES_ACTION}/import`,
+export namespace LocalFilesAction {
+  const FILES_ACTION = `${FILES_PLUGIN}/action`;
+
+  export class SelectRoot extends S.TaggedClass<SelectRoot>()(`${FILES_ACTION}/select-root`, {
+    input: S.Void,
+    output: S.Void,
+  }) {}
+
+  export class Export extends S.TaggedClass<Export>()(`${FILES_ACTION}/export`, {
+    input: S.Void,
+    output: S.Void,
+  }) {}
+
+  export class Import extends S.TaggedClass<Import>()(`${FILES_ACTION}/import`, {
+    input: S.Struct({
+      rootDir: S.optional(S.String),
+    }),
+    output: S.Void,
+  }) {}
+
+  export class OpenFile extends S.TaggedClass<OpenFile>()(`${FILES_ACTION}/open-file`, {
+    input: S.Void,
+    output: S.Struct({
+      id: S.String,
+      activeParts: ActiveParts,
+    }),
+  }) {}
+
+  export class OpenDirectory extends S.TaggedClass<OpenDirectory>()(`${FILES_ACTION}/open-directory`, {
+    input: S.Void,
+    output: S.Struct({
+      id: S.String,
+      activeParts: ActiveParts,
+    }),
+  }) {}
+
+  export class Reconnect extends S.TaggedClass<Reconnect>()(`${FILES_ACTION}/reconnect`, {
+    input: S.Struct({
+      id: S.String,
+    }),
+    output: S.Void,
+  }) {}
+
+  export class Close extends S.TaggedClass<Close>()(`${FILES_ACTION}/close`, {
+    input: S.Struct({
+      id: S.String,
+    }),
+    output: S.Void,
+  }) {}
+
+  export class Save extends S.TaggedClass<Save>()(`${FILES_ACTION}/save`, {
+    input: S.Struct({
+      id: S.String,
+    }),
+    output: S.Void,
+  }) {}
 }
 
 type PermissionStatus = 'granted' | 'denied' | 'prompt';

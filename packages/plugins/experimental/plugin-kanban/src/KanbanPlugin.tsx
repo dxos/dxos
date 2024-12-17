@@ -4,17 +4,8 @@
 
 import React from 'react';
 
-import {
-  resolvePlugin,
-  type PluginDefinition,
-  parseIntentPlugin,
-  NavigationAction,
-  createSurface,
-} from '@dxos/app-framework';
+import { type PluginDefinition, createSurface, createIntent, createResolver } from '@dxos/app-framework';
 import { create } from '@dxos/live-object';
-import { parseClientPlugin } from '@dxos/plugin-client';
-import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
-import { SpaceAction } from '@dxos/plugin-space';
 import { loadObjectReferences } from '@dxos/react-client/echo';
 
 import { KanbanMain } from './components';
@@ -30,7 +21,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
       metadata: {
         records: {
           [KanbanType.typename]: {
-            createObject: KanbanAction.CREATE,
+            createObject: (props: { name?: string }) => createIntent(KanbanAction.Create, props),
             placeholder: ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
             icon: 'ph--kanban--regular',
             // TODO(wittjosiah): Move out of metadata.
@@ -51,48 +42,6 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
         system: [KanbanColumnType, KanbanItemType],
       },
       translations,
-      graph: {
-        builder: (plugins) => {
-          const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
-          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-          if (!client || !dispatch) {
-            return [];
-          }
-
-          return createExtension({
-            id: KanbanAction.CREATE,
-            filter: (node): node is ActionGroup => isActionGroup(node) && node.id.startsWith(SpaceAction.ADD_OBJECT),
-            actions: ({ node }) => {
-              const id = node.id.split('/').at(-1);
-              const [spaceId, objectId] = id?.split(':') ?? [];
-              const space = client.spaces.get().find((space) => space.id === spaceId);
-              const object = objectId && space?.db.getObjectById(objectId);
-              const target = objectId ? object : space;
-              if (!target) {
-                return;
-              }
-
-              return [
-                {
-                  id: `${KANBAN_PLUGIN}/create/${node.id}`,
-                  data: async () => {
-                    await dispatch([
-                      { plugin: KANBAN_PLUGIN, action: KanbanAction.CREATE },
-                      { action: SpaceAction.ADD_OBJECT, data: { target } },
-                      { action: NavigationAction.OPEN },
-                    ]);
-                  },
-                  properties: {
-                    label: ['create kanban label', { ns: KANBAN_PLUGIN }],
-                    icon: 'ph--kanban--regular',
-                    testId: 'kanbanPlugin.createObject',
-                  },
-                },
-              ];
-            },
-          });
-        },
-      },
       surface: {
         definitions: () =>
           createSurface({
@@ -103,13 +52,10 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
           }),
       },
       intent: {
-        resolver: (intent) => {
-          switch (intent.action) {
-            case KanbanAction.CREATE: {
-              return { data: create(KanbanType, { columns: [] }) };
-            }
-          }
-        },
+        resolvers: () =>
+          createResolver(KanbanAction.Create, ({ name }) => ({
+            data: { object: create(KanbanType, { name, columns: [] }) },
+          })),
       },
     },
   };

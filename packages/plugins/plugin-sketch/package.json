@@ -65,6 +65,7 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-stack": "workspace:*",
+    "@dxos/plugin-thread": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
@@ -78,6 +79,7 @@
     "@tldraw/tldraw": "^3.0.0",
     "@tldraw/tlschema": "^3.0.0",
     "@tldraw/utils": "^3.0.0",
+    "effect": "^3.9.2",
     "lodash.defaultsdeep": "^4.6.1",
     "react-resize-detector": "^11.0.1"
   },

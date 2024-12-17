@@ -6649,6 +6649,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugin-client
@@ -6923,6 +6926,9 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
+      '@dxos/plugin-observability':
+        specifier: workspace:*
+        version: link:../plugin-observability
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -7195,6 +7201,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: ^3.9.2
+        version: 3.10.15
       immer:
         specifier: ^10.1.1
         version: 10.1.1
@@ -7235,6 +7244,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-schema
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -7271,6 +7283,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: ^3.9.2
+        version: 3.10.15
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
@@ -7551,6 +7566,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: ^3.9.2
+        version: 3.10.15
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -7798,6 +7816,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
@@ -7810,9 +7831,6 @@ importers:
       '@dxos/observability':
         specifier: workspace:*
         version: link:../../sdk/observability
-      '@dxos/plugin-client':
-        specifier: workspace:*
-        version: link:../plugin-client
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
@@ -8144,6 +8162,9 @@ importers:
       '@dxos/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
+      '@dxos/plugin-thread':
+        specifier: workspace:*
+        version: link:../plugin-thread
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -8319,6 +8340,9 @@ importers:
       '@dxos/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
+      '@dxos/plugin-thread':
+        specifier: workspace:*
+        version: link:../plugin-thread
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -8358,6 +8382,9 @@ importers:
       '@tldraw/utils':
         specifier: ^3.0.0
         version: 3.0.0
+      effect:
+        specifier: ^3.9.2
+        version: 3.10.15
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -8500,6 +8527,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: ^3.9.2
+        version: 3.10.15
       jszip:
         specifier: ^3.10.1
         version: 3.10.1
@@ -8667,6 +8697,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/plugin-observability':
+        specifier: workspace:*
+        version: link:../plugin-observability
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
@@ -8749,6 +8782,9 @@ importers:
       '@dxos/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
+      '@dxos/plugin-thread':
+        specifier: workspace:*
+        version: link:../plugin-thread
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client

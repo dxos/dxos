@@ -3,15 +3,15 @@
 //
 
 import type {
-  GraphBuilderProvides,
   IntentResolverProvides,
   MetadataRecordsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
+import { S } from '@dxos/echo-schema';
 import { type SchemaProvides } from '@dxos/plugin-space';
 
-import { type KanbanColumnType, type KanbanItemType, type KanbanType } from './kanban';
+import { KanbanType, type KanbanColumnType, type KanbanItemType } from './kanban';
 import { KANBAN_PLUGIN } from '../meta';
 
 /**
@@ -23,15 +23,21 @@ import { KANBAN_PLUGIN } from '../meta';
  * by the model (e.g., a query of items based on metadata within a column object).
  */
 
-const KANBAN_ACTION = `${KANBAN_PLUGIN}/action`;
+export namespace KanbanAction {
+  const KANBAN_ACTION = `${KANBAN_PLUGIN}/action`;
 
-export enum KanbanAction {
-  CREATE = `${KANBAN_ACTION}/create`,
+  export class Create extends S.TaggedClass<Create>()(`${KANBAN_ACTION}/create`, {
+    input: S.Struct({
+      name: S.optional(S.String),
+    }),
+    output: S.Struct({
+      object: KanbanType,
+    }),
+  }) {}
 }
 
 export type KanbanPluginProvides = SurfaceProvides &
   IntentResolverProvides &
-  GraphBuilderProvides &
   MetadataRecordsProvides &
   TranslationsProvides &
   SchemaProvides;

@@ -4,9 +4,11 @@
 
 import { Effect, Ref } from 'effect';
 
-import { pick } from '@dxos/util';
+import { type MaybePromise, pick } from '@dxos/util';
 
 import {
+  createIntent,
+  IntentAction,
   type AnyIntent,
   type AnyIntentChain,
   type Intent,
@@ -15,13 +17,11 @@ import {
   type IntentParams,
   type IntentResultData,
   type IntentSchema,
+  type Label,
 } from './intent';
 
 const EXECUTION_LIMIT = 100;
 const HISTORY_LIMIT = 100;
-
-// NOTE: Should maintain compatibility with `i18next` (and @dxos/react-ui).
-export type Label = string | [string, { ns: string; count?: number }];
 
 /**
  * The return value of an intent effect.
@@ -32,7 +32,7 @@ export type IntentEffectResult<Fields extends IntentParams> = {
    *
    * If the intent is apart of a chain of intents, the data will be passed to the next intent.
    */
-  data: IntentResultData<Fields>;
+  data?: IntentResultData<Fields>;
 
   /**
    * If provided, the action will be undoable.
@@ -80,7 +80,7 @@ export type IntentDisposition = 'default' | 'hoist' | 'fallback';
 export type IntentEffectDefinition<Fields extends IntentParams> = (
   data: IntentData<Fields>,
   undo: boolean,
-) => Promise<IntentEffectResult<Fields>> | Effect.Effect<IntentEffectResult<Fields>>;
+) => MaybePromise<IntentEffectResult<Fields> | void> | Effect.Effect<IntentEffectResult<Fields> | void>;
 
 /**
  * Intent resolver to match intents to their effects.
@@ -88,6 +88,7 @@ export type IntentEffectDefinition<Fields extends IntentParams> = (
 export type IntentResolver<Tag extends string, Fields extends IntentParams> = {
   action: Tag;
   disposition?: IntentDisposition;
+  // TODO(wittjosiah): Would be nice to make this a guard for intents with optional data.
   filter?: (data: IntentData<Fields>) => boolean;
   effect: IntentEffectDefinition<Fields>;
 };
@@ -153,6 +154,7 @@ export type IntentContext = {
   dispatchPromise: PromiseIntentDispatcher;
   undo: IntentUndo;
   undoPromise: PromiseIntentUndo;
+  registerResolver: (id: string, resolver: AnyIntentResolver) => () => void;
 };
 
 /**
@@ -179,11 +181,14 @@ export const createDispatcher = (
           return a === b ? 0 : a === 'hoist' || b === 'fallback' ? -1 : b === 'hoist' || a === 'fallback' ? 1 : 0;
         });
       if (candidates.length === 0) {
-        yield* Effect.fail(new Error(`No resolver found for action: ${intent.action}`));
+        return {
+          _intent: intent,
+          error: new Error(`No resolver found for action: ${intent.action}`),
+        } satisfies AnyIntentResult;
       }
 
       const effect = candidates[0].effect(intent.data, intent.undo ?? false);
-      const result = Effect.isEffect(effect) ? yield* effect : yield* Effect.promise(() => effect);
+      const result = Effect.isEffect(effect) ? yield* effect : yield* Effect.promise(async () => effect);
       return { _intent: intent, ...result } satisfies AnyIntentResult;
     });
   };
@@ -208,6 +213,7 @@ export const createDispatcher = (
           for (const intent of result.intents) {
             // Returned intents are dispatched but not yielded into results,
             // as such they cannot be undone.
+            // TODO(wittjosiah): Use higher execution concurrency & yield?
             void dispatch(intent, depth + 1);
           }
         }
@@ -223,6 +229,11 @@ export const createDispatcher = (
           }
           return next;
         });
+
+        if (result.undoable && isUndoable(results)) {
+          // TODO(wittjosiah): Is there a better way to handle showing undo for chains?
+          void dispatch(createIntent(IntentAction.ShowUndo, { message: result.undoable.message }));
+        }
 
         return pick(result, ['data', 'error']);
       } else {
@@ -259,5 +270,12 @@ export const createDispatcher = (
     return Effect.runPromise(program);
   };
 
-  return { dispatch, dispatchPromise, undo, undoPromise };
+  const registerResolver = (id: string, resolver: AnyIntentResolver) => {
+    resolvers[id] = [...(resolvers[id] ?? []), resolver];
+    return () => {
+      resolvers[id] = resolvers[id].filter((r) => r !== resolver);
+    };
+  };
+
+  return { dispatch, dispatchPromise, undo, undoPromise, registerResolver };
 };

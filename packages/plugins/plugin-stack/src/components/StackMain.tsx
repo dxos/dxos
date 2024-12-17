@@ -3,9 +3,10 @@
 //
 
 import { Plus } from '@phosphor-icons/react';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
+  createIntent,
   LayoutAction,
   NavigationAction,
   parseMetadataResolverPlugin,
@@ -21,7 +22,6 @@ import { AttentionProvider } from '@dxos/react-ui-attention';
 import { Stack } from '@dxos/react-ui-stack';
 import { nonNullable } from '@dxos/util';
 
-import { AddSection } from './AddSection';
 import { StackContext } from './StackContext';
 import { StackSection } from './StackSection';
 import { STACK_PLUGIN } from '../meta';
@@ -40,7 +40,7 @@ type StackMainProps = {
 };
 
 const StackMain = ({ id, collection }: StackMainProps) => {
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { graph } = useGraph();
   const { t } = useTranslation(STACK_PLUGIN);
   const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
@@ -72,46 +72,51 @@ const StackMain = ({ id, collection }: StackMainProps) => {
         return { id: fullyQualifiedId(object), object, metadata, view } satisfies StackSectionItem;
       }) ?? [];
 
-  const handleDelete = async (id: string) => {
-    const index = collection.objects.filter(nonNullable).findIndex((section) => fullyQualifiedId(section) === id);
-    if (index >= 0) {
-      await dispatch({
-        action: SpaceAction.REMOVE_OBJECTS,
-        data: { objects: [collection.objects[index]], collection },
-      });
+  const handleDelete = useCallback(
+    async (id: string) => {
+      const index = collection.objects.filter(nonNullable).findIndex((section) => fullyQualifiedId(section) === id);
+      if (index >= 0) {
+        await dispatch(
+          createIntent(SpaceAction.RemoveObjects, { objects: [collection.objects[index]], target: collection }),
+        );
 
-      // TODO(wittjosiah): The section should also be removed, but needs to be restored if the action is undone.
-      // delete stack.sections[Path.last(path)];
-    }
-  };
+        // TODO(wittjosiah): The section should also be removed, but needs to be restored if the action is undone.
+        // delete stack.sections[Path.last(path)];
+      }
+    },
+    [collection, dispatch],
+  );
 
-  const handleAdd = (id: string, position: AddSectionPosition) => {
-    void dispatch?.({
-      action: LayoutAction.SET_LAYOUT,
-      data: {
-        element: 'dialog',
-        component: `${STACK_PLUGIN}/AddSectionDialog`,
-        subject: { path: id, position, collection },
-      },
-    });
-  };
+  const handleAdd = useCallback(
+    async (id: string, position: AddSectionPosition) => {
+      await dispatch?.(
+        createIntent(LayoutAction.SetLayout, {
+          element: 'dialog',
+          component: `${STACK_PLUGIN}/AddSectionDialog`,
+          subject: { path: id, position, collection },
+        }),
+      );
+    },
+    [collection, dispatch],
+  );
 
-  const handleNavigate = async (id: string) => {
-    await dispatch([
-      {
-        action: NavigationAction.OPEN,
-        data: { activeParts: { main: [id] } },
-      },
-      {
-        action: LayoutAction.SCROLL_INTO_VIEW,
-        data: { id },
-      },
-    ]);
-  };
+  const handleNavigate = useCallback(
+    async (id: string) => {
+      await dispatch(createIntent(NavigationAction.Open, { activeParts: { main: [id] } }));
+      await dispatch(createIntent(LayoutAction.ScrollIntoView, { id }));
+    },
+    [dispatch],
+  );
 
-  const handleCollapse = (id: string, collapsed: boolean) => {
-    setCollapsedSections((prev) => ({ ...prev, [id]: collapsed }));
-  };
+  const handleCollapse = useCallback(
+    (id: string, collapsed: boolean) => setCollapsedSections((prev) => ({ ...prev, [id]: collapsed })),
+    [],
+  );
+
+  const handleAddSection = useCallback(
+    () => dispatch?.(createIntent(SpaceAction.OpenCreateObject, { target: collection })),
+    [collection, dispatch],
+  );
 
   return (
     <AttentionProvider id={id}>
@@ -129,29 +134,12 @@ const StackMain = ({ id, collection }: StackMainProps) => {
           ))}
         </Stack>
 
-        {items.length === 0 ? (
-          <AddSection collection={collection} />
-        ) : (
-          <div role='none' className='flex mlb-2 pli-2 justify-center'>
-            <Button
-              data-testid='stack.createSection'
-              classNames='gap-2'
-              onClick={() =>
-                dispatch?.({
-                  action: LayoutAction.SET_LAYOUT,
-                  data: {
-                    element: 'dialog',
-                    component: 'dxos.org/plugin/stack/AddSectionDialog',
-                    subject: { position: 'afterAll', collection },
-                  },
-                })
-              }
-            >
-              <Plus />
-              <span className='sr-only'>{t('add section label')}</span>
-            </Button>
-          </div>
-        )}
+        <div role='none' className='flex mlb-2 pli-2 justify-center'>
+          <Button data-testid='stack.createSection' classNames='gap-2' onClick={handleAddSection}>
+            <Plus />
+            <span className='sr-only'>{t('add section label')}</span>
+          </Button>
+        </div>
       </StackContext.Provider>
     </AttentionProvider>
   );

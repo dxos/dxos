@@ -2,20 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
-import { TextAa } from '@phosphor-icons/react';
+import { pipe } from 'effect';
 import React from 'react';
 
 import {
   parseIntentPlugin,
   resolvePlugin,
-  NavigationAction,
   type PluginDefinition,
   createSurface,
+  createResolver,
+  createIntent,
+  chain,
 } from '@dxos/app-framework';
 import { create } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { parseClientPlugin } from '@dxos/plugin-client';
-import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 import { CollectionType } from '@dxos/plugin-space/types';
 import {
@@ -28,7 +28,6 @@ import {
 import {
   type EditorInputMode,
   type EditorViewMode,
-  EditorViewModes,
   translations as editorTranslations,
   createEditorStateStore,
 } from '@dxos/react-ui-editor';
@@ -86,7 +85,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       metadata: {
         records: {
           [DocumentType.typename]: {
-            createObject: MarkdownAction.CREATE,
+            createObject: (props: { name?: string }) => createIntent(MarkdownAction.Create, props),
             label: (object: any) => (object instanceof DocumentType ? object.name || object.fallbackName : undefined),
             placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
             icon: 'ph--text-aa--regular',
@@ -105,48 +104,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         system: [TextType],
       },
       graph: {
-        builder: (plugins) => {
-          const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
-          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-          if (!client || !dispatch) {
-            return [];
-          }
-
-          return createExtension({
-            id: MarkdownAction.CREATE,
-            filter: (node): node is ActionGroup => isActionGroup(node) && node.id.startsWith(SpaceAction.ADD_OBJECT),
-            actions: ({ node }) => {
-              const id = node.id.split('/').at(-1);
-              const [spaceId, objectId] = id?.split(':') ?? [];
-              const space = client.spaces.get().find((space) => space.id === spaceId);
-              const object = objectId && space?.db.getObjectById(objectId);
-              const target = objectId ? object : space;
-              if (!target) {
-                return;
-              }
-
-              return [
-                {
-                  id: `${MARKDOWN_PLUGIN}/create/${node.id}`,
-                  data: async () => {
-                    await dispatch([
-                      { plugin: MARKDOWN_PLUGIN, action: MarkdownAction.CREATE },
-                      { action: SpaceAction.ADD_OBJECT, data: { target } },
-                      { action: NavigationAction.OPEN },
-                    ]);
-                  },
-                  properties: {
-                    label: ['create document label', { ns: MARKDOWN_PLUGIN }],
-                    icon: 'ph--text-aa--regular',
-                    testId: 'markdownPlugin.createObject',
-                  },
-                },
-              ];
-            },
-          });
-        },
         serializer: (plugins) => {
-          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
+          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatchPromise;
           if (!dispatch) {
             return [];
           }
@@ -177,38 +136,18 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                   return;
                 }
 
-                const result = await dispatch([
-                  {
-                    plugin: MARKDOWN_PLUGIN,
-                    action: MarkdownAction.CREATE,
-                    data: { name: data.name, content: data.data },
-                  },
-                  {
-                    action: SpaceAction.ADD_OBJECT,
-                    data: { target },
-                  },
-                ]);
+                const result = await dispatch(
+                  pipe(
+                    createIntent(MarkdownAction.Create, { name: data.name, content: data.data }),
+                    chain(SpaceAction.AddObject, { target }),
+                  ),
+                );
 
-                return result?.data.object;
+                return result.data?.object;
               },
             },
           ];
         },
-      },
-      stack: {
-        creators: [
-          {
-            id: 'create-stack-section-doc',
-            testId: 'markdownPlugin.createSection',
-            type: ['plugin name', { ns: MARKDOWN_PLUGIN }],
-            label: ['create stack section label', { ns: MARKDOWN_PLUGIN }],
-            icon: (props: any) => <TextAa {...props} />,
-            intent: {
-              plugin: MARKDOWN_PLUGIN,
-              action: MarkdownAction.CREATE,
-            },
-          },
-        ],
       },
       thread: {
         predicate: (obj) => obj instanceof DocumentType,
@@ -278,29 +217,20 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         ],
       },
       intent: {
-        resolver: ({ action, data }) => {
-          switch (action) {
-            case MarkdownAction.CREATE: {
-              const doc = create(DocumentType, {
-                name: data?.name,
-                content: create(TextType, { content: data?.content ?? '' }),
-                threads: [],
-              });
+        resolvers: () => [
+          createResolver(MarkdownAction.Create, ({ name, content }) => {
+            const doc = create(DocumentType, {
+              name,
+              content: create(TextType, { content: content ?? '' }),
+              threads: [],
+            });
 
-              return { data: doc };
-            }
-
-            case MarkdownAction.SET_VIEW_MODE: {
-              const { id, viewMode } = data ?? {};
-              if (typeof id === 'string' && EditorViewModes.includes(viewMode)) {
-                state.values.viewMode[id] = viewMode;
-                return { data: true };
-              }
-
-              break;
-            }
-          }
-        },
+            return { data: { object: doc } };
+          }),
+          createResolver(MarkdownAction.SetViewMode, ({ id, viewMode }) => {
+            state.values.viewMode[id] = viewMode;
+          }),
+        ],
       },
     },
   };

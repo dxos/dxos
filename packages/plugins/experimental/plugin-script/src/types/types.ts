@@ -3,25 +3,34 @@
 //
 
 import type {
-  GraphBuilderProvides,
   IntentResolverProvides,
   MetadataRecordsProvides,
   SettingsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
+import { S } from '@dxos/echo-schema';
 import { type SchemaProvides } from '@dxos/plugin-space';
 
+import { ScriptType } from './schema';
 import { SCRIPT_PLUGIN } from '../meta';
 
-export enum ScriptAction {
-  CREATE = `${SCRIPT_PLUGIN}/create`,
+export namespace ScriptAction {
+  const SCRIPT_ACTION = `${SCRIPT_PLUGIN}/action`;
+
+  export class Create extends S.TaggedClass<Create>()(`${SCRIPT_ACTION}/create`, {
+    input: S.Struct({
+      name: S.optional(S.String),
+    }),
+    output: S.Struct({
+      object: ScriptType,
+    }),
+  }) {}
 }
 
 export type ScriptSettingsProps = {};
 
-export type ScriptPluginProvides = GraphBuilderProvides &
-  IntentResolverProvides &
+export type ScriptPluginProvides = IntentResolverProvides &
   MetadataRecordsProvides &
   SchemaProvides &
   SettingsProvides<ScriptSettingsProps> &

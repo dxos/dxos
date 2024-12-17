@@ -4,6 +4,8 @@
 
 import { S } from '@dxos/echo-schema';
 
+import { INTENT_PLUGIN } from './meta';
+
 export type IntentParams = {
   readonly input: S.Schema.All;
   readonly output: S.Schema.All;
@@ -93,6 +95,8 @@ export const createIntent = <Tag extends string, Fields extends IntentParams>(
   };
 };
 
+// TODO(wittjosiah): Add a function for mapping the output of one intent to the input of another.
+
 /**
  * Chain two intents together.
  *
@@ -128,3 +132,29 @@ export const chain =
       all: [...intents, last],
     };
   };
+
+//
+// Intents
+//
+
+// NOTE: Should maintain compatibility with `i18next` (and @dxos/react-ui).
+// TODO(wittjosiah): Making this immutable breaks type compatibility.
+export const Label = S.Union(
+  S.String,
+  S.mutable(S.Tuple(S.String, S.mutable(S.Struct({ ns: S.String, count: S.optional(S.Number) })))),
+);
+export type Label = S.Schema.Type<typeof Label>;
+
+export const INTENT_ACTION = `${INTENT_PLUGIN}/action`;
+
+export namespace IntentAction {
+  /**
+   * Fired after an intent is dispatched if the intent is undoable.
+   */
+  export class ShowUndo extends S.TaggedClass<ShowUndo>()(`${INTENT_ACTION}/show-undo`, {
+    input: S.Struct({
+      message: Label,
+    }),
+    output: S.Void,
+  }) {}
+}

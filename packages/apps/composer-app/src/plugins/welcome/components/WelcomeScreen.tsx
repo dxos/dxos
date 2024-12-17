@@ -4,11 +4,11 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { LayoutAction, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, LayoutAction, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
 import { type Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
-import { ClientAction } from '@dxos/plugin-client/meta';
-import { SpaceAction } from '@dxos/plugin-space/meta';
+import { ClientAction } from '@dxos/plugin-client/types';
+import { SpaceAction } from '@dxos/plugin-space/types';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { isSpace } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
@@ -22,7 +22,7 @@ export const WELCOME_SCREEN = 'WelcomeScreen';
 export const WelcomeScreen = ({ hubUrl, firstRun }: { hubUrl: string; firstRun?: Trigger }) => {
   const client = useClient();
   const identity = useIdentity();
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const [state, setState] = useState<WelcomeState>(WelcomeState.INIT);
   const [error, setError] = useState(false);
   const pendingRef = useRef(false);
@@ -56,22 +56,22 @@ export const WelcomeScreen = ({ hubUrl, firstRun }: { hubUrl: string; firstRun?:
   );
 
   const handleJoinIdentity = useCallback(async () => {
-    await dispatch({ action: ClientAction.JOIN_IDENTITY });
+    await dispatch(createIntent(ClientAction.JoinIdentity));
   }, [dispatch]);
 
   const handleRecoverIdentity = useCallback(async () => {
-    await dispatch({ action: ClientAction.RECOVER_IDENTITY });
+    await dispatch(createIntent(ClientAction.RecoverIdentity));
   }, [dispatch]);
 
   const handleSpaceInvitation = async () => {
-    const identityResult = await dispatch({ action: ClientAction.CREATE_IDENTITY });
+    const identityResult = await dispatch(createIntent(ClientAction.CreateIdentity));
     const identity = identityResult?.data as Identity | undefined;
     if (!identity) {
       return;
     }
 
     firstRun?.wake();
-    const result = await dispatch({ action: SpaceAction.JOIN, data: { invitationCode: spaceInvitationCode } });
+    const result = await dispatch(createIntent(SpaceAction.Join, { invitationCode: spaceInvitationCode }));
     spaceInvitationCode && removeQueryParamByValue(spaceInvitationCode);
 
     if (isSpace(result?.data.space)) {

@@ -35,6 +35,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/plugin-observability": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@effect/schema": "^0.75.5",

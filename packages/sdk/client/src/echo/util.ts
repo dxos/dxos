@@ -4,9 +4,10 @@
 //
 
 import { type Space } from '@dxos/client-protocol';
-import { getDatabaseFromObject } from '@dxos/echo-db';
+import { getDatabaseFromObject, isEchoObject } from '@dxos/echo-db';
+import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type ReactiveObject } from '@dxos/live-object';
+import { isReactiveObject, type ReactiveObject } from '@dxos/live-object';
 
 import { SpaceProxy } from './space-proxy';
 
@@ -15,6 +16,19 @@ export const OBJECT_ID_LENGTH = 26;
 export const FQ_ID_LENGTH = SPACE_ID_LENGTH + OBJECT_ID_LENGTH + 1;
 
 export const isSpace = (object: unknown): object is Space => object instanceof SpaceProxy;
+
+export const SpaceSchema = S.Any.pipe(
+  S.filter((x) => isSpace(x)),
+  S.annotations({ title: 'Space' }),
+);
+export const ReactiveObjectSchema = S.Any.pipe(
+  S.filter((x) => isReactiveObject(x)),
+  S.annotations({ title: 'ReactiveObject' }),
+);
+export const EchoObjectSchema = S.Any.pipe(
+  S.filter((x) => isEchoObject(x)),
+  S.annotations({ title: 'EchoObject' }),
+);
 
 export const getSpace = (object?: ReactiveObject<any>): Space | undefined => {
   if (!object) {

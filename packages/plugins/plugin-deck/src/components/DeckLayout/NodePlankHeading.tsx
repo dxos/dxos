@@ -5,6 +5,7 @@
 import React, { Fragment, memo, useEffect, useMemo } from 'react';
 
 import {
+  createIntent,
   LayoutAction,
   NavigationAction,
   SLUG_PATH_SEPARATOR,
@@ -48,7 +49,7 @@ export const NodePlankHeading = memo(
     const label = pending
       ? t('pending heading')
       : toLocalizedString(node?.properties?.label ?? ['plank heading fallback label', { ns: DECK_PLUGIN }], t);
-    const dispatch = useIntentDispatcher();
+    const { dispatchPromise: dispatch } = useIntentDispatcher();
     const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
     const [isNotMobile] = useMediaQuery('md');
 
@@ -121,36 +122,22 @@ export const NodePlankHeading = memo(
 
             // TODO(Zan): Update this to use the new layout actions.
             if (eventType === 'solo') {
-              return dispatch([
-                {
-                  action: NavigationAction.ADJUST,
-                  data: { type: eventType, layoutCoordinate: { part: 'main', entryId: coordinate.entryId } },
-                },
-              ]);
+              return dispatch(
+                createIntent(NavigationAction.Adjust, {
+                  type: eventType,
+                  layoutCoordinate: { part: 'main', entryId: coordinate.entryId },
+                }),
+              );
             } else if (eventType === 'close') {
               if (layoutPart === 'complementary') {
-                return dispatch({
-                  action: LayoutAction.SET_LAYOUT,
-                  data: {
-                    element: 'complementary',
-                    state: false,
-                  },
-                });
+                return dispatch(createIntent(LayoutAction.SetLayout, { element: 'complementary', state: false }));
               } else {
-                return dispatch({
-                  action: NavigationAction.CLOSE,
-                  data: {
-                    activeParts: {
-                      [layoutPart]: [coordinate.entryId],
-                    },
-                  },
-                });
+                return dispatch(
+                  createIntent(NavigationAction.Close, { activeParts: { [layoutPart]: [coordinate.entryId] } }),
+                );
               }
             } else {
-              return dispatch({
-                action: NavigationAction.ADJUST,
-                data: { type: eventType, layoutCoordinate: coordinate },
-              });
+              return dispatch(createIntent(NavigationAction.Adjust, { type: eventType, layoutCoordinate: coordinate }));
             }
           }}
           close={layoutPart === 'complementary' ? 'minify-end' : true}

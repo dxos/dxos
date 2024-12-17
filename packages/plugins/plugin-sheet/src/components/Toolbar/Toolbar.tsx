@@ -5,7 +5,8 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useCallback } from 'react';
 
-import { useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { ThreadAction } from '@dxos/plugin-thread/types';
 import {
   Icon,
   type ThemedClassName,
@@ -111,7 +112,7 @@ type Range = SheetType['ranges'][number];
 const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
   const { id, model, cursorFallbackRange, cursor } = useSheetContext();
   const { hasAttention } = useAttention(id);
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   // TODO(Zan): Externalize the toolbar action handler. E.g., Toolbar/keys should both fire events.
   const handleAction = useCallback(
@@ -159,16 +160,14 @@ const ToolbarRoot = ({ children, role, classNames }: ToolbarProps) => {
           }
           break;
         case 'comment': {
-          // TODO(Zan): We shouldn't hardcode the action ID.
           if (cursorFallbackRange) {
-            void dispatch({
-              action: 'dxos.org/plugin/thread/action/create',
-              data: {
+            void dispatch(
+              createIntent(ThreadAction.Create, {
                 cursor: completeCellRangeToThreadCursor(cursorFallbackRange),
                 name: action.cellContent,
                 subject: model.sheet,
-              },
-            });
+              }),
+            );
           }
         }
       }

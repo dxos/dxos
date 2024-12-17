@@ -4,9 +4,10 @@
 
 import React, { useCallback, useMemo, useRef } from 'react';
 
-import { useIntentDispatcher, type LayoutContainerProps } from '@dxos/app-framework';
+import { createIntent, useIntentDispatcher, type LayoutContainerProps } from '@dxos/app-framework';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { SpaceAction } from '@dxos/plugin-space';
+import { SpaceAction } from '@dxos/plugin-space/types';
+import { ThreadAction } from '@dxos/plugin-thread/types';
 import { create, fullyQualifiedId, getSpace, Filter, useQuery } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -28,7 +29,7 @@ export const sectionToolbarLayout = 'bs-[--rail-action] bg-[--sticky-bg] sticky 
 // TODO(zantonio): Move toolbar action handling to a more appropriate location.
 const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType; role?: string }>) => {
   const { hasAttention } = useAttention(fullyQualifiedId(table));
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = getSpace(table);
 
   const schema = useMemo(
@@ -46,16 +47,13 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
 
   const handleDeleteRows = useCallback(
     (_row: number, objects: any[]) => {
-      void dispatch({ action: SpaceAction.REMOVE_OBJECTS, data: { objects } });
+      void dispatch(createIntent(SpaceAction.RemoveObjects, { objects }));
     },
     [dispatch],
   );
 
   const handleDeleteColumn = useCallback((fieldId: string) => {
-    void dispatch({
-      action: TableAction.DELETE_COLUMN,
-      data: { table, fieldId } satisfies TableAction.DeleteColumn,
-    });
+    void dispatch(createIntent(TableAction.DeleteColumn, { table, fieldId }));
   }, []);
 
   const projection = useMemo(() => {
@@ -80,14 +78,8 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   });
 
   const onThreadCreate = useCallback(() => {
-    void dispatch({
-      // TODO(Zan): We shouldn't hardcode the action ID.
-      action: 'dxos.org/plugin/thread/action/create',
-      data: {
-        subject: table,
-        cursor: Date.now().toString(), // TODO(Zan): Consider a more appropriate anchor format.
-      },
-    });
+    // TODO(Zan): Consider a more appropriate anchor format.
+    void dispatch(createIntent(ThreadAction.Create, { subject: table, cursor: Date.now().toString() }));
   }, [dispatch, table]);
 
   const handleAction = useCallback(

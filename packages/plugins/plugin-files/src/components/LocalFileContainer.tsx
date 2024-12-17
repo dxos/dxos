@@ -41,7 +41,8 @@ const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
   const { t } = useTranslation(FILES_PLUGIN);
   const { graph } = useGraph();
   const node = graph.findNode(entity.id);
-  const action = node && graph.actions(node).find((action) => action.id === `${LocalFilesAction.RECONNECT}:${node.id}`);
+  const action =
+    node && graph.actions(node).find((action) => action.id === `${LocalFilesAction.Reconnect._tag}:${node.id}`);
 
   return (
     <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>

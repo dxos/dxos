@@ -7,7 +7,8 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React from 'react';
 
-import { type Intent, IntentProvider } from '@dxos/app-framework';
+import { type AnyIntentChain, type IntentContext, IntentProvider } from '@dxos/app-framework';
+import { todo } from '@dxos/debug';
 import { useSpace, create } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
@@ -20,20 +21,18 @@ import { useComputeGraph } from '../ComputeGraph';
 import { RangeList } from '../RangeList';
 
 // TODO(thure via wittjosiah):  stories/components should be written such that the dependency on intents is external and provided via callback and then the story can implement it differently.
-const storybookIntentValue = create({
-  dispatch: async (intents: Intent | Intent[]) => {
-    const intent = Array.isArray(intents) ? intents[0] : intents;
-    switch (intent.action) {
-      case SheetAction.DROP_AXIS: {
-        if (!intent.undo) {
-          const { model, axis, axisIndex } = intent.data as SheetAction.DropAxis;
-          model[axis === 'col' ? 'dropColumn' : 'dropRow'](axisIndex);
-        }
+const storybookIntentValue = create<IntentContext>({
+  dispatch: () => todo(),
+  dispatchPromise: async (intentChain: AnyIntentChain): Promise<any> => {
+    switch (intentChain.first.action) {
+      case SheetAction.DropAxis._tag: {
+        const { model, axis, axisIndex } = intentChain.first.data as SheetAction.DropAxis['input'];
+        model[axis === 'col' ? 'dropColumn' : 'dropRow'](axisIndex);
       }
     }
   },
-  undo: async () => ({}),
-  history: [],
+  undo: () => todo(),
+  undoPromise: () => todo(),
   registerResolver: () => () => {},
 });
 

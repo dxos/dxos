@@ -4,18 +4,17 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { getSpace } from '@dxos/react-client/echo';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { type TableType } from '@dxos/react-ui-table';
 
-import { TABLE_PLUGIN } from '../meta';
 import { TableAction } from '../types';
 
 type TableViewEditorProps = { table: TableType };
 
 const TableViewEditor = ({ table }: TableViewEditorProps) => {
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = getSpace(table);
 
   // TODO(ZaymonFC): The schema registry needs an API where we can query with initial value and
@@ -38,11 +37,7 @@ const TableViewEditor = ({ table }: TableViewEditorProps) => {
 
   const handleDelete = useCallback(
     (fieldId: string) => {
-      void dispatch?.({
-        plugin: TABLE_PLUGIN,
-        action: TableAction.DELETE_COLUMN,
-        data: { table, fieldId },
-      });
+      void dispatch(createIntent(TableAction.DeleteColumn, { table, fieldId }));
     },
     [dispatch, table],
   );

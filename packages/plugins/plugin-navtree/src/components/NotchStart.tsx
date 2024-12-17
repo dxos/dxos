@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { useIntentDispatcher, useResolvePlugin } from '@dxos/app-framework';
-import { ClientAction } from '@dxos/plugin-client/meta';
+import { createIntent, useIntentDispatcher, useResolvePlugin } from '@dxos/app-framework';
+import { ClientAction } from '@dxos/plugin-client/types';
 import { parseObservabilityPlugin } from '@dxos/plugin-observability';
 import { useIdentity } from '@dxos/react-client/halo';
 
@@ -15,7 +15,7 @@ import { HaloButton } from './HaloButton';
 export const NotchStart = () => {
   const identity = useIdentity();
   const observabilityPlugin = useResolvePlugin(parseObservabilityPlugin);
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   return (
     <HaloButton
       size={8}
@@ -23,7 +23,7 @@ export const NotchStart = () => {
       hue={identity?.profile?.data?.hue}
       emoji={identity?.profile?.data?.emoji}
       internal={observabilityPlugin?.provides?.observability?.group === 'dxos'}
-      onClick={() => dispatch({ action: ClientAction.SHARE_IDENTITY })}
+      onClick={() => dispatch(createIntent(ClientAction.ShareIdentity))}
     />
   );
 };

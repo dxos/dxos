@@ -4,7 +4,8 @@
 
 import React, { useCallback } from 'react';
 
-import { useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { ThreadAction } from '@dxos/plugin-thread/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useAttendableAttributes, useAttention } from '@dxos/react-ui-attention';
 
@@ -15,17 +16,11 @@ const SketchContainer = ({ classNames, sketch, ...props }: SketchProps) => {
   const id = fullyQualifiedId(sketch);
   const attentionAttrs = useAttendableAttributes(id);
   const { hasAttention } = useAttention(id);
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const onThreadCreate = useCallback(() => {
-    void dispatch({
-      // TODO(Zan): We shouldn't hardcode the action ID.
-      action: 'dxos.org/plugin/thread/action/create',
-      data: {
-        subject: sketch,
-        cursor: Date.now().toString(), // TODO(Zan): Consider a more appropriate anchor format.
-      },
-    });
+    // TODO(Zan): Consider a more appropriate anchor format.
+    void dispatch(createIntent(ThreadAction.Create, { subject: sketch, cursor: Date.now().toString() }));
   }, [dispatch, sketch]);
 
   // NOTE: Min 500px height (for tools palette to be visible).

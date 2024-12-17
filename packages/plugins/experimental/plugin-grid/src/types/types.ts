@@ -3,25 +3,32 @@
 //
 
 import type {
-  GraphBuilderProvides,
   IntentResolverProvides,
   MetadataRecordsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
+import { S } from '@dxos/echo-schema';
 import { type SchemaProvides } from '@dxos/plugin-space';
 
+import { GridType } from './grid';
 import { GRID_PLUGIN } from '../meta';
 
-const GRID_ACTION = `${GRID_PLUGIN}/action`;
+export namespace GridAction {
+  const GRID_ACTION = `${GRID_PLUGIN}/action`;
 
-export enum GridAction {
-  CREATE = `${GRID_ACTION}/create`,
+  export class Create extends S.TaggedClass<Create>()(`${GRID_ACTION}/create`, {
+    input: S.Struct({
+      name: S.optional(S.String),
+    }),
+    output: S.Struct({
+      object: GridType,
+    }),
+  }) {}
 }
 
 export type GridPluginProvides = SurfaceProvides &
   IntentResolverProvides &
-  GraphBuilderProvides &
   MetadataRecordsProvides &
   TranslationsProvides &
   SchemaProvides;

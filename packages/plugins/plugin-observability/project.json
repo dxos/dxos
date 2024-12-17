@@ -12,7 +12,8 @@
       "options": {
         "entryPoints": [
           "{projectRoot}/src/index.ts",
-          "{projectRoot}/src/meta.ts"
+          "{projectRoot}/src/meta.ts",
+          "{projectRoot}/src/types.ts"
         ]
       }
     },

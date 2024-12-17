@@ -27,6 +27,7 @@ export const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
     dispatchPromise: defaultPromise,
     undo: defaultEffect,
     undoPromise: defaultPromise,
+    registerResolver: () => () => {},
   });
 
   return {
@@ -35,7 +36,14 @@ export const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
       const resolvers = Object.fromEntries(
         filterPlugins(plugins, parseIntentResolverPlugin).map((plugin): [string, AnyIntentResolver[]] => {
           const resolvers = reduceResolvers(
-            plugin.provides.intent.resolvers({ plugins, dispatch: (intent) => state.dispatch(intent) }),
+            plugin.provides.intent.resolvers({
+              plugins,
+              dispatch: (intent) => state.dispatch(intent),
+              dispatchPromise: (intent) => state.dispatchPromise(intent),
+              undo: () => state.undo(),
+              undoPromise: () => state.undoPromise(),
+              registerResolver: (id, resolver) => state.registerResolver(id, resolver),
+            }),
           );
           return [plugin.meta.id, resolvers];
         }),

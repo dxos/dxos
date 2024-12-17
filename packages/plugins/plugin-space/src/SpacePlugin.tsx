@@ -16,6 +16,8 @@ import {
   type Plugin,
   type PluginDefinition,
   Surface,
+  createIntent,
+  createResolver,
   createSurface,
   filterPlugins,
   findPlugin,
@@ -29,7 +31,7 @@ import {
   resolvePlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type Trigger, type UnsubscribeCallback } from '@dxos/async';
-import { S, type AbstractTypedObject, type HasId } from '@dxos/echo-schema';
+import { type AbstractTypedObject, type HasId } from '@dxos/echo-schema';
 import { scheduledEffect } from '@dxos/echo-signals/core';
 import { invariant } from '@dxos/invariant';
 import { create, isDeleted, isReactiveObject } from '@dxos/live-object';
@@ -37,9 +39,9 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { type AttentionPluginProvides, parseAttentionPlugin } from '@dxos/plugin-attention';
-import { type ClientPluginProvides, parseClientPlugin } from '@dxos/plugin-client';
+import { type ClientPluginProvides, parseClientPlugin } from '@dxos/plugin-client/types';
 import { type Node, createExtension, memoize, toSignal } from '@dxos/plugin-graph';
-import { ObservabilityAction } from '@dxos/plugin-observability/meta';
+import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type Client, PublicKey } from '@dxos/react-client';
 import {
@@ -91,13 +93,15 @@ import {
   CREATE_OBJECT_DIALOG,
   POPOVER_RENAME_SPACE,
   POPOVER_RENAME_OBJECT,
+  type JoinDialogProps,
 } from './components';
-import meta, { CollectionAction, SPACE_PLUGIN, SpaceAction } from './meta';
+import meta, { SPACE_PLUGIN } from './meta';
 import translations from './translations';
 import {
+  CollectionAction,
   CollectionType,
   parseSchemaPlugin,
-  SpaceForm,
+  SpaceAction,
   type PluginState,
   type SpacePluginProvides,
   type SpaceSettingsProps,
@@ -233,11 +237,7 @@ export const SpacePlugin = ({
             const timeout = setTimeout(async () => {
               const node = graph.findNode(soloPart.id);
               if (!node) {
-                await dispatch({
-                  plugin: SPACE_PLUGIN,
-                  action: SpaceAction.WAIT_FOR_OBJECT,
-                  data: { id: soloPart.id },
-                });
+                await dispatch(createIntent(SpaceAction.WaitForObject, { id: soloPart.id }));
               }
             }, WAIT_FOR_OBJECT_TIMEOUT);
 
@@ -484,7 +484,7 @@ export const SpacePlugin = ({
       metadata: {
         records: {
           [CollectionType.typename]: {
-            createObject: CollectionAction.CREATE,
+            createObject: (props: { name?: string }) => createIntent(CollectionAction.Create, props),
             placeholder: ['unnamed collection label', { ns: SPACE_PLUGIN }],
             icon: 'ph--cards-three--regular',
             // TODO(wittjosiah): Move out of metadata.
@@ -718,12 +718,9 @@ export const SpacePlugin = ({
               filter: (node): node is Node<null> => node.id === SPACES,
               actions: () => [
                 {
-                  id: SpaceAction.OPEN_CREATE_SPACE,
+                  id: SpaceAction.OpenCreateSpace._tag,
                   data: async () => {
-                    await dispatch({
-                      plugin: SPACE_PLUGIN,
-                      action: SpaceAction.OPEN_CREATE_SPACE,
-                    });
+                    await dispatch(createIntent(SpaceAction.OpenCreateSpace));
                   },
                   properties: {
                     label: ['create space label', { ns: SPACE_PLUGIN }],
@@ -734,12 +731,9 @@ export const SpacePlugin = ({
                   },
                 },
                 {
-                  id: SpaceAction.JOIN,
+                  id: SpaceAction.Join._tag,
                   data: async () => {
-                    await dispatch({
-                      plugin: SPACE_PLUGIN,
-                      action: SpaceAction.JOIN,
-                    });
+                    await dispatch(createIntent(SpaceAction.Join));
                   },
                   properties: {
                     label: ['join space label', { ns: SPACE_PLUGIN }],
@@ -1010,7 +1004,7 @@ export const SpacePlugin = ({
           ];
         },
         serializer: (plugins) => {
-          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
+          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatchPromise;
           if (!dispatch) {
             return [];
           }
@@ -1037,12 +1031,10 @@ export const SpacePlugin = ({
                 type: DIRECTORY_TYPE,
               }),
               deserialize: async (data) => {
-                const result = await dispatch({
-                  plugin: SPACE_PLUGIN,
-                  action: SpaceAction.CREATE,
-                  data: { name: data.name },
-                });
-                return result?.data.space;
+                const result = await dispatch(
+                  createIntent(SpaceAction.Create, { name: data.name, edgeReplication: true }),
+                );
+                return result.data?.space;
               },
             },
             {
@@ -1062,57 +1054,42 @@ export const SpacePlugin = ({
                   return;
                 }
 
-                const result = await dispatch({
-                  plugin: SPACE_PLUGIN,
-                  action: SpaceAction.ADD_OBJECT,
-                  data: {
+                const result = await dispatch(
+                  createIntent(SpaceAction.AddObject, {
                     target: collection,
                     object: create(CollectionType, { name: data.name, objects: [], views: {} }),
-                  },
-                });
+                  }),
+                );
 
-                return result?.data.object;
+                return result.data?.object;
               },
             },
           ];
         },
       },
       intent: {
-        resolver: async (intent, plugins) => {
-          const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
-          const client = clientPlugin?.provides.client;
-          switch (intent.action) {
-            case SpaceAction.WAIT_FOR_OBJECT: {
-              state.values.awaiting = intent.data?.id;
-              return { data: true };
-            }
+        resolvers: ({ plugins, dispatchPromise: dispatch }) => {
+          const activeParts = resolvePlugin(plugins, parseNavigationPlugin)?.provides.location.active;
+          const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
+          const resolve = resolvePlugin(plugins, parseMetadataResolverPlugin)?.provides.metadata.resolver;
 
-            case SpaceAction.OPEN_CREATE_SPACE: {
-              return {
-                data: true,
-                intents: [
-                  [
-                    {
-                      action: LayoutAction.SET_LAYOUT,
-                      data: {
-                        element: 'dialog',
-                        component: CREATE_SPACE_DIALOG,
-                        dialogBlockAlign: 'start',
-                        subject: intent.data,
-                      },
-                    },
-                  ],
-                ],
-              };
-            }
+          invariant(activeParts, 'Active parts not available.');
+          invariant(client, 'Client not available.');
+          invariant(resolve, 'Metadata resolver not available.');
 
-            case SpaceAction.CREATE: {
-              if (!client || !S.is(SpaceForm)(intent.data)) {
-                return;
-              }
-
-              const space = await client.spaces.create({ name: intent.data.name });
-              if (intent.data.edgeReplication) {
+          return [
+            createResolver(SpaceAction.OpenCreateSpace, () => ({
+              intents: [
+                createIntent(LayoutAction.SetLayout, {
+                  element: 'dialog',
+                  component: 'awaiting-object',
+                  dialogBlockAlign: 'start',
+                }),
+              ],
+            })),
+            createResolver(SpaceAction.Create, async ({ name, edgeReplication }) => {
+              const space = await client.spaces.create({ name });
+              if (edgeReplication) {
                 await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
               }
               await space.waitUntilReady();
@@ -1130,303 +1107,187 @@ export const SpacePlugin = ({
                   activeParts: { main: [space.id] },
                 },
                 intents: [
-                  [
-                    {
-                      action: ObservabilityAction.SEND_EVENT,
-                      data: {
-                        name: 'space.create',
-                        properties: {
-                          spaceId: space.id,
-                        },
-                      },
+                  createIntent(ObservabilityAction.SendEvent, {
+                    name: 'space.create',
+                    properties: {
+                      spaceId: space.id,
                     },
-                  ],
+                  }),
                 ],
               };
-            }
-
-            case SpaceAction.JOIN: {
-              return {
-                data: true,
-                intents: [
-                  [
-                    {
-                      action: LayoutAction.SET_LAYOUT,
-                      data: {
-                        element: 'dialog',
-                        component: JOIN_DIALOG,
-                        dialogBlockAlign: 'start',
-                        subject: {
-                          initialInvitationCode: intent.data?.invitationCode,
-                        } satisfies Partial<JoinPanelProps>,
-                      },
-                    },
-                  ],
-                ],
-              };
-            }
-
-            case SpaceAction.SHARE: {
-              const space = intent.data?.space;
-              if (isSpace(space) && !space.properties[COMPOSER_SPACE_LOCK]) {
+            }),
+            createResolver(SpaceAction.Join, ({ invitationCode }) => ({
+              intents: [
+                createIntent(LayoutAction.SetLayout, {
+                  element: 'dialog',
+                  component: JOIN_DIALOG,
+                  dialogBlockAlign: 'start',
+                  subject: {
+                    initialInvitationCode: invitationCode,
+                  } satisfies Partial<JoinDialogProps>,
+                }),
+              ],
+            })),
+            createResolver(
+              SpaceAction.Share,
+              ({ space }) => {
                 const active = navigationPlugin?.provides.location.active;
                 const mode = layoutPlugin?.provides.layout.layoutMode;
                 const current = active ? firstIdInPart(active, mode === 'solo' ? 'solo' : 'main') : undefined;
                 const target = current?.startsWith(space.id) ? current : undefined;
 
                 return {
-                  data: true,
                   intents: [
-                    [
-                      {
-                        action: LayoutAction.SET_LAYOUT,
-                        data: {
-                          element: 'dialog',
-                          component: SPACE_SETTINGS_DIALOG,
-                          dialogBlockAlign: 'start',
-                          subject: {
-                            space,
-                            target,
-                            initialTab: 'members',
-                            createInvitationUrl: createSpaceInvitationUrl,
-                          } satisfies Partial<SpaceSettingsDialogProps>,
-                        },
+                    createIntent(LayoutAction.SetLayout, {
+                      element: 'dialog',
+                      component: SPACE_SETTINGS_DIALOG,
+                      dialogBlockAlign: 'start',
+                      subject: {
+                        space,
+                        target,
+                        initialTab: 'members',
+                        createInvitationUrl: createSpaceInvitationUrl,
+                      } satisfies Partial<SpaceSettingsDialogProps>,
+                    }),
+                    createIntent(ObservabilityAction.SendEvent, {
+                      name: 'space.share',
+                      properties: {
+                        space: space.id,
                       },
-                    ],
-                    [
-                      {
-                        action: ObservabilityAction.SEND_EVENT,
-                        data: {
-                          name: 'space.share',
-                          properties: {
-                            space: space.id,
-                          },
-                        },
-                      },
-                    ],
+                    }),
                   ],
                 };
-              }
-              break;
-            }
-
-            case SpaceAction.LOCK: {
-              const space = intent.data?.space;
-              if (isSpace(space)) {
-                space.properties[COMPOSER_SPACE_LOCK] = true;
-                return {
-                  data: true,
-                  intents: [
-                    [
-                      {
-                        action: ObservabilityAction.SEND_EVENT,
-                        data: {
-                          name: 'space.lock',
-                          properties: {
-                            spaceId: space.id,
-                          },
-                        },
-                      },
-                    ],
-                  ],
-                };
-              }
-              break;
-            }
-
-            case SpaceAction.UNLOCK: {
-              const space = intent.data?.space;
-              if (isSpace(space)) {
-                space.properties[COMPOSER_SPACE_LOCK] = false;
-                return {
-                  data: true,
-                  intents: [
-                    [
-                      {
-                        action: ObservabilityAction.SEND_EVENT,
-                        data: {
-                          name: 'space.unlock',
-                          properties: {
-                            spaceId: space.id,
-                          },
-                        },
-                      },
-                    ],
-                  ],
-                };
-              }
-              break;
-            }
-
-            case SpaceAction.RENAME: {
-              const { caller, space } = intent.data ?? {};
-              if (typeof caller === 'string' && isSpace(space)) {
-                return {
-                  intents: [
-                    [
-                      {
-                        action: LayoutAction.SET_LAYOUT,
-                        data: {
-                          element: 'popover',
-                          anchorId: `dxos.org/ui/${caller}/${space.id}`,
-                          component: POPOVER_RENAME_SPACE,
-                          subject: space,
-                        },
-                      },
-                    ],
-                  ],
-                };
-              }
-              break;
-            }
-
-            case SpaceAction.OPEN_SETTINGS: {
-              const space = intent.data?.space;
-              if (isSpace(space)) {
-                return {
-                  data: true,
-                  intents: [
-                    [
-                      {
-                        action: LayoutAction.SET_LAYOUT,
-                        data: {
-                          element: 'dialog',
-                          component: SPACE_SETTINGS_DIALOG,
-                          dialogBlockAlign: 'start',
-                          subject: {
-                            space,
-                            initialTab: 'settings',
-                            createInvitationUrl: createSpaceInvitationUrl,
-                          } satisfies Partial<SpaceSettingsDialogProps>,
-                        },
-                      },
-                    ],
-                  ],
-                };
-              }
-              break;
-            }
-
-            case SpaceAction.OPEN: {
-              const space = intent.data?.space;
-              if (isSpace(space)) {
-                await space.open();
-                return { data: true };
-              }
-              break;
-            }
-
-            case SpaceAction.CLOSE: {
-              const space = intent.data?.space;
-              if (isSpace(space)) {
-                await space.close();
-                return { data: true };
-              }
-              break;
-            }
-
-            case SpaceAction.MIGRATE: {
-              const space = intent.data?.space;
-              if (isSpace(space)) {
-                if (space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
-                  state.values.sdkMigrationRunning[space.id] = true;
-                  await space.internal.migrate();
-                  state.values.sdkMigrationRunning[space.id] = false;
-                }
-                const result = await Migrations.migrate(space, intent.data?.version);
-                return {
-                  data: result,
-                  intents: [
-                    [
-                      {
-                        action: ObservabilityAction.SEND_EVENT,
-                        data: {
-                          name: 'space.migrate',
-                          properties: {
-                            spaceId: space.id,
-                            version: intent.data?.version,
-                          },
-                        },
-                      },
-                    ],
-                  ],
-                };
-              }
-              break;
-            }
-
-            case SpaceAction.OPEN_CREATE_OBJECT: {
+              },
+              { filter: (data): data is { space: Space } => !data.space.properties[COMPOSER_SPACE_LOCK] },
+            ),
+            createResolver(SpaceAction.Lock, ({ space }) => {
+              space.properties[COMPOSER_SPACE_LOCK] = true;
               return {
-                data: true,
                 intents: [
-                  [
-                    {
-                      action: LayoutAction.SET_LAYOUT,
-                      data: {
-                        element: 'dialog',
-                        component: CREATE_OBJECT_DIALOG,
-                        dialogBlockAlign: 'start',
-                        subject: intent.data,
-                      },
+                  createIntent(ObservabilityAction.SendEvent, {
+                    name: 'space.lock',
+                    properties: {
+                      spaceId: space.id,
                     },
-                  ],
+                  }),
                 ],
               };
-            }
-
-            case SpaceAction.ADD_OBJECT: {
-              const object = intent.data?.object ?? intent.data?.result;
-              if (!isReactiveObject(object)) {
-                return;
+            }),
+            createResolver(SpaceAction.Unlock, ({ space }) => {
+              space.properties[COMPOSER_SPACE_LOCK] = false;
+              return {
+                intents: [
+                  createIntent(ObservabilityAction.SendEvent, {
+                    name: 'space.unlock',
+                    properties: {
+                      spaceId: space.id,
+                    },
+                  }),
+                ],
+              };
+            }),
+            createResolver(SpaceAction.Rename, ({ caller, space }) => {
+              return {
+                intents: [
+                  createIntent(LayoutAction.SetLayout, {
+                    element: 'popover',
+                    anchorId: `dxos.org/ui/${caller}/${space.id}`,
+                    component: POPOVER_RENAME_SPACE,
+                    subject: space,
+                  }),
+                ],
+              };
+            }),
+            createResolver(SpaceAction.OpenSettings, ({ space }) => {
+              return {
+                intents: [
+                  createIntent(LayoutAction.SetLayout, {
+                    element: 'dialog',
+                    component: SPACE_SETTINGS_DIALOG,
+                    dialogBlockAlign: 'start',
+                    subject: {
+                      space,
+                      initialTab: 'settings',
+                      createInvitationUrl: createSpaceInvitationUrl,
+                    } satisfies Partial<SpaceSettingsDialogProps>,
+                  }),
+                ],
+              };
+            }),
+            createResolver(SpaceAction.Open, async ({ space }) => {
+              await space.open();
+            }),
+            createResolver(SpaceAction.Close, async ({ space }) => {
+              await space.close();
+            }),
+            createResolver(SpaceAction.Migrate, async ({ space, version }) => {
+              if (space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
+                state.values.sdkMigrationRunning[space.id] = true;
+                await space.internal.migrate();
+                state.values.sdkMigrationRunning[space.id] = false;
               }
-
-              const space = isSpace(intent.data?.target) ? intent.data?.target : getSpace(intent.data?.target);
-              if (!space) {
-                return;
-              }
+              const result = await Migrations.migrate(space, version);
+              return {
+                data: result,
+                intents: [
+                  createIntent(ObservabilityAction.SendEvent, {
+                    name: 'space.migrate',
+                    properties: {
+                      spaceId: space.id,
+                      version,
+                    },
+                  }),
+                ],
+              };
+            }),
+            createResolver(SpaceAction.OpenCreateObject, ({ target }) => {
+              return {
+                intents: [
+                  createIntent(LayoutAction.SetLayout, {
+                    element: 'dialog',
+                    component: CREATE_OBJECT_DIALOG,
+                    dialogBlockAlign: 'start',
+                    subject: { target } satisfies Partial<CreateObjectDialogProps>,
+                  }),
+                ],
+              };
+            }),
+            createResolver(SpaceAction.AddObject, async ({ target, object }) => {
+              const space = isSpace(target) ? target : getSpace(target);
+              invariant(space, 'Space not found.');
 
               if (space.db.coreDatabase.getAllObjectIds().length >= SPACE_MAX_OBJECTS) {
-                return {
-                  data: false,
-                  intents: [
-                    [
-                      {
-                        action: LayoutAction.SET_LAYOUT,
-                        data: {
-                          element: 'toast',
-                          subject: {
-                            id: `${SPACE_PLUGIN}/space-limit`,
-                            title: translations[0]['en-US'][SPACE_PLUGIN]['space limit label'],
-                            description: translations[0]['en-US'][SPACE_PLUGIN]['space limit description'],
-                            duration: 5_000,
-                            icon: 'ph--warning--regular',
-                            actionLabel: translations[0]['en-US'][SPACE_PLUGIN]['remove deleted objects label'],
-                            actionAlt: translations[0]['en-US'][SPACE_PLUGIN]['remove deleted objects alt'],
-                            // TODO(wittjosiah): Use OS namespace.
-                            closeLabel: translations[0]['en-US'][SPACE_PLUGIN]['space limit close label'],
-                            onAction: () => space.db.coreDatabase.unlinkDeletedObjects(),
-                          },
-                        },
-                      },
-                    ],
-                    [
-                      {
-                        action: ObservabilityAction.SEND_EVENT,
-                        data: {
-                          name: 'space.limit',
-                          properties: {
-                            spaceId: space.id,
-                          },
-                        },
-                      },
-                    ],
-                  ],
-                };
+                void dispatch(
+                  createIntent(LayoutAction.SetLayout, {
+                    element: 'toast',
+                    subject: {
+                      id: `${SPACE_PLUGIN}/space-limit`,
+                      title: ['space limit label', { ns: SPACE_PLUGIN }],
+                      description: ['space limit description', { ns: SPACE_PLUGIN }],
+                      duration: 5_000,
+                      icon: 'ph--warning--regular',
+                      actionLabel: ['remove deleted objects label', { ns: SPACE_PLUGIN }],
+                      actionAlt: ['remove deleted objects alt', { ns: SPACE_PLUGIN }],
+                      closeLabel: ['close label', { ns: 'os' }],
+                      onAction: () => space.db.coreDatabase.unlinkDeletedObjects(),
+                    },
+                  }),
+                );
+                void dispatch(
+                  createIntent(ObservabilityAction.SendEvent, {
+                    name: 'space.limit',
+                    properties: {
+                      spaceId: space.id,
+                    },
+                  }),
+                );
+
+                throw new Error('Space limit reached.');
               }
 
-              if (intent.data?.target instanceof CollectionType) {
-                intent.data?.target.objects.push(object as HasId);
-              } else if (isSpace(intent.data?.target)) {
+              if (target instanceof CollectionType) {
+                target.objects.push(object as HasId);
+              } else if (isSpace(target)) {
                 const collection = space.properties[CollectionType.typename];
                 if (collection instanceof CollectionType) {
                   collection.objects.push(object as HasId);
@@ -1440,39 +1301,25 @@ export const SpacePlugin = ({
               return {
                 data: { id: fullyQualifiedId(object), object, activeParts: { main: [fullyQualifiedId(object)] } },
                 intents: [
-                  [
-                    {
-                      action: ObservabilityAction.SEND_EVENT,
-                      data: {
-                        name: 'space.object.add',
-                        properties: {
-                          spaceId: space.id,
-                          objectId: object.id,
-                          typename: getTypename(object),
-                        },
-                      },
+                  createIntent(ObservabilityAction.SendEvent, {
+                    name: 'space.object.add',
+                    properties: {
+                      spaceId: space.id,
+                      objectId: object.id,
+                      typename: getTypename(object),
                     },
-                  ],
+                  }),
                 ],
               };
-            }
-
-            case SpaceAction.REMOVE_OBJECTS: {
-              const objects = intent.data?.objects ?? intent.data?.result;
-              invariant(Array.isArray(objects));
-
+            }),
+            createResolver(SpaceAction.RemoveObjects, async ({ objects, target, deletionData }, undo) => {
               // All objects must be a member of the same space.
               const space = getSpace(objects[0]);
-              if (!space || !objects.every((obj) => isEchoObject(obj) && getSpace(obj) === space)) {
-                return;
-              }
-
-              const resolve = resolvePlugin(plugins, parseMetadataResolverPlugin)?.provides.metadata.resolver;
-              const activeParts = navigationPlugin?.provides.location.active;
+              invariant(space && objects.every((obj) => isEchoObject(obj) && getSpace(obj) === space));
               const openObjectIds = new Set<string>(openIds(activeParts ?? {}));
 
-              if (!intent.undo && resolve) {
-                const parentCollection = intent.data?.collection ?? space.properties[CollectionType.typename];
+              if (!undo) {
+                const parentCollection: CollectionType = target ?? space.properties[CollectionType.typename];
                 const nestedObjectsList = await Promise.all(objects.map((obj) => getNestedObjects(obj, resolve)));
 
                 const deletionData = {
@@ -1486,19 +1333,7 @@ export const SpacePlugin = ({
                     .flatMap((obj, i) => [obj, ...nestedObjectsList[i]])
                     .map((obj) => fullyQualifiedId(obj))
                     .filter((id) => openObjectIds.has(id)),
-                };
-
-                if (deletionData.wasActive.length > 0) {
-                  await intentPlugin?.provides.intent.dispatch({
-                    action: NavigationAction.CLOSE,
-                    data: {
-                      activeParts: {
-                        main: deletionData.wasActive,
-                        sidebar: deletionData.wasActive,
-                      },
-                    },
-                  });
-                }
+                } satisfies SpaceAction.DeletionData;
 
                 if (deletionData.parentCollection instanceof CollectionType) {
                   [...deletionData.indices]
@@ -1522,102 +1357,78 @@ export const SpacePlugin = ({
                     : 'object deleted label';
 
                 return {
-                  data: true,
                   undoable: {
                     // TODO(ZaymonFC): Pluralize if more than one object.
-                    message: translations[0]['en-US'][SPACE_PLUGIN][undoMessageKey],
-                    data: deletionData,
+                    message: [undoMessageKey, { ns: SPACE_PLUGIN }],
+                    data: { deletionData },
                   },
+                  intents:
+                    deletionData.wasActive.length > 0
+                      ? [createIntent(NavigationAction.Close, { activeParts: { main: deletionData.wasActive } })]
+                      : undefined,
                 };
               } else {
-                const undoData = intent.data;
                 if (
-                  undoData?.objects?.length &&
-                  undoData.objects.every(isEchoObject) &&
-                  undoData.parentCollection instanceof CollectionType
+                  deletionData?.objects?.length &&
+                  deletionData.objects.every(isEchoObject) &&
+                  deletionData.parentCollection instanceof CollectionType
                 ) {
                   // Restore the object to the space.
-                  const restoredObjects = undoData.objects.map((obj: Expando) => space.db.add(obj));
+                  const restoredObjects = deletionData.objects.map((obj: Expando) => space.db.add(obj));
 
                   // Restore nested objects to the space.
-                  undoData.nestedObjectsList.flat().forEach((obj: Expando) => {
+                  deletionData.nestedObjectsList.flat().forEach((obj: Expando) => {
                     space.db.add(obj);
                   });
 
-                  undoData.indices.forEach((index: number, i: number) => {
+                  deletionData.indices.forEach((index: number, i: number) => {
                     if (index !== -1) {
-                      undoData.parentCollection.objects.splice(index, 0, restoredObjects[i] as Expando);
+                      deletionData.parentCollection.objects.splice(index, 0, restoredObjects[i] as Expando);
                     }
                   });
 
-                  if (undoData.wasActive.length > 0) {
-                    await intentPlugin?.provides.intent.dispatch({
-                      action: NavigationAction.OPEN,
-                      data: { activeParts: { main: undoData.wasActive } },
-                    });
-                  }
-
-                  return { data: true };
+                  return {
+                    intents:
+                      deletionData.wasActive.length > 0
+                        ? [
+                            createIntent(NavigationAction.Open, {
+                              activeParts: { main: deletionData.wasActive as string[] },
+                            }),
+                          ]
+                        : undefined,
+                  };
                 }
-
-                return { data: false };
               }
-            }
+            }),
+            createResolver(SpaceAction.RenameObject, async ({ object, caller }) => ({
+              intents: [
+                createIntent(LayoutAction.SetLayout, {
+                  element: 'popover',
+                  anchorId: `dxos.org/ui/${caller}/${fullyQualifiedId(object)}`,
+                  component: POPOVER_RENAME_OBJECT,
+                  subject: object,
+                }),
+              ],
+            })),
+            createResolver(SpaceAction.DuplicateObject, async ({ object, target }) => {
+              const space = isSpace(target) ? target : getSpace(target);
+              invariant(space, 'Space not found.');
 
-            case SpaceAction.RENAME_OBJECT: {
-              const object = intent.data?.object ?? intent.data?.result;
-              const caller = intent.data?.caller;
-              if (isReactiveObject(object) && caller) {
-                return {
-                  intents: [
-                    [
-                      {
-                        action: LayoutAction.SET_LAYOUT,
-                        data: {
-                          element: 'popover',
-                          anchorId: `dxos.org/ui/${caller}/${fullyQualifiedId(object)}`,
-                          component: POPOVER_RENAME_OBJECT,
-                          subject: object,
-                        },
-                      },
-                    ],
-                  ],
-                };
-              }
-              break;
-            }
-
-            case SpaceAction.DUPLICATE_OBJECT: {
-              const originalObject = intent.data?.object ?? intent.data?.result;
-              const resolve = resolvePlugin(plugins, parseMetadataResolverPlugin)?.provides.metadata.resolver;
-              const space = isSpace(intent.data?.target) ? intent.data?.target : getSpace(intent.data?.target);
-              if (!isEchoObject(originalObject) || !resolve || !space) {
-                return;
-              }
-
-              const newObject = await cloneObject(originalObject, resolve, space);
+              const newObject = await cloneObject(object, resolve, space);
               return {
-                intents: [
-                  [{ action: SpaceAction.ADD_OBJECT, data: { object: newObject, target: intent.data?.target } }],
-                ],
+                intents: [createIntent(SpaceAction.AddObject, { object: newObject, target })],
               };
-            }
-
-            case SpaceAction.TOGGLE_HIDDEN: {
-              settings.values.showHidden = intent.data?.state ?? !settings.values.showHidden;
-              return { data: true };
-            }
-
-            case CollectionAction.CREATE: {
-              const collection = create(CollectionType, {
-                name: intent.data?.name,
-                objects: [],
-                views: {},
-              });
-
-              return { data: collection };
-            }
-          }
+            }),
+            createResolver(SpaceAction.WaitForObject, async ({ id }) => {
+              state.values.awaiting = id;
+            }),
+            createResolver(SpaceAction.ToggleHidden, async ({ state }) => {
+              settings.values.showHidden = state;
+            }),
+            createResolver(CollectionAction.Create, async ({ name }) => ({
+              data: { object: create(CollectionType, { name, objects: [], views: {} }) },
+            })),
+          ];
         },
       },
     },

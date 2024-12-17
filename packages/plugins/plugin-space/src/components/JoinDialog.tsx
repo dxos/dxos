@@ -4,9 +4,9 @@
 
 import React, { useCallback } from 'react';
 
-import { LayoutAction, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, LayoutAction, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
 import { useGraph } from '@dxos/plugin-graph';
-import { ObservabilityAction } from '@dxos/plugin-observability/meta';
+import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { useSpaces } from '@dxos/react-client/echo';
 import { type InvitationResult } from '@dxos/react-client/invitations';
 import { Dialog, useTranslation } from '@dxos/react-ui';
@@ -22,7 +22,7 @@ export type JoinDialogProps = JoinPanelProps & {
 
 export const JoinDialog = ({ navigableCollections, ...props }: JoinDialogProps) => {
   const { t } = useTranslation(SPACE_PLUGIN);
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const spaces = useSpaces();
   const { graph } = useGraph();
 
@@ -30,9 +30,8 @@ export const JoinDialog = ({ navigableCollections, ...props }: JoinDialogProps) 
     async (result: InvitationResult | null) => {
       if (result?.spaceKey) {
         await Promise.all([
-          dispatch({
-            action: LayoutAction.SET_LAYOUT,
-            data: {
+          dispatch(
+            createIntent(LayoutAction.SetLayout, {
               element: 'toast',
               subject: {
                 id: `${SPACE_PLUGIN}/join-success`,
@@ -40,15 +39,14 @@ export const JoinDialog = ({ navigableCollections, ...props }: JoinDialogProps) 
                 title: t('join success label'),
                 closeLabel: t('dismiss label'),
               },
-            },
-          }),
-          dispatch({
-            action: LayoutAction.SET_LAYOUT,
-            data: {
+            }),
+          ),
+          dispatch(
+            createIntent(LayoutAction.SetLayout, {
               element: 'dialog',
               state: false,
-            },
-          }),
+            }),
+          ),
         ]);
       }
 
@@ -62,31 +60,15 @@ export const JoinDialog = ({ navigableCollections, ...props }: JoinDialogProps) 
         // If the target has not yet replicated, this will trigger a loading toast.
         await graph.waitForPath({ target }).catch(() => {});
         await Promise.all([
-          dispatch({
-            action: NavigationAction.OPEN,
-            data: {
-              activeParts: { main: [target] },
-            },
-          }),
-          dispatch({
-            action: NavigationAction.EXPOSE,
-            data: {
-              id: target,
-            },
-          }),
+          dispatch(createIntent(NavigationAction.Open, { activeParts: { main: [target] } })),
+          dispatch(createIntent(NavigationAction.Expose, { id: target })),
         ]);
       }
 
       if (space) {
-        await dispatch({
-          action: ObservabilityAction.SEND_EVENT,
-          data: {
-            name: 'space.join',
-            properties: {
-              spaceId: space.id,
-            },
-          },
-        });
+        await dispatch(
+          createIntent(ObservabilityAction.SendEvent, { name: 'space.join', properties: { spaceId: space.id } }),
+        );
       }
     },
     [dispatch, spaces],
