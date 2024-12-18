@@ -14,7 +14,7 @@ export type ToolbarProps = ThemedClassName<{
 }>;
 
 export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
-  const handleAction: ActionHandler = (action) => {
+  const handleAction: ActionHandler = async (action) => {
     return onAction?.(action) ?? false;
   };
 
