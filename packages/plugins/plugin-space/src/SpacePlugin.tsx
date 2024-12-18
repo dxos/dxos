@@ -14,7 +14,7 @@ import {
   NavigationAction,
   type Plugin,
   type PluginDefinition,
-  PromiseIntentDispatcher,
+  type PromiseIntentDispatcher,
   Surface,
   createIntent,
   createResolver,
@@ -34,7 +34,7 @@ import { EventSubscriptions, type Trigger, type UnsubscribeCallback } from '@dxo
 import { type AbstractTypedObject, type HasId } from '@dxos/echo-schema';
 import { scheduledEffect } from '@dxos/echo-signals/core';
 import { invariant } from '@dxos/invariant';
-import { create, isDeleted, isReactiveObject } from '@dxos/live-object';
+import { create, isDeleted, isReactiveObject, type ReactiveObject } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
@@ -49,6 +49,7 @@ import {
   FQ_ID_LENGTH,
   Filter,
   OBJECT_ID_LENGTH,
+  QueryOptions,
   type ReactiveEchoObject,
   SPACE_ID_LENGTH,
   type Space,
@@ -562,13 +563,13 @@ export const SpacePlugin = ({
             createSurface({
               id: CREATE_OBJECT_DIALOG,
               role: 'dialog',
-              filter: (data): data is { subject: CreateObjectDialogProps } => data.component === CREATE_OBJECT_DIALOG,
+              filter: (data): data is { subject: Partial<CreateObjectDialogProps> } =>
+                data.component === CREATE_OBJECT_DIALOG,
               component: ({ data }) => (
                 <CreateObjectDialog
-                  {...data.subject}
                   schemas={schemas}
-                  navigableCollections={state.values.navigableCollections}
                   resolve={metadataPlugin?.provides.metadata.resolver}
+                  {...data.subject}
                 />
               ),
             }),
@@ -664,7 +665,7 @@ export const SpacePlugin = ({
           const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
 
           const client = clientPlugin?.provides.client;
-          const dispatch = intentPlugin?.provides.intent.dispatch;
+          const dispatch = intentPlugin?.provides.intent.dispatchPromise;
           const resolve = metadataPlugin?.provides.metadata.resolver;
           const graph = graphPlugin?.provides.graph;
           if (!client || !dispatch || !resolve || !graph) {
@@ -911,7 +912,7 @@ export const SpacePlugin = ({
                 memoize(() => {
                   if (!store.value) {
                     void space.db
-                      .query({ id: objectId })
+                      .query({ id: objectId }, { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED })
                       .first()
                       .then((o) => (store.value = o))
                       .catch((err) => log.catch(err, { objectId }));
@@ -1082,7 +1083,7 @@ export const SpacePlugin = ({
               intents: [
                 createIntent(LayoutAction.SetLayout, {
                   element: 'dialog',
-                  component: 'awaiting-object',
+                  component: CREATE_SPACE_DIALOG,
                   dialogBlockAlign: 'start',
                 }),
               ],
@@ -1240,14 +1241,20 @@ export const SpacePlugin = ({
                 ],
               };
             }),
-            createResolver(SpaceAction.OpenCreateObject, ({ target }) => {
+            createResolver(SpaceAction.OpenCreateObject, ({ target, navigable = true }) => {
               return {
                 intents: [
                   createIntent(LayoutAction.SetLayout, {
                     element: 'dialog',
                     component: CREATE_OBJECT_DIALOG,
                     dialogBlockAlign: 'start',
-                    subject: { target } satisfies Partial<CreateObjectDialogProps>,
+                    subject: {
+                      target,
+                      shouldNavigate: navigable
+                        ? (object: ReactiveObject<any>) =>
+                            !(object instanceof CollectionType) || state.values.navigableCollections
+                        : () => false,
+                    } satisfies Partial<CreateObjectDialogProps>,
                   }),
                 ],
               };
@@ -1299,7 +1306,11 @@ export const SpacePlugin = ({
               }
 
               return {
-                data: { id: fullyQualifiedId(object), object, activeParts: { main: [fullyQualifiedId(object)] } },
+                data: {
+                  id: fullyQualifiedId(object),
+                  object: object as HasId,
+                  activeParts: { main: [fullyQualifiedId(object)] },
+                },
                 intents: [
                   createIntent(ObservabilityAction.SendEvent, {
                     name: 'space.object.add',

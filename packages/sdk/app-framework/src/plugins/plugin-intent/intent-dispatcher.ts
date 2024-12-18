@@ -213,8 +213,8 @@ export const createDispatcher = (
           for (const intent of result.intents) {
             // Returned intents are dispatched but not yielded into results,
             // as such they cannot be undone.
-            // TODO(wittjosiah): Use higher execution concurrency & yield?
-            void dispatch(intent, depth + 1);
+            // TODO(wittjosiah): Use higher execution concurrency?
+            yield* dispatch(intent, depth + 1);
           }
         }
       }
@@ -232,7 +232,7 @@ export const createDispatcher = (
 
         if (result.undoable && isUndoable(results)) {
           // TODO(wittjosiah): Is there a better way to handle showing undo for chains?
-          void dispatch(createIntent(IntentAction.ShowUndo, { message: result.undoable.message }));
+          yield* dispatch(createIntent(IntentAction.ShowUndo, { message: result.undoable.message }));
         }
 
         return pick(result, ['data', 'error']);

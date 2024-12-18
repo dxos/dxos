@@ -452,7 +452,8 @@ export const ThreadPlugin = (): PluginDefinition<
 
             if (!undo) {
               const messageIndex = thread.messages.findIndex((m) => m?.id === messageId);
-              if (messageIndex === -1) {
+              const message = thread.messages[messageIndex];
+              if (!message) {
                 return;
               }
 

@@ -9,7 +9,7 @@ import type {
   MetadataRecordsProvides,
 } from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
-import { EchoObjectSchema, isEchoObject, type ReactiveEchoObject } from '@dxos/react-client/echo';
+import { isEchoObject, ReactiveObjectSchema, type ReactiveEchoObject } from '@dxos/react-client/echo';
 
 import { TEMPLATE_PLUGIN } from './meta';
 
@@ -21,7 +21,7 @@ export namespace TemplateAction {
       name: S.optional(S.String),
     }),
     output: S.Struct({
-      object: EchoObjectSchema,
+      object: ReactiveObjectSchema,
     }),
   }) {}
 }

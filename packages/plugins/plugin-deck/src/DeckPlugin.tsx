@@ -376,7 +376,7 @@ export const DeckPlugin = ({
                   actionLabel: ['undo action label', { ns: DECK_PLUGIN }],
                   actionAlt: ['undo action alt', { ns: DECK_PLUGIN }],
                   closeLabel: ['undo close label', { ns: DECK_PLUGIN }],
-                  onAction: () => intentPlugin?.provides.intent.undo?.(),
+                  onAction: () => intentPlugin?.provides.intent.undoPromise?.(),
                 },
               ];
             }),
@@ -460,15 +460,7 @@ export const DeckPlugin = ({
                 data: { open: ids },
                 intents: [
                   createIntent(LayoutAction.ScrollIntoView, { id: newlyOpen[0] ?? toAttend }),
-                  // TODO(wittjosiah): ??
-                  // intent.data?.object
-                  //   ? [
-                  //       {
-                  //         action: NavigationAction.EXPOSE,
-                  //         data: { id: fullyQualifiedId(intent.data.object) },
-                  //       },
-                  //     ]
-                  //   : [],
+                  ...(toAttend ? [createIntent(NavigationAction.Expose, { id: toAttend })] : []),
                   ...(observability
                     ? newlyOpen.map((id) => {
                         const active = graph?.findNode(id)?.data;

@@ -77,15 +77,18 @@ export type AnyIntentChain = IntentChain<any, any, any, any>;
  */
 export const createIntent = <Tag extends string, Fields extends IntentParams>(
   schema: IntentSchema<Tag, Fields>,
-  data?: IntentData<Fields>,
+  data: IntentData<Fields> = {},
   params: Pick<AnyIntent, 'plugin' | 'undo'> = {},
 ): IntentChain<Tag, Tag, Fields, Fields> => {
+  // The output of validateSync breaks proxy objects so this is just used for validation.
+  // TODO(wittjosiah): Is there a better way to make theses types align?
+  // TODO(wittjosiah): TypedObject schemas are currently failing this.
+  // const _ = S.validateSync(schema.fields.input as S.Schema<any, any, unknown>)(data);
   const intent = {
     ...params,
     _schema: schema,
     action: schema._tag,
-    // TODO(wittjosiah): Is there a better way to make theses types align?
-    data: S.validateSync(schema.fields.input as S.Schema<any, any, unknown>)(data),
+    data,
   } satisfies Intent<Tag, Fields>;
 
   return {
@@ -111,7 +114,7 @@ export const chain =
     NextFields extends IntentParams,
   >(
     schema: IntentSchema<NextTag, NextFields>,
-    data: Omit<IntentData<NextFields>, keyof IntentResultData<LastFields>>,
+    data: Omit<IntentData<NextFields>, keyof IntentResultData<LastFields>> = {},
     params: Pick<AnyIntent, 'plugin' | 'undo'> = {},
   ) =>
   (

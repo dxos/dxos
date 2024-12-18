@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createIntent, type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
+import { createIntent, type PromiseIntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { EXPANDO_TYPENAME, getObjectAnnotation, getTypename, type Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { getSchema, isReactiveObject } from '@dxos/live-object';
@@ -217,7 +217,7 @@ export const constructSpaceActions = ({
   migrating,
 }: {
   space: Space;
-  dispatch: IntentDispatcher;
+  dispatch: PromiseIntentDispatcher;
   personal?: boolean;
   migrating?: boolean;
 }) => {
@@ -404,7 +404,7 @@ export const constructObjectActions = ({
   dispatch,
 }: {
   node: Node<ReactiveEchoObject<any>>;
-  dispatch: IntentDispatcher;
+  dispatch: PromiseIntentDispatcher;
 }) => {
   const object = node.data;
   const getId = (id: string) => `${id}/${fullyQualifiedId(object)}`;

@@ -36,7 +36,7 @@ export const Toast = ({
       <NaturalToast.Body>
         <NaturalToast.Title classNames='items-center'>
           {icon && <Icon icon={icon} size={5} classNames='inline mr-1' />}
-          {title && <span>toLocalizedString(title, t)</span>}
+          {title && <span>{toLocalizedString(title, t)}</span>}
         </NaturalToast.Title>
         {description && (
           <NaturalToast.Description>{description && toLocalizedString(description, t)}</NaturalToast.Description>

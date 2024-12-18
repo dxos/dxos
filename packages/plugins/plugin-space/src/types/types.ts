@@ -209,6 +209,7 @@ export namespace SpaceAction {
   export class OpenCreateObject extends S.TaggedClass<OpenCreateObject>()(`${SPACE_ACTION}/open-create-object`, {
     input: S.Struct({
       target: S.Union(SpaceSchema, CollectionType),
+      navigable: S.optional(S.Boolean),
     }),
     output: S.Void,
   }) {}

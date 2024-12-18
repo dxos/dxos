@@ -13,7 +13,7 @@ import {
   useIntentDispatcher,
   useResolvePlugin,
 } from '@dxos/app-framework';
-import { create, getType, fullyQualifiedId } from '@dxos/client/echo';
+import { create, getType, fullyQualifiedId, isReactiveObject } from '@dxos/client/echo';
 import { useGraph } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 import { type CollectionType } from '@dxos/plugin-space/types';
@@ -75,10 +75,9 @@ const StackMain = ({ id, collection }: StackMainProps) => {
   const handleDelete = useCallback(
     async (id: string) => {
       const index = collection.objects.filter(nonNullable).findIndex((section) => fullyQualifiedId(section) === id);
-      if (index >= 0) {
-        await dispatch(
-          createIntent(SpaceAction.RemoveObjects, { objects: [collection.objects[index]], target: collection }),
-        );
+      const object = collection.objects[index];
+      if (isReactiveObject(object)) {
+        await dispatch(createIntent(SpaceAction.RemoveObjects, { objects: [object], target: collection }));
 
         // TODO(wittjosiah): The section should also be removed, but needs to be restored if the action is undone.
         // delete stack.sections[Path.last(path)];
@@ -114,7 +113,7 @@ const StackMain = ({ id, collection }: StackMainProps) => {
   );
 
   const handleAddSection = useCallback(
-    () => dispatch?.(createIntent(SpaceAction.OpenCreateObject, { target: collection })),
+    () => dispatch?.(createIntent(SpaceAction.OpenCreateObject, { target: collection, navigable: false })),
     [collection, dispatch],
   );
 

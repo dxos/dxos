@@ -7,7 +7,14 @@ import React, { useCallback, useRef } from 'react';
 
 import { chain, createIntent, type MetadataResolver, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
-import { type AbstractTypedObject, getSpace, isReactiveObject, isSpace, useSpaces } from '@dxos/react-client/echo';
+import {
+  type AbstractTypedObject,
+  getSpace,
+  isReactiveObject,
+  isSpace,
+  type ReactiveObject,
+  useSpaces,
+} from '@dxos/react-client/echo';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 
 import { CreateObjectPanel, type CreateObjectPanelProps } from './CreateObjectPanel';
@@ -18,7 +25,7 @@ export const CREATE_OBJECT_DIALOG = `${SPACE_PLUGIN}/CreateObjectDialog`;
 
 export type CreateObjectDialogProps = Pick<CreateObjectPanelProps, 'schemas' | 'target' | 'typename' | 'name'> & {
   resolve?: MetadataResolver;
-  navigableCollections?: boolean;
+  shouldNavigate?: (object: ReactiveObject<any>) => boolean;
 };
 
 export const CreateObjectDialog = ({
@@ -26,7 +33,7 @@ export const CreateObjectDialog = ({
   target,
   typename,
   name,
-  navigableCollections,
+  shouldNavigate: _shouldNavigate,
   resolve,
 }: CreateObjectDialogProps) => {
   const closeRef = useRef<HTMLButtonElement | null>(null);
@@ -57,10 +64,11 @@ export const CreateObjectDialog = ({
 
       const space = isSpace(target) ? target : getSpace(target);
       const result = await dispatch(createObjectIntent({ name, space }));
-      const object = result?.data;
+      const object = result.data?.object;
       if (isReactiveObject(object)) {
         const addObjectIntent = createIntent(SpaceAction.AddObject, { target, object });
-        if (!(object instanceof CollectionType) || navigableCollections) {
+        const shouldNavigate = _shouldNavigate ?? (() => true);
+        if (shouldNavigate(object)) {
           await dispatch(pipe(addObjectIntent, chain(NavigationAction.Open, {})));
         } else {
           await dispatch(addObjectIntent);
