@@ -74,7 +74,10 @@ const StackMain = ({ id, collection }: StackMainProps) => {
       }) ?? [];
 
   const handleDelete = async (id: string) => {
-    const index = collection.objects.map((object) => object.target).filter(nonNullable).findIndex((section) => fullyQualifiedId(section) === id);
+    const index = collection.objects
+      .map((object) => object.target)
+      .filter(nonNullable)
+      .findIndex((section) => fullyQualifiedId(section) === id);
     if (index >= 0) {
       await dispatch({
         action: SpaceAction.REMOVE_OBJECTS,

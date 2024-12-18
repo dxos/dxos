@@ -26,8 +26,8 @@ import {
   type DxGridCellValue,
   toPlaneCellIndex,
 } from '@dxos/react-ui-grid';
-import { VIEW_FIELD_LIMIT, type FieldType, type ViewProjection } from '@dxos/schema';
 import { mx } from '@dxos/react-ui-theme';
+import { VIEW_FIELD_LIMIT, type FieldType, type ViewProjection } from '@dxos/schema';
 
 import { SelectionModel } from './selection-model';
 import { type TableType } from '../types';

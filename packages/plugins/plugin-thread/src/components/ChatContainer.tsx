@@ -4,6 +4,7 @@
 
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
+import { Ref } from '@dxos/echo-schema';
 import { create, makeRef, RefArray } from '@dxos/live-object';
 import { MessageType } from '@dxos/plugin-space/types';
 import { fullyQualifiedId, getSpace, useMembers, type Expando } from '@dxos/react-client/echo';
@@ -13,7 +14,6 @@ import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/re
 import { StackItem } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, threadLayout } from '@dxos/react-ui-thread';
-import { nonNullable } from '@dxos/util';
 
 import { MessageContainer } from './MessageContainer';
 import { command } from './command-extension';
@@ -21,7 +21,6 @@ import { type ThreadContainerProps } from './types';
 import { useStatus } from '../hooks';
 import { THREAD_PLUGIN } from '../meta';
 import { getMessageMetadata } from '../util';
-import { Ref } from '@dxos/echo-schema';
 
 export const ChatHeading = ({ attendableId }: { attendableId?: string }) => {
   const { t } = useTranslation(THREAD_PLUGIN);

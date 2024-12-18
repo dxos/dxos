@@ -23,7 +23,6 @@ import {
   Filter,
   fullyQualifiedId,
   getSpace,
-  isEchoObject,
   isSpace,
   SpaceState,
   type Echo,

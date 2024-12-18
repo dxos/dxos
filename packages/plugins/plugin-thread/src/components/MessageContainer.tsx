@@ -7,6 +7,7 @@ import { Check, PencilSimple, X } from '@phosphor-icons/react';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
+import { RefArray } from '@dxos/live-object';
 import { type MessageType } from '@dxos/plugin-space/types';
 import { PublicKey } from '@dxos/react-client';
 import { type ReactiveEchoObject, type Expando, type SpaceMember } from '@dxos/react-client/echo';
@@ -22,13 +23,11 @@ import {
   mx,
 } from '@dxos/react-ui-theme';
 import { MessageHeading, MessageRoot } from '@dxos/react-ui-thread';
-import { nonNullable } from '@dxos/util';
 
 import { command } from './command-extension';
 import { useOnEditAnalytics } from '../hooks';
 import { THREAD_ITEM, THREAD_PLUGIN } from '../meta';
 import { getMessageMetadata } from '../util';
-import { RefArray } from '@dxos/live-object';
 
 // TODO(thure): #8149
 const messageControlClassNames = ['!p-1 !min-bs-0 transition-opacity', hoverableControlItem];

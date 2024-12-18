@@ -132,7 +132,8 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
         fn.version = version;
       }
 
-      const deployedFunction = fn ?? space.db.add(create(FunctionType, { name: functionId, version, source: makeRef(script) }));
+      const deployedFunction =
+        fn ?? space.db.add(create(FunctionType, { name: functionId, version, source: makeRef(script) }));
 
       script.changed = false;
 

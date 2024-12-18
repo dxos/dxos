@@ -40,7 +40,11 @@ export const CanvasPlugin = (): PluginDefinition<CanvasPluginProvides> => {
             parse: (item: CanvasItemType, type: string) => {
               switch (type) {
                 case 'node':
-                  return { id: item.object.target?.id, label: (item.object.target as any).title, data: item.object.target };
+                  return {
+                    id: item.object.target?.id,
+                    label: (item.object.target as any).title,
+                    data: item.object.target,
+                  };
                 case 'object':
                   return item.object.target;
                 case 'view-object':

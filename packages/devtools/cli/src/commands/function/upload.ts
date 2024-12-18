@@ -124,7 +124,9 @@ export default class Upload extends BaseCommand<typeof Upload> {
         existingObject.source.target!.content = scriptContent;
 
         if (this.flags.verbose) {
-          this.log(`Updated source in ${this.flags.spaceKey}/${this.flags.objectId} (${existingObject.source.target!.id})`);
+          this.log(
+            `Updated source in ${this.flags.spaceKey}/${this.flags.objectId} (${existingObject.source.target!.id})`,
+          );
         }
         if (!functionUrlFromExistingObject) {
           setUserFunctionUrlInMetadata(getMeta(existingObject), `/${space.id}/${result.functionId}`);

@@ -6,6 +6,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useCallback } from 'react';
 
 import { useIntentDispatcher } from '@dxos/app-framework';
+import { RefArray } from '@dxos/live-object';
 import {
   Icon,
   type ThemedClassName,
@@ -17,7 +18,6 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { nonNullable } from '@dxos/util';
 
 import {
   alignKey,
@@ -36,7 +36,6 @@ import { completeCellRangeToThreadCursor } from '../../integrations';
 import { SHEET_PLUGIN } from '../../meta';
 import { type SheetType } from '../../types';
 import { useSheetContext } from '../SheetContext';
-import { RefArray } from '@dxos/live-object';
 
 //
 // Buttons

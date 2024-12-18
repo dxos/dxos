@@ -7,15 +7,14 @@ import { EditorView } from '@codemirror/view';
 import { computed, effect } from '@preact/signals-core';
 
 import { type IntentDispatcher } from '@dxos/app-framework';
+import { Ref } from '@dxos/echo-schema';
+import { RefArray } from '@dxos/live-object';
 import { type DocumentType } from '@dxos/plugin-markdown/types';
 import { ThreadType } from '@dxos/plugin-space/types';
 import { getSpace, getTextInRange, createDocAccessor, fullyQualifiedId } from '@dxos/react-client/echo';
 import { comments, createExternalCommentSync } from '@dxos/react-ui-editor';
-import { nonNullable } from '@dxos/util';
 
 import { ThreadAction, type ThreadState } from '../types';
-import { RefArray } from '@dxos/live-object';
-import { Ref } from '@dxos/echo-schema';
 
 // TODO(burdon): Factor out.
 const getName = (doc: DocumentType, anchor: string): string | undefined => {

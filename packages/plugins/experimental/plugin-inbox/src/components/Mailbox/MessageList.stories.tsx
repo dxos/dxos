@@ -7,13 +7,12 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React, { useState } from 'react';
 
+import { RefArray } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
-import { nonNullable } from '@dxos/util';
 
 import { MessageList, type MessageListProps } from './MessageList';
 import { createInbox } from '../../testing';
-import { RefArray } from '@dxos/live-object';
 
 const DefaultStory = () => {
   const [inbox] = useState(() => createInbox(100));

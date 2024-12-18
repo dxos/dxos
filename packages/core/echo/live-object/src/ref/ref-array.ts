@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { BaseObject, ObjectId, Ref } from '@dxos/echo-schema';
+import { type BaseObject, type ObjectId, Ref } from '@dxos/echo-schema';
 import { nonNullable } from '@dxos/util';
 
 /**

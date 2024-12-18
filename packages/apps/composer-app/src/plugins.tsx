@@ -55,6 +55,7 @@ import ThemeMeta from '@dxos/plugin-theme/meta';
 import ThreadMeta from '@dxos/plugin-thread/meta';
 import WildcardMeta from '@dxos/plugin-wildcard/meta';
 import WnfsMeta from '@dxos/plugin-wnfs/meta';
+import { makeRef } from '@dxos/react-client/echo';
 import { DeviceType } from '@dxos/react-client/halo';
 import { isNotFalsy } from '@dxos/util';
 
@@ -62,7 +63,6 @@ import { INITIAL_CONTENT, INITIAL_DOC_TITLE } from './constants';
 import { steps } from './help';
 import { meta as WelcomeMeta } from './plugins/welcome/meta';
 import { queryAllCredentials } from './util';
-import { makeRef } from '@dxos/react-client/echo';
 
 export type State = {
   appKey: string;

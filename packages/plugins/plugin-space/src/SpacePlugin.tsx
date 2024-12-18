@@ -863,7 +863,7 @@ export const SpacePlugin = ({
                 }
 
                 return collection.objects
-                  .map(object => object.target)
+                  .map((object) => object.target)
                   .filter(nonNullable)
                   .map((object) =>
                     createObjectNode({ object, space, resolve, navigable: state.values.navigableCollections }),
@@ -884,7 +884,7 @@ export const SpacePlugin = ({
                 }
 
                 return collection.objects
-                  .map(object => object.target)
+                  .map((object) => object.target)
                   .filter(nonNullable)
                   .map((object) =>
                     createObjectNode({ object, space, resolve, navigable: state.values.navigableCollections }),
@@ -1482,7 +1482,9 @@ export const SpacePlugin = ({
                   objects,
                   parentCollection,
                   indices: objects.map((obj) =>
-                    parentCollection instanceof CollectionType ? parentCollection.objects.findIndex(object => object.target === obj) : -1,
+                    parentCollection instanceof CollectionType
+                      ? parentCollection.objects.findIndex((object) => object.target === obj)
+                      : -1,
                   ),
                   nestedObjectsList,
                   wasActive: objects

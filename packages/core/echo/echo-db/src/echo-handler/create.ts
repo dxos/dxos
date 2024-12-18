@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Reference } from '@dxos/echo-protocol';
 import {
   type BaseObject,
   getObjectAnnotation,
@@ -11,7 +12,7 @@ import {
   type S,
   SchemaValidator,
   requireTypeReference,
-  Ref
+  Ref,
 } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
@@ -37,7 +38,6 @@ import {
 } from './echo-proxy-target';
 import { type DecodedAutomergePrimaryValue, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
-import { Reference } from '@dxos/echo-protocol';
 
 // TODO(burdon): Rename EchoObject and reconcile with proto name.
 export type ReactiveEchoObject<T extends BaseObject> = ReactiveObject<T> & HasId;
