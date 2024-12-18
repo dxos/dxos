@@ -108,7 +108,7 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
     }, [scale, offset, width, height]);
 
     // Data state.
-    const graph = useMemo(() => new GraphModel<Node<Shape>>(_graph), [_graph]);
+    const graph = useMemo<GraphModel<Node<Shape>>>(() => new GraphModel<Node<Shape>>(_graph), [_graph]);
 
     // Editor state.
     const selection = useMemo(() => new SelectionModel(), []);
@@ -156,11 +156,13 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
       forwardedRef,
       () => ({
         zoomToFit: async () => {
-          const handler = handleAction(context);
-          handler({ type: 'zoom-to-fit', duration: 0 });
+          setTimeout(async () => {
+            const handler = handleAction(context);
+            await handler({ type: 'zoom-to-fit', duration: 0 });
+          });
         },
       }),
-      [context], // TODO(burdon): Is this right?
+      [context],
     );
 
     return (

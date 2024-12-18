@@ -14,7 +14,7 @@ export type ToolbarProps = ThemedClassName<{
 }>;
 
 export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
-  const handleAction: ActionHandler = (action) => {
+  const handleAction: ActionHandler = async (action) => {
     return onAction?.(action) ?? false;
   };
 
@@ -40,6 +40,9 @@ export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
       </NaturalToolbar.Button>
       <NaturalToolbar.Button onClick={() => handleAction({ type: 'zoom-out' })} title='Center canvas.'>
         <Icon icon='ph--magnifying-glass-minus--regular' />
+      </NaturalToolbar.Button>
+      <NaturalToolbar.Button onClick={() => handleAction({ type: 'layout' })} title='Do layout.'>
+        <Icon icon='ph--align-center-horizontal--regular' />
       </NaturalToolbar.Button>
       <NaturalToolbar.Button onClick={() => handleAction({ type: 'create' })} title='Create objects.'>
         <Icon icon='ph--plus--regular' />

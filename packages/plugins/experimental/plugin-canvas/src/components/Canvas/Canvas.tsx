@@ -142,7 +142,7 @@ const useDragMonitor = (el: HTMLElement | null) => {
         cancelled.current = location.current.dropTargets.length === 0;
       },
 
-      onDrop: ({ source, location }) => {
+      onDrop: async ({ source, location }) => {
         if (!cancelled.current) {
           // TODO(burdon): Adjust for offset on drag?
           invariant(el);
@@ -168,9 +168,9 @@ const useDragMonitor = (el: HTMLElement | null) => {
               if (!id) {
                 id = createId();
                 const shape = createRect({ id, pos: snapPoint(pos), size: itemSize });
-                actionHandler({ type: 'create', shape });
+                await actionHandler({ type: 'create', shape });
               }
-              actionHandler({ type: 'link', source: shape.id, target: id });
+              await actionHandler({ type: 'link', source: shape.id, target: id });
               break;
             }
           }
