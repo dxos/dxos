@@ -131,7 +131,11 @@ export class Client {
   }
 
   [inspect.custom]() {
-    return inspectObject(this);
+    return this.toString();
+  }
+
+  toString() {
+    return `Client(${this._instanceId})`;
   }
 
   @trace.info({ depth: null })
