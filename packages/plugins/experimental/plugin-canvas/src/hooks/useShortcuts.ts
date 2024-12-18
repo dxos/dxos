@@ -12,11 +12,8 @@ import { useEditorContext } from './useEditorContext';
  */
 export const useShortcuts = () => {
   const { id, graph, selection } = useEditorContext();
-  const option = { scopes: id };
   const handleAction = useActionHandler();
-
-  // TODO(burdon): preventDefault.
-
+  const option = { scopes: id };
   useHotkeys(
     'd',
     () => {
