@@ -105,7 +105,7 @@ export const Default: Story = {
     sidebar: true,
     init: true,
     id: 'test',
-    debug: true,
+    // debug: true,
     scale: 1,
   },
 };
