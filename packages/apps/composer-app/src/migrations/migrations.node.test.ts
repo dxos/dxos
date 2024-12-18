@@ -87,7 +87,7 @@ describe('Composer migrations', () => {
       cursor: toCursorRange(createDocAccessor(doc1.content!.target!, ['content']), 0, 3),
       thread: makeRef(thread1),
     });
-    expect(doc1.comments![0].thread.target instanceof LegacyTypes.ThreadType).to.be.true;
+    expect(doc1.comments![0].thread!.target instanceof LegacyTypes.ThreadType).to.be.true;
 
     const folder1 = space.db.add(
       create(LegacyTypes.FolderType, {
