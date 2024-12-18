@@ -13,7 +13,7 @@ import {
   type PluginDefinition,
   resolvePlugin,
 } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
+import { create, makeRef } from '@dxos/live-object';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { TextType } from '@dxos/plugin-markdown/types';

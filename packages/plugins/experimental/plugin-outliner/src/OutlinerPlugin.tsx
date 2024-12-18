@@ -12,7 +12,7 @@ import {
   NavigationAction,
   createSurface,
 } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
+import { create, makeRef } from '@dxos/live-object';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
@@ -127,8 +127,9 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
             case OutlinerAction.CREATE: {
               return {
                 data: create(TreeType, {
-                  root: makeRef(create(TreeItemType, {
-                    content: '',
+                  root: makeRef(
+                    create(TreeItemType, {
+                      content: '',
                       items: [makeRef(create(TreeItemType, { content: '', items: [] }))],
                     }),
                   ),

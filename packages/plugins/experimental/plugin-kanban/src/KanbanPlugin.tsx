@@ -115,9 +115,10 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
               invariant(kanban.cardView);
 
               const schema =
-                kanban.cardView && getSpace(kanban)?.db.schemaRegistry.getSchema(kanban.cardView.query.type);
+                kanban.cardView.target &&
+                getSpace(kanban)?.db.schemaRegistry.getSchema(kanban.cardView.target.query.type);
               invariant(schema);
-              const projection = new ViewProjection(schema, kanban.cardView);
+              const projection = new ViewProjection(schema, kanban.cardView.target!);
 
               if (!intent.undo) {
                 const { deleted, index } = projection.deleteFieldProjection(fieldId);

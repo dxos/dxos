@@ -31,6 +31,7 @@ import {
   getSpace,
   getTypename,
   loadObjectReferences,
+  makeRef,
   parseId,
   type ReactiveEchoObject,
   SpaceState,
@@ -286,7 +287,7 @@ export const ThreadPlugin = (): PluginDefinition<
                 data.subject instanceof ChannelType && !!data.subject.threads[0],
               component: ({ data }) => {
                 const channel = data.subject;
-                const thread = channel.threads[0]!;
+                const thread = channel.threads[0].target!;
                 // TODO(zan): Maybe we should have utility for positional main object ids.
                 if (isLayoutParts(location?.active) && location.active.main) {
                   const layoutEntries = location.active.main;
@@ -389,7 +390,7 @@ export const ThreadPlugin = (): PluginDefinition<
               } else {
                 // NOTE: This is the standalone thread creation case.
                 return {
-                  data: create(ChannelType, { threads: [create(ThreadType, { messages: [] }))] }),
+                  data: create(ChannelType, { threads: [makeRef(create(ThreadType, { messages: [] }))] }),
                 };
               }
             }
@@ -600,7 +601,18 @@ export const ThreadPlugin = (): PluginDefinition<
                   return;
                 }
 
-                thread.messages.splice(messageIndex, 0, makeRef(create(MessageType, { content: message })));
+                thread.messages.splice(
+                  messageIndex,
+                  0,
+                  makeRef(
+                    create(MessageType, {
+                      context: makeRef(message),
+                      timestamp: message.timestamp,
+                      sender: message.sender,
+                      text: message.text,
+                    }),
+                  ),
+                );
                 return {
                   data: true,
                   intents: [

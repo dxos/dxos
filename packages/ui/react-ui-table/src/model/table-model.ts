@@ -9,18 +9,29 @@ import { Resource } from '@dxos/context';
 import { getValue, setValue, FormatEnum, type JsonProp } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/react-client';
-import { formatForEditing, parseValue } from '@dxos/react-ui-form';
+import {
+  cellClassesForFieldType,
+  cellClassesForRowSelection,
+  formatForDisplay,
+  formatForEditing,
+  parseValue,
+} from '@dxos/react-ui-form';
 import {
   type DxGridAxisMeta,
   type DxGridPlaneRange,
   type DxGridPlanePosition,
   type DxGridPosition,
+  type DxGridPlaneCells,
+  type DxGridPlane,
+  type DxGridCellValue,
+  toPlaneCellIndex,
 } from '@dxos/react-ui-grid';
-import { type ViewProjection } from '@dxos/schema';
+import { VIEW_FIELD_LIMIT, type FieldType, type ViewProjection } from '@dxos/schema';
+import { mx } from '@dxos/react-ui-theme';
 
 import { SelectionModel } from './selection-model';
 import { type TableType } from '../types';
-import { touch } from '../util';
+import { tableButtons, tableControls, touch } from '../util';
 
 export type SortDirection = 'asc' | 'desc';
 export type SortConfig = { fieldId: string; direction: SortDirection };
