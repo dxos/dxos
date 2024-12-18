@@ -163,6 +163,9 @@ export class EchoHost extends Resource {
     await this._spaceStateManager.open(ctx);
 
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
+      if (e.previousRootId) {
+        void this._automergeHost.clearLocalCollectionState(deriveCollectionIdFromSpaceId(e.spaceId, e.previousRootId));
+      }
       // TODO(yaroslav): remove collection without spaceRootId after release (production<->staging interop)
       void this._automergeHost.updateLocalCollectionState(deriveCollectionIdFromSpaceId(e.spaceId), e.documentIds);
       void this._automergeHost.updateLocalCollectionState(
