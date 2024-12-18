@@ -71,7 +71,13 @@ interface EditorController {
 
 type EditorRootProps = ThemedClassName<
   PropsWithChildren<
-    Partial<Pick<EditorContextType, 'options' | 'debug' | 'scale' | 'offset'> & { graph: Graph }> & {
+    Partial<
+      Pick<EditorContextType, 'options' | 'debug' | 'scale' | 'offset'> & {
+        // TODO:(burdon): Has for attention (move to storybook).
+        attention?: boolean;
+        graph: Graph;
+      }
+    > & {
       id: string;
     }
   >
@@ -83,6 +89,7 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
       children,
       classNames,
       id,
+      attention,
       options: _options = defaultEditorOptions,
       debug: _debug = false,
       scale: _scale = 1,
@@ -172,7 +179,7 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
         className={mx('relative w-full h-full overflow-hidden', classNames)}
       >
         <EditorContext.Provider value={context}>
-          <HotkeysProvider initiallyActiveScopes={['main']}>{children}</HotkeysProvider>
+          <HotkeysProvider initiallyActiveScopes={attention ? ['*'] : ['app']}>{children}</HotkeysProvider>
         </EditorContext.Provider>
       </div>
     );

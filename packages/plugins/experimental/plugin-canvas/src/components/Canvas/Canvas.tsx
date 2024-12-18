@@ -20,6 +20,10 @@ import { Grid } from '../Grid';
 import { eventsNone, styles } from '../styles';
 import { testId } from '../util';
 
+// TODO(burdon): Flaky error:
+// Warning: Cannot update a component (`Shapes`) while rendering a different component (`Canvas`).
+// To locate the bad setState() call inside `Canvas`, follow the stack trace as described in https://reactjs.org/link/setstate-in-render
+
 /**
  * Main canvas component.
  */

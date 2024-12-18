@@ -25,6 +25,7 @@ export const useShortcuts = () => {
       disableScope(id);
     }
   }, [id, hasAttention]);
+  console.log('::::', hasAttention);
 
   const handleAction = useActionHandler();
   useHotkeys(

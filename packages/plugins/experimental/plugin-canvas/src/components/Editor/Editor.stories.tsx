@@ -12,6 +12,7 @@ import { getTypename } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { RootAttentionProvider } from '@dxos/react-ui-attention';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { createObjectFactory, type ValueGenerator, Testing, type TypeSpec } from '@dxos/schema/testing';
@@ -27,7 +28,7 @@ const types = [Testing.OrgType, Testing.ProjectType, Testing.ContactType];
 
 type RenderProps = EditorRootProps & { init?: boolean; sidebar?: boolean };
 
-const Render = ({ init, sidebar, ...props }: RenderProps) => {
+const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
   const editorRef = useRef<EditorController>(null);
   const [graph, setGraph] = useState<Graph>();
   const [_, space] = useSpaces(); // TODO(burdon): Get created space.
@@ -57,10 +58,17 @@ const Render = ({ init, sidebar, ...props }: RenderProps) => {
   return (
     <div className='grid grid-cols-[1fr,400px] w-full h-full'>
       <div className={mx('flex w-full h-full', !sidebar && 'col-span-2')}>
-        <Editor.Root ref={editorRef} graph={graph} {...props}>
-          <Editor.Canvas />
-          <Editor.UI />
-        </Editor.Root>
+        {/* TODO(burdon): Option for layout? */}
+        <RootAttentionProvider
+          onChange={() => {
+            console.log('!!!');
+          }}
+        >
+          <Editor.Root ref={editorRef} id={id} graph={graph} {...props}>
+            <Editor.Canvas />
+            <Editor.UI />
+          </Editor.Root>
+        </RootAttentionProvider>
       </div>
       {sidebar && (
         <SyntaxHighlighter language='json' classNames='text-xs'>
@@ -102,10 +110,13 @@ type Story = StoryObj<RenderProps>;
 
 export const Default: Story = {
   args: {
+    sidebar: false,
+  },
+};
+
+export const Query: Story = {
+  args: {
     sidebar: true,
     init: true,
-    id: 'test',
-    // debug: true,
-    scale: 1,
   },
 };
