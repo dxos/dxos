@@ -9,23 +9,20 @@ import { useDynamicRef } from '@dxos/react-ui';
 
 import { Frame } from './Frame';
 import { Line } from './Line';
+import { type BaseShapeProps } from './base';
 import { createLine, type GraphModel, type Shape, type ShapeType } from '../../../graph';
 import { type SelectionEvent, useEditorContext, useSelectionEvents } from '../../../hooks';
 import {
-  boundsContain,
-  boundsToModel,
-  findClosestIntersection,
-  getBounds,
   type Point,
   type Rect,
+  findClosestIntersection,
+  getRect,
+  pointsToRect,
+  rectToPoints,
+  rectContains,
+  screenToModel,
 } from '../../../layout';
 import { testId } from '../../util';
-
-// Ontology:
-// TODO(burdon): Separate shapes/layout from data graph.
-//  - Graph is a view-like projection of underlying objects.
-//  - Layout is a static or dynamic layout of shapes associated with graph nodes.
-//  - Shapes are the visual representation of the layout.
 
 /**
  * Data associated with a drag event.
@@ -36,29 +33,18 @@ export type DragPayloadData<S extends ShapeType> = {
   shape: S;
 };
 
-export const Component = ({ shape }: { shape: Shape }) => {
-  const { scale, selection } = useEditorContext();
-  const { id, type } = shape;
+// TODO(burdon): Create factory.
+export const ShapeComponent = (props: BaseShapeProps<any>) => {
+  const {
+    shape: { type },
+  } = props;
   switch (type) {
     case 'rect': {
-      return (
-        <Frame
-          shape={shape}
-          scale={scale}
-          selected={selection.contains(id)}
-          onSelect={(id, shift) => selection.toggleSelected([id], shift)}
-        />
-      );
+      return <Frame {...(props as BaseShapeProps<'rect'>)} />;
     }
 
     case 'line': {
-      return (
-        <Line
-          shape={shape}
-          selected={selection.contains(id)}
-          onSelect={(id, shift) => selection.toggleSelected([id], shift)}
-        />
-      );
+      return <Line {...(props as BaseShapeProps<'line'>)} />;
     }
 
     default:
@@ -70,20 +56,36 @@ export const Component = ({ shape }: { shape: Shape }) => {
  * Render shapes.
  */
 export const Shapes = ({ shapes, style }: { shapes: Shape[]; style: CSSProperties }) => {
+  const { scale, selection } = useEditorContext();
+  const handleSelection = useCallback(
+    (id: string, shift: boolean) => selection.toggleSelected([id], shift),
+    [selection],
+  );
+
   return (
     <div {...testId('dx-shapes')} className='absolute' style={style}>
       {shapes.map((shape) => (
-        <Component key={shape.id} shape={shape} />
+        <ShapeComponent
+          key={shape.id}
+          shape={shape}
+          scale={scale}
+          selected={selection.contains(shape.id)}
+          onSelect={handleSelection}
+        />
       ))}
     </div>
   );
 };
 
+export type Layout = {
+  shapes: Shape[];
+};
+
 /**
- * Generate shapes.
+ * Generate layout.
  */
-// TODO(burdon): Create memoized layout.
-export const useShapes = (graph: GraphModel, dragging?: Shape, debug?: boolean): Shape[] => {
+// TODO(burdon): Graph hierarchy?
+export const useLayout = (graph: GraphModel, dragging?: Shape, debug?: boolean): Layout => {
   const getPos = (id: string): { center: Point; bounds: Rect } | undefined => {
     const node = graph.getNode(id);
     if (node) {
@@ -91,22 +93,18 @@ export const useShapes = (graph: GraphModel, dragging?: Shape, debug?: boolean):
         invariant(dragging.type === 'rect');
         return {
           center: dragging.pos,
-          bounds: getBounds(dragging.pos, dragging.size),
+          bounds: getRect(dragging.pos, dragging.size),
         };
       } else {
         return {
           center: node.data.pos,
-          bounds: getBounds(node.data.pos, node.data.size),
+          bounds: getRect(node.data.pos, node.data.size),
         };
       }
     }
   };
 
   const shapes: Shape[] = [];
-
-  graph.nodes.forEach(({ data: shape }) => {
-    shapes.push(shape);
-  });
 
   graph.edges.forEach(({ id, source, target }) => {
     const { center: p1, bounds: r1 } = getPos(source) ?? {};
@@ -126,7 +124,11 @@ export const useShapes = (graph: GraphModel, dragging?: Shape, debug?: boolean):
     shapes.push(line);
   });
 
-  return shapes;
+  graph.nodes.forEach(({ data: shape }) => {
+    shapes.push(shape);
+  });
+
+  return { shapes };
 };
 
 /**
@@ -138,19 +140,19 @@ export const useSelectionHandler = (el: HTMLElement | null, shapes: Shape[]) => 
 
   const handleSelectionBounds = useCallback<SelectionEvent>(
     (bounds, shift) => {
-      if (!el || !bounds) {
+      if (!bounds) {
         selection.clear();
         return;
       }
 
       // Map the pointer event to the SVG coordinate system.
-      const selectionBounds = boundsToModel(el.getBoundingClientRect(), scale, offset, bounds);
+      const selectionBounds = pointsToRect(screenToModel(scale, offset, rectToPoints(bounds)));
       const selected = shapesRef.current
         .filter((shape) => {
           switch (shape.type) {
             case 'rect':
             case 'line':
-              return boundsContain(selectionBounds, shape.rect);
+              return rectContains(selectionBounds, shape.rect);
 
             default:
               return false;
@@ -160,7 +162,7 @@ export const useSelectionHandler = (el: HTMLElement | null, shapes: Shape[]) => 
 
       selection.setSelected(selected, shift);
     },
-    [el, scale, offset, selection],
+    [scale, offset, selection],
   );
 
   return useSelectionEvents(el, handleSelectionBounds);

@@ -13,29 +13,35 @@ export type ToolbarProps = ThemedClassName<{
   onAction?: ActionHandler;
 }>;
 
-// TODO(burdon): Generalize state management.
 export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
+  const handleAction: ActionHandler = (action) => {
+    return onAction?.(action) ?? false;
+  };
+
   return (
     <NaturalToolbar.Root classNames={mx('p-1', classNames)}>
-      <NaturalToolbar.Button onClick={() => onAction?.({ type: 'debug' })} title='Toggle debug.'>
+      <NaturalToolbar.Button onClick={() => handleAction({ type: 'debug' })} title='Toggle debug.'>
         <Icon icon='ph--bug--regular' />
       </NaturalToolbar.Button>
-      <NaturalToolbar.Button onClick={() => onAction?.({ type: 'grid' })} title='Toggle snap.'>
+      <NaturalToolbar.Button onClick={() => handleAction({ type: 'grid' })} title='Toggle snap.'>
         <Icon icon='ph--dots-nine--regular' />
       </NaturalToolbar.Button>
-      <NaturalToolbar.Button onClick={() => onAction?.({ type: 'snap' })} title='Toggle snap.'>
+      <NaturalToolbar.Button onClick={() => handleAction({ type: 'snap' })} title='Toggle snap.'>
         <Icon icon='ph--arrows-in-line-horizontal--regular' />
       </NaturalToolbar.Button>
-      <NaturalToolbar.Button onClick={() => onAction?.({ type: 'center' })} title='Center canvas.'>
+      <NaturalToolbar.Button onClick={() => handleAction({ type: 'center' })} title='Center canvas.'>
         <Icon icon='ph--crosshair-simple--regular' />
       </NaturalToolbar.Button>
-      <NaturalToolbar.Button onClick={() => onAction?.({ type: 'zoom-in' })} title='Center canvas.'>
+      <NaturalToolbar.Button onClick={() => handleAction({ type: 'zoom-to-fit' })} title='Expand selected.'>
+        <Icon icon='ph--arrows-out--regular' />
+      </NaturalToolbar.Button>
+      <NaturalToolbar.Button onClick={() => handleAction({ type: 'zoom-in' })} title='Center canvas.'>
         <Icon icon='ph--magnifying-glass-plus--regular' />
       </NaturalToolbar.Button>
-      <NaturalToolbar.Button onClick={() => onAction?.({ type: 'zoom-out' })} title='Center canvas.'>
+      <NaturalToolbar.Button onClick={() => handleAction({ type: 'zoom-out' })} title='Center canvas.'>
         <Icon icon='ph--magnifying-glass-minus--regular' />
       </NaturalToolbar.Button>
-      <NaturalToolbar.Button onClick={() => onAction?.({ type: 'create' })} title='Create objects.'>
+      <NaturalToolbar.Button onClick={() => handleAction({ type: 'create' })} title='Create objects.'>
         <Icon icon='ph--plus--regular' />
       </NaturalToolbar.Button>
     </NaturalToolbar.Root>

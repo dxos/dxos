@@ -10,6 +10,7 @@ import {
   GeneratorAnnotationId,
   getSchemaReference,
   getTypename,
+  type AbstractSchema,
   type BaseObject,
   type ExcludeId,
   type JsonSchemaType,
@@ -30,6 +31,32 @@ export type ValueGenerator<T = any> = Record<string, () => T>;
 
 const randomBoolean = (p = 0.5) => Math.random() < p;
 const randomElement = <T>(elements: T[]): T => elements[Math.floor(Math.random() * elements.length)];
+
+export type TypeSpec = {
+  type: AbstractSchema;
+  count: number;
+};
+
+/**
+ * Create sets of objects.
+ */
+export const createObjectFactory =
+  (db: EchoDatabase, generator: ValueGenerator) =>
+  async (specs: TypeSpec[]): Promise<Map<string, ReactiveObject<any>[]>> => {
+    const map = new Map<string, ReactiveObject<any>[]>();
+    for (const { type, count } of specs) {
+      try {
+        const pipeline = createObjectPipeline(generator, type, { db });
+        const objects = await Effect.runPromise(createArrayPipeline(count, pipeline));
+        map.set(type.typename, objects);
+        await db.flush();
+      } catch (err) {
+        log.catch(err);
+      }
+    }
+
+    return map;
+  };
 
 /**
  * Set properties based on generator annotation.

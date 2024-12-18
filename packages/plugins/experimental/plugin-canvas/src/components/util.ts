@@ -7,7 +7,7 @@ export type TestId =
   | 'dx-editor'
   | 'dx-canvas'
   | 'dx-shapes'
-  | 'dx-grid'
+  | 'dx-canvas-grid'
   | 'dx-background'
   | 'dx-overlays'
   | 'dx-ui';

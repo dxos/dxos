@@ -7,9 +7,9 @@ import {
   type HasId,
   MutableSchema,
   type ObjectMeta,
-  requireTypeReference,
   type S,
   SchemaValidator,
+  requireTypeReference,
 } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';

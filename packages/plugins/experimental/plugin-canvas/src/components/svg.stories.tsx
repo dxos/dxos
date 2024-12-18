@@ -9,7 +9,7 @@ import React from 'react';
 
 import { withTheme } from '@dxos/storybook-utils';
 
-import { Arrow, createPath } from './markers';
+import { Arrow, createPath } from './svg';
 import { testId } from './util';
 
 const Render = () => (
