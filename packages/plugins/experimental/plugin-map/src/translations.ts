@@ -3,10 +3,14 @@
 //
 
 import { MAP_PLUGIN } from './meta';
+import { MapType } from './types';
 
 export default [
   {
     'en-US': {
+      [MapType.typename]: {
+        'typename label': 'Map',
+      },
       [MAP_PLUGIN]: {
         'plugin name': 'Maps',
         'object title placeholder': 'New map',
