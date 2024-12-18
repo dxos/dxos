@@ -279,7 +279,7 @@ export const plugins = ({
         threads: [],
       });
 
-      const defaultSpaceCollection = client.spaces.default.properties[CollectionType.typename] as CollectionType;
+      const defaultSpaceCollection = client.spaces.default.properties[CollectionType.typename].target as CollectionType;
       defaultSpaceCollection?.objects.push(makeRef(readme));
 
       await dispatch([

@@ -142,7 +142,7 @@ const DefaultStory = () => {
         )}
 
         <SyntaxHighlighter language='json' className='w-full text-xs'>
-          {JSON.stringify({ view: table.view, schema }, null, 2)}
+          {JSON.stringify({ view: table.view?.target, schema }, null, 2)}
         </SyntaxHighlighter>
       </div>
     </div>

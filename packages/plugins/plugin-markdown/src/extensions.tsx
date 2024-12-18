@@ -117,7 +117,7 @@ export const useExtensions = ({
         baseExtensions,
         pluginExtensions,
       ].filter(isNotFalsy),
-    [baseExtensions, pluginExtensions, document, document?.content, space, identity],
+    [baseExtensions, pluginExtensions, document, document?.content?.target, space, identity],
   );
 };
 

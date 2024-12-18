@@ -119,7 +119,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                 const space = ancestors.find(isSpace);
                 const target =
                   ancestors.findLast((ancestor) => ancestor instanceof CollectionType) ??
-                  space?.properties[CollectionType.typename];
+                  space?.properties[CollectionType.typename]?.target;
                 if (!space || !target) {
                   return;
                 }

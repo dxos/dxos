@@ -143,7 +143,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
             case TableAction.DELETE_COLUMN: {
               const { table, fieldId } = intent.data as TableAction.DeleteColumn;
               invariant(isTable(table));
-              invariant(table.view);
+              invariant(table.view?.target);
 
               const schema = getSpace(table)?.db.schemaRegistry.getSchema(table.view.target!.query.type);
               invariant(schema);

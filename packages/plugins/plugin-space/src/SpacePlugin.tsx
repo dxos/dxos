@@ -441,7 +441,7 @@ export const SpacePlugin = ({
         const defaultSpace = client.spaces.default;
 
         // Create root collection structure.
-        defaultSpace.properties[CollectionType.typename] = create(CollectionType, { objects: [], views: {} });
+        defaultSpace.properties[CollectionType.typename] = makeRef(create(CollectionType, { objects: [], views: {} }));
         if (Migrations.versionProperty) {
           defaultSpace.properties[Migrations.versionProperty] = Migrations.targetVersion;
         }
@@ -512,7 +512,7 @@ export const SpacePlugin = ({
                 isSpace(data.subject) && data.subject.state.get() === SpaceState.SPACE_READY,
               component: ({ data, role, ...rest }) => (
                 <Surface
-                  data={{ id: data.subject.id, subject: data.subject.properties[CollectionType.typename] }}
+                  data={{ id: data.subject.id, subject: data.subject.properties[CollectionType.typename]?.target }}
                   role={role}
                   {...rest}
                 />
@@ -619,7 +619,7 @@ export const SpacePlugin = ({
                 const space = isSpace(data.subject) ? data.subject : getSpace(data.subject);
                 const object = isSpace(data.subject)
                   ? data.subject.state.get() === SpaceState.SPACE_READY
-                    ? (space?.properties[CollectionType.typename] as CollectionType)
+                    ? (space?.properties[CollectionType.typename]?.target as CollectionType)
                     : undefined
                   : data.subject;
 
@@ -857,7 +857,7 @@ export const SpacePlugin = ({
                   return;
                 }
 
-                const collection = space.properties[CollectionType.typename] as CollectionType | undefined;
+                const collection = space.properties[CollectionType.typename]?.target as CollectionType | undefined;
                 if (!collection) {
                   return;
                 }
@@ -1059,7 +1059,7 @@ export const SpacePlugin = ({
                 const space = ancestors.find(isSpace);
                 const collection =
                   ancestors.findLast((ancestor) => ancestor instanceof CollectionType) ??
-                  space?.properties[CollectionType.typename];
+                  space?.properties[CollectionType.typename]?.target;
                 if (!space || !collection) {
                   return;
                 }
@@ -1119,7 +1119,7 @@ export const SpacePlugin = ({
               }
               await space.waitUntilReady();
               const collection = create(CollectionType, { objects: [], views: {} });
-              space.properties[CollectionType.typename] = collection;
+              space.properties[CollectionType.typename] = makeRef(collection);
 
               if (Migrations.versionProperty) {
                 space.properties[Migrations.versionProperty] = Migrations.targetVersion;
@@ -1430,7 +1430,7 @@ export const SpacePlugin = ({
               if (intent.data?.target instanceof CollectionType) {
                 intent.data?.target.objects.push(makeRef(object as HasId));
               } else if (isSpace(intent.data?.target)) {
-                const collection = space.properties[CollectionType.typename];
+                const collection = space.properties[CollectionType.typename]?.target;
                 if (collection instanceof CollectionType) {
                   collection.objects.push(makeRef(object as HasId));
                 } else {
@@ -1475,7 +1475,7 @@ export const SpacePlugin = ({
               const openObjectIds = new Set<string>(openIds(activeParts ?? {}));
 
               if (!intent.undo && resolve) {
-                const parentCollection = intent.data?.collection ?? space.properties[CollectionType.typename];
+                const parentCollection = intent.data?.collection ?? space.properties[CollectionType.typename]?.target;
                 const nestedObjectsList = await Promise.all(objects.map((obj) => getNestedObjects(obj, resolve)));
 
                 const deletionData = {

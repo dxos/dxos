@@ -188,7 +188,7 @@ export const constructSpaceNode = ({
   resolve: MetadataResolver;
 }) => {
   const hasPendingMigration = checkPendingMigration(space);
-  const collection = space.state.get() === SpaceState.SPACE_READY && space.properties[CollectionType.typename];
+  const collection = space.state.get() === SpaceState.SPACE_READY && space.properties[CollectionType.typename]?.target;
   const partials =
     space.state.get() === SpaceState.SPACE_READY && collection instanceof CollectionType
       ? getCollectionGraphNodePartials({ collection, space, resolve, navigable })
