@@ -18,7 +18,7 @@ export const useShortcuts = () => {
     'd',
     (ev) => {
       ev.preventDefault();
-      handleAction({
+      void handleAction({
         type: 'debug',
       });
     },
@@ -28,7 +28,7 @@ export const useShortcuts = () => {
     'meta+a',
     (ev) => {
       ev.preventDefault();
-      handleAction({
+      void handleAction({
         type: 'select',
         ids: [...graph.nodes.map((node) => node.id), ...graph.edges.map((edge) => edge.id)],
       });
@@ -39,7 +39,7 @@ export const useShortcuts = () => {
     "meta+'",
     (ev) => {
       ev.preventDefault();
-      handleAction({
+      void handleAction({
         type: 'grid',
       });
     },
@@ -49,7 +49,7 @@ export const useShortcuts = () => {
     'Home',
     (ev) => {
       ev.preventDefault();
-      handleAction({
+      void handleAction({
         type: 'home',
       });
     },
@@ -59,7 +59,7 @@ export const useShortcuts = () => {
     'Backspace',
     (ev) => {
       ev.preventDefault();
-      handleAction({
+      void handleAction({
         type: 'delete',
         ids: [...selection.ids],
       });

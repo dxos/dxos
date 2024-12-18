@@ -9,7 +9,7 @@ import { type EditorContextType } from './context';
 import { useEditorContext } from './useEditorContext';
 import { type ActionHandler } from '../actions';
 import { createRect } from '../graph';
-import { getCenter, modelToScreen, rectUnion, zoomTo, zoomInPlace } from '../layout';
+import { getCenter, modelToScreen, rectUnion, zoomTo, zoomInPlace, doLayout } from '../layout';
 import { createId, itemSize } from '../testing';
 
 export const useActionHandler = (): ActionHandler => {
@@ -34,7 +34,7 @@ export const handleAction = ({
   setShowGrid,
   setSnapToGrid,
 }: EditorContextType): ActionHandler => {
-  return (action) => {
+  const handler: ActionHandler = async (action) => {
     const { type } = action;
     log.info('action', { action });
     switch (type) {
@@ -66,7 +66,12 @@ export const handleAction = ({
       }
       case 'zoom-to-fit': {
         const { duration = 200 } = action;
-        const bounds = rectUnion(graph.nodes.filter((node) => node.data.type === 'rect').map((node) => node.data.rect));
+        const nodes = graph.nodes.filter((node) => node.data.type === 'rect').map((node) => node.data.rect);
+        if (!nodes.length) {
+          return false;
+        }
+
+        const bounds = rectUnion(nodes);
         const center = getCenter(bounds);
         const padding = 64;
         const newScale = Math.min(1, Math.min(width / (bounds.width + padding), height / (bounds.height + padding)));
@@ -92,6 +97,19 @@ export const handleAction = ({
           return false;
         }
         zoomInPlace(setTransform, getCenter({ x: 0, y: 0, width, height }), offset, scale, newScale);
+        return true;
+      }
+      case 'layout': {
+        const layout = await doLayout(graph);
+        for (const { id, data } of layout.nodes) {
+          const node = graph.getNode(id);
+          if (node && data.type === 'rect') {
+            const { pos, size, rect } = data;
+            Object.assign(node.data, { pos, size, rect });
+          }
+        }
+
+        await handler({ type: 'zoom-to-fit' });
         return true;
       }
 
@@ -124,4 +142,6 @@ export const handleAction = ({
         return false;
     }
   };
+
+  return handler;
 };
