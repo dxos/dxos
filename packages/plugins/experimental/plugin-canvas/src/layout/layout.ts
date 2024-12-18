@@ -86,7 +86,12 @@ export const doLayout = async <N extends object>(
   return graph;
 };
 
-const LAYOUTS = ['force', 'circular', 'radial', 'grid'];
+const LAYOUTS = [
+  // 'force',
+  'circular',
+  'radial',
+  'grid',
+];
 
 // https://github.com/antvis/layout/blob/v5/packages/layout/README.md
 type CommonLayoutOptions = Intersection<
