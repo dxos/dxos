@@ -8,9 +8,9 @@ import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { Editor } from './Editor';
-import { type CanvasType } from '../types';
+import { type CanvasBoardType } from '../types';
 
-export const CanvasContainer = ({ canvas }: { canvas: CanvasType }) => {
+export const CanvasContainer = ({ canvas }: { canvas: CanvasBoardType }) => {
   const id = fullyQualifiedId(canvas);
   return (
     <StackItem.Content id={id} toolbar={false}>

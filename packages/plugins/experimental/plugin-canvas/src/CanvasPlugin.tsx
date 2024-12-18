@@ -6,9 +6,9 @@ import React from 'react';
 
 import {
   createSurface,
-  NavigationAction,
   parseIntentPlugin,
   resolvePlugin,
+  NavigationAction,
   type PluginDefinition,
 } from '@dxos/app-framework';
 import { create } from '@dxos/live-object';
@@ -20,8 +20,7 @@ import { loadObjectReferences } from '@dxos/react-client/echo';
 import { CanvasContainer } from './components';
 import meta, { CANVAS_PLUGIN } from './meta';
 import translations from './translations';
-import { CanvasItemType, CanvasType } from './types';
-import { CanvasAction, type CanvasPluginProvides } from './types';
+import { CanvasAction, type CanvasPluginProvides, CanvasBoardType } from './types';
 
 export const CanvasPlugin = (): PluginDefinition<CanvasPluginProvides> => {
   return {
@@ -29,33 +28,18 @@ export const CanvasPlugin = (): PluginDefinition<CanvasPluginProvides> => {
     provides: {
       metadata: {
         records: {
-          [CanvasType.typename]: {
+          [CanvasBoardType.typename]: {
             createObject: CanvasAction.CREATE,
             placeholder: ['canvas title placeholder', { ns: CANVAS_PLUGIN }],
             icon: 'ph--infinity--regular',
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (canvas: CanvasType) => loadObjectReferences(canvas, (canvas) => canvas.items),
-          },
-          [CanvasItemType.typename]: {
-            parse: (item: CanvasItemType, type: string) => {
-              switch (type) {
-                case 'node':
-                  return { id: item.object?.id, label: (item.object as any).title, data: item.object };
-                case 'object':
-                  return item.object;
-                case 'view-object':
-                  return item;
-              }
-            },
-            // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (item: CanvasItemType) => [], // loadObjectReferences(item, (item) => [item.object])
+            loadReferences: (canvas: CanvasBoardType) => loadObjectReferences(canvas, (canvas) => canvas.items),
           },
         },
       },
       translations,
       echo: {
-        schema: [CanvasType],
-        system: [CanvasItemType],
+        schema: [CanvasBoardType],
       },
       graph: {
         builder: (plugins) => {
@@ -104,7 +88,7 @@ export const CanvasPlugin = (): PluginDefinition<CanvasPluginProvides> => {
           createSurface({
             id: CANVAS_PLUGIN,
             role: 'article',
-            filter: (data): data is { subject: CanvasType } => data.subject instanceof CanvasType,
+            filter: (data): data is { subject: CanvasBoardType } => data.subject instanceof CanvasBoardType,
             component: ({ data }) => <CanvasContainer canvas={data.subject} />,
           }),
         ],
@@ -113,7 +97,7 @@ export const CanvasPlugin = (): PluginDefinition<CanvasPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case CanvasAction.CREATE: {
-              return { data: create(CanvasType, { items: [] }) };
+              return { data: create(CanvasBoardType, { items: [] }) };
             }
           }
         },

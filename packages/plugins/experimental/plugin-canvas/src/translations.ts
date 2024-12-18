@@ -3,12 +3,12 @@
 //
 
 import { CANVAS_PLUGIN } from './meta';
-import { CanvasType } from './types';
+import { CanvasBoardType } from './types';
 
 export default [
   {
     'en-US': {
-      [CanvasType.typename]: {
+      [CanvasBoardType.typename]: {
         'typename label': 'Canvas',
       },
       [CANVAS_PLUGIN]: {
