@@ -468,7 +468,7 @@ describe('Spaces', () => {
 
     const hostSpace = await host.spaces.create();
     await hostSpace.waitUntilReady();
-    const hostRoot = hostSpace.db.add(createObject({ entries: [createObject({ name: 'first' })] }));
+    const hostRoot = hostSpace.db.add(createObject({ entries: [makeRef(createObject({ name: 'first' }))] }));
 
     await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
     const guestSpace = await waitForSpace(guest, hostSpace.key, { ready: true });
@@ -487,7 +487,7 @@ describe('Spaces', () => {
 
       onTestFinished(() => unsub());
 
-      hostRoot.entries.push(createObject({ name: 'second' }));
+      hostRoot.entries.push(makeRef(createObject({ name: 'second' })));
       await done.wait({ timeout: 1_000 });
     }
   });
