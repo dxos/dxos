@@ -160,7 +160,7 @@
       "@types/node": "22.10.2",
       "@types/react": "~18.2.0",
       "@types/react-dom": "~18.2.0",
-      "@automerge/automerge-wasm": "npm:@dxos/automerge-wasm@^0.17.1",
+      "@automerge/automerge-wasm": "npm:@dxos/automerge-wasm@^0.17.2",
       "@opentelemetry/core": "^1.25.1",
       "@lezer/lr": "^1.4.2",
       "@opentelemetry/exporter-trace-otlp-http": "^0.52.1",

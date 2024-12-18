@@ -13,7 +13,7 @@ overrides:
   '@types/node': 22.10.2
   '@types/react': ~18.2.0
   '@types/react-dom': ~18.2.0
-  '@automerge/automerge-wasm': npm:@dxos/automerge-wasm@^0.17.1
+  '@automerge/automerge-wasm': npm:@dxos/automerge-wasm@^0.17.2
   '@opentelemetry/core': ^1.25.1
   '@lezer/lr': ^1.4.2
   '@opentelemetry/exporter-trace-otlp-http': ^0.52.1
@@ -2306,8 +2306,8 @@ importers:
   packages/core/echo/automerge:
     dependencies:
       '@automerge/automerge-wasm':
-        specifier: npm:@dxos/automerge-wasm@^0.17.1
-        version: '@dxos/automerge-wasm@0.17.1'
+        specifier: npm:@dxos/automerge-wasm@^0.17.2
+        version: '@dxos/automerge-wasm@0.17.2'
       bs58check:
         specifier: ^3.0.1
         version: 3.0.1
@@ -2337,8 +2337,8 @@ importers:
         version: 5.12.0
     devDependencies:
       '@automerge/automerge':
-        specifier: ^2.2.2
-        version: 2.2.2
+        specifier: ^2.2.8
+        version: 2.2.8
       '@automerge/automerge-repo':
         specifier: ^1.1.12
         version: 1.1.12(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2)
@@ -12264,8 +12264,8 @@ packages:
   '@automerge/automerge-repo@1.1.12':
     resolution: {integrity: sha512-rhUcA24xN2+vt4dYt1BQdfaO4f8jC+suVZeqUjUlHKN2PTHe0aqJfy/WtwnRgp1d1VJulSMpusOYX0FMUqRcJw==}
 
-  '@automerge/automerge@2.2.2':
-    resolution: {integrity: sha512-tjEMNWXr6wgIZuGpJ7JwFZuKoWBuYt7tl8lCRhC/Pyqht8LsXFMI1stfi3ZrUTqDkJ1qwPSOTS2iwKLw8ObErw==}
+  '@automerge/automerge@2.2.8':
+    resolution: {integrity: sha512-kP6Z9lIkNeIGe/jhF8SUQAgUMwVjtXCBL0eZEgQGCoWvPNTPcg8fnQco28XkYBrfkkuqiEUAbdHhJmSp0y79ug==}
 
   '@aws-crypto/crc32@5.2.0':
     resolution: {integrity: sha512-nLbCWqQNgUiwwtFsen1AdzAtvuLRsQS8rYgMuxCrdKf9kOssamGLuPwyTY9wyYblNr9+1XM8v6zoDTPPSIeANg==}
@@ -14203,8 +14203,8 @@ packages:
   '@dxos/async@0.4.9':
     resolution: {integrity: sha512-bS4s7xod4yZRL2ZS4Ylf5r21HmHjlclQRGgqecm8zbkyv/j+ii7rtJjnyjptzvYHd7awBzxgOwZq7s0twAwi6w==}
 
-  '@dxos/automerge-wasm@0.17.1':
-    resolution: {integrity: sha512-iFqAuNpoBuqXOCaB8l8uvm/8AfDMFD4HLhKKMmIeTGuLWtY3TbuyNF5XzUNE1slRBlVsg4orzCWh6IAiAPvB8A==}
+  '@dxos/automerge-wasm@0.17.2':
+    resolution: {integrity: sha512-n41bQuWHUxLr6ChYpyhiqtbbUbas1mZu8j5HmjbTy/AMKeopiluULzfjnSD+eu5ye6Bl//Tj5fmKT/qb/7lNNQ==}
 
   '@dxos/context@0.4.9':
     resolution: {integrity: sha512-4rdh3ZBnspOyiAc3pMOsRr3dhjK0bsSVM9vzLpMf+dyuKNmVurpjzJ1FOmCcEbxxs5ITottHARys6hEWm/EPww==}
@@ -33507,7 +33507,7 @@ snapshots:
 
   '@automerge/automerge-repo@1.1.12(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2)':
     dependencies:
-      '@automerge/automerge': 2.2.2
+      '@automerge/automerge': 2.2.8
       bs58check: 3.0.1
       cbor-x: 1.5.4
       debug: 4.3.4
@@ -33524,9 +33524,8 @@ snapshots:
       - supports-color
       - typescript
 
-  '@automerge/automerge@2.2.2':
+  '@automerge/automerge@2.2.8':
     dependencies:
-      '@automerge/automerge-wasm': '@dxos/automerge-wasm@0.17.1'
       uuid: 9.0.1
 
   '@aws-crypto/crc32@5.2.0':
@@ -37325,7 +37324,7 @@ snapshots:
       zen-observable: 0.10.0
       zen-push: 0.3.1
 
-  '@dxos/automerge-wasm@0.17.1': {}
+  '@dxos/automerge-wasm@0.17.2': {}
 
   '@dxos/context@0.4.9':
     dependencies:
