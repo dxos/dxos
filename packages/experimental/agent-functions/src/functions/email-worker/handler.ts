@@ -50,7 +50,7 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
         ChannelType,
         {
           name: account,
-          threads: [create(ThreadType, { name: 'Inbox', messages: [] })],
+          threads: [makeRef(create(ThreadType, { name: 'Inbox', messages: [] }))],
         },
         {
           keys: [
@@ -86,7 +86,7 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
         ),
       );
 
-      mailbox.threads[0]?.messages?.push(object);
+      mailbox.threads[0].target?.messages?.push(makeRef(object));
     }
   }
 

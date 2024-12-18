@@ -53,12 +53,12 @@ export const handler = subscriptionHandler(async ({ event }) => {
 
   // Lookup contacts.
   for (const message of messages ?? []) {
-    message.sender.contact = getOrCreateContact(message.sender);
+    message.sender.contact = makeRef(getOrCreateContact(message.sender));
     message.properties?.to?.forEach((to: ActorType) => {
-      to.contact = getOrCreateContact(to);
+      to.contact = makeRef(getOrCreateContact(to));
     });
     message.properties?.cc?.forEach((cc: ActorType) => {
-      cc.contact = getOrCreateContact(cc);
+      cc.contact = makeRef(getOrCreateContact(cc));
     });
   }
 
