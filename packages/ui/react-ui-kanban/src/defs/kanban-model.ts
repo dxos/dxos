@@ -8,16 +8,13 @@ import { type JsonProp, type MutableSchema } from '@dxos/echo-schema';
 import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 
 import { type KanbanType } from './kanban';
+import { computeArrangement } from '../util';
 
 export type BaseKanbanItem = Record<JsonProp, any> & { id: string };
 
 export type KanbanModelProps = {
   kanban: KanbanType;
   cardSchema: MutableSchema;
-};
-
-export type ColumnProps = {
-  label: string;
 };
 
 export type KanbanArrangement<T extends BaseKanbanItem = { id: string }> = { columnValue: string; cards: T[] }[];
@@ -27,6 +24,10 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   private readonly _cardSchema: MutableSchema;
   private _items = signal<T[]>([]);
   private _arrangement = signal<KanbanArrangement<T>>([]);
+
+  private _computeArrangement(): KanbanArrangement<T> {
+    return computeArrangement<T>(this._kanban, this._items.value);
+  }
 
   constructor({ kanban, cardSchema }: KanbanModelProps) {
     super();
@@ -48,41 +49,26 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     return this._cardSchema;
   }
 
-  private _computeArrangement(): KanbanArrangement<T> {
-    const pivotField = this._kanban.columnField;
-    const kanbanArrangement = this._kanban.arrangement;
-    if (pivotField && kanbanArrangement) {
-      return kanbanArrangement.map(({ columnValue, ids }) => {
-        const orderMap = new Map(ids.map((id, index) => [id, index]));
-
-        const prioritizedItems: T[] = [];
-        const remainingItems: T[] = [];
-
-        // Categorize items
-        for (const item of this.items) {
-          if (item[pivotField as keyof typeof item] === columnValue) {
-            if (orderMap.has(item.id)) {
-              prioritizedItems.push(item);
-            } else {
-              remainingItems.push(item);
-            }
-          }
-        }
-
-        prioritizedItems.sort((a, b) => {
-          const indexA = orderMap.get(a.id) ?? Infinity;
-          const indexB = orderMap.get(b.id) ?? Infinity;
-          return indexA - indexB;
-        });
-
-        return { columnValue, cards: [...prioritizedItems, ...remainingItems] };
-      });
-    }
-    return [];
-  }
-
   get arrangement() {
     return this._arrangement.value;
+  }
+
+  public addEmptyColumn(columnValue: string) {
+    // TODO(thure): Fix readonly.
+    // @ts-ignore
+    this._kanban.arrangement ??= [];
+    // @ts-ignore
+    this._kanban.arrangement.push({ columnValue, ids: [] });
+    this._arrangement.value = this._computeArrangement();
+  }
+
+  public removeColumnFromArrangement(columnValue: string) {
+    const columnIndex = this._kanban.arrangement?.findIndex((column) => column.columnValue === columnValue);
+    if (this._kanban.arrangement && Number.isFinite(columnIndex) && columnIndex! >= 0) {
+      // @ts-ignore
+      this._kanban.arrangement.splice(columnIndex, 1);
+      this._arrangement.value = this._computeArrangement();
+    }
   }
 
   public onRearrange: StackItemRearrangeHandler = (source, target, closestEdge) => {
