@@ -15,7 +15,6 @@ import {
   type DxGridPlaneRange,
   type DxGridPlanePosition,
   type DxGridPosition,
-  toPlaneCellIndex,
 } from '@dxos/react-ui-grid';
 import { type ViewProjection } from '@dxos/schema';
 
