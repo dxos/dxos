@@ -408,8 +408,8 @@ export const DeckPlugin = ({
                 }
               });
             }),
-            createResolver(LayoutAction.ScrollIntoView, (data) => {
-              layout.values.scrollIntoView = data.id;
+            createResolver(LayoutAction.ScrollIntoView, ({ id }) => {
+              layout.values.scrollIntoView = id;
             }),
             // TODO(wittjosiah): Factor out navgiation from deck plugin.
             createResolver(NavigationAction.Open, (data) => {

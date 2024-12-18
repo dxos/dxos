@@ -48,12 +48,13 @@ export const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
           return [plugin.meta.id, resolvers];
         }),
       );
-      const { dispatch, dispatchPromise, undo, undoPromise } = createDispatcher(resolvers);
+      const { dispatch, dispatchPromise, undo, undoPromise, registerResolver } = createDispatcher(resolvers);
 
       state.dispatch = dispatch;
       state.dispatchPromise = dispatchPromise;
       state.undo = undo;
       state.undoPromise = undoPromise;
+      state.registerResolver = registerResolver;
     },
     provides: {
       intent: state,

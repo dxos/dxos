@@ -70,9 +70,13 @@ export type AnyIntentEffectResult = IntentEffectResult<any>;
 export type IntentDispatcherResult<Fields extends IntentParams> = Pick<IntentEffectResult<Fields>, 'data' | 'error'>;
 
 /**
- * Determines the priority of the surface when multiple components are resolved.
+ * Determines the priority of the effect when multiple intent resolvers are matched.
+ *
+ * - `static` - The effect is selected in the order it was resolved.
+ * - `hoist` - The effect is selected before `static` effects.
+ * - `fallback` - The effect is selected after `static` effects.
  */
-export type IntentDisposition = 'default' | 'hoist' | 'fallback';
+export type IntentDisposition = 'static' | 'hoist' | 'fallback';
 
 /**
  * The implementation of an intent effect.
@@ -177,7 +181,7 @@ export const createDispatcher = (
         .flatMap(([_, resolvers]) => resolvers)
         .filter((r) => r.action === intent.action)
         .filter((r) => !r.filter || r.filter(intent.data))
-        .toSorted(({ disposition: a = 'default' }, { disposition: b = 'default' }) => {
+        .toSorted(({ disposition: a = 'static' }, { disposition: b = 'static' }) => {
           return a === b ? 0 : a === 'hoist' || b === 'fallback' ? -1 : b === 'hoist' || a === 'fallback' ? 1 : 0;
         });
       if (candidates.length === 0) {
