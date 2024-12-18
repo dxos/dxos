@@ -453,6 +453,10 @@ export class AutomergeHost extends Resource {
     this._collectionSynchronizer.setLocalCollectionState(collectionId, { documents });
   }
 
+  async clearLocalCollectionState(collectionId: string) {
+    this._collectionSynchronizer.clearLocalCollectionState(collectionId);
+  }
+
   private _onCollectionStateQueried(collectionId: string, peerId: PeerId) {
     this._collectionSynchronizer.onCollectionStateQueried(collectionId, peerId);
   }
