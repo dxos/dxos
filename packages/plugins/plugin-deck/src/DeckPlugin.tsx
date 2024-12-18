@@ -7,6 +7,7 @@ import { setAutoFreeze } from 'immer';
 import React, { type PropsWithChildren } from 'react';
 
 import {
+  createSurface,
   filterPlugins,
   type GraphProvides,
   IntentAction,
@@ -221,7 +222,7 @@ export const DeckPlugin = ({
 
   return {
     meta,
-    ready: async (plugins) => {
+    ready: async ({ plugins }) => {
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       attentionPlugin = resolvePlugin(plugins, parseAttentionPlugin);
@@ -363,13 +364,13 @@ export const DeckPlugin = ({
         );
       },
       surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'settings':
-              return data.plugin === meta.id ? <LayoutSettings settings={settings.values} /> : null;
-          }
-          return null;
-        },
+        definitions: () =>
+          createSurface({
+            id: DECK_PLUGIN,
+            role: 'settings',
+            filter: (data): data is any => data.subject === DECK_PLUGIN,
+            component: () => <LayoutSettings settings={settings.values} />,
+          }),
       },
       intent: {
         resolver: (intent) => {

@@ -96,6 +96,15 @@ export class SelectionModel<T extends BaseTableRow> extends Resource {
   };
 
   public setSelection = (mode: 'all' | 'none'): void => {
-    this._selection.value = mode === 'all' ? new Set(this._rows.value.map((row) => row.id)) : new Set();
+    switch (mode) {
+      case 'all': {
+        this._selection.value = new Set(this._rows.value.map((row) => row.id));
+        break;
+      }
+      case 'none': {
+        this._selection.value = new Set();
+        break;
+      }
+    }
   };
 }

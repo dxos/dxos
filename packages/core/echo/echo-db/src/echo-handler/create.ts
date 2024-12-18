@@ -2,17 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Reference } from '@dxos/echo-protocol';
 import {
   type BaseObject,
   getObjectAnnotation,
   type HasId,
   MutableSchema,
   type ObjectMeta,
-  Ref,
-  requireTypeReference,
   type S,
   SchemaValidator,
+  requireTypeReference,
 } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';

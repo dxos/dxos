@@ -4,17 +4,26 @@
 
 import React from 'react';
 
-import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
+import {
+  resolvePlugin,
+  type PluginDefinition,
+  parseIntentPlugin,
+  NavigationAction,
+  createSurface,
+} from '@dxos/app-framework';
+import { invariant } from '@dxos/invariant';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
-import { KanbanType } from '@dxos/react-ui-kanban';
+import { getSpace } from '@dxos/react-client/echo';
+import { KanbanType, translations as kanbanTranslations } from '@dxos/react-ui-kanban';
+import { type FieldProjection, ViewProjection } from '@dxos/schema';
 
 import { KanbanContainer } from './components';
-import { createKanban } from './components/create-kanban';
+import KanbanViewEditor from './components/KanbanViewEditor';
 import meta, { KANBAN_PLUGIN } from './meta';
 import translations from './translations';
-import { KanbanAction, type KanbanPluginProvides } from './types';
+import { isKanban, KanbanAction, type KanbanPluginProvides, createKanban } from './types';
 
 export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
   return {
@@ -32,7 +41,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
       echo: {
         schema: [KanbanType],
       },
-      translations,
+      translations: [...translations, ...kanbanTranslations],
       graph: {
         builder: (plugins) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
@@ -76,22 +85,52 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
         },
       },
       surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'section':
-            case 'article':
-              return data.object instanceof KanbanType ? <KanbanContainer kanban={data.object} role={role} /> : null;
-            default:
-              return null;
-          }
-        },
+        definitions: () => [
+          createSurface({
+            id: `${KANBAN_PLUGIN}/kanban`,
+            role: ['article', 'section'],
+            filter: (data): data is { subject: KanbanType } => isKanban(data.subject),
+            component: ({ data, role }) => <KanbanContainer kanban={data.subject} role={role} />,
+          }),
+          createSurface({
+            id: `${KANBAN_PLUGIN}/settings`,
+            role: 'complementary--settings',
+            filter: (data): data is { subject: KanbanType } => isKanban(data.subject),
+            component: ({ data }) => <KanbanViewEditor kanban={data.subject} />,
+          }),
+        ],
       },
       intent: {
         resolver: (intent) => {
           switch (intent.action) {
             case KanbanAction.CREATE: {
-              if (intent.data?.space) {
-                return { data: createKanban(intent.data.space) };
+              const { space } = intent.data as KanbanAction.Create;
+              invariant(space);
+              const kanban = createKanban(space);
+              return { data: kanban };
+            }
+            case KanbanAction.DELETE_CARD_FIELD: {
+              const { kanban, fieldId } = intent.data as KanbanAction.DeleteColumn;
+              invariant(isKanban(kanban));
+              invariant(kanban.cardView);
+
+              const schema =
+                kanban.cardView && getSpace(kanban)?.db.schemaRegistry.getSchema(kanban.cardView.query.type);
+              invariant(schema);
+              const projection = new ViewProjection(schema, kanban.cardView);
+
+              if (!intent.undo) {
+                const { deleted, index } = projection.deleteFieldProjection(fieldId);
+                return {
+                  undoable: {
+                    message: translations[0]['en-US'][KANBAN_PLUGIN]['card field deleted label'],
+                    data: { deleted, index },
+                  },
+                };
+              } else if (intent.undo) {
+                const { deleted, index } = intent.data as { deleted: FieldProjection; index: number };
+                projection.setFieldProjection(deleted, index);
+                return { data: true };
               }
             }
           }

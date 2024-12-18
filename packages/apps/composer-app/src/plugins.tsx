@@ -25,7 +25,6 @@ import DeckMeta from '@dxos/plugin-deck/meta';
 import ExcalidrawMeta from '@dxos/plugin-excalidraw/meta';
 import ExplorerMeta from '@dxos/plugin-explorer/meta';
 import FilesMeta from '@dxos/plugin-files/meta';
-import GithubMeta from '@dxos/plugin-github/meta';
 import GraphMeta from '@dxos/plugin-graph/meta';
 import HelpMeta from '@dxos/plugin-help/meta';
 import InboxMeta from '@dxos/plugin-inbox/meta';
@@ -152,7 +151,6 @@ export const recommended = ({ isDev, isLabs }: PluginConfig): PluginMeta[] =>
       ? [
           // prettier-ignore
           CanvasMeta,
-          GithubMeta,
           InboxMeta,
           OutlinerMeta,
         ]
@@ -241,7 +239,6 @@ export const plugins = ({
   [ExcalidrawMeta.id]: Plugin.lazy(() => import('@dxos/plugin-excalidraw')),
   [ExplorerMeta.id]: Plugin.lazy(() => import('@dxos/plugin-explorer')),
   [FilesMeta.id]: Plugin.lazy(() => import('@dxos/plugin-files')),
-  [GithubMeta.id]: Plugin.lazy(() => import('@dxos/plugin-github')),
   [GraphMeta.id]: Plugin.lazy(() => import('@dxos/plugin-graph')),
   [HelpMeta.id]: Plugin.lazy(() => import('@dxos/plugin-help'), { steps }),
   [InboxMeta.id]: Plugin.lazy(() => import('@dxos/plugin-inbox')),

@@ -9,31 +9,18 @@ import { Resource } from '@dxos/context';
 import { getValue, setValue, FormatEnum, type JsonProp } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/react-client';
-import {
-  cellClassesForFieldType,
-  cellClassesForRowSelection,
-  formatForDisplay,
-  formatForEditing,
-  parseValue,
-} from '@dxos/react-ui-form';
+import { formatForEditing, parseValue } from '@dxos/react-ui-form';
 import {
   type DxGridAxisMeta,
-  type DxGridCellValue,
-  type DxGridPlane,
-  type DxGridPlaneCells,
   type DxGridPlaneRange,
   type DxGridPlanePosition,
-  toPlaneCellIndex,
   type DxGridPosition,
 } from '@dxos/react-ui-grid';
-import { mx } from '@dxos/react-ui-theme';
-import { VIEW_FIELD_LIMIT, type ViewProjection, type FieldType } from '@dxos/schema';
+import { type ViewProjection } from '@dxos/schema';
 
-import { ModalController } from './modal-controller';
 import { SelectionModel } from './selection-model';
 import { type TableType } from '../types';
-import { tableButtons, touch } from '../util';
-import { tableControls } from '../util/table-controls';
+import { touch } from '../util';
 
 export type SortDirection = 'asc' | 'desc';
 export type SortConfig = { fieldId: string; direction: SortDirection };
@@ -84,7 +71,6 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
 
   private _selection!: SelectionModel<T>;
   private _columnMeta?: ReadonlySignal<DxGridAxisMeta>;
-  private readonly _modalController = new ModalController();
 
   constructor({
     table,
@@ -118,6 +104,10 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     return this._projection;
   }
 
+  public get rows(): ReadonlySignal<T[]> {
+    return this._sortedRows;
+  }
+
   public get pinnedRows(): NonNullable<TableModelProps<T>['pinnedRows']> {
     return this._pinnedRows;
   }
@@ -129,10 +119,6 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
 
   public get sorting(): SortConfig | undefined {
     return this._sorting.value;
-  }
-
-  public get modalController() {
-    return this._modalController;
   }
 
   public get selection() {
@@ -509,30 +495,6 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
       this._onDeleteColumn(field.id);
     }
   }
-
-  //
-  // Interactions
-  //
-  public handleGridClick = (event: React.MouseEvent): void => {
-    if (!this._modalController.handleClick(event)) {
-      const target = event.target as HTMLElement;
-
-      const selectionCheckbox = target.closest(`input[${tableControls.checkbox.attributes.checkbox}]`);
-      if (selectionCheckbox) {
-        const isHeader = selectionCheckbox.hasAttribute(tableControls.checkbox.attributes.header);
-        if (isHeader) {
-          if (this._selection.allRowsSeleted.value) {
-            this._selection.setSelection('none');
-          } else {
-            this._selection.setSelection('all');
-          }
-        } else {
-          const rowIndex = Number(selectionCheckbox.getAttribute(tableControls.checkbox.attributes.checkbox));
-          this._selection.toggleSelectionForRowIndex(rowIndex);
-        }
-      }
-    }
-  };
 
   //
   // Resize

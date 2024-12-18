@@ -5,10 +5,10 @@
 import React from 'react';
 
 import {
+  createSurface,
   type IntentPluginProvides,
   isLayoutParts,
   LayoutAction,
-  type LocationProvides,
   NavigationAction,
   parseIntentPlugin,
   parseMetadataResolverPlugin,
@@ -31,21 +31,13 @@ import {
   getSpace,
   getTypename,
   loadObjectReferences,
-  makeRef,
   parseId,
   type ReactiveEchoObject,
   SpaceState,
 } from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 
-import {
-  ChatContainer,
-  ChatHeading,
-  ThreadArticle,
-  ThreadComplementary,
-  ThreadMain,
-  ThreadSettings,
-} from './components';
+import { ThreadArticle, ThreadComplementary, ThreadSettings } from './components';
 import { threads } from './extensions';
 import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
@@ -74,7 +66,6 @@ export const ThreadPlugin = (): PluginDefinition<
     return viewStore[subjectId];
   };
 
-  let navigationPlugin: Plugin<LocationProvides> | undefined;
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
 
   const unsubscribeCallbacks = [] as UnsubscribeCallback[];
@@ -92,8 +83,7 @@ export const ThreadPlugin = (): PluginDefinition<
         },
       };
     },
-    ready: async (plugins) => {
-      navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
+    ready: async ({ plugins }) => {
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
     },
     unload: async () => {
@@ -286,74 +276,59 @@ export const ThreadPlugin = (): PluginDefinition<
         },
       },
       surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'main': {
-              return data.active instanceof ChannelType && data.active.threads[0] ? (
-                <ThreadMain thread={data.active.threads[0].target!} />
-              ) : null;
-            }
-
-            case 'settings': {
-              return data.plugin === meta.id ? <ThreadSettings settings={settings.values} /> : null;
-            }
-
-            case 'article': {
-              const location = navigationPlugin?.provides.location;
-
-              if (data.object instanceof ChannelType && data.object.threads[0]) {
-                const channel = data.object;
+        definitions: ({ plugins }) => {
+          const location = resolvePlugin(plugins, parseNavigationPlugin)?.provides.location;
+          return [
+            createSurface({
+              id: `${THREAD_PLUGIN}/channel`,
+              role: 'article',
+              filter: (data): data is { subject: ChannelType } =>
+                data.subject instanceof ChannelType && !!data.subject.threads[0],
+              component: ({ data }) => {
+                const channel = data.subject;
+                const thread = channel.threads[0]!;
                 // TODO(zan): Maybe we should have utility for positional main object ids.
                 if (isLayoutParts(location?.active) && location.active.main) {
                   const layoutEntries = location.active.main;
                   const currentPosition = layoutEntries.findIndex((entry) => channel.id === entry.id);
                   if (currentPosition > 0) {
                     const objectToTheLeft = layoutEntries[currentPosition - 1];
-                    const context = getSpace(data.object)?.db.getObjectById(objectToTheLeft.id);
-                    return <ThreadArticle thread={data.object.threads[0].target!} context={context} />;
+                    const context = getSpace(channel)?.db.getObjectById(objectToTheLeft.id);
+                    return <ThreadArticle thread={thread} context={context} />;
                   }
                 }
 
-                return <ThreadArticle thread={data.object.threads[0].target!} />;
-              }
-
-              if (data.subject instanceof ThreadType) {
-                return (
-                  <>
-                    <ChatHeading attendableId={data.subject.id} />
-                    <ChatContainer thread={data.subject} />
-                  </>
-                );
-              }
-
-              break;
-            }
-
-            case 'complementary--comments': {
-              if (
-                data.subject &&
+                return <ThreadArticle thread={thread} />;
+              },
+            }),
+            createSurface({
+              id: `${THREAD_PLUGIN}/thread`,
+              role: 'complementary--comments',
+              filter: (data): data is { subject: { threads: ThreadType[] } } =>
+                !!data.subject &&
                 typeof data.subject === 'object' &&
                 'threads' in data.subject &&
                 Array.isArray(data.subject.threads) &&
-                !(data.subject instanceof ChannelType)
-              ) {
+                !(data.subject instanceof ChannelType),
+              component: ({ data }) => {
                 const { showResolvedThreads } = getViewState(fullyQualifiedId(data.subject));
                 return (
                   <ThreadComplementary
-                    role={role}
                     subject={data.subject}
                     drafts={state.drafts[fullyQualifiedId(data.subject)]}
                     current={state.current}
                     showResolvedThreads={showResolvedThreads}
                   />
                 );
-              }
-
-              break;
-            }
-          }
-
-          return null;
+              },
+            }),
+            createSurface({
+              id: `${THREAD_PLUGIN}/settings`,
+              role: 'settings',
+              filter: (data): data is any => data.plugin === THREAD_PLUGIN,
+              component: () => <ThreadSettings settings={settings.values} />,
+            }),
+          ];
         },
       },
       intent: {
@@ -414,7 +389,7 @@ export const ThreadPlugin = (): PluginDefinition<
               } else {
                 // NOTE: This is the standalone thread creation case.
                 return {
-                  data: create(ChannelType, { threads: [makeRef(create(ThreadType, { messages: [] }))] }),
+                  data: create(ChannelType, { threads: [create(ThreadType, { messages: [] }))] }),
                 };
               }
             }
@@ -625,7 +600,7 @@ export const ThreadPlugin = (): PluginDefinition<
                   return;
                 }
 
-                thread.messages.splice(messageIndex, 0, makeRef(message));
+                thread.messages.splice(messageIndex, 0, makeRef(create(MessageType, { content: message })));
                 return {
                   data: true,
                   intents: [

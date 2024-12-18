@@ -183,7 +183,7 @@ const MessageBlockObjectTile: MosaicTileComponent<ReactiveEchoObject<any>> = for
         <Surface
           role='card'
           limit={1}
-          data={{ content: item }}
+          data={{ subject: item }}
           draggableProps={draggableProps}
           fallback={title}
           {...props}

@@ -4,13 +4,19 @@
 
 import React from 'react';
 
-import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
+import {
+  createSurface,
+  NavigationAction,
+  parseIntentPlugin,
+  resolvePlugin,
+  type PluginDefinition,
+} from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { createExtension, isActionGroup, type ActionGroup } from '@dxos/plugin-graph';
 import { FunctionType } from '@dxos/plugin-script/types';
 import { SpaceAction } from '@dxos/plugin-space';
-import { getSpace, isEchoObject } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/react-client/echo';
 import { Icon } from '@dxos/react-ui';
 
 import { ComputeGraphContextProvider, SheetContainer, SheetObjectSettings } from './components';
@@ -27,7 +33,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
 
   return {
     meta,
-    ready: async (plugins) => {
+    ready: async ({ plugins }) => {
       const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
       invariant(client);
       let remoteFunctionUrl: string | undefined;
@@ -138,24 +144,23 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
           !indexA || !indexB ? 0 : compareIndexPositions(sheet, indexA, indexB),
       },
       surface: {
-        component: ({ data, role }) => {
-          const space = isEchoObject(data.object) ? getSpace(data.object) : undefined;
-          switch (role) {
-            case 'article':
-            case 'section':
-              if (space && data.object instanceof SheetType) {
-                return <SheetContainer space={space} sheet={data.object} role={role} />;
-              }
-              break;
-            case 'complementary--settings':
-              if (data.subject instanceof SheetType) {
-                return <SheetObjectSettings sheet={data.subject} />;
-              }
-              break;
-          }
-
-          return null;
-        },
+        definitions: () => [
+          createSurface({
+            id: `${SHEET_PLUGIN}/sheet`,
+            role: ['article', 'section'],
+            filter: (data): data is { subject: SheetType } =>
+              data.subject instanceof SheetType && !!getSpace(data.subject),
+            component: ({ data, role }) => (
+              <SheetContainer space={getSpace(data.subject)!} sheet={data.subject} role={role} />
+            ),
+          }),
+          createSurface({
+            id: `${SHEET_PLUGIN}/settings`,
+            role: 'complementary--settings',
+            filter: (data): data is { subject: SheetType } => data.subject instanceof SheetType,
+            component: ({ data }) => <SheetObjectSettings sheet={data.subject} />,
+          }),
+        ],
       },
       intent: {
         resolver: async (intent) => {

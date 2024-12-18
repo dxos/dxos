@@ -5,7 +5,13 @@
 import { Table } from '@phosphor-icons/react';
 import React from 'react';
 
-import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
+import {
+  resolvePlugin,
+  type PluginDefinition,
+  parseIntentPlugin,
+  NavigationAction,
+  createSurface,
+} from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
 import { parseClientPlugin } from '@dxos/plugin-client';
@@ -25,7 +31,7 @@ import { TableAction, type TablePluginProvides, isTable } from './types';
 export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
   return {
     meta,
-    ready: async (plugins) => {
+    ready: async ({ plugins }) => {
       const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
       clientPlugin?.provides.client.addTypes([TableType]);
     },
@@ -91,25 +97,20 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
         },
       },
       surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'slide':
-              return isTable(data.slide) ? <TableContainer table={data.slide} /> : null;
-            case 'section':
-            case 'article':
-              return isTable(data.object) ? <TableContainer role={role} table={data.object} /> : null;
-            case 'complementary--settings': {
-              if (data.subject instanceof TableType) {
-                const table = data.subject;
-                return { node: <TableViewEditor table={table} /> };
-              }
-
-              return null;
-            }
-            default:
-              return null;
-          }
-        },
+        definitions: () => [
+          createSurface({
+            id: `${TABLE_PLUGIN}/table`,
+            role: ['article', 'section', 'slide'],
+            filter: (data): data is { subject: TableType } => data.subject instanceof TableType,
+            component: ({ data, role }) => <TableContainer table={data.subject} role={role} />,
+          }),
+          createSurface({
+            id: `${TABLE_PLUGIN}/settings-panel`,
+            role: 'complementary--settings',
+            filter: (data): data is { subject: TableType } => data.subject instanceof TableType,
+            component: ({ data }) => <TableViewEditor table={data.subject} />,
+          }),
+        ],
       },
       stack: {
         creators: [

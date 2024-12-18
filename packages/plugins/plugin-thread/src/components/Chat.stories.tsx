@@ -7,8 +7,8 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
-import { SurfaceProvider } from '@dxos/app-framework';
-import { ThreadType } from '@dxos/plugin-space/types';
+import { createSurface, SurfaceProvider } from '@dxos/app-framework';
+import { MessageType, ThreadType } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
@@ -48,10 +48,12 @@ const Story = () => {
   return (
     <SurfaceProvider
       value={{
-        components: {
-          ObjectMessage: ({ role }) => {
-            return <span>{JSON.stringify({ role })}</span>;
-          },
+        surfaces: {
+          ObjectMessage: createSurface({
+            id: 'test',
+            role: 'card',
+            component: ({ role }) => <span>{JSON.stringify({ role })}</span>,
+          }),
         },
       }}
     >
@@ -71,8 +73,8 @@ const meta: Meta = {
   title: 'plugins/plugin-thread/Chat',
   component: Thread,
   // TODO(burdon): Use decorator.
-  render: () => <ClientRepeater component={Story} createIdentity createSpace types={[ThreadType]} />,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  render: () => <ClientRepeater component={Story} createIdentity createSpace types={[ThreadType, MessageType]} />,
+  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
   parameters: { translations },
 };
 

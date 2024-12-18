@@ -5,8 +5,14 @@
 import { TextAa } from '@phosphor-icons/react';
 import React from 'react';
 
-import { parseIntentPlugin, resolvePlugin, NavigationAction, type PluginDefinition } from '@dxos/app-framework';
-import { create, makeRef } from '@dxos/live-object';
+import {
+  parseIntentPlugin,
+  resolvePlugin,
+  NavigationAction,
+  type PluginDefinition,
+  createSurface,
+} from '@dxos/app-framework';
+import { create } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
@@ -39,9 +45,6 @@ import {
 } from './types';
 import { markdownExtensionPlugins, serializer } from './util';
 
-// TODO(burdon): Normalize active/object.
-const getDoc = (object: any) => (object instanceof DocumentType ? object : undefined);
-
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, {
     defaultViewMode: 'preview',
@@ -60,7 +63,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
   return {
     meta,
-    ready: async (plugins) => {
+    ready: async ({ plugins }) => {
       settings
         .prop({ key: 'defaultViewMode', type: LocalStorageStore.enum<EditorViewMode>() })
         .prop({ key: 'editorInputMode', type: LocalStorageStore.enum<EditorInputMode>({ allowUndefined: true }) })
@@ -231,42 +234,48 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         },
       },
       surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'section':
-            case 'article': {
-              const doc = getDoc(data.object);
-              const { id, object } = isEditorModel(data.object)
-                ? { id: data.object.id, object: data.object }
-                : doc
-                  ? { id: fullyQualifiedId(doc), object: doc }
-                  : {};
-
-              if (!id || !object) {
-                return null;
-              }
-
-              return (
-                <MarkdownContainer
-                  id={id}
-                  object={object}
-                  role={role}
-                  settings={settings.values}
-                  extensionProviders={state.values.extensionProviders}
-                  viewMode={getViewMode(id)}
-                  editorStateStore={editorStateStore}
-                  onViewModeChange={setViewMode}
-                />
-              );
-            }
-
-            case 'settings': {
-              return data.plugin === meta.id ? <MarkdownSettings settings={settings.values} /> : null;
-            }
-          }
-
-          return null;
-        },
+        definitions: () => [
+          createSurface({
+            id: `${MARKDOWN_PLUGIN}/document`,
+            role: ['article', 'section'],
+            filter: (data): data is { subject: DocumentType } => data.subject instanceof DocumentType,
+            component: ({ data, role }) => (
+              <MarkdownContainer
+                id={fullyQualifiedId(data.subject)}
+                object={data.subject}
+                role={role}
+                settings={settings.values}
+                extensionProviders={state.values.extensionProviders}
+                viewMode={getViewMode(fullyQualifiedId(data.subject))}
+                editorStateStore={editorStateStore}
+                onViewModeChange={setViewMode}
+              />
+            ),
+          }),
+          createSurface({
+            id: `${MARKDOWN_PLUGIN}/editor`,
+            role: ['article', 'section'],
+            filter: (data): data is { subject: { id: string; text: string } } => isEditorModel(data.subject),
+            component: ({ data, role }) => (
+              <MarkdownContainer
+                id={data.subject.id}
+                object={data.subject}
+                role={role}
+                settings={settings.values}
+                extensionProviders={state.values.extensionProviders}
+                viewMode={getViewMode(data.subject.id)}
+                editorStateStore={editorStateStore}
+                onViewModeChange={setViewMode}
+              />
+            ),
+          }),
+          createSurface({
+            id: `${MARKDOWN_PLUGIN}/settings`,
+            role: 'settings',
+            filter: (data): data is any => data.subject === MARKDOWN_PLUGIN,
+            component: () => <MarkdownSettings settings={settings.values} />,
+          }),
+        ],
       },
       intent: {
         resolver: ({ action, data }) => {

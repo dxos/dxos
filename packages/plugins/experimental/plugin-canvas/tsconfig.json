@@ -43,6 +43,9 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../../core/echo/echo-db"
+    },
+    {
       "path": "../../../core/echo/echo-schema"
     },
     {
@@ -59,6 +62,9 @@
     },
     {
       "path": "../../../ui/react-ui"
+    },
+    {
+      "path": "../../../ui/react-ui-attention"
     },
     {
       "path": "../../../ui/react-ui-card"

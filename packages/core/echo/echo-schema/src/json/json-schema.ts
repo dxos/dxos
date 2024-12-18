@@ -18,6 +18,7 @@ import {
   ObjectAnnotationId,
   type PropertyMetaAnnotation,
   PropertyMetaAnnotationId,
+  LabelAnnotationId,
 } from '../ast';
 import { createEchoReferenceSchema, Ref, type JsonSchemaReferenceInfo } from '../ast/ref';
 import { CustomAnnotations } from '../formats';
@@ -319,7 +320,13 @@ const refToEffectSchema = (root: any): S.Schema<any> => {
  */
 export const ECHO_REFINEMENT_KEY = 'echo';
 
-const ECHO_REFINEMENTS = [ObjectAnnotationId, PropertyMetaAnnotationId, GeneratorAnnotationId, FieldLookupAnnotationId];
+const ECHO_REFINEMENTS = [
+  ObjectAnnotationId,
+  PropertyMetaAnnotationId,
+  LabelAnnotationId,
+  FieldLookupAnnotationId,
+  GeneratorAnnotationId,
+];
 
 const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<symbol, any> => {
   const schemaFields: Record<string, any> = {};

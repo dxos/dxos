@@ -6,8 +6,14 @@
 import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import React from 'react';
 
-import { NavigationAction, parseIntentPlugin, type PluginDefinition, resolvePlugin } from '@dxos/app-framework';
-import { create, makeRef } from '@dxos/live-object';
+import {
+  createSurface,
+  NavigationAction,
+  parseIntentPlugin,
+  type PluginDefinition,
+  resolvePlugin,
+} from '@dxos/app-framework';
+import { create } from '@dxos/live-object';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { TextType } from '@dxos/plugin-markdown/types';
@@ -104,39 +110,33 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
         },
       },
       surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'settings': {
-              return data.plugin === meta.id ? <ScriptSettings settings={{}} /> : null;
-            }
-
-            case 'article': {
-              if (data.object instanceof ScriptType) {
-                return <ScriptContainer script={data.object} env={compiler.environment} />;
-              }
-              break;
-            }
-
-            case 'complementary--automation': {
-              if (data.subject instanceof ScriptType) {
-                return {
-                  node: <AutomationPanel subject={data.subject as any} />,
-                  disposition: 'hoist',
-                };
-              }
-              break;
-            }
-
-            case 'complementary--settings': {
-              if (data.subject instanceof ScriptType) {
-                return <ScriptSettingsPanel script={data.subject} />;
-              }
-              break;
-            }
-          }
-
-          return null;
-        },
+        definitions: () => [
+          createSurface({
+            id: `${SCRIPT_PLUGIN}/settings`,
+            role: 'settings',
+            filter: (data): data is any => data.subject === SCRIPT_PLUGIN,
+            component: () => <ScriptSettings settings={{}} />,
+          }),
+          createSurface({
+            id: `${SCRIPT_PLUGIN}/article`,
+            role: 'article',
+            filter: (data): data is { subject: ScriptType } => data.subject instanceof ScriptType,
+            component: ({ data }) => <ScriptContainer script={data.subject} env={compiler.environment} />,
+          }),
+          createSurface({
+            id: `${SCRIPT_PLUGIN}/automation`,
+            role: 'complementary--automation',
+            disposition: 'hoist',
+            filter: (data): data is { subject: ScriptType } => data.subject instanceof ScriptType,
+            component: ({ data }) => <AutomationPanel subject={data.subject} />,
+          }),
+          createSurface({
+            id: `${SCRIPT_PLUGIN}/settings-panel`,
+            role: 'complementary--settings',
+            filter: (data): data is { subject: ScriptType } => data.subject instanceof ScriptType,
+            component: ({ data }) => <ScriptSettingsPanel script={data.subject} />,
+          }),
+        ],
       },
       intent: {
         resolver: (intent) => {

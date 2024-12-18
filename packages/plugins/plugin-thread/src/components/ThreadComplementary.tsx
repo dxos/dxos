@@ -18,13 +18,11 @@ const providesThreadsConfig = (plugin: any): Plugin<ThreadProvides<any>> | undef
   'thread' in plugin.provides ? (plugin as Plugin<ThreadProvides<any>>) : undefined;
 
 export const ThreadComplementary = ({
-  role,
   subject,
   drafts,
   current,
   showResolvedThreads,
 }: {
-  role: string;
   subject: any;
   drafts: ThreadType[] | undefined;
   current?: string;

@@ -4,7 +4,13 @@
 
 import React from 'react';
 
-import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
+import {
+  createSurface,
+  NavigationAction,
+  parseIntentPlugin,
+  resolvePlugin,
+  type PluginDefinition,
+} from '@dxos/app-framework';
 import { create } from '@dxos/live-object';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
@@ -94,15 +100,14 @@ export const CanvasPlugin = (): PluginDefinition<CanvasPluginProvides> => {
         },
       },
       surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'article': {
-              return data.object instanceof CanvasType ? <CanvasContainer canvas={data.object} /> : null;
-            }
-          }
-
-          return null;
-        },
+        definitions: () => [
+          createSurface({
+            id: CANVAS_PLUGIN,
+            role: 'article',
+            filter: (data): data is { subject: CanvasType } => data.subject instanceof CanvasType,
+            component: ({ data }) => <CanvasContainer canvas={data.subject} />,
+          }),
+        ],
       },
       intent: {
         resolver: (intent) => {
