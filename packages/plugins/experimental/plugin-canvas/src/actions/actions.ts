@@ -14,8 +14,9 @@ export type Action =
   | { type: 'zoom-in' }
   | { type: 'zoom-out' }
   | { type: 'zoom-to-fit'; duration?: number }
+  | { type: 'layout' }
   | { type: 'create'; shape?: Shape }
   | { type: 'link'; source: string; target: string }
   | { type: 'delete'; ids?: string[] };
 
-export type ActionHandler = (action: Action) => boolean;
+export type ActionHandler = (action: Action) => Promise<boolean>;
