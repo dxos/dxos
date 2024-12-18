@@ -494,7 +494,7 @@ export const ThreadPlugin = (): PluginDefinition<
               } else if (intent.undo) {
                 // TODO(wittjosiah): SDK should do this automatically.
                 const savedThread = space.db.add(thread);
-                subject.threads.push(savedThread);
+                subject.threads.push(makeRef(savedThread));
 
                 return {
                   data: true,

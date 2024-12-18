@@ -139,7 +139,7 @@ export const CommentContainer = ({
           sender: { identityKey: identity.identityKey.toHex() },
           timestamp: new Date().toISOString(),
           text: messageRef.current,
-          context: makeRef(context as Expando),
+          context: context ? makeRef(context) : undefined,
         }),
       ),
     );
