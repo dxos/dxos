@@ -16,7 +16,8 @@ export const useShortcuts = () => {
   const option = { scopes: id };
   useHotkeys(
     'd',
-    () => {
+    (ev) => {
+      ev.preventDefault();
       handleAction({
         type: 'debug',
       });
@@ -36,7 +37,8 @@ export const useShortcuts = () => {
   );
   useHotkeys(
     "meta+'",
-    () => {
+    (ev) => {
+      ev.preventDefault();
       handleAction({
         type: 'grid',
       });
@@ -45,7 +47,8 @@ export const useShortcuts = () => {
   );
   useHotkeys(
     'Home',
-    () => {
+    (ev) => {
+      ev.preventDefault();
       handleAction({
         type: 'home',
       });
@@ -54,7 +57,8 @@ export const useShortcuts = () => {
   );
   useHotkeys(
     'Backspace',
-    () => {
+    (ev) => {
+      ev.preventDefault();
       handleAction({
         type: 'delete',
         ids: [...selection.ids],
