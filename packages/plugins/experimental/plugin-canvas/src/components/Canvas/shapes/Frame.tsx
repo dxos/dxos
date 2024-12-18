@@ -22,6 +22,8 @@ import { DATA_SHAPE_ID, Anchor } from '../Anchor';
 // TODO(burdon): Surface for form content. Or pass in children (which may include a Surface).
 //  return <Surface ref={forwardRef} role='card' limit={1} data={{ content: object} />;
 
+const DBLCLICK_TIMEOUT = 200;
+
 export type FrameProps = BaseShapeProps<'rect'> & { showAnchors?: boolean };
 
 /**
@@ -87,13 +89,17 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
       : [];
   }, [showAnchors, hovering]);
 
+  const clickTimer = useRef<number>();
   const handleClick: MouseEventHandler<HTMLDivElement> = (ev) => {
-    if (!editing) {
-      onSelect?.(shape.id, ev.shiftKey);
+    if (ev.detail === 1 && !editing) {
+      clickTimer.current = window.setTimeout(() => {
+        onSelect?.(shape.id, ev.shiftKey);
+      }, DBLCLICK_TIMEOUT);
     }
   };
 
   const handleDoubleClick: MouseEventHandler<HTMLDivElement> = () => {
+    clearTimeout(clickTimer.current);
     setEditing({ shape });
   };
 

@@ -18,12 +18,13 @@ import { mx } from '@dxos/react-ui-theme';
 export type TextBoxProps = ThemedClassName<
   {
     value?: string;
+    center?: boolean;
     onClose?: (value: string) => void;
     onCancel?: () => void;
   } & Pick<BasicExtensionsOptions, 'placeholder'>
 >;
 
-export const TextBox = ({ classNames, value = '', onClose, onCancel, ...rest }: TextBoxProps) => {
+export const TextBox = ({ classNames, value = '', center = true, onClose, onCancel, ...rest }: TextBoxProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef, view, focusAttributes } = useTextEditor(() => {
     return {
@@ -34,8 +35,8 @@ export const TextBox = ({ classNames, value = '', onClose, onCancel, ...rest }: 
         createThemeExtensions({
           themeMode,
           slots: {
-            editor: { className: 'overflow-hidden' },
-            content: { className: 'overflow-hidden text-center [&>*]:overflow-hidden' },
+            editor: { className: '[&>.cm-scroller]:scrollbar-none' },
+            content: { className: mx(center && 'text-center') },
           },
         }),
         EditorView.focusChangeEffect.of((state, focusing) => {

@@ -31,8 +31,10 @@ export const Canvas = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { styles: transformStyles } = useTransform();
 
-  // Event handlers.
+  // Pan and zoom.
   useWheel(containerRef.current, width, height, setTransform);
+
+  // Keyboard shortcuts.
   useShortcuts();
 
   // Drop target.
@@ -50,7 +52,7 @@ export const Canvas = () => {
   // Dragging and linking.
   const { frameDragging, overlay } = useDragMonitor(containerRef.current);
 
-  // Shapes.
+  // Layout.
   const layout = useLayout(graph, frameDragging, debug);
   const { shapes } = layout;
   const selectionRect = useSelectionHandler(containerRef.current, shapes);

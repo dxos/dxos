@@ -39,12 +39,13 @@ export const getZoomTransform = ({
   pos,
   newScale,
 }: TransformState & { pos: Point; newScale: number }): TransformState => {
-  const newOffset = {
-    x: pos.x - (pos.x - offset.x) * (newScale / scale),
-    y: pos.y - (pos.y - offset.y) * (newScale / scale),
+  return {
+    scale: newScale,
+    offset: {
+      x: pos.x - (pos.x - offset.x) * (newScale / scale),
+      y: pos.y - (pos.y - offset.y) * (newScale / scale),
+    },
   };
-
-  return { scale: newScale, offset: newOffset };
 };
 
 /**
