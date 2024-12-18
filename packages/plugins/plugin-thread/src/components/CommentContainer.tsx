@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { create, makeRef, RefArray } from '@dxos/live-object';
 import { MessageType } from '@dxos/plugin-space/types';
-import { fullyQualifiedId, getSpace, useMembers, type Expando } from '@dxos/react-client/echo';
+import { fullyQualifiedId, getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Button, Tag, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
