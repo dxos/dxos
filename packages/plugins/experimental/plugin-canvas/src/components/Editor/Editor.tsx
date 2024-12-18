@@ -7,7 +7,7 @@ import { HotkeysProvider } from 'react-hotkeys-hook';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { useAttendableAttributes, useAttention } from '@dxos/react-ui-attention';
+import { useAttendableAttributes } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
 import { emptyGraph, type Graph, GraphModel, type Node, type Shape } from '../../graph';
@@ -94,7 +94,6 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
     // Canvas state.
     const { ref, width = 0, height = 0 } = useResizeDetector();
     const attendableAttrs = useAttendableAttributes(id);
-    const { hasAttention } = useAttention(id);
     const options = useMemo(() => Object.assign({}, defaultEditorOptions, _options), [_options]);
     const [debug, setDebug] = useState(_debug);
     const [gridSize, setGridSize] = useState({ width: 32, height: 32 });
@@ -172,10 +171,9 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
         ref={ref}
         className={mx('relative w-full h-full overflow-hidden', classNames)}
       >
-        {/* TODO(burdon): Change scope based on attention. */}
-        <HotkeysProvider initiallyActiveScopes={hasAttention ? [id] : []}>
-          <EditorContext.Provider value={context}>{children}</EditorContext.Provider>
-        </HotkeysProvider>
+        <EditorContext.Provider value={context}>
+          <HotkeysProvider initiallyActiveScopes={['main']}>{children}</HotkeysProvider>
+        </EditorContext.Provider>
       </div>
     );
   },

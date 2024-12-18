@@ -2,7 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useHotkeys } from 'react-hotkeys-hook';
+import { useEffect } from 'react';
+import { useHotkeys, useHotkeysContext } from 'react-hotkeys-hook';
+
+import { useAttention } from '@dxos/react-ui-attention';
 
 import { useActionHandler } from './useActionHandler';
 import { useEditorContext } from './useEditorContext';
@@ -12,8 +15,18 @@ import { useEditorContext } from './useEditorContext';
  */
 export const useShortcuts = () => {
   const { id, graph, selection } = useEditorContext();
+  const { hasAttention } = useAttention(id);
+  // TODO(burdon): Consider lower-level API without react dependency (for integration with app framework).
+  const { enableScope, disableScope } = useHotkeysContext();
+  useEffect(() => {
+    if (hasAttention) {
+      enableScope(id);
+    } else {
+      disableScope(id);
+    }
+  }, [id, hasAttention]);
+
   const handleAction = useActionHandler();
-  const option = { scopes: id };
   useHotkeys(
     'd',
     (ev) => {
@@ -22,7 +35,7 @@ export const useShortcuts = () => {
         type: 'debug',
       });
     },
-    option,
+    { scopes: [id] },
   );
   useHotkeys(
     'meta+a',
@@ -33,7 +46,7 @@ export const useShortcuts = () => {
         ids: [...graph.nodes.map((node) => node.id), ...graph.edges.map((edge) => edge.id)],
       });
     },
-    option,
+    { scopes: [id] },
   );
   useHotkeys(
     "meta+'",
@@ -43,7 +56,7 @@ export const useShortcuts = () => {
         type: 'grid',
       });
     },
-    option,
+    { scopes: [id] },
   );
   useHotkeys(
     'Home',
@@ -53,7 +66,7 @@ export const useShortcuts = () => {
         type: 'home',
       });
     },
-    option,
+    { scopes: [id] },
   );
   useHotkeys(
     'Backspace',
@@ -64,6 +77,6 @@ export const useShortcuts = () => {
         ids: [...selection.ids],
       });
     },
-    option,
+    { scopes: [id] },
   );
 };

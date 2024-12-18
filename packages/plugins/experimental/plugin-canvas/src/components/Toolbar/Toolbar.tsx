@@ -18,6 +18,7 @@ export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
     return onAction?.(action) ?? false;
   };
 
+  // TODO(burdon): Translations.
   return (
     <NaturalToolbar.Root classNames={mx('p-1', classNames)}>
       <NaturalToolbar.Button onClick={() => handleAction({ type: 'debug' })} title='Toggle debug.'>
