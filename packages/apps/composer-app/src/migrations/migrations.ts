@@ -181,7 +181,7 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
       for (const sketch of sketches) {
         try {
           const data = await sketch.data.load();
-          await builder.migrateObject(sketch.id, async ({ data }) => {
+          await builder.migrateObject(sketch.id, async () => {
             return {
               schema: CanvasType,
               props: {
