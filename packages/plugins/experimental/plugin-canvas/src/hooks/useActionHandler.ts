@@ -100,7 +100,6 @@ export const handleAction = ({
         return true;
       }
       case 'layout': {
-        const now = Date.now();
         const layout = await doLayout(graph);
         for (const { id, data } of layout.nodes) {
           const node = graph.getNode(id);
@@ -110,7 +109,6 @@ export const handleAction = ({
           }
         }
 
-        console.log(Date.now() - now);
         await handler({ type: 'zoom-to-fit' });
         return true;
       }

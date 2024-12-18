@@ -168,9 +168,9 @@ const useDragMonitor = (el: HTMLElement | null) => {
               if (!id) {
                 id = createId();
                 const shape = createRect({ id, pos: snapPoint(pos), size: itemSize });
-                actionHandler({ type: 'create', shape });
+                await actionHandler({ type: 'create', shape });
               }
-              actionHandler({ type: 'link', source: shape.id, target: id });
+              await actionHandler({ type: 'link', source: shape.id, target: id });
               break;
             }
           }
