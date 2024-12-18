@@ -123,6 +123,14 @@ export class RefImpl<T> implements Ref<T> {
     };
   }
 
+  toString() {
+    if (this.#target) {
+      return `Ref(${this.#target.toString()})`;
+    }
+
+    return `Ref(${this.#dxn.toString()})`;
+  }
+
   [RefTypeId] = refVariance;
 
   /**
