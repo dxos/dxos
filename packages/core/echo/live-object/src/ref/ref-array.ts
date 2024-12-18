@@ -16,6 +16,10 @@ export const RefArray = Object.freeze({
     return refs.map((ref) => ref.target).filter(nonNullable);
   },
 
+  loadAll: <T extends BaseObject>(refs: Ref<T>[]): Promise<T[]> => {
+    return Promise.all(refs.map((ref) => ref.load()));
+  },
+
   /**
    * Removes the ref with the given id.
    */

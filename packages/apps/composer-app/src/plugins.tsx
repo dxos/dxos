@@ -63,6 +63,7 @@ import { INITIAL_CONTENT, INITIAL_DOC_TITLE } from './constants';
 import { steps } from './help';
 import { meta as WelcomeMeta } from './plugins/welcome/meta';
 import { queryAllCredentials } from './util';
+import { makeRef } from '@dxos/react-client/echo';
 
 export type State = {
   appKey: string;
@@ -277,12 +278,12 @@ export const plugins = ({
 
       const readme = create(DocumentType, {
         name: INITIAL_DOC_TITLE,
-        content: create(TextType, { content: INITIAL_CONTENT.join('\n\n') }),
+        content: makeRef(create(TextType, { content: INITIAL_CONTENT.join('\n\n') })),
         threads: [],
       });
 
       const defaultSpaceCollection = client.spaces.default.properties[CollectionType.typename] as CollectionType;
-      defaultSpaceCollection?.objects.push(readme);
+      defaultSpaceCollection?.objects.push(makeRef(readme));
 
       await dispatch([
         {
