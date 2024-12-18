@@ -87,13 +87,13 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
       surface: {
         definitions: () => [
           createSurface({
-            id: KANBAN_PLUGIN,
+            id: `${KANBAN_PLUGIN}/kanban`,
             role: ['article', 'section'],
             filter: (data): data is { subject: KanbanType } => isKanban(data.subject),
             component: ({ data, role }) => <KanbanContainer kanban={data.subject} role={role} />,
           }),
           createSurface({
-            id: KANBAN_PLUGIN,
+            id: `${KANBAN_PLUGIN}/settings`,
             role: 'complementary--settings',
             filter: (data): data is { subject: KanbanType } => isKanban(data.subject),
             component: ({ data }) => <KanbanViewEditor kanban={data.subject} />,
