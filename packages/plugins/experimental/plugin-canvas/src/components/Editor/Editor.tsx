@@ -44,11 +44,10 @@ import { testId } from '../util';
 //    - UML of this package using Beast and mermaid.
 //  - Spline.
 //  - Drop/snap visualization.
-//  - Undo.
 //  - Resize frames.
-//  - Context/CSS Variables.
 //  - Move all selected.
 //  - Factor out react-ui-xxx vs. plugin.
+//  - Undo.
 
 // Ontology:
 // TODO(burdon): Separate shapes/layout from data graph.
@@ -57,7 +56,6 @@ import { testId } from '../util';
 //  - Shapes are the visual representation of the layout.
 
 // TODO(burdon): Debt:
-//  - Factor out common key shortcuts pattern.
 //  - Factor out common Toolbar pattern (with state observers).
 
 const defaultOffset = { x: 0, y: 0 };
@@ -117,8 +115,6 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
     const [dragging, setDragging] = useState<DraggingState>();
     const [linking, setLinking] = useState<DraggingState>();
     const [editing, setEditing] = useState<EditingState>();
-
-    console.log(id, hasAttention);
 
     const context: EditorContextType = {
       id,
