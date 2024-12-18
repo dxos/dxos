@@ -31,7 +31,6 @@ import {
   type LoadDocOptions,
   type CreateDocOptions,
   type EchoReplicator,
-  type CollectionSyncState,
   type EchoDataStats,
   type PeerIdProvider,
 } from '../automerge';
@@ -91,6 +90,7 @@ export class EchoHost extends Resource {
 
     this._dataService = new DataServiceImpl({
       automergeHost: this._automergeHost,
+      spaceStateManager: this._spaceStateManager,
       updateIndexes: async () => {
         await this._indexer.updateIndexes();
       },
@@ -163,7 +163,10 @@ export class EchoHost extends Resource {
     await this._spaceStateManager.open(ctx);
 
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
-      void this._automergeHost.updateLocalCollectionState(deriveCollectionIdFromSpaceId(e.spaceId), e.documentIds);
+      void this._automergeHost.updateLocalCollectionState(
+        deriveCollectionIdFromSpaceId(e.spaceId, e.spaceRootId),
+        e.documentIds,
+      );
     });
   }
 
@@ -248,11 +251,6 @@ export class EchoHost extends Resource {
    */
   async removeReplicator(replicator: EchoReplicator): Promise<void> {
     await this._automergeHost.removeReplicator(replicator);
-  }
-
-  async getSpaceSyncState(spaceId: SpaceId): Promise<CollectionSyncState> {
-    const collectionId = deriveCollectionIdFromSpaceId(spaceId);
-    return this._automergeHost.getCollectionSyncState(collectionId);
   }
 }
 
