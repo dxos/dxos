@@ -35,7 +35,7 @@ describe('MutableSchema', () => {
     await builder.close();
   });
 
-  test.only('set MutableSchema as echo object field', async () => {
+  test('set MutableSchema as echo object field', async () => {
     const { db } = await setupTest();
     const instanceWithSchemaRef = db.add(create(TestSchema, {}));
     class GeneratedSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
@@ -138,8 +138,8 @@ describe('MutableSchema', () => {
     const orgSchema = db.schemaRegistry.addSchema(OrgSchema);
     const contactSchema = db.schemaRegistry.addSchema(ContactSchema);
     const org = db.add(create(orgSchema, { name: 'DXOS' }));
-    const contact = db.add(create(contactSchema, { name: 'Bot', org }));
-    expect(contact.org?.id).to.eq(org.id);
+    const contact = db.add(create(contactSchema, { name: 'Bot', org: makeRef(org) }));
+    expect(contact.org?.target?.id).to.eq(org.id);
   });
 
   const setupTest = async () => {
