@@ -39,7 +39,7 @@ describe('View', () => {
     ]);
 
     const props = getSchemaProperties(schema.ast);
-    const labels = props.map((p) => pipe(p.title ?? p.name, capitalize));
+    const labels = props.map((p) => pipe(p.name ?? p.title, capitalize));
     expect(labels).to.deep.eq([
       'Name',
       'Email',
