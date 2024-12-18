@@ -15,46 +15,54 @@ export const useShortcuts = () => {
   const option = { scopes: id };
   const handleAction = useActionHandler();
 
+  // TODO(burdon): preventDefault.
+
   useHotkeys(
     'd',
-    () =>
+    () => {
       handleAction({
         type: 'debug',
-      }),
+      });
+    },
     option,
   );
   useHotkeys(
     'meta+a',
-    () =>
+    (ev) => {
+      ev.preventDefault();
       handleAction({
         type: 'select',
         ids: [...graph.nodes.map((node) => node.id), ...graph.edges.map((edge) => edge.id)],
-      }),
+      });
+    },
     option,
   );
   useHotkeys(
     "meta+'",
-    () =>
+    () => {
       handleAction({
         type: 'grid',
-      }),
+      });
+    },
     option,
   );
   useHotkeys(
     'Home',
-    () =>
+    () => {
       handleAction({
         type: 'home',
-      }),
+      });
+    },
     option,
   );
   useHotkeys(
     'Backspace',
-    () =>
+    () => {
       handleAction({
         type: 'delete',
         ids: [...selection.ids],
-      }),
+      });
+    },
     option,
   );
 };
