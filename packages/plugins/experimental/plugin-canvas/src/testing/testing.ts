@@ -4,23 +4,22 @@
 
 import { range } from '@dxos/util';
 
-import { createRect, type Graph, GraphModel } from '../graph';
+import { createRect, type Graph, GraphModel, type Node, type Shape } from '../graph';
 import type { Dimension, PointTransform } from '../layout';
 
-// TODO(burdon): Layout.
 export const itemSize: Dimension = { width: 128, height: 64 };
 
 export const createId = () => Math.random().toString(36).slice(2, 10);
 
-export const createGraph = (snap: PointTransform): Graph => {
-  const wrapper = new GraphModel();
+export const createGraph = (snap: PointTransform = (p) => p): Graph => {
+  const graph = new GraphModel<Node<Shape>, any>();
   range(1).forEach((i) => {
     const a = createId();
     const b = createId();
     const c = createId();
     const d = createId();
 
-    wrapper.addNode({
+    graph.addNode({
       id: a,
       data: createRect({
         id: a,
@@ -30,7 +29,7 @@ export const createGraph = (snap: PointTransform): Graph => {
       }),
     });
 
-    wrapper.addNode({
+    graph.addNode({
       id: b,
       data: createRect({
         id: b,
@@ -40,7 +39,7 @@ export const createGraph = (snap: PointTransform): Graph => {
       }),
     });
 
-    wrapper.addNode({
+    graph.addNode({
       id: c,
       data: createRect({
         id: c,
@@ -50,7 +49,7 @@ export const createGraph = (snap: PointTransform): Graph => {
       }),
     });
 
-    wrapper.addNode({
+    graph.addNode({
       id: d,
       data: createRect({
         id: d,
@@ -60,21 +59,21 @@ export const createGraph = (snap: PointTransform): Graph => {
       }),
     });
 
-    wrapper.addEdge({
+    graph.addEdge({
       id: createId(),
       source: a,
       target: b,
       data: {},
     });
 
-    wrapper.addEdge({
+    graph.addEdge({
       id: createId(),
       source: a,
       target: c,
       data: {},
     });
 
-    wrapper.addEdge({
+    graph.addEdge({
       id: createId(),
       source: a,
       target: d,
@@ -82,5 +81,5 @@ export const createGraph = (snap: PointTransform): Graph => {
     });
   });
 
-  return wrapper.graph;
+  return graph.graph;
 };
