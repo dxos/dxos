@@ -23,6 +23,7 @@ import {
   Filter,
   fullyQualifiedId,
   getSpace,
+  isEchoObject,
   isSpace,
   SpaceState,
   type Echo,
@@ -105,7 +106,7 @@ const getCollectionGraphNodePartials = ({
     role: 'branch',
     onRearrangeChildren: (nextOrder: unknown[]) => {
       // Change on disk.
-      collection.objects = nextOrder.map((object) => makeRef(object as Expando));
+      collection.objects = nextOrder.filter(isEchoObject).map(makeRef);
     },
     onTransferStart: (child: Node<ReactiveEchoObject<any>>, index?: number) => {
       // TODO(wittjosiah): Support transfer between spaces.
