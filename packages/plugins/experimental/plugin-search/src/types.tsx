@@ -9,13 +9,17 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
+import { S } from '@dxos/echo-schema';
 
 import { SEARCH_PLUGIN } from './meta';
 
-const SEARCH_ACTION = `${SEARCH_PLUGIN}/action`;
+export namespace SearchAction {
+  const SEARCH_ACTION = `${SEARCH_PLUGIN}/action`;
 
-export enum SearchAction {
-  SEARCH = `${SEARCH_ACTION}/search`,
+  export class OpenSearch extends S.TaggedClass<OpenSearch>()(`${SEARCH_ACTION}/open-search`, {
+    input: S.Void,
+    output: S.Void,
+  }) {}
 }
 
 export type SearchPluginProvides = SurfaceProvides &

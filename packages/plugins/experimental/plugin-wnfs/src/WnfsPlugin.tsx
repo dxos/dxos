@@ -7,7 +7,7 @@ import React from 'react';
 
 import { type PluginDefinition, createSurface, resolvePlugin } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
-import { parseClientPlugin } from '@dxos/plugin-client';
+import { parseClientPlugin } from '@dxos/plugin-client/types';
 import { type DocumentType } from '@dxos/plugin-markdown/types';
 import { type Space, getSpace } from '@dxos/react-client/echo';
 

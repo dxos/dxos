@@ -31,7 +31,7 @@ import {
   mapFormulaIndicesToRefs,
   mapFormulaRefsToIndices,
 } from '../defs';
-import { type CellScalarValue, type CellValue, type SheetType, type RestoreAxis } from '../types';
+import { type SheetAction, type CellScalarValue, type CellValue, type SheetType } from '../types';
 
 // Map sheet types to system types.
 // https://hyperformula.handsontable.com/guide/types-of-values.html
@@ -181,7 +181,7 @@ export class SheetModel extends Resource {
     return idx;
   }
 
-  dropRow(rowIndex: string): RestoreAxis {
+  dropRow(rowIndex: string): SheetAction.RestoreAxis {
     const range = {
       from: addressFromIndex(this._sheet, `${this._sheet.columns[0]}@${rowIndex}`),
       to: addressFromIndex(this._sheet, `${this._sheet.columns[this._sheet.columns.length - 1]}@${rowIndex}`),
@@ -195,7 +195,7 @@ export class SheetModel extends Resource {
     return { axis: 'row', index, axisIndex: rowIndex, axisMeta: this._sheet.rowMeta[rowIndex], values };
   }
 
-  dropColumn(colIndex: string): RestoreAxis {
+  dropColumn(colIndex: string): SheetAction.RestoreAxis {
     const range = {
       from: addressFromIndex(this._sheet, `${colIndex}@${this._sheet.rows[0]}`),
       to: addressFromIndex(this._sheet, `${colIndex}@${this._sheet.rows[this._sheet.rows.length - 1]}`),
@@ -209,7 +209,7 @@ export class SheetModel extends Resource {
     return { axis: 'col', index, axisIndex: colIndex, axisMeta: this._sheet.rowMeta[colIndex], values };
   }
 
-  restoreRow({ index, axisIndex, axisMeta, values }: RestoreAxis) {
+  restoreRow({ index, axisIndex, axisMeta, values }: SheetAction.RestoreAxis) {
     this._sheet.rows.splice(index, 0, axisIndex);
     values.forEach((value, col) => {
       if (value) {
@@ -222,7 +222,7 @@ export class SheetModel extends Resource {
     this.reset();
   }
 
-  restoreColumn({ index, axisIndex, axisMeta, values }: RestoreAxis) {
+  restoreColumn({ index, axisIndex, axisMeta, values }: SheetAction.RestoreAxis) {
     this._sheet.columns.splice(index, 0, axisIndex);
     values.forEach((value, row) => {
       if (value) {

@@ -2,29 +2,29 @@
 // Copyright 2023 DXOS.org
 //
 
-import { z } from 'zod';
+import { S } from '@dxos/echo-schema';
 
 import { type Plugin } from '../plugin-host';
-import { type IntentData } from '../plugin-intent';
+import { Label } from '../plugin-intent';
 
 //
 // Provides
 //
 
-export const Toast = z.object({
-  id: z.string(),
-  title: z.string().optional(),
-  description: z.string().optional(),
-  // TODO(wittjosiah): `icon` should be string to be parsed by an `Icon` component.
-  icon: z.any().optional(),
-  duration: z.number().optional(),
-  closeLabel: z.string().optional(),
-  actionLabel: z.string().optional(),
-  actionAlt: z.string().optional(),
-  onAction: z.function().optional(),
+export const Toast = S.Struct({
+  id: S.String,
+  title: S.optional(Label),
+  description: S.optional(Label),
+  icon: S.optional(S.String),
+  duration: S.optional(S.Number),
+  closeLabel: S.optional(Label),
+  actionLabel: S.optional(Label),
+  actionAlt: S.optional(Label),
+  // TODO(wittjosiah): Make class with customizable method?
+  onAction: S.optional(S.Any),
 });
 
-export type Toast = z.infer<typeof Toast>;
+export type Toast = S.Schema.Type<typeof Toast>;
 
 /**
  * Basic state provided by a layout plugin.
@@ -34,43 +34,47 @@ export type Toast = z.infer<typeof Toast>;
  * For other landmarks, such as toasts, rendering them in the layout prevents them from unmounting when navigating.
  */
 
-const LayoutMode = z.union([z.literal('deck'), z.literal('solo'), z.literal('fullscreen')]);
-export const isLayoutMode = (value: any): value is LayoutMode => LayoutMode.safeParse(value).success;
-export type LayoutMode = z.infer<typeof LayoutMode>;
+const LayoutMode = S.Union(S.Literal('deck'), S.Literal('solo'), S.Literal('fullscreen'));
+export const isLayoutMode = (value: any): value is LayoutMode => S.is(LayoutMode)(value);
+export type LayoutMode = S.Schema.Type<typeof LayoutMode>;
 
-// TODO(wittjosiah): Replace Zod w/ Effect Schema to align with ECHO.
-export const Layout = z.object({
-  layoutMode: z.union([z.literal('deck'), z.literal('solo'), z.literal('fullscreen')]),
+export const Layout = S.mutable(
+  S.Struct({
+    layoutMode: LayoutMode,
 
-  sidebarOpen: z.boolean(),
-  complementarySidebarOpen: z.boolean(),
-  /**
-   * @deprecated
-   */
-  complementarySidebarContent: z
-    .any()
-    .optional()
-    .describe('DEPRECATED. Data to be passed to the complementary sidebar Surface.'),
+    sidebarOpen: S.Boolean,
+    complementarySidebarOpen: S.Boolean,
+    /**
+     * @deprecated Data to be passed to the complementary sidebar Surface.
+     */
+    complementarySidebarContent: S.optional(S.Any),
 
-  dialogOpen: z.boolean(),
-  dialogContent: z.any().optional().describe('Data to be passed to the dialog Surface.'),
-  // TODO(wittjosiah): Custom properties?
-  dialogBlockAlign: z.union([z.literal('start'), z.literal('center')]).optional(),
-  dialogType: z.union([z.literal('default'), z.literal('alert')]).optional(),
+    dialogOpen: S.Boolean,
+    /**
+     * Data to be passed to the dialog Surface.
+     */
+    dialogContent: S.optional(S.Any),
+    // TODO(wittjosiah): Custom properties?
+    dialogBlockAlign: S.optional(S.Literal('start', 'center')),
+    dialogType: S.optional(S.Literal('default', 'alert')),
 
-  popoverOpen: z.boolean(),
-  popoverContent: z.any().optional().describe('Data to be passed to the popover Surface.'),
-  popoverAnchorId: z.string().optional(),
+    popoverOpen: S.Boolean,
+    /**
+     * Data to be passed to the popover Surface.
+     */
+    popoverContent: S.optional(S.Any),
+    popoverAnchorId: S.optional(S.String),
 
-  toasts: z.array(Toast),
+    toasts: S.mutable(S.Array(Toast)),
 
-  scrollIntoView: z
-    .string()
-    .optional()
-    .describe('The identifier of a component to scroll into view when it is mounted.'),
-});
+    /**
+     * The identifier of a component to scroll into view when it is mounted.
+     */
+    scrollIntoView: S.optional(S.String),
+  }),
+);
 
-export type Layout = z.infer<typeof Layout>;
+export type Layout = S.Schema.Type<typeof Layout>;
 
 /**
  * Provides for a plugin that can manage the app layout.
@@ -83,7 +87,7 @@ export type LayoutProvides = {
  * Type guard for layout plugins.
  */
 export const parseLayoutPlugin = (plugin: Plugin) => {
-  const { success } = Layout.safeParse((plugin.provides as any).layout);
+  const success = S.is(Layout)((plugin.provides as any).layout);
   return success ? (plugin as Plugin<LayoutProvides>) : undefined;
 };
 
@@ -91,65 +95,79 @@ export const parseLayoutPlugin = (plugin: Plugin) => {
 // Intents
 //
 
-const LAYOUT_PLUGIN = 'dxos.org/plugin/layout';
-
-const LAYOUT_ACTION = `${LAYOUT_PLUGIN}/action`;
-
-export enum LayoutAction {
-  SET_LAYOUT = `${LAYOUT_ACTION}/set-layout`,
-  SET_LAYOUT_MODE = `${LAYOUT_ACTION}/set-layout-mode`,
-  SCROLL_INTO_VIEW = `${LAYOUT_ACTION}/scroll-into-view`,
-  UPDATE_PLANK_SIZE = `${LAYOUT_ACTION}/update-plank-size`,
-}
+export const LAYOUT_PLUGIN = 'dxos.org/plugin/layout';
+export const LAYOUT_ACTION = `${LAYOUT_PLUGIN}/action`;
 
 /**
  * Expected payload for layout actions.
  */
 export namespace LayoutAction {
-  export type SetLayoutMode = IntentData<{
-    layoutMode?: LayoutMode;
-    revert?: boolean;
-  }>;
+  export class SetLayout extends S.TaggedClass<SetLayout>()(`${LAYOUT_ACTION}/set-layout`, {
+    input: S.Struct({
+      /**
+       * Element to set the state of.
+       */
+      element: S.Literal('fullscreen', 'sidebar', 'complementary', 'dialog', 'popover', 'toast'),
 
-  export type SetLayout = IntentData<{
-    /**
-     * Element to set the state of.
-     */
-    element: 'fullscreen' | 'sidebar' | 'complementary' | 'dialog' | 'popover' | 'toast';
+      /**
+       * Whether the element is on or off.
+       *
+       * If omitted, the element's state will be toggled or set based on other provided data.
+       * For example, if `component` is provided, the state will be set to `true`.
+       */
+      state: S.optional(S.Boolean),
 
-    /**
-     * Whether the element is on or off.
-     *
-     * If omitted, the element's state will be toggled or set based on other provided data.
-     * For example, if `component` is provided, the state will be set to `true`.
-     */
-    state?: boolean;
+      /**
+       * Component to render in the dialog or popover.
+       */
+      component: S.optional(S.String),
 
-    /**
-     * Component to render in the dialog or popover.
-     */
-    component?: string;
+      /**
+       * Data to be passed to the dialog or popover Surface.
+       */
+      subject: S.optional(S.Any),
 
-    /**
-     * Data to be passed to the dialog or popover Surface.
-     */
-    subject?: any;
+      /**
+       * Anchor ID for the popover.
+       */
+      anchorId: S.optional(S.String),
 
-    /**
-     * Anchor ID for the popover.
-     */
-    anchorId?: string;
+      // TODO(wittjosiah): Custom properties?
 
-    // TODO(wittjosiah): Custom properties?
+      /**
+       * Block alignment for the dialog.
+       */
+      dialogBlockAlign: S.optional(S.Literal('start', 'center')),
 
-    /**
-     * Block alignment for the dialog.
-     */
-    dialogBlockAlign?: 'start' | 'center';
+      /**
+       * Type of dialog.
+       */
+      dialogType: S.optional(S.Literal('default', 'alert')),
+    }),
+    output: S.Void,
+  }) {}
 
-    /**
-     * Type of dialog.
-     */
-    dialogType?: 'default' | 'alert';
-  }>;
+  // TODO(wittjosiah): Do all these need to be separate actions?
+
+  export class SetLayoutMode extends S.TaggedClass<SetLayoutMode>()(`${LAYOUT_ACTION}/set-layout-mode`, {
+    input: S.Union(
+      S.Struct({
+        layoutMode: LayoutMode,
+      }),
+      S.Struct({
+        revert: S.Literal(true),
+      }),
+    ),
+    output: S.Void,
+  }) {}
+
+  export class ScrollIntoView extends S.TaggedClass<ScrollIntoView>()(`${LAYOUT_ACTION}/scroll-into-view`, {
+    input: S.Struct({
+      id: S.optional(S.String),
+      // TODO(wittjosiah): Factor out to thread scroll into view action?
+      cursor: S.optional(S.String),
+      ref: S.optional(S.String),
+    }),
+    output: S.Void,
+  }) {}
 }

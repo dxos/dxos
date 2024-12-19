@@ -3,12 +3,10 @@
 //
 
 import { Schema as S } from '@effect/schema';
-import { z } from 'zod';
 
 import { pick } from '@dxos/util';
 
 import { type Plugin } from '../plugin-host';
-import { type IntentData } from '../plugin-intent';
 
 // NOTE(thure): These are chosen from RFC 1738’s `safe` characters: http://www.faqs.org/rfcs/rfc1738.html
 export const SLUG_LIST_SEPARATOR = '+';
@@ -39,7 +37,14 @@ export type LayoutParts = S.Schema.Type<typeof LayoutPartsSchema>;
 const LayoutCoordinateSchema = S.mutable(S.Struct({ part: LayoutPartSchema, entryId: S.String }));
 export type LayoutCoordinate = S.Schema.Type<typeof LayoutCoordinateSchema>;
 
-const PartAdjustmentSchema = S.Union(S.Literal('increment-start'), S.Literal('increment-end'), S.Literal('solo'));
+const PartAdjustmentSchema = S.Union(
+  S.Literal('increment-start'),
+  S.Literal('increment-end'),
+  S.Literal('pin-start'),
+  S.Literal('pin-end'),
+  S.Literal('close'),
+  S.Literal('solo'),
+);
 export type PartAdjustment = S.Schema.Type<typeof PartAdjustmentSchema>;
 
 const LayoutAdjustmentSchema = S.mutable(
@@ -48,8 +53,8 @@ const LayoutAdjustmentSchema = S.mutable(
 export type LayoutAdjustment = S.Schema.Type<typeof LayoutAdjustmentSchema>;
 
 /** @deprecated */
-export const ActiveParts = z.record(z.string(), z.union([z.string(), z.array(z.string())]));
-export type ActiveParts = z.infer<typeof ActiveParts>;
+export const ActiveParts = S.Record({ key: S.String, value: S.Union(S.String, S.mutable(S.Array(S.String))) });
+export type ActiveParts = S.Schema.Type<typeof ActiveParts>;
 
 // TODO(burdon): Where should this go?
 export type LayoutContainerProps<T> = T & { role?: string; coordinate?: LayoutCoordinate };
@@ -135,51 +140,75 @@ export const partLength = (layout: LayoutParts | undefined, part: LayoutPart | u
 // Intents
 //
 
-const NAVIGATION_PLUGIN = 'dxos.org/plugin/navigation';
-
-const NAVIGATION_ACTION = `${NAVIGATION_PLUGIN}/action`;
-
-export enum NavigationAction {
-  OPEN = `${NAVIGATION_ACTION}/open`,
-  ADD_TO_ACTIVE = `${NAVIGATION_ACTION}/add-to-active`,
-  SET = `${NAVIGATION_ACTION}/set`,
-  ADJUST = `${NAVIGATION_ACTION}/adjust`,
-  CLOSE = `${NAVIGATION_ACTION}/close`,
-  EXPOSE = `${NAVIGATION_ACTION}/expose`,
-}
+export const NAVIGATION_PLUGIN = 'dxos.org/plugin/navigation';
+export const NAVIGATION_ACTION = `${NAVIGATION_PLUGIN}/action`;
 
 /**
  * Expected payload for navigation actions.
  */
+// TODO(wittjosiah): These seem to be too deck-specific.
 export namespace NavigationAction {
   /**
    * An additive overlay to apply to `location.active` (i.e. the result is a union of previous active and the argument)
    */
-  export type Open = IntentData<{ activeParts: ActiveParts }>;
+  export class Open extends S.TaggedClass<Open>()(`${NAVIGATION_ACTION}/open`, {
+    input: S.Struct({
+      activeParts: ActiveParts,
+      noToggle: S.optional(S.Boolean),
+    }),
+    output: S.Struct({
+      open: S.Array(S.String),
+    }),
+  }) {}
 
   /**
    * Payload for adding an item to the active items.
    */
-  export type AddToActive = IntentData<{
-    part: LayoutPart;
-    id: string;
-    scrollIntoView?: boolean;
-    pivotId?: string;
-    positioning?: 'start' | 'end';
-  }>;
-
-  /**
-   * A subtractive overlay to apply to `location.active` (i.e. the result is a subtraction from the previous active of the argument)
-   */
-  export type Close = IntentData<{ activeParts: ActiveParts; noToggle?: boolean }>;
+  export class AddToActive extends S.TaggedClass<AddToActive>()(`${NAVIGATION_ACTION}/add-to-active`, {
+    input: S.Struct({
+      id: S.String,
+      part: LayoutPartSchema,
+      scrollIntoView: S.optional(S.Boolean),
+      pivotId: S.optional(S.String),
+      positioning: S.optional(S.Literal('start', 'end')),
+    }),
+    output: S.Void,
+  }) {}
 
   /**
    * The active parts to directly set, to be used when working with URLs or restoring a specific state.
    */
-  export type Set = IntentData<{ activeParts: ActiveParts }>;
+  export class Set extends S.TaggedClass<Set>()(`${NAVIGATION_ACTION}/set`, {
+    input: S.Struct({
+      activeParts: ActiveParts,
+    }),
+    output: S.Void,
+  }) {}
+
+  /**
+   * A subtractive overlay to apply to `location.active` (i.e. the result is a subtraction from the previous active of the argument)
+   */
+  export class Close extends S.TaggedClass<Close>()(`${NAVIGATION_ACTION}/close`, {
+    input: S.Struct({
+      activeParts: ActiveParts,
+      noToggle: S.optional(S.Boolean),
+    }),
+    output: S.Void,
+  }) {}
 
   /**
    * An atomic transaction to apply to `location.active`, describing which element to (attempt to) move to which location.
    */
-  export type Adjust = IntentData<LayoutAdjustment>;
+  export class Adjust extends S.TaggedClass<Adjust>()(`${NAVIGATION_ACTION}/adjust`, {
+    input: LayoutAdjustmentSchema,
+    output: S.Void,
+  }) {}
+
+  // TODO(wittjosiah): This action seems unrelated to the others.
+  export class Expose extends S.TaggedClass<Expose>()(`${NAVIGATION_ACTION}/expose`, {
+    input: S.Struct({
+      id: S.String,
+    }),
+    output: S.Void,
+  }) {}
 }

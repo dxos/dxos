@@ -84,6 +84,9 @@
     },
     {
       "path": "../plugin-stack"
+    },
+    {
+      "path": "../plugin-thread"
     }
   ]
 }

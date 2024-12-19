@@ -4,7 +4,7 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { useIntentDispatcher, LayoutAction } from '@dxos/app-framework';
+import { useIntentDispatcher, LayoutAction, createIntent } from '@dxos/app-framework';
 import { type ActionLike, isActionGroup, isAction } from '@dxos/app-graph';
 import { Keyboard, keySymbols } from '@dxos/keyboard';
 import { useGraph } from '@dxos/plugin-graph';
@@ -21,7 +21,7 @@ export const COMMANDS_DIALOG = `${NAVTREE_PLUGIN}/CommandsDialog`;
 export const CommandsDialogContent = ({ selected: initial }: { selected?: string }) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const [selected, setSelected] = useState<string | undefined>(initial);
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { graph } = useGraph();
 
   // Traverse graph.
@@ -85,7 +85,7 @@ export const CommandsDialogContent = ({ selected: initial }: { selected?: string
                     return;
                   }
 
-                  void dispatch({ action: LayoutAction.SET_LAYOUT, data: { element: 'dialog', state: false } });
+                  void dispatch(createIntent(LayoutAction.SetLayout, { element: 'dialog', state: false }));
                   setTimeout(() => {
                     const node = graph.nodes(group ?? action, { relation: 'inbound' })[0];
                     void (node && isAction(action) && action.data({ node, caller: KEY_BINDING }));
