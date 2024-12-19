@@ -74,14 +74,18 @@ export const WelcomeScreen = ({ hubUrl, firstRun }: { hubUrl: string; firstRun?:
     }
 
     const handleDone = async (result: InvitationResult | null) => {
-      await dispatch(createIntent(NavigationAction.Close, { activeParts: {
-        fullScreen: WELCOME_SCREEN,
-        main: client.spaces.default.id,
-      }}))
+      await dispatch(
+        createIntent(NavigationAction.Close, {
+          activeParts: {
+            fullScreen: WELCOME_SCREEN,
+            main: client.spaces.default.id,
+          },
+        }),
+      );
       await dispatch(createIntent(LayoutAction.SetLayoutMode, { layoutMode: 'solo' }));
 
       if (identityCreated) {
-        await dispatch(createIntent(ClientAction.CreateRecoveryCode))
+        await dispatch(createIntent(ClientAction.CreateRecoveryCode));
         await dispatch(createIntent(ClientAction.CreateAgent));
       }
 

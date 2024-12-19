@@ -20,7 +20,7 @@ import AutomationMeta from '@dxos/plugin-automation/meta';
 import CallsMeta from '@dxos/plugin-calls/meta';
 import CanvasMeta from '@dxos/plugin-canvas/meta';
 import ChessMeta from '@dxos/plugin-chess/meta';
-import ClientMeta, { CLIENT_PLUGIN } from '@dxos/plugin-client/meta';
+import ClientMeta from '@dxos/plugin-client/meta';
 import { ClientAction } from '@dxos/plugin-client/types';
 import DebugMeta from '@dxos/plugin-debug/meta';
 import DeckMeta from '@dxos/plugin-deck/meta';
