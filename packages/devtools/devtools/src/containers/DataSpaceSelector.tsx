@@ -6,12 +6,14 @@ import * as localForage from 'localforage';
 import React from 'react';
 
 import { PublicKey } from '@dxos/react-client';
-import { useSpaces } from '@dxos/react-client/echo';
+import { useSpaces, type Space, SpaceId } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { humanize } from '@dxos/util';
+import { Select } from '@dxos/react-ui';
 
 import { PublicKeySelector } from '../components';
 import { useDevtoolsDispatch, useDevtoolsState, useSpacesInfo } from '../hooks';
+import { invariant } from '@dxos/invariant';
 
 export const DataSpaceSelector = () => {
   const spaces = useSpaces({ all: true });
@@ -19,37 +21,55 @@ export const DataSpaceSelector = () => {
   const { space } = useDevtoolsState();
   const setState = useDevtoolsDispatch();
 
-  const handleSelect = (spaceKey?: PublicKey) => {
+  const handleSelect = (spaceId?: SpaceId) => {
+    const space = spaceId ? spaces.find((space) => space.id === spaceId) : undefined;
+    // TODO(dmaretskyi): Expose id in space info.
+    const spaceInfo = space ? spacesInfo.find((spaceInfo) => spaceInfo.key.equals(space.key)) : undefined;
     setState((state) => ({
       ...state,
-      space: spaceKey ? spaces.find((space) => space.key.equals(spaceKey)) : undefined,
-      spaceInfo: spaceKey ? spacesInfo.find((spaceInfo) => spaceInfo.key.equals(spaceKey)) : undefined,
+      space,
+      spaceInfo,
     }));
 
-    if (spaceKey) {
-      void localForage.setItem('dxos.devtools.spaceKey', spaceKey.toHex());
+    if (spaceId) {
+      void localForage.setItem('dxos.devtools.spaceId', spaceId);
     }
   };
 
   useAsyncEffect(async () => {
-    const spaceKeyHex: string | null = await localForage.getItem('dxos.devtools.spaceKey');
-    if (spaceKeyHex) {
-      handleSelect(PublicKey.fromHex(spaceKeyHex));
+    const spaceId: SpaceId | null = await localForage.getItem('dxos.devtools.spaceId');
+    if (spaceId) {
+      invariant(SpaceId.isValid(spaceId));
+      handleSelect(spaceId);
     }
   }, []);
 
-  const getLabel = (key: PublicKey) => {
-    const space = spaces.find((space) => space.key.equals(key));
-    return space?.isOpen ? space?.properties.name ?? humanize(key) : `${humanize(key)} (closed)`;
+  const getLabel = (space: Space) => {
+    return space?.isOpen ? space?.properties.name ?? 'New space' : `(closed)`;
   };
 
   return (
-    <PublicKeySelector
-      placeholder='Select space'
-      getLabel={getLabel}
-      keys={spaces.map((space) => space.key)}
-      value={space?.key}
-      onChange={handleSelect}
-    />
+    <Select.Root
+      value={space?.id}
+      onValueChange={(id) => {
+        id && handleSelect?.(id as SpaceId);
+      }}
+    >
+      <Select.TriggerButton placeholder='Select space' />
+      <Select.Portal>
+        <Select.Content>
+          <Select.Viewport>
+            {spaces.map((space) => (
+              <Select.Option key={space.id} value={space.id}>
+                <div className='flex items-center gap-2'>
+                  <span className='font-mono text-neutral-250'>{space.id.slice(0, 6)}</span>
+                  {getLabel(space)}
+                </div>
+              </Select.Option>
+            ))}
+          </Select.Viewport>
+        </Select.Content>
+      </Select.Portal>
+    </Select.Root>
   );
 };

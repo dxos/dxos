@@ -4062,6 +4062,9 @@ importers:
       '@dxos/gem-spore':
         specifier: workspace:*
         version: link:../../experimental/gem-spore
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
