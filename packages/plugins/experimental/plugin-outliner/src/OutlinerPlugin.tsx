@@ -16,7 +16,6 @@ import { create, makeRef, RefArray } from '@dxos/live-object';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
-import { loadObjectReferences } from '@dxos/react-client/echo';
 
 import { OutlinerMain, TreeSection } from './components';
 import meta, { OUTLINER_PLUGIN } from './meta';

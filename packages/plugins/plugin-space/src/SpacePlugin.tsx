@@ -56,7 +56,6 @@ import {
   getTypename,
   isEchoObject,
   isSpace,
-  loadObjectReferences,
   parseFullyQualifiedId,
   parseId,
 } from '@dxos/react-client/echo';

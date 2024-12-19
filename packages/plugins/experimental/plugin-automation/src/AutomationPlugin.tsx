@@ -14,7 +14,6 @@ import {
   getSpace,
   getTypename,
   isEchoObject,
-  loadObjectReferences,
   parseId,
   type ReactiveEchoObject,
   RefArray,

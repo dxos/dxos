@@ -18,7 +18,6 @@ import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { TextType } from '@dxos/plugin-markdown/types';
 import { SpaceAction } from '@dxos/plugin-space';
-import { loadObjectReferences } from '@dxos/react-client/echo';
 
 import { initializeBundler } from './bundler';
 import { Compiler } from './compiler';

@@ -18,6 +18,7 @@ import {
   resolvePlugin,
 } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
+import type { Ref } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { parseClientPlugin } from '@dxos/plugin-client';
@@ -30,7 +31,6 @@ import {
   fullyQualifiedId,
   getSpace,
   getTypename,
-  loadObjectReferences,
   makeRef,
   parseId,
   type ReactiveEchoObject,
@@ -44,7 +44,6 @@ import { threads } from './extensions';
 import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
 import { ThreadAction, type ThreadPluginProvides, type ThreadSettingsProps, type ThreadState } from './types';
-import type { Ref } from '@dxos/echo-schema';
 
 type SubjectId = string;
 

@@ -12,6 +12,7 @@ import {
   type PluginDefinition,
   createSurface,
 } from '@dxos/app-framework';
+import type { BaseObject } from '@dxos/echo-schema';
 import { create, makeRef, RefArray } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { parseClientPlugin } from '@dxos/plugin-client';
@@ -44,7 +45,6 @@ import {
   type MarkdownPluginState,
 } from './types';
 import { markdownExtensionPlugins, serializer } from './util';
-import type { BaseObject } from '@dxos/echo-schema';
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, {
