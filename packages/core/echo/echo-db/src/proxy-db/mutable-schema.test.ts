@@ -8,20 +8,20 @@ import {
   MutableSchema,
   ObjectAnnotationId,
   getTypeReference,
-  ref,
+  Ref,
   TypedObject,
   S,
   getTypename,
 } from '@dxos/echo-schema';
 import { EmptySchemaType } from '@dxos/echo-schema/testing';
-import { getSchema, getType, create } from '@dxos/live-object';
+import { getSchema, getType, create, makeRef } from '@dxos/live-object';
 
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
 
 class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-  schema: S.optional(ref(MutableSchema)),
-  schemaArray: S.optional(S.mutable(S.Array(ref(MutableSchema)))),
+  schema: S.optional(Ref(MutableSchema)),
+  schemaArray: S.optional(S.mutable(S.Array(Ref(MutableSchema)))),
 }) {}
 
 describe('MutableSchema', () => {
@@ -42,17 +42,18 @@ describe('MutableSchema', () => {
       field: S.String,
     }) {}
 
-    instanceWithSchemaRef.schema = db.schemaRegistry.addSchema(GeneratedSchema);
+    const schema = db.schemaRegistry.addSchema(GeneratedSchema);
+    instanceWithSchemaRef.schema = makeRef(schema);
     const schemaWithId = GeneratedSchema.annotations({
       [ObjectAnnotationId]: {
         typename: 'example.com/type/Test',
         version: '0.1.0',
-        schemaId: instanceWithSchemaRef.schema?.id,
+        schemaId: instanceWithSchemaRef.schema?.target?.id,
       },
     });
-    expect(instanceWithSchemaRef.schema?.ast).to.deep.eq(schemaWithId.ast);
+    expect(instanceWithSchemaRef.schema?.target?.ast).to.deep.eq(schemaWithId.ast);
 
-    const validator = S.validateSync(instanceWithSchemaRef.schema!);
+    const validator = S.validateSync(instanceWithSchemaRef.schema!.target!);
     expect(() => validator({ id: instanceWithSchemaRef.id, field: '1' })).not.to.throw();
     expect(() => validator({ id: instanceWithSchemaRef.id, field: 1 })).to.throw();
   });
@@ -64,8 +65,8 @@ describe('MutableSchema', () => {
     }) {}
 
     const schema = db.schemaRegistry.addSchema(GeneratedSchema);
-    const instanceWithSchemaRef = db.add(create(TestSchema, { schema }));
-    expect(instanceWithSchemaRef.schema!.typename).to.eq(GeneratedSchema.typename);
+    const instanceWithSchemaRef = db.add(create(TestSchema, { schema: makeRef(schema) }));
+    expect(instanceWithSchemaRef.schema!.target!.typename).to.eq(GeneratedSchema.typename);
   });
 
   test('push MutableSchema to echo object schema array', async () => {
@@ -74,8 +75,9 @@ describe('MutableSchema', () => {
     class GeneratedSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
       field: S.String,
     }) {}
-    instanceWithSchemaRef.schemaArray!.push(db.schemaRegistry.addSchema(GeneratedSchema));
-    expect(instanceWithSchemaRef.schemaArray![0].typename).to.eq(GeneratedSchema.typename);
+    const schema = db.schemaRegistry.addSchema(GeneratedSchema);
+    instanceWithSchemaRef.schemaArray!.push(makeRef(schema));
+    expect(instanceWithSchemaRef.schemaArray![0].target!.typename).to.eq(GeneratedSchema.typename);
   });
 
   test('can be used to create objects', async () => {
@@ -130,14 +132,14 @@ describe('MutableSchema', () => {
       version: '0.1.0',
     })({
       name: S.optional(S.String),
-      org: S.optional(ref(OrgSchema)),
+      org: S.optional(Ref(OrgSchema)),
     });
 
     const orgSchema = db.schemaRegistry.addSchema(OrgSchema);
     const contactSchema = db.schemaRegistry.addSchema(ContactSchema);
     const org = db.add(create(orgSchema, { name: 'DXOS' }));
-    const contact = db.add(create(contactSchema, { name: 'Bot', org }));
-    expect(contact.org?.id).to.eq(org.id);
+    const contact = db.add(create(contactSchema, { name: 'Bot', org: makeRef(org) }));
+    expect(contact.org?.target?.id).to.eq(org.id);
   });
 
   const setupTest = async () => {

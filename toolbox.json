@@ -1,10 +1,24 @@
 {
   "project": {
-    "ignored": ["@dxos/dxos"],
-    "fixedKeys": ["$schema", "name", "tags", "sourceRoot", "projectType", "targets"]
+    "ignored": [
+      "@dxos/dxos"
+    ],
+    "fixedKeys": [
+      "$schema",
+      "name",
+      "tags",
+      "sourceRoot",
+      "projectType",
+      "targets"
+    ]
   },
   "package": {
-    "commonKeys": ["license", "author", "homepage", "bugs"],
+    "commonKeys": [
+      "license",
+      "author",
+      "homepage",
+      "bugs"
+    ],
     "withCustomExports": [
       "@dxos/shell",
       "@dxos/node-std",
@@ -27,7 +41,10 @@
     ]
   },
   "tsconfig": {
-    "fixedKeys": ["extends", "compilerOptions"],
+    "fixedKeys": [
+      "extends",
+      "compilerOptions"
+    ],
     "pathMapping": {
       "include": [
         "packages/devtools/devtools",

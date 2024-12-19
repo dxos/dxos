@@ -3,7 +3,7 @@
 //
 
 import { type AbstractSchema, type BaseObject } from '@dxos/echo-schema';
-import { create, type ReactiveObject } from '@dxos/live-object';
+import { create, makeRef, type ReactiveObject } from '@dxos/live-object';
 import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
 import { addressToA1Notation, createSheet } from '@dxos/plugin-sheet';
 import { type CellValue } from '@dxos/plugin-sheet/types';
@@ -40,7 +40,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
         const obj = space.db.add(
           create(DocumentType, {
             name: faker.commerce.productName(),
-            content: create(TextType, { content: faker.lorem.sentences(5) }),
+            content: makeRef(create(TextType, { content: faker.lorem.sentences(5) })),
             threads: [],
           }),
         );
@@ -60,7 +60,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
         const obj = space.db.add(
           create(DiagramType, {
             name: faker.commerce.productName(),
-            canvas: create(CanvasType, { content: {} }),
+            canvas: makeRef(create(CanvasType, { content: {} })),
           }),
         );
 
@@ -128,11 +128,11 @@ export const createGenerator = <T extends BaseObject>(type: AbstractSchema<T>): 
 
     // Find or create table and view.
     const { objects: tables } = await space.db.query(Filter.schema(TableType)).run();
-    const table = tables.find((table) => table.view?.query?.type === type.typename);
+    const table = tables.find((table) => table.view?.target?.query?.type === type.typename);
     if (!table) {
       const name = type.typename.split('/').pop() ?? type.typename;
       const view = createView({ name, typename: type.typename, jsonSchema: schema.jsonSchema });
-      const table = space.db.add(create(TableType, { name, view }));
+      const table = space.db.add(create(TableType, { name, view: makeRef(view) }));
       cb?.([table]);
     }
 

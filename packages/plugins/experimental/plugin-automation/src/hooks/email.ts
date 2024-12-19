@@ -7,7 +7,7 @@ import { foreignKey } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { MailboxType } from '@dxos/plugin-inbox/types';
 import { MessageType } from '@dxos/plugin-space/types';
-import { type Space, Filter, create } from '@dxos/react-client/echo';
+import { type Space, Filter, create, makeRef } from '@dxos/react-client/echo';
 
 export const SOURCE_ID = 'hub.dxos.network/api/mailbox';
 
@@ -41,7 +41,7 @@ export const handleEmail = async (space: Space, data: any) => {
           },
         ),
       );
-      mailbox.messages?.push(object);
+      mailbox.messages?.push(makeRef(object));
     }
   }
 

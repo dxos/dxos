@@ -15,7 +15,7 @@ import { Expando, getObjectAnnotation, S, TypedObject } from '@dxos/echo-schema'
 import { updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';
-import { create, getSchema } from '@dxos/live-object';
+import { create, getSchema, makeRef } from '@dxos/live-object';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
 
@@ -128,6 +128,8 @@ describe('Integration tests', () => {
     await dataAssertion.verify(db2);
   });
 
+  // TODO(dmaretskyi): Test Ref.load() too.
+  // TODO(dmaretskyi): Test that accessing the ref DXN doesn't load the target.
   test('references are loaded lazily and receive signal notifications', async () => {
     const [spaceKey] = PublicKey.randomSequence();
     await using peer = await builder.createPeer();
@@ -138,7 +140,7 @@ describe('Integration tests', () => {
       await using db = await peer.createDatabase(spaceKey);
       rootUrl = db.rootUrl!;
       const inner = db.add({ name: 'inner' });
-      const outer = db.add({ inner });
+      const outer = db.add({ inner: makeRef(inner) });
       outerId = outer.id;
       await db.flush();
     }
@@ -149,15 +151,43 @@ describe('Integration tests', () => {
       const outer = (await db.query({ id: outerId }).first()) as any;
       const loaded = new Trigger();
       using updates = updateCounter(() => {
-        if (outer.inner) {
+        if (outer.inner.target) {
           loaded.wake();
         }
       });
-      expect(outer.inner).to.eq(undefined);
+      expect(outer.inner.target).to.eq(undefined);
 
       await loaded.wait();
-      expect(outer.inner).to.include({ name: 'inner' });
+      expect(outer.inner.target).to.include({ name: 'inner' });
       expect(updates.count).to.eq(1);
+    }
+  });
+
+  test('references can be loaded explicitly using ref.load()', async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using peer = await builder.createPeer();
+
+    let rootUrl: string;
+    let outerId: string;
+    {
+      await using db = await peer.createDatabase(spaceKey);
+      rootUrl = db.rootUrl!;
+      const inner = db.add({ name: 'inner' });
+      const outer = db.add({ inner: makeRef(inner) });
+      outerId = outer.id;
+      await db.flush();
+    }
+
+    await peer.reload();
+    {
+      await using db = await peer.openDatabase(spaceKey, rootUrl);
+      const outer = (await db.query({ id: outerId }).first()) as any;
+      expect(outer.inner.target).to.eq(undefined);
+
+      const target = await outer.inner.load();
+      expect(target).to.include({ name: 'inner' });
+      expect(outer.inner.target).to.include({ name: 'inner' });
+      expect(outer.inner.target === target).to.be.true;
     }
   });
 

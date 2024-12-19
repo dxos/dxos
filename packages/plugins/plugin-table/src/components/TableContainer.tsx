@@ -33,8 +33,8 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   const space = getSpace(table);
 
   const schema = useMemo(
-    () => (table.view ? space?.db.schemaRegistry.getSchema(table.view.query.type) : undefined),
-    [space, table.view],
+    () => (table.view?.target ? space?.db.schemaRegistry.getSchema(table.view.target.query.type) : undefined),
+    [space, table.view?.target],
   );
   const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
@@ -60,12 +60,12 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   }, []);
 
   const projection = useMemo(() => {
-    if (!schema || !table.view) {
+    if (!schema || !table.view?.target) {
       return;
     }
 
-    return new ViewProjection(schema, table.view);
-  }, [schema, table.view]);
+    return new ViewProjection(schema, table.view.target!);
+  }, [schema, table.view?.target]);
 
   const tableRef = useRef<TableController>(null);
 
