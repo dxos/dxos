@@ -12,7 +12,7 @@ import { getTypename } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { RootAttentionProvider } from '@dxos/react-ui-attention';
+import { withAttention } from '@dxos/react-ui-attention/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { createObjectFactory, type ValueGenerator, Testing, type TypeSpec } from '@dxos/schema/testing';
@@ -58,17 +58,10 @@ const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
   return (
     <div className='grid grid-cols-[1fr,400px] w-full h-full'>
       <div className={mx('flex w-full h-full', !sidebar && 'col-span-2')}>
-        {/* TODO(burdon): Option for layout? */}
-        <RootAttentionProvider
-          onChange={() => {
-            console.log('!!!');
-          }}
-        >
-          <Editor.Root ref={editorRef} id={id} graph={graph} {...props}>
-            <Editor.Canvas />
-            <Editor.UI />
-          </Editor.Root>
-        </RootAttentionProvider>
+        <Editor.Root ref={editorRef} id={id} graph={graph} {...props}>
+          <Editor.Canvas />
+          <Editor.UI />
+        </Editor.Root>
       </div>
       {sidebar && (
         <SyntaxHighlighter language='json' classNames='text-xs'>
@@ -100,6 +93,7 @@ const meta: Meta<EditorRootProps> = {
       },
     }),
     withTheme,
+    withAttention,
     withLayout({ fullscreen: true }),
   ],
 };
