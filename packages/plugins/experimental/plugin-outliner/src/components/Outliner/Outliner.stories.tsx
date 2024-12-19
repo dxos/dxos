@@ -6,7 +6,7 @@ import '@dxos-theme';
 
 import React, { useState } from 'react';
 
-import { create } from '@dxos/live-object';
+import { create, makeRef } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { attentionSurface } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
@@ -42,10 +42,12 @@ const DefaultStory = ({
             }
           }
 
-          return create(TreeItemType, {
-            content: text,
-            items: [],
-          });
+          return makeRef(
+            create(TreeItemType, {
+              content: text,
+              items: [],
+            }),
+          );
         },
         { count },
       ),

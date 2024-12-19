@@ -57,6 +57,7 @@ import ThemeMeta from '@dxos/plugin-theme/meta';
 import ThreadMeta from '@dxos/plugin-thread/meta';
 import WildcardMeta from '@dxos/plugin-wildcard/meta';
 import WnfsMeta from '@dxos/plugin-wnfs/meta';
+import { makeRef } from '@dxos/react-client/echo';
 import { DeviceType } from '@dxos/react-client/halo';
 import { isNotFalsy } from '@dxos/util';
 
@@ -270,12 +271,12 @@ export const plugins = ({
 
       const readme = create(DocumentType, {
         name: INITIAL_DOC_TITLE,
-        content: create(TextType, { content: INITIAL_CONTENT.join('\n\n') }),
+        content: makeRef(create(TextType, { content: INITIAL_CONTENT.join('\n\n') })),
         threads: [],
       });
 
-      const defaultSpaceCollection = client.spaces.default.properties[CollectionType.typename] as CollectionType;
-      defaultSpaceCollection?.objects.push(readme);
+      const defaultSpaceCollection = client.spaces.default.properties[CollectionType.typename].target as CollectionType;
+      defaultSpaceCollection?.objects.push(makeRef(readme));
 
       await dispatch(createIntent(LayoutAction.SetLayoutMode, { layoutMode: 'solo' }));
       await dispatch(createIntent(NavigationAction.Open, { activeParts: { main: [fullyQualifiedId(readme)] } }));

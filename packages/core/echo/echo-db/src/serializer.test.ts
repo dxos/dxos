@@ -8,7 +8,7 @@ import { Expando } from '@dxos/echo-schema';
 import { Contact, Task } from '@dxos/echo-schema/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { create, getSchema } from '@dxos/live-object';
+import { create, getSchema, makeRef } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 
 import { type EchoDatabase } from './proxy-db';
@@ -126,16 +126,22 @@ describe('Serializer', () => {
         const obj = create({
           title: 'Main task',
           subtasks: [
-            create(Expando, {
-              title: 'Subtask 1',
-            }),
-            create(Expando, {
-              title: 'Subtask 2',
-            }),
+            makeRef(
+              create(Expando, {
+                title: 'Subtask 1',
+              }),
+            ),
+            makeRef(
+              create(Expando, {
+                title: 'Subtask 2',
+              }),
+            ),
           ],
-          previous: create(Expando, {
-            title: 'Previous task',
-          }),
+          previous: makeRef(
+            create(Expando, {
+              title: 'Previous task',
+            }),
+          ),
         });
         db.add(obj);
         await db.flush();
@@ -226,7 +232,7 @@ const assertNestedObjects = async (db: EchoDatabase) => {
   const main = objects.find((object) => object.title === 'Main task')!;
   expect(main).to.exist;
   expect(main.subtasks).to.have.length(2);
-  expect(main.subtasks[0].title).to.eq('Subtask 1');
-  expect(main.subtasks[1].title).to.eq('Subtask 2');
-  expect(main.previous.title).to.eq('Previous task');
+  expect(main.subtasks[0].target?.title).to.eq('Subtask 1');
+  expect(main.subtasks[1].target?.title).to.eq('Subtask 2');
+  expect(main.previous.target?.title).to.eq('Previous task');
 };

@@ -18,7 +18,7 @@ import {
 import { type Stream } from '@dxos/codec-protobuf';
 import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { inspectObject, raise } from '@dxos/debug';
+import { raise } from '@dxos/debug';
 import { EchoClient } from '@dxos/echo-db';
 import { getTypename, type AbstractTypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -131,7 +131,11 @@ export class Client {
   }
 
   [inspect.custom]() {
-    return inspectObject(this);
+    return this.toString();
+  }
+
+  toString() {
+    return `Client(${this._instanceId})`;
   }
 
   @trace.info({ depth: null })

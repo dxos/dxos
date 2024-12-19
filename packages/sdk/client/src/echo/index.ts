@@ -13,6 +13,8 @@ export {
   isReactiveObject,
   type ReactiveObject,
   compareForeignKeys,
+  makeRef,
+  RefArray,
 } from '@dxos/live-object';
 export {
   createDocAccessor,

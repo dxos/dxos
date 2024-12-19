@@ -5,8 +5,7 @@
 import React from 'react';
 
 import { createIntent, createResolver, createSurface, type PluginDefinition } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
-import { loadObjectReferences } from '@dxos/react-client/echo';
+import { create, RefArray } from '@dxos/live-object';
 
 import { CanvasContainer } from './components';
 import meta, { CANVAS_PLUGIN } from './meta';
@@ -24,15 +23,19 @@ export const CanvasPlugin = (): PluginDefinition<CanvasPluginProvides> => {
             placeholder: ['grid title placeholder', { ns: CANVAS_PLUGIN }],
             icon: 'ph--squares-four--regular',
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (canvas: CanvasType) => loadObjectReferences(canvas, (canvas) => canvas.items),
+            loadReferences: async (canvas: CanvasType) => await RefArray.loadAll(canvas.items ?? []),
           },
           [CanvasItemType.typename]: {
             parse: (item: CanvasItemType, type: string) => {
               switch (type) {
                 case 'node':
-                  return { id: item.object?.id, label: (item.object as any).title, data: item.object };
+                  return {
+                    id: item.object.target?.id,
+                    label: (item.object.target as any).title,
+                    data: item.object.target,
+                  };
                 case 'object':
-                  return item.object;
+                  return item.object.target;
                 case 'view-object':
                   return item;
               }
@@ -48,13 +51,14 @@ export const CanvasPlugin = (): PluginDefinition<CanvasPluginProvides> => {
         system: [CanvasItemType],
       },
       surface: {
-        definitions: () =>
+        definitions: () => [
           createSurface({
             id: CANVAS_PLUGIN,
             role: 'article',
             filter: (data): data is { subject: CanvasType } => data.subject instanceof CanvasType,
             component: ({ data }) => <CanvasContainer canvas={data.subject} />,
           }),
+        ],
       },
       intent: {
         resolvers: () =>

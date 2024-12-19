@@ -78,9 +78,9 @@ export const useSelectThreadOnCellFocus = () => {
         return;
       }
 
-      const closestThread = threads?.find(({ anchor }) => {
-        if (anchor) {
-          const range = parseThreadAnchorAsCellRange(anchor);
+      const closestThread = threads?.find((ref) => {
+        if (ref.target?.anchor) {
+          const range = parseThreadAnchorAsCellRange(ref.target!.anchor);
           return range ? inRange(range, cellAddress) : false;
         } else {
           return false;

@@ -14,6 +14,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 import {
   Table,
   type TableController,
+  TablePresentation,
   Toolbar,
   type ToolbarAction,
   type TableType,
@@ -33,8 +34,8 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   const space = getSpace(table);
 
   const schema = useMemo(
-    () => (table.view ? space?.db.schemaRegistry.getSchema(table.view.query.type) : undefined),
-    [space, table.view],
+    () => (table.view?.target ? space?.db.schemaRegistry.getSchema(table.view.target.query.type) : undefined),
+    [space, table.view?.target],
   );
   const queriedObjects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
@@ -57,12 +58,12 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   }, []);
 
   const projection = useMemo(() => {
-    if (!schema || !table.view) {
+    if (!schema || !table.view?.target) {
       return;
     }
 
-    return new ViewProjection(schema, table.view);
-  }, [schema, table.view]);
+    return new ViewProjection(schema, table.view.target!);
+  }, [schema, table.view?.target]);
 
   const tableRef = useRef<TableController>(null);
 
@@ -76,6 +77,8 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
     onCellUpdate: (cell) => tableRef.current?.update?.(cell),
     onRowOrderChanged: () => tableRef.current?.update?.(),
   });
+
+  const presentation = useMemo(() => (model ? new TablePresentation(model) : undefined), [model]);
 
   const onThreadCreate = useCallback(() => {
     // TODO(Zan): Consider a more appropriate anchor format.
@@ -106,7 +109,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
         <Toolbar.Actions />
       </Toolbar.Root>
       <Table.Root role={role}>
-        <Table.Main key={table.id} ref={tableRef} model={model} />
+        <Table.Main key={table.id} ref={tableRef} model={model} presentation={presentation} />
       </Table.Root>
     </StackItem.Content>
   );

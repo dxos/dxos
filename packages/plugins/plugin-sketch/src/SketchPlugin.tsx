@@ -17,7 +17,7 @@ import {
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceAction } from '@dxos/plugin-space';
 import { CollectionType } from '@dxos/plugin-space/types';
-import { create, isSpace, loadObjectReferences } from '@dxos/react-client/echo';
+import { create, isSpace, makeRef, RefArray } from '@dxos/react-client/echo';
 
 import { SketchContainer, SketchSettings } from './components';
 import meta, { SKETCH_PLUGIN } from './meta';
@@ -42,7 +42,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             placeholder: ['object title placeholder', { ns: SKETCH_PLUGIN }],
             icon: 'ph--compass-tool--regular',
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (diagram: DiagramType) => loadObjectReferences(diagram, (diagram) => [diagram.canvas]),
+            loadReferences: async (diagram: DiagramType) => await RefArray.loadAll([diagram.canvas]),
             serializer,
           },
         },
@@ -67,7 +67,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
               // Reconcile with metadata serializers.
               serialize: async (node) => {
                 const diagram = node.data;
-                const canvas = await loadObjectReferences(diagram, (diagram) => diagram.canvas);
+                const canvas = await diagram.canvas.load();
                 return {
                   name: diagram.name || translations[0]['en-US'][SKETCH_PLUGIN]['object title placeholder'],
                   data: JSON.stringify({ schema: canvas.schema, content: canvas.content }),
@@ -78,7 +78,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                 const space = ancestors.find(isSpace);
                 const target =
                   ancestors.findLast((ancestor) => ancestor instanceof CollectionType) ??
-                  space?.properties[CollectionType.typename];
+                  space?.properties[CollectionType.typename]?.target;
                 if (!space || !target) {
                   return;
                 }
@@ -127,7 +127,11 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
         resolvers: () =>
           createResolver(SketchAction.Create, ({ name, schema = TLDRAW_SCHEMA, content = {} }) => ({
             data: {
-              object: create(DiagramType, { name, canvas: create(CanvasType, { schema, content }), threads: [] }),
+              object: create(DiagramType, {
+                name,
+                canvas: makeRef(create(CanvasType, { schema, content })),
+                threads: [],
+              }),
             },
           })),
       },

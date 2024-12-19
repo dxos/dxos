@@ -7,7 +7,7 @@ import React from 'react';
 import { type PluginDefinition, createSurface, createIntent, createResolver } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { EXCALIDRAW_SCHEMA, CanvasType, DiagramType, isDiagramType } from '@dxos/plugin-sketch/types';
-import { create, fullyQualifiedId } from '@dxos/react-client/echo';
+import { create, fullyQualifiedId, makeRef } from '@dxos/react-client/echo';
 
 import { SketchComponent, SketchSettings } from './components';
 import meta, { SKETCH_PLUGIN } from './meta';
@@ -77,7 +77,11 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
         resolvers: () =>
           createResolver(SketchAction.Create, ({ name, schema = EXCALIDRAW_SCHEMA, content = {} }) => ({
             data: {
-              object: create(DiagramType, { name, canvas: create(CanvasType, { schema, content }), threads: [] }),
+              object: create(DiagramType, {
+                name,
+                canvas: makeRef(create(CanvasType, { schema, content })),
+                threads: [],
+              }),
             },
           })),
       },

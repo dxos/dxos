@@ -20,6 +20,7 @@ import {
   resolvePlugin,
 } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
+import { Ref } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { parseClientPlugin } from '@dxos/plugin-client/types';
@@ -32,9 +33,10 @@ import {
   fullyQualifiedId,
   getSpace,
   getTypename,
-  loadObjectReferences,
+  makeRef,
   parseId,
   type ReactiveEchoObject,
+  RefArray,
   SpaceState,
 } from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
@@ -100,11 +102,11 @@ export const ThreadPlugin = (): PluginDefinition<
             placeholder: ['channel name placeholder', { ns: THREAD_PLUGIN }],
             icon: 'ph--chat--regular',
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (channel: ChannelType) => loadObjectReferences(channel, (channel) => channel.threads),
+            loadReferences: async (channel: ChannelType) => await RefArray.loadAll(channel.threads ?? []),
           },
           [ThreadType.typename]: {
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (thread: ThreadType) => loadObjectReferences(thread, (thread) => thread.messages),
+            loadReferences: async (thread: ThreadType) => await RefArray.loadAll(thread.messages ?? []),
           },
           [MessageType.typename]: {
             // TODO(wittjosiah): Move out of metadata.
@@ -254,7 +256,7 @@ export const ThreadPlugin = (): PluginDefinition<
                 data.subject instanceof ChannelType && !!data.subject.threads[0],
               component: ({ data }) => {
                 const channel = data.subject;
-                const thread = channel.threads[0]!;
+                const thread = channel.threads[0].target!;
                 // TODO(zan): Maybe we should have utility for positional main object ids.
                 if (isLayoutParts(location?.active) && location.active.main) {
                   const layoutEntries = location.active.main;
@@ -272,7 +274,7 @@ export const ThreadPlugin = (): PluginDefinition<
             createSurface({
               id: `${THREAD_PLUGIN}/thread`,
               role: 'complementary--comments',
-              filter: (data): data is { subject: { threads: ThreadType[] } } =>
+              filter: (data): data is { subject: { threads: Ref<ThreadType>[] } } =>
                 !!data.subject &&
                 typeof data.subject === 'object' &&
                 'threads' in data.subject &&
@@ -334,7 +336,7 @@ export const ThreadPlugin = (): PluginDefinition<
             } else {
               // NOTE: This is the standalone thread creation case.
               return {
-                data: { object: create(ChannelType, { threads: [create(ThreadType, { messages: [] })] }) },
+                data: { object: create(ChannelType, { threads: [makeRef(create(ThreadType, { messages: [] }))] }) },
               };
             }
           }),
@@ -428,7 +430,7 @@ export const ThreadPlugin = (): PluginDefinition<
             if (state.drafts[subjectId]?.find((t) => t === thread)) {
               // Move draft to document.
               thread.status = 'active';
-              subject.threads ? subject.threads.push(thread) : (subject.threads = [thread]);
+              subject.threads ? subject.threads.push(makeRef(thread)) : (subject.threads = [makeRef(thread)]);
               state.drafts[subjectId] = state.drafts[subjectId]?.filter(({ id }) => id !== thread.id);
               intents.push(
                 createIntent(ObservabilityAction.SendEvent, {
@@ -451,8 +453,8 @@ export const ThreadPlugin = (): PluginDefinition<
             const space = getSpace(subject);
 
             if (!undo) {
-              const messageIndex = thread.messages.findIndex((m) => m?.id === messageId);
-              const message = thread.messages[messageIndex];
+              const messageIndex = thread.messages.findIndex(Ref.hasObjectId(messageId));
+              const message = thread.messages[messageIndex]?.target;
               if (!message) {
                 return;
               }
@@ -479,11 +481,11 @@ export const ThreadPlugin = (): PluginDefinition<
                 ],
               };
             } else {
-              if (!(typeof messageIndex === 'number')) {
+              if (!messageIndex || !message) {
                 return;
               }
 
-              thread.messages.splice(messageIndex, 0, message);
+              thread.messages.splice(messageIndex, 0, makeRef(message));
               return {
                 intents: [
                   createIntent(ObservabilityAction.SendEvent, {

@@ -14,17 +14,12 @@ import {
   createIntent,
   chain,
 } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
+import type { BaseObject } from '@dxos/echo-schema';
+import { create, makeRef, RefArray } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { SpaceAction } from '@dxos/plugin-space';
 import { CollectionType } from '@dxos/plugin-space/types';
-import {
-  createDocAccessor,
-  fullyQualifiedId,
-  getRangeFromCursor,
-  isSpace,
-  loadObjectReferences,
-} from '@dxos/react-client/echo';
+import { createDocAccessor, fullyQualifiedId, getRangeFromCursor, isSpace } from '@dxos/react-client/echo';
 import {
   type EditorInputMode,
   type EditorViewMode,
@@ -93,7 +88,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               managesAutofocus: true,
             },
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (doc: DocumentType) => loadObjectReferences(doc, (doc) => [doc.content, ...doc.threads]),
+            loadReferences: async (doc: DocumentType) =>
+              await RefArray.loadAll<BaseObject>([doc.content, ...doc.threads]),
             serializer,
           },
         },
@@ -117,7 +113,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               // Reconcile with metadata serializers.
               serialize: async (node) => {
                 const doc = node.data;
-                const content = await loadObjectReferences(doc, (doc) => doc.content);
+                const content = await doc.content.load();
                 return {
                   name:
                     doc.name ||
@@ -131,7 +127,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 const space = ancestors.find(isSpace);
                 const target =
                   ancestors.findLast((ancestor) => ancestor instanceof CollectionType) ??
-                  space?.properties[CollectionType.typename];
+                  space?.properties[CollectionType.typename]?.target;
                 if (!space || !target) {
                   return;
                 }
@@ -152,7 +148,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       thread: {
         predicate: (obj) => obj instanceof DocumentType,
         createSort: (doc: DocumentType) => {
-          const accessor = doc.content ? createDocAccessor(doc.content, ['content']) : undefined;
+          const accessor = doc.content.target ? createDocAccessor(doc.content.target, ['content']) : undefined;
           if (!accessor) {
             return (_) => 0;
           }
@@ -221,7 +217,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           createResolver(MarkdownAction.Create, ({ name, content }) => {
             const doc = create(DocumentType, {
               name,
-              content: create(TextType, { content: content ?? '' }),
+              content: makeRef(create(TextType, { content: content ?? '' })),
               threads: [],
             });
 

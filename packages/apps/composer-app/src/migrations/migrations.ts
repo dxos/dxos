@@ -5,7 +5,7 @@
 // import type { SerializedStore } from '@tldraw/store';
 // import type { TLRecord } from '@tldraw/tldraw';
 
-import { Filter, loadObjectReferences } from '@dxos/client/echo';
+import { Filter, RefArray } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { type Migration, type MigrationBuilder, type ObjectStructure } from '@dxos/migrations';
 import { FileType } from '@dxos/plugin-ipfs/types';
@@ -46,7 +46,7 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
 
       // Migrate stacks to collections.
       for (const stack of stacks) {
-        const sections = await loadObjectReferences(stack, (s) => s.sections);
+        const sections = await RefArray.loadAll(stack.sections);
         const sectionStructures: ObjectStructure[] = [];
         for (const section of sections) {
           const object = await builder.findObject(section.id);
@@ -90,7 +90,7 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
       const { objects: docs } = await space.db.query(Filter.schema(LegacyTypes.DocumentType)).run();
 
       for (const doc of docs) {
-        const content = await loadObjectReferences(doc, (d) => d.content);
+        const content = await doc.content.load();
         await builder.migrateObject(content.id, ({ data }) => ({
           schema: TextType,
           props: {
@@ -99,24 +99,22 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
         }));
 
         // NOTE: Catching errors because some documents may not have comments.
-        await loadObjectReferences(
-          doc,
-          (d) => d.comments?.map((comment) => comment.thread).filter((thread) => !!thread) ?? [],
-        ).catch(() => {});
+        await RefArray.loadAll(doc.comments?.map((comment) => comment.thread).filter(nonNullable) ?? []).catch(
+          () => {},
+        );
         const threads: ReturnType<MigrationBuilder['createReference']>[] = [];
         for (const comment of doc.comments ?? []) {
-          const thread = comment.thread;
+          const thread = comment.thread?.target;
           if (!thread) {
             continue;
           }
 
-          const messages = await loadObjectReferences(thread, (t) => t.messages);
+          const messages = await RefArray.loadAll(thread.messages);
           for (const message of messages) {
             // NOTE: Catching errors because some messages may not have block content.
-            const { content } = await loadObjectReferences(
-              message,
-              (m) => m.blocks[0].content ?? { content: '' },
-            ).catch(() => ({ content: '' }));
+            const { content } = (await message.blocks[0].content?.load().catch(() => ({ content: '' }))) ?? {
+              content: '',
+            };
             await builder.migrateObject(message.id, ({ data }) => ({
               schema: MessageType,
               props: {
@@ -182,8 +180,8 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
 
       for (const sketch of sketches) {
         try {
-          const data = await loadObjectReferences(sketch, (s) => s.data, { timeout: 10_000 });
-          await builder.migrateObject(data.id, async ({ data }) => {
+          const data = await sketch.data.load();
+          await builder.migrateObject(sketch.id, async () => {
             return {
               schema: CanvasType,
               props: {
@@ -228,17 +226,17 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
 
       const { objects: threads } = await space.db.query(Filter.schema(LegacyTypes.ThreadType)).run();
       const documentThreads = docs
-        .flatMap((doc) => doc.comments?.map((comment) => comment.thread?.id))
+        .flatMap((doc) => doc.comments?.map((comment) => comment.thread?.target))
         .filter(nonNullable);
-      const standaloneThreads = threads.filter((thread) => !documentThreads.includes(thread.id));
+      const standaloneThreads = threads.filter((thread) => !documentThreads.includes(thread));
 
       for (const thread of standaloneThreads) {
-        const messages = await loadObjectReferences(thread, (t) => t.messages);
+        const messages = await RefArray.loadAll(thread.messages);
         for (const message of messages) {
           // NOTE: Catching errors because some messages may not have block content.
-          const { content } = await loadObjectReferences(message, (m) => m.blocks[0].content ?? { content: '' }).catch(
-            () => ({ content: '' }),
-          );
+          const { content } = (await message.blocks[0].content?.load().catch(() => ({ content: '' }))) ?? {
+            content: '',
+          };
           await builder.migrateObject(message.id, ({ data }) => ({
             schema: MessageType,
             props: {

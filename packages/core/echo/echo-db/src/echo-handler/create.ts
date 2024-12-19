@@ -2,18 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Reference } from '@dxos/echo-protocol';
 import {
   type BaseObject,
+  getObjectAnnotation,
   type HasId,
   MutableSchema,
   type ObjectMeta,
-  requireTypeReference,
   type S,
   SchemaValidator,
+  requireTypeReference,
+  Ref,
 } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { type ReactiveObject } from '@dxos/live-object';
+import { getRefSavedTarget, type ReactiveObject } from '@dxos/live-object';
 import {
   createProxy,
   getMeta,
@@ -39,6 +42,10 @@ import { type EchoDatabase } from '../proxy-db';
 // TODO(burdon): Rename EchoObject and reconcile with proto name.
 export type ReactiveEchoObject<T extends BaseObject> = ReactiveObject<T> & HasId;
 
+/**
+ * @returns True if `value` is a reactive object with an EchoHandler backend.
+ */
+// TODO(dmaretskyi): Reconcile with `isTypedObjectProxy`.
 export const isEchoObject = (value: any): value is ReactiveEchoObject<any> => {
   if (!isReactiveObject(value)) {
     return false;
@@ -50,6 +57,25 @@ export const isEchoObject = (value: any): value is ReactiveEchoObject<any> => {
   }
 
   return isRootDataObject(getProxyTarget(value));
+};
+
+/**
+ * Used to determine if the value should be placed at the root of a separate ECHO object.
+ *
+ * @returns True if `value` is a reactive object with an EchoHandler backend or a schema that has an `Object` annotation.
+ */
+// TODO(dmaretskyi): Reconcile with `isEchoObject`.
+export const isTypedObjectProxy = (value: any): value is ReactiveObject<any> => {
+  if (isEchoObject(value)) {
+    return true;
+  }
+
+  const schema = getSchema(value);
+  if (schema != null) {
+    return !!getObjectAnnotation(schema);
+  }
+
+  return false;
 };
 
 /**
@@ -169,10 +195,11 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
     if (value === undefined) {
       delete target[key];
     } else if (typeof value === 'object') {
-      if (value instanceof MutableSchema) {
-        target[key] = value.storedSchema;
-        validateInitialProps(value.storedSchema, seen);
-      } else if (!isEchoObject(value)) {
+      if (Ref.isRef(value)) {
+        // Pass refs as is.
+      } else if (value instanceof MutableSchema || isTypedObjectProxy(value)) {
+        throw new Error('Object references must be wrapped with `makeRef`');
+      } else {
         throwIfCustomClass(key, value);
         validateInitialProps(target[key], seen);
       }
@@ -182,8 +209,13 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
 
 const linkAllNestedProperties = (target: ProxyTarget): DecodedAutomergePrimaryValue => {
   return deepMapValues(target, (value, recurse) => {
-    if (isReactiveObject(value) as boolean) {
-      return EchoReactiveHandler.instance.createRef(target, value);
+    if (Ref.isRef(value)) {
+      const savedTarget = getRefSavedTarget(value);
+      if (savedTarget) {
+        return EchoReactiveHandler.instance.createRef(target, savedTarget);
+      } else {
+        return Reference.fromDXN(value.dxn);
+      }
     }
 
     return recurse(value);

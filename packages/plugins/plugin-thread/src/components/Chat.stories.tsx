@@ -8,7 +8,7 @@ import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
 import { createSurface, SurfaceProvider } from '@dxos/app-framework';
-import { ThreadType } from '@dxos/plugin-space/types';
+import { MessageType, ThreadType } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
@@ -73,8 +73,8 @@ const meta: Meta = {
   title: 'plugins/plugin-thread/Chat',
   component: Thread,
   // TODO(burdon): Use decorator.
-  render: () => <ClientRepeater component={Story} createIdentity createSpace types={[ThreadType]} />,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  render: () => <ClientRepeater component={Story} createIdentity createSpace types={[ThreadType, MessageType]} />,
+  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
   parameters: { translations },
 };
 

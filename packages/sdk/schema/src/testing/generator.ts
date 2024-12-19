@@ -10,6 +10,7 @@ import {
   GeneratorAnnotationId,
   getSchemaReference,
   getTypename,
+  type AbstractSchema,
   type BaseObject,
   type ExcludeId,
   type JsonSchemaType,
@@ -17,7 +18,7 @@ import {
 } from '@dxos/echo-schema';
 import { AST, findAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { create, type ReactiveObject } from '@dxos/live-object';
+import { create, makeRef, type ReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getDeep } from '@dxos/util';
 
@@ -30,6 +31,32 @@ export type ValueGenerator<T = any> = Record<string, () => T>;
 
 const randomBoolean = (p = 0.5) => Math.random() < p;
 const randomElement = <T>(elements: T[]): T => elements[Math.floor(Math.random() * elements.length)];
+
+export type TypeSpec = {
+  type: AbstractSchema;
+  count: number;
+};
+
+/**
+ * Create sets of objects.
+ */
+export const createObjectFactory =
+  (db: EchoDatabase, generator: ValueGenerator) =>
+  async (specs: TypeSpec[]): Promise<Map<string, ReactiveObject<any>[]>> => {
+    const map = new Map<string, ReactiveObject<any>[]>();
+    for (const { type, count } of specs) {
+      try {
+        const pipeline = createObjectPipeline(generator, type, { db });
+        const objects = await Effect.runPromise(createArrayPipeline(count, pipeline));
+        map.set(type.typename, objects);
+        await db.flush();
+      } catch (err) {
+        log.catch(err);
+      }
+    }
+
+    return map;
+  };
 
 /**
  * Set properties based on generator annotation.
@@ -70,7 +97,7 @@ export const createReferences = <T extends BaseObject>(schema: S.Schema<T>, db: 
             const { objects } = await db.query((obj) => getTypename(obj) === typename).run();
             if (objects.length) {
               const object = randomElement(objects);
-              (obj as any)[property.name] = object;
+              (obj as any)[property.name] = makeRef(object);
             }
           }
         }

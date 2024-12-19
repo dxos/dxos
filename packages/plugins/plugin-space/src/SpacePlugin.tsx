@@ -34,7 +34,7 @@ import { EventSubscriptions, type Trigger, type UnsubscribeCallback } from '@dxo
 import { type AbstractTypedObject, type HasId } from '@dxos/echo-schema';
 import { scheduledEffect } from '@dxos/echo-signals/core';
 import { invariant } from '@dxos/invariant';
-import { create, isDeleted, isReactiveObject, type ReactiveObject } from '@dxos/live-object';
+import { create, isDeleted, isReactiveObject, makeRef, RefArray, type ReactiveObject } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
@@ -59,7 +59,6 @@ import {
   getTypename,
   isEchoObject,
   isSpace,
-  loadObjectReferences,
   parseFullyQualifiedId,
   parseId,
 } from '@dxos/react-client/echo';
@@ -442,7 +441,7 @@ export const SpacePlugin = ({
         const defaultSpace = client.spaces.default;
 
         // Create root collection structure.
-        defaultSpace.properties[CollectionType.typename] = create(CollectionType, { objects: [], views: {} });
+        defaultSpace.properties[CollectionType.typename] = makeRef(create(CollectionType, { objects: [], views: {} }));
         if (Migrations.versionProperty) {
           defaultSpace.properties[Migrations.versionProperty] = Migrations.targetVersion;
         }
@@ -489,11 +488,8 @@ export const SpacePlugin = ({
             placeholder: ['unnamed collection label', { ns: SPACE_PLUGIN }],
             icon: 'ph--cards-three--regular',
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (collection: CollectionType) =>
-              loadObjectReferences(collection, (collection) => [
-                ...collection.objects,
-                ...Object.values(collection.views),
-              ]),
+            loadReferences: async (collection: CollectionType) =>
+              await RefArray.loadAll([...collection.objects, ...Object.values(collection.views)]),
           },
         },
       },
@@ -513,7 +509,7 @@ export const SpacePlugin = ({
                 isSpace(data.subject) && data.subject.state.get() === SpaceState.SPACE_READY,
               component: ({ data, role, ...rest }) => (
                 <Surface
-                  data={{ id: data.subject.id, subject: data.subject.properties[CollectionType.typename] }}
+                  data={{ id: data.subject.id, subject: data.subject.properties[CollectionType.typename]?.target }}
                   role={role}
                   {...rest}
                 />
@@ -620,7 +616,7 @@ export const SpacePlugin = ({
                 const space = isSpace(data.subject) ? data.subject : getSpace(data.subject);
                 const object = isSpace(data.subject)
                   ? data.subject.state.get() === SpaceState.SPACE_READY
-                    ? (space?.properties[CollectionType.typename] as CollectionType)
+                    ? (space?.properties[CollectionType.typename]?.target as CollectionType)
                     : undefined
                   : data.subject;
 
@@ -852,12 +848,13 @@ export const SpacePlugin = ({
                   return;
                 }
 
-                const collection = space.properties[CollectionType.typename] as CollectionType | undefined;
+                const collection = space.properties[CollectionType.typename]?.target as CollectionType | undefined;
                 if (!collection) {
                   return;
                 }
 
                 return collection.objects
+                  .map((object) => object.target)
                   .filter(nonNullable)
                   .map((object) =>
                     createObjectNode({ object, space, resolve, navigable: state.values.navigableCollections }),
@@ -878,6 +875,7 @@ export const SpacePlugin = ({
                 }
 
                 return collection.objects
+                  .map((object) => object.target)
                   .filter(nonNullable)
                   .map((object) =>
                     createObjectNode({ object, space, resolve, navigable: state.values.navigableCollections }),
@@ -1050,7 +1048,7 @@ export const SpacePlugin = ({
                 const space = ancestors.find(isSpace);
                 const collection =
                   ancestors.findLast((ancestor) => ancestor instanceof CollectionType) ??
-                  space?.properties[CollectionType.typename];
+                  space?.properties[CollectionType.typename]?.target;
                 if (!space || !collection) {
                   return;
                 }
@@ -1095,7 +1093,7 @@ export const SpacePlugin = ({
               }
               await space.waitUntilReady();
               const collection = create(CollectionType, { objects: [], views: {} });
-              space.properties[CollectionType.typename] = collection;
+              space.properties[CollectionType.typename] = makeRef(collection);
 
               if (Migrations.versionProperty) {
                 space.properties[Migrations.versionProperty] = Migrations.targetVersion;
@@ -1293,15 +1291,15 @@ export const SpacePlugin = ({
               }
 
               if (target instanceof CollectionType) {
-                target.objects.push(object as HasId);
+                target.objects.push(makeRef(object as HasId));
               } else if (isSpace(target)) {
-                const collection = space.properties[CollectionType.typename];
+                const collection = space.properties[CollectionType.typename]?.target;
                 if (collection instanceof CollectionType) {
-                  collection.objects.push(object as HasId);
+                  collection.objects.push(makeRef(object as HasId));
                 } else {
                   // TODO(wittjosiah): Can't add non-echo objects by including in a collection because of types.
-                  const collection = create(CollectionType, { objects: [object as HasId], views: {} });
-                  space.properties[CollectionType.typename] = collection;
+                  const collection = create(CollectionType, { objects: [makeRef(object as HasId)], views: {} });
+                  space.properties[CollectionType.typename] = makeRef(collection);
                 }
               }
 
@@ -1330,14 +1328,16 @@ export const SpacePlugin = ({
               const openObjectIds = new Set<string>(openIds(activeParts ?? {}));
 
               if (!undo) {
-                const parentCollection: CollectionType = target ?? space.properties[CollectionType.typename];
+                const parentCollection: CollectionType = target ?? space.properties[CollectionType.typename]?.target;
                 const nestedObjectsList = await Promise.all(objects.map((obj) => getNestedObjects(obj, resolve)));
 
                 const deletionData = {
                   objects,
                   parentCollection,
                   indices: objects.map((obj) =>
-                    parentCollection instanceof CollectionType ? parentCollection.objects.indexOf(obj as Expando) : -1,
+                    parentCollection instanceof CollectionType
+                      ? parentCollection.objects.findIndex((object) => object.target === obj)
+                      : -1,
                   ),
                   nestedObjectsList,
                   wasActive: objects
@@ -1394,7 +1394,7 @@ export const SpacePlugin = ({
 
                   deletionData.indices.forEach((index: number, i: number) => {
                     if (index !== -1) {
-                      deletionData.parentCollection.objects.splice(index, 0, restoredObjects[i] as Expando);
+                      deletionData.parentCollection.objects.splice(index, 0, makeRef(restoredObjects[i] as Expando));
                     }
                   });
 

@@ -21,6 +21,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Table, type TableController } from './Table';
 import { useTableModel, type UseTableModelParams } from '../../hooks';
+import { TablePresentation } from '../../model';
 import translations from '../../translations';
 import { TableType } from '../../types';
 import { initializeTable } from '../../util';
@@ -44,13 +45,13 @@ const DefaultStory = () => {
       const table = tables[0];
       invariant(table.view);
       setTable(table);
-      setSchema(space.db.schemaRegistry.getSchema(table.view.query.type));
+      setSchema(space.db.schemaRegistry.getSchema(table.view.target!.query.type));
     }
   }, [tables]);
 
   const projection = useMemo(() => {
     if (schema && table?.view) {
-      return new ViewProjection(schema, table.view);
+      return new ViewProjection(schema, table.view.target!);
     }
   }, [schema, table?.view]);
 
@@ -108,6 +109,12 @@ const DefaultStory = () => {
     onRowOrderChanged: () => tableRef.current?.update?.(),
   });
 
+  const presentation = useMemo(() => {
+    if (model) {
+      return new TablePresentation(model);
+    }
+  }, [model]);
+
   if (!schema || !table) {
     return <div />;
   }
@@ -121,7 +128,7 @@ const DefaultStory = () => {
           <Toolbar.Actions />
         </Toolbar.Root>
         <Table.Root>
-          <Table.Main ref={tableRef} model={model} ignoreAttention />
+          <Table.Main ref={tableRef} model={model} presentation={presentation} ignoreAttention />
         </Table.Root>
       </div>
       <div className='flex flex-col h-full border-l border-separator overflow-y-auto'>
@@ -129,13 +136,13 @@ const DefaultStory = () => {
           <ViewEditor
             registry={space?.db.schemaRegistry}
             schema={schema}
-            view={table.view}
+            view={table.view.target!}
             onDelete={handleDeleteColumn}
           />
         )}
 
         <SyntaxHighlighter language='json' className='w-full text-xs'>
-          {JSON.stringify({ view: table.view, schema }, null, 2)}
+          {JSON.stringify({ view: table.view?.target, schema }, null, 2)}
         </SyntaxHighlighter>
       </div>
     </div>
@@ -162,8 +169,8 @@ const TablePerformanceStory = (props: StoryProps) => {
   const handleDeleteColumn = useCallback<NonNullable<UseTableModelParams<any>['onDeleteColumn']>>(
     (fieldId) => {
       if (table && table.view) {
-        const fieldPosition = table.view.fields.findIndex((field) => field.id === fieldId);
-        table.view.fields.splice(fieldPosition, 1);
+        const fieldPosition = table.view.target!.fields.findIndex((field) => field.id === fieldId);
+        table.view.target!.fields.splice(fieldPosition, 1);
       }
     },
     [table],

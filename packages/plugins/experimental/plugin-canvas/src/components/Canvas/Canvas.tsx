@@ -10,11 +10,11 @@ import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Background } from './Background';
-import { type DragPayloadData, FrameDragPreview, Line, Shapes, useShapes, useSelectionHandler } from './shapes';
+import { type DragPayloadData, FrameDragPreview, Line, Shapes, useLayout, useSelectionHandler } from './shapes';
 import { createLine, createRect, type Shape, type ShapeType } from '../../graph';
 import { useActionHandler, useEditorContext, useShortcuts, useSnap, useTransform } from '../../hooks';
 import { useWheel } from '../../hooks/useWheel';
-import { boundsToModel, findClosestIntersection, getBounds, getInputPoint, type Point } from '../../layout';
+import { screenToModel, findClosestIntersection, getRect, getInputPoint, type Point } from '../../layout';
 import { createId, itemSize } from '../../testing';
 import { Grid } from '../Grid';
 import { eventsNone, styles } from '../styles';
@@ -24,7 +24,8 @@ import { testId } from '../util';
  * Main canvas component.
  */
 export const Canvas = () => {
-  const { debug, width, height, scale, offset, graph, showGrid, dragging, setTransform } = useEditorContext();
+  const { id, options, debug, width, height, scale, offset, graph, showGrid, dragging, setTransform } =
+    useEditorContext();
 
   // Canvas.
   const containerRef = useRef<HTMLDivElement>(null);
@@ -32,8 +33,7 @@ export const Canvas = () => {
 
   // Event handlers.
   useWheel(containerRef.current, width, height, setTransform);
-  useShortcuts(containerRef.current);
-  useActionHandler();
+  useShortcuts();
 
   // Drop target.
   useEffect(() => {
@@ -51,16 +51,17 @@ export const Canvas = () => {
   const { frameDragging, overlay } = useDragMonitor(containerRef.current);
 
   // Shapes.
-  const shapes = useShapes(graph, frameDragging, debug);
+  const layout = useLayout(graph, frameDragging, debug);
+  const { shapes } = layout;
   const selectionRect = useSelectionHandler(containerRef.current, shapes);
 
   return (
-    <div {...testId('dx-canvas')} ref={containerRef} tabIndex={0} className={mx('absolute inset-0 overflow-hidden')}>
+    <div {...testId('dx-canvas')} ref={containerRef} className={mx('absolute inset-0 overflow-hidden')}>
       {/* Background. */}
       <Background />
 
       {/* Grid. */}
-      {showGrid && <Grid offset={offset} scale={scale} />}
+      {showGrid && <Grid id={id} size={options.gridSize} offset={offset} scale={scale} />}
 
       {/* Content. */}
       {<Shapes shapes={shapes} style={transformStyles} />}
@@ -77,7 +78,7 @@ export const Canvas = () => {
         {/* Linking overlay. */}
         {overlay && (
           <div className='absolute' style={transformStyles}>
-            <Line shape={overlay} />
+            <Line scale={scale} shape={overlay} />
           </div>
         )}
 
@@ -98,31 +99,39 @@ export const Canvas = () => {
  * Monitor frames and anchors being dragged.
  */
 const useDragMonitor = (el: HTMLElement | null) => {
-  const { scale, offset, graph, selection, setDragging, setLinking } = useEditorContext();
+  const { graph, scale, offset, selection, dragging, setDragging, linking, setLinking } = useEditorContext();
+  const actionHandler = useActionHandler();
   const snapPoint = useSnap();
 
   const [frameDragging, setFrameDragging] = useState<Shape>();
   const [overlay, setOverlay] = useState<ShapeType<'line'>>();
   const cancelled = useRef(false);
 
+  const lastPointRef = useRef<Point>();
   useEffect(() => {
     return monitorForElements({
+      // NOTE: This seems to be continually called.
       onDrag: ({ source, location }) => {
         invariant(el);
-        const rect = el.getBoundingClientRect();
-        const { x, y } = boundsToModel(rect, scale, offset, getInputPoint(location.current.input));
+        const [{ x, y }] = screenToModel(scale, offset, [getInputPoint(el, location.current.input)]);
         const pos = { x, y };
         const { type, shape } = source.data as DragPayloadData<ShapeType<'rect'>>;
+        if (x !== lastPointRef.current?.x || y !== lastPointRef.current?.y) {
+          lastPointRef.current = pos;
+          switch (type) {
+            case 'frame': {
+              if (dragging) {
+                setFrameDragging({ ...shape, pos });
+              }
+              break;
+            }
 
-        switch (type) {
-          case 'frame': {
-            setFrameDragging({ ...shape, pos });
-            break;
-          }
-
-          case 'anchor': {
-            setOverlay(createLineOverlay(shape, pos));
-            break;
+            case 'anchor': {
+              if (linking) {
+                setOverlay(createLineOverlay(shape, pos));
+              }
+              break;
+            }
           }
         }
       },
@@ -133,19 +142,22 @@ const useDragMonitor = (el: HTMLElement | null) => {
         cancelled.current = location.current.dropTargets.length === 0;
       },
 
-      onDrop: ({ source, location }) => {
+      onDrop: async ({ source, location }) => {
         if (!cancelled.current) {
+          // TODO(burdon): Adjust for offset on drag?
           invariant(el);
-          const rect = el.getBoundingClientRect();
-          // TODO(burdon): Adjust for offset?
-          // const pos = boundsToModelWithOffset(rect, scale, offset, shape.pos, location.initial, location.current);
-          const pos = boundsToModel(rect, scale, offset, getInputPoint(location.current.input));
+          const [pos] = screenToModel(scale, offset, [getInputPoint(el, location.current.input)]);
           const { type, shape } = source.data as DragPayloadData<ShapeType<'rect'>>;
 
           switch (type) {
             case 'frame': {
               shape.pos = snapPoint(pos);
-              shape.rect = getBounds(shape.pos, shape.size);
+              shape.rect = getRect(shape.pos, shape.size);
+
+              // TODO(burdon): Copy.
+              if (!graph.getNode(shape.id)) {
+                graph.addNode({ id: shape.id, data: { ...shape } });
+              }
               break;
             }
 
@@ -154,12 +166,11 @@ const useDragMonitor = (el: HTMLElement | null) => {
                 .shape as Shape;
               let id = target?.id;
               if (!id) {
-                // TODO(burdon): Use action handler to reuse undo.
                 id = createId();
-                graph.addNode({ id, data: createRect({ id, pos: snapPoint(pos), size: itemSize }) });
-                selection.setSelected([id]);
+                const shape = createRect({ id, pos: snapPoint(pos), size: itemSize });
+                await actionHandler({ type: 'create', shape });
               }
-              graph.addEdge({ id: createId(), source: shape.id, target: id, data: {} });
+              await actionHandler({ type: 'link', source: shape.id, target: id });
               break;
             }
           }
@@ -171,7 +182,7 @@ const useDragMonitor = (el: HTMLElement | null) => {
         setOverlay(undefined);
       },
     });
-  }, [el, graph, selection, scale, offset, snapPoint]);
+  }, [el, actionHandler, selection, scale, offset, snapPoint, dragging, linking]);
 
   return { frameDragging, overlay };
 };

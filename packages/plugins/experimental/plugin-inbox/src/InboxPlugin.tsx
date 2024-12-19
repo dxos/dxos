@@ -5,8 +5,7 @@
 import React from 'react';
 
 import { createIntent, createResolver, createSurface, type PluginDefinition } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
-import { loadObjectReferences } from '@dxos/react-client/echo';
+import { create, RefArray } from '@dxos/live-object';
 
 import { ContactsContainer, EventsContainer, MailboxContainer } from './components';
 import meta, { INBOX_PLUGIN } from './meta';
@@ -36,7 +35,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
           },
           [EventType.typename]: {
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (event: EventType) => loadObjectReferences(event, (event) => event.links),
+            loadReferences: async (event: EventType) => await RefArray.loadAll(event.links ?? []),
           },
         },
       },

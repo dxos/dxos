@@ -7,9 +7,8 @@ import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import React from 'react';
 
 import { createIntent, createResolver, createSurface, type PluginDefinition } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
+import { create, makeRef, RefArray } from '@dxos/live-object';
 import { TextType } from '@dxos/plugin-markdown/types';
-import { loadObjectReferences } from '@dxos/react-client/echo';
 
 import { initializeBundler } from './bundler';
 import { Compiler } from './compiler';
@@ -49,7 +48,7 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
             placeholder: ['object title placeholder', { ns: SCRIPT_PLUGIN }],
             icon: 'ph--code--regular',
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (script: ScriptType) => loadObjectReferences(script, (script) => [script.source]),
+            loadReferences: async (script: ScriptType) => await RefArray.loadAll([script.source]),
           },
         },
       },
@@ -90,7 +89,15 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
       intent: {
         resolvers: () =>
           createResolver(ScriptAction.Create, ({ name }) => ({
-            data: { object: create(ScriptType, { name, source: create(TextType, { content: templates[0].source }) }) },
+            data: {
+              object: create(ScriptType, {
+                source: makeRef(
+                  create(TextType, {
+                    content: templates[0].source,
+                  }),
+                ),
+              }),
+            },
           })),
       },
     },

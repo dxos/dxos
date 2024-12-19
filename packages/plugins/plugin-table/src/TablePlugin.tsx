@@ -66,9 +66,9 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
           createResolver(TableAction.DeleteColumn, ({ table, fieldId, deletionData }, undo) => {
             invariant(table.view);
 
-            const schema = getSpace(table)?.db.schemaRegistry.getSchema(table.view.query.type);
+            const schema = getSpace(table)?.db.schemaRegistry.getSchema(table.view.target!.query.type);
             invariant(schema);
-            const projection = new ViewProjection(schema, table.view);
+            const projection = new ViewProjection(schema, table.view.target!);
 
             if (!undo) {
               const { deleted, index } = projection.deleteFieldProjection(fieldId);

@@ -4673,6 +4673,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -5630,6 +5633,12 @@ importers:
 
   packages/plugins/experimental/plugin-canvas:
     dependencies:
+      '@antv/graphlib':
+        specifier: ^2.0.4
+        version: 2.0.4
+      '@antv/layout':
+        specifier: ^1.2.13
+        version: 1.2.13(workerize-loader@2.0.2(webpack@5.88.2(@swc/core@1.5.7(@swc/helpers@0.5.1))(esbuild@0.23.1)))
       '@atlaskit/pragmatic-drag-and-drop':
         specifier: ^1.4.0
         version: 1.4.0
@@ -5654,6 +5663,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-db
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
@@ -5675,9 +5687,15 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../../plugin-space
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-attention
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
@@ -5714,16 +5732,16 @@ importers:
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
-      react-fps-stats:
-        specifier: ^0.3.1
-        version: 0.3.1(prop-types@15.8.1)(react@18.2.0)
+      react-hotkeys-hook:
+        specifier: ^4.6.1
+        version: 4.6.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      transformation-matrix:
+        specifier: ^2.16.1
+        version: 2.16.1
     devDependencies:
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
@@ -6154,6 +6172,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugin-client
@@ -6172,12 +6193,18 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-form
       '@dxos/react-ui-kanban':
         specifier: workspace:*
         version: link:../../../ui/react-ui-kanban
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../../ui/react-ui-stack
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../../sdk/schema
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -29481,11 +29508,11 @@ packages:
       react: ~18.2.0
       react-dom: ~18.2.0
 
-  react-fps-stats@0.3.1:
-    resolution: {integrity: sha512-SwjJd8eK6XQseXF0DjOv0PotfzSkIm9yhqsggEaJHhPgKq0P7QcL5xuLy/UlOFGjFbRMHRp1w8b8wJfoWNR3uA==}
+  react-hotkeys-hook@4.6.1:
+    resolution: {integrity: sha512-XlZpbKUj9tkfgPgT9gA+1p7Ey6vFIZHttUjPqpTdyT5nqQ8mHL7elxvSbaC+dpSiHUSmr21Ya1mDxBZG3aje4Q==}
     peerDependencies:
-      prop-types: ^15.6.2
       react: ~18.2.0
+      react-dom: ~18.2.0
 
   react-i18next@11.18.6:
     resolution: {integrity: sha512-yHb2F9BiT0lqoQDt8loZ5gWP331GwctHz9tYQ8A2EIEUu+CcEdjBLQWli1USG3RdWQt3W+jqQLg/d4rrQR96LA==}
@@ -31412,6 +31439,9 @@ packages:
   tr46@5.0.0:
     resolution: {integrity: sha512-tk2G5R2KRwBd+ZN0zaEXpmzdKyOYksXwywulIX95MBODjSzMIuQnQ3m8JxgbhnL1LeVo7lqQKsYa1O3Htl7K5g==}
     engines: {node: '>=18'}
+
+  transformation-matrix@2.16.1:
+    resolution: {integrity: sha512-tdtC3wxVEuzU7X/ydL131Q3JU5cPMEn37oqVLITjRDSDsnSHVFzW2JiCLfZLIQEgWzZHdSy3J6bZzvKEN24jGA==}
 
   traverse@0.3.9:
     resolution: {integrity: sha512-iawgk0hLP3SxGKDfnDJf8wTz4p2qImnyihM5Hh/sGvQ3K37dPi/w8sRhdNIxYA1TwFwc5mDhIJq+O0RsvXBKdQ==}
@@ -55780,10 +55810,10 @@ snapshots:
       react-dom: 18.2.0(react@18.2.0)
       tree-changes: 0.9.3
 
-  react-fps-stats@0.3.1(prop-types@15.8.1)(react@18.2.0):
+  react-hotkeys-hook@4.6.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
     dependencies:
-      prop-types: 15.8.1
       react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
 
   react-i18next@11.18.6(i18next@21.10.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
     dependencies:
@@ -58262,6 +58292,8 @@ snapshots:
   tr46@5.0.0:
     dependencies:
       punycode: 2.3.1
+
+  transformation-matrix@2.16.1: {}
 
   traverse@0.3.9: {}
 

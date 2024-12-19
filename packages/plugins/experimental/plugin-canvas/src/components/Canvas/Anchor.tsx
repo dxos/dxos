@@ -16,7 +16,7 @@ import { useEditorContext } from '../../hooks';
 import { type Dimension, getBoundsProperties, type Point } from '../../layout';
 import { styles } from '../styles';
 
-export const DATA_ITEM_ID = 'data-item-id';
+export const DATA_SHAPE_ID = 'data-shape-id';
 
 const defaultSize: Dimension = { width: 12, height: 12 };
 
@@ -51,7 +51,7 @@ export const Anchor = ({ id, shape, pos, size = defaultSize, scale = 1, onMouseL
             return { x: (scale * size.width) / 2, y: (scale * size.height) / 2 };
           },
           render: ({ container }) => {
-            setLinking({ shape, container, anchor: id });
+            setLinking({ container, shape, anchor: id });
           },
         });
       },
@@ -65,16 +65,16 @@ export const Anchor = ({ id, shape, pos, size = defaultSize, scale = 1, onMouseL
     <>
       <div
         ref={ref}
-        {...{ [DATA_ITEM_ID]: shape.id }}
+        {...{ [DATA_SHAPE_ID]: shape.id }}
         style={getBoundsProperties({ ...pos, ...size })}
-        className={mx('absolute z-10', styles.anchor, isLinking && 'opacity-0')}
+        className={mx('absolute', styles.anchor, isLinking && 'opacity-0')}
         onMouseLeave={() => onMouseLeave?.()}
       />
 
       {isLinking &&
         createPortal(
           <div style={scale ? { transform: `scale(${scale})` } : undefined}>
-            <div style={getBoundsProperties({ ...pos, ...size })} className={mx('absolute z-20', styles.anchor)} />
+            <div style={getBoundsProperties({ ...pos, ...size })} className={mx(styles.anchor)} />
           </div>,
           linking.container,
         )}

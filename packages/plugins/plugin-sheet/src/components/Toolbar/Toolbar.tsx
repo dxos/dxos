@@ -6,6 +6,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useCallback } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { RefArray } from '@dxos/live-object';
 import { ThreadAction } from '@dxos/plugin-thread/types';
 import {
   Icon,
@@ -18,7 +19,6 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { nonNullable } from '@dxos/util';
 
 import {
   alignKey,
@@ -295,8 +295,7 @@ const Actions = () => {
   const { t } = useTranslation(SHEET_PLUGIN);
 
   // TODO(thure): Can this O(n) call be memoized?
-  const overlapsCommentAnchor = (model.sheet.threads ?? [])
-    .filter(nonNullable)
+  const overlapsCommentAnchor = RefArray.allResolvedTargets(model.sheet.threads ?? [])
     .filter((thread) => thread.status !== 'resolved')
     .some((thread) => {
       if (!cursorFallbackRange) {

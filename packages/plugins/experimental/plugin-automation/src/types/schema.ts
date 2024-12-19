@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ref, S, TypedObject } from '@dxos/echo-schema';
+import { Ref, S, TypedObject } from '@dxos/echo-schema';
 
 // TODO(burdon): Change to S.Literal (and discriminated union).
 export enum ChainInputType {
@@ -34,5 +34,5 @@ export class ChainPromptType extends TypedObject({ typename: 'dxos.org/type/Chai
 
 export class ChainType extends TypedObject({ typename: 'dxos.org/type/Chain', version: '0.1.0' })({
   name: S.optional(S.String),
-  prompts: S.optional(S.mutable(S.Array(ref(ChainPromptType)))),
+  prompts: S.optional(S.mutable(S.Array(Ref(ChainPromptType)))),
 }) {}

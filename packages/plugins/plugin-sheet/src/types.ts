@@ -8,7 +8,7 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import { ref, S, TypedObject } from '@dxos/echo-schema';
+import { Ref, S, TypedObject } from '@dxos/echo-schema';
 import { type MarkdownExtensionProvides } from '@dxos/plugin-markdown';
 import { type SchemaProvides } from '@dxos/plugin-space';
 import { ThreadType } from '@dxos/plugin-space/types';
@@ -82,7 +82,7 @@ export class SheetType extends TypedObject({ typename: 'dxos.org/type/Sheet', ve
   ranges: S.mutable(S.Array(Range)),
 
   // Threads associated with the sheet
-  threads: S.optional(S.mutable(S.Array(ref(ThreadType)))),
+  threads: S.optional(S.mutable(S.Array(Ref(ThreadType)))),
 }) {}
 
 export type SheetSize = {

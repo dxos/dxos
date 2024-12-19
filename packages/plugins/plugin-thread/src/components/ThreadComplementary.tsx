@@ -6,7 +6,7 @@ import React, { useEffect, useMemo } from 'react';
 
 import { createIntent, LayoutAction, type Plugin, useIntentDispatcher, useResolvePlugins } from '@dxos/app-framework';
 import { type ThreadType } from '@dxos/plugin-space';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { fullyQualifiedId, RefArray } from '@dxos/react-client/echo';
 import { useAttended } from '@dxos/react-ui-attention';
 import { nonNullable } from '@dxos/util';
 
@@ -37,9 +37,11 @@ export const ThreadComplementary = ({
   );
   const sort = useMemo(() => createSort?.(subject), [createSort, subject]);
 
+  const threadObjects = RefArray.allResolvedTargets(subject.threads ?? []);
+
   const threads = useMemo(() => {
-    return subject.threads.concat(drafts ?? []).filter(nonNullable) as ThreadType[];
-  }, [JSON.stringify(subject.threads), JSON.stringify(drafts)]);
+    return threadObjects.concat(drafts ?? []).filter(nonNullable) as ThreadType[];
+  }, [JSON.stringify(threadObjects), JSON.stringify(drafts)]);
 
   const detachedIds = useMemo(() => {
     return threads.filter(({ anchor }) => !anchor).map((thread) => fullyQualifiedId(thread));
