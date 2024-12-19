@@ -13,6 +13,9 @@ import { type DXN } from '@dxos/keys';
  */
 // TODO(dmaretskyi): Should be `Ref.make` but that's not possible because of the circular dependency.
 export const makeRef = <T extends BaseObject>(obj: T): Ref<T> => {
+  if (typeof obj !== 'object' || obj === null) {
+    throw new TypeError('Invalid parameter `obj`. Expected: ECHO object.');
+  }
   // TODO(dmaretskyi): Extract to `getObjectDXN` function.
   const id = obj.id;
   invariant(ObjectId.isValid(id), 'Invalid object ID');
