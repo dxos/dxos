@@ -3,6 +3,7 @@
 //
 
 import { effect } from '@preact/signals-core';
+import { pipe } from 'effect';
 import localforage from 'localforage';
 import React from 'react';
 
@@ -18,6 +19,9 @@ import {
   filterPlugins,
   parseGraphSerializerPlugin,
   createSurface,
+  createIntent,
+  chain,
+  createResolver,
 } from '@dxos/app-framework';
 import { EventSubscriptions, Trigger } from '@dxos/async';
 import { scheduledEffect } from '@dxos/echo-signals/core';
@@ -178,7 +182,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
       };
     },
     ready: async ({ plugins }) => {
-      const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
+      const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatchPromise;
       subscriptions.add(
         effect(() => {
           if (!settings.values.autoExport || !settings.values.rootHandle || !dispatch) {
@@ -191,7 +195,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
             }
 
             state.values.exportRunning = true;
-            await dispatch({ plugin: FILES_PLUGIN, action: LocalFilesAction.EXPORT });
+            await dispatch(createIntent(LocalFilesAction.Export));
             state.values.exportRunning = false;
           }, settings.values.autoExportInterval);
 
@@ -265,7 +269,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
       },
       graph: {
         builder: (plugins) => {
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatchPromise;
 
           return [
             // Create export/import actions.
@@ -274,12 +278,9 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
               filter: (node): node is Node<null> => node.id === 'root',
               actions: () => [
                 {
-                  id: LocalFilesAction.EXPORT,
+                  id: LocalFilesAction.Export._tag,
                   data: async () => {
-                    await intentPlugin?.provides.intent.dispatch({
-                      plugin: FILES_PLUGIN,
-                      action: LocalFilesAction.EXPORT,
-                    });
+                    await dispatch?.(createIntent(LocalFilesAction.Export));
                   },
                   properties: {
                     label: ['export label', { ns: FILES_PLUGIN }],
@@ -287,12 +288,9 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                   },
                 },
                 {
-                  id: LocalFilesAction.IMPORT,
+                  id: LocalFilesAction.Import._tag,
                   data: async () => {
-                    await intentPlugin?.provides.intent.dispatch({
-                      plugin: FILES_PLUGIN,
-                      action: LocalFilesAction.IMPORT,
-                    });
+                    await dispatch?.(createIntent(LocalFilesAction.Import));
                   },
                   properties: {
                     label: ['import label', { ns: FILES_PLUGIN }],
@@ -328,15 +326,9 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
               filter: (node): node is Node<null> => node.id === FILES_PLUGIN,
               actions: () => [
                 {
-                  id: 'open-file-handle',
+                  id: LocalFilesAction.OpenFile._tag,
                   data: async () => {
-                    await intentPlugin?.provides.intent.dispatch([
-                      {
-                        plugin: FILES_PLUGIN,
-                        action: LocalFilesAction.OPEN_FILE,
-                      },
-                      { action: NavigationAction.OPEN },
-                    ]);
+                    await dispatch?.(pipe(createIntent(LocalFilesAction.OpenFile), chain(NavigationAction.Open, {})));
                   },
                   properties: {
                     label: ['open file label', { ns: FILES_PLUGIN }],
@@ -348,13 +340,9 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                       {
                         id: 'open-directory',
                         data: async () => {
-                          await intentPlugin?.provides.intent.dispatch([
-                            {
-                              plugin: FILES_PLUGIN,
-                              action: LocalFilesAction.OPEN_DIRECTORY,
-                            },
-                            { action: NavigationAction.OPEN },
-                          ]);
+                          await dispatch?.(
+                            pipe(createIntent(LocalFilesAction.OpenDirectory), chain(NavigationAction.Open, {})),
+                          );
                         },
                         properties: {
                           label: ['open directory label', { ns: FILES_PLUGIN }],
@@ -399,13 +387,9 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
               filter: (node): node is Node<LocalEntity> => isLocalEntity(node.data),
               actions: ({ node }) => [
                 {
-                  id: `${LocalFilesAction.CLOSE}:${node.id}`,
+                  id: `${LocalFilesAction.Close._tag}:${node.id}`,
                   data: async () => {
-                    await intentPlugin?.provides.intent.dispatch({
-                      plugin: FILES_PLUGIN,
-                      action: LocalFilesAction.CLOSE,
-                      data: { id: node.id },
-                    });
+                    await dispatch?.(createIntent(LocalFilesAction.Close, { id: node.id }));
                   },
                   properties: {
                     label: ['close label', { ns: FILES_PLUGIN }],
@@ -415,13 +399,9 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                 ...(node.data.permission !== 'granted'
                   ? [
                       {
-                        id: `${LocalFilesAction.RECONNECT}:${node.id}`,
+                        id: `${LocalFilesAction.Reconnect._tag}:${node.id}`,
                         data: async () => {
-                          await intentPlugin?.provides.intent.dispatch({
-                            plugin: FILES_PLUGIN,
-                            action: LocalFilesAction.RECONNECT,
-                            data: { id: node.id },
-                          });
+                          await dispatch?.(createIntent(LocalFilesAction.Reconnect, { id: node.id }));
                         },
                         properties: {
                           label: ['re-open label', { ns: FILES_PLUGIN }],
@@ -434,13 +414,9 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                 ...(node.data.permission === 'granted' && isLocalFile(node.data)
                   ? [
                       {
-                        id: `${LocalFilesAction.SAVE}:${node.data.id}`,
+                        id: `${LocalFilesAction.Save._tag}:${node.data.id}`,
                         data: async () => {
-                          await intentPlugin?.provides.intent.dispatch({
-                            plugin: FILES_PLUGIN,
-                            action: LocalFilesAction.SAVE,
-                            data: { id: node.data.id },
-                          });
+                          await dispatch?.(createIntent(LocalFilesAction.Save, { id: node.data.id }));
                         },
                         properties: {
                           label: [node.data.handle ? 'save label' : 'save as label', { ns: FILES_PLUGIN }],
@@ -474,188 +450,163 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
         ],
       },
       intent: {
-        resolver: async (intent, plugins) => {
-          switch (intent.action) {
-            case LocalFilesAction.SELECT_ROOT: {
-              const rootDir = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
-              if (rootDir) {
-                settings.values.rootHandle = rootDir;
-                return { data: true };
-              }
-              return { data: false };
+        resolvers: ({ plugins }) => [
+          createResolver(LocalFilesAction.SelectRoot, async () => {
+            const rootDir = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+            if (rootDir) {
+              settings.values.rootHandle = rootDir;
+            }
+          }),
+          createResolver(LocalFilesAction.Export, async () => {
+            const explore = resolvePlugin(plugins, parseGraphPlugin)?.provides.explore;
+            if (!explore) {
+              return;
             }
 
-            case LocalFilesAction.EXPORT: {
-              const explore = resolvePlugin(plugins, parseGraphPlugin)?.provides.explore;
-              if (!explore) {
-                return;
-              }
-
-              if (!settings.values.rootHandle) {
-                return {
-                  data: false,
-                  intents: [[{ action: SettingsAction.OPEN, data: { plugin: FILES_PLUGIN } }]],
-                };
-              }
-
-              const serializers = filterPlugins(plugins, parseGraphSerializerPlugin).flatMap((plugin) =>
-                plugin.provides.graph.serializer(plugins),
-              );
-
-              // TODO(wittjosiah): Export needs to include order of nodes as well.
-              //   Without this order is not guaranteed to be preserved on import.
-              //   This can be done by computing the relations of a node before visiting it.
-              //   The inverse needs to be done on import as well,
-              //   the files need to be deserialized first in order to restore the relations.
-              await explore({
-                visitor: async (node, path) => {
-                  if (isActionLike(node)) {
-                    return false;
-                  }
-
-                  const [serializer] = serializers
-                    .filter((serializer) => node.type === serializer.inputType)
-                    .sort(byDisposition);
-                  if (!serializer && node.data !== null) {
-                    return false;
-                  }
-
-                  const serialized = await serializer.serialize(node);
-                  await exportFile({ node, path: path.slice(1), serialized });
-                },
-              });
-
-              state.values.lastExport = Date.now();
-
-              return { data: true };
+            if (!settings.values.rootHandle) {
+              return { intents: [createIntent(SettingsAction.Open, { plugin: FILES_PLUGIN })] };
             }
 
-            case LocalFilesAction.IMPORT: {
-              const rootDir =
-                intent.data?.intent.rootDir ?? (await (window as any).showDirectoryPicker({ mode: 'read' }));
-              if (!rootDir) {
-                return;
-              }
+            const serializers = filterPlugins(plugins, parseGraphSerializerPlugin).flatMap((plugin) =>
+              plugin.provides.graph.serializer(plugins),
+            );
 
-              const serializers = filterPlugins(plugins, parseGraphSerializerPlugin).flatMap((plugin) =>
-                plugin.provides.graph.serializer(plugins),
-              );
-
-              const importFile = async ({ handle, ancestors }: { handle: FileSystemHandle; ancestors: unknown[] }) => {
-                const [name, ...extension] = handle.name.split('.');
-
-                let type = getFileType(extension.join('.'));
-                if (!type && handle.kind === 'directory') {
-                  const metadataHandle = await (handle as any).getFileHandle('.composer.json');
-                  if (metadataHandle) {
-                    const file = await metadataHandle.getFile();
-                    const metadata = JSON.parse(await file.text());
-                    type = metadata.type;
-                  }
-                } else if (!type) {
-                  log('unsupported file type', { name, extension });
-                  return;
+            // TODO(wittjosiah): Export needs to include order of nodes as well.
+            //   Without this order is not guaranteed to be preserved on import.
+            //   This can be done by computing the relations of a node before visiting it.
+            //   The inverse needs to be done on import as well,
+            //   the files need to be deserialized first in order to restore the relations.
+            await explore({
+              visitor: async (node, path) => {
+                if (isActionLike(node)) {
+                  return false;
                 }
-                const data = handle.kind === 'directory' ? name : await (await (handle as any).getFile()).text();
+
                 const [serializer] = serializers
-                  .filter((serializer) =>
-                    // For directories, the output type cannot be inferred from the file extension.
-                    handle.kind === 'directory' ? type === serializer.inputType : type === serializer.outputType,
-                  )
+                  .filter((serializer) => node.type === serializer.inputType)
                   .sort(byDisposition);
+                if (!serializer && node.data !== null) {
+                  return false;
+                }
 
-                return serializer?.deserialize({ name, data, type }, ancestors);
-              };
+                const serialized = await serializer.serialize(node);
+                await exportFile({ node, path: path.slice(1), serialized });
+              },
+            });
 
-              await traverseFileSystem(rootDir, (handle, ancestors) => importFile({ handle, ancestors }));
-              return { data: true };
+            state.values.lastExport = Date.now();
+          }),
+          createResolver(LocalFilesAction.Import, async (data) => {
+            const rootDir = data.rootDir ?? (await (window as any).showDirectoryPicker({ mode: 'read' }));
+            if (!rootDir) {
+              return;
             }
 
-            case LocalFilesAction.OPEN_FILE: {
-              if ('showOpenFilePicker' in window) {
-                const [handle]: FileSystemFileHandle[] = await (window as any).showOpenFilePicker({
-                  mode: 'readwrite',
-                  types: [
-                    {
-                      description: 'Markdown',
-                      accept: { 'text/markdown': ['.md'] },
-                    },
-                  ],
-                });
-                const file = await handleToLocalFile(handle);
+            const serializers = filterPlugins(plugins, parseGraphSerializerPlugin).flatMap((plugin) =>
+              plugin.provides.graph.serializer(plugins),
+            );
+
+            const importFile = async ({ handle, ancestors }: { handle: FileSystemHandle; ancestors: unknown[] }) => {
+              const [name, ...extension] = handle.name.split('.');
+
+              let type = getFileType(extension.join('.'));
+              if (!type && handle.kind === 'directory') {
+                const metadataHandle = await (handle as any).getFileHandle('.composer.json');
+                if (metadataHandle) {
+                  const file = await metadataHandle.getFile();
+                  const metadata = JSON.parse(await file.text());
+                  type = metadata.type;
+                }
+              } else if (!type) {
+                log('unsupported file type', { name, extension });
+                return;
+              }
+              const data = handle.kind === 'directory' ? name : await (await (handle as any).getFile()).text();
+              const [serializer] = serializers
+                .filter((serializer) =>
+                  // For directories, the output type cannot be inferred from the file extension.
+                  handle.kind === 'directory' ? type === serializer.inputType : type === serializer.outputType,
+                )
+                .sort(byDisposition);
+
+              return serializer?.deserialize({ name, data, type }, ancestors);
+            };
+
+            await traverseFileSystem(rootDir, (handle, ancestors) => importFile({ handle, ancestors }));
+          }),
+          createResolver(LocalFilesAction.OpenFile, async () => {
+            if ('showOpenFilePicker' in window) {
+              const [handle]: FileSystemFileHandle[] = await (window as any).showOpenFilePicker({
+                mode: 'readwrite',
+                types: [
+                  {
+                    description: 'Markdown',
+                    accept: { 'text/markdown': ['.md'] },
+                  },
+                ],
+              });
+              const file = await handleToLocalFile(handle);
+              state.values.files.push(file);
+
+              return { data: { id: file.id, activeParts: { main: [file.id] } } };
+            }
+
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.md,text/markdown';
+            const result = new Trigger<string>();
+            input.onchange = async () => {
+              const [legacyFile] = input.files ? Array.from(input.files) : [];
+              if (legacyFile) {
+                const file = await legacyFileToLocalFile(legacyFile);
                 state.values.files.push(file);
-
-                return { data: { activeParts: { main: [file.id] } } };
+                result.wake(file.id);
               }
-
-              const input = document.createElement('input');
-              input.type = 'file';
-              input.accept = '.md,text/markdown';
-              const result = new Trigger<string[]>();
-              input.onchange = async () => {
-                const [legacyFile] = input.files ? Array.from(input.files) : [];
-                if (legacyFile) {
-                  const file = await legacyFileToLocalFile(legacyFile);
-                  state.values.files.push(file);
-                  result.wake([file.id]);
-                }
-              };
-              input.click();
-              return { data: await result.wait() };
+            };
+            input.click();
+            const id = await result.wait();
+            return { data: { id, activeParts: { main: [id] } } };
+          }),
+          createResolver(LocalFilesAction.OpenDirectory, async () => {
+            const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+            const directory = await handleToLocalDirectory(handle);
+            state.values.files.push(directory);
+            return { data: { id: directory.id, activeParts: { main: [directory.id, directory.children[0]?.id] } } };
+          }),
+          createResolver(LocalFilesAction.Reconnect, async (data) => {
+            const entity = state.values.files.find((entity) => entity.id === data.id);
+            if (!entity) {
+              return;
             }
 
-            case LocalFilesAction.OPEN_DIRECTORY: {
-              const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
-              const directory = await handleToLocalDirectory(handle);
-              state.values.files.push(directory);
-              return { data: { activeParts: { main: [directory.id, directory.children[0]?.id] } } };
-            }
-
-            case LocalFilesAction.RECONNECT: {
-              const entity = state.values.files.find((entity) => entity.id === intent.data?.id);
-              if (!entity) {
-                break;
+            if ('children' in entity) {
+              const permission = await (entity.handle as any).requestPermission({ mode: 'readwrite' });
+              if (permission === 'granted') {
+                entity.children = await getDirectoryChildren(entity.handle, entity.handle.name);
+                entity.permission = permission;
               }
-
-              if ('children' in entity) {
-                const permission = await (entity.handle as any).requestPermission({ mode: 'readwrite' });
-                if (permission === 'granted') {
-                  entity.children = await getDirectoryChildren(entity.handle, entity.handle.name);
-                  entity.permission = permission;
-                }
-              } else {
-                const permission = await (entity.handle as any)?.requestPermission({ mode: 'readwrite' });
-                if (permission === 'granted') {
-                  const text = await (entity.handle as any).getFile?.().then((file: any) => file.text());
-                  entity.text = text;
-                  entity.permission = permission;
-                }
+            } else {
+              const permission = await (entity.handle as any)?.requestPermission({ mode: 'readwrite' });
+              if (permission === 'granted') {
+                const text = await (entity.handle as any).getFile?.().then((file: any) => file.text());
+                entity.text = text;
+                entity.permission = permission;
               }
-
-              return { data: true };
             }
-
-            case LocalFilesAction.SAVE: {
-              const file = findFile(state.values.files, [intent.data?.id]);
-              if (file) {
-                await handleSave(file);
-                return { data: true };
-              }
-              break;
+          }),
+          createResolver(LocalFilesAction.Save, async (data) => {
+            const file = findFile(state.values.files, [data.id]);
+            if (file) {
+              await handleSave(file);
             }
-
-            case LocalFilesAction.CLOSE: {
-              if (typeof intent.data?.id === 'string') {
-                const index = state.values.files.findIndex((f) => f.id === intent.data?.id);
-                if (index >= 0) {
-                  state.values.files.splice(index, 1);
-                  return { data: true };
-                }
-              }
-              break;
+          }),
+          createResolver(LocalFilesAction.Close, async (data) => {
+            const index = state.values.files.findIndex((f) => f.id === data.id);
+            if (index >= 0) {
+              state.values.files.splice(index, 1);
             }
-          }
-        },
+          }),
+        ],
       },
     },
   };

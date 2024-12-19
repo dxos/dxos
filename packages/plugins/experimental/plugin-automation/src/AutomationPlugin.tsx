@@ -7,16 +7,16 @@ import React from 'react';
 import { createSurface, parseMetadataResolverPlugin, type PluginDefinition, resolvePlugin } from '@dxos/app-framework';
 import { FunctionTrigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { parseClientPlugin } from '@dxos/plugin-client';
+import { parseClientPlugin } from '@dxos/plugin-client/types';
 import { createExtension, toSignal } from '@dxos/plugin-graph';
 import { memoizeQuery } from '@dxos/plugin-space';
 import {
   getSpace,
   getTypename,
   isEchoObject,
-  loadObjectReferences,
   parseId,
   type ReactiveEchoObject,
+  RefArray,
   SpaceState,
 } from '@dxos/react-client/echo';
 import { translations as formTranslations } from '@dxos/react-ui-form';
@@ -36,7 +36,7 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
             placeholder: ['object placeholder', { ns: AUTOMATION_PLUGIN }],
             icon: 'ph--magic-wand--regular',
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (chain: ChainType) => loadObjectReferences(chain, (chain) => chain.prompts),
+            loadReferences: async (chain: ChainType) => await RefArray.loadAll(chain.prompts ?? []),
           },
         },
       },
@@ -199,7 +199,7 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
         ],
       },
       intent: {
-        resolver: (intent) => {},
+        resolvers: () => [],
       },
     },
   };

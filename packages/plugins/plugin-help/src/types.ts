@@ -12,6 +12,9 @@ import {
   type SurfaceProvides,
   type TranslationsProvides,
 } from '@dxos/app-framework';
+import { S } from '@dxos/echo-schema';
+
+import { HELP_PLUGIN } from './meta';
 
 export type Step = BaseStep & {
   before?: (context: { plugins: Plugin[]; step: Step }) => void;
@@ -36,3 +39,11 @@ export const HelpContext: Context<HelpContextType> = createContext<HelpContextTy
 });
 
 export type HelpPluginProvides = GraphBuilderProvides & IntentResolverProvides & SurfaceProvides & TranslationsProvides;
+
+export const HELP_ACTION = `${HELP_PLUGIN}/action`;
+export namespace HelpAction {
+  export class Start extends S.TaggedClass<Start>()(`${HELP_ACTION}/start`, {
+    input: S.Void,
+    output: S.Void,
+  }) {}
+}

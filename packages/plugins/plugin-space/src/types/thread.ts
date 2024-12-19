@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Expando, ref, S, TypedObject } from '@dxos/echo-schema';
+import { Expando, Ref, S, TypedObject } from '@dxos/echo-schema';
 
 // TODO(wittjosiah): These types were placed here rather than in @dxos/plugin-thread
 //   in order to avoid a circular dependency between threads and other objects that use threads.
@@ -22,7 +22,7 @@ export class ContactType extends TypedObject({ typename: 'dxos.org/type/Contact'
 
 export const ActorSchema = S.mutable(
   S.Struct({
-    contact: S.optional(ref(ContactType)),
+    contact: S.optional(Ref(ContactType)),
     // TODO(wittjosiah): Should the below fields just be the contact schema?
     //  i.e. it should either be a reference to an existing contact or an inline contact schema.
     identityKey: S.optional(S.String),
@@ -51,7 +51,7 @@ export class MessageType extends TypedObject({ typename: 'dxos.org/type/Message'
   /** Text content of the message. */
   text: S.String,
   /** Non-text content sent with a message (e.g., files, polls, etc.) */
-  parts: S.optional(S.mutable(S.Array(ref(Expando)))),
+  parts: S.optional(S.mutable(S.Array(Ref(Expando)))),
   /** Custom properties for specific message types (e.g. email subject or cc fields). */
   properties: S.optional(S.mutable(S.Record({ key: S.String, value: S.Any }))),
   // TODO(wittjosiah): Add read status:
@@ -59,7 +59,7 @@ export class MessageType extends TypedObject({ typename: 'dxos.org/type/Message'
   //  - Read receipts don't need to be added to schema until they being implemented.
   /** Context of the application when message was created. */
   // TODO(burdon): Evolve "attention object" to be current UX state? E.g., of Deck?
-  context: S.optional(ref(Expando)),
+  context: S.optional(Ref(Expando)),
 }) {}
 
 export const ThreadStatus = S.Union(S.Literal('staged'), S.Literal('active'), S.Literal('resolved'));
@@ -69,10 +69,10 @@ export class ThreadType extends TypedObject({ typename: 'dxos.org/type/Thread', 
   /** AM cursor-range: 'from:to'. */
   anchor: S.optional(S.String),
   status: S.optional(ThreadStatus),
-  messages: S.mutable(S.Array(ref(MessageType))),
+  messages: S.mutable(S.Array(Ref(MessageType))),
 }) {}
 
 export class ChannelType extends TypedObject({ typename: 'dxos.org/type/Channel', version: '0.1.0' })({
   name: S.optional(S.String),
-  threads: S.mutable(S.Array(ref(ThreadType))),
+  threads: S.mutable(S.Array(Ref(ThreadType))),
 }) {}

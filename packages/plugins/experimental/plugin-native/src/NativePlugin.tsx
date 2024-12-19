@@ -3,7 +3,14 @@
 //
 
 import type { Plugin, PluginDefinition } from '@dxos/app-framework';
-import { NavigationAction, SettingsAction, LayoutAction, parseIntentPlugin, resolvePlugin } from '@dxos/app-framework';
+import {
+  NavigationAction,
+  SettingsAction,
+  LayoutAction,
+  parseIntentPlugin,
+  resolvePlugin,
+  createIntent,
+} from '@dxos/app-framework';
 import { HELP_PLUGIN } from '@dxos/plugin-help/meta';
 import { NAVTREE_PLUGIN } from '@dxos/plugin-navtree/meta';
 import { safeParseJson } from '@dxos/util';
@@ -85,26 +92,25 @@ const setupMenuItemListener = (intentPlugin: any, app: any) => {
     const id = `${event.detail.parent}:${event.detail.title}`;
     switch (id) {
       case 'App Name:Search commands': {
-        void intentPlugin?.provides.intent.dispatch({
-          action: LayoutAction.SET_LAYOUT,
-          data: { element: 'dialog', component: `${NAVTREE_PLUGIN}/Commands` },
-        });
+        void intentPlugin?.provides.intent.dispatchPromise(
+          createIntent(LayoutAction.SetLayout, {
+            element: 'dialog',
+            component: `${NAVTREE_PLUGIN}/Commands`,
+          }),
+        );
         break;
       }
       case 'App Name:Settings...': {
-        void intentPlugin?.provides.intent.dispatch({
-          action: SettingsAction.OPEN,
-        });
+        void intentPlugin?.provides.intent.dispatchPromise(createIntent(SettingsAction.Open));
         break;
       }
       case 'App Name:Show shortcuts': {
-        void intentPlugin?.provides.intent.dispatch({
-          action: LayoutAction.SET_LAYOUT,
-          data: {
+        void intentPlugin?.provides.intent.dispatchPromise(
+          createIntent(LayoutAction.SetLayout, {
             element: 'dialog',
             component: `${HELP_PLUGIN}/Shortcuts`,
-          },
-        });
+          }),
+        );
         break;
       }
       case 'App Name:Quit': {
@@ -128,11 +134,13 @@ const setupApplicationUrlListener = (app: any, intentPlugin: any) => {
       // Currently, the dialogs are controlled by Client Plugin and not the Layout Plugin.
       window.location.href = location;
     } else {
-      void intentPlugin?.provides.intent.dispatch({
-        action: NavigationAction.OPEN,
-        // TODO(thure): what is `location` and is this right?
-        data: { activeParts: { main: [location] } },
-      });
+      void intentPlugin?.provides.intent.dispatchPromise(
+        createIntent(
+          NavigationAction.Open,
+          // TODO(thure): what is `location` and is this right?
+          { activeParts: { main: [location] } },
+        ),
+      );
     }
   });
 };
@@ -143,10 +151,9 @@ const setupGlobalHotkey = async (socketWindow: any, appWindow: any, intentPlugin
   // Global hotkey listener
   binding.addEventListener('hotkey', () => {
     appWindow.restore();
-    void intentPlugin?.provides.intent.dispatch({
-      action: LayoutAction.SET_LAYOUT,
-      data: { element: 'dialog', component: `${NAVTREE_PLUGIN}/Commands` },
-    });
+    void intentPlugin?.provides.intent.dispatchPromise(
+      createIntent(LayoutAction.SetLayout, { element: 'dialog', component: `${NAVTREE_PLUGIN}/Commands` }),
+    );
   });
 };
 

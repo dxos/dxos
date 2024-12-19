@@ -6,7 +6,6 @@ import { type IconProps } from '@phosphor-icons/react';
 import { type FC } from 'react';
 
 import type {
-  Intent,
   MetadataRecordsProvides,
   SettingsProvides,
   SurfaceProvides,
@@ -14,6 +13,7 @@ import type {
 } from '@dxos/app-framework';
 import { type SchemaProvides } from '@dxos/plugin-space';
 import { type CollectionType } from '@dxos/plugin-space/types';
+import { type ReactiveEchoObject } from '@dxos/react-client/echo';
 import { type Label } from '@dxos/react-ui';
 import { type StackItemSize } from '@dxos/react-ui-stack';
 
@@ -31,8 +31,6 @@ export type StackSectionView = {
   custom?: Record<string, any>;
 };
 
-// TODO(wittjosiah): Creators/choosers likely aren't stack-specific.
-//  Also distinct from graph actions though, output should be inserted into current view rather than navigated to.
 type StackSectionAction = {
   id: string;
   testId: string;
@@ -49,23 +47,9 @@ export type StackSectionMetadata = {
 
 export type StackSectionItem = {
   id: string;
-  object: CollectionType['objects'][number];
+  object: ReactiveEchoObject<any>;
   view: StackSectionView;
   metadata: StackSectionMetadata;
-};
-
-export type StackSectionCreator = StackSectionAction & {
-  intent: Intent | Intent[];
-};
-
-export type StackProvides = {
-  stack: {
-    creators?: StackSectionCreator[];
-  };
-};
-
-export type StackState = {
-  creators: StackSectionCreator[];
 };
 
 export type StackSettingsProps = { separation: boolean };
@@ -74,4 +58,4 @@ export type StackPluginProvides = SurfaceProvides &
   MetadataRecordsProvides &
   SettingsProvides<StackSettingsProps> &
   TranslationsProvides &
-  SchemaProvides & { stack: StackState };
+  SchemaProvides;

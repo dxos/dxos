@@ -2,22 +2,30 @@
 // Copyright 2024 DXOS.org
 //
 
+import { pipe } from 'effect';
 import React, { useCallback, useRef } from 'react';
 
-import { type MetadataResolver, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
+import { chain, createIntent, type MetadataResolver, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
-import { type AbstractTypedObject, getSpace, isReactiveObject, isSpace, useSpaces } from '@dxos/react-client/echo';
+import {
+  type AbstractTypedObject,
+  getSpace,
+  isReactiveObject,
+  isSpace,
+  type ReactiveObject,
+  useSpaces,
+} from '@dxos/react-client/echo';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 
 import { CreateObjectPanel, type CreateObjectPanelProps } from './CreateObjectPanel';
-import { SPACE_PLUGIN, SpaceAction } from '../../meta';
-import { CollectionType } from '../../types';
+import { SPACE_PLUGIN } from '../../meta';
+import { CollectionType, SpaceAction } from '../../types';
 
 export const CREATE_OBJECT_DIALOG = `${SPACE_PLUGIN}/CreateObjectDialog`;
 
 export type CreateObjectDialogProps = Pick<CreateObjectPanelProps, 'schemas' | 'target' | 'typename' | 'name'> & {
   resolve?: MetadataResolver;
-  navigableCollections?: boolean;
+  shouldNavigate?: (object: ReactiveObject<any>) => boolean;
 };
 
 export const CreateObjectDialog = ({
@@ -25,14 +33,14 @@ export const CreateObjectDialog = ({
   target,
   typename,
   name,
-  navigableCollections,
+  shouldNavigate: _shouldNavigate,
   resolve,
 }: CreateObjectDialogProps) => {
   const closeRef = useRef<HTMLButtonElement | null>(null);
   const { t } = useTranslation(SPACE_PLUGIN);
   const client = useClient();
   const spaces = useSpaces();
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const handleCreateObject = useCallback(
     async ({
@@ -44,9 +52,11 @@ export const CreateObjectDialog = ({
       target: CreateObjectPanelProps['target'];
       name?: string;
     }) => {
-      const target = isSpace(_target) ? (_target.properties[CollectionType.typename] as CollectionType) : _target;
-      const createObjectAction = resolve?.(schema.typename)?.createObject;
-      if (!createObjectAction || !target) {
+      const target = isSpace(_target)
+        ? (_target.properties[CollectionType.typename]?.target as CollectionType | undefined)
+        : _target;
+      const createObjectIntent = resolve?.(schema.typename)?.createObject;
+      if (!createObjectIntent || !target) {
         // TODO(wittjosiah): UI feedback.
         return;
       }
@@ -55,17 +65,16 @@ export const CreateObjectDialog = ({
       closeRef.current?.click();
 
       const space = isSpace(target) ? target : getSpace(target);
-      const result = await dispatch({ action: createObjectAction, data: { name, space } });
-      const object = result?.data;
+      const result = await dispatch(createObjectIntent({ name, space }));
+      const object = result.data?.object;
       if (isReactiveObject(object)) {
-        await dispatch([
-          {
-            plugin: SPACE_PLUGIN,
-            action: SpaceAction.ADD_OBJECT,
-            data: { target, object },
-          },
-          ...(!(object instanceof CollectionType) || navigableCollections ? [{ action: NavigationAction.OPEN }] : []),
-        ]);
+        const addObjectIntent = createIntent(SpaceAction.AddObject, { target, object });
+        const shouldNavigate = _shouldNavigate ?? (() => true);
+        if (shouldNavigate(object)) {
+          await dispatch(pipe(addObjectIntent, chain(NavigationAction.Open, {})));
+        } else {
+          await dispatch(addObjectIntent);
+        }
       }
     },
     [dispatch, resolve],

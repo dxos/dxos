@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-client",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "description": "DXOS Surface plugin for DXOS Client",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -17,6 +17,11 @@
       "types": "./dist/types/src/meta.d.ts",
       "browser": "./dist/lib/browser/meta.mjs",
       "node": "./dist/lib/node-esm/meta.mjs"
+    },
+    "./types": {
+      "types": "./dist/types/src/types.d.ts",
+      "browser": "./dist/lib/browser/types.mjs",
+      "node": "./dist/lib/node-esm/types.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -24,6 +29,9 @@
     "*": {
       "meta": [
         "dist/types/src/meta.d.ts"
+      ],
+      "types": [
+        "dist/types/src/types.d.ts"
       ]
     }
   },
@@ -40,6 +48,7 @@
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
+    "@dxos/plugin-observability": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/shell": "workspace:*",

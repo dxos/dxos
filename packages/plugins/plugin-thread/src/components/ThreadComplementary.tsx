@@ -4,14 +4,13 @@
 
 import React, { useEffect, useMemo } from 'react';
 
-import { LayoutAction, type Plugin, useIntentDispatcher, useResolvePlugins } from '@dxos/app-framework';
+import { createIntent, LayoutAction, type Plugin, useIntentDispatcher, useResolvePlugins } from '@dxos/app-framework';
 import { type ThreadType } from '@dxos/plugin-space';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { fullyQualifiedId, RefArray } from '@dxos/react-client/echo';
 import { useAttended } from '@dxos/react-ui-attention';
 import { nonNullable } from '@dxos/util';
 
 import { CommentsContainer } from '../components';
-import { THREAD_PLUGIN } from '../meta';
 import { ThreadAction, type ThreadProvides } from '../types';
 
 const providesThreadsConfig = (plugin: any): Plugin<ThreadProvides<any>> | undefined =>
@@ -28,7 +27,7 @@ export const ThreadComplementary = ({
   current?: string;
   showResolvedThreads?: boolean;
 }) => {
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const threadsIntegrators = useResolvePlugins(providesThreadsConfig);
   const threadProvides = useMemo(() => threadsIntegrators.map((p) => p.provides.thread), [threadsIntegrators]);
@@ -38,9 +37,11 @@ export const ThreadComplementary = ({
   );
   const sort = useMemo(() => createSort?.(subject), [createSort, subject]);
 
+  const threadObjects = RefArray.allResolvedTargets(subject.threads ?? []);
+
   const threads = useMemo(() => {
-    return subject.threads.concat(drafts ?? []).filter(nonNullable) as ThreadType[];
-  }, [JSON.stringify(subject.threads), JSON.stringify(drafts)]);
+    return threadObjects.concat(drafts ?? []).filter(nonNullable) as ThreadType[];
+  }, [JSON.stringify(threadObjects), JSON.stringify(drafts)]);
 
   const detachedIds = useMemo(() => {
     return threads.filter(({ anchor }) => !anchor).map((thread) => fullyQualifiedId(thread));
@@ -70,34 +71,21 @@ export const ThreadComplementary = ({
           // TODO(wittjosiah): Should this be a thread-specific intent?
           //  The layout doesn't know about threads and this working depends on other plugins conditionally handling it.
           //  This may be overloading this intent or highjacking its intended purpose.
-          void dispatch?.([
-            {
-              action: LayoutAction.SCROLL_INTO_VIEW,
-              data: {
-                id: fullyQualifiedId(subject),
-                thread: threadId,
-                cursor: thread.anchor,
-              },
-            },
-          ]);
+          void dispatch?.(
+            createIntent(LayoutAction.ScrollIntoView, {
+              id: fullyQualifiedId(subject),
+              cursor: thread.anchor,
+              ref: threadId,
+            }),
+          );
         }
       }}
-      onThreadDelete={(thread) => {
-        return dispatch({ plugin: THREAD_PLUGIN, action: ThreadAction.DELETE, data: { subject, thread } });
-      }}
+      onThreadDelete={(thread) => dispatch(createIntent(ThreadAction.Delete, { thread, subject }))}
       onMessageDelete={(thread, messageId) =>
-        dispatch({
-          plugin: THREAD_PLUGIN,
-          action: ThreadAction.DELETE_MESSAGE,
-          data: { subject, thread, messageId },
-        })
+        dispatch(createIntent(ThreadAction.DeleteMessage, { thread, subject, messageId }))
       }
-      onThreadToggleResolved={(thread) =>
-        dispatch({ plugin: THREAD_PLUGIN, action: ThreadAction.TOGGLE_RESOLVED, data: { thread } })
-      }
-      onComment={(thread) => {
-        void dispatch({ action: ThreadAction.ON_MESSAGE_ADD, data: { thread, subject } });
-      }}
+      onThreadToggleResolved={(thread) => dispatch(createIntent(ThreadAction.ToggleResolved, { thread }))}
+      onComment={(thread) => dispatch(createIntent(ThreadAction.OnMessageAdd, { thread, subject }))}
     />
   );
 };

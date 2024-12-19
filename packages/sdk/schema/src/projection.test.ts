@@ -12,7 +12,7 @@ import {
   FormatEnum,
   TypeEnum,
   TypedObject,
-  ref,
+  Ref,
   toJsonSchema,
   type JsonPath,
   type JsonProp,
@@ -151,7 +151,7 @@ describe('ViewProjection', () => {
           name: S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }),
           email: Format.Email,
           salary: Format.Currency({ code: 'usd', decimals: 2 }),
-          org: ref(Org),
+          org: Ref(Org),
         }),
       ),
     );

@@ -13,6 +13,8 @@ export {
   isReactiveObject,
   type ReactiveObject,
   compareForeignKeys,
+  makeRef,
+  RefArray,
 } from '@dxos/live-object';
 export {
   createDocAccessor,
@@ -57,6 +59,9 @@ export {
   fullyQualifiedId,
   parseFullyQualifiedId,
   parseId,
+  EchoObjectSchema,
+  ReactiveObjectSchema,
+  SpaceSchema,
   FQ_ID_LENGTH,
   OBJECT_ID_LENGTH,
   SPACE_ID_LENGTH,

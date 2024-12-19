@@ -8,7 +8,7 @@ import urlJoin from 'url-join';
 
 import { type Plugin, type PluginDefinition, createSurface, resolvePlugin } from '@dxos/app-framework';
 import { log } from '@dxos/log';
-import { type ClientPluginProvides, parseClientPlugin } from '@dxos/plugin-client';
+import { type ClientPluginProvides, parseClientPlugin } from '@dxos/plugin-client/types';
 
 import { FileMain, FileSection, FileSlide } from './components';
 import meta, { IPFS_PLUGIN } from './meta';

@@ -34,7 +34,7 @@ const OutlinerMain: FC<{ tree: TreeType }> = ({ tree }) => {
           <Outliner.Root
             className={mx(attentionSurface, surfaceElevation({ elevation: 'group' }), 'p-4')}
             isTasklist={tree.checkbox}
-            root={tree.root}
+            root={tree.root.target!}
             onCreate={(text?: string) => create(TreeItemType, { content: text ?? '', items: [] })}
             onDelete={({ id }) => {
               const item = space.db.getObjectById(id);

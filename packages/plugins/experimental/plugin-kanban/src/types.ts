@@ -3,14 +3,17 @@
 //
 
 import type {
-  GraphBuilderProvides,
   IntentResolverProvides,
   MetadataRecordsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
+import { S } from '@dxos/echo-schema';
 import { type SchemaProvides } from '@dxos/plugin-space';
-import { type KanbanType } from '@dxos/react-ui-kanban';
+import { type Space, SpaceSchema } from '@dxos/react-client/echo';
+import { KanbanType } from '@dxos/react-ui-kanban';
+import { initializeKanban } from '@dxos/react-ui-kanban/testing';
+import { FieldSchema } from '@dxos/schema';
 
 import { KANBAN_PLUGIN } from './meta';
 
@@ -23,15 +26,40 @@ import { KANBAN_PLUGIN } from './meta';
  * by the model (e.g., a query of items based on metadata within a column object).
  */
 
-const KANBAN_ACTION = `${KANBAN_PLUGIN}/action`;
+export namespace KanbanAction {
+  const KANBAN_ACTION = `${KANBAN_PLUGIN}/action`;
 
-export enum KanbanAction {
-  CREATE = `${KANBAN_ACTION}/create`,
+  export class Create extends S.TaggedClass<Create>()(`${KANBAN_ACTION}/create`, {
+    input: S.Struct({
+      name: S.optional(S.String),
+      space: SpaceSchema,
+    }),
+    output: S.Struct({
+      object: KanbanType,
+    }),
+  }) {}
+
+  export class DeleteCardField extends S.TaggedClass<DeleteCardField>()(`${KANBAN_ACTION}/delete-card-field`, {
+    input: S.Struct({
+      kanban: KanbanType,
+      fieldId: S.String,
+      // TODO(wittjosiah): Separate fields for undo data?
+      deletionData: S.optional(
+        S.Struct({
+          field: FieldSchema,
+          // TODO(wittjosiah): This creates a type error.
+          // props: PropertySchema,
+          props: S.Any,
+          index: S.Number,
+        }),
+      ),
+    }),
+    output: S.Void,
+  }) {}
 }
 
 export type KanbanPluginProvides = SurfaceProvides &
   IntentResolverProvides &
-  GraphBuilderProvides &
   MetadataRecordsProvides &
   TranslationsProvides &
   SchemaProvides;
@@ -50,4 +78,11 @@ export interface KanbanModel {
 
 export type Location = {
   idx?: number;
+};
+
+export const isKanban = (object: unknown): object is KanbanType => object != null && object instanceof KanbanType;
+
+export const createKanban = (space: Space) => {
+  const { kanban } = initializeKanban({ space });
+  return kanban;
 };

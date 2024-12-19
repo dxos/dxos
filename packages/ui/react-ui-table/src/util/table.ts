@@ -15,7 +15,7 @@ import {
 } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { PublicKey } from '@dxos/react-client';
-import { create, type Space } from '@dxos/react-client/echo';
+import { create, makeRef, type Space } from '@dxos/react-client/echo';
 import { createFieldId, createView, ViewProjection } from '@dxos/schema';
 
 import { type TableType } from '../types';
@@ -29,7 +29,7 @@ type InitialiseTableProps = {
 // TODO(burdon): Pass in type.
 // TODO(burdon): User should determine typename.
 export const initializeTable = ({ space, table, initialRow = true }: InitialiseTableProps): MutableSchema => {
-  log.info('initializeTable', { table });
+  log('initializeTable', { table });
 
   const ContactSchema = TypedObject({
     typename: `example.com/type/${PublicKey.random().truncate()}`,
@@ -45,17 +45,19 @@ export const initializeTable = ({ space, table, initialRow = true }: InitialiseT
   });
 
   const contactSchema = space.db.schemaRegistry.addSchema(ContactSchema);
-  table.view = createView({
-    name: 'Test',
-    typename: contactSchema.typename,
-    jsonSchema: contactSchema.jsonSchema,
-    fields: ['name', 'email', 'salary'],
-  });
+  table.view = makeRef(
+    createView({
+      name: 'Test',
+      typename: contactSchema.typename,
+      jsonSchema: contactSchema.jsonSchema,
+      fields: ['name', 'email', 'salary'],
+    }),
+  );
 
-  const projection = new ViewProjection(contactSchema, table.view!);
+  const projection = new ViewProjection(contactSchema, table.view.target!);
   projection.setFieldProjection({
     field: {
-      id: table.view.fields[2].id,
+      id: table.view.target!.fields[2].id,
       path: 'salary' as JsonPath,
       size: 150,
     },

@@ -4,18 +4,8 @@
 
 import React from 'react';
 
-import {
-  createSurface,
-  NavigationAction,
-  parseIntentPlugin,
-  type PluginDefinition,
-  resolvePlugin,
-} from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
-import { parseClientPlugin } from '@dxos/plugin-client';
-import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
-import { SpaceAction } from '@dxos/plugin-space';
-import { loadObjectReferences } from '@dxos/react-client/echo';
+import { createIntent, createResolver, createSurface, type PluginDefinition } from '@dxos/app-framework';
+import { create, RefArray } from '@dxos/live-object';
 
 import { ContactsContainer, EventsContainer, MailboxContainer } from './components';
 import meta, { INBOX_PLUGIN } from './meta';
@@ -29,98 +19,29 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
       metadata: {
         records: {
           [MailboxType.typename]: {
-            createObject: InboxAction.CREATE_MAILBOX,
+            createObject: (props: { name?: string }) => createIntent(InboxAction.CreateMailbox, props),
             placeholder: ['mailbox title placeholder', { ns: INBOX_PLUGIN }],
             icon: 'ph--envelope--regular',
           },
           [ContactsType.typename]: {
-            createObject: InboxAction.CREATE_CONTACTS,
+            createObject: (props: { name?: string }) => createIntent(InboxAction.CreateContacts, props),
             placeholder: ['contacts title placeholder', { ns: INBOX_PLUGIN }],
             icon: 'ph--address-book--regular',
           },
           [CalendarType.typename]: {
-            createObject: InboxAction.CREATE_CALENDAR,
+            createObject: (props: { name?: string }) => createIntent(InboxAction.CreateCalendar, props),
             placeholder: ['calendar title placeholder', { ns: INBOX_PLUGIN }],
             icon: 'ph--calendar--regular',
           },
           [EventType.typename]: {
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (event: EventType) => loadObjectReferences(event, (event) => event.links),
+            loadReferences: async (event: EventType) => await RefArray.loadAll(event.links ?? []),
           },
         },
       },
       translations,
       echo: {
         schema: [MailboxType, ContactsType, CalendarType],
-      },
-      graph: {
-        builder: (plugins) => {
-          const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
-          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-          if (!client || !dispatch) {
-            return [];
-          }
-
-          return createExtension({
-            id: INBOX_PLUGIN,
-            filter: (node): node is ActionGroup => isActionGroup(node) && node.id.startsWith(SpaceAction.ADD_OBJECT),
-            actions: ({ node }) => {
-              const id = node.id.split('/').at(-1);
-              const [spaceId, objectId] = id?.split(':') ?? [];
-              const space = client.spaces.get().find((space) => space.id === spaceId);
-              const object = objectId && space?.db.getObjectById(objectId);
-              const target = objectId ? object : space;
-              if (!target) {
-                return;
-              }
-
-              return [
-                {
-                  id: `${INBOX_PLUGIN}/create-mailbox/${node.id}`,
-                  data: async () => {
-                    await dispatch([
-                      { plugin: INBOX_PLUGIN, action: InboxAction.CREATE_MAILBOX },
-                      { action: SpaceAction.ADD_OBJECT, data: { target } },
-                      { action: NavigationAction.OPEN },
-                    ]);
-                  },
-                  properties: {
-                    label: ['create mailbox label', { ns: INBOX_PLUGIN }],
-                    icon: 'ph--envelope--regular',
-                  },
-                },
-                {
-                  id: `${INBOX_PLUGIN}/create-contacts/${node.id}`,
-                  data: async () => {
-                    await dispatch([
-                      { plugin: INBOX_PLUGIN, action: InboxAction.CREATE_CONTACTS },
-                      { action: SpaceAction.ADD_OBJECT, data: { target } },
-                      { action: NavigationAction.OPEN },
-                    ]);
-                  },
-                  properties: {
-                    label: ['create contacts label', { ns: INBOX_PLUGIN }],
-                    icon: 'ph--address-book--regular',
-                  },
-                },
-                {
-                  id: `${INBOX_PLUGIN}/create-calendar/${node.id}`,
-                  data: async () => {
-                    await dispatch([
-                      { plugin: INBOX_PLUGIN, action: InboxAction.CREATE_CALENDAR },
-                      { action: SpaceAction.ADD_OBJECT, data: { target } },
-                      { action: NavigationAction.OPEN },
-                    ]);
-                  },
-                  properties: {
-                    label: ['create calendar label', { ns: INBOX_PLUGIN }],
-                    icon: 'ph--calendar--regular',
-                  },
-                },
-              ];
-            },
-          });
-        },
       },
       surface: {
         definitions: () => [
@@ -145,19 +66,17 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
         ],
       },
       intent: {
-        resolver: (intent) => {
-          switch (intent.action) {
-            case InboxAction.CREATE_MAILBOX: {
-              return { data: create(MailboxType, { messages: [] }) };
-            }
-            case InboxAction.CREATE_CONTACTS: {
-              return { data: create(ContactsType, {}) };
-            }
-            case InboxAction.CREATE_CALENDAR: {
-              return { data: create(CalendarType, {}) };
-            }
-          }
-        },
+        resolvers: () => [
+          createResolver(InboxAction.CreateMailbox, () => ({
+            data: { object: create(MailboxType, { messages: [] }) },
+          })),
+          createResolver(InboxAction.CreateContacts, () => ({
+            data: { object: create(ContactsType, {}) },
+          })),
+          createResolver(InboxAction.CreateCalendar, () => ({
+            data: { object: create(CalendarType, {}) },
+          })),
+        ],
       },
     },
   };

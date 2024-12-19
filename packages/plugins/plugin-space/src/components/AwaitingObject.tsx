@@ -3,15 +3,22 @@
 //
 
 import { CheckCircle, CircleDashed, CircleNotch } from '@phosphor-icons/react';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
-import { parseIntentPlugin, useResolvePlugin, parseNavigationPlugin, NavigationAction } from '@dxos/app-framework';
+import {
+  useResolvePlugin,
+  parseNavigationPlugin,
+  NavigationAction,
+  useIntentDispatcher,
+  createIntent,
+} from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
 import { Filter, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
 import { Button, Toast, useTranslation } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
-import { SpaceAction, SPACE_PLUGIN } from '../meta';
+import { SPACE_PLUGIN } from '../meta';
+import { SpaceAction } from '../types';
 
 const WAIT_FOR_OBJECT_TIMEOUT = 180e3; // 3 minutes
 const TOAST_TIMEOUT = 240e3; // 4 minutes
@@ -21,7 +28,7 @@ export const AwaitingObject = ({ id }: { id: string }) => {
   const [waiting, setWaiting] = useState(true);
   const [found, setFound] = useState(false);
   const { t } = useTranslation(SPACE_PLUGIN);
-  const intentPlugin = useResolvePlugin(parseIntentPlugin);
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
 
   const client = useClient();
@@ -47,22 +54,17 @@ export const AwaitingObject = ({ id }: { id: string }) => {
         setOpen(false);
       }
     }
-  }, [id, objects, intentPlugin]);
+  }, [id, objects, navigationPlugin]);
 
-  const handleClose = async () =>
-    intentPlugin?.provides.intent.dispatch({
-      plugin: SPACE_PLUGIN,
-      action: SpaceAction.WAIT_FOR_OBJECT,
-      data: { id: undefined },
-    });
+  const handleClose = useCallback(
+    async () => dispatch(createIntent(SpaceAction.WaitForObject, { id: undefined })),
+    [dispatch],
+  );
 
-  const handleNavigate = () => {
-    void intentPlugin?.provides.intent.dispatch({
-      action: NavigationAction.OPEN,
-      data: { activeParts: { main: [id] } },
-    });
+  const handleNavigate = useCallback(() => {
+    void dispatch(createIntent(NavigationAction.Open, { activeParts: { main: [id] } }));
     void handleClose();
-  };
+  }, [id, handleClose, dispatch]);
 
   return (
     <Toast.Root open={open} duration={TOAST_TIMEOUT} onOpenChange={setOpen}>

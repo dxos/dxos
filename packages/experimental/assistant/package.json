@@ -1,6 +1,6 @@
 {
   "name": "@dxos/assistant",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "private": true,
   "description": "Natural language interface to DXOS",
   "homepage": "https://dxos.org",
@@ -31,6 +31,7 @@
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/schema": "^0.75.5",

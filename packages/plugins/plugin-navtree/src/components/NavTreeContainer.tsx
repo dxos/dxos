@@ -7,7 +7,7 @@ import { extractInstruction, type Instruction } from '@atlaskit/pragmatic-drag-a
 import { untracked } from '@preact/signals-core';
 import React, { memo, useCallback, useEffect } from 'react';
 
-import { LayoutAction, NavigationAction, Surface, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, LayoutAction, NavigationAction, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { isAction, isActionLike, type Node } from '@dxos/app-graph';
 import { useGraph } from '@dxos/plugin-graph';
 import { isEchoObject, isSpace } from '@dxos/react-client/echo';
@@ -43,7 +43,7 @@ export type NavTreeContainerProps = {
 export const NavTreeContainer = memo(({ isCurrent, popoverAnchorId, ...props }: NavTreeContainerProps) => {
   const { closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
   const [isLg] = useMediaQuery('lg', { ssr: false });
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { graph } = useGraph();
 
   const getActions = useCallback((node: Node) => naturalGetActions(graph, node), [graph]);
@@ -124,28 +124,11 @@ export const NavTreeContainer = memo(({ isCurrent, popoverAnchorId, ...props }: 
 
       const current = isCurrent(path, node);
       if (!current) {
-        void dispatch({
-          action: NavigationAction.OPEN,
-          data: {
-            activeParts: {
-              main: [node.id],
-            },
-          },
-        });
+        void dispatch(createIntent(NavigationAction.Open, { activeParts: { main: [node.id] } }));
       } else if (option) {
-        void dispatch({
-          action: NavigationAction.CLOSE,
-          data: {
-            activeParts: {
-              main: [node.id],
-            },
-          },
-        });
+        void dispatch(createIntent(NavigationAction.Close, { activeParts: { main: [node.id] } }));
       } else {
-        void dispatch({
-          action: LayoutAction.SCROLL_INTO_VIEW,
-          data: { id: node.id },
-        });
+        void dispatch(createIntent(LayoutAction.ScrollIntoView, { id: node.id }));
       }
 
       const defaultAction = graph.actions(node).find((action) => action.properties?.disposition === 'default');
