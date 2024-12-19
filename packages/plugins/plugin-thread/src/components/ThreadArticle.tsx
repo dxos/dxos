@@ -4,14 +4,15 @@
 
 import React, { type ComponentProps, type FC } from 'react';
 
+import { StackItem } from '@dxos/react-ui-stack';
+
 import { ChatContainer } from './ChatContainer';
 
 const ThreadArticle: FC<Pick<ComponentProps<typeof ChatContainer>, 'thread' | 'context'>> = (props) => {
-  // TODO(burdon): Factor out Main container across plugins?
   return (
-    <div role='none' className='row-span-2'>
+    <StackItem.Content toolbar={false} role='article'>
       <ChatContainer {...props} />
-    </div>
+    </StackItem.Content>
   );
 };
 
