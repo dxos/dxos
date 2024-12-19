@@ -55,7 +55,7 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
 
   private getMainGridCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
-    const fields = this.model.table.view?.fields ?? [];
+    const fields = this.model.table.view?.target?.fields ?? [];
 
     const addCell = (obj: T, field: FieldType, colIndex: number, displayIndex: number): void => {
       const { props } = this.model.projection.getFieldProjection(field.id);
@@ -124,7 +124,7 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
 
   private getHeaderCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
-    const fields = this.model.table.view?.fields ?? [];
+    const fields = this.model.table.view?.target?.fields ?? [];
     for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
       const { field, props } = this.model.projection.getFieldProjection(fields[col].id);
       cells[toPlaneCellIndex({ col, row: 0 })] = {
@@ -190,7 +190,7 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
       [toPlaneCellIndex({ col: 0, row: 0 })]: {
         value: '',
         accessoryHtml: tableButtons.addColumn.render({
-          disabled: (this.model.table.view?.fields?.length ?? 0) >= VIEW_FIELD_LIMIT,
+          disabled: (this.model.table.view?.target?.fields?.length ?? 0) >= VIEW_FIELD_LIMIT,
         }),
         readonly: true,
       },

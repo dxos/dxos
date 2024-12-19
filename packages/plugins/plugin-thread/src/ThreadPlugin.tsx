@@ -18,6 +18,7 @@ import {
   resolvePlugin,
 } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
+import { Ref } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { parseClientPlugin } from '@dxos/plugin-client';
@@ -30,9 +31,10 @@ import {
   fullyQualifiedId,
   getSpace,
   getTypename,
-  loadObjectReferences,
+  makeRef,
   parseId,
   type ReactiveEchoObject,
+  RefArray,
   SpaceState,
 } from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
@@ -98,11 +100,11 @@ export const ThreadPlugin = (): PluginDefinition<
             placeholder: ['channel name placeholder', { ns: THREAD_PLUGIN }],
             icon: 'ph--chat--regular',
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (channel: ChannelType) => loadObjectReferences(channel, (channel) => channel.threads),
+            loadReferences: async (channel: ChannelType) => await RefArray.loadAll(channel.threads ?? []),
           },
           [ThreadType.typename]: {
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (thread: ThreadType) => loadObjectReferences(thread, (thread) => thread.messages),
+            loadReferences: async (thread: ThreadType) => await RefArray.loadAll(thread.messages ?? []),
           },
           [MessageType.typename]: {
             // TODO(wittjosiah): Move out of metadata.
@@ -286,7 +288,7 @@ export const ThreadPlugin = (): PluginDefinition<
                 data.subject instanceof ChannelType && !!data.subject.threads[0],
               component: ({ data }) => {
                 const channel = data.subject;
-                const thread = channel.threads[0]!;
+                const thread = channel.threads[0].target!;
                 // TODO(zan): Maybe we should have utility for positional main object ids.
                 if (isLayoutParts(location?.active) && location.active.main) {
                   const layoutEntries = location.active.main;
@@ -304,7 +306,7 @@ export const ThreadPlugin = (): PluginDefinition<
             createSurface({
               id: `${THREAD_PLUGIN}/thread`,
               role: 'complementary--comments',
-              filter: (data): data is { subject: { threads: ThreadType[] } } =>
+              filter: (data): data is { subject: { threads: Ref<ThreadType>[] } } =>
                 !!data.subject &&
                 typeof data.subject === 'object' &&
                 'threads' in data.subject &&
@@ -389,7 +391,7 @@ export const ThreadPlugin = (): PluginDefinition<
               } else {
                 // NOTE: This is the standalone thread creation case.
                 return {
-                  data: create(ChannelType, { threads: [create(ThreadType, { messages: [] })] }),
+                  data: create(ChannelType, { threads: [makeRef(create(ThreadType, { messages: [] }))] }),
                 };
               }
             }
@@ -468,7 +470,7 @@ export const ThreadPlugin = (): PluginDefinition<
               }
 
               if (!intent.undo) {
-                const index = subject.threads.findIndex((t: any) => t?.id === thread.id);
+                const index = subject.threads.findIndex(Ref.hasObjectId(thread.id));
                 const cursor = subject.threads[index]?.anchor;
                 if (index !== -1) {
                   subject.threads?.splice(index, 1);
@@ -493,7 +495,7 @@ export const ThreadPlugin = (): PluginDefinition<
               } else if (intent.undo) {
                 // TODO(wittjosiah): SDK should do this automatically.
                 const savedThread = space.db.add(thread);
-                subject.threads.push(savedThread);
+                subject.threads.push(makeRef(savedThread));
 
                 return {
                   data: true,
@@ -527,7 +529,7 @@ export const ThreadPlugin = (): PluginDefinition<
               if (state.drafts[subjectId]?.find((t) => t === thread)) {
                 // Move draft to document.
                 thread.status = 'active';
-                subject.threads ? subject.threads.push(thread) : (subject.threads = [thread]);
+                subject.threads ? subject.threads.push(makeRef(thread)) : (subject.threads = [makeRef(thread)]);
                 state.drafts[subjectId] = state.drafts[subjectId]?.filter(({ id }) => id !== thread.id);
                 intents.push({
                   action: ObservabilityAction.SEND_EVENT,
@@ -561,8 +563,8 @@ export const ThreadPlugin = (): PluginDefinition<
               }
 
               if (!intent.undo) {
-                const message = thread.messages.find((m) => m?.id === messageId);
-                const messageIndex = thread.messages.findIndex((m) => m?.id === messageId);
+                const messageIndex = thread.messages.findIndex(Ref.hasObjectId(messageId));
+                const message = thread.messages[messageIndex]?.target;
                 if (messageIndex === -1 || !message) {
                   return undefined;
                 }
@@ -600,7 +602,7 @@ export const ThreadPlugin = (): PluginDefinition<
                   return;
                 }
 
-                thread.messages.splice(messageIndex, 0, message);
+                thread.messages.splice(messageIndex, 0, makeRef(message as MessageType));
                 return {
                   data: true,
                   intents: [

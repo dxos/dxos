@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 
 import { setValue, toJsonSchema, S, TypeEnum, TypedObject, FormatEnum } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
-import { create } from '@dxos/react-client/echo';
+import { create, makeRef } from '@dxos/react-client/echo';
 import { createView, type ViewProjection } from '@dxos/schema';
 import {} from '@dxos/schema';
 
@@ -22,11 +22,13 @@ export const TestSchema = TypedObject({ typename: 'example.com/type/Test', versi
 
 export const createTable = (schema = TestSchema) => {
   return create(TableType, {
-    view: createView({
-      name: 'Test',
-      typename: schema.typename,
-      jsonSchema: toJsonSchema(schema),
-    }),
+    view: makeRef(
+      createView({
+        name: 'Test',
+        typename: schema.typename,
+        jsonSchema: toJsonSchema(schema),
+      }),
+    ),
   });
 };
 
@@ -71,7 +73,7 @@ export const useSimulator = ({ items, table, insertInterval, updateInterval }: S
 
     const i = setInterval(() => {
       const rowIdx = Math.floor(Math.random() * items.length);
-      const fields = table.view?.fields ?? [];
+      const fields = table.view?.target?.fields ?? [];
       const columnIdx = Math.floor(Math.random() * fields.length);
       const projection: ViewProjection = (table as any)._projection;
       const field = fields[columnIdx];
@@ -111,5 +113,5 @@ export const useSimulator = ({ items, table, insertInterval, updateInterval }: S
     }, updateInterval);
 
     return () => clearInterval(i);
-  }, [items, table.view?.fields, updateInterval]);
+  }, [items, table.view?.target?.fields, updateInterval]);
 };

@@ -13,12 +13,11 @@ import {
   type PluginDefinition,
   resolvePlugin,
 } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
+import { create, makeRef, RefArray } from '@dxos/live-object';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { TextType } from '@dxos/plugin-markdown/types';
 import { SpaceAction } from '@dxos/plugin-space';
-import { loadObjectReferences } from '@dxos/react-client/echo';
 
 import { initializeBundler } from './bundler';
 import { Compiler } from './compiler';
@@ -58,7 +57,7 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
             placeholder: ['object title placeholder', { ns: SCRIPT_PLUGIN }],
             icon: 'ph--code--regular',
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (script: ScriptType) => loadObjectReferences(script, (script) => [script.source]),
+            loadReferences: async (script: ScriptType) => await RefArray.loadAll([script.source]),
           },
         },
       },
@@ -144,9 +143,11 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
             case ScriptAction.CREATE: {
               return {
                 data: create(ScriptType, {
-                  source: create(TextType, {
-                    content: templates[0].source,
-                  }),
+                  source: makeRef(
+                    create(TextType, {
+                      content: templates[0].source,
+                    }),
+                  ),
                 }),
               };
             }

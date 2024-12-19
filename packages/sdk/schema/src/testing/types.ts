@@ -10,7 +10,7 @@ import {
   GeneratorAnnotationId,
   LabelAnnotationId,
   AST,
-  ref,
+  Ref,
 } from '@dxos/echo-schema';
 
 export namespace Testing {
@@ -71,7 +71,7 @@ export namespace Testing {
       }),
     ),
     employer: S.optional(
-      ref(OrgType).annotations({
+      Ref(OrgType).annotations({
         [FieldLookupAnnotationId]: 'name',
       }),
     ),

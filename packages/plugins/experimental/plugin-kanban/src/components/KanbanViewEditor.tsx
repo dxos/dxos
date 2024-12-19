@@ -21,13 +21,15 @@ const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
   // TODO(ZaymonFC): The schema registry needs an API where we can query with initial value and
   // endure typename changes. We shouldn't need to manage a subscription at this layer.
   const [schema, setSchema] = useState(
-    space && kanban?.cardView?.query?.type ? space.db.schemaRegistry.getSchema(kanban.cardView.query.type) : undefined,
+    space && kanban?.cardView?.target?.query?.type
+      ? space.db.schemaRegistry.getSchema(kanban.cardView.target.query.type)
+      : undefined,
   );
 
   useEffect(() => {
-    if (space && kanban?.cardView?.query?.type) {
+    if (space && kanban?.cardView?.target?.query?.type) {
       const unsubscribe = space.db.schemaRegistry.subscribe((schemas) => {
-        const schema = schemas.find((schema) => schema.typename === kanban?.cardView?.query?.type);
+        const schema = schemas.find((schema) => schema.typename === kanban?.cardView?.target?.query?.type);
         if (schema) {
           setSchema(schema);
         }
@@ -35,7 +37,7 @@ const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
 
       return unsubscribe;
     }
-  }, [space, kanban?.cardView?.query?.type]);
+  }, [space, kanban?.cardView?.target?.query?.type]);
 
   const handleDelete = useCallback(
     (fieldId: string) => {
@@ -48,7 +50,7 @@ const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
     [dispatch, kanban],
   );
 
-  if (!space || !schema || !kanban.cardView) {
+  if (!space || !schema || !kanban.cardView?.target) {
     return null;
   }
 
@@ -62,7 +64,12 @@ const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
           kanban.arrangement = undefined;
         }}
       />
-      <ViewEditor registry={space.db.schemaRegistry} schema={schema} view={kanban.cardView} onDelete={handleDelete} />
+      <ViewEditor
+        registry={space.db.schemaRegistry}
+        schema={schema}
+        view={kanban.cardView.target}
+        onDelete={handleDelete}
+      />
     </>
   );
 };
