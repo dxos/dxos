@@ -4,6 +4,7 @@
 
 import React, { forwardRef } from 'react';
 
+import { type PartAdjustment } from '@dxos/app-framework';
 import {
   Button,
   ButtonGroup,
@@ -16,8 +17,7 @@ import {
 
 import { DECK_PLUGIN } from '../../meta';
 
-export type PlankControlEvent = 'solo' | 'close' | `${'pin' | 'increment'}-${'start' | 'end'}`;
-export type PlankControlHandler = (event: PlankControlEvent) => void;
+export type PlankControlHandler = (event: PartAdjustment) => void;
 
 export type PlankCapabilities = {
   incrementStart?: boolean;

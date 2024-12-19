@@ -10,6 +10,8 @@ import {
   parseIntentPlugin,
   LayoutAction,
   createSurface,
+  createResolver,
+  createIntent,
 } from '@dxos/app-framework';
 import { createExtension, type Node } from '@dxos/app-graph';
 import { create } from '@dxos/live-object';
@@ -22,9 +24,9 @@ import {
   ShortcutsHints,
   ShortcutsList,
 } from './components';
-import meta, { HelpAction, HELP_PLUGIN } from './meta';
+import meta, { HELP_PLUGIN } from './meta';
 import translations from './translations';
-import { type Step, type HelpPluginProvides } from './types';
+import { type Step, type HelpPluginProvides, HelpAction } from './types';
 
 export type HelpSettingsProps = { showHints?: boolean; showWelcome?: boolean };
 
@@ -60,20 +62,17 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
       translations,
       graph: {
         builder: (plugins) => {
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
+          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatchPromise;
 
           return createExtension({
             id: HELP_PLUGIN,
             filter: (node): node is Node<null> => node.id === 'root',
             actions: () => [
               {
-                id: HelpAction.START,
+                id: HelpAction.Start._tag,
                 data: async () => {
                   settings.values.showHints = true;
-                  await intentPlugin?.provides.intent.dispatch({
-                    plugin: HELP_PLUGIN,
-                    action: HelpAction.START,
-                  });
+                  await dispatch?.(createIntent(HelpAction.Start));
                 },
                 properties: {
                   label: ['open help tour', { ns: HELP_PLUGIN }],
@@ -91,13 +90,9 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
                 id: 'dxos.org/plugin/help/open-shortcuts',
                 data: async () => {
                   settings.values.showHints = true;
-                  await intentPlugin?.provides.intent.dispatch({
-                    action: LayoutAction.SET_LAYOUT,
-                    data: {
-                      element: 'dialog',
-                      component: SHORTCUTS_DIALOG,
-                    },
-                  });
+                  await dispatch?.(
+                    createIntent(LayoutAction.SetLayout, { element: 'dialog', component: SHORTCUTS_DIALOG }),
+                  );
                 },
                 properties: {
                   label: ['open shortcuts label', { ns: HELP_PLUGIN }],
@@ -132,13 +127,10 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
         ],
       },
       intent: {
-        resolver: async (intent) => {
-          switch (intent.action) {
-            case HelpAction.START:
-              state.running = true;
-              break;
-          }
-        },
+        resolvers: () =>
+          createResolver(HelpAction.Start, () => {
+            state.running = true;
+          }),
       },
     },
   };

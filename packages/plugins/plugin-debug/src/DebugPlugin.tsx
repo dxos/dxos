@@ -5,6 +5,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import {
+  createIntent,
   createSurface,
   definePlugin,
   parseGraphPlugin,
@@ -16,7 +17,7 @@ import {
 import { Timer } from '@dxos/async';
 import { Devtools } from '@dxos/devtools';
 import { invariant } from '@dxos/invariant';
-import { type ClientPluginProvides, parseClientPlugin } from '@dxos/plugin-client';
+import { parseClientPlugin } from '@dxos/plugin-client/types';
 import { createExtension, Graph, type Node, toSignal } from '@dxos/plugin-graph';
 import { memoizeQuery, SpaceAction } from '@dxos/plugin-space';
 import { CollectionType } from '@dxos/plugin-space/types';
@@ -44,13 +45,7 @@ import {
 } from './components';
 import meta, { DEBUG_PLUGIN } from './meta';
 import translations from './translations';
-import {
-  DebugAction,
-  DebugContext,
-  type DebugPluginProvides,
-  type DebugSettingsProps,
-  DebugSettingsSchema,
-} from './types';
+import { DebugContext, type DebugPluginProvides, type DebugSettingsProps, DebugSettingsSchema } from './types';
 
 type SpaceDebug = {
   type: string;
@@ -276,31 +271,6 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
           ];
         },
       },
-      intent: {
-        resolver: async (intent, plugins) => {
-          switch (intent.action) {
-            case DebugAction.OPEN_DEVTOOLS: {
-              const clientPlugin = context.getPlugin<ClientPluginProvides>('dxos.org/plugin/client');
-              const client = clientPlugin.provides.client;
-              const vaultUrl = client.config.values?.runtime?.client?.remoteSource ?? 'https://halo.dxos.org';
-
-              // Check if we're serving devtools locally on the usual port.
-              let devtoolsUrl = 'http://localhost:5174';
-              try {
-                // TODO(burdon): Test header to see if this is actually devtools.
-                await fetch(devtoolsUrl);
-              } catch {
-                // Match devtools to running app.
-                const isDev = window.location.href.includes('.dev.') || window.location.href.includes('localhost');
-                devtoolsUrl = `https://devtools${isDev ? '.dev.' : '.'}dxos.org`;
-              }
-
-              window.open(`${devtoolsUrl}?target=${vaultUrl}`, '_blank');
-              return { data: true };
-            }
-          }
-        },
-      },
       surface: {
         definitions: () => [
           createSurface({
@@ -344,12 +314,13 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
                     return;
                   }
 
-                  void context.resolvePlugin(parseIntentPlugin).provides.intent.dispatch(
-                    objects.map((object) => ({
-                      action: SpaceAction.ADD_OBJECT,
-                      data: { target: collection, object },
-                    })),
-                  );
+                  objects.forEach((object) => {
+                    void context
+                      .resolvePlugin(parseIntentPlugin)
+                      .provides.intent.dispatchPromise(
+                        createIntent(SpaceAction.AddObject, { target: collection, object }),
+                      );
+                  });
                 },
                 [data.subject.space],
               );

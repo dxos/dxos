@@ -10,11 +10,13 @@ import { StackManager } from '@dxos/react-ui-stack/testing';
 export const Stack = {
   getStack: (page: Page) => new StackManager(page.getByTestId('main.stack')),
 
-  createSection: async (page: Page, plugin: string) => {
+  createSection: async (page: Page, type: string) => {
     const dialogTrigger = await page.$('[data-testid="stack.createSection"]');
-    if (dialogTrigger) {
-      await dialogTrigger.click();
-    }
-    return page.getByTestId(`${plugin}.createSection`).click();
+    await dialogTrigger!.click();
+    await page.getByTestId('create-object-form.schema-input').fill(type);
+    await page.keyboard.press('Enter');
+
+    const objectForm = page.getByTestId('create-object-form');
+    await objectForm.getByTestId('save-button').click();
   },
 };

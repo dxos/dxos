@@ -2,13 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IntentContext } from './IntentContext';
-import { type IntentResolver } from './intent';
-import { type Plugin } from '../plugin-host';
+import { type IntentContext, type AnyIntentResolver } from './intent-dispatcher';
+import { type HostContext, type Plugin } from '../plugin-host';
+
+type Context = HostContext & IntentContext;
+
+export type ResolverDefinitions = AnyIntentResolver | AnyIntentResolver[] | ResolverDefinitions[];
 
 export type IntentResolverProvides = {
   intent: {
-    resolver: IntentResolver;
+    resolvers: (context: Context) => ResolverDefinitions;
   };
 };
 
@@ -20,19 +23,4 @@ export const parseIntentPlugin = (plugin: Plugin) =>
   (plugin.provides as any).intent?.dispatch ? (plugin as Plugin<IntentPluginProvides>) : undefined;
 
 export const parseIntentResolverPlugin = (plugin: Plugin) =>
-  (plugin.provides as any).intent?.resolver ? (plugin as Plugin<IntentResolverProvides>) : undefined;
-
-//
-// Intents
-//
-
-const INTENT_PLUGIN = 'dxos.org/plugin/intent';
-
-const INTENT_ACTION = `${INTENT_PLUGIN}/action`;
-
-export enum IntentAction {
-  /**
-   * Fired after an intent is dispatched if the intent is undoable.
-   */
-  SHOW_UNDO = `${INTENT_ACTION}/show-undo`,
-}
+  (plugin.provides as any).intent?.resolvers ? (plugin as Plugin<IntentResolverProvides>) : undefined;
