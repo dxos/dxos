@@ -18,7 +18,7 @@ import {
   resolvePlugin,
 } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
-import type { Ref } from '@dxos/echo-schema';
+import { Ref } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { parseClientPlugin } from '@dxos/plugin-client';
@@ -470,7 +470,7 @@ export const ThreadPlugin = (): PluginDefinition<
               }
 
               if (!intent.undo) {
-                const index = subject.threads.findIndex((t: any) => t?.id === thread.id);
+                const index = subject.threads.findIndex(Ref.hasObjectId(thread.id));
                 const cursor = subject.threads[index]?.anchor;
                 if (index !== -1) {
                   subject.threads?.splice(index, 1);
@@ -563,8 +563,8 @@ export const ThreadPlugin = (): PluginDefinition<
               }
 
               if (!intent.undo) {
-                const message = thread.messages.find((m) => m?.target?.id === messageId);
-                const messageIndex = thread.messages.findIndex((m) => m?.target?.id === messageId);
+                const messageIndex = thread.messages.findIndex(Ref.hasObjectId(messageId));
+                const message = thread.messages[messageIndex]?.target;
                 if (messageIndex === -1 || !message) {
                   return undefined;
                 }
@@ -602,18 +602,7 @@ export const ThreadPlugin = (): PluginDefinition<
                   return;
                 }
 
-                thread.messages.splice(
-                  messageIndex,
-                  0,
-                  makeRef(
-                    create(MessageType, {
-                      context: makeRef(message),
-                      timestamp: message.timestamp,
-                      sender: message.sender,
-                      text: message.text,
-                    }),
-                  ),
-                );
+                thread.messages.splice(messageIndex, 0, makeRef(message as MessageType));
                 return {
                   data: true,
                   intents: [
