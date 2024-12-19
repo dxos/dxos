@@ -11,7 +11,7 @@ import { createIntent, LayoutAction, NavigationAction, Surface, useIntentDispatc
 import { isAction, isActionLike, type Node } from '@dxos/app-graph';
 import { useGraph } from '@dxos/plugin-graph';
 import { isEchoObject, isSpace } from '@dxos/react-client/echo';
-import { ElevationProvider, useMediaQuery, useSidebars } from '@dxos/react-ui';
+import { useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { isTreeData, type TreeData, type PropsFromTreeItem } from '@dxos/react-ui-list';
 import { mx } from '@dxos/react-ui-theme';
 import { arrayMove } from '@dxos/util';
@@ -203,35 +203,30 @@ export const NavTreeContainer = memo(({ isCurrent, popoverAnchorId, ...props }: 
   }, [graph]);
 
   return (
-    <ElevationProvider elevation='chrome'>
-      <div
-        role='none'
-        className='grid grid-cols-1 grid-rows-[var(--rail-size)_1fr_min-content] bs-full overflow-hidden'
-      >
-        {/* TODO(wittjosiah): Factor out surfaces to layout? */}
-        <div role='none' className='border-be border-separator'>
-          <Surface role='search-input' limit={1} />
-        </div>
-
-        {/* TODO(thure): What gives this an inline `overflow: initial`? */}
-        <div role='none' className='border-be border-separator !overflow-y-auto'>
-          <NavTree
-            id={graph.root.id}
-            getActions={getActions}
-            getItems={getItems}
-            getProps={getProps}
-            isCurrent={isCurrent}
-            loadDescendents={loadDescendents}
-            renderItemEnd={renderItemEnd}
-            popoverAnchorId={popoverAnchorId}
-            canDrop={canDrop}
-            onSelect={handleSelect}
-            {...props}
-          />
-        </div>
-
-        <NavTreeFooter />
+    <div role='none' className='grid grid-cols-1 grid-rows-[var(--rail-size)_1fr_min-content] bs-full overflow-hidden'>
+      {/* TODO(wittjosiah): Factor out surfaces to layout? */}
+      <div role='none' className='border-be border-separator'>
+        <Surface role='search-input' limit={1} />
       </div>
-    </ElevationProvider>
+
+      {/* TODO(thure): What gives this an inline `overflow: initial`? */}
+      <div role='none' className='border-be border-separator !overflow-y-auto'>
+        <NavTree
+          id={graph.root.id}
+          getActions={getActions}
+          getItems={getItems}
+          getProps={getProps}
+          isCurrent={isCurrent}
+          loadDescendents={loadDescendents}
+          renderItemEnd={renderItemEnd}
+          popoverAnchorId={popoverAnchorId}
+          canDrop={canDrop}
+          onSelect={handleSelect}
+          {...props}
+        />
+      </div>
+
+      <NavTreeFooter />
+    </div>
   );
 });

@@ -5,7 +5,7 @@
 import type { Density, Elevation, ComponentFunction, Theme } from '@dxos/react-ui-types';
 
 import { mx } from '../../util';
-import { contentElevation, ghostHover } from '../fragments';
+import { ghostHover } from '../fragments';
 
 export const primaryButtonColors =
   'text-inverse bg-accentSurface hover:bg-accentSurfaceHover aria-pressed:bg-primary-500 dark:aria-pressed:bg-primary-500 data-[state=open]:bg-primary-500 dark:data-[state=open]:bg-primary-500 aria-checked:bg-primary-500 dark:aria-checked:bg-primary-500 aria-checked:text-primary-100';
@@ -36,7 +36,6 @@ export const buttonRoot: ComponentFunction<ButtonStyleProps> = (_props, ...etc) 
 export const buttonGroup: ComponentFunction<{ elevation?: Elevation }> = (props, ...etc) => {
   return mx(
     'inline-flex rounded-sm [&>:first-child]:rounded-is-sm [&>:last-child]:rounded-ie-sm [&>button]:relative',
-    contentElevation({ elevation: props.elevation }),
     ...etc,
   );
 };

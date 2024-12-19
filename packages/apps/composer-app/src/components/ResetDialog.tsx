@@ -114,7 +114,7 @@ export const ResetDialog = ({
                     <Clipboard weight='duotone' size='1em' />
                   </Button>
                 </Tooltip.Trigger>
-                <Tooltip.Content classNames='z-[51]'>{t('copy error label')}</Tooltip.Content>
+                <Tooltip.Content>{t('copy error label')}</Tooltip.Content>
               </Tooltip.Root>
             )}
             <div role='none' className='flex-grow' />
@@ -125,7 +125,7 @@ export const ResetDialog = ({
                 </Button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Portal>
-                <DropdownMenu.Content side='top' classNames='z-[51]'>
+                <DropdownMenu.Content side='top'>
                   <DropdownMenu.Viewport>
                     <DropdownMenu.Item data-testid='resetDialog.confirmReset' onClick={handleReset}>
                       {t('reset client confirm label')}

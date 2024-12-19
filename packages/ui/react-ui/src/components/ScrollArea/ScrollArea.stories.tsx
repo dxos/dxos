@@ -7,7 +7,7 @@ import '@dxos-theme';
 import React, { type PropsWithChildren } from 'react';
 
 import { faker } from '@dxos/random';
-import { groupSurface, surfaceElevation } from '@dxos/react-ui-theme';
+import { groupSurface, surfaceShadow } from '@dxos/react-ui-theme';
 
 import { ScrollArea } from './ScrollArea';
 import { withTheme } from '../../testing';
@@ -17,7 +17,7 @@ faker.seed(1234);
 const StorybookScrollArea = ({ children }: PropsWithChildren<{}>) => {
   return (
     <ScrollArea.Root
-      classNames={['is-[300px] bs-[400px] rounded', groupSurface, surfaceElevation({ elevation: 'group' })]}
+      classNames={['is-[300px] bs-[400px] rounded', groupSurface, surfaceShadow({ elevation: 'positioned' })]}
     >
       <ScrollArea.Viewport classNames='rounded p-4'>
         <p>{children}</p>
