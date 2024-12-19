@@ -1,15 +1,14 @@
 /* TODO(thure): Focus is handled by .ch-focus-ring, but should ideally be applied as part of this component.*/
 /* TODO(thure): This should be on the `components` layer, but utility classes like `pli-0` weren’t getting precedence like they should. */
 @layer base {
+  .ch-checkbox--switch,
   .ch-checkbox {
-    @apply is-4 bs-4 border-0 shadow-inner transition-colors bg-unAccent accent-unAccent text-inverse shrink-0 inline-grid place-items-center rounded-sm;
-    /* Not-unchecked styles */
     &[aria-checked='true'],
     &[aria-checked='mixed'],
     &:checked {
       @apply bg-accentSurface accent-accentSurface;
     }
-    /* Enabled styles */
+
     &:not([disabled]),
     &[disabled='false'] {
       &:hover {
@@ -19,6 +18,31 @@
         &:checked {
           @apply bg-accentSurfaceHover accent-accentSurfaceHover;
         }
+      }
+    }
+  }
+
+  .ch-checkbox {
+    @apply is-4 bs-4 border-0 overflow-hidden shadow-inner transition-colors bg-unAccent accent-unAccent text-inverse shrink-0 inline-grid place-items-center rounded-sm;
+  }
+
+  /* TODO(ZaymonFC): Focus is handled by .ch-focus-ring, but should ideally be applied as part of this component.*/
+  /* NOTE: This isn't compatible with the Radix switch. */
+  .ch-checkbox--switch {
+    @apply inline-block appearance-none relative shrink-0 bs-5 is-8  !bg-none;
+    @apply shadow-inner transition-colors bg-unAccent;
+    @apply cursor-pointer rounded-full;
+
+    &::before {
+      @apply is-3 bs-3 mli-[0.1875rem] mlb-[0.1875rem] absolute block bg-white rounded-full border-separator transition-transform duration-100 will-change-transform;
+      content: '';
+    }
+
+    &[aria-checked='true'],
+    &[aria-checked='mixed'],
+    &:checked {
+      &::before {
+        @apply translate-x-[100%];
       }
     }
   }

@@ -4,17 +4,18 @@
 
 import { Check, type IconWeight, Minus } from '@phosphor-icons/react';
 import {
+  CheckboxIndicator,
   Root as CheckboxPrimitive,
   type CheckboxProps as CheckboxPrimitiveProps,
-  Indicator as CheckboxIndicatorPrimitive,
 } from '@radix-ui/react-checkbox';
-import {
-  Root as SwitchPrimitive,
-  Thumb as SwitchThumbPrimitive,
-  type SwitchProps as SwitchPrimitiveProps,
-} from '@radix-ui/react-switch';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { forwardRef, type ForwardRefExoticComponent, Fragment, useCallback } from 'react';
+import React, {
+  type ComponentPropsWithRef,
+  forwardRef,
+  type ForwardRefExoticComponent,
+  Fragment,
+  useCallback,
+} from 'react';
 
 import {
   InputRoot,
@@ -41,6 +42,7 @@ import { type Density, type Elevation, type ClassNameValue, type Size } from '@d
 
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
+import { Icon } from '../Icon';
 
 type InputVariant = 'default' | 'subdued';
 
@@ -262,7 +264,7 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
     });
     const { id, validationValence, descriptionId, errorMessageId } = useInputContext(INPUT_NAME, __inputScope);
     const { tx } = useThemeContext();
-    const Icon = checked === 'indeterminate' ? Minus : checked ? Check : Fragment;
+
     return (
       <CheckboxPrimitive
         {...{
@@ -279,63 +281,46 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
         }}
         ref={forwardedRef}
       >
-        <CheckboxIndicatorPrimitive asChild>
-          <Icon
-            {...(checked && {
-              weight,
-              className: tx('input.checkboxIndicator', 'input--checkbox__indicator', { size }),
-            })}
-          />
-        </CheckboxIndicatorPrimitive>
+        <Icon
+          icon={checked === 'indeterminate' ? 'ph--minus--regular' : 'ph--check--regular'}
+          classNames={tx('input.checkboxIndicator', 'input--checkbox__indicator', { size, checked })}
+        />
       </CheckboxPrimitive>
     );
   },
 );
 
-type SwitchProps = ThemedClassName<Omit<SwitchPrimitiveProps, 'children'>> & { size?: Size };
+type SwitchProps = ThemedClassName<
+  Omit<ComponentPropsWithRef<'input'>, 'children' | 'onChange'> & { onCheckedChange?: (checked: boolean) => void }
+>;
 
-const Switch: ForwardRefExoticComponent<SwitchProps> = forwardRef<HTMLButtonElement, InputScopedProps<SwitchProps>>(
-  (
-    {
-      __inputScope,
-      checked: propsChecked,
-      defaultChecked: propsDefaultChecked,
-      onCheckedChange: propsOnCheckedChange,
-      size = 5,
-      classNames,
-      ...props
-    },
-    forwardedRef,
-  ) => {
-    const { tx } = useThemeContext();
-
+const Switch = forwardRef<HTMLInputElement, InputScopedProps<SwitchProps>>(
+  ({ __inputScope, checked: propsChecked, classNames, ...props }, forwardedRef) => {
     const [checked, onCheckedChange] = useControllableState({
       prop: propsChecked,
-      defaultProp: propsDefaultChecked,
-      onChange: propsOnCheckedChange,
+      defaultProp: props.defaultChecked ?? false,
+      onChange: props.onCheckedChange,
     });
 
     const { id, validationValence, descriptionId, errorMessageId } = useInputContext(INPUT_NAME, __inputScope);
+
     return (
-      <SwitchPrimitive
-        {...{
-          ...props,
-          checked,
-          onCheckedChange,
-          id,
-          'aria-describedby': descriptionId,
-          ...(validationValence === 'error' && {
-            'aria-invalid': 'true' as const,
-            'aria-errormessage': errorMessageId,
-          }),
-          className: tx('input.switch', 'input--switch', { size }, classNames),
+      <input
+        type='checkbox'
+        className='ch-checkbox--switch ch-focus-ring'
+        checked={checked}
+        onChange={(event) => {
+          onCheckedChange(event.target.checked);
         }}
+        id={id}
+        aria-describedby={descriptionId}
+        {...props}
+        {...(validationValence === 'error' && {
+          'aria-invalid': 'true' as const,
+          'aria-errormessage': errorMessageId,
+        })}
         ref={forwardedRef}
-      >
-        {/* TODO(wittjosiah): Embed icons/text for on/off states.
-             e.g., https://codepen.io/alvarotrigo/pen/oNoJePo (#13) */}
-        <SwitchThumbPrimitive className={tx('input.switchThumb', 'input--switch__thumb', { size })} />
-      </SwitchPrimitive>
+      />
     );
   },
 );

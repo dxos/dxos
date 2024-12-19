@@ -39,6 +39,7 @@ export type InputStyleProps = Partial<{
   focused: boolean;
   validationValence: MessageValence;
   size: Size;
+  checked: boolean;
 }>;
 
 export type InputMetaStyleProps = Partial<{
@@ -124,8 +125,8 @@ export const inputInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
 export const inputCheckbox: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
   mx('ch-checkbox ch-focus-ring', getSize(size), ...etc);
 
-export const inputCheckboxIndicator: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
-  mx(getSize(computeSize(sizeValue(size) * 0.65, 4)), ...etc);
+export const inputCheckboxIndicator: ComponentFunction<InputStyleProps> = ({ size = 5, checked }, ...etc) =>
+  mx(getSize(computeSize(sizeValue(size) * 0.65, 4)), !checked && 'invisible', ...etc);
 
 export const inputSwitch: ComponentFunction<InputStyleProps> = ({ size = 5, disabled }, ...etc) =>
   mx(

@@ -214,8 +214,6 @@ export const Switch = {
   args: {
     label: 'This is a switch',
     type: 'switch',
-    description: 'It’s checked, indeterminate, or unchecked',
-    size: 5,
-    weight: 'bold',
+    description: 'It’s either off... or on.',
   },
 };
