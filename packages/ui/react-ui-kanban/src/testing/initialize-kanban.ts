@@ -4,7 +4,7 @@
 
 import { AST, type MutableSchema, S, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
-import { type Space, create } from '@dxos/react-client/echo';
+import { type Space, create, makeRef } from '@dxos/react-client/echo';
 import { createView } from '@dxos/schema';
 
 import { KanbanType } from '../defs';
@@ -35,12 +35,14 @@ export const initializeKanban = ({
 
   const kanban = space.db.add(
     create(KanbanType, {
-      cardView: createView({
-        name: 'Test kanban’s card view',
-        typename: taskSchema.typename,
-        jsonSchema: taskSchema.jsonSchema,
-        fields: ['title', 'description', 'state'],
-      }),
+      cardView: makeRef(
+        createView({
+          name: 'Test kanban’s card view',
+          typename: taskSchema.typename,
+          jsonSchema: taskSchema.jsonSchema,
+          fields: ['title', 'description', 'state'],
+        }),
+      ),
       columnField: 'state',
       arrangement: [
         { columnValue: 'To do', ids: [] },

@@ -105,7 +105,7 @@ export const useExtensions = ({
         document &&
           createDataExtensions({
             id: document.id,
-            text: document.content && createDocAccessor(document.content, ['content']),
+            text: document.content.target && createDocAccessor(document.content.target, ['content']),
             space,
             identity,
           }),
@@ -117,7 +117,7 @@ export const useExtensions = ({
         baseExtensions,
         pluginExtensions,
       ].filter(isNotFalsy),
-    [baseExtensions, pluginExtensions, document, document?.content, space, identity],
+    [baseExtensions, pluginExtensions, document, document?.content?.target, space, identity],
   );
 };
 

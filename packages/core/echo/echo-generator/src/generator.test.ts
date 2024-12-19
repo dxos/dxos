@@ -47,7 +47,7 @@ describe('TestObjectGenerator', () => {
 
     // Expect at least one person object with a linked org reference.
     const objects = await generator.createObjects({ [TestSchemaType.contact]: 10 });
-    expect(objects.some((object) => object.org === organization)).to.be.true;
+    expect(objects.some((object) => object.org?.target === organization)).to.be.true;
   });
 
   test('idempotence', async () => {

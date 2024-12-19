@@ -14,7 +14,7 @@ import { Grid, type GridProps } from './Grid';
 import type { TransformState } from '../../hooks';
 import { useWheel } from '../../hooks';
 
-// TODO(burdon): Factor out transform class, etc.
+// TODO(burdon): Factor out transform class, etc. (check reactivity).
 
 const Render = (props: GridProps) => {
   const { ref, width = 0, height = 0 } = useResizeDetector();

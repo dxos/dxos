@@ -11,7 +11,7 @@ import { Filter, type Query, type ReactiveEchoObject } from '@dxos/echo-db';
 import { Expando } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { create } from '@dxos/live-object';
+import { create, makeRef } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 
@@ -37,15 +37,19 @@ describe('Index queries', () => {
     documents: [
       create(DocumentType, {
         title: 'DXOS Design Doc',
-        content: create(TextV0Type, {
-          content: 'Very important design document',
-        }),
+        content: makeRef(
+          create(TextV0Type, {
+            content: 'Very important design document',
+          }),
+        ),
       }),
       create(DocumentType, {
         title: 'ECHO Architecture',
-        content: create(TextV0Type, {
-          content: 'Very important architecture document',
-        }),
+        content: makeRef(
+          create(TextV0Type, {
+            content: 'Very important architecture document',
+          }),
+        ),
       }),
     ],
     expandos: [

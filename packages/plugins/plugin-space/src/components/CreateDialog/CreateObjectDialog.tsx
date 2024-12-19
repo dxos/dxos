@@ -44,7 +44,9 @@ export const CreateObjectDialog = ({
       target: CreateObjectPanelProps['target'];
       name?: string;
     }) => {
-      const target = isSpace(_target) ? (_target.properties[CollectionType.typename] as CollectionType) : _target;
+      const target = isSpace(_target)
+        ? (_target.properties[CollectionType.typename]?.target as CollectionType)
+        : _target;
       const createObjectAction = resolve?.(schema.typename)?.createObject;
       if (!createObjectAction || !target) {
         // TODO(wittjosiah): UI feedback.

@@ -9,7 +9,7 @@ import { deepMapValues } from '@dxos/util';
 
 import { getEchoProp, toEffectSchema, toJsonSchema } from './json-schema';
 import { PropertyMeta, setSchemaProperty, type JsonSchemaType, getSchemaProperty } from '../ast';
-import { createSchemaReference, getSchemaReference, ref } from '../ast/ref';
+import { createSchemaReference, getSchemaReference, Ref } from '../ast/ref';
 import { FormatAnnotationId } from '../formats';
 import { Email } from '../formats/string';
 import { TypedObject } from '../object';
@@ -44,7 +44,7 @@ describe('effect-to-json', () => {
       name: S.String,
     }) {}
     class Schema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-      name: ref(Nested),
+      name: Ref(Nested),
     }) {}
     const jsonSchema = toJsonSchema(Schema);
     const nested = jsonSchema.properties!.name;
@@ -56,7 +56,7 @@ describe('effect-to-json', () => {
       name: S.String,
     }) {}
     class Schema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-      name: S.Array(ref(Nested)),
+      name: S.Array(Ref(Nested)),
     }) {}
 
     const jsonSchema = toJsonSchema(Schema);
@@ -68,7 +68,7 @@ describe('effect-to-json', () => {
       name: S.String,
     }) {}
     class Schema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-      name: S.optional(ref(Nested)),
+      name: S.optional(Ref(Nested)),
     }) {}
     const jsonSchema = toJsonSchema(Schema);
     expectReferenceAnnotation(jsonSchema.properties!.name);
@@ -127,7 +127,7 @@ describe('effect-to-json', () => {
 
     class Contact extends TypedObject({ typename: 'example.com/type/Contact', version: '0.1.0' })({
       name: S.String,
-      org: ref(Org).annotations({ description: 'Contact organization' }),
+      org: Ref(Org).annotations({ description: 'Contact organization' }),
     }) {}
 
     const jsonSchema = toJsonSchema(Contact);
@@ -174,7 +174,7 @@ describe('effect-to-json', () => {
 
     class Contact extends TypedObject({ typename: 'example.com/type/Contact', version: '0.1.0' })({
       name: S.String,
-      org: ref(Org).annotations({ description: 'Contact organization' }),
+      org: Ref(Org).annotations({ description: 'Contact organization' }),
     }) {}
 
     const jsonSchema = toJsonSchema(Contact);
@@ -223,9 +223,9 @@ describe('json-to-effect', () => {
           array: S.Array(S.String),
           twoDArray: S.Array(S.Array(S.String)),
           record: S.Record({ key: S.String, value: S.Number }),
-          object: S.Struct({ id: S.String, field: ref(Org) }),
-          echoObject: ref(Org),
-          echoObjectArray: S.Array(ref(Org)),
+          object: S.Struct({ id: S.String, field: Ref(Org) }),
+          echoObject: Ref(Org),
+          echoObjectArray: S.Array(Ref(Org)),
           email: S.String.annotations({ [FormatAnnotationId]: 'email' }),
           null: S.Null,
         },

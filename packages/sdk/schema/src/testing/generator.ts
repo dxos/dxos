@@ -18,7 +18,7 @@ import {
 } from '@dxos/echo-schema';
 import { AST, findAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { create, type ReactiveObject } from '@dxos/live-object';
+import { create, makeRef, type ReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getDeep } from '@dxos/util';
 
@@ -97,7 +97,7 @@ export const createReferences = <T extends BaseObject>(schema: S.Schema<T>, db: 
             const { objects } = await db.query((obj) => getTypename(obj) === typename).run();
             if (objects.length) {
               const object = randomElement(objects);
-              (obj as any)[property.name] = object;
+              (obj as any)[property.name] = makeRef(object);
             }
           }
         }

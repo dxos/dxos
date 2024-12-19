@@ -180,6 +180,7 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
                 const state = toSignal(
                   (onChange) => space.state.subscribe(() => onChange()).unsubscribe,
                   () => space.state.get(),
+                  space.id,
                 );
                 if (state !== SpaceState.SPACE_READY) {
                   return;
@@ -188,7 +189,7 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
                 // Not adding the debug node until the root collection is available aligns the behaviour of this
                 // extension with that of the space plugin adding objects. This ensures that the debug node is added at
                 // the same time as objects and prevents order from changing as the nodes are added.
-                const collection = space.properties[CollectionType.typename] as CollectionType | undefined;
+                const collection = space.properties[CollectionType.typename]?.target as CollectionType | undefined;
                 if (!collection) {
                   return;
                 }
@@ -338,7 +339,7 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
 
                   const collection =
                     data.subject.space.state.get() === SpaceState.SPACE_READY &&
-                    data.subject.space.properties[CollectionType.typename];
+                    data.subject.space.properties[CollectionType.typename]?.target;
                   if (!(collection instanceof CollectionType)) {
                     return;
                   }

@@ -11,11 +11,10 @@ import {
   NavigationAction,
   type PluginDefinition,
 } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
+import { create, RefArray } from '@dxos/live-object';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
-import { loadObjectReferences } from '@dxos/react-client/echo';
 
 import { CanvasContainer } from './components';
 import meta, { CANVAS_PLUGIN } from './meta';
@@ -33,7 +32,7 @@ export const CanvasPlugin = (): PluginDefinition<CanvasPluginProvides> => {
             placeholder: ['canvas title placeholder', { ns: CANVAS_PLUGIN }],
             icon: 'ph--infinity--regular',
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (canvas: CanvasBoardType) => loadObjectReferences(canvas, (canvas) => canvas.items),
+            loadReferences: async (canvas: CanvasBoardType) => await RefArray.loadAll(canvas.items ?? []),
           },
         },
       },

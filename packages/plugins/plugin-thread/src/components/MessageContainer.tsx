@@ -7,6 +7,7 @@ import { Check, PencilSimple, X } from '@phosphor-icons/react';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
+import { RefArray } from '@dxos/live-object';
 import { type MessageType } from '@dxos/plugin-space/types';
 import { PublicKey } from '@dxos/react-client';
 import { type ReactiveEchoObject, type Expando, type SpaceMember } from '@dxos/react-client/echo';
@@ -22,7 +23,6 @@ import {
   mx,
 } from '@dxos/react-ui-theme';
 import { MessageHeading, MessageRoot } from '@dxos/react-ui-thread';
-import { nonNullable } from '@dxos/util';
 
 import { command } from './command-extension';
 import { useOnEditAnalytics } from '../hooks';
@@ -101,7 +101,9 @@ export const MessageContainer = ({
         </ButtonGroup>
       </MessageHeading>
       <TextboxBlock message={message} isAuthor={userIsAuthor} editing={editing} />
-      {message.parts?.filter(nonNullable).map((part, index) => <MessagePart key={index} part={part} />)}
+      {RefArray.allResolvedTargets(message.parts ?? []).map((part, index) => (
+        <MessagePart key={index} part={part} />
+      ))}
     </MessageRoot>
   );
 };

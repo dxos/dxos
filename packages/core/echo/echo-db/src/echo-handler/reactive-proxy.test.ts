@@ -36,6 +36,7 @@ describe('Echo reactive proxy', () => {
 
     return {
       objectsHaveId: true,
+      allowObjectAssignments: false,
       beforeAllCb: async () => {
         await builder.open();
         ({ db } = await builder.createDatabase());

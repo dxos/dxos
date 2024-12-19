@@ -8,6 +8,7 @@ import React, { type FC, type KeyboardEvent, type MouseEvent, useCallback } from
 
 import { usePlugin, useIntentDispatcher } from '@dxos/app-framework';
 import { type CollectionType } from '@dxos/plugin-space/types';
+import { makeRef } from '@dxos/react-client/echo';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
@@ -70,8 +71,8 @@ export const AddSection = ({ collection }: { collection: CollectionType }) => {
   const handleAdd = useCallback(
     async (creator: StackSectionCreator) => {
       const { data: section } = (await dispatch(creator.intent)) ?? {};
-      collection.objects = [section];
-      const stack = collection.views[StackViewType.typename];
+      collection.objects = [makeRef(section)];
+      const stack = collection.views[StackViewType.typename].target as StackViewType | undefined;
       if (stack) {
         stack.sections[section.id] = {};
       }
