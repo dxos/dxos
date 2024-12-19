@@ -1547,7 +1547,7 @@ export const SpacePlugin = ({
 
                   undoData.indices.forEach((index: number, i: number) => {
                     if (index !== -1) {
-                      undoData.parentCollection.objects.splice(index, 0, restoredObjects[i] as Expando);
+                      undoData.parentCollection.objects.splice(index, 0, makeRef(restoredObjects[i] as Expando));
                     }
                   });
 
