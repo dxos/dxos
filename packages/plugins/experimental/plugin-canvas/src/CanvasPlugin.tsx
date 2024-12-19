@@ -32,29 +32,7 @@ export const CanvasPlugin = (): PluginDefinition<CanvasPluginProvides> => {
             placeholder: ['canvas title placeholder', { ns: CANVAS_PLUGIN }],
             icon: 'ph--infinity--regular',
             // TODO(wittjosiah): Move out of metadata.
-<<<<<<< HEAD
-            loadReferences: (canvas: CanvasBoardType) => loadObjectReferences(canvas, (canvas) => canvas.items),
-=======
-            loadReferences: async (canvas: CanvasType) => await RefArray.loadAll(canvas.items ?? []),
-          },
-          [CanvasItemType.typename]: {
-            parse: (item: CanvasItemType, type: string) => {
-              switch (type) {
-                case 'node':
-                  return {
-                    id: item.object.target?.id,
-                    label: (item.object.target as any).title,
-                    data: item.object.target,
-                  };
-                case 'object':
-                  return item.object.target;
-                case 'view-object':
-                  return item;
-              }
-            },
-            // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (item: CanvasItemType) => [], // loadObjectReferences(item, (item) => [item.object])
->>>>>>> origin/main
+            loadReferences: async (canvas: CanvasBoardType) => await RefArray.loadAll(canvas.items ?? []),
           },
         },
       },
