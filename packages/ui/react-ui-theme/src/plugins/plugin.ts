@@ -70,8 +70,6 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
 
   return {
     name: 'vite-plugin-dxos-ui-theme',
-
-    // Initial load configuration
     config: async ({ root }, env): Promise<UserConfig> => {
       environment = env.mode;
       const content = root ? await resolveKnownPeers(config.content ?? [], root) : config.content;
@@ -81,7 +79,6 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
 
       return { css: { postcss: { plugins: createPostCSSPipeline(environment, config) } } };
     },
-    // Configure virtual module for theme.css.
     resolveId: (id) => {
       if (id === config.virtualFileId) {
         return config.cssPath;
