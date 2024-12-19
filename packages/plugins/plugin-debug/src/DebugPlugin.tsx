@@ -173,6 +173,7 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
                 const state = toSignal(
                   (onChange) => space.state.subscribe(() => onChange()).unsubscribe,
                   () => space.state.get(),
+                  space.id,
                 );
                 if (state !== SpaceState.SPACE_READY) {
                   return;
