@@ -250,7 +250,7 @@ export const StoragePanel = () => {
               <Toolbar.Button>Reset Storage</Toolbar.Button>
             </DropdownMenu.Trigger>
             <DropdownMenu.Portal>
-              <DropdownMenu.Content side='top' classNames='z-[51]'>
+              <DropdownMenu.Content side='top'>
                 <DropdownMenu.Viewport>
                   <DropdownMenu.Item
                     onClick={async () => {

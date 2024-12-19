@@ -64,7 +64,7 @@ export const Toolbar = ({
 
   // TODO(burdon): Factor out common toolbar components with sheet/editor?
   return (
-    <ElevationProvider elevation='chrome'>
+    <ElevationProvider elevation='positioned'>
       <NaturalToolbar.Root classNames={['p-1', classNames]} style={{ contain: 'layout' }}>
         {templates && <TemplateSelect templates={templates} onTemplateSelect={onTemplateSelect} />}
         {onFormat && <ToolbarIconButton icon='ph--magic-wand--regular' text={t('format label')} onClick={onFormat} />}

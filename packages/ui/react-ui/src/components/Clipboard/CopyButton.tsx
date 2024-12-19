@@ -53,7 +53,7 @@ export const CopyButtonIconOnly = ({ value, classNames, iconProps, variant, ...p
   return (
     <Tooltip.Root delayDuration={1500} open={open} onOpenChange={setOpen}>
       <Tooltip.Portal>
-        <Tooltip.Content side='bottom' sideOffset={12} classNames='z-30'>
+        <Tooltip.Content side='bottom' sideOffset={12}>
           <span>{label}</span>
           <Tooltip.Arrow />
         </Tooltip.Content>
