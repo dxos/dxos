@@ -29,6 +29,6 @@ describe('EchoObject class DSL', () => {
   });
 
   test('expect schema', async () => {
-    console.log(AST.isTypeLiteral(Org.ast));
+    expect(AST.isTypeLiteral(Org.ast)).to.be.true;
   });
 });

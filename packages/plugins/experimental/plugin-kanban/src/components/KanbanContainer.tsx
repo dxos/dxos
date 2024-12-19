@@ -16,7 +16,7 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
   const space = getSpace(kanban);
   useEffect(() => {
     if (kanban.cardView && space) {
-      setCardSchema(space.db.schemaRegistry.getSchema(kanban.cardView!.query.type));
+      setCardSchema(space.db.schemaRegistry.getSchema(kanban.cardView.target!.query.type));
     }
   }, [kanban.cardView, space]);
 

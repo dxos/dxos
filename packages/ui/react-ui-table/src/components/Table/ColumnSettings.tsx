@@ -34,11 +34,11 @@ export const ColumnSettings = ({ model, modals, onNewColumn }: ColumnSettingsPro
     if (state?.type === 'columnSettings') {
       const { mode } = state;
       if (mode.type === 'edit') {
-        return model?.table?.view?.fields.find((f) => f.id === mode.fieldId);
+        return model?.table?.view?.target?.fields.find((f) => f.id === mode.fieldId);
       }
     }
     return undefined;
-  }, [model?.table?.view?.fields, state]);
+  }, [model?.table?.view?.target?.fields, state]);
 
   const field = existingField ?? newField;
 
@@ -52,7 +52,7 @@ export const ColumnSettings = ({ model, modals, onNewColumn }: ColumnSettingsPro
     }
   }, [model?.projection, state, newField]);
 
-  if (!model?.table?.view || !model.projection || !field) {
+  if (!model?.table?.view?.target || !model.projection || !field) {
     return null;
   }
 
@@ -63,7 +63,7 @@ export const ColumnSettings = ({ model, modals, onNewColumn }: ColumnSettingsPro
         <DropdownMenu.Content classNames='md:is-64'>
           <DropdownMenu.Viewport>
             <FieldEditor
-              view={model.table.view}
+              view={model.table.view.target!}
               projection={model.projection}
               field={field}
               registry={space?.db.schemaRegistry}

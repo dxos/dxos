@@ -5,8 +5,9 @@
 import { type Schema as S } from '@effect/schema';
 
 import { raise } from '@dxos/debug';
-import { JSON_SCHEMA_ECHO_REF_ID, toJsonSchema, type JsonSchemaType } from '@dxos/echo-schema';
+import { JSON_SCHEMA_ECHO_REF_ID, ObjectId, toJsonSchema, type JsonSchemaType, type Ref } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { makeRef } from '@dxos/live-object';
 
 import {
   type DataSource,
@@ -22,101 +23,101 @@ export const createTestData = (): MockDataSource => {
   const dataSource = new MockDataSource();
 
   const contactRich = dataSource.add(Contact, {
-    id: 'contact-rich',
+    id: ObjectId.random(),
     name: 'Rich',
   });
   const contactJosiah = dataSource.add(Contact, {
-    id: 'contact-josiah',
+    id: ObjectId.random(),
     name: 'Josiah',
   });
   const contactDima = dataSource.add(Contact, {
-    id: 'contact-dima',
+    id: ObjectId.random(),
     name: 'Dima',
   });
   const contactFred = dataSource.add(Contact, {
-    id: 'contact-fred',
+    id: ObjectId.random(),
     name: 'Fred',
   });
 
   const projectComposer = dataSource.add(Project, {
-    id: 'project-composer',
+    id: ObjectId.random(),
     name: 'Composer',
   });
   const projectEcho = dataSource.add(Project, {
-    id: 'project-echo',
+    id: ObjectId.random(),
     name: 'ECHO',
   });
   const projectDoodles = dataSource.add(Project, {
-    id: 'project-doodles',
+    id: ObjectId.random(),
     name: 'Doodles',
   });
 
   const _taskComposer1 = dataSource.add(Task, {
-    id: 'task-1',
+    id: ObjectId.random(),
     name: 'Optimize startup performance',
-    project: projectComposer,
-    assignee: contactJosiah,
+    project: makeRef(projectComposer),
+    assignee: makeRef(contactJosiah),
   });
   const _taskComposer2 = dataSource.add(Task, {
-    id: 'task-2',
+    id: ObjectId.random(),
     name: 'Create form builder',
-    project: projectComposer,
-    assignee: contactRich,
+    project: makeRef(projectComposer),
+    assignee: makeRef(contactRich),
   });
   const _taskComposer3 = dataSource.add(Task, {
-    id: 'task-3',
+    id: ObjectId.random(),
     name: 'Add support for custom themes',
-    project: projectComposer,
-    assignee: contactJosiah,
+    project: makeRef(projectComposer),
+    assignee: makeRef(contactJosiah),
   });
   const _taskComposer5 = dataSource.add(Task, {
-    id: 'task-8',
+    id: ObjectId.random(),
     name: 'Implement community plugin',
-    project: projectComposer,
-    assignee: contactFred,
+    project: makeRef(projectComposer),
+    assignee: makeRef(contactFred),
   });
   const _taskComposer4 = dataSource.add(Task, {
-    id: 'task-8',
+    id: ObjectId.random(),
     name: 'Implement dark mode',
-    project: projectComposer,
-    assignee: contactRich,
+    project: makeRef(projectComposer),
+    assignee: makeRef(contactRich),
   });
   const _taskEcho1 = dataSource.add(Task, {
-    id: 'task-4',
+    id: ObjectId.random(),
     name: 'Implement cypher query engine',
-    project: projectEcho,
-    assignee: contactDima,
+    project: makeRef(projectEcho),
+    assignee: makeRef(contactDima),
   });
   const _taskEcho2 = dataSource.add(Task, {
-    id: 'task-5',
+    id: ObjectId.random(),
     name: 'Add schema editor',
-    project: projectEcho,
-    assignee: contactRich,
+    project: makeRef(projectEcho),
+    assignee: makeRef(contactRich),
   });
   const _taskDoodles1 = dataSource.add(Task, {
-    id: 'task-6',
+    id: ObjectId.random(),
     name: 'Add support for custom themes',
-    project: projectDoodles,
-    assignee: contactFred,
+    project: makeRef(projectDoodles),
+    assignee: makeRef(contactFred),
   });
   const _taskDoodles2 = dataSource.add(Task, {
-    id: 'task-7',
+    id: ObjectId.random(),
     name: 'Implement dark mode',
-    project: projectDoodles,
-    assignee: contactJosiah,
+    project: makeRef(projectDoodles),
+    assignee: makeRef(contactJosiah),
   });
 
   const _orgDxos = dataSource.add(Org, {
-    id: 'org-dxos',
+    id: ObjectId.random(),
     name: 'DXOS',
-    employees: [contactRich, contactJosiah, contactDima],
-    projects: [projectEcho],
+    employees: [makeRef(contactRich), makeRef(contactJosiah), makeRef(contactDima)],
+    projects: [makeRef(projectEcho)],
   });
   const _orgBraneframe = dataSource.add(Org, {
-    id: 'org-braneframe',
+    id: ObjectId.random(),
     name: 'Braneframe',
-    employees: [contactJosiah, contactRich],
-    projects: [projectComposer],
+    employees: [makeRef(contactJosiah), makeRef(contactRich)],
+    projects: [makeRef(projectComposer)],
   });
   dataSource.computeGraph();
 
@@ -201,7 +202,7 @@ export class MockDataSource implements DataSource {
             continue;
           }
 
-          const { id: targetId } = (object.data as any)[name];
+          const { id: targetId } = (object.data as any)[name].target;
 
           const target = this.nodes.find((node) => node.id === targetId);
           if (!target) {
@@ -224,7 +225,7 @@ export class MockDataSource implements DataSource {
             continue;
           }
 
-          for (const { id: targetId } of (object.data as any)[name]) {
+          for (const { id: targetId } of (object.data as any)[name].map((x: Ref<any>) => x.target)) {
             const target = this.nodes.find((node) => node.id === targetId);
             if (!target) {
               continue;

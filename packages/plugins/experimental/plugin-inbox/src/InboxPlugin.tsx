@@ -11,11 +11,10 @@ import {
   type PluginDefinition,
   resolvePlugin,
 } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
+import { create, RefArray } from '@dxos/live-object';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
-import { loadObjectReferences } from '@dxos/react-client/echo';
 
 import { ContactsContainer, EventsContainer, MailboxContainer } from './components';
 import meta, { INBOX_PLUGIN } from './meta';
@@ -45,7 +44,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
           },
           [EventType.typename]: {
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (event: EventType) => loadObjectReferences(event, (event) => event.links),
+            loadReferences: async (event: EventType) => await RefArray.loadAll(event.links ?? []),
           },
         },
       },

@@ -12,11 +12,10 @@ import {
   NavigationAction,
   createSurface,
 } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
+import { create, makeRef, RefArray } from '@dxos/live-object';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
-import { loadObjectReferences } from '@dxos/react-client/echo';
 
 import { OutlinerMain, TreeSection } from './components';
 import meta, { OUTLINER_PLUGIN } from './meta';
@@ -35,11 +34,11 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
             placeholder: ['object placeholder', { ns: OUTLINER_PLUGIN }],
             icon: 'ph--tree-structure--regular',
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (tree: TreeType) => loadObjectReferences(tree, (tree) => [tree.root]),
+            loadReferences: async (tree: TreeType) => await RefArray.loadAll([tree.root]),
           },
           [TreeItemType.typename]: {
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (item: TreeItemType) => loadObjectReferences(item, (item) => item.items),
+            loadReferences: async (item: TreeItemType) => await RefArray.loadAll(item.items ?? []),
           },
         },
       },
@@ -127,10 +126,12 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
             case OutlinerAction.CREATE: {
               return {
                 data: create(TreeType, {
-                  root: create(TreeItemType, {
-                    content: '',
-                    items: [create(TreeItemType, { content: '', items: [] })],
-                  }),
+                  root: makeRef(
+                    create(TreeItemType, {
+                      content: '',
+                      items: [makeRef(create(TreeItemType, { content: '', items: [] }))],
+                    }),
+                  ),
                 }),
               };
             }

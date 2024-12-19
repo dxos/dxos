@@ -7,7 +7,7 @@ import fs from 'node:fs';
 
 import { asyncTimeout } from '@dxos/async';
 import { type Client } from '@dxos/client';
-import { type ReactiveEchoObject, Filter, loadObjectReferences } from '@dxos/client/echo';
+import { type ReactiveEchoObject, Filter, loadObjectReferences, makeRef } from '@dxos/client/echo';
 import { create, getMeta } from '@dxos/client/echo';
 import { type Space } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
@@ -121,10 +121,12 @@ export default class Upload extends BaseCommand<typeof Upload> {
         if (!existingObject.source) {
           this.error('Object source not found');
         }
-        existingObject.source.content = scriptContent;
+        existingObject.source.target!.content = scriptContent;
 
         if (this.flags.verbose) {
-          this.log(`Updated source in ${this.flags.spaceKey}/${this.flags.objectId} (${existingObject.source.id})`);
+          this.log(
+            `Updated source in ${this.flags.spaceKey}/${this.flags.objectId} (${existingObject.source.target!.id})`,
+          );
         }
         if (!functionUrlFromExistingObject) {
           setUserFunctionUrlInMetadata(getMeta(existingObject), `/${space.id}/${result.functionId}`);
@@ -137,7 +139,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
         // Create new object
         // TODO: make object navigable in Composer.
         const sourceObj = space.db.add(create(TextType, { content: scriptContent }));
-        const obj = space.db.add(create(ScriptType, { name: this.flags.name, source: sourceObj }));
+        const obj = space.db.add(create(ScriptType, { name: this.flags.name, source: makeRef(sourceObj) }));
         setUserFunctionUrlInMetadata(getMeta(obj), result.functionId);
         if (this.flags.verbose) {
           this.log(`Created object: ${this.flags.spaceKey}/${obj.id}`);

@@ -12,7 +12,7 @@ import { Context } from '@dxos/context';
 import { getObjectCore } from '@dxos/echo-db';
 import { Expando, type HasId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
-import { create, type ReactiveObject } from '@dxos/live-object';
+import { create, type ReactiveObject, makeRef } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
@@ -314,7 +314,8 @@ describe('Spaces', () => {
     await hostSpace.db.flush();
     await waitForObject(guestSpace, hostDocument);
 
-    hostDocument.content!.content = 'Hello, world!';
+    const text = create(TextV0Type, { content: 'Hello, world!' });
+    hostDocument.content = makeRef(text);
 
     await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
   });
@@ -405,7 +406,8 @@ describe('Spaces', () => {
       await hostSpace.db.flush();
       await waitForObject(guestSpace, hostDocument);
 
-      (hostDocument.content as any).content = 'Hello, world!';
+      const text = create(TextV0Type, { content: 'Hello, world!' });
+      hostDocument.content = makeRef(text);
 
       await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
     }
@@ -417,7 +419,8 @@ describe('Spaces', () => {
       await hostSpace.db.flush();
       await waitForObject(guestSpace, hostDocument);
 
-      (hostDocument.content as any).content = 'Hello, world!';
+      const text = create(TextV0Type, { content: 'Hello, world!' });
+      hostDocument.content = makeRef(text);
 
       await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
     }
@@ -465,7 +468,7 @@ describe('Spaces', () => {
 
     const hostSpace = await host.spaces.create();
     await hostSpace.waitUntilReady();
-    const hostRoot = hostSpace.db.add(createObject({ entries: [createObject({ name: 'first' })] }));
+    const hostRoot = hostSpace.db.add(createObject({ entries: [makeRef(createObject({ name: 'first' }))] }));
 
     await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
     const guestSpace = await waitForSpace(guest, hostSpace.key, { ready: true });
@@ -484,7 +487,7 @@ describe('Spaces', () => {
 
       onTestFinished(() => unsub());
 
-      hostRoot.entries.push(createObject({ name: 'second' }));
+      hostRoot.entries.push(makeRef(createObject({ name: 'second' })));
       await done.wait({ timeout: 1_000 });
     }
   });
@@ -520,7 +523,7 @@ describe('Spaces', () => {
   };
 
   const getDocumentText = (space: Space, documentId: string): string => {
-    return (space.db.getObjectById(documentId) as DocumentType).content!.content;
+    return (space.db.getObjectById(documentId) as DocumentType).content.target!.content;
   };
 
   const registerTypes = (client: Client) => {
@@ -528,8 +531,10 @@ describe('Spaces', () => {
   };
 
   const createDocument = (): ReactiveObject<DocumentType> => {
+    const text = create(TextV0Type, { content: 'Hello, world!' });
     return create(DocumentType, {
-      content: create(TextV0Type, { content: '' }),
+      title: 'Test document',
+      content: makeRef(text),
     });
   };
 
