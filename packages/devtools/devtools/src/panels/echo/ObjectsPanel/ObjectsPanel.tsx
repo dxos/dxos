@@ -5,15 +5,17 @@
 import React, { useState } from 'react';
 
 import { Filter, type ReactiveEchoObject } from '@dxos/echo-db';
-import { isDeleted, getType, getTypename, getSchema } from '@dxos/live-object';
+import { getSchema, getType, getTypename, isDeleted } from '@dxos/live-object';
 import { QueryOptions, useQuery } from '@dxos/react-client/echo';
-import { Toolbar } from '@dxos/react-ui';
-import { createColumnBuilder, type TableColumnDef, textPadding } from '@dxos/react-ui-table/deprecated';
+import { AnchoredOverflow, Toolbar } from '@dxos/react-ui';
+import { createColumnBuilder, Table, type TableColumnDef, textPadding } from '@dxos/react-ui-table/deprecated';
 
-import { MasterDetailTable, PanelContainer, Searchbar } from '../../../components';
+import { getSchemaVersion, type ObjectId } from '@dxos/echo-schema';
+import { mx } from '@dxos/react-ui-theme';
+import { JsonView, PanelContainer, Searchbar } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
-import { getSchemaVersion, type ObjectId } from '@dxos/echo-schema';
+import { styles } from '../../../styles';
 
 const textFilter = (text?: string) => {
   if (!text) {
@@ -68,6 +70,7 @@ export const ObjectsPanel = () => {
   // TODO(burdon): Sort by type?
   const items = useQuery(space, Filter.all(), { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED });
   const [filter, setFilter] = useState('');
+  const [selected, setSelected] = useState<ReactiveEchoObject<any>>();
 
   return (
     <PanelContainer
@@ -78,11 +81,35 @@ export const ObjectsPanel = () => {
         </Toolbar.Root>
       }
     >
-      <MasterDetailTable<ReactiveEchoObject<any>>
-        columns={columns}
-        data={items.filter(textFilter(filter))}
-        statusBar={<div>Objects: {items.length}</div>}
-      />
+      <div className={mx('flex grow', 'flex-col divide-y', 'overflow-hidden', styles.border)}>
+        <Table.Root>
+          <Table.Viewport asChild>
+            <div className='flex-col divide-y'>
+              <Table.Main<ReactiveEchoObject<any>>
+                columns={columns}
+                data={items.filter(textFilter(filter))}
+                rowsSelectable
+                currentDatum={selected}
+                onDatumClick={setSelected}
+                fullWidth
+              />
+            </div>
+          </Table.Viewport>
+        </Table.Root>
+
+        <div className={mx('flex overflow-auto', 'h-1/2')}>{selected ? <JsonView data={selected} /> : 'Details'}</div>
+      </div>
+      <div
+        className={mx(
+          'bs-[--statusbar-size]',
+          'flex justify-end items-center gap-2',
+          'bg-base text-description',
+          'border-bs border-separator',
+          'text-lg pointer-fine:text-xs',
+        )}
+      >
+        <div>Objects: {items.length}</div>
+      </div>
     </PanelContainer>
   );
 };
