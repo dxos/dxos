@@ -22,7 +22,7 @@ export const Wireframe = ({ classNames, label, object }: WireframeProps) => {
   const attendableAttrs = useAttendableAttributes(fullyQualifiedId(object));
   const { width, height, ref } = useResizeDetector();
   return (
-    <div ref={ref} className={mx('relative grow min-bs-96', classNames)} {...attendableAttrs}>
+    <div ref={ref} className={mx('relative min-bs-96', classNames)} {...attendableAttrs}>
       <div className='absolute inset-2 flex flex-col gap-2 overflow-hidden font-mono'>
         <div className='flex justify-between'>
           <div>{label}</div>

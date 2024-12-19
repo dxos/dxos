@@ -32,6 +32,7 @@ import {
   type Space,
   SpaceState,
 } from '@dxos/react-client/echo';
+import { StackItem } from '@dxos/react-ui-stack';
 
 import {
   DebugApp,
@@ -323,7 +324,11 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
             id: `${DEBUG_PLUGIN}/devtools`,
             role: 'article',
             filter: (data): data is any => data.subject === 'devtools' && !!settings.devtools,
-            component: () => <Devtools />,
+            component: () => (
+              <StackItem.Content role='article' toolbar={false}>
+                <Devtools />
+              </StackItem.Content>
+            ),
           }),
           createSurface({
             id: `${DEBUG_PLUGIN}/space`,
@@ -374,7 +379,9 @@ export const DebugPlugin = definePlugin<DebugPluginProvides>((context) => {
             filter: (data): data is { subject: ReactiveEchoObject<any> } =>
               isEchoObject(data.subject) && !!settings.wireframe,
             component: ({ data, role }) => (
-              <Wireframe label={`${role}:${name}`} object={data.subject} classNames='row-span-2 overflow-hidden' />
+              <StackItem.Content role={role} toolbar={false}>
+                <Wireframe label={`${role}:${name}`} object={data.subject} />
+              </StackItem.Content>
             ),
           }),
         ],
