@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type ComponentFunction, type Theme } from '@dxos/react-ui-types';
+import { type ComponentFunction, type Theme, type Elevation } from '@dxos/react-ui-types';
 
 import { mx } from '../../util';
 import {
@@ -11,22 +11,25 @@ import {
   modalSurface,
   popperMotion,
   subduedFocus,
-  surfaceElevation,
+  surfaceShadow,
+  surfaceZIndex,
 } from '../fragments';
 
 export type MenuStyleProps = Partial<{
   constrainBlockSize: boolean;
+  elevation: Elevation;
 }>;
 
 export const menuViewport: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
   mx('rounded-md p-1 max-bs-[--radix-dropdown-menu-content-available-height] overflow-y-auto', ...etc);
 
-export const menuContent: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
+export const menuContent: ComponentFunction<MenuStyleProps> = ({ elevation }, ...etc) =>
   mx(
-    'is-48 rounded-md md:is-56 z-[30] border border-separator',
+    'is-48 rounded-md md:is-56 border border-separator',
+    surfaceZIndex({ elevation, level: 'menu' }),
+    surfaceShadow({ elevation: 'positioned' }),
     modalSurface,
     popperMotion,
-    surfaceElevation({ elevation: 'group' }),
     ...etc,
   );
 

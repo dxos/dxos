@@ -11,19 +11,21 @@ import {
   getSize,
   ghostHighlighted,
   modalSurface,
-  surfaceElevation,
+  surfaceShadow,
   separatorBorderColor,
+  surfaceZIndex,
 } from '../fragments';
 
 export type SelectStyleProps = Partial<{
   elevation: Elevation;
 }>;
 
-export const selectContent: ComponentFunction<SelectStyleProps> = ({ elevation = 'chrome' }, ...etc) => {
+export const selectContent: ComponentFunction<SelectStyleProps> = ({ elevation }, ...etc) => {
   return mx(
-    'z-[50] min-w-[--radix-select-trigger-width] rounded max-bs-[--radix-select-content-available-height]',
+    'z-20 min-w-[--radix-select-trigger-width] rounded max-bs-[--radix-select-content-available-height]',
     modalSurface,
-    surfaceElevation({ elevation }),
+    surfaceShadow({ elevation: 'positioned' }),
+    surfaceZIndex({ elevation, level: 'menu' }),
     ...etc,
   );
 };
