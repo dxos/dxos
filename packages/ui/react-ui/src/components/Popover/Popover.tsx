@@ -36,7 +36,7 @@ import React, {
 } from 'react';
 import { RemoveScroll } from 'react-remove-scroll';
 
-import { useThemeContext } from '../../hooks';
+import { useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 
 /* -------------------------------------------------------------------------------------------------
@@ -258,6 +258,7 @@ const PopoverContent = forwardRef<PopoverContentTypeElement, PopoverContentProps
     const portalContext = usePortalContext(CONTENT_NAME, props.__scopePopover);
     const { forceMount = portalContext.forceMount, ...contentProps } = props;
     const context = usePopoverContext(CONTENT_NAME, props.__scopePopover);
+
     return (
       <Presence present={forceMount || context.open}>
         {context.modal ? (
@@ -433,6 +434,7 @@ const PopoverContentImpl = forwardRef<PopoverContentImplElement, PopoverContentI
     const context = usePopoverContext(CONTENT_NAME, __scopePopover);
     const popperScope = usePopperScope(__scopePopover);
     const { tx } = useThemeContext();
+    const elevation = useElevationContext();
 
     // Make sure the whole tree has focus guards as our `Popover` may be
     // the last element in the DOM (because of the `Portal`)
@@ -461,7 +463,7 @@ const PopoverContentImpl = forwardRef<PopoverContentImplElement, PopoverContentI
             id={context.contentId}
             {...popperScope}
             {...contentProps}
-            className={tx('popover.content', 'popover', {}, classNames)}
+            className={tx('popover.content', 'popover', { elevation }, classNames)}
             ref={forwardedRef}
             style={{
               ...contentProps.style,

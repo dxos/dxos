@@ -59,7 +59,7 @@ export const FrameContainer = ({ containerUrl, result, debug = true }: FrameCont
             className={mx(
               baseSurface,
               'flex absolute right-2 bottom-2 w-[400px] h-[200px] ring rounded',
-              'z-[100] overflow-x-hidden overflow-y-auto',
+              'z-20 overflow-x-hidden overflow-y-auto',
             )}
           >
             <pre className='text-xs whitespace-break-spaces break-all p-2'>

@@ -28,7 +28,7 @@ import React, {
   type RefObject,
 } from 'react';
 
-import { useThemeContext } from '../../hooks';
+import { useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 
 type Direction = 'ltr' | 'rtl';
@@ -235,6 +235,7 @@ const DropdownMenuContent = forwardRef<DropdownMenuContentElement, DropdownMenuC
     const { __scopeDropdownMenu, classNames, ...contentProps } = props;
     const { tx } = useThemeContext();
     const context = useDropdownMenuContext(CONTENT_NAME, __scopeDropdownMenu);
+    const elevation = useElevationContext();
     const menuScope = useMenuScope(__scopeDropdownMenu);
     const hasInteractedOutsideRef = useRef(false);
 
@@ -261,7 +262,7 @@ const DropdownMenuContent = forwardRef<DropdownMenuContentElement, DropdownMenuC
             hasInteractedOutsideRef.current = true;
           }
         })}
-        className={tx('menu.content', 'menu', {}, classNames)}
+        className={tx('menu.content', 'menu', { elevation }, classNames)}
         style={{
           ...props.style,
           // re-namespace exposed content custom properties

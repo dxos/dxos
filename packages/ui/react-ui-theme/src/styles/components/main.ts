@@ -18,7 +18,7 @@ export type MainStyleProps = Partial<{
 
 export const mainSidebar: ComponentFunction<MainStyleProps> = (_, ...etc) =>
   mx(
-    'fixed block-start-0 block-end-0 is-[100vw] z-10 data-[side=ie]:z-20 overscroll-contain overflow-x-hidden overflow-y-auto',
+    'fixed block-start-0 block-end-0 is-[100vw] z-[7] data-[side=is]:z-[8] overscroll-contain overflow-x-hidden overflow-y-auto',
     'transition-[inset-inline-start,inset-inline-end] duration-200 data-[resizing=false]:duration-200 ease-in-out-symmetric',
     'data-[side=is]:-inline-start-[100vw] sm:data-[side=is]:is-[--nav-sidebar-size] sm:data-[side=is]:-inline-start-[--nav-sidebar-size]',
     'data-[side=ie]:-inline-end-[100vw] sm:data-[side=ie]:is-[--complementary-sidebar-size] sm:data-[side=ie]:-inline-end-[--complementary-sidebar-size]',
@@ -51,7 +51,7 @@ export const mainIntrinsicSize = mx(
 
 export const mainOverlay: ComponentFunction<MainStyleProps> = (_, ...etc) =>
   mx(
-    'fixed inset-0 z-[9] bg-scrim',
+    'fixed inset-0 z-[6] bg-scrim',
     'transition-opacity duration-200 ease-in-out-symmetric',
     'opacity-0 data-[state=open]:opacity-100 lg:data-[state=open]:opacity-100',
     'hidden data-[state=open]:block lg:data-[state=open]:hidden',
@@ -60,10 +60,10 @@ export const mainOverlay: ComponentFunction<MainStyleProps> = (_, ...etc) =>
 
 export const mainNotch: ComponentFunction<MainStyleProps> = (_, ...etc) =>
   mx(
-    'fixed z-[11] block-end-0 inline-start-0 pbe-[env(safe-area-inset-bottom)] rounded-se-lg min-bs-[var(--rail-size)] is-fit border-separator bg-base',
+    'fixed z-[9] block-end-0 inline-start-0 pbe-[env(safe-area-inset-bottom)] rounded-se-lg min-bs-[var(--rail-size)] is-fit border-separator bg-base',
     'transition-[border-width] box-content border-bs border-ie data-[nav-sidebar-state=open]:border-bs-0 data-[nav-sidebar-state=open]:border-ie-0',
     'pis-1 grid grid-cols-[repeat(auto-fit,var(--rail-action))]',
-    'max-is-[--nav-sidebar-size] ch-focus-ring-inset focus-visible:!z-[11]',
+    'max-is-[--nav-sidebar-size] ch-focus-ring-inset focus-visible:!z-[9]',
     ...etc,
   );
 

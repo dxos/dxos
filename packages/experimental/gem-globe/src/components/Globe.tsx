@@ -242,9 +242,7 @@ const Button = ({ icon, onAction }: { icon: string; onAction?: () => void }) => 
 const GlobeZoomControls = ({ classNames, position = 'bottom-left', onAction }: GlobeControlsProps) => {
   // TODO(wittjosiah): This is a hack to get the theme to work. Gem isn't getting global theme context.
   return (
-    <Toolbar.Root
-      classNames={mx('z-10 absolute overflow-hidden !is-auto gap-0', controlPositions[position], classNames)}
-    >
+    <Toolbar.Root classNames={['z-10 absolute overflow-hidden !is-auto gap-0', controlPositions[position], classNames]}>
       <Button icon='ph--plus--regular' onAction={() => onAction?.('zoom-in')} />
       <Button icon='ph--minus--regular' onAction={() => onAction?.('zoom-out')} />
     </Toolbar.Root>
@@ -254,9 +252,7 @@ const GlobeZoomControls = ({ classNames, position = 'bottom-left', onAction }: G
 const GlobeActionControls = ({ classNames, position = 'bottom-right', onAction }: GlobeControlsProps) => {
   // TODO(wittjosiah): This is a hack to get the theme to work. Gem isn't getting global theme context.
   return (
-    <Toolbar.Root
-      classNames={mx('z-10 absolute overflow-hidden !is-auto gap-0', controlPositions[position], classNames)}
-    >
+    <Toolbar.Root classNames={['z-10 absolute overflow-hidden !is-auto gap-0', controlPositions[position], classNames]}>
       <Button icon='ph--play--regular' onAction={() => onAction?.('start')} />
       <Button icon='ph--globe-hemisphere-west--regular' onAction={() => onAction?.('toggle')} />
     </Toolbar.Root>

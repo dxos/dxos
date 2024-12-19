@@ -5,7 +5,7 @@
 import { type ComponentFunction, type Theme } from '@dxos/react-ui-types';
 
 import { mx } from '../../util';
-import { descriptionText, focusRing, modalSurface, surfaceElevation } from '../fragments';
+import { descriptionText, focusRing, modalSurface, surfaceShadow } from '../fragments';
 
 export type ToastStyleProps = Partial<{
   srOnly: boolean;
@@ -13,7 +13,7 @@ export type ToastStyleProps = Partial<{
 
 export const toastViewport: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
   mx(
-    'z-[70] fixed bottom-4 inset-x-4 w-auto md:top-4 md:right-4 md:left-auto md:bottom-auto md:w-full md:max-w-sm rounded-lg flex flex-col gap-2',
+    'z-40 fixed bottom-4 inset-x-4 w-auto md:top-4 md:right-4 md:left-auto md:bottom-auto md:w-full md:max-w-sm rounded-lg flex flex-col gap-2',
     ...etc,
   );
 
@@ -21,7 +21,7 @@ export const toastRoot: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
   mx(
     'rounded-lg flex p-2 gap-2',
     modalSurface,
-    surfaceElevation({ elevation: 'chrome' }),
+    surfaceShadow({ elevation: 'toast' }),
     'radix-state-open:animate-toast-slide-in-bottom md:radix-state-open:animate-toast-slide-in-right',
     'radix-state-closed:animate-toast-hide',
     'radix-swipe-end:animate-toast-swipe-out',

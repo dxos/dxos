@@ -146,7 +146,7 @@ export const AssistantPanel = ({ subject, classNames }: AssistantPanelProps) => 
             </Toolbar.Button>
           </ContextMenu.Trigger>
           <ContextMenu.Portal>
-            <ContextMenu.Content classNames='z-[31]'>
+            <ContextMenu.Content>
               <ContextMenu.Viewport>
                 <ContextMenu.Item onClick={clearThread}>Clear thread</ContextMenu.Item>
                 <ContextMenu.Item onClick={async () => console.log(await getSystemPrompt())}>
