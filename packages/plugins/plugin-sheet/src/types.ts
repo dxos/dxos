@@ -112,7 +112,8 @@ export namespace SheetAction {
 
   export class InsertAxis extends S.TaggedClass<InsertAxis>()(`${SHEET_ACTION}/axis-insert`, {
     input: S.Struct({
-      model: S.instanceOf(SheetModel),
+      // TODO(wittjosiah): S.instanceOf(SheetModel) throws when running tests.
+      model: S.Any.pipe(S.filter((model) => model instanceof SheetModel)) as S.Schema<SheetModel>,
       axis: Axis,
       index: S.Number,
       count: S.optional(S.Number),
@@ -132,7 +133,8 @@ export namespace SheetAction {
 
   export class DropAxis extends S.TaggedClass<DropAxis>()(`${SHEET_ACTION}/axis-drop`, {
     input: S.Struct({
-      model: S.instanceOf(SheetModel),
+      // TODO(wittjosiah): S.instanceOf(SheetModel) throws when running tests.
+      model: S.Any.pipe(S.filter((model) => model instanceof SheetModel)) as S.Schema<SheetModel>,
       axis: Axis,
       axisIndex: S.String,
       deletionData: S.optional(RestoreAxis),

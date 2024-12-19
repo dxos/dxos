@@ -29,7 +29,7 @@ type InitialiseTableProps = {
 // TODO(burdon): Pass in type.
 // TODO(burdon): User should determine typename.
 export const initializeTable = ({ space, table, initialRow = true }: InitialiseTableProps): MutableSchema => {
-  log.info('initializeTable', { table });
+  log('initializeTable', { table });
 
   const ContactSchema = TypedObject({
     typename: `example.com/type/${PublicKey.random().truncate()}`,
