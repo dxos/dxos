@@ -37,7 +37,7 @@ export type ScriptBlockProps = {
  */
 // TODO(burdon): Cache compiled results in context.
 export const ScriptBlock = ({ script, hideSelector, containerUrl }: ScriptBlockProps) => {
-  const source = useMemo(() => script.source && createDocAccessor(script.source, ['content']), [script.source]);
+  const source = useMemo(() => script.source && createDocAccessor(script.source.target!, ['content']), [script.source]);
   const [result, setResult] = useState<BundlerResult>();
   const bundler = useMemo(
     () => new Bundler({ platform: 'browser', sandboxedModules: PROVIDED_MODULES, remoteModules: {} }),

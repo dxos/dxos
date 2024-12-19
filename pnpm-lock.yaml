@@ -4673,6 +4673,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -44344,7 +44347,7 @@ snapshots:
 
   '@types/lodash.defaultsdeep@4.6.7':
     dependencies:
-      '@types/lodash': 4.17.0
+      '@types/lodash': 4.17.12
 
   '@types/lodash.flatten@4.4.7':
     dependencies:

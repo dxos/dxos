@@ -12,7 +12,6 @@ import { getObjectAnnotation, type HasId } from './ast';
 import type { ObjectMeta } from './object/meta';
 
 // TODO(burdon): Use consistently (with serialization utils).
-export const ECHO_ATTR_ID = '@id';
 export const ECHO_ATTR_META = '@meta';
 
 //
@@ -44,11 +43,6 @@ export const RawObject = <S extends S.Schema<any>>(
 ): S.Schema<ExcludeId<S.Schema.Type<S>> & WithMeta, S.Schema.Encoded<S>> => {
   return S.make(AST.omit(schema.ast, ['id']));
 };
-
-/**
- * Reference to another ECHO object.
- */
-export type Ref<T extends WithId> = T | undefined;
 
 //
 // Data

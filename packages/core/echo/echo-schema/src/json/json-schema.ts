@@ -20,7 +20,7 @@ import {
   PropertyMetaAnnotationId,
   LabelAnnotationId,
 } from '../ast';
-import { createEchoReferenceSchema, ref, type JsonSchemaReferenceInfo } from '../ast/ref';
+import { createEchoReferenceSchema, Ref, type JsonSchemaReferenceInfo } from '../ast/ref';
 import { CustomAnnotations } from '../formats';
 import { Expando } from '../object';
 
@@ -292,7 +292,7 @@ const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): S.Schema<any> => {
 // TODO(dmaretskyi): Types.
 const refToEffectSchema = (root: any): S.Schema<any> => {
   if (!('reference' in root)) {
-    return ref(Expando);
+    return Ref(Expando);
   }
   const reference: JsonSchemaReferenceInfo = root.reference;
   if (typeof reference !== 'object') {

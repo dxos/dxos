@@ -37,13 +37,13 @@ const DefaultStory = ({ editing }: StoryProps) => {
       const table = tables[0];
       invariant(table.view);
       setTable(table);
-      setSchema(space.db.schemaRegistry.getSchema(table.view.query.type));
+      setSchema(space.db.schemaRegistry.getSchema(table.view.target!.query.type));
     }
   }, [tables]);
 
   const projection = useMemo(() => {
     if (schema && table?.view) {
-      return new ViewProjection(schema, table.view);
+      return new ViewProjection(schema, table.view.target!);
     }
   }, [schema, table?.view]);
 

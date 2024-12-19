@@ -4,16 +4,16 @@
 
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { create } from '@dxos/live-object';
+import { Ref } from '@dxos/echo-schema';
+import { create, makeRef, RefArray } from '@dxos/live-object';
 import { MessageType } from '@dxos/plugin-space/types';
-import { fullyQualifiedId, getSpace, useMembers } from '@dxos/react-client/echo';
+import { fullyQualifiedId, getSpace, useMembers, type Expando } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Icon, ScrollArea, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, threadLayout } from '@dxos/react-ui-thread';
-import { nonNullable } from '@dxos/util';
 
 import { MessageContainer } from './MessageContainer';
 import { command } from './command-extension';
@@ -77,12 +77,14 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
     }
 
     thread.messages.push(
-      create(MessageType, {
-        sender: { identityKey: identity.identityKey.toHex() },
-        timestamp: new Date().toISOString(),
-        text: messageRef.current,
-        context,
-      }),
+      makeRef(
+        create(MessageType, {
+          sender: { identityKey: identity.identityKey.toHex() },
+          timestamp: new Date().toISOString(),
+          text: messageRef.current,
+          context: makeRef(context as Expando),
+        }),
+      ),
     );
 
     messageRef.current = '';
@@ -93,7 +95,7 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
   };
 
   const handleDelete = (id: string) => {
-    const messageIndex = thread.messages.filter(nonNullable).findIndex((message) => message.id === id);
+    const messageIndex = thread.messages.findIndex(Ref.hasObjectId(id));
     if (messageIndex !== -1) {
       thread.messages.splice(messageIndex, 1);
     }
@@ -108,7 +110,7 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
       <ScrollArea.Root classNames='col-span-2'>
         <ScrollArea.Viewport classNames='overflow-anchored after:overflow-anchor after:block after:bs-px after:-mbs-px [&>div]:min-bs-full [&>div]:!grid [&>div]:grid-rows-[1fr_0]'>
           <div role='none' className={mx(threadLayout, 'place-self-end')}>
-            {thread.messages.filter(nonNullable).map((message) => (
+            {RefArray.allResolvedTargets(thread.messages ?? []).map((message) => (
               <MessageContainer key={message.id} message={message} members={members} onDelete={handleDelete} />
             ))}
           </div>

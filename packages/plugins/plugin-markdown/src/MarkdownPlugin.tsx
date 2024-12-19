@@ -12,7 +12,8 @@ import {
   type PluginDefinition,
   createSurface,
 } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
+import type { BaseObject } from '@dxos/echo-schema';
+import { create, makeRef, RefArray } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
@@ -94,7 +95,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               managesAutofocus: true,
             },
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (doc: DocumentType) => loadObjectReferences(doc, (doc) => [doc.content, ...doc.threads]),
+            loadReferences: async (doc: DocumentType) =>
+              await RefArray.loadAll<BaseObject>([doc.content, ...doc.threads]),
             serializer,
           },
         },
@@ -172,7 +174,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 const space = ancestors.find(isSpace);
                 const target =
                   ancestors.findLast((ancestor) => ancestor instanceof CollectionType) ??
-                  space?.properties[CollectionType.typename];
+                  space?.properties[CollectionType.typename]?.target;
                 if (!space || !target) {
                   return;
                 }
@@ -213,7 +215,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       thread: {
         predicate: (obj) => obj instanceof DocumentType,
         createSort: (doc: DocumentType) => {
-          const accessor = doc.content ? createDocAccessor(doc.content, ['content']) : undefined;
+          const accessor = doc.content.target ? createDocAccessor(doc.content.target, ['content']) : undefined;
           if (!accessor) {
             return (_) => 0;
           }
@@ -283,7 +285,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             case MarkdownAction.CREATE: {
               const doc = create(DocumentType, {
                 name: data?.name,
-                content: create(TextType, { content: data?.content ?? '' }),
+                content: makeRef(create(TextType, { content: data?.content ?? '' })),
                 threads: [],
               });
 

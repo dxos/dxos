@@ -14,6 +14,7 @@ import type {
 } from '@dxos/app-framework';
 import { type SchemaProvides } from '@dxos/plugin-space';
 import { type CollectionType } from '@dxos/plugin-space/types';
+import { type ReactiveEchoObject } from '@dxos/react-client/echo';
 import { type Label } from '@dxos/react-ui';
 import { type StackItemSize } from '@dxos/react-ui-stack';
 
@@ -49,7 +50,7 @@ export type StackSectionMetadata = {
 
 export type StackSectionItem = {
   id: string;
-  object: CollectionType['objects'][number];
+  object: ReactiveEchoObject<any>;
   view: StackSectionView;
   metadata: StackSectionMetadata;
 };
