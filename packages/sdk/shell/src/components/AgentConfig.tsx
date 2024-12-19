@@ -73,9 +73,7 @@ export const AgentConfig = ({
                   </Button>
                 </Tooltip.Trigger>
                 <Tooltip.Portal>
-                  <Tooltip.Content side='bottom' classNames='z-50'>
-                    {t('destroy agent label')}
-                  </Tooltip.Content>
+                  <Tooltip.Content side='bottom'>{t('destroy agent label')}</Tooltip.Content>
                 </Tooltip.Portal>
               </Tooltip.Root>
             )}

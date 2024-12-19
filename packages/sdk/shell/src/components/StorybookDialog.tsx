@@ -16,7 +16,7 @@ export const StorybookDialog = (props: StorybookDialogProps) => {
   const { tx } = useThemeContext();
   return (
     <Tooltip.Provider>
-      <ElevationProvider elevation='chrome'>
+      <ElevationProvider elevation='dialog'>
         <Clipboard.Provider>
           <div
             role='group'

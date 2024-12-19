@@ -235,7 +235,7 @@ export const SmallPresence = ({ id, count }: { id?: string; count: number }) => 
         </div>
       </Tooltip.Trigger>
       <Tooltip.Portal>
-        <Tooltip.Content side='bottom' classNames='z-[70]'>
+        <Tooltip.Content side='bottom'>
           <span>{t('presence label', { count })}</span>
           <Tooltip.Arrow />
         </Tooltip.Content>

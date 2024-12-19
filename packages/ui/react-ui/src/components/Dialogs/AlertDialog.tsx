@@ -31,7 +31,11 @@ import { ElevationProvider } from '../ElevationProvider';
 
 type AlertDialogRootProps = AlertDialogRootPrimitiveProps;
 
-const AlertDialogRoot: FunctionComponent<AlertDialogRootProps> = AlertDialogRootPrimitive;
+const AlertDialogRoot: FunctionComponent<AlertDialogRootProps> = (props) => (
+  <ElevationProvider elevation='dialog'>
+    <AlertDialogRootPrimitive {...props} />
+  </ElevationProvider>
+);
 
 type AlertDialogTriggerProps = AlertDialogTriggerPrimitiveProps;
 
@@ -134,7 +138,7 @@ const AlertDialogContent: ForwardRefExoticComponent<AlertDialogContentProps> = f
       className={tx('dialog.content', 'dialog--alert', { inOverlayLayout }, classNames)}
       ref={forwardedRef}
     >
-      <ElevationProvider elevation='chrome'>{children}</ElevationProvider>
+      {children}
     </AlertDialogContentPrimitive>
   );
 });
