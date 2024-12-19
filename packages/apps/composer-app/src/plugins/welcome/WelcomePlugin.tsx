@@ -13,9 +13,10 @@ import {
   LayoutAction,
   parseLayoutPlugin,
   createSurface,
+  createIntent,
 } from '@dxos/app-framework';
 import { type Trigger } from '@dxos/async';
-import { parseClientPlugin } from '@dxos/plugin-client';
+import { parseClientPlugin } from '@dxos/plugin-client/types';
 
 import { BETA_DIALOG, BetaDialog, WELCOME_SCREEN, WelcomeScreen } from './components';
 import { meta, WELCOME_PLUGIN } from './meta';
@@ -38,7 +39,7 @@ export const WelcomePlugin = ({
   return {
     meta,
     ready: async ({ plugins }) => {
-      const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
+      const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatchPromise;
       const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
       const layout = resolvePlugin(plugins, parseLayoutPlugin)?.provides.layout;
       if (!client || !dispatch || !layout) {
@@ -48,14 +49,13 @@ export const WelcomePlugin = ({
       }
 
       if (DEPRECATED_DEPLOYMENT) {
-        await dispatch({
-          action: LayoutAction.SET_LAYOUT,
-          data: {
+        await dispatch(
+          createIntent(LayoutAction.SetLayout, {
             element: 'dialog',
             state: true,
             component: BETA_DIALOG,
-          },
-        });
+          }),
+        );
 
         return;
       }

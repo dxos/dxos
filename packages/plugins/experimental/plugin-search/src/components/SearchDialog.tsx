@@ -13,6 +13,7 @@ import {
   type LayoutCoordinate,
   isLayoutParts,
   useIntentDispatcher,
+  createIntent,
 } from '@dxos/app-framework';
 import { type Node } from '@dxos/plugin-graph';
 import { useClient } from '@dxos/react-client';
@@ -48,12 +49,10 @@ const SearchListResult = forwardRef<HTMLDivElement, SearchListResultProps>(({ no
 });
 
 export type SearchDialogProps = {
-  action: NavigationAction;
   layoutCoordinate: LayoutCoordinate;
-  position: 'add-after' | 'add-before';
 };
 
-export const SearchDialog = ({ action, layoutCoordinate, position }: SearchDialogProps) => {
+export const SearchDialog = ({ layoutCoordinate }: SearchDialogProps) => {
   const { t } = useTranslation(SEARCH_PLUGIN);
   const graphPlugin = useResolvePlugin(parseGraphPlugin);
   const graph = graphPlugin?.provides.graph;
@@ -68,33 +67,29 @@ export const SearchDialog = ({ action, layoutCoordinate, position }: SearchDialo
   const dangerouslyLoadAllObjects = useQuery(client.spaces, Filter.all());
   const [pending, results] = useSearchResults(queryString, dangerouslyLoadAllObjects);
   const resultObjects = Array.from(results.keys());
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const handleSelect = useCallback(
-    (nodeId: string) => {
+    async (nodeId: string) => {
       if (active && isLayoutParts(active)) {
         // If node is already present in the active parts, scroll to it and close the dialog.
         const index = active?.main?.findIndex((entry) => entry.id === nodeId);
         if (index !== -1) {
-          return dispatch([
-            { action: LayoutAction.SET_LAYOUT, data: { element: 'dialog', state: false } },
-            { action: LayoutAction.SCROLL_INTO_VIEW, data: { id: nodeId } },
-          ]);
+          await dispatch(createIntent(LayoutAction.SetLayout, { element: 'dialog', state: false }));
+          await dispatch(createIntent(LayoutAction.ScrollIntoView, { id: nodeId }));
+          return;
         }
 
-        return dispatch([
-          {
-            action: NavigationAction.ADD_TO_ACTIVE,
-            data: {
-              part: layoutCoordinate.part,
-              id: nodeId,
-              pivotId: layoutCoordinate.entryId,
-              positioning: 'end',
-            },
-          },
-          { action: LayoutAction.SET_LAYOUT, data: { element: 'dialog', state: false } },
-          { action: LayoutAction.SCROLL_INTO_VIEW, data: { id: nodeId } },
-        ]);
+        await dispatch(
+          createIntent(NavigationAction.AddToActive, {
+            part: layoutCoordinate.part,
+            id: nodeId,
+            pivotId: layoutCoordinate.entryId,
+            positioning: 'end',
+          }),
+        );
+        await dispatch(createIntent(LayoutAction.SetLayout, { element: 'dialog', state: false }));
+        await dispatch(createIntent(LayoutAction.ScrollIntoView, { id: nodeId }));
       }
     },
     [layoutCoordinate, dispatch, active],

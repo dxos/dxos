@@ -5,7 +5,6 @@
 import { type TLStore } from '@tldraw/tlschema';
 
 import type {
-  GraphBuilderProvides,
   GraphSerializerProvides,
   IntentResolverProvides,
   MetadataRecordsProvides,
@@ -13,26 +12,34 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
+import { S } from '@dxos/echo-schema';
 import { type SchemaProvides } from '@dxos/plugin-space';
-import { type StackProvides } from '@dxos/plugin-stack';
 
+import { DiagramType } from './diagram';
 import { SKETCH_PLUGIN } from '../meta';
 
-const SKETCH_ACTION = `${SKETCH_PLUGIN}/action`;
+export namespace SketchAction {
+  const SKETCH_ACTION = `${SKETCH_PLUGIN}/action`;
 
-export enum SketchAction {
-  CREATE = `${SKETCH_ACTION}/create`,
+  export class Create extends S.TaggedClass<Create>()(`${SKETCH_ACTION}/create`, {
+    input: S.Struct({
+      name: S.optional(S.String),
+      schema: S.optional(S.String),
+      content: S.optional(S.Record({ key: S.String, value: S.Any })),
+    }),
+    output: S.Struct({
+      object: DiagramType,
+    }),
+  }) {}
 }
 
 export type SketchPluginProvides = SurfaceProvides &
   IntentResolverProvides &
-  GraphBuilderProvides &
   GraphSerializerProvides &
   MetadataRecordsProvides &
   TranslationsProvides &
   SettingsProvides<SketchSettingsProps> &
-  SchemaProvides &
-  StackProvides;
+  SchemaProvides;
 
 export interface SketchModel {
   store: TLStore;

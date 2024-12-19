@@ -3,25 +3,32 @@
 //
 
 import type {
-  GraphBuilderProvides,
   IntentResolverProvides,
   MetadataRecordsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
+import { S } from '@dxos/echo-schema';
 import { type SchemaProvides } from '@dxos/plugin-space';
 
+import { ViewType } from './view';
 import { EXPLORER_PLUGIN } from '../meta';
 
-const EXPLORER_ACTION = `${EXPLORER_PLUGIN}/action`;
+export namespace ExplorerAction {
+  const EXPLORER_ACTION = `${EXPLORER_PLUGIN}/action`;
 
-export enum ExplorerAction {
-  CREATE = `${EXPLORER_ACTION}/create`,
+  export class Create extends S.TaggedClass<Create>()(`${EXPLORER_ACTION}/create`, {
+    input: S.Struct({
+      name: S.optional(S.String),
+    }),
+    output: S.Struct({
+      object: ViewType,
+    }),
+  }) {}
 }
 
 export type ExplorerPluginProvides = SurfaceProvides &
   IntentResolverProvides &
-  GraphBuilderProvides &
   MetadataRecordsProvides &
   TranslationsProvides &
   SchemaProvides;

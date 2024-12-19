@@ -5,6 +5,7 @@
 import { IntentPlugin } from './IntentPlugin';
 
 export * from './intent';
+export * from './intent-dispatcher';
 export * from './provides';
 
 export * from './IntentContext';

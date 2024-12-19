@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
 import { PaperPlaneTilt, X } from '@phosphor-icons/react';
 import React, { useCallback } from 'react';
 
-import { useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { ObservabilityAction, UserFeedback } from '@dxos/plugin-observability/types';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 import { useForm } from '@dxos/react-ui-form';
 import { getSize } from '@dxos/react-ui-theme';
@@ -14,43 +14,24 @@ import { getSize } from '@dxos/react-ui-theme';
 import { STATUS_BAR_PLUGIN } from '../meta';
 import { mkTranslation } from '../translations';
 
-const Email = S.String.pipe(
-  S.nonEmptyString({ message: () => 'Email is required.' }),
-  S.pattern(/^(?!\.)(?!.*\.\.)([A-Z0-9_+-.]*)[A-Z0-9_+-]@([A-Z0-9][A-Z0-9-]*\.)+[A-Z]{2,}$/i, {
-    message: () => 'Invalid email address.',
-  }),
-);
-
-const nonEmpty = (field: string) => S.nonEmptyString({ message: () => `${field} is required.` });
-const maxLength = (field: string, length: number) => S.maxLength(length, { message: () => `${field} is too long.` });
-
-// Types and validation.
-const FeedbackFormSchema = S.Struct({
-  name: S.String.pipe(nonEmpty('Name'), maxLength('Name', 256)),
-  email: Email.pipe(maxLength('Email', 256)),
-  message: S.String.pipe(nonEmpty('Feedback'), maxLength('Feedback', 32_768)),
-});
-
-type FeedbackFormType = S.Schema.Type<typeof FeedbackFormSchema>;
-
-const initialValues: FeedbackFormType = { name: '', email: '', message: '' };
+const initialValues: UserFeedback = { name: '', email: '', message: '' };
 
 export const FeedbackForm = ({ onClose }: { onClose: () => void }) => {
   const { t } = useTranslation(STATUS_BAR_PLUGIN);
   const translation = mkTranslation(t);
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const onSave = useCallback(
-    (values: FeedbackFormType) => {
-      void dispatch({ action: 'dxos.org/plugin/observability/capture-feedback', data: values });
+    (values: UserFeedback) => {
+      void dispatch(createIntent(ObservabilityAction.CaptureUserFeedback, values));
       onClose();
     },
     [dispatch, onClose],
   );
 
-  const { handleSave, canSave, getStatus, ...inputProps } = useForm<FeedbackFormType>({
+  const { handleSave, canSave, getStatus, ...inputProps } = useForm<UserFeedback>({
     initialValues,
-    schema: FeedbackFormSchema,
+    schema: UserFeedback,
     onSave,
   });
 

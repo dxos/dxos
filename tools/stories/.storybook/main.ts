@@ -111,6 +111,7 @@ export const config = (
           ThemePlugin({
             root: __dirname,
             content: [
+              join(packages, '/*/*/src/**/*.css'),
               join(packages, '/*/*/src/**/*.{ts,tsx,js,jsx}'),
               join(packages, '/plugins/*/src/**/*.{ts,tsx,js,jsx}'),
               join(packages, '/plugins/experimental/*/src/**/*.{ts,tsx,js,jsx}'),
