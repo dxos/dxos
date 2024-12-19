@@ -15,6 +15,7 @@ import {
   indexInPart,
   partLength,
   LayoutAction,
+  createIntent,
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { useGraph } from '@dxos/plugin-graph';
@@ -25,8 +26,8 @@ import { mainIntrinsicSize, mx } from '@dxos/react-ui-theme';
 import { NodePlankHeading } from './NodePlankHeading';
 import { PlankContentError, PlankError } from './PlankError';
 import { PlankLoading } from './PlankLoading';
-import { DeckAction } from '../../DeckPlugin';
 import { useNode, useMainSize } from '../../hooks';
+import { DeckAction } from '../../types';
 import { useDeckContext } from '../DeckContext';
 import { useLayout } from '../LayoutContext';
 
@@ -42,7 +43,7 @@ export type PlankProps = {
 };
 
 export const Plank = memo(({ entry, layoutParts, part, layoutMode, order }: PlankProps) => {
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const coordinate: LayoutCoordinate = useMemo(() => ({ part, entryId: entry?.id ?? UNKNOWN_ID }), [entry?.id, part]);
   const { popoverAnchorId, scrollIntoView } = useLayout();
   const { plankSizing } = useDeckContext();
@@ -61,7 +62,7 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order }: Plan
   const size = plankSizing?.[coordinate.entryId] as number | undefined;
   const setSize = useCallback(
     debounce((nextSize: number) => {
-      return dispatch({ action: DeckAction.UPDATE_PLANK_SIZE, data: { id: coordinate.entryId, size: nextSize } });
+      return dispatch(createIntent(DeckAction.UpdatePlankSize, { id: coordinate.entryId, size: nextSize }));
     }, 200),
     [dispatch, coordinate.entryId],
   );
@@ -81,7 +82,7 @@ export const Plank = memo(({ entry, layoutParts, part, layoutMode, order }: Plan
       focusable?.focus({ preventScroll: true });
       layoutMode === 'deck' && focusable?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
       // Clear the scroll into view state once it has been actioned.
-      void dispatch({ action: LayoutAction.SCROLL_INTO_VIEW, data: { id: undefined } });
+      void dispatch(createIntent(LayoutAction.ScrollIntoView, { id: undefined }));
     }
   }, [coordinate.entryId, scrollIntoView, layoutMode]);
 

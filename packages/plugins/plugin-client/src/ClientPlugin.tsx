@@ -8,19 +8,17 @@ import {
   LayoutAction,
   parseIntentPlugin,
   resolvePlugin,
-  type SurfaceProvides,
-  type GraphBuilderProvides,
-  type IntentResolverProvides,
-  type Plugin,
   type PluginDefinition,
-  type TranslationsProvides,
   createSurface,
+  createIntent,
+  createResolver,
 } from '@dxos/app-framework';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { registerSignalsRuntime } from '@dxos/echo-signals/react';
 import { invariant } from '@dxos/invariant';
 import { createExtension, type Node } from '@dxos/plugin-graph';
-import { Client, type ClientOptions, ClientProvider } from '@dxos/react-client';
+import { ObservabilityAction } from '@dxos/plugin-observability/types';
+import { Client, ClientProvider } from '@dxos/react-client';
 import { type IdentityPanelProps, type JoinPanelProps } from '@dxos/shell/react';
 
 import {
@@ -32,51 +30,9 @@ import {
   RecoveryCodeDialog,
   type RecoveryCodeDialogProps,
 } from './components';
-import meta, { CLIENT_PLUGIN, ClientAction, OBSERVABILITY_ACTION } from './meta';
+import meta, { CLIENT_PLUGIN } from './meta';
 import translations from './translations';
-
-export type ClientPluginOptions = ClientOptions & {
-  /**
-   * Used to track app-specific state in spaces.
-   */
-  appKey: string;
-
-  /**
-   * Base URL for the invitation link.
-   */
-  invitationUrl?: string;
-
-  /**
-   * Query parameter for the invitation code.
-   */
-  invitationParam?: string;
-
-  /**
-   * Run after the client has been initialized.
-   */
-  onClientInitialized?: (client: Client) => Promise<void>;
-
-  /**
-   * Run after the identity has been successfully initialized.
-   * Run with client during plugin ready phase.
-   */
-  onReady?: (client: Client, plugins: Plugin[]) => Promise<void>;
-
-  /**
-   * Called when the client is reset.
-   */
-  onReset?: (params: { target?: string }) => Promise<void>;
-};
-
-export type ClientPluginProvides = IntentResolverProvides &
-  GraphBuilderProvides &
-  SurfaceProvides &
-  TranslationsProvides & {
-    client: Client;
-  };
-
-export const parseClientPlugin = (plugin?: Plugin) =>
-  (plugin?.provides as any).client instanceof Client ? (plugin as Plugin<ClientPluginProvides>) : undefined;
+import { ClientAction, type ClientPluginOptions, type ClientPluginProvides } from './types';
 
 export const ClientPlugin = ({
   appKey,
@@ -166,7 +122,7 @@ export const ClientPlugin = ({
       },
       graph: {
         builder: (plugins) => {
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatchPromise;
           const id = `${CLIENT_PLUGIN}/open-shell`;
 
           return createExtension({
@@ -176,9 +132,7 @@ export const ClientPlugin = ({
               {
                 id,
                 data: async () => {
-                  await intentPlugin?.provides.intent.dispatch([
-                    { plugin: CLIENT_PLUGIN, action: ClientAction.SHARE_IDENTITY },
-                  ]);
+                  await dispatch?.(createIntent(ClientAction.ShareIdentity));
                 },
                 properties: {
                   label: ['open shell label', { ns: CLIENT_PLUGIN }],
@@ -197,130 +151,76 @@ export const ClientPlugin = ({
         },
       },
       intent: {
-        resolver: async (intent) => {
-          switch (intent.action) {
-            case ClientAction.CREATE_IDENTITY: {
-              const data = await client.halo.createIdentity();
-              return {
-                data,
-                intents: [
-                  [
-                    {
-                      action: OBSERVABILITY_ACTION,
-                      data: {
-                        name: 'identity.create',
-                      },
-                    },
-                  ],
-                ],
-              };
-            }
-
-            case ClientAction.JOIN_IDENTITY: {
-              return {
-                data: true,
-                intents: [
-                  [
-                    {
-                      action: LayoutAction.SET_LAYOUT,
-                      data: {
-                        element: 'dialog',
-                        component: JOIN_DIALOG,
-                        dialogBlockAlign: 'start',
-                        subject: {
-                          initialInvitationCode: intent.data?.invitationCode,
-                          initialDisposition: 'accept-halo-invitation',
-                        } satisfies Partial<JoinPanelProps>,
-                      },
-                    },
-                  ],
-                ],
-              };
-            }
-
-            case ClientAction.SHARE_IDENTITY: {
-              return {
-                data: true,
-                intents: [
-                  [
-                    {
-                      action: LayoutAction.SET_LAYOUT,
-                      data: {
-                        element: 'dialog',
-                        component: IDENTITY_DIALOG,
-                        dialogBlockAlign: 'start',
-                      },
-                    },
-                  ],
-                  [
-                    {
-                      action: OBSERVABILITY_ACTION,
-                      data: {
-                        name: 'identity.share',
-                      },
-                    },
-                  ],
-                ],
-              };
-            }
-
-            case ClientAction.RECOVER_IDENTITY: {
-              return {
-                data: true,
-                intents: [
-                  [
-                    {
-                      action: LayoutAction.SET_LAYOUT,
-                      data: {
-                        element: 'dialog',
-                        component: JOIN_DIALOG,
-                        dialogBlockAlign: 'start',
-                        subject: {
-                          initialDisposition: 'recover-identity',
-                        } satisfies Partial<JoinPanelProps>,
-                      },
-                    },
-                  ],
-                ],
-              };
-            }
-
-            case ClientAction.RESET_STORAGE: {
-              await onReset?.({ target: intent.data?.target });
-              return { data: true };
-            }
-
-            case ClientAction.CREATE_AGENT: {
-              invariant(client.services.services.EdgeAgentService, 'Missing EdgeAgentService');
-              await client.services.services.EdgeAgentService.createAgent(null as any, { timeout: 10_000 });
-              return { data: true };
-            }
-
-            case ClientAction.CREATE_RECOVERY_CODE: {
-              invariant(client.services.services.IdentityService, 'IdentityService not available');
-              // TODO(wittjosiah): This needs a proper api. Rename property.
-              const { seedphrase } = await client.services.services.IdentityService.createRecoveryPhrase();
-              return {
-                data: true,
-                intents: [
-                  [
-                    {
-                      action: LayoutAction.SET_LAYOUT,
-                      data: {
-                        element: 'dialog',
-                        dialogBlockAlign: 'start',
-                        dialogType: 'alert',
-                        state: true,
-                        component: RECOVER_CODE_DIALOG,
-                        subject: { code: seedphrase },
-                      },
-                    },
-                  ],
-                ],
-              };
-            }
-          }
-        },
+        resolvers: () => [
+          createResolver(ClientAction.CreateIdentity, async () => {
+            const data = await client.halo.createIdentity();
+            return { data, intents: [createIntent(ObservabilityAction.SendEvent, { name: 'identity.create' })] };
+          }),
+          createResolver(ClientAction.JoinIdentity, async (data) => {
+            return {
+              intents: [
+                createIntent(LayoutAction.SetLayout, {
+                  element: 'dialog',
+                  component: JOIN_DIALOG,
+                  dialogBlockAlign: 'start',
+                  subject: {
+                    initialInvitationCode: data.invitationCode,
+                    initialDisposition: 'accept-halo-invitation',
+                  } satisfies Partial<JoinPanelProps>,
+                }),
+              ],
+            };
+          }),
+          createResolver(ClientAction.ShareIdentity, async () => {
+            return {
+              intents: [
+                createIntent(LayoutAction.SetLayout, {
+                  element: 'dialog',
+                  component: IDENTITY_DIALOG,
+                  dialogBlockAlign: 'start',
+                }),
+                createIntent(ObservabilityAction.SendEvent, { name: 'identity.share' }),
+              ],
+            };
+          }),
+          createResolver(ClientAction.RecoverIdentity, async () => {
+            return {
+              intents: [
+                createIntent(LayoutAction.SetLayout, {
+                  element: 'dialog',
+                  component: JOIN_DIALOG,
+                  dialogBlockAlign: 'start',
+                  subject: { initialDisposition: 'recover-identity' } satisfies Partial<JoinPanelProps>,
+                }),
+              ],
+            };
+          }),
+          createResolver(ClientAction.ResetStorage, async (data) => {
+            await onReset?.({ target: data.target });
+            return {};
+          }),
+          createResolver(ClientAction.CreateAgent, async () => {
+            invariant(client.services.services.EdgeAgentService, 'Missing EdgeAgentService');
+            await client.services.services.EdgeAgentService.createAgent(null as any, { timeout: 10_000 });
+          }),
+          createResolver(ClientAction.CreateRecoveryCode, async () => {
+            invariant(client.services.services.IdentityService, 'IdentityService not available');
+            // TODO(wittjosiah): This needs a proper api. Rename property.
+            const { seedphrase } = await client.services.services.IdentityService.createRecoveryPhrase();
+            return {
+              intents: [
+                createIntent(LayoutAction.SetLayout, {
+                  element: 'dialog',
+                  dialogBlockAlign: 'start',
+                  dialogType: 'alert',
+                  state: true,
+                  component: RECOVER_CODE_DIALOG,
+                  subject: { code: seedphrase },
+                }),
+              ],
+            };
+          }),
+        ],
       },
     },
   };

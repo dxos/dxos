@@ -16,8 +16,12 @@ import {
   LayoutAction,
   SettingsAction,
   createSurface,
+  findPlugin,
+  createIntent,
+  createResolver,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 import {
@@ -28,12 +32,12 @@ import {
   storeObservabilityDisabled,
   getObservabilityGroup,
 } from '@dxos/observability';
-import type { EventOptions } from '@dxos/observability/segment';
-import { parseClientPlugin } from '@dxos/plugin-client';
+import { type Client } from '@dxos/react-client';
 
 import { ObservabilitySettings, type ObservabilitySettingsProps } from './components';
-import meta, { OBSERVABILITY_PLUGIN, ObservabilityAction, type UserFeedback } from './meta';
+import meta, { OBSERVABILITY_PLUGIN } from './meta';
 import translations from './translations';
+import { ObservabilityAction } from './types';
 
 export type ObservabilityPluginState = {
   group?: string;
@@ -67,22 +71,21 @@ export const ObservabilityPlugin = (options: {
       state.prop({ key: 'notified', type: LocalStorageStore.bool({ allowUndefined: true }) });
     },
     ready: async ({ plugins }) => {
-      const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
+      const client = findPlugin<{ client: Client }>(plugins, 'dxos.org/plugin/client')?.provides.client;
       const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
 
-      const dispatch = intentPlugin?.provides?.intent?.dispatch;
+      const dispatch = intentPlugin?.provides?.intent?.dispatchPromise;
       if (!dispatch) {
         return;
       }
 
       const sendPrivacyNotice = async () => {
-        const environment = clientPlugin?.provides?.client?.config?.values.runtime?.app?.env?.DX_ENVIRONMENT;
+        const environment = client?.config?.values.runtime?.app?.env?.DX_ENVIRONMENT;
         const notify =
           environment && environment !== 'ci' && !environment.endsWith('.local') && !environment.endsWith('.lan');
         if (!state.values.notified && notify) {
-          await dispatch({
-            action: LayoutAction.SET_LAYOUT,
-            data: {
+          await dispatch(
+            createIntent(LayoutAction.SetLayout, {
               element: 'toast',
               subject: {
                 id: `${OBSERVABILITY_PLUGIN}/notice`,
@@ -94,10 +97,10 @@ export const ObservabilityPlugin = (options: {
                 actionLabel: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast action label'],
                 actionAlt: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast action alt'],
                 closeLabel: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast close label'],
-                onAction: () => dispatch({ action: SettingsAction.OPEN, data: { plugin: OBSERVABILITY_PLUGIN } }),
+                onAction: () => dispatch(createIntent(SettingsAction.Open, { plugin: OBSERVABILITY_PLUGIN })),
               },
-            },
-          });
+            }),
+          );
 
           state.values.notified = true;
         }
@@ -113,22 +116,20 @@ export const ObservabilityPlugin = (options: {
 
         // Start client observability (i.e. not running as shared worker)
         // TODO(nf): how to prevent multiple instances for single shared worker?
-        const client = clientPlugin?.provides?.client;
         if (!client) {
           return;
         }
 
-        await dispatch({
-          action: ObservabilityAction.SEND_EVENT,
-          data: {
+        await dispatch(
+          createIntent(ObservabilityAction.SendEvent, {
             name: 'page.load',
             properties: {
               href: window.location.href,
               // TODO(wittjosiah): These apis are deprecated. Is there a better way to find this information?
               loadDuration: window.performance.timing.loadEventEnd - window.performance.timing.loadEventStart,
             },
-          },
-        });
+          }),
+        );
 
         setupTelemetryListeners(options.namespace, client, observability);
 
@@ -158,15 +159,16 @@ export const ObservabilityPlugin = (options: {
     },
     provides: {
       intent: {
-        resolver: async (intent, plugins) => {
-          const client = resolvePlugin(plugins, parseClientPlugin)?.provides?.client;
+        resolvers: ({ plugins }) => {
+          const client = findPlugin<{ client: Client }>(plugins, 'dxos.org/plugin/client')?.provides.client;
           if (!client || !observability) {
-            return;
+            return [];
           }
 
-          switch (intent.action) {
-            case ObservabilityAction.TOGGLE:
-              settings.enabled = !settings.enabled;
+          return [
+            createResolver(ObservabilityAction.Toggle, async ({ state }) => {
+              invariant(observability, 'Observability instance not available');
+              settings.enabled = state ?? !settings.enabled;
               observability.event({
                 identityId: getTelemetryIdentifier(client),
                 name: `${options.namespace}.observability.toggle`,
@@ -177,9 +179,9 @@ export const ObservabilityPlugin = (options: {
               observability.setMode(settings.enabled ? 'basic' : 'disabled');
               await storeObservabilityDisabled(options.namespace, !settings.enabled);
               return { data: settings.enabled };
-
-            case ObservabilityAction.SEND_EVENT: {
-              const data = intent.data as EventOptions;
+            }),
+            createResolver(ObservabilityAction.SendEvent, async (data) => {
+              invariant(observability, 'Observability instance not available');
               const event = {
                 identityId: getTelemetryIdentifier(client),
                 name: `${options.namespace}.${data.name}`,
@@ -188,16 +190,12 @@ export const ObservabilityPlugin = (options: {
                 },
               };
               observability.event(event);
-              return { data: event };
-            }
-
-            case ObservabilityAction.CAPTURE_USER_FEEDBACK: {
-              const feedback = intent.data as UserFeedback;
-
-              observability.captureUserFeedback(feedback.email, feedback.name, feedback.message);
-              return { data: true };
-            }
-          }
+            }),
+            createResolver(ObservabilityAction.CaptureUserFeedback, async (data) => {
+              invariant(observability, 'Observability instance not available');
+              observability.captureUserFeedback(data.email, data.name, data.message);
+            }),
+          ];
         },
       },
       observability: state.values,

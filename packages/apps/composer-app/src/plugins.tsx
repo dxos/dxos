@@ -3,6 +3,7 @@
 //
 
 import {
+  createIntent,
   type HostPluginParams,
   LayoutAction,
   NavigationAction,
@@ -19,7 +20,8 @@ import AutomationMeta from '@dxos/plugin-automation/meta';
 import CallsMeta from '@dxos/plugin-calls/meta';
 import CanvasMeta from '@dxos/plugin-canvas/meta';
 import ChessMeta from '@dxos/plugin-chess/meta';
-import ClientMeta, { CLIENT_PLUGIN, ClientAction } from '@dxos/plugin-client/meta';
+import ClientMeta from '@dxos/plugin-client/meta';
+import { ClientAction } from '@dxos/plugin-client/types';
 import DebugMeta from '@dxos/plugin-debug/meta';
 import DeckMeta from '@dxos/plugin-deck/meta';
 import ExcalidrawMeta from '@dxos/plugin-excalidraw/meta';
@@ -206,10 +208,7 @@ export const plugins = ({
         (credential) => credential.subject.assertion['@type'] === 'dxos.halo.credentials.IdentityRecovery',
       );
       if (identity && !recoveryCredential) {
-        await dispatch({
-          plugin: CLIENT_PLUGIN,
-          action: ClientAction.CREATE_RECOVERY_CODE,
-        });
+        await dispatch(createIntent(ClientAction.CreateRecoveryCode));
       }
 
       const devices = client.halo.devices.get();
@@ -217,10 +216,7 @@ export const plugins = ({
         (device) => device.profile?.type === DeviceType.AGENT_MANAGED && device.profile?.os?.toUpperCase() === 'EDGE',
       );
       if (identity && !edgeAgent) {
-        await dispatch({
-          plugin: CLIENT_PLUGIN,
-          action: ClientAction.CREATE_AGENT,
-        });
+        await dispatch(createIntent(ClientAction.CreateAgent));
       }
     },
     onReset: async ({ target }) => {
@@ -282,20 +278,9 @@ export const plugins = ({
       const defaultSpaceCollection = client.spaces.default.properties[CollectionType.typename].target as CollectionType;
       defaultSpaceCollection?.objects.push(makeRef(readme));
 
-      await dispatch([
-        {
-          action: LayoutAction.SET_LAYOUT_MODE,
-          data: { layoutMode: 'solo' },
-        },
-        {
-          action: NavigationAction.OPEN,
-          data: { activeParts: { main: [fullyQualifiedId(readme)] } },
-        },
-      ]);
-      await dispatch({
-        action: NavigationAction.EXPOSE,
-        data: { id: fullyQualifiedId(readme) },
-      });
+      await dispatch(createIntent(LayoutAction.SetLayoutMode, { layoutMode: 'solo' }));
+      await dispatch(createIntent(NavigationAction.Open, { activeParts: { main: [fullyQualifiedId(readme)] } }));
+      await dispatch(createIntent(NavigationAction.Expose, { id: fullyQualifiedId(readme) }));
     },
   }),
   [StatusBarMeta.id]: Plugin.lazy(() => import('@dxos/plugin-status-bar')),
