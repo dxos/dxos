@@ -12,7 +12,7 @@ import {
   type PluginDefinition,
   createSurface,
 } from '@dxos/app-framework';
-import { create, makeRef } from '@dxos/live-object';
+import { create, makeRef, RefArray } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
@@ -44,6 +44,7 @@ import {
   type MarkdownPluginState,
 } from './types';
 import { markdownExtensionPlugins, serializer } from './util';
+import type { BaseObject } from '@dxos/echo-schema';
 
 export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   const settings = new LocalStorageStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN, {
@@ -94,7 +95,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
               managesAutofocus: true,
             },
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (doc: DocumentType) => loadObjectReferences(doc, (doc) => [doc.content, ...doc.threads]),
+            loadReferences: async (doc: DocumentType) =>
+              await RefArray.loadAll<BaseObject>([doc.content, ...doc.threads]),
             serializer,
           },
         },

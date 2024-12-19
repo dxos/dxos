@@ -17,6 +17,7 @@ import {
   loadObjectReferences,
   parseId,
   type ReactiveEchoObject,
+  RefArray,
   SpaceState,
 } from '@dxos/react-client/echo';
 import { translations as formTranslations } from '@dxos/react-ui-form';
@@ -36,7 +37,7 @@ export const AutomationPlugin = (): PluginDefinition<AutomationPluginProvides> =
             placeholder: ['object placeholder', { ns: AUTOMATION_PLUGIN }],
             icon: 'ph--magic-wand--regular',
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (chain: ChainType) => loadObjectReferences(chain, (chain) => chain.prompts),
+            loadReferences: async (chain: ChainType) => await RefArray.loadAll(chain.prompts ?? []),
           },
         },
       },

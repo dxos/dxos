@@ -32,7 +32,7 @@ import { EventSubscriptions, type Trigger, type UnsubscribeCallback } from '@dxo
 import { S, type AbstractTypedObject, type HasId } from '@dxos/echo-schema';
 import { scheduledEffect } from '@dxos/echo-signals/core';
 import { invariant } from '@dxos/invariant';
-import { create, isDeleted, isReactiveObject, makeRef } from '@dxos/live-object';
+import { create, isDeleted, isReactiveObject, makeRef, RefArray } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
@@ -488,11 +488,8 @@ export const SpacePlugin = ({
             placeholder: ['unnamed collection label', { ns: SPACE_PLUGIN }],
             icon: 'ph--cards-three--regular',
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (collection: CollectionType) =>
-              loadObjectReferences(collection, (collection) => [
-                ...collection.objects,
-                ...Object.values(collection.views),
-              ]),
+            loadReferences: async (collection: CollectionType) =>
+              await RefArray.loadAll([...collection.objects, ...Object.values(collection.views)]),
           },
         },
       },

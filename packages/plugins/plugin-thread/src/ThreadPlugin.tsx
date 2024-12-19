@@ -34,6 +34,7 @@ import {
   makeRef,
   parseId,
   type ReactiveEchoObject,
+  RefArray,
   SpaceState,
 } from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
@@ -100,11 +101,11 @@ export const ThreadPlugin = (): PluginDefinition<
             placeholder: ['channel name placeholder', { ns: THREAD_PLUGIN }],
             icon: 'ph--chat--regular',
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (channel: ChannelType) => loadObjectReferences(channel, (channel) => channel.threads),
+            loadReferences: async (channel: ChannelType) => await RefArray.loadAll(channel.threads ?? []),
           },
           [ThreadType.typename]: {
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (thread: ThreadType) => loadObjectReferences(thread, (thread) => thread.messages),
+            loadReferences: async (thread: ThreadType) => await RefArray.loadAll(thread.messages ?? []),
           },
           [MessageType.typename]: {
             // TODO(wittjosiah): Move out of metadata.

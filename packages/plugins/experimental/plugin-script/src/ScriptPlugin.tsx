@@ -13,7 +13,7 @@ import {
   type PluginDefinition,
   resolvePlugin,
 } from '@dxos/app-framework';
-import { create, makeRef } from '@dxos/live-object';
+import { create, makeRef, RefArray } from '@dxos/live-object';
 import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { TextType } from '@dxos/plugin-markdown/types';
@@ -58,7 +58,7 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
             placeholder: ['object title placeholder', { ns: SCRIPT_PLUGIN }],
             icon: 'ph--code--regular',
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (script: ScriptType) => loadObjectReferences(script, (script) => [script.source]),
+            loadReferences: async (script: ScriptType) => await RefArray.loadAll([script.source]),
           },
         },
       },

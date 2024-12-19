@@ -17,7 +17,7 @@ import { parseClientPlugin } from '@dxos/plugin-client';
 import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 import { CollectionType } from '@dxos/plugin-space/types';
-import { isSpace, loadObjectReferences } from '@dxos/react-client/echo';
+import { isSpace, loadObjectReferences, RefArray } from '@dxos/react-client/echo';
 
 import { SketchContainer, SketchSettings } from './components';
 import meta, { SKETCH_PLUGIN } from './meta';
@@ -42,7 +42,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             placeholder: ['object title placeholder', { ns: SKETCH_PLUGIN }],
             icon: 'ph--compass-tool--regular',
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (diagram: DiagramType) => loadObjectReferences(diagram, (diagram) => [diagram.canvas]),
+            loadReferences: async (diagram: DiagramType) => await RefArray.loadAll([diagram.canvas]),
             serializer,
           },
         },
