@@ -98,6 +98,14 @@ const DefaultStory = () => {
   );
 
   const tableRef = useRef<TableController>(null);
+  const handleCellUpdate = useCallback((cell: any) => {
+    tableRef.current?.update?.(cell);
+  }, []);
+
+  const handleRowOrderChanged = useCallback(() => {
+    tableRef.current?.update?.();
+  }, []);
+
   const model = useTableModel({
     table,
     projection,
@@ -105,8 +113,8 @@ const DefaultStory = () => {
     onInsertRow: handleInsertRow,
     onDeleteRows: handleDeleteRows,
     onDeleteColumn: handleDeleteColumn,
-    onCellUpdate: (cell) => tableRef.current?.update?.(cell),
-    onRowOrderChanged: () => tableRef.current?.update?.(),
+    onCellUpdate: handleCellUpdate,
+    onRowOrderChanged: handleRowOrderChanged,
   });
 
   const presentation = useMemo(() => {

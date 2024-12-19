@@ -114,19 +114,19 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           return;
         }
 
-        const selector = Object.values(tableButtons)
+        const buttonSelector = Object.values(tableButtons)
           .map((button) => `button[${button.attr}]`)
           .join(',');
 
-        const matchedElement = (event.target as HTMLElement).closest(selector) as HTMLElement;
-        if (matchedElement) {
-          const button = Object.values(tableButtons).find((btn) => matchedElement.hasAttribute(btn.attr));
+        const tableButtonElement = (event.target as HTMLElement).closest(buttonSelector) as HTMLElement;
+        if (tableButtonElement) {
+          const button = Object.values(tableButtons).find((btn) => tableButtonElement.hasAttribute(btn.attr));
           if (!button) {
             return;
           }
 
-          modals.setTrigger(matchedElement);
-          const data = button.getData(matchedElement);
+          modals.setTrigger(tableButtonElement);
+          const data = button.getData(tableButtonElement);
           switch (data.type) {
             case 'rowMenu': {
               modals.showRowMenu(data.rowIndex);
@@ -148,17 +148,32 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           return;
         }
 
-        const selectionCheckbox = (event.target as HTMLElement).closest(
-          `input[${tableControls.checkbox.attributes.checkbox}]`,
-        ) as HTMLElement | null;
+        const controlSelector = Object.values(tableControls)
+          .map((control) => `input[${control.attr}]`)
+          .join(',');
 
-        if (selectionCheckbox) {
-          const isHeader = selectionCheckbox.hasAttribute(tableControls.checkbox.attributes.header);
-          if (isHeader) {
-            model?.selection.setSelection(model.selection.allRowsSeleted.value ? 'none' : 'all');
-          } else {
-            const rowIndex = Number(selectionCheckbox.getAttribute(tableControls.checkbox.attributes.checkbox));
-            model?.selection.toggleSelectionForRowIndex(rowIndex);
+        const controlElement = (event.target as HTMLElement).closest(controlSelector) as HTMLElement;
+        if (controlElement) {
+          const control = Object.values(tableControls).find((ctrl) => controlElement.hasAttribute(ctrl.attr));
+          if (!control) {
+            return;
+          }
+
+          const data = control.getData(controlElement);
+          switch (data.type) {
+            case 'checkbox': {
+              if (data.header) {
+                model?.selection.setSelection(model.selection.allRowsSeleted.value ? 'none' : 'all');
+              } else {
+                model?.selection.toggleSelectionForRowIndex(data.rowIndex);
+              }
+              break;
+            }
+            case 'switch': {
+              // Handle switch control case
+              console.log('Switch Clicked!');
+              break;
+            }
           }
         }
       },
