@@ -8,28 +8,19 @@ import React from 'react';
 
 import { withTheme } from '@dxos/storybook-utils';
 
-import { AttentionGlyph } from './AttentionGlyph';
+import { AttentionGlyph, type AttentionGlyphProps } from './AttentionGlyph';
 
-type StoryProps = {
-  current?: boolean;
-  attention?: boolean;
-};
-
-const Story = ({ current, attention }: StoryProps) => {
-  const itemAttrs = {
-    ...(current && { 'aria-current': 'page' as const }),
-    ...(attention && { 'data-attention': 'true' }),
-  };
+const Story = (props: AttentionGlyphProps) => {
   return (
     <ul className='flex gap-2 mbe-2'>
-      <li {...itemAttrs}>
-        <AttentionGlyph presence='none' />
+      <li>
+        <AttentionGlyph presence='none' {...props} />
       </li>
-      <li {...itemAttrs}>
-        <AttentionGlyph presence='one' />
+      <li>
+        <AttentionGlyph presence='one' {...props} />
       </li>
-      <li {...itemAttrs}>
-        <AttentionGlyph presence='many' />
+      <li>
+        <AttentionGlyph presence='many' {...props} />
       </li>
     </ul>
   );
@@ -46,10 +37,14 @@ export const Default = {
   args: {},
 };
 
-export const Current = {
-  args: { current: true },
+export const Attention = {
+  args: { attended: true },
 };
 
-export const Attention = {
-  args: { current: true, attention: true },
+export const Contains = {
+  args: { containsAttended: true },
+};
+
+export const Syncing = {
+  args: { syncing: true },
 };

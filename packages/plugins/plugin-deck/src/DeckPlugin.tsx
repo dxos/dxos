@@ -34,11 +34,12 @@ import {
 import { type UnsubscribeCallback } from '@dxos/async';
 import { getTypename, S } from '@dxos/echo-schema';
 import { scheduledEffect } from '@dxos/echo-signals/core';
+import { invariant } from '@dxos/invariant';
 import { create, isReactiveObject } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { type AttentionPluginProvides, parseAttentionPlugin } from '@dxos/plugin-attention';
-import { createExtension, type Node } from '@dxos/plugin-graph';
+import { createExtension, ROOT_ID, type Node } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 
@@ -289,18 +290,22 @@ export const DeckPlugin = ({
       graph: {
         builder: (plugins) => {
           const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatchPromise;
+          const attention = resolvePlugin(plugins, parseAttentionPlugin)?.provides.attention;
+
+          invariant(dispatch, 'Intent plugin is required for deck plugin.');
+          invariant(attention, 'Attention plugin is required for deck plugin.');
 
           // TODO(burdon): Root menu isn't visible so nothing bound.
           return createExtension({
             id: DECK_PLUGIN,
-            // NOTE(Zan): This is currently disabled.
-            // TODO(Zan): Fullscreen needs to know the active node and provide that to the layout part.
-            filter: (node): node is Node<null> => false,
-            actions: () => [
-              {
+            filter: (node): node is Node<null> => node.id === ROOT_ID,
+            actions: () => {
+              // NOTE(Zan): This is currently disabled.
+              // TODO(Zan): Fullscreen needs to know the active node and provide that to the layout part.
+              const _fullscreen = {
                 id: `${LayoutAction.SetLayoutMode._tag}/fullscreen`,
                 data: async () => {
-                  await dispatch?.(createIntent(LayoutAction.SetLayoutMode, { layoutMode: 'fullscreen' }));
+                  await dispatch(createIntent(LayoutAction.SetLayoutMode, { layoutMode: 'fullscreen' }));
                 },
                 properties: {
                   label: ['toggle fullscreen label', { ns: DECK_PLUGIN }],
@@ -310,8 +315,56 @@ export const DeckPlugin = ({
                     windows: 'shift+ctrl+f',
                   },
                 },
-              },
-            ],
+              };
+
+              const closeCurrent = {
+                id: `${NavigationAction.Close._tag}/current`,
+                data: async () => {
+                  const attended = attention.attended.at(-1);
+                  if (attended) {
+                    await dispatch(createIntent(NavigationAction.Close, { activeParts: { main: [attended] } }));
+                  }
+                },
+                properties: {
+                  label: ['close current label', { ns: DECK_PLUGIN }],
+                  icon: 'ph--x--regular',
+                },
+              };
+
+              const closeOthers = {
+                id: `${NavigationAction.Close._tag}/others`,
+                data: async () => {
+                  const attended = attention.attended.at(-1);
+                  const ids = openIds(location.values.active, ['main']).filter((id) => id !== attended);
+                  await dispatch(
+                    createIntent(NavigationAction.Close, {
+                      activeParts: { main: ids },
+                    }),
+                  );
+                },
+                properties: {
+                  label: ['close others label', { ns: DECK_PLUGIN }],
+                  icon: 'ph--x-square--regular',
+                },
+              };
+
+              const closeAll = {
+                id: `${NavigationAction.Close._tag}/all`,
+                data: async () => {
+                  await dispatch(
+                    createIntent(NavigationAction.Close, {
+                      activeParts: { main: openIds(location.values.active, ['main']) },
+                    }),
+                  );
+                },
+                properties: {
+                  label: ['close all label', { ns: DECK_PLUGIN }],
+                  icon: 'ph--x-circle--regular',
+                },
+              };
+
+              return layout.values.layoutMode === 'deck' ? [closeCurrent, closeOthers, closeAll] : [];
+            },
           });
         },
       },

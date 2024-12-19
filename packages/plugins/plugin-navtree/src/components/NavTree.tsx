@@ -23,12 +23,13 @@ export type NavTreeProps = Omit<
 
 export const NavTree = ({ getActions, loadDescendents, renderItemEnd, popoverAnchorId, ...props }: NavTreeProps) => {
   const renderColumns = useCallback<NonNullable<TreeProps<NavTreeItemGraphNode>['renderColumns']>>(
-    ({ item, path, menuOpen, setMenuOpen }) => {
+    ({ item, path, open, menuOpen, setMenuOpen }) => {
       return (
         <NavTreeColumns
           path={path}
           node={item}
           getActions={getActions}
+          open={open}
           menuOpen={menuOpen}
           setMenuOpen={setMenuOpen}
           loadDescendents={loadDescendents}
@@ -54,10 +55,11 @@ type NavTreeColumnsProps = {
   path: string[];
   node: Node;
   getActions: (node: Node) => FlattenedActions;
+  open: boolean;
   menuOpen: boolean;
   setMenuOpen: (open: boolean) => void;
   loadDescendents?: (node: Node) => MaybePromise<void>;
-  renderItemEnd?: FC<{ node: Node }>;
+  renderItemEnd?: FC<{ node: Node; open: boolean }>;
   popoverAnchorId?: string;
 };
 
@@ -65,6 +67,7 @@ const NavTreeColumns = ({
   path,
   node,
   getActions,
+  open,
   menuOpen,
   setMenuOpen,
   loadDescendents,
@@ -130,7 +133,7 @@ const NavTreeColumns = ({
           <Treegrid.Cell />
         )}
       </ActionRoot>
-      {ItemEnd && <ItemEnd node={node} />}
+      {ItemEnd && <ItemEnd node={node} open={open} />}
     </>
   );
 };

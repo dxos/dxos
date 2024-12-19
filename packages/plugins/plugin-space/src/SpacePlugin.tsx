@@ -79,7 +79,6 @@ import {
   PopoverRenameObject,
   PopoverRenameSpace,
   ShareSpaceButton,
-  SmallPresence,
   SmallPresenceLive,
   SpacePluginSettings,
   SpacePresence,
@@ -498,7 +497,11 @@ export const SpacePlugin = ({
       },
       surface: {
         definitions: ({ plugins }) => {
-          const metadataPlugin = resolvePlugin(plugins, parseMetadataResolverPlugin);
+          const resolve = resolvePlugin(plugins, parseMetadataResolverPlugin)?.provides.metadata.resolver;
+          const attention = resolvePlugin(plugins, parseAttentionPlugin)?.provides.attention;
+
+          invariant(resolve, 'Metadata plugin not found.');
+          invariant(attention, 'Attention plugin not found.');
 
           return [
             createSurface({
@@ -561,13 +564,7 @@ export const SpacePlugin = ({
               role: 'dialog',
               filter: (data): data is { subject: Partial<CreateObjectDialogProps> } =>
                 data.component === CREATE_OBJECT_DIALOG,
-              component: ({ data }) => (
-                <CreateObjectDialog
-                  schemas={schemas}
-                  resolve={metadataPlugin?.provides.metadata.resolver}
-                  {...data.subject}
-                />
-              ),
+              component: ({ data }) => <CreateObjectDialog schemas={schemas} resolve={resolve} {...data.subject} />,
             }),
             createSurface({
               id: POPOVER_RENAME_SPACE,
@@ -586,10 +583,10 @@ export const SpacePlugin = ({
             createSurface({
               id: `${SPACE_PLUGIN}/navtree-presence`,
               role: 'navtree-item-end',
-              filter: (data): data is { id: string; subject: ReactiveEchoObject<any> } =>
+              filter: (data): data is { id: string; subject: ReactiveEchoObject<any>; open?: boolean } =>
                 typeof data.id === 'string' && isEchoObject(data.subject),
               component: ({ data }) => (
-                <SmallPresenceLive id={data.id} viewers={state.values.viewersByObject[data.id]} />
+                <SmallPresenceLive id={data.id} open={data.open} viewers={state.values.viewersByObject[data.id]} />
               ),
             }),
             createSurface({
@@ -597,14 +594,14 @@ export const SpacePlugin = ({
               id: `${SPACE_PLUGIN}/navtree-presence-fallback`,
               role: 'navtree-item-end',
               disposition: 'fallback',
-              filter: (data): data is { id: string; subject: ReactiveEchoObject<any> } => typeof data.id === 'string',
-              component: ({ data }) => <SmallPresence id={data.id} count={0} />,
+              filter: (data): data is { id: string; open?: boolean } => typeof data.id === 'string' && !data.open,
+              component: ({ data }) => <SmallPresenceLive id={data.id} open={data.open} />,
             }),
             createSurface({
               id: `${SPACE_PLUGIN}/navtree-sync-status`,
               role: 'navtree-item-end',
-              filter: (data): data is { subject: Space } => isSpace(data.subject),
-              component: ({ data }) => <InlineSyncStatus space={data.subject} />,
+              filter: (data): data is { subject: Space; open?: boolean } => isSpace(data.subject),
+              component: ({ data }) => <InlineSyncStatus space={data.subject} open={data.open} />,
             }),
             createSurface({
               id: `${SPACE_PLUGIN}/navbar-presence`,
@@ -701,18 +698,10 @@ export const SpacePlugin = ({
           };
 
           return [
-            // Create spaces group node.
+            // Primary actions.
             createExtension({
-              id: `${SPACE_PLUGIN}/root`,
+              id: `${SPACE_PLUGIN}/primary-actions`,
               filter: (node): node is Node<null> => node.id === 'root',
-              connector: () => [spacesNode],
-              resolver: ({ id }) => (id === SPACES ? spacesNode : undefined),
-            }),
-
-            // Create space nodes.
-            createExtension({
-              id: SPACES,
-              filter: (node): node is Node<null> => node.id === SPACES,
               actions: () => [
                 {
                   id: SpaceAction.OpenCreateSpace._tag,
@@ -724,7 +713,6 @@ export const SpacePlugin = ({
                     icon: 'ph--plus--regular',
                     testId: 'spacePlugin.createSpace',
                     disposition: 'item',
-                    className: 'border-t border-separator',
                   },
                 },
                 {
@@ -737,9 +725,24 @@ export const SpacePlugin = ({
                     icon: 'ph--sign-in--regular',
                     testId: 'spacePlugin.joinSpace',
                     disposition: 'item',
+                    className: 'border-b border-separator',
                   },
                 },
               ],
+            }),
+
+            // Create spaces group node.
+            createExtension({
+              id: `${SPACE_PLUGIN}/root`,
+              filter: (node): node is Node<null> => node.id === 'root',
+              connector: () => [spacesNode],
+              resolver: ({ id }) => (id === SPACES ? spacesNode : undefined),
+            }),
+
+            // Create space nodes.
+            createExtension({
+              id: SPACES,
+              filter: (node): node is Node<null> => node.id === SPACES,
               connector: () => {
                 const spaces = toSignal(
                   (onChange) => client.spaces.subscribe(() => onChange()).unsubscribe,
