@@ -26,6 +26,7 @@ import { type ThreadContainerProps } from './types';
 import { useStatus } from '../hooks';
 import { THREAD_PLUGIN } from '../meta';
 import { getMessageMetadata } from '../util';
+import { nonNullable } from '@dxos/util';
 
 const sizeClass = getSize(4);
 
@@ -187,7 +188,7 @@ export const CommentContainer = ({
         </div>
       </div>
       {/** TODO(dmaretskyi): How's `thread.messages` undefined? */}
-      {RefArray.allResolvedTargets(thread.messages ?? []).map((message) => (
+      {RefArray.allResolvedTargets(thread.messages?.filter(nonNullable) ?? []).map((message) => (
         <MessageContainer
           key={message.id}
           message={message}
