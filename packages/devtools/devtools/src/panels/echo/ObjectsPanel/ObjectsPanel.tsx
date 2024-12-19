@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 
 import { Filter, type ReactiveEchoObject } from '@dxos/echo-db';
-import { isDeleted, getType } from '@dxos/live-object';
+import { isDeleted, getType, getTypename, getSchema } from '@dxos/live-object';
 import { QueryOptions, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { createColumnBuilder, type TableColumnDef, textPadding } from '@dxos/react-ui-table/deprecated';
@@ -13,6 +13,7 @@ import { createColumnBuilder, type TableColumnDef, textPadding } from '@dxos/rea
 import { MasterDetailTable, PanelContainer, Searchbar } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
+import { getSchemaVersion, type ObjectId } from '@dxos/echo-schema';
 
 const textFilter = (text?: string) => {
   if (!text) {
@@ -29,32 +30,36 @@ const textFilter = (text?: string) => {
   };
 };
 
-const describeContent = (obj: ReactiveEchoObject<any>): string => {
-  if ('name' in obj) {
-    return obj.name;
-  }
-  if ('content' in obj && typeof obj.content === 'string') {
-    const maxLength = 30;
-    return obj.content.length < maxLength ? obj.content : `${obj.content.substring(0, maxLength)}...`;
-  }
-  return '';
-};
-
 const { helper, builder } = createColumnBuilder<ReactiveEchoObject<any>>();
 const columns: TableColumnDef<ReactiveEchoObject<any>, any>[] = [
-  helper.accessor('id', builder.string({ header: 'id' })),
-  helper.accessor((item) => getType(item)?.objectId, {
+  helper.accessor(
+    'id',
+    builder.string({
+      header: 'id',
+      accessorFn: (item) => trimId(item.id),
+      size: 140,
+      // TODO(dmaretskyi): font-mono doesn't work.
+      meta: { cell: { classNames: ['font-mono'] } },
+    }),
+  ),
+  helper.accessor((item) => (isDeleted(item) ? '❌' : ' '), {
+    id: 'deleted',
+    size: 80,
+    meta: { cell: { classNames: [textPadding, 'text-center'] } },
+  }),
+  helper.accessor((item) => getTypename(item), {
     id: 'type',
     ...builder.string(),
   }),
-  helper.accessor((item) => describeContent(item), {
-    id: 'content',
+  helper.accessor((item) => (getSchema(item) ? getSchemaVersion(getSchema(item)!) : undefined), {
+    id: 'version',
+    size: 80,
     ...builder.string(),
   }),
-  helper.accessor((item) => (isDeleted(item) ? '☑' : '☐'), {
-    id: 'deleted',
-    meta: { cell: { classNames: [textPadding, 'text-center'] } },
-    size: 50,
+  helper.accessor((item) => (!!getSchema(item) ? 'YES' : 'NO'), {
+    id: 'Schema Available',
+    ...builder.string(),
+    size: 80,
   }),
 ];
 
@@ -81,3 +86,5 @@ export const ObjectsPanel = () => {
     </PanelContainer>
   );
 };
+
+const trimId = (id: ObjectId) => `${id.substring(0, 4)}...${id.substring(id.length - 4)}`;
