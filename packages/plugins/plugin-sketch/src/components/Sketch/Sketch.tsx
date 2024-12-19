@@ -14,7 +14,6 @@ import { useResizeDetector } from 'react-resize-detector';
 import { debounce } from '@dxos/async';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 
 import { useStoreAdapter } from '../../hooks';
 import { type SketchGridType, type DiagramType } from '../../types';
@@ -191,7 +190,7 @@ export const Sketch = ({
       role='none'
       ref={containerRef}
       style={{ visibility: ready ? 'visible' : 'hidden' }}
-      className={mx('is-full bs-full', classNames)}
+      className='absolute inset-0'
     >
       <Tldraw
         key={fullyQualifiedId(sketch)}
