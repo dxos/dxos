@@ -65,8 +65,7 @@ import { ComplexMap, nonNullable, reduceGroupBy } from '@dxos/util';
 
 import {
   AwaitingObject,
-  CollectionMain,
-  CollectionSection,
+  CollectionContainer,
   CreateObjectDialog,
   type CreateObjectDialogProps,
   CreateSpaceDialog,
@@ -523,7 +522,7 @@ export const SpacePlugin = ({
               role: 'article',
               disposition: 'fallback',
               filter: (data): data is { subject: CollectionType } => data.subject instanceof CollectionType,
-              component: ({ data }) => <CollectionMain collection={data.subject} />,
+              component: ({ data }) => <CollectionContainer role='article' collection={data.subject} />,
             }),
             createSurface({
               id: `${SPACE_PLUGIN}/settings-panel`,
@@ -635,7 +634,7 @@ export const SpacePlugin = ({
               id: `${SPACE_PLUGIN}/collection-section`,
               role: 'section',
               filter: (data): data is { subject: CollectionType } => data.subject instanceof CollectionType,
-              component: ({ data }) => <CollectionSection collection={data.subject} />,
+              component: ({ data }) => <CollectionContainer role='section' collection={data.subject} />,
             }),
             createSurface({
               id: `${SPACE_PLUGIN}/settings`,

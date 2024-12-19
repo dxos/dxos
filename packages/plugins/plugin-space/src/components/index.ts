@@ -4,8 +4,7 @@
 
 export * from './AwaitingObject';
 export * from './CreateDialog';
-export * from './CollectionMain';
-export * from './CollectionSection';
+export * from './CollectionContainer';
 export * from './DefaultObjectSettings';
 export * from './JoinDialog';
 export * from './MenuFooter';
