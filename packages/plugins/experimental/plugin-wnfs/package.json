@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-wnfs",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "description": "WNFS file management plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
