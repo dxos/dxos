@@ -11,3 +11,4 @@ export * from './useSelectionEvents';
 export * from './useShortcuts';
 export * from './useSnap';
 export * from './useTranform';
+export * from './useWheel';

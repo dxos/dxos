@@ -14,10 +14,10 @@ import { testId } from '../util';
 
 const gridRations = [1 / 2, 1, 2, 8];
 
-export type GridProps = ThemedClassName<{ id: string; size: number; offset?: Point; scale?: number }>;
+export type GridProps = ThemedClassName<{ id: string; size?: number; scale?: number; offset?: Point }>;
 
 export const Grid = forwardRef<SVGSVGElement, GridProps>(
-  ({ id: parentId, size, offset = { x: 0, y: 0 }, scale = 1, classNames }, forwardedRef) => {
+  ({ id: parentId, size = 16, offset = { x: 0, y: 0 }, scale = 1, classNames }, forwardedRef) => {
     const grids = useMemo(
       () =>
         gridRations

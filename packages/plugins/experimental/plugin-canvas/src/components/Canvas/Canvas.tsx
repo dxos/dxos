@@ -12,8 +12,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { Background } from './Background';
 import { type DragPayloadData, FrameDragPreview, Line, Shapes, useLayout, useSelectionHandler } from './shapes';
 import { createLine, createRect, type Shape, type ShapeType } from '../../graph';
-import { useActionHandler, useEditorContext, useShortcuts, useSnap, useTransform } from '../../hooks';
-import { useWheel } from '../../hooks/useWheel';
+import { useActionHandler, useEditorContext, useShortcuts, useSnap, useTransform, useWheel } from '../../hooks';
 import { screenToModel, findClosestIntersection, getRect, getInputPoint, type Point } from '../../layout';
 import { createId, itemSize } from '../../testing';
 import { Grid } from '../Grid';
@@ -67,7 +66,7 @@ export const Canvas = () => {
       <Background />
 
       {/* Grid. */}
-      {showGrid && <Grid id={id} size={options.gridSize} offset={offset} scale={scale} />}
+      {showGrid && <Grid id={id} size={options.gridSize} scale={scale} offset={offset} />}
 
       {/* Content. */}
       {<Shapes shapes={shapes} style={transformStyles} />}

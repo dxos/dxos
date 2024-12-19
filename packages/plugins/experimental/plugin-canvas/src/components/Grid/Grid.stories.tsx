@@ -5,16 +5,25 @@
 import '@dxos-theme';
 
 import type { Meta, StoryObj } from '@storybook/react';
-import React from 'react';
+import React, { useState } from 'react';
+import { useResizeDetector } from 'react-resize-detector';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Grid, type GridProps } from './Grid';
+import type { TransformState } from '../../hooks';
+import { useWheel } from '../../hooks';
+
+// TODO(burdon): Factor out transform class, etc.
 
 const Render = (props: GridProps) => {
+  const { ref, width = 0, height = 0 } = useResizeDetector();
+  const [{ scale, offset }, setTransform] = useState<TransformState>({ scale: 1, offset: { x: 0, y: 0 } });
+  useWheel(ref.current, width, height, setTransform);
+
   return (
-    <div className='flex w-[200px] p-2 rounded border border-primary-500'>
-      <Grid {...props} />
+    <div ref={ref} className='grow'>
+      <Grid scale={scale} offset={offset} {...props} />
     </div>
   );
 };
@@ -31,5 +40,7 @@ export default meta;
 type Story = StoryObj<GridProps>;
 
 export const Default: Story = {
-  args: {},
+  args: {
+    size: 16,
+  },
 };
