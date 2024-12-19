@@ -17,6 +17,7 @@ import { jsonKeyReplacer, sortKeys } from '@dxos/util';
 
 import { type ObjectGenerator, createGenerator, staticGenerators } from './ObjectGenerator';
 import { SchemaTable } from './SchemaTable';
+import { Container } from '../Container';
 
 export type SpaceGeneratorProps = {
   space: Space;
@@ -83,31 +84,33 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
   );
 
   return (
-    <div role='none' className='flex flex-col divide-y divide-separator'>
-      <Toolbar.Root classNames='p-1'>
-        <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={updateInfo} />
-        <Toolbar.Expander />
-        <div className='flex'>
-          <Input.Root>
-            <Input.TextInput
-              type='number'
-              min={1}
-              max={100}
-              placeholder={'Count'}
-              classNames='w-[80px]'
-              value={count}
-              onChange={(ev) => setCount(parseInt(ev.target.value))}
-            />
-          </Input.Root>
-        </div>
-      </Toolbar.Root>
-
+    <Container
+      toolbar={
+        <Toolbar.Root classNames='p-1'>
+          <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={updateInfo} />
+          <Toolbar.Expander />
+          <div className='flex'>
+            <Input.Root>
+              <Input.TextInput
+                type='number'
+                min={1}
+                max={100}
+                placeholder={'Count'}
+                classNames='w-[80px]'
+                value={count}
+                onChange={(ev) => setCount(parseInt(ev.target.value))}
+              />
+            </Input.Root>
+          </div>
+        </Toolbar.Root>
+      }
+    >
       <SchemaTable types={staticTypes} objects={info.objects} label='Static Types' onClick={handleCreateData} />
       <SchemaTable types={mutableTypes} objects={info.objects} label='Mutable Types' onClick={handleCreateData} />
 
       <SyntaxHighlighter classNames='flex text-xs' language='json'>
         {JSON.stringify({ space, ...info }, jsonKeyReplacer({ truncate: true }), 2)}
       </SyntaxHighlighter>
-    </div>
+    </Container>
   );
 };
