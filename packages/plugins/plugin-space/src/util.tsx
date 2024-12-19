@@ -482,6 +482,7 @@ export const constructObjectActions = ({
         testId: 'spacePlugin.copyLink',
       },
     },
+    // TODO(wittjosiah): Factor out and apply to all nodes.
     {
       id: NavigationAction.Expose._tag,
       type: ACTION_TYPE,

@@ -594,7 +594,7 @@ export const SpacePlugin = ({
               id: `${SPACE_PLUGIN}/navtree-presence-fallback`,
               role: 'navtree-item-end',
               disposition: 'fallback',
-              filter: (data): data is { id: string; open?: boolean } => typeof data.id === 'string' && !data.open,
+              filter: (data): data is { id: string; open?: boolean } => typeof data.id === 'string',
               component: ({ data }) => <SmallPresenceLive id={data.id} open={data.open} />,
             }),
             createSurface({

@@ -206,6 +206,9 @@ export const SmallPresenceLive = ({ id, open, viewers }: SmallPresenceLiveProps)
   const { hasAttention, isAncestor, isRelated } = useAttention(id);
   const isAttended = hasAttention || isAncestor || isRelated;
 
+  // TODO(wittjosiah): If the attended node is deep in the graph and the graph is not fully loaded
+  //   this will result in an empty path until the graph is connected.
+  // TODO(wittjosiah): Consider using this indicator for all open nodes instead of just attended.
   const { graph } = useGraph();
   const attended = useAttended();
   const startOfAttention = attended.at(-1);
