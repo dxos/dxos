@@ -9,7 +9,7 @@ import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-frame
 import { Button, useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
-import { NAVTREE_PLUGIN } from '../meta';
+import { COMMANDS_DIALOG, NAVTREE_PLUGIN } from '../meta';
 
 // TODO(thure): Refactor to be handled by a more appropriate plugin.
 export const CommandsTrigger = () => {
@@ -22,7 +22,7 @@ export const CommandsTrigger = () => {
         dispatch(
           createIntent(LayoutAction.SetLayout, {
             element: 'dialog',
-            component: `${NAVTREE_PLUGIN}/Commands`,
+            component: COMMANDS_DIALOG,
             dialogBlockAlign: 'start',
           }),
         )

@@ -32,8 +32,8 @@ import {
 // TODO(thure): Is NavTree truly authoritative in this regard?
 export const NODE_TYPE = 'dxos/app-graph/node';
 
-const renderItemEnd = ({ node }: { node: Node }) => (
-  <Surface role='navtree-item-end' data={{ id: node.id, subject: node.data }} limit={1} />
+const renderItemEnd = ({ node, open }: { node: Node; open: boolean }) => (
+  <Surface role='navtree-item-end' data={{ id: node.id, subject: node.data, open }} limit={1} />
 );
 
 export type NavTreeContainerProps = {

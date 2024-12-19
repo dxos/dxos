@@ -66,6 +66,10 @@ export const systemSememes = {
     light: ['neutral', '450/.1'],
     dark: ['neutral', '450/.1'],
   },
+  attentionRelated: {
+    light: ['neutral', surfaceCadence.light[4]],
+    dark: ['neutral', surfaceCadence.dark[6]],
+  },
 
   //
   // Borders (border-, divide-)
