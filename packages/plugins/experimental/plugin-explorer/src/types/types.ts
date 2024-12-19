@@ -11,7 +11,7 @@ import type {
 import { S } from '@dxos/echo-schema';
 import { type SchemaProvides } from '@dxos/plugin-space';
 
-import { ViewType } from './view';
+import { ViewType } from './schema';
 import { EXPLORER_PLUGIN } from '../meta';
 
 export namespace ExplorerAction {

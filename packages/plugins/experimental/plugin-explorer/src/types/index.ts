@@ -2,5 +2,5 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './view';
+export * from './schema';
 export * from './types';
