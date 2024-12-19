@@ -45,7 +45,7 @@ const StackMain = ({ id, collection }: StackMainProps) => {
   const { t } = useTranslation(STACK_PLUGIN);
   const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
   const defaultStack = useMemo(() => create(StackViewType, { sections: {} }), [collection]);
-  const stack = (collection.views[StackViewType.typename].target as StackViewType) ?? defaultStack;
+  const stack = (collection.views[StackViewType.typename]?.target as StackViewType | undefined) ?? defaultStack;
   const [collapsedSections, setCollapsedSections] = useState<CollapsedSections>({});
 
   useEffect(() => {
@@ -70,7 +70,7 @@ const StackMain = ({ id, collection }: StackMainProps) => {
           title:
             (object as any)?.title ?? toLocalizedString(graph.findNode(fullyQualifiedId(object))?.properties.label, t),
         } as StackSectionView;
-        return { id: fullyQualifiedId(object), object: makeRef(object), metadata, view } satisfies StackSectionItem;
+        return { id: fullyQualifiedId(object), object, metadata, view } satisfies StackSectionItem;
       }) ?? [];
 
   const handleDelete = async (id: string) => {
