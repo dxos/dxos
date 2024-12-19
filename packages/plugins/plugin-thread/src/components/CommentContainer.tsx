@@ -186,7 +186,8 @@ export const CommentContainer = ({
           {onThreadDelete && <DeleteThreadButton onDelete={onThreadDelete} />}
         </div>
       </div>
-      {RefArray.allResolvedTargets(thread.messages).map((message) => (
+      {/** TODO(dmaretskyi): How's `thread.messages` undefined? */}
+      {RefArray.allResolvedTargets(thread.messages ?? []).map((message) => (
         <MessageContainer
           key={message.id}
           message={message}

@@ -43,6 +43,7 @@ import { threads } from './extensions';
 import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
 import { ThreadAction, type ThreadPluginProvides, type ThreadSettingsProps, type ThreadState } from './types';
+import type { Ref } from '@dxos/echo-schema';
 
 type SubjectId = string;
 
@@ -305,7 +306,7 @@ export const ThreadPlugin = (): PluginDefinition<
             createSurface({
               id: `${THREAD_PLUGIN}/thread`,
               role: 'complementary--comments',
-              filter: (data): data is { subject: { threads: ThreadType[] } } =>
+              filter: (data): data is { subject: { threads: Ref<ThreadType>[] } } =>
                 !!data.subject &&
                 typeof data.subject === 'object' &&
                 'threads' in data.subject &&
@@ -528,7 +529,7 @@ export const ThreadPlugin = (): PluginDefinition<
               if (state.drafts[subjectId]?.find((t) => t === thread)) {
                 // Move draft to document.
                 thread.status = 'active';
-                subject.threads ? subject.threads.push(thread) : (subject.threads = [thread]);
+                subject.threads ? subject.threads.push(makeRef(thread)) : (subject.threads = [makeRef(thread)]);
                 state.drafts[subjectId] = state.drafts[subjectId]?.filter(({ id }) => id !== thread.id);
                 intents.push({
                   action: ObservabilityAction.SEND_EVENT,

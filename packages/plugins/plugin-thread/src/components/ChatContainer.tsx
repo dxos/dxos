@@ -110,7 +110,7 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
       <ScrollArea.Root classNames='col-span-2'>
         <ScrollArea.Viewport classNames='overflow-anchored after:overflow-anchor after:block after:bs-px after:-mbs-px [&>div]:min-bs-full [&>div]:!grid [&>div]:grid-rows-[1fr_0]'>
           <div role='none' className={mx(threadLayout, 'place-self-end')}>
-            {RefArray.allResolvedTargets(thread.messages).map((message) => (
+            {RefArray.allResolvedTargets(thread.messages ?? []).map((message) => (
               <MessageContainer key={message.id} message={message} members={members} onDelete={handleDelete} />
             ))}
           </div>
