@@ -3,3 +3,4 @@
 //
 
 export * from './SyntaxHighlighter';
+export { createElement } from 'react-syntax-highlighter';

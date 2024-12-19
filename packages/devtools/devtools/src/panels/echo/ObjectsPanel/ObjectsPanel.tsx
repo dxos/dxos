@@ -9,6 +9,7 @@ import { getSchema, getType, getTypename, isDeleted } from '@dxos/live-object';
 import { QueryOptions, useQuery } from '@dxos/react-client/echo';
 import { AnchoredOverflow, Toolbar } from '@dxos/react-ui';
 import { createColumnBuilder, Table, type TableColumnDef, textPadding } from '@dxos/react-ui-table/deprecated';
+import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
 
 import { getSchemaVersion, type ObjectId } from '@dxos/echo-schema';
 import { mx } from '@dxos/react-ui-theme';
@@ -16,6 +17,7 @@ import { JsonView, PanelContainer, Searchbar } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
 import { styles } from '../../../styles';
+import { DXN } from '@dxos/keys';
 
 const textFilter = (text?: string) => {
   if (!text) {
@@ -72,6 +74,16 @@ export const ObjectsPanel = () => {
   const [filter, setFilter] = useState('');
   const [selected, setSelected] = useState<ReactiveEchoObject<any>>();
 
+  const onNavigate = (dxn: DXN) => {
+    if (dxn.isLocalObjectId()) {
+      const [, id] = dxn.parts;
+      const object = items.find((item) => item.id === id);
+      if (object) {
+        setSelected(object);
+      }
+    }
+  };
+
   return (
     <PanelContainer
       toolbar={
@@ -97,7 +109,13 @@ export const ObjectsPanel = () => {
           </Table.Viewport>
         </Table.Root>
 
-        <div className={mx('flex overflow-auto', 'h-1/2')}>{selected ? <JsonView data={selected} /> : 'Details'}</div>
+        <div className={mx('flex overflow-auto', 'h-1/2')}>
+          {selected ? (
+            <ObjectDataViewer object={selected} onNavigate={onNavigate} />
+          ) : (
+            'Select an object to inspect the contents'
+          )}
+        </div>
       </div>
       <div
         className={mx(
@@ -114,4 +132,76 @@ export const ObjectsPanel = () => {
   );
 };
 
+export type ObjectDataViewerProps = {
+  object: ReactiveEchoObject<any>;
+  onNavigate: (dxn: DXN) => void;
+};
+
+const ObjectDataViewer = ({ object, onNavigate }: ObjectDataViewerProps) => {
+  const text = JSON.stringify(object, null, 2);
+
+  const rowRenderer = ({
+    rows,
+    stylesheet,
+    useInlineStyles,
+  }: {
+    rows: rendererNode[];
+    stylesheet: any;
+    useInlineStyles: any;
+  }) => {
+    /**
+     * Changes the "dxn:..." span to an anchor tag that navigates to the object.
+     */
+    const addDxnLinks = (node: rendererNode) => {
+      if (isDxnSpanNode(node)) {
+        node.tagName = 'a';
+        node.properties ??= { className: [] };
+        node.properties.className.push('underline', 'cursor-pointer');
+        node.properties.onClick = () => {
+          onNavigate(DXN.parse((node.children![0].value as string).slice(1, -1)));
+        };
+      } else {
+        node.children?.forEach(addDxnLinks);
+      }
+    };
+
+    rows.forEach(addDxnLinks);
+
+    return rows.map((row, index) => {
+      return createElement({
+        node: row,
+        stylesheet,
+        style: {},
+        useInlineStyles,
+        key: index,
+      });
+    });
+  };
+
+  return (
+    <SyntaxHighlighter language='json' renderer={rowRenderer}>
+      {text}
+    </SyntaxHighlighter>
+  );
+};
+
 const trimId = (id: ObjectId) => `${id.substring(0, 4)}...${id.substring(id.length - 4)}`;
+
+interface rendererNode {
+  type: 'element' | 'text';
+  value?: string | number | undefined;
+  tagName?: keyof React.JSX.IntrinsicElements | React.ComponentType<any> | undefined;
+  properties?: { className: any[]; [key: string]: any };
+  children?: rendererNode[];
+}
+
+const isDxnSpanNode = (node: rendererNode) => {
+  return (
+    node.type === 'element' &&
+    node.tagName === 'span' &&
+    node.children?.length === 1 &&
+    node.children[0].type === 'text' &&
+    typeof node.children[0].value === 'string' &&
+    node.children[0].value.match(/^"(dxn:[^"]+)"$/)
+  );
+};
