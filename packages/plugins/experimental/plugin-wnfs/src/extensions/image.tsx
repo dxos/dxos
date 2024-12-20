@@ -257,22 +257,27 @@ class WnfsImageWidget extends WidgetType {
       imageWrapper.appendChild(loader);
     }, 1500);
 
-    this._urlPromise.then((blobUrl) => {
-      const img = document.createElement('img');
-      img.setAttribute('loading', 'lazy');
-      img.setAttribute('src', blobUrl);
-      img.setAttribute('class', 'cm-image-with-loader');
-      img.onload = () => {
-        setTimeout(() => {
-          clearTimeout(timeoutId);
-          img.classList.add('cm-loaded-image');
-          img.closest('.cm-image-wrapper')?.classList?.add('cm-loaded-image');
-          loader.classList.add('opacity-0');
-        }, 0);
-      };
+    this._urlPromise
+      .then((blobUrl) => {
+        const img = document.createElement('img');
+        img.setAttribute('loading', 'lazy');
+        img.setAttribute('src', blobUrl);
+        img.setAttribute('class', 'cm-image-with-loader');
+        img.onload = () => {
+          setTimeout(() => {
+            clearTimeout(timeoutId);
+            img.classList.add('cm-loaded-image');
+            img.closest('.cm-image-wrapper')?.classList?.add('cm-loaded-image');
+            loader.classList.add('opacity-0');
+          }, 0);
+        };
 
-      imageWrapper.appendChild(img);
-    });
+        imageWrapper.appendChild(img);
+      })
+      .catch((err) => {
+        // eslint-disable-next-line
+        console.error(err);
+      });
 
     root.render(
       <ThemeProvider tx={defaultTx}>

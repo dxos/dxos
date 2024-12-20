@@ -2,12 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { CarBufferWriter } from '@ipld/car';
+import { CarWriter } from '@ipld/car';
 import { BaseBlockstore } from 'blockstore-core';
 import { IDBBlockstore } from 'blockstore-idb';
 import debounce from 'debounce';
 import * as IDB from 'idb-keyval';
+import all from 'it-all';
 import { CID } from 'multiformats';
+import * as Uint8Arrays from 'uint8arrays';
 
 import { storeName } from './common';
 
@@ -35,7 +37,7 @@ export class MixedBlockstore extends BaseBlockstore {
     this.#isConnected = navigator.onLine;
     this.#queue = [];
 
-    this.#flushQueue = debounce(this.#flushQueueInt, 10000);
+    this.#flushQueue = debounce(this.#flushQueueInt, 5000);
   }
 
   async open() {
@@ -54,7 +56,7 @@ export class MixedBlockstore extends BaseBlockstore {
 
   url(apiHost: string, cid?: CID) {
     const path = cid ? cid.toString() : '';
-    return `${apiHost}/api/file/${path}`;
+    return `${apiHost}/api/file${path.length ? '/' + path : ''}`;
   }
 
   // BLOCKSTORE IMPLEMENTATION
@@ -154,6 +156,9 @@ export class MixedBlockstore extends BaseBlockstore {
     }
 
     const keys = [...this.#queue];
+    if (keys.length === 0) {
+      return;
+    }
 
     // Create CAR file
     const blocks = await Promise.all(
@@ -164,19 +169,26 @@ export class MixedBlockstore extends BaseBlockstore {
       }),
     );
 
-    const totalBytes = blocks.reduce((sum, block) => sum + block.bytes.length, 0);
-    const writer = CarBufferWriter.createWriter(new ArrayBuffer(totalBytes));
+    const { writer, out } = CarWriter.create();
+    const outPromise = all(out);
 
-    blocks.forEach((block) => {
-      writer.write(block);
-    });
+    await Promise.all(
+      blocks.map((block) => {
+        return writer.put(block);
+      }),
+    );
 
-    const carBytes = writer.close();
+    await writer.close();
+    const carBytes = Uint8Arrays.concat(await outPromise);
+
     await this.putCarRemote(carBytes);
 
     // Adjust queue
     const queue = [...this.#queue].filter((k) => {
-      if (keys.includes(k)) return false;
+      if (keys.includes(k)) {
+        return false;
+      }
+
       return true;
     });
 

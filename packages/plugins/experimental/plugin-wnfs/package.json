@@ -57,6 +57,7 @@
     "debounce": "^2.2.0",
     "idb-keyval": "^6.2.1",
     "interface-blockstore": "^5.2.10",
+    "it-all": "^3.0.6",
     "multiformats": "^13.2.2",
     "uint8arrays": "^5.1.0",
     "wnfs": "0.2.2"
