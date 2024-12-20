@@ -13,7 +13,7 @@ import { Background } from './Background';
 import { type DragPayloadData, FrameDragPreview, Line, Shapes, useLayout, useSelectionHandler } from './shapes';
 import { createLine, createRect, type Shape, type ShapeType } from '../../graph';
 import { useActionHandler, useEditorContext, useShortcuts, useSnap, useTransform, useWheel } from '../../hooks';
-import { screenToModel, findClosestIntersection, getRect, getInputPoint, type Point } from '../../layout';
+import { screenToModel, findClosestIntersection, getInputPoint, type Point, getRect } from '../../layout';
 import { createId, itemSize } from '../../testing';
 import { Grid } from '../Grid';
 import { eventsNone, styles } from '../styles';
@@ -115,7 +115,6 @@ const useDragMonitor = (el: HTMLElement | null) => {
   const lastPointRef = useRef<Point>();
   useEffect(() => {
     return monitorForElements({
-      // NOTE: This seems to be continually called.
       onDrag: ({ source, location }) => {
         invariant(el);
         const [{ x, y }] = screenToModel(scale, offset, [getInputPoint(el, location.current.input)]);
@@ -137,6 +136,10 @@ const useDragMonitor = (el: HTMLElement | null) => {
               }
               break;
             }
+
+            // case 'tool': {
+            //
+            // }
           }
         }
       },
@@ -157,7 +160,6 @@ const useDragMonitor = (el: HTMLElement | null) => {
           switch (type) {
             case 'frame': {
               shape.pos = snapPoint(pos);
-              shape.rect = getRect(shape.pos, shape.size);
 
               // TODO(burdon): Copy.
               if (!graph.getNode(shape.id)) {
@@ -194,7 +196,8 @@ const useDragMonitor = (el: HTMLElement | null) => {
 
 const createLineOverlay = (source: Shape, p2: Point): ShapeType<'line'> | undefined => {
   if (source.type === 'rect') {
-    const { pos, rect } = source;
+    const { pos } = source;
+    const rect = getRect(source.pos, source.size);
     const p1 = findClosestIntersection([p2, pos], rect) ?? pos;
     return createLine({ id: 'link', p1, p2 });
   }

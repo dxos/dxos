@@ -56,8 +56,9 @@ export const getBounds = (p1: Point, p2: Point): Rect => ({
   x: Math.min(p1.x, p2.x),
   y: Math.min(p1.y, p2.y),
   width: Math.abs(p1.x - p2.x),
-  height: Math.abs(p1.y - p2.y),
+  hdeight: Math.abs(p1.y - p2.y),
 });
+af;
 
 export const pointsToRect = ([p1, p2]: Point[]): Rect => {
   return getBounds(p1, p2);
@@ -222,4 +223,29 @@ export const createPathThroughPoints = (points: Point[]): string => {
   }
 
   return path.join(' ');
+};
+
+const defaultTension = 0.5;
+
+/**
+ * Creates a spline through five control points.
+ */
+export const generatePath = (
+  [p0, p1, p2, p3, p4]: [Point, Point, Point, Point, Point],
+  options: { tension?: number },
+) => {
+  // Calculate control points for smooth transition at middle point.
+  const dx = p3.x - p1.x;
+  const dy = p3.y - p1.y;
+
+  const c2x = p2.x - dx * (options?.tension ?? defaultTension);
+  const c2y = p2.y - dy * (options?.tension ?? defaultTension);
+  const c3x = p2.x + dx * (options?.tension ?? defaultTension);
+  const c3y = p2.y + dy * (options?.tension ?? defaultTension);
+
+  return (
+    `M ${p0.x} ${p0.y} ` +
+    `C ${p1.x} ${p1.y}, ${c2x} ${c2y}, ${p2.x} ${p2.y} ` +
+    `C ${c3x} ${c3y}, ${p3.x} ${p3.y}, ${p4.x} ${p4.y}`
+  );
 };

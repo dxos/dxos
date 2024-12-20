@@ -30,6 +30,10 @@ import { testId } from '../util';
 //  - Basic UML (internal use; generate from GH via function).
 //  - Basic processing pipeline (AI).
 
+// TODO(burdon): NEXT
+//  - Different shapes (reconcile rect, circle, line).
+//  - Dragging: shape, anchor, tool.\
+
 // TODO(burdon): Phase 1: Basic plugin.
 //  - Group/collapse nodes; hierarchical editor.
 //    - Bounding box/hierarchy. [DIFFERENTIATOR]

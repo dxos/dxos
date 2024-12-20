@@ -18,25 +18,25 @@ import { mx } from '@dxos/react-ui-theme';
 export type TextBoxProps = ThemedClassName<
   {
     value?: string;
-    center?: boolean;
+    centered?: boolean;
     onClose?: (value: string) => void;
     onCancel?: () => void;
   } & Pick<BasicExtensionsOptions, 'placeholder'>
 >;
 
-export const TextBox = ({ classNames, value = '', center = true, onClose, onCancel, ...rest }: TextBoxProps) => {
+export const TextBox = ({ classNames, value = '', centered, onClose, onCancel, ...rest }: TextBoxProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef, view, focusAttributes } = useTextEditor(() => {
     return {
       id: 'text',
       initialValue: value,
       extensions: [
-        createBasicExtensions({ lineWrapping: false, ...rest }),
+        createBasicExtensions({ lineWrapping: !centered, ...rest }),
         createThemeExtensions({
           themeMode,
           slots: {
             editor: { className: '[&>.cm-scroller]:scrollbar-none' },
-            content: { className: mx(center && 'text-center') },
+            content: { className: mx(centered && 'text-center') },
           },
         }),
         EditorView.focusChangeEffect.of((state, focusing) => {

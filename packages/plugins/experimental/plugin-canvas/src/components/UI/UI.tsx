@@ -9,7 +9,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { FPS } from './FPS';
 import { useActionHandler, useEditorContext, useSelected } from '../../hooks';
-import { Toolbar } from '../Toolbar';
+import { Shapes, Toolbar } from '../Toolbar';
 import { eventsAuto, eventsNone } from '../styles';
 import { testId } from '../util';
 
@@ -45,6 +45,13 @@ export const UI = () => {
         <div className='absolute top-2 left-2'>{debug && <FPS bar='bg-cyan-500' />}</div>
       </div>
       <div>
+        <div className='absolute top-2 left-2 right-2 flex justify-center'>
+          <div className='p-1 bg-base rounded-md border border-separator'>
+            <Shapes classNames={mx(eventsAuto)} />
+          </div>
+        </div>
+      </div>
+      <div>
         <div className='absolute bottom-2 left-2'>
           {debug && (
             <SyntaxHighlighter
@@ -55,7 +62,7 @@ export const UI = () => {
             </SyntaxHighlighter>
           )}
         </div>
-        <div className='absolute bottom-2 left-0 right-0 flex justify-center'>
+        <div className='absolute bottom-2 left-2 right-2 flex justify-center'>
           <div className='p-1 bg-base rounded-md border border-separator'>
             <Toolbar onAction={handleAction} classNames={mx(eventsAuto)} />
           </div>

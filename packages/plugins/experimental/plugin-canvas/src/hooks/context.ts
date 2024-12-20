@@ -13,6 +13,7 @@ export type TransformState = {
   offset: Point;
 };
 
+// TODO(burdon): Reconcile with DragPayloadData.
 export type DraggingState = {
   container: HTMLElement;
   shape: ShapeType<'rect'>;

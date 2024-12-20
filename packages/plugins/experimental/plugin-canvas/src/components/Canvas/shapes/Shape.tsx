@@ -25,11 +25,11 @@ import {
 import { testId } from '../../util';
 
 /**
- * Data associated with a drag event.
+ * Data associated with a draggable.
  */
 export type DragPayloadData<S extends ShapeType> = {
-  type: 'frame' | 'anchor';
-  anchor?: string;
+  type: 'frame' | 'anchor' | 'tool';
+  anchor?: string; // TODO(burdon): id.
   shape: S;
 };
 
@@ -150,9 +150,14 @@ export const useSelectionHandler = (el: HTMLElement | null, shapes: Shape[]) => 
       const selected = shapesRef.current
         .filter((shape) => {
           switch (shape.type) {
-            case 'rect':
-            case 'line':
-              return rectContains(selectionBounds, shape.rect);
+            case 'rect': {
+              const rect = getRect(shape.pos, shape.size);
+              return rectContains(selectionBounds, rect);
+            }
+
+            case 'line': {
+              break;
+            }
 
             default:
               return false;

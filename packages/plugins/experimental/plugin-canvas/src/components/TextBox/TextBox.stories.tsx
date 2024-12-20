@@ -13,7 +13,7 @@ import { TextBox, type TextBoxProps } from './TextBox';
 
 const Render = (props: TextBoxProps) => {
   return (
-    <div className='flex w-[200px] p-2 rounded border border-primary-500'>
+    <div className='flex w-[300px] p-2 rounded border border-primary-500'>
       <TextBox {...props} onClose={console.log} />
     </div>
   );
@@ -33,9 +33,17 @@ export default meta;
 
 type Story = StoryObj<TextBoxProps>;
 
-export const Default: Story = {
+export const Wrapping: Story = {
   args: {
     placeholder: 'Type something...',
-    value: 'Test',
+    // value: 'Test',
+  },
+};
+
+export const Centered: Story = {
+  args: {
+    centered: true,
+    placeholder: 'Type something...',
+    // value: 'Test',
   },
 };

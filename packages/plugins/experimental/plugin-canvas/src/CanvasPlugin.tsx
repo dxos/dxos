@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { createIntent, createResolver, createSurface, type PluginDefinition } from '@dxos/app-framework';
-import { create, RefArray } from '@dxos/live-object';
+import { create } from '@dxos/live-object';
 
 import { CanvasContainer } from './components';
 import meta, { CANVAS_PLUGIN } from './meta';
@@ -22,8 +22,6 @@ export const CanvasPlugin = (): PluginDefinition<CanvasPluginProvides> => {
             createObject: (props: { name?: string }) => createIntent(CanvasAction.Create, props),
             placeholder: ['grid title placeholder', { ns: CANVAS_PLUGIN }],
             icon: 'ph--squares-four--regular',
-            // TODO(wittjosiah): Move out of metadata.
-            loadReferences: async (canvas: CanvasBoardType) => await RefArray.loadAll(canvas.items ?? []),
           },
         },
       },
@@ -44,7 +42,7 @@ export const CanvasPlugin = (): PluginDefinition<CanvasPluginProvides> => {
       intent: {
         resolvers: () =>
           createResolver(CanvasAction.Create, ({ name }) => ({
-            data: { object: create(CanvasBoardType, { name, items: [] }) },
+            data: { object: create(CanvasBoardType, { name, layout: { shapes: [] } }) },
           })),
       },
     },

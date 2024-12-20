@@ -39,7 +39,7 @@ export const Kanban = ({ model, onAddColumn, onAddCard, onRemoveCard, onRemoveEm
               <StackItem.DragHandle asChild>
                 <IconButton
                   iconOnly
-                  icon='ph--dots-six-vertical'
+                  icon='ph--dots-six-vertical--regular'
                   variant='ghost'
                   label={t('column drag handle label')}
                 />
@@ -61,7 +61,12 @@ export const Kanban = ({ model, onAddColumn, onAddCard, onRemoveCard, onRemoveEm
                   <div role='none' className='rounded bg-[--surface-bg]'>
                     <div role='none' className='flex items-center'>
                       <StackItem.DragHandle asChild>
-                        <IconButton iconOnly icon='ph--dots-six' variant='ghost' label={t('card drag handle label')} />
+                        <IconButton
+                          iconOnly
+                          icon='ph--dots-six--regular'
+                          variant='ghost'
+                          label={t('card drag handle label')}
+                        />
                       </StackItem.DragHandle>
                       {onRemoveCard && (
                         <>
