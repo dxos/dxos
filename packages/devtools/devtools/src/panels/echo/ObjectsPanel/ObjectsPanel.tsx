@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
-import { Filter, type ReactiveEchoObject } from '@dxos/echo-db';
+import { Filter, getEditHistory, type ReactiveEchoObject } from '@dxos/echo-db';
 import { getSchema, getType, getTypename, isDeleted } from '@dxos/live-object';
 import { QueryOptions, useQuery } from '@dxos/react-client/echo';
 import { AnchoredOverflow, Toolbar } from '@dxos/react-ui';
@@ -84,6 +84,10 @@ export const ObjectsPanel = () => {
     }
   };
 
+  const history = useMemo(() => {
+    return selected ? getEditHistory(selected) : [];
+  }, [selected]);
+
   return (
     <PanelContainer
       toolbar={
@@ -112,6 +116,17 @@ export const ObjectsPanel = () => {
         <div className={mx('flex overflow-auto', 'h-1/2')}>
           {selected ? (
             <ObjectDataViewer object={selected} onNavigate={onNavigate} />
+          ) : (
+            'Select an object to inspect the contents'
+          )}
+        </div>
+        <div className={mx('flex overflow-auto', 'h-1/2')}>
+          {selected ? (
+            <>
+              {history.map((change) => (
+                <div key={change.change.hash}>{JSON.stringify(change)}</div>
+              ))}
+            </>
           ) : (
             'Select an object to inspect the contents'
           )}

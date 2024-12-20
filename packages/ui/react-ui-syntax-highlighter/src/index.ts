@@ -3,4 +3,5 @@
 //
 
 export * from './SyntaxHighlighter';
-export { createElement } from 'react-syntax-highlighter';
+import createElement from 'react-syntax-highlighter/dist/esm/create-element';
+export { createElement };
