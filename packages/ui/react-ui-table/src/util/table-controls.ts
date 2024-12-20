@@ -24,7 +24,7 @@ export const CONTROL_IDENTIFIERS = {
 
 const BASE_CLASSES = {
   checkbox: 'absolute inset-block-[6px] inline-end-[6px] ch-checkbox',
-  switch: 'absolute inset-block-[6px] inline-end-[6px] ch-checkbox--switch',
+  switch: 'absolute inset-block-[4px] inline-end-[4px] ch-checkbox--switch',
 } as const;
 
 const renderAttributes = (data: Record<string, string>) => {
@@ -33,8 +33,14 @@ const renderAttributes = (data: Record<string, string>) => {
     .join(' ');
 };
 
-const renderInput = (baseClass: string, attrs: Record<string, string>, checked = false, disabled = false) => {
-  return `<input type="checkbox" class="${baseClass}" ${renderAttributes(attrs)} ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''} data-testid="table-selection"/>`;
+const renderInput = (
+  baseClass: string,
+  attrs: Record<string, string>,
+  checked = false,
+  disabled = false,
+  preventToggle = false,
+) => {
+  return `<input type="checkbox" class="${baseClass}" ${renderAttributes(attrs)} ${checked ? 'checked' : ''} ${preventToggle ? 'onclick="return false"' : ''} ${disabled ? 'disabled' : ''} data-testid="table-selection"/>`;
 };
 
 export const renderCheckbox = ({
@@ -49,7 +55,7 @@ export const renderCheckbox = ({
     ...(header && { 'data-header': '' }),
   };
 
-  return renderInput(BASE_CLASSES.checkbox, attrs, checked, disabled);
+  return renderInput(BASE_CLASSES.checkbox, attrs, checked, disabled, false);
 };
 
 export const renderSwitch = ({ colIndex, rowIndex, checked = false, disabled = false }: RenderSwitchProps): string => {
@@ -59,7 +65,7 @@ export const renderSwitch = ({ colIndex, rowIndex, checked = false, disabled = f
     'data-col-index': colIndex.toString(),
   };
 
-  return renderInput(BASE_CLASSES.switch, attrs, checked, disabled);
+  return renderInput(BASE_CLASSES.switch, attrs, checked, disabled, true);
 };
 
 export const tableControls = {

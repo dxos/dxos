@@ -176,10 +176,30 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
         return this._rows.value;
       }
 
+      const { props } = this._projection.getFieldProjection(field.id);
+
       const dataWithIndices = this._rows.value.map((item, index) => {
-        const value = getValue(item, field.path);
-        return { item, index, value, isEmpty: value == null || value === '' };
+        const rawValue = getValue(item, field.path);
+        let sortValue = rawValue;
+
+        if (props.type.startsWith('boolean')) {
+          sortValue = !!rawValue; // Coerce null/undefined/false to false for booleans
+        } else if (rawValue != null) {
+          if (props.format === FormatEnum.Ref && field.referencePath) {
+            sortValue = getValue(rawValue, field.referencePath);
+          } else {
+            sortValue = formatForDisplay({ type: props.type, format: props.format, value: rawValue });
+          }
+        }
+
+        return {
+          item,
+          index,
+          value: sortValue,
+          isEmpty: !props.type.startsWith('boolean') && (sortValue == null || sortValue === ''),
+        };
       });
+
       const sorted = orderBy(dataWithIndices, ['isEmpty', 'value'], ['asc', sort.direction]);
 
       for (let displayIndex = 0; displayIndex < sorted.length; displayIndex++) {
@@ -488,6 +508,21 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
       }
     }
   };
+
+  /**
+   * Updates a cell's value using a transform function.
+   * @param {DxGridPlanePosition} position - The position of the cell to update.
+   * @param {(value: any) => any} update - A function that takes the current value and returns the updated value.
+   */
+  public updateCellData({ col, row }: DxGridPlanePosition, update: (value: any) => any): void {
+    const dataRow = this._displayToDataIndex.get(row) ?? row;
+    const fields = this.table.view?.target?.fields ?? [];
+    const field = fields[col];
+
+    const value = getValue(this._rows.value[dataRow], field.path);
+    const updatedValue = update(value);
+    setValue(this._rows.value[dataRow], field.path, updatedValue);
+  }
 
   //
   // Column Operations

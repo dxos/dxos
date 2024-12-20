@@ -170,8 +170,9 @@ const TableMain = forwardRef<TableController, TableMainProps>(
               break;
             }
             case 'switch': {
-              // Handle switch control case
-              console.log('Switch Clicked!');
+              if (model) {
+                model.updateCellData({ row: data.rowIndex, col: data.colIndex }, (value) => !value);
+              }
               break;
             }
           }
