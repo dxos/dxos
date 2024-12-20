@@ -56,9 +56,8 @@ export const getBounds = (p1: Point, p2: Point): Rect => ({
   x: Math.min(p1.x, p2.x),
   y: Math.min(p1.y, p2.y),
   width: Math.abs(p1.x - p2.x),
-  hdeight: Math.abs(p1.y - p2.y),
+  height: Math.abs(p1.y - p2.y),
 });
-af;
 
 export const pointsToRect = ([p1, p2]: Point[]): Rect => {
   return getBounds(p1, p2);

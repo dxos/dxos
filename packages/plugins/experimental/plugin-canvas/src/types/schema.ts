@@ -64,7 +64,6 @@ export type Point = S.Schema.Type<typeof Point>;
 export type Dimension = S.Schema.Type<typeof Dimension>;
 export type Rect = S.Schema.Type<typeof Rect>;
 
-export type DraggableShape = S.Schema.Type<typeof DraggableShape>;
 export type Shape = S.Schema.Type<typeof Shape>;
 
 export type RectangleShape = S.Schema.Type<typeof RectangleShape>;
