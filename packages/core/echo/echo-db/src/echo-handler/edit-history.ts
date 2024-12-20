@@ -1,9 +1,14 @@
-import { assertParameter } from '@dxos/protocols';
-import { isEchoObject, type ReactiveEchoObject } from './create';
-import { DATA_NAMESPACE, getObjectCore } from './echo-handler';
+//
+// Copyright 2024 DXOS.org
+//
+
 import { next as am, type Doc, type Heads, type State } from '@dxos/automerge/automerge';
-import { ObjectCore } from '../core-db';
 import { ECHO_ATTR_META, ECHO_ATTR_TYPE, type BaseObject } from '@dxos/echo-schema';
+import { assertParameter } from '@dxos/protocols';
+
+import { isEchoObject, type ReactiveEchoObject } from './create';
+import { getObjectCore } from './echo-handler';
+import { ObjectCore } from '../core-db';
 
 /**
  * Returns the edit history of an ECHO object.

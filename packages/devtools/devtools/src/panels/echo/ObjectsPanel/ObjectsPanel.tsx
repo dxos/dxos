@@ -4,21 +4,21 @@
 
 import React, { useMemo, useState } from 'react';
 
+import type { State as AmState } from '@dxos/automerge/automerge';
 import { checkoutVersion, Filter, getEditHistory, type ReactiveEchoObject } from '@dxos/echo-db';
+import { getSchemaVersion, type ObjectId } from '@dxos/echo-schema';
+import { DXN } from '@dxos/keys';
 import { getSchema, getType, getTypename, isDeleted } from '@dxos/live-object';
 import { QueryOptions, useQuery } from '@dxos/react-client/echo';
-import { AnchoredOverflow, Toolbar } from '@dxos/react-ui';
-import { createColumnBuilder, Table, type TableColumnDef, textPadding } from '@dxos/react-ui-table/deprecated';
+import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
-import type { State as AmState } from '@dxos/automerge/automerge';
-
-import { getSchemaVersion, type ObjectId } from '@dxos/echo-schema';
+import { createColumnBuilder, Table, type TableColumnDef, textPadding } from '@dxos/react-ui-table/deprecated';
 import { mx } from '@dxos/react-ui-theme';
-import { JsonView, PanelContainer, Searchbar } from '../../../components';
+
+import { PanelContainer, Searchbar } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
 import { styles } from '../../../styles';
-import { DXN } from '@dxos/keys';
 
 const textFilter = (text?: string) => {
   if (!text) {
@@ -61,7 +61,7 @@ const columns: TableColumnDef<ReactiveEchoObject<any>, any>[] = [
     size: 80,
     ...builder.string(),
   }),
-  helper.accessor((item) => (!!getSchema(item) ? 'YES' : 'NO'), {
+  helper.accessor((item) => (getSchema(item) ? 'YES' : 'NO'), {
     id: 'Schema Available',
     ...builder.string(),
     size: 80,

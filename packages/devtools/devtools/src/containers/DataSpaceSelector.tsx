@@ -5,15 +5,12 @@
 import * as localForage from 'localforage';
 import React from 'react';
 
-import { PublicKey } from '@dxos/react-client';
+import { invariant } from '@dxos/invariant';
 import { useSpaces, type Space, SpaceId } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { humanize } from '@dxos/util';
 import { Select } from '@dxos/react-ui';
 
-import { PublicKeySelector } from '../components';
 import { useDevtoolsDispatch, useDevtoolsState, useSpacesInfo } from '../hooks';
-import { invariant } from '@dxos/invariant';
 
 export const DataSpaceSelector = () => {
   const spaces = useSpaces({ all: true });
@@ -45,7 +42,7 @@ export const DataSpaceSelector = () => {
   }, []);
 
   const getLabel = (space: Space) => {
-    return space?.isOpen ? space?.properties.name ?? 'New space' : `(closed)`;
+    return space?.isOpen ? space?.properties.name ?? 'New space' : '(closed)';
   };
 
   return (
