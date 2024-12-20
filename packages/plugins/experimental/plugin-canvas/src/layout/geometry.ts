@@ -15,12 +15,6 @@ import { type Dimension, type Point, type Rect } from '../types';
 //  - https://github.com/antvis/coord/blob/master/docs/api/README.md
 //  - https://www.npmjs.com/package/geometric
 
-// TODO(burdon): Generalize positional unit (e.g., x,y, fraction, slot).
-
-// export type Point = { x: number; y: number };
-// export type Dimension = { width: number; height: number };
-// export type Rect = Point & Dimension;
-
 export type Line = [Point, Point];
 export type Range = { p1: Point; p2: Point }; // TODO(burdon): Array.
 
