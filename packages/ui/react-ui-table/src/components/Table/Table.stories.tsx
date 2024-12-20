@@ -50,10 +50,10 @@ const DefaultStory = () => {
   }, [tables]);
 
   const projection = useMemo(() => {
-    if (schema && table?.view) {
-      return new ViewProjection(schema, table.view.target!);
+    if (schema && table?.view?.target) {
+      return new ViewProjection(schema, table.view.target);
     }
-  }, [schema, table?.view]);
+  }, [schema, table?.view?.target]);
 
   const objects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
@@ -140,7 +140,7 @@ const DefaultStory = () => {
         </Table.Root>
       </div>
       <div className='flex flex-col h-full border-l border-separator overflow-y-auto'>
-        {table.view && (
+        {table.view?.target && (
           <ViewEditor
             registry={space?.db.schemaRegistry}
             schema={schema}
@@ -176,7 +176,7 @@ const TablePerformanceStory = (props: StoryProps) => {
 
   const handleDeleteColumn = useCallback<NonNullable<UseTableModelParams<any>['onDeleteColumn']>>(
     (fieldId) => {
-      if (table && table.view) {
+      if (table && table.view?.target) {
         const fieldPosition = table.view.target!.fields.findIndex((field) => field.id === fieldId);
         table.view.target!.fields.splice(fieldPosition, 1);
       }
