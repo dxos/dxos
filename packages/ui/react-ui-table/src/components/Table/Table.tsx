@@ -94,7 +94,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           return {};
         }
 
-        dxGrid.getCells = presentation.getCells.bind(model);
+        dxGrid.getCells = (range, plane) => presentation.getCells(range, plane);
         return {
           update: (cell) => {
             if (cell) {
