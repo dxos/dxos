@@ -47,7 +47,6 @@ export const initializeTable = ({ space, table, initialRow = true }: InitialiseT
 
   const contactSchema = space.db.schemaRegistry.addSchema(ContactSchema);
 
-  const fields = ['name', 'active', 'email', 'salary'];
   table.view = makeRef(
     createView({
       name: 'Test',
@@ -60,7 +59,7 @@ export const initializeTable = ({ space, table, initialRow = true }: InitialiseT
   const projection = new ViewProjection(contactSchema, table.view.target!);
   projection.setFieldProjection({
     field: {
-      id: table.view.target!.fields[fields.indexOf('salary')].id,
+      id: table.view.target!.fields.find((f) => f.path === 'salary')!.id,
       path: 'salary' as JsonPath,
       size: 150,
     },
