@@ -139,7 +139,9 @@ export const handleAction = ({
       }
       case 'link': {
         const { source, target } = action;
-        graph.addEdge({ id: createId(), source, target });
+        const id = createId();
+        graph.addEdge({ id, source, target });
+        selection.setSelected([id]);
         return true;
       }
       case 'delete': {

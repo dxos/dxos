@@ -4,13 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { S } from '@dxos/echo-schema';
-
-import { PolygonShape, type EllipseShape, type LineShape, type RectangleShape, type Shape } from './schema';
-
-// TODO(burdon): 1. Port polymorphic types to components.
-// TODO(burdon): 2. Map graph to layout. (Value add)
-// TODO(burdon): 3. Drag from toolbar. (Show ECHO updates in JSON tree; value add).
+import { type EllipseShape, type LineShape, type RectangleShape, type Shape, isPolygon } from './schema';
 
 describe('schema', () => {
   test('types', ({ expect }) => {
@@ -34,7 +28,7 @@ describe('schema', () => {
       } satisfies LineShape,
     ];
 
-    const draggable = shapes.filter((s) => S.is(PolygonShape)(s)).map((s) => s.center);
-    expect(draggable).to.have.length(2);
+    const polygons = shapes.filter((s) => isPolygon(s)).map((s) => s.center);
+    expect(polygons).to.have.length(2);
   });
 });

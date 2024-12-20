@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Background } from './Background';
-import { type DragPayloadData, FrameDragPreview, Line, Shapes, useLayout, useSelectionHandler } from './shapes';
+import { type DragPayloadData, FrameDragPreview, Layout, Line, useLayout, useSelectionHandler } from './shapes';
 import { useActionHandler, useEditorContext, useShortcuts, useSnap, useTransform, useWheel } from '../../hooks';
 import {
   createLine,
@@ -76,7 +76,7 @@ export const Canvas = () => {
       {showGrid && <Grid id={id} size={options.gridSize} scale={scale} offset={offset} />}
 
       {/* Content. */}
-      {<Shapes shapes={shapes} style={transformStyles} />}
+      {<Layout shapes={shapes} style={transformStyles} />}
 
       {/* Overlays. */}
       <div {...testId('dx-overlays')} className={mx('absolute', eventsNone)}>
@@ -164,7 +164,7 @@ const useDragMonitor = (el: HTMLElement | null) => {
             case 'frame': {
               shape.center = snapPoint(pos);
 
-              // TODO(burdon): Copy.
+              // TODO(burdon): Copy from other component.
               // if (!graph.getNode(shape.id)) {
               //   graph.addNode({ id: shape.id, data: { ...shape } });
               // }
@@ -197,8 +197,8 @@ const useDragMonitor = (el: HTMLElement | null) => {
   return { frameDragging, overlay };
 };
 
-const createLineOverlay = (source: PolygonShape, p2: Point): LineShape | undefined => {
+const createLineOverlay = (source: PolygonShape, pos: Point): LineShape | undefined => {
   const rect = getRect(source.center, source.size);
-  const p1 = findClosestIntersection([p2, source.center], rect) ?? source.center;
-  return createLine({ id: 'link', p1, p2 });
+  const p1 = findClosestIntersection([pos, source.center], rect) ?? source.center;
+  return createLine({ id: 'link', p1, p2: pos });
 };

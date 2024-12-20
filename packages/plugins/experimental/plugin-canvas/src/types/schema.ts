@@ -19,6 +19,8 @@ export const BaseShape = S.mutable(
     type: S.String,
     object: S.optional(Ref(Expando)),
     text: S.optional(S.String),
+    // TODO(burdon): Generic tag.
+    guide: S.optional(S.Boolean),
   }),
 );
 

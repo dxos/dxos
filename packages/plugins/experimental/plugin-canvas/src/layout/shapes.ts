@@ -7,7 +7,7 @@ import { type LineShape, type Point, type PolygonShape, type RectangleShape, typ
 
 export type ShapeKind = 'rect' | 'line';
 
-type CommonProps = Pick<Shape, 'id' | 'text'>;
+type CommonProps = Pick<Shape, 'id' | 'guide' | 'text'>;
 
 type RectProps = CommonProps & Pick<PolygonShape, 'center' | 'size'>;
 

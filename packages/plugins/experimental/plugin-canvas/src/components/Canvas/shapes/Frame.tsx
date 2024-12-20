@@ -10,8 +10,7 @@ import React, { type MouseEventHandler, useEffect, useMemo, useRef, useState } f
 import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type DragPayloadData } from './Shape';
-import { type BaseShapeProps } from './base';
+import { type DragPayloadData, type BaseShapeProps } from './Shape';
 import { useEditorContext } from '../../../hooks';
 import { pointAdd, getBoundsProperties } from '../../../layout';
 import { type PolygonShape } from '../../../types';
@@ -27,9 +26,9 @@ const DBLCLICK_TIMEOUT = 200;
 export type FrameProps = BaseShapeProps<PolygonShape> & { showAnchors?: boolean };
 
 /**
- * Draggable Frame around shapes.
+ * Draggable Frame around polygons.
  */
-export const Frame = ({ classNames, guide, shape, scale, selected, showAnchors, onSelect }: FrameProps) => {
+export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelect }: FrameProps) => {
   const { debug, linking, dragging, setDragging, editing, setEditing } = useEditorContext();
   const isDragging = dragging?.shape.id === shape.id;
   const isEditing = editing?.shape.id === shape.id;
@@ -125,7 +124,7 @@ export const Frame = ({ classNames, guide, shape, scale, selected, showAnchors, 
           styles.frameBorder,
           selected && styles.frameSelected,
           over && styles.frameActive,
-          guide && styles.frameGuide,
+          shape.guide && styles.frameGuide,
           classNames,
           'transition',
           scale >= 16 && 'duration-500 opacity-0',

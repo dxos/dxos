@@ -84,9 +84,9 @@ const meta: Meta<EditorRootProps> = {
         space.db.graph.schemaRegistry.addSchema(types);
         const createObjects = createObjectFactory(space.db, generator);
         const spec: TypeSpec[] = [
-          { type: Testing.OrgType, count: 8 },
+          { type: Testing.OrgType, count: 2 },
           { type: Testing.ProjectType, count: 0 },
-          { type: Testing.ContactType, count: 16 },
+          { type: Testing.ContactType, count: 8 },
         ];
 
         await createObjects(spec);
@@ -104,7 +104,7 @@ type Story = StoryObj<RenderProps>;
 
 export const Default: Story = {
   args: {
-    sidebar: false,
+    sidebar: true,
   },
 };
 

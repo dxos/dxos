@@ -6,26 +6,23 @@ import React from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
 
-import type { BaseShapeProps } from './base';
+import { type BaseShapeProps, DEFS_ID } from './Shape';
 import { type LineShape } from '../../../types';
 import { eventsAuto, eventsNone, styles } from '../../styles';
-import { Markers } from '../../svg';
+import { createUrl } from '../../svg';
 
 export type LineProps = BaseShapeProps<LineShape>;
 
 /**
  * Line shapes.
  */
-export const Line = ({ guide, shape, selected, onSelect }: LineProps) => {
+export const Line = ({ shape, selected, onSelect }: LineProps) => {
   return (
     <div>
       <svg className={mx('absolute overflow-visible', eventsNone, styles.line, selected && styles.lineSelected)}>
-        <defs>
-          <Markers />
-        </defs>
         <g>
           {/* Hit area. */}
-          {!guide && onSelect && (
+          {!shape.guide && onSelect && (
             <path
               d={shape.path}
               strokeWidth={8}
@@ -33,15 +30,16 @@ export const Line = ({ guide, shape, selected, onSelect }: LineProps) => {
               onClick={(ev) => onSelect?.(shape.id, ev.shiftKey)}
             />
           )}
+          {/* This may not be necessary? */}
+          <use href={`#${DEFS_ID}`} />
           <path
             d={shape.path}
-            // stroke={'red'}
-            markerStart={createUrl(!guide && shape.id !== 'link' && shape.start)}
-            markerEnd={createUrl(!guide && shape.id !== 'link' && shape.end)}
+            markerStart={createUrl(!shape.guide && shape.id !== 'link' && shape.start)}
+            markerEnd={createUrl(!shape.guide && shape.id !== 'link' && shape.end)}
             className={mx(
               'stroke-[var(--dx-stroke-color)]',
               selected && styles.lineSelected,
-              guide && styles.lineGuide,
+              shape.guide && styles.lineGuide,
             )}
           />
         </g>
@@ -49,5 +47,3 @@ export const Line = ({ guide, shape, selected, onSelect }: LineProps) => {
     </div>
   );
 };
-
-const createUrl = (ref?: string | false | undefined) => (ref ? `url(#${ref})` : undefined);
