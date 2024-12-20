@@ -8,12 +8,13 @@ import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
+import { Point } from '../../types';
 
 import { Background } from './Background';
 import { type DragPayloadData, FrameDragPreview, Line, Shapes, useLayout, useSelectionHandler } from './shapes';
 import { createLine, createRect, type Shape, type ShapeType } from '../../graph';
 import { useActionHandler, useEditorContext, useShortcuts, useSnap, useTransform, useWheel } from '../../hooks';
-import { screenToModel, findClosestIntersection, getInputPoint, type Point, getRect } from '../../layout';
+import { screenToModel, findClosestIntersection, getInputPoint, getRect } from '../../layout';
 import { createId, itemSize } from '../../testing';
 import { Grid } from '../Grid';
 import { eventsNone, styles } from '../styles';

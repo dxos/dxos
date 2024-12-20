@@ -4,7 +4,7 @@
 
 import { type Input } from '@atlaskit/pragmatic-drag-and-drop/types';
 
-import { type Point } from './geometry';
+import { type Point } from '../types';
 
 /**
  * Get the relative position of the input event with respect to the provided element.

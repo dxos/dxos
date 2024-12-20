@@ -9,11 +9,12 @@ import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
+import { Dimension, Point } from '../../types';
 
 import { type DragPayloadData } from './shapes';
 import { type ShapeType } from '../../graph';
 import { useEditorContext } from '../../hooks';
-import { type Dimension, getBoundsProperties, type Point } from '../../layout';
+import { getBoundsProperties } from '../../layout';
 import { styles } from '../styles';
 
 export const DATA_SHAPE_ID = 'data-shape-id';

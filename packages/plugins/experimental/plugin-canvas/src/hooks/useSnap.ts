@@ -4,8 +4,9 @@
 
 import { useMemo } from 'react';
 
+import { Dimension, Point } from '../types';
 import { useEditorContext } from './useEditorContext';
-import { type PointTransform, type Dimension, type Point, round } from '../layout';
+import { type PointTransform, round } from '../layout';
 
 export const createSnap =
   ({ width, height }: Dimension): PointTransform =>

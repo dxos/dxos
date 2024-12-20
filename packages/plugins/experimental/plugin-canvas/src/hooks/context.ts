@@ -6,7 +6,7 @@ import { createContext, type Dispatch, type SetStateAction } from 'react';
 
 import { type SelectionModel } from './useSelected';
 import { type GraphModel, type Node, type Shape, type ShapeType } from '../graph';
-import type { Dimension, Point } from '../layout';
+import type { Dimension, Point } from '../types';
 
 export type TransformState = {
   scale: number;

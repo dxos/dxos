@@ -6,7 +6,8 @@ import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { bind } from 'bind-event-listener';
 import { useEffect, useState } from 'react';
 
-import { getBounds, type Rect, type Point, type Range } from '../layout';
+import { getBounds, type Range } from '../layout';
+import { Point, Rect } from '../types';
 
 export type SelectionEvent = (rect: Rect | null, shift?: boolean) => void;
 

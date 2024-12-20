@@ -15,7 +15,8 @@ import {
   type CircularLayoutOptions,
 } from '@antv/layout';
 
-import { type Dimension, getRect } from './geometry';
+import { type Dimension } from '../types';
+import { getRect } from './geometry';
 import { type BaseShape, type Graph, GraphModel, type Node } from '../graph';
 
 // TODO(burdon): Util.

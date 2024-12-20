@@ -5,6 +5,7 @@
 import { type CSSProperties } from 'react';
 
 import { invariant } from '@dxos/invariant';
+import { Dimension, Point, Rect } from '../types';
 
 // TODO(burdon): Utils?
 //  - https://www.npmjs.com/package/@antv/coord
@@ -15,9 +16,10 @@ import { invariant } from '@dxos/invariant';
 
 // TODO(burdon): Generalize positional unit (e.g., x,y, fraction, slot).
 
-export type Point = { x: number; y: number };
-export type Dimension = { width: number; height: number };
-export type Rect = Point & Dimension;
+// export type Point = { x: number; y: number };
+// export type Dimension = { width: number; height: number };
+// export type Rect = Point & Dimension;
+
 export type Line = [Point, Point];
 export type Range = { p1: Point; p2: Point }; // TODO(burdon): Array.
 

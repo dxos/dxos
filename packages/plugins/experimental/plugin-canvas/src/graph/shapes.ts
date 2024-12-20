@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { createPathThroughPoints, type Dimension, type Point } from '../layout';
+import { createPathThroughPoints } from '../layout';
+import { Dimension, Point } from '../types';
 
 export type ShapeKind = 'rect' | 'line';
 

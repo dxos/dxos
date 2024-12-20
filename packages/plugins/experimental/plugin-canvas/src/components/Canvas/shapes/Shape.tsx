@@ -6,6 +6,7 @@ import React, { type CSSProperties, useCallback } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { useDynamicRef } from '@dxos/react-ui';
+import { Point, Rect } from '../../../types';
 
 import { Frame } from './Frame';
 import { Line } from './Line';
@@ -13,8 +14,6 @@ import { type BaseShapeProps } from './base';
 import { createLine, type GraphModel, type Shape, type ShapeType } from '../../../graph';
 import { type SelectionEvent, useEditorContext, useSelectionEvents } from '../../../hooks';
 import {
-  type Point,
-  type Rect,
   findClosestIntersection,
   getRect,
   pointsToRect,

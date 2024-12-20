@@ -7,7 +7,7 @@ import React, { forwardRef, useMemo } from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type Point } from '../../layout';
+import { type Point } from '../../types';
 import { eventsNone } from '../styles';
 import { GridPattern } from '../svg';
 import { testId } from '../util';

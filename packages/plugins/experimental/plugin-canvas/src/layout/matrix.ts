@@ -5,7 +5,7 @@
 import * as d3 from 'd3';
 import { applyToPoints, inverse, translate, compose, scale } from 'transformation-matrix';
 
-import { type Point } from './geometry';
+import { type Point } from '../types';
 import { type TransformState } from '../hooks';
 
 // TODO(burdon): Create class.
