@@ -6,16 +6,22 @@ export type TestId =
   | 'dx-storybook'
   | 'dx-editor'
   | 'dx-canvas'
-  | 'dx-shapes'
+  | 'dx-layout'
   | 'dx-canvas-grid'
   | 'dx-background'
   | 'dx-overlays'
   | 'dx-ui';
 
+let logged = false;
+
 export const testId = (id: TestId, inspect = false) => {
   if (inspect) {
-    // eslint-disable-next-line no-console
-    console.log('Open storybook in expanded window;\nthen run INSPECT()');
+    if (!logged) {
+      // eslint-disable-next-line no-console
+      console.log('Open storybook in expanded window;\nthen run INSPECT()');
+      logged = true;
+    }
+
     (window as any).INSPECT = () => {
       const el = document.querySelector(`[data-test-id="${id}"]`);
       (window as any).inspect(el);

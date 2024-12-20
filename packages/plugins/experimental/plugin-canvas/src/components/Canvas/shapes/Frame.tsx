@@ -12,9 +12,9 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { type DragPayloadData } from './Shape';
 import { type BaseShapeProps } from './base';
-import { type ShapeType } from '../../../graph';
 import { useEditorContext } from '../../../hooks';
 import { pointAdd, getBoundsProperties } from '../../../layout';
+import { type PolygonShape } from '../../../types';
 import { ReadonlyTextBox, TextBox, type TextBoxProps } from '../../TextBox';
 import { styles } from '../../styles';
 import { DATA_SHAPE_ID, Anchor } from '../Anchor';
@@ -24,12 +24,12 @@ import { DATA_SHAPE_ID, Anchor } from '../Anchor';
 
 const DBLCLICK_TIMEOUT = 200;
 
-export type FrameProps = BaseShapeProps<'rect'> & { showAnchors?: boolean };
+export type FrameProps = BaseShapeProps<PolygonShape> & { showAnchors?: boolean };
 
 /**
  * Draggable Frame around shapes.
  */
-export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelect }: FrameProps) => {
+export const Frame = ({ classNames, guide, shape, scale, selected, showAnchors, onSelect }: FrameProps) => {
   const { debug, linking, dragging, setDragging, editing, setEditing } = useEditorContext();
   const isDragging = dragging?.shape.id === shape.id;
   const isEditing = editing?.shape.id === shape.id;
@@ -44,7 +44,7 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
     return combine(
       dropTargetForElements({
         element: ref.current,
-        getData: () => ({ type: 'frame', shape }) satisfies DragPayloadData<ShapeType<'rect'>>,
+        getData: () => ({ type: 'frame', shape }) satisfies DragPayloadData,
         onDragEnter: () => setOver(true),
         onDragLeave: () => setOver(false),
         // getIsSticky: () => true,
@@ -52,7 +52,7 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
       }),
       draggable({
         element: ref.current,
-        getInitialData: () => ({ type: 'frame', shape }) satisfies DragPayloadData<ShapeType<'rect'>>,
+        getInitialData: () => ({ type: 'frame', shape }) satisfies DragPayloadData,
         onGenerateDragPreview: ({ nativeSetDragImage }) => {
           setCustomNativeDragPreview({
             nativeSetDragImage,
@@ -81,10 +81,10 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
   const anchors = useMemo(() => {
     return showAnchors !== false && hovering
       ? [
-          { id: 'w', pos: pointAdd(shape.pos, { x: -shape.size.width / 2, y: 0 }) },
-          { id: 'e', pos: pointAdd(shape.pos, { x: shape.size.width / 2, y: 0 }) },
-          { id: 'n', pos: pointAdd(shape.pos, { x: 0, y: shape.size.height / 2 }) },
-          { id: 's', pos: pointAdd(shape.pos, { x: 0, y: -shape.size.height / 2 }) },
+          { id: 'w', pos: pointAdd(shape.center, { x: -shape.size.width / 2, y: 0 }) },
+          { id: 'e', pos: pointAdd(shape.center, { x: shape.size.width / 2, y: 0 }) },
+          { id: 'n', pos: pointAdd(shape.center, { x: 0, y: shape.size.height / 2 }) },
+          { id: 's', pos: pointAdd(shape.center, { x: 0, y: -shape.size.height / 2 }) },
         ].filter(({ id }) => !linking || linking.anchor === id)
       : [];
   }, [showAnchors, hovering]);
@@ -118,14 +118,14 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
         ref={ref}
         // TODO(burdon): These should be the same.
         // style={getBoundsProperties(shape.rect)}
-        style={getBoundsProperties({ ...shape.pos, ...shape.size })}
+        style={getBoundsProperties({ ...shape.center, ...shape.size })}
         className={mx(
           styles.frameContainer,
           styles.frameHover,
           styles.frameBorder,
           selected && styles.frameSelected,
           over && styles.frameActive,
-          shape.guide && styles.frameGuide,
+          guide && styles.frameGuide,
           classNames,
           'transition',
           scale >= 16 && 'duration-500 opacity-0',
@@ -161,7 +161,7 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
 export const FrameDragPreview = ({ shape }: FrameProps) => {
   return (
     <div
-      style={getBoundsProperties({ ...shape.pos, ...shape.size })}
+      style={getBoundsProperties({ ...shape.center, ...shape.size })}
       className={mx(styles.frameContainer, styles.frameBorder)}
     >
       <ReadonlyTextBox value={shape.text ?? shape.id} />
@@ -169,6 +169,6 @@ export const FrameDragPreview = ({ shape }: FrameProps) => {
   );
 };
 
-const getLabel = (shape: ShapeType<'rect'>, debug = false) => {
-  return debug ? shape.id + `\n(${shape.pos.x},${shape.pos.y})` : shape.text ?? shape.id;
+const getLabel = (shape: PolygonShape, debug = false) => {
+  return debug ? shape.id + `\n(${shape.center.x},${shape.center.y})` : shape.text ?? shape.id;
 };

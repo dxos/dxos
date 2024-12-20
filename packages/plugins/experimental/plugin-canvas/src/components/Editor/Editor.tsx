@@ -10,7 +10,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { useAttendableAttributes } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
-import { emptyGraph, type Graph, GraphModel, type Node, type Shape } from '../../graph';
+import { emptyGraph, type Graph, GraphModel, type Node } from '../../graph';
 import {
   type DraggingState,
   type EditingState,
@@ -21,6 +21,7 @@ import {
   type TransformState,
   handleAction,
 } from '../../hooks';
+import { type Shape } from '../../types';
 import { Canvas } from '../Canvas';
 import { UI } from '../UI';
 import { testId } from '../util';

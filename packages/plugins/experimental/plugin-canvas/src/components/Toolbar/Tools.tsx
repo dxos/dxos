@@ -11,23 +11,23 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { useEditorContext } from '../../hooks';
 
-export type ShapesProps = ThemedClassName<{}>;
+export type ToolsProps = ThemedClassName<{}>;
 
-export const Shapes = ({ classNames }: ShapesProps) => {
+export const Tools = ({ classNames }: ToolsProps) => {
   return (
     <div className={mx('flex p-1 gap-2', classNames)}>
-      <Shape id={'rectangle'} icon={'ph--rectangle--regular'} />
-      <Shape id={'circle'} icon={'ph--circle--regular'} />
+      <Tool id={'rectangle'} icon={'ph--rectangle--regular'} />
+      <Tool id={'circle'} icon={'ph--circle--regular'} />
     </div>
   );
 };
 
-type ShapeProps = {
+type ToolProps = {
   id: string;
   icon: string;
 };
 
-const Shape = ({ id, icon }: ShapeProps) => {
+const Tool = ({ id, icon }: ToolProps) => {
   const { dragging } = useEditorContext();
   const isDragging = dragging;
   const ref = useRef<HTMLDivElement>(null);

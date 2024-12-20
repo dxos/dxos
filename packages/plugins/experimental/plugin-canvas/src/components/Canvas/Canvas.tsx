@@ -11,11 +11,10 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { Background } from './Background';
 import { type DragPayloadData, FrameDragPreview, Line, Shapes, useLayout, useSelectionHandler } from './shapes';
-import { createLine, createRect, type Shape, type ShapeType } from '../../graph';
 import { useActionHandler, useEditorContext, useShortcuts, useSnap, useTransform, useWheel } from '../../hooks';
-import { screenToModel, findClosestIntersection, getInputPoint, getRect } from '../../layout';
+import { createLine, createRect, screenToModel, findClosestIntersection, getInputPoint, getRect } from '../../layout';
 import { createId, itemSize } from '../../testing';
-import { type Point } from '../../types';
+import { type PolygonShape, type LineShape, type Point } from '../../types';
 import { Grid } from '../Grid';
 import { eventsNone, styles } from '../styles';
 import { testId } from '../util';
@@ -109,8 +108,8 @@ const useDragMonitor = (el: HTMLElement | null) => {
   const actionHandler = useActionHandler();
   const snapPoint = useSnap();
 
-  const [frameDragging, setFrameDragging] = useState<Shape>();
-  const [overlay, setOverlay] = useState<ShapeType<'line'>>();
+  const [frameDragging, setFrameDragging] = useState<PolygonShape>();
+  const [overlay, setOverlay] = useState<LineShape>();
   const cancelled = useRef(false);
 
   const lastPointRef = useRef<Point>();
@@ -120,13 +119,13 @@ const useDragMonitor = (el: HTMLElement | null) => {
         invariant(el);
         const [{ x, y }] = screenToModel(scale, offset, [getInputPoint(el, location.current.input)]);
         const pos = { x, y };
-        const { type, shape } = source.data as DragPayloadData<ShapeType<'rect'>>;
+        const { type, shape } = source.data as DragPayloadData<PolygonShape>;
         if (x !== lastPointRef.current?.x || y !== lastPointRef.current?.y) {
           lastPointRef.current = pos;
           switch (type) {
             case 'frame': {
               if (dragging) {
-                setFrameDragging({ ...shape, pos });
+                setFrameDragging({ ...shape, center: pos });
               }
               break;
             }
@@ -137,10 +136,6 @@ const useDragMonitor = (el: HTMLElement | null) => {
               }
               break;
             }
-
-            // case 'tool': {
-            //
-            // }
           }
         }
       },
@@ -156,26 +151,26 @@ const useDragMonitor = (el: HTMLElement | null) => {
           // TODO(burdon): Adjust for offset on drag?
           invariant(el);
           const [pos] = screenToModel(scale, offset, [getInputPoint(el, location.current.input)]);
-          const { type, shape } = source.data as DragPayloadData<ShapeType<'rect'>>;
+          const { type, shape } = source.data as DragPayloadData;
 
           switch (type) {
             case 'frame': {
-              shape.pos = snapPoint(pos);
+              shape.center = snapPoint(pos);
 
               // TODO(burdon): Copy.
-              if (!graph.getNode(shape.id)) {
-                graph.addNode({ id: shape.id, data: { ...shape } });
-              }
+              // if (!graph.getNode(shape.id)) {
+              //   graph.addNode({ id: shape.id, data: { ...shape } });
+              // }
               break;
             }
 
             case 'anchor': {
               const target = location.current.dropTargets.find(({ data }) => data.type === 'frame')?.data
-                .shape as Shape;
+                .shape as PolygonShape;
               let id = target?.id;
               if (!id) {
                 id = createId();
-                const shape = createRect({ id, pos: snapPoint(pos), size: itemSize });
+                const shape = createRect({ id, center: snapPoint(pos), size: itemSize });
                 await actionHandler({ type: 'create', shape });
               }
               await actionHandler({ type: 'link', source: shape.id, target: id });
@@ -195,11 +190,8 @@ const useDragMonitor = (el: HTMLElement | null) => {
   return { frameDragging, overlay };
 };
 
-const createLineOverlay = (source: Shape, p2: Point): ShapeType<'line'> | undefined => {
-  if (source.type === 'rect') {
-    const { pos } = source;
-    const rect = getRect(source.pos, source.size);
-    const p1 = findClosestIntersection([p2, pos], rect) ?? pos;
-    return createLine({ id: 'link', p1, p2 });
-  }
+const createLineOverlay = (source: PolygonShape, p2: Point): LineShape | undefined => {
+  const rect = getRect(source.center, source.size);
+  const p1 = findClosestIntersection([p2, source.center], rect) ?? source.center;
+  return createLine({ id: 'link', p1, p2 });
 };

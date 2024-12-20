@@ -8,8 +8,7 @@ import { log } from '@dxos/log';
 import { type EditorContextType } from './context';
 import { useEditorContext } from './useEditorContext';
 import { type ActionHandler } from '../actions';
-import { createRect } from '../graph';
-import { getCenter, modelToScreen, rectUnion, zoomTo, zoomInPlace, doLayout } from '../layout';
+import { createRect, getCenter, modelToScreen, rectUnion, zoomTo, zoomInPlace, doLayout } from '../layout';
 import { createId, itemSize } from '../testing';
 
 export const useActionHandler = (): ActionHandler => {
@@ -36,7 +35,7 @@ export const handleAction = ({
 }: EditorContextType): ActionHandler => {
   const handler: ActionHandler = async (action) => {
     const { type } = action;
-    log.info('action', { action });
+    log('action', { action });
     switch (type) {
       case 'debug': {
         setDebug((debug) => !debug);
@@ -118,7 +117,7 @@ export const handleAction = ({
         let { shape } = action;
         if (!shape) {
           const id = createId();
-          shape = createRect({ id, pos: { x: 0, y: 0 }, size: itemSize });
+          shape = createRect({ id, center: { x: 0, y: 0 }, size: itemSize });
         }
         invariant(shape);
         graph.addNode({ id: shape.id, data: shape });

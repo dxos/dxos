@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Shape } from '../graph';
+import { type Shape } from '../types';
 
 export type Action =
   | { type: 'debug' }

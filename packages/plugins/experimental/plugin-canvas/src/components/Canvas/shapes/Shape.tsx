@@ -10,7 +10,7 @@ import { useDynamicRef } from '@dxos/react-ui';
 import { Frame } from './Frame';
 import { Line } from './Line';
 import { type BaseShapeProps } from './base';
-import { createLine, type GraphModel, type Shape, type ShapeType } from '../../../graph';
+import { type GraphModel, type Node } from '../../../graph';
 import { type SelectionEvent, useEditorContext, useSelectionEvents } from '../../../hooks';
 import {
   findClosestIntersection,
@@ -19,14 +19,15 @@ import {
   rectToPoints,
   rectContains,
   screenToModel,
+  createLine,
 } from '../../../layout';
-import { type Point, type Rect } from '../../../types';
+import { type PolygonShape, type LineShape, type Point, type Rect, type Shape, isPolygon } from '../../../types';
 import { testId } from '../../util';
 
 /**
  * Data associated with a draggable.
  */
-export type DragPayloadData<S extends ShapeType> = {
+export type DragPayloadData<S extends PolygonShape = PolygonShape> = {
   type: 'frame' | 'anchor' | 'tool';
   anchor?: string; // TODO(burdon): id.
   shape: S;
@@ -34,16 +35,14 @@ export type DragPayloadData<S extends ShapeType> = {
 
 // TODO(burdon): Create factory.
 export const ShapeComponent = (props: BaseShapeProps<any>) => {
-  const {
-    shape: { type },
-  } = props;
-  switch (type) {
-    case 'rect': {
-      return <Frame {...(props as BaseShapeProps<'rect'>)} />;
-    }
+  const { shape } = props;
+  if (isPolygon(shape)) {
+    return <Frame {...(props as BaseShapeProps<PolygonShape>)} />;
+  }
 
+  switch (shape.type) {
     case 'line': {
-      return <Line {...(props as BaseShapeProps<'line'>)} />;
+      return <Line {...(props as BaseShapeProps<LineShape>)} />;
     }
 
     default:
@@ -62,7 +61,7 @@ export const Shapes = ({ shapes, style }: { shapes: Shape[]; style: CSSPropertie
   );
 
   return (
-    <div {...testId('dx-shapes')} className='absolute' style={style}>
+    <div {...testId('dx-layout', true)} className='absolute' style={style}>
       {shapes.map((shape) => (
         <ShapeComponent
           key={shape.id}
@@ -84,20 +83,20 @@ export type Layout = {
  * Generate layout.
  */
 // TODO(burdon): Graph hierarchy?
-export const useLayout = (graph: GraphModel, dragging?: Shape, debug?: boolean): Layout => {
+export const useLayout = (graph: GraphModel<Node<Shape>>, dragging?: PolygonShape, debug?: boolean): Layout => {
+  // TODO(burdon): ???
   const getPos = (id: string): { center: Point; bounds: Rect } | undefined => {
     const node = graph.getNode(id);
     if (node) {
       if (dragging?.id === id) {
-        invariant(dragging.type === 'rect');
         return {
-          center: dragging.pos,
-          bounds: getRect(dragging.pos, dragging.size),
+          center: dragging.center,
+          bounds: getRect(dragging.center, dragging.size),
         };
       } else {
         return {
-          center: node.data.pos,
-          bounds: getRect(node.data.pos, node.data.size),
+          center: node.data.center,
+          bounds: getRect(node.data.center, node.data.size),
         };
       }
     }
@@ -112,9 +111,10 @@ export const useLayout = (graph: GraphModel, dragging?: Shape, debug?: boolean):
       return;
     }
 
-    if (debug) {
-      shapes.push(createLine({ id: `${id}-guide`, p1, p2, guide: true }));
-    }
+    // TODO(burdon): Guides.
+    // if (debug) {
+    // shapes.push(createLine({ id: `${id}-guide`, p1, p2, guide: true }));
+    // }
 
     invariant(r1 && r2);
     const i1 = findClosestIntersection([p2, p1], r1) ?? p1;
@@ -149,8 +149,8 @@ export const useSelectionHandler = (el: HTMLElement | null, shapes: Shape[]) => 
       const selected = shapesRef.current
         .filter((shape) => {
           switch (shape.type) {
-            case 'rect': {
-              const rect = getRect(shape.pos, shape.size);
+            case 'rectangle': {
+              const rect = getRect(shape.center, shape.size);
               return rectContains(selectionBounds, rect);
             }
 

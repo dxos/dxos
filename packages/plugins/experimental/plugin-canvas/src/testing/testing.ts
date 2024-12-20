@@ -4,9 +4,9 @@
 
 import { range } from '@dxos/util';
 
-import { createRect, type Graph, GraphModel, type Node, type Shape } from '../graph';
-import type { PointTransform } from '../layout';
-import { type Dimension } from '../types';
+import { type Graph, GraphModel, type Node } from '../graph';
+import { createRect, type PointTransform } from '../layout';
+import { type Dimension, type Shape } from '../types';
 
 export const itemSize: Dimension = { width: 128, height: 64 };
 
@@ -24,7 +24,7 @@ export const createGraph = (snap: PointTransform = (p) => p): Graph => {
       id: a,
       data: createRect({
         id: a,
-        pos: snap({ x: 0, y: 0 }),
+        center: snap({ x: 0, y: 0 }),
         size: itemSize,
         text: 'A',
       }),
@@ -34,7 +34,7 @@ export const createGraph = (snap: PointTransform = (p) => p): Graph => {
       id: b,
       data: createRect({
         id: b,
-        pos: snap({ x: -itemSize.width * 2, y: 0 }),
+        center: snap({ x: -itemSize.width * 2, y: 0 }),
         size: itemSize,
         text: 'B',
       }),
@@ -44,7 +44,7 @@ export const createGraph = (snap: PointTransform = (p) => p): Graph => {
       id: c,
       data: createRect({
         id: c,
-        pos: snap({ x: itemSize.width * 2, y: 0 }),
+        center: snap({ x: itemSize.width * 2, y: 0 }),
         size: itemSize,
         text: 'C',
       }),
@@ -54,7 +54,7 @@ export const createGraph = (snap: PointTransform = (p) => p): Graph => {
       id: d,
       data: createRect({
         id: d,
-        pos: snap({ x: 0, y: 128 }),
+        center: snap({ x: 0, y: 128 }),
         size: itemSize,
         text: 'D',
       }),

@@ -8,24 +8,35 @@ export const Point = S.Struct({ x: S.Number, y: S.Number });
 export const Dimension = S.Struct({ width: S.Number, height: S.Number });
 export const Rect = S.extend(Point, Dimension);
 
+// TODO(burdon): Consider GeoJSON standard.
+
+/**
+ * Base type for all shapes.
+ */
 export const BaseShape = S.mutable(
   S.Struct({
     id: S.String,
+    type: S.String,
     object: S.optional(Ref(Expando)),
-    label: S.optional(S.String),
+    text: S.optional(S.String),
   }),
 );
 
-export const DraggableShape = S.extend(
-  BaseShape,
-  S.Struct({
-    center: Point,
-    size: Dimension,
-  }),
+/**
+ * A closed shape.
+ */
+export const PolygonShape = S.mutable(
+  S.extend(
+    BaseShape,
+    S.Struct({
+      center: Point,
+      size: Dimension,
+    }),
+  ),
 );
 
 export const RectangleShape = S.extend(
-  DraggableShape,
+  PolygonShape,
   S.Struct({
     type: S.Literal('rectangle'),
     rounded: S.optional(S.Number),
@@ -33,7 +44,7 @@ export const RectangleShape = S.extend(
 );
 
 export const EllipseShape = S.extend(
-  DraggableShape,
+  PolygonShape,
   S.Struct({
     type: S.Literal('ellipse'),
   }),
@@ -63,6 +74,8 @@ export type Point = S.Schema.Type<typeof Point>;
 export type Dimension = S.Schema.Type<typeof Dimension>;
 export type Rect = S.Schema.Type<typeof Rect>;
 
+export type BaseShape = S.Schema.Type<typeof BaseShape>;
+export type PolygonShape = S.Schema.Type<typeof PolygonShape>;
 export type Shape = S.Schema.Type<typeof Shape>;
 
 export type RectangleShape = S.Schema.Type<typeof RectangleShape>;
@@ -70,6 +83,8 @@ export type EllipseShape = S.Schema.Type<typeof EllipseShape>;
 export type LineShape = S.Schema.Type<typeof LineShape>;
 
 export type Layout = S.Schema.Type<typeof Layout>;
+
+export const isPolygon = S.is(PolygonShape);
 
 export class CanvasBoardType extends TypedObject({
   typename: 'dxos.org/type/CanvasBoard',

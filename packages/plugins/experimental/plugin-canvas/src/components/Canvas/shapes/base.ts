@@ -6,12 +6,17 @@ import type { PropsWithChildren } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 
-import { type ShapeKind, type ShapeType } from '../../../graph';
+import { type BaseShape } from '../../../types';
 
-export type BaseShapeProps<K extends ShapeKind> = PropsWithChildren<
+/**
+ * Runtime representations of shape.
+ */
+// TODO(burdon): Rename.
+export type BaseShapeProps<S extends BaseShape> = PropsWithChildren<
   ThemedClassName<{
-    shape: ShapeType<K>;
+    shape: S;
     scale: number;
+    guide?: boolean;
     selected?: boolean;
     onSelect?: (id: string, shift: boolean) => void;
   }>

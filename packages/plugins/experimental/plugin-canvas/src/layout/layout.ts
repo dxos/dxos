@@ -16,8 +16,8 @@ import {
 } from '@antv/layout';
 
 import { getRect } from './geometry';
-import { type BaseShape, type Graph, GraphModel, type Node } from '../graph';
-import { type Dimension } from '../types';
+import { type Graph, GraphModel, type Node } from '../graph';
+import { type Dimension, type Shape } from '../types';
 
 // TODO(burdon): Util.
 export type Intersection<Types extends readonly unknown[]> = Types extends [infer First, ...infer Rest]
@@ -37,11 +37,12 @@ export const defaultLayoutOptions: LayoutOptions = {
 };
 
 // TODO(burdon): Builder?
+// TODO(burdon): N should be an referenceable object.
 export const doLayout = async <N extends object>(
   data: GraphModel<Node<N>>,
   { gridSize, nodeSize, shapeSize }: LayoutOptions = defaultLayoutOptions,
-): Promise<GraphModel<Node<BaseShape<N>>>> => {
-  const graph = new GraphModel<Node<BaseShape<N>>>();
+): Promise<GraphModel<Node<Shape>>> => {
+  const graph = new GraphModel<Node<Shape>>();
 
   const defaultOptions: Intersection<[D3ForceLayoutOptions, GridLayoutOptions, RadialLayoutOptions]> = {
     center: [0, 0],
@@ -69,12 +70,13 @@ export const doLayout = async <N extends object>(
         id: node.id,
         data: {
           id: node.id,
-          type: 'rect',
+          type: 'rectangle',
           text: label,
-          pos: { x, y },
+          center: { x, y },
           size: shapeSize,
           rect: getRect({ x, y }, shapeSize),
-          data: node.data,
+          // TODO(burdon): Object.
+          // data: node.data,
         },
       });
     }

@@ -11,10 +11,9 @@ import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type DragPayloadData } from './shapes';
-import { type ShapeType } from '../../graph';
 import { useEditorContext } from '../../hooks';
 import { getBoundsProperties } from '../../layout';
-import { type Dimension, type Point } from '../../types';
+import { type Dimension, type PolygonShape, type Point } from '../../types';
 import { styles } from '../styles';
 
 export const DATA_SHAPE_ID = 'data-shape-id';
@@ -23,7 +22,7 @@ const defaultSize: Dimension = { width: 12, height: 12 };
 
 export type AnchorProps = {
   id: string;
-  shape: ShapeType<'rect'>;
+  shape: PolygonShape;
   pos: Point;
   size?: Dimension;
   scale?: number;
@@ -44,7 +43,7 @@ export const Anchor = ({ id, shape, pos, size = defaultSize, scale = 1, onMouseL
     invariant(ref.current);
     return draggable({
       element: ref.current,
-      getInitialData: () => ({ type: 'anchor', shape, anchor: id }) satisfies DragPayloadData<ShapeType<'rect'>>,
+      getInitialData: () => ({ type: 'anchor', shape, anchor: id }) satisfies DragPayloadData<PolygonShape>,
       onGenerateDragPreview: ({ nativeSetDragImage }) => {
         setCustomNativeDragPreview({
           nativeSetDragImage,

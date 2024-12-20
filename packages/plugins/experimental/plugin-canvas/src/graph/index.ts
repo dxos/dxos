@@ -4,4 +4,3 @@
 
 export * from './echo-graph';
 export * from './graph';
-export * from './shapes';

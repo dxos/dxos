@@ -9,7 +9,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { FPS } from './FPS';
 import { useActionHandler, useEditorContext, useSelected } from '../../hooks';
-import { Shapes, Toolbar } from '../Toolbar';
+import { Tools, Toolbar } from '../Toolbar';
 import { eventsAuto, eventsNone } from '../styles';
 import { testId } from '../util';
 
@@ -47,7 +47,7 @@ export const UI = () => {
       <div>
         <div className='absolute top-2 left-2 right-2 flex justify-center'>
           <div className='p-1 bg-base rounded-md border border-separator'>
-            <Shapes classNames={mx(eventsAuto)} />
+            <Tools classNames={mx(eventsAuto)} />
           </div>
         </div>
       </div>

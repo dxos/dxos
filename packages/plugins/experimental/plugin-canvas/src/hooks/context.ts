@@ -5,8 +5,8 @@
 import { createContext, type Dispatch, type SetStateAction } from 'react';
 
 import { type SelectionModel } from './useSelected';
-import { type GraphModel, type Node, type Shape, type ShapeType } from '../graph';
-import type { Dimension, Point } from '../types';
+import { type GraphModel, type Node } from '../graph';
+import type { Dimension, PolygonShape, Point, Shape } from '../types';
 
 export type TransformState = {
   scale: number;
@@ -16,12 +16,12 @@ export type TransformState = {
 // TODO(burdon): Reconcile with DragPayloadData.
 export type DraggingState = {
   container: HTMLElement;
-  shape: ShapeType<'rect'>;
+  shape: PolygonShape;
   anchor?: string;
 };
 
 export type EditingState = {
-  shape: Shape;
+  shape: PolygonShape;
 };
 
 export type EditorOptions = {
