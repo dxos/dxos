@@ -240,7 +240,6 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
       {/* Global popovers. */}
       <Popover.Portal>
         <Popover.Content
-          classNames='z-[60]'
           onEscapeKeyDown={() => {
             context.popoverOpen = false;
             context.popoverAnchorId = undefined;

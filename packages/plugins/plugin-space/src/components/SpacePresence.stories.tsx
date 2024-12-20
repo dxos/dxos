@@ -61,30 +61,38 @@ export const Full = (props: MemberPresenceProps) => {
   );
 };
 
-export const Small = (props: MemberPresenceProps) => {
-  const p: MemberPresenceProps = {
-    ...props,
-  };
-
+export const Small = () => {
   return (
     <div className='p-4'>
-      <div className='p-3'>
-        <SmallPresence count={0} {...p} />
+      <div className='flex gap-3 p-3'>
+        <SmallPresence count={0} />
+        <SmallPresence count={0} attended />
+        <SmallPresence count={0} containsAttended />
       </div>
-      <div className='p-3'>
-        <SmallPresence count={1} {...p} />
+      <div className='flex gap-3 p-3'>
+        <SmallPresence count={1} />
+        <SmallPresence count={1} attended />
+        <SmallPresence count={1} containsAttended />
       </div>
-      <div className='p-3'>
-        <SmallPresence count={2} {...p} />
+      <div className='flex gap-3 p-3'>
+        <SmallPresence count={2} />
+        <SmallPresence count={2} attended />
+        <SmallPresence count={2} containsAttended />
       </div>
-      <div className='p-3'>
-        <SmallPresence count={3} {...p} />
+      <div className='flex gap-3 p-3'>
+        <SmallPresence count={3} />
+        <SmallPresence count={3} attended />
+        <SmallPresence count={3} containsAttended />
       </div>
-      <div className='p-3'>
-        <SmallPresence count={4} {...p} />
+      <div className='flex gap-3 p-3'>
+        <SmallPresence count={4} />
+        <SmallPresence count={4} attended />
+        <SmallPresence count={4} containsAttended />
       </div>
-      <div className='p-3'>
-        <SmallPresence count={5} {...p} />
+      <div className='flex gap-3 p-3'>
+        <SmallPresence count={5} />
+        <SmallPresence count={5} attended />
+        <SmallPresence count={5} containsAttended />
       </div>
     </div>
   );

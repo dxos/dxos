@@ -43,7 +43,7 @@ import { useSheetContext } from '../SheetContext';
 //
 
 const buttonStyles = 'min-bs-0 p-2';
-const tooltipProps = { side: 'bottom' as const, classNames: 'z-10' };
+const tooltipProps = { side: 'bottom' as const };
 
 const ToolbarSeparator = () => <div role='separator' className='grow' />;
 

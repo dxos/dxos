@@ -90,7 +90,7 @@ export const HuePickerToolbarButton = ({
           </DropdownMenu.Trigger>
         </Tooltip.Trigger>
         <Tooltip.Portal>
-          <Tooltip.Content side='bottom' classNames='z-50'>
+          <Tooltip.Content side='bottom'>
             {t('select hue label')}
             <Tooltip.Arrow />
           </Tooltip.Content>
@@ -171,7 +171,7 @@ export const HuePickerBlock = ({ disabled, hue, onChangeHue, defaultHue, onClick
           </Button>
         </Tooltip.Trigger>
         <Tooltip.Portal>
-          <Tooltip.Content style={{ zIndex: 70 }} side='right'>
+          <Tooltip.Content side='right'>
             {t('clear label')}
             <Tooltip.Arrow />
           </Tooltip.Content>

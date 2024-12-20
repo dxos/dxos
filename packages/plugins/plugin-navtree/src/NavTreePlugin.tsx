@@ -33,16 +33,9 @@ import { type TreeData } from '@dxos/react-ui-list';
 import { Path } from '@dxos/react-ui-mosaic';
 import { getHostPlatform } from '@dxos/util';
 
-import {
-  COMMANDS_DIALOG,
-  CommandsDialogContent,
-  NavTreeContainer,
-  NavTreeDocumentTitle,
-  NODE_TYPE,
-  NotchStart,
-} from './components';
+import { CommandsDialogContent, NavTreeContainer, NavTreeDocumentTitle, NODE_TYPE, NotchStart } from './components';
 import { CommandsTrigger } from './components/CommandsTrigger';
-import meta, { KEY_BINDING, NAVTREE_PLUGIN } from './meta';
+import meta, { COMMANDS_DIALOG, KEY_BINDING, NAVTREE_PLUGIN } from './meta';
 import translations from './translations';
 import { type NavTreeItemGraphNode } from './types';
 import { expandChildrenAndActions } from './util';
@@ -291,7 +284,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
               filter: (node): node is Node<null> => node.id === 'root',
               actions: () => [
                 {
-                  id: 'dxos.org/plugin/navtree/open-commands',
+                  id: COMMANDS_DIALOG,
                   data: async () => {
                     await dispatch?.(
                       createIntent(LayoutAction.SetLayout, {

@@ -56,7 +56,7 @@ const ToggleResolvedButton = ({
         </Button>
       </Tooltip.Trigger>
       <Tooltip.Portal>
-        <Tooltip.Content classNames={'z-[21]'}>
+        <Tooltip.Content>
           {label}
           <Tooltip.Arrow />
         </Tooltip.Content>
@@ -82,7 +82,7 @@ const DeleteThreadButton = ({ onDelete }: { onDelete: () => void }) => {
         </Button>
       </Tooltip.Trigger>
       <Tooltip.Portal>
-        <Tooltip.Content classNames='z-[21]'>
+        <Tooltip.Content classNames='z-30'>
           {label}
           <Tooltip.Arrow />
         </Tooltip.Content>
@@ -170,7 +170,7 @@ export const CommentContainer = ({
               <ThreadHeading detached>{thread.name}</ThreadHeading>
             </Tooltip.Trigger>
             <Tooltip.Portal>
-              <Tooltip.Content classNames='z-[21]' side='top'>
+              <Tooltip.Content classNames='z-30' side='top'>
                 {t('detached thread label')}
                 <Tooltip.Arrow />
               </Tooltip.Content>

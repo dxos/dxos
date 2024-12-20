@@ -22,7 +22,7 @@ export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
 
   return (
     <AlertDialog.Content classNames='bs-content min-bs-[15rem] max-bs-full md:max-is-[40rem] overflow-hidden'>
-      <AlertDialog.Title classNames=''>{t('recovery code dialog title')}</AlertDialog.Title>
+      <AlertDialog.Title>{t('recovery code dialog title')}</AlertDialog.Title>
       <p className='py-4'>{t('recovery code dialog description')}</p>
       <Clipboard.Provider>
         <Code code={code} />

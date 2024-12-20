@@ -82,7 +82,7 @@ export const EmojiPickerToolbarButton = ({
           </Popover.Trigger>
         </Tooltip.Trigger>
         <Tooltip.Portal>
-          <Tooltip.Content side='bottom' classNames='z-50'>
+          <Tooltip.Content side='bottom'>
             {t('select emoji label')}
             <Tooltip.Arrow />
           </Tooltip.Content>
@@ -176,7 +176,7 @@ export const EmojiPickerBlock = ({ disabled, defaultEmoji, emoji, onChangeEmoji,
           </Button>
         </Tooltip.Trigger>
         <Tooltip.Portal>
-          <Tooltip.Content style={{ zIndex: 70 }} side='right'>
+          <Tooltip.Content side='right'>
             {t('clear label')}
             <Tooltip.Arrow />
           </Tooltip.Content>

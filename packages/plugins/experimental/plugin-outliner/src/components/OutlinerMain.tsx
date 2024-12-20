@@ -14,7 +14,6 @@ import {
   textBlockWidth,
   topbarBlockPaddingStart,
   mx,
-  surfaceElevation,
 } from '@dxos/react-ui-theme';
 
 import { Outliner } from './Outliner';
@@ -32,7 +31,7 @@ const OutlinerMain: FC<{ tree: TreeType }> = ({ tree }) => {
       <div role='none' className={mx(textBlockWidth, 'pli-2')}>
         <div role='none' className={mx('plb-4 min-bs-[calc(100dvh-var(--topbar-size))] flex flex-col')}>
           <Outliner.Root
-            className={mx(attentionSurface, surfaceElevation({ elevation: 'group' }), 'p-4')}
+            className={mx(attentionSurface, 'p-4')}
             isTasklist={tree.checkbox}
             root={tree.root.target!}
             onCreate={(text?: string) => create(TreeItemType, { content: text ?? '', items: [] })}

@@ -152,7 +152,6 @@ export const NodePlankHeading = memo(
               classNames='!pli-2 !plb-3 [&>svg]:-scale-x-100'
               icon='ph--sidebar-simple--regular'
               size={4}
-              tooltipZIndex='70'
             />
           )}
         </PlankControls>

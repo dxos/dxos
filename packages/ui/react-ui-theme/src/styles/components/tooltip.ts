@@ -2,19 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type ComponentFunction, type Theme } from '@dxos/react-ui-types';
+import { type ComponentFunction, type Theme, type Elevation } from '@dxos/react-ui-types';
 
 import { mx } from '../../util';
-import { arrow, chromeText, surfaceElevation, modalSurface, popperMotion } from '../fragments';
+import { arrow, chromeText, surfaceShadow, modalSurface, popperMotion, surfaceZIndex } from '../fragments';
 
-export type TooltipStyleProps = {};
+export type TooltipStyleProps = Partial<{
+  elevation: Elevation;
+}>;
 
-export const tooltipContent: ComponentFunction<TooltipStyleProps> = (_props, ...etc) =>
+export const tooltipContent: ComponentFunction<TooltipStyleProps> = ({ elevation }, ...etc) =>
   mx(
     'inline-flex items-center rounded-md plb-2 pli-3 max-is-64',
     modalSurface,
     popperMotion,
-    surfaceElevation({ elevation: 'group' }),
+    surfaceShadow({ elevation: 'positioned' }),
+    surfaceZIndex({ elevation, level: 'tooltip' }),
     chromeText,
     ...etc,
   );

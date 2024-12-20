@@ -2,7 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createIntent, type PromiseIntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
+import {
+  createIntent,
+  type PromiseIntentDispatcher,
+  type MetadataResolver,
+  NavigationAction,
+} from '@dxos/app-framework';
 import { EXPANDO_TYPENAME, getObjectAnnotation, getTypename, type Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { getSchema, isReactiveObject, makeRef } from '@dxos/live-object';
@@ -475,6 +480,19 @@ export const constructObjectActions = ({
         label: ['copy link label', { ns: SPACE_PLUGIN }],
         icon: 'ph--link--regular',
         testId: 'spacePlugin.copyLink',
+      },
+    },
+    // TODO(wittjosiah): Factor out and apply to all nodes.
+    {
+      id: NavigationAction.Expose._tag,
+      type: ACTION_TYPE,
+      data: async () => {
+        await dispatch(createIntent(NavigationAction.Expose, { id: fullyQualifiedId(object) }));
+      },
+      properties: {
+        label: ['expose object label', { ns: SPACE_PLUGIN }],
+        icon: 'ph--eye--regular',
+        testId: 'spacePlugin.exposeObject',
       },
     },
   ];

@@ -41,7 +41,6 @@ export const ThemeProvider = ({
   tx = (_path, defaultClassName, _styleProps, ..._options) => defaultClassName,
   themeMode = 'dark',
   rootDensity = 'fine',
-  rootElevation = 'base',
   ...rest
 }: ThemeProviderProps) => {
   useEffect(() => {
@@ -61,7 +60,7 @@ export const ThemeProvider = ({
           appNs,
         }}
       >
-        <ElevationProvider elevation={rootElevation}>
+        <ElevationProvider elevation='base'>
           <DensityProvider density={rootDensity}>{children}</DensityProvider>
         </ElevationProvider>
       </TranslationsProvider>

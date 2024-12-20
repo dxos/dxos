@@ -73,7 +73,7 @@ export type ToolbarProps = ThemedClassName<
 const ToolbarRoot = ({ children, onAction, classNames, state }: ToolbarProps) => {
   return (
     <ToolbarContextProvider onAction={onAction} state={state}>
-      <ElevationProvider elevation='chrome'>
+      <ElevationProvider elevation='positioned'>
         <NaturalToolbar.Root
           classNames={['p-1 is-full shrink-0 overflow-x-auto overflow-y-hidden', classNames]}
           style={{ contain: 'layout' }}

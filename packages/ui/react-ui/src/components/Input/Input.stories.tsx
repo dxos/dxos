@@ -6,7 +6,7 @@ import '@dxos-theme';
 
 import React from 'react';
 
-import { baseSurface, modalSurface, groupSurface, mx, surfaceElevation } from '@dxos/react-ui-theme';
+import { baseSurface, modalSurface, groupSurface, mx, surfaceShadow } from '@dxos/react-ui-theme';
 import { type MessageValence } from '@dxos/react-ui-types';
 
 import { Input } from './Input';
@@ -61,10 +61,10 @@ const StoryInput = (props: StoryInputProps) => {
       <div className={mx(baseSurface, 'p-4')}>
         <StoryInputContent {...props} />
       </div>
-      <div className={mx(groupSurface, 'p-4 rounded-lg', surfaceElevation({ elevation: 'group' }))}>
+      <div className={mx(groupSurface, 'p-4 rounded-lg', surfaceShadow({ elevation: 'positioned' }))}>
         <StoryInputContent {...props} />
       </div>
-      <div className={mx(modalSurface, 'p-4 rounded-lg', surfaceElevation({ elevation: 'chrome' }))}>
+      <div className={mx(modalSurface, 'p-4 rounded-lg', surfaceShadow({ elevation: 'dialog' }))}>
         <StoryInputContent {...props} />
       </div>
     </div>

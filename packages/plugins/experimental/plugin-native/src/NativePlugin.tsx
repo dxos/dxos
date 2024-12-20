@@ -12,7 +12,7 @@ import {
   createIntent,
 } from '@dxos/app-framework';
 import { HELP_PLUGIN } from '@dxos/plugin-help/meta';
-import { NAVTREE_PLUGIN } from '@dxos/plugin-navtree/meta';
+import { COMMANDS_DIALOG } from '@dxos/plugin-navtree/meta';
 import { safeParseJson } from '@dxos/util';
 
 import meta from './meta';
@@ -95,7 +95,8 @@ const setupMenuItemListener = (intentPlugin: any, app: any) => {
         void intentPlugin?.provides.intent.dispatchPromise(
           createIntent(LayoutAction.SetLayout, {
             element: 'dialog',
-            component: `${NAVTREE_PLUGIN}/Commands`,
+            component: COMMANDS_DIALOG,
+            dialogBlockAlign: 'start',
           }),
         );
         break;
@@ -152,7 +153,11 @@ const setupGlobalHotkey = async (socketWindow: any, appWindow: any, intentPlugin
   binding.addEventListener('hotkey', () => {
     appWindow.restore();
     void intentPlugin?.provides.intent.dispatchPromise(
-      createIntent(LayoutAction.SetLayout, { element: 'dialog', component: `${NAVTREE_PLUGIN}/Commands` }),
+      createIntent(LayoutAction.SetLayout, {
+        element: 'dialog',
+        component: COMMANDS_DIALOG,
+        dialogBlockAlign: 'start',
+      }),
     );
   });
 };
