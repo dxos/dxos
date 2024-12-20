@@ -8,7 +8,7 @@ import { log } from '@dxos/log';
 import { type EditorContextType } from './context';
 import { useEditorContext } from './useEditorContext';
 import { type ActionHandler } from '../actions';
-import { createRect, getCenter, modelToScreen, rectUnion, zoomTo, zoomInPlace, doLayout } from '../layout';
+import { createRectangle, getCenter, modelToScreen, rectUnion, zoomTo, zoomInPlace, doLayout } from '../layout';
 import { createId, itemSize } from '../testing';
 
 export const useActionHandler = (): ActionHandler => {
@@ -117,7 +117,7 @@ export const handleAction = ({
         let { shape } = action;
         if (!shape) {
           const id = createId();
-          shape = createRect({ id, center: { x: 0, y: 0 }, size: itemSize });
+          shape = createRectangle({ id, center: { x: 0, y: 0 }, size: itemSize });
         }
         invariant(shape);
         graph.addNode({ id: shape.id, data: shape });

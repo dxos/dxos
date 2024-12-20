@@ -12,7 +12,14 @@ import { mx } from '@dxos/react-ui-theme';
 import { Background } from './Background';
 import { type DragPayloadData, FrameDragPreview, Line, Shapes, useLayout, useSelectionHandler } from './shapes';
 import { useActionHandler, useEditorContext, useShortcuts, useSnap, useTransform, useWheel } from '../../hooks';
-import { createLine, createRect, screenToModel, findClosestIntersection, getInputPoint, getRect } from '../../layout';
+import {
+  createLine,
+  createRectangle,
+  screenToModel,
+  findClosestIntersection,
+  getInputPoint,
+  getRect,
+} from '../../layout';
 import { createId, itemSize } from '../../testing';
 import { type PolygonShape, type LineShape, type Point } from '../../types';
 import { Grid } from '../Grid';
@@ -170,7 +177,7 @@ const useDragMonitor = (el: HTMLElement | null) => {
               let id = target?.id;
               if (!id) {
                 id = createId();
-                const shape = createRect({ id, center: snapPoint(pos), size: itemSize });
+                const shape = createRectangle({ id, center: snapPoint(pos), size: itemSize });
                 await actionHandler({ type: 'create', shape });
               }
               await actionHandler({ type: 'link', source: shape.id, target: id });

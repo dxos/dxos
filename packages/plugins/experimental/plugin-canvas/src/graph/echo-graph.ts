@@ -43,6 +43,8 @@ export const createGraph = (
       if (prop.format === FormatEnum.Ref) {
         const source = object;
         const target = object[prop.name];
+        log.info('===', { prop, source, target });
+
         if (target) {
           graph.addEdge({
             id: `${source.id}-${String(prop.name)}-${target.id}`,
@@ -53,6 +55,8 @@ export const createGraph = (
       }
     }
   });
+
+  console.log('!!!!!!!!!!!!!!!');
 
   return graph;
 };

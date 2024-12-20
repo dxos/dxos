@@ -3,32 +3,25 @@
 //
 
 import { createPathThroughPoints } from '../layout';
-import { type Dimension, type LineShape, type Point, type RectangleShape, type Shape } from '../types';
+import { type LineShape, type Point, type PolygonShape, type RectangleShape, type Shape } from '../types';
 
 export type ShapeKind = 'rect' | 'line';
 
-type CommonProps = Pick<Shape, 'id'>;
+type CommonProps = Pick<Shape, 'id' | 'text'>;
 
-type RectProps = CommonProps & {
-  center: Point;
-  size: Dimension;
-  text?: string;
-};
+type RectProps = CommonProps & Pick<PolygonShape, 'center' | 'size'>;
 
-export const createRect = ({ id, center, size, ...rest }: RectProps): RectangleShape => ({
+export const createRectangle = ({ id, ...rest }: RectProps): RectangleShape => ({
   id,
   type: 'rectangle',
-  center,
-  size,
   ...rest,
 });
 
-type LineProps = CommonProps & {
-  p1: Point;
-  p2: Point;
-  start?: string;
-  end?: string;
-};
+type LineProps = CommonProps &
+  Pick<LineShape, 'start' | 'end'> & {
+    p1: Point;
+    p2: Point;
+  };
 
 export const createLine = ({ id, p1, p2, ...rest }: LineProps): LineShape => ({
   id,

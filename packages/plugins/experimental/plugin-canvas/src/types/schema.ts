@@ -8,7 +8,7 @@ export const Point = S.Struct({ x: S.Number, y: S.Number });
 export const Dimension = S.Struct({ width: S.Number, height: S.Number });
 export const Rect = S.extend(Point, Dimension);
 
-// TODO(burdon): Consider GeoJSON standard.
+// TODO(burdon): Consider interop with TLDraw and GeoJSON standard.
 
 /**
  * Base type for all shapes.
@@ -63,7 +63,6 @@ export const LineShape = S.extend(
 /**
  * Discriminated union.
  */
-// TODO(burdon): Consider interop with TLDraw schema.
 export const Shape = S.Union(RectangleShape, EllipseShape, LineShape);
 
 export const Layout = S.Struct({

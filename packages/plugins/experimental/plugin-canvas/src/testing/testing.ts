@@ -5,7 +5,7 @@
 import { range } from '@dxos/util';
 
 import { type Graph, GraphModel, type Node } from '../graph';
-import { createRect, type PointTransform } from '../layout';
+import { createRectangle, type PointTransform } from '../layout';
 import { type Dimension, type Shape } from '../types';
 
 export const itemSize: Dimension = { width: 128, height: 64 };
@@ -22,7 +22,7 @@ export const createGraph = (snap: PointTransform = (p) => p): Graph => {
 
     graph.addNode({
       id: a,
-      data: createRect({
+      data: createRectangle({
         id: a,
         center: snap({ x: 0, y: 0 }),
         size: itemSize,
@@ -32,7 +32,7 @@ export const createGraph = (snap: PointTransform = (p) => p): Graph => {
 
     graph.addNode({
       id: b,
-      data: createRect({
+      data: createRectangle({
         id: b,
         center: snap({ x: -itemSize.width * 2, y: 0 }),
         size: itemSize,
@@ -42,7 +42,7 @@ export const createGraph = (snap: PointTransform = (p) => p): Graph => {
 
     graph.addNode({
       id: c,
-      data: createRect({
+      data: createRectangle({
         id: c,
         center: snap({ x: itemSize.width * 2, y: 0 }),
         size: itemSize,
@@ -52,7 +52,7 @@ export const createGraph = (snap: PointTransform = (p) => p): Graph => {
 
     graph.addNode({
       id: d,
-      data: createRect({
+      data: createRectangle({
         id: d,
         center: snap({ x: 0, y: 128 }),
         size: itemSize,
