@@ -2,20 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Check, type IconWeight, Minus } from '@phosphor-icons/react';
-import {
-  CheckboxIndicator,
-  Root as CheckboxPrimitive,
-  type CheckboxProps as CheckboxPrimitiveProps,
-} from '@radix-ui/react-checkbox';
+import { type IconWeight } from '@phosphor-icons/react';
+import { Root as CheckboxPrimitive, type CheckboxProps as CheckboxPrimitiveProps } from '@radix-ui/react-checkbox';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, {
-  type ComponentPropsWithRef,
-  forwardRef,
-  type ForwardRefExoticComponent,
-  Fragment,
-  useCallback,
-} from 'react';
+import React, { type ComponentPropsWithRef, forwardRef, type ForwardRefExoticComponent, useCallback } from 'react';
 
 import {
   InputRoot,
