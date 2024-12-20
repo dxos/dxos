@@ -8,8 +8,18 @@ import { log } from '@dxos/log';
 import { type EditorContextType } from './context';
 import { useEditorContext } from './useEditorContext';
 import { type ActionHandler } from '../actions';
-import { createRectangle, getCenter, modelToScreen, rectUnion, zoomTo, zoomInPlace, doLayout } from '../layout';
+import {
+  createRectangle,
+  getCenter,
+  modelToScreen,
+  rectUnion,
+  zoomTo,
+  zoomInPlace,
+  doLayout,
+  getRect,
+} from '../layout';
 import { createId, itemSize } from '../testing';
+import { isPolygon } from '../types';
 
 export const useActionHandler = (): ActionHandler => {
   const context = useEditorContext();
@@ -65,7 +75,9 @@ export const handleAction = ({
       }
       case 'zoom-to-fit': {
         const { duration = 200 } = action;
-        const nodes = graph.nodes.filter((node) => node.data.type === 'rect').map((node) => node.data.rect);
+        const nodes = graph.nodes
+          .filter((node) => isPolygon(node.data))
+          .map((node) => getRect(node.data.center, node.data.size));
         if (!nodes.length) {
           return false;
         }
@@ -98,13 +110,14 @@ export const handleAction = ({
         zoomInPlace(setTransform, getCenter({ x: 0, y: 0, width, height }), offset, scale, newScale);
         return true;
       }
+
       case 'layout': {
         const layout = await doLayout(graph);
         for (const { id, data } of layout.nodes) {
           const node = graph.getNode(id);
-          if (node && data.type === 'rect') {
-            const { pos, size, rect } = data;
-            Object.assign(node.data, { pos, size, rect });
+          if (node && isPolygon(data)) {
+            const { center, size } = data;
+            Object.assign(node.data, { center, size });
           }
         }
 

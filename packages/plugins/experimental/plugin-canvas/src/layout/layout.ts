@@ -66,15 +66,16 @@ export const doLayout = async <N extends object>(
       // TODO(burdon): Get label from schema annotation.
       // const label = node.data.text,
       const label = (node.data as any).name;
+      const center = { x, y };
       graph.addNode({
         id: node.id,
         data: {
           id: node.id,
           type: 'rectangle',
           text: label,
-          center: { x, y },
+          center,
           size: shapeSize,
-          rect: getRect({ x, y }, shapeSize),
+          rect: getRect(center, shapeSize),
           // TODO(burdon): Object.
           // data: node.data,
         },
