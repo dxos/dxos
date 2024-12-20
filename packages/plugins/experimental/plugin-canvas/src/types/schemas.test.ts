@@ -30,8 +30,7 @@ describe('schema', () => {
       {
         id: 'shape-3',
         type: 'line',
-        p1: { x: 0, y: 0 },
-        p2: { x: 160, y: 0 },
+        path: 'M 0,0 L 160,0',
       } satisfies LineShape,
     ];
 

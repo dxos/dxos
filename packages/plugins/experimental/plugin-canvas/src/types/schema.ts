@@ -43,8 +43,7 @@ export const LineShape = S.extend(
   BaseShape,
   S.Struct({
     type: S.Literal('line'),
-    p1: Point,
-    p2: Point,
+    path: S.String,
     start: S.optional(S.String),
     end: S.optional(S.String),
   }),
@@ -72,7 +71,10 @@ export type LineShape = S.Schema.Type<typeof LineShape>;
 
 export type Layout = S.Schema.Type<typeof Layout>;
 
-export class CanvasBoardType extends TypedObject({ typename: 'dxos.org/type/CanvasBoard', version: '0.1.0' })({
+export class CanvasBoardType extends TypedObject({
+  typename: 'dxos.org/type/CanvasBoard',
+  version: '0.1.0',
+})({
   name: S.optional(S.String),
   layout: Layout,
 }) {}
