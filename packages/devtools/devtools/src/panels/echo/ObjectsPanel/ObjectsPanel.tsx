@@ -4,12 +4,13 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { Filter, getEditHistory, type ReactiveEchoObject } from '@dxos/echo-db';
+import { checkoutVersion, Filter, getEditHistory, type ReactiveEchoObject } from '@dxos/echo-db';
 import { getSchema, getType, getTypename, isDeleted } from '@dxos/live-object';
 import { QueryOptions, useQuery } from '@dxos/react-client/echo';
 import { AnchoredOverflow, Toolbar } from '@dxos/react-ui';
 import { createColumnBuilder, Table, type TableColumnDef, textPadding } from '@dxos/react-ui-table/deprecated';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
+import type { State as AmState } from '@dxos/automerge/automerge';
 
 import { getSchemaVersion, type ObjectId } from '@dxos/echo-schema';
 import { mx } from '@dxos/react-ui-theme';
@@ -67,26 +68,82 @@ const columns: TableColumnDef<ReactiveEchoObject<any>, any>[] = [
   }),
 ];
 
+type HistoryRow = {
+  hash: string;
+  actor: string;
+  time: number;
+  message: string | null;
+};
+
+const mapHistoryRow = (item: AmState<any>): HistoryRow => {
+  return {
+    hash: item.change.hash,
+    actor: item.change.actor,
+    time: item.change.time,
+    message: item.change.message,
+  };
+};
+
+const cb = createColumnBuilder<HistoryRow>();
+const historyColumns: TableColumnDef<HistoryRow, any>[] = [
+  cb.helper.accessor((item) => item.hash.slice(0, 8), {
+    ...cb.builder.string(),
+    header: 'Hash',
+    size: 80,
+  }),
+  // TODO(dmaretskyi): Correlate with identity.
+  cb.helper.accessor((item) => item.actor, {
+    ...cb.builder.string(),
+    header: 'Author (Actor ID)',
+    size: 80,
+  }),
+  // Currently not set.
+  // cb.helper.accessor((item) => item.time, {
+  //   ...cb.builder.number(),
+  //   header: 'Timestamp',
+  //   size: 80,
+  // }),
+  // cb.helper.accessor((item) => item.message, {
+  //   ...cb.builder.string(),
+  //   header: 'Message',
+  //   size: 80,
+  // }),
+];
+
 export const ObjectsPanel = () => {
   const { space } = useDevtoolsState();
   // TODO(burdon): Sort by type?
   const items = useQuery(space, Filter.all(), { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED });
   const [filter, setFilter] = useState('');
   const [selected, setSelected] = useState<ReactiveEchoObject<any>>();
+  const [selectedVersion, setSelectedVersion] = useState<HistoryRow | null>(null);
+  const [selectedVersionObject, setSelectedVersionObject] = useState<any | null>(null);
 
   const onNavigate = (dxn: DXN) => {
     if (dxn.isLocalObjectId()) {
       const [, id] = dxn.parts;
       const object = items.find((item) => item.id === id);
       if (object) {
+        setSelectedVersionObject(null);
         setSelected(object);
       }
     }
   };
 
+  const objectSelect = (object: ReactiveEchoObject<any>) => {
+    setSelectedVersionObject(null);
+    setSelected(object);
+  };
+
   const history = useMemo(() => {
-    return selected ? getEditHistory(selected) : [];
+    // It's better for performance to materialize all changes here in one loop.
+    return selected ? getEditHistory(selected).map(mapHistoryRow) : [];
   }, [selected]);
+
+  const onVersionClick = (version: HistoryRow) => {
+    setSelectedVersion(version);
+    setSelectedVersionObject(checkoutVersion(selected!, [version.hash]));
+  };
 
   return (
     <PanelContainer
@@ -106,7 +163,7 @@ export const ObjectsPanel = () => {
                 data={items.filter(textFilter(filter))}
                 rowsSelectable
                 currentDatum={selected}
-                onDatumClick={setSelected}
+                onDatumClick={objectSelect}
                 fullWidth
               />
             </div>
@@ -115,7 +172,7 @@ export const ObjectsPanel = () => {
 
         <div className={mx('flex overflow-auto', 'h-1/2')}>
           {selected ? (
-            <ObjectDataViewer object={selected} onNavigate={onNavigate} />
+            <ObjectDataViewer object={selectedVersionObject ?? selected} onNavigate={onNavigate} />
           ) : (
             'Select an object to inspect the contents'
           )}
@@ -123,9 +180,20 @@ export const ObjectsPanel = () => {
         <div className={mx('flex overflow-auto', 'h-1/2')}>
           {selected ? (
             <>
-              {history.map((change) => (
-                <div key={change.change.hash}>{JSON.stringify(change)}</div>
-              ))}
+              <Table.Root>
+                <Table.Viewport asChild>
+                  <div className='flex-col divide-y'>
+                    <Table.Main<HistoryRow>
+                      columns={historyColumns}
+                      data={history}
+                      rowsSelectable
+                      currentDatum={selectedVersion ?? undefined}
+                      onDatumClick={onVersionClick}
+                      fullWidth
+                    />
+                  </div>
+                </Table.Viewport>
+              </Table.Root>
             </>
           ) : (
             'Select an object to inspect the contents'
