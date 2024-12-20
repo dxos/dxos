@@ -6,7 +6,6 @@ import React, { type CSSProperties, useCallback } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { useDynamicRef } from '@dxos/react-ui';
-import { Point, Rect } from '../../../types';
 
 import { Frame } from './Frame';
 import { Line } from './Line';
@@ -21,6 +20,7 @@ import {
   rectContains,
   screenToModel,
 } from '../../../layout';
+import { type Point, type Rect } from '../../../types';
 import { testId } from '../../util';
 
 /**
@@ -155,7 +155,7 @@ export const useSelectionHandler = (el: HTMLElement | null, shapes: Shape[]) => 
             }
 
             case 'line': {
-              break;
+              return false;
             }
 
             default:

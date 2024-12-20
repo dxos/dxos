@@ -7,7 +7,7 @@ import { bind } from 'bind-event-listener';
 import { useEffect, useState } from 'react';
 
 import { getBounds, type Range } from '../layout';
-import { Point, Rect } from '../types';
+import { type Point, type Rect } from '../types';
 
 export type SelectionEvent = (rect: Rect | null, shift?: boolean) => void;
 

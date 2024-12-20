@@ -3,7 +3,7 @@
 //
 
 import { createPathThroughPoints } from '../layout';
-import { Dimension, Point } from '../types';
+import { type Dimension, type Point } from '../types';
 
 export type ShapeKind = 'rect' | 'line';
 

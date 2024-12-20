@@ -15,9 +15,9 @@ import {
   type CircularLayoutOptions,
 } from '@antv/layout';
 
-import { type Dimension } from '../types';
 import { getRect } from './geometry';
 import { type BaseShape, type Graph, GraphModel, type Node } from '../graph';
+import { type Dimension } from '../types';
 
 // TODO(burdon): Util.
 export type Intersection<Types extends readonly unknown[]> = Types extends [infer First, ...infer Rest]

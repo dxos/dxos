@@ -6,7 +6,7 @@ import { range } from '@dxos/util';
 
 import { createRect, type Graph, GraphModel, type Node, type Shape } from '../graph';
 import type { PointTransform } from '../layout';
-import { Dimension } from '../types';
+import { type Dimension } from '../types';
 
 export const itemSize: Dimension = { width: 128, height: 64 };
 
