@@ -18,6 +18,7 @@ export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
     return onAction?.(action) ?? false;
   };
 
+  // TODO(burdon): Translations.
   return (
     <NaturalToolbar.Root classNames={mx('p-1', classNames)}>
       <NaturalToolbar.Button onClick={() => handleAction({ type: 'debug' })} title='Toggle debug.'>
@@ -26,7 +27,7 @@ export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
       <NaturalToolbar.Button onClick={() => handleAction({ type: 'grid' })} title='Toggle snap.'>
         <Icon icon='ph--dots-nine--regular' />
       </NaturalToolbar.Button>
-      <NaturalToolbar.Button onClick={() => handleAction({ type: 'snap' })} title='Toggle snap.'>
+      <NaturalToolbar.Button onClick={() => handleAction({ type: 'grid-snap' })} title='Toggle snap.'>
         <Icon icon='ph--arrows-in-line-horizontal--regular' />
       </NaturalToolbar.Button>
       <NaturalToolbar.Button onClick={() => handleAction({ type: 'center' })} title='Center canvas.'>
@@ -43,6 +44,9 @@ export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
       </NaturalToolbar.Button>
       <NaturalToolbar.Button onClick={() => handleAction({ type: 'layout' })} title='Do layout.'>
         <Icon icon='ph--align-center-horizontal--regular' />
+      </NaturalToolbar.Button>
+      <NaturalToolbar.Button onClick={() => handleAction({ type: 'delete' })} title='Delete objects.'>
+        <Icon icon='ph--trash--regular' />
       </NaturalToolbar.Button>
       <NaturalToolbar.Button onClick={() => handleAction({ type: 'create' })} title='Create objects.'>
         <Icon icon='ph--plus--regular' />

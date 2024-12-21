@@ -135,6 +135,7 @@ export const recommended = ({ isDev, isLabs }: PluginConfig): PluginMeta[] =>
     // prettier-ignore
     !isDev && DebugMeta,
     AutomationMeta,
+    CanvasMeta,
     ChessMeta,
     CallsMeta,
     ExcalidrawMeta,
@@ -149,14 +150,7 @@ export const recommended = ({ isDev, isLabs }: PluginConfig): PluginMeta[] =>
     StackMeta,
     WnfsMeta,
 
-    ...(isLabs
-      ? [
-          // prettier-ignore
-          CanvasMeta,
-          InboxMeta,
-          OutlinerMeta,
-        ]
-      : []),
+    ...(isLabs ? [InboxMeta, OutlinerMeta] : []),
   ].filter(isNotFalsy);
 
 /**

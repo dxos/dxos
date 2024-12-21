@@ -2,10 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Dimension } from '@dxos/react-ui-canvas';
 import { range } from '@dxos/util';
 
-import { createRect, type Graph, GraphModel, type Node, type Shape } from '../graph';
-import type { Dimension, PointTransform } from '../layout';
+import { type Graph, GraphModel, type Node } from '../graph';
+import { createRectangle, type PointTransform } from '../layout';
+import { type Shape } from '../types';
 
 export const itemSize: Dimension = { width: 128, height: 64 };
 
@@ -21,9 +23,9 @@ export const createGraph = (snap: PointTransform = (p) => p): Graph => {
 
     graph.addNode({
       id: a,
-      data: createRect({
+      data: createRectangle({
         id: a,
-        pos: snap({ x: 0, y: 0 }),
+        center: snap({ x: 0, y: 0 }),
         size: itemSize,
         text: 'A',
       }),
@@ -31,9 +33,9 @@ export const createGraph = (snap: PointTransform = (p) => p): Graph => {
 
     graph.addNode({
       id: b,
-      data: createRect({
+      data: createRectangle({
         id: b,
-        pos: snap({ x: -itemSize.width * 2, y: 0 }),
+        center: snap({ x: -itemSize.width * 2, y: 0 }),
         size: itemSize,
         text: 'B',
       }),
@@ -41,9 +43,9 @@ export const createGraph = (snap: PointTransform = (p) => p): Graph => {
 
     graph.addNode({
       id: c,
-      data: createRect({
+      data: createRectangle({
         id: c,
-        pos: snap({ x: itemSize.width * 2, y: 0 }),
+        center: snap({ x: itemSize.width * 2, y: 0 }),
         size: itemSize,
         text: 'C',
       }),
@@ -51,9 +53,9 @@ export const createGraph = (snap: PointTransform = (p) => p): Graph => {
 
     graph.addNode({
       id: d,
-      data: createRect({
+      data: createRectangle({
         id: d,
-        pos: snap({ x: 0, y: 128 }),
+        center: snap({ x: 0, y: 128 }),
         size: itemSize,
         text: 'D',
       }),

@@ -15,8 +15,11 @@ import {
   type CircularLayoutOptions,
 } from '@antv/layout';
 
-import { type Dimension, getRect } from './geometry';
-import { type BaseShape, type Graph, GraphModel, type Node } from '../graph';
+import { type Dimension } from '@dxos/react-ui-canvas';
+
+import { getRect } from './geometry';
+import { type Graph, GraphModel, type Node } from '../graph';
+import { type Shape } from '../types';
 
 // TODO(burdon): Util.
 export type Intersection<Types extends readonly unknown[]> = Types extends [infer First, ...infer Rest]
@@ -36,11 +39,12 @@ export const defaultLayoutOptions: LayoutOptions = {
 };
 
 // TODO(burdon): Builder?
+// TODO(burdon): N should be an referenceable object.
 export const doLayout = async <N extends object>(
   data: GraphModel<Node<N>>,
   { gridSize, nodeSize, shapeSize }: LayoutOptions = defaultLayoutOptions,
-): Promise<GraphModel<Node<BaseShape<N>>>> => {
-  const graph = new GraphModel<Node<BaseShape<N>>>();
+): Promise<GraphModel<Node<Shape>>> => {
+  const graph = new GraphModel<Node<Shape>>();
 
   const defaultOptions: Intersection<[D3ForceLayoutOptions, GridLayoutOptions, RadialLayoutOptions]> = {
     center: [0, 0],
@@ -64,16 +68,18 @@ export const doLayout = async <N extends object>(
       // TODO(burdon): Get label from schema annotation.
       // const label = node.data.text,
       const label = (node.data as any).name;
+      const center = { x, y };
       graph.addNode({
         id: node.id,
         data: {
           id: node.id,
-          type: 'rect',
+          type: 'rectangle',
           text: label,
-          pos: { x, y },
+          center,
           size: shapeSize,
-          rect: getRect({ x, y }, shapeSize),
-          data: node.data,
+          rect: getRect(center, shapeSize),
+          // TODO(burdon): Object.
+          // data: node.data,
         },
       });
     }

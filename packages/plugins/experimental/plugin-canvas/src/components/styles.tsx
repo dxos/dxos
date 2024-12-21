@@ -4,10 +4,10 @@
 
 // TODO(burdon): Theme.
 export const styles = {
-  gridLine: 'stroke-neutral-500 opacity-5',
+  gridLine: 'stroke-neutral-500',
   frameContainer: 'absolute flex p-2 items-center overflow-hidden bg-base',
   frameBorder: 'border border-neutral-500 rounded',
-  frameSelected: '!bg-sky-300 !dark:bg-sky-700',
+  frameSelected: 'border-2 border-sky-500',
   frameActive: 'bg-sky-200 dark:bg-sky-800',
   frameHover: 'hover:bg-neutral-200 hover:dark:bg-neutral-800',
   frameGuide: 'border-green-500 border-dashed !opacity-50 !bg-transparent',

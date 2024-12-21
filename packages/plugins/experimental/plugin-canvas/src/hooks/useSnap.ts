@@ -4,8 +4,10 @@
 
 import { useMemo } from 'react';
 
+import { type Dimension, type Point } from '@dxos/react-ui-canvas';
+
 import { useEditorContext } from './useEditorContext';
-import { type PointTransform, type Dimension, type Point, round } from '../layout';
+import { type PointTransform, round } from '../layout';
 
 export const createSnap =
   ({ width, height }: Dimension): PointTransform =>
@@ -18,6 +20,9 @@ export const createSnap =
  *
  */
 export const useSnap = (): PointTransform => {
-  const { gridSize, snapToGrid } = useEditorContext();
-  return useMemo(() => (snapToGrid ? createSnap(gridSize) : (p) => p), [gridSize, snapToGrid]);
+  const { options, snapToGrid } = useEditorContext();
+  return useMemo<PointTransform>(() => {
+    const snap = options.gridSnap ?? options.gridSize;
+    return snapToGrid && snap ? createSnap({ width: snap, height: snap }) : (p) => p;
+  }, [options.gridSnap, snapToGrid]);
 };

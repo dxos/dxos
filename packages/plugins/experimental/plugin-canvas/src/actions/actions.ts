@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Shape } from '../graph';
+import { type Shape } from '../types';
 
 export type Action =
   | { type: 'debug' }
   | { type: 'grid'; on?: boolean }
-  | { type: 'snap'; on?: boolean }
+  | { type: 'grid-snap'; on?: boolean }
   | { type: 'select'; ids: string[]; shift?: boolean }
   | { type: 'home' }
   | { type: 'center' }
