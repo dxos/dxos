@@ -2,15 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { forwardRef, type PropsWithChildren, useEffect, useImperativeHandle, useMemo, useState } from 'react';
-import { HotkeysProvider } from 'react-hotkeys-hook';
-import { useResizeDetector } from 'react-resize-detector';
+import React, { forwardRef, type PropsWithChildren, useImperativeHandle, useMemo, useState } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { useAttendableAttributes } from '@dxos/react-ui-attention';
+import { testId } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
-import { emptyGraph, type Graph, GraphModel, type Node } from '../../graph';
+import { emptyGraph, GraphModel, type Node } from '../../graph';
 import {
   type DraggingState,
   type EditingState,
@@ -18,13 +16,11 @@ import {
   type EditorContextType,
   type EditorOptions,
   SelectionModel,
-  type TransformState,
   handleAction,
 } from '../../hooks';
 import { type Shape } from '../../types';
 import { Canvas } from '../Canvas';
 import { UI } from '../UI';
-import { testId } from '../util';
 
 // Scenario:
 //  - ECHO query/editor.
@@ -63,8 +59,6 @@ import { testId } from '../util';
 // TODO(burdon): Debt:
 //  - Factor out common Toolbar pattern (with state observers).
 
-const defaultOffset = { x: 0, y: 0 };
-
 export const defaultEditorOptions: EditorOptions = {
   gridSize: 16,
   zoomFactor: 2,
@@ -76,13 +70,7 @@ interface EditorController {
 
 type EditorRootProps = ThemedClassName<
   PropsWithChildren<
-    Partial<
-      Pick<EditorContextType, 'options' | 'debug' | 'scale' | 'offset'> & {
-        // TODO:(burdon): Has for attention (move to storybook).
-        attention?: boolean;
-        graph: Graph;
-      }
-    > & {
+    Partial<Pick<EditorContextType, 'options' | 'debug' | 'graph'>> & {
       id: string;
     }
   >
@@ -94,29 +82,18 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
       children,
       classNames,
       id,
-      attention,
       options: _options = defaultEditorOptions,
       debug: _debug = false,
-      scale: _scale = 1,
-      offset: _offset = defaultOffset,
       graph: _graph = emptyGraph,
     },
     forwardedRef,
   ) => {
     // Canvas state.
-    const { ref, width = 0, height = 0 } = useResizeDetector();
-    const attendableAttrs = useAttendableAttributes(id);
     const options = useMemo(() => Object.assign({}, defaultEditorOptions, _options), [_options]);
     const [debug, setDebug] = useState(_debug);
     const [gridSize, setGridSize] = useState({ width: 32, height: 32 });
     const [showGrid, setShowGrid] = useState(true);
     const [snapToGrid, setSnapToGrid] = useState(true);
-    const [{ scale, offset }, setTransform] = useState<TransformState>({ scale: _scale, offset: _offset });
-    useEffect(() => {
-      if (width && height && offset === defaultOffset) {
-        setTransform({ scale, offset: { x: width / 2, y: height / 2 } });
-      }
-    }, [scale, offset, width, height]);
 
     // Data state.
     const graph = useMemo<GraphModel<Node<Shape>>>(() => new GraphModel<Node<Shape>>(_graph), [_graph]);
@@ -132,13 +109,6 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
       options,
       debug,
       setDebug,
-
-      width,
-      height,
-
-      scale,
-      offset,
-      setTransform,
 
       gridSize,
       setGridSize,
@@ -177,16 +147,11 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
     );
 
     return (
-      <div
-        {...testId('dx-editor')}
-        {...attendableAttrs}
-        ref={ref}
-        className={mx('relative w-full h-full overflow-hidden', classNames)}
-      >
-        <EditorContext.Provider value={context}>
-          <HotkeysProvider initiallyActiveScopes={attention ? ['*'] : ['app']}>{children}</HotkeysProvider>
-        </EditorContext.Provider>
-      </div>
+      <EditorContext.Provider value={context}>
+        <div {...testId('dx-editor')} className={mx('relative w-full h-full overflow-hidden p-1', classNames)}>
+          {children}
+        </div>
+      </EditorContext.Provider>
     );
   },
 );

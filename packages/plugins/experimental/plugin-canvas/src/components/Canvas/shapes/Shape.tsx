@@ -8,18 +8,17 @@ import { type ThemedClassName } from '@dxos/react-ui';
 
 import { Frame } from './Frame';
 import { Line } from './Line';
-import { type PolygonShape, isPolygon, type BaseShape } from '../../../types';
+import { isPolygon, type BaseShape } from '../../../types';
 
 export const DEFS_ID = 'dx-defs';
 export const MARKER_PREFIX = 'dx-marker';
 
-/**
- * Data associated with a draggable.
- */
-export type DragPayloadData<S extends PolygonShape = PolygonShape> = {
-  type: 'frame' | 'anchor' | 'tool';
-  anchor?: string; // TODO(burdon): id.
-  shape: S;
+export const shapeAttrs = (shape: BaseShape) => ({ 'data-shape-id': shape.id });
+
+export const getShapeElement = (root: HTMLDivElement, id: string) => root.querySelector(`[data-shape-id="${id}"]`);
+export const getShapeBounds = (root: HTMLDivElement, id: string): DOMRect | undefined => {
+  const el = getShapeElement(root, id);
+  return el ? el.getClientRects()[0] : undefined;
 };
 
 /**

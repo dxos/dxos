@@ -2,11 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Dimension } from '@dxos/react-ui-canvas';
 import { range } from '@dxos/util';
 
 import { type Graph, GraphModel, type Node } from '../graph';
 import { createRectangle, type PointTransform } from '../layout';
-import { type Dimension, type Shape } from '../types';
+import { type Shape } from '../types';
 
 export const itemSize: Dimension = { width: 128, height: 64 };
 

@@ -8,12 +8,12 @@ import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
+import { type Dimension, type Point } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type DragPayloadData } from './shapes';
-import { useEditorContext } from '../../hooks';
+import { type DragPayloadData, useEditorContext } from '../../hooks';
 import { getBoundsProperties } from '../../layout';
-import { type Dimension, type PolygonShape, type Point } from '../../types';
+import { type PolygonShape } from '../../types';
 import { styles } from '../styles';
 
 export const DATA_SHAPE_ID = 'data-shape-id';

@@ -2,10 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useEffect } from 'react';
-import { useHotkeys, useHotkeysContext } from 'react-hotkeys-hook';
-
-import { useAttention } from '@dxos/react-ui-attention';
+import { useHotkeys } from 'react-hotkeys-hook';
 
 import { useActionHandler } from './useActionHandler';
 import { useEditorContext } from './useEditorContext';
@@ -15,16 +12,6 @@ import { useEditorContext } from './useEditorContext';
  */
 export const useShortcuts = () => {
   const { id, graph, selection } = useEditorContext();
-  const { hasAttention } = useAttention(id);
-  // TODO(burdon): Consider lower-level API without react dependency (for integration with app framework).
-  const { enableScope, disableScope } = useHotkeysContext();
-  useEffect(() => {
-    if (hasAttention) {
-      enableScope(id);
-    } else {
-      disableScope(id);
-    }
-  }, [id, hasAttention]);
 
   const handleAction = useActionHandler();
   useHotkeys(

@@ -4,14 +4,11 @@
 
 import { createContext, type Dispatch, type SetStateAction } from 'react';
 
+import { type Dimension } from '@dxos/react-ui-canvas';
+
 import { type SelectionModel } from './useSelected';
 import { type GraphModel, type Node } from '../graph';
-import type { Dimension, PolygonShape, Point, Shape } from '../types';
-
-export type TransformState = {
-  scale: number;
-  offset: Point;
-};
+import type { PolygonShape, Shape } from '../types';
 
 // TODO(burdon): Reconcile with DragPayloadData.
 export type DraggingState = {
@@ -34,13 +31,6 @@ export type EditorContextType = {
   debug: boolean;
   setDebug: Dispatch<SetStateAction<boolean>>;
   options: EditorOptions;
-
-  width: number;
-  height: number;
-
-  scale: number;
-  offset: Point;
-  setTransform: Dispatch<SetStateAction<TransformState>>;
 
   gridSize: Dimension;
   setGridSize: Dispatch<SetStateAction<Dimension>>;

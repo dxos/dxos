@@ -3,10 +3,7 @@
 //
 
 import { Expando, Ref, S, TypedObject } from '@dxos/echo-schema';
-
-export const Point = S.Struct({ x: S.Number, y: S.Number });
-export const Dimension = S.Struct({ width: S.Number, height: S.Number });
-export const Rect = S.extend(Point, Dimension);
+import { Point, Dimension } from '@dxos/react-ui-canvas';
 
 // TODO(burdon): Consider interop with TLDraw and GeoJSON standard.
 
@@ -71,10 +68,6 @@ export const Layout = S.Struct({
   shapes: S.mutable(S.Array(Shape)),
 });
 
-export type Point = S.Schema.Type<typeof Point>;
-export type Dimension = S.Schema.Type<typeof Dimension>;
-export type Rect = S.Schema.Type<typeof Rect>;
-
 export type BaseShape = S.Schema.Type<typeof BaseShape>;
 export type PolygonShape = S.Schema.Type<typeof PolygonShape>;
 export type Shape = S.Schema.Type<typeof Shape>;
@@ -86,6 +79,7 @@ export type LineShape = S.Schema.Type<typeof LineShape>;
 export type Layout = S.Schema.Type<typeof Layout>;
 
 export const isPolygon = S.is(PolygonShape);
+export const isLine = S.is(LineShape);
 
 export class CanvasBoardType extends TypedObject({
   typename: 'dxos.org/type/CanvasBoard',

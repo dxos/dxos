@@ -141,6 +141,7 @@
       <project name="react-metagraph" file="file://$PROJECT_DIR$/packages/experimental/react-metagraph/project.json" />
       <project name="react-ui" file="file://$PROJECT_DIR$/packages/ui/react-ui/project.json" />
       <project name="react-ui-attention" file="file://$PROJECT_DIR$/packages/ui/react-ui-attention/project.json" />
+      <project name="react-ui-canvas" file="file://$PROJECT_DIR$/packages/ui/react-ui-canvas/project.json" />
       <project name="react-ui-card" file="file://$PROJECT_DIR$/packages/ui/react-ui-card/project.json" />
       <project name="react-ui-editor" file="file://$PROJECT_DIR$/packages/ui/react-ui-editor/project.json" />
       <project name="react-ui-form" file="file://$PROJECT_DIR$/packages/ui/react-ui-form/project.json" />

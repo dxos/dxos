@@ -6,15 +6,16 @@ import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { bind } from 'bind-event-listener';
 import { useEffect, useState } from 'react';
 
-import { getBounds, type Range } from '../layout';
-import { type Point, type Rect } from '../types';
+import { type Point, type Rect } from '@dxos/react-ui-canvas';
 
-export type SelectionEvent = (rect: Rect | null, shift?: boolean) => void;
+import { getBounds, type Range } from '../layout';
+
+export type SelectionEvent = { bounds?: Rect | null; shift?: boolean };
 
 /**
  * Event listener to track range bounds selection.
  */
-export const useSelectionEvents = (el: HTMLElement | null, cb?: SelectionEvent): Rect | null => {
+export const useSelectionEvents = (el: HTMLElement | null, cb?: (event: SelectionEvent) => void): Rect | null => {
   const [range, setRange] = useState<Partial<Range>>();
   useEffect(() => {
     if (!el) {
@@ -62,9 +63,13 @@ export const useSelectionEvents = (el: HTMLElement | null, cb?: SelectionEvent):
           setRange((range) => {
             if (range?.p1 && range?.p2) {
               const bounds = getBounds(range.p1, range.p2);
-              cb?.(bounds, ev.shiftKey);
+              requestAnimationFrame(() => {
+                cb?.({ bounds, shift: ev.shiftKey });
+              });
             } else {
-              cb?.(null);
+              requestAnimationFrame(() => {
+                cb?.({});
+              });
             }
 
             return undefined;

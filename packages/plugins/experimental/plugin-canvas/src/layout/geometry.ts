@@ -5,8 +5,7 @@
 import { type CSSProperties } from 'react';
 
 import { invariant } from '@dxos/invariant';
-
-import { type Dimension, type Point, type Rect } from '../types';
+import { type Dimension, type Point, type Rect } from '@dxos/react-ui-canvas';
 
 // TODO(burdon): Utils?
 //  - https://www.npmjs.com/package/@antv/coord

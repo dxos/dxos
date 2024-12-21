@@ -2,8 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Point } from '@dxos/react-ui-canvas';
+
 import { createPathThroughPoints } from '../layout';
-import { type LineShape, type Point, type PolygonShape, type RectangleShape, type Shape } from '../types';
+import { type LineShape, type PolygonShape, type RectangleShape, type Shape } from '../types';
 
 export type ShapeKind = 'rect' | 'line';
 

@@ -3,6 +3,6 @@
 //
 
 export * from './Frame';
-export * from './Layout';
 export * from './Line';
 export * from './Shape';
+export * from './Shapes';

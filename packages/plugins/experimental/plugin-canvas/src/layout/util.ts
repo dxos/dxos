@@ -4,7 +4,7 @@
 
 import { type Input } from '@atlaskit/pragmatic-drag-and-drop/types';
 
-import { type Point } from '../types';
+import { type Point } from '@dxos/react-ui-canvas';
 
 /**
  * Get the relative position of the input event with respect to the provided element.

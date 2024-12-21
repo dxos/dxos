@@ -7,11 +7,7 @@ import React, { type PropsWithChildren, type SVGProps } from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { MARKER_PREFIX } from './Canvas/shapes';
-import { styles } from './styles';
 import { type Dimension, type Point } from '../types';
-
-export const createUrl = (ref?: string | false | undefined) => (ref ? `url(#${MARKER_PREFIX}-${ref})` : undefined);
 
 // Refs
 //  - https://airbnb.io/visx/gallery
@@ -127,7 +123,7 @@ export const GridPattern = ({
     patternUnits='userSpaceOnUse'
   >
     {/* TODO(burdon): vars. */}
-    <g className={mx(styles.gridLine, classNames)}>
+    <g className={mx(classNames)}>
       <line x1={0} y1={size / 2} x2={size} y2={size / 2} />
       <line x1={size / 2} y1={0} x2={size / 2} y2={size} />
     </g>

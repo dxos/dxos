@@ -14,23 +14,24 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/react-ui-theme';
 import { createObjectFactory, type ValueGenerator, Testing, type TypeSpec } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
-import { createGraph, type Graph } from '../../graph';
+import { createGraph, type Node, type GraphModel } from '../../graph';
 import { doLayout } from '../../layout';
+import { type Shape } from '../../types';
+import { AttentionContainer } from '../AttentionContainer';
 
 const generator: ValueGenerator = faker as any;
 
 const types = [Testing.OrgType, Testing.ProjectType, Testing.ContactType];
 
-type RenderProps = EditorRootProps & { init?: boolean; sidebar?: boolean };
+type RenderProps = Omit<EditorRootProps, 'graph'> & { init?: boolean; sidebar?: boolean };
 
 const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
   const editorRef = useRef<EditorController>(null);
-  const [graph, setGraph] = useState<Graph>();
+  const [graph, setGraph] = useState<GraphModel<Node<Shape>>>();
   const [_, space] = useSpaces(); // TODO(burdon): Get created space.
   useEffect(() => {
     if (!space || !init) {
@@ -43,7 +44,7 @@ const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
         .run();
 
       const model = await doLayout(createGraph(objects));
-      setGraph(model.graph);
+      setGraph(model);
     });
 
     return () => clearTimeout(t);
@@ -57,16 +58,18 @@ const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
 
   return (
     <div className='grid grid-cols-[1fr,400px] w-full h-full'>
-      <div className={mx('flex w-full h-full', !sidebar && 'col-span-2')}>
+      <AttentionContainer id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
         <Editor.Root ref={editorRef} id={id} graph={graph} {...props}>
           <Editor.Canvas />
           <Editor.UI />
         </Editor.Root>
-      </div>
+      </AttentionContainer>
       {sidebar && (
-        <SyntaxHighlighter language='json' classNames='text-xs'>
-          {JSON.stringify({ graph }, null, 2)}
-        </SyntaxHighlighter>
+        <AttentionContainer id='sidebar' tabIndex={0} classNames='flex grow overflow-hidden'>
+          <SyntaxHighlighter language='json' classNames='text-xs'>
+            {JSON.stringify({ graph }, null, 2)}
+          </SyntaxHighlighter>
+        </AttentionContainer>
       )}
     </div>
   );

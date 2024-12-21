@@ -4,30 +4,23 @@
 
 import React from 'react';
 
+import { FPS, testId } from '@dxos/react-ui-canvas';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
-import { FPS } from './FPS';
 import { useActionHandler, useEditorContext, useSelected } from '../../hooks';
 import { Tools, Toolbar } from '../Toolbar';
 import { eventsAuto, eventsNone } from '../styles';
-import { testId } from '../util';
 
 /**
  * UI components.
  */
 export const UI = () => {
-  const { debug, width, height, scale, offset, graph, showGrid, snapToGrid, dragging, linking } = useEditorContext();
+  const { debug, graph, showGrid, snapToGrid, dragging, linking } = useEditorContext();
   const handleAction = useActionHandler();
   const selected = useSelected();
   const info = {
     debug,
-    bounds: {
-      width,
-      height,
-    },
-    scale,
-    offset,
     graph: {
       nodes: graph.nodes.length,
       edges: graph.edges.length,

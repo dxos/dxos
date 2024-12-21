@@ -10,8 +10,8 @@ import React, { type MouseEventHandler, useEffect, useMemo, useRef, useState } f
 import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type DragPayloadData, type BaseShapeProps } from './Shape';
-import { useEditorContext } from '../../../hooks';
+import { type BaseShapeProps, shapeAttrs } from './Shape';
+import { type DragPayloadData, useEditorContext } from '../../../hooks';
 import { pointAdd, getBoundsProperties } from '../../../layout';
 import { type PolygonShape } from '../../../types';
 import { ReadonlyTextBox, TextBox, type TextBoxProps } from '../../TextBox';
@@ -114,9 +114,8 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
   return (
     <div className={mx(isDragging && 'opacity-0')}>
       <div
+        {...shapeAttrs(shape)}
         ref={ref}
-        // TODO(burdon): These should be the same.
-        // style={getBoundsProperties(shape.rect)}
         style={getBoundsProperties({ ...shape.center, ...shape.size })}
         className={mx(
           styles.frameContainer,
@@ -140,7 +139,6 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
           }
         }}
       >
-        {/* TODO(burdon): Transition text when full zoomed. */}
         {/* TODO(burdon): Auto-expand height? Trigger layout? */}
         {(isEditing && <TextBox value={shape.text} onClose={handleClose} onCancel={handleCancel} />) || (
           <ReadonlyTextBox classNames={mx(debug && 'font-mono text-xs')} value={getLabel(shape, debug)} />

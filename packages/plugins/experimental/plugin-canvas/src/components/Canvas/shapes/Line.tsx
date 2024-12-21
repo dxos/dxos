@@ -6,10 +6,11 @@ import React from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
 
-import { type BaseShapeProps, DEFS_ID } from './Shape';
+import { type BaseShapeProps, DEFS_ID, MARKER_PREFIX, shapeAttrs } from './Shape';
 import { type LineShape } from '../../../types';
 import { eventsAuto, eventsNone, styles } from '../../styles';
-import { createUrl } from '../../svg';
+
+const createUrl = (ref: string | undefined) => (ref ? `url(#${MARKER_PREFIX}-${ref})` : undefined);
 
 export type LineProps = BaseShapeProps<LineShape>;
 
@@ -33,9 +34,10 @@ export const Line = ({ shape, selected, onSelect }: LineProps) => {
           {/* This may not be necessary? */}
           <use href={`#${DEFS_ID}`} />
           <path
+            {...shapeAttrs(shape)}
             d={shape.path}
-            markerStart={createUrl(!shape.guide && shape.id !== 'link' && shape.start)}
-            markerEnd={createUrl(!shape.guide && shape.id !== 'link' && shape.end)}
+            markerStart={!shape.guide && shape.id !== 'link' ? createUrl(shape.start) : undefined}
+            markerEnd={!shape.guide && shape.id !== 'link' ? createUrl(shape.end) : undefined}
             className={mx(
               'stroke-[var(--dx-stroke-color)]',
               selected && styles.lineSelected,

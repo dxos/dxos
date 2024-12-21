@@ -5,20 +5,12 @@
 import { bind } from 'bind-event-listener';
 import { type Dispatch, type SetStateAction, useEffect } from 'react';
 
-import { type TransformState } from './context';
-import { getZoomTransform } from '../layout';
+import { getZoomTransform, type ProjectionState } from './projection';
 
 /**
  * Handle wheel events to update the transform state (zoom and offset).
  */
-export const useWheel = (
-  el: HTMLElement | null,
-  width: number,
-  height: number,
-  setTransform: Dispatch<SetStateAction<TransformState>>,
-) => {
-  // TODO(burdon): Jumps when zooming and cursor falls out of node.
-
+export const useWheel = (el: HTMLDivElement | null, setProjection: Dispatch<SetStateAction<ProjectionState>>) => {
   useEffect(() => {
     if (!el) {
       return;
@@ -28,22 +20,23 @@ export const useWheel = (
       type: 'wheel',
       listener: (ev: WheelEvent) => {
         ev.preventDefault();
+
         // Zoom or pan.
         if (ev.ctrlKey) {
           if (!el) {
             return;
           }
 
-          // Keep centered.
-          setTransform(({ scale, offset }) => {
+          // Keep centered while zooming.
+          setProjection(({ scale, offset }) => {
             const scaleSensitivity = 0.01;
             const newScale = scale * Math.exp(-ev.deltaY * scaleSensitivity);
             const rect = el.getBoundingClientRect();
-            const pos = { x: ev.offsetX - rect.left, y: ev.offsetY - rect.top };
+            const pos = { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
             return getZoomTransform({ scale, offset, newScale, pos });
           });
         } else {
-          setTransform(({ scale, offset: { x, y } }) => {
+          setProjection(({ scale, offset: { x, y } }) => {
             return {
               scale,
               offset: {
@@ -55,5 +48,5 @@ export const useWheel = (
         }
       },
     });
-  }, [el, setTransform, width, height]);
+  }, [el, setProjection]);
 };

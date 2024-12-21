@@ -2,81 +2,89 @@
 // Copyright 2024 DXOS.org
 //
 
-import { monitorForElements, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import React, { useEffect, useRef, useState } from 'react';
+import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
-import { invariant } from '@dxos/invariant';
+import { Canvas as NativeCanvas, Grid, testId, useWheel, useProjection } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Background } from './Background';
-import { type DragPayloadData, FrameDragPreview, Layout, Line, useLayout, useSelectionHandler } from './shapes';
-import { useActionHandler, useEditorContext, useShortcuts, useSnap, useTransform, useWheel } from '../../hooks';
-import {
-  createLine,
-  createRectangle,
-  screenToModel,
-  findClosestIntersection,
-  getInputPoint,
-  getRect,
-} from '../../layout';
-import { createId, itemSize } from '../../testing';
-import { type PolygonShape, type LineShape, type Point } from '../../types';
-import { Grid } from '../Grid';
+import { FrameDragPreview, getShapeBounds, Line, Shapes } from './shapes';
+import { useDragMonitor, useEditorContext, useLayout, useSelectionEvents, useShortcuts } from '../../hooks';
+import { rectContains } from '../../layout';
 import { eventsNone, styles } from '../styles';
-import { testId } from '../util';
-
-// TODO(burdon): Flaky error:
-// Warning: Cannot update a component (`Shapes`) while rendering a different component (`Canvas`).
-// To locate the bad setState() call inside `Canvas`, follow the stack trace as described in https://reactjs.org/link/setstate-in-render
 
 /**
  * Main canvas component.
  */
 export const Canvas = () => {
-  const { id, options, debug, width, height, scale, offset, graph, showGrid, dragging, setTransform } =
-    useEditorContext();
+  // TODO(burdon): Controller.
+  return (
+    <NativeCanvas {...testId('dx-canvas')} classNames={'absolute inset-0 overflow-hidden'}>
+      <CanvasContent />
+    </NativeCanvas>
+  );
+};
 
-  // Canvas.
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { styles: transformStyles } = useTransform();
-
-  // Pan and zoom.
-  useWheel(containerRef.current, width, height, setTransform);
-
-  // Keyboard shortcuts.
-  useShortcuts();
+export const CanvasContent = () => {
+  const { id, options, debug, graph, showGrid, dragging, selection } = useEditorContext();
+  const { root, styles: transformStyles, setProjection, scale, offset } = useProjection();
 
   // Drop target.
   useEffect(() => {
-    if (!containerRef.current) {
+    if (!root) {
       return;
     }
 
     return dropTargetForElements({
-      element: containerRef.current,
+      element: root,
       getData: () => ({ type: 'canvas' }),
+      canDrop: () => true,
     });
-  }, [containerRef.current]);
+  }, [root]);
+
+  // Keyboard shortcuts.
+  useShortcuts();
+
+  // Pan and zoom.
+  useWheel(root, setProjection);
 
   // Dragging and linking.
-  const { frameDragging, overlay } = useDragMonitor(containerRef.current);
+  const { frameDragging, overlay } = useDragMonitor(root);
 
   // Layout.
   const layout = useLayout(graph, frameDragging, debug);
-  const { shapes } = layout;
-  const selectionRect = useSelectionHandler(containerRef.current, shapes);
+
+  // Selection.
+  const shapesRef = useRef<HTMLDivElement>(null);
+  const selectionRect = useSelectionEvents(root, ({ bounds }) => {
+    if (!bounds) {
+      selection.clear();
+    } else {
+      selection.setSelected(
+        layout.shapes
+          .filter((shape) => {
+            const rect = getShapeBounds(shapesRef.current!, shape.id);
+            return rect && rectContains(bounds, rect);
+          })
+          .map((shape) => shape.id),
+      );
+    }
+  });
 
   return (
-    <div {...testId('dx-canvas')} ref={containerRef} className={mx('absolute inset-0 overflow-hidden')}>
+    <>
       {/* Background. */}
       <Background />
 
       {/* Grid. */}
-      {showGrid && <Grid id={id} size={options.gridSize} scale={scale} offset={offset} />}
+      {showGrid && <Grid id={id} size={options.gridSize} scale={scale} offset={offset} classNames={styles.gridLine} />}
 
       {/* Content. */}
-      {<Layout shapes={shapes} style={transformStyles} />}
+      <div ref={shapesRef} {...testId('dx-layout', true)} style={transformStyles}>
+        <Shapes layout={layout} />
+      </div>
 
       {/* Overlays. */}
       <div {...testId('dx-overlays')} className={mx('absolute', eventsNone)}>
@@ -87,118 +95,14 @@ export const Canvas = () => {
           </svg>
         )}
 
-        {/* Linking overlay. */}
-        {overlay && (
-          <div className='absolute' style={transformStyles}>
-            <Line scale={scale} shape={overlay} />
-          </div>
-        )}
+        <div style={transformStyles}>
+          {/* Drag preview. */}
+          {dragging && createPortal(<FrameDragPreview scale={scale} shape={dragging.shape} />, dragging.container)}
 
-        {/* Drag preview. */}
-        {dragging &&
-          createPortal(
-            <div style={transformStyles}>
-              <FrameDragPreview scale={scale} shape={dragging.shape} />
-            </div>,
-            dragging.container,
-          )}
+          {/* Linking overlay. */}
+          {overlay && <Line scale={scale} shape={overlay} />}
+        </div>
       </div>
-    </div>
+    </>
   );
-};
-
-/**
- * Monitor frames and anchors being dragged.
- */
-const useDragMonitor = (el: HTMLElement | null) => {
-  const { graph, scale, offset, selection, dragging, setDragging, linking, setLinking } = useEditorContext();
-  const actionHandler = useActionHandler();
-  const snapPoint = useSnap();
-
-  const [frameDragging, setFrameDragging] = useState<PolygonShape>();
-  const [overlay, setOverlay] = useState<LineShape>();
-  const cancelled = useRef(false);
-
-  const lastPointRef = useRef<Point>();
-  useEffect(() => {
-    return monitorForElements({
-      onDrag: ({ source, location }) => {
-        invariant(el);
-        const [{ x, y }] = screenToModel(scale, offset, [getInputPoint(el, location.current.input)]);
-        const pos = { x, y };
-        const { type, shape } = source.data as DragPayloadData<PolygonShape>;
-        if (x !== lastPointRef.current?.x || y !== lastPointRef.current?.y) {
-          lastPointRef.current = pos;
-          switch (type) {
-            case 'frame': {
-              if (dragging) {
-                setFrameDragging({ ...shape, center: pos });
-              }
-              break;
-            }
-
-            case 'anchor': {
-              if (linking) {
-                setOverlay(createLineOverlay(shape, pos));
-              }
-              break;
-            }
-          }
-        }
-      },
-
-      // Dragging cancelled if user presses Esc.
-      // https://atlassian.design/components/pragmatic-drag-and-drop/core-package/events#cancelling
-      onDropTargetChange: ({ source, location }) => {
-        cancelled.current = location.current.dropTargets.length === 0;
-      },
-
-      onDrop: async ({ source, location }) => {
-        if (!cancelled.current) {
-          // TODO(burdon): Adjust for offset on drag?
-          invariant(el);
-          const [pos] = screenToModel(scale, offset, [getInputPoint(el, location.current.input)]);
-          const { type, shape } = source.data as DragPayloadData;
-
-          switch (type) {
-            case 'frame': {
-              shape.center = snapPoint(pos);
-
-              // TODO(burdon): Copy from other component.
-              // if (!graph.getNode(shape.id)) {
-              //   graph.addNode({ id: shape.id, data: { ...shape } });
-              // }
-              break;
-            }
-
-            case 'anchor': {
-              const target = location.current.dropTargets.find(({ data }) => data.type === 'frame')?.data
-                .shape as PolygonShape;
-              let id = target?.id;
-              if (!id) {
-                id = createId();
-                const shape = createRectangle({ id, center: snapPoint(pos), size: itemSize });
-                await actionHandler({ type: 'create', shape });
-              }
-              await actionHandler({ type: 'link', source: shape.id, target: id });
-              break;
-            }
-          }
-        }
-
-        setDragging(undefined);
-        setLinking(undefined);
-        setFrameDragging(undefined);
-        setOverlay(undefined);
-      },
-    });
-  }, [el, actionHandler, selection, scale, offset, snapPoint, dragging, linking]);
-
-  return { frameDragging, overlay };
-};
-
-const createLineOverlay = (source: PolygonShape, pos: Point): LineShape | undefined => {
-  const rect = getRect(source.center, source.size);
-  const p1 = findClosestIntersection([pos, source.center], rect) ?? source.center;
-  return createLine({ id: 'link', p1, p2: pos });
 };
