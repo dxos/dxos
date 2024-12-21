@@ -277,7 +277,7 @@ export const getNormals = (r1: Rect, r2: Rect, len = 32): [Point[], Point[]] => 
 
   const distances = [];
 
-  // Check horizontal facing sides
+  // Check horizontal facing sides.
   if (r1.x + r1.width <= r2.x) {
     distances.push({
       pair: [sidesR1.right, sidesR2.left],
@@ -290,7 +290,7 @@ export const getNormals = (r1: Rect, r2: Rect, len = 32): [Point[], Point[]] => 
     });
   }
 
-  // Check vertical facing sides
+  // Check vertical facing sides.
   if (r1.y + r1.height <= r2.y) {
     distances.push({
       pair: [sidesR1.bottom, sidesR2.top],
@@ -307,18 +307,13 @@ export const getNormals = (r1: Rect, r2: Rect, len = 32): [Point[], Point[]] => 
   const [side1, side2] = distances.reduce((max, curr) => (curr.distance > max.distance ? curr : max)).pair;
 
   // Generate lines perpendicular to the sides and pointing away.
-  const createPerpendicularLine = (
-    side: Point[],
-    direction: 'horizontal' | 'vertical',
-    away: 1 | -1,
-    len: number,
-  ): Line => {
+  const createPerpendicularLine = (side: Point[], vertical: boolean, away: 1 | -1, len: number): Line => {
     const midPoint: Point = {
       x: (side[0].x + side[1].x) / 2,
       y: (side[0].y + side[1].y) / 2,
     };
 
-    if (direction === 'horizontal') {
+    if (vertical) {
       return [{ x: midPoint.x - len * away, y: midPoint.y }, midPoint];
     } else {
       return [{ x: midPoint.x, y: midPoint.y - len * away }, midPoint];
@@ -332,7 +327,7 @@ export const getNormals = (r1: Rect, r2: Rect, len = 32): [Point[], Point[]] => 
   const direction2 = isVertical2 ? (side2[0].x < side1[0].x ? -1 : 1) : side2[0].y < side1[0].y ? -1 : 1;
 
   return [
-    createPerpendicularLine(side1, isVertical1 ? 'horizontal' : 'vertical', direction1, len),
-    createPerpendicularLine(side2, isVertical2 ? 'horizontal' : 'vertical', direction2, len),
+    createPerpendicularLine(side1, isVertical1, direction1, len),
+    createPerpendicularLine(side2, isVertical2, direction2, len),
   ];
 };

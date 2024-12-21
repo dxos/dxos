@@ -67,7 +67,7 @@ export const CanvasContent = () => {
 
   // Selection.
   const shapesRef = useRef<HTMLDivElement>(null);
-  const selectionRect = useSelectionEvents(root, ({ bounds }) => {
+  const selectionRect = useSelectionEvents(root, ({ bounds, shift }) => {
     if (!bounds) {
       selection.clear();
       root.click();
@@ -79,6 +79,7 @@ export const CanvasContent = () => {
             return rect && rectContains(bounds, rect);
           })
           .map((shape) => shape.id),
+        shift,
       );
     }
   });
