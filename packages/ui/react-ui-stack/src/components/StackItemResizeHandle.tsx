@@ -10,8 +10,8 @@ import React, { useLayoutEffect, useRef } from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
 
-import { useStack, useStackItem } from './StackContext';
-import { DEFAULT_EXTRINSIC_SIZE, type StackItemSize } from './StackItem';
+import { useStack, useStackItem, type StackItemSize } from './StackContext';
+import { DEFAULT_EXTRINSIC_SIZE } from './StackItem';
 
 const REM = parseFloat(getComputedStyle(document.documentElement).fontSize);
 
