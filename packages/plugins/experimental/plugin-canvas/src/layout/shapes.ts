@@ -5,19 +5,39 @@
 import { type Point } from '@dxos/react-ui-canvas';
 
 import { createSplineThroughPoints, createPathThroughPoints } from '../layout';
-import { type LineShape, type PolygonShape, type RectangleShape, type Shape } from '../types';
+import { type EllipseShape, type LineShape, type PolygonShape, type RectangleShape, type Shape } from '../types';
 
 export type ShapeKind = 'rect' | 'line';
 
 type CommonProps = Pick<Shape, 'id' | 'guide' | 'text'>;
 
-type RectProps = CommonProps & Pick<PolygonShape, 'center' | 'size'>;
+//
+// Rectangle
+//
 
-export const createRectangle = ({ id, ...rest }: RectProps): RectangleShape => ({
+type RectangleProps = CommonProps & Pick<PolygonShape, 'center' | 'size'>;
+
+export const createRectangle = ({ id, ...rest }: RectangleProps): RectangleShape => ({
   id,
   type: 'rectangle',
   ...rest,
 });
+
+//
+// Ellipse
+//
+
+type EllipseProps = CommonProps & Pick<PolygonShape, 'center' | 'size'>;
+
+export const createEllipse = ({ id, ...rest }: EllipseProps): EllipseShape => ({
+  id,
+  type: 'ellipse',
+  ...rest,
+});
+
+//
+// Line
+//
 
 type LineProps = CommonProps &
   Pick<LineShape, 'start' | 'end'> & {

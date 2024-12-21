@@ -169,5 +169,5 @@ export const FrameDragPreview = ({ shape }: FrameProps) => {
 };
 
 const getLabel = (shape: PolygonShape, debug = false) => {
-  return debug ? shape.id + `\n(${shape.center.x},${shape.center.y})` : shape.text ?? shape.id;
+  return debug ? [shape.id, shape.type, `(${shape.center.x},${shape.center.y})`].join('\n') : shape.text ?? shape.id;
 };

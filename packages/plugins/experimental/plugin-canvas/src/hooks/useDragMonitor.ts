@@ -6,22 +6,32 @@ import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/ad
 import { useEffect, useRef, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { type Point, useProjection } from '@dxos/react-ui-canvas';
 
 import { useEditorContext } from './useEditorContext';
 import { useSnap } from './useSnap';
-import { createLine, createRectangle, findClosestIntersection, getInputPoint, getRect } from '../layout';
+import { createEllipse, createLine, createRectangle, findClosestIntersection, getInputPoint, getRect } from '../layout';
 import { createId, itemSize } from '../testing';
 import { type PolygonShape, type LineShape } from '../types';
 
 /**
  * Data associated with a draggable.
  */
-export type DragPayloadData<S extends PolygonShape = PolygonShape> = {
-  type: 'frame' | 'anchor' | 'tool';
-  anchor?: string; // TODO(burdon): id.
-  shape: S;
-};
+export type DragPayloadData =
+  | {
+      type: 'tool';
+      tool: string;
+    }
+  | {
+      type: 'frame';
+      shape: PolygonShape;
+    }
+  | {
+      type: 'anchor';
+      shape: PolygonShape;
+      anchor: string;
+    };
 
 /**
  * Monitor frames and anchors being dragged.
@@ -42,20 +52,20 @@ export const useDragMonitor = (el: HTMLElement | null) => {
         invariant(el);
         const [{ x, y }] = projection.toModel([getInputPoint(el, location.current.input)]);
         const pos = { x, y };
-        const { type, shape } = source.data as DragPayloadData<PolygonShape>;
+        const data = source.data as DragPayloadData;
         if (x !== lastPointRef.current?.x || y !== lastPointRef.current?.y) {
           lastPointRef.current = pos;
-          switch (type) {
+          switch (data.type) {
             case 'frame': {
               if (dragging) {
-                setFrameDragging({ ...shape, center: pos });
+                setFrameDragging({ ...data.shape, center: pos });
               }
               break;
             }
 
             case 'anchor': {
               if (linking) {
-                setOverlay(createLineOverlay(shape, pos));
+                setOverlay(createLinkOverlay(data.shape, pos));
               }
               break;
             }
@@ -63,26 +73,47 @@ export const useDragMonitor = (el: HTMLElement | null) => {
         }
       },
 
-      // Dragging cancelled if user presses Esc.
-      // https://atlassian.design/components/pragmatic-drag-and-drop/core-package/events#cancelling
-      onDropTargetChange: ({ source, location }) => {
-        cancelled.current = location.current.dropTargets.length === 0;
-      },
-
       onDrop: async ({ source, location }) => {
         if (!cancelled.current) {
           // TODO(burdon): Adjust for offset on drag?
           invariant(el);
           const [pos] = projection.toModel([getInputPoint(el, location.current.input)]);
-          const { type, shape } = source.data as DragPayloadData;
+          const data = source.data as DragPayloadData;
+          switch (data.type) {
+            case 'tool': {
+              // TODO(burdon): Generalize constructor/factor out.
+              switch (data.tool) {
+                case 'ellipse': {
+                  const center = snapPoint(pos);
+                  invariant(dragging?.shape);
+                  await actionHandler?.({
+                    type: 'create',
+                    shape: createEllipse({ id: createId(), center, size: dragging.shape.size }),
+                  });
+                  break;
+                }
 
-          switch (type) {
+                case 'rectangle':
+                default: {
+                  const center = snapPoint(pos);
+                  invariant(dragging?.shape);
+                  await actionHandler?.({
+                    type: 'create',
+                    shape: createRectangle({ id: createId(), center, size: dragging.shape.size }),
+                  });
+                  break;
+                }
+              }
+              break;
+            }
+
             case 'frame': {
-              shape.center = snapPoint(pos);
+              data.shape.center = snapPoint(pos);
 
               // TODO(burdon): Copy from other component.
-              if (!graph.getNode(shape.id)) {
+              if (!graph.getNode(data.shape.id)) {
                 // graph.addNode({ id: shape.id, data: { ...shape } });
+                log.info('copy', { shape: data.shape });
               }
               break;
             }
@@ -96,7 +127,7 @@ export const useDragMonitor = (el: HTMLElement | null) => {
                 const shape = createRectangle({ id, center: snapPoint(pos), size: itemSize });
                 await actionHandler?.({ type: 'create', shape });
               }
-              await actionHandler?.({ type: 'link', source: shape.id, target: id });
+              await actionHandler?.({ type: 'link', source: data.shape.id, target: id });
               break;
             }
           }
@@ -107,13 +138,19 @@ export const useDragMonitor = (el: HTMLElement | null) => {
         setFrameDragging(undefined);
         setOverlay(undefined);
       },
+
+      // Dragging cancelled if user presses Esc.
+      // https://atlassian.design/components/pragmatic-drag-and-drop/core-package/events#cancelling
+      onDropTargetChange: ({ source, location }) => {
+        cancelled.current = location.current.dropTargets.length === 0;
+      },
     });
   }, [el, projection, actionHandler, selection, snapPoint, dragging, linking]);
 
   return { frameDragging, overlay };
 };
 
-const createLineOverlay = (source: PolygonShape, pos: Point): LineShape | undefined => {
+const createLinkOverlay = (source: PolygonShape, pos: Point): LineShape | undefined => {
   const rect = getRect(source.center, source.size);
   const p1 = findClosestIntersection([pos, source.center], rect) ?? source.center;
   return createLine({ id: 'link', points: [p1, pos] });

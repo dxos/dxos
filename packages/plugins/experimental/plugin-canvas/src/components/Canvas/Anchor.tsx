@@ -43,7 +43,7 @@ export const Anchor = ({ id, shape, pos, size = defaultSize, scale = 1, onMouseL
     invariant(ref.current);
     return draggable({
       element: ref.current,
-      getInitialData: () => ({ type: 'anchor', shape, anchor: id }) satisfies DragPayloadData<PolygonShape>,
+      getInitialData: () => ({ type: 'anchor', shape, anchor: id }) satisfies DragPayloadData,
       onGenerateDragPreview: ({ nativeSetDragImage }) => {
         setCustomNativeDragPreview({
           nativeSetDragImage,
