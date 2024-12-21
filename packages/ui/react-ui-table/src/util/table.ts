@@ -38,6 +38,7 @@ export const initializeTable = ({ space, table, initialRow = true }: InitialiseT
     name: S.optional(S.String).annotations({
       [AST.TitleAnnotationId]: 'Name',
     }),
+    active: S.optional(S.Boolean),
     email: S.optional(Format.Email),
     salary: S.optional(Format.Currency()).annotations({
       [AST.TitleAnnotationId]: 'Salary',
@@ -45,19 +46,20 @@ export const initializeTable = ({ space, table, initialRow = true }: InitialiseT
   });
 
   const contactSchema = space.db.schemaRegistry.addSchema(ContactSchema);
+
   table.view = makeRef(
     createView({
       name: 'Test',
       typename: contactSchema.typename,
       jsonSchema: contactSchema.jsonSchema,
-      fields: ['name', 'email', 'salary'],
+      fields: ['name', 'active', 'email', 'salary'],
     }),
   );
 
   const projection = new ViewProjection(contactSchema, table.view.target!);
   projection.setFieldProjection({
     field: {
-      id: table.view.target!.fields[2].id,
+      id: table.view.target!.fields.find((f) => f.path === 'salary')!.id,
       path: 'salary' as JsonPath,
       size: 150,
     },
