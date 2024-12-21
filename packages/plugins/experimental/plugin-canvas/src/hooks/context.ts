@@ -7,6 +7,7 @@ import { createContext, type Dispatch, type SetStateAction } from 'react';
 import { type Dimension } from '@dxos/react-ui-canvas';
 
 import { type SelectionModel } from './useSelected';
+import type { ActionHandler } from '../actions';
 import { type GraphModel, type Node } from '../graph';
 import type { PolygonShape, Shape } from '../types';
 
@@ -24,6 +25,7 @@ export type EditingState = {
 export type EditorOptions = {
   zoomFactor: number;
   gridSize: number;
+  gridSnap: number;
 };
 
 export type EditorContextType = {
@@ -31,6 +33,9 @@ export type EditorContextType = {
   debug: boolean;
   setDebug: Dispatch<SetStateAction<boolean>>;
   options: EditorOptions;
+
+  actionHandler: ActionHandler | undefined;
+  setActionHandler: (cb: ActionHandler | undefined) => void;
 
   gridSize: Dimension;
   setGridSize: Dispatch<SetStateAction<Dimension>>;

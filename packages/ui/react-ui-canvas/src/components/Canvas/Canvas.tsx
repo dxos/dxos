@@ -17,7 +17,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { defaultOffset, CanvasContext, ProjectionMapperImpl, type ProjectionState } from '../../hooks';
+import { defaultOffset, CanvasContext, ProjectionMapper, type ProjectionState } from '../../hooks';
 
 export interface CanvasController {
   setProjection(projection: ProjectionState): Promise<void>;
@@ -43,7 +43,7 @@ export const Canvas = forwardRef<CanvasController, CanvasProps>(
     }, [width, height, scale, offset]);
 
     // Projection mapper.
-    const projection = useMemo(() => new ProjectionMapperImpl(), []);
+    const projection = useMemo(() => new ProjectionMapper(), []);
     useEffect(() => {
       projection.update(scale, offset);
     }, [projection, scale, offset]);
@@ -74,7 +74,7 @@ export const Canvas = forwardRef<CanvasController, CanvasProps>(
       <CanvasContext.Provider
         value={{ root: ref.current, width, height, scale, offset, styles, projection, setProjection }}
       >
-        <div role='none' {...props} className={mx('overflow-hidden', classNames)} ref={ref}>
+        <div role='none' {...props} className={mx('absolute inset-0 overflow-hidden', classNames)} ref={ref}>
           {children}
         </div>
       </CanvasContext.Provider>

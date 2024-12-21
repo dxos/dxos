@@ -20,6 +20,9 @@ export const createSnap =
  *
  */
 export const useSnap = (): PointTransform => {
-  const { gridSize, snapToGrid } = useEditorContext();
-  return useMemo(() => (snapToGrid ? createSnap(gridSize) : (p) => p), [gridSize, snapToGrid]);
+  const { options, snapToGrid } = useEditorContext();
+  return useMemo<PointTransform>(() => {
+    const snap = options.gridSnap ?? options.gridSize;
+    return snapToGrid && snap ? createSnap({ width: snap, height: snap }) : (p) => p;
+  }, [options.gridSnap, snapToGrid]);
 };

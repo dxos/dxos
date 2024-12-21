@@ -8,7 +8,6 @@ import { useEffect, useRef, useState } from 'react';
 import { invariant } from '@dxos/invariant';
 import { type Point, useProjection } from '@dxos/react-ui-canvas';
 
-import { useActionHandler } from './useActionHandler';
 import { useEditorContext } from './useEditorContext';
 import { useSnap } from './useSnap';
 import { createLine, createRectangle, findClosestIntersection, getInputPoint, getRect } from '../layout';
@@ -28,9 +27,8 @@ export type DragPayloadData<S extends PolygonShape = PolygonShape> = {
  * Monitor frames and anchors being dragged.
  */
 export const useDragMonitor = (el: HTMLElement | null) => {
-  const { graph, selection, dragging, setDragging, linking, setLinking } = useEditorContext();
+  const { graph, selection, dragging, setDragging, linking, setLinking, actionHandler } = useEditorContext();
   const { projection } = useProjection();
-  const actionHandler = useActionHandler();
   const snapPoint = useSnap();
 
   const [frameDragging, setFrameDragging] = useState<PolygonShape>();
@@ -83,9 +81,9 @@ export const useDragMonitor = (el: HTMLElement | null) => {
               shape.center = snapPoint(pos);
 
               // TODO(burdon): Copy from other component.
-              // if (!graph.getNode(shape.id)) {
-              //   graph.addNode({ id: shape.id, data: { ...shape } });
-              // }
+              if (!graph.getNode(shape.id)) {
+                // graph.addNode({ id: shape.id, data: { ...shape } });
+              }
               break;
             }
 
@@ -96,9 +94,9 @@ export const useDragMonitor = (el: HTMLElement | null) => {
               if (!id) {
                 id = createId();
                 const shape = createRectangle({ id, center: snapPoint(pos), size: itemSize });
-                await actionHandler({ type: 'create', shape });
+                await actionHandler?.({ type: 'create', shape });
               }
-              await actionHandler({ type: 'link', source: shape.id, target: id });
+              await actionHandler?.({ type: 'link', source: shape.id, target: id });
               break;
             }
           }

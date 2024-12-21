@@ -6,12 +6,18 @@ import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element
 import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
-import { Canvas as NativeCanvas, Grid, testId, useWheel, useProjection } from '@dxos/react-ui-canvas';
+import { Canvas as NativeCanvas, Grid, type Rect, testId, useWheel, useProjection } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
-import { Background } from './Background';
 import { FrameDragPreview, getShapeBounds, Line, Shapes } from './shapes';
-import { useDragMonitor, useEditorContext, useLayout, useSelectionEvents, useShortcuts } from '../../hooks';
+import {
+  useActionHandler,
+  useDragMonitor,
+  useEditorContext,
+  useLayout,
+  useSelectionEvents,
+  useShortcuts,
+} from '../../hooks';
 import { rectContains } from '../../layout';
 import { eventsNone, styles } from '../styles';
 
@@ -21,7 +27,7 @@ import { eventsNone, styles } from '../styles';
 export const Canvas = () => {
   // TODO(burdon): Controller.
   return (
-    <NativeCanvas {...testId('dx-canvas')} classNames={'absolute inset-0 overflow-hidden'}>
+    <NativeCanvas {...testId('dx-canvas')}>
       <CanvasContent />
     </NativeCanvas>
   );
@@ -30,6 +36,10 @@ export const Canvas = () => {
 export const CanvasContent = () => {
   const { id, options, debug, graph, showGrid, dragging, selection } = useEditorContext();
   const { root, styles: transformStyles, setProjection, scale, offset } = useProjection();
+  console.log(scale);
+
+  // Actions.
+  useActionHandler();
 
   // Drop target.
   useEffect(() => {
@@ -82,27 +92,41 @@ export const CanvasContent = () => {
       {showGrid && <Grid id={id} size={options.gridSize} scale={scale} offset={offset} classNames={styles.gridLine} />}
 
       {/* Content. */}
-      <div ref={shapesRef} {...testId('dx-layout', true)} style={transformStyles}>
+      <div ref={shapesRef} {...testId('dx-layout', true)} style={transformStyles} className='absolute'>
         <Shapes layout={layout} />
       </div>
 
       {/* Overlays. */}
-      <div {...testId('dx-overlays')} className={mx('absolute', eventsNone)}>
+      <div {...testId('dx-overlays')} className={mx(eventsNone)}>
         {/* Selection overlay. */}
-        {selectionRect && (
-          <svg className='absolute overflow-visible cursor-crosshair'>
-            <rect {...selectionRect} className={styles.cursor} />
-          </svg>
-        )}
+        {selectionRect && <SelectionBox rect={selectionRect} />}
 
-        <div style={transformStyles}>
-          {/* Drag preview. */}
-          {dragging && createPortal(<FrameDragPreview scale={scale} shape={dragging.shape} />, dragging.container)}
+        {/* Drag preview (NOTE: styles should be included to apply scale). */}
+        {dragging &&
+          createPortal(
+            <div style={transformStyles}>
+              <FrameDragPreview scale={scale} shape={dragging.shape} />
+            </div>,
+            dragging.container,
+          )}
 
-          {/* Linking overlay. */}
+        {/* Linking overlay. */}
+        <div className='absolute' style={transformStyles}>
           {overlay && <Line scale={scale} shape={overlay} />}
         </div>
       </div>
     </>
+  );
+};
+
+const Background = () => {
+  return <div {...testId('dx-background')} className={mx('absolute inset-0 bg-base', eventsNone)} />;
+};
+
+const SelectionBox = ({ rect }: { rect: Rect }) => {
+  return (
+    <svg className='absolute overflow-visible cursor-crosshair'>
+      <rect {...rect} className={styles.cursor} />
+    </svg>
   );
 };

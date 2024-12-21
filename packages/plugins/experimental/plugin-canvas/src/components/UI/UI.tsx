@@ -8,7 +8,7 @@ import { FPS, testId } from '@dxos/react-ui-canvas';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useActionHandler, useEditorContext, useSelected } from '../../hooks';
+import { useEditorContext, useSelected } from '../../hooks';
 import { Tools, Toolbar } from '../Toolbar';
 import { eventsAuto, eventsNone } from '../styles';
 
@@ -16,8 +16,7 @@ import { eventsAuto, eventsNone } from '../styles';
  * UI components.
  */
 export const UI = () => {
-  const { debug, graph, showGrid, snapToGrid, dragging, linking } = useEditorContext();
-  const handleAction = useActionHandler();
+  const { debug, graph, showGrid, snapToGrid, dragging, linking, actionHandler } = useEditorContext();
   const selected = useSelected();
   const info = {
     debug,
@@ -57,7 +56,7 @@ export const UI = () => {
         </div>
         <div className='absolute bottom-2 left-2 right-2 flex justify-center'>
           <div className='p-1 bg-base rounded-md border border-separator'>
-            <Toolbar onAction={handleAction} classNames={mx(eventsAuto)} />
+            <Toolbar onAction={actionHandler} classNames={mx(eventsAuto)} />
           </div>
         </div>
       </div>

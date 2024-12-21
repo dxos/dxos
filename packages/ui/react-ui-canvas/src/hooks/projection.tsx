@@ -3,7 +3,15 @@
 //
 
 import * as d3 from 'd3';
-import { applyToPoints, compose, inverse, type Matrix, translate, identity, scale } from 'transformation-matrix';
+import {
+  type Matrix,
+  applyToPoints,
+  compose,
+  inverse,
+  translate as translateMatrix,
+  identity,
+  scale as scaleMatrix,
+} from 'transformation-matrix';
 
 import { type Point } from '../types';
 
@@ -36,17 +44,24 @@ export interface Projection {
   toModel(points: Point[]): Point[];
 }
 
-export class ProjectionMapperImpl implements Projection {
+export class ProjectionMapper implements Projection {
   private _scale: number = 1;
   private _offset: Point = defaultOffset;
   private _toScreen: Matrix = identity();
   private _toModel: Matrix = identity();
 
-  update(s: number, offset: Point) {
-    this._scale = s;
+  constructor(scale?: number, offset?: Point) {
+    if (scale && offset) {
+      this.update(scale, offset);
+    }
+  }
+
+  update(scale: number, offset: Point) {
+    this._scale = scale;
     this._offset = offset;
-    this._toScreen = compose(translate(this._offset.x, this._offset.y), scale(this._scale));
+    this._toScreen = compose(translateMatrix(this._offset.x, this._offset.y), scaleMatrix(this._scale));
     this._toModel = inverse(this._toScreen);
+    return this;
   }
 
   get scale(): number {
@@ -87,6 +102,7 @@ export const getZoomTransform = ({
 /**
  * Zoom while keeping the specified position in place.
  */
+// TODO(burdon): Convert to object.
 export const zoomInPlace = (
   setTransform: (state: ProjectionState) => void,
   pos: Point,
@@ -108,6 +124,7 @@ export const zoomInPlace = (
 /**
  * Zoom to new scale and position.
  */
+// TODO(burdon): Convert to object.
 export const zoomTo = (
   setTransform: (state: ProjectionState) => void,
   current: ProjectionState,

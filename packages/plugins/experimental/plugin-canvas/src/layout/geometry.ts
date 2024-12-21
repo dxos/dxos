@@ -37,9 +37,9 @@ export const distance = (p1: Point, p2: Point): number =>
 // Rect
 //
 
-export const getCenter = (rect: Rect): Point => ({
-  x: rect.x + rect.width / 2,
-  y: rect.y + rect.height / 2,
+export const getCenter = (rect: Partial<Rect>): Point => ({
+  x: (rect.x ?? 0) + (rect.width ?? 0) / 2,
+  y: (rect.y ?? 0) + (rect.height ?? 0) / 2,
 });
 
 export const getRect = (center: Point, size: Dimension): Rect => ({

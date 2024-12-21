@@ -8,6 +8,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { testId } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
+import { type ActionHandler } from '../../actions';
 import { type Graph, GraphModel, type Node } from '../../graph';
 import {
   type DraggingState,
@@ -16,7 +17,6 @@ import {
   type EditorContextType,
   type EditorOptions,
   SelectionModel,
-  handleAction,
 } from '../../hooks';
 import { type Shape } from '../../types';
 import { Canvas } from '../Canvas';
@@ -61,6 +61,7 @@ import { UI } from '../UI';
 
 export const defaultEditorOptions: EditorOptions = {
   gridSize: 16,
+  gridSnap: 32,
   zoomFactor: 2,
 };
 
@@ -85,7 +86,7 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
     // Canvas state.
     const options = useMemo(() => Object.assign({}, defaultEditorOptions, _options), [_options]);
     const [debug, setDebug] = useState(_debug);
-    const [gridSize, setGridSize] = useState({ width: 32, height: 32 });
+    const [gridSize, setGridSize] = useState({ width: options.gridSize, height: options.gridSize });
     const [showGrid, setShowGrid] = useState(true);
     const [snapToGrid, setSnapToGrid] = useState(true);
 
@@ -99,11 +100,17 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
     const [linking, setLinking] = useState<DraggingState>();
     const [editing, setEditing] = useState<EditingState>();
 
+    // Actions.
+    const [actionHandler, setActionHandler] = useState<ActionHandler>();
+
     const context: EditorContextType = {
       id,
       options,
       graph,
       selection,
+
+      actionHandler,
+      setActionHandler: (handler) => setActionHandler(() => handler),
 
       debug,
       setDebug,
@@ -132,18 +139,17 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
       forwardedRef,
       () => ({
         zoomToFit: async () => {
-          setTimeout(async () => {
-            const handler = handleAction(context);
-            await handler({ type: 'zoom-to-fit', duration: 0 });
-          });
+          // requestAnimationFrame(async () => {
+          // await actionHandler?.({ type: 'zoom-to-fit', duration: 0 });
+          // });
         },
       }),
-      [context],
+      [context, actionHandler],
     );
 
     return (
       <EditorContext.Provider value={context}>
-        <div {...testId('dx-editor')} className={mx('relative w-full h-full overflow-hidden p-1', classNames)}>
+        <div {...testId('dx-editor')} className={mx('relative w-full h-full overflow-hidden', classNames)}>
           {children}
         </div>
       </EditorContext.Provider>

@@ -13,8 +13,6 @@ import { Grid, type GridProps } from './Grid';
 import { type ProjectionState } from '../../hooks';
 import { useWheel } from '../../hooks';
 
-// TODO(burdon): Factor out transform class, etc. (check reactivity).
-
 const Render = (props: GridProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const [{ scale, offset }, setProjection] = useState<ProjectionState>({ scale: 1, offset: { x: 0, y: 0 } });

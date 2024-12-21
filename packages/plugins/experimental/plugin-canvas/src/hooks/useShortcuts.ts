@@ -4,21 +4,19 @@
 
 import { useHotkeys } from 'react-hotkeys-hook';
 
-import { useActionHandler } from './useActionHandler';
 import { useEditorContext } from './useEditorContext';
 
 /**
  * Handle keyboard shortcuts.
  */
 export const useShortcuts = () => {
-  const { id, graph, selection } = useEditorContext();
+  const { id, graph, selection, actionHandler } = useEditorContext();
 
-  const handleAction = useActionHandler();
   useHotkeys(
     'd',
     (ev) => {
       ev.preventDefault();
-      void handleAction({
+      void actionHandler?.({
         type: 'debug',
       });
     },
@@ -28,7 +26,7 @@ export const useShortcuts = () => {
     'meta+a',
     (ev) => {
       ev.preventDefault();
-      void handleAction({
+      void actionHandler?.({
         type: 'select',
         ids: [...graph.nodes.map((node) => node.id), ...graph.edges.map((edge) => edge.id)],
       });
@@ -39,7 +37,7 @@ export const useShortcuts = () => {
     "meta+'",
     (ev) => {
       ev.preventDefault();
-      void handleAction({
+      void actionHandler?.({
         type: 'grid',
       });
     },
@@ -49,7 +47,7 @@ export const useShortcuts = () => {
     'Home',
     (ev) => {
       ev.preventDefault();
-      void handleAction({
+      void actionHandler?.({
         type: 'home',
       });
     },
@@ -59,7 +57,7 @@ export const useShortcuts = () => {
     'Backspace',
     (ev) => {
       ev.preventDefault();
-      void handleAction({
+      void actionHandler?.({
         type: 'delete',
         ids: [...selection.ids],
       });

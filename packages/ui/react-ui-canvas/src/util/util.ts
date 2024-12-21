@@ -5,6 +5,15 @@
 let logged = false;
 
 /**
+ * Get the relative point of the cursor.
+ * NOTE: ev.offset returns the position relative to the target.
+ */
+export const getRelativePoint = (el: HTMLElement, ev: MouseEvent) => {
+  const rect = el.getBoundingClientRect();
+  return { x: ev.clientX - rect.x, y: ev.clientY - rect.top };
+};
+
+/**
  *
  */
 // TODO(burdon): Factor out.
