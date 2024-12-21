@@ -43,11 +43,10 @@ import { UI } from '../UI';
 //  - Auto-layout (reconcile with plugin-debug).
 //    - AI generated layout from mermaid.
 //    - UML of this package using Beast and mermaid.
-//  - Spline.
+//  - Splines.
 //  - Drop/snap visualization.
 //  - Resize frames.
 //  - Move all selected.
-//  - Factor out react-ui-xxx vs. plugin.
 //  - Undo.
 
 // Ontology:
@@ -150,7 +149,7 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
 
     return (
       <EditorContext.Provider value={context}>
-        <div {...testId('dx-editor')} className={mx('relative w-full h-full overflow-hidden', classNames)}>
+        <div {...testId('dx-editor')} tabIndex={0} className={mx('relative w-full h-full overflow-hidden', classNames)}>
           {children}
         </div>
       </EditorContext.Provider>

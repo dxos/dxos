@@ -4,7 +4,7 @@
 
 import { type Point } from '@dxos/react-ui-canvas';
 
-import { createPathThroughPoints } from '../layout';
+import { createSplineThroughPoints, createPathThroughPoints } from '../layout';
 import { type LineShape, type PolygonShape, type RectangleShape, type Shape } from '../types';
 
 export type ShapeKind = 'rect' | 'line';
@@ -21,13 +21,12 @@ export const createRectangle = ({ id, ...rest }: RectProps): RectangleShape => (
 
 type LineProps = CommonProps &
   Pick<LineShape, 'start' | 'end'> & {
-    p1: Point;
-    p2: Point;
+    points: Point[];
   };
 
-export const createLine = ({ id, p1, p2, ...rest }: LineProps): LineShape => ({
+export const createLine = ({ id, points, ...rest }: LineProps): LineShape => ({
   id,
   type: 'line',
-  path: createPathThroughPoints([p1, p2]),
+  path: points.length === 2 ? createPathThroughPoints(points) : createSplineThroughPoints(points),
   ...rest,
 });

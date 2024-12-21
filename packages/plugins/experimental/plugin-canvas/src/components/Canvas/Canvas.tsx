@@ -70,6 +70,7 @@ export const CanvasContent = () => {
   const selectionRect = useSelectionEvents(root, ({ bounds }) => {
     if (!bounds) {
       selection.clear();
+      root.click();
     } else {
       selection.setSelected(
         layout.shapes

@@ -127,7 +127,8 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
           shape.guide && styles.frameGuide,
           classNames,
           'transition',
-          scale >= 16 && 'duration-500 opacity-0',
+          debug && 'opacity-50',
+          // scale >= 16 && 'duration-500 opacity-0',
         )}
         onClick={handleClick}
         onDoubleClick={handleDoubleClick}

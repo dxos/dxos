@@ -26,6 +26,7 @@ export const Line = ({ shape, selected, onSelect }: LineProps) => {
           {!shape.guide && onSelect && (
             <path
               d={shape.path}
+              fill={'none'}
               strokeWidth={8}
               className={mx('stroke-transparent', eventsAuto)}
               onClick={(ev) => onSelect?.(shape.id, ev.shiftKey)}
@@ -36,6 +37,7 @@ export const Line = ({ shape, selected, onSelect }: LineProps) => {
           <path
             {...shapeAttrs(shape)}
             d={shape.path}
+            fill={'none'}
             markerStart={!shape.guide && shape.id !== 'link' ? createUrl(shape.start) : undefined}
             markerEnd={!shape.guide && shape.id !== 'link' ? createUrl(shape.end) : undefined}
             className={mx(

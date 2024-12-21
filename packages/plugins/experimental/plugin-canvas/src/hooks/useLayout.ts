@@ -6,7 +6,7 @@ import { invariant } from '@dxos/invariant';
 import { type Point, type Rect } from '@dxos/react-ui-canvas';
 
 import { type GraphModel, type Node } from '../graph';
-import { createLine, findClosestIntersection, getRect } from '../layout';
+import { createLine, distance, findClosestIntersection, getNormals, getRect } from '../layout';
 import { type PolygonShape, type Shape } from '../types';
 
 export type Layout = {
@@ -27,15 +27,21 @@ export const useLayout = (graph: GraphModel<Node<Shape>>, dragging?: PolygonShap
       return;
     }
 
-    if (debug) {
-      shapes.push(createLine({ id: `${id}-guide`, p1, p2, guide: true }));
+    invariant(r1 && r2);
+
+    let points: Point[];
+    const d = distance(p1, p2);
+    if (d < 256) {
+      const i1 = findClosestIntersection([p2, p1], r1) ?? p1;
+      const i2 = findClosestIntersection([p1, p2], r2) ?? p2;
+      points = [i1, i2];
+    } else {
+      // TODO(burdon): Move point to closest free anchor.
+      const [s1, s2] = getNormals(r1, r2, 16);
+      points = [s1[1], s1[0], s2[0], s2[1]];
     }
 
-    invariant(r1 && r2);
-    const i1 = findClosestIntersection([p2, p1], r1) ?? p1;
-    const i2 = findClosestIntersection([p1, p2], r2) ?? p2;
-    const line = createLine({ id, p1: i1, p2: i2, start: 'circle', end: 'arrow-end' });
-    shapes.push(line);
+    shapes.push(createLine({ id, points, start: 'circle', end: 'arrow-end' }));
   });
 
   graph.nodes.forEach(({ data: shape }) => {

@@ -116,5 +116,5 @@ export const useDragMonitor = (el: HTMLElement | null) => {
 const createLineOverlay = (source: PolygonShape, pos: Point): LineShape | undefined => {
   const rect = getRect(source.center, source.size);
   const p1 = findClosestIntersection([pos, source.center], rect) ?? source.center;
-  return createLine({ id: 'link', p1, p2: pos });
+  return createLine({ id: 'link', points: [p1, pos] });
 };

@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as d3 from 'd3';
 import { type CSSProperties } from 'react';
 
 import { invariant } from '@dxos/invariant';
@@ -29,6 +30,7 @@ export const round = (n: number, m: number) => Math.round(n / m) * m;
 
 export const pointAdd = (a: Point, b: Point): Point => ({ x: a.x + b.x, y: a.y + b.y });
 export const pointSubtract = (a: Point, b: Point): Point => ({ x: a.x - b.x, y: a.y - b.y });
+export const pointMid = (a: Point, b: Point): Point => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
 
 export const distance = (p1: Point, p2: Point): number =>
   Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
@@ -220,27 +222,117 @@ export const createPathThroughPoints = (points: Point[]): string => {
   return path.join(' ');
 };
 
-const defaultTension = 0.5;
-
 /**
- * Creates a spline through five control points.
+ * https://d3js.org/d3-shape/curve
  */
-export const generatePath = (
-  [p0, p1, p2, p3, p4]: [Point, Point, Point, Point, Point],
-  options: { tension?: number },
-) => {
-  // Calculate control points for smooth transition at middle point.
-  const dx = p3.x - p1.x;
-  const dy = p3.y - p1.y;
+const splineGenerator = d3
+  .line<Point>()
+  .curve(d3.curveCatmullRom.alpha(0.9))
+  .x((d) => d.x)
+  .y((d) => d.y);
 
-  const c2x = p2.x - dx * (options?.tension ?? defaultTension);
-  const c2y = p2.y - dy * (options?.tension ?? defaultTension);
-  const c3x = p2.x + dx * (options?.tension ?? defaultTension);
-  const c3y = p2.y + dy * (options?.tension ?? defaultTension);
+export const createSplineThroughPoints = (points: Point[]): string => {
+  invariant(points.length >= 2);
+  return splineGenerator(points)!;
+};
 
-  return (
-    `M ${p0.x} ${p0.y} ` +
-    `C ${p1.x} ${p1.y}, ${c2x} ${c2y}, ${p2.x} ${p2.y} ` +
-    `C ${c3x} ${c3y}, ${p3.x} ${p3.y}, ${p4.x} ${p4.y}`
-  );
+export const getNormals = (r1: Rect, r2: Rect, len = 32): [Point[], Point[]] => {
+  const sidesR1 = {
+    left: [
+      { x: r1.x, y: r1.y },
+      { x: r1.x, y: r1.y + r1.height },
+    ],
+    right: [
+      { x: r1.x + r1.width, y: r1.y },
+      { x: r1.x + r1.width, y: r1.y + r1.height },
+    ],
+    top: [
+      { x: r1.x, y: r1.y },
+      { x: r1.x + r1.width, y: r1.y },
+    ],
+    bottom: [
+      { x: r1.x, y: r1.y + r1.height },
+      { x: r1.x + r1.width, y: r1.y + r1.height },
+    ],
+  };
+
+  const sidesR2 = {
+    left: [
+      { x: r2.x, y: r2.y },
+      { x: r2.x, y: r2.y + r2.height },
+    ],
+    right: [
+      { x: r2.x + r2.width, y: r2.y },
+      { x: r2.x + r2.width, y: r2.y + r2.height },
+    ],
+    top: [
+      { x: r2.x, y: r2.y },
+      { x: r2.x + r2.width, y: r2.y },
+    ],
+    bottom: [
+      { x: r2.x, y: r2.y + r2.height },
+      { x: r2.x + r2.width, y: r2.y + r2.height },
+    ],
+  };
+
+  const distances = [];
+
+  // Check horizontal facing sides
+  if (r1.x + r1.width <= r2.x) {
+    distances.push({
+      pair: [sidesR1.right, sidesR2.left],
+      distance: Math.abs(r1.x + r1.width - r2.x),
+    });
+  } else if (r2.x + r2.width <= r1.x) {
+    distances.push({
+      pair: [sidesR1.left, sidesR2.right],
+      distance: Math.abs(r2.x + r2.width - r1.x),
+    });
+  }
+
+  // Check vertical facing sides
+  if (r1.y + r1.height <= r2.y) {
+    distances.push({
+      pair: [sidesR1.bottom, sidesR2.top],
+      distance: Math.abs(r1.y + r1.height - r2.y),
+    });
+  } else if (r2.y + r2.height <= r1.y) {
+    distances.push({
+      pair: [sidesR1.top, sidesR2.bottom],
+      distance: Math.abs(r2.y + r2.height - r1.y),
+    });
+  }
+
+  invariant(distances.length > 0);
+  const [side1, side2] = distances.reduce((max, curr) => (curr.distance > max.distance ? curr : max)).pair;
+
+  // Generate lines perpendicular to the sides and pointing away.
+  const createPerpendicularLine = (
+    side: Point[],
+    direction: 'horizontal' | 'vertical',
+    away: 1 | -1,
+    len: number,
+  ): Line => {
+    const midPoint: Point = {
+      x: (side[0].x + side[1].x) / 2,
+      y: (side[0].y + side[1].y) / 2,
+    };
+
+    if (direction === 'horizontal') {
+      return [{ x: midPoint.x - len * away, y: midPoint.y }, midPoint];
+    } else {
+      return [{ x: midPoint.x, y: midPoint.y - len * away }, midPoint];
+    }
+  };
+
+  const isVertical1 = side1[0].x === side1[1].x;
+  const isVertical2 = side2[0].x === side2[1].x;
+
+  const direction1 = isVertical1 ? (side1[0].x < side2[0].x ? -1 : 1) : side1[0].y < side2[0].y ? -1 : 1;
+  const direction2 = isVertical2 ? (side2[0].x < side1[0].x ? -1 : 1) : side2[0].y < side1[0].y ? -1 : 1;
+
+  return [
+    createPerpendicularLine(side1, isVertical1 ? 'horizontal' : 'vertical', direction1, len),
+    createPerpendicularLine(side2, isVertical2 ? 'horizontal' : 'vertical', direction2, len),
+  ];
 };
