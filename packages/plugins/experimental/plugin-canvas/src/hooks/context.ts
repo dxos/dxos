@@ -23,9 +23,10 @@ export type EditingState = {
 };
 
 export type EditorOptions = {
-  zoomFactor: number;
   gridSize: number;
   gridSnap: number;
+  zoomFactor: number;
+  zoomDuration: number;
 };
 
 export type EditorContextType = {

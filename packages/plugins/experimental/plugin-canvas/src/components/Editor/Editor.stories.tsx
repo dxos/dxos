@@ -51,7 +51,9 @@ const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
 
   useEffect(() => {
     if (graph) {
-      void editorRef.current?.zoomToFit();
+      requestAnimationFrame(() => {
+        void editorRef.current?.zoomToFit();
+      });
     }
   }, [graph]);
 

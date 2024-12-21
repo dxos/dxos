@@ -36,7 +36,6 @@ export const Canvas = () => {
 export const CanvasContent = () => {
   const { id, options, debug, graph, showGrid, dragging, selection } = useEditorContext();
   const { root, styles: transformStyles, setProjection, scale, offset } = useProjection();
-  console.log(scale);
 
   // Actions.
   useActionHandler();

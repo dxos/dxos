@@ -63,6 +63,7 @@ export const defaultEditorOptions: EditorOptions = {
   gridSize: 16,
   gridSnap: 32,
   zoomFactor: 2,
+  zoomDuration: 300,
 };
 
 interface EditorController {
@@ -137,14 +138,14 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
     // Controller.
     useImperativeHandle(
       forwardedRef,
-      () => ({
-        zoomToFit: async () => {
-          // requestAnimationFrame(async () => {
-          // await actionHandler?.({ type: 'zoom-to-fit', duration: 0 });
-          // });
-        },
-      }),
-      [context, actionHandler],
+      () => {
+        return {
+          zoomToFit: async () => {
+            await actionHandler?.({ type: 'zoom-to-fit', duration: 0 });
+          },
+        };
+      },
+      [actionHandler],
     );
 
     return (

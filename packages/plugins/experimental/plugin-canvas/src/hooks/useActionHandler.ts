@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -18,8 +18,8 @@ export const useActionHandler = () => {
   const { options, graph, selection, setDebug, setShowGrid, setSnapToGrid, setActionHandler } = useEditorContext();
   const { width, height, scale, offset, setProjection } = useProjection();
 
-  const actionHandler = useCallback<ActionHandler>(
-    async (action) => {
+  useEffect(() => {
+    const actionHandler: ActionHandler = async (action) => {
       const { type } = action;
       log('action', { action });
       switch (type) {
@@ -41,12 +41,17 @@ export const useActionHandler = () => {
           return true;
         }
         case 'center': {
-          zoomTo(setProjection, { scale, offset }, { scale: 1, offset: getCenter({ width, height }) });
+          zoomTo(
+            setProjection,
+            { scale, offset },
+            { scale: 1, offset: getCenter({ width, height }) },
+            options.zoomDuration,
+          );
           return true;
         }
 
         case 'zoom-to-fit': {
-          const { duration = 200 } = action;
+          const { duration = options.zoomDuration } = action;
           const nodes = graph.nodes
             .filter((node) => isPolygon(node.data))
             .map((node) => getRect(node.data.center, node.data.size));
@@ -133,11 +138,8 @@ export const useActionHandler = () => {
         default:
           return false;
       }
-    },
-    [options, graph, setProjection, selection, width, height, scale, offset],
-  );
+    };
 
-  useEffect(() => {
     setActionHandler(actionHandler);
-  }, [actionHandler]);
+  }, [options, graph, setProjection, selection, width, height, scale, offset]);
 };
