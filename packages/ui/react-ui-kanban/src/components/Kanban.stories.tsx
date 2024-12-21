@@ -25,9 +25,6 @@ import translations from '../translations';
 
 faker.seed(0);
 
-const stateColumns = { init: { label: 'To do' }, doing: { label: 'Doing' }, done: { label: 'Done' } };
-const states = Object.keys(stateColumns);
-
 //
 // Story components.
 //
@@ -148,7 +145,7 @@ const meta: Meta<StoryProps> = {
             create(taskSchema, {
               title: faker.commerce.productName(),
               description: faker.lorem.paragraph(),
-              state: states[faker.number.int(states.length)],
+              state: ['To do', 'Doing', 'Done'][faker.number.int(2)],
             }),
           );
         });
