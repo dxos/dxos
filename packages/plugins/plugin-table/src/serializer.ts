@@ -2,32 +2,45 @@
 // Copyright 2024 DXOS.org
 //
 
-import { StoredSchema } from '@dxos/echo-schema';
+import { createStoredSchema } from '@dxos/echo-schema';
 import { type TypedObjectSerializer } from '@dxos/plugin-space/types';
 import { create, getObjectCore } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table/types';
+import { ViewType } from '@dxos/schema';
 
 export const serializer: TypedObjectSerializer<TableType> = {
-  serialize: async ({ object }): Promise<string> => {
-    const table = { id: object.id, name: object.name, view: object.view };
+  serialize: async ({ object, space }): Promise<string> => {
+    const view = object.view && {
+      name: object.view.name,
+      fields: object.view.fields,
+    };
+    const typename = object.view?.query.typename;
+    // TODO(wittjosiah): Remove. Shouldn't have access to space.
+    const dbSchema = typename ? space.db.schemaRegistry.getSchema(typename) : undefined;
+    const schema = dbSchema && {
+      typename: dbSchema.typename,
+      version: dbSchema.version,
+      jsonSchema: dbSchema.jsonSchema,
+    };
+    const table = { id: object.id, name: object.name, view, schema };
     return JSON.stringify(table, null, 2);
   },
 
   deserialize: async ({ content, space, newId }) => {
-    const {
-      schema: { id: schemaId, ...parsedSchema },
-      ...parsed
-    } = JSON.parse(content);
-    // TODO(wittjosiah): Should the rows also be copied?
-    // TODO(wittjosiah): This is a hack to get the schema to be deserialized correctly.
-    const storedSchema = space.db.add(create(StoredSchema, parsedSchema));
-    const table = create(TableType, { name: parsed.name, view: parsed.view });
+    const parsed = JSON.parse(content);
+    const schema = createStoredSchema({
+      typename: parsed.schema.typename,
+      version: parsed.schema.version,
+      jsonSchema: parsed.schema.jsonSchema,
+    });
+    // TODO(wittjosiah): Remove. Shouldn't have access to space.
+    space.db.add(schema);
+    const view = create(ViewType, { ...parsed.view, query: { typename: parsed.schema.typename } });
+    const table = create(TableType, { name: parsed.name, view });
 
     if (!newId) {
       const core = getObjectCore(table);
       core.id = parsed.id;
-      const schemaCore = getObjectCore(storedSchema);
-      schemaCore.id = schemaId;
     }
 
     return table;
