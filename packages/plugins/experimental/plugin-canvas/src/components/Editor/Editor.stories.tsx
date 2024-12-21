@@ -88,9 +88,9 @@ const meta: Meta<EditorRootProps> = {
         space.db.graph.schemaRegistry.addSchema(types);
         const createObjects = createObjectFactory(space.db, generator);
         const spec: TypeSpec[] = [
-          { type: Testing.OrgType, count: 4 },
+          { type: Testing.OrgType, count: 8 },
           { type: Testing.ProjectType, count: 0 },
-          { type: Testing.ContactType, count: 8 },
+          { type: Testing.ContactType, count: 16 },
         ];
 
         await createObjects(spec);

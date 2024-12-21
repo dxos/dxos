@@ -119,7 +119,7 @@ const createLayout = (type: string, options: CommonLayoutOptions) => {
     case 'radial':
       return new RadialLayout({
         ...options,
-        linkDistance: nodeSize * 4,
+        unitRadius: nodeSize * 2,
       });
     case 'grid':
     default:
