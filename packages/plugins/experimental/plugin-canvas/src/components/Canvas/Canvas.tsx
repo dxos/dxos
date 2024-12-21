@@ -2,87 +2,107 @@
 // Copyright 2024 DXOS.org
 //
 
-import { monitorForElements, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import React, { useEffect, useRef, useState } from 'react';
+import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
-import { invariant } from '@dxos/invariant';
+import { Canvas as NativeCanvas, Grid, type Rect, testId, useWheel, useProjection } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
-import { Background } from './Background';
-import { type DragPayloadData, FrameDragPreview, Line, Shapes, useLayout, useSelectionHandler } from './shapes';
-import { createLine, createRect, type Shape, type ShapeType } from '../../graph';
-import { useActionHandler, useEditorContext, useShortcuts, useSnap, useTransform } from '../../hooks';
-import { useWheel } from '../../hooks/useWheel';
-import { screenToModel, findClosestIntersection, getRect, getInputPoint, type Point } from '../../layout';
-import { createId, itemSize } from '../../testing';
-import { Grid } from '../Grid';
+import { FrameDragPreview, getShapeBounds, Line, Shapes } from './shapes';
+import {
+  useActionHandler,
+  useDragMonitor,
+  useEditorContext,
+  useLayout,
+  useSelectionEvents,
+  useShortcuts,
+} from '../../hooks';
+import { rectContains } from '../../layout';
 import { eventsNone, styles } from '../styles';
-import { testId } from '../util';
 
 /**
  * Main canvas component.
  */
 export const Canvas = () => {
-  const { id, options, debug, width, height, scale, offset, graph, showGrid, dragging, setTransform } =
-    useEditorContext();
+  // TODO(burdon): Controller.
+  return (
+    <NativeCanvas {...testId('dx-canvas')}>
+      <CanvasContent />
+    </NativeCanvas>
+  );
+};
 
-  // Canvas.
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { styles: transformStyles } = useTransform();
+export const CanvasContent = () => {
+  const { id, options, debug, graph, showGrid, dragging, selection } = useEditorContext();
+  const { root, styles: transformStyles, setProjection, scale, offset } = useProjection();
 
-  // Event handlers.
-  useWheel(containerRef.current, width, height, setTransform);
-  useShortcuts();
+  // Actions.
+  useActionHandler();
 
   // Drop target.
   useEffect(() => {
-    if (!containerRef.current) {
+    if (!root) {
       return;
     }
 
     return dropTargetForElements({
-      element: containerRef.current,
+      element: root,
       getData: () => ({ type: 'canvas' }),
+      canDrop: () => true,
     });
-  }, [containerRef.current]);
+  }, [root]);
+
+  // Keyboard shortcuts.
+  useShortcuts();
+
+  // Pan and zoom.
+  useWheel(root, setProjection);
 
   // Dragging and linking.
-  const { frameDragging, overlay } = useDragMonitor(containerRef.current);
+  const { frameDragging, overlay } = useDragMonitor(root);
 
-  // Shapes.
+  // Layout.
   const layout = useLayout(graph, frameDragging, debug);
-  const { shapes } = layout;
-  const selectionRect = useSelectionHandler(containerRef.current, shapes);
+
+  // Selection.
+  const shapesRef = useRef<HTMLDivElement>(null);
+  const selectionRect = useSelectionEvents(root, ({ bounds, shift }) => {
+    if (!bounds) {
+      selection.clear();
+      root.click();
+    } else {
+      selection.setSelected(
+        layout.shapes
+          .filter((shape) => {
+            const rect = getShapeBounds(shapesRef.current!, shape.id);
+            return rect && rectContains(bounds, rect);
+          })
+          .map((shape) => shape.id),
+        shift,
+      );
+    }
+  });
 
   return (
-    <div {...testId('dx-canvas')} ref={containerRef} className={mx('absolute inset-0 overflow-hidden')}>
+    <>
       {/* Background. */}
       <Background />
 
       {/* Grid. */}
-      {showGrid && <Grid id={id} size={options.gridSize} offset={offset} scale={scale} />}
+      {showGrid && <Grid id={id} size={options.gridSize} scale={scale} offset={offset} classNames={styles.gridLine} />}
 
       {/* Content. */}
-      {<Shapes shapes={shapes} style={transformStyles} />}
+      <div ref={shapesRef} {...testId('dx-layout', true)} style={transformStyles} className='absolute'>
+        <Shapes layout={layout} />
+      </div>
 
       {/* Overlays. */}
-      <div {...testId('dx-overlays')} className={mx('absolute', eventsNone)}>
+      <div {...testId('dx-overlays')} className={mx(eventsNone)}>
         {/* Selection overlay. */}
-        {selectionRect && (
-          <svg className='absolute overflow-visible cursor-crosshair'>
-            <rect {...selectionRect} className={styles.cursor} />
-          </svg>
-        )}
+        {selectionRect && <SelectionBox rect={selectionRect} />}
 
-        {/* Linking overlay. */}
-        {overlay && (
-          <div className='absolute' style={transformStyles}>
-            <Line scale={scale} shape={overlay} />
-          </div>
-        )}
-
-        {/* Drag preview. */}
+        {/* Drag preview (NOTE: styles should be included to apply scale). */}
         {dragging &&
           createPortal(
             <div style={transformStyles}>
@@ -90,107 +110,24 @@ export const Canvas = () => {
             </div>,
             dragging.container,
           )}
+
+        {/* Linking overlay. */}
+        <div className='absolute' style={transformStyles}>
+          {overlay && <Line scale={scale} shape={overlay} />}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
-/**
- * Monitor frames and anchors being dragged.
- */
-const useDragMonitor = (el: HTMLElement | null) => {
-  const { graph, scale, offset, selection, dragging, setDragging, linking, setLinking } = useEditorContext();
-  const actionHandler = useActionHandler();
-  const snapPoint = useSnap();
-
-  const [frameDragging, setFrameDragging] = useState<Shape>();
-  const [overlay, setOverlay] = useState<ShapeType<'line'>>();
-  const cancelled = useRef(false);
-
-  const lastPointRef = useRef<Point>();
-  useEffect(() => {
-    return monitorForElements({
-      // NOTE: This seems to be continually called.
-      onDrag: ({ source, location }) => {
-        invariant(el);
-        const [{ x, y }] = screenToModel(scale, offset, [getInputPoint(el, location.current.input)]);
-        const pos = { x, y };
-        const { type, shape } = source.data as DragPayloadData<ShapeType<'rect'>>;
-        if (x !== lastPointRef.current?.x || y !== lastPointRef.current?.y) {
-          lastPointRef.current = pos;
-          switch (type) {
-            case 'frame': {
-              if (dragging) {
-                setFrameDragging({ ...shape, pos });
-              }
-              break;
-            }
-
-            case 'anchor': {
-              if (linking) {
-                setOverlay(createLineOverlay(shape, pos));
-              }
-              break;
-            }
-          }
-        }
-      },
-
-      // Dragging cancelled if user presses Esc.
-      // https://atlassian.design/components/pragmatic-drag-and-drop/core-package/events#cancelling
-      onDropTargetChange: ({ source, location }) => {
-        cancelled.current = location.current.dropTargets.length === 0;
-      },
-
-      onDrop: async ({ source, location }) => {
-        if (!cancelled.current) {
-          // TODO(burdon): Adjust for offset on drag?
-          invariant(el);
-          const [pos] = screenToModel(scale, offset, [getInputPoint(el, location.current.input)]);
-          const { type, shape } = source.data as DragPayloadData<ShapeType<'rect'>>;
-
-          switch (type) {
-            case 'frame': {
-              shape.pos = snapPoint(pos);
-              shape.rect = getRect(shape.pos, shape.size);
-
-              // TODO(burdon): Copy.
-              if (!graph.getNode(shape.id)) {
-                graph.addNode({ id: shape.id, data: { ...shape } });
-              }
-              break;
-            }
-
-            case 'anchor': {
-              const target = location.current.dropTargets.find(({ data }) => data.type === 'frame')?.data
-                .shape as Shape;
-              let id = target?.id;
-              if (!id) {
-                id = createId();
-                const shape = createRect({ id, pos: snapPoint(pos), size: itemSize });
-                await actionHandler({ type: 'create', shape });
-              }
-              await actionHandler({ type: 'link', source: shape.id, target: id });
-              break;
-            }
-          }
-        }
-
-        setDragging(undefined);
-        setLinking(undefined);
-        setFrameDragging(undefined);
-        setOverlay(undefined);
-      },
-    });
-  }, [el, actionHandler, selection, scale, offset, snapPoint, dragging, linking]);
-
-  return { frameDragging, overlay };
+const Background = () => {
+  return <div {...testId('dx-background')} className={mx('absolute inset-0 bg-base', eventsNone)} />;
 };
 
-const createLineOverlay = (source: Shape, p2: Point): ShapeType<'line'> | undefined => {
-  if (source.type === 'rect') {
-    const { pos, rect } = source;
-    const p1 = findClosestIntersection([p2, pos], rect) ?? pos;
-    return createLine({ id: 'link', p1, p2 });
-  }
+const SelectionBox = ({ rect }: { rect: Rect }) => {
+  return (
+    <svg className='absolute overflow-visible cursor-crosshair'>
+      <rect {...rect} className={styles.cursor} />
+    </svg>
+  );
 };

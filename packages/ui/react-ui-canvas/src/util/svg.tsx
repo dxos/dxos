@@ -7,8 +7,7 @@ import React, { type PropsWithChildren, type SVGProps } from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { styles } from './styles';
-import { type Dimension, type Point } from '../layout';
+import { type Dimension, type Point } from '../types';
 
 // Refs
 //  - https://airbnb.io/visx/gallery
@@ -22,20 +21,15 @@ export const createPath = (points: Point[], join = false) => {
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Paths
  * NOTE: Leave space around shape for line width.
  */
-export const Markers = ({ classNames }: ThemedClassName<{}>) => {
+export const Markers = ({ id = 'dx-marker', classNames }: ThemedClassName<{ id?: string }>) => {
   return (
     <>
-      <Arrow id='dx-arrow-start' dir='start' classNames={classNames} />
-      <Arrow id='dx-arrow-end' dir='end' classNames={classNames} />
-      <Arrow id='dx-triangle-start' dir='start' closed classNames={classNames} />
-      <Arrow id='dx-triangle-end' dir='end' closed classNames={classNames} />
-      <Marker id='dx-circle' pos={{ x: 6, y: 6 }} size={{ width: 12, height: 12 }}>
-        <circle
-          cx={6}
-          cy={6}
-          r={5}
-          className={mx('stroke-[var(--dx-stroke-color)] fill-[var(--dx-stroke-color)]', classNames)}
-        />
+      <Arrow id={`${id}-arrow-start`} dir='start' classNames={classNames} />
+      <Arrow id={`${id}-arrow-end`} dir='end' classNames={classNames} />
+      <Arrow id={`${id}-triangle-start`} dir='start' closed classNames={classNames} />
+      <Arrow id={`${id}-triangle-end`} dir='end' closed classNames={classNames} />
+      <Marker id={`${id}-circle`} pos={{ x: 6, y: 6 }} size={{ width: 12, height: 12 }}>
+        <circle cx={6} cy={6} r={5} stroke={'context-stroke'} className={mx(classNames)} />
       </Marker>
     </>
   );
@@ -54,7 +48,6 @@ export type MarkerProps = SVGProps<SVGMarkerElement> &
 /**
  * https://www.w3.org/TR/SVG2/painting.html#Markers
  */
-// TODO(burdon): Correct way to handle marker styles? ids are global? use?
 export const Marker = ({
   id,
   className,
@@ -95,8 +88,8 @@ export const Arrow = ({
   >
     <path
       fill={closed ? undefined : 'none'}
-      stroke={'context-stroke"'}
-      className={mx('stroke-[var(--dx-stroke-color)]', closed && 'fill-[var(--dx-stroke-fill)]', classNames)}
+      stroke={'context-stroke'}
+      className={mx(classNames)}
       d={createPath(
         dir === 'end'
           ? [
@@ -130,7 +123,7 @@ export const GridPattern = ({
     patternUnits='userSpaceOnUse'
   >
     {/* TODO(burdon): vars. */}
-    <g className={mx(styles.gridLine, classNames)}>
+    <g className={mx(classNames)}>
       <line x1={0} y1={size / 2} x2={size} y2={size / 2} />
       <line x1={size / 2} y1={0} x2={size / 2} y2={size} />
     </g>

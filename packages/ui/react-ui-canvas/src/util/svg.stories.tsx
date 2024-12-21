@@ -32,7 +32,7 @@ const Render = () => (
 );
 
 const meta: Meta = {
-  title: 'plugins/plugin-canvas/svg',
+  title: 'ui/react-ui-canvas/svg',
   render: Render,
   decorators: [withTheme],
   parameters: {

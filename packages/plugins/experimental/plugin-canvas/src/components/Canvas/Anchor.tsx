@@ -8,12 +8,12 @@ import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
+import { type Dimension, type Point } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type DragPayloadData } from './shapes';
-import { type ShapeType } from '../../graph';
-import { useEditorContext } from '../../hooks';
-import { type Dimension, getBoundsProperties, type Point } from '../../layout';
+import { type DragPayloadData, useEditorContext } from '../../hooks';
+import { getBoundsProperties } from '../../layout';
+import { type PolygonShape } from '../../types';
 import { styles } from '../styles';
 
 export const DATA_SHAPE_ID = 'data-shape-id';
@@ -22,7 +22,7 @@ const defaultSize: Dimension = { width: 12, height: 12 };
 
 export type AnchorProps = {
   id: string;
-  shape: ShapeType<'rect'>;
+  shape: PolygonShape;
   pos: Point;
   size?: Dimension;
   scale?: number;
@@ -43,7 +43,7 @@ export const Anchor = ({ id, shape, pos, size = defaultSize, scale = 1, onMouseL
     invariant(ref.current);
     return draggable({
       element: ref.current,
-      getInitialData: () => ({ type: 'anchor', shape, anchor: id }) satisfies DragPayloadData<ShapeType<'rect'>>,
+      getInitialData: () => ({ type: 'anchor', shape, anchor: id }) satisfies DragPayloadData,
       onGenerateDragPreview: ({ nativeSetDragImage }) => {
         setCustomNativeDragPreview({
           nativeSetDragImage,

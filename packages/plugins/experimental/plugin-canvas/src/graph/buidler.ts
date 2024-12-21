@@ -9,20 +9,13 @@ import { getSchemaProperties } from '@dxos/schema';
 
 import { GraphModel, type Node } from './graph';
 
-// TODO(burdon): Reconcile with debug and explorer plugin (graph-model).
-
-export type GraphOptions = {
-  linkSchema?: boolean;
-};
+// TODO(burdon): Factor out graph. Reconcile with debug and explorer plugin (graph-model).
+// TODO(burdon): GraphBuilder? With subscriptions?
 
 /**
  * Maps an ECHO object graph onto a layout graph.
  */
-// TODO(burdon): GraphBuilder? With subscriptions?
-export const createGraph = (
-  objects: ReactiveEchoObject<any>[],
-  options?: GraphOptions,
-): GraphModel<Node<ReactiveEchoObject<any>>> => {
+export const createGraph = (objects: ReactiveEchoObject<any>[]): GraphModel<Node<ReactiveEchoObject<any>>> => {
   const graph = new GraphModel<Node<ReactiveEchoObject<any>>>();
 
   // Map objects.
@@ -42,7 +35,7 @@ export const createGraph = (
     for (const prop of getSchemaProperties(schema.ast, object)) {
       if (prop.format === FormatEnum.Ref) {
         const source = object;
-        const target = object[prop.name];
+        const target = object[prop.name]?.target;
         if (target) {
           graph.addEdge({
             id: `${source.id}-${String(prop.name)}-${target.id}`,
