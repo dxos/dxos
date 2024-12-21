@@ -2,15 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { forwardRef, type PropsWithChildren, useEffect, useImperativeHandle, useMemo, useState } from 'react';
-import { HotkeysProvider } from 'react-hotkeys-hook';
-import { useResizeDetector } from 'react-resize-detector';
+import React, { forwardRef, type PropsWithChildren, useImperativeHandle, useMemo, useState } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { useAttendableAttributes, useAttention } from '@dxos/react-ui-attention';
+import { testId } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
-import { emptyGraph, type Graph, GraphModel, type Node, type Shape } from '../../graph';
+import { type ActionHandler } from '../../actions';
+import { type Graph, GraphModel, type Node } from '../../graph';
 import {
   type DraggingState,
   type EditingState,
@@ -18,17 +17,19 @@ import {
   type EditorContextType,
   type EditorOptions,
   SelectionModel,
-  type TransformState,
-  handleAction,
 } from '../../hooks';
+import { type Shape } from '../../types';
 import { Canvas } from '../Canvas';
 import { UI } from '../UI';
-import { testId } from '../util';
 
 // Scenario:
 //  - ECHO query/editor.
 //  - Basic UML (internal use; generate from GH via function).
 //  - Basic processing pipeline (AI).
+
+// TODO(burdon): NEXT
+//  - Different shapes (reconcile rect, circle, line).
+//  - Dragging: shape, anchor, tool.\
 
 // TODO(burdon): Phase 1: Basic plugin.
 //  - Group/collapse nodes; hierarchical editor.
@@ -42,11 +43,10 @@ import { testId } from '../util';
 //  - Auto-layout (reconcile with plugin-debug).
 //    - AI generated layout from mermaid.
 //    - UML of this package using Beast and mermaid.
-//  - Spline.
+//  - Splines.
 //  - Drop/snap visualization.
 //  - Resize frames.
 //  - Move all selected.
-//  - Factor out react-ui-xxx vs. plugin.
 //  - Undo.
 
 // Ontology:
@@ -58,11 +58,11 @@ import { testId } from '../util';
 // TODO(burdon): Debt:
 //  - Factor out common Toolbar pattern (with state observers).
 
-const defaultOffset = { x: 0, y: 0 };
-
 export const defaultEditorOptions: EditorOptions = {
   gridSize: 16,
+  gridSnap: 32,
   zoomFactor: 2,
+  zoomDuration: 300,
 };
 
 interface EditorController {
@@ -71,63 +71,49 @@ interface EditorController {
 
 type EditorRootProps = ThemedClassName<
   PropsWithChildren<
-    Partial<Pick<EditorContextType, 'options' | 'debug' | 'scale' | 'offset'> & { graph: Graph }> & {
+    Partial<Pick<EditorContextType, 'options' | 'debug'>> & {
       id: string;
+      graph?: Graph;
     }
   >
 >;
 
 const EditorRoot = forwardRef<EditorController, EditorRootProps>(
   (
-    {
-      children,
-      classNames,
-      id,
-      options: _options = defaultEditorOptions,
-      debug: _debug = false,
-      scale: _scale = 1,
-      offset: _offset = defaultOffset,
-      graph: _graph = emptyGraph,
-    },
+    { children, classNames, id, options: _options = defaultEditorOptions, debug: _debug = false, graph: _graph },
     forwardedRef,
   ) => {
     // Canvas state.
-    const { ref, width = 0, height = 0 } = useResizeDetector();
-    const attendableAttrs = useAttendableAttributes(id);
-    const { hasAttention } = useAttention(id);
     const options = useMemo(() => Object.assign({}, defaultEditorOptions, _options), [_options]);
     const [debug, setDebug] = useState(_debug);
-    const [gridSize, setGridSize] = useState({ width: 32, height: 32 });
+    const [gridSize, setGridSize] = useState({ width: options.gridSize, height: options.gridSize });
     const [showGrid, setShowGrid] = useState(true);
     const [snapToGrid, setSnapToGrid] = useState(true);
-    const [{ scale, offset }, setTransform] = useState<TransformState>({ scale: _scale, offset: _offset });
-    useEffect(() => {
-      if (width && height && offset === defaultOffset) {
-        setTransform({ scale, offset: { x: width / 2, y: height / 2 } });
-      }
-    }, [scale, offset, width, height]);
 
     // Data state.
+    // TODO(burdon): External reactivity?
     const graph = useMemo<GraphModel<Node<Shape>>>(() => new GraphModel<Node<Shape>>(_graph), [_graph]);
 
     // Editor state.
-    const selection = useMemo(() => new SelectionModel(), []);
+    const [selection] = useState(() => new SelectionModel());
     const [dragging, setDragging] = useState<DraggingState>();
     const [linking, setLinking] = useState<DraggingState>();
     const [editing, setEditing] = useState<EditingState>();
 
+    // Actions.
+    const [actionHandler, setActionHandler] = useState<ActionHandler>();
+
     const context: EditorContextType = {
       id,
       options,
+      graph,
+      selection,
+
+      actionHandler,
+      setActionHandler: (handler) => setActionHandler(() => handler),
+
       debug,
       setDebug,
-
-      width,
-      height,
-
-      scale,
-      offset,
-      setTransform,
 
       gridSize,
       setGridSize,
@@ -137,9 +123,6 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
 
       snapToGrid,
       setSnapToGrid,
-
-      graph,
-      selection,
 
       dragging,
       setDragging,
@@ -154,29 +137,22 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
     // Controller.
     useImperativeHandle(
       forwardedRef,
-      () => ({
-        zoomToFit: async () => {
-          setTimeout(async () => {
-            const handler = handleAction(context);
-            await handler({ type: 'zoom-to-fit', duration: 0 });
-          });
-        },
-      }),
-      [context],
+      () => {
+        return {
+          zoomToFit: async () => {
+            await actionHandler?.({ type: 'zoom-to-fit', duration: 0 });
+          },
+        };
+      },
+      [actionHandler],
     );
 
     return (
-      <div
-        {...testId('dx-editor')}
-        {...attendableAttrs}
-        ref={ref}
-        className={mx('relative w-full h-full overflow-hidden', classNames)}
-      >
-        {/* TODO(burdon): Change scope based on attention. */}
-        <HotkeysProvider initiallyActiveScopes={hasAttention ? [id] : []}>
-          <EditorContext.Provider value={context}>{children}</EditorContext.Provider>
-        </HotkeysProvider>
-      </div>
+      <EditorContext.Provider value={context}>
+        <div {...testId('dx-editor')} tabIndex={0} className={mx('relative w-full h-full overflow-hidden', classNames)}>
+          {children}
+        </div>
+      </EditorContext.Provider>
     );
   },
 );

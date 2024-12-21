@@ -11,7 +11,7 @@ import type {
 import { S } from '@dxos/echo-schema';
 import { type SchemaProvides } from '@dxos/plugin-space';
 
-import { CanvasType } from './schema';
+import { CanvasBoardType } from './schema';
 import { CANVAS_PLUGIN } from '../meta';
 
 export namespace CanvasAction {
@@ -22,7 +22,7 @@ export namespace CanvasAction {
       name: S.optional(S.String),
     }),
     output: S.Struct({
-      object: CanvasType,
+      object: CanvasBoardType,
     }),
   }) {}
 }
