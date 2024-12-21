@@ -68,6 +68,9 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
           }
 
           switch (props.format) {
+            case FormatEnum.Boolean: {
+              return '';
+            }
             case FormatEnum.Ref: {
               if (!field.referencePath) {
                 return ''; // TODO(burdon): Show error.
@@ -102,6 +105,16 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
           targetId: targetObj.id as any as string,
           schemaId: props.referenceSchema,
         });
+      }
+
+      if (props.format === FormatEnum.Boolean) {
+        const value = getValue(obj, field.path);
+        cell.accessoryHtml = tableControls.switch.render({
+          colIndex,
+          rowIndex: displayIndex,
+          checked: value ?? false,
+        });
+        cell.readonly = true;
       }
 
       const idx = toPlaneCellIndex({ col: colIndex, row: displayIndex });
