@@ -8,7 +8,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { testId } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
-import { emptyGraph, GraphModel, type Node } from '../../graph';
+import { type Graph, GraphModel, type Node } from '../../graph';
 import {
   type DraggingState,
   type EditingState,
@@ -70,22 +70,16 @@ interface EditorController {
 
 type EditorRootProps = ThemedClassName<
   PropsWithChildren<
-    Partial<Pick<EditorContextType, 'options' | 'debug' | 'graph'>> & {
+    Partial<Pick<EditorContextType, 'options' | 'debug'>> & {
       id: string;
+      graph?: Graph;
     }
   >
 >;
 
 const EditorRoot = forwardRef<EditorController, EditorRootProps>(
   (
-    {
-      children,
-      classNames,
-      id,
-      options: _options = defaultEditorOptions,
-      debug: _debug = false,
-      graph: _graph = emptyGraph,
-    },
+    { children, classNames, id, options: _options = defaultEditorOptions, debug: _debug = false, graph: _graph },
     forwardedRef,
   ) => {
     // Canvas state.
@@ -96,10 +90,11 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
     const [snapToGrid, setSnapToGrid] = useState(true);
 
     // Data state.
+    // TODO(burdon): External reactivity?
     const graph = useMemo<GraphModel<Node<Shape>>>(() => new GraphModel<Node<Shape>>(_graph), [_graph]);
 
     // Editor state.
-    const selection = useMemo(() => new SelectionModel(), []);
+    const [selection] = useState(() => new SelectionModel());
     const [dragging, setDragging] = useState<DraggingState>();
     const [linking, setLinking] = useState<DraggingState>();
     const [editing, setEditing] = useState<EditingState>();
@@ -107,6 +102,9 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
     const context: EditorContextType = {
       id,
       options,
+      graph,
+      selection,
+
       debug,
       setDebug,
 
@@ -118,9 +116,6 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
 
       snapToGrid,
       setSnapToGrid,
-
-      graph,
-      selection,
 
       dragging,
       setDragging,

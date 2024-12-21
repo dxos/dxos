@@ -18,9 +18,8 @@ import { createObjectFactory, type ValueGenerator, Testing, type TypeSpec } from
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
-import { createGraph, type Node, type GraphModel } from '../../graph';
+import { createGraph, type Graph } from '../../graph';
 import { doLayout } from '../../layout';
-import { type Shape } from '../../types';
 import { AttentionContainer } from '../AttentionContainer';
 
 const generator: ValueGenerator = faker as any;
@@ -31,7 +30,7 @@ type RenderProps = Omit<EditorRootProps, 'graph'> & { init?: boolean; sidebar?: 
 
 const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
   const editorRef = useRef<EditorController>(null);
-  const [graph, setGraph] = useState<GraphModel<Node<Shape>>>();
+  const [graph, setGraph] = useState<Graph>();
   const [_, space] = useSpaces(); // TODO(burdon): Get created space.
   useEffect(() => {
     if (!space || !init) {
@@ -44,7 +43,7 @@ const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
         .run();
 
       const model = await doLayout(createGraph(objects));
-      setGraph(model);
+      setGraph(model.graph);
     });
 
     return () => clearTimeout(t);
@@ -107,7 +106,7 @@ type Story = StoryObj<RenderProps>;
 
 export const Default: Story = {
   args: {
-    sidebar: true,
+    sidebar: false,
   },
 };
 

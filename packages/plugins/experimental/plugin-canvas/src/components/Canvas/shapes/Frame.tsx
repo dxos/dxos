@@ -21,7 +21,8 @@ import { DATA_SHAPE_ID, Anchor } from '../Anchor';
 // TODO(burdon): Surface for form content. Or pass in children (which may include a Surface).
 //  return <Surface ref={forwardRef} role='card' limit={1} data={{ content: object} />;
 
-const DBLCLICK_TIMEOUT = 200;
+// NOTE: Delaying double-click detection makes select slow.
+const DBLCLICK_TIMEOUT = 0;
 
 export type FrameProps = BaseShapeProps<PolygonShape> & { showAnchors?: boolean };
 
@@ -140,7 +141,7 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
         }}
       >
         {/* TODO(burdon): Auto-expand height? Trigger layout? */}
-        {(isEditing && <TextBox value={shape.text} onClose={handleClose} onCancel={handleCancel} />) || (
+        {(isEditing && <TextBox value={shape.text} centered onClose={handleClose} onCancel={handleCancel} />) || (
           <ReadonlyTextBox classNames={mx(debug && 'font-mono text-xs')} value={getLabel(shape, debug)} />
         )}
       </div>

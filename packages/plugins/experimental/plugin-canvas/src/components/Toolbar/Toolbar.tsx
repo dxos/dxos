@@ -45,6 +45,9 @@ export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
       <NaturalToolbar.Button onClick={() => handleAction({ type: 'layout' })} title='Do layout.'>
         <Icon icon='ph--align-center-horizontal--regular' />
       </NaturalToolbar.Button>
+      <NaturalToolbar.Button onClick={() => handleAction({ type: 'delete' })} title='Delete objects.'>
+        <Icon icon='ph--trash--regular' />
+      </NaturalToolbar.Button>
       <NaturalToolbar.Button onClick={() => handleAction({ type: 'create' })} title='Create objects.'>
         <Icon icon='ph--plus--regular' />
       </NaturalToolbar.Button>

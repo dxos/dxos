@@ -132,7 +132,7 @@ export const handleAction = ({
         return true;
       }
       case 'delete': {
-        const { ids } = action;
+        const { ids = selection.ids } = action;
         ids?.forEach((id) => graph.removeNode(id));
         ids?.forEach((id) => graph.removeEdge(id));
         selection.clear();
