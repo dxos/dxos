@@ -32,7 +32,7 @@ export const StackContext = createContext<StackContextValue>({
 
 export const useStack = () => useContext(StackContext);
 
-type StackItemContextValue = {
+export type StackItemContextValue = {
   selfDragHandleRef: (element: HTMLDivElement | null) => void;
   size: StackItemSize;
   setSize: (nextSize: StackItemSize, commit?: boolean) => void;

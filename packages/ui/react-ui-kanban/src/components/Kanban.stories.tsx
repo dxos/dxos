@@ -145,7 +145,7 @@ const meta: Meta<StoryProps> = {
             create(taskSchema, {
               title: faker.commerce.productName(),
               description: faker.lorem.paragraph(),
-              state: ['To do', 'Doing', 'Done', 'Fridge'][faker.number.int(2)],
+              state: ['To do', 'Doing', 'Done'][faker.number.int(2)],
             }),
           );
         });

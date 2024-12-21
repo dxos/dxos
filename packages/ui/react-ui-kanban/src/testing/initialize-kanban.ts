@@ -48,6 +48,7 @@ export const initializeKanban = ({
         { columnValue: 'To do', ids: [] },
         { columnValue: 'Doing', ids: [] },
         { columnValue: 'Done', ids: [] },
+        { columnValue: 'Fridge', ids: [] },
       ],
     }),
   );

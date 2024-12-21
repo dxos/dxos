@@ -25,7 +25,14 @@ export const Kanban = ({ model, onAddColumn, onAddCard, onRemoveCard, onRemoveEm
   const [namingColumn, setNamingColumn] = useState(false);
 
   return (
-    <Stack orientation='horizontal' size='contain' rail={false} classNames='pli-1' onRearrange={model.onRearrange}>
+    <Stack
+      orientation='horizontal'
+      size='contain'
+      rail={false}
+      classNames='pli-1'
+      onRearrange={model.onRearrange}
+      itemsCount={model.arrangement.length + (onAddColumn ? 1 : 0)}
+    >
       {model.arrangement.map(({ columnValue, cards }) => (
         <StackItem.Root key={columnValue} item={{ id: columnValue }} size={20} classNames='pli-1 plb-2'>
           <div role='none' className={mx('bg-deck rounded-lg grid', railGridHorizontal)}>
@@ -50,11 +57,13 @@ export const Kanban = ({ model, onAddColumn, onAddCard, onRemoveCard, onRemoveEm
               )}
             </StackItem.Heading>
             <Stack
+              id={columnValue}
               orientation='vertical'
               size='contain'
               rail={false}
               classNames='pbe-1'
               onRearrange={model.onRearrange}
+              itemsCount={cards.length}
             >
               {cards.map((card) => (
                 <StackItem.Root key={card.id} item={card} classNames='plb-1 pli-2'>
@@ -63,7 +72,7 @@ export const Kanban = ({ model, onAddColumn, onAddCard, onRemoveCard, onRemoveEm
                       <StackItem.DragHandle asChild>
                         <IconButton
                           iconOnly
-                          icon='ph--dots-six--vertical'
+                          icon='ph--dots-six-vertical--regular'
                           variant='ghost'
                           label={t('card drag handle label')}
                         />

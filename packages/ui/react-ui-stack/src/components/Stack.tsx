@@ -55,8 +55,10 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
       ...style,
     };
 
+    const selfDroppable = !!(itemsCount < 1 && onRearrange && props.id);
+
     useLayoutEffect(() => {
-      if (!stackElement || itemsCount > 0 || !onRearrange || !props.id) {
+      if (!stackElement || !selfDroppable) {
         return;
       }
       const acceptSourceType = orientation === 'horizontal' ? 'column' : 'card';
@@ -65,7 +67,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
         getData: ({ input, element }) => {
           return attachClosestEdge(
             { id: props.id, type: orientation === 'horizontal' ? 'card' : 'column' },
-            { input, element, allowedEdges: orientation === 'horizontal' ? ['left', 'right'] : ['top', 'bottom'] },
+            { input, element, allowedEdges: [orientation === 'horizontal' ? 'left' : 'top'] },
           );
         },
         onDragEnter: ({ source }) => {
@@ -81,12 +83,12 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
         onDragLeave: () => setDropping(false),
         onDrop: ({ self, source }) => {
           setDropping(false);
-          if (source.data.type === acceptSourceType) {
+          if (source.data.type === acceptSourceType && selfDroppable) {
             onRearrange(source.data as StackItemData, self.data as StackItemData, extractClosestEdge(self.data));
           }
         },
       });
-    }, []);
+    }, [stackElement, selfDroppable]);
 
     return (
       <StackContext.Provider value={{ orientation, rail, size, onRearrange }}>
@@ -113,7 +115,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
           ref={composedItemRef}
         >
           {children}
-          {dropping && <ListItem.DropIndicator edge={orientation === 'horizontal' ? 'left' : 'top'} />}
+          {selfDroppable && dropping && <ListItem.DropIndicator edge={orientation === 'horizontal' ? 'left' : 'top'} />}
         </div>
       </StackContext.Provider>
     );
