@@ -62,7 +62,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
         return;
       }
       const acceptSourceType = orientation === 'horizontal' ? 'column' : 'card';
-      dropTargetForElements({
+      return dropTargetForElements({
         element: stackElement,
         getData: ({ input, element }) => {
           return attachClosestEdge(

@@ -95,11 +95,14 @@ export const Kanban = ({ model, onAddColumn, onAddCard, onRemoveCard, onRemoveEm
                 </StackItem.Root>
               ))}
               {onAddCard && (
-                <IconButton
-                  icon='ph--plus--regular'
-                  label={t('add card label')}
-                  onClick={() => onAddCard(columnValue)}
-                />
+                <div role='none' className='plb-1 pli-2'>
+                  <IconButton
+                    icon='ph--plus--regular'
+                    label={t('add card label')}
+                    onClick={() => onAddCard(columnValue)}
+                    classNames='is-full'
+                  />
+                </div>
               )}
             </Stack>
           </div>
@@ -131,6 +134,7 @@ export const Kanban = ({ model, onAddColumn, onAddCard, onRemoveCard, onRemoveEm
                 icon='ph--plus--regular'
                 label={t('add column label')}
                 onClick={() => setNamingColumn(true)}
+                classNames='is-full'
               />
             )}
           </StackItem.Heading>
