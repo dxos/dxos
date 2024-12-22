@@ -47,7 +47,7 @@ const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
 
     const t = setTimeout(async () => {
       const { objects } = await space.db
-        .query((object: ReactiveEchoObject<any>) => types.some((t) => t.typename === getTypename(object)))
+        .query((object: ReactiveEchoObject<any>) => types.some((type) => type.typename === getTypename(object)))
         .run();
       const model = await doLayout(createGraph(objects));
       setGraph(model);
