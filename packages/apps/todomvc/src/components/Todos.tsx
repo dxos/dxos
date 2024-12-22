@@ -22,7 +22,7 @@ export const Todos = () => {
   const completed = state === FILTER.ACTIVE ? false : state === FILTER.COMPLETED ? true : undefined;
   // TODO(wittjosiah): Support multiple lists in a single space.
   const list: TodoListType | undefined =
-    space?.state.get() === SpaceState.SPACE_READY ? space?.properties[TodoListType.typename] : undefined;
+    space?.state.get() === SpaceState.SPACE_READY ? space?.properties[TodoListType.typename]?.target : undefined;
   const allTodos = list?.todos.map((todo) => todo.target).filter(nonNullable) ?? [];
   const todos = allTodos.filter((todo) => (completed !== undefined ? completed === !!todo?.completed : true));
 
