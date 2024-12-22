@@ -6,7 +6,7 @@ import { createContext, type Dispatch, type SetStateAction } from 'react';
 
 import { type Dimension } from '@dxos/react-ui-canvas';
 
-import { type SelectionModel } from './useSelected';
+import { type SelectionModel } from './selection';
 import { type ActionHandler } from '../actions';
 import { type GraphModel, type Node } from '../graph';
 import type { PolygonShape, Shape } from '../types';
