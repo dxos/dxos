@@ -246,7 +246,7 @@ export class AppManager {
   }
 
   async enablePlugin(plugin: string) {
-    await this.page.getByTestId(`pluginList.${plugin}`).getByRole('switch').click();
+    await this.page.getByTestId(`pluginList.${plugin}`).locator('input[type="checkbox"]').click();
     await this.page.goto(INITIAL_URL);
     await this.page.getByTestId('treeView.haloButton').waitFor();
   }
