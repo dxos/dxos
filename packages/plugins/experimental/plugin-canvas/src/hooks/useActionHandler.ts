@@ -128,7 +128,7 @@ export const useActionHandler = () => {
           return true;
         }
         case 'delete': {
-          const { ids = selection.ids } = action;
+          const { ids = selection.selected.value } = action;
           ids?.forEach((id) => graph.removeNode(id));
           ids?.forEach((id) => graph.removeEdge(id));
           selection.clear();

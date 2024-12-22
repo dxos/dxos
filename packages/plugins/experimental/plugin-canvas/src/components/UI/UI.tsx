@@ -8,7 +8,7 @@ import { FPS, testId } from '@dxos/react-ui-canvas';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useEditorContext, useSelected } from '../../hooks';
+import { useEditorContext } from '../../hooks';
 import { Tools, Toolbar } from '../Toolbar';
 import { eventsAuto, eventsNone } from '../styles';
 
@@ -16,15 +16,14 @@ import { eventsAuto, eventsNone } from '../styles';
  * UI components.
  */
 export const UI = () => {
-  const { debug, graph, showGrid, snapToGrid, dragging, linking, actionHandler } = useEditorContext();
-  const selected = useSelected();
+  const { debug, graph, showGrid, snapToGrid, dragging, linking, selection, actionHandler } = useEditorContext();
   const info = {
     debug,
     graph: {
       nodes: graph.nodes.length,
       edges: graph.edges.length,
     },
-    selected,
+    selected: selection.selected.value,
     showGrid,
     snapToGrid,
     dragging,

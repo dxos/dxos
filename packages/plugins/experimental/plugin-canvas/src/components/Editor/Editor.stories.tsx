@@ -108,6 +108,7 @@ type Story = StoryObj<RenderProps>;
 
 export const Default: Story = {
   args: {
+    debug: true,
     sidebar: false,
   },
 };

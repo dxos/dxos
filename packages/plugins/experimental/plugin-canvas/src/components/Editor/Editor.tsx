@@ -74,13 +74,22 @@ type EditorRootProps = ThemedClassName<
     Partial<Pick<EditorContextType, 'options' | 'debug'>> & {
       id: string;
       graph?: Graph;
+      selection?: SelectionModel;
     }
   >
 >;
 
 const EditorRoot = forwardRef<EditorController, EditorRootProps>(
   (
-    { children, classNames, id, options: _options = defaultEditorOptions, debug: _debug = false, graph: _graph },
+    {
+      children,
+      classNames,
+      id,
+      options: _options = defaultEditorOptions,
+      debug: _debug = false,
+      graph: _graph,
+      selection: _selection,
+    },
     forwardedRef,
   ) => {
     // Canvas state.
@@ -95,7 +104,7 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
     const graph = useMemo<GraphModel<Node<Shape>>>(() => new GraphModel<Node<Shape>>(_graph), [_graph]);
 
     // Editor state.
-    const [selection] = useState(() => new SelectionModel());
+    const [selection] = useState(() => _selection ?? new SelectionModel());
     const [dragging, setDragging] = useState<DraggingState>();
     const [linking, setLinking] = useState<DraggingState>();
     const [editing, setEditing] = useState<EditingState>();
