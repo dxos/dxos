@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react';
+import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { type MutableSchema } from '@dxos/echo-schema';
@@ -140,12 +140,13 @@ const meta: Meta<StoryProps> = {
       createSpace: true,
       onSpaceCreated: async ({ space }) => {
         const { taskSchema } = initializeKanban({ space });
+        // TODO(burdon): Replace with sdk/schema/testing.
         Array.from({ length: 24 }).map(() => {
           return space.db.add(
             create(taskSchema, {
               title: faker.commerce.productName(),
               description: faker.lorem.paragraph(),
-              state: ['To do', 'Doing', 'Done'][faker.number.int(2)],
+              state: ['Pending', 'Active', 'Done'][faker.number.int(2)],
             }),
           );
         });
@@ -158,6 +159,6 @@ const meta: Meta<StoryProps> = {
 
 export default meta;
 
-// type Story = StoryObj<StoryProps>;
+type Story = StoryObj<StoryProps>;
 
-export const Default = {};
+export const Default: Story = {};
