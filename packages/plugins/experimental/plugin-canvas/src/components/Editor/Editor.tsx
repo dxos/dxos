@@ -9,7 +9,7 @@ import { testId } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type ActionHandler } from '../../actions';
-import { type Graph, GraphModel, type Node } from '../../graph';
+import { GraphModel, type Node } from '../../graph';
 import {
   type DraggingState,
   type EditingState,
@@ -26,10 +26,6 @@ import { UI } from '../UI';
 //  - ECHO query/editor.
 //  - Basic UML (internal use; generate from GH via function).
 //  - Basic processing pipeline (AI).
-
-// TODO(burdon): NEXT
-//  - Different shapes (reconcile rect, circle, line).
-//  - Dragging: shape, anchor, tool.\
 
 // TODO(burdon): Phase 1: Basic plugin.
 //  - Group/collapse nodes; hierarchical editor.
@@ -71,16 +67,24 @@ interface EditorController {
 
 type EditorRootProps = ThemedClassName<
   PropsWithChildren<
-    Partial<Pick<EditorContextType, 'options' | 'debug'>> & {
+    Partial<Pick<EditorContextType, 'options' | 'debug' | 'graph'>> & {
       id: string;
-      graph?: Graph;
+      selection?: SelectionModel;
     }
   >
 >;
 
 const EditorRoot = forwardRef<EditorController, EditorRootProps>(
   (
-    { children, classNames, id, options: _options = defaultEditorOptions, debug: _debug = false, graph: _graph },
+    {
+      children,
+      classNames,
+      id,
+      options: _options = defaultEditorOptions,
+      debug: _debug = false,
+      graph: _graph,
+      selection: _selection,
+    },
     forwardedRef,
   ) => {
     // Canvas state.
@@ -90,12 +94,11 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
     const [showGrid, setShowGrid] = useState(true);
     const [snapToGrid, setSnapToGrid] = useState(true);
 
-    // Data state.
-    // TODO(burdon): External reactivity?
-    const graph = useMemo<GraphModel<Node<Shape>>>(() => new GraphModel<Node<Shape>>(_graph), [_graph]);
+    // External state.
+    const graph = useMemo<GraphModel<Node<Shape>>>(() => _graph ?? new GraphModel<Node<Shape>>(), [_graph]);
+    const selection = useMemo(() => _selection ?? new SelectionModel(), [_selection]);
 
     // Editor state.
-    const [selection] = useState(() => new SelectionModel());
     const [dragging, setDragging] = useState<DraggingState>();
     const [linking, setLinking] = useState<DraggingState>();
     const [editing, setEditing] = useState<EditingState>();

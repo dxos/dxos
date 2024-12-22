@@ -25,7 +25,7 @@ export const Shapes = ({ layout: { shapes } }: ShapesProps) => {
 
   return (
     <>
-      <svg id={DEFS_ID} className='absolute'>
+      <svg id={DEFS_ID} className='absolute opacity-0' width={0} height={0}>
         <defs>
           <Markers id={MARKER_PREFIX} />
         </defs>

@@ -17,7 +17,6 @@ import {
 
 import { type Dimension } from '@dxos/react-ui-canvas';
 
-import { getRect } from './geometry';
 import { type Graph, GraphModel, type Node } from '../graph';
 import { type Shape } from '../types';
 
@@ -76,8 +75,7 @@ export const doLayout = async <N extends object>(
           type: 'rectangle',
           text: label,
           center,
-          size: shapeSize,
-          rect: getRect(center, shapeSize),
+          size: { ...shapeSize },
           // TODO(burdon): Object.
           // data: node.data,
         },
@@ -119,7 +117,7 @@ const createLayout = (type: string, options: CommonLayoutOptions) => {
     case 'radial':
       return new RadialLayout({
         ...options,
-        linkDistance: nodeSize * 4,
+        unitRadius: nodeSize * 2,
       });
     case 'grid':
     default:

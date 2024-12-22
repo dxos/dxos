@@ -14,6 +14,7 @@ import { createRectangle, doLayout, getCenter, getRect, rectUnion } from '../lay
 import { createId, itemSize } from '../testing';
 import { isPolygon } from '../types';
 
+// TODO(burdon): Handle multiple actions.
 export const useActionHandler = () => {
   const { options, graph, selection, setDebug, setShowGrid, setSnapToGrid, setActionHandler } = useEditorContext();
   const { width, height, scale, offset, setProjection } = useProjection();
@@ -61,7 +62,7 @@ export const useActionHandler = () => {
 
           const bounds = rectUnion(nodes);
           const center = getCenter(bounds);
-          const padding = 64;
+          const padding = 256;
           const newScale = Math.min(1, Math.min(width / (bounds.width + padding), height / (bounds.height + padding)));
           const mapper = new ProjectionMapper(newScale, getCenter({ width, height }));
           const [newOffset] = mapper.toScreen([{ x: -center.x, y: -center.y }]);
@@ -128,7 +129,7 @@ export const useActionHandler = () => {
           return true;
         }
         case 'delete': {
-          const { ids = selection.ids } = action;
+          const { ids = selection.selected.value } = action;
           ids?.forEach((id) => graph.removeNode(id));
           ids?.forEach((id) => graph.removeEdge(id));
           selection.clear();
