@@ -7,16 +7,15 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React from 'react';
 
-import { useStoryClientData, withClientProvider } from '@dxos/react-client/testing';
+import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { SpaceSettingsPanel, type SpaceSettingsPanelProps } from './SpaceSettingsPanel';
 import translations from '../../translations';
 
 const Story = (args: Partial<SpaceSettingsPanelProps>) => {
-  const { space } = useStoryClientData();
-
-  return <SpaceSettingsPanel {...args} space={space!} />;
+  const { space } = useClientProvider();
+  return <SpaceSettingsPanel {...args} space={space!} classNames='p-2 border border-primary-500 rounded' />;
 };
 
 const meta: Meta = {
@@ -24,7 +23,10 @@ const meta: Meta = {
   component: SpaceSettingsPanel,
   render: Story,
   decorators: [withClientProvider({ createIdentity: true, createSpace: true }), withTheme],
-  parameters: { translations },
+  parameters: {
+    translations,
+    layout: 'centered',
+  },
 };
 
 export default meta;

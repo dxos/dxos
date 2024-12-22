@@ -8,16 +8,17 @@ import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { Input, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, Input, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormInput } from '@dxos/react-ui-form';
+import { mx } from '@dxos/react-ui-theme';
 
 import { SPACE_PLUGIN } from '../../meta';
 
-export type SpaceSettingsPanelProps = {
+export type SpaceSettingsPanelProps = ThemedClassName<{
   space: Space;
-};
+}>;
 
-export const SpaceSettingsPanel = ({ space }: SpaceSettingsPanelProps) => {
+export const SpaceSettingsPanel = ({ classNames, space }: SpaceSettingsPanelProps) => {
   const { t } = useTranslation(SPACE_PLUGIN);
 
   const client = useClient();
@@ -40,7 +41,7 @@ export const SpaceSettingsPanel = ({ space }: SpaceSettingsPanelProps) => {
   );
 
   return (
-    <div role='form' className='flex flex-col'>
+    <div role='form' className={mx('flex flex-col', classNames)}>
       <DeprecatedFormInput label={t('name label')}>
         <Input.TextInput
           placeholder={t('unnamed space label')}
