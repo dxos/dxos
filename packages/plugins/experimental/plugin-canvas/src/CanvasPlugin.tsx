@@ -20,8 +20,8 @@ export const CanvasPlugin = (): PluginDefinition<CanvasPluginProvides> => {
         records: {
           [CanvasBoardType.typename]: {
             createObject: (props: { name?: string }) => createIntent(CanvasAction.Create, props),
-            placeholder: ['grid title placeholder', { ns: CANVAS_PLUGIN }],
-            icon: 'ph--squares-four--regular',
+            placeholder: ['canvas title placeholder', { ns: CANVAS_PLUGIN }],
+            icon: 'ph--infinity--regular',
           },
         },
       },

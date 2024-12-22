@@ -59,7 +59,18 @@ export const useShortcuts = () => {
       ev.preventDefault();
       void actionHandler?.({
         type: 'delete',
-        ids: [...selection.ids],
+        ids: [...selection.selected.value],
+      });
+    },
+    { scopes: [id] },
+  );
+  useHotkeys(
+    'Escape',
+    (ev) => {
+      ev.preventDefault();
+      void actionHandler?.({
+        type: 'select',
+        ids: [],
       });
     },
     { scopes: [id] },

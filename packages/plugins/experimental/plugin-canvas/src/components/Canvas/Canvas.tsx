@@ -68,10 +68,10 @@ export const CanvasContent = () => {
   // Selection.
   const shapesRef = useRef<HTMLDivElement>(null);
   const selectionRect = useSelectionEvents(root, ({ bounds, shift }) => {
-    if (!bounds) {
+    // NOTE: bounds will be undefined if clicking on an object.
+    if (bounds === null) {
       selection.clear();
-      root.click();
-    } else {
+    } else if (bounds) {
       selection.setSelected(
         layout.shapes
           .filter((shape) => {
