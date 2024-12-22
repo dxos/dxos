@@ -5,9 +5,9 @@
 import { type BaseObject, FormatEnum } from '@dxos/echo-schema';
 import { type SimpleType } from '@dxos/effect';
 
-import { GeiPointInput } from './Custom';
 import { BooleanInput, NumberInput, TextInput } from './Defaults';
 import { type InputComponent } from './Input';
+import { GeoPointInput } from './custom';
 
 /**
  * Get property input component.
@@ -18,7 +18,7 @@ export const getInputComponent = <T extends BaseObject>(
 ): InputComponent<T> | undefined => {
   switch (format) {
     case FormatEnum.LatLng:
-      return GeiPointInput;
+      return GeoPointInput;
   }
 
   switch (type) {

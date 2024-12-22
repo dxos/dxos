@@ -2,7 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { forwardRef, type PropsWithChildren, useImperativeHandle, useMemo, useState } from 'react';
+import React, {
+  type PropsWithChildren,
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { testId } from '@dxos/react-ui-canvas';
@@ -21,6 +29,7 @@ import {
 import { type Shape } from '../../types';
 import { Canvas } from '../Canvas';
 import { UI } from '../UI';
+import { type TestId } from '../defs';
 
 // Scenario:
 //  - ECHO query/editor.
@@ -39,7 +48,6 @@ import { UI } from '../UI';
 //  - Auto-layout (reconcile with plugin-debug).
 //    - AI generated layout from mermaid.
 //    - UML of this package using Beast and mermaid.
-//  - Splines.
 //  - Drop/snap visualization.
 //  - Resize frames.
 //  - Move all selected.
@@ -62,7 +70,7 @@ export const defaultEditorOptions: EditorOptions = {
 };
 
 interface EditorController {
-  zoomToFit(): Promise<void>;
+  zoomToFit(): void;
 }
 
 type EditorRootProps = ThemedClassName<
@@ -70,6 +78,7 @@ type EditorRootProps = ThemedClassName<
     Partial<Pick<EditorContextType, 'options' | 'debug' | 'graph'>> & {
       id: string;
       selection?: SelectionModel;
+      autoZoom?: boolean;
     }
   >
 >;
@@ -84,19 +93,23 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
       debug: _debug = false,
       graph: _graph,
       selection: _selection,
+      autoZoom,
     },
     forwardedRef,
   ) => {
-    // Canvas state.
+    // External state.
+    const graph = useMemo<GraphModel<Node<Shape>>>(() => _graph ?? new GraphModel<Node<Shape>>(), [_graph]);
+    const selection = useMemo(() => _selection ?? new SelectionModel(), [_selection]);
     const options = useMemo(() => Object.assign({}, defaultEditorOptions, _options), [_options]);
+
+    // Canvas state.
     const [debug, setDebug] = useState(_debug);
     const [gridSize, setGridSize] = useState({ width: options.gridSize, height: options.gridSize });
     const [showGrid, setShowGrid] = useState(true);
     const [snapToGrid, setSnapToGrid] = useState(true);
 
-    // External state.
-    const graph = useMemo<GraphModel<Node<Shape>>>(() => _graph ?? new GraphModel<Node<Shape>>(), [_graph]);
-    const selection = useMemo(() => _selection ?? new SelectionModel(), [_selection]);
+    // Canvas layout.
+    const overlaySvg = useRef<SVGSVGElement>(null);
 
     // Editor state.
     const [dragging, setDragging] = useState<DraggingState>();
@@ -111,29 +124,25 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
       options,
       graph,
       selection,
+      overlaySvg,
 
       actionHandler,
       setActionHandler: (handler) => setActionHandler(() => handler),
 
       debug,
-      setDebug,
-
       gridSize,
-      setGridSize,
-
       showGrid,
-      setShowGrid,
-
       snapToGrid,
+      setDebug,
+      setGridSize,
+      setShowGrid,
       setSnapToGrid,
 
       dragging,
-      setDragging,
-
       linking,
-      setLinking,
-
       editing,
+      setDragging,
+      setLinking,
       setEditing,
     };
 
@@ -142,17 +151,32 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
       forwardedRef,
       () => {
         return {
-          zoomToFit: async () => {
-            await actionHandler?.({ type: 'zoom-to-fit', duration: 0 });
+          zoomToFit: () => {
+            requestAnimationFrame(() => {
+              void actionHandler?.({ type: 'zoom-to-fit', duration: 0 });
+            });
           },
         };
       },
       [actionHandler],
     );
 
+    // Trigger on graph change.
+    useEffect(() => {
+      if (graph.nodes.length && autoZoom) {
+        setTimeout(() => {
+          void actionHandler?.({ type: 'zoom-to-fit', duration: 0 });
+        });
+      }
+    }, [actionHandler, graph, autoZoom]);
+
     return (
       <EditorContext.Provider value={context}>
-        <div {...testId('dx-editor')} tabIndex={0} className={mx('relative w-full h-full overflow-hidden', classNames)}>
+        <div
+          {...testId<TestId>('dx-editor')}
+          tabIndex={0}
+          className={mx('relative w-full h-full overflow-hidden', classNames)}
+        >
           {children}
         </div>
       </EditorContext.Provider>

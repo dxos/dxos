@@ -13,7 +13,7 @@ import {
   scale as scaleMatrix,
 } from 'transformation-matrix';
 
-import { type Point } from '../types';
+import { type Point, type Dimension } from '../types';
 
 export const defaultOffset: Point = { x: 0, y: 0 };
 
@@ -30,6 +30,7 @@ export type ProjectionState = {
  * Maps between screen and model coordinates.
  */
 export interface Projection {
+  get bounds(): Dimension;
   get scale(): number;
   get offset(): Point;
 
@@ -45,18 +46,20 @@ export interface Projection {
 }
 
 export class ProjectionMapper implements Projection {
+  private _bounds: Dimension = { width: 0, height: 0 };
   private _scale: number = 1;
   private _offset: Point = defaultOffset;
   private _toScreen: Matrix = identity();
   private _toModel: Matrix = identity();
 
-  constructor(scale?: number, offset?: Point) {
-    if (scale && offset) {
-      this.update(scale, offset);
+  constructor(bounds?: Dimension, scale?: number, offset?: Point) {
+    if (bounds && scale && offset) {
+      this.update(bounds, scale, offset);
     }
   }
 
-  update(scale: number, offset: Point) {
+  update(bounds: Dimension, scale: number, offset: Point) {
+    this._bounds = bounds;
     this._scale = scale;
     this._offset = offset;
     this._toScreen = compose(translateMatrix(this._offset.x, this._offset.y), scaleMatrix(this._scale));
@@ -64,11 +67,15 @@ export class ProjectionMapper implements Projection {
     return this;
   }
 
-  get scale(): number {
+  get bounds() {
+    return this._bounds;
+  }
+
+  get scale() {
     return this._scale;
   }
 
-  get offset(): Point {
+  get offset() {
     return this._offset;
   }
 
