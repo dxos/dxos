@@ -2,18 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { useState } from 'react';
 
-import { Icon, Toolbar as NaturalToolbar, type ThemedClassName } from '@dxos/react-ui';
+import { Icon, Select, Toolbar as NaturalToolbar, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type ActionHandler } from '../../actions';
+import { type LayoutKind, LAYOUTS } from '../../layout';
 
 export type ToolbarProps = ThemedClassName<{
   onAction?: ActionHandler;
 }>;
 
 export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
+  const [layout, setLayout] = useState<LayoutKind>(LAYOUTS[0]);
   const handleAction: ActionHandler = async (action) => {
     return onAction?.(action) ?? false;
   };
@@ -42,8 +44,27 @@ export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
       <NaturalToolbar.Button onClick={() => handleAction({ type: 'zoom-out' })} title='Center canvas.'>
         <Icon icon='ph--magnifying-glass-minus--regular' />
       </NaturalToolbar.Button>
-      <NaturalToolbar.Button onClick={() => handleAction({ type: 'layout' })} title='Do layout.'>
-        <Icon icon='ph--align-center-horizontal--regular' />
+      <Select.Root value={layout} onValueChange={(value) => setLayout(value as LayoutKind)}>
+        <NaturalToolbar.Button asChild>
+          <Select.TriggerButton variant='ghost' classNames='w-[100px]' />
+        </NaturalToolbar.Button>
+        <Select.Portal>
+          <Select.Content>
+            <Select.ScrollUpButton />
+            <Select.Viewport>
+              {LAYOUTS.map((layout) => (
+                <Select.Option key={layout} value={layout}>
+                  {layout}
+                </Select.Option>
+              ))}
+            </Select.Viewport>
+            <Select.ScrollDownButton />
+            <Select.Arrow />
+          </Select.Content>
+        </Select.Portal>
+      </Select.Root>
+      <NaturalToolbar.Button onClick={() => handleAction({ type: 'layout', layout })} title='Do layout.'>
+        <Icon icon='ph--graph--regular' />
       </NaturalToolbar.Button>
       <NaturalToolbar.Button onClick={() => handleAction({ type: 'delete' })} title='Delete objects.'>
         <Icon icon='ph--trash--regular' />

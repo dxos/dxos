@@ -29,18 +29,21 @@ export const useLayout = (graph: GraphModel<Node<Shape>>, dragging?: PolygonShap
 
     invariant(r1 && r2);
 
-    let points: Point[];
+    let points: Point[] = [];
     const d = distance(p1, p2);
-    if (d < 256) {
+    if (d > 256) {
+      const [s1, s2] = getNormals(r1, r2, 32) ?? [];
+      if (s1 && s2) {
+        points = [s1[1], s1[0], s2[0], s2[1]];
+      }
+    }
+    if (!points.length) {
       const i1 = findClosestIntersection([p2, p1], r1) ?? p1;
       const i2 = findClosestIntersection([p1, p2], r2) ?? p2;
       points = [i1, i2];
-    } else {
-      // TODO(burdon): Move point to closest free anchor.
-      const [s1, s2] = getNormals(r1, r2, 16);
-      points = [s1[1], s1[0], s2[0], s2[1]];
     }
 
+    // TODO(burdon): Move point to closest free anchor.
     shapes.push(createLine({ id, points, start: 'circle', end: 'arrow-end' }));
   });
 

@@ -114,7 +114,7 @@ export const useActionHandler = () => {
         }
 
         case 'layout': {
-          const layout = await doLayout(graph);
+          const layout = await doLayout(graph, { layout: action.layout });
           for (const { id, data } of layout.nodes) {
             const node = graph.getNode(id);
             if (node && isPolygon(data)) {

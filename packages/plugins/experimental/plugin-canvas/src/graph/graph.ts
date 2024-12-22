@@ -7,6 +7,11 @@ import { create } from '@dxos/live-object';
 
 import { removeElements } from './util';
 
+// Prior art:
+//  - https://graphology.github.io (TS, tree-shakable, multiple packages for extensions)
+//  - https://github.com/dagrejs/graphlib (mature, extensive)
+//  - https://github.com/avoidwork/tiny-graph
+
 export const BaseNode = S.Struct({
   id: S.String,
   type: S.optional(S.String),

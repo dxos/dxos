@@ -12,7 +12,7 @@ import { S, getTypename } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { Form } from '@dxos/react-ui-form';
+import { Form, TupleInput } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { createObjectFactory, type ValueGenerator, Testing, type TypeSpec } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -78,7 +78,18 @@ const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
         </Editor.Root>
       </AttentionContainer>
       {/* TODO(burdon): Autosave saves too early (before blur event). */}
-      {sidebar === 'selected' && selected && <Form schema={RectangleShapeWithoutRef} values={selected} autoSave />}
+      {sidebar === 'selected' && selected && (
+        <Form
+          schema={RectangleShapeWithoutRef}
+          values={selected}
+          Custom={{
+            // TODO(burdon): Replace by type.
+            ['center' as const]: (props) => <TupleInput {...props} binding={['x', 'y']} />,
+            ['size' as const]: (props) => <TupleInput {...props} binding={['width', 'height']} />,
+          }}
+          autoSave
+        />
+      )}
       {sidebar === 'json' && (
         <AttentionContainer id='sidebar' tabIndex={0} classNames='flex grow overflow-hidden'>
           <SyntaxHighlighter language='json' classNames='text-xs'>
@@ -102,9 +113,9 @@ const meta: Meta<EditorRootProps> = {
         space.db.graph.schemaRegistry.addSchema(types);
         const createObjects = createObjectFactory(space.db, generator);
         const spec: TypeSpec[] = [
-          { type: Testing.OrgType, count: 1 },
+          { type: Testing.OrgType, count: 4 },
           { type: Testing.ProjectType, count: 0 },
-          { type: Testing.ContactType, count: 3 },
+          { type: Testing.ContactType, count: 16 },
         ];
 
         await createObjects(spec);

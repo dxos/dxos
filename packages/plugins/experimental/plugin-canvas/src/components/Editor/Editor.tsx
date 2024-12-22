@@ -27,6 +27,8 @@ import { UI } from '../UI';
 //  - Basic UML (internal use; generate from GH via function).
 //  - Basic processing pipeline (AI).
 
+// TODO(burdon): Activation bullets.
+
 // TODO(burdon): Phase 1: Basic plugin.
 //  - Group/collapse nodes; hierarchical editor.
 //    - Bounding box/hierarchy. [DIFFERENTIATOR]
@@ -39,7 +41,6 @@ import { UI } from '../UI';
 //  - Auto-layout (reconcile with plugin-debug).
 //    - AI generated layout from mermaid.
 //    - UML of this package using Beast and mermaid.
-//  - Splines.
 //  - Drop/snap visualization.
 //  - Resize frames.
 //  - Move all selected.
@@ -118,24 +119,19 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
       setActionHandler: (handler) => setActionHandler(() => handler),
 
       debug,
-      setDebug,
-
       gridSize,
-      setGridSize,
-
       showGrid,
-      setShowGrid,
-
       snapToGrid,
+      setDebug,
+      setGridSize,
+      setShowGrid,
       setSnapToGrid,
 
       dragging,
-      setDragging,
-
       linking,
-      setLinking,
-
       editing,
+      setDragging,
+      setLinking,
       setEditing,
     };
 

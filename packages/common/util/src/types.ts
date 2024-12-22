@@ -91,11 +91,3 @@ export const arrayMove = <T>(array: T[], from: number, to: number): Array<T> => 
   return array;
 };
 
-export const safeParseInt = (value: string | undefined, defaultValue?: number) => {
-  try {
-    const n = parseInt(value ?? '');
-    return isNaN(n) ? defaultValue : n;
-  } catch (err) {
-    return defaultValue;
-  }
-};
