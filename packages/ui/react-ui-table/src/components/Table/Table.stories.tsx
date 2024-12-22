@@ -36,6 +36,7 @@ faker.seed(0);
 
 const DefaultStory = () => {
   const { space } = useClientProvider();
+  invariant(space);
 
   const tables = useQuery(space, Filter.schema(TableType));
   const [table, setTable] = useState<TableType>();
