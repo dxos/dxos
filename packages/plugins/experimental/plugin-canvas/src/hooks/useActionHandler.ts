@@ -10,6 +10,7 @@ import { useProjection, zoomTo, zoomInPlace, ProjectionMapper } from '@dxos/reac
 
 import { useEditorContext } from './useEditorContext';
 import { type ActionHandler } from '../actions';
+import { getShapeElement } from '../components/Canvas/shapes';
 import { createRectangle, doLayout, getCenter, getRect, rectUnion } from '../layout';
 import { createId, itemSize } from '../testing';
 import { isPolygon } from '../types';
@@ -17,7 +18,7 @@ import { isPolygon } from '../types';
 // TODO(burdon): Handle multiple actions.
 export const useActionHandler = () => {
   const { options, graph, selection, setDebug, setShowGrid, setSnapToGrid, setActionHandler } = useEditorContext();
-  const { projection, setProjection } = useProjection();
+  const { root, projection, setProjection } = useProjection();
 
   useEffect(() => {
     const actionHandler: ActionHandler = async (action) => {
@@ -164,11 +165,18 @@ export const useActionHandler = () => {
           return true;
         }
 
+        case 'run': {
+          const { id = selection.selected.value[0] } = action;
+          const el = getShapeElement(root, id);
+          console.log(el);
+          return true;
+        }
+
         default:
           return false;
       }
     };
 
     setActionHandler(actionHandler);
-  }, [options, graph, selection, projection]);
+  }, [root, options, graph, selection, projection]);
 };

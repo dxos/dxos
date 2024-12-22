@@ -75,6 +75,9 @@ export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
       <NaturalToolbar.Button onClick={() => handleAction({ type: 'create' })} title='Create objects.'>
         <Icon icon='ph--plus--regular' />
       </NaturalToolbar.Button>
+      <NaturalToolbar.Button onClick={() => handleAction({ type: 'run' })} title='Run task.'>
+        <Icon icon='ph--play--regular' />
+      </NaturalToolbar.Button>
     </NaturalToolbar.Root>
   );
 };

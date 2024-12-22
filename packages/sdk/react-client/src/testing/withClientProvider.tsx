@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Decorator } from '@storybook/react';
+import { type StoryContext, type Decorator } from '@storybook/react';
 import React, { createContext, type PropsWithChildren, useContext, useEffect, useRef, useState } from 'react';
 import { type FallbackProps, ErrorBoundary as NativeErrorBoundary } from 'react-error-boundary';
 
@@ -21,7 +21,8 @@ type InitializeProps = {
   createSpace?: boolean;
   onInitialized?: (client: Client) => MaybePromise<void>;
   onIdentityCreated?: (props: { client: Client }) => MaybePromise<void>;
-  onSpaceCreated?: (props: { client: Client; space: Space }) => MaybePromise<void>;
+  // NOTE: context must be untyped until ClientRepeater is removed.
+  onSpaceCreated?: (props: { client: Client; space: Space }, context: StoryContext | any) => MaybePromise<void>;
 };
 
 /**
@@ -30,6 +31,7 @@ type InitializeProps = {
 const initializeClient = async (
   client: Client,
   { createIdentity, createSpace, onSpaceCreated, onIdentityCreated, onInitialized }: InitializeProps,
+  context: StoryContext,
 ): Promise<ClientStory> => {
   await onInitialized?.(client);
 
@@ -43,7 +45,7 @@ const initializeClient = async (
   let space: Space | undefined;
   if (createSpace) {
     space = await client.spaces.create({ name: 'Test Space' });
-    await onSpaceCreated?.({ client, space });
+    await onSpaceCreated?.({ client, space }, context);
   }
 
   return { space };
@@ -62,16 +64,20 @@ export const withClientProvider = ({
   onInitialized,
   ...props
 }: WithClientProviderProps = {}): Decorator => {
-  return (Story) => {
+  return (Story, context) => {
     const [data, setData] = useState<ClientStory>({});
     const handleInitialized = async (client: Client) => {
-      const data = await initializeClient(client, {
-        createIdentity,
-        createSpace,
-        onSpaceCreated,
-        onIdentityCreated,
-        onInitialized,
-      });
+      const data = await initializeClient(
+        client,
+        {
+          createIdentity,
+          createSpace,
+          onSpaceCreated,
+          onIdentityCreated,
+          onInitialized,
+        },
+        context,
+      );
 
       setData(data);
     };
@@ -112,7 +118,7 @@ export const withMultiClientProvider = ({
   onInitialized,
   ...props
 }: WithMultiClientProviderProps): Decorator => {
-  return (Story) => {
+  return (Story, context) => {
     const builder = useRef(new TestBuilder());
     const hostRef = useRef<Client>();
     const spaceReady = useRef(new Trigger<Space | undefined>());
@@ -124,18 +130,22 @@ export const withMultiClientProvider = ({
       if (createSpace) {
         if (!hostRef.current) {
           hostRef.current = client;
-          const { space } = await initializeClient(client, {
-            createIdentity,
-            createSpace,
-            onSpaceCreated,
-            onIdentityCreated,
-            onInitialized,
-          });
+          const { space } = await initializeClient(
+            client,
+            {
+              createIdentity,
+              createSpace,
+              onSpaceCreated,
+              onIdentityCreated,
+              onInitialized,
+            },
+            context,
+          );
 
           spaceReady.current.wake(space);
           log.info('inviting', { index });
         } else {
-          await initializeClient(client, { createIdentity, onInitialized });
+          await initializeClient(client, { createIdentity, onInitialized }, context);
           const space = await spaceReady.current.wait();
           if (space) {
             log.info('joining', { index });

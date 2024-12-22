@@ -14,7 +14,7 @@ import { useClientProvider, withClientProvider } from '@dxos/react-client/testin
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Form, TupleInput } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { createObjectFactory, type ValueGenerator, Testing, type TypeSpec } from '@dxos/schema/testing';
+import { type TypeSpec, createObjectFactory, type ValueGenerator, Testing } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
@@ -109,32 +109,43 @@ const meta: Meta<EditorRootProps> = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ space }) => {
-        space.db.graph.schemaRegistry.addSchema(types);
-        const createObjects = createObjectFactory(space.db, generator);
-        const spec: TypeSpec[] = [
-          { type: Testing.OrgType, count: 4 },
-          { type: Testing.ProjectType, count: 0 },
-          { type: Testing.ContactType, count: 16 },
-        ];
-
-        await createObjects(spec);
+      onSpaceCreated: async ({ space }, { args: { spec } }) => {
+        if (spec) {
+          space.db.graph.schemaRegistry.addSchema(types);
+          const createObjects = createObjectFactory(space.db, generator);
+          await createObjects(spec as TypeSpec[]);
+        }
       },
     }),
     withTheme,
     withAttention,
     withLayout({ fullscreen: true, tooltips: true }),
+    (Story, { args }) => {
+      console.log(args);
+      return <Story />;
+    },
   ],
 };
 
 export default meta;
 
-type Story = StoryObj<RenderProps>;
+type Story = StoryObj<RenderProps & { spec?: TypeSpec[] }>;
 
 export const Default: Story = {
   args: {
-    sidebar: 'selected',
+    sidebar: 'json',
     debug: true,
+  },
+};
+
+export const Json: Story = {
+  args: {
+    sidebar: 'json',
+    init: true,
+    spec: [
+      { type: Testing.OrgType, count: 2 },
+      { type: Testing.ContactType, count: 4 },
+    ],
   },
 };
 
@@ -142,5 +153,10 @@ export const Query: Story = {
   args: {
     sidebar: 'selected',
     init: true,
+    spec: [
+      { type: Testing.OrgType, count: 4 },
+      { type: Testing.ProjectType, count: 0 },
+      { type: Testing.ContactType, count: 16 },
+    ],
   },
 };

@@ -8,12 +8,19 @@ import { type ThemedClassName } from '@dxos/react-ui';
 
 import { Frame } from './Frame';
 import { Line } from './Line';
-import { isPolygon, type BaseShape } from '../../../types';
+import { isPolygon, type BaseShape, isLine } from '../../../types';
 
 export const DEFS_ID = 'dx-defs';
 export const MARKER_PREFIX = 'dx-marker';
 
-export const shapeAttrs = (shape: BaseShape) => ({ 'data-shape-id': shape.id });
+export const shapeAttrs = (shape: BaseShape) => {
+  const attrs = { 'data-shape-id': shape.id };
+  if (isLine(shape)) {
+    // console.log(shape.object);
+  }
+
+  return attrs;
+};
 
 export const getShapeElement = (root: HTMLDivElement, id: string) => root.querySelector(`[data-shape-id="${id}"]`);
 export const getShapeBounds = (root: HTMLDivElement, id: string): DOMRect | undefined => {
