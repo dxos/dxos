@@ -10,18 +10,18 @@ import { Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { performInvitation, TestBuilder } from '@dxos/client/testing';
-import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';
 
+import { ClientStory } from './context';
 import { ClientProvider, type ClientProviderProps } from '../client';
 
 type InitializeProps = {
   createIdentity?: boolean;
   createSpace?: boolean;
-  onInitialized?: (client: Client) => MaybePromise<Record<string, any> | void>;
-  onIdentityCreated?: (props: { client: Client }) => MaybePromise<Record<string, any> | void>;
-  onSpaceCreated?: (props: { client: Client; space: Space }) => MaybePromise<Record<string, any> | void>;
+  onInitialized?: (client: Client) => MaybePromise<void>;
+  onIdentityCreated?: (props: { client: Client }) => MaybePromise<void>;
+  onSpaceCreated?: (props: { client: Client; space: Space }) => MaybePromise<void>;
 };
 
 /**
@@ -30,35 +30,23 @@ type InitializeProps = {
 const initializeClient = async (
   client: Client,
   { createIdentity, createSpace, onSpaceCreated, onIdentityCreated, onInitialized }: InitializeProps,
-): Promise<StoryClientProps> => {
-  const clientData = await onInitialized?.(client);
+): Promise<ClientStory> => {
+  await onInitialized?.(client);
 
-  let identityData: Record<string, any> | void = {};
   if (createIdentity || createSpace) {
     if (!client.halo.identity.get()) {
       await client.halo.createIdentity();
-      identityData = await onIdentityCreated?.({ client });
+      await onIdentityCreated?.({ client });
     }
   }
 
   let space: Space | undefined;
-  let spaceData: Record<string, any> | void = {};
   if (createSpace) {
     space = await client.spaces.create({ name: 'Test Space' });
-    spaceData = await onSpaceCreated?.({ client, space });
+    await onSpaceCreated?.({ client, space });
   }
 
-  return { space, ...clientData, ...identityData, ...spaceData };
-};
-
-type StoryClientProps<T extends Record<string, any> = Record<string, unknown>> = T & { space?: Space };
-
-// TODO(wittjosiah): Add to multi-client as well.
-const StoryClientContext = createContext<StoryClientProps | undefined>(undefined);
-
-export const useStoryClientData = <T extends Record<string, any> = Record<string, unknown>>() => {
-  const data = useContext(StoryClientContext) ?? raise(new Error('Missing withClientProvider decorator.'));
-  return data as StoryClientProps<T>;
+  return { space };
 };
 
 export type WithClientProviderProps = InitializeProps & Omit<ClientProviderProps, 'onInitialized'>;
@@ -75,26 +63,25 @@ export const withClientProvider = ({
   ...props
 }: WithClientProviderProps = {}): Decorator => {
   return (Story) => {
-    const [data, setData] = useState<StoryClientProps>({});
-
+    const [data, setData] = useState<ClientStory>({});
     const handleInitialized = async (client: Client) => {
-      setData(
-        await initializeClient(client, {
-          createIdentity,
-          createSpace,
-          onSpaceCreated,
-          onIdentityCreated,
-          onInitialized,
-        }),
-      );
+      const data = await initializeClient(client, {
+        createIdentity,
+        createSpace,
+        onSpaceCreated,
+        onIdentityCreated,
+        onInitialized,
+      });
+
+      setData(data);
     };
 
     return (
       <ErrorBoundary>
         <ClientProvider onInitialized={handleInitialized} {...props}>
-          <StoryClientContext.Provider value={data}>
+          <ClientStory.Provider value={data}>
             <Story />
-          </StoryClientContext.Provider>
+          </ClientStory.Provider>
         </ClientProvider>
       </ErrorBoundary>
     );
@@ -144,6 +131,7 @@ export const withMultiClientProvider = ({
             onIdentityCreated,
             onInitialized,
           });
+
           spaceReady.current.wake(space);
           log.info('inviting', { index });
         } else {

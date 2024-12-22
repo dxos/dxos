@@ -11,8 +11,8 @@ import { type MutableSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
-import { Filter, useSpaces, useQuery, create } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
+import { Filter, useQuery, create } from '@dxos/react-client/echo';
+import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { useDefaultValue } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -35,19 +35,20 @@ faker.seed(0);
 //
 
 const DefaultStory = () => {
-  const spaces = useSpaces();
-  const space = spaces[spaces.length - 1];
+  const { space } = useClientProvider();
+  invariant(space);
+
   const tables = useQuery(space, Filter.schema(TableType));
   const [table, setTable] = useState<TableType>();
   const [schema, setSchema] = useState<MutableSchema>();
   useEffect(() => {
-    if (tables.length && !table) {
+    if (space && tables.length && !table) {
       const table = tables[0];
       invariant(table.view);
       setTable(table);
       setSchema(space.db.schemaRegistry.getSchema(table.view.target!.query.type));
     }
-  }, [tables]);
+  }, [space, tables]);
 
   const projection = useMemo(() => {
     if (schema && table?.view?.target) {
@@ -94,7 +95,7 @@ const DefaultStory = () => {
         }
       }
     },
-    [table, spaces],
+    [table],
   );
 
   const tableRef = useRef<TableController>(null);
