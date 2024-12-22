@@ -76,6 +76,10 @@ export class GraphModel<GraphNode extends Node = any, GraphEdge extends Edge = a
     return this.edges.find((edge) => edge.id === id);
   }
 
+  getEdges({ source, target }: Partial<GraphEdge>): GraphEdge[] {
+    return this.edges.filter((e) => (!source || source === e.source) && (!target || target === e.target));
+  }
+
   addNode(node: GraphNode): this {
     this._graph.nodes.push(node);
     return this;

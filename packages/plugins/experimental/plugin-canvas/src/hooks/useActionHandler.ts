@@ -6,18 +6,20 @@ import { useEffect } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { useProjection, zoomTo, zoomInPlace, ProjectionMapper } from '@dxos/react-ui-canvas';
+import { DATA_TEST_ID, useProjection, zoomTo, zoomInPlace, ProjectionMapper } from '@dxos/react-ui-canvas';
 
 import { useEditorContext } from './useEditorContext';
 import { type ActionHandler } from '../actions';
-import { getShapeElement } from '../components/Canvas/shapes';
+import { type TestId } from '../components';
 import { createRectangle, doLayout, getCenter, getRect, rectUnion } from '../layout';
+import { fireBullet } from '../layout/bullets';
 import { createId, itemSize } from '../testing';
 import { isPolygon } from '../types';
 
 // TODO(burdon): Handle multiple actions.
 export const useActionHandler = () => {
-  const { options, graph, selection, setDebug, setShowGrid, setSnapToGrid, setActionHandler } = useEditorContext();
+  const { options, overlaySvg, graph, selection, setDebug, setShowGrid, setSnapToGrid, setActionHandler } =
+    useEditorContext();
   const { root, projection, setProjection } = useProjection();
 
   useEffect(() => {
@@ -167,8 +169,13 @@ export const useActionHandler = () => {
 
         case 'run': {
           const { id = selection.selected.value[0] } = action;
-          const el = getShapeElement(root, id);
-          console.log(el);
+          const g = overlaySvg.current!.querySelector<SVGGElement>(
+            `g[${DATA_TEST_ID}="${'dx-overlay-bullets' satisfies TestId}"]`,
+          );
+          if (g && id) {
+            // TODO(burdon): Return cancel.
+            fireBullet(root, g, graph, id);
+          }
           return true;
         }
 
@@ -178,5 +185,5 @@ export const useActionHandler = () => {
     };
 
     setActionHandler(actionHandler);
-  }, [root, options, graph, selection, projection]);
+  }, [root, overlaySvg, options, graph, selection, projection]);
 };

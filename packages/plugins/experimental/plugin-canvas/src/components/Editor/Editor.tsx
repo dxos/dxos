@@ -2,7 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { forwardRef, type PropsWithChildren, useEffect, useImperativeHandle, useMemo, useState } from 'react';
+import React, {
+  type PropsWithChildren,
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { testId } from '@dxos/react-ui-canvas';
@@ -21,13 +29,12 @@ import {
 import { type Shape } from '../../types';
 import { Canvas } from '../Canvas';
 import { UI } from '../UI';
+import { type TestId } from '../defs';
 
 // Scenario:
 //  - ECHO query/editor.
 //  - Basic UML (internal use; generate from GH via function).
 //  - Basic processing pipeline (AI).
-
-// TODO(burdon): Activation bullets.
 
 // TODO(burdon): Phase 1: Basic plugin.
 //  - Group/collapse nodes; hierarchical editor.
@@ -90,16 +97,19 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
     },
     forwardedRef,
   ) => {
-    // Canvas state.
+    // External state.
+    const graph = useMemo<GraphModel<Node<Shape>>>(() => _graph ?? new GraphModel<Node<Shape>>(), [_graph]);
+    const selection = useMemo(() => _selection ?? new SelectionModel(), [_selection]);
     const options = useMemo(() => Object.assign({}, defaultEditorOptions, _options), [_options]);
+
+    // Canvas state.
     const [debug, setDebug] = useState(_debug);
     const [gridSize, setGridSize] = useState({ width: options.gridSize, height: options.gridSize });
     const [showGrid, setShowGrid] = useState(true);
     const [snapToGrid, setSnapToGrid] = useState(true);
 
-    // External state.
-    const graph = useMemo<GraphModel<Node<Shape>>>(() => _graph ?? new GraphModel<Node<Shape>>(), [_graph]);
-    const selection = useMemo(() => _selection ?? new SelectionModel(), [_selection]);
+    // Canvas layout.
+    const overlaySvg = useRef<SVGSVGElement>(null);
 
     // Editor state.
     const [dragging, setDragging] = useState<DraggingState>();
@@ -114,6 +124,7 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
       options,
       graph,
       selection,
+      overlaySvg,
 
       actionHandler,
       setActionHandler: (handler) => setActionHandler(() => handler),
@@ -161,7 +172,11 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
 
     return (
       <EditorContext.Provider value={context}>
-        <div {...testId('dx-editor')} tabIndex={0} className={mx('relative w-full h-full overflow-hidden', classNames)}>
+        <div
+          {...testId<TestId>('dx-editor')}
+          tabIndex={0}
+          className={mx('relative w-full h-full overflow-hidden', classNames)}
+        >
           {children}
         </div>
       </EditorContext.Provider>

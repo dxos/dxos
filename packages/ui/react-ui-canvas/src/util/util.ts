@@ -17,7 +17,7 @@ export const getRelativePoint = (el: HTMLElement, ev: MouseEvent) => {
  *
  */
 // TODO(burdon): Factor out.
-export const testId = (id: string, inspect = false) => {
+export const testId = <ID = string>(id: ID, inspect = false) => {
   if (inspect) {
     if (!logged) {
       // eslint-disable-next-line no-console
@@ -33,5 +33,7 @@ export const testId = (id: string, inspect = false) => {
     };
   }
 
-  return { 'data-test-id': id };
+  return { [DATA_TEST_ID]: id };
 };
+
+export const DATA_TEST_ID = 'data-test-id';

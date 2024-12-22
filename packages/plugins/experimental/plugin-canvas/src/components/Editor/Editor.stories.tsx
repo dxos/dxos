@@ -120,10 +120,6 @@ const meta: Meta<EditorRootProps> = {
     withTheme,
     withAttention,
     withLayout({ fullscreen: true, tooltips: true }),
-    (Story, { args }) => {
-      console.log(args);
-      return <Story />;
-    },
   ],
 };
 
