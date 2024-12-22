@@ -4,6 +4,8 @@
 
 import { Graph as NativeGraph, type PlainObject } from '@antv/graphlib';
 import {
+  CircularLayout,
+  type CircularLayoutOptions,
   type D3ForceLayoutOptions,
   ForceLayout,
   type ForceLayoutOptions,
@@ -11,8 +13,6 @@ import {
   type GridLayoutOptions,
   RadialLayout,
   type RadialLayoutOptions,
-  CircularLayout,
-  type CircularLayoutOptions,
 } from '@antv/layout';
 import defaultsDeep from 'lodash.defaultsdeep';
 
@@ -21,6 +21,10 @@ import { getDeep } from '@dxos/util';
 
 import { type Graph, GraphModel, type Node } from '../graph';
 import { type Shape } from '../types';
+
+// TODO(burdon): Custom UML layout heuristics:
+//  - Layout longest chain on horizontal.
+//  - Inherits always goes up.
 
 // TODO(burdon): Util.
 export type Intersection<Types extends readonly unknown[]> = Types extends [infer First, ...infer Rest]
