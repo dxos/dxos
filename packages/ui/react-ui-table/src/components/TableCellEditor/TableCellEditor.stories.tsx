@@ -29,13 +29,12 @@ type StoryProps = {
 
 const DefaultStory = ({ editing }: StoryProps) => {
   const { space } = useClientProvider();
-  invariant(space);
 
   const tables = useQuery(space, Filter.schema(TableType));
   const [table, setTable] = useState<TableType>();
   const [schema, setSchema] = useState<MutableSchema>();
   useEffect(() => {
-    if (tables.length && !table) {
+    if (space && tables.length && !table) {
       const table = tables[0];
       invariant(table.view);
       setTable(table);

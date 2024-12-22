@@ -37,19 +37,18 @@ faker.seed(0);
 
 const DefaultStory = () => {
   const { space } = useClientProvider();
-  invariant(space);
 
   const tables = useQuery(space, Filter.schema(TableType));
   const [table, setTable] = useState<TableType>();
   const [schema, setSchema] = useState<MutableSchema>();
   useEffect(() => {
-    if (tables.length && !table) {
+    if (space && tables.length && !table) {
       const table = tables[0];
       invariant(table.view);
       setTable(table);
       setSchema(space.db.schemaRegistry.getSchema(table.view.target!.query.type));
     }
-  }, [tables]);
+  }, [space, tables]);
 
   const projection = useMemo(() => {
     if (schema && table?.view?.target) {

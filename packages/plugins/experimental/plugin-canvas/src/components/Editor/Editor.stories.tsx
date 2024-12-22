@@ -30,8 +30,8 @@ const types = [Testing.OrgType, Testing.ProjectType, Testing.ContactType];
 
 type RenderProps = Omit<EditorRootProps, 'graph'> & { init?: boolean; sidebar?: 'json' | 'selected' };
 
-// TODO(burdon): Ref expando breks the form.
-const FixedRectangleShape = S.omit<any, any, ['object']>('object')(RectangleShape);
+// TODO(burdon): Ref expando breaks the form.
+const RectangleShapeWithoutRef = S.omit<any, any, ['object']>('object')(RectangleShape);
 
 const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
   const editorRef = useRef<EditorController>(null);
@@ -69,7 +69,7 @@ const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
     });
   }, [graph, selection]);
 
-  // TODO(burdon): Set option to do this automatically.
+  // TODO(burdon): Editor option to do this automatically.
   useEffect(() => {
     if (graph) {
       requestAnimationFrame(() => {
@@ -87,7 +87,7 @@ const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
         </Editor.Root>
       </AttentionContainer>
       {/* TODO(burdon): Autosave saves too early (before blur event). */}
-      {sidebar === 'selected' && selected && <Form schema={FixedRectangleShape} values={selected} autoSave />}
+      {sidebar === 'selected' && selected && <Form schema={RectangleShapeWithoutRef} values={selected} autoSave />}
       {sidebar === 'json' && (
         <AttentionContainer id='sidebar' tabIndex={0} classNames='flex grow overflow-hidden'>
           <SyntaxHighlighter language='json' classNames='text-xs'>
