@@ -14,6 +14,7 @@ import { createRectangle, doLayout, getCenter, getRect, rectUnion } from '../lay
 import { createId, itemSize } from '../testing';
 import { isPolygon } from '../types';
 
+// TODO(burdon): Handle multiple actions.
 export const useActionHandler = () => {
   const { options, graph, selection, setDebug, setShowGrid, setSnapToGrid, setActionHandler } = useEditorContext();
   const { width, height, scale, offset, setProjection } = useProjection();

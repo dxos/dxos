@@ -29,7 +29,7 @@ export class SelectionModel {
   toggleSelected(ids: string[], shift = false) {
     const set = new Set<string>(shift ? Array.from(this._selected.value.values()) : undefined);
     ids.forEach((id) => {
-      if (set.has(id)) {
+      if (this._selected.value.has(id)) {
         set.delete(id);
       } else {
         set.add(id);

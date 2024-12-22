@@ -128,6 +128,9 @@ export const useDragMonitor = (el: HTMLElement | null) => {
                 await actionHandler?.({ type: 'create', shape });
               }
               await actionHandler?.({ type: 'link', source: data.shape.id, target: id });
+              if (!target?.id) {
+                await actionHandler?.({ type: 'select', ids: [id] });
+              }
               break;
             }
           }
