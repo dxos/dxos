@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import { ReactiveEchoObject } from '@dxos/echo-db';
 import { FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { getSchema } from '@dxos/live-object';
 import { log } from '@dxos/log';
-import { type ReactiveEchoObject, getSchema } from '@dxos/react-client/echo';
 import { getSchemaProperties } from '@dxos/schema';
 
 import { GraphModel, type Node } from './graph';

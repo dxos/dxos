@@ -9,6 +9,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { type ReactiveEchoObject } from '@dxos/echo-db';
 import { S, getTypename } from '@dxos/echo-schema';
+import { createGraph, type GraphModel, type Node } from '@dxos/graph';
 import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
@@ -18,7 +19,6 @@ import { type TypeSpec, createObjectFactory, type ValueGenerator, Testing } from
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
-import { createGraph, type GraphModel, type Node } from '../../graph';
 import { SelectionModel } from '../../hooks';
 import { doLayout } from '../../layout';
 import { RectangleShape, type Shape } from '../../types';
