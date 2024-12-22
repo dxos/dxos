@@ -44,7 +44,7 @@ export type BulletOptions = {
 
 export const defaultBulletOptions: BulletOptions = {
   max: 32,
-  radius: 5,
+  radius: 3,
   delay: 50,
   minDuration: 500,
   maxDuration: 1000,
@@ -90,9 +90,18 @@ export const createBullet = (
       const bullet = d3
         .select(this)
         .append('circle')
-        .attr('class', 'fill-red-500')
+        .attr('class', 'fill-orange-500')
         .attr('cx', p.x)
         .attr('cy', p.y)
+        .attr('r', options.radius);
+
+      // Pulse.
+      bullet
+        .transition('s')
+        .duration(500)
+        .attr('r', options.radius * 1.5)
+        .transition()
+        .duration(300)
         .attr('r', options.radius);
 
       bullet
