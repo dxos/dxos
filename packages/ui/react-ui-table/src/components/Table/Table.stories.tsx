@@ -11,7 +11,8 @@ import { type MutableSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
-import { Filter, useSpaces, useQuery, create } from '@dxos/react-client/echo';
+import { Filter, useQuery, create } from '@dxos/react-client/echo';
+import { useClientProvider } from '@dxos/react-client/src/testing';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useDefaultValue } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-form';
@@ -35,8 +36,9 @@ faker.seed(0);
 //
 
 const DefaultStory = () => {
-  const spaces = useSpaces();
-  const space = spaces[spaces.length - 1];
+  const { space } = useClientProvider();
+  invariant(space);
+
   const tables = useQuery(space, Filter.schema(TableType));
   const [table, setTable] = useState<TableType>();
   const [schema, setSchema] = useState<MutableSchema>();
@@ -94,7 +96,7 @@ const DefaultStory = () => {
         }
       }
     },
-    [table, spaces],
+    [table],
   );
 
   const tableRef = useRef<TableController>(null);

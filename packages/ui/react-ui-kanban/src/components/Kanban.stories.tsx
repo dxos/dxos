@@ -140,12 +140,13 @@ const meta: Meta<StoryProps> = {
       createSpace: true,
       onSpaceCreated: async ({ space }) => {
         const { taskSchema } = initializeKanban({ space });
+        // TODO(burdon): Replace with sdk/schema/testing.
         Array.from({ length: 24 }).map(() => {
           return space.db.add(
             create(taskSchema, {
               title: faker.commerce.productName(),
               description: faker.lorem.paragraph(),
-              state: ['To do', 'Doing', 'Done'][faker.number.int(2)],
+              state: ['To do', 'Active', 'Done'][faker.number.int(2)],
             }),
           );
         });

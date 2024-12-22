@@ -10,7 +10,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { type MutableSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
-import { Filter, useSpaces, useQuery, create } from '@dxos/react-client/echo';
+import { Filter, useQuery, create } from '@dxos/react-client/echo';
+import { useClientProvider } from '@dxos/react-client/src/testing';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { defaultSizeRow, Grid, type GridEditing } from '@dxos/react-ui-grid';
 import { ViewProjection, ViewType } from '@dxos/schema';
@@ -27,8 +28,9 @@ type StoryProps = {
 };
 
 const DefaultStory = ({ editing }: StoryProps) => {
-  const spaces = useSpaces();
-  const space = spaces[spaces.length - 1];
+  const { space } = useClientProvider();
+  invariant(space);
+
   const tables = useQuery(space, Filter.schema(TableType));
   const [table, setTable] = useState<TableType>();
   const [schema, setSchema] = useState<MutableSchema>();
@@ -39,7 +41,7 @@ const DefaultStory = ({ editing }: StoryProps) => {
       setTable(table);
       setSchema(space.db.schemaRegistry.getSchema(table.view.target!.query.type));
     }
-  }, [tables]);
+  }, [space, tables]);
 
   const projection = useMemo(() => {
     if (schema && table?.view) {

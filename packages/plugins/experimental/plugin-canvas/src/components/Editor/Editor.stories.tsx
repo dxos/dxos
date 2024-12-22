@@ -10,8 +10,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { type ReactiveEchoObject } from '@dxos/echo-db';
 import { S, getTypename } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
-import { useSpaces } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
+import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Form } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -36,7 +35,7 @@ const FixedRectangleShape = S.omit<any, any, ['object']>('object')(RectangleShap
 
 const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
   const editorRef = useRef<EditorController>(null);
-  const [_, space] = useSpaces(); // TODO(burdon): Get created space.
+  const { space } = useClientProvider();
 
   // Do layout.
   const [graph, setGraph] = useState<GraphModel<Node<Shape>>>();
@@ -113,7 +112,7 @@ const meta: Meta<EditorRootProps> = {
         const createObjects = createObjectFactory(space.db, generator);
         const spec: TypeSpec[] = [
           { type: Testing.OrgType, count: 1 },
-          // { type: Testing.ProjectType, count: 0 },
+          { type: Testing.ProjectType, count: 0 },
           { type: Testing.ContactType, count: 3 },
         ];
 
