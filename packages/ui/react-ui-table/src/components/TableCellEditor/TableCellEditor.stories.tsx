@@ -11,8 +11,7 @@ import { type MutableSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { Filter, useQuery, create } from '@dxos/react-client/echo';
-import { useClientProvider } from '@dxos/react-client/src/testing';
-import { withClientProvider } from '@dxos/react-client/testing';
+import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { defaultSizeRow, Grid, type GridEditing } from '@dxos/react-ui-grid';
 import { ViewProjection, ViewType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -29,6 +28,7 @@ type StoryProps = {
 
 const DefaultStory = ({ editing }: StoryProps) => {
   const { space } = useClientProvider();
+  invariant(space);
 
   const tables = useQuery(space, Filter.schema(TableType));
   const [table, setTable] = useState<TableType>();
