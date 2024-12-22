@@ -20,10 +20,10 @@ import { createObjectFactory, type ValueGenerator, Testing, type TypeSpec } from
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
-import { createGraph, type Graph } from '../../graph';
+import { createGraph, type GraphModel, type Node } from '../../graph';
 import { SelectionModel } from '../../hooks';
 import { doLayout } from '../../layout';
-import { RectangleShape } from '../../types';
+import { RectangleShape, type Shape } from '../../types';
 import { AttentionContainer } from '../AttentionContainer';
 
 const generator: ValueGenerator = faker as any;
@@ -38,7 +38,7 @@ const FixedRectangleShape = S.omit<any, any, ['object']>('object')(RectangleShap
 const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
   const editorRef = useRef<EditorController>(null);
   const selection = useMemo(() => new SelectionModel(), []);
-  const [graph, setGraph] = useState<Graph>();
+  const [graph, setGraph] = useState<GraphModel<Node<Shape>>>();
   const [_, space] = useSpaces(); // TODO(burdon): Get created space.
   useEffect(() => {
     if (!space || !init) {
@@ -50,7 +50,7 @@ const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
         .query((object: ReactiveEchoObject<any>) => types.some((t) => t.typename === getTypename(object)))
         .run();
       const model = await doLayout(createGraph(objects));
-      setGraph(model.graph);
+      setGraph(model);
     });
 
     return () => clearTimeout(t);
@@ -118,9 +118,9 @@ const meta: Meta<EditorRootProps> = {
         space.db.graph.schemaRegistry.addSchema(types);
         const createObjects = createObjectFactory(space.db, generator);
         const spec: TypeSpec[] = [
-          { type: Testing.OrgType, count: 8 },
-          { type: Testing.ProjectType, count: 0 },
-          { type: Testing.ContactType, count: 16 },
+          { type: Testing.OrgType, count: 1 },
+          // { type: Testing.ProjectType, count: 0 },
+          { type: Testing.ContactType, count: 3 },
         ];
 
         await createObjects(spec);

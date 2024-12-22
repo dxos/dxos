@@ -9,7 +9,7 @@ import { testId } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type ActionHandler } from '../../actions';
-import { type Graph, GraphModel, type Node } from '../../graph';
+import { GraphModel, type Node } from '../../graph';
 import {
   type DraggingState,
   type EditingState,
@@ -67,9 +67,8 @@ interface EditorController {
 
 type EditorRootProps = ThemedClassName<
   PropsWithChildren<
-    Partial<Pick<EditorContextType, 'options' | 'debug'>> & {
+    Partial<Pick<EditorContextType, 'options' | 'debug' | 'graph'>> & {
       id: string;
-      graph?: Graph;
       selection?: SelectionModel;
     }
   >
@@ -96,11 +95,10 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
     const [snapToGrid, setSnapToGrid] = useState(true);
 
     // Data state.
-    // TODO(burdon): External reactivity?
-    const graph = useMemo<GraphModel<Node<Shape>>>(() => new GraphModel<Node<Shape>>(_graph), [_graph]);
+    const graph = useMemo<GraphModel<Node<Shape>>>(() => _graph ?? new GraphModel<Node<Shape>>(), [_graph]);
+    const selection = useMemo(() => _selection ?? new SelectionModel(), [_selection]);
 
     // Editor state.
-    const [selection] = useState(() => _selection ?? new SelectionModel());
     const [dragging, setDragging] = useState<DraggingState>();
     const [linking, setLinking] = useState<DraggingState>();
     const [editing, setEditing] = useState<EditingState>();

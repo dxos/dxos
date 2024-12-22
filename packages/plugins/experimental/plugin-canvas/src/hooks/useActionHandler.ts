@@ -62,7 +62,7 @@ export const useActionHandler = () => {
 
           const bounds = rectUnion(nodes);
           const center = getCenter(bounds);
-          const padding = 128;
+          const padding = 256;
           const newScale = Math.min(1, Math.min(width / (bounds.width + padding), height / (bounds.height + padding)));
           const mapper = new ProjectionMapper(newScale, getCenter({ width, height }));
           const [newOffset] = mapper.toScreen([{ x: -center.x, y: -center.y }]);
