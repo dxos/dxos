@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { forwardRef, type PropsWithChildren, useImperativeHandle, useMemo, useState } from 'react';
+import React, { forwardRef, type PropsWithChildren, useEffect, useImperativeHandle, useMemo, useState } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { testId } from '@dxos/react-ui-canvas';
@@ -62,7 +62,7 @@ export const defaultEditorOptions: EditorOptions = {
 };
 
 interface EditorController {
-  zoomToFit(): Promise<void>;
+  zoomToFit(): void;
 }
 
 type EditorRootProps = ThemedClassName<
@@ -70,6 +70,7 @@ type EditorRootProps = ThemedClassName<
     Partial<Pick<EditorContextType, 'options' | 'debug' | 'graph'>> & {
       id: string;
       selection?: SelectionModel;
+      autoZoom?: boolean;
     }
   >
 >;
@@ -84,6 +85,7 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
       debug: _debug = false,
       graph: _graph,
       selection: _selection,
+      autoZoom,
     },
     forwardedRef,
   ) => {
@@ -142,13 +144,24 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
       forwardedRef,
       () => {
         return {
-          zoomToFit: async () => {
-            await actionHandler?.({ type: 'zoom-to-fit', duration: 0 });
+          zoomToFit: () => {
+            requestAnimationFrame(() => {
+              void actionHandler?.({ type: 'zoom-to-fit', duration: 0 });
+            });
           },
         };
       },
       [actionHandler],
     );
+
+    // Trigger on graph change.
+    useEffect(() => {
+      if (graph.nodes.length && autoZoom) {
+        setTimeout(() => {
+          void actionHandler?.({ type: 'zoom-to-fit', duration: 0 });
+        });
+      }
+    }, [actionHandler, graph, autoZoom]);
 
     return (
       <EditorContext.Provider value={context}>

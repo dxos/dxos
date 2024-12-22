@@ -17,7 +17,7 @@ import { isPolygon } from '../types';
 // TODO(burdon): Handle multiple actions.
 export const useActionHandler = () => {
   const { options, graph, selection, setDebug, setShowGrid, setSnapToGrid, setActionHandler } = useEditorContext();
-  const { width, height, scale, offset, setProjection } = useProjection();
+  const { projection, setProjection } = useProjection();
 
   useEffect(() => {
     const actionHandler: ActionHandler = async (action) => {
@@ -38,14 +38,14 @@ export const useActionHandler = () => {
         }
 
         case 'home': {
-          setProjection({ scale: 1, offset: getCenter({ width, height }) });
+          setProjection({ scale: 1, offset: getCenter(projection.bounds) });
           return true;
         }
         case 'center': {
           zoomTo(
             setProjection,
-            { scale, offset },
-            { scale: 1, offset: getCenter({ width, height }) },
+            { scale: projection.scale, offset: projection.offset },
+            { scale: 1, offset: getCenter(projection.bounds) },
             options.zoomDuration,
           );
           return true;
@@ -63,30 +63,53 @@ export const useActionHandler = () => {
           const bounds = rectUnion(nodes);
           const center = getCenter(bounds);
           const padding = 256;
-          const newScale = Math.min(1, Math.min(width / (bounds.width + padding), height / (bounds.height + padding)));
-          const mapper = new ProjectionMapper(newScale, getCenter({ width, height }));
+          const newScale = Math.min(
+            1,
+            Math.min(
+              projection.bounds.width / (bounds.width + padding),
+              projection.bounds.height / (bounds.height + padding),
+            ),
+          );
+          const mapper = new ProjectionMapper(projection.bounds, newScale, getCenter(projection.bounds));
           const [newOffset] = mapper.toScreen([{ x: -center.x, y: -center.y }]);
           if (duration) {
-            zoomTo(setProjection, { scale, offset }, { scale: newScale, offset: newOffset }, duration);
+            zoomTo(
+              setProjection,
+              { scale: projection.scale, offset: projection.offset },
+              { scale: newScale, offset: newOffset },
+              duration,
+            );
           } else {
             setProjection({ scale: newScale, offset: newOffset });
           }
           return true;
         }
         case 'zoom-in': {
-          const newScale = Math.round(scale) * options.zoomFactor;
+          const newScale = Math.round(projection.scale) * options.zoomFactor;
           if (newScale > 16) {
             return false;
           }
-          zoomInPlace(setProjection, getCenter({ x: 0, y: 0, width, height }), offset, scale, newScale);
+          zoomInPlace(
+            setProjection,
+            getCenter({ x: 0, y: 0, ...projection.bounds }),
+            projection.offset,
+            projection.scale,
+            newScale,
+          );
           return true;
         }
         case 'zoom-out': {
-          const newScale = Math.round(scale) / options.zoomFactor;
-          if (Math.round(scale) === 0) {
+          const newScale = Math.round(projection.scale) / options.zoomFactor;
+          if (Math.round(projection.scale) === 0) {
             return false;
           }
-          zoomInPlace(setProjection, getCenter({ x: 0, y: 0, width, height }), offset, scale, newScale);
+          zoomInPlace(
+            setProjection,
+            getCenter({ x: 0, y: 0, ...projection.bounds }),
+            projection.offset,
+            projection.scale,
+            newScale,
+          );
           return true;
         }
 
@@ -142,5 +165,5 @@ export const useActionHandler = () => {
     };
 
     setActionHandler(actionHandler);
-  }, [options, graph, setProjection, selection, width, height, scale, offset]);
+  }, [options, graph, selection, projection]);
 };

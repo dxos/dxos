@@ -69,19 +69,10 @@ const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
     });
   }, [graph, selection]);
 
-  // TODO(burdon): Editor option to do this automatically.
-  useEffect(() => {
-    if (graph) {
-      requestAnimationFrame(() => {
-        void editorRef.current?.zoomToFit();
-      });
-    }
-  }, [graph]);
-
   return (
     <div className='grid grid-cols-[1fr,360px] w-full h-full'>
       <AttentionContainer id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
-        <Editor.Root ref={editorRef} id={id} graph={graph} selection={selection} {...props}>
+        <Editor.Root ref={editorRef} id={id} graph={graph} selection={selection} autoZoom {...props}>
           <Editor.Canvas />
           <Editor.UI />
         </Editor.Root>
