@@ -152,9 +152,14 @@ export const useActionHandler = () => {
           return true;
         }
         case 'delete': {
-          const { ids = selection.selected.value } = action;
-          ids?.forEach((id) => graph.removeNode(id));
-          ids?.forEach((id) => graph.removeEdge(id));
+          const { ids = selection.selected.value, all } = action;
+          if (all) {
+            graph.clear();
+            void actionHandler?.({ type: 'center' });
+          } else {
+            ids?.forEach((id) => graph.removeNode(id));
+            ids?.forEach((id) => graph.removeEdge(id));
+          }
           selection.clear();
           return true;
         }

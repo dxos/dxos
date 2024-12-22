@@ -86,6 +86,12 @@ export class GraphModel<GraphNode extends Node = any, GraphEdge extends Edge = a
     return this;
   }
 
+  clear(): this {
+    this._graph.nodes.length = 0;
+    this._graph.edges.length = 0;
+    return this;
+  }
+
   removeNode(id: string): this {
     removeElements(this._graph.nodes, (node) => node.id === id);
     removeElements(this._graph.edges, (edge) => edge.source === id || edge.target === id);

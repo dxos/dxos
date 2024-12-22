@@ -35,9 +35,6 @@ export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
       <NaturalToolbar.Button onClick={() => handleAction({ type: 'center' })} title='Center canvas.'>
         <Icon icon='ph--crosshair-simple--regular' />
       </NaturalToolbar.Button>
-      <NaturalToolbar.Button onClick={() => handleAction({ type: 'zoom-to-fit' })} title='Expand selected.'>
-        <Icon icon='ph--arrows-out--regular' />
-      </NaturalToolbar.Button>
       <NaturalToolbar.Button onClick={() => handleAction({ type: 'zoom-in' })} title='Center canvas.'>
         <Icon icon='ph--magnifying-glass-plus--regular' />
       </NaturalToolbar.Button>
@@ -66,7 +63,13 @@ export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
       <NaturalToolbar.Button onClick={() => handleAction({ type: 'layout', layout })} title='Do layout.'>
         <Icon icon='ph--graph--regular' />
       </NaturalToolbar.Button>
-      <NaturalToolbar.Button onClick={() => handleAction({ type: 'delete' })} title='Delete objects.'>
+      <NaturalToolbar.Button onClick={() => handleAction({ type: 'zoom-to-fit' })} title='Expand selected.'>
+        <Icon icon='ph--arrows-out--regular' />
+      </NaturalToolbar.Button>
+      <NaturalToolbar.Button
+        onClick={(ev) => handleAction({ type: 'delete', all: ev.shiftKey })}
+        title='Delete objects.'
+      >
         <Icon icon='ph--trash--regular' />
       </NaturalToolbar.Button>
       <NaturalToolbar.Button onClick={() => handleAction({ type: 'create' })} title='Create objects.'>

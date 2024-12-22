@@ -18,6 +18,6 @@ export type Action =
   | { type: 'layout'; layout?: LayoutKind }
   | { type: 'create'; shape?: Shape }
   | { type: 'link'; source: string; target: string }
-  | { type: 'delete'; ids?: string[] };
+  | { type: 'delete'; ids?: string[]; all?: boolean };
 
 export type ActionHandler = (action: Action) => Promise<boolean>;

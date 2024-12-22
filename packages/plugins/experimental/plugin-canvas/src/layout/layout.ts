@@ -55,8 +55,8 @@ export const doLayout = async <N extends object>(
 
   const defaultOptions: Intersection<[D3ForceLayoutOptions, GridLayoutOptions, RadialLayoutOptions]> = {
     center: [0, 0],
-    width: opt.gridSize * 20,
-    height: opt.gridSize * 20,
+    width: opt.gridSize * 16,
+    height: opt.gridSize * 16,
     nodeSize: opt.nodeSize,
     nodeSpacing: opt.nodeSize / 2,
     preventOverlap: true,
@@ -109,20 +109,27 @@ type CommonLayoutOptions = Intersection<
 const createLayout = (type: LayoutKind, options: CommonLayoutOptions) => {
   const nodeSize = options.nodeSize as number;
   switch (type) {
+    // https://github.com/antvis/layout/blob/v5/packages/layout/README.md#Force
     case 'force':
       return new ForceLayout({
         ...options,
-        collideStrength: 0.8,
+        // nodeStrength: 1000,
+        // edgeStrength: 2000,
+        // collideStrength: 0.5,
       });
+    // https://github.com/antvis/layout/blob/v5/packages/layout/README.md#Circular
     case 'circular':
       return new CircularLayout({
         ...options,
       });
+    // https://github.com/antvis/layout/blob/v5/packages/layout/README.md#Radial
     case 'radial':
       return new RadialLayout({
         ...options,
+        nodeSpacing: nodeSize * 2,
         unitRadius: nodeSize * 2,
       });
+    // https://github.com/antvis/layout/blob/v5/packages/layout/README.md#Grid
     case 'grid':
     default:
       return new GridLayout(options);

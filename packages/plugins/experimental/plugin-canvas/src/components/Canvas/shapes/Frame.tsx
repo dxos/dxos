@@ -45,7 +45,7 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
       dropTargetForElements({
         element: ref.current,
         getData: () => ({ type: 'frame', shape }) satisfies DragPayloadData,
-        onDragEnter: () => setOver(true),
+        onDragEnter: () => linking && setOver(true),
         onDragLeave: () => setOver(false),
         // getIsSticky: () => true,
         // canDrop: () => true,
@@ -69,7 +69,7 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
         },
       }),
     );
-  }, [scale, shape]);
+  }, [scale, shape, linking]);
 
   // Reset hovering state once dragging ends.
   useEffect(() => {
