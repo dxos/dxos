@@ -94,7 +94,7 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
     const [showGrid, setShowGrid] = useState(true);
     const [snapToGrid, setSnapToGrid] = useState(true);
 
-    // Data state.
+    // External state.
     const graph = useMemo<GraphModel<Node<Shape>>>(() => _graph ?? new GraphModel<Node<Shape>>(), [_graph]);
     const selection = useMemo(() => _selection ?? new SelectionModel(), [_selection]);
 

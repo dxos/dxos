@@ -9,7 +9,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { type ReactiveEchoObject } from '@dxos/echo-db';
 import { S, getTypename } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -37,9 +36,10 @@ const FixedRectangleShape = S.omit<any, any, ['object']>('object')(RectangleShap
 
 const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
   const editorRef = useRef<EditorController>(null);
-  const selection = useMemo(() => new SelectionModel(), []);
-  const [graph, setGraph] = useState<GraphModel<Node<Shape>>>();
   const [_, space] = useSpaces(); // TODO(burdon): Get created space.
+
+  // Do layout.
+  const [graph, setGraph] = useState<GraphModel<Node<Shape>>>();
   useEffect(() => {
     if (!space || !init) {
       return;
@@ -56,6 +56,21 @@ const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
     return () => clearTimeout(t);
   }, [space, init]);
 
+  // selection.
+  const selection = useMemo(() => new SelectionModel(), []);
+  const [selected, setSelected] = useState();
+  useEffect(() => {
+    return selection.selected.subscribe((selected) => {
+      if (selection.size) {
+        const [id] = selected.values();
+        setSelected(graph?.getNode(id)?.data);
+      } else {
+        setSelected(undefined);
+      }
+    });
+  }, [graph, selection]);
+
+  // TODO(burdon): Set option to do this automatically.
   useEffect(() => {
     if (graph) {
       requestAnimationFrame(() => {
@@ -63,13 +78,6 @@ const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
       });
     }
   }, [graph]);
-
-  // TODO(burdon): Get selected from graph.
-  useEffect(() => {
-    return selection.selected.subscribe((selected) => {
-      log.info('selected', { ids: Array.from(selected.values()) });
-    });
-  }, [selection]);
 
   return (
     <div className='grid grid-cols-[1fr,360px] w-full h-full'>
@@ -79,22 +87,8 @@ const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
           <Editor.UI />
         </Editor.Root>
       </AttentionContainer>
-      {sidebar === 'selected' && selection.selected.value.length > 0 && (
-        <div>
-          <Form
-            schema={FixedRectangleShape}
-            values={
-              {
-                id: 'test',
-                type: 'rectangle',
-                center: { x: 0, y: 0 },
-                size: { width: 0, height: 0 },
-                text: 'test',
-              } satisfies RectangleShape
-            }
-          />
-        </div>
-      )}
+      {/* TODO(burdon): Autosave saves too early (before blur event). */}
+      {sidebar === 'selected' && selected && <Form schema={FixedRectangleShape} values={selected} autoSave />}
       {sidebar === 'json' && (
         <AttentionContainer id='sidebar' tabIndex={0} classNames='flex grow overflow-hidden'>
           <SyntaxHighlighter language='json' classNames='text-xs'>
@@ -128,7 +122,7 @@ const meta: Meta<EditorRootProps> = {
     }),
     withTheme,
     withAttention,
-    withLayout({ fullscreen: true }),
+    withLayout({ fullscreen: true, tooltips: true }),
   ],
 };
 
@@ -145,7 +139,7 @@ export const Default: Story = {
 
 export const Query: Story = {
   args: {
-    sidebar: 'json',
+    sidebar: 'selected',
     init: true,
   },
 };

@@ -10,6 +10,10 @@ import { computed, signal, type ReadonlySignal, type Signal } from '@preact/sign
 export class SelectionModel {
   private readonly _selected: Signal<Set<string>> = signal(new Set<string>());
 
+  get size(): number {
+    return this._selected.value.size;
+  }
+
   get selected(): ReadonlySignal<string[]> {
     return computed(() => Array.from(this._selected.value.values()));
   }
