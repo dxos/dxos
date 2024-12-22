@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { createContext, type Dispatch, type SetStateAction } from 'react';
+import { createContext, type Dispatch, type RefObject, type SetStateAction } from 'react';
 
 import { type Dimension } from '@dxos/react-ui-canvas';
 
@@ -34,6 +34,9 @@ export type EditorContextType = {
   debug: boolean;
   setDebug: Dispatch<SetStateAction<boolean>>;
   options: EditorOptions;
+
+  // TODO(burdon): Remove access?
+  overlaySvg: RefObject<SVGSVGElement>;
 
   actionHandler: ActionHandler | undefined;
   setActionHandler: (cb: ActionHandler | undefined) => void;

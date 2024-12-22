@@ -236,7 +236,7 @@ export const createSplineThroughPoints = (points: Point[]): string => {
   return splineGenerator(points)!;
 };
 
-export const getNormals = (r1: Rect, r2: Rect, len = 32): [Point[], Point[]] => {
+export const getNormals = (r1: Rect, r2: Rect, len = 32): [Point[], Point[]] | null => {
   const sidesR1 = {
     left: [
       { x: r1.x, y: r1.y },
@@ -290,20 +290,29 @@ export const getNormals = (r1: Rect, r2: Rect, len = 32): [Point[], Point[]] => 
     });
   }
 
-  // Check vertical facing sides.
-  if (r1.y + r1.height <= r2.y) {
-    distances.push({
-      pair: [sidesR1.bottom, sidesR2.top],
-      distance: Math.abs(r1.y + r1.height - r2.y),
-    });
-  } else if (r2.y + r2.height <= r1.y) {
-    distances.push({
-      pair: [sidesR1.top, sidesR2.bottom],
-      distance: Math.abs(r2.y + r2.height - r1.y),
-    });
+  // Bias horizontal unless too close.
+  const d = distances.length
+    ? distances.reduce((max, curr) => (curr.distance > max.distance ? curr : max)).distance
+    : 0;
+  if (d < len * 2) {
+    // Check vertical facing sides.
+    if (r1.y + r1.height <= r2.y) {
+      distances.push({
+        pair: [sidesR1.bottom, sidesR2.top],
+        distance: Math.abs(r1.y + r1.height - r2.y),
+      });
+    } else if (r2.y + r2.height <= r1.y) {
+      distances.push({
+        pair: [sidesR1.top, sidesR2.bottom],
+        distance: Math.abs(r2.y + r2.height - r1.y),
+      });
+    }
   }
 
-  invariant(distances.length > 0);
+  if (!distances.length) {
+    return null;
+  }
+
   const [side1, side2] = distances.reduce((max, curr) => (curr.distance > max.distance ? curr : max)).pair;
 
   // Generate lines perpendicular to the sides and pointing away.

@@ -19,6 +19,7 @@ import {
   useShortcuts,
 } from '../../hooks';
 import { rectContains } from '../../layout';
+import { type TestId } from '../defs';
 import { eventsNone, styles } from '../styles';
 
 /**
@@ -27,14 +28,14 @@ import { eventsNone, styles } from '../styles';
 export const Canvas = () => {
   // TODO(burdon): Controller.
   return (
-    <NativeCanvas {...testId('dx-canvas')}>
+    <NativeCanvas {...testId<TestId>('dx-canvas')}>
       <CanvasContent />
     </NativeCanvas>
   );
 };
 
 export const CanvasContent = () => {
-  const { id, options, debug, graph, showGrid, dragging, selection } = useEditorContext();
+  const { id, overlaySvg, options, debug, graph, showGrid, dragging, selection } = useEditorContext();
   const { root, styles: transformStyles, setProjection, scale, offset } = useProjection();
 
   // Actions.
@@ -93,12 +94,12 @@ export const CanvasContent = () => {
       {showGrid && <Grid id={id} size={options.gridSize} scale={scale} offset={offset} classNames={styles.gridLine} />}
 
       {/* Content. */}
-      <div ref={shapesRef} {...testId('dx-layout', true)} style={transformStyles} className='absolute'>
+      <div ref={shapesRef} {...testId<TestId>('dx-layout', true)} style={transformStyles} className='absolute'>
         <Shapes layout={layout} />
       </div>
 
       {/* Overlays. */}
-      <div {...testId('dx-overlays')} className={mx(eventsNone)}>
+      <div {...testId<TestId>('dx-overlays')} className={mx(eventsNone)}>
         {/* Selection overlay. */}
         {selectionRect && <SelectionBox rect={selectionRect} />}
 
@@ -115,18 +116,29 @@ export const CanvasContent = () => {
         <div className='absolute' style={transformStyles}>
           {overlay && <Line scale={scale} shape={overlay} />}
         </div>
+
+        {/* Misc overlay. */}
+        <svg
+          ref={overlaySvg}
+          className='absolute overflow-visible pointer-events-none'
+          style={transformStyles}
+          width={1}
+          height={1}
+        >
+          <g {...testId<TestId>('dx-overlay-bullets')}></g>
+        </svg>
       </div>
     </>
   );
 };
 
 const Background = () => {
-  return <div {...testId('dx-background')} className={mx('absolute inset-0 bg-base', eventsNone)} />;
+  return <div {...testId<TestId>('dx-background')} className={mx('absolute inset-0 bg-base', eventsNone)} />;
 };
 
 const SelectionBox = ({ rect }: { rect: Rect }) => {
   return (
-    <svg className='absolute overflow-visible cursor-crosshair'>
+    <svg className='absolute overflow-visible cursor-crosshair' width={1} height={1}>
       <rect {...rect} className={styles.cursor} />
     </svg>
   );

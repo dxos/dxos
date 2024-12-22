@@ -10,4 +10,5 @@ export type TestId =
   | 'dx-canvas-grid'
   | 'dx-background'
   | 'dx-overlays'
+  | 'dx-overlay-bullets'
   | 'dx-ui';
