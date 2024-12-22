@@ -15,7 +15,7 @@ import translations from '../../translations';
 
 const Story = (args: Partial<SpaceSettingsPanelProps>) => {
   const { space } = useClientProvider();
-  return <SpaceSettingsPanel {...args} space={space!} />;
+  return <SpaceSettingsPanel {...args} space={space!} classNames='p-2 border border-primary-500 rounded' />;
 };
 
 const meta: Meta = {
@@ -23,7 +23,10 @@ const meta: Meta = {
   component: SpaceSettingsPanel,
   render: Story,
   decorators: [withClientProvider({ createIdentity: true, createSpace: true }), withTheme],
-  parameters: { translations },
+  parameters: {
+    translations,
+    layout: 'centered',
+  },
 };
 
 export default meta;

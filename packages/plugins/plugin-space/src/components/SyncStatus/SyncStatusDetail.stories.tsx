@@ -56,9 +56,10 @@ const createSpaceSyncStateMap = async (client: Client): Promise<SpaceSyncStateMa
 const meta: Meta<typeof SyncStatusDetail> = {
   title: 'plugins/plugin-space/SyncStatusDetail',
   component: SyncStatusDetail,
-  decorators: [withTheme, withLayout({ fullscreen: true }), withClientProvider({ createIdentity: true })],
+  decorators: [withTheme, withLayout(), withClientProvider({ createIdentity: true })],
   parameters: {
     translations,
+    layout: 'centered',
   },
   args: {
     classNames: 'm-2 border border-separator rounded-md',
