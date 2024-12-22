@@ -380,10 +380,11 @@ export class ServiceContext extends Resource {
     let edgeIdentity: EdgeIdentity;
     const identity = this.identityManager.identity;
     if (identity) {
-      log.info('Setting identity on edge connection', {
+      log('setting identity on edge connection', {
         identity: identity.identityKey.toHex(),
         swarms: this.networkManager.topics,
       });
+
       if (params?.deviceCredential) {
         edgeIdentity = await createChainEdgeIdentity(
           identity.signer,

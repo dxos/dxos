@@ -12,9 +12,9 @@ import { S, getTypename } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { Form } from '@dxos/react-ui-form';
+import { Form, TupleInput } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { createObjectFactory, type ValueGenerator, Testing, type TypeSpec } from '@dxos/schema/testing';
+import { type TypeSpec, createObjectFactory, type ValueGenerator, Testing } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
@@ -69,25 +69,27 @@ const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
     });
   }, [graph, selection]);
 
-  // TODO(burdon): Editor option to do this automatically.
-  useEffect(() => {
-    if (graph) {
-      requestAnimationFrame(() => {
-        void editorRef.current?.zoomToFit();
-      });
-    }
-  }, [graph]);
-
   return (
     <div className='grid grid-cols-[1fr,360px] w-full h-full'>
       <AttentionContainer id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
-        <Editor.Root ref={editorRef} id={id} graph={graph} selection={selection} {...props}>
+        <Editor.Root ref={editorRef} id={id} graph={graph} selection={selection} autoZoom {...props}>
           <Editor.Canvas />
           <Editor.UI />
         </Editor.Root>
       </AttentionContainer>
       {/* TODO(burdon): Autosave saves too early (before blur event). */}
-      {sidebar === 'selected' && selected && <Form schema={RectangleShapeWithoutRef} values={selected} autoSave />}
+      {sidebar === 'selected' && selected && (
+        <Form
+          schema={RectangleShapeWithoutRef}
+          values={selected}
+          Custom={{
+            // TODO(burdon): Replace by type.
+            ['center' as const]: (props) => <TupleInput {...props} binding={['x', 'y']} />,
+            ['size' as const]: (props) => <TupleInput {...props} binding={['width', 'height']} />,
+          }}
+          autoSave
+        />
+      )}
       {sidebar === 'json' && (
         <AttentionContainer id='sidebar' tabIndex={0} classNames='flex grow overflow-hidden'>
           <SyntaxHighlighter language='json' classNames='text-xs'>
@@ -107,16 +109,12 @@ const meta: Meta<EditorRootProps> = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ space }) => {
-        space.db.graph.schemaRegistry.addSchema(types);
-        const createObjects = createObjectFactory(space.db, generator);
-        const spec: TypeSpec[] = [
-          { type: Testing.OrgType, count: 1 },
-          { type: Testing.ProjectType, count: 0 },
-          { type: Testing.ContactType, count: 3 },
-        ];
-
-        await createObjects(spec);
+      onSpaceCreated: async ({ space }, { args: { spec } }) => {
+        if (spec) {
+          space.db.graph.schemaRegistry.addSchema(types);
+          const createObjects = createObjectFactory(space.db, generator);
+          await createObjects(spec as TypeSpec[]);
+        }
       },
     }),
     withTheme,
@@ -127,12 +125,23 @@ const meta: Meta<EditorRootProps> = {
 
 export default meta;
 
-type Story = StoryObj<RenderProps>;
+type Story = StoryObj<RenderProps & { spec?: TypeSpec[] }>;
 
 export const Default: Story = {
   args: {
-    sidebar: 'selected',
+    sidebar: 'json',
     debug: true,
+  },
+};
+
+export const Json: Story = {
+  args: {
+    sidebar: 'json',
+    init: true,
+    spec: [
+      { type: Testing.OrgType, count: 2 },
+      { type: Testing.ContactType, count: 4 },
+    ],
   },
 };
 
@@ -140,5 +149,12 @@ export const Query: Story = {
   args: {
     sidebar: 'selected',
     init: true,
+    spec: [
+      { type: Testing.OrgType, count: 4 },
+      { type: Testing.ProjectType, count: 0 },
+      { type: Testing.ContactType, count: 16 },
+    ],
   },
 };
+
+// TODO(burdon): Graph builder demo.

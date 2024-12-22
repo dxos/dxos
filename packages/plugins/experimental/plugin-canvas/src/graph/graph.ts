@@ -7,6 +7,11 @@ import { create } from '@dxos/live-object';
 
 import { removeElements } from './util';
 
+// Prior art:
+//  - https://graphology.github.io (TS, tree-shakable, multiple packages for extensions)
+//  - https://github.com/dagrejs/graphlib (mature, extensive)
+//  - https://github.com/avoidwork/tiny-graph
+
 export const BaseNode = S.Struct({
   id: S.String,
   type: S.optional(S.String),
@@ -71,6 +76,10 @@ export class GraphModel<GraphNode extends Node = any, GraphEdge extends Edge = a
     return this.edges.find((edge) => edge.id === id);
   }
 
+  getEdges({ source, target }: Partial<GraphEdge>): GraphEdge[] {
+    return this.edges.filter((e) => (!source || source === e.source) && (!target || target === e.target));
+  }
+
   addNode(node: GraphNode): this {
     this._graph.nodes.push(node);
     return this;
@@ -78,6 +87,12 @@ export class GraphModel<GraphNode extends Node = any, GraphEdge extends Edge = a
 
   addEdge(edge: GraphEdge): this {
     this._graph.edges.push(edge);
+    return this;
+  }
+
+  clear(): this {
+    this._graph.nodes.length = 0;
+    this._graph.edges.length = 0;
     return this;
   }
 

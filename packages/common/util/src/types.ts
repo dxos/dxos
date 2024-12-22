@@ -90,12 +90,3 @@ export const arrayMove = <T>(array: T[], from: number, to: number): Array<T> => 
   array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0]);
   return array;
 };
-
-export const safeParseInt = (value: string | undefined, defaultValue?: number) => {
-  try {
-    const n = parseInt(value ?? '');
-    return isNaN(n) ? defaultValue : n;
-  } catch (err) {
-    return defaultValue;
-  }
-};

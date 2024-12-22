@@ -6,15 +6,12 @@ import React from 'react';
 
 import { type BaseObject, type GeoPoint } from '@dxos/echo-schema';
 import { Input, useTranslation } from '@dxos/react-ui';
+import { safeParseFloat } from '@dxos/util';
 
-import { InputHeader, type InputProps } from './Input';
-import { translationKey } from '../../translations';
+import { translationKey } from '../../../translations';
+import { InputHeader, type InputProps } from '../Input';
 
-//
-// Custom format components.
-//
-
-export const GeiPointInput = <T extends BaseObject>({
+export const GeoPointInput = <T extends BaseObject>({
   property,
   type,
   label,
@@ -53,13 +50,4 @@ export const GeiPointInput = <T extends BaseObject>({
       </div>
     </Input.Root>
   );
-};
-
-// TODO(burdon): Factor out.
-const safeParseFloat = (str: string, defaultValue?: number): number | undefined => {
-  try {
-    return parseFloat(str);
-  } catch {
-    return defaultValue ?? 0;
-  }
 };

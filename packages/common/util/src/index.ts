@@ -31,7 +31,7 @@ export * from './range';
 export * from './reducers';
 export * from './safe-await';
 export * from './safe-instanceof';
-export * from './safe-parse-json';
+export * from './safe-parse';
 export * from './sliding-window-summary';
 export * from './sort';
 export * from './sum';

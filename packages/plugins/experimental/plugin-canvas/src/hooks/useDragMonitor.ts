@@ -80,6 +80,7 @@ export const useDragMonitor = (el: HTMLElement | null) => {
           const [pos] = projection.toModel([getInputPoint(el, location.current.input)]);
           const data = source.data as DragPayloadData;
           switch (data.type) {
+            // Tools.
             case 'tool': {
               // TODO(burdon): Generalize constructor/factor out.
               switch (data.tool) {
@@ -107,6 +108,7 @@ export const useDragMonitor = (el: HTMLElement | null) => {
               break;
             }
 
+            // Dragging.
             case 'frame': {
               data.shape.center = snapPoint(pos);
 
@@ -118,6 +120,7 @@ export const useDragMonitor = (el: HTMLElement | null) => {
               break;
             }
 
+            // Linking.
             case 'anchor': {
               const target = location.current.dropTargets.find(({ data }) => data.type === 'frame')?.data
                 .shape as PolygonShape;
@@ -126,6 +129,8 @@ export const useDragMonitor = (el: HTMLElement | null) => {
                 id = createId();
                 const shape = createRectangle({ id, center: snapPoint(pos), size: itemSize });
                 await actionHandler?.({ type: 'create', shape });
+              } else if (id === data.shape.id) {
+                break;
               }
               await actionHandler?.({ type: 'link', source: data.shape.id, target: id });
               if (!target?.id) {

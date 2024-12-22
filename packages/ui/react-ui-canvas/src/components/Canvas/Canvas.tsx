@@ -45,8 +45,8 @@ export const Canvas = forwardRef<CanvasController, CanvasProps>(
     // Projection mapper.
     const projection = useMemo(() => new ProjectionMapper(), []);
     useEffect(() => {
-      projection.update(scale, offset);
-    }, [projection, scale, offset]);
+      projection.update({ width, height }, scale, offset);
+    }, [projection, scale, offset, width, height]);
 
     // CSS transforms.
     const styles = useMemo<CSSProperties>(() => {

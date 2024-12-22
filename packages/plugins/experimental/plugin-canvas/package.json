@@ -73,6 +73,8 @@
     "@radix-ui/react-context": "^1.0.0",
     "bind-event-listener": "^3.0.0",
     "d3": "^7.9.0",
+    "graphology": "^0.25.4",
+    "graphology-shortest-path": "^2.1.0",
     "lodash.defaultsdeep": "^4.6.1",
     "react-hotkeys-hook": "^4.6.1",
     "react-resize-detector": "^11.0.1",
