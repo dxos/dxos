@@ -141,7 +141,7 @@ export const Sketch = ({
       actions: (_editor: Editor, actions: any, _helpers: any) => ({
         ...actions,
         snap: {
-          id: 'snap',
+          id: 'grid-snap',
           label: 'Snap',
           kbd: 's',
           icon: 'horizontal-align-middle',

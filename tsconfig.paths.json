@@ -149,6 +149,9 @@
       "@dxos/plugin-client/meta": [
         "packages/plugins/plugin-client/src/meta.ts"
       ],
+      "@dxos/plugin-client/types": [
+        "packages/plugins/plugin-client/src/types.ts"
+      ],
       "@dxos/plugin-debug": [
         "packages/plugins/plugin-debug/src/index.ts"
       ],
@@ -181,6 +184,9 @@
       ],
       "@dxos/plugin-help/meta": [
         "packages/plugins/plugin-help/src/meta.ts"
+      ],
+      "@dxos/plugin-help/types": [
+        "packages/plugins/plugin-help/src/types.ts"
       ],
       "@dxos/plugin-manager": [
         "packages/plugins/plugin-manager/src/index.ts"
@@ -220,6 +226,9 @@
       ],
       "@dxos/plugin-observability/meta": [
         "packages/plugins/plugin-observability/src/meta.ts"
+      ],
+      "@dxos/plugin-observability/types": [
+        "packages/plugins/plugin-observability/src/types.ts"
       ],
       "@dxos/plugin-presenter": [
         "packages/plugins/plugin-presenter/src/index.ts"

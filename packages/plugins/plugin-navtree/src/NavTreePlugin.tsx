@@ -6,6 +6,8 @@ import { effect } from '@preact/signals-core';
 import React from 'react';
 
 import {
+  createIntent,
+  createResolver,
   createSurface,
   type GraphBuilderProvides,
   type GraphProvides,
@@ -31,16 +33,9 @@ import { type TreeData } from '@dxos/react-ui-list';
 import { Path } from '@dxos/react-ui-mosaic';
 import { getHostPlatform } from '@dxos/util';
 
-import {
-  COMMANDS_DIALOG,
-  CommandsDialogContent,
-  NavTreeContainer,
-  NavTreeDocumentTitle,
-  NODE_TYPE,
-  NotchStart,
-} from './components';
+import { CommandsDialogContent, NavTreeContainer, NavTreeDocumentTitle, NODE_TYPE, NotchStart } from './components';
 import { CommandsTrigger } from './components/CommandsTrigger';
-import meta, { KEY_BINDING, NAVTREE_PLUGIN } from './meta';
+import meta, { COMMANDS_DIALOG, KEY_BINDING, NAVTREE_PLUGIN } from './meta';
 import translations from './translations';
 import { type NavTreeItemGraphNode } from './types';
 import { expandChildrenAndActions } from './util';
@@ -132,9 +127,9 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
       }
 
       const soloPart = location?.active.solo?.[0];
-      const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
+      const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatchPromise;
       if (dispatch && soloPart) {
-        void dispatch({ plugin: NAVTREE_PLUGIN, action: NavigationAction.EXPOSE, data: { id: soloPart.id } });
+        void dispatch(createIntent(NavigationAction.Expose, { id: soloPart.id }));
       }
 
       let previous: string[] = [];
@@ -260,28 +255,28 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
         ],
       },
       intent: {
-        resolver: async (intent) => {
-          switch (intent.action) {
-            case NavigationAction.EXPOSE: {
-              if (graph && intent.data?.id) {
-                const path = await graph.waitForPath({ target: intent.data.id });
-                [...Array(path.length)].forEach((_, index) => {
-                  const subpath = path.slice(0, index);
-                  const value = getItem(subpath);
-                  if (!value.open) {
-                    setItem(subpath, 'open', true);
-                  }
-                });
-              }
-              break;
-            }
+        resolvers: ({ plugins }) => {
+          const graph = resolvePlugin(plugins, parseGraphPlugin)?.provides.graph;
+          if (!graph) {
+            return [];
           }
+
+          return createResolver(NavigationAction.Expose, async ({ id }) => {
+            const path = await graph.waitForPath({ target: id });
+            [...Array(path.length)].forEach((_, index) => {
+              const subpath = path.slice(0, index);
+              const value = getItem(subpath);
+              if (!value.open) {
+                setItem(subpath, 'open', true);
+              }
+            });
+          });
         },
       },
       graph: {
         builder: (plugins) => {
           // TODO(burdon): Move to separate plugin (for keys and command k). Move bindings from LayoutPlugin.
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatchPromise;
 
           return [
             createExtension({
@@ -289,16 +284,15 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
               filter: (node): node is Node<null> => node.id === 'root',
               actions: () => [
                 {
-                  id: 'dxos.org/plugin/navtree/open-commands',
+                  id: COMMANDS_DIALOG,
                   data: async () => {
-                    await intentPlugin?.provides.intent.dispatch({
-                      action: LayoutAction.SET_LAYOUT,
-                      data: {
+                    await dispatch?.(
+                      createIntent(LayoutAction.SetLayout, {
                         element: 'dialog',
                         component: COMMANDS_DIALOG,
                         dialogBlockAlign: 'start',
-                      },
-                    });
+                      }),
+                    );
                   },
                   properties: {
                     label: ['open commands label', { ns: NAVTREE_PLUGIN }],

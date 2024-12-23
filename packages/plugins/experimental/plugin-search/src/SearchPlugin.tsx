@@ -13,6 +13,8 @@ import {
   LayoutAction,
   firstIdInPart,
   createSurface,
+  createResolver,
+  createIntent,
 } from '@dxos/app-framework';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { getActiveSpace } from '@dxos/plugin-space';
@@ -47,18 +49,16 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
       },
       graph: {
         builder: (plugins) => {
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatchPromise;
+
           return createExtension({
             id: SEARCH_PLUGIN,
             filter: (node): node is Node<null> => node.id === 'root',
             actions: () => [
               {
-                id: SearchAction.SEARCH,
+                id: SearchAction.OpenSearch._tag,
                 data: async () => {
-                  await intentPlugin?.provides.intent.dispatch({
-                    plugin: SEARCH_PLUGIN,
-                    action: SearchAction.SEARCH,
-                  });
+                  await dispatch?.(createIntent(SearchAction.OpenSearch));
                 },
                 properties: {
                   label: ['search action label', { ns: SEARCH_PLUGIN }],
@@ -100,17 +100,10 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
         },
       },
       intent: {
-        resolver: (intent, plugins) => {
-          switch (intent.action) {
-            case SearchAction.SEARCH: {
-              const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-              return intentPlugin?.provides.intent.dispatch({
-                action: LayoutAction.SET_LAYOUT,
-                data: { element: 'complementary', state: true },
-              });
-            }
-          }
-        },
+        resolvers: () =>
+          createResolver(SearchAction.OpenSearch, () => ({
+            intents: [createIntent(LayoutAction.SetLayout, { element: 'complementary', state: true })],
+          })),
       },
     },
   };

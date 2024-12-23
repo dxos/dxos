@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-deck",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "description": "DXOS Surface plugin for the main application layout.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -61,6 +61,7 @@
     "@dxos/util": "workspace:*",
     "@fluentui/react-tabster": "^9.19.0",
     "@preact/signals-core": "^1.6.0",
+    "effect": "^3.9.2",
     "immer": "^10.1.1"
   },
   "devDependencies": {

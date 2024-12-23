@@ -4,18 +4,17 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { getSpace } from '@dxos/react-client/echo';
 import { ViewEditor, Form } from '@dxos/react-ui-form';
 import { type KanbanType, KanbanPropsSchema } from '@dxos/react-ui-kanban';
 
-import { KANBAN_PLUGIN } from '../meta';
 import { KanbanAction } from '../types';
 
 type KanbanViewEditorProps = { kanban: KanbanType };
 
 const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = getSpace(kanban);
 
   // TODO(ZaymonFC): The schema registry needs an API where we can query with initial value and
@@ -28,25 +27,21 @@ const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
 
   useEffect(() => {
     if (space && kanban?.cardView?.target?.query?.type) {
-      const unsubscribe = space.db.schemaRegistry.subscribe((schemas) => {
-        const schema = schemas.find((schema) => schema.typename === kanban?.cardView?.target?.query?.type);
-        if (schema) {
-          setSchema(schema);
-        }
-      });
+      const unsubscribe = space.db.schemaRegistry
+        .query({ typename: kanban?.cardView?.target?.query?.type })
+        .subscribe((query) => {
+          const [schema] = query.results;
+          if (schema) {
+            setSchema(schema);
+          }
+        });
 
       return unsubscribe;
     }
   }, [space, kanban?.cardView?.target?.query?.type]);
 
   const handleDelete = useCallback(
-    (fieldId: string) => {
-      void dispatch?.({
-        plugin: KANBAN_PLUGIN,
-        action: KanbanAction.DELETE_CARD_FIELD,
-        data: { kanban, fieldId },
-      });
-    },
+    (fieldId: string) => dispatch?.(createIntent(KanbanAction.DeleteCardField, { kanban, fieldId })),
     [dispatch, kanban],
   );
 

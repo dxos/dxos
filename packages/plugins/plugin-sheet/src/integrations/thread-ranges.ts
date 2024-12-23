@@ -4,8 +4,15 @@
 
 import { useCallback, useEffect, useMemo } from 'react';
 
-import { type IntentResolver, LayoutAction, useIntentDispatcher, useIntentResolver } from '@dxos/app-framework';
+import {
+  createIntent,
+  createResolver,
+  LayoutAction,
+  useIntentDispatcher,
+  useIntentResolver,
+} from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
+import { ThreadAction } from '@dxos/plugin-thread/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { type DxGridElement, type DxGridPosition } from '@dxos/react-ui-grid';
 
@@ -32,31 +39,30 @@ export const parseThreadAnchorAsCellRange = (cursor: string): CompleteCellRange 
 
 export const useUpdateFocusedCellOnThreadSelection = (grid: DxGridElement | null) => {
   const { model, setActiveRefs } = useSheetContext();
-  const handleScrollIntoView: IntentResolver = useCallback(
-    ({ action, data }) => {
-      switch (action) {
-        case LayoutAction.SCROLL_INTO_VIEW: {
-          if (!data?.id || data?.cursor === undefined || data?.id !== fullyQualifiedId(model.sheet)) {
-            return;
-          }
-          setActiveRefs(data.thread);
+  const scrollIntoViewResolver = useMemo(
+    () =>
+      createResolver(
+        LayoutAction.ScrollIntoView,
+        ({ cursor, ref }) => {
+          setActiveRefs(ref);
           // TODO(Zan): Everywhere we refer to the cursor in a thread context should change to `anchor`.
-          const range = parseThreadAnchorAsCellRange(data.cursor);
+          const range = parseThreadAnchorAsCellRange(cursor!);
           range && grid?.setFocus({ ...range.to, plane: 'grid' }, true);
-
-          return { data: true };
-        }
-      }
-    },
+        },
+        {
+          disposition: 'hoist',
+          filter: (data) => data.id === fullyQualifiedId(model.sheet) && !!data.cursor,
+        },
+      ),
     [model.sheet, setActiveRefs],
   );
 
-  useIntentResolver(SHEET_PLUGIN, handleScrollIntoView);
+  useIntentResolver(SHEET_PLUGIN, scrollIntoViewResolver);
 };
 
 export const useSelectThreadOnCellFocus = () => {
   const { model, cursor } = useSheetContext();
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const threads = useMemo(
     () => model.sheet.threads?.filter((thread): thread is NonNullable<typeof thread> => !!thread) ?? [],
@@ -82,9 +88,7 @@ export const useSelectThreadOnCellFocus = () => {
       });
 
       if (closestThread) {
-        void dispatch([
-          { action: 'dxos.org/plugin/thread/action/select', data: { current: fullyQualifiedId(closestThread) } },
-        ]);
+        void dispatch(createIntent(ThreadAction.Select, { current: fullyQualifiedId(closestThread) }));
       }
     },
     [dispatch, threads],

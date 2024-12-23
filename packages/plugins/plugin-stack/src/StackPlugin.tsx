@@ -4,42 +4,24 @@
 
 import React from 'react';
 
-import { createSurface, type Plugin, type PluginDefinition } from '@dxos/app-framework';
-import { create, type ReactiveEchoObject, fullyQualifiedId } from '@dxos/client/echo';
+import { createSurface, type PluginDefinition } from '@dxos/app-framework';
+import { type ReactiveEchoObject, fullyQualifiedId } from '@dxos/client/echo';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { CollectionType } from '@dxos/plugin-space/types';
 
-import {
-  StackMain,
-  StackSettings,
-  AddSectionDialog,
-  dataHasAddSectionDialogProps,
-  ADD_SECTION_DIALOG,
-  type AddSectionDialogProps,
-} from './components';
+import { StackMain, StackSettings } from './components';
 import meta, { SECTION_IDENTIFIER, STACK_PLUGIN } from './meta';
 import translations from './translations';
 import { StackViewType } from './types';
-import { type StackPluginProvides, type StackProvides, type StackState, type StackSettingsProps } from './types';
+import { type StackPluginProvides, type StackSettingsProps } from './types';
 
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
   const settings = new LocalStorageStore<StackSettingsProps>(STACK_PLUGIN, { separation: true });
-  const stackState = create<StackState>({ creators: [] });
 
   return {
     meta,
-    ready: async ({ plugins }) => {
+    ready: async () => {
       settings.prop({ key: 'separation', type: LocalStorageStore.bool() });
-
-      for (const plugin of plugins) {
-        if (plugin.meta.id === STACK_PLUGIN) {
-          continue;
-        }
-
-        if (Array.isArray((plugin as Plugin<StackProvides>).provides?.stack?.creators)) {
-          stackState.creators.push(...((plugin as Plugin<StackProvides>).provides.stack.creators ?? []));
-        }
-      }
     },
     provides: {
       settings: settings.values,
@@ -71,13 +53,6 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
       surface: {
         definitions: () => [
           createSurface({
-            id: ADD_SECTION_DIALOG,
-            role: 'dialog',
-            filter: (data): data is { subject: AddSectionDialogProps } =>
-              data.component === ADD_SECTION_DIALOG && dataHasAddSectionDialogProps(data),
-            component: ({ data }) => <AddSectionDialog {...data.subject} />,
-          }),
-          createSurface({
             id: `${STACK_PLUGIN}/article`,
             role: 'article',
             filter: (data): data is { id?: string; subject: CollectionType } => data.subject instanceof CollectionType,
@@ -100,7 +75,6 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           }),
         ],
       },
-      stack: stackState,
     },
   };
 };

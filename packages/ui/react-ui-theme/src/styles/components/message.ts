@@ -5,7 +5,7 @@
 import { type ComponentFunction, type Elevation, type MessageValence, type Theme } from '@dxos/react-ui-types';
 
 import { mx } from '../../util';
-import { messageValence, contentElevation } from '../fragments';
+import { messageValence } from '../fragments';
 
 export type MessageStyleProps = {
   valence?: MessageValence;
@@ -13,7 +13,7 @@ export type MessageStyleProps = {
 };
 
 export const messageRoot: ComponentFunction<MessageStyleProps> = ({ valence, elevation }, ...etc) =>
-  mx('p-3 rounded-md max-is-full overflow-auto', contentElevation({ elevation }), messageValence(valence), ...etc);
+  mx('p-3 rounded-md max-is-full overflow-auto', messageValence(valence), ...etc);
 
 export const messageTitle: ComponentFunction<MessageStyleProps> = (_props, ...etc) =>
   mx('text-baseText font-medium mb-2', ...etc);

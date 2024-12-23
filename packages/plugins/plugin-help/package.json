@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-help",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "description": "Help plugin.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -15,6 +15,10 @@
     "./meta": {
       "types": "./dist/types/src/meta.d.ts",
       "browser": "./dist/lib/browser/meta.mjs"
+    },
+    "./types": {
+      "types": "./dist/types/src/types.d.ts",
+      "browser": "./dist/lib/browser/types.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -22,6 +26,9 @@
     "*": {
       "meta": [
         "dist/types/src/meta.d.ts"
+      ],
+      "types": [
+        "dist/types/src/types.d.ts"
       ]
     }
   },

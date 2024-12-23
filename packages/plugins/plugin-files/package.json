@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-files",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "description": "DXOS Surface plugin for managing files.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -32,6 +32,7 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -44,6 +45,7 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
+    "effect": "^3.9.2",
     "localforage": "^1.10.0"
   },
   "devDependencies": {

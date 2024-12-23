@@ -70,7 +70,7 @@ export const MessageContainer = ({
                 </Button>
               </Tooltip.Trigger>
               <Tooltip.Portal>
-                <Tooltip.Content classNames='z-[21]'>
+                <Tooltip.Content>
                   {editLabel}
                   <Tooltip.Arrow />
                 </Tooltip.Content>
@@ -91,7 +91,7 @@ export const MessageContainer = ({
                 </Button>
               </Tooltip.Trigger>
               <Tooltip.Portal>
-                <Tooltip.Content classNames='z-[21]'>
+                <Tooltip.Content>
                   {deleteLabel}
                   <Tooltip.Arrow />
                 </Tooltip.Content>

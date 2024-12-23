@@ -5,32 +5,40 @@
 import '@dxos-theme';
 
 import type { Meta, StoryObj } from '@storybook/react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { type ReactiveEchoObject } from '@dxos/echo-db';
-import { getTypename } from '@dxos/echo-schema';
+import { S, getTypename } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
-import { useSpaces } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
+import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { withAttention } from '@dxos/react-ui-attention/testing';
+import { Form, TupleInput } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/react-ui-theme';
-import { createObjectFactory, type ValueGenerator, Testing, type TypeSpec } from '@dxos/schema/testing';
+import { type TypeSpec, createObjectFactory, type ValueGenerator, Testing } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
-import { createGraph, type Graph } from '../../graph';
+import { createGraph, type GraphModel, type Node } from '../../graph';
+import { SelectionModel } from '../../hooks';
 import { doLayout } from '../../layout';
+import { RectangleShape, type Shape } from '../../types';
+import { AttentionContainer } from '../AttentionContainer';
 
 const generator: ValueGenerator = faker as any;
 
 const types = [Testing.OrgType, Testing.ProjectType, Testing.ContactType];
 
-type RenderProps = EditorRootProps & { init?: boolean; sidebar?: boolean };
+type RenderProps = Omit<EditorRootProps, 'graph'> & { init?: boolean; sidebar?: 'json' | 'selected' };
 
-const Render = ({ init, sidebar, ...props }: RenderProps) => {
+// TODO(burdon): Ref expando breaks the form.
+const RectangleShapeWithoutRef = S.omit<any, any, ['object']>('object')(RectangleShape);
+
+const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
   const editorRef = useRef<EditorController>(null);
-  const [graph, setGraph] = useState<Graph>();
-  const [_, space] = useSpaces(); // TODO(burdon): Get created space.
+  const { space } = useClientProvider();
+
+  // Do layout.
+  const [graph, setGraph] = useState<GraphModel<Node<Shape>>>();
   useEffect(() => {
     if (!space || !init) {
       return;
@@ -38,34 +46,56 @@ const Render = ({ init, sidebar, ...props }: RenderProps) => {
 
     const t = setTimeout(async () => {
       const { objects } = await space.db
-        .query((object: ReactiveEchoObject<any>) => types.some((t) => t.typename === getTypename(object)))
+        .query((object: ReactiveEchoObject<any>) => types.some((type) => type.typename === getTypename(object)))
         .run();
-
       const model = await doLayout(createGraph(objects));
-      setGraph(model.graph);
+      setGraph(model);
     });
 
     return () => clearTimeout(t);
   }, [space, init]);
 
+  // selection.
+  const selection = useMemo(() => new SelectionModel(), []);
+  const [selected, setSelected] = useState();
   useEffect(() => {
-    if (graph) {
-      void editorRef.current?.zoomToFit();
-    }
-  }, [graph]);
+    return selection.selected.subscribe((selected) => {
+      if (selection.size) {
+        const [id] = selected.values();
+        setSelected(graph?.getNode(id)?.data);
+      } else {
+        setSelected(undefined);
+      }
+    });
+  }, [graph, selection]);
 
   return (
-    <div className='grid grid-cols-[1fr,400px] w-full h-full'>
-      <div className={mx('flex w-full h-full', !sidebar && 'col-span-2')}>
-        <Editor.Root ref={editorRef} graph={graph} {...props}>
+    <div className='grid grid-cols-[1fr,360px] w-full h-full'>
+      <AttentionContainer id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
+        <Editor.Root ref={editorRef} id={id} graph={graph} selection={selection} autoZoom {...props}>
           <Editor.Canvas />
           <Editor.UI />
         </Editor.Root>
-      </div>
-      {sidebar && (
-        <SyntaxHighlighter language='json' classNames='text-xs'>
-          {JSON.stringify({ graph }, null, 2)}
-        </SyntaxHighlighter>
+      </AttentionContainer>
+      {/* TODO(burdon): Autosave saves too early (before blur event). */}
+      {sidebar === 'selected' && selected && (
+        <Form
+          schema={RectangleShapeWithoutRef}
+          values={selected}
+          Custom={{
+            // TODO(burdon): Replace by type.
+            ['center' as const]: (props) => <TupleInput {...props} binding={['x', 'y']} />,
+            ['size' as const]: (props) => <TupleInput {...props} binding={['width', 'height']} />,
+          }}
+          autoSave
+        />
+      )}
+      {sidebar === 'json' && (
+        <AttentionContainer id='sidebar' tabIndex={0} classNames='flex grow overflow-hidden'>
+          <SyntaxHighlighter language='json' classNames='text-xs'>
+            {JSON.stringify({ graph }, null, 2)}
+          </SyntaxHighlighter>
+        </AttentionContainer>
       )}
     </div>
   );
@@ -79,33 +109,52 @@ const meta: Meta<EditorRootProps> = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ space }) => {
-        space.db.graph.schemaRegistry.addSchema(types);
-        const createObjects = createObjectFactory(space.db, generator);
-        const spec: TypeSpec[] = [
-          { type: Testing.OrgType, count: 8 },
-          { type: Testing.ProjectType, count: 0 },
-          { type: Testing.ContactType, count: 16 },
-        ];
-
-        await createObjects(spec);
+      onSpaceCreated: async ({ space }, { args: { spec } }) => {
+        if (spec) {
+          space.db.graph.schemaRegistry.addSchema(types);
+          const createObjects = createObjectFactory(space.db, generator);
+          await createObjects(spec as TypeSpec[]);
+        }
       },
     }),
     withTheme,
-    withLayout({ fullscreen: true }),
+    withAttention,
+    withLayout({ fullscreen: true, tooltips: true }),
   ],
 };
 
 export default meta;
 
-type Story = StoryObj<RenderProps>;
+type Story = StoryObj<RenderProps & { spec?: TypeSpec[] }>;
 
 export const Default: Story = {
   args: {
-    sidebar: true,
-    init: true,
-    id: 'test',
-    // debug: true,
-    scale: 1,
+    sidebar: 'json',
+    debug: true,
   },
 };
+
+export const Json: Story = {
+  args: {
+    sidebar: 'json',
+    init: true,
+    spec: [
+      { type: Testing.OrgType, count: 2 },
+      { type: Testing.ContactType, count: 4 },
+    ],
+  },
+};
+
+export const Query: Story = {
+  args: {
+    sidebar: 'selected',
+    init: true,
+    spec: [
+      { type: Testing.OrgType, count: 4 },
+      { type: Testing.ProjectType, count: 0 },
+      { type: Testing.ContactType, count: 16 },
+    ],
+  },
+};
+
+// TODO(burdon): Graph builder demo.

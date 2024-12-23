@@ -13,7 +13,7 @@ import React, {
   useState,
 } from 'react';
 
-import { useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
@@ -72,7 +72,7 @@ export const GridSheet = () => {
   // a reliable dependency for `useEffect` whereas `useLayoutEffect` does not guarantee the element will be defined.
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
   const [extraplanarFocus, setExtraplanarFocus] = useState<DxGridPosition | null>(null);
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const rangeController = useRef<RangeController>();
   const { hasAttention } = useAttention(id);
 
@@ -252,24 +252,21 @@ export const GridSheet = () => {
       switch (operation) {
         case 'insert-before':
         case 'insert-after':
-          return dispatch({
-            action: SheetAction.INSERT_AXIS,
-            data: {
+          return dispatch(
+            createIntent(SheetAction.InsertAxis, {
               model,
               axis: contextMenuAxis,
               index: contextMenuOpen![contextMenuAxis] + (operation === 'insert-before' ? 0 : 1),
-            } satisfies SheetAction.InsertAxis,
-          });
-          break;
+            }),
+          );
         case 'drop':
-          return dispatch({
-            action: SheetAction.DROP_AXIS,
-            data: {
+          return dispatch(
+            createIntent(SheetAction.DropAxis, {
               model,
               axis: contextMenuAxis,
               axisIndex: model.sheet[contextMenuAxis === 'row' ? 'rows' : 'columns'][contextMenuOpen![contextMenuAxis]],
-            } satisfies SheetAction.DropAxis,
-          });
+            }),
+          );
       }
     },
     [contextMenuAxis, contextMenuOpen, model, dispatch],

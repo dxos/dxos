@@ -6,7 +6,6 @@ import { type IconProps } from '@phosphor-icons/react';
 import { type FC } from 'react';
 
 import type {
-  Intent,
   MetadataRecordsProvides,
   SettingsProvides,
   SurfaceProvides,
@@ -32,8 +31,6 @@ export type StackSectionView = {
   custom?: Record<string, any>;
 };
 
-// TODO(wittjosiah): Creators/choosers likely aren't stack-specific.
-//  Also distinct from graph actions though, output should be inserted into current view rather than navigated to.
 type StackSectionAction = {
   id: string;
   testId: string;
@@ -55,24 +52,10 @@ export type StackSectionItem = {
   metadata: StackSectionMetadata;
 };
 
-export type StackSectionCreator = StackSectionAction & {
-  intent: Intent | Intent[];
-};
-
-export type StackProvides = {
-  stack: {
-    creators?: StackSectionCreator[];
-  };
-};
-
-export type StackState = {
-  creators: StackSectionCreator[];
-};
-
 export type StackSettingsProps = { separation: boolean };
 
 export type StackPluginProvides = SurfaceProvides &
   MetadataRecordsProvides &
   SettingsProvides<StackSettingsProps> &
   TranslationsProvides &
-  SchemaProvides & { stack: StackState };
+  SchemaProvides;

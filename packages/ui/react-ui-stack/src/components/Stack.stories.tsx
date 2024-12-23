@@ -10,7 +10,8 @@ import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Stack } from './Stack';
-import { StackItem, type StackItemData } from './StackItem';
+import { type StackItemData } from './StackContext';
+import { StackItem } from './StackItem';
 
 type StoryStackItem = {
   id: string;
@@ -93,15 +94,15 @@ const StorybookStack = () => {
 
   return (
     <main className='fixed inset-0'>
-      <Stack orientation='horizontal' size='contain'>
+      <Stack orientation='horizontal' size='contain' onRearrange={reorderItem}>
         {columns.map((column) => (
-          <StackItem.Root key={column.id} item={column} onRearrange={reorderItem}>
+          <StackItem.Root key={column.id} item={column}>
             <StackItem.Heading>
               <StackItem.ResizeHandle />
             </StackItem.Heading>
             <Stack orientation='vertical' size='contain'>
               {column.items?.map((card) => (
-                <StackItem.Root key={card.id} item={card} onRearrange={reorderItem}>
+                <StackItem.Root key={card.id} item={card}>
                   <StackItem.Heading>
                     <StackItem.ResizeHandle />
                   </StackItem.Heading>

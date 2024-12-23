@@ -2,30 +2,31 @@
 // Copyright 2024 DXOS.org
 //
 
-import { createContext, type Dispatch, type SetStateAction } from 'react';
+import { createContext, type Dispatch, type RefObject, type SetStateAction } from 'react';
 
-import { type SelectionModel } from './useSelected';
-import { type GraphModel, type Node, type Shape, type ShapeType } from '../graph';
-import type { Dimension, Point } from '../layout';
+import { type Dimension } from '@dxos/react-ui-canvas';
 
-export type TransformState = {
-  scale: number;
-  offset: Point;
-};
+import { type SelectionModel } from './selection';
+import { type ActionHandler } from '../actions';
+import { type GraphModel, type Node } from '../graph';
+import type { PolygonShape, Shape } from '../types';
 
+// TODO(burdon): Reconcile with DragPayloadData.
 export type DraggingState = {
   container: HTMLElement;
-  shape: ShapeType<'rect'>;
+  shape: PolygonShape;
   anchor?: string;
 };
 
 export type EditingState = {
-  shape: Shape;
+  shape: PolygonShape;
 };
 
 export type EditorOptions = {
-  zoomFactor: number;
   gridSize: number;
+  gridSnap: number;
+  zoomFactor: number;
+  zoomDuration: number;
 };
 
 export type EditorContextType = {
@@ -34,12 +35,11 @@ export type EditorContextType = {
   setDebug: Dispatch<SetStateAction<boolean>>;
   options: EditorOptions;
 
-  width: number;
-  height: number;
+  // TODO(burdon): Remove access?
+  overlaySvg: RefObject<SVGSVGElement>;
 
-  scale: number;
-  offset: Point;
-  setTransform: Dispatch<SetStateAction<TransformState>>;
+  actionHandler: ActionHandler | undefined;
+  setActionHandler: (cb: ActionHandler | undefined) => void;
 
   gridSize: Dimension;
   setGridSize: Dispatch<SetStateAction<Dimension>>;

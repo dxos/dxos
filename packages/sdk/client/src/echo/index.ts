@@ -4,7 +4,7 @@
 
 export { SpaceId } from '@dxos/keys';
 export { type Echo, type Space, type PropertiesType, type PropertiesTypeProps } from '@dxos/client-protocol';
-export { getTypename, Expando, type AbstractTypedObject, type ObjectMeta, type TypedObject } from '@dxos/echo-schema';
+export { getTypename, Expando, type TypedObject, type ObjectMeta } from '@dxos/echo-schema';
 export {
   create,
   getMeta,
@@ -59,6 +59,9 @@ export {
   fullyQualifiedId,
   parseFullyQualifiedId,
   parseId,
+  EchoObjectSchema,
+  ReactiveObjectSchema,
+  SpaceSchema,
   FQ_ID_LENGTH,
   OBJECT_ID_LENGTH,
   SPACE_ID_LENGTH,

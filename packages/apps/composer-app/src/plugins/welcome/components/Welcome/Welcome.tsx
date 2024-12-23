@@ -154,7 +154,7 @@ export const Welcome = ({
               </div>
             )}
 
-            <div className='z-20 flex flex-col h-full justify-end'>
+            <div className='z-[11] flex flex-col h-full justify-end'>
               <a href='https://dxos.org' target='_blank' rel='noreferrer'>
                 <div className='flex justify-center items-center text-sm gap-1 pr-3 pb-1 opacity-70'>
                   <span className='text-subdued'>Powered by</span>

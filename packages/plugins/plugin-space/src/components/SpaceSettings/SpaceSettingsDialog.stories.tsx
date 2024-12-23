@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react';
 import React from 'react';
 
-import { useStoryClientData, withClientProvider } from '@dxos/react-client/testing';
+import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { Dialog } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/shell/react';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -16,8 +16,7 @@ import { SpaceSettingsDialog, type SpaceSettingsDialogProps } from './SpaceSetti
 import translations from '../../translations';
 
 const Story = (args: Partial<SpaceSettingsDialogProps>) => {
-  const { space } = useStoryClientData();
-
+  const { space } = useClientProvider();
   return (
     <Dialog.Root open>
       <Dialog.Overlay blockAlign='start'>

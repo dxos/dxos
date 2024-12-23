@@ -4,8 +4,8 @@
 
 import React, { useMemo, type PropsWithChildren } from 'react';
 
-import { type PluginMeta, useIntentDispatcher, usePlugins } from '@dxos/app-framework';
-import { ObservabilityAction } from '@dxos/plugin-observability/meta';
+import { createIntent, type PluginMeta, useIntentDispatcher, usePlugins } from '@dxos/app-framework';
+import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormInput } from '@dxos/react-ui-form';
 
@@ -18,7 +18,7 @@ const sortPluginMeta = ({ name: a = '' }: PluginMeta, { name: b = '' }: PluginMe
 export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }) => {
   const { t } = useTranslation(REGISTRY_PLUGIN);
   const { plugins, enabled, core, setPlugin, ...pluginContext } = usePlugins();
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   // Memoize to prevent plugins from disappearing when toggling enabled.
   const installed = useMemo(
@@ -41,13 +41,12 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettingsProps }
 
   const handleChange = (id: string, enabled: boolean) => {
     setPlugin(id, enabled);
-    void dispatch({
-      action: ObservabilityAction.SEND_EVENT,
-      data: {
+    void dispatch(
+      createIntent(ObservabilityAction.SendEvent, {
         name: 'plugins.toggle',
         properties: { plugin: id, enabled },
-      },
-    });
+      }),
+    );
   };
 
   const handleReload = () => {

@@ -4,66 +4,75 @@
 
 import { useHotkeys } from 'react-hotkeys-hook';
 
-import { useActionHandler } from './useActionHandler';
 import { useEditorContext } from './useEditorContext';
 
 /**
  * Handle keyboard shortcuts.
  */
 export const useShortcuts = () => {
-  const { id, graph, selection } = useEditorContext();
-  const handleAction = useActionHandler();
-  const option = { scopes: id };
+  const { id, graph, selection, actionHandler } = useEditorContext();
+
   useHotkeys(
     'd',
     (ev) => {
       ev.preventDefault();
-      void handleAction({
+      void actionHandler?.({
         type: 'debug',
       });
     },
-    option,
+    { scopes: [id] },
   );
   useHotkeys(
     'meta+a',
     (ev) => {
       ev.preventDefault();
-      void handleAction({
+      void actionHandler?.({
         type: 'select',
         ids: [...graph.nodes.map((node) => node.id), ...graph.edges.map((edge) => edge.id)],
       });
     },
-    option,
+    { scopes: [id] },
   );
   useHotkeys(
     "meta+'",
     (ev) => {
       ev.preventDefault();
-      void handleAction({
+      void actionHandler?.({
         type: 'grid',
       });
     },
-    option,
+    { scopes: [id] },
   );
   useHotkeys(
     'Home',
     (ev) => {
       ev.preventDefault();
-      void handleAction({
+      void actionHandler?.({
         type: 'home',
       });
     },
-    option,
+    { scopes: [id] },
   );
   useHotkeys(
     'Backspace',
     (ev) => {
       ev.preventDefault();
-      void handleAction({
+      void actionHandler?.({
         type: 'delete',
-        ids: [...selection.ids],
+        ids: [...selection.selected.value],
       });
     },
-    option,
+    { scopes: [id] },
+  );
+  useHotkeys(
+    'Escape',
+    (ev) => {
+      ev.preventDefault();
+      void actionHandler?.({
+        type: 'select',
+        ids: [],
+      });
+    },
+    { scopes: [id] },
   );
 };

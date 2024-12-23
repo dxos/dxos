@@ -4,6 +4,8 @@
 
 import { invariant } from '@dxos/invariant';
 
+// TODO(burdon): Replace with hotkeys-js, react-hotkeys, and react-hotkeys-hook.
+
 export type KeyHandler = (props: {
   context: string;
   shortcut: string;

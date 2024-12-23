@@ -5702,6 +5702,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../../ui/react-ui-attention
+      '@dxos/react-ui-canvas':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-canvas
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
@@ -5735,6 +5738,12 @@ importers:
       d3:
         specifier: ^7.9.0
         version: 7.9.0
+      graphology:
+        specifier: ^0.25.4
+        version: 0.25.4
+      graphology-shortest-path:
+        specifier: ^2.1.0
+        version: 2.1.0
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -6706,6 +6715,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugin-client
@@ -6980,6 +6992,9 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
+      '@dxos/plugin-observability':
+        specifier: workspace:*
+        version: link:../plugin-observability
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -7252,6 +7267,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: ^3.9.2
+        version: 3.10.15
       immer:
         specifier: ^10.1.1
         version: 10.1.1
@@ -7292,6 +7310,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-schema
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -7328,6 +7349,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: ^3.9.2
+        version: 3.10.15
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
@@ -7608,6 +7632,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: ^3.9.2
+        version: 3.10.15
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -7855,6 +7882,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
@@ -7867,9 +7897,6 @@ importers:
       '@dxos/observability':
         specifier: workspace:*
         version: link:../../sdk/observability
-      '@dxos/plugin-client':
-        specifier: workspace:*
-        version: link:../plugin-client
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
@@ -8201,6 +8228,9 @@ importers:
       '@dxos/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
+      '@dxos/plugin-thread':
+        specifier: workspace:*
+        version: link:../plugin-thread
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -8376,6 +8406,9 @@ importers:
       '@dxos/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
+      '@dxos/plugin-thread':
+        specifier: workspace:*
+        version: link:../plugin-thread
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -8415,6 +8448,9 @@ importers:
       '@tldraw/utils':
         specifier: ^3.0.0
         version: 3.0.0
+      effect:
+        specifier: ^3.9.2
+        version: 3.10.15
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -8557,6 +8593,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: ^3.9.2
+        version: 3.10.15
       jszip:
         specifier: ^3.10.1
         version: 3.10.1
@@ -8724,6 +8763,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/plugin-observability':
+        specifier: workspace:*
+        version: link:../plugin-observability
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
@@ -8806,6 +8848,9 @@ importers:
       '@dxos/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
+      '@dxos/plugin-thread':
+        specifier: workspace:*
+        version: link:../plugin-thread
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -9113,6 +9158,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      effect:
+        specifier: ^3.9.2
+        version: 3.10.15
       zod:
         specifier: ^3.22.4
         version: 3.22.4
@@ -10434,6 +10482,79 @@ importers:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
 
+  packages/ui/react-ui-canvas:
+    dependencies:
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@preact/signals-core':
+        specifier: ^1.6.0
+        version: 1.6.0
+      '@radix-ui/react-context':
+        specifier: ^1.0.0
+        version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
+      bind-event-listener:
+        specifier: ^3.0.0
+        version: 3.0.0
+      d3:
+        specifier: ^7.9.0
+        version: 7.9.0
+      effect:
+        specifier: ^3.9.2
+        version: 3.10.15
+      react-resize-detector:
+        specifier: ^11.0.1
+        version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      transformation-matrix:
+        specifier: ^2.16.1
+        version: 2.16.1
+    devDependencies:
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
+      '@effect/schema':
+        specifier: ^0.75.5
+        version: 0.75.5(effect@3.10.15)
+      '@types/d3':
+        specifier: ^7.4.3
+        version: 7.4.3
+      '@types/react':
+        specifier: ~18.2.0
+        version: 18.2.79
+      '@types/react-dom':
+        specifier: ~18.2.0
+        version: 18.2.25
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: 5.4.7
+        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
+
   packages/ui/react-ui-card:
     dependencies:
       '@radix-ui/react-primitive':
@@ -11565,6 +11686,12 @@ importers:
       lodash.merge:
         specifier: ^4.6.2
         version: 4.6.2
+      postcss:
+        specifier: ^8.4.41
+        version: 8.4.41
+      postcss-import:
+        specifier: ^16.1.0
+        version: 16.1.0(postcss@8.4.41)
       tailwind-merge:
         specifier: ^2.2.1
         version: 2.2.1
@@ -11590,12 +11717,12 @@ importers:
       '@types/lodash.merge':
         specifier: ^4.6.6
         version: 4.6.7
+      '@types/postcss-import':
+        specifier: ^14.0.3
+        version: 14.0.3
       esbuild:
         specifier: ^0.23.1
         version: 0.23.1
-      postcss:
-        specifier: ^8.4.41
-        version: 8.4.41
       tailwind-config-viewer:
         specifier: ^2.0.4
         version: 2.0.4(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2)))
@@ -20352,6 +20479,9 @@ packages:
   '@types/platform@1.3.5':
     resolution: {integrity: sha512-PdpJUHGRTQ+4TSsRb0Z/VpLbB2OlpVdcwj5PLw721ogPufKkvQhMpuxmTrD5QaXVTLes5q6He0YweKKIV/iu0A==}
 
+  '@types/postcss-import@14.0.3':
+    resolution: {integrity: sha512-raZhRVTf6Vw5+QbmQ7LOHSDML71A5rj4+EqDzAbrZPfxfoGzFxMHRCq16VlddGIZpHELw0BG4G0YE2ANkdZiIQ==}
+
   '@types/prettier@2.7.3':
     resolution: {integrity: sha512-+68kP9yzs4LMp7VNh8gdzMSPZFL44MLGqiHWvttYJe+6qnuVr4Ek9wSBQoveqY/r+LwjCcU29kNVkidwim+kYA==}
 
@@ -21048,6 +21178,9 @@ packages:
     resolution: {integrity: sha512-aiATs7pSutzda/rq8fnuPwTglyVwjM22bNnK2ZgjrpAjQHSSl3lztd2f9evst1W/qnC58DRz7T7QndUDumAR4Q==}
     engines: {node: '>=14.15.0'}
 
+  '@yomguithereal/helpers@1.1.1':
+    resolution: {integrity: sha512-UYvAq/XCA7xoh1juWDYsq3W0WywOB+pz8cgVnE1b45ZfdMhBvHDrgmSFG3jXeZSr2tMTYLGHFHON+ekG05Jebg==}
+
   '@zeit/schemas@2.21.0':
     resolution: {integrity: sha512-/J4WBTpWtQ4itN1rb3ao8LfClmVcmz2pO6oYb7Qd4h7VSqUhIbJIvrykz9Ew1WMg6eFWsKdsMHc5uPbFxqlCpg==}
 
@@ -21173,6 +21306,11 @@ packages:
 
   ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
+    peerDependencies:
+      ajv: ^8.0.0
+    peerDependenciesMeta:
+      ajv:
+        optional: true
 
   ajv-keywords@3.5.2:
     resolution: {integrity: sha512-5p6WTN0DdTGVQk6VjcEju19IgaHudalcfabD7yhDGeA6bcQnmL+CpveLJq/3hvfwd1aof6L386Ougkx6RfyMIQ==}
@@ -25025,6 +25163,26 @@ packages:
   graphemer@1.4.0:
     resolution: {integrity: sha512-EtKwoO6kxCL9WO5xipiHTZlSzBm7WLT627TqC/uVRd0HKmq8NXyebnNYxDoBi7wt8eTWrUrKXCOVaFq9x1kgag==}
 
+  graphology-indices@0.17.0:
+    resolution: {integrity: sha512-A7RXuKQvdqSWOpn7ZVQo4S33O0vCfPBnUSf7FwE0zNCasqwZVUaCXePuWo5HBpWw68KJcwObZDHpFk6HKH6MYQ==}
+    peerDependencies:
+      graphology-types: '>=0.20.0'
+
+  graphology-shortest-path@2.1.0:
+    resolution: {integrity: sha512-KbT9CTkP/u72vGEJzyRr24xFC7usI9Es3LMmCPHGwQ1KTsoZjxwA9lMKxfU0syvT/w+7fZUdB/Hu2wWYcJBm6Q==}
+    peerDependencies:
+      graphology-types: '>=0.20.0'
+
+  graphology-utils@2.5.2:
+    resolution: {integrity: sha512-ckHg8MXrXJkOARk56ZaSCM1g1Wihe2d6iTmz1enGOz4W/l831MBCKSayeFQfowgF8wd+PQ4rlch/56Vs/VZLDQ==}
+    peerDependencies:
+      graphology-types: '>=0.23.0'
+
+  graphology@0.25.4:
+    resolution: {integrity: sha512-33g0Ol9nkWdD6ulw687viS8YJQBxqG5LWII6FI6nul0pq6iM2t5EKquOTFDbyTblRB3O9I+7KX4xI8u5ffekAQ==}
+    peerDependencies:
+      graphology-types: '>=0.24.0'
+
   graphql@16.9.0:
     resolution: {integrity: sha512-GGTKBX4SD7Wdb8mqeDLni2oaRGYQWjWHGKPQ24ZMnUtKfcsVoiv4uX8+LJr1K6U5VW2Lu1BwJnj7uiori0YtRw==}
     engines: {node: ^12.22.0 || ^14.16.0 || ^16.0.0 || >=17.0.0}
@@ -27690,6 +27848,9 @@ packages:
   ml-tree-similarity@1.0.0:
     resolution: {integrity: sha512-XJUyYqjSuUQkNQHMscr6tcjldsOoAekxADTplt40QKfwW6nd++1wHWV9AArl0Zvw/TIHgNaZZNvr8QGvE8wLRg==}
 
+  mnemonist@0.39.8:
+    resolution: {integrity: sha512-vyWo2K3fjrUw8YeeZ1zF0fy6Mu59RHokURlld8ymdUPjMlD9EC9ov1/YPqTgqRvUN9nTr3Gqfz29LYAmu0PHPQ==}
+
   mocha@10.6.0:
     resolution: {integrity: sha512-hxjt4+EEB0SA0ZDygSS015t65lJw/I2yRCS3Ae+SJ5FrbzrXgfYwJr96f0OvIXdj7h4lv/vLCrH3rkiuizFSvw==}
     engines: {node: '>= 14.0.0'}
@@ -28204,6 +28365,9 @@ packages:
   object.values@1.1.7:
     resolution: {integrity: sha512-aU6xnDFYT3x17e/f0IiiwlGPTy2jzMySGfUB4fq6z7CV8l85CWHDk5ErhyhpfDHhrOMwGFhSQkhMGHaIotA6Ng==}
     engines: {node: '>= 0.4'}
+
+  obliterator@2.0.4:
+    resolution: {integrity: sha512-lgHwxlxV1qIg1Eap7LgIeoBWIMFibOjbrYPIPJZcI1mmGAI2m3lNYpK12Y+GBdPQ0U1hRwSord7GIaawz962qQ==}
 
   oblivious-set@1.0.0:
     resolution: {integrity: sha512-z+pI07qxo4c2CulUHCDf9lcqDlMSo72N/4rLUpRXf6fu+q8vjt8y0xS+Tlf8NTJDdTXHbdeO1n3MlbctwEoXZw==}
@@ -28787,6 +28951,12 @@ packages:
   postcss-import@15.1.0:
     resolution: {integrity: sha512-hpr+J05B2FVYUAXHeK1YyI267J/dDDhMU6B6civm8hSY1jYJnBXxzKDKDswzJmtLHryrjhnDjqqp/49t8FALew==}
     engines: {node: '>=14.0.0'}
+    peerDependencies:
+      postcss: ^8.0.0
+
+  postcss-import@16.1.0:
+    resolution: {integrity: sha512-7hsAZ4xGXl4MW+OKEWCnF6T5jqBw80/EE9aXg1r2yyn1RsVEU8EtKXbijEODa+rg7iih4bKf7vlvTGYR4CnPNg==}
+    engines: {node: '>=18.0.0'}
     peerDependencies:
       postcss: ^8.0.0
 
@@ -44534,6 +44704,10 @@ snapshots:
 
   '@types/platform@1.3.5': {}
 
+  '@types/postcss-import@14.0.3':
+    dependencies:
+      postcss: 8.4.47
+
   '@types/prettier@2.7.3': {}
 
   '@types/prop-types@15.7.5': {}
@@ -45642,6 +45816,8 @@ snapshots:
       js-yaml: 3.14.1
       tslib: 2.8.0
 
+  '@yomguithereal/helpers@1.1.1': {}
+
   '@zeit/schemas@2.21.0': {}
 
   '@zkochan/js-yaml@0.0.7':
@@ -45765,8 +45941,8 @@ snapshots:
       clean-stack: 2.2.0
       indent-string: 4.0.0
 
-  ajv-formats@2.1.1:
-    dependencies:
+  ajv-formats@2.1.1(ajv@8.12.0):
+    optionalDependencies:
       ajv: 8.12.0
 
   ajv-keywords@3.5.2(ajv@6.12.6):
@@ -47378,7 +47554,7 @@ snapshots:
   conf@12.0.0:
     dependencies:
       ajv: 8.12.0
-      ajv-formats: 2.1.1
+      ajv-formats: 2.1.1(ajv@8.12.0)
       atomically: 2.0.3
       debounce-fn: 5.1.2
       dot-prop: 8.0.2
@@ -50470,6 +50646,25 @@ snapshots:
   grapheme-splitter@1.0.4: {}
 
   graphemer@1.4.0: {}
+
+  graphology-indices@0.17.0:
+    dependencies:
+      graphology-utils: 2.5.2
+      mnemonist: 0.39.8
+
+  graphology-shortest-path@2.1.0:
+    dependencies:
+      '@yomguithereal/helpers': 1.1.1
+      graphology-indices: 0.17.0
+      graphology-utils: 2.5.2
+      mnemonist: 0.39.8
+
+  graphology-utils@2.5.2: {}
+
+  graphology@0.25.4:
+    dependencies:
+      events: 3.3.0
+      obliterator: 2.0.4
 
   graphql@16.9.0: {}
 
@@ -53771,6 +53966,10 @@ snapshots:
       binary-search: 1.3.6
       num-sort: 2.1.0
 
+  mnemonist@0.39.8:
+    dependencies:
+      obliterator: 2.0.4
+
   mocha@10.6.0:
     dependencies:
       ansi-colors: 4.1.3
@@ -54370,6 +54569,8 @@ snapshots:
       call-bind: 1.0.5
       define-properties: 1.2.1
       es-abstract: 1.22.2
+
+  obliterator@2.0.4: {}
 
   oblivious-set@1.0.0: {}
 
@@ -54991,6 +55192,13 @@ snapshots:
   postcss-import@15.1.0(postcss@8.4.47):
     dependencies:
       postcss: 8.4.47
+      postcss-value-parser: 4.2.0
+      read-cache: 1.0.0
+      resolve: 1.22.8
+
+  postcss-import@16.1.0(postcss@8.4.41):
+    dependencies:
+      postcss: 8.4.41
       postcss-value-parser: 4.2.0
       read-cache: 1.0.0
       resolve: 1.22.8
@@ -56816,7 +57024,7 @@ snapshots:
     dependencies:
       '@types/json-schema': 7.0.15
       ajv: 8.12.0
-      ajv-formats: 2.1.1
+      ajv-formats: 2.1.1(ajv@8.12.0)
       ajv-keywords: 5.1.0(ajv@8.12.0)
 
   screenfull@5.2.0: {}

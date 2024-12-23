@@ -2,75 +2,69 @@
 // Copyright 2024 DXOS.org
 //
 
-import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
-import { bind } from 'bind-event-listener';
+import { bindAll } from 'bind-event-listener';
 import { useEffect, useState } from 'react';
 
-import { getBounds, type Rect, type Point, type Range } from '../layout';
+import { type Rect, getRelativePoint } from '@dxos/react-ui-canvas';
 
-export type SelectionEvent = (rect: Rect | null, shift?: boolean) => void;
+import { getBounds, type Range } from '../layout';
+
+export type SelectionEvent = { bounds?: Rect | null; shift?: boolean };
 
 /**
  * Event listener to track range bounds selection.
  */
-export const useSelectionEvents = (el: HTMLElement | null, cb?: SelectionEvent): Rect | null => {
+export const useSelectionEvents = (el: HTMLElement | null, cb?: (event: SelectionEvent) => void): Rect | null => {
   const [range, setRange] = useState<Partial<Range>>();
   useEffect(() => {
     if (!el) {
       return;
     }
 
-    return combine(
-      bind(el, {
+    return bindAll(el, [
+      {
         type: 'keydown',
         listener: (ev) => {
           if (ev.key === 'Escape') {
             setRange(undefined);
           }
         },
-      }),
-      bind(el, {
+      },
+      {
         type: 'pointerdown',
         listener: (ev) => {
           if (ev.target !== el) {
-            return false;
+            return;
           }
 
-          const p1: Point = { x: ev.offsetX, y: ev.offsetY };
+          const p1 = getRelativePoint(el, ev);
           setRange({ p1 });
         },
-      }),
-      bind(el, {
+      },
+      {
         type: 'pointermove',
         listener: (ev) => {
-          if (ev.target !== el) {
-            return false;
+          if (!range) {
+            return;
           }
 
-          const p2: Point = { x: ev.offsetX, y: ev.offsetY };
+          const p2 = getRelativePoint(el, ev);
           setRange((range) => (range ? { ...range, p2 } : undefined));
         },
-      }),
-      bind(el, {
+      },
+      {
         type: 'pointerup',
         listener: (ev) => {
-          if (ev.target !== el) {
-            return false;
+          if (range?.p1 && !range?.p2) {
+            cb?.({ bounds: null });
+          } else {
+            cb?.({ bounds: range?.p1 && range?.p2 ? getBounds(range.p1, range.p2) : undefined, shift: ev.shiftKey });
           }
 
-          setRange((range) => {
-            if (range?.p1 && range?.p2) {
-              const bounds = getBounds(range.p1, range.p2);
-              cb?.(bounds, ev.shiftKey);
-            } else {
-              cb?.(null);
-            }
-
-            return undefined;
-          });
+          setRange(undefined);
         },
-      }),
-    );
+      },
+    ]);
   }, [el, cb]);
 
   return range?.p1 && range?.p2 ? getBounds(range.p1, range.p2) : null;

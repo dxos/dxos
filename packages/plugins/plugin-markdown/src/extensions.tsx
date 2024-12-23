@@ -5,7 +5,7 @@
 import React, { type AnchorHTMLAttributes, type ReactNode, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { type IntentDispatcher, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, NavigationAction, type PromiseIntentDispatcher, useIntentDispatcher } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { createDocAccessor, fullyQualifiedId, getSpace, type Query } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -34,7 +34,7 @@ import { setFallbackName } from './util';
 
 type ExtensionsOptions = {
   document?: DocumentType;
-  dispatch?: IntentDispatcher;
+  dispatch?: PromiseIntentDispatcher;
   query?: Query<DocumentType>;
   settings: MarkdownSettingsProps;
   viewMode?: EditorViewMode;
@@ -49,7 +49,7 @@ export const useExtensions = ({
   editorStateStore,
   extensionProviders,
 }: ExtensionsOptions & Pick<MarkdownPluginState, 'extensionProviders'>): Extension[] => {
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const identity = useIdentity();
   const space = getSpace(document);
 
@@ -144,15 +144,14 @@ const createBaseExtensions = ({ document, dispatch, settings, query, viewMode }:
           renderLinkButton:
             dispatch && document
               ? onRenderLink((id: string) => {
-                  void dispatch({
-                    action: NavigationAction.ADD_TO_ACTIVE,
-                    data: {
+                  void dispatch(
+                    createIntent(NavigationAction.AddToActive, {
                       id,
                       part: 'main',
                       pivotId: fullyQualifiedId(document),
                       scrollIntoView: true,
-                    },
-                  });
+                    }),
+                  );
                 })
               : undefined,
         }),

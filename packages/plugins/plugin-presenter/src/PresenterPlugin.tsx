@@ -10,12 +10,12 @@ import {
   parseIntentPlugin,
   LayoutAction,
   NavigationAction,
-  type Intent,
   createSurface,
+  createIntent,
+  createResolver,
 } from '@dxos/app-framework';
 import { create } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { parseClientPlugin } from '@dxos/plugin-client';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { CollectionType } from '@dxos/plugin-space/types';
@@ -24,12 +24,7 @@ import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { PresenterMain, PresenterSettings, MarkdownSlide, RevealMain } from './components';
 import meta, { PRESENTER_PLUGIN } from './meta';
 import translations from './translations';
-import {
-  PresenterContext,
-  type PresenterSettingsProps,
-  TOGGLE_PRESENTATION,
-  type PresenterPluginProvides,
-} from './types';
+import { PresenterContext, type PresenterSettingsProps, type PresenterPluginProvides, PresenterAction } from './types';
 
 // TODO(burdon): Only scale markdown content.
 // TODO(burdon): Map stack content; Slide content type (e.g., markdown, sketch, IPFS image, table, etc.)
@@ -51,9 +46,8 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
       settings: settings.values,
       graph: {
         builder: (plugins) => {
-          const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
-          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-          if (!client || !dispatch) {
+          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatchPromise;
+          if (!dispatch) {
             return [];
           }
 
@@ -68,21 +62,11 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
               const id = fullyQualifiedId(object);
               return [
                 {
-                  id: `${TOGGLE_PRESENTATION}/${id}`,
+                  id: `${PresenterAction.TogglePresentation._tag}/${id}`,
                   // TODO(burdon): Allow function so can generate state when activated.
                   //  So can set explicit fullscreen state coordinated with current presenter state.
                   data: async () => {
-                    await dispatch([
-                      {
-                        plugin: PRESENTER_PLUGIN,
-                        action: TOGGLE_PRESENTATION,
-                        data: { object },
-                      },
-                      {
-                        action: NavigationAction.OPEN,
-                        data: { activeParts: { fullScreen: id } },
-                      },
-                    ]);
+                    await dispatch(createIntent(PresenterAction.TogglePresentation, { object }));
                   },
                   properties: {
                     label: ['toggle presentation label', { ns: PRESENTER_PLUGIN }],
@@ -142,22 +126,26 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
         ],
       },
       intent: {
-        resolver: (intent) => {
-          switch (intent.action) {
-            case TOGGLE_PRESENTATION: {
-              state.presenting = intent.data?.state ?? !state.presenting;
+        resolvers: () =>
+          createResolver(PresenterAction.TogglePresentation, ({ object, state: next }) => {
+            state.presenting = next ?? !state.presenting;
 
-              const intents = [] as Intent[][];
-              if (state.presenting) {
-                intents.push([{ action: LayoutAction.SET_LAYOUT_MODE, data: { layoutMode: 'fullscreen' } }]);
-              } else {
-                intents.push([{ action: LayoutAction.SET_LAYOUT_MODE, data: { revert: true } }]);
-              }
-
-              return { data: state.presenting, intents };
+            if (state.presenting) {
+              return {
+                intents: [
+                  createIntent(LayoutAction.SetLayoutMode, { layoutMode: 'fullscreen' }),
+                  createIntent(NavigationAction.Open, { activeParts: { fullScreen: fullyQualifiedId(object) } }),
+                ],
+              };
+            } else {
+              return {
+                intents: [
+                  createIntent(LayoutAction.SetLayoutMode, { revert: true }),
+                  createIntent(NavigationAction.Close, { activeParts: { fullScreen: fullyQualifiedId(object) } }),
+                ],
+              };
             }
-          }
-        },
+          }),
       },
     },
   };

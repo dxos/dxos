@@ -2,27 +2,27 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CompassTool } from '@phosphor-icons/react';
+import { pipe } from 'effect';
 import React from 'react';
 
 import {
   parseIntentPlugin,
   type PluginDefinition,
   resolvePlugin,
-  NavigationAction,
   createSurface,
+  createResolver,
+  createIntent,
+  chain,
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { parseClientPlugin } from '@dxos/plugin-client';
-import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space';
 import { CollectionType } from '@dxos/plugin-space/types';
-import { isSpace, loadObjectReferences, RefArray } from '@dxos/react-client/echo';
+import { create, isSpace, makeRef, RefArray } from '@dxos/react-client/echo';
 
 import { SketchContainer, SketchSettings } from './components';
 import meta, { SKETCH_PLUGIN } from './meta';
 import translations from './translations';
-import { TLDRAW_SCHEMA, CanvasType, DiagramType, createDiagramType, isDiagramType } from './types';
+import { TLDRAW_SCHEMA, CanvasType, DiagramType, isDiagramType } from './types';
 import { SketchAction, type SketchGridType, type SketchPluginProvides, type SketchSettingsProps } from './types';
 import { serializer } from './util';
 
@@ -38,7 +38,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
       metadata: {
         records: {
           [DiagramType.typename]: {
-            createObject: SketchAction.CREATE,
+            createObject: (props: { name?: string }) => createIntent(SketchAction.Create, props),
             placeholder: ['object title placeholder', { ns: SKETCH_PLUGIN }],
             icon: 'ph--compass-tool--regular',
             // TODO(wittjosiah): Move out of metadata.
@@ -54,53 +54,12 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
         system: [CanvasType],
       },
       graph: {
-        builder: (plugins) => {
-          const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
-          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-          if (!client || !dispatch) {
-            return [];
-          }
-
-          return [
-            createExtension({
-              id: SketchAction.CREATE,
-              filter: (node): node is ActionGroup => isActionGroup(node) && node.id.startsWith(SpaceAction.ADD_OBJECT),
-              actions: ({ node }) => {
-                const id = node.id.split('/').at(-1);
-                const [spaceId, objectId] = id?.split(':') ?? [];
-                const space = client.spaces.get().find((space) => space.id === spaceId);
-                const object = objectId && space?.db.getObjectById(objectId);
-                const target = objectId ? object : space;
-                if (!target) {
-                  return;
-                }
-
-                return [
-                  {
-                    id: `${SKETCH_PLUGIN}/create/${node.id}`,
-                    data: async () => {
-                      await dispatch([
-                        { plugin: SKETCH_PLUGIN, action: SketchAction.CREATE },
-                        { action: SpaceAction.ADD_OBJECT, data: { target } },
-                        { action: NavigationAction.OPEN },
-                      ]);
-                    },
-                    properties: {
-                      label: ['create object label', { ns: SKETCH_PLUGIN }],
-                      icon: 'ph--compass-tool--regular',
-                      testId: 'sketchPlugin.createObject',
-                    },
-                  },
-                ];
-              },
-            }),
-          ];
-        },
         serializer: (plugins) => {
-          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
+          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatchPromise;
           if (!dispatch) {
             return [];
           }
+
           return [
             {
               inputType: DiagramType.typename,
@@ -108,7 +67,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
               // Reconcile with metadata serializers.
               serialize: async (node) => {
                 const diagram = node.data;
-                const canvas = await loadObjectReferences(diagram, (diagram) => diagram.canvas);
+                const canvas = await diagram.canvas.load();
                 return {
                   name: diagram.name || translations[0]['en-US'][SKETCH_PLUGIN]['object title placeholder'],
                   data: JSON.stringify({ schema: canvas.schema, content: canvas.content }),
@@ -126,38 +85,18 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
 
                 const { schema, content } = JSON.parse(data.data);
 
-                const result = await dispatch([
-                  {
-                    plugin: SKETCH_PLUGIN,
-                    action: SketchAction.CREATE,
-                    data: { name: data.name, schema, content },
-                  },
-                  {
-                    action: SpaceAction.ADD_OBJECT,
-                    data: { target },
-                  },
-                ]);
+                const result = await dispatch(
+                  pipe(
+                    createIntent(SketchAction.Create, { name: data.name, schema, content }),
+                    chain(SpaceAction.AddObject, { target }),
+                  ),
+                );
 
-                return result?.data.object;
+                return result.data?.object;
               },
             },
           ];
         },
-      },
-      stack: {
-        creators: [
-          {
-            id: 'create-stack-section-sketch',
-            testId: 'sketchPlugin.createSection',
-            type: ['plugin name', { ns: SKETCH_PLUGIN }],
-            label: ['create stack section label', { ns: SKETCH_PLUGIN }],
-            icon: (props: any) => <CompassTool {...props} />,
-            intent: {
-              plugin: SKETCH_PLUGIN,
-              action: SketchAction.CREATE,
-            },
-          },
-        ],
       },
       surface: {
         definitions: () => [
@@ -185,17 +124,16 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
         ],
       },
       intent: {
-        resolver: (intent) => {
-          switch (intent.action) {
-            case SketchAction.CREATE: {
-              const schema = intent.data?.schema ?? TLDRAW_SCHEMA;
-              const content = intent.data?.content ?? {};
-              return {
-                data: createDiagramType(schema, content),
-              };
-            }
-          }
-        },
+        resolvers: () =>
+          createResolver(SketchAction.Create, ({ name, schema = TLDRAW_SCHEMA, content = {} }) => ({
+            data: {
+              object: create(DiagramType, {
+                name,
+                canvas: makeRef(create(CanvasType, { schema, content })),
+                threads: [],
+              }),
+            },
+          })),
       },
     },
   };

@@ -4,15 +4,8 @@
 
 import React, { type FC, useContext, useState } from 'react';
 
-import {
-  Surface,
-  useIntentDispatcher,
-  useResolvePlugin,
-  parseLayoutPlugin,
-  NavigationAction,
-} from '@dxos/app-framework';
+import { Surface, useIntentDispatcher, useResolvePlugin, parseLayoutPlugin, createIntent } from '@dxos/app-framework';
 import { type CollectionType } from '@dxos/plugin-space/types';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import {
   baseSurface,
@@ -22,8 +15,7 @@ import {
 } from '@dxos/react-ui-theme';
 
 import { Layout, PageNumber, Pager, StartButton } from './Presenter';
-import { PRESENTER_PLUGIN } from '../meta';
-import { PresenterContext, TOGGLE_PRESENTATION } from '../types';
+import { PresenterContext, PresenterAction } from '../types';
 
 const PresenterMain: FC<{ collection: CollectionType }> = ({ collection }) => {
   const [slide, setSlide] = useState(0);
@@ -34,23 +26,9 @@ const PresenterMain: FC<{ collection: CollectionType }> = ({ collection }) => {
   const { running } = useContext(PresenterContext);
 
   // TODO(burdon): Currently conflates fullscreen and running.
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const handleSetRunning = (running: boolean) => {
-    void dispatch([
-      {
-        plugin: PRESENTER_PLUGIN,
-        action: TOGGLE_PRESENTATION,
-        data: { state: running },
-      },
-      ...(!running
-        ? [
-            {
-              action: NavigationAction.CLOSE,
-              data: { activeParts: { fullScreen: fullyQualifiedId(collection) } },
-            },
-          ]
-        : []),
-    ]);
+    void dispatch(createIntent(PresenterAction.TogglePresentation, { object: collection, state: running }));
   };
 
   return (

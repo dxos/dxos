@@ -2,7 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
+import {
+  createIntent,
+  type PromiseIntentDispatcher,
+  type MetadataResolver,
+  NavigationAction,
+} from '@dxos/app-framework';
 import { EXPANDO_TYPENAME, getObjectAnnotation, getTypename, type Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { getSchema, isReactiveObject, makeRef } from '@dxos/live-object';
@@ -34,8 +39,8 @@ import {
   type Space,
 } from '@dxos/react-client/echo';
 
-import { SPACE_PLUGIN, SpaceAction } from './meta';
-import { CollectionType } from './types';
+import { SPACE_PLUGIN } from './meta';
+import { CollectionType, SpaceAction } from './types';
 
 export const SPACES = `${SPACE_PLUGIN}-spaces`;
 export const SPACE_TYPE = 'dxos.org/type/Space';
@@ -218,7 +223,7 @@ export const constructSpaceActions = ({
   migrating,
 }: {
   space: Space;
-  dispatch: IntentDispatcher;
+  dispatch: PromiseIntentDispatcher;
   personal?: boolean;
   migrating?: boolean;
 }) => {
@@ -229,10 +234,10 @@ export const constructSpaceActions = ({
 
   if (hasPendingMigration) {
     actions.push({
-      id: getId(SpaceAction.MIGRATE),
+      id: getId(SpaceAction.Migrate._tag),
       type: ACTION_GROUP_TYPE,
       data: async () => {
-        await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.MIGRATE, data: { space } });
+        await dispatch(createIntent(SpaceAction.Migrate, { space }));
       },
       properties: {
         label: ['migrate space label', { ns: SPACE_PLUGIN }],
@@ -247,10 +252,10 @@ export const constructSpaceActions = ({
     const locked = space.properties[COMPOSER_SPACE_LOCK];
     actions.push(
       {
-        id: getId(SpaceAction.OPEN_CREATE_OBJECT),
+        id: getId(SpaceAction.OpenCreateObject._tag),
         type: ACTION_TYPE,
         data: async () => {
-          await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.OPEN_CREATE_OBJECT, data: { target: space } });
+          await dispatch(createIntent(SpaceAction.OpenCreateObject, { target: space }));
         },
         properties: {
           label: ['create object in space label', { ns: SPACE_PLUGIN }],
@@ -260,13 +265,13 @@ export const constructSpaceActions = ({
         },
       },
       {
-        id: getId(SpaceAction.SHARE),
+        id: getId(SpaceAction.Share._tag),
         type: ACTION_TYPE,
         data: async () => {
           if (locked) {
             return;
           }
-          await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SHARE, data: { space } });
+          await dispatch(createIntent(SpaceAction.Share, { space }));
         },
         properties: {
           label: ['share space label', { ns: SPACE_PLUGIN }],
@@ -279,14 +284,14 @@ export const constructSpaceActions = ({
         },
       },
       {
-        id: locked ? getId(SpaceAction.UNLOCK) : getId(SpaceAction.LOCK),
+        id: locked ? getId(SpaceAction.Unlock._tag) : getId(SpaceAction.Lock._tag),
         type: ACTION_TYPE,
         data: async () => {
-          await dispatch({
-            plugin: SPACE_PLUGIN,
-            action: locked ? SpaceAction.UNLOCK : SpaceAction.LOCK,
-            data: { space },
-          });
+          if (locked) {
+            await dispatch(createIntent(SpaceAction.Unlock, { space }));
+          } else {
+            await dispatch(createIntent(SpaceAction.Lock, { space }));
+          }
         },
         properties: {
           label: [locked ? 'unlock space label' : 'lock space label', { ns: SPACE_PLUGIN }],
@@ -294,10 +299,10 @@ export const constructSpaceActions = ({
         },
       },
       {
-        id: getId(SpaceAction.RENAME),
+        id: getId(SpaceAction.Rename._tag),
         type: ACTION_TYPE,
         data: async (params: InvokeParams) => {
-          await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.RENAME, data: { space, ...params } });
+          await dispatch(createIntent(SpaceAction.Rename, { space, caller: params.caller }));
         },
         properties: {
           label: ['rename space label', { ns: SPACE_PLUGIN }],
@@ -309,10 +314,10 @@ export const constructSpaceActions = ({
         },
       },
       {
-        id: getId(SpaceAction.OPEN_SETTINGS),
+        id: getId(SpaceAction.OpenSettings._tag),
         type: ACTION_TYPE,
         data: async () => {
-          await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.OPEN_SETTINGS, data: { space } });
+          await dispatch(createIntent(SpaceAction.OpenSettings, { space }));
         },
         properties: {
           label: ['open space settings label', { ns: SPACE_PLUGIN }],
@@ -325,10 +330,10 @@ export const constructSpaceActions = ({
   // TODO(wittjosiah): Consider moving close space into the space settings dialog.
   if (state !== SpaceState.SPACE_INACTIVE && !hasPendingMigration) {
     actions.push({
-      id: getId(SpaceAction.CLOSE),
+      id: getId(SpaceAction.Close._tag),
       type: ACTION_TYPE,
       data: async () => {
-        await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.CLOSE, data: { space } });
+        await dispatch(createIntent(SpaceAction.Close, { space }));
       },
       properties: {
         label: ['close space label', { ns: SPACE_PLUGIN }],
@@ -340,10 +345,10 @@ export const constructSpaceActions = ({
 
   if (state === SpaceState.SPACE_INACTIVE) {
     actions.push({
-      id: getId(SpaceAction.OPEN),
+      id: getId(SpaceAction.Open._tag),
       type: ACTION_TYPE,
       data: async () => {
-        await dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.OPEN, data: { space } });
+        await dispatch(createIntent(SpaceAction.Open, { space }));
       },
       properties: {
         label: ['open space label', { ns: SPACE_PLUGIN }],
@@ -405,7 +410,7 @@ export const constructObjectActions = ({
   dispatch,
 }: {
   node: Node<ReactiveEchoObject<any>>;
-  dispatch: IntentDispatcher;
+  dispatch: PromiseIntentDispatcher;
 }) => {
   const object = node.data;
   const getId = (id: string) => `${id}/${fullyQualifiedId(object)}`;
@@ -413,14 +418,10 @@ export const constructObjectActions = ({
     ...(object instanceof CollectionType
       ? [
           {
-            id: getId(SpaceAction.ADD_OBJECT),
+            id: getId(SpaceAction.OpenCreateObject._tag),
             type: ACTION_TYPE,
             data: async () => {
-              await dispatch({
-                plugin: SPACE_PLUGIN,
-                action: SpaceAction.OPEN_CREATE_OBJECT,
-                data: { target: object },
-              });
+              await dispatch(createIntent(SpaceAction.OpenCreateObject, { target: object }));
             },
             properties: {
               label: ['create object in collection label', { ns: SPACE_PLUGIN }],
@@ -432,13 +433,10 @@ export const constructObjectActions = ({
         ]
       : []),
     {
-      id: getId(SpaceAction.RENAME_OBJECT),
+      id: getId(SpaceAction.RenameObject._tag),
       type: ACTION_TYPE,
       data: async (params: InvokeParams) => {
-        await dispatch({
-          action: SpaceAction.RENAME_OBJECT,
-          data: { object, ...params },
-        });
+        await dispatch(createIntent(SpaceAction.RenameObject, { object, caller: params.caller }));
       },
       properties: {
         label: [
@@ -452,19 +450,14 @@ export const constructObjectActions = ({
       },
     },
     {
-      id: getId(SpaceAction.REMOVE_OBJECTS),
+      id: getId(SpaceAction.RemoveObjects._tag),
       type: ACTION_TYPE,
       data: async () => {
         const graph = getGraph(node);
         const collection = graph
           .nodes(node, { relation: 'inbound' })
           .find(({ data }) => data instanceof CollectionType)?.data;
-        await dispatch([
-          {
-            action: SpaceAction.REMOVE_OBJECTS,
-            data: { objects: [object], collection },
-          },
-        ]);
+        await dispatch(createIntent(SpaceAction.RemoveObjects, { objects: [object], target: collection }));
       },
       properties: {
         label: [
@@ -487,6 +480,19 @@ export const constructObjectActions = ({
         label: ['copy link label', { ns: SPACE_PLUGIN }],
         icon: 'ph--link--regular',
         testId: 'spacePlugin.copyLink',
+      },
+    },
+    // TODO(wittjosiah): Factor out and apply to all nodes.
+    {
+      id: NavigationAction.Expose._tag,
+      type: ACTION_TYPE,
+      data: async () => {
+        await dispatch(createIntent(NavigationAction.Expose, { id: fullyQualifiedId(object) }));
+      },
+      properties: {
+        label: ['expose object label', { ns: SPACE_PLUGIN }],
+        icon: 'ph--eye--regular',
+        testId: 'spacePlugin.exposeObject',
       },
     },
   ];

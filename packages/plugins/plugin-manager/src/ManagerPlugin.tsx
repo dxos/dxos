@@ -15,6 +15,8 @@ import {
   parseIntentPlugin,
   resolvePlugin,
   createSurface,
+  createResolver,
+  createIntent,
 } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { createExtension, type Node } from '@dxos/plugin-graph';
@@ -68,34 +70,27 @@ export const ManagerPlugin = (): PluginDefinition<SettingsPluginProvides> => {
         ],
       },
       intent: {
-        resolver: (intent) => {
-          switch (intent.action) {
-            case SettingsAction.OPEN: {
-              if (intent.data?.plugin) {
-                settings.values.selected = intent.data?.plugin;
-              }
-
-              return {
-                intents: [
-                  [
-                    {
-                      action: LayoutAction.SET_LAYOUT,
-                      data: {
-                        element: 'dialog',
-                        component: SETTINGS_DIALOG,
-                        dialogBlockAlign: 'start',
-                      },
-                    },
-                  ],
-                ],
-              };
+        resolvers: () =>
+          createResolver(SettingsAction.Open, ({ plugin }) => {
+            if (plugin) {
+              settings.values.selected = plugin;
             }
-          }
-        },
+
+            return {
+              intents: [
+                createIntent(LayoutAction.SetLayout, {
+                  element: 'dialog',
+                  component: SETTINGS_DIALOG,
+                  dialogBlockAlign: 'start',
+                }),
+              ],
+            };
+          }),
       },
       graph: {
         builder: (plugins) => {
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatchPromise;
+
           return createExtension({
             id: MANAGER_PLUGIN,
             filter: (node): node is Node<null> => node.id === 'root',
@@ -103,10 +98,7 @@ export const ManagerPlugin = (): PluginDefinition<SettingsPluginProvides> => {
               {
                 id: MANAGER_PLUGIN,
                 data: async () => {
-                  await intentPlugin?.provides.intent.dispatch({
-                    plugin: MANAGER_PLUGIN,
-                    action: SettingsAction.OPEN,
-                  });
+                  await dispatch?.(createIntent(SettingsAction.Open));
                 },
                 properties: {
                   label: ['open settings label', { ns: MANAGER_PLUGIN }],

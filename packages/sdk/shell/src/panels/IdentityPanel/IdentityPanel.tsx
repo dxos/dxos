@@ -108,7 +108,7 @@ const IdentityHeading = ({
               </Toolbar.Button>
             </Tooltip.Trigger>
             <Tooltip.Portal>
-              <Tooltip.Content side='bottom' classNames='z-50'>
+              <Tooltip.Content side='bottom'>
                 {t(publicKeyCopied ? 'copy success label' : 'copy self public key label')}
                 <Tooltip.Arrow />
               </Tooltip.Content>
@@ -127,7 +127,7 @@ const IdentityHeading = ({
               </Toolbar.Button>
             </Tooltip.Trigger>
             <Tooltip.Portal>
-              <Tooltip.Content side='bottom' classNames='z-50'>
+              <Tooltip.Content side='bottom'>
                 {t(isConnected ? 'disconnect label' : 'connect label')}
                 <Tooltip.Arrow />
               </Tooltip.Content>

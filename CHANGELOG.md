@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.4](https://github.com/dxos/dxos/compare/v0.7.3...v0.7.4) (2024-12-19)
+
+
+### Bug Fixes
+
+* do not sync old collections ([#8423](https://github.com/dxos/dxos/issues/8423)) ([e5f2677](https://github.com/dxos/dxos/commit/e5f2677549eb8bc784be732157ae5b9fb089a959))
+* make space root doc id a part of collectionId ([#8422](https://github.com/dxos/dxos/issues/8422)) ([3999bae](https://github.com/dxos/dxos/commit/3999baefac4d966fe87cca22f58520446896aebc))
+
 ## [0.7.3](https://github.com/dxos/dxos/compare/v0.7.2...v0.7.3) (2024-12-16)
 
 
