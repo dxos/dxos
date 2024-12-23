@@ -2,7 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-// TODO(burdon): Reconcile:
+// TODO(burdon): Separate hyperformula (client compute) from remote/edge functions.
+
+// TODO(burdon): Reconcile: types.
 //  - dxos/graph
 //  - dxos/compute
 //  - dxoc/plugin-automation
