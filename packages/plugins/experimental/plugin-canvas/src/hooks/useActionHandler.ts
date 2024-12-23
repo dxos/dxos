@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 import { type GraphModel, type GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { DATA_TEST_ID, useProjection, zoomTo, zoomInPlace, ProjectionMapper } from '@dxos/react-ui-canvas';
+import { DATA_TEST_ID, ProjectionMapper, useProjection, zoomTo, zoomInPlace } from '@dxos/react-ui-canvas';
 import { isNotFalsy } from '@dxos/util';
 
 import { useEditorContext } from './useEditorContext';

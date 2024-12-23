@@ -87,14 +87,22 @@ export class GraphModel<Node extends GraphNode = any, Edge extends GraphEdge = a
     return this;
   }
 
-  removeNode(id: string): this {
+  // TODO(burdon): Return graph.
+
+  removeNode(id: string) {
     removeElements(this._graph.nodes, (node) => node.id === id);
     removeElements(this._graph.edges, (edge) => edge.source === id || edge.target === id);
-    return this;
   }
 
-  removeEdge(id: string): this {
+  removeNodes(ids: string[]) {
+    ids.forEach((id) => this.removeNode(id));
+  }
+
+  removeEdge(id: string) {
     removeElements(this._graph.edges, (edge) => edge.id === id);
-    return this;
+  }
+
+  removeEdges(ids: string[]) {
+    ids.forEach((id) => this.removeEdge(id));
   }
 }
