@@ -8,7 +8,7 @@ import { LocalStorageStore } from '@dxos/local-storage';
 
 import { PluginContainer } from './PluginContainer';
 import { type PluginContext, PluginProvider } from './PluginContext';
-import { type Plugin, type PluginDefinition, type PluginMeta } from './plugin';
+import { type PluginDefinition, type PluginMeta } from './plugin';
 import { ErrorBoundary } from '../plugin-surface';
 
 export type HostPluginParams = {
@@ -20,13 +20,6 @@ export type HostPluginParams = {
   fallback?: ErrorBoundary['props']['fallback'];
   placeholder?: ReactNode;
 };
-
-export type HostPluginProvides = {
-  plugins: PluginContext;
-};
-
-export const parsePluginHost = (plugin: Plugin) =>
-  (plugin.provides as HostPluginProvides).plugins ? (plugin as Plugin<HostPluginProvides>) : undefined;
 
 const HOST_PLUGIN = 'dxos.org/plugin/host';
 
@@ -40,7 +33,7 @@ export const HostPlugin = ({
   defaults = [],
   fallback = DefaultFallback,
   placeholder = null,
-}: HostPluginParams): PluginDefinition<HostPluginProvides> => {
+}: HostPluginParams): PluginDefinition => {
   const state = new LocalStorageStore<PluginContext>(HOST_PLUGIN, {
     ready: false,
     core,
@@ -67,7 +60,6 @@ export const HostPlugin = ({
       name: 'Plugin host',
     },
     provides: {
-      plugins: state.values,
       context: ({ children }) => {
         return <PluginProvider value={state.values}>{children}</PluginProvider>;
       },

@@ -12,8 +12,3 @@ export default {
   name: 'Help',
   icon: 'ph--info--regular',
 } satisfies PluginMeta;
-
-const HELP_ACTION = `${HELP_PLUGIN}/action`;
-export enum HelpAction {
-  START = `${HELP_ACTION}/start`,
-}

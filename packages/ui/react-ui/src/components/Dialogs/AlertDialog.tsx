@@ -31,7 +31,11 @@ import { ElevationProvider } from '../ElevationProvider';
 
 type AlertDialogRootProps = AlertDialogRootPrimitiveProps;
 
-const AlertDialogRoot: FunctionComponent<AlertDialogRootProps> = AlertDialogRootPrimitive;
+const AlertDialogRoot: FunctionComponent<AlertDialogRootProps> = (props) => (
+  <ElevationProvider elevation='dialog'>
+    <AlertDialogRootPrimitive {...props} />
+  </ElevationProvider>
+);
 
 type AlertDialogTriggerProps = AlertDialogTriggerPrimitiveProps;
 
@@ -91,18 +95,27 @@ const [OverlayLayoutProvider, useOverlayLayoutContext] = createContext<OverlayLa
   },
 );
 
-type AlertDialogOverlayProps = ThemedClassName<AlertDialogOverlayPrimitiveProps>;
+type AlertDialogOverlayProps = ThemedClassName<AlertDialogOverlayPrimitiveProps> & { blockAlign?: 'center' | 'start' };
 
 const AlertDialogOverlay: ForwardRefExoticComponent<AlertDialogOverlayProps> = forwardRef<
   HTMLDivElement,
   AlertDialogOverlayProps
->(({ classNames, children, ...props }, forwardedRef) => {
+>(({ classNames, children, blockAlign, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
     <AlertDialogOverlayPrimitive
       {...props}
-      className={tx('dialog.overlay', 'dialog--alert__overlay', {}, classNames)}
+      className={tx(
+        'dialog.overlay',
+        'dialog--alert__overlay',
+        {},
+        classNames,
+        'data-[block-align=start]:justify-center',
+        'data-[block-align=start]:items-start',
+        'data-[block-align=center]:place-content-center',
+      )}
       ref={forwardedRef}
+      data-block-align={blockAlign}
     >
       <OverlayLayoutProvider inOverlayLayout>{children}</OverlayLayoutProvider>
     </AlertDialogOverlayPrimitive>
@@ -125,7 +138,7 @@ const AlertDialogContent: ForwardRefExoticComponent<AlertDialogContentProps> = f
       className={tx('dialog.content', 'dialog--alert', { inOverlayLayout }, classNames)}
       ref={forwardedRef}
     >
-      <ElevationProvider elevation='chrome'>{children}</ElevationProvider>
+      {children}
     </AlertDialogContentPrimitive>
   );
 });

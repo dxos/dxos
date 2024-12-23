@@ -13,7 +13,6 @@ import { getEchoIdentifierAnnotation, getObjectAnnotation, type HasId } from './
 import type { ObjectMeta } from './object/meta';
 
 // TODO(burdon): Use consistently (with serialization utils).
-export const ECHO_ATTR_ID = '@id';
 export const ECHO_ATTR_META = '@meta';
 
 //
@@ -45,11 +44,6 @@ export const RawObject = <S extends S.Schema<any>>(
 ): S.Schema<ExcludeId<S.Schema.Type<S>> & WithMeta, S.Schema.Encoded<S>> => {
   return S.make(AST.omit(schema.ast, ['id']));
 };
-
-/**
- * Reference to another ECHO object.
- */
-export type Ref<T extends WithId> = T | undefined;
 
 //
 // Data
@@ -91,8 +85,24 @@ export const splitMeta = <T>(object: T & WithMeta): { object: T; meta?: ObjectMe
   return { meta, object };
 };
 
-export const getValue = <T = any>(obj: any, path: JsonPath) => getDeep<T>(obj, path.split('.'));
-export const setValue = <T = any>(obj: any, path: JsonPath, value: T) => setDeep<T>(obj, path.split('.'), value);
+export const splitPath = (path: JsonPath): string[] => {
+  return path.match(/[a-zA-Z_$][\w$]*|\[\d+\]/g) ?? [];
+};
+
+export const getValue = <T extends object>(obj: T, path: JsonPath): any => {
+  return getDeep(
+    obj,
+    splitPath(path).map((p) => p.replace(/[[\]]/g, '')),
+  );
+};
+
+export const setValue = <T extends object>(obj: T, path: JsonPath, value: any): T => {
+  return setDeep(
+    obj,
+    splitPath(path).map((p) => p.replace(/[[\]]/g, '')),
+    value,
+  );
+};
 
 /**
  * Returns a typename of a schema.

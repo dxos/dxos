@@ -9,13 +9,12 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { useAttention, type AttendableId, type Related } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useStack, useStackItem } from './StackContext';
+import { useStack } from './StackContext';
 
 export type StackItemHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
 export const StackItemHeading = ({ children, classNames, ...props }: StackItemHeadingProps) => {
   const { orientation } = useStack();
-  const { selfDragHandleRef } = useStackItem();
   const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
   return (
     <div
@@ -28,7 +27,6 @@ export const StackItemHeading = ({ children, classNames, ...props }: StackItemHe
         orientation === 'horizontal' ? 'bs-[--rail-size]' : 'is-[--rail-size] flex-col',
         classNames,
       )}
-      ref={selfDragHandleRef}
     >
       {children}
     </div>

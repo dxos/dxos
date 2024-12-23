@@ -44,6 +44,7 @@ const MarkdownContainer = ({
         role={role}
         document={doc}
         extensions={extensions}
+        viewMode={viewMode}
         settings={settings}
         scrollPastEnd={scrollPastEnd}
         onViewModeChange={onViewModeChange}
@@ -76,8 +77,8 @@ export const DocumentEditor = ({ id, document: doc, settings, viewMode, ...props
 
   // Migrate gradually to `fallbackName`.
   useEffect(() => {
-    if (!doc.fallbackName && doc.content?.content) {
-      doc.fallbackName = getFallbackName(doc.content.content);
+    if (!doc.fallbackName && doc.content?.target?.content) {
+      doc.fallbackName = getFallbackName(doc.content.target.content);
     }
   }, [doc, doc.content]);
 
@@ -95,7 +96,7 @@ export const DocumentEditor = ({ id, document: doc, settings, viewMode, ...props
   return (
     <MarkdownEditor
       id={id}
-      initialValue={doc.content?.content}
+      initialValue={doc.content?.target?.content}
       viewMode={viewMode}
       toolbar={settings.toolbar}
       inputMode={settings.editorInputMode}

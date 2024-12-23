@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { JsonSchemaType, ref, S, TypedObject } from '@dxos/echo-schema';
+import { JsonSchemaType, Ref, S, TypedObject } from '@dxos/echo-schema';
 import { TextType } from '@dxos/plugin-markdown/types';
 
 /**
@@ -18,7 +18,7 @@ export class ScriptType extends TypedObject({
   // TODO(burdon): Change to hash of deployed content.
   // Whether source has changed since last deploy.
   changed: S.optional(S.Boolean),
-  source: ref(TextType),
+  source: Ref(TextType),
 }) {}
 
 /**
@@ -35,7 +35,7 @@ export class FunctionType extends TypedObject({
 
   // Reference to a source script if it exists within ECHO.
   // TODO(burdon): Don't ref ScriptType directly (core).
-  source: S.optional(ref(ScriptType)),
+  source: S.optional(Ref(ScriptType)),
 
   inputSchema: S.optional(JsonSchemaType),
 

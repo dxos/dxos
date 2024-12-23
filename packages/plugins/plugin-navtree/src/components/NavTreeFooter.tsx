@@ -12,6 +12,7 @@ import {
   parseNavigationPlugin,
   useResolvePlugin,
   useIntentDispatcher,
+  createIntent,
 } from '@dxos/app-framework';
 import { useConfig } from '@dxos/react-client';
 import {
@@ -41,7 +42,7 @@ export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
   const config = useConfig();
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const { navigationSidebarOpen } = useSidebars(NAVTREE_PLUGIN);
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};
   const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
   const [_, v] = version?.match(VERSION_REGEX) ?? [];
@@ -126,7 +127,7 @@ export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
             data-testid='treeView.openSettings'
             data-joyride='welcome/settings'
             {...(!navigationSidebarOpen && { tabIndex: -1 })}
-            onClick={() => dispatch({ action: SettingsAction.OPEN })}
+            onClick={() => dispatch(createIntent(SettingsAction.Open))}
           >
             <span className='sr-only'>{t('open settings label')}</span>
             <GearSix className={mx(getSize(5), 'rotate-90')} />

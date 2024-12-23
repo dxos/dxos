@@ -22,5 +22,66 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../../common/async"
+    },
+    {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../../../common/random"
+    },
+    {
+      "path": "../../../common/storybook-utils"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../../../core/echo/echo-generator"
+    },
+    {
+      "path": "../../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../../core/echo/live-object"
+    },
+    {
+      "path": "../../../experimental/gem-core"
+    },
+    {
+      "path": "../../../experimental/gem-spore"
+    },
+    {
+      "path": "../../../sdk/app-framework"
+    },
+    {
+      "path": "../../../sdk/client"
+    },
+    {
+      "path": "../../../sdk/react-client"
+    },
+    {
+      "path": "../../../ui/react-ui"
+    },
+    {
+      "path": "../../../ui/react-ui-theme"
+    },
+    {
+      "path": "../../plugin-client"
+    },
+    {
+      "path": "../../plugin-graph"
+    },
+    {
+      "path": "../../plugin-space"
+    },
+    {
+      "path": "../plugin-outliner"
+    },
+    {
+      "path": "../plugin-search"
+    }
+  ]
 }

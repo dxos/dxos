@@ -2,12 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type TypedObject, type BaseObject } from '@dxos/echo-schema';
-import { create, type ReactiveObject } from '@dxos/live-object';
+import { type BaseObject, type TypedObject } from '@dxos/echo-schema';
+import { create, makeRef, type ReactiveObject } from '@dxos/live-object';
 import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
 import { addressToA1Notation, createSheet } from '@dxos/plugin-sheet';
-import { type CellValue } from '@dxos/plugin-sheet/types';
-import { SheetType } from '@dxos/plugin-sheet/types';
+import { SheetType, type CellValue } from '@dxos/plugin-sheet/types';
 import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
 import { faker } from '@dxos/random';
 import { Filter, type Space } from '@dxos/react-client/echo';
@@ -40,7 +39,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
         const obj = space.db.add(
           create(DocumentType, {
             name: faker.commerce.productName(),
-            content: create(TextType, { content: faker.lorem.sentences(5) }),
+            content: makeRef(create(TextType, { content: faker.lorem.sentences(5) })),
             threads: [],
           }),
         );
@@ -60,7 +59,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
         const obj = space.db.add(
           create(DiagramType, {
             name: faker.commerce.productName(),
-            canvas: create(CanvasType, { content: {} }),
+            canvas: makeRef(create(CanvasType, { content: {} })),
           }),
         );
 
@@ -128,11 +127,11 @@ export const createGenerator = <T extends BaseObject>(type: TypedObject<T>): Obj
 
     // Find or create table and view.
     const { objects: tables } = await space.db.query(Filter.schema(TableType)).run();
-    const table = tables.find((table) => table.view?.query?.typename === type.typename);
+    const table = tables.find((table) => table.view?.target?.query?.type === type.typename);
     if (!table) {
       const name = type.typename.split('/').pop() ?? type.typename;
       const view = createView({ name, typename: type.typename, jsonSchema: schema.jsonSchema });
-      const table = space.db.add(create(TableType, { name, view }));
+      const table = space.db.add(create(TableType, { name, view: makeRef(view) }));
       cb?.([table]);
     }
 

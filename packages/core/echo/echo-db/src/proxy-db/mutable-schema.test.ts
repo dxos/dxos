@@ -8,7 +8,7 @@ import {
   EchoSchema,
   ObjectAnnotationId,
   getTypeReference,
-  ref,
+  Ref,
   TypedObject,
   S,
   getTypename,
@@ -16,14 +16,14 @@ import {
   type ObjectAnnotation,
 } from '@dxos/echo-schema';
 import { EmptySchemaType } from '@dxos/echo-schema/testing';
-import { getSchema, getType, create } from '@dxos/live-object';
+import { getSchema, getType, create, makeRef } from '@dxos/live-object';
 
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
 
 class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-  schema: S.optional(ref(EchoSchema)),
-  schemaArray: S.optional(S.mutable(S.Array(ref(EchoSchema)))),
+  schema: S.optional(Ref(EchoSchema)),
+  schemaArray: S.optional(S.mutable(S.Array(Ref(EchoSchema)))),
 }) {}
 
 describe('EchoSchema', () => {
@@ -45,17 +45,17 @@ describe('EchoSchema', () => {
     }) {}
 
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
-    instanceWithSchemaRef.schema = schema;
+    instanceWithSchemaRef.schema = makeRef(schema);
     const schemaWithId = GeneratedSchema.annotations({
       [ObjectAnnotationId]: {
         typename: 'example.com/type/Test',
         version: '0.1.0',
       } satisfies ObjectAnnotation,
-      [EchoIdentifierAnnotationId]: `dxn:echo:@:${instanceWithSchemaRef.schema?.id}`,
+      [EchoIdentifierAnnotationId]: `dxn:echo:@:${instanceWithSchemaRef.schema?.target?.id}`,
     });
-    expect(instanceWithSchemaRef.schema?.ast).to.deep.eq(schemaWithId.ast);
+    expect(instanceWithSchemaRef.schema?.target?.ast).to.deep.eq(schemaWithId.ast);
 
-    const validator = S.validateSync(instanceWithSchemaRef.schema!);
+    const validator = S.validateSync(instanceWithSchemaRef.schema!.target!);
     expect(() => validator({ id: instanceWithSchemaRef.id, field: '1' })).not.to.throw();
     expect(() => validator({ id: instanceWithSchemaRef.id, field: 1 })).to.throw();
   });
@@ -67,8 +67,8 @@ describe('EchoSchema', () => {
     }) {}
 
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
-    const instanceWithSchemaRef = db.add(create(TestSchema, { schema }));
-    expect(instanceWithSchemaRef.schema!.typename).to.eq(GeneratedSchema.typename);
+    const instanceWithSchemaRef = db.add(create(TestSchema, { schema: makeRef(schema) }));
+    expect(instanceWithSchemaRef.schema!.target!.typename).to.eq(GeneratedSchema.typename);
   });
 
   test('push EchoSchema to echo object schema array', async () => {
@@ -78,8 +78,8 @@ describe('EchoSchema', () => {
       field: S.String,
     }) {}
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
-    instanceWithSchemaRef.schemaArray!.push(schema);
-    expect(instanceWithSchemaRef.schemaArray![0].typename).to.eq(GeneratedSchema.typename);
+    instanceWithSchemaRef.schemaArray!.push(makeRef(schema));
+    expect(instanceWithSchemaRef.schemaArray![0].target!.typename).to.eq(GeneratedSchema.typename);
   });
 
   test('can be used to create objects', async () => {
@@ -134,14 +134,14 @@ describe('EchoSchema', () => {
       version: '0.1.0',
     })({
       name: S.optional(S.String),
-      org: S.optional(ref(OrgSchema)),
+      org: S.optional(Ref(OrgSchema)),
     });
 
     const [orgSchema] = await db.schemaRegistry.register([OrgSchema]);
     const [contactSchema] = await db.schemaRegistry.register([ContactSchema]);
     const org = db.add(create(orgSchema, { name: 'DXOS' }));
-    const contact = db.add(create(contactSchema, { name: 'Bot', org }));
-    expect(contact.org?.id).to.eq(org.id);
+    const contact = db.add(create(contactSchema, { name: 'Bot', org: makeRef(org) }));
+    expect(contact.org?.target?.id).to.eq(org.id);
   });
 
   const setupTest = async () => {

@@ -22,7 +22,7 @@ export const createContext = async (
 ): Promise<RequestContext> => {
   let object: ReactiveEchoObject<any> | undefined;
 
-  const contextObjectId = message.context?.id;
+  const contextObjectId = message.context?.target?.id;
   if (contextObjectId) {
     // TODO(burdon): Handle composite key?
     const idParts = contextObjectId.split(':');
@@ -35,10 +35,10 @@ export const createContext = async (
   let text: string | undefined;
   if (object instanceof DocumentType) {
     await loadObjectReferences(object, (doc) => doc.threads ?? []);
-    const comment = object.threads?.find((t) => t === thread);
-    if (object.content && comment?.anchor) {
-      const [start, end] = comment.anchor.split(':');
-      text = getTextInRange(createDocAccessor(object.content, ['content']), start, end) ?? '';
+    const comment = object.threads?.find((t) => t.target === thread);
+    if (object.content && comment?.target?.anchor) {
+      const [start, end] = comment.target.anchor.split(':');
+      text = getTextInRange(createDocAccessor(object.content.target!, ['content']), start, end) ?? '';
     }
   }
 

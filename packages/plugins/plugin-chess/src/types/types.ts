@@ -3,29 +3,35 @@
 //
 
 import type {
-  GraphBuilderProvides,
   IntentResolverProvides,
   MetadataRecordsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
+import { S } from '@dxos/echo-schema';
 import { isReactiveObject } from '@dxos/live-object';
 import { type SchemaProvides } from '@dxos/plugin-space';
 
 import { GameType } from './schema';
 import { CHESS_PLUGIN } from '../meta';
 
-const CHESS_ACTION = `${CHESS_PLUGIN}/action`;
+export namespace ChessAction {
+  const CHESS_ACTION = `${CHESS_PLUGIN}/action`;
 
-export enum ChessAction {
-  CREATE = `${CHESS_ACTION}/create`,
+  export class Create extends S.TaggedClass<Create>()(`${CHESS_ACTION}/create`, {
+    input: S.Struct({
+      name: S.optional(S.String),
+    }),
+    output: S.Struct({
+      object: GameType,
+    }),
+  }) {}
 }
 
 export type ChessProvides = {};
 
 export type ChessPluginProvides = SurfaceProvides &
   IntentResolverProvides &
-  GraphBuilderProvides &
   MetadataRecordsProvides &
   TranslationsProvides &
   SchemaProvides;

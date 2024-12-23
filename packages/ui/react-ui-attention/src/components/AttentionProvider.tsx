@@ -92,6 +92,7 @@ const RootAttentionProvider = ({
       onChange?.(next);
     }
   };
+
   return (
     <AttentionContextProvider attention={attention} path={[]}>
       <div role='none' className='contents' onFocusCapture={handleFocus}>

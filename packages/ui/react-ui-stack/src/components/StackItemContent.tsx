@@ -21,18 +21,13 @@ export const StackItemContent = ({
   classNames,
   ...props
 }: StackItemContentProps) => {
-  const { size, separators } = useStack();
+  const { size } = useStack();
 
   return (
     <div
       role='none'
       {...props}
-      className={mx(
-        'group grid grid-cols-[100%]',
-        size === 'contain' && 'min-bs-0 overflow-hidden',
-        separators && 'divide-separator divide-y',
-        classNames,
-      )}
+      className={mx('group grid grid-cols-[100%]', size === 'contain' && 'min-bs-0 overflow-hidden', classNames)}
       style={{
         gridTemplateRows: [
           ...(toolbar ? ['var(--rail-action)'] : []),

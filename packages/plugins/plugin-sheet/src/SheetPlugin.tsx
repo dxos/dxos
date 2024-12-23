@@ -4,14 +4,11 @@
 
 import React from 'react';
 
-import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
+import { createIntent, createResolver, createSurface, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
-import { parseClientPlugin } from '@dxos/plugin-client';
-import { createExtension, isActionGroup, type ActionGroup } from '@dxos/plugin-graph';
+import { parseClientPlugin } from '@dxos/plugin-client/types';
 import { FunctionType } from '@dxos/plugin-script/types';
-import { SpaceAction } from '@dxos/plugin-space';
-import { getSpace, isEchoObject } from '@dxos/react-client/echo';
-import { Icon } from '@dxos/react-ui';
+import { getSpace } from '@dxos/react-client/echo';
 
 import { ComputeGraphContextProvider, SheetContainer, SheetObjectSettings } from './components';
 import { type ComputeGraphRegistry } from './compute-graph';
@@ -27,7 +24,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
 
   return {
     meta,
-    ready: async (plugins) => {
+    ready: async ({ plugins }) => {
       const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
       invariant(client);
       let remoteFunctionUrl: string | undefined;
@@ -49,7 +46,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       metadata: {
         records: {
           [SheetType.typename]: {
-            createObject: SheetAction.CREATE,
+            createObject: (props: { name?: string }) => createIntent(SheetAction.Create, props),
             label: (object: any) => (object instanceof SheetType ? object.name : undefined),
             placeholder: ['sheet title placeholder', { ns: SHEET_PLUGIN }],
             icon: 'ph--grid-nine--regular',
@@ -64,48 +61,6 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
         //  FunctionType is currently registered here in case script plugin isn't enabled.
         system: [FunctionType],
       },
-      graph: {
-        builder: (plugins) => {
-          const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
-          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-          if (!client || !dispatch) {
-            return [];
-          }
-
-          return createExtension({
-            id: SheetAction.CREATE,
-            filter: (node): node is ActionGroup => isActionGroup(node) && node.id.startsWith(SpaceAction.ADD_OBJECT),
-            actions: ({ node }) => {
-              const id = node.id.split('/').at(-1);
-              const [spaceId, objectId] = id?.split(':') ?? [];
-              const space = client.spaces.get().find((space) => space.id === spaceId);
-              const object = objectId && space?.db.getObjectById(objectId);
-              const target = objectId ? object : space;
-              if (!target) {
-                return;
-              }
-
-              return [
-                {
-                  id: `${SHEET_PLUGIN}/create/${node.id}`,
-                  data: async () => {
-                    await dispatch([
-                      { plugin: SHEET_PLUGIN, action: SheetAction.CREATE, data: { space } },
-                      { action: SpaceAction.ADD_OBJECT, data: { target } },
-                      { action: NavigationAction.OPEN },
-                    ]);
-                  },
-                  properties: {
-                    label: ['create sheet label', { ns: SHEET_PLUGIN }],
-                    icon: 'ph--grid-nine--regular',
-                    testId: 'sheetPlugin.createObject',
-                  },
-                },
-              ];
-            },
-          });
-        },
-      },
       markdown: {
         extensions: ({ document: doc }) => {
           invariant(computeGraphRegistry);
@@ -116,75 +71,50 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
           }
         },
       },
-      stack: {
-        creators: [
-          {
-            id: 'create-stack-section-sheet',
-            testId: 'sheetPlugin.createSection',
-            type: ['plugin name', { ns: SHEET_PLUGIN }],
-            label: ['create sheet section label', { ns: SHEET_PLUGIN }],
-            // TODO(thure): Refactor to use strings
-            icon: (props: any) => <Icon icon='ph--grid-nine--regular' {...props} />,
-            intent: {
-              plugin: SHEET_PLUGIN,
-              action: SheetAction.CREATE,
-            },
-          },
-        ],
-      },
       thread: {
         predicate: (data) => data instanceof SheetType,
         createSort: (sheet) => (indexA, indexB) =>
           !indexA || !indexB ? 0 : compareIndexPositions(sheet, indexA, indexB),
       },
       surface: {
-        component: ({ data, role }) => {
-          const space = isEchoObject(data.object) ? getSpace(data.object) : undefined;
-          switch (role) {
-            case 'article':
-            case 'section':
-              if (space && data.object instanceof SheetType) {
-                return <SheetContainer space={space} sheet={data.object} role={role} />;
-              }
-              break;
-            case 'complementary--settings':
-              if (data.subject instanceof SheetType) {
-                return <SheetObjectSettings sheet={data.subject} />;
-              }
-              break;
-          }
-
-          return null;
-        },
+        definitions: () => [
+          createSurface({
+            id: `${SHEET_PLUGIN}/sheet`,
+            role: ['article', 'section'],
+            filter: (data): data is { subject: SheetType } =>
+              data.subject instanceof SheetType && !!getSpace(data.subject),
+            component: ({ data, role }) => (
+              <SheetContainer space={getSpace(data.subject)!} sheet={data.subject} role={role} />
+            ),
+          }),
+          createSurface({
+            id: `${SHEET_PLUGIN}/settings`,
+            role: 'complementary--settings',
+            filter: (data): data is { subject: SheetType } => data.subject instanceof SheetType,
+            component: ({ data }) => <SheetObjectSettings sheet={data.subject} />,
+          }),
+        ],
       },
       intent: {
-        resolver: async (intent) => {
-          switch (intent.action) {
-            case SheetAction.CREATE: {
-              return { data: createSheet() };
+        resolvers: () => [
+          createResolver(SheetAction.Create, ({ name }) => ({ data: { object: createSheet({ name }) } })),
+          createResolver(SheetAction.InsertAxis, ({ model, axis, index, count }) => {
+            const _indices = model[axis === 'col' ? 'insertColumns' : 'insertRows'](index, count);
+          }),
+          createResolver(SheetAction.DropAxis, ({ model, axis, axisIndex, deletionData }, undo) => {
+            if (!undo) {
+              const undoData = model[axis === 'col' ? 'dropColumn' : 'dropRow'](axisIndex);
+              return {
+                undoable: {
+                  message: (translations[0]['en-US'][SHEET_PLUGIN] as any)[`${axis} dropped label`],
+                  data: { ...undoData, model },
+                },
+              };
+            } else if (undo && deletionData) {
+              model[deletionData.axis === 'col' ? 'restoreColumn' : 'restoreRow'](deletionData);
             }
-            case SheetAction.INSERT_AXIS: {
-              const { model, axis, index, count } = intent.data as SheetAction.InsertAxis;
-              const _indices = model[axis === 'col' ? 'insertColumns' : 'insertRows'](index, count);
-              return;
-            }
-            case SheetAction.DROP_AXIS: {
-              if (!intent.undo) {
-                const { model, axis, axisIndex } = intent.data as SheetAction.DropAxis;
-                const undoData = model[axis === 'col' ? 'dropColumn' : 'dropRow'](axisIndex);
-                return {
-                  undoable: {
-                    message: (translations[0]['en-US'][SHEET_PLUGIN] as any)[`${axis} dropped label`],
-                    data: { ...undoData, model },
-                  },
-                };
-              } else {
-                const { model, ...undoData } = intent.data as SheetAction.DropAxisRestore;
-                model[undoData.axis === 'col' ? 'restoreColumn' : 'restoreRow'](undoData);
-              }
-            }
-          }
-        },
+          }),
+        ],
       },
     },
   };

@@ -4,8 +4,8 @@
 
 import '@fontsource/poiret-one';
 
-import { CaretRight, Planet, QrCode } from '@phosphor-icons/react';
-import React, { useRef, useState } from 'react';
+import { CaretRight, Key, Planet, QrCode } from '@phosphor-icons/react';
+import React, { useCallback, useRef, useState } from 'react';
 
 import { DXOSHorizontalType } from '@dxos/brand';
 import { Button, Input, useTranslation, Dialog } from '@dxos/react-ui';
@@ -22,19 +22,20 @@ export const Welcome = ({
   error,
   onSignup,
   onJoinIdentity,
+  onRecoverIdentity,
   onSpaceInvitation,
 }: WelcomeScreenProps) => {
   const { t } = useTranslation(WELCOME_PLUGIN);
   const emailRef = useRef<HTMLInputElement>(null);
   const [email, setEmail] = useState('');
 
-  const handleSignup = () => {
+  const handleSignup = useCallback(() => {
     if (validEmail(email)) {
       onSignup?.(email);
     } else {
       emailRef.current?.focus();
     }
-  };
+  }, [email]);
 
   return (
     <Dialog.Root defaultOpen>
@@ -84,7 +85,7 @@ export const Welcome = ({
                     <Button
                       variant='primary'
                       disabled={!validEmail(email)}
-                      onClick={() => handleSignup()}
+                      onClick={handleSignup}
                       data-testid='welcome.login'
                     >
                       {t('login button label')}
@@ -104,28 +105,43 @@ export const Welcome = ({
                   slots={{ root: { className: 'is-full' } }}
                   after={<CaretRight className={getSize(4)} weight='bold' />}
                   before={<Planet className={getSize(6)} />}
-                  onClick={() => onSpaceInvitation()}
+                  onClick={onSpaceInvitation}
                 >
                   {t('join space button label')}
                 </CompoundButton>
               </div>
             )}
 
-            {state === WelcomeState.INIT && onJoinIdentity && (
+            {state === WelcomeState.INIT && (onJoinIdentity || onRecoverIdentity) && (
               <div role='none' className='flex flex-col gap-8'>
                 <div className='flex flex-col gap-2'>
                   <h1 className='text-2xl'>{t('new device')}</h1>
                   <p className='text-subdued'>{t('new device description')}</p>
                 </div>
-                <CompoundButton
-                  slots={{ label: { className: 'text-sm' } }}
-                  after={<CaretRight className={getSize(4)} weight='bold' />}
-                  before={<QrCode className={getSize(6)} />}
-                  onClick={() => onJoinIdentity()}
-                  data-testid='welcome.join-identity'
-                >
-                  {t('join device button label')}
-                </CompoundButton>
+                <div className='flex flex-col gap-2'>
+                  {onJoinIdentity && (
+                    <CompoundButton
+                      slots={{ label: { className: 'text-sm' } }}
+                      after={<CaretRight className={getSize(4)} weight='bold' />}
+                      before={<QrCode className={getSize(6)} />}
+                      onClick={onJoinIdentity}
+                      data-testid='welcome.join-identity'
+                    >
+                      {t('join device button label')}
+                    </CompoundButton>
+                  )}
+                  {onRecoverIdentity && (
+                    <CompoundButton
+                      slots={{ label: { className: 'text-sm' } }}
+                      after={<CaretRight className={getSize(4)} weight='bold' />}
+                      before={<Key className={getSize(6)} />}
+                      onClick={onRecoverIdentity}
+                      data-testid='welcome.recover-identity'
+                    >
+                      {t('recover identity button label')}
+                    </CompoundButton>
+                  )}
+                </div>
               </div>
             )}
 
@@ -133,12 +149,12 @@ export const Welcome = ({
               <div role='none' className='flex flex-col gap-8'>
                 <div className='flex flex-col gap-2'>
                   <h1 className='text-2xl'>{t('welcome title')}</h1>
-                  <p className='text-subdued'>{t('check email')}</p>
+                  <p className='text-subdued'>{identity ? t('check email for access') : t('check email to confirm')}</p>
                 </div>
               </div>
             )}
 
-            <div className='z-20 flex flex-col h-full justify-end'>
+            <div className='z-[11] flex flex-col h-full justify-end'>
               <a href='https://dxos.org' target='_blank' rel='noreferrer'>
                 <div className='flex justify-center items-center text-sm gap-1 pr-3 pb-1 opacity-70'>
                   <span className='text-subdued'>Powered by</span>

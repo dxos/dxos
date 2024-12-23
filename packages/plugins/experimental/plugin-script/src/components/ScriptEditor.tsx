@@ -9,7 +9,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { create, createDocAccessor, Filter, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
+import { create, createDocAccessor, Filter, getMeta, getSpace, makeRef, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { createDataExtensions, listener } from '@dxos/react-ui-editor';
@@ -47,14 +47,14 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
     () => [
       listener({
         onChange: (text) => {
-          if (script.source && script.source?.content !== text) {
+          if (script.source && script.source.target?.content !== text) {
             script.changed = true;
           }
         },
       }),
       createDataExtensions({
         id: script.id,
-        text: script.source && createDocAccessor(script.source, ['content']),
+        text: script.source && createDocAccessor(script.source.target!, ['content']),
         space,
         identity,
       }),
@@ -72,7 +72,7 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
     }
 
     try {
-      script.source.content = await format(script.source.content, {
+      script.source.target!.content = await format(script.source.target!.content, {
         parser: 'typescript',
         plugins: [prettierPluginEstree, prettierPluginTypescript],
         semi: true,
@@ -88,7 +88,7 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
     const template = templates.find((template) => template.id === id);
     if (template) {
       script.name = template.name;
-      script.source!.content = template.source;
+      script.source!.target!.content = template.source;
       const metaKeys = getMeta(script).keys;
       const oldPresetIndex = metaKeys.findIndex((key) => key.source === FUNCTIONS_PRESET_META_KEY);
       if (oldPresetIndex >= 0) {
@@ -111,7 +111,7 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
       const existingFunctionId = existingFunctionUrl?.split('/').at(-1);
 
       const bundler = new Bundler({ platform: 'browser', sandboxedModules: [], remoteModules: {} });
-      const buildResult = await bundler.bundle(script.source.content);
+      const buildResult = await bundler.bundle(script.source.target!.content);
       if (buildResult.error || !buildResult.bundle) {
         throw buildResult.error;
       }
@@ -132,7 +132,8 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
         fn.version = version;
       }
 
-      const deployedFunction = fn ?? space.db.add(create(FunctionType, { name: functionId, version, source: script }));
+      const deployedFunction =
+        fn ?? space.db.add(create(FunctionType, { name: functionId, version, source: makeRef(script) }));
 
       script.changed = false;
 
@@ -179,7 +180,7 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
         <TypescriptEditor
           id={script.id}
           env={env}
-          initialValue={script.source?.content}
+          initialValue={script.source?.target?.content}
           extensions={extensions}
           className='flex is-full bs-full overflow-hidden ch-focus-ring-inset-over-all'
         />

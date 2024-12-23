@@ -3,25 +3,31 @@
 //
 
 import type {
-  GraphBuilderProvides,
   IntentResolverProvides,
   TranslationsProvides,
   SurfaceProvides,
   MetadataRecordsProvides,
 } from '@dxos/app-framework';
-import { isEchoObject, type ReactiveEchoObject } from '@dxos/react-client/echo';
+import { S } from '@dxos/echo-schema';
+import { isEchoObject, ReactiveObjectSchema, type ReactiveEchoObject } from '@dxos/react-client/echo';
 
 import { TEMPLATE_PLUGIN } from './meta';
 
-const TEMPLATE_ACTION = `${TEMPLATE_PLUGIN}/action`;
+export namespace TemplateAction {
+  const TEMPLATE_ACTION = `${TEMPLATE_PLUGIN}/action`;
 
-export enum TemplateAction {
-  CREATE = `${TEMPLATE_ACTION}/create`,
+  export class Create extends S.TaggedClass<Create>()(`${TEMPLATE_ACTION}/create`, {
+    input: S.Struct({
+      name: S.optional(S.String),
+    }),
+    output: S.Struct({
+      object: ReactiveObjectSchema,
+    }),
+  }) {}
 }
 
 export type TemplatePluginProvides = SurfaceProvides &
   IntentResolverProvides &
-  GraphBuilderProvides &
   MetadataRecordsProvides &
   TranslationsProvides;
 

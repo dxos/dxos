@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { useTranslation } from '@dxos/react-ui';
+import { type MaybePromise } from '@dxos/util';
 
 import { Action, Actions, StepHeading, Input } from '../../../components';
 import { type JoinStepProps } from '../JoinPanelProps';
@@ -18,7 +19,7 @@ export interface IdentityCreatorProps extends JoinStepProps {
 export type IdentityInputProps = IdentityCreatorProps;
 
 export type IdentityInputImplProps = IdentityCreatorProps & {
-  onDisplayNameConfirm?: (displayName: string) => void;
+  onConfirm?: (value: string) => MaybePromise<void>;
   validationMessage?: string;
 };
 
@@ -28,9 +29,9 @@ export const IdentityInput = (props: IdentityInputProps) => {
   const client = useClient();
   const { t } = useTranslation('os');
   const [validationMessage, setValidationMessage] = useState('');
-  const createIdentity = (value: string) => {
+  const handleConfirm = async (value: string) => {
     if (isRecover) {
-      void client.halo.recoverIdentity({ seedphrase: value }).then(
+      await client.halo.recoverIdentity({ seedphrase: value }).then(
         (identity) => {
           send?.({ type: 'selectIdentity' as const, identity });
         },
@@ -40,7 +41,7 @@ export const IdentityInput = (props: IdentityInputProps) => {
         },
       );
     } else {
-      void client.halo.createIdentity({ displayName: value }).then(
+      await client.halo.createIdentity({ displayName: value }).then(
         (identity) => {
           send?.({ type: 'selectIdentity' as const, identity });
         },
@@ -51,16 +52,24 @@ export const IdentityInput = (props: IdentityInputProps) => {
       );
     }
   };
-  return <IdentityInputImpl {...props} onDisplayNameConfirm={createIdentity} validationMessage={validationMessage} />;
+  return <IdentityInputImpl {...props} onConfirm={handleConfirm} validationMessage={validationMessage} />;
 };
 
 // TODO(zhenyasav): impl shouldn't need send()
 export const IdentityInputImpl = (props: IdentityInputImplProps) => {
-  const { method, send, active, onDisplayNameConfirm, validationMessage } = props;
-  const disabled = !active;
+  const { method, active, onConfirm, validationMessage } = props;
   const { t } = useTranslation('os');
   const [inputValue, setInputValue] = useState('');
+  const [pending, setPending] = useState(false);
+  const disabled = !active || pending;
   const isRecover = method === 'recover identity';
+
+  const handleConfirm = useCallback(async () => {
+    setPending(true);
+    await onConfirm?.(inputValue);
+    setPending(false);
+  }, [onConfirm, inputValue]);
+
   return (
     <>
       <div role='none' className='grow flex flex-col justify-center'>
@@ -71,11 +80,12 @@ export const IdentityInputImpl = (props: IdentityInputImplProps) => {
           }
           disabled={disabled}
           data-testid='identity-input'
-          placeholder={isRecover ? 'Type your recovery phrase' : 'Type a display name'}
+          placeholder={isRecover ? t('recovery code placeholder') : t('display name placeholder')}
           onChange={({ target: { value } }) => setInputValue(value)}
         />
       </div>
       <Actions>
+        {/* TODO(wittjosiah): This disables returning to deprecated identity creation flow.
         <Action
           variant='ghost'
           disabled={disabled}
@@ -83,14 +93,14 @@ export const IdentityInputImpl = (props: IdentityInputImplProps) => {
           data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-back`}
         >
           {t('back label')}
-        </Action>
+        </Action> */}
         <Action
           variant='primary'
-          disabled={disabled}
-          onClick={() => onDisplayNameConfirm?.(inputValue)}
+          disabled={disabled || inputValue.trim().length === 0}
+          onClick={handleConfirm}
           data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-continue`}
         >
-          {t('continue label')}
+          {pending ? t('pending label') : t('continue label')}
         </Action>
       </Actions>
     </>

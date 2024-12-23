@@ -13,7 +13,8 @@ import {
   ObjectAnnotationId,
   TypeEnum,
   TypedObject,
-  ref,
+  Ref,
+  toJsonSchema,
   type JsonPath,
   type JsonProp,
 } from '@dxos/echo-schema';

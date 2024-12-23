@@ -60,7 +60,7 @@ export const ViewEditor = ({
       name: view.name,
       // TODO(burdon): Need to warn user of possible consequences of editing.
       // TODO(burdon): Settings should have domain name owned by user.
-      typename: view.query.typename,
+      typename: view.query.type,
     };
   }, [view]);
 
@@ -68,7 +68,7 @@ export const ViewEditor = ({
     ({ name, typename }: ViewMetaType) => {
       requestAnimationFrame(() => {
         view.name = name;
-        view.query.typename = typename;
+        view.query.type = typename;
         schema.updateTypename(typename);
       });
     },

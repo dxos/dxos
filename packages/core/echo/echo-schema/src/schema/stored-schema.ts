@@ -5,7 +5,8 @@
 import { S } from '@dxos/effect';
 
 import { JsonSchemaType } from '../ast';
-import { TypedObject } from '../object/typed-object';
+import { TypedObject } from '../object';
+
 /**
  * Stored representation of a schema.
  */

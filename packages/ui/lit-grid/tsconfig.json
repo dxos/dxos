@@ -16,5 +16,9 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../common/test-utils"
+    }
+  ]
 }

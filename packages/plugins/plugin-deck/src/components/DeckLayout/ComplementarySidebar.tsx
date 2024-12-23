@@ -5,6 +5,7 @@
 import React, { useMemo } from 'react';
 
 import {
+  createIntent,
   type LayoutCoordinate,
   NavigationAction,
   SLUG_PATH_SEPARATOR,
@@ -36,7 +37,7 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
   const id = attended[0] ? `${attended[0]}${SLUG_PATH_SEPARATOR}${panel}` : undefined;
   const { graph } = useGraph();
   const node = useNode(graph, id);
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   useNodeActionExpander(node);
 
   const actions = useMemo(
@@ -44,7 +45,7 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
       panels.map(({ id, label, icon }) => ({
         id: `complementary-${id}`,
         data: () => {
-          void dispatch({ action: NavigationAction.OPEN, data: { activeParts: { complementary: id } } });
+          void dispatch(createIntent(NavigationAction.Open, { activeParts: { complementary: id } }));
         },
         properties: {
           label,
@@ -62,7 +63,7 @@ export const ComplementarySidebar = ({ panels, current }: ComplementarySidebarPr
   // TODO(burdon): Scroll area should be controlled by surface.
   return (
     <Main.ComplementarySidebar>
-      <StackContext.Provider value={{ size: 'contain', orientation: 'horizontal', separators: false, rail: true }}>
+      <StackContext.Provider value={{ size: 'contain', orientation: 'horizontal', rail: true }}>
         <div role='none' className={mx(railGridHorizontal, 'grid grid-cols-[100%] bs-full')}>
           <NodePlankHeading coordinate={coordinate} node={node} popoverAnchorId={popoverAnchorId} actions={actions} />
           <ScrollArea.Root>

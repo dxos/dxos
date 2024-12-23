@@ -21,8 +21,8 @@ export const useStoreAdapter = (object?: ReactiveEchoObject<DiagramType>) => {
       return;
     }
 
-    if (object.canvas?.schema !== TLDRAW_SCHEMA) {
-      log.warn('invalid schema', { schema: object.canvas?.schema });
+    if (object.canvas?.target?.schema !== TLDRAW_SCHEMA) {
+      log.warn('invalid schema', { schema: object.canvas.target?.schema });
       return;
     }
 
@@ -34,14 +34,14 @@ export const useStoreAdapter = (object?: ReactiveEchoObject<DiagramType>) => {
         const accessor = createDocAccessor(object, ['content']);
         const oldData = getDeep(accessor.handle.docSync(), accessor.path);
         if (Object.keys(oldData ?? {}).length) {
-          object.canvas.content = oldData;
+          object.canvas.target!.content = oldData;
           accessor.handle.change((object) => setDeep(object, accessor.path, {}));
         }
       } catch (err) {
         log.catch(err);
       }
 
-      const accessor = createDocAccessor(object.canvas, ['content']);
+      const accessor = createDocAccessor(object.canvas.target!, ['content']);
       await adapter.open(accessor);
       forceUpdate({});
     });

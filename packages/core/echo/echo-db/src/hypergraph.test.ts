@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Expando } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { create } from '@dxos/live-object';
+import { create, makeRef } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 
 import { getObjectCore } from './echo-handler';
@@ -95,15 +95,15 @@ describe('HyperGraph', () => {
       }),
     );
 
-    obj1.link = obj2;
-    expect(obj1.link.title).to.eq('B');
+    obj1.link = makeRef(obj2);
+    expect(obj1.link.target?.title).to.eq('B');
 
     await Promise.all([db1.flush(), db2.flush()]);
-    expect(obj1.link.title).to.eq('B');
+    expect(obj1.link.target?.title).to.eq('B');
 
     await db1.close();
     await db1.open();
-    expect(obj1.link.title).to.eq('B');
+    expect(obj1.link.target?.title).to.eq('B');
   });
 
   // TODO(mykola): Broken.
@@ -128,9 +128,9 @@ describe('HyperGraph', () => {
         title: 'B',
       }),
     );
-    obj1.link = obj2;
+    obj1.link = makeRef(obj2);
     await Promise.all([db1.flush(), db2.flush()]);
-    expect(obj1.link.title).to.eq('B');
+    expect(obj1.link.target?.title).to.eq('B');
 
     await db2.close();
 
@@ -140,7 +140,7 @@ describe('HyperGraph', () => {
     });
 
     await db2.open();
-    expect(obj1.link.title).to.eq('B');
+    expect(obj1.link.target?.title).to.eq('B');
     expect(called).to.eq(true);
   });
 });

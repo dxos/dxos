@@ -12,6 +12,8 @@ export type MaybePromise<T> = T | Promise<T>;
 
 export type MakeOptional<Type, Key extends keyof Type> = Omit<Type, Key> & Partial<Pick<Type, Key>>;
 
+export type GuardedType<T> = T extends (value: any) => value is infer R ? R : never;
+
 /**
  * All types that evaluate to false when cast to a boolean.
  */
@@ -55,14 +57,14 @@ export const getAsyncProviderValue = <T, V = void>(
 /**
  * Remove keys with undefined values.
  */
-export const stripUndefinedValues = <T extends { [index: string]: any }>(obj: T): T => {
+export const stripUndefined = <T extends { [index: string]: any }>(obj: T): T => {
   if (typeof obj === 'object') {
     Object.keys(obj).forEach((key) => {
       const value = obj[key];
       if (value === undefined) {
         delete obj[key];
       } else if (value !== null && typeof value === 'object') {
-        stripUndefinedValues(value); // TODO(burdon): Test recursion.
+        stripUndefined(value); // TODO(burdon): Test recursion.
       }
     });
   }
@@ -87,13 +89,4 @@ export const sortKeys = <T extends object>(obj: T): T =>
 export const arrayMove = <T>(array: T[], from: number, to: number): Array<T> => {
   array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0]);
   return array;
-};
-
-export const safeParseInt = (value: string | undefined, defaultValue?: number) => {
-  try {
-    const n = parseInt(value ?? '');
-    return isNaN(n) ? defaultValue : n;
-  } catch (err) {
-    return defaultValue;
-  }
 };

@@ -6,6 +6,9 @@ import { effect } from '@preact/signals-core';
 import React from 'react';
 
 import {
+  createIntent,
+  createResolver,
+  createSurface,
   type GraphBuilderProvides,
   type GraphProvides,
   type IntentResolverProvides,
@@ -32,7 +35,7 @@ import { getHostPlatform } from '@dxos/util';
 
 import { CommandsDialogContent, NavTreeContainer, NavTreeDocumentTitle, NODE_TYPE, NotchStart } from './components';
 import { CommandsTrigger } from './components/CommandsTrigger';
-import meta, { KEY_BINDING, NAVTREE_PLUGIN } from './meta';
+import meta, { COMMANDS_DIALOG, KEY_BINDING, NAVTREE_PLUGIN } from './meta';
 import translations from './translations';
 import { type NavTreeItemGraphNode } from './types';
 import { expandChildrenAndActions } from './util';
@@ -59,7 +62,7 @@ const getInitialState = () => {
           open: boolean;
           current: boolean;
         }>,
-      ] => [key, create(value)],
+      ] => [key, create({ open: value.open, current: false })],
     );
   } catch {}
 };
@@ -114,7 +117,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
 
   return {
     meta,
-    ready: async (plugins) => {
+    ready: async ({ plugins }) => {
       const layout = resolvePlugin(plugins, parseLayoutPlugin)?.provides.layout;
       const location = resolvePlugin(plugins, parseNavigationPlugin)?.provides.location;
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
@@ -124,9 +127,9 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
       }
 
       const soloPart = location?.active.solo?.[0];
-      const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
+      const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatchPromise;
       if (dispatch && soloPart) {
-        void dispatch({ plugin: NAVTREE_PLUGIN, action: NavigationAction.EXPOSE, data: { id: soloPart.id } });
+        void dispatch(createIntent(NavigationAction.Expose, { id: soloPart.id }));
       }
 
       let previous: string[] = [];
@@ -212,65 +215,68 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
         },
       },
       surface: {
-        component: ({ data, role }) => {
-          switch (data.component) {
-            case `${NAVTREE_PLUGIN}/Commands`: {
-              const selected = typeof data.subject === 'string' ? data.subject : undefined;
-              return <CommandsDialogContent selected={selected} />;
-            }
-          }
-
-          switch (role) {
-            case 'navigation':
-              return (
-                <NavTreeContainer
-                  isOpen={isOpen}
-                  isCurrent={isCurrent}
-                  onOpenChange={handleOpenChange}
-                  popoverAnchorId={data.popoverAnchorId as string}
-                />
-              );
-
-            case 'document-title': {
-              return <NavTreeDocumentTitle node={isGraphNode(data.activeNode) ? data.activeNode : undefined} />;
-            }
-
-            case 'notch-start':
-              return <NotchStart />;
-
-            case 'search-input':
-              return {
-                node: <CommandsTrigger />,
-                disposition: 'fallback',
-              };
-          }
-
-          return null;
-        },
+        definitions: () => [
+          createSurface({
+            id: COMMANDS_DIALOG,
+            role: 'dialog',
+            filter: (data): data is { subject?: string } => data.component === COMMANDS_DIALOG,
+            component: ({ data }) => <CommandsDialogContent selected={data.subject} />,
+          }),
+          createSurface({
+            id: `${NAVTREE_PLUGIN}/navigation`,
+            role: 'navigation',
+            component: ({ data }) => (
+              <NavTreeContainer
+                isOpen={isOpen}
+                isCurrent={isCurrent}
+                onOpenChange={handleOpenChange}
+                popoverAnchorId={data.popoverAnchorId as string | undefined}
+              />
+            ),
+          }),
+          createSurface({
+            id: `${NAVTREE_PLUGIN}/document-title`,
+            role: 'document-title',
+            component: ({ data }) => (
+              <NavTreeDocumentTitle node={isGraphNode(data.subject) ? data.subject : undefined} />
+            ),
+          }),
+          createSurface({
+            id: `${NAVTREE_PLUGIN}/notch-start`,
+            role: 'notch-start',
+            component: () => <NotchStart />,
+          }),
+          createSurface({
+            id: `${NAVTREE_PLUGIN}/search-input`,
+            role: 'search-input',
+            disposition: 'fallback',
+            component: () => <CommandsTrigger />,
+          }),
+        ],
       },
       intent: {
-        resolver: async (intent) => {
-          switch (intent.action) {
-            case NavigationAction.EXPOSE: {
-              if (graph && intent.data?.id) {
-                const path = await graph.waitForPath({ target: intent.data.id });
-                [...Array(path.length)].forEach((_, index) => {
-                  const subpath = path.slice(0, index);
-                  const value = getItem(subpath);
-                  if (!value.open) {
-                    setItem(subpath, 'open', true);
-                  }
-                });
-              }
-              break;
-            }
+        resolvers: ({ plugins }) => {
+          const graph = resolvePlugin(plugins, parseGraphPlugin)?.provides.graph;
+          if (!graph) {
+            return [];
           }
+
+          return createResolver(NavigationAction.Expose, async ({ id }) => {
+            const path = await graph.waitForPath({ target: id });
+            [...Array(path.length)].forEach((_, index) => {
+              const subpath = path.slice(0, index);
+              const value = getItem(subpath);
+              if (!value.open) {
+                setItem(subpath, 'open', true);
+              }
+            });
+          });
         },
       },
       graph: {
         builder: (plugins) => {
           // TODO(burdon): Move to separate plugin (for keys and command k). Move bindings from LayoutPlugin.
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatchPromise;
 
           return [
             createExtension({
@@ -278,16 +284,15 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
               filter: (node): node is Node<null> => node.id === 'root',
               actions: () => [
                 {
-                  id: 'dxos.org/plugin/navtree/open-commands',
+                  id: COMMANDS_DIALOG,
                   data: async () => {
-                    await intentPlugin?.provides.intent.dispatch({
-                      action: LayoutAction.SET_LAYOUT,
-                      data: {
+                    await dispatch?.(
+                      createIntent(LayoutAction.SetLayout, {
                         element: 'dialog',
-                        component: `${NAVTREE_PLUGIN}/Commands`,
+                        component: COMMANDS_DIALOG,
                         dialogBlockAlign: 'start',
-                      },
-                    });
+                      }),
+                    );
                   },
                   properties: {
                     label: ['open commands label', { ns: NAVTREE_PLUGIN }],

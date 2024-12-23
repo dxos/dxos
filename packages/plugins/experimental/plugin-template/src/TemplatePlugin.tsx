@@ -4,11 +4,8 @@
 
 import React from 'react';
 
-import { resolvePlugin, parseIntentPlugin, type PluginDefinition, NavigationAction } from '@dxos/app-framework';
-import { parseClientPlugin } from '@dxos/plugin-client';
-import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
-import { SpaceAction } from '@dxos/plugin-space';
-import { create } from '@dxos/react-client/echo';
+import { type PluginDefinition, createSurface, createIntent, createResolver } from '@dxos/app-framework';
+import { create, type ReactiveEchoObject } from '@dxos/react-client/echo';
 
 import { TemplateMain } from './components';
 import meta, { TEMPLATE_PLUGIN } from './meta';
@@ -24,74 +21,28 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
       metadata: {
         records: {
           [typename]: {
+            createObject: (props: { name?: string }) => createIntent(TemplateAction.Create, props),
             placeholder: ['object placeholder', { ns: TEMPLATE_PLUGIN }],
             icon: 'ph--asterisk--regular',
           },
         },
       },
       translations,
-      graph: {
-        builder: (plugins) => {
-          const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
-          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-          if (!client || !dispatch) {
-            return [];
-          }
-
-          return createExtension({
-            id: TemplateAction.CREATE,
-            filter: (node): node is ActionGroup => isActionGroup(node) && node.id.startsWith(SpaceAction.ADD_OBJECT),
-            actions: ({ node }) => {
-              const id = node.id.split('/').at(-1);
-              const [spaceId, objectId] = id?.split(':') ?? [];
-              const space = client.spaces.get().find((space) => space.id === spaceId);
-              const object = objectId && space?.db.getObjectById(objectId);
-              const target = objectId ? object : space;
-              if (!target) {
-                return;
-              }
-
-              return [
-                {
-                  id: `${TEMPLATE_PLUGIN}/create/${node.id}`,
-                  data: async () => {
-                    await dispatch([
-                      { plugin: TEMPLATE_PLUGIN, action: TemplateAction.CREATE },
-                      { action: SpaceAction.ADD_OBJECT, data: { target } },
-                      { action: NavigationAction.OPEN },
-                    ]);
-                  },
-                  properties: {
-                    label: ['create object label', { ns: TEMPLATE_PLUGIN }],
-                    icon: 'ph--placeholder--regular',
-                    testId: 'templatePlugin.createObject',
-                  },
-                },
-              ];
-            },
-          });
-        },
-      },
       surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'main': {
-              return isObject(data.active) ? <TemplateMain object={data.active} /> : null;
-            }
-          }
-
-          return null;
-        },
+        definitions: () =>
+          createSurface({
+            id: TEMPLATE_PLUGIN,
+            role: 'article',
+            filter: (data): data is { subject: ReactiveEchoObject<any> } => isObject(data.subject),
+            component: ({ data }) => <TemplateMain object={data.subject} />,
+          }),
       },
       intent: {
-        resolver: (intent) => {
-          switch (intent.action) {
-            case TemplateAction.CREATE: {
-              // TODO(burdon): Set typename.
-              return { data: create({ type: 'template' }) };
-            }
-          }
-        },
+        resolvers: () =>
+          createResolver(TemplateAction.Create, ({ name }) => ({
+            // TODO(burdon): Set typename.
+            data: { object: create({ type: 'template', name }) },
+          })),
       },
     },
   };

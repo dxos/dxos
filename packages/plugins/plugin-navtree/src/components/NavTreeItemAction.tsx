@@ -90,7 +90,7 @@ export const NavTreeItemActionDropdownMenu = ({
         </DropdownMenu.Trigger>
       </Tooltip.Trigger>
       <DropdownMenu.Portal>
-        <DropdownMenu.Content classNames='z-[31]'>
+        <DropdownMenu.Content>
           <DropdownMenu.Viewport>
             {menuActions?.map((action) => {
               const shortcut = getShortcut(action);
@@ -144,7 +144,7 @@ const NavTreeItemActionContextMenuImpl = ({
     <ContextMenu.Root>
       <ContextMenu.Trigger asChild>{children}</ContextMenu.Trigger>
       <ContextMenu.Portal>
-        <ContextMenu.Content classNames='z-[31]'>
+        <ContextMenu.Content>
           <ContextMenu.Viewport>
             {menuActions?.map((action) => {
               const shortcut = getShortcut(action);
@@ -241,7 +241,7 @@ export const NavTreeItemActionSearchList = ({
       </Tooltip.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay>
-          <Dialog.Content classNames='z-[31] is-full max-is-[24rem] pli-2 plb-1'>
+          <Dialog.Content classNames='is-full max-is-[24rem] pli-2 plb-1'>
             <SearchList.Root label={t('tree item searchlist input placeholder')}>
               <SearchList.Input placeholder={t('tree item searchlist input placeholder')} classNames='pli-3' />
               <SearchList.Content classNames='min-bs-[12rem] bs-[50dvh] max-bs-[30rem] overflow-auto'>

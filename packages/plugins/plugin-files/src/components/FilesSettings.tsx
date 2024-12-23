@@ -5,7 +5,7 @@
 import { FloppyDisk, Folder, FolderOpen } from '@phosphor-icons/react';
 import React from 'react';
 
-import { useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Button, Input, Message, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormInput } from '@dxos/react-ui-form';
 import { getSize } from '@dxos/react-ui-theme';
@@ -15,7 +15,7 @@ import { LocalFilesAction, type FilesSettingsProps } from '../types';
 
 export const FilesSettings = ({ settings }: { settings: FilesSettingsProps }) => {
   const { t } = useTranslation(FILES_PLUGIN);
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   return (
     <>
@@ -28,17 +28,17 @@ export const FilesSettings = ({ settings }: { settings: FilesSettingsProps }) =>
         }
       >
         {settings.rootHandle && <Input.Label>{settings.rootHandle.name}</Input.Label>}
-        <Button classNames='mis-2' onClick={() => dispatch({ action: LocalFilesAction.SELECT_ROOT })}>
+        <Button classNames='mis-2' onClick={() => dispatch(createIntent(LocalFilesAction.SelectRoot))}>
           <Folder className={getSize(5)} />
         </Button>
       </DeprecatedFormInput>
       <DeprecatedFormInput label={t('trigger export label')}>
-        <Button classNames='mis-2' onClick={() => dispatch({ action: LocalFilesAction.EXPORT })}>
+        <Button classNames='mis-2' onClick={() => dispatch(createIntent(LocalFilesAction.Export))}>
           <FloppyDisk className={getSize(5)} />
         </Button>
       </DeprecatedFormInput>
       <DeprecatedFormInput label={t('trigger import label')}>
-        <Button classNames='mis-2' onClick={() => dispatch({ action: LocalFilesAction.IMPORT })}>
+        <Button classNames='mis-2' onClick={() => dispatch(createIntent(LocalFilesAction.Import))}>
           <FolderOpen className={getSize(5)} />
         </Button>
       </DeprecatedFormInput>

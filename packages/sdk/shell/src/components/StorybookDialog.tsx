@@ -4,9 +4,7 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { ElevationProvider, Tooltip, useThemeContext } from '@dxos/react-ui';
-
-import { ClipboardProvider } from './Clipboard';
+import { Clipboard, ElevationProvider, Tooltip, useThemeContext } from '@dxos/react-ui';
 
 export type StorybookDialogProps = PropsWithChildren & {
   inOverlayLayout?: boolean;
@@ -18,15 +16,15 @@ export const StorybookDialog = (props: StorybookDialogProps) => {
   const { tx } = useThemeContext();
   return (
     <Tooltip.Provider>
-      <ElevationProvider elevation='chrome'>
-        <ClipboardProvider>
+      <ElevationProvider elevation='dialog'>
+        <Clipboard.Provider>
           <div
             role='group'
             className={tx('dialog.content', 'dialog', { inOverlayLayout }, 'p-1', inOverlayLayout ? 'm-4' : '')}
           >
             {props.children}
           </div>
-        </ClipboardProvider>
+        </Clipboard.Provider>
       </ElevationProvider>
     </Tooltip.Provider>
   );

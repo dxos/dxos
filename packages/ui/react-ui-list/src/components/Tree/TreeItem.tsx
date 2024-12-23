@@ -18,7 +18,7 @@ import React, { memo, useCallback, useEffect, useMemo, useRef, useState, type FC
 
 import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { Treegrid } from '@dxos/react-ui';
+import { Treegrid, TreeItem as NaturalTreeItem } from '@dxos/react-ui';
 import {
   focusRing,
   ghostHover,
@@ -28,7 +28,6 @@ import {
   mx,
 } from '@dxos/react-ui-theme';
 
-import { DropIndicator } from './DropIndicator';
 import { useTree } from './TreeContext';
 import { TreeItemHeading } from './TreeItemHeading';
 import { TreeItemToggle } from './TreeItemToggle';
@@ -54,7 +53,13 @@ export type TreeItemProps<T = any> = {
   path: string[];
   last: boolean;
   draggable?: boolean;
-  renderColumns?: FC<{ item: T; path: string[]; menuOpen: boolean; setMenuOpen: (open: boolean) => void }>;
+  renderColumns?: FC<{
+    item: T;
+    path: string[];
+    open: boolean;
+    menuOpen: boolean;
+    setMenuOpen: (open: boolean) => void;
+  }>;
   canDrop?: (source: TreeData, target: TreeData) => boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
   onSelect?: (params: { item: T; path: string[]; current: boolean; option: boolean }) => void;
@@ -253,8 +258,8 @@ export const RawTreeItem = <T = any,>({
               onSelect={handleSelect}
             />
           </div>
-          {Columns && <Columns item={item} path={path} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />}
-          {instruction && <DropIndicator instruction={instruction} gap={2} />}
+          {Columns && <Columns item={item} path={path} open={open} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />}
+          {instruction && <NaturalTreeItem.DropIndicator instruction={instruction} gap={2} />}
         </Treegrid.Cell>
       </Treegrid.Row>
       {open &&

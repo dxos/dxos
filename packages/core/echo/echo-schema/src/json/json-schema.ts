@@ -10,18 +10,19 @@ import { DXN } from '@dxos/keys';
 import { orderKeys } from '@dxos/util';
 
 import {
-  getObjectAnnotation,
+  EchoIdentifierAnnotationId,
   FieldLookupAnnotationId,
   GeneratorAnnotationId,
   type JsonSchemaType,
+  LabelAnnotationId,
   type ObjectAnnotation,
   ObjectAnnotationId,
   type PropertyMetaAnnotation,
   PropertyMetaAnnotationId,
   getEchoIdentifierAnnotation,
-  EchoIdentifierAnnotationId,
+  getObjectAnnotation,
 } from '../ast';
-import { createEchoReferenceSchema, ref, type JsonSchemaReferenceInfo } from '../ast/ref';
+import { type JsonSchemaReferenceInfo, Ref, createEchoReferenceSchema } from '../ast/ref';
 import { CustomAnnotations } from '../formats';
 import { Expando } from '../object';
 
@@ -315,7 +316,7 @@ const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): S.Schema<any> => {
 // TODO(dmaretskyi): Types.
 const refToEffectSchema = (root: any): S.Schema<any> => {
   if (!('reference' in root)) {
-    return ref(Expando);
+    return Ref(Expando);
   }
   const reference: JsonSchemaReferenceInfo = root.reference;
   if (typeof reference !== 'object') {
@@ -341,7 +342,13 @@ const refToEffectSchema = (root: any): S.Schema<any> => {
  */
 export const ECHO_REFINEMENT_KEY = 'echo';
 
-const ECHO_REFINEMENTS = [ObjectAnnotationId, PropertyMetaAnnotationId, GeneratorAnnotationId, FieldLookupAnnotationId];
+const ECHO_REFINEMENTS = [
+  ObjectAnnotationId,
+  PropertyMetaAnnotationId,
+  LabelAnnotationId,
+  FieldLookupAnnotationId,
+  GeneratorAnnotationId,
+];
 
 const annotationToRefinementKey: { [annotation: symbol]: keyof EchoRefinement } = {
   // TODO(dmaretskyi): Extract out.

@@ -31,7 +31,7 @@ export const ThemePlugin = (
 
   return {
     meta,
-    ready: async (plugins) => {
+    ready: async ({ plugins }) => {
       modeQuery = window.matchMedia('(prefers-color-scheme: dark)');
       setTheme({ matches: modeQuery.matches });
       modeQuery.addEventListener('change', setTheme);

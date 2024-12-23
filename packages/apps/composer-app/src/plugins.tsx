@@ -2,23 +2,32 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type HostPluginParams, LayoutAction, NavigationAction, Plugin, type PluginMeta } from '@dxos/app-framework';
+import {
+  createIntent,
+  type HostPluginParams,
+  LayoutAction,
+  NavigationAction,
+  parseIntentPlugin,
+  Plugin,
+  type PluginMeta,
+  resolvePlugin,
+} from '@dxos/app-framework';
 import { type Trigger } from '@dxos/async';
 import { type Config, type ClientServicesProvider } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
 import AttentionMeta from '@dxos/plugin-attention/meta';
 import AutomationMeta from '@dxos/plugin-automation/meta';
 import CallsMeta from '@dxos/plugin-calls/meta';
+import CanvasMeta from '@dxos/plugin-canvas/meta';
 import ChessMeta from '@dxos/plugin-chess/meta';
 import ClientMeta from '@dxos/plugin-client/meta';
+import { ClientAction } from '@dxos/plugin-client/types';
 import DebugMeta from '@dxos/plugin-debug/meta';
 import DeckMeta from '@dxos/plugin-deck/meta';
 import ExcalidrawMeta from '@dxos/plugin-excalidraw/meta';
 import ExplorerMeta from '@dxos/plugin-explorer/meta';
 import FilesMeta from '@dxos/plugin-files/meta';
-import GithubMeta from '@dxos/plugin-github/meta';
 import GraphMeta from '@dxos/plugin-graph/meta';
-import GridMeta from '@dxos/plugin-grid/meta';
 import HelpMeta from '@dxos/plugin-help/meta';
 import InboxMeta from '@dxos/plugin-inbox/meta';
 import IpfsMeta from '@dxos/plugin-ipfs/meta';
@@ -48,11 +57,14 @@ import ThemeMeta from '@dxos/plugin-theme/meta';
 import ThreadMeta from '@dxos/plugin-thread/meta';
 import WildcardMeta from '@dxos/plugin-wildcard/meta';
 import WnfsMeta from '@dxos/plugin-wnfs/meta';
+import { makeRef } from '@dxos/react-client/echo';
+import { DeviceType } from '@dxos/react-client/halo';
 import { isNotFalsy } from '@dxos/util';
 
 import { INITIAL_CONTENT, INITIAL_DOC_TITLE } from './constants';
 import { steps } from './help';
 import { meta as WelcomeMeta } from './plugins/welcome/meta';
+import { queryAllCredentials } from './util';
 
 export type State = {
   appKey: string;
@@ -123,11 +135,13 @@ export const recommended = ({ isDev, isLabs }: PluginConfig): PluginMeta[] =>
     // prettier-ignore
     !isDev && DebugMeta,
     AutomationMeta,
+    CanvasMeta,
     ChessMeta,
     CallsMeta,
     ExcalidrawMeta,
     ExplorerMeta,
     IpfsMeta,
+    KanbanMeta,
     MapMeta,
     MermaidMeta,
     PresenterMeta,
@@ -136,16 +150,7 @@ export const recommended = ({ isDev, isLabs }: PluginConfig): PluginMeta[] =>
     StackMeta,
     WnfsMeta,
 
-    ...(isLabs
-      ? [
-          // prettier-ignore
-          GithubMeta,
-          GridMeta,
-          InboxMeta,
-          KanbanMeta,
-          OutlinerMeta,
-        ]
-      : []),
+    ...(isLabs ? [InboxMeta, OutlinerMeta] : []),
   ].filter(isNotFalsy);
 
 /**
@@ -165,6 +170,7 @@ export const plugins = ({
   [AttentionMeta.id]: Plugin.lazy(() => import('@dxos/plugin-attention')),
   [AutomationMeta.id]: Plugin.lazy(() => import('@dxos/plugin-automation')),
   [CallsMeta.id]: Plugin.lazy(() => import('@dxos/plugin-calls')),
+  [CanvasMeta.id]: Plugin.lazy(() => import('@dxos/plugin-canvas')),
   [ChessMeta.id]: Plugin.lazy(() => import('@dxos/plugin-chess')),
   [ClientMeta.id]: Plugin.lazy(() => import('@dxos/plugin-client'), {
     appKey,
@@ -184,6 +190,29 @@ export const plugins = ({
         LegacyTypes.ThreadType,
       ]);
     },
+    onReady: async (client, plugins) => {
+      const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
+      if (!dispatch) {
+        return;
+      }
+
+      const identity = client.halo.identity.get();
+      const credentials = await queryAllCredentials(client);
+      const recoveryCredential = credentials.find(
+        (credential) => credential.subject.assertion['@type'] === 'dxos.halo.credentials.IdentityRecovery',
+      );
+      if (identity && !recoveryCredential) {
+        await dispatch(createIntent(ClientAction.CreateRecoveryCode));
+      }
+
+      const devices = client.halo.devices.get();
+      const edgeAgent = devices.find(
+        (device) => device.profile?.type === DeviceType.AGENT_MANAGED && device.profile?.os?.toUpperCase() === 'EDGE',
+      );
+      if (identity && !edgeAgent) {
+        await dispatch(createIntent(ClientAction.CreateAgent));
+      }
+    },
     onReset: async ({ target }) => {
       localStorage.clear();
 
@@ -200,9 +229,7 @@ export const plugins = ({
   [ExcalidrawMeta.id]: Plugin.lazy(() => import('@dxos/plugin-excalidraw')),
   [ExplorerMeta.id]: Plugin.lazy(() => import('@dxos/plugin-explorer')),
   [FilesMeta.id]: Plugin.lazy(() => import('@dxos/plugin-files')),
-  [GithubMeta.id]: Plugin.lazy(() => import('@dxos/plugin-github')),
   [GraphMeta.id]: Plugin.lazy(() => import('@dxos/plugin-graph')),
-  [GridMeta.id]: Plugin.lazy(() => import('@dxos/plugin-grid')),
   [HelpMeta.id]: Plugin.lazy(() => import('@dxos/plugin-help'), { steps }),
   [InboxMeta.id]: Plugin.lazy(() => import('@dxos/plugin-inbox')),
   [IpfsMeta.id]: Plugin.lazy(() => import('@dxos/plugin-ipfs')),
@@ -238,27 +265,16 @@ export const plugins = ({
 
       const readme = create(DocumentType, {
         name: INITIAL_DOC_TITLE,
-        content: create(TextType, { content: INITIAL_CONTENT.join('\n\n') }),
+        content: makeRef(create(TextType, { content: INITIAL_CONTENT.join('\n\n') })),
         threads: [],
       });
 
-      const defaultSpaceCollection = client.spaces.default.properties[CollectionType.typename] as CollectionType;
-      defaultSpaceCollection?.objects.push(readme);
+      const defaultSpaceCollection = client.spaces.default.properties[CollectionType.typename].target as CollectionType;
+      defaultSpaceCollection?.objects.push(makeRef(readme));
 
-      await dispatch([
-        {
-          action: LayoutAction.SET_LAYOUT_MODE,
-          data: { layoutMode: 'solo' },
-        },
-        {
-          action: NavigationAction.OPEN,
-          data: { activeParts: { main: [fullyQualifiedId(readme)] } },
-        },
-      ]);
-      await dispatch({
-        action: NavigationAction.EXPOSE,
-        data: { id: fullyQualifiedId(readme) },
-      });
+      await dispatch(createIntent(LayoutAction.SetLayoutMode, { layoutMode: 'solo' }));
+      await dispatch(createIntent(NavigationAction.Open, { activeParts: { main: [fullyQualifiedId(readme)] } }));
+      await dispatch(createIntent(NavigationAction.Expose, { id: fullyQualifiedId(readme) }));
     },
   }),
   [StatusBarMeta.id]: Plugin.lazy(() => import('@dxos/plugin-status-bar')),

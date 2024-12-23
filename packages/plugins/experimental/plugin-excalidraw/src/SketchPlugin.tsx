@@ -2,24 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CompassTool } from '@phosphor-icons/react';
 import React from 'react';
 
-import { parseIntentPlugin, type PluginDefinition, resolvePlugin, NavigationAction } from '@dxos/app-framework';
+import { type PluginDefinition, createSurface, createIntent, createResolver } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { parseClientPlugin } from '@dxos/plugin-client';
-import { type ActionGroup, createExtension, isActionGroup } from '@dxos/plugin-graph';
-import {
-  EXCALIDRAW_SCHEMA,
-  CanvasType,
-  DiagramType,
-  createDiagramType,
-  isDiagramType,
-} from '@dxos/plugin-sketch/types';
-import { SpaceAction } from '@dxos/plugin-space';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { EXCALIDRAW_SCHEMA, CanvasType, DiagramType, isDiagramType } from '@dxos/plugin-sketch/types';
+import { create, fullyQualifiedId, makeRef } from '@dxos/react-client/echo';
 
-import { SketchComponent, SketchMain, SketchSettings } from './components';
+import { SketchComponent, SketchSettings } from './components';
 import meta, { SKETCH_PLUGIN } from './meta';
 import translations from './translations';
 import { SketchAction, type SketchGridType, type SketchPluginProvides, type SketchSettingsProps } from './types';
@@ -44,7 +34,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
       metadata: {
         records: {
           [DiagramType.typename]: {
-            createObject: SketchAction.CREATE,
+            createObject: (props: { name?: string }) => createIntent(SketchAction.Create, props),
             placeholder: ['object title placeholder', { ns: SKETCH_PLUGIN }],
             icon: 'ph--compass-tool--regular',
           },
@@ -56,120 +46,44 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
         schema: [DiagramType],
         system: [CanvasType],
       },
-      graph: {
-        builder: (plugins) => {
-          const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
-          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-          if (!client || !dispatch) {
-            return [];
-          }
-
-          return [
-            createExtension({
-              id: SketchAction.CREATE,
-              filter: (node): node is ActionGroup => isActionGroup(node) && node.id.startsWith(SpaceAction.ADD_OBJECT),
-              actions: ({ node }) => {
-                const id = node.id.split('/').at(-1);
-                const [spaceId, objectId] = id?.split(':') ?? [];
-                const space = client.spaces.get().find((space) => space.id === spaceId);
-                const object = objectId && space?.db.getObjectById(objectId);
-                const target = objectId ? object : space;
-                if (!target) {
-                  return;
-                }
-
-                return [
-                  {
-                    id: `${SKETCH_PLUGIN}/create/${node.id}`,
-                    data: async () => {
-                      await dispatch([
-                        { plugin: SKETCH_PLUGIN, action: SketchAction.CREATE },
-                        { action: SpaceAction.ADD_OBJECT, data: { target } },
-                        { action: NavigationAction.OPEN },
-                      ]);
-                    },
-                    properties: {
-                      label: ['create object label', { ns: SKETCH_PLUGIN }],
-                      icon: 'ph--compass-tool--regular',
-                      testId: 'sketchPlugin.createObject',
-                    },
-                  },
-                ];
-              },
-            }),
-          ];
-        },
-      },
-      stack: {
-        creators: [
-          {
-            id: `${SKETCH_PLUGIN}/create-stack-section`,
-            testId: 'sketchPlugin.createSection',
-            type: ['plugin name', { ns: SKETCH_PLUGIN }],
-            label: ['create stack section label', { ns: SKETCH_PLUGIN }],
-            icon: (props: any) => <CompassTool {...props} />,
-            intent: {
-              plugin: SKETCH_PLUGIN,
-              action: SketchAction.CREATE,
-            },
-          },
+      surface: {
+        definitions: () => [
+          createSurface({
+            id: `${SKETCH_PLUGIN}/sketch`,
+            role: ['article', 'section', 'slide'],
+            filter: (data): data is { subject: DiagramType } => isDiagramType(data.subject, EXCALIDRAW_SCHEMA),
+            component: ({ data, role }) => (
+              <SketchComponent
+                key={fullyQualifiedId(data.subject)} // Force instance per sketch object. Otherwise, sketch shares the same instance.
+                sketch={data.subject}
+                readonly={role === 'slide'}
+                maxZoom={role === 'slide' ? 1.5 : undefined}
+                autoZoom={role === 'section'}
+                autoHideControls={settings.values.autoHideControls}
+                className={role === 'article' ? 'row-span-2' : role === 'section' ? 'aspect-square' : 'p-16'}
+                grid={settings.values.gridType}
+              />
+            ),
+          }),
+          createSurface({
+            id: `${SKETCH_PLUGIN}/settings`,
+            role: 'settings',
+            filter: (data): data is any => data.subject === SKETCH_PLUGIN,
+            component: () => <SketchSettings settings={settings.values} />,
+          }),
         ],
       },
-      surface: {
-        component: ({ data, role }) => {
-          switch (role) {
-            case 'main':
-              return isDiagramType(data.active, EXCALIDRAW_SCHEMA) ? (
-                <SketchMain
-                  sketch={data.active}
-                  autoHideControls={settings.values.autoHideControls}
-                  grid={settings.values.gridType}
-                />
-              ) : null;
-            case 'slide':
-              return isDiagramType(data.slide, EXCALIDRAW_SCHEMA) ? (
-                <SketchComponent
-                  key={fullyQualifiedId(data.slide)} // Force instance per sketch object. Otherwise, sketch shares the same instance.
-                  sketch={data.slide}
-                  readonly
-                  autoZoom
-                  maxZoom={1.5}
-                  className='p-16'
-                  autoHideControls={settings.values.autoHideControls}
-                  grid={settings.values.gridType}
-                />
-              ) : null;
-            case 'article':
-            case 'section':
-              // NOTE: Min 500px height (for tools palette).
-              return isDiagramType(data.object, EXCALIDRAW_SCHEMA) ? (
-                <SketchComponent
-                  key={fullyQualifiedId(data.object)} // Force instance per sketch object. Otherwise, sketch shares the same instance.
-                  sketch={data.object}
-                  autoZoom={role === 'section'}
-                  className={role === 'article' ? 'row-span-2' : 'aspect-square'}
-                  autoHideControls={settings.values.autoHideControls}
-                  grid={settings.values.gridType}
-                />
-              ) : null;
-            case 'settings': {
-              return data.plugin === meta.id ? <SketchSettings settings={settings.values} /> : null;
-            }
-            default:
-              return null;
-          }
-        },
-      },
       intent: {
-        resolver: (intent) => {
-          switch (intent.action) {
-            case SketchAction.CREATE: {
-              return {
-                data: createDiagramType(EXCALIDRAW_SCHEMA),
-              };
-            }
-          }
-        },
+        resolvers: () =>
+          createResolver(SketchAction.Create, ({ name, schema = EXCALIDRAW_SCHEMA, content = {} }) => ({
+            data: {
+              object: create(DiagramType, {
+                name,
+                canvas: makeRef(create(CanvasType, { schema, content })),
+                threads: [],
+              }),
+            },
+          })),
       },
     },
   };

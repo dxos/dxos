@@ -8,7 +8,9 @@ import { Schema as S } from '@effect/schema';
  * ECHO query object.
  */
 const QuerySchema = S.Struct({
-  typename: S.String,
+  // TODO(burdon): Rename to typename.
+  // typename: S.String,
+  type: S.String,
 }).pipe(S.mutable);
 
 export interface QueryType extends S.Schema.Type<typeof QuerySchema> {}

@@ -4,7 +4,7 @@
 
 import { type Space } from '@dxos/client/echo';
 import { AST } from '@dxos/echo-schema';
-import { create, type ReactiveObject } from '@dxos/live-object';
+import { create, makeRef, type ReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
 import { CollectionType } from '@dxos/plugin-space/types';
@@ -71,10 +71,12 @@ export class ResponseBuilder {
           : content;
 
       this._context.object.objects.push(
-        create(DocumentType, {
-          content: create(TextType, { content: formattedContent }),
-          threads: [],
-        }),
+        makeRef(
+          create(DocumentType, {
+            content: makeRef(create(TextType, { content: formattedContent })),
+            threads: [],
+          }),
+        ),
       );
 
       return undefined;

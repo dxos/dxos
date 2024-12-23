@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { AutomergeHost, DataServiceImpl, createIdFromSpaceKey } from '@dxos/echo-pipeline';
+import { AutomergeHost, DataServiceImpl, createIdFromSpaceKey, SpaceStateManager } from '@dxos/echo-pipeline';
 import { type SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
 import { createObjectId } from '@dxos/echo-schema';
 import { IndexMetadataStore } from '@dxos/indexing';
@@ -85,7 +85,11 @@ describe('AutomergeDocumentLoader', () => {
       indexMetadataStore: new IndexMetadataStore({ db: level.sublevel('index-metadata') }),
     });
     await openAndClose(host);
-    const dataService = new DataServiceImpl({ automergeHost: host, updateIndexes: async () => {} });
+    const dataService = new DataServiceImpl({
+      automergeHost: host,
+      spaceStateManager: new SpaceStateManager(),
+      updateIndexes: async () => {},
+    });
     const repo = new RepoProxy(dataService, SpaceId.random());
     await openAndClose(repo);
 

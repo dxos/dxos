@@ -35,7 +35,7 @@ export const AttentionPlugin = (): PluginDefinition<AttentionPluginProvides> => 
 
   return {
     meta,
-    ready: async (plugins: any) => {
+    ready: async ({ plugins }) => {
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
 
       effect(() => {

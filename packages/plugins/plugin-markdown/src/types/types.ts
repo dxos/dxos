@@ -3,7 +3,6 @@
 //
 
 import type {
-  GraphBuilderProvides,
   GraphSerializerProvides,
   IntentResolverProvides,
   MetadataRecordsProvides,
@@ -11,17 +10,33 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
+import { S } from '@dxos/echo-schema';
 import { type SchemaProvides } from '@dxos/plugin-space';
-import { type Extension, type EditorInputMode, type EditorViewMode } from '@dxos/react-ui-editor';
+import { type Extension, type EditorInputMode, EditorViewMode } from '@dxos/react-ui-editor';
 
-import { type DocumentType } from './document';
+import { DocumentType } from './document';
 import { MARKDOWN_PLUGIN } from '../meta';
 
 const MARKDOWN_ACTION = `${MARKDOWN_PLUGIN}/action`;
 
-export enum MarkdownAction {
-  CREATE = `${MARKDOWN_ACTION}/create`,
-  SET_VIEW_MODE = `${MARKDOWN_ACTION}/set-view-mode`,
+export namespace MarkdownAction {
+  export class Create extends S.TaggedClass<Create>()(MARKDOWN_ACTION, {
+    input: S.Struct({
+      name: S.optional(S.String),
+      content: S.optional(S.String),
+    }),
+    output: S.Struct({
+      object: DocumentType,
+    }),
+  }) {}
+
+  export class SetViewMode extends S.TaggedClass<SetViewMode>()(`${MARKDOWN_ACTION}/set-view-mode`, {
+    input: S.Struct({
+      id: S.String,
+      viewMode: EditorViewMode,
+    }),
+    output: S.Void,
+  }) {}
 }
 
 export type MarkdownProperties = Record<string, any>;
@@ -35,13 +50,6 @@ export type MarkdownExtensionProvides = {
   // TODO(burdon): Rename.
   markdown: {
     extensions: MarkdownExtensionProvider;
-  };
-};
-
-// TODO(wittjosiah): Factor out to graph plugin?
-type StackProvides = {
-  stack: {
-    creators?: Record<string, any>[];
   };
 };
 
@@ -76,11 +84,9 @@ type ThreadProvides<T> = {
 
 export type MarkdownPluginProvides = SurfaceProvides &
   IntentResolverProvides &
-  GraphBuilderProvides &
   GraphSerializerProvides &
   MetadataRecordsProvides &
   SettingsProvides<MarkdownSettingsProps> &
   TranslationsProvides &
   SchemaProvides &
-  StackProvides &
   ThreadProvides<DocumentType>;

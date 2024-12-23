@@ -4,16 +4,17 @@
 
 import React from 'react';
 
-import { useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { type Space } from '@dxos/react-client/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 
-import { SPACE_PLUGIN, SpaceAction } from '../meta';
+import { SPACE_PLUGIN } from '../meta';
+import { SpaceAction } from '../types';
 
 export const ShareSpaceButton = ({ space }: { space: Space }) => {
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
 
-  return <ShareSpaceButtonImpl onClick={() => dispatch({ action: SpaceAction.SHARE, data: { space } })} />;
+  return <ShareSpaceButtonImpl onClick={() => dispatch(createIntent(SpaceAction.Share, { space }))} />;
 };
 
 // TODO(wittjosiah): Better way to name pure/impure components?

@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { Filter } from '@dxos/echo-db';
-import { create } from '@dxos/live-object';
+import { create, makeRef } from '@dxos/live-object';
 import { isNode } from '@dxos/util';
 
 import { Client } from '../client';
@@ -177,14 +177,16 @@ describe('Client', () => {
     const text = 'Hello world';
     const message = space2.db.add(
       create(MessageType, {
-        blocks: [{ timestamp: new Date().toISOString(), content: create(TextV0Type, { content: text }) }],
+        blocks: [{ timestamp: new Date().toISOString(), content: makeRef(create(TextV0Type, { content: text })) }],
       }),
     );
-    thread2.messages.push(message);
+    thread2.messages.push(makeRef(message));
     await space2.db.flush();
 
     await expect.poll(() => thread1.messages.length, { timeout: 1_000 }).toEqual(1);
-    await expect.poll(() => thread1.messages[0]!.blocks[0].content?.content, { timeout: 1_000 }).toEqual(text);
+    await expect
+      .poll(() => thread1.messages[0].target!.blocks[0].content?.target?.content, { timeout: 1_000 })
+      .toEqual(text);
   });
 
   // TODO(wittjosiah): This functionality is currently disabled because it was unreliable.

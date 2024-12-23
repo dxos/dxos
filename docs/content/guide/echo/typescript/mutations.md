@@ -68,7 +68,7 @@ If strong types are desired, an instance of a specific `TypedObject` descendant 
 
 ```tsx file=./snippets/create-objects-typed.ts#L5-
 import { Client } from '@dxos/client';
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/live-object';
 
 import { TaskType } from './schema';
 

@@ -6,7 +6,7 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import { type FunctionOptions, ollama, openai, type TextGenerationModelSettings } from 'modelfusion';
 
 import { log } from '@dxos/log';
-import { stripUndefinedValues } from '@dxos/util';
+import { stripUndefined } from '@dxos/util';
 
 //
 // NOTE: Only use for testing.
@@ -62,7 +62,7 @@ export const functionOptions = (uri?: string): FunctionOptions => ({
   observers: [
     {
       onFunctionEvent: ({ functionId, functionType, callId, eventType }) => {
-        log.info('onFunctionEvent', stripUndefinedValues({ functionId, functionType, callId, eventType }));
+        log.info('onFunctionEvent', stripUndefined({ functionId, functionType, callId, eventType }));
       },
     },
   ],

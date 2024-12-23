@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ref, S, TypedObject } from '@dxos/echo-schema';
-import { type Space, create } from '@dxos/react-client/echo';
+import { Ref, S, TypedObject } from '@dxos/echo-schema';
+import { type Space, create, makeRef } from '@dxos/react-client/echo';
 
 export class TodoType extends TypedObject({ typename: 'dxos.org/type/Todo', version: '0.1.0' })({
   title: S.String,
@@ -11,11 +11,11 @@ export class TodoType extends TypedObject({ typename: 'dxos.org/type/Todo', vers
 }) {}
 
 export class TodoListType extends TypedObject({ typename: 'dxos.org/type/TodoList', version: '0.1.0' })({
-  todos: S.mutable(S.Array(ref(TodoType))),
+  todos: S.mutable(S.Array(Ref(TodoType))),
 }) {}
 
 export const createTodoList = (space: Space) => {
   const list = space.db.add(create(TodoListType, { todos: [] }));
-  space.properties[TodoListType.typename] = list;
+  space.properties[TodoListType.typename] = makeRef(list);
   return list;
 };

@@ -15,5 +15,9 @@
     "./src/**/*.ts",
     "./src/typings.d.ds"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../packages/common/plate"
+    }
+  ]
 }

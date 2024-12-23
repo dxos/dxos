@@ -61,5 +61,5 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel, storedTrigger 
 };
 
 const getFunctionName = (scripts: ScriptType[], fn: FunctionType) => {
-  return scripts.find((s) => fn.source?.id === s.id)?.name ?? fn.name;
+  return scripts.find((s) => fn.source?.target?.id === s.id)?.name ?? fn.name;
 };

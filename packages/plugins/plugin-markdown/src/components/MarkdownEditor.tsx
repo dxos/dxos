@@ -6,7 +6,7 @@ import { openSearchPanel } from '@codemirror/search';
 import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect, useCallback } from 'react';
 
-import { type FileInfo, LayoutAction, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, type FileInfo, LayoutAction, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
@@ -75,7 +75,7 @@ export const MarkdownEditor = ({
 }: MarkdownEditorProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
-  const dispatch = useIntentDispatcher();
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const [formattingState, formattingObserver] = useFormattingState();
   const { hasAttention } = useAttention(id);
 
@@ -91,17 +91,9 @@ export const MarkdownEditor = ({
 
   // TODO(Zan): Move these into thread plugin as well?
   const [commentsState, commentObserver] = useCommentState();
-  const onCommentClick = useCallback(() => {
-    void dispatch([
-      {
-        action: NavigationAction.OPEN,
-        data: { activeParts: { complementary: 'comments' } },
-      },
-      {
-        action: LayoutAction.SET_LAYOUT,
-        data: { element: 'complementary', state: true },
-      },
-    ]);
+  const onCommentClick = useCallback(async () => {
+    await dispatch(createIntent(NavigationAction.Open, { activeParts: { complementary: 'comments' } }));
+    await dispatch(createIntent(LayoutAction.SetLayout, { element: 'complementary', state: true }));
   }, [dispatch]);
   const commentClickObserver = useCommentClickListener(onCommentClick);
 

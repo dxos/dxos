@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ref, S, TypedObject } from '@dxos/echo-schema';
+import { Ref, S, TypedObject } from '@dxos/echo-schema';
 import { ThreadType } from '@dxos/plugin-space/types';
 
 export class TextType extends TypedObject({ typename: 'dxos.org/type/Text', version: '0.1.0' })({
@@ -12,8 +12,8 @@ export class TextType extends TypedObject({ typename: 'dxos.org/type/Text', vers
 export class DocumentType extends TypedObject({ typename: 'dxos.org/type/Document', version: '0.1.0' })({
   name: S.optional(S.String),
   fallbackName: S.optional(S.String),
-  content: ref(TextType),
-  threads: S.mutable(S.Array(ref(ThreadType))),
+  content: Ref(TextType),
+  threads: S.mutable(S.Array(Ref(ThreadType))),
 }) {}
 
 /**

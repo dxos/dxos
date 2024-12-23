@@ -18,5 +18,12 @@
     "src/**/*.tsx",
     "src/*.ts"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../common/node-std"
+    },
+    {
+      "path": "../react-ui-types"
+    }
+  ]
 }

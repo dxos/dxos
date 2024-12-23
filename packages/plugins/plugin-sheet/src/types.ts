@@ -3,45 +3,18 @@
 //
 
 import type {
-  GraphBuilderProvides,
   IntentResolverProvides,
   MetadataRecordsProvides,
   SurfaceProvides,
   TranslationsProvides,
-  IntentData,
 } from '@dxos/app-framework';
-import { ref, S, TypedObject } from '@dxos/echo-schema';
+import { Ref, S, TypedObject } from '@dxos/echo-schema';
 import { type MarkdownExtensionProvides } from '@dxos/plugin-markdown';
 import { type SchemaProvides } from '@dxos/plugin-space';
 import { ThreadType } from '@dxos/plugin-space/types';
-import { type StackProvides } from '@dxos/plugin-stack';
-import { type DxGridAxis } from '@dxos/react-ui-grid';
 
 import { SHEET_PLUGIN } from './meta';
-import { type SheetModel } from './model';
-
-const SHEET_ACTION = `${SHEET_PLUGIN}/action`;
-
-export enum SheetAction {
-  CREATE = `${SHEET_ACTION}/create`,
-  INSERT_AXIS = `${SHEET_ACTION}/axis-insert`,
-  DROP_AXIS = `${SHEET_ACTION}/axis-drop`,
-}
-
-export type RestoreAxis = {
-  axis: DxGridAxis;
-  axisIndex: string;
-  index: number;
-  axisMeta?: S.Schema.Type<typeof RowColumnMeta>;
-  values: CellScalarValue[];
-};
-
-export namespace SheetAction {
-  export type Create = IntentData<{ sheet: SheetType }>;
-  export type InsertAxis = IntentData<{ model: SheetModel; axis: DxGridAxis; index: number; count?: number }>;
-  export type DropAxis = IntentData<{ model: SheetModel; axis: DxGridAxis; axisIndex: string }>;
-  export type DropAxisRestore = IntentData<RestoreAxis & { model: SheetModel }>;
-}
+import { SheetModel } from './model';
 
 // TODO(Zan): Move this to the plugin-space plugin or another common location
 // when we implement comments in sheets.
@@ -55,12 +28,10 @@ type ThreadProvides<T> = {
 
 export type SheetPluginProvides = SurfaceProvides &
   IntentResolverProvides &
-  GraphBuilderProvides &
   MarkdownExtensionProvides &
   MetadataRecordsProvides &
   TranslationsProvides &
   SchemaProvides &
-  StackProvides &
   ThreadProvides<SheetType>;
 
 export type CellScalarValue = number | string | boolean | null;
@@ -111,7 +82,7 @@ export class SheetType extends TypedObject({ typename: 'dxos.org/type/Sheet', ve
   ranges: S.mutable(S.Array(Range)),
 
   // Threads associated with the sheet
-  threads: S.optional(S.mutable(S.Array(ref(ThreadType)))),
+  threads: S.optional(S.mutable(S.Array(Ref(ThreadType)))),
 }) {}
 
 export type SheetSize = {
@@ -123,3 +94,51 @@ export type CreateSheetOptions = {
   name?: string;
   cells?: Record<string, CellValue>;
 } & Partial<SheetSize>;
+
+export namespace SheetAction {
+  const SHEET_ACTION = `${SHEET_PLUGIN}/action`;
+
+  export class Create extends S.TaggedClass<Create>()(`${SHEET_ACTION}/create`, {
+    input: S.Struct({
+      name: S.optional(S.String),
+    }),
+    output: S.Struct({
+      object: SheetType,
+    }),
+  }) {}
+
+  // TODO(wittjosiah): Factor out. This is `DxGridAxis` from `@dxos/react-ui-grid`.
+  const Axis = S.Union(S.Literal('row'), S.Literal('col'));
+
+  export class InsertAxis extends S.TaggedClass<InsertAxis>()(`${SHEET_ACTION}/axis-insert`, {
+    input: S.Struct({
+      // TODO(wittjosiah): S.instanceOf(SheetModel) throws when running tests.
+      model: S.Any.pipe(S.filter((model) => model instanceof SheetModel)) as S.Schema<SheetModel>,
+      axis: Axis,
+      index: S.Number,
+      count: S.optional(S.Number),
+    }),
+    output: S.Void,
+  }) {}
+
+  export const RestoreAxis = S.Struct({
+    axis: Axis,
+    axisIndex: S.String,
+    index: S.Number,
+    axisMeta: RowColumnMeta,
+    values: S.Array(S.Any),
+  });
+
+  export type RestoreAxis = S.Schema.Type<typeof RestoreAxis>;
+
+  export class DropAxis extends S.TaggedClass<DropAxis>()(`${SHEET_ACTION}/axis-drop`, {
+    input: S.Struct({
+      // TODO(wittjosiah): S.instanceOf(SheetModel) throws when running tests.
+      model: S.Any.pipe(S.filter((model) => model instanceof SheetModel)) as S.Schema<SheetModel>,
+      axis: Axis,
+      axisIndex: S.String,
+      deletionData: S.optional(RestoreAxis),
+    }),
+    output: S.Void,
+  }) {}
+}

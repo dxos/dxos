@@ -4,9 +4,8 @@
 
 import React from 'react';
 
-import { Dialog, type DialogContentProps, useId } from '@dxos/react-ui';
+import { Clipboard, Dialog, type DialogContentProps, useId } from '@dxos/react-ui';
 
-import { ClipboardProvider } from '../../components';
 import { SpacePanel, type SpacePanelProps } from '../../panels';
 
 export interface SpaceDialogProps
@@ -20,7 +19,7 @@ export const SpaceDialog = (spacePanelProps: SpaceDialogProps) => {
       <Dialog.Portal>
         <Dialog.Overlay>
           <Dialog.Content aria-labelledby={titleId}>
-            <ClipboardProvider>
+            <Clipboard.Provider>
               <SpacePanel
                 {...{
                   ...spacePanelProps,
@@ -28,7 +27,7 @@ export const SpaceDialog = (spacePanelProps: SpaceDialogProps) => {
                   doneActionParent: <Dialog.Close asChild />,
                 }}
               />
-            </ClipboardProvider>
+            </Clipboard.Provider>
           </Dialog.Content>
         </Dialog.Overlay>
       </Dialog.Portal>

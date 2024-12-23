@@ -8,7 +8,7 @@ import { type Meta } from '@storybook/react';
 import React, { useMemo } from 'react';
 
 import { TextType } from '@dxos/plugin-markdown/types';
-import { create, createObject } from '@dxos/react-client/echo';
+import { create, createObject, makeRef } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -33,7 +33,10 @@ const code = [
 
 const DefaultStory = () => {
   // TODO(burdon): Review what's the right way to create automerge-backed objects.
-  const object = useMemo(() => createObject(create(ScriptType, { source: create(TextType, { content: code }) })), []);
+  const object = useMemo(
+    () => createObject(create(ScriptType, { source: makeRef(create(TextType, { content: code })) })),
+    [],
+  );
 
   // TODO(dmaretskyi): Not sure how to provide `containerUrl` here since the html now lives in composer-app.
   // TODO(burdon): Normalize html/frame.tsx with composer-app to test locally.

@@ -20,7 +20,7 @@ const TreeSection: FC<{ tree: TreeType }> = ({ tree }) => {
     <Outliner.Root
       className='w-full plb-4'
       isTasklist={tree.checkbox}
-      root={tree.root}
+      root={tree.root.target!}
       onCreate={() => create(TreeItemType, { content: '', items: [] })}
       onDelete={({ id }) => {
         const item = space.db.getObjectById(id);
