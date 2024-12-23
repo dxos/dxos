@@ -9,16 +9,18 @@ import {
   type CellAddress,
   type CellRange,
   type CompleteCellRange,
-  DEFAULT_COLUMNS,
-  DEFAULT_ROWS,
-  MAX_COLUMNS,
-  MAX_ROWS,
 } from '@dxos/compute';
 import { randomBytes } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
 
 import { type CreateSheetOptions, type SheetSize, SheetType } from '../types';
+
+export const MAX_ROWS = 500;
+export const MAX_COLS = 676; // 26^2;
+
+export const DEFAULT_ROWS = 50;
+export const DEFAULT_COLS = 26;
 
 // TODO(burdon): Factor out from dxos/protocols to new common package.
 export class ApiError extends Error {}
@@ -30,8 +32,6 @@ export class RangeException extends ApiError {
     super();
   }
 }
-
-// TODO(burdon): Factor out to types lib.
 
 /**
  * With a string length of 8, the chance of a collision is 0.02% for a sheet with 10,000 strings.
@@ -57,13 +57,13 @@ export const insertIndices = (indices: string[], i: number, n: number, max: numb
 
 export const initialize = (
   sheet: SheetType,
-  { rows = DEFAULT_ROWS, columns = DEFAULT_COLUMNS }: Partial<SheetSize> = {},
+  { rows = DEFAULT_ROWS, columns = DEFAULT_COLS }: Partial<SheetSize> = {},
 ) => {
   if (!sheet.rows.length) {
     insertIndices(sheet.rows, 0, rows, MAX_ROWS);
   }
   if (!sheet.columns.length) {
-    insertIndices(sheet.columns, 0, columns, MAX_COLUMNS);
+    insertIndices(sheet.columns, 0, columns, MAX_COLS);
   }
 };
 

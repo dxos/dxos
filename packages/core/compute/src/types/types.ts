@@ -4,33 +4,24 @@
 
 import { invariant } from '@dxos/invariant';
 
-export const DEFAULT_ROWS = 50;
-export const DEFAULT_COLUMNS = 26;
-
-export const MAX_ROWS = 500;
-export const MAX_COLUMNS = 26 * 2;
-
 // TODO(burdon): Reconcile with DxGridPlanePosition.
 export type CellAddress = Record<'row' | 'col', number>;
-export type CellScalarValue = number | string | boolean | null;
-
+// TODO(burdon): Unify and use Partial<CellRange> as needed.
 export type CellRange = { from: CellAddress; to?: CellAddress };
 export type CompleteCellRange = { from: CellAddress; to: CellAddress };
 
-export type CellIndex = string;
-
-export type CellContentValue = number | string | boolean | null;
+export type CellScalarValue = number | string | boolean | null;
 
 export const RANGE_NOTATION = /^[A-Z]+[0-9]+(:[A-Z]+[0-9]+)?$/;
 
 export const isFormula = (value: any): value is string => typeof value === 'string' && value.charAt(0) === '=';
 
-export const posEquals = (a: CellAddress | undefined, b: CellAddress | undefined) => {
+export const cellEquals = (a: CellAddress | undefined, b: CellAddress | undefined) => {
   return a?.col === b?.col && a?.row === b?.row;
 };
 
 export const columnLetter = (col: number): string => {
-  invariant(col < MAX_COLUMNS, `Invalid column: ${col}`);
+  invariant(col < 676, `Invalid column: ${col}`); // 26^2
   return (
     (col >= 26 ? String.fromCharCode('A'.charCodeAt(0) + Math.floor(col / 26) - 1) : '') +
     String.fromCharCode('A'.charCodeAt(0) + (col % 26))
@@ -68,7 +59,7 @@ export const inRange = (range: CellRange | undefined, cell: CellAddress): boolea
   }
 
   const { from, to } = range;
-  if ((from && posEquals(from, cell)) || (to && posEquals(to, cell))) {
+  if ((from && cellEquals(from, cell)) || (to && cellEquals(to, cell))) {
     return true;
   }
 

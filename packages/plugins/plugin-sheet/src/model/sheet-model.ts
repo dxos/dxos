@@ -8,20 +8,18 @@ import {
   addressToA1Notation,
   createSheetName,
   isFormula,
+  type CellAddress,
+  type CellRange,
+  type CellScalarValue,
   type ComputeGraph,
   type ComputeNode,
   type ComputeNodeEvent,
-  type CellAddress,
-  type CellRange,
+  DetailedCellError,
+  ExportedCellChange,
   type SimpleCellRange,
   type SimpleCellAddress,
   type SimpleDate,
   type SimpleDateTime,
-  MAX_COLUMNS,
-  MAX_ROWS,
-  DetailedCellError,
-  ExportedCellChange,
-  type CellScalarValue,
 } from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { getTypename, FormatEnum, TypeEnum } from '@dxos/echo-schema';
@@ -37,6 +35,8 @@ import {
   insertIndices,
   mapFormulaIndicesToRefs,
   mapFormulaRefsToIndices,
+  MAX_ROWS,
+  MAX_COLS,
 } from '../types';
 import { type SheetAction, type CellValue, type SheetType } from '../types';
 
@@ -184,7 +184,7 @@ export class SheetModel extends Resource {
   }
 
   insertColumns(i: number, n = 1) {
-    const idx = insertIndices(this._sheet.columns, i, n, MAX_COLUMNS);
+    const idx = insertIndices(this._sheet.columns, i, n, MAX_COLS);
     this.reset();
     return idx;
   }
@@ -381,7 +381,7 @@ export class SheetModel extends Resource {
       refresh = true;
     }
     if (cell.col >= this._sheet.columns.length) {
-      insertIndices(this._sheet.columns, cell.col, 1, MAX_COLUMNS);
+      insertIndices(this._sheet.columns, cell.col, 1, MAX_COLS);
       refresh = true;
     }
 
