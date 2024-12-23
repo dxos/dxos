@@ -8,11 +8,6 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "exports": {
-    "./edge": {
-      "types": "./dist/types/src/edge/index.d.ts",
-      "browser": "./dist/lib/browser/edge/index.mjs",
-      "node": "./dist/lib/node-esm/edge/index.mjs"
-    },
     ".": {
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
@@ -32,9 +27,6 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "edge": [
-        "dist/types/src/edge/index.d.ts"
-      ],
       "meta": [
         "dist/types/src/meta.d.ts"
       ],
@@ -59,10 +51,10 @@
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
+    "@dxos/compute": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
-    "@dxos/edge-client": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/live-object": "workspace:*",

@@ -2,10 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { randomBytes } from '@dxos/crypto';
-import { invariant } from '@dxos/invariant';
-import { create } from '@dxos/live-object';
-
 import {
   addressFromA1Notation,
   addressToA1Notation,
@@ -17,7 +13,11 @@ import {
   DEFAULT_ROWS,
   MAX_COLUMNS,
   MAX_ROWS,
-} from './types';
+} from '@dxos/compute';
+import { randomBytes } from '@dxos/crypto';
+import { invariant } from '@dxos/invariant';
+import { create } from '@dxos/live-object';
+
 import { type CreateSheetOptions, type SheetSize, SheetType } from '../types';
 
 // TODO(burdon): Factor out from dxos/protocols to new common package.

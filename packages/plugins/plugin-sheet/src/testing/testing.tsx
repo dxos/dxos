@@ -5,11 +5,11 @@
 import { type Decorator } from '@storybook/react';
 import React, { useState } from 'react';
 
+import { type ComputeGraph, type ComputeGraphOptions, ComputeGraphRegistry } from '@dxos/compute';
 import { type Space } from '@dxos/react-client/echo';
 import { useAsyncState } from '@dxos/react-hooks';
 
 import { ComputeGraphContextProvider } from '../components';
-import { type ComputeGraph, type ComputeGraphOptions, ComputeGraphRegistry } from '../compute-graph';
 import { createSheet } from '../defs';
 import { type CreateSheetOptions } from '../types';
 

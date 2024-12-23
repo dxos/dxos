@@ -12,11 +12,23 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "{projectRoot}/src/index.ts"
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/edge/index.ts",
+          "{projectRoot}/src/testing/index.ts"
         ]
       }
     },
     "lint": {},
+    "prebuild": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./scripts/vendor.mjs",
+        "cwd": "{projectRoot}"
+      },
+      "outputs": [
+        "{projectRoot}/dist/vendor/*"
+      ]
+    },
     "test": {}
   },
   "implicitDependencies": [

@@ -6,11 +6,11 @@
 import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { type ScriptType } from '@dxos/compute';
 import { createDocAccessor, DocAccessor } from '@dxos/react-client/echo';
 import { Toolbar, Button, Icon } from '@dxos/react-ui';
 
 import { Bundler, type BundlerResult, initializeBundler } from '../../bundler';
-import { type ScriptType } from '../../types';
 import { FrameContainer } from '../FrameContainer';
 import { ScriptEditor } from '../ScriptEditor';
 

@@ -6,6 +6,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useCallback } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { inRange } from '@dxos/compute';
 import { RefArray } from '@dxos/live-object';
 import { ThreadAction } from '@dxos/plugin-thread/types';
 import {
@@ -22,14 +23,13 @@ import { useAttention } from '@dxos/react-ui-attention';
 
 import {
   alignKey,
+  rangeFromIndex,
+  rangeToIndex,
+  styleKey,
   type AlignKey,
   type AlignValue,
   type CommentKey,
   type CommentValue,
-  inRange,
-  rangeFromIndex,
-  rangeToIndex,
-  styleKey,
   type StyleKey,
   type StyleValue,
 } from '../../defs';

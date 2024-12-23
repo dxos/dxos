@@ -14,6 +14,7 @@ import React, {
 } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { DEFAULT_COLUMNS, DEFAULT_ROWS, rangeToA1Notation, type CellRange } from '@dxos/compute';
 import { DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
@@ -32,7 +33,6 @@ import {
 } from '@dxos/react-ui-grid';
 
 import { colLabelCell, rowLabelCell, useSheetModelDxGridProps } from './util';
-import { DEFAULT_COLUMNS, DEFAULT_ROWS, rangeToA1Notation, type CellRange } from '../../defs';
 import { rangeExtension, sheetExtension, type RangeController } from '../../extensions';
 import { useSelectThreadOnCellFocus, useUpdateFocusedCellOnThreadSelection } from '../../integrations';
 import { SHEET_PLUGIN } from '../../meta';

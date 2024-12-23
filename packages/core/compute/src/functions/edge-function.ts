@@ -21,7 +21,6 @@ const FUNCTION_TTL = 10_000;
 
 /**
  * A hyperformula function plugin for calling remote (EDGE) functions.
- *
  * https://hyperformula.handsontable.com/guide/custom-functions.html#add-a-simple-custom-function
  */
 export class EdgeFunctionPlugin extends AsyncFunctionPlugin {

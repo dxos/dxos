@@ -8,8 +8,9 @@ import { testTree } from '@lezer/generator/test';
 import { spreadsheet } from 'codemirror-lang-spreadsheet';
 import { describe, expect, test } from 'vitest';
 
+import { defaultFunctions } from '@dxos/compute';
+
 import { sheetExtension } from './extension';
-import { defaultFunctions } from '../../compute-graph';
 
 describe('formula parser', () => {
   const {

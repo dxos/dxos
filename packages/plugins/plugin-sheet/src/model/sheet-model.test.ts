@@ -5,19 +5,13 @@
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
+import { FunctionType, addressFromA1Notation, isFormula } from '@dxos/compute';
+import { TestBuilder, testFunctionPlugins } from '@dxos/compute/testing';
 import { log } from '@dxos/log';
-import { FunctionType } from '@dxos/plugin-script/types';
 
 import { SheetModel } from './sheet-model';
 import { createTestGrid } from './testing';
-import { TestBuilder, testFunctionPlugins } from '../compute-graph/testing';
-import {
-  addressFromA1Notation,
-  createSheet,
-  isFormula,
-  mapFormulaIndicesToRefs,
-  mapFormulaRefsToIndices,
-} from '../defs';
+import { createSheet, mapFormulaIndicesToRefs, mapFormulaRefsToIndices } from '../defs';
 import { type CellScalarValue } from '../types';
 
 describe('SheetModel', () => {

@@ -6616,6 +6616,9 @@ importers:
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../../../sdk/client-protocol
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../../core/compute
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../../../common/crypto
@@ -8308,6 +8311,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context

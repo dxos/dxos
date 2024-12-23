@@ -9,11 +9,11 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
+import { ScriptType } from '@dxos/compute';
 import { S } from '@dxos/echo-schema';
 import { type SchemaProvides } from '@dxos/plugin-space';
 
-import { ScriptType } from './schema';
-import { SCRIPT_PLUGIN } from '../meta';
+import { SCRIPT_PLUGIN } from './meta';
 
 export namespace ScriptAction {
   const SCRIPT_ACTION = `${SCRIPT_PLUGIN}/action`;

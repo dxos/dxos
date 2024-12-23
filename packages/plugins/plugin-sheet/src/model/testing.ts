@@ -2,7 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { addressToA1Notation, createSheet } from '../defs';
+import { addressToA1Notation } from '@dxos/compute';
+
+import { createSheet } from '../defs';
 import type { CellValue, SheetType } from '../types';
 
 // TODO(burdon): Create testing endpoint.

@@ -4,13 +4,12 @@
 
 import React, { type ChangeEvent, useCallback } from 'react';
 
+import { FunctionType, type ScriptType, getInvocationUrl, getUserFunctionUrlInMetadata } from '@dxos/compute';
 import { useClient } from '@dxos/react-client';
 import { Filter, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Button, Icon, Input, useControlledValue, useTranslation } from '@dxos/react-ui';
 
-import { getInvocationUrl, getUserFunctionUrlInMetadata } from '../edge';
 import { SCRIPT_PLUGIN } from '../meta';
-import { FunctionType, type ScriptType } from '../types';
 
 export type ScriptSettingsPanelProps = {
   script: ScriptType;

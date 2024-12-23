@@ -13,8 +13,8 @@ import { type MarkdownExtensionProvides } from '@dxos/plugin-markdown';
 import { type SchemaProvides } from '@dxos/plugin-space';
 import { ThreadType } from '@dxos/plugin-space/types';
 
-import { SHEET_PLUGIN } from './meta';
-import { SheetModel } from './model';
+import { SHEET_PLUGIN } from '../meta';
+import { SheetModel } from '../model';
 
 // TODO(Zan): Move this to the plugin-space plugin or another common location
 // when we implement comments in sheets.

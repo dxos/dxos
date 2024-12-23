@@ -2,32 +2,37 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type SimpleCellRange } from 'hyperformula/typings/AbsoluteCellRange';
-import { type SimpleCellAddress } from 'hyperformula/typings/Cell';
-import { type SimpleDate, type SimpleDateTime } from 'hyperformula/typings/DateTimeHelper';
-
 import { Event } from '@dxos/async';
+import {
+  type SimpleCellRange,
+  type SimpleCellAddress,
+  type SimpleDate,
+  type SimpleDateTime,
+  type ComputeGraph,
+  type ComputeNode,
+  type ComputeNodeEvent,
+  createSheetName,
+  addressFromA1Notation,
+  addressToA1Notation,
+  isFormula,
+  type CellAddress,
+  type CellRange,
+  MAX_COLUMNS,
+  MAX_ROWS,
+} from '@dxos/compute';
+import { DetailedCellError, ExportedCellChange } from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { getTypename, FormatEnum, TypeEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { DetailedCellError, ExportedCellChange } from '#hyperformula';
-import { type ComputeGraph, type ComputeNode, type ComputeNodeEvent, createSheetName } from '../compute-graph';
 import {
-  addressFromA1Notation,
+  ReadonlyException,
   addressFromIndex,
-  addressToA1Notation,
   addressToIndex,
   initialize,
   insertIndices,
-  isFormula,
-  type CellAddress,
-  type CellRange,
-  ReadonlyException,
-  MAX_COLUMNS,
-  MAX_ROWS,
   mapFormulaIndicesToRefs,
   mapFormulaRefsToIndices,
 } from '../defs';

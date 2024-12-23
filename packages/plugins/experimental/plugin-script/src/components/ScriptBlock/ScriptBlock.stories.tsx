@@ -7,13 +7,13 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React, { useMemo } from 'react';
 
+import { ScriptType } from '@dxos/compute';
 import { TextType } from '@dxos/plugin-markdown/types';
 import { create, createObject, makeRef } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { ScriptBlock } from './ScriptBlock';
-import { ScriptType } from '../../types';
 // @ts-ignore
 import mainUrl from '../FrameContainer/frame?url';
 

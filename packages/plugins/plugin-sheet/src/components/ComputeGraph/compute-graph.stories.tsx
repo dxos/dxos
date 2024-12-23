@@ -7,20 +7,19 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { FunctionType } from './types';
-
+import { FunctionType } from '@dxos/compute';
+import { testFunctionPlugins } from '@dxos/compute/testing';
 import { create, useSpace, Filter } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Toolbar, Button, Input } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { testFunctionPlugins } from './testing';
-import { useComputeGraph } from '../components';
-import { createSheet } from '../defs';
-import { useSheetModel } from '../model';
-import { withComputeGraphDecorator } from '../testing';
-import { SheetType } from '../types';
+import { useComputeGraph } from './ComputeGraphContextProvider';
+import { createSheet } from '../../defs';
+import { useSheetModel } from '../../model';
+import { withComputeGraphDecorator } from '../../testing';
+import { SheetType } from '../../types';
 
 const FUNCTION_NAME = 'TEST';
 
