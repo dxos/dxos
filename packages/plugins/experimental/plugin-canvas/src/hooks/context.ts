@@ -31,15 +31,15 @@ export type EditorOptions = {
 
 export type EditorContextType = {
   id: string;
-  debug: boolean;
-  setDebug: Dispatch<SetStateAction<boolean>>;
   options: EditorOptions;
 
-  // TODO(burdon): Remove access?
   overlaySvg: RefObject<SVGSVGElement>;
 
   actionHandler: ActionHandler | undefined;
   setActionHandler: (cb: ActionHandler | undefined) => void;
+
+  debug: boolean;
+  setDebug: Dispatch<SetStateAction<boolean>>;
 
   gridSize: Dimension;
   setGridSize: Dispatch<SetStateAction<Dimension>>;
@@ -48,6 +48,7 @@ export type EditorContextType = {
   setShowGrid: Dispatch<SetStateAction<boolean>>;
 
   graph: GraphModel<GraphNode<Shape>>;
+  clipboard: GraphModel<GraphNode<Shape>>;
   selection: SelectionModel;
 
   snapToGrid: boolean;

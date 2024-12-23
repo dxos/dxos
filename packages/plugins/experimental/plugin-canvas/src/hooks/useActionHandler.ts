@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 
-import { GraphModel, type GraphNode } from '@dxos/graph';
+import { type GraphModel, type GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { DATA_TEST_ID, useProjection, zoomTo, zoomInPlace, ProjectionMapper } from '@dxos/react-ui-canvas';
@@ -20,12 +20,9 @@ import { isPolygon, type Shape } from '../types';
 
 // TODO(burdon): Handle multiple actions.
 export const useActionHandler = () => {
-  const { options, overlaySvg, graph, selection, setDebug, setShowGrid, setSnapToGrid, setActionHandler } =
+  const { options, overlaySvg, graph, clipboard, selection, setDebug, setShowGrid, setSnapToGrid, setActionHandler } =
     useEditorContext();
   const { root, projection, setProjection } = useProjection();
-
-  // TODO(burdon): Move to root.
-  const clipboard = useMemo<GraphModel>(() => new GraphModel<GraphNode<Shape>>(), []);
 
   useEffect(() => {
     const actionHandler: ActionHandler = async (action) => {

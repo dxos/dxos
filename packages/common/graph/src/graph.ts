@@ -35,12 +35,19 @@ export class ReadonlyGraphModel<Node extends GraphNode = any, Edge extends Graph
     return this.nodes.find((node) => node.id === id);
   }
 
+  getNodes({ type }: Partial<Node>): Node[] {
+    return this.nodes.filter((node) => !type || type === node.type);
+  }
+
   getEdge(id: string): Edge | undefined {
     return this.edges.find((edge) => edge.id === id);
   }
 
-  getEdges({ source, target }: Partial<Edge>): Edge[] {
-    return this.edges.filter((e) => (!source || source === e.source) && (!target || target === e.target));
+  getEdges({ type, source, target }: Partial<Edge>): Edge[] {
+    return this.edges.filter(
+      (edge) =>
+        (!type || type === edge.type) && (!source || source === edge.source) && (!target || target === edge.target),
+    );
   }
 }
 
