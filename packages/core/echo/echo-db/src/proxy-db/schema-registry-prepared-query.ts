@@ -32,11 +32,12 @@ export class SchemaRegistryPreparedQueryImpl<T> implements SchemaRegistryPrepare
   private readonly _changes = new Event<this>();
   private _isReactiveQueryRunning = false;
   private _subscriberCount = 0;
+  private _isFiring = false;
 
   constructor(private readonly _resolver: SchemaRegistryQueryResolver<T>) {}
 
   get results(): T[] {
-    if (!this._isReactiveQueryRunning) {
+    if (!this._isReactiveQueryRunning && !this._isFiring) {
       throw new Error(
         'Query must have at least 1 subscriber for `.results` to be used. Use query.run() for single-use result retrieval.',
       );
@@ -77,7 +78,12 @@ export class SchemaRegistryPreparedQueryImpl<T> implements SchemaRegistryPrepare
       if (!cb) {
         throw new Error('Cannot fire without a callback');
       }
-      cb(this);
+      try {
+        this._isFiring = true;
+        cb(this);
+      } finally {
+        this._isFiring = false;
+      }
     }
 
     return () => {
