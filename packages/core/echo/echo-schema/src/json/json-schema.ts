@@ -7,22 +7,24 @@ import { Option, type Types } from 'effect';
 import { AST, JSONSchema, S, mapAst } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { orderKeys, removeUndefinedProperties } from '@dxos/util';
+import { orderKeys } from '@dxos/util';
 
 import {
-  getObjectAnnotation,
+  EchoIdentifierAnnotationId,
   FieldLookupAnnotationId,
   GeneratorAnnotationId,
   type JsonSchemaType,
+  LabelAnnotationId,
   type ObjectAnnotation,
   ObjectAnnotationId,
   type PropertyMetaAnnotation,
   PropertyMetaAnnotationId,
-  LabelAnnotationId,
+  getEchoIdentifierAnnotation,
+  getObjectAnnotation,
 } from '../ast';
-import { createEchoReferenceSchema, Ref, type JsonSchemaReferenceInfo } from '../ast/ref';
+import { type JsonSchemaReferenceInfo, Ref, createEchoReferenceSchema } from '../ast/ref';
 import { CustomAnnotations } from '../formats';
-import { Expando } from '../object';
+import { Expando, ObjectId } from '../object';
 
 /**
  * @internal
@@ -47,12 +49,8 @@ interface EchoRefinement {
   type?: ObjectAnnotation;
   reference?: ObjectAnnotation;
   annotations?: PropertyMetaAnnotation;
+  generator?: string;
 }
-
-const annotationToRefinementKey: { [annotation: symbol]: keyof EchoRefinement } = {
-  [ObjectAnnotationId]: 'type',
-  [PropertyMetaAnnotationId]: 'annotations',
-};
 
 // TODO(burdon): Are these values stored (can they be changed?)
 export enum PropType {
@@ -99,10 +97,19 @@ export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
     jsonSchema.properties = orderKeys(jsonSchema.properties, ['id']);
   }
 
+  const echoIdentifier = getEchoIdentifierAnnotation(schema);
+  if (echoIdentifier) {
+    jsonSchema.$id = echoIdentifier;
+  }
+
   const objectAnnotation = getObjectAnnotation(schema);
   if (objectAnnotation) {
-    jsonSchema.$id = `dxn:type:${objectAnnotation.typename}`;
+    // EchoIdentifier annotation takes precedence but the id can also be defined by the typename.
+    if (!jsonSchema.$id) {
+      jsonSchema.$id = `dxn:type:${objectAnnotation.typename}`;
+    }
     jsonSchema.version = objectAnnotation.version;
+    jsonSchema.typename = objectAnnotation.typename;
   }
 
   // Fix field order.
@@ -111,14 +118,20 @@ export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
   jsonSchema = orderKeys(jsonSchema, [
     '$schema',
     '$id',
+    'typename',
     'version',
+
     'type',
+
+    'enum',
+
     'properties',
     'required',
+    'propertyOrder',
     'items',
-    'enum',
-    'anyOf',
     'additionalProperties',
+
+    'anyOf',
   ]);
 
   return jsonSchema;
@@ -132,6 +145,13 @@ const withEchoRefinements = (ast: AST.AST): AST.AST => {
     const jsonSchema = toJsonSchema(S.make(suspendedAst));
     recursiveResult = new AST.Suspend(() => withEchoRefinements(suspendedAst), {
       [AST.JSONSchemaAnnotationId]: jsonSchema,
+    });
+  } else if (AST.isTypeLiteral(ast)) {
+    recursiveResult = mapAst(ast, withEchoRefinements);
+    recursiveResult = makeAnnotatedRefinement(recursiveResult, {
+      [AST.JSONSchemaAnnotationId]: {
+        propertyOrder: [...ast.propertySignatures.map((p) => p.name)] as string[],
+      } satisfies JsonSchemaType,
     });
   } else {
     recursiveResult = mapAst(ast, withEchoRefinements);
@@ -238,7 +258,7 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
   const isEchoObject =
     echoRefinement != null || ('$id' in root && typeof root.$id === 'string' && root.$id.startsWith('dxn:'));
 
-  const fields: S.Struct.Fields = {};
+  let fields: S.Struct.Fields = {};
   const propertyList = Object.entries(root.properties ?? {});
   let immutableIdField: S.Schema<any> | undefined;
   for (const [key, value] of propertyList) {
@@ -250,6 +270,10 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
         ? toEffectSchema(value, defs)
         : S.optional(toEffectSchema(value, defs));
     }
+  }
+
+  if (root.propertyOrder) {
+    fields = orderKeys(fields, root.propertyOrder as any);
   }
 
   let schema: S.Schema<any, any, unknown>;
@@ -283,7 +307,8 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
 const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): S.Schema<any> => {
   const echoRefinement: EchoRefinement = (root as any)[ECHO_REFINEMENT_KEY];
   if (echoRefinement?.reference != null) {
-    return createEchoReferenceSchema(echoRefinement.reference);
+    const echoId = root.$id.startsWith('dxn:echo:') ? root.$id : undefined;
+    return createEchoReferenceSchema(echoId, echoRefinement.reference.typename, echoRefinement.reference.version);
   }
 
   return S.Any;
@@ -303,11 +328,9 @@ const refToEffectSchema = (root: any): S.Schema<any> => {
   invariant(targetSchemaDXN.kind === DXN.kind.TYPE);
 
   return createEchoReferenceSchema(
-    removeUndefinedProperties({
-      typename: targetSchemaDXN.parts[0],
-      version: reference.schemaVersion,
-      schemaId: reference.schemaObject,
-    }),
+    targetSchemaDXN.toString(),
+    targetSchemaDXN.kind === DXN.kind.TYPE ? targetSchemaDXN.parts[0] : undefined,
+    reference.schemaVersion,
   );
 };
 
@@ -328,17 +351,31 @@ const ECHO_REFINEMENTS = [
   GeneratorAnnotationId,
 ];
 
+const annotationToRefinementKey: { [annotation: symbol]: keyof EchoRefinement } = {
+  // TODO(dmaretskyi): Extract out.
+  [PropertyMetaAnnotationId]: 'annotations',
+  [GeneratorAnnotationId]: 'generator',
+};
+
 const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<symbol, any> => {
   const schemaFields: Record<string, any> = {};
 
   const echoRefinement: EchoRefinement = {};
   for (const annotation of ECHO_REFINEMENTS) {
     if (annotations[annotation] != null) {
-      echoRefinement[annotationToRefinementKey[annotation]] = annotations[annotation] as any;
+      if (annotationToRefinementKey[annotation]) {
+        echoRefinement[annotationToRefinementKey[annotation]] = annotations[annotation] as any;
+      }
     }
   }
   if (Object.keys(echoRefinement).length > 0) {
     schemaFields[ECHO_REFINEMENT_KEY] = echoRefinement;
+  }
+
+  const echoIdentifier = annotations[EchoIdentifierAnnotationId];
+  if (echoIdentifier) {
+    schemaFields[ECHO_REFINEMENT_KEY] ??= {};
+    schemaFields[ECHO_REFINEMENT_KEY].schemaId = echoIdentifier;
   }
 
   // Custom (at end).
@@ -362,6 +399,28 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): AST.Annotations 
         annotations[annotation] = echoRefinement[annotationToRefinementKey[annotation]];
       }
     }
+  }
+
+  // Limit to dxn:echo: URIs.
+  if (schema.$id && schema.$id.startsWith('dxn:echo:')) {
+    annotations[EchoIdentifierAnnotationId] = schema.$id;
+  } else if (schema.$id && schema.$id.startsWith('dxn:type:') && schema?.echo?.type?.schemaId) {
+    const id = schema?.echo?.type?.schemaId;
+    if (ObjectId.isValid(id)) {
+      annotations[EchoIdentifierAnnotationId] = DXN.fromLocalObjectId(id).toString();
+    }
+  }
+
+  if (schema.typename) {
+    annotations[ObjectAnnotationId] ??= { typename: schema.typename, version: schema.version };
+  }
+
+  // Decode legacy schema.
+  if (!schema.typename && schema?.echo?.type) {
+    annotations[ObjectAnnotationId] ??= {
+      typename: schema.echo.type.typename,
+      version: schema.echo.type.version,
+    };
   }
 
   // Custom (at end).

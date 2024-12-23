@@ -6,7 +6,7 @@ import { describe, expect, it, beforeEach } from 'vitest';
 
 import { S, TypedObject } from '@dxos/echo-schema';
 import { create, makeRef } from '@dxos/live-object';
-import { createMutableSchema } from '@dxos/live-object/testing';
+import { createEchoSchema } from '@dxos/live-object/testing';
 import { createView, ViewProjection } from '@dxos/schema';
 
 import { TableModel, type TableModelProps } from './table-model';
@@ -94,7 +94,7 @@ class Test extends TypedObject({ typename: 'example.com/type/Test', version: '0.
 }) {}
 
 const createTableModel = (props: Partial<TableModelProps> = {}): TableModel => {
-  const schema = createMutableSchema(Test);
+  const schema = createEchoSchema(Test);
   const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: schema.jsonSchema });
   const projection = new ViewProjection(schema, view);
   const table = create(TableType, { view: makeRef(view) });

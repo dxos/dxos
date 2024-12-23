@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { type MutableSchema } from '@dxos/echo-schema';
+import { type EchoSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
@@ -34,7 +34,7 @@ const StorybookKanban = () => {
   const space = spaces[spaces.length - 1];
   const kanbans = useQuery(space, Filter.schema(KanbanType));
   const [kanban, setKanban] = useState<KanbanType>();
-  const [cardSchema, setCardSchema] = useState<MutableSchema>();
+  const [cardSchema, setCardSchema] = useState<EchoSchema>();
   useEffect(() => {
     if (kanbans.length && !kanban) {
       const kanban = kanbans[0];
@@ -139,7 +139,7 @@ const meta: Meta<StoryProps> = {
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ space }) => {
-        const { taskSchema } = initializeKanban({ space });
+        const { taskSchema } = await initializeKanban({ space });
         // TODO(burdon): Replace with sdk/schema/testing.
         Array.from({ length: 24 }).map(() => {
           return space.db.add(
