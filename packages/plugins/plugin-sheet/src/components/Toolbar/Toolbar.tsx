@@ -6,6 +6,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useCallback } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { inRange } from '@dxos/compute';
 import { RefArray } from '@dxos/live-object';
 import { ThreadAction } from '@dxos/plugin-thread/types';
 import {
@@ -20,22 +21,21 @@ import {
 } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 
+import { completeCellRangeToThreadCursor } from '../../integrations';
+import { SHEET_PLUGIN } from '../../meta';
 import {
   alignKey,
+  rangeFromIndex,
+  rangeToIndex,
+  styleKey,
   type AlignKey,
   type AlignValue,
   type CommentKey,
   type CommentValue,
-  inRange,
-  rangeFromIndex,
-  rangeToIndex,
-  styleKey,
   type StyleKey,
   type StyleValue,
-} from '../../defs';
-import { completeCellRangeToThreadCursor } from '../../integrations';
-import { SHEET_PLUGIN } from '../../meta';
-import { type SheetType } from '../../types';
+  type SheetType,
+} from '../../types';
 import { useSheetContext } from '../SheetContext';
 
 //

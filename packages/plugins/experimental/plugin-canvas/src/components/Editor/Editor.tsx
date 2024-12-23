@@ -12,12 +12,12 @@ import React, {
   useState,
 } from 'react';
 
+import { GraphModel, type Node } from '@dxos/graph';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { testId } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type ActionHandler } from '../../actions';
-import { GraphModel, type Node } from '../../graph';
 import {
   type DraggingState,
   type EditingState,

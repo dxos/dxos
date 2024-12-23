@@ -46,7 +46,7 @@
       "path": "../../../common/util"
     },
     {
-      "path": "../../../core/chain"
+      "path": "../../../core/compute"
     },
     {
       "path": "../../../core/echo/echo-db"

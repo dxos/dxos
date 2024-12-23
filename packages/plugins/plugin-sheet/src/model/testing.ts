@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { addressToA1Notation, createSheet } from '../defs';
-import type { CellValue, SheetType } from '../types';
+import { addressToA1Notation } from '@dxos/compute';
+
+import { type CellValue, type SheetType, createSheet } from '../types';
 
 // TODO(burdon): Create testing endpoint.
 // TODO(burdon): Move to react-ui-sheet.
