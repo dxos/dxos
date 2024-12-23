@@ -38,6 +38,7 @@ import {
 } from '../defs';
 import { type SheetAction, type CellScalarValue, type CellValue, type SheetType } from '../types';
 
+// TODO(burdon): Move to compute.
 // Map sheet types to system types.
 // https://hyperformula.handsontable.com/guide/types-of-values.html
 //  - https://github.com/handsontable/hyperformula/blob/master/src/Cell.ts (CellValueType)

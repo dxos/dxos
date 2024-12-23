@@ -13,23 +13,19 @@
 //  - dxos/chain
 //  - dxos/functions
 
-// TODO(burdon):
+// TODO(burdon): Tech debt.
+//  - move hyperformula defs from sheet to compute.
 //  - standard from ./types exports for plugins.
+//  - remove mosaic/cards
 
-// TODO(burdon):
-//  - plugin-debug
-
-// TODO(burdon): Reconcile:
-//  - dxoc/plugin-automation
-//  - dxoc/plugin-canvas
-//  - dxoc/gem-*
+// TODO(burdon): Reconcile UX.
+//  - dxos/plugin-explorer
+//  - dxos/plugin-canvas
+//  - dxos/gem-*
 
 // TODO(burdon): Next
 //  - dxos/plugin-search
 //  - dxos/plugin-threads
-
-// TODO(burdon): Clean-up
-//  - remove mosaic/cards
 
 export * from './compute-graph';
 export * from './compute-graph-registry';

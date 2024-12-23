@@ -15,7 +15,6 @@ import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
 import { ExportedCellChange, type HyperFormula } from '#hyperformula';
-import { FunctionType } from './types';
 import { ComputeNode } from './compute-node';
 import {
   defaultFunctions,
@@ -24,6 +23,7 @@ import {
   type FunctionDefinition,
   EDGE_FUNCTION_NAME,
 } from './functions';
+import { FunctionType } from './types';
 
 // TODO(burdon): Factor out compute-graph.
 

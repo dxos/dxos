@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ReactiveEchoObject } from '@dxos/echo-db';
+import { type ReactiveEchoObject } from '@dxos/echo-db';
 import { FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { getSchema } from '@dxos/live-object';

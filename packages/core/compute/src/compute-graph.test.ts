@@ -7,10 +7,10 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { create, fullyQualifiedId } from '@dxos/client/echo';
-import { FunctionType } from './types';
 
 import { DetailedCellError } from '#hyperformula';
 import { TestBuilder } from './testing';
+import { FunctionType } from './types';
 
 describe('ComputeGraph', () => {
   let testBuilder: TestBuilder;

@@ -7,13 +7,6 @@ import { type SimpleCellAddress } from 'hyperformula/typings/Cell';
 import { type SimpleDate, type SimpleDateTime } from 'hyperformula/typings/DateTimeHelper';
 
 // TODO(burdon): Explain.
-import { DetailedCellError, ExportedCellChange } from '#hyperformula';
+import { type DetailedCellError, type ExportedCellChange } from '#hyperformula';
 
-export {
-  DetailedCellError,
-  ExportedCellChange,
-  SimpleCellRange,
-  SimpleCellAddress,
-  SimpleDate,
-  SimpleDateTime,
-}
+export type { DetailedCellError, ExportedCellChange, SimpleCellRange, SimpleCellAddress, SimpleDate, SimpleDateTime };
