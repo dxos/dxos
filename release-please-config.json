@@ -219,11 +219,6 @@
         },
         {
           "type": "json",
-          "path": "packages/core/chain/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/core/compute/package.json",
           "jsonpath": "$.version"
         },

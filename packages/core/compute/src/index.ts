@@ -7,18 +7,17 @@
 // TODO(burdon): Reconcile: types.
 //  - dxos/graph
 //  - dxos/compute
-//  - dxoc/plugin-automation
+//  - dxos/functions
+//  - dxos/plugin-automation
 //  - dxos/plugin-script
 //  - dxos/plugin-sheet
-//  - dxos/agent-functions
-//  - dxos/agent
-//  - dxos/chain
-//  - dxos/functions
 
 // TODO(burdon): Tech debt.
 //  - move hyperformula defs from sheet to compute.
 //  - standard from ./types exports for plugins.
-//  - remove mosaic/cards
+//  - dxos/agent
+//  - dxos/agent-functions
+//  - dxos/mosaic, dxos-card
 
 // TODO(burdon): Reconcile UX.
 //  - dxos/plugin-explorer

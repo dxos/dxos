@@ -2358,12 +2358,6 @@ importers:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2)
 
-  packages/core/chain:
-    dependencies:
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../common/node-std
-
   packages/core/compute:
     dependencies:
       '@dxos/async':
@@ -5569,9 +5563,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
-      '@dxos/chain':
-        specifier: workspace:*
-        version: link:../../../core/chain
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../../core/compute

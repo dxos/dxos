@@ -47,7 +47,6 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/chain": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo-db": "workspace:*",
