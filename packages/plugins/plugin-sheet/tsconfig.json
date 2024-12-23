@@ -56,6 +56,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute"
+    },
+    {
       "path": "../../core/echo/echo-generator"
     },
     {
@@ -63,6 +66,9 @@
     },
     {
       "path": "../../core/echo/live-object"
+    },
+    {
+      "path": "../../core/functions"
     },
     {
       "path": "../../sdk/app-framework"

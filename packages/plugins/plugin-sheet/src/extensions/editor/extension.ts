@@ -18,11 +18,10 @@ import { type SyntaxNode } from '@lezer/common';
 import { tags } from '@lezer/highlight';
 import { spreadsheet } from 'codemirror-lang-spreadsheet';
 
+import { type FunctionDefinition } from '@dxos/compute';
+import { RANGE_NOTATION } from '@dxos/compute';
 import { singleValueFacet } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
-
-import { type FunctionDefinition } from '../../compute-graph';
-import { RANGE_NOTATION } from '../../defs';
 
 /**
  * https://codemirror.net/examples/styling

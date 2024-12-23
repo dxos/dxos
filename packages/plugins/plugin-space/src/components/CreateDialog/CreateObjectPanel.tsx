@@ -63,7 +63,7 @@ export const CreateObjectPanel = ({
 
   // TODO(wittjosiah): All of these inputs should be rolled into a `Form` once it supports the necessary variants.
   const schemaInput = (
-    <SearchList.Root label={t('schema input label')} classNames='flex flex-col grow overflow-hidden my-2 px-2'>
+    <SearchList.Root label={t('schema input label')} classNames='flex flex-col grow overflow-hidden'>
       <SearchList.Input
         autoFocus
         data-testid='create-object-form.schema-input'
@@ -89,7 +89,7 @@ export const CreateObjectPanel = ({
   );
 
   const spaceInput = (
-    <SearchList.Root label={t('space input label')} classNames='flex flex-col grow overflow-hidden my-2 px-2'>
+    <SearchList.Root label={t('space input label')} classNames='flex flex-col grow overflow-hidden'>
       <SearchList.Input
         autoFocus
         data-testid='create-object-form.space-input'
@@ -126,10 +126,10 @@ export const CreateObjectPanel = ({
   return (
     <div role='form' className='flex flex-col gap-2'>
       {target && (
-        <div role='none' className='px-2'>
+        <div role='none'>
           <Input.Root>
             <InputHeader>
-              <Input.Label>
+              <Input.Label classNames='px-2'>
                 {t(isSpace(target) ? 'creating in space label' : 'creating in collection label')}
               </Input.Label>
             </InputHeader>
@@ -148,10 +148,10 @@ export const CreateObjectPanel = ({
         </div>
       )}
       {schema && (
-        <div role='none' className='px-2'>
+        <div role='none'>
           <Input.Root>
             <InputHeader>
-              <Input.Label>{t('creating object type label')}</Input.Label>
+              <Input.Label classNames='px-2'>{t('creating object type label')}</Input.Label>
             </InputHeader>
             <div role='none' className='flex gap-2'>
               <Input.TextInput

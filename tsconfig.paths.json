@@ -95,9 +95,6 @@
       "@dxos/plugin-outliner/types": [
         "packages/plugins/experimental/plugin-outliner/src/types/index.ts"
       ],
-      "@dxos/plugin-script/edge": [
-        "packages/plugins/experimental/plugin-script/src/edge/index.ts"
-      ],
       "@dxos/plugin-script": [
         "packages/plugins/experimental/plugin-script/src/index.ts"
       ],
@@ -105,7 +102,7 @@
         "packages/plugins/experimental/plugin-script/src/meta.ts"
       ],
       "@dxos/plugin-script/types": [
-        "packages/plugins/experimental/plugin-script/src/types/index.ts"
+        "packages/plugins/experimental/plugin-script/src/types.ts"
       ],
       "@dxos/plugin-search": [
         "packages/plugins/experimental/plugin-search/src/index.ts"
@@ -255,7 +252,7 @@
         "packages/plugins/plugin-sheet/src/meta.ts"
       ],
       "@dxos/plugin-sheet/types": [
-        "packages/plugins/plugin-sheet/src/types.ts"
+        "packages/plugins/plugin-sheet/src/types/index.ts"
       ],
       "@dxos/plugin-sketch": [
         "packages/plugins/plugin-sketch/src/index.ts"

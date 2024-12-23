@@ -14,7 +14,7 @@ import { S } from '@dxos/echo-schema';
 import { type SchemaProvides } from '@dxos/plugin-space';
 import { type Extension, type EditorInputMode, EditorViewMode } from '@dxos/react-ui-editor';
 
-import { DocumentType } from './document';
+import { DocumentType } from './schema';
 import { MARKDOWN_PLUGIN } from '../meta';
 
 const MARKDOWN_ACTION = `${MARKDOWN_PLUGIN}/action`;

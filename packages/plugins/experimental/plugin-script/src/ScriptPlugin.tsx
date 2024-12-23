@@ -7,6 +7,7 @@ import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import React from 'react';
 
 import { createIntent, createResolver, createSurface, type PluginDefinition } from '@dxos/app-framework';
+import { FunctionType, ScriptType } from '@dxos/functions';
 import { create, makeRef, RefArray } from '@dxos/live-object';
 import { TextType } from '@dxos/plugin-markdown/types';
 
@@ -16,7 +17,7 @@ import { AutomationPanel, ScriptContainer, ScriptSettings, ScriptSettingsPanel }
 import meta, { SCRIPT_PLUGIN } from './meta';
 import { templates } from './templates';
 import translations from './translations';
-import { FunctionType, ScriptAction, type ScriptPluginProvides, ScriptType } from './types';
+import { ScriptAction, type ScriptPluginProvides } from './types';
 
 export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
   const compiler = new Compiler();

@@ -4,11 +4,11 @@
 
 import { createContext, type Dispatch, type RefObject, type SetStateAction } from 'react';
 
+import { type GraphModel, type Node } from '@dxos/graph';
 import { type Dimension } from '@dxos/react-ui-canvas';
 
 import { type SelectionModel } from './selection';
 import { type ActionHandler } from '../actions';
-import { type GraphModel, type Node } from '../graph';
 import type { PolygonShape, Shape } from '../types';
 
 // TODO(burdon): Reconcile with DragPayloadData.

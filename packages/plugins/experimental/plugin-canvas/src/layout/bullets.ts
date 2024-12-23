@@ -5,10 +5,10 @@
 import * as d3 from 'd3';
 import { type Selection } from 'd3';
 
+import type { Edge, GraphModel, Node } from '@dxos/graph';
 import { isNotFalsy } from '@dxos/util';
 
 import { DATA_SHAPE_ID, getShapeElements } from '../components';
-import type { Edge, GraphModel, Node } from '../graph';
 import type { Shape } from '../types';
 
 /**

@@ -12,12 +12,12 @@ import {
   useIntentResolver,
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
+import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute';
 import { ThreadAction } from '@dxos/plugin-thread/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { type DxGridElement, type DxGridPosition } from '@dxos/react-ui-grid';
 
 import { useSheetContext } from '../components';
-import { type CellAddress, type CompleteCellRange, inRange } from '../defs';
 import { SHEET_PLUGIN } from '../meta';
 
 export const completeCellRangeToThreadCursor = (range: CompleteCellRange): string => {
