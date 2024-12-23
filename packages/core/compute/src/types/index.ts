@@ -4,3 +4,4 @@
 
 export * from './hyperformula';
 export * from './schema';
+export * from './types';
