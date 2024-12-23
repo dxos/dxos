@@ -4,7 +4,7 @@
 import { signal } from '@preact/signals-core';
 
 import { Resource } from '@dxos/context';
-import { type JsonProp, type MutableSchema } from '@dxos/echo-schema';
+import { type JsonProp, type EchoSchema } from '@dxos/echo-schema';
 import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 
 import { type KanbanType } from './kanban';
@@ -14,14 +14,14 @@ export type BaseKanbanItem = Record<JsonProp, any> & { id: string };
 
 export type KanbanModelProps = {
   kanban: KanbanType;
-  cardSchema: MutableSchema;
+  cardSchema: EchoSchema;
 };
 
 export type KanbanArrangement<T extends BaseKanbanItem = { id: string }> = { columnValue: string; cards: T[] }[];
 
 export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Resource {
   private readonly _kanban: KanbanType;
-  private readonly _cardSchema: MutableSchema;
+  private readonly _cardSchema: EchoSchema;
   private _items = signal<T[]>([]);
   private _arrangement = signal<KanbanArrangement<T>>([]);
 

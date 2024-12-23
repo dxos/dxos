@@ -51,8 +51,8 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
       },
       intent: {
         resolvers: () => [
-          createResolver(KanbanAction.Create, ({ space }) => ({
-            data: { object: createKanban(space) },
+          createResolver(KanbanAction.Create, async ({ space }) => ({
+            data: { object: await createKanban(space) },
           })),
           createResolver(KanbanAction.DeleteCardField, ({ kanban, fieldId, deletionData }, undo) => {
             invariant(kanban.cardView);

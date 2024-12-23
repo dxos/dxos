@@ -7,7 +7,7 @@ import {
   typeToFormat,
   FormatEnum,
   type JsonProp,
-  type MutableSchema,
+  type EchoSchema,
   S,
   TypeEnum,
   type JsonSchemaType,
@@ -41,7 +41,7 @@ export class ViewProjection {
   constructor(
     // TODO(burdon): This could be StoredSchema?
     // TODO(burdon): How to use tables with static schema.
-    private readonly _schema: MutableSchema,
+    private readonly _schema: EchoSchema,
     private readonly _view: ViewType,
   ) {}
 

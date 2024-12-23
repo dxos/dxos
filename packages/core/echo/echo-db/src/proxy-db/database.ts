@@ -13,7 +13,7 @@ import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { defaultMap } from '@dxos/util';
 
-import { MutableSchemaRegistry } from './mutable-schema-registry';
+import { EchoSchemaRegistry } from './echo-schema-registry';
 import {
   CoreDatabase,
   type FlushOptions,
@@ -60,7 +60,7 @@ export interface EchoDatabase {
 
   get spaceId(): SpaceId;
 
-  get schemaRegistry(): MutableSchemaRegistry;
+  get schemaRegistry(): EchoSchemaRegistry;
 
   get graph(): Hypergraph;
 
@@ -130,6 +130,7 @@ export type EchoDatabaseParams = {
  * Implements EchoDatabase interface.
  */
 export class EchoDatabaseImpl extends Resource implements EchoDatabase {
+  private readonly _schemaRegistry: EchoSchemaRegistry;
   /**
    * @internal
    */
@@ -143,8 +144,6 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   readonly _rootProxies = new Map<ObjectCore, ReactiveEchoObject<any>>();
 
-  public readonly schemaRegistry: MutableSchemaRegistry;
-
   constructor(params: EchoDatabaseParams) {
     super();
 
@@ -156,11 +155,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       spaceKey: params.spaceKey,
     });
 
-    this.schemaRegistry = new MutableSchemaRegistry(this, { reactiveQuery: params.reactiveSchemaQuery });
-  }
-
-  get graph(): Hypergraph {
-    return this._coreDatabase.graph;
+    this._schemaRegistry = new EchoSchemaRegistry(this, { reactiveQuery: params.reactiveSchemaQuery });
   }
 
   get spaceId(): SpaceId {
@@ -178,15 +173,25 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return this._rootUrl;
   }
 
+  get graph(): Hypergraph {
+    return this._coreDatabase.graph;
+  }
+
+  get schemaRegistry(): EchoSchemaRegistry {
+    return this._schemaRegistry;
+  }
+
   @synchronized
   protected override async _open(): Promise<void> {
     if (this._rootUrl !== undefined) {
       await this._coreDatabase.open({ rootUrl: this._rootUrl });
     }
+    await this._schemaRegistry.open();
   }
 
   @synchronized
   protected override async _close(): Promise<void> {
+    await this._schemaRegistry.close();
     await this._coreDatabase.close();
   }
 

@@ -8,11 +8,11 @@ import React, { useCallback, useRef } from 'react';
 import { chain, createIntent, type MetadataResolver, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
 import {
-  type AbstractTypedObject,
   getSpace,
   isReactiveObject,
   isSpace,
   type ReactiveObject,
+  type TypedObject,
   useSpaces,
 } from '@dxos/react-client/echo';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
@@ -48,7 +48,7 @@ export const CreateObjectDialog = ({
       target: _target,
       name,
     }: {
-      schema: AbstractTypedObject;
+      schema: TypedObject;
       target: CreateObjectPanelProps['target'];
       name?: string;
     }) => {
