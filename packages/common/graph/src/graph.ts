@@ -4,15 +4,15 @@
 
 import { create } from '@dxos/live-object';
 
-import { type Edge, Graph, type Node } from './types';
+import { Graph, type GraphNode, type GraphEdge } from './types';
 import { removeElements } from './util';
 
-// TODO(burdon): Traversal.
+// TODO(burdon): Traversal/visitor.
 
 /**
  * Typed reactive object graph.
  */
-export class ReadonlyGraphModel<GraphNode extends Node = any, GraphEdge extends Edge = any> {
+export class ReadonlyGraphModel<Node extends GraphNode = any, Edge extends GraphEdge = any> {
   protected readonly _graph: Graph;
 
   constructor({ nodes = [], edges = [] }: Partial<Graph> = {}) {
@@ -23,30 +23,30 @@ export class ReadonlyGraphModel<GraphNode extends Node = any, GraphEdge extends 
     return this._graph;
   }
 
-  get nodes(): GraphNode[] {
-    return this._graph.nodes as GraphNode[];
+  get nodes(): Node[] {
+    return this._graph.nodes as Node[];
   }
 
-  get edges(): GraphEdge[] {
-    return this._graph.edges as GraphEdge[];
+  get edges(): Edge[] {
+    return this._graph.edges as Edge[];
   }
 
-  getNode(id: string): GraphNode | undefined {
+  getNode(id: string): Node | undefined {
     return this.nodes.find((node) => node.id === id);
   }
 
-  getEdge(id: string): GraphEdge | undefined {
+  getEdge(id: string): Edge | undefined {
     return this.edges.find((edge) => edge.id === id);
   }
 
-  getEdges({ source, target }: Partial<GraphEdge>): GraphEdge[] {
+  getEdges({ source, target }: Partial<Edge>): Edge[] {
     return this.edges.filter((e) => (!source || source === e.source) && (!target || target === e.target));
   }
 }
 
-export class GraphModel<GraphNode extends Node = any, GraphEdge extends Edge = any> extends ReadonlyGraphModel<
-  GraphNode,
-  GraphEdge
+export class GraphModel<Node extends GraphNode = any, Edge extends GraphEdge = any> extends ReadonlyGraphModel<
+  Node,
+  Edge
 > {
   clear(): this {
     this._graph.nodes.length = 0;
@@ -54,13 +54,29 @@ export class GraphModel<GraphNode extends Node = any, GraphEdge extends Edge = a
     return this;
   }
 
-  addNode(node: GraphNode): this {
+  addGraph(graph: GraphModel<Node, Edge>): this {
+    this.addNodes(graph.nodes);
+    this.addEdges(graph.edges);
+    return this;
+  }
+
+  addNode(node: Node): this {
     this._graph.nodes.push(node);
     return this;
   }
 
-  addEdge(edge: GraphEdge): this {
+  addNodes(nodes: Node[]): this {
+    nodes.forEach((node) => this.addNode(node));
+    return this;
+  }
+
+  addEdge(edge: Edge): this {
     this._graph.edges.push(edge);
+    return this;
+  }
+
+  addEdges(edges: Edge[]): this {
+    edges.forEach((edge) => this.addEdge(edge));
     return this;
   }
 

@@ -4,7 +4,7 @@
 
 import { createContext, type Dispatch, type RefObject, type SetStateAction } from 'react';
 
-import { type GraphModel, type Node } from '@dxos/graph';
+import { type GraphModel, type GraphNode } from '@dxos/graph';
 import { type Dimension } from '@dxos/react-ui-canvas';
 
 import { type SelectionModel } from './selection';
@@ -47,7 +47,7 @@ export type EditorContextType = {
   showGrid: boolean;
   setShowGrid: Dispatch<SetStateAction<boolean>>;
 
-  graph: GraphModel<Node<Shape>>;
+  graph: GraphModel<GraphNode<Shape>>;
   selection: SelectionModel;
 
   snapToGrid: boolean;

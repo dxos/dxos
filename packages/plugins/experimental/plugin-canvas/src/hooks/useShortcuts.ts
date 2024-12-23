@@ -13,46 +13,36 @@ export const useShortcuts = () => {
   const { id, graph, selection, actionHandler } = useEditorContext();
 
   useHotkeys(
-    'd',
+    'meta+x',
     (ev) => {
       ev.preventDefault();
       void actionHandler?.({
-        type: 'debug',
+        type: 'cut',
       });
     },
     { scopes: [id] },
   );
   useHotkeys(
-    'meta+a',
+    'meta+c',
     (ev) => {
       ev.preventDefault();
       void actionHandler?.({
-        type: 'select',
-        ids: [...graph.nodes.map((node) => node.id), ...graph.edges.map((edge) => edge.id)],
+        type: 'copy',
       });
     },
     { scopes: [id] },
   );
   useHotkeys(
-    "meta+'",
+    'meta+v',
     (ev) => {
       ev.preventDefault();
       void actionHandler?.({
-        type: 'grid',
+        type: 'paste',
       });
     },
     { scopes: [id] },
   );
-  useHotkeys(
-    'Home',
-    (ev) => {
-      ev.preventDefault();
-      void actionHandler?.({
-        type: 'home',
-      });
-    },
-    { scopes: [id] },
-  );
+
   useHotkeys(
     'Backspace',
     (ev) => {
@@ -71,6 +61,51 @@ export const useShortcuts = () => {
       void actionHandler?.({
         type: 'select',
         ids: [],
+      });
+    },
+    { scopes: [id] },
+  );
+
+  useHotkeys(
+    'd',
+    (ev) => {
+      ev.preventDefault();
+      void actionHandler?.({
+        type: 'debug',
+      });
+    },
+    { scopes: [id] },
+  );
+
+  useHotkeys(
+    'meta+a',
+    (ev) => {
+      ev.preventDefault();
+      void actionHandler?.({
+        type: 'select',
+        ids: [...graph.nodes.map((node) => node.id), ...graph.edges.map((edge) => edge.id)],
+      });
+    },
+    { scopes: [id] },
+  );
+
+  useHotkeys(
+    "meta+'",
+    (ev) => {
+      ev.preventDefault();
+      void actionHandler?.({
+        type: 'grid',
+      });
+    },
+    { scopes: [id] },
+  );
+
+  useHotkeys(
+    'Home',
+    (ev) => {
+      ev.preventDefault();
+      void actionHandler?.({
+        type: 'home',
       });
     },
     { scopes: [id] },

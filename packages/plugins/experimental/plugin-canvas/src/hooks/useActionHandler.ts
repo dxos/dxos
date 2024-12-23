@@ -2,11 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 
+import { GraphModel, type GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { DATA_TEST_ID, useProjection, zoomTo, zoomInPlace, ProjectionMapper } from '@dxos/react-ui-canvas';
+import { isNotFalsy } from '@dxos/util';
 
 import { useEditorContext } from './useEditorContext';
 import { type ActionHandler } from '../actions';
@@ -14,13 +16,16 @@ import { type TestId } from '../components';
 import { createRectangle, doLayout, getCenter, getRect, rectUnion } from '../layout';
 import { fireBullet } from '../layout/bullets';
 import { createId, itemSize } from '../testing';
-import { isPolygon } from '../types';
+import { isPolygon, type Shape } from '../types';
 
 // TODO(burdon): Handle multiple actions.
 export const useActionHandler = () => {
   const { options, overlaySvg, graph, selection, setDebug, setShowGrid, setSnapToGrid, setActionHandler } =
     useEditorContext();
   const { root, projection, setProjection } = useProjection();
+
+  // TODO(burdon): Move to root.
+  const clipboard = useMemo<GraphModel>(() => new GraphModel<GraphNode<Shape>>(), []);
 
   useEffect(() => {
     const actionHandler: ActionHandler = async (action) => {
@@ -130,7 +135,44 @@ export const useActionHandler = () => {
           return true;
         }
 
+        // TODO(burdon): Manage undo/redo history via automerge?
+        case 'undo': {
+          return true;
+        }
+        case 'redo': {
+          return true;
+        }
+
         // TODO(burdon): Factor out graph handlers. Undo.
+        case 'cut': {
+          const { ids = selection.selected.value } = action;
+          const g: GraphModel<GraphNode<Shape>> = graph;
+          const nodes: GraphNode<Shape>[] = ids
+            .map((id) => {
+              const node = g.getNode(id);
+              graph.removeNode(id);
+              return node;
+            })
+            .filter(isNotFalsy);
+          clipboard.addNodes(nodes);
+          selection.clear();
+          return true;
+        }
+        case 'copy': {
+          // TODO(burdon): Copy/cut entire graph.
+          const { ids = selection.selected.value } = action;
+          const nodes = ids.map((id) => graph.getNode(id)).filter(isNotFalsy);
+          clipboard.addNodes(nodes);
+          return true;
+        }
+        case 'paste': {
+          graph.addGraph(clipboard);
+          // TODO(burdon): Change ids if pasting copy.
+          selection.setSelected([...clipboard.nodes.map((node) => node.id), ...clipboard.edges.map((edge) => edge.id)]);
+          clipboard.clear();
+          return true;
+        }
+
         case 'select': {
           const { ids, shift } = action;
           selection.setSelected(ids, shift);

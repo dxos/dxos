@@ -9,7 +9,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { type ReactiveEchoObject } from '@dxos/echo-db';
 import { S, getTypename } from '@dxos/echo-schema';
-import { createGraph, type GraphModel, type Node } from '@dxos/graph';
+import { createGraph, type GraphModel, type GraphNode } from '@dxos/graph';
 import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
@@ -38,7 +38,7 @@ const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
   const { space } = useClientProvider();
 
   // Do layout.
-  const [graph, setGraph] = useState<GraphModel<Node<Shape>>>();
+  const [graph, setGraph] = useState<GraphModel<GraphNode<Shape>>>();
   useEffect(() => {
     if (!space || !init) {
       return;

@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { getSchemaProperties } from '@dxos/schema';
 
 import { GraphModel } from './graph';
-import { type Node } from './types';
+import { type GraphNode } from './types';
 
 // NOTE: The `relation` is different from the `type`.
 type Edge = { source: string; target: string; relation: string };
@@ -26,8 +26,8 @@ export const parseEdgeId = (id: string): Edge => {
 /**
  * Maps an ECHO object graph onto a layout graph.
  */
-export const createGraph = (objects: ReactiveEchoObject<any>[]): GraphModel<Node<ReactiveEchoObject<any>>> => {
-  const graph = new GraphModel<Node<ReactiveEchoObject<any>>>();
+export const createGraph = (objects: ReactiveEchoObject<any>[]): GraphModel<GraphNode<ReactiveEchoObject<any>>> => {
+  const graph = new GraphModel<GraphNode<ReactiveEchoObject<any>>>();
 
   // Map objects.
   objects.forEach((object) => {
