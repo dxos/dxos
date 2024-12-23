@@ -3,13 +3,13 @@
 //
 
 import { sleep } from '@dxos/async';
+import { FunctionType } from '@dxos/compute';
 import { getObjectCore, ResultFormat } from '@dxos/echo-db';
-import type { AnyObjectData } from '@dxos/echo-schema';
+import { type AnyObjectData } from '@dxos/echo-schema';
 import { type FunctionTrigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { FunctionType } from '@dxos/plugin-script';
 import { type Client, type Config } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 

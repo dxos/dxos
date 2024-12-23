@@ -3620,6 +3620,9 @@ importers:
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../../sdk/client-services
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -5566,6 +5569,9 @@ importers:
       '@dxos/chain':
         specifier: workspace:*
         version: link:../../../core/chain
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../../core/compute
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
@@ -6628,9 +6634,6 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
-      '@dxos/edge-client':
-        specifier: workspace:*
-        version: link:../../../core/mesh/edge-client
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -7175,6 +7178,9 @@ importers:
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../../sdk/client-services
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config

@@ -10,15 +10,16 @@ import { type Client } from '@dxos/client';
 import { type ReactiveEchoObject, Filter, loadObjectReferences, makeRef } from '@dxos/client/echo';
 import { create, getMeta } from '@dxos/client/echo';
 import { type Space } from '@dxos/client-protocol';
-import { invariant } from '@dxos/invariant';
-import { TextType } from '@dxos/plugin-markdown/types';
 import {
   getUserFunctionUrlInMetadata,
   incrementSemverPatch,
   setUserFunctionUrlInMetadata,
   uploadWorkerFunction,
-} from '@dxos/plugin-script/edge';
-import { FunctionType, ScriptType } from '@dxos/plugin-script/types';
+  FunctionType,
+  ScriptType,
+} from '@dxos/compute';
+import { invariant } from '@dxos/invariant';
+import { TextType } from '@dxos/plugin-markdown/types';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
 
 import { BaseCommand } from '../../base';
