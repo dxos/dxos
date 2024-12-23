@@ -2384,9 +2384,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../echo/echo-schema
-      '@dxos/edge-client':
+      '@dxos/functions':
         specifier: workspace:*
-        version: link:../mesh/edge-client
+        version: link:../functions
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -2417,9 +2417,6 @@ importers:
       hyperformula:
         specifier: ^2.7.1
         version: 2.7.1
-      iso-did:
-        specifier: ^1.6.0
-        version: 1.6.0
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -2950,6 +2947,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../echo/echo-schema
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../mesh/edge-client
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -2992,6 +2992,9 @@ importers:
       get-port-please:
         specifier: ^3.1.1
         version: 3.1.1
+      iso-did:
+        specifier: ^1.6.0
+        version: 1.6.0
       ws:
         specifier: ^8.14.2
         version: 8.17.0
@@ -6634,6 +6637,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../../core/functions
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -8332,6 +8338,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant

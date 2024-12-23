@@ -4,8 +4,14 @@
 
 import React from 'react';
 
-import { FunctionType, ScriptType } from '@dxos/compute';
-import { FunctionTriggerSchema, type FunctionTriggerType, type FunctionTrigger, TriggerKind } from '@dxos/functions';
+import {
+  FunctionType,
+  FunctionTriggerSchema,
+  type FunctionTriggerType,
+  type FunctionTrigger,
+  ScriptType,
+  TriggerKind,
+} from '@dxos/functions';
 import { Filter, useQuery, type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Form, SelectInput } from '@dxos/react-ui-form';

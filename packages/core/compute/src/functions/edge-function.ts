@@ -7,13 +7,12 @@ import { type InterpreterState } from 'hyperformula/typings/interpreter/Interpre
 import { type ProcedureAst } from 'hyperformula/typings/parser';
 
 import { Filter, getMeta } from '@dxos/client/echo';
+import { FunctionType, getUserFunctionUrlInMetadata } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
 import { CellError, ErrorType, FunctionArgumentType } from '#hyperformula';
 import { type AsyncFunction, AsyncFunctionPlugin } from './async-function';
-import { getUserFunctionUrlInMetadata } from '../edge';
-import { FunctionType } from '../types';
 
 export const EDGE_FUNCTION_NAME = 'DX';
 

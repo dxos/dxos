@@ -3,9 +3,9 @@
 //
 
 import { sleep } from '@dxos/async';
-import { FunctionType } from '@dxos/compute';
 import { getObjectCore, ResultFormat } from '@dxos/echo-db';
 import { type AnyObjectData } from '@dxos/echo-schema';
+import { FunctionType } from '@dxos/functions';
 import { type FunctionTrigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG } from '@dxos/keys';

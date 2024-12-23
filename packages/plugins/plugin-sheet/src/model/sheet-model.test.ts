@@ -5,8 +5,9 @@
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { type CellScalarValue, FunctionType, addressFromA1Notation, isFormula } from '@dxos/compute';
+import { type CellScalarValue, addressFromA1Notation, isFormula } from '@dxos/compute';
 import { TestBuilder, testFunctionPlugins } from '@dxos/compute/testing';
+import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
 
 import { SheetModel } from './sheet-model';

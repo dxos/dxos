@@ -6,7 +6,7 @@
 import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type ScriptType } from '@dxos/compute';
+import { type ScriptType } from '@dxos/functions';
 import { createDocAccessor, DocAccessor } from '@dxos/react-client/echo';
 import { Toolbar, Button, Icon } from '@dxos/react-ui';
 

@@ -7,7 +7,7 @@ import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import React from 'react';
 
 import { createIntent, createResolver, createSurface, type PluginDefinition } from '@dxos/app-framework';
-import { FunctionType, ScriptType } from '@dxos/compute';
+import { FunctionType, ScriptType } from '@dxos/functions';
 import { create, makeRef, RefArray } from '@dxos/live-object';
 import { TextType } from '@dxos/plugin-markdown/types';
 

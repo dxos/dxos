@@ -9,8 +9,8 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import { ScriptType } from '@dxos/compute';
 import { S } from '@dxos/echo-schema';
+import { ScriptType } from '@dxos/functions';
 import { type SchemaProvides } from '@dxos/plugin-space';
 
 import { SCRIPT_PLUGIN } from './meta';

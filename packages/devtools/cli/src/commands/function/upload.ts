@@ -17,7 +17,7 @@ import {
   uploadWorkerFunction,
   FunctionType,
   ScriptType,
-} from '@dxos/compute';
+} from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { TextType } from '@dxos/plugin-markdown/types';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';

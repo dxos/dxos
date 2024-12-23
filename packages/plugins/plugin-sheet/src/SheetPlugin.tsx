@@ -6,7 +6,7 @@ import React from 'react';
 
 import { createIntent, createResolver, createSurface, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 import { type ComputeGraphRegistry } from '@dxos/compute';
-import { FunctionType } from '@dxos/compute';
+import { FunctionType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { parseClientPlugin } from '@dxos/plugin-client/types';
 import { getSpace } from '@dxos/react-client/echo';

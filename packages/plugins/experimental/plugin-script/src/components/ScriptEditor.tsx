@@ -8,15 +8,15 @@ import prettierPluginTypescript from 'prettier/plugins/typescript';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import {
+  FUNCTIONS_PRESET_META_KEY,
   FunctionType,
   type ScriptType,
   getInvocationUrl,
   getUserFunctionUrlInMetadata,
   setUserFunctionUrlInMetadata,
   uploadWorkerFunction,
-  FUNCTIONS_PRESET_META_KEY,
   incrementSemverPatch,
-} from '@dxos/compute';
+} from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { create, createDocAccessor, Filter, getMeta, getSpace, makeRef, useQuery } from '@dxos/react-client/echo';

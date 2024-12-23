@@ -19,11 +19,6 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
-    "./edge": {
-      "types": "./dist/types/src/edge/index.d.ts",
-      "browser": "./dist/lib/browser/edge/index.mjs",
-      "node": "./dist/lib/node-esm/edge/index.mjs"
-    },
     "./testing": {
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
@@ -55,7 +50,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
-    "@dxos/edge-client": "workspace:*",
+    "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/live-object": "workspace:*",
@@ -66,7 +61,6 @@
     "@effect/schema": "^0.75.5",
     "@preact/signals-core": "^1.6.0",
     "hyperformula": "^2.7.1",
-    "iso-did": "^1.6.0",
     "lodash.defaultsdeep": "^4.6.1"
   },
   "devDependencies": {

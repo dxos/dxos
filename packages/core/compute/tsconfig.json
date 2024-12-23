@@ -60,7 +60,7 @@
       "path": "../echo/live-object"
     },
     {
-      "path": "../mesh/edge-client"
+      "path": "../functions"
     },
     {
       "path": "../protocols"
