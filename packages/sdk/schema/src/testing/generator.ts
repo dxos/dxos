@@ -14,6 +14,7 @@ import {
   type ExcludeId,
   type JsonSchemaType,
   type S,
+  type TypedObject,
 } from '@dxos/echo-schema';
 import { AST, findAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -32,7 +33,7 @@ const randomBoolean = (p = 0.5) => Math.random() < p;
 const randomElement = <T>(elements: T[]): T => elements[Math.floor(Math.random() * elements.length)];
 
 export type TypeSpec = {
-  type: AbstractSchema;
+  type: TypedObject;
   count: number;
 };
 
