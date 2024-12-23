@@ -26,9 +26,9 @@ const TableViewEditor = ({ table }: TableViewEditorProps) => {
   );
   // TODO(dmaretskyi): New hook for schema query.
   useEffect(() => {
-    if (space && table?.view?.target?.query?.typename) {
+    if (space && table?.view?.target?.query?.type) {
       const unsubscribe = space.db.schemaRegistry
-        .query({ typename: table.view.target.query.typename })
+        .query({ typename: table.view.target.query.type })
         .subscribe((query) => {
           const schema = query.results[0];
           if (schema) {

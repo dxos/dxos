@@ -141,7 +141,7 @@ describe('ViewProjection', () => {
       name: S.String.annotations({ [AST.TitleAnnotationId]: 'Name' }),
       email: Format.Email,
       salary: Format.Currency({ code: 'usd', decimals: 2 }),
-      org: ref(Org),
+      org: Ref(Org),
     }).annotations({
       [ObjectAnnotationId]: {
         typename: 'example.com/type/Person',

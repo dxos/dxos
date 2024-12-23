@@ -49,6 +49,7 @@ interface EchoRefinement {
   type?: ObjectAnnotation;
   reference?: ObjectAnnotation;
   annotations?: PropertyMetaAnnotation;
+  generator?: string;
 }
 
 // TODO(burdon): Are these values stored (can they be changed?)
@@ -353,6 +354,7 @@ const ECHO_REFINEMENTS = [
 const annotationToRefinementKey: { [annotation: symbol]: keyof EchoRefinement } = {
   // TODO(dmaretskyi): Extract out.
   [PropertyMetaAnnotationId]: 'annotations',
+  [GeneratorAnnotationId]: 'generator',
 };
 
 const annotationsToJsonSchemaFields = (annotations: AST.Annotations): Record<symbol, any> => {

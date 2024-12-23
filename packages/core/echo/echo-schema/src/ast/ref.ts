@@ -2,23 +2,22 @@
 // Copyright 2024 DXOS.org
 //
 
-import { getDescriptionAnnotation, getIdentifierAnnotation, type Annotated } from '@effect/schema/AST';
-import { getTitleAnnotation } from '@effect/schema/AST';
+import {
+  getDescriptionAnnotation,
+  getIdentifierAnnotation,
+  getTitleAnnotation,
+  type Annotated,
+} from '@effect/schema/AST';
 import { Option } from 'effect';
 
 import { type EncodedReference } from '@dxos/echo-protocol';
 import { S } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
-import { getEchoIdentifierAnnotation, getObjectAnnotation, ReferenceAnnotationId } from './annotations';
-import { type JsonSchemaType } from './json-schema-type';
-import { EXPANDO_TYPENAME, getTypename } from '../object';
-import { EchoSchema, StoredSchema } from '../schema';
-import { type Ref, type WithId } from '../types';
-import { getObjectAnnotation, ReferenceAnnotationId, type ObjectAnnotation } from './annotations';
-import { type JsonSchemaType } from './types';
 import type { ObjectId } from '../object';
 import { type WithId } from '../types';
+import { getEchoIdentifierAnnotation, getObjectAnnotation, ReferenceAnnotationId } from './annotations';
+import { type JsonSchemaType } from './json-schema-type';
 
 /**
  * The `$id` field for an ECHO reference schema.
@@ -67,7 +66,12 @@ export const Ref: RefFn = <T extends WithId>(schema: S.Schema<T, any>): Ref$<T> 
     throw new Error('Reference target must be an ECHO schema.');
   }
 
-  return createEchoReferenceSchema(getEchoIdentifierAnnotation(schema), annotation.typename, annotation.version, getSchemaExpectedName(schema.ast));
+  return createEchoReferenceSchema(
+    getEchoIdentifierAnnotation(schema),
+    annotation.typename,
+    annotation.version,
+    getSchemaExpectedName(schema.ast),
+  );
 };
 
 export const RefTypeId: unique symbol = Symbol('@dxos/echo-schema/Ref');
@@ -130,7 +134,7 @@ export const createEchoReferenceSchema = (
   echoId: string | undefined,
   typename: string | undefined,
   version: string | undefined,
-  schemaName?: string
+  schemaName?: string,
 ): S.Schema<any> => {
   if (!echoId && !typename) {
     throw new TypeError('Either echoId or typename must be provided.');
@@ -151,7 +155,7 @@ export const createEchoReferenceSchema = (
         }
 
         // TODO(dmaretskyi): Validate reference target.
-        // if (obj instanceof MutableSchema) {
+        // if (obj instanceof EchoSchema) {
         //   return annotation.typename === StoredSchema.typename;
         // }
 

@@ -10,7 +10,7 @@ import {
   GeneratorAnnotationId,
   getSchemaReference,
   getTypename,
-  type AbstractSchema,
+  type TypedObject,
   type BaseObject,
   type ExcludeId,
   type JsonSchemaType,
@@ -71,7 +71,7 @@ export const createProps = <T extends BaseObject>(generator: ValueGenerator, sch
           if (fn) {
             obj[property.name] = fn();
           } else if (!property.optional) {
-            log.warn('missing generator for required property', { property });
+            log.warn('missing generator for required property', { property, schema });
           }
         }
       }

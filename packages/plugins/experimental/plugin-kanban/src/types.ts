@@ -82,7 +82,7 @@ export type Location = {
 
 export const isKanban = (object: unknown): object is KanbanType => object != null && object instanceof KanbanType;
 
-export const createKanban = (space: Space) => {
-  const { kanban } = initializeKanban({ space });
+export const createKanban = async (space: Space) => {
+  const { kanban } = await initializeKanban({ space });
   return kanban;
 };

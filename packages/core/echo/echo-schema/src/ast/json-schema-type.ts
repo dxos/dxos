@@ -239,6 +239,12 @@ const _JsonSchemaType = S.mutable(
               value: S.Any,
             }),
           ),
+
+          /**
+           * Generator function for this schema.
+           * Mapped from {@link GeneratorAnnotationId}.
+           */
+          generator: S.optional(S.String),
         }),
       ),
     ),
