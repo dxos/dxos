@@ -11,7 +11,7 @@ import {
   defineHiddenProperty,
   ECHO_ATTR_META,
   ECHO_ATTR_TYPE,
-  MutableSchema,
+  EchoSchema,
   type ObjectMeta,
   ObjectMetaSchema,
   Ref,
@@ -118,7 +118,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     if (prop === TYPENAME_SYMBOL) {
       const schema = this.getSchema(target);
-      // Special handling for MutableSchema. objectId is StoredSchema objectId, not a typename.
+      // Special handling for EchoSchema. objectId is StoredSchema objectId, not a typename.
       if (schema && typeof schema === 'object' && SchemaMetaSymbol in schema) {
         return (schema as any)[SchemaMetaSymbol].typename;
       }
@@ -207,7 +207,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     // Object instanceof StoredEchoSchema requires database to lookup schema.
     const database = target[symbolInternals].database;
     if (object != null && database && object instanceof StoredSchema) {
-      return database.schemaRegistry.registerSchema(object);
+      return database.schemaRegistry._registerSchema(object);
     }
 
     return object;
@@ -303,7 +303,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     // DynamicEchoSchema is a utility-wrapper around the object we actually store in automerge, unwrap it
-    const unwrappedValue = value instanceof MutableSchema ? value.storedSchema : value;
+    const unwrappedValue = value instanceof EchoSchema ? value.storedSchema : value;
     const propertySchema = SchemaValidator.getPropertySchema(rootObjectSchema, path, (path) => {
       return target[symbolInternals].core.getDecoded([getNamespace(target), ...path]);
     });
@@ -512,7 +512,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    * @param proxy - the proxy that was passed to the method
    */
   createRef(target: ProxyTarget, proxy: any): Reference {
-    let otherEchoObj = proxy instanceof MutableSchema ? proxy.storedSchema : proxy;
+    let otherEchoObj = proxy instanceof EchoSchema ? proxy.storedSchema : proxy;
     otherEchoObj = !isEchoObject(otherEchoObj) ? createObject(otherEchoObj) : otherEchoObj;
     const otherObjId = otherEchoObj.id;
     invariant(typeof otherObjId === 'string' && otherObjId.length > 0);
@@ -700,7 +700,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 }
 
 export const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
-  if (value == null || Array.isArray(value) || value instanceof MutableSchema || Ref.isRef(value)) {
+  if (value == null || Array.isArray(value) || value instanceof EchoSchema || Ref.isRef(value)) {
     return;
   }
 

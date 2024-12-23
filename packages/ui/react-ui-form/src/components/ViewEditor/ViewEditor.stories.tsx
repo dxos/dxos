@@ -5,11 +5,12 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
-import { Format, type MutableSchema, S, toJsonSchema, TypedObject } from '@dxos/echo-schema';
+import { Format, type EchoSchema, S, toJsonSchema, TypedObject } from '@dxos/echo-schema';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { useAsyncEffect } from '@dxos/react-ui';
 import { type ViewType, ViewProjection, createView } from '@dxos/schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
@@ -19,10 +20,10 @@ import { TestLayout, TestPanel } from '../testing';
 
 const DefaultStory = () => {
   const space = useSpace();
-  const [schema, setSchema] = useState<MutableSchema>();
+  const [schema, setSchema] = useState<EchoSchema>();
   const [view, setView] = useState<ViewType>();
   const [projection, setProjection] = useState<ViewProjection>();
-  useEffect(() => {
+  useAsyncEffect(async () => {
     if (space) {
       class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
         name: S.String,
@@ -30,7 +31,7 @@ const DefaultStory = () => {
         salary: Format.Currency(),
       }) {}
 
-      const schema = space.db.schemaRegistry.addSchema(TestSchema);
+      const [schema] = await space.db.schemaRegistry.register([TestSchema]);
       const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: toJsonSchema(TestSchema) });
       const projection = new ViewProjection(schema, view);
 

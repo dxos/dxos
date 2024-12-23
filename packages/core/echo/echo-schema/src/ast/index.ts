@@ -7,3 +7,4 @@ export * from './annotations';
 // export * from './ref';
 export * from './schema-validator';
 export * from './types';
+export * from './json-schema-type';

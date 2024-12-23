@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { type MutableSchema } from '@dxos/echo-schema';
+import { type EchoSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { Filter, useQuery, getSpace, create } from '@dxos/react-client/echo';
@@ -12,7 +12,7 @@ import { type KanbanType, useKanbanModel, Kanban } from '@dxos/react-ui-kanban';
 import { StackItem } from '@dxos/react-ui-stack';
 
 export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }) => {
-  const [cardSchema, setCardSchema] = useState<MutableSchema>();
+  const [cardSchema, setCardSchema] = useState<EchoSchema>();
   const space = getSpace(kanban);
   useEffect(() => {
     if (kanban.cardView && space) {

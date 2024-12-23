@@ -2,12 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type AbstractSchema, type BaseObject } from '@dxos/echo-schema';
+import { type BaseObject, type TypedObject } from '@dxos/echo-schema';
 import { create, makeRef, type ReactiveObject } from '@dxos/live-object';
 import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
 import { addressToA1Notation, createSheet } from '@dxos/plugin-sheet';
-import { type CellValue } from '@dxos/plugin-sheet/types';
-import { SheetType } from '@dxos/plugin-sheet/types';
+import { SheetType, type CellValue } from '@dxos/plugin-sheet/types';
 import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
 import { faker } from '@dxos/random';
 import { Filter, type Space } from '@dxos/react-client/echo';
@@ -111,19 +110,19 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
   ],
 ]);
 
-export const createGenerator = <T extends BaseObject>(type: AbstractSchema<T>): ObjectGenerator<T> => {
+export const createGenerator = <T extends BaseObject>(type: TypedObject<T>): ObjectGenerator<T> => {
   return async (
     space: Space,
     n: number,
     cb?: (objects: ReactiveObject<any>[]) => void,
   ): Promise<ReactiveObject<T>[]> => {
     // Find or create mutable schema.
-    const mutableSchema = await space.db.schemaRegistry.query();
     const schema =
-      mutableSchema.find((schema) => schema.typename === type.typename) ?? space.db.schemaRegistry.addSchema(type);
+      (await space.db.schemaRegistry.query({ typename: type.typename }).firstOrUndefined()) ??
+      (await space.db.schemaRegistry.register([type]))[0];
 
     // Create objects.
-    const generate = createAsyncGenerator(generator, schema.schema, { db: space.db });
+    const generate = createAsyncGenerator(generator, schema.getSchemaSnapshot(), { db: space.db });
     const objects = await generate.createObjects(n);
 
     // Find or create table and view.
