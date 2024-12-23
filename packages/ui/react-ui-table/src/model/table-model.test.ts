@@ -12,8 +12,8 @@ import { createEchoSchema } from '@dxos/live-object/testing';
 import { create, makeRef } from '@dxos/react-client/echo';
 import { createView, ViewProjection } from '@dxos/schema';
 
-import { TableType } from '../types';
 import { TableModel, type TableModelProps } from './table-model';
+import { TableType } from '../types';
 
 // TODO(burdon): Tests are disabled in project.json since they bring in plugin deps.
 //  Restore once factored out into react-ui-table.

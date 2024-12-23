@@ -13,7 +13,9 @@ type InitialiseKanbanProps = {
   space: Space;
 };
 
-export const initializeKanban = async ({ space }: InitialiseKanbanProps): Promise<{ kanban: KanbanType; taskSchema: EchoSchema }> => {
+export const initializeKanban = async ({
+  space,
+}: InitialiseKanbanProps): Promise<{ kanban: KanbanType; taskSchema: EchoSchema }> => {
   const TaskSchema = TypedObject({
     typename: `example.com/type/${PublicKey.random().truncate()}`,
     version: '0.1.0',

@@ -14,10 +14,10 @@ import { type EncodedReference } from '@dxos/echo-protocol';
 import { S } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
-import type { ObjectId } from '../object';
-import { type WithId } from '../types';
 import { getEchoIdentifierAnnotation, getObjectAnnotation, ReferenceAnnotationId } from './annotations';
 import { type JsonSchemaType } from './json-schema-type';
+import type { ObjectId } from '../object';
+import { type WithId } from '../types';
 
 /**
  * The `$id` field for an ECHO reference schema.

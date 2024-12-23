@@ -10,7 +10,6 @@ import {
   GeneratorAnnotationId,
   getSchemaReference,
   getTypename,
-  type TypedObject,
   type BaseObject,
   type ExcludeId,
   type JsonSchemaType,

@@ -27,13 +27,13 @@ const Story = () => {
   useEffect(() => {
     const space = client.spaces.default;
     const generator = createSpaceObjectGenerator(space);
-    generator.addSchemas();
-    void generator
-      .createObjects({
+    queueMicrotask(async () => {
+      await generator.addSchemas();
+      await generator.createObjects({
         [TestSchemaType.organization]: 20,
         [TestSchemaType.contact]: 50,
-      })
-      .catch(() => {});
+      });
+    });
 
     const view = space.db.add(create(ViewType, { name: '', type: '' }));
     setSpace(space);

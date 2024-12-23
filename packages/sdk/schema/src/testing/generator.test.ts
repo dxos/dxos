@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { type EchoDatabase, Filter } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { type TypedObject, type S } from '@dxos/echo-schema';
+import { type S } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { stripUndefined } from '@dxos/util';

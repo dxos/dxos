@@ -7,12 +7,19 @@ import React, { useCallback, useRef } from 'react';
 
 import { chain, createIntent, type MetadataResolver, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
-import { getSpace, isReactiveObject, isSpace, type ReactiveObject, type TypedObject, useSpaces } from '@dxos/react-client/echo';
+import {
+  getSpace,
+  isReactiveObject,
+  isSpace,
+  type ReactiveObject,
+  type TypedObject,
+  useSpaces,
+} from '@dxos/react-client/echo';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 
+import { CreateObjectPanel, type CreateObjectPanelProps } from './CreateObjectPanel';
 import { SPACE_PLUGIN } from '../../meta';
 import { CollectionType, SpaceAction } from '../../types';
-import { CreateObjectPanel, type CreateObjectPanelProps } from './CreateObjectPanel';
 
 export const CREATE_OBJECT_DIALOG = `${SPACE_PLUGIN}/CreateObjectDialog`;
 

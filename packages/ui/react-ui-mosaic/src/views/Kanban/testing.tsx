@@ -5,11 +5,11 @@
 import React, { type FC, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
+import { useAsyncEffect } from '@dxos/react-ui';
 
 import { Kanban, type KanbanColumn, type KanbanProps } from './Kanban';
 import { Mosaic, type MosaicDropEvent, Path, swapItems } from '../../mosaic';
 import { TestObjectGenerator, Priority, Status, type TestItem } from '../../testing';
-import { useAsyncEffect } from '@dxos/react-ui';
 
 const createKanban = ({ types, columns = 3 }: { types?: string[]; columns?: number }) => {
   const generator = new TestObjectGenerator({ types });

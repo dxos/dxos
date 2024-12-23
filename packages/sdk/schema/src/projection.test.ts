@@ -14,7 +14,6 @@ import {
   TypeEnum,
   TypedObject,
   Ref,
-  toJsonSchema,
   type JsonPath,
   type JsonProp,
 } from '@dxos/echo-schema';
