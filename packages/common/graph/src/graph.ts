@@ -67,6 +67,14 @@ export class GraphModel<Node extends GraphNode = any, Edge extends GraphEdge = a
     return this;
   }
 
+  addGraphs(graphs: GraphModel<Node, Edge>[]): this {
+    graphs.forEach((graph) => {
+      this.addNodes(graph.nodes);
+      this.addEdges(graph.edges);
+    });
+    return this;
+  }
+
   addNode(node: Node): this {
     this._graph.nodes.push(node);
     return this;
@@ -89,20 +97,24 @@ export class GraphModel<Node extends GraphNode = any, Edge extends GraphEdge = a
 
   // TODO(burdon): Return graph.
 
-  removeNode(id: string) {
-    removeElements(this._graph.nodes, (node) => node.id === id);
-    removeElements(this._graph.edges, (edge) => edge.source === id || edge.target === id);
+  removeNode(id: string): GraphModel<Node, Edge> {
+    const nodes = removeElements(this._graph.nodes, (node) => node.id === id);
+    const edges = removeElements(this._graph.edges, (edge) => edge.source === id || edge.target === id);
+    return new GraphModel<Node, Edge>({ nodes, edges });
   }
 
-  removeNodes(ids: string[]) {
-    ids.forEach((id) => this.removeNode(id));
+  removeNodes(ids: string[]): GraphModel<Node, Edge> {
+    const graphs = ids.map((id) => this.removeNode(id));
+    return new GraphModel<Node, Edge>().addGraphs(graphs);
   }
 
-  removeEdge(id: string) {
-    removeElements(this._graph.edges, (edge) => edge.id === id);
+  removeEdge(id: string): GraphModel<Node, Edge> {
+    const edges = removeElements(this._graph.edges, (edge) => edge.id === id);
+    return new GraphModel<Node, Edge>({ edges });
   }
 
-  removeEdges(ids: string[]) {
-    ids.forEach((id) => this.removeEdge(id));
+  removeEdges(ids: string[]): GraphModel<Node, Edge> {
+    const graphs = ids.map((id) => this.removeEdge(id));
+    return new GraphModel<Node, Edge>().addGraphs(graphs);
   }
 }

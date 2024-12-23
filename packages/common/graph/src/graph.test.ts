@@ -35,10 +35,12 @@ describe('Graph', () => {
     expect(graph.nodes).to.have.length(3);
     expect(graph.edges).to.have.length(2);
 
-    const n: GraphNode<TestData> = graph.getNode('node-1')!;
-    expect(n).to.exist;
+    const node: GraphNode<TestData> = graph.getNode('node-2')!;
+    expect(node).to.exist;
 
-    graph.removeNode('node-2');
+    const removed = graph.removeNode('node-2');
+    expect(removed.nodes).to.have.length(1);
+    expect(removed.edges).to.have.length(2);
     expect(graph.nodes).to.have.length(2);
     expect(graph.edges).to.have.length(0);
 

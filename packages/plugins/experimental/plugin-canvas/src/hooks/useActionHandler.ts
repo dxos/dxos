@@ -4,7 +4,6 @@
 
 import { useEffect } from 'react';
 
-import { type GraphModel, type GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { DATA_TEST_ID, ProjectionMapper, useProjection, zoomTo, zoomInPlace } from '@dxos/react-ui-canvas';
@@ -16,7 +15,7 @@ import { type TestId } from '../components';
 import { createRectangle, doLayout, getCenter, getRect, rectUnion } from '../layout';
 import { fireBullet } from '../layout/bullets';
 import { createId, itemSize } from '../testing';
-import { isPolygon, type Shape } from '../types';
+import { isPolygon } from '../types';
 
 // TODO(burdon): Handle multiple actions.
 export const useActionHandler = () => {
@@ -141,25 +140,18 @@ export const useActionHandler = () => {
         }
 
         // TODO(burdon): Factor out graph handlers. Undo.
+
         case 'cut': {
           const { ids = selection.selected.value } = action;
-          const g: GraphModel<GraphNode<Shape>> = graph;
-          const nodes: GraphNode<Shape>[] = ids
-            .map((id) => {
-              const node = g.getNode(id);
-              graph.removeNode(id);
-              return node;
-            })
-            .filter(isNotFalsy);
-          clipboard.addNodes(nodes);
+          clipboard.clear().addGraphs([graph.removeNodes(ids), graph.removeEdges(ids)]);
           selection.clear();
           return true;
         }
         case 'copy': {
-          // TODO(burdon): Copy/cut entire graph.
           const { ids = selection.selected.value } = action;
           const nodes = ids.map((id) => graph.getNode(id)).filter(isNotFalsy);
-          clipboard.addNodes(nodes);
+          const edges = ids.map((id) => graph.getEdge(id)).filter(isNotFalsy);
+          clipboard.clear().addNodes(nodes).addEdges(edges);
           return true;
         }
         case 'paste': {
