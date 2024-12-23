@@ -1563,6 +1563,67 @@ importers:
         specifier: ^4.6.6
         version: 4.6.7
 
+  packages/common/graph:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../async
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../debug
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-schema
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../invariant
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../log
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../util
+      '@effect/schema':
+        specifier: ^0.75.5
+        version: 0.75.5(effect@3.10.15)
+      '@preact/signals-core':
+        specifier: ^1.6.0
+        version: 1.6.0
+      graphology:
+        specifier: ^0.25.4
+        version: 0.25.4(graphology-types@0.24.8)
+      graphology-shortest-path:
+        specifier: ^2.1.0
+        version: 2.1.0(graphology-types@0.24.8)
+      graphology-types:
+        specifier: ^0.24.8
+        version: 0.24.8
+      lodash.defaultsdeep:
+        specifier: ^4.6.1
+        version: 4.6.1
+    devDependencies:
+      '@antv/graphlib':
+        specifier: ^2.0.4
+        version: 2.0.4
+      '@antv/layout':
+        specifier: ^1.2.13
+        version: 1.2.13(workerize-loader@2.0.2(webpack@5.88.2(@swc/core@1.5.7(@swc/helpers@0.5.1))(esbuild@0.23.1)))
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../random
+      '@types/lodash.defaultsdeep':
+        specifier: ^4.6.6
+        version: 4.6.7
+
   packages/common/hypercore:
     dependencies:
       '@dxos/async':
@@ -2297,11 +2358,72 @@ importers:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2)
 
-  packages/core/chain:
+  packages/core/compute:
     dependencies:
-      '@dxos/node-std':
+      '@dxos/async':
         specifier: workspace:*
-        version: link:../../common/node-std
+        version: link:../../common/async
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../echo/echo-db
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../echo/echo-schema
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../functions
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../echo/live-object
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../protocols
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@effect/schema':
+        specifier: ^0.75.5
+        version: 0.75.5(effect@3.10.15)
+      '@preact/signals-core':
+        specifier: ^1.6.0
+        version: 1.6.0
+      hyperformula:
+        specifier: ^2.7.1
+        version: 2.7.1
+      lodash.defaultsdeep:
+        specifier: ^4.6.1
+        version: 4.6.1
+    devDependencies:
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
+      '@tldraw/indices':
+        specifier: ^2.0.0-alpha.14
+        version: 2.0.0-canary.e43b0103fdf5
+      '@types/lodash.defaultsdeep':
+        specifier: ^4.6.6
+        version: 4.6.7
 
   packages/core/echo/automerge:
     dependencies:
@@ -2819,6 +2941,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../echo/echo-schema
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../mesh/edge-client
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -2861,6 +2986,9 @@ importers:
       get-port-please:
         specifier: ^3.1.1
         version: 3.1.1
+      iso-did:
+        specifier: ^1.6.0
+        version: 1.6.0
       ws:
         specifier: ^8.14.2
         version: 8.17.0
@@ -3489,6 +3617,9 @@ importers:
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../../sdk/client-services
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -5432,9 +5563,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
-      '@dxos/chain':
+      '@dxos/compute':
         specifier: workspace:*
-        version: link:../../../core/chain
+        version: link:../../../core/compute
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
@@ -5669,6 +5800,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
+      '@dxos/graph':
+        specifier: workspace:*
+        version: link:../../../common/graph
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -5734,10 +5868,10 @@ importers:
         version: 7.9.0
       graphology:
         specifier: ^0.25.4
-        version: 0.25.4
+        version: 0.25.4(graphology-types@0.24.8)
       graphology-shortest-path:
         specifier: ^2.1.0
-        version: 2.1.0
+        version: 2.1.0(graphology-types@0.24.8)
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -6482,6 +6616,9 @@ importers:
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../../../sdk/client-protocol
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../../core/compute
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../../../common/crypto
@@ -6491,9 +6628,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
-      '@dxos/edge-client':
+      '@dxos/functions':
         specifier: workspace:*
-        version: link:../../../core/mesh/edge-client
+        version: link:../../../core/functions
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -6575,9 +6712,6 @@ importers:
       esbuild-wasm:
         specifier: ^0.16.14
         version: 0.16.17
-      iso-did:
-        specifier: ^1.6.0
-        version: 1.6.0
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -7041,6 +7175,9 @@ importers:
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../../sdk/client-services
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -8177,6 +8314,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -8189,6 +8329,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -8285,9 +8428,6 @@ importers:
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
-      hyperformula:
-        specifier: ^2.7.1
-        version: 2.7.1
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -25161,6 +25301,9 @@ packages:
     resolution: {integrity: sha512-KbT9CTkP/u72vGEJzyRr24xFC7usI9Es3LMmCPHGwQ1KTsoZjxwA9lMKxfU0syvT/w+7fZUdB/Hu2wWYcJBm6Q==}
     peerDependencies:
       graphology-types: '>=0.20.0'
+
+  graphology-types@0.24.8:
+    resolution: {integrity: sha512-hDRKYXa8TsoZHjgEaysSRyPdT6uB78Ci8WnjgbStlQysz7xR52PInxNsmnB7IBOM1BhikxkNyCVEFgmPKnpx3Q==}
 
   graphology-utils@2.5.2:
     resolution: {integrity: sha512-ckHg8MXrXJkOARk56ZaSCM1g1Wihe2d6iTmz1enGOz4W/l831MBCKSayeFQfowgF8wd+PQ4rlch/56Vs/VZLDQ==}
@@ -50636,23 +50779,30 @@ snapshots:
 
   graphemer@1.4.0: {}
 
-  graphology-indices@0.17.0:
+  graphology-indices@0.17.0(graphology-types@0.24.8):
     dependencies:
-      graphology-utils: 2.5.2
+      graphology-types: 0.24.8
+      graphology-utils: 2.5.2(graphology-types@0.24.8)
       mnemonist: 0.39.8
 
-  graphology-shortest-path@2.1.0:
+  graphology-shortest-path@2.1.0(graphology-types@0.24.8):
     dependencies:
       '@yomguithereal/helpers': 1.1.1
-      graphology-indices: 0.17.0
-      graphology-utils: 2.5.2
+      graphology-indices: 0.17.0(graphology-types@0.24.8)
+      graphology-types: 0.24.8
+      graphology-utils: 2.5.2(graphology-types@0.24.8)
       mnemonist: 0.39.8
 
-  graphology-utils@2.5.2: {}
+  graphology-types@0.24.8: {}
 
-  graphology@0.25.4:
+  graphology-utils@2.5.2(graphology-types@0.24.8):
+    dependencies:
+      graphology-types: 0.24.8
+
+  graphology@0.25.4(graphology-types@0.24.8):
     dependencies:
       events: 3.3.0
+      graphology-types: 0.24.8
       obliterator: 2.0.4
 
   graphql@16.9.0: {}
@@ -51799,7 +51949,7 @@ snapshots:
       did-resolver: 4.1.0
       iso-base: 2.0.1
       iso-web: 1.0.6
-      multiformats: 13.1.0
+      multiformats: 13.3.0
 
   iso-kv@3.0.3:
     dependencies:

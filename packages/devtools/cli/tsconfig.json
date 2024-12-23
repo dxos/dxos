@@ -55,6 +55,9 @@
       "path": "../../core/agent"
     },
     {
+      "path": "../../core/compute"
+    },
+    {
       "path": "../../core/echo/echo-schema"
     },
     {

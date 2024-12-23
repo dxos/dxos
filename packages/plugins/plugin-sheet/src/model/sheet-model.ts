@@ -2,37 +2,45 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type SimpleCellRange } from 'hyperformula/typings/AbsoluteCellRange';
-import { type SimpleCellAddress } from 'hyperformula/typings/Cell';
-import { type SimpleDate, type SimpleDateTime } from 'hyperformula/typings/DateTimeHelper';
-
 import { Event } from '@dxos/async';
+import {
+  addressFromA1Notation,
+  addressToA1Notation,
+  createSheetName,
+  isFormula,
+  type CellAddress,
+  type CellRange,
+  type CellScalarValue,
+  type ComputeGraph,
+  type ComputeNode,
+  type ComputeNodeEvent,
+  DetailedCellError,
+  ExportedCellChange,
+  type SimpleCellRange,
+  type SimpleCellAddress,
+  type SimpleDate,
+  type SimpleDateTime,
+} from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { getTypename, FormatEnum, TypeEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { DetailedCellError, ExportedCellChange } from '#hyperformula';
-import { type ComputeGraph, type ComputeNode, type ComputeNodeEvent, createSheetName } from '../compute-graph';
 import {
-  addressFromA1Notation,
+  ReadonlyException,
   addressFromIndex,
-  addressToA1Notation,
   addressToIndex,
   initialize,
   insertIndices,
-  isFormula,
-  type CellAddress,
-  type CellRange,
-  ReadonlyException,
-  MAX_COLUMNS,
-  MAX_ROWS,
   mapFormulaIndicesToRefs,
   mapFormulaRefsToIndices,
-} from '../defs';
-import { type SheetAction, type CellScalarValue, type CellValue, type SheetType } from '../types';
+  MAX_ROWS,
+  MAX_COLS,
+} from '../types';
+import { type SheetAction, type CellValue, type SheetType } from '../types';
 
+// TODO(burdon): Move to compute.
 // Map sheet types to system types.
 // https://hyperformula.handsontable.com/guide/types-of-values.html
 //  - https://github.com/handsontable/hyperformula/blob/master/src/Cell.ts (CellValueType)
@@ -176,7 +184,7 @@ export class SheetModel extends Resource {
   }
 
   insertColumns(i: number, n = 1) {
-    const idx = insertIndices(this._sheet.columns, i, n, MAX_COLUMNS);
+    const idx = insertIndices(this._sheet.columns, i, n, MAX_COLS);
     this.reset();
     return idx;
   }
@@ -373,7 +381,7 @@ export class SheetModel extends Resource {
       refresh = true;
     }
     if (cell.col >= this._sheet.columns.length) {
-      insertIndices(this._sheet.columns, cell.col, 1, MAX_COLUMNS);
+      insertIndices(this._sheet.columns, cell.col, 1, MAX_COLS);
       refresh = true;
     }
 

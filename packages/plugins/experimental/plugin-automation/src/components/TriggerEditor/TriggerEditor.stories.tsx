@@ -7,9 +7,8 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
-import { FunctionTrigger, TriggerKind } from '@dxos/functions';
+import { FunctionType, FunctionTrigger, TriggerKind } from '@dxos/functions';
 import { create } from '@dxos/live-object';
-import { FunctionType } from '@dxos/plugin-script/types';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
