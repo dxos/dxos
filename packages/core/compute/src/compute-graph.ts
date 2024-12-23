@@ -12,10 +12,10 @@ import { getTypename } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { FunctionType } from '@dxos/plugin-script/types';
 import { nonNullable } from '@dxos/util';
 
 import { ExportedCellChange, type HyperFormula } from '#hyperformula';
+import { FunctionType } from './types';
 import { ComputeNode } from './compute-node';
 import {
   defaultFunctions,

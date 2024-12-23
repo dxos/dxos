@@ -3,5 +3,4 @@
 //
 
 export * from './sheet-range-types';
-export * from './types';
 export * from './util';

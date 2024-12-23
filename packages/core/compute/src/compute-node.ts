@@ -10,8 +10,7 @@ import { Resource } from '@dxos/context';
 
 import { DetailedCellError } from '#hyperformula';
 import { type ComputeGraph } from './compute-graph';
-import { type CellAddress, isFormula } from '../defs';
-import { type CellScalarValue } from '../types';
+import { type CellAddress, type CellScalarValue, isFormula } from './defs';
 
 export type ComputeNodeEvent = {
   type: keyof Listeners;

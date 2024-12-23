@@ -7,7 +7,8 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { FunctionType } from '@dxos/plugin-script/types';
+import { FunctionType } from './types';
+
 import { create, useSpace, Filter } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Toolbar, Button, Input } from '@dxos/react-ui';

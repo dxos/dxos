@@ -5,6 +5,7 @@
 import { Ref, S, TypedObject } from '@dxos/echo-schema';
 import { ThreadType } from '@dxos/plugin-space/types';
 
+// TODO(burdon): Factor out.
 export class TextType extends TypedObject({ typename: 'dxos.org/type/Text', version: '0.1.0' })({
   content: S.String,
 }) {}

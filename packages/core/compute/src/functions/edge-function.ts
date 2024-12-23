@@ -8,12 +8,12 @@ import { type ProcedureAst } from 'hyperformula/typings/parser';
 
 import { Filter, getMeta } from '@dxos/client/echo';
 import { log } from '@dxos/log';
-import { getUserFunctionUrlInMetadata } from '@dxos/plugin-script/edge';
-import { FunctionType } from '@dxos/plugin-script/types';
 import { nonNullable } from '@dxos/util';
 
 import { CellError, ErrorType, FunctionArgumentType } from '#hyperformula';
 import { type AsyncFunction, AsyncFunctionPlugin } from './async-function';
+import { getUserFunctionUrlInMetadata } from '../edge';
+import { FunctionType } from '../types';
 
 export const EDGE_FUNCTION_NAME = 'DX';
 

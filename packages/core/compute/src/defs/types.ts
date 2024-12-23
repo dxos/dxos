@@ -3,7 +3,6 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import { type DxGridPlanePosition } from '@dxos/react-ui-grid';
 
 export const DEFAULT_ROWS = 50;
 export const DEFAULT_COLUMNS = 26;
@@ -11,7 +10,9 @@ export const DEFAULT_COLUMNS = 26;
 export const MAX_ROWS = 500;
 export const MAX_COLUMNS = 26 * 2;
 
-export type CellAddress = DxGridPlanePosition;
+// TODO(burdon): Reconcile with DxGridPlanePosition.
+export type CellAddress = Record<'row' | 'col', number>;
+export type CellScalarValue = number | string | boolean | null;
 
 export type CellRange = { from: CellAddress; to?: CellAddress };
 export type CompleteCellRange = { from: CellAddress; to: CellAddress };

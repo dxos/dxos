@@ -2369,6 +2369,12 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -2378,15 +2384,24 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../echo/echo-schema
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../mesh/edge-client
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../protocols
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -2399,6 +2414,12 @@ importers:
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
+      hyperformula:
+        specifier: ^2.7.1
+        version: 2.7.1
+      iso-did:
+        specifier: ^1.6.0
+        version: 1.6.0
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -2406,6 +2427,9 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      '@tldraw/indices':
+        specifier: ^2.0.0-alpha.14
+        version: 2.0.0-canary.e43b0103fdf5
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -6685,9 +6709,6 @@ importers:
       esbuild-wasm:
         specifier: ^0.16.14
         version: 0.16.17
-      iso-did:
-        specifier: ^1.6.0
-        version: 1.6.0
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -8395,9 +8416,6 @@ importers:
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
-      hyperformula:
-        specifier: ^2.7.1
-        version: 2.7.1
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -51919,7 +51937,7 @@ snapshots:
       did-resolver: 4.1.0
       iso-base: 2.0.1
       iso-web: 1.0.6
-      multiformats: 13.1.0
+      multiformats: 13.3.0
 
   iso-kv@3.0.3:
     dependencies:
