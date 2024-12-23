@@ -90,7 +90,7 @@ test.describe('Table', () => {
 
   // Rest of add column test remains the same as it's a more complex flow.
   // TODO(ZaymonFC): Restore this after fixing format selection.
-  test.skip('add column', async ({ browser }) => {
+  test('add column', async ({ browser }) => {
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
