@@ -9,16 +9,15 @@ import { getSchema } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getSchemaProperties } from '@dxos/schema';
 
-import { GraphModel, type Node } from './graph';
+import { GraphModel } from './graph';
+import { type Node } from './types';
 
-// TODO(burdon): Factor out graph. Reconcile with debug and explorer plugin (graph-model).
-// TODO(burdon): GraphBuilder? With subscriptions?
+// NOTE: The `relation` is different from the `type`.
+type Edge = { source: string; target: string; relation: string };
 
-// TODO(burdon): Make safe.
-export const createEdgeId = ({ source, target, relation }: { source: string; target: string; relation: string }) =>
-  `${source}-${relation}-${target}`;
+export const createEdgeId = ({ source, target, relation }: Edge) => `${source}-${relation}-${target}`;
 
-export const parseEdgeId = (id: string) => {
+export const parseEdgeId = (id: string): Edge => {
   const [source, relation, target] = id.split('-');
   invariant(source && target && relation);
   return { source, relation, target };
