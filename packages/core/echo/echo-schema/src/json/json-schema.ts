@@ -24,7 +24,7 @@ import {
 } from '../ast';
 import { type JsonSchemaReferenceInfo, Ref, createEchoReferenceSchema } from '../ast/ref';
 import { CustomAnnotations } from '../formats';
-import { Expando } from '../object';
+import { Expando, ObjectId } from '../object';
 
 /**
  * @internal
@@ -404,10 +404,23 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): AST.Annotations 
   // Limit to dxn:echo: URIs.
   if (schema.$id && schema.$id.startsWith('dxn:echo:')) {
     annotations[EchoIdentifierAnnotationId] = schema.$id;
+  } else if (schema.$id && schema.$id.startsWith('dxn:type:') && schema?.echo?.type?.schemaId) {
+    const id = schema?.echo?.type?.schemaId;
+    if (ObjectId.isValid(id)) {
+      annotations[EchoIdentifierAnnotationId] = DXN.fromLocalObjectId(id).toString();
+    }
   }
 
   if (schema.typename) {
     annotations[ObjectAnnotationId] ??= { typename: schema.typename, version: schema.version };
+  }
+
+  // Decode legacy schema.
+  if (!schema.typename && schema?.echo?.type) {
+    annotations[ObjectAnnotationId] ??= {
+      typename: schema.echo.type.typename,
+      version: schema.echo.type.version,
+    };
   }
 
   // Custom (at end).

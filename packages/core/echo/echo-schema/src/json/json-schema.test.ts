@@ -8,7 +8,14 @@ import { type AST, type JsonProp, S } from '@dxos/effect';
 import { deepMapValues } from '@dxos/util';
 
 import { getEchoProp, toEffectSchema, toJsonSchema } from './json-schema';
-import { PropertyMeta, setSchemaProperty, type JsonSchemaType, getSchemaProperty } from '../ast';
+import {
+  PropertyMeta,
+  setSchemaProperty,
+  type JsonSchemaType,
+  getSchemaProperty,
+  getObjectAnnotation,
+  getEchoIdentifierAnnotation,
+} from '../ast';
 import { createSchemaReference, getSchemaReference, Ref } from '../ast/ref';
 import { FormatAnnotationId } from '../formats';
 import { Email } from '../formats/string';
@@ -241,6 +248,45 @@ describe('json-to-effect', () => {
       // ).toEqual('email');
     });
   }
+
+  test('legacy schema with dxn:type $id gets decoded', () => {
+    const jsonSchema: JsonSchemaType = {
+      $id: 'dxn:type:example.com/type/Project',
+      $schema: 'http://json-schema.org/draft-07/schema#',
+      additionalProperties: false,
+      echo: {
+        type: {
+          schemaId: '01JERV1HQCQZDQ4NVCJ42QB38F',
+          typename: 'example.com/type/Project',
+          version: '0.1.0',
+        },
+      },
+      properties: {
+        description: {
+          type: 'string',
+        },
+        id: {
+          type: 'string',
+        },
+        name: {
+          echo: {
+            generator: 'commerce.productName',
+          },
+          type: 'string',
+        },
+      },
+      required: ['id'],
+      type: 'object',
+      version: '0.1.0',
+    };
+
+    const schema = toEffectSchema(jsonSchema);
+    expect(getObjectAnnotation(schema)).to.deep.eq({
+      typename: 'example.com/type/Project',
+      version: '0.1.0',
+    });
+    expect(getEchoIdentifierAnnotation(schema)).to.deep.eq('dxn:echo:@:01JERV1HQCQZDQ4NVCJ42QB38F');
+  });
 
   test('symbol annotations get compared', () => {
     const schema1 = S.String.annotations({ [FormatAnnotationId]: 'email' });
