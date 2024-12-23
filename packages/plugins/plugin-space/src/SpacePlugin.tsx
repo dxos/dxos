@@ -31,10 +31,10 @@ import {
   resolvePlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type Trigger, type UnsubscribeCallback } from '@dxos/async';
-import { type AbstractTypedObject, type HasId } from '@dxos/echo-schema';
+import { type HasId, type TypedObject } from '@dxos/echo-schema';
 import { scheduledEffect } from '@dxos/echo-signals/core';
 import { invariant } from '@dxos/invariant';
-import { create, isDeleted, isReactiveObject, makeRef, RefArray, type ReactiveObject } from '@dxos/live-object';
+import { type ReactiveObject, RefArray, create, isDeleted, isReactiveObject, makeRef } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
@@ -67,43 +67,43 @@ import { ComplexMap, nonNullable, reduceGroupBy } from '@dxos/util';
 
 import {
   AwaitingObject,
+  CREATE_OBJECT_DIALOG,
+  CREATE_SPACE_DIALOG,
   CollectionMain,
   CollectionSection,
   CreateObjectDialog,
   type CreateObjectDialogProps,
   CreateSpaceDialog,
   DefaultObjectSettings,
-  JoinDialog,
   InlineSyncStatus,
+  JOIN_DIALOG,
+  JoinDialog,
+  type JoinDialogProps,
   MenuFooter,
+  POPOVER_RENAME_OBJECT,
+  POPOVER_RENAME_SPACE,
   PopoverRenameObject,
   PopoverRenameSpace,
+  SPACE_SETTINGS_DIALOG,
   ShareSpaceButton,
   SmallPresenceLive,
   SpacePluginSettings,
   SpacePresence,
   SpaceSettingsDialog,
+  type SpaceSettingsDialogProps,
   SpaceSettingsPanel,
   SyncStatus,
-  type SpaceSettingsDialogProps,
-  SPACE_SETTINGS_DIALOG,
-  JOIN_DIALOG,
-  CREATE_SPACE_DIALOG,
-  CREATE_OBJECT_DIALOG,
-  POPOVER_RENAME_SPACE,
-  POPOVER_RENAME_OBJECT,
-  type JoinDialogProps,
 } from './components';
 import meta, { SPACE_PLUGIN } from './meta';
 import translations from './translations';
 import {
   CollectionAction,
   CollectionType,
-  parseSchemaPlugin,
-  SpaceAction,
   type PluginState,
+  SpaceAction,
   type SpacePluginProvides,
   type SpaceSettingsProps,
+  parseSchemaPlugin,
 } from './types';
 import {
   COMPOSER_SPACE_LOCK,
@@ -177,7 +177,7 @@ export const SpacePlugin = ({
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
   const graphSubscriptions = new Map<string, UnsubscribeCallback>();
-  const schemas: AbstractTypedObject[] = [];
+  const schemas: TypedObject[] = [];
 
   let clientPlugin: Plugin<ClientPluginProvides> | undefined;
   let graphPlugin: Plugin<GraphProvides> | undefined;

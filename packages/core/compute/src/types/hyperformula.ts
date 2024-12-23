@@ -9,6 +9,11 @@ import { type SimpleDate, type SimpleDateTime } from 'hyperformula/typings/DateT
 // TODO(burdon): Explain special import.
 import { DetailedCellError, ExportedCellChange } from '#hyperformula';
 
+/**
+ * Hyperformula had issues during bundling with vite,
+ * so we pre-bundle hyperformula and place it in the vendor directory of this package.
+ */
+
 export { DetailedCellError, ExportedCellChange };
 
 export type { SimpleCellRange, SimpleCellAddress, SimpleDate, SimpleDateTime };

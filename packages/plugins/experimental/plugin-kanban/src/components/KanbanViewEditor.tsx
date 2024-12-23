@@ -27,12 +27,14 @@ const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
 
   useEffect(() => {
     if (space && kanban?.cardView?.target?.query?.type) {
-      const unsubscribe = space.db.schemaRegistry.subscribe((schemas) => {
-        const schema = schemas.find((schema) => schema.typename === kanban?.cardView?.target?.query?.type);
-        if (schema) {
-          setSchema(schema);
-        }
-      });
+      const unsubscribe = space.db.schemaRegistry
+        .query({ typename: kanban?.cardView?.target?.query?.type })
+        .subscribe((query) => {
+          const [schema] = query.results;
+          if (schema) {
+            setSchema(schema);
+          }
+        });
 
       return unsubscribe;
     }

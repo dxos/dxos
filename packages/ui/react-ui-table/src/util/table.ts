@@ -8,7 +8,7 @@ import {
   FormatEnum,
   type JsonPath,
   type JsonProp,
-  type MutableSchema,
+  type EchoSchema,
   S,
   TypedObject,
   TypeEnum,
@@ -28,7 +28,11 @@ type InitialiseTableProps = {
 
 // TODO(burdon): Pass in type.
 // TODO(burdon): User should determine typename.
-export const initializeTable = ({ space, table, initialRow = true }: InitialiseTableProps): MutableSchema => {
+export const initializeTable = async ({
+  space,
+  table,
+  initialRow = true,
+}: InitialiseTableProps): Promise<EchoSchema> => {
   log('initializeTable', { table });
 
   const ContactSchema = TypedObject({
@@ -45,7 +49,7 @@ export const initializeTable = ({ space, table, initialRow = true }: InitialiseT
     }), // TODO(burdon): Should default to prop name?
   });
 
-  const contactSchema = space.db.schemaRegistry.addSchema(ContactSchema);
+  const [contactSchema] = await space.db.schemaRegistry.register([ContactSchema]);
 
   table.view = makeRef(
     createView({

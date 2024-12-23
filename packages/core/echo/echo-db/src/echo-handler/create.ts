@@ -7,7 +7,7 @@ import {
   type BaseObject,
   getObjectAnnotation,
   type HasId,
-  MutableSchema,
+  EchoSchema,
   type ObjectMeta,
   type S,
   SchemaValidator,
@@ -197,7 +197,7 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
     } else if (typeof value === 'object') {
       if (Ref.isRef(value)) {
         // Pass refs as is.
-      } else if (value instanceof MutableSchema || isTypedObjectProxy(value)) {
+      } else if (value instanceof EchoSchema || isTypedObjectProxy(value)) {
         throw new Error('Object references must be wrapped with `makeRef`');
       } else {
         throwIfCustomClass(key, value);

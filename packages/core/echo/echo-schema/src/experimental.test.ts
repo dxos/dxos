@@ -8,7 +8,7 @@ import { AST, S } from '@dxos/effect';
 
 import { Format } from './formats';
 
-// TODO(burdon): MutableSchema should preserve the order of properties.
+// TODO(burdon): EchoSchema should preserve the order of properties.
 // TODO(burdon): Type issue with Contact.employer ref (see Form.stories.tsx).
 // TODO(burdon): Handle defaults.
 
