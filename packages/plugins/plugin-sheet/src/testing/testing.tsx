@@ -10,8 +10,7 @@ import { type Space } from '@dxos/react-client/echo';
 import { useAsyncState } from '@dxos/react-hooks';
 
 import { ComputeGraphContextProvider } from '../components';
-import { createSheet } from '../defs';
-import { type CreateSheetOptions } from '../types';
+import { createSheet, type CreateSheetOptions } from '../types';
 
 export const useTestSheet = (space?: Space, graph?: ComputeGraph, options?: CreateSheetOptions) => {
   const [sheet] = useAsyncState(async () => {

@@ -21,6 +21,8 @@ import {
 } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 
+import { completeCellRangeToThreadCursor } from '../../integrations';
+import { SHEET_PLUGIN } from '../../meta';
 import {
   alignKey,
   rangeFromIndex,
@@ -32,10 +34,8 @@ import {
   type CommentValue,
   type StyleKey,
   type StyleValue,
-} from '../../defs';
-import { completeCellRangeToThreadCursor } from '../../integrations';
-import { SHEET_PLUGIN } from '../../meta';
-import { type SheetType } from '../../types';
+  type SheetType,
+} from '../../types';
 import { useSheetContext } from '../SheetContext';
 
 //

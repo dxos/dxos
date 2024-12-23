@@ -4,8 +4,7 @@
 
 import { addressToA1Notation } from '@dxos/compute';
 
-import { createSheet } from '../defs';
-import type { CellValue, SheetType } from '../types';
+import { type CellValue, type SheetType, createSheet } from '../types';
 
 // TODO(burdon): Create testing endpoint.
 // TODO(burdon): Move to react-ui-sheet.

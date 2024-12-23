@@ -10,8 +10,8 @@ import { useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover } from '@dxos/react-ui-theme';
 
-import { rangeFromIndex } from '../../defs';
 import { SHEET_PLUGIN } from '../../meta';
+import { rangeFromIndex } from '../../types';
 import { Range, type SheetType } from '../../types';
 
 export type RangeListProps = {

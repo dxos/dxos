@@ -16,10 +16,9 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { useComputeGraph } from './ComputeGraphContextProvider';
-import { createSheet } from '../../defs';
 import { useSheetModel } from '../../model';
 import { withComputeGraphDecorator } from '../../testing';
-import { SheetType } from '../../types';
+import { createSheet, SheetType } from '../../types';
 
 const FUNCTION_NAME = 'TEST';
 

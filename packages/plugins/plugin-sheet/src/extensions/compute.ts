@@ -15,11 +15,15 @@ import {
 import { Decoration, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
 
 import { type UnsubscribeCallback, debounce } from '@dxos/async';
-import { type ComputeGraph, type ComputeNode, createSheetName, type CellAddress } from '@dxos/compute';
+import {
+  createSheetName,
+  type CellAddress,
+  type CellScalarValue,
+  type ComputeGraph,
+  type ComputeNode,
+} from '@dxos/compute';
 import { invariant } from '@dxos/invariant';
 import { documentId, singleValueFacet } from '@dxos/react-ui-editor';
-
-import { type CellScalarValue } from '../types';
 
 const LANGUAGE_TAG = 'dx';
 

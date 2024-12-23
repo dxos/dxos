@@ -15,9 +15,8 @@ import { automerge } from '@dxos/react-ui-editor';
 import { CellEditor, type CellEditorProps } from '@dxos/react-ui-grid';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { createSheet } from '../../defs';
 import { sheetExtension } from '../../extensions';
-import { SheetType } from '../../types';
+import { createSheet, SheetType } from '../../types';
 
 type StoryProps = CellEditorProps;
 

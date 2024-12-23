@@ -12,12 +12,11 @@ import { parseClientPlugin } from '@dxos/plugin-client/types';
 import { getSpace } from '@dxos/react-client/echo';
 
 import { ComputeGraphContextProvider, SheetContainer, SheetObjectSettings } from './components';
-import { compareIndexPositions, createSheet } from './defs';
 import { computeGraphFacet } from './extensions';
 import meta, { SHEET_PLUGIN } from './meta';
 import { serializer } from './serializer';
 import translations from './translations';
-import { SheetAction, SheetType, type SheetPluginProvides } from './types';
+import { compareIndexPositions, createSheet, SheetAction, SheetType, type SheetPluginProvides } from './types';
 
 export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
   let computeGraphRegistry: ComputeGraphRegistry | undefined;

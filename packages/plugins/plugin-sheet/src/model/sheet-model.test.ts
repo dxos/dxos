@@ -5,14 +5,13 @@
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { FunctionType, addressFromA1Notation, isFormula } from '@dxos/compute';
+import { type CellScalarValue, FunctionType, addressFromA1Notation, isFormula } from '@dxos/compute';
 import { TestBuilder, testFunctionPlugins } from '@dxos/compute/testing';
 import { log } from '@dxos/log';
 
 import { SheetModel } from './sheet-model';
 import { createTestGrid } from './testing';
-import { createSheet, mapFormulaIndicesToRefs, mapFormulaRefsToIndices } from '../defs';
-import { type CellScalarValue } from '../types';
+import { createSheet, mapFormulaIndicesToRefs, mapFormulaRefsToIndices } from '../types';
 
 describe('SheetModel', () => {
   let testBuilder: TestBuilder;

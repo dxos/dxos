@@ -19,8 +19,10 @@ import {
   type SimpleDateTime,
   MAX_COLUMNS,
   MAX_ROWS,
+  DetailedCellError,
+  ExportedCellChange,
+  type CellScalarValue,
 } from '@dxos/compute';
-import { DetailedCellError, ExportedCellChange } from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { getTypename, FormatEnum, TypeEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -35,8 +37,8 @@ import {
   insertIndices,
   mapFormulaIndicesToRefs,
   mapFormulaRefsToIndices,
-} from '../defs';
-import { type SheetAction, type CellScalarValue, type CellValue, type SheetType } from '../types';
+} from '../types';
+import { type SheetAction, type CellValue, type SheetType } from '../types';
 
 // TODO(burdon): Move to compute.
 // Map sheet types to system types.
