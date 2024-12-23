@@ -7,6 +7,16 @@ import prettierPluginEstree from 'prettier/plugins/estree';
 import prettierPluginTypescript from 'prettier/plugins/typescript';
 import React, { useCallback, useMemo, useState } from 'react';
 
+import {
+  FUNCTIONS_PRESET_META_KEY,
+  FunctionType,
+  type ScriptType,
+  getInvocationUrl,
+  getUserFunctionUrlInMetadata,
+  setUserFunctionUrlInMetadata,
+  uploadWorkerFunction,
+  incrementSemverPatch,
+} from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { create, createDocAccessor, Filter, getMeta, getSpace, makeRef, useQuery } from '@dxos/react-client/echo';
@@ -19,17 +29,8 @@ import { DebugPanel } from './DebugPanel';
 import { type TemplateSelectProps, Toolbar, type ViewType } from './Toolbar';
 import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor';
 import { Bundler } from '../bundler';
-import {
-  getInvocationUrl,
-  getUserFunctionUrlInMetadata,
-  setUserFunctionUrlInMetadata,
-  uploadWorkerFunction,
-  FUNCTIONS_PRESET_META_KEY,
-  incrementSemverPatch,
-} from '../edge';
 import { SCRIPT_PLUGIN } from '../meta';
 import { templates } from '../templates';
-import { FunctionType, type ScriptType } from '../types';
 
 export type ScriptEditorProps = ThemedClassName<{
   script: ScriptType;

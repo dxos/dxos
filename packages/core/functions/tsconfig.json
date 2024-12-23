@@ -53,6 +53,9 @@
       "path": "../echo/live-object"
     },
     {
+      "path": "../mesh/edge-client"
+    },
+    {
       "path": "../protocols"
     }
   ]

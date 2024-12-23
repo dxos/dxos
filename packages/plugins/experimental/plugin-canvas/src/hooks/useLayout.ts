@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type GraphModel, type Node } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { type Point, type Rect } from '@dxos/react-ui-canvas';
 
-import { type GraphModel, type Node } from '../graph';
 import { createLine, distance, findClosestIntersection, getNormals, getRect } from '../layout';
 import { type PolygonShape, type Shape } from '../types';
 

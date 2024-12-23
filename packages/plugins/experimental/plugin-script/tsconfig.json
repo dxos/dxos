@@ -50,13 +50,16 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../../core/compute"
+    },
+    {
       "path": "../../../core/echo/echo-schema"
     },
     {
       "path": "../../../core/echo/live-object"
     },
     {
-      "path": "../../../core/mesh/edge-client"
+      "path": "../../../core/functions"
     },
     {
       "path": "../../../core/mesh/rpc"

@@ -16,10 +16,10 @@ import {
 } from '@antv/layout';
 import defaultsDeep from 'lodash.defaultsdeep';
 
+import { type Graph, GraphModel, type Node } from '@dxos/graph';
 import { type Dimension } from '@dxos/react-ui-canvas';
 import { getDeep } from '@dxos/util';
 
-import { type Graph, GraphModel, type Node } from '../graph';
 import { type Shape } from '../types';
 
 // TODO(burdon): Custom UML layout heuristics:
