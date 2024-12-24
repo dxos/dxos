@@ -464,10 +464,10 @@ describe('Queries with types', () => {
     await openAndClose(testBuilder);
     const { db } = await testBuilder.createDatabase();
 
-    const schema = db.schemaRegistry.addSchema(Contact);
+    const [schema] = await db.schemaRegistry.register([Contact]);
     const contact = db.add(create(schema, {}));
 
-    // NOTE: Must use `Filter.schema` with MutableSchema instance since matching is done by the object ID of the mutable schema.
+    // NOTE: Must use `Filter.schema` with EchoSchema instance since matching is done by the object ID of the mutable schema.
     const query = db.query(Filter.schema(schema));
     const result = await query.run();
     expect(result.objects).to.have.length(1);

@@ -2,9 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as d3 from 'd3';
 import { type CSSProperties } from 'react';
 
 import { invariant } from '@dxos/invariant';
+import { type Dimension, type Point, type Rect } from '@dxos/react-ui-canvas';
 
 // TODO(burdon): Utils?
 //  - https://www.npmjs.com/package/@antv/coord
@@ -13,11 +15,6 @@ import { invariant } from '@dxos/invariant';
 //  - https://github.com/antvis/coord/blob/master/docs/api/README.md
 //  - https://www.npmjs.com/package/geometric
 
-// TODO(burdon): Generalize positional unit (e.g., x,y, fraction, slot).
-
-export type Point = { x: number; y: number };
-export type Dimension = { width: number; height: number };
-export type Rect = Point & Dimension;
 export type Line = [Point, Point];
 export type Range = { p1: Point; p2: Point }; // TODO(burdon): Array.
 
@@ -33,6 +30,7 @@ export const round = (n: number, m: number) => Math.round(n / m) * m;
 
 export const pointAdd = (a: Point, b: Point): Point => ({ x: a.x + b.x, y: a.y + b.y });
 export const pointSubtract = (a: Point, b: Point): Point => ({ x: a.x - b.x, y: a.y - b.y });
+export const pointMid = (a: Point, b: Point): Point => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
 
 export const distance = (p1: Point, p2: Point): number =>
   Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
@@ -41,9 +39,9 @@ export const distance = (p1: Point, p2: Point): number =>
 // Rect
 //
 
-export const getCenter = (rect: Rect): Point => ({
-  x: rect.x + rect.width / 2,
-  y: rect.y + rect.height / 2,
+export const getCenter = (rect: Partial<Rect>): Point => ({
+  x: (rect.x ?? 0) + (rect.width ?? 0) / 2,
+  y: (rect.y ?? 0) + (rect.height ?? 0) / 2,
 });
 
 export const getRect = (center: Point, size: Dimension): Rect => ({
@@ -222,4 +220,123 @@ export const createPathThroughPoints = (points: Point[]): string => {
   }
 
   return path.join(' ');
+};
+
+/**
+ * https://d3js.org/d3-shape/curve
+ */
+const splineGenerator = d3
+  .line<Point>()
+  .curve(d3.curveCatmullRom.alpha(0.9))
+  .x((d) => d.x)
+  .y((d) => d.y);
+
+export const createSplineThroughPoints = (points: Point[]): string => {
+  invariant(points.length >= 2);
+  return splineGenerator(points)!;
+};
+
+export const getNormals = (r1: Rect, r2: Rect, len = 32): [Point[], Point[]] | null => {
+  const sidesR1 = {
+    left: [
+      { x: r1.x, y: r1.y },
+      { x: r1.x, y: r1.y + r1.height },
+    ],
+    right: [
+      { x: r1.x + r1.width, y: r1.y },
+      { x: r1.x + r1.width, y: r1.y + r1.height },
+    ],
+    top: [
+      { x: r1.x, y: r1.y },
+      { x: r1.x + r1.width, y: r1.y },
+    ],
+    bottom: [
+      { x: r1.x, y: r1.y + r1.height },
+      { x: r1.x + r1.width, y: r1.y + r1.height },
+    ],
+  };
+
+  const sidesR2 = {
+    left: [
+      { x: r2.x, y: r2.y },
+      { x: r2.x, y: r2.y + r2.height },
+    ],
+    right: [
+      { x: r2.x + r2.width, y: r2.y },
+      { x: r2.x + r2.width, y: r2.y + r2.height },
+    ],
+    top: [
+      { x: r2.x, y: r2.y },
+      { x: r2.x + r2.width, y: r2.y },
+    ],
+    bottom: [
+      { x: r2.x, y: r2.y + r2.height },
+      { x: r2.x + r2.width, y: r2.y + r2.height },
+    ],
+  };
+
+  const distances = [];
+
+  // Check horizontal facing sides.
+  if (r1.x + r1.width <= r2.x) {
+    distances.push({
+      pair: [sidesR1.right, sidesR2.left],
+      distance: Math.abs(r1.x + r1.width - r2.x),
+    });
+  } else if (r2.x + r2.width <= r1.x) {
+    distances.push({
+      pair: [sidesR1.left, sidesR2.right],
+      distance: Math.abs(r2.x + r2.width - r1.x),
+    });
+  }
+
+  // Bias horizontal unless too close.
+  const d = distances.length
+    ? distances.reduce((max, curr) => (curr.distance > max.distance ? curr : max)).distance
+    : 0;
+  if (d < len * 2) {
+    // Check vertical facing sides.
+    if (r1.y + r1.height <= r2.y) {
+      distances.push({
+        pair: [sidesR1.bottom, sidesR2.top],
+        distance: Math.abs(r1.y + r1.height - r2.y),
+      });
+    } else if (r2.y + r2.height <= r1.y) {
+      distances.push({
+        pair: [sidesR1.top, sidesR2.bottom],
+        distance: Math.abs(r2.y + r2.height - r1.y),
+      });
+    }
+  }
+
+  if (!distances.length) {
+    return null;
+  }
+
+  const [side1, side2] = distances.reduce((max, curr) => (curr.distance > max.distance ? curr : max)).pair;
+
+  // Generate lines perpendicular to the sides and pointing away.
+  const createPerpendicularLine = (side: Point[], vertical: boolean, away: 1 | -1, len: number): Line => {
+    const midPoint: Point = {
+      x: (side[0].x + side[1].x) / 2,
+      y: (side[0].y + side[1].y) / 2,
+    };
+
+    if (vertical) {
+      return [{ x: midPoint.x - len * away, y: midPoint.y }, midPoint];
+    } else {
+      return [{ x: midPoint.x, y: midPoint.y - len * away }, midPoint];
+    }
+  };
+
+  const isVertical1 = side1[0].x === side1[1].x;
+  const isVertical2 = side2[0].x === side2[1].x;
+
+  const direction1 = isVertical1 ? (side1[0].x < side2[0].x ? -1 : 1) : side1[0].y < side2[0].y ? -1 : 1;
+  const direction2 = isVertical2 ? (side2[0].x < side1[0].x ? -1 : 1) : side2[0].y < side1[0].y ? -1 : 1;
+
+  return [
+    createPerpendicularLine(side1, isVertical1, direction1, len),
+    createPerpendicularLine(side2, isVertical2, direction2, len),
+  ];
 };

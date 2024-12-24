@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST, type MutableSchema, S, TypedObject } from '@dxos/echo-schema';
+import { AST, type EchoSchema, S, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
 import { type Space, create, makeRef } from '@dxos/react-client/echo';
 import { createView } from '@dxos/schema';
@@ -13,9 +13,9 @@ type InitialiseKanbanProps = {
   space: Space;
 };
 
-export const initializeKanban = ({
+export const initializeKanban = async ({
   space,
-}: InitialiseKanbanProps): { kanban: KanbanType; taskSchema: MutableSchema } => {
+}: InitialiseKanbanProps): Promise<{ kanban: KanbanType; taskSchema: EchoSchema }> => {
   const TaskSchema = TypedObject({
     typename: `example.com/type/${PublicKey.random().truncate()}`,
     version: '0.1.0',
@@ -31,7 +31,7 @@ export const initializeKanban = ({
     }), // TODO(burdon): Should default to prop name?
   });
 
-  const taskSchema = space.db.schemaRegistry.addSchema(TaskSchema);
+  const [taskSchema] = await space.db.schemaRegistry.register([TaskSchema]);
 
   const kanban = space.db.add(
     create(KanbanType, {
@@ -48,6 +48,7 @@ export const initializeKanban = ({
         { columnValue: 'To do', ids: [] },
         { columnValue: 'Doing', ids: [] },
         { columnValue: 'Done', ids: [] },
+        { columnValue: 'Fridge', ids: [] },
       ],
     }),
   );

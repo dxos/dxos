@@ -24,14 +24,17 @@ const TableViewEditor = ({ table }: TableViewEditorProps) => {
       ? space.db.schemaRegistry.getSchema(table.view.target!.query.type)
       : undefined,
   );
+  // TODO(dmaretskyi): New hook for schema query.
   useEffect(() => {
     if (space && table?.view?.target?.query?.type) {
-      const unsubscribe = space.db.schemaRegistry.subscribe((schemas) => {
-        const schema = schemas.find((schema) => schema.typename === table?.view?.target?.query?.type);
-        if (schema) {
-          setSchema(schema);
-        }
-      });
+      const unsubscribe = space.db.schemaRegistry
+        .query({ typename: table.view.target.query.type })
+        .subscribe((query) => {
+          const schema = query.results[0];
+          if (schema) {
+            setSchema(schema);
+          }
+        });
 
       return unsubscribe;
     }

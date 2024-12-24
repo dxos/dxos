@@ -22,17 +22,19 @@ const createButton = ({
   data,
   disabled = false,
   icon,
+  testId,
 }: {
   attr: string;
   data: Record<string, string>;
   disabled?: boolean;
   icon: string;
+  testId: string;
 }) => {
   const dataAttrs = Object.entries(data)
     .map(([k, v]) => `${k}="${v}"`)
     .join(' ');
 
-  return `<button ${attr} class="ch-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-2" ${dataAttrs} ${disabled ? 'disabled' : ''}><svg><use href="/icons.svg#${icon}"/></svg></button>`;
+  return `<button ${attr} data-testid="${testId}" class="ch-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-2" ${dataAttrs} ${disabled ? 'disabled' : ''}><svg><use href="/icons.svg#${icon}"/></svg></button>`;
 };
 
 const addColumnButton = {
@@ -44,6 +46,7 @@ const addColumnButton = {
       icon: addColumnButton.icon,
       disabled,
       data: {},
+      testId: 'table-new-column-button',
     });
   },
   getData: (_el: HTMLElement): Extract<ButtonData, { type: 'newColumn' }> => ({ type: 'newColumn' }),
@@ -59,6 +62,7 @@ const columnSettingsButton = {
       data: {
         'data-field-id': fieldId,
       },
+      testId: 'table-column-settings-button',
     });
   },
   getData: (el: HTMLElement): Extract<ButtonData, { type: 'columnSettings' }> => ({
@@ -78,6 +82,7 @@ const referencedCellButton = {
         'data-target-id': targetId,
         'data-schema-id': schemaId,
       },
+      testId: 'table-ref-cell-button',
     });
   },
   getData: (el: HTMLElement): Extract<ButtonData, { type: 'referencedCell' }> => ({
@@ -97,6 +102,7 @@ const rowMenuButton = {
       data: {
         'data-row-index': rowIndex.toString(),
       },
+      testId: 'table-row-menu-button',
     });
   },
   getData: (el: HTMLElement): Extract<ButtonData, { type: 'rowMenu' }> => ({

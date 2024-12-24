@@ -8,7 +8,7 @@ import {
   FormatEnum,
   type JsonPath,
   type JsonProp,
-  type MutableSchema,
+  type EchoSchema,
   S,
   TypedObject,
   TypeEnum,
@@ -28,7 +28,11 @@ type InitialiseTableProps = {
 
 // TODO(burdon): Pass in type.
 // TODO(burdon): User should determine typename.
-export const initializeTable = ({ space, table, initialRow = true }: InitialiseTableProps): MutableSchema => {
+export const initializeTable = async ({
+  space,
+  table,
+  initialRow = true,
+}: InitialiseTableProps): Promise<EchoSchema> => {
   log('initializeTable', { table });
 
   const ContactSchema = TypedObject({
@@ -38,26 +42,28 @@ export const initializeTable = ({ space, table, initialRow = true }: InitialiseT
     name: S.optional(S.String).annotations({
       [AST.TitleAnnotationId]: 'Name',
     }),
+    active: S.optional(S.Boolean),
     email: S.optional(Format.Email),
     salary: S.optional(Format.Currency()).annotations({
       [AST.TitleAnnotationId]: 'Salary',
     }), // TODO(burdon): Should default to prop name?
   });
 
-  const contactSchema = space.db.schemaRegistry.addSchema(ContactSchema);
+  const [contactSchema] = await space.db.schemaRegistry.register([ContactSchema]);
+
   table.view = makeRef(
     createView({
       name: 'Test',
       typename: contactSchema.typename,
       jsonSchema: contactSchema.jsonSchema,
-      fields: ['name', 'email', 'salary'],
+      fields: ['name', 'active', 'email', 'salary'],
     }),
   );
 
   const projection = new ViewProjection(contactSchema, table.view.target!);
   projection.setFieldProjection({
     field: {
-      id: table.view.target!.fields[2].id,
+      id: table.view.target!.fields.find((f) => f.path === 'salary')!.id,
       path: 'salary' as JsonPath,
       size: 150,
     },

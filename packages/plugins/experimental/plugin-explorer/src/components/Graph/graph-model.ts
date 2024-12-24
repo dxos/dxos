@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AST, MutableSchema, ReferenceAnnotationId, type S, SchemaValidator, StoredSchema } from '@dxos/echo-schema';
+import { AST, EchoSchema, ReferenceAnnotationId, type S, SchemaValidator, StoredSchema } from '@dxos/echo-schema';
 import { type GraphData, type GraphLink, GraphModel } from '@dxos/gem-spore';
 import { log } from '@dxos/log';
 import { CollectionType } from '@dxos/plugin-space/types';
@@ -73,7 +73,7 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
               return links;
             }
 
-            if (!(objectSchema instanceof MutableSchema)) {
+            if (!(objectSchema instanceof EchoSchema)) {
               const idx = objects.findIndex((obj) => obj.id === typename);
               if (idx === -1) {
                 this._graph.nodes.push({

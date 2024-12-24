@@ -58,9 +58,9 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
       },
       intent: {
         resolvers: () => [
-          createResolver(TableAction.Create, ({ space, name }) => {
+          createResolver(TableAction.Create, async ({ space, name }) => {
             const table = create(TableType, { name, threads: [] });
-            initializeTable({ space, table });
+            await initializeTable({ space, table });
             return { data: { object: table } };
           }),
           createResolver(TableAction.DeleteColumn, ({ table, fieldId, deletionData }, undo) => {

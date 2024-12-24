@@ -4,8 +4,8 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { type SchemaResolver } from '@dxos/echo-db';
-import { FormatEnum, FormatEnums, formatToType, type MutableSchema } from '@dxos/echo-schema';
+import { type SchemaRegistry } from '@dxos/echo-db';
+import { FormatEnum, FormatEnums, formatToType, type EchoSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
 import {
@@ -25,7 +25,7 @@ export type FieldEditorProps = {
   view: ViewType;
   projection: ViewProjection;
   field: FieldType;
-  registry?: SchemaResolver;
+  registry?: SchemaRegistry;
   onSave: () => void;
   onCancel?: () => void;
 };
@@ -38,15 +38,17 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
   const [props, setProps] = useState<PropertyType>(projection.getFieldProjection(field.id).props);
   useEffect(() => setProps(projection.getFieldProjection(field.id).props), [field, projection]);
 
-  const [schemas, setSchemas] = useState<MutableSchema[]>([]);
+  const [schemas, setSchemas] = useState<EchoSchema[]>([]);
   useEffect(() => {
     if (!registry) {
       return;
     }
 
-    const subscription = registry.subscribe(setSchemas);
+    const subscription = registry.query().subscribe((query) => setSchemas(query.results), { fire: true });
+
+    // TODO(dmaretskyi): This shouldn't be needed.
     const t = setTimeout(async () => {
-      const schemas = await registry.query();
+      const schemas = await registry.query().run();
       setSchemas(schemas);
     });
     return () => {
@@ -55,7 +57,7 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
     };
   }, [registry]);
 
-  const [schema, setSchema] = useState<MutableSchema>();
+  const [schema, setSchema] = useState<EchoSchema>();
   useEffect(() => {
     setSchema(schemas.find((schema) => schema.typename === props?.referenceSchema));
   }, [schemas, props?.referenceSchema]);
@@ -63,13 +65,19 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
   // TODO(burdon): Need to wrap otherwise throws error:
   //  Class constructor SchemaClass cannot be invoked without 'new'.
   const [{ fieldSchema }, setFieldSchema] = useState({ fieldSchema: getFormatSchema(props?.format) });
+
   const handleValuesChanged = useCallback<NonNullable<FormProps<PropertyType>['onValuesChanged']>>(
     (_props) => {
-      // Update schema if format changed.
       // TODO(burdon): Callback should pass `changed` to indicate which fields have changed.
-      if (_props.format !== props.format) {
-        setFieldSchema({ fieldSchema: getFormatSchema(_props.format) });
-      }
+      // TODO(Zaymon): Workout why old and new format values are the same sometimes even when
+      //   selecting novel format values.
+      setFieldSchema((prev) => {
+        const fieldSchema = getFormatSchema(_props.format);
+        if (prev.fieldSchema === fieldSchema) {
+          return prev;
+        }
+        return { fieldSchema };
+      });
       if (_props.referenceSchema !== props.referenceSchema) {
         setSchema(schemas.find((schema) => schema.typename === _props.referenceSchema));
       }
@@ -83,7 +91,7 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
         return props;
       });
     },
-    [schemas, props],
+    [schemas, props.format, props.referenceSchema],
   );
 
   const handleValidate = useCallback<NonNullable<FormProps<PropertyType>['onValidate']>>(

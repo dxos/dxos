@@ -8,11 +8,11 @@ import React, { useCallback, useRef } from 'react';
 import { chain, createIntent, type MetadataResolver, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
 import {
-  type AbstractTypedObject,
   getSpace,
   isReactiveObject,
   isSpace,
   type ReactiveObject,
+  type TypedObject,
   useSpaces,
 } from '@dxos/react-client/echo';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
@@ -48,7 +48,7 @@ export const CreateObjectDialog = ({
       target: _target,
       name,
     }: {
-      schema: AbstractTypedObject;
+      schema: TypedObject;
       target: CreateObjectPanelProps['target'];
       name?: string;
     }) => {
@@ -84,7 +84,7 @@ export const CreateObjectDialog = ({
     // TODO(wittjosiah): The tablist dialog pattern is copied from @dxos/plugin-manager.
     //  Consider factoring it out to the tabs package.
     <Dialog.Content classNames='p-0 bs-content min-bs-[15rem] max-bs-full md:max-is-[40rem] overflow-hidden'>
-      <div role='none' className='flex justify-between pbs-3 pis-2 pie-3 @md:pbs-4 @md:pis-4 @md:pie-5'>
+      <div role='none' className='flex justify-between pbs-2 pis-2 pie-2 @md:pbs-4 @md:pis-4 @md:pie-4'>
         <Dialog.Title>{t('create object dialog title')}</Dialog.Title>
         <Dialog.Close asChild>
           <Button ref={closeRef} density='fine' variant='ghost' autoFocus>

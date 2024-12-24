@@ -7,12 +7,12 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type MutableSchema } from '@dxos/echo-schema';
+import { type EchoSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
-import { Filter, useSpaces, useQuery, create } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
+import { Filter, useQuery, create } from '@dxos/react-client/echo';
+import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { useDefaultValue } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -35,25 +35,26 @@ faker.seed(0);
 //
 
 const DefaultStory = () => {
-  const spaces = useSpaces();
-  const space = spaces[spaces.length - 1];
+  const { space } = useClientProvider();
+  invariant(space);
+
   const tables = useQuery(space, Filter.schema(TableType));
   const [table, setTable] = useState<TableType>();
-  const [schema, setSchema] = useState<MutableSchema>();
+  const [schema, setSchema] = useState<EchoSchema>();
   useEffect(() => {
-    if (tables.length && !table) {
+    if (space && tables.length && !table) {
       const table = tables[0];
       invariant(table.view);
       setTable(table);
       setSchema(space.db.schemaRegistry.getSchema(table.view.target!.query.type));
     }
-  }, [tables]);
+  }, [space, tables]);
 
   const projection = useMemo(() => {
-    if (schema && table?.view) {
-      return new ViewProjection(schema, table.view.target!);
+    if (schema && table?.view?.target) {
+      return new ViewProjection(schema, table.view.target);
     }
-  }, [schema, table?.view]);
+  }, [schema, table?.view?.target]);
 
   const objects = useQuery(space, schema ? Filter.schema(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
@@ -94,10 +95,18 @@ const DefaultStory = () => {
         }
       }
     },
-    [table, spaces],
+    [table],
   );
 
   const tableRef = useRef<TableController>(null);
+  const handleCellUpdate = useCallback((cell: any) => {
+    tableRef.current?.update?.(cell);
+  }, []);
+
+  const handleRowOrderChanged = useCallback(() => {
+    tableRef.current?.update?.();
+  }, []);
+
   const model = useTableModel({
     table,
     projection,
@@ -105,8 +114,8 @@ const DefaultStory = () => {
     onInsertRow: handleInsertRow,
     onDeleteRows: handleDeleteRows,
     onDeleteColumn: handleDeleteColumn,
-    onCellUpdate: (cell) => tableRef.current?.update?.(cell),
-    onRowOrderChanged: () => tableRef.current?.update?.(),
+    onCellUpdate: handleCellUpdate,
+    onRowOrderChanged: handleRowOrderChanged,
   });
 
   const presentation = useMemo(() => {
@@ -132,7 +141,7 @@ const DefaultStory = () => {
         </Table.Root>
       </div>
       <div className='flex flex-col h-full border-l border-separator overflow-y-auto'>
-        {table.view && (
+        {table.view?.target && (
           <ViewEditor
             registry={space?.db.schemaRegistry}
             schema={schema}
@@ -168,7 +177,7 @@ const TablePerformanceStory = (props: StoryProps) => {
 
   const handleDeleteColumn = useCallback<NonNullable<UseTableModelParams<any>['onDeleteColumn']>>(
     (fieldId) => {
-      if (table && table.view) {
+      if (table && table.view?.target) {
         const fieldPosition = table.view.target!.fields.findIndex((field) => field.id === fieldId);
         table.view.target!.fields.splice(fieldPosition, 1);
       }
@@ -209,7 +218,7 @@ const meta: Meta<StoryProps> = {
       createSpace: true,
       onSpaceCreated: async ({ space }) => {
         const table = space.db.add(create(TableType, {}));
-        const schema = initializeTable({ space, table, initialRow: false });
+        const schema = await initializeTable({ space, table, initialRow: false });
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
             create(schema, {

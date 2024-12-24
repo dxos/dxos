@@ -4,66 +4,111 @@
 
 import { useHotkeys } from 'react-hotkeys-hook';
 
-import { useActionHandler } from './useActionHandler';
 import { useEditorContext } from './useEditorContext';
 
 /**
  * Handle keyboard shortcuts.
  */
 export const useShortcuts = () => {
-  const { id, graph, selection } = useEditorContext();
-  const handleAction = useActionHandler();
-  const option = { scopes: id };
+  const { id, graph, selection, actionHandler } = useEditorContext();
+
+  // TODO(burdon): Linux/windows combos also.
+
   useHotkeys(
-    'd',
+    'meta+z',
     (ev) => {
       ev.preventDefault();
-      void handleAction({
-        type: 'debug',
-      });
+      void actionHandler?.({ type: 'undo' });
     },
-    option,
+    { scopes: [id] },
   );
   useHotkeys(
-    'meta+a',
+    'shift+meta+z',
     (ev) => {
       ev.preventDefault();
-      void handleAction({
-        type: 'select',
-        ids: [...graph.nodes.map((node) => node.id), ...graph.edges.map((edge) => edge.id)],
-      });
+      void actionHandler?.({ type: 'redo' });
     },
-    option,
+    { scopes: [id] },
+  );
+
+  useHotkeys(
+    'meta+x',
+    (ev) => {
+      ev.preventDefault();
+      void actionHandler?.({ type: 'cut' });
+    },
+    { scopes: [id] },
   );
   useHotkeys(
-    "meta+'",
+    'meta+c',
     (ev) => {
       ev.preventDefault();
-      void handleAction({
-        type: 'grid',
-      });
+      void actionHandler?.({ type: 'copy' });
     },
-    option,
+    { scopes: [id] },
   );
   useHotkeys(
-    'Home',
+    'meta+v',
     (ev) => {
       ev.preventDefault();
-      void handleAction({
-        type: 'home',
-      });
+      void actionHandler?.({ type: 'paste' });
     },
-    option,
+    { scopes: [id] },
   );
+
   useHotkeys(
     'Backspace',
     (ev) => {
       ev.preventDefault();
-      void handleAction({
-        type: 'delete',
-        ids: [...selection.ids],
+      void actionHandler?.({ type: 'delete', ids: [...selection.selected.value] });
+    },
+    { scopes: [id] },
+  );
+  useHotkeys(
+    'Escape',
+    (ev) => {
+      ev.preventDefault();
+      void actionHandler?.({ type: 'select', ids: [] });
+    },
+    { scopes: [id] },
+  );
+
+  useHotkeys(
+    'd',
+    (ev) => {
+      ev.preventDefault();
+      void actionHandler?.({ type: 'debug' });
+    },
+    { scopes: [id] },
+  );
+
+  useHotkeys(
+    'meta+a',
+    (ev) => {
+      ev.preventDefault();
+      void actionHandler?.({
+        type: 'select',
+        ids: [...graph.nodes.map((node) => node.id), ...graph.edges.map((edge) => edge.id)],
       });
     },
-    option,
+    { scopes: [id] },
+  );
+
+  useHotkeys(
+    "meta+'",
+    (ev) => {
+      ev.preventDefault();
+      void actionHandler?.({ type: 'grid' });
+    },
+    { scopes: [id] },
+  );
+
+  useHotkeys(
+    'Home',
+    (ev) => {
+      ev.preventDefault();
+      void actionHandler?.({ type: 'home' });
+    },
+    { scopes: [id] },
   );
 };

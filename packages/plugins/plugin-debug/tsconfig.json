@@ -7,6 +7,8 @@
       "DOM",
       "ESNext"
     ],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "types": [
       "node"
     ]
@@ -44,6 +46,9 @@
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute"
     },
     {
       "path": "../../core/echo/automerge"

@@ -1,7 +1,5 @@
 {
-  "extends": [
-    "../../../../tsconfig.base.json"
-  ],
+  "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
     "lib": [
       "DOM",
@@ -26,6 +24,9 @@
     },
     {
       "path": "../../../common/debug"
+    },
+    {
+      "path": "../../../common/graph"
     },
     {
       "path": "../../../common/invariant"
@@ -65,6 +66,9 @@
     },
     {
       "path": "../../../ui/react-ui-attention"
+    },
+    {
+      "path": "../../../ui/react-ui-canvas"
     },
     {
       "path": "../../../ui/react-ui-card"
