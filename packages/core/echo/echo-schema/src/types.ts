@@ -109,6 +109,15 @@ export const setValue = <T extends object>(obj: T, path: JsonPath, value: any): 
  */
 export const getTypenameOrThrow = (schema: S.Schema<any>): string => requireTypeReference(schema).objectId;
 
+export const getSchemaVersion = (schema: S.Schema<any>): string | undefined => {
+  const annotation = getObjectAnnotation(schema);
+  if (!annotation) {
+    return undefined;
+  }
+
+  return annotation.version;
+};
+
 /**
  * Returns a reference that will be used to point to a schema.
  */
@@ -142,4 +151,15 @@ export const requireTypeReference = (schema: S.Schema<any>): Reference => {
   }
 
   return typeReference;
+};
+
+// TODO(dmaretskyi): Unify with `getTypeReference`.
+export const getSchemaDXN = (schema: S.Schema.AnyNoContext): DXN | undefined => {
+  // TODO(dmaretskyi): Add support for dynamic schema.
+  const objectAnnotation = getObjectAnnotation(schema);
+  if (!objectAnnotation) {
+    return undefined;
+  }
+
+  return DXN.fromTypenameAndVersion(objectAnnotation.typename, objectAnnotation.version);
 };

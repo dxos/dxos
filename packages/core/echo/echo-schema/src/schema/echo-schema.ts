@@ -13,9 +13,10 @@ import {
   updateFieldsInSchema,
 } from './manipulation';
 import { StoredSchema } from './stored-schema';
-import { SchemaMetaSymbol, schemaVariance, type JsonSchemaType, type SchemaMeta } from '../ast';
+import { getObjectAnnotation, SchemaMetaSymbol, schemaVariance, type JsonSchemaType, type SchemaMeta } from '../ast';
 import { toEffectSchema, toJsonSchema } from '../json';
 import { type TypedObject, type ObjectId, type TypedObjectPrototype } from '../object';
+import { DXN } from '@dxos/keys';
 
 /**
  * Defines an effect-schema for the `EchoSchema` type.

@@ -4,7 +4,7 @@
 
 import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
-import { type AnyObjectData, type BaseObject } from '@dxos/echo-schema';
+import { type AnyObjectData, type BaseObject, type ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type ReactiveObject, getProxyTarget, getSchema, isReactiveObject } from '@dxos/live-object';
@@ -32,7 +32,8 @@ import {
   isEchoObject,
 } from '../echo-handler';
 import { type Hypergraph } from '../hypergraph';
-import { type FilterSource, type PropertyFilter, type QueryFn, type QueryOptions } from '../query';
+import { Filter, type FilterSource, type PropertyFilter, type QueryFn, type QueryOptions } from '../query';
+import type { ObjectMigration } from './object-migration';
 
 export type GetObjectByIdOptions = {
   deleted?: boolean;
@@ -285,6 +286,24 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   async flush(opts?: FlushOptions): Promise<void> {
     await this._coreDatabase.flush(opts);
+  }
+
+  async runMigrations(migrations: ObjectMigration[]): Promise<void> {
+    for (const migration of migrations) {
+      const { objects } = await this._coreDatabase.graph.query(Filter.typeDXN(migration.fromType.toString())).run();
+      log.info('migrate', { from: migration.fromType, to: migration.toType, objects: objects.length });
+      for (const object of objects) {
+        const output = await migration.transform(object, { db: this });
+        log.info('migration', { id: object.id, output });
+
+        // TODO(dmaretskyi): Output validation.
+        delete (output as any).id;
+
+        await this._coreDatabase.atomicReplaceObject(object.id, output as AnyObjectData);
+        await migration.onMigration({ before: object, object, db: this });
+      }
+    }
+    await this.flush();
   }
 
   /**

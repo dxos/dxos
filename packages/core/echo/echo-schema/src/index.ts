@@ -24,4 +24,3 @@ export * from './object';
 export * from './query';
 export * from './types';
 export * from './utils';
-export * from './migrations';

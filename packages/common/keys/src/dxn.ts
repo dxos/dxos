@@ -91,7 +91,7 @@ export class DXN {
     // Per-type validation.
     switch (kind) {
       case DXN.kind.TYPE:
-        if (parts.length !== 1) {
+        if (parts.length > 2) {
           throw new Error('Invalid "type" DXN');
         }
         break;

@@ -18,8 +18,8 @@ import { interpretAsDocumentId, type AutomergeUrl, type DocumentId } from '@dxos
 import { Stream } from '@dxos/codec-protobuf';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { isEncodedReference, Reference, type SpaceDoc, type SpaceState } from '@dxos/echo-protocol';
-import { type AnyObjectData } from '@dxos/echo-schema';
+import { encodeReference, isEncodedReference, Reference, type SpaceDoc, type SpaceState } from '@dxos/echo-protocol';
+import { Ref, type AnyObjectData, type ObjectId } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -494,6 +494,24 @@ export class CoreDatabase {
       const toUnlink = objects.filter((o) => o?.isDeleted()).map((o) => o!.id);
       this.unlinkObjects(toUnlink);
     }
+  }
+
+  async atomicReplaceObject(id: ObjectId, data: AnyObjectData): Promise<void> {
+    invariant(!('__typename' in data));
+    invariant(!('__meta' in data));
+    invariant(!('id' in data));
+
+    const core = await this.loadObjectCoreById(id);
+    invariant(core);
+
+    const mappedData = deepMapValues(data, (value) => {
+      if (Ref.isRef(value)) {
+        return { '/': value.dxn.toString() };
+      }
+      return value;
+    });
+
+    core.setDecoded([DATA_NAMESPACE], mappedData);
   }
 
   async flush({ disk = true, indexes = false, updates = false }: FlushOptions = {}): Promise<void> {
