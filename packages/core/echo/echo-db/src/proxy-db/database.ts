@@ -6,8 +6,8 @@ import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
 import { type AnyObjectData, type BaseObject, type ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey, type SpaceId } from '@dxos/keys';
-import { type ReactiveObject, getProxyTarget, getSchema, isReactiveObject } from '@dxos/live-object';
+import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
+import { type ReactiveObject, getProxyTarget, getSchema, getType, isReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
@@ -299,7 +299,14 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
         // TODO(dmaretskyi): Output validation.
         delete (output as any).id;
 
-        await this._coreDatabase.atomicReplaceObject(object.id, output as AnyObjectData);
+        await this._coreDatabase.atomicReplaceObject(object.id, {
+          data: output,
+          type: migration.toType,
+        });
+        const postMigrationType = getType(object)?.toDXN();
+        log.info('post migration', { id: object.id, type: postMigrationType });
+        invariant(postMigrationType != null && DXN.equals(postMigrationType, migration.toType));
+
         await migration.onMigration({ before: object, object, db: this });
       }
     }

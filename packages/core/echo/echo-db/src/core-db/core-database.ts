@@ -18,7 +18,14 @@ import { interpretAsDocumentId, type AutomergeUrl, type DocumentId } from '@dxos
 import { Stream } from '@dxos/codec-protobuf';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { encodeReference, isEncodedReference, Reference, type SpaceDoc, type SpaceState } from '@dxos/echo-protocol';
+import {
+  encodeReference,
+  isEncodedReference,
+  Reference,
+  type ObjectStructure,
+  type SpaceDoc,
+  type SpaceState,
+} from '@dxos/echo-protocol';
 import { Ref, type AnyObjectData, type ObjectId } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
@@ -44,6 +51,7 @@ import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChanged
 import { DATA_NAMESPACE } from '../echo-handler/echo-handler';
 import { type Hypergraph } from '../hypergraph';
 import { Filter, optionsToProto, Query, type FilterSource, type PropertyFilter, type QueryFn } from '../query';
+import { __type } from 'effect/FastCheck';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 
@@ -496,10 +504,8 @@ export class CoreDatabase {
     }
   }
 
-  async atomicReplaceObject(id: ObjectId, data: AnyObjectData): Promise<void> {
-    invariant(!('__typename' in data));
-    invariant(!('__meta' in data));
-    invariant(!('id' in data));
+  async atomicReplaceObject(id: ObjectId, params: AtomicReplaceObjectParams): Promise<void> {
+    const { data, type } = params;
 
     const core = await this.loadObjectCoreById(id);
     invariant(core);
@@ -511,7 +517,17 @@ export class CoreDatabase {
       return value;
     });
 
-    core.setDecoded([DATA_NAMESPACE], mappedData);
+    const existingStruct: ObjectStructure = core.getDecoded([]) as any;
+    const newStruct: ObjectStructure = {
+      ...existingStruct,
+      data: mappedData,
+    };
+
+    if (type !== undefined) {
+      newStruct.system.type = encodeReference(Reference.fromDXN(type));
+    }
+
+    core.setDecoded([], newStruct);
   }
 
   async flush({ disk = true, indexes = false, updates = false }: FlushOptions = {}): Promise<void> {
@@ -875,6 +891,19 @@ export type GetObjectCoreByIdOptions = {
    * @default true
    */
   load?: boolean;
+};
+
+export type AtomicReplaceObjectParams = {
+  /**
+   * Update data.
+   * NOTE: This is not merged with the existing data.
+   */
+  data: any;
+
+  /**
+   * Update object type.
+   */
+  type?: DXN;
 };
 
 export type FlushOptions = {

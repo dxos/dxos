@@ -9,9 +9,10 @@ import { Trigger } from '@dxos/async';
 import { createIdFromSpaceKey, SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
 import { Expando } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { PublicKey } from '@dxos/keys';
+import { Contact } from '@dxos/echo-schema/testing';
+import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { create, makeRef } from '@dxos/live-object';
+import { create, getSnapshot, getType, makeRef } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
@@ -20,6 +21,7 @@ import { type DocHandleProxy, type RepoProxy } from '../client';
 import { getObjectCore, type ReactiveEchoObject } from '../echo-handler';
 import { type EchoDatabase, type EchoDatabaseImpl } from '../proxy-db';
 import { EchoTestBuilder } from '../testing';
+import { log } from '@dxos/log';
 
 describe('CoreDatabase', () => {
   describe('space fragmentation', () => {
@@ -357,6 +359,25 @@ describe('CoreDatabase', () => {
         await barrier.wait();
         expect(coreDb.getAllObjectIds()).to.deep.eq([]);
       });
+    });
+
+    // TODO(dmaretskyi): Test for conflict resolution.
+    test('atomic replace object', async () => {
+      const testBuilder = new EchoTestBuilder();
+      await openAndClose(testBuilder);
+      const { db, graph } = await testBuilder.createDatabase();
+      graph.schemaRegistry.addSchema([Contact]);
+      const contact = db.add(create(Contact, { name: 'Foo' }));
+
+      await db._coreDatabase.atomicReplaceObject(contact.id, {
+        type: DXN.parse('dxn:type:example.com/type/Task:0.1.0'),
+        data: { name: 'Bar' },
+      });
+
+      log.info('contact', { contact: getSnapshot(contact) });
+
+      expect(contact.name).to.eq('Bar');
+      expect(getType(contact)?.toDXN().toString()).to.eq('dxn:type:example.com/type/Task:0.1.0');
     });
   });
 });

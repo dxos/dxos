@@ -3,6 +3,7 @@ import { EchoTestBuilder } from '../testing';
 import { S, TypedObject } from '@dxos/echo-schema';
 import { defineObjectMigration } from './object-migration';
 import { create } from '@dxos/live-object';
+import { Filter } from '../query';
 
 let builder: EchoTestBuilder;
 
@@ -40,7 +41,33 @@ test('migrate 1 object', async () => {
   await db.flush({ indexes: true });
   await db.runMigrations([migration]);
 
-  const { objects } = await db.query().run();
+  const { objects } = await db.query(Filter.schema(ContactV2)).run();
   expect(objects).to.have.length(1);
   expect(objects[0].name).to.eq('John Doe');
+});
+
+test.only('incremental migrations', async () => {
+  const { db, graph } = await builder.createDatabase();
+  graph.schemaRegistry.addSchema([ContactV1, ContactV2]);
+
+  db.add(create(ContactV1, { firstName: 'John', lastName: 'Doe' }));
+  await db.flush({ indexes: true });
+  await db.runMigrations([migration]);
+
+  {
+    const { objects } = await db.query(Filter.schema(ContactV2)).run();
+    expect(objects).to.have.length(1);
+    expect(objects[0].name).to.eq('John Doe');
+  }
+
+  db.add(create(ContactV1, { firstName: 'Jane', lastName: 'Smith' }));
+  await db.flush({ indexes: true });
+  await db.runMigrations([migration]);
+
+  {
+    const { objects } = await db.query(Filter.schema(ContactV2)).run();
+    expect(objects).to.have.length(2);
+    expect(objects[0].name).to.eq('John Doe');
+    expect(objects[1].name).to.eq('Jane Smith');
+  }
 });
