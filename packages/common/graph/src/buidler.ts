@@ -9,16 +9,15 @@ import { getSchema } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getSchemaProperties } from '@dxos/schema';
 
-import { GraphModel, type Node } from './graph';
+import { GraphModel } from './graph';
+import { type GraphNode } from './types';
 
-// TODO(burdon): Factor out graph. Reconcile with debug and explorer plugin (graph-model).
-// TODO(burdon): GraphBuilder? With subscriptions?
+// NOTE: The `relation` is different from the `type`.
+type Edge = { source: string; target: string; relation: string };
 
-// TODO(burdon): Make safe.
-export const createEdgeId = ({ source, target, relation }: { source: string; target: string; relation: string }) =>
-  `${source}-${relation}-${target}`;
+export const createEdgeId = ({ source, target, relation }: Edge) => `${source}-${relation}-${target}`;
 
-export const parseEdgeId = (id: string) => {
+export const parseEdgeId = (id: string): Edge => {
   const [source, relation, target] = id.split('-');
   invariant(source && target && relation);
   return { source, relation, target };
@@ -27,8 +26,8 @@ export const parseEdgeId = (id: string) => {
 /**
  * Maps an ECHO object graph onto a layout graph.
  */
-export const createGraph = (objects: ReactiveEchoObject<any>[]): GraphModel<Node<ReactiveEchoObject<any>>> => {
-  const graph = new GraphModel<Node<ReactiveEchoObject<any>>>();
+export const createGraph = (objects: ReactiveEchoObject<any>[]): GraphModel<GraphNode<ReactiveEchoObject<any>>> => {
+  const graph = new GraphModel<GraphNode<ReactiveEchoObject<any>>>();
 
   // Map objects.
   objects.forEach((object) => {

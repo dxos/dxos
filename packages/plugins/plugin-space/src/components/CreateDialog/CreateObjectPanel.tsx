@@ -129,7 +129,7 @@ export const CreateObjectPanel = ({
         <div role='none'>
           <Input.Root>
             <InputHeader>
-              <Input.Label classNames='px-2'>
+              <Input.Label>
                 {t(isSpace(target) ? 'creating in space label' : 'creating in collection label')}
               </Input.Label>
             </InputHeader>
@@ -151,7 +151,7 @@ export const CreateObjectPanel = ({
         <div role='none'>
           <Input.Root>
             <InputHeader>
-              <Input.Label classNames='px-2'>{t('creating object type label')}</Input.Label>
+              <Input.Label>{t('creating object type label')}</Input.Label>
             </InputHeader>
             <div role='none' className='flex gap-2'>
               <Input.TextInput

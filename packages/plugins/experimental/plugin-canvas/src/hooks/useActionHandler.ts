@@ -6,19 +6,19 @@ import { useEffect } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { DATA_TEST_ID, useProjection, zoomTo, zoomInPlace, ProjectionMapper } from '@dxos/react-ui-canvas';
+import { DATA_TEST_ID, ProjectionMapper, useProjection, zoomTo, zoomInPlace } from '@dxos/react-ui-canvas';
+import { isNotFalsy } from '@dxos/util';
 
 import { useEditorContext } from './useEditorContext';
 import { type ActionHandler } from '../actions';
 import { type TestId } from '../components';
-import { createRectangle, doLayout, getCenter, getRect, rectUnion } from '../layout';
-import { fireBullet } from '../layout/bullets';
+import { createRectangle, doLayout, getCenter, getRect, rectUnion, fireBullet } from '../layout';
 import { createId, itemSize } from '../testing';
 import { isPolygon } from '../types';
 
 // TODO(burdon): Handle multiple actions.
 export const useActionHandler = () => {
-  const { options, overlaySvg, graph, selection, setDebug, setShowGrid, setSnapToGrid, setActionHandler } =
+  const { options, overlaySvg, graph, clipboard, selection, setDebug, setShowGrid, setSnapToGrid, setActionHandler } =
     useEditorContext();
   const { root, projection, setProjection } = useProjection();
 
@@ -130,7 +130,43 @@ export const useActionHandler = () => {
           return true;
         }
 
-        // TODO(burdon): Factor out graph handlers. Undo.
+        // TODO(burdon): Manage undo/redo history via automerge?
+        case 'undo': {
+          return true;
+        }
+        case 'redo': {
+          return true;
+        }
+
+        // TODO(burdon): Factor out graph mutators.
+        case 'cut': {
+          const { ids = selection.selected.value } = action;
+          clipboard.clear().addGraphs([graph.removeNodes(ids), graph.removeEdges(ids)]);
+          selection.clear();
+          return true;
+        }
+        case 'copy': {
+          const { ids = selection.selected.value } = action;
+          const nodes = ids.map((id) => graph.getNode(id)).filter(isNotFalsy);
+          const edges = ids.map((id) => graph.getEdge(id)).filter(isNotFalsy);
+          clipboard //
+            .clear()
+            .addNodes(nodes)
+            .addEdges(edges);
+          return true;
+        }
+        case 'paste': {
+          // TODO(burdon): Change ids if pasting copy (update links).
+          graph.addGraph(clipboard);
+          selection.setSelected([
+            //
+            ...clipboard.nodes.map((node) => node.id),
+            ...clipboard.edges.map((edge) => edge.id),
+          ]);
+          clipboard.clear();
+          return true;
+        }
+
         case 'select': {
           const { ids, shift } = action;
           selection.setSelected(ids, shift);
