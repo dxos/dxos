@@ -8,7 +8,9 @@ type DefineObjectMigrationOptions<From extends S.Schema.AnyNoContext, To extends
   /**
    * Pure function that converts the old object data to the new object data.
    */
-  migrate: (from: S.Schema.Type<From>, context: ObjectMigrationContext) => Promise<S.Schema.Type<To>>;
+  transform: (from: S.Schema.Type<From>, context: ObjectMigrationContext) => Promise<S.Schema.Type<To>>;
+
+  // TODO(dmaretskyi): Add an on-migration callback that will allow to do further database updates. E.g. creating new relations.
 };
 
 // TODO(dmaretskyi): For future extensibility.
@@ -19,7 +21,7 @@ export type ObjectMigration = {
   toType: DXN;
   fromSchema: S.Schema.AnyNoContext;
   toSchema: S.Schema.AnyNoContext;
-  migrate: (from: unknown, context: ObjectMigrationContext) => Promise<unknown>;
+  transform: (from: unknown, context: ObjectMigrationContext) => Promise<unknown>;
 };
 
 export const defineObjectMigration = <From extends S.Schema.AnyNoContext, To extends S.Schema.AnyNoContext>(
@@ -39,7 +41,7 @@ export const defineObjectMigration = <From extends S.Schema.AnyNoContext, To ext
     toType,
     fromSchema: options.from,
     toSchema: options.to,
-    migrate: options.migrate as any,
+    transform: options.transform as any,
   };
 };
 
