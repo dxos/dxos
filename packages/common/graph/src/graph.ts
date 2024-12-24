@@ -19,6 +19,13 @@ export class ReadonlyGraphModel<Node extends GraphNode = any, Edge extends Graph
     this._graph = create(Graph, { nodes, edges });
   }
 
+  toJSON() {
+    // Sort to enable stable comparisons.
+    this._graph.nodes.sort(({ id: a }, { id: b }) => a.localeCompare(b));
+    this._graph.edges.sort(({ id: a }, { id: b }) => a.localeCompare(b));
+    return JSON.parse(JSON.stringify(this._graph));
+  }
+
   get graph(): Graph {
     return this._graph;
   }

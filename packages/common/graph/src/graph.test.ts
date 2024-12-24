@@ -17,7 +17,7 @@ describe('Graph', () => {
     expect(graph.edges).to.have.length(0);
   });
 
-  test('add and remove', ({ expect }) => {
+  test('add and remove subgraphs', ({ expect }) => {
     const graph = new GraphModel<GraphNode<TestData>>()
       .addNode({ id: 'node-1', data: { value: 'test' } })
       .addNode({ id: 'node-2', data: { value: 'test' } })
@@ -34,6 +34,7 @@ describe('Graph', () => {
       });
     expect(graph.nodes).to.have.length(3);
     expect(graph.edges).to.have.length(2);
+    const pre = graph.toJSON();
 
     const node: GraphNode<TestData> = graph.getNode('node-2')!;
     expect(node).to.exist;
@@ -43,6 +44,10 @@ describe('Graph', () => {
     expect(removed.edges).to.have.length(2);
     expect(graph.nodes).to.have.length(2);
     expect(graph.edges).to.have.length(0);
+
+    graph.addGraph(removed);
+    const post = graph.toJSON();
+    expect(pre).to.deep.eq(post);
 
     graph.clear();
     expect(graph.nodes).to.have.length(0);
