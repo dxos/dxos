@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { create } from '@dxos/live-object';
+import { create, getSnapshot } from '@dxos/live-object';
 
 import { Graph, type GraphNode, type GraphEdge } from './types';
 import { removeElements } from './util';
@@ -15,15 +15,19 @@ import { removeElements } from './util';
 export class ReadonlyGraphModel<Node extends GraphNode = any, Edge extends GraphEdge = any> {
   protected readonly _graph: Graph;
 
+  // TODO(burdon): Copy?
   constructor({ nodes = [], edges = [] }: Partial<Graph> = {}) {
     this._graph = create(Graph, { nodes, edges });
   }
 
+  /**
+   * Return stable sorted JSON representation of graph.
+   */
   toJSON() {
-    // Sort to enable stable comparisons.
-    this._graph.nodes.sort(({ id: a }, { id: b }) => a.localeCompare(b));
-    this._graph.edges.sort(({ id: a }, { id: b }) => a.localeCompare(b));
-    return JSON.parse(JSON.stringify(this._graph));
+    const { nodes, edges } = getSnapshot(this._graph);
+    nodes.sort(({ id: a }, { id: b }) => a.localeCompare(b));
+    edges.sort(({ id: a }, { id: b }) => a.localeCompare(b));
+    return { nodes, edges };
   }
 
   get graph(): Graph {

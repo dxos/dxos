@@ -8,6 +8,7 @@ import { S } from '@dxos/echo-schema';
 // - https://graphology.github.io (TS, tree-shakable, multiple packages for extensions)
 // - https://github.com/dagrejs/graphlib (mature, extensive)
 // - https://github.com/avoidwork/tiny-graph
+// - levelgraph, oxigraph (Rust WASM)
 
 export const BaseGraphNode = S.Struct({
   id: S.String,

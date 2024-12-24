@@ -77,7 +77,7 @@ const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
           <Editor.UI />
         </Editor.Root>
       </AttentionContainer>
-      {/* TODO(burdon): Autosave saves too early (before blur event). */}
+
       {sidebar === 'selected' && selected && (
         <Form
           schema={RectangleShapeWithoutRef}
@@ -87,9 +87,9 @@ const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
             ['center' as const]: (props) => <TupleInput {...props} binding={['x', 'y']} />,
             ['size' as const]: (props) => <TupleInput {...props} binding={['width', 'height']} />,
           }}
-          autoSave
         />
       )}
+
       {sidebar === 'json' && (
         <AttentionContainer id='sidebar' tabIndex={0} classNames='flex grow overflow-hidden'>
           <SyntaxHighlighter language='json' classNames='text-xs'>
@@ -156,5 +156,3 @@ export const Query: Story = {
     ],
   },
 };
-
-// TODO(burdon): Graph builder demo.
