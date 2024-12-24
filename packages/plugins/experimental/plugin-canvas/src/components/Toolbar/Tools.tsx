@@ -26,11 +26,12 @@ export const Tools = ({ classNames }: ToolsProps) => {
       <Tool id={'table'} icon={'ph--table--regular'} />
       <Tool id={'function'} icon={'ph--function--regular'} />
       <Tool id={'database'} icon={'ph--database--regular'} />
+      <Tool id={'timer'} icon={'ph--alarm--regular'} />
     </div>
   );
 };
 
-export type ToolKind = 'rectangle' | 'ellipse' | 'textbox' | 'form' | 'table' | 'function' | 'database';
+export type ToolKind = 'rectangle' | 'ellipse' | 'textbox' | 'form' | 'table' | 'function' | 'database' | 'timer';
 
 type ToolProps = {
   id: ToolKind;
@@ -57,6 +58,7 @@ const Tool = ({ id, icon }: ToolProps) => {
             // TODO(burdon): Custom shape depending on tool.
             let shape: PolygonShape;
             switch (id) {
+              case 'timer':
               case 'function':
               case 'database':
               case 'textbox':

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type GraphModel, type Node } from '@dxos/graph';
+import { type GraphModel, type GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { type Point, type Rect } from '@dxos/react-ui-canvas';
 
@@ -17,7 +17,7 @@ export type Layout = {
  * Generate layout.
  */
 // TODO(burdon): Graph hierarchy?
-export const useLayout = (graph: GraphModel<Node<Shape>>, dragging?: PolygonShape, debug?: boolean): Layout => {
+export const useLayout = (graph: GraphModel<GraphNode<Shape>>, dragging?: PolygonShape, debug?: boolean): Layout => {
   const shapes: Shape[] = [];
 
   graph.edges.forEach(({ id, source, target }) => {
@@ -56,7 +56,7 @@ export const useLayout = (graph: GraphModel<Node<Shape>>, dragging?: PolygonShap
 
 const getNodeBounds = (
   dragging: PolygonShape | undefined,
-  node: Node<Shape> | undefined,
+  node: GraphNode<Shape> | undefined,
 ): { center: Point; bounds: Rect } | undefined => {
   if (!node) {
     return undefined;

@@ -133,7 +133,12 @@ export const CanvasContent = () => {
 };
 
 const Background = () => {
-  return <div {...testId<TestId>('dx-background')} className={mx('absolute inset-0 bg-base', eventsNone)} />;
+  return (
+    <div
+      {...testId<TestId>('dx-background')}
+      className={mx('absolute inset-0 _bg-base _attention-surface', eventsNone)}
+    />
+  );
 };
 
 const SelectionBox = ({ rect }: { rect: Rect }) => {

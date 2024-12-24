@@ -26,7 +26,7 @@ export const AttentionContainer = ({
   const attendableAttrs = useAttendableAttributes(id);
 
   return (
-    <div role='none' {...attendableAttrs} {...props} className={mx(classNames)}>
+    <div role='none' {...attendableAttrs} {...props} className={mx('attention-surface', classNames)}>
       <HotkeysProvider initiallyActiveScopes={[GLOBAL_SCOPE]}>
         <Inner id={id}>{children}</Inner>
       </HotkeysProvider>

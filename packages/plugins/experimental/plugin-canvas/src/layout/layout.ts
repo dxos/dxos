@@ -16,7 +16,7 @@ import {
 } from '@antv/layout';
 import defaultsDeep from 'lodash.defaultsdeep';
 
-import { type Graph, GraphModel, type Node } from '@dxos/graph';
+import { type Graph, GraphModel, type GraphNode } from '@dxos/graph';
 import { type Dimension } from '@dxos/react-ui-canvas';
 import { getDeep } from '@dxos/util';
 
@@ -47,10 +47,10 @@ export const defaultLayoutOptions: LayoutOptions = {
 
 // TODO(burdon): N should be an referenceable object.
 export const doLayout = async <N extends object>(
-  data: GraphModel<Node<N>>,
+  data: GraphModel<GraphNode<N>>,
   options: Partial<LayoutOptions> = defaultLayoutOptions,
-): Promise<GraphModel<Node<Shape>>> => {
-  const graph = new GraphModel<Node<Shape>>();
+): Promise<GraphModel<GraphNode<Shape>>> => {
+  const graph = new GraphModel<GraphNode<Shape>>();
   const opt = defaultsDeep({}, options, defaultLayoutOptions);
 
   const defaultOptions: Intersection<[D3ForceLayoutOptions, GridLayoutOptions, RadialLayoutOptions]> = {
