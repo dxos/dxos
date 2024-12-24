@@ -14,6 +14,7 @@ import React, {
 } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { rangeToA1Notation, type CellRange } from '@dxos/compute';
 import { DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
@@ -32,11 +33,10 @@ import {
 } from '@dxos/react-ui-grid';
 
 import { colLabelCell, rowLabelCell, useSheetModelDxGridProps } from './util';
-import { DEFAULT_COLUMNS, DEFAULT_ROWS, rangeToA1Notation, type CellRange } from '../../defs';
 import { rangeExtension, sheetExtension, type RangeController } from '../../extensions';
 import { useSelectThreadOnCellFocus, useUpdateFocusedCellOnThreadSelection } from '../../integrations';
 import { SHEET_PLUGIN } from '../../meta';
-import { SheetAction } from '../../types';
+import { DEFAULT_COLS, DEFAULT_ROWS, SheetAction } from '../../types';
 import { useSheetContext } from '../SheetContext';
 
 const inertPosition: DxGridPosition = { plane: 'grid', col: 0, row: 0 };
@@ -306,7 +306,7 @@ export const GridSheet = () => {
       <GridCellEditor getCellContent={getCellContent} extension={extension} onBlur={handleBlur} />
       <Grid.Content
         initialCells={initialCells}
-        limitColumns={DEFAULT_COLUMNS}
+        limitColumns={DEFAULT_COLS}
         limitRows={DEFAULT_ROWS}
         columns={columns}
         rows={rows}

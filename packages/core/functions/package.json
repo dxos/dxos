@@ -13,15 +13,20 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
+    "./edge": {
+      "types": "./dist/types/src/edge/index.d.ts",
+      "browser": "./dist/lib/browser/edge/index.mjs",
+      "node": "./dist/lib/node-esm/edge/index.mjs"
+    },
     "./testing": {
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"
     },
     "./types": {
-      "types": "./dist/types/src/types.d.ts",
-      "browser": "./dist/lib/browser/types.mjs",
-      "node": "./dist/lib/node-esm/types.mjs"
+      "types": "./dist/types/src/types/index.d.ts",
+      "browser": "./dist/lib/browser/types/index.mjs",
+      "node": "./dist/lib/node-esm/types/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -50,6 +55,7 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/live-object": "workspace:*",
@@ -64,6 +70,7 @@
     "effect": "^3.9.2",
     "express": "^4.19.2",
     "get-port-please": "^3.1.1",
+    "iso-did": "^1.6.0",
     "ws": "^8.14.2"
   },
   "devDependencies": {

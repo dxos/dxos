@@ -116,7 +116,7 @@ export default [
         'space input placeholder': 'Select space',
         'schema input placeholder': 'Select object type',
         'creating object type label': 'Type',
-        'creating in space label': 'In Space',
+        'creating in space label': 'Location',
         'creating in collection label': 'In Collection',
         'clear input label': 'Clear',
         'expose object label': 'Expose in navtree',

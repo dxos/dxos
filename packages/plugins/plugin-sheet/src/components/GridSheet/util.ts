@@ -4,6 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
+import { inRange } from '@dxos/compute';
 import { createDocAccessor, fullyQualifiedId } from '@dxos/react-client/echo';
 import { parseValue, cellClassesForFieldType } from '@dxos/react-ui-form';
 import {
@@ -20,9 +21,9 @@ import {
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 
-import { inRange, cellClassNameForRange, rangeFromIndex } from '../../defs';
 import { parseThreadAnchorAsCellRange } from '../../integrations';
 import { type SheetModel } from '../../model';
+import { cellClassNameForRange, rangeFromIndex } from '../../types';
 
 const createDxGridColumns = (model: SheetModel): DxGridAxisMeta => {
   return model.sheet.columns.reduce(

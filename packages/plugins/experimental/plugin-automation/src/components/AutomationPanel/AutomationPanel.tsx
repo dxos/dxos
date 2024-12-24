@@ -5,8 +5,13 @@
 import React, { useState } from 'react';
 
 import { S } from '@dxos/echo-schema';
-import { FunctionTriggerSchema, FunctionTrigger, type FunctionTriggerType } from '@dxos/functions';
-import { FunctionType, ScriptType } from '@dxos/plugin-script';
+import {
+  FunctionType,
+  FunctionTrigger,
+  FunctionTriggerSchema,
+  type FunctionTriggerType,
+  ScriptType,
+} from '@dxos/functions';
 import { type Client, useClient } from '@dxos/react-client';
 import { create, Filter, useQuery, type Space, type ReactiveObject, getSpace } from '@dxos/react-client/echo';
 import { IconButton, Input, useTranslation, Button } from '@dxos/react-ui';

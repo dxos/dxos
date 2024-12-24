@@ -5,10 +5,10 @@
 import * as d3 from 'd3';
 import { type Selection } from 'd3';
 
+import type { GraphEdge, GraphModel, GraphNode } from '@dxos/graph';
 import { isNotFalsy } from '@dxos/util';
 
 import { DATA_SHAPE_ID, getShapeElements } from '../components';
-import type { Edge, GraphModel, Node } from '../graph';
 import type { Shape } from '../types';
 
 /**
@@ -18,10 +18,10 @@ import type { Shape } from '../types';
  * @param filter
  */
 export const getPaths = (
-  graph: GraphModel<Node<Shape>>,
+  graph: GraphModel<GraphNode<Shape>>,
   root: HTMLElement,
   filter: { source?: string; target?: string },
-): { edge: Edge; el: SVGPathElement }[] => {
+): { edge: GraphEdge; el: SVGPathElement }[] => {
   return getShapeElements<SVGPathElement>(root, 'line')
     .map((el) => {
       const edge = graph.getEdge(el.getAttribute(DATA_SHAPE_ID)!);
@@ -58,8 +58,8 @@ export const defaultBulletOptions: BulletOptions = {
  * @param id
  */
 // TODO(burdon): Stop method.
-export const fireBullet = (root: HTMLElement, g: SVGGElement, graph: GraphModel<Node<Shape>>, id: string) => {
-  const cb = (edge: Edge) => {
+export const fireBullet = (root: HTMLElement, g: SVGGElement, graph: GraphModel<GraphNode<Shape>>, id: string) => {
+  const cb = (edge: GraphEdge) => {
     const num = d3.select(g).selectAll('circle').size();
     if (num < defaultBulletOptions.max) {
       const paths = getPaths(graph, root, { source: edge.target });
@@ -79,10 +79,10 @@ export const fireBullet = (root: HTMLElement, g: SVGGElement, graph: GraphModel<
  * Creates a bullet animation.
  */
 export const createBullet = (
-  edge: Edge,
+  edge: GraphEdge,
   path: SVGPathElement,
   options: BulletOptions = defaultBulletOptions,
-  cb?: (edge: Edge) => void,
+  cb?: (edge: GraphEdge) => void,
 ) => {
   return (selection: Selection<any, any, any, any>) => {
     selection.each(function () {

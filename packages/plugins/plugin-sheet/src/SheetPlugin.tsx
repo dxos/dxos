@@ -5,19 +5,18 @@
 import React from 'react';
 
 import { createIntent, createResolver, createSurface, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
+import { type ComputeGraphRegistry } from '@dxos/compute';
+import { FunctionType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { parseClientPlugin } from '@dxos/plugin-client/types';
-import { FunctionType } from '@dxos/plugin-script/types';
 import { getSpace } from '@dxos/react-client/echo';
 
 import { ComputeGraphContextProvider, SheetContainer, SheetObjectSettings } from './components';
-import { type ComputeGraphRegistry } from './compute-graph';
-import { compareIndexPositions, createSheet } from './defs';
 import { computeGraphFacet } from './extensions';
 import meta, { SHEET_PLUGIN } from './meta';
 import { serializer } from './serializer';
 import translations from './translations';
-import { SheetAction, SheetType, type SheetPluginProvides } from './types';
+import { compareIndexPositions, createSheet, SheetAction, SheetType, type SheetPluginProvides } from './types';
 
 export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
   let computeGraphRegistry: ComputeGraphRegistry | undefined;
@@ -35,7 +34,7 @@ export const SheetPlugin = (): PluginDefinition<SheetPluginProvides> => {
       }
 
       // Async import removes direct dependency on hyperformula.
-      const { defaultPlugins, ComputeGraphRegistry } = await import('./compute-graph');
+      const { defaultPlugins, ComputeGraphRegistry } = await import('@dxos/compute');
       computeGraphRegistry = new ComputeGraphRegistry({ plugins: defaultPlugins, remoteFunctionUrl });
     },
     provides: {

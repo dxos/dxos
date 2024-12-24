@@ -4,15 +4,13 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { type ReactiveEchoObject } from '@dxos/client/echo';
 import { failUndefined } from '@dxos/debug';
+import { FunctionType, ScriptType, getInvocationUrl, getUserFunctionUrlInMetadata } from '@dxos/functions';
 import { useClient } from '@dxos/react-client';
-import { Filter, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
+import { Filter, getMeta, getSpace, type ReactiveEchoObject, useQuery } from '@dxos/react-client/echo';
 import { Select, useTranslation } from '@dxos/react-ui';
 
-import { getInvocationUrl, getUserFunctionUrlInMetadata } from '../../edge';
 import { SCRIPT_PLUGIN } from '../../meta';
-import { FunctionType, ScriptType } from '../../types';
 import { DebugPanel } from '../DebugPanel';
 
 export interface AutomationPanelProps {

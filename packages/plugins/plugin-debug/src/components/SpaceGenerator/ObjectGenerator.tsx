@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { addressToA1Notation } from '@dxos/compute';
 import { type BaseObject, type TypedObject } from '@dxos/echo-schema';
 import { create, makeRef, type ReactiveObject } from '@dxos/live-object';
 import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
-import { addressToA1Notation, createSheet } from '@dxos/plugin-sheet';
+import { createSheet } from '@dxos/plugin-sheet';
 import { SheetType, type CellValue } from '@dxos/plugin-sheet/types';
 import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
 import { faker } from '@dxos/random';
