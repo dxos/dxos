@@ -65,13 +65,19 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
   // TODO(burdon): Need to wrap otherwise throws error:
   //  Class constructor SchemaClass cannot be invoked without 'new'.
   const [{ fieldSchema }, setFieldSchema] = useState({ fieldSchema: getFormatSchema(props?.format) });
+
   const handleValuesChanged = useCallback<NonNullable<FormProps<PropertyType>['onValuesChanged']>>(
     (_props) => {
-      // Update schema if format changed.
       // TODO(burdon): Callback should pass `changed` to indicate which fields have changed.
-      if (_props.format !== props.format) {
-        setFieldSchema({ fieldSchema: getFormatSchema(_props.format) });
-      }
+      // TODO(Zaymon): Workout why old and new format values are the same sometimes even when
+      //   selecting novel format values.
+      setFieldSchema((prev) => {
+        const fieldSchema = getFormatSchema(_props.format);
+        if (prev.fieldSchema === fieldSchema) {
+          return prev;
+        }
+        return { fieldSchema };
+      });
       if (_props.referenceSchema !== props.referenceSchema) {
         setSchema(schemas.find((schema) => schema.typename === _props.referenceSchema));
       }
@@ -85,7 +91,7 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
         return props;
       });
     },
-    [schemas, props],
+    [schemas, props.format, props.referenceSchema],
   );
 
   const handleValidate = useCallback<NonNullable<FormProps<PropertyType>['onValidate']>>(
