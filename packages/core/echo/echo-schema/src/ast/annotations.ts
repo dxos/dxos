@@ -46,8 +46,10 @@ export const getObjectAnnotation = (schema: S.Schema.All): ObjectAnnotation | un
     Option.getOrElse(() => undefined),
   )(schema.ast);
 
-// TODO(burdon): Rename getTypename.
+// TODO(burdon): Rename getTypename. (dmaretskyi): Would conflict with the `getTypename` getter for objects.
 export const getSchemaTypename = (schema: S.Schema.All): string | undefined => getObjectAnnotation(schema)?.typename;
+
+export const getSchemaVersion = (schema: S.Schema.All): string | undefined => getObjectAnnotation(schema)?.version;
 
 export const getEchoIdentifierAnnotation = (schema: S.Schema.All) =>
   flow(
