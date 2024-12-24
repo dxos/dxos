@@ -339,20 +339,20 @@ describe('Queries', () => {
     const contactV2 = db.add(create(ContactV2, { name: 'Brian Smith' }));
     await db.flush({ indexes: true });
 
-    const test = async (db: EchoDatabase) => {
-      await testQuery(db, Filter.typename(ContactV1.typename), [contactV1, contactV2]);
-      await testQuery(db, Filter.schema(ContactV1), [contactV1]);
-      await testQuery(db, Filter.schema(ContactV2), [contactV2]);
-      await testQuery(db, Filter.typeDXN(`dxn:type:example.com/type/Contact`), [contactV1, contactV2]);
-      await testQuery(db, Filter.typeDXN(`dxn:type:example.com/type/Contact:0.1.0`), [contactV1]);
-      await testQuery(db, Filter.typeDXN(`dxn:type:example.com/type/Contact:0.1.0`), [contactV1]);
-      await testQuery(db, Filter.typeDXN(`dxn:type:example.com/type/Contact:0.2.0`), [contactV2]);
+    const assertQueries = async (db: EchoDatabase) => {
+      await assertQuery(db, Filter.typename(ContactV1.typename), [contactV1, contactV2]);
+      await assertQuery(db, Filter.schema(ContactV1), [contactV1]);
+      await assertQuery(db, Filter.schema(ContactV2), [contactV2]);
+      await assertQuery(db, Filter.typeDXN(`dxn:type:example.com/type/Contact`), [contactV1, contactV2]);
+      await assertQuery(db, Filter.typeDXN(`dxn:type:example.com/type/Contact:0.1.0`), [contactV1]);
+      await assertQuery(db, Filter.typeDXN(`dxn:type:example.com/type/Contact:0.1.0`), [contactV1]);
+      await assertQuery(db, Filter.typeDXN(`dxn:type:example.com/type/Contact:0.2.0`), [contactV2]);
     };
 
-    await test(db);
+    await assertQueries(db);
 
     await peer.reload();
-    await test(await peer.openLastDatabase());
+    await assertQueries(await peer.openLastDatabase());
   });
 });
 
@@ -555,7 +555,7 @@ const createObjects = async (peer: EchoTestPeer, db: EchoDatabase, options: { co
   return objects;
 };
 
-const testQuery = async (db: EchoDatabase, filter: Filter, expected: any[]) => {
+const assertQuery = async (db: EchoDatabase, filter: Filter, expected: any[]) => {
   const { objects } = await db.query(filter).run();
   expect(sortById(objects)).toEqual(expect.arrayContaining(sortById(expected)));
 };
