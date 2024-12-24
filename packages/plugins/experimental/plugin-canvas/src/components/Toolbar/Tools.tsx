@@ -58,6 +58,7 @@ const Tool = ({ id, icon }: ToolProps) => {
             // TODO(burdon): Custom shape depending on tool.
             let shape: PolygonShape;
             switch (id) {
+              case 'timer':
               case 'function':
               case 'database':
               case 'textbox':
