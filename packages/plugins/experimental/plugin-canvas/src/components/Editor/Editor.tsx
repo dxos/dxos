@@ -12,7 +12,7 @@ import React, {
   useState,
 } from 'react';
 
-import { GraphModel, type Node } from '@dxos/graph';
+import { GraphModel, type GraphNode } from '@dxos/graph';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { testId } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
@@ -98,7 +98,8 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
     forwardedRef,
   ) => {
     // External state.
-    const graph = useMemo<GraphModel<Node<Shape>>>(() => _graph ?? new GraphModel<Node<Shape>>(), [_graph]);
+    const graph = useMemo<GraphModel<GraphNode<Shape>>>(() => _graph ?? new GraphModel<GraphNode<Shape>>(), [_graph]);
+    const clipboard = useMemo<GraphModel>(() => new GraphModel<GraphNode<Shape>>(), []);
     const selection = useMemo(() => _selection ?? new SelectionModel(), [_selection]);
     const options = useMemo(() => Object.assign({}, defaultEditorOptions, _options), [_options]);
 
@@ -122,8 +123,11 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
     const context: EditorContextType = {
       id,
       options,
+
       graph,
+      clipboard,
       selection,
+
       overlaySvg,
 
       actionHandler,

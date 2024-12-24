@@ -28,6 +28,7 @@ export const RowColumnMeta = S.Struct({
   size: S.optional(S.Number),
 });
 
+// TODO(burdon): Reconcile col/column (across packages).
 // TODO(burdon): Index to all updates when rows/columns are inserted/deleted.
 export class SheetType extends TypedObject({ typename: 'dxos.org/type/Sheet', version: '0.1.0' })({
   name: S.optional(S.String),

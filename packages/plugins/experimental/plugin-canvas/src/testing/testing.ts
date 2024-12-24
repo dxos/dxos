@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Graph, GraphModel, type Node } from '@dxos/graph';
+import { type Graph, GraphModel, type GraphNode } from '@dxos/graph';
 import { type Dimension } from '@dxos/react-ui-canvas';
 import { range } from '@dxos/util';
 
@@ -14,7 +14,7 @@ export const itemSize: Dimension = { width: 128, height: 64 };
 export const createId = () => Math.random().toString(36).slice(2, 10);
 
 export const createGraph = (snap: PointTransform = (p) => p): Graph => {
-  const graph = new GraphModel<Node<Shape>, any>();
+  const graph = new GraphModel<GraphNode<Shape>, any>();
   range(1).forEach((i) => {
     const a = createId();
     const b = createId();
