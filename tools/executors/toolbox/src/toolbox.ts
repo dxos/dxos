@@ -10,12 +10,12 @@ import fs from 'fs';
 import globrex from 'globrex';
 import defaultsDeep from 'lodash.defaultsdeep';
 import pick from 'lodash.pick';
+import { existsSync } from 'node:fs';
 import { inspect } from 'node:util';
 import { dirname, join, relative } from 'path';
 import sortPackageJson from 'sort-package-json';
 
 import { loadJson, saveJson, sortJson } from './util';
-import { existsSync } from 'node:fs';
 
 const raise = (err: Error) => {
   throw err;
