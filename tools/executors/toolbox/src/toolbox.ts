@@ -15,6 +15,7 @@ import { dirname, join, relative } from 'path';
 import sortPackageJson from 'sort-package-json';
 
 import { loadJson, saveJson, sortJson } from './util';
+import { existsSync } from 'node:fs';
 
 const raise = (err: Error) => {
   throw err;
@@ -418,9 +419,11 @@ export class Toolbox {
 
   async updateTsConfigAll() {
     const tsconfigAll = await loadJson<TsConfigJson>(join(this.rootDir, 'tsconfig.all.json'));
-    tsconfigAll.references = this.projects.map((project) => {
-      return { path: relative(this.rootDir, project.path) };
-    });
+    tsconfigAll.references = this.projects
+      .filter((project) => existsSync(join(project.path, 'tsconfig.json')))
+      .map((project) => {
+        return { path: relative(this.rootDir, join(project.path, 'tsconfig.json')) };
+      });
 
     await saveJson(join(this.rootDir, 'tsconfig.all.json'), tsconfigAll, this.options.verbose);
   }
