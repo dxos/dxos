@@ -1,0 +1,546 @@
+// Tsconfig that builds all projects.
+{
+  "compilerOptions": {},
+  "references": [
+    {
+      "path": "docs"
+    },
+    {
+      "path": "packages/apps/composer-app"
+    },
+    {
+      "path": "packages/apps/composer-crx"
+    },
+    {
+      "path": "packages/apps/testbench-app"
+    },
+    {
+      "path": "packages/apps/todomvc"
+    },
+    {
+      "path": "packages/common/async"
+    },
+    {
+      "path": "packages/common/codec-protobuf"
+    },
+    {
+      "path": "packages/common/context"
+    },
+    {
+      "path": "packages/common/crypto"
+    },
+    {
+      "path": "packages/common/crypto-names"
+    },
+    {
+      "path": "packages/common/debug"
+    },
+    {
+      "path": "packages/common/display-name"
+    },
+    {
+      "path": "packages/common/effect"
+    },
+    {
+      "path": "packages/common/esbuild-plugins"
+    },
+    {
+      "path": "packages/common/eslint-plugin"
+    },
+    {
+      "path": "packages/common/eslint-plugin-rules"
+    },
+    {
+      "path": "packages/common/feed-store"
+    },
+    {
+      "path": "packages/common/graph"
+    },
+    {
+      "path": "packages/common/hypercore"
+    },
+    {
+      "path": "packages/common/invariant"
+    },
+    {
+      "path": "packages/common/keyboard"
+    },
+    {
+      "path": "packages/common/keys"
+    },
+    {
+      "path": "packages/common/kv-store"
+    },
+    {
+      "path": "packages/common/local-storage"
+    },
+    {
+      "path": "packages/common/lock-file"
+    },
+    {
+      "path": "packages/common/log"
+    },
+    {
+      "path": "packages/common/merkle-search-tree"
+    },
+    {
+      "path": "packages/common/node-std"
+    },
+    {
+      "path": "packages/common/phoenix"
+    },
+    {
+      "path": "packages/common/plate"
+    },
+    {
+      "path": "packages/common/process"
+    },
+    {
+      "path": "packages/common/protobuf-compiler"
+    },
+    {
+      "path": "packages/common/random"
+    },
+    {
+      "path": "packages/common/random-access-storage"
+    },
+    {
+      "path": "packages/common/storybook-utils"
+    },
+    {
+      "path": "packages/common/test-utils"
+    },
+    {
+      "path": "packages/common/timeframe"
+    },
+    {
+      "path": "packages/common/tracing"
+    },
+    {
+      "path": "packages/common/typings"
+    },
+    {
+      "path": "packages/common/util"
+    },
+    {
+      "path": "packages/core/agent"
+    },
+    {
+      "path": "packages/core/compute"
+    },
+    {
+      "path": "packages/core/echo/automerge"
+    },
+    {
+      "path": "packages/core/echo/echo-db"
+    },
+    {
+      "path": "packages/core/echo/echo-generator"
+    },
+    {
+      "path": "packages/core/echo/echo-pipeline"
+    },
+    {
+      "path": "packages/core/echo/echo-protocol"
+    },
+    {
+      "path": "packages/core/echo/echo-query"
+    },
+    {
+      "path": "packages/core/echo/echo-schema"
+    },
+    {
+      "path": "packages/core/echo/echo-signals"
+    },
+    {
+      "path": "packages/core/echo/indexing"
+    },
+    {
+      "path": "packages/core/echo/live-object"
+    },
+    {
+      "path": "packages/core/functions"
+    },
+    {
+      "path": "packages/core/halo/credentials"
+    },
+    {
+      "path": "packages/core/halo/keyring"
+    },
+    {
+      "path": "packages/core/mesh/edge-client"
+    },
+    {
+      "path": "packages/core/mesh/messaging"
+    },
+    {
+      "path": "packages/core/mesh/network-manager"
+    },
+    {
+      "path": "packages/core/mesh/rpc"
+    },
+    {
+      "path": "packages/core/mesh/rpc-tunnel"
+    },
+    {
+      "path": "packages/core/mesh/signal"
+    },
+    {
+      "path": "packages/core/mesh/teleport"
+    },
+    {
+      "path": "packages/core/mesh/teleport-extension-automerge-replicator"
+    },
+    {
+      "path": "packages/core/mesh/teleport-extension-gossip"
+    },
+    {
+      "path": "packages/core/mesh/teleport-extension-object-sync"
+    },
+    {
+      "path": "packages/core/mesh/teleport-extension-replicator"
+    },
+    {
+      "path": "packages/core/mesh/websocket-rpc"
+    },
+    {
+      "path": "packages/core/protocols"
+    },
+    {
+      "path": "packages/devtools/cli"
+    },
+    {
+      "path": "packages/devtools/cli-base"
+    },
+    {
+      "path": "packages/devtools/cli-composer"
+    },
+    {
+      "path": "packages/devtools/devtools"
+    },
+    {
+      "path": "packages/devtools/devtools-extension"
+    },
+    {
+      "path": "packages/e2e/rpc-tunnel-e2e"
+    },
+    {
+      "path": "packages/experimental/agent-functions"
+    },
+    {
+      "path": "packages/experimental/assistant"
+    },
+    {
+      "path": "packages/experimental/cf-labs"
+    },
+    {
+      "path": "packages/experimental/discord-bot"
+    },
+    {
+      "path": "packages/experimental/gem-core"
+    },
+    {
+      "path": "packages/experimental/gem-globe"
+    },
+    {
+      "path": "packages/experimental/gem-spore"
+    },
+    {
+      "path": "packages/experimental/metagraph"
+    },
+    {
+      "path": "packages/experimental/plexus"
+    },
+    {
+      "path": "packages/experimental/react-metagraph"
+    },
+    {
+      "path": "packages/experimental/script-toolbox"
+    },
+    {
+      "path": "packages/experimental/spyglass"
+    },
+    {
+      "path": "packages/gravity/blade-runner"
+    },
+    {
+      "path": "packages/gravity/kube-publishing"
+    },
+    {
+      "path": "packages/gravity/proto-guard"
+    },
+    {
+      "path": "packages/plugins/experimental/plugin-automation"
+    },
+    {
+      "path": "packages/plugins/experimental/plugin-calls"
+    },
+    {
+      "path": "packages/plugins/experimental/plugin-canvas"
+    },
+    {
+      "path": "packages/plugins/experimental/plugin-excalidraw"
+    },
+    {
+      "path": "packages/plugins/experimental/plugin-explorer"
+    },
+    {
+      "path": "packages/plugins/experimental/plugin-inbox"
+    },
+    {
+      "path": "packages/plugins/experimental/plugin-ipfs"
+    },
+    {
+      "path": "packages/plugins/experimental/plugin-kanban"
+    },
+    {
+      "path": "packages/plugins/experimental/plugin-map"
+    },
+    {
+      "path": "packages/plugins/experimental/plugin-native"
+    },
+    {
+      "path": "packages/plugins/experimental/plugin-outliner"
+    },
+    {
+      "path": "packages/plugins/experimental/plugin-script"
+    },
+    {
+      "path": "packages/plugins/experimental/plugin-search"
+    },
+    {
+      "path": "packages/plugins/experimental/plugin-template"
+    },
+    {
+      "path": "packages/plugins/experimental/plugin-wnfs"
+    },
+    {
+      "path": "packages/plugins/plugin-attention"
+    },
+    {
+      "path": "packages/plugins/plugin-chess"
+    },
+    {
+      "path": "packages/plugins/plugin-client"
+    },
+    {
+      "path": "packages/plugins/plugin-debug"
+    },
+    {
+      "path": "packages/plugins/plugin-deck"
+    },
+    {
+      "path": "packages/plugins/plugin-files"
+    },
+    {
+      "path": "packages/plugins/plugin-graph"
+    },
+    {
+      "path": "packages/plugins/plugin-help"
+    },
+    {
+      "path": "packages/plugins/plugin-manager"
+    },
+    {
+      "path": "packages/plugins/plugin-markdown"
+    },
+    {
+      "path": "packages/plugins/plugin-mermaid"
+    },
+    {
+      "path": "packages/plugins/plugin-metadata"
+    },
+    {
+      "path": "packages/plugins/plugin-navtree"
+    },
+    {
+      "path": "packages/plugins/plugin-observability"
+    },
+    {
+      "path": "packages/plugins/plugin-presenter"
+    },
+    {
+      "path": "packages/plugins/plugin-pwa"
+    },
+    {
+      "path": "packages/plugins/plugin-registry"
+    },
+    {
+      "path": "packages/plugins/plugin-sheet"
+    },
+    {
+      "path": "packages/plugins/plugin-sketch"
+    },
+    {
+      "path": "packages/plugins/plugin-space"
+    },
+    {
+      "path": "packages/plugins/plugin-stack"
+    },
+    {
+      "path": "packages/plugins/plugin-status-bar"
+    },
+    {
+      "path": "packages/plugins/plugin-table"
+    },
+    {
+      "path": "packages/plugins/plugin-theme"
+    },
+    {
+      "path": "packages/plugins/plugin-thread"
+    },
+    {
+      "path": "packages/plugins/plugin-wildcard"
+    },
+    {
+      "path": "packages/sdk/app-framework"
+    },
+    {
+      "path": "packages/sdk/app-graph"
+    },
+    {
+      "path": "packages/sdk/client"
+    },
+    {
+      "path": "packages/sdk/client-protocol"
+    },
+    {
+      "path": "packages/sdk/client-services"
+    },
+    {
+      "path": "packages/sdk/config"
+    },
+    {
+      "path": "packages/sdk/examples"
+    },
+    {
+      "path": "packages/sdk/migrations"
+    },
+    {
+      "path": "packages/sdk/observability"
+    },
+    {
+      "path": "packages/sdk/react-client"
+    },
+    {
+      "path": "packages/sdk/schema"
+    },
+    {
+      "path": "packages/sdk/shell"
+    },
+    {
+      "path": "packages/ui/brand"
+    },
+    {
+      "path": "packages/ui/lit-grid"
+    },
+    {
+      "path": "packages/ui/primitives/react-hooks"
+    },
+    {
+      "path": "packages/ui/primitives/react-input"
+    },
+    {
+      "path": "packages/ui/primitives/react-list"
+    },
+    {
+      "path": "packages/ui/react-ui"
+    },
+    {
+      "path": "packages/ui/react-ui-attention"
+    },
+    {
+      "path": "packages/ui/react-ui-canvas"
+    },
+    {
+      "path": "packages/ui/react-ui-card"
+    },
+    {
+      "path": "packages/ui/react-ui-editor"
+    },
+    {
+      "path": "packages/ui/react-ui-form"
+    },
+    {
+      "path": "packages/ui/react-ui-grid"
+    },
+    {
+      "path": "packages/ui/react-ui-kanban"
+    },
+    {
+      "path": "packages/ui/react-ui-list"
+    },
+    {
+      "path": "packages/ui/react-ui-mosaic"
+    },
+    {
+      "path": "packages/ui/react-ui-searchlist"
+    },
+    {
+      "path": "packages/ui/react-ui-stack"
+    },
+    {
+      "path": "packages/ui/react-ui-syntax-highlighter"
+    },
+    {
+      "path": "packages/ui/react-ui-table"
+    },
+    {
+      "path": "packages/ui/react-ui-tabs"
+    },
+    {
+      "path": "packages/ui/react-ui-text-tooltip"
+    },
+    {
+      "path": "packages/ui/react-ui-theme"
+    },
+    {
+      "path": "packages/ui/react-ui-thread"
+    },
+    {
+      "path": "packages/ui/react-ui-types"
+    },
+    {
+      "path": "tools/apidoc"
+    },
+    {
+      "path": "tools/beast"
+    },
+    {
+      "path": "tools/codemods"
+    },
+    {
+      "path": "tools/executors/esbuild"
+    },
+    {
+      "path": "tools/executors/nx-protobuf-compiler"
+    },
+    {
+      "path": "tools/executors/toolbox"
+    },
+    {
+      "path": "tools/lit-stories"
+    },
+    {
+      "path": "tools/log-hook"
+    },
+    {
+      "path": "tools/protobuf-test"
+    },
+    {
+      "path": "tools/ridoculous"
+    },
+    {
+      "path": "tools/stories"
+    },
+    {
+      "path": "tools/swc-log-plugin"
+    },
+    {
+      "path": "tools/vite-plugin-icons"
+    },
+    {
+      "path": "tools/x"
+    }
+  ]
+}

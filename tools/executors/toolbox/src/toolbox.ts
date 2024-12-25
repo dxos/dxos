@@ -416,6 +416,15 @@ export class Toolbox {
     await saveJson(join(this.rootDir, 'tsconfig.paths.json'), tsconfigPaths, this.options.verbose);
   }
 
+  async updateTsConfigAll() {
+    const tsconfigAll = await loadJson<TsConfigJson>(join(this.rootDir, 'tsconfig.all.json'));
+    tsconfigAll.references = this.projects.map((project) => {
+      return { path: relative(this.rootDir, project.path) };
+    });
+
+    await saveJson(join(this.rootDir, 'tsconfig.all.json'), tsconfigAll, this.options.verbose);
+  }
+
   async printStats() {
     const stats: Record<
       string,
