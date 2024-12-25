@@ -8,11 +8,11 @@ import { describe, expect, test } from 'vitest';
 import { Trigger } from '@dxos/async';
 import { createIdFromSpaceKey, SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
 import { Expando } from '@dxos/echo-schema';
-import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { Contact } from '@dxos/echo-schema/testing';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { create, getSnapshot, getType, makeRef } from '@dxos/live-object';
+import { create, getType, makeRef } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
@@ -21,8 +21,6 @@ import { type DocHandleProxy, type RepoProxy } from '../client';
 import { getObjectCore, type ReactiveEchoObject } from '../echo-handler';
 import { type EchoDatabase, type EchoDatabaseImpl } from '../proxy-db';
 import { EchoTestBuilder } from '../testing';
-import { log } from '@dxos/log';
-import { getObjectDocument } from '../echo-handler/echo-handler';
 
 describe('CoreDatabase', () => {
   describe('space fragmentation', () => {

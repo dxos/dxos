@@ -4,6 +4,7 @@
 
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
+import type * as A from '@dxos/automerge/automerge';
 import { devtoolsFormatter, type DevtoolsFormatter } from '@dxos/debug';
 import { encodeReference, Reference, type ObjectStructure } from '@dxos/echo-protocol';
 import {
@@ -49,7 +50,6 @@ import {
 } from './echo-proxy-target';
 import { type KeyPath, META_NAMESPACE, type ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
-import * as A from '@dxos/automerge/automerge';
 
 export const PROPERTY_ID = 'id';
 

@@ -1,8 +1,14 @@
-import { DXN } from '@dxos/keys';
-import { Schema as S } from '@effect/schema';
-import { getObjectAnnotation, getSchemaDXN } from '@dxos/echo-schema';
-import type { ReactiveEchoObject } from '../echo-handler';
+//
+// Copyright 2024 DXOS.org
+//
+
+import { type Schema as S } from '@effect/schema';
+
+import { getSchemaDXN } from '@dxos/echo-schema';
+import { type DXN } from '@dxos/keys';
+
 import type { EchoDatabase } from './database';
+import type { ReactiveEchoObject } from '../echo-handler';
 
 type DefineObjectMigrationOptions<From extends S.Schema.AnyNoContext, To extends S.Schema.AnyNoContext> = {
   from: From;

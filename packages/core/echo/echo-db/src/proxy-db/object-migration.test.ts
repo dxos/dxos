@@ -1,12 +1,16 @@
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
-import { EchoTestBuilder } from '../testing';
+//
+// Copyright 2024 DXOS.org
+//
+
+import { afterEach, beforeEach, expect, test } from 'vitest';
+
 import { getSchemaDXN, getSchemaVersion, getTypename, S, TypedObject } from '@dxos/echo-schema';
-import { defineObjectMigration } from './object-migration';
-import { create, getSchema, getSnapshot } from '@dxos/live-object';
-import { Filter } from '../query';
 import { DXN } from '@dxos/keys';
-import { log } from '@dxos/log';
-import { getObjectDocument } from '../echo-handler/echo-handler';
+import { create, getSchema } from '@dxos/live-object';
+
+import { defineObjectMigration } from './object-migration';
+import { Filter } from '../query';
+import { EchoTestBuilder } from '../testing';
 
 let builder: EchoTestBuilder;
 

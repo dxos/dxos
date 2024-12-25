@@ -4,11 +4,12 @@
 
 import { type Schema as S } from '@effect/schema';
 
-import { defaultMap } from '@dxos/util';
 import { raise } from '@dxos/debug';
-import { getSchemaVersion, getTypenameOrThrow } from '../types';
-import { StoredSchema } from './stored-schema';
 import type { DXN } from '@dxos/keys';
+import { defaultMap } from '@dxos/util';
+
+import { StoredSchema } from './stored-schema';
+import { getSchemaVersion, getTypenameOrThrow } from '../types';
 
 /**
  * Runtime registry of static schema objects (i.e., not Dynamic .
@@ -64,7 +65,7 @@ export class RuntimeSchemaRegistry {
   addSchema(types: S.Schema<any>[]) {
     types.forEach((schema) => {
       const typename = getTypenameOrThrow(schema);
-      const version = getSchemaVersion(schema) ?? raise(new TypeError(`Schema has no version.`));
+      const version = getSchemaVersion(schema) ?? raise(new TypeError('Schema has no version.'));
       const arr = defaultMap(this._schema, typename, () => []);
       if (arr.some((s) => getSchemaVersion(s) === version)) {
         throw new Error(`Schema version already registered: ${typename}:${version}`);

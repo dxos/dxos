@@ -343,10 +343,10 @@ describe('Queries', () => {
       await assertQuery(db, Filter.typename(ContactV1.typename), [contactV1, contactV2]);
       await assertQuery(db, Filter.schema(ContactV1), [contactV1]);
       await assertQuery(db, Filter.schema(ContactV2), [contactV2]);
-      await assertQuery(db, Filter.typeDXN(`dxn:type:example.com/type/Contact`), [contactV1, contactV2]);
-      await assertQuery(db, Filter.typeDXN(`dxn:type:example.com/type/Contact:0.1.0`), [contactV1]);
-      await assertQuery(db, Filter.typeDXN(`dxn:type:example.com/type/Contact:0.1.0`), [contactV1]);
-      await assertQuery(db, Filter.typeDXN(`dxn:type:example.com/type/Contact:0.2.0`), [contactV2]);
+      await assertQuery(db, Filter.typeDXN('dxn:type:example.com/type/Contact'), [contactV1, contactV2]);
+      await assertQuery(db, Filter.typeDXN('dxn:type:example.com/type/Contact:0.1.0'), [contactV1]);
+      await assertQuery(db, Filter.typeDXN('dxn:type:example.com/type/Contact:0.1.0'), [contactV1]);
+      await assertQuery(db, Filter.typeDXN('dxn:type:example.com/type/Contact:0.2.0'), [contactV2]);
     };
 
     await assertQueries(db);
