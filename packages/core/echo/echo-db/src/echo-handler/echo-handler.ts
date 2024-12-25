@@ -5,7 +5,7 @@
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { devtoolsFormatter, type DevtoolsFormatter } from '@dxos/debug';
-import { encodeReference, Reference } from '@dxos/echo-protocol';
+import { encodeReference, Reference, type ObjectStructure } from '@dxos/echo-protocol';
 import {
   type BaseObject,
   defineHiddenProperty,
@@ -49,6 +49,7 @@ import {
 } from './echo-proxy-target';
 import { type KeyPath, META_NAMESPACE, type ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
+import * as A from '@dxos/automerge/automerge';
 
 export const PROPERTY_ID = 'id';
 
@@ -352,7 +353,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return undefined;
     }
 
-    const staticSchema = target[symbolInternals].database.graph.schemaRegistry.getSchema(typeReference.objectId);
+    const staticSchema = target[symbolInternals].database.graph.schemaRegistry.getSchemaByDXN(typeReference.toDXN());
     if (staticSchema != null) {
       return staticSchema;
     }
@@ -717,6 +718,15 @@ export const getObjectCore = <T extends BaseObject>(obj: ReactiveEchoObject<T>):
   }
   const { core } = (obj as any as ProxyTarget)[symbolInternals];
   return core;
+};
+
+/**
+ * @returns Automerge document (or a part of it) that backs the object.
+ * Mostly used for debugging.
+ */
+export const getObjectDocument = (obj: ReactiveEchoObject<any>): A.Doc<ObjectStructure> => {
+  const core = getObjectCore(obj);
+  return getDeep(core.getDoc(), core.mountPath)!;
 };
 
 export const isRootDataObject = (target: ProxyTarget) => {

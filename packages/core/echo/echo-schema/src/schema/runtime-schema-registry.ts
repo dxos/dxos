@@ -5,9 +5,10 @@
 import { type Schema as S } from '@effect/schema';
 
 import { defaultMap } from '@dxos/util';
-import { raise } from '../../../../../common/debug/src';
+import { raise } from '@dxos/debug';
 import { getSchemaVersion, getTypenameOrThrow } from '../types';
 import { StoredSchema } from './stored-schema';
+import type { DXN } from '@dxos/keys';
 
 /**
  * Runtime registry of static schema objects (i.e., not Dynamic .
@@ -33,6 +34,18 @@ export class RuntimeSchemaRegistry {
     return arr?.some((s) => getSchemaVersion(s) === getSchemaVersion(schema)) ?? false;
   }
 
+  getSchemaByDXN(dxn: DXN): S.Schema<any> | undefined {
+    const components = dxn.asTypeDXN();
+    if (!components) {
+      return undefined;
+    }
+    const { type, version } = components;
+    return this._schema.get(type)?.find((s) => getSchemaVersion(s) === version);
+  }
+
+  /**
+   * @deprecated Use getSchemaByDXN.
+   */
   // TODO(burdon): TypedObject
   getSchema(typename: string): S.Schema<any> | undefined {
     return this._schema.get(typename)?.[0];

@@ -291,10 +291,9 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   async runMigrations(migrations: ObjectMigration[]): Promise<void> {
     for (const migration of migrations) {
       const { objects } = await this._coreDatabase.graph.query(Filter.typeDXN(migration.fromType.toString())).run();
-      log.info('migrate', { from: migration.fromType, to: migration.toType, objects: objects.length });
+      log.verbose('migrate', { from: migration.fromType, to: migration.toType, objects: objects.length });
       for (const object of objects) {
         const output = await migration.transform(object, { db: this });
-        log.info('migration', { id: object.id, output });
 
         // TODO(dmaretskyi): Output validation.
         delete (output as any).id;
@@ -304,7 +303,6 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
           type: migration.toType,
         });
         const postMigrationType = getType(object)?.toDXN();
-        log.info('post migration', { id: object.id, type: postMigrationType });
         invariant(postMigrationType != null && DXN.equals(postMigrationType, migration.toType));
 
         await migration.onMigration({ before: object, object, db: this });

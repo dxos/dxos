@@ -504,6 +504,11 @@ export class CoreDatabase {
     }
   }
 
+  /**
+   * Resets the object to the new state.
+   * Intended way to change the type of the object (for schema migrations).
+   * Any concurrent changes made by other peers will be overwritten.
+   */
   async atomicReplaceObject(id: ObjectId, params: AtomicReplaceObjectParams): Promise<void> {
     const { data, type } = params;
 

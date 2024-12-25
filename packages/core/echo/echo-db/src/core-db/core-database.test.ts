@@ -22,6 +22,7 @@ import { getObjectCore, type ReactiveEchoObject } from '../echo-handler';
 import { type EchoDatabase, type EchoDatabaseImpl } from '../proxy-db';
 import { EchoTestBuilder } from '../testing';
 import { log } from '@dxos/log';
+import { getObjectDocument } from '../echo-handler/echo-handler';
 
 describe('CoreDatabase', () => {
   describe('space fragmentation', () => {
@@ -373,8 +374,6 @@ describe('CoreDatabase', () => {
         type: DXN.parse('dxn:type:example.com/type/Task:0.1.0'),
         data: { name: 'Bar' },
       });
-
-      log.info('contact', { contact: getSnapshot(contact) });
 
       expect(contact.name).to.eq('Bar');
       expect(getType(contact)?.toDXN().toString()).to.eq('dxn:type:example.com/type/Task:0.1.0');
