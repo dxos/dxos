@@ -48,6 +48,7 @@ const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
       const { objects } = await space.db
         .query((object: ReactiveEchoObject<any>) => types.some((type) => type.typename === getTypename(object)))
         .run();
+
       const model = await doLayout(createGraph(objects));
       setGraph(model);
     });
@@ -130,7 +131,8 @@ type Story = StoryObj<RenderProps & { spec?: TypeSpec[] }>;
 export const Default: Story = {
   args: {
     sidebar: 'json',
-    debug: true,
+    init: true,
+    // debug: true,
   },
 };
 

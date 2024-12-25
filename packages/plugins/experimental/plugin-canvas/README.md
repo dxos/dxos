@@ -33,6 +33,7 @@
 - [ ] Group/collapse nodes; hierarchical graph editor. 
 
 ### Technical Debt
-- [ ] Reconcile Graph with framework (ECHO, app-graph, etc.)
+- [ ] AttentionContainer (and key management).
 - [ ] Factor out common Toolbar pattern (with state observers).
-- [ ] Reconcile layouts with `@dxos/plugin-debug`.
+- [ ] Reconcile Graph with framework (ECHO, app-graph, etc.)
+- [ ] Reconcile @antv layouts with `@dxos/plugin-debug`.

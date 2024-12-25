@@ -11,7 +11,7 @@ import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type DragPayloadData, useEditorContext } from '../../hooks';
-import { createEllipse, createRectangle } from '../../layout';
+import { createEllipse, createFunction, createRectangle } from '../../layout';
 import { type PolygonShape } from '../../types';
 
 export type ToolsProps = ThemedClassName<{}>;
@@ -19,14 +19,14 @@ export type ToolsProps = ThemedClassName<{}>;
 export const Tools = ({ classNames }: ToolsProps) => {
   return (
     <div className={mx('flex p-1 gap-2', classNames)}>
+      <Tool id={'function'} icon={'ph--function--regular'} />
       <Tool id={'rectangle'} icon={'ph--rectangle--regular'} />
       <Tool id={'ellipse'} icon={'ph--circle--regular'} />
-      <Tool id={'textbox'} icon={'ph--article--regular'} />
-      <Tool id={'form'} icon={'ph--textbox--regular'} />
-      <Tool id={'table'} icon={'ph--table--regular'} />
-      <Tool id={'function'} icon={'ph--function--regular'} />
-      <Tool id={'database'} icon={'ph--database--regular'} />
-      <Tool id={'timer'} icon={'ph--alarm--regular'} />
+      {/* <Tool id={'textbox'} icon={'ph--article--regular'} /> */}
+      {/* <Tool id={'form'} icon={'ph--textbox--regular'} /> */}
+      {/* <Tool id={'table'} icon={'ph--table--regular'} /> */}
+      {/* <Tool id={'database'} icon={'ph--database--regular'} /> */}
+      {/* <Tool id={'timer'} icon={'ph--alarm--regular'} /> */}
     </div>
   );
 };
@@ -55,29 +55,20 @@ const Tool = ({ id, icon }: ToolProps) => {
             return { x: 64, y: 32 };
           },
           render: ({ container }) => {
-            // TODO(burdon): Custom shape depending on tool.
+            // TODO(burdon): Factor out common props/factory.
+            const defaultProps = { id, center: { x: 0, y: 0 }, size: { width: 128, height: 64 } };
             let shape: PolygonShape;
             switch (id) {
-              case 'timer':
-              case 'function':
-              case 'database':
-              case 'textbox':
-              case 'form':
-              case 'table':
               case 'rectangle': {
-                shape = createRectangle({
-                  id,
-                  center: { x: 0, y: 0 },
-                  size: { width: 128, height: 64 },
-                });
+                shape = createRectangle(defaultProps);
                 break;
               }
               case 'ellipse': {
-                shape = createEllipse({
-                  id,
-                  center: { x: 0, y: 0 },
-                  size: { width: 128, height: 64 },
-                });
+                shape = createEllipse(defaultProps);
+                break;
+              }
+              case 'function': {
+                shape = createFunction({ ...defaultProps, size: { width: 128, height: 128 } });
                 break;
               }
               default:

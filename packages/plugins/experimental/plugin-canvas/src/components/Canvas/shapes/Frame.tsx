@@ -5,7 +5,7 @@
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
-import React, { type MouseEventHandler, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type FC, type MouseEventHandler, useEffect, useMemo, useRef, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
@@ -24,12 +24,17 @@ import { DATA_SHAPE_ID, Anchor, getAnchorPos } from '../Anchor';
 // NOTE: Delaying double-click detection makes select slow.
 const DBLCLICK_TIMEOUT = 0;
 
-export type FrameProps = BaseShapeProps<PolygonShape> & { showAnchors?: boolean };
+export type FrameProps = BaseShapeProps<PolygonShape> & {
+  Component?: FC<BaseShapeProps<PolygonShape>>;
+  showAnchors?: boolean;
+};
 
 /**
  * Draggable Frame around polygons.
  */
-export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelect }: FrameProps) => {
+// TODO(burdon): Rename PolygonFrame.
+export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
+  const { classNames, shape, scale, selected, onSelect } = baseProps;
   const { debug, linking, dragging, setDragging, editing, setEditing } = useEditorContext();
   const isDragging = dragging?.shape.id === shape.id;
   const isEditing = editing?.shape.id === shape.id;
@@ -138,10 +143,15 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
           }
         }}
       >
-        {/* TODO(burdon): Auto-expand height? Trigger layout? */}
-        {(isEditing && <TextBox value={shape.text} centered onClose={handleClose} onCancel={handleCancel} />) || (
-          <ReadonlyTextBox classNames={mx(debug && 'font-mono text-xs')} value={getLabel(shape, debug)} />
-        )}
+        {Component && <Component {...baseProps} />}
+
+        {/* TODO(burdon): Factor out. */}
+        {(!Component && isEditing && (
+          <TextBox value={shape.text} centered onClose={handleClose} onCancel={handleCancel} />
+        )) ||
+          (!Component && (
+            <ReadonlyTextBox classNames={mx(debug && 'font-mono text-xs')} value={getLabel(shape, debug)} />
+          ))}
       </div>
 
       {/* Anchors. */}

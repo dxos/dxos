@@ -11,6 +11,7 @@ import { Point, Dimension } from '@dxos/react-ui-canvas';
 /**
  * Base type for all shapes.
  */
+// TODO(burdon): Rename (Shape suffix should be a well formed Shape type).
 export const BaseShape = S.mutable(
   S.Struct({
     id: S.String,
@@ -25,19 +26,21 @@ export const BaseShape = S.mutable(
 
 /**
  * Closed shape.
+ * Common handling via Frame.
  */
-export const PolygonShape = S.mutable(
+// TODO(burdon): Rename.
+export const BasePolygonShape = S.mutable(
   S.extend(
     BaseShape,
     S.Struct({
       center: Point,
-      size: Dimension,
+      size: S.mutable(Dimension),
     }),
   ),
 );
 
 export const RectangleShape = S.extend(
-  PolygonShape,
+  BasePolygonShape,
   S.Struct({
     type: S.Literal('rectangle'),
     rounded: S.optional(S.Number),
@@ -45,7 +48,7 @@ export const RectangleShape = S.extend(
 );
 
 export const EllipseShape = S.extend(
-  PolygonShape,
+  BasePolygonShape,
   S.Struct({
     type: S.Literal('ellipse'),
   }),
@@ -68,7 +71,7 @@ export const FunctionProperty = S.Struct({
 });
 
 export const FunctionShape = S.extend(
-  PolygonShape,
+  BasePolygonShape,
   S.Struct({
     type: S.Literal('function'),
     // TODO(burdon): These data should be in the graph structure (not UX)?
@@ -87,7 +90,6 @@ export const Layout = S.Struct({
 });
 
 export type BaseShape = S.Schema.Type<typeof BaseShape>;
-export type PolygonShape = S.Schema.Type<typeof PolygonShape>;
 
 export type RectangleShape = S.Schema.Type<typeof RectangleShape>;
 export type EllipseShape = S.Schema.Type<typeof EllipseShape>;
@@ -97,10 +99,14 @@ export type FunctionProperty = S.Schema.Type<typeof FunctionProperty>;
 export type FunctionShape = S.Schema.Type<typeof FunctionShape>;
 
 export type Shape = S.Schema.Type<typeof Shape>;
-export type Layout = S.Schema.Type<typeof Layout>;
 
-export const isPolygon = S.is(PolygonShape);
+// TODO(burdon): Correct way to narrow Shape to a Polygon?
+export type PolygonShape = Shape & S.Schema.Type<typeof BasePolygonShape>;
+
+export const isPolygon = S.is(BasePolygonShape);
 export const isPath = S.is(PathShape);
+
+export type Layout = S.Schema.Type<typeof Layout>;
 
 export class CanvasBoardType extends TypedObject({
   typename: 'dxos.org/type/CanvasBoard',

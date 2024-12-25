@@ -11,7 +11,7 @@ import { type Point, useProjection } from '@dxos/react-ui-canvas';
 
 import { useEditorContext } from './useEditorContext';
 import { useSnap } from './useSnap';
-import { createEllipse, createPath, createRectangle, findClosestIntersection, getInputPoint, getRect } from '../layout';
+import { createPath, createRectangle, findClosestIntersection, getInputPoint, getRect } from '../layout';
 import { createId, itemSize } from '../testing';
 import { type PolygonShape, type PathShape } from '../types';
 
@@ -82,28 +82,10 @@ export const useDragMonitor = (el: HTMLElement | null) => {
           switch (data.type) {
             // Tools.
             case 'tool': {
-              // TODO(burdon): Generalize constructor/factor out.
-              switch (data.tool) {
-                case 'ellipse': {
-                  const center = snapPoint(pos);
-                  invariant(dragging?.shape);
-                  await actionHandler?.({
-                    type: 'create',
-                    shape: createEllipse({ id: createId(), center, size: dragging.shape.size }),
-                  });
-                  break;
-                }
-
-                case 'rectangle':
-                default: {
-                  const center = snapPoint(pos);
-                  invariant(dragging?.shape);
-                  await actionHandler?.({
-                    type: 'create',
-                    shape: createRectangle({ id: createId(), center, size: dragging.shape.size }),
-                  });
-                  break;
-                }
+              invariant(dragging?.shape);
+              const shape: PolygonShape = { ...dragging.shape, id: createId(), center: snapPoint(pos) };
+              if (shape) {
+                await actionHandler?.({ type: 'create', shape });
               }
               break;
             }
@@ -111,8 +93,7 @@ export const useDragMonitor = (el: HTMLElement | null) => {
             // Dragging.
             case 'frame': {
               data.shape.center = snapPoint(pos);
-
-              // TODO(burdon): Copy from other component.
+              // TODO(burdon): Copy from external canvas/component.
               if (!graph.getNode(data.shape.id)) {
                 // graph.addNode({ id: shape.id, data: { ...shape } });
                 log.info('copy', { shape: data.shape });

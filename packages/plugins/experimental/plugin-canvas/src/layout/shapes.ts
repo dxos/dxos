@@ -5,7 +5,14 @@
 import { type Point } from '@dxos/react-ui-canvas';
 
 import { createSplineThroughPoints, createPathThroughPoints } from '../layout';
-import { type EllipseShape, type PathShape, type PolygonShape, type RectangleShape, type Shape } from '../types';
+import {
+  type EllipseShape,
+  type FunctionShape,
+  type PathShape,
+  type PolygonShape,
+  type RectangleShape,
+  type Shape,
+} from '../types';
 
 export type ShapeKind = 'rect' | 'path';
 
@@ -48,5 +55,18 @@ export const createPath = ({ id, points, ...rest }: PathProps): PathShape => ({
   id,
   type: 'path',
   path: points.length === 2 ? createPathThroughPoints(points) : createSplineThroughPoints(points),
+  ...rest,
+});
+
+//
+// Function
+//
+
+type FunctionProps = CommonProps & Pick<PolygonShape, 'center' | 'size'>;
+
+export const createFunction = ({ id, ...rest }: FunctionProps): FunctionShape => ({
+  id,
+  type: 'function',
+  properties: [],
   ...rest,
 });

@@ -5,12 +5,12 @@
 import { type ReactiveEchoObject } from '@dxos/echo-db';
 import { FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { getSchema } from '@dxos/live-object';
+import { getSchema, create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getSchemaProperties } from '@dxos/schema';
 
 import { GraphModel } from './graph';
-import { type GraphNode } from './types';
+import { Graph, type GraphNode } from './types';
 
 // NOTE: The `relation` is different from the `type`.
 type Edge = { source: string; target: string; relation: string };
@@ -24,10 +24,11 @@ export const parseEdgeId = (id: string): Edge => {
 };
 
 /**
- * Maps an ECHO object graph onto a layout graph.
+ * Creates a new reactive graph from a set of ECHO objects.
+ * References are mapped onto graph edges.
  */
 export const createGraph = (objects: ReactiveEchoObject<any>[]): GraphModel<GraphNode<ReactiveEchoObject<any>>> => {
-  const graph = new GraphModel<GraphNode<ReactiveEchoObject<any>>>();
+  const graph = new GraphModel<GraphNode<ReactiveEchoObject<any>>>(create(Graph, { nodes: [], edges: [] }));
 
   // Map objects.
   objects.forEach((object) => {

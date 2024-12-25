@@ -2,13 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type PropsWithChildren } from 'react';
+import React, { type FC, type PropsWithChildren } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 
 import { Frame } from './Frame';
+import { Function } from './Function';
 import { Path } from './Path';
-import { isPolygon, type BaseShape } from '../../../types';
+import { isPolygon, type BaseShape, type PolygonShape } from '../../../types';
 
 export const DEFS_ID = 'dx-defs';
 export const MARKER_PREFIX = 'dx-marker';
@@ -52,7 +53,15 @@ export type BaseShapeProps<S extends BaseShape> = PropsWithChildren<
 export const ShapeComponent = (props: BaseShapeProps<any>) => {
   const { shape } = props;
   if (isPolygon(shape)) {
-    return <Frame {...props} />;
+    let component: FC<BaseShapeProps<PolygonShape>> | undefined;
+    switch (shape.type) {
+      case 'function': {
+        component = Function as any; // TODO(burdon): This satisfies PolygonShape.
+        break;
+      }
+    }
+
+    return <Frame {...props} Component={component} />;
   }
 
   switch (shape.type) {
