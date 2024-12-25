@@ -12,7 +12,7 @@ const reflectiveRelation = {
   method: 'floor',
 } satisfies AccompanyingSeries;
 
-const gamuts: Gamut[] = ['srgb', 'p3', 'rec2020'];
+const gamuts: (Gamut & string)[] = ['srgb', 'p3', 'rec2020'];
 
 export const huePalettes = {
   red: {
@@ -170,7 +170,7 @@ export const physicalColors: ColorsPhysicalLayer = {
     rec2020: ['@media (color-gamut: rec2020)', ':root'],
   },
   series: Object.entries(physicalSeries).reduce((acc: ColorsPhysicalLayer['series'], [id, arc]) => {
-    acc[id] = gamuts.reduce((acc: PhysicalSeries<Gamut, HelicalArcSeries>, gamut) => {
+    acc[id] = gamuts.reduce((acc: PhysicalSeries<Gamut & string, HelicalArcSeries>, gamut) => {
       acc[gamut] = { ...arc, physicalValueRelation: reflectiveRelation };
       return acc;
     }, {});
