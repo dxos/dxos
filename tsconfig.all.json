@@ -1,546 +1,538 @@
 // Tsconfig that builds all projects.
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {},
   "references": [
+    // {
+    //   "path": "docs/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/apps/composer-app/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/apps/composer-crx/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/apps/testbench-app/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/apps/todomvc/tsconfig.json"
+    // },
     {
-      "path": "docs"
+      "path": "packages/common/async/tsconfig.json"
     },
     {
-      "path": "packages/apps/composer-app"
+      "path": "packages/common/codec-protobuf/tsconfig.json"
     },
     {
-      "path": "packages/apps/composer-crx"
+      "path": "packages/common/context/tsconfig.json"
     },
     {
-      "path": "packages/apps/testbench-app"
+      "path": "packages/common/crypto/tsconfig.json"
     },
     {
-      "path": "packages/apps/todomvc"
+      "path": "packages/common/crypto-names/tsconfig.json"
     },
     {
-      "path": "packages/common/async"
+      "path": "packages/common/debug/tsconfig.json"
     },
     {
-      "path": "packages/common/codec-protobuf"
+      "path": "packages/common/display-name/tsconfig.json"
     },
     {
-      "path": "packages/common/context"
+      "path": "packages/common/effect/tsconfig.json"
     },
     {
-      "path": "packages/common/crypto"
+      "path": "packages/common/esbuild-plugins/tsconfig.json"
     },
     {
-      "path": "packages/common/crypto-names"
+      "path": "packages/common/feed-store/tsconfig.json"
     },
     {
-      "path": "packages/common/debug"
+      "path": "packages/common/graph/tsconfig.json"
     },
     {
-      "path": "packages/common/display-name"
+      "path": "packages/common/hypercore/tsconfig.json"
     },
     {
-      "path": "packages/common/effect"
+      "path": "packages/common/invariant/tsconfig.json"
     },
     {
-      "path": "packages/common/esbuild-plugins"
+      "path": "packages/common/keyboard/tsconfig.json"
     },
     {
-      "path": "packages/common/eslint-plugin"
+      "path": "packages/common/keys/tsconfig.json"
     },
     {
-      "path": "packages/common/eslint-plugin-rules"
+      "path": "packages/common/kv-store/tsconfig.json"
     },
     {
-      "path": "packages/common/feed-store"
+      "path": "packages/common/local-storage/tsconfig.json"
     },
     {
-      "path": "packages/common/graph"
+      "path": "packages/common/lock-file/tsconfig.json"
     },
     {
-      "path": "packages/common/hypercore"
+      "path": "packages/common/log/tsconfig.json"
     },
     {
-      "path": "packages/common/invariant"
+      "path": "packages/common/merkle-search-tree/tsconfig.json"
     },
     {
-      "path": "packages/common/keyboard"
+      "path": "packages/common/node-std/tsconfig.json"
     },
     {
-      "path": "packages/common/keys"
+      "path": "packages/common/phoenix/tsconfig.json"
     },
     {
-      "path": "packages/common/kv-store"
+      "path": "packages/common/plate/tsconfig.json"
     },
     {
-      "path": "packages/common/local-storage"
+      "path": "packages/common/process/tsconfig.json"
     },
     {
-      "path": "packages/common/lock-file"
+      "path": "packages/common/protobuf-compiler/tsconfig.json"
     },
     {
-      "path": "packages/common/log"
+      "path": "packages/common/random/tsconfig.json"
     },
     {
-      "path": "packages/common/merkle-search-tree"
+      "path": "packages/common/random-access-storage/tsconfig.json"
     },
     {
-      "path": "packages/common/node-std"
+      "path": "packages/common/storybook-utils/tsconfig.json"
     },
     {
-      "path": "packages/common/phoenix"
+      "path": "packages/common/test-utils/tsconfig.json"
     },
     {
-      "path": "packages/common/plate"
+      "path": "packages/common/timeframe/tsconfig.json"
     },
     {
-      "path": "packages/common/process"
+      "path": "packages/common/tracing/tsconfig.json"
     },
     {
-      "path": "packages/common/protobuf-compiler"
+      "path": "packages/common/typings/tsconfig.json"
     },
     {
-      "path": "packages/common/random"
-    },
-    {
-      "path": "packages/common/random-access-storage"
-    },
-    {
-      "path": "packages/common/storybook-utils"
-    },
-    {
-      "path": "packages/common/test-utils"
-    },
-    {
-      "path": "packages/common/timeframe"
-    },
-    {
-      "path": "packages/common/tracing"
-    },
-    {
-      "path": "packages/common/typings"
-    },
-    {
-      "path": "packages/common/util"
-    },
-    {
-      "path": "packages/core/agent"
-    },
-    {
-      "path": "packages/core/compute"
-    },
-    {
-      "path": "packages/core/echo/automerge"
-    },
-    {
-      "path": "packages/core/echo/echo-db"
-    },
-    {
-      "path": "packages/core/echo/echo-generator"
-    },
-    {
-      "path": "packages/core/echo/echo-pipeline"
-    },
-    {
-      "path": "packages/core/echo/echo-protocol"
-    },
-    {
-      "path": "packages/core/echo/echo-query"
-    },
-    {
-      "path": "packages/core/echo/echo-schema"
-    },
-    {
-      "path": "packages/core/echo/echo-signals"
-    },
-    {
-      "path": "packages/core/echo/indexing"
-    },
-    {
-      "path": "packages/core/echo/live-object"
-    },
-    {
-      "path": "packages/core/functions"
-    },
-    {
-      "path": "packages/core/halo/credentials"
-    },
-    {
-      "path": "packages/core/halo/keyring"
-    },
-    {
-      "path": "packages/core/mesh/edge-client"
-    },
-    {
-      "path": "packages/core/mesh/messaging"
-    },
-    {
-      "path": "packages/core/mesh/network-manager"
-    },
-    {
-      "path": "packages/core/mesh/rpc"
-    },
-    {
-      "path": "packages/core/mesh/rpc-tunnel"
-    },
-    {
-      "path": "packages/core/mesh/signal"
-    },
-    {
-      "path": "packages/core/mesh/teleport"
-    },
-    {
-      "path": "packages/core/mesh/teleport-extension-automerge-replicator"
-    },
-    {
-      "path": "packages/core/mesh/teleport-extension-gossip"
-    },
-    {
-      "path": "packages/core/mesh/teleport-extension-object-sync"
-    },
-    {
-      "path": "packages/core/mesh/teleport-extension-replicator"
-    },
-    {
-      "path": "packages/core/mesh/websocket-rpc"
-    },
-    {
-      "path": "packages/core/protocols"
-    },
-    {
-      "path": "packages/devtools/cli"
-    },
-    {
-      "path": "packages/devtools/cli-base"
-    },
-    {
-      "path": "packages/devtools/cli-composer"
-    },
-    {
-      "path": "packages/devtools/devtools"
-    },
-    {
-      "path": "packages/devtools/devtools-extension"
-    },
-    {
-      "path": "packages/e2e/rpc-tunnel-e2e"
-    },
-    {
-      "path": "packages/experimental/agent-functions"
-    },
-    {
-      "path": "packages/experimental/assistant"
-    },
-    {
-      "path": "packages/experimental/cf-labs"
-    },
-    {
-      "path": "packages/experimental/discord-bot"
-    },
-    {
-      "path": "packages/experimental/gem-core"
-    },
-    {
-      "path": "packages/experimental/gem-globe"
-    },
-    {
-      "path": "packages/experimental/gem-spore"
-    },
-    {
-      "path": "packages/experimental/metagraph"
-    },
-    {
-      "path": "packages/experimental/plexus"
-    },
-    {
-      "path": "packages/experimental/react-metagraph"
-    },
-    {
-      "path": "packages/experimental/script-toolbox"
-    },
-    {
-      "path": "packages/experimental/spyglass"
-    },
-    {
-      "path": "packages/gravity/blade-runner"
-    },
-    {
-      "path": "packages/gravity/kube-publishing"
-    },
-    {
-      "path": "packages/gravity/proto-guard"
-    },
-    {
-      "path": "packages/plugins/experimental/plugin-automation"
-    },
-    {
-      "path": "packages/plugins/experimental/plugin-calls"
-    },
-    {
-      "path": "packages/plugins/experimental/plugin-canvas"
-    },
-    {
-      "path": "packages/plugins/experimental/plugin-excalidraw"
-    },
-    {
-      "path": "packages/plugins/experimental/plugin-explorer"
-    },
-    {
-      "path": "packages/plugins/experimental/plugin-inbox"
-    },
-    {
-      "path": "packages/plugins/experimental/plugin-ipfs"
-    },
-    {
-      "path": "packages/plugins/experimental/plugin-kanban"
-    },
-    {
-      "path": "packages/plugins/experimental/plugin-map"
-    },
-    {
-      "path": "packages/plugins/experimental/plugin-native"
-    },
-    {
-      "path": "packages/plugins/experimental/plugin-outliner"
-    },
-    {
-      "path": "packages/plugins/experimental/plugin-script"
-    },
-    {
-      "path": "packages/plugins/experimental/plugin-search"
-    },
-    {
-      "path": "packages/plugins/experimental/plugin-template"
-    },
-    {
-      "path": "packages/plugins/experimental/plugin-wnfs"
-    },
-    {
-      "path": "packages/plugins/plugin-attention"
-    },
-    {
-      "path": "packages/plugins/plugin-chess"
-    },
-    {
-      "path": "packages/plugins/plugin-client"
-    },
-    {
-      "path": "packages/plugins/plugin-debug"
-    },
-    {
-      "path": "packages/plugins/plugin-deck"
-    },
-    {
-      "path": "packages/plugins/plugin-files"
-    },
-    {
-      "path": "packages/plugins/plugin-graph"
-    },
-    {
-      "path": "packages/plugins/plugin-help"
-    },
-    {
-      "path": "packages/plugins/plugin-manager"
-    },
-    {
-      "path": "packages/plugins/plugin-markdown"
-    },
-    {
-      "path": "packages/plugins/plugin-mermaid"
-    },
-    {
-      "path": "packages/plugins/plugin-metadata"
-    },
-    {
-      "path": "packages/plugins/plugin-navtree"
-    },
-    {
-      "path": "packages/plugins/plugin-observability"
-    },
-    {
-      "path": "packages/plugins/plugin-presenter"
-    },
-    {
-      "path": "packages/plugins/plugin-pwa"
-    },
-    {
-      "path": "packages/plugins/plugin-registry"
-    },
-    {
-      "path": "packages/plugins/plugin-sheet"
-    },
-    {
-      "path": "packages/plugins/plugin-sketch"
-    },
-    {
-      "path": "packages/plugins/plugin-space"
-    },
-    {
-      "path": "packages/plugins/plugin-stack"
-    },
-    {
-      "path": "packages/plugins/plugin-status-bar"
-    },
-    {
-      "path": "packages/plugins/plugin-table"
-    },
-    {
-      "path": "packages/plugins/plugin-theme"
-    },
-    {
-      "path": "packages/plugins/plugin-thread"
-    },
-    {
-      "path": "packages/plugins/plugin-wildcard"
-    },
-    {
-      "path": "packages/sdk/app-framework"
-    },
-    {
-      "path": "packages/sdk/app-graph"
-    },
-    {
-      "path": "packages/sdk/client"
-    },
-    {
-      "path": "packages/sdk/client-protocol"
-    },
-    {
-      "path": "packages/sdk/client-services"
-    },
-    {
-      "path": "packages/sdk/config"
-    },
-    {
-      "path": "packages/sdk/examples"
-    },
-    {
-      "path": "packages/sdk/migrations"
-    },
-    {
-      "path": "packages/sdk/observability"
-    },
-    {
-      "path": "packages/sdk/react-client"
-    },
-    {
-      "path": "packages/sdk/schema"
-    },
-    {
-      "path": "packages/sdk/shell"
-    },
-    {
-      "path": "packages/ui/brand"
-    },
-    {
-      "path": "packages/ui/lit-grid"
-    },
-    {
-      "path": "packages/ui/primitives/react-hooks"
-    },
-    {
-      "path": "packages/ui/primitives/react-input"
-    },
-    {
-      "path": "packages/ui/primitives/react-list"
-    },
-    {
-      "path": "packages/ui/react-ui"
-    },
-    {
-      "path": "packages/ui/react-ui-attention"
-    },
-    {
-      "path": "packages/ui/react-ui-canvas"
-    },
-    {
-      "path": "packages/ui/react-ui-card"
-    },
-    {
-      "path": "packages/ui/react-ui-editor"
-    },
-    {
-      "path": "packages/ui/react-ui-form"
-    },
-    {
-      "path": "packages/ui/react-ui-grid"
-    },
-    {
-      "path": "packages/ui/react-ui-kanban"
-    },
-    {
-      "path": "packages/ui/react-ui-list"
-    },
-    {
-      "path": "packages/ui/react-ui-mosaic"
-    },
-    {
-      "path": "packages/ui/react-ui-searchlist"
-    },
-    {
-      "path": "packages/ui/react-ui-stack"
-    },
-    {
-      "path": "packages/ui/react-ui-syntax-highlighter"
-    },
-    {
-      "path": "packages/ui/react-ui-table"
-    },
-    {
-      "path": "packages/ui/react-ui-tabs"
-    },
-    {
-      "path": "packages/ui/react-ui-text-tooltip"
-    },
-    {
-      "path": "packages/ui/react-ui-theme"
-    },
-    {
-      "path": "packages/ui/react-ui-thread"
-    },
-    {
-      "path": "packages/ui/react-ui-types"
-    },
-    {
-      "path": "tools/apidoc"
-    },
-    {
-      "path": "tools/beast"
-    },
-    {
-      "path": "tools/codemods"
-    },
-    {
-      "path": "tools/executors/esbuild"
-    },
-    {
-      "path": "tools/executors/nx-protobuf-compiler"
-    },
-    {
-      "path": "tools/executors/toolbox"
-    },
-    {
-      "path": "tools/lit-stories"
-    },
-    {
-      "path": "tools/log-hook"
-    },
-    {
-      "path": "tools/protobuf-test"
-    },
-    {
-      "path": "tools/ridoculous"
-    },
-    {
-      "path": "tools/stories"
-    },
-    {
-      "path": "tools/swc-log-plugin"
-    },
-    {
-      "path": "tools/vite-plugin-icons"
-    },
-    {
-      "path": "tools/x"
+      "path": "packages/common/util/tsconfig.json"
     }
+    // {
+    //   "path": "packages/core/agent/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/core/compute/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/core/echo/automerge/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/core/echo/echo-db/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/core/echo/echo-generator/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/core/echo/echo-pipeline/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/core/echo/echo-protocol/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/core/echo/echo-query/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/core/echo/echo-schema/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/core/echo/echo-signals/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/core/echo/indexing/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/core/echo/live-object/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/core/functions/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/core/halo/credentials/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/core/halo/keyring/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/core/mesh/edge-client/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/core/mesh/messaging/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/core/mesh/network-manager/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/core/mesh/rpc/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/core/mesh/rpc-tunnel/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/core/mesh/signal/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/core/mesh/teleport/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/core/mesh/teleport-extension-automerge-replicator/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/core/mesh/teleport-extension-gossip/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/core/mesh/teleport-extension-object-sync/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/core/mesh/teleport-extension-replicator/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/core/mesh/websocket-rpc/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/core/protocols/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/devtools/cli/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/devtools/cli-base/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/devtools/cli-composer/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/devtools/devtools/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/devtools/devtools-extension/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/e2e/rpc-tunnel-e2e/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/experimental/agent-functions/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/experimental/assistant/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/experimental/cf-labs/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/experimental/discord-bot/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/experimental/gem-core/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/experimental/gem-globe/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/experimental/gem-spore/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/experimental/metagraph/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/experimental/plexus/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/experimental/react-metagraph/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/experimental/script-toolbox/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/experimental/spyglass/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/gravity/blade-runner/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/gravity/kube-publishing/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/gravity/proto-guard/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/experimental/plugin-automation/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/experimental/plugin-calls/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/experimental/plugin-canvas/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/experimental/plugin-excalidraw/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/experimental/plugin-explorer/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/experimental/plugin-inbox/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/experimental/plugin-ipfs/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/experimental/plugin-kanban/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/experimental/plugin-map/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/experimental/plugin-native/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/experimental/plugin-outliner/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/experimental/plugin-script/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/experimental/plugin-search/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/experimental/plugin-template/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/experimental/plugin-wnfs/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/plugin-attention/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/plugin-chess/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/plugin-client/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/plugin-debug/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/plugin-deck/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/plugin-files/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/plugin-graph/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/plugin-help/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/plugin-manager/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/plugin-markdown/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/plugin-mermaid/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/plugin-metadata/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/plugin-navtree/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/plugin-observability/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/plugin-presenter/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/plugin-pwa/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/plugin-registry/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/plugin-sheet/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/plugin-sketch/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/plugin-space/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/plugin-stack/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/plugin-status-bar/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/plugin-table/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/plugin-theme/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/plugin-thread/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/plugins/plugin-wildcard/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/sdk/app-framework/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/sdk/app-graph/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/sdk/client/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/sdk/client-protocol/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/sdk/client-services/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/sdk/config/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/sdk/examples/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/sdk/migrations/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/sdk/observability/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/sdk/react-client/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/sdk/schema/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/sdk/shell/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/ui/brand/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/ui/lit-grid/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/ui/primitives/react-hooks/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/ui/primitives/react-input/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/ui/primitives/react-list/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/ui/react-ui/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/ui/react-ui-attention/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/ui/react-ui-canvas/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/ui/react-ui-card/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/ui/react-ui-editor/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/ui/react-ui-form/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/ui/react-ui-grid/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/ui/react-ui-kanban/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/ui/react-ui-list/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/ui/react-ui-mosaic/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/ui/react-ui-searchlist/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/ui/react-ui-stack/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/ui/react-ui-syntax-highlighter/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/ui/react-ui-table/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/ui/react-ui-tabs/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/ui/react-ui-text-tooltip/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/ui/react-ui-theme/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/ui/react-ui-thread/tsconfig.json"
+    // },
+    // {
+    //   "path": "packages/ui/react-ui-types/tsconfig.json"
+    // },
+    // {
+    //   "path": "tools/apidoc/tsconfig.json"
+    // },
+    // {
+    //   "path": "tools/beast/tsconfig.json"
+    // },
+    // {
+    //   "path": "tools/codemods/tsconfig.json"
+    // },
+    // {
+    //   "path": "tools/executors/esbuild/tsconfig.json"
+    // },
+    // {
+    //   "path": "tools/executors/nx-protobuf-compiler/tsconfig.json"
+    // },
+    // {
+    //   "path": "tools/executors/toolbox/tsconfig.json"
+    // },
+    // {
+    //   "path": "tools/lit-stories/tsconfig.json"
+    // },
+    // {
+    //   "path": "tools/log-hook/tsconfig.json"
+    // },
+    // {
+    //   "path": "tools/protobuf-test/tsconfig.json"
+    // },
+    // {
+    //   "path": "tools/ridoculous/tsconfig.json"
+    // },
+    // {
+    //   "path": "tools/stories/tsconfig.json"
+    // },
+    // {
+    //   "path": "tools/vite-plugin-icons/tsconfig.json"
+    // },
+    // {
+    //   "path": "tools/x/tsconfig.json"
+    // }
   ]
 }
