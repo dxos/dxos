@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type DragPayloadData, useEditorContext } from '../../hooks';
+import { type DragDropPayload, useEditorContext } from '../../hooks';
 import { type Polygon } from '../../types';
 import { type ShapeRegistry } from '../Canvas';
 
@@ -41,7 +41,7 @@ const Tool = ({ type, icon }: ToolProps) => {
     invariant(ref.current);
     return draggable({
       element: ref.current,
-      getInitialData: () => ({ type: 'tool', tool: type }) satisfies DragPayloadData,
+      getInitialData: () => ({ type: 'tool', tool: type }) satisfies DragDropPayload,
       onGenerateDragPreview: ({ nativeSetDragImage }) => {
         setCustomNativeDragPreview({
           nativeSetDragImage,

@@ -12,7 +12,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { Anchor, getAnchors } from './Anchor';
 import { DATA_SHAPE_ID, type ShapeComponentProps, shapeAttrs } from './Shape';
-import { type DragPayloadData, useEditorContext } from '../../hooks';
+import { type DragDropPayload, useEditorContext } from '../../hooks';
 import { getBoundsProperties } from '../../layout';
 import { type Polygon } from '../../types';
 import { ReadonlyTextBox, type TextBoxProps } from '../TextBox';
@@ -50,7 +50,7 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
     return combine(
       dropTargetForElements({
         element: ref.current,
-        getData: () => ({ type: 'frame', shape }) satisfies DragPayloadData,
+        getData: () => ({ type: 'frame', shape }) satisfies DragDropPayload,
         onDragEnter: () => linking && setHover(true),
         onDragLeave: () => setHover(false),
         // getIsSticky: () => true,
@@ -58,7 +58,7 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
       }),
       draggable({
         element: ref.current,
-        getInitialData: () => ({ type: 'frame', shape }) satisfies DragPayloadData,
+        getInitialData: () => ({ type: 'frame', shape }) satisfies DragDropPayload,
         onGenerateDragPreview: ({ nativeSetDragImage }) => {
           setCustomNativeDragPreview({
             nativeSetDragImage,

@@ -13,6 +13,7 @@ import { FrameDragPreview } from './Frame';
 import { getShapeBounds } from './Shape';
 import { Shapes } from './Shapes';
 import {
+  type DragDropPayload,
   useActionHandler,
   useDragMonitor,
   useEditorContext,
@@ -52,7 +53,7 @@ export const CanvasContent = () => {
 
     return dropTargetForElements({
       element: root,
-      getData: () => ({ type: 'canvas' }),
+      getData: () => ({ type: 'canvas' }) satisfies DragDropPayload,
       canDrop: () => true,
     });
   }, [root]);

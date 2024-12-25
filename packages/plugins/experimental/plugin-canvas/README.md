@@ -31,6 +31,7 @@
   - [x] Custom frames.
   - [x] Custom anchors.
   - #####
+  - [ ] Pluggable drag/drop logic; e.g., canDrop, etc.
   - [ ] Prevent drag/drop on Function body.
   - [ ] Anchor target.
   - [ ] Create data structure for link on drop (useDragMonitor); e.g., property in edge type.

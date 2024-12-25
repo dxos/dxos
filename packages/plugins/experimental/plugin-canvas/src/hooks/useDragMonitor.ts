@@ -3,6 +3,7 @@
 //
 
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { type DropTargetRecord } from '@atlaskit/pragmatic-drag-and-drop/types';
 import { useEffect, useRef, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
@@ -17,9 +18,14 @@ import { createId, itemSize } from '../testing';
 import { type Polygon, type PathShape } from '../types';
 
 /**
- * Data associated with a draggable.
+ * Data property associated with a draggable (DropTargetRecord and ElementDragPayload).
+ * - `draggable.getInitialData()`
+ * - `dropTargetForElements.getData()`
  */
-export type DragPayloadData =
+export type DragDropPayload =
+  | {
+      type: 'canvas';
+    }
   | {
       type: 'tool';
       tool: string;
@@ -33,6 +39,16 @@ export type DragPayloadData =
       shape: Polygon;
       anchor: string;
     };
+
+const findDropTarget = (
+  targets: DropTargetRecord[],
+  match: (data: DragDropPayload) => boolean,
+): DragDropPayload | undefined => {
+  const target = targets.find(({ data }) => match(data as DragDropPayload));
+  if (target) {
+    return target.data as DragDropPayload;
+  }
+};
 
 /**
  * Monitor frames and anchors being dragged.
@@ -53,7 +69,7 @@ export const useDragMonitor = (el: HTMLElement | null) => {
         invariant(el);
         const [{ x, y }] = projection.toModel([getInputPoint(el, location.current.input)]);
         const pos = { x, y };
-        const data = source.data as DragPayloadData;
+        const data = source.data as DragDropPayload;
         if (x !== lastPointRef.current?.x || y !== lastPointRef.current?.y) {
           lastPointRef.current = pos;
           switch (data.type) {
@@ -87,7 +103,7 @@ export const useDragMonitor = (el: HTMLElement | null) => {
           // TODO(burdon): Adjust for offset on drag?
           invariant(el);
           const [pos] = projection.toModel([getInputPoint(el, location.current.input)]);
-          const data = source.data as DragPayloadData;
+          const data = source.data as DragDropPayload;
           switch (data.type) {
             //
             // Create shape from tool.
@@ -116,26 +132,43 @@ export const useDragMonitor = (el: HTMLElement | null) => {
 
             //
             // Create link.
+            // TODO(burdon): Callbacks to create and link (and determine if can drop).
             //
             case 'anchor': {
-              // TODO(burdon): Determine if anchor ID should be part of graph edge. Direction.
-              console.log('>>>', JSON.stringify(source.data, null, 2));
-              const target = location.current.dropTargets.find(({ data }) => data.type === 'frame')?.data
-                .shape as Polygon;
-              let id = target?.id;
-              if (!id) {
-                id = createId();
+              // TODO(burdon): Doesn't update data.
+              const target = findDropTarget(
+                location.current.dropTargets,
+                (data) => data.type === 'frame' || data.type === 'anchor',
+              );
+              if (!target) {
+                const id = createId();
                 const shape = createRectangle({ id, center: snapPoint(pos), size: itemSize });
                 await actionHandler?.({ type: 'create', shape });
-              } else if (id === data.shape.id) {
-                break;
+                await actionHandler?.({ type: 'link', source: data.shape.id, target: id });
+                return;
               }
 
-              const ref = undefined; // TODO(burdon): ???
-              await actionHandler?.({ type: 'link', source: data.shape.id, target: id, data: ref });
+              switch (target?.type) {
+                case 'frame': {
+                  const { shape } = target;
+                  await actionHandler?.({
+                    type: 'link',
+                    source: target.shape.id,
+                    target: shape.id,
+                  });
+                  break;
+                }
 
-              if (!target?.id) {
-                await actionHandler?.({ type: 'select', ids: [id] });
+                case 'anchor': {
+                  const { shape, anchor } = target;
+                  await actionHandler?.({
+                    type: 'link',
+                    source: target.shape.id,
+                    target: shape.id,
+                    data: { property: anchor },
+                  });
+                  break;
+                }
               }
               break;
             }

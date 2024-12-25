@@ -13,14 +13,12 @@ import { type Dimension, type Point } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
 import { DATA_SHAPE_ID } from './Shape';
-import { type DraggingState, type DragPayloadData, useEditorContext } from '../../hooks';
+import { type DraggingState, type DragDropPayload, useEditorContext } from '../../hooks';
 import { getBoundsProperties, pointAdd } from '../../layout';
 import { type Polygon } from '../../types';
 import { styles } from '../styles';
 
 const defaultSize: Dimension = { width: 12, height: 12 };
-
-// TODO(burdon): Fixed anchors. E.g., "w.1.4" (first of four).
 
 export type Anchor = {
   /** Parent shape id. */
@@ -75,14 +73,18 @@ export const Anchor = ({ id, shape, pos, size = defaultSize, scale = 1, onMouseL
     return combine(
       dropTargetForElements({
         element: ref.current,
-        getData: () => ({ shape, anchor: id, pos }),
+        getData: () => ({ type: 'anchor', shape, anchor: id }) satisfies DragDropPayload,
         onDragEnter: () => setHover(true),
         onDragLeave: () => setHover(false),
         onDrop: () => setHover(false),
+        canDrop: () => {
+          // TODO(burdon): Don't allow if slow is full.
+          return true;
+        },
       }),
       draggable({
         element: ref.current,
-        getInitialData: () => ({ type: 'anchor', shape, anchor: id }) satisfies DragPayloadData,
+        getInitialData: () => ({ type: 'anchor', shape, anchor: id }) satisfies DragDropPayload,
         onGenerateDragPreview: ({ nativeSetDragImage }) => {
           setCustomNativeDragPreview({
             nativeSetDragImage,
