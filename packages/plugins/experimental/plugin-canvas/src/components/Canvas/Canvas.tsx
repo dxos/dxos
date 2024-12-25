@@ -9,7 +9,7 @@ import { createPortal } from 'react-dom';
 import { Canvas as NativeCanvas, Grid, type Rect, testId, useWheel, useProjection } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
-import { FrameDragPreview, getShapeBounds, Line, Shapes } from './shapes';
+import { FrameDragPreview, getShapeBounds, Path, Shapes } from './shapes';
 import {
   useActionHandler,
   useDragMonitor,
@@ -36,7 +36,7 @@ export const Canvas = () => {
 
 export const CanvasContent = () => {
   const { id, overlaySvg, options, debug, graph, showGrid, dragging, selection } = useEditorContext();
-  const { root, styles: transformStyles, setProjection, scale, offset } = useProjection();
+  const { root, styles: projectionStyles, setProjection, scale, offset } = useProjection();
 
   // Actions.
   useActionHandler();
@@ -94,9 +94,7 @@ export const CanvasContent = () => {
       {showGrid && <Grid id={id} size={options.gridSize} scale={scale} offset={offset} classNames={styles.gridLine} />}
 
       {/* Content. */}
-      <div ref={shapesRef} {...testId<TestId>('dx-layout', true)} style={transformStyles} className='absolute'>
-        <Shapes layout={layout} />
-      </div>
+      <Shapes ref={shapesRef} {...testId<TestId>('dx-layout', true)} classNames='absolute' layout={layout} />
 
       {/* Overlays. */}
       <div {...testId<TestId>('dx-overlays')} className={mx(eventsNone)}>
@@ -106,22 +104,22 @@ export const CanvasContent = () => {
         {/* Drag preview (NOTE: styles should be included to apply scale). */}
         {dragging &&
           createPortal(
-            <div style={transformStyles}>
+            <div style={projectionStyles}>
               <FrameDragPreview scale={scale} shape={dragging.shape} />
             </div>,
             dragging.container,
           )}
 
         {/* Linking overlay. */}
-        <div className='absolute' style={transformStyles}>
-          {overlay && <Line scale={scale} shape={overlay} />}
+        <div className='absolute' style={projectionStyles}>
+          {overlay && <Path scale={scale} shape={overlay} />}
         </div>
 
         {/* Misc overlay. */}
         <svg
           ref={overlaySvg}
           className='absolute overflow-visible pointer-events-none'
-          style={transformStyles}
+          style={projectionStyles}
           width={1}
           height={1}
         >

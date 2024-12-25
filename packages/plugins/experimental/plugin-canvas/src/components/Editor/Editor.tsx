@@ -31,37 +31,6 @@ import { Canvas } from '../Canvas';
 import { UI } from '../UI';
 import { type TestId } from '../defs';
 
-// Scenario:
-//  - ECHO query/editor.
-//  - Basic UML (internal use; generate from GH via function).
-//  - Basic processing pipeline (AI).
-
-// TODO(burdon): Phase 1: Basic plugin.
-//  - Group/collapse nodes; hierarchical editor.
-//    - Bounding box/hierarchy. [DIFFERENTIATOR]
-//  - Property panels (e.g. line style). Shape schema.
-//    - Line options (1-to-many, inherits, etc.)
-//  - Surface/form storybook; auto-size.
-//  - Reactive wrapper for graph.
-
-// TODO(burdon): Phase 2
-//  - Auto-layout (reconcile with plugin-debug).
-//    - AI generated layout from mermaid.
-//    - UML of this package using Beast and mermaid.
-//  - Drop/snap visualization.
-//  - Resize frames.
-//  - Move all selected.
-//  - Undo.
-
-// Ontology:
-// TODO(burdon): Separate shapes/layout from data graph.
-//  - Graph is a view-like projection of underlying objects.
-//  - Layout is a static or dynamic layout of shapes associated with graph nodes.
-//  - Shapes are the visual representation of the layout.
-
-// TODO(burdon): Debt:
-//  - Factor out common Toolbar pattern (with state observers).
-
 export const defaultEditorOptions: EditorOptions = {
   gridSize: 16,
   gridSnap: 32,

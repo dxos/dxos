@@ -21,7 +21,8 @@ import {
 
 // TODO(burdon): Move out of src?
 
-const ENDPOINT = 'http://localhost:8787';
+// const ENDPOINT = 'http://localhost:8787';
+const ENDPOINT = 'https://ai-service.dxos.workers.dev';
 
 const client = new AIServiceClientImpl({
   endpoint: ENDPOINT,

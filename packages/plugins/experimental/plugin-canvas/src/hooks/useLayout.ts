@@ -6,7 +6,7 @@ import { type GraphModel, type GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { type Point, type Rect } from '@dxos/react-ui-canvas';
 
-import { createLine, distance, findClosestIntersection, getNormals, getRect } from '../layout';
+import { createPath, distance, findClosestIntersection, getNormals, getRect } from '../layout';
 import { type PolygonShape, type Shape } from '../types';
 
 export type Layout = {
@@ -16,11 +16,11 @@ export type Layout = {
 /**
  * Generate layout.
  */
-// TODO(burdon): Graph hierarchy?
 export const useLayout = (graph: GraphModel<GraphNode<Shape>>, dragging?: PolygonShape, debug?: boolean): Layout => {
   const shapes: Shape[] = [];
 
-  graph.edges.forEach(({ id, source, target }) => {
+  // Layout edges.
+  graph.edges.forEach(({ id, source, target, data }) => {
     const { center: p1, bounds: r1 } = getNodeBounds(dragging, graph.getNode(source)) ?? {};
     const { center: p2, bounds: r2 } = getNodeBounds(dragging, graph.getNode(target)) ?? {};
     if (!p1 || !p2) {
@@ -37,6 +37,7 @@ export const useLayout = (graph: GraphModel<GraphNode<Shape>>, dragging?: Polygo
         points = [s1[1], s1[0], s2[0], s2[1]];
       }
     }
+
     if (!points.length) {
       const i1 = findClosestIntersection([p2, p1], r1) ?? p1;
       const i2 = findClosestIntersection([p1, p2], r2) ?? p2;
@@ -44,9 +45,10 @@ export const useLayout = (graph: GraphModel<GraphNode<Shape>>, dragging?: Polygo
     }
 
     // TODO(burdon): Move point to closest free anchor.
-    shapes.push(createLine({ id, points, start: 'circle', end: 'arrow-end' }));
+    shapes.push(createPath({ id, points, start: 'circle', end: 'arrow-end' }));
   });
 
+  // Layout nodes.
   graph.nodes.forEach(({ data: shape }) => {
     shapes.push(shape);
   });

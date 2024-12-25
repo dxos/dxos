@@ -11,9 +11,9 @@ import { type Point, useProjection } from '@dxos/react-ui-canvas';
 
 import { useEditorContext } from './useEditorContext';
 import { useSnap } from './useSnap';
-import { createEllipse, createLine, createRectangle, findClosestIntersection, getInputPoint, getRect } from '../layout';
+import { createEllipse, createPath, createRectangle, findClosestIntersection, getInputPoint, getRect } from '../layout';
 import { createId, itemSize } from '../testing';
-import { type PolygonShape, type LineShape } from '../types';
+import { type PolygonShape, type PathShape } from '../types';
 
 /**
  * Data associated with a draggable.
@@ -42,7 +42,7 @@ export const useDragMonitor = (el: HTMLElement | null) => {
   const snapPoint = useSnap();
 
   const [frameDragging, setFrameDragging] = useState<PolygonShape>();
-  const [overlay, setOverlay] = useState<LineShape>();
+  const [overlay, setOverlay] = useState<PathShape>();
   const cancelled = useRef(false);
 
   const lastPointRef = useRef<Point>();
@@ -132,6 +132,7 @@ export const useDragMonitor = (el: HTMLElement | null) => {
               } else if (id === data.shape.id) {
                 break;
               }
+              // TODO(burdon): Add anchor points.
               await actionHandler?.({ type: 'link', source: data.shape.id, target: id });
               if (!target?.id) {
                 await actionHandler?.({ type: 'select', ids: [id] });
@@ -158,8 +159,8 @@ export const useDragMonitor = (el: HTMLElement | null) => {
   return { frameDragging, overlay };
 };
 
-const createLinkOverlay = (source: PolygonShape, pos: Point): LineShape | undefined => {
+const createLinkOverlay = (source: PolygonShape, pos: Point): PathShape | undefined => {
   const rect = getRect(source.center, source.size);
   const p1 = findClosestIntersection([pos, source.center], rect) ?? source.center;
-  return createLine({ id: 'link', points: [p1, pos] });
+  return createPath({ id: 'link', points: [p1, pos] });
 };

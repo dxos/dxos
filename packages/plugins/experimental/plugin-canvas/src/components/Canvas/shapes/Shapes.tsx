@@ -2,44 +2,55 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { forwardRef, type HTMLAttributes, useCallback } from 'react';
 
+import { type ThemedClassName } from '@dxos/react-ui';
 import { Markers, useProjection } from '@dxos/react-ui-canvas';
+import { mx } from '@dxos/react-ui-theme';
 
 import { DEFS_ID, MARKER_PREFIX, ShapeComponent } from './Shape';
 import { type Layout, useEditorContext } from '../../../hooks';
 
-export type ShapesProps = { layout: Layout };
+export type ShapesProps = ThemedClassName<
+  {
+    layout: Layout;
+  } & HTMLAttributes<HTMLDivElement>
+>;
 
 /**
- * Render shapes.
+ * Render layout.
  */
-export const Shapes = ({ layout: { shapes } }: ShapesProps) => {
-  const { selection } = useEditorContext();
-  const { scale } = useProjection();
+export const Shapes = forwardRef<HTMLDivElement, ShapesProps>(
+  ({ classNames, layout: { shapes }, ...props }, forwardRef) => {
+    const { selection } = useEditorContext();
+    const { styles: projectionStyles } = useProjection();
+    const { scale } = useProjection();
 
-  const handleSelection = useCallback(
-    (id: string, shift: boolean) => selection.toggleSelected([id], shift),
-    [selection],
-  );
+    const handleSelection = useCallback(
+      (id: string, shift: boolean) => selection.toggleSelected([id], shift),
+      [selection],
+    );
 
-  return (
-    <>
-      <svg id={DEFS_ID} className='absolute opacity-0' width={0} height={0}>
-        <defs>
-          <Markers id={MARKER_PREFIX} />
-        </defs>
-      </svg>
+    return (
+      <>
+        <svg id={DEFS_ID} className='absolute opacity-0' width={0} height={0}>
+          <defs>
+            <Markers id={MARKER_PREFIX} />
+          </defs>
+        </svg>
 
-      {shapes.map((shape) => (
-        <ShapeComponent
-          key={shape.id}
-          shape={shape}
-          scale={scale}
-          selected={selection.contains(shape.id)}
-          onSelect={handleSelection}
-        />
-      ))}
-    </>
-  );
-};
+        <div ref={forwardRef} {...props} style={projectionStyles} className={mx(classNames)}>
+          {shapes.map((shape) => (
+            <ShapeComponent
+              key={shape.id}
+              shape={shape}
+              scale={scale}
+              selected={selection.contains(shape.id)}
+              onSelect={handleSelection}
+            />
+          ))}
+        </div>
+      </>
+    );
+  },
+);

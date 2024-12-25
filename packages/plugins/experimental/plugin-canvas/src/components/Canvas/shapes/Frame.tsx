@@ -12,11 +12,11 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { type BaseShapeProps, shapeAttrs } from './Shape';
 import { type DragPayloadData, useEditorContext } from '../../../hooks';
-import { pointAdd, getBoundsProperties } from '../../../layout';
+import { getBoundsProperties } from '../../../layout';
 import { type PolygonShape } from '../../../types';
 import { ReadonlyTextBox, TextBox, type TextBoxProps } from '../../TextBox';
 import { styles } from '../../styles';
-import { DATA_SHAPE_ID, Anchor } from '../Anchor';
+import { DATA_SHAPE_ID, Anchor, getAnchorPos } from '../Anchor';
 
 // TODO(burdon): Surface for form content. Or pass in children (which may include a Surface).
 //  return <Surface ref={forwardRef} role='card' limit={1} data={{ content: object} />;
@@ -77,15 +77,12 @@ export const Frame = ({ classNames, shape, scale, selected, showAnchors, onSelec
     setOver(false);
   }, [linking]);
 
-  // TODO(burdon): Generalize anchor points.
+  // TODO(burdon): Depends on shape.
   const anchors = useMemo(() => {
     return showAnchors !== false && hovering
-      ? [
-          { id: 'w', pos: pointAdd(shape.center, { x: -shape.size.width / 2, y: 0 }) },
-          { id: 'e', pos: pointAdd(shape.center, { x: shape.size.width / 2, y: 0 }) },
-          { id: 'n', pos: pointAdd(shape.center, { x: 0, y: shape.size.height / 2 }) },
-          { id: 's', pos: pointAdd(shape.center, { x: 0, y: -shape.size.height / 2 }) },
-        ].filter(({ id }) => !linking || linking.anchor === id)
+      ? ['w', 'e', 'n', 's']
+          .map((id) => ({ id, pos: getAnchorPos(shape.center, shape.size, id) }))
+          .filter(({ id }) => !linking || linking.anchor === id)
       : [];
   }, [showAnchors, hovering]);
 

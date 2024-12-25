@@ -5,9 +5,9 @@
 import { type Point } from '@dxos/react-ui-canvas';
 
 import { createSplineThroughPoints, createPathThroughPoints } from '../layout';
-import { type EllipseShape, type LineShape, type PolygonShape, type RectangleShape, type Shape } from '../types';
+import { type EllipseShape, type PathShape, type PolygonShape, type RectangleShape, type Shape } from '../types';
 
-export type ShapeKind = 'rect' | 'line';
+export type ShapeKind = 'rect' | 'path';
 
 type CommonProps = Pick<Shape, 'id' | 'guide' | 'text'>;
 
@@ -36,17 +36,17 @@ export const createEllipse = ({ id, ...rest }: EllipseProps): EllipseShape => ({
 });
 
 //
-// Line
+// Path
 //
 
-type LineProps = CommonProps &
-  Pick<LineShape, 'start' | 'end'> & {
+type PathProps = CommonProps &
+  Pick<PathShape, 'start' | 'end'> & {
     points: Point[];
   };
 
-export const createLine = ({ id, points, ...rest }: LineProps): LineShape => ({
+export const createPath = ({ id, points, ...rest }: PathProps): PathShape => ({
   id,
-  type: 'line',
+  type: 'path',
   path: points.length === 2 ? createPathThroughPoints(points) : createSplineThroughPoints(points),
   ...rest,
 });

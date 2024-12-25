@@ -4,10 +4,17 @@
 
 import { describe, test } from 'vitest';
 
-import { type EllipseShape, type LineShape, type RectangleShape, type Shape, isPolygon } from './schema';
+import {
+  isPolygon,
+  type EllipseShape,
+  type FunctionShape,
+  type PathShape,
+  type RectangleShape,
+  type Shape,
+} from './schema';
 
 describe('schema', () => {
-  test('types', ({ expect }) => {
+  test('basic types', ({ expect }) => {
     const shapes: Shape[] = [
       {
         id: 'shape-1',
@@ -23,12 +30,27 @@ describe('schema', () => {
       } satisfies EllipseShape,
       {
         id: 'shape-3',
-        type: 'line',
+        type: 'path',
         path: 'M 0,0 L 160,0',
-      } satisfies LineShape,
+      } satisfies PathShape,
     ];
 
     const polygons = shapes.filter((s) => isPolygon(s)).map((s) => s.center);
     expect(polygons).to.have.length(2);
+  });
+
+  test('functions', ({ expect }) => {
+    const shapes: Shape[] = [
+      {
+        id: 'function-1',
+        type: 'function',
+        center: { x: 0, y: 0 },
+        size: { width: 80, height: 80 },
+        properties: [],
+      } satisfies FunctionShape,
+    ];
+
+    const polygons = shapes.filter((s) => isPolygon(s)).map((s) => s.center);
+    expect(polygons).to.have.length(1);
   });
 });

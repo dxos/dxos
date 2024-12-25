@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { create, getSnapshot } from '@dxos/live-object';
+import { inspect } from 'node:util';
 
-import { Graph, type GraphNode, type GraphEdge } from './types';
+import { getSnapshot } from '@dxos/live-object';
+
+import { type Graph, type GraphNode, type GraphEdge } from './types';
 import { removeElements } from './util';
-
-// TODO(burdon): Traversal/visitor.
 
 /**
  * Typed reactive object graph.
@@ -15,9 +15,15 @@ import { removeElements } from './util';
 export class ReadonlyGraphModel<Node extends GraphNode = any, Edge extends GraphEdge = any> {
   protected readonly _graph: Graph;
 
-  // TODO(burdon): Copy?
-  constructor({ nodes = [], edges = [] }: Partial<Graph> = {}) {
-    this._graph = create(Graph, { nodes, edges });
+  /**
+   * NOTE: Pass in simple Graph or ReactiveObject.
+   */
+  constructor(graph?: Graph) {
+    this._graph = graph ?? { nodes: [], edges: [] };
+  }
+
+  inspect() {
+    return inspect(this.toJSON());
   }
 
   /**
@@ -62,6 +68,9 @@ export class ReadonlyGraphModel<Node extends GraphNode = any, Edge extends Graph
   }
 }
 
+/**
+ * Typed wrapper.
+ */
 export class GraphModel<Node extends GraphNode = any, Edge extends GraphEdge = any> extends ReadonlyGraphModel<
   Node,
   Edge
@@ -106,8 +115,6 @@ export class GraphModel<Node extends GraphNode = any, Edge extends GraphEdge = a
     return this;
   }
 
-  // TODO(burdon): Return graph.
-
   removeNode(id: string): GraphModel<Node, Edge> {
     const nodes = removeElements(this._graph.nodes, (node) => node.id === id);
     const edges = removeElements(this._graph.edges, (edge) => edge.source === id || edge.target === id);
@@ -121,7 +128,7 @@ export class GraphModel<Node extends GraphNode = any, Edge extends GraphEdge = a
 
   removeEdge(id: string): GraphModel<Node, Edge> {
     const edges = removeElements(this._graph.edges, (edge) => edge.id === id);
-    return new GraphModel<Node, Edge>({ edges });
+    return new GraphModel<Node, Edge>({ nodes: [], edges });
   }
 
   removeEdges(ids: string[]): GraphModel<Node, Edge> {

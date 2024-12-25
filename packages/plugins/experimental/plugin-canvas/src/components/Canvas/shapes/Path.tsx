@@ -7,20 +7,20 @@ import React from 'react';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type BaseShapeProps, DEFS_ID, MARKER_PREFIX, shapeAttrs } from './Shape';
-import { type LineShape } from '../../../types';
+import { type PathShape } from '../../../types';
 import { eventsAuto, eventsNone, styles } from '../../styles';
 
 const createUrl = (ref: string | undefined) => (ref ? `url(#${MARKER_PREFIX}-${ref})` : undefined);
 
-export type LineProps = BaseShapeProps<LineShape>;
+export type PathProps = BaseShapeProps<PathShape>;
 
 /**
- * Line shapes.
+ * Path shape.
  */
-export const Line = ({ shape, selected, onSelect }: LineProps) => {
+export const Path = ({ shape, selected, onSelect }: PathProps) => {
   return (
     <div>
-      <svg className={mx('absolute overflow-visible', eventsNone, styles.line, selected && styles.lineSelected)}>
+      <svg className={mx('absolute overflow-visible', eventsNone, styles.path, selected && styles.pathSelected)}>
         <g>
           {/* Hit area. */}
           {!shape.guide && onSelect && (
@@ -42,8 +42,8 @@ export const Line = ({ shape, selected, onSelect }: LineProps) => {
             markerEnd={!shape.guide && shape.id !== 'link' ? createUrl(shape.end) : undefined}
             className={mx(
               'stroke-[var(--dx-stroke-color)]',
-              selected && styles.lineSelected,
-              shape.guide && styles.lineGuide,
+              selected && styles.pathSelected,
+              shape.guide && styles.pathGuide,
             )}
           />
         </g>

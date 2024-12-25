@@ -12,9 +12,9 @@ export const styles = {
   frameHover: 'hover:bg-neutral-200 hover:dark:bg-neutral-800',
   frameGuide: 'border-green-500 border-dashed !opacity-50 !bg-transparent',
   anchor: 'bg-base border border-neutral-500 rounded hover:bg-orange-500',
-  line: 'fill-base [--dx-stroke-color:theme(colors.neutral.500)]',
-  lineSelected: 'stroke-sky-500 [--dx-stroke-color:theme(colors.sky.500)]',
-  lineGuide: '!stroke-green-500 [stroke-dasharray:6_6]',
+  path: 'fill-base [--dx-stroke-color:theme(colors.neutral.500)]',
+  pathSelected: 'stroke-sky-500 [--dx-stroke-color:theme(colors.sky.500)]',
+  pathGuide: '!stroke-green-500 [stroke-dasharray:6_6]',
   cursor: 'stroke-primary-500 opacity-30',
 };
 

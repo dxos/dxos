@@ -7,4 +7,5 @@ export { DecimalPrecision } from './number';
 export { GeoPoint } from './object';
 
 export * from './format';
+export * from './string';
 export * from './types';

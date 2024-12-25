@@ -7,7 +7,7 @@ import React, { type PropsWithChildren } from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 
 import { Frame } from './Frame';
-import { Line } from './Line';
+import { Path } from './Path';
 import { isPolygon, type BaseShape } from '../../../types';
 
 export const DEFS_ID = 'dx-defs';
@@ -56,8 +56,8 @@ export const ShapeComponent = (props: BaseShapeProps<any>) => {
   }
 
   switch (shape.type) {
-    case 'line': {
-      return <Line {...props} />;
+    case 'path': {
+      return <Path {...props} />;
     }
 
     default:

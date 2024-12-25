@@ -21,8 +21,10 @@ import {
   PropertyMetaAnnotationId,
   getEchoIdentifierAnnotation,
   getObjectAnnotation,
+  type JsonSchemaReferenceInfo,
+  Ref,
+  createEchoReferenceSchema,
 } from '../ast';
-import { type JsonSchemaReferenceInfo, Ref, createEchoReferenceSchema } from '../ast/ref';
 import { CustomAnnotations } from '../formats';
 import { Expando, ObjectId } from '../object';
 
@@ -347,7 +349,7 @@ const ECHO_REFINEMENTS = [
   ObjectAnnotationId,
   PropertyMetaAnnotationId,
   LabelAnnotationId,
-  FieldLookupAnnotationId,
+  FieldLookupAnnotationId, // TODO(burdon): ???
   GeneratorAnnotationId,
 ];
 

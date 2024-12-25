@@ -42,7 +42,9 @@ export const CanvasPlugin = (): PluginDefinition<CanvasPluginProvides> => {
       intent: {
         resolvers: () =>
           createResolver(CanvasAction.Create, ({ name }) => ({
-            data: { object: create(CanvasBoardType, { name, layout: { shapes: [] } }) },
+            data: {
+              object: create(CanvasBoardType, { name, graph: { nodes: [], edges: [] } }),
+            },
           })),
       },
     },

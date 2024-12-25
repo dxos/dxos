@@ -76,6 +76,7 @@ export const EchoObject = (typename: string, version: string) => {
 
 /**
  * PropertyMeta (metadata for dynamic schema properties).
+ * For user-defined annotations.
  */
 export const PropertyMetaAnnotationId = Symbol.for('@dxos/schema/annotation/PropertyMeta');
 
