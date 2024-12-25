@@ -5,6 +5,7 @@
 import { lazy } from 'react';
 
 export * from './defs';
+export * from './styles';
 
 export * from './Canvas';
 export * from './Editor';

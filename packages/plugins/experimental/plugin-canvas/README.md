@@ -27,7 +27,13 @@
 
 ## Phase 2: 
 - [x] FunctionShape components with properties and anchor points. Add/delete and Play buttons.
-- [ ] Auto-size.
+- [x] Shape registry.
+  - [ ] Custom frames.
+  - [ ] Custom anchors.
+  - [ ] Connect paths to anchors.
+- [ ] Auto-size triggers layout.
+- [ ] Logic gates (AND, etc.)
+- [ ] Triggers (Timer, Query, etc.)
 
 ## Phase 3:
 - [ ] Group/collapse nodes; hierarchical graph editor. 

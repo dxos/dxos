@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC, type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 
 import { Frame } from './Frame';
-import { Function } from './Function';
-import { Path } from './Path';
-import { isPolygon, type BaseShape, type PolygonShape } from '../../../types';
+import { useEditorContext } from '../../hooks';
+import { PathComponent } from '../../shapes';
+import { isPath, isPolygon, type Shape } from '../../types';
 
 export const DEFS_ID = 'dx-defs';
 export const MARKER_PREFIX = 'dx-marker';
@@ -17,7 +17,7 @@ export const MARKER_PREFIX = 'dx-marker';
 export const DATA_SHAPE_ID = 'data-shape-id';
 export const DATA_SHAPE_TYPE = 'data-shape-type';
 
-export const shapeAttrs = (shape: BaseShape) => {
+export const shapeAttrs = (shape: Shape) => {
   return {
     [DATA_SHAPE_ID]: shape.id,
     [DATA_SHAPE_TYPE]: shape.type,
@@ -41,35 +41,26 @@ export const getShapeBounds = (root: HTMLDivElement, id: string): DOMRect | unde
 /**
  * Runtime representations of shape.
  */
-export type BaseShapeProps<S extends BaseShape> = PropsWithChildren<
+export type ShapeComponentProps<S extends Shape> = PropsWithChildren<
   ThemedClassName<{
     shape: S;
+    debug: boolean;
     scale: number;
     selected?: boolean;
     onSelect?: (id: string, shift: boolean) => void;
   }>
 >;
 
-export const ShapeComponent = (props: BaseShapeProps<any>) => {
+export const ShapeComponent = (props: ShapeComponentProps<any>) => {
+  const { registry } = useEditorContext();
   const { shape } = props;
   if (isPolygon(shape)) {
-    let component: FC<BaseShapeProps<PolygonShape>> | undefined;
-    switch (shape.type) {
-      case 'function': {
-        component = Function as any; // TODO(burdon): This satisfies PolygonShape.
-        break;
-      }
-    }
-
+    const component = registry.getShape(shape.type)?.component;
     return <Frame {...props} Component={component} />;
   }
-
-  switch (shape.type) {
-    case 'path': {
-      return <Path {...props} />;
-    }
-
-    default:
-      return null;
+  if (isPath(shape)) {
+    return <PathComponent {...props} />;
   }
+
+  return null;
 };

@@ -26,8 +26,9 @@ import {
   type EditorOptions,
   SelectionModel,
 } from '../../hooks';
+import { defaultShapes } from '../../shapes';
 import { type Shape } from '../../types';
-import { Canvas } from '../Canvas';
+import { Canvas, ShapeRegistry } from '../Canvas';
 import { UI } from '../UI';
 import { type TestId } from '../defs';
 
@@ -44,11 +45,10 @@ interface EditorController {
 
 type EditorRootProps = ThemedClassName<
   PropsWithChildren<
-    Partial<Pick<EditorContextType, 'options' | 'debug' | 'graph'>> & {
-      id: string;
-      selection?: SelectionModel;
-      autoZoom?: boolean;
-    }
+    Pick<EditorContextType, 'id'> &
+      Partial<Pick<EditorContextType, 'options' | 'debug' | 'graph' | 'selection' | 'registry'>> & {
+        autoZoom?: boolean;
+      }
   >
 >;
 
@@ -62,15 +62,18 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
       debug: _debug = false,
       graph: _graph,
       selection: _selection,
+      registry: _registry,
       autoZoom,
     },
     forwardedRef,
   ) => {
+    const options = useMemo(() => Object.assign({}, defaultEditorOptions, _options), [_options]);
+
     // External state.
     const graph = useMemo<GraphModel<GraphNode<Shape>>>(() => _graph ?? new GraphModel<GraphNode<Shape>>(), [_graph]);
     const clipboard = useMemo<GraphModel>(() => new GraphModel<GraphNode<Shape>>(), []);
     const selection = useMemo(() => _selection ?? new SelectionModel(), [_selection]);
-    const options = useMemo(() => Object.assign({}, defaultEditorOptions, _options), [_options]);
+    const registry = useMemo(() => _registry ?? new ShapeRegistry(defaultShapes), [_registry]);
 
     // Canvas state.
     const [debug, setDebug] = useState(_debug);
@@ -92,6 +95,7 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
     const context: EditorContextType = {
       id,
       options,
+      registry,
 
       graph,
       clipboard,

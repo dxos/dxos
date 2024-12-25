@@ -9,20 +9,16 @@ import { Markers, useProjection } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
 import { DEFS_ID, MARKER_PREFIX, ShapeComponent } from './Shape';
-import { type Layout, useEditorContext } from '../../../hooks';
+import { type Layout, useEditorContext } from '../../hooks';
 
-export type ShapesProps = ThemedClassName<
-  {
-    layout: Layout;
-  } & HTMLAttributes<HTMLDivElement>
->;
+export type ShapesProps = ThemedClassName<{ layout: Layout }> & HTMLAttributes<HTMLDivElement>;
 
 /**
  * Render layout.
  */
 export const Shapes = forwardRef<HTMLDivElement, ShapesProps>(
   ({ classNames, layout: { shapes }, ...props }, forwardRef) => {
-    const { selection } = useEditorContext();
+    const { debug, selection } = useEditorContext();
     const { styles: projectionStyles } = useProjection();
     const { scale } = useProjection();
 
@@ -39,10 +35,11 @@ export const Shapes = forwardRef<HTMLDivElement, ShapesProps>(
           </defs>
         </svg>
 
-        <div ref={forwardRef} {...props} style={projectionStyles} className={mx(classNames)}>
+        <div {...props} ref={forwardRef} style={projectionStyles} className={mx(classNames)}>
           {shapes.map((shape) => (
             <ShapeComponent
               key={shape.id}
+              debug={debug}
               shape={shape}
               scale={scale}
               selected={selection.contains(shape.id)}

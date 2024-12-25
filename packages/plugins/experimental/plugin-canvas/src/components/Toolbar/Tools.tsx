@@ -11,42 +11,37 @@ import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type DragPayloadData, useEditorContext } from '../../hooks';
-import { createEllipse, createFunction, createRectangle } from '../../layout';
-import { type PolygonShape } from '../../types';
+import { type Polygon } from '../../types';
+import { type ShapeRegistry } from '../Canvas';
 
-export type ToolsProps = ThemedClassName<{}>;
+export type ToolsProps = ThemedClassName<{
+  registry: ShapeRegistry;
+}>;
 
-export const Tools = ({ classNames }: ToolsProps) => {
+export const Tools = ({ classNames, registry }: ToolsProps) => {
   return (
     <div className={mx('flex p-1 gap-2', classNames)}>
-      <Tool id={'function'} icon={'ph--function--regular'} />
-      <Tool id={'rectangle'} icon={'ph--rectangle--regular'} />
-      <Tool id={'ellipse'} icon={'ph--circle--regular'} />
-      {/* <Tool id={'textbox'} icon={'ph--article--regular'} /> */}
-      {/* <Tool id={'form'} icon={'ph--textbox--regular'} /> */}
-      {/* <Tool id={'table'} icon={'ph--table--regular'} /> */}
-      {/* <Tool id={'database'} icon={'ph--database--regular'} /> */}
-      {/* <Tool id={'timer'} icon={'ph--alarm--regular'} /> */}
+      {registry.shapes.map((shape) => (
+        <Tool key={shape.type} type={shape.type} icon={shape.icon} />
+      ))}
     </div>
   );
 };
 
-export type ToolKind = 'rectangle' | 'ellipse' | 'textbox' | 'form' | 'table' | 'function' | 'database' | 'timer';
-
 type ToolProps = {
-  id: ToolKind;
+  type: string;
   icon: string;
 };
 
-const Tool = ({ id, icon }: ToolProps) => {
-  const { dragging, setDragging } = useEditorContext();
+const Tool = ({ type, icon }: ToolProps) => {
+  const { registry, dragging, setDragging } = useEditorContext();
   const isDragging = dragging;
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     invariant(ref.current);
     return draggable({
       element: ref.current,
-      getInitialData: () => ({ type: 'tool', tool: id }) satisfies DragPayloadData,
+      getInitialData: () => ({ type: 'tool', tool: type }) satisfies DragPayloadData,
       onGenerateDragPreview: ({ nativeSetDragImage }) => {
         setCustomNativeDragPreview({
           nativeSetDragImage,
@@ -55,27 +50,11 @@ const Tool = ({ id, icon }: ToolProps) => {
             return { x: 64, y: 32 };
           },
           render: ({ container }) => {
-            // TODO(burdon): Factor out common props/factory.
-            const defaultProps = { id, center: { x: 0, y: 0 }, size: { width: 128, height: 64 } };
-            let shape: PolygonShape;
-            switch (id) {
-              case 'rectangle': {
-                shape = createRectangle(defaultProps);
-                break;
-              }
-              case 'ellipse': {
-                shape = createEllipse(defaultProps);
-                break;
-              }
-              case 'function': {
-                shape = createFunction({ ...defaultProps, size: { width: 128, height: 128 } });
-                break;
-              }
-              default:
-                return;
+            const def = registry.getShape(type);
+            if (def) {
+              const shape: Polygon = def.create();
+              setDragging({ container, shape });
             }
-
-            setDragging({ container, shape });
           },
         });
       },

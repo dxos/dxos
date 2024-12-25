@@ -10,13 +10,13 @@ import React, { type FC, type MouseEventHandler, useEffect, useMemo, useRef, use
 import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type BaseShapeProps, shapeAttrs } from './Shape';
-import { type DragPayloadData, useEditorContext } from '../../../hooks';
-import { getBoundsProperties } from '../../../layout';
-import { type PolygonShape } from '../../../types';
-import { ReadonlyTextBox, TextBox, type TextBoxProps } from '../../TextBox';
-import { styles } from '../../styles';
-import { DATA_SHAPE_ID, Anchor, getAnchorPos } from '../Anchor';
+import { Anchor, getAnchors } from './Anchor';
+import { DATA_SHAPE_ID, type ShapeComponentProps, shapeAttrs } from './Shape';
+import { type DragPayloadData, useEditorContext } from '../../hooks';
+import { getBoundsProperties } from '../../layout';
+import { type Polygon } from '../../types';
+import { ReadonlyTextBox, type TextBoxProps } from '../TextBox';
+import { styles } from '../styles';
 
 // TODO(burdon): Surface for form content. Or pass in children (which may include a Surface).
 //  return <Surface ref={forwardRef} role='card' limit={1} data={{ content: object} />;
@@ -24,18 +24,20 @@ import { DATA_SHAPE_ID, Anchor, getAnchorPos } from '../Anchor';
 // NOTE: Delaying double-click detection makes select slow.
 const DBLCLICK_TIMEOUT = 0;
 
-export type FrameProps = BaseShapeProps<PolygonShape> & {
-  Component?: FC<BaseShapeProps<PolygonShape>>;
+export type FrameProps = ShapeComponentProps<Polygon> & {
+  Component?: FC<FrameProps>;
+  editing?: boolean;
   showAnchors?: boolean;
+  onClose?: (value: string) => void;
+  onCancel?: () => void;
 };
 
 /**
  * Draggable Frame around polygons.
  */
-// TODO(burdon): Rename PolygonFrame.
 export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
   const { classNames, shape, scale, selected, onSelect } = baseProps;
-  const { debug, linking, dragging, setDragging, editing, setEditing } = useEditorContext();
+  const { debug, linking, dragging, setDragging, editing, setEditing, registry } = useEditorContext();
   const isDragging = dragging?.shape.id === shape.id;
   const isEditing = editing?.shape.id === shape.id;
   const [hovering, setHovering] = useState(false);
@@ -82,13 +84,11 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
     setOver(false);
   }, [linking]);
 
-  // TODO(burdon): Depends on shape.
+  // Custom anchors.
   const anchors = useMemo(() => {
-    return showAnchors !== false && hovering
-      ? ['w', 'e', 'n', 's']
-          .map((id) => ({ id, pos: getAnchorPos(shape.center, shape.size, id) }))
-          .filter(({ id }) => !linking || linking.anchor === id)
-      : [];
+    return showAnchors === false
+      ? []
+      : registry.getShape(shape.type)?.getAnchors?.(shape, linking) ?? getAnchors(shape, linking);
   }, [showAnchors, hovering]);
 
   const clickTimer = useRef<number>();
@@ -143,15 +143,7 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
           }
         }}
       >
-        {Component && <Component {...baseProps} />}
-
-        {/* TODO(burdon): Factor out. */}
-        {(!Component && isEditing && (
-          <TextBox value={shape.text} centered onClose={handleClose} onCancel={handleCancel} />
-        )) ||
-          (!Component && (
-            <ReadonlyTextBox classNames={mx(debug && 'font-mono text-xs')} value={getLabel(shape, debug)} />
-          ))}
+        {Component && <Component {...baseProps} editing={isEditing} onClose={handleClose} onCancel={handleCancel} />}
       </div>
 
       {/* Anchors. */}
@@ -173,8 +165,4 @@ export const FrameDragPreview = ({ shape }: FrameProps) => {
       <ReadonlyTextBox value={shape.text ?? shape.id} />
     </div>
   );
-};
-
-const getLabel = (shape: PolygonShape, debug = false) => {
-  return debug ? [shape.id, shape.type, `(${shape.center.x},${shape.center.y})`].join('\n') : shape.text ?? shape.id;
 };

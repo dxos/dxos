@@ -6,7 +6,8 @@ import { type Graph, GraphModel, type GraphNode } from '@dxos/graph';
 import { type Dimension } from '@dxos/react-ui-canvas';
 import { range } from '@dxos/util';
 
-import { createRectangle, type PointTransform } from '../layout';
+import { type PointTransform } from '../layout';
+import { createRectangle } from '../shapes';
 import { type Shape } from '../types';
 
 export const itemSize: Dimension = { width: 128, height: 64 };

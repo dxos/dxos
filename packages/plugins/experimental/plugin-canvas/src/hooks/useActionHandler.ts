@@ -12,7 +12,8 @@ import { isNotFalsy } from '@dxos/util';
 import { useEditorContext } from './useEditorContext';
 import { type ActionHandler } from '../actions';
 import { type TestId } from '../components';
-import { createRectangle, doLayout, getCenter, getRect, rectUnion, fireBullet } from '../layout';
+import { doLayout, getCenter, getRect, rectUnion, fireBullet } from '../layout';
+import { createRectangle } from '../shapes';
 import { createId, itemSize } from '../testing';
 import { isPolygon } from '../types';
 

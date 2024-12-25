@@ -22,7 +22,7 @@ export const getPaths = (
   root: HTMLElement,
   filter: { source?: string; target?: string },
 ): { edge: GraphEdge; el: SVGPathElement }[] => {
-  return getShapeElements<SVGPathElement>(root, 'line')
+  return getShapeElements<SVGPathElement>(root, 'path')
     .map((el) => {
       const edge = graph.getEdge(el.getAttribute(DATA_SHAPE_ID)!);
       if (edge?.source === filter.source) {

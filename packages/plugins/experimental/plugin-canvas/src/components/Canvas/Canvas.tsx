@@ -9,7 +9,9 @@ import { createPortal } from 'react-dom';
 import { Canvas as NativeCanvas, Grid, type Rect, testId, useWheel, useProjection } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
-import { FrameDragPreview, getShapeBounds, Path, Shapes } from './shapes';
+import { FrameDragPreview } from './Frame';
+import { getShapeBounds } from './Shape';
+import { Shapes } from './Shapes';
 import {
   useActionHandler,
   useDragMonitor,
@@ -19,6 +21,7 @@ import {
   useShortcuts,
 } from '../../hooks';
 import { rectContains } from '../../layout';
+import { PathComponent } from '../../shapes';
 import { type TestId } from '../defs';
 import { eventsNone, styles } from '../styles';
 
@@ -93,7 +96,7 @@ export const CanvasContent = () => {
       {/* Grid. */}
       {showGrid && <Grid id={id} size={options.gridSize} scale={scale} offset={offset} classNames={styles.gridLine} />}
 
-      {/* Content. */}
+      {/* Layout. */}
       <Shapes ref={shapesRef} {...testId<TestId>('dx-layout', true)} classNames='absolute' layout={layout} />
 
       {/* Overlays. */}
@@ -105,14 +108,14 @@ export const CanvasContent = () => {
         {dragging &&
           createPortal(
             <div style={projectionStyles}>
-              <FrameDragPreview scale={scale} shape={dragging.shape} />
+              <FrameDragPreview debug={debug} scale={scale} shape={dragging.shape} />
             </div>,
             dragging.container,
           )}
 
         {/* Linking overlay. */}
         <div className='absolute' style={projectionStyles}>
-          {overlay && <Path scale={scale} shape={overlay} />}
+          {overlay && <PathComponent debug={debug} scale={scale} shape={overlay} />}
         </div>
 
         {/* Misc overlay. */}

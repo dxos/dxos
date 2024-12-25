@@ -4,20 +4,36 @@
 
 import React from 'react';
 
+import { type Point } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type BaseShapeProps, DEFS_ID, MARKER_PREFIX, shapeAttrs } from './Shape';
-import { type PathShape } from '../../../types';
-import { eventsAuto, eventsNone, styles } from '../../styles';
+import {
+  type ShapeComponentProps,
+  DEFS_ID,
+  MARKER_PREFIX,
+  eventsAuto,
+  eventsNone,
+  shapeAttrs,
+  styles,
+} from '../components';
+import { createPathThroughPoints, createSplineThroughPoints } from '../layout';
+import { type PathShape } from '../types';
 
 const createUrl = (ref: string | undefined) => (ref ? `url(#${MARKER_PREFIX}-${ref})` : undefined);
 
-export type PathProps = BaseShapeProps<PathShape>;
+export type CreatePathProps = Omit<PathShape, 'type' | 'path'> & { points: Point[] };
+
+export const createPath = ({ id, points, ...rest }: CreatePathProps): PathShape => ({
+  id,
+  type: 'path',
+  path: points.length === 2 ? createPathThroughPoints(points) : createSplineThroughPoints(points),
+  ...rest,
+});
 
 /**
  * Path shape.
  */
-export const Path = ({ shape, selected, onSelect }: PathProps) => {
+export const PathComponent = ({ shape, selected, onSelect }: ShapeComponentProps<PathShape>) => {
   return (
     <div>
       <svg className={mx('absolute overflow-visible', eventsNone, styles.path, selected && styles.pathSelected)}>

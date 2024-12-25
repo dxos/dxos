@@ -9,17 +9,18 @@ import { type Dimension } from '@dxos/react-ui-canvas';
 
 import { type SelectionModel } from './selection';
 import { type ActionHandler } from '../actions';
-import type { PolygonShape, Shape } from '../types';
+import { type ShapeRegistry } from '../components';
+import type { Polygon, Shape } from '../types';
 
 // TODO(burdon): Reconcile with DragPayloadData.
 export type DraggingState = {
   container: HTMLElement;
-  shape: PolygonShape;
+  shape: Polygon;
   anchor?: string;
 };
 
 export type EditingState = {
-  shape: PolygonShape;
+  shape: Polygon;
 };
 
 export type EditorOptions = {
@@ -32,6 +33,7 @@ export type EditorOptions = {
 export type EditorContextType = {
   id: string;
   options: EditorOptions;
+  registry: ShapeRegistry;
 
   overlaySvg: RefObject<SVGSVGElement>;
 

@@ -6,8 +6,9 @@ import { type GraphModel, type GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { type Point, type Rect } from '@dxos/react-ui-canvas';
 
-import { createPath, distance, findClosestIntersection, getNormals, getRect } from '../layout';
-import { type PolygonShape, type Shape } from '../types';
+import { distance, findClosestIntersection, getNormals, getRect } from '../layout';
+import { createPath } from '../shapes';
+import { type Polygon, type Shape } from '../types';
 
 export type Layout = {
   shapes: Shape[];
@@ -16,8 +17,13 @@ export type Layout = {
 /**
  * Generate layout.
  */
-export const useLayout = (graph: GraphModel<GraphNode<Shape>>, dragging?: PolygonShape, debug?: boolean): Layout => {
+export const useLayout = (graph: GraphModel<GraphNode<Shape>>, dragging?: Polygon, debug?: boolean): Layout => {
   const shapes: Shape[] = [];
+
+  // Layout nodes.
+  graph.nodes.forEach(({ data: shape }) => {
+    shapes.push(shape);
+  });
 
   // Layout edges.
   graph.edges.forEach(({ id, source, target, data }) => {
@@ -48,16 +54,11 @@ export const useLayout = (graph: GraphModel<GraphNode<Shape>>, dragging?: Polygo
     shapes.push(createPath({ id, points, start: 'circle', end: 'arrow-end' }));
   });
 
-  // Layout nodes.
-  graph.nodes.forEach(({ data: shape }) => {
-    shapes.push(shape);
-  });
-
   return { shapes };
 };
 
 const getNodeBounds = (
-  dragging: PolygonShape | undefined,
+  dragging: Polygon | undefined,
   node: GraphNode<Shape> | undefined,
 ): { center: Point; bounds: Rect } | undefined => {
   if (!node) {

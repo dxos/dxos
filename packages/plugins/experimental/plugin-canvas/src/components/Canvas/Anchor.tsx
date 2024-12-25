@@ -11,35 +11,40 @@ import { invariant } from '@dxos/invariant';
 import { type Dimension, type Point } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type DragPayloadData, useEditorContext } from '../../hooks';
+import { DATA_SHAPE_ID } from './Shape';
+import { type DraggingState, type DragPayloadData, useEditorContext } from '../../hooks';
 import { getBoundsProperties, pointAdd } from '../../layout';
-import { type PolygonShape } from '../../types';
+import { type Polygon } from '../../types';
 import { styles } from '../styles';
-
-export const DATA_SHAPE_ID = 'data-shape-id';
 
 const defaultSize: Dimension = { width: 12, height: 12 };
 
 // TODO(burdon): Fixed anchors. E.g., "w.1.4" (first of four).
-const relativePos: Record<string, Point> = {
+
+export type Anchor = { id: string; pos: Point };
+
+export const defaultAnchors: Record<string, Point> = {
   w: { x: -1, y: 0 },
   e: { x: 1, y: 0 },
   n: { x: 0, y: 1 },
   s: { x: 0, y: -1 },
 };
 
-export const getAnchorPos = (center: Point, { width, height }: Dimension, id: string): Point => {
-  const pos = relativePos[id];
-  if (pos) {
-    return pointAdd(center, { x: (pos.x * width) / 2, y: (pos.y * height) / 2 });
-  } else {
-    return center;
-  }
+export const getAnchors = (
+  { center, size: { width, height } }: Polygon,
+  linking?: DraggingState,
+  anchors: Record<string, Point> = defaultAnchors,
+): Anchor[] => {
+  return Object.entries(anchors)
+    .filter(([id]) => !linking || linking.anchor === id)
+    .map(([id, pos]) => {
+      return { id, pos: pointAdd(center, { x: (pos.x * width) / 2, y: (pos.y * height) / 2 }) };
+    });
 };
 
 export type AnchorProps = {
   id: string; // E.g., "w", "w.1.4", "prop-1", "output", etc.
-  shape: PolygonShape;
+  shape: Polygon;
   pos: Point;
   size?: Dimension;
   scale?: number;

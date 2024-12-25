@@ -11,9 +11,10 @@ import { type Point, useProjection } from '@dxos/react-ui-canvas';
 
 import { useEditorContext } from './useEditorContext';
 import { useSnap } from './useSnap';
-import { createPath, createRectangle, findClosestIntersection, getInputPoint, getRect } from '../layout';
+import { findClosestIntersection, getInputPoint, getRect } from '../layout';
+import { createPath, createRectangle } from '../shapes';
 import { createId, itemSize } from '../testing';
-import { type PolygonShape, type PathShape } from '../types';
+import { type Polygon, type PathShape } from '../types';
 
 /**
  * Data associated with a draggable.
@@ -25,11 +26,11 @@ export type DragPayloadData =
     }
   | {
       type: 'frame';
-      shape: PolygonShape;
+      shape: Polygon;
     }
   | {
       type: 'anchor';
-      shape: PolygonShape;
+      shape: Polygon;
       anchor: string;
     };
 
@@ -41,7 +42,7 @@ export const useDragMonitor = (el: HTMLElement | null) => {
   const { projection } = useProjection();
   const snapPoint = useSnap();
 
-  const [frameDragging, setFrameDragging] = useState<PolygonShape>();
+  const [frameDragging, setFrameDragging] = useState<Polygon>();
   const [overlay, setOverlay] = useState<PathShape>();
   const cancelled = useRef(false);
 
@@ -83,7 +84,7 @@ export const useDragMonitor = (el: HTMLElement | null) => {
             // Tools.
             case 'tool': {
               invariant(dragging?.shape);
-              const shape: PolygonShape = { ...dragging.shape, id: createId(), center: snapPoint(pos) };
+              const shape: Polygon = { ...dragging.shape, id: createId(), center: snapPoint(pos) };
               if (shape) {
                 await actionHandler?.({ type: 'create', shape });
               }
@@ -104,7 +105,7 @@ export const useDragMonitor = (el: HTMLElement | null) => {
             // Linking.
             case 'anchor': {
               const target = location.current.dropTargets.find(({ data }) => data.type === 'frame')?.data
-                .shape as PolygonShape;
+                .shape as Polygon;
               let id = target?.id;
               if (!id) {
                 id = createId();
@@ -140,7 +141,7 @@ export const useDragMonitor = (el: HTMLElement | null) => {
   return { frameDragging, overlay };
 };
 
-const createLinkOverlay = (source: PolygonShape, pos: Point): PathShape | undefined => {
+const createLinkOverlay = (source: Polygon, pos: Point): PathShape | undefined => {
   const rect = getRect(source.center, source.size);
   const p1 = findClosestIntersection([pos, source.center], rect) ?? source.center;
   return createPath({ id: 'link', points: [p1, pos] });

@@ -17,7 +17,8 @@ import { eventsAuto, eventsNone } from '../styles';
  * UI components.
  */
 export const UI = () => {
-  const { debug, graph, showGrid, snapToGrid, dragging, linking, selection, actionHandler } = useEditorContext();
+  const { registry, debug, graph, showGrid, snapToGrid, dragging, linking, selection, actionHandler } =
+    useEditorContext();
   const info = {
     debug,
     graph: {
@@ -39,7 +40,7 @@ export const UI = () => {
       <div>
         <div className='absolute top-2 left-2 right-2 flex justify-center'>
           <div className='p-1 bg-base rounded-md border border-separator'>
-            <Tools classNames={mx(eventsAuto)} />
+            <Tools classNames={mx(eventsAuto)} registry={registry} />
           </div>
         </div>
       </div>

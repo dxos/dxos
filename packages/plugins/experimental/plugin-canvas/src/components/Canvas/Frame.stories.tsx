@@ -11,7 +11,8 @@ import { Canvas } from '@dxos/react-ui-canvas';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Shapes, type ShapesProps } from './Shapes';
-import { Editor } from '../../Editor';
+import { createRectangle } from '../../shapes';
+import { Editor } from '../Editor';
 
 const Render = ({ layout }: ShapesProps) => {
   return (
@@ -37,12 +38,11 @@ export const Default: Story = {
   args: {
     layout: {
       shapes: [
-        {
+        createRectangle({
           id: 'item-1',
-          type: 'rectangle',
           center: { x: 0, y: 0 },
           size: { width: 256, height: 128 },
-        },
+        }),
       ],
     },
   },

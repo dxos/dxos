@@ -11,8 +11,7 @@ import { Point, Dimension } from '@dxos/react-ui-canvas';
 /**
  * Base type for all shapes.
  */
-// TODO(burdon): Rename (Shape suffix should be a well formed Shape type).
-export const BaseShape = S.mutable(
+export const Shape = S.mutable(
   S.Struct({
     id: S.String,
     type: S.String,
@@ -29,9 +28,9 @@ export const BaseShape = S.mutable(
  * Common handling via Frame.
  */
 // TODO(burdon): Rename.
-export const BasePolygonShape = S.mutable(
+export const Polygon = S.mutable(
   S.extend(
-    BaseShape,
+    Shape,
     S.Struct({
       center: Point,
       size: S.mutable(Dimension),
@@ -40,7 +39,7 @@ export const BasePolygonShape = S.mutable(
 );
 
 export const RectangleShape = S.extend(
-  BasePolygonShape,
+  Polygon,
   S.Struct({
     type: S.Literal('rectangle'),
     rounded: S.optional(S.Number),
@@ -48,14 +47,14 @@ export const RectangleShape = S.extend(
 );
 
 export const EllipseShape = S.extend(
-  BasePolygonShape,
+  Polygon,
   S.Struct({
     type: S.Literal('ellipse'),
   }),
 );
 
 export const PathShape = S.extend(
-  BaseShape,
+  Shape,
   S.Struct({
     type: S.Literal('path'),
     path: S.String,
@@ -64,46 +63,21 @@ export const PathShape = S.extend(
   }),
 );
 
-export const FunctionProperty = S.Struct({
-  name: S.String,
-  // TODO(burdon): Use echo definitions?
-  type: S.Union(S.Literal('string'), S.Literal('number'), S.Literal('boolean')),
-});
-
-export const FunctionShape = S.extend(
-  BasePolygonShape,
-  S.Struct({
-    type: S.Literal('function'),
-    // TODO(burdon): These data should be in the graph structure (not UX)?
-    properties: S.mutable(S.Array(FunctionProperty)),
-  }),
-);
-
-/**
- * Discriminated union.
- */
-// TODO(burdon): Extensible?
-export const Shape = S.Union(RectangleShape, EllipseShape, PathShape, FunctionShape);
-
+// TODO(burdon): Rename scene?
 export const Layout = S.Struct({
   shapes: S.mutable(S.Array(Shape)),
 });
 
-export type BaseShape = S.Schema.Type<typeof BaseShape>;
+export type Shape = S.Schema.Type<typeof Shape>;
+export type Polygon = S.Schema.Type<typeof Polygon>;
 
+// TODO(burdon): Factor out.
 export type RectangleShape = S.Schema.Type<typeof RectangleShape>;
 export type EllipseShape = S.Schema.Type<typeof EllipseShape>;
 export type PathShape = S.Schema.Type<typeof PathShape>;
 
-export type FunctionProperty = S.Schema.Type<typeof FunctionProperty>;
-export type FunctionShape = S.Schema.Type<typeof FunctionShape>;
-
-export type Shape = S.Schema.Type<typeof Shape>;
-
-// TODO(burdon): Correct way to narrow Shape to a Polygon?
-export type PolygonShape = Shape & S.Schema.Type<typeof BasePolygonShape>;
-
-export const isPolygon = S.is(BasePolygonShape);
+// TODO(burdon): Remove?
+export const isPolygon = S.is(Polygon);
 export const isPath = S.is(PathShape);
 
 export type Layout = S.Schema.Type<typeof Layout>;
