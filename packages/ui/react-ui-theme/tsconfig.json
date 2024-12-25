@@ -1,20 +1,32 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "skipLibCheck": true,
-    "moduleResolution": "bundler",
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
     "module": "Preserve",
-    "lib": ["DOM", "ESNext"],
-    "types": ["node"],
+    "moduleResolution": "bundler",
+    "skipLibCheck": true,
+    "types": [
+      "node"
+    ]
   },
-  "exclude": ["plugin.d.ts", "vite.config.ts"],
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/*.ts"],
+  "exclude": [
+    "plugin.d.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
   "references": [
     {
-      "path": "../../common/node-std",
+      "path": "../../common/node-std"
     },
     {
-      "path": "../react-ui-types",
-    },
-  ],
+      "path": "../react-ui-types"
+    }
+  ]
 }

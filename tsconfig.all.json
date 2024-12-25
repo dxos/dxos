@@ -256,9 +256,6 @@
       "path": "packages/experimental/spyglass/tsconfig.json"
     },
     {
-      "path": "packages/gravity/blade-runner/tsconfig.json"
-    },
-    {
       "path": "packages/gravity/kube-publishing/tsconfig.json"
     },
     {
@@ -536,5 +533,7 @@
     }
   ],
   "include": [],
-  "exclude": ["**/node_modules"]
+  "exclude": [
+    "**/node_modules"
+  ]
 }

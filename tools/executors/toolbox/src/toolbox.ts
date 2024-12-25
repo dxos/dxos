@@ -420,6 +420,8 @@ export class Toolbox {
   async updateTsConfigAll() {
     const tsconfigAll = await loadJson<TsConfigJson>(join(this.rootDir, 'tsconfig.all.json'));
     tsconfigAll.references = this.projects
+      // TODO(dmaretskyi): Blade runner doesn't build.
+      .filter((project) => !project.name.includes('blade-runner'))
       .filter((project) => existsSync(join(project.path, 'tsconfig.json')))
       .map((project) => {
         return { path: relative(this.rootDir, join(project.path, 'tsconfig.json')) };
