@@ -2,25 +2,22 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Build all",
-      "group": "build",
-      "type": "shell",
-      "command": "pnpm -w nx run-many --target=build",
-      "problemMatcher": [
-        "$tsc",
-        {
-          "owner": "typescript",
-          "fileLocation": ["relative", "${workspaceRoot}"],
-          "pattern": {
-            "regexp": "^(.+\\.ts):(\\d+):(\\d+) - (error|warning) TS\\d+: (.*)$",
-            "file": 1,
-            "line": 2,
-            "column": 3,
-            "severity": 4,
-            "message": 5
-          }
-        }
-      ]
+      "label": "build",
+      "type": "typescript",
+      "tsconfig": "tsconfig.all.json",
+      "isBackground": true,
+      "problemMatcher": ["$tsc-watch"],
+      "option": "watch",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
     }
   ]
 }
