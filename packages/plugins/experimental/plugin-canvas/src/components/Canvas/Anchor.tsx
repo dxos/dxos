@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
+import { dropTargetForElements, draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
@@ -21,7 +22,14 @@ const defaultSize: Dimension = { width: 12, height: 12 };
 
 // TODO(burdon): Fixed anchors. E.g., "w.1.4" (first of four).
 
-export type Anchor = { id: string; pos: Point };
+export type Anchor = {
+  /** Parent shape id. */
+  shape: string;
+  /** Anchor id (e.g., property). */
+  anchor: string;
+  /** Anchor center. */
+  pos: Point;
+};
 
 export const defaultAnchors: Record<string, Point> = {
   w: { x: -1, y: 0 },
@@ -31,14 +39,14 @@ export const defaultAnchors: Record<string, Point> = {
 };
 
 export const getAnchors = (
-  { center, size: { width, height } }: Polygon,
-  linking?: DraggingState,
+  { id, center, size: { width, height } }: Polygon,
+  linking?: DraggingState<any>,
   anchors: Record<string, Point> = defaultAnchors,
 ): Anchor[] => {
   return Object.entries(anchors)
-    .filter(([id]) => !linking || linking.anchor === id)
-    .map(([id, pos]) => {
-      return { id, pos: pointAdd(center, { x: (pos.x * width) / 2, y: (pos.y * height) / 2 }) };
+    .filter(([anchor]) => !linking || linking.anchor === anchor)
+    .map(([anchor, pos]) => {
+      return { shape: id, anchor, pos: pointAdd(center, { x: (pos.x * width) / 2, y: (pos.y * height) / 2 }) };
     });
 };
 
@@ -56,6 +64,7 @@ export type AnchorProps = {
  */
 export const Anchor = ({ id, shape, pos, size = defaultSize, scale = 1, onMouseLeave }: AnchorProps) => {
   const { linking, setLinking } = useEditorContext();
+  const [hover, setHover] = useState(false);
   const isLinking = linking?.shape.id === shape.id && linking?.anchor === id;
 
   // Dragging.
@@ -63,24 +72,33 @@ export const Anchor = ({ id, shape, pos, size = defaultSize, scale = 1, onMouseL
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     invariant(ref.current);
-    return draggable({
-      element: ref.current,
-      getInitialData: () => ({ type: 'anchor', shape, anchor: id }) satisfies DragPayloadData,
-      onGenerateDragPreview: ({ nativeSetDragImage }) => {
-        setCustomNativeDragPreview({
-          nativeSetDragImage,
-          getOffset: () => {
-            return { x: (scale * size.width) / 2, y: (scale * size.height) / 2 };
-          },
-          render: ({ container }) => {
-            setLinking({ container, shape, anchor: id });
-          },
-        });
-      },
-      onDrop: ({ location }) => {
-        setLinking(undefined);
-      },
-    });
+    return combine(
+      dropTargetForElements({
+        element: ref.current,
+        getData: () => ({ shape, anchor: id, pos }),
+        onDragEnter: () => setHover(true),
+        onDragLeave: () => setHover(false),
+        onDrop: () => setHover(false),
+      }),
+      draggable({
+        element: ref.current,
+        getInitialData: () => ({ type: 'anchor', shape, anchor: id }) satisfies DragPayloadData,
+        onGenerateDragPreview: ({ nativeSetDragImage }) => {
+          setCustomNativeDragPreview({
+            nativeSetDragImage,
+            getOffset: () => {
+              return { x: (scale * size.width) / 2, y: (scale * size.height) / 2 };
+            },
+            render: ({ container }) => {
+              setLinking({ container, shape, anchor: id });
+            },
+          });
+        },
+        onDrop: ({ location }) => {
+          setLinking(undefined);
+        },
+      }),
+    );
   }, [pos]);
 
   return (
@@ -89,7 +107,7 @@ export const Anchor = ({ id, shape, pos, size = defaultSize, scale = 1, onMouseL
         ref={ref}
         {...{ [DATA_SHAPE_ID]: shape.id }}
         style={getBoundsProperties({ ...pos, ...size })}
-        className={mx('absolute', styles.anchor, isLinking && 'opacity-0')}
+        className={mx('absolute', styles.anchor, isLinking && 'opacity-0', hover && styles.anchorHover)}
         onMouseLeave={() => onMouseLeave?.()}
       />
 

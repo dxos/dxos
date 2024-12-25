@@ -57,6 +57,9 @@ export const useDragMonitor = (el: HTMLElement | null) => {
         if (x !== lastPointRef.current?.x || y !== lastPointRef.current?.y) {
           lastPointRef.current = pos;
           switch (data.type) {
+            //
+            // Drag shape.
+            //
             case 'frame': {
               if (dragging) {
                 setFrameDragging({ ...data.shape, center: pos });
@@ -64,8 +67,13 @@ export const useDragMonitor = (el: HTMLElement | null) => {
               break;
             }
 
+            //
+            // Drag anchor.
+            //
             case 'anchor': {
               if (linking) {
+                // TODO(burdon): Get center of anchor. Calculate or cache? Need reference.
+                // console.log(JSON.stringify({ t: Date.now(), data }, null, 2));
                 setOverlay(createLinkOverlay(data.shape, pos));
               }
               break;
@@ -81,7 +89,9 @@ export const useDragMonitor = (el: HTMLElement | null) => {
           const [pos] = projection.toModel([getInputPoint(el, location.current.input)]);
           const data = source.data as DragPayloadData;
           switch (data.type) {
-            // Tools.
+            //
+            // Create shape from tool.
+            //
             case 'tool': {
               invariant(dragging?.shape);
               const shape: Polygon = { ...dragging.shape, id: createId(), center: snapPoint(pos) };
@@ -91,7 +101,9 @@ export const useDragMonitor = (el: HTMLElement | null) => {
               break;
             }
 
-            // Dragging.
+            //
+            // Move shape.
+            //
             case 'frame': {
               data.shape.center = snapPoint(pos);
               // TODO(burdon): Copy from external canvas/component.
@@ -102,8 +114,12 @@ export const useDragMonitor = (el: HTMLElement | null) => {
               break;
             }
 
-            // Linking.
+            //
+            // Create link.
+            //
             case 'anchor': {
+              // TODO(burdon): Determine if anchor ID should be part of graph edge. Direction.
+              console.log('>>>', JSON.stringify(source.data, null, 2));
               const target = location.current.dropTargets.find(({ data }) => data.type === 'frame')?.data
                 .shape as Polygon;
               let id = target?.id;
@@ -114,8 +130,10 @@ export const useDragMonitor = (el: HTMLElement | null) => {
               } else if (id === data.shape.id) {
                 break;
               }
-              // TODO(burdon): Add anchor points.
-              await actionHandler?.({ type: 'link', source: data.shape.id, target: id });
+
+              const ref = undefined; // TODO(burdon): ???
+              await actionHandler?.({ type: 'link', source: data.shape.id, target: id, data: ref });
+
               if (!target?.id) {
                 await actionHandler?.({ type: 'select', ids: [id] });
               }

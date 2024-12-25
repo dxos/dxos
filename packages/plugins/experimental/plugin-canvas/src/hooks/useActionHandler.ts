@@ -185,9 +185,9 @@ export const useActionHandler = () => {
           return true;
         }
         case 'link': {
-          const { source, target } = action;
+          const { source, target, data } = action;
           const id = createId();
-          graph.addEdge({ id, source, target });
+          graph.addEdge({ id, source, target, data });
           selection.setSelected([id]);
           return true;
         }

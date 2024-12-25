@@ -89,9 +89,9 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
     const overlaySvg = useRef<SVGSVGElement>(null);
 
     // Editor state.
-    const [dragging, setDragging] = useState<DraggingState>();
-    const [linking, setLinking] = useState<DraggingState>();
-    const [editing, setEditing] = useState<EditingState>();
+    const [dragging, setDragging] = useState<DraggingState<any>>();
+    const [linking, setLinking] = useState<DraggingState<any>>();
+    const [editing, setEditing] = useState<EditingState<any>>();
 
     // Actions.
     const [actionHandler, setActionHandler] = useState<ActionHandler>();

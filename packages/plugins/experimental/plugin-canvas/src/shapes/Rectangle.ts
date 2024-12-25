@@ -19,7 +19,7 @@ export const RectangleComponent = ({ shape }: ShapeComponentProps<RectangleShape
   return null;
 };
 
-export const rectangleShape: ShapeDef = {
+export const rectangleShape: ShapeDef<RectangleShape> = {
   type: 'rectangle',
   icon: 'ph--rectangle--regular',
   component: DefaultFrameComponent,

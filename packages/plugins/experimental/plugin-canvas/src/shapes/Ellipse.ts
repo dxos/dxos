@@ -18,7 +18,7 @@ export const EllipseComponent = ({ shape }: ShapeComponentProps<EllipseShape>) =
   return null;
 };
 
-export const ellipseShape: ShapeDef = {
+export const ellipseShape: ShapeDef<EllipseShape> = {
   type: 'ellipse',
   icon: 'ph--circle--regular',
   component: EllipseComponent,

@@ -30,7 +30,7 @@ export type Action =
   | { type: 'copy'; ids?: string[] }
   | { type: 'paste' }
   | { type: 'create'; shape?: Shape }
-  | { type: 'link'; source: string; target: string }
+  | { type: 'link'; source: string; target: string; data?: object }
   | { type: 'delete'; ids?: string[]; all?: boolean }
 
   //

@@ -40,8 +40,7 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
   const { debug, linking, dragging, setDragging, editing, setEditing, registry } = useEditorContext();
   const isDragging = dragging?.shape.id === shape.id;
   const isEditing = editing?.shape.id === shape.id;
-  const [hovering, setHovering] = useState(false);
-  const [over, setOver] = useState(false);
+  const [hover, setHover] = useState(false);
 
   // Dragging.
   // TODO(burdon): Handle cursor dragging out of window (currently drop is lost/frozen).
@@ -52,8 +51,8 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
       dropTargetForElements({
         element: ref.current,
         getData: () => ({ type: 'frame', shape }) satisfies DragPayloadData,
-        onDragEnter: () => linking && setOver(true),
-        onDragLeave: () => setOver(false),
+        onDragEnter: () => linking && setHover(true),
+        onDragLeave: () => setHover(false),
         // getIsSticky: () => true,
         // canDrop: () => true,
       }),
@@ -79,18 +78,15 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
   }, [scale, shape, linking]);
 
   // Reset hovering state once dragging ends.
-  useEffect(() => {
-    setHovering(false);
-    setOver(false);
-  }, [linking]);
+  useEffect(() => setHover(false), [linking]);
 
   // Custom anchors.
   // TODO(burdon): Refresh when properties changed.
-  const anchors = useMemo(() => {
+  const anchors = useMemo<Anchor[]>(() => {
     return showAnchors === false
       ? []
       : registry.getShape(shape.type)?.getAnchors?.(shape, linking) ?? getAnchors(shape, linking);
-  }, [shape, hovering, showAnchors]);
+  }, [shape, hover, showAnchors]);
 
   const clickTimer = useRef<number>();
   const handleClick: MouseEventHandler<HTMLDivElement> = (ev) => {
@@ -126,7 +122,7 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
           styles.frameHover,
           styles.frameBorder,
           selected && styles.frameSelected,
-          over && styles.frameActive,
+          hover && styles.frameActive,
           shape.guide && styles.frameGuide,
           classNames,
           'transition',
@@ -135,12 +131,12 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
         )}
         onClick={handleClick}
         onDoubleClick={handleDoubleClick}
-        onMouseEnter={() => setHovering(true)}
+        onMouseEnter={() => setHover(true)}
         onMouseLeave={(ev) => {
           // We need to keep rendering the anchor that is being dragged.
           const related = ev.relatedTarget as HTMLElement;
           if (related?.getAttribute?.(DATA_SHAPE_ID) !== shape.id) {
-            setHovering(false);
+            setHover(false);
           }
         }}
       >
@@ -149,8 +145,8 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
 
       {/* Anchors. */}
       <div>
-        {anchors.map(({ id, pos }) => (
-          <Anchor key={id} id={id} shape={shape} scale={scale} pos={pos} onMouseLeave={() => setHovering(false)} />
+        {anchors.map(({ anchor, pos }) => (
+          <Anchor key={anchor} id={anchor} shape={shape} scale={scale} pos={pos} onMouseLeave={() => setHover(false)} />
         ))}
       </div>
     </div>

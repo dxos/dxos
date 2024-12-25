@@ -9,22 +9,22 @@ import { type ShapeComponentProps } from './Shape';
 import { type DraggingState } from '../../hooks';
 import { type Polygon } from '../../types';
 
-export type ShapeDef<S extends Polygon = Polygon> = {
+export type ShapeDef<S extends Polygon> = {
   type: string;
   icon: string;
-  component: FC<ShapeComponentProps<any>>;
-  create: () => Polygon;
-  getAnchors?: (shape: S, linking?: DraggingState) => Anchor[];
+  component: FC<ShapeComponentProps<S>>;
+  create: () => S;
+  getAnchors?: (shape: S, linking?: DraggingState<S>) => Anchor[];
 };
 
 export class ShapeRegistry {
-  private readonly _registry: Map<string, ShapeDef>;
+  private readonly _registry: Map<string, ShapeDef<any>>;
 
-  constructor(shapes: ShapeDef[] = []) {
-    this._registry = new Map<string, ShapeDef>(shapes.map((shape) => [shape.type, shape]));
+  constructor(shapes: ShapeDef<any>[] = []) {
+    this._registry = new Map<string, ShapeDef<any>>(shapes.map((shape) => [shape.type, shape]));
   }
 
-  get shapes(): ShapeDef[] {
+  get shapes(): ShapeDef<any>[] {
     return Array.from(this._registry.values());
   }
 
@@ -32,7 +32,7 @@ export class ShapeRegistry {
     return this._registry.get(type);
   }
 
-  register(shape: ShapeDef) {
+  register(shape: ShapeDef<any>) {
     this._registry.set(shape.type, shape);
   }
 }

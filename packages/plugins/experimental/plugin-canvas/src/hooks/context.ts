@@ -12,15 +12,14 @@ import { type ActionHandler } from '../actions';
 import { type ShapeRegistry } from '../components';
 import type { Polygon, Shape } from '../types';
 
-// TODO(burdon): Reconcile with DragPayloadData.
-export type DraggingState = {
+export type DraggingState<S extends Polygon> = {
   container: HTMLElement;
-  shape: Polygon;
+  shape: S;
   anchor?: string;
 };
 
-export type EditingState = {
-  shape: Polygon;
+export type EditingState<S extends Polygon> = {
+  shape: S;
 };
 
 export type EditorOptions = {
@@ -56,14 +55,14 @@ export type EditorContextType = {
   snapToGrid: boolean;
   setSnapToGrid: Dispatch<SetStateAction<boolean>>;
 
-  dragging?: DraggingState;
-  setDragging: Dispatch<SetStateAction<DraggingState | undefined>>;
+  dragging?: DraggingState<any>;
+  setDragging: Dispatch<SetStateAction<DraggingState<any> | undefined>>;
 
-  linking?: DraggingState;
-  setLinking: Dispatch<SetStateAction<DraggingState | undefined>>;
+  linking?: DraggingState<any>;
+  setLinking: Dispatch<SetStateAction<DraggingState<any> | undefined>>;
 
-  editing?: EditingState;
-  setEditing: Dispatch<SetStateAction<EditingState | undefined>>;
+  editing?: EditingState<any>;
+  setEditing: Dispatch<SetStateAction<EditingState<any> | undefined>>;
 };
 
 /**

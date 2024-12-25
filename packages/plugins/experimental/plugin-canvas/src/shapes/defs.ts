@@ -7,4 +7,9 @@ import { functionShape } from './Function';
 import { rectangleShape } from './Rectangle';
 import { type ShapeDef } from '../components';
 
-export const defaultShapes: ShapeDef[] = [rectangleShape, ellipseShape, functionShape];
+export const defaultShapes: ShapeDef<any>[] = [
+  //
+  rectangleShape,
+  ellipseShape,
+  functionShape,
+];

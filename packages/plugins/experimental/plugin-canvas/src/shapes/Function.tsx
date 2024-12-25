@@ -41,11 +41,18 @@ export type CreateFunctionProps = Omit<FunctionShape, 'type' | 'properties'>;
 export const createFunction = ({ id, ...rest }: CreateFunctionProps): FunctionShape => ({
   id,
   type: 'function',
-  properties: [],
+  properties: [
+    // TODO(burdon): Testing only.
+    {
+      name: 'prop-1',
+      type: 'string',
+    },
+  ],
   ...rest,
 });
 
 const rowHeight = 20;
+const maxProperties = 8;
 
 export const FunctionComponent = ({ shape }: ShapeComponentProps<FunctionShape>) => {
   const { actionHandler } = useEditorContext();
@@ -60,8 +67,10 @@ export const FunctionComponent = ({ shape }: ShapeComponentProps<FunctionShape>)
   const handleAdd: IconButtonProps['onClick'] = (ev) => {
     ev.stopPropagation(); // TODO(burdon): Prevent select.
     // TODO(burdon): Not reactive when pushed or spliced.
-    shape.properties.push({ name: `prop-${shape.properties.length + 1}`, type: 'string' });
-    shape.size.height += rowHeight; // TODO(burdon): Trigger layout. Snap to size.
+    if (shape.properties.length < maxProperties) {
+      shape.properties.push({ name: `prop-${shape.properties.length + 1}`, type: 'string' });
+      shape.size.height += rowHeight; // TODO(burdon): Trigger layout. Snap to size.
+    }
   };
 
   const handleDelete = (name: string) => {
@@ -97,16 +106,21 @@ export const functionShape: ShapeDef<FunctionShape> = {
   type: 'function',
   icon: 'ph--function--regular',
   component: FunctionComponent,
-  create: () => createFunction({ id: createId(), center: { x: 0, y: 0 }, size: { width: 128, height: 64 } }),
-  getAnchors: ({ center, size, properties }, linking) => {
+  create: () => createFunction({ id: createId(), center: { x: 0, y: 0 }, size: { width: 128, height: 128 } }),
+  getAnchors: ({ id, center, size, properties }, linking) => {
     return [
       {
-        id: 'output',
+        shape: id,
+        anchor: '#output', // TODO(burdon): Const.
         pos: pointAdd(center, { x: size.width / 2, y: 0 }),
       },
       ...properties.map(({ name }, i) => ({
-        id: name,
-        pos: pointAdd(center, { x: -size.width / 2, y: size.height / 2 - 18 - i * rowHeight }),
+        shape: id,
+        anchor: name,
+        pos: pointAdd(center, {
+          x: -size.width / 2,
+          y: size.height / 2 - (properties.length * rowHeight - 2) + i * rowHeight,
+        }),
       })),
     ];
   },

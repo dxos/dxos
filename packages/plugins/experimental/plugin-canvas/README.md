@@ -30,8 +30,13 @@
 - [x] Shape registry.
   - [x] Custom frames.
   - [x] Custom anchors.
+  - #####
+  - [ ] Prevent drag/drop on Function body.
+  - [ ] Anchor target.
+  - [ ] Create data structure for link on drop (useDragMonitor); e.g., property in edge type.
   - [ ] Connect paths to anchors; prevent multiple connections; directional.
   - [ ] Select/edit.
+  - [ ] Green anchors if match.
 - [ ] Auto-size triggers layout.
 - [ ] Logic gates (AND, etc.)
 - [ ] Triggers (Timer, Query, etc.)
