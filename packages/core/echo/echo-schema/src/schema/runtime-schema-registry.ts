@@ -40,7 +40,16 @@ export class RuntimeSchemaRegistry {
       return undefined;
     }
     const { type, version } = components;
-    return this._schema.get(type)?.find((s) => getSchemaVersion(s) === version);
+    const allSchemas = this._schema.get(type) ?? [];
+    if (version) {
+      return allSchemas.find((s) => getSchemaVersion(s) === version);
+    } else {
+      // If no version is specified, return the earliest version for backwards compatibility.
+      // TODO(dmaretskyi): Probably not correct to compare lexicographically, but it's good enough for now.
+      return allSchemas.sort((a, b) =>
+        (getSchemaVersion(a) ?? '0.0.0').localeCompare(getSchemaVersion(b) ?? '0.0.0'),
+      )[0];
+    }
   }
 
   /**

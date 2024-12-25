@@ -297,7 +297,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       const typeReference = target[symbolInternals].core.getType();
       if (typeReference) {
         // The object has schema, but we can't access it to validate the value being set.
-        throw new Error(`Schema not found in schema registry: ${typeReference.objectId}`);
+        throw new Error(`Schema not found in schema registry: ${typeReference.toDXN().toString()}`);
       }
 
       return value;
