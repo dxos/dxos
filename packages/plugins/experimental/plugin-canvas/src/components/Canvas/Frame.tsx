@@ -85,11 +85,12 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
   }, [linking]);
 
   // Custom anchors.
+  // TODO(burdon): Refresh when properties changed.
   const anchors = useMemo(() => {
     return showAnchors === false
       ? []
       : registry.getShape(shape.type)?.getAnchors?.(shape, linking) ?? getAnchors(shape, linking);
-  }, [showAnchors, hovering]);
+  }, [shape, hovering, showAnchors]);
 
   const clickTimer = useRef<number>();
   const handleClick: MouseEventHandler<HTMLDivElement> = (ev) => {

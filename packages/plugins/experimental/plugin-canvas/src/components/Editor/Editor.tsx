@@ -46,7 +46,9 @@ interface EditorController {
 type EditorRootProps = ThemedClassName<
   PropsWithChildren<
     Pick<EditorContextType, 'id'> &
-      Partial<Pick<EditorContextType, 'options' | 'debug' | 'graph' | 'selection' | 'registry'>> & {
+      Partial<
+        Pick<EditorContextType, 'options' | 'debug' | 'showGrid' | 'snapToGrid' | 'graph' | 'selection' | 'registry'>
+      > & {
         autoZoom?: boolean;
       }
   >
@@ -60,6 +62,8 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
       id,
       options: _options = defaultEditorOptions,
       debug: _debug = false,
+      showGrid: _showGrid = true,
+      snapToGrid: _snapToGrid = true,
       graph: _graph,
       selection: _selection,
       registry: _registry,
@@ -78,8 +82,8 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
     // Canvas state.
     const [debug, setDebug] = useState(_debug);
     const [gridSize, setGridSize] = useState({ width: options.gridSize, height: options.gridSize });
-    const [showGrid, setShowGrid] = useState(true);
-    const [snapToGrid, setSnapToGrid] = useState(true);
+    const [showGrid, setShowGrid] = useState(_showGrid);
+    const [snapToGrid, setSnapToGrid] = useState(_snapToGrid);
 
     // Canvas layout.
     const overlaySvg = useRef<SVGSVGElement>(null);

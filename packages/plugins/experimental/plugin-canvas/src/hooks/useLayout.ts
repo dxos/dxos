@@ -50,8 +50,14 @@ export const useLayout = (graph: GraphModel<GraphNode<Shape>>, dragging?: Polygo
       points = [i1, i2];
     }
 
-    // TODO(burdon): Move point to closest free anchor.
-    shapes.push(createPath({ id, points, start: 'circle', end: 'arrow-end' }));
+    shapes.push(
+      createPath({
+        id,
+        points,
+        // start: 'circle',
+        end: 'arrow-end',
+      }),
+    );
   });
 
   return { shapes };

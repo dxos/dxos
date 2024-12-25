@@ -9,12 +9,12 @@ import { type ShapeComponentProps } from './Shape';
 import { type DraggingState } from '../../hooks';
 import { type Polygon } from '../../types';
 
-export type ShapeDef = {
+export type ShapeDef<S extends Polygon = Polygon> = {
   type: string;
   icon: string;
   component: FC<ShapeComponentProps<any>>;
   create: () => Polygon;
-  getAnchors?: (shape: Polygon, linking?: DraggingState) => Anchor[];
+  getAnchors?: (shape: S, linking?: DraggingState) => Anchor[];
 };
 
 export class ShapeRegistry {

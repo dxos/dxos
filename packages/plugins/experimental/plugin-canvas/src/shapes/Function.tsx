@@ -6,10 +6,10 @@ import React from 'react';
 
 import { S } from '@dxos/echo-schema';
 import { Icon, IconButton, type IconButtonProps } from '@dxos/react-ui';
-import { type Point } from '@dxos/react-ui-canvas';
 
-import { getAnchors, type ShapeComponentProps, type ShapeDef } from '../components';
+import { type ShapeComponentProps, type ShapeDef } from '../components';
 import { useEditorContext } from '../hooks';
+import { pointAdd } from '../layout';
 import { createId } from '../testing';
 import { Polygon } from '../types';
 
@@ -59,7 +59,7 @@ export const FunctionComponent = ({ shape }: ShapeComponentProps<FunctionShape>)
 
   const handleAdd: IconButtonProps['onClick'] = (ev) => {
     ev.stopPropagation(); // TODO(burdon): Prevent select.
-    // TODO(burdon): Not reactive when pushed (ok when splicing below).
+    // TODO(burdon): Not reactive when pushed or spliced.
     shape.properties.push({ name: `prop-${shape.properties.length + 1}`, type: 'string' });
     shape.size.height += rowHeight; // TODO(burdon): Trigger layout. Snap to size.
   };
@@ -93,15 +93,21 @@ export const FunctionComponent = ({ shape }: ShapeComponentProps<FunctionShape>)
   );
 };
 
-const defaultAnchors: Record<string, Point> = {
-  w: { x: -1, y: 0 },
-  e: { x: 1, y: 0 },
-};
-
-export const functionShape: ShapeDef = {
+export const functionShape: ShapeDef<FunctionShape> = {
   type: 'function',
   icon: 'ph--function--regular',
   component: FunctionComponent,
   create: () => createFunction({ id: createId(), center: { x: 0, y: 0 }, size: { width: 128, height: 64 } }),
-  getAnchors: (shape, linking) => getAnchors(shape, linking, defaultAnchors),
+  getAnchors: ({ center, size, properties }, linking) => {
+    return [
+      {
+        id: 'output',
+        pos: pointAdd(center, { x: size.width / 2, y: 0 }),
+      },
+      ...properties.map(({ name }, i) => ({
+        id: name,
+        pos: pointAdd(center, { x: -size.width / 2, y: size.height / 2 - 18 - i * rowHeight }),
+      })),
+    ];
+  },
 };
