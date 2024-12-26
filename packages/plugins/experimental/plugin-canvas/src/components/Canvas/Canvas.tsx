@@ -4,12 +4,10 @@
 
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import React, { useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
 
 import { Canvas as NativeCanvas, Grid, type Rect, testId, useWheel, useProjection } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
-import { FrameDragPreview } from './Frame';
 import { getShapeBounds } from './Shape';
 import { Shapes } from './Shapes';
 import {
@@ -30,7 +28,6 @@ import { eventsNone, styles } from '../styles';
  * Main canvas component.
  */
 export const Canvas = () => {
-  // TODO(burdon): Controller.
   return (
     <NativeCanvas {...testId<TestId>('dx-canvas')}>
       <CanvasContent />
@@ -39,7 +36,7 @@ export const Canvas = () => {
 };
 
 export const CanvasContent = () => {
-  const { id, overlaySvg, options, debug, showGrid, dragging, selection } = useEditorContext();
+  const { id, overlaySvg, options, debug, showGrid, selection } = useEditorContext();
   const { root, styles: projectionStyles, setProjection, scale, offset } = useProjection();
 
   // Actions.
@@ -65,10 +62,10 @@ export const CanvasContent = () => {
   useWheel(root, setProjection);
 
   // Dragging and linking.
-  const { frameDragging, overlay } = useDragMonitor(root);
+  const { overlay } = useDragMonitor(root);
 
   // Layout.
-  const layout = useLayout(frameDragging);
+  const layout = useLayout();
 
   // Selection.
   const shapesRef = useRef<HTMLDivElement>(null);
@@ -101,15 +98,6 @@ export const CanvasContent = () => {
       <div {...testId<TestId>('dx-overlays')} className={mx(eventsNone)}>
         {/* Selection overlay. */}
         {selectionRect && <SelectionBox rect={selectionRect} />}
-
-        {/* Drag preview (NOTE: styles should be included to apply scale). */}
-        {dragging &&
-          createPortal(
-            <div style={projectionStyles}>
-              <FrameDragPreview debug={debug} scale={scale} shape={dragging.shape} />
-            </div>,
-            dragging.container,
-          )}
 
         {/* Linking overlay. */}
         <div className='absolute' style={projectionStyles}>

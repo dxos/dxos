@@ -20,11 +20,12 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { type ActionHandler } from '../../actions';
 import {
-  type DraggingState,
+  DragMonitor,
   type EditingState,
   EditorContext,
   type EditorContextType,
   type EditorOptions,
+  type LinkingState,
   SelectionModel,
 } from '../../hooks';
 import { defaultShapes } from '../../shapes';
@@ -94,8 +95,8 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
     const overlaySvg = useRef<SVGSVGElement>(null);
 
     // Editor state.
-    const [dragging, setDragging] = useState<DraggingState<any>>();
-    const [linking, setLinking] = useState<DraggingState<any>>();
+    const monitor = useMemo(() => new DragMonitor(), []);
+    const [linking, setLinking] = useState<LinkingState<any>>(); // TODO(burdon): Remove.
     const [editing, setEditing] = useState<EditingState<any>>();
 
     // Actions.
@@ -125,10 +126,9 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
       setShowGrid,
       setSnapToGrid,
 
-      dragging,
+      monitor,
       linking,
       editing,
-      setDragging,
       setLinking,
       setEditing,
     };

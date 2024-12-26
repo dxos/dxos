@@ -17,18 +17,19 @@ import { eventsAuto, eventsNone } from '../styles';
  * UI components.
  */
 export const UI = () => {
-  const { registry, debug, graph, showGrid, snapToGrid, dragging, linking, selection, actionHandler } =
+  const { debug, registry, monitor, graph, showGrid, snapToGrid, linking, selection, actionHandler } =
     useEditorContext();
+  const { shape: dragging } = monitor.state().value;
   const info = {
     debug,
     graph: {
       nodes: graph.nodes.length,
       edges: graph.edges.length,
     },
+    dragging,
     selected: selection.selected.value,
     showGrid,
     snapToGrid,
-    dragging,
     linking,
   };
 

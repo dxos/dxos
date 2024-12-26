@@ -6,7 +6,7 @@ import { invariant } from '@dxos/invariant';
 import { type Point, type Rect } from '@dxos/react-ui-canvas';
 
 import { useEditorContext } from './useEditorContext';
-import { distance, findClosestIntersection, getNormals, getRect } from '../layout';
+import { distance, findClosestIntersection, getNormals, getRect, pointAdd } from '../layout';
 import { createPath } from '../shapes';
 import { isPolygon, type Polygon, type Shape } from '../types';
 
@@ -17,8 +17,9 @@ export type Layout = {
 /**
  * Generate layout.
  */
-export const useLayout = (dragging?: Polygon): Layout => {
-  const { graph, registry } = useEditorContext();
+export const useLayout = (): Layout => {
+  const { graph, registry, monitor } = useEditorContext();
+  const { shape: dragging } = monitor.state('frame').value;
   const shapes: Shape[] = [];
 
   // Layout edges.
@@ -38,16 +39,22 @@ export const useLayout = (dragging?: Polygon): Layout => {
     // TODO(burdon): Custom handling of anchors.
     if (data) {
       // TODO(burdon): Cache anchor positions (runtime representation of shapes and paths).
-      const sourceAnchors = registry
-        .getShape(source.data.type)
-        ?.getAnchors?.(source.data, dragging?.id === source.data.id ? dragging.center : undefined);
-      const targetAnchors = registry
-        .getShape(target.data.type)
-        ?.getAnchors?.(target.data, dragging?.id === target.data.id ? dragging.center : undefined);
-      const sourceAnchor = sourceAnchors?.['#output'];
-      const targetAnchor = targetAnchors?.[data.property];
+      const getAnchors = (shape: Shape) =>
+        registry.getShape(shape.type)?.getAnchors?.(shape, dragging?.id === shape.id ? dragging?.center : undefined);
+      const sourceAnchor = getAnchors(source.data)?.['#output'];
+      const targetAnchor = getAnchors(target.data)?.[data.property];
       if (sourceAnchor && targetAnchor) {
-        shapes.push(createPath({ id, points: [sourceAnchor.pos, targetAnchor.pos] }));
+        shapes.push(
+          createPath({
+            id,
+            points: [
+              sourceAnchor.pos,
+              pointAdd(sourceAnchor.pos, { x: 10, y: 0 }),
+              pointAdd(targetAnchor.pos, { x: -10, y: 0 }),
+              targetAnchor.pos,
+            ],
+          }),
+        );
       }
       return;
     }
@@ -62,6 +69,7 @@ export const useLayout = (dragging?: Polygon): Layout => {
       }
     }
 
+    // Direct path.
     if (!points.length) {
       const i1 = findClosestIntersection([p2, p1], r1) ?? p1;
       const i2 = findClosestIntersection([p1, p2], r2) ?? p2;

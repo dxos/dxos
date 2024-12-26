@@ -6,8 +6,10 @@ import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import React, { type FC, type MouseEventHandler, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
+import { useProjection } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Anchor } from './Anchor';
@@ -37,8 +39,9 @@ export type FrameProps = ShapeComponentProps<Polygon> & {
  */
 export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
   const { classNames, shape, scale, selected, onSelect } = baseProps;
-  const { debug, linking, dragging, setDragging, editing, setEditing, registry } = useEditorContext();
-  const isDragging = dragging?.shape.id === shape.id;
+  const { debug, monitor, linking, editing, setEditing, registry } = useEditorContext();
+  const { styles: projectionStyles } = useProjection();
+  const { container } = monitor.state('frame', shape.id).value;
   const isEditing = editing?.shape.id === shape.id;
   const [hover, setHover] = useState(false);
 
@@ -65,13 +68,11 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
               return { x: (scale * shape.size.width) / 2, y: (scale * shape.size.height) / 2 };
             },
             render: ({ container }) => {
-              setDragging({ shape, container });
+              monitor.drag({ container, type: 'frame', shape });
             },
           });
         },
-        onDrop: () => {
-          setDragging(undefined);
-        },
+        onDrop: () => monitor.drop(),
       }),
     );
   }, [scale, shape, linking]);
@@ -109,44 +110,62 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
   };
 
   return (
-    <div className={mx(isDragging && 'opacity-0')}>
-      <div
-        {...shapeAttrs(shape)}
-        ref={ref}
-        style={getBoundsProperties({ ...shape.center, ...shape.size })}
-        className={mx(
-          styles.frameContainer,
-          styles.frameHover,
-          styles.frameBorder,
-          selected && styles.frameSelected,
-          hover && styles.frameActive,
-          shape.guide && styles.frameGuide,
-          classNames,
-          'transition',
-          debug && 'opacity-50',
-          // scale >= 16 && 'duration-500 opacity-0',
-        )}
-        onClick={handleClick}
-        onDoubleClick={handleDoubleClick}
-        onMouseEnter={() => setHover(true)}
-        onMouseLeave={(ev) => {
-          // We need to keep rendering the anchor that is being dragged.
-          const related = ev.relatedTarget as HTMLElement;
-          if (related?.getAttribute?.(DATA_SHAPE_ID) !== shape.id) {
-            setHover(false);
-          }
-        }}
-      >
-        {Component && <Component {...baseProps} editing={isEditing} onClose={handleClose} onCancel={handleCancel} />}
+    <>
+      <div className={mx(container && 'opacity-30')}>
+        <div
+          {...shapeAttrs(shape)}
+          ref={ref}
+          style={getBoundsProperties({ ...shape.center, ...shape.size })}
+          className={mx(
+            styles.frameContainer,
+            styles.frameHover,
+            styles.frameBorder,
+            selected && styles.frameSelected,
+            hover && styles.frameActive,
+            shape.guide && styles.frameGuide,
+            classNames,
+            'transition',
+            debug && 'opacity-50',
+            // scale >= 16 && 'duration-500 opacity-0',
+          )}
+          onClick={handleClick}
+          onDoubleClick={handleDoubleClick}
+          onMouseEnter={() => setHover(true)}
+          onMouseLeave={(ev) => {
+            // We need to keep rendering the anchor that is being dragged.
+            const related = ev.relatedTarget as HTMLElement;
+            if (related?.getAttribute?.(DATA_SHAPE_ID) !== shape.id) {
+              setHover(false);
+            }
+          }}
+        >
+          {Component && <Component {...baseProps} editing={isEditing} onClose={handleClose} onCancel={handleCancel} />}
+        </div>
+
+        {/* Anchors. */}
+        <div>
+          {Object.entries(anchors).map(([anchor, { pos }]) => (
+            <Anchor
+              key={anchor}
+              id={anchor}
+              shape={shape}
+              scale={scale}
+              pos={pos}
+              onMouseLeave={() => setHover(false)}
+            />
+          ))}
+        </div>
       </div>
 
-      {/* Anchors. */}
-      <div>
-        {Object.entries(anchors).map(([anchor, { pos }]) => (
-          <Anchor key={anchor} id={anchor} shape={shape} scale={scale} pos={pos} onMouseLeave={() => setHover(false)} />
-        ))}
-      </div>
-    </div>
+      {/* Drag preview (NOTE: styles should be included to apply scale). */}
+      {container &&
+        createPortal(
+          <div style={projectionStyles}>
+            <FrameDragPreview debug={debug} scale={scale} shape={shape} />
+          </div>,
+          container,
+        )}
+    </>
   );
 };
 

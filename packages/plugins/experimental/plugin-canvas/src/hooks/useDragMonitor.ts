@@ -3,7 +3,12 @@
 //
 
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { type DropTargetRecord } from '@atlaskit/pragmatic-drag-and-drop/types';
+import {
+  type BaseEventPayload,
+  type DropTargetRecord,
+  type ElementDragType,
+} from '@atlaskit/pragmatic-drag-and-drop/types';
+import { type Signal, signal } from '@preact/signals-core';
 import { useEffect, useRef, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
@@ -12,6 +17,7 @@ import { type Point, useProjection } from '@dxos/react-ui-canvas';
 
 import { useEditorContext } from './useEditorContext';
 import { useSnap } from './useSnap';
+import { type Anchor } from '../components';
 import { findClosestIntersection, getInputPoint, getRect } from '../layout';
 import { createPath, createRectangle } from '../shapes';
 import { createId, itemSize } from '../testing';
@@ -40,25 +46,72 @@ export type DragDropPayload =
       anchor: string;
     };
 
-const findDropTarget = (
-  targets: DropTargetRecord[],
-  match: (data: DragDropPayload) => boolean,
-): DragDropPayload | undefined => {
-  const target = targets.find(({ data }) => match(data as DragDropPayload));
-  if (target) {
-    return target.data as DragDropPayload;
-  }
+export type DraggingState = {
+  container?: HTMLElement;
+  type?: string;
+  shape?: Polygon;
+  anchor?: Anchor;
 };
+
+const NULL = signal<DraggingState>({});
+
+// TODO(burdon): Drag controller abstract class.
+export class DragMonitor {
+  private _state: Signal<DraggingState> = signal<DraggingState>({});
+
+  get dragging(): Signal<DraggingState> {
+    return this._state;
+  }
+
+  /**
+   *
+   */
+  // TODO(burdon): Pull out id.
+  state(type?: string, id?: string): Signal<DraggingState> {
+    return (!type || this._state?.value.type === type) && (!id || this._state?.value.shape?.id === id)
+      ? this._state
+      : NULL;
+  }
+
+  /**
+   * Called from setCustomNativeDragPreview.render()
+   */
+  drag(state: DraggingState) {
+    this._state.value = state;
+  }
+
+  /**
+   *
+   */
+  drop() {
+    this._state.value = {};
+  }
+
+  /**
+   * Called by dropTargetForElements.canDrop(DropTargetGetFeedbackArgs)
+   */
+  canDrop(current: DragDropPayload, dragging: DragDropPayload) {}
+
+  /**
+   *
+   */
+  onDrag(event: BaseEventPayload<ElementDragType>) {}
+
+  /**
+   *
+   */
+  onDrop(event: BaseEventPayload<ElementDragType>) {}
+}
 
 /**
  * Monitor frames and anchors being dragged.
  */
 export const useDragMonitor = (el: HTMLElement | null) => {
-  const { graph, selection, dragging, setDragging, linking, setLinking, actionHandler } = useEditorContext();
+  const { graph, selection, monitor, linking, setLinking, actionHandler } = useEditorContext();
   const { projection } = useProjection();
   const snapPoint = useSnap();
 
-  const [frameDragging, setFrameDragging] = useState<Polygon>();
+  const { shape } = monitor.state().value;
   const [overlay, setOverlay] = useState<PathShape>();
   const cancelled = useRef(false);
 
@@ -77,15 +130,16 @@ export const useDragMonitor = (el: HTMLElement | null) => {
             // Drag shape.
             //
             case 'frame': {
-              if (dragging) {
-                setFrameDragging({ ...data.shape, center: pos });
-              }
+              // if (dragging) {
+              //   setFrameDragging({ ...data.shape, center: pos });
+              // }
               break;
             }
 
             //
             // Drag anchor.
             //
+            // TODO(burdon): Move to canvas where used.
             case 'anchor': {
               if (linking) {
                 // TODO(burdon): Get center of anchor. Calculate or cache? Need reference.
@@ -109,11 +163,9 @@ export const useDragMonitor = (el: HTMLElement | null) => {
             // Create shape from tool.
             //
             case 'tool': {
-              invariant(dragging?.shape);
-              const shape: Polygon = { ...dragging.shape, id: createId(), center: snapPoint(pos) };
-              if (shape) {
-                await actionHandler?.({ type: 'create', shape });
-              }
+              invariant(shape);
+              const created: Polygon = { ...shape, center: snapPoint(pos) };
+              await actionHandler?.({ type: 'create', shape: created });
               break;
             }
 
@@ -150,11 +202,7 @@ export const useDragMonitor = (el: HTMLElement | null) => {
 
               switch (target?.type) {
                 case 'frame': {
-                  await actionHandler?.({
-                    type: 'link',
-                    source: data.shape.id,
-                    target: target.shape.id,
-                  });
+                  await actionHandler?.({ type: 'link', source: data.shape.id, target: target.shape.id });
                   break;
                 }
 
@@ -173,9 +221,9 @@ export const useDragMonitor = (el: HTMLElement | null) => {
           }
         }
 
-        setDragging(undefined);
+        // setDragging(undefined);
+        // setFrameDragging(undefined);
         setLinking(undefined);
-        setFrameDragging(undefined);
         setOverlay(undefined);
       },
 
@@ -185,13 +233,23 @@ export const useDragMonitor = (el: HTMLElement | null) => {
         cancelled.current = location.current.dropTargets.length === 0;
       },
     });
-  }, [el, projection, actionHandler, selection, snapPoint, dragging, linking]);
+  }, [el, projection, actionHandler, selection, snapPoint, shape, linking]);
 
-  return { frameDragging, overlay };
+  return { overlay };
 };
 
 const createLinkOverlay = (source: Polygon, pos: Point): PathShape | undefined => {
   const rect = getRect(source.center, source.size);
   const p1 = findClosestIntersection([pos, source.center], rect) ?? source.center;
   return createPath({ id: 'link', points: [p1, pos] });
+};
+
+const findDropTarget = (
+  targets: DropTargetRecord[],
+  match: (data: DragDropPayload) => boolean,
+): DragDropPayload | undefined => {
+  const target = targets.find(({ data }) => match(data as DragDropPayload));
+  if (target) {
+    return target.data as DragDropPayload;
+  }
 };

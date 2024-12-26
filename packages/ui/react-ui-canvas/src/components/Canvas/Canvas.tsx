@@ -4,13 +4,13 @@
 
 import React, {
   type CSSProperties,
+  type HTMLAttributes,
   type PropsWithChildren,
   forwardRef,
   useEffect,
   useImperativeHandle,
   useMemo,
   useState,
-  type HTMLAttributes,
 } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 

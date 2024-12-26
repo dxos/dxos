@@ -5,6 +5,7 @@
 import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
@@ -12,7 +13,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { type DragDropPayload, useEditorContext } from '../../hooks';
 import { type Polygon } from '../../types';
-import { type ShapeRegistry } from '../Canvas';
+import { FrameDragPreview, type ShapeRegistry } from '../Canvas';
 
 export type ToolsProps = ThemedClassName<{
   registry: ShapeRegistry;
@@ -34,8 +35,10 @@ type ToolProps = {
 };
 
 const Tool = ({ type, icon }: ToolProps) => {
-  const { registry, dragging, setDragging } = useEditorContext();
-  const isDragging = dragging;
+  const { registry, monitor } = useEditorContext();
+  // const { styles: projectionStyles } = useProjection();
+  const { container, shape } = monitor.state('tool').value;
+
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     invariant(ref.current);
@@ -53,19 +56,30 @@ const Tool = ({ type, icon }: ToolProps) => {
             const def = registry.getShape(type);
             if (def) {
               const shape: Polygon = def.create();
-              setDragging({ container, shape });
+              monitor.drag({ container, type: 'tool', shape });
             }
           },
         });
       },
+      onDrop: () => monitor.drop(),
     });
   }, []);
 
   return (
     <>
-      <div ref={ref} className={mx('flex', isDragging && 'opacity-50')}>
+      <div ref={ref} className={mx('flex', container && 'opacity-50')}>
         <Icon icon={icon} size={6} />
       </div>
+
+      {/* TODO(burdon): Scale. */}
+      {container &&
+        shape &&
+        createPortal(
+          <div>
+            <FrameDragPreview shape={shape} scale={1} />
+          </div>,
+          container,
+        )}
     </>
   );
 };

@@ -44,8 +44,8 @@ export const getShapeBounds = (root: HTMLDivElement, id: string): DOMRect | unde
 export type ShapeComponentProps<S extends Shape> = PropsWithChildren<
   ThemedClassName<{
     shape: S;
-    debug: boolean;
-    scale: number;
+    debug?: boolean;
+    scale: number; // TODO(burdon): Remove.
     selected?: boolean;
     onSelect?: (id: string, shift: boolean) => void;
   }>

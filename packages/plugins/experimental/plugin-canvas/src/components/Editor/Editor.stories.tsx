@@ -15,7 +15,7 @@ import { useClientProvider, withClientProvider } from '@dxos/react-client/testin
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Form, TupleInput } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { type TypeSpec, createObjectFactory, type ValueGenerator, Testing } from '@dxos/schema/testing';
+import { createObjectFactory, Testing, type TypeSpec, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
@@ -28,17 +28,17 @@ const generator: ValueGenerator = faker as any;
 
 const types = [Testing.OrgType, Testing.ProjectType, Testing.ContactType];
 
-type RenderProps = Omit<EditorRootProps, 'graph'> & { init?: boolean; sidebar?: 'json' | 'selected' };
-
 // TODO(burdon): Ref expando breaks the form.
 const RectangleShapeWithoutRef = S.omit<any, any, ['object']>('object')(RectangleShape);
 
-const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
+type RenderProps = EditorRootProps & { init?: boolean; sidebar?: 'json' | 'selected' };
+
+const Render = ({ id = 'test', graph: _graph, init, sidebar, ...props }: RenderProps) => {
   const editorRef = useRef<EditorController>(null);
   const { space } = useClientProvider();
 
   // Do layout.
-  const [graph, setGraph] = useState<GraphModel<GraphNode<Shape>>>();
+  const [graph, setGraph] = useState<GraphModel<GraphNode<Shape>> | undefined>(_graph);
   useEffect(() => {
     if (!space || !init) {
       return;
@@ -56,7 +56,7 @@ const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
     return () => clearTimeout(t);
   }, [space, init]);
 
-  // selection.
+  // Selection.
   const selection = useMemo(() => new SelectionModel(), []);
   const [selected, setSelected] = useState();
   useEffect(() => {
@@ -79,6 +79,7 @@ const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
         </Editor.Root>
       </AttentionContainer>
 
+      {/* TODO(burdon): Different types. */}
       {sidebar === 'selected' && selected && (
         <Form
           schema={RectangleShapeWithoutRef}
@@ -131,9 +132,9 @@ type Story = StoryObj<RenderProps & { spec?: TypeSpec[] }>;
 export const Default: Story = {
   args: {
     debug: true,
-    sidebar: 'json',
     showGrid: false,
     snapToGrid: false,
+    sidebar: 'json',
     init: true,
   },
 };

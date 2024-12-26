@@ -5897,6 +5897,9 @@ importers:
         specifier: ^2.16.1
         version: 2.16.1
     devDependencies:
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../../core/compute
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui

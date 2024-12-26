@@ -1,7 +1,7 @@
 {
   "name": "@dxos/plugin-canvas",
   "version": "0.7.4",
-  "description": "Braneframe grid plugin",
+  "description": "Infinite canvas.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -82,6 +82,7 @@
     "transformation-matrix": "^2.16.1"
   },
   "devDependencies": {
+    "@dxos/compute": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-card": "workspace:*",

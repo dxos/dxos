@@ -8,11 +8,13 @@ import { type GraphModel, type GraphNode } from '@dxos/graph';
 import { type Dimension } from '@dxos/react-ui-canvas';
 
 import { type SelectionModel } from './selection';
+import { type DragMonitor } from './useDragMonitor';
 import { type ActionHandler } from '../actions';
 import { type ShapeRegistry } from '../components';
 import type { Polygon, Shape } from '../types';
 
-export type DraggingState<S extends Polygon> = {
+// TODO(burdon): Remove.
+export type LinkingState<S extends Polygon> = {
   container: HTMLElement;
   shape: S;
   anchor?: string;
@@ -56,11 +58,10 @@ export type EditorContextType = {
   snapToGrid: boolean;
   setSnapToGrid: Dispatch<SetStateAction<boolean>>;
 
-  dragging?: DraggingState<any>;
-  setDragging: Dispatch<SetStateAction<DraggingState<any> | undefined>>;
-
-  linking?: DraggingState<any>;
-  setLinking: Dispatch<SetStateAction<DraggingState<any> | undefined>>;
+  monitor: DragMonitor;
+  // TODO(burdon): Remove.
+  linking?: LinkingState<any>;
+  setLinking: Dispatch<SetStateAction<LinkingState<any> | undefined>>;
 
   editing?: EditingState<any>;
   setEditing: Dispatch<SetStateAction<EditingState<any> | undefined>>;
