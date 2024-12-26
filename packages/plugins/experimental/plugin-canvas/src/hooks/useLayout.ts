@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type GraphModel, type GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { type Point, type Rect } from '@dxos/react-ui-canvas';
 
+import { useEditorContext } from './useEditorContext';
 import { distance, findClosestIntersection, getNormals, getRect } from '../layout';
 import { createPath } from '../shapes';
-import { type Polygon, type Shape } from '../types';
+import { isPolygon, type Polygon, type Shape } from '../types';
 
 export type Layout = {
   shapes: Shape[];
@@ -17,24 +17,42 @@ export type Layout = {
 /**
  * Generate layout.
  */
-export const useLayout = (graph: GraphModel<GraphNode<Shape>>, dragging?: Polygon, debug?: boolean): Layout => {
+export const useLayout = (dragging?: Polygon): Layout => {
+  const { graph, registry } = useEditorContext();
   const shapes: Shape[] = [];
 
-  // Layout nodes.
-  graph.nodes.forEach(({ data: shape }) => {
-    shapes.push(shape);
-  });
-
   // Layout edges.
-  graph.edges.forEach(({ id, source, target, data }) => {
-    const { center: p1, bounds: r1 } = getNodeBounds(dragging, graph.getNode(source)) ?? {};
-    const { center: p2, bounds: r2 } = getNodeBounds(dragging, graph.getNode(target)) ?? {};
+  graph.edges.forEach(({ id, source: _source, target: _target, data }) => {
+    const source = graph.getNode(_source);
+    const target = graph.getNode(_target);
+    if (!source || !target || !isPolygon(source.data) || !isPolygon(target.data)) {
+      return;
+    }
+
+    const { center: p1, bounds: r1 } = getNodeBounds(source.data, dragging) ?? {};
+    const { center: p2, bounds: r2 } = getNodeBounds(target.data, dragging) ?? {};
     if (!p1 || !p2) {
       return;
     }
 
-    invariant(r1 && r2);
+    // TODO(burdon): Custom handling of anchors.
+    if (data) {
+      // TODO(burdon): Cache anchor positions (runtime representation of shapes and paths).
+      const sourceAnchors = registry
+        .getShape(source.data.type)
+        ?.getAnchors?.(source.data, dragging?.id === source.data.id ? dragging.center : undefined);
+      const targetAnchors = registry
+        .getShape(target.data.type)
+        ?.getAnchors?.(target.data, dragging?.id === target.data.id ? dragging.center : undefined);
+      const sourceAnchor = sourceAnchors?.['#output'];
+      const targetAnchor = targetAnchors?.[data.property];
+      if (sourceAnchor && targetAnchor) {
+        shapes.push(createPath({ id, points: [sourceAnchor.pos, targetAnchor.pos] }));
+      }
+      return;
+    }
 
+    invariant(r1 && r2);
     let points: Point[] = [];
     const d = distance(p1, p2);
     if (d > 256) {
@@ -54,32 +72,37 @@ export const useLayout = (graph: GraphModel<GraphNode<Shape>>, dragging?: Polygo
       createPath({
         id,
         points,
-        // start: 'circle',
+        start: 'circle',
         end: 'arrow-end',
       }),
     );
+  });
+
+  // Layout nodes.
+  graph.nodes.forEach(({ data: shape }) => {
+    shapes.push(shape);
   });
 
   return { shapes };
 };
 
 const getNodeBounds = (
+  shape: Polygon | undefined,
   dragging: Polygon | undefined,
-  node: GraphNode<Shape> | undefined,
 ): { center: Point; bounds: Rect } | undefined => {
-  if (!node) {
+  if (!shape) {
     return undefined;
   }
 
-  if (dragging?.id === node.id) {
+  if (dragging?.id === shape.id) {
     return {
       center: dragging.center,
       bounds: getRect(dragging.center, dragging.size),
     };
   } else {
     return {
-      center: node.data.center,
-      bounds: getRect(node.data.center, node.data.size),
+      center: shape.center,
+      bounds: getRect(shape.center, shape.size),
     };
   }
 };

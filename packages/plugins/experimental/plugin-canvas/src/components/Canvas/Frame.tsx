@@ -10,7 +10,7 @@ import React, { type FC, type MouseEventHandler, useEffect, useMemo, useRef, use
 import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
-import { Anchor, getAnchors } from './Anchor';
+import { Anchor } from './Anchor';
 import { DATA_SHAPE_ID, type ShapeComponentProps, shapeAttrs } from './Shape';
 import { type DragDropPayload, useEditorContext } from '../../hooks';
 import { getBoundsProperties } from '../../layout';
@@ -51,10 +51,9 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
       dropTargetForElements({
         element: ref.current,
         getData: () => ({ type: 'frame', shape }) satisfies DragDropPayload,
+        canDrop: () => false,
         onDragEnter: () => linking && setHover(true),
         onDragLeave: () => setHover(false),
-        // getIsSticky: () => true,
-        // canDrop: () => true,
       }),
       draggable({
         element: ref.current,
@@ -81,12 +80,10 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
   useEffect(() => setHover(false), [linking]);
 
   // Custom anchors.
-  // TODO(burdon): Refresh when properties changed.
-  const anchors = useMemo<Anchor[]>(() => {
-    return showAnchors === false
-      ? []
-      : registry.getShape(shape.type)?.getAnchors?.(shape, linking) ?? getAnchors(shape, linking);
-  }, [shape, hover, showAnchors]);
+  const anchors = useMemo(
+    () => registry.getShape(shape.type)?.getAnchors?.(shape) ?? [],
+    [shape.center, shape.size.height],
+  );
 
   const clickTimer = useRef<number>();
   const handleClick: MouseEventHandler<HTMLDivElement> = (ev) => {
@@ -145,7 +142,7 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
 
       {/* Anchors. */}
       <div>
-        {anchors.map(({ anchor, pos }) => (
+        {Object.entries(anchors).map(([anchor, { pos }]) => (
           <Anchor key={anchor} id={anchor} shape={shape} scale={scale} pos={pos} onMouseLeave={() => setHover(false)} />
         ))}
       </div>

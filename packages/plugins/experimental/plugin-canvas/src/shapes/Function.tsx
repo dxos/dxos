@@ -5,9 +5,9 @@
 import React from 'react';
 
 import { S } from '@dxos/echo-schema';
-import { Icon, IconButton, type IconButtonProps } from '@dxos/react-ui';
+import { Icon, IconButton } from '@dxos/react-ui';
 
-import { type ShapeComponentProps, type ShapeDef } from '../components';
+import { type Anchor, type ShapeComponentProps, type ShapeDef } from '../components';
 import { useEditorContext } from '../hooks';
 import { pointAdd } from '../layout';
 import { createId } from '../testing';
@@ -51,11 +51,12 @@ export const createFunction = ({ id, ...rest }: CreateFunctionProps): FunctionSh
   ...rest,
 });
 
+const minHeight = 64;
 const rowHeight = 20;
 const maxProperties = 8;
 
 export const FunctionComponent = ({ shape }: ShapeComponentProps<FunctionShape>) => {
-  const { actionHandler } = useEditorContext();
+  const { actionHandler, repaint } = useEditorContext();
 
   // TODO(burdon): Position of anchors.
   // console.log(shape.properties);
@@ -64,21 +65,23 @@ export const FunctionComponent = ({ shape }: ShapeComponentProps<FunctionShape>)
     void actionHandler?.({ type: 'run', id: shape.id });
   };
 
-  const handleAdd: IconButtonProps['onClick'] = (ev) => {
-    ev.stopPropagation(); // TODO(burdon): Prevent select.
-    // TODO(burdon): Not reactive when pushed or spliced.
+  const handleAdd = () => {
     if (shape.properties.length < maxProperties) {
       shape.properties.push({ name: `prop-${shape.properties.length + 1}`, type: 'string' });
-      shape.size.height += rowHeight; // TODO(burdon): Trigger layout. Snap to size.
+      shape.size.height = minHeight + shape.properties.length * rowHeight;
+      // TODO(burdon): Not reactive when pushed or spliced?
+      repaint();
     }
   };
 
+  // TODO(burdon): Potentially delete link.
   const handleDelete = (name: string) => {
-    shape.size.height -= rowHeight;
     shape.properties.splice(
       shape.properties.findIndex((p) => p.name === name),
       1,
     );
+    shape.size.height = minHeight + shape.properties.length * rowHeight;
+    repaint();
   };
 
   return (
@@ -106,22 +109,27 @@ export const functionShape: ShapeDef<FunctionShape> = {
   type: 'function',
   icon: 'ph--function--regular',
   component: FunctionComponent,
-  create: () => createFunction({ id: createId(), center: { x: 0, y: 0 }, size: { width: 128, height: 128 } }),
-  getAnchors: ({ id, center, size, properties }, linking) => {
-    return [
-      {
-        shape: id,
-        anchor: '#output', // TODO(burdon): Const.
-        pos: pointAdd(center, { x: size.width / 2, y: 0 }),
+  create: () => createFunction({ id: createId(), center: { x: 0, y: 0 }, size: { width: 128, height: 80 } }),
+  getAnchors: ({ id, center: _center, size, properties }, current) => {
+    const center = current ?? _center;
+    return properties.reduce(
+      (map, { name }, i) => {
+        map[name] = {
+          shape: id,
+          pos: pointAdd(center, {
+            x: -size.width / 2,
+            y: size.height / 2 - (properties.length * rowHeight - 2) + i * rowHeight,
+          }),
+        };
+
+        return map;
       },
-      ...properties.map(({ name }, i) => ({
-        shape: id,
-        anchor: name,
-        pos: pointAdd(center, {
-          x: -size.width / 2,
-          y: size.height / 2 - (properties.length * rowHeight - 2) + i * rowHeight,
-        }),
-      })),
-    ];
+      {
+        '#output': {
+          shape: id,
+          pos: pointAdd(center, { x: size.width / 2, y: 0 }),
+        },
+      } as Record<string, Anchor>,
+    );
   },
 };

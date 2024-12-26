@@ -35,6 +35,7 @@ export type EditorContextType = {
   registry: ShapeRegistry;
 
   overlaySvg: RefObject<SVGSVGElement>;
+  repaint: () => void;
 
   actionHandler: ActionHandler | undefined;
   setActionHandler: (cb: ActionHandler | undefined) => void;

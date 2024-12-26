@@ -30,18 +30,20 @@
 - [x] Shape registry.
   - [x] Custom frames.
   - [x] Custom anchors.
-  - #####
-  - [ ] Pluggable drag/drop logic; e.g., canDrop, etc.
-  - [ ] Prevent drag/drop on Function body.
-  - [ ] Anchor target.
-  - [ ] Create data structure for link on drop (useDragMonitor); e.g., property in edge type.
-  - [ ] Connect paths to anchors; prevent multiple connections; directional.
-  - [ ] Select/edit.
+  - [ ] Shape def should be a class whose instances are cached by the layout and passed to the react function.
+  - [ ] Pluggable drag/drop logic: determines which drag/drop targets are active; replaces current dragging/linking state.
+  - [ ] Create data structure for link on drop (useDragMonitor); custom typed property in edge type.
+  - [ ] Bezier connectors.
+  - [ ] Select/edit Rectangle/ellipse/function name.
+  - [ ] Delete link when deleting anchor.
+  - [ ] Prevent input anchors being used multiple times (custom rule).
+  - [ ] Loop back path if anchors are not facing each other.
   - [ ] Green anchors if match.
-- [ ] Auto-size triggers layout.
+  - [ ] Cache layout.
+- [ ] State machine (local implementation); run mode.
 - [ ] Logic gates (AND, etc.)
 - [ ] Triggers (Timer, Query, etc.)
-- [ ] State machine (local implementation); run mode.
+- [ ] Rename properties.
 
 ## Phase 3:
 - [ ] Group/collapse nodes; hierarchical graph editor. 

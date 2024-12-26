@@ -2,19 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { FC } from 'react';
+import { type Point } from '@antv/layout';
+import { type FC } from 'react';
 
 import { type Anchor } from './Anchor';
 import { type ShapeComponentProps } from './Shape';
-import { type DraggingState } from '../../hooks';
 import { type Polygon } from '../../types';
 
+// TODO(burdon): Create abstract base class.
 export type ShapeDef<S extends Polygon> = {
   type: string;
   icon: string;
   component: FC<ShapeComponentProps<S>>;
   create: () => S;
-  getAnchors?: (shape: S, linking?: DraggingState<S>) => Anchor[];
+  getAnchors?: (shape: S, center?: Point) => Record<string, Anchor>;
 };
 
 export class ShapeRegistry {

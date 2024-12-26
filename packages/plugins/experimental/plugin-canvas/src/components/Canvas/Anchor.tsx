@@ -13,7 +13,7 @@ import { type Dimension, type Point } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
 import { DATA_SHAPE_ID } from './Shape';
-import { type DraggingState, type DragDropPayload, useEditorContext } from '../../hooks';
+import { type DragDropPayload, useEditorContext } from '../../hooks';
 import { getBoundsProperties, pointAdd } from '../../layout';
 import { type Polygon } from '../../types';
 import { styles } from '../styles';
@@ -23,8 +23,6 @@ const defaultSize: Dimension = { width: 12, height: 12 };
 export type Anchor = {
   /** Parent shape id. */
   shape: string;
-  /** Anchor id (e.g., property). */
-  anchor: string;
   /** Anchor center. */
   pos: Point;
 };
@@ -38,14 +36,15 @@ export const defaultAnchors: Record<string, Point> = {
 
 export const getAnchors = (
   { id, center, size: { width, height } }: Polygon,
-  linking?: DraggingState<any>,
   anchors: Record<string, Point> = defaultAnchors,
-): Anchor[] => {
-  return Object.entries(anchors)
-    .filter(([anchor]) => !linking || linking.anchor === anchor)
-    .map(([anchor, pos]) => {
-      return { shape: id, anchor, pos: pointAdd(center, { x: (pos.x * width) / 2, y: (pos.y * height) / 2 }) };
-    });
+): Record<string, Anchor> => {
+  return Object.entries(anchors).reduce(
+    (map, [anchor, pos]) => {
+      map[anchor] = { shape: id, pos: pointAdd(center, { x: (pos.x * width) / 2, y: (pos.y * height) / 2 }) };
+      return map;
+    },
+    {} as Record<string, Anchor>,
+  );
 };
 
 export type AnchorProps = {
@@ -74,13 +73,10 @@ export const Anchor = ({ id, shape, pos, size = defaultSize, scale = 1, onMouseL
       dropTargetForElements({
         element: ref.current,
         getData: () => ({ type: 'anchor', shape, anchor: id }) satisfies DragDropPayload,
+        canDrop: () => linking?.shape.id !== shape.id,
         onDragEnter: () => setHover(true),
         onDragLeave: () => setHover(false),
         onDrop: () => setHover(false),
-        canDrop: () => {
-          // TODO(burdon): Don't allow if slow is full.
-          return true;
-        },
       }),
       draggable({
         element: ref.current,
@@ -101,7 +97,7 @@ export const Anchor = ({ id, shape, pos, size = defaultSize, scale = 1, onMouseL
         },
       }),
     );
-  }, [pos]);
+  }, [linking, pos]);
 
   return (
     <>

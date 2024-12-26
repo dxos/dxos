@@ -39,7 +39,7 @@ export const Canvas = () => {
 };
 
 export const CanvasContent = () => {
-  const { id, overlaySvg, options, debug, graph, showGrid, dragging, selection } = useEditorContext();
+  const { id, overlaySvg, options, debug, showGrid, dragging, selection } = useEditorContext();
   const { root, styles: projectionStyles, setProjection, scale, offset } = useProjection();
 
   // Actions.
@@ -68,7 +68,7 @@ export const CanvasContent = () => {
   const { frameDragging, overlay } = useDragMonitor(root);
 
   // Layout.
-  const layout = useLayout(graph, frameDragging, debug);
+  const layout = useLayout(frameDragging);
 
   // Selection.
   const shapesRef = useRef<HTMLDivElement>(null);
@@ -91,9 +91,6 @@ export const CanvasContent = () => {
 
   return (
     <>
-      {/* Background. */}
-      <Background />
-
       {/* Grid. */}
       {showGrid && <Grid id={id} size={options.gridSize} scale={scale} offset={offset} classNames={styles.gridLine} />}
 
@@ -131,15 +128,6 @@ export const CanvasContent = () => {
         </svg>
       </div>
     </>
-  );
-};
-
-const Background = () => {
-  return (
-    <div
-      {...testId<TestId>('dx-background')}
-      className={mx('absolute inset-0 _bg-base _attention-surface', eventsNone)}
-    />
   );
 };
 

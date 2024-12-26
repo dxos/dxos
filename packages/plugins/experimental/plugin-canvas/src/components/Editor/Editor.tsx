@@ -10,6 +10,7 @@ import React, {
   useMemo,
   useRef,
   useState,
+  useCallback,
 } from 'react';
 
 import { GraphModel, type GraphNode } from '@dxos/graph';
@@ -85,6 +86,10 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
     const [showGrid, setShowGrid] = useState(_showGrid);
     const [snapToGrid, setSnapToGrid] = useState(_snapToGrid);
 
+    // Repaint.
+    const [, forceUpdate] = useState({});
+    const repaint = useCallback(() => forceUpdate({}), []);
+
     // Canvas layout.
     const overlaySvg = useRef<SVGSVGElement>(null);
 
@@ -106,6 +111,7 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
       selection,
 
       overlaySvg,
+      repaint,
 
       actionHandler,
       setActionHandler: (handler) => setActionHandler(() => handler),

@@ -8,7 +8,6 @@ export type TestId =
   | 'dx-canvas'
   | 'dx-layout'
   | 'dx-canvas-grid'
-  | 'dx-background'
   | 'dx-overlays'
   | 'dx-overlay-bullets'
   | 'dx-ui';

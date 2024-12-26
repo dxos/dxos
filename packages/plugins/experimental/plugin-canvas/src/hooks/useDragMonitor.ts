@@ -150,22 +150,20 @@ export const useDragMonitor = (el: HTMLElement | null) => {
 
               switch (target?.type) {
                 case 'frame': {
-                  const { shape } = target;
                   await actionHandler?.({
                     type: 'link',
-                    source: target.shape.id,
-                    target: shape.id,
+                    source: data.shape.id,
+                    target: target.shape.id,
                   });
                   break;
                 }
 
                 case 'anchor': {
-                  const { shape, anchor } = target;
                   await actionHandler?.({
                     type: 'link',
-                    source: target.shape.id,
-                    target: shape.id,
-                    data: { property: anchor },
+                    source: data.shape.id,
+                    target: target.shape.id,
+                    data: { property: target.anchor },
                   });
                   break;
                 }
