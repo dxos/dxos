@@ -45,7 +45,6 @@ export type ShapeComponentProps<S extends Shape> = PropsWithChildren<
   ThemedClassName<{
     shape: S;
     debug?: boolean;
-    scale: number; // TODO(burdon): Remove.
     selected?: boolean;
     onSelect?: (id: string, shift: boolean) => void;
   }>

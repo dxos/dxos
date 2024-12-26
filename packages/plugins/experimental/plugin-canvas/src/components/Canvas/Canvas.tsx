@@ -4,10 +4,12 @@
 
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
 import { Canvas as NativeCanvas, Grid, type Rect, testId, useWheel, useProjection } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
+import { FrameDragPreview } from './Frame';
 import { getShapeBounds } from './Shape';
 import { Shapes } from './Shapes';
 import {
@@ -36,8 +38,9 @@ export const Canvas = () => {
 };
 
 export const CanvasContent = () => {
-  const { id, overlaySvg, options, debug, showGrid, selection } = useEditorContext();
+  const { id, monitor, overlaySvg, options, debug, showGrid, selection } = useEditorContext();
   const { root, styles: projectionStyles, setProjection, scale, offset } = useProjection();
+  const { container, shape: dragging } = monitor.state('tool').value;
 
   // Actions.
   useActionHandler();
@@ -103,6 +106,16 @@ export const CanvasContent = () => {
         <div className='absolute' style={projectionStyles}>
           {overlay && <PathComponent debug={debug} scale={scale} shape={overlay} />}
         </div>
+
+        {/* Tool dragging. */}
+        {container &&
+          dragging &&
+          createPortal(
+            <div style={projectionStyles}>
+              <FrameDragPreview shape={dragging} />
+            </div>,
+            container,
+          )}
 
         {/* Misc overlay. */}
         <svg
