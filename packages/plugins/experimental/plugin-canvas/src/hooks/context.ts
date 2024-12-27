@@ -13,13 +13,6 @@ import { type ActionHandler } from '../actions';
 import { type ShapeRegistry } from '../components';
 import type { Polygon, Shape } from '../types';
 
-// TODO(burdon): Remove.
-export type LinkingState<S extends Polygon> = {
-  container: HTMLElement;
-  shape: S;
-  anchor?: string;
-};
-
 export type EditingState<S extends Polygon> = {
   shape: S;
 };
@@ -36,12 +29,6 @@ export type EditorContextType = {
   options: EditorOptions;
   registry: ShapeRegistry;
 
-  overlaySvg: RefObject<SVGSVGElement>;
-  repaint: () => void;
-
-  actionHandler: ActionHandler | undefined;
-  setActionHandler: (cb: ActionHandler | undefined) => void;
-
   debug: boolean;
   setDebug: Dispatch<SetStateAction<boolean>>;
 
@@ -51,20 +38,22 @@ export type EditorContextType = {
   showGrid: boolean;
   setShowGrid: Dispatch<SetStateAction<boolean>>;
 
+  snapToGrid: boolean;
+  setSnapToGrid: Dispatch<SetStateAction<boolean>>;
+
   graph: GraphModel<GraphNode<Shape>>;
   clipboard: GraphModel<GraphNode<Shape>>;
   selection: SelectionModel;
 
-  snapToGrid: boolean;
-  setSnapToGrid: Dispatch<SetStateAction<boolean>>;
-
   monitor: DragMonitor;
-  // TODO(burdon): Remove.
-  linking?: LinkingState<any>;
-  setLinking: Dispatch<SetStateAction<LinkingState<any> | undefined>>;
-
   editing?: EditingState<any>;
   setEditing: Dispatch<SetStateAction<EditingState<any> | undefined>>;
+
+  actionHandler: ActionHandler | undefined;
+  setActionHandler: (cb: ActionHandler | undefined) => void;
+
+  overlayRef: RefObject<SVGSVGElement>;
+  repaint: () => void;
 };
 
 /**

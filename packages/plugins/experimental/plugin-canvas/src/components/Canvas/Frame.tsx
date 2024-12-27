@@ -15,7 +15,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { Anchor } from './Anchor';
 import { DATA_SHAPE_ID, type ShapeComponentProps, shapeAttrs } from './Shape';
 import { type DragDropPayload, useEditorContext } from '../../hooks';
-import { getBoundsProperties } from '../../layout';
+import { getBoundsProperties, getInputPoint } from '../../layout';
 import { type Polygon } from '../../types';
 import { ReadonlyTextBox, type TextBoxProps } from '../TextBox';
 import { styles } from '../styles';
@@ -38,10 +38,13 @@ export type FrameProps = ShapeComponentProps<Polygon> & {
  * Draggable Frame around polygons.
  */
 export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
-  const { classNames, shape, scale, selected, onSelect } = baseProps;
-  const { debug, monitor, linking, editing, setEditing, registry } = useEditorContext();
-  const { styles: projectionStyles } = useProjection();
-  const { container } = monitor.state('frame', shape.id).value;
+  const { classNames, shape, selected, onSelect } = baseProps;
+  const { debug, monitor, registry, editing, setEditing } = useEditorContext();
+  const { root, projection, styles: projectionStyles } = useProjection();
+  const { container } = monitor.state(
+    ({ type, shape: dragging }) => type === 'frame' && dragging?.id === shape.id,
+  ).value;
+
   const isEditing = editing?.shape.id === shape.id;
   const [hover, setHover] = useState(false);
 
@@ -55,7 +58,7 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
         element: ref.current,
         getData: () => ({ type: 'frame', shape }) satisfies DragDropPayload,
         canDrop: () => false,
-        onDragEnter: () => linking && setHover(true),
+        onDragEnter: () => setHover(true),
         onDragLeave: () => setHover(false),
       }),
       draggable({
@@ -65,20 +68,28 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
           setCustomNativeDragPreview({
             nativeSetDragImage,
             getOffset: () => {
-              return { x: (scale * shape.size.width) / 2, y: (scale * shape.size.height) / 2 };
+              return { x: (projection.scale * shape.size.width) / 2, y: (projection.scale * shape.size.height) / 2 };
             },
             render: ({ container }) => {
-              monitor.drag({ container, type: 'frame', shape });
+              monitor.preview({ container, type: 'frame', shape });
             },
           });
         },
-        onDrop: () => monitor.drop(),
+        onDrag: ({ location }) => {
+          const [center] = projection.toModel([getInputPoint(root, location.current.input)]);
+          monitor.drag({ shape: { ...shape, center } });
+        },
+        onDrop: ({ location }) => {
+          const [center] = projection.toModel([getInputPoint(root, location.current.input)]);
+          shape.center = center;
+          monitor.drop();
+        },
       }),
     );
-  }, [scale, shape, linking]);
+  }, [monitor, root, projection, shape]);
 
   // Reset hovering state once dragging ends.
-  useEffect(() => setHover(false), [linking]);
+  // useEffect(() => setHover(false), []);
 
   // Custom anchors.
   const anchors = useMemo(
@@ -111,7 +122,7 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
 
   return (
     <>
-      <div className={mx(container && 'opacity-30')}>
+      <div className={mx(container && 'opacity-0')}>
         <div
           {...shapeAttrs(shape)}
           ref={ref}
@@ -145,14 +156,7 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
         {/* Anchors. */}
         <div>
           {Object.entries(anchors).map(([anchor, { pos }]) => (
-            <Anchor
-              key={anchor}
-              id={anchor}
-              shape={shape}
-              scale={scale}
-              pos={pos}
-              onMouseLeave={() => setHover(false)}
-            />
+            <Anchor key={anchor} id={anchor} shape={shape} pos={pos} onMouseLeave={() => setHover(false)} />
           ))}
         </div>
       </div>
@@ -161,7 +165,7 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
       {container &&
         createPortal(
           <div style={projectionStyles}>
-            <FrameDragPreview debug={debug} scale={scale} shape={shape} />
+            <FrameDragPreview debug={debug} shape={shape} />
           </div>,
           container,
         )}

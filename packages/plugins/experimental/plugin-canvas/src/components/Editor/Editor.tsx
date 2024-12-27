@@ -25,7 +25,6 @@ import {
   EditorContext,
   type EditorContextType,
   type EditorOptions,
-  type LinkingState,
   SelectionModel,
 } from '../../hooks';
 import { defaultShapes } from '../../shapes';
@@ -92,11 +91,10 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
     const repaint = useCallback(() => forceUpdate({}), []);
 
     // Canvas layout.
-    const overlaySvg = useRef<SVGSVGElement>(null);
+    const overlayRef = useRef<SVGSVGElement>(null);
 
     // Editor state.
     const monitor = useMemo(() => new DragMonitor(), []);
-    const [linking, setLinking] = useState<LinkingState<any>>(); // TODO(burdon): Remove.
     const [editing, setEditing] = useState<EditingState<any>>();
 
     // Actions.
@@ -111,12 +109,6 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
       clipboard,
       selection,
 
-      overlaySvg,
-      repaint,
-
-      actionHandler,
-      setActionHandler: (handler) => setActionHandler(() => handler),
-
       debug,
       gridSize,
       showGrid,
@@ -127,10 +119,14 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
       setSnapToGrid,
 
       monitor,
-      linking,
       editing,
-      setLinking,
       setEditing,
+
+      actionHandler,
+      setActionHandler: (handler) => setActionHandler(() => handler),
+
+      overlayRef,
+      repaint,
     };
 
     // Controller.

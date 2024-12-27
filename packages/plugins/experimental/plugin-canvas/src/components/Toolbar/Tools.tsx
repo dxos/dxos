@@ -42,25 +42,25 @@ const Tool = ({ type, icon }: ToolProps) => {
     return draggable({
       element: ref.current,
       getInitialData: () => ({ type: 'tool', tool: type }) satisfies DragDropPayload,
-      onGenerateDragPreview: ({ nativeSetDragImage }) => {
+      onGenerateDragPreview: ({ nativeSetDragImage, source: { data } }) => {
         setCustomNativeDragPreview({
           nativeSetDragImage,
           getOffset: () => {
-            // TODO(burdon): Based on type.
+            // TODO(burdon): Get size from data.
+            // TODO(burdon): Adjust for scale (need to get projection).
             return { x: 64, y: 32 };
           },
           render: ({ container }) => {
             const def = registry.getShape(type);
             if (def) {
               const shape: Polygon = def.create();
-              monitor.drag({ container, type: 'tool', shape });
+              monitor.preview({ container, type: 'tool', shape });
             }
           },
         });
       },
-      onDrop: () => monitor.drop(),
     });
-  }, []);
+  }, [monitor]);
 
   return (
     <div ref={ref} className='flex'>

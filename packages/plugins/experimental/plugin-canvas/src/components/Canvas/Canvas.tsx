@@ -38,9 +38,9 @@ export const Canvas = () => {
 };
 
 export const CanvasContent = () => {
-  const { id, monitor, overlaySvg, options, debug, showGrid, selection } = useEditorContext();
+  const { id, debug, monitor, overlayRef, options, showGrid, selection } = useEditorContext();
   const { root, styles: projectionStyles, setProjection, scale, offset } = useProjection();
-  const { container, shape: dragging } = monitor.state('tool').value;
+  const { container, shape: dragging } = monitor.state(({ type }) => type === 'tool').value;
 
   // Actions.
   useActionHandler();
@@ -66,12 +66,12 @@ export const CanvasContent = () => {
 
   // Dragging and linking.
   const { overlay } = useDragMonitor(root);
+  const shapesRef = useRef<HTMLDivElement>(null);
 
   // Layout.
   const layout = useLayout();
 
   // Selection.
-  const shapesRef = useRef<HTMLDivElement>(null);
   const selectionRect = useSelectionEvents(root, ({ bounds, shift }) => {
     // NOTE: bounds will be undefined if clicking on an object.
     if (bounds === null) {
@@ -95,7 +95,7 @@ export const CanvasContent = () => {
       {showGrid && <Grid id={id} size={options.gridSize} scale={scale} offset={offset} classNames={styles.gridLine} />}
 
       {/* Layout. */}
-      <Shapes ref={shapesRef} {...testId<TestId>('dx-layout', true)} classNames='absolute' layout={layout} />
+      <Shapes {...testId<TestId>('dx-layout', true)} ref={shapesRef} layout={layout} />
 
       {/* Overlays. */}
       <div {...testId<TestId>('dx-overlays')} className={mx(eventsNone)}>
@@ -104,7 +104,7 @@ export const CanvasContent = () => {
 
         {/* Linking overlay. */}
         <div className='absolute' style={projectionStyles}>
-          {overlay && <PathComponent debug={debug} scale={scale} shape={overlay} />}
+          {overlay && <PathComponent debug={debug} shape={overlay} />}
         </div>
 
         {/* Tool dragging. */}
@@ -119,7 +119,7 @@ export const CanvasContent = () => {
 
         {/* Misc overlay. */}
         <svg
-          ref={overlaySvg}
+          ref={overlayRef}
           className='absolute overflow-visible pointer-events-none'
           style={projectionStyles}
           width={1}

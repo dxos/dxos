@@ -19,7 +19,7 @@ import { isPolygon } from '../types';
 
 // TODO(burdon): Handle multiple actions.
 export const useActionHandler = () => {
-  const { options, overlaySvg, graph, clipboard, selection, setDebug, setShowGrid, setSnapToGrid, setActionHandler } =
+  const { options, overlayRef, graph, clipboard, selection, setDebug, setShowGrid, setSnapToGrid, setActionHandler } =
     useEditorContext();
   const { root, projection, setProjection } = useProjection();
 
@@ -206,7 +206,7 @@ export const useActionHandler = () => {
 
         case 'run': {
           const { id = selection.selected.value[0] } = action;
-          const g = overlaySvg.current!.querySelector<SVGGElement>(
+          const g = overlayRef.current!.querySelector<SVGGElement>(
             `g[${DATA_TEST_ID}="${'dx-overlay-bullets' satisfies TestId}"]`,
           );
           if (g && id) {
@@ -222,5 +222,5 @@ export const useActionHandler = () => {
     };
 
     setActionHandler(actionHandler);
-  }, [root, overlaySvg, options, graph, selection, projection]);
+  }, [root, overlayRef, options, graph, selection, projection]);
 };

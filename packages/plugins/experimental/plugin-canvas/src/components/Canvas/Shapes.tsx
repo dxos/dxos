@@ -20,7 +20,6 @@ export const Shapes = forwardRef<HTMLDivElement, ShapesProps>(
   ({ classNames, layout: { shapes }, ...props }, forwardRef) => {
     const { debug, selection } = useEditorContext();
     const { styles: projectionStyles } = useProjection();
-    const { scale } = useProjection();
 
     const handleSelection = useCallback(
       (id: string, shift: boolean) => selection.toggleSelected([id], shift),
@@ -35,13 +34,12 @@ export const Shapes = forwardRef<HTMLDivElement, ShapesProps>(
           </defs>
         </svg>
 
-        <div {...props} ref={forwardRef} style={projectionStyles} className={mx(classNames)}>
+        <div {...props} ref={forwardRef} style={projectionStyles} className={mx('absolute', classNames)}>
           {shapes.map((shape) => (
             <ShapeComponent
               key={shape.id}
               debug={debug}
               shape={shape}
-              scale={scale}
               selected={selection.contains(shape.id)}
               onSelect={handleSelection}
             />

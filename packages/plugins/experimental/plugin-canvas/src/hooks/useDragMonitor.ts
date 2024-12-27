@@ -16,10 +16,10 @@ import { log } from '@dxos/log';
 import { type Point, useProjection } from '@dxos/react-ui-canvas';
 
 import { useEditorContext } from './useEditorContext';
+import { createLinkOverlay } from './useLayout';
 import { useSnap } from './useSnap';
-import { type Anchor } from '../components';
-import { findClosestIntersection, getInputPoint, getRect } from '../layout';
-import { createPath, createRectangle } from '../shapes';
+import { getInputPoint } from '../layout';
+import { createRectangle } from '../shapes';
 import { createId, itemSize } from '../testing';
 import { type Polygon, type PathShape } from '../types';
 
@@ -50,7 +50,8 @@ export type DraggingState = {
   container?: HTMLElement;
   type?: string;
   shape?: Polygon;
-  anchor?: Anchor;
+  anchor?: string; // TODO(burdon): Change to type?
+  pos?: Point;
 };
 
 const NULL = signal<DraggingState>({});
@@ -66,18 +67,22 @@ export class DragMonitor {
   /**
    *
    */
-  // TODO(burdon): Pull out id.
-  state(type?: string, id?: string): Signal<DraggingState> {
-    return (!type || this._state?.value.type === type) && (!id || this._state?.value.shape?.id === id)
-      ? this._state
-      : NULL;
+  state(test?: (state: DraggingState) => boolean): Signal<DraggingState> {
+    return !test || test(this._state.value) ? this._state : NULL;
   }
 
   /**
    * Called from setCustomNativeDragPreview.render()
    */
-  drag(state: DraggingState) {
+  preview(state: DraggingState) {
     this._state.value = state;
+  }
+
+  /**
+   *
+   */
+  drag(state: Omit<DraggingState, 'container'>) {
+    this._state.value = { ...this._state.value, ...state };
   }
 
   /**
@@ -107,12 +112,12 @@ export class DragMonitor {
  * Monitor frames and anchors being dragged.
  */
 export const useDragMonitor = (el: HTMLElement | null) => {
-  const { graph, selection, monitor, linking, setLinking, actionHandler } = useEditorContext();
+  const { graph, selection, monitor, actionHandler } = useEditorContext();
   const { projection } = useProjection();
   const snapPoint = useSnap();
 
-  const { shape } = monitor.state().value;
-  const [overlay, setOverlay] = useState<PathShape>();
+  const { shape } = monitor.state().value; // TODO(burdon): Remove.
+  const [overlay, setOverlay] = useState<PathShape>(); // TODO(burdon): Remove.
   const cancelled = useRef(false);
 
   const lastPointRef = useRef<Point>();
@@ -120,32 +125,18 @@ export const useDragMonitor = (el: HTMLElement | null) => {
     return monitorForElements({
       onDrag: ({ source, location }) => {
         invariant(el);
-        const [{ x, y }] = projection.toModel([getInputPoint(el, location.current.input)]);
-        const pos = { x, y };
+        const [pos] = projection.toModel([getInputPoint(el, location.current.input)]);
         const data = source.data as DragDropPayload;
-        if (x !== lastPointRef.current?.x || y !== lastPointRef.current?.y) {
+        if (pos.x !== lastPointRef.current?.x || pos.y !== lastPointRef.current?.y) {
           lastPointRef.current = pos;
           switch (data.type) {
             //
-            // Drag shape.
-            //
-            case 'frame': {
-              // if (dragging) {
-              //   setFrameDragging({ ...data.shape, center: pos });
-              // }
-              break;
-            }
-
-            //
             // Drag anchor.
             //
-            // TODO(burdon): Move to canvas where used.
             case 'anchor': {
-              if (linking) {
-                // TODO(burdon): Get center of anchor. Calculate or cache? Need reference.
-                // console.log(JSON.stringify({ t: Date.now(), data }, null, 2));
-                setOverlay(createLinkOverlay(data.shape, pos));
-              }
+              // TODO(burdon): Move to anchor class.
+              // TODO(burdon): Create path using same logic as layout.
+              setOverlay(createLinkOverlay(data.shape, pos));
               break;
             }
           }
@@ -154,7 +145,6 @@ export const useDragMonitor = (el: HTMLElement | null) => {
 
       onDrop: async ({ source, location }) => {
         if (!cancelled.current) {
-          // TODO(burdon): Adjust for offset on drag?
           invariant(el);
           const [pos] = projection.toModel([getInputPoint(el, location.current.input)]);
           const data = source.data as DragDropPayload;
@@ -170,10 +160,10 @@ export const useDragMonitor = (el: HTMLElement | null) => {
             }
 
             //
-            // Move shape.
+            // Drag from other container.
             //
             case 'frame': {
-              data.shape.center = snapPoint(pos);
+              // data.shape.center = snapPoint(pos);
               // TODO(burdon): Copy from external canvas/component.
               if (!graph.getNode(data.shape.id)) {
                 // graph.addNode({ id: shape.id, data: { ...shape } });
@@ -187,43 +177,40 @@ export const useDragMonitor = (el: HTMLElement | null) => {
             // TODO(burdon): Callbacks to create and link (and determine if can drop).
             //
             case 'anchor': {
-              // TODO(burdon): Doesn't update data.
               const target = findDropTarget(
                 location.current.dropTargets,
                 (data) => data.type === 'frame' || data.type === 'anchor',
               );
-              if (!target) {
+
+              if (target) {
+                switch (target?.type) {
+                  case 'frame': {
+                    await actionHandler?.({ type: 'link', source: data.shape.id, target: target.shape.id });
+                    break;
+                  }
+
+                  case 'anchor': {
+                    await actionHandler?.({
+                      type: 'link',
+                      source: data.shape.id,
+                      target: target.shape.id,
+                      data: { property: target.anchor },
+                    });
+                    break;
+                  }
+                }
+              } else {
                 const id = createId();
                 const shape = createRectangle({ id, center: snapPoint(pos), size: itemSize });
                 await actionHandler?.({ type: 'create', shape });
                 await actionHandler?.({ type: 'link', source: data.shape.id, target: id });
-                return;
               }
 
-              switch (target?.type) {
-                case 'frame': {
-                  await actionHandler?.({ type: 'link', source: data.shape.id, target: target.shape.id });
-                  break;
-                }
-
-                case 'anchor': {
-                  await actionHandler?.({
-                    type: 'link',
-                    source: data.shape.id,
-                    target: target.shape.id,
-                    data: { property: target.anchor },
-                  });
-                  break;
-                }
-              }
               break;
             }
           }
         }
 
-        // setDragging(undefined);
-        // setFrameDragging(undefined);
-        setLinking(undefined);
         setOverlay(undefined);
       },
 
@@ -233,15 +220,9 @@ export const useDragMonitor = (el: HTMLElement | null) => {
         cancelled.current = location.current.dropTargets.length === 0;
       },
     });
-  }, [el, projection, actionHandler, selection, snapPoint, shape, linking]);
+  }, [el, monitor, projection, actionHandler, selection, shape, snapPoint]);
 
   return { overlay };
-};
-
-const createLinkOverlay = (source: Polygon, pos: Point): PathShape | undefined => {
-  const rect = getRect(source.center, source.size);
-  const p1 = findClosestIntersection([pos, source.center], rect) ?? source.center;
-  return createPath({ id: 'link', points: [p1, pos] });
 };
 
 const findDropTarget = (

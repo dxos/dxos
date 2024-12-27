@@ -9,12 +9,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
-import { type Dimension, type Point } from '@dxos/react-ui-canvas';
+import { useProjection, type Dimension, type Point } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
 import { DATA_SHAPE_ID } from './Shape';
 import { type DragDropPayload, useEditorContext } from '../../hooks';
-import { getBoundsProperties, pointAdd } from '../../layout';
+import { getBoundsProperties, getInputPoint, pointAdd } from '../../layout';
 import { type Polygon } from '../../types';
 import { styles } from '../styles';
 
@@ -60,9 +60,11 @@ export type AnchorProps = {
  * Anchor points for attaching links.
  */
 export const Anchor = ({ id, shape, pos, size = defaultSize, scale = 1, onMouseLeave }: AnchorProps) => {
-  const { linking, setLinking } = useEditorContext();
+  const { monitor } = useEditorContext();
+  const { root, projection } = useProjection();
+  const { container, shape: linking } = monitor.state(({ type, anchor }) => type === 'anchor' && anchor === id).value;
+
   const [hover, setHover] = useState(false);
-  const isLinking = linking?.shape.id === shape.id && linking?.anchor === id;
 
   // Dragging.
   // TODO(burdon): ESC to cancel dragging.
@@ -73,7 +75,7 @@ export const Anchor = ({ id, shape, pos, size = defaultSize, scale = 1, onMouseL
       dropTargetForElements({
         element: ref.current,
         getData: () => ({ type: 'anchor', shape, anchor: id }) satisfies DragDropPayload,
-        canDrop: () => linking?.shape.id !== shape.id,
+        canDrop: () => linking?.id !== shape.id,
         onDragEnter: () => setHover(true),
         onDragLeave: () => setHover(false),
         onDrop: () => setHover(false),
@@ -88,16 +90,20 @@ export const Anchor = ({ id, shape, pos, size = defaultSize, scale = 1, onMouseL
               return { x: (scale * size.width) / 2, y: (scale * size.height) / 2 };
             },
             render: ({ container }) => {
-              setLinking({ container, shape, anchor: id });
+              monitor.preview({ container, type: 'anchor', shape, anchor: id });
             },
           });
         },
+        onDrag: ({ location }) => {
+          const [pos] = projection.toModel([getInputPoint(root, location.current.input)]);
+          monitor.drag({ pos });
+        },
         onDrop: ({ location }) => {
-          setLinking(undefined);
+          monitor.drop();
         },
       }),
     );
-  }, [linking, pos]);
+  }, [monitor, root, projection, pos]);
 
   return (
     <>
@@ -105,16 +111,16 @@ export const Anchor = ({ id, shape, pos, size = defaultSize, scale = 1, onMouseL
         ref={ref}
         {...{ [DATA_SHAPE_ID]: shape.id }}
         style={getBoundsProperties({ ...pos, ...size })}
-        className={mx('absolute', styles.anchor, isLinking && 'opacity-0', hover && styles.anchorHover)}
+        className={mx('absolute', styles.anchor, container && 'opacity-0', hover && styles.anchorHover)}
         onMouseLeave={() => onMouseLeave?.()}
       />
 
-      {isLinking &&
+      {container &&
         createPortal(
-          <div style={scale ? { transform: `scale(${scale})` } : undefined}>
+          <div>
             <div style={getBoundsProperties({ ...pos, ...size })} className={mx(styles.anchor)} />
           </div>,
-          linking.container,
+          container,
         )}
     </>
   );

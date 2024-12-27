@@ -8,7 +8,7 @@ import { type Point, type Rect } from '@dxos/react-ui-canvas';
 import { useEditorContext } from './useEditorContext';
 import { distance, findClosestIntersection, getNormals, getRect, pointAdd } from '../layout';
 import { createPath } from '../shapes';
-import { isPolygon, type Polygon, type Shape } from '../types';
+import { isPolygon, type PathShape, type Polygon, type Shape } from '../types';
 
 export type Layout = {
   shapes: Shape[];
@@ -19,7 +19,10 @@ export type Layout = {
  */
 export const useLayout = (): Layout => {
   const { graph, registry, monitor } = useEditorContext();
-  const { shape: dragging } = monitor.state('frame').value;
+  const {
+    value: { shape: dragging },
+  } = monitor.state(({ type }) => type === 'frame');
+
   const shapes: Shape[] = [];
 
   // Layout edges.
@@ -38,7 +41,7 @@ export const useLayout = (): Layout => {
 
     // TODO(burdon): Custom handling of anchors.
     if (data) {
-      // TODO(burdon): Cache anchor positions (runtime representation of shapes and paths).
+      // TODO(burdon): Cache anchor positions? (runtime representation of shapes and paths).
       const getAnchors = (shape: Shape) =>
         registry.getShape(shape.type)?.getAnchors?.(shape, dragging?.id === shape.id ? dragging?.center : undefined);
       const sourceAnchor = getAnchors(source.data)?.['#output'];
@@ -113,4 +116,10 @@ const getNodeBounds = (
       bounds: getRect(shape.center, shape.size),
     };
   }
+};
+
+export const createLinkOverlay = (source: Polygon, pos: Point): PathShape | undefined => {
+  const rect = getRect(source.center, source.size);
+  const p1 = findClosestIntersection([pos, source.center], rect) ?? source.center;
+  return createPath({ id: 'link', points: [p1, pos] });
 };
