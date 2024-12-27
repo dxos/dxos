@@ -19,6 +19,13 @@ const JsonSchemaOrBoolean = S.Union(
   S.Boolean,
 );
 
+export enum EntityKind {
+  Object = 'object',
+  Relation = 'relation',
+}
+
+export const EntityKindSchema = S.Enums(EntityKind);
+
 /**
  * Describes a schema for the JSON-schema objects stored in ECHO.
  * Contains extensions for ECHO (e.g., references).
@@ -47,6 +54,11 @@ const _JsonSchemaType = S.mutable(
      * Comments are ignored when interpreting the schema.
      */
     $comment: S.optional(S.String),
+
+    /**
+     * Defines whether this schema is an object schema or a relation schema.
+     */
+    entityKind: S.optional(EntityKindSchema),
 
     /**
      * Typename of this schema.

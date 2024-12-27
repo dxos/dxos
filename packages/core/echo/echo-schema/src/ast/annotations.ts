@@ -11,6 +11,7 @@ import { type Primitive } from '@dxos/util';
 import { checkIdNotPresentOnSchema } from './schema-validator';
 import { type HasId } from './types';
 import { type BaseObject } from '../types';
+import type { EntityKind } from './json-schema-type';
 
 type ToMutable<T> = T extends BaseObject
   ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
@@ -29,7 +30,9 @@ export const VERSION_REGEX = /^\d+.\d+.\d+$/;
  */
 // TODO(burdon): Reconcile with other types.
 // TODO(burdon): Define as schema with regex patterns above.
+// TODO(dmaretskyi): Rename to represent commonality between objects and relations (e.g. `entity`).
 export type ObjectAnnotation = {
+  kind: EntityKind;
   typename: string;
   version: string;
 };

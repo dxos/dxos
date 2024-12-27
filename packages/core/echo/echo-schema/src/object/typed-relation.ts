@@ -4,16 +4,10 @@
 
 import { S } from '@dxos/effect';
 
-import {
-  EntityKind,
-  type HasId,
-  type ObjectAnnotation,
-  ObjectAnnotationId,
-  TYPENAME_REGEX,
-  VERSION_REGEX,
-} from '../ast';
+import { EntityKind, type HasId, ObjectAnnotationId, TYPENAME_REGEX, VERSION_REGEX } from '../ast';
 import { makeTypedEntityClass, type TypedObjectFields, type TypedObjectOptions } from './common';
 import { getTypename } from './typename';
+import type { ObjectAnnotation } from '../ast/annotations';
 
 /**
  * Definition for an object type that can be stored in an ECHO database.
@@ -22,7 +16,7 @@ import { getTypename } from './typename';
  *
  * In contrast to {@link EchoSchema} this definition is not recorded in the database.
  */
-export interface TypedObject<A = any, I = any> extends S.Schema<A, I> {
+export interface TypedRelation<A = any, I = any> extends S.Schema<A, I> {
   /** Fully qualified type name. */
   readonly typename: string;
 
@@ -35,14 +29,14 @@ export interface TypedObject<A = any, I = any> extends S.Schema<A, I> {
 /**
  * Typed object that could be used as a prototype in class definitions.
  * This is an internal API type.
- * Use {@link TypedObject} for the common use-cases.
+ * Use {@link TypedRelation} for the common use-cases.
  */
-export interface TypedObjectPrototype<A = any, I = any> extends TypedObject<A, I> {
+export interface TypedRelationPrototype<A = any, I = any> extends TypedRelation<A, I> {
   /** Type constructor. */
   new (): HasId & A;
 }
 
-export type TypedObjectProps = {
+export type TypedRelationProps = {
   typename: string;
   version: string;
 
@@ -53,9 +47,9 @@ export type TypedObjectProps = {
 /**
  * Base class factory for typed objects.
  */
-// TODO(burdon): Can this be flattened into a single function (e.g., `class X extends TypedObject({})`).
+// TODO(burdon): Can this be flattened into a single function (e.g., `class X extends TypedRelation({})`).
 // TODO(burdon): Support pipe(S.default({}))
-export const TypedObject = <ClassType>({ typename, version, skipTypenameFormatCheck }: TypedObjectProps) => {
+export const TypedRelation = <ClassType>({ typename, version, skipTypenameFormatCheck }: TypedRelationProps) => {
   if (!skipTypenameFormatCheck) {
     if (!TYPENAME_REGEX.test(typename)) {
       throw new TypeError(`Invalid typename: ${typename}`);
@@ -71,7 +65,7 @@ export const TypedObject = <ClassType>({ typename, version, skipTypenameFormatCh
   return <SchemaFields extends S.Struct.Fields, Options extends TypedObjectOptions>(
     fields: SchemaFields,
     options?: Options,
-  ): TypedObjectPrototype<TypedObjectFields<SchemaFields, Options>, S.Struct.Encoded<SchemaFields>> => {
+  ): TypedRelationPrototype<TypedObjectFields<SchemaFields, Options>, S.Struct.Encoded<SchemaFields>> => {
     // Create schema from fields.
     const schema: S.Schema.All = options?.record ? S.Struct(fields, { key: S.String, value: S.Any }) : S.Struct(fields);
 
@@ -80,16 +74,16 @@ export const TypedObject = <ClassType>({ typename, version, skipTypenameFormatCh
 
     // Set ECHO annotations.
     const annotatedSchema = typeSchema.annotations({
-      [ObjectAnnotationId]: { kind: EntityKind.Object, typename, version } satisfies ObjectAnnotation,
+      [ObjectAnnotationId]: { kind: EntityKind.Relation, typename, version } satisfies ObjectAnnotation,
     });
 
     /**
      * Return class definition.
      * NOTE: Actual reactive ECHO objects must be created via the `create(Type)` function.
      */
-    // TODO(burdon): This is missing fields required by TypedObject (e.g., Type, Encoded, Context)?
-    return class TypedObject extends makeTypedEntityClass(typename, version, annotatedSchema as any) {
-      // Implement TypedObject properties.
+    // TODO(burdon): This is missing fields required by TypedRelation (e.g., Type, Encoded, Context)?
+    return class TypedRelation extends makeTypedEntityClass(typename, version, annotatedSchema as any) {
+      // Implement TypedRelation properties.
       static readonly typename = typename;
 
       static readonly version = version;
