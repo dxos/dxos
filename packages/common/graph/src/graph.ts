@@ -22,7 +22,7 @@ export class ReadonlyGraphModel<Node extends GraphNode = any, Edge extends Graph
     this._graph = graph ?? { nodes: [], edges: [] };
   }
 
-  inspect() {
+  [inspect.custom]() {
     return inspect(this.toJSON());
   }
 

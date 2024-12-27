@@ -47,7 +47,6 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
   const [active, setActive] = useState(false);
 
   // Dragging.
-  // TODO(burdon): Handle cursor dragging out of window (currently drop is lost/frozen).
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     invariant(ref.current);
@@ -55,9 +54,10 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
       dropTargetForElements({
         element: ref.current,
         getData: () => ({ type: 'frame', shape }) satisfies DragDropPayload,
-        canDrop: () => shape.type !== 'function', // TODO(burdon): Custom.
+        canDrop: () => monitor.canDrop({ type: 'frame', shape }),
         onDragEnter: () => setActive(true),
         onDragLeave: () => setActive(false),
+        onDrop: () => setActive(false),
       }),
       draggable({
         element: ref.current,

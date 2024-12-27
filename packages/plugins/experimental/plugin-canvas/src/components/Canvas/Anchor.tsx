@@ -61,12 +61,13 @@ export type AnchorProps = {
 export const Anchor = ({ id, shape, pos, size = defaultSize, onMouseLeave }: AnchorProps) => {
   const { monitor } = useEditorContext();
   const { root, projection } = useProjection();
-  const { container, shape: linking } = monitor.state(
+  const { container } = monitor.state(
     ({ type, shape: active, anchor }) => type === 'anchor' && active?.id === shape.id && anchor === id,
   ).value;
 
-  const [hover, setHover] = useState(false);
+  const [active, setActive] = useState(false);
 
+  // Dragging.
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     invariant(ref.current);
@@ -74,10 +75,10 @@ export const Anchor = ({ id, shape, pos, size = defaultSize, onMouseLeave }: Anc
       dropTargetForElements({
         element: ref.current,
         getData: () => ({ type: 'anchor', shape, anchor: id }) satisfies DragDropPayload,
-        canDrop: () => linking?.id !== shape.id,
-        onDragEnter: () => setHover(true),
-        onDragLeave: () => setHover(false),
-        onDrop: () => setHover(false),
+        canDrop: () => monitor.canDrop({ type: 'anchor', shape, anchor: id }),
+        onDragEnter: () => setActive(true),
+        onDragLeave: () => setActive(false),
+        onDrop: () => setActive(false),
       }),
       draggable({
         element: ref.current,
@@ -110,7 +111,7 @@ export const Anchor = ({ id, shape, pos, size = defaultSize, onMouseLeave }: Anc
         ref={ref}
         {...{ [DATA_SHAPE_ID]: shape.id }}
         style={getBoundsProperties({ ...pos, ...size })}
-        className={mx('absolute', styles.anchor, hover && styles.anchorHover)}
+        className={mx('absolute', styles.anchor, active && styles.anchorActive)}
         onMouseLeave={() => onMouseLeave?.()}
       />
 

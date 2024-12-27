@@ -61,6 +61,7 @@ const INACTIVE = signal<DraggingState>({});
  * Manages reactive dragging state.
  */
 // TODO(burdon): Handle cancellation.
+// TODO(burdon): Handle cursor dragging out of window (currently drop is lost/frozen).
 export class DragMonitor {
   private _state: Signal<DraggingState> = signal<DraggingState>({});
 
@@ -96,12 +97,36 @@ export class DragMonitor {
     this._state.value = {};
   }
 
-  // TODO(burdon): Pluggable callbacks.
+  // TODO(burdon): Pluggable callbacks. Move logic from drag handler below.
 
   /**
    * Called by dropTargetForElements.canDrop(DropTargetGetFeedbackArgs)
    */
-  canDrop(current: DragDropPayload, dragging: DragDropPayload) {}
+  canDrop(target: DragDropPayload): boolean {
+    const { type, shape, anchor } = this._state.value;
+    if (type) {
+      switch (target.type) {
+        case 'frame': {
+          return target.shape.type !== 'function';
+        }
+
+        case 'anchor': {
+          if (target.shape.id !== shape?.id) {
+            // TODO(burdon): Test polarity and type.
+            if (
+              (target.anchor === '#output' && anchor !== '#output') ||
+              (target.anchor !== '#output' && anchor === '#output')
+            ) {
+              return true;
+            }
+          }
+          break;
+        }
+      }
+    }
+
+    return false;
+  }
 
   /**
    *
