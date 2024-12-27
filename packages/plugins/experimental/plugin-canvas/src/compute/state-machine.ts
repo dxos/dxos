@@ -36,7 +36,7 @@ export class StateMachine {
   // TODO(burdon): Start scheduler.
   async start() {}
 
-  async exec(node: GraphNode<ComputeNode<any, any>> | undefined) {
+  async exec(node?: GraphNode<ComputeNode<any, any>> | undefined) {
     if (node) {
       // Update root node.
       const output = await node.data.exec();
