@@ -5,6 +5,7 @@
 import { type JsonProp, S } from '@dxos/effect';
 
 import { FormatAnnotationId } from '../formats';
+import { EntityKind } from './annotations';
 //
 // JSON Schema
 //
@@ -18,11 +19,6 @@ const JsonSchemaOrBoolean = S.Union(
   S.suspend(() => JsonSchemaType),
   S.Boolean,
 );
-
-export enum EntityKind {
-  Object = 'object',
-  Relation = 'relation',
-}
 
 export const EntityKindSchema = S.Enums(EntityKind);
 

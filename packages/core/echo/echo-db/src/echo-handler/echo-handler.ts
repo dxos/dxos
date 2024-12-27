@@ -50,6 +50,7 @@ import {
 } from './echo-proxy-target';
 import { type KeyPath, META_NAMESPACE, type ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
+import { RelationSourceId, RelationTargetId } from './relations';
 
 export const PROPERTY_ID = 'id';
 
@@ -111,6 +112,22 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return target[symbolInternals];
     }
 
+    // Non-reactive root properties.
+    if (isRootDataObject(target)) {
+      switch (prop) {
+        case RelationSourceId: {
+          const sourceRef = target[symbolInternals].core.getSource();
+          invariant(sourceRef);
+          return this.lookupRef(target, sourceRef);
+        }
+        case RelationTargetId: {
+          const targetRef = target[symbolInternals].core.getTarget();
+          invariant(targetRef);
+          return this.lookupRef(target, targetRef);
+        }
+      }
+    }
+
     target[symbolInternals].signal.notifyRead();
 
     if (prop === devtoolsFormatter) {
@@ -126,6 +143,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return this.getTypeReference(target)?.objectId;
     }
 
+    // TODO(dmaretskyi): Combine with switch-case above.
     if (isRootDataObject(target)) {
       const handled = this._handleRootObjectProperty(target, prop);
       if (handled != null) {
@@ -637,6 +655,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   };
 
   private _toJSON(target: ProxyTarget): any {
+    target[symbolInternals].signal.notifyRead();
     const typeRef = target[symbolInternals].core.getType();
     const reified = this._getReified(target);
     return {

@@ -51,6 +51,11 @@ export const makeTypedEntityClass = (
     static readonly annotations = baseSchema.annotations.bind(baseSchema);
     static readonly pipe = baseSchema.pipe.bind(baseSchema);
 
+    // TODO(burdon): Comment required.
+    static [Symbol.hasInstance](obj: unknown) {
+      return obj != null && getTypename(obj) === typename;
+    }
+
     // TODO(burdon): Throw APIError.
     private constructor() {
       throw new Error('Use create(Typename, { ...fields }) to instantiate an object.');

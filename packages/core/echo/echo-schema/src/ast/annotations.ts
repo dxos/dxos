@@ -11,7 +11,6 @@ import { type Primitive } from '@dxos/util';
 import { checkIdNotPresentOnSchema } from './schema-validator';
 import { type HasId } from './types';
 import { type BaseObject } from '../types';
-import type { EntityKind } from './json-schema-type';
 
 type ToMutable<T> = T extends BaseObject
   ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
@@ -24,6 +23,11 @@ export const ObjectAnnotationId = Symbol.for('@dxos/schema/annotation/Object');
 
 export const TYPENAME_REGEX = /^\w+\.\w{2,}\/[\w/]+$/;
 export const VERSION_REGEX = /^\d+.\d+.\d+$/;
+
+export enum EntityKind {
+  Object = 'object',
+  Relation = 'relation',
+}
 
 /**
  * Payload stored under {@link ObjectAnnotationId}.
@@ -43,11 +47,22 @@ export type ObjectAnnotation = {
  */
 export const EchoIdentifierAnnotationId = Symbol.for('@dxos/schema/annotation/EchoIdentifier');
 
+/**
+ * @returns {@link ObjectAnnotation} from a schema.
+ * Schema must have been created with {@link TypedObject} or {@link TypedLink} or manually assigned an appropriate annotation.
+ */
 export const getObjectAnnotation = (schema: S.Schema.All): ObjectAnnotation | undefined =>
   flow(
     AST.getAnnotation<ObjectAnnotation>(ObjectAnnotationId),
     Option.getOrElse(() => undefined),
   )(schema.ast);
+
+/**
+ * @returns {@link EntityKind} from a schema.
+ */
+export const getEntityKind = (schema: S.Schema.All): EntityKind | undefined => {
+  return getObjectAnnotation(schema)?.kind;
+};
 
 // TODO(burdon): Rename getTypename. (dmaretskyi): Would conflict with the `getTypename` getter for objects.
 export const getSchemaTypename = (schema: S.Schema.All): string | undefined => getObjectAnnotation(schema)?.typename;
@@ -72,7 +87,9 @@ export const EchoObject = (typename: string, version: string) => {
 
     // TODO(dmaretskyi): Does `S.mutable` work for deep mutability here?
     const schemaWithId = S.extend(S.mutable(self), S.Struct({ id: S.String }));
-    const ast = AST.annotations(schemaWithId.ast, { [ObjectAnnotationId]: { typename, version } });
+    const ast = AST.annotations(schemaWithId.ast, {
+      [ObjectAnnotationId]: { kind: EntityKind.Object, typename, version } satisfies ObjectAnnotation,
+    });
     return S.make(ast) as S.Schema<Simplify<HasId & ToMutable<A>>>;
   };
 };

@@ -14,6 +14,7 @@ import {
   toJsonSchema,
   type JsonSchemaType,
   type ObjectAnnotation,
+  EntityKind,
 } from '@dxos/echo-schema';
 
 import { create, type ReactiveObject } from './object';
@@ -37,10 +38,10 @@ export const createStoredSchema = (
  */
 export const createEchoSchema = ({ typename, version }: ObjectAnnotation, fields: S.Struct.Fields): EchoSchema => {
   const schema = S.partial(S.Struct(fields).omit('id')).pipe(EchoObject(typename, version));
-  const objectAnnotation = getObjectAnnotation(schema);
-  const schemaObject = createStoredSchema({ typename, version });
+  const objectAnnotation = getObjectAnnotation(schema)!;
+  const schemaObject = createStoredSchema({ kind: EntityKind.Object, typename, version });
   const updatedSchema = schema.annotations({
-    [ObjectAnnotationId]: { ...objectAnnotation, schemaId: schemaObject.id },
+    [ObjectAnnotationId]: { ...objectAnnotation } satisfies ObjectAnnotation,
   });
 
   schemaObject.jsonSchema = toJsonSchema(updatedSchema);

@@ -9,7 +9,8 @@ import type { DXN } from '@dxos/keys';
 import { defaultMap } from '@dxos/util';
 
 import { StoredSchema } from './stored-schema';
-import { getSchemaVersion, getTypenameOrThrow } from '../types';
+import { getTypenameOrThrow } from '../types';
+import { getSchemaVersion } from '../ast';
 
 /**
  * Runtime registry of static schema objects (i.e., not Dynamic .

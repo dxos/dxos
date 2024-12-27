@@ -13,7 +13,7 @@ import {
   Reference,
   type SpaceDoc,
 } from '@dxos/echo-protocol';
-import { createObjectId, type CommonObjectData, type ObjectMeta } from '@dxos/echo-schema';
+import { createObjectId, EntityKind, type CommonObjectData, type ObjectMeta } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { isReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
@@ -337,18 +337,9 @@ export class ObjectCore {
     this._setRaw(path, this.encode(value));
   }
 
-  setType(reference: Reference) {
-    this._setRaw([SYSTEM_NAMESPACE, 'type'], this.encode(reference));
-  }
-
-  getMeta(): ObjectMeta {
-    return this.getDecoded([META_NAMESPACE]) as ObjectMeta;
-  }
-
-  setMeta(meta: ObjectMeta) {
-    this._setRaw([META_NAMESPACE], this.encode(meta));
-  }
-
+  /**
+   * Deletes key at path.
+   */
   delete(path: KeyPath) {
     const fullPath = [...this.mountPath, ...path];
 
@@ -356,6 +347,37 @@ export class ObjectCore {
       const value: any = getDeep(doc, fullPath.slice(0, fullPath.length - 1));
       delete value[fullPath[fullPath.length - 1]];
     });
+  }
+
+  getKind(): EntityKind {
+    return (this._getRaw([SYSTEM_NAMESPACE, 'kind']) as any) ?? EntityKind.Object;
+  }
+
+  // TODO(dmaretskyi): Just set statically during construction.
+  setKind(kind: EntityKind) {
+    this._setRaw([SYSTEM_NAMESPACE, 'kind'], kind);
+  }
+
+  getSource(): Reference | undefined {
+    const res = this.getDecoded([SYSTEM_NAMESPACE, 'source']);
+    invariant(res === undefined || res instanceof Reference);
+    return res;
+  }
+
+  // TODO(dmaretskyi): Just set statically during construction.
+  setSource(ref: Reference) {
+    this.setDecoded([SYSTEM_NAMESPACE, 'source'], ref);
+  }
+
+  getTarget(): Reference | undefined {
+    const res = this.getDecoded([SYSTEM_NAMESPACE, 'target']);
+    invariant(res === undefined || res instanceof Reference);
+    return res;
+  }
+
+  // TODO(dmaretskyi): Just set statically during construction.
+  setTarget(ref: Reference) {
+    this.setDecoded([SYSTEM_NAMESPACE, 'target'], ref);
   }
 
   getType(): Reference | undefined {
@@ -366,6 +388,18 @@ export class ObjectCore {
 
     invariant(value instanceof Reference);
     return value;
+  }
+
+  setType(reference: Reference) {
+    this._setRaw([SYSTEM_NAMESPACE, 'type'], this.encode(reference));
+  }
+
+  getMeta(): ObjectMeta {
+    return this.getDecoded([META_NAMESPACE]) as ObjectMeta;
+  }
+
+  setMeta(meta: ObjectMeta) {
+    this._setRaw([META_NAMESPACE], this.encode(meta));
   }
 
   isDeleted() {

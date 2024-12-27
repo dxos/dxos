@@ -13,6 +13,8 @@ import {
   SchemaValidator,
   requireTypeReference,
   Ref,
+  EntityKind,
+  getEntityKind,
 } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
@@ -38,6 +40,7 @@ import {
 } from './echo-proxy-target';
 import { type DecodedAutomergePrimaryValue, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
+import { log } from '@dxos/log';
 
 // TODO(burdon): Rename EchoObject and reconcile with proto name.
 export type ReactiveEchoObject<T extends BaseObject> = ReactiveObject<T> & HasId;
@@ -114,7 +117,10 @@ export const createObject = <T extends BaseObject>(obj: T): ReactiveEchoObject<T
     initCore(core, target);
     slot.handler.init(target);
 
-    setTypeOnObject(target[symbolInternals], schema);
+    setSchemaPropertiesOnObjectCore(target[symbolInternals], schema);
+
+    // TODO(dmaretskyi): Set source & target for relations.
+
     if (meta && meta.keys.length > 0) {
       target[symbolInternals].core.setMeta(meta);
     }
@@ -132,7 +138,10 @@ export const createObject = <T extends BaseObject>(obj: T): ReactiveEchoObject<T
 
     initCore(core, target);
     const proxy = createProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
-    setTypeOnObject(target[symbolInternals], schema);
+    setSchemaPropertiesOnObjectCore(target[symbolInternals], schema);
+
+    // TODO(dmaretskyi): Set source & target for relations.
+
     return proxy;
   }
 };
@@ -175,12 +184,18 @@ export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: Ech
 
 const validateSchema = (schema: S.Schema<any>) => {
   requireTypeReference(schema);
+  const entityKind = getEntityKind(schema);
+  invariant(entityKind === 'object' || entityKind === 'relation');
   SchemaValidator.validateSchema(schema);
 };
 
-const setTypeOnObject = (internals: ObjectInternals, schema: S.Schema<any> | undefined) => {
+const setSchemaPropertiesOnObjectCore = (internals: ObjectInternals, schema: S.Schema<any> | undefined) => {
   if (schema != null) {
     internals.core.setType(requireTypeReference(schema));
+
+    const kind = getEntityKind(schema);
+    invariant(kind);
+    internals.core.setKind(kind);
   }
 };
 

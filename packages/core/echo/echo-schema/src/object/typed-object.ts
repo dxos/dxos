@@ -14,6 +14,7 @@ import {
 } from '../ast';
 import { makeTypedEntityClass, type TypedObjectFields, type TypedObjectOptions } from './common';
 import { getTypename } from './typename';
+import { invariant } from '@dxos/invariant';
 
 /**
  * Definition for an object type that can be stored in an ECHO database.
@@ -79,6 +80,7 @@ export const TypedObject = <ClassType>({ typename, version, skipTypenameFormatCh
     const typeSchema = S.extend(S.mutable(options?.partial ? S.partial(schema) : schema), S.Struct({ id: S.String }));
 
     // Set ECHO annotations.
+    invariant(typeof EntityKind.Object === 'string');
     const annotatedSchema = typeSchema.annotations({
       [ObjectAnnotationId]: { kind: EntityKind.Object, typename, version } satisfies ObjectAnnotation,
     });
@@ -88,16 +90,6 @@ export const TypedObject = <ClassType>({ typename, version, skipTypenameFormatCh
      * NOTE: Actual reactive ECHO objects must be created via the `create(Type)` function.
      */
     // TODO(burdon): This is missing fields required by TypedObject (e.g., Type, Encoded, Context)?
-    return class TypedObject extends makeTypedEntityClass(typename, version, annotatedSchema as any) {
-      // Implement TypedObject properties.
-      static readonly typename = typename;
-
-      static readonly version = version;
-
-      // TODO(burdon): Comment required.
-      static override [Symbol.hasInstance](obj: unknown): obj is ClassType {
-        return obj != null && getTypename(obj) === typename;
-      }
-    } as any;
+    return class TypedObject extends makeTypedEntityClass(typename, version, annotatedSchema as any) {} as any;
   };
 };

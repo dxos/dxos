@@ -8,6 +8,7 @@ import { EntityKind, type HasId, ObjectAnnotationId, TYPENAME_REGEX, VERSION_REG
 import { makeTypedEntityClass, type TypedObjectFields, type TypedObjectOptions } from './common';
 import { getTypename } from './typename';
 import type { ObjectAnnotation } from '../ast/annotations';
+import { invariant } from '@dxos/invariant';
 
 /**
  * Definition for an object type that can be stored in an ECHO database.
@@ -73,6 +74,7 @@ export const TypedRelation = <ClassType>({ typename, version, skipTypenameFormat
     const typeSchema = S.extend(S.mutable(options?.partial ? S.partial(schema) : schema), S.Struct({ id: S.String }));
 
     // Set ECHO annotations.
+    invariant(typeof EntityKind.Relation === 'string');
     const annotatedSchema = typeSchema.annotations({
       [ObjectAnnotationId]: { kind: EntityKind.Relation, typename, version } satisfies ObjectAnnotation,
     });
@@ -82,16 +84,6 @@ export const TypedRelation = <ClassType>({ typename, version, skipTypenameFormat
      * NOTE: Actual reactive ECHO objects must be created via the `create(Type)` function.
      */
     // TODO(burdon): This is missing fields required by TypedRelation (e.g., Type, Encoded, Context)?
-    return class TypedRelation extends makeTypedEntityClass(typename, version, annotatedSchema as any) {
-      // Implement TypedRelation properties.
-      static readonly typename = typename;
-
-      static readonly version = version;
-
-      // TODO(burdon): Comment required.
-      static override [Symbol.hasInstance](obj: unknown): obj is ClassType {
-        return obj != null && getTypename(obj) === typename;
-      }
-    } as any;
+    return class TypedRelation extends makeTypedEntityClass(typename, version, annotatedSchema as any) {} as any;
   };
 };
