@@ -3,21 +3,23 @@
 //
 
 import { bindAll } from 'bind-event-listener';
-import { type Dispatch, type SetStateAction, useEffect } from 'react';
+import { useEffect } from 'react';
 
-import { getZoomTransform, type ProjectionState } from './projection';
+import { getZoomTransform } from './projection';
+import { useProjection } from './useProjection';
 import { getRelativePoint } from '../util';
 
 /**
  * Handle wheel events to update the transform state (zoom and offset).
  */
-export const useWheel = (el: HTMLDivElement | null, setProjection: Dispatch<SetStateAction<ProjectionState>>) => {
+export const useWheel = () => {
+  const { root, setProjection } = useProjection();
   useEffect(() => {
-    if (!el) {
+    if (!root) {
       return;
     }
 
-    return bindAll(el, [
+    return bindAll(root, [
       {
         type: 'wheel',
         options: { capture: true, passive: false },
@@ -26,13 +28,13 @@ export const useWheel = (el: HTMLDivElement | null, setProjection: Dispatch<SetS
 
           // Zoom or pan.
           if (ev.ctrlKey) {
-            if (!el) {
+            if (!root) {
               return;
             }
 
             // Keep centered while zooming.
             setProjection(({ scale, offset }) => {
-              const pos = getRelativePoint(el, ev);
+              const pos = getRelativePoint(root, ev);
               const scaleSensitivity = 0.01;
               const newScale = scale * Math.exp(-ev.deltaY * scaleSensitivity);
               return getZoomTransform({ scale, offset, newScale, pos });
@@ -51,5 +53,5 @@ export const useWheel = (el: HTMLDivElement | null, setProjection: Dispatch<SetS
         },
       },
     ]);
-  }, [el, setProjection]);
+  }, [root]);
 };

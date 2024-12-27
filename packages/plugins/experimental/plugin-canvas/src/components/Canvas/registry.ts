@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Point } from '@antv/layout';
 import { type FC } from 'react';
 
 import { type Anchor } from './Anchor';
@@ -15,7 +14,7 @@ export type ShapeDef<S extends Polygon> = {
   icon: string;
   component: FC<ShapeComponentProps<S>>;
   create: () => S;
-  getAnchors?: (shape: S, center?: Point) => Record<string, Anchor>;
+  getAnchors?: (shape: S) => Record<string, Anchor>;
 };
 
 export class ShapeRegistry {

@@ -11,7 +11,7 @@ import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type DragDropPayload, useEditorContext } from '../../hooks';
-import { type Polygon } from '../../types';
+import { getCenter } from '../../layout';
 import { type ShapeRegistry } from '../Canvas';
 
 export type ToolsProps = ThemedClassName<{
@@ -41,21 +41,22 @@ const Tool = ({ type, icon }: ToolProps) => {
     invariant(ref.current);
     return draggable({
       element: ref.current,
-      getInitialData: () => ({ type: 'tool', tool: type }) satisfies DragDropPayload,
-      onGenerateDragPreview: ({ nativeSetDragImage, source: { data } }) => {
+      getInitialData: () => {
+        const def = registry.getShape(type);
+        const shape = def?.create();
+        return { type: 'tool', tool: type, shape } satisfies DragDropPayload;
+      },
+      onGenerateDragPreview: ({ nativeSetDragImage, source }) => {
+        const data = source.data as DragDropPayload;
+        invariant(data.type === 'tool');
         setCustomNativeDragPreview({
           nativeSetDragImage,
           getOffset: () => {
-            // TODO(burdon): Get size from data.
             // TODO(burdon): Adjust for scale (need to get projection).
-            return { x: 64, y: 32 };
+            return getCenter(data.shape.size);
           },
           render: ({ container }) => {
-            const def = registry.getShape(type);
-            if (def) {
-              const shape: Polygon = def.create();
-              monitor.preview({ container, type: 'tool', shape });
-            }
+            monitor.preview({ container, type: 'tool', shape: data.shape });
           },
         });
       },

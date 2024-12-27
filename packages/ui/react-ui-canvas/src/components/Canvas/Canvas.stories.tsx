@@ -24,8 +24,9 @@ const Render = (props: GridProps) => {
 };
 
 const Content = (props: GridProps) => {
-  const { root, scale, offset, styles, setProjection } = useProjection();
-  useWheel(root, setProjection);
+  const { scale, offset, styles } = useProjection();
+
+  useWheel();
 
   return (
     <>

@@ -41,8 +41,8 @@ export type CreateFunctionProps = Omit<FunctionShape, 'type' | 'properties'>;
 export const createFunction = ({ id, ...rest }: CreateFunctionProps): FunctionShape => ({
   id,
   type: 'function',
+  // TODO(burdon): Effect schema for input and output.
   properties: [
-    // TODO(burdon): Testing only.
     {
       name: 'prop-1',
       type: 'string',
@@ -109,9 +109,8 @@ export const functionShape: ShapeDef<FunctionShape> = {
   type: 'function',
   icon: 'ph--function--regular',
   component: FunctionComponent,
-  create: () => createFunction({ id: createId(), center: { x: 0, y: 0 }, size: { width: 128, height: 80 } }),
-  getAnchors: ({ id, center: _center, size, properties }, current) => {
-    const center = current ?? _center;
+  create: () => createFunction({ id: createId(), center: { x: 0, y: 0 }, size: { width: 192, height: 80 } }),
+  getAnchors: ({ id, center, size, properties }) => {
     return properties.reduce(
       (map, { name }, i) => {
         map[name] = {

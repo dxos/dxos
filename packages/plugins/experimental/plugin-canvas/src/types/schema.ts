@@ -27,7 +27,6 @@ export const Shape = S.mutable(
  * Closed shape.
  * Common handling via Frame.
  */
-// TODO(burdon): Rename.
 export const Polygon = S.mutable(
   S.extend(
     Shape,

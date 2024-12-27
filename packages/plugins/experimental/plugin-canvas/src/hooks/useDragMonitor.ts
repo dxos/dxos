@@ -9,19 +9,18 @@ import {
   type ElementDragType,
 } from '@atlaskit/pragmatic-drag-and-drop/types';
 import { type Signal, signal } from '@preact/signals-core';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Point, useProjection } from '@dxos/react-ui-canvas';
 
 import { useEditorContext } from './useEditorContext';
-import { createLinkOverlay } from './useLayout';
 import { useSnap } from './useSnap';
 import { getInputPoint } from '../layout';
 import { createRectangle } from '../shapes';
 import { createId, itemSize } from '../testing';
-import { type Polygon, type PathShape } from '../types';
+import { type Polygon } from '../types';
 
 /**
  * Data property associated with a draggable (DropTargetRecord and ElementDragPayload).
@@ -34,6 +33,7 @@ export type DragDropPayload =
     }
   | {
       type: 'tool';
+      shape: Polygon;
       tool: string;
     }
   | {
@@ -50,13 +50,17 @@ export type DraggingState = {
   container?: HTMLElement;
   type?: string;
   shape?: Polygon;
-  anchor?: string; // TODO(burdon): Change to type?
+  anchor?: string;
   pos?: Point;
 };
 
-const NULL = signal<DraggingState>({});
+const INACTIVE = signal<DraggingState>({});
 
-// TODO(burdon): Drag controller abstract class.
+/**
+ * Extensible controller.
+ * Manages reactive dragging state.
+ */
+// TODO(burdon): Handle cancellation.
 export class DragMonitor {
   private _state: Signal<DraggingState> = signal<DraggingState>({});
 
@@ -65,10 +69,10 @@ export class DragMonitor {
   }
 
   /**
-   *
+   * Returns the state if the test matches.
    */
   state(test?: (state: DraggingState) => boolean): Signal<DraggingState> {
-    return !test || test(this._state.value) ? this._state : NULL;
+    return !test || test(this._state.value) ? this._state : INACTIVE;
   }
 
   /**
@@ -79,18 +83,20 @@ export class DragMonitor {
   }
 
   /**
-   *
+   * Called from draggable.onDrag()
    */
   drag(state: Omit<DraggingState, 'container'>) {
     this._state.value = { ...this._state.value, ...state };
   }
 
   /**
-   *
+   * Called from draggable.onDrop()
    */
   drop() {
     this._state.value = {};
   }
+
+  // TODO(burdon): Pluggable callbacks.
 
   /**
    * Called by dropTargetForElements.canDrop(DropTargetGetFeedbackArgs)
@@ -110,119 +116,107 @@ export class DragMonitor {
 
 /**
  * Monitor frames and anchors being dragged.
+ * Components manager their own previews and dragging state; this hook performs actions on drop.
  */
-export const useDragMonitor = (el: HTMLElement | null) => {
+export const useDragMonitor = () => {
   const { graph, selection, monitor, actionHandler } = useEditorContext();
-  const { projection } = useProjection();
+  const { root, projection } = useProjection();
   const snapPoint = useSnap();
 
-  const { shape } = monitor.state().value; // TODO(burdon): Remove.
-  const [overlay, setOverlay] = useState<PathShape>(); // TODO(burdon): Remove.
-  const cancelled = useRef(false);
-
-  const lastPointRef = useRef<Point>();
   useEffect(() => {
     return monitorForElements({
-      onDrag: ({ source, location }) => {
-        invariant(el);
-        const [pos] = projection.toModel([getInputPoint(el, location.current.input)]);
-        const data = source.data as DragDropPayload;
-        if (pos.x !== lastPointRef.current?.x || pos.y !== lastPointRef.current?.y) {
-          lastPointRef.current = pos;
-          switch (data.type) {
-            //
-            // Drag anchor.
-            //
-            case 'anchor': {
-              // TODO(burdon): Move to anchor class.
-              // TODO(burdon): Create path using same logic as layout.
-              setOverlay(createLinkOverlay(data.shape, pos));
-              break;
-            }
-          }
-        }
-      },
-
       onDrop: async ({ source, location }) => {
-        if (!cancelled.current) {
-          invariant(el);
-          const [pos] = projection.toModel([getInputPoint(el, location.current.input)]);
-          const data = source.data as DragDropPayload;
-          switch (data.type) {
-            //
-            // Create shape from tool.
-            //
-            case 'tool': {
-              invariant(shape);
-              const created: Polygon = { ...shape, center: snapPoint(pos) };
-              await actionHandler?.({ type: 'create', shape: created });
-              break;
+        if (!monitor.state() || !location.current.dropTargets.length) {
+          return;
+        }
+
+        invariant(root);
+        const [pos] = projection.toModel([getInputPoint(root, location.current.input)]);
+        const data = source.data as DragDropPayload;
+        switch (data.type) {
+          //
+          // Create shape from tool.
+          //
+          case 'tool': {
+            const shape = data.shape;
+            shape.center = snapPoint(pos);
+            await actionHandler?.({ type: 'create', shape });
+            break;
+          }
+
+          //
+          // Drag from other container.
+          //
+          case 'frame': {
+            // TODO(burdon): Copy from external canvas/component.
+            if (!graph.getNode(data.shape.id)) {
+              // graph.addNode({ id: shape.id, data: { ...shape } });
+              log.info('copy', { shape: data.shape });
             }
+            break;
+          }
 
-            //
-            // Drag from other container.
-            //
-            case 'frame': {
-              // data.shape.center = snapPoint(pos);
-              // TODO(burdon): Copy from external canvas/component.
-              if (!graph.getNode(data.shape.id)) {
-                // graph.addNode({ id: shape.id, data: { ...shape } });
-                log.info('copy', { shape: data.shape });
-              }
-              break;
-            }
+          //
+          // Create link.
+          //
+          case 'anchor': {
+            const target = findDropTarget(
+              location.current.dropTargets,
+              ({ type }) => type === 'frame' || type === 'anchor',
+            );
 
-            //
-            // Create link.
-            // TODO(burdon): Callbacks to create and link (and determine if can drop).
-            //
-            case 'anchor': {
-              const target = findDropTarget(
-                location.current.dropTargets,
-                (data) => data.type === 'frame' || data.type === 'anchor',
-              );
+            // Check link to existing.
+            if (target) {
+              switch (target?.type) {
+                case 'frame': {
+                  await actionHandler?.({ type: 'link', source: data.shape.id, target: target.shape.id });
+                  break;
+                }
 
-              if (target) {
-                switch (target?.type) {
-                  case 'frame': {
-                    await actionHandler?.({ type: 'link', source: data.shape.id, target: target.shape.id });
-                    break;
-                  }
-
-                  case 'anchor': {
+                case 'anchor': {
+                  if (data.anchor) {
+                    // TODO(burdon): Unlink existing.
+                    if (data.anchor === '#output') {
+                      await actionHandler?.({
+                        type: 'link',
+                        source: data.shape.id,
+                        target: target.shape.id,
+                        data: { property: target.anchor },
+                      });
+                    } else {
+                      await actionHandler?.({
+                        type: 'link',
+                        source: target.shape.id,
+                        target: data.shape.id,
+                        data: { property: data.anchor },
+                      });
+                    }
+                  } else {
                     await actionHandler?.({
                       type: 'link',
                       source: data.shape.id,
                       target: target.shape.id,
-                      data: { property: target.anchor },
                     });
-                    break;
                   }
+                  break;
                 }
-              } else {
+              }
+            } else {
+              if (data.shape.type !== 'function') {
+                // New object.
                 const id = createId();
                 const shape = createRectangle({ id, center: snapPoint(pos), size: itemSize });
                 await actionHandler?.({ type: 'create', shape });
                 await actionHandler?.({ type: 'link', source: data.shape.id, target: id });
               }
-
-              break;
             }
+
+            break;
           }
         }
-
-        setOverlay(undefined);
-      },
-
-      // Dragging cancelled if user presses Esc.
-      // https://atlassian.design/components/pragmatic-drag-and-drop/core-package/events#cancelling
-      onDropTargetChange: ({ source, location }) => {
-        cancelled.current = location.current.dropTargets.length === 0;
       },
     });
-  }, [el, monitor, projection, actionHandler, selection, shape, snapPoint]);
-
-  return { overlay };
+  }, [root, monitor, projection, actionHandler, selection, snapPoint]);
 };
 
 const findDropTarget = (

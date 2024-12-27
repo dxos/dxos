@@ -15,8 +15,8 @@ import { useWheel } from '../../hooks';
 
 const Render = (props: GridProps) => {
   const ref = useRef<HTMLDivElement>(null);
-  const [{ scale, offset }, setProjection] = useState<ProjectionState>({ scale: 1, offset: { x: 0, y: 0 } });
-  useWheel(ref.current, setProjection);
+  const [{ scale, offset }] = useState<ProjectionState>({ scale: 1, offset: { x: 0, y: 0 } });
+  useWheel();
 
   return (
     <div ref={ref} className='grow'>

@@ -19,8 +19,18 @@ import { isPolygon } from '../types';
 
 // TODO(burdon): Handle multiple actions.
 export const useActionHandler = () => {
-  const { options, overlayRef, graph, clipboard, selection, setDebug, setShowGrid, setSnapToGrid, setActionHandler } =
-    useEditorContext();
+  const {
+    options,
+    overlayRef,
+    graph,
+    clipboard,
+    selection,
+    setDebug,
+    setShowGrid,
+    setSnapToGrid,
+    setActionHandler,
+    repaint,
+  } = useEditorContext();
   const { root, projection, setProjection } = useProjection();
 
   useEffect(() => {
@@ -201,6 +211,7 @@ export const useActionHandler = () => {
             ids?.forEach((id) => graph.removeEdge(id));
           }
           selection.clear();
+          repaint(); // TODO(burdon): Hack since graph doesn't trigger layout update.
           return true;
         }
 

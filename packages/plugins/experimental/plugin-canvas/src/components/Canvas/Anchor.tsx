@@ -48,26 +48,25 @@ export const getAnchors = (
 };
 
 export type AnchorProps = {
-  id: string; // E.g., "w", "w.1.4", "prop-1", "output", etc.
+  id: string; // E.g., "w", "w.1.4", "prop-1", "#output", etc.
   shape: Polygon;
   pos: Point;
   size?: Dimension;
-  scale?: number;
   onMouseLeave?: () => void;
 };
 
 /**
  * Anchor points for attaching links.
  */
-export const Anchor = ({ id, shape, pos, size = defaultSize, scale = 1, onMouseLeave }: AnchorProps) => {
+export const Anchor = ({ id, shape, pos, size = defaultSize, onMouseLeave }: AnchorProps) => {
   const { monitor } = useEditorContext();
   const { root, projection } = useProjection();
-  const { container, shape: linking } = monitor.state(({ type, anchor }) => type === 'anchor' && anchor === id).value;
+  const { container, shape: linking } = monitor.state(
+    ({ type, shape: active, anchor }) => type === 'anchor' && active?.id === shape.id && anchor === id,
+  ).value;
 
   const [hover, setHover] = useState(false);
 
-  // Dragging.
-  // TODO(burdon): ESC to cancel dragging.
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     invariant(ref.current);
@@ -87,7 +86,7 @@ export const Anchor = ({ id, shape, pos, size = defaultSize, scale = 1, onMouseL
           setCustomNativeDragPreview({
             nativeSetDragImage,
             getOffset: () => {
-              return { x: (scale * size.width) / 2, y: (scale * size.height) / 2 };
+              return { x: (projection.scale * size.width) / 2, y: (projection.scale * size.height) / 2 };
             },
             render: ({ container }) => {
               monitor.preview({ container, type: 'anchor', shape, anchor: id });
@@ -98,12 +97,12 @@ export const Anchor = ({ id, shape, pos, size = defaultSize, scale = 1, onMouseL
           const [pos] = projection.toModel([getInputPoint(root, location.current.input)]);
           monitor.drag({ pos });
         },
-        onDrop: ({ location }) => {
+        onDrop: () => {
           monitor.drop();
         },
       }),
     );
-  }, [monitor, root, projection, pos]);
+  }, []);
 
   return (
     <>
@@ -111,13 +110,13 @@ export const Anchor = ({ id, shape, pos, size = defaultSize, scale = 1, onMouseL
         ref={ref}
         {...{ [DATA_SHAPE_ID]: shape.id }}
         style={getBoundsProperties({ ...pos, ...size })}
-        className={mx('absolute', styles.anchor, container && 'opacity-0', hover && styles.anchorHover)}
+        className={mx('absolute', styles.anchor, hover && styles.anchorHover)}
         onMouseLeave={() => onMouseLeave?.()}
       />
 
       {container &&
         createPortal(
-          <div>
+          <div style={{ transform: `scale(${projection.scale})` }}>
             <div style={getBoundsProperties({ ...pos, ...size })} className={mx(styles.anchor)} />
           </div>,
           container,

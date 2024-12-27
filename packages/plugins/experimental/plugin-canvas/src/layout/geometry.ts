@@ -227,7 +227,7 @@ export const createPathThroughPoints = (points: Point[]): string => {
  */
 const splineGenerator = d3
   .line<Point>()
-  .curve(d3.curveCatmullRom.alpha(0.9))
+  .curve(d3.curveCatmullRom.alpha(1))
   .x((d) => d.x)
   .y((d) => d.y);
 
@@ -236,7 +236,7 @@ export const createSplineThroughPoints = (points: Point[]): string => {
   return splineGenerator(points)!;
 };
 
-export const getNormals = (r1: Rect, r2: Rect, len = 32): [Point[], Point[]] | null => {
+export const getNormals = (r1: Rect, r2: Rect, len = 32): [Point[], Point[]] | undefined => {
   const sidesR1 = {
     left: [
       { x: r1.x, y: r1.y },
@@ -309,34 +309,32 @@ export const getNormals = (r1: Rect, r2: Rect, len = 32): [Point[], Point[]] | n
     }
   }
 
-  if (!distances.length) {
-    return null;
+  if (distances.length) {
+    const [side1, side2] = distances.reduce((max, curr) => (curr.distance > max.distance ? curr : max)).pair;
+
+    const isVertical1 = side1[0].x === side1[1].x;
+    const isVertical2 = side2[0].x === side2[1].x;
+
+    const direction1 = isVertical1 ? (side1[0].x < side2[0].x ? -1 : 1) : side1[0].y < side2[0].y ? -1 : 1;
+    const direction2 = isVertical2 ? (side2[0].x < side1[0].x ? -1 : 1) : side2[0].y < side1[0].y ? -1 : 1;
+
+    return [
+      createPerpendicularLine(side1, isVertical1, direction1, len),
+      createPerpendicularLine(side2, isVertical2, direction2, len),
+    ];
   }
+};
 
-  const [side1, side2] = distances.reduce((max, curr) => (curr.distance > max.distance ? curr : max)).pair;
-
-  // Generate lines perpendicular to the sides and pointing away.
-  const createPerpendicularLine = (side: Point[], vertical: boolean, away: 1 | -1, len: number): Line => {
-    const midPoint: Point = {
-      x: (side[0].x + side[1].x) / 2,
-      y: (side[0].y + side[1].y) / 2,
-    };
-
-    if (vertical) {
-      return [{ x: midPoint.x - len * away, y: midPoint.y }, midPoint];
-    } else {
-      return [{ x: midPoint.x, y: midPoint.y - len * away }, midPoint];
-    }
+// Generate lines perpendicular to the sides and pointing away.
+const createPerpendicularLine = (side: Point[], vertical: boolean, away: 1 | -1, len: number): Line => {
+  const midPoint: Point = {
+    x: (side[0].x + side[1].x) / 2,
+    y: (side[0].y + side[1].y) / 2,
   };
 
-  const isVertical1 = side1[0].x === side1[1].x;
-  const isVertical2 = side2[0].x === side2[1].x;
-
-  const direction1 = isVertical1 ? (side1[0].x < side2[0].x ? -1 : 1) : side1[0].y < side2[0].y ? -1 : 1;
-  const direction2 = isVertical2 ? (side2[0].x < side1[0].x ? -1 : 1) : side2[0].y < side1[0].y ? -1 : 1;
-
-  return [
-    createPerpendicularLine(side1, isVertical1, direction1, len),
-    createPerpendicularLine(side2, isVertical2, direction2, len),
-  ];
+  if (vertical) {
+    return [{ x: midPoint.x - len * away, y: midPoint.y }, midPoint];
+  } else {
+    return [{ x: midPoint.x, y: midPoint.y - len * away }, midPoint];
+  }
 };

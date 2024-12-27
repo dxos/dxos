@@ -22,7 +22,6 @@ import {
   useShortcuts,
 } from '../../hooks';
 import { rectContains } from '../../layout';
-import { PathComponent } from '../../shapes';
 import { type TestId } from '../defs';
 import { eventsNone, styles } from '../styles';
 
@@ -38,12 +37,10 @@ export const Canvas = () => {
 };
 
 export const CanvasContent = () => {
-  const { id, debug, monitor, overlayRef, options, showGrid, selection } = useEditorContext();
-  const { root, styles: projectionStyles, setProjection, scale, offset } = useProjection();
+  const { id, monitor, overlayRef, options, showGrid, selection } = useEditorContext();
+  const { root, styles: projectionStyles, scale, offset } = useProjection();
   const { container, shape: dragging } = monitor.state(({ type }) => type === 'tool').value;
-
-  // Actions.
-  useActionHandler();
+  const shapesRef = useRef<HTMLDivElement>(null);
 
   // Drop target.
   useEffect(() => {
@@ -61,12 +58,14 @@ export const CanvasContent = () => {
   // Keyboard shortcuts.
   useShortcuts();
 
+  // Actions.
+  useActionHandler();
+
   // Pan and zoom.
-  useWheel(root, setProjection);
+  useWheel();
 
   // Dragging and linking.
-  const { overlay } = useDragMonitor(root);
-  const shapesRef = useRef<HTMLDivElement>(null);
+  useDragMonitor();
 
   // Layout.
   const layout = useLayout();
@@ -101,11 +100,6 @@ export const CanvasContent = () => {
       <div {...testId<TestId>('dx-overlays')} className={mx(eventsNone)}>
         {/* Selection overlay. */}
         {selectionRect && <SelectionBox rect={selectionRect} />}
-
-        {/* Linking overlay. */}
-        <div className='absolute' style={projectionStyles}>
-          {overlay && <PathComponent debug={debug} shape={overlay} />}
-        </div>
 
         {/* Tool dragging. */}
         {container &&

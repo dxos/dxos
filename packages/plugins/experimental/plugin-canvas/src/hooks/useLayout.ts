@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { invariant } from '@dxos/invariant';
 import { type Point, type Rect } from '@dxos/react-ui-canvas';
 
 import { useEditorContext } from './useEditorContext';
+import { type ShapeRegistry } from '../components';
 import { distance, findClosestIntersection, getNormals, getRect, pointAdd } from '../layout';
 import { createPath } from '../shapes';
-import { isPolygon, type PathShape, type Polygon, type Shape } from '../types';
+import { isPolygon, type Polygon, type Shape } from '../types';
 
 export type Layout = {
   shapes: Shape[];
@@ -18,78 +18,72 @@ export type Layout = {
  * Generate layout.
  */
 export const useLayout = (): Layout => {
-  const { graph, registry, monitor } = useEditorContext();
-  const {
-    value: { shape: dragging },
-  } = monitor.state(({ type }) => type === 'frame');
+  const { monitor, graph, registry } = useEditorContext();
+  const { shape: dragging } = monitor.state(({ type }) => type === 'frame').value;
+  const { shape: source, pos: linking, anchor } = monitor.state(({ type }) => type === 'anchor').value;
 
   const shapes: Shape[] = [];
 
-  // Layout edges.
-  graph.edges.forEach(({ id, source: _source, target: _target, data }) => {
-    const source = graph.getNode(_source);
-    const target = graph.getNode(_target);
+  // Edges.
+  graph.edges.forEach(({ id, source: sourceId, target: targetId, data }) => {
+    const source = graph.getNode(sourceId);
+    const target = graph.getNode(targetId);
     if (!source || !target || !isPolygon(source.data) || !isPolygon(target.data)) {
       return;
     }
 
-    const { center: p1, bounds: r1 } = getNodeBounds(source.data, dragging) ?? {};
-    const { center: p2, bounds: r2 } = getNodeBounds(target.data, dragging) ?? {};
-    if (!p1 || !p2) {
-      return;
-    }
-
-    // TODO(burdon): Custom handling of anchors.
+    // TODO(burdon): Custom logic for function anchors. Assumes source is always the output.
     if (data) {
-      // TODO(burdon): Cache anchor positions? (runtime representation of shapes and paths).
-      const getAnchors = (shape: Shape) =>
-        registry.getShape(shape.type)?.getAnchors?.(shape, dragging?.id === shape.id ? dragging?.center : undefined);
-      const sourceAnchor = getAnchors(source.data)?.['#output'];
-      const targetAnchor = getAnchors(target.data)?.[data.property];
+      const { property } = data;
+      const sourceAnchor = getAnchorPoint(registry, dragging?.id === source.id ? dragging : source.data, '#output');
+      const targetAnchor = getAnchorPoint(registry, dragging?.id === target.id ? dragging : target.data, property);
       if (sourceAnchor && targetAnchor) {
+        const offset = 16;
         shapes.push(
           createPath({
             id,
             points: [
-              sourceAnchor.pos,
-              pointAdd(sourceAnchor.pos, { x: 10, y: 0 }),
-              pointAdd(targetAnchor.pos, { x: -10, y: 0 }),
-              targetAnchor.pos,
+              sourceAnchor,
+              pointAdd(sourceAnchor, { x: offset, y: 0 }),
+              pointAdd(targetAnchor, { x: -offset, y: 0 }),
+              targetAnchor,
             ],
           }),
         );
-      }
-      return;
-    }
-
-    invariant(r1 && r2);
-    let points: Point[] = [];
-    const d = distance(p1, p2);
-    if (d > 256) {
-      const [s1, s2] = getNormals(r1, r2, 32) ?? [];
-      if (s1 && s2) {
-        points = [s1[1], s1[0], s2[0], s2[1]];
+        return;
       }
     }
 
-    // Direct path.
-    if (!points.length) {
-      const i1 = findClosestIntersection([p2, p1], r1) ?? p1;
-      const i2 = findClosestIntersection([p1, p2], r2) ?? p2;
-      points = [i1, i2];
+    const sourceBounds = getNodeBounds(dragging?.id === source.id ? dragging : source.data);
+    const targetBounds = getNodeBounds(dragging?.id === target.id ? dragging : target.data);
+    if (sourceBounds?.center && targetBounds?.center) {
+      const points = createCenterPoints(sourceBounds, targetBounds);
+      if (points) {
+        shapes.push(createPath({ id, points, end: 'arrow-end' }));
+      }
     }
-
-    shapes.push(
-      createPath({
-        id,
-        points,
-        start: 'circle',
-        end: 'arrow-end',
-      }),
-    );
   });
 
-  // Layout nodes.
+  // Linking.
+  if (source && linking) {
+    let points: Point[] | undefined;
+    if (anchor) {
+      const pos = getAnchorPoint(registry, source, anchor);
+      if (pos) {
+        points = [pos, linking];
+      }
+    }
+
+    if (!points) {
+      const rect = getRect(source.center, source.size);
+      const pos = findClosestIntersection([linking, source.center], rect) ?? source.center;
+      points = [pos, linking];
+    }
+
+    shapes.push(createPath({ id: 'link', points }));
+  }
+
+  // Nodes.
   graph.nodes.forEach(({ data: shape }) => {
     shapes.push(shape);
   });
@@ -97,29 +91,41 @@ export const useLayout = (): Layout => {
   return { shapes };
 };
 
-const getNodeBounds = (
-  shape: Polygon | undefined,
-  dragging: Polygon | undefined,
-): { center: Point; bounds: Rect } | undefined => {
-  if (!shape) {
-    return undefined;
-  }
-
-  if (dragging?.id === shape.id) {
-    return {
-      center: dragging.center,
-      bounds: getRect(dragging.center, dragging.size),
-    };
-  } else {
-    return {
-      center: shape.center,
-      bounds: getRect(shape.center, shape.size),
-    };
-  }
+type Bounds = {
+  center: Point;
+  bounds: Rect;
 };
 
-export const createLinkOverlay = (source: Polygon, pos: Point): PathShape | undefined => {
-  const rect = getRect(source.center, source.size);
-  const p1 = findClosestIntersection([pos, source.center], rect) ?? source.center;
-  return createPath({ id: 'link', points: [p1, pos] });
+const getNodeBounds = (shape: Polygon): Bounds => ({
+  center: shape.center,
+  bounds: getRect(shape.center, shape.size),
+});
+
+// TODO(burdon): Cache anchor positions? (runtime representation of shapes and paths).
+const getAnchorPoint = (registry: ShapeRegistry, shape: Shape, property: string): Point | undefined => {
+  const anchors = registry.getShape(shape.type)?.getAnchors?.(shape);
+  const anchor = anchors?.[property];
+  return anchor?.pos;
+};
+
+const createCenterPoints = (source: Bounds, target: Bounds, len = 32): Point[] => {
+  let points: Point[] = [];
+
+  // Curve.
+  const d = distance(source.center, target.center);
+  if (d > 256) {
+    const [s1, s2] = getNormals(source.bounds, target.bounds, len) ?? [];
+    if (s1 && s2) {
+      points = [s1[1], s1[0], s2[0], s2[1]];
+    }
+  }
+
+  // Direct path.
+  if (!points.length) {
+    const i1 = findClosestIntersection([target.center, source.center], source.bounds) ?? source.center;
+    const i2 = findClosestIntersection([source.center, target.center], target.bounds) ?? target.center;
+    points = [i1, i2];
+  }
+
+  return points;
 };

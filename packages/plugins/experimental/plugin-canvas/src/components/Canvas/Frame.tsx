@@ -13,7 +13,7 @@ import { useProjection } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
 import { Anchor } from './Anchor';
-import { DATA_SHAPE_ID, type ShapeComponentProps, shapeAttrs } from './Shape';
+import { type ShapeComponentProps, shapeAttrs } from './Shape';
 import { type DragDropPayload, useEditorContext } from '../../hooks';
 import { getBoundsProperties, getInputPoint } from '../../layout';
 import { type Polygon } from '../../types';
@@ -41,12 +41,10 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
   const { classNames, shape, selected, onSelect } = baseProps;
   const { debug, monitor, registry, editing, setEditing } = useEditorContext();
   const { root, projection, styles: projectionStyles } = useProjection();
-  const { container } = monitor.state(
-    ({ type, shape: dragging }) => type === 'frame' && dragging?.id === shape.id,
-  ).value;
+  const { container } = monitor.state(({ type, shape: active }) => type === 'frame' && active?.id === shape.id).value;
 
   const isEditing = editing?.shape.id === shape.id;
-  const [hover, setHover] = useState(false);
+  const [active, setActive] = useState(false);
 
   // Dragging.
   // TODO(burdon): Handle cursor dragging out of window (currently drop is lost/frozen).
@@ -57,9 +55,9 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
       dropTargetForElements({
         element: ref.current,
         getData: () => ({ type: 'frame', shape }) satisfies DragDropPayload,
-        canDrop: () => false,
-        onDragEnter: () => setHover(true),
-        onDragLeave: () => setHover(false),
+        canDrop: () => shape.type !== 'function', // TODO(burdon): Custom.
+        onDragEnter: () => setActive(true),
+        onDragLeave: () => setActive(false),
       }),
       draggable({
         element: ref.current,
@@ -132,23 +130,22 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
             styles.frameHover,
             styles.frameBorder,
             selected && styles.frameSelected,
-            hover && styles.frameActive,
+            active && styles.frameActive,
             shape.guide && styles.frameGuide,
             classNames,
             'transition',
             debug && 'opacity-50',
-            // scale >= 16 && 'duration-500 opacity-0',
           )}
           onClick={handleClick}
           onDoubleClick={handleDoubleClick}
-          onMouseEnter={() => setHover(true)}
-          onMouseLeave={(ev) => {
-            // We need to keep rendering the anchor that is being dragged.
-            const related = ev.relatedTarget as HTMLElement;
-            if (related?.getAttribute?.(DATA_SHAPE_ID) !== shape.id) {
-              setHover(false);
-            }
-          }}
+          // onMouseEnter={() => setActive(true)}
+          // onMouseLeave={(ev) => {
+          //   // We need to keep rendering the anchor that is being dragged.
+          //   const related = ev.relatedTarget as HTMLElement;
+          //   if (related?.getAttribute?.(DATA_SHAPE_ID) !== shape.id) {
+          //     setActive(false);
+          //   }
+          // }}
         >
           {Component && <Component {...baseProps} editing={isEditing} onClose={handleClose} onCancel={handleCancel} />}
         </div>
@@ -156,7 +153,7 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
         {/* Anchors. */}
         <div>
           {Object.entries(anchors).map(([anchor, { pos }]) => (
-            <Anchor key={anchor} id={anchor} shape={shape} pos={pos} onMouseLeave={() => setHover(false)} />
+            <Anchor key={anchor} id={anchor} shape={shape} pos={pos} onMouseLeave={() => setActive(false)} />
           ))}
         </div>
       </div>
