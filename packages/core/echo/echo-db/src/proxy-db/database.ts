@@ -6,14 +6,15 @@ import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
 import { type AnyObjectData, type BaseObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey, type SpaceId } from '@dxos/keys';
-import { type ReactiveObject, getProxyTarget, getSchema, isReactiveObject } from '@dxos/live-object';
+import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
+import { type ReactiveObject, getProxyTarget, getSchema, getType, isReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { defaultMap } from '@dxos/util';
 
 import { EchoSchemaRegistry } from './echo-schema-registry';
+import type { ObjectMigration } from './object-migration';
 import {
   CoreDatabase,
   type FlushOptions,
@@ -32,7 +33,7 @@ import {
   isEchoObject,
 } from '../echo-handler';
 import { type Hypergraph } from '../hypergraph';
-import { type FilterSource, type PropertyFilter, type QueryFn, type QueryOptions } from '../query';
+import { Filter, type FilterSource, type PropertyFilter, type QueryFn, type QueryOptions } from '../query';
 
 export type GetObjectByIdOptions = {
   deleted?: boolean;
@@ -285,6 +286,29 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   async flush(opts?: FlushOptions): Promise<void> {
     await this._coreDatabase.flush(opts);
+  }
+
+  async runMigrations(migrations: ObjectMigration[]): Promise<void> {
+    for (const migration of migrations) {
+      const { objects } = await this._coreDatabase.graph.query(Filter.typeDXN(migration.fromType.toString())).run();
+      log.verbose('migrate', { from: migration.fromType, to: migration.toType, objects: objects.length });
+      for (const object of objects) {
+        const output = await migration.transform(object, { db: this });
+
+        // TODO(dmaretskyi): Output validation.
+        delete (output as any).id;
+
+        await this._coreDatabase.atomicReplaceObject(object.id, {
+          data: output,
+          type: migration.toType,
+        });
+        const postMigrationType = getType(object)?.toDXN();
+        invariant(postMigrationType != null && DXN.equals(postMigrationType, migration.toType));
+
+        await migration.onMigration({ before: object, object, db: this });
+      }
+    }
+    await this.flush();
   }
 
   /**

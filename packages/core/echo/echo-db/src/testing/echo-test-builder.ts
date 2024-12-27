@@ -40,6 +40,7 @@ export class EchoTestBuilder extends Resource {
     const peer = await this.createPeer(kv);
     const db = await peer.createDatabase(PublicKey.random());
     return {
+      peer,
       host: peer.host,
       db,
       graph: db.graph,
@@ -52,6 +53,8 @@ export class EchoTestPeer extends Resource {
   private readonly _clients = new Set<EchoClient>();
   private _echoHost!: EchoHost;
   private _echoClient!: EchoClient;
+  private _lastDatabaseSpaceKey?: PublicKey = undefined;
+  private _lastDatabaseRootUrl?: string = undefined;
 
   constructor(private readonly _kv: LevelDB = createTestLevel()) {
     super();
@@ -124,6 +127,9 @@ export class EchoTestPeer extends Resource {
     const db = client.constructDatabase({ spaceId, spaceKey });
     await db.setSpaceRoot(root.url);
     await db.open();
+
+    this._lastDatabaseSpaceKey = spaceKey;
+    this._lastDatabaseRootUrl = root.url;
     return db;
   }
 
@@ -135,6 +141,10 @@ export class EchoTestPeer extends Resource {
     await db.setSpaceRoot(rootUrl);
     await db.open();
     return db;
+  }
+
+  async openLastDatabase() {
+    return this.openDatabase(this._lastDatabaseSpaceKey!, this._lastDatabaseRootUrl!);
   }
 }
 

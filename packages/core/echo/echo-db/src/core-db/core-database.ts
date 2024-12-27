@@ -18,8 +18,15 @@ import { interpretAsDocumentId, type AutomergeUrl, type DocumentId } from '@dxos
 import { Stream } from '@dxos/codec-protobuf';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { isEncodedReference, Reference, type SpaceDoc, type SpaceState } from '@dxos/echo-protocol';
-import { type AnyObjectData } from '@dxos/echo-schema';
+import {
+  encodeReference,
+  isEncodedReference,
+  Reference,
+  type ObjectStructure,
+  type SpaceDoc,
+  type SpaceState,
+} from '@dxos/echo-protocol';
+import { Ref, type AnyObjectData, type ObjectId } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -496,6 +503,37 @@ export class CoreDatabase {
     }
   }
 
+  /**
+   * Resets the object to the new state.
+   * Intended way to change the type of the object (for schema migrations).
+   * Any concurrent changes made by other peers will be overwritten.
+   */
+  async atomicReplaceObject(id: ObjectId, params: AtomicReplaceObjectParams): Promise<void> {
+    const { data, type } = params;
+
+    const core = await this.loadObjectCoreById(id);
+    invariant(core);
+
+    const mappedData = deepMapValues(data, (value) => {
+      if (Ref.isRef(value)) {
+        return { '/': value.dxn.toString() };
+      }
+      return value;
+    });
+
+    const existingStruct: ObjectStructure = core.getDecoded([]) as any;
+    const newStruct: ObjectStructure = {
+      ...existingStruct,
+      data: mappedData,
+    };
+
+    if (type !== undefined) {
+      newStruct.system.type = encodeReference(Reference.fromDXN(type));
+    }
+
+    core.setDecoded([], newStruct);
+  }
+
   async flush({ disk = true, indexes = false, updates = false }: FlushOptions = {}): Promise<void> {
     if (disk) {
       await this._repoProxy.flush();
@@ -857,6 +895,19 @@ export type GetObjectCoreByIdOptions = {
    * @default true
    */
   load?: boolean;
+};
+
+export type AtomicReplaceObjectParams = {
+  /**
+   * Update data.
+   * NOTE: This is not merged with the existing data.
+   */
+  data: any;
+
+  /**
+   * Update object type.
+   */
+  type?: DXN;
 };
 
 export type FlushOptions = {

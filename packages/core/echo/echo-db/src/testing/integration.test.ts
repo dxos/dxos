@@ -36,60 +36,56 @@ describe('Integration tests', () => {
   });
 
   test('read/write to one database', async () => {
-    const [spaceKey] = PublicKey.randomSequence();
     const dataAssertion = createDataAssertion({ referenceEquality: true });
     await using peer = await builder.createPeer();
 
-    await using db = await peer.createDatabase(spaceKey);
+    await using db = await peer.createDatabase();
     await dataAssertion.seed(db);
     await dataAssertion.verify(db);
   });
 
   test('reopen peer', async () => {
-    const [spaceKey] = PublicKey.randomSequence();
     const dataAssertion = createDataAssertion();
     await using peer = await builder.createPeer();
 
-    await using db = await peer.createDatabase(spaceKey);
+    await using db = await peer.createDatabase();
     await dataAssertion.seed(db);
 
     await peer.host.updateIndexes();
     await peer.close();
     await peer.open();
 
-    await using db2 = await peer.openDatabase(spaceKey, db.rootUrl!);
+    await using db2 = await peer.openLastDatabase();
     await dataAssertion.verify(db2);
   });
 
   test('reopen peer - updating indexes after restart', async () => {
-    const [spaceKey] = PublicKey.randomSequence();
     const dataAssertion = createDataAssertion();
     await using peer = await builder.createPeer();
 
-    await using db = await peer.createDatabase(spaceKey);
+    await using db = await peer.createDatabase();
     await dataAssertion.seed(db);
 
     await peer.close();
     await peer.open();
     await peer.host.updateIndexes();
 
-    await using db2 = await peer.openDatabase(spaceKey, db.rootUrl!);
+    await using db2 = await peer.openLastDatabase();
     await dataAssertion.verify(db2);
   });
 
   test('reload peer', async () => {
-    const [spaceKey] = PublicKey.randomSequence();
     const dataAssertion = createDataAssertion();
     await using peer = await builder.createPeer();
 
-    await using db = await peer.createDatabase(spaceKey);
+    await using db = await peer.createDatabase();
     await dataAssertion.seed(db);
     await db.flush();
     const heads = await db.coreDatabase.getDocumentHeads();
 
     await peer.reload();
 
-    await using db2 = await peer.openDatabase(spaceKey, db.rootUrl!);
+    await using db2 = await peer.openLastDatabase();
     await db2.coreDatabase.waitUntilHeadsReplicated(heads);
     await db2.coreDatabase.updateIndexes();
     await dataAssertion.verify(db2);
@@ -107,7 +103,7 @@ describe('Integration tests', () => {
     await peer.client.close();
     await peer.client.open();
 
-    await using db2 = await peer.openDatabase(spaceKey, db.rootUrl!);
+    await using db2 = await peer.openLastDatabase();
     await dataAssertion.verify(db2);
   });
 
@@ -131,14 +127,11 @@ describe('Integration tests', () => {
   // TODO(dmaretskyi): Test Ref.load() too.
   // TODO(dmaretskyi): Test that accessing the ref DXN doesn't load the target.
   test('references are loaded lazily and receive signal notifications', async () => {
-    const [spaceKey] = PublicKey.randomSequence();
     await using peer = await builder.createPeer();
 
-    let rootUrl: string;
     let outerId: string;
     {
-      await using db = await peer.createDatabase(spaceKey);
-      rootUrl = db.rootUrl!;
+      await using db = await peer.createDatabase();
       const inner = db.add({ name: 'inner' });
       const outer = db.add({ inner: makeRef(inner) });
       outerId = outer.id;
@@ -147,7 +140,7 @@ describe('Integration tests', () => {
 
     await peer.reload();
     {
-      await using db = await peer.openDatabase(spaceKey, rootUrl);
+      await using db = await peer.openLastDatabase();
       const outer = (await db.query({ id: outerId }).first()) as any;
       const loaded = new Trigger();
       using updates = updateCounter(() => {
