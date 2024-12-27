@@ -75,13 +75,16 @@ export class StateMachine {
   }
 }
 
+/**
+ * Represents a connection between nodes.
+ */
 export type ComputeEdge = {
   // TODO(burdon): Match property name to input keys.
   property: string;
 };
 
 /**
- *
+ * Represents a compute element, which may take inputs from multiple other nodes, and output a value to other nodes.
  */
 export abstract class ComputeNode<Input, Output> {
   abstract readonly type: string;
@@ -104,7 +107,7 @@ export abstract class ComputeNode<Input, Output> {
   }
 
   toString() {
-    return `Node(${this.type})`;
+    return `ComputeNode(${this.type})`;
   }
 
   toJSON() {
@@ -261,7 +264,7 @@ export class AndGate extends ComputeNode<LogicGateInput, boolean> {
 //
 //   override async invoke() {}
 // }
-//
+
 // export class Subscription extends ComputeNode<void, ReactiveObject<any>[]> {
 //   override readonly type = 'subscription';
 //
@@ -269,7 +272,7 @@ export class AndGate extends ComputeNode<LogicGateInput, boolean> {
 //     throw new Error('Invalid state');
 //   }
 // }
-//
+
 // export class RemoteFunction<Input> extends ComputeNode<Input, void> {
 //   override readonly type = 'function';
 //
@@ -277,7 +280,7 @@ export class AndGate extends ComputeNode<LogicGateInput, boolean> {
 //     invariant('Invalid state');
 //   }
 // }
-//
+
 // export class TransformerFunction extends ComputeNode<string, string> {
 //   override readonly type = 'gpt';
 //
