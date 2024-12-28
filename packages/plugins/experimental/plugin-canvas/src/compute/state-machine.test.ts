@@ -8,7 +8,8 @@ import { Trigger } from '@dxos/async';
 import { createEdgeId, type GraphNode } from '@dxos/graph';
 import { log } from '@dxos/log';
 
-import { AndGate, Beacon, type ComputeNode, createComputeGraph, StateMachine, Switch } from './state-machine';
+import { AndGate, Beacon, Switch } from './compute-nodes';
+import { type ComputeNode, createComputeGraph, StateMachine } from './state-machine';
 import { createId } from '../testing';
 
 describe('state machine', () => {
@@ -47,6 +48,7 @@ describe('state machine', () => {
     });
 
     const machine = new StateMachine(graph);
+    void machine.open();
 
     const done = new Trigger<boolean>();
     machine.update.on((ev) => {
@@ -65,5 +67,6 @@ describe('state machine', () => {
 
     await done.wait();
     expect(d.data.value).to.be.true;
+    void machine.close();
   });
 });

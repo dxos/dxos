@@ -5,6 +5,7 @@
 import { inspect } from 'node:util';
 
 import { Event } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { AST, S } from '@dxos/echo-schema';
 import { type GraphNode, GraphModel, type GraphEdge } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
@@ -20,21 +21,58 @@ export const createComputeGraph = (): ComputeGraph => {
   return new GraphModel<GraphNode<ComputeNode<any, any>>, GraphEdge<ComputeEdge | undefined>>();
 };
 
+export const InvalidStateError = Error;
+
+/**
+ * Callback to notify the state machine of a scheduled update.
+ */
+export type AsyncUpdate<T> = (value: T) => void;
+
 /**
  * Manages the dependency graph and async propagation of computed values.
  * Compute Nodes are invoked when all of their inputs are provided.
  * Root Nodes have a Void input type and are processed first.
  */
-// TODO(burdon): Extend resource?
 // TODO(burdon): Move to compute (use hyperformula).
 // TODO(burdon): Maps onto hyperformula?
 export class StateMachine {
   public readonly update = new Event<{ node: GraphNode<ComputeNode<any, any>>; value: any }>();
 
+  private _ctx?: Context;
+
   constructor(private readonly _graph: ComputeGraph) {}
 
-  // TODO(burdon): Start scheduler.
-  async start() {}
+  get isOpen() {
+    return this._ctx !== undefined;
+  }
+
+  // TODO(burdon): Extend resource?
+  async open() {
+    if (this._ctx) {
+      await this.close();
+    }
+
+    this._ctx = new Context();
+    await Promise.all(
+      this._graph.nodes.map(async (node) =>
+        node.data.open(this._ctx, (output: any) => {
+          if (!this._ctx) {
+            return;
+          }
+
+          this.update.emit({ node, value: output });
+          void this._propagate(node, output);
+        }),
+      ),
+    );
+  }
+
+  async close() {
+    if (this._ctx) {
+      await this._ctx.dispose();
+      this._ctx = undefined;
+    }
+  }
 
   async exec(node?: GraphNode<ComputeNode<any, any>> | undefined) {
     if (node) {
@@ -174,117 +212,13 @@ export abstract class ComputeNode<Input, Output> {
     return output;
   }
 
-  // TODO(burdon): Effect try (for error propagation, logging, etc.)
+  /**
+   * Initialize the node (and set clean-up logic).
+   * @param ctx
+   * @param cb
+   */
+  open(ctx: Context, cb: AsyncUpdate<Output>) {}
+
+  // TODO(burdon): Use Effect try (for error propagation, logging, etc.)
   protected abstract invoke(input: Input): Promise<Output>;
 }
-
-//
-// Compute node types.
-//
-
-export class Switch extends ComputeNode<void, boolean> {
-  override readonly type = 'switch';
-  private _state = false;
-
-  constructor() {
-    super(S.Void, S.Boolean);
-  }
-
-  setState(state: boolean): this {
-    this._state = state;
-    return this;
-  }
-
-  override async invoke() {
-    return this._state;
-  }
-}
-
-export class Beacon extends ComputeNode<boolean, void> {
-  override readonly type = 'beacon';
-
-  constructor() {
-    super(S.Boolean, S.Void);
-  }
-
-  override async invoke() {
-    invariant('Invalid state');
-  }
-}
-
-// TODO(burdon): Array or subtype with named properties?
-const LogicGateInput = S.mutable(S.Struct({ a: S.Boolean, b: S.Boolean }));
-type LogicGateInput = S.Schema.Type<typeof LogicGateInput>;
-
-export class NotGate extends ComputeNode<boolean, boolean> {
-  override readonly type = 'not';
-
-  constructor() {
-    super(S.Boolean, S.Boolean);
-  }
-
-  override async invoke(input: boolean) {
-    return !input;
-  }
-}
-
-export class OrGate extends ComputeNode<LogicGateInput, boolean> {
-  override readonly type = 'or';
-
-  constructor() {
-    super(LogicGateInput, S.Boolean);
-  }
-
-  override async invoke(input: LogicGateInput) {
-    return input.a || input.b;
-  }
-}
-
-export class AndGate extends ComputeNode<LogicGateInput, boolean> {
-  override readonly type = 'and';
-
-  constructor() {
-    super(LogicGateInput, S.Boolean);
-  }
-
-  override async invoke(input: LogicGateInput) {
-    return input.a && input.b;
-  }
-}
-
-// TODO(burdon): Logging "tap" pass-through.
-
-// TODO(burdon): Start/stop nodes or implement schedule.
-// export class Timer extends ComputeNode<void, number> {
-//   override readonly type = 'timer';
-//
-//   constructor() {
-//     super(S.Void, S.Number);
-//   }
-//
-//   override async invoke() {}
-// }
-
-// export class Subscription extends ComputeNode<void, ReactiveObject<any>[]> {
-//   override readonly type = 'subscription';
-//
-//   override async run() {
-//     throw new Error('Invalid state');
-//   }
-// }
-
-// export class RemoteFunction<Input> extends ComputeNode<Input, void> {
-//   override readonly type = 'function';
-//
-//   override async run(input: Input) {
-//     invariant('Invalid state');
-//   }
-// }
-
-// export class TransformerFunction extends ComputeNode<string, string> {
-//   override readonly type = 'gpt';
-//
-//   override async run(input: string) {
-//     invariant('Invalid state');
-//   }
-// }

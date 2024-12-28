@@ -5803,6 +5803,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../../common/context
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
