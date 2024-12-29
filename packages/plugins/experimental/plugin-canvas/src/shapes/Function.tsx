@@ -115,6 +115,7 @@ export const functionShape: ShapeDef<FunctionShape> = {
   create: () => createFunction({ id: createId(), center: { x: 0, y: 0 }, size: { width: 192, height: 80 } }),
   getAnchors: ({ id, center, size, properties }) => {
     const output = createAnchorId('output');
+    // TODO(burdon): From schema.
     return properties.reduce(
       (map, { name }, i) => {
         const input = createAnchorId('input', name);

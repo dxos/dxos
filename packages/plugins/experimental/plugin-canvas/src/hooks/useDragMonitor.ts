@@ -241,10 +241,7 @@ export const useDragMonitor = () => {
               case 'anchor': {
                 // TODO(burdon): Custom logic.
                 const [sourceDirection, sourceAnchorId] = parseAnchorId(source.anchor.id);
-                const [targetDirection, targetAnchorId] = parseAnchorId(target.anchor.id);
-
-                // TODO(burdon): Drop snap.
-                console.log(sourceDirection, source.anchor.id, target.anchor.id);
+                const [, targetAnchorId] = parseAnchorId(target.anchor.id);
 
                 if (sourceDirection === 'output') {
                   await actionHandler({

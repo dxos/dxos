@@ -131,7 +131,7 @@ type Story = StoryObj<RenderProps & { spec?: TypeSpec[] }>;
 
 export const Default: Story = {
   args: {
-    debug: true,
+    // debug: true,
     showGrid: true,
     snapToGrid: false,
     sidebar: 'json',
