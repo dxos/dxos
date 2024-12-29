@@ -5,10 +5,11 @@
 import { type GraphNode, type ReadonlyGraphModel } from '@dxos/graph';
 import { type Point, type Rect } from '@dxos/react-ui-canvas';
 
+import { type DragDropPayload } from './useDragMonitor';
 import { useEditorContext } from './useEditorContext';
 import { type Anchor, type ShapeRegistry } from '../components';
 import { getDistance, findClosestIntersection, getNormals, getRect, pointAdd } from '../layout';
-import { createPath } from '../shapes';
+import { createAnchorId, createPath } from '../shapes';
 import { isPolygon, type Polygon, type Shape } from '../types';
 
 export type Layout = {
@@ -45,8 +46,8 @@ export const useLayout = (): Layout => {
     // TODO(burdon): Custom logic for function anchors (e.g., assumes source is always the output.)
     if (data) {
       const { property } = data;
-      const sourceAnchor = getAnchorPoint(registry, source, '#output');
-      const targetAnchor = getAnchorPoint(registry, target, property);
+      const sourceAnchor = getAnchorPoint(registry, source, createAnchorId('output'));
+      const targetAnchor = getAnchorPoint(registry, target, createAnchorId('input', property));
       if (sourceAnchor && targetAnchor) {
         const offset = 16;
         return shapes.push(
@@ -139,9 +140,9 @@ const createCenterPoints = (source: Bounds, target: Bounds, len = 32): Point[] =
 };
 
 // TODO(burdon): Cache anchor positions? (runtime representation of shapes and paths).
-const getAnchorPoint = (registry: ShapeRegistry, shape: Shape, property: string): Point | undefined => {
+const getAnchorPoint = (registry: ShapeRegistry, shape: Shape, anchorId: string): Point | undefined => {
   const anchors = registry.getShape(shape.type)?.getAnchors?.(shape);
-  const anchor = anchors?.[property];
+  const anchor = anchors?.[anchorId];
   return anchor?.pos;
 };
 
@@ -151,19 +152,19 @@ export const getClosestAnchor = (
   registry: ShapeRegistry,
   pos: Point,
   test: (shape: Polygon, anchor: Anchor, d: number) => boolean,
-): Anchor | undefined => {
+): Extract<DragDropPayload, { type: 'anchor' }> | undefined => {
   let min = Infinity;
-  let closest: Anchor | undefined;
+  let closest: Extract<DragDropPayload, { type: 'anchor' }> | undefined;
   graph.nodes
     .filter(({ data }) => data.type === 'function')
     .forEach(({ data: shape }) => {
       const anchors = registry.getShape(shape.type)?.getAnchors?.(shape);
       if (anchors) {
-        for (const [_, anchor] of Object.entries(anchors)) {
+        for (const anchor of Object.values(anchors)) {
           const d = getDistance(pos, anchor.pos);
           if (min > d && test(shape, anchor, d)) {
             min = d;
-            closest = anchor;
+            closest = { type: 'anchor', shape, anchor };
           }
         }
       }

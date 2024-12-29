@@ -105,16 +105,21 @@ export const FunctionComponent = ({ shape }: ShapeComponentProps<FunctionShape>)
   );
 };
 
+export const createAnchorId = (direction: 'input' | 'output', property = '#default') => [direction, property].join('.');
+export const parseAnchorId = (id: string) => id.split('.');
+
 export const functionShape: ShapeDef<FunctionShape> = {
   type: 'function',
   icon: 'ph--function--regular',
   component: FunctionComponent,
   create: () => createFunction({ id: createId(), center: { x: 0, y: 0 }, size: { width: 192, height: 80 } }),
   getAnchors: ({ id, center, size, properties }) => {
+    const output = createAnchorId('output');
     return properties.reduce(
       (map, { name }, i) => {
-        map[name] = {
-          id: name,
+        const input = createAnchorId('input', name);
+        map[input] = {
+          id: input,
           shape: id,
           pos: pointAdd(center, {
             x: -size.width / 2,
@@ -125,9 +130,8 @@ export const functionShape: ShapeDef<FunctionShape> = {
         return map;
       },
       {
-        '#output': {
-          // TODO(burdon): Const.
-          id: '#output',
+        [output]: {
+          id: output,
           shape: id,
           pos: pointAdd(center, { x: size.width / 2, y: 0 }),
         },

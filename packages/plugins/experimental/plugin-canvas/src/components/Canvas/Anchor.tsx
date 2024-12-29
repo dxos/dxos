@@ -54,7 +54,7 @@ export const getAnchors = (
 };
 
 export type AnchorProps = {
-  id: string; // E.g., "w", "w.1.4", "prop-1", "#output", etc.
+  id: string; // E.g., "w", "w.1.4", "prop-1", "#default", etc.
   shape: Polygon;
   anchor: Anchor;
   size?: Dimension;

@@ -151,6 +151,7 @@ export const Default: Story = {
         data: {
           id: 'node-b',
           type: 'function',
+          // TODO(burdon): Convert to schema.
           properties: [{ name: 'prop-1' }, { name: 'prop-2' }, { name: 'prop-3' }],
           size: { width: 128, height: 128 },
           center: { x: 128, y: 0 },

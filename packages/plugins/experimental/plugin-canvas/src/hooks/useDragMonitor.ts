@@ -16,7 +16,7 @@ import { getClosestAnchor } from './useLayout';
 import { useSnap } from './useSnap';
 import { type Anchor } from '../components';
 import { getInputPoint } from '../layout';
-import { createRectangle } from '../shapes';
+import { createRectangle, parseAnchorId } from '../shapes';
 import { createId, itemSize } from '../testing';
 import { type Polygon } from '../types';
 
@@ -65,7 +65,9 @@ export type DraggingState =
       type: 'anchor';
       shape: Polygon;
       anchor: Anchor;
-      target?: Anchor;
+      /** Snap target. */
+      target?: DragDropPayload;
+      /** Current pointer. */
       pointer?: Point;
       container: HTMLElement;
     };
@@ -126,12 +128,12 @@ export class DragMonitor {
 
         case 'anchor': {
           if (this._state.value.type === 'anchor' && target.shape.id !== this._state.value.anchor.id) {
-            // TODO(burdon): Test polarity and type.
+            // TODO(burdon): Test type.
             // TODO(burdon): Prevent drop if anchor is already populated.
-            if (
-              (target.anchor.id === '#output' && this._state.value.anchor.id !== '#output') ||
-              (target.anchor.id !== '#output' && this._state.value.anchor.id === '#output')
-            ) {
+            const source = this._state.value;
+            const [sourceDirection] = parseAnchorId(source.anchor.id);
+            const [targetDirection] = parseAnchorId(target.anchor.id);
+            if (sourceDirection !== targetDirection) {
               return true;
             }
           }
@@ -179,11 +181,11 @@ export const useDragMonitor = () => {
           case 'anchor': {
             // Snap to closest anchor.
             // TODO(burdon): Update layout to use anchor.
-            const anchor = getClosestAnchor(graph, registry, pos, (shape, anchor, d) => {
+            const target = getClosestAnchor(graph, registry, pos, (shape, anchor, d) => {
               return d < 32 && monitor.canDrop({ type: 'anchor', shape, anchor });
             });
 
-            monitor.update({ target: anchor, pointer: anchor?.pos ?? pos });
+            monitor.update({ target, pointer: target?.anchor.pos ?? pos });
             break;
           }
         }
@@ -228,7 +230,8 @@ export const useDragMonitor = () => {
           //
           case 'anchor': {
             const source = state.value;
-            const target = location.current.dropTargets?.[0]?.data as DragDropPayload;
+            const target = state.value.target ?? (location.current.dropTargets?.[0]?.data as DragDropPayload);
+
             switch (target?.type) {
               case 'frame': {
                 await actionHandler({ type: 'link', source: source.shape.id, target: target.shape.id });
@@ -236,19 +239,26 @@ export const useDragMonitor = () => {
               }
 
               case 'anchor': {
-                if (source.anchor.id === '#output') {
+                // TODO(burdon): Custom logic.
+                const [sourceDirection, sourceAnchorId] = parseAnchorId(source.anchor.id);
+                const [targetDirection, targetAnchorId] = parseAnchorId(target.anchor.id);
+
+                // TODO(burdon): Drop snap.
+                console.log(sourceDirection, source.anchor.id, target.anchor.id);
+
+                if (sourceDirection === 'output') {
                   await actionHandler({
                     type: 'link',
                     source: source.shape.id,
                     target: target.shape.id,
-                    data: { property: target.anchor.id },
+                    data: { property: targetAnchorId },
                   });
                 } else {
                   await actionHandler({
                     type: 'link',
                     source: target.shape.id,
                     target: source.shape.id,
-                    data: { property: source.anchor.id },
+                    data: { property: sourceAnchorId },
                   });
                 }
                 break;
