@@ -20,10 +20,10 @@ import { isPolygon } from '../types';
 // TODO(burdon): Handle multiple actions.
 export const useActionHandler = () => {
   const {
+    clipboard,
+    graph,
     options,
     overlayRef,
-    graph,
-    clipboard,
     selection,
     setDebug,
     setShowGrid,

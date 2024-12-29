@@ -9,7 +9,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { type ReactiveEchoObject } from '@dxos/echo-db';
 import { S, getTypename } from '@dxos/echo-schema';
-import { createGraph, type GraphModel, type GraphNode } from '@dxos/graph';
+import { createGraph, GraphModel, type GraphNode } from '@dxos/graph';
 import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
@@ -132,10 +132,36 @@ type Story = StoryObj<RenderProps & { spec?: TypeSpec[] }>;
 export const Default: Story = {
   args: {
     debug: true,
-    showGrid: false,
+    showGrid: true,
     snapToGrid: false,
     sidebar: 'json',
-    init: true,
+    graph: new GraphModel<GraphNode<Shape>>()
+      .addNode({
+        id: 'node-a',
+        data: {
+          id: 'node-a',
+          type: 'function',
+          properties: [],
+          size: { width: 128, height: 128 },
+          center: { x: -128, y: 0 },
+        },
+      })
+      .addNode({
+        id: 'node-b',
+        data: {
+          id: 'node-b',
+          type: 'function',
+          properties: [{ name: 'prop-1' }, { name: 'prop-2' }, { name: 'prop-3' }],
+          size: { width: 128, height: 128 },
+          center: { x: 128, y: 0 },
+        },
+      })
+      .addEdge({
+        id: 'node-a-to-node-b',
+        source: 'node-a',
+        target: 'node-b',
+        data: { property: 'prop-2' },
+      }),
   },
 };
 

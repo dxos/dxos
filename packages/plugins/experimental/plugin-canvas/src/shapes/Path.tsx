@@ -48,14 +48,14 @@ export const PathComponent = ({ shape, selected, onSelect }: ShapeComponentProps
               onClick={(ev) => onSelect?.(shape.id, ev.shiftKey)}
             />
           )}
-          {/* This may not be necessary? */}
+          {/* TODO(burdon): Document if this is required. */}
           <use href={`#${DEFS_ID}`} />
           <path
             {...shapeAttrs(shape)}
             d={shape.path}
             fill={'none'}
-            markerStart={!shape.guide && shape.id !== 'link' ? createUrl(shape.start) : undefined}
-            markerEnd={!shape.guide && shape.id !== 'link' ? createUrl(shape.end) : undefined}
+            markerStart={!shape.guide ? createUrl(shape.start) : undefined}
+            markerEnd={!shape.guide ? createUrl(shape.end) : undefined}
             className={mx(
               'stroke-[var(--dx-stroke-color)]',
               selected && styles.pathSelected,

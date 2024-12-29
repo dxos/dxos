@@ -33,8 +33,7 @@ export type AsyncUpdate<T> = (value: T) => void;
  * Compute Nodes are invoked when all of their inputs are provided.
  * Root Nodes have a Void input type and are processed first.
  */
-// TODO(burdon): Move to compute (use hyperformula).
-// TODO(burdon): Maps onto hyperformula?
+// TODO(burdon): Move to compute (wihout hyperformula dependency). Maps onto hyperformula as client runtime?
 export class StateMachine {
   public readonly update = new Event<{ node: GraphNode<ComputeNode<any, any>>; value: any }>();
 

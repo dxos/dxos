@@ -39,8 +39,9 @@ export const Canvas = () => {
 export const CanvasContent = () => {
   const { id, monitor, overlayRef, options, showGrid, selection } = useEditorContext();
   const { root, styles: projectionStyles, scale, offset } = useProjection();
-  const { container, shape: dragging } = monitor.state(({ type }) => type === 'tool').value;
   const shapesRef = useRef<HTMLDivElement>(null);
+
+  const dragging = monitor.state((state) => state.type === 'tool').value;
 
   // Drop target.
   useEffect(() => {
@@ -102,13 +103,12 @@ export const CanvasContent = () => {
         {selectionRect && <SelectionBox rect={selectionRect} />}
 
         {/* Tool dragging. */}
-        {container &&
-          dragging &&
+        {dragging.type === 'tool' &&
           createPortal(
             <div style={projectionStyles}>
-              <FrameDragPreview shape={dragging} />
+              <FrameDragPreview shape={dragging.shape} />
             </div>,
-            container,
+            dragging.container,
           )}
 
         {/* Misc overlay. */}

@@ -32,7 +32,7 @@ export const pointAdd = (a: Point, b: Point): Point => ({ x: a.x + b.x, y: a.y +
 export const pointSubtract = (a: Point, b: Point): Point => ({ x: a.x - b.x, y: a.y - b.y });
 export const pointMid = (a: Point, b: Point): Point => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
 
-export const distance = (p1: Point, p2: Point): number =>
+export const getDistance = (p1: Point, p2: Point): number =>
   Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
 
 //
@@ -93,8 +93,8 @@ export const findClosestIntersection = ([p1, p2]: Line, rect: Rect): Point | nul
 
   // Find the closest intersection point to the line's p1.
   return intersections.reduce((closest, point) => {
-    const closestDistance = distance(p1, closest);
-    const currentDistance = distance(p1, point);
+    const closestDistance = getDistance(p1, closest);
+    const currentDistance = getDistance(p1, point);
     return currentDistance < closestDistance ? point : closest;
   });
 };

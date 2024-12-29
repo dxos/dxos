@@ -55,11 +55,11 @@ const minHeight = 64;
 const rowHeight = 20;
 const maxProperties = 8;
 
+/**
+ * Generalize to any compute node with anchors.
+ */
 export const FunctionComponent = ({ shape }: ShapeComponentProps<FunctionShape>) => {
   const { actionHandler, repaint } = useEditorContext();
-
-  // TODO(burdon): Position of anchors.
-  // console.log(shape.properties);
 
   const handleRun = () => {
     void actionHandler?.({ type: 'run', id: shape.id });
@@ -114,6 +114,7 @@ export const functionShape: ShapeDef<FunctionShape> = {
     return properties.reduce(
       (map, { name }, i) => {
         map[name] = {
+          id: name,
           shape: id,
           pos: pointAdd(center, {
             x: -size.width / 2,
@@ -125,6 +126,8 @@ export const functionShape: ShapeDef<FunctionShape> = {
       },
       {
         '#output': {
+          // TODO(burdon): Const.
+          id: '#output',
           shape: id,
           pos: pointAdd(center, { x: size.width / 2, y: 0 }),
         },
