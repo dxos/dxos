@@ -36,7 +36,7 @@ export const defaultAnchors: Record<string, Point> = {
   s: { x: 0, y: -1 },
 };
 
-export const getAnchors = (
+export const createAnchors = (
   { id, center, size: { width, height } }: Polygon,
   anchors: Record<string, Point> = defaultAnchors,
 ): Record<string, Anchor> => {
@@ -47,6 +47,7 @@ export const getAnchors = (
         shape: id,
         pos: pointAdd(center, { x: (pos.x * width) / 2, y: (pos.y * height) / 2 }),
       };
+
       return map;
     },
     {} as Record<string, Anchor>,

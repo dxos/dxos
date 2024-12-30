@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { S } from '@dxos/echo-schema';
 import { Input } from '@dxos/react-ui';
 
-import { getAnchors, type ShapeComponentProps, type ShapeDef } from '../../components';
+import { createAnchors, type ShapeComponentProps, type ShapeDef } from '../../components';
 import { createId } from '../../testing';
 import { Polygon } from '../../types';
 
@@ -45,5 +45,5 @@ export const switchShape: ShapeDef<SwitchShape> = {
   icon: 'ph--toggle-left--regular',
   component: SwitchComponent,
   create: () => createSwitch({ id: createId(), center: { x: 0, y: 0 }, size: { width: 64, height: 64 } }),
-  getAnchors: (shape) => getAnchors(shape, { 'output.#default': { x: 1, y: 0 } }),
+  getAnchors: (shape) => createAnchors(shape, { 'output.#default': { x: 1, y: 0 } }),
 };

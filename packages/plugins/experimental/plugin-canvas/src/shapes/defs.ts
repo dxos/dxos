@@ -4,7 +4,7 @@
 
 import { ellipseShape } from './Ellipse';
 import { rectangleShape } from './Rectangle';
-import { andShape, functionShape, switchShape, beaconShape } from './compute';
+import { andShape, orShape, notShape, functionShape, switchShape, beaconShape } from './compute';
 import { type ShapeDef } from '../components';
 
 /**
@@ -16,5 +16,7 @@ export const defaultShapes: ShapeDef<any>[] = [
   functionShape,
   switchShape,
   andShape,
+  orShape,
+  notShape,
   beaconShape,
 ];

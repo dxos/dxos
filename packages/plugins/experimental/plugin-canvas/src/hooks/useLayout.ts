@@ -10,7 +10,7 @@ import { useEditorContext } from './useEditorContext';
 import { type Anchor, type ShapeRegistry } from '../components';
 import { getDistance, findClosestIntersection, getNormals, getRect, pointAdd } from '../layout';
 import { createAnchorId, createPath } from '../shapes';
-import { isPolygon, type Polygon, type Shape } from '../types';
+import { isPolygon, type PathShape, type Polygon, type Shape } from '../types';
 
 export type Layout = {
   shapes: Shape[];
@@ -27,7 +27,28 @@ export const useLayout = (): Layout => {
   const getShape = (shape: Polygon) =>
     dragging.type === 'frame' && dragging.shape.id === shape.id ? dragging.shape : shape;
 
-  // TODO(burdon): Cache with useMemo.
+  type LinkProps = { id: string; source: Polygon; target: Polygon; property?: string };
+  const createPathForEdge = ({ id, source, target, property }: LinkProps): PathShape | undefined => {
+    if (property) {
+      // TODO(burdon): Custom logic for function anchors.
+      const sourceAnchor = getAnchorPoint(registry, source, createAnchorId('output'));
+      const targetAnchor = getAnchorPoint(registry, target, createAnchorId('input', property));
+      if (sourceAnchor && targetAnchor) {
+        return createPath({ id, points: createCurve(sourceAnchor, targetAnchor) });
+      }
+    }
+
+    const sourceBounds = getNodeBounds(source);
+    const targetBounds = getNodeBounds(target);
+    if (sourceBounds?.center && targetBounds?.center) {
+      const points = createCenterPoints(sourceBounds, targetBounds);
+      if (points) {
+        return createPath({ id, points, end: 'arrow-end' });
+      }
+    }
+  };
+
+  // TODO(burdon): Cache with useMemo? Can we determine what changed?
   const shapes: Shape[] = [];
 
   //
@@ -43,34 +64,10 @@ export const useLayout = (): Layout => {
     const source = getShape(sourceNode.data);
     const target = getShape(targetNode.data);
 
-    // TODO(burdon): Custom logic for function anchors (e.g., assumes source is always the output.)
-    if (data) {
-      const { property } = data;
-      const sourceAnchor = getAnchorPoint(registry, source, createAnchorId('output'));
-      const targetAnchor = getAnchorPoint(registry, target, createAnchorId('input', property));
-      if (sourceAnchor && targetAnchor) {
-        const offset = 16;
-        return shapes.push(
-          createPath({
-            id,
-            points: [
-              sourceAnchor,
-              pointAdd(sourceAnchor, { x: offset, y: 0 }),
-              pointAdd(targetAnchor, { x: -offset, y: 0 }),
-              targetAnchor,
-            ],
-          }),
-        );
-      }
-    }
-
-    const sourceBounds = getNodeBounds(source);
-    const targetBounds = getNodeBounds(target);
-    if (sourceBounds?.center && targetBounds?.center) {
-      const points = createCenterPoints(sourceBounds, targetBounds);
-      if (points) {
-        return shapes.push(createPath({ id, points, end: 'arrow-end' }));
-      }
+    const { property } = data;
+    const path = createPathForEdge({ id, source, target, property });
+    if (path) {
+      shapes.push(path);
     }
   });
 
@@ -80,10 +77,16 @@ export const useLayout = (): Layout => {
   if (dragging?.type === 'anchor' && dragging.pointer) {
     let points: Point[] | undefined;
     if (dragging.anchor) {
-      // TODO(burdon): Check if snapped to anchor.
-      const pos = getAnchorPoint(registry, dragging.shape, dragging.anchor.id);
-      if (pos) {
-        points = [pos, dragging.pointer];
+      const sourceAnchor = getAnchorPoint(registry, dragging.shape, dragging.anchor.id);
+      if (sourceAnchor) {
+        let targetAnchor =
+          dragging.target?.type === 'anchor' &&
+          getAnchorPoint(registry, dragging.target.shape, dragging.target.anchor.id);
+        if (!targetAnchor) {
+          targetAnchor = dragging.pointer;
+        }
+
+        points = createCurve(sourceAnchor, targetAnchor);
       }
     }
 
@@ -140,6 +143,13 @@ const createCenterPoints = (source: Bounds, target: Bounds, len = 32): Point[] =
 
   return points;
 };
+
+const createCurve = (source: Point, target: Point, offset = 10) => [
+  source,
+  pointAdd(source, { x: offset, y: 0 }),
+  pointAdd(target, { x: -offset, y: 0 }),
+  target,
+];
 
 // TODO(burdon): Cache anchor positions? (runtime representation of shapes and paths).
 const getAnchorPoint = (registry: ShapeRegistry, shape: Shape, anchorId: string): Point | undefined => {

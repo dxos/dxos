@@ -241,6 +241,8 @@ export const useDragMonitor = () => {
                 const [sourceDirection, sourceAnchorId] = parseAnchorId(source.anchor.id);
                 const [, targetAnchorId] = parseAnchorId(target.anchor.id);
 
+                console.log(sourceDirection, sourceAnchorId, targetAnchorId);
+
                 if (sourceDirection === 'output') {
                   await actionHandler({
                     type: 'link',

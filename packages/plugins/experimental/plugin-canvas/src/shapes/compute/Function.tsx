@@ -7,11 +7,15 @@ import React from 'react';
 import { S } from '@dxos/echo-schema';
 import { Icon, IconButton } from '@dxos/react-ui';
 
+import { rowHeight } from './util';
 import { type Anchor, type ShapeComponentProps, type ShapeDef } from '../../components';
 import { useEditorContext } from '../../hooks';
 import { pointAdd } from '../../layout';
 import { createId } from '../../testing';
 import { Polygon } from '../../types';
+
+const minHeight = 64;
+const maxProperties = 8;
 
 export const FunctionProperty = S.Struct({
   name: S.String,
@@ -50,10 +54,6 @@ export const createFunction = ({ id, ...rest }: CreateFunctionProps): FunctionSh
   ],
   ...rest,
 });
-
-const minHeight = 64;
-const rowHeight = 20;
-const maxProperties = 8;
 
 /**
  * Generalize to any compute node with anchors.
@@ -113,6 +113,7 @@ export const functionShape: ShapeDef<FunctionShape> = {
   icon: 'ph--function--regular',
   component: FunctionComponent,
   create: () => createFunction({ id: createId(), center: { x: 0, y: 0 }, size: { width: 192, height: 80 } }),
+  // TODO(burdon): Reconcile with createAnchors.
   getAnchors: ({ id, center, size, properties }) => {
     const output = createAnchorId('output');
     // TODO(burdon): From schema.

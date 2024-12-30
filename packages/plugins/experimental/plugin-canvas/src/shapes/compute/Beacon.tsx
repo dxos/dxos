@@ -7,7 +7,7 @@ import React from 'react';
 import { S } from '@dxos/echo-schema';
 import { Icon } from '@dxos/react-ui';
 
-import { getAnchors, type ShapeComponentProps, type ShapeDef } from '../../components';
+import { createAnchors, type ShapeComponentProps, type ShapeDef } from '../../components';
 import { createId } from '../../testing';
 import { Polygon } from '../../types';
 
@@ -41,5 +41,5 @@ export const beaconShape: ShapeDef<BeaconShape> = {
   icon: 'ph--sun--regular',
   component: BeaconComponent,
   create: () => createBeacon({ id: createId(), center: { x: 0, y: 0 }, size: { width: 64, height: 64 } }),
-  getAnchors: (shape) => getAnchors(shape, { 'input.#default': { x: -1, y: 0 } }),
+  getAnchors: (shape) => createAnchors(shape, { 'input.#default': { x: -1, y: 0 } }),
 };
