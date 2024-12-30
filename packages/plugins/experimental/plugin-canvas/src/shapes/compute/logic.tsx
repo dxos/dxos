@@ -13,6 +13,7 @@ import { Polygon } from '../../types';
 
 //
 // Gate utils.
+// https://en.wikipedia.org/wiki/Logic_gate
 //
 
 type GateType = 'and' | 'or' | 'not';
