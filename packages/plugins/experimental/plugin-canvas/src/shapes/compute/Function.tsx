@@ -7,11 +7,11 @@ import React from 'react';
 import { S } from '@dxos/echo-schema';
 import { Icon, IconButton } from '@dxos/react-ui';
 
-import { type Anchor, type ShapeComponentProps, type ShapeDef } from '../components';
-import { useEditorContext } from '../hooks';
-import { pointAdd } from '../layout';
-import { createId } from '../testing';
-import { Polygon } from '../types';
+import { type Anchor, type ShapeComponentProps, type ShapeDef } from '../../components';
+import { useEditorContext } from '../../hooks';
+import { pointAdd } from '../../layout';
+import { createId } from '../../testing';
+import { Polygon } from '../../types';
 
 export const FunctionProperty = S.Struct({
   name: S.String,

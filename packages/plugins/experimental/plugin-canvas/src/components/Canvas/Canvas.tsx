@@ -9,7 +9,7 @@ import { createPortal } from 'react-dom';
 import { Canvas as NativeCanvas, Grid, type Rect, testId, useWheel, useProjection } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
-import { FrameDragPreview } from './Frame';
+import { Frame } from './Frame';
 import { getShapeBounds } from './Shape';
 import { Shapes } from './Shapes';
 import {
@@ -106,7 +106,7 @@ export const CanvasContent = () => {
         {dragging.type === 'tool' &&
           createPortal(
             <div style={projectionStyles}>
-              <FrameDragPreview shape={dragging.shape} />
+              <Frame shape={dragging.shape} />
             </div>,
             dragging.container,
           )}

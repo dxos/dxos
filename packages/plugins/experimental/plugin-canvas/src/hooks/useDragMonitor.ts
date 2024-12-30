@@ -72,8 +72,6 @@ export type DraggingState =
       container: HTMLElement;
     };
 
-// snapTarget?: DragDropPayload;
-
 /**
  * Extensible controller.
  * Manages reactive dragging state.

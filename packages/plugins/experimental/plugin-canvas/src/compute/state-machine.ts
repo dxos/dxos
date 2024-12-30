@@ -7,19 +7,11 @@ import { inspect } from 'node:util';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { AST, S } from '@dxos/echo-schema';
-import { type GraphNode, GraphModel, type GraphEdge } from '@dxos/graph';
+import { type GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-/**
- * Dependency graph of compute nodes.
- * Each compute node has an INPUT and OUTPUT type.
- */
-export type ComputeGraph = GraphModel<GraphNode<ComputeNode<any, any>>, GraphEdge<ComputeEdge | void>>;
-
-export const createComputeGraph = (): ComputeGraph => {
-  return new GraphModel<GraphNode<ComputeNode<any, any>>, GraphEdge<ComputeEdge | undefined>>();
-};
+import { type ComputeGraph } from './compute-graph';
 
 export const InvalidStateError = Error;
 

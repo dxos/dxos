@@ -5,10 +5,20 @@
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
-import React, { type FC, type MouseEventHandler, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  type FC,
+  type MouseEventHandler,
+  type PropsWithChildren,
+  forwardRef,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { useProjection } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -17,7 +27,7 @@ import { type ShapeComponentProps, shapeAttrs } from './Shape';
 import { type DragDropPayload, useEditorContext } from '../../hooks';
 import { getBoundsProperties } from '../../layout';
 import { type Polygon } from '../../types';
-import { ReadonlyTextBox, type TextBoxProps } from '../TextBox';
+import { type TextBoxProps } from '../TextBox';
 import { styles } from '../styles';
 
 // TODO(burdon): Surface for form content. Or pass in children (which may include a Surface).
@@ -38,21 +48,22 @@ export type FrameProps = ShapeComponentProps<Polygon> & {
  * Draggable Frame around polygons.
  */
 export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
-  const { classNames, shape, selected, onSelect } = baseProps;
-  const { debug, monitor, registry, editing, setEditing } = useEditorContext();
+  const { shape, onSelect } = baseProps;
+  const { monitor, registry, editing, setEditing } = useEditorContext();
   const { root, projection, styles: projectionStyles } = useProjection();
 
   const dragging = monitor.state((state) => state.type === 'frame' && state.shape.id === shape.id).value;
+  const isDragging = dragging.type === 'frame';
   const isEditing = editing?.shape.id === shape.id;
   const [active, setActive] = useState(false);
 
   // Dragging.
-  const ref = useRef<HTMLDivElement>(null);
+  const draggingRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    invariant(ref.current);
+    invariant(draggingRef.current);
     return combine(
       dropTargetForElements({
-        element: ref.current,
+        element: draggingRef.current,
         getData: () => ({ type: 'frame', shape }) satisfies DragDropPayload,
         canDrop: () => monitor.canDrop({ type: 'frame', shape }),
         onDragEnter: () => setActive(true),
@@ -60,7 +71,7 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
         onDrop: () => setActive(false),
       }),
       draggable({
-        element: ref.current,
+        element: draggingRef.current,
         getInitialData: () => ({ type: 'frame', shape }) satisfies DragDropPayload,
         onGenerateDragPreview: ({ nativeSetDragImage }) => {
           setCustomNativeDragPreview({
@@ -79,7 +90,7 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
 
   // Custom anchors.
   const anchors = useMemo(
-    () => registry.getShape(shape.type)?.getAnchors?.(shape) ?? [],
+    () => registry.getShape(shape.type)?.getAnchors?.(shape) ?? {},
     [shape.center, shape.size.height],
   );
 
@@ -108,24 +119,65 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
 
   return (
     <>
-      <div className={mx(dragging.type === 'frame' && 'opacity-0')}>
+      <Child
+        {...baseProps}
+        dragging={isDragging}
+        active={active}
+        anchors={anchors}
+        onSelect={() => {}}
+        onEdit={() => {}}
+        ref={draggingRef}
+      >
+        {Component && <Component {...baseProps} editing={isEditing} onClose={handleClose} onCancel={handleCancel} />}
+      </Child>
+
+      {/* Drag preview (NOTE: styles should be included to apply scale). */}
+      {dragging.type === 'frame' &&
+        createPortal(
+          <div style={projectionStyles}>
+            <Child {...baseProps} anchors={anchors} onSelect={() => {}} onEdit={() => {}}>
+              {Component && <Component {...baseProps} />}
+            </Child>
+            {/* <FrameDragPreview debug={debug} shape={shape} /> */}
+          </div>,
+          dragging.container,
+        )}
+    </>
+  );
+};
+
+export type ChildProps = PropsWithChildren<
+  ThemedClassName<
+    {
+      anchors: Record<string, Anchor>;
+      active?: boolean;
+      dragging?: boolean;
+      onSelect?: () => void;
+      onEdit?: () => void;
+    } & Omit<FrameProps, 'onSelect'>
+  >
+>;
+
+export const Child = forwardRef<HTMLDivElement, ChildProps>(
+  ({ children, classNames, shape, debug, selected, dragging, anchors, active, onSelect, onEdit }, forwardedRef) => {
+    return (
+      <div className={mx(dragging && 'opacity-0')}>
         <div
           {...shapeAttrs(shape)}
-          ref={ref}
+          ref={forwardedRef}
           style={getBoundsProperties({ ...shape.center, ...shape.size })}
           className={mx(
+            classNames,
             styles.frameContainer,
             styles.frameHover,
             styles.frameBorder,
             selected && styles.frameSelected,
             active && styles.frameActive,
             shape.guide && styles.frameGuide,
-            classNames,
-            'transition',
             debug && 'opacity-50',
           )}
-          onClick={handleClick}
-          onDoubleClick={handleDoubleClick}
+          onClick={onSelect}
+          onDoubleClick={onEdit}
           // onMouseEnter={() => setActive(true)}
           // onMouseLeave={(ev) => {
           //   // We need to keep rendering the anchor that is being dragged.
@@ -135,7 +187,7 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
           //   }
           // }}
         >
-          {Component && <Component {...baseProps} editing={isEditing} onClose={handleClose} onCancel={handleCancel} />}
+          {children}
         </div>
 
         {/* Anchors. */}
@@ -146,32 +198,11 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
               id={anchor.id}
               shape={shape}
               anchor={anchor}
-              onMouseLeave={() => setActive(false)}
+              // onMouseLeave={() => setActive(false)}
             />
           ))}
         </div>
       </div>
-
-      {/* Drag preview (NOTE: styles should be included to apply scale). */}
-      {/* TODO(burdon): Should render anchors also. */}
-      {dragging.type === 'frame' &&
-        createPortal(
-          <div style={projectionStyles}>
-            <FrameDragPreview debug={debug} shape={shape} />
-          </div>,
-          dragging.container,
-        )}
-    </>
-  );
-};
-
-export const FrameDragPreview = ({ shape }: FrameProps) => {
-  return (
-    <div
-      style={getBoundsProperties({ ...shape.center, ...shape.size })}
-      className={mx(styles.frameContainer, styles.frameBorder)}
-    >
-      <ReadonlyTextBox value={shape.text ?? shape.id} />
-    </div>
-  );
-};
+    );
+  },
+);

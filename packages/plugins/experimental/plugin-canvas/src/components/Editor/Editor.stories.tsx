@@ -188,3 +188,13 @@ export const Query: Story = {
     ],
   },
 };
+
+// TODO(burdon): FunctionShape <== schema
+// TODO(burdon): Create compute graph.
+// TODO(burdon): Run compute graph.
+export const Compute: Story = {
+  args: {
+    sidebar: 'json',
+    // graph: createComputeGraph(),
+  },
+};

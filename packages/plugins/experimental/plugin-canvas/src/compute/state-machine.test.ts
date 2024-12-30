@@ -8,8 +8,9 @@ import { Trigger } from '@dxos/async';
 import { createEdgeId, type GraphNode } from '@dxos/graph';
 import { log } from '@dxos/log';
 
+import { createComputeGraph } from './compute-graph';
 import { AndGate, Beacon, Switch } from './compute-nodes';
-import { type ComputeNode, createComputeGraph, StateMachine } from './state-machine';
+import { type ComputeNode, StateMachine } from './state-machine';
 import { createId } from '../testing';
 
 describe('state machine', () => {

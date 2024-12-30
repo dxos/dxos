@@ -107,6 +107,8 @@ export const useLayout = (): Layout => {
   return { shapes };
 };
 
+// TODO(burdon): Generalize and move to geometry.
+
 type Bounds = {
   center: Point;
   bounds: Rect;
@@ -146,7 +148,6 @@ const getAnchorPoint = (registry: ShapeRegistry, shape: Shape, anchorId: string)
   return anchor?.pos;
 };
 
-// TODO(burdon): Generalize function to be a compute node with anchors.
 export const getClosestAnchor = (
   graph: ReadonlyGraphModel<GraphNode<Shape>>,
   registry: ShapeRegistry,
@@ -155,20 +156,18 @@ export const getClosestAnchor = (
 ): Extract<DragDropPayload, { type: 'anchor' }> | undefined => {
   let min = Infinity;
   let closest: Extract<DragDropPayload, { type: 'anchor' }> | undefined;
-  graph.nodes
-    .filter(({ data }) => data.type === 'function')
-    .forEach(({ data: shape }) => {
-      const anchors = registry.getShape(shape.type)?.getAnchors?.(shape);
-      if (anchors) {
-        for (const anchor of Object.values(anchors)) {
-          const d = getDistance(pos, anchor.pos);
-          if (min > d && test(shape, anchor, d)) {
-            min = d;
-            closest = { type: 'anchor', shape, anchor };
-          }
+  graph.nodes.forEach(({ data: shape }) => {
+    const anchors = registry.getShape(shape.type)?.getAnchors?.(shape);
+    if (anchors) {
+      for (const anchor of Object.values(anchors)) {
+        const d = getDistance(pos, anchor.pos);
+        if (min > d && test(shape, anchor, d)) {
+          min = d;
+          closest = { type: 'anchor', shape, anchor };
         }
       }
-    });
+    }
+  });
 
   return closest;
 };

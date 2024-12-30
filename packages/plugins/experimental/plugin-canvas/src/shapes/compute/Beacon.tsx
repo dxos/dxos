@@ -7,9 +7,9 @@ import React from 'react';
 import { S } from '@dxos/echo-schema';
 import { Icon } from '@dxos/react-ui';
 
-import { getAnchors, type ShapeComponentProps, type ShapeDef } from '../components';
-import { createId } from '../testing';
-import { Polygon } from '../types';
+import { getAnchors, type ShapeComponentProps, type ShapeDef } from '../../components';
+import { createId } from '../../testing';
+import { Polygon } from '../../types';
 
 export const BeaconShape = S.extend(
   Polygon,

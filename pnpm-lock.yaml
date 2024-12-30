@@ -5827,6 +5827,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../../../common/node-std
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugin-client

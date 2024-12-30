@@ -9,7 +9,19 @@
   or more customized components (e.g., `FunctionShape`).
 - Each `Shape` may have a reference to an external data object, from which it may derive properties.
 
-## Phase 1: Basic editor
+## Design
+
+- All visual elements are represented by a `Shape` object.
+- Most shapes implement the `Polygon` type, which is rendered by the `Frame` component.
+  - Specific shapes are able to customize the `Polygon` by overriding the `Component` option.
+- The underlying canvas is managed by the `@dxos/react-ui-canvas` components, which handle panning and zoom.
+- Most of the UX logic is handled by the hooks; in particular:
+  - `useLayout` handles the rendering of `Shape` objects on to their corresponding rect components.
+  - `useDragMonitor` handles the drag/drop logic, which include anchor based connections.
+
+## Development
+
+### Phase 1: Basic editor
 - [x] Canvas with pan and zoom (`@dxos/react-canvaas`).
 - [x] General graph data structure (`@dxos/graph`).
 - [x] Radix-style Editor component, with Canvas, Grid and Toolbar.
@@ -25,30 +37,40 @@
 - [ ] Undo/redo (history).
 - [ ] Snap to edges or center? (currently center).
 
-## Phase 2: 
+### Phase 2: 
 - [x] FunctionShape components with properties and anchor points. Add/delete and Play buttons.
 - [x] Shape registry.
   - [x] Custom frames.
   - [x] Custom anchors.
   - [x] Bezier connectors.
-  - [ ] Pluggable drag/drop logic: determines which drag/drop targets are active; replaces current dragging/linking state.
-  - [ ] Select/edit Rectangle/ellipse/function name.
+  - [x] Pluggable drag/drop logic: determines which drag/drop targets are active; replaces current dragging/linking state.
+  - [x] Select/edit Rectangle/ellipse/function name.
   - [ ] Delete link when deleting anchor.
   - [ ] Prevent input anchors being used multiple times (custom rule).
   - [ ] Loop back path if anchors are not facing each other.
   - [ ] Green anchors if match.
   - [ ] Cache layout.
-- [ ] State machine (local implementation); run mode.
-- [ ] Logic gates (AND, etc.)
+  - [ ] Touch input (ipad).
+
+### Phase 3: State machine
+- [ ] Generalize function anchors (e.g., shape with anchors).
+- [ ] Shape => ComputeNode? (e.g., get properties, current state, etc.)
+- [ ] Drag events to compute plugin (create, link, etc).
+- [x] State machine (local implementation); run mode.
+  - [ ] Function shape driven by schema; add property.
+  - [ ] All compute nodes should be driven by schema.
+  - [ ] Map compute/shape graphs.
+  - [ ] Run simulation.
+- [x] Logic gates (AND, etc.)
 - [ ] Triggers (Timer, Query, etc.)
 - [ ] Rename properties.
 - [ ] Shape def should be a class whose instances are cached by the layout and passed to the react function.
 
-## Phase 3:
+### Phase 4:
 - [ ] Group/collapse nodes; hierarchical graph editor. 
 
 ### Technical Debt
-- [ ] AttentionContainer (and key management).
+- [ ] `AttentionContainer` (and key management).
 - [ ] Factor out common Toolbar pattern (with state observers).
 - [ ] Reconcile Graph with framework (ECHO, app-graph, etc.)
 - [ ] Reconcile @antv layouts with `@dxos/plugin-debug`.
