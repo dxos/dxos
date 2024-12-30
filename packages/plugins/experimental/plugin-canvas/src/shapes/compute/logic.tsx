@@ -167,4 +167,4 @@ const NotSymbol = Symbol(({ startX, endX, height }) => {
 export const NotShape = GateShape;
 export type NotShape = GateShape;
 export const createNot = (props: GateShape) => createGate({ ...props, type: 'not' });
-export const notShape = gateShape('not', 'ph--x--regular', NotSymbol, ['input']);
+export const notShape = gateShape('not', 'ph--x--regular', NotSymbol, ['input.#default']);

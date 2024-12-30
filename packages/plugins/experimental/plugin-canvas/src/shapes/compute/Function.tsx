@@ -62,7 +62,7 @@ export const FunctionComponent = ({ shape }: ShapeComponentProps<FunctionShape>)
   const { actionHandler, repaint } = useEditorContext();
 
   const handleRun = () => {
-    void actionHandler?.({ type: 'run', id: shape.id });
+    void actionHandler?.({ type: 'run', ids: [shape.id] });
   };
 
   const handleAdd = () => {
