@@ -4,9 +4,11 @@
 
 import { type ForwardedRef, useRef, useEffect } from 'react';
 
+/**
+ * Combines a possibly undefined forwarded ref with a locally defined ref.
+ */
 export const useForwardedRef = <T>(ref: ForwardedRef<T>) => {
   const innerRef = useRef<T>(null);
-
   useEffect(() => {
     if (!ref) {
       return;

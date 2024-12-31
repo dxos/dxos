@@ -3,6 +3,7 @@
 //
 
 export * from './logic';
+export * from './util';
 
 export * from './Beacon';
 export * from './Function';

@@ -9,7 +9,7 @@ import { type DragDropPayload } from './useDragMonitor';
 import { useEditorContext } from './useEditorContext';
 import { type Anchor, type ShapeRegistry } from '../components';
 import { getDistance, findClosestIntersection, getNormals, getRect, pointAdd } from '../layout';
-import { createAnchorId, createPath } from '../shapes';
+import { createAnchorId, createPath, parseAnchorId } from '../shapes';
 import { isPolygon, type PathShape, type Polygon, type Shape } from '../types';
 
 export type Layout = {
@@ -64,7 +64,7 @@ export const useLayout = (): Layout => {
     const source = getShape(sourceNode.data);
     const target = getShape(targetNode.data);
 
-    const { property } = data;
+    const property = data?.property;
     const path = createPathForEdge({ id, source, target, property });
     if (path) {
       shapes.push(path);
@@ -77,16 +77,19 @@ export const useLayout = (): Layout => {
   if (dragging?.type === 'anchor' && dragging.pointer) {
     let points: Point[] | undefined;
     if (dragging.anchor) {
-      const sourceAnchor = getAnchorPoint(registry, dragging.shape, dragging.anchor.id);
-      if (sourceAnchor) {
-        let targetAnchor =
-          dragging.target?.type === 'anchor' &&
-          getAnchorPoint(registry, dragging.target.shape, dragging.target.anchor.id);
-        if (!targetAnchor) {
-          targetAnchor = dragging.pointer;
-        }
+      const [direction] = parseAnchorId(dragging.anchor.id);
+      if (direction) {
+        const sourceAnchor = getAnchorPoint(registry, dragging.shape, dragging.anchor.id);
+        if (sourceAnchor) {
+          let targetAnchor =
+            dragging.target?.type === 'anchor' &&
+            getAnchorPoint(registry, dragging.target.shape, dragging.target.anchor.id);
+          if (!targetAnchor) {
+            targetAnchor = dragging.pointer;
+          }
 
-        points = createCurve(sourceAnchor, targetAnchor);
+          points = createCurve(sourceAnchor, targetAnchor);
+        }
       }
     }
 

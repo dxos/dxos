@@ -54,12 +54,12 @@ export type DraggingState =
   | {
       type: 'tool';
       shape: Polygon;
+      // TODO(burdon): Remove (see frame handling).
       container: HTMLElement;
     }
   | {
       type: 'frame';
       shape: Polygon;
-      container: HTMLElement;
     }
   | {
       type: 'anchor';
@@ -69,7 +69,6 @@ export type DraggingState =
       target?: DragDropPayload;
       /** Current pointer. */
       pointer?: Point;
-      container: HTMLElement;
     };
 
 /**
@@ -93,7 +92,7 @@ export class DragMonitor {
   /**
    * Called from setCustomNativeDragPreview.render()
    */
-  preview(state: DraggingState) {
+  start(state: DraggingState) {
     this._state.value = state;
   }
 
@@ -121,7 +120,8 @@ export class DragMonitor {
     if (type) {
       switch (target.type) {
         case 'frame': {
-          return target.shape.type !== 'function';
+          // TODO(burdon): Type specific.
+          return target.shape.type === 'rectangle';
         }
 
         case 'anchor': {
@@ -217,7 +217,7 @@ export const useDragMonitor = () => {
               // graph.addNode({ id: shape.id, data: { ...shape } });
               log.info('copy', { shape: state.value.shape });
             } else {
-              node.data.center = pos;
+              node.data.center = snapPoint(pos);
             }
 
             break;
@@ -240,9 +240,7 @@ export const useDragMonitor = () => {
                 // TODO(burdon): Custom logic.
                 const [sourceDirection, sourceAnchorId] = parseAnchorId(source.anchor.id);
                 const [, targetAnchorId] = parseAnchorId(target.anchor.id);
-
-                console.log(sourceDirection, sourceAnchorId, targetAnchorId);
-
+                console.log(sourceDirection);
                 if (sourceDirection === 'output') {
                   await actionHandler({
                     type: 'link',

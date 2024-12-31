@@ -56,7 +56,7 @@ const Tool = ({ type, icon }: ToolProps) => {
             return getCenter(data.shape.size);
           },
           render: ({ container }) => {
-            monitor.preview({ container, type: 'tool', shape: data.shape });
+            monitor.start({ container, type: 'tool', shape: data.shape });
           },
         });
       },

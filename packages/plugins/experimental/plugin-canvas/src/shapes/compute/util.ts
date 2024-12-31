@@ -9,6 +9,12 @@ import { type Polygon } from '../../types';
 
 export const rowHeight = 20;
 
+export const createAnchorId = (direction: 'input' | 'output', property = '#default') => [direction, property].join('.');
+export const parseAnchorId = (id: string): ['input' | 'output' | undefined, string] => {
+  const parts = id.match(/(input|output)\.(.+)/);
+  return parts ? (parts.slice(1) as any) : [undefined, id];
+};
+
 export const getAnchorPoints = (center: Point, n: number) => {
   const h = (n - 1) * rowHeight;
   return [...Array(n)].map((_, i) => ({ x: center.x, y: center.y - h / 2 + i * rowHeight }));

@@ -30,10 +30,10 @@ export const getShapeElements = <E extends Element>(el: HTMLElement, type: strin
   return elements;
 };
 
-export const getShapeElement = (root: HTMLDivElement, id: string): Element | null =>
+export const getShapeElement = (root: HTMLElement, id: string): Element | null =>
   root.querySelector(`[${DATA_SHAPE_ID}="${id}"]`);
 
-export const getShapeBounds = (root: HTMLDivElement, id: string): DOMRect | undefined => {
+export const getShapeBounds = (root: HTMLElement, id: string): DOMRect | undefined => {
   const el = getShapeElement(root, id);
   return el ? el.getClientRects()[0] : undefined;
 };

@@ -18,11 +18,11 @@ import React, {
 import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
-import { type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
 import { useProjection } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
-import { Anchor } from './Anchor';
+import { Anchor, createAnchors, defaultAnchors, defaultAnchorSize } from './Anchor';
 import { type ShapeComponentProps, shapeAttrs } from './Shape';
 import { type DragDropPayload, useEditorContext } from '../../hooks';
 import { getBoundsProperties } from '../../layout';
@@ -48,7 +48,7 @@ export type FrameProps = ShapeComponentProps<Polygon> & {
  * Draggable Frame around polygons.
  */
 export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
-  const { shape, onSelect } = baseProps;
+  const { shape } = baseProps;
   const { monitor, registry, editing, setEditing } = useEditorContext();
   const { root, projection, styles: projectionStyles } = useProjection();
 
@@ -56,6 +56,7 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
   const isDragging = dragging.type === 'frame';
   const isEditing = editing?.shape.id === shape.id;
   const [active, setActive] = useState(false);
+  const [preview, setPreview] = useState<HTMLElement>();
 
   // Dragging.
   const draggingRef = useRef<HTMLDivElement>(null);
@@ -75,38 +76,27 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
         getInitialData: () => ({ type: 'frame', shape }) satisfies DragDropPayload,
         onGenerateDragPreview: ({ nativeSetDragImage }) => {
           setCustomNativeDragPreview({
-            nativeSetDragImage,
-            getOffset: () => {
-              return { x: (projection.scale * shape.size.width) / 2, y: (projection.scale * shape.size.height) / 2 };
-            },
+            // TODO(burdon): Set preview to "snapshot" image then remove.
             render: ({ container }) => {
-              monitor.preview({ type: 'frame', shape, container });
+              setPreview(container);
+              return () => setPreview(undefined);
             },
+            getOffset: ({ container }) => {
+              // NOTE: During preview, we render ghost anchors so that we can predict the actual size of the image.
+              return {
+                x: (projection.scale * shape.size.width + defaultAnchorSize.width) / 2,
+                y: (projection.scale * shape.size.height + defaultAnchorSize.height) / 2,
+              };
+            },
+            nativeSetDragImage,
           });
+        },
+        onDragStart: () => {
+          monitor.start({ type: 'frame', shape });
         },
       }),
     );
   }, [root, projection, monitor, shape]);
-
-  // Custom anchors.
-  const anchors = useMemo(
-    () => registry.getShape(shape.type)?.getAnchors?.(shape) ?? {},
-    [shape.center, shape.size.height],
-  );
-
-  const clickTimer = useRef<number>();
-  const handleClick: MouseEventHandler<HTMLDivElement> = (ev) => {
-    if (ev.detail === 1 && !editing) {
-      clickTimer.current = window.setTimeout(() => {
-        onSelect?.(shape.id, ev.shiftKey);
-      }, DBLCLICK_TIMEOUT);
-    }
-  };
-
-  const handleDoubleClick: MouseEventHandler<HTMLDivElement> = () => {
-    clearTimeout(clickTimer.current);
-    setEditing({ shape });
-  };
 
   const handleClose: TextBoxProps['onClose'] = (value: string) => {
     shape.text = value;
@@ -117,54 +107,79 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
     setEditing(undefined);
   };
 
+  // Custom anchors.
+  const anchors = useMemo(
+    () => registry.getShape(shape.type)?.getAnchors?.(shape) ?? {},
+    [shape.center, shape.size.height],
+  );
+
   return (
     <>
-      <Child
+      <FrameContent
         {...baseProps}
-        dragging={isDragging}
+        hidden={isDragging}
         active={active}
         anchors={anchors}
-        onSelect={() => {}}
-        onEdit={() => {}}
+        onEdit={() => setEditing({ shape })}
         ref={draggingRef}
       >
         {Component && <Component {...baseProps} editing={isEditing} onClose={handleClose} onCancel={handleCancel} />}
-      </Child>
+      </FrameContent>
 
       {/* Drag preview (NOTE: styles should be included to apply scale). */}
-      {dragging.type === 'frame' &&
+      {preview &&
         createPortal(
           <div style={projectionStyles}>
-            <Child {...baseProps} anchors={anchors} onSelect={() => {}} onEdit={() => {}}>
+            <FrameContent {...baseProps} anchors={anchors} preview>
               {Component && <Component {...baseProps} />}
-            </Child>
-            {/* <FrameDragPreview debug={debug} shape={shape} /> */}
+            </FrameContent>
           </div>,
-          dragging.container,
+          preview,
         )}
     </>
   );
 };
 
-export type ChildProps = PropsWithChildren<
+export type FrameContentProps = PropsWithChildren<
   ThemedClassName<
     {
+      hidden?: boolean;
+      preview?: boolean;
       anchors: Record<string, Anchor>;
       active?: boolean;
-      dragging?: boolean;
-      onSelect?: () => void;
       onEdit?: () => void;
-    } & Omit<FrameProps, 'onSelect'>
+    } & FrameProps
   >
 >;
 
-export const Child = forwardRef<HTMLDivElement, ChildProps>(
-  ({ children, classNames, shape, debug, selected, dragging, anchors, active, onSelect, onEdit }, forwardedRef) => {
+/**
+ * Content rendered by frames and tools.
+ */
+export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
+  (
+    { children, classNames, shape, debug, selected, editing, hidden, preview, anchors, active, onSelect, onEdit },
+    forwardedRef,
+  ) => {
+    const ref = useForwardedRef(forwardedRef);
+    const clickTimer = useRef<number>();
+    const handleClick: MouseEventHandler<HTMLDivElement> = (ev) => {
+      if (ev.detail === 1 && !editing) {
+        clickTimer.current = window.setTimeout(() => {
+          onSelect?.(shape.id, ev.shiftKey);
+        }, DBLCLICK_TIMEOUT);
+      }
+    };
+
+    const handleDoubleClick: MouseEventHandler<HTMLDivElement> = () => {
+      clearTimeout(clickTimer.current);
+      onEdit?.();
+    };
+
     return (
-      <div className={mx(dragging && 'opacity-0')}>
+      <div>
         <div
+          ref={ref}
           {...shapeAttrs(shape)}
-          ref={forwardedRef}
           style={getBoundsProperties({ ...shape.center, ...shape.size })}
           className={mx(
             classNames,
@@ -174,10 +189,11 @@ export const Child = forwardRef<HTMLDivElement, ChildProps>(
             selected && styles.frameSelected,
             active && styles.frameActive,
             shape.guide && styles.frameGuide,
+            hidden && 'opacity-0',
             debug && 'opacity-50',
           )}
-          onClick={onSelect}
-          onDoubleClick={onEdit}
+          onClick={handleClick}
+          onDoubleClick={handleDoubleClick}
           // onMouseEnter={() => setActive(true)}
           // onMouseLeave={(ev) => {
           //   // We need to keep rendering the anchor that is being dragged.
@@ -191,17 +207,25 @@ export const Child = forwardRef<HTMLDivElement, ChildProps>(
         </div>
 
         {/* Anchors. */}
-        <div>
-          {Object.values(anchors).map((anchor) => (
-            <Anchor
-              key={anchor.id}
-              id={anchor.id}
-              shape={shape}
-              anchor={anchor}
-              // onMouseLeave={() => setActive(false)}
-            />
-          ))}
-        </div>
+        {!hidden && (
+          <div>
+            {Object.values(anchors).map((anchor) => (
+              <Anchor
+                key={anchor.id}
+                shape={shape}
+                anchor={anchor}
+                size={defaultAnchorSize}
+                // onMouseLeave={() => setActive(false)}
+              />
+            ))}
+
+            {/* NOTE: During preview, we render ghost anchors so that we can predict the actual size of the image. */}
+            {preview &&
+              Object.values(createAnchors(shape, defaultAnchors)).map((anchor) => (
+                <Anchor key={anchor.id} shape={shape} anchor={anchor} size={defaultAnchorSize} classNames='opacity-0' />
+              ))}
+          </div>
+        )}
       </div>
     );
   },

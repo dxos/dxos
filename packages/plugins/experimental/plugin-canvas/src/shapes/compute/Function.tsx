@@ -7,7 +7,7 @@ import React from 'react';
 import { S } from '@dxos/echo-schema';
 import { Icon, IconButton } from '@dxos/react-ui';
 
-import { rowHeight } from './util';
+import { createAnchorId, rowHeight } from './util';
 import { type Anchor, type ShapeComponentProps, type ShapeDef } from '../../components';
 import { useEditorContext } from '../../hooks';
 import { pointAdd } from '../../layout';
@@ -100,14 +100,11 @@ export const FunctionComponent = ({ shape }: ShapeComponentProps<FunctionShape>)
   );
 };
 
-export const createAnchorId = (direction: 'input' | 'output', property = '#default') => [direction, property].join('.');
-export const parseAnchorId = (id: string) => id.split('.');
-
 export const functionShape: ShapeDef<FunctionShape> = {
   type: 'function',
   icon: 'ph--function--regular',
   component: FunctionComponent,
-  create: () => createFunction({ id: createId(), center: { x: 0, y: 0 }, size: { width: 192, height: 80 } }),
+  create: () => createFunction({ id: createId(), center: { x: 0, y: 0 }, properties: [] }),
   // TODO(burdon): Reconcile with createAnchors.
   getAnchors: ({ id, center, size, properties }) => {
     const output = createAnchorId('output');

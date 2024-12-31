@@ -9,16 +9,16 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { useProjection, type Dimension, type Point } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
-import { DATA_SHAPE_ID } from './Shape';
 import { type DragDropPayload, useEditorContext } from '../../hooks';
 import { getBoundsProperties, pointAdd } from '../../layout';
 import { type Polygon } from '../../types';
 import { styles } from '../styles';
 
-const defaultSize: Dimension = { width: 12, height: 12 };
+export const defaultAnchorSize: Dimension = { width: 12, height: 12 };
 
 export type Anchor = {
   /** Id (e.g., property). */
@@ -54,24 +54,24 @@ export const createAnchors = (
   );
 };
 
-export type AnchorProps = {
-  id: string; // E.g., "w", "w.1.4", "prop-1", "#default", etc.
+export type AnchorProps = ThemedClassName<{
   shape: Polygon;
   anchor: Anchor;
   size?: Dimension;
   onMouseLeave?: () => void;
-};
+}>;
 
 /**
  * Anchor points for attaching links.
  */
-export const Anchor = ({ id, shape, anchor, size = defaultSize, onMouseLeave }: AnchorProps) => {
+export const Anchor = ({ classNames, shape, anchor, size = defaultAnchorSize, onMouseLeave }: AnchorProps) => {
   const { monitor } = useEditorContext();
   const { root, projection } = useProjection();
 
   const dragging = monitor.state(
     (state) => state.type === 'anchor' && state.shape.id === shape.id && state.anchor.id === anchor.id,
   ).value;
+  const [preview, setPreview] = useState<HTMLElement>();
 
   const [active, setActive] = useState(false);
 
@@ -94,13 +94,14 @@ export const Anchor = ({ id, shape, anchor, size = defaultSize, onMouseLeave }: 
         onGenerateDragPreview: ({ nativeSetDragImage }) => {
           setCustomNativeDragPreview({
             nativeSetDragImage,
-            getOffset: () => {
-              return { x: (projection.scale * size.width) / 2, y: (projection.scale * size.height) / 2 };
-            },
             render: ({ container }) => {
-              monitor.preview({ type: 'anchor', shape, anchor, container });
+              setPreview(container);
+              return () => setPreview(undefined);
             },
           });
+        },
+        onDragStart: () => {
+          monitor.start({ type: 'anchor', shape, anchor });
         },
       }),
     );
@@ -110,18 +111,17 @@ export const Anchor = ({ id, shape, anchor, size = defaultSize, onMouseLeave }: 
     <>
       <div
         ref={ref}
-        {...{ [DATA_SHAPE_ID]: shape.id }}
         style={getBoundsProperties({ ...anchor.pos, ...size })}
-        className={mx('absolute', styles.anchor, active && styles.anchorActive)}
+        className={mx('absolute', styles.anchor, classNames, active && styles.anchorActive)}
         onMouseLeave={() => onMouseLeave?.()}
       />
 
-      {dragging.type === 'anchor' &&
+      {preview &&
         createPortal(
           <div style={{ transform: `scale(${projection.scale})` }}>
-            <div style={getBoundsProperties({ ...anchor.pos, ...size })} className={''} />
+            <div style={getBoundsProperties({ ...anchor.pos, ...size })} />
           </div>,
-          dragging.container,
+          preview,
         )}
     </>
   );
