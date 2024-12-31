@@ -8,3 +8,4 @@ export * from './util';
 export * from './Beacon';
 export * from './Function';
 export * from './Switch';
+export * from './Timer';

@@ -20,11 +20,12 @@ export const SwitchShape = S.extend(
 
 export type SwitchShape = S.Schema.Type<typeof SwitchShape>;
 
-export type CreateSwitchProps = Omit<SwitchShape, 'type'>;
+export type CreateSwitchProps = Omit<SwitchShape, 'type' | 'size'>;
 
 export const createSwitch = ({ id, ...rest }: CreateSwitchProps): SwitchShape => ({
   id,
   type: 'switch',
+  size: { width: 64, height: 64 },
   ...rest,
 });
 
@@ -44,6 +45,6 @@ export const switchShape: ShapeDef<SwitchShape> = {
   type: 'switch',
   icon: 'ph--toggle-left--regular',
   component: SwitchComponent,
-  create: () => createSwitch({ id: createId(), center: { x: 0, y: 0 }, size: { width: 64, height: 64 } }),
+  create: () => createSwitch({ id: createId(), center: { x: 0, y: 0 } }),
   getAnchors: (shape) => createAnchors(shape, { 'output.#default': { x: 1, y: 0 } }),
 };

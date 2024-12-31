@@ -21,7 +21,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
 import { SelectionModel } from '../../hooks';
 import { doLayout } from '../../layout';
-import { createAnd, createFunction, createNot } from '../../shapes';
+import { createAnd, createFunction, createSwitch, createTimer } from '../../shapes';
 import { RectangleShape, type Shape } from '../../types';
 import { AttentionContainer } from '../AttentionContainer';
 
@@ -161,17 +161,45 @@ export const Default: Story = {
       })
       .addNode({
         id: 'node-c',
-        data: createNot({ id: 'node-c', center: { x: 320, y: 0 } }),
+        data: createTimer({ id: 'node-c', center: { x: -320, y: 0 } }),
       })
       .addNode({
         id: 'node-d',
-        data: createAnd({ id: 'node-d', center: { x: -320, y: 0 } }),
+        data: createAnd({ id: 'node-d', center: { x: 128, y: -256 } }),
+      })
+      .addNode({
+        id: 'node-e',
+        data: createSwitch({ id: 'node-c', center: { x: -320, y: -256 } }),
       })
       .addEdge({
         id: 'node-a-to-node-b',
         source: 'node-a',
         target: 'node-b',
         data: { property: 'prop-3' },
+      })
+      .addEdge({
+        id: 'node-c-to-node-a',
+        source: 'node-c',
+        target: 'node-a',
+        data: { property: 'prop-1' },
+      })
+      .addEdge({
+        id: 'node-b-to-node-d',
+        source: 'node-b',
+        target: 'node-d',
+        data: { property: 'a' },
+      })
+      .addEdge({
+        id: 'node-d-to-node-b',
+        source: 'node-d',
+        target: 'node-b',
+        data: { property: 'prop-2' },
+      })
+      .addEdge({
+        id: 'node-e-to-node-d',
+        source: 'node-e',
+        target: 'node-d',
+        data: { property: 'b' },
       }),
   },
 };
