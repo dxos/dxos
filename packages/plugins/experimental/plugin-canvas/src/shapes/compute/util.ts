@@ -11,7 +11,7 @@ export const rowHeight = 20;
 
 export const getAnchorPoints = (center: Point, n: number) => {
   const h = (n - 1) * rowHeight;
-  return Array(n).map((_, i) => ({ x: center.x, y: center.y - h / 2 + i * rowHeight }));
+  return [...Array(n)].map((_, i) => ({ x: center.x, y: center.y - h / 2 + i * rowHeight }));
 };
 
 /**

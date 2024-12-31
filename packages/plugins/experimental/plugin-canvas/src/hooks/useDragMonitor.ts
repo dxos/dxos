@@ -125,7 +125,7 @@ export class DragMonitor {
         }
 
         case 'anchor': {
-          if (this._state.value.type === 'anchor' && target.shape.id !== this._state.value.anchor.id) {
+          if (this._state.value.type === 'anchor' && target.shape.id !== this._state.value.anchor.shape) {
             // TODO(burdon): Test type.
             // TODO(burdon): Prevent drop if anchor is already populated.
             const source = this._state.value;

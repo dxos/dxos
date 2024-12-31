@@ -21,6 +21,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
 import { SelectionModel } from '../../hooks';
 import { doLayout } from '../../layout';
+import { createAnd, createFunction, createNot } from '../../shapes';
 import { RectangleShape, type Shape } from '../../types';
 import { AttentionContainer } from '../AttentionContainer';
 
@@ -138,30 +139,39 @@ export const Default: Story = {
     graph: new GraphModel<GraphNode<Shape>>()
       .addNode({
         id: 'node-a',
-        data: {
+        data: createFunction({
           id: 'node-a',
-          type: 'function',
-          properties: [],
-          size: { width: 128, height: 128 },
+          // TODO(burdon): Convert to schema.
+          properties: [{ type: 'string', name: 'prop-1' }],
           center: { x: -128, y: 0 },
-        },
+        }),
       })
       .addNode({
         id: 'node-b',
-        data: {
+        data: createFunction({
           id: 'node-b',
-          type: 'function',
           // TODO(burdon): Convert to schema.
-          properties: [{ name: 'prop-1' }, { name: 'prop-2' }, { name: 'prop-3' }],
-          size: { width: 128, height: 128 },
+          properties: [
+            { type: 'string', name: 'prop-1' },
+            { type: 'string', name: 'prop-2' },
+            { type: 'string', name: 'prop-3' },
+          ],
           center: { x: 128, y: 0 },
-        },
+        }),
+      })
+      .addNode({
+        id: 'node-c',
+        data: createNot({ id: 'node-c', center: { x: 320, y: 0 } }),
+      })
+      .addNode({
+        id: 'node-d',
+        data: createAnd({ id: 'node-d', center: { x: -320, y: 0 } }),
       })
       .addEdge({
         id: 'node-a-to-node-b',
         source: 'node-a',
         target: 'node-b',
-        data: { property: 'prop-2' },
+        data: { property: 'prop-3' },
       }),
   },
 };

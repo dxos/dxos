@@ -40,18 +40,13 @@ export const FunctionShape = S.extend(
 export type FunctionProperty = S.Schema.Type<typeof FunctionProperty>;
 export type FunctionShape = S.Schema.Type<typeof FunctionShape>;
 
-export type CreateFunctionProps = Omit<FunctionShape, 'type' | 'properties'>;
+export type CreateFunctionProps = Omit<FunctionShape, 'type' | 'size'>;
 
-export const createFunction = ({ id, ...rest }: CreateFunctionProps): FunctionShape => ({
+export const createFunction = ({ id, properties, ...rest }: CreateFunctionProps): FunctionShape => ({
   id,
   type: 'function',
-  // TODO(burdon): Effect schema for input and output.
-  properties: [
-    {
-      name: 'prop-1',
-      type: 'string',
-    },
-  ],
+  size: { width: 128, height: minHeight + properties.length * rowHeight },
+  properties,
   ...rest,
 });
 

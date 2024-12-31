@@ -27,11 +27,12 @@ const GateShape = S.extend(
 
 type GateShape = S.Schema.Type<typeof GateShape>;
 
-type CreateGateProps = Omit<GateShape, 'type'> & { type: GateType };
+type CreateGateProps = Omit<GateShape, 'type' | 'size'> & { type: GateType };
 
 const createGate = ({ id, type, ...rest }: CreateGateProps): GateShape => ({
   id,
   type,
+  size: { width: 64, height: 64 },
   ...rest,
 });
 
@@ -53,7 +54,7 @@ const gateShape = (
   type,
   icon,
   component: GateComponent(Symbol),
-  create: () => createGate({ id: createId(), type, center: { x: 0, y: 0 }, size: { width: 64, height: 64 } }),
+  create: () => createGate({ id: createId(), type, center: { x: 0, y: 0 } }),
   getAnchors: (shape) => createAnchors(shape, inputs, ['output.#default']),
 });
 
@@ -73,7 +74,13 @@ type GateSymbolProps = {
 // TODO(burdon): Note inputs should line up with anchors.
 const Symbol =
   (pathConstructor: PathConstructor, inputs: number): FC<GateSymbolProps> =>
-  ({ width = 64, height = 32, className = 'fill-white dark:fill-black stroke-separator', strokeWidth = 1 }) => {
+  ({
+    width = 64,
+    height = 32,
+    // TODO(burdon): Same as line color.
+    className = 'fill-neutral-200 dark:fill-neutral-800 stroke-neutral-500',
+    strokeWidth = 1,
+  }) => {
     const startX = width * 0.25;
     const endX = width * 0.75;
     const centerY = height / 2;
@@ -116,7 +123,7 @@ const AndSymbol = Symbol(({ startX, endX, height }) => {
 
 export const AndShape = GateShape;
 export type AndShape = GateShape;
-export const createAnd = (props: GateShape) => createGate({ ...props, type: 'and' });
+export const createAnd = (props: Omit<CreateGateProps, 'type'>) => createGate({ ...props, type: 'and' });
 export const andShape = gateShape('and', 'ph--intersection--regular', AndSymbol, ['input.a', 'input.b']);
 
 //
@@ -140,11 +147,11 @@ const OrSymbol = Symbol(({ startX, endX, height }) => {
 
 export const OrShape = GateShape;
 export type OrShape = GateShape;
-export const createOr = (props: GateShape) => createGate({ ...props, type: 'or' });
+export const createOr = (props: Omit<CreateGateProps, 'type'>) => createGate({ ...props, type: 'or' });
 export const orShape = gateShape('or', 'ph--union--regular', OrSymbol, ['input.a', 'input.b']);
 
 //
-// NOTE
+// NOT
 //
 
 const NotSymbol = Symbol(({ startX, endX, height }) => {
@@ -166,5 +173,5 @@ const NotSymbol = Symbol(({ startX, endX, height }) => {
 
 export const NotShape = GateShape;
 export type NotShape = GateShape;
-export const createNot = (props: GateShape) => createGate({ ...props, type: 'not' });
+export const createNot = (props: Omit<CreateGateProps, 'type'>) => createGate({ ...props, type: 'not' });
 export const notShape = gateShape('not', 'ph--x--regular', NotSymbol, ['input.#default']);
