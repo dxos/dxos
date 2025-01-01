@@ -43,5 +43,5 @@ export const beaconShape: ShapeDef<BeaconShape> = {
   icon: 'ph--sun--regular',
   component: BeaconComponent,
   createShape: createBeacon,
-  getAnchors: (shape) => createAnchors(shape, { 'input.#default': { x: -1, y: 0 } }),
+  getAnchors: (shape) => createAnchors(shape, { 'input.value': { x: -1, y: 0 } }),
 };

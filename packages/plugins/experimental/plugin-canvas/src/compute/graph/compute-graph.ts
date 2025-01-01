@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { inspect } from 'node:util';
+// import { inspect } from 'node:util';
 
 import { type Context } from '@dxos/context';
 import { AST, type S } from '@dxos/echo-schema';
@@ -53,9 +53,10 @@ export abstract class ComputeNode<Input, Output> {
     this.reset();
   }
 
-  [inspect.custom]() {
-    return inspect(this.toJSON());
-  }
+  // TODO(burdon): ???
+  // [inspect.custom]() {
+  //   return inspect(this.toJSON());
+  // }
 
   toString() {
     return `ComputeNode(${this.type})`;

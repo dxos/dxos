@@ -16,10 +16,7 @@
           "{projectRoot}/src/meta.ts",
           "{projectRoot}/src/types/index.ts"
         ],
-        "platforms": [
-          "browser",
-          "node"
-        ]
+        "injectGlobals": true
       }
     },
     "lint": {},

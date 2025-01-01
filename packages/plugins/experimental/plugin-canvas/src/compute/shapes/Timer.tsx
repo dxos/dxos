@@ -61,5 +61,5 @@ export const timerShape: ShapeDef<TimerShape> = {
   icon: 'ph--alarm--regular',
   component: TimerComponent,
   createShape: createTimer,
-  getAnchors: (shape) => createAnchors(shape, { 'output.#default': { x: 1, y: 0 } }),
+  getAnchors: (shape) => createAnchors(shape, { 'output.value': { x: 1, y: 0 } }),
 };

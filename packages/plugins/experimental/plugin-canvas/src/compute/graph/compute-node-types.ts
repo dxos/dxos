@@ -149,8 +149,8 @@ export class Timer extends ComputeNode<void, number> {
   }
 }
 
-export const DefaultInput = S.Struct({ input: S.Any });
-export const DefaultOutput = S.Struct({ input: S.Any });
+export const DefaultInput = S.Struct({ value: S.Any });
+export const DefaultOutput = S.Struct({ value: S.Any });
 
 export type DefaultInput = S.Schema.Type<typeof DefaultInput>;
 export type DefaultOutput = S.Schema.Type<typeof DefaultOutput>;

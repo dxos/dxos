@@ -47,5 +47,5 @@ export const switchShape: ShapeDef<SwitchShape> = {
   icon: 'ph--toggle-left--regular',
   component: SwitchComponent,
   createShape: createSwitch,
-  getAnchors: (shape) => createAnchors(shape, { 'output.#default': { x: 1, y: 0 } }),
+  getAnchors: (shape) => createAnchors(shape, { 'output.value': { x: 1, y: 0 } }),
 };

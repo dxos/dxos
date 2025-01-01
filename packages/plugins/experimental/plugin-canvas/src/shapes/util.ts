@@ -9,7 +9,7 @@ import { type Polygon } from '../types';
 
 export const rowHeight = 20;
 
-export const createAnchorId = (direction: 'input' | 'output', property = '#default') => [direction, property].join('.');
+export const createAnchorId = (direction: 'input' | 'output', property = 'value') => [direction, property].join('.');
 
 export const parseAnchorId = (id: string): ['input' | 'output' | undefined, string] => {
   const parts = id.match(/(input|output)\.(.+)/);
@@ -24,8 +24,19 @@ export const getAnchorPoints = (center: Point, n: number) => {
 /**
  * Create anchor points.
  */
-export const createAnchors = (shape: Polygon, inputs: string[], outputs: string[]): Record<string, Anchor> => {
-  const { id, center, size } = shape;
+export const createAnchors = ({
+  shape,
+  inputs,
+  outputs,
+  center = shape.center,
+}: {
+  shape: Polygon;
+  inputs: string[];
+  outputs: string[];
+  center?: Point;
+}): Record<string, Anchor> => {
+  const { id, size } = shape;
+
   const hi = (inputs.length - 1) * rowHeight;
   const i = inputs.reduce(
     (map, anchor, i) => ({
@@ -41,6 +52,7 @@ export const createAnchors = (shape: Polygon, inputs: string[], outputs: string[
     }),
     {},
   );
+
   const ho = (outputs.length - 1) * rowHeight;
   const o = outputs.reduce(
     (map, anchor, i) => ({
@@ -56,5 +68,6 @@ export const createAnchors = (shape: Polygon, inputs: string[], outputs: string[
     }),
     {},
   );
+
   return { ...i, ...o };
 };

@@ -49,7 +49,7 @@ const defineShape = <S extends GateShape>({
   Symbol,
   createShape,
   inputs,
-  outputs = ['output.#default'],
+  outputs = ['output.value'],
 }: {
   type: GateType;
   icon: string;
@@ -62,7 +62,7 @@ const defineShape = <S extends GateShape>({
   icon,
   component: GateComponent(Symbol),
   createShape,
-  getAnchors: (shape) => createAnchors(shape, inputs, outputs),
+  getAnchors: (shape) => createAnchors({ shape, inputs, outputs }),
 });
 
 //
@@ -207,5 +207,5 @@ export const notShape = defineShape({
   icon: 'ph--x--regular',
   Symbol: NotSymbol,
   createShape: createNot,
-  inputs: ['input.#default'],
+  inputs: ['input.value'],
 });

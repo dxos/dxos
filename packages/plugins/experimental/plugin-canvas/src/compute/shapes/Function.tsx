@@ -5,15 +5,17 @@
 import React from 'react';
 
 import { AST, S } from '@dxos/echo-schema';
-import { Icon, IconButton } from '@dxos/react-ui';
+import { IconButton } from '@dxos/react-ui';
 
 import { BaseComputeShape, type BaseComputeShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { useEditorContext } from '../../hooks';
+import { pointAdd } from '../../layout';
 import { createAnchorId, createAnchors, rowHeight } from '../../shapes';
 import { DefaultInput, DefaultOutput, RemoteFunction } from '../graph';
 
-const minHeight = 64;
+const headerHeight = 40;
+const bodyPadding = 8;
 
 export const FunctionProperty = S.Struct({
   name: S.String,
@@ -43,12 +45,13 @@ export type CreateFunctionProps = Omit<BaseComputeShapeProps<RemoteFunction<any,
 export const createFunction = ({ id, ...rest }: CreateFunctionProps): FunctionShape => {
   const node = new RemoteFunction(DefaultInput, DefaultOutput);
   const properties = AST.getPropertySignatures(DefaultInput.ast);
+  const height = headerHeight + bodyPadding * 2 + properties.length * rowHeight + 3; // 3 = borders.
 
   return {
     id,
     type: 'function',
     node,
-    size: { width: 128, height: minHeight + properties.length * rowHeight },
+    size: { width: 128, height },
     ...rest,
   };
 };
@@ -57,48 +60,23 @@ export const createFunction = ({ id, ...rest }: CreateFunctionProps): FunctionSh
  * Generalize to any compute node with anchors.
  */
 export const FunctionComponent = ({ shape }: ShapeComponentProps<FunctionShape>) => {
-  const { actionHandler, repaint } = useEditorContext();
-
-  const properties = AST.getPropertySignatures(shape.node.input.ast).map(({ name }) => ({
-    name: name.toString(),
-  }));
+  const { actionHandler } = useEditorContext();
+  const inputs = AST.getPropertySignatures(shape.node.input.ast).map(({ name }) => name.toString());
 
   const handleRun = () => {
     void actionHandler?.({ type: 'run', ids: [shape.id] });
   };
 
-  const handleAdd = () => {
-    // if (shape.properties.length < maxProperties) {
-    //   shape.properties.push({ name: `prop-${shape.properties.length + 1}`, type: 'string' });
-    //   shape.size.height = minHeight + shape.properties.length * rowHeight;
-    //   // TODO(burdon): Not reactive when pushed or spliced?
-    //   repaint();
-    // }
-  };
-
-  // TODO(burdon): Potentially delete link.
-  const handleDelete = (name: string) => {
-    // shape.properties.splice(
-    //   shape.properties.findIndex((p) => p.name === name),
-    //   1,
-    // );
-    // shape.size.height = minHeight + shape.properties.length * rowHeight;
-    repaint();
-  };
-
   return (
     <div className='flex flex-col h-full w-full justify-between'>
       <div className='flex w-full justify-between items-center p-1 border-b border-separator'>
-        <IconButton icon='ph--plus--regular' label='play' iconOnly onClick={handleAdd} />
         <IconButton icon='ph--play--regular' label='play' iconOnly onClick={handleRun} />
       </div>
-      <div className='p-2'>
-        {properties.map(({ name }) => (
-          <div key={name} className='group flex text-sm font-mono items-center justify-between'>
+      {/* TODO(burdon): Abs position next to anchors. */}
+      <div style={{ padding: bodyPadding }}>
+        {inputs.map((name) => (
+          <div key={name} className='flex text-sm font-mono items-center' style={{ height: rowHeight }}>
             <div>{name}</div>
-            <button className='invisible group-hover:visible' onClick={() => handleDelete(name)}>
-              <Icon icon='ph--x--regular' size={4} />
-            </button>
           </div>
         ))}
       </div>
@@ -111,35 +89,19 @@ export const functionShape: ShapeDef<FunctionShape> = {
   icon: 'ph--function--regular',
   component: FunctionComponent,
   createShape: createFunction,
-  // TODO(burdon): Reconcile with createAnchors.
   getAnchors: (shape) => {
-    // TODO(burdon): Get props from node's schema.
-    const inputs = [createAnchorId('input')];
-    const outputs = [createAnchorId('output')];
-    // TODO(burdon): Offset.
-    return createAnchors(shape, inputs, outputs);
+    const inputs = AST.getPropertySignatures(shape.node.input.ast).map(({ name }) =>
+      createAnchorId('input', name.toString()),
+    );
+    const outputs = AST.getPropertySignatures(shape.node.output.ast).map(({ name }) =>
+      createAnchorId('output', name.toString()),
+    );
 
-    //   return inputs.reduce(
-    //     (map, name, i) => {
-    //       const input = createAnchorId('input', name);
-    //       map[input] = {
-    //         id: input,
-    //         shape: id,
-    //         pos: pointAdd(center, {
-    //           x: -size.width / 2,
-    //           y: size.height / 2 - (input.length * rowHeight - 2) + i * rowHeight,
-    //         }),
-    //       };
-    //
-    //       return map;
-    //     },
-    //     {
-    //       [outputs]: {
-    //         id: outputs,
-    //         shape: id,
-    //         pos: pointAdd(center, { x: size.width / 2, y: 0 }),
-    //       },
-    //     } as Record<string, Anchor>,
-    //   );
+    return createAnchors({
+      shape,
+      inputs,
+      outputs,
+      center: pointAdd(shape.center, { x: 0, y: headerHeight / 2 }),
+    });
   },
 };

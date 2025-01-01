@@ -2,66 +2,33 @@
 // Copyright 2024 DXOS.org
 //
 
-import { GraphModel, type GraphNode } from '@dxos/graph';
+import { GraphModel, type GraphNode, createEdgeId } from '@dxos/graph';
 
 import { createAnd, createFunction, createSwitch, createTimer } from './shapes';
 import type { Shape } from '../types';
 
-// TODO(burdon): Incorrect inference in Webstorm.
-export const testGraph = new GraphModel<GraphNode<Shape>>()
-  .addNode({
-    id: 'node-a',
-    data: createFunction({
-      id: 'node-a',
-      center: { x: -128, y: 0 },
-    }),
-  })
-  .addNode({
-    id: 'node-b',
-    data: createFunction({
-      id: 'node-b',
-      center: { x: 128, y: 0 },
-    }),
-  })
-  .addNode({
-    id: 'node-c',
-    data: createTimer({ id: 'node-c', center: { x: -320, y: 0 } }),
-  })
-  .addNode({
-    id: 'node-d',
-    data: createAnd({ id: 'node-d', center: { x: -128, y: -256 } }),
-  })
-  .addNode({
-    id: 'node-e',
-    data: createSwitch({ id: 'node-e', center: { x: -320, y: -256 } }),
-  })
-  .addEdge({
-    id: 'node-a-to-node-b',
-    source: 'node-a',
-    target: 'node-b',
-    data: { property: 'prop-3' },
-  })
-  .addEdge({
-    id: 'node-c-to-node-a',
-    source: 'node-c',
-    target: 'node-a',
-    data: { property: 'prop-1' },
-  })
-  .addEdge({
-    id: 'node-b-to-node-d',
-    source: 'node-b',
-    target: 'node-d',
-    data: { property: 'b' },
-  })
-  .addEdge({
-    id: 'node-d-to-node-b',
-    source: 'node-d',
-    target: 'node-b',
-    data: { property: 'prop-1' },
-  })
-  .addEdge({
-    id: 'node-e-to-node-d',
-    source: 'node-e',
-    target: 'node-d',
-    data: { property: 'a' },
-  });
+const nodes = [
+  createFunction({ id: 'a', center: { x: -128, y: 0 } }),
+  createFunction({ id: 'b', center: { x: 128, y: 0 } }),
+  createTimer({ id: 'c', center: { x: -320, y: 0 } }),
+  createAnd({ id: 'd', center: { x: -128, y: -256 } }),
+  createSwitch({ id: 'e', center: { x: -320, y: -256 } }),
+];
+
+const edges = [
+  { source: 'c', target: 'a', data: { property: 'value' } },
+  { source: 'e', target: 'd', data: { property: 'a' } },
+  { source: 'd', target: 'b', data: { property: 'value' } },
+  { source: 'a', target: 'b', data: { property: 'value' } },
+  { source: 'b', target: 'd', data: { property: 'b' } },
+];
+
+export const testGraph = new GraphModel<GraphNode<Shape>>({
+  nodes: nodes.map((data) => ({ id: data.id, data })),
+  edges: edges.map(({ source, target, data }) => ({
+    id: createEdgeId({ source, target, relation: 'computes' }),
+    source,
+    target,
+    data,
+  })),
+});
