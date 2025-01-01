@@ -53,6 +53,10 @@
   - [ ] Touch input (ipad).
 
 ### Phase 3: State machine
+
+- [ ] shape factory to create runtime compute node (via context).
+- [ ] function with schema.
+
 - [ ] Generalize function anchors (e.g., shape with anchors).
 - [ ] Shape => ComputeNode? (e.g., get properties, current state, etc.)
 - [ ] Drag events to compute plugin (create, link, etc).

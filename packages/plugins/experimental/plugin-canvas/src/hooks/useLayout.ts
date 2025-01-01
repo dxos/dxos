@@ -154,8 +154,8 @@ const createCurve = (source: Point, target: Point, offset = 16) => [
 ];
 
 // TODO(burdon): Cache anchor positions? (runtime representation of shapes and paths).
-const getAnchorPoint = (registry: ShapeRegistry, shape: Shape, anchorId: string): Point | undefined => {
-  const anchors = registry.getShape(shape.type)?.getAnchors?.(shape);
+const getAnchorPoint = (registry: ShapeRegistry, shape: Polygon, anchorId: string): Point | undefined => {
+  const anchors = registry.getShapeDef(shape.type)?.getAnchors?.(shape);
   const anchor = anchors?.[anchorId];
   return anchor?.pos;
 };
@@ -169,7 +169,7 @@ export const getClosestAnchor = (
   let min = Infinity;
   let closest: Extract<DragDropPayload, { type: 'anchor' }> | undefined;
   graph.nodes.forEach(({ data: shape }) => {
-    const anchors = registry.getShape(shape.type)?.getAnchors?.(shape);
+    const anchors = registry.getShapeDef(shape.type)?.getAnchors?.(shape);
     if (anchors) {
       for (const anchor of Object.values(anchors)) {
         const d = getDistance(pos, anchor.pos);

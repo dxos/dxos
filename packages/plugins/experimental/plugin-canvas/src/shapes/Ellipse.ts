@@ -3,7 +3,6 @@
 //
 
 import type { ShapeComponentProps, ShapeDef } from '../components';
-import { createId } from '../testing';
 import { type EllipseShape } from '../types';
 
 export type CreateEllipseProps = Omit<EllipseShape, 'type'>;
@@ -22,5 +21,5 @@ export const ellipseShape: ShapeDef<EllipseShape> = {
   type: 'ellipse',
   icon: 'ph--circle--regular',
   component: EllipseComponent,
-  create: () => createEllipse({ id: createId(), center: { x: 0, y: 0 }, size: { width: 128, height: 128 } }),
+  createShape: ({ id, center }) => createEllipse({ id, center, size: { width: 128, height: 128 } }),
 };

@@ -12,6 +12,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { type DragDropPayload, useEditorContext } from '../../hooks';
 import { getCenter } from '../../layout';
+import { createId } from '../../testing';
 import { type ShapeRegistry } from '../Canvas';
 
 export type ToolsProps = ThemedClassName<{
@@ -42,8 +43,7 @@ const Tool = ({ type, icon }: ToolProps) => {
     return draggable({
       element: ref.current,
       getInitialData: () => {
-        const def = registry.getShape(type);
-        const shape = def?.create();
+        const shape = registry.createShape(type, { id: createId(), center: { x: 0, y: 0 } });
         return { type: 'tool', tool: type, shape } satisfies DragDropPayload;
       },
       onGenerateDragPreview: ({ nativeSetDragImage, source }) => {
@@ -51,10 +51,11 @@ const Tool = ({ type, icon }: ToolProps) => {
         invariant(data.type === 'tool');
         setCustomNativeDragPreview({
           nativeSetDragImage,
+          // TODO(burdon): Adjust for scale (need to get projection).
           getOffset: () => {
-            // TODO(burdon): Adjust for scale (need to get projection).
             return getCenter(data.shape.size);
           },
+          // TODO(burdon): Same preview pattern as frame?
           render: ({ container }) => {
             monitor.start({ container, type: 'tool', shape: data.shape });
           },

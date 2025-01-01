@@ -54,7 +54,7 @@ export const ShapeComponent = (props: ShapeComponentProps<any>) => {
   const { registry } = useEditorContext();
   const { shape } = props;
   if (isPolygon(shape)) {
-    const component = registry.getShape(shape.type)?.component;
+    const component = registry.getShapeDef(shape.type)?.component;
     return <Frame {...props} Component={component} />;
   }
   if (isPath(shape)) {

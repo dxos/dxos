@@ -19,10 +19,10 @@ import { type AsyncUpdate } from './state-machine';
 // TODO(burdon): The node and edge types should be schema (not the runtime class)?
 // TODO(burdon): Can GraphModel manage this binding?
 // TODO(burdon): Initially leave as runtime and sync on startup.
-export type ComputeGraph = GraphModel<GraphNode<AbstractComputeNode<any, any>>, GraphEdge<ComputeEdge | void>>;
+export type ComputeGraph = GraphModel<GraphNode<ComputeNode<any, any>>, GraphEdge<ComputeEdge | void>>;
 
 export const createComputeGraph = (graph?: Graph): ComputeGraph => {
-  return new GraphModel<GraphNode<AbstractComputeNode<any, any>>, GraphEdge<ComputeEdge | undefined>>(graph);
+  return new GraphModel<GraphNode<ComputeNode<any, any>>, GraphEdge<ComputeEdge | undefined>>(graph);
 };
 
 /**
@@ -36,7 +36,7 @@ export type ComputeEdge = {
 /**
  * Represents a compute element, which may take inputs from multiple other nodes, and output a value to other nodes.
  */
-export abstract class AbstractComputeNode<Input, Output> {
+export abstract class ComputeNode<Input, Output> {
   // TODO(burdon): Replace with schema.
   abstract readonly type: string;
 
@@ -46,7 +46,7 @@ export abstract class AbstractComputeNode<Input, Output> {
   // TODO(burdon): Move into separate structure to keep ComputeNode stateless.
   protected _input: any; // Partial<Input> | undefined;
 
-  protected constructor(
+  constructor(
     readonly input: S.Schema<Input>,
     readonly output: S.Schema<Output>,
   ) {

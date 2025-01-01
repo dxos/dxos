@@ -13,8 +13,6 @@ export const testGraph = new GraphModel<GraphNode<Shape>>()
     id: 'node-a',
     data: createFunction({
       id: 'node-a',
-      // TODO(burdon): Convert to schema.
-      properties: [{ type: 'string', name: 'prop-1' }],
       center: { x: -128, y: 0 },
     }),
   })
@@ -22,12 +20,6 @@ export const testGraph = new GraphModel<GraphNode<Shape>>()
     id: 'node-b',
     data: createFunction({
       id: 'node-b',
-      // TODO(burdon): Convert to schema.
-      properties: [
-        { type: 'string', name: 'prop-1' },
-        { type: 'string', name: 'prop-2' },
-        { type: 'string', name: 'prop-3' },
-      ],
       center: { x: 128, y: 0 },
     }),
   })

@@ -8,13 +8,16 @@ import { type Query } from '@dxos/echo-db';
 import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
-import { AbstractComputeNode } from './compute-graph';
+import { ComputeNode } from './compute-graph';
 import { type AsyncUpdate, InvalidStateError } from './state-machine';
+
+// TODO(burdon): Text input node.
+// TODO(burdon): Logging "tap" pass-through node.
 
 /**
  * Switch outputs true when set.
  */
-export class Switch extends AbstractComputeNode<void, boolean> {
+export class Switch extends ComputeNode<void, boolean> {
   override readonly type = 'switch';
   private _state = false;
 
@@ -35,7 +38,7 @@ export class Switch extends AbstractComputeNode<void, boolean> {
 /**
  * Beacon displays the current boolean status.
  */
-export class Beacon extends AbstractComputeNode<boolean, void> {
+export class Beacon extends ComputeNode<boolean, void> {
   override readonly type = 'beacon';
 
   constructor() {
@@ -54,7 +57,7 @@ type LogicGateInput = S.Schema.Type<typeof LogicGateInput>;
 /**
  * Logical NOT gate.
  */
-export class NotGate extends AbstractComputeNode<boolean, boolean> {
+export class NotGate extends ComputeNode<boolean, boolean> {
   override readonly type = 'not';
 
   constructor() {
@@ -69,7 +72,7 @@ export class NotGate extends AbstractComputeNode<boolean, boolean> {
 /**
  * Logical OR gate.
  */
-export class OrGate extends AbstractComputeNode<LogicGateInput, boolean> {
+export class OrGate extends ComputeNode<LogicGateInput, boolean> {
   override readonly type = 'or';
 
   constructor() {
@@ -84,7 +87,7 @@ export class OrGate extends AbstractComputeNode<LogicGateInput, boolean> {
 /**
  * Logical AND gate.
  */
-export class AndGate extends AbstractComputeNode<LogicGateInput, boolean> {
+export class AndGate extends ComputeNode<LogicGateInput, boolean> {
   override readonly type = 'and';
 
   constructor() {
@@ -99,21 +102,21 @@ export class AndGate extends AbstractComputeNode<LogicGateInput, boolean> {
 /**
  * ECHO subscription.
  */
-export class Subscription extends AbstractComputeNode<void, readonly any[]> {
+export class Subscription extends ComputeNode<void, readonly any[]> {
   override readonly type = 'subscription';
 
   // TODO(burdon): Throttling options.
   // TODO(burdon): Pause/resume (base class?)
-  constructor(private readonly _query: Query) {
+  constructor(private _query?: Query) {
     super(S.Void, S.Array(S.Any));
   }
 
   override async open(ctx: Context, cb: AsyncUpdate<readonly any[]>) {
-    const subscription = this._query.subscribe(({ results }) => {
+    const subscription = this._query?.subscribe(({ results }) => {
       cb(results);
     });
 
-    ctx.onDispose(() => subscription());
+    ctx.onDispose(() => subscription?.());
   }
 
   override async invoke() {
@@ -126,10 +129,10 @@ export class Subscription extends AbstractComputeNode<void, readonly any[]> {
  */
 // TODO(burdon): Send custom value.
 // TODO(burdon): Pause/resume (base class?)
-export class Timer extends AbstractComputeNode<void, number> {
+export class Timer extends ComputeNode<void, number> {
   override readonly type = 'timer';
 
-  constructor(private readonly _interval: number) {
+  constructor(private _interval = 1_000) {
     super(S.Void, S.Number);
   }
 
@@ -146,20 +149,24 @@ export class Timer extends AbstractComputeNode<void, number> {
   }
 }
 
-// TODO(burdon): Logging "tap" pass-through.
+export const DefaultInput = S.Struct({ input: S.Any });
+export const DefaultOutput = S.Struct({ input: S.Any });
 
-// export class RemoteFunction<Input> extends ComputeNode<Input, void> {
-//   override readonly type = 'function';
-//
-//   override async invoke(input: Input) {
-//     invariant('Invalid state');
-//   }
-// }
+export type DefaultInput = S.Schema.Type<typeof DefaultInput>;
+export type DefaultOutput = S.Schema.Type<typeof DefaultOutput>;
 
-// export class TransformerFunction extends ComputeNode<string, string> {
-//   override readonly type = 'gpt';
-//
-//   override async invoke(input: string) {
-//     invariant('Invalid state');
-//   }
-// }
+export class RemoteFunction<Input, Output> extends ComputeNode<Input, Output> {
+  override readonly type = 'function';
+
+  override async invoke(input: Input) {
+    return raise(new InvalidStateError());
+  }
+}
+
+export class TransformerFunction extends ComputeNode<string, string> {
+  override readonly type = 'gpt';
+
+  override async invoke(input: string) {
+    return raise(new InvalidStateError());
+  }
+}

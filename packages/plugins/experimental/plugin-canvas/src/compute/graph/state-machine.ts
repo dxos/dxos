@@ -8,7 +8,7 @@ import { S } from '@dxos/echo-schema';
 import { type GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 
-import { type ComputeGraph, type AbstractComputeNode } from './compute-graph';
+import { type ComputeGraph, type ComputeNode } from './compute-graph';
 
 export const InvalidStateError = Error;
 
@@ -24,7 +24,7 @@ export type AsyncUpdate<T> = (value: T) => void;
  */
 // TODO(burdon): Move to compute (wihout hyperformula dependency). Maps onto hyperformula as client runtime?
 export class StateMachine {
-  public readonly update = new Event<{ node: GraphNode<AbstractComputeNode<any, any>>; value: any }>();
+  public readonly update = new Event<{ node: GraphNode<ComputeNode<any, any>>; value: any }>();
 
   private _ctx?: Context;
 
@@ -62,7 +62,7 @@ export class StateMachine {
     }
   }
 
-  async exec(node?: GraphNode<AbstractComputeNode<any, any>> | undefined) {
+  async exec(node?: GraphNode<ComputeNode<any, any>> | undefined) {
     if (node) {
       // Update root node.
       const output = await node.data.exec();
@@ -83,7 +83,7 @@ export class StateMachine {
   /**
    * Depth first propagation of compute events.
    */
-  private async _propagate<T>(node: GraphNode<AbstractComputeNode<any, T>>, output: T) {
+  private async _propagate<T>(node: GraphNode<ComputeNode<any, T>>, output: T) {
     for (const edge of this._graph.getEdges({ source: node.id })) {
       const target = this._graph.getNode(edge.target);
       invariant(target);

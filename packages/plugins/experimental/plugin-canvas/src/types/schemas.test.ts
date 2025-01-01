@@ -13,7 +13,7 @@ describe('schema', () => {
     const shapes: Shape[] = [];
     shapes.push(createRectangle({ id: 'shape-1', center: { x: 0, y: 0 }, size: { width: 80, height: 80 } }));
     shapes.push(createEllipse({ id: 'shape-2', center: { x: 0, y: 0 }, size: { width: 80, height: 80 } }));
-    shapes.push(createFunction({ id: 'shape-3', center: { x: 0, y: 0 }, properties: [] }));
+    shapes.push(createFunction({ id: 'shape-3', center: { x: 0, y: 0 } }));
     shapes.push(
       createPath({
         id: 'shape-4',

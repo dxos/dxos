@@ -33,7 +33,10 @@ export const createAnchors = (shape: Polygon, inputs: string[], outputs: string[
       [anchor]: {
         id: anchor,
         shape: id,
-        pos: { x: center.x - size.width / 2, y: center.y - hi / 2 + i * rowHeight },
+        pos: {
+          x: center.x - size.width / 2,
+          y: center.y - hi / 2 + i * rowHeight,
+        },
       },
     }),
     {},
@@ -45,7 +48,10 @@ export const createAnchors = (shape: Polygon, inputs: string[], outputs: string[
       [anchor]: {
         id: anchor,
         shape: id,
-        pos: { x: center.x + size.width / 2, y: center.y - ho / 2 + i * rowHeight },
+        pos: {
+          x: center.x + size.width / 2,
+          y: center.y - ho / 2 + i * rowHeight,
+        },
       },
     }),
     {},
