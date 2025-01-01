@@ -48,7 +48,10 @@ type EditorRootProps = ThemedClassName<
   PropsWithChildren<
     Pick<EditorContextType, 'id'> &
       Partial<
-        Pick<EditorContextType, 'options' | 'debug' | 'showGrid' | 'snapToGrid' | 'graph' | 'selection' | 'registry'>
+        Pick<
+          EditorContextType,
+          'options' | 'debug' | 'showGrid' | 'snapToGrid' | 'graph' | 'graphMonitor' | 'selection' | 'registry'
+        >
       > & {
         autoZoom?: boolean;
       }
@@ -66,6 +69,7 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
       showGrid: _showGrid = true,
       snapToGrid: _snapToGrid = true,
       graph: _graph,
+      graphMonitor,
       selection: _selection,
       registry: _registry,
       autoZoom,
@@ -106,6 +110,7 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
       registry,
 
       graph,
+      graphMonitor,
       clipboard,
       selection,
 

@@ -8,12 +8,13 @@ import { type Query } from '@dxos/echo-db';
 import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
-import { type AsyncUpdate, ComputeNode, InvalidStateError } from './state-machine';
+import { AbstractComputeNode } from './compute-graph';
+import { type AsyncUpdate, InvalidStateError } from './state-machine';
 
 /**
  * Switch outputs true when set.
  */
-export class Switch extends ComputeNode<void, boolean> {
+export class Switch extends AbstractComputeNode<void, boolean> {
   override readonly type = 'switch';
   private _state = false;
 
@@ -34,7 +35,7 @@ export class Switch extends ComputeNode<void, boolean> {
 /**
  * Beacon displays the current boolean status.
  */
-export class Beacon extends ComputeNode<boolean, void> {
+export class Beacon extends AbstractComputeNode<boolean, void> {
   override readonly type = 'beacon';
 
   constructor() {
@@ -53,7 +54,7 @@ type LogicGateInput = S.Schema.Type<typeof LogicGateInput>;
 /**
  * Logical NOT gate.
  */
-export class NotGate extends ComputeNode<boolean, boolean> {
+export class NotGate extends AbstractComputeNode<boolean, boolean> {
   override readonly type = 'not';
 
   constructor() {
@@ -68,7 +69,7 @@ export class NotGate extends ComputeNode<boolean, boolean> {
 /**
  * Logical OR gate.
  */
-export class OrGate extends ComputeNode<LogicGateInput, boolean> {
+export class OrGate extends AbstractComputeNode<LogicGateInput, boolean> {
   override readonly type = 'or';
 
   constructor() {
@@ -83,7 +84,7 @@ export class OrGate extends ComputeNode<LogicGateInput, boolean> {
 /**
  * Logical AND gate.
  */
-export class AndGate extends ComputeNode<LogicGateInput, boolean> {
+export class AndGate extends AbstractComputeNode<LogicGateInput, boolean> {
   override readonly type = 'and';
 
   constructor() {
@@ -98,7 +99,7 @@ export class AndGate extends ComputeNode<LogicGateInput, boolean> {
 /**
  * ECHO subscription.
  */
-export class Subscription extends ComputeNode<void, readonly any[]> {
+export class Subscription extends AbstractComputeNode<void, readonly any[]> {
   override readonly type = 'subscription';
 
   // TODO(burdon): Throttling options.
@@ -125,7 +126,7 @@ export class Subscription extends ComputeNode<void, readonly any[]> {
  */
 // TODO(burdon): Send custom value.
 // TODO(burdon): Pause/resume (base class?)
-export class Timer extends ComputeNode<void, number> {
+export class Timer extends AbstractComputeNode<void, number> {
   override readonly type = 'timer';
 
   constructor(private readonly _interval: number) {

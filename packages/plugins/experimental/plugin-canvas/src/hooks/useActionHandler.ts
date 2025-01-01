@@ -22,6 +22,7 @@ export const useActionHandler = () => {
   const {
     clipboard,
     graph,
+    graphMonitor,
     options,
     overlayRef,
     selection,
@@ -160,20 +161,13 @@ export const useActionHandler = () => {
           const { ids = selection.selected.value } = action;
           const nodes = ids.map((id) => graph.getNode(id)).filter(isNotFalsy);
           const edges = ids.map((id) => graph.getEdge(id)).filter(isNotFalsy);
-          clipboard //
-            .clear()
-            .addNodes(nodes)
-            .addEdges(edges);
+          clipboard.clear().addNodes(nodes).addEdges(edges);
           return true;
         }
         case 'paste': {
           // TODO(burdon): Change ids if pasting copy (update links).
           graph.addGraph(clipboard);
-          selection.setSelected([
-            //
-            ...clipboard.nodes.map((node) => node.id),
-            ...clipboard.edges.map((edge) => edge.id),
-          ]);
+          selection.setSelected([...clipboard.nodes.map((node) => node.id), ...clipboard.edges.map((edge) => edge.id)]);
           clipboard.clear();
           return true;
         }
@@ -190,6 +184,7 @@ export const useActionHandler = () => {
             shape = createRectangle({ id, center: { x: 0, y: 0 }, size: itemSize });
           }
           invariant(shape);
+          graphMonitor?.onCreate(shape);
           graph.addNode({ id: shape.id, data: shape });
           selection.setSelected([shape.id]);
           return true;
@@ -215,6 +210,7 @@ export const useActionHandler = () => {
           return true;
         }
 
+        // TODO(burdon): Note this should actually first the associated compute node.
         case 'run': {
           const { ids = selection.selected.value } = action;
           for (const id of ids) {
@@ -235,5 +231,5 @@ export const useActionHandler = () => {
     };
 
     setActionHandler(actionHandler);
-  }, [root, overlayRef, options, graph, selection, projection]);
+  }, [root, overlayRef, options, graph, graphMonitor, selection, projection]);
 };

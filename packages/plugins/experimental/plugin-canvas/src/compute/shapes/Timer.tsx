@@ -36,6 +36,8 @@ export const createTimer = ({ id, ...rest }: CreateTimerProps): TimerShape => ({
 export const TimerComponent = ({ shape }: ShapeComponentProps<TimerShape>) => {
   const { actionHandler } = useEditorContext(); // TODO(burdon): Narrow to shape context.
   const [value, setValue] = useState(false);
+
+  // TODO(burdon): Note the actual time should come from the associated compute node.
   const timer = useRef<NodeJS.Timeout>();
   useEffect(() => {
     clearInterval(timer.current);

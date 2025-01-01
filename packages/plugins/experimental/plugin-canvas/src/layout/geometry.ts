@@ -20,13 +20,14 @@ export type Range = { p1: Point; p2: Point }; // TODO(burdon): Array.
 
 export type PointTransform = (pos: Point) => Point;
 
-// TODO(burdon): Namespace for functions?
+// TODO(burdon): Namespace functions (e.g., Point.add(a, b)).
+// TODO(burdon): Factor out low-level SVG package.
+
+export const round = (n: number, m: number) => Math.round(n / m) * m;
 
 //
 // Point
 //
-
-export const round = (n: number, m: number) => Math.round(n / m) * m;
 
 export const pointAdd = (a: Point, b: Point): Point => ({ x: a.x + b.x, y: a.y + b.y });
 export const pointSubtract = (a: Point, b: Point): Point => ({ x: a.x - b.x, y: a.y - b.y });
@@ -80,6 +81,17 @@ export const rectOverlaps = (b1: Rect, b2: Rect): boolean =>
 
 export const rectContains = (b1: Rect, b2: Rect): boolean =>
   b2.x >= b1.x && b2.y >= b1.y && b2.x + b2.width <= b1.x + b1.width && b2.y + b2.height <= b1.y + b1.height;
+
+//
+// CSS
+//
+
+export const getBoundsProperties = ({ x, y, width, height }: Rect): CSSProperties => ({
+  left: `${x - width / 2}px`,
+  top: `${y - height / 2}px`,
+  width: `${width}px`,
+  height: `${height}px`,
+});
 
 //
 // Intersections
@@ -142,40 +154,25 @@ export const findLineRectangleIntersections = (line: Line, rect: Rect): Point[] 
  * Line2 is represented as: c + s(d-c), where s is between 0 and 1.
  */
 export const findLineIntersection = ([p1, p2]: Line, [q1, q2]: Line): Point | null => {
-  // Calculate denominator first to check if lines are parallel.
+  // Calculate denominator first to check if lines are parallel; if 0, then lines are parallel.
   const denominator = (p2.x - p1.x) * (q2.y - q1.y) - (p2.y - p1.y) * (q2.x - q1.x);
-
-  // If denominator is 0, lines are parallel.
   if (Math.abs(denominator) < 1e-10) {
     return null;
   }
 
-  // Calculate intersection parameters.
+  // Check if intersection occurs within both line segments.
   const t = ((q1.x - p1.x) * (q2.y - q1.y) - (q1.y - p1.y) * (q2.x - q1.x)) / denominator;
   const s = ((q1.x - p1.x) * (p2.y - p1.y) - (q1.y - p1.y) * (p2.x - p1.x)) / denominator;
-
-  // Check if intersection occurs within both line segments.
   if (t < 0 || t > 1 || s < 0 || s > 1) {
     return null;
   }
 
-  // Calculate intersection point.
+  // Intersection point.
   return {
     x: p1.x + t * (p2.x - p1.x),
     y: p1.y + t * (p2.y - p1.y),
   };
 };
-
-//
-// CSS
-//
-
-export const getBoundsProperties = ({ x, y, width, height }: Rect): CSSProperties => ({
-  left: `${x - width / 2}px`,
-  top: `${y - height / 2}px`,
-  width: `${width}px`,
-  height: `${height}px`,
-});
 
 //
 // SVG Paths
@@ -225,18 +222,20 @@ export const createPathThroughPoints = (points: Point[]): string => {
 /**
  * https://d3js.org/d3-shape/curve
  */
-const splineGenerator = d3
+const curveGenerator = d3
   .line<Point>()
+  // .curve(d3.curveBasis)
+  // .curve(d3.curveBundle)
   .curve(d3.curveCatmullRom.alpha(1))
   .x((d) => d.x)
   .y((d) => d.y);
 
 export const createSplineThroughPoints = (points: Point[]): string => {
   invariant(points.length >= 2);
-  return splineGenerator(points)!;
+  return curveGenerator(points)!;
 };
 
-export const getNormals = (r1: Rect, r2: Rect, len = 32): [Point[], Point[]] | undefined => {
+export const createNormalsFromRectangles = (r1: Rect, r2: Rect, len = 32): [Point[], Point[]] | undefined => {
   const sidesR1 = {
     left: [
       { x: r1.x, y: r1.y },

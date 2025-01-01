@@ -8,6 +8,9 @@ import { type Anchor } from './Anchor';
 import { type ShapeComponentProps } from './Shape';
 import { type Polygon } from '../../types';
 
+/**
+ * Shape definition.
+ */
 // TODO(burdon): Create abstract base class.
 export type ShapeDef<S extends Polygon> = {
   type: string;
@@ -17,6 +20,9 @@ export type ShapeDef<S extends Polygon> = {
   getAnchors?: (shape: S) => Record<string, Anchor>;
 };
 
+/**
+ * Shape registry may be provided to the Editor.
+ */
 export class ShapeRegistry {
   private readonly _registry: Map<string, ShapeDef<any>>;
 

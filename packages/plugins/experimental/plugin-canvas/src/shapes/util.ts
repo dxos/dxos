@@ -4,12 +4,13 @@
 
 import { type Point } from '@antv/layout';
 
-import { type Anchor } from '../../components';
-import { type Polygon } from '../../types';
+import { type Anchor } from '../components';
+import { type Polygon } from '../types';
 
 export const rowHeight = 20;
 
 export const createAnchorId = (direction: 'input' | 'output', property = '#default') => [direction, property].join('.');
+
 export const parseAnchorId = (id: string): ['input' | 'output' | undefined, string] => {
   const parts = id.match(/(input|output)\.(.+)/);
   return parts ? (parts.slice(1) as any) : [undefined, id];

@@ -126,7 +126,7 @@ export class DragMonitor {
 
         case 'anchor': {
           if (this._state.value.type === 'anchor' && target.shape.id !== this._state.value.anchor.shape) {
-            // TODO(burdon): Test type.
+            // TODO(burdon): Test types match.
             // TODO(burdon): Prevent drop if anchor is already populated.
             const source = this._state.value;
             const [sourceDirection] = parseAnchorId(source.anchor.id);
@@ -240,7 +240,6 @@ export const useDragMonitor = () => {
                 // TODO(burdon): Custom logic.
                 const [sourceDirection, sourceAnchorId] = parseAnchorId(source.anchor.id);
                 const [, targetAnchorId] = parseAnchorId(target.anchor.id);
-                console.log(sourceDirection);
                 if (sourceDirection === 'output') {
                   await actionHandler({
                     type: 'link',

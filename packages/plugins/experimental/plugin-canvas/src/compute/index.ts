@@ -1,7 +1,7 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-export * from './compute-graph';
-export * from './compute-nodes';
-export * from './state-machine';
+// export * from './graph';
+export * from './shapes';
+export * from './registry';

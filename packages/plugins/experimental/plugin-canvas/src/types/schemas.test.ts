@@ -5,7 +5,8 @@
 import { describe, test } from 'vitest';
 
 import { isPolygon, isPath, type Shape } from './schema';
-import { createEllipse, createRectangle, createFunction, createPath } from '../shapes';
+import { createFunction } from '../compute';
+import { createEllipse, createRectangle, createPath } from '../shapes';
 
 describe('schema', () => {
   test('basic types', ({ expect }) => {

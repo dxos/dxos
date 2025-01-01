@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './compute';
-export * from './defs';
+export * from './registry';
+export * from './util';
 
 export * from './Ellipse';
 export * from './Path';

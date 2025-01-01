@@ -8,7 +8,7 @@ import { type Point, type Rect } from '@dxos/react-ui-canvas';
 import { type DragDropPayload } from './useDragMonitor';
 import { useEditorContext } from './useEditorContext';
 import { type Anchor, type ShapeRegistry } from '../components';
-import { getDistance, findClosestIntersection, getNormals, getRect, pointAdd } from '../layout';
+import { getDistance, findClosestIntersection, createNormalsFromRectangles, getRect, pointAdd } from '../layout';
 import { createAnchorId, createPath, parseAnchorId } from '../shapes';
 import { isPolygon, type PathShape, type Polygon, type Shape } from '../types';
 
@@ -63,9 +63,7 @@ export const useLayout = (): Layout => {
 
     const source = getShape(sourceNode.data);
     const target = getShape(targetNode.data);
-
-    const property = data?.property;
-    const path = createPathForEdge({ id, source, target, property });
+    const path = createPathForEdge({ id, source, target, property: data?.property });
     if (path) {
       shapes.push(path);
     }
@@ -131,7 +129,7 @@ const createCenterPoints = (source: Bounds, target: Bounds, len = 32): Point[] =
   // Curve.
   const d = getDistance(source.center, target.center);
   if (d > 256) {
-    const [s1, s2] = getNormals(source.bounds, target.bounds, len) ?? [];
+    const [s1, s2] = createNormalsFromRectangles(source.bounds, target.bounds, len) ?? [];
     if (s1 && s2) {
       points = [s1[1], s1[0], s2[0], s2[1]];
     }
@@ -147,7 +145,8 @@ const createCenterPoints = (source: Bounds, target: Bounds, len = 32): Point[] =
   return points;
 };
 
-const createCurve = (source: Point, target: Point, offset = 10) => [
+// TODO(burdon): Sweep out curve if horizontal.
+const createCurve = (source: Point, target: Point, offset = 16) => [
   source,
   pointAdd(source, { x: offset, y: 0 }),
   pointAdd(target, { x: -offset, y: 0 }),

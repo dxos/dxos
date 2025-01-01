@@ -8,17 +8,19 @@ import { Trigger } from '@dxos/async';
 import { createEdgeId, type GraphNode } from '@dxos/graph';
 import { log } from '@dxos/log';
 
-import { createComputeGraph } from './compute-graph';
-import { AndGate, Beacon, Switch } from './compute-nodes';
-import { type ComputeNode, StateMachine } from './state-machine';
-import { createId } from '../testing';
+import { type AbstractComputeNode, createComputeGraph } from './compute-graph';
+import { AndGate, Beacon, Switch } from './node-types';
+import { StateMachine } from './state-machine';
+import { createId } from '../../testing';
 
 describe('state machine', () => {
   test('construct', async ({ expect }) => {
     const graph = createComputeGraph();
 
+    // TODO(burdon): data should be object. Define schema for compute.
+
     // TODO(burdon): Builder pattern.
-    const [a, b, c, d]: GraphNode<ComputeNode<any, any>>[] = [
+    const [a, b, c, d]: GraphNode<AbstractComputeNode<any, any>>[] = [
       { id: createId(), data: new Switch().setState(false) },
       { id: createId(), data: new Switch().setState(true) },
       { id: createId(), data: new AndGate() },

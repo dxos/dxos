@@ -20,16 +20,12 @@ import { type Graph, GraphModel, type GraphNode } from '@dxos/graph';
 import { type Dimension } from '@dxos/react-ui-canvas';
 import { getDeep } from '@dxos/util';
 
+import { type Intersection } from './util';
 import { type Shape } from '../types';
 
 // TODO(burdon): Custom UML layout heuristics:
 //  - Layout longest chain on horizontal.
 //  - Inherits always goes up.
-
-// TODO(burdon): Util.
-export type Intersection<Types extends readonly unknown[]> = Types extends [infer First, ...infer Rest]
-  ? First & Intersection<Rest>
-  : unknown;
 
 export type LayoutOptions = {
   layout: LayoutKind;

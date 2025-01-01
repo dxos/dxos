@@ -6,8 +6,8 @@ import React, { type FC } from 'react';
 
 import { S } from '@dxos/echo-schema';
 
-import { createAnchors, getAnchorPoints } from './util';
 import { type ShapeDef } from '../../components';
+import { createAnchors, getAnchorPoints } from '../../shapes';
 import { createId } from '../../testing';
 import { Polygon } from '../../types';
 

@@ -19,6 +19,7 @@ export const Shape = S.mutable(
     // TODO(burdon): Generic tag.
     guide: S.optional(S.Boolean),
     // External object.
+    // TODO(burdon): Generic typed object.
     object: S.optional(Ref(Expando)),
   }),
 );

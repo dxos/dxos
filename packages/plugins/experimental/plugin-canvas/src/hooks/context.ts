@@ -24,6 +24,14 @@ export type EditorOptions = {
   zoomDuration: number;
 };
 
+/**
+ * Model callback.
+ */
+export interface GraphMonitor {
+  onCreate: (shape: Shape) => void;
+  onLink: () => void;
+}
+
 export type EditorContextType = {
   id: string;
   options: EditorOptions;
@@ -42,6 +50,7 @@ export type EditorContextType = {
   setSnapToGrid: Dispatch<SetStateAction<boolean>>;
 
   graph: GraphModel<GraphNode<Shape>>;
+  graphMonitor?: GraphMonitor;
   clipboard: GraphModel<GraphNode<Shape>>;
   selection: SelectionModel;
 

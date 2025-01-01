@@ -9,7 +9,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { type ReactiveEchoObject } from '@dxos/echo-db';
 import { S, getTypename } from '@dxos/echo-schema';
-import { createGraph, GraphModel, type GraphNode } from '@dxos/graph';
+import { createGraph, type GraphModel, type GraphNode } from '@dxos/graph';
 import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
@@ -19,11 +19,13 @@ import { createObjectFactory, Testing, type TypeSpec, type ValueGenerator } from
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
-import { SelectionModel } from '../../hooks';
+import { computeShapes } from '../../compute';
+import { testGraph } from '../../compute/testing';
+import { type GraphMonitor, SelectionModel } from '../../hooks';
 import { doLayout } from '../../layout';
-import { createAnd, createFunction, createSwitch, createTimer } from '../../shapes';
 import { RectangleShape, type Shape } from '../../types';
 import { AttentionContainer } from '../AttentionContainer';
+import { ShapeRegistry } from '../Canvas';
 
 const generator: ValueGenerator = faker as any;
 
@@ -38,7 +40,7 @@ const Render = ({ id = 'test', graph: _graph, init, sidebar, ...props }: RenderP
   const editorRef = useRef<EditorController>(null);
   const { space } = useClientProvider();
 
-  // Do layout.
+  // Layout.
   const [graph, setGraph] = useState<GraphModel<GraphNode<Shape>> | undefined>(_graph);
   useEffect(() => {
     if (!space || !init) {
@@ -57,6 +59,17 @@ const Render = ({ id = 'test', graph: _graph, init, sidebar, ...props }: RenderP
     return () => clearTimeout(t);
   }, [space, init]);
 
+  // Monitor.
+  const graphMonitor = useMemo<GraphMonitor>(
+    () => ({
+      onCreate: (shape) => {
+        console.log(shape);
+      },
+      onLink: () => {},
+    }),
+    [],
+  );
+
   // Selection.
   const selection = useMemo(() => new SelectionModel(), []);
   const [selected, setSelected] = useState();
@@ -74,7 +87,15 @@ const Render = ({ id = 'test', graph: _graph, init, sidebar, ...props }: RenderP
   return (
     <div className='grid grid-cols-[1fr,360px] w-full h-full'>
       <AttentionContainer id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
-        <Editor.Root ref={editorRef} id={id} graph={graph} selection={selection} autoZoom {...props}>
+        <Editor.Root
+          ref={editorRef}
+          id={id}
+          graph={graph}
+          graphMonitor={graphMonitor}
+          selection={selection}
+          autoZoom
+          {...props}
+        >
           <Editor.Canvas />
           <Editor.UI />
         </Editor.Root>
@@ -132,80 +153,6 @@ type Story = StoryObj<RenderProps & { spec?: TypeSpec[] }>;
 
 export const Default: Story = {
   args: {
-    // debug: true,
-    showGrid: true,
-    snapToGrid: false,
-    sidebar: 'json',
-    graph: new GraphModel<GraphNode<Shape>>()
-      .addNode({
-        id: 'node-a',
-        data: createFunction({
-          id: 'node-a',
-          // TODO(burdon): Convert to schema.
-          properties: [{ type: 'string', name: 'prop-1' }],
-          center: { x: -128, y: 0 },
-        }),
-      })
-      .addNode({
-        id: 'node-b',
-        data: createFunction({
-          id: 'node-b',
-          // TODO(burdon): Convert to schema.
-          properties: [
-            { type: 'string', name: 'prop-1' },
-            { type: 'string', name: 'prop-2' },
-            { type: 'string', name: 'prop-3' },
-          ],
-          center: { x: 128, y: 0 },
-        }),
-      })
-      .addNode({
-        id: 'node-c',
-        data: createTimer({ id: 'node-c', center: { x: -320, y: 0 } }),
-      })
-      .addNode({
-        id: 'node-d',
-        data: createAnd({ id: 'node-d', center: { x: 128, y: -256 } }),
-      })
-      .addNode({
-        id: 'node-e',
-        data: createSwitch({ id: 'node-c', center: { x: -320, y: -256 } }),
-      })
-      .addEdge({
-        id: 'node-a-to-node-b',
-        source: 'node-a',
-        target: 'node-b',
-        data: { property: 'prop-3' },
-      })
-      .addEdge({
-        id: 'node-c-to-node-a',
-        source: 'node-c',
-        target: 'node-a',
-        data: { property: 'prop-1' },
-      })
-      .addEdge({
-        id: 'node-b-to-node-d',
-        source: 'node-b',
-        target: 'node-d',
-        data: { property: 'a' },
-      })
-      .addEdge({
-        id: 'node-d-to-node-b',
-        source: 'node-d',
-        target: 'node-b',
-        data: { property: 'prop-2' },
-      })
-      .addEdge({
-        id: 'node-e-to-node-d',
-        source: 'node-e',
-        target: 'node-d',
-        data: { property: 'b' },
-      }),
-  },
-};
-
-export const Json: Story = {
-  args: {
     sidebar: 'json',
     init: true,
     spec: [
@@ -227,10 +174,21 @@ export const Query: Story = {
   },
 };
 
+export const Compute: Story = {
+  args: {
+    // debug: true,
+    showGrid: true,
+    snapToGrid: false,
+    sidebar: 'json',
+    graph: testGraph,
+    registry: new ShapeRegistry(computeShapes),
+  },
+};
+
 // TODO(burdon): FunctionShape <== schema
 // TODO(burdon): Create compute graph.
 // TODO(burdon): Run compute graph.
-export const Compute: Story = {
+export const Component: Story = {
   args: {
     sidebar: 'json',
     // graph: createComputeGraph(),
