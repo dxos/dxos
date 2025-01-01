@@ -3,5 +3,5 @@
 //
 
 export * from './compute-graph';
-export * from './compute-node-types';
+export * from './nodes';
 export * from './state-machine';

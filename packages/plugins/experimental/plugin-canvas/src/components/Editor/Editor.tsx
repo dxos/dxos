@@ -41,6 +41,7 @@ export const defaultEditorOptions: EditorOptions = {
 };
 
 interface EditorController {
+  action?: ActionHandler;
   zoomToFit(): void;
 }
 
@@ -139,6 +140,7 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
       forwardedRef,
       () => {
         return {
+          action: actionHandler,
           zoomToFit: () => {
             requestAnimationFrame(() => {
               void actionHandler?.({ type: 'zoom-to-fit', duration: 0 });

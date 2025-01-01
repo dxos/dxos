@@ -9,7 +9,13 @@ import { type Polygon } from '../types';
 
 export const rowHeight = 20;
 
-export const createAnchorId = (direction: 'input' | 'output', property = 'value') => [direction, property].join('.');
+export const DEFAULT_INPUT = 'input';
+export const DEFAULT_OUTPUT = 'result';
+
+export const createAnchorId = (
+  direction: 'input' | 'output',
+  property = direction === 'input' ? DEFAULT_INPUT : DEFAULT_OUTPUT,
+) => [direction, property].join('.');
 
 export const parseAnchorId = (id: string): ['input' | 'output' | undefined, string] => {
   const parts = id.match(/(input|output)\.(.+)/);

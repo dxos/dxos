@@ -71,7 +71,7 @@ export const fireBullet = (root: HTMLElement, g: SVGGElement, graph: GraphModel<
 
   const paths = getPaths(graph, root, { source: id });
   for (const { edge, el } of paths) {
-    d3.select(g).call(createBullet(edge, el, defaultBulletOptions, cb));
+    d3.select(g).call(createBullet(edge, el, defaultBulletOptions));
   }
 };
 
@@ -108,7 +108,8 @@ export const createBullet = (
         // Start animation.
         .transition()
         .delay(options.delay)
-        .duration(options.minDuration + Math.random() * options.maxDuration)
+        .duration(options.minDuration)
+        // .duration(options.minDuration + Math.random() * options.maxDuration)
         .ease(d3.easeLinear)
         .tween('pathTween', function () {
           const length = path.getTotalLength();

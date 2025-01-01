@@ -68,11 +68,7 @@ export const Anchor = ({ classNames, shape, anchor, size = defaultAnchorSize, on
   const { monitor } = useEditorContext();
   const { root, projection } = useProjection();
 
-  const dragging = monitor.state(
-    (state) => state.type === 'anchor' && state.shape.id === shape.id && state.anchor.id === anchor.id,
-  ).value;
   const [preview, setPreview] = useState<HTMLElement>();
-
   const [active, setActive] = useState(false);
 
   // Dragging.
@@ -113,6 +109,7 @@ export const Anchor = ({ classNames, shape, anchor, size = defaultAnchorSize, on
         ref={ref}
         style={getBoundsProperties({ ...anchor.pos, ...size })}
         className={mx('absolute', styles.anchor, classNames, active && styles.anchorActive)}
+        title={anchor.id}
         onMouseLeave={() => onMouseLeave?.()}
       />
 

@@ -7,8 +7,9 @@ import { Context } from '@dxos/context';
 import { S } from '@dxos/echo-schema';
 import { type GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
-import { type ComputeGraph, type ComputeNode } from './compute-graph';
+import { type ComputeGraph, type ComputeNode, createComputeGraph } from './compute-graph';
 
 export const InvalidStateError = Error;
 
@@ -26,12 +27,20 @@ export type AsyncUpdate<T> = (value: T) => void;
 export class StateMachine {
   public readonly update = new Event<{ node: GraphNode<ComputeNode<any, any>>; value: any }>();
 
+  private readonly _graph: ComputeGraph;
+
   private _ctx?: Context;
 
-  constructor(private readonly _graph: ComputeGraph) {}
+  constructor(graph?: ComputeGraph) {
+    this._graph = graph ?? createComputeGraph();
+  }
 
   get isOpen() {
     return this._ctx !== undefined;
+  }
+
+  get graph() {
+    return this._graph;
   }
 
   // TODO(burdon): Extend resource?
@@ -43,7 +52,7 @@ export class StateMachine {
     this._ctx = new Context();
     await Promise.all(
       this._graph.nodes.map(async (node) =>
-        node.data.open(this._ctx, (output: any) => {
+        node.data.initialize(this._ctx, (output: any) => {
           if (!this._ctx) {
             return;
           }
@@ -62,41 +71,69 @@ export class StateMachine {
     }
   }
 
+  /**
+   * Execute node and possibly recursive chain.
+   */
   async exec(node?: GraphNode<ComputeNode<any, any>> | undefined) {
     if (node) {
       // Update root node.
-      const output = await node.data.exec();
-      this.update.emit({ node, value: output });
-      void this._propagate(node, output);
+      await this._exec(node);
     } else {
       // Fire root notes.
       for (const node of this._graph.nodes) {
-        if (node.data.input === S.Void) {
-          const output = await node.data.exec();
-          this.update.emit({ node, value: output });
-          void this._propagate(node, output);
+        if (node.data.inputSchema === S.Void) {
+          await this._exec(node);
         }
       }
     }
   }
 
   /**
+   * Exec node and propagate output to downstream nodes.
+   */
+  private async _exec(node: GraphNode<ComputeNode<any, any>>) {
+    if (node.data.outputSchema === S.Void) {
+      return;
+    }
+
+    log.info('exec', { node });
+    const output = await node.data.exec();
+    this.update.emit({ node, value: output });
+    void this._propagate(node, output);
+  }
+
+  /**
    * Depth first propagation of compute events.
    */
   private async _propagate<T>(node: GraphNode<ComputeNode<any, T>>, output: T) {
-    for (const edge of this._graph.getEdges({ source: node.id })) {
-      const target = this._graph.getNode(edge.target);
-      invariant(target);
-      target.data.setInput(edge.data?.property, output);
-      if (target.data.output === S.Void) {
-        this.update.emit({ node: target, value: output });
-      } else {
-        if (target.data.ready) {
-          const output = await target.data.exec();
+    try {
+      for (const edge of this._graph.getEdges({ source: node.id })) {
+        const target = this._graph.getNode(edge.target);
+        invariant(target);
+
+        // Get output.
+        let value = output;
+        if (edge.data?.output) {
+          invariant(typeof output === 'object');
+          value = (output as any)[edge.data?.output];
+        }
+
+        // Set input.
+        target.data.setInput(edge.data?.input, value);
+
+        // Check if ready.
+        if (target.data.output === S.Void) {
           this.update.emit({ node: target, value: output });
-          void this._propagate(target, output);
+        } else {
+          if (target.data.ready) {
+            await this._exec(target);
+          }
         }
       }
+    } catch (err) {
+      log.catch(err); // TODO(burdon): Not visible!
+      console.log(err);
+      await this.close();
     }
   }
 }

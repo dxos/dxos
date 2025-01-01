@@ -6,10 +6,10 @@ import React, { type FC } from 'react';
 
 import { S } from '@dxos/echo-schema';
 
-import { BaseComputeShape } from './defs';
+import { ComputeShape } from './defs';
 import { type ShapeDef } from '../../components';
-import { createAnchors, getAnchorPoints } from '../../shapes';
-import { type ComputeNode, NotGate } from '../graph';
+import { createAnchorId, createAnchors, getAnchorPoints } from '../../shapes';
+import { AndGate, NotGate, OrGate } from '../graph';
 
 //
 // Gate utils.
@@ -19,7 +19,7 @@ import { type ComputeNode, NotGate } from '../graph';
 type GateType = 'and' | 'or' | 'not';
 
 const GateShape = S.extend(
-  BaseComputeShape,
+  ComputeShape,
   S.Struct({
     type: S.String,
   }),
@@ -27,7 +27,7 @@ const GateShape = S.extend(
 
 type GateShape = S.Schema.Type<typeof GateShape>;
 
-type CreateGateProps = Omit<BaseComputeShape<ComputeNode<any, any>>, 'type' | 'size'> & { type: GateType };
+type CreateGateProps = Omit<GateShape, 'type' | 'size'> & { type: GateType };
 
 const createGate = (props: CreateGateProps): GateShape => ({
   ...props,
@@ -49,7 +49,7 @@ const defineShape = <S extends GateShape>({
   Symbol,
   createShape,
   inputs,
-  outputs = ['output.value'],
+  outputs = [createAnchorId('output')],
 }: {
   type: GateType;
   icon: string;
@@ -132,7 +132,7 @@ export const AndShape = GateShape;
 export type AndShape = GateShape;
 
 export const createAnd = (props: Omit<CreateGateProps, 'type' | 'node'>) => {
-  return createGate({ ...props, type: 'and', node: new NotGate() });
+  return createGate({ ...props, type: 'and', node: new AndGate() });
 };
 export const andShape = defineShape({
   type: 'and',
@@ -165,7 +165,7 @@ export const OrShape = GateShape;
 export type OrShape = GateShape;
 
 export const createOr = (props: Omit<CreateGateProps, 'type' | 'node'>) => {
-  return createGate({ ...props, type: 'or', node: new NotGate() });
+  return createGate({ ...props, type: 'or', node: new OrGate() });
 };
 export const orShape = defineShape({
   type: 'or',
@@ -207,5 +207,5 @@ export const notShape = defineShape({
   icon: 'ph--x--regular',
   Symbol: NotSymbol,
   createShape: createNot,
-  inputs: ['input.value'],
+  inputs: [createAnchorId('input')],
 });

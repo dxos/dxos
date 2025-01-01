@@ -7,14 +7,13 @@ import React from 'react';
 import { AST, S } from '@dxos/echo-schema';
 import { IconButton } from '@dxos/react-ui';
 
-import { BaseComputeShape, type BaseComputeShapeProps } from './defs';
+import { ComputeShape } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
-import { useEditorContext } from '../../hooks';
 import { pointAdd } from '../../layout';
 import { createAnchorId, createAnchors, rowHeight } from '../../shapes';
 import { DefaultInput, DefaultOutput, RemoteFunction } from '../graph';
 
-const headerHeight = 40;
+const headerHeight = 32;
 const bodyPadding = 8;
 
 export const FunctionProperty = S.Struct({
@@ -29,29 +28,28 @@ export const FunctionProperty = S.Struct({
 });
 
 export const FunctionShape = S.extend(
-  BaseComputeShape,
+  ComputeShape,
   S.Struct({
     type: S.Literal('function'),
   }),
 );
 
 export type FunctionProperty = S.Schema.Type<typeof FunctionProperty>;
-export type FunctionShape = S.Schema.Type<typeof FunctionShape>;
 
-export type CreateFunctionProps = Omit<BaseComputeShapeProps<RemoteFunction<any, any>>, 'size'>;
+export type FunctionShape = ComputeShape<S.Schema.Type<typeof FunctionShape>, RemoteFunction<any, any>>;
 
-// TODO(burdon): How is it selected?
+export type CreateFunctionProps = Omit<FunctionShape, 'type' | 'node' | 'size'>;
 
 export const createFunction = ({ id, ...rest }: CreateFunctionProps): FunctionShape => {
   const node = new RemoteFunction(DefaultInput, DefaultOutput);
   const properties = AST.getPropertySignatures(DefaultInput.ast);
-  const height = headerHeight + bodyPadding * 2 + properties.length * rowHeight + 3; // 3 = borders.
+  const height = headerHeight + bodyPadding * 2 + properties.length * rowHeight + 2; // Incl. borders.
 
   return {
     id,
     type: 'function',
     node,
-    size: { width: 128, height },
+    size: { width: 192, height },
     ...rest,
   };
 };
@@ -60,20 +58,15 @@ export const createFunction = ({ id, ...rest }: CreateFunctionProps): FunctionSh
  * Generalize to any compute node with anchors.
  */
 export const FunctionComponent = ({ shape }: ShapeComponentProps<FunctionShape>) => {
-  const { actionHandler } = useEditorContext();
-  const inputs = AST.getPropertySignatures(shape.node.input.ast).map(({ name }) => name.toString());
-
-  const handleRun = () => {
-    void actionHandler?.({ type: 'run', ids: [shape.id] });
-  };
+  const inputs = AST.getPropertySignatures(shape.node.inputSchema.ast).map(({ name }) => name.toString());
 
   return (
     <div className='flex flex-col h-full w-full justify-between'>
-      <div className='flex w-full justify-between items-center p-1 border-b border-separator'>
-        <IconButton icon='ph--play--regular' label='play' iconOnly onClick={handleRun} />
+      <div className='flex w-full justify-between items-center h-[32px] bg-hoverSurface'>
+        <div className='ps-2 text-sm truncate'>{shape.node.name}</div>
+        <IconButton classNames='p-1' variant='ghost' icon='ph--gear-six--regular' size={4} label='settings' iconOnly />
       </div>
-      {/* TODO(burdon): Abs position next to anchors. */}
-      <div style={{ padding: bodyPadding }}>
+      <div className='flex flex-col' style={{ padding: bodyPadding }}>
         {inputs.map((name) => (
           <div key={name} className='flex text-sm font-mono items-center' style={{ height: rowHeight }}>
             <div>{name}</div>
@@ -90,10 +83,10 @@ export const functionShape: ShapeDef<FunctionShape> = {
   component: FunctionComponent,
   createShape: createFunction,
   getAnchors: (shape) => {
-    const inputs = AST.getPropertySignatures(shape.node.input.ast).map(({ name }) =>
+    const inputs = AST.getPropertySignatures(shape.node.inputSchema.ast).map(({ name }) =>
       createAnchorId('input', name.toString()),
     );
-    const outputs = AST.getPropertySignatures(shape.node.output.ast).map(({ name }) =>
+    const outputs = AST.getPropertySignatures(shape.node.outputSchema.ast).map(({ name }) =>
       createAnchorId('output', name.toString()),
     );
 

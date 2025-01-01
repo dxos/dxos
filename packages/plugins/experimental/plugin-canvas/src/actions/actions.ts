@@ -34,6 +34,6 @@ export type Action =
   | { type: 'delete'; ids?: string[]; all?: boolean }
 
   //
-  | { type: 'run'; ids?: string[] };
+  | { type: 'trigger'; ids?: string[] };
 
 export type ActionHandler = (action: Action) => Promise<boolean>;

@@ -6,21 +6,23 @@ import React from 'react';
 
 import { S } from '@dxos/echo-schema';
 import { Icon } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
-import { BaseComputeShape, type BaseComputeShapeProps } from './defs';
+import { ComputeShape } from './defs';
 import { createAnchors, type ShapeComponentProps, type ShapeDef } from '../../components';
+import { createAnchorId } from '../../shapes';
 import { Beacon } from '../graph';
 
 export const BeaconShape = S.extend(
-  BaseComputeShape,
+  ComputeShape,
   S.Struct({
     type: S.Literal('beacon'),
   }),
 );
 
-export type BeaconShape = S.Schema.Type<typeof BeaconShape>;
+export type BeaconShape = ComputeShape<S.Schema.Type<typeof BeaconShape>, Beacon>;
 
-export type CreateBeaconProps = Omit<BaseComputeShapeProps<Beacon>, 'size'>;
+export type CreateBeaconProps = Omit<BeaconShape, 'type' | 'node' | 'size'>;
 
 export const createBeacon = ({ id, ...rest }: CreateBeaconProps): BeaconShape => ({
   id,
@@ -31,9 +33,16 @@ export const createBeacon = ({ id, ...rest }: CreateBeaconProps): BeaconShape =>
 });
 
 export const BeaconComponent = ({ shape }: ShapeComponentProps<BeaconShape>) => {
+  // Signals value.
+  const value = shape.node.state.value;
+
   return (
     <div className='flex w-full justify-center items-center'>
-      <Icon icon='ph--sun--regular' size={6} />
+      <Icon
+        icon='ph--sun--regular'
+        classNames={mx('transition opacity-20 duration-1000', value && 'opacity-100 text-yellow-500')}
+        size={8}
+      />
     </div>
   );
 };
@@ -43,5 +52,5 @@ export const beaconShape: ShapeDef<BeaconShape> = {
   icon: 'ph--sun--regular',
   component: BeaconComponent,
   createShape: createBeacon,
-  getAnchors: (shape) => createAnchors(shape, { 'input.value': { x: -1, y: 0 } }),
+  getAnchors: (shape) => createAnchors(shape, { [createAnchorId('input')]: { x: -1, y: 0 } }),
 };

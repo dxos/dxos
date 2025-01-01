@@ -210,8 +210,7 @@ export const useActionHandler = () => {
           return true;
         }
 
-        // TODO(burdon): Note this should actually first the associated compute node.
-        case 'run': {
+        case 'trigger': {
           const { ids = selection.selected.value } = action;
           for (const id of ids) {
             const g = overlayRef.current!.querySelector<SVGGElement>(

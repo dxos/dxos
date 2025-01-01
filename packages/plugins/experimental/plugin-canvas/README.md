@@ -54,21 +54,17 @@
 
 ### Phase 3: State machine
 
-- [ ] shape factory to create runtime compute node (via context).
-- [ ] function with schema.
-
-- [ ] Generalize function anchors (e.g., shape with anchors).
-- [ ] Shape => ComputeNode? (e.g., get properties, current state, etc.)
-- [ ] Drag events to compute plugin (create, link, etc).
+- [x] Generalize function anchors (e.g., shape with anchors).
+- [x] Shape => ComputeNode? (e.g., get properties, current state, etc.)
 - [x] State machine (local implementation); run mode.
-  - [ ] Function shape driven by schema; add property.
-  - [ ] All compute nodes should be driven by schema.
-  - [ ] Map compute/shape graphs.
-  - [ ] Run simulation.
+  - [x] Function shape driven by schema; add property.
+  - [x] All compute nodes should be driven by schema.
+  - [ ] Connect state machine.
 - [x] Logic gates (AND, etc.)
-- [ ] Triggers (Timer, Query, etc.)
-- [ ] Rename properties.
-- [ ] Shape def should be a class whose instances are cached by the layout and passed to the react function.
+- [x] Timer.
+- [ ] Select function via properties (show schema).
+- [ ] ECHO Query.
+- [ ] GPT (with prompt and base prompt inputs).
 
 ### Phase 4:
 - [ ] Group/collapse nodes; hierarchical graph editor. 
@@ -78,3 +74,8 @@
 - [ ] Factor out common Toolbar pattern (with state observers).
 - [ ] Reconcile Graph with framework (ECHO, app-graph, etc.)
 - [ ] Reconcile @antv layouts with `@dxos/plugin-debug`.
+
+### Errors
+- [ ] log.catch not displayed in state machine error handler.
+- [ ] Warning: Unknown event handler property `onCheckedChange`. (Switch)
+- [ ] inspect node:util build error.

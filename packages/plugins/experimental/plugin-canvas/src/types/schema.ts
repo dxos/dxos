@@ -2,11 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S, TypedObject, Expando, Ref } from '@dxos/echo-schema';
+import { S, TypedObject } from '@dxos/echo-schema';
 import { Graph } from '@dxos/graph';
 import { Point, Dimension } from '@dxos/react-ui-canvas';
 
-// TODO(burdon): Consider interop with TLDraw and GeoJSON standards.
+// TODO(burdon): Consider interop with TLDraw and GeoJSON standards?
+
+export const Connection = S.Struct({
+  input: S.optional(S.String),
+  output: S.optional(S.String),
+});
+
+export type Connection = S.Schema.Type<typeof Connection>;
 
 /**
  * Base type for all shapes.
@@ -16,13 +23,12 @@ export const Shape = S.mutable(
     id: S.String,
     type: S.String,
     text: S.optional(S.String),
-    // TODO(burdon): Generic tag.
+    // TODO(burdon): Generic tag?
     guide: S.optional(S.Boolean),
-    // External object.
-    // TODO(burdon): Generic typed object.
-    object: S.optional(Ref(Expando)),
   }),
 );
+
+export type Shape = S.Schema.Type<typeof Shape>;
 
 /**
  * Closed shape.
@@ -37,6 +43,8 @@ export const Polygon = S.mutable(
     }),
   ),
 );
+
+export type Polygon = S.Schema.Type<typeof Polygon>;
 
 export const RectangleShape = S.extend(
   Polygon,
@@ -67,9 +75,6 @@ export const PathShape = S.extend(
 export const Layout = S.Struct({
   shapes: S.mutable(S.Array(Shape)),
 });
-
-export type Shape = S.Schema.Type<typeof Shape>;
-export type Polygon = S.Schema.Type<typeof Polygon>;
 
 // TODO(burdon): Factor out.
 export type RectangleShape = S.Schema.Type<typeof RectangleShape>;

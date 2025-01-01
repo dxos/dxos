@@ -19,8 +19,8 @@ import { createObjectFactory, Testing, type TypeSpec, type ValueGenerator } from
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
-import { computeShapes } from '../../compute';
-import { testGraph } from '../../compute/testing';
+import { computeShapes, type StateMachine } from '../../compute';
+import { createComputeGraph, createTest1, createTest2 } from '../../compute/testing';
 import { type GraphMonitor, SelectionModel } from '../../hooks';
 import { doLayout } from '../../layout';
 import { RectangleShape, type Shape } from '../../types';
@@ -34,11 +34,29 @@ const types = [Testing.OrgType, Testing.ProjectType, Testing.ContactType];
 // TODO(burdon): Ref expando breaks the form.
 const RectangleShapeWithoutRef = S.omit<any, any, ['object']>('object')(RectangleShape);
 
-type RenderProps = EditorRootProps & { init?: boolean; sidebar?: 'json' | 'selected' };
+type RenderProps = EditorRootProps & { init?: boolean; sidebar?: 'json' | 'selected'; machine?: StateMachine };
 
-const Render = ({ id = 'test', graph: _graph, init, sidebar, ...props }: RenderProps) => {
+const Render = ({ id = 'test', graph: _graph, machine, init, sidebar, ...props }: RenderProps) => {
   const editorRef = useRef<EditorController>(null);
   const { space } = useClientProvider();
+
+  // State machine.
+  useEffect(() => {
+    if (!machine) {
+      return;
+    }
+
+    void machine.open();
+    const off = machine.update.on((ev) => {
+      const { node } = ev;
+      void editorRef.current?.action?.({ type: 'trigger', ids: [node.id] });
+    });
+
+    return () => {
+      void machine.close();
+      off();
+    };
+  }, [machine]);
 
   // Layout.
   const [graph, setGraph] = useState<GraphModel<GraphNode<Shape>> | undefined>(_graph);
@@ -174,23 +192,24 @@ export const Query: Story = {
   },
 };
 
-export const Compute: Story = {
+export const Compute1: Story = {
   args: {
     // debug: true,
-    showGrid: true,
+    showGrid: false,
     snapToGrid: false,
-    sidebar: 'json',
-    graph: testGraph,
+    // sidebar: 'selected',
     registry: new ShapeRegistry(computeShapes),
+    ...createComputeGraph(createTest1()),
   },
 };
 
-// TODO(burdon): FunctionShape <== schema
-// TODO(burdon): Create compute graph.
-// TODO(burdon): Run compute graph.
-export const Component: Story = {
+export const Compute2: Story = {
   args: {
-    sidebar: 'json',
-    // graph: createComputeGraph(),
+    // debug: true,
+    showGrid: false,
+    snapToGrid: false,
+    // sidebar: 'selected',
+    registry: new ShapeRegistry(computeShapes),
+    ...createComputeGraph(createTest2()),
   },
 };

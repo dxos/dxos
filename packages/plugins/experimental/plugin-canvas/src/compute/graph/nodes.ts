@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { computed, type Signal } from '@preact/signals-core';
+
 import { type Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { type Query } from '@dxos/echo-db';
@@ -9,7 +11,8 @@ import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
 import { ComputeNode } from './compute-graph';
-import { type AsyncUpdate, InvalidStateError } from './state-machine';
+import { InvalidStateError } from './state-machine';
+import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '../../shapes';
 
 // TODO(burdon): Text input node.
 // TODO(burdon): Logging "tap" pass-through node.
@@ -19,6 +22,7 @@ import { type AsyncUpdate, InvalidStateError } from './state-machine';
  */
 export class Switch extends ComputeNode<void, boolean> {
   override readonly type = 'switch';
+
   private _state = false;
 
   constructor() {
@@ -27,6 +31,7 @@ export class Switch extends ComputeNode<void, boolean> {
 
   setState(state: boolean): this {
     this._state = state;
+    void this.update(state);
     return this;
   }
 
@@ -43,6 +48,10 @@ export class Beacon extends ComputeNode<boolean, void> {
 
   constructor() {
     super(S.Boolean, S.Void);
+  }
+
+  get state(): Signal<boolean> {
+    return computed(() => !!this._input.value);
   }
 
   override async invoke() {
@@ -106,14 +115,13 @@ export class Subscription extends ComputeNode<void, readonly any[]> {
   override readonly type = 'subscription';
 
   // TODO(burdon): Throttling options.
-  // TODO(burdon): Pause/resume (base class?)
   constructor(private _query?: Query) {
     super(S.Void, S.Array(S.Any));
   }
 
-  override async open(ctx: Context, cb: AsyncUpdate<readonly any[]>) {
+  override async onInitialize(ctx: Context) {
     const subscription = this._query?.subscribe(({ results }) => {
-      cb(results);
+      this.update(results);
     });
 
     ctx.onDispose(() => subscription?.());
@@ -127,21 +135,33 @@ export class Subscription extends ComputeNode<void, readonly any[]> {
 /**
  * Timer sends a periodic value.
  */
-// TODO(burdon): Send custom value.
-// TODO(burdon): Pause/resume (base class?)
 export class Timer extends ComputeNode<void, number> {
   override readonly type = 'timer';
 
-  constructor(private _interval = 1_000) {
+  private _interval?: NodeJS.Timeout;
+
+  constructor(private _period = 1_000) {
     super(S.Void, S.Number);
   }
 
-  override async open(ctx: Context, cb: AsyncUpdate<number>) {
-    const t = setInterval(() => {
-      cb(Date.now());
-    }, this._interval);
+  start() {
+    this._interval = setInterval(
+      () => {
+        void this.update(Date.now());
+      },
+      Math.max(this._period, 1_000),
+    );
+  }
 
-    ctx.onDispose(() => clearInterval(t));
+  stop() {
+    if (this._interval) {
+      clearInterval(this._interval);
+      this._interval = undefined;
+    }
+  }
+
+  override async onInitialize(ctx: Context) {
+    ctx.onDispose(() => this.stop());
   }
 
   override async invoke() {
@@ -149,8 +169,8 @@ export class Timer extends ComputeNode<void, number> {
   }
 }
 
-export const DefaultInput = S.Struct({ value: S.Any });
-export const DefaultOutput = S.Struct({ value: S.Any });
+export const DefaultInput = S.Struct({ input: S.Any });
+export const DefaultOutput = S.Struct({ result: S.Any });
 
 export type DefaultInput = S.Schema.Type<typeof DefaultInput>;
 export type DefaultOutput = S.Schema.Type<typeof DefaultOutput>;
@@ -158,15 +178,25 @@ export type DefaultOutput = S.Schema.Type<typeof DefaultOutput>;
 export class RemoteFunction<Input, Output> extends ComputeNode<Input, Output> {
   override readonly type = 'function';
 
+  get name() {
+    return 'Function';
+  }
+
+  // TODO(burdon): Should be replaced by actual function.
   override async invoke(input: Input) {
-    return raise(new InvalidStateError());
+    const value = (input as any)[DEFAULT_INPUT];
+    const output = {
+      [DEFAULT_OUTPUT]: value,
+    };
+
+    return output as any as Output;
   }
 }
 
-export class TransformerFunction extends ComputeNode<string, string> {
-  override readonly type = 'gpt';
-
-  override async invoke(input: string) {
-    return raise(new InvalidStateError());
-  }
-}
+// export class TransformerFunction extends ComputeNode<string, string> {
+//   override readonly type = 'gpt';
+//
+//   override async invoke(input: string) {
+//     return raise(new InvalidStateError());
+//   }
+// }

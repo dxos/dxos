@@ -27,15 +27,13 @@ export const useLayout = (): Layout => {
   const getShape = (shape: Polygon) =>
     dragging.type === 'frame' && dragging.shape.id === shape.id ? dragging.shape : shape;
 
-  type LinkProps = { id: string; source: Polygon; target: Polygon; property?: string };
-  const createPathForEdge = ({ id, source, target, property }: LinkProps): PathShape | undefined => {
-    if (property) {
-      // TODO(burdon): Custom logic for function anchors.
-      const sourceAnchor = getAnchorPoint(registry, source, createAnchorId('output'));
-      const targetAnchor = getAnchorPoint(registry, target, createAnchorId('input', property));
-      if (sourceAnchor && targetAnchor) {
-        return createPath({ id, points: createCurve(sourceAnchor, targetAnchor) });
-      }
+  type LinkProps = { id: string; source: Polygon; target: Polygon; input?: string; output?: string };
+  const createPathForEdge = ({ id, source, target, input, output }: LinkProps): PathShape | undefined => {
+    // TODO(burdon): Custom logic for function anchors.
+    const sourceAnchor = getAnchorPoint(registry, source, createAnchorId('output', output));
+    const targetAnchor = getAnchorPoint(registry, target, createAnchorId('input', input));
+    if (sourceAnchor && targetAnchor) {
+      return createPath({ id, points: createCurve(sourceAnchor, targetAnchor) });
     }
 
     const sourceBounds = getNodeBounds(source);
@@ -63,7 +61,7 @@ export const useLayout = (): Layout => {
 
     const source = getShape(sourceNode.data);
     const target = getShape(targetNode.data);
-    const path = createPathForEdge({ id, source, target, property: data?.property });
+    const path = createPathForEdge({ id, source, target, input: data?.input });
     if (path) {
       shapes.push(path);
     }

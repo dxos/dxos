@@ -245,14 +245,14 @@ export const useDragMonitor = () => {
                     type: 'link',
                     source: source.shape.id,
                     target: target.shape.id,
-                    data: { property: targetAnchorId },
+                    data: { input: targetAnchorId },
                   });
                 } else {
                   await actionHandler({
                     type: 'link',
                     source: target.shape.id,
                     target: source.shape.id,
-                    data: { property: sourceAnchorId },
+                    data: { input: sourceAnchorId },
                   });
                 }
                 break;

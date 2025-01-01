@@ -2,25 +2,26 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { S } from '@dxos/echo-schema';
 import { Input } from '@dxos/react-ui';
 
-import { BaseComputeShape, type BaseComputeShapeProps } from './defs';
+import { ComputeShape } from './defs';
 import { createAnchors, type ShapeComponentProps, type ShapeDef } from '../../components';
+import { createAnchorId } from '../../shapes';
 import { Switch } from '../graph';
 
 export const SwitchShape = S.extend(
-  BaseComputeShape,
+  ComputeShape,
   S.Struct({
     type: S.Literal('switch'),
   }),
 );
 
-export type SwitchShape = S.Schema.Type<typeof SwitchShape>;
+export type SwitchShape = ComputeShape<S.Schema.Type<typeof SwitchShape>, Switch>;
 
-export type CreateSwitchProps = Omit<BaseComputeShapeProps<Switch>, 'size'>;
+export type CreateSwitchProps = Omit<SwitchShape, 'type' | 'node' | 'size'>;
 
 export const createSwitch = ({ id, ...rest }: CreateSwitchProps): SwitchShape => ({
   id,
@@ -32,6 +33,9 @@ export const createSwitch = ({ id, ...rest }: CreateSwitchProps): SwitchShape =>
 
 export const SwitchComponent = ({ shape }: ShapeComponentProps<SwitchShape>) => {
   const [value, setValue] = useState(false);
+  useEffect(() => {
+    shape.node.setState(value);
+  }, [value]);
 
   return (
     <div className='flex w-full justify-center items-center' onClick={(ev) => ev.stopPropagation()}>
@@ -47,5 +51,5 @@ export const switchShape: ShapeDef<SwitchShape> = {
   icon: 'ph--toggle-left--regular',
   component: SwitchComponent,
   createShape: createSwitch,
-  getAnchors: (shape) => createAnchors(shape, { 'output.value': { x: 1, y: 0 } }),
+  getAnchors: (shape) => createAnchors(shape, { [createAnchorId('output')]: { x: 1, y: 0 } }),
 };

@@ -7,7 +7,7 @@ import { S } from '@dxos/echo-schema';
 import { Polygon } from '../../types';
 import { type ComputeNode } from '../graph';
 
-export const BaseComputeShape = S.extend(
+export const ComputeShape = S.extend(
   Polygon,
   S.Struct({
     // Compute node.
@@ -16,11 +16,8 @@ export const BaseComputeShape = S.extend(
   }),
 );
 
-export type BaseComputeShape<Node extends ComputeNode<any, any>> = Omit<
-  S.Schema.Type<typeof BaseComputeShape>,
-  'node'
-> & {
+export type BaseComputeShape = S.Schema.Type<typeof ComputeShape>;
+
+export type ComputeShape<S extends BaseComputeShape, Node extends ComputeNode<any, any>> = Omit<S, 'node'> & {
   node: Node;
 };
-
-export type BaseComputeShapeProps<Node extends ComputeNode<any, any>> = Omit<BaseComputeShape<Node>, 'type' | 'node'>;

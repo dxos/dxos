@@ -19,18 +19,18 @@ describe('Graph', () => {
 
   test('add and remove subgraphs', ({ expect }) => {
     const graph = new GraphModel<GraphNode<TestData>>()
-      .addNode({ id: 'node-1', data: { value: 'test' } })
-      .addNode({ id: 'node-2', data: { value: 'test' } })
-      .addNode({ id: 'node-3', data: { value: 'test' } })
+      .addNode({ id: 'node1', data: { value: 'test' } })
+      .addNode({ id: 'node2', data: { value: 'test' } })
+      .addNode({ id: 'node3', data: { value: 'test' } })
       .addEdge({
-        id: createEdgeId({ source: 'node-1', target: 'node-2', relation: 'test' }),
-        source: 'node-1',
-        target: 'node-2',
+        id: createEdgeId({ source: 'node1', target: 'node2', relation: 'test' }),
+        source: 'node1',
+        target: 'node2',
       })
       .addEdge({
-        id: createEdgeId({ source: 'node-2', target: 'node-3', relation: 'test' }),
-        source: 'node-2',
-        target: 'node-3',
+        id: createEdgeId({ source: 'node2', target: 'node3', relation: 'test' }),
+        source: 'node2',
+        target: 'node3',
       });
     expect(graph.nodes).to.have.length(3);
     expect(graph.edges).to.have.length(2);
