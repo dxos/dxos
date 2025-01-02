@@ -13,7 +13,7 @@ export const DefaultOutput = S.Struct({ result: S.Any });
 export type DefaultInput = S.Schema.Type<typeof DefaultInput>;
 export type DefaultOutput = S.Schema.Type<typeof DefaultOutput>;
 
-export class RemoteFunction<Input, Output> extends ComputeNode<Input, Output> {
+export class Function<Input, Output> extends ComputeNode<Input, Output> {
   override readonly type = 'function';
 
   get name() {

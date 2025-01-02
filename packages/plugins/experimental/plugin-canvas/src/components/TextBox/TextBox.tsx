@@ -19,12 +19,12 @@ export type TextBoxProps = ThemedClassName<
   {
     value?: string;
     centered?: boolean;
-    onClose?: (value: string) => void;
+    onEnter?: (value: string) => void;
     onCancel?: () => void;
   } & Pick<BasicExtensionsOptions, 'placeholder'>
 >;
 
-export const TextBox = ({ classNames, value = '', centered, onClose, onCancel, ...rest }: TextBoxProps) => {
+export const TextBox = ({ classNames, value = '', centered, onEnter, onCancel, ...rest }: TextBoxProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef, view, focusAttributes } = useTextEditor(() => {
     return {
@@ -35,13 +35,13 @@ export const TextBox = ({ classNames, value = '', centered, onClose, onCancel, .
         createThemeExtensions({
           themeMode,
           slots: {
-            editor: { className: '[&>.cm-scroller]:scrollbar-none' },
+            editor: { className: 'w-full [&>.cm-scroller]:scrollbar-none' },
             content: { className: mx(centered && 'text-center') },
           },
         }),
         EditorView.focusChangeEffect.of((state, focusing) => {
           if (!focusing) {
-            onClose?.(state.doc.toString());
+            onEnter?.(state.doc.toString());
           }
           return null;
         }),
@@ -51,7 +51,7 @@ export const TextBox = ({ classNames, value = '', centered, onClose, onCancel, .
               key: 'Enter',
               preventDefault: true,
               run: (view) => {
-                onClose?.(view.state.doc.toString());
+                onEnter?.(view.state.doc.toString());
                 return true;
               },
             },

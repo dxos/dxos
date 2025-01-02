@@ -14,7 +14,7 @@ import { TextBox, type TextBoxProps } from './TextBox';
 const Render = (props: TextBoxProps) => {
   return (
     <div className='flex w-[300px] p-2 rounded border border-primary-500'>
-      <TextBox {...props} onClose={console.log} />
+      <TextBox {...props} onEnter={console.log} />
     </div>
   );
 };

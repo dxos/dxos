@@ -7,42 +7,47 @@ import React from 'react';
 import { S } from '@dxos/echo-schema';
 
 import { ComputeShape } from './defs';
-import { createAnchors, type ShapeComponentProps, type ShapeDef, TextBox } from '../../components';
+import { createAnchors, type ShapeComponentProps, type ShapeDef, TextBox, type TextBoxProps } from '../../components';
 import { createAnchorId } from '../../shapes';
-import { Textbox } from '../graph';
+import { Text } from '../graph';
 
-export const TextboxShape = S.extend(
+export const TextShape = S.extend(
   ComputeShape,
   S.Struct({
-    type: S.Literal('textbox'),
+    type: S.Literal('text'),
   }),
 );
 
-export type TextboxShape = ComputeShape<S.Schema.Type<typeof TextboxShape>, Textbox>;
+export type TextShape = ComputeShape<S.Schema.Type<typeof TextShape>, Text>;
 
-export type CreateTextboxProps = Omit<TextboxShape, 'type' | 'node' | 'size'>;
+export type CreateTextProps = Omit<TextShape, 'type' | 'node' | 'size'>;
 
-export const createTextbox = ({ id, ...rest }: CreateTextboxProps): TextboxShape => ({
+export const createText = ({ id, ...rest }: CreateTextProps): TextShape => ({
   id,
-  type: 'textbox',
-  node: new Textbox(),
+  type: 'text',
+  node: new Text(),
   size: { width: 256, height: 128 },
   ...rest,
 });
 
-// TODO(burdon): Wobbles.
-export const TextboxComponent = ({ shape }: ShapeComponentProps<TextboxShape>) => {
+export const TextComponent = ({ shape }: ShapeComponentProps<TextShape>) => {
+  const handleEnter: TextBoxProps['onEnter'] = (value) => {
+    if (value.trim().length) {
+      shape.node.setState(value);
+    }
+  };
+
   return (
     <div className='flex w-full h-full p-2'>
-      <TextBox classNames='flex grow overflow-hidden' placeholder='Prompt' />
+      <TextBox classNames='flex grow overflow-hidden' placeholder='Prompt' onEnter={handleEnter} />
     </div>
   );
 };
 
-export const textboxShape: ShapeDef<TextboxShape> = {
-  type: 'textbox',
+export const textShape: ShapeDef<TextShape> = {
+  type: 'text',
   icon: 'ph--textbox--regular',
-  component: TextboxComponent,
-  createShape: createTextbox,
+  component: TextComponent,
+  createShape: createText,
   getAnchors: (shape) => createAnchors(shape, { [createAnchorId('output')]: { x: 1, y: 0 } }),
 };

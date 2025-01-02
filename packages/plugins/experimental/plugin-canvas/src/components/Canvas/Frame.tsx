@@ -98,7 +98,7 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
     );
   }, [root, projection, monitor, shape]);
 
-  const handleClose: TextBoxProps['onClose'] = (value: string) => {
+  const handleClose: TextBoxProps['onEnter'] = (value: string) => {
     shape.text = value;
     setEditing(undefined);
   };

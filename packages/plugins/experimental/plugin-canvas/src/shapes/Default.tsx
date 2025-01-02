@@ -11,7 +11,7 @@ import { type Polygon } from '../types';
 
 export const DefaultFrameComponent = ({ debug, shape, editing, onClose, onCancel }: FrameProps) => {
   if (editing) {
-    return <TextBox value={shape.text} centered onClose={onClose} onCancel={onCancel} />;
+    return <TextBox value={shape.text} centered onEnter={onClose} onCancel={onCancel} />;
   }
 
   return <ReadonlyTextBox classNames={mx(debug && 'font-mono text-xs')} value={getLabel(shape, debug)} />;

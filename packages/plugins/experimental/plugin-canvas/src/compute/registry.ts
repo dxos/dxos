@@ -2,7 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { functionShape, gptShape, switchShape, timerShape, andShape, orShape, notShape, beaconShape } from './shapes';
+import {
+  andShape,
+  beaconShape,
+  calculatorShape,
+  functionShape,
+  gptShape,
+  listShape,
+  notShape,
+  orShape,
+  switchShape,
+  textShape,
+  timerShape,
+} from './shapes';
 import type { ShapeDef } from '../components';
 
 /**
@@ -11,10 +23,13 @@ import type { ShapeDef } from '../components';
 export const computeShapes: ShapeDef<any>[] = [
   functionShape,
   gptShape,
+  textShape,
   switchShape,
   timerShape,
   andShape,
   orShape,
   notShape,
+  listShape,
   beaconShape,
+  calculatorShape,
 ];

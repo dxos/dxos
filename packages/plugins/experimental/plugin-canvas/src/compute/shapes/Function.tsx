@@ -12,7 +12,7 @@ import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { pointAdd } from '../../layout';
 import { createAnchorId, createAnchors, rowHeight } from '../../shapes';
 import { type Polygon } from '../../types';
-import { DefaultInput, DefaultOutput, RemoteFunction } from '../graph';
+import { DefaultInput, DefaultOutput, Function } from '../graph';
 
 export const FunctionShape = S.extend(
   ComputeShape,
@@ -21,7 +21,7 @@ export const FunctionShape = S.extend(
   }),
 );
 
-export type FunctionShape = ComputeShape<S.Schema.Type<typeof FunctionShape>, RemoteFunction<any, any>>;
+export type FunctionShape = ComputeShape<S.Schema.Type<typeof FunctionShape>, Function<any, any>>;
 
 export type CreateFunctionProps = Omit<FunctionShape, 'type' | 'node' | 'size'>;
 
@@ -29,7 +29,7 @@ export const createFunction = ({ id, ...rest }: CreateFunctionProps): FunctionSh
   return {
     id,
     type: 'function',
-    node: new RemoteFunction(DefaultInput, DefaultOutput),
+    node: new Function(DefaultInput, DefaultOutput),
     size: { width: 192, height: getHeight(DefaultInput) },
     ...rest,
   };

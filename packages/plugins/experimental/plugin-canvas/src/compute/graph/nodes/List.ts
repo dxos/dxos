@@ -11,7 +11,7 @@ import { ComputeNode } from '../compute-node';
 /**
  * Displays the current count.
  */
-export class Calculator extends ComputeNode<number, number> {
+export class List extends ComputeNode<number, number> {
   override readonly type = 'calculator';
 
   _current = 0;

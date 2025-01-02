@@ -9,7 +9,7 @@ import { AST, S } from '@dxos/echo-schema';
 import { FunctionBody, getAnchors, getHeight } from './Function';
 import { ComputeShape } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
-import { RemoteFunction } from '../graph';
+import { Function } from '../graph';
 
 export const GptShape = S.extend(
   ComputeShape,
@@ -21,6 +21,12 @@ export const GptShape = S.extend(
 export const GptInput = S.Struct({
   systemPrompt: S.String,
   prompt: S.String,
+  history: S.Array(
+    S.Struct({
+      role: S.Union(S.Literal('system'), S.Literal('user'), S.Literal('assistant')),
+      text: S.String,
+    }),
+  ),
 });
 
 export const GptOutput = S.Struct({
@@ -31,7 +37,7 @@ export const GptOutput = S.Struct({
 export type GptInput = S.Schema.Type<typeof GptInput>;
 export type GptOutput = S.Schema.Type<typeof GptOutput>;
 
-export type GptShape = ComputeShape<S.Schema.Type<typeof GptShape>, RemoteFunction<GptInput, GptOutput>>;
+export type GptShape = ComputeShape<S.Schema.Type<typeof GptShape>, Function<GptInput, GptOutput>>;
 
 export type CreateGptProps = Omit<GptShape, 'type' | 'node' | 'size'>;
 
@@ -39,7 +45,7 @@ export const createGpt = ({ id, ...rest }: CreateGptProps): GptShape => {
   return {
     id,
     type: 'gpt',
-    node: new RemoteFunction(GptInput, GptOutput),
+    node: new Function(GptInput, GptOutput),
     size: { width: 192, height: getHeight(GptInput) },
     ...rest,
   };

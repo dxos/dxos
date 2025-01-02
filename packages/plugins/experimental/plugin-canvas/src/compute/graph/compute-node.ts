@@ -7,7 +7,7 @@
 import { signal, type Signal } from '@preact/signals-core';
 
 import { type Context } from '@dxos/context';
-import { AST, type S } from '@dxos/echo-schema';
+import { AST, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -72,6 +72,15 @@ export abstract class ComputeNode<Input, Output> {
    */
   reset() {
     this._input.value = AST.isTypeLiteral(this.inputSchema.ast) ? ({} as Input) : undefined;
+  }
+
+  /**
+   * Set state directly (e.g., for nodes that have no input and are controlled by ux).
+   */
+  setState(state: Output): this {
+    invariant((this.inputSchema as S.Schema<any>) === S.Void, 'invalid state');
+    void this.update(state);
+    return this;
   }
 
   /**
