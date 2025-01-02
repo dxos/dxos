@@ -8,14 +8,27 @@ import { type Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { type Query } from '@dxos/echo-db';
 import { S } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
 
 import { ComputeNode } from './compute-node';
 import { InvalidStateError } from './state-machine';
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '../../shapes';
 
-// TODO(burdon): Text input node.
 // TODO(burdon): Logging "tap" pass-through node.
+
+/**
+ * User input
+ */
+export class Text extends ComputeNode<void, string> {
+  override readonly type = 'text';
+
+  constructor() {
+    super(S.Void, S.String);
+  }
+
+  override async invoke() {
+    return raise(new InvalidStateError());
+  }
+}
 
 /**
  * Switch outputs true when set.
@@ -23,20 +36,12 @@ import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '../../shapes';
 export class Switch extends ComputeNode<void, boolean> {
   override readonly type = 'switch';
 
-  private _state = false;
-
   constructor() {
     super(S.Void, S.Boolean);
   }
 
-  setState(state: boolean): this {
-    this._state = state;
-    void this.update(state);
-    return this;
-  }
-
   override async invoke() {
-    return this._state;
+    return raise(new InvalidStateError());
   }
 }
 
@@ -55,7 +60,31 @@ export class Beacon extends ComputeNode<boolean, void> {
   }
 
   override async invoke() {
-    invariant('Invalid state');
+    return raise(new InvalidStateError());
+  }
+}
+
+/**
+ * Displays the current count.
+ */
+export class Calculator extends ComputeNode<number, number> {
+  override readonly type = 'calculator';
+
+  _current = 0;
+
+  constructor() {
+    super(S.Number, S.Number);
+  }
+
+  get state(): Signal<number> {
+    return computed(() => this._current);
+  }
+
+  // TODO(burdon): Value coercion.
+  override async invoke(input: number) {
+    console.log('????', input, typeof input);
+    this._current += input;
+    return this._current;
   }
 }
 
@@ -182,7 +211,7 @@ export class RemoteFunction<Input, Output> extends ComputeNode<Input, Output> {
     return 'Function';
   }
 
-  // TODO(burdon): Should be replaced by actual function.
+  // TODO(burdon): Should be replaced by actual function (e.g., transformer).
   override async invoke(input: Input) {
     const value = (input as any)[DEFAULT_INPUT];
     const output = {
@@ -192,11 +221,3 @@ export class RemoteFunction<Input, Output> extends ComputeNode<Input, Output> {
     return output as any as Output;
   }
 }
-
-// export class TransformerFunction extends ComputeNode<string, string> {
-//   override readonly type = 'gpt';
-//
-//   override async invoke(input: string) {
-//     return raise(new InvalidStateError());
-//   }
-// }
