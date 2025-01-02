@@ -88,7 +88,8 @@ export abstract class ComputeNode<Input, Output> {
    * Set state directly (e.g., for nodes that have no input and are controlled by ux).
    * Send an async update to the state machine.
    */
-  setState(value: Output): this {
+  // TODO(burdon): Change to setOutputProp and match schema.
+  setOutput(value: Output): this {
     invariant((this.inputSchema as S.Schema<any>) === S.Void, 'invalid state');
     if (!this._callback) {
       log.warn('callback not set', { node: this });

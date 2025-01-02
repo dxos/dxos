@@ -113,7 +113,7 @@ export class StateMachine {
     try {
       for (const edge of this._graph.getEdges({ source: node.id })) {
         const target = this._graph.getNode(edge.target);
-        invariant(target);
+        invariant(target, `invalid target: ${edge.target}`);
 
         // Get output.
         let value = output;

@@ -8,7 +8,7 @@ import { S } from '@dxos/echo-schema';
 
 import { ComputeShape } from './defs';
 import { createAnchors, type ShapeComponentProps, type ShapeDef, TextBox, type TextBoxProps } from '../../components';
-import { createAnchorId } from '../../shapes';
+import { createAnchorId, DEFAULT_OUTPUT } from '../../shapes';
 import { Text } from '../graph';
 
 export const TextShape = S.extend(
@@ -34,7 +34,8 @@ export const TextComponent = ({ shape }: ShapeComponentProps<TextShape>) => {
   const [reset, setReset] = useState({});
   const handleEnter: TextBoxProps['onEnter'] = (value) => {
     if (value.trim().length) {
-      shape.node.setState(value);
+      // TODO(burdon): Standardize.
+      shape.node.setOutput({ [DEFAULT_OUTPUT]: value });
       setReset({});
     }
   };

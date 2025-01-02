@@ -34,7 +34,7 @@ export const createSwitch = ({ id, ...rest }: CreateSwitchProps): SwitchShape =>
 export const SwitchComponent = ({ shape }: ShapeComponentProps<SwitchShape>) => {
   const [value, setValue] = useState(false);
   useEffect(() => {
-    shape.node.setState(value);
+    shape.node.setOutput(value);
   }, [value]);
 
   return (

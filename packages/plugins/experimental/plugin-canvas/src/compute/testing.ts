@@ -18,7 +18,7 @@ import {
   createTimer,
 } from './shapes';
 import { type BaseComputeShape, type ComputeShape } from './shapes/defs';
-import { DEFAULT_INPUT } from '../shapes';
+import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '../shapes';
 import type { Connection, Shape } from '../types';
 
 // TODO(burdon): GraphBuilder.
@@ -88,7 +88,7 @@ export const createTest3 = () => {
   ];
 
   const edges = [
-    { source: 'a', target: 'b', data: { input: 'prompt' } },
+    { source: 'a', target: 'b', data: { input: 'prompt', output: DEFAULT_OUTPUT } },
     { source: 'b', target: 'c', data: { output: 'result', input: DEFAULT_INPUT } },
     { source: 'b', target: 'd', data: { output: 'tokens' } },
   ];

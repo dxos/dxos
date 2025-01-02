@@ -19,8 +19,8 @@ describe('state machine', () => {
 
     // TODO(burdon): Builder pattern.
     const [a, b, c, d]: GraphNode<ComputeNode<any, any>>[] = [
-      { id: createId(), data: new Switch().setState(false) },
-      { id: createId(), data: new Switch().setState(true) },
+      { id: createId(), data: new Switch().setOutput(false) },
+      { id: createId(), data: new Switch().setOutput(true) },
       { id: createId(), data: new AndGate() },
       { id: createId(), data: new Beacon() },
     ];
