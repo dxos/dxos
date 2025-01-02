@@ -8,13 +8,13 @@ import { type ComputeNode, StateMachine } from './graph';
 import {
   createAnd,
   createBeacon,
+  createChat,
   createCounter,
   createFunction,
   createGpt,
   createList,
   createOr,
   createSwitch,
-  createText,
   createTimer,
 } from './shapes';
 import { type BaseComputeShape, type ComputeShape } from './shapes/defs';
@@ -81,7 +81,7 @@ export const createTest2 = () => {
 
 export const createTest3 = () => {
   const nodes: Shape[] = [
-    createText({ id: 'a', center: { x: -384, y: 0 } }),
+    createChat({ id: 'a', center: { x: -384, y: 0 } }),
     createGpt({ id: 'b', center: { x: 0, y: 0 } }),
     createList({ id: 'c', center: { x: 384, y: -128 } }),
     createCounter({ id: 'd', center: { x: 384, y: 256 } }),

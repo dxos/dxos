@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { Fragment } from 'react';
 
 import { S } from '@dxos/echo-schema';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -59,12 +59,10 @@ export const ListItem = ({ classNames, item }: ThemedClassName<{ item: any }>) =
   return (
     <div className={mx('grid grid-cols-[80px,1fr]', classNames)}>
       {Object.entries(item).map(([key, value]) => (
-        <>
-          <div key={key} className='p-1 text-xs text-subdued'>
-            {key}
-          </div>
-          <div key={key}>{String(value)}</div>
-        </>
+        <Fragment key={key}>
+          <div className='p-1 text-xs text-subdued'>{key}</div>
+          <div>{String(value)}</div>
+        </Fragment>
       ))}
     </div>
   );
