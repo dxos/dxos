@@ -372,8 +372,8 @@ describe('Queries', () => {
       );
       const hasManager = db.add(
         create(HasManager, {
-          [RelationSourceId]: makeRef(bob),
-          [RelationTargetId]: makeRef(alice),
+          [RelationSourceId]: bob,
+          [RelationTargetId]: alice,
           since: '2022',
         }),
       );

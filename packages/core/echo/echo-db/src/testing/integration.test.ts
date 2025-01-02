@@ -408,8 +408,8 @@ describe('Integration tests', () => {
         );
         const hasManager = db.add(
           create(HasManager, {
-            [RelationSourceId]: makeRef(bob),
-            [RelationTargetId]: makeRef(alice),
+            [RelationSourceId]: bob,
+            [RelationTargetId]: alice,
             since: '2022',
           }),
         );
@@ -424,8 +424,8 @@ describe('Integration tests', () => {
           objects: [obj],
         } = await db.query({ id: relationId }).run();
         log.info('xxx', { obj });
-        expect(getSource(obj).target?.name).toEqual('Bob');
-        expect(getTarget(obj).target?.name).toEqual('Alice');
+        expect(getSource(obj).name).toEqual('Bob');
+        expect(getTarget(obj).name).toEqual('Alice');
       }
     });
   });

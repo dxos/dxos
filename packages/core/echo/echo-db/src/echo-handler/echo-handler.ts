@@ -124,12 +124,14 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         case RelationSourceId: {
           const sourceRef = target[symbolInternals].core.getSource();
           invariant(sourceRef);
-          return this.lookupRef(target, sourceRef);
+          // TODO(dmaretskyi): This shouldn't be implement via refs \_(^.^)_/.
+          return this.lookupRef(target, sourceRef)?.target;
         }
         case RelationTargetId: {
           const targetRef = target[symbolInternals].core.getTarget();
           invariant(targetRef);
-          return this.lookupRef(target, targetRef);
+          // TODO(dmaretskyi): This shouldn't be implement via refs \_(^.^)_/.
+          return this.lookupRef(target, targetRef)?.target;
         }
         case TYPENAME_SYMBOL:
           return this._getTypename(target);

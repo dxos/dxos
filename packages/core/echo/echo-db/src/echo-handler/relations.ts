@@ -31,20 +31,20 @@ export const isRelation = <T extends BaseObject>(object: ReactiveEchoObject<T>):
  * @returns Source ref from a relation.
  * @throws If the object is not a relation.
  */
-export const getSource = (relation: ReactiveEchoObject<any>): Ref<ReactiveEchoObject<any>> => {
+export const getSource = (relation: ReactiveEchoObject<any>): ReactiveEchoObject<any> => {
   invariant(isRelation(relation));
-  const ref = relation[RelationSourceId];
-  invariant(Ref.isRef(ref));
-  return ref;
+  const obj = relation[RelationSourceId];
+  invariant(obj !== undefined);
+  return obj;
 };
 
 /**
  * @returns Target ref from a relation.
  * @throws If the object is not a relation.
  */
-export const getTarget = (relation: ReactiveEchoObject<any>): Ref<ReactiveEchoObject<any>> => {
+export const getTarget = (relation: ReactiveEchoObject<any>): ReactiveEchoObject<any> => {
   invariant(isRelation(relation));
-  const ref = relation[RelationTargetId];
-  invariant(Ref.isRef(ref));
-  return ref;
+  const obj = relation[RelationTargetId];
+  invariant(obj !== undefined);
+  return obj;
 };

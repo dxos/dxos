@@ -41,15 +41,15 @@ describe('Relations', () => {
     );
     const hasManager = db.add(
       create(HasManager, {
-        [RelationSourceId]: makeRef(bob),
-        [RelationTargetId]: makeRef(alice),
+        [RelationSourceId]: bob,
+        [RelationTargetId]: alice,
         since: '2022',
       }),
     );
 
     expect(isRelation(hasManager)).to.be.true;
-    expect(getSource(hasManager).target! === bob).to.be.true;
-    expect(getTarget(hasManager).target! === alice).to.be.true;
+    expect(getSource(hasManager) === bob).to.be.true;
+    expect(getTarget(hasManager) === alice).to.be.true;
     expect(hasManager.since).to.equal('2022');
 
     await db.flush({ indexes: true });
@@ -61,8 +61,8 @@ describe('Relations', () => {
 
       expect(HasManager).toBeDefined();
       expect(isRelation(HasManager!)).to.be.true;
-      expect(getSource(HasManager!).target!.name).toEqual('Bob');
-      expect(getTarget(HasManager!).target!.name).toEqual('Alice');
+      expect(getSource(HasManager!).name).toEqual('Bob');
+      expect(getTarget(HasManager!).name).toEqual('Alice');
       expect(HasManager!.since).to.equal('2022');
     }
   });

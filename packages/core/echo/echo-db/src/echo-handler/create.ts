@@ -211,15 +211,15 @@ const setRelationSourceAndTarget = (
     if (!sourceRef || !targetRef) {
       throw new TypeError('Relation source and target must be specified');
     }
-    if (!Ref.isRef(sourceRef)) {
-      throw new TypeError('source must be a ref');
+    if (!isReactiveObject(sourceRef)) {
+      throw new TypeError('source must be an ECHO object');
     }
-    if (!Ref.isRef(targetRef)) {
-      throw new TypeError('target must be a ref');
+    if (!isReactiveObject(targetRef)) {
+      throw new TypeError('target must be an ECHO object');
     }
 
-    core.setSource(refToEchoReference(target, sourceRef));
-    core.setTarget(refToEchoReference(target, targetRef));
+    core.setSource(EchoReactiveHandler.instance.createRef(target, sourceRef));
+    core.setTarget(EchoReactiveHandler.instance.createRef(target, targetRef));
   }
 };
 
