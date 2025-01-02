@@ -11,8 +11,18 @@ import {
   testAutomergeReplicatorFactory,
   TestReplicationNetwork,
 } from '@dxos/echo-pipeline/testing';
-import { Expando, getObjectAnnotation, getSchemaTypename, getTypeReference, S, TypedObject } from '@dxos/echo-schema';
-import { Contact, updateCounter } from '@dxos/echo-schema/testing';
+import {
+  Expando,
+  getObjectAnnotation,
+  getSchemaTypename,
+  getTypeReference,
+  RelationSourceId,
+  RelationTargetId,
+  S,
+  TypedObject,
+  type ObjectId,
+} from '@dxos/echo-schema';
+import { Contact, HasManager, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';
 import { create, getSchema, makeRef } from '@dxos/live-object';
@@ -22,6 +32,7 @@ import { deferAsync } from '@dxos/util';
 import { log } from '@dxos/log';
 import { Filter } from '../query';
 import { createDataAssertion, EchoTestBuilder } from './echo-test-builder';
+import { getSource, getTarget } from '../echo-handler/relations';
 
 registerSignalsRuntime();
 
@@ -372,6 +383,51 @@ describe('Integration tests', () => {
     );
     await db1.flush();
     await expect.poll(() => db2.getObjectById(obj1.id)).not.toEqual(undefined);
+  });
+
+  describe('relations', () => {
+    test('relation source and target is eagerly loaded with the relation', async () => {
+      await using peer = await builder.createPeer();
+      await using db = await peer.createDatabase(PublicKey.random(), {
+        reactiveSchemaQuery: false,
+        preloadSchemaOnOpen: false,
+      });
+      db.graph.schemaRegistry.addSchema([Contact, HasManager]);
+
+      let relationId!: ObjectId;
+      {
+        const alice = db.add(
+          create(Contact, {
+            name: 'Alice',
+          }),
+        );
+        const bob = db.add(
+          create(Contact, {
+            name: 'Bob',
+          }),
+        );
+        const hasManager = db.add(
+          create(HasManager, {
+            [RelationSourceId]: makeRef(bob),
+            [RelationTargetId]: makeRef(alice),
+            since: '2022',
+          }),
+        );
+        relationId = hasManager.id;
+        await db.flush({ indexes: true });
+      }
+
+      await peer.reload();
+      {
+        await using db = await peer.openLastDatabase({ reactiveSchemaQuery: false, preloadSchemaOnOpen: false });
+        const {
+          objects: [obj],
+        } = await db.query({ id: relationId }).run();
+        log.info('xxx', { obj });
+        expect(getSource(obj).target?.name).toEqual('Bob');
+        expect(getTarget(obj).target?.name).toEqual('Alice');
+      }
+    });
   });
 
   describe('dynamic schema', () => {

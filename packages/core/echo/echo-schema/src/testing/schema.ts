@@ -6,7 +6,7 @@ import { S } from '@dxos/effect';
 
 import { EchoObject } from '../ast';
 import { Ref, type Ref$ } from '../ast/ref';
-import { TypedObject, Expando } from '../object';
+import { TypedObject, Expando, TypedRelation } from '../object';
 
 // TODO(burdon): Clean up.
 
@@ -144,3 +144,7 @@ export class Container extends TypedObject({
   },
   { partial: true },
 ) {}
+
+export class HasManager extends TypedRelation({ typename: 'example.org/relation/HasManager', version: '0.1.0' })({
+  since: S.optional(S.String),
+}) {}
