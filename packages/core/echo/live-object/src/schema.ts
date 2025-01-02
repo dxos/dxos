@@ -23,7 +23,7 @@ import { create, type ReactiveObject } from './object';
  * Create ECHO object representing schema.
  */
 export const createStoredSchema = (
-  { typename, version }: ObjectAnnotation,
+  { typename, version }: Pick<ObjectAnnotation, 'typename' | 'version'>,
   jsonSchema?: JsonSchemaType,
 ): ReactiveObject<StoredSchema> => {
   return create(StoredSchema, {
@@ -36,10 +36,13 @@ export const createStoredSchema = (
 /**
  * Create runtime representation of a schema.
  */
-export const createEchoSchema = ({ typename, version }: ObjectAnnotation, fields: S.Struct.Fields): EchoSchema => {
+export const createEchoSchema = (
+  { typename, version }: Pick<ObjectAnnotation, 'typename' | 'version'>,
+  fields: S.Struct.Fields,
+): EchoSchema => {
   const schema = S.partial(S.Struct(fields).omit('id')).pipe(EchoObject(typename, version));
   const objectAnnotation = getObjectAnnotation(schema)!;
-  const schemaObject = createStoredSchema({ kind: EntityKind.Object, typename, version });
+  const schemaObject = createStoredSchema({ typename, version });
   const updatedSchema = schema.annotations({
     [ObjectAnnotationId]: { ...objectAnnotation } satisfies ObjectAnnotation,
   });
