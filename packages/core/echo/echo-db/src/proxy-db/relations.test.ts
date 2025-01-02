@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, test } from 'vitest';
 
 import { RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
 import { Contact, HasManager } from '@dxos/echo-schema/testing';
-import { create, makeRef } from '@dxos/live-object';
+import { create } from '@dxos/live-object';
 
 import type { EchoDatabase } from './database';
 import { getSource, getTarget, isRelation } from '../echo-handler/relations';

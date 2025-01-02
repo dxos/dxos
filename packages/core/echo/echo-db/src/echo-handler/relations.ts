@@ -5,7 +5,6 @@
 import {
   EntityKind,
   EntityKindPropertyId,
-  Ref,
   RelationSourceId,
   RelationTargetId,
   type BaseObject,
