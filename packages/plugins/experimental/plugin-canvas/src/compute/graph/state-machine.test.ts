@@ -7,7 +7,8 @@ import { describe, test } from 'vitest';
 import { Trigger } from '@dxos/async';
 import { createEdgeId, type GraphNode } from '@dxos/graph';
 
-import { type ComputeNode, createComputeGraph } from './compute-graph';
+import { createComputeGraph } from './compute-graph';
+import { type ComputeNode } from './compute-node';
 import { AndGate, Beacon, Switch } from './nodes';
 import { StateMachine } from './state-machine';
 import { createId } from '../../testing';

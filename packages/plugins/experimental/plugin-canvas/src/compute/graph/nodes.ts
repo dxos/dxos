@@ -10,7 +10,7 @@ import { type Query } from '@dxos/echo-db';
 import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
-import { ComputeNode } from './compute-graph';
+import { ComputeNode } from './compute-node';
 import { InvalidStateError } from './state-machine';
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '../../shapes';
 

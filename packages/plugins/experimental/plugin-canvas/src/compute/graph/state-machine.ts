@@ -9,7 +9,8 @@ import { type GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { type ComputeGraph, type ComputeNode, createComputeGraph } from './compute-graph';
+import { type ComputeGraph, createComputeGraph } from './compute-graph';
+import { type ComputeNode } from './compute-node';
 
 export const InvalidStateError = Error;
 

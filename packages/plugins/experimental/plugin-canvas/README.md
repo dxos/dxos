@@ -1,23 +1,33 @@
 # @dxos/plugin-canvas
 
-## Ontology
+## Summary
 
-- The `Graph` represents the data structure, consisting of extensible `GraphNode` and `GraphEdge` elements. 
-- Like a `View`, it may be a projection of underlying ECHO objects.
-- The `Editor` manages a `GraphModel<GraphNode<Shape>>`, which implements a graph of `Shape` nodes.
-- `Shape` nodes can be generic extensions (e.g., `RectangleShape`, `EllipseShape`, `PathShape`), 
-  or more customized components (e.g., `FunctionShape`).
-- Each `Shape` may have a reference to an external data object, from which it may derive properties.
+The system is built on `@dxos/graph` as the core abstraction layer Canvas visualization consists of:
 
-## Design
+- A graph of reactive `Shape` objects (esp. `Polygon`, `Path`) and corresponding components
+- Polygons have a generic outline `Frame`, which may include `Anchor` points, which are used to connect `Path` objects
+- Default positional layout with pluggable auto-layout options
+- No direct knowledge of computation logic
 
-- All visual elements are represented by a `Shape` object.
-- Most shapes implement the `Polygon` type, which is rendered by the `Frame` component.
-  - Specific shapes are able to customize the `Polygon` by overriding the `Component` option.
-- The underlying canvas is managed by the `@dxos/react-ui-canvas` components, which handle panning and zoom.
-- Most of the UX logic is handled by the hooks; in particular:
-  - `useLayout` handles the rendering of `Shape` objects on to their corresponding rect components.
-  - `useDragMonitor` handles the drag/drop logic, which include anchor based connections.
+### Compute functionality:
+
+- Implemented via a custom `ShapeRegistry` containing logic gates
+- Shapes maintain dual representation in both canvas and state machine graphs
+- Future iteration will separate these into parallel graphs
+
+### State machine behavior:
+
+- Nodes follow `ComputeNode<INPUT, OUTPUT>` typing pattern
+- Basic nodes like switches use `Switch<S.Void, S.Boolean>` schema
+- Execution starts from nodes requiring no input
+- Output propagates through graph based on node linkage
+- Node firing occurs when all input properties are satisfied
+
+### Reactive integration:
+
+- ComputeNode state changes are Effect signals
+- Canvas React components automatically update based on these signals
+
 
 ## Development
 
