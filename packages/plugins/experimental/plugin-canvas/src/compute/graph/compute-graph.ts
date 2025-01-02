@@ -31,7 +31,9 @@ export const createComputeGraph = (graph?: Graph): ComputeGraph => {
  * Represents a connection between nodes.
  */
 export type ComputeEdge = {
+  /** Input prop. */
   input?: string;
+  /** Output prop. */
   output?: string;
 };
 

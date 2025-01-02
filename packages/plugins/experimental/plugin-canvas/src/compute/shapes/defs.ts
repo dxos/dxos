@@ -10,7 +10,7 @@ import { type ComputeNode } from '../graph';
 export const ComputeShape = S.extend(
   Polygon,
   S.Struct({
-    // Compute node.
+    // Runtime-only compute node (not persistent).
     // TODO(burdon): Is this the best way to represent a generic runtime object?
     node: S.Any as S.Schema<ComputeNode<any, any>, unknown, never>,
   }),
