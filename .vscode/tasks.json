@@ -17,6 +17,11 @@
       "group": {
         "kind": "build",
         "isDefault": true
+      },
+      "options": {
+        "env": {
+          "NODE_OPTIONS": "--max-old-space-size=12192"
+        }
       }
     }
   ]
