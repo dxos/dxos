@@ -11,16 +11,17 @@ import {
   testAutomergeReplicatorFactory,
   TestReplicationNetwork,
 } from '@dxos/echo-pipeline/testing';
-import { Expando, getObjectAnnotation, S, TypedObject } from '@dxos/echo-schema';
-import { updateCounter } from '@dxos/echo-schema/testing';
+import { Expando, getObjectAnnotation, getSchemaTypename, getTypeReference, S, TypedObject } from '@dxos/echo-schema';
+import { Contact, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';
 import { create, getSchema, makeRef } from '@dxos/live-object';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
 
-import { createDataAssertion, EchoTestBuilder } from './echo-test-builder';
+import { log } from '@dxos/log';
 import { Filter } from '../query';
+import { createDataAssertion, EchoTestBuilder } from './echo-test-builder';
 
 registerSignalsRuntime();
 
@@ -430,6 +431,33 @@ describe('Integration tests', () => {
         });
       }
     });
+  });
+
+  test('dynamic schema is eagerly loaded with objects', async () => {
+    await using peer = await builder.createPeer();
+
+    let typeDXN!: DXN;
+    {
+      await using db = await peer.createDatabase(PublicKey.random(), {
+        reactiveSchemaQuery: false,
+        preloadSchemaOnOpen: false,
+      });
+      const [schema] = await db.schemaRegistry.register([Contact]);
+      typeDXN = getTypeReference(schema)!.toDXN();
+      const obj = db.add(create(schema, { name: 'Bob' }));
+      await db.flush({ indexes: true });
+    }
+
+    await peer.reload();
+    {
+      await using db = await peer.openLastDatabase({ reactiveSchemaQuery: false, preloadSchemaOnOpen: false });
+      const {
+        objects: [obj],
+      } = await db.query(Filter.typeDXN(typeDXN.toString())).run();
+      log.info('xxx', { typeDXN, obj });
+      expect(getSchema(obj)).toBeDefined();
+      expect(getSchemaTypename(getSchema(obj)!)).toEqual(Contact.typename);
+    }
   });
 });
 

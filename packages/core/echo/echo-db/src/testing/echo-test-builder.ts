@@ -19,6 +19,12 @@ import { EchoClient } from '../client';
 import { type ReactiveEchoObject } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 
+type OpenDatabaseOptions = {
+  client?: EchoClient;
+  reactiveSchemaQuery?: boolean;
+  preloadSchemaOnOpen?: boolean;
+};
+
 export class EchoTestBuilder extends Resource {
   private readonly _peers: EchoTestPeer[] = [];
 
@@ -123,12 +129,12 @@ export class EchoTestPeer extends Resource {
 
   async createDatabase(
     spaceKey: PublicKey = PublicKey.random(),
-    { client = this.client }: { client?: EchoClient } = {},
+    { client = this.client, reactiveSchemaQuery, preloadSchemaOnOpen }: OpenDatabaseOptions = {},
   ) {
     const root = await this.host.createSpaceRoot(spaceKey);
     // NOTE: Client closes the database when it is closed.
     const spaceId = await createIdFromSpaceKey(spaceKey);
-    const db = client.constructDatabase({ spaceId, spaceKey });
+    const db = client.constructDatabase({ spaceId, spaceKey, reactiveSchemaQuery, preloadSchemaOnOpen });
     await db.setSpaceRoot(root.url);
     await db.open();
 
@@ -137,18 +143,26 @@ export class EchoTestPeer extends Resource {
     return db;
   }
 
-  async openDatabase(spaceKey: PublicKey, rootUrl: string, { client = this.client }: { client?: EchoClient } = {}) {
+  async openDatabase(
+    spaceKey: PublicKey,
+    rootUrl: string,
+    { client = this.client, reactiveSchemaQuery, preloadSchemaOnOpen }: OpenDatabaseOptions = {},
+  ) {
     // NOTE: Client closes the database when it is closed.
     const spaceId = await createIdFromSpaceKey(spaceKey);
     await this.host.openSpaceRoot(spaceId, rootUrl as AutomergeUrl);
-    const db = client.constructDatabase({ spaceId, spaceKey });
+    const db = client.constructDatabase({ spaceId, spaceKey, reactiveSchemaQuery, preloadSchemaOnOpen });
     await db.setSpaceRoot(rootUrl);
     await db.open();
     return db;
   }
 
-  async openLastDatabase() {
-    return this.openDatabase(this._lastDatabaseSpaceKey!, this._lastDatabaseRootUrl!);
+  async openLastDatabase({ client = this.client, reactiveSchemaQuery, preloadSchemaOnOpen }: OpenDatabaseOptions = {}) {
+    return this.openDatabase(this._lastDatabaseSpaceKey!, this._lastDatabaseRootUrl!, {
+      client,
+      reactiveSchemaQuery,
+      preloadSchemaOnOpen,
+    });
   }
 }
 

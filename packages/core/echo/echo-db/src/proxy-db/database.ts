@@ -122,6 +122,8 @@ export type EchoDatabaseParams = {
    */
   reactiveSchemaQuery?: boolean;
 
+  preloadSchemaOnOpen?: boolean;
+
   /** @deprecated Use spaceId */
   spaceKey: PublicKey;
 };
@@ -156,7 +158,10 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       spaceKey: params.spaceKey,
     });
 
-    this._schemaRegistry = new EchoSchemaRegistry(this, { reactiveQuery: params.reactiveSchemaQuery });
+    this._schemaRegistry = new EchoSchemaRegistry(this, {
+      reactiveQuery: params.reactiveSchemaQuery,
+      preloadSchemaOnOpen: params.preloadSchemaOnOpen,
+    });
   }
 
   get spaceId(): SpaceId {

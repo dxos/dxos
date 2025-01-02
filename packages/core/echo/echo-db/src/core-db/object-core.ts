@@ -30,6 +30,9 @@ import {
 } from './types';
 import { type DocHandleProxy } from '../client';
 import { DATA_NAMESPACE } from '../echo-handler/echo-handler';
+import { DXN } from '@dxos/keys';
+import { inspectCustom } from '@dxos/debug';
+import type { InspectOptionsStylized, inspect } from 'util';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 // TODO(dmaretskyi): Remove in favour of explicitly specifying this in the API/Schema.
@@ -82,6 +85,14 @@ export class ObjectCore {
    * Handles link resolution as well as manual changes.
    */
   public readonly updates = new Event();
+
+  toString() {
+    return `ObjectCore { id: ${this.id} }`;
+  }
+
+  [inspectCustom](depth: number, options: InspectOptionsStylized, inspectFn: typeof inspect) {
+    return `ObjectCore ${inspectFn({ id: this.id }, options)}`;
+  }
 
   /**
    * Create local doc with initial state from this object.
@@ -431,6 +442,29 @@ export class ObjectCore {
       __meta: this.getDecoded([META_NAMESPACE]) as ObjectMeta,
       ...dataMapped,
     };
+  }
+
+  /**
+   * DXNs of objects that this object strongly depends on.
+   * Strong references are loaded together with the source object.
+   * Currently this is the schema reference and the source and target for relations
+   */
+  getStrongDependencies(): DXN[] {
+    const res: DXN[] = [];
+
+    const type = this.getType()?.toDXN();
+    if (type && type.kind === DXN.kind.ECHO) {
+      res.push(type);
+    }
+
+    if (this.getKind() === EntityKind.Relation) {
+      const source = this.getSource()?.toDXN();
+      if (source) res.push(source);
+      const target = this.getTarget()?.toDXN();
+      if (target) res.push(target);
+    }
+
+    return res;
   }
 }
 
