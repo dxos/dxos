@@ -22,6 +22,10 @@ import { type EchoDatabase } from '../proxy-db';
 export class EchoTestBuilder extends Resource {
   private readonly _peers: EchoTestPeer[] = [];
 
+  get lastPeer(): EchoTestPeer | undefined {
+    return this._peers.at(-1);
+  }
+
   protected override async _close(ctx: Context): Promise<void> {
     await Promise.all(this._peers.map((peer) => peer.close(ctx)));
   }

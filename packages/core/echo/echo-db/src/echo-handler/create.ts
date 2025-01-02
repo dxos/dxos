@@ -15,6 +15,8 @@ import {
   Ref,
   EntityKind,
   getEntityKind,
+  RelationSourceId,
+  RelationTargetId,
 } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
@@ -41,6 +43,7 @@ import {
 import { type DecodedAutomergePrimaryValue, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 import { log } from '@dxos/log';
+import { getSource, getTarget } from './relations';
 
 // TODO(burdon): Rename EchoObject and reconcile with proto name.
 export type ReactiveEchoObject<T extends BaseObject> = ReactiveObject<T> & HasId;
@@ -118,8 +121,7 @@ export const createObject = <T extends BaseObject>(obj: T): ReactiveEchoObject<T
     slot.handler.init(target);
 
     setSchemaPropertiesOnObjectCore(target[symbolInternals], schema);
-
-    // TODO(dmaretskyi): Set source & target for relations.
+    setRelationSourceAndTarget(target, core, schema);
 
     if (meta && meta.keys.length > 0) {
       target[symbolInternals].core.setMeta(meta);
@@ -139,8 +141,7 @@ export const createObject = <T extends BaseObject>(obj: T): ReactiveEchoObject<T
     initCore(core, target);
     const proxy = createProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
     setSchemaPropertiesOnObjectCore(target[symbolInternals], schema);
-
-    // TODO(dmaretskyi): Set source & target for relations.
+    setRelationSourceAndTarget(target, core, schema);
 
     return proxy;
   }
@@ -199,6 +200,31 @@ const setSchemaPropertiesOnObjectCore = (internals: ObjectInternals, schema: S.S
   }
 };
 
+const setRelationSourceAndTarget = (
+  target: ProxyTarget,
+  core: ObjectCore,
+  schema: S.Schema.AnyNoContext | undefined,
+) => {
+  const kind = schema && getEntityKind(schema);
+  if (kind === EntityKind.Relation) {
+    // `getSource` and `getTarget` don't work here since they assert entity kind.
+    const sourceRef = (target as any)[RelationSourceId];
+    const targetRef = (target as any)[RelationTargetId];
+    if (!sourceRef || !targetRef) {
+      throw new TypeError('Relation source and target must be specified');
+    }
+    if (!Ref.isRef(sourceRef)) {
+      throw new TypeError('source must be a ref');
+    }
+    if (!Ref.isRef(targetRef)) {
+      throw new TypeError('target must be a ref');
+    }
+
+    core.setSource(refToEchoReference(target, sourceRef));
+    core.setTarget(refToEchoReference(target, targetRef));
+  }
+};
+
 const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
   if (seen.has(target)) {
     return;
@@ -225,16 +251,20 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
 const linkAllNestedProperties = (target: ProxyTarget): DecodedAutomergePrimaryValue => {
   return deepMapValues(target, (value, recurse) => {
     if (Ref.isRef(value)) {
-      const savedTarget = getRefSavedTarget(value);
-      if (savedTarget) {
-        return EchoReactiveHandler.instance.createRef(target, savedTarget);
-      } else {
-        return Reference.fromDXN(value.dxn);
-      }
+      return refToEchoReference(target, value);
     }
 
     return recurse(value);
   });
+};
+
+const refToEchoReference = (target: ProxyTarget, ref: Ref<any>): Reference => {
+  const savedTarget = getRefSavedTarget(ref);
+  if (savedTarget) {
+    return EchoReactiveHandler.instance.createRef(target, savedTarget);
+  } else {
+    return Reference.fromDXN(ref.dxn);
+  }
 };
 
 const initInternals = (core: ObjectCore, database?: EchoDatabase): ObjectInternals => ({

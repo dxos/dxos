@@ -5,7 +5,7 @@
 import { type JsonProp, S } from '@dxos/effect';
 
 import { FormatAnnotationId } from '../formats';
-import { EntityKind } from './annotations';
+import { EntityKind } from './entity-kind';
 //
 // JSON Schema
 //

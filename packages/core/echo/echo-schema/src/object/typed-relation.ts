@@ -9,6 +9,7 @@ import { makeTypedEntityClass, type TypedObjectFields, type TypedObjectOptions }
 import { getTypename } from './typename';
 import type { ObjectAnnotation } from '../ast/annotations';
 import { invariant } from '@dxos/invariant';
+import type { RelationSourceTargetRefs } from './relation';
 
 /**
  * Definition for an object type that can be stored in an ECHO database.
@@ -66,7 +67,10 @@ export const TypedRelation = <ClassType>({ typename, version, skipTypenameFormat
   return <SchemaFields extends S.Struct.Fields, Options extends TypedObjectOptions>(
     fields: SchemaFields,
     options?: Options,
-  ): TypedRelationPrototype<TypedObjectFields<SchemaFields, Options>, S.Struct.Encoded<SchemaFields>> => {
+  ): TypedRelationPrototype<
+    TypedObjectFields<SchemaFields, Options> & RelationSourceTargetRefs,
+    S.Struct.Encoded<SchemaFields>
+  > => {
     // Create schema from fields.
     const schema: S.Schema.All = options?.record ? S.Struct(fields, { key: S.String, value: S.Any }) : S.Struct(fields);
 

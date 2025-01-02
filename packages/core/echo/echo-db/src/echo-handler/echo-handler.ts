@@ -13,6 +13,8 @@ import {
   ECHO_ATTR_META,
   ECHO_ATTR_TYPE,
   EchoSchema,
+  EntityKind,
+  EntityKindPropertyId,
   type ObjectMeta,
   ObjectMetaSchema,
   Ref,
@@ -50,7 +52,7 @@ import {
 } from './echo-proxy-target';
 import { type KeyPath, META_NAMESPACE, type ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
-import { RelationSourceId, RelationTargetId } from './relations';
+import { RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
 
 export const PROPERTY_ID = 'id';
 
@@ -107,14 +109,18 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
     invariant(Array.isArray(target[symbolPath]));
 
-    // Internals should not cause signal read events.
-    if (prop === symbolInternals) {
-      return target[symbolInternals];
+    // Non reactive properties on root and nested records.
+    switch (prop) {
+      case symbolInternals:
+        return target[symbolInternals];
     }
 
     // Non-reactive root properties.
     if (isRootDataObject(target)) {
       switch (prop) {
+        case EntityKindPropertyId: {
+          return target[symbolInternals].core.getKind();
+        }
         case RelationSourceId: {
           const sourceRef = target[symbolInternals].core.getSource();
           invariant(sourceRef);
@@ -125,29 +131,26 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           invariant(targetRef);
           return this.lookupRef(target, targetRef);
         }
+        case TYPENAME_SYMBOL:
+          return this._getTypename(target);
       }
     }
 
     target[symbolInternals].signal.notifyRead();
 
-    if (prop === devtoolsFormatter) {
-      return this._getDevtoolsFormatter(target);
+    // Reactive properties on root and nested records.
+    switch (prop) {
+      case devtoolsFormatter:
+        return this._getDevtoolsFormatter(target);
     }
 
-    if (prop === TYPENAME_SYMBOL) {
-      const schema = this.getSchema(target);
-      // Special handling for EchoSchema. objectId is StoredSchema objectId, not a typename.
-      if (schema && typeof schema === 'object' && SchemaMetaSymbol in schema) {
-        return (schema as any)[SchemaMetaSymbol].typename;
-      }
-      return this.getTypeReference(target)?.objectId;
-    }
-
-    // TODO(dmaretskyi): Combine with switch-case above.
+    // Reactive root properties.
     if (isRootDataObject(target)) {
-      const handled = this._handleRootObjectProperty(target, prop);
-      if (handled != null) {
-        return handled;
+      switch (prop) {
+        case 'toJSON':
+          return () => this._toJSON(target);
+        case PROPERTY_ID:
+          return target[symbolInternals].core.id;
       }
     }
 
@@ -163,15 +166,13 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return this._wrapInProxyIfRequired(target, decodedValueAtPath);
   }
 
-  private _handleRootObjectProperty(target: ProxyTarget, prop: string | symbol) {
-    // TODO(dmaretskyi): toJSON should be available for nested objects too.
-    if (prop === 'toJSON') {
-      return () => this._toJSON(target);
+  private _getTypename(target: ProxyTarget): string | undefined {
+    const schema = this.getSchema(target);
+    // Special handling for EchoSchema. objectId is StoredSchema objectId, not a typename.
+    if (schema && typeof schema === 'object' && SchemaMetaSymbol in schema) {
+      return (schema as any)[SchemaMetaSymbol].typename;
     }
-    if (prop === PROPERTY_ID) {
-      return target[symbolInternals].core.id;
-    }
-    return null;
+    return this.getTypeReference(target)?.objectId;
   }
 
   /**
@@ -643,15 +644,22 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     inspectFn: (value: any, options?: InspectOptionsStylized) => string,
   ) {
     const handler = this[symbolHandler] as EchoReactiveHandler;
+
+    const typename = handler._getTypename(this);
+    const isRelation = this[symbolInternals].core.getKind() === EntityKind.Relation;
+
     const isTyped = !!this[symbolInternals].core.getType();
     const reified = handler._getReified(this);
     reified.id = this[symbolInternals].core.id;
-    return `${isTyped ? 'Typed' : ''}EchoObject ${inspectFn(reified, {
-      ...options,
-      compact: true,
-      showHidden: false,
-      customInspect: false,
-    })}`;
+    return `${isTyped ? 'Typed' : ''}Echo${isRelation ? 'Relation' : 'Object'}${typename ? `(${typename})` : ''} ${inspectFn(
+      reified,
+      {
+        ...options,
+        compact: true,
+        showHidden: false,
+        customInspect: false,
+      },
+    )}`;
   };
 
   private _toJSON(target: ProxyTarget): any {

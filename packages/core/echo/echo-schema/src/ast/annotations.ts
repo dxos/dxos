@@ -11,6 +11,7 @@ import { type Primitive } from '@dxos/util';
 import { checkIdNotPresentOnSchema } from './schema-validator';
 import { type HasId } from './types';
 import { type BaseObject } from '../types';
+import { EntityKind } from './entity-kind';
 
 type ToMutable<T> = T extends BaseObject
   ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
@@ -23,11 +24,6 @@ export const ObjectAnnotationId = Symbol.for('@dxos/schema/annotation/Object');
 
 export const TYPENAME_REGEX = /^\w+\.\w{2,}\/[\w/]+$/;
 export const VERSION_REGEX = /^\d+.\d+.\d+$/;
-
-export enum EntityKind {
-  Object = 'object',
-  Relation = 'relation',
-}
 
 /**
  * Payload stored under {@link ObjectAnnotationId}.

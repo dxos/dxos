@@ -1,32 +1,28 @@
-import { EntityKind, getEntityKind, Ref, type BaseObject, type HasId } from '@dxos/echo-schema';
+import {
+  EntityKind,
+  EntityKindPropertyId,
+  getEntityKind,
+  Ref,
+  RelationSourceId,
+  RelationTargetId,
+  type BaseObject,
+  type HasId,
+  type RelationSourceTargetRefs,
+} from '@dxos/echo-schema';
 import type { ReactiveEchoObject } from './create';
 import { invariant } from '@dxos/invariant';
 import { getSchema, type ReactiveObject } from '@dxos/live-object';
 import type { DXN } from '@dxos/keys';
 
-export type ReactiveEchoRelation<T extends BaseObject> = ReactiveObject<T> &
-  HasId & {
-    [RelationSourceId]: Ref<ReactiveEchoObject<any>>;
-    [RelationTargetId]: Ref<ReactiveEchoObject<any>>;
-  };
+export type ReactiveEchoRelation<T extends BaseObject> = ReactiveObject<T> & HasId & RelationSourceTargetRefs;
 
 export const isRelation = <T extends BaseObject>(object: ReactiveEchoObject<T>): object is ReactiveEchoRelation<T> => {
-  const schema = getSchema(object);
-  if (!schema) return false;
-  return getEntityKind(schema) === EntityKind.Relation;
+  const kind = (object as any)[EntityKindPropertyId];
+  if (kind === undefined) {
+    throw new TypeError('Provided value is not a valid ECHO object or relation');
+  }
+  return kind === EntityKind.Relation;
 };
-
-/**
- * Used to access relation source ref on live ECHO objects.
- * Reading this symbol must return `Ref<Live<EchoObject<any>>>`
- */
-export const RelationSourceId: unique symbol = Symbol('@dxos/echo-db/RelationSource');
-
-/**
- * Used to access relation target ref on live ECHO objects.
- * Reading this symbol must return `Ref<Live<EchoObject<any>>>`
- */
-export const RelationTargetId: unique symbol = Symbol('@dxos/echo-db/RelationSource');
 
 /**
  * @returns Source ref from a relation.
