@@ -5,6 +5,8 @@
 import React from 'react';
 
 import { S } from '@dxos/echo-schema';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 import { getAnchors } from './Function';
 import { GptMessage } from './Gpt';
@@ -30,7 +32,7 @@ export const createList = ({ id, ...rest }: CreateListProps): ListShape => ({
   id,
   type: 'list',
   node: new List(GptMessage),
-  size: { width: 256, height: 512 },
+  size: { width: 320, height: 512 },
   ...rest,
 });
 
@@ -42,11 +44,28 @@ export const ListComponent = ({ shape }: ShapeComponentProps<ListShape>) => {
     <div className='flex flex-col w-full h-full overflow-hidden'>
       <div className='flex flex-col w-full overflow-y-scroll divide-y divide-separator'>
         {[...items].reverse().map((item, i) => (
-          <div key={i} className='p-1 px-2'>
-            {JSON.stringify(item)}
-          </div>
+          <ListItem key={i} classNames='p-1 px-2' item={item} />
         ))}
       </div>
+    </div>
+  );
+};
+
+export const ListItem = ({ classNames, item }: ThemedClassName<{ item: any }>) => {
+  if (typeof item !== 'object') {
+    return <div className={mx(classNames)}>{item}</div>;
+  }
+
+  return (
+    <div className={mx('grid grid-cols-[80px,1fr]', classNames)}>
+      {Object.entries(item).map(([key, value]) => (
+        <>
+          <div key={key} className='p-1 text-xs text-subdued'>
+            {key}
+          </div>
+          <div key={key}>{String(value)}</div>
+        </>
+      ))}
     </div>
   );
 };

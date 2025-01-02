@@ -68,9 +68,11 @@ export const gptShape: ShapeDef<GptShape> = {
   getAnchors: (shape) => getAnchors(shape, shape.node.inputSchema, shape.node.outputSchema),
 };
 
-const callOllama: FunctionCallback<GptInput, GptOutput> = async ({ prompt, history = [] }) => {
-  console.log('::::', history);
+const callOllama: FunctionCallback<GptInput, GptOutput> = async ({ systemPrompt, prompt, history = [] }) => {
+  console.log(systemPrompt);
+
   const messages = [
+    ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
     ...history.map(({ role, message }) => ({
       role,
       content: message,
