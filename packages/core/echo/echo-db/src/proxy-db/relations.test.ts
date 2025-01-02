@@ -1,14 +1,18 @@
-import { beforeEach, describe, expect, test } from 'vitest';
-import { EchoTestBuilder } from '../testing';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { afterEach } from 'node:test';
-import type { EchoDatabase } from './database';
-import type { Hypergraph } from '../hypergraph';
-import { RelationSourceId, RelationTargetId, TypedRelation } from '@dxos/echo-schema';
+import { beforeEach, describe, expect, test } from 'vitest';
+
+import { RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
 import { Contact, HasManager } from '@dxos/echo-schema/testing';
-import { Schema as S } from '@effect/Schema';
 import { create, makeRef } from '@dxos/live-object';
+
+import type { EchoDatabase } from './database';
 import { getSource, getTarget, isRelation } from '../echo-handler/relations';
-import { log } from '@dxos/log';
+import type { Hypergraph } from '../hypergraph';
+import { EchoTestBuilder } from '../testing';
 
 describe('Relations', () => {
   let testBuilder: EchoTestBuilder, db: EchoDatabase, graph: Hypergraph;

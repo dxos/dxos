@@ -1,5 +1,8 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import type { Ref } from '../ast/ref';
-import type { BaseObject } from '../types';
 
 /**
  * Used to access relation source ref on live ECHO objects.

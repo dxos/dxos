@@ -26,13 +26,13 @@ import { Contact, HasManager, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';
 import { create, getSchema, makeRef } from '@dxos/live-object';
+import { log } from '@dxos/log';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
 
-import { log } from '@dxos/log';
-import { Filter } from '../query';
 import { createDataAssertion, EchoTestBuilder } from './echo-test-builder';
 import { getSource, getTarget } from '../echo-handler/relations';
+import { Filter } from '../query';
 
 registerSignalsRuntime();
 
@@ -500,7 +500,7 @@ describe('Integration tests', () => {
       });
       const [schema] = await db.schemaRegistry.register([Contact]);
       typeDXN = getTypeReference(schema)!.toDXN();
-      const obj = db.add(create(schema, { name: 'Bob' }));
+      db.add(create(schema, { name: 'Bob' }));
       await db.flush({ indexes: true });
     }
 

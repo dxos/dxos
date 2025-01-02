@@ -2,9 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import type { InspectOptionsStylized, inspect } from 'util';
+
 import { Event } from '@dxos/async';
 import { type ChangeFn, type ChangeOptions, type Doc, type Heads, next as A } from '@dxos/automerge/automerge';
 import { type DocHandleChangePayload } from '@dxos/automerge/automerge-repo';
+import { inspectCustom } from '@dxos/debug';
 import {
   decodeReference,
   encodeReference,
@@ -15,6 +18,7 @@ import {
 } from '@dxos/echo-protocol';
 import { createObjectId, EntityKind, type CommonObjectData, type ObjectMeta } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 import { isReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { setDeep, defer, getDeep, throwUnhandledError, deepMapValues } from '@dxos/util';
@@ -30,9 +34,6 @@ import {
 } from './types';
 import { type DocHandleProxy } from '../client';
 import { DATA_NAMESPACE } from '../echo-handler/echo-handler';
-import { DXN } from '@dxos/keys';
-import { inspectCustom } from '@dxos/debug';
-import type { InspectOptionsStylized, inspect } from 'util';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 // TODO(dmaretskyi): Remove in favour of explicitly specifying this in the API/Schema.
@@ -459,9 +460,13 @@ export class ObjectCore {
 
     if (this.getKind() === EntityKind.Relation) {
       const source = this.getSource()?.toDXN();
-      if (source) res.push(source);
+      if (source) {
+        res.push(source);
+      }
       const target = this.getTarget()?.toDXN();
-      if (target) res.push(target);
+      if (target) {
+        res.push(target);
+      }
     }
 
     return res;

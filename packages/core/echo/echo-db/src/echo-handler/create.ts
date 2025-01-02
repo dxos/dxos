@@ -42,8 +42,6 @@ import {
 } from './echo-proxy-target';
 import { type DecodedAutomergePrimaryValue, ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
-import { log } from '@dxos/log';
-import { getSource, getTarget } from './relations';
 
 // TODO(burdon): Rename EchoObject and reconcile with proto name.
 export type ReactiveEchoObject<T extends BaseObject> = ReactiveObject<T> & HasId;

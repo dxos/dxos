@@ -14,7 +14,6 @@ import {
   toJsonSchema,
   type JsonSchemaType,
   type ObjectAnnotation,
-  EntityKind,
 } from '@dxos/echo-schema';
 
 import { create, type ReactiveObject } from './object';

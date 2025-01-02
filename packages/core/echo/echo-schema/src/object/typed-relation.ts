@@ -3,13 +3,12 @@
 //
 
 import { S } from '@dxos/effect';
-
-import { EntityKind, type HasId, ObjectAnnotationId, TYPENAME_REGEX, VERSION_REGEX } from '../ast';
-import { makeTypedEntityClass, type TypedObjectFields, type TypedObjectOptions } from './common';
-import { getTypename } from './typename';
-import type { ObjectAnnotation } from '../ast/annotations';
 import { invariant } from '@dxos/invariant';
+
+import { makeTypedEntityClass, type TypedObjectFields, type TypedObjectOptions } from './common';
 import type { RelationSourceTargetRefs } from './relation';
+import { EntityKind, type HasId, ObjectAnnotationId, TYPENAME_REGEX, VERSION_REGEX } from '../ast';
+import type { ObjectAnnotation } from '../ast/annotations';
 
 /**
  * Definition for an object type that can be stored in an ECHO database.
@@ -51,7 +50,7 @@ export type TypedRelationProps = {
  */
 // TODO(burdon): Can this be flattened into a single function (e.g., `class X extends TypedRelation({})`).
 // TODO(burdon): Support pipe(S.default({}))
-export const TypedRelation = <ClassType>({ typename, version, skipTypenameFormatCheck }: TypedRelationProps) => {
+export const TypedRelation = ({ typename, version, skipTypenameFormatCheck }: TypedRelationProps) => {
   if (!skipTypenameFormatCheck) {
     if (!TYPENAME_REGEX.test(typename)) {
       throw new TypeError(`Invalid typename: ${typename}`);

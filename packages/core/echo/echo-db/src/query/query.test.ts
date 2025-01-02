@@ -357,7 +357,7 @@ describe('Queries', () => {
 
   describe('Relations', () => {
     test('query by type', async () => {
-      const { peer, db, graph } = await builder.createDatabase();
+      const { db, graph } = await builder.createDatabase();
       graph.schemaRegistry.addSchema([Contact, HasManager]);
 
       const alice = db.add(

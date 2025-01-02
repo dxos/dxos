@@ -1,7 +1,10 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import {
   EntityKind,
   EntityKindPropertyId,
-  getEntityKind,
   Ref,
   RelationSourceId,
   RelationTargetId,
@@ -9,10 +12,10 @@ import {
   type HasId,
   type RelationSourceTargetRefs,
 } from '@dxos/echo-schema';
-import type { ReactiveEchoObject } from './create';
 import { invariant } from '@dxos/invariant';
-import { getSchema, type ReactiveObject } from '@dxos/live-object';
-import type { DXN } from '@dxos/keys';
+import { type ReactiveObject } from '@dxos/live-object';
+
+import type { ReactiveEchoObject } from './create';
 
 export type ReactiveEchoRelation<T extends BaseObject> = ReactiveObject<T> & HasId & RelationSourceTargetRefs;
 

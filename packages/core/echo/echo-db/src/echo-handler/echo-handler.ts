@@ -24,6 +24,7 @@ import {
   StoredSchema,
   TYPENAME_SYMBOL,
 } from '@dxos/echo-schema';
+import { RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import {
   createProxy,
@@ -52,7 +53,6 @@ import {
 } from './echo-proxy-target';
 import { type KeyPath, META_NAMESPACE, type ObjectCore } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
-import { RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
 
 export const PROPERTY_ID = 'id';
 

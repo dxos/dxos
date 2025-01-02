@@ -26,7 +26,7 @@ import {
   type SpaceDoc,
   type SpaceState,
 } from '@dxos/echo-protocol';
-import { ObjectId, Ref, type AnyObjectData } from '@dxos/echo-schema';
+import { type ObjectId, Ref, type AnyObjectData } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';

@@ -3,7 +3,9 @@
 //
 
 import { S } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 
+import { makeTypedEntityClass, type TypedObjectFields, type TypedObjectOptions } from './common';
 import {
   EntityKind,
   type HasId,
@@ -12,9 +14,6 @@ import {
   TYPENAME_REGEX,
   VERSION_REGEX,
 } from '../ast';
-import { makeTypedEntityClass, type TypedObjectFields, type TypedObjectOptions } from './common';
-import { getTypename } from './typename';
-import { invariant } from '@dxos/invariant';
 
 /**
  * Definition for an object type that can be stored in an ECHO database.
@@ -56,7 +55,7 @@ export type TypedObjectProps = {
  */
 // TODO(burdon): Can this be flattened into a single function (e.g., `class X extends TypedObject({})`).
 // TODO(burdon): Support pipe(S.default({}))
-export const TypedObject = <ClassType>({ typename, version, skipTypenameFormatCheck }: TypedObjectProps) => {
+export const TypedObject = ({ typename, version, skipTypenameFormatCheck }: TypedObjectProps) => {
   if (!skipTypenameFormatCheck) {
     if (!TYPENAME_REGEX.test(typename)) {
       throw new TypeError(`Invalid typename: ${typename}`);

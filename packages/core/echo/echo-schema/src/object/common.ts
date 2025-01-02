@@ -1,7 +1,11 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Schema as S } from '@effect/schema';
-import { schemaVariance, TYPENAME_REGEX, VERSION_REGEX } from '../ast';
+
 import { getTypename } from './typename';
-import type { TypedObjectProps, TypedObjectPrototype } from './typed-object';
+import { schemaVariance } from '../ast';
 
 // TODO(dmaretskyi): Rename to represent commonality between objects and relations (e.g. `entity`).
 export type TypedObjectOptions = {
