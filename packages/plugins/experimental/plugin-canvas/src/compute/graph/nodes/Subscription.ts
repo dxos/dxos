@@ -23,7 +23,7 @@ export class Subscription extends ComputeNode<void, readonly any[]> {
 
   override async onInitialize(ctx: Context) {
     const subscription = this._query?.subscribe(({ results }) => {
-      this.update(results);
+      this.setState(results);
     });
 
     ctx.onDispose(() => subscription?.());

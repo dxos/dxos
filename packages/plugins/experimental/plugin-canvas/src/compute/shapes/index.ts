@@ -5,7 +5,7 @@
 export * from './logic';
 
 export * from './Beacon';
-export * from './Calculator';
+export * from './Counter';
 export * from './Function';
 export * from './Gpt';
 export * from './List';

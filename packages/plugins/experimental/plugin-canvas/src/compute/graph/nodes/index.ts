@@ -3,7 +3,7 @@
 //
 
 export * from './Beacon';
-export * from './Calculator';
+export * from './Counter';
 export * from './Function';
 export * from './Gate';
 export * from './List';

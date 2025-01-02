@@ -88,7 +88,6 @@ const Render = ({ id = 'test', graph: _graph, machine, init, sidebar, ...props }
     () => ({
       onCreate: (node) => {
         if (machine) {
-          console.log(node.data);
           const data = node.data as ComputeShape<BaseComputeShape, ComputeNode<any, any>>;
           // TODO(burdon): Check type (e.g., could be just decorative).
           machine.graph.addNode({ id: data.id, data: data.node });

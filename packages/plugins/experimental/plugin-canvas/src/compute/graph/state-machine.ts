@@ -133,7 +133,7 @@ export class StateMachine {
       }
     } catch (err) {
       log.catch(err); // TODO(burdon): Not visible!
-      console.log(err);
+      console.error(err);
       await this.close();
     }
   }

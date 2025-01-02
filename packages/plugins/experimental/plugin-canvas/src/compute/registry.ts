@@ -5,7 +5,7 @@
 import {
   andShape,
   beaconShape,
-  calculatorShape,
+  counterShape,
   functionShape,
   gptShape,
   listShape,
@@ -31,5 +31,5 @@ export const computeShapes: ShapeDef<any>[] = [
   notShape,
   listShape,
   beaconShape,
-  calculatorShape,
+  counterShape,
 ];

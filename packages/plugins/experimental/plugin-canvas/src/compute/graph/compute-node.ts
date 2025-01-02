@@ -16,6 +16,7 @@ import { type AsyncUpdate } from './state-machine';
 /**
  * Represents a compute element, which may take inputs from multiple other nodes, and output a value to other nodes.
  */
+// TODO(burdon): Node id.
 export abstract class ComputeNode<Input, Output> {
   abstract readonly type: string;
 
@@ -54,6 +55,7 @@ export abstract class ComputeNode<Input, Output> {
    * Determine if node has all required inputs.
    */
   get ready() {
+    // TODO(burdon): Use this check everywhere rather than === void.
     if (AST.isVoidKeyword(this.inputSchema.ast)) {
       return true;
     }
@@ -67,6 +69,14 @@ export abstract class ComputeNode<Input, Output> {
   }
 
   /**
+   * Initialize the node (and set clean-up logic).
+   */
+  initialize(ctx: Context, cb: AsyncUpdate<Output>) {
+    this._callback = cb;
+    this.onInitialize(ctx);
+  }
+
+  /**
    * Reset state.
    */
   reset() {
@@ -75,21 +85,26 @@ export abstract class ComputeNode<Input, Output> {
 
   /**
    * Set state directly (e.g., for nodes that have no input and are controlled by ux).
+   * Send an async update to the state machine.
    */
-  setState(state: Output): this {
+  setState(value: Output): this {
     invariant((this.inputSchema as S.Schema<any>) === S.Void, 'invalid state');
-    void this.update(state);
+    if (!this._callback) {
+      log.warn('callback not set', { node: this });
+    } else {
+      this._callback(value);
+    }
     return this;
   }
 
   /**
-   * Set input value.
+   * Set input property.
    * @param property
    * @param value
    */
-  // TODO(burdon): Check property and match type.
+  // TODO(burdon): Check property and type matches.
   setInput(property: keyof Input | undefined, value: any) {
-    log('set', { property, value });
+    log('set', { node: this.type, property, value });
     invariant(value !== undefined, 'computed values should not be undefined');
     if (property) {
       invariant(this._input.value, `input is not defined for property: ${String(property)}`);
@@ -106,26 +121,10 @@ export abstract class ComputeNode<Input, Output> {
     invariant(!AST.isVoidKeyword(this.outputSchema.ast), 'cannot exec void output');
     invariant(this.ready, 'not ready');
     log('exec', { node: this, input: this._input.value });
+    // TODO(burdon): Try/catch.
     const output = await this.invoke(this._input.value as Input);
-    log('exec', { node: this, output });
+    log.info('exec', { node: this, input: this._input.value, output });
     return output;
-  }
-
-  /**
-   * Send an async update to the state machine.
-   */
-  update(value: Output) {
-    if (this._callback) {
-      this._callback(value);
-    }
-  }
-
-  /**
-   * Initialize the node (and set clean-up logic).
-   */
-  initialize(ctx: Context, cb: AsyncUpdate<Output>) {
-    this._callback = cb;
-    this.onInitialize(ctx);
   }
 
   protected onInitialize(ctx: Context) {}

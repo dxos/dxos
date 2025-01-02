@@ -6,11 +6,14 @@ import React from 'react';
 
 import { S } from '@dxos/echo-schema';
 
+import { getAnchors } from './Function';
 import { GptMessage } from './Gpt';
-import { ComputeShape } from './defs';
-import { createAnchors, type ShapeComponentProps, type ShapeDef } from '../../components';
-import { createAnchorId } from '../../shapes';
+import { ComputeShape, createInputSchema, createOutputSchema } from './defs';
+import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { List } from '../graph';
+
+const InputSchema = createInputSchema(GptMessage);
+const OutputSchema = createOutputSchema(S.mutable(S.Array(GptMessage)));
 
 export const ListShape = S.extend(
   ComputeShape,
@@ -19,7 +22,7 @@ export const ListShape = S.extend(
   }),
 );
 
-export type ListShape = ComputeShape<S.Schema.Type<typeof ListShape>, List<any>>;
+export type ListShape = ComputeShape<S.Schema.Type<typeof ListShape>, List<any, any>>;
 
 export type CreateListProps = Omit<ListShape, 'type' | 'node' | 'size'>;
 
@@ -27,12 +30,25 @@ export const createList = ({ id, ...rest }: CreateListProps): ListShape => ({
   id,
   type: 'list',
   node: new List(GptMessage),
-  size: { width: 256, height: 128 },
+  size: { width: 256, height: 256 },
   ...rest,
 });
 
 export const ListComponent = ({ shape }: ShapeComponentProps<ListShape>) => {
-  return <div className='flex w-full h-full p-2'>{shape.node.length.value}</div>;
+  const items = shape.node.items.value;
+
+  // TODO(burdon): Doesn't scroll.
+  return (
+    <div className='flex flex-col w-full h-full overflow-hidden'>
+      <div className='flex flex-col w-full overflow-y-scroll divide-y divide-separator'>
+        {[...items].reverse().map((item, i) => (
+          <div key={i} className='p-1 px-2'>
+            {JSON.stringify(item)}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 };
 
 export const listShape: ShapeDef<ListShape> = {
@@ -40,9 +56,5 @@ export const listShape: ShapeDef<ListShape> = {
   icon: 'ph--list-dashes--regular',
   component: ListComponent,
   createShape: createList,
-  getAnchors: (shape) =>
-    createAnchors(shape, {
-      [createAnchorId('input')]: { x: -1, y: 0 },
-      [createAnchorId('output')]: { x: 1, y: 0 },
-    }),
+  getAnchors: (shape) => getAnchors(shape, InputSchema, OutputSchema),
 };

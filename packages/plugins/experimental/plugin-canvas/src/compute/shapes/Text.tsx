@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { useState } from 'react';
 
 import { S } from '@dxos/echo-schema';
 
@@ -31,15 +31,17 @@ export const createText = ({ id, ...rest }: CreateTextProps): TextShape => ({
 });
 
 export const TextComponent = ({ shape }: ShapeComponentProps<TextShape>) => {
+  const [reset, setReset] = useState({});
   const handleEnter: TextBoxProps['onEnter'] = (value) => {
     if (value.trim().length) {
       shape.node.setState(value);
+      setReset({});
     }
   };
 
   return (
     <div className='flex w-full h-full p-2'>
-      <TextBox classNames='flex grow overflow-hidden' placeholder='Prompt' onEnter={handleEnter} />
+      <TextBox classNames='flex grow overflow-hidden' reset={reset} placeholder='Prompt' onEnter={handleEnter} />
     </div>
   );
 };

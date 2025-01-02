@@ -182,6 +182,7 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
           {...shapeAttrs(shape)}
           style={getBoundsProperties({ ...shape.center, ...shape.size })}
           className={mx(
+            'overflow-hidden',
             classNames,
             styles.frameContainer,
             styles.frameHover,

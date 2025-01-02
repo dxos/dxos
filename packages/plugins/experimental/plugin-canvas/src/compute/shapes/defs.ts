@@ -4,6 +4,7 @@
 
 import { S } from '@dxos/echo-schema';
 
+import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '../../shapes';
 import { Polygon } from '../../types';
 import { type ComputeNode } from '../graph';
 
@@ -20,4 +21,15 @@ export type BaseComputeShape = S.Schema.Type<typeof ComputeShape>;
 
 export type ComputeShape<S extends BaseComputeShape, Node extends ComputeNode<any, any>> = Omit<S, 'node'> & {
   node: Node;
+};
+
+export const createInputSchema = (schema: S.Schema<any>): S.Schema<any> => S.Struct({ [DEFAULT_INPUT]: schema });
+export const createOutputSchema = (schema: S.Schema<any>): S.Schema<any> => S.Struct({ [DEFAULT_OUTPUT]: schema });
+
+export type InputType<INPUT = any> = {
+  [DEFAULT_INPUT]: INPUT;
+};
+
+export type OutputType<OUTPUT = any> = {
+  [DEFAULT_OUTPUT]: OUTPUT;
 };

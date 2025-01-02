@@ -18,13 +18,14 @@ import { mx } from '@dxos/react-ui-theme';
 export type TextBoxProps = ThemedClassName<
   {
     value?: string;
+    reset?: object;
     centered?: boolean;
     onEnter?: (value: string) => void;
     onCancel?: () => void;
   } & Pick<BasicExtensionsOptions, 'placeholder'>
 >;
 
-export const TextBox = ({ classNames, value = '', centered, onEnter, onCancel, ...rest }: TextBoxProps) => {
+export const TextBox = ({ classNames, value = '', reset, centered, onEnter, onCancel, ...rest }: TextBoxProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef, view, focusAttributes } = useTextEditor(() => {
     return {
@@ -74,6 +75,13 @@ export const TextBox = ({ classNames, value = '', centered, onEnter, onCancel, .
       ],
     };
   }, [value]);
+
+  // TODO(burdon): Better way to reset?
+  useEffect(() => {
+    if (reset) {
+      view?.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: value } });
+    }
+  }, [view, value, reset]);
 
   useEffect(() => {
     view?.dispatch({ selection: { anchor: view.state.doc.length } });

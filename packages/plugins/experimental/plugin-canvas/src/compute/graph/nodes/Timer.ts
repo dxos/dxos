@@ -24,7 +24,7 @@ export class Timer extends ComputeNode<void, number> {
   start() {
     this._interval = setInterval(
       () => {
-        void this.update(Date.now());
+        void this.setState(Date.now());
       },
       Math.max(this._period, 1_000),
     );

@@ -2,30 +2,44 @@
 // Copyright 2024 DXOS.org
 //
 
-import { computed, type Signal } from '@preact/signals-core';
+import { signal, type Signal } from '@preact/signals-core';
 
 import { S } from '@dxos/echo-schema';
 
+import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '../../../shapes';
+import { createInputSchema, createOutputSchema, type InputType, type OutputType } from '../../shapes/defs';
 import { ComputeNode } from '../compute-node';
 
 /**
  * List accumulator.
  */
-export class List<T extends object> extends ComputeNode<T, T[]> {
+// TODO(burdon): Adapt to support transform from I to O[] type.
+export class List<INPUT extends InputType<T>, OUTPUT extends OutputType<T[]>, T = any> extends ComputeNode<
+  INPUT,
+  OUTPUT
+> {
   override readonly type = 'list';
 
-  _list: T[] = [];
+  private readonly _items: Signal<T[]> = signal([]);
 
   constructor(schema: S.Schema<T>) {
-    super(schema, S.mutable(S.Array(schema)));
+    super(createInputSchema(schema), createOutputSchema(S.mutable(S.Array(schema))));
   }
 
-  get length(): Signal<number> {
-    return computed(() => this._list.length);
+  get items(): Signal<T[]> {
+    return this._items;
   }
 
-  override async invoke(input: T) {
-    this._list.push(input);
-    return this._list;
+  clear() {
+    this._items.value.length = 0;
+  }
+
+  override async invoke(input: INPUT) {
+    const value = input[DEFAULT_INPUT];
+    this._items.value = [...this._items.value, value];
+
+    return {
+      [DEFAULT_OUTPUT]: this._items.value,
+    } as OUTPUT;
   }
 }
