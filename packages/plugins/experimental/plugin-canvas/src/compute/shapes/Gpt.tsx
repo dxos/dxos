@@ -18,15 +18,17 @@ export const GptShape = S.extend(
   }),
 );
 
+export const GptMessage = S.Struct({
+  role: S.Union(S.Literal('system'), S.Literal('user'), S.Literal('assistant')),
+  text: S.String,
+});
+
+export type GptMessage = S.Schema.Type<typeof GptMessage>;
+
 export const GptInput = S.Struct({
   systemPrompt: S.String,
   prompt: S.String,
-  history: S.Array(
-    S.Struct({
-      role: S.Union(S.Literal('system'), S.Literal('user'), S.Literal('assistant')),
-      text: S.String,
-    }),
-  ),
+  history: S.Array(GptMessage),
 });
 
 export const GptOutput = S.Struct({

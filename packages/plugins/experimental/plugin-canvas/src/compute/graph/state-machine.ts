@@ -52,7 +52,7 @@ export class StateMachine {
 
     this._ctx = new Context();
     await Promise.all(
-      this._graph.nodes.map(async (node) =>
+      this._graph.nodes.map(async (node) => {
         node.data.initialize(this._ctx, (output: any) => {
           if (!this._ctx) {
             return;
@@ -60,8 +60,8 @@ export class StateMachine {
 
           this.update.emit({ node, value: output });
           void this._propagate(node, output);
-        }),
-      ),
+        });
+      }),
     );
   }
 

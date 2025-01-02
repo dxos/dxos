@@ -3,7 +3,7 @@
 //
 
 import { type LayoutKind } from '../layout';
-import { type Shape } from '../types';
+import { type Connection, type Shape } from '../types';
 
 export type Action =
   | { type: 'debug' }
@@ -30,7 +30,7 @@ export type Action =
   | { type: 'copy'; ids?: string[] }
   | { type: 'paste' }
   | { type: 'create'; shape?: Shape }
-  | { type: 'link'; source: string; target: string; data?: object }
+  | { type: 'link'; source: string; target: string; connection?: Connection }
   | { type: 'delete'; ids?: string[]; all?: boolean }
 
   //

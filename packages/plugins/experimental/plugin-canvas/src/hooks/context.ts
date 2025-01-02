@@ -4,14 +4,14 @@
 
 import { createContext, type Dispatch, type RefObject, type SetStateAction } from 'react';
 
-import { type GraphModel, type GraphNode } from '@dxos/graph';
+import { type GraphEdge, type GraphModel, type GraphNode } from '@dxos/graph';
 import { type Dimension } from '@dxos/react-ui-canvas';
 
 import { type SelectionModel } from './selection';
 import { type DragMonitor } from './useDragMonitor';
 import { type ActionHandler } from '../actions';
 import { type ShapeRegistry } from '../components';
-import type { Polygon, Shape } from '../types';
+import type { Connection, Polygon, Shape } from '../types';
 
 export type EditingState<S extends Polygon> = {
   shape: S;
@@ -27,9 +27,10 @@ export type EditorOptions = {
 /**
  * Model callback.
  */
+// TODO(burdon): Update, Delete, etc. Better way to keep in sync?
 export interface GraphMonitor {
-  onCreate: (shape: Shape) => void;
-  onLink: () => void;
+  onCreate: (node: GraphNode<Shape>) => void;
+  onLink: (edge: GraphEdge<Connection>) => void;
 }
 
 export type EditorContextType = {

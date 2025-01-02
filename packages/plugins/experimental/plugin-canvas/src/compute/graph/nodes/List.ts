@@ -9,25 +9,23 @@ import { S } from '@dxos/echo-schema';
 import { ComputeNode } from '../compute-node';
 
 /**
- * Displays the current count.
+ * List accumulator.
  */
-export class List extends ComputeNode<number, number> {
-  override readonly type = 'calculator';
+export class List<T extends object> extends ComputeNode<T, T[]> {
+  override readonly type = 'list';
 
-  _current = 0;
+  _list: T[] = [];
 
-  constructor() {
-    super(S.Number, S.Number);
+  constructor(schema: S.Schema<T>) {
+    super(schema, S.mutable(S.Array(schema)));
   }
 
-  get state(): Signal<number> {
-    return computed(() => this._current);
+  get length(): Signal<number> {
+    return computed(() => this._list.length);
   }
 
-  // TODO(burdon): Value coercion.
-  override async invoke(input: number) {
-    console.log('????', input, typeof input);
-    this._current += input;
-    return this._current;
+  override async invoke(input: T) {
+    this._list.push(input);
+    return this._list;
   }
 }

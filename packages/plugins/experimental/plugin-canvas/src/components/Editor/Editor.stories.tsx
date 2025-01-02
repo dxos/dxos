@@ -19,11 +19,12 @@ import { createObjectFactory, Testing, type TypeSpec, type ValueGenerator } from
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
-import { computeShapes, type StateMachine } from '../../compute';
+import { type ComputeNode, computeShapes, type StateMachine } from '../../compute';
+import type { BaseComputeShape, ComputeShape } from '../../compute/shapes/defs';
 import { createComputeGraph, createTest1, createTest2 } from '../../compute/testing';
 import { type GraphMonitor, SelectionModel } from '../../hooks';
 import { doLayout } from '../../layout';
-import { RectangleShape, type Shape } from '../../types';
+import { type Connection, RectangleShape, type Shape } from '../../types';
 import { AttentionContainer } from '../AttentionContainer';
 import { ShapeRegistry } from '../Canvas';
 
@@ -34,11 +35,16 @@ const types = [Testing.OrgType, Testing.ProjectType, Testing.ContactType];
 // TODO(burdon): Ref expando breaks the form.
 const RectangleShapeWithoutRef = S.omit<any, any, ['object']>('object')(RectangleShape);
 
-type RenderProps = EditorRootProps & { init?: boolean; sidebar?: 'json' | 'selected'; machine?: StateMachine };
+type RenderProps = EditorRootProps & {
+  init?: boolean;
+  sidebar?: 'json' | 'selected' | 'state-machine';
+  machine?: StateMachine;
+};
 
 const Render = ({ id = 'test', graph: _graph, machine, init, sidebar, ...props }: RenderProps) => {
   const editorRef = useRef<EditorController>(null);
   const { space } = useClientProvider();
+  const [, forceUpdate] = useState({});
 
   // State machine.
   useEffect(() => {
@@ -80,12 +86,28 @@ const Render = ({ id = 'test', graph: _graph, machine, init, sidebar, ...props }
   // Monitor.
   const graphMonitor = useMemo<GraphMonitor>(
     () => ({
-      onCreate: (shape) => {
-        console.log(shape);
+      onCreate: (node) => {
+        if (machine) {
+          console.log(node.data);
+          const data = node.data as ComputeShape<BaseComputeShape, ComputeNode<any, any>>;
+          // TODO(burdon): Check type (e.g., could be just decorative).
+          machine.graph.addNode({ id: data.id, data: data.node });
+          void machine.open(); // TODO(burdon): Make automatic.
+          forceUpdate({});
+        }
       },
-      onLink: () => {},
+      onLink: (edge) => {
+        if (machine) {
+          // TODO(burdon): Check type.
+          const data = edge.data as Connection;
+          const { input, output } = data ?? {};
+          machine.graph.addEdge({ id: edge.id, source: edge.source, target: edge.target, data: { input, output } });
+          void machine.open();
+          forceUpdate({});
+        }
+      },
     }),
-    [],
+    [machine],
   );
 
   // Selection.
@@ -119,7 +141,7 @@ const Render = ({ id = 'test', graph: _graph, machine, init, sidebar, ...props }
         </Editor.Root>
       </AttentionContainer>
 
-      {/* TODO(burdon): Different types. */}
+      {/* TODO(burdon): Need to set schema based on what is selected. */}
       {sidebar === 'selected' && selected && (
         <Form
           schema={RectangleShapeWithoutRef}
@@ -136,6 +158,14 @@ const Render = ({ id = 'test', graph: _graph, machine, init, sidebar, ...props }
         <AttentionContainer id='sidebar' tabIndex={0} classNames='flex grow overflow-hidden'>
           <SyntaxHighlighter language='json' classNames='text-xs'>
             {JSON.stringify({ graph }, null, 2)}
+          </SyntaxHighlighter>
+        </AttentionContainer>
+      )}
+
+      {sidebar === 'state-machine' && (
+        <AttentionContainer id='sidebar' tabIndex={0} classNames='flex grow overflow-hidden'>
+          <SyntaxHighlighter language='json' classNames='text-xs'>
+            {JSON.stringify({ machine }, null, 2)}
           </SyntaxHighlighter>
         </AttentionContainer>
       )}
@@ -192,6 +222,17 @@ export const Query: Story = {
   },
 };
 
+export const Compute: Story = {
+  args: {
+    // debug: true,
+    showGrid: false,
+    snapToGrid: false,
+    sidebar: 'state-machine',
+    registry: new ShapeRegistry(computeShapes),
+    ...createComputeGraph(),
+  },
+};
+
 export const Compute1: Story = {
   args: {
     // debug: true,
@@ -208,7 +249,7 @@ export const Compute2: Story = {
     // debug: true,
     showGrid: false,
     snapToGrid: false,
-    // sidebar: 'selected',
+    sidebar: 'state-machine',
     registry: new ShapeRegistry(computeShapes),
     ...createComputeGraph(createTest2()),
   },

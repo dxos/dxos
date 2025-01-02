@@ -67,17 +67,21 @@ export const createTest2 = () => {
   });
 };
 
-// TODO(burdon): Initialize nodes when added from canvas.
 // TODO(burdon): Check output anchor id is set from functions.
-// TODO(burdon): Factor out transform.
-export const createComputeGraph = (graph: GraphModel<GraphNode<Shape>, GraphEdge<Connection>>) => {
+export const createComputeGraph = (graph?: GraphModel<GraphNode<Shape>, GraphEdge<Connection>>) => {
   const machine = new StateMachine();
-  for (const node of graph.nodes) {
-    const data = node.data as ComputeShape<BaseComputeShape, ComputeNode<any, any>>;
-    machine.graph.addNode({ id: data.id, data: data.node });
-  }
-  for (const edge of graph.edges) {
-    machine.graph.addEdge(edge);
+
+  // TODO(burdon): Factor out mapping (reconcile with Editor.stories).
+  if (graph) {
+    for (const node of graph.nodes) {
+      const data = node.data as ComputeShape<BaseComputeShape, ComputeNode<any, any>>;
+      machine.graph.addNode({ id: data.id, data: data.node });
+    }
+    for (const edge of graph.edges) {
+      const data = (edge.data ?? {}) as Connection;
+      const { input, output } = data;
+      machine.graph.addEdge({ id: edge.id, source: edge.source, target: edge.target, data: { input, output } });
+    }
   }
 
   return { graph, machine };

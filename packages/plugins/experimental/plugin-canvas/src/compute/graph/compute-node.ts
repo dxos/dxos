@@ -17,7 +17,6 @@ import { type AsyncUpdate } from './state-machine';
  * Represents a compute element, which may take inputs from multiple other nodes, and output a value to other nodes.
  */
 export abstract class ComputeNode<Input, Output> {
-  // TODO(burdon): Replace with schema.
   abstract readonly type: string;
 
   /**
@@ -90,7 +89,7 @@ export abstract class ComputeNode<Input, Output> {
    */
   // TODO(burdon): Check property and match type.
   setInput(property: keyof Input | undefined, value: any) {
-    log.info('set', { property, value });
+    log('set', { property, value });
     invariant(value !== undefined, 'computed values should not be undefined');
     if (property) {
       invariant(this._input.value, `input is not defined for property: ${String(property)}`);
