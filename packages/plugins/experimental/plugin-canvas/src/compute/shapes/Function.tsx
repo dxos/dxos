@@ -18,7 +18,7 @@ const bodyPadding = 8;
 
 export const FunctionProperty = S.Struct({
   name: S.String,
-  // TODO(burdon): Use echo definitions?
+  // TODO(burdon): Use echo definitions.
   type: S.Union(
     //
     S.Literal('string'),
