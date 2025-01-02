@@ -7,8 +7,8 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, onTestFin
 import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { type SpaceDoc } from '@dxos/echo-protocol';
-import { Expando, S, TypedObject, type Ref } from '@dxos/echo-schema';
-import { Contact } from '@dxos/echo-schema/testing';
+import { Expando, RelationSourceId, RelationTargetId, S, TypedObject, type Ref } from '@dxos/echo-schema';
+import { Contact, HasManager } from '@dxos/echo-schema/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { create, getMeta, makeRef } from '@dxos/live-object';
@@ -353,6 +353,34 @@ describe('Queries', () => {
 
     await peer.reload();
     await assertQueries(await peer.openLastDatabase());
+  });
+
+  describe('Relations', () => {
+    test('query by type', async () => {
+      const { peer, db, graph } = await builder.createDatabase();
+      graph.schemaRegistry.addSchema([Contact, HasManager]);
+
+      const alice = db.add(
+        create(Contact, {
+          name: 'Alice',
+        }),
+      );
+      const bob = db.add(
+        create(Contact, {
+          name: 'Bob',
+        }),
+      );
+      const hasManager = db.add(
+        create(HasManager, {
+          [RelationSourceId]: makeRef(bob),
+          [RelationTargetId]: makeRef(alice),
+          since: '2022',
+        }),
+      );
+
+      const { objects } = await db.query(Filter.schema(HasManager)).run();
+      expect(objects).toEqual([hasManager]);
+    });
   });
 });
 
