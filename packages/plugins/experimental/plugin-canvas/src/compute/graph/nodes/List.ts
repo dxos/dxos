@@ -36,7 +36,13 @@ export class List<INPUT extends InputType<T>, OUTPUT extends OutputType<T[]>, T 
 
   override async invoke(input: INPUT) {
     const value = input[DEFAULT_INPUT];
-    this._items.value = [...this._items.value, value];
+
+    // TODO(burdon): Hack since GPT sends an array (user prompt then response). Needs configuration.
+    if (Array.isArray(value)) {
+      this._items.value = [...this._items.value, ...value];
+    } else {
+      this._items.value = [...this._items.value, value];
+    }
 
     return {
       [DEFAULT_OUTPUT]: this._items.value,

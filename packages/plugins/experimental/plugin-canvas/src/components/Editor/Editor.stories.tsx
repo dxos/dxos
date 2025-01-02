@@ -21,7 +21,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
 import { type ComputeNode, computeShapes, type StateMachine } from '../../compute';
 import type { BaseComputeShape, ComputeShape } from '../../compute/shapes/defs';
-import { createComputeGraph, createTest1, createTest2 } from '../../compute/testing';
+import { createComputeGraph, createTest1, createTest2, createTest3 } from '../../compute/testing';
 import { type GraphMonitor, SelectionModel } from '../../hooks';
 import { doLayout } from '../../layout';
 import { type Connection, RectangleShape, type Shape } from '../../types';
@@ -251,5 +251,16 @@ export const Compute2: Story = {
     sidebar: 'state-machine',
     registry: new ShapeRegistry(computeShapes),
     ...createComputeGraph(createTest2()),
+  },
+};
+
+export const GPT: Story = {
+  args: {
+    // debug: true,
+    showGrid: false,
+    snapToGrid: false,
+    // sidebar: 'state-machine',
+    registry: new ShapeRegistry(computeShapes),
+    ...createComputeGraph(createTest3()),
   },
 };

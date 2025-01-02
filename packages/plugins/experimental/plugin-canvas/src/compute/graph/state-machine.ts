@@ -50,11 +50,13 @@ export class StateMachine {
       await this.close();
     }
 
+    log.info('opening...');
     this._ctx = new Context();
     await Promise.all(
       this._graph.nodes.map(async (node) => {
         node.data.initialize(this._ctx, (output: any) => {
           if (!this._ctx) {
+            log.warn('not running'); // TODO(burdon): Not displayed.
             return;
           }
 
@@ -67,6 +69,7 @@ export class StateMachine {
 
   async close() {
     if (this._ctx) {
+      log.info('closing...');
       await this._ctx.dispose();
       this._ctx = undefined;
     }
@@ -120,19 +123,20 @@ export class StateMachine {
         }
 
         // Set input.
-        target.data.setInput(edge.data?.input, value);
+        const optional = target.data.setInput(edge.data?.input, value);
 
         // Check if ready.
         if (target.data.output === S.Void) {
           this.update.emit({ node: target, value: output });
         } else {
-          if (target.data.ready) {
+          // TODO(burdon): Don't fire if optional (breaks feedback loop).
+          if (!optional && target.data.ready) {
             await this._exec(target);
           }
         }
       }
     } catch (err) {
-      log.catch(err); // TODO(burdon): Not visible!
+      log.catch(err); // TODO(burdon): ???
       console.error(err);
       await this.close();
     }

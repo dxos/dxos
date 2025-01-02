@@ -30,7 +30,7 @@ export const createList = ({ id, ...rest }: CreateListProps): ListShape => ({
   id,
   type: 'list',
   node: new List(GptMessage),
-  size: { width: 256, height: 256 },
+  size: { width: 256, height: 512 },
   ...rest,
 });
 

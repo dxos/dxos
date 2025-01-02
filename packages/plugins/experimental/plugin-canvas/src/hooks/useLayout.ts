@@ -10,7 +10,7 @@ import { useEditorContext } from './useEditorContext';
 import { type Anchor, type ShapeRegistry } from '../components';
 import { getDistance, findClosestIntersection, createNormalsFromRectangles, getRect, pointAdd } from '../layout';
 import { createAnchorId, createPath, parseAnchorId } from '../shapes';
-import { isPolygon, type PathShape, type Polygon, type Shape } from '../types';
+import { type Connection, isPolygon, type PathShape, type Polygon, type Shape } from '../types';
 
 export type Layout = {
   shapes: Shape[];
@@ -27,11 +27,11 @@ export const useLayout = (): Layout => {
   const getShape = (shape: Polygon) =>
     dragging.type === 'frame' && dragging.shape.id === shape.id ? dragging.shape : shape;
 
-  type LinkProps = { id: string; source: Polygon; target: Polygon; input?: string; output?: string };
-  const createPathForEdge = ({ id, source, target, input, output }: LinkProps): PathShape | undefined => {
+  type LinkProps = { id: string; source: Polygon; target: Polygon; connection?: Connection };
+  const createPathForEdge = ({ id, source, target, connection }: LinkProps): PathShape | undefined => {
     // TODO(burdon): Custom logic for function anchors.
-    const sourceAnchor = getAnchorPoint(registry, source, createAnchorId('output', output));
-    const targetAnchor = getAnchorPoint(registry, target, createAnchorId('input', input));
+    const sourceAnchor = getAnchorPoint(registry, source, createAnchorId('output', connection?.output));
+    const targetAnchor = getAnchorPoint(registry, target, createAnchorId('input', connection?.input));
     if (sourceAnchor && targetAnchor) {
       return createPath({ id, points: createCurve(sourceAnchor, targetAnchor) });
     }
@@ -52,7 +52,7 @@ export const useLayout = (): Layout => {
   //
   // Edges.
   //
-  graph.edges.forEach(({ id, source: sourceId, target: targetId, data }) => {
+  graph.edges.forEach(({ id, source: sourceId, target: targetId, data: connection }) => {
     const sourceNode = graph.getNode(sourceId);
     const targetNode = graph.getNode(targetId);
     if (!sourceNode || !targetNode || !isPolygon(sourceNode.data) || !isPolygon(targetNode.data)) {
@@ -61,7 +61,7 @@ export const useLayout = (): Layout => {
 
     const source = getShape(sourceNode.data);
     const target = getShape(targetNode.data);
-    const path = createPathForEdge({ id, source, target, input: data?.input });
+    const path = createPathForEdge({ id, source, target, connection });
     if (path) {
       shapes.push(path);
     }

@@ -62,7 +62,8 @@ export abstract class ComputeNode<Input, Output> {
 
     if (AST.isTypeLiteral(this.inputSchema.ast)) {
       invariant(this._input.value);
-      return Object.keys(this._input.value).length === AST.getPropertySignatures(this.inputSchema.ast).length;
+      const required = AST.getPropertySignatures(this.inputSchema.ast).filter((p) => !p.isOptional);
+      return Object.keys(this._input.value).length >= required.length;
     } else {
       return this._input.value !== undefined;
     }
@@ -106,12 +107,19 @@ export abstract class ComputeNode<Input, Output> {
   setInput(property: keyof Input | undefined, value: any) {
     log('set', { node: this.type, property, value });
     invariant(value !== undefined, 'computed values should not be undefined');
+
+    // TODO(burdon): Standardize all nodes to require a property (i.e., remove default?)
+    const p = property && AST.getPropertySignatures(this.inputSchema.ast).find((p) => p.name === property);
+    invariant(!property || p, `invalid property: ${String(property)}`);
+
     if (property) {
       invariant(this._input.value, `input is not defined for property: ${String(property)}`);
       this._input.value[property] = value;
     } else {
       this._input.value = value;
     }
+
+    return p?.isOptional;
   }
 
   /**

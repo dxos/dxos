@@ -2,14 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
+import ollama from 'ollama/browser';
 import React from 'react';
 
 import { AST, S } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 
 import { FunctionBody, getAnchors, getHeight } from './Function';
 import { ComputeShape } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
-import { Function } from '../graph';
+import { Function, type FunctionCallback } from '../graph';
 
 export const GptShape = S.extend(
   ComputeShape,
@@ -20,19 +22,19 @@ export const GptShape = S.extend(
 
 export const GptMessage = S.Struct({
   role: S.Union(S.Literal('system'), S.Literal('user'), S.Literal('assistant')),
-  text: S.String,
+  message: S.String,
 });
 
 export type GptMessage = S.Schema.Type<typeof GptMessage>;
 
 export const GptInput = S.Struct({
-  systemPrompt: S.String,
+  systemPrompt: S.optional(S.String),
   prompt: S.String,
-  history: S.Array(GptMessage),
+  history: S.optional(S.Array(GptMessage)),
 });
 
 export const GptOutput = S.Struct({
-  result: S.String,
+  result: S.Array(GptMessage),
   tokens: S.Number,
 });
 
@@ -47,7 +49,7 @@ export const createGpt = ({ id, ...rest }: CreateGptProps): GptShape => {
   return {
     id,
     type: 'gpt',
-    node: new Function(GptInput, GptOutput),
+    node: new Function(GptInput, GptOutput, callOllama, 'GPT'),
     size: { width: 192, height: getHeight(GptInput) },
     ...rest,
   };
@@ -64,4 +66,33 @@ export const gptShape: ShapeDef<GptShape> = {
   component: GptComponent,
   createShape: createGpt,
   getAnchors: (shape) => getAnchors(shape, shape.node.inputSchema, shape.node.outputSchema),
+};
+
+const callOllama: FunctionCallback<GptInput, GptOutput> = async ({ prompt, history = [] }) => {
+  console.log('::::', history);
+  const messages = [
+    ...history.map(({ role, message }) => ({
+      role,
+      content: message,
+    })),
+    { role: 'user', content: prompt },
+  ];
+
+  const result = await ollama.chat({ model: 'llama3.2', messages });
+  log.info('gpt', { prompt, result });
+  const { message, eval_count } = result;
+
+  return {
+    result: [
+      {
+        role: 'user',
+        message: prompt,
+      },
+      {
+        role: message.role as any,
+        message: message.content,
+      },
+    ],
+    tokens: eval_count,
+  };
 };

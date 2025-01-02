@@ -5,8 +5,20 @@
 import { GraphModel, type GraphNode, type GraphEdge, createEdgeId } from '@dxos/graph';
 
 import { type ComputeNode, StateMachine } from './graph';
-import { createAnd, createBeacon, createFunction, createOr, createSwitch, createTimer } from './shapes';
+import {
+  createAnd,
+  createBeacon,
+  createCounter,
+  createFunction,
+  createGpt,
+  createList,
+  createOr,
+  createSwitch,
+  createText,
+  createTimer,
+} from './shapes';
 import { type BaseComputeShape, type ComputeShape } from './shapes/defs';
+import { DEFAULT_INPUT } from '../shapes';
 import type { Connection, Shape } from '../types';
 
 // TODO(burdon): GraphBuilder.
@@ -54,6 +66,31 @@ export const createTest2 = () => {
     { source: 'e', target: 'c', data: { input: 'a' } },
     { source: 'b', target: 'c', data: { input: 'b', output: 'result' } },
     { source: 'c', target: 'd' },
+  ];
+
+  return new GraphModel<GraphNode<Shape>, GraphEdge<Connection>>({
+    nodes: nodes.map((data) => ({ id: data.id, data })),
+    edges: edges.map(({ source, target, data }) => ({
+      id: createEdgeId({ source, target, relation: 'invokes' }),
+      source,
+      target,
+      data,
+    })),
+  });
+};
+
+export const createTest3 = () => {
+  const nodes: Shape[] = [
+    createText({ id: 'a', center: { x: -384, y: 0 } }),
+    createGpt({ id: 'b', center: { x: 0, y: 0 } }),
+    createList({ id: 'c', center: { x: 384, y: -128 } }),
+    createCounter({ id: 'd', center: { x: 384, y: 256 } }),
+  ];
+
+  const edges = [
+    { source: 'a', target: 'b', data: { input: 'prompt' } },
+    { source: 'b', target: 'c', data: { output: 'result', input: DEFAULT_INPUT } },
+    { source: 'b', target: 'd', data: { output: 'tokens' } },
   ];
 
   return new GraphModel<GraphNode<Shape>, GraphEdge<Connection>>({

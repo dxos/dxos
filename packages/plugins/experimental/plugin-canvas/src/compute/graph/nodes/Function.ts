@@ -13,20 +13,32 @@ export const DefaultOutput = S.Struct({ result: S.Any });
 export type DefaultInput = S.Schema.Type<typeof DefaultInput>;
 export type DefaultOutput = S.Schema.Type<typeof DefaultOutput>;
 
-export class Function<Input, Output> extends ComputeNode<Input, Output> {
+export type FunctionCallback<INPUT, OUTPUT> = (input: INPUT) => Promise<OUTPUT>;
+
+const defaultCallback: FunctionCallback<any, any> = (input) => {
+  const value = (input as any)[DEFAULT_INPUT];
+  return {
+    [DEFAULT_OUTPUT]: value,
+  } as any;
+};
+
+export class Function<INPUT, OUTPUT> extends ComputeNode<INPUT, OUTPUT> {
   override readonly type = 'function';
 
-  get name() {
-    return 'Function';
+  constructor(
+    inputSchema: S.Schema<INPUT>,
+    outputSchema: S.Schema<OUTPUT>,
+    private readonly _cb: FunctionCallback<INPUT, OUTPUT> = defaultCallback,
+    private readonly _name = 'Function',
+  ) {
+    super(inputSchema, outputSchema);
   }
 
-  // TODO(burdon): Should be replaced by actual function (e.g., transformer).
-  override async invoke(input: Input) {
-    const value = (input as any)[DEFAULT_INPUT];
-    const output = {
-      [DEFAULT_OUTPUT]: value,
-    };
+  get name() {
+    return this._name;
+  }
 
-    return output as any as Output;
+  override async invoke(input: INPUT) {
+    return this._cb(input);
   }
 }

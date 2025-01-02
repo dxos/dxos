@@ -5,6 +5,8 @@
       "DOM",
       "ESNext"
     ],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "types": [
       "node"
     ]
