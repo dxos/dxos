@@ -19,7 +19,7 @@ import { createObjectFactory, Testing, type TypeSpec, type ValueGenerator } from
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
-import { type ComputeNode, computeShapes, type StateMachine } from '../../compute';
+import { type ComputeNode, computeShapes, type StateMachine, type StateMachineContext } from '../../compute';
 import type { BaseComputeShape, ComputeShape } from '../../compute/shapes/defs';
 import { createComputeGraph, createTest1, createTest2, createTest3 } from '../../compute/testing';
 import { type GraphMonitor, SelectionModel } from '../../hooks';
@@ -39,9 +39,10 @@ type RenderProps = EditorRootProps & {
   init?: boolean;
   sidebar?: 'json' | 'selected' | 'state-machine';
   machine?: StateMachine;
+  model?: StateMachineContext['model'];
 };
 
-const Render = ({ id = 'test', graph: _graph, machine, init, sidebar, ...props }: RenderProps) => {
+const Render = ({ id = 'test', graph: _graph, machine, model, init, sidebar, ...props }: RenderProps) => {
   const editorRef = useRef<EditorController>(null);
   const { space } = useClientProvider();
   const [, forceUpdate] = useState({});
@@ -53,7 +54,7 @@ const Render = ({ id = 'test', graph: _graph, machine, init, sidebar, ...props }
     }
 
     // TODO(burdon): Better abstraction for context?
-    machine.setContext({ space, model: /*'@ollama/llama-3-2-3b'*/ '@anthropic/claude-3-5-sonnet-20241022' });
+    machine.setContext({ space, model });
     void machine.open();
     const off = machine.update.on((ev) => {
       const { node } = ev;
@@ -257,6 +258,17 @@ export const Compute2: Story = {
   },
 };
 
+export const Ollama: Story = {
+  args: {
+    // debug: true,
+    showGrid: false,
+    snapToGrid: false,
+    // sidebar: 'state-machine',
+    registry: new ShapeRegistry(computeShapes),
+    ...createComputeGraph(createTest3()),
+  },
+};
+
 export const GPT: Story = {
   args: {
     // debug: true,
@@ -269,6 +281,7 @@ export const GPT: Story = {
       { type: Testing.ProjectType, count: 4 },
       { type: Testing.ContactType, count: 8 },
     ],
-    ...createComputeGraph(createTest3()),
+    ...createComputeGraph(createTest3(true)),
+    model: '@anthropic/claude-3-5-sonnet-20241022',
   },
 };

@@ -86,20 +86,20 @@ export const createTest2 = () => {
   });
 };
 
-export const createTest3 = () => {
+export const createTest3 = (db = false) => {
   const nodes: Shape[] = [
     createChat({ id: 'a', center: pos({ x: -12, y: 0 }) }),
     createGpt({ id: 'b', center: pos({ x: 0, y: 0 }) }),
     createList({ id: 'c', center: pos({ x: 16, y: -4 }) }),
     createCounter({ id: 'd', center: pos({ x: 8, y: 6 }) }),
-    createDatabase({ id: 'e', center: pos({ x: -10, y: 6 }) }),
+    ...(db ? [createDatabase({ id: 'e', center: pos({ x: -10, y: 6 }) })] : []),
   ];
 
   const edges = [
     { source: 'a', target: 'b', data: { input: 'prompt', output: DEFAULT_OUTPUT } },
     { source: 'b', target: 'c', data: { output: 'result', input: DEFAULT_INPUT } },
     { source: 'b', target: 'd', data: { output: 'tokens' } },
-    { source: 'e', target: 'b', data: { input: 'tools', output: DEFAULT_OUTPUT } },
+    ...(db ? [{ source: 'e', target: 'b', data: { input: 'tools', output: DEFAULT_OUTPUT } }] : []),
   ];
 
   return new GraphModel<GraphNode<Shape>, GraphEdge<Connection>>({

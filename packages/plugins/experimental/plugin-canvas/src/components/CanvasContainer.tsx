@@ -16,6 +16,8 @@ export const CanvasContainer = ({ canvas }: { canvas: CanvasBoardType }) => {
   const id = fullyQualifiedId(canvas);
   const graph = useMemo(() => new GraphModel<GraphNode<Shape>>(canvas.graph), [canvas.graph]);
 
+  // TODO(burdon): Add graph monitor to sync.
+
   return (
     <StackItem.Content id={id} toolbar={false}>
       <AttentionContainer id={id}>
