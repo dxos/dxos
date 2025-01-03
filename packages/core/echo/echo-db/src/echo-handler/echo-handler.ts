@@ -4,14 +4,17 @@
 
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
+import type * as A from '@dxos/automerge/automerge';
 import { devtoolsFormatter, type DevtoolsFormatter } from '@dxos/debug';
-import { encodeReference, Reference } from '@dxos/echo-protocol';
+import { encodeReference, Reference, type ObjectStructure } from '@dxos/echo-protocol';
 import {
   type BaseObject,
   defineHiddenProperty,
   ECHO_ATTR_META,
   ECHO_ATTR_TYPE,
   EchoSchema,
+  EntityKind,
+  EntityKindPropertyId,
   type ObjectMeta,
   ObjectMetaSchema,
   Ref,
@@ -21,6 +24,7 @@ import {
   StoredSchema,
   TYPENAME_SYMBOL,
 } from '@dxos/echo-schema';
+import { RelationSourceId, RelationTargetId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import {
   createProxy,
@@ -105,30 +109,50 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
     invariant(Array.isArray(target[symbolPath]));
 
-    // Internals should not cause signal read events.
-    if (prop === symbolInternals) {
-      return target[symbolInternals];
+    // Non reactive properties on root and nested records.
+    switch (prop) {
+      case symbolInternals:
+        return target[symbolInternals];
+    }
+
+    // Non-reactive root properties.
+    if (isRootDataObject(target)) {
+      switch (prop) {
+        case EntityKindPropertyId: {
+          return target[symbolInternals].core.getKind();
+        }
+        case RelationSourceId: {
+          const sourceRef = target[symbolInternals].core.getSource();
+          invariant(sourceRef);
+          // TODO(dmaretskyi): This shouldn't be implement via refs \_(^.^)_/.
+          return this.lookupRef(target, sourceRef)?.target;
+        }
+        case RelationTargetId: {
+          const targetRef = target[symbolInternals].core.getTarget();
+          invariant(targetRef);
+          // TODO(dmaretskyi): This shouldn't be implement via refs \_(^.^)_/.
+          return this.lookupRef(target, targetRef)?.target;
+        }
+        case TYPENAME_SYMBOL:
+          return this._getTypename(target);
+      }
     }
 
     target[symbolInternals].signal.notifyRead();
 
-    if (prop === devtoolsFormatter) {
-      return this._getDevtoolsFormatter(target);
+    // Reactive properties on root and nested records.
+    switch (prop) {
+      case devtoolsFormatter:
+        return this._getDevtoolsFormatter(target);
     }
 
-    if (prop === TYPENAME_SYMBOL) {
-      const schema = this.getSchema(target);
-      // Special handling for EchoSchema. objectId is StoredSchema objectId, not a typename.
-      if (schema && typeof schema === 'object' && SchemaMetaSymbol in schema) {
-        return (schema as any)[SchemaMetaSymbol].typename;
-      }
-      return this.getTypeReference(target)?.objectId;
-    }
-
+    // Reactive root properties.
     if (isRootDataObject(target)) {
-      const handled = this._handleRootObjectProperty(target, prop);
-      if (handled != null) {
-        return handled;
+      switch (prop) {
+        case 'toJSON':
+          return () => this._toJSON(target);
+        case PROPERTY_ID:
+          return target[symbolInternals].core.id;
       }
     }
 
@@ -144,15 +168,13 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return this._wrapInProxyIfRequired(target, decodedValueAtPath);
   }
 
-  private _handleRootObjectProperty(target: ProxyTarget, prop: string | symbol) {
-    // TODO(dmaretskyi): toJSON should be available for nested objects too.
-    if (prop === 'toJSON') {
-      return () => this._toJSON(target);
+  private _getTypename(target: ProxyTarget): string | undefined {
+    const schema = this.getSchema(target);
+    // Special handling for EchoSchema. objectId is StoredSchema objectId, not a typename.
+    if (schema && typeof schema === 'object' && SchemaMetaSymbol in schema) {
+      return (schema as any)[SchemaMetaSymbol].typename;
     }
-    if (prop === PROPERTY_ID) {
-      return target[symbolInternals].core.id;
-    }
-    return null;
+    return this.getTypeReference(target)?.objectId;
   }
 
   /**
@@ -296,7 +318,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       const typeReference = target[symbolInternals].core.getType();
       if (typeReference) {
         // The object has schema, but we can't access it to validate the value being set.
-        throw new Error(`Schema not found in schema registry: ${typeReference.objectId}`);
+        throw new Error(`Schema not found in schema registry: ${typeReference.toDXN().toString()}`);
       }
 
       return value;
@@ -352,7 +374,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return undefined;
     }
 
-    const staticSchema = target[symbolInternals].database.graph.schemaRegistry.getSchema(typeReference.objectId);
+    const staticSchema = target[symbolInternals].database.graph.schemaRegistry.getSchemaByDXN(typeReference.toDXN());
     if (staticSchema != null) {
       return staticSchema;
     }
@@ -624,18 +646,26 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     inspectFn: (value: any, options?: InspectOptionsStylized) => string,
   ) {
     const handler = this[symbolHandler] as EchoReactiveHandler;
+
+    const typename = handler._getTypename(this);
+    const isRelation = this[symbolInternals].core.getKind() === EntityKind.Relation;
+
     const isTyped = !!this[symbolInternals].core.getType();
     const reified = handler._getReified(this);
     reified.id = this[symbolInternals].core.id;
-    return `${isTyped ? 'Typed' : ''}EchoObject ${inspectFn(reified, {
-      ...options,
-      compact: true,
-      showHidden: false,
-      customInspect: false,
-    })}`;
+    return `${isTyped ? 'Typed' : ''}Echo${isRelation ? 'Relation' : 'Object'}${typename ? `(${typename})` : ''} ${inspectFn(
+      reified,
+      {
+        ...options,
+        compact: true,
+        showHidden: false,
+        customInspect: false,
+      },
+    )}`;
   };
 
   private _toJSON(target: ProxyTarget): any {
+    target[symbolInternals].signal.notifyRead();
     const typeRef = target[symbolInternals].core.getType();
     const reified = this._getReified(target);
     return {
@@ -717,6 +747,15 @@ export const getObjectCore = <T extends BaseObject>(obj: ReactiveEchoObject<T>):
   }
   const { core } = (obj as any as ProxyTarget)[symbolInternals];
   return core;
+};
+
+/**
+ * @returns Automerge document (or a part of it) that backs the object.
+ * Mostly used for debugging.
+ */
+export const getObjectDocument = (obj: ReactiveEchoObject<any>): A.Doc<ObjectStructure> => {
+  const core = getObjectCore(obj);
+  return getDeep(core.getDoc(), core.mountPath)!;
 };
 
 export const isRootDataObject = (target: ProxyTarget) => {

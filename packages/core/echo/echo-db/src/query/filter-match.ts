@@ -69,8 +69,11 @@ const filterMatchInner = (
 
   if (filter.type) {
     const type = core.getType()?.toDXN() ?? DXN.fromTypename(EXPANDO_TYPENAME);
-    log('type compare', { type, filterType: filter.type });
-    if (!filter.type.some((filterType) => DXN.equals(filterType, type))) {
+    log('type compare', {
+      type,
+      filterType: filter.type,
+    });
+    if (!filter.type.some((filterType) => compareTypes(filterType, type))) {
       return false;
     }
   }
@@ -130,4 +133,27 @@ const compareValues = (a: any, b: any) => {
   }
 
   return a === b;
+};
+
+const compareTypes = (filter: DXN, object: DXN) => {
+  switch (filter.kind) {
+    case DXN.kind.TYPE: {
+      if (object.kind !== DXN.kind.TYPE) {
+        return false;
+      }
+
+      const filterParsed = filter.asTypeDXN()!;
+      const objectParsed = object.asTypeDXN()!;
+
+      // NOTE: If the object version is not set, it will match any version.
+      return (
+        filterParsed.type === objectParsed.type &&
+        (!filterParsed.version || !objectParsed.version || filterParsed.version === objectParsed.version)
+      );
+    }
+    case DXN.kind.ECHO: {
+      // TODO(dmaretskyi): Handle DXNs with the local space tag & explicit space id.
+      return DXN.equals(filter, object);
+    }
+  }
 };
