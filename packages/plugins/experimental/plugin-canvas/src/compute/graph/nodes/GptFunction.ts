@@ -137,10 +137,15 @@ const callEdge: FunctionCallback<GptInput, GptOutput> = async ({
         role: 'user',
         message: prompt,
       },
-      ...newMessages.map(({ role, content }) => ({
-        role,
-        message: (content.findLast(({ type }) => type === 'text') as MessageTextContentBlock)?.text ?? '',
-      })),
+      ...newMessages.flatMap(({ role, content }) =>
+        content.flatMap((content) =>
+          content.type === 'text'
+            ? [{ role, message: content.text }]
+            : content.type === 'tool_use'
+              ? [{ role, message: JSON.stringify(content) }]
+              : [],
+        ),
+      ),
     ],
     tokens: 0,
   };
