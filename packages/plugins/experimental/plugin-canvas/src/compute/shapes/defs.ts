@@ -12,7 +12,7 @@ export const ComputeShape = S.extend(
   Polygon,
   S.Struct({
     // Runtime-only compute node (not persistent).
-    // TODO(burdon): Is this the best way to represent a generic runtime object?
+    // TODO(burdon): Is this the best way to represent a generic runtime object? (See below).
     node: S.Any as S.Schema<ComputeNode<any, any>, unknown, never>,
   }),
 );
@@ -33,3 +33,17 @@ export type InputType<INPUT = any> = {
 export type OutputType<OUTPUT = any> = {
   [DEFAULT_OUTPUT]: OUTPUT;
 };
+
+// export const Node = <T extends S.Schema.AnyNoContext>(properties: T) =>
+//   S.Struct({
+//     id: S.String,
+//     properties,
+//   });
+//
+// const FunctionNode = Node(
+//   S.Struct({
+//     name: S.String,
+//   }),
+// );
+//
+// const AnyNode = Node(S.Any);

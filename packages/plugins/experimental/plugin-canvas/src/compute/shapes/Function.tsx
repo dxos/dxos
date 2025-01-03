@@ -6,7 +6,7 @@ import React from 'react';
 
 import { AST, S } from '@dxos/echo-schema';
 
-import { Box } from './common';
+import { Box } from './components';
 import { ComputeShape } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { pointAdd } from '../../layout';

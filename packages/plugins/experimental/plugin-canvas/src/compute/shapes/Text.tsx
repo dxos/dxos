@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { S } from '@dxos/echo-schema';
 
-import { Box } from './common';
+import { Box } from './components';
 import { ComputeShape } from './defs';
 import { createAnchors, type ShapeComponentProps, type ShapeDef, TextBox, type TextBoxProps } from '../../components';
 import { createAnchorId, DEFAULT_OUTPUT } from '../../shapes';
