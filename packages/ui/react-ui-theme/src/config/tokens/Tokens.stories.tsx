@@ -32,28 +32,55 @@ const structure = Object.entries(tokenSet.colors.physical.series)
   })
   .reverse();
 
-const Swatch = ({ variable }: { variable: string }) => {
+type SwatchProps = { variable: string; seriesId: string; shadeValue: number; opacity: number; name: string };
+
+const Swatch = ({ variable, seriesId, shadeValue, opacity, name }: SwatchProps) => {
   return (
-    <div className='inline-block is-16'>
+    <div className='shrink-0 is-16'>
       <dd className='aspect-square' style={{ background: `var(${variable})` }}></dd>
-      <dt>{variable.substring(tokenSet.colors.physical.namespace!.length + 2)}</dt>
+      <dt className='text-xs'>
+        <p>{seriesId}</p>
+        <p>{shadeValue}</p>
+        {opacity < 1 && <p>{opacity}</p>}
+      </dt>
     </div>
   );
 };
 
-export const Tokens = () => {
-  return structure.map(([seriesId, variables]) => {
-    return (
-      <>
-        <h2>{seriesId}</h2>
-        <dl>
-          {(variables as string[]).map((variable) => (
-            <Swatch key={variable} variable={variable} />
-          ))}
-        </dl>
-      </>
-    );
-  });
+export const Audit = () => {
+  return (
+    <>
+      <h1>Physical tokens</h1>
+      {structure.map(([seriesId, variables]) => {
+        const swatches = (variables as string[])
+          .map((variable) => {
+            const name = variable.substring(tokenSet.colors.physical.namespace!.length + 2);
+            const results = name.split(/-|\\\/\\/);
+            const [seriesId, shadeValue, opacity] = results;
+            return {
+              seriesId,
+              shadeValue: parseFloat(shadeValue),
+              opacity: opacity ? parseFloat(opacity) : 1,
+              name,
+              variable,
+            };
+          })
+          .sort((a, b) => {
+            return a.shadeValue - b.shadeValue - (a.opacity - b.opacity);
+          });
+        return (
+          <>
+            <h2 className='mbs-4 mbe-2'>{seriesId}</h2>
+            <dl className='flex flex-wrap'>
+              {swatches.map((swatch) => (
+                <Swatch key={swatch.variable} {...swatch} />
+              ))}
+            </dl>
+          </>
+        );
+      })}
+    </>
+  );
 };
 
 const meta: Meta = {
