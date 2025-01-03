@@ -129,9 +129,14 @@ export abstract class ComputeNode<Input, Output> {
     invariant(this.ready, 'not ready');
     log('exec', { node: this, input: this._input.value });
     // TODO(burdon): Try/catch.
-    const output = await this.invoke(this._input.value as Input);
-    log.info('exec', { node: this, input: this._input.value, output });
-    return output;
+    try {
+      const output = await this.invoke(this._input.value as Input);
+      log.info('exec', { node: this, input: this._input.value, output });
+      return output;
+    } catch (err) {
+      log.error('exec', { node: this, input: this._input.value, error: err });
+      throw err;
+    }
   }
 
   protected onInitialize(ctx: Context) {}
