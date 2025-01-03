@@ -9,6 +9,7 @@ import { type Reference as ReferenceProto } from '@dxos/protocols/proto/dxos/ech
 /**
  * Runtime representation of object reference.
  */
+// TODO(dmaretskyi): This class needs refactoring.
 export class Reference {
   /**
    * Protocol references to runtime registered types.
@@ -18,7 +19,7 @@ export class Reference {
   static fromDXN(dxn: DXN): Reference {
     switch (dxn.kind) {
       case DXN.kind.TYPE:
-        return Reference.fromLegacyTypename(dxn.parts[0]);
+        return new Reference(dxn.parts[0], Reference.TYPE_PROTOCOL, 'dxos.org', dxn);
       case DXN.kind.ECHO:
         if (dxn.parts[0] === LOCAL_SPACE_TAG) {
           return new Reference(dxn.parts[1]);
@@ -51,9 +52,11 @@ export class Reference {
 
   // prettier-ignore
   constructor(
+    // TODO(dmaretskyi): Remove and just leave DXN.
     public readonly objectId: ObjectId,
     public readonly protocol?: string,
-    public readonly host?: string
+    public readonly host?: string,
+    public readonly dxn?: DXN,
   ) {}
 
   encode(): ReferenceProto {
@@ -61,6 +64,10 @@ export class Reference {
   }
 
   toDXN(): DXN {
+    if (this.dxn) {
+      return this.dxn;
+    }
+
     if (this.protocol === Reference.TYPE_PROTOCOL) {
       return new DXN(DXN.kind.TYPE, [this.objectId]);
     } else {

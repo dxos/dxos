@@ -6,7 +6,7 @@ import { S } from '@dxos/effect';
 
 import { EchoObject } from '../ast';
 import { Ref, type Ref$ } from '../ast';
-import { TypedObject, Expando } from '../object';
+import { Expando, TypedObject, TypedRelation } from '../object';
 
 //
 // Primitives
@@ -51,7 +51,7 @@ const fields = {
 export const TestSchema = S.mutable(S.partial(S.Struct(fields)));
 export type TestSchema = S.Schema.Type<typeof TestSchema>;
 
-export class TestSchemaType extends TypedObject<TestSchemaType>({
+export class TestSchemaType extends TypedObject({
   typename: 'example.com/type/Test',
   version: '0.1.0',
 })(fields, { partial: true }) {}
@@ -80,7 +80,7 @@ export const TestSchemaWithClass = S.mutable(
 
 export type TestSchemaWithClass = S.Schema.Type<typeof TestSchemaWithClass>;
 
-export class Contact extends TypedObject<Contact>({
+export class Contact extends TypedObject({
   typename: 'example.com/type/Contact',
   version: '0.1.0',
 })(
@@ -142,3 +142,7 @@ export class Container extends TypedObject({
   },
   { partial: true },
 ) {}
+
+export class HasManager extends TypedRelation({ typename: 'example.org/relation/HasManager', version: '0.1.0' })({
+  since: S.optional(S.String),
+}) {}

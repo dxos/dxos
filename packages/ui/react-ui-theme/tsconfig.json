@@ -5,6 +5,9 @@
       "DOM",
       "ESNext"
     ],
+    "module": "Preserve",
+    "moduleResolution": "bundler",
+    "skipLibCheck": true,
     "types": [
       "node"
     ]

@@ -10,6 +10,7 @@ import fs from 'fs';
 import globrex from 'globrex';
 import defaultsDeep from 'lodash.defaultsdeep';
 import pick from 'lodash.pick';
+import { existsSync } from 'node:fs';
 import { inspect } from 'node:util';
 import { dirname, join, relative } from 'path';
 import sortPackageJson from 'sort-package-json';
@@ -414,6 +415,19 @@ export class Toolbox {
     );
 
     await saveJson(join(this.rootDir, 'tsconfig.paths.json'), tsconfigPaths, this.options.verbose);
+  }
+
+  async updateTsConfigAll() {
+    const tsconfigAll = await loadJson<TsConfigJson>(join(this.rootDir, 'tsconfig.all.json'));
+    tsconfigAll.references = this.projects
+      // TODO(dmaretskyi): Blade runner doesn't build.
+      .filter((project) => !project.name.includes('blade-runner'))
+      .filter((project) => existsSync(join(project.path, 'tsconfig.json')))
+      .map((project) => {
+        return { path: relative(this.rootDir, join(project.path, 'tsconfig.json')) };
+      });
+
+    await saveJson(join(this.rootDir, 'tsconfig.all.json'), tsconfigAll, this.options.verbose);
   }
 
   async printStats() {

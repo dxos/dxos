@@ -11,6 +11,8 @@ import { orderKeys } from '@dxos/util';
 
 import {
   EchoIdentifierAnnotationId,
+  EntityKind,
+  EntityKindSchema,
   FieldLookupAnnotationId,
   GeneratorAnnotationId,
   type JsonSchemaType,
@@ -110,6 +112,7 @@ export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
     if (!jsonSchema.$id) {
       jsonSchema.$id = `dxn:type:${objectAnnotation.typename}`;
     }
+    jsonSchema.entityKind = objectAnnotation.kind;
     jsonSchema.version = objectAnnotation.version;
     jsonSchema.typename = objectAnnotation.typename;
   }
@@ -120,6 +123,7 @@ export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
   jsonSchema = orderKeys(jsonSchema, [
     '$schema',
     '$id',
+    'entityKind',
     'typename',
     'version',
 
@@ -414,15 +418,20 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): AST.Annotations 
   }
 
   if (schema.typename) {
-    annotations[ObjectAnnotationId] ??= { typename: schema.typename, version: schema.version };
+    annotations[ObjectAnnotationId] ??= {
+      kind: schema.entityKind ? S.decodeSync(EntityKindSchema)(schema.entityKind) : EntityKind.Object,
+      typename: schema.typename,
+      version: schema.version ?? '0.1.0',
+    } satisfies ObjectAnnotation;
   }
 
   // Decode legacy schema.
   if (!schema.typename && schema?.echo?.type) {
     annotations[ObjectAnnotationId] ??= {
+      kind: EntityKind.Object,
       typename: schema.echo.type.typename,
       version: schema.echo.type.version,
-    };
+    } satisfies ObjectAnnotation;
   }
 
   // Custom (at end).

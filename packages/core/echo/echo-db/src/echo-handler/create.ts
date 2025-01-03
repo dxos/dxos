@@ -13,6 +13,10 @@ import {
   SchemaValidator,
   requireTypeReference,
   Ref,
+  EntityKind,
+  getEntityKind,
+  RelationSourceId,
+  RelationTargetId,
 } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
@@ -114,7 +118,9 @@ export const createObject = <T extends BaseObject>(obj: T): ReactiveEchoObject<T
     initCore(core, target);
     slot.handler.init(target);
 
-    setTypeOnObject(target[symbolInternals], schema);
+    setSchemaPropertiesOnObjectCore(target[symbolInternals], schema);
+    setRelationSourceAndTarget(target, core, schema);
+
     if (meta && meta.keys.length > 0) {
       target[symbolInternals].core.setMeta(meta);
     }
@@ -132,7 +138,9 @@ export const createObject = <T extends BaseObject>(obj: T): ReactiveEchoObject<T
 
     initCore(core, target);
     const proxy = createProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
-    setTypeOnObject(target[symbolInternals], schema);
+    setSchemaPropertiesOnObjectCore(target[symbolInternals], schema);
+    setRelationSourceAndTarget(target, core, schema);
+
     return proxy;
   }
 };
@@ -175,12 +183,43 @@ export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: Ech
 
 const validateSchema = (schema: S.Schema<any>) => {
   requireTypeReference(schema);
+  const entityKind = getEntityKind(schema);
+  invariant(entityKind === 'object' || entityKind === 'relation');
   SchemaValidator.validateSchema(schema);
 };
 
-const setTypeOnObject = (internals: ObjectInternals, schema: S.Schema<any> | undefined) => {
+const setSchemaPropertiesOnObjectCore = (internals: ObjectInternals, schema: S.Schema<any> | undefined) => {
   if (schema != null) {
     internals.core.setType(requireTypeReference(schema));
+
+    const kind = getEntityKind(schema);
+    invariant(kind);
+    internals.core.setKind(kind);
+  }
+};
+
+const setRelationSourceAndTarget = (
+  target: ProxyTarget,
+  core: ObjectCore,
+  schema: S.Schema.AnyNoContext | undefined,
+) => {
+  const kind = schema && getEntityKind(schema);
+  if (kind === EntityKind.Relation) {
+    // `getSource` and `getTarget` don't work here since they assert entity kind.
+    const sourceRef = (target as any)[RelationSourceId];
+    const targetRef = (target as any)[RelationTargetId];
+    if (!sourceRef || !targetRef) {
+      throw new TypeError('Relation source and target must be specified');
+    }
+    if (!isReactiveObject(sourceRef)) {
+      throw new TypeError('source must be an ECHO object');
+    }
+    if (!isReactiveObject(targetRef)) {
+      throw new TypeError('target must be an ECHO object');
+    }
+
+    core.setSource(EchoReactiveHandler.instance.createRef(target, sourceRef));
+    core.setTarget(EchoReactiveHandler.instance.createRef(target, targetRef));
   }
 };
 
@@ -210,16 +249,20 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
 const linkAllNestedProperties = (target: ProxyTarget): DecodedAutomergePrimaryValue => {
   return deepMapValues(target, (value, recurse) => {
     if (Ref.isRef(value)) {
-      const savedTarget = getRefSavedTarget(value);
-      if (savedTarget) {
-        return EchoReactiveHandler.instance.createRef(target, savedTarget);
-      } else {
-        return Reference.fromDXN(value.dxn);
-      }
+      return refToEchoReference(target, value);
     }
 
     return recurse(value);
   });
+};
+
+const refToEchoReference = (target: ProxyTarget, ref: Ref<any>): Reference => {
+  const savedTarget = getRefSavedTarget(ref);
+  if (savedTarget) {
+    return EchoReactiveHandler.instance.createRef(target, savedTarget);
+  } else {
+    return Reference.fromDXN(ref.dxn);
+  }
 };
 
 const initInternals = (core: ObjectCore, database?: EchoDatabase): ObjectInternals => ({
