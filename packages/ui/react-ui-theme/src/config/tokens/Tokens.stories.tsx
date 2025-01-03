@@ -50,17 +50,19 @@ const Swatch = ({ variable, seriesId, shadeValue, opacity, name }: SwatchProps) 
 export const Audit = () => {
   return (
     <>
+      <h1>Semantic tokens</h1>
+      {}
       <h1>Physical tokens</h1>
       {structure.map(([seriesId, variables]) => {
         const swatches = (variables as string[])
           .map((variable) => {
             const name = variable.substring(tokenSet.colors.physical.namespace!.length + 2);
-            const results = name.split(/-|\\\/\\/);
+            const results = name.split(/-|\\\/\\?/);
             const [seriesId, shadeValue, opacity] = results;
             return {
               seriesId,
               shadeValue: parseFloat(shadeValue),
-              opacity: opacity ? parseFloat(opacity) : 1,
+              opacity: typeof opacity !== 'undefined' ? parseFloat(opacity) : 1,
               name,
               variable,
             };
