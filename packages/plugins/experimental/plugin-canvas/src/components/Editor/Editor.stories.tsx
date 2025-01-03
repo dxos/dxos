@@ -265,9 +265,9 @@ export const GPT: Story = {
     // sidebar: 'state-machine',
     registry: new ShapeRegistry(computeShapes),
     spec: [
-      { type: Testing.OrgType, count: 4 },
-      { type: Testing.ProjectType, count: 0 },
-      { type: Testing.ContactType, count: 16 },
+      { type: Testing.OrgType, count: 2 },
+      { type: Testing.ProjectType, count: 4 },
+      { type: Testing.ContactType, count: 8 },
     ],
     ...createComputeGraph(createTest3()),
   },
