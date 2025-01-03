@@ -53,7 +53,7 @@ const Render = ({ id = 'test', graph: _graph, machine, init, sidebar, ...props }
     }
 
     // TODO(burdon): Better abstraction for context?
-    machine.setContext({ space, model: '@ollama/llama-3-2-3b' });
+    machine.setContext({ space, model: /*'@ollama/llama-3-2-3b'*/ '@anthropic/claude-3-5-sonnet-20241022' });
     void machine.open();
     const off = machine.update.on((ev) => {
       const { node } = ev;
@@ -183,10 +183,11 @@ const meta: Meta<EditorRootProps> = {
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ space }, { args: { spec } }) => {
+        space.db.graph.schemaRegistry.addSchema(types);
         if (spec) {
-          space.db.graph.schemaRegistry.addSchema(types);
           const createObjects = createObjectFactory(space.db, generator);
           await createObjects(spec as TypeSpec[]);
+          await space.db.flush({ indexes: true });
         }
       },
     }),
@@ -263,6 +264,11 @@ export const GPT: Story = {
     snapToGrid: false,
     // sidebar: 'state-machine',
     registry: new ShapeRegistry(computeShapes),
+    spec: [
+      { type: Testing.OrgType, count: 4 },
+      { type: Testing.ProjectType, count: 0 },
+      { type: Testing.ContactType, count: 16 },
+    ],
     ...createComputeGraph(createTest3()),
   },
 };
