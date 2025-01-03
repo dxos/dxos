@@ -2,24 +2,35 @@
 // Copyright 2024 DXOS.org
 //
 
-import { LLMTool } from '@dxos/assistant';
+import { LLMTool, EchoDataSource, type LLMToolDefinition } from '@dxos/assistant';
+import { createCypherTool } from '@dxos/assistant/testing';
 import { raise } from '@dxos/debug';
 import { S } from '@dxos/echo-schema';
 
 import { ComputeNode } from '../compute-node';
-import { InvalidStateError } from '../state-machine';
+import { InvalidStateError, type StateMachineContext } from '../state-machine';
+import type { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
+import { createOutputSchema } from '../../shapes/defs';
+import { DEFAULT_OUTPUT } from '../../../shapes';
 
 /**
  * Database GPT tool.
  */
-export class Database extends ComputeNode<void, LLMTool> {
+export class Database extends ComputeNode<void, { [DEFAULT_OUTPUT]: LLMToolDefinition }> {
   override readonly type = 'database';
 
   constructor() {
-    super(S.Void, LLMTool);
+    super(S.Void, createOutputSchema(LLMTool));
   }
 
   override async invoke() {
     return raise(new InvalidStateError());
+  }
+
+  override onInitialize(ctx: Context, context: StateMachineContext) {
+    invariant(context.space, 'space is required');
+    const dataSource = new EchoDataSource(context.space.db);
+    this.setOutput({ [DEFAULT_OUTPUT]: createCypherTool(dataSource) });
   }
 }

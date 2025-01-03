@@ -4,7 +4,15 @@
 
 import React from 'react';
 
-import { LLMTool } from '@dxos/assistant';
+import {
+  LLMToolDefinition,
+  ObjectId,
+  type MessageTextContentBlock,
+  LLMTool,
+  AIServiceClientImpl,
+  type Message,
+  runLLM,
+} from '@dxos/assistant';
 import { AST, S } from '@dxos/echo-schema';
 
 import { FunctionBody, getAnchors, getHeight } from './Function';
@@ -30,7 +38,7 @@ export const GptInput = S.Struct({
   systemPrompt: S.optional(S.String),
   prompt: S.String,
   history: S.optional(S.Array(GptMessage)),
-  tools: S.optional(S.Array(LLMTool)),
+  tools: S.optional(S.Array(LLMToolDefinition)),
 });
 
 export const GptOutput = S.Struct({

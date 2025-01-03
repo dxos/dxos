@@ -5,7 +5,7 @@
 /* eslint-disable unused-imports/no-unused-vars */
 /* eslint-disable @typescript-eslint/consistent-type-imports */
 
-import { createRequire } from 'node:module';
+// import { createRequire } from 'node:module';
 import type { Parjser } from 'parjs';
 
 import type {
@@ -26,13 +26,13 @@ import type {
 } from './ast';
 
 // TODO(dmaretskyi): Must be like this or it breaks vitest.
-const require = createRequire(import.meta.url);
-const { string, regexp, whitespace } = require('parjs') as typeof import('parjs');
-const { between, many, manySepBy, or, map, then, thenq, recover } =
-  require('parjs/combinators') as typeof import('parjs/combinators');
+// const require = createRequire(import.meta.url);
+// const { string, regexp, whitespace } = require('parjs') as typeof import('parjs');
+// const { between, many, manySepBy, or, map, then, thenq, recover } =
+//   require('parjs/combinators') as typeof import('parjs/combinators');
 
-// import type { NodePattern, Properties, Property, RelationshipPattern } from './ast';
-// import { between, manySepBy, map, or, type Parjser, recover, regexp, string, then, whitespace } from './parjs';
+import { between, many, manySepBy, or, map, then, thenq, recover } from 'parjs/combinators';
+import { string, regexp, whitespace } from 'parjs';
 
 // Helper parsers
 const ws = whitespace(); // Parses whitespace

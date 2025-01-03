@@ -6,12 +6,13 @@ import { type Point } from '@antv/layout';
 
 import { GraphModel, type GraphNode, type GraphEdge, createEdgeId } from '@dxos/graph';
 
-import { type ComputeNode, StateMachine } from './graph';
+import { type ComputeNode, StateMachine, type StateMachineContext } from './graph';
 import {
   createAnd,
   createBeacon,
   createChat,
   createCounter,
+  createDatabase,
   createFunction,
   createGpt,
   createList,
@@ -91,12 +92,14 @@ export const createTest3 = () => {
     createGpt({ id: 'b', center: pos({ x: 0, y: 0 }) }),
     createList({ id: 'c', center: pos({ x: 12, y: -8 }) }),
     createCounter({ id: 'd', center: pos({ x: 8, y: 4 }) }),
+    createDatabase({ id: 'e', center: pos({ x: -12, y: 8 }) }),
   ];
 
   const edges = [
     { source: 'a', target: 'b', data: { input: 'prompt', output: DEFAULT_OUTPUT } },
     { source: 'b', target: 'c', data: { output: 'result', input: DEFAULT_INPUT } },
     { source: 'b', target: 'd', data: { output: 'tokens' } },
+    { source: 'e', target: 'b', data: { input: 'tools', output: DEFAULT_OUTPUT } },
   ];
 
   return new GraphModel<GraphNode<Shape>, GraphEdge<Connection>>({
@@ -111,8 +114,12 @@ export const createTest3 = () => {
 };
 
 // TODO(burdon): Check output anchor id is set from functions.
-export const createComputeGraph = (graph?: GraphModel<GraphNode<Shape>, GraphEdge<Connection>>) => {
-  const machine = new StateMachine();
+export const createComputeGraph = (
+  graph?: GraphModel<GraphNode<Shape>, GraphEdge<Connection>>,
+  context?: StateMachineContext,
+) => {
+  const machine = new StateMachine(undefined);
+  machine.setContext(context);
 
   // TODO(burdon): Factor out mapping (reconcile with Editor.stories).
   if (graph) {
