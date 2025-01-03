@@ -4,7 +4,13 @@
 
 import ollama from 'ollama';
 
-import { AIServiceClientImpl, type Message, type MessageTextContentBlock } from '@dxos/assistant';
+import {
+  AIServiceClientImpl,
+  runLLM,
+  type LLMToolDefinition,
+  type Message,
+  type MessageTextContentBlock,
+} from '@dxos/assistant';
 import { SpaceId } from '@dxos/client/echo';
 import { raise } from '@dxos/debug';
 import { ObjectId } from '@dxos/echo-schema';
@@ -63,7 +69,21 @@ const callOllama: FunctionCallback<GptInput, GptOutput> = async ({ systemPrompt,
 // EDGE
 //
 
-const callEdge: FunctionCallback<GptInput, GptOutput> = async ({ systemPrompt, prompt, history = [] }) => {
+const callEdge: FunctionCallback<GptInput, GptOutput> = async ({
+  systemPrompt,
+  prompt,
+  tools: toolsInput,
+  history = [],
+}) => {
+  let tools: LLMToolDefinition[] = [];
+  if (toolsInput === undefined) {
+    tools = [];
+  }
+
+  if (!Array.isArray(toolsInput)) {
+    tools = [toolsInput as any];
+  }
+
   const spaceId = SpaceId.random(); // TODO(dmaretskyi): Use spaceId from the context.
   const threadId = ObjectId.random();
 
@@ -97,23 +117,20 @@ const callEdge: FunctionCallback<GptInput, GptOutput> = async ({ systemPrompt, p
   await aiServiceClient.insertMessages(messages);
 
   log.info('gpt', { systemPrompt, prompt, history });
-  const output = await aiServiceClient.generate({
+  const newMessages: Message[] = [];
+  await runLLM({
     model: '@anthropic/claude-3-5-sonnet-20241022',
+    tools,
     spaceId,
     threadId,
-    tools: [],
-    systemPrompt,
+    system: systemPrompt,
+    client: aiServiceClient,
+    logger: (event) => {
+      if (event.type === 'message') {
+        newMessages.push(event.message);
+      }
+    },
   });
-
-  // TODO(dmaretskyi): output.complete() never resolves if we don't consume the stream. This shouldn't be necessary.
-  queueMicrotask(async () => {
-    for await (const event of output) {
-      log.info('up', { event });
-    }
-  });
-
-  const [resultMessage] = await output.complete();
-  log.info('gpt', { resultMessage });
 
   return {
     result: [
@@ -121,10 +138,10 @@ const callEdge: FunctionCallback<GptInput, GptOutput> = async ({ systemPrompt, p
         role: 'user',
         message: prompt,
       },
-      {
-        role: 'assistant',
-        message: (resultMessage.content.findLast(({ type }) => type === 'text') as MessageTextContentBlock)?.text ?? '',
-      },
+      ...newMessages.map(({ role, content }) => ({
+        role,
+        message: (content.findLast(({ type }) => type === 'text') as MessageTextContentBlock)?.text ?? '',
+      })),
     ],
     tokens: 0,
   };
