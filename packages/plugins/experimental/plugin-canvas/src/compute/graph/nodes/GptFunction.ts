@@ -13,7 +13,6 @@ import {
   ObjectId,
 } from '@dxos/assistant';
 import { SpaceId } from '@dxos/client/echo';
-import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';
 
 import { Function, type FunctionCallback } from './Function';
@@ -23,14 +22,13 @@ import { type GptInput, type GptOutput } from '../../shapes';
 export class GptFunction extends Function<GptInput, GptOutput> {
   override async invoke(input: GptInput) {
     switch (this._context?.model) {
-      case '@ollama/llama-3-2-3b': {
-        return callOllama(input);
-      }
       case '@anthropic/claude-3-5-sonnet-20241022': {
         return callEdge(input);
       }
-      default:
-        return raise(new Error(`invalid model: ${this._context?.model}`));
+      case '@ollama/llama-3-2-3b':
+      default: {
+        return callOllama(input);
+      }
     }
   }
 }
