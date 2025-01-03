@@ -33,7 +33,7 @@ export const createList = ({ id, ...rest }: CreateListProps): ListShape => ({
   id,
   type: 'list',
   node: new List(GptMessage),
-  size: { width: 320, height: 512 },
+  size: { width: 320, height: 768 },
   ...rest,
 });
 
@@ -42,7 +42,7 @@ export const ListComponent = ({ shape }: ShapeComponentProps<ListShape>) => {
 
   return (
     <Box name={'List'}>
-      <div className='flex flex-col w-full overflow-y-scroll divide-y divide-separator'>
+      <div tabIndex={0} className='flex flex-col w-full overflow-y-scroll divide-y divide-separator'>
         {[...items].reverse().map((item, i) => (
           <ListItem key={i} classNames='p-1 px-2' item={item} />
         ))}
