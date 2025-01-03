@@ -10,7 +10,7 @@ import { AST, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { type AsyncUpdate } from './state-machine';
+import { type AsyncUpdate, type StateMachineContext } from './state-machine';
 
 /**
  * Represents a compute element, which may take inputs from multiple other nodes, and output a value to other nodes.
@@ -70,9 +70,9 @@ export abstract class ComputeNode<Input, Output> {
   /**
    * Initialize the node (and set clean-up logic).
    */
-  initialize(ctx: Context, cb: AsyncUpdate<Output>) {
+  initialize(ctx: Context, context: StateMachineContext, cb: AsyncUpdate<Output>) {
     this._callback = cb;
-    this.onInitialize(ctx);
+    this.onInitialize(ctx, context);
   }
 
   /**
@@ -139,7 +139,7 @@ export abstract class ComputeNode<Input, Output> {
     }
   }
 
-  protected onInitialize(ctx: Context) {}
+  protected onInitialize(ctx: Context, context: StateMachineContext) {}
 
   // TODO(burdon): Use Effect try (for error propagation, logging, etc.)
   protected abstract invoke(input: Input): Promise<Output>;

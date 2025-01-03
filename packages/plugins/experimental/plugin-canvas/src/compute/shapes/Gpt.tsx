@@ -5,16 +5,17 @@
 import ollama from 'ollama/browser';
 import React from 'react';
 
-import { ObjectId, MessageTextContentBlock, LLMTool } from '@dxos/assistant';
+import { ObjectId, type MessageTextContentBlock, LLMTool, AIServiceClientImpl, type Message } from '@dxos/assistant';
 import { AST, S } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
-import { AIServiceClient, AIServiceClientImpl, Message } from '@dxos/assistant';
+import { SpaceId } from '@dxos/react-client/echo';
 
 import { FunctionBody, getAnchors, getHeight } from './Function';
 import { ComputeShape } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { Function, type FunctionCallback } from '../graph';
-import { SpaceId } from '@dxos/react-client/echo';
+
+const USE_AI_SERVICE = true;
 
 export const GptShape = S.extend(
   ComputeShape,
@@ -48,8 +49,6 @@ export type GptOutput = S.Schema.Type<typeof GptOutput>;
 export type GptShape = ComputeShape<S.Schema.Type<typeof GptShape>, Function<GptInput, GptOutput>>;
 
 export type CreateGptProps = Omit<GptShape, 'type' | 'node' | 'size'>;
-
-const USE_AI_SERVICE = true;
 
 export const createGpt = ({ id, ...rest }: CreateGptProps): GptShape => {
   return {
@@ -148,6 +147,7 @@ const callAiService: FunctionCallback<GptInput, GptOutput> = async ({ systemProm
   // TODO(dmaretskyi): output.complete() never resolves if we don't consume the stream. This shouldn't be necessary.
   queueMicrotask(async () => {
     for await (const event of output) {
+      console.log(event);
     }
   });
 

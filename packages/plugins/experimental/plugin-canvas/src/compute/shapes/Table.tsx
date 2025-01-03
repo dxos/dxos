@@ -8,7 +8,7 @@ import { S } from '@dxos/echo-schema';
 
 import { getAnchors } from './Function';
 import { GptMessage } from './Gpt';
-import { Box } from './common';
+import { Box } from './components';
 import { ComputeShape, createInputSchema, createOutputSchema } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { List } from '../graph';
@@ -37,7 +37,6 @@ export const createTable = ({ id, ...rest }: CreateTableProps): TableShape => ({
 
 export const TableComponent = ({ shape }: ShapeComponentProps<TableShape>) => {
   const items = shape.node.items.value;
-
   return <Box name={'Table'}></Box>;
 };
 
@@ -48,17 +47,3 @@ export const tableShape: ShapeDef<TableShape> = {
   createShape: createTable,
   getAnchors: (shape) => getAnchors(shape, InputSchema, OutputSchema),
 };
-
-// export const Node = <T extends S.Schema.AnyNoContext>(properties: T) =>
-//   S.Struct({
-//     id: S.String,
-//     properties,
-//   });
-//
-// const FunctionNode = Node(
-//   S.Struct({
-//     name: S.String,
-//   }),
-// );
-//
-// const AnyNode = Node(S.Any);

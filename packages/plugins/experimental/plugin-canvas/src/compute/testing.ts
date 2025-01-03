@@ -6,7 +6,7 @@ import { type Point } from '@antv/layout';
 
 import { GraphModel, type GraphNode, type GraphEdge, createEdgeId } from '@dxos/graph';
 
-import { type ComputeNode, StateMachine } from './graph';
+import { type ComputeNode, StateMachine, type StateMachineOptions } from './graph';
 import {
   createAnd,
   createBeacon,
@@ -111,8 +111,11 @@ export const createTest3 = () => {
 };
 
 // TODO(burdon): Check output anchor id is set from functions.
-export const createComputeGraph = (graph?: GraphModel<GraphNode<Shape>, GraphEdge<Connection>>) => {
-  const machine = new StateMachine();
+export const createComputeGraph = (
+  graph?: GraphModel<GraphNode<Shape>, GraphEdge<Connection>>,
+  options?: StateMachineOptions,
+) => {
+  const machine = new StateMachine(undefined, options);
 
   // TODO(burdon): Factor out mapping (reconcile with Editor.stories).
   if (graph) {

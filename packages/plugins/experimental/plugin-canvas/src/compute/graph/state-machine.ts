@@ -3,6 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
+import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { S } from '@dxos/echo-schema';
 import { type GraphNode } from '@dxos/graph';
@@ -19,12 +20,18 @@ export const InvalidStateError = Error;
  */
 export type AsyncUpdate<T> = (value: T) => void;
 
+export type StateMachineContext = {
+  space?: Space;
+  model?: string;
+};
+
 /**
  * Manages the dependency graph and async propagation of computed values.
  * Compute Nodes are invoked when all of their inputs are provided.
  * Root Nodes have a Void input type and are processed first.
  */
-// TODO(burdon): Move to compute (wihout hyperformula dependency). Maps onto hyperformula as client runtime?
+// TODO(burdon): Move to compute (without hyperformula dependency). Maps onto hyperformula as client runtime?
+// TODO(burdon): Extend resource.
 export class StateMachine {
   public readonly update = new Event<{ node: GraphNode<ComputeNode<any, any>>; value: any }>();
 
@@ -44,7 +51,13 @@ export class StateMachine {
     return this._graph;
   }
 
-  // TODO(burdon): Extend resource?
+  // TODO(burdon): Clean this up.
+  private _context?: Partial<StateMachineContext>;
+  setContext(context?: Partial<StateMachineContext>): this {
+    this._context = context;
+    return this;
+  }
+
   async open() {
     if (this._ctx) {
       await this.close();
@@ -54,7 +67,7 @@ export class StateMachine {
     this._ctx = new Context();
     await Promise.all(
       this._graph.nodes.map(async (node) => {
-        node.data.initialize(this._ctx, (output: any) => {
+        node.data.initialize(this._ctx, this._context, (output: any) => {
           if (!this._ctx) {
             log.warn('not running'); // TODO(burdon): Not displayed.
             return;
