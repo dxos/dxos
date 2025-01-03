@@ -28,7 +28,8 @@ export class Function<INPUT, OUTPUT> extends ComputeNode<INPUT, OUTPUT> {
   constructor(
     inputSchema: S.Schema<INPUT>,
     outputSchema: S.Schema<OUTPUT>,
-    private readonly _cb: FunctionCallback<INPUT, OUTPUT> = defaultCallback,
+    // TODO(burdon): Make private readonly (see GPT lifecycle).
+    protected _cb: FunctionCallback<INPUT, OUTPUT> = defaultCallback,
     private readonly _name = 'Function',
   ) {
     super(inputSchema, outputSchema);
