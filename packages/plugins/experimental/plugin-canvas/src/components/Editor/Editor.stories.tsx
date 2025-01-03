@@ -53,7 +53,7 @@ const Render = ({ id = 'test', graph: _graph, machine, init, sidebar, ...props }
     }
 
     // TODO(burdon): Better abstraction for context?
-    machine.setContext({ space });
+    machine.setContext({ space, model: '@ollama/llama-3-2-3b' });
     void machine.open();
     const off = machine.update.on((ev) => {
       const { node } = ev;

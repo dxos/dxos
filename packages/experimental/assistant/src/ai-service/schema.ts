@@ -105,6 +105,7 @@ export const Message = S.Struct({
   // created: S.optional(S.DateFromString),
   // updated: S.optional(S.DateFromString),
 });
+
 export interface Message extends S.Schema.Type<typeof Message> {}
 
 /**
@@ -129,6 +130,7 @@ export const LLMModel = S.Literal(
   '@ollama/llama-3-1-nemotron-70b-instruct',
   '@ollama/llama-3-1-nemotron-mini-4b-instruct',
 );
+
 export type LLMModel = S.Schema.Type<typeof LLMModel>;
 
 export const LLMTool = S.Struct({
