@@ -4,15 +4,7 @@
 
 import React from 'react';
 
-import {
-  LLMToolDefinition,
-  ObjectId,
-  type MessageTextContentBlock,
-  LLMTool,
-  AIServiceClientImpl,
-  type Message,
-  runLLM,
-} from '@dxos/assistant';
+import { LLMToolDefinition } from '@dxos/assistant';
 import { AST, S } from '@dxos/echo-schema';
 
 import { FunctionBody, getAnchors, getHeight } from './Function';
@@ -57,8 +49,7 @@ export const createGpt = ({ id, ...rest }: CreateGptProps): GptShape => {
   return {
     id,
     type: 'gpt',
-    // TODO(burdon): Should be generic Function.
-    node: new GptFunction(GptInput, GptOutput, undefined, 'GPT'),
+    node: new GptFunction(),
     size: { width: 192, height: getHeight(GptInput) },
     ...rest,
   };
