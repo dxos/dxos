@@ -2,6 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+// @ts-nocheck
+// NOTE: This file cannot have typescript syntax otherwise storybook will fail to start.
+
 import { type Preview } from '@storybook/react';
 
 import { preview } from '../../.storybook/preview';
@@ -27,7 +30,7 @@ export default {
     ...preview.parameters,
     options: {
       // This must be defined inline and may not include TS type defs.
-      storySort: (a: any, b: any) => (a.title === b.title ? 0 : a.id.localeCompare(b.id, undefined, { numeric: true })),
+      storySort: (a, b) => (a.title === b.title ? 0 : a.id.localeCompare(b.id, undefined, { numeric: true })),
     },
   },
 } as Preview;
