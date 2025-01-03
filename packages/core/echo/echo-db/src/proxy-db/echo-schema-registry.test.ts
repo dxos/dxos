@@ -7,10 +7,12 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import {
   EchoIdentifierAnnotationId,
   EchoSchema,
+  EntityKind,
   ObjectAnnotationId,
   S,
   StoredSchema,
   toJsonSchema,
+  type ObjectAnnotation,
 } from '@dxos/echo-schema';
 import { create } from '@dxos/live-object';
 
@@ -21,13 +23,21 @@ const Org = S.Struct({
   name: S.String,
   address: S.String,
 }).annotations({
-  [ObjectAnnotationId]: { typename: 'example.com/type/Org', version: '0.1.0' },
+  [ObjectAnnotationId]: {
+    kind: EntityKind.Object,
+    typename: 'example.com/type/Org',
+    version: '0.1.0',
+  } satisfies ObjectAnnotation,
 });
 
 const Contact = S.Struct({
   name: S.String,
 }).annotations({
-  [ObjectAnnotationId]: { typename: 'example.com/type/Contact', version: '0.1.0' },
+  [ObjectAnnotationId]: {
+    kind: EntityKind.Object,
+    typename: 'example.com/type/Contact',
+    version: '0.1.0',
+  } satisfies ObjectAnnotation,
 });
 
 describe('schema registry', () => {
@@ -50,7 +60,11 @@ describe('schema registry', () => {
     const { registry } = await setupTest();
     const [echoSchema] = await registry.register([Contact]);
     const expectedSchema = Contact.annotations({
-      [ObjectAnnotationId]: { typename: 'example.com/type/Contact', version: '0.1.0' },
+      [ObjectAnnotationId]: {
+        kind: EntityKind.Object,
+        typename: 'example.com/type/Contact',
+        version: '0.1.0',
+      } satisfies ObjectAnnotation,
       [EchoIdentifierAnnotationId]: `dxn:echo:@:${echoSchema.id}`,
     });
     console.log(echoSchema.ast);
@@ -65,7 +79,11 @@ describe('schema registry', () => {
     const { registry } = await setupTest();
     const [echoSchema] = await registry.register([Org]);
     const expectedSchema = Org.annotations({
-      [ObjectAnnotationId]: { typename: 'example.com/type/Org', version: '0.1.0' },
+      [ObjectAnnotationId]: {
+        kind: EntityKind.Object,
+        typename: 'example.com/type/Org',
+        version: '0.1.0',
+      } satisfies ObjectAnnotation,
       [EchoIdentifierAnnotationId]: `dxn:echo:@:${echoSchema.id}`,
     });
     console.log(echoSchema.ast);
