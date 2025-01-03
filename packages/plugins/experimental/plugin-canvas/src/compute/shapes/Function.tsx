@@ -5,8 +5,8 @@
 import React from 'react';
 
 import { AST, S } from '@dxos/echo-schema';
-import { IconButton } from '@dxos/react-ui';
 
+import { Box } from './common';
 import { ComputeShape } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { pointAdd } from '../../layout';
@@ -56,12 +56,9 @@ const headerHeight = 32;
 const bodyPadding = 8;
 
 export const FunctionBody = ({ name, inputs }: { name: string; inputs: string[] }) => {
+  // TODO(burdon): Consider moving property labels to the Anchor component? Or use anchor positions.
   return (
-    <div className='flex flex-col h-full w-full justify-between'>
-      <div className='flex w-full justify-between items-center h-[32px] bg-hoverSurface'>
-        <div className='ps-2 text-sm truncate'>{name}</div>
-        <IconButton classNames='p-1' variant='ghost' icon='ph--gear-six--regular' size={4} label='settings' iconOnly />
-      </div>
+    <Box name={name}>
       <div className='flex flex-col' style={{ padding: bodyPadding }}>
         {inputs.map((name) => (
           <div key={name} className='flex text-sm font-mono items-center' style={{ height: rowHeight }}>
@@ -69,7 +66,7 @@ export const FunctionBody = ({ name, inputs }: { name: string; inputs: string[] 
           </div>
         ))}
       </div>
-    </div>
+    </Box>
   );
 };
 

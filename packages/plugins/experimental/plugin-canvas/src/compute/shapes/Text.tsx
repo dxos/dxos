@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 
 import { S } from '@dxos/echo-schema';
 
+import { Box } from './common';
 import { ComputeShape } from './defs';
 import { createAnchors, type ShapeComponentProps, type ShapeDef, TextBox, type TextBoxProps } from '../../components';
 import { createAnchorId, DEFAULT_OUTPUT } from '../../shapes';
@@ -37,9 +38,9 @@ export type ChatShape = ComputeShape<S.Schema.Type<typeof ChatShape>, Text>;
 // Component
 //
 
-export type TextComponentProps = ShapeComponentProps<TextShape> & { chat?: boolean };
+export type TextComponentProps = ShapeComponentProps<TextShape> & TextBoxProps & { chat?: boolean };
 
-export const TextComponent = ({ shape, chat }: TextComponentProps) => {
+export const TextComponent = ({ shape, chat, ...props }: TextComponentProps) => {
   const [reset, setReset] = useState({});
   const handleEnter: TextBoxProps['onEnter'] = (value) => {
     if (value.trim().length) {
@@ -52,9 +53,9 @@ export const TextComponent = ({ shape, chat }: TextComponentProps) => {
   };
 
   return (
-    <div className='flex w-full h-full p-2'>
-      <TextBox classNames='flex grow overflow-hidden' reset={reset} placeholder='Prompt' onEnter={handleEnter} />
-    </div>
+    <Box name={'Text'}>
+      <TextBox classNames='flex grow p-2 overflow-hidden' {...props} reset={reset} onEnter={handleEnter} />
+    </Box>
   );
 };
 
@@ -85,7 +86,7 @@ export const createChat = ({ id, ...rest }: CreateChatProps): ChatShape => ({
 export const textShape: ShapeDef<TextShape> = {
   type: 'text',
   icon: 'ph--article--regular',
-  component: TextComponent,
+  component: (props) => <TextComponent {...props} placeholder={'Text'} />,
   createShape: createText,
   getAnchors: (shape) => createAnchors(shape, { [createAnchorId('output')]: { x: 1, y: 0 } }),
 };
@@ -93,7 +94,7 @@ export const textShape: ShapeDef<TextShape> = {
 export const chatShape: ShapeDef<TextShape> = {
   type: 'chat',
   icon: 'ph--textbox--regular',
-  component: (props) => <TextComponent {...props} chat />,
+  component: (props) => <TextComponent {...props} placeholder={'Message'} chat />,
   createShape: createText,
   getAnchors: (shape) => createAnchors(shape, { [createAnchorId('output')]: { x: 1, y: 0 } }),
 };

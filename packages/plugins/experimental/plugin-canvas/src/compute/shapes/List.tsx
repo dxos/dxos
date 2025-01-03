@@ -10,6 +10,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { getAnchors } from './Function';
 import { GptMessage } from './Gpt';
+import { Box } from './common';
 import { ComputeShape, createInputSchema, createOutputSchema } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { List } from '../graph';
@@ -39,15 +40,14 @@ export const createList = ({ id, ...rest }: CreateListProps): ListShape => ({
 export const ListComponent = ({ shape }: ShapeComponentProps<ListShape>) => {
   const items = shape.node.items.value;
 
-  // TODO(burdon): Doesn't scroll.
   return (
-    <div className='flex flex-col w-full h-full overflow-hidden'>
+    <Box name={'List'}>
       <div className='flex flex-col w-full overflow-y-scroll divide-y divide-separator'>
         {[...items].reverse().map((item, i) => (
           <ListItem key={i} classNames='p-1 px-2' item={item} />
         ))}
       </div>
-    </div>
+    </Box>
   );
 };
 

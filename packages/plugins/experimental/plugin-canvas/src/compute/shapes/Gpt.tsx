@@ -5,6 +5,7 @@
 import ollama from 'ollama/browser';
 import React from 'react';
 
+import { LLMTool } from '@dxos/assistant';
 import { AST, S } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
@@ -31,6 +32,7 @@ export const GptInput = S.Struct({
   systemPrompt: S.optional(S.String),
   prompt: S.String,
   history: S.optional(S.Array(GptMessage)),
+  tools: S.optional(S.Array(LLMTool)),
 });
 
 export const GptOutput = S.Struct({

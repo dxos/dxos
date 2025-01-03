@@ -82,6 +82,7 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
               return () => setPreview(undefined);
             },
             getOffset: ({ container }) => {
+              // TODO(burdon): Calculate relative offset and apply to center position.
               // NOTE: During preview, we render ghost anchors so that we can predict the actual size of the image.
               return {
                 x: (projection.scale * shape.size.width + defaultAnchorSize.width) / 2,

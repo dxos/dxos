@@ -64,6 +64,9 @@
       "path": "../../../core/echo/live-object"
     },
     {
+      "path": "../../../experimental/assistant"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {

@@ -89,4 +89,3 @@ The system is built on `@dxos/graph` as the core abstraction layer Canvas visual
 - [ ] log.catch not displayed in state machine error handler.
 - [ ] browser log doesn't show function name or source.
 - [ ] Warning: Unknown event handler property `onCheckedChange`. (Switch)
-- [ ] inspect node:util build error.

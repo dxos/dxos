@@ -151,6 +151,7 @@ export const LLMTool = S.Struct({
    */
   parameters: S.optional(JsonSchemaType),
 });
+
 export interface LLMTool extends S.Schema.Type<typeof LLMTool> {}
 
 //

@@ -4,6 +4,7 @@
 
 export * from './Beacon';
 export * from './Counter';
+export * from './Database';
 export * from './Function';
 export * from './Gate';
 export * from './List';

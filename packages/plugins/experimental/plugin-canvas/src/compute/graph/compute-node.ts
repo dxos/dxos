@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-// import { inspect } from 'node:util';
-
 import { signal, type Signal } from '@preact/signals-core';
 
 import { type Context } from '@dxos/context';
+import { inspectCustom } from '@dxos/debug';
 import { AST, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -38,10 +37,9 @@ export abstract class ComputeNode<Input, Output> {
     this._input = signal(AST.isTypeLiteral(this.inputSchema.ast) ? ({} as Input) : undefined);
   }
 
-  // TODO(burdon): Build issue.
-  // [inspect.custom]() {
-  //   return inspect(this.toJSON());
-  // }
+  [inspectCustom]() {
+    return this.toJSON();
+  }
 
   toString() {
     return `ComputeNode(${this.type})`;
