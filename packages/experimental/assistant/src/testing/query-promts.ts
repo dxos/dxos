@@ -47,6 +47,7 @@ export const createCypherTool = (dataSource: DataSource) =>
         log('query complete', { results });
         return LLMToolResult.Success(results);
       } catch (e: any) {
+        log.catch(e);
         return LLMToolResult.Error(e.message);
       }
     },
