@@ -16,6 +16,7 @@ import {
   Ref,
   type JsonPath,
   type JsonProp,
+  EntityKind,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
@@ -49,6 +50,7 @@ describe('ViewProjection', () => {
       salary: Format.Currency({ code: 'usd', decimals: 2 }),
     }).annotations({
       [ObjectAnnotationId]: {
+        kind: EntityKind.Object,
         typename: 'example.com/type/Person',
         version: '0.1.0',
       },
@@ -143,6 +145,7 @@ describe('ViewProjection', () => {
       org: Ref(Org),
     }).annotations({
       [ObjectAnnotationId]: {
+        kind: EntityKind.Object,
         typename: 'example.com/type/Person',
         version: '0.1.0',
       },
@@ -228,6 +231,7 @@ describe('ViewProjection', () => {
       description: S.optional(S.String),
     }).annotations({
       [ObjectAnnotationId]: {
+        kind: EntityKind.Object,
         typename: 'example.com/type/Person',
         version: '0.1.0',
       },
@@ -273,6 +277,7 @@ describe('ViewProjection', () => {
       email: Format.Email,
     }).annotations({
       [ObjectAnnotationId]: {
+        kind: EntityKind.Object,
         typename: 'example.com/type/Person',
         version: '0.1.0',
       },

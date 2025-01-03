@@ -4,6 +4,7 @@
 
 import { type JsonProp, S } from '@dxos/effect';
 
+import { EntityKind } from './entity-kind';
 import { FormatAnnotationId } from '../formats';
 //
 // JSON Schema
@@ -18,6 +19,8 @@ const JsonSchemaOrBoolean = S.Union(
   S.suspend(() => JsonSchemaType),
   S.Boolean,
 );
+
+export const EntityKindSchema = S.Enums(EntityKind);
 
 /**
  * Describes a schema for the JSON-schema objects stored in ECHO.
@@ -47,6 +50,11 @@ const _JsonSchemaType = S.mutable(
      * Comments are ignored when interpreting the schema.
      */
     $comment: S.optional(S.String),
+
+    /**
+     * Defines whether this schema is an object schema or a relation schema.
+     */
+    entityKind: S.optional(EntityKindSchema),
 
     /**
      * Typename of this schema.

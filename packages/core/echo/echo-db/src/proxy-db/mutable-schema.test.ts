@@ -14,6 +14,7 @@ import {
   getTypename,
   EchoIdentifierAnnotationId,
   type ObjectAnnotation,
+  EntityKind,
 } from '@dxos/echo-schema';
 import { EmptySchemaType } from '@dxos/echo-schema/testing';
 import { getSchema, getType, create, makeRef } from '@dxos/live-object';
@@ -48,6 +49,7 @@ describe('EchoSchema', () => {
     instanceWithSchemaRef.schema = makeRef(schema);
     const schemaWithId = GeneratedSchema.annotations({
       [ObjectAnnotationId]: {
+        kind: EntityKind.Object,
         typename: 'example.com/type/Test',
         version: '0.1.0',
       } satisfies ObjectAnnotation,

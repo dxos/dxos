@@ -156,7 +156,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
       test('getTypeReference', async () => {
         const obj = await createObject({ number: 42 });
-        expect(getType(obj)).to.deep.eq(getTypeReference(getSchema(obj)));
+        expect(getType(obj)?.toDXN().toString()).to.deep.eq(getTypeReference(getSchema(obj))?.toDXN().toString());
       });
 
       test('can assign arrays with objects', async () => {

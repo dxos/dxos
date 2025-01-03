@@ -8,10 +8,11 @@ import { describe, expect, test } from 'vitest';
 import { Trigger } from '@dxos/async';
 import { createIdFromSpaceKey, SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
 import { Expando } from '@dxos/echo-schema';
+import { Contact } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { PublicKey } from '@dxos/keys';
+import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { create, makeRef } from '@dxos/live-object';
+import { create, getType, makeRef } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
@@ -357,6 +358,23 @@ describe('CoreDatabase', () => {
         await barrier.wait();
         expect(coreDb.getAllObjectIds()).to.deep.eq([]);
       });
+    });
+
+    // TODO(dmaretskyi): Test for conflict resolution.
+    test('atomic replace object', async () => {
+      const testBuilder = new EchoTestBuilder();
+      await openAndClose(testBuilder);
+      const { db, graph } = await testBuilder.createDatabase();
+      graph.schemaRegistry.addSchema([Contact]);
+      const contact = db.add(create(Contact, { name: 'Foo' }));
+
+      await db._coreDatabase.atomicReplaceObject(contact.id, {
+        type: DXN.parse('dxn:type:example.com/type/Task:0.1.0'),
+        data: { name: 'Bar' },
+      });
+
+      expect(contact.name).to.eq('Bar');
+      expect(getType(contact)?.toDXN().toString()).to.eq('dxn:type:example.com/type/Task:0.1.0');
     });
   });
 });
