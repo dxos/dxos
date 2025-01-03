@@ -6,9 +6,9 @@ import ollama from 'ollama';
 
 import { AIServiceClientImpl, type Message, type MessageTextContentBlock } from '@dxos/assistant';
 import { SpaceId } from '@dxos/client/echo';
+import { raise } from '@dxos/debug';
 import { ObjectId } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
-import { raise } from '@dxos/debug';
 
 import { Function, type FunctionCallback } from './Function';
 import { type GptInput, type GptOutput } from '../../shapes';
@@ -24,7 +24,7 @@ export class GptFunction extends Function<GptInput, GptOutput> {
         return callEdge(input);
       }
       default:
-        return raise(new Error(`invalid model: ${}`));
+        return raise(new Error(`invalid model: ${this._context?.model}`));
     }
   }
 }
