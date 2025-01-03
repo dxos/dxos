@@ -53,7 +53,7 @@ const fields = {
 export const TestSchema = S.mutable(S.partial(S.Struct(fields)));
 export type TestSchema = S.Schema.Type<typeof TestSchema>;
 
-export class TestSchemaType extends TypedObject<TestSchemaType>({
+export class TestSchemaType extends TypedObject({
   typename: 'example.com/type/Test',
   version: '0.1.0',
 })(fields, { partial: true }) {}
@@ -82,7 +82,7 @@ export const TestSchemaWithClass = S.mutable(
 
 export type TestSchemaWithClass = S.Schema.Type<typeof TestSchemaWithClass>;
 
-export class Contact extends TypedObject<Contact>({
+export class Contact extends TypedObject({
   typename: 'example.com/type/Contact',
   version: '0.1.0',
 })(
