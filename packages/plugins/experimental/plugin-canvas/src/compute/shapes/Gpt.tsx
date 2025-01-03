@@ -5,7 +5,15 @@
 import ollama from 'ollama/browser';
 import React from 'react';
 
-import { ObjectId, type MessageTextContentBlock, LLMTool, AIServiceClientImpl, type Message } from '@dxos/assistant';
+import {
+  LLMToolDefinition,
+  ObjectId,
+  type MessageTextContentBlock,
+  LLMTool,
+  AIServiceClientImpl,
+  type Message,
+  runLLM,
+} from '@dxos/assistant';
 import { AST, S } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { SpaceId } from '@dxos/react-client/echo';
@@ -35,7 +43,7 @@ export const GptInput = S.Struct({
   systemPrompt: S.optional(S.String),
   prompt: S.String,
   history: S.optional(S.Array(GptMessage)),
-  tools: S.optional(S.Array(LLMTool)),
+  tools: S.optional(S.Array(LLMToolDefinition)),
 });
 
 export const GptOutput = S.Struct({
@@ -102,7 +110,21 @@ const callOllama: FunctionCallback<GptInput, GptOutput> = async ({ systemPrompt,
   };
 };
 
-const callAiService: FunctionCallback<GptInput, GptOutput> = async ({ systemPrompt, prompt, history = [] }) => {
+const callAiService: FunctionCallback<GptInput, GptOutput> = async ({
+  systemPrompt,
+  prompt,
+  tools: toolsInput,
+  history = [],
+}) => {
+  let tools: LLMToolDefinition[] = [];
+  if (toolsInput === undefined) {
+    tools = [];
+  }
+
+  if (!Array.isArray(toolsInput)) {
+    tools = [toolsInput as any];
+  }
+
   const spaceId = SpaceId.random(); // TODO(dmaretskyi): Use spaceId from the context.
   const threadId = ObjectId.random();
 
@@ -136,23 +158,20 @@ const callAiService: FunctionCallback<GptInput, GptOutput> = async ({ systemProm
   await aiServiceClient.insertMessages(messages);
 
   log.info('gpt', { systemPrompt, prompt, history });
-  const output = await aiServiceClient.generate({
+  const newMessages: Message[] = [];
+  await runLLM({
     model: '@anthropic/claude-3-5-sonnet-20241022',
+    tools,
     spaceId,
     threadId,
-    tools: [],
-    systemPrompt,
+    system: systemPrompt,
+    client: aiServiceClient,
+    logger: (event) => {
+      if (event.type === 'message') {
+        newMessages.push(event.message);
+      }
+    },
   });
-
-  // TODO(dmaretskyi): output.complete() never resolves if we don't consume the stream. This shouldn't be necessary.
-  queueMicrotask(async () => {
-    for await (const event of output) {
-      console.log(event);
-    }
-  });
-
-  const [resultMessage] = await output.complete();
-  log.info('gpt', { resultMessage });
 
   return {
     result: [
@@ -160,10 +179,10 @@ const callAiService: FunctionCallback<GptInput, GptOutput> = async ({ systemProm
         role: 'user',
         message: prompt,
       },
-      {
-        role: 'assistant',
-        message: (resultMessage.content.findLast(({ type }) => type === 'text') as MessageTextContentBlock)?.text ?? '',
-      },
+      ...newMessages.map(({ role, content }) => ({
+        role,
+        message: (content.findLast(({ type }) => type === 'text') as MessageTextContentBlock)?.text ?? '',
+      })),
     ],
     tokens: 0,
   };
