@@ -22,7 +22,10 @@ export abstract class ComputeNode<Input, Output> {
   /**
    * Async callback set by the state machine.
    */
-  private _callback?: AsyncUpdate<Output>;
+  protected _callback?: AsyncUpdate<Output>;
+
+  // TODO(burdon): Remove?
+  protected _context?: StateMachineContext;
 
   /**
    * The input is either a map of properties or a scalar value depending on the INPUT type.
@@ -72,7 +75,11 @@ export abstract class ComputeNode<Input, Output> {
    */
   initialize(ctx: Context, context: StateMachineContext, cb: AsyncUpdate<Output>) {
     this._callback = cb;
+    this._context = context;
     this.onInitialize(ctx, context);
+    ctx.onDispose(() => {
+      this._context = undefined;
+    });
   }
 
   /**

@@ -2,20 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import ollama from 'ollama/browser';
 import React from 'react';
 
-import { ObjectId, type MessageTextContentBlock, LLMTool, AIServiceClientImpl, type Message } from '@dxos/assistant';
+import { LLMTool } from '@dxos/assistant';
 import { AST, S } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
-import { SpaceId } from '@dxos/react-client/echo';
 
 import { FunctionBody, getAnchors, getHeight } from './Function';
 import { ComputeShape } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
-import { Function, type FunctionCallback } from '../graph';
-
-const USE_AI_SERVICE = true;
+import { GptFunction } from '../graph';
 
 export const GptShape = S.extend(
   ComputeShape,
@@ -46,7 +41,7 @@ export const GptOutput = S.Struct({
 export type GptInput = S.Schema.Type<typeof GptInput>;
 export type GptOutput = S.Schema.Type<typeof GptOutput>;
 
-export type GptShape = ComputeShape<S.Schema.Type<typeof GptShape>, Function<GptInput, GptOutput>>;
+export type GptShape = ComputeShape<S.Schema.Type<typeof GptShape>, GptFunction>;
 
 export type CreateGptProps = Omit<GptShape, 'type' | 'node' | 'size'>;
 
@@ -54,7 +49,8 @@ export const createGpt = ({ id, ...rest }: CreateGptProps): GptShape => {
   return {
     id,
     type: 'gpt',
-    node: new Function(GptInput, GptOutput, USE_AI_SERVICE ? callAiService : callOllama, 'GPT'),
+    // TODO(burdon): Should be generic Function.
+    node: new GptFunction(GptInput, GptOutput, undefined, 'GPT'),
     size: { width: 192, height: getHeight(GptInput) },
     ...rest,
   };
@@ -72,105 +68,3 @@ export const gptShape: ShapeDef<GptShape> = {
   createShape: createGpt,
   getAnchors: (shape) => getAnchors(shape, shape.node.inputSchema, shape.node.outputSchema),
 };
-
-const callOllama: FunctionCallback<GptInput, GptOutput> = async ({ systemPrompt, prompt, history = [] }) => {
-  const messages = [
-    ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
-    ...history.map(({ role, message }) => ({
-      role,
-      content: message,
-    })),
-    { role: 'user', content: prompt },
-  ];
-
-  const result = await ollama.chat({ model: 'llama3.2', messages });
-  log.info('gpt', { prompt, result });
-  const { message, eval_count } = result;
-
-  return {
-    result: [
-      {
-        role: 'user',
-        message: prompt,
-      },
-      {
-        role: message.role as any,
-        message: message.content,
-      },
-    ],
-    tokens: eval_count,
-  };
-};
-
-const callAiService: FunctionCallback<GptInput, GptOutput> = async ({ systemPrompt, prompt, history = [] }) => {
-  const spaceId = SpaceId.random(); // TODO(dmaretskyi): Use spaceId from the context.
-  const threadId = ObjectId.random();
-
-  const messages: Message[] = [
-    ...history.map(({ role, message }) => ({
-      id: ObjectId.random(),
-      spaceId,
-      threadId,
-      role: role === 'system' ? 'user' : role,
-      content: [
-        {
-          type: 'text' as const,
-          text: message,
-        },
-      ],
-    })),
-    {
-      id: ObjectId.random(),
-      spaceId,
-      threadId,
-      role: 'user',
-      content: [
-        {
-          type: 'text' as const,
-          text: prompt,
-        },
-      ],
-    },
-  ];
-
-  await aiServiceClient.insertMessages(messages);
-
-  log.info('gpt', { systemPrompt, prompt, history });
-  const output = await aiServiceClient.generate({
-    model: '@anthropic/claude-3-5-sonnet-20241022',
-    spaceId,
-    threadId,
-    tools: [],
-    systemPrompt,
-  });
-
-  // TODO(dmaretskyi): output.complete() never resolves if we don't consume the stream. This shouldn't be necessary.
-  queueMicrotask(async () => {
-    for await (const event of output) {
-      console.log(event);
-    }
-  });
-
-  const [resultMessage] = await output.complete();
-  log.info('gpt', { resultMessage });
-
-  return {
-    result: [
-      {
-        role: 'user',
-        message: prompt,
-      },
-      {
-        role: 'assistant',
-        message: (resultMessage.content.findLast(({ type }) => type === 'text') as MessageTextContentBlock)?.text ?? '',
-      },
-    ],
-    tokens: 0,
-  };
-};
-
-const AI_SERVICE_ENDPOINT = 'http://localhost:8787';
-
-const aiServiceClient = new AIServiceClientImpl({
-  endpoint: AI_SERVICE_ENDPOINT,
-});

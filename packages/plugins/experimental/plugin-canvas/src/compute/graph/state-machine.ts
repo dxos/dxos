@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type LLMModel } from '@dxos/assistant';
 import { Event } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
@@ -22,7 +23,7 @@ export type AsyncUpdate<T> = (value: T) => void;
 
 export type StateMachineContext = {
   space?: Space;
-  model?: string;
+  model?: LLMModel; // TODO(burdon): Evolve.
 };
 
 /**

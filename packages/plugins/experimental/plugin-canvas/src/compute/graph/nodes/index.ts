@@ -7,6 +7,7 @@ export * from './Counter';
 export * from './Database';
 export * from './Function';
 export * from './Gate';
+export * from './GptFunction';
 export * from './List';
 export * from './Switch';
 export * from './Switch';
