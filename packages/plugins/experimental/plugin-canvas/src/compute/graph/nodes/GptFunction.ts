@@ -135,6 +135,7 @@ const callEdge =
       client,
       logger: (event) => {
         if (event.type === 'message') {
+          console.log('MSG', event.message);
           messages.push(event.message);
         }
       },
