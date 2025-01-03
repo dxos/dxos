@@ -5,6 +5,7 @@
 import {
   andShape,
   beaconShape,
+  chatShape,
   counterShape,
   functionShape,
   gptShape,
@@ -23,6 +24,7 @@ import type { ShapeDef } from '../components';
 export const computeShapes: ShapeDef<any>[] = [
   functionShape,
   gptShape,
+  chatShape,
   textShape,
   switchShape,
   timerShape,

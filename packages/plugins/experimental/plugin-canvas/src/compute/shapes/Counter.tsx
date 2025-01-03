@@ -31,7 +31,6 @@ export const createCounter = ({ id, ...rest }: CreateCounterProps): CounterShape
 });
 
 export const CounterComponent = ({ shape }: ShapeComponentProps<CounterShape>) => {
-  // Signals value.
   const value = shape.node.state.value;
 
   return <div className='flex w-full justify-center items-center'>{value}</div>;
@@ -42,5 +41,9 @@ export const counterShape: ShapeDef<CounterShape> = {
   icon: 'ph--calculator--regular',
   component: CounterComponent,
   createShape: createCounter,
-  getAnchors: (shape) => createAnchors(shape, { [createAnchorId('input')]: { x: -1, y: 0 } }),
+  getAnchors: (shape) =>
+    createAnchors(shape, {
+      [createAnchorId('input')]: { x: -1, y: 0 },
+      [createAnchorId('output')]: { x: 1, y: 0 },
+    }),
 };

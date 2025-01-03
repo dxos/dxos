@@ -2,22 +2,25 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Point } from '@antv/layout';
+
 import { GraphModel, type GraphNode, type GraphEdge, createEdgeId } from '@dxos/graph';
 
 import { type ComputeNode, StateMachine } from './graph';
 import {
   createAnd,
   createBeacon,
+  createChat,
   createCounter,
   createFunction,
   createGpt,
   createList,
   createOr,
   createSwitch,
-  createText,
   createTimer,
 } from './shapes';
 import { type BaseComputeShape, type ComputeShape } from './shapes/defs';
+import { pointMultiply } from '../layout';
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '../shapes';
 import type { Connection, Shape } from '../types';
 
@@ -79,12 +82,15 @@ export const createTest2 = () => {
   });
 };
 
+// TODO(burdon): Factor out.
+const pos = (p: Point) => pointMultiply(p, 32);
+
 export const createTest3 = () => {
   const nodes: Shape[] = [
-    createText({ id: 'a', center: { x: -384, y: 0 } }),
-    createGpt({ id: 'b', center: { x: 0, y: 0 } }),
-    createList({ id: 'c', center: { x: 384, y: -128 } }),
-    createCounter({ id: 'd', center: { x: 384, y: 256 } }),
+    createChat({ id: 'a', center: pos({ x: -12, y: 0 }) }),
+    createGpt({ id: 'b', center: pos({ x: 0, y: 0 }) }),
+    createList({ id: 'c', center: pos({ x: 12, y: -8 }) }),
+    createCounter({ id: 'd', center: pos({ x: 8, y: 4 }) }),
   ];
 
   const edges = [

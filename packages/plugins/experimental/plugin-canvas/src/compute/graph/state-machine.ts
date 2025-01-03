@@ -100,6 +100,7 @@ export class StateMachine {
       return;
     }
 
+    // TODO(burdon): Use inspect to stringify.
     log.info('exec', { node });
     const output = await node.data.exec();
     this.update.emit({ node, value: output });
