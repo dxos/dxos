@@ -77,5 +77,5 @@ export const formatInferredRelationshipLabel = (typenameDxn: string, property: s
   return `${nodeLabel}_${property}`.toUpperCase();
 };
 
-const isReference = (schema: JsonSchemaType) =>
+export const isReference = (schema: JsonSchemaType) =>
   schema.$id === JSON_SCHEMA_ECHO_REF_ID || (schema.type === 'array' && schema.items?.$id === JSON_SCHEMA_ECHO_REF_ID);

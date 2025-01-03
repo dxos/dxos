@@ -46,6 +46,7 @@ export const MessageTextContentBlock = S.Struct({
   type: S.Literal('text'),
   text: S.String,
 }).pipe(S.mutable);
+export type MessageTextContentBlock = S.Schema.Type<typeof MessageTextContentBlock>;
 
 export const MessageToolUseContentBlock = S.Struct({
   type: S.Literal('tool_use'),
