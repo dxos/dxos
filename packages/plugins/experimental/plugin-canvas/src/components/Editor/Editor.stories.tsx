@@ -52,6 +52,8 @@ const Render = ({ id = 'test', graph: _graph, machine, init, sidebar, ...props }
       return;
     }
 
+    // TODO(burdon): Better abstraction for context?
+    machine.setContext({ space });
     void machine.open();
     const off = machine.update.on((ev) => {
       const { node } = ev;
