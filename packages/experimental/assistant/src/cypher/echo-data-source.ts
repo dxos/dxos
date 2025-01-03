@@ -9,6 +9,7 @@ import { raise } from '@dxos/debug';
 export class EchoDataSource implements DataSource {
   constructor(private readonly _db: EchoDatabase) {}
 
+  @log.method()
   async getNodes({ label }: { label?: string }): Promise<Node[]> {
     if (!label) {
       const { objects } = await this._db.query().run();
@@ -25,6 +26,7 @@ export class EchoDataSource implements DataSource {
     return objects.map(this._objectToNode);
   }
 
+  @log.method()
   async getRelationships({ label }: { label?: string }): Promise<Relationship[]> {
     const syntheticRefRelationships = this._db.graph.schemaRegistry.schemas
       .filter((schema) => getSchemaTypename(schema) !== StoredSchema.typename)

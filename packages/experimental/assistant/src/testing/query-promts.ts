@@ -11,10 +11,12 @@ import { defineTool, LLMToolResult } from '../conversation';
 import { executeQuery, formatJsonSchemaForLLM, type DataSource } from '../cypher';
 import { trim } from '../util';
 
-export const createCypherTool = (dataSource: DataSource) =>
+export const createCypherTool = (dataSource: DataSource, schemaTypes: S.Schema.Any[] = []) =>
   defineTool({
     name: 'graphQuery',
-    description: 'Query the ECHO graph database in cypher query language. Returns data from the database.',
+    description:
+      'Query the ECHO graph database in cypher query language. Returns data from the database.' +
+      (schemaTypes.length > 0 ? `\n\n${createSystemPrompt(schemaTypes)}` : ''),
     schema: S.Struct({
       query: S.String.annotations({
         description: `

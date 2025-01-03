@@ -125,6 +125,7 @@ const callEdge: FunctionCallback<GptInput, GptOutput> = async ({
     client: aiServiceClient,
     logger: (event) => {
       if (event.type === 'message') {
+        console.log(event.message);
         newMessages.push(event.message);
       }
     },
