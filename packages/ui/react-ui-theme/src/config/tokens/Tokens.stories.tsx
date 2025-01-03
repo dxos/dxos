@@ -39,9 +39,8 @@ const Swatch = ({ variable, seriesId, shadeValue, opacity, name }: SwatchProps) 
     <div className='shrink-0 is-16'>
       <dd className='aspect-square' style={{ background: `var(${variable})` }}></dd>
       <dt className='text-xs'>
-        <p>{seriesId}</p>
         <p>{shadeValue}</p>
-        {opacity < 1 && <p>{opacity}</p>}
+        {opacity < 1 && <p>/ {opacity}</p>}
       </dt>
     </div>
   );
