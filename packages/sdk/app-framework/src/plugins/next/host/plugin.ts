@@ -13,8 +13,6 @@
 
 import { type MaybePromise } from '@dxos/util';
 
-import { type AnyActivationEvent } from './manager';
-
 export type PluginMeta = {
   /**
    * Globally unique ID.
@@ -33,7 +31,7 @@ export type PluginMeta = {
   /**
    * Events which the plugin depends on being activated.
    * Plugin is marked as needing reset a plugin activated by a dependent event is removed.
-   * Dependent events are activated automatically before the plugin is activated.
+   * Events are automatically activated before activation of the plugin.
    */
   dependentEvents?: string[];
 
@@ -77,9 +75,27 @@ export type InterfaceDef<T> = {
   identifier: string;
 };
 
+export type ActivationEvent<T> = {
+  // Pattern borrowed from effect, they use symbols which I ommited for brewity.
+  _TypeId: {
+    // This is gonna be `null` at runtime, here it's just so that the InterfaceDef holds on to the type-param
+    _T: T;
+  };
+  id: string;
+  fires: 'once' | 'many';
+  specifier?: string;
+};
+
+export type AnyActivationEvent = ActivationEvent<any>;
+
+export const defineEvent = <T>(id: string, fires: 'once' | 'many', specifier?: string) => {
+  return { id, fires, specifier } as ActivationEvent<T>;
+};
+
 type PluginsContextOptions = {
-  activate: (event: AnyActivationEvent) => Promise<boolean>;
+  activate: (event: AnyActivationEvent) => MaybePromise<boolean>;
   reset: (id: string) => void;
+  subscribe: (onEnable: (meta: PluginMeta) => MaybePromise<void>) => () => void;
 };
 
 // Shared for all plugins
@@ -89,10 +105,12 @@ export class PluginsContext {
 
   readonly activate: PluginsContextOptions['activate'];
   readonly reset: PluginsContextOptions['reset'];
+  readonly subscribe: PluginsContextOptions['subscribe'];
 
-  constructor({ activate, reset }: PluginsContextOptions) {
+  constructor({ activate, reset, subscribe }: PluginsContextOptions) {
     this.activate = activate;
     this.reset = reset;
+    this.subscribe = subscribe;
   }
 
   /**
@@ -129,19 +147,20 @@ export type AnyContribution = Contribution<any>;
 
 export type Plugin = {
   meta: PluginMeta;
-  activate: (context: PluginsContext) => MaybePromise<AnyContribution> | MaybePromise<AnyContribution>[];
+  register?: AnyActivationEvent[];
+  activate?: (context: PluginsContext) => MaybePromise<MaybePromise<AnyContribution> | MaybePromise<AnyContribution>[]>;
   deactivate?: (context: PluginsContext) => MaybePromise<void>;
 };
 
-export const define = (meta: PluginMeta, activate: Plugin['activate'], deactivate?: Plugin['deactivate']) => {
-  return { meta, activate, deactivate } satisfies Plugin;
+export const define = (meta: PluginMeta, rest: Omit<Plugin, 'meta'> = {}) => {
+  return { meta, ...rest } satisfies Plugin;
 };
 
 export const defineInterface = <T>(identifier: string) => {
   return { identifier } as InterfaceDef<T>;
 };
 
-export const contributes = <T>(interfaceDef: InterfaceDef<T>, implementation: T) => {
+export const contributes = <T>(interfaceDef: InterfaceDef<T>, implementation: T): Contribution<T> => {
   return { interface: interfaceDef, implementation } satisfies Contribution<T>;
 };
 

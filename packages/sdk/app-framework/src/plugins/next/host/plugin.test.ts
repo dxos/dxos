@@ -9,6 +9,7 @@ import { defineInterface, PluginsContext } from './plugin';
 const defaultOptions = {
   activate: () => Promise.resolve(false),
   reset: () => {},
+  subscribe: () => () => {},
 };
 
 describe('PluginsContext', () => {
