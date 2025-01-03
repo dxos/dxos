@@ -76,39 +76,3 @@ export const gptShape: ShapeDef<GptShape> = {
   createShape: createGpt,
   getAnchors: (shape) => getAnchors(shape, shape.node.inputSchema, shape.node.outputSchema),
 };
-
-const callOllama: FunctionCallback<GptInput, GptOutput> = async ({ systemPrompt, prompt, history = [] }) => {
-  const messages = [
-    ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
-    ...history.map(({ role, message }) => ({
-      role,
-      content: message,
-    })),
-    { role: 'user', content: prompt },
-  ];
-
-  const result = await ollama.chat({ model: 'llama3.2', messages });
-  log.info('gpt', { prompt, result });
-  const { message, eval_count } = result;
-
-  return {
-    result: [
-      {
-        role: 'user',
-        message: prompt,
-      },
-      {
-        role: message.role as any,
-        message: message.content,
-      },
-    ],
-    tokens: eval_count,
-  };
-};
-
-
-const AI_SERVICE_ENDPOINT = 'http://localhost:8787';
-
-const aiServiceClient = new AIServiceClientImpl({
-  endpoint: AI_SERVICE_ENDPOINT,
-});

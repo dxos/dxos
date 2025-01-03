@@ -10,10 +10,10 @@ import {
   type LLMToolDefinition,
   type Message,
   type MessageTextContentBlock,
+  ObjectId,
 } from '@dxos/assistant';
 import { SpaceId } from '@dxos/client/echo';
 import { raise } from '@dxos/debug';
-import { ObjectId } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { Function, type FunctionCallback } from './Function';
