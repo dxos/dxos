@@ -99,7 +99,16 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
     const overlayRef = useRef<SVGSVGElement>(null);
 
     // Editor state.
-    const monitor = useMemo(() => new DragMonitor(), []);
+    const [dragMonitor] = useState(() => {
+      const m = new DragMonitor();
+      console.log('dragMonitor', m._instance);
+      return m;
+    });
+    useEffect(() => {
+      return () => {
+        console.log('dragMonitor.dispose', dragMonitor._instance);
+      };
+    }, [dragMonitor]);
     const [editing, setEditing] = useState<EditingState<any>>();
 
     // Actions.
@@ -124,7 +133,7 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
       setShowGrid,
       setSnapToGrid,
 
-      monitor,
+      dragMonitor,
       editing,
       setEditing,
 

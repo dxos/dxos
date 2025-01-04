@@ -65,7 +65,7 @@ export type AnchorProps = ThemedClassName<{
  * Anchor points for attaching links.
  */
 export const Anchor = ({ classNames, shape, anchor, size = defaultAnchorSize, onMouseLeave }: AnchorProps) => {
-  const { monitor } = useEditorContext();
+  const { dragMonitor } = useEditorContext();
   const { root, projection } = useProjection();
 
   const [preview, setPreview] = useState<HTMLElement>();
@@ -79,7 +79,7 @@ export const Anchor = ({ classNames, shape, anchor, size = defaultAnchorSize, on
       dropTargetForElements({
         element: ref.current,
         getData: () => ({ type: 'anchor', shape, anchor }) satisfies DragDropPayload,
-        canDrop: () => monitor.canDrop({ type: 'anchor', shape, anchor }),
+        canDrop: () => dragMonitor.canDrop({ type: 'anchor', shape, anchor }),
         onDragEnter: () => setActive(true),
         onDragLeave: () => setActive(false),
         onDrop: () => setActive(false),
@@ -97,11 +97,11 @@ export const Anchor = ({ classNames, shape, anchor, size = defaultAnchorSize, on
           });
         },
         onDragStart: () => {
-          monitor.start({ type: 'anchor', shape, anchor });
+          dragMonitor.start({ type: 'anchor', shape, anchor });
         },
       }),
     );
-  }, [root, projection, monitor, shape, anchor]);
+  }, [root, projection, dragMonitor, shape, anchor]);
 
   return (
     <>

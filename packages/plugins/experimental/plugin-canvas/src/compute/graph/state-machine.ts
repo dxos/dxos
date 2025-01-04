@@ -6,6 +6,7 @@ import { type LLMModel } from '@dxos/assistant';
 import { Event } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
+import { inspectCustom } from '@dxos/debug';
 import { S } from '@dxos/echo-schema';
 import { type GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
@@ -42,6 +43,25 @@ export class StateMachine {
 
   constructor(graph?: ComputeGraph) {
     this._graph = graph ?? createComputeGraph();
+  }
+
+  [inspectCustom]() {
+    return this.toJSON();
+  }
+
+  toString() {
+    return `StateMachine({ nodes: ${this._graph.nodes.length} })`;
+  }
+
+  toJSON() {
+    return {
+      // TODO(burdon): Error if graph.toJSON.
+      //  Converting circular structure to JSON --> starting at object with constructor 'Object' --- property 'native' closes the circle
+      graph: {
+        nodes: this._graph.nodes.length,
+        edges: this._graph.edges.length,
+      },
+    };
   }
 
   get isOpen() {
@@ -144,15 +164,14 @@ export class StateMachine {
         if (target.data.output === S.Void) {
           this.update.emit({ node: target, value: output });
         } else {
-          // TODO(burdon): Don't fire if optional (breaks feedback loop).
+          // TODO(burdon): Don't fire if optional (breaks feedback loop). Need trigger props.
           if (!optional && target.data.ready) {
             await this._exec(target);
           }
         }
       }
     } catch (err) {
-      log.catch(err); // TODO(burdon): ???
-      console.error(err);
+      log.catch(err);
       await this.close();
     }
   }

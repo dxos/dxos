@@ -17,8 +17,8 @@ import { eventsAuto, eventsNone } from '../styles';
  * UI components.
  */
 export const UI = () => {
-  const { debug, registry, monitor, graph, showGrid, snapToGrid, selection, actionHandler } = useEditorContext();
-  const dragging = monitor.state().value;
+  const { debug, registry, dragMonitor, graph, showGrid, snapToGrid, selection, actionHandler } = useEditorContext();
+  const dragging = dragMonitor.state().value;
   const info = {
     debug,
     graph: {

@@ -49,10 +49,10 @@ export type FrameProps = ShapeComponentProps<Polygon> & {
  */
 export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
   const { shape } = baseProps;
-  const { monitor, registry, editing, setEditing } = useEditorContext();
+  const { dragMonitor, registry, editing, setEditing } = useEditorContext();
   const { root, projection, styles: projectionStyles } = useProjection();
 
-  const dragging = monitor.state((state) => state.type === 'frame' && state.shape.id === shape.id).value;
+  const dragging = dragMonitor.state((state) => state.type === 'frame' && state.shape.id === shape.id).value;
   const isDragging = dragging.type === 'frame';
   const isEditing = editing?.shape.id === shape.id;
   const [active, setActive] = useState(false);
@@ -66,7 +66,7 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
       dropTargetForElements({
         element: draggingRef.current,
         getData: () => ({ type: 'frame', shape }) satisfies DragDropPayload,
-        canDrop: () => monitor.canDrop({ type: 'frame', shape }),
+        canDrop: () => dragMonitor.canDrop({ type: 'frame', shape }),
         onDragEnter: () => setActive(true),
         onDragLeave: () => setActive(false),
         onDrop: () => setActive(false),
@@ -93,11 +93,11 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
           });
         },
         onDragStart: () => {
-          monitor.start({ type: 'frame', shape });
+          dragMonitor.start({ type: 'frame', shape });
         },
       }),
     );
-  }, [root, projection, monitor, shape]);
+  }, [root, projection, dragMonitor, shape]);
 
   const handleClose: TextBoxProps['onEnter'] = (value: string) => {
     shape.text = value;

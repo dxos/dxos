@@ -50,6 +50,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/client": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-db": "workspace:*",
@@ -80,6 +81,7 @@
     "graphology": "^0.25.4",
     "graphology-shortest-path": "^2.1.0",
     "lodash.defaultsdeep": "^4.6.1",
+    "ollama": "^0.5.11",
     "react-hotkeys-hook": "^4.6.1",
     "react-resize-detector": "^11.0.1",
     "transformation-matrix": "^2.16.1"
@@ -95,7 +97,6 @@
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
-    "ollama": "^0.5.11",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
     "vite": "5.4.7"

@@ -76,6 +76,7 @@ export type DraggingState =
  * Manages reactive dragging state.
  */
 export class DragMonitor {
+  _instance = 'DragMonitor-' + String(Math.random()).slice(2, 6); // TODO(burdon): ???
   private readonly _state: Signal<DraggingState> = signal<DraggingState>({ type: 'inactive' });
 
   get dragging() {
@@ -93,6 +94,7 @@ export class DragMonitor {
    * Called from setCustomNativeDragPreview.render()
    */
   start(state: DraggingState) {
+    log.info('start', { id: this._instance, state });
     this._state.value = state;
   }
 
@@ -106,7 +108,8 @@ export class DragMonitor {
   /**
    * Called on drop.
    */
-  reset() {
+  stop() {
+    log.info('stop', { id: this._instance });
     this._state.value = { type: 'inactive' };
   }
 
@@ -151,28 +154,29 @@ export class DragMonitor {
 // TODO(burdon): Handle cancellation.
 // TODO(burdon): Handle cursor dragging out of window (currently drop is lost/frozen).
 export const useDragMonitor = () => {
-  const { graph, selection, monitor, registry, actionHandler } = useEditorContext();
+  const { graph, selection, dragMonitor, registry, actionHandler } = useEditorContext();
   const { root, projection } = useProjection();
   const snapPoint = useSnap();
 
-  const state = monitor.state();
+  const state = dragMonitor.state();
 
   useEffect(() => {
     if (!actionHandler) {
       return;
     }
 
+    console.log('useDragMonitor', dragMonitor._instance);
     return monitorForElements({
       //
       // Drag
       //
       onDrag: async ({ location }) => {
-        invariant(monitor.dragging);
+        invariant(dragMonitor.dragging, `Monitor not dragging: ${dragMonitor._instance}`);
         const [pos] = projection.toModel([getInputPoint(root, location.current.input)]);
 
         switch (state.value.type) {
           case 'frame': {
-            monitor.update({ shape: { ...state.value.shape, center: pos } });
+            dragMonitor.update({ shape: { ...state.value.shape, center: pos } });
             break;
           }
 
@@ -180,10 +184,10 @@ export const useDragMonitor = () => {
             // Snap to closest anchor.
             // TODO(burdon): Update layout to use anchor.
             const target = getClosestAnchor(graph, registry, pos, (shape, anchor, d) => {
-              return d < 32 && monitor.canDrop({ type: 'anchor', shape, anchor });
+              return d < 32 && dragMonitor.canDrop({ type: 'anchor', shape, anchor });
             });
 
-            monitor.update({ target, pointer: target?.anchor.pos ?? pos });
+            dragMonitor.update({ target, pointer: target?.anchor.pos ?? pos });
             break;
           }
         }
@@ -193,7 +197,7 @@ export const useDragMonitor = () => {
       // Drop
       //
       onDrop: async ({ location }) => {
-        invariant(monitor.dragging);
+        invariant(dragMonitor.dragging);
         const [pos] = projection.toModel([getInputPoint(root, location.current.input)]);
 
         switch (state.value.type) {
@@ -273,8 +277,8 @@ export const useDragMonitor = () => {
           }
         }
 
-        monitor.reset();
+        dragMonitor.stop();
       },
     });
-  }, [root, monitor, projection, actionHandler, selection, snapPoint]);
+  }, [root, dragMonitor, projection, actionHandler, selection, snapPoint]);
 };

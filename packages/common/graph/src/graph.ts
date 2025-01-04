@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { inspect } from 'node:util';
-
+import { inspectCustom } from '@dxos/debug';
 import { getSnapshot } from '@dxos/live-object';
 
 import { type Graph, type GraphNode, type GraphEdge } from './types';
@@ -22,8 +21,8 @@ export class ReadonlyGraphModel<Node extends GraphNode = any, Edge extends Graph
     this._graph = graph ?? { nodes: [], edges: [] };
   }
 
-  [inspect.custom]() {
-    return inspect(this.toJSON());
+  [inspectCustom]() {
+    return this.toJSON();
   }
 
   /**

@@ -21,8 +21,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
 import { computeShapes, type StateMachine, type StateMachineContext } from '../../compute';
 import { createComputeGraph, createTest1, createTest2, createTest3 } from '../../compute/testing';
-import { SelectionModel } from '../../hooks';
-import { useGraphMonitor } from '../../hooks/useGraphMonitor';
+import { SelectionModel, useGraphMonitor } from '../../hooks';
 import { doLayout } from '../../layout';
 import { RectangleShape, type Shape } from '../../types';
 import { AttentionContainer } from '../AttentionContainer';
@@ -45,7 +44,6 @@ type RenderProps = EditorRootProps & {
 const Render = ({ id = 'test', graph: _graph, machine, model, init, sidebar, ...props }: RenderProps) => {
   const editorRef = useRef<EditorController>(null);
   const { space } = useClientProvider();
-  const [, forceUpdate] = useState({});
 
   // State machine.
   useEffect(() => {
@@ -160,15 +158,17 @@ const meta: Meta<EditorRootProps> = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ space }, { args: { spec, storeSchema } }) => {
+      onSpaceCreated: async ({ space }, { args: { spec, registerSchema } }) => {
         if (spec) {
-          if (storeSchema) {
+          if (registerSchema) {
             // Replace all schema in the spec with the registered schema.
-            const allSchema = [...new Set(spec.map((s: any) => s.type))] as S.Schema.AnyNoContext[];
-            const registeredSchema = await space.db.schemaRegistry.register(allSchema);
-            spec = spec.map((s: any) => ({
-              ...s,
-              type: registeredSchema.find((schema) => getSchemaTypename(schema) === getSchemaTypename(s.type)),
+            const registeredSchema = await space.db.schemaRegistry.register([
+              ...new Set(spec.map((schema: any) => schema.type)),
+            ] as S.Schema.AnyNoContext[]);
+
+            spec = spec.map((schema: any) => ({
+              ...schema,
+              type: registeredSchema.find((schema) => getSchemaTypename(schema) === getSchemaTypename(schema.type)),
             }));
           } else {
             space.db.graph.schemaRegistry.addSchema(types);
@@ -188,7 +188,7 @@ const meta: Meta<EditorRootProps> = {
 
 export default meta;
 
-type Story = StoryObj<RenderProps & { spec?: TypeSpec[] }>;
+type Story = StoryObj<RenderProps & { spec?: TypeSpec[]; registerSchema?: boolean }>;
 
 export const Default: Story = {
   args: {
@@ -251,7 +251,7 @@ export const Ollama: Story = {
     // debug: true,
     showGrid: false,
     snapToGrid: false,
-    // sidebar: 'state-machine',
+    sidebar: 'state-machine',
     registry: new ShapeRegistry(computeShapes),
     ...createComputeGraph(createTest3()),
   },
@@ -264,12 +264,12 @@ export const GPT: Story = {
     snapToGrid: false,
     // sidebar: 'state-machine',
     registry: new ShapeRegistry(computeShapes),
-    storeSchema: true,
     spec: [
       { type: Testing.OrgType, count: 2 },
       { type: Testing.ProjectType, count: 4 },
       { type: Testing.ContactType, count: 8 },
     ],
+    registerSchema: true,
     ...createComputeGraph(createTest3(true)),
     model: '@anthropic/claude-3-5-sonnet-20241022',
   },

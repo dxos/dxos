@@ -37,11 +37,11 @@ export const Canvas = () => {
 };
 
 export const CanvasContent = () => {
-  const { id, monitor, overlayRef, options, showGrid, selection } = useEditorContext();
+  const { id, dragMonitor, overlayRef, options, showGrid, selection } = useEditorContext();
   const { root, styles: projectionStyles, scale, offset } = useProjection();
   const shapesRef = useRef<HTMLDivElement>(null);
 
-  const dragging = monitor.state((state) => state.type === 'tool').value;
+  const dragging = dragMonitor.state((state) => state.type === 'tool').value;
 
   // Drop target.
   useEffect(() => {

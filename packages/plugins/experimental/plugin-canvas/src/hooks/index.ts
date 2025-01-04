@@ -8,6 +8,7 @@ export * from './selection';
 export * from './useActionHandler';
 export * from './useDragMonitor';
 export * from './useEditorContext';
+export * from './useGraphMonitor';
 export * from './useLayout';
 export * from './useSelectionEvents';
 export * from './useShortcuts';

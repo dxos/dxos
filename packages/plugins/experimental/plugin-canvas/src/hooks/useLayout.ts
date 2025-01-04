@@ -20,10 +20,10 @@ export type Layout = {
  * Generate layout from graph (including linking).
  */
 export const useLayout = (): Layout => {
-  const { monitor, graph, registry } = useEditorContext();
+  const { dragMonitor, graph, registry } = useEditorContext();
 
   // TODO(burdon): Use to trigger state update.
-  const dragging = monitor.state(({ type }) => type === 'frame' || type === 'anchor').value;
+  const dragging = dragMonitor.state(({ type }) => type === 'frame' || type === 'anchor').value;
   const getShape = (shape: Polygon) =>
     dragging.type === 'frame' && dragging.shape.id === shape.id ? dragging.shape : shape;
 

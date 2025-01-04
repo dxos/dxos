@@ -49,7 +49,7 @@ function readPackage(packageJson, context) {
       break;
     }
 
-    // Package has an unneccessarily strict peer dep of 17.0.1
+    // Package has an unnecessarily strict peer dep of 17.0.1
     case '@hot-loader/react-dom': {
       packageJson.peerDependencies['react'] = '^18.0.0';
       break;

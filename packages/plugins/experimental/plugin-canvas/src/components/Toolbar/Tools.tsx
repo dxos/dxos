@@ -35,7 +35,7 @@ type ToolProps = {
 };
 
 const Tool = ({ type, icon }: ToolProps) => {
-  const { registry, monitor } = useEditorContext();
+  const { registry, dragMonitor } = useEditorContext();
 
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -57,12 +57,12 @@ const Tool = ({ type, icon }: ToolProps) => {
           },
           // TODO(burdon): Same preview pattern as frame?
           render: ({ container }) => {
-            monitor.start({ container, type: 'tool', shape: data.shape });
+            dragMonitor.start({ container, type: 'tool', shape: data.shape });
           },
         });
       },
     });
-  }, [monitor]);
+  }, [dragMonitor]);
 
   return (
     <div ref={ref} className='flex'>
