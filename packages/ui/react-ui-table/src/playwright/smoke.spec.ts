@@ -122,4 +122,24 @@ test.describe('Table', () => {
     await expect(page.getByRole('gridcell', { name: newColumnLabel })).toBeVisible();
     await page.close();
   });
+  test('test toggles', async ({ browser }) => {
+    const { page } = await setupPage(browser, { url: storyUrl });
+    const table = new TableManager(page);
+
+    await table.grid.ready();
+
+    await page.getByTestId('table-switch').first().click();
+    await page.getByTestId('table-switch').nth(7).click();
+
+    // Test that checks are durable in the data model by sorting.
+    await table.sortColumn(1, 'descending');
+
+    // Assert the first two switch checkboxes are checked.
+    await expect(page.getByTestId('table-switch').first()).toBeChecked();
+    await expect(page.getByTestId('table-switch').nth(1)).toBeChecked();
+    await expect(table.grid.cell(0, 0, 'grid')).toHaveText('Anita Mayer');
+    await expect(table.grid.cell(0, 1, 'grid')).toHaveText('Uwe Øvergård');
+
+    await page.close();
+  });
 });
