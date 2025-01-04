@@ -122,6 +122,27 @@ test.describe('Table', () => {
     await expect(page.getByRole('gridcell', { name: newColumnLabel })).toBeVisible();
     await page.close();
   });
+
+  test('pick reference', async ({ browser }) => {
+    const { page } = await setupPage(browser, { url: storyUrl });
+    const table = new TableManager(page);
+
+    await table.grid.ready();
+
+    await table.grid.panByWheel(10000, 0);
+
+    await table.grid.cell(4, 0, 'grid').click();
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('A');
+    await page.getByRole('option', { name: 'Anita Mayer' }).click();
+    await page.keyboard.press('Enter');
+
+    // Assert that the value is shown in the cell.
+    await expect(page.getByRole('gridcell', { name: 'Anita Mayer' })).toBeVisible();
+
+    await page.close();
+  });
+
   test('test toggles', async ({ browser }) => {
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);

@@ -6,32 +6,22 @@ import { computed, effect, signal, type ReadonlySignal } from '@preact/signals-c
 import orderBy from 'lodash.orderby';
 
 import { Resource } from '@dxos/context';
-import { getValue, setValue, FormatEnum, type JsonProp, Ref } from '@dxos/echo-schema';
+import { getValue, setValue, FormatEnum, type JsonProp } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { isReactiveObject, makeRef } from '@dxos/live-object';
 import { PublicKey } from '@dxos/react-client';
-import {
-  cellClassesForFieldType,
-  cellClassesForRowSelection,
-  formatForDisplay,
-  formatForEditing,
-  parseValue,
-} from '@dxos/react-ui-form';
+import { formatForDisplay, formatForEditing, parseValue } from '@dxos/react-ui-form';
 import {
   type DxGridAxisMeta,
   type DxGridPlaneRange,
   type DxGridPlanePosition,
   type DxGridPosition,
-  type DxGridPlaneCells,
-  type DxGridPlane,
-  type DxGridCellValue,
-  toPlaneCellIndex,
 } from '@dxos/react-ui-grid';
-import { mx } from '@dxos/react-ui-theme';
-import { VIEW_FIELD_LIMIT, type FieldType, type ViewProjection } from '@dxos/schema';
+import { type ViewProjection } from '@dxos/schema';
 
 import { SelectionModel } from './selection-model';
 import { type TableType } from '../types';
-import { tableButtons, tableControls, touch } from '../util';
+import { touch } from '../util';
 
 export type SortDirection = 'asc' | 'desc';
 export type SortConfig = { fieldId: string; direction: SortDirection };
@@ -295,7 +285,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
           return ''; // TODO(burdon): Show error.
         }
 
-        return getValue(value, field.referencePath);
+        return getValue(value.target, field.referencePath);
       }
 
       default: {
@@ -315,7 +305,12 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     const { props } = this._projection.getFieldProjection(field.id);
     switch (props.format) {
       case FormatEnum.Ref: {
-        setValue(this._rows.value[rowIdx], field.path, value);
+        // TODO(ZaymonFC): This get's called an additional time by on blur, but with the cell editors
+        // plain string value. Maybe onBlur should be called with the actual value?
+        if (!isReactiveObject(value)) {
+          break;
+        }
+        setValue(this._rows.value[rowIdx], field.path, makeRef(value));
         break;
       }
 

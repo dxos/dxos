@@ -76,7 +76,7 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
                 return ''; // TODO(burdon): Show error.
               }
 
-              return getValue(value, field.referencePath);
+              return getValue(value.target, field.referencePath);
             }
 
             default: {
@@ -99,12 +99,14 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
         cell.className = mx(classes.flat());
       }
 
-      if (cell.value && props.format === FormatEnum.Ref && props.referenceSchema) {
-        const targetObj = getValue(obj, field.path);
-        cell.accessoryHtml = tableButtons.referencedCell.render({
-          targetId: targetObj.id as any as string,
-          schemaId: props.referenceSchema,
-        });
+      if (props.format === FormatEnum.Ref && props.referenceSchema) {
+        const targetObj = getValue(obj, field.path)?.target;
+        if (targetObj) {
+          cell.accessoryHtml = tableButtons.referencedCell.render({
+            targetId: targetObj.id as any as string,
+            schemaId: props.referenceSchema,
+          });
+        }
       }
 
       if (props.format === FormatEnum.Boolean) {
