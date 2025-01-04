@@ -39,8 +39,9 @@ const renderInput = (
   checked = false,
   disabled = false,
   preventToggle = false,
+  testId: string,
 ) => {
-  return `<input type="checkbox" class="${baseClass}" ${renderAttributes(attrs)} ${checked ? 'checked' : ''} ${preventToggle ? 'onclick="return false"' : ''} ${disabled ? 'disabled' : ''} data-testid="table-selection"/>`;
+  return `<input type="checkbox" class="${baseClass}" ${renderAttributes(attrs)} ${checked ? 'checked' : ''} ${preventToggle ? 'onclick="return false"' : ''} ${disabled ? 'disabled' : ''} data-testid="${testId}"/>`;
 };
 
 export const renderCheckbox = ({
@@ -55,7 +56,7 @@ export const renderCheckbox = ({
     ...(header && { 'data-header': '' }),
   };
 
-  return renderInput(BASE_CLASSES.checkbox, attrs, checked, disabled, false);
+  return renderInput(BASE_CLASSES.checkbox, attrs, checked, disabled, true, 'table-selection');
 };
 
 export const renderSwitch = ({ colIndex, rowIndex, checked = false, disabled = false }: RenderSwitchProps): string => {
@@ -65,7 +66,7 @@ export const renderSwitch = ({ colIndex, rowIndex, checked = false, disabled = f
     'data-col-index': colIndex.toString(),
   };
 
-  return renderInput(BASE_CLASSES.switch, attrs, checked, disabled, true);
+  return renderInput(BASE_CLASSES.switch, attrs, checked, disabled, true, 'table-switch');
 };
 
 export const tableControls = {
