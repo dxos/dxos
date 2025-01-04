@@ -306,11 +306,10 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     switch (props.format) {
       case FormatEnum.Ref: {
         // TODO(ZaymonFC): This get's called an additional time by the cell editor onBlur, but with the cell editors
-        // plain string value. Maybe onBlur should be called with the actual value?
-        if (!isReactiveObject(value)) {
-          break;
+        //   plain string value. Maybe onBlur should be called with the actual value?
+        if (isReactiveObject(value)) {
+          setValue(this._rows.value[rowIdx], field.path, makeRef(value));
         }
-        setValue(this._rows.value[rowIdx], field.path, makeRef(value));
         break;
       }
 
