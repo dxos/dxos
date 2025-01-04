@@ -16,6 +16,7 @@ import {
   switchShape,
   tableShape,
   textShape,
+  threadShape,
   timerShape,
 } from './shapes';
 import type { ShapeDef } from '../components';
@@ -35,6 +36,7 @@ export const computeShapes: ShapeDef<any>[] = [
   orShape,
   notShape,
   listShape,
+  threadShape,
   tableShape,
   beaconShape,
   counterShape,
