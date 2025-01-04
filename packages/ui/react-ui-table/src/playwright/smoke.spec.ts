@@ -132,10 +132,8 @@ test.describe('Table', () => {
     await table.grid.panByWheel(10000, 0);
 
     await table.grid.cell(4, 0, 'grid').click();
-    await page.keyboard.press('Enter');
     await page.keyboard.press('A');
     await page.getByRole('option', { name: 'Anita Mayer' }).click();
-    await page.keyboard.press('Enter');
 
     // Assert that the value is shown in the cell.
     await expect(page.getByRole('gridcell', { name: 'Anita Mayer' })).toBeVisible();
