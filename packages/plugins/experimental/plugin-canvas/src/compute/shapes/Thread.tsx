@@ -68,8 +68,8 @@ export const ThreadItem = ({ classNames, item }: ThemedClassName<{ item: any }>)
     <div className={mx('flex', classNames, role === 'user' && 'justify-end')}>
       <div
         className={mx(
-          'block rounded-md p-1 px-2',
-          role === 'user' ? 'bg-blue-200 dark:bg-blue-800' : 'whitespace-pre-wrap bg-neutral-200 dark:bg-neutral-800',
+          'block rounded-md p-1 px-2 text-sm',
+          role === 'user' ? 'bg-blue-100 dark:bg-blue-800' : 'whitespace-pre-wrap bg-neutral-50 dark:bg-neutral-800',
         )}
       >
         {message}
