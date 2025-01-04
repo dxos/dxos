@@ -69,3 +69,20 @@ export const distinctBy = <T, K>(array: T[], selector: (item: T) => K): T[] => {
     return true;
   });
 };
+
+/**
+ * Remove elements from array.
+ * @param array
+ * @param test
+ * @returns removed elements.
+ */
+export const removeBy = <T>(array: T[], test: (element: T, index: number) => boolean): T[] => {
+  const removed: T[] = [];
+  for (let i = array.length - 1; i >= 0; i--) {
+    if (test(array[i], i)) {
+      removed.push(...array.splice(i, 1));
+    }
+  }
+
+  return removed;
+};

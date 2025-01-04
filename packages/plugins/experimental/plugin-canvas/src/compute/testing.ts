@@ -113,7 +113,7 @@ export const createTest3 = (db = false) => {
   });
 };
 
-export const createComputeGraph = (graph?: GraphModel<GraphNode<Shape>, GraphEdge<Connection>>) => {
+export const createMachine = (graph?: GraphModel<GraphNode<Shape>, GraphEdge<Connection>>) => {
   const machine = new StateMachine(undefined);
 
   // TODO(burdon): Factor out mapping (reconcile with Editor.stories).
@@ -129,5 +129,5 @@ export const createComputeGraph = (graph?: GraphModel<GraphNode<Shape>, GraphEdg
     }
   }
 
-  return { graph, machine };
+  return { machine, graph };
 };

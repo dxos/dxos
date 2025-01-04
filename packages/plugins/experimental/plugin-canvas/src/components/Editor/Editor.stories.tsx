@@ -20,7 +20,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
 import { computeShapes, type StateMachine, type StateMachineContext } from '../../compute';
-import { createComputeGraph, createTest1, createTest2, createTest3 } from '../../compute/testing';
+import { createMachine, createTest1, createTest2, createTest3 } from '../../compute/testing';
 import { SelectionModel, useGraphMonitor } from '../../hooks';
 import { doLayout } from '../../layout';
 import { RectangleShape, type Shape } from '../../types';
@@ -220,7 +220,7 @@ export const Compute: Story = {
     snapToGrid: false,
     sidebar: 'state-machine',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraph(),
+    ...createMachine(),
   },
 };
 
@@ -231,7 +231,7 @@ export const Compute1: Story = {
     snapToGrid: false,
     // sidebar: 'selected',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraph(createTest1()),
+    ...createMachine(createTest1()),
   },
 };
 
@@ -242,7 +242,7 @@ export const Compute2: Story = {
     snapToGrid: false,
     sidebar: 'state-machine',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraph(createTest2()),
+    ...createMachine(createTest2()),
   },
 };
 
@@ -253,7 +253,7 @@ export const Ollama: Story = {
     snapToGrid: false,
     sidebar: 'state-machine',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraph(createTest3()),
+    ...createMachine(createTest3()),
   },
 };
 
@@ -270,7 +270,7 @@ export const GPT: Story = {
       { type: Testing.ContactType, count: 8 },
     ],
     registerSchema: true,
-    ...createComputeGraph(createTest3(true)),
+    ...createMachine(createTest3(true)),
     model: '@anthropic/claude-3-5-sonnet-20241022',
   },
 };

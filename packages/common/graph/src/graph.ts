@@ -4,9 +4,9 @@
 
 import { inspectCustom } from '@dxos/debug';
 import { getSnapshot } from '@dxos/live-object';
+import { removeBy } from '@dxos/util';
 
 import { type Graph, type GraphNode, type GraphEdge } from './types';
-import { removeElements } from './util';
 
 /**
  * Typed reactive object graph.
@@ -115,8 +115,8 @@ export class GraphModel<Node extends GraphNode = any, Edge extends GraphEdge = a
   }
 
   removeNode(id: string): GraphModel<Node, Edge> {
-    const nodes = removeElements(this._graph.nodes, (node) => node.id === id);
-    const edges = removeElements(this._graph.edges, (edge) => edge.source === id || edge.target === id);
+    const nodes = removeBy(this._graph.nodes, (node) => node.id === id);
+    const edges = removeBy(this._graph.edges, (edge) => edge.source === id || edge.target === id);
     return new GraphModel<Node, Edge>({ nodes, edges });
   }
 
@@ -126,7 +126,7 @@ export class GraphModel<Node extends GraphNode = any, Edge extends GraphEdge = a
   }
 
   removeEdge(id: string): GraphModel<Node, Edge> {
-    const edges = removeElements(this._graph.edges, (edge) => edge.id === id);
+    const edges = removeBy(this._graph.edges, (edge) => edge.id === id);
     return new GraphModel<Node, Edge>({ nodes: [], edges });
   }
 

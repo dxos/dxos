@@ -4,21 +4,22 @@
 
 import React, { useEffect, useMemo } from 'react';
 
-import { GraphModel, type GraphNode } from '@dxos/graph';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { AttentionContainer } from './AttentionContainer';
 import { ShapeRegistry } from './Canvas';
 import { Editor } from './Editor';
-import { computeShapes, StateMachine } from '../compute';
+import { computeShapes } from '../compute';
+import { createMachine, createTest3 } from '../compute/testing';
 import { useGraphMonitor } from '../hooks';
-import { type CanvasBoardType, type Shape } from '../types';
+import { type CanvasBoardType } from '../types';
 
 export const CanvasContainer = ({ canvas }: { canvas: CanvasBoardType }) => {
   const id = fullyQualifiedId(canvas);
-  const graph = useMemo(() => new GraphModel<GraphNode<Shape>>(canvas.graph), [canvas.graph]);
-  const machine = useMemo(() => new StateMachine(), []);
+  // TODO(burdon): Use canvas.graph.
+  const graph = useMemo(() => createTest3(), []);
+  const { machine } = useMemo(() => createMachine(graph), []);
   const graphMonitor = useGraphMonitor(machine);
   const registry = useMemo(() => new ShapeRegistry(computeShapes), []);
 

@@ -12,9 +12,10 @@ type TestData = { value: string };
 
 describe('Graph', () => {
   test('empty', ({ expect }) => {
-    const { graph } = new GraphModel();
+    const graph = new GraphModel();
     expect(graph.nodes).to.have.length(0);
     expect(graph.edges).to.have.length(0);
+    expect(graph.toJSON()).to.deep.eq({ nodes: [], edges: [] });
   });
 
   test('add and remove subgraphs', ({ expect }) => {
