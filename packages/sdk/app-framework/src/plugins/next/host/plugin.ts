@@ -24,23 +24,6 @@ export type PluginMeta = {
   id: string;
 
   /**
-   * Events for which the plugin will be activated.
-   */
-  activationEvents: string[];
-
-  /**
-   * Events which the plugin depends on being activated.
-   * Plugin is marked as needing reset a plugin activated by a dependent event is removed.
-   * Events are automatically activated before activation of the plugin.
-   */
-  dependentEvents?: string[];
-
-  /**
-   * Events which this plugin triggers upon activation.
-   */
-  triggeredEvents?: string[];
-
-  /**
    * Human-readable name.
    */
   name?: string;
@@ -141,13 +124,51 @@ export type AnyContribution = Contribution<any>;
 
 export type Plugin = {
   meta: PluginMeta;
+  modules: PluginModule[];
+};
+
+export const definePlugin = (meta: PluginMeta, modules: PluginModule[]) => {
+  return { meta, modules } satisfies Plugin;
+};
+
+export type PluginModule = {
+  /**
+   * Unique sub-ID of the plugin.
+   */
+  id: string;
+
+  /**
+   * Events for which the module will be activated.
+   */
+  activationEvents: string[];
+
+  /**
+   * Events which the plugin depends on being activated.
+   * Plugin is marked as needing reset a plugin activated by a dependent event is removed.
+   * Events are automatically activated before activation of the plugin.
+   */
+  dependentEvents?: string[];
+
+  /**
+   * Events which this plugin triggers upon activation.
+   */
+  triggeredEvents?: string[];
+
+  /**
+   * Called when the module is activated.
+   * @param context The plugin context.
+   * @returns The contributions of the module.
+   */
   activate: (context: PluginsContext) => MaybePromise<MaybePromise<AnyContribution> | MaybePromise<AnyContribution>[]>;
+
+  /**
+   * Called when the module is deactivated.
+   * @param context The plugin context.
+   */
   deactivate?: (context: PluginsContext) => MaybePromise<void>;
 };
 
-export const define = (meta: PluginMeta, activate: Plugin['activate'], deactivate?: Plugin['deactivate']) => {
-  return { meta, activate, deactivate } satisfies Plugin;
-};
+export const defineModule = (module: PluginModule) => module;
 
 export const defineInterface = <T>(identifier: string) => {
   return { identifier } as InterfaceDef<T>;

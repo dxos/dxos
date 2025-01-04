@@ -11,7 +11,15 @@ import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
 
 import { eventKey, PluginManager } from './manager';
-import { contributes, define, defineInterface, type PluginsContext, type Plugin, defineEvent } from './plugin';
+import {
+  contributes,
+  definePlugin,
+  defineModule,
+  defineInterface,
+  type PluginsContext,
+  type Plugin,
+  defineEvent,
+} from './plugin';
 import { createStateEvent, StartupEvent } from '../common';
 
 registerSignalsRuntime();
@@ -21,6 +29,8 @@ const Number = defineInterface<{ number: number }>('dxos.org/test/number');
 const Total = defineInterface<{ total: number }>('dxos.org/test/total');
 
 const CountEvent = defineEvent('dxos.org/test/count');
+
+const testMeta = { id: 'dxos.org/plugin/test' };
 
 describe('PluginManager', () => {
   let plugins: Plugin[] = [];
@@ -35,53 +45,61 @@ describe('PluginManager', () => {
   });
 
   it('should be able to add and remove plugins', async () => {
-    const Hello = define({ id: 'dxos.org/test/hello', activationEvents: [StartupEvent.id] }, () =>
-      contributes(String, { string: 'hello' }),
-    );
-    const World = define({ id: 'dxos.org/test/world', activationEvents: [StartupEvent.id] }, () =>
-      contributes(String, { string: 'world' }),
-    );
-    plugins = [Hello, World];
+    const Hello = defineModule({
+      id: 'dxos.org/test/hello',
+      activationEvents: [StartupEvent.id],
+      activate: () => contributes(String, { string: 'hello' }),
+    });
+    const World = defineModule({
+      id: 'dxos.org/test/world',
+      activationEvents: [StartupEvent.id],
+      activate: () => contributes(String, { string: 'world' }),
+    });
+    plugins = [definePlugin(testMeta, [Hello, World])];
 
     const manager = new PluginManager({ pluginLoader });
-    await manager.add(Hello.meta.id);
-    expect(manager.plugins).toEqual([Hello]);
-    await manager.add(World.meta.id);
-    expect(manager.plugins).toEqual([Hello, World]);
-    await manager.remove(Hello.meta.id);
-    expect(manager.plugins).toEqual([World]);
+    await manager.add(testMeta.id);
+    expect(manager.modules).toEqual([Hello, World]);
+    await manager.remove(testMeta.id);
+    expect(manager.modules).toEqual([]);
   });
 
   it('should be able to activate plugins', async () => {
-    const Hello = define({ id: 'dxos.org/test/hello', activationEvents: [StartupEvent.id] }, () =>
-      contributes(String, { string: 'hello' }),
-    );
-    plugins = [Hello];
+    const Hello = defineModule({
+      id: 'dxos.org/test/hello',
+      activationEvents: [StartupEvent.id],
+      activate: () => contributes(String, { string: 'hello' }),
+    });
+    plugins = [definePlugin(testMeta, [Hello])];
 
     const manager = new PluginManager({ pluginLoader });
-    await manager.add(Hello.meta.id);
-    expect(manager.plugins).toEqual([Hello]);
+    await manager.add(testMeta.id);
+    expect(manager.modules).toEqual([Hello]);
     expect(manager.activated).toEqual([]);
     await manager.activate(StartupEvent);
-    expect(manager.plugins).toEqual([Hello]);
-    expect(manager.activated).toEqual([Hello.meta.id]);
+    expect(manager.modules).toEqual([Hello]);
+    expect(manager.activated).toEqual([Hello.id]);
   });
 
   it('should be able to reset an activation event', async () => {
     let count = 0;
-    const Hello = define({ id: 'dxos.org/test/hello', activationEvents: [StartupEvent.id] }, () => {
-      count++;
-      return contributes(String, { string: 'hello' });
+    const Hello = defineModule({
+      id: 'dxos.org/test/hello',
+      activationEvents: [StartupEvent.id],
+      activate: () => {
+        count++;
+        return contributes(String, { string: 'hello' });
+      },
     });
-    plugins = [Hello];
+    plugins = [definePlugin(testMeta, [Hello])];
 
     const manager = new PluginManager({ pluginLoader });
 
     {
-      await manager.add(Hello.meta.id);
+      await manager.add(testMeta.id);
       const result = await manager.activate(StartupEvent);
       expect(result).toEqual(true);
-      expect(manager.activated).toEqual([Hello.meta.id]);
+      expect(manager.activated).toEqual([Hello.id]);
       expect(count).toEqual(1);
     }
 
@@ -104,14 +122,26 @@ describe('PluginManager', () => {
   });
 
   it('should be able to fire custom activation events', async () => {
-    const One = define({ id: 'dxos.org/test/one', activationEvents: [CountEvent.id] }, () => [
-      contributes(Number, { number: 1 }),
+    const One = definePlugin({ id: 'dxos.org/test/one' }, [
+      defineModule({
+        id: 'dxos.org/test/one',
+        activationEvents: [CountEvent.id],
+        activate: () => [contributes(Number, { number: 1 })],
+      }),
     ]);
-    const Two = define({ id: 'dxos.org/test/two', activationEvents: [CountEvent.id] }, () => [
-      contributes(Number, { number: 2 }),
+    const Two = definePlugin({ id: 'dxos.org/test/two' }, [
+      defineModule({
+        id: 'dxos.org/test/two',
+        activationEvents: [CountEvent.id],
+        activate: () => [contributes(Number, { number: 2 })],
+      }),
     ]);
-    const Three = define({ id: 'dxos.org/test/three', activationEvents: [CountEvent.id] }, () => [
-      contributes(Number, { number: 3 }),
+    const Three = definePlugin({ id: 'dxos.org/test/three' }, [
+      defineModule({
+        id: 'dxos.org/test/three',
+        activationEvents: [CountEvent.id],
+        activate: () => [contributes(Number, { number: 3 })],
+      }),
     ]);
     plugins = [One, Two, Three];
 
@@ -141,33 +171,41 @@ describe('PluginManager', () => {
       state.total = numbers.reduce((acc, n) => acc + n.number, 0);
     };
 
-    const Count = define(
-      {
+    const Count = definePlugin({ id: 'dxos.org/test/count' }, [
+      defineModule({
         id: 'dxos.org/test/count',
         activationEvents: [StartupEvent.id],
         dependentEvents: [CountEvent.id],
-      },
-      (context) => {
-        computeTotal(context);
-        return contributes(Total, state);
-      },
-    );
+        activate: (context) => {
+          computeTotal(context);
+          return contributes(Total, state);
+        },
+      }),
+    ]);
 
-    const One = define({ id: 'dxos.org/test/one', activationEvents: [CountEvent.id] }, () =>
-      contributes(Number, { number: 1 }),
-    );
-    const Two = define({ id: 'dxos.org/test/two', activationEvents: [CountEvent.id] }, () =>
-      contributes(Number, { number: 2 }),
-    );
-    const Three = define({ id: 'dxos.org/test/three', activationEvents: [CountEvent.id] }, () =>
-      contributes(Number, { number: 3 }),
-    );
-    plugins = [Count, One, Two, Three];
+    const Test = definePlugin(testMeta, [
+      defineModule({
+        id: 'dxos.org/test/one',
+        activationEvents: [CountEvent.id],
+        activate: () => contributes(Number, { number: 1 }),
+      }),
+      defineModule({
+        id: 'dxos.org/test/two',
+        activationEvents: [CountEvent.id],
+        activate: () => contributes(Number, { number: 2 }),
+      }),
+      defineModule({
+        id: 'dxos.org/test/three',
+        activationEvents: [CountEvent.id],
+        activate: () => contributes(Number, { number: 3 }),
+      }),
+    ]);
+    plugins = [Count, Test];
 
-    const manager = new PluginManager({ plugins: [Count, One, Two, Three], pluginLoader });
+    const manager = new PluginManager({ plugins: [Count, Test], pluginLoader });
     {
       await manager.activate(StartupEvent);
-      expect(manager.activated).toEqual([One.meta.id, Two.meta.id, Three.meta.id, Count.meta.id]);
+      expect(manager.activated).toEqual([...Test.modules.map((m) => m.id), Count.meta.id]);
       expect(manager.pendingReset).toEqual([]);
 
       const totals = manager.context.requestCapability(Total);
@@ -176,8 +214,8 @@ describe('PluginManager', () => {
     }
 
     {
-      await manager.remove(One.meta.id);
-      expect(manager.activated).toEqual([Two.meta.id, Three.meta.id, Count.meta.id]);
+      await manager.remove(Test.meta.id);
+      expect(manager.activated).toEqual([Count.meta.id]);
       expect(manager.pendingReset).toEqual([CountEvent.id, StartupEvent.id]);
 
       const totals = manager.context.requestCapability(Total);
@@ -187,7 +225,7 @@ describe('PluginManager', () => {
 
     {
       await manager.reset(CountEvent);
-      expect(manager.activated).toEqual([Count.meta.id, Two.meta.id, Three.meta.id]);
+      expect(manager.activated).toEqual([Count.meta.id]);
       expect(manager.pendingReset).toEqual([StartupEvent.id]);
 
       const totals = manager.context.requestCapability(Total);
@@ -197,37 +235,37 @@ describe('PluginManager', () => {
 
     {
       await manager.reset(StartupEvent);
-      expect(manager.activated).toEqual([Two.meta.id, Three.meta.id, Count.meta.id]);
+      expect(manager.activated).toEqual([Count.meta.id]);
       expect(manager.pendingReset).toEqual([]);
 
       const totals = manager.context.requestCapability(Total);
       expect(totals).toHaveLength(1);
-      expect(totals[0].total).toEqual(5);
+      expect(totals[0].total).toEqual(0);
     }
 
     {
-      await manager.add(One.meta.id);
-      expect(manager.activated).toEqual([Two.meta.id, Three.meta.id, Count.meta.id]);
+      await manager.add(Test.meta.id);
+      expect(manager.activated).toEqual([Count.meta.id]);
       expect(manager.pendingReset).toEqual([CountEvent.id, StartupEvent.id]);
 
       const totals = manager.context.requestCapability(Total);
       expect(totals).toHaveLength(1);
-      expect(totals[0].total).toEqual(5);
+      expect(totals[0].total).toEqual(0);
     }
 
     {
       await manager.reset(CountEvent);
-      expect(manager.activated).toEqual([Count.meta.id, Two.meta.id, Three.meta.id, One.meta.id]);
+      expect(manager.activated).toEqual([Count.meta.id, ...Test.modules.map((m) => m.id)]);
       expect(manager.pendingReset).toEqual([StartupEvent.id]);
 
       const totals = manager.context.requestCapability(Total);
       expect(totals).toHaveLength(1);
-      expect(totals[0].total).toEqual(5);
+      expect(totals[0].total).toEqual(0);
     }
 
     {
       await manager.reset(StartupEvent);
-      expect(manager.activated).toEqual([Two.meta.id, Three.meta.id, One.meta.id, Count.meta.id]);
+      expect(manager.activated).toEqual([...Test.modules.map((m) => m.id), Count.meta.id]);
       expect(manager.pendingReset).toEqual([]);
 
       const totals = manager.context.requestCapability(Total);
@@ -239,35 +277,35 @@ describe('PluginManager', () => {
   it('should be able to handle live object contributions', async () => {
     const id = 'dxos.org/test/counter';
     const stateEvent = createStateEvent(id);
-    const Counter = define(
-      {
+
+    let unsubscribe: () => void;
+    const Test = definePlugin(testMeta, [
+      defineModule({
         id,
         activationEvents: [StartupEvent.id],
         triggeredEvents: [eventKey(stateEvent)],
-      },
-      () => contributes(Number, create({ number: 1 })),
-    );
+        activate: () => contributes(Number, create({ number: 1 })),
+      }),
+      defineModule({
+        id: 'dxos.org/test/doubler',
+        activationEvents: [eventKey(stateEvent)],
+        activate: (context) => {
+          const [counter] = context.requestCapability(Number);
+          const state = create({ total: counter.number * 2 });
+          unsubscribe = effect(() => {
+            state.total = counter.number * 2;
+          });
+          return contributes(Total, state);
+        },
+        deactivate: () => {
+          unsubscribe?.();
+        },
+      }),
+    ]);
 
-    let unsubscribe: () => void;
-    const Doubler = define(
-      { id: 'dxos.org/test/doubler', activationEvents: [eventKey(stateEvent)] },
-      (context) => {
-        const [counter] = context.requestCapability(Number);
-        const state = create({ total: counter.number * 2 });
-        unsubscribe = effect(() => {
-          state.total = counter.number * 2;
-        });
-        return contributes(Total, state);
-      },
-      () => {
-        unsubscribe?.();
-      },
-    );
-    plugins = [Counter, Doubler];
-
-    const manager = new PluginManager({ plugins: [Counter, Doubler], pluginLoader });
+    const manager = new PluginManager({ plugins: [Test], pluginLoader });
     await manager.activate(StartupEvent);
-    expect(manager.activated).toEqual([Counter.meta.id, Doubler.meta.id]);
+    expect(manager.activated).toEqual(Test.modules.map((m) => m.id));
 
     const [counter] = manager.context.requestCapability(Number);
     const [doubler] = manager.context.requestCapability(Total);
