@@ -38,6 +38,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@dxos/echo-signals": "workspace:*",
     "@types/react": "~18.2.0",
     "react": "~18.2.0"
   },
