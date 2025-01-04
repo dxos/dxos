@@ -15,9 +15,9 @@ import {
   createDatabase,
   createFunction,
   createGpt,
-  createList,
   createOr,
   createSwitch,
+  createThread,
   createTimer,
 } from './shapes';
 import { type BaseComputeShape, type ComputeShape } from './shapes/defs';
@@ -90,7 +90,7 @@ export const createTest3 = (db = false) => {
   const nodes: Shape[] = [
     createChat({ id: 'a', center: pos({ x: -12, y: 0 }) }),
     createGpt({ id: 'b', center: pos({ x: 0, y: 0 }) }),
-    createList({ id: 'c', center: pos({ x: 16, y: -4 }) }),
+    createThread({ id: 'c', center: pos({ x: 16, y: -4 }) }),
     createCounter({ id: 'd', center: pos({ x: 8, y: 6 }) }),
     ...(db ? [createDatabase({ id: 'e', center: pos({ x: -10, y: 6 }) })] : []),
   ];
