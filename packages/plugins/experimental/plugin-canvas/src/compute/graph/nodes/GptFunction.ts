@@ -81,6 +81,7 @@ const callOllama: FunctionCallback<GptInput, GptOutput> = async ({ systemPrompt,
         message: message.content,
       },
     ],
+    cot: [],
   };
 };
 
@@ -153,22 +154,45 @@ const callEdge =
       },
     });
 
+    const outputMessages = messages.flatMap(({ role, content }) =>
+      content.flatMap((content) => {
+        switch (content.type) {
+          case 'text': {
+            const textWithoutCot = content.text.replace(/<cot>[\s\S]*?<\/cot>/g, '').trim();
+            return textWithoutCot ? [{ role, message: textWithoutCot }] : [];
+          }
+          default:
+            return [];
+        }
+      }),
+    );
+
+    const chainOfThought = messages.flatMap(({ role, content }) =>
+      content.map((content) => {
+        switch (content.type) {
+          case 'text': {
+            const cotMatch = content.text.match(/<cot>([\s\S]*?)<\/cot>/);
+            return cotMatch ? cotMatch[1].trim() : '';
+          }
+          case 'tool_use':
+            return JSON.stringify(content);
+          case 'tool_result':
+            return content.content;
+          default:
+            return '';
+        }
+      }),
+    );
+
     return {
       result: [
         {
           role: 'user',
           message: prompt,
         },
-        ...messages.flatMap(({ role, content }) =>
-          content.flatMap((content) =>
-            content.type === 'text'
-              ? [{ role, message: content.text }]
-              : content.type === 'tool_use'
-                ? [{ role, message: JSON.stringify(content) }]
-                : [],
-          ),
-        ),
+        ...outputMessages,
       ],
       tokens: 0,
+      cot: chainOfThought.join('\n'),
     };
   };

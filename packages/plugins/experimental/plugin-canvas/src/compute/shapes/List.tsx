@@ -54,7 +54,7 @@ export const ListComponent = ({ shape }: ShapeComponentProps<ListShape>) => {
 
 export const ListItem = ({ classNames, item }: ThemedClassName<{ item: any }>) => {
   if (typeof item !== 'object') {
-    return <div className={mx(classNames)}>{item}</div>;
+    return <div className={mx(classNames, 'whitespace-pre-wrap')}>{item}</div>;
   }
 
   return (
