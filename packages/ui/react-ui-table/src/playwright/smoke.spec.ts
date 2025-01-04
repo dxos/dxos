@@ -38,6 +38,26 @@ test.describe('Table', () => {
     await page.close();
   });
 
+  test('selection', async ({ browser }) => {
+    const { page } = await setupPage(browser, { url: storyUrl });
+    const table = new TableManager(page);
+
+    await table.grid.ready();
+    // Select All
+    await table.toggleSelectAll();
+    await expect(table.selection(0)).toBeChecked();
+    await expect(table.selection(1)).toBeChecked();
+    await expect(table.selection(2)).toBeChecked();
+
+    // Deselect All
+    await table.toggleSelectAll();
+    await expect(table.selection(0)).not.toBeChecked();
+    await expect(table.selection(1)).not.toBeChecked();
+    await expect(table.selection(2)).not.toBeChecked();
+
+    await page.close();
+  });
+
   test('delete row', async ({ browser }) => {
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
