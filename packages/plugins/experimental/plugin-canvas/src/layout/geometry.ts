@@ -32,6 +32,7 @@ export const round = (n: number, m: number) => Math.round(n / m) * m;
 export const pointAdd = (a: Point, b: Point): Point => ({ x: a.x + b.x, y: a.y + b.y });
 export const pointSubtract = (a: Point, b: Point): Point => ({ x: a.x - b.x, y: a.y - b.y });
 export const pointMultiply = (a: Point, b = 1): Point => ({ x: a.x * b, y: a.y * b });
+export const pointDivide = (a: Point, b = 1): Point => ({ x: a.x / b, y: a.y / b });
 export const pointMid = (a: Point, b: Point): Point => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
 
 export const getDistance = (p1: Point, p2: Point): number =>

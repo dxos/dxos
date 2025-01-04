@@ -15,7 +15,7 @@ import { useEditorContext } from './useEditorContext';
 import { getClosestAnchor } from './useLayout';
 import { useSnap } from './useSnap';
 import { type Anchor } from '../components';
-import { getInputPoint } from '../layout';
+import { getInputPoint, pointAdd } from '../layout';
 import { createRectangle, parseAnchorId } from '../shapes';
 import { createId, itemSize } from '../testing';
 import { type Polygon } from '../types';
@@ -78,9 +78,15 @@ export type DraggingState =
 export class DragMonitor {
   _instance = 'DragMonitor-' + String(Math.random()).slice(2, 6); // TODO(burdon): ???
   private readonly _state: Signal<DraggingState> = signal<DraggingState>({ type: 'inactive' });
+  private _offset?: Point;
 
   get dragging() {
     return this._state.value.type !== 'inactive';
+  }
+
+  get offset(): Point {
+    invariant(this._offset);
+    return this._offset;
   }
 
   /**
@@ -88,6 +94,13 @@ export class DragMonitor {
    */
   state(test?: (state: DraggingState) => boolean): Signal<DraggingState> {
     return !test || test(this._state.value) ? this._state : signal<DraggingState>({ type: 'inactive' });
+  }
+
+  /**
+   * Offset relative to the center of the shape.
+   */
+  setOffset(offset: Point) {
+    this._offset = offset;
   }
 
   /**
@@ -111,6 +124,7 @@ export class DragMonitor {
   stop() {
     log.info('stop', { id: this._instance });
     this._state.value = { type: 'inactive' };
+    this._offset = undefined;
   }
 
   // TODO(burdon): Pluggable callbacks. Move logic from drag handler below.
@@ -165,7 +179,6 @@ export const useDragMonitor = () => {
       return;
     }
 
-    console.log('useDragMonitor', dragMonitor._instance);
     return monitorForElements({
       //
       // Drag
@@ -176,7 +189,7 @@ export const useDragMonitor = () => {
 
         switch (state.value.type) {
           case 'frame': {
-            dragMonitor.update({ shape: { ...state.value.shape, center: pos } });
+            dragMonitor.update({ shape: { ...state.value.shape, center: pointAdd(pos, dragMonitor.offset) } });
             break;
           }
 
@@ -221,7 +234,7 @@ export const useDragMonitor = () => {
               // graph.addNode({ id: shape.id, data: { ...shape } });
               log.info('copy', { shape: state.value.shape });
             } else {
-              node.data.center = snapPoint(pos);
+              node.data.center = snapPoint(pointAdd(pos, dragMonitor.offset));
             }
 
             break;

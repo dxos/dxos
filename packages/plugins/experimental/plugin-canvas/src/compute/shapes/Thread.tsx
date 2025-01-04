@@ -63,13 +63,18 @@ export const ThreadItem = ({ classNames, item }: ThemedClassName<{ item: any }>)
   }
 
   // TODO(burdon): Hack; introspect type.
+  // TODO(burdon): Markdown parser.
   const { role, message } = item;
   return (
     <div className={mx('flex', classNames, role === 'user' && 'justify-end')}>
       <div
         className={mx(
           'block rounded-md p-1 px-2 text-sm',
-          role === 'user' ? 'bg-blue-100 dark:bg-blue-800' : 'whitespace-pre-wrap bg-neutral-50 dark:bg-neutral-800',
+          role === 'user'
+            ? 'bg-blue-100 dark:bg-blue-800'
+            : role === 'system'
+              ? 'bg-red-100, dark:bg-red-800'
+              : 'whitespace-pre-wrap bg-neutral-50 dark:bg-neutral-800',
         )}
       >
         {message}

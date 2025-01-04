@@ -23,7 +23,7 @@ export const PluginContainer = ({ plugins: definitions, core, state, placeholder
   const [error, setError] = useState<unknown>();
 
   useEffect(() => {
-    log('initializing plugins', { enabled: state.enabled });
+    log.info('initializing plugins', { enabled: state.enabled });
     const t = setTimeout(async () => {
       try {
         const enabledIds = [...core, ...state.enabled];
@@ -37,11 +37,12 @@ export const PluginContainer = ({ plugins: definitions, core, state, placeholder
 
         const plugins = await Promise.all(
           enabled.map(async (definition) => {
-            const plugin = await initializePlugin(definition).catch((err) => {
+            log.info('being init', { plugin: definition.meta.id });
+            const plugin = initializePlugin(definition).catch((err) => {
               log.error('Failed to initialize plugin:', { id: definition.meta.id, err });
             });
 
-            log('initialized', { plugin: definition.meta.id });
+            log.info('initialized', { plugin: definition.meta.id });
             return plugin;
           }),
         );
