@@ -20,7 +20,7 @@ import { log } from '@dxos/log';
 import { Function, type FunctionCallback } from './Function';
 import { GptInput, GptOutput } from '../../shapes';
 import { type StateMachineContext } from '../state-machine';
-import { isNotNullable } from 'effect/Predicate';
+import { isNotNullOrUndefined } from '@dxos/util';
 
 export class GptFunction extends Function<GptInput, GptOutput> {
   constructor() {
@@ -91,6 +91,8 @@ const callOllama: FunctionCallback<GptInput, GptOutput> = async ({ systemPrompt,
 const callEdge =
   (client: AIServiceClientImpl): FunctionCallback<GptInput, GptOutput> =>
   async ({ systemPrompt, prompt, tools: toolsInput, history = [] }) => {
+    log.info('callEdge', { systemPrompt, prompt, toolsInput, history });
+
     let tools: LLMToolDefinition[] = [];
     if (toolsInput === undefined) {
       tools = [];
@@ -100,7 +102,7 @@ const callEdge =
       tools = [toolsInput as any];
     }
 
-    tools = tools.filter(isNotNullable);
+    tools = tools.filter(isNotNullOrUndefined);
 
     const spaceId = SpaceId.random(); // TODO(dmaretskyi): Use spaceId from the context.
     const threadId = ObjectId.random();

@@ -35,7 +35,9 @@ export class Database extends ComputeNode<void, { [DEFAULT_OUTPUT]: LLMToolDefin
 
     const types = [
       ...(await context.space.db.schemaRegistry.query().run()),
-      ...context.space.db.graph.schemaRegistry.schemas,
+      ...context.space.db.graph.schemaRegistry.schemas.filter((schema) =>
+        getSchemaTypename(schema)?.startsWith('example.org'),
+      ),
     ].filter((schema) => getSchemaTypename(schema) !== StoredSchema.typename);
     log.info('TYPES', { types });
 
