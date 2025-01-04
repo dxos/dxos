@@ -20,6 +20,7 @@ import { log } from '@dxos/log';
 import { Function, type FunctionCallback } from './Function';
 import { GptInput, GptOutput } from '../../shapes';
 import { type StateMachineContext } from '../state-machine';
+import { isNotNullable } from 'effect/Predicate';
 
 export class GptFunction extends Function<GptInput, GptOutput> {
   constructor() {
@@ -98,6 +99,8 @@ const callEdge =
     if (!Array.isArray(toolsInput)) {
       tools = [toolsInput as any];
     }
+
+    tools = tools.filter(isNotNullable);
 
     const spaceId = SpaceId.random(); // TODO(dmaretskyi): Use spaceId from the context.
     const threadId = ObjectId.random();
