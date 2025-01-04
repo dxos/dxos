@@ -60,9 +60,11 @@ export class EchoDataSource implements DataSource {
   }
 
   private async _getAllSchema(): Promise<S.Schema.AnyNoContext[]> {
-    return [...(await this._db.schemaRegistry.query().run()), ...this._db.graph.schemaRegistry.schemas].filter(
-      (schema) => getSchemaTypename(schema) !== StoredSchema.typename,
-    );
+    return [
+      ...(await this._db.schemaRegistry.query().run()),
+      // TODO(dmaretskyi): Remove once we can serialize recursive schema.
+      ...this._db.graph.schemaRegistry.schemas.filter((s) => getSchemaTypename(s)?.startsWith('example.org')),
+    ].filter((schema) => getSchemaTypename(schema) !== StoredSchema.typename);
   }
 
   private _objectToNode(object: ReactiveEchoObject<any>): Node {
