@@ -14,7 +14,7 @@ import { tokenSet } from './index';
 const semanticValues = facetSemanticValues((tokenSet.colors as Facet).semantic);
 const mainCondition = 'p3';
 
-const structure = Object.entries(tokenSet.colors.physical.series)
+const physicalSwatches = Object.entries(tokenSet.colors.physical.series)
   .map(([seriesId, { [mainCondition]: series }]) => {
     const resolvedNaming = resolveNaming(series?.naming as any);
     const values = seriesValues(series!, Array.from(semanticValues?.[seriesId] ?? []));
@@ -27,10 +27,26 @@ const structure = Object.entries(tokenSet.colors.physical.series)
         namespace: tokenSet.colors.physical.namespace,
         resolvedNaming,
         values,
-      }).map((declaration) => declaration.split(':')[0]),
+      })
+        .map((declaration) => declaration.split(':')[0])
+        .map((variable) => {
+          const name = variable.substring(tokenSet.colors.physical.namespace!.length + 2);
+          const results = name.split(/-|\\\/\\?/);
+          const [seriesId, shadeValue, opacity] = results;
+          return {
+            seriesId,
+            shadeValue: parseFloat(shadeValue),
+            opacity: typeof opacity !== 'undefined' ? parseFloat(opacity) : 1,
+            name,
+            variable,
+          } satisfies SwatchProps;
+        })
+        .sort((a, b) => {
+          return a.shadeValue - b.shadeValue - (a.opacity - b.opacity);
+        }),
     ];
   })
-  .reverse();
+  .reverse() as [string, SwatchProps[]][];
 
 type SwatchProps = { variable: string; seriesId: string; shadeValue: number; opacity: number; name: string };
 
@@ -52,23 +68,7 @@ export const Audit = () => {
       <h1>Semantic tokens</h1>
       {}
       <h1>Physical tokens</h1>
-      {structure.map(([seriesId, variables]) => {
-        const swatches = (variables as string[])
-          .map((variable) => {
-            const name = variable.substring(tokenSet.colors.physical.namespace!.length + 2);
-            const results = name.split(/-|\\\/\\?/);
-            const [seriesId, shadeValue, opacity] = results;
-            return {
-              seriesId,
-              shadeValue: parseFloat(shadeValue),
-              opacity: typeof opacity !== 'undefined' ? parseFloat(opacity) : 1,
-              name,
-              variable,
-            };
-          })
-          .sort((a, b) => {
-            return a.shadeValue - b.shadeValue - (a.opacity - b.opacity);
-          });
+      {physicalSwatches.map(([seriesId, swatches]) => {
         return (
           <>
             <h2 className='mbs-4 mbe-2'>{seriesId}</h2>
