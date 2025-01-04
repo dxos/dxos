@@ -29,13 +29,14 @@ export class Database extends ComputeNode<void, { [DEFAULT_OUTPUT]: LLMToolDefin
     return raise(new InvalidStateError());
   }
 
-  override onInitialize(ctx: Context, context: StateMachineContext) {
+  override async onInitialize(ctx: Context, context: StateMachineContext): Promise<void> {
     invariant(context.space, 'space is required');
     const dataSource = new EchoDataSource(context.space.db);
 
-    const types = context.space.db.graph.schemaRegistry.schemas.filter(
-      (schema) => getSchemaTypename(schema) !== StoredSchema.typename,
-    );
+    const types = [
+      ...(await context.space.db.schemaRegistry.query().run()),
+      ...context.space.db.graph.schemaRegistry.schemas,
+    ].filter((schema) => getSchemaTypename(schema) !== StoredSchema.typename);
     log.info('TYPES', { types });
 
     this.setOutput({ [DEFAULT_OUTPUT]: createCypherTool(dataSource, types) });

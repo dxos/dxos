@@ -8,7 +8,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { type ReactiveEchoObject } from '@dxos/echo-db';
-import { S, getTypename } from '@dxos/echo-schema';
+import { S, getSchemaTypename, getTypename } from '@dxos/echo-schema';
 import { createGraph, type GraphModel, type GraphNode } from '@dxos/graph';
 import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
@@ -160,9 +160,20 @@ const meta: Meta<EditorRootProps> = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ space }, { args: { spec } }) => {
-        space.db.graph.schemaRegistry.addSchema(types);
+      onSpaceCreated: async ({ space }, { args: { spec, storeSchema } }) => {
         if (spec) {
+          if (storeSchema) {
+            // Replace all schema in the spec with the registered schema.
+            const allSchema = [...new Set(spec.map((s: any) => s.type))] as S.Schema.AnyNoContext[];
+            const registeredSchema = await space.db.schemaRegistry.register(allSchema);
+            spec = spec.map((s: any) => ({
+              ...s,
+              type: registeredSchema.find((schema) => getSchemaTypename(schema) === getSchemaTypename(s.type)),
+            }));
+          } else {
+            space.db.graph.schemaRegistry.addSchema(types);
+          }
+
           const createObjects = createObjectFactory(space.db, generator);
           await createObjects(spec as TypeSpec[]);
           await space.db.flush({ indexes: true });
@@ -253,6 +264,7 @@ export const GPT: Story = {
     snapToGrid: false,
     // sidebar: 'state-machine',
     registry: new ShapeRegistry(computeShapes),
+    storeSchema: true,
     spec: [
       { type: Testing.OrgType, count: 2 },
       { type: Testing.ProjectType, count: 4 },

@@ -142,6 +142,7 @@ const callEdge =
       client,
       logger: (event) => {
         if (event.type === 'message') {
+          console.log('MSG', event.message);
           messages.push(event.message);
         }
       },
@@ -153,10 +154,15 @@ const callEdge =
           role: 'user',
           message: prompt,
         },
-        ...messages.map(({ role, content }) => ({
-          role,
-          message: (content.findLast(({ type }) => type === 'text') as MessageTextContentBlock)?.text ?? '',
-        })),
+        ...messages.flatMap(({ role, content }) =>
+          content.flatMap((content) =>
+            content.type === 'text'
+              ? [{ role, message: content.text }]
+              : content.type === 'tool_use'
+                ? [{ role, message: JSON.stringify(content) }]
+                : [],
+          ),
+        ),
       ],
       tokens: 0,
     };

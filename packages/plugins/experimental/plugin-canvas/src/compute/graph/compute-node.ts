@@ -73,10 +73,10 @@ export abstract class ComputeNode<Input, Output> {
   /**
    * Initialize the node (and set clean-up logic).
    */
-  initialize(ctx: Context, context: StateMachineContext, cb: AsyncUpdate<Output>) {
+  async initialize(ctx: Context, context: StateMachineContext, cb: AsyncUpdate<Output>) {
     this._callback = cb;
     this._context = context;
-    this.onInitialize(ctx, context);
+    await this.onInitialize(ctx, context);
     ctx.onDispose(() => {
       this._context = undefined;
     });
@@ -146,7 +146,7 @@ export abstract class ComputeNode<Input, Output> {
     }
   }
 
-  protected onInitialize(ctx: Context, context: StateMachineContext) {}
+  protected onInitialize(ctx: Context, context: StateMachineContext): void | Promise<void> {}
 
   // TODO(burdon): Use Effect try (for error propagation, logging, etc.)
   protected abstract invoke(input: Input): Promise<Output>;

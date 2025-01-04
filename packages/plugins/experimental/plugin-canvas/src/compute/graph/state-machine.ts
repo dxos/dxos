@@ -68,7 +68,7 @@ export class StateMachine {
     this._ctx = new Context();
     await Promise.all(
       this._graph.nodes.map(async (node) => {
-        node.data.initialize(this._ctx, this._context, (output: any) => {
+        await node.data.initialize(this._ctx, this._context, (output: any) => {
           if (!this._ctx) {
             log.warn('not running'); // TODO(burdon): Not displayed.
             return;

@@ -1,4 +1,5 @@
 import { EchoDatabase, Filter, type ReactiveEchoObject } from '@dxos/echo-db';
+import { S } from '@dxos/echo-schema';
 import type { DataSource, Node, Relationship } from './query-executor';
 import { log } from '@dxos/log';
 import { getSchemaDXN, getSchemaTypename, StoredSchema, toJsonSchema } from '@dxos/echo-schema';
@@ -16,7 +17,7 @@ export class EchoDataSource implements DataSource {
       return objects.map(this._objectToNode);
     }
 
-    const schema = this._db.graph.schemaRegistry.schemas.find((s) => getSchemaTypename(s)?.endsWith(label));
+    const schema = (await this._getAllSchema()).find((s) => getSchemaTypename(s)?.endsWith(label));
 
     if (!schema) {
       return [];
@@ -28,7 +29,7 @@ export class EchoDataSource implements DataSource {
 
   @log.method()
   async getRelationships({ label }: { label?: string }): Promise<Relationship[]> {
-    const syntheticRefRelationships = this._db.graph.schemaRegistry.schemas
+    const syntheticRefRelationships = (await this._getAllSchema())
       .filter((schema) => getSchemaTypename(schema) !== StoredSchema.typename)
       .flatMap((schema) => {
         const jsonSchema = toJsonSchema(schema);
@@ -36,7 +37,7 @@ export class EchoDataSource implements DataSource {
 
         return relationships.map(([key, value]) => {
           const relationshipLabel = formatInferredRelationshipLabel(
-            jsonSchema.$id ?? raise(new Error('Schema must have $id')),
+            jsonSchema.typename ?? raise(new Error('Schema must have typename')),
             key,
           );
 
@@ -58,12 +59,18 @@ export class EchoDataSource implements DataSource {
     ).flat();
   }
 
+  private async _getAllSchema(): Promise<S.Schema.AnyNoContext[]> {
+    return [...(await this._db.schemaRegistry.query().run()), ...this._db.graph.schemaRegistry.schemas].filter(
+      (schema) => getSchemaTypename(schema) !== StoredSchema.typename,
+    );
+  }
+
   private _objectToNode(object: ReactiveEchoObject<any>): Node {
     const { id, ...properties } = object;
     return {
       id,
       kind: 'node',
-      label: formatNodeLabel(getSchemaDXN(getSchema(object)!)!.toString()),
+      label: formatNodeLabel(getSchemaTypename(getSchema(object)!)!),
       properties,
     };
   }
@@ -81,7 +88,7 @@ export class EchoDataSource implements DataSource {
         return {
           id: `${object.id}-${prop}-${target.id}`,
           kind: 'relationship',
-          label: formatInferredRelationshipLabel(getSchemaDXN(getSchema(object)!)!.toString(), prop),
+          label: formatInferredRelationshipLabel(getSchemaTypename(getSchema(object)!)!, prop),
           properties: {},
           source: this._objectToNode(object),
           target: this._objectToNode(target),
