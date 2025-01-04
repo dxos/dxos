@@ -305,7 +305,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     const { props } = this._projection.getFieldProjection(field.id);
     switch (props.format) {
       case FormatEnum.Ref: {
-        // TODO(ZaymonFC): This get's called an additional time by on blur, but with the cell editors
+        // TODO(ZaymonFC): This get's called an additional time by the cell editor onBlur, but with the cell editors
         // plain string value. Maybe onBlur should be called with the actual value?
         if (!isReactiveObject(value)) {
           break;
