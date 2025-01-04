@@ -65,6 +65,9 @@ const Render = ({ id = 'test', graph: _graph, machine, model, init, sidebar, ...
     };
   }, [machine]);
 
+  // Monitor.
+  const graphMonitor = useGraphMonitor(machine);
+
   // Layout.
   const [graph, setGraph] = useState<GraphModel<GraphNode<Shape>> | undefined>(_graph);
   useEffect(() => {
@@ -83,9 +86,6 @@ const Render = ({ id = 'test', graph: _graph, machine, model, init, sidebar, ...
 
     return () => clearTimeout(t);
   }, [space, init]);
-
-  // Monitor.
-  const graphMonitor = useGraphMonitor(machine);
 
   // Selection.
   const selection = useMemo(() => new SelectionModel(), []);

@@ -12,8 +12,8 @@ import type { Connection } from '../types';
 // TODO(burdon): Figure out sync.
 // TODO(burdon): Make state machine reactive.
 export const useGraphMonitor = (machine?: StateMachine): GraphMonitor => {
-  return useMemo<GraphMonitor>(
-    () => ({
+  return useMemo<GraphMonitor>(() => {
+    return {
       onCreate: (node) => {
         if (machine) {
           const data = node.data as ComputeShape<BaseComputeShape, ComputeNode<any, any>>;
@@ -32,7 +32,6 @@ export const useGraphMonitor = (machine?: StateMachine): GraphMonitor => {
           void machine.open();
         }
       },
-    }),
-    [machine],
-  );
+    };
+  }, [machine]);
 };
