@@ -17,7 +17,7 @@ import { type CanvasBoardType, type Shape } from '../types';
 
 export const CanvasContainer = ({ canvas }: { canvas: CanvasBoardType }) => {
   const id = fullyQualifiedId(canvas);
-  const graph = useMemo(() => new GraphModel<GraphNode<Shape>>(canvas.graph), [canvas.graph]);
+  const graph = useMemo(() => new GraphModel<GraphNode<Shape>>(), []);
   const machine = useMemo(() => new StateMachine(), []);
   const graphMonitor = useGraphMonitor(machine);
   const registry = useMemo(() => new ShapeRegistry(computeShapes), []);
