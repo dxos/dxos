@@ -19,12 +19,12 @@ import { createObjectFactory, Testing, type TypeSpec, type ValueGenerator } from
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
-import { type ComputeNode, computeShapes, type StateMachine, type StateMachineContext } from '../../compute';
-import type { BaseComputeShape, ComputeShape } from '../../compute/shapes/defs';
+import { computeShapes, type StateMachine, type StateMachineContext } from '../../compute';
 import { createComputeGraph, createTest1, createTest2, createTest3 } from '../../compute/testing';
-import { type GraphMonitor, SelectionModel } from '../../hooks';
+import { SelectionModel } from '../../hooks';
+import { useGraphMonitor } from '../../hooks/useGraphMonitor';
 import { doLayout } from '../../layout';
-import { type Connection, RectangleShape, type Shape } from '../../types';
+import { RectangleShape, type Shape } from '../../types';
 import { AttentionContainer } from '../AttentionContainer';
 import { ShapeRegistry } from '../Canvas';
 
@@ -87,30 +87,7 @@ const Render = ({ id = 'test', graph: _graph, machine, model, init, sidebar, ...
   }, [space, init]);
 
   // Monitor.
-  const graphMonitor = useMemo<GraphMonitor>(
-    () => ({
-      onCreate: (node) => {
-        if (machine) {
-          const data = node.data as ComputeShape<BaseComputeShape, ComputeNode<any, any>>;
-          // TODO(burdon): Check type (e.g., could be just decorative).
-          machine.graph.addNode({ id: data.id, data: data.node });
-          void machine.open(); // TODO(burdon): Make automatic.
-          forceUpdate({});
-        }
-      },
-      onLink: (edge) => {
-        if (machine) {
-          // TODO(burdon): Check type.
-          const data = edge.data as Connection;
-          const { input, output } = data ?? {};
-          machine.graph.addEdge({ id: edge.id, source: edge.source, target: edge.target, data: { input, output } });
-          void machine.open();
-          forceUpdate({});
-        }
-      },
-    }),
-    [machine],
-  );
+  const graphMonitor = useGraphMonitor(machine);
 
   // Selection.
   const selection = useMemo(() => new SelectionModel(), []);

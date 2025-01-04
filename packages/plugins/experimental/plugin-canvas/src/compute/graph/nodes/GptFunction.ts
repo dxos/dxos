@@ -5,15 +5,16 @@
 import ollama from 'ollama';
 
 import {
-  AIServiceClientImpl,
   runLLM,
+  AIServiceClientImpl,
   type LLMToolDefinition,
   type Message,
   type MessageTextContentBlock,
-  ObjectId,
+  ObjectId, // TODO(burdon): Reconcile with echo-schema.
 } from '@dxos/assistant';
 import { SpaceId } from '@dxos/client/echo';
 import { type Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { Function, type FunctionCallback } from './Function';
@@ -22,12 +23,13 @@ import { type StateMachineContext } from '../state-machine';
 
 export class GptFunction extends Function<GptInput, GptOutput> {
   constructor() {
-    super(GptInput, GptOutput, undefined, 'GPT');
+    super(GptInput, GptOutput, 'GPT');
   }
 
-  // TODO(burdon): Fix abstraction: should just be Function.
+  _cb?: FunctionCallback<GptInput, GptOutput>;
+
   protected override onInitialize(ctx: Context, context: StateMachineContext) {
-    switch (this._context?.model) {
+    switch (context?.model) {
       case '@anthropic/claude-3-5-sonnet-20241022': {
         this._cb = callEdge(
           new AIServiceClientImpl({
@@ -43,6 +45,11 @@ export class GptFunction extends Function<GptInput, GptOutput> {
         this._cb = callOllama;
       }
     }
+  }
+
+  override async invoke(input: GptInput) {
+    invariant(this._cb);
+    return this._cb!(input);
   }
 }
 

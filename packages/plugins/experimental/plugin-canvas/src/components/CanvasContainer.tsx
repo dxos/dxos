@@ -10,6 +10,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 
 import { AttentionContainer } from './AttentionContainer';
 import { Editor } from './Editor';
+import { StateMachine } from '../compute';
 import { type CanvasBoardType, type Shape } from '../types';
 
 export const CanvasContainer = ({ canvas }: { canvas: CanvasBoardType }) => {
@@ -17,6 +18,10 @@ export const CanvasContainer = ({ canvas }: { canvas: CanvasBoardType }) => {
   const graph = useMemo(() => new GraphModel<GraphNode<Shape>>(canvas.graph), [canvas.graph]);
 
   // TODO(burdon): Add graph monitor to sync.
+  const machine = useMemo(() => {
+    const machine = new StateMachine();
+    return machine;
+  });
 
   return (
     <StackItem.Content id={id} toolbar={false}>

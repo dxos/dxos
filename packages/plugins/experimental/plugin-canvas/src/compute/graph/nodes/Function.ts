@@ -15,21 +15,12 @@ export type DefaultOutput = S.Schema.Type<typeof DefaultOutput>;
 
 export type FunctionCallback<INPUT, OUTPUT> = (input: INPUT) => Promise<OUTPUT>;
 
-const defaultCallback: FunctionCallback<any, any> = (input) => {
-  const value = (input as any)[DEFAULT_INPUT];
-  return {
-    [DEFAULT_OUTPUT]: value,
-  } as any;
-};
-
 export class Function<INPUT, OUTPUT> extends ComputeNode<INPUT, OUTPUT> {
   override readonly type = 'function';
 
   constructor(
     inputSchema: S.Schema<INPUT>,
     outputSchema: S.Schema<OUTPUT>,
-    // TODO(burdon): Make private readonly (see GPT lifecycle).
-    protected _cb: FunctionCallback<INPUT, OUTPUT> = defaultCallback,
     private readonly _name = 'Function',
   ) {
     super(inputSchema, outputSchema);
@@ -40,6 +31,9 @@ export class Function<INPUT, OUTPUT> extends ComputeNode<INPUT, OUTPUT> {
   }
 
   override async invoke(input: INPUT) {
-    return this._cb(input);
+    const value = (input as any)[DEFAULT_INPUT];
+    return {
+      [DEFAULT_OUTPUT]: value,
+    } as any;
   }
 }
