@@ -32,6 +32,7 @@ import { VIEW_FIELD_LIMIT, type FieldType, type ViewProjection } from '@dxos/sch
 import { SelectionModel } from './selection-model';
 import { type TableType } from '../types';
 import { tableButtons, tableControls, touch } from '../util';
+import { makeRef, isReactiveObject } from '@dxos/live-object';
 
 export type SortDirection = 'asc' | 'desc';
 export type SortConfig = { fieldId: string; direction: SortDirection };
@@ -470,7 +471,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
           return ''; // TODO(burdon): Show error.
         }
 
-        return getValue(value, field.referencePath);
+        return getValue(value.target, field.referencePath);
       }
 
       default: {
@@ -490,7 +491,11 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     const { props } = this._projection.getFieldProjection(field.id);
     switch (props.format) {
       case FormatEnum.Ref: {
-        setValue(this._rows.value[rowIdx], field.path, value);
+        // TODO(dmaretskyi): FIX ME!!! When editing refs the table code calls the setter two times: once with the actual object, and then the second time onBlur only with the referenced property (usually a string), here we ignore the second call but we should fix the table code.
+        if (!isReactiveObject(value)) {
+          return;
+        }
+        setValue(this._rows.value[rowIdx], field.path, makeRef(value));
         break;
       }
 

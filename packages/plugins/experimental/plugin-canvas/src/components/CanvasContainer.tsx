@@ -19,7 +19,7 @@ export const CanvasContainer = ({ canvas }: { canvas: CanvasBoardType }) => {
   const id = fullyQualifiedId(canvas);
   // TODO(burdon): Use canvas.graph.
   const space = getSpace(canvas);
-  const graph = useMemo(() => createTest3(), []);
+  const graph = useMemo(() => createTest3(true), []);
   const { machine } = useMemo(() => createMachine(graph), []);
   const editorRef = useRef<EditorController>(null);
   useEffect(() => {
@@ -28,7 +28,7 @@ export const CanvasContainer = ({ canvas }: { canvas: CanvasBoardType }) => {
     }
 
     // TODO(burdon): Better abstraction for context?
-    machine.setContext({ space, model: undefined });
+    machine.setContext({ space, model: '@anthropic/claude-3-5-sonnet-20241022' });
     void machine.open();
     const off = machine.update.on((ev) => {
       const { node } = ev;
@@ -42,14 +42,6 @@ export const CanvasContainer = ({ canvas }: { canvas: CanvasBoardType }) => {
   }, [machine]);
   const graphMonitor = useGraphMonitor(machine);
   const registry = useMemo(() => new ShapeRegistry(computeShapes), []);
-
-  // TODO(burdon): When in solo both components are still mounted. Should transplant.
-  useEffect(() => {
-    console.log('construct CanvasContainer');
-    return () => {
-      console.log('destruct CanvasContainer');
-    };
-  }, []);
 
   // TODO(burdon): Allow configuration of UI/Toolbar.
   return (
