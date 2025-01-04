@@ -36,6 +36,7 @@ export const GptInput = S.Struct({
 export const GptOutput = S.Struct({
   result: S.Array(GptMessage),
   tokens: S.Number,
+  cot: S.optional(S.String),
 });
 
 export type GptInput = S.Schema.Type<typeof GptInput>;

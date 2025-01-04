@@ -91,6 +91,7 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
                 y: (projection.scale * (shape.size.height + defaultAnchorSize.height)) / 2,
               });
 
+              // Set offset to center of shape.
               const pos = getInputPoint(root, location.current.input);
               dragMonitor.setOffset(pointDivide(pointSubtract(center, pos), projection.scale));
 

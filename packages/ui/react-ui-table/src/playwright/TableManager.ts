@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Page } from '@playwright/test';
+import { Locator, type Page } from '@playwright/test';
 
 import { DxGridManager } from '@dxos/lit-grid/testing';
 
@@ -42,6 +42,10 @@ export class TableManager {
 
   public async toggleSelectAll(): Promise<void> {
     await this.page.getByTestId(TABLE_SELECTORS.selection).nth(0).click();
+  }
+
+  public selection(index: number): Locator {
+    return this.page.getByTestId(TABLE_SELECTORS.selection).nth(index + 1);
   }
 
   public async sortColumn(index: number, direction: 'ascending' | 'descending'): Promise<void> {
