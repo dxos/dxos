@@ -69,7 +69,7 @@ export const ThreadItem = ({ classNames, item }: ThemedClassName<{ item: any }>)
       <div
         className={mx(
           'block rounded-md p-1 px-2',
-          role === 'user' ? 'bg-blue-800 dark:bg-blue-200' : 'whitespace-pre-wrap bg-neutral-800 dark:bg-neutral-200',
+          role === 'user' ? 'bg-blue-200 dark:bg-blue-800' : 'whitespace-pre-wrap bg-neutral-200 dark:bg-neutral-800',
         )}
       >
         {message}
