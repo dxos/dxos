@@ -168,7 +168,7 @@ const meta: Meta<EditorRootProps> = {
 
             spec = spec.map((schema: any) => ({
               ...schema,
-              type: registeredSchema.find((schema) => getSchemaTypename(schema) === getSchemaTypename(schema.type)),
+              type: registeredSchema.find((s) => getSchemaTypename(s) === getSchemaTypename(schema.type)),
             }));
           } else {
             space.db.graph.schemaRegistry.addSchema(types);
