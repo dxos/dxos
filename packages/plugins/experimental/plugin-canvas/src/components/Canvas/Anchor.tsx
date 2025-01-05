@@ -58,13 +58,12 @@ export type AnchorProps = ThemedClassName<{
   shape: Polygon;
   anchor: Anchor;
   size?: Dimension;
-  onMouseLeave?: () => void;
 }>;
 
 /**
  * Anchor points for attaching links.
  */
-export const Anchor = ({ classNames, shape, anchor, size = defaultAnchorSize, onMouseLeave }: AnchorProps) => {
+export const Anchor = ({ classNames, shape, anchor, size = defaultAnchorSize }: AnchorProps) => {
   const { dragMonitor } = useEditorContext();
   const { root, projection } = useProjection();
 
@@ -89,11 +88,11 @@ export const Anchor = ({ classNames, shape, anchor, size = defaultAnchorSize, on
         getInitialData: () => ({ type: 'anchor', shape, anchor }) satisfies DragDropPayload,
         onGenerateDragPreview: ({ nativeSetDragImage }) => {
           setCustomNativeDragPreview({
-            nativeSetDragImage,
             render: ({ container }) => {
               setPreview(container);
               return () => setPreview(undefined);
             },
+            nativeSetDragImage,
           });
         },
         onDragStart: () => {
@@ -110,7 +109,6 @@ export const Anchor = ({ classNames, shape, anchor, size = defaultAnchorSize, on
         style={getBoundsProperties({ ...anchor.pos, ...size })}
         className={mx('absolute', styles.anchor, classNames, active && styles.anchorActive)}
         title={anchor.id}
-        onMouseLeave={() => onMouseLeave?.()}
       />
 
       {preview &&

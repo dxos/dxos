@@ -6,7 +6,8 @@
 export const styles = {
   gridLine: 'stroke-neutral-500',
   frameContainer: 'absolute flex items-center overflow-hidden bg-base',
-  frameBorder: 'border border-neutral-500 rounded',
+  frameBorder: 'border border-hoverSurface rounded-lg',
+  framePreview: '',
   frameSelected: 'border-primary-500',
   frameActive: 'border-primary-500',
   frameHover: 'hover:border-orange-500',
