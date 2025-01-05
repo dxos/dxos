@@ -22,6 +22,16 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "imports": {
+    "#parjs": {
+      "browser": "./vendor/parjs-browser.mjs",
+      "default": "./vendor/parjs-default.mjs"
+    },
+    "#parjs/combinators": {
+      "browser": "./vendor/parjs-combinators-browser.mjs",
+      "default": "./vendor/parjs-combinators-default.mjs"
+    }
+  },
   "files": [
     "dist",
     "src"
