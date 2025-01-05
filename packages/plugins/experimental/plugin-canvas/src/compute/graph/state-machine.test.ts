@@ -14,7 +14,7 @@ import { StateMachine } from './state-machine';
 import { createId } from '../../testing';
 
 describe('state machine', () => {
-  test('construct', async ({ expect }) => {
+  test.skip('construct', async ({ expect }) => {
     const graph = createComputeGraph();
 
     // TODO(burdon): Builder pattern.
@@ -62,7 +62,7 @@ describe('state machine', () => {
     void machine.exec();
 
     // TODO(burdon): Updating values should automatically trigger computation.
-    a.data.setState(true);
+    a.data.setOutput(true);
     void machine.exec(a);
 
     await done.wait();

@@ -52,6 +52,10 @@ export abstract class ComputeNode<Input, Output> {
     return { type: this.type, input: this._input.value, ready: this.ready };
   }
 
+  get input() {
+    return this._input.value;
+  }
+
   /**
    * Determine if node has all required inputs.
    */

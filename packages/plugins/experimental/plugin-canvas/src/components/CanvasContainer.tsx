@@ -13,13 +13,14 @@ import { Editor, type EditorController } from './Editor';
 import { computeShapes } from '../compute';
 import { createMachine, createTest3 } from '../compute/testing';
 import { useGraphMonitor } from '../hooks';
-import { type CanvasBoardType } from '../types';
+import { type CanvasBoardType, type Connection, type Shape } from '../types';
+import { GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
 
 export const CanvasContainer = ({ canvas }: { canvas: CanvasBoardType }) => {
   const id = fullyQualifiedId(canvas);
   // TODO(burdon): Use canvas.graph.
   const space = getSpace(canvas);
-  const graph = useMemo(() => createTest3(true), []);
+  const graph = useMemo(() => new GraphModel<GraphNode<Shape>, GraphEdge<Connection>>(canvas.shapes), []);
   const { machine } = useMemo(() => createMachine(graph), []);
   const editorRef = useRef<EditorController>(null);
   useEffect(() => {

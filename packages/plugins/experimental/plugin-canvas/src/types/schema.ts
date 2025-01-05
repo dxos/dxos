@@ -5,6 +5,7 @@
 import { S, TypedObject } from '@dxos/echo-schema';
 import { Graph } from '@dxos/graph';
 import { Point, Dimension } from '@dxos/react-ui-canvas';
+import { Ref } from '@dxos/echo-schema';
 
 // TODO(burdon): Consider interop with TLDraw and GeoJSON standards?
 
@@ -87,10 +88,26 @@ export const isPath = S.is(PathShape);
 
 export type Layout = S.Schema.Type<typeof Layout>;
 
+export class ComputeGraph extends TypedObject({
+  typename: 'dxos.org/type/ComputeGraph',
+  version: '0.1.0',
+})({
+  graph: Graph,
+}) {}
+
 export class CanvasBoardType extends TypedObject({
   typename: 'dxos.org/type/CanvasBoard',
   version: '0.1.0',
 })({
   name: S.optional(S.String),
-  graph: Graph,
+  /**
+   * Graph of shapes positioned on the canvas.
+   */
+  shapes: Graph,
+
+  /**
+   * Reference to the object containing the data graph.
+   */
+  // TODO(dmaretskyi): Generalize not to depend on ComputeGraph.
+  data: Ref(ComputeGraph),
 }) {}

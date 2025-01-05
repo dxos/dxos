@@ -89,7 +89,7 @@ const Render = ({ id = 'test', graph: _graph, machine, model, init, sidebar, ...
 
   // Selection.
   const selection = useMemo(() => new SelectionModel(), []);
-  const [selected, setSelected] = useState();
+  const [selected, setSelected] = useState<Shape | undefined>();
   useEffect(() => {
     return selection.selected.subscribe((selected) => {
       if (selection.size) {

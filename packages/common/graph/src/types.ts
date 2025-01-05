@@ -17,7 +17,7 @@ export const BaseGraphNode = S.Struct({
 });
 
 export type BaseGraphNode = S.Schema.Type<typeof BaseGraphNode>;
-export type GraphNode<Data extends object | void = void> = BaseGraphNode & { data: Data };
+export type GraphNode<Data extends object | void = void> = Omit<BaseGraphNode, 'data'> & { data: Data };
 
 export const BaseGraphEdge = S.Struct({
   id: S.String,
