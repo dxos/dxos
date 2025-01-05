@@ -11,7 +11,7 @@ import { type Graph, type GraphNode, type GraphEdge } from './types';
 /**
  * Typed reactive object graph.
  */
-export class ReadonlyGraphModel<Node extends GraphNode = any, Edge extends GraphEdge = any> {
+export class ReadonlyGraphModel<Node extends GraphNode<any> = any, Edge extends GraphEdge<any> = any> {
   protected readonly _graph: Graph;
 
   /**
@@ -70,7 +70,7 @@ export class ReadonlyGraphModel<Node extends GraphNode = any, Edge extends Graph
 /**
  * Typed wrapper.
  */
-export class GraphModel<Node extends GraphNode = any, Edge extends GraphEdge = any> extends ReadonlyGraphModel<
+export class GraphModel<Node extends GraphNode<any> = any, Edge extends GraphEdge<any> = any> extends ReadonlyGraphModel<
   Node,
   Edge
 > {

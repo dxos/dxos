@@ -159,7 +159,7 @@ const getAnchorPoint = (registry: ShapeRegistry, shape: Polygon, anchorId: strin
 };
 
 export const getClosestAnchor = (
-  graph: ReadonlyGraphModel<GraphNode<Shape>>,
+  graph: ReadonlyGraphModel<GraphNode<any>>,
   registry: ShapeRegistry,
   pos: Point,
   test: (shape: Polygon, anchor: Anchor, d: number) => boolean,

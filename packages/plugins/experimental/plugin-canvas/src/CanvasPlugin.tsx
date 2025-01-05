@@ -5,12 +5,13 @@
 import React from 'react';
 
 import { createIntent, createResolver, createSurface, type PluginDefinition } from '@dxos/app-framework';
-import { create } from '@dxos/live-object';
+import { create, makeRef } from '@dxos/live-object';
 
 import { CanvasContainer } from './components';
 import meta, { CANVAS_PLUGIN } from './meta';
 import translations from './translations';
-import { CanvasAction, type CanvasPluginProvides, CanvasBoardType } from './types';
+import { CanvasAction, type CanvasPluginProvides, CanvasBoardType, ComputeGraph } from './types';
+import { emptyGraph } from '@dxos/graph';
 
 export const CanvasPlugin = (): PluginDefinition<CanvasPluginProvides> => {
   return {
@@ -43,7 +44,11 @@ export const CanvasPlugin = (): PluginDefinition<CanvasPluginProvides> => {
         resolvers: () =>
           createResolver(CanvasAction.Create, ({ name }) => ({
             data: {
-              object: create(CanvasBoardType, { name, graph: { nodes: [], edges: [] } }),
+              object: create(CanvasBoardType, {
+                name,
+                shapes: emptyGraph,
+                data: makeRef(create(ComputeGraph, { graph: emptyGraph })),
+              }),
             },
           })),
       },

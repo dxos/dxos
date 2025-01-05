@@ -18,7 +18,7 @@ import { type Anchor } from '../components';
 import { getInputPoint, pointAdd } from '../layout';
 import { createRectangle, parseAnchorId } from '../shapes';
 import { createId, itemSize } from '../testing';
-import { type Polygon } from '../types';
+import { isPolygon, type Polygon } from '../types';
 
 /**
  * Data property associated with a `draggable` and `dropTargetForElements`.
@@ -234,6 +234,7 @@ export const useDragMonitor = () => {
               // graph.addNode({ id: shape.id, data: { ...shape } });
               log.info('copy', { shape: state.value.shape });
             } else {
+              invariant(isPolygon(node.data));
               node.data.center = snapPoint(pointAdd(pos, dragMonitor.offset));
             }
 

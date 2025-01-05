@@ -70,8 +70,9 @@ export const useActionHandler = () => {
         case 'zoom-to-fit': {
           const { duration = options.zoomDuration } = action;
           const nodes = graph.nodes
-            .filter((node) => isPolygon(node.data))
-            .map((node) => getRect(node.data.center, node.data.size));
+            .map((node) => node.data)
+            .filter((data) => isPolygon(data))
+            .map((data) => getRect(data.center, data.size));
           if (!nodes.length) {
             return false;
           }

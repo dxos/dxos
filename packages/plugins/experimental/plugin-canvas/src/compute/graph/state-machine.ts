@@ -88,7 +88,7 @@ export class StateMachine {
     this._ctx = new Context();
     await Promise.all(
       this._graph.nodes.map(async (node) => {
-        await node.data.initialize(this._ctx, this._context, (output: any) => {
+        await node.data.initialize(this._ctx!, this._context!, (output: any) => {
           if (!this._ctx) {
             log.warn('not running'); // TODO(burdon): Not displayed.
             return;
@@ -161,7 +161,7 @@ export class StateMachine {
         const optional = target.data.setInput(edge.data?.input, value);
 
         // Check if ready.
-        if (target.data.output === S.Void) {
+        if (target.data.outputSchema === S.Void) {
           this.update.emit({ node: target, value: output });
         } else {
           // TODO(burdon): Don't fire if optional (breaks feedback loop). Need trigger props.

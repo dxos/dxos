@@ -21,7 +21,7 @@ import { type Dimension } from '@dxos/react-ui-canvas';
 import { getDeep } from '@dxos/util';
 
 import { type Intersection } from './util';
-import { type Shape } from '../types';
+import { type Polygon, type Shape } from '../types';
 
 // TODO(burdon): Custom UML layout heuristics:
 //  - Layout longest chain on horizontal.
@@ -71,17 +71,18 @@ export const doLayout = async <N extends object>(
       // const label = node.data.text,
       const label = (node.data as any).name;
       const center = { x, y };
+      const data: Polygon = {
+        id: node.id,
+        type: 'rectangle',
+        text: label,
+        center,
+        size: { ...opt.shapeSize },
+        // TODO(burdon): Object.
+        // data: node.data,
+      };
       graph.addNode({
         id: node.id,
-        data: {
-          id: node.id,
-          type: 'rectangle',
-          text: label,
-          center,
-          size: { ...opt.shapeSize },
-          // TODO(burdon): Object.
-          // data: node.data,
-        },
+        data,
       });
     }
   }
