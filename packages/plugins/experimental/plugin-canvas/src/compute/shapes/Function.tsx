@@ -12,7 +12,10 @@ import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { pointAdd } from '../../layout';
 import { createAnchorId, createAnchors, rowHeight } from '../../shapes';
 import { type Polygon } from '../../types';
-import { DefaultInput, DefaultOutput, Function } from '../graph';
+import { DEFAULT_INPUT, DEFAULT_OUTPUT, Function } from '../graph';
+
+const DefaultInput = S.Struct({ [DEFAULT_INPUT]: S.Any });
+const DefaultOutput = S.Struct({ [DEFAULT_OUTPUT]: S.Any });
 
 export const FunctionShape = S.extend(
   ComputeShape,
