@@ -5,9 +5,9 @@
 import { Option, type Types } from 'effect';
 
 import { AST, JSONSchema, S, mapAst } from '@dxos/effect';
-import { invariant } from '@dxos/invariant';
+import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { orderKeys } from '@dxos/util';
+import { getDebugName, orderKeys } from '@dxos/util';
 
 import {
   EchoIdentifierAnnotationId,
@@ -29,6 +29,7 @@ import {
 } from '../ast';
 import { CustomAnnotations } from '../formats';
 import { Expando, ObjectId } from '../object';
+import { log } from '@dxos/log';
 
 /**
  * @internal
@@ -94,7 +95,7 @@ export const toPropType = (type?: PropType): string => {
  */
 export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
   invariant(schema);
-  const schemaWithRefinements = S.make(withEchoRefinements(schema.ast));
+  const schemaWithRefinements = S.make(withEchoRefinements(schema.ast, '#'));
   let jsonSchema = JSONSchema.make(schemaWithRefinements) as JsonSchemaType;
   if (jsonSchema.properties && 'id' in jsonSchema.properties) {
     // Put id first.
@@ -143,24 +144,50 @@ export const toJsonSchema = (schema: S.Schema.All): JsonSchemaType => {
   return jsonSchema;
 };
 
-const withEchoRefinements = (ast: AST.AST): AST.AST => {
+const withEchoRefinements = (
+  ast: AST.AST,
+  path: string | undefined,
+  suspendCache = new Map<AST.AST, string>(),
+): AST.AST => {
+  if (path) {
+    suspendCache.set(ast, path);
+  }
+
   let recursiveResult: AST.AST;
   if (AST.isSuspend(ast)) {
     // Precompute JSON schema for suspended AST since effect serializer does not support it.
+
     const suspendedAst = ast.f();
-    const jsonSchema = toJsonSchema(S.make(suspendedAst));
-    recursiveResult = new AST.Suspend(() => withEchoRefinements(suspendedAst), {
-      [AST.JSONSchemaAnnotationId]: jsonSchema,
-    });
+    const cachedPath = suspendCache.get(suspendedAst);
+    if (cachedPath) {
+      recursiveResult = new AST.Suspend(() => withEchoRefinements(suspendedAst, path, suspendCache), {
+        [AST.JSONSchemaAnnotationId]: {
+          $ref: cachedPath,
+        },
+      });
+    } else {
+      const jsonSchema = toJsonSchema(S.make(suspendedAst));
+      recursiveResult = new AST.Suspend(() => withEchoRefinements(suspendedAst, path, suspendCache), {
+        [AST.JSONSchemaAnnotationId]: jsonSchema,
+      });
+    }
   } else if (AST.isTypeLiteral(ast)) {
-    recursiveResult = mapAst(ast, withEchoRefinements);
+    recursiveResult = mapAst(ast, (ast, key) =>
+      withEchoRefinements(ast, path && typeof key === 'string' ? `${path}/${key}` : undefined, suspendCache),
+    );
     recursiveResult = makeAnnotatedRefinement(recursiveResult, {
       [AST.JSONSchemaAnnotationId]: {
         propertyOrder: [...ast.propertySignatures.map((p) => p.name)] as string[],
       } satisfies JsonSchemaType,
     });
   } else {
-    recursiveResult = mapAst(ast, withEchoRefinements);
+    recursiveResult = mapAst(ast, (ast, key) =>
+      withEchoRefinements(
+        ast,
+        path && (typeof key === 'string' || typeof key === 'number') ? `${path}/${key}` : undefined,
+        suspendCache,
+      ),
+    );
   }
 
   const annotationFields = annotationsToJsonSchemaFields(ast.annotations);

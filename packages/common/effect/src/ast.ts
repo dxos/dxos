@@ -413,13 +413,19 @@ export const getDiscriminatedType = (node: AST.AST, value: Record<string, any> =
  * The user is responsible for recursively calling {@link mapAst} on the AST.
  * NOTE: Will evaluate suspended ASTs.
  */
-export const mapAst = (ast: AST.AST, f: (ast: AST.AST) => AST.AST): AST.AST => {
+export const mapAst = (ast: AST.AST, f: (ast: AST.AST, key: keyof any | undefined) => AST.AST): AST.AST => {
   switch (ast._tag) {
     case 'TypeLiteral':
       return new AST.TypeLiteral(
         ast.propertySignatures.map(
           (prop) =>
-            new AST.PropertySignature(prop.name, f(prop.type), prop.isOptional, prop.isReadonly, prop.annotations),
+            new AST.PropertySignature(
+              prop.name,
+              f(prop.type, prop.name),
+              prop.isOptional,
+              prop.isReadonly,
+              prop.annotations,
+            ),
         ),
         ast.indexSignatures,
       );
@@ -427,13 +433,13 @@ export const mapAst = (ast: AST.AST, f: (ast: AST.AST) => AST.AST): AST.AST => {
       return AST.Union.make(ast.types.map(f), ast.annotations);
     case 'TupleType':
       return new AST.TupleType(
-        ast.elements.map((t) => new AST.OptionalType(f(t.type), t.isOptional, t.annotations)),
-        ast.rest.map((t) => new AST.Type(f(t.type), t.annotations)),
+        ast.elements.map((t, index) => new AST.OptionalType(f(t.type, index), t.isOptional, t.annotations)),
+        ast.rest.map((t) => new AST.Type(f(t.type, undefined), t.annotations)),
         ast.isReadonly,
         ast.annotations,
       );
     case 'Suspend': {
-      const newAst = f(ast.f());
+      const newAst = f(ast.f(), undefined);
       return new AST.Suspend(() => newAst, ast.annotations);
     }
     default:

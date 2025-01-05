@@ -21,6 +21,7 @@ import { createSchemaReference, getSchemaReference, Ref } from '../ast';
 import { FormatAnnotationId, Email } from '../formats';
 import { TypedObject } from '../object';
 import { Contact } from '../testing';
+import { StoredSchema } from '../schema';
 
 const EXAMPLE_NAMESPACE = '@example';
 
@@ -119,7 +120,7 @@ describe('effect-to-json', () => {
     });
   });
 
-  test('Contact schema serialization', () => {
+  test('handles suspend -- Contact schema serialization', () => {
     const schema = toJsonSchema(Contact);
     expect(Object.keys(schema.properties!)).toEqual(['id', 'name', 'username', 'email', 'tasks', 'address']);
   });
@@ -183,6 +184,15 @@ describe('effect-to-json', () => {
     setSchemaProperty(jsonSchema, 'employer' as JsonProp, createSchemaReference(Org.typename));
     const { typename } = getSchemaReference(getSchemaProperty(jsonSchema, 'employer' as JsonProp) ?? {}) ?? {};
     expect(typename).to.eq(Org.typename);
+  });
+
+  test('serialize circular schema (StoredSchema)', () => {
+    const jsonSchema = toJsonSchema(StoredSchema);
+    expect(Object.keys(jsonSchema.properties!).length).toBeGreaterThan(0);
+
+    // TODO(dmaretskyi): Currently unable to deserialize.
+    // const effectSchema = toEffectSchema(jsonSchema);
+    // console.log(JSON.stringify(jsonSchema, null, 2));
   });
 
   const expectReferenceAnnotation = (object: JsonSchemaType) => {
