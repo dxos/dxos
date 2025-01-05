@@ -25,6 +25,10 @@ export class Switch extends ComputeNode<NoInput, { [DEFAULT_OUTPUT]: boolean }> 
   }
 
   setEnabled(value: boolean) {
+    if (this._enabled === value) {
+      return this;
+    }
+
     this._enabled = value;
     this.setOutput({ [DEFAULT_OUTPUT]: value });
     return this;
