@@ -118,7 +118,6 @@ export class Event<T = void> implements ReadOnlyEvent<T> {
    * In most cases should only be called by the class or entity containing the event.
    * All listeners are called in order of subscription with persistent ones first.
    * Listeners are called sequentially.
-   * A thrown exception in the listener will stop the event from being emitted to the rest of the listeners.
    *
    * @param data param that will be passed to all listeners.
    */
