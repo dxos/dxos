@@ -6,17 +6,28 @@ import { signal, type Signal } from '@preact/signals-core';
 
 import { type Context } from '@dxos/context';
 import { inspectCustom } from '@dxos/debug';
-import { AST, S } from '@dxos/echo-schema';
+import { AST, S, type BaseObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { type AsyncUpdate, type StateMachineContext } from './state-machine';
 
+export type Binding = Record<string, any>;
+
+export const DEFAULT_INPUT = 'input';
+export const DEFAULT_OUTPUT = 'result';
+
+export const NoInput = S.Struct({});
+export const NoOutput = S.Struct({});
+
+export type NoInput = S.Schema.Type<typeof NoInput>;
+export type NoOutput = S.Schema.Type<typeof NoOutput>;
+
 /**
  * Represents a compute element, which may take inputs from multiple other nodes, and output a value to other nodes.
  */
 // TODO(burdon): Node id.
-export abstract class ComputeNode<Input, Output> {
+export abstract class ComputeNode<Input extends Binding, Output extends Binding> {
   abstract readonly type: string;
 
   /**
@@ -31,13 +42,14 @@ export abstract class ComputeNode<Input, Output> {
    * The input is either a map of properties or a scalar value depending on the INPUT type.
    */
   // TODO(burdon): Move into separate structure to keep ComputeNode stateless.
-  protected _input: Signal<Input | undefined>;
+  protected _input: Signal<Input> = signal({} as Input);
 
   constructor(
     readonly inputSchema: S.Schema<Input>,
     readonly outputSchema: S.Schema<Output>,
   ) {
-    this._input = signal(AST.isTypeLiteral(this.inputSchema.ast) ? ({} as Input) : undefined);
+    invariant(AST.isTypeLiteral(this.inputSchema.ast));
+    invariant(AST.isTypeLiteral(this.outputSchema.ast));
   }
 
   [inspectCustom]() {
@@ -90,7 +102,7 @@ export abstract class ComputeNode<Input, Output> {
    * Reset state.
    */
   reset() {
-    this._input.value = AST.isTypeLiteral(this.inputSchema.ast) ? ({} as Input) : undefined;
+    this._input.value = {} as Input;
   }
 
   /**
@@ -98,8 +110,9 @@ export abstract class ComputeNode<Input, Output> {
    * Send an async update to the state machine.
    */
   // TODO(burdon): Change to setOutputProp and match schema.
+  // TODO(dmaretskyi): Make protected.
   setOutput(value: Output): this {
-    invariant((this.inputSchema as S.Schema<any>) === S.Void, 'invalid state');
+    invariant(this.getInputs().length === 0, 'invalid state');
     if (!this._callback) {
       log.warn('callback not set', { node: this });
     } else {
@@ -114,7 +127,7 @@ export abstract class ComputeNode<Input, Output> {
    * @param value
    */
   // TODO(burdon): Check property and type matches.
-  setInput(property: keyof Input | undefined, value: any) {
+  setInput(property: keyof Input, value: any) {
     log('set', { node: this.type, property, value });
     invariant(value !== undefined, 'computed values should not be undefined');
 
@@ -122,13 +135,8 @@ export abstract class ComputeNode<Input, Output> {
     const p = property && AST.getPropertySignatures(this.inputSchema.ast).find((p) => p.name === property);
     invariant(!property || p, `invalid property: ${String(property)}`);
 
-    if (property) {
-      invariant(this._input.value, `input is not defined for property: ${String(property)}`);
-      this._input.value[property] = value;
-    } else {
-      this._input.value = value;
-    }
-
+    invariant(this._input.value, `input is not defined for property: ${String(property)}`);
+    this._input.value[property] = value;
     return p?.isOptional;
   }
 
@@ -150,8 +158,17 @@ export abstract class ComputeNode<Input, Output> {
     }
   }
 
+  getInputs() {
+    return AST.getPropertySignatures(this.inputSchema.ast);
+  }
+
+  getOutputs() {
+    return AST.getPropertySignatures(this.outputSchema.ast);
+  }
+
   protected onInitialize(ctx: Context, context: StateMachineContext): void | Promise<void> {}
 
   // TODO(burdon): Use Effect try (for error propagation, logging, etc.)
+  // TODO(dmaretskyi): Change this to an `update` function that calls setOutput.
   protected abstract invoke(input: Input): Promise<Output>;
 }

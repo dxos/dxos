@@ -13,7 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { type ComputeGraph, createComputeGraph } from './compute-graph';
-import { type ComputeNode } from './compute-node';
+import { type Binding, type ComputeNode } from './compute-node';
 
 export const InvalidStateError = Error;
 
@@ -33,7 +33,7 @@ export type StateMachineContext = {
  * Root Nodes have a Void input type and are processed first.
  */
 // TODO(burdon): Move to compute (without hyperformula dependency). Maps onto hyperformula as client runtime?
-// TODO(burdon): Extend resource.
+// TODO(burdon): Extend Resource.
 export class StateMachine {
   public readonly update = new Event<{ node: GraphNode<ComputeNode<any, any>>; value: any }>();
 
@@ -119,7 +119,7 @@ export class StateMachine {
     } else {
       // Fire root notes.
       for (const node of this._graph.nodes) {
-        if (node.data.inputSchema === S.Void) {
+        if (node.data.getInputs().length === 0) {
           await this._exec(node);
         }
       }
@@ -130,7 +130,7 @@ export class StateMachine {
    * Exec node and propagate output to downstream nodes.
    */
   private async _exec(node: GraphNode<ComputeNode<any, any>>) {
-    if (node.data.outputSchema === S.Void) {
+    if (node.data.getOutputs().length === 0) {
       return;
     }
 
@@ -144,7 +144,7 @@ export class StateMachine {
   /**
    * Depth first propagation of compute events.
    */
-  private async _propagate<T>(node: GraphNode<ComputeNode<any, T>>, output: T) {
+  private async _propagate<T extends Binding>(node: GraphNode<ComputeNode<any, T>>, output: T) {
     try {
       for (const edge of this._graph.getEdges({ source: node.id })) {
         const target = this._graph.getNode(edge.target);
@@ -161,7 +161,7 @@ export class StateMachine {
         const optional = target.data.setInput(edge.data?.input, value);
 
         // Check if ready.
-        if (target.data.outputSchema === S.Void) {
+        if (target.data.getOutputs().length === 0) {
           this.update.emit({ node: target, value: output });
         } else {
           // TODO(burdon): Don't fire if optional (breaks feedback loop). Need trigger props.

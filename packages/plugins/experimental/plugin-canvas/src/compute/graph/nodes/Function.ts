@@ -4,18 +4,17 @@
 
 import { S } from '@dxos/echo-schema';
 
-import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '../../../shapes';
-import { ComputeNode } from '../compute-node';
+import { ComputeNode, DEFAULT_OUTPUT, DEFAULT_INPUT, type Binding } from '../compute-node';
 
-export const DefaultInput = S.Struct({ input: S.Any });
-export const DefaultOutput = S.Struct({ result: S.Any });
+export const DefaultInput = S.Struct({ [DEFAULT_INPUT]: S.Any });
+export const DefaultOutput = S.Struct({ [DEFAULT_OUTPUT]: S.Any });
 
 export type DefaultInput = S.Schema.Type<typeof DefaultInput>;
 export type DefaultOutput = S.Schema.Type<typeof DefaultOutput>;
 
 export type FunctionCallback<INPUT, OUTPUT> = (input: INPUT) => Promise<OUTPUT>;
 
-export class Function<INPUT, OUTPUT> extends ComputeNode<INPUT, OUTPUT> {
+export class Function<INPUT extends Binding, OUTPUT extends Binding> extends ComputeNode<INPUT, OUTPUT> {
   override readonly type = 'function';
 
   constructor(

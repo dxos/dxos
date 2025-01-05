@@ -24,7 +24,7 @@ export const createComputeGraph = (graph?: Graph): ComputeGraph => {
  */
 export type ComputeEdge = {
   /** Input prop. */
-  input?: string;
+  input: string;
   /** Output prop. */
-  output?: string;
+  output: string;
 };
