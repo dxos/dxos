@@ -206,7 +206,14 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
     };
 
     return (
-      <>
+      <div
+        style={getBoundsProperties({
+          ...shape.center,
+          width: shape.size.width + previewBorder,
+          height: shape.size.height + previewBorder,
+        })}
+        className='absolute pointer-events-none'
+      >
         <div
           ref={ref}
           {...shapeAttrs(shape)}
@@ -231,16 +238,16 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
         </div>
 
         {/* NOTE: This ensures the preview contains the anchors for the native image snapshot. */}
-        {preview && (
-          <div
-            style={getBoundsProperties({
-              ...shape.center,
-              width: shape.size.width + previewBorder,
-              height: shape.size.height + previewBorder,
-            })}
-            className='absolute pointer-events-none'
-          />
-        )}
+        {/* {preview && ( */}
+        {/*  <div */}
+        {/*    style={getBoundsProperties({ */}
+        {/*      ...shape.center, */}
+        {/*      width: shape.size.width + previewBorder, */}
+        {/*      height: shape.size.height + previewBorder, */}
+        {/*    })} */}
+        {/*    className='absolute pointer-events-none' */}
+        {/*  /> */}
+        {/* )} */}
 
         {/* Anchors. */}
         {!hidden && (
@@ -252,7 +259,7 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
         )}
 
         {/* TODO(burdon): Resize handles (shift key). */}
-      </>
+      </div>
     );
   },
 );
