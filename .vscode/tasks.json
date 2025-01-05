@@ -3,17 +3,11 @@
   "tasks": [
     {
       "label": "build",
-      "type": "shell",
-      "command": "node",
-      "args": [
-        "--max-old-space-size=12192",
-        "${workspaceFolder}/node_modules/typescript/bin/tsc",
-        "-b",
-        "tsconfig.all.json",
-        "--watch"
-      ],
+      "type": "typescript",
+      "tsconfig": "tsconfig.all.json",
       "isBackground": true,
       "problemMatcher": ["$tsc-watch"],
+      "option": "watch",
       "presentation": {
         "echo": true,
         "reveal": "silent",
@@ -23,9 +17,6 @@
       "group": {
         "kind": "build",
         "isDefault": true
-      },
-      "options": {
-        "cwd": "${workspaceFolder}"
       }
     }
   ]
