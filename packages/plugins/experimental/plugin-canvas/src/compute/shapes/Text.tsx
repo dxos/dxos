@@ -9,8 +9,8 @@ import { S } from '@dxos/echo-schema';
 import { Box } from './components';
 import { ComputeShape } from './defs';
 import { createAnchors, type ShapeComponentProps, type ShapeDef, TextBox, type TextBoxProps } from '../../components';
-import { createAnchorId, DEFAULT_OUTPUT } from '../../shapes';
-import { Text } from '../graph';
+import { createAnchorId } from '../../shapes';
+import { DEFAULT_OUTPUT, Text } from '../graph';
 
 //
 // Data
