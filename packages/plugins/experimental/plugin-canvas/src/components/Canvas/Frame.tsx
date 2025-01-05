@@ -25,7 +25,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { Anchor, createAnchors, defaultAnchors, defaultAnchorSize } from './Anchor';
 import { type ShapeComponentProps, shapeAttrs } from './Shape';
 import { type DragDropPayload, useEditorContext } from '../../hooks';
-import { getBoundsProperties } from '../../layout';
+import { getBoundsProperties, getInputPoint, pointDivide, pointSubtract } from '../../layout';
 import { type Polygon } from '../../types';
 import { type TextBoxProps } from '../TextBox';
 import { styles } from '../styles';
@@ -74,20 +74,28 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
       draggable({
         element: draggingRef.current,
         getInitialData: () => ({ type: 'frame', shape }) satisfies DragDropPayload,
-        onGenerateDragPreview: ({ nativeSetDragImage }) => {
+        onGenerateDragPreview: ({ nativeSetDragImage, location }) => {
           setCustomNativeDragPreview({
-            // TODO(burdon): Set preview to "snapshot" image then remove.
             render: ({ container }) => {
               setPreview(container);
               return () => setPreview(undefined);
             },
-            getOffset: ({ container }) => {
-              // TODO(burdon): Calculate relative offset and apply to center position.
-              // NOTE: During preview, we render ghost anchors so that we can predict the actual size of the image.
-              return {
-                x: (projection.scale * shape.size.width + defaultAnchorSize.width) / 2,
-                y: (projection.scale * shape.size.height + defaultAnchorSize.height) / 2,
-              };
+            /**
+             * Calculate relative offset and apply to center position.
+             * NOTE: During preview, we render ghost anchors so that we can predict the actual size of the image.
+             */
+            getOffset: () => {
+              const [center] = projection.toScreen([shape.center]);
+              const topLeft = pointSubtract(center, {
+                x: (projection.scale * (shape.size.width + defaultAnchorSize.width)) / 2,
+                y: (projection.scale * (shape.size.height + defaultAnchorSize.height)) / 2,
+              });
+
+              // Set offset to center of shape.
+              const pos = getInputPoint(root, location.current.input);
+              dragMonitor.setOffset(pointDivide(pointSubtract(center, pos), projection.scale));
+
+              return pointSubtract(pos, topLeft);
             },
             nativeSetDragImage,
           });

@@ -2,25 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import ollama from 'ollama';
-
 import {
   runLLM,
   AIServiceClientImpl,
   type LLMToolDefinition,
   type Message,
-  type MessageTextContentBlock,
   ObjectId, // TODO(burdon): Reconcile with echo-schema.
 } from '@dxos/assistant';
 import { SpaceId } from '@dxos/client/echo';
 import { type Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { isNotNullOrUndefined } from '@dxos/util';
 
 import { Function, type FunctionCallback } from './Function';
 import { GptInput, GptOutput } from '../../shapes';
 import { type StateMachineContext } from '../state-machine';
-import { isNotNullOrUndefined } from '@dxos/util';
 
 export class GptFunction extends Function<GptInput, GptOutput> {
   constructor() {
@@ -35,7 +32,8 @@ export class GptFunction extends Function<GptInput, GptOutput> {
         this._cb = callEdge(
           new AIServiceClientImpl({
             // TODO(burdon): Move to config.
-            endpoint: 'http://localhost:8787',
+            // endpoint: 'http://localhost:8787',
+            endpoint: 'https://ai-service.dxos.workers.dev',
           }),
         );
         break;
@@ -43,7 +41,7 @@ export class GptFunction extends Function<GptInput, GptOutput> {
 
       case '@ollama/llama-3-2-3b':
       default: {
-        this._cb = callOllama;
+        // this._cb = callOllama;
       }
     }
   }
@@ -58,32 +56,32 @@ export class GptFunction extends Function<GptInput, GptOutput> {
 // Ollama
 //
 
-const callOllama: FunctionCallback<GptInput, GptOutput> = async ({ systemPrompt, prompt, history = [] }) => {
-  const messages = [
-    ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
-    ...history.map(({ role, message }) => ({ role, content: message })),
-    { role: 'user', content: prompt },
-  ];
-
-  const result = await ollama.chat({ model: 'llama3.2', messages });
-  log.info('gpt', { prompt, result });
-  const { message, eval_count } = result;
-
-  return {
-    tokens: eval_count,
-    result: [
-      {
-        role: 'user',
-        message: prompt,
-      },
-      {
-        role: message.role as any,
-        message: message.content,
-      },
-    ],
-    cot: [],
-  };
-};
+// TODO(burdon): Make pluggable since should not be bundled.
+// const callOllama: FunctionCallback<GptInput, GptOutput> = async ({ systemPrompt, prompt, history = [] }) => {
+//   const messages = [
+//     ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
+//     ...history.map(({ role, message }) => ({ role, content: message })),
+//     { role: 'user', content: prompt },
+//   ];
+//
+//   const result = await ollama.chat({ model: 'llama3.2', messages });
+//   log.info('gpt', { prompt, result });
+//   const { message, eval_count } = result;
+//
+//   return {
+//     tokens: eval_count,
+//     result: [
+//       {
+//         role: 'user',
+//         message: prompt,
+//       },
+//       {
+//         role: message.role as any,
+//         message: message.content,
+//       },
+//     ],
+//   };
+// };
 
 //
 // EDGE
@@ -148,7 +146,6 @@ const callEdge =
       client,
       logger: (event) => {
         if (event.type === 'message') {
-          console.log('MSG', event.message);
           messages.push(event.message);
         }
       },

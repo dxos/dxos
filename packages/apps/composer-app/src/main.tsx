@@ -60,7 +60,7 @@ const main = async () => {
 
   const services = await createClientServices(
     config,
-    config.values.runtime?.app?.env?.DX_HOST
+    true
       ? undefined
       : () =>
           new SharedWorker(new URL('./shared-worker', import.meta.url), {
