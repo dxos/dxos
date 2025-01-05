@@ -14,6 +14,8 @@ import { log } from '@dxos/log';
 
 import { type ComputeGraph, createComputeGraph } from './compute-graph';
 import { type Binding, type ComputeNode } from './compute-node';
+import type { FunctionCallback } from './nodes';
+import type { GptInput, GptOutput } from '../shapes';
 
 export const InvalidStateError = Error;
 
@@ -22,8 +24,11 @@ export const InvalidStateError = Error;
  */
 export type AsyncUpdate<T> = (value: T) => void;
 
+export type GptExecutor = FunctionCallback<GptInput, GptOutput>;
+
 export type StateMachineContext = {
   space?: Space;
+  gpt?: GptExecutor;
   model?: LLMModel; // TODO(burdon): Evolve.
 };
 
