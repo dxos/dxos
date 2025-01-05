@@ -16,13 +16,14 @@ import React, {
   useState,
 } from 'react';
 import { createPortal } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 
 import { invariant } from '@dxos/invariant';
-import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
+import { type ThemedClassName, ThemeProvider, Tooltip, useForwardedRef } from '@dxos/react-ui';
 import { useProjection } from '@dxos/react-ui-canvas';
-import { mx } from '@dxos/react-ui-theme';
+import { defaultTx, mx } from '@dxos/react-ui-theme';
 
-import { Anchor, createAnchors, defaultAnchors, defaultAnchorSize } from './Anchor';
+import { Anchor, defaultAnchorSize } from './Anchor';
 import { type ShapeComponentProps, shapeAttrs } from './Shape';
 import { type DragDropPayload, useEditorContext } from '../../hooks';
 import { getBoundsProperties, getInputPoint, pointDivide, pointSubtract } from '../../layout';
@@ -30,8 +31,8 @@ import { type Polygon } from '../../types';
 import { type TextBoxProps } from '../TextBox';
 import { styles } from '../styles';
 
-// TODO(burdon): Surface for form content. Or pass in children (which may include a Surface).
-//  return <Surface ref={forwardRef} role='card' limit={1} data={{ content: object} />;
+// Border around frame for preview snapshot.
+const previewBorder = defaultAnchorSize.width + 8;
 
 // NOTE: Delaying double-click detection makes select slow.
 const DBLCLICK_TIMEOUT = 0;
@@ -74,28 +75,51 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
       draggable({
         element: draggingRef.current,
         getInitialData: () => ({ type: 'frame', shape }) satisfies DragDropPayload,
-        onGenerateDragPreview: ({ nativeSetDragImage, location }) => {
+        onGenerateDragPreview: ({ nativeSetDragImage, location, source }) => {
           setCustomNativeDragPreview({
-            render: ({ container }) => {
-              setPreview(container);
-              return () => setPreview(undefined);
-            },
             /**
              * Calculate relative offset and apply to center position.
-             * NOTE: During preview, we render ghost anchors so that we can predict the actual size of the image.
+             * NOTE: During preview, we render a hidden border to contain the anchors for the native preview snapshot.
+             * See preserveOffsetOnSource
              */
             getOffset: () => {
+              // TODO(burdon): Seems to move slightly on drop.
               const [center] = projection.toScreen([shape.center]);
-              const topLeft = pointSubtract(center, {
-                x: (projection.scale * (shape.size.width + defaultAnchorSize.width)) / 2,
-                y: (projection.scale * (shape.size.height + defaultAnchorSize.height)) / 2,
-              });
 
               // Set offset to center of shape.
               const pos = getInputPoint(root, location.current.input);
               dragMonitor.setOffset(pointDivide(pointSubtract(center, pos), projection.scale));
 
+              // Calculate offset relative to top-left corner.
+              const topLeft = pointSubtract(center, {
+                x: (projection.scale * (shape.size.width + previewBorder + 1)) / 2,
+                y: (projection.scale * (shape.size.height + previewBorder + 1)) / 2,
+              });
               return pointSubtract(pos, topLeft);
+            },
+            render: ({ container }) => {
+              const remount = true;
+              if (remount) {
+                // Remount and preserve context.
+                setPreview(container);
+                return () => setPreview(undefined);
+              } else {
+                // TODO(burdon): Render directly but set-up new context.
+                // https://atlassian.design/components/pragmatic-drag-and-drop/core-package/adapters/element/drag-previews#approach-1-use-a-custom-native-drag-preview
+                const root = createRoot(container);
+                root.render(
+                  <ThemeProvider tx={defaultTx} themeMode='dark'>
+                    <Tooltip.Provider>
+                      <div style={{ transform: `scale(${projection.scale})` }}>
+                        <FrameContent {...baseProps} anchors={anchors} preview>
+                          {Component && <Component {...baseProps} />}
+                        </FrameContent>
+                      </div>
+                    </Tooltip.Provider>
+                  </ThemeProvider>,
+                );
+                return () => root.unmount();
+              }
             },
             nativeSetDragImage,
           });
@@ -105,7 +129,7 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
         },
       }),
     );
-  }, [root, projection, dragMonitor, shape]);
+  }, [root, projection, projectionStyles, dragMonitor, shape]);
 
   const handleClose: TextBoxProps['onEnter'] = (value: string) => {
     shape.text = value;
@@ -132,6 +156,7 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
         onEdit={() => setEditing({ shape })}
         ref={draggingRef}
       >
+        {/* <pre>{JSON.stringify(shape.center)}</pre> */}
         {Component && <Component {...baseProps} editing={isEditing} onClose={handleClose} onCancel={handleCancel} />}
       </FrameContent>
 
@@ -170,6 +195,7 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
     forwardedRef,
   ) => {
     const ref = useForwardedRef(forwardedRef);
+
     const clickTimer = useRef<number>();
     const handleClick: MouseEventHandler<HTMLDivElement> = (ev) => {
       if (ev.detail === 1 && !editing) {
@@ -185,7 +211,7 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
     };
 
     return (
-      <div>
+      <>
         <div
           ref={ref}
           {...shapeAttrs(shape)}
@@ -199,44 +225,39 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
             selected && styles.frameSelected,
             active && styles.frameActive,
             shape.guide && styles.frameGuide,
+            preview && styles.framePreview,
             hidden && 'opacity-0',
             debug && 'opacity-50',
           )}
           onClick={handleClick}
           onDoubleClick={handleDoubleClick}
-          // onMouseEnter={() => setActive(true)}
-          // onMouseLeave={(ev) => {
-          //   // We need to keep rendering the anchor that is being dragged.
-          //   const related = ev.relatedTarget as HTMLElement;
-          //   if (related?.getAttribute?.(DATA_SHAPE_ID) !== shape.id) {
-          //     setActive(false);
-          //   }
-          // }}
         >
           {children}
         </div>
+
+        {/* NOTE: This ensures the preview contains the anchors for the native image snapshot. */}
+        {preview && (
+          <div
+            style={getBoundsProperties({
+              ...shape.center,
+              width: shape.size.width + previewBorder,
+              height: shape.size.height + previewBorder,
+            })}
+            className='absolute pointer-events-none'
+          />
+        )}
 
         {/* Anchors. */}
         {!hidden && (
           <div>
             {Object.values(anchors).map((anchor) => (
-              <Anchor
-                key={anchor.id}
-                shape={shape}
-                anchor={anchor}
-                size={defaultAnchorSize}
-                // onMouseLeave={() => setActive(false)}
-              />
+              <Anchor key={anchor.id} shape={shape} anchor={anchor} size={defaultAnchorSize} />
             ))}
-
-            {/* NOTE: During preview, we render ghost anchors so that we can predict the actual size of the image. */}
-            {preview &&
-              Object.values(createAnchors(shape, defaultAnchors)).map((anchor) => (
-                <Anchor key={anchor.id} shape={shape} anchor={anchor} size={defaultAnchorSize} classNames='opacity-0' />
-              ))}
           </div>
         )}
-      </div>
+
+        {/* TODO(burdon): Resize handles (shift key). */}
+      </>
     );
   },
 );

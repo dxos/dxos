@@ -15,7 +15,7 @@ import { useEditorContext } from './useEditorContext';
 import { getClosestAnchor } from './useLayout';
 import { useSnap } from './useSnap';
 import { type Anchor } from '../components';
-import { getInputPoint, pointAdd } from '../layout';
+import { getInputPoint, pointAdd, pointRound } from '../layout';
 import { createRectangle, parseAnchorId } from '../shapes';
 import { createId, itemSize } from '../testing';
 import { type Polygon } from '../types';
@@ -189,7 +189,9 @@ export const useDragMonitor = () => {
 
         switch (state.value.type) {
           case 'frame': {
-            dragMonitor.update({ shape: { ...state.value.shape, center: pointAdd(pos, dragMonitor.offset) } });
+            dragMonitor.update({
+              shape: { ...state.value.shape, center: pointRound(pointAdd(pos, dragMonitor.offset)) },
+            });
             break;
           }
 
@@ -234,7 +236,7 @@ export const useDragMonitor = () => {
               // graph.addNode({ id: shape.id, data: { ...shape } });
               log.info('copy', { shape: state.value.shape });
             } else {
-              node.data.center = snapPoint(pointAdd(pos, dragMonitor.offset));
+              node.data.center = snapPoint(pointRound(pointAdd(pos, dragMonitor.offset)));
             }
 
             break;

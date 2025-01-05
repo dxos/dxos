@@ -262,6 +262,7 @@ export const GPT: Story = {
     // debug: true,
     showGrid: false,
     snapToGrid: false,
+    // sidebar: 'json',
     // sidebar: 'state-machine',
     registry: new ShapeRegistry(computeShapes),
     spec: [
