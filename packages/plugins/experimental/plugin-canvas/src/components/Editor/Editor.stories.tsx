@@ -26,6 +26,8 @@ import { doLayout } from '../../layout';
 import { RectangleShape, type Shape } from '../../types';
 import { AttentionContainer } from '../AttentionContainer';
 import { ShapeRegistry } from '../Canvas';
+import { callEdge } from '../../compute/graph/gpt/edge';
+import { AIServiceClientImpl } from '@dxos/assistant';
 
 const generator: ValueGenerator = faker as any;
 
@@ -39,9 +41,10 @@ type RenderProps = EditorRootProps & {
   sidebar?: 'json' | 'selected' | 'state-machine';
   machine?: StateMachine;
   model?: StateMachineContext['model'];
+  gpt?: StateMachineContext['gpt'];
 };
 
-const Render = ({ id = 'test', graph: _graph, machine, model, init, sidebar, ...props }: RenderProps) => {
+const Render = ({ id = 'test', graph: _graph, machine, model, gpt, init, sidebar, ...props }: RenderProps) => {
   const editorRef = useRef<EditorController>(null);
   const { space } = useClientProvider();
 
@@ -52,7 +55,7 @@ const Render = ({ id = 'test', graph: _graph, machine, model, init, sidebar, ...
     }
 
     // TODO(burdon): Better abstraction for context?
-    machine.setContext({ space, model });
+    machine.setContext({ space, model, gpt });
     void machine.open();
     const off = machine.update.on((ev) => {
       const { node } = ev;
@@ -273,5 +276,10 @@ export const GPT: Story = {
     registerSchema: true,
     ...createMachine(createTest3(true)),
     model: '@anthropic/claude-3-5-sonnet-20241022',
+    gpt: callEdge(
+      new AIServiceClientImpl({
+        endpoint: 'https://ai-service.dxos.workers.dev',
+      }),
+    ),
   },
 };

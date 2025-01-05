@@ -6,7 +6,7 @@ import { type Point } from '@antv/layout';
 
 import { GraphModel, type GraphNode, type GraphEdge, createEdgeId } from '@dxos/graph';
 
-import { type ComputeNode, StateMachine } from './graph';
+import { type ComputeNode, DEFAULT_INPUT, DEFAULT_OUTPUT, StateMachine } from './graph';
 import {
   createAnd,
   createBeacon,
@@ -22,7 +22,6 @@ import {
 } from './shapes';
 import { type BaseComputeShape, type ComputeShape } from './shapes/defs';
 import { pointMultiply } from '../layout';
-import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '../shapes';
 import type { Connection, Shape } from '../types';
 
 // TODO(burdon): Factor out.

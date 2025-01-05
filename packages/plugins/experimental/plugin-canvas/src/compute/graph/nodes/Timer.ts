@@ -6,25 +6,26 @@ import { type Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { S } from '@dxos/echo-schema';
 
-import { ComputeNode } from '../compute-node';
+import { ComputeNode, DEFAULT_OUTPUT, NoInput } from '../compute-node';
 import { InvalidStateError } from '../state-machine';
 
 /**
  * Timer sends a periodic value.
  */
-export class Timer extends ComputeNode<void, number> {
+export class Timer extends ComputeNode<NoInput, { [DEFAULT_OUTPUT]: number }> {
   override readonly type = 'timer';
 
   private _interval?: NodeJS.Timeout;
 
+  // TODO(dmaretskyi): Move to inputs.
   constructor(private _period = 1_000) {
-    super(S.Void, S.Number);
+    super(NoInput, S.Struct({ [DEFAULT_OUTPUT]: S.Number }));
   }
 
   start() {
     this._interval = setInterval(
       () => {
-        void this.setOutput(Date.now());
+        this.setOutput({ [DEFAULT_OUTPUT]: Date.now() });
       },
       Math.max(this._period, 1_000),
     );

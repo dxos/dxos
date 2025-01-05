@@ -4,9 +4,8 @@
 
 import { S } from '@dxos/echo-schema';
 
-import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '../../shapes';
 import { Polygon } from '../../types';
-import { type ComputeNode } from '../graph';
+import { DEFAULT_OUTPUT, DEFAULT_INPUT, type ComputeNode } from '../graph';
 
 export const ComputeShape = S.extend(
   Polygon,

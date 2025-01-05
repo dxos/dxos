@@ -15,6 +15,8 @@ import { createMachine, createTest3 } from '../compute/testing';
 import { useGraphMonitor } from '../hooks';
 import { type CanvasBoardType, type Connection, type Shape } from '../types';
 import { GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
+import { callEdge } from '../compute/graph/gpt/edge';
+import { AIServiceClientImpl } from '@dxos/assistant';
 
 export const CanvasContainer = ({ canvas }: { canvas: CanvasBoardType }) => {
   const id = fullyQualifiedId(canvas);
@@ -29,7 +31,15 @@ export const CanvasContainer = ({ canvas }: { canvas: CanvasBoardType }) => {
     }
 
     // TODO(burdon): Better abstraction for context?
-    machine.setContext({ space, model: '@anthropic/claude-3-5-sonnet-20241022' });
+    machine.setContext({
+      space,
+      model: '@anthropic/claude-3-5-sonnet-20241022',
+      gpt: callEdge(
+        new AIServiceClientImpl({
+          endpoint: 'https://ai-service.dxos.workers.dev',
+        }),
+      ),
+    });
     void machine.open();
     const off = machine.update.on((ev) => {
       const { node } = ev;

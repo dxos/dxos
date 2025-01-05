@@ -10,8 +10,8 @@ import { Ref } from '@dxos/echo-schema';
 // TODO(burdon): Consider interop with TLDraw and GeoJSON standards?
 
 export const Connection = S.Struct({
-  input: S.optional(S.String),
-  output: S.optional(S.String),
+  input: S.String,
+  output: S.String,
 });
 
 export type Connection = S.Schema.Type<typeof Connection>;

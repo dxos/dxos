@@ -194,8 +194,9 @@ export const useActionHandler = () => {
         }
         case 'link': {
           const { source, target, connection } = action;
+          invariant(connection);
           const id = createId();
-          const edge: GraphEdge<Connection> = { id, source, target, data: connection ?? {} };
+          const edge: GraphEdge<Connection> = { id, source, target, data: connection };
           graph.addEdge(edge);
           graphMonitor?.onLink(edge);
           selection.setSelected([id]);

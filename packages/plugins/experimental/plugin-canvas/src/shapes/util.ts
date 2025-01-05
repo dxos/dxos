@@ -6,11 +6,10 @@ import { type Point } from '@antv/layout';
 
 import { type Anchor } from '../components';
 import { type Polygon } from '../types';
+import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '../compute/graph/compute-node';
 
 export const rowHeight = 20;
 
-export const DEFAULT_INPUT = 'input';
-export const DEFAULT_OUTPUT = 'result';
 
 export const createAnchorId = (
   direction: 'input' | 'output',

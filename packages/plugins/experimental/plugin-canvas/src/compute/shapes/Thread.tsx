@@ -25,7 +25,7 @@ export const ThreadShape = S.extend(
   }),
 );
 
-export type ThreadShape = ComputeShape<S.Schema.Type<typeof ThreadShape>, List<any, any>>;
+export type ThreadShape = ComputeShape<S.Schema.Type<typeof ThreadShape>, List<any>>;
 
 export type CreateThreadProps = Omit<ThreadShape, 'type' | 'node' | 'size'>;
 

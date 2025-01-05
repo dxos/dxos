@@ -6,18 +6,14 @@ import { signal, type Signal } from '@preact/signals-core';
 
 import { S } from '@dxos/echo-schema';
 
-import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '../../../shapes';
 import { createInputSchema, createOutputSchema, type InputType, type OutputType } from '../../shapes/defs';
-import { ComputeNode } from '../compute-node';
+import { ComputeNode, DEFAULT_INPUT, DEFAULT_OUTPUT } from '../compute-node';
 
 /**
  * List accumulator.
  */
 // TODO(burdon): Adapt to support transform from I to O[] type.
-export class List<INPUT extends InputType<T>, OUTPUT extends OutputType<T[]>, T = any> extends ComputeNode<
-  INPUT,
-  OUTPUT
-> {
+export class List<T = any> extends ComputeNode<{ [DEFAULT_INPUT]: T }, { [DEFAULT_OUTPUT]: T[] }> {
   override readonly type = 'list';
 
   private readonly _items: Signal<T[]> = signal([]);
@@ -34,9 +30,7 @@ export class List<INPUT extends InputType<T>, OUTPUT extends OutputType<T[]>, T 
     this._items.value.length = 0;
   }
 
-  override async invoke(input: INPUT) {
-    const value = input[DEFAULT_INPUT];
-
+  override async invoke({ [DEFAULT_INPUT]: value }: { [DEFAULT_INPUT]: T }) {
     // TODO(burdon): Hack since GPT sends an array (user prompt then response). Needs configuration.
     if (Array.isArray(value)) {
       this._items.value = [...this._items.value, ...value];
@@ -46,6 +40,6 @@ export class List<INPUT extends InputType<T>, OUTPUT extends OutputType<T[]>, T 
 
     return {
       [DEFAULT_OUTPUT]: this._items.value,
-    } as OUTPUT;
+    };
   }
 }

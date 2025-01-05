@@ -23,7 +23,7 @@ export const TableShape = S.extend(
   }),
 );
 
-export type TableShape = ComputeShape<S.Schema.Type<typeof TableShape>, List<any, any>>;
+export type TableShape = ComputeShape<S.Schema.Type<typeof TableShape>, List<any>>;
 
 export type CreateTableProps = Omit<TableShape, 'type' | 'node' | 'size'>;
 
