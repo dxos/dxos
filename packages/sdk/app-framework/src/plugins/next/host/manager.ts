@@ -2,32 +2,50 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Event } from '@dxos/async';
+import { create, type ReactiveObject } from '@dxos/live-object';
 import { type MaybePromise } from '@dxos/util';
 
-import { type ActivationEvent, type AnyContribution, type Plugin, type PluginModule, PluginsContext } from './plugin';
+import { type ActivationEvent, type AnyCapability, type Plugin, type PluginModule, PluginsContext } from './plugin';
 
 export const eventKey = (event: ActivationEvent) => (event.specifier ? `${event.id}:${event.specifier}` : event.id);
 
 type PluginManagerOptions = {
   pluginLoader: (id: string) => MaybePromise<Plugin>;
   plugins?: Plugin[];
+  core?: string[];
 };
 
 export class PluginManager {
+  readonly activation = new Event<{ event: string; state: 'activating' | 'activated' | 'error'; error?: any }>();
+
   private readonly _context = new PluginsContext({
     activate: (event) => this.activate(event),
     reset: (id) => this.reset(id),
   });
 
+  private readonly _state: ReactiveObject<{
+    core: string[];
+    enabled: string[];
+    active: string[];
+    eventsFired: string[];
+    pendingReset: string[];
+  }>;
+
   private readonly _pluginLoader: PluginManagerOptions['pluginLoader'];
   private readonly _plugins = new Map<string, Plugin>();
   private readonly _modules = new Map<string, PluginModule>();
-  private readonly _activated = new Map<string, AnyContribution[]>();
-  private readonly _fired = new Set<string>();
-  private readonly _pendingReset = new Set<string>();
+  private readonly _capabilities = new Map<string, AnyCapability[]>();
 
-  constructor({ pluginLoader, plugins = [] }: PluginManagerOptions) {
+  constructor({ pluginLoader, plugins = [], core = [] }: PluginManagerOptions) {
     this._pluginLoader = pluginLoader;
+    this._state = create({
+      core,
+      enabled: plugins.map((plugin) => plugin.meta.id),
+      active: [],
+      eventsFired: [],
+      pendingReset: [],
+    });
     plugins.forEach((plugin) => this._registerPlugin(plugin));
   }
 
@@ -35,16 +53,23 @@ export class PluginManager {
     return this._context;
   }
 
-  get modules() {
+  get enabled(): readonly string[] {
+    return this._state.enabled;
+  }
+
+  get active(): readonly string[] {
+    return this._state.active;
+  }
+
+  get pendingReset(): readonly string[] {
+    return this._state.pendingReset;
+  }
+
+  /**
+   * @internal
+   */
+  get modules(): readonly PluginModule[] {
     return Array.from(this._modules.values());
-  }
-
-  get activated() {
-    return Array.from(this._activated.keys());
-  }
-
-  get pendingReset() {
-    return Array.from(this._pendingReset);
   }
 
   /**
@@ -55,6 +80,10 @@ export class PluginManager {
     const plugin = await this._pluginLoader(id);
     this._registerPlugin(plugin);
     plugin.modules.forEach((module) => this._setPendingResetByModule(module));
+
+    if (!this._state.enabled.includes(plugin.meta.id)) {
+      this._state.enabled.push(plugin.meta.id);
+    }
   }
 
   /**
@@ -62,14 +91,25 @@ export class PluginManager {
    * @param id The ID of the plugin.
    */
   async remove(id: string) {
-    const deactivated = await this.deactivate(id);
-    if (deactivated) {
-      const plugin = this._plugins.get(id);
-      this._plugins.delete(id);
-      plugin?.modules.forEach((module) => this._modules.delete(module.id));
+    if (this._state.core.includes(id)) {
+      return false;
     }
 
-    return deactivated;
+    const deactivated = await this.deactivate(id);
+    if (!deactivated) {
+      return false;
+    }
+
+    const plugin = this._plugins.get(id);
+    this._plugins.delete(id);
+    plugin?.modules.forEach((module) => this._modules.delete(module.id));
+
+    const enabledIndex = this._state.enabled.findIndex((enabled) => enabled === id);
+    if (enabledIndex !== -1) {
+      this._state.enabled.splice(enabledIndex, 1);
+    }
+
+    return true;
   }
 
   /**
@@ -118,11 +158,11 @@ export class PluginManager {
   }
 
   private _getActiveModules() {
-    return this.modules.filter((module) => this._activated.has(module.id));
+    return this.modules.filter((module) => this._state.active.includes(module.id));
   }
 
   private _getInactiveModules() {
-    return this.modules.filter((module) => !this._activated.has(module.id));
+    return this.modules.filter((module) => !this._state.active.includes(module.id));
   }
 
   private _getActiveModulesByEvent(eventKey: string) {
@@ -134,44 +174,64 @@ export class PluginManager {
   }
 
   private _setPendingResetByModule(module: PluginModule) {
-    const activationEvents = module.activationEvents.filter((event) => this._fired.has(event));
+    const activationEvents = module.activationEvents.filter((event) => this._state.eventsFired.includes(event));
     const parentEvents = activationEvents.flatMap((event) => {
       const modules = this._getActiveModules().filter((module) => module.dependentEvents?.includes(event));
       return modules.flatMap((module) => module.activationEvents);
     });
 
-    [...activationEvents, ...parentEvents].forEach((event) => this._pendingReset.add(event));
+    const pendingReset = Array.from(new Set([...activationEvents, ...parentEvents])).filter(
+      (event) => !this._state.pendingReset.includes(event),
+    );
+    if (pendingReset.length > 0) {
+      this._state.pendingReset.push(...pendingReset);
+    }
   }
 
   // TODO(wittjosiah): Use Effect.
   private async _activate(key: string) {
-    this._pendingReset.delete(key);
+    const pendingIndex = this._state.pendingReset.findIndex((event) => event === key);
+    if (pendingIndex !== -1) {
+      this._state.pendingReset.splice(pendingIndex, 1);
+    }
+
     const modules = this._getInactiveModulesByEvent(key);
     if (modules.length === 0) {
       return false;
     }
 
-    await Promise.all(
-      modules.map(async (module) => {
-        await Promise.all(module.dependentEvents?.map((event) => this._activate(event)) ?? []);
+    this.activation.emit({ event: key, state: 'activating' });
+    try {
+      await Promise.all(
+        modules.map(async (module) => {
+          await Promise.all(module.dependentEvents?.map((event) => this._activate(event)) ?? []);
 
-        const maybeContributions = (await module.activate?.(this._context)) ?? [];
-        const contributions = Array.isArray(maybeContributions)
-          ? await Promise.all(maybeContributions)
-          : [await maybeContributions];
-        await Promise.all(
-          contributions.map(async (contribution) => {
-            this._context.contributeCapability(contribution.interface, contribution.implementation);
-          }),
-        );
+          const maybeCapabilities = (await module.activate?.(this._context)) ?? [];
+          const capabilities = Array.isArray(maybeCapabilities)
+            ? await Promise.all(maybeCapabilities)
+            : [await maybeCapabilities];
+          await Promise.all(
+            capabilities.map(async (capability) => {
+              return this._context.contributeCapability(capability.interface, capability.implementation);
+            }),
+          );
 
-        this._activated.set(module.id, contributions);
+          this._state.active.push(module.id);
+          this._capabilities.set(module.id, capabilities);
 
-        await Promise.all(module.triggeredEvents?.map((event) => this._activate(event)) ?? []);
-      }),
-    );
+          await Promise.all(module.triggeredEvents?.map((event) => this._activate(event)) ?? []);
+        }),
+      );
 
-    this._fired.add(key);
+      if (!this._state.eventsFired.includes(key)) {
+        this._state.eventsFired.push(key);
+      }
+
+      this.activation.emit({ event: key, state: 'activated' });
+    } catch (err: any) {
+      this.activation.emit({ event: key, state: 'error', error: err });
+      throw err;
+    }
 
     return true;
   }
@@ -182,14 +242,23 @@ export class PluginManager {
       return false;
     }
 
-    const contributions = this._activated.get(id);
-    if (contributions) {
-      resetting || this._setPendingResetByModule(module);
-      await module.deactivate?.(this._context);
-      contributions.forEach((contribution) => {
-        this._context.removeCapability(contribution.interface, contribution.implementation);
+    await module.deactivate?.(this._context);
+
+    const capabilities = this._capabilities.get(id);
+    if (capabilities) {
+      capabilities.forEach((capability) => {
+        this._context.removeCapability(capability.interface, capability.implementation);
       });
-      this._activated.delete(id);
+      this._capabilities.delete(id);
+    }
+
+    const activeIndex = this._state.active.findIndex((event) => event === id);
+    if (activeIndex !== -1) {
+      this._state.active.splice(activeIndex, 1);
+    }
+
+    if (!resetting) {
+      this._setPendingResetByModule(module);
     }
 
     return true;

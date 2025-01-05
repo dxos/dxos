@@ -11,32 +11,34 @@ import { type IntentContext, type AnyIntentResolver } from '../plugin-intent';
 // Common Contributions
 //
 
-export const ReactContext = defineInterface<{ context: FC<PropsWithChildren> }>(
-  'dxos.org/app-framework/contributions/react-context',
-);
+export namespace Contributions {
+  export type ReactContext = { id: string; dependsOn?: string[]; context: FC<PropsWithChildren> };
+  export const ReactContext = defineInterface<ReactContext>('dxos.org/app-framework/contributions/react-context');
 
-export const ReactRoot = defineInterface<{ root: FC<PropsWithChildren> }>(
-  'dxos.org/app-framework/contributions/react-root',
-);
+  export type ReactRoot = { id: string; root: FC<PropsWithChildren> };
+  export const ReactRoot = defineInterface<ReactRoot>('dxos.org/app-framework/contributions/react-root');
 
-export const IntentResolver = defineInterface<{ resolvers: AnyIntentResolver | AnyIntentResolver[] }>(
-  'dxos.org/app-framework/contributions/intent-resolver',
-);
+  export type IntentResolver = { resolvers: AnyIntentResolver | AnyIntentResolver[] };
+  export const IntentResolver = defineInterface<IntentResolver>('dxos.org/app-framework/contributions/intent-resolver');
 
-export const IntentDispatcher = defineInterface<Omit<IntentContext, 'registerResolver'>>(
-  'dxos.org/app-framework/contributions/intent-dispatcher',
-);
+  export type IntentDispatcher = Omit<IntentContext, 'registerResolver'>;
+  export const IntentDispatcher = defineInterface<IntentDispatcher>(
+    'dxos.org/app-framework/contributions/intent-dispatcher',
+  );
+}
 
 //
 // Common Activation Events
 //
 
-/**
- * Fired when the app is started.
- */
-export const StartupEvent = defineEvent('dxos.org/app-framework/events/startup');
+export namespace Events {
+  /**
+   * Fired when the app is started.
+   */
+  export const Startup = defineEvent('dxos.org/app-framework/events/startup');
 
-/**
- * Fired when plugin state is ready.
- */
-export const createStateEvent = (specifier: string) => defineEvent('dxos.org/app-framework/events/state', specifier);
+  /**
+   * Fired when plugin state is ready.
+   */
+  export const createStateEvent = (specifier: string) => defineEvent('dxos.org/app-framework/events/state', specifier);
+}

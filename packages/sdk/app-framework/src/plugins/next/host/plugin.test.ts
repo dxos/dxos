@@ -4,6 +4,8 @@
 
 import { describe, expect, it } from 'vitest';
 
+import { updateCounter } from '@dxos/echo-schema/testing';
+
 import { defineInterface, PluginsContext } from './plugin';
 
 const defaultOptions = {
@@ -57,5 +59,23 @@ describe('PluginsContext', () => {
     context.contributeCapability(interfaceDef2, implementation2);
     expect(context.requestCapability(interfaceDef1)).toEqual([implementation1]);
     expect(context.requestCapability(interfaceDef2)).toEqual([implementation2]);
+  });
+
+  it('should be reactive', () => {
+    const context = new PluginsContext(defaultOptions);
+    const interfaceDef = defineInterface<{ example: string }>('@dxos/app-framework/test/example');
+
+    using updates = updateCounter(() => {
+      context.requestCapability(interfaceDef);
+    });
+
+    expect(updates.count).toEqual(0);
+
+    const implementation = { example: 'identifier' };
+    context.contributeCapability(interfaceDef, implementation);
+    expect(updates.count).toEqual(1);
+
+    context.removeCapability(interfaceDef, implementation);
+    expect(updates.count).toEqual(2);
   });
 });

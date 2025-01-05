@@ -11,8 +11,13 @@
 - laziness needs to move from pluign def to the contribution point function
 */
 
+import { signal, type Signal } from '@preact/signals-core';
+
 import { type MaybePromise } from '@dxos/util';
 
+/**
+ *
+ */
 export type PluginMeta = {
   /**
    * Globally unique ID.
@@ -54,8 +59,11 @@ export type PluginMeta = {
   tags?: string[];
 };
 
+/**
+ *
+ */
 export type InterfaceDef<T> = {
-  // Pattern borrowed from effect, they use symbols which I ommited for brewity.
+  // TODO(dima): Pattern borrowed from effect, they use symbols which I ommited for brewity.
   _TypeId: {
     // This is gonna be `null` at runtime, here it's just so that the InterfaceDef holds on to the type-param
     _T: T;
@@ -63,11 +71,27 @@ export type InterfaceDef<T> = {
   identifier: string;
 };
 
+/**
+ *
+ */
+export type Capability<T> = {
+  interface: InterfaceDef<T>;
+  implementation: T;
+};
+
+export type AnyCapability = Capability<any>;
+
+/**
+ *
+ */
 export type ActivationEvent = {
   id: string;
   specifier?: string;
 };
 
+/**
+ *
+ */
 export const defineEvent = (id: string, specifier?: string) => {
   return { id, specifier } as ActivationEvent;
 };
@@ -77,12 +101,23 @@ type PluginsContextOptions = {
   reset: (event: ActivationEvent) => void;
 };
 
-// Shared for all plugins
+/**
+ *
+ */
 export class PluginsContext {
-  // It's okay to use unknown here since we will do strict type-safe API
-  private readonly _definedCapabilities = new Map<string, unknown[]>();
+  // TODO(wittjosiah): This should use live object rather than plain signal.
+  //   Live object would allow the array itself to be reactive.
+  //   This would allow the reference to the array to be maintained and subscribed to.
+  private readonly _definedCapabilities = new Map<string, Signal<unknown[]>>();
 
+  /**
+   *
+   */
   readonly activate: PluginsContextOptions['activate'];
+
+  /**
+   *
+   */
   readonly reset: PluginsContextOptions['reset'];
 
   constructor({ activate, reset }: PluginsContextOptions) {
@@ -94,43 +129,60 @@ export class PluginsContext {
    * @internal
    */
   contributeCapability<T>(interfaceDef: InterfaceDef<T>, implementation: T) {
-    this._definedCapabilities.set(interfaceDef.identifier, [
-      ...(this._definedCapabilities.get(interfaceDef.identifier) ?? []),
-      implementation,
-    ]);
+    let current = this._definedCapabilities.get(interfaceDef.identifier);
+    if (!current) {
+      current = signal<unknown[]>([]);
+      this._definedCapabilities.set(interfaceDef.identifier, current);
+    }
+
+    current.value = [...current.value, implementation];
   }
 
   /**
    * @internal
    */
   removeCapability<T>(interfaceDef: InterfaceDef<T>, implementation: T) {
-    this._definedCapabilities.set(
-      interfaceDef.identifier,
-      (this._definedCapabilities.get(interfaceDef.identifier) ?? []).filter((i) => i !== implementation),
-    );
+    const current = this._definedCapabilities.get(interfaceDef.identifier);
+    if (!current) {
+      return;
+    }
+
+    current.value = current.value.filter((i) => i !== implementation);
   }
 
+  /**
+   *
+   */
   requestCapability<T>(interfaceDef: InterfaceDef<T>) {
-    return (this._definedCapabilities.get(interfaceDef.identifier) ?? []) as T[];
+    let current = this._definedCapabilities.get(interfaceDef.identifier);
+    if (!current) {
+      current = signal<unknown[]>([]);
+      this._definedCapabilities.set(interfaceDef.identifier, current);
+    }
+
+    // NOTE: This the type-checking for capabilities is done at the time of contribution.
+    return current.value as T[];
   }
 }
 
-export type Contribution<T> = {
-  interface: InterfaceDef<T>;
-  implementation: T;
-};
-
-export type AnyContribution = Contribution<any>;
-
+/**
+ *
+ */
 export type Plugin = {
   meta: PluginMeta;
   modules: PluginModule[];
 };
 
+/**
+ *
+ */
 export const definePlugin = (meta: PluginMeta, modules: PluginModule[]) => {
   return { meta, modules } satisfies Plugin;
 };
 
+/**
+ *
+ */
 export type PluginModule = {
   /**
    * Unique sub-ID of the plugin.
@@ -157,9 +209,9 @@ export type PluginModule = {
   /**
    * Called when the module is activated.
    * @param context The plugin context.
-   * @returns The contributions of the module.
+   * @returns The capabilities of the module.
    */
-  activate: (context: PluginsContext) => MaybePromise<MaybePromise<AnyContribution> | MaybePromise<AnyContribution>[]>;
+  activate: (context: PluginsContext) => MaybePromise<MaybePromise<AnyCapability> | MaybePromise<AnyCapability>[]>;
 
   /**
    * Called when the module is deactivated.
@@ -168,20 +220,33 @@ export type PluginModule = {
   deactivate?: (context: PluginsContext) => MaybePromise<void>;
 };
 
+/**
+ *
+ */
 export const defineModule = (module: PluginModule) => module;
 
+/**
+ *
+ */
 export const defineInterface = <T>(identifier: string) => {
   return { identifier } as InterfaceDef<T>;
 };
 
-export const contributes = <T>(interfaceDef: InterfaceDef<T>, implementation: T): Contribution<T> => {
-  return { interface: interfaceDef, implementation } satisfies Contribution<T>;
+/**
+ *
+ */
+export const contributes = <T>(interfaceDef: InterfaceDef<T>, implementation: T): Capability<T> => {
+  return { interface: interfaceDef, implementation } satisfies Capability<T>;
 };
 
-type LazyContribution<T, U> = () => Promise<{ default: (props: T) => Contribution<U> }>;
-export const lazy = <T, U>(c: LazyContribution<T, U>, props?: T) => {
+type LazyCapability<T, U> = () => Promise<{ default: (props: T) => Capability<U> }>;
+
+/**
+ *
+ */
+export const lazy = <T, U>(c: LazyCapability<T, U>, props?: T) => {
   return () =>
-    c().then(({ default: contribution }) => {
-      return contribution(props as T);
+    c().then(({ default: getCapability }) => {
+      return getCapability(props as T);
     });
 };
