@@ -2,16 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { raise } from '@dxos/debug';
 import { S } from '@dxos/echo-schema';
 
-import { ComputeNode, DEFAULT_OUTPUT, NoInput } from '../compute-node';
-import { InvalidStateError } from '../state-machine';
+import { ComputeNode, DEFAULT_OUTPUT, type DefaultOutput, NoInput } from '../compute-node';
 
 /**
  * Switch outputs true when set.
  */
-export class Switch extends ComputeNode<NoInput, { [DEFAULT_OUTPUT]: boolean }> {
+export class Switch extends ComputeNode<NoInput, DefaultOutput<boolean>> {
   override readonly type = 'switch';
 
   private _enabled = false;
@@ -20,17 +18,16 @@ export class Switch extends ComputeNode<NoInput, { [DEFAULT_OUTPUT]: boolean }> 
     super(NoInput, S.Struct({ [DEFAULT_OUTPUT]: S.Boolean }));
   }
 
-  override async invoke() {
-    return { [DEFAULT_OUTPUT]: this._enabled };
-  }
-
   setEnabled(value: boolean) {
-    if (this._enabled === value) {
-      return this;
+    if (this._enabled !== value) {
+      this._enabled = value;
+      this.setOutput({ [DEFAULT_OUTPUT]: value });
     }
 
-    this._enabled = value;
-    this.setOutput({ [DEFAULT_OUTPUT]: value });
     return this;
+  }
+
+  override async invoke() {
+    return { [DEFAULT_OUTPUT]: this._enabled };
   }
 }

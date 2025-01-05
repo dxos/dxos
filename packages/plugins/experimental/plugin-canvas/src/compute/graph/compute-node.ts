@@ -6,7 +6,7 @@ import { signal, type Signal } from '@preact/signals-core';
 
 import { type Context } from '@dxos/context';
 import { inspectCustom } from '@dxos/debug';
-import { AST, S, type BaseObject } from '@dxos/echo-schema';
+import { AST, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -16,6 +16,9 @@ export type Binding = Record<string, any>;
 
 export const DEFAULT_INPUT = 'input';
 export const DEFAULT_OUTPUT = 'result';
+
+export type DefaultInput<T> = { [DEFAULT_INPUT]: T };
+export type DefaultOutput<T> = { [DEFAULT_OUTPUT]: T };
 
 export const NoInput = S.Struct({});
 export const NoOutput = S.Struct({});

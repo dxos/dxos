@@ -7,13 +7,13 @@ import { computed, type Signal } from '@preact/signals-core';
 import { raise } from '@dxos/debug';
 import { S } from '@dxos/echo-schema';
 
-import { ComputeNode, DEFAULT_INPUT, NoOutput } from '../compute-node';
+import { ComputeNode, DEFAULT_INPUT, type DefaultInput, NoOutput } from '../compute-node';
 import { InvalidStateError } from '../state-machine';
 
 /**
  * Beacon displays the current boolean status.
  */
-export class Beacon extends ComputeNode<{ [DEFAULT_INPUT]: boolean }, NoOutput> {
+export class Beacon extends ComputeNode<DefaultInput<boolean>, NoOutput> {
   override readonly type = 'beacon';
 
   constructor() {

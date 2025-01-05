@@ -138,7 +138,7 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
   // Custom anchors.
   const anchors = useMemo(
     () => registry.getShapeDef(shape.type)?.getAnchors?.(shape) ?? {},
-    [shape.center, shape.size.height],
+    [shape.center, shape.size],
   );
 
   return (
@@ -213,14 +213,14 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
           style={getBoundsProperties({ ...shape.center, ...shape.size })}
           className={mx(
             'overflow-hidden',
-            classNames,
             styles.frameContainer,
             styles.frameHover,
             styles.frameBorder,
+            classNames,
+            preview && styles.framePreview,
             selected && styles.frameSelected,
             active && styles.frameActive,
             shape.guide && styles.frameGuide,
-            preview && styles.framePreview,
             hidden && 'opacity-0',
             debug && 'opacity-50',
           )}
