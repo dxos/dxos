@@ -16,12 +16,11 @@ import React, {
   useState,
 } from 'react';
 import { createPortal } from 'react-dom';
-import { createRoot } from 'react-dom/client';
 
 import { invariant } from '@dxos/invariant';
-import { type ThemedClassName, ThemeProvider, Tooltip, useForwardedRef } from '@dxos/react-ui';
+import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
 import { useProjection } from '@dxos/react-ui-canvas';
-import { defaultTx, mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/react-ui-theme';
 
 import { Anchor, defaultAnchorSize } from './Anchor';
 import { type ShapeComponentProps, shapeAttrs } from './Shape';
@@ -75,7 +74,7 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
       draggable({
         element: draggingRef.current,
         getInitialData: () => ({ type: 'frame', shape }) satisfies DragDropPayload,
-        onGenerateDragPreview: ({ nativeSetDragImage, location, source }) => {
+        onGenerateDragPreview: ({ nativeSetDragImage, location }) => {
           setCustomNativeDragPreview({
             /**
              * Calculate relative offset and apply to center position.
@@ -98,28 +97,24 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
               return pointSubtract(pos, topLeft);
             },
             render: ({ container }) => {
-              const remount = true;
-              if (remount) {
-                // Remount and preserve context.
-                setPreview(container);
-                return () => setPreview(undefined);
-              } else {
-                // TODO(burdon): Render directly but set-up new context.
-                // https://atlassian.design/components/pragmatic-drag-and-drop/core-package/adapters/element/drag-previews#approach-1-use-a-custom-native-drag-preview
-                const root = createRoot(container);
-                root.render(
-                  <ThemeProvider tx={defaultTx} themeMode='dark'>
-                    <Tooltip.Provider>
-                      <div style={{ transform: `scale(${projection.scale})` }}>
-                        <FrameContent {...baseProps} anchors={anchors} preview>
-                          {Component && <Component {...baseProps} />}
-                        </FrameContent>
-                      </div>
-                    </Tooltip.Provider>
-                  </ThemeProvider>,
-                );
-                return () => root.unmount();
-              }
+              // TODO(burdon): Render directly but set-up new context.
+              // https://atlassian.design/components/pragmatic-drag-and-drop/core-package/adapters/element/drag-previews#approach-1-use-a-custom-native-drag-preview
+              // const root = createRoot(container);
+              // root.render(
+              //   <ThemeProvider tx={defaultTx} themeMode='dark'>
+              //     <Tooltip.Provider>
+              //       <div style={{ transform: `scale(${projection.scale})` }}>
+              //         <FrameContent {...baseProps} anchors={anchors} preview>
+              //           {Component && <Component {...baseProps} />}
+              //         </FrameContent>
+              //       </div>
+              //     </Tooltip.Provider>
+              //   </ThemeProvider>,
+              // );
+              // return () => root.unmount();
+
+              setPreview(container);
+              return () => setPreview(undefined);
             },
             nativeSetDragImage,
           });
@@ -150,11 +145,11 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
     <>
       <FrameContent
         {...baseProps}
+        ref={draggingRef}
         hidden={isDragging}
         active={active}
         anchors={anchors}
         onEdit={() => setEditing({ shape })}
-        ref={draggingRef}
       >
         {/* <pre>{JSON.stringify(shape.center)}</pre> */}
         {Component && <Component {...baseProps} editing={isEditing} onClose={handleClose} onCancel={handleCancel} />}

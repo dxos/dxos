@@ -121,7 +121,6 @@ export abstract class ComputeNode<Input, Output> {
     // TODO(burdon): Standardize all nodes to require a property (i.e., remove default?)
     const p = property && AST.getPropertySignatures(this.inputSchema.ast).find((p) => p.name === property);
     invariant(!property || p, `invalid property: ${String(property)}`);
-
     if (property) {
       invariant(this._input.value, `input is not defined for property: ${String(property)}`);
       this._input.value[property] = value;
