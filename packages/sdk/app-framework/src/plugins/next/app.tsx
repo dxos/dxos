@@ -3,17 +3,18 @@
 //
 
 import { effect } from '@preact/signals-core';
-import React, { useEffect, useMemo, useState } from 'react';
+import React from 'react';
 import { type ReactNode } from 'react';
 
 import { invariant } from '@dxos/invariant';
+import { create } from '@dxos/live-object';
 
-import { PluginProvider } from './PluginContext';
+import { Capabilities, Events } from './common';
+import { topologicalSort } from './helpers';
 import { PluginManager } from './manager';
 import { type Plugin } from './plugin';
-import { ErrorBoundary } from '../../plugin-surface';
-import { Contributions, Events } from '../common';
-import { topologicalSort } from '../helpers';
+import { PluginManagerProvider } from './react';
+import { ErrorBoundary } from '../plugin-surface';
 
 const ENABLED_KEY = 'dxos.org/app-framework/enabled';
 
@@ -23,6 +24,7 @@ export type HostPluginParams = {
   defaults?: string[];
   fallback?: ErrorBoundary['props']['fallback'];
   placeholder?: ReactNode;
+  cacheEnabled?: boolean;
 };
 
 export const createApp = ({
@@ -31,6 +33,7 @@ export const createApp = ({
   defaults = [],
   fallback = DefaultFallback,
   placeholder = null,
+  cacheEnabled = false,
 }: HostPluginParams) => {
   // TODO(wittjosiah): Allow custom plugin loader and provide one which supports loading via url.
   const pluginLoader = (id: string) => {
@@ -39,65 +42,72 @@ export const createApp = ({
     return plugin;
   };
 
-  const plugins = getEnabledPlugins(available, defaults);
+  const state = create({ ready: false, error: null });
+  const plugins = getEnabledPlugins({ available, core, defaults, cacheEnabled });
   const manager = new PluginManager({ pluginLoader, plugins, core });
-  void manager.activate(Events.Startup);
+  manager.context.contributeCapability(Capabilities.PluginManager, manager);
 
-  effect(() => {
-    localStorage.setItem(ENABLED_KEY, JSON.stringify(manager.enabled));
+  manager.activation.on(({ event, state: _state, error }) => {
+    if (event === Events.Startup.id) {
+      state.ready = _state === 'activated';
+      state.error = error;
+    }
   });
 
-  return () => <App placeholder={placeholder} fallback={fallback} manager={manager} />;
+  effect(() => {
+    cacheEnabled && localStorage.setItem(ENABLED_KEY, JSON.stringify(manager.enabled));
+  });
+
+  void manager.activate(Events.Startup);
+
+  return () => <App placeholder={placeholder} fallback={fallback} manager={manager} state={state} />;
 };
 
-const getEnabledPlugins = (available: Plugin[], defaults: string[]) => {
+const getEnabledPlugins = ({
+  available,
+  core,
+  defaults,
+  cacheEnabled,
+}: {
+  available: Plugin[];
+  core: string[];
+  defaults: string[];
+  cacheEnabled: boolean;
+}) => {
   const cached: string[] = JSON.parse(localStorage.getItem(ENABLED_KEY) ?? '[]');
-  const enabled = cached.length > 0 ? cached : defaults;
-  return available.filter((plugin) => enabled.includes(plugin.meta.id));
+  const enabled = cacheEnabled && cached.length > 0 ? cached : defaults;
+  return available.filter((plugin) => enabled.includes(plugin.meta.id) || core.includes(plugin.meta.id));
 };
 
 type AppProps = Required<Pick<HostPluginParams, 'placeholder' | 'fallback'>> & {
   manager: PluginManager;
+  state: { ready: boolean; error: unknown };
 };
 
-const App = ({ placeholder, fallback, manager }: AppProps) => {
-  const [ready, setReady] = useState(false);
-  const [error, setError] = useState<unknown>(null);
-
-  useEffect(() => {
-    return manager.activation.on(({ event, state, error }) => {
-      if (event === Events.Startup.id) {
-        setReady(state === 'activated');
-        setError(error);
-      }
-    });
-  }, [manager]);
-
-  if (error) {
-    throw error;
+const App = ({ placeholder, fallback, manager, state }: AppProps) => {
+  if (state.error) {
+    // This trigger the error boundary to provide UI feedback for the startup error.
+    throw state.error;
   }
 
-  if (!ready) {
+  // TODO(wittjosiah): Consider using Suspense instead?
+  if (!state.ready) {
     return <>{placeholder}</>;
   }
 
-  const reactContexts = manager.context.requestCapability(Contributions.ReactContext);
-  const reactRoots = manager.context.requestCapability(Contributions.ReactRoot);
+  const reactContexts = manager.context.requestCapability(Capabilities.ReactContext);
+  const reactRoots = manager.context.requestCapability(Capabilities.ReactRoot);
 
-  const ComposedContext = useMemo(
-    () => composeContexts(reactContexts),
-    [JSON.stringify(reactContexts.map(({ id }) => id))],
-  );
-
+  const ComposedContext = composeContexts(reactContexts);
   return (
     <ErrorBoundary fallback={fallback}>
-      <PluginProvider value={manager}>
+      <PluginManagerProvider value={manager}>
         <ComposedContext>
           {reactRoots.map(({ id, root: Component }) => (
             <Component key={id} />
           ))}
         </ComposedContext>
-      </PluginProvider>
+      </PluginManagerProvider>
     </ErrorBoundary>
   );
 };
@@ -115,7 +125,7 @@ const DefaultFallback = ({ error }: { error: Error }) => {
   );
 };
 
-const composeContexts = (contexts: Contributions.ReactContext[]) => {
+const composeContexts = (contexts: Capabilities.ReactContext[]) => {
   return topologicalSort(contexts)
     .map(({ context }) => context)
     .reduce((Acc, Next) => ({ children }) => (

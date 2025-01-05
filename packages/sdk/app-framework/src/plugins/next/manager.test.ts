@@ -13,6 +13,7 @@ import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
 
+import { Events } from './common';
 import { eventKey, PluginManager } from './manager';
 import {
   contributes,
@@ -23,7 +24,6 @@ import {
   type Plugin,
   defineEvent,
 } from './plugin';
-import { Events } from '../common';
 
 registerSignalsRuntime();
 

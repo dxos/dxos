@@ -4,6 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { create, type ReactiveObject } from '@dxos/live-object';
+import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';
 
 import { type ActivationEvent, type AnyCapability, type Plugin, type PluginModule, PluginsContext } from './plugin';
@@ -153,6 +154,7 @@ export class PluginManager {
   }
 
   private _registerPlugin(plugin: Plugin) {
+    log('register plugin', { id: plugin.meta.id });
     plugin.modules.forEach((module) => this._modules.set(module.id, module));
     this._plugins.set(plugin.meta.id, plugin);
   }
@@ -184,12 +186,14 @@ export class PluginManager {
       (event) => !this._state.pendingReset.includes(event),
     );
     if (pendingReset.length > 0) {
+      log('pending reset', { events: pendingReset });
       this._state.pendingReset.push(...pendingReset);
     }
   }
 
   // TODO(wittjosiah): Use Effect.
   private async _activate(key: string) {
+    log('activating', { key });
     const pendingIndex = this._state.pendingReset.findIndex((event) => event === key);
     if (pendingIndex !== -1) {
       this._state.pendingReset.splice(pendingIndex, 1);
@@ -197,6 +201,7 @@ export class PluginManager {
 
     const modules = this._getInactiveModulesByEvent(key);
     if (modules.length === 0) {
+      log('no modules to activate', { key });
       return false;
     }
 
@@ -228,6 +233,7 @@ export class PluginManager {
       }
 
       this.activation.emit({ event: key, state: 'activated' });
+      log('activated', { key });
     } catch (err: any) {
       this.activation.emit({ event: key, state: 'error', error: err });
       throw err;
@@ -237,8 +243,10 @@ export class PluginManager {
   }
 
   private async _deactivate(id: string, resetting = false) {
+    log('deactivating', { id, resetting });
     const module = this._modules.get(id);
     if (!module) {
+      log('module not found', { id });
       return false;
     }
 
@@ -261,6 +269,7 @@ export class PluginManager {
       this._setPendingResetByModule(module);
     }
 
+    log('deactivated', { id, resetting });
     return true;
   }
 }

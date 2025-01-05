@@ -13,6 +13,7 @@
 
 import { signal, type Signal } from '@preact/signals-core';
 
+import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';
 
 /**
@@ -136,6 +137,7 @@ export class PluginsContext {
     }
 
     current.value = [...current.value, implementation];
+    log('capability contributed', { id: interfaceDef.identifier, count: current.value.length });
   }
 
   /**
@@ -148,6 +150,7 @@ export class PluginsContext {
     }
 
     current.value = current.value.filter((i) => i !== implementation);
+    log('capability removed', { id: interfaceDef.identifier, count: current.value.length });
   }
 
   /**
@@ -211,7 +214,7 @@ export type PluginModule = {
    * @param context The plugin context.
    * @returns The capabilities of the module.
    */
-  activate: (context: PluginsContext) => MaybePromise<MaybePromise<AnyCapability> | MaybePromise<AnyCapability>[]>;
+  activate: (context: PluginsContext) => MaybePromise<AnyCapability | AnyCapability[]>;
 
   /**
    * Called when the module is deactivated.
@@ -244,9 +247,9 @@ type LazyCapability<T, U> = () => Promise<{ default: (props: T) => Capability<U>
 /**
  *
  */
-export const lazy = <T, U>(c: LazyCapability<T, U>, props?: T) => {
-  return () =>
+export const lazy =
+  <T, U>(c: LazyCapability<T, U>, props?: T) =>
+  (): Promise<Capability<U>> =>
     c().then(({ default: getCapability }) => {
       return getCapability(props as T);
     });
-};
