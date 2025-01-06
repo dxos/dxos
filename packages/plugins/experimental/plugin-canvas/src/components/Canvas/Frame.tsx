@@ -82,8 +82,8 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
              * NOTE: During preview, we render a hidden border to contain the anchors for the native preview snapshot.
              * See preserveOffsetOnSource
              */
+            // TODO(burdon): Randomly of by 1px on drop.
             getOffset: () => {
-              // TODO(burdon): Seems to move slightly on drop.
               const [center] = projection.toScreen([shape.center]);
 
               // Set offset to center of shape.
@@ -100,20 +100,6 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
             render: ({ container }) => {
               // TODO(burdon): Render directly but set-up new context.
               // https://atlassian.design/components/pragmatic-drag-and-drop/core-package/adapters/element/drag-previews#approach-1-use-a-custom-native-drag-preview
-              // const root = createRoot(container);
-              // root.render(
-              //   <ThemeProvider tx={defaultTx} themeMode='dark'>
-              //     <Tooltip.Provider>
-              //       <div style={{ transform: `scale(${projection.scale})` }}>
-              //         <FrameContent {...baseProps} anchors={anchors} preview>
-              //           {Component && <Component {...baseProps} />}
-              //         </FrameContent>
-              //       </div>
-              //     </Tooltip.Provider>
-              //   </ThemeProvider>,
-              // );
-              // return () => root.unmount();
-
               setPreview(container);
               return () => setPreview(undefined);
             },
@@ -152,7 +138,6 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
         anchors={anchors}
         onEdit={() => setEditing({ shape })}
       >
-        {/* <pre>{JSON.stringify(shape.center)}</pre> */}
         {Component && <Component {...baseProps} editing={isEditing} onClose={handleClose} onCancel={handleCancel} />}
       </FrameContent>
 
@@ -208,7 +193,10 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
 
     return (
       <div ref={ref} {...shapeAttrs(shape)}>
-        {/* NOTE: We create an expanded background to ensure that the preview contains the anchors for the native image snapshot. */}
+        {/*
+         * Background.
+         * NOTE: We create an expanded background to ensure that the preview contains the anchors for the native image snapshot.
+         */}
         {(preview || debug) && (
           <div
             style={getBoundsProperties({
