@@ -10,7 +10,7 @@ import { AST, S } from '@dxos/echo-schema';
 import { FunctionBody, getAnchors, getHeight } from './Function';
 import { ComputeShape } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
-import { GptFunction } from '../graph';
+import { GptFunction, GptInput } from '../graph';
 
 export const GptShape = S.extend(
   ComputeShape,
@@ -18,29 +18,6 @@ export const GptShape = S.extend(
     type: S.Literal('gpt'),
   }),
 );
-
-export const GptMessage = S.Struct({
-  role: S.Union(S.Literal('system'), S.Literal('user'), S.Literal('assistant')),
-  message: S.String,
-});
-
-export type GptMessage = S.Schema.Type<typeof GptMessage>;
-
-export const GptInput = S.Struct({
-  systemPrompt: S.optional(S.String),
-  prompt: S.String,
-  history: S.optional(S.Array(GptMessage)),
-  tools: S.optional(S.Array(LLMToolDefinition)),
-});
-
-export const GptOutput = S.Struct({
-  result: S.Array(GptMessage),
-  tokens: S.Number,
-  cot: S.optional(S.String),
-});
-
-export type GptInput = S.Schema.Type<typeof GptInput>;
-export type GptOutput = S.Schema.Type<typeof GptOutput>;
 
 export type GptShape = ComputeShape<S.Schema.Type<typeof GptShape>, GptFunction>;
 

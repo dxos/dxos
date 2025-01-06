@@ -14,8 +14,7 @@ import { log } from '@dxos/log';
 
 import { type ComputeGraph, createComputeGraph } from './compute-graph';
 import { type Binding, type ComputeNode } from './compute-node';
-import type { FunctionCallback } from './nodes';
-import type { GptInput, GptOutput } from '../shapes';
+import type { FunctionCallback, GptInput, GptOutput } from './nodes';
 
 export const InvalidStateError = Error;
 

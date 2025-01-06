@@ -9,11 +9,10 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { getAnchors } from './Function';
-import { GptMessage } from './Gpt';
 import { Box } from './components';
 import { ComputeShape, createInputSchema, createOutputSchema } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
-import { List } from '../graph';
+import { GptMessage, List } from '../graph';
 
 const InputSchema = createInputSchema(GptMessage);
 const OutputSchema = createOutputSchema(S.mutable(S.Array(GptMessage)));
