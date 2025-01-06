@@ -53,6 +53,7 @@ export const ImageSource = S.Struct({
   media_type: S.Literal('image/jpeg', 'image/png', 'image/gif', 'image/webp'),
   data: S.String,
 }).pipe(S.mutable);
+export type ImageSource = S.Schema.Type<typeof ImageSource>;
 
 export const MessageImageContentBlock = S.Struct({
   type: S.Literal('image'),
