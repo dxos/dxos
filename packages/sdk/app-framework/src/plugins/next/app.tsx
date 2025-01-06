@@ -11,7 +11,7 @@ import { create } from '@dxos/live-object';
 
 import { Capabilities, Events } from './common';
 import { topologicalSort } from './helpers';
-import { PluginManager } from './manager';
+import { PluginManager, type PluginManagerOptions } from './manager';
 import { type Plugin } from './plugin';
 import { PluginManagerProvider } from './react';
 import { ErrorBoundary } from '../plugin-surface';
@@ -19,8 +19,9 @@ import { ErrorBoundary } from '../plugin-surface';
 const ENABLED_KEY = 'dxos.org/app-framework/enabled';
 
 export type HostPluginParams = {
-  plugins: Plugin[];
-  core: string[];
+  pluginLoader?: PluginManagerOptions['pluginLoader'];
+  plugins?: Plugin[];
+  core?: string[];
   defaults?: string[];
   fallback?: ErrorBoundary['props']['fallback'];
   placeholder?: ReactNode;
@@ -28,19 +29,22 @@ export type HostPluginParams = {
 };
 
 export const createApp = ({
-  plugins: available,
-  core,
+  pluginLoader: _pluginLoader,
+  plugins: available = [],
+  core = [],
   defaults = [],
   fallback = DefaultFallback,
   placeholder = null,
   cacheEnabled = false,
 }: HostPluginParams) => {
-  // TODO(wittjosiah): Allow custom plugin loader and provide one which supports loading via url.
-  const pluginLoader = (id: string) => {
-    const plugin = available.find((plugin) => plugin.meta.id === id);
-    invariant(plugin, `Plugin not found: ${id}`);
-    return plugin;
-  };
+  // TODO(wittjosiah): Provide a custom plugin loader which supports loading via url.
+  const pluginLoader =
+    _pluginLoader ??
+    ((id: string) => {
+      const plugin = available.find((plugin) => plugin.meta.id === id);
+      invariant(plugin, `Plugin not found: ${id}`);
+      return plugin;
+    });
 
   const state = create({ ready: false, error: null });
   const plugins = getEnabledPlugins({ available, core, defaults, cacheEnabled });

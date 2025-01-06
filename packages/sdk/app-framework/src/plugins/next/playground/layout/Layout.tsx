@@ -10,9 +10,18 @@ import { contributes } from '../../plugin';
 
 export const Layout = () => {
   return (
-    <div>
-      <Surface role='toolbar' />
-      <Surface role='main' limit={1} />
+    <div className='flex flex-col gap-2'>
+      <div className='flex gap-2'>
+        <Surface role='toolbar' />
+      </div>
+      <div className='flex gap-2'>
+        <div className='flex-1'>
+          <Surface role='primary' limit={1} />
+        </div>
+        <div className='flex-1'>
+          <Surface role='secondary' limit={1} />
+        </div>
+      </div>
     </div>
   );
 };

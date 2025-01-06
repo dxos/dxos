@@ -11,7 +11,7 @@ import { type ActivationEvent, type AnyCapability, type Plugin, type PluginModul
 
 export const eventKey = (event: ActivationEvent) => (event.specifier ? `${event.id}:${event.specifier}` : event.id);
 
-type PluginManagerOptions = {
+export type PluginManagerOptions = {
   pluginLoader: (id: string) => MaybePromise<Plugin>;
   plugins?: Plugin[];
   core?: string[];
@@ -54,16 +54,46 @@ export class PluginManager {
     return this._context;
   }
 
+  /**
+   * Ids of plugins that are core and cannot be removed.
+   */
+  get core(): readonly string[] {
+    return this._state.core;
+  }
+
+  /**
+   * Ids of plugins that are currently registered.
+   */
   get enabled(): readonly string[] {
     return this._state.enabled;
   }
 
+  /**
+   * Ids of modules that are currently active.
+   */
   get active(): readonly string[] {
     return this._state.active;
   }
 
+  /**
+   * @internal
+   */
+  get eventsFired(): readonly string[] {
+    return this._state.eventsFired;
+  }
+
+  /**
+   * Ids of events that are pending reset.
+   */
   get pendingReset(): readonly string[] {
     return this._state.pendingReset;
+  }
+
+  /**
+   * Plugins that are currently registered.
+   */
+  get plugins(): readonly Plugin[] {
+    return Array.from(this._plugins.values());
   }
 
   /**

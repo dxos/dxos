@@ -15,9 +15,11 @@ export const Debug = () => {
   const manager = usePluginManager();
 
   const object = {
+    core: manager.core,
     enabled: manager.enabled,
     active: manager.active,
     pendingReset: manager.pendingReset,
+    eventsFired: manager.eventsFired,
   };
 
   return (
@@ -32,7 +34,7 @@ export default () =>
     Capabilities.ReactSurface,
     createSurface({
       id: 'dxos.org/test/debug/main',
-      role: 'main',
+      role: 'secondary',
       component: Debug,
     }),
   );
