@@ -7,7 +7,7 @@ import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type LLMToolDefinition } from './types';
-import { ObjectId } from '../ai-service';
+import { ObjectId, type LLMTool } from '../ai-service';
 import { type AIServiceClient, type Message, type ResultStreamEvent, type LLMModel } from '../ai-service';
 
 export type CreateLLMConversationParams = {
@@ -21,7 +21,7 @@ export type CreateLLMConversationParams = {
   spaceId: SpaceId;
   threadId: ObjectId;
 
-  tools: LLMToolDefinition[];
+  tools: LLMTool[];
 
   client: AIServiceClient;
 
@@ -52,12 +52,15 @@ export const runLLM = async (params: CreateLLMConversationParams) => {
     for await (const event of result) {
       params.logger?.(event);
     }
-    const [message] = await result.complete();
+    const messages = await result.complete();
+    const message = messages.at(-1);
 
     log('llm result', { time: Date.now() - beginTs, message });
     invariant(message);
     params.logger?.({ type: 'message', message });
-    await params.client.insertMessages([message]);
+    await params.client.insertMessages(
+      messages.map((msg) => ({ ...msg, content: msg.content.filter((c) => c.type !== 'image') })),
+    );
 
     const isToolUse = message.content.at(-1)?.type === 'tool_use';
     if (isToolUse) {

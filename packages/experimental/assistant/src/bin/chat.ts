@@ -6,7 +6,7 @@ import inquirer from 'inquirer';
 
 import { SpaceId } from '@dxos/keys';
 
-import { AIServiceClientImpl, ObjectId } from '../ai-service';
+import { AIServiceClientImpl, ObjectId, ToolTypes } from '../ai-service';
 import { runLLM, createUserMessage } from '../conversation';
 import {
   createLogger,
@@ -18,11 +18,12 @@ import {
   Project,
   Task,
 } from '../testing';
+import { readFileSync, writeFileSync } from 'fs';
 
 // TODO(burdon): Move out of src?
 
-// const ENDPOINT = 'http://localhost:8787';
-const ENDPOINT = 'https://ai-service.dxos.workers.dev';
+const ENDPOINT = 'http://localhost:8787';
+// const ENDPOINT = 'https://ai-service.dxos.workers.dev';
 
 const client = new AIServiceClientImpl({
   endpoint: ENDPOINT,
@@ -52,12 +53,26 @@ while (true) {
     spaceId,
     threadId,
     system: createSystemPrompt(schemaTypes),
-    tools: [cypherTool],
+    tools: [
+      cypherTool,
+      {
+        name: 'text-to-image',
+        type: ToolTypes.TextToImage,
+      },
+    ],
     client,
     logger: createLogger({
       stream: true,
       filter: (e) => {
         return true;
+      },
+      onImage: (img) => {
+        const path = `/tmp/image-${img.id}.jpeg`;
+        writeFileSync(path, Buffer.from(img.source.data, 'base64'));
+        console.log(`Saved image to ${path}`);
+        // Print image in iTerm using ANSI escape sequence
+        const imageData = img.source.data;
+        process.stdout.write('\x1b]1337;File=inline=1:' + imageData + '\x07');
       },
     }),
   });
