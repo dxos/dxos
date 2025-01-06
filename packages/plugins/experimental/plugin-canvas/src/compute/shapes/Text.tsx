@@ -45,7 +45,7 @@ export const TextComponent = ({ shape, chat, ...props }: TextComponentProps) => 
   const handleEnter: TextBoxProps['onEnter'] = (value) => {
     if (value.trim().length) {
       // TODO(burdon): Standardize.
-      shape.node.setOutput({ [DEFAULT_OUTPUT]: value });
+      shape.node.setText(value);
       if (chat) {
         setReset({});
       }
@@ -54,7 +54,13 @@ export const TextComponent = ({ shape, chat, ...props }: TextComponentProps) => 
 
   return (
     <Box name={'Text'}>
-      <TextBox classNames='flex grow p-2 overflow-hidden' {...props} reset={reset} onEnter={handleEnter} />
+      <TextBox
+        classNames='flex grow p-2 overflow-hidden'
+        {...props}
+        reset={reset}
+        onEnter={handleEnter}
+        value={shape.node.getText()}
+      />
     </Box>
   );
 };
@@ -63,17 +69,19 @@ export const TextComponent = ({ shape, chat, ...props }: TextComponentProps) => 
 // Defs
 //
 
-export type CreateTextProps = Omit<TextShape, 'type' | 'node' | 'size'>;
+export type CreateTextProps = Omit<TextShape, 'type' | 'node' | 'size'> & { text?: string };
 
-export const createText = ({ id, ...rest }: CreateTextProps): TextShape => ({
+export const createText = ({ id, text, ...rest }: CreateTextProps): TextShape => ({
   id,
   type: 'text',
-  node: new Text(),
+  node: new Text().setText(text ?? ''),
   size: { width: 256, height: 128 },
   ...rest,
 });
 
 export type CreateChatProps = Omit<ChatShape, 'type' | 'node' | 'size'>;
+
+console.log({ Text });
 
 export const createChat = ({ id, ...rest }: CreateChatProps): ChatShape => ({
   id,

@@ -26,12 +26,14 @@ export const ListShape = S.extend(
 
 export type ListShape = ComputeShape<S.Schema.Type<typeof ListShape>, List<any>>;
 
-export type CreateListProps = Omit<ListShape, 'type' | 'node' | 'size'>;
+export type CreateListProps = Omit<ListShape, 'type' | 'node' | 'size'> & {
+  onlyLast?: boolean;
+};
 
-export const createList = ({ id, ...rest }: CreateListProps): ListShape => ({
+export const createList = ({ id, onlyLast, ...rest }: CreateListProps): ListShape => ({
   id,
   type: 'list',
-  node: new List(GptMessage),
+  node: new List(GptMessage, { onlyLast }),
   size: { width: 256, height: 512 },
   ...rest,
 });

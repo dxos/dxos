@@ -139,7 +139,7 @@ const Render = ({ id = 'test', graph: _graph, machine, model, gpt, init, sidebar
       {sidebar === 'json' && (
         <AttentionContainer id='sidebar' tabIndex={0} classNames='flex grow overflow-hidden'>
           <SyntaxHighlighter language='json' classNames='text-xs'>
-            {JSON.stringify({ graph }, null, 2)}
+            {JSON.stringify({ graph: graph?.graph }, null, 2)}
           </SyntaxHighlighter>
         </AttentionContainer>
       )}
@@ -277,7 +277,32 @@ export const GPT: Story = {
       { type: Testing.ContactType, count: 8 },
     ],
     registerSchema: true,
-    ...createMachine(createTest3(true)),
+    ...createMachine(createTest3({ db: true })),
+    model: '@anthropic/claude-3-5-sonnet-20241022',
+    gpt: callEdge(
+      new AIServiceClientImpl({
+        // endpoint: 'https://ai-service.dxos.workers.dev',
+        endpoint: 'http://localhost:8787',
+      }),
+    ),
+  },
+};
+
+export const GPTArtifact: Story = {
+  args: {
+    // debug: true,
+    showGrid: false,
+    snapToGrid: false,
+    sidebar: 'json',
+    // sidebar: 'state-machine',
+    registry: new ShapeRegistry(computeShapes),
+    spec: [
+      { type: Testing.OrgType, count: 2 },
+      { type: Testing.ProjectType, count: 4 },
+      { type: Testing.ContactType, count: 8 },
+    ],
+    registerSchema: true,
+    ...createMachine(createTest3({ db: true, cot: true, artifact: true })),
     model: '@anthropic/claude-3-5-sonnet-20241022',
     gpt: callEdge(
       new AIServiceClientImpl({

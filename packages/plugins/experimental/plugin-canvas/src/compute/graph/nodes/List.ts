@@ -9,6 +9,13 @@ import { S } from '@dxos/echo-schema';
 import { createInputSchema, createOutputSchema, type InputType, type OutputType } from '../../shapes/defs';
 import { ComputeNode, DEFAULT_INPUT, DEFAULT_OUTPUT } from '../compute-node';
 
+type ListOptions = {
+  /**
+   * Keep only the last item.
+   */
+  onlyLast?: boolean;
+};
+
 /**
  * List accumulator.
  */
@@ -17,9 +24,11 @@ export class List<T = any> extends ComputeNode<{ [DEFAULT_INPUT]: T }, { [DEFAUL
   override readonly type = 'list';
 
   private readonly _items: Signal<T[]> = signal([]);
+  private readonly _options: ListOptions = {};
 
-  constructor(schema: S.Schema<T>) {
+  constructor(schema: S.Schema<T>, options: ListOptions = {}) {
     super(createInputSchema(schema), createOutputSchema(S.mutable(S.Array(schema))));
+    this._options = options;
   }
 
   get items(): Signal<T[]> {
@@ -36,6 +45,10 @@ export class List<T = any> extends ComputeNode<{ [DEFAULT_INPUT]: T }, { [DEFAUL
       this._items.value = [...this._items.value, ...value];
     } else {
       this._items.value = [...this._items.value, value];
+    }
+
+    if (this._options.onlyLast) {
+      this._items.value = [this._items.value.at(-1) as T];
     }
 
     return {

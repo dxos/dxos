@@ -28,6 +28,8 @@ export type GptExecutor = FunctionCallback<GptInput, GptOutput>;
 export type StateMachineContext = {
   space?: Space;
   gpt?: GptExecutor;
+  
+  // TODO(dmaretskyi): Not used.
   model?: LLMModel; // TODO(burdon): Evolve.
 };
 

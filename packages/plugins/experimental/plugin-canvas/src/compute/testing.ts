@@ -15,8 +15,10 @@ import {
   createDatabase,
   createFunction,
   createGpt,
+  createList,
   createOr,
   createSwitch,
+  createText,
   createThread,
   createTimer,
 } from './shapes';
@@ -85,20 +87,41 @@ export const createTest2 = () => {
   });
 };
 
-export const createTest3 = (db = false) => {
+const ARTIFACTS_SYSTEM_PROMPT = `
+You are able to create artifacts which are a persisted piece of data.
+To create an artifact, print the text you want to put into the artifact in <artifact> tags.
+When a user asks you to create something, decide whether it should be an artifact.
+Prefer artifacts for tables, lists, and other data structures.
+`;
+
+export const createTest3 = ({
+  db = false,
+  cot = false,
+  artifact = false,
+}: {
+  db?: boolean;
+  cot?: boolean;
+  artifact?: boolean;
+} = {}) => {
   const nodes: Shape[] = [
     createChat({ id: 'a', center: pos({ x: -12, y: 0 }) }),
+    ...(artifact ? [createText({ id: 'h', center: pos({ x: -12, y: -6 }), text: ARTIFACTS_SYSTEM_PROMPT })] : []),
     createGpt({ id: 'b', center: pos({ x: 0, y: 0 }) }),
     createThread({ id: 'c', center: pos({ x: 16, y: -4 }) }),
     createCounter({ id: 'd', center: pos({ x: 8, y: 6 }) }),
     ...(db ? [createDatabase({ id: 'e', center: pos({ x: -10, y: 6 }) })] : []),
+    ...(cot ? [createList({ id: 'f', center: pos({ x: 0, y: 14 }) })] : []),
+    ...(artifact ? [createList({ id: 'g', onlyLast: true, center: pos({ x: 0, y: -12 }) })] : []),
   ];
 
-  const edges = [
+  const edges: Omit<GraphEdge<Connection>, 'id'>[] = [
     { source: 'a', target: 'b', data: { input: 'prompt', output: DEFAULT_OUTPUT } },
+    ...(artifact ? [{ source: 'h', target: 'b', data: { output: DEFAULT_OUTPUT, input: 'systemPrompt' } }] : []),
     { source: 'b', target: 'c', data: { output: 'result', input: DEFAULT_INPUT } },
-    { source: 'b', target: 'd', data: { output: 'tokens' } },
+    { source: 'b', target: 'd', data: { output: 'tokens', input: DEFAULT_INPUT } },
     ...(db ? [{ source: 'e', target: 'b', data: { input: 'tools', output: DEFAULT_OUTPUT } }] : []),
+    ...(cot ? [{ source: 'b', target: 'f', data: { output: 'cot', input: DEFAULT_INPUT } }] : []),
+    ...(artifact ? [{ source: 'b', target: 'g', data: { output: 'artifact', input: DEFAULT_INPUT } }] : []),
   ];
 
   return new GraphModel<GraphNode<Shape>, GraphEdge<Connection>>({
