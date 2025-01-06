@@ -6,6 +6,7 @@ import '@dxos-theme';
 
 import type { Meta, StoryObj } from '@storybook/react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import ollamaClient from 'ollama';
 
 import { AIServiceClientImpl } from '@dxos/assistant';
 import { type ReactiveEchoObject } from '@dxos/echo-db';
@@ -28,6 +29,7 @@ import { doLayout } from '../../layout';
 import { RectangleShape, type Shape } from '../../types';
 import { AttentionContainer } from '../AttentionContainer';
 import { ShapeRegistry } from '../Canvas';
+import { callOllama } from '../../compute/graph/gpt/ollama';
 
 const generator: ValueGenerator = faker as any;
 
@@ -257,6 +259,7 @@ export const Ollama: Story = {
     sidebar: 'state-machine',
     registry: new ShapeRegistry(computeShapes),
     ...createMachine(createTest3()),
+    gpt: callOllama(ollamaClient),
   },
 };
 
