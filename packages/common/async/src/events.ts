@@ -45,6 +45,9 @@ export type ListenerOptions = {
 
 type EventCallback<T> = (data: T) => MaybePromise<void>;
 
+// TODO(dmaretskyi): Remove this once the code is cleaned up.
+const DO_NOT_ERROR_ON_ASYNC_CALLBACK = true;
+
 /**
  * An EventEmitter variant that does not do event multiplexing and represents a single event.
  *
@@ -472,8 +475,10 @@ class EventListener<T> {
       this.ctx.raise(err);
     }
 
-    if (result instanceof Promise) {
-      throw new TypeError('Event has async callbacks, use emitAsync instead');
+    if (!DO_NOT_ERROR_ON_ASYNC_CALLBACK) {
+      if (result instanceof Promise) {
+        throw new TypeError('Event has async callbacks, use emitAsync instead');
+      }
     }
   }
 
