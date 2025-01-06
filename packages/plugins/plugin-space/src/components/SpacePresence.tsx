@@ -217,7 +217,9 @@ export const SmallPresenceLive = ({ id, open, viewers }: SmallPresenceLiveProps)
 
   const getActiveViewers = (viewers: ComplexMap<PublicKey, ObjectViewerProps>): ObjectViewerProps[] => {
     const moment = Date.now();
-    return Array.from(viewers.values()).filter(({ lastSeen }) => moment - lastSeen < ACTIVITY_DURATION);
+    return Array.from<ObjectViewerProps>(viewers.values()).filter(
+      (viewer) => moment - viewer.lastSeen < ACTIVITY_DURATION,
+    );
   };
 
   const [activeViewers, setActiveViewers] = useState(viewers ? getActiveViewers(viewers) : []);

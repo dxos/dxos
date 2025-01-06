@@ -77,8 +77,13 @@ export const DocumentEditor = ({ id, document: doc, settings, viewMode, ...props
 
   // Migrate gradually to `fallbackName`.
   useEffect(() => {
-    if (!doc.fallbackName && doc.content?.target?.content) {
-      doc.fallbackName = getFallbackName(doc.content.target.content);
+    if (typeof doc.fallbackName === 'string') {
+      return;
+    }
+
+    const fallbackName = doc.content?.target?.content ? getFallbackName(doc.content.target.content) : undefined;
+    if (fallbackName) {
+      doc.fallbackName = fallbackName;
     }
   }, [doc, doc.content]);
 
