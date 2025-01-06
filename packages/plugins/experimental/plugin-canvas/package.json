@@ -87,6 +87,7 @@
   },
   "devDependencies": {
     "@dxos/compute": "workspace:*",
+    "@dxos/echo-signals": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-card": "workspace:*",

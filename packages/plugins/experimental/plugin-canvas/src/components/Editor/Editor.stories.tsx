@@ -302,7 +302,7 @@ export const GPTArtifact: Story = {
       { type: Testing.ContactType, count: 8 },
     ],
     registerSchema: true,
-    ...createMachine(createTest3({ db: true, cot: true, artifact: true })),
+    ...createMachine(createTest3({ db: true, cot: true, artifact: true, history: true })),
     model: '@anthropic/claude-3-5-sonnet-20241022',
     gpt: callEdge(
       new AIServiceClientImpl({

@@ -25,6 +25,7 @@ import {
 import { type BaseComputeShape, type ComputeShape } from './shapes/defs';
 import { pointMultiply } from '../layout';
 import type { Connection, Shape } from '../types';
+import { createView } from './shapes/View';
 
 // TODO(burdon): Factor out.
 const pos = (p: Point) => pointMultiply(p, 32);
@@ -98,10 +99,12 @@ export const createTest3 = ({
   db = false,
   cot = false,
   artifact = false,
+  history = false,
 }: {
   db?: boolean;
   cot?: boolean;
   artifact?: boolean;
+  history?: boolean;
 } = {}) => {
   const nodes: Shape[] = [
     createChat({ id: 'a', center: pos({ x: -12, y: 0 }) }),
@@ -111,7 +114,7 @@ export const createTest3 = ({
     createCounter({ id: 'd', center: pos({ x: 8, y: 6 }) }),
     ...(db ? [createDatabase({ id: 'e', center: pos({ x: -10, y: 6 }) })] : []),
     ...(cot ? [createList({ id: 'f', center: pos({ x: 0, y: 14 }) })] : []),
-    ...(artifact ? [createList({ id: 'g', onlyLast: true, center: pos({ x: 0, y: -12 }) })] : []),
+    ...(artifact ? [createView({ id: 'g', center: pos({ x: 0, y: -12 }) })] : []),
   ];
 
   const edges: Omit<GraphEdge<Connection>, 'id'>[] = [
@@ -119,6 +122,7 @@ export const createTest3 = ({
     ...(artifact ? [{ source: 'h', target: 'b', data: { output: DEFAULT_OUTPUT, input: 'systemPrompt' } }] : []),
     { source: 'b', target: 'c', data: { output: 'result', input: DEFAULT_INPUT } },
     { source: 'b', target: 'd', data: { output: 'tokens', input: DEFAULT_INPUT } },
+    ...(history ? [{ source: 'c', target: 'b', data: { output: DEFAULT_OUTPUT, input: 'history' } }] : []),
     ...(db ? [{ source: 'e', target: 'b', data: { input: 'tools', output: DEFAULT_OUTPUT } }] : []),
     ...(cot ? [{ source: 'b', target: 'f', data: { output: 'cot', input: DEFAULT_INPUT } }] : []),
     ...(artifact ? [{ source: 'b', target: 'g', data: { output: 'artifact', input: DEFAULT_INPUT } }] : []),
