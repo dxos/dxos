@@ -5918,6 +5918,9 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../../core/compute
+      '@dxos/echo-signals':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-signals
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui

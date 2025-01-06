@@ -10,7 +10,9 @@ import { useThemeContext, type ThemedClassName } from '@dxos/react-ui';
 import {
   type BasicExtensionsOptions,
   createBasicExtensions,
+  createMarkdownExtensions,
   createThemeExtensions,
+  decorateMarkdown,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
@@ -33,6 +35,8 @@ export const TextBox = ({ classNames, value = '', reset, centered, onEnter, onCa
       initialValue: value,
       extensions: [
         createBasicExtensions({ lineWrapping: !centered, ...rest }),
+        createMarkdownExtensions(),
+        decorateMarkdown(),
         createThemeExtensions({
           themeMode,
           slots: {

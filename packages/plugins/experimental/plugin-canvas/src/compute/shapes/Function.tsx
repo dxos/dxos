@@ -7,7 +7,7 @@ import React from 'react';
 import { AST, S } from '@dxos/echo-schema';
 
 import { Box } from './components';
-import { ComputeShape } from './defs';
+import { ComputeShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { pointAdd } from '../../layout';
 import { createAnchorId, createAnchors, rowHeight } from '../../shapes';
@@ -26,7 +26,7 @@ export const FunctionShape = S.extend(
 
 export type FunctionShape = ComputeShape<S.Schema.Type<typeof FunctionShape>, Function<any, any>>;
 
-export type CreateFunctionProps = Omit<FunctionShape, 'type' | 'node' | 'size'>;
+export type CreateFunctionProps = CreateShapeProps<FunctionShape>;
 
 export const createFunction = ({ id, ...rest }: CreateFunctionProps): FunctionShape => {
   return {

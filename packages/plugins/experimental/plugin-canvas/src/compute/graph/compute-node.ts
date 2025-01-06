@@ -139,7 +139,7 @@ export abstract class ComputeNode<Input extends Binding, Output extends Binding>
     invariant(!property || p, `invalid property: ${String(property)}`);
 
     invariant(this._input.value, `input is not defined for property: ${String(property)}`);
-    this._input.value[property] = value;
+    this._input.value = { ...this._input.value, [property]: value };
     return p?.isOptional;
   }
 

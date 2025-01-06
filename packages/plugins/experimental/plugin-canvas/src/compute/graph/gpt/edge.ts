@@ -73,7 +73,10 @@ export const callEdge =
       content.flatMap((content) => {
         switch (content.type) {
           case 'text': {
-            const textWithoutCot = content.text.replace(/<cot>[\s\S]*?<\/cot>/g, '').trim();
+            const textWithoutCot = content.text
+              .replace(/<cot>[\s\S]*?<\/cot>/g, '')
+              .replace(/<artifact>[\s\S]*?<\/artifact>/g, '')
+              .trim();
             return textWithoutCot ? [{ role, message: textWithoutCot }] : [];
           }
           default:
@@ -99,6 +102,19 @@ export const callEdge =
       }),
     );
 
+    const artifacts = messages.flatMap(({ role, content }) =>
+      content.flatMap((content) => {
+        switch (content.type) {
+          case 'text': {
+            const artifactMatch = content.text.match(/<artifact>([\s\S]*?)<\/artifact>/);
+            return artifactMatch ? [artifactMatch[1].trim()] : [];
+          }
+          default:
+            return [];
+        }
+      }),
+    );
+
     return {
       result: [
         {
@@ -109,5 +125,6 @@ export const callEdge =
       ],
       tokens: 0,
       cot: chainOfThought.join('\n'),
+      artifact: artifacts.join('\n'),
     };
   };

@@ -85,7 +85,3 @@ The system is built on `@dxos/graph` as the core abstraction layer Canvas visual
 - [ ] Reconcile Graph with framework (ECHO, app-graph, etc.)
 - [ ] Reconcile @antv layouts with `@dxos/plugin-debug`.
 
-### Errors
-- [ ] log.catch not displayed in state machine error handler.
-- [ ] browser log doesn't show function name or source.
-- [ ] Warning: Unknown event handler property `onCheckedChange`. (Switch)

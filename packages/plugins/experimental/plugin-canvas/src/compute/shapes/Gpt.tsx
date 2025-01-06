@@ -4,11 +4,10 @@
 
 import React from 'react';
 
-import { LLMToolDefinition } from '@dxos/assistant';
 import { AST, S } from '@dxos/echo-schema';
 
 import { FunctionBody, getAnchors, getHeight } from './Function';
-import { ComputeShape } from './defs';
+import { ComputeShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { GptFunction, GptInput } from '../graph';
 
@@ -21,7 +20,7 @@ export const GptShape = S.extend(
 
 export type GptShape = ComputeShape<S.Schema.Type<typeof GptShape>, GptFunction>;
 
-export type CreateGptProps = Omit<GptShape, 'type' | 'node' | 'size'>;
+export type CreateGptProps = CreateShapeProps<GptShape>;
 
 export const createGpt = ({ id, ...rest }: CreateGptProps): GptShape => {
   return {

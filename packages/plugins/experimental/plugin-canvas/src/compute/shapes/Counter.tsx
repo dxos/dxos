@@ -6,7 +6,7 @@ import React from 'react';
 
 import { S } from '@dxos/echo-schema';
 
-import { ComputeShape } from './defs';
+import { ComputeShape, type CreateShapeProps } from './defs';
 import { createAnchors, type ShapeComponentProps, type ShapeDef } from '../../components';
 import { createAnchorId } from '../../shapes';
 import { Counter } from '../graph';
@@ -20,7 +20,7 @@ export const CounterShape = S.extend(
 
 export type CounterShape = ComputeShape<S.Schema.Type<typeof CounterShape>, Counter>;
 
-export type CreateCounterProps = Omit<CounterShape, 'type' | 'node' | 'size'>;
+export type CreateCounterProps = CreateShapeProps<CounterShape>;
 
 export const createCounter = ({ id, ...rest }: CreateCounterProps): CounterShape => ({
   id,

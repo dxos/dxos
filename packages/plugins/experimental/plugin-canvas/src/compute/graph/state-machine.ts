@@ -5,9 +5,8 @@
 import { type LLMModel } from '@dxos/assistant';
 import { Event } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
-import { Context, Resource } from '@dxos/context';
+import { type Context, Resource } from '@dxos/context';
 import { inspectCustom } from '@dxos/debug';
-import { S } from '@dxos/echo-schema';
 import { type GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -28,6 +27,8 @@ export type GptExecutor = FunctionCallback<GptInput, GptOutput>;
 export type StateMachineContext = {
   space?: Space;
   gpt?: GptExecutor;
+
+  // TODO(dmaretskyi): Not used.
   model?: LLMModel; // TODO(burdon): Evolve.
 };
 
@@ -185,7 +186,8 @@ export class StateMachine extends Resource {
         }
 
         // Set input.
-        const optional = target.data.setInput(edge.data?.input, value);
+        invariant(edge.data?.input);
+        const optional = target.data.setInput(edge.data.input, value);
 
         // Check if ready.
         if (target.data.getOutputs().length === 0) {

@@ -14,6 +14,8 @@ import { InvalidStateError } from '../state-machine';
 export class Text extends ComputeNode<NoInput, { [DEFAULT_OUTPUT]: string }> {
   override readonly type = 'text';
 
+  private _text = '';
+
   constructor() {
     // TODO(burdon): Standardize.
     super(NoInput, S.Struct({ [DEFAULT_OUTPUT]: S.String }));
@@ -21,5 +23,15 @@ export class Text extends ComputeNode<NoInput, { [DEFAULT_OUTPUT]: string }> {
 
   override async invoke() {
     return raise(new InvalidStateError());
+  }
+
+  getText() {
+    return this._text;
+  }
+
+  setText(text: string) {
+    this._text = text;
+    this.setOutput({ [DEFAULT_OUTPUT]: text });
+    return this;
   }
 }

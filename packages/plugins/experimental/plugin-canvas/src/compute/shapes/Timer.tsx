@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { S } from '@dxos/echo-schema';
 import { Input } from '@dxos/react-ui';
 
-import { ComputeShape } from './defs';
+import { ComputeShape, type CreateShapeProps } from './defs';
 import { createAnchors, type ShapeComponentProps, type ShapeDef } from '../../components';
 import { createAnchorId } from '../../shapes';
 import { Timer } from '../graph';
@@ -21,7 +21,7 @@ export const TimerShape = S.extend(
 
 export type TimerShape = ComputeShape<S.Schema.Type<typeof TimerShape>, Timer>;
 
-export type CreateTimerProps = Omit<TimerShape, 'type' | 'node' | 'size'>;
+export type CreateTimerProps = CreateShapeProps<TimerShape>;
 
 export const createTimer = (props: CreateTimerProps): TimerShape => ({
   ...props,

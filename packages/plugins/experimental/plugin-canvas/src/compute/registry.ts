@@ -20,6 +20,7 @@ import {
   timerShape,
 } from './shapes';
 import type { ShapeDef } from '../components';
+import { viewShape } from './shapes/View';
 
 /**
  * Order used by toolbar.
@@ -40,4 +41,5 @@ export const computeShapes: ShapeDef<any>[] = [
   tableShape,
   beaconShape,
   counterShape,
+  viewShape,
 ];

@@ -5,8 +5,8 @@
 import '@dxos-theme';
 
 import type { Meta, StoryObj } from '@storybook/react';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
 import ollamaClient from 'ollama';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { AIServiceClientImpl } from '@dxos/assistant';
 import { type ReactiveEchoObject } from '@dxos/echo-db';
@@ -23,13 +23,13 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
 import { computeShapes, type StateMachine, type StateMachineContext } from '../../compute';
 import { callEdge } from '../../compute/graph/gpt/edge';
+import { callOllama } from '../../compute/graph/gpt/ollama';
 import { createMachine, createTest1, createTest2, createTest3 } from '../../compute/testing';
 import { SelectionModel, useGraphMonitor } from '../../hooks';
 import { doLayout } from '../../layout';
 import { RectangleShape, type Shape } from '../../types';
 import { AttentionContainer } from '../AttentionContainer';
 import { ShapeRegistry } from '../Canvas';
-import { callOllama } from '../../compute/graph/gpt/ollama';
 
 const generator: ValueGenerator = faker as any;
 
@@ -139,7 +139,7 @@ const Render = ({ id = 'test', graph: _graph, machine, model, gpt, init, sidebar
       {sidebar === 'json' && (
         <AttentionContainer id='sidebar' tabIndex={0} classNames='flex grow overflow-hidden'>
           <SyntaxHighlighter language='json' classNames='text-xs'>
-            {JSON.stringify({ graph }, null, 2)}
+            {JSON.stringify({ graph: graph?.graph }, null, 2)}
           </SyntaxHighlighter>
         </AttentionContainer>
       )}
@@ -277,7 +277,32 @@ export const GPT: Story = {
       { type: Testing.ContactType, count: 8 },
     ],
     registerSchema: true,
-    ...createMachine(createTest3(true)),
+    ...createMachine(createTest3({ db: true })),
+    model: '@anthropic/claude-3-5-sonnet-20241022',
+    gpt: callEdge(
+      new AIServiceClientImpl({
+        // endpoint: 'https://ai-service.dxos.workers.dev',
+        endpoint: 'http://localhost:8787',
+      }),
+    ),
+  },
+};
+
+export const GPTArtifact: Story = {
+  args: {
+    // debug: true,
+    showGrid: false,
+    snapToGrid: false,
+    // sidebar: 'json',
+    // sidebar: 'state-machine',
+    registry: new ShapeRegistry(computeShapes),
+    spec: [
+      { type: Testing.OrgType, count: 2 },
+      { type: Testing.ProjectType, count: 4 },
+      { type: Testing.ContactType, count: 8 },
+    ],
+    registerSchema: true,
+    ...createMachine(createTest3({ db: true, cot: true, artifact: true, history: true })),
     model: '@anthropic/claude-3-5-sonnet-20241022',
     gpt: callEdge(
       new AIServiceClientImpl({

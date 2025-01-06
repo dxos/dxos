@@ -15,7 +15,7 @@ import {
 
 import { type Point, type Dimension } from '../types';
 
-export const defaultOffset: Point = { x: 0, y: 0 };
+export const defaultOrigin: Point = { x: 0, y: 0 };
 
 // TODO(burdon): Rotation also?
 export type ProjectionState = {
@@ -23,16 +23,13 @@ export type ProjectionState = {
   offset: Point;
 };
 
-// TODO(burdon): Tradeoff between stable ProjectionMapping object that can be used with live values within a closure,
-//  vs. a reactive object that can trigger updates?
-
 /**
  * Maps between screen and model coordinates.
  */
 export interface Projection {
   get bounds(): Dimension;
   get scale(): number;
-  get origin(): Point;
+  get offset(): Point;
 
   /**
    * Maps the model space to the screen offset (from the top-left of the element).
@@ -45,14 +42,10 @@ export interface Projection {
   toModel(points: Point[]): Point[];
 }
 
-/**
- *
- */
-// TODO(burdon): Flip y-axis?
 export class ProjectionMapper implements Projection {
   private _bounds: Dimension = { width: 0, height: 0 };
   private _scale: number = 1;
-  private _origin: Point = defaultOffset;
+  private _offset: Point = defaultOrigin;
   private _toScreen: Matrix = identity();
   private _toModel: Matrix = identity();
 
@@ -62,16 +55,16 @@ export class ProjectionMapper implements Projection {
     }
   }
 
-  update(bounds: Dimension, scale: number, origin: Point) {
+  update(bounds: Dimension, scale: number, offset: Point) {
     this._bounds = bounds;
     this._scale = scale;
-    this._origin = origin;
+    this._offset = offset;
     this._toScreen = compose(
-      //
-      translateMatrix(this._origin.x, this._origin.y),
+      // NOTE: Order is important.
+      translateMatrix(this._offset.x, this._offset.y),
       scaleMatrix(this._scale),
-      // TODO(burdon): Flip y-axis for screen coordinates.
-      // flipY(),
+      // TODO(burdon): Flip.
+      // flipX(),
     );
     this._toModel = inverse(this._toScreen);
     return this;
@@ -85,8 +78,8 @@ export class ProjectionMapper implements Projection {
     return this._scale;
   }
 
-  get origin() {
-    return this._origin;
+  get offset() {
+    return this._offset;
   }
 
   toScreen(points: Point[]): Point[] {
@@ -138,6 +131,8 @@ export const zoomInPlace = (
     });
 };
 
+const noop = () => {};
+
 /**
  * Zoom to new scale and position.
  */
@@ -147,6 +142,7 @@ export const zoomTo = (
   current: ProjectionState,
   next: ProjectionState,
   delay = 200,
+  cb = noop,
 ) => {
   const is = d3.interpolateObject({ scale: current.scale, ...current.offset }, { scale: next.scale, ...next.offset });
   d3.transition()
@@ -155,5 +151,6 @@ export const zoomTo = (
     .tween('zoom', () => (t) => {
       const { scale, x, y } = is(t);
       setTransform({ scale, offset: { x, y } });
-    });
+    })
+    .on('end', cb);
 };

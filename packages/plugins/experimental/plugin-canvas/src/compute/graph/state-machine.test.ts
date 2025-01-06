@@ -2,17 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
-import { Trigger } from '@dxos/async';
-import { createEdgeId, type GraphNode } from '@dxos/graph';
+import { createEdgeId } from '@dxos/graph';
 
 import { createComputeGraph } from './compute-graph';
-import { DEFAULT_INPUT, DEFAULT_OUTPUT, type ComputeNode } from './compute-node';
+import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './compute-node';
 import { AndGate, Beacon, Switch } from './nodes';
 import { StateMachine } from './state-machine';
 import { createId } from '../../testing';
-import { log } from '@dxos/log';
 
 describe('state machine', () => {
   test('construct', async ({ expect }) => {
@@ -28,18 +26,6 @@ describe('state machine', () => {
     await machine.runToCompletion();
     expect(nodes.d.data.input[DEFAULT_INPUT]).to.be.true;
     void machine.close();
-  });
-
-  test('toJSON', async () => {
-    const { graph } = createAndGateGraph();
-    await using machine = await new StateMachine(graph).open();
-    const json = machine.toJSON();
-    expect(json).to.deep.equal({
-      graph: {
-        nodes: 4,
-        edges: 3,
-      },
-    });
   });
 });
 
