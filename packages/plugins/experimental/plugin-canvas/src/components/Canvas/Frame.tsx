@@ -47,6 +47,7 @@ export type FrameProps = ShapeComponentProps<Polygon> & {
 /**
  * Draggable Frame around polygons.
  */
+// TODO(burdon): Access compute node.
 export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
   const { shape } = baseProps;
   const { dragMonitor, registry, editing, setEditing } = useEditorContext();
@@ -206,17 +207,8 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
     };
 
     return (
-      <div
-        style={getBoundsProperties({
-          ...shape.center,
-          width: shape.size.width + previewBorder,
-          height: shape.size.height + previewBorder,
-        })}
-        className='absolute pointer-events-none'
-      >
+      <div ref={ref} {...shapeAttrs(shape)}>
         <div
-          ref={ref}
-          {...shapeAttrs(shape)}
           style={getBoundsProperties({ ...shape.center, ...shape.size })}
           className={mx(
             'overflow-hidden',
@@ -236,6 +228,15 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
         >
           {children}
         </div>
+
+        <div
+          style={getBoundsProperties({
+            ...shape.center,
+            width: shape.size.width + previewBorder,
+            height: shape.size.height + previewBorder,
+          })}
+          className='absolute pointer-events-none __border border-primary-500'
+        />
 
         {/* NOTE: This ensures the preview contains the anchors for the native image snapshot. */}
         {/* {preview && ( */}
