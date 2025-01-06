@@ -48,6 +48,19 @@ export const MessageTextContentBlock = S.Struct({
 }).pipe(S.mutable);
 export type MessageTextContentBlock = S.Schema.Type<typeof MessageTextContentBlock>;
 
+export const ImageSource = S.Struct({
+  type: S.Literal('base64'),
+  media_type: S.Literal('image/jpeg', 'image/png', 'image/gif', 'image/webp'),
+  data: S.String,
+}).pipe(S.mutable);
+
+export const MessageImageContentBlock = S.Struct({
+  type: S.Literal('image'),
+  id: S.optional(S.String),
+  source: S.optional(ImageSource),
+}).pipe(S.mutable);
+export type MessageImageContentBlock = S.Schema.Type<typeof MessageImageContentBlock>;
+
 export const MessageToolUseContentBlock = S.Struct({
   type: S.Literal('tool_use'),
 
@@ -77,6 +90,7 @@ export const MessageToolResultContentBlock = S.Struct({
 
 export const MessageContentBlock = S.Union(
   MessageTextContentBlock,
+  MessageImageContentBlock,
   MessageToolUseContentBlock,
   MessageToolResultContentBlock,
 );
@@ -133,14 +147,21 @@ export const LLMModel = S.Literal(
 
 export type LLMModel = S.Schema.Type<typeof LLMModel>;
 
+export const ToolTypes = Object.freeze({
+  // TODO(dmaretskyi): Not implemented yet.
+  // DatabaseQuery: 'database_query',
+
+  TextToImage: 'text_to_image',
+});
+
 export const LLMTool = S.Struct({
   name: S.String,
 
   /**
    * If the tool is implemented by the service a type should be provided.
    * For user-implemented tools, this field should be omitted.
+   * See {@link ToolTypes} for the list of supported types.
    */
-  // TODO(dmaretskyi): Define tool types.
   type: S.optional(S.String),
 
   /**
@@ -153,6 +174,16 @@ export const LLMTool = S.Struct({
    * Required for user-implemented tools.
    */
   parameters: S.optional(JsonSchemaType),
+
+  /**
+   * Tool-specific options.
+   */
+  options: S.optional(S.Any),
+
+  /**
+   * Javascript function to execute the tool.
+   */
+  execute: S.optional(S.Any),
 });
 
 export interface LLMTool extends S.Schema.Type<typeof LLMTool> {}

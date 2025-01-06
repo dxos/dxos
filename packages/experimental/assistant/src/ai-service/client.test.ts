@@ -11,11 +11,11 @@ import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { AIServiceClientImpl } from './client';
-import { ObjectId, type LLMTool } from './schema';
+import { ObjectId, ToolTypes, type LLMTool } from './schema';
 
 const ENDPOINT = 'http://localhost:8787';
 
-describe.skip('AI Service Client', () => {
+describe('AI Service Client', () => {
   test('client generation', async () => {
     const client = new AIServiceClientImpl({
       endpoint: ENDPOINT,
@@ -50,7 +50,7 @@ describe.skip('AI Service Client', () => {
     });
   });
 
-  test.only('tool calls', async () => {
+  test('tool calls', async () => {
     const client = new AIServiceClientImpl({
       endpoint: ENDPOINT,
     });
@@ -119,6 +119,44 @@ describe.skip('AI Service Client', () => {
     const [message2] = await stream2.complete();
     log.info('full message', {
       message: message2,
+    });
+  });
+
+  test.only('image generation', async () => {
+    const client = new AIServiceClientImpl({
+      endpoint: ENDPOINT,
+    });
+
+    const spaceId = SpaceId.random();
+    const threadId = ObjectId.random();
+
+    await client.insertMessages([
+      {
+        id: ObjectId.random(),
+        spaceId,
+        threadId,
+        role: 'user',
+        content: [{ type: 'text', text: 'Generate an image of a cat' }],
+      },
+    ]);
+
+    const stream = await client.generate({
+      model: '@anthropic/claude-3-5-sonnet-20241022',
+      spaceId,
+      threadId,
+      tools: [
+        {
+          name: 'text-to-image',
+          type: ToolTypes.TextToImage,
+        },
+      ],
+    });
+    for await (const event of stream) {
+      log.info('event', event);
+    }
+
+    log.info('full message', {
+      message: await stream.complete(),
     });
   });
 });
