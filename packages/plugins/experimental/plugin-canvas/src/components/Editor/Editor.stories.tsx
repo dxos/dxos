@@ -232,7 +232,7 @@ export const Compute1: Story = {
     // debug: true,
     showGrid: false,
     snapToGrid: false,
-    // sidebar: 'selected',
+    sidebar: 'selected',
     registry: new ShapeRegistry(computeShapes),
     ...createMachine(createTest1()),
   },
