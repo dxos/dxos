@@ -18,15 +18,14 @@ describe('state machine', () => {
   test('construct', async ({ expect }) => {
     const { graph, nodes } = createAndGateGraph();
 
-    await using machine = await new StateMachine(graph).open();
+    await using machine = await new StateMachine(graph).setAutoRun(true).open();
     expect(machine.isOpen).to.be.true;
     expect(nodes.c.data.input!.a).to.be.undefined;
     expect(nodes.c.data.input!.b).to.be.undefined;
     await machine.exec();
 
-    // // TODO(burdon): Updating values should automatically trigger computation.
     nodes.a.data.setEnabled(true);
-    await machine.exec(nodes.a);
+    await machine.runToCompletion();
     expect(nodes.d.data.input[DEFAULT_INPUT]).to.be.true;
     void machine.close();
   });

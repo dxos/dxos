@@ -40,6 +40,10 @@ export type StateMachineContext = {
 // TODO(burdon): Move to compute (without hyperformula dependency). Maps onto hyperformula as client runtime?
 // TODO(burdon): Extend Resource.
 export class StateMachine extends Resource {
+  private _autoRun = false;
+  // TODO(dmaretskyi): Will be replaced by a sync function that does propagation.
+  private _activeTasks: Promise<void>[] = [];
+
   public readonly update = new Event<{ node: GraphNode<ComputeNode<any, any>>; value: any }>();
 
   private readonly _graph: ComputeGraph;
@@ -79,6 +83,11 @@ export class StateMachine extends Resource {
     return this;
   }
 
+  setAutoRun(autoRun: boolean): this {
+    this._autoRun = autoRun;
+    return this;
+  }
+
   protected override async _open(ctx: Context) {
     log.info('opening...');
     await Promise.all(
@@ -89,8 +98,10 @@ export class StateMachine extends Resource {
             return;
           }
 
-          this.update.emit({ node, value: output });
-          void this._propagate(node, output);
+          if (this._autoRun) {
+            this.update.emit({ node, value: output });
+            void this._addToActiveTasks(() => this._propagate(node, output));
+          }
         });
       }),
     );
@@ -98,6 +109,15 @@ export class StateMachine extends Resource {
 
   protected override async _close(ctx: Context): Promise<void> {
     // noop
+  }
+
+  /**
+   * Run all state updates until the graph state has settled.
+   */
+  async runToCompletion() {
+    while (this._activeTasks.length > 0) {
+      await Promise.all(this._activeTasks);
+    }
   }
 
   /**
@@ -115,6 +135,23 @@ export class StateMachine extends Resource {
         }
       }
     }
+
+    await this.runToCompletion();
+  }
+
+  private async _addToActiveTasks(fn: () => Promise<void>) {
+    const promise = fn()
+      .catch((err) => {
+        log.catch(err);
+      })
+      .finally(() => {
+        const idx = this._activeTasks.indexOf(promise);
+        if (idx !== -1) {
+          this._activeTasks.splice(idx, 1);
+        }
+      });
+    this._activeTasks.push(promise);
+    return promise;
   }
 
   /**
@@ -129,7 +166,7 @@ export class StateMachine extends Resource {
     log.info('exec', { node });
     const output = await node.data.exec();
     this.update.emit({ node, value: output });
-    void this._propagate(node, output);
+    void this._addToActiveTasks(() => this._propagate(node, output));
   }
 
   /**
