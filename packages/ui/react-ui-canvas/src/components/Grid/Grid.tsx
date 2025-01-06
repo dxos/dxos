@@ -4,7 +4,7 @@
 
 import React, { forwardRef, useMemo } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import { useForwardedRef, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type Point } from '../../types';
@@ -16,10 +16,17 @@ const defaultOffset: Point = { x: 0, y: 0 };
 
 const createId = (parent: string, grid: number) => `dx-canvas-grid-${parent}-${grid}`;
 
-export type GridProps = ThemedClassName<{ id: string; size: number; scale?: number; offset?: Point }>;
+export type GridProps = ThemedClassName<{
+  id: string;
+  size: number;
+  scale?: number;
+  offset?: Point;
+  showAxes?: boolean;
+}>;
 
 export const Grid = forwardRef<SVGSVGElement, GridProps>(
-  ({ id: parentId, size: gridSize, scale = 1, offset = defaultOffset, classNames }, forwardedRef) => {
+  ({ id: parentId, size: gridSize, scale = 1, offset = defaultOffset, showAxes = true, classNames }, forwardedRef) => {
+    const svgRef = useForwardedRef(forwardedRef);
     const grids = useMemo(
       () =>
         gridRatios
@@ -28,10 +35,12 @@ export const Grid = forwardRef<SVGSVGElement, GridProps>(
       [gridSize, scale],
     );
 
+    const { width = 0, height = 0 } = svgRef.current?.getBoundingClientRect() ?? {};
+
     return (
       <svg
         {...testId('dx-canvas-grid')}
-        ref={forwardedRef}
+        ref={svgRef}
         className={mx(
           'absolute inset-0 w-full h-full pointer-events-none touch-none select-none',
           'stroke-neutral-500',
@@ -44,6 +53,12 @@ export const Grid = forwardRef<SVGSVGElement, GridProps>(
             <GridPattern key={id} id={createId(parentId, id)} offset={offset} size={size} />
           ))}
         </defs>
+        {showAxes && (
+          <>
+            <line x1={0} y1={offset.y} x2={width} y2={offset.y} className='stroke-neutral-500 opacity-40' />
+            <line x1={offset.x} y1={0} x2={offset.x} y2={height} className='stroke-neutral-500 opacity-40' />
+          </>
+        )}
         <g>
           {grids.map(({ id }, i) => (
             <rect

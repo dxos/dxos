@@ -15,6 +15,13 @@ import { type Point } from '../../types';
 import { testId } from '../../util';
 import { Grid, type GridProps } from '../Grid';
 
+const size = 128;
+
+const points: Point[] = [0, (2 * Math.PI) / 3, (2 * Math.PI * 2) / 3].map((a, i) => ({
+  x: Math.round(Math.cos(a - Math.PI / 2) * size * 1.5),
+  y: Math.round(Math.sin(a - Math.PI / 2) * size * 1.5),
+}));
+
 const Render = (props: GridProps) => {
   return (
     <Canvas>
@@ -24,25 +31,27 @@ const Render = (props: GridProps) => {
 };
 
 const Content = (props: GridProps) => {
-  const { scale, offset, styles } = useProjection();
-
+  const { scale, offset } = useProjection();
   useWheel();
 
+  // TODO(burdon): Doesn't update until moved.
   return (
     <>
       <Grid scale={scale} offset={offset} {...props} />
-      <div className='absolute' style={styles}>
-        <Item x={0} y={-128} />
-        <Item x={-128} y={128} />
-        <Item x={128} y={128} />
+      <div>
+        {points.map(({ x, y }, i) => (
+          <Item key={i} x={x} y={y} />
+        ))}
       </div>
     </>
   );
 };
 
-const Item = ({ x, y }: Point) => {
-  const size = 128;
-  const pos = {
+const Item = (p: Point) => {
+  const { projection } = useProjection();
+  const r = (projection.scale * size) / 2;
+  const [{ x, y }] = projection.toScreen([p]);
+  const rect = {
     left: x - size / 2,
     top: y - size / 2,
     width: size,
@@ -51,14 +60,15 @@ const Item = ({ x, y }: Point) => {
 
   return (
     <div {...testId('dx-test', true)}>
-      <div className='absolute flex border border-red-500 justify-center items-center' style={pos}>
+      <div className='absolute flex justify-center items-center' style={rect}>
         <div className='font-mono'>
-          ({x},{y})
+          ({p.x},{p.y})
         </div>
       </div>
+
       {/* NOTE: Width and height are not important since overflow-visible. */}
-      <svg className='absolute overflow-visible' style={pos}>
-        <circle cx={64} cy={64} r={64} className='stroke-red-500 storke-width-2 fill-none' />
+      <svg className='absolute overflow-visible'>
+        <circle cx={x} cy={y} r={r} className='stroke-red-500 storke-width-2 fill-none' />
       </svg>
     </div>
   );

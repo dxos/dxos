@@ -25,10 +25,9 @@ import { pointMultiply } from '../layout';
 import type { Connection, Shape } from '../types';
 
 // TODO(burdon): Factor out.
-const pos = (p: Point) => pointMultiply(p, 32);
+const snap = (p: Point) => pointMultiply(p, 32);
 
 // TODO(burdon): GraphBuilder.
-
 export const createTest1 = () => {
   const nodes: Shape[] = [
     createSwitch({ id: 'a1', center: { x: -256, y: -256 } }),
@@ -87,11 +86,11 @@ export const createTest2 = () => {
 
 export const createTest3 = (db = false) => {
   const nodes: Shape[] = [
-    createChat({ id: 'a', center: pos({ x: -12, y: 0 }) }),
-    createGpt({ id: 'b', center: pos({ x: 0, y: 0 }) }),
-    createThread({ id: 'c', center: pos({ x: 16, y: -4 }) }),
-    createCounter({ id: 'd', center: pos({ x: 8, y: 6 }) }),
-    ...(db ? [createDatabase({ id: 'e', center: pos({ x: -10, y: 6 }) })] : []),
+    createChat({ id: 'a', center: snap({ x: -12, y: 0 }) }),
+    createGpt({ id: 'b', center: snap({ x: 0, y: 0 }) }),
+    createThread({ id: 'c', center: snap({ x: 16, y: -4 }) }),
+    createCounter({ id: 'd', center: snap({ x: 8, y: 6 }) }),
+    ...(db ? [createDatabase({ id: 'e', center: snap({ x: -10, y: 6 }) })] : []),
   ];
 
   const edges = [

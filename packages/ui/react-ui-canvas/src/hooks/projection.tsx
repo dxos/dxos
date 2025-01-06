@@ -7,10 +7,10 @@ import {
   type Matrix,
   applyToPoints,
   compose,
-  inverse,
-  translate as translateMatrix,
   identity,
+  inverse,
   scale as scaleMatrix,
+  translate as translateMatrix,
 } from 'transformation-matrix';
 
 import { type Point, type Dimension } from '../types';
@@ -32,7 +32,7 @@ export type ProjectionState = {
 export interface Projection {
   get bounds(): Dimension;
   get scale(): number;
-  get offset(): Point;
+  get origin(): Point;
 
   /**
    * Maps the model space to the screen offset (from the top-left of the element).
@@ -45,10 +45,14 @@ export interface Projection {
   toModel(points: Point[]): Point[];
 }
 
+/**
+ *
+ */
+// TODO(burdon): Flip y-axis?
 export class ProjectionMapper implements Projection {
   private _bounds: Dimension = { width: 0, height: 0 };
   private _scale: number = 1;
-  private _offset: Point = defaultOffset;
+  private _origin: Point = defaultOffset;
   private _toScreen: Matrix = identity();
   private _toModel: Matrix = identity();
 
@@ -58,11 +62,17 @@ export class ProjectionMapper implements Projection {
     }
   }
 
-  update(bounds: Dimension, scale: number, offset: Point) {
+  update(bounds: Dimension, scale: number, origin: Point) {
     this._bounds = bounds;
     this._scale = scale;
-    this._offset = offset;
-    this._toScreen = compose(translateMatrix(this._offset.x, this._offset.y), scaleMatrix(this._scale));
+    this._origin = origin;
+    this._toScreen = compose(
+      //
+      translateMatrix(this._origin.x, this._origin.y),
+      scaleMatrix(this._scale),
+      // TODO(burdon): Flip y-axis for screen coordinates.
+      // flipY(),
+    );
     this._toModel = inverse(this._toScreen);
     return this;
   }
@@ -75,8 +85,8 @@ export class ProjectionMapper implements Projection {
     return this._scale;
   }
 
-  get offset() {
-    return this._offset;
+  get origin() {
+    return this._origin;
   }
 
   toScreen(points: Point[]): Point[] {
