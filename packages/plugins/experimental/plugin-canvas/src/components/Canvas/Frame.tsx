@@ -208,6 +208,19 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
 
     return (
       <div ref={ref} {...shapeAttrs(shape)}>
+        {/* NOTE: We create an expanded background to ensure that the preview contains the anchors for the native image snapshot. */}
+        {(preview || debug) && (
+          <div
+            style={getBoundsProperties({
+              ...shape.center,
+              width: shape.size.width + previewBorder,
+              height: shape.size.height + previewBorder,
+            })}
+            className={mx('absolute pointer-events-none', debug && 'border border-dashed border-primary-500')}
+          />
+        )}
+
+        {/* Main body. */}
         <div
           style={getBoundsProperties({ ...shape.center, ...shape.size })}
           className={mx(
@@ -221,34 +234,13 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
             active && styles.frameActive,
             shape.guide && styles.frameGuide,
             hidden && 'opacity-0',
-            debug && 'opacity-50',
+            debug && 'opacity-30',
           )}
           onClick={handleClick}
           onDoubleClick={handleDoubleClick}
         >
           {children}
         </div>
-
-        <div
-          style={getBoundsProperties({
-            ...shape.center,
-            width: shape.size.width + previewBorder,
-            height: shape.size.height + previewBorder,
-          })}
-          className='absolute pointer-events-none __border border-primary-500'
-        />
-
-        {/* NOTE: This ensures the preview contains the anchors for the native image snapshot. */}
-        {/* {preview && ( */}
-        {/*  <div */}
-        {/*    style={getBoundsProperties({ */}
-        {/*      ...shape.center, */}
-        {/*      width: shape.size.width + previewBorder, */}
-        {/*      height: shape.size.height + previewBorder, */}
-        {/*    })} */}
-        {/*    className='absolute pointer-events-none' */}
-        {/*  /> */}
-        {/* )} */}
 
         {/* Anchors. */}
         {!hidden && (

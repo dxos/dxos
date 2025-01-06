@@ -40,7 +40,12 @@ export const SwitchComponent = ({ shape }: ShapeComponentProps<SwitchShape>) => 
   return (
     <div className='flex w-full justify-center items-center' onClick={(ev) => ev.stopPropagation()}>
       <Input.Root>
-        <Input.Switch checked={value} onCheckedChange={(checked) => setValue(checked)} />
+        <Input.Switch
+          checked={value}
+          onCheckedChange={(ev) => {
+            setValue(ev === true);
+          }}
+        />
       </Input.Root>
     </div>
   );
