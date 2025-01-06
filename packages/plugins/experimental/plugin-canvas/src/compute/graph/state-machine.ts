@@ -5,7 +5,7 @@
 import { type LLMModel } from '@dxos/assistant';
 import { Event } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
-import { Context } from '@dxos/context';
+import { Context, Resource } from '@dxos/context';
 import { inspectCustom } from '@dxos/debug';
 import { S } from '@dxos/echo-schema';
 import { type GraphNode } from '@dxos/graph';
@@ -39,14 +39,13 @@ export type StateMachineContext = {
  */
 // TODO(burdon): Move to compute (without hyperformula dependency). Maps onto hyperformula as client runtime?
 // TODO(burdon): Extend Resource.
-export class StateMachine {
+export class StateMachine extends Resource {
   public readonly update = new Event<{ node: GraphNode<ComputeNode<any, any>>; value: any }>();
 
   private readonly _graph: ComputeGraph;
 
-  private _ctx?: Context;
-
   constructor(graph?: ComputeGraph) {
+    super();
     this._graph = graph ?? createComputeGraph();
   }
 
@@ -54,7 +53,7 @@ export class StateMachine {
     return this.toJSON();
   }
 
-  toString() {
+  override toString() {
     return `StateMachine({ nodes: ${this._graph.nodes.length} })`;
   }
 
@@ -69,10 +68,6 @@ export class StateMachine {
     };
   }
 
-  get isOpen() {
-    return this._ctx !== undefined;
-  }
-
   get graph() {
     return this._graph;
   }
@@ -84,13 +79,8 @@ export class StateMachine {
     return this;
   }
 
-  async open() {
-    if (this._ctx) {
-      await this.close();
-    }
-
+  protected override async _open(ctx: Context) {
     log.info('opening...');
-    this._ctx = new Context();
     await Promise.all(
       this._graph.nodes.map(async (node) => {
         await node.data.initialize(this._ctx!, this._context!, (output: any) => {
@@ -106,12 +96,8 @@ export class StateMachine {
     );
   }
 
-  async close() {
-    if (this._ctx) {
-      log.info('closing...');
-      await this._ctx.dispose();
-      this._ctx = undefined;
-    }
+  protected override async _close(ctx: Context): Promise<void> {
+    // noop
   }
 
   /**
