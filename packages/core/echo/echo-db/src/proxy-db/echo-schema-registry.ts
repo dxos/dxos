@@ -38,6 +38,12 @@ export type EchoSchemaRegistryOptions = {
    * @default true
    */
   reactiveQuery?: boolean;
+
+  /**
+   * Preload all schema during open.
+   * @default true
+   */
+  preloadSchemaOnOpen?: boolean;
 };
 
 /**
@@ -46,6 +52,7 @@ export type EchoSchemaRegistryOptions = {
 // TODO(burdon): Reconcile with RuntimeSchemaRegistry.
 export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
   private readonly _reactiveQuery: boolean;
+  private readonly _preloadSchemaOnOpen: boolean;
 
   private readonly _schemaById: Map<string, EchoSchema> = new Map();
   private readonly _schemaByType: Map<string, EchoSchema> = new Map();
@@ -54,16 +61,20 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
 
   constructor(
     private readonly _db: EchoDatabase,
-    { reactiveQuery = true }: EchoSchemaRegistryOptions = {},
+    { reactiveQuery = true, preloadSchemaOnOpen = true }: EchoSchemaRegistryOptions = {},
   ) {
     super();
     this._reactiveQuery = reactiveQuery;
+    this._preloadSchemaOnOpen = preloadSchemaOnOpen;
   }
 
   protected override async _open(ctx: Context): Promise<void> {
-    // Preload schemas.
-    const { objects } = await this._db.query(Filter.schema(StoredSchema)).run();
-    objects.forEach((object) => this._registerSchema(object));
+    // Preloading schema is required for ECHO to operate.
+    // TODO(dmaretskyi): Does this change with strong object deps.
+    if (this._preloadSchemaOnOpen) {
+      const { objects } = await this._db.query(Filter.schema(StoredSchema)).run();
+      objects.forEach((object) => this._registerSchema(object));
+    }
 
     if (this._reactiveQuery) {
       const unsubscribe = this._db.query(Filter.schema(StoredSchema)).subscribe(({ objects }) => {

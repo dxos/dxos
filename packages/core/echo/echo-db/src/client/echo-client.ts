@@ -34,6 +34,12 @@ export type ConstructDatabaseParams = {
   reactiveSchemaQuery?: boolean;
 
   /**
+   * Preload all schema during open.
+   * @default true
+   */
+  preloadSchemaOnOpen?: boolean;
+
+  /**
    * Space proxy reference for SDK compatibility.
    */
   // TODO(dmaretskyi): Remove.
@@ -106,7 +112,13 @@ export class EchoClient extends Resource {
   }
 
   // TODO(dmaretskyi): Make async?
-  constructDatabase({ spaceId, owningObject, reactiveSchemaQuery, spaceKey }: ConstructDatabaseParams) {
+  constructDatabase({
+    spaceId,
+    owningObject,
+    reactiveSchemaQuery,
+    preloadSchemaOnOpen,
+    spaceKey,
+  }: ConstructDatabaseParams) {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(!this._databases.has(spaceId), 'Database already exists.');
     const db = new EchoDatabaseImpl({
@@ -115,6 +127,7 @@ export class EchoClient extends Resource {
       graph: this._graph,
       spaceId,
       reactiveSchemaQuery,
+      preloadSchemaOnOpen,
       spaceKey,
     });
     this._graph._register(spaceId, spaceKey, db, owningObject);

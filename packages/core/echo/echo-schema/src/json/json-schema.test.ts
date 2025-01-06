@@ -15,6 +15,7 @@ import {
   getSchemaProperty,
   getObjectAnnotation,
   getEchoIdentifierAnnotation,
+  EntityKind,
 } from '../ast';
 import { createSchemaReference, getSchemaReference, Ref } from '../ast/ref';
 import { FormatAnnotationId } from '../formats';
@@ -97,6 +98,8 @@ describe('effect-to-json', () => {
     expect(jsonSchema).to.deep.eq({
       $schema: 'http://json-schema.org/draft-07/schema#',
       $id: 'dxn:type:example.com/type/Contact',
+
+      entityKind: EntityKind.Object,
       typename: 'example.com/type/Contact',
       version: '0.1.0',
 
@@ -136,6 +139,7 @@ describe('effect-to-json', () => {
       $schema: 'http://json-schema.org/draft-07/schema#',
       $id: 'dxn:type:example.com/type/Contact',
 
+      entityKind: EntityKind.Object,
       typename: 'example.com/type/Contact',
       version: '0.1.0',
 
@@ -282,6 +286,7 @@ describe('json-to-effect', () => {
 
     const schema = toEffectSchema(jsonSchema);
     expect(getObjectAnnotation(schema)).to.deep.eq({
+      kind: EntityKind.Object,
       typename: 'example.com/type/Project',
       version: '0.1.0',
     });
