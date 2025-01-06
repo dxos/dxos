@@ -109,7 +109,7 @@ export const ResetDialog = ({
           <div role='none' className='flex gap-2 mbs-4'>
             {showStack && (
               <Tooltip.Root>
-                <Tooltip.Trigger>
+                <Tooltip.Trigger asChild>
                   <Button onClick={handleCopyError}>
                     <Clipboard weight='duotone' size='1em' />
                   </Button>
