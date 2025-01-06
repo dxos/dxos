@@ -278,7 +278,8 @@ export const GPT: Story = {
     model: '@anthropic/claude-3-5-sonnet-20241022',
     gpt: callEdge(
       new AIServiceClientImpl({
-        endpoint: 'https://ai-service.dxos.workers.dev',
+        // endpoint: 'https://ai-service.dxos.workers.dev',
+        endpoint: 'http://localhost:8787',
       }),
     ),
   },

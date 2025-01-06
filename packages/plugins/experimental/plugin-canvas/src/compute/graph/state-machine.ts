@@ -14,8 +14,7 @@ import { log } from '@dxos/log';
 
 import { type ComputeGraph, createComputeGraph } from './compute-graph';
 import { type Binding, type ComputeNode } from './compute-node';
-import type { FunctionCallback } from './nodes';
-import type { GptInput, GptOutput } from '../shapes';
+import type { FunctionCallback, GptInput, GptOutput } from './nodes';
 
 export const InvalidStateError = Error;
 
@@ -40,7 +39,7 @@ export type StateMachineContext = {
 // TODO(burdon): Move to compute (without hyperformula dependency). Maps onto hyperformula as client runtime?
 // TODO(burdon): Extend Resource.
 export class StateMachine extends Resource {
-  private _autoRun = false;
+  private _autoRun = true;
   // TODO(dmaretskyi): Will be replaced by a sync function that does propagation.
   private _activeTasks: Promise<void>[] = [];
 

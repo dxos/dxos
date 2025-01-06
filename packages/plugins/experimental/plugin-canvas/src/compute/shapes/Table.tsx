@@ -7,11 +7,10 @@ import React from 'react';
 import { S } from '@dxos/echo-schema';
 
 import { getAnchors } from './Function';
-import { GptMessage } from './Gpt';
 import { Box } from './components';
 import { ComputeShape, createInputSchema, createOutputSchema } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
-import { List } from '../graph';
+import { GptMessage, List } from '../graph';
 
 const InputSchema = createInputSchema(GptMessage);
 const OutputSchema = createOutputSchema(S.mutable(S.Array(GptMessage)));
