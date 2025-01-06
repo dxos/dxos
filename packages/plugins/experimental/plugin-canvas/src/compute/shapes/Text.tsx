@@ -7,10 +7,10 @@ import React, { useState } from 'react';
 import { S } from '@dxos/echo-schema';
 
 import { Box } from './components';
-import { ComputeShape } from './defs';
+import { ComputeShape, type CreateShapeProps } from './defs';
 import { createAnchors, type ShapeComponentProps, type ShapeDef, TextBox, type TextBoxProps } from '../../components';
 import { createAnchorId } from '../../shapes';
-import { DEFAULT_OUTPUT, Text } from '../graph';
+import { Text } from '../graph';
 
 //
 // Data
@@ -38,9 +38,9 @@ export type ChatShape = ComputeShape<S.Schema.Type<typeof ChatShape>, Text>;
 // Component
 //
 
-export type TextComponentProps = ShapeComponentProps<TextShape> & TextBoxProps & { chat?: boolean };
+export type TextComponentProps = ShapeComponentProps<TextShape> & TextBoxProps & { title?: string; chat?: boolean };
 
-export const TextComponent = ({ shape, chat, ...props }: TextComponentProps) => {
+export const TextComponent = ({ shape, title, chat, ...props }: TextComponentProps) => {
   const [reset, setReset] = useState({});
   const handleEnter: TextBoxProps['onEnter'] = (value) => {
     if (value.trim().length) {
@@ -53,13 +53,13 @@ export const TextComponent = ({ shape, chat, ...props }: TextComponentProps) => 
   };
 
   return (
-    <Box name={'Text'}>
+    <Box name={title ?? 'Text'}>
       <TextBox
         classNames='flex grow p-2 overflow-hidden'
         {...props}
         reset={reset}
+        value={chat ? '' : shape.node.getText()}
         onEnter={handleEnter}
-        value={shape.node.getText()}
       />
     </Box>
   );
@@ -69,19 +69,17 @@ export const TextComponent = ({ shape, chat, ...props }: TextComponentProps) => 
 // Defs
 //
 
-export type CreateTextProps = Omit<TextShape, 'type' | 'node' | 'size'> & { text?: string };
+export type CreateTextProps = CreateShapeProps<TextShape> & { text?: string };
 
-export const createText = ({ id, text, ...rest }: CreateTextProps): TextShape => ({
+export const createText = ({ id, text, size = { width: 256, height: 128 }, ...rest }: CreateTextProps): TextShape => ({
   id,
   type: 'text',
   node: new Text().setText(text ?? ''),
-  size: { width: 256, height: 128 },
+  size,
   ...rest,
 });
 
-export type CreateChatProps = Omit<ChatShape, 'type' | 'node' | 'size'>;
-
-console.log({ Text });
+export type CreateChatProps = CreateShapeProps<TextShape>;
 
 export const createChat = ({ id, ...rest }: CreateChatProps): ChatShape => ({
   id,
@@ -102,7 +100,7 @@ export const textShape: ShapeDef<TextShape> = {
 export const chatShape: ShapeDef<TextShape> = {
   type: 'chat',
   icon: 'ph--textbox--regular',
-  component: (props) => <TextComponent {...props} placeholder={'Message'} chat />,
+  component: (props) => <TextComponent {...props} title={'Prompt'} placeholder={'Message'} chat />,
   createShape: createText,
   getAnchors: (shape) => createAnchors(shape, { [createAnchorId('output')]: { x: 1, y: 0 } }),
 };

@@ -2,9 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Point } from '@antv/layout';
-
 import { GraphModel, type GraphNode, type GraphEdge, createEdgeId } from '@dxos/graph';
+import { type Point, type Dimension } from '@dxos/react-ui-canvas';
 
 import { type ComputeNode, DEFAULT_INPUT, DEFAULT_OUTPUT, StateMachine } from './graph';
 import {
@@ -22,16 +21,23 @@ import {
   createThread,
   createTimer,
 } from './shapes';
-import { type BaseComputeShape, type ComputeShape } from './shapes/defs';
-import { pointMultiply } from '../layout';
-import type { Connection, Shape } from '../types';
 import { createView } from './shapes/View';
+import { type BaseComputeShape, type ComputeShape } from './shapes/defs';
+import { pointMultiply, pointsToRect, rectToPoints } from '../layout';
+import type { Connection, Shape } from '../types';
 
-// TODO(burdon): Factor out.
-const pos = (p: Point) => pointMultiply(p, 32);
+// TODO(burdon): LayoutBuilder.
+const layout = (rect: Point & Partial<Dimension>, snap = 32): { center: Point; size?: Dimension } => {
+  const [center, size] = rectToPoints({ width: 0, height: 0, ...rect });
+  const { x, y, width, height } = pointsToRect([pointMultiply(center, snap), pointMultiply(size, snap)]);
+  if (width && height) {
+    return { center: { x, y }, size: width && height ? { width, height } : undefined };
+  } else {
+    return { center: { x, y } };
+  }
+};
 
 // TODO(burdon): GraphBuilder.
-
 export const createTest1 = () => {
   const nodes: Shape[] = [
     createSwitch({ id: 'a1', center: { x: -256, y: -256 } }),
@@ -93,7 +99,7 @@ You are able to create artifacts which are a persisted piece of data.
 To create an artifact, print the text you want to put into the artifact in <artifact> tags.
 When a user asks you to create something, decide whether it should be an artifact.
 Prefer artifacts for tables, lists, and other data structures.
-`;
+`.trim();
 
 export const createTest3 = ({
   db = false,
@@ -107,14 +113,22 @@ export const createTest3 = ({
   history?: boolean;
 } = {}) => {
   const nodes: Shape[] = [
-    createChat({ id: 'a', center: pos({ x: -12, y: 0 }) }),
-    ...(artifact ? [createText({ id: 'h', center: pos({ x: -12, y: -6 }), text: ARTIFACTS_SYSTEM_PROMPT })] : []),
-    createGpt({ id: 'b', center: pos({ x: 0, y: 0 }) }),
-    createThread({ id: 'c', center: pos({ x: 16, y: -4 }) }),
-    createCounter({ id: 'd', center: pos({ x: 8, y: 6 }) }),
-    ...(db ? [createDatabase({ id: 'e', center: pos({ x: -10, y: 6 }) })] : []),
-    ...(cot ? [createList({ id: 'f', center: pos({ x: 0, y: 14 }) })] : []),
-    ...(artifact ? [createView({ id: 'g', center: pos({ x: 0, y: -12 }) })] : []),
+    createChat({ id: 'a', ...layout({ x: -12, y: 0 }) }),
+    ...(artifact
+      ? [
+          createText({
+            id: 'h',
+            ...layout({ x: -12, y: -8, width: 8, height: 8 }),
+            text: ARTIFACTS_SYSTEM_PROMPT,
+          }),
+          createView({ id: 'g', ...layout({ x: 12, y: -6, width: 10, height: 14 }) }),
+        ]
+      : []),
+    createGpt({ id: 'b', ...layout({ x: 0, y: 4 }) }),
+    createThread({ id: 'c', ...layout({ x: 25, y: -4 }) }),
+    createCounter({ id: 'd', ...layout({ x: 8, y: 6 }) }),
+    ...(db ? [createDatabase({ id: 'e', ...layout({ x: -10, y: 6 }) })] : []),
+    ...(cot ? [createList({ id: 'f', ...layout({ x: 0, y: -12, width: 10, height: 12 }) })] : []),
   ];
 
   const edges: Omit<GraphEdge<Connection>, 'id'>[] = [

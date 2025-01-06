@@ -76,7 +76,6 @@ export type DraggingState =
  * Manages reactive dragging state.
  */
 export class DragMonitor {
-  _instance = 'DragMonitor-' + String(Math.random()).slice(2, 6); // TODO(burdon): ???
   private readonly _state: Signal<DraggingState> = signal<DraggingState>({ type: 'inactive' });
   private _offset?: Point;
 
@@ -107,7 +106,6 @@ export class DragMonitor {
    * Called from setCustomNativeDragPreview.render()
    */
   start(state: DraggingState) {
-    log.info('start', { id: this._instance, state });
     this._state.value = state;
   }
 
@@ -122,7 +120,6 @@ export class DragMonitor {
    * Called on drop.
    */
   stop() {
-    log.info('stop', { id: this._instance });
     this._state.value = { type: 'inactive' };
     this._offset = undefined;
   }
@@ -184,7 +181,7 @@ export const useDragMonitor = () => {
       // Drag
       //
       onDrag: async ({ location }) => {
-        invariant(dragMonitor.dragging, `Monitor not dragging: ${dragMonitor._instance}`);
+        invariant(dragMonitor.dragging);
         const [pos] = projection.toModel([getInputPoint(root, location.current.input)]);
 
         switch (state.value.type) {

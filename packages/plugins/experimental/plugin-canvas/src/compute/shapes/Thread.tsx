@@ -10,7 +10,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { getAnchors } from './Function';
 import { Box } from './components';
-import { ComputeShape, createInputSchema, createOutputSchema } from './defs';
+import { ComputeShape, createInputSchema, createOutputSchema, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { GptMessage, List } from '../graph';
 
@@ -26,7 +26,7 @@ export const ThreadShape = S.extend(
 
 export type ThreadShape = ComputeShape<S.Schema.Type<typeof ThreadShape>, List<any>>;
 
-export type CreateThreadProps = Omit<ThreadShape, 'type' | 'node' | 'size'>;
+export type CreateThreadProps = CreateShapeProps<ThreadShape>;
 
 export const createThread = ({ id, ...rest }: CreateThreadProps): ThreadShape => ({
   id,

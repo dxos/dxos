@@ -37,7 +37,7 @@ export const Canvas = () => {
 };
 
 export const CanvasContent = () => {
-  const { id, dragMonitor, overlayRef, options, showGrid, selection } = useEditorContext();
+  const { id, ready, dragMonitor, overlayRef, options, showGrid, selection } = useEditorContext();
   const { root, styles: projectionStyles, scale, offset } = useProjection();
   const shapesRef = useRef<HTMLDivElement>(null);
 
@@ -95,7 +95,7 @@ export const CanvasContent = () => {
       {showGrid && <Grid id={id} size={options.gridSize} scale={scale} offset={offset} classNames={styles.gridLine} />}
 
       {/* Layout. */}
-      <Shapes {...testId<TestId>('dx-layout', true)} ref={shapesRef} layout={layout} />
+      {<Shapes {...testId<TestId>('dx-layout', true)} ref={shapesRef} layout={layout} />}
 
       {/* Overlays. */}
       <div {...testId<TestId>('dx-overlays')} className={mx(eventsNone)}>

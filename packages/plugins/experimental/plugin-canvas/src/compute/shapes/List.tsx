@@ -10,7 +10,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { getAnchors } from './Function';
 import { Box } from './components';
-import { ComputeShape, createInputSchema, createOutputSchema } from './defs';
+import { ComputeShape, createInputSchema, createOutputSchema, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { GptMessage, List } from '../graph';
 
@@ -26,9 +26,7 @@ export const ListShape = S.extend(
 
 export type ListShape = ComputeShape<S.Schema.Type<typeof ListShape>, List<any>>;
 
-export type CreateListProps = Omit<ListShape, 'type' | 'node' | 'size'> & {
-  onlyLast?: boolean;
-};
+export type CreateListProps = CreateShapeProps<ListShape> & { onlyLast?: boolean };
 
 export const createList = ({ id, onlyLast, ...rest }: CreateListProps): ListShape => ({
   id,

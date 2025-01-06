@@ -2,10 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
+import type { Simplify } from 'effect/Types';
+
 import { S } from '@dxos/echo-schema';
 
 import { Polygon } from '../../types';
 import { DEFAULT_OUTPUT, DEFAULT_INPUT, type ComputeNode } from '../graph';
+
+// TODO(burdon): Factor out.
+export type OptionalProps<T, K extends keyof T> = Simplify<Omit<T, K> & Partial<Pick<T, K>>>;
+export type Specialize<T, U> = Simplify<Omit<T, keyof U> & U>;
+
+export type CreateShapeProps<S extends Polygon> = Omit<OptionalProps<S, 'size'>, 'type' | 'node'>;
 
 export const ComputeShape = S.extend(
   Polygon,
@@ -18,9 +26,12 @@ export const ComputeShape = S.extend(
 
 export type BaseComputeShape = S.Schema.Type<typeof ComputeShape>;
 
-export type ComputeShape<S extends BaseComputeShape, Node extends ComputeNode<any, any>> = Omit<S, 'node'> & {
-  node: Node;
-};
+export type ComputeShape<S extends BaseComputeShape, Node extends ComputeNode<any, any>> = Specialize<
+  S,
+  {
+    node: Node;
+  }
+>;
 
 export const createInputSchema = (schema: S.Schema<any>): S.Schema<any> => S.Struct({ [DEFAULT_INPUT]: schema });
 export const createOutputSchema = (schema: S.Schema<any>): S.Schema<any> => S.Struct({ [DEFAULT_OUTPUT]: schema });

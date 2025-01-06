@@ -8,7 +8,7 @@ import { S } from '@dxos/echo-schema';
 import { Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { ComputeShape } from './defs';
+import { ComputeShape, type CreateShapeProps } from './defs';
 import { createAnchors, type ShapeComponentProps, type ShapeDef } from '../../components';
 import { createAnchorId } from '../../shapes';
 import { Beacon } from '../graph';
@@ -22,7 +22,7 @@ export const BeaconShape = S.extend(
 
 export type BeaconShape = ComputeShape<S.Schema.Type<typeof BeaconShape>, Beacon>;
 
-export type CreateBeaconProps = Omit<BeaconShape, 'type' | 'node' | 'size'>;
+export type CreateBeaconProps = CreateShapeProps<BeaconShape>;
 
 export const createBeacon = ({ id, ...rest }: CreateBeaconProps): BeaconShape => ({
   id,

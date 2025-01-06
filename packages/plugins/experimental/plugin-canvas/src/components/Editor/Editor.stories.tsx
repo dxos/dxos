@@ -5,8 +5,8 @@
 import '@dxos-theme';
 
 import type { Meta, StoryObj } from '@storybook/react';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
 import ollamaClient from 'ollama';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { AIServiceClientImpl } from '@dxos/assistant';
 import { type ReactiveEchoObject } from '@dxos/echo-db';
@@ -23,13 +23,13 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
 import { computeShapes, type StateMachine, type StateMachineContext } from '../../compute';
 import { callEdge } from '../../compute/graph/gpt/edge';
+import { callOllama } from '../../compute/graph/gpt/ollama';
 import { createMachine, createTest1, createTest2, createTest3 } from '../../compute/testing';
 import { SelectionModel, useGraphMonitor } from '../../hooks';
 import { doLayout } from '../../layout';
 import { RectangleShape, type Shape } from '../../types';
 import { AttentionContainer } from '../AttentionContainer';
 import { ShapeRegistry } from '../Canvas';
-import { callOllama } from '../../compute/graph/gpt/ollama';
 
 const generator: ValueGenerator = faker as any;
 
@@ -293,7 +293,7 @@ export const GPTArtifact: Story = {
     // debug: true,
     showGrid: false,
     snapToGrid: false,
-    sidebar: 'json',
+    // sidebar: 'json',
     // sidebar: 'state-machine',
     registry: new ShapeRegistry(computeShapes),
     spec: [

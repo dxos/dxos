@@ -5,14 +5,12 @@
 import React from 'react';
 
 import { S } from '@dxos/echo-schema';
-import { registerSignalsRuntime } from '@dxos/echo-signals';
-registerSignalsRuntime();
 
-import { ComputeShape } from './defs';
+import { Box } from './components';
+import { ComputeShape, type CreateShapeProps } from './defs';
 import { createAnchors, TextBox, type ShapeComponentProps, type ShapeDef } from '../../components';
 import { createAnchorId } from '../../shapes';
-import { DEFAULT_INPUT, View } from '../graph';
-import { Box } from './components';
+import { View } from '../graph';
 
 export const ViewShape = S.extend(
   ComputeShape,
@@ -23,7 +21,7 @@ export const ViewShape = S.extend(
 
 export type ViewShape = ComputeShape<S.Schema.Type<typeof ViewShape>, View>;
 
-export type CreateViewProps = Omit<ViewShape, 'type' | 'node' | 'size'>;
+export type CreateViewProps = CreateShapeProps<ViewShape>;
 
 export const createView = ({ id, ...rest }: CreateViewProps): ViewShape => ({
   id,

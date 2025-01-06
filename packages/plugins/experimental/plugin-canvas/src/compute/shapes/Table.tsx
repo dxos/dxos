@@ -8,7 +8,7 @@ import { S } from '@dxos/echo-schema';
 
 import { getAnchors } from './Function';
 import { Box } from './components';
-import { ComputeShape, createInputSchema, createOutputSchema } from './defs';
+import { ComputeShape, createInputSchema, createOutputSchema, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { GptMessage, List } from '../graph';
 
@@ -24,7 +24,7 @@ export const TableShape = S.extend(
 
 export type TableShape = ComputeShape<S.Schema.Type<typeof TableShape>, List<any>>;
 
-export type CreateTableProps = Omit<TableShape, 'type' | 'node' | 'size'>;
+export type CreateTableProps = CreateShapeProps<TableShape>;
 
 export const createTable = ({ id, ...rest }: CreateTableProps): TableShape => ({
   id,

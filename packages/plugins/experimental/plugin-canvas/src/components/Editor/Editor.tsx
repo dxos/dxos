@@ -99,16 +99,8 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
     const overlayRef = useRef<SVGSVGElement>(null);
 
     // Editor state.
-    const [dragMonitor] = useState(() => {
-      const m = new DragMonitor();
-      console.log('dragMonitor', m._instance);
-      return m;
-    });
-    useEffect(() => {
-      return () => {
-        console.log('dragMonitor.dispose', dragMonitor._instance);
-      };
-    }, [dragMonitor]);
+    const [ready, setReady] = useState(!autoZoom);
+    const [dragMonitor] = useState(() => new DragMonitor());
     const [editing, setEditing] = useState<EditingState<any>>();
 
     // Actions.
@@ -133,6 +125,7 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
       setShowGrid,
       setSnapToGrid,
 
+      ready,
       dragMonitor,
       editing,
       setEditing,
@@ -162,10 +155,11 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
 
     // Trigger on graph change.
     useEffect(() => {
-      if (graph.nodes.length && autoZoom) {
-        setTimeout(() => {
-          void actionHandler?.({ type: 'zoom-to-fit', duration: 0 });
-        });
+      if (autoZoom) {
+        setTimeout(async () => {
+          await actionHandler?.({ type: 'zoom-to-fit', duration: 0 });
+          setReady(true);
+        }, 0);
       }
     }, [actionHandler, graph, autoZoom]);
 
@@ -174,7 +168,11 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
         <div
           {...testId<TestId>('dx-editor')}
           tabIndex={0}
-          className={mx('relative w-full h-full overflow-hidden', classNames)}
+          className={mx(
+            'relative w-full h-full overflow-hidden',
+            ready ? 'transition-opacity delay-[1s] duration-[1s] opacity-100' : 'opacity-0',
+            classNames,
+          )}
         >
           {children}
         </div>

@@ -7,7 +7,7 @@ import React from 'react';
 import { S } from '@dxos/echo-schema';
 
 import { Box } from './components';
-import { ComputeShape } from './defs';
+import { ComputeShape, type CreateShapeProps } from './defs';
 import { createAnchors, type ShapeComponentProps, type ShapeDef } from '../../components';
 import { createAnchorId } from '../../shapes';
 import { Database } from '../graph';
@@ -21,7 +21,7 @@ export const DatabaseShape = S.extend(
 
 export type DatabaseShape = ComputeShape<S.Schema.Type<typeof DatabaseShape>, Database>;
 
-export type CreateDatabaseProps = Omit<DatabaseShape, 'type' | 'node' | 'size'>;
+export type CreateDatabaseProps = CreateShapeProps<DatabaseShape>;
 
 export const createDatabase = ({ id, ...rest }: CreateDatabaseProps): DatabaseShape => ({
   id,

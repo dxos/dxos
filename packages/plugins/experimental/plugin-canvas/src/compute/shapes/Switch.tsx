@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { S } from '@dxos/echo-schema';
 import { Input } from '@dxos/react-ui';
 
-import { ComputeShape } from './defs';
+import { ComputeShape, type CreateShapeProps } from './defs';
 import { createAnchors, type ShapeComponentProps, type ShapeDef } from '../../components';
 import { createAnchorId } from '../../shapes';
 import { Switch } from '../graph';
@@ -21,7 +21,7 @@ export const SwitchShape = S.extend(
 
 export type SwitchShape = ComputeShape<S.Schema.Type<typeof SwitchShape>, Switch>;
 
-export type CreateSwitchProps = Omit<SwitchShape, 'type' | 'node' | 'size'>;
+export type CreateSwitchProps = CreateShapeProps<SwitchShape>;
 
 export const createSwitch = ({ id, ...rest }: CreateSwitchProps): SwitchShape => ({
   id,

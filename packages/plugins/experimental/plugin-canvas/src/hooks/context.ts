@@ -55,6 +55,7 @@ export type EditorContextType = {
   clipboard: GraphModel<GraphNode<Shape>>;
   selection: SelectionModel;
 
+  ready: boolean;
   dragMonitor: DragMonitor;
   editing?: EditingState<any>;
   setEditing: Dispatch<SetStateAction<EditingState<any> | undefined>>;
