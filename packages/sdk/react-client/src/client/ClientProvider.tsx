@@ -126,9 +126,14 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
 
     // Create and/or initialize client.
     useEffect(() => {
+      let disposed = false;
       const initialize = async (client: Client) => {
         if (!client.initialized) {
-          await client.initialize().catch(setError);
+          await client.initialize().catch((err) => {
+            if (!disposed) {
+              setError(err);
+            }
+          });
           log('client ready');
           await onInitialized?.(client);
           log('initialization complete');
@@ -143,24 +148,31 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
 
       let client: Client;
       const t = setTimeout(async () => {
-        if (clientProvider) {
-          // Asynchronously request client.
-          client = await getAsyncProviderValue(clientProvider);
-          await initialize(client);
-        } else {
-          // Asynchronously construct client (config may be undefined).
-          const config = await getAsyncProviderValue(configProvider);
-          log('resolved config', { config });
-          const services = await getAsyncProviderValue(servicesProvider, config);
-          log('created services', { services });
-          client = new Client({ config, services, ...options });
-          log('created client');
-          await initialize(client);
+        try {
+          if (clientProvider) {
+            // Asynchronously request client.
+            client = await getAsyncProviderValue(clientProvider);
+            await initialize(client);
+          } else {
+            // Asynchronously construct client (config may be undefined).
+            const config = await getAsyncProviderValue(configProvider);
+            log('resolved config', { config });
+            const services = await getAsyncProviderValue(servicesProvider, config);
+            log('created services', { services });
+            client = new Client({ config, services, ...options });
+            log('created client');
+            await initialize(client);
+          }
+        } catch (err) {
+          if (!disposed) {
+            log.catch(err);
+          }
         }
       });
 
       return () => {
         log('clean up');
+        disposed = true;
         clearTimeout(t);
         void client
           ?.destroy()
