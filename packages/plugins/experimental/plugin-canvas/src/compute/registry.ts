@@ -18,6 +18,7 @@ import {
   textShape,
   threadShape,
   timerShape,
+  textToImageShape,
 } from './shapes';
 import type { ShapeDef } from '../components';
 import { viewShape } from './shapes/View';
@@ -31,6 +32,7 @@ export const computeShapes: ShapeDef<any>[] = [
   chatShape,
   textShape,
   databaseShape,
+  textToImageShape,
   switchShape,
   timerShape,
   andShape,

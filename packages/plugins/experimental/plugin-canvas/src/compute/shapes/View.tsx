@@ -38,6 +38,27 @@ export const ViewComponent = ({ shape }: ShapeComponentProps<ViewShape>) => {
     value = JSON.stringify(value, null, 2);
   }
 
+  const imageMatch = (value as string)?.match(/<image id="([^"]+)"(?:\s+prompt="([^"]+)")?\s*\/>/);
+  if (imageMatch) {
+    const [, id, prompt] = imageMatch;
+    const image = shape.node.resolveImage(id);
+    if (image?.source) {
+      return (
+        <Box name={'Artifact'}>
+          <img
+            src={`data:image/jpeg;base64,${image.source.data}`}
+            style={{
+              maxWidth: '100%',
+              height: 'auto',
+            }}
+            alt={prompt || 'Generated image'}
+          />
+        </Box>
+      );
+    } else {
+      value += '\n\n(image not found)';
+    }
+  }
   return (
     <Box name={'Artifact'}>
       <TextBox value={value} />

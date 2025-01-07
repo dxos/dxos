@@ -2,13 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { LLMToolDefinition } from '@dxos/assistant';
+import {
+  LLMTool
+} from '@dxos/assistant';
 import { type Context } from '@dxos/context';
 import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
-import { Function, type FunctionCallback } from './Function';
 import { type StateMachineContext } from '../state-machine';
+import { Function, type FunctionCallback } from './Function';
 
 export const GptMessage = S.Struct({
   role: S.Union(S.Literal('system'), S.Literal('user'), S.Literal('assistant')),
@@ -21,7 +23,7 @@ export const GptInput = S.Struct({
   systemPrompt: S.optional(S.String),
   prompt: S.String,
   history: S.optional(S.Array(GptMessage)),
-  tools: S.optional(S.Array(LLMToolDefinition)),
+  tools: S.optional(S.Array(S.Union(LLMTool, S.Null))),
 });
 
 export const GptOutput = S.Struct({
@@ -43,7 +45,7 @@ export class GptFunction extends Function<GptInput, GptOutput> {
 
   protected override onInitialize(ctx: Context, context: StateMachineContext) {
     invariant(context.gpt);
-    this._cb = context.gpt;
+    this._cb = context.gpt.invoke.bind(context.gpt);
   }
 
   override async invoke(input: GptInput) {

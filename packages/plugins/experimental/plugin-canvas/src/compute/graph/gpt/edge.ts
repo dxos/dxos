@@ -1,24 +1,20 @@
-import type { AIServiceClientImpl, LLMToolDefinition } from '@dxos/assistant';
+import type { AIServiceClientImpl, LLMTool, LLMToolDefinition, MessageImageContentBlock } from '@dxos/assistant';
 import { log } from '@dxos/log';
 import { isNotNullOrUndefined } from '@dxos/util';
 import { type GptExecutor } from '../state-machine';
 import { type Message, ObjectId, runLLM } from '@dxos/assistant';
 import { SpaceId } from '@dxos/client/echo';
+import type { GptInput, GptOutput } from '../nodes/GptFunction';
 
-export const callEdge =
-  (client: AIServiceClientImpl): GptExecutor =>
-  async ({ systemPrompt, prompt, tools: toolsInput, history = [] }) => {
+export class EdgeGpt implements GptExecutor {
+  public readonly imageCache = new Map<string, MessageImageContentBlock>();
+
+  constructor(private readonly _client: AIServiceClientImpl) {}
+
+  public async invoke({ systemPrompt, prompt, tools: toolsInput, history = [] }: GptInput): Promise<GptOutput> {
     log.info('callEdge', { systemPrompt, prompt, toolsInput, history });
 
-    let tools: LLMToolDefinition[] = [];
-    if (toolsInput === undefined) {
-      tools = [];
-    }
-
-    if (!Array.isArray(toolsInput)) {
-      tools = [toolsInput as any];
-    }
-
+    let tools: LLMTool[] = (toolsInput as any) ?? [];
     tools = tools.filter(isNotNullOrUndefined);
 
     const spaceId = SpaceId.random(); // TODO(dmaretskyi): Use spaceId from the context.
@@ -51,9 +47,9 @@ export const callEdge =
       },
     ];
 
-    await client.insertMessages(newMessages);
+    await this._client.insertMessages(newMessages);
 
-    log.info('gpt', { systemPrompt, prompt, history });
+    log.info('gpt', { systemPrompt, prompt, history, tools });
     const messages: Message[] = [];
     await runLLM({
       model: '@anthropic/claude-3-5-sonnet-20241022',
@@ -61,10 +57,37 @@ export const callEdge =
       spaceId,
       threadId,
       system: systemPrompt,
-      client,
+      client: this._client,
       logger: (event) => {
-        if (event.type === 'message') {
-          messages.push(event.message);
+        log.info('event', { event });
+        switch (event.type) {
+          case 'message': {
+            messages.push(event.message);
+            for (const content of event.message.content) {
+              if (content.type === 'image' && content.id != null && content.source != null) {
+                log.info('image', { id: content.id });
+                this.imageCache.set(content.id, content);
+              }
+            }
+            break;
+          }
+          case 'message_start': {
+            messages.push(event.message as any);
+            for (const content of event.message.content) {
+              if (content.type === 'image' && content.id != null && content.source != null) {
+                log.info('image', { id: content.id });
+                this.imageCache.set(content.id, content);
+              }
+            }
+            break;
+          }
+          case 'content_block_start': {
+            if (event.content.type === 'image' && event.content.id != null && event.content.source != null) {
+              log.info('image', { id: event.content.id });
+              this.imageCache.set(event.content.id, event.content);
+            }
+            break;
+          }
         }
       },
     });
@@ -127,4 +150,5 @@ export const callEdge =
       cot: chainOfThought.join('\n'),
       artifact: artifacts.join('\n'),
     };
-  };
+  }
+}

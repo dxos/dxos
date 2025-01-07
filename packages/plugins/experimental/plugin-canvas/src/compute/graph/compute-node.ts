@@ -124,6 +124,10 @@ export abstract class ComputeNode<Input extends Binding, Output extends Binding>
     return this;
   }
 
+  getInput(property: keyof Input) {
+    return this._input.value[property];
+  }
+
   /**
    * Set input property.
    * @param property

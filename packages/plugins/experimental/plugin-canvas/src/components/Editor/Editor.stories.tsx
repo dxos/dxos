@@ -22,8 +22,8 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
 import { computeShapes, type StateMachine, type StateMachineContext } from '../../compute';
-import { callEdge } from '../../compute/graph/gpt/edge';
-import { callOllama } from '../../compute/graph/gpt/ollama';
+import { EdgeGpt } from '../../compute/graph/gpt/edge';
+import { OllamaGpt } from '../../compute/graph/gpt/ollama';
 import { createMachine, createTest1, createTest2, createTest3 } from '../../compute/testing';
 import { SelectionModel, useGraphMonitor } from '../../hooks';
 import { doLayout } from '../../layout';
@@ -259,7 +259,7 @@ export const Ollama: Story = {
     sidebar: 'state-machine',
     registry: new ShapeRegistry(computeShapes),
     ...createMachine(createTest3()),
-    gpt: callOllama(ollamaClient),
+    gpt: new OllamaGpt(ollamaClient),
   },
 };
 
@@ -279,7 +279,7 @@ export const GPT: Story = {
     registerSchema: true,
     ...createMachine(createTest3({ db: true })),
     model: '@anthropic/claude-3-5-sonnet-20241022',
-    gpt: callEdge(
+    gpt: new EdgeGpt(
       new AIServiceClientImpl({
         // endpoint: 'https://ai-service.dxos.workers.dev',
         endpoint: 'http://localhost:8787',
@@ -302,9 +302,9 @@ export const GPTArtifact: Story = {
       { type: Testing.ContactType, count: 8 },
     ],
     registerSchema: true,
-    ...createMachine(createTest3({ db: true, cot: true, artifact: true, history: true })),
+    ...createMachine(createTest3({ cot: true, artifact: true, history: true, db: true, textToImage: true })),
     model: '@anthropic/claude-3-5-sonnet-20241022',
-    gpt: callEdge(
+    gpt: new EdgeGpt(
       new AIServiceClientImpl({
         // endpoint: 'https://ai-service.dxos.workers.dev',
         endpoint: 'http://localhost:8787',
