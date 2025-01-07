@@ -8,9 +8,8 @@ import { type SpaceId } from '@dxos/keys';
 export enum EdgeService {
   AUTOMERGE_REPLICATOR = 'automerge-replicator',
   FEED_REPLICATOR = 'feed-replicator',
-  // TODO(burdon): Rename to just SWARM, SIGNAL.
-  SWARM_SERVICE_ID = 'swarm',
-  SIGNAL_SERVICE_ID = 'signal',
+  SWARM = 'swarm',
+  SIGNAL = 'signal',
 }
 
 export type EdgeHttpSuccess<T> = {
