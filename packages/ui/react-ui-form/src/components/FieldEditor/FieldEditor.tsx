@@ -162,7 +162,7 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
             {...props}
             options={
               schema
-                ? getSchemaProperties(schema.schema.ast)
+                ? getSchemaProperties(schema.ast)
                     .sort(sortProperties)
                     .map((p) => ({ value: p.name }))
                 : []

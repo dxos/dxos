@@ -101,6 +101,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
               dxGrid.updateIfWithinBounds(cell);
             } else {
               dxGrid.updateCells(true);
+              dxGrid.requestUpdate();
             }
           },
         };
