@@ -7,8 +7,6 @@ import { facetSemanticValues, type Facet, resolveNaming, seriesValues, renderHel
 import { type Meta } from '@storybook/react';
 import React from 'react';
 
-import { withTheme } from '@dxos/storybook-utils';
-
 import { tokenSet } from './index';
 
 const semanticValues = facetSemanticValues((tokenSet.colors as Facet).semantic);
@@ -86,7 +84,6 @@ export const Audit = () => {
 
 const meta: Meta = {
   title: 'ui/react-ui-theme/Tokens',
-  decorators: [withTheme],
 };
 
 export default meta;
