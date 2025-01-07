@@ -13,10 +13,10 @@ import { type ComputeNode } from './compute-node';
 // TODO(burdon): The node and edge types should be schema (not the runtime class)?
 // TODO(burdon): Can GraphModel manage this binding?
 // TODO(burdon): Initially leave as runtime and sync on startup.
-export type ComputeGraph = GraphModel<GraphNode<ComputeNode<any, any>>, GraphEdge<ComputeEdge | void>>;
+export type ComputeGraph = GraphModel<GraphNode<ComputeNode<any, any>>, GraphEdge<ComputeEdge>>;
 
 export const createComputeGraph = (graph?: Graph): ComputeGraph => {
-  return new GraphModel<GraphNode<ComputeNode<any, any>>, GraphEdge<ComputeEdge | undefined>>(graph);
+  return new GraphModel<GraphNode<ComputeNode<any, any>>, GraphEdge<ComputeEdge>>(graph);
 };
 
 /**

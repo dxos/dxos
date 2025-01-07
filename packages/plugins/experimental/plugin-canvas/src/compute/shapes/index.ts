@@ -14,3 +14,4 @@ export * from './Table';
 export * from './Text';
 export * from './Thread';
 export * from './Timer';
+export * from './TextToImage';

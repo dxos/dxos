@@ -20,12 +20,16 @@ export class View extends ComputeNode<{ [DEFAULT_INPUT]: any }, NoOutput> {
     super(S.Struct({ [DEFAULT_INPUT]: S.Any }), NoOutput);
   }
 
-
   get state(): any {
     return this._input.value[DEFAULT_INPUT];
   }
 
   override async invoke() {
     return raise(new InvalidStateError());
+  }
+
+  // TODO(dmaretskyi): Pre-parse the input in the compute node instead of exposing this.
+  resolveImage(id: string) {
+    return this._context?.gpt?.imageCache.get(id);
   }
 }

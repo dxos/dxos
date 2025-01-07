@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type LLMModel } from '@dxos/assistant';
+import { type ImageSource, type LLMModel, type MessageImageContentBlock } from '@dxos/assistant';
 import { Event } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { type Context, Resource } from '@dxos/context';
@@ -22,7 +22,12 @@ export const InvalidStateError = Error;
  */
 export type AsyncUpdate<T> = (value: T) => void;
 
-export type GptExecutor = FunctionCallback<GptInput, GptOutput>;
+export interface GptExecutor {
+  invoke: FunctionCallback<GptInput, GptOutput>;
+
+  // TODO(dmaretskyi): A hack to get image artifacts working. Rework into querying images from the ai-service store.
+  imageCache: Map<string, MessageImageContentBlock>;
+}
 
 export type StateMachineContext = {
   space?: Space;
@@ -187,14 +192,34 @@ export class StateMachine extends Resource {
 
         // Set input.
         invariant(edge.data?.input);
-        const optional = target.data.setInput(edge.data.input, value);
+
+        let shouldPropagate;
+
+        const inboundEdges = this._graph
+          .getEdges({ target: target.id })
+          .filter((e) => e.data.input === edge.data.input);
+        if (inboundEdges.length > 1) {
+          log.info('composite edge', { target, inboundEdges });
+          const position = inboundEdges.findIndex((e) => e.id === edge.id);
+          if (position === -1) {
+            log.warn('unable to determine edge position in aggregated node input');
+            continue;
+          }
+
+          const prevOutput = target.data.getInput(edge.data.input) ?? [];
+          const newOutput = [...prevOutput];
+          newOutput[position] = value;
+          shouldPropagate = !target.data.setInput(edge.data.input, newOutput);
+        } else {
+          shouldPropagate = !target.data.setInput(edge.data.input, value);
+        }
 
         // Check if ready.
         if (target.data.getOutputs().length === 0) {
           this.update.emit({ node: target, value: output });
         } else {
           // TODO(burdon): Don't fire if optional (breaks feedback loop). Need trigger props.
-          if (!optional && target.data.ready) {
+          if (shouldPropagate && target.data.ready) {
             await this._exec(target);
           }
         }

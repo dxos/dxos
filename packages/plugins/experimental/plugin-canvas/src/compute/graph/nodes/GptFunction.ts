@@ -7,7 +7,8 @@ import {
   AIServiceClientImpl,
   LLMToolDefinition,
   type Message,
-  ObjectId, // TODO(burdon): Reconcile with echo-schema.
+  ObjectId,
+  LLMTool, // TODO(burdon): Reconcile with echo-schema.
 } from '@dxos/assistant';
 import { SpaceId } from '@dxos/client/echo';
 import { type Context } from '@dxos/context';
@@ -30,7 +31,7 @@ export const GptInput = S.Struct({
   systemPrompt: S.optional(S.String),
   prompt: S.String,
   history: S.optional(S.Array(GptMessage)),
-  tools: S.optional(S.Array(LLMToolDefinition)),
+  tools: S.optional(S.Array(S.Union(LLMTool, S.Null))),
 });
 
 export const GptOutput = S.Struct({
@@ -52,7 +53,7 @@ export class GptFunction extends Function<GptInput, GptOutput> {
 
   protected override onInitialize(ctx: Context, context: StateMachineContext) {
     invariant(context.gpt);
-    this._cb = context.gpt;
+    this._cb = context.gpt.invoke.bind(context.gpt);
   }
 
   override async invoke(input: GptInput) {

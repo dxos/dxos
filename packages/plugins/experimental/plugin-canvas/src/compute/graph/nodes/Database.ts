@@ -17,11 +17,11 @@ import { log } from '@dxos/log';
 /**
  * Database GPT tool.
  */
-export class Database extends ComputeNode<NoInput, { [DEFAULT_OUTPUT]: LLMToolDefinition }> {
+export class Database extends ComputeNode<NoInput, { [DEFAULT_OUTPUT]: LLMTool }> {
   override readonly type = 'database';
 
   constructor() {
-    super(NoInput, S.Struct({ [DEFAULT_OUTPUT]: LLMToolDefinition }));
+    super(NoInput, S.Struct({ [DEFAULT_OUTPUT]: LLMTool }));
   }
 
   override async invoke() {

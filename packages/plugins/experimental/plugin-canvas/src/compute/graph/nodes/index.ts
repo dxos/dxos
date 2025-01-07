@@ -14,3 +14,4 @@ export * from './Switch';
 export * from './Text';
 export * from './Timer';
 export * from './View';
+export * from './TextToImage';

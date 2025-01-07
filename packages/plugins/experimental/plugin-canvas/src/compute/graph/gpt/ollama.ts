@@ -1,17 +1,23 @@
 import { type Ollama } from 'ollama';
 import type { GptExecutor } from '../state-machine';
 import { log } from '@dxos/log';
+import type { GptInput, GptOutput } from '../nodes/GptFunction';
+import type { MessageImageContentBlock } from '@dxos/assistant';
 
-export const callOllama =
-  (ollama: Ollama): GptExecutor =>
-  async ({ systemPrompt, prompt, history = [] }) => {
+export class OllamaGpt implements GptExecutor {
+  // Images are not supported.
+  public readonly imageCache = new Map<string, MessageImageContentBlock>();
+
+  constructor(private readonly _ollama: Ollama) {}
+
+  public async invoke({ systemPrompt, prompt, history = [] }: GptInput): Promise<GptOutput> {
     const messages = [
       ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
       ...history.map(({ role, message }) => ({ role, content: message })),
       { role: 'user', content: prompt },
     ];
 
-    const result = await ollama.chat({ model: 'llama3.2', messages });
+    const result = await this._ollama.chat({ model: 'llama3.2', messages });
     log.info('gpt', { prompt, result });
     const { message, eval_count } = result;
 
@@ -28,4 +34,5 @@ export const callOllama =
         },
       ],
     };
-  };
+  }
+}
