@@ -4,6 +4,7 @@
 
 import { lazy } from 'react';
 
+export * from './anchors';
 export * from './defs';
 export * from './styles';
 

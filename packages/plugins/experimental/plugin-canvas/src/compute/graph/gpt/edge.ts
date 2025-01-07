@@ -1,12 +1,20 @@
-import type { AIServiceClientImpl, LLMTool, LLMToolDefinition, MessageImageContentBlock } from '@dxos/assistant';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { ObjectId, runLLM } from '@dxos/assistant';
+import type { AIServiceClientImpl, LLMTool, MessageImageContentBlock, Message } from '@dxos/assistant';
+import { SpaceId } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { isNotNullOrUndefined } from '@dxos/util';
-import { type GptExecutor } from '../state-machine';
-import { type Message, ObjectId, runLLM } from '@dxos/assistant';
-import { SpaceId } from '@dxos/client/echo';
-import type { GptInput, GptOutput } from '../nodes/GptFunction';
 
-export class EdgeGpt implements GptExecutor {
+import type { GptInput, GptOutput } from '../nodes';
+import { type GptExecutor } from '../state-machine';
+
+/**
+ * Remote GPT execution.
+ */
+export class EdgeGptExecutor implements GptExecutor {
   public readonly imageCache = new Map<string, MessageImageContentBlock>();
 
   constructor(private readonly _client: AIServiceClientImpl) {}

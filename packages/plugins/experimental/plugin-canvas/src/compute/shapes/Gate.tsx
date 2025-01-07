@@ -6,9 +6,9 @@ import React, { type FC } from 'react';
 
 import { S } from '@dxos/echo-schema';
 
-import { ComputeShape } from './defs';
+import { ComputeShape, createAnchorId } from './defs';
 import { type ShapeDef } from '../../components';
-import { createAnchorId, createAnchors, getAnchorPoints } from '../../shapes';
+import { createAnchors, getAnchorPoints } from '../../components';
 import { AndGate, NotGate, OrGate } from '../graph';
 
 //

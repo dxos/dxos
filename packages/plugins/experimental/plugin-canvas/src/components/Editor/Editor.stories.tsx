@@ -22,7 +22,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
 import { computeShapes, type StateMachine, type StateMachineContext } from '../../compute';
-import { EdgeGpt } from '../../compute/graph/gpt/edge';
+import { EdgeGptExecutor } from '../../compute/graph/gpt/edge';
 import { OllamaGpt } from '../../compute/graph/gpt/ollama';
 import { createMachine, createTest1, createTest2, createTest3 } from '../../compute/testing';
 import { SelectionModel, useGraphMonitor } from '../../hooks';
@@ -279,7 +279,7 @@ export const GPT: Story = {
     registerSchema: true,
     ...createMachine(createTest3({ db: true })),
     model: '@anthropic/claude-3-5-sonnet-20241022',
-    gpt: new EdgeGpt(
+    gpt: new EdgeGptExecutor(
       new AIServiceClientImpl({
         // endpoint: 'https://ai-service.dxos.workers.dev',
         endpoint: 'http://localhost:8787',
@@ -304,7 +304,7 @@ export const GPTArtifact: Story = {
     registerSchema: true,
     ...createMachine(createTest3({ cot: true, artifact: true, history: true, db: true, textToImage: true })),
     model: '@anthropic/claude-3-5-sonnet-20241022',
-    gpt: new EdgeGpt(
+    gpt: new EdgeGptExecutor(
       new AIServiceClientImpl({
         // endpoint: 'https://ai-service.dxos.workers.dev',
         endpoint: 'http://localhost:8787',

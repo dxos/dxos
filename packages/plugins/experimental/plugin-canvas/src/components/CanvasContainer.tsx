@@ -4,6 +4,8 @@
 
 import React, { useEffect, useMemo, useRef } from 'react';
 
+import { AIServiceClientImpl } from '@dxos/assistant';
+import { GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
@@ -11,12 +13,10 @@ import { AttentionContainer } from './AttentionContainer';
 import { ShapeRegistry } from './Canvas';
 import { Editor, type EditorController } from './Editor';
 import { computeShapes } from '../compute';
-import { createMachine, createTest3 } from '../compute/testing';
+import { EdgeGptExecutor } from '../compute/graph/gpt/edge';
+import { createMachine } from '../compute/testing';
 import { useGraphMonitor } from '../hooks';
 import { type CanvasBoardType, type Connection, type Shape } from '../types';
-import { GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
-import { callEdge } from '../compute/graph/gpt/edge';
-import { AIServiceClientImpl } from '@dxos/assistant';
 
 export const CanvasContainer = ({ canvas }: { canvas: CanvasBoardType }) => {
   const id = fullyQualifiedId(canvas);
@@ -34,7 +34,7 @@ export const CanvasContainer = ({ canvas }: { canvas: CanvasBoardType }) => {
     machine.setContext({
       space,
       model: '@anthropic/claude-3-5-sonnet-20241022',
-      gpt: callEdge(
+      gpt: new EdgeGptExecutor(
         new AIServiceClientImpl({
           endpoint: 'https://ai-service.dxos.workers.dev',
         }),

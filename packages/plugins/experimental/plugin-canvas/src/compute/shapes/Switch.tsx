@@ -7,9 +7,9 @@ import React, { useEffect, useState } from 'react';
 import { S } from '@dxos/echo-schema';
 import { Input } from '@dxos/react-ui';
 
-import { ComputeShape, type CreateShapeProps } from './defs';
-import { createAnchors, type ShapeComponentProps, type ShapeDef } from '../../components';
-import { createAnchorId } from '../../shapes';
+import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
+import { type ShapeComponentProps, type ShapeDef } from '../../components';
+import { createAnchorMap } from '../../components';
 import { Switch } from '../graph';
 
 export const SwitchShape = S.extend(
@@ -56,5 +56,5 @@ export const switchShape: ShapeDef<SwitchShape> = {
   icon: 'ph--toggle-left--regular',
   component: SwitchComponent,
   createShape: createSwitch,
-  getAnchors: (shape) => createAnchors(shape, { [createAnchorId('output')]: { x: 1, y: 0 } }),
+  getAnchors: (shape) => createAnchorMap(shape, { [createAnchorId('output')]: { x: 1, y: 0 } }),
 };

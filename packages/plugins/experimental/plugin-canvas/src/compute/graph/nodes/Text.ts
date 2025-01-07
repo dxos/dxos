@@ -21,10 +21,6 @@ export class Text extends ComputeNode<NoInput, { [DEFAULT_OUTPUT]: string }> {
     super(NoInput, S.Struct({ [DEFAULT_OUTPUT]: S.String }));
   }
 
-  override async invoke() {
-    return raise(new InvalidStateError());
-  }
-
   getText() {
     return this._text;
   }
@@ -33,5 +29,9 @@ export class Text extends ComputeNode<NoInput, { [DEFAULT_OUTPUT]: string }> {
     this._text = text;
     this.setOutput({ [DEFAULT_OUTPUT]: text });
     return this;
+  }
+
+  override async invoke() {
+    return raise(new InvalidStateError());
   }
 }

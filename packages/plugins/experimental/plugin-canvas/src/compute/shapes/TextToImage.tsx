@@ -7,15 +7,15 @@ import React from 'react';
 import { S } from '@dxos/echo-schema';
 
 import { Box } from './components';
-import { ComputeShape, type CreateShapeProps } from './defs';
-import { createAnchors, type ShapeComponentProps, type ShapeDef } from '../../components';
-import { createAnchorId } from '../../shapes';
-import { DEFAULT_OUTPUT, TextToImage } from '../graph';
+import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
+import { type ShapeComponentProps, type ShapeDef } from '../../components';
+import { createAnchorMap } from '../../components';
+import { TextToImage } from '../graph';
 
 export const TextToImageShape = S.extend(
   ComputeShape,
   S.Struct({
-    type: S.Literal('textToImage'),
+    type: S.Literal('text-to-image'),
   }),
 );
 
@@ -25,20 +25,20 @@ export type CreateTextToImageProps = CreateShapeProps<TextToImageShape>;
 
 export const createTextToImage = ({ id, ...rest }: CreateTextToImageProps): TextToImageShape => ({
   id,
-  type: 'textToImage',
+  type: 'text-to-image',
   node: new TextToImage(),
   size: { width: 128, height: 64 },
   ...rest,
 });
 
 export const TextToImageComponent = ({ shape }: ShapeComponentProps<TextToImageShape>) => {
-  return <Box name={'TextToImage'}></Box>;
+  return <Box name={'Image Gen'}></Box>;
 };
 
 export const textToImageShape: ShapeDef<TextToImageShape> = {
-  type: 'textToImage',
+  type: 'text-to-image',
   icon: 'ph--image--regular',
   component: TextToImageComponent,
   createShape: createTextToImage,
-  getAnchors: (shape) => createAnchors(shape, { [createAnchorId('output')]: { x: 1, y: 0 } }),
+  getAnchors: (shape) => createAnchorMap(shape, { [createAnchorId('output')]: { x: 1, y: 0 } }),
 };

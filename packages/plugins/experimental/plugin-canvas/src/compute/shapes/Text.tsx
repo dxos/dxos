@@ -7,9 +7,9 @@ import React, { useState } from 'react';
 import { S } from '@dxos/echo-schema';
 
 import { Box } from './components';
-import { ComputeShape, type CreateShapeProps } from './defs';
-import { createAnchors, type ShapeComponentProps, type ShapeDef, TextBox, type TextBoxProps } from '../../components';
-import { createAnchorId } from '../../shapes';
+import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
+import { type ShapeComponentProps, type ShapeDef, TextBox, type TextBoxProps } from '../../components';
+import { createAnchorMap } from '../../components';
 import { Text } from '../graph';
 
 //
@@ -94,7 +94,7 @@ export const textShape: ShapeDef<TextShape> = {
   icon: 'ph--article--regular',
   component: (props) => <TextComponent {...props} placeholder={'Text'} />,
   createShape: createText,
-  getAnchors: (shape) => createAnchors(shape, { [createAnchorId('output')]: { x: 1, y: 0 } }),
+  getAnchors: (shape) => createAnchorMap(shape, { [createAnchorId('output')]: { x: 1, y: 0 } }),
 };
 
 export const chatShape: ShapeDef<TextShape> = {
@@ -102,5 +102,5 @@ export const chatShape: ShapeDef<TextShape> = {
   icon: 'ph--textbox--regular',
   component: (props) => <TextComponent {...props} title={'Prompt'} placeholder={'Message'} chat />,
   createShape: createText,
-  getAnchors: (shape) => createAnchors(shape, { [createAnchorId('output')]: { x: 1, y: 0 } }),
+  getAnchors: (shape) => createAnchorMap(shape, { [createAnchorId('output')]: { x: 1, y: 0 } }),
 };

@@ -7,9 +7,9 @@ import React from 'react';
 import { S } from '@dxos/echo-schema';
 
 import { Box } from './components';
-import { ComputeShape, type CreateShapeProps } from './defs';
-import { createAnchors, type ShapeComponentProps, type ShapeDef } from '../../components';
-import { createAnchorId } from '../../shapes';
+import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
+import { type ShapeComponentProps, type ShapeDef } from '../../components';
+import { createAnchorMap } from '../../components';
 import { Database } from '../graph';
 
 export const DatabaseShape = S.extend(
@@ -40,5 +40,5 @@ export const databaseShape: ShapeDef<DatabaseShape> = {
   icon: 'ph--database--regular',
   component: DatabaseComponent,
   createShape: createDatabase,
-  getAnchors: (shape) => createAnchors(shape, { [createAnchorId('output')]: { x: 1, y: 0 } }),
+  getAnchors: (shape) => createAnchorMap(shape, { [createAnchorId('output')]: { x: 1, y: 0 } }),
 };

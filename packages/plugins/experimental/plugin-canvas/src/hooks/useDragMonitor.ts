@@ -15,8 +15,9 @@ import { useEditorContext } from './useEditorContext';
 import { getClosestAnchor } from './useLayout';
 import { useSnap } from './useSnap';
 import { type Anchor } from '../components';
+import { parseAnchorId } from '../compute';
 import { getInputPoint, pointAdd } from '../layout';
-import { createRectangle, parseAnchorId } from '../shapes';
+import { createRectangle } from '../shapes';
 import { createId, itemSize } from '../testing';
 import { isPolygon, type Polygon } from '../types';
 

@@ -3,7 +3,8 @@
 //
 
 import { DefaultFrameComponent } from './Default';
-import { defaultAnchors, createAnchors, type ShapeComponentProps, type ShapeDef } from '../components';
+import { defaultAnchors, createAnchorMap } from '../components';
+import { type ShapeComponentProps, type ShapeDef } from '../components';
 import { type RectangleShape } from '../types';
 
 export type CreateRectangleProps = Omit<RectangleShape, 'type'>;
@@ -23,5 +24,5 @@ export const rectangleShape: ShapeDef<RectangleShape> = {
   icon: 'ph--rectangle--regular',
   component: DefaultFrameComponent,
   createShape: ({ id, center }) => createRectangle({ id, center, size: { width: 128, height: 64 } }),
-  getAnchors: (shape) => createAnchors(shape, defaultAnchors),
+  getAnchors: (shape) => createAnchorMap(shape, defaultAnchors),
 };

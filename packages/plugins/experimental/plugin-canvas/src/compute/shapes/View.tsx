@@ -7,9 +7,9 @@ import React from 'react';
 import { S } from '@dxos/echo-schema';
 
 import { Box } from './components';
-import { ComputeShape, type CreateShapeProps } from './defs';
-import { createAnchors, TextBox, type ShapeComponentProps, type ShapeDef } from '../../components';
-import { createAnchorId } from '../../shapes';
+import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
+import { TextBox, type ShapeComponentProps, type ShapeDef } from '../../components';
+import { createAnchorMap } from '../../components';
 import { View } from '../graph';
 
 export const ViewShape = S.extend(
@@ -33,7 +33,6 @@ export const createView = ({ id, ...rest }: CreateViewProps): ViewShape => ({
 
 export const ViewComponent = ({ shape }: ShapeComponentProps<ViewShape>) => {
   let value = shape.node.state;
-
   if (typeof value !== 'string') {
     value = JSON.stringify(value, null, 2);
   }
@@ -47,18 +46,16 @@ export const ViewComponent = ({ shape }: ShapeComponentProps<ViewShape>) => {
         <Box name={'Artifact'}>
           <img
             src={`data:image/jpeg;base64,${image.source.data}`}
-            style={{
-              maxWidth: '100%',
-              height: 'auto',
-            }}
+            className='grow object-cover'
             alt={prompt || 'Generated image'}
           />
         </Box>
       );
     } else {
-      value += '\n\n(image not found)';
+      value += 'image not found.';
     }
   }
+
   return (
     <Box name={'Artifact'}>
       <TextBox value={value} />
@@ -71,8 +68,5 @@ export const viewShape: ShapeDef<ViewShape> = {
   icon: 'ph--eye--regular',
   component: ViewComponent,
   createShape: createView,
-  getAnchors: (shape) =>
-    createAnchors(shape, {
-      [createAnchorId('input')]: { x: -1, y: 0 },
-    }),
+  getAnchors: (shape) => createAnchorMap(shape, { [createAnchorId('input')]: { x: -1, y: 0 } }),
 };

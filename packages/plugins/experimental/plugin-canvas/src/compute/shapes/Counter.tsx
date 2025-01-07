@@ -6,9 +6,9 @@ import React from 'react';
 
 import { S } from '@dxos/echo-schema';
 
-import { ComputeShape, type CreateShapeProps } from './defs';
-import { createAnchors, type ShapeComponentProps, type ShapeDef } from '../../components';
-import { createAnchorId } from '../../shapes';
+import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
+import { type ShapeComponentProps, type ShapeDef } from '../../components';
+import { createAnchorMap } from '../../components';
 import { Counter } from '../graph';
 
 export const CounterShape = S.extend(
@@ -42,7 +42,7 @@ export const counterShape: ShapeDef<CounterShape> = {
   component: CounterComponent,
   createShape: createCounter,
   getAnchors: (shape) =>
-    createAnchors(shape, {
+    createAnchorMap(shape, {
       [createAnchorId('input')]: { x: -1, y: 0 },
       [createAnchorId('output')]: { x: 1, y: 0 },
     }),

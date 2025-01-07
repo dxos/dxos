@@ -57,6 +57,7 @@ const createAndGateGraph = () => {
     target: d.id,
     data: { output: DEFAULT_OUTPUT, input: DEFAULT_INPUT },
   });
+
   return {
     graph,
     nodes: { a, b, c, d },

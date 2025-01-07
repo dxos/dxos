@@ -230,7 +230,7 @@ const curveGenerator = d3
   .line<Point>()
   // .curve(d3.curveBasis)
   // .curve(d3.curveBundle)
-  .curve(d3.curveCatmullRom.alpha(1))
+  .curve(d3.curveCatmullRom.alpha(0.9))
   .x((d) => d.x)
   .y((d) => d.y);
 
