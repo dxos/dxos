@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Mutex, scheduleTask, scheduleMicroTask } from '@dxos/async';
-import * as A from '@dxos/automerge/automerge';
+import { Mutex, scheduleTask, scheduleMicroTask, Trigger } from '@dxos/async';
 import { cbor } from '@dxos/automerge/automerge-repo';
 import { Context, Resource } from '@dxos/context';
 import { randomUUID } from '@dxos/crypto';
@@ -184,9 +183,11 @@ type EdgeReplicatorConnectionsParams = {
   onRestartRequested: () => Promise<void>;
 };
 
+const MAX_INFLIGHT_REQUESTS = 5;
+
 class EdgeReplicatorConnection extends Resource implements ReplicatorConnection {
   private readonly _edgeConnection: EdgeConnection;
-  private _remotePeerId: string | null = null;
+  private readonly _remotePeerId: string | null = null;
   private readonly _targetServiceId: string;
   private readonly _spaceId: SpaceId;
   private readonly _context: EchoReplicatorContext;
@@ -194,6 +195,16 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
   private readonly _onRemoteConnected: () => Promise<void>;
   private readonly _onRemoteDisconnected: () => Promise<void>;
   private readonly _onRestartRequested: () => void;
+
+  /**
+   * Prevents sending too many messages to edge over this connection so that we don't overwhelm
+   * a replicator durable object.
+   * inflightRequests counter is incremented on outgoing sync messages and decremented on incoming messages.
+   * The trigger is waiting while the counter is above MAX_INFLIGHT_REQUESTS.
+   * The counter can go negative because we receive edge-initiated sync messages on doc change broadcasts.
+   */
+  private _outgoingRequestsBarrier = new Trigger();
+  private _inflightRequests = 0;
 
   private _readableStreamController!: ReadableStreamDefaultController<AutomergeProtocolMessage>;
 
@@ -213,7 +224,6 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     this._edgeConnection = edgeConnection;
     this._spaceId = spaceId;
     this._context = context;
-
     // Generate a unique peer id for every connection.
     // This way automerge-repo will have separate sync states for every connection.
     // This is important because the previous connection might have had some messages that failed to deliver
@@ -225,6 +235,8 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     this._onRemoteDisconnected = onRemoteDisconnected;
     this._onRestartRequested = onRestartRequested;
 
+    this._outgoingRequestsBarrier.wake();
+
     this.readable = new ReadableStream<AutomergeProtocolMessage>({
       start: (controller) => {
         this._readableStreamController = controller;
@@ -233,6 +245,13 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
 
     this.writable = new WritableStream<AutomergeProtocolMessage>({
       write: async (message: AutomergeProtocolMessage, controller) => {
+        await this._outgoingRequestsBarrier.wait();
+
+        this._inflightRequests++;
+        if (this._inflightRequests === MAX_INFLIGHT_REQUESTS) {
+          this._outgoingRequestsBarrier.reset();
+        }
+
         await this._sendMessage(message);
       },
     });
@@ -253,6 +272,9 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
   protected override async _close(): Promise<void> {
     log('close');
     this._readableStreamController.close();
+
+    this._outgoingRequestsBarrier.throw(new Error('Connection closed.'));
+
     await this._onRemoteDisconnected();
   }
 
@@ -272,9 +294,10 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
         peerId: this._remotePeerId as PeerId,
       });
 
-      log.info('document not found locally for share policy check, accepting the remote document', {
+      log.verbose('edge-replicator document not found locally for share policy check', {
         documentId: params.documentId,
-        remoteDocumentExists,
+        acceptDocument: remoteDocumentExists,
+        remoteId: this._remotePeerId,
       });
 
       // If a document is not present locally return true only if it already exists on edge.
@@ -290,7 +313,8 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
       return true;
     }
     const spaceId = getSpaceIdFromCollectionId(params.collectionId as CollectionId);
-    return spaceId === this._spaceId;
+    // Only sync collections of form space:id:rootDoc, edge ignores legacy space:id collections
+    return spaceId === this._spaceId && params.collectionId.split(':').length === 3;
   }
 
   private _onMessage(message: RouterMessage) {
@@ -299,15 +323,12 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     }
 
     const payload = cbor.decode(message.payload!.value) as AutomergeProtocolMessage;
-    log('recv', () => {
-      const decodedData =
-        payload.type === 'sync' && payload.data
-          ? A.decodeSyncMessage(payload.data)
-          : payload.type === 'collection-state'
-            ? (payload as any).state
-            : payload;
-      return { from: message.serviceId, type: payload.type, decodedData };
+    log.verbose('edge replicator receive', {
+      type: payload.type,
+      documentId: payload.type === 'sync' && payload.documentId,
+      remoteId: this._remotePeerId,
     });
+
     // Fix the peer id.
     payload.senderId = this._remotePeerId! as PeerId;
     this._processMessage(payload);
@@ -322,6 +343,13 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
       return;
     }
 
+    if (message.type === 'sync') {
+      this._inflightRequests--;
+      if (this._inflightRequests === MAX_INFLIGHT_REQUESTS - 1) {
+        this._outgoingRequestsBarrier.wake();
+      }
+    }
+
     this._readableStreamController.enqueue(message);
   }
 
@@ -329,12 +357,12 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     // Fix the peer id.
     (message as any).targetId = this._targetServiceId as PeerId;
 
-    log('send', {
+    log.verbose('edge replicator send', {
       type: message.type,
-      senderId: message.senderId,
-      targetId: (message as any).targetId,
-      documentId: (message as any).documentId,
+      documentId: message.type === 'sync' && message.documentId,
+      remoteId: this._remotePeerId,
     });
+
     const encoded = cbor.encode(message);
 
     await this._edgeConnection.send(
