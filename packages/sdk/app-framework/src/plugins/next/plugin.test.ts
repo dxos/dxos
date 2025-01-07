@@ -5,8 +5,11 @@
 import { describe, expect, it } from 'vitest';
 
 import { updateCounter } from '@dxos/echo-schema/testing';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
 
 import { defineInterface, PluginsContext } from './plugin';
+
+registerSignalsRuntime();
 
 const defaultOptions = {
   activate: () => Promise.resolve(false),
@@ -77,5 +80,28 @@ describe('PluginsContext', () => {
 
     context.removeCapability(interfaceDef, implementation);
     expect(updates.count).toEqual(2);
+  });
+
+  it('should not be reactive to changes within the implementation', () => {
+    const context = new PluginsContext(defaultOptions);
+    const interfaceDef = defineInterface<{ example: string }>('@dxos/app-framework/test/example');
+
+    using updates = updateCounter(() => {
+      context.requestCapability(interfaceDef);
+    });
+
+    expect(updates.count).toEqual(0);
+
+    const implementation = { example: 'identifier' };
+    context.contributeCapability(interfaceDef, implementation);
+    expect(updates.count).toEqual(1);
+
+    implementation.example = 'updated';
+    expect(updates.count).toEqual(1);
+
+    const capabilities = context.requestCapability(interfaceDef);
+    expect(capabilities).toEqual([implementation]);
+    expect(capabilities[0].example).toEqual('updated');
+    expect(updates.count).toEqual(1);
   });
 });

@@ -11,8 +11,9 @@
 - laziness needs to move from pluign def to the contribution point function
 */
 
-import { signal, type Signal } from '@preact/signals-core';
+import { untracked } from '@preact/signals-core';
 
+import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';
 
@@ -102,14 +103,15 @@ type PluginsContextOptions = {
   reset: (event: ActivationEvent) => void;
 };
 
+class CapabilityDef<T> {
+  constructor(readonly implementation: T) {}
+}
+
 /**
  *
  */
 export class PluginsContext {
-  // TODO(wittjosiah): This should use live object rather than plain signal.
-  //   Live object would allow the array itself to be reactive.
-  //   This would allow the reference to the array to be maintained and subscribed to.
-  private readonly _definedCapabilities = new Map<string, Signal<unknown[]>>();
+  private readonly _definedCapabilities = new Map<string, CapabilityDef<unknown>[]>();
 
   /**
    *
@@ -132,12 +134,13 @@ export class PluginsContext {
   contributeCapability<T>(interfaceDef: InterfaceDef<T>, implementation: T) {
     let current = this._definedCapabilities.get(interfaceDef.identifier);
     if (!current) {
-      current = signal<unknown[]>([]);
+      const object = create<{ value: CapabilityDef<unknown>[] }>({ value: [] });
+      current = untracked(() => object.value);
       this._definedCapabilities.set(interfaceDef.identifier, current);
     }
 
-    current.value = [...current.value, implementation];
-    log('capability contributed', { id: interfaceDef.identifier, count: current.value.length });
+    current.push(new CapabilityDef(implementation));
+    log('capability contributed', { id: interfaceDef.identifier, count: untracked(() => current.length) });
   }
 
   /**
@@ -149,8 +152,11 @@ export class PluginsContext {
       return;
     }
 
-    current.value = current.value.filter((i) => i !== implementation);
-    log('capability removed', { id: interfaceDef.identifier, count: current.value.length });
+    const index = current.findIndex((i) => i.implementation === implementation);
+    if (index !== -1) {
+      current.splice(index, 1);
+      log('capability removed', { id: interfaceDef.identifier, count: untracked(() => current.length) });
+    }
   }
 
   /**
@@ -159,12 +165,15 @@ export class PluginsContext {
   requestCapability<T>(interfaceDef: InterfaceDef<T>) {
     let current = this._definedCapabilities.get(interfaceDef.identifier);
     if (!current) {
-      current = signal<unknown[]>([]);
+      const object = create<{ value: CapabilityDef<unknown>[] }>({ value: [] });
+      current = untracked(() => object.value);
       this._definedCapabilities.set(interfaceDef.identifier, current);
     }
 
     // NOTE: This the type-checking for capabilities is done at the time of contribution.
-    return current.value as T[];
+    // TODO(wittjosiah): This should be maintained as a live array that can be subscribed to.
+    //   This could be done with a `computed` utility for live objects.
+    return current.map((i) => i.implementation) as T[];
   }
 }
 
