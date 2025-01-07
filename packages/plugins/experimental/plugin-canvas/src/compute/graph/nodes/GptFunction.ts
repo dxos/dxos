@@ -2,22 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import {
-  runLLM,
-  AIServiceClientImpl,
-  LLMToolDefinition,
-  type Message,
-  ObjectId, // TODO(burdon): Reconcile with echo-schema.
-} from '@dxos/assistant';
-import { SpaceId } from '@dxos/client/echo';
+import { LLMToolDefinition } from '@dxos/assistant';
 import { type Context } from '@dxos/context';
+import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
-import { isNotNullOrUndefined } from '@dxos/util';
 
 import { Function, type FunctionCallback } from './Function';
 import { type StateMachineContext } from '../state-machine';
-import { AST, S } from '@dxos/echo-schema';
 
 export const GptMessage = S.Struct({
   role: S.Union(S.Literal('system'), S.Literal('user'), S.Literal('assistant')),

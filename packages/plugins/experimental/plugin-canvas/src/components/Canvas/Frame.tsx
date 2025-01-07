@@ -62,10 +62,11 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
   // Dragging.
   const draggingRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    invariant(draggingRef.current);
+    const element = draggingRef.current;
+    invariant(element);
     return combine(
       dropTargetForElements({
-        element: draggingRef.current,
+        element,
         getData: () => ({ type: 'frame', shape }) satisfies DragDropPayload,
         canDrop: () => dragMonitor.canDrop({ type: 'frame', shape }),
         onDragEnter: () => setActive(true),
@@ -73,7 +74,7 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
         onDrop: () => setActive(false),
       }),
       draggable({
-        element: draggingRef.current,
+        element,
         getInitialData: () => ({ type: 'frame', shape }) satisfies DragDropPayload,
         onGenerateDragPreview: ({ nativeSetDragImage, location }) => {
           setCustomNativeDragPreview({
@@ -82,19 +83,22 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
              * NOTE: During preview, we render a hidden border to contain the anchors for the native preview snapshot.
              * See preserveOffsetOnSource
              */
-            // TODO(burdon): Randomly of by 1px on drop.
+            // getOffset: preserveOffsetOnSource({ element, input: location.current.input }),
+            // TODO(burdon): Randomly of by 1px and flickers on drop.
             getOffset: () => {
-              const [center] = projection.toScreen([shape.center]);
+              // const sourceRect = element.getBoundingClientRect();
+              const pos = getInputPoint(root, location.current.input);
 
               // Set offset to center of shape.
-              const pos = getInputPoint(root, location.current.input);
+              const [center] = projection.toScreen([shape.center]);
               dragMonitor.setOffset(pointDivide(pointSubtract(center, pos), projection.scale));
 
               // Calculate offset relative to top-left corner.
               const topLeft = pointSubtract(center, {
-                x: (projection.scale * (shape.size.width + previewBorder + 1)) / 2,
-                y: (projection.scale * (shape.size.height + previewBorder + 1)) / 2,
+                x: (projection.scale * (shape.size.width + previewBorder)) / 2,
+                y: (projection.scale * (shape.size.height + previewBorder)) / 2,
               });
+
               return pointSubtract(pos, topLeft);
             },
             render: ({ container }) => {
@@ -108,6 +112,9 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
         },
         onDragStart: () => {
           dragMonitor.start({ type: 'frame', shape });
+        },
+        onDrop: () => {
+          console.log('drop');
         },
       }),
     );
@@ -123,6 +130,7 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
   };
 
   // Custom anchors.
+  // TODO(burdon): Position relative to frame.
   const anchors = useMemo(
     () => registry.getShapeDef(shape.type)?.getAnchors?.(shape) ?? {},
     [shape.center, shape.size],

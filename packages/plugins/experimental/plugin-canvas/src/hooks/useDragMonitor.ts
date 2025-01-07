@@ -15,7 +15,7 @@ import { useEditorContext } from './useEditorContext';
 import { getClosestAnchor } from './useLayout';
 import { useSnap } from './useSnap';
 import { type Anchor } from '../components';
-import { getInputPoint, pointAdd, pointRound } from '../layout';
+import { getInputPoint, pointAdd } from '../layout';
 import { createRectangle, parseAnchorId } from '../shapes';
 import { createId, itemSize } from '../testing';
 import { isPolygon, type Polygon } from '../types';
@@ -187,7 +187,8 @@ export const useDragMonitor = () => {
         switch (state.value.type) {
           case 'frame': {
             dragMonitor.update({
-              shape: { ...state.value.shape, center: pointRound(pointAdd(pos, dragMonitor.offset)) },
+              shape: { ...state.value.shape, center: pointAdd(pos, dragMonitor.offset) },
+              // shape: { ...state.value.shape, center: pos },
             });
             break;
           }
@@ -234,7 +235,8 @@ export const useDragMonitor = () => {
               log.info('copy', { shape: state.value.shape });
             } else {
               invariant(isPolygon(node.data));
-              node.data.center = snapPoint(pointRound(pointAdd(pos, dragMonitor.offset)));
+              node.data.center = snapPoint(pointAdd(pos, dragMonitor.offset));
+              // node.data.center = snapPoint(pos);
             }
 
             break;
@@ -249,7 +251,9 @@ export const useDragMonitor = () => {
 
             switch (target?.type) {
               case 'frame': {
-                await actionHandler({ type: 'link', source: source.shape.id, target: target.shape.id });
+                if (source.shape.type === 'rectangle') {
+                  await actionHandler({ type: 'link', source: source.shape.id, target: target.shape.id });
+                }
                 break;
               }
 
@@ -277,7 +281,7 @@ export const useDragMonitor = () => {
 
               case 'canvas': {
                 // TODO(burdon): Popup selector.
-                if (source.shape.type !== 'function') {
+                if (source.shape.type === 'rectangle') {
                   const shape = createRectangle({ id: createId(), center: pos, size: itemSize });
                   await actionHandler({ type: 'create', shape });
                   await actionHandler({ type: 'link', source: source.shape.id, target: shape.id });
