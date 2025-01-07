@@ -28,6 +28,7 @@ import { initializeTable } from '../../util';
 import { Toolbar } from '../Toolbar';
 import { createItems, createTable, type SimulatorProps, useSimulator } from '../testing';
 
+// NOTE(ZaymonFC): We rely on this seed being 0 in the smoke tests.
 faker.seed(0);
 
 //

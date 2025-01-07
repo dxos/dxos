@@ -6,14 +6,9 @@ import { S } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { makeTypedEntityClass, type TypedObjectFields, type TypedObjectOptions } from './common';
-import {
-  EntityKind,
-  type HasId,
-  type ObjectAnnotation,
-  ObjectAnnotationId,
-  TYPENAME_REGEX,
-  VERSION_REGEX,
-} from '../ast';
+import type { RelationSourceTargetRefs } from './relation';
+import { EntityKind, type HasId, ObjectAnnotationId, TYPENAME_REGEX, VERSION_REGEX } from '../ast';
+import type { ObjectAnnotation } from '../ast/annotations';
 
 /**
  * Definition for an object type that can be stored in an ECHO database.
@@ -22,7 +17,7 @@ import {
  *
  * In contrast to {@link EchoSchema} this definition is not recorded in the database.
  */
-export interface TypedObject<A = any, I = any> extends S.Schema<A, I> {
+export interface TypedRelation<A = any, I = any> extends S.Schema<A, I> {
   /** Fully qualified type name. */
   readonly typename: string;
 
@@ -35,14 +30,14 @@ export interface TypedObject<A = any, I = any> extends S.Schema<A, I> {
 /**
  * Typed object that could be used as a prototype in class definitions.
  * This is an internal API type.
- * Use {@link TypedObject} for the common use-cases.
+ * Use {@link TypedRelation} for the common use-cases.
  */
-export interface TypedObjectPrototype<A = any, I = any> extends TypedObject<A, I> {
+export interface TypedRelationPrototype<A = any, I = any> extends TypedRelation<A, I> {
   /** Type constructor. */
   new (): HasId & A;
 }
 
-export type TypedObjectProps = {
+export type TypedRelationProps = {
   typename: string;
   version: string;
 
@@ -53,9 +48,9 @@ export type TypedObjectProps = {
 /**
  * Base class factory for typed objects.
  */
-// TODO(burdon): Can this be flattened into a single function (e.g., `class X extends TypedObject({})`).
+// TODO(burdon): Can this be flattened into a single function (e.g., `class X extends TypedRelation({})`).
 // TODO(burdon): Support pipe(S.default({}))
-export const TypedObject = ({ typename, version, skipTypenameFormatCheck }: TypedObjectProps) => {
+export const TypedRelation = ({ typename, version, skipTypenameFormatCheck }: TypedRelationProps) => {
   if (!skipTypenameFormatCheck) {
     if (!TYPENAME_REGEX.test(typename)) {
       throw new TypeError(`Invalid typename: ${typename}`);
@@ -71,7 +66,10 @@ export const TypedObject = ({ typename, version, skipTypenameFormatCheck }: Type
   return <SchemaFields extends S.Struct.Fields, Options extends TypedObjectOptions>(
     fields: SchemaFields,
     options?: Options,
-  ): TypedObjectPrototype<TypedObjectFields<SchemaFields, Options>, S.Struct.Encoded<SchemaFields>> => {
+  ): TypedRelationPrototype<
+    TypedObjectFields<SchemaFields, Options> & RelationSourceTargetRefs,
+    S.Struct.Encoded<SchemaFields>
+  > => {
     // Create schema from fields.
     const schema: S.Schema.All = options?.record ? S.Struct(fields, { key: S.String, value: S.Any }) : S.Struct(fields);
 
@@ -79,16 +77,16 @@ export const TypedObject = ({ typename, version, skipTypenameFormatCheck }: Type
     const typeSchema = S.extend(S.mutable(options?.partial ? S.partial(schema) : schema), S.Struct({ id: S.String }));
 
     // Set ECHO annotations.
-    invariant(typeof EntityKind.Object === 'string');
+    invariant(typeof EntityKind.Relation === 'string');
     const annotatedSchema = typeSchema.annotations({
-      [ObjectAnnotationId]: { kind: EntityKind.Object, typename, version } satisfies ObjectAnnotation,
+      [ObjectAnnotationId]: { kind: EntityKind.Relation, typename, version } satisfies ObjectAnnotation,
     });
 
     /**
      * Return class definition.
      * NOTE: Actual reactive ECHO objects must be created via the `create(Type)` function.
      */
-    // TODO(burdon): This is missing fields required by TypedObject (e.g., Type, Encoded, Context)?
-    return class TypedObject extends makeTypedEntityClass(typename, version, annotatedSchema as any) {} as any;
+    // TODO(burdon): This is missing fields required by TypedRelation (e.g., Type, Encoded, Context)?
+    return class TypedRelation extends makeTypedEntityClass(typename, version, annotatedSchema as any) {} as any;
   };
 };

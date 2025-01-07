@@ -4,7 +4,7 @@
 
 import { Schema as S } from '@effect/schema';
 
-import { ObjectAnnotationId, Ref } from '@dxos/echo-schema';
+import { EntityKind, ObjectAnnotationId, Ref } from '@dxos/echo-schema';
 
 // TODO(burdon): Reconcile with sdk/schema/testing.
 // TODO(burdon): Convert interface to type.
@@ -20,6 +20,7 @@ export const Contact = S.Struct({
   .pipe(S.mutable)
   .annotations({
     [ObjectAnnotationId]: {
+      kind: EntityKind.Object,
       typename: 'example.com/type/Contact',
       version: '0.1.0',
     },
@@ -35,6 +36,7 @@ export const Project = S.Struct({
   .pipe(S.mutable)
   .annotations({
     [ObjectAnnotationId]: {
+      kind: EntityKind.Object,
       typename: 'example.com/type/Project',
       version: '0.1.0',
     },
@@ -52,6 +54,7 @@ export const Task = S.Struct({
   .pipe(S.mutable)
   .annotations({
     [ObjectAnnotationId]: {
+      kind: EntityKind.Object,
       typename: 'example.com/type/Task',
       version: '0.1.0',
     },
@@ -68,6 +71,7 @@ export const Org = S.Struct({
   .pipe(S.mutable)
   .annotations({
     [ObjectAnnotationId]: {
+      kind: EntityKind.Object,
       typename: 'example.com/type/Org',
       version: '0.1.0',
     },

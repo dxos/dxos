@@ -25,6 +25,7 @@ export const ECHO_ATTR_META = '@meta';
  * It is stricter than `T extends {}` or `T extends object`.
  */
 // TODO(burdon): Consider moving to lower-level base type lib.
+// TODO(dmaretskyi): Rename AnyProperties.
 export type BaseObject = { [key: string]: any };
 
 export type PropertyKey<T extends BaseObject> = Extract<keyof ExcludeId<T>, string>;
@@ -142,4 +143,15 @@ export const requireTypeReference = (schema: S.Schema<any>): Reference => {
   }
 
   return typeReference;
+};
+
+// TODO(dmaretskyi): Unify with `getTypeReference`.
+export const getSchemaDXN = (schema: S.Schema.AnyNoContext): DXN | undefined => {
+  // TODO(dmaretskyi): Add support for dynamic schema.
+  const objectAnnotation = getObjectAnnotation(schema);
+  if (!objectAnnotation) {
+    return undefined;
+  }
+
+  return DXN.fromTypenameAndVersion(objectAnnotation.typename, objectAnnotation.version);
 };
