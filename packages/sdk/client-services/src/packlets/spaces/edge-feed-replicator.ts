@@ -150,7 +150,7 @@ export class EdgeFeedReplicator extends Resource {
     if (message.type === 'data') {
       log.info('sending blocks', {
         feedKey: message.feedKey,
-        blocks: message.blocks.map((b) => b.index)
+        blocks: message.blocks.map((b) => b.index),
       });
     }
 
