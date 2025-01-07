@@ -5,10 +5,10 @@
 import { type Event } from '@dxos/async';
 import { type Lifecycle } from '@dxos/context';
 import { type PublicKey } from '@dxos/keys';
-import { type Peer } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { type Peer } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { type SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
 
-export type PeerInfo = Partial<Peer> & Required<Pick<Peer, 'peerKey'>>;
+export type PeerInfo = Peer;
 export const PeerInfoHash = ({ peerKey }: PeerInfo) => peerKey;
 
 export interface Message {
