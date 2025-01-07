@@ -224,6 +224,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/conductor/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/echo/automerge/package.json",
           "jsonpath": "$.version"
         },

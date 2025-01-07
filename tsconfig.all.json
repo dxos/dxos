@@ -124,6 +124,9 @@
       "path": "packages/core/compute/tsconfig.json"
     },
     {
+      "path": "packages/core/conductor/tsconfig.json"
+    },
+    {
       "path": "packages/core/echo/automerge/tsconfig.json"
     },
     {

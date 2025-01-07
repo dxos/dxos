@@ -2428,6 +2428,8 @@ importers:
         specifier: ^4.6.6
         version: 4.6.7
 
+  packages/core/conductor: {}
+
   packages/core/echo/automerge:
     dependencies:
       '@automerge/automerge-wasm':
