@@ -27,7 +27,8 @@ export default {
     ...preview.parameters,
     options: {
       // This must be defined inline and may not include TS type defs.
-      storySort: (a: any, b: any) => (a.title === b.title ? 0 : a.id.localeCompare(b.id, undefined, { numeric: true })),
+      // @ts-ignore specifying parameter types breaks stories bundling
+      storySort: (a, b) => (a.title === b.title ? 0 : a.id.localeCompare(b.id, undefined, { numeric: true })),
     },
   },
 } as Preview;
