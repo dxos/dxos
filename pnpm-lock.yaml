@@ -3653,12 +3653,6 @@ importers:
       '@dxos/observability':
         specifier: workspace:*
         version: link:../../sdk/observability
-      '@dxos/plugin-markdown':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-markdown
-      '@dxos/plugin-script':
-        specifier: workspace:*
-        version: link:../../plugins/experimental/plugin-script
       '@dxos/process':
         specifier: workspace:*
         version: link:../../common/process
