@@ -147,7 +147,7 @@ const Render = ({ id = 'test', graph: _graph, machine, model, gpt, init, sidebar
       {sidebar === 'state-machine' && (
         <AttentionContainer id='sidebar' tabIndex={0} classNames='flex grow overflow-hidden'>
           <SyntaxHighlighter language='json' classNames='text-xs'>
-            {JSON.stringify({ machine }, null, 2)}
+            {JSON.stringify({ machine, selected }, null, 2)}
           </SyntaxHighlighter>
         </AttentionContainer>
       )}

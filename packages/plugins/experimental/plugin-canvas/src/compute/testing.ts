@@ -161,7 +161,7 @@ export const createTest3 = ({
         ]
       : []),
     createGpt({ id: 'b', ...layout({ x: 0, y: 4 }) }),
-    createThread({ id: 'c', ...layout({ x: 25, y: -4 }) }),
+    createThread({ id: 'c', ...layout({ x: 26, y: -4 }) }),
     createCounter({ id: 'd', ...layout({ x: 8, y: 6 }) }),
     ...(db ? [createDatabase({ id: 'e', ...layout({ x: -10, y: 6 }) })] : []),
     ...(textToImage ? [createTextToImage({ id: 'j', ...layout({ x: -10, y: 10 }) })] : []),
