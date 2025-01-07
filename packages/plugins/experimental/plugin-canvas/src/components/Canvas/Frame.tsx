@@ -25,7 +25,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { Anchor, defaultAnchorSize } from './Anchor';
 import { type ShapeComponentProps, shapeAttrs } from './Shape';
 import { type DragDropPayload, useEditorContext } from '../../hooks';
-import { getBoundsProperties, getInputPoint, pointDivide, pointSubtract } from '../../layout';
+import { getBoundsProperties, getInputPoint, pointSubtract } from '../../layout';
 import { type Polygon } from '../../types';
 import { type TextBoxProps } from '../TextBox';
 import { styles } from '../styles';
@@ -89,16 +89,17 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
               // const sourceRect = element.getBoundingClientRect();
               const pos = getInputPoint(root, location.current.input);
 
-              // Set offset to center of shape.
-              const [center] = projection.toScreen([shape.center]);
-              dragMonitor.setOffset(pointDivide(pointSubtract(center, pos), projection.scale));
+              // Set offset (in model coordinates) relative to center.
+              const [p] = projection.toModel([pos]);
+              dragMonitor.setOffset(pointSubtract(shape.center, p));
 
               // Calculate offset relative to top-left corner.
-              const topLeft = pointSubtract(center, {
-                x: (projection.scale * (shape.size.width + previewBorder)) / 2,
-                y: (projection.scale * (shape.size.height + previewBorder)) / 2,
-              });
-
+              const [topLeft] = projection.toScreen([
+                pointSubtract(shape.center, {
+                  x: (shape.size.width + previewBorder) / 2,
+                  y: (shape.size.height + previewBorder) / 2,
+                }),
+              ]);
               return pointSubtract(pos, topLeft);
             },
             render: ({ container }) => {
@@ -112,9 +113,6 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
         },
         onDragStart: () => {
           dragMonitor.start({ type: 'frame', shape });
-        },
-        onDrop: () => {
-          console.log('drop');
         },
       }),
     );
