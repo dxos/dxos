@@ -93,6 +93,7 @@ export const compile = async ({
 
     const result = Effect.gen(function* () {
       const inputValues = yield* computeInputs(node);
+      // TODO(dmaretskyi): Consider resolving the node implementation at the start of the computation.
       const nodeSpec = yield* Effect.promise(() => computeResolver(node.graphNode));
       if (nodeSpec.compute == null) {
         yield* Effect.fail(new Error(`No compute function for node type: ${node.graphNode.type}`));
