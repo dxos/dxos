@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect } from 'effect';
+import { Effect, type Context } from 'effect';
 import { describe, test } from 'vitest';
 
 import { raise } from '@dxos/debug';
@@ -11,10 +11,16 @@ import { createEdgeId, GraphModel, type GraphEdge, type GraphNode } from '@dxos/
 import { log } from '@dxos/log';
 
 import { inputNode, outputNode } from './base-nodes';
+import { EventLogger, logCustomEvent, type ComputeEvent } from './event-logger';
 import { compile } from './fiber-compiler';
-import { defineComputeNode, type ComputeEdge, type ComputeNode, type ComputeImplementation, NodeType } from './schema';
-
-// TODO(burdon): Better examples: Crawler, fake GPT, etc.
+import {
+  defineComputeNode,
+  NodeType,
+  type ComputeEdge,
+  type ComputeImplementation,
+  type ComputeNode,
+  type ComputeRequirements,
+} from './schema';
 
 describe('Graph as a fiber runtime', () => {
   test('simple adder node', async ({ expect }) => {
@@ -25,7 +31,11 @@ describe('Graph as a fiber runtime', () => {
     // console.log('input', input.toString());
     // console.log('output', output.toString());
 
-    const result = await Effect.runPromise(runtime.runGraph('dxn:graph:adder', { number1: 1, number2: 2 }));
+    const result = await Effect.runPromise(
+      runtime
+        .runGraph('dxn:graph:adder', { number1: 1, number2: 2 })
+        .pipe(Effect.provideService(EventLogger, consoleLogger)),
+    );
     expect(result).toEqual({ sum: 3 });
   });
 
@@ -35,7 +45,11 @@ describe('Graph as a fiber runtime', () => {
     runtime.registerGraph('dxn:graph:add3', add3());
 
     try {
-      const result = await Effect.runPromise(runtime.runGraph('dxn:graph:add3', { a: 1, b: 2, c: 3 }));
+      const result = await Effect.runPromise(
+        runtime
+          .runGraph('dxn:graph:add3', { a: 1, b: 2, c: 3 })
+          .pipe(Effect.provideService(EventLogger, consoleLogger)),
+      );
       expect(result).toEqual({ result: 6 });
     } catch (err) {
       log.catch(err);
@@ -82,7 +96,7 @@ class TestRuntime {
     this.graphs.set(id, graph);
   }
 
-  runGraph(id: string, input: any): Effect.Effect<any, Error> {
+  runGraph(id: string, input: any): Effect.Effect<any, Error, ComputeRequirements> {
     const self = this;
     return Effect.gen(function* () {
       const graph = self.graphs.get(id) ?? raise(new Error(`Graph not found: ${id}`));
@@ -139,7 +153,14 @@ class TestRuntime {
 const addNode = defineComputeNode({
   input: S.Struct({ a: S.Number, b: S.Number }),
   output: S.Struct({ result: S.Number }),
-  compute: (input) => Effect.succeed({ result: input.a + input.b }),
+  compute: ({ a, b }) =>
+    Effect.gen(function* () {
+      yield* logCustomEvent({
+        operation: 'add',
+        operands: { a, b },
+      });
+      return { result: a + b };
+    }),
 });
 
 const createEdge = (params: {
@@ -153,3 +174,10 @@ const createEdge = (params: {
   target: params.target,
   data: { input: params.input, output: params.output },
 });
+
+const consoleLogger: Context.Tag.Service<EventLogger> = {
+  log: (event: ComputeEvent) => {
+    console.log(event);
+  },
+  nodeId: undefined,
+};

@@ -7,10 +7,10 @@ import { Effect } from 'effect';
 import { AST, S } from '@dxos/echo-schema';
 import type { GraphEdge, GraphModel, GraphNode } from '@dxos/graph';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 
 import { pickProperty } from './ast';
-import type { ComputeNode, ComputeEdge, ComputeImplementation, ComputeMeta } from './schema';
+import { EventLogger } from './event-logger';
+import type { ComputeNode, ComputeEdge, ComputeImplementation, ComputeMeta, ComputeRequirements } from './schema';
 
 export type ValidateParams = {
   graph: GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;
@@ -79,9 +79,9 @@ export const compile = async ({
     },
   });
 
-  const computeCache = new Map<string, Effect.Effect<any, any>>();
+  const computeCache = new Map<string, Effect.Effect<any, any, ComputeRequirements>>();
 
-  const computeInputs = (node: TopologyNode): Effect.Effect<any, Error> => {
+  const computeInputs = (node: TopologyNode): Effect.Effect<any, Error, ComputeRequirements> => {
     return Effect.gen(function* () {
       const inputValues = yield* Effect.forEach(node.inputs, (input) => {
         const sourceNode = topology.nodes.find((node) => node.id === input.sourceNodeId) ?? failedInvariant();
@@ -94,7 +94,7 @@ export const compile = async ({
     });
   };
 
-  const computeNode = (node: TopologyNode): Effect.Effect<any, any> => {
+  const computeNode = (node: TopologyNode): Effect.Effect<any, any, ComputeRequirements> => {
     if (computeCache.has(node.id)) {
       return computeCache.get(node.id)!;
     }
@@ -108,17 +108,27 @@ export const compile = async ({
         return;
       }
 
-      log.info('begin compute', {
+      const logger = yield* EventLogger;
+      logger.log({
+        type: 'begin-compute',
         nodeId: node.id,
-        type: node.graphNode.type,
-        inputValues,
-        inputSchema: node.meta.input.toString(),
+        inputs: inputValues,
       });
 
       const sanitizedInputs = yield* S.decode(node.meta.input)(inputValues);
-      const output = yield* nodeSpec.compute(sanitizedInputs);
+      const output = yield* nodeSpec.compute(sanitizedInputs).pipe(
+        Effect.provideService(EventLogger, {
+          log: logger.log,
+          nodeId: node.id,
+        }),
+      );
       const decodedOutput = yield* S.decode(node.meta.output)(output);
-      log.info('compute result', { nodeId: node.id, type: node.graphNode.type, output: decodedOutput });
+
+      logger.log({
+        type: 'end-compute',
+        nodeId: node.id,
+        outputs: decodedOutput,
+      });
       return decodedOutput;
     });
 
@@ -134,9 +144,29 @@ export const compile = async ({
       },
 
       compute: (input) => {
-        computeCache.set(topology.inputNodeId, Effect.succeed(input));
-        const outputNode = topology.nodes.find((node) => node.id === topology.outputNodeId) ?? failedInvariant();
-        return computeInputs(outputNode);
+        return Effect.gen(function* () {
+          const logger = yield* EventLogger;
+
+          // TODO(dmaretskyi): At the start we log a synthetic end-compute event for the input node to capture it's inputs.
+          logger.log({
+            type: 'end-compute',
+            nodeId: inputNodeId,
+            outputs: input,
+          });
+          computeCache.set(topology.inputNodeId, Effect.succeed(input));
+          const outputNode = topology.nodes.find((node) => node.id === topology.outputNodeId) ?? failedInvariant();
+
+          const outputs = yield* computeInputs(outputNode);
+
+          // Log the output node inputs.
+          logger.log({
+            type: 'begin-compute',
+            nodeId: outputNodeId,
+            inputs: outputs,
+          });
+
+          return outputs;
+        });
       },
     },
     diagnostics: topology.diagnostics,
@@ -209,6 +239,8 @@ const createTopology = async ({
         sourceNodeOutput: edge.data.output,
       });
     }
+
+    // TODO(dmaretskyi): Check assignability.
 
     // TODO(burdon): Set above? (i.e., let input = ...).
     const input = sourceNode.outputs.find((output) => output.name === edge.data.output);
