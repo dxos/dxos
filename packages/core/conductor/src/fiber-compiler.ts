@@ -109,7 +109,12 @@ export const compile = async ({
       });
 
       const sanitizedInputs = yield* S.decode(node.meta.input)(inputValues);
-      const output = yield* nodeSpec.compute(sanitizedInputs);
+      const output = yield* nodeSpec.compute(sanitizedInputs).pipe(
+        Effect.provideService(EventLogger, {
+          log: logger.log,
+          nodeId: node.id,
+        }),
+      );
       const decodedOutput = yield* S.decode(node.meta.output)(output);
 
       logger.log({

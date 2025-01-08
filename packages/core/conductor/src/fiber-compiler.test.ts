@@ -20,7 +20,7 @@ import {
   type ComputeNode,
   type ComputeRequirements,
 } from './schema';
-import { EventLogger, type ComputeEvent } from './event-logger';
+import { EventLogger, logCustomEvent, type ComputeEvent } from './event-logger';
 
 describe('Graph as a fiber runtime', () => {
   test('simple adder node', async ({ expect }) => {
@@ -192,7 +192,14 @@ class TestRuntime {
 const addNode = defineComputeNode({
   input: S.Struct({ a: S.Number, b: S.Number }),
   output: S.Struct({ result: S.Number }),
-  compute: (input) => Effect.succeed({ result: input.a + input.b }),
+  compute: ({ a, b }) =>
+    Effect.gen(function* () {
+      yield* logCustomEvent({
+        operation: 'add',
+        operands: { a, b },
+      });
+      return { result: a + b };
+    }),
 });
 
 const createEdge = (params: {
@@ -211,4 +218,5 @@ const consoleLogger: Context.Tag.Service<EventLogger> = {
   log: (event: ComputeEvent) => {
     console.log(event);
   },
+  nodeId: undefined,
 };

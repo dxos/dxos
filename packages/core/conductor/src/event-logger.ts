@@ -19,5 +19,18 @@ export type ComputeEvent =
 
 export class EventLogger extends Context.Tag('EventLogger')<
   EventLogger,
-  { readonly log: (event: ComputeEvent) => void }
+  { readonly log: (event: ComputeEvent) => void; readonly nodeId: string | undefined }
 >() {}
+
+export const logCustomEvent = (data: any) =>
+  Effect.gen(function* () {
+    const logger = yield* EventLogger;
+    if (!logger.nodeId) {
+      throw new Error('logCustomEvent must be called within a node compute function');
+    }
+    logger.log({
+      type: 'custom',
+      nodeId: logger.nodeId,
+      event: data,
+    });
+  });
