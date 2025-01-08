@@ -5933,6 +5933,9 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../common/storybook-utils
+      '@effect/ai':
+        specifier: ^0.5.1
+        version: 0.5.1(effect@3.10.15)
       '@types/d3':
         specifier: ^7.4.3
         version: 7.4.3
@@ -14538,6 +14541,12 @@ packages:
 
   '@dxos/web-auth@0.4.80':
     resolution: {integrity: sha512-yRIGQRJd1KrNqdwZGxFvDpi2ioMy2I+RJbif1YCF9T9eKqiyJDuZe6IGBfwiY/ew1bTW0m88D4hnH81NA1iCdg==}
+
+  '@effect/ai@0.5.1':
+    resolution: {integrity: sha512-daKAnSQ60yGPUQWD5Y1otRGSM02NoektyQUC21GF6vkfEv+D0L06yirJ9CFMaUVcZI1oi7NSZgGoGeVWB9m6DA==}
+    peerDependencies:
+      '@effect/platform': ^0.72.1
+      effect: ^3.12.1
 
   '@effect/schema@0.75.5':
     resolution: {integrity: sha512-TQInulTVCuF+9EIbJpyLP6dvxbQJMphrnRqgexm/Ze39rSjfhJuufF7XvU3SxTgg3HnL7B/kpORTJbHhlE6thw==}
@@ -37742,6 +37751,10 @@ snapshots:
       hono: 4.4.10
       lodash.isequal: 4.5.0
       lodash.pick: 4.4.0
+
+  '@effect/ai@0.5.1(effect@3.10.15)':
+    dependencies:
+      effect: 3.10.15
 
   '@effect/schema@0.75.5(effect@3.10.15)':
     dependencies:
