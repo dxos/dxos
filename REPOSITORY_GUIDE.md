@@ -93,11 +93,14 @@ Once the required changes have been made, re-run `pnpm i`.
 
 ## Updating dependencies
 
-Run `pnpm up` to update dependencies from the root directory. For example:
+Use `npm-check-updates` to update dependencies from the root directory. For example:
 
 ```bash
-pnpm up --latest -i -r "effect" "@effect/*"
+npx npm-check-updates --deep -u effect "@effect/*"
+pnpm i
 ```
+
+NOTE: Do not use `pnpm up` since it will update more than the targeted dependencies.
 
 ## Tasks in `nx` targets
 
