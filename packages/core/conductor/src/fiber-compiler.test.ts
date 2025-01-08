@@ -27,7 +27,7 @@ describe('Graph as a fiber runtime', () => {
     expect(result).toEqual({ sum: 3 });
   });
 
-  test.only('composition', async ({ expect }) => {
+  test('composition', async ({ expect }) => {
     const runtime = new TestRuntime();
     runtime.registerGraph('dxn:graph:adder', adder());
     runtime.registerGraph('dxn:graph:add3', add3());
