@@ -108,7 +108,6 @@ class TestRuntime {
   async resolveNode(node: ComputeNode): Promise<ComputeImplementation> {
     if (this.graphs.has(node.type)) {
       const computation = await this.compileGraph(this.graphs.get(node.type)!);
-
       // TODO(dmaretskyi): Caching.
       return computation;
     }
@@ -138,11 +137,10 @@ class TestRuntime {
       computeResolver: this.resolveNode.bind(this),
     });
 
-    for (const d of diagnostics) {
-      const { severity, message, ...rest } = d;
+    for (const { severity, message, ...rest } of diagnostics) {
       console.log(severity, message, rest);
     }
-    if (diagnostics.some((d) => d.severity === 'error')) {
+    if (diagnostics.some(({ severity }) => severity === 'error')) {
       throw new Error('Graph compilation failed');
     }
 
