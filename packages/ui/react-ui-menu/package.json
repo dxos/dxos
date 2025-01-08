@@ -23,7 +23,10 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/util": "workspace:*"
+    "@dxos/app-graph": "workspace:*",
+    "@dxos/keyboard": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@radix-ui/react-use-controllable-state": "^1.0.0"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
