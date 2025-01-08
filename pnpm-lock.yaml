@@ -2430,6 +2430,9 @@ importers:
 
   packages/core/conductor:
     dependencies:
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../echo/echo-schema
