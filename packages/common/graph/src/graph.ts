@@ -70,10 +70,10 @@ export class ReadonlyGraphModel<Node extends GraphNode<any> = any, Edge extends 
 /**
  * Typed wrapper.
  */
-export class GraphModel<Node extends GraphNode<any> = any, Edge extends GraphEdge<any> = any> extends ReadonlyGraphModel<
-  Node,
-  Edge
-> {
+export class GraphModel<
+  Node extends GraphNode<any> = any,
+  Edge extends GraphEdge<any> = any,
+> extends ReadonlyGraphModel<Node, Edge> {
   clear(): this {
     this._graph.nodes.length = 0;
     this._graph.edges.length = 0;
