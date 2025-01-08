@@ -1,13 +1,16 @@
-import type { Graph, GraphEdge, GraphModel, GraphNode } from '@dxos/graph';
-import type { ComputeCallback, ComputeEdge, ComputeImplementation, ComputeMeta } from './schema';
-import type { ComputeNode } from './schema';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Cause, Effect } from 'effect';
-import { raise } from '../../../common/debug/src';
-import { effect } from 'effect/Layer';
+
 import { AST, S } from '@dxos/echo-schema';
+import type { GraphEdge, GraphModel, GraphNode } from '@dxos/graph';
 import { log } from '@dxos/log';
+
 import { pickProperty } from './ast';
-import { failedInvariant, invariant, InvariantViolation } from '../../../common/invariant/src';
+import type { ComputeNode, ComputeEdge, ComputeImplementation, ComputeMeta } from './schema';
+import { failedInvariant, invariant } from '../../../common/invariant/src';
 
 export type ValidateParams = {
   graph: GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;
@@ -203,14 +206,14 @@ const createTopology = async ({
       topology.diagnostics.push({
         severity: 'error',
         edgeId: edge.id,
-        message: `Output does not exist on node.`,
+        message: 'Output does not exist on node.',
       });
     }
     if (AST.isNeverKeyword(input.schema.ast)) {
       topology.diagnostics.push({
         severity: 'error',
         edgeId: edge.id,
-        message: `Input does not exist on node.`,
+        message: 'Input does not exist on node.',
       });
     }
   }

@@ -1,5 +1,10 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Schema as S } from '@effect/schema';
-import { defineComputeNode, type ComputeImplementation } from './schema';
+
+import { defineComputeNode } from './schema';
 
 export const inputNode = defineComputeNode({
   input: S.Struct({}),

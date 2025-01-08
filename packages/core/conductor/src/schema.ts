@@ -1,5 +1,10 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { type Effect } from 'effect';
+
 import { S } from '@dxos/echo-schema';
-import { Effect } from 'effect';
 
 export const ComputeNode = S.Struct({
   /**

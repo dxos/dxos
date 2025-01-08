@@ -1,15 +1,11 @@
-import { AST } from '@effect/schema';
-import { Schema } from '@effect/schema';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { AST, Schema } from '@effect/schema';
 import * as Arr from 'effect/Array';
-import type { Effect } from 'effect/Effect';
-import { dual, identity } from 'effect/Function';
-import { globalValue } from 'effect/GlobalValue';
-import * as Number from 'effect/Number';
 import * as Option from 'effect/Option';
-import * as Order from 'effect/Order';
 import * as Predicate from 'effect/Predicate';
-import * as regexp from 'effect/RegExp';
-import type { Concurrency } from 'effect/Types';
 
 export const pickProperty = <S extends Schema.Schema.Any, K extends keyof Schema.Schema.Type<S>>(
   schema: S,
@@ -57,7 +53,7 @@ const getTypeLiteralPropertySignature = (
 
   // from index signatures...
   if (Predicate.isString(name)) {
-    let out: AST.PropertySignature | undefined = undefined;
+    let out: AST.PropertySignature | undefined;
     for (const is of ast.indexSignatures) {
       const parameterBase = getParameterBase(is.parameter);
       switch (parameterBase._tag) {

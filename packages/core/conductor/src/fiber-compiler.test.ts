@@ -1,14 +1,20 @@
-import { describe, test } from 'vitest';
-import { createEdgeId, Graph, GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
-import { defineComputeNode, NodeType, type ComputeEdge, type ComputeImplementation, type ComputeNode } from './schema';
-import { compile } from './fiber-compiler';
-import { S } from '@dxos/echo-schema';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Effect } from 'effect';
-import { inputNode, outputNode } from './base-nodes';
+import { describe, test } from 'vitest';
+
 import { raise } from '@dxos/debug';
+import { S } from '@dxos/echo-schema';
+import { createEdgeId, GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
 import { log } from '@dxos/log';
 
-describe('Graph as a fiber runtime', async () => {
+import { inputNode, outputNode } from './base-nodes';
+import { compile } from './fiber-compiler';
+import { defineComputeNode, NodeType, type ComputeEdge, type ComputeImplementation, type ComputeNode } from './schema';
+
+describe('Graph as a fiber runtime', () => {
   test('simple adder node', async ({ expect }) => {
     const runtime = new TestRuntime();
     runtime.registerGraph('dxn:graph:adder', adder());
@@ -131,7 +137,7 @@ class TestRuntime {
         console.log(d);
       }
       if (diagnostics.some((d) => d.severity === 'error')) {
-        throw new Error(`Graph compilation failed`);
+        throw new Error('Graph compilation failed');
       }
 
       // TODO(dmaretskyi): Caching.
