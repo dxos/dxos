@@ -24,12 +24,17 @@ export type ComputeEdge = S.Schema.Type<typeof ComputeEdge>;
 
 export type ComputeCallback<I, O> = (input: I) => Effect.Effect<O, Error>;
 
+// TODO(dmaretskyi): To effect schema.
+export type ComputeMeta = {
+  input: S.Schema.AnyNoContext;
+  output: S.Schema.AnyNoContext;
+};
+
 export type ComputeImplementation<
   SI extends S.Schema.AnyNoContext = S.Schema.AnyNoContext,
   SO extends S.Schema.AnyNoContext = S.Schema.AnyNoContext,
 > = {
-  input: SI;
-  output: SO;
+  meta: ComputeMeta;
   /**
    * Missing for meta nodes like input/output.
    */
@@ -41,7 +46,7 @@ export const defineComputeNode = <SI extends S.Schema.AnyNoContext, SO extends S
   output: SO;
   compute?: ComputeCallback<S.Schema.Type<SI>, S.Schema.Type<SO>>;
 }): ComputeImplementation => {
-  return { input: opts.input, output: opts.output, compute: opts.compute };
+  return { meta: { input: opts.input, output: opts.output }, compute: opts.compute };
 };
 
 /**

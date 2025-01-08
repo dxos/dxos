@@ -119,17 +119,23 @@ class TestRuntime {
     const self = this;
     return Effect.gen(function* () {
       const graph = self.graphs.get(id) ?? raise(new Error(`Graph not found: ${id}`));
-      const computation = yield* Effect.promise(() => self.compileGraph(graph));
+      const { computation } = yield* Effect.promise(() => self.compileGraph(graph));
       return yield* computation.compute!(input);
     });
   }
 
   async resolveNode(node: ComputeNode): Promise<ComputeImplementation> {
     if (this.graphs.has(node.type)) {
-      const computation = await this.compileGraph(this.graphs.get(node.type)!);
+      const { computation: compute, diagnostics } = await this.compileGraph(this.graphs.get(node.type)!);
+      for (const d of diagnostics) {
+        console.log(d);
+      }
+      if (diagnostics.some((d) => d.severity === 'error')) {
+        throw new Error(`Graph compilation failed`);
+      }
 
       // TODO(dmaretskyi): Caching.
-      return computation;
+      return compute;
     }
 
     switch (node.type) {

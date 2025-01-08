@@ -1,5 +1,5 @@
 import type { Graph, GraphEdge, GraphModel, GraphNode } from '@dxos/graph';
-import type { ComputeCallback, ComputeEdge, ComputeImplementation } from './schema';
+import type { ComputeCallback, ComputeEdge, ComputeImplementation, ComputeMeta } from './schema';
 import type { ComputeNode } from './schema';
 import { Cause, Effect } from 'effect';
 import { raise } from '../../../common/debug/src';
@@ -7,6 +7,31 @@ import { effect } from 'effect/Layer';
 import { AST, S } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { pickProperty } from './ast';
+import { failedInvariant, invariant, InvariantViolation } from '../../../common/invariant/src';
+
+export type ValidateParams = {
+  graph: GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;
+  inputNodeId: string;
+  outputNodeId: string;
+  computeMetaResolver: (node: ComputeNode) => Promise<ComputeMeta>;
+};
+
+export const validate = async ({
+  graph,
+  inputNodeId,
+  outputNodeId,
+  computeMetaResolver,
+}: ValidateParams): Promise<{ meta: ComputeMeta; diagnostics: GraphDiagnostic[] }> => {
+  const topology = await createTopology({ graph, inputNodeId, outputNodeId, computeMetaResolver });
+
+  return {
+    meta: {
+      input: topology.inputSchema,
+      output: topology.outputSchema,
+    },
+    diagnostics: topology.diagnostics,
+  };
+};
 
 export type CompileParams = {
   graph: GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;
@@ -32,113 +57,214 @@ export const compile = async ({
   inputNodeId,
   outputNodeId,
   computeResolver,
-}: CompileParams): Promise<ComputeImplementation> => {
-  const getInputType = async (nodeId: string, input: string): Promise<S.Schema.AnyNoContext> => {
-    const spec = await computeResolver(graph.getNode(nodeId)!.data);
-    return pickProperty(spec.input, input);
-  };
-
-  const getOutputType = async (nodeId: string, output: string): Promise<S.Schema.AnyNoContext> => {
-    const spec = await computeResolver(graph.getNode(nodeId)!.data);
-    return pickProperty(spec.output, output);
-  };
-
-  // Validate graph
-  {
-    const edges = graph.getEdges({});
-    for (const edge of edges) {
-      const outputType = await getOutputType(edge.source, edge.data.output);
-      const inputType = await getInputType(edge.target, edge.data.input);
-
-      if (AST.isNeverKeyword(outputType.ast)) {
-        throw new Error(`Invalid output: ${edge.data.output} on node ${edge.source}`);
-      }
-      if (AST.isNeverKeyword(inputType.ast)) {
-        throw new Error(`Invalid input: ${edge.data.input} on node ${edge.target}`);
-      }
-    }
-  }
-
-  const inputNode = graph.getNode(inputNodeId) ?? raise(new Error(`Input node not found`));
-  const outputNode = graph.getNode(outputNodeId) ?? raise(new Error(`Output node not found`));
-
-  // log.info('inputEdges', { inputNodeId, edges: graph.getEdges({ source: inputNodeId }) });
-
-  const inputNodeSchema = S.Struct(
-    Object.fromEntries(
-      await Promise.all(
-        graph
-          .getEdges({ source: inputNodeId })
-          .map(async (edge) => [edge.data.output, await getInputType(edge.target, edge.data.input)] as const),
-      ),
-    ),
-  );
-
-  // log.info('inputSchema', { inputSchema: inputNodeSchema.toString() });
-
-  const outputNodeSchema = S.Struct(
-    Object.fromEntries(
-      await Promise.all(
-        graph
-          .getEdges({ target: outputNodeId })
-          .map(async (edge) => [edge.data.input, await getOutputType(edge.source, edge.data.output)] as const),
-      ),
-    ),
-  );
+}: CompileParams): Promise<{ computation: ComputeImplementation; diagnostics: GraphDiagnostic[] }> => {
+  const topology = await createTopology({
+    graph,
+    inputNodeId,
+    outputNodeId,
+    computeMetaResolver: async (node) => {
+      const compute = await computeResolver(node);
+      return compute.meta;
+    },
+  });
 
   const computeCache = new Map<string, Effect.Effect<any, any>>();
 
-  const computeInputs = (nodeId: string): Effect.Effect<any, Error> => {
+  const computeInputs = (node: TopologyNode): Effect.Effect<any, Error> => {
     return Effect.gen(function* () {
-      const inputEdges = graph.getEdges({ target: nodeId });
-
-      const inputValues = yield* Effect.forEach(inputEdges, (edge) =>
-        computeNode(edge.source).pipe(Effect.map((value) => [edge.data.input, value[edge.data.output]] as const)),
-      ).pipe(Effect.map((inputs) => Object.fromEntries(inputs)));
+      const inputValues = yield* Effect.forEach(node.inputs, (input) => {
+        const sourceNode = topology.nodes.find((node) => node.id === input.sourceNodeId) ?? failedInvariant();
+        return computeNode(sourceNode).pipe(
+          Effect.map((value) => [input.name, value[input.sourceNodeOutput!]] as const),
+        );
+      }).pipe(Effect.map((inputs) => Object.fromEntries(inputs)));
 
       return inputValues;
     });
   };
 
-  const computeNode = (nodeId: string): Effect.Effect<any, any> => {
-    if (computeCache.has(nodeId)) {
-      return computeCache.get(nodeId)!;
+  const computeNode = (node: TopologyNode): Effect.Effect<any, any> => {
+    if (computeCache.has(node.id)) {
+      return computeCache.get(node.id)!;
     }
 
     const result = Effect.gen(function* () {
-      const inputValues = yield* computeInputs(nodeId);
-
-      const node = graph.getNode(nodeId) ?? raise(new Error(`Node not found: ${nodeId}`));
-      const nodeSpec = yield* Effect.promise(() => computeResolver(node.data));
+      const inputValues = yield* computeInputs(node);
+      const nodeSpec = yield* Effect.promise(() => computeResolver(node.graphNode));
       if (nodeSpec.compute == null) {
-        yield* Effect.fail(new Error(`No compute function for node type: ${node.data.type}`));
+        yield* Effect.fail(new Error(`No compute function for node type: ${node.graphNode.type}`));
         return;
       }
 
-      log.info('begin compute', { nodeId, type: node.data.type, inputValues, inputSchema: nodeSpec.input.toString() });
+      log.info('begin compute', {
+        nodeId: node.id,
+        type: node.graphNode.type,
+        inputValues,
+        inputSchema: node.meta.input.toString(),
+      });
 
-      const sanitizedInputs = yield* S.decode(nodeSpec.input)(inputValues).pipe(
+      const sanitizedInputs = yield* S.decode(node.meta.input)(inputValues).pipe(
         Effect.mapErrorCause((cause) =>
-          Cause.sequential(cause, Cause.fail(`While sanitizing node inputs: ${node.data.type}`)),
+          Cause.sequential(cause, Cause.fail(`While sanitizing node inputs: ${node.graphNode.type}`)),
         ),
       );
       const output = yield* nodeSpec.compute(sanitizedInputs);
-      const decodedOutput = yield* S.decode(nodeSpec.output)(output);
-      log.info('compute result', { nodeId, type: node.data.type, output: decodedOutput });
+      const decodedOutput = yield* S.decode(node.meta.output)(output);
+      log.info('compute result', { nodeId: node.id, type: node.graphNode.type, output: decodedOutput });
       return decodedOutput;
     });
 
-    computeCache.set(nodeId, result);
+    computeCache.set(node.id, result);
     return result;
   };
 
   return {
-    input: inputNodeSchema,
-    output: outputNodeSchema,
+    computation: {
+      meta: {
+        input: topology.inputSchema,
+        output: topology.outputSchema,
+      },
 
-    compute: (input) => {
-      computeCache.set(inputNode.id, Effect.succeed(input));
-      return computeInputs(outputNode.id);
+      compute: (input) => {
+        computeCache.set(topology.inputNodeId, Effect.succeed(input));
+        const outputNode = topology.nodes.find((node) => node.id === topology.outputNodeId) ?? failedInvariant();
+        return computeNode(outputNode);
+      },
     },
+    diagnostics: topology.diagnostics,
   };
+};
+
+type CreateTopologyParams = {
+  graph: GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;
+  inputNodeId: string;
+  outputNodeId: string;
+  computeMetaResolver: (node: ComputeNode) => Promise<ComputeMeta>;
+};
+
+const createTopology = async ({
+  graph,
+  inputNodeId,
+  outputNodeId,
+  computeMetaResolver,
+}: CreateTopologyParams): Promise<Topology> => {
+  const topology: Omit<Topology, 'inputSchema' | 'outputSchema'> = {
+    inputNodeId,
+    outputNodeId,
+    nodes: [],
+    diagnostics: [],
+  };
+
+  for (const node of graph.getNodes({})) {
+    const meta = await computeMetaResolver(node.data);
+    if (!meta) {
+      throw new Error(`No meta for node: ${node.data.type}`);
+    }
+
+    topology.nodes.push({
+      id: node.id,
+      graphNode: node.data,
+      meta,
+      inputs: [],
+      outputs: [],
+    });
+  }
+
+  for (const edge of graph.getEdges({})) {
+    const sourceNode = topology.nodes.find((node) => node.id === edge.source);
+    const targetNode = topology.nodes.find((node) => node.id === edge.target);
+
+    if (sourceNode == null || targetNode == null) {
+      continue;
+    }
+
+    if (sourceNode.outputs.find((output) => output.name === edge.data.output) == null) {
+      sourceNode.outputs.push({
+        name: edge.data.output,
+        schema: pickProperty(sourceNode.meta.output, edge.data.output),
+      });
+    }
+
+    if (targetNode.inputs.find((input) => input.name === edge.data.input) == null) {
+      targetNode.inputs.push({
+        name: edge.data.input,
+        schema: pickProperty(targetNode.meta.input, edge.data.input),
+        sourceNodeId: sourceNode.id,
+        sourceNodeOutput: edge.data.output,
+      });
+    }
+
+    const input = sourceNode.outputs.find((output) => output.name === edge.data.output);
+    const output = targetNode.inputs.find((input) => input.name === edge.data.input);
+    invariant(input);
+    invariant(output);
+
+    if (AST.isNeverKeyword(output.schema.ast)) {
+      topology.diagnostics.push({
+        severity: 'error',
+        edgeId: edge.id,
+        message: `Output does not exist on node.`,
+      });
+    }
+    if (AST.isNeverKeyword(input.schema.ast)) {
+      topology.diagnostics.push({
+        severity: 'error',
+        edgeId: edge.id,
+        message: `Input does not exist on node.`,
+      });
+    }
+  }
+
+  const inputNode = topology.nodes.find((node) => node.id === inputNodeId) ?? failedInvariant();
+  const inputSchema = S.Struct(
+    Object.fromEntries(inputNode.outputs.map((output) => [output.name, output.schema] as const)),
+  );
+
+  const outputNode = topology.nodes.find((node) => node.id === outputNodeId) ?? failedInvariant();
+  const outputSchema = S.Struct(
+    Object.fromEntries(outputNode.inputs.map((input) => [input.name, input.schema] as const)),
+  );
+
+  return {
+    ...topology,
+    inputSchema,
+    outputSchema,
+  };
+};
+
+type Topology = {
+  inputNodeId: string;
+  outputNodeId: string;
+  inputSchema: S.Schema.AnyNoContext;
+  outputSchema: S.Schema.AnyNoContext;
+
+  nodes: TopologyNode[];
+
+  diagnostics: GraphDiagnostic[];
+};
+
+type TopologyNode = {
+  id: string;
+  graphNode: ComputeNode;
+  meta: ComputeMeta;
+  inputs: {
+    name: string;
+    schema: S.Schema.AnyNoContext;
+
+    sourceNodeId?: string;
+    sourceNodeOutput?: string;
+  }[];
+
+  outputs: {
+    name: string;
+    schema: S.Schema.AnyNoContext;
+  }[];
+};
+
+type GraphDiagnostic = {
+  severity: 'error' | 'warning';
+  message: string;
+
+  nodeId?: string;
+  edgeId?: string;
 };
