@@ -128,7 +128,7 @@ export const compile = async ({
       compute: (input) => {
         computeCache.set(topology.inputNodeId, Effect.succeed(input));
         const outputNode = topology.nodes.find((node) => node.id === topology.outputNodeId) ?? failedInvariant();
-        return computeNode(outputNode);
+        return computeInputs(outputNode);
       },
     },
     diagnostics: topology.diagnostics,
