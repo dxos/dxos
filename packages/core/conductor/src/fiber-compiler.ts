@@ -194,6 +194,8 @@ const createTopology = async ({
       });
     }
 
+    // TODO(dmaretskyi): Check assignability.
+
     const input = sourceNode.outputs.find((output) => output.name === edge.data.output);
     const output = targetNode.inputs.find((input) => input.name === edge.data.input);
     invariant(input);
