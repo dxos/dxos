@@ -51,7 +51,7 @@ export class ReadonlyGraphModel<Node extends GraphNode<any> = any, Edge extends 
     return this.nodes.find((node) => node.id === id);
   }
 
-  getNodes({ type }: Partial<Node>): Node[] {
+  getNodes({ type }: Partial<Node> = {}): Node[] {
     return this.nodes.filter((node) => !type || type === node.type);
   }
 
@@ -59,7 +59,7 @@ export class ReadonlyGraphModel<Node extends GraphNode<any> = any, Edge extends 
     return this.edges.find((edge) => edge.id === id);
   }
 
-  getEdges({ type, source, target }: Partial<Edge>): Edge[] {
+  getEdges({ type, source, target }: Partial<Edge> = {}): Edge[] {
     return this.edges.filter(
       (edge) =>
         (!type || type === edge.type) && (!source || source === edge.source) && (!target || target === edge.target),

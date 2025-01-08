@@ -7,11 +7,16 @@ import * as Arr from 'effect/Array';
 import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
 
+/**
+ *
+ * @param schema
+ * @param property
+ */
 export const pickProperty = <S extends Schema.Schema.Any, K extends keyof Schema.Schema.Type<S>>(
   schema: S,
-  prop: K,
+  property: K,
 ): Schema.Schema<Schema.Schema.Type<S>[K], Schema.Schema.Encoded<S>[K], Schema.Schema.Context<S>> => {
-  return Schema.make(getPropertyKeyIndexedAccess(schema.ast, prop).type);
+  return Schema.make(getPropertyKeyIndexedAccess(schema.ast, property).type);
 };
 
 // Copied from @effect/schema.

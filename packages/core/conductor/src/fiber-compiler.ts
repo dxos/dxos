@@ -19,6 +19,14 @@ export type ValidateParams = {
   computeMetaResolver: (node: ComputeNode) => Promise<ComputeMeta>;
 };
 
+/**
+ *
+ * @param graph
+ * @param inputNodeId
+ * @param outputNodeId
+ * @param computeMetaResolver
+ */
+// TODO(burdon): Remove? Just wraps createTopology?
 export const validate = async ({
   graph,
   inputNodeId,
@@ -26,7 +34,6 @@ export const validate = async ({
   computeMetaResolver,
 }: ValidateParams): Promise<{ meta: ComputeMeta; diagnostics: GraphDiagnostic[] }> => {
   const topology = await createTopology({ graph, inputNodeId, outputNodeId, computeMetaResolver });
-
   return {
     meta: {
       input: topology.inputSchema,
@@ -53,7 +60,8 @@ export type CompileParams = {
 };
 
 /**
- * @returns A new compute implementation that takes input from the specific entrypoint node and returns the output from the specific output node computing all intermediate nodes.
+ * @returns A new compute implementation that takes input from the specific entrypoint node
+ * and returns the output from the specific output node computing all intermediate nodes.
  */
 export const compile = async ({
   graph,
@@ -142,6 +150,13 @@ type CreateTopologyParams = {
   computeMetaResolver: (node: ComputeNode) => Promise<ComputeMeta>;
 };
 
+/**
+ *
+ * @param graph
+ * @param inputNodeId
+ * @param outputNodeId
+ * @param computeMetaResolver
+ */
 const createTopology = async ({
   graph,
   inputNodeId,
@@ -155,7 +170,8 @@ const createTopology = async ({
     diagnostics: [],
   };
 
-  for (const node of graph.getNodes({})) {
+  // Process nodes.
+  for (const node of graph.getNodes()) {
     const meta = await computeMetaResolver(node.data);
     if (!meta) {
       throw new Error(`No meta for node: ${node.data.type}`);
@@ -170,12 +186,12 @@ const createTopology = async ({
     });
   }
 
-  for (const edge of graph.getEdges({})) {
+  // Process edges.
+  for (const edge of graph.getEdges()) {
     const sourceNode = topology.nodes.find((node) => node.id === edge.source);
     const targetNode = topology.nodes.find((node) => node.id === edge.target);
-
     if (sourceNode == null || targetNode == null) {
-      continue;
+      continue; // TODO(burdon): Warn.
     }
 
     if (sourceNode.outputs.find((output) => output.name === edge.data.output) == null) {
@@ -194,11 +210,13 @@ const createTopology = async ({
       });
     }
 
+    // TODO(burdon): Set above? (i.e., let input = ...).
     const input = sourceNode.outputs.find((output) => output.name === edge.data.output);
-    const output = targetNode.inputs.find((input) => input.name === edge.data.input);
     invariant(input);
+    const output = targetNode.inputs.find((input) => input.name === edge.data.input);
     invariant(output);
 
+    // TODO(burdon): Output first?
     if (AST.isNeverKeyword(output.schema.ast)) {
       topology.diagnostics.push({
         severity: 'error',
@@ -206,6 +224,7 @@ const createTopology = async ({
         message: 'Output does not exist on node.',
       });
     }
+
     if (AST.isNeverKeyword(input.schema.ast)) {
       topology.diagnostics.push({
         severity: 'error',
@@ -242,20 +261,23 @@ type Topology = {
   outputNodeId: string;
   inputSchema: S.Schema.AnyNoContext;
   outputSchema: S.Schema.AnyNoContext;
-
+  // TODO(burdon): Map?
   nodes: TopologyNode[];
-
+  // TODO(burdon): Part of topology?
   diagnostics: GraphDiagnostic[];
 };
 
+/**
+ *
+ */
 type TopologyNode = {
   id: string;
   graphNode: ComputeNode;
   meta: ComputeMeta;
+
   inputs: {
     name: string;
     schema: S.Schema.AnyNoContext;
-
     sourceNodeId?: string;
     sourceNodeOutput?: string;
   }[];
@@ -269,7 +291,6 @@ type TopologyNode = {
 type GraphDiagnostic = {
   severity: 'error' | 'warning';
   message: string;
-
   nodeId?: string;
   edgeId?: string;
 };

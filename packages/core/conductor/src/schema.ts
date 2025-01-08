@@ -6,28 +6,34 @@ import { type Effect } from 'effect';
 
 import { S } from '@dxos/echo-schema';
 
+/**
+ * GraphNode payload.
+ */
 export const ComputeNode = S.Struct({
-  /**
-   * DXN of the node specifier.
-   */
+  /** DXN of the node specifier. */
+  // TODO(burdon): Type property exists on base GraphNode.
   type: S.String,
 });
+
 export type ComputeNode = S.Schema.Type<typeof ComputeNode>;
 
+/**
+ * GraphEdge payload.
+ */
 export const ComputeEdge = S.Struct({
-  /**
-   * Input anchor name.
-   */
+  /** Input property. */
   input: S.String,
 
-  /**
-   * Output anchor name.
-   */
+  /** Output property. */
   output: S.String,
 });
+
 export type ComputeEdge = S.Schema.Type<typeof ComputeEdge>;
 
-export type ComputeCallback<I, O> = (input: I) => Effect.Effect<O, Error>;
+/**
+ * Node function.
+ */
+export type ComputeFunction<I, O> = (input: I) => Effect.Effect<O, Error>;
 
 // TODO(dmaretskyi): To effect schema.
 export type ComputeMeta = {
@@ -39,20 +45,25 @@ export type ComputeImplementation<
   SI extends S.Schema.AnyNoContext = S.Schema.AnyNoContext,
   SO extends S.Schema.AnyNoContext = S.Schema.AnyNoContext,
 > = {
+  // TODO(burdon): Why meta?
   meta: ComputeMeta;
-  /**
-   * Missing for meta nodes like input/output.
-   */
-  compute?: ComputeCallback<S.Schema.Type<SI>, S.Schema.Type<SO>>;
+
+  /** Undefined for meta nodes like input/output. */
+  compute?: ComputeFunction<S.Schema.Type<SI>, S.Schema.Type<SO>>;
 };
 
-export const defineComputeNode = <SI extends S.Schema.AnyNoContext, SO extends S.Schema.AnyNoContext>(opts: {
+export const defineComputeNode = <SI extends S.Schema.AnyNoContext, SO extends S.Schema.AnyNoContext>({
+  input,
+  output,
+  compute,
+}: {
   input: SI;
   output: SO;
-  compute?: ComputeCallback<S.Schema.Type<SI>, S.Schema.Type<SO>>;
-}): ComputeImplementation => {
-  return { meta: { input: opts.input, output: opts.output }, compute: opts.compute };
-};
+  compute?: ComputeFunction<S.Schema.Type<SI>, S.Schema.Type<SO>>;
+}): ComputeImplementation => ({
+  meta: { input, output },
+  compute,
+});
 
 /**
  * Well-known node types.

@@ -14,6 +14,8 @@ import { inputNode, outputNode } from './base-nodes';
 import { compile } from './fiber-compiler';
 import { defineComputeNode, type ComputeEdge, type ComputeNode, type ComputeImplementation, NodeType } from './schema';
 
+// TODO(burdon): Better examples: Crawler, fake GPT, etc.
+
 describe('Graph as a fiber runtime', () => {
   test('simple adder node', async ({ expect }) => {
     const runtime = new TestRuntime();
@@ -36,7 +38,7 @@ describe('Graph as a fiber runtime', () => {
       const result = await Effect.runPromise(runtime.runGraph('dxn:graph:add3', { a: 1, b: 2, c: 3 }));
       expect(result).toEqual({ result: 6 });
     } catch (err) {
-      log.info('err', { err });
+      log.catch(err);
     }
   });
 });
@@ -46,29 +48,13 @@ describe('Graph as a fiber runtime', () => {
  * number1, number2 -> sum
  */
 const adder = (): GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>> => {
-  const graph = new GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>();
-  graph.addNode({
-    id: 'adder-X',
-    data: {
-      type: NodeType.Input,
-    },
-  });
-  graph.addEdge(createEdge({ source: 'adder-X', output: 'number1', target: 'adder-Y', input: 'a' }));
-  graph.addEdge(createEdge({ source: 'adder-X', output: 'number2', target: 'adder-Y', input: 'b' }));
-  graph.addNode({
-    id: 'adder-Y',
-    data: {
-      type: 'dxn:test:add',
-    },
-  });
-  graph.addEdge(createEdge({ source: 'adder-Y', output: 'result', target: 'adder-Z', input: 'sum' }));
-  graph.addNode({
-    id: 'adder-Z',
-    data: {
-      type: NodeType.Output,
-    },
-  });
-  return graph;
+  return new GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>()
+    .addNode({ id: 'adder-X', data: { type: NodeType.Input } })
+    .addEdge(createEdge({ source: 'adder-X', output: 'number1', target: 'adder-Y', input: 'a' }))
+    .addEdge(createEdge({ source: 'adder-X', output: 'number2', target: 'adder-Y', input: 'b' }))
+    .addNode({ id: 'adder-Y', data: { type: 'dxn:test:add' } })
+    .addEdge(createEdge({ source: 'adder-Y', output: 'result', target: 'adder-Z', input: 'sum' }))
+    .addNode({ id: 'adder-Z', data: { type: NodeType.Output } });
 };
 
 /**
@@ -77,41 +63,16 @@ const adder = (): GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>> => 
  * Uses adder node.
  */
 const add3 = (): GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>> => {
-  const graph = new GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>();
-  graph.addNode({
-    id: 'add3-X',
-    data: {
-      type: NodeType.Input,
-    },
-  });
-  graph.addEdge(createEdge({ source: 'add3-X', output: 'a', target: 'add3-Y', input: 'number1' }));
-  graph.addEdge(createEdge({ source: 'add3-X', output: 'b', target: 'add3-Y', input: 'number2' }));
-  graph.addNode({
-    id: 'add3-Y',
-    data: {
-      type: 'dxn:graph:adder',
-    },
-  });
-
-  graph.addEdge(createEdge({ source: 'add3-X', output: 'c', target: 'add3-Z', input: 'number1' }));
-  graph.addEdge(createEdge({ source: 'add3-Y', output: 'sum', target: 'add3-Z', input: 'number2' }));
-
-  graph.addNode({
-    id: 'add3-Z',
-    data: {
-      type: 'dxn:graph:adder',
-    },
-  });
-
-  graph.addEdge(createEdge({ source: 'add3-Z', output: 'sum', target: 'add3-Zprime', input: 'result' }));
-
-  graph.addNode({
-    id: 'add3-Zprime',
-    data: {
-      type: NodeType.Output,
-    },
-  });
-  return graph;
+  return new GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>()
+    .addNode({ id: 'add3-X', data: { type: NodeType.Input } })
+    .addEdge(createEdge({ source: 'add3-X', output: 'a', target: 'add3-Y', input: 'number1' }))
+    .addEdge(createEdge({ source: 'add3-X', output: 'b', target: 'add3-Y', input: 'number2' }))
+    .addNode({ id: 'add3-Y', data: { type: 'dxn:graph:adder' } })
+    .addEdge(createEdge({ source: 'add3-X', output: 'c', target: 'add3-Z', input: 'number1' }))
+    .addEdge(createEdge({ source: 'add3-Y', output: 'sum', target: 'add3-Z', input: 'number2' }))
+    .addNode({ id: 'add3-Z', data: { type: 'dxn:graph:adder' } })
+    .addEdge(createEdge({ source: 'add3-Z', output: 'sum', target: 'add3-Zprime', input: 'result' }))
+    .addNode({ id: 'add3-Zprime', data: { type: NodeType.Output } });
 };
 
 class TestRuntime {
@@ -162,6 +123,7 @@ class TestRuntime {
       outputNodeId: outputNode.id,
       computeResolver: this.resolveNode.bind(this),
     });
+
     for (const d of diagnostics) {
       const { severity, message, ...rest } = d;
       console.log(severity, message, rest);
@@ -169,6 +131,7 @@ class TestRuntime {
     if (diagnostics.some((d) => d.severity === 'error')) {
       throw new Error('Graph compilation failed');
     }
+
     return computation;
   }
 }
