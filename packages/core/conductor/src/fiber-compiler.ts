@@ -148,27 +148,18 @@ export const compile = async ({
           const logger = yield* EventLogger;
 
           // TODO(dmaretskyi): At the start we log a synthetic end-compute event for the input node to capture it's inputs.
-          logger.log({
-            type: 'end-compute',
-            nodeId: inputNodeId,
-            outputs: input,
-          });
+          logger.log({ type: 'end-compute', nodeId: inputNodeId, outputs: input });
           computeCache.set(topology.inputNodeId, Effect.succeed(input));
           const outputNode = topology.nodes.find((node) => node.id === topology.outputNodeId) ?? failedInvariant();
-
           const outputs = yield* computeInputs(outputNode);
 
           // Log the output node inputs.
-          logger.log({
-            type: 'begin-compute',
-            nodeId: outputNodeId,
-            inputs: outputs,
-          });
-
+          logger.log({ type: 'begin-compute', nodeId: outputNodeId, inputs: outputs });
           return outputs;
         });
       },
     },
+
     diagnostics: topology.diagnostics,
   };
 };
