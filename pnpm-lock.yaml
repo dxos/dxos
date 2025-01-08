@@ -2444,10 +2444,10 @@ importers:
         version: link:../../common/log
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       effect:
-        specifier: ^3.9.2
-        version: 3.10.15
+        specifier: ^3.12.1
+        version: 3.12.1
 
   packages/core/echo/automerge:
     dependencies:
@@ -23992,9 +23992,6 @@ packages:
   ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
-  effect@3.10.15:
-    resolution: {integrity: sha512-LdczPAFbtij3xGr9i+8PyDtuWdlXjSY5UJ8PKrYrr0DClKfR/OW3j8sxtambWYljzJAYD865KFhv7LdbWdG7VQ==}
-
   effect@3.12.1:
     resolution: {integrity: sha512-aAZdh56Yp1ehOFYeMcHHctTtxfqm6kkOdZFTXK6Zf0QoaKKc1hPG6ocjrKOc0axE8JbG4eZw351ogNLrM4vo9w==}
 
@@ -37780,11 +37777,6 @@ snapshots:
     dependencies:
       effect: 3.12.1
 
-  '@effect/schema@0.75.5(effect@3.10.15)':
-    dependencies:
-      effect: 3.10.15
-      fast-check: 3.23.1
-
   '@effect/schema@0.75.5(effect@3.12.1)':
     dependencies:
       effect: 3.12.1
@@ -49011,10 +49003,6 @@ snapshots:
       semver: 6.3.1
 
   ee-first@1.1.1: {}
-
-  effect@3.10.15:
-    dependencies:
-      fast-check: 3.23.1
 
   effect@3.12.1:
     dependencies:

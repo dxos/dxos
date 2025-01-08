@@ -107,11 +107,7 @@ export const compile = async ({
         inputSchema: node.meta.input.toString(),
       });
 
-      const sanitizedInputs = yield* S.decode(node.meta.input)(inputValues).pipe(
-        Effect.mapErrorCause((cause) =>
-          Cause.sequential(cause, Cause.fail(`While sanitizing node inputs: ${node.graphNode.type}`)),
-        ),
-      );
+      const sanitizedInputs = yield* S.decode(node.meta.input)(inputValues);
       const output = yield* nodeSpec.compute(sanitizedInputs);
       const decodedOutput = yield* S.decode(node.meta.output)(output);
       log.info('compute result', { nodeId: node.id, type: node.graphNode.type, output: decodedOutput });
