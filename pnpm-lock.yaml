@@ -103,7 +103,7 @@ importers:
         version: link:packages/common/typings
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       '@mdx-js/react':
         specifier: ^2.1.3
         version: 2.1.5(react@18.2.0)
@@ -249,8 +249,8 @@ importers:
         specifier: ^1.4.7
         version: 1.4.7
       effect:
-        specifier: ^3.9.2
-        version: 3.10.15
+        specifier: ^3.12.1
+        version: 3.12.1
       esbuild:
         specifier: ^0.23.1
         version: 0.23.1
@@ -730,13 +730,13 @@ importers:
         version: 0.4.80
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       '@fontsource/poiret-one':
         specifier: ^5.0.20
         version: 5.0.20
       effect:
-        specifier: ^3.9.2
-        version: 3.10.15
+        specifier: ^3.12.1
+        version: 3.12.1
       isomorphic-fetch:
         specifier: ^3.0.0
         version: 3.0.0(encoding@0.1.13)
@@ -1396,10 +1396,10 @@ importers:
         version: link:../log
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       effect:
-        specifier: ^3.9.2
-        version: 3.10.15
+        specifier: ^3.12.1
+        version: 3.12.1
 
   packages/common/esbuild-plugins:
     dependencies:
@@ -1597,7 +1597,7 @@ importers:
         version: link:../util
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -2407,7 +2407,7 @@ importers:
         version: link:../../common/util
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -2564,8 +2564,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       effect:
-        specifier: ^3.9.2
-        version: 3.10.15
+        specifier: ^3.12.1
+        version: 3.12.1
       eventemitter3:
         specifier: ^5.0.1
         version: 5.0.1
@@ -2812,13 +2812,13 @@ importers:
         version: link:../../../common/util
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
       effect:
-        specifier: ^3.9.2
-        version: 3.10.15
+        specifier: ^3.12.1
+        version: 3.12.1
       ulidx:
         specifier: ^2.3.0
         version: 2.3.0
@@ -2937,13 +2937,13 @@ importers:
         version: link:../../../common/util
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
       effect:
-        specifier: ^3.9.2
-        version: 3.10.15
+        specifier: ^3.12.1
+        version: 3.12.1
       ulidx:
         specifier: ^2.3.0
         version: 2.3.0
@@ -2997,7 +2997,7 @@ importers:
         version: link:../../common/util
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -3005,8 +3005,8 @@ importers:
         specifier: ^3.1.6
         version: 3.1.6
       effect:
-        specifier: ^3.9.2
-        version: 3.10.15
+        specifier: ^3.12.1
+        version: 3.12.1
       express:
         specifier: ^4.19.2
         version: 4.19.2
@@ -3974,8 +3974,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: ^3.9.2
-        version: 3.10.15
+        specifier: ^3.12.1
+        version: 3.12.1
       fast-check:
         specifier: ^3.19.0
         version: 3.19.0
@@ -4698,8 +4698,8 @@ importers:
         specifier: ^14.14.1
         version: 14.14.1
       effect:
-        specifier: ^3.9.2
-        version: 3.10.15
+        specifier: ^3.12.1
+        version: 3.12.1
       email-addresses:
         specifier: ^5.0.0
         version: 5.0.0
@@ -4854,7 +4854,7 @@ importers:
         version: link:../../common/util
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       parjs:
         specifier: ^1.3.9
         version: 1.3.9
@@ -5685,7 +5685,7 @@ importers:
         version: link:../../../common/util
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -5904,7 +5904,7 @@ importers:
         version: link:../../../common/util
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -5954,6 +5954,9 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../../common/storybook-utils
+      '@effect/ai':
+        specifier: ^0.5.1
+        version: 0.5.1(effect@3.12.1)
       '@types/d3':
         specifier: ^7.4.3
         version: 7.4.3
@@ -6128,7 +6131,7 @@ importers:
         version: link:../../../common/util
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       '@observablehq/plot':
         specifier: ^0.6.11
         version: 0.6.11
@@ -6243,7 +6246,7 @@ importers:
         version: link:../../../common/util
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -6319,7 +6322,7 @@ importers:
         version: link:../../../ui/react-ui-mosaic
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       kubo-rpc-client:
         specifier: ^4.1.1
         version: 4.1.1(undici@6.13.0)
@@ -6413,7 +6416,7 @@ importers:
         version: link:../../../common/util
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -6486,7 +6489,7 @@ importers:
         version: link:../../../common/util
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -6599,7 +6602,7 @@ importers:
         version: link:../../../common/util
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -6753,7 +6756,7 @@ importers:
         version: link:../../../common/util
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       '@lezer/common':
         specifier: ^1.2.2
         version: 1.2.2
@@ -6859,7 +6862,7 @@ importers:
         version: link:../../../ui/react-ui-searchlist
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       main-thread-scheduling:
         specifier: ^14.1.1
         version: 14.2.0
@@ -7112,7 +7115,7 @@ importers:
         version: link:../../sdk/react-client
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -7338,8 +7341,8 @@ importers:
         specifier: ^3.3.1
         version: 3.6.0
       effect:
-        specifier: ^3.9.2
-        version: 3.10.15
+        specifier: ^3.12.1
+        version: 3.12.1
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -7459,8 +7462,8 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0
       effect:
-        specifier: ^3.9.2
-        version: 3.10.15
+        specifier: ^3.12.1
+        version: 3.12.1
       immer:
         specifier: ^10.1.1
         version: 10.1.1
@@ -7541,8 +7544,8 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0
       effect:
-        specifier: ^3.9.2
-        version: 3.10.15
+        specifier: ^3.12.1
+        version: 3.12.1
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
@@ -7819,13 +7822,13 @@ importers:
         version: link:../../common/util
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
       effect:
-        specifier: ^3.9.2
-        version: 3.10.15
+        specifier: ^3.12.1
+        version: 3.12.1
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -8460,7 +8463,7 @@ importers:
         version: link:../../common/util
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       '@lezer/common':
         specifier: ^1.2.2
         version: 1.2.2
@@ -8617,7 +8620,7 @@ importers:
         version: link:../../common/util
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -8643,8 +8646,8 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
       effect:
-        specifier: ^3.9.2
-        version: 3.10.15
+        specifier: ^3.12.1
+        version: 3.12.1
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -8783,13 +8786,13 @@ importers:
         version: link:../../common/util
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
       effect:
-        specifier: ^3.9.2
-        version: 3.10.15
+        specifier: ^3.12.1
+        version: 3.12.1
       jszip:
         specifier: ^3.10.1
         version: 3.10.1
@@ -8898,7 +8901,7 @@ importers:
         version: link:../../common/util
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       '@fluentui/react-tabster':
         specifier: ^9.19.0
         version: 9.19.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -8968,7 +8971,7 @@ importers:
         version: link:../../sdk/schema
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       '@fluentui/react-tabster':
         specifier: ^9.19.0
         version: 9.19.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -8979,8 +8982,8 @@ importers:
         specifier: ^1.0.1
         version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
       effect:
-        specifier: ^3.9.2
-        version: 3.10.15
+        specifier: ^3.12.1
+        version: 3.12.1
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -9065,7 +9068,7 @@ importers:
         version: link:../../sdk/schema
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -9345,7 +9348,7 @@ importers:
         version: link:../../common/util
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -9353,8 +9356,8 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0
       effect:
-        specifier: ^3.9.2
-        version: 3.10.15
+        specifier: ^3.12.1
+        version: 3.12.1
       zod:
         specifier: ^3.22.4
         version: 3.22.4
@@ -9530,7 +9533,7 @@ importers:
         version: link:../../core/mesh/websocket-rpc
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       base-x:
         specifier: ~3.0.9
         version: 3.0.9
@@ -9612,7 +9615,7 @@ importers:
         version: link:../../core/mesh/rpc
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       base-x:
         specifier: ~3.0.9
         version: 3.0.9
@@ -10130,13 +10133,13 @@ importers:
         version: link:../../common/util
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
       effect:
-        specifier: ^3.9.2
-        version: 3.10.15
+        specifier: ^3.12.1
+        version: 3.12.1
       jsonpath:
         specifier: ^1.1.1
         version: 1.1.1
@@ -10706,8 +10709,8 @@ importers:
         specifier: ^7.9.0
         version: 7.9.0
       effect:
-        specifier: ^3.9.2
-        version: 3.10.15
+        specifier: ^3.12.1
+        version: 3.12.1
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -10729,7 +10732,7 @@ importers:
         version: link:../../common/storybook-utils
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       '@types/d3':
         specifier: ^7.4.3
         version: 7.4.3
@@ -11061,7 +11064,7 @@ importers:
         version: link:../../common/util
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       '@radix-ui/react-context':
         specifier: ^1.0.0
         version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
@@ -11069,8 +11072,8 @@ importers:
         specifier: ^3.3.1
         version: 3.6.0
       effect:
-        specifier: ^3.9.2
-        version: 3.10.15
+        specifier: ^3.12.1
+        version: 3.12.1
       jsonpath:
         specifier: ^1.1.1
         version: 1.1.1
@@ -11300,8 +11303,8 @@ importers:
         specifier: ^1.0.0
         version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
       effect:
-        specifier: ^3.9.2
-        version: 3.10.15
+        specifier: ^3.12.1
+        version: 3.12.1
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -11508,7 +11511,7 @@ importers:
         version: link:../../common/util
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.10.15)
+        version: 0.75.5(effect@3.12.1)
       '@fluentui/react-tabster':
         specifier: ^9.19.0
         version: 9.19.2(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -14559,6 +14562,12 @@ packages:
 
   '@dxos/web-auth@0.4.80':
     resolution: {integrity: sha512-yRIGQRJd1KrNqdwZGxFvDpi2ioMy2I+RJbif1YCF9T9eKqiyJDuZe6IGBfwiY/ew1bTW0m88D4hnH81NA1iCdg==}
+
+  '@effect/ai@0.5.1':
+    resolution: {integrity: sha512-daKAnSQ60yGPUQWD5Y1otRGSM02NoektyQUC21GF6vkfEv+D0L06yirJ9CFMaUVcZI1oi7NSZgGoGeVWB9m6DA==}
+    peerDependencies:
+      '@effect/platform': ^0.72.1
+      effect: ^3.12.1
 
   '@effect/schema@0.75.5':
     resolution: {integrity: sha512-TQInulTVCuF+9EIbJpyLP6dvxbQJMphrnRqgexm/Ze39rSjfhJuufF7XvU3SxTgg3HnL7B/kpORTJbHhlE6thw==}
@@ -23985,6 +23994,9 @@ packages:
 
   effect@3.10.15:
     resolution: {integrity: sha512-LdczPAFbtij3xGr9i+8PyDtuWdlXjSY5UJ8PKrYrr0DClKfR/OW3j8sxtambWYljzJAYD865KFhv7LdbWdG7VQ==}
+
+  effect@3.12.1:
+    resolution: {integrity: sha512-aAZdh56Yp1ehOFYeMcHHctTtxfqm6kkOdZFTXK6Zf0QoaKKc1hPG6ocjrKOc0axE8JbG4eZw351ogNLrM4vo9w==}
 
   ejs@3.1.10:
     resolution: {integrity: sha512-UeJmFfOrAQS8OJWPZ4qtgHyWExa088/MtK5UEyoJGFH67cDEXkZSviOiKRCZ4Xij0zxI3JECgYs3oKx+AizQBA==}
@@ -37764,9 +37776,18 @@ snapshots:
       lodash.isequal: 4.5.0
       lodash.pick: 4.4.0
 
+  '@effect/ai@0.5.1(effect@3.12.1)':
+    dependencies:
+      effect: 3.12.1
+
   '@effect/schema@0.75.5(effect@3.10.15)':
     dependencies:
       effect: 3.10.15
+      fast-check: 3.23.1
+
+  '@effect/schema@0.75.5(effect@3.12.1)':
+    dependencies:
+      effect: 3.12.1
       fast-check: 3.23.1
 
   '@emnapi/core@1.2.0':
@@ -48992,6 +49013,10 @@ snapshots:
   ee-first@1.1.1: {}
 
   effect@3.10.15:
+    dependencies:
+      fast-check: 3.23.1
+
+  effect@3.12.1:
     dependencies:
       fast-check: 3.23.1
 

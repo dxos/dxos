@@ -20,6 +20,7 @@ export type GptMessage = S.Schema.Type<typeof GptMessage>;
 export const GptInput = S.Struct({
   systemPrompt: S.optional(S.String),
   prompt: S.String,
+  model: S.String,
   history: S.optional(S.Array(GptMessage)),
   tools: S.optional(S.Array(S.Union(LLMTool, S.Null))),
 });

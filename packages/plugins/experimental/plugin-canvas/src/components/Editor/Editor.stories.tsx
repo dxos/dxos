@@ -19,6 +19,7 @@ import { Form, TupleInput } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { createObjectFactory, Testing, type TypeSpec, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { omit } from '@dxos/util';
 
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
 import { computeShapes, type StateMachine, type StateMachineContext } from '../../compute';
@@ -98,8 +99,17 @@ const Render = ({ id = 'test', graph: _graph, machine, model, gpt, init, sidebar
   useEffect(() => {
     return selection.selected.subscribe((selected) => {
       if (selection.size) {
-        const [id] = selected.values();
-        setSelected(graph?.getNode(id)?.data);
+        // Selection included nodes and edges.
+        for (const id of Array.from(selected.values())) {
+          const node = graph?.getNode(id);
+          if (node) {
+            // TODO(burdon): !!!
+            const data = omit(node.data as any, ['node']);
+            console.log(JSON.stringify(data, null, 2));
+            setSelected(data as any);
+            break;
+          }
+        }
       } else {
         setSelected(undefined);
       }
@@ -293,7 +303,7 @@ export const GPTArtifact: Story = {
     // debug: true,
     showGrid: false,
     snapToGrid: false,
-    // sidebar: 'json',
+    sidebar: 'selected',
     // sidebar: 'state-machine',
     registry: new ShapeRegistry(computeShapes),
     spec: [

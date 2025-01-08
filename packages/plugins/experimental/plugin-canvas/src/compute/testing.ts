@@ -161,15 +161,15 @@ export const createTest3 = ({
             ...layout({ x: -12, y: -10, width: 8, height: 12 }),
             text: ARTIFACTS_SYSTEM_PROMPT,
           }),
-          createView({ id: 'g', ...layout({ x: 13, y: -9, width: 10, height: 14 }) }),
+          createView({ id: 'g', ...layout({ x: 26, y: -10, width: 12, height: 12 }) }),
         ]
       : []),
     createGpt({ id: 'b', ...layout({ x: 0, y: 0 }) }),
-    createThread({ id: 'c', ...layout({ x: 26, y: -4 }) }),
-    createCounter({ id: 'd', ...layout({ x: 9, y: 7 }) }),
+    createThread({ id: 'c', ...layout({ x: 13, y: -4, width: 10, height: 24 }) }),
+    createCounter({ id: 'd', ...layout({ x: 5, y: 7 }) }),
     ...(db ? [createDatabase({ id: 'e', ...layout({ x: -10, y: 4 }) })] : []),
     ...(textToImage ? [createTextToImage({ id: 'j', ...layout({ x: -10, y: 7 }) })] : []),
-    ...(cot ? [createList({ id: 'f', ...layout({ x: 0, y: -11, width: 10, height: 10 }) })] : []),
+    ...(cot ? [createList({ id: 'f', ...layout({ x: 0, y: -10, width: 8, height: 12 }) })] : []),
   ];
 
   const edges: Omit<GraphEdge<Connection>, 'id'>[] = [

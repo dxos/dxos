@@ -7,7 +7,7 @@ import { type Point, type Rect } from '@dxos/react-ui-canvas';
 
 import { type DragDropPayload } from './useDragMonitor';
 import { useEditorContext } from './useEditorContext';
-import { type ShapeRegistry, type Anchor } from '../components';
+import { type ShapeRegistry, type Anchor, defaultAnchorSize } from '../components';
 import { createAnchorId, parseAnchorId } from '../compute';
 import { getDistance, findClosestIntersection, createNormalsFromRectangles, getRect, pointAdd } from '../layout';
 import { createPath } from '../shapes';
@@ -144,11 +144,12 @@ const createCenterPoints = (source: Bounds, target: Bounds, len = 32): Point[] =
   return points;
 };
 
-// TODO(burdon): Sweep out curve if horizontal.
-const createCurve = (source: Point, target: Point, offset = 8) => [
+const createCurve = (source: Point, target: Point) => [
   source,
-  pointAdd(source, { x: offset, y: 0 }),
-  pointAdd(target, { x: -offset, y: 0 }),
+  // pointAdd(source, { x: defaultAnchorSize.width / 2, y: 0 }),
+  pointAdd(source, { x: defaultAnchorSize.width, y: 0 }),
+  pointAdd(target, { x: -defaultAnchorSize.width, y: 0 }),
+  // pointAdd(target, { x: -defaultAnchorSize.width, y: 0 }),
   target,
 ];
 
