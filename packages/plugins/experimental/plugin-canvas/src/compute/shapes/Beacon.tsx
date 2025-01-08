@@ -8,9 +8,9 @@ import { S } from '@dxos/echo-schema';
 import { Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { ComputeShape, type CreateShapeProps } from './defs';
-import { createAnchors, type ShapeComponentProps, type ShapeDef } from '../../components';
-import { createAnchorId } from '../../shapes';
+import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
+import { type ShapeComponentProps, type ShapeDef } from '../../components';
+import { createAnchorMap } from '../../components';
 import { Beacon } from '../graph';
 
 export const BeaconShape = S.extend(
@@ -52,5 +52,5 @@ export const beaconShape: ShapeDef<BeaconShape> = {
   icon: 'ph--sun--regular',
   component: BeaconComponent,
   createShape: createBeacon,
-  getAnchors: (shape) => createAnchors(shape, { [createAnchorId('input')]: { x: -1, y: 0 } }),
+  getAnchors: (shape) => createAnchorMap(shape, { [createAnchorId('input')]: { x: -1, y: 0 } }),
 };

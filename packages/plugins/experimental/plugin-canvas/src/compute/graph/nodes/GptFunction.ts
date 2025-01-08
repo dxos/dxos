@@ -2,15 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import {
-  LLMTool
-} from '@dxos/assistant';
+import { LLMTool } from '@dxos/assistant';
 import { type Context } from '@dxos/context';
 import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
-import { type StateMachineContext } from '../state-machine';
 import { Function, type FunctionCallback } from './Function';
+import { type StateMachineContext } from '../state-machine';
 
 export const GptMessage = S.Struct({
   role: S.Union(S.Literal('system'), S.Literal('user'), S.Literal('assistant')),
@@ -28,9 +26,9 @@ export const GptInput = S.Struct({
 
 export const GptOutput = S.Struct({
   result: S.Array(GptMessage),
-  tokens: S.Number,
-  cot: S.optional(S.String),
   artifact: S.optional(S.Any),
+  cot: S.optional(S.String),
+  tokens: S.Number,
 });
 
 export type GptInput = S.Schema.Type<typeof GptInput>;

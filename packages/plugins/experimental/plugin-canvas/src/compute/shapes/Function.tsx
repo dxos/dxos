@@ -7,10 +7,10 @@ import React from 'react';
 import { AST, S } from '@dxos/echo-schema';
 
 import { Box } from './components';
-import { ComputeShape, type CreateShapeProps } from './defs';
+import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
+import { createAnchors, rowHeight } from '../../components';
 import { pointAdd } from '../../layout';
-import { createAnchorId, createAnchors, rowHeight } from '../../shapes';
 import { type Polygon } from '../../types';
 import { DEFAULT_INPUT, DEFAULT_OUTPUT, Function } from '../graph';
 

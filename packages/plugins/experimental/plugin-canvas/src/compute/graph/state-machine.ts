@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type ImageSource, type LLMModel, type MessageImageContentBlock } from '@dxos/assistant';
+import { type LLMModel, type MessageImageContentBlock } from '@dxos/assistant';
 import { Event } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { type Context, Resource } from '@dxos/context';
@@ -46,6 +46,7 @@ export type StateMachineContext = {
 // TODO(burdon): Extend Resource.
 export class StateMachine extends Resource {
   private _autoRun = true;
+
   // TODO(dmaretskyi): Will be replaced by a sync function that does propagation.
   private _activeTasks: Promise<void>[] = [];
 
@@ -99,7 +100,7 @@ export class StateMachine extends Resource {
       this._graph.nodes.map(async (node) => {
         await node.data.initialize(this._ctx!, this._context!, (output: any) => {
           if (!this._ctx) {
-            log.warn('not running'); // TODO(burdon): Not displayed.
+            log.warn('not running');
             return;
           }
 
@@ -113,7 +114,7 @@ export class StateMachine extends Resource {
   }
 
   protected override async _close(ctx: Context): Promise<void> {
-    // noop
+    log.info('closing...');
   }
 
   /**
@@ -155,6 +156,7 @@ export class StateMachine extends Resource {
           this._activeTasks.splice(idx, 1);
         }
       });
+
     this._activeTasks.push(promise);
     return promise;
   }
@@ -192,14 +194,13 @@ export class StateMachine extends Resource {
 
         // Set input.
         invariant(edge.data?.input);
-
-        let shouldPropagate;
-
         const inboundEdges = this._graph
           .getEdges({ target: target.id })
           .filter((e) => e.data.input === edge.data.input);
+
+        let shouldPropagate;
         if (inboundEdges.length > 1) {
-          log.info('composite edge', { target, inboundEdges });
+          log('composite edge', { target, inboundEdges });
           const position = inboundEdges.findIndex((e) => e.id === edge.id);
           if (position === -1) {
             log.warn('unable to determine edge position in aggregated node input');

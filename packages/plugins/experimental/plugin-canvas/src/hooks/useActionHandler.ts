@@ -79,7 +79,7 @@ export const useActionHandler = () => {
 
           const bounds = rectUnion(nodes);
           const center = getCenter(bounds);
-          const padding = 256;
+          const padding = 180;
           const newScale = Math.min(
             1,
             Math.min(

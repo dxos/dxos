@@ -22,12 +22,13 @@ import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
 import { useProjection } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
-import { Anchor, defaultAnchorSize } from './Anchor';
+import { AnchorComponent, defaultAnchorSize } from './Anchor';
 import { type ShapeComponentProps, shapeAttrs } from './Shape';
 import { type DragDropPayload, useEditorContext } from '../../hooks';
-import { getBoundsProperties, getInputPoint, pointDivide, pointSubtract } from '../../layout';
+import { getBoundsProperties, getInputPoint, pointSubtract } from '../../layout';
 import { type Polygon } from '../../types';
 import { type TextBoxProps } from '../TextBox';
+import { type Anchor, createAnchorMap, resizeAnchors } from '../anchors';
 import { styles } from '../styles';
 
 // Border around frame for preview snapshot.
@@ -89,16 +90,17 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
               // const sourceRect = element.getBoundingClientRect();
               const pos = getInputPoint(root, location.current.input);
 
-              // Set offset to center of shape.
-              const [center] = projection.toScreen([shape.center]);
-              dragMonitor.setOffset(pointDivide(pointSubtract(center, pos), projection.scale));
+              // Set offset (in model coordinates) relative to center.
+              const [p] = projection.toModel([pos]);
+              dragMonitor.setOffset(pointSubtract(shape.center, p));
 
               // Calculate offset relative to top-left corner.
-              const topLeft = pointSubtract(center, {
-                x: (projection.scale * (shape.size.width + previewBorder)) / 2,
-                y: (projection.scale * (shape.size.height + previewBorder)) / 2,
-              });
-
+              const [topLeft] = projection.toScreen([
+                pointSubtract(shape.center, {
+                  x: (shape.size.width + previewBorder) / 2,
+                  y: (shape.size.height + previewBorder) / 2,
+                }),
+              ]);
               return pointSubtract(pos, topLeft);
             },
             render: ({ container }) => {
@@ -112,9 +114,6 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
         },
         onDragStart: () => {
           dragMonitor.start({ type: 'frame', shape });
-        },
-        onDrop: () => {
-          console.log('drop');
         },
       }),
     );
@@ -141,7 +140,7 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
       <FrameContent
         {...baseProps}
         ref={draggingRef}
-        hidden={isDragging}
+        dragging={isDragging}
         active={active}
         anchors={anchors}
         onEdit={() => setEditing({ shape })}
@@ -166,7 +165,8 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
 export type FrameContentProps = PropsWithChildren<
   ThemedClassName<
     {
-      hidden?: boolean;
+      resize?: boolean;
+      dragging?: boolean;
       preview?: boolean;
       anchors: Record<string, Anchor>;
       active?: boolean;
@@ -180,7 +180,21 @@ export type FrameContentProps = PropsWithChildren<
  */
 export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
   (
-    { children, classNames, shape, debug, selected, editing, hidden, preview, anchors, active, onSelect, onEdit },
+    {
+      children,
+      classNames,
+      shape,
+      debug,
+      selected,
+      editing,
+      resize,
+      dragging,
+      preview,
+      anchors,
+      active,
+      onSelect,
+      onEdit,
+    },
     forwardedRef,
   ) => {
     const ref = useForwardedRef(forwardedRef);
@@ -200,7 +214,7 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
     };
 
     return (
-      <div ref={ref} {...shapeAttrs(shape)}>
+      <div>
         {/*
          * Background.
          * NOTE: We create an expanded background to ensure that the preview contains the anchors for the native image snapshot.
@@ -218,6 +232,8 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
 
         {/* Main body. */}
         <div
+          ref={ref}
+          {...shapeAttrs(shape)}
           style={getBoundsProperties({ ...shape.center, ...shape.size })}
           className={mx(
             'overflow-hidden',
@@ -225,11 +241,11 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
             styles.frameHover,
             styles.frameBorder,
             classNames,
+            dragging && 'opacity-0',
             preview && styles.framePreview,
             selected && styles.frameSelected,
             active && styles.frameActive,
             shape.guide && styles.frameGuide,
-            hidden && 'opacity-0',
             debug && 'opacity-30',
           )}
           onClick={handleClick}
@@ -239,15 +255,26 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
         </div>
 
         {/* Anchors. */}
-        {!hidden && (
+        {!dragging && (
           <div>
             {Object.values(anchors).map((anchor) => (
-              <Anchor key={anchor.id} shape={shape} anchor={anchor} size={defaultAnchorSize} />
+              <AnchorComponent key={anchor.id} shape={shape} anchor={anchor} size={defaultAnchorSize} />
             ))}
           </div>
         )}
 
         {/* TODO(burdon): Resize handles (shift key). */}
+        {resize && (
+          <div>
+            {Object.values(createAnchorMap(shape, resizeAnchors)).map((anchor) => (
+              <div
+                key={anchor.id}
+                style={getBoundsProperties({ ...anchor.pos, ...defaultAnchorSize })}
+                className='absolute border border-primary-500'
+              />
+            ))}
+          </div>
+        )}
       </div>
     );
   },

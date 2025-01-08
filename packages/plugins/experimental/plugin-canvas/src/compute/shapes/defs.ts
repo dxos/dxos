@@ -9,6 +9,16 @@ import { S } from '@dxos/echo-schema';
 import { Polygon } from '../../types';
 import { DEFAULT_OUTPUT, DEFAULT_INPUT, type ComputeNode } from '../graph';
 
+export const createAnchorId = (
+  direction: 'input' | 'output',
+  property = direction === 'input' ? DEFAULT_INPUT : DEFAULT_OUTPUT,
+) => [direction, property].join('.');
+
+export const parseAnchorId = (id: string): ['input' | 'output' | undefined, string] => {
+  const parts = id.match(/(input|output)\.(.+)/);
+  return parts ? (parts.slice(1) as any) : [undefined, id];
+};
+
 // TODO(burdon): Factor out.
 export type OptionalProps<T, K extends keyof T> = Simplify<Omit<T, K> & Partial<Pick<T, K>>>;
 export type Specialize<T, U> = Simplify<Omit<T, keyof U> & U>;

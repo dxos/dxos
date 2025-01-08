@@ -96,7 +96,11 @@ export const createTest2 = () => {
 };
 
 const ARTIFACTS_SYSTEM_PROMPT = `
-You are an advanced AI assistant capable of creating and managing artifacts, which are persisted pieces of data. Your task is to process user input and decide whether to create artifacts or handle the content normally. Follow these guidelines carefully:
+You are an advanced AI assistant capable of creating and managing artifacts from available data and tools. 
+
+Your task is to process user input and decide whether to create artifacts or handle the content normally. 
+
+Follow these guidelines carefully:
 
 1. User Input:
 Read the users message.
@@ -110,7 +114,7 @@ Read the users message.
 - When presenting an image, you must use an artifact.
 - Nest the <image> tag inside the <artifact> tag.
 - Image tags are always self-closing and must contain an id attribute.
-Example: <artifact><image id="unique_identifier" /></artifact>
+(Example: <artifact><image id="unique_identifier" /></artifact>)
 
 4. Artifact Rules:
 - Ensure that artifact tags are always balanced (i.e., each opening tag has a corresponding closing tag).
@@ -154,18 +158,18 @@ export const createTest3 = ({
       ? [
           createText({
             id: 'h',
-            ...layout({ x: -12, y: -8, width: 8, height: 8 }),
+            ...layout({ x: -12, y: -10, width: 8, height: 12 }),
             text: ARTIFACTS_SYSTEM_PROMPT,
           }),
-          createView({ id: 'g', ...layout({ x: 12, y: -6, width: 10, height: 14 }) }),
+          createView({ id: 'g', ...layout({ x: 13, y: -9, width: 10, height: 14 }) }),
         ]
       : []),
-    createGpt({ id: 'b', ...layout({ x: 0, y: 4 }) }),
+    createGpt({ id: 'b', ...layout({ x: 0, y: 0 }) }),
     createThread({ id: 'c', ...layout({ x: 26, y: -4 }) }),
-    createCounter({ id: 'd', ...layout({ x: 8, y: 6 }) }),
-    ...(db ? [createDatabase({ id: 'e', ...layout({ x: -10, y: 6 }) })] : []),
-    ...(textToImage ? [createTextToImage({ id: 'j', ...layout({ x: -10, y: 10 }) })] : []),
-    ...(cot ? [createList({ id: 'f', ...layout({ x: 0, y: -12, width: 10, height: 12 }) })] : []),
+    createCounter({ id: 'd', ...layout({ x: 9, y: 7 }) }),
+    ...(db ? [createDatabase({ id: 'e', ...layout({ x: -10, y: 4 }) })] : []),
+    ...(textToImage ? [createTextToImage({ id: 'j', ...layout({ x: -10, y: 7 }) })] : []),
+    ...(cot ? [createList({ id: 'f', ...layout({ x: 0, y: -11, width: 10, height: 10 }) })] : []),
   ];
 
   const edges: Omit<GraphEdge<Connection>, 'id'>[] = [

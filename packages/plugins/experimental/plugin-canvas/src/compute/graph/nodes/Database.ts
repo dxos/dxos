@@ -2,17 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { LLMTool, EchoDataSource, LLMToolDefinition } from '@dxos/assistant';
+import { LLMTool, EchoDataSource } from '@dxos/assistant';
 import { createCypherTool } from '@dxos/assistant/testing';
+import type { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { getSchemaTypename, S, StoredSchema } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 
 import { ComputeNode, DEFAULT_OUTPUT, NoInput } from '../compute-node';
 import { InvalidStateError, type StateMachineContext } from '../state-machine';
-import type { Context } from '@dxos/context';
-import { invariant } from '@dxos/invariant';
-import { createOutputSchema } from '../../shapes/defs';
-import { log } from '@dxos/log';
 
 /**
  * Database GPT tool.
@@ -39,8 +37,6 @@ export class Database extends ComputeNode<NoInput, { [DEFAULT_OUTPUT]: LLMTool }
         getSchemaTypename(schema)?.startsWith('example.org'),
       ),
     ].filter((schema) => getSchemaTypename(schema) !== StoredSchema.typename);
-    log.info('TYPES', { types });
-
     this.setOutput({ [DEFAULT_OUTPUT]: createCypherTool(dataSource, types) });
   }
 }

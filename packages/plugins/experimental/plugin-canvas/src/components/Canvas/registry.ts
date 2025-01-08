@@ -6,9 +6,9 @@ import { type FC } from 'react';
 
 import { invariant } from '@dxos/invariant';
 
-import { type Anchor } from './Anchor';
 import { type ShapeComponentProps } from './Shape';
 import { type Polygon } from '../../types';
+import { type Anchor } from '../anchors';
 
 /**
  * Shape definition.

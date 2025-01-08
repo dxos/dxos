@@ -10,49 +10,16 @@ import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { useProjection, type Dimension, type Point } from '@dxos/react-ui-canvas';
+import { useProjection, type Dimension } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type DragDropPayload, useEditorContext } from '../../hooks';
-import { getBoundsProperties, pointAdd } from '../../layout';
+import { getBoundsProperties } from '../../layout';
 import { type Polygon } from '../../types';
+import { type Anchor } from '../anchors';
 import { styles } from '../styles';
 
 export const defaultAnchorSize: Dimension = { width: 12, height: 12 };
-
-export type Anchor = {
-  /** Id (e.g., property). */
-  id: string;
-  /** Parent shape id. */
-  shape: string;
-  /** Anchor center. */
-  pos: Point;
-};
-
-export const defaultAnchors: Record<string, Point> = {
-  w: { x: -1, y: 0 },
-  e: { x: 1, y: 0 },
-  n: { x: 0, y: 1 },
-  s: { x: 0, y: -1 },
-};
-
-export const createAnchors = (
-  { id, center, size: { width, height } }: Polygon,
-  anchors: Record<string, Point> = defaultAnchors,
-): Record<string, Anchor> => {
-  return Object.entries(anchors).reduce(
-    (map, [anchor, pos]) => {
-      map[anchor] = {
-        id: anchor,
-        shape: id,
-        pos: pointAdd(center, { x: (pos.x * width) / 2, y: (pos.y * height) / 2 }),
-      };
-
-      return map;
-    },
-    {} as Record<string, Anchor>,
-  );
-};
 
 export type AnchorProps = ThemedClassName<{
   shape: Polygon;
@@ -63,7 +30,7 @@ export type AnchorProps = ThemedClassName<{
 /**
  * Anchor points for attaching links.
  */
-export const Anchor = ({ classNames, shape, anchor, size = defaultAnchorSize }: AnchorProps) => {
+export const AnchorComponent = ({ classNames, shape, anchor, size = defaultAnchorSize }: AnchorProps) => {
   const { dragMonitor } = useEditorContext();
   const { root, projection } = useProjection();
 
