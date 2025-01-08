@@ -6,7 +6,6 @@ import React, { useCallback } from 'react';
 
 import { IconButton, List, ListItem } from '@dxos/react-ui';
 
-import { CountEvent } from './generator';
 import { Capabilities } from '../../common';
 import { contributes } from '../../plugin';
 import { usePluginManager } from '../../react';
@@ -43,13 +42,9 @@ const Item = ({
 export const Main = () => {
   const manager = usePluginManager();
 
-  // Subscribes to enabled for reactivity.
-  const _ = manager.enabled.length;
-
   const handleRemove = useCallback(
     async (id: string) => {
       await manager.remove(id);
-      await manager.activate(CountEvent);
     },
     [manager],
   );

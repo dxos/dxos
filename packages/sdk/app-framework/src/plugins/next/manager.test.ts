@@ -49,22 +49,30 @@ describe('PluginManager', () => {
   });
 
   it('should be able to add and remove plugins', async () => {
+    const Test = definePlugin(testMeta, []);
+    plugins = [Test];
+
+    const manager = new PluginManager({ pluginLoader });
+    await manager.add(testMeta.id);
+    expect(manager.plugins).toEqual([Test]);
+    await manager.remove(testMeta.id);
+    expect(manager.plugins).toEqual([]);
+  });
+
+  it('should be able to enable and disable plugins', async () => {
     const Hello = defineModule({
       id: 'dxos.org/test/hello',
       activationEvents: [Events.Startup.id],
       activate: () => contributes(String, { string: 'hello' }),
     });
-    const World = defineModule({
-      id: 'dxos.org/test/world',
-      activationEvents: [Events.Startup.id],
-      activate: () => contributes(String, { string: 'world' }),
-    });
-    plugins = [definePlugin(testMeta, [Hello, World])];
+    const Test = definePlugin(testMeta, [Hello]);
 
-    const manager = new PluginManager({ pluginLoader });
-    await manager.add(testMeta.id);
-    expect(manager.modules).toEqual([Hello, World]);
-    await manager.remove(testMeta.id);
+    const manager = new PluginManager({ plugins: [Test], pluginLoader });
+    manager.enable(testMeta.id);
+    expect(manager.enabled).toEqual([Test.meta.id]);
+    expect(manager.modules).toEqual([Hello]);
+    manager.disable(testMeta.id);
+    expect(manager.enabled).toEqual([]);
     expect(manager.modules).toEqual([]);
   });
 
@@ -74,15 +82,17 @@ describe('PluginManager', () => {
       activationEvents: [Events.Startup.id],
       activate: () => contributes(String, { string: 'hello' }),
     });
-    plugins = [definePlugin(testMeta, [Hello])];
+    const Test = definePlugin(testMeta, [Hello]);
 
-    const manager = new PluginManager({ pluginLoader });
-    await manager.add(testMeta.id);
+    const manager = new PluginManager({ plugins: [Test], enabled: [Test.meta.id], pluginLoader });
+    expect(manager.plugins).toEqual([Test]);
+    expect(manager.enabled).toEqual([Test.meta.id]);
     expect(manager.modules).toEqual([Hello]);
     expect(manager.active).toEqual([]);
+    expect(manager.eventsFired).toEqual([]);
     await manager.activate(Events.Startup);
-    expect(manager.modules).toEqual([Hello]);
     expect(manager.active).toEqual([Hello.id]);
+    expect(manager.eventsFired).toEqual([Events.Startup.id]);
   });
 
   it('should propagate errors thrown by module activate callbacks', async () => {
@@ -198,10 +208,11 @@ describe('PluginManager', () => {
     ]);
     plugins = [One, Two, Three];
 
-    const manager = new PluginManager({ plugins: [One], pluginLoader });
+    const manager = new PluginManager({ pluginLoader });
     expect(manager.active).toEqual([]);
     expect(manager.context.requestCapability(Number)).toHaveLength(0);
 
+    await manager.add(One.meta.id);
     await manager.activate(CountEvent);
     expect(manager.active).toEqual([One.meta.id]);
     expect(manager.context.requestCapability(Number)).toHaveLength(1);
@@ -217,7 +228,7 @@ describe('PluginManager', () => {
     expect(manager.context.requestCapability(Number)).toHaveLength(3);
   });
 
-  it('should be able to remove and re-add an active plugin', async () => {
+  it('should be able to disable and re-enable an active plugin', async () => {
     const state = { total: 0 };
     const computeTotal = (context: PluginsContext) => {
       const numbers = context.requestCapability(Number);
@@ -255,8 +266,10 @@ describe('PluginManager', () => {
     ]);
     plugins = [Count, Test];
 
-    const manager = new PluginManager({ plugins: [Count, Test], pluginLoader });
+    const manager = new PluginManager({ pluginLoader });
     {
+      await manager.add(Test.meta.id);
+      await manager.add(Count.meta.id);
       await manager.activate(Events.Startup);
       expect(manager.active).toEqual([...Test.modules.map((m) => m.id), Count.meta.id]);
       expect(manager.pendingReset).toEqual([]);
@@ -267,8 +280,8 @@ describe('PluginManager', () => {
     }
 
     {
-      await manager.remove(Test.meta.id);
-      expect(manager.active).toEqual([Count.meta.id]);
+      await manager.disable(Test.meta.id);
+      expect(manager.active).toEqual([...Test.modules.map((m) => m.id), Count.meta.id]);
       expect(manager.pendingReset).toEqual([CountEvent.id, Events.Startup.id]);
 
       const totals = manager.context.requestCapability(Total);
@@ -297,7 +310,7 @@ describe('PluginManager', () => {
     }
 
     {
-      await manager.add(Test.meta.id);
+      await manager.enable(Test.meta.id);
       expect(manager.active).toEqual([Count.meta.id]);
       expect(manager.pendingReset).toEqual([CountEvent.id, Events.Startup.id]);
 
@@ -355,8 +368,10 @@ describe('PluginManager', () => {
         },
       }),
     ]);
+    plugins = [Test];
 
-    const manager = new PluginManager({ plugins: [Test], pluginLoader });
+    const manager = new PluginManager({ pluginLoader });
+    await manager.add(Test.meta.id);
     await manager.activate(Events.Startup);
     expect(manager.active).toEqual(Test.modules.map((m) => m.id));
 
@@ -394,48 +409,116 @@ describe('PluginManager', () => {
     plugins = [One, Two, Three];
 
     const manager = new PluginManager({ pluginLoader });
+    using pluginUpdates = updateCounter(() => {
+      const _ = manager.plugins.length;
+    });
     using enabledUpdates = updateCounter(() => {
       const _ = manager.enabled.length;
+    });
+    using modulesUpdates = updateCounter(() => {
+      const _ = manager.modules.length;
     });
     using activeUpdates = updateCounter(() => {
       const _ = manager.active.length;
     });
+    using pendingRemovalUpdates = updateCounter(() => {
+      const _ = manager.pendingRemoval.length;
+    });
+    using eventsFiredUpdates = updateCounter(() => {
+      const _ = manager.eventsFired.length;
+    });
     using pendingResetUpdates = updateCounter(() => {
       const _ = manager.pendingReset.length;
     });
+    expect(pluginUpdates.count).toEqual(0);
     expect(enabledUpdates.count).toEqual(0);
+    expect(modulesUpdates.count).toEqual(0);
     expect(activeUpdates.count).toEqual(0);
+    expect(pendingRemovalUpdates.count).toEqual(0);
+    expect(eventsFiredUpdates.count).toEqual(0);
     expect(pendingResetUpdates.count).toEqual(0);
 
     await manager.add(One.meta.id);
+    expect(pluginUpdates.count).toEqual(1);
     expect(enabledUpdates.count).toEqual(1);
+    expect(modulesUpdates.count).toEqual(1);
     expect(activeUpdates.count).toEqual(0);
+    expect(pendingRemovalUpdates.count).toEqual(0);
+    expect(eventsFiredUpdates.count).toEqual(0);
     expect(pendingResetUpdates.count).toEqual(0);
 
     await manager.activate(CountEvent);
+    expect(pluginUpdates.count).toEqual(1);
     expect(enabledUpdates.count).toEqual(1);
+    expect(modulesUpdates.count).toEqual(1);
     expect(activeUpdates.count).toEqual(1);
+    expect(pendingRemovalUpdates.count).toEqual(0);
+    expect(eventsFiredUpdates.count).toEqual(1);
     expect(pendingResetUpdates.count).toEqual(0);
 
     await manager.add(Two.meta.id);
+    expect(pluginUpdates.count).toEqual(2);
     expect(enabledUpdates.count).toEqual(2);
+    expect(modulesUpdates.count).toEqual(2);
     expect(activeUpdates.count).toEqual(1);
+    expect(pendingRemovalUpdates.count).toEqual(0);
+    expect(eventsFiredUpdates.count).toEqual(1);
     expect(pendingResetUpdates.count).toEqual(1);
 
     await manager.activate(CountEvent);
+    expect(pluginUpdates.count).toEqual(2);
     expect(enabledUpdates.count).toEqual(2);
+    expect(modulesUpdates.count).toEqual(2);
     expect(activeUpdates.count).toEqual(2);
+    expect(pendingRemovalUpdates.count).toEqual(0);
+    expect(eventsFiredUpdates.count).toEqual(1);
     expect(pendingResetUpdates.count).toEqual(2);
 
     await manager.add(Three.meta.id);
+    expect(pluginUpdates.count).toEqual(3);
     expect(enabledUpdates.count).toEqual(3);
+    expect(modulesUpdates.count).toEqual(3);
     expect(activeUpdates.count).toEqual(2);
+    expect(pendingRemovalUpdates.count).toEqual(0);
+    expect(eventsFiredUpdates.count).toEqual(1);
     expect(pendingResetUpdates.count).toEqual(3);
 
     await manager.reset(CountEvent);
+    expect(pluginUpdates.count).toEqual(3);
     expect(enabledUpdates.count).toEqual(3);
+    expect(modulesUpdates.count).toEqual(3);
     // Starts at 2, plus deactivates 2, plus activates 3.
     expect(activeUpdates.count).toEqual(7);
+    expect(pendingRemovalUpdates.count).toEqual(0);
+    expect(eventsFiredUpdates.count).toEqual(1);
     expect(pendingResetUpdates.count).toEqual(4);
+
+    await manager.disable(One.meta.id);
+    expect(pluginUpdates.count).toEqual(3);
+    expect(enabledUpdates.count).toEqual(4);
+    expect(modulesUpdates.count).toEqual(3);
+    expect(activeUpdates.count).toEqual(7);
+    expect(pendingRemovalUpdates.count).toEqual(1);
+    expect(eventsFiredUpdates.count).toEqual(1);
+    expect(pendingResetUpdates.count).toEqual(5);
+
+    await manager.remove(One.meta.id);
+    expect(pluginUpdates.count).toEqual(4);
+    expect(enabledUpdates.count).toEqual(4);
+    expect(modulesUpdates.count).toEqual(3);
+    expect(activeUpdates.count).toEqual(7);
+    expect(pendingRemovalUpdates.count).toEqual(1);
+    expect(eventsFiredUpdates.count).toEqual(1);
+    expect(pendingResetUpdates.count).toEqual(5);
+
+    await manager.reset(CountEvent);
+    expect(pluginUpdates.count).toEqual(4);
+    expect(enabledUpdates.count).toEqual(4);
+    expect(modulesUpdates.count).toEqual(4);
+    // Starts at 7, plus deactivates 3, plus activates 2.
+    expect(activeUpdates.count).toEqual(12);
+    expect(pendingRemovalUpdates.count).toEqual(2);
+    expect(eventsFiredUpdates.count).toEqual(1);
+    expect(pendingResetUpdates.count).toEqual(6);
   });
 });

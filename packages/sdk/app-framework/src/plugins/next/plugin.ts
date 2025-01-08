@@ -2,67 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-/*
-- activation events in meta
-- plugins can contribute activation events
-- activate/deactivate functions (passed context to request capabilities from other plugins)
-- contribution point function contributing capabilities based on well-defined interfaces with with fully qualified names
-- allow plugin defs to be arrays of plugin defs
-- laziness needs to move from pluign def to the contribution point function
-*/
-
 import { untracked } from '@preact/signals-core';
 
 import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';
 
-/**
- *
- */
-export type PluginMeta = {
-  /**
-   * Globally unique ID.
-   *
-   * Expected to be in the form of a valid URL.
-   *
-   * @example dxos.org/plugin/example
-   */
-  id: string;
-
-  /**
-   * Human-readable name.
-   */
-  name?: string;
-
-  /**
-   * A grep-able symbol string which can be resolved to an icon asset by @ch-ui/icons, via @ch-ui/vite-plugin-icons.
-   */
-  icon?: string;
-
-  /**
-   * Short description of plugin functionality.
-   */
-  description?: string;
-
-  /**
-   * URL of home page.
-   */
-  homePage?: string;
-
-  /**
-   * URL of source code.
-   */
-  source?: string;
-
-  /**
-   * Tags to help categorize the plugin.
-   */
-  tags?: string[];
-};
+import { type PluginMeta } from '../plugin-host';
 
 /**
- *
+ * Interface definition for a capability.
  */
 export type InterfaceDef<T> = {
   // TODO(dima): Pattern borrowed from effect, they use symbols which I ommited for brewity.
@@ -74,7 +23,7 @@ export type InterfaceDef<T> = {
 };
 
 /**
- *
+ * Functionality contributed to the application by a plugin module.
  */
 export type Capability<T> = {
   interface: InterfaceDef<T>;
@@ -84,7 +33,7 @@ export type Capability<T> = {
 export type AnyCapability = Capability<any>;
 
 /**
- *
+ * An event which activates a plugin module.
  */
 export type ActivationEvent = {
   id: string;
@@ -92,7 +41,7 @@ export type ActivationEvent = {
 };
 
 /**
- *
+ * Helper to define an activation event.
  */
 export const defineEvent = (id: string, specifier?: string) => {
   return { id, specifier } as ActivationEvent;
@@ -100,7 +49,7 @@ export const defineEvent = (id: string, specifier?: string) => {
 
 type PluginsContextOptions = {
   activate: (event: ActivationEvent) => MaybePromise<boolean>;
-  reset: (event: ActivationEvent) => void;
+  reset: (event: ActivationEvent) => MaybePromise<boolean>;
 };
 
 class CapabilityDef<T> {
@@ -108,18 +57,22 @@ class CapabilityDef<T> {
 }
 
 /**
- *
+ * Context which is passed to plugins, allowing them to interact with each other.
  */
 export class PluginsContext {
   private readonly _definedCapabilities = new Map<string, CapabilityDef<unknown>[]>();
 
   /**
-   *
+   * Activates plugins based on the activation event.
+   * @param event The activation event.
+   * @returns Whether the activation was successful.
    */
   readonly activate: PluginsContextOptions['activate'];
 
   /**
-   *
+   * Re-activates the modules that were activated by the event.
+   * @param event The activation event.
+   * @returns Whether the reset was successful.
    */
   readonly reset: PluginsContextOptions['reset'];
 
@@ -178,24 +131,24 @@ export class PluginsContext {
 }
 
 /**
- *
+ * A collection of modules that are be enabled/disabled as a unit.
  */
-export type Plugin = {
-  meta: PluginMeta;
-  modules: PluginModule[];
-};
+// NOTE: This is implemented as a class to prevent it from being proxied by PluginManager state.
+export class Plugin {
+  constructor(
+    readonly meta: PluginMeta,
+    readonly modules: PluginModule[],
+  ) {}
+}
 
 /**
- *
+ * Helper to define a plugin.
  */
 export const definePlugin = (meta: PluginMeta, modules: PluginModule[]) => {
-  return { meta, modules } satisfies Plugin;
+  return new Plugin(meta, modules);
 };
 
-/**
- *
- */
-export type PluginModule = {
+interface PluginModuleInterface {
   /**
    * Unique sub-ID of the plugin.
    */
@@ -230,22 +183,45 @@ export type PluginModule = {
    * @param context The plugin context.
    */
   deactivate?: (context: PluginsContext) => MaybePromise<void>;
-};
+}
 
 /**
- *
+ * A unit of containment of modular functionality that can be provided to an application.
+ * Plugins provide things like components, state, actions, etc. to the application.
  */
-export const defineModule = (module: PluginModule) => module;
+// NOTE: This is implemented as a class to prevent it from being proxied by PluginManager state.
+export class PluginModule implements PluginModuleInterface {
+  readonly id: PluginModuleInterface['id'];
+  readonly activationEvents: PluginModuleInterface['activationEvents'];
+  readonly activate: PluginModuleInterface['activate'];
+  readonly dependentEvents?: PluginModuleInterface['dependentEvents'];
+  readonly triggeredEvents?: PluginModuleInterface['triggeredEvents'];
+  readonly deactivate?: PluginModuleInterface['deactivate'];
+
+  constructor(options: PluginModuleInterface) {
+    this.id = options.id;
+    this.activationEvents = options.activationEvents;
+    this.activate = options.activate;
+    this.dependentEvents = options.dependentEvents;
+    this.triggeredEvents = options.triggeredEvents;
+    this.deactivate = options.deactivate;
+  }
+}
 
 /**
- *
+ * Helper to define a module.
+ */
+export const defineModule = (options: PluginModuleInterface) => new PluginModule(options);
+
+/**
+ * Helper to define the interface of a capability.
  */
 export const defineInterface = <T>(identifier: string) => {
   return { identifier } as InterfaceDef<T>;
 };
 
 /**
- *
+ * Helper to define the implementation of a capability.
  */
 export const contributes = <T>(interfaceDef: InterfaceDef<T>, implementation: T): Capability<T> => {
   return { interface: interfaceDef, implementation } satisfies Capability<T>;
@@ -254,7 +230,7 @@ export const contributes = <T>(interfaceDef: InterfaceDef<T>, implementation: T)
 type LazyCapability<T, U> = () => Promise<{ default: (props: T) => Capability<U> }>;
 
 /**
- *
+ * Helper to define a lazily loaded implementation of a capability.
  */
 export const lazy =
   <T, U>(c: LazyCapability<T, U>, props?: T) =>
