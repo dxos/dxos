@@ -125,23 +125,17 @@ class TestRuntime {
     const self = this;
     return Effect.gen(function* () {
       const graph = self.graphs.get(id) ?? raise(new Error(`Graph not found: ${id}`));
-      const { computation } = yield* Effect.promise(() => self.compileGraph(graph));
+      const computation = yield* Effect.promise(() => self.compileGraph(graph));
       return yield* computation.compute!(input);
     });
   }
 
   async resolveNode(node: ComputeNode): Promise<ComputeImplementation> {
     if (this.graphs.has(node.type)) {
-      const { computation: compute, diagnostics } = await this.compileGraph(this.graphs.get(node.type)!);
-      for (const d of diagnostics) {
-        console.log(d);
-      }
-      if (diagnostics.some((d) => d.severity === 'error')) {
-        throw new Error('Graph compilation failed');
-      }
+      const computation = await this.compileGraph(this.graphs.get(node.type)!);
 
       // TODO(dmaretskyi): Caching.
-      return compute;
+      return computation;
     }
 
     switch (node.type) {
@@ -162,12 +156,20 @@ class TestRuntime {
     const outputNode =
       graph.getNodes({}).find((node) => node.data.type === NodeType.Output) ??
       raise(new Error('Output node not found'));
-    return compile({
+    const { computation, diagnostics } = await compile({
       graph,
       inputNodeId: inputNode.id,
       outputNodeId: outputNode.id,
       computeResolver: this.resolveNode.bind(this),
     });
+    for (const d of diagnostics) {
+      const { severity, message, ...rest } = d;
+      console.log(severity, message, rest);
+    }
+    if (diagnostics.some((d) => d.severity === 'error')) {
+      throw new Error('Graph compilation failed');
+    }
+    return computation;
   }
 }
 
