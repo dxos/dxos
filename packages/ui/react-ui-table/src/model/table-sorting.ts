@@ -44,15 +44,12 @@ export class TableSorting<T extends BaseTableRow> {
       }
 
       const { props } = this._projection.getFieldProjection(field.id);
+
       const dataWithIndices = this._rows.value.map((item, index) => {
         const sortValue = this.getSortValue(props, field, item);
+        const isEmpty = !(props.type === TypeEnum.Boolean) && (sortValue == null || sortValue === '');
 
-        return {
-          item,
-          index,
-          value: sortValue,
-          isEmpty: !(props.type === TypeEnum.Boolean) && (sortValue == null || sortValue === ''),
-        };
+        return { item, index, value: sortValue, isEmpty };
       });
 
       const ordered = orderBy(dataWithIndices, ['isEmpty', 'value'], ['asc', sort.direction]);
@@ -76,28 +73,26 @@ export class TableSorting<T extends BaseTableRow> {
   }
 
   private getSortValue(props: PropertyType, field: FieldType, item: T) {
-    const rawValue = getValue(item, field.path);
+    const { type, format } = props;
+    const value = getValue(item, field.path);
 
-    if (props.type === TypeEnum.Boolean) {
-      return !!rawValue; // Coerce null/undefined/false to false for booleans.
+    if (type === TypeEnum.Boolean) {
+      return !!value; // Coerce null/undefined/false to false for booleans.
     }
-    if (props.type === TypeEnum.Number) {
-      return rawValue;
+    if (type === TypeEnum.Number) {
+      return value;
     }
-    if (rawValue == null) {
-      return rawValue;
+    if (value == null) {
+      return value;
     }
 
     // TODO(Zaymon): Should we format this returned value for display based on the referenced prop format?
     //   Right now we're going to be sorting based on the raw values.
-    if (props.format === FormatEnum.Ref && field.referencePath) {
-      return getValue(rawValue, field.referencePath);
+    //   Maybe we need to recurse this function with the referenced prop format and field?
+    if (format === FormatEnum.Ref && field.referencePath) {
+      return getValue(value, field.referencePath);
     }
 
-    return formatForDisplay({
-      type: props.type,
-      format: props.format,
-      value: rawValue,
-    });
+    return formatForDisplay({ type, format, value });
   }
 }
