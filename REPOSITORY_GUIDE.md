@@ -96,7 +96,7 @@ Once the required changes have been made, re-run `pnpm i`.
 Use `npm-check-updates` to update dependencies from the root directory. For example:
 
 ```bash
-npx npm-check-updates --deep -u effect "@effect/*"
+npx npm-check-updates -u --deep effect "@effect/*"
 pnpm i
 ```
 
