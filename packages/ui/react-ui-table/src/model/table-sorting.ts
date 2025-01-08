@@ -27,7 +27,11 @@ export class TableSorting<T extends BaseTableRow> {
     private readonly _projection: ViewProjection,
   ) {
     this._rows = rows;
-    this.sortedRows = computed(() => {
+    this.sortedRows = this.initialiseSortedRows();
+  }
+
+  private initialiseSortedRows(): ReadonlySignal<T[]> {
+    return computed(() => {
       this._displayToDataIndex.clear();
       const sort = this._sorting.value;
       if (!sort) {
