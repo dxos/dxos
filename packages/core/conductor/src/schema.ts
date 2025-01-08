@@ -5,6 +5,7 @@
 import { type Effect } from 'effect';
 
 import { S } from '@dxos/echo-schema';
+import type { EventLogger } from './event-logger';
 
 export const ComputeNode = S.Struct({
   /**
@@ -27,7 +28,9 @@ export const ComputeEdge = S.Struct({
 });
 export type ComputeEdge = S.Schema.Type<typeof ComputeEdge>;
 
-export type ComputeCallback<I, O> = (input: I) => Effect.Effect<O, Error>;
+export type ComputeRequirements = EventLogger;
+
+export type ComputeCallback<I, O> = (input: I) => Effect.Effect<O, Error, ComputeRequirements>;
 
 // TODO(dmaretskyi): To effect schema.
 export type ComputeMeta = {

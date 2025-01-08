@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect } from 'effect';
+import { Effect, type Context } from 'effect';
 import { describe, test } from 'vitest';
 
 import { raise } from '@dxos/debug';
@@ -12,7 +12,15 @@ import { log } from '@dxos/log';
 
 import { inputNode, outputNode } from './base-nodes';
 import { compile } from './fiber-compiler';
-import { defineComputeNode, NodeType, type ComputeEdge, type ComputeImplementation, type ComputeNode } from './schema';
+import {
+  defineComputeNode,
+  NodeType,
+  type ComputeEdge,
+  type ComputeImplementation,
+  type ComputeNode,
+  type ComputeRequirements,
+} from './schema';
+import { EventLogger, type ComputeEvent } from './event-logger';
 
 describe('Graph as a fiber runtime', () => {
   test('simple adder node', async ({ expect }) => {
@@ -23,7 +31,11 @@ describe('Graph as a fiber runtime', () => {
     // console.log('input', input.toString());
     // console.log('output', output.toString());
 
-    const result = await Effect.runPromise(runtime.runGraph('dxn:graph:adder', { number1: 1, number2: 2 }));
+    const result = await Effect.runPromise(
+      runtime
+        .runGraph('dxn:graph:adder', { number1: 1, number2: 2 })
+        .pipe(Effect.provideService(EventLogger, consoleLogger)),
+    );
     expect(result).toEqual({ sum: 3 });
   });
 
@@ -33,7 +45,11 @@ describe('Graph as a fiber runtime', () => {
     runtime.registerGraph('dxn:graph:add3', add3());
 
     try {
-      const result = await Effect.runPromise(runtime.runGraph('dxn:graph:add3', { a: 1, b: 2, c: 3 }));
+      const result = await Effect.runPromise(
+        runtime
+          .runGraph('dxn:graph:add3', { a: 1, b: 2, c: 3 })
+          .pipe(Effect.provideService(EventLogger, consoleLogger)),
+      );
       expect(result).toEqual({ result: 6 });
     } catch (err) {
       log.info('err', { err });
@@ -121,7 +137,7 @@ class TestRuntime {
     this.graphs.set(id, graph);
   }
 
-  runGraph(id: string, input: any): Effect.Effect<any, Error> {
+  runGraph(id: string, input: any): Effect.Effect<any, Error, ComputeRequirements> {
     const self = this;
     return Effect.gen(function* () {
       const graph = self.graphs.get(id) ?? raise(new Error(`Graph not found: ${id}`));
@@ -190,3 +206,9 @@ const createEdge = (params: {
   target: params.target,
   data: { input: params.input, output: params.output },
 });
+
+const consoleLogger: Context.Tag.Service<EventLogger> = {
+  log: (event: ComputeEvent) => {
+    console.log(event);
+  },
+};
