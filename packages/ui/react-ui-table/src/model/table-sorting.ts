@@ -64,6 +64,10 @@ export class TableSorting<T extends BaseTableRow> {
     });
   }
 
+  public get sorting(): ReadonlySignal<SortConfig | undefined> {
+    return this._sorting;
+  }
+
   public getDataIndex(displayIndex: number): number {
     return this._displayToDataIndex.get(displayIndex) ?? displayIndex;
   }
@@ -77,7 +81,7 @@ export class TableSorting<T extends BaseTableRow> {
     const value = getValue(item, field.path);
 
     if (type === TypeEnum.Boolean) {
-      return !!value; // Coerce null/undefined/false to false for booleans.
+      return !!value; // Coerce null/undefined to false for booleans.
     }
     if (type === TypeEnum.Number) {
       return value;

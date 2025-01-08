@@ -18,7 +18,7 @@ export const ColumnActionsMenu = ({ model, modals }: ColumnActionsMenuProps) => 
     return null;
   }
 
-  const currentSort = model.sorting;
+  const currentSort = model.sorting.value;
   const isCurrentColumnSorted = currentSort?.fieldId === state.fieldId;
 
   return (

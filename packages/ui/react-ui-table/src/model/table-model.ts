@@ -102,6 +102,10 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     return this._sorting.sortedRows;
   }
 
+  public get sorting(): ReadonlySignal<SortConfig | undefined> {
+    return this._sorting.sorting;
+  }
+
   public get pinnedRows(): NonNullable<TableModelProps<T>['pinnedRows']> {
     return this._pinnedRows;
   }
