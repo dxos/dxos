@@ -30,9 +30,10 @@ export class EdgeSignalManager extends Resource implements SignalManager {
    * Swarm key -> { peer: <own peer info>, joinedPeers: <state of swarm> }.
    */
   // TODO(mykola): This class should not contain swarm state joinedPeers. Temporary before network-manager API changes to accept list of peers.
-  private readonly _swarmPeers = new ComplexMap<PublicKey, { peer: PeerInfo; joinedPeers: ComplexSet<PeerInfo> }>(
-    PublicKey.hash,
-  );
+  private readonly _swarmPeers = new ComplexMap<
+    PublicKey,
+    { lastState?: Uint8Array; joinedPeers: ComplexSet<PeerInfo> }
+  >(PublicKey.hash);
 
   private readonly _edgeConnection: EdgeConnection;
 
@@ -65,7 +66,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
       });
     }
 
-    this._swarmPeers.set(topic, { peer, joinedPeers: new ComplexSet<PeerInfo>(PeerInfoHash) });
+    this._swarmPeers.set(topic, { lastState: peer.state, joinedPeers: new ComplexSet<PeerInfo>(PeerInfoHash) });
     await this._edgeConnection.send(
       protocol.createMessage(SwarmRequestSchema, {
         serviceId: EdgeService.SWARM,
@@ -188,8 +189,15 @@ export class EdgeSignalManager extends Resource implements SignalManager {
   private async _rejoinAllSwarms() {
     log('rejoin swarms', { swarms: Array.from(this._swarmPeers.keys()) });
     // Clear all swarms. But leave keys in the map.
-    for (const [topic, { peer }] of this._swarmPeers.entries()) {
-      await this.join({ topic, peer });
+    for (const [topic, { lastState }] of this._swarmPeers.entries()) {
+      await this.join({
+        topic,
+        peer: {
+          peerKey: this._edgeConnection.peerKey,
+          identityKey: this._edgeConnection.identityKey,
+          state: lastState,
+        },
+      });
     }
   }
 }
