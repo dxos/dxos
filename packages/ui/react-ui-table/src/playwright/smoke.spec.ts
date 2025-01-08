@@ -123,20 +123,35 @@ test.describe('Table', () => {
     await page.close();
   });
 
-  test('pick reference', async ({ browser }) => {
+  test('reference > reference / create new object', async ({ browser }) => {
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
     await table.grid.ready();
 
+    // Reference existing object.
+    // Scroll over to the manager column.
     await table.grid.panByWheel(10000, 0);
 
     await table.grid.cell(4, 0, 'grid').click();
     await page.keyboard.press('A');
+    await page.keyboard.press('N');
     await page.getByRole('option', { name: 'Anita Mayer' }).click();
 
     // Assert that the value is shown in the cell.
     await expect(page.getByRole('gridcell', { name: 'Anita Mayer' })).toBeVisible();
+
+    // Create new object.
+    await table.grid.cell(4, 1, 'grid').click();
+    await page.keyboard.type('t');
+    await page.keyboard.type('e');
+    await page.keyboard.type('s');
+    await page.keyboard.type('t');
+    await page.getByText('Create new object', { exact: false }).click();
+    await page.getByTestId('save-button').click();
+
+    // Scroll to the left.
+    await page.getByRole('gridcell', { name: 'test' }).click();
 
     await page.close();
   });
