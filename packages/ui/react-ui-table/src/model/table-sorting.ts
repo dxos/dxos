@@ -94,7 +94,8 @@ export class TableSorting<T extends BaseTableRow> {
     //   Right now we're going to be sorting based on the raw values.
     //   Maybe we need to recurse this function with the referenced prop format and field?
     if (format === FormatEnum.Ref && field.referencePath) {
-      return getValue(value, field.referencePath);
+      const refValue = getValue(value.target, field.referencePath);
+      return refValue;
     }
 
     return formatForDisplay({ type, format, value });
