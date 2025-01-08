@@ -232,6 +232,11 @@ const createTopology = async ({
   };
 };
 
+/**
+ * Structure derived from the compute graph.
+ * Validates the edges and types.
+ * Is used to run the computation.
+ */
 type Topology = {
   inputNodeId: string;
   outputNodeId: string;
