@@ -14,7 +14,8 @@ export const pickProperty = <S extends Schema.Schema.Any, K extends keyof Schema
   return Schema.make(getPropertyKeyIndexedAccess(schema.ast, prop).type);
 };
 
-// Copy-pasted from @effect/schema.
+// Copied from @effect/schema.
+// TODO(burdon): Reconcile with common/effect.
 
 /** @internal */
 export const getPropertyKeyIndexedAccess = (ast: AST.AST, name: PropertyKey): AST.PropertySignature => {
@@ -38,6 +39,7 @@ export const getPropertyKeyIndexedAccess = (ast: AST.AST, name: PropertyKey): AS
     case 'Refinement':
       return getPropertyKeyIndexedAccess(ast.from, name);
   }
+
   return new AST.PropertySignature(name, AST.neverKeyword, false, true);
 };
 

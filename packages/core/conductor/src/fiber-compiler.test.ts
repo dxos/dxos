@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 
 import { inputNode, outputNode } from './base-nodes';
 import { compile } from './fiber-compiler';
-import { defineComputeNode, NodeType, type ComputeEdge, type ComputeImplementation, type ComputeNode } from './schema';
+import { defineComputeNode, type ComputeEdge, type ComputeNode, type ComputeImplementation, NodeType } from './schema';
 
 describe('Graph as a fiber runtime', () => {
   test('simple adder node', async ({ expect }) => {

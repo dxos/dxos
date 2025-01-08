@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Cause, Effect } from 'effect';
+import { Effect } from 'effect';
 
 import { AST, S } from '@dxos/echo-schema';
 import type { GraphEdge, GraphModel, GraphNode } from '@dxos/graph';
+import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { pickProperty } from './ast';
 import type { ComputeNode, ComputeEdge, ComputeImplementation, ComputeMeta } from './schema';
-import { failedInvariant, invariant } from '../../../common/invariant/src';
 
 export type ValidateParams = {
   graph: GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;
