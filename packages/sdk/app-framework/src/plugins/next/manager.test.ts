@@ -117,7 +117,7 @@ describe('PluginManager', () => {
     const Fail = defineModule({
       id: 'dxos.org/test/fail',
       activationEvents: [FailEvent.id],
-      activate: () => raise(new Error('test')),
+      activate: async () => raise(new Error('test')),
     });
     plugins = [definePlugin(testMeta, [Hello, Fail])];
 

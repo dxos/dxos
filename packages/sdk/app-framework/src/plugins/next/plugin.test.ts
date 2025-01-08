@@ -13,8 +13,7 @@ registerSignalsRuntime();
 
 const defaultOptions = {
   activate: () => Promise.resolve(false),
-  reset: () => {},
-  subscribe: () => () => {},
+  reset: () => Promise.resolve(false),
 };
 
 describe('PluginsContext', () => {

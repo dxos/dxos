@@ -3,6 +3,7 @@
 //
 
 import { untracked } from '@preact/signals-core';
+import { Effect, Either, Match } from 'effect';
 
 import { Event } from '@dxos/async';
 import { create, type ReactiveObject } from '@dxos/live-object';
@@ -10,6 +11,11 @@ import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';
 
 import { type ActivationEvent, type AnyCapability, type Plugin, type PluginModule, PluginsContext } from './plugin';
+
+// TODO(wittjosiah): Factor out?
+const isPromise = (value: unknown): value is Promise<unknown> => {
+  return value !== null && typeof value === 'object' && 'then' in value;
+};
 
 export const eventKey = (event: ActivationEvent) => (event.specifier ? `${event.id}:${event.specifier}` : event.id);
 
@@ -216,58 +222,8 @@ export class PluginManager {
    * @param event The activation event.
    * @returns Whether the activation was successful.
    */
-  // TODO(wittjosiah): Use Effect.
-  async activate(event: ActivationEvent | string): Promise<boolean> {
-    return untracked(async () => {
-      const key = typeof event === 'string' ? event : eventKey(event);
-      log('activating', { key });
-      const pendingIndex = this._state.pendingReset.findIndex((event) => event === key);
-      if (pendingIndex !== -1) {
-        this._state.pendingReset.splice(pendingIndex, 1);
-      }
-
-      const modules = this._getInactiveModulesByEvent(key);
-      if (modules.length === 0) {
-        log('no modules to activate', { key });
-        return false;
-      }
-
-      this.activation.emit({ event: key, state: 'activating' });
-      try {
-        await Promise.all(
-          modules.map(async (module) => {
-            await Promise.all(module.dependentEvents?.map((event) => this.activate(event)) ?? []);
-
-            const maybeCapabilities = (await module.activate?.(this.context)) ?? [];
-            const capabilities = Array.isArray(maybeCapabilities)
-              ? await Promise.all(maybeCapabilities)
-              : [await maybeCapabilities];
-            await Promise.all(
-              capabilities.map(async (capability) => {
-                return this.context.contributeCapability(capability.interface, capability.implementation);
-              }),
-            );
-
-            this._state.active.push(module.id);
-            this._capabilities.set(module.id, capabilities);
-
-            await Promise.all(module.triggeredEvents?.map((event) => this.activate(event)) ?? []);
-          }),
-        );
-
-        if (!this._state.eventsFired.includes(key)) {
-          this._state.eventsFired.push(key);
-        }
-
-        this.activation.emit({ event: key, state: 'activated' });
-        log('activated', { key });
-      } catch (err: any) {
-        this.activation.emit({ event: key, state: 'error', error: err });
-        throw err;
-      }
-
-      return true;
-    });
+  activate(event: ActivationEvent | string): Promise<boolean> {
+    return untracked(() => Effect.runPromise(this._activate(event)));
   }
 
   /**
@@ -275,17 +231,8 @@ export class PluginManager {
    * @param id The id of the plugin.
    * @returns Whether the deactivation was successful.
    */
-  async deactivate(id: string): Promise<boolean> {
-    return untracked(async () => {
-      log('deactivate plugin', { id });
-      const plugin = this._getPlugin(id);
-      if (!plugin) {
-        return false;
-      }
-
-      const results = await Promise.all(plugin.modules.map((module) => this._deactivate(module.id)));
-      return results.every((result) => result);
-    });
+  deactivate(id: string): Promise<boolean> {
+    return untracked(() => Effect.runPromise(this._deactivate(id)));
   }
 
   /**
@@ -293,26 +240,8 @@ export class PluginManager {
    * @param event The activation event.
    * @returns Whether the reset was successful.
    */
-  async reset(event: ActivationEvent): Promise<boolean> {
-    return untracked(async () => {
-      const key = eventKey(event);
-      log('reset', { key });
-      const modules = this._getActiveModulesByEvent(key);
-      const results = await Promise.all(modules.map((module) => this._deactivate(module.id)));
-
-      if (this._state.pendingRemoval.length > 0) {
-        this._state.pendingRemoval.forEach((id) => {
-          this._removeModule(id);
-        });
-        this._state.pendingRemoval.splice(0, this._state.pendingRemoval.length);
-      }
-
-      if (results.every((result) => result)) {
-        return this.activate(key);
-      } else {
-        return false;
-      }
-    });
+  reset(event: ActivationEvent | string): Promise<boolean> {
+    return untracked(() => Effect.runPromise(this._reset(event)));
   }
 
   private _addPlugin(plugin: Plugin) {
@@ -357,10 +286,6 @@ export class PluginManager {
     return this._state.plugins.find((plugin) => plugin.meta.id === id);
   }
 
-  private _getModule(id: string) {
-    return this._state.modules.find((module) => module.id === id);
-  }
-
   private _getActiveModules() {
     return this._state.modules.filter((module) => this._state.active.includes(module.id));
   }
@@ -395,32 +320,134 @@ export class PluginManager {
     });
   }
 
-  private async _deactivate(id: string) {
-    return untracked(async () => {
-      log('deactivating', { id });
-      const module = this._getModule(id);
-      if (!module) {
-        log('module not found', { id });
+  private _activate(event: ActivationEvent | string): Effect.Effect<boolean, Error> {
+    const self = this;
+    return Effect.gen(function* () {
+      const key = typeof event === 'string' ? event : eventKey(event);
+      log('activating', { key });
+      const pendingIndex = self._state.pendingReset.findIndex((event) => event === key);
+      if (pendingIndex !== -1) {
+        self._state.pendingReset.splice(pendingIndex, 1);
+      }
+
+      const modules = self._getInactiveModulesByEvent(key);
+      if (modules.length === 0) {
+        log('no modules to activate', { key });
         return false;
       }
 
-      await module.deactivate?.(this.context);
+      self.activation.emit({ event: key, state: 'activating' });
 
-      const capabilities = this._capabilities.get(id);
-      if (capabilities) {
-        capabilities.forEach((capability) => {
-          this.context.removeCapability(capability.interface, capability.implementation);
-        });
-        this._capabilities.delete(id);
+      for (const module of modules) {
+        yield* Effect.all(module.dependentEvents?.map((event) => self._activate(event)) ?? []);
+
+        const result = yield* self._activateModule(module).pipe(Effect.either);
+        if (Either.isLeft(result)) {
+          self.activation.emit({ event: key, state: 'error', error: result.left });
+          yield* Effect.fail(result.left);
+        }
+
+        yield* Effect.all(module.triggeredEvents?.map((event) => self._activate(event)) ?? []);
       }
 
-      const activeIndex = this._state.active.findIndex((event) => event === id);
+      if (!self._state.eventsFired.includes(key)) {
+        self._state.eventsFired.push(key);
+      }
+
+      self.activation.emit({ event: key, state: 'activated' });
+      log('activated', { key });
+
+      return true;
+    });
+  }
+
+  private _activateModule(module: PluginModule): Effect.Effect<void, Error> {
+    const self = this;
+    return Effect.gen(function* () {
+      // TODO(wittjosiah): This is not handling errors thrown if this is synchronous.
+      const program = module.activate(self.context);
+      const maybeCapabilities = yield* Match.value(program).pipe(
+        Match.when(Effect.isEffect, (effect) => effect),
+        Match.when(isPromise, (promise) => Effect.tryPromise(() => promise)),
+        Match.orElse((program) => Effect.succeed(program)),
+      );
+      const capabilities = Match.value(maybeCapabilities).pipe(
+        Match.when(Array.isArray, (array) => array),
+        Match.orElse((value) => [value]),
+      );
+      capabilities.forEach((capability) => {
+        self.context.contributeCapability(capability.interface, capability.implementation);
+      });
+      self._state.active.push(module.id);
+      self._capabilities.set(module.id, capabilities);
+    });
+  }
+
+  private _deactivate(id: string): Effect.Effect<boolean, Error> {
+    const self = this;
+    return Effect.gen(function* () {
+      const plugin = self._getPlugin(id);
+      if (!plugin) {
+        return false;
+      }
+
+      const modules = plugin.modules;
+      const results = yield* Effect.all(modules.map((module) => self._deactivateModule(module)));
+      return results.every((result) => result);
+    });
+  }
+
+  private _deactivateModule(module: PluginModule): Effect.Effect<boolean, Error> {
+    const self = this;
+    return Effect.gen(function* () {
+      const id = module.id;
+      log('deactivating', { id });
+
+      const program = module.deactivate?.(self.context);
+      yield* Match.value(program).pipe(
+        Match.when(Effect.isEffect, (effect) => effect),
+        Match.when(isPromise, (promise) => Effect.tryPromise(() => promise)),
+        Match.orElse((program) => Effect.succeed(program)),
+      );
+
+      const capabilities = self._capabilities.get(id);
+      if (capabilities) {
+        capabilities.forEach((capability) => {
+          self.context.removeCapability(capability.interface, capability.implementation);
+        });
+        self._capabilities.delete(id);
+      }
+
+      const activeIndex = self._state.active.findIndex((event) => event === id);
       if (activeIndex !== -1) {
-        this._state.active.splice(activeIndex, 1);
+        self._state.active.splice(activeIndex, 1);
       }
 
       log('deactivated', { id });
       return true;
+    });
+  }
+
+  private _reset(event: ActivationEvent | string): Effect.Effect<boolean, Error> {
+    const self = this;
+    return Effect.gen(function* () {
+      const key = typeof event === 'string' ? event : eventKey(event);
+      log('reset', { key });
+      const modules = self._getActiveModulesByEvent(key);
+      const results = yield* Effect.all(modules.map((module) => self._deactivateModule(module)));
+
+      if (self._state.pendingRemoval.length > 0) {
+        self._state.pendingRemoval.forEach((id) => {
+          self._removeModule(id);
+        });
+        self._state.pendingRemoval.splice(0, self._state.pendingRemoval.length);
+      }
+
+      if (results.every((result) => result)) {
+        return yield* self._activate(key);
+      } else {
+        return false;
+      }
     });
   }
 }

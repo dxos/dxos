@@ -12,11 +12,20 @@
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./next": {
+      "types": "./dist/types/src/plugins/next/index.d.ts",
+      "browser": "./dist/lib/browser/plugins/next/index.mjs",
+      "node": "./dist/lib/node-esm/plugins/next/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
-    "*": {}
+    "*": {
+      "next": [
+        "dist/types/src/plugins/next/index.d.ts"
+      ]
+    }
   },
   "dependencies": {
     "@dxos/app-graph": "workspace:*",

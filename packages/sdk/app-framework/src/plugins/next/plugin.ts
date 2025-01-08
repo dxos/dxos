@@ -3,6 +3,7 @@
 //
 
 import { untracked } from '@preact/signals-core';
+import { type Effect } from 'effect';
 
 import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
@@ -150,7 +151,7 @@ export const definePlugin = (meta: PluginMeta, modules: PluginModule[]) => {
 
 interface PluginModuleInterface {
   /**
-   * Unique sub-ID of the plugin.
+   * Unique id of the module.
    */
   id: string;
 
@@ -176,13 +177,15 @@ interface PluginModuleInterface {
    * @param context The plugin context.
    * @returns The capabilities of the module.
    */
-  activate: (context: PluginsContext) => MaybePromise<AnyCapability | AnyCapability[]>;
+  activate: (
+    context: PluginsContext,
+  ) => MaybePromise<AnyCapability | AnyCapability[]> | Effect.Effect<AnyCapability | AnyCapability[], Error>;
 
   /**
    * Called when the module is deactivated.
    * @param context The plugin context.
    */
-  deactivate?: (context: PluginsContext) => MaybePromise<void>;
+  deactivate?: (context: PluginsContext) => MaybePromise<void> | Effect.Effect<void, Error>;
 }
 
 /**
