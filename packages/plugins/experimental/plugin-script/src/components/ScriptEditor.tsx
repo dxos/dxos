@@ -48,19 +48,19 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
     () => [
       listener({
         onChange: (text) => {
-          if (script.source && script.source.target?.content !== text) {
+          if (script.source.target && script.source.target.content !== text) {
             script.changed = true;
           }
         },
       }),
       createDataExtensions({
         id: script.id,
-        text: script.source && createDocAccessor(script.source.target!, ['content']),
+        text: script.source.target && createDocAccessor(script.source.target, ['content']),
         space,
         identity,
       }),
     ],
-    [script, script.source, space, identity],
+    [script, script.source.target, space, identity],
   );
 
   const [view, setView] = useState<ViewType>('editor');

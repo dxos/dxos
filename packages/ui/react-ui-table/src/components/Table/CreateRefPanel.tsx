@@ -19,13 +19,13 @@ export const CreateRefPanel = ({ model, modals, __gridScope }: GridScopedProps<C
   const { id: gridId } = useGridContext('TableCellEditor', __gridScope);
   const space = getSpace(model?.table);
   const state = modals.state.value;
+
   const schema = useMemo<S.Schema<any> | undefined>(() => {
     if (!space || state?.type !== 'createRefPanel') {
       return;
     }
 
-    // TODO(burdon): Factor out.
-    const schema: S.Schema<any> | undefined = space.db.schemaRegistry.getSchema(state.typename)?.schema;
+    const [schema] = space.db.schemaRegistry.query({ typename: state.typename }).runSync();
     if (schema) {
       const omit = S.omit<any, any, ['id']>('id');
       return omit(schema);
@@ -38,12 +38,11 @@ export const CreateRefPanel = ({ model, modals, __gridScope }: GridScopedProps<C
         return;
       }
 
-      const schema: S.Schema<any> | undefined = space.db.schemaRegistry.getSchema(state.typename)?.schema;
+      const [schema] = space.db.schemaRegistry.query({ typename: state.typename }).runSync();
       if (schema) {
         const obj = space.db.add(create(schema, values));
         state.onCreate?.(obj);
       }
-
       void modals.close();
     },
     [modals, space, state],

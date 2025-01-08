@@ -496,7 +496,10 @@ export class AutomergeHost extends Resource {
       return;
     }
 
-    log.info('replication documents after collection sync', {
+    log.info('replicating documents after collection sync', {
+      collectionId,
+      peerId,
+      toReplicate,
       count: toReplicate.length,
     });
 

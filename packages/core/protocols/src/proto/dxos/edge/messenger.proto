@@ -29,6 +29,11 @@ message Peer {
   optional string swarmKey = 1;
   optional string identityKey = 2;
   string peerKey = 3;
+  /**
+   * Optional opeage data that represents peer state is updated on `join` request and all peers in swarm are notified.
+   * Is not used for WebRTC protocol, but is useful for another purposes of Swarms, e. g. call room users states.
+   */
+  optional bytes state = 4;
 }
 
 //

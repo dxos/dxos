@@ -147,9 +147,12 @@ export class EdgeFeedReplicator extends Resource {
       return;
     }
 
-    const logPayload =
-      message.type === 'data' ? { feedKey: message.feedKey, blocks: message.blocks.map((b) => b.index) } : { message };
-    log.info('sending message', logPayload);
+    if (message.type === 'data') {
+      log.info('sending blocks', {
+        feedKey: message.feedKey,
+        blocks: message.blocks.map((b) => b.index),
+      });
+    }
 
     invariant(message.feedKey);
     const payloadValue = bufferToArray(encodeCbor(message));
@@ -175,8 +178,6 @@ export class EdgeFeedReplicator extends Resource {
     scheduleMicroTask(this._connectionCtx, async () => {
       switch (message.type) {
         case 'metadata': {
-          log.info('received metadata', { message });
-
           const feedKey = PublicKey.fromHex(message.feedKey);
           const feed = this._feeds.get(feedKey);
           if (!feed) {
@@ -188,13 +189,18 @@ export class EdgeFeedReplicator extends Resource {
 
           this._remoteLength.set(feedKey, message.length);
 
+          const logMeta = { localLength: feed.length, remoteLength: message.length, feedKey };
           if (message.length > feed.length) {
+            log.info('requesting missing blocks', logMeta);
+
             await this._sendMessage({
               type: 'request',
               feedKey: feedKey.toHex(),
               range: { from: feed.length, to: message.length },
             });
           } else if (message.length < feed.length) {
+            log.info('pushing blocks to remote', logMeta);
+
             await this._pushBlocks(feed, message.length, feed.length);
           }
 
