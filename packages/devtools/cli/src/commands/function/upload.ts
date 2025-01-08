@@ -3,24 +3,25 @@
 //
 
 import { Args, Flags } from '@oclif/core';
-import fs from 'node:fs';
 
-import { asyncTimeout } from '@dxos/async';
-import { type Client } from '@dxos/client';
-import { type ReactiveEchoObject, Filter, loadObjectReferences, makeRef } from '@dxos/client/echo';
-import { create, getMeta } from '@dxos/client/echo';
+import { Filter } from '@dxos/client/echo';
 import { type Space } from '@dxos/client-protocol';
-import {
-  getUserFunctionUrlInMetadata,
-  incrementSemverPatch,
-  setUserFunctionUrlInMetadata,
-  uploadWorkerFunction,
-  FunctionType,
-  ScriptType,
-} from '@dxos/functions';
-import { invariant } from '@dxos/invariant';
-import { TextType } from '@dxos/plugin-markdown/types';
-import { type UploadFunctionResponseBody } from '@dxos/protocols';
+import { incrementSemverPatch, FunctionType } from '@dxos/functions';
+import { log } from '@dxos/log';
+
+// import {
+//   getUserFunctionUrlInMetadata,
+//   setUserFunctionUrlInMetadata,
+//   uploadWorkerFunction,
+//   ScriptType,
+// } from '@dxos/functions';
+// import { type ReactiveEchoObject, loadObjectReferences, makeRef } from '@dxos/client/echo';
+// import { asyncTimeout } from '@dxos/async';
+// import { type Client } from '@dxos/client';
+// import { create, getMeta } from '@dxos/client/echo';
+// import { invariant } from '@dxos/invariant';
+// import { TextType } from '@dxos/plugin-markdown/types';
+// import { type UploadFunctionResponseBody } from '@dxos/protocols';
 
 import { BaseCommand } from '../../base';
 
@@ -47,114 +48,117 @@ export default class Upload extends BaseCommand<typeof Upload> {
   };
 
   async run(): Promise<any> {
-    let scriptContent: string | undefined;
-    try {
-      scriptContent = fs.readFileSync(this.args.file, 'utf8');
-    } catch (err: any) {
-      this.error(`Error reading file ${this.args.file}: ${err.message}`);
-    }
+    log.warn('Broken');
+    // TODO(mykola): Is broken, to reproduce run on `pnpm -w nx prepack cli` step.
 
-    const handleUpload = async ({ client, space }: { client: Client; space?: Space }) => {
-      invariant(space, 'Has to provide a space');
+    // let scriptContent: string | undefined;
+    // try {
+    //   scriptContent = fs.readFileSync(this.args.file, 'utf8');
+    // } catch (err: any) {
+    //   this.error(`Error reading file ${this.args.file}: ${err.message}`);
+    // }
 
-      client.addTypes([ScriptType, TextType]);
-      const identity = client.halo.identity.get();
-      invariant(identity, 'Identity not available');
+    // const handleUpload = async ({ client, space }: { client: Client; space?: Space }) => {
+    //   invariant(space, 'Has to provide a space');
 
-      let existingFunctionId: string | undefined;
-      let existingObject: ReactiveEchoObject<ScriptType> | undefined;
-      let functionUrlFromExistingObject: string | undefined;
-      if (this.flags.functionId) {
-        existingFunctionId = this.flags.functionId;
-      }
+    //   client.addTypes([ScriptType, TextType]);
+    //   const identity = client.halo.identity.get();
+    //   invariant(identity, 'Identity not available');
 
-      // Find existing object and functionId in metadata if it exists
-      if (this.flags.objectId) {
-        const qr = await space.db.query(Filter.schema(ScriptType)).run();
-        existingObject = qr.objects.find((o) => o.id === this.flags.objectId);
-        if (!existingObject) {
-          this.error(`Object not found: ${this.flags.spaceKey}/${this.flags.objectId}`);
-        }
-        functionUrlFromExistingObject = await getUserFunctionUrlInMetadata(getMeta(existingObject));
-        if (functionUrlFromExistingObject) {
-          existingFunctionId = functionUrlFromExistingObject.split('/').at(-1);
-          if (existingFunctionId !== this.flags.functionId) {
-            this.warn(
-              `provided functionId ${this.flags.functionId} does not match existing functionId ${existingFunctionId}, using existing functionId`,
-            );
-          }
-        }
+    //   let existingFunctionId: string | undefined;
+    //   let existingObject: ReactiveEchoObject<ScriptType> | undefined;
+    //   let functionUrlFromExistingObject: string | undefined;
+    //   if (this.flags.functionId) {
+    //     existingFunctionId = this.flags.functionId;
+    //   }
 
-        if (this.flags.verbose) {
-          this.log(
-            `Uploading to existing FunctionId ${existingFunctionId} read from ${this.flags.spaceKey}/${this.flags.objectId}`,
-          );
-        }
-      }
+    //   // Find existing object and functionId in metadata if it exists
+    //   if (this.flags.objectId) {
+    //     const qr = await space.db.query(Filter.schema(ScriptType)).run();
+    //     existingObject = qr.objects.find((o) => o.id === this.flags.objectId);
+    //     if (!existingObject) {
+    //       this.error(`Object not found: ${this.flags.spaceKey}/${this.flags.objectId}`);
+    //     }
+    //     functionUrlFromExistingObject = await getUserFunctionUrlInMetadata(getMeta(existingObject));
+    //     if (functionUrlFromExistingObject) {
+    //       existingFunctionId = functionUrlFromExistingObject.split('/').at(-1);
+    //       if (existingFunctionId !== this.flags.functionId) {
+    //         this.warn(
+    //           `provided functionId ${this.flags.functionId} does not match existing functionId ${existingFunctionId}, using existing functionId`,
+    //         );
+    //       }
+    //     }
 
-      let result: UploadFunctionResponseBody;
-      try {
-        result = await asyncTimeout(
-          uploadWorkerFunction({
-            client,
-            spaceId: space.id,
-            version: await this._getNextVersion(space, existingFunctionId),
-            functionId: existingFunctionId,
-            name: this.flags.name,
-            source: scriptContent,
-          }),
-          5_000,
-        );
-        invariant(result.functionId, 'Upload failed.');
-        this.log(`Uploaded function: ${result.functionId}`);
-      } catch (err: any) {
-        this.error(err.message);
-      }
+    //     if (this.flags.verbose) {
+    //       this.log(
+    //         `Uploading to existing FunctionId ${existingFunctionId} read from ${this.flags.spaceKey}/${this.flags.objectId}`,
+    //       );
+    //     }
+    //   }
 
-      // If we haven't been provided an ECHO space/object, we're done.
-      if (!space) {
-        return;
-      }
+    //   let result: UploadFunctionResponseBody;
+    //   try {
+    //     result = await asyncTimeout(
+    //       uploadWorkerFunction({
+    //         client,
+    //         spaceId: space.id,
+    //         version: await this._getNextVersion(space, existingFunctionId),
+    //         functionId: existingFunctionId,
+    //         name: this.flags.name,
+    //         source: scriptContent,
+    //       }),
+    //       5_000,
+    //     );
+    //     invariant(result.functionId, 'Upload failed.');
+    //     this.log(`Uploaded function: ${result.functionId}`);
+    //   } catch (err: any) {
+    //     this.error(err.message);
+    //   }
 
-      if (existingObject) {
-        // Update existing object
-        await loadObjectReferences(existingObject, (obj) => obj.source);
-        if (!existingObject.source) {
-          this.error('Object source not found');
-        }
-        existingObject.source.target!.content = scriptContent;
+    //   // If we haven't been provided an ECHO space/object, we're done.
+    //   if (!space) {
+    //     return;
+    //   }
 
-        if (this.flags.verbose) {
-          this.log(
-            `Updated source in ${this.flags.spaceKey}/${this.flags.objectId} (${existingObject.source.target!.id})`,
-          );
-        }
-        if (!functionUrlFromExistingObject) {
-          setUserFunctionUrlInMetadata(getMeta(existingObject), `/${space.id}/${result.functionId}`);
-        } else {
-          if (existingFunctionId !== result.functionId) {
-            this.error('functionId mismatch');
-          }
-        }
-      } else {
-        // Create new object
-        // TODO: make object navigable in Composer.
-        const sourceObj = space.db.add(create(TextType, { content: scriptContent }));
-        const obj = space.db.add(create(ScriptType, { name: this.flags.name, source: makeRef(sourceObj) }));
-        setUserFunctionUrlInMetadata(getMeta(obj), result.functionId);
-        if (this.flags.verbose) {
-          this.log(`Created object: ${this.flags.spaceKey}/${obj.id}`);
-        }
-      }
-    };
+    //   if (existingObject) {
+    //     // Update existing object
+    //     await loadObjectReferences(existingObject, (obj) => obj.source);
+    //     if (!existingObject.source) {
+    //       this.error('Object source not found');
+    //     }
+    //     existingObject.source.target!.content = scriptContent;
 
-    if (this.flags.spaceKey) {
-      return await this.execWithSpace(async ({ client, space }) => await handleUpload({ client, space }), {
-        spaceKeys: [this.flags.spaceKey],
-      });
-    }
+    //     if (this.flags.verbose) {
+    //       this.log(
+    //         `Updated source in ${this.flags.spaceKey}/${this.flags.objectId} (${existingObject.source.target!.id})`,
+    //       );
+    //     }
+    //     if (!functionUrlFromExistingObject) {
+    //       setUserFunctionUrlInMetadata(getMeta(existingObject), `/${space.id}/${result.functionId}`);
+    //     } else {
+    //       if (existingFunctionId !== result.functionId) {
+    //         this.error('functionId mismatch');
+    //       }
+    //     }
+    //   } else {
+    //     // Create new object
+    //     // TODO: make object navigable in Composer.
+    //     const sourceObj = space.db.add(create(TextType, { content: scriptContent }));
+    //     const obj = space.db.add(create(ScriptType, { name: this.flags.name, source: makeRef(sourceObj) }));
+    //     setUserFunctionUrlInMetadata(getMeta(obj), result.functionId);
+    //     if (this.flags.verbose) {
+    //       this.log(`Created object: ${this.flags.spaceKey}/${obj.id}`);
+    //     }
+    //   }
+    // };
 
-    return await this.execWithClient(async ({ client }) => await handleUpload({ client }));
+    // if (this.flags.spaceKey) {
+    //   return await this.execWithSpace(async ({ client, space }) => await handleUpload({ client, space }), {
+    //     spaceKeys: [this.flags.spaceKey],
+    //   });
+    // }
+
+    // return await this.execWithClient(async ({ client }) => await handleUpload({ client }));
   }
 
   private async _getNextVersion(space: Space, functionId: string | undefined): Promise<string> {
