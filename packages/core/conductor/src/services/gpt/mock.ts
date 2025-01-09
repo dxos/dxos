@@ -8,6 +8,8 @@ import { Effect, Stream } from 'effect';
 import type { GptInput } from '../gpt';
 import { ObjectId, type ResultStreamEvent } from '@dxos/assistant';
 import { log } from '@dxos/log';
+import type { OutputBag } from '../../schema';
+import type G from 'glob';
 
 export type GPTConfig = {
   initDelay?: number;
@@ -32,12 +34,26 @@ export class MockGpt implements Context.Tag.Service<GptService> {
     };
   }
 
-  public invoke({ systemPrompt, prompt, history = [] }: GptInput): Effect.Effect<GptOutput, never, never> {
+  public invoke({ systemPrompt, prompt, history = [] }: GptInput): Effect.Effect<OutputBag<GptOutput>> {
+    const self = this;
     return Effect.promise(async () => {
-      const response = this.config.responses[prompt] || this.config.responses.default;
+      const response = self.config.responses[prompt] || self.config.responses.default;
+
+      let onDone!: () => void;
+      const textResult = new Promise<string>((resolve) => {
+        onDone = () => {
+          log.info('gpt done', { response });
+          resolve(response);
+        };
+      });
+
+      const tokenStream = Stream.fromAsyncIterable(
+        self.createStream(response, onDone),
+        (err) => new Error(String(err)),
+      );
 
       return {
-        text: response,
+        text: Effect.promise(() => textResult),
         messages: [
           {
             id: ObjectId.random(),
@@ -50,13 +66,13 @@ export class MockGpt implements Context.Tag.Service<GptService> {
             content: [{ type: 'text', text: response }],
           },
         ],
-        tokenStream: Stream.fromAsyncIterable(this.createStream(response), (err) => new Error(String(err))),
+        tokenStream,
         tokenCount: 0,
-      } satisfies GptOutput;
+      } satisfies OutputBag<GptOutput>;
     });
   }
 
-  private async *createStream(response: string): AsyncGenerator<ResultStreamEvent> {
+  private async *createStream(response: string, onDone: () => void): AsyncGenerator<ResultStreamEvent> {
     // Simulate initial API delay.
     await this.delay(this.config.initDelay);
 
@@ -97,6 +113,8 @@ export class MockGpt implements Context.Tag.Service<GptService> {
     yield {
       type: 'message_stop',
     };
+
+    onDone();
   }
 
   private *tokenize(text: string): Generator<string> {

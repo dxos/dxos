@@ -9,8 +9,16 @@ import type { GraphEdge, GraphModel, GraphNode } from '@dxos/graph';
 import { failedInvariant } from '@dxos/invariant';
 
 import { EventLogger } from './services/event-logger';
-import type { ComputeNode, ComputeEdge, ComputeImplementation, ComputeMeta, ComputeRequirements } from './schema';
+import type {
+  ComputeNode,
+  ComputeEdge,
+  ComputeImplementation,
+  ComputeMeta,
+  ComputeRequirements,
+  OutputBag,
+} from './schema';
 import { createTopology, type GraphDiagnostic, type TopologyNode } from './topology';
+import { log } from '@dxos/log';
 
 export type ValidateParams = {
   graph: GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;
@@ -81,7 +89,7 @@ export const compile = async ({
 
   const computeCache = new Map<string, Effect.Effect<any, any, ComputeRequirements>>();
 
-  const computeInputs = (node: TopologyNode): Effect.Effect<any, Error, ComputeRequirements> => {
+  const computeInputs = (node: TopologyNode): Effect.Effect<OutputBag<any>, Error, ComputeRequirements> => {
     return Effect.gen(function* () {
       return yield* Effect.forEach(node.inputs, (input) => {
         const sourceNode = topology.nodes.find((node) => node.id === input.sourceNodeId) ?? failedInvariant();
@@ -92,13 +100,24 @@ export const compile = async ({
     });
   };
 
+  const unwrapOutputBag = <T>(output: OutputBag<T>): Effect.Effect<T, Error, ComputeRequirements> => {
+    return Effect.gen(function* () {
+      const res = {} as any;
+      for (const [key, value] of Object.entries(output)) {
+        res[key] = Effect.isEffect(value) ? yield* value : value;
+      }
+      return res;
+    }) as any;
+  };
+
   const computeNode = (node: TopologyNode): Effect.Effect<any, any, ComputeRequirements> => {
     if (computeCache.has(node.id)) {
       return computeCache.get(node.id)!;
     }
 
     const result = Effect.gen(function* () {
-      const inputValues = yield* computeInputs(node);
+      const inputValuesBag = yield* computeInputs(node);
+      const inputValues = yield* unwrapOutputBag(inputValuesBag);
       // TODO(dmaretskyi): Consider resolving the node implementation at the start of the computation.
       const nodeSpec = yield* Effect.promise(() => computeResolver(node.graphNode));
       if (nodeSpec.compute == null) {
@@ -120,14 +139,15 @@ export const compile = async ({
           nodeId: node.id,
         }),
       );
-      const decodedOutput = yield* S.decode(node.meta.output)(output);
+      log.info('output', { output });
+      // const decodedOutput = yield* S.decode(node.meta.output)(output);
 
       logger.log({
         type: 'end-compute',
         nodeId: node.id,
-        outputs: decodedOutput,
+        outputs: output,
       });
-      return decodedOutput;
+      return output;
     });
 
     computeCache.set(node.id, result);

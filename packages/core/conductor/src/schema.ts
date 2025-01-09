@@ -37,9 +37,14 @@ export const ComputeEdge = S.Struct({
 export type ComputeEdge = S.Schema.Type<typeof ComputeEdge>;
 
 /**
+ * Bag of effects. One per output property.
+ */
+export type OutputBag<O> = { [K in keyof O]: O[K] | Effect.Effect<O[K], Error, never> };
+
+/**
  * Node function.
  */
-export type ComputeFunction<I, O> = (input: I) => Effect.Effect<O, Error, ComputeRequirements>;
+export type ComputeFunction<I, O> = (input: I) => Effect.Effect<OutputBag<O>, Error, ComputeRequirements>;
 
 export type ComputeRequirements = EventLogger | GptService;
 

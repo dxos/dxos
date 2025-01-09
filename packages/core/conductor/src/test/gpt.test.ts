@@ -5,6 +5,7 @@ import { NodeType, type ComputeEdge, type ComputeGraph, type ComputeNode } from 
 import { createEdge, TestRuntime } from '../testing';
 import { testServices } from '../testing/test-services';
 import type { ResultStreamEvent } from '@dxos/assistant';
+import { MockGpt } from '../services/gpt/mock';
 
 const ENABLE_LOGGING = false;
 
@@ -21,20 +22,25 @@ describe('Gpt pipelines', () => {
         .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }))),
     );
 
-    expect(text).toEqual('This is a mock response that simulates a GPT-like output.');
+    expect(await Effect.runPromise(text)).toEqual('This is a mock response that simulates a GPT-like output.');
   });
 
-  test('stream output', async ({ expect }) => {
+  test.only('stream output', async ({ expect }) => {
     const runtime = new TestRuntime();
     runtime.registerGraph('dxn:graph:gpt2', gpt2());
 
-    const { tokenStream } = (await Effect.runPromise(
+    const { tokenStream, text } = (await Effect.runPromise(
       runtime
         .runGraph('dxn:graph:gpt2', {
           prompt: 'What is the meaning of life?',
         })
-        .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }))),
-    )) as { tokenStream: Stream.Stream<ResultStreamEvent> };
+        .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING, gpt: new MockGpt({ maxDelay: 50 }) }))),
+    )) as { tokenStream: Stream.Stream<ResultStreamEvent>; text: Effect.Effect<string> };
+
+    console.log({ text });
+    const p = Effect.runPromise(text).then((x) => {
+      console.log({ x });
+    });
 
     const tokens = await Effect.runPromise(
       tokenStream.pipe(
@@ -72,6 +78,8 @@ describe('Gpt pipelines', () => {
       '.',
       '',
     ]);
+
+    await p;
   });
 });
 
@@ -90,5 +98,6 @@ const gpt2 = (): ComputeGraph => {
     .addNode({ id: 'gpt2-GPT', data: { type: NodeType.Gpt } })
     .addNode({ id: 'gpt2-OUTPUT', data: { type: NodeType.Output } })
     .addEdge(createEdge({ source: 'gpt2-INPUT', output: 'prompt', target: 'gpt2-GPT', input: 'prompt' }))
+    .addEdge(createEdge({ source: 'gpt2-GPT', output: 'text', target: 'gpt2-OUTPUT', input: 'text' }))
     .addEdge(createEdge({ source: 'gpt2-GPT', output: 'tokenStream', target: 'gpt2-OUTPUT', input: 'tokenStream' }));
 };
