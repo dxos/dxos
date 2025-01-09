@@ -2,4 +2,5 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './Menus';
+export * from './components';
+export * from './defs';

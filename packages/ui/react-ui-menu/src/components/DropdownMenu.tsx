@@ -23,7 +23,7 @@ export type DropdownMenuProps = PropsWithChildren<MenuProps> &
     onAction?: (action: Action) => void;
   }>;
 
-export const DropdownMenu = ({
+const DropdownMenuRoot = ({
   defaultMenuOpen,
   actions,
   menuOpen,
@@ -89,4 +89,10 @@ export const DropdownMenu = ({
       </NaturalDropdownMenu.Portal>
     </NaturalDropdownMenu.Root>
   );
+};
+
+export const DropdownMenu = {
+  Root: DropdownMenuRoot,
+  Trigger: NaturalDropdownMenu.Trigger,
+  VirtualTrigger: NaturalDropdownMenu.VirtualTrigger,
 };
