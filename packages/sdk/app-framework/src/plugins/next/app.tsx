@@ -54,6 +54,9 @@ export const createApp = ({
   manager.activation.on(({ event, state: _state, error }) => {
     if (event === Events.Startup.id) {
       state.ready = _state === 'activated';
+    }
+
+    if (error && !state.ready && !state.error) {
       state.error = error;
     }
   });
@@ -64,7 +67,11 @@ export const createApp = ({
 
   void manager.activate(Events.Startup);
 
-  return () => <App placeholder={placeholder} fallback={fallback} manager={manager} state={state} />;
+  return () => (
+    <ErrorBoundary fallback={fallback}>
+      <App placeholder={placeholder} manager={manager} state={state} />
+    </ErrorBoundary>
+  );
 };
 
 const getEnabledPlugins = ({
@@ -83,12 +90,12 @@ const getEnabledPlugins = ({
   return available.filter((plugin) => enabled.includes(plugin.meta.id) || core.includes(plugin.meta.id));
 };
 
-type AppProps = Required<Pick<HostPluginParams, 'placeholder' | 'fallback'>> & {
+type AppProps = Required<Pick<HostPluginParams, 'placeholder'>> & {
   manager: PluginManager;
   state: { ready: boolean; error: unknown };
 };
 
-const App = ({ placeholder, fallback, manager, state }: AppProps) => {
+const App = ({ placeholder, manager, state }: AppProps) => {
   if (state.error) {
     // This trigger the error boundary to provide UI feedback for the startup error.
     throw state.error;
@@ -104,15 +111,13 @@ const App = ({ placeholder, fallback, manager, state }: AppProps) => {
 
   const ComposedContext = composeContexts(reactContexts);
   return (
-    <ErrorBoundary fallback={fallback}>
-      <PluginManagerProvider value={manager}>
-        <ComposedContext>
-          {reactRoots.map(({ id, root: Component }) => (
-            <Component key={id} />
-          ))}
-        </ComposedContext>
-      </PluginManagerProvider>
-    </ErrorBoundary>
+    <PluginManagerProvider value={manager}>
+      <ComposedContext>
+        {reactRoots.map(({ id, root: Component }) => (
+          <Component key={id} />
+        ))}
+      </ComposedContext>
+    </PluginManagerProvider>
   );
 };
 

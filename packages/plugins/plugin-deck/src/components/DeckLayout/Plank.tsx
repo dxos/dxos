@@ -9,7 +9,6 @@ import {
   type LayoutEntry,
   type LayoutPart,
   type LayoutParts,
-  Surface,
   useIntentDispatcher,
   type Layout,
   indexInPart,
@@ -17,6 +16,7 @@ import {
   LayoutAction,
   createIntent,
 } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/next';
 import { debounce } from '@dxos/async';
 import { useGraph } from '@dxos/plugin-graph';
 import { useAttendableAttributes } from '@dxos/react-ui-attention';

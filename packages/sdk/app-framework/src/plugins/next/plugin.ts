@@ -27,8 +27,20 @@ export type InterfaceDef<T> = {
  * Functionality contributed to the application by a plugin module.
  */
 export type Capability<T> = {
+  /**
+   * The interface definition of the capability.
+   */
   interface: InterfaceDef<T>;
+
+  /**
+   * The implementation of the capability.
+   */
   implementation: T;
+
+  /**
+   * Called when the capability is deactivated.
+   */
+  deactivate?: () => MaybePromise<void> | Effect.Effect<void, Error>;
 };
 
 export type AnyCapability = Capability<any>;
@@ -116,7 +128,10 @@ export class PluginsContext {
   /**
    *
    */
-  requestCapability<T>(interfaceDef: InterfaceDef<T>) {
+  requestCapability<T, U extends T = T>(
+    interfaceDef: InterfaceDef<T>,
+    filter?: (capability: T) => capability is U,
+  ): U[] {
     let current = this._definedCapabilities.get(interfaceDef.identifier);
     if (!current) {
       const object = create<{ value: CapabilityDef<unknown>[] }>({ value: [] });
@@ -125,9 +140,12 @@ export class PluginsContext {
     }
 
     // NOTE: This the type-checking for capabilities is done at the time of contribution.
-    // TODO(wittjosiah): This should be maintained as a live array that can be subscribed to.
-    //   This could be done with a `computed` utility for live objects.
-    return current.map((i) => i.implementation) as T[];
+    const capabilities = current.map((i) => i.implementation) as T[];
+    if (filter) {
+      return capabilities.filter(filter);
+    } else {
+      return capabilities as U[];
+    }
   }
 }
 
@@ -180,12 +198,6 @@ interface PluginModuleInterface {
   activate: (
     context: PluginsContext,
   ) => MaybePromise<AnyCapability | AnyCapability[]> | Effect.Effect<AnyCapability | AnyCapability[], Error>;
-
-  /**
-   * Called when the module is deactivated.
-   * @param context The plugin context.
-   */
-  deactivate?: (context: PluginsContext) => MaybePromise<void> | Effect.Effect<void, Error>;
 }
 
 /**
@@ -196,18 +208,16 @@ interface PluginModuleInterface {
 export class PluginModule implements PluginModuleInterface {
   readonly id: PluginModuleInterface['id'];
   readonly activationEvents: PluginModuleInterface['activationEvents'];
-  readonly activate: PluginModuleInterface['activate'];
   readonly dependentEvents?: PluginModuleInterface['dependentEvents'];
   readonly triggeredEvents?: PluginModuleInterface['triggeredEvents'];
-  readonly deactivate?: PluginModuleInterface['deactivate'];
+  readonly activate: PluginModuleInterface['activate'];
 
   constructor(options: PluginModuleInterface) {
     this.id = options.id;
     this.activationEvents = options.activationEvents;
-    this.activate = options.activate;
     this.dependentEvents = options.dependentEvents;
     this.triggeredEvents = options.triggeredEvents;
-    this.deactivate = options.deactivate;
+    this.activate = options.activate;
   }
 }
 
@@ -226,18 +236,22 @@ export const defineInterface = <T>(identifier: string) => {
 /**
  * Helper to define the implementation of a capability.
  */
-export const contributes = <T>(interfaceDef: InterfaceDef<T>, implementation: T): Capability<T> => {
-  return { interface: interfaceDef, implementation } satisfies Capability<T>;
+export const contributes = <T>(
+  interfaceDef: Capability<T>['interface'],
+  implementation: Capability<T>['implementation'],
+  deactivate?: Capability<T>['deactivate'],
+): Capability<T> => {
+  return { interface: interfaceDef, implementation, deactivate } satisfies Capability<T>;
 };
 
-type LazyCapability<T, U> = () => Promise<{ default: (props: T) => Capability<U> }>;
+type LazyCapability<T, U> = () => Promise<{ default: (props: T) => MaybePromise<Capability<U>> }>;
 
 /**
  * Helper to define a lazily loaded implementation of a capability.
  */
 export const lazy =
-  <T, U>(c: LazyCapability<T, U>, props?: T) =>
-  (): Promise<Capability<U>> =>
+  <T, U>(c: LazyCapability<T, U>) =>
+  (props?: T): Promise<Capability<U>> =>
     c().then(({ default: getCapability }) => {
       return getCapability(props as T);
     });

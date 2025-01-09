@@ -37,15 +37,18 @@ export type PanelProvides = {
 export const parsePanelPlugin = (plugin?: Plugin) =>
   Array.isArray((plugin?.provides as any).complementary?.panels) ? (plugin as Plugin<PanelProvides>) : undefined;
 
-export type DeckSettingsProps = {
-  showHints: boolean;
-  customSlots: boolean;
-  flatDeck: boolean;
-  enableNativeRedirect: boolean;
-  disableDeck: boolean;
-  newPlankPositioning: NewPlankPositioning;
-  overscroll: Overscroll;
-};
+export const DeckSettingsSchema = S.mutable(
+  S.Struct({
+    showHints: S.Boolean,
+    customSlots: S.Boolean,
+    flatDeck: S.Boolean,
+    enableNativeRedirect: S.Boolean,
+    newPlankPositioning: S.Literal(...NewPlankPositions),
+    overscroll: S.Literal(...OverscrollOptions),
+  }),
+);
+
+export type DeckSettingsProps = S.Schema.Type<typeof DeckSettingsSchema>;
 
 export type DeckPluginProvides = SurfaceProvides &
   IntentResolverProvides &

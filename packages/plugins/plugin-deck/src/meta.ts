@@ -4,7 +4,7 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const DECK_PLUGIN = 'dxos.org/plugin/deck';
+export const DECK_PLUGIN = 'dxos.org/plugin/deck' as const;
 
 export default {
   id: DECK_PLUGIN,

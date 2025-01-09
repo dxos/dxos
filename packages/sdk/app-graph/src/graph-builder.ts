@@ -166,7 +166,7 @@ export const toSignal = <T>(
   return thisSignal.value;
 };
 
-export type BuilderExtension = {
+export type BuilderExtension = Readonly<{
   id: string;
   resolver?: ResolverExtension;
   connector?: ConnectorExtension;
@@ -174,7 +174,7 @@ export type BuilderExtension = {
   relation?: Relation;
   type?: string;
   filter?: (node: Node) => boolean;
-};
+}>;
 
 type ExtensionArg = BuilderExtension | BuilderExtension[] | ExtensionArg[];
 

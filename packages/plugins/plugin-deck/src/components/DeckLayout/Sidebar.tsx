@@ -4,16 +4,12 @@
 
 import React, { useMemo } from 'react';
 
-import { type LayoutParts, Surface } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/next';
 import { Main } from '@dxos/react-ui';
 
 import { useLayout } from '../LayoutContext';
 
-export type SidebarProps = {
-  layoutParts: LayoutParts;
-};
-
-export const Sidebar = ({ layoutParts }: SidebarProps) => {
+export const Sidebar = () => {
   const { popoverAnchorId } = useLayout();
   const navigationData = useMemo(() => ({ popoverAnchorId }), [popoverAnchorId]);
 

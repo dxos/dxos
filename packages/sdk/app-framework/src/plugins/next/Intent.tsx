@@ -8,8 +8,9 @@ import React from 'react';
 import { create } from '@dxos/live-object';
 
 import { Capabilities, Events } from './common';
+import { eventKey } from './manager';
 import { contributes, defineModule, definePlugin } from './plugin';
-import { createDispatcher, IntentProvider, type IntentContext } from '../plugin-intent';
+import { createDispatcher, type IntentContext, IntentProvider } from '../plugin-intent';
 import IntentMeta from '../plugin-intent/meta';
 
 const defaultEffect = () => Effect.fail(new Error('Intent runtime not ready'));
@@ -21,8 +22,9 @@ export const IntentPlugin = definePlugin(IntentMeta, [
     // TODO(wittjosiah): This will mean that startup needs to be reset when intents are added or removed.
     //   This is fine for now because it's how it worked prior to capabilities api anyways.
     //   In the future, the intent dispatcher should be able to be reset without resetting the entire app.
-    activationEvents: [Events.Startup.id],
-    dependentEvents: [Events.SetupIntents.id],
+    activationEvents: [eventKey(Events.Startup)],
+    dependentEvents: [eventKey(Events.SetupIntents)],
+    triggeredEvents: [eventKey(Events.DispatcherReady)],
     activate: (context) => {
       const state = create<IntentContext>({
         dispatch: defaultEffect,
@@ -45,7 +47,7 @@ export const IntentPlugin = definePlugin(IntentMeta, [
       return [
         contributes(Capabilities.IntentDispatcher, state),
         contributes(Capabilities.ReactContext, {
-          id: `${IntentMeta.id}/context`,
+          id: IntentMeta.id,
           context: ({ children }) => <IntentProvider value={state}>{children}</IntentProvider>,
         }),
       ];

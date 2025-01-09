@@ -16,7 +16,10 @@ export const usePluginManager = (): PluginManager =>
 
 export const PluginManagerProvider = PluginManagerContext.Provider;
 
-export const useCapabilities = <T>(interfaceDef: InterfaceDef<T>) => {
+export const useCapabilities = <T, U extends T = T>(
+  interfaceDef: InterfaceDef<T>,
+  filter?: (capability: T) => capability is U,
+) => {
   const manager = usePluginManager();
-  return manager.context.requestCapability(interfaceDef);
+  return manager.context.requestCapability(interfaceDef, filter);
 };

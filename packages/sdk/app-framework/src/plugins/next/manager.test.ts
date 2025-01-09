@@ -228,6 +228,30 @@ describe('PluginManager', () => {
     expect(manager.context.requestCapability(Number)).toHaveLength(3);
   });
 
+  it('should only activate modules after all activatation events have been fired', async () => {
+    const Hello = defineModule({
+      id: 'dxos.org/test/hello',
+      activationEvents: [Events.Startup.id, CountEvent.id],
+      activate: () => {
+        return contributes(String, { string: 'hello' });
+      },
+    });
+    plugins = [definePlugin(testMeta, [Hello])];
+
+    const manager = new PluginManager({ pluginLoader });
+    expect(manager.active).toEqual([]);
+    expect(manager.context.requestCapability(Number)).toHaveLength(0);
+
+    await manager.add(testMeta.id);
+    await manager.activate(Events.Startup);
+    expect(manager.active).toEqual([]);
+    expect(manager.context.requestCapability(String)).toHaveLength(0);
+
+    await manager.activate(CountEvent);
+    expect(manager.active).toEqual([Hello.id]);
+    expect(manager.context.requestCapability(String)).toHaveLength(1);
+  });
+
   it('should be able to disable and re-enable an active plugin', async () => {
     const state = { total: 0 };
     const computeTotal = (context: PluginsContext) => {
@@ -344,7 +368,6 @@ describe('PluginManager', () => {
     const id = 'dxos.org/test/counter';
     const stateEvent = Events.createStateEvent(id);
 
-    let unsubscribe: () => void;
     const Test = definePlugin(testMeta, [
       defineModule({
         id,
@@ -358,13 +381,10 @@ describe('PluginManager', () => {
         activate: (context) => {
           const [counter] = context.requestCapability(Number);
           const state = create({ total: counter.number * 2 });
-          unsubscribe = effect(() => {
+          const unsubscribe = effect(() => {
             state.total = counter.number * 2;
           });
-          return contributes(Total, state);
-        },
-        deactivate: () => {
-          unsubscribe?.();
+          return contributes(Total, state, () => unsubscribe());
         },
       }),
     ]);

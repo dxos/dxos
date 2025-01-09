@@ -80,13 +80,13 @@ export type SurfaceDisposition = 'static' | 'hoist' | 'fallback';
 /**
  * Definition of when a SurfaceComponent should be rendered.
  */
-export type SurfaceDefinition<T extends Record<string, any> = any> = {
+export type SurfaceDefinition<T extends Record<string, any> = any> = Readonly<{
   id: string;
   role: string | string[];
   disposition?: SurfaceDisposition;
   filter?: (data: Record<string, unknown>) => data is T;
   component: SurfaceComponent<GuardedType<SurfaceDefinition<T>['filter']>>;
-};
+}>;
 
 export const createSurface = <T extends Record<string, any> = any>(definition: SurfaceDefinition<T>) => definition;
 

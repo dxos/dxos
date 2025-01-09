@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AttentionPlugin } from './AttentionPlugin';
-
-export default AttentionPlugin;
+export * from '@dxos/react-ui-attention';
 
 export * from './AttentionPlugin';
+export * from './capabilities';
+export * from './events';

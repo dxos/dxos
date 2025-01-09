@@ -90,10 +90,10 @@ export default defineConfig((env) => ({
   plugins: [
     SourceMapsPlugin(),
     // TODO(wittjosiah): Causing issues with bundle.
-    env.command === 'serve' &&
-      tsconfigPaths({
-        projects: ['../../../tsconfig.paths.json'],
-      }),
+    // env.command === 'serve' &&
+    //   tsconfigPaths({
+    //     projects: ['../../../tsconfig.paths.json'],
+    //   }),
     ConfigPlugin(),
     ThemePlugin({
       root: __dirname,

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/next';
 import { useGraph } from '@dxos/plugin-graph';
 import { fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 

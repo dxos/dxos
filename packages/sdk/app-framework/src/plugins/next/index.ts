@@ -8,4 +8,5 @@ export * from './Intent';
 export * from './manager';
 export * from './plugin';
 export * from './react';
+export * from './Settings';
 export * from './Surface';

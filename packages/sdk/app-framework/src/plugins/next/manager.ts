@@ -339,6 +339,14 @@ export class PluginManager {
       self.activation.emit({ event: key, state: 'activating' });
 
       for (const module of modules) {
+        if (
+          !module.activationEvents
+            .filter((event) => event !== key)
+            .every((event) => self._state.eventsFired.includes(event))
+        ) {
+          continue;
+        }
+
         yield* Effect.all(module.dependentEvents?.map((event) => self._activate(event)) ?? []);
 
         const result = yield* self._activateModule(module).pipe(Effect.either);
@@ -403,18 +411,17 @@ export class PluginManager {
       const id = module.id;
       log('deactivating', { id });
 
-      const program = module.deactivate?.(self.context);
-      yield* Match.value(program).pipe(
-        Match.when(Effect.isEffect, (effect) => effect),
-        Match.when(isPromise, (promise) => Effect.tryPromise(() => promise)),
-        Match.orElse((program) => Effect.succeed(program)),
-      );
-
       const capabilities = self._capabilities.get(id);
       if (capabilities) {
-        capabilities.forEach((capability) => {
+        for (const capability of capabilities) {
           self.context.removeCapability(capability.interface, capability.implementation);
-        });
+          const program = capability.deactivate?.();
+          yield* Match.value(program).pipe(
+            Match.when(Effect.isEffect, (effect) => effect),
+            Match.when(isPromise, (promise) => Effect.tryPromise(() => promise)),
+            Match.orElse((program) => Effect.succeed(program)),
+          );
+        }
         self._capabilities.delete(id);
       }
 

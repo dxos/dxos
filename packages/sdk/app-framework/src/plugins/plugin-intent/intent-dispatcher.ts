@@ -89,13 +89,13 @@ export type IntentEffectDefinition<Fields extends IntentParams> = (
 /**
  * Intent resolver to match intents to their effects.
  */
-export type IntentResolver<Tag extends string, Fields extends IntentParams> = {
+export type IntentResolver<Tag extends string, Fields extends IntentParams> = Readonly<{
   action: Tag;
   disposition?: IntentDisposition;
   // TODO(wittjosiah): Would be nice to make this a guard for intents with optional data.
   filter?: (data: IntentData<Fields>) => boolean;
   effect: IntentEffectDefinition<Fields>;
-};
+}>;
 
 export type AnyIntentResolver = IntentResolver<any, any>;
 
