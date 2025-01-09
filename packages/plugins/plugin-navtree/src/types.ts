@@ -47,7 +47,7 @@ export type ActionProperties = SharedProperties & {
   disposition?: string;
   hidden?: boolean;
   caller?: string;
-  menuType?: 'searchList' | 'dropdown';
+  menuType?: 'dropdown';
   keyBinding?: string | KeyBinding;
 };
 
