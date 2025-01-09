@@ -22,6 +22,8 @@ import {
   type ComputeRequirements,
 } from './schema';
 
+const ENABLE_LOGGING = false;
+
 describe('Graph as a fiber runtime', () => {
   test('simple adder node', async ({ expect }) => {
     const runtime = new TestRuntime();
@@ -34,7 +36,7 @@ describe('Graph as a fiber runtime', () => {
     const result = await Effect.runPromise(
       runtime
         .runGraph('dxn:graph:adder', { number1: 1, number2: 2 })
-        .pipe(Effect.provideService(EventLogger, consoleLogger)),
+        .pipe(Effect.provideService(EventLogger, ENABLE_LOGGING ? consoleLogger : noopLogger)),
     );
     expect(result).toEqual({ sum: 3 });
   });
@@ -48,7 +50,7 @@ describe('Graph as a fiber runtime', () => {
       const result = await Effect.runPromise(
         runtime
           .runGraph('dxn:graph:add3', { a: 1, b: 2, c: 3 })
-          .pipe(Effect.provideService(EventLogger, consoleLogger)),
+          .pipe(Effect.provideService(EventLogger, ENABLE_LOGGING ? consoleLogger : noopLogger)),
       );
       expect(result).toEqual({ result: 6 });
     } catch (err) {
@@ -172,6 +174,11 @@ const createEdge = (params: {
   target: params.target,
   data: { input: params.input, output: params.output },
 });
+
+const noopLogger: Context.Tag.Service<EventLogger> = {
+  log: () => Effect.succeed(undefined),
+  nodeId: undefined,
+};
 
 const consoleLogger: Context.Tag.Service<EventLogger> = {
   log: (event: ComputeEvent) => {
