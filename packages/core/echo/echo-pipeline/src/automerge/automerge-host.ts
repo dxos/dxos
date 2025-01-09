@@ -148,9 +148,13 @@ export class AutomergeHost extends Resource {
     Event.wrap(this._echoNetworkAdapter, 'peer-disconnected').on(this._ctx, ((e: PeerDisconnectedPayload) =>
       this._onPeerDisconnected(e.peerId)) as any);
 
-    this._collectionSynchronizer.remoteStateUpdated.on(this._ctx, ({ collectionId, peerId }) => {
+    this._collectionSynchronizer.remoteStateUpdated.on(this._ctx, ({ collectionId, peerId, newDocsAppeared }) => {
       this._onRemoteCollectionStateUpdated(collectionId, peerId);
       this.collectionStateUpdated.emit({ collectionId: collectionId as CollectionId });
+      // We use collection lookups during share policy check, so we might need to update share policy for the new doc
+      if (newDocsAppeared) {
+        this._echoNetworkAdapter.onConnectionAuthScopeChanged(peerId);
+      }
     });
 
     await this._echoNetworkAdapter.open();
