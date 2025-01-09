@@ -3,23 +3,44 @@
 //
 
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type MutableRefObject, type PropsWithChildren } from 'react';
+import React, { type MouseEvent, type MutableRefObject, type PropsWithChildren, useCallback } from 'react';
 
-import { keySymbols } from '@dxos/keyboard';
-import { DropdownMenu as NaturalDropdownMenu, Icon, useTranslation, toLocalizedString } from '@dxos/react-ui';
-import { mx, descriptionText } from '@dxos/react-ui-theme';
+import { type Action } from '@dxos/app-graph';
+import { DropdownMenu as NaturalDropdownMenu, Icon } from '@dxos/react-ui';
 
+import { ActionLabel } from './ActionLabel';
 import { type MenuProps } from '../defs';
-import { translationKey } from '../translations';
-import { getShortcut } from '../util';
 
-export type DropdownMenuProps = PropsWithChildren<MenuProps> &
-  Partial<{
-    defaultMenuOpen: boolean;
-    menuOpen: boolean;
-    onMenuOpenChange: (nextOpen: boolean) => void;
-    suppressNextTooltip?: MutableRefObject<boolean>;
-  }>;
+export type DropdownMenuProps = MenuProps &
+  PropsWithChildren<
+    Partial<{
+      defaultMenuOpen: boolean;
+      menuOpen: boolean;
+      onMenuOpenChange: (nextOpen: boolean) => void;
+      suppressNextTooltip?: MutableRefObject<boolean>;
+    }>
+  >;
+
+const DropdownMenuItem = ({
+  action,
+  onClick,
+}: {
+  action: Action;
+  onClick: (action: Action, event: MouseEvent) => void;
+}) => {
+  const handleClick = useCallback((event: MouseEvent) => onClick(action, event), [action, onClick]);
+  return (
+    <NaturalDropdownMenu.Item
+      onClick={handleClick}
+      classNames='gap-2'
+      disabled={action.properties?.disabled}
+      {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
+    >
+      {action.properties?.icon && <Icon icon={action.properties!.icon} size={4} />}
+      <ActionLabel action={action} />
+    </NaturalDropdownMenu.Item>
+  );
+};
 
 const DropdownMenuRoot = ({
   defaultMenuOpen,
@@ -30,13 +51,27 @@ const DropdownMenuRoot = ({
   onAction,
   children,
 }: DropdownMenuProps) => {
-  const { t } = useTranslation(translationKey);
-
   const [optionsMenuOpen, setOptionsMenuOpen] = useControllableState({
     prop: menuOpen,
     defaultProp: defaultMenuOpen,
     onChange: onMenuOpenChange,
   });
+
+  const handleActionClick = useCallback(
+    (action: Action, event: MouseEvent) => {
+      if (action.properties?.disabled) {
+        return;
+      }
+      event.stopPropagation();
+      // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
+      if (suppressNextTooltip) {
+        suppressNextTooltip.current = true;
+      }
+      setOptionsMenuOpen(false);
+      onAction?.(action);
+    },
+    [onAction],
+  );
 
   return (
     <NaturalDropdownMenu.Root
@@ -54,33 +89,7 @@ const DropdownMenuRoot = ({
       <NaturalDropdownMenu.Portal>
         <NaturalDropdownMenu.Content>
           <NaturalDropdownMenu.Viewport>
-            {actions?.map((action) => {
-              const shortcut = getShortcut(action);
-              return (
-                <NaturalDropdownMenu.Item
-                  key={action.id}
-                  onClick={(event) => {
-                    if (action.properties?.disabled) {
-                      return;
-                    }
-                    event.stopPropagation();
-                    // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
-                    if (suppressNextTooltip) {
-                      suppressNextTooltip.current = true;
-                    }
-                    setOptionsMenuOpen(false);
-                    onAction?.(action);
-                  }}
-                  classNames='gap-2'
-                  disabled={action.properties?.disabled}
-                  {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
-                >
-                  {action.properties?.icon && <Icon icon={action.properties!.icon} size={4} />}
-                  <span className='grow truncate'>{toLocalizedString(action.properties!.label, t)}</span>
-                  {shortcut && <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>}
-                </NaturalDropdownMenu.Item>
-              );
-            })}
+            {actions?.map((action) => <DropdownMenuItem key={action.id} action={action} onClick={handleActionClick} />)}
           </NaturalDropdownMenu.Viewport>
           <NaturalDropdownMenu.Arrow />
         </NaturalDropdownMenu.Content>

@@ -2,48 +2,54 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren } from 'react';
+import React, { type MouseEvent, useCallback } from 'react';
 
-import { keySymbols } from '@dxos/keyboard';
-import { Toolbar as NaturalToolbar, useTranslation, toLocalizedString, type IconButtonProps } from '@dxos/react-ui';
-import { mx, descriptionText } from '@dxos/react-ui-theme';
+import { type Action } from '@dxos/app-graph';
+import { Toolbar as NaturalToolbar, type IconButtonProps } from '@dxos/react-ui';
 
+import { ActionLabel } from './ActionLabel';
 import { type MenuProps } from '../defs';
-import { translationKey } from '../translations';
-import { getShortcut } from '../util';
 
-export type ToolbarProps = PropsWithChildren<MenuProps> & { iconSize?: IconButtonProps['size'] };
+export type ToolbarProps = MenuProps & { iconSize?: IconButtonProps['size'] };
+
+const ToolbarItem = ({
+  iconSize,
+  action,
+  onClick,
+}: Pick<ToolbarProps, 'iconSize'> & { action: Action; onClick: (action: Action, event: MouseEvent) => void }) => {
+  const handleClick = useCallback(
+    (event: MouseEvent) => {
+      onClick(action, event);
+    },
+    [action, onClick],
+  );
+  return (
+    <NaturalToolbar.IconButton
+      key={action.id}
+      iconOnly
+      variant='ghost'
+      icon={action.properties!.icon}
+      size={iconSize}
+      label={<ActionLabel action={action} />}
+      disabled={action.properties?.disabled}
+      onClick={handleClick}
+      {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
+    />
+  );
+};
 
 export const Toolbar = ({ actions, onAction, iconSize = 5 }: ToolbarProps) => {
-  const { t } = useTranslation(translationKey);
+  const handleActionClick = useCallback((action: Action) => {
+    if (action.properties?.disabled) {
+      return;
+    }
+    onAction?.(action);
+  }, []);
   return (
     <NaturalToolbar.Root>
-      {actions?.map((action) => {
-        const shortcut = getShortcut(action);
-        return (
-          <NaturalToolbar.IconButton
-            key={action.id}
-            iconOnly
-            variant='ghost'
-            icon={action.properties!.icon}
-            size={iconSize}
-            label={
-              <>
-                <span className='grow truncate'>{toLocalizedString(action.properties!.label, t)}</span>
-                {shortcut && <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>}
-              </>
-            }
-            disabled={action.properties?.disabled}
-            onClick={() => {
-              if (action.properties?.disabled) {
-                return;
-              }
-              onAction?.(action);
-            }}
-            {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
-          />
-        );
-      })}
+      {actions?.map((action) => (
+        <ToolbarItem key={action.id} action={action} iconSize={iconSize} onClick={handleActionClick} />
+      ))}
     </NaturalToolbar.Root>
   );
 };
