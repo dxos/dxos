@@ -57,9 +57,9 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
     };
   }, [registry]);
 
-  const [schema, setSchema] = useState<EchoSchema>();
+  const [referenceSchema, setReferenceSchema] = useState<EchoSchema>();
   useEffect(() => {
-    setSchema(schemas.find((schema) => schema.typename === props?.referenceSchema));
+    setReferenceSchema(schemas.find((schema) => schema.typename === props?.referenceSchema));
   }, [schemas, props?.referenceSchema]);
 
   // TODO(burdon): Need to wrap otherwise throws error:
@@ -78,9 +78,15 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
         }
         return { fieldSchema };
       });
-      if (_props.referenceSchema !== props.referenceSchema) {
-        setSchema(schemas.find((schema) => schema.typename === _props.referenceSchema));
-      }
+      setReferenceSchema((prev) => {
+        if (_props.referenceSchema !== prev?.typename) {
+          const newSchema = schemas.find((schema) => schema.typename === _props.referenceSchema);
+          if (newSchema) {
+            return newSchema;
+          }
+        }
+        return prev;
+      });
 
       setProps((props) => {
         const type = formatToType[_props.format as keyof typeof formatToType];
@@ -161,8 +167,8 @@ export const FieldEditor = ({ view, projection, field, registry, onSave, onCance
           <SelectInput<PropertyType>
             {...props}
             options={
-              schema
-                ? getSchemaProperties(schema.ast)
+              referenceSchema
+                ? getSchemaProperties(referenceSchema.ast)
                     .sort(sortProperties)
                     .map((p) => ({ value: p.name }))
                 : []
