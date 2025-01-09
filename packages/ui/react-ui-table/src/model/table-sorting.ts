@@ -31,9 +31,9 @@ export type SortConfig = { fieldId: string; direction: SortDirection };
  *
  * Original Data:        Sorted Display:       Mapping: (Display → Data)
  * ┌──────────────┐      ┌──────────────┐      ┌────────┐
- * │ 0: "Banana"  │  =>  │ 0: "Apple"   │  =>  │ 0 → 1 │
- * │ 1: "Apple"   │  =>  │ 1: "Banana"  │  =>  │ 1 → 0 │
- * │ 2: "Cherry"  │  =>  │ 2: "Cherry"  │  =>  │ 2 → 2 │
+ * │ 0: "Banana"  │  =>  │ 0: "Apple"   │  =>  │ 0 => 1 │
+ * │ 1: "Apple"   │  =>  │ 1: "Banana"  │  =>  │ 1 => 0 │
+ * │ 2: "Cherry"  │  =>  │ 2: "Cherry"  │  =>  │ 2 => 2 │
  * └──────────────┘      └──────────────┘      └────────┘
  */
 export class TableSorting<T extends BaseTableRow> {
