@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import { type Action } from '@dxos/app-graph';
 import { create } from '@dxos/live-object';
 import { faker } from '@dxos/random';
+import { type DeepWriteable } from '@dxos/util';
 
 export type CreateActionsParams = Partial<{
   callback: () => void;
@@ -53,12 +54,10 @@ export const createActions = (params?: CreateActionsParams) => {
 export const mutateActionsOnInterval = (actions: Action[]) => {
   let cursor = 0;
   return setInterval(() => {
-    const action = actions[cursor];
-    // @ts-ignore
+    const action = actions[cursor] as DeepWriteable<Action>;
     action.properties.icon = faker.helpers.arrayElement(
       action.properties.icon.endsWith('regular') ? icons.fill : icons.regular,
     );
-    // @ts-ignore
     action.properties.disabled = !action.properties.disabled;
     cursor = (cursor + actions.length + 1) % actions.length;
   }, 1_000);
