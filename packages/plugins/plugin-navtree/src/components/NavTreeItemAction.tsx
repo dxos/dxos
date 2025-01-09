@@ -2,20 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type MutableRefObject, type PropsWithChildren, useRef, useState } from 'react';
+import React, { type MutableRefObject, useRef, useState } from 'react';
 
 import { type Action, type ActionLike, type Node } from '@dxos/app-graph';
 import { keySymbols } from '@dxos/keyboard';
-import {
-  Button,
-  Dialog,
-  ContextMenu,
-  Tooltip,
-  useTranslation,
-  toLocalizedString,
-  Icon,
-  IconButton,
-} from '@dxos/react-ui';
+import { Button, Dialog, Tooltip, useTranslation, toLocalizedString, Icon, IconButton } from '@dxos/react-ui';
 import { DropdownMenu } from '@dxos/react-ui-menu';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { descriptionText, hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
@@ -69,55 +60,6 @@ export const NavTreeItemActionDropdownMenu = ({
         </DropdownMenu.Trigger>
       </Tooltip.Trigger>
     </DropdownMenu.Root>
-  );
-};
-
-export const NavTreeItemActionContextMenu = (
-  props: PropsWithChildren<Pick<NavTreeItemActionMenuProps, 'menuActions' | 'onAction'>>,
-) => {
-  return (props.menuActions?.length ?? 0) > 0 ? <NavTreeItemActionContextMenuImpl {...props} /> : <>{props.children}</>;
-};
-
-const NavTreeItemActionContextMenuImpl = ({
-  menuActions,
-  onAction,
-  children,
-}: PropsWithChildren<Pick<NavTreeItemActionMenuProps, 'menuActions' | 'onAction'>>) => {
-  const { t } = useTranslation(NAVTREE_PLUGIN);
-
-  return (
-    <ContextMenu.Root>
-      <ContextMenu.Trigger asChild>{children}</ContextMenu.Trigger>
-      <ContextMenu.Portal>
-        <ContextMenu.Content>
-          <ContextMenu.Viewport>
-            {menuActions?.map((action) => {
-              const shortcut = getShortcut(action);
-              return (
-                <ContextMenu.Item
-                  key={action.id}
-                  onClick={(event) => {
-                    if (action.properties?.disabled) {
-                      return;
-                    }
-                    event.stopPropagation();
-                    onAction?.(action);
-                  }}
-                  classNames='gap-2'
-                  disabled={action.properties?.disabled}
-                  {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
-                >
-                  {action.properties?.icon && <Icon icon={action.properties?.icon} size={4} />}
-                  <span className='grow truncate'>{toLocalizedString(action.properties!.label, t)}</span>
-                  {shortcut && <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>}
-                </ContextMenu.Item>
-              );
-            })}
-          </ContextMenu.Viewport>
-          <ContextMenu.Arrow />
-        </ContextMenu.Content>
-      </ContextMenu.Portal>
-    </ContextMenu.Root>
   );
 };
 
