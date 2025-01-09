@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type MutableRefObject, type PropsWithChildren, useRef, useState } from 'react';
 
 import { type Action, type ActionLike, type Node } from '@dxos/app-graph';
@@ -10,13 +9,14 @@ import { keySymbols } from '@dxos/keyboard';
 import {
   Button,
   Dialog,
-  DropdownMenu,
   ContextMenu,
   Tooltip,
   useTranslation,
   toLocalizedString,
   Icon,
+  IconButton,
 } from '@dxos/react-ui';
+import { DropdownMenu } from '@dxos/react-ui-menu';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { descriptionText, hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
 import { getHostPlatform } from '@dxos/util';
@@ -48,81 +48,26 @@ export const NavTreeItemActionDropdownMenu = ({
   label,
   icon,
   testId,
-  defaultMenuOpen,
   menuActions,
-  menuOpen,
-  suppressNextTooltip,
-  onChangeMenuOpen,
-  onAction,
+  ...menuProps
 }: NavTreeItemActionMenuProps) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
 
-  const [optionsMenuOpen, setOptionsMenuOpen] = useControllableState({
-    prop: menuOpen,
-    defaultProp: defaultMenuOpen,
-    onChange: onChangeMenuOpen,
-  });
-
   return (
-    <DropdownMenu.Root
-      {...{
-        open: optionsMenuOpen,
-        onOpenChange: (nextOpen: boolean) => {
-          if (!nextOpen && suppressNextTooltip) {
-            suppressNextTooltip.current = true;
-          }
-          return setOptionsMenuOpen(nextOpen);
-        },
-      }}
-    >
+    <DropdownMenu.Root actions={menuActions} {...menuProps}>
       <Tooltip.Trigger asChild>
         <DropdownMenu.Trigger asChild>
-          <Button
+          <IconButton
             variant='ghost'
             density='fine'
             classNames={mx('shrink-0 !pli-2 pointer-fine:!pli-1', hoverableControlItem, hoverableOpenControlItem)}
             data-testid={testId}
-            aria-label={t('tree item actions label')}
-          >
-            <span className='sr-only'>{toLocalizedString(label, t)}</span>
-            <Icon icon={icon ?? fallbackIcon} size={4} />
-          </Button>
+            label={t('tree item actions label')}
+            icon={icon ?? fallbackIcon}
+            size={4}
+          />
         </DropdownMenu.Trigger>
       </Tooltip.Trigger>
-      <DropdownMenu.Portal>
-        <DropdownMenu.Content>
-          <DropdownMenu.Viewport>
-            {menuActions?.map((action) => {
-              const shortcut = getShortcut(action);
-              return (
-                <DropdownMenu.Item
-                  key={action.id}
-                  onClick={(event) => {
-                    if (action.properties?.disabled) {
-                      return;
-                    }
-                    event.stopPropagation();
-                    // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
-                    if (suppressNextTooltip) {
-                      suppressNextTooltip.current = true;
-                    }
-                    setOptionsMenuOpen(false);
-                    onAction?.(action);
-                  }}
-                  classNames='gap-2'
-                  disabled={action.properties?.disabled}
-                  {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
-                >
-                  {action.properties?.icon && <Icon icon={action.properties!.icon} size={4} />}
-                  <span className='grow truncate'>{toLocalizedString(action.properties!.label, t)}</span>
-                  {shortcut && <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>}
-                </DropdownMenu.Item>
-              );
-            })}
-          </DropdownMenu.Viewport>
-          <DropdownMenu.Arrow />
-        </DropdownMenu.Content>
-      </DropdownMenu.Portal>
     </DropdownMenu.Root>
   );
 };
