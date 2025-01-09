@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 
-import { defineInterface, PluginsContext } from './plugin';
+import { defineCapability, PluginsContext } from './plugin';
 
 registerSignalsRuntime();
 
@@ -19,13 +19,13 @@ const defaultOptions = {
 describe('PluginsContext', () => {
   it('should return empty array if no capabilities are contributed', () => {
     const context = new PluginsContext(defaultOptions);
-    const interfaceDef = defineInterface<{ example: string }>('@dxos/app-framework/test/example');
+    const interfaceDef = defineCapability<{ example: string }>('@dxos/app-framework/test/example');
     expect(context.requestCapability(interfaceDef)).toEqual([]);
   });
 
   it('should be able to contribute and request capabilities', () => {
     const context = new PluginsContext(defaultOptions);
-    const interfaceDef = defineInterface<{ example: string }>('@dxos/app-framework/test/example');
+    const interfaceDef = defineCapability<{ example: string }>('@dxos/app-framework/test/example');
     const implementation = { example: 'identifier' };
     context.contributeCapability(interfaceDef, implementation);
     expect(context.requestCapability(interfaceDef)).toEqual([implementation]);
@@ -33,7 +33,7 @@ describe('PluginsContext', () => {
 
   it('should be able to remove capabilities', () => {
     const context = new PluginsContext(defaultOptions);
-    const interfaceDef = defineInterface<{ example: string }>('@dxos/app-framework/test/example');
+    const interfaceDef = defineCapability<{ example: string }>('@dxos/app-framework/test/example');
     const implementation = { example: 'identifier' };
     context.contributeCapability(interfaceDef, implementation);
     expect(context.requestCapability(interfaceDef)).toEqual([implementation]);
@@ -43,7 +43,7 @@ describe('PluginsContext', () => {
 
   it('should be able to contribute and request multiple implementations', () => {
     const context = new PluginsContext(defaultOptions);
-    const interfaceDef = defineInterface<{ example: string }>('@dxos/app-framework/test/example');
+    const interfaceDef = defineCapability<{ example: string }>('@dxos/app-framework/test/example');
     const implementation1 = { example: 'first' };
     const implementation2 = { example: 'second' };
     context.contributeCapability(interfaceDef, implementation1);
@@ -53,8 +53,8 @@ describe('PluginsContext', () => {
 
   it('should be able to request multiple capabilities', () => {
     const context = new PluginsContext(defaultOptions);
-    const interfaceDef1 = defineInterface<{ one: number }>('@dxos/app-framework/test/one');
-    const interfaceDef2 = defineInterface<{ two: number }>('@dxos/app-framework/test/two');
+    const interfaceDef1 = defineCapability<{ one: number }>('@dxos/app-framework/test/one');
+    const interfaceDef2 = defineCapability<{ two: number }>('@dxos/app-framework/test/two');
     const implementation1 = { one: 1 };
     const implementation2 = { two: 2 };
     context.contributeCapability(interfaceDef1, implementation1);
@@ -65,7 +65,7 @@ describe('PluginsContext', () => {
 
   it('should be reactive', () => {
     const context = new PluginsContext(defaultOptions);
-    const interfaceDef = defineInterface<{ example: string }>('@dxos/app-framework/test/example');
+    const interfaceDef = defineCapability<{ example: string }>('@dxos/app-framework/test/example');
 
     using updates = updateCounter(() => {
       context.requestCapability(interfaceDef);
@@ -83,7 +83,7 @@ describe('PluginsContext', () => {
 
   it('should not be reactive to changes within the implementation', () => {
     const context = new PluginsContext(defaultOptions);
-    const interfaceDef = defineInterface<{ example: string }>('@dxos/app-framework/test/example');
+    const interfaceDef = defineCapability<{ example: string }>('@dxos/app-framework/test/example');
 
     using updates = updateCounter(() => {
       context.requestCapability(interfaceDef);

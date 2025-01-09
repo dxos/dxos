@@ -323,6 +323,9 @@
       "@dxos/app-framework": [
         "packages/sdk/app-framework/src/index.ts"
       ],
+      "@dxos/app-framework/plugins/next": [
+        "packages/sdk/app-framework/src/plugins/next/index.ts"
+      ],
       "@dxos/app-graph": [
         "packages/sdk/app-graph/src/index.ts"
       ],

@@ -229,7 +229,7 @@ export const defineModule = (options: PluginModuleInterface) => new PluginModule
 /**
  * Helper to define the interface of a capability.
  */
-export const defineInterface = <T>(identifier: string) => {
+export const defineCapability = <T>(identifier: string) => {
   return { identifier } as InterfaceDef<T>;
 };
 

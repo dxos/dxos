@@ -19,7 +19,7 @@ import {
   contributes,
   definePlugin,
   defineModule,
-  defineInterface,
+  defineCapability,
   type PluginsContext,
   type Plugin,
   defineEvent,
@@ -27,9 +27,9 @@ import {
 
 registerSignalsRuntime();
 
-const String = defineInterface<{ string: string }>('dxos.org/test/string');
-const Number = defineInterface<{ number: number }>('dxos.org/test/number');
-const Total = defineInterface<{ total: number }>('dxos.org/test/total');
+const String = defineCapability<{ string: string }>('dxos.org/test/string');
+const Number = defineCapability<{ number: number }>('dxos.org/test/number');
+const Total = defineCapability<{ total: number }>('dxos.org/test/total');
 
 const CountEvent = defineEvent('dxos.org/test/count');
 const FailEvent = defineEvent('dxos.org/test/fail');

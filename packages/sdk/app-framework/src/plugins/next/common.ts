@@ -9,7 +9,7 @@ import { type RootSettingsStore } from '@dxos/local-storage';
 import { type DeepReadonly } from '@dxos/util';
 
 import { type PluginManager } from './manager';
-import { defineEvent, defineInterface } from './plugin';
+import { defineEvent, defineCapability } from './plugin';
 import { type LayoutParts, type Layout, type Resource } from '../common';
 import { type IntentContext, type AnyIntentResolver } from '../plugin-intent';
 import { type SurfaceDefinition } from '../plugin-surface';
@@ -19,54 +19,54 @@ import { type SurfaceDefinition } from '../plugin-surface';
 //
 
 export namespace Capabilities {
-  export const PluginManager = defineInterface<PluginManager>('dxos.org/app-framework/capabilities/plugin-manager');
+  export const PluginManager = defineCapability<PluginManager>('dxos.org/app-framework/capabilities/plugin-manager');
 
-  export const Null = defineInterface<null>('dxos.org/app-framework/contributions/null');
+  export const Null = defineCapability<null>('dxos.org/app-framework/capabilities/null');
 
   export type ReactContext = Readonly<{ id: string; dependsOn?: string[]; context: FC<PropsWithChildren> }>;
-  export const ReactContext = defineInterface<ReactContext>('dxos.org/app-framework/contributions/react-context');
+  export const ReactContext = defineCapability<ReactContext>('dxos.org/app-framework/capabilities/react-context');
 
   export type ReactRoot = Readonly<{ id: string; root: FC<PropsWithChildren> }>;
-  export const ReactRoot = defineInterface<ReactRoot>('dxos.org/app-framework/contributions/react-root');
+  export const ReactRoot = defineCapability<ReactRoot>('dxos.org/app-framework/capabilities/react-root');
 
   export type ReactSurface = SurfaceDefinition | readonly SurfaceDefinition[];
-  export const ReactSurface = defineInterface<ReactSurface>('dxos.org/app-framework/common/react-surface');
+  export const ReactSurface = defineCapability<ReactSurface>('dxos.org/app-framework/common/react-surface');
 
   export type IntentResolver = AnyIntentResolver | readonly AnyIntentResolver[];
-  export const IntentResolver = defineInterface<IntentResolver>('dxos.org/app-framework/contributions/intent-resolver');
+  export const IntentResolver = defineCapability<IntentResolver>('dxos.org/app-framework/capabilities/intent-resolver');
 
   export type IntentDispatcher = Readonly<Omit<IntentContext, 'registerResolver'>>;
-  export const IntentDispatcher = defineInterface<IntentDispatcher>(
-    'dxos.org/app-framework/contributions/intent-dispatcher',
+  export const IntentDispatcher = defineCapability<IntentDispatcher>(
+    'dxos.org/app-framework/capabilities/intent-dispatcher',
   );
 
-  export const SettingsStore = defineInterface<RootSettingsStore>(
-    'dxos.org/app-framework/contributions/settings-store',
+  export const SettingsStore = defineCapability<RootSettingsStore>(
+    'dxos.org/app-framework/capabilities/settings-store',
   );
 
   export type MutableSettings = { plugin: string; settings: Record<string, any> };
   export type Settings = DeepReadonly<MutableSettings>;
-  export const Settings = defineInterface<Settings>('dxos.org/app-framework/contributions/settings');
-  export const MutableSettings = defineInterface<MutableSettings>('dxos.org/app-framework/contributions/settings');
+  export const Settings = defineCapability<Settings>('dxos.org/app-framework/capabilities/settings');
+  export const MutableSettings = defineCapability<MutableSettings>('dxos.org/app-framework/capabilities/settings');
 
-  export const Layout = defineInterface<Readonly<Layout>>('dxos.org/app-framework/contributions/layout');
-  export const MutableLayout = defineInterface<Layout>('dxos.org/app-framework/contributions/layout');
+  export const Layout = defineCapability<Readonly<Layout>>('dxos.org/app-framework/capabilities/layout');
+  export const MutableLayout = defineCapability<Layout>('dxos.org/app-framework/capabilities/layout');
 
   export type MutableLocation = { active: LayoutParts; closed: string[] };
   export type Location = DeepReadonly<MutableLocation>;
-  export const Location = defineInterface<Location>('dxos.org/app-framework/contributions/location');
-  export const MutableLocation = defineInterface<MutableLocation>('dxos.org/app-framework/contributions/location');
+  export const Location = defineCapability<Location>('dxos.org/app-framework/capabilities/location');
+  export const MutableLocation = defineCapability<MutableLocation>('dxos.org/app-framework/capabilities/location');
 
-  export const Translations = defineInterface<Readonly<Resource[]>>(
-    'dxos.org/app-framework/contributions/translations',
+  export const Translations = defineCapability<Readonly<Resource[]>>(
+    'dxos.org/app-framework/capabilities/translations',
   );
 
-  export const AppGraph = defineInterface<Readonly<Pick<GraphBuilder, 'graph' | 'explore'>>>(
-    'dxos.org/app-framework/contributions/app-graph',
+  export const AppGraph = defineCapability<Readonly<Pick<GraphBuilder, 'graph' | 'explore'>>>(
+    'dxos.org/app-framework/capabilities/app-graph',
   );
 
-  export const AppGraphBuilder = defineInterface<Parameters<GraphBuilder['addExtension']>[0]>(
-    'dxos.org/app-framework/contributions/app-graph-builder',
+  export const AppGraphBuilder = defineCapability<Parameters<GraphBuilder['addExtension']>[0]>(
+    'dxos.org/app-framework/capabilities/app-graph-builder',
   );
 }
 

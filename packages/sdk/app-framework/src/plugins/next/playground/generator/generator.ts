@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, defineEvent, defineInterface, defineModule, definePlugin } from '../../plugin';
+import { contributes, defineEvent, defineCapability, defineModule, definePlugin } from '../../plugin';
 
-export const Number = defineInterface<number>('dxos.org/test/generator/number');
+export const Number = defineCapability<number>('dxos.org/test/generator/number');
 
 export const CountEvent = defineEvent('dxos.org/test/generator/count');
 
