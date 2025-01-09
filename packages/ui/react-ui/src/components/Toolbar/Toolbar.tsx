@@ -15,6 +15,8 @@ import {
   Toggle,
   type ToggleGroupItemProps,
   type ToggleProps,
+  IconButton,
+  type IconButtonProps,
 } from '../Buttons';
 import { Link, type LinkProps } from '../Link';
 import { Separator, type SeparatorProps } from '../Separator';
@@ -36,6 +38,16 @@ const ToolbarButton = forwardRef<HTMLButtonElement, ToolbarButtonProps>((props, 
   return (
     <ToolbarPrimitive.Button asChild>
       <Button {...props} ref={forwardedRef} />
+    </ToolbarPrimitive.Button>
+  );
+});
+
+type ToolbarIconButtonProps = IconButtonProps;
+
+const ToolbarIconButton = forwardRef<HTMLButtonElement, ToolbarIconButtonProps>((props, forwardedRef) => {
+  return (
+    <ToolbarPrimitive.Button asChild>
+      <IconButton {...props} ref={forwardedRef} />
     </ToolbarPrimitive.Button>
   );
 });
@@ -103,6 +115,7 @@ const ToolbarExpander = () => <div className={'grow'} />;
 export const Toolbar = {
   Root: ToolbarRoot,
   Button: ToolbarButton,
+  IconButton: ToolbarIconButton,
   Link: ToolbarLink,
   Toggle: ToolbarToggle,
   ToggleGroup: ToolbarToggleGroup,
@@ -114,6 +127,7 @@ export const Toolbar = {
 export type {
   ToolbarRootProps,
   ToolbarButtonProps,
+  ToolbarIconButtonProps,
   ToolbarLinkProps,
   ToolbarToggleProps,
   ToolbarToggleGroupProps,

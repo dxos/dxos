@@ -5,7 +5,6 @@
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type MutableRefObject, type PropsWithChildren } from 'react';
 
-import { type Action } from '@dxos/app-graph';
 import { keySymbols } from '@dxos/keyboard';
 import { DropdownMenu as NaturalDropdownMenu, Icon, useTranslation, toLocalizedString } from '@dxos/react-ui';
 import { mx, descriptionText } from '@dxos/react-ui-theme';
@@ -20,7 +19,6 @@ export type DropdownMenuProps = PropsWithChildren<MenuProps> &
     menuOpen: boolean;
     onMenuOpenChange: (nextOpen: boolean) => void;
     suppressNextTooltip?: MutableRefObject<boolean>;
-    onAction?: (action: Action) => void;
   }>;
 
 const DropdownMenuRoot = ({

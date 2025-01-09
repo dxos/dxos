@@ -5,4 +5,5 @@ import { type Action } from '@dxos/app-graph';
 
 export type MenuProps = {
   actions?: Action[];
+  onAction?: (action: Action) => void;
 };

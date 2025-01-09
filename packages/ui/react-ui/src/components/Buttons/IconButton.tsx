@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { forwardRef } from 'react';
+import React, { forwardRef, type ReactNode } from 'react';
 
 import { Button, type ButtonProps } from './Button';
 import { useThemeContext } from '../../hooks';
@@ -12,7 +12,7 @@ import { Tooltip } from '../Tooltip';
 
 type IconButtonProps = Omit<ButtonProps, 'children'> &
   Pick<IconProps, 'icon' | 'size'> & {
-    label: string;
+    label: NonNullable<ReactNode>;
     iconOnly?: boolean;
     // TODO(burdon): Create slots abstraction?
     iconClassNames?: ThemedClassName<any>['classNames'];
