@@ -28,6 +28,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/echo/live-object"
+    },
+    {
       "path": "../../sdk/app-graph"
     },
     {

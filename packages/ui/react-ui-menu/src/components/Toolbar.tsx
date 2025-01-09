@@ -5,16 +5,16 @@
 import React, { type PropsWithChildren } from 'react';
 
 import { keySymbols } from '@dxos/keyboard';
-import { Toolbar as NaturalToolbar, useTranslation, toLocalizedString } from '@dxos/react-ui';
+import { Toolbar as NaturalToolbar, useTranslation, toLocalizedString, type IconButtonProps } from '@dxos/react-ui';
 import { mx, descriptionText } from '@dxos/react-ui-theme';
 
 import { type MenuProps } from '../defs';
 import { translationKey } from '../translations';
 import { getShortcut } from '../util';
 
-export type ToolbarProps = PropsWithChildren<MenuProps>;
+export type ToolbarProps = PropsWithChildren<MenuProps> & { iconSize: IconButtonProps['size'] };
 
-export const Toolbar = ({ actions, onAction }: ToolbarProps) => {
+export const Toolbar = ({ actions, onAction, iconSize = 5 }: ToolbarProps) => {
   const { t } = useTranslation(translationKey);
   return (
     <NaturalToolbar.Root>
@@ -26,6 +26,7 @@ export const Toolbar = ({ actions, onAction }: ToolbarProps) => {
             iconOnly
             variant='ghost'
             icon={action.properties!.icon}
+            size={iconSize}
             label={
               <>
                 <span className='grow truncate'>{toLocalizedString(action.properties!.label, t)}</span>
