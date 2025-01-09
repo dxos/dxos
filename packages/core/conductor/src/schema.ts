@@ -6,10 +6,11 @@ import { type Effect } from 'effect';
 
 import { S } from '@dxos/echo-schema';
 
-import type { EventLogger } from './event-logger';
+import type { EventLogger } from './services/event-logger';
 import type { GraphModel } from '@dxos/graph';
 import type { GraphEdge } from '@dxos/graph';
 import type { GraphNode } from '@dxos/graph';
+import type { GptService } from './services/gpt';
 
 /**
  * GraphNode payload.
@@ -40,7 +41,7 @@ export type ComputeEdge = S.Schema.Type<typeof ComputeEdge>;
  */
 export type ComputeFunction<I, O> = (input: I) => Effect.Effect<O, Error, ComputeRequirements>;
 
-export type ComputeRequirements = EventLogger;
+export type ComputeRequirements = EventLogger | GptService;
 
 // TODO(dmaretskyi): To effect schema.
 export type ComputeMeta = {
@@ -78,6 +79,7 @@ export const defineComputeNode = <SI extends S.Schema.AnyNoContext, SO extends S
 export const NodeType = Object.freeze({
   Input: 'dxn:graph:input',
   Output: 'dxn:graph:output',
+  Gpt: 'dxn:graph:gpt',
 });
 
 export type ComputeGraph = GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;

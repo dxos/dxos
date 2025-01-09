@@ -11,7 +11,11 @@ export const isStream = (value: any): value is Stream.Stream<any> =>
 
 // "API-type" style borrowed from effect
 export interface StreamSchema<Item extends S.Schema.AnyNoContext>
-  extends S.Schema<Stream.Stream<S.Schema.Type<Item>>, Stream.Stream<S.Schema.Encoded<Item>>, S.Schema.Context<Item>> {}
+  extends S.Schema<
+    Stream.Stream<S.Schema.Type<Item>, any>,
+    Stream.Stream<S.Schema.Encoded<Item>, any>,
+    S.Schema.Context<Item>
+  > {}
 
 export const StreamSchema = <Item extends S.Schema.AnyNoContext>(item: Item): StreamSchema<Item> =>
   S.Any.pipe(S.filter(isStream)).annotations({

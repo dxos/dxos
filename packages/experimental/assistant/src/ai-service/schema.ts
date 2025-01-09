@@ -103,8 +103,8 @@ export type MessageContentBlock = S.Schema.Type<typeof MessageContentBlock>;
 
 export const Message = S.Struct({
   id: ObjectId,
-  threadId: ObjectId,
-  spaceId: SpaceIdSchema,
+  threadId: S.optional(ObjectId),
+  spaceId: S.optional(SpaceIdSchema),
 
   role: MessageRole,
 

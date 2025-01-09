@@ -9,9 +9,10 @@ import { S } from '@dxos/echo-schema';
 import { createEdgeId, GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
 import { log } from '@dxos/log';
 
-import { EventLogger, logCustomEvent, type ComputeEvent } from './event-logger';
+import { EventLogger, logCustomEvent, type ComputeEvent } from './services/event-logger';
 import { defineComputeNode, NodeType, type ComputeEdge, type ComputeGraph, type ComputeNode } from './schema';
 import { consoleLogger, createEdge, noopLogger, TestRuntime } from './testing';
+import { testServices } from './testing/test-services';
 
 const ENABLE_LOGGING = false;
 
@@ -28,7 +29,7 @@ describe('Graph as a fiber runtime', () => {
     const result = await Effect.runPromise(
       runtime
         .runGraph('dxn:graph:adder', { number1: 1, number2: 2 })
-        .pipe(Effect.provideService(EventLogger, ENABLE_LOGGING ? consoleLogger : noopLogger)),
+        .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }))),
     );
     expect(result).toEqual({ sum: 3 });
   });
@@ -43,7 +44,7 @@ describe('Graph as a fiber runtime', () => {
       const result = await Effect.runPromise(
         runtime
           .runGraph('dxn:graph:add3', { a: 1, b: 2, c: 3 })
-          .pipe(Effect.provideService(EventLogger, ENABLE_LOGGING ? consoleLogger : noopLogger)),
+          .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }))),
       );
       expect(result).toEqual({ result: 6 });
     } catch (err) {

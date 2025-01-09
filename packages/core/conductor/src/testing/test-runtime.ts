@@ -6,8 +6,8 @@ import { S } from '@dxos/echo-schema';
 import { createEdgeId, GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
 import { log } from '@dxos/log';
 
-import { inputNode, outputNode } from '../base-nodes';
-import { EventLogger, logCustomEvent, type ComputeEvent } from '../event-logger';
+import { inputNode, outputNode } from '../nodes/base-nodes';
+import { EventLogger, logCustomEvent, type ComputeEvent } from '../services/event-logger';
 import { compile } from '../fiber-compiler';
 import {
   defineComputeNode,
@@ -17,6 +17,7 @@ import {
   type ComputeNode,
   type ComputeRequirements,
 } from '../schema';
+import { gptNode } from '../nodes/gpt-node';
 
 export class TestRuntime {
   nodes = new Map<string, ComputeImplementation>();
@@ -56,6 +57,8 @@ export class TestRuntime {
         return inputNode;
       case NodeType.Output:
         return outputNode;
+      case NodeType.Gpt:
+        return gptNode;
     }
 
     throw new Error(`Unknown node type: ${node.type}`);
@@ -84,4 +87,3 @@ export class TestRuntime {
     return computation;
   }
 }
-

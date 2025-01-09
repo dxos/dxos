@@ -1,12 +1,13 @@
 import { S } from '@dxos/echo-schema';
 import { defineComputeNode, NodeType, type ComputeEdge, type ComputeGraph, type ComputeNode } from './schema';
 import { Effect, Stream } from 'effect';
-import { EventLogger, logCustomEvent } from './event-logger';
+import { EventLogger, logCustomEvent } from './services/event-logger';
 import { StreamSchema } from './schema-dsl';
 import { consoleLogger, createEdge, noopLogger, TestRuntime } from './testing';
 import { describe, test } from 'vitest';
 import { GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
 import { stream } from 'effect/FastCheck';
+import { testServices } from './testing/test-services';
 
 const ENABLE_LOGGING = false;
 
@@ -21,7 +22,7 @@ describe('Streaming pipelines', () => {
         .runGraph('dxn:graph:stream-sum', {
           stream: Stream.range(1, 10),
         })
-        .pipe(Effect.provideService(EventLogger, ENABLE_LOGGING ? consoleLogger : noopLogger)),
+        .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }))),
     );
 
     expect(result).toEqual(55);
@@ -41,13 +42,11 @@ describe('Streaming pipelines', () => {
         .runGraph('dxn:graph:stream-sum', {
           stream: delayedStream,
         })
-        .pipe(Effect.provideService(EventLogger, ENABLE_LOGGING ? consoleLogger : noopLogger)),
+        .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }))),
     );
 
     expect(result).toEqual(55);
   });
-
-  
 });
 
 /**

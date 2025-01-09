@@ -8,7 +8,7 @@ import { S } from '@dxos/echo-schema';
 import type { GraphEdge, GraphModel, GraphNode } from '@dxos/graph';
 import { failedInvariant } from '@dxos/invariant';
 
-import { EventLogger } from './event-logger';
+import { EventLogger } from './services/event-logger';
 import type { ComputeNode, ComputeEdge, ComputeImplementation, ComputeMeta, ComputeRequirements } from './schema';
 import { createTopology, type GraphDiagnostic, type TopologyNode } from './topology';
 

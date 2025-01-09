@@ -6,8 +6,9 @@ import { AST, S } from '@dxos/echo-schema';
 import type { GraphEdge, GraphModel, GraphNode } from '@dxos/graph';
 import { failedInvariant, invariant } from '@dxos/invariant';
 
-import { pickProperty } from './ast';
+import { pickProperty } from './util/ast';
 import type { ComputeNode, ComputeEdge, ComputeMeta } from './schema';
+import { log } from '@dxos/log';
 
 /**
  * Structure derived from the compute graph.
@@ -105,10 +106,19 @@ export const createTopology = async ({
     }
 
     if (sourceNode.outputs.find((output) => output.name === edge.data.output) == null) {
+      const schema = pickProperty(sourceNode.meta.output, edge.data.output);
       sourceNode.outputs.push({
         name: edge.data.output,
-        schema: pickProperty(sourceNode.meta.output, edge.data.output),
+        schema,
       });
+      if (AST.isNeverKeyword(schema.ast)) {
+        log.info('setting never output on node:', {
+          sourceNode: sourceNode.graphNode.type,
+          output: edge.data.output,
+          type: schema.ast,
+          nodeOutputType: sourceNode.meta.output.ast,
+        });
+      }
     }
 
     if (targetNode.inputs.find((input) => input.name === edge.data.input) == null) {
@@ -123,25 +133,32 @@ export const createTopology = async ({
     // TODO(dmaretskyi): Check assignability.
 
     // TODO(burdon): Set above? (i.e., let input = ...).
-    const input = sourceNode.outputs.find((output) => output.name === edge.data.output);
-    invariant(input);
-    const output = targetNode.inputs.find((input) => input.name === edge.data.input);
+    const output = sourceNode.outputs.find((output) => output.name === edge.data.output);
     invariant(output);
+    const input = targetNode.inputs.find((input) => input.name === edge.data.input);
+    invariant(input);
 
     // TODO(burdon): Output first?
     if (AST.isNeverKeyword(output.schema.ast)) {
       topology.diagnostics.push({
         severity: 'error',
         edgeId: edge.id,
-        message: 'Output does not exist on node.',
+        message: `Output does not exist on node: [${sourceNode.graphNode.type}] -> ${output.name}`,
       });
     }
 
     if (AST.isNeverKeyword(input.schema.ast)) {
+      log.info('Input does not exist on node:', {
+        targetNode: targetNode.graphNode.type,
+        input: input.name,
+        type: input.schema.ast,
+        nodeInputType: targetNode.meta.input.ast,
+        pickProperty: pickProperty(targetNode.meta.input, input.name).ast,
+      });
       topology.diagnostics.push({
         severity: 'error',
         edgeId: edge.id,
-        message: 'Input does not exist on node.',
+        message: `Input does not exist on node: ${input.name} -> [${targetNode.graphNode.type}]`,
       });
     }
   }

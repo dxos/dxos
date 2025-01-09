@@ -1,6 +1,6 @@
 import { Effect, type Context } from 'effect';
-import type { EventLogger } from '../event-logger';
-import type { ComputeEvent } from '../event-logger';
+import type { EventLogger } from '../services/event-logger';
+import type { ComputeEvent } from '../services/event-logger';
 
 export const noopLogger: Context.Tag.Service<EventLogger> = {
   log: () => Effect.succeed(undefined),
