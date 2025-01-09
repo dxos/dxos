@@ -7,6 +7,9 @@ import { type Effect } from 'effect';
 import { S } from '@dxos/echo-schema';
 
 import type { EventLogger } from './event-logger';
+import type { GraphModel } from '@dxos/graph';
+import type { GraphEdge } from '@dxos/graph';
+import type { GraphNode } from '@dxos/graph';
 
 /**
  * GraphNode payload.
@@ -76,3 +79,5 @@ export const NodeType = Object.freeze({
   Input: 'dxn:graph:input',
   Output: 'dxn:graph:output',
 });
+
+export type ComputeGraph = GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;
