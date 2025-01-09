@@ -12,7 +12,7 @@ import { type MenuProps } from '../defs';
 import { translationKey } from '../translations';
 import { getShortcut } from '../util';
 
-export type ToolbarProps = PropsWithChildren<MenuProps> & { iconSize: IconButtonProps['size'] };
+export type ToolbarProps = PropsWithChildren<MenuProps> & { iconSize?: IconButtonProps['size'] };
 
 export const Toolbar = ({ actions, onAction, iconSize = 5 }: ToolbarProps) => {
   const { t } = useTranslation(translationKey);
