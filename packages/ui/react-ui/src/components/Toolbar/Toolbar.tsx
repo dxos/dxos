@@ -100,17 +100,17 @@ const ToolbarToggleGroupItem = forwardRef<HTMLButtonElement, ToolbarToggleGroupI
   },
 );
 
-type ToolbarSeparatorProps = SeparatorProps;
+type ToolbarSeparatorProps = SeparatorProps & { variant?: 'gap' | 'line' };
 
-const ToolbarSeparator = (props: SeparatorProps) => {
-  return (
+const ToolbarSeparator = ({ variant = 'line', ...props }: ToolbarSeparatorProps) => {
+  return variant === 'line' ? (
     <ToolbarPrimitive.Separator asChild>
-      <Separator orientation='vertical' {...props} />
+      <Separator {...props} />
     </ToolbarPrimitive.Separator>
+  ) : (
+    <ToolbarPrimitive.Separator className='grow' />
   );
 };
-
-const ToolbarExpander = () => <div className={'grow'} />;
 
 export const Toolbar = {
   Root: ToolbarRoot,
@@ -121,7 +121,6 @@ export const Toolbar = {
   ToggleGroup: ToolbarToggleGroup,
   ToggleGroupItem: ToolbarToggleGroupItem,
   Separator: ToolbarSeparator,
-  Expander: ToolbarExpander,
 };
 
 export type {

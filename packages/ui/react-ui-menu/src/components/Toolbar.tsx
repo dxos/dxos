@@ -5,12 +5,12 @@
 import React, { type MouseEvent, useCallback } from 'react';
 
 import { type Action } from '@dxos/app-graph';
-import { Toolbar as NaturalToolbar, type IconButtonProps } from '@dxos/react-ui';
+import { Toolbar as NaturalToolbar, type IconButtonProps, type ToolbarRootProps } from '@dxos/react-ui';
 
 import { ActionLabel } from './ActionLabel';
 import { type MenuProps } from '../defs';
 
-export type ToolbarProps = MenuProps & { iconSize?: IconButtonProps['size'] };
+export type ToolbarProps = ToolbarRootProps & MenuProps & { iconSize?: IconButtonProps['size'] };
 
 const ToolbarItem = ({
   iconSize,
@@ -38,7 +38,7 @@ const ToolbarItem = ({
   );
 };
 
-export const Toolbar = ({ actions, onAction, iconSize = 5 }: ToolbarProps) => {
+export const Toolbar = ({ actions, onAction, iconSize = 5, ...props }: ToolbarProps) => {
   const handleActionClick = useCallback((action: Action) => {
     if (action.properties?.disabled) {
       return;
@@ -46,7 +46,7 @@ export const Toolbar = ({ actions, onAction, iconSize = 5 }: ToolbarProps) => {
     onAction?.(action);
   }, []);
   return (
-    <NaturalToolbar.Root>
+    <NaturalToolbar.Root {...props}>
       {actions?.map((action) => (
         <ToolbarItem key={action.id} action={action} iconSize={iconSize} onClick={handleActionClick} />
       ))}
