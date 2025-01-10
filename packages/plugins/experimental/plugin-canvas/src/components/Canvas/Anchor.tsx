@@ -67,7 +67,7 @@ export const AnchorComponent = ({ classNames, type, shape, anchor, size = defaul
           disableNativeDragPreview({ nativeSetDragImage });
         },
         onDragStart: () => {
-          dragMonitor.start({ type, shape, anchor, initialSize: shape.size });
+          dragMonitor.start({ type, shape, anchor, initial: { ...shape.center, ...shape.size } });
         },
       }),
     );
