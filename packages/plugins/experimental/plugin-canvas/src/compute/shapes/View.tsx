@@ -69,4 +69,5 @@ export const viewShape: ShapeDef<ViewShape> = {
   component: ViewComponent,
   createShape: createView,
   getAnchors: (shape) => createAnchorMap(shape, { [createAnchorId('input')]: { x: -1, y: 0 } }),
+  resizeable: true,
 };

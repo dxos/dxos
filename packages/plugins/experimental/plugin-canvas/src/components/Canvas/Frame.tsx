@@ -44,6 +44,7 @@ const nativeDrag = false;
 export type FrameProps = ShapeComponentProps<Polygon> & {
   Component?: FC<FrameProps>;
   editing?: boolean;
+  resizeable?: boolean;
   showAnchors?: boolean;
   onClose?: (value: string) => void;
   onCancel?: () => void;
@@ -204,6 +205,7 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
       selected,
       editing,
       dragging,
+      resizeable,
       resizing,
       preview,
       anchors,
@@ -281,7 +283,7 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
         )}
 
         {/* Resize handles. */}
-        {(selected || resizing) && (
+        {resizeable && (selected || resizing) && (
           <div>
             <div
               style={getBoundsProperties({ x: 0, y: 0, ...shape.size })}

@@ -54,8 +54,8 @@ export const ShapeComponent = (props: ShapeComponentProps<any>) => {
   const { registry } = useEditorContext();
   const { shape } = props;
   if (isPolygon(shape)) {
-    const component = registry.getShapeDef(shape.type)?.component;
-    return <Frame {...props} Component={component} />;
+    const { component, resizeable } = registry.getShapeDef(shape.type)!;
+    return <Frame {...props} resizeable={resizeable} Component={component} />;
   }
   if (isPath(shape)) {
     return <PathComponent {...props} />;

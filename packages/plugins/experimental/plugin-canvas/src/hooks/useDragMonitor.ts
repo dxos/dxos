@@ -75,7 +75,7 @@ export type DraggingState =
       shape: Polygon;
       anchor: Anchor;
       pointer?: Point;
-      initialSize: Dimension;
+      initial: Point & Dimension;
     };
 
 /**
@@ -186,12 +186,13 @@ export const useDragMonitor = () => {
       //
       // Drag
       //
-      onDrag: async ({ location }) => {
+      onDrag: async ({ location, source }) => {
         if (!dragMonitor.dragging) {
           return;
         }
 
         const [pos] = projection.toModel([getInputPoint(root, location.current.input)]);
+        const shiftKey = location.current.input.shiftKey;
 
         switch (state.value.type) {
           case 'frame': {
@@ -202,20 +203,42 @@ export const useDragMonitor = () => {
           }
 
           case 'resize': {
+            // TODO(burdon): Defaults sizes.
+            // TODO(burdon): Don't resize functions.
+            const min = 160;
+            const max = 640;
             const delta = pointSubtract(
               getInputPoint(root, location.current.input),
               getInputPoint(root, location.initial.input),
             );
             const anchor = resizeAnchors[state.value.anchor.id];
+            let { x: dx, y: dy } = snapPoint({
+              x: delta.x * anchor.x * (shiftKey ? 2 : 1),
+              y: delta.y * anchor.y * (shiftKey ? 2 : 1),
+            });
+            if (state.value.initial.width + dx < min) {
+              dx = min - state.value.initial.width;
+            } else if (state.value.initial.width + dx > max) {
+              dx = max - state.value.initial.width;
+            }
+            if (state.value.initial.height + dy < min) {
+              dy = min - state.value.initial.height;
+            } else if (state.value.initial.height + dy > max) {
+              dy = max - state.value.initial.height;
+            }
+
+            const center = shiftKey
+              ? state.value.initial
+              : {
+                  x: state.value.initial.x + (dx / 2) * (anchor.x < 0 ? -1 : 1),
+                  y: state.value.initial.y + (dy / 2) * (anchor.y < 0 ? -1 : 1),
+                };
+            const size = {
+              width: state.value.initial.width + dx,
+              height: state.value.initial.height + dy,
+            };
             dragMonitor.update({
-              shape: {
-                ...state.value.shape,
-                size: {
-                  // TODO(burdon): Defaults.
-                  width: clamp(state.value.initialSize.width + delta.x * anchor.x * 2, 160, 640),
-                  height: clamp(state.value.initialSize.height + delta.y * anchor.y * 2, 160, 640),
-                },
-              },
+              shape: { ...state.value.shape, center, size },
             });
             break;
           }
@@ -226,8 +249,8 @@ export const useDragMonitor = () => {
               return d < 32 && dragMonitor.canDrop({ type: 'anchor', shape, anchor });
             });
             dragMonitor.update({
-              snapTarget: target,
               pointer: target?.anchor.pos ?? pos,
+              snapTarget: target,
             });
             break;
           }
@@ -277,6 +300,7 @@ export const useDragMonitor = () => {
             const node = graph.getNode(state.value.shape.id);
             if (node) {
               invariant(isPolygon(node.data));
+              node.data.center = state.value.shape.center;
               node.data.size = state.value.shape.size;
             }
             break;

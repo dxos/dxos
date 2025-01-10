@@ -115,9 +115,7 @@ const Render = ({
         for (const id of Array.from(selected.values())) {
           const node = graph?.getNode(id);
           if (node) {
-            // TODO(burdon): !!!
             const data = omit(node.data as any, ['node']);
-            console.log(JSON.stringify(data, null, 2));
             setSelected(data as any);
             break;
           }

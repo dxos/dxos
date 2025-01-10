@@ -35,7 +35,7 @@ import { type TestId } from '../defs';
 
 export const defaultEditorOptions: EditorOptions = {
   gridSize: 16,
-  gridSnap: 32,
+  gridSnap: 16,
   zoomFactor: 2,
   zoomDuration: 300,
 };

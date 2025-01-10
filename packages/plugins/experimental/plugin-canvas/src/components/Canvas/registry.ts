@@ -19,6 +19,7 @@ export type ShapeDef<S extends Polygon> = {
   component: FC<ShapeComponentProps<S>>;
   createShape: (props: Pick<S, 'id' | 'center'>) => S;
   getAnchors?: (shape: S) => Record<string, Anchor>;
+  resizeable?: boolean;
 };
 
 /**

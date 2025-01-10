@@ -30,6 +30,10 @@ export const defaultAnchors: Record<string, Point> = {
 };
 
 export const resizeAnchors: Record<string, Point> = {
+  n: { x: 0, y: -1 },
+  w: { x: -1, y: 0 },
+  e: { x: 1, y: 0 },
+  s: { x: 0, y: 1 },
   nw: { x: -1, y: -1 },
   ne: { x: 1, y: -1 },
   sw: { x: -1, y: 1 },

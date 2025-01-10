@@ -74,4 +74,5 @@ export const listShape: ShapeDef<ListShape> = {
   component: ListComponent,
   createShape: createList,
   getAnchors: (shape) => createFunctionAnchors(shape, InputSchema, OutputSchema),
+  resizeable: true,
 };
