@@ -1,4 +1,4 @@
-import type { Context } from 'effect';
+import type { Context, Scope } from 'effect';
 
 import type { GptOutput } from '../gpt';
 
@@ -9,7 +9,7 @@ import type { GptInput } from '../gpt';
 import { ObjectId, type ResultStreamEvent } from '@dxos/assistant';
 import { log } from '@dxos/log';
 import type { OutputBag } from '../../schema';
-import type G from 'glob';
+import { getDebugName } from '@dxos/util';
 
 export type GPTConfig = {
   initDelay?: number;
@@ -34,9 +34,13 @@ export class MockGpt implements Context.Tag.Service<GptService> {
     };
   }
 
-  public invoke({ systemPrompt, prompt, history = [] }: GptInput): Effect.Effect<OutputBag<GptOutput>> {
+  public invoke({
+    systemPrompt,
+    prompt,
+    history = [],
+  }: GptInput): Effect.Effect<OutputBag<GptOutput>, any, Scope.Scope> {
     const self = this;
-    return Effect.promise(async () => {
+    return Effect.gen(function* () {
       const response = self.config.responses[prompt] || self.config.responses.default;
 
       let onDone!: () => void;
@@ -52,8 +56,13 @@ export class MockGpt implements Context.Tag.Service<GptService> {
         (err) => new Error(String(err)),
       );
 
+      const [stream1, stream2] = yield* Stream.broadcast(tokenStream, 2, { capacity: 'unbounded' });
+
+      const text = Effect.promise(() => textResult);
+      log.info('text in gpt', { text: getDebugName(text) });
+
       return {
-        text: Effect.promise(() => textResult),
+        text,
         messages: [
           {
             id: ObjectId.random(),
@@ -66,7 +75,7 @@ export class MockGpt implements Context.Tag.Service<GptService> {
             content: [{ type: 'text', text: response }],
           },
         ],
-        tokenStream,
+        tokenStream: stream1,
         tokenCount: 0,
       } satisfies OutputBag<GptOutput>;
     });

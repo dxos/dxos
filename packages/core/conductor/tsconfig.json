@@ -18,6 +18,9 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../experimental/assistant"
     },
     {

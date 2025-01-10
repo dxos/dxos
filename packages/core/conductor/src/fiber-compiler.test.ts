@@ -29,7 +29,7 @@ describe('Graph as a fiber runtime', () => {
     const result = await Effect.runPromise(
       runtime
         .runGraph('dxn:graph:adder', { number1: 1, number2: 2 })
-        .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }))),
+        .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Effect.scoped),
     );
     expect(result).toEqual({ sum: 3 });
   });
@@ -44,7 +44,7 @@ describe('Graph as a fiber runtime', () => {
       const result = await Effect.runPromise(
         runtime
           .runGraph('dxn:graph:add3', { a: 1, b: 2, c: 3 })
-          .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }))),
+          .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Effect.scoped),
       );
       expect(result).toEqual({ result: 6 });
     } catch (err) {
