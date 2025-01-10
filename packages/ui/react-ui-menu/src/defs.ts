@@ -11,6 +11,8 @@ export type MenuActionProperties = {
   disabled?: boolean;
   iconOnly?: boolean;
   testId?: string;
+  variant?: 'action' | 'toggle';
+  checked?: boolean;
 };
 
 export type MenuAction = Action<MenuActionProperties>;

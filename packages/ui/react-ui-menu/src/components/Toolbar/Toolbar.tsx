@@ -8,7 +8,8 @@ import { Toolbar as NaturalToolbar } from '@dxos/react-ui';
 
 import { ToolbarDropdownMenu } from './ToolbarDropdownMenu';
 import { ToolbarToggleGroup } from './ToolbarToggleGroup';
-import { isMenu, isSeparator, type ToolbarAction, type ToolbarProps } from './defs';
+import { isMenu, isSeparator, type ToolbarProps } from './defs';
+import { type MenuAction } from '../../defs';
 import { ActionLabel } from '../ActionLabel';
 
 const ToolbarItem = ({
@@ -16,7 +17,7 @@ const ToolbarItem = ({
   action,
   onAction,
 }: Pick<ToolbarProps, 'iconSize' | 'onAction'> & {
-  action: ToolbarAction;
+  action: MenuAction;
 }) => {
   const handleClick = useCallback(() => {
     onAction?.(action);
@@ -62,7 +63,7 @@ export const Toolbar = ({ actions: items, onAction, iconSize = 5, graph, ...prop
             />
           )
         ) : (
-          <ToolbarItem key={item.id} action={item as ToolbarAction} onAction={onAction} iconSize={iconSize} />
+          <ToolbarItem key={item.id} action={item as MenuAction} onAction={onAction} iconSize={iconSize} />
         ),
       )}
     </NaturalToolbar.Root>

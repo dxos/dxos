@@ -16,7 +16,7 @@ import { getShortcut } from '../util';
 export const ActionLabel = ({
   action,
 }: {
-  action: Action<MenuActionProperties> | ActionGroup<MenuActionProperties>;
+  action: Action<MenuActionProperties> | ActionGroup<Omit<MenuActionProperties, 'variant'>>;
 }) => {
   const shortcut = getShortcut(action);
   const { t } = useTranslation(translationKey);
