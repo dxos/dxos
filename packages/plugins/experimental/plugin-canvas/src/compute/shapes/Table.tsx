@@ -45,4 +45,5 @@ export const tableShape: ShapeDef<TableShape> = {
   component: TableComponent,
   createShape: createTable,
   getAnchors: (shape) => createFunctionAnchors(shape, InputSchema, OutputSchema),
+  resizeable: true,
 };

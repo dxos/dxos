@@ -203,7 +203,8 @@ export const useDragMonitor = () => {
           }
 
           case 'resize': {
-            // TODO(burdon): Defaults sizes
+            // TODO(burdon): Defaults sizes.
+            // TODO(burdon): Don't resize functions.
             const min = 160;
             const max = 640;
             const delta = pointSubtract(

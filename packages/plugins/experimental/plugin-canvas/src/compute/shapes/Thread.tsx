@@ -88,4 +88,5 @@ export const threadShape: ShapeDef<ThreadShape> = {
   component: ThreadComponent,
   createShape: createThread,
   getAnchors: (shape) => createFunctionAnchors(shape, InputSchema, OutputSchema),
+  resizeable: true,
 };

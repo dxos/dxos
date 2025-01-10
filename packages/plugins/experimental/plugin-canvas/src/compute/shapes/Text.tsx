@@ -103,4 +103,5 @@ export const chatShape: ShapeDef<TextShape> = {
   component: (props) => <TextComponent {...props} title={'Prompt'} placeholder={'Message'} chat />,
   createShape: createText,
   getAnchors: (shape) => createAnchorMap(shape, { [createAnchorId('output')]: { x: 1, y: 0 } }),
+  resizeable: true,
 };
