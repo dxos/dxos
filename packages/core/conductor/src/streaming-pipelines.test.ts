@@ -22,7 +22,7 @@ describe('Streaming pipelines', () => {
         .runGraph('dxn:graph:stream-sum', {
           stream: Stream.range(1, 10),
         })
-        .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }))),
+        .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Effect.scoped),
     );
 
     expect(result).toEqual(55);
@@ -42,7 +42,7 @@ describe('Streaming pipelines', () => {
         .runGraph('dxn:graph:stream-sum', {
           stream: delayedStream,
         })
-        .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }))),
+        .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Effect.scoped),
     );
 
     expect(result).toEqual(55);

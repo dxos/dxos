@@ -35,16 +35,17 @@ describe('effect-basics', () => {
 
   test('caching', async () => {
     const compute = Effect.promise(async () => {
-      // log.info('compute');
+      log.info('compute');
       return 1;
     });
 
-    const result = Effect.gen(function* () {
-      const cached = yield* compute.pipe(Effect.cached);
-      const value = yield* cached;
-      return value;
-    });
+    // const result = Effect.gen(function* () {
+    //   const cached = yield* compute.pipe(Effect.cached);
+    //   const value = yield* cached;
+    //   return value;
+    // });
 
-    await Effect.runPromise(result);
+    await Effect.runPromise(compute);
+    await Effect.runPromise(compute);
   });
 });

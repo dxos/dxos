@@ -2448,6 +2448,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
       '@effect/schema':
         specifier: ^0.75.5
         version: 0.75.5(effect@3.12.1)

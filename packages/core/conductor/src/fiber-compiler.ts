@@ -19,7 +19,7 @@ import type {
 } from './schema';
 import { createTopology, type GraphDiagnostic, type TopologyNode } from './topology';
 import { log } from '@dxos/log';
-import { getDebugName } from '../../../common/util/src';
+import { getDebugName } from '@dxos/util';
 
 export type ValidateParams = {
   graph: GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;

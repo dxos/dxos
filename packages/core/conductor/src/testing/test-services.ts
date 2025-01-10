@@ -1,4 +1,4 @@
-import { Layer, type Context } from 'effect';
+import { Layer, type Context, type Scope } from 'effect';
 import { GptService } from '../services/gpt';
 import { MockGpt } from '../services/gpt/mock';
 import { consoleLogger } from './logger';
@@ -16,7 +16,7 @@ export const testServices = ({
   enableLogging = false,
   logger = enableLogging ? consoleLogger : noopLogger,
   gpt = DEFAULT_MOCK_GPT,
-}: TestServiceOptions = {}): Layer.Layer<ComputeRequirements> => {
+}: TestServiceOptions = {}): Layer.Layer<Exclude<ComputeRequirements, Scope.Scope>> => {
   const logLayer = Layer.succeed(EventLogger, logger);
   const gptLayer = Layer.succeed(GptService, gpt);
 

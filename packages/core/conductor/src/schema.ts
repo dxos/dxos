@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Effect } from 'effect';
+import { type Effect, type Scope } from 'effect';
 
 import { S } from '@dxos/echo-schema';
 
@@ -46,7 +46,7 @@ export type OutputBag<O> = { [K in keyof O]: O[K] | Effect.Effect<O[K], Error, n
  */
 export type ComputeFunction<I, O> = (input: I) => Effect.Effect<OutputBag<O>, Error, ComputeRequirements>;
 
-export type ComputeRequirements = EventLogger | GptService;
+export type ComputeRequirements = EventLogger | GptService | Scope.Scope;
 
 // TODO(dmaretskyi): To effect schema.
 export type ComputeMeta = {

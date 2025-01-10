@@ -1,89 +1,103 @@
 import { GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
-import { Chunk, Console, Effect, Option, Stream } from 'effect';
+import { Chunk, Console, Effect, Exit, Option, pipe, Scope, Stream } from 'effect';
 import { describe, test } from 'vitest';
-import { NodeType, type ComputeEdge, type ComputeGraph, type ComputeNode } from '../schema';
+import { NodeType, type ComputeEdge, type ComputeGraph, type ComputeNode, type OutputBag } from '../schema';
 import { createEdge, TestRuntime } from '../testing';
 import { testServices } from '../testing/test-services';
 import type { ResultStreamEvent } from '@dxos/assistant';
 import { MockGpt } from '../services/gpt/mock';
 import { log } from '@dxos/log';
-import { getDebugName } from '../../../../common/util/src';
+import { getDebugName } from '@dxos/util';
+import type { GptOutput } from '../services/gpt';
 
 const ENABLE_LOGGING = false;
 
 describe('Gpt pipelines', () => {
-  test.skip('text output', async ({ expect }) => {
+  test.only('text output', async ({ expect }) => {
     const runtime = new TestRuntime();
     runtime.registerGraph('dxn:graph:gpt1', gpt1());
 
-    const { text, tokenStream } = await Effect.runPromise(
-      runtime
-        .runGraph('dxn:graph:gpt1', {
-          prompt: 'What is the meaning of life?',
-        })
-        .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }))),
-    );
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const scope = yield* Scope.make();
 
-    // TODO(dmaretskyi): Have to drain the stream due to the way the mock gpt works.
-    expect(await Effect.runPromise(text)).toEqual('This is a mock response that simulates a GPT-like output.');
+        const computeResult = runtime
+          .runGraph('dxn:graph:gpt1', {
+            prompt: 'What is the meaning of life?',
+          })
+          .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Scope.extend(scope));
+
+        const { text }: { text: Effect.Effect<string, Error, never> } = yield* computeResult;
+
+        // TODO(dmaretskyi): Have to drain the stream due to the way the mock gpt works.
+        expect(yield* text).toEqual('This is a mock response that simulates a GPT-like output.');
+
+        yield* Scope.close(scope, Exit.void);
+      }),
+    );
   });
 
-  test('stream output', { timeout: 1000 }, async ({ expect }) => {
+  test.only('stream output', { timeout: 1000 }, async ({ expect }) => {
     const runtime = new TestRuntime();
     runtime.registerGraph('dxn:graph:gpt2', gpt2());
 
-    const { tokenStream, text } = (await Effect.runPromise(
-      runtime
-        .runGraph('dxn:graph:gpt2', {
-          prompt: 'What is the meaning of life?',
-        })
-        .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING, gpt: new MockGpt({ maxDelay: 50 }) }))),
-    )) as { tokenStream: Stream.Stream<ResultStreamEvent>; text: Effect.Effect<string> };
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const scope = yield* Scope.make();
 
-    log.info('text in test', { text: getDebugName(text) });
+        const { tokenStream, text }: { tokenStream: Stream.Stream<ResultStreamEvent>; text: Effect.Effect<string> } =
+          yield* runtime
+            .runGraph('dxn:graph:gpt2', {
+              prompt: 'What is the meaning of life?',
+            })
+            .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Scope.extend(scope));
 
-    const p = Effect.runPromise(text).then((x) => {
-      console.log({ x });
-    });
+        log.info('text in test', { text: getDebugName(text) }) ;
 
-    const tokens = await Effect.runPromise(
-      tokenStream.pipe(
-        Stream.filterMap((ev) =>
-          ev.type === 'content_block_delta' && ev.delta.type === 'text_delta'
-            ? Option.some(ev.delta.text)
-            : Option.none(),
-        ),
-        Stream.tap((token) => Console.log(token)),
-        Stream.runCollect,
-        Effect.map(Chunk.toArray),
-      ),
+        const p = Effect.runPromise(text).then((x) => {
+          console.log({ x });
+        });
+
+        const tokens = yield* tokenStream.pipe(
+          Stream.filterMap((ev) =>
+            ev.type === 'content_block_delta' && ev.delta.type === 'text_delta'
+              ? Option.some(ev.delta.text)
+              : Option.none(),
+          ),
+          Stream.tap((token) => Console.log(token)),
+          Stream.runCollect,
+          Effect.map(Chunk.toArray),
+        );
+
+        expect(tokens).toEqual([
+          'This',
+          ' ',
+          'is',
+          ' ',
+          'a',
+          ' ',
+          'mock',
+          ' ',
+          'response',
+          ' ',
+          'that',
+          ' ',
+          'simulates',
+          ' ',
+          'a',
+          ' ',
+          'GPT-like',
+          ' ',
+          'output',
+          '.',
+          '',
+        ]);
+
+        yield* Effect.promise(() => p);
+
+        yield* Scope.close(scope, Exit.void);
+      }),
     );
-
-    expect(tokens).toEqual([
-      'This',
-      ' ',
-      'is',
-      ' ',
-      'a',
-      ' ',
-      'mock',
-      ' ',
-      'response',
-      ' ',
-      'that',
-      ' ',
-      'simulates',
-      ' ',
-      'a',
-      ' ',
-      'GPT-like',
-      ' ',
-      'output',
-      '.',
-      '',
-    ]);
-
-    await p;
   });
 });
 
