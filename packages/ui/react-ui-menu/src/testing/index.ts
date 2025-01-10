@@ -9,6 +9,8 @@ import { create } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { type DeepWriteable } from '@dxos/util';
 
+import { type MenuAction } from '../defs';
+
 export type CreateActionsParams = Partial<{
   callback: () => void;
   count: number;
@@ -37,7 +39,7 @@ export const createActions = (params?: CreateActionsParams) => {
   const { callback = () => console.log('invoke'), count = 12 } = params ?? {};
   return faker.helpers.multiple(
     () =>
-      create<Action>({
+      create<MenuAction>({
         id: faker.string.uuid(),
         type: 'action',
         data: callback,

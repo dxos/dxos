@@ -27,7 +27,7 @@ export const isMenu = (node: Node): node is ToolbarActionGroup => node.type === 
 export type ToolbarItem = ToolbarSeparatorNode | MenuAction | ToolbarActionGroup;
 
 export type ToolbarProps = ToolbarRootProps &
-  MenuProps<ToolbarItem> & { iconSize?: IconButtonProps['size']; graph?: Graph };
+  MenuProps<ToolbarItem, MenuAction> & { iconSize?: IconButtonProps['size']; graph?: Graph };
 
 export type ToolbarActionGroupProps = Pick<ToolbarProps, 'iconSize'> &
   Omit<MenuProps<MenuAction>, 'actions'> & {

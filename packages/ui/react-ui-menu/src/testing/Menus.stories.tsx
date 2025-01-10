@@ -6,13 +6,13 @@ import '@dxos-theme';
 
 import React from 'react';
 
-import { type Action } from '@dxos/app-graph';
 import { faker } from '@dxos/random';
 import { IconButton } from '@dxos/react-ui';
 import { withTheme, withLayout, withSignals } from '@dxos/storybook-utils';
 
 import { createActions, useMutateActions } from './index';
 import { Toolbar as NaturalToolbar, DropdownMenu as NaturalDropdownMenu } from '../components';
+import { type MenuAction } from '../defs';
 import translations from '../translations';
 
 faker.seed(1234);
@@ -26,7 +26,7 @@ export default {
 
 const menuActions = createActions();
 
-const handleAction = (action: Action) => console.log('[on action]', action);
+const handleAction = (action: MenuAction) => console.log('[on action]', action);
 
 export const DropdownMenu = {
   render: () => {
