@@ -212,8 +212,10 @@ export const useDragMonitor = () => {
               getInputPoint(root, location.initial.input),
             );
             const anchor = resizeAnchors[state.value.anchor.id];
-            let dx = delta.x * anchor.x * (shiftKey ? 2 : 1);
-            let dy = delta.y * anchor.y * (shiftKey ? 2 : 1);
+            let { x: dx, y: dy } = snapPoint({
+              x: delta.x * anchor.x * (shiftKey ? 2 : 1),
+              y: delta.y * anchor.y * (shiftKey ? 2 : 1),
+            });
             if (state.value.initial.width + dx < min) {
               dx = min - state.value.initial.width;
             } else if (state.value.initial.width + dx > max) {
