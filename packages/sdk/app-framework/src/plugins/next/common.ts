@@ -11,7 +11,7 @@ import { type DeepReadonly } from '@dxos/util';
 
 import { type PluginManager } from './manager';
 import { defineEvent, defineCapability } from './plugin';
-import { type LayoutParts, type Layout, type Resource } from '../common';
+import { type LayoutParts, type Layout, type Resource, type NodeSerializer } from '../common';
 import { type IntentContext, type AnyIntentResolver } from '../plugin-intent';
 import { type SurfaceDefinition } from '../plugin-surface';
 
@@ -61,6 +61,10 @@ export namespace Capabilities {
     'dxos.org/app-framework/capabilities/app-graph-builder',
   );
 
+  export const AppGraphSerializer = defineCapability<NodeSerializer[]>(
+    'dxos.org/app-framework/capabilities/app-graph-serializer',
+  );
+
   export const SettingsStore = defineCapability<RootSettingsStore>(
     'dxos.org/app-framework/capabilities/settings-store',
   );
@@ -75,7 +79,7 @@ export namespace Capabilities {
   };
   export const Settings = defineCapability<Settings>('dxos.org/app-framework/capabilities/settings');
 
-  export type Metadata = Readonly<{ plugin: string; metadata: Record<string, any> }>;
+  export type Metadata = Readonly<{ id: string; metadata: Record<string, any> }>;
   export const Metadata = defineCapability<Metadata>('dxos.org/app-framework/capabilities/metadata');
 }
 
@@ -106,7 +110,7 @@ export namespace Events {
   /**
    * Fired before the graph is created.
    */
-  export const SetupGraph = defineEvent('dxos.org/app-framework/events/setup-graph');
+  export const SetupAppGraph = defineEvent('dxos.org/app-framework/events/setup-graph');
 
   /**
    * Fired before the translations provider is created.
@@ -130,12 +134,12 @@ export namespace Events {
   /**
    * Fired when the graph is ready.
    */
-  export const GraphReady = defineEvent('dxos.org/app-framework/events/graph-ready');
+  export const AppGraphReady = defineEvent('dxos.org/app-framework/events/graph-ready');
 
   /**
    * Fired when plugin state is ready.
    */
   export const createStateEvent = (specifier: string) => defineEvent('dxos.org/app-framework/events/state', specifier);
-  export const LayoutState = createStateEvent(Capabilities.Layout.identifier);
-  export const LocationState = createStateEvent(Capabilities.Location.identifier);
+  export const LayoutReady = createStateEvent(Capabilities.Layout.identifier);
+  export const LocationReady = createStateEvent(Capabilities.Location.identifier);
 }

@@ -37,7 +37,7 @@ export const DeckPlugin = definePlugin(meta, [
   //
 
   defineModule({
-    id: `${meta.id}/settings`,
+    id: `${meta.id}/module/settings`,
     activationEvents: [eventKey(Events.SetupSettings)],
     activate: Settings,
   }),
@@ -47,45 +47,45 @@ export const DeckPlugin = definePlugin(meta, [
   //
 
   defineModule({
-    id: `${meta.id}/layout`,
+    id: `${meta.id}/module/layout`,
     activationEvents: [eventKey(Events.Startup)],
-    triggeredEvents: [eventKey(Events.LayoutState)],
+    triggeredEvents: [eventKey(Events.LayoutReady)],
     activate: LayoutState,
   }),
   defineModule({
-    id: `${meta.id}/deck`,
+    id: `${meta.id}/module/deck`,
     activationEvents: [eventKey(Events.Startup)],
     triggeredEvents: [eventKey(DeckEvents.StateReady)],
     activate: DeckState,
   }),
   defineModule({
-    id: `${meta.id}/translations`,
+    id: `${meta.id}/module/translations`,
     activationEvents: [eventKey(Events.SetupTranslations)],
     activate: () => contributes(Capabilities.Translations, [...translations, ...stackTranslations]),
   }),
   defineModule({
-    id: `${meta.id}/react-context`,
+    id: `${meta.id}/module/react-context`,
     activationEvents: [eventKey(Events.Startup)],
     activate: ReactContext,
   }),
   defineModule({
-    id: `${meta.id}/root`,
+    id: `${meta.id}/module/root`,
     activationEvents: [eventKey(Events.Startup)],
     activate: ReactRoot,
   }),
   defineModule({
-    id: `${meta.id}/surface`,
+    id: `${meta.id}/module/surface`,
     activationEvents: [eventKey(Events.Startup)],
     activate: Surface,
   }),
   defineModule({
-    id: `${meta.id}/layout-intents`,
+    id: `${meta.id}/module/layout-intents`,
     activationEvents: [eventKey(Events.SetupIntents)],
     activate: LayoutIntents,
   }),
   defineModule({
-    id: `${meta.id}/graph-builder`,
-    activationEvents: [eventKey(Events.SetupGraph)],
+    id: `${meta.id}/module/graph-builder`,
+    activationEvents: [eventKey(Events.SetupAppGraph)],
     activate: GraphBuilder,
   }),
 
@@ -94,28 +94,28 @@ export const DeckPlugin = definePlugin(meta, [
   //
 
   defineModule({
-    id: `${meta.id}/location`,
+    id: `${meta.id}/module/location`,
     activationEvents: [eventKey(Events.Startup)],
-    triggeredEvents: [eventKey(Events.LocationState)],
+    triggeredEvents: [eventKey(Events.LocationReady)],
     activate: LocationState,
   }),
   defineModule({
-    id: `${meta.id}/check-app-scheme`,
+    id: `${meta.id}/module/check-app-scheme`,
     activationEvents: [eventKey(Events.SettingsReady)],
     activate: CheckAppScheme,
   }),
   defineModule({
-    id: `${meta.id}/url`,
+    id: `${meta.id}/module/url`,
     activationEvents: [
       eventKey(Events.DispatcherReady),
-      eventKey(Events.LayoutState),
-      eventKey(Events.LocationState),
+      eventKey(Events.LayoutReady),
+      eventKey(Events.LocationReady),
       eventKey(AttentionEvents.AttentionReady),
     ],
     activate: Url,
   }),
   defineModule({
-    id: `${meta.id}/navigation-intents`,
+    id: `${meta.id}/module/navigation-intents`,
     activationEvents: [eventKey(Events.SetupIntents)],
     activate: NavigationIntents,
   }),

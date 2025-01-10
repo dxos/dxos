@@ -4,7 +4,7 @@
 
 import { Capabilities, contributes, defineModule, definePlugin, eventKey, Events } from '@dxos/app-framework/next';
 
-import { Client, GraphBuilder, IntentResolver, ReactContext, Surface } from './capabilities';
+import { Client, AppGraphBuilder, IntentResolver, ReactContext, ReactSurface } from './capabilities';
 import { ClientEvents } from './events';
 import meta from './meta';
 import translations from './translations';
@@ -26,6 +26,7 @@ export const ClientPlugin = ({
     defineModule({
       id: `${meta.id}/module/client`,
       activationEvents: [eventKey(Events.Startup)],
+      dependentEvents: [eventKey(ClientEvents.SetupClient)],
       triggeredEvents: [eventKey(ClientEvents.ClientReady)],
       activate: (context) => Client({ ...options, context }),
     }),
@@ -35,14 +36,14 @@ export const ClientPlugin = ({
       activate: ReactContext,
     }),
     defineModule({
-      id: `${meta.id}/module/surface`,
+      id: `${meta.id}/module/react-surface`,
       activationEvents: [eventKey(Events.Startup)],
-      activate: () => Surface({ createInvitationUrl }),
+      activate: () => ReactSurface({ createInvitationUrl }),
     }),
     defineModule({
-      id: `${meta.id}/module/graph-builder`,
-      activationEvents: [eventKey(Events.SetupGraph)],
-      activate: GraphBuilder,
+      id: `${meta.id}/module/app-graph-builder`,
+      activationEvents: [eventKey(Events.SetupAppGraph)],
+      activate: AppGraphBuilder,
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,

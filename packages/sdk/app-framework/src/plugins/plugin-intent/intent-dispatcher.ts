@@ -192,7 +192,7 @@ export const createDispatcher = (
       }
 
       const effect = candidates[0].effect(intent.data, intent.undo ?? false);
-      const result = Effect.isEffect(effect) ? yield* effect : yield* Effect.promise(async () => effect);
+      const result = Effect.isEffect(effect) ? yield* effect : yield* Effect.tryPromise(async () => effect);
       return { _intent: intent, ...result } satisfies AnyIntentResult;
     });
   };
@@ -210,9 +210,6 @@ export const createDispatcher = (
         const { data: prev } = (yield* resultsRef.get)[0] ?? {};
         const result = yield* handleIntent({ ...intent, data: { ...intent.data, ...prev } });
         yield* Ref.update(resultsRef, (results) => [result, ...results]);
-        if (result.error) {
-          break;
-        }
         if (result.intents) {
           for (const intent of result.intents) {
             // Returned intents are dispatched but not yielded into results,
@@ -220,6 +217,9 @@ export const createDispatcher = (
             // TODO(wittjosiah): Use higher execution concurrency?
             yield* dispatch(intent, depth + 1);
           }
+        }
+        if (result.error) {
+          break;
         }
       }
 

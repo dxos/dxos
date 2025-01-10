@@ -18,11 +18,11 @@ import {
   type RecoveryCodeDialogProps,
 } from '../components';
 
-type SurfaceCapabilityOptions = {
+type ReactSurfaceOptions = {
   createInvitationUrl: (invitationCode: string) => string;
 };
 
-export default ({ createInvitationUrl }: SurfaceCapabilityOptions) =>
+export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: IDENTITY_DIALOG,

@@ -7,6 +7,7 @@ import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { Client } from '@dxos/react-client';
 
 import { ClientCapabilities } from './capabilities';
+import { ClientEvents } from '../events';
 import { type ClientPluginOptions } from '../types';
 
 type ClientCapabilityOptions = Omit<ClientPluginOptions, 'appKey' | 'invitationUrl' | 'invitationParam' | 'onReset'> & {
@@ -20,6 +21,11 @@ export default async ({ context, onClientInitialized, ...options }: ClientCapabi
   await client.initialize();
   await onClientInitialized?.(context, client);
 
+  const systemSchemas = context.requestCapabilities(ClientCapabilities.SystemSchema).flat();
+  const schemas = context.requestCapabilities(ClientCapabilities.Schema).flat();
+  client.addTypes(systemSchemas);
+  client.addTypes(schemas);
+
   // TODO(wittjosiah): Remove. This is a hack to get the app to boot with the new identity after a reset.
   client.reloaded.on(() => {
     client.halo.identity.subscribe(async (identity) => {
@@ -29,5 +35,14 @@ export default async ({ context, onClientInitialized, ...options }: ClientCapabi
     });
   });
 
-  return contributes(ClientCapabilities.Client, client, () => client.destroy());
+  const subscription = client.spaces.isReady.subscribe(async (ready) => {
+    if (ready) {
+      await context.activate(ClientEvents.SpacesReady);
+    }
+  });
+
+  return contributes(ClientCapabilities.Client, client, async () => {
+    subscription.unsubscribe();
+    await client.destroy();
+  });
 };

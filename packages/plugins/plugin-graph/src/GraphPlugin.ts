@@ -13,14 +13,15 @@ import meta from './meta';
  */
 export const GraphPlugin = definePlugin(meta, [
   defineModule({
-    id: `${meta.id}/react-context`,
+    id: `${meta.id}/module/react-context`,
     activationEvents: [eventKey(Events.Startup)],
     activate: lazy(() => import('./GraphContext')),
   }),
   defineModule({
-    id: `${meta.id}/graph`,
+    id: `${meta.id}/module/graph`,
     activationEvents: [eventKey(Events.Startup)],
-    dependentEvents: [eventKey(Events.SetupGraph)],
+    dependentEvents: [eventKey(Events.SetupAppGraph)],
+    triggeredEvents: [eventKey(Events.AppGraphReady)],
     activate: lazy(() => import('./graph')),
   }),
 ]);

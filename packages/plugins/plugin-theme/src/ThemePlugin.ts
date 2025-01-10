@@ -10,7 +10,7 @@ import { type ThemePluginOptions } from './react-context';
 export const ThemePlugin = (options: ThemePluginOptions) =>
   definePlugin(meta, [
     defineModule({
-      id: `${meta.id}/react-context`,
+      id: `${meta.id}/module/react-context`,
       activationEvents: [eventKey(Events.Startup)],
       activate: () => lazy(() => import('./react-context'))(options),
     }),

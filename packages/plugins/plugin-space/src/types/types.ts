@@ -71,12 +71,16 @@ export type PluginState = {
   enabledEdgeReplication: boolean;
 };
 
-export type SpaceSettingsProps = {
-  /**
-   * Show closed spaces.
-   */
-  showHidden?: boolean;
-};
+export const SpaceSettingsSchema = S.mutable(
+  S.Struct({
+    /**
+     * Show closed spaces.
+     */
+    showHidden: S.Boolean,
+  }),
+);
+
+export type SpaceSettingsProps = S.Schema.Type<typeof SpaceSettingsSchema>;
 
 export type SchemaProvides = {
   echo: {
@@ -264,13 +268,6 @@ export namespace SpaceAction {
   export class WaitForObject extends S.TaggedClass<WaitForObject>()(`${SPACE_ACTION}/wait-for-object`, {
     input: S.Struct({
       id: S.optional(S.String),
-    }),
-    output: S.Void,
-  }) {}
-
-  export class ToggleHidden extends S.TaggedClass<ToggleHidden>()(`${SPACE_ACTION}/toggle-hidden`, {
-    input: S.Struct({
-      state: S.optional(S.Boolean),
     }),
     output: S.Void,
   }) {}

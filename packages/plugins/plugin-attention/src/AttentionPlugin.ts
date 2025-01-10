@@ -11,7 +11,7 @@ import meta from './meta';
 
 export const AttentionPlugin = definePlugin(meta, [
   defineModule({
-    id: `${meta.id}/attention`,
+    id: `${meta.id}/module/attention`,
     activationEvents: [eventKey(AppEvents.Startup)],
     triggeredEvents: [eventKey(AttentionEvents.AttentionReady)],
     activate: () => {
@@ -21,13 +21,13 @@ export const AttentionPlugin = definePlugin(meta, [
     },
   }),
   defineModule({
-    id: `${meta.id}/react-context`,
+    id: `${meta.id}/module/react-context`,
     activationEvents: [eventKey(AppEvents.Startup)],
     activate: lazy(() => import('./react-context')),
   }),
   defineModule({
-    id: `${meta.id}/keyboard`,
-    activationEvents: [eventKey(AppEvents.GraphReady), eventKey(AttentionEvents.AttentionReady)],
+    id: `${meta.id}/module/keyboard`,
+    activationEvents: [eventKey(AppEvents.AppGraphReady), eventKey(AttentionEvents.AttentionReady)],
     activate: lazy(() => import('./keyboard')),
   }),
 ]);

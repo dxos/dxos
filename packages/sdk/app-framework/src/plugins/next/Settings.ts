@@ -11,7 +11,7 @@ import SettingsMeta from '../plugin-settings/meta';
 
 export const SettingsPlugin = definePlugin(SettingsMeta, [
   defineModule({
-    id: `${SettingsMeta.id}/store`,
+    id: `${SettingsMeta.id}/module/store`,
     dependentEvents: [eventKey(Events.SetupSettings)],
     activationEvents: [eventKey(Events.Startup)],
     triggeredEvents: [eventKey(Events.SettingsReady)],

@@ -16,6 +16,7 @@ import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { DeckPlugin } from '@dxos/plugin-deck';
 import { GraphPlugin } from '@dxos/plugin-graph';
+import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { Status, Tooltip, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
@@ -68,12 +69,13 @@ const main = async () => {
 
   const plugins = [
     AttentionPlugin,
+    ClientPlugin({ config, services }),
     DeckPlugin,
     GraphPlugin,
     IntentPlugin,
-    ThemePlugin({ appName: 'Composer' }),
     SettingsPlugin,
-    ClientPlugin({ config, services }),
+    SpacePlugin(),
+    ThemePlugin({ appName: 'Composer' }),
   ];
 
   const App = createApp({

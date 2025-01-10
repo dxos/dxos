@@ -18,7 +18,7 @@ const defaultPromise = () => Effect.runPromise(defaultEffect());
 
 export const IntentPlugin = definePlugin(IntentMeta, [
   defineModule({
-    id: `${IntentMeta.id}/dispatcher`,
+    id: `${IntentMeta.id}/module/dispatcher`,
     // TODO(wittjosiah): This will mean that startup needs to be reset when intents are added or removed.
     //   This is fine for now because it's how it worked prior to capabilities api anyways.
     //   In the future, the intent dispatcher should be able to be reset without resetting the entire app.

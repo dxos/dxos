@@ -521,7 +521,7 @@ export const getActiveSpace = (graph: Graph, active?: string) => {
  */
 export const getNestedObjects = async (
   object: ReactiveEchoObject<any>,
-  resolve: MetadataResolver,
+  resolve: (typename: string) => Record<string, any>,
 ): Promise<ReactiveEchoObject<any>[]> => {
   const type = getTypename(object);
   if (!type) {
@@ -529,7 +529,7 @@ export const getNestedObjects = async (
   }
 
   const metadata = resolve(type);
-  const loadReferences = metadata.loadReferences;
+  const loadReferences = metadata?.loadReferences;
   if (typeof loadReferences !== 'function') {
     return [];
   }
@@ -543,7 +543,11 @@ export const getNestedObjects = async (
  * @deprecated Workaround for ECHO not supporting clone.
  */
 // TODO(burdon): Remove.
-export const cloneObject = async (object: Expando, resolve: MetadataResolver, newSpace: Space): Promise<Expando> => {
+export const cloneObject = async (
+  object: Expando,
+  resolve: (typename: string) => Record<string, any>,
+  newSpace: Space,
+): Promise<Expando> => {
   const schema = getSchema(object);
   const typename = schema ? getObjectAnnotation(schema)?.typename ?? EXPANDO_TYPENAME : EXPANDO_TYPENAME;
   const metadata = resolve(typename);
