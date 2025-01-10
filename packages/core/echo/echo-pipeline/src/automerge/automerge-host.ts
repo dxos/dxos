@@ -44,6 +44,8 @@ import { LevelDBStorageAdapter, type BeforeSaveParams } from './leveldb-storage-
 
 export type PeerIdProvider = () => string | undefined;
 
+export type RootDocumentSpaceKeyProvider = (documentId: string) => PublicKey | undefined;
+
 export type AutomergeHostParams = {
   db: LevelDB;
 
@@ -54,6 +56,7 @@ export type AutomergeHostParams = {
    * Used for creating stable ids. A random key is generated on open, if no value is provided.
    */
   peerIdProvider?: PeerIdProvider;
+  getSpaceKeyByRootDocumentId?: RootDocumentSpaceKeyProvider;
 };
 
 export type LoadDocOptions = {
@@ -90,10 +93,17 @@ export class AutomergeHost extends Resource {
   private _peerId!: PeerId;
 
   private readonly _peerIdProvider?: PeerIdProvider;
+  private readonly _getSpaceKeyByRootDocumentId?: RootDocumentSpaceKeyProvider;
 
   public readonly collectionStateUpdated = new Event<{ collectionId: CollectionId }>();
 
-  constructor({ db, indexMetadataStore, dataMonitor, peerIdProvider }: AutomergeHostParams) {
+  constructor({
+    db,
+    indexMetadataStore,
+    dataMonitor,
+    peerIdProvider,
+    getSpaceKeyByRootDocumentId,
+  }: AutomergeHostParams) {
     super();
     this._db = db;
     this._storage = new LevelDBStorageAdapter({
@@ -114,6 +124,7 @@ export class AutomergeHost extends Resource {
     this._headsStore = new HeadsStore({ db: db.sublevel('heads') });
     this._indexMetadataStore = indexMetadataStore;
     this._peerIdProvider = peerIdProvider;
+    this._getSpaceKeyByRootDocumentId = getSpaceKeyByRootDocumentId;
   }
 
   protected override async _open() {
@@ -132,14 +143,28 @@ export class AutomergeHost extends Resource {
       ],
     });
 
-    Event.wrap(this._echoNetworkAdapter, 'peer-candidate').on(this._ctx, ((e: PeerCandidatePayload) =>
-      this._onPeerConnected(e.peerId)) as any);
-    Event.wrap(this._echoNetworkAdapter, 'peer-disconnected').on(this._ctx, ((e: PeerDisconnectedPayload) =>
-      this._onPeerDisconnected(e.peerId)) as any);
+    let updatingAuthScope = false;
+    Event.wrap(this._echoNetworkAdapter, 'peer-candidate').on(
+      this._ctx,
+      ((e: PeerCandidatePayload) => !updatingAuthScope && this._onPeerConnected(e.peerId)) as any,
+    );
+    Event.wrap(this._echoNetworkAdapter, 'peer-disconnected').on(
+      this._ctx,
+      ((e: PeerDisconnectedPayload) => !updatingAuthScope && this._onPeerDisconnected(e.peerId)) as any,
+    );
 
-    this._collectionSynchronizer.remoteStateUpdated.on(this._ctx, ({ collectionId, peerId }) => {
+    this._collectionSynchronizer.remoteStateUpdated.on(this._ctx, ({ collectionId, peerId, newDocsAppeared }) => {
       this._onRemoteCollectionStateUpdated(collectionId, peerId);
       this.collectionStateUpdated.emit({ collectionId: collectionId as CollectionId });
+      // We use collection lookups during share policy check, so we might need to update share policy for the new doc
+      if (newDocsAppeared) {
+        updatingAuthScope = true;
+        try {
+          this._echoNetworkAdapter.onConnectionAuthScopeChanged(peerId);
+        } finally {
+          updatingAuthScope = false;
+        }
+      }
     });
 
     await this._echoNetworkAdapter.open();
@@ -351,16 +376,23 @@ export class AutomergeHost extends Resource {
 
   private async _getContainingSpaceForDocument(documentId: string): Promise<PublicKey | null> {
     const doc = this._repo.handles[documentId as any]?.docSync();
-    if (!doc) {
-      return null;
+    if (doc) {
+      const spaceKeyHex = getSpaceKeyFromDoc(doc);
+      if (spaceKeyHex) {
+        return PublicKey.from(spaceKeyHex);
+      }
+    }
+    /**
+     * Edge case on the initial space setup.
+     * A peer is maybe trying to share space root document with us after a successful invitation.
+     * We don't have a document to check access block locally, so we need to rely on external sources (space metada).
+     */
+    const rootDocSpaceKey = this._getSpaceKeyByRootDocumentId?.(documentId);
+    if (rootDocSpaceKey) {
+      return rootDocSpaceKey;
     }
 
-    const spaceKeyHex = getSpaceKeyFromDoc(doc);
-    if (!spaceKeyHex) {
-      return null;
-    }
-
-    return PublicKey.from(spaceKeyHex);
+    return null;
   }
 
   /**
