@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import type { ToggleGroupItemProps as ToggleGroupItemPrimitiveProps } from '@radix-ui/react-toggle-group';
 import * as ToolbarPrimitive from '@radix-ui/react-toolbar';
 import React, { forwardRef } from 'react';
 
@@ -15,6 +16,8 @@ import {
   Toggle,
   type ToggleGroupItemProps,
   type ToggleProps,
+  IconButton,
+  type IconButtonProps,
 } from '../Buttons';
 import { Link, type LinkProps } from '../Link';
 import { Separator, type SeparatorProps } from '../Separator';
@@ -36,6 +39,16 @@ const ToolbarButton = forwardRef<HTMLButtonElement, ToolbarButtonProps>((props, 
   return (
     <ToolbarPrimitive.Button asChild>
       <Button {...props} ref={forwardedRef} />
+    </ToolbarPrimitive.Button>
+  );
+});
+
+type ToolbarIconButtonProps = IconButtonProps;
+
+const ToolbarIconButton = forwardRef<HTMLButtonElement, ToolbarIconButtonProps>((props, forwardedRef) => {
+  return (
+    <ToolbarPrimitive.Button asChild>
+      <IconButton {...props} ref={forwardedRef} />
     </ToolbarPrimitive.Button>
   );
 });
@@ -88,35 +101,50 @@ const ToolbarToggleGroupItem = forwardRef<HTMLButtonElement, ToolbarToggleGroupI
   },
 );
 
-type ToolbarSeparatorProps = SeparatorProps;
+type ToolbarToggleGroupIconItemProps = Omit<ToggleGroupItemPrimitiveProps, 'className'> & IconButtonProps;
 
-const ToolbarSeparator = (props: SeparatorProps) => {
-  return (
+const ToolbarToggleGroupIconItem = forwardRef<HTMLButtonElement, ToolbarToggleGroupIconItemProps>(
+  ({ variant, density, elevation, classNames, icon, label, iconOnly, ...props }, forwardedRef) => {
+    return (
+      <ToolbarPrimitive.ToolbarToggleItem {...props} asChild>
+        <IconButton {...{ variant, density, elevation, classNames, icon, label, iconOnly }} ref={forwardedRef} />
+      </ToolbarPrimitive.ToolbarToggleItem>
+    );
+  },
+);
+
+type ToolbarSeparatorProps = SeparatorProps & { variant?: 'gap' | 'line' };
+
+const ToolbarSeparator = ({ variant = 'line', ...props }: ToolbarSeparatorProps) => {
+  return variant === 'line' ? (
     <ToolbarPrimitive.Separator asChild>
-      <Separator orientation='vertical' {...props} />
+      <Separator {...props} />
     </ToolbarPrimitive.Separator>
+  ) : (
+    <ToolbarPrimitive.Separator className='grow' />
   );
 };
-
-const ToolbarExpander = () => <div className={'grow'} />;
 
 export const Toolbar = {
   Root: ToolbarRoot,
   Button: ToolbarButton,
+  IconButton: ToolbarIconButton,
   Link: ToolbarLink,
   Toggle: ToolbarToggle,
   ToggleGroup: ToolbarToggleGroup,
   ToggleGroupItem: ToolbarToggleGroupItem,
+  ToggleGroupIconItem: ToolbarToggleGroupIconItem,
   Separator: ToolbarSeparator,
-  Expander: ToolbarExpander,
 };
 
 export type {
   ToolbarRootProps,
   ToolbarButtonProps,
+  ToolbarIconButtonProps,
   ToolbarLinkProps,
   ToolbarToggleProps,
   ToolbarToggleGroupProps,
   ToolbarToggleGroupItemProps,
+  ToolbarToggleGroupIconItemProps,
   ToolbarSeparatorProps,
 };

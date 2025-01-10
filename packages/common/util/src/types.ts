@@ -14,6 +14,8 @@ export type MakeOptional<Type, Key extends keyof Type> = Omit<Type, Key> & Parti
 
 export type GuardedType<T> = T extends (value: any) => value is infer R ? R : never;
 
+export type DeepWriteable<T> = { -readonly [K in keyof T]: T[K] extends object ? DeepWriteable<T[K]> : T[K] };
+
 /**
  * All types that evaluate to false when cast to a boolean.
  */
