@@ -6,15 +6,17 @@ import { createEdge, TestRuntime } from '../testing';
 import { testServices } from '../testing/test-services';
 import type { ResultStreamEvent } from '@dxos/assistant';
 import { MockGpt } from '../services/gpt/mock';
+import { log } from '@dxos/log';
+import { getDebugName } from '../../../../common/util/src';
 
 const ENABLE_LOGGING = false;
 
 describe('Gpt pipelines', () => {
-  test('text output', async ({ expect }) => {
+  test.skip('text output', async ({ expect }) => {
     const runtime = new TestRuntime();
     runtime.registerGraph('dxn:graph:gpt1', gpt1());
 
-    const { text } = await Effect.runPromise(
+    const { text, tokenStream } = await Effect.runPromise(
       runtime
         .runGraph('dxn:graph:gpt1', {
           prompt: 'What is the meaning of life?',
@@ -22,10 +24,11 @@ describe('Gpt pipelines', () => {
         .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }))),
     );
 
+    // TODO(dmaretskyi): Have to drain the stream due to the way the mock gpt works.
     expect(await Effect.runPromise(text)).toEqual('This is a mock response that simulates a GPT-like output.');
   });
 
-  test.only('stream output', async ({ expect }) => {
+  test('stream output', { timeout: 1000 }, async ({ expect }) => {
     const runtime = new TestRuntime();
     runtime.registerGraph('dxn:graph:gpt2', gpt2());
 
@@ -37,7 +40,8 @@ describe('Gpt pipelines', () => {
         .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING, gpt: new MockGpt({ maxDelay: 50 }) }))),
     )) as { tokenStream: Stream.Stream<ResultStreamEvent>; text: Effect.Effect<string> };
 
-    console.log({ text });
+    log.info('text in test', { text: getDebugName(text) });
+
     const p = Effect.runPromise(text).then((x) => {
       console.log({ x });
     });

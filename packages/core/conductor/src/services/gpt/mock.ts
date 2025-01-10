@@ -10,6 +10,7 @@ import { ObjectId, type ResultStreamEvent } from '@dxos/assistant';
 import { log } from '@dxos/log';
 import type { OutputBag } from '../../schema';
 import type G from 'glob';
+import { getDebugName } from '../../../../../common/util/src';
 
 export type GPTConfig = {
   initDelay?: number;
@@ -52,8 +53,11 @@ export class MockGpt implements Context.Tag.Service<GptService> {
         (err) => new Error(String(err)),
       );
 
+      const text = Effect.promise(() => textResult);
+      log.info('text in gpt', { text: getDebugName(text) });
+
       return {
-        text: Effect.promise(() => textResult),
+        text,
         messages: [
           {
             id: ObjectId.random(),

@@ -19,6 +19,7 @@ import type {
 } from './schema';
 import { createTopology, type GraphDiagnostic, type TopologyNode } from './topology';
 import { log } from '@dxos/log';
+import { getDebugName } from '../../../common/util/src';
 
 export type ValidateParams = {
   graph: GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;
@@ -111,46 +112,55 @@ export const compile = async ({
   };
 
   const computeNode = (node: TopologyNode): Effect.Effect<any, any, ComputeRequirements> => {
-    if (computeCache.has(node.id)) {
-      return computeCache.get(node.id)!;
-    }
-
     const result = Effect.gen(function* () {
-      const inputValuesBag = yield* computeInputs(node);
-      const inputValues = yield* unwrapOutputBag(inputValuesBag);
-      // TODO(dmaretskyi): Consider resolving the node implementation at the start of the computation.
-      const nodeSpec = yield* Effect.promise(() => computeResolver(node.graphNode));
-      if (nodeSpec.compute == null) {
-        yield* Effect.fail(new Error(`No compute function for node type: ${node.graphNode.type}`));
-        return;
+      if (computeCache.has(node.id)) {
+        return yield* computeCache.get(node.id)!;
       }
 
-      const logger = yield* EventLogger;
-      logger.log({
-        type: 'begin-compute',
-        nodeId: node.id,
-        inputs: inputValues,
-      });
+      const compute = Effect.gen(function* () {
+        const inputValuesBag = yield* computeInputs(node);
+        const inputValues = yield* unwrapOutputBag(inputValuesBag);
+        // TODO(dmaretskyi): Consider resolving the node implementation at the start of the computation.
+        const nodeSpec = yield* Effect.promise(() => computeResolver(node.graphNode));
+        if (nodeSpec.compute == null) {
+          yield* Effect.fail(new Error(`No compute function for node type: ${node.graphNode.type}`));
+          return;
+        }
 
-      const sanitizedInputs = yield* S.decode(node.meta.input)(inputValues);
-      const output = yield* nodeSpec.compute(sanitizedInputs).pipe(
-        Effect.provideService(EventLogger, {
-          log: logger.log,
+        const logger = yield* EventLogger;
+        logger.log({
+          type: 'begin-compute',
           nodeId: node.id,
-        }),
-      );
-      log.info('output', { output });
-      // const decodedOutput = yield* S.decode(node.meta.output)(output);
+          inputs: inputValues,
+        });
 
-      logger.log({
-        type: 'end-compute',
-        nodeId: node.id,
-        outputs: output,
+        const sanitizedInputs = yield* S.decode(node.meta.input)(inputValues);
+        const output = yield* nodeSpec.compute(sanitizedInputs).pipe(
+          Effect.provideService(EventLogger, {
+            log: logger.log,
+            nodeId: node.id,
+          }),
+        );
+        // log.info('output', { output });
+        if ('text' in output) {
+          log.info('text in fiber', { text: getDebugName(output.text) });
+        }
+
+        // const decodedOutput = yield* S.decode(node.meta.output)(output);
+
+        logger.log({
+          type: 'end-compute',
+          nodeId: node.id,
+          outputs: output,
+        });
+        return output;
       });
-      return output;
+
+      const cachedCompute = yield* compute.pipe(Effect.cached);
+      computeCache.set(node.id, cachedCompute);
+      return yield* cachedCompute;
     });
 
-    computeCache.set(node.id, result);
     return result;
   };
 
