@@ -5,11 +5,10 @@
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type MouseEvent, type MutableRefObject, type PropsWithChildren, useCallback } from 'react';
 
-import { type Action } from '@dxos/app-graph';
 import { DropdownMenu as NaturalDropdownMenu, Icon } from '@dxos/react-ui';
 
 import { ActionLabel } from './ActionLabel';
-import { type MenuProps } from '../defs';
+import { type MenuAction, type MenuProps } from '../defs';
 
 export type DropdownMenuProps = MenuProps &
   PropsWithChildren<
@@ -25,8 +24,8 @@ const DropdownMenuItem = ({
   action,
   onClick,
 }: {
-  action: Action;
-  onClick: (action: Action, event: MouseEvent) => void;
+  action: MenuAction;
+  onClick: (action: MenuAction, event: MouseEvent) => void;
 }) => {
   const handleClick = useCallback((event: MouseEvent) => onClick(action, event), [action, onClick]);
   return (
@@ -58,7 +57,7 @@ const DropdownMenuRoot = ({
   });
 
   const handleActionClick = useCallback(
-    (action: Action, event: MouseEvent) => {
+    (action: MenuAction, event: MouseEvent) => {
       if (action.properties?.disabled) {
         return;
       }

@@ -13,7 +13,9 @@ export type MenuActionProperties = {
   testId?: string;
 };
 
-export type MenuProps<A extends Node = Action> = {
+export type MenuAction = Action<MenuActionProperties>;
+
+export type MenuProps<A extends Node = Action<MenuActionProperties>> = {
   actions?: A[];
   onAction?: (action: A) => void;
 };

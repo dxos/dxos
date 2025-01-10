@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { MouseEvent } from 'react';
-
 import { type Node, type Action, type ActionGroup, type Graph } from '@dxos/app-graph';
 import { type ToolbarRootProps, type ToolbarSeparatorProps, type IconButtonProps } from '@dxos/react-ui';
 
@@ -33,8 +31,8 @@ export type ToolbarItem = ToolbarSeparatorNode | ToolbarAction | ToolbarActionGr
 export type ToolbarProps = ToolbarRootProps &
   MenuProps<ToolbarItem> & { iconSize?: IconButtonProps['size']; graph?: Graph };
 
-export type ToolbarActionGroupProps = Pick<ToolbarProps, 'iconSize'> & {
-  actionGroup: ToolbarActionGroup;
-  onClick: (action: ToolbarAction, event: MouseEvent) => void;
-  graph?: Graph;
-};
+export type ToolbarActionGroupProps = Pick<ToolbarProps, 'iconSize'> &
+  Omit<MenuProps, 'actions'> & {
+    actionGroup: ToolbarActionGroup;
+    graph?: Graph;
+  };
