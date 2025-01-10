@@ -6,7 +6,7 @@ import React, { type MutableRefObject, useRef, useState } from 'react';
 
 import { type Action, type Node } from '@dxos/app-graph';
 import { Button, Tooltip, useTranslation, toLocalizedString, Icon, IconButton } from '@dxos/react-ui';
-import { DropdownMenu } from '@dxos/react-ui-menu';
+import { DropdownMenu, type MenuAction } from '@dxos/react-ui-menu';
 import { hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
 
 import { NAVTREE_PLUGIN } from '../meta';
@@ -36,7 +36,7 @@ export const NavTreeItemActionDropdownMenu = ({
   const { t } = useTranslation(NAVTREE_PLUGIN);
 
   return (
-    <DropdownMenu.Root actions={menuActions} {...menuProps}>
+    <DropdownMenu.Root actions={menuActions as MenuAction[]} {...menuProps}>
       <Tooltip.Trigger asChild>
         <DropdownMenu.Trigger asChild>
           <IconButton
