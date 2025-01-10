@@ -38,6 +38,7 @@ const icons = {
 };
 
 export const createActions = (params?: CreateActionsParams) => {
+  // eslint-disable-next-line no-console
   const { callback = () => console.log('invoke'), count = 12, type = ACTION_TYPE } = params ?? {};
   return faker.helpers.multiple(
     () =>
@@ -65,7 +66,6 @@ export const createNestedActionGraph = (groupParams?: CreateActionsParams, param
     graph._addEdges(actions.map((action) => ({ source: group.id, target: action.id })));
     void graph.expand(group);
   });
-  console.log('[graph]', graph.toJSON());
   return { graph, topLevelActions: actionGroups as ToolbarItem[] };
 };
 
