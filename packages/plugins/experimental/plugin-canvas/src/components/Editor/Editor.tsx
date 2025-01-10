@@ -156,10 +156,10 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
     // Trigger on graph change.
     useEffect(() => {
       if (autoZoom) {
-        setTimeout(async () => {
+        requestAnimationFrame(async () => {
           await actionHandler?.({ type: 'zoom-to-fit', duration: 0 });
           setReady(true);
-        }, 0);
+        });
       }
     }, [actionHandler, graph, autoZoom]);
 

@@ -3,7 +3,7 @@
 //
 
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import React, { useEffect, useRef } from 'react';
+import React, { type PropsWithChildren, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 import { Canvas as NativeCanvas, Grid, type Rect, testId, useWheel, useProjection } from '@dxos/react-ui-canvas';
@@ -28,16 +28,16 @@ import { eventsNone, styles } from '../styles';
 /**
  * Main canvas component.
  */
-export const Canvas = () => {
+export const Canvas = ({ children }: PropsWithChildren) => {
   return (
     <NativeCanvas {...testId<TestId>('dx-canvas')}>
-      <CanvasContent />
+      <CanvasContent>{children}</CanvasContent>
     </NativeCanvas>
   );
 };
 
-export const CanvasContent = () => {
-  const { id, ready, dragMonitor, overlayRef, options, showGrid, selection } = useEditorContext();
+export const CanvasContent = ({ children }: PropsWithChildren) => {
+  const { id, dragMonitor, overlayRef, options, showGrid, selection } = useEditorContext();
   const { root, styles: projectionStyles, scale, offset } = useProjection();
   const shapesRef = useRef<HTMLDivElement>(null);
 
@@ -96,6 +96,9 @@ export const CanvasContent = () => {
 
       {/* Layout. */}
       {<Shapes {...testId<TestId>('dx-layout', true)} ref={shapesRef} layout={layout} />}
+
+      {/* External content. */}
+      {children}
 
       {/* Overlays. */}
       <div {...testId<TestId>('dx-overlays')} className={mx(eventsNone)}>

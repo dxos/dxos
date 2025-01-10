@@ -4,6 +4,7 @@
 
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { disableNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/disable-native-drag-preview';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import React, {
   type FC,
@@ -22,7 +23,7 @@ import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
 import { useProjection } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
-import { AnchorComponent, defaultAnchorSize } from './Anchor';
+import { AnchorComponent } from './Anchor';
 import { type ShapeComponentProps, shapeAttrs } from './Shape';
 import { type DragDropPayload, useEditorContext } from '../../hooks';
 import { getBoundsProperties, getInputPoint, pointSubtract } from '../../layout';
@@ -32,10 +33,13 @@ import { type Anchor, createAnchorMap, resizeAnchors } from '../anchors';
 import { styles } from '../styles';
 
 // Border around frame for preview snapshot.
-const previewBorder = defaultAnchorSize.width + 8;
+const previewBorder = 8;
 
 // NOTE: Delaying double-click detection makes select slow.
 const DBLCLICK_TIMEOUT = 0;
+
+// TODO(burdon): Remove since native is broken.
+const nativeDrag = false;
 
 export type FrameProps = ShapeComponentProps<Polygon> & {
   Component?: FC<FrameProps>;
@@ -48,14 +52,17 @@ export type FrameProps = ShapeComponentProps<Polygon> & {
 /**
  * Draggable Frame around polygons.
  */
-// TODO(burdon): Access compute node.
 export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
   const { shape } = baseProps;
   const { dragMonitor, registry, editing, setEditing } = useEditorContext();
   const { root, projection, styles: projectionStyles } = useProjection();
 
-  const dragging = dragMonitor.state((state) => state.type === 'frame' && state.shape.id === shape.id).value;
+  const dragging = dragMonitor.state(
+    (state) => (state.type === 'frame' || state.type === 'resize') && state.shape.id === shape.id,
+  ).value;
   const isDragging = dragging.type === 'frame';
+  const isResizing = dragging.type === 'resize';
+
   const isEditing = editing?.shape.id === shape.id;
   const [active, setActive] = useState(false);
   const [preview, setPreview] = useState<HTMLElement>();
@@ -77,17 +84,18 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
       draggable({
         element,
         getInitialData: () => ({ type: 'frame', shape }) satisfies DragDropPayload,
-        onGenerateDragPreview: ({ nativeSetDragImage, location }) => {
+        onGenerateDragPreview: ({ nativeSetDragImage, source, location }) => {
+          if (!nativeDrag) {
+            disableNativeDragPreview({ nativeSetDragImage });
+            return;
+          }
+
           setCustomNativeDragPreview({
             /**
              * Calculate relative offset and apply to center position.
              * NOTE: During preview, we render a hidden border to contain the anchors for the native preview snapshot.
-             * See preserveOffsetOnSource
              */
-            // getOffset: preserveOffsetOnSource({ element, input: location.current.input }),
-            // TODO(burdon): Randomly of by 1px and flickers on drop.
             getOffset: () => {
-              // const sourceRect = element.getBoundingClientRect();
               const pos = getInputPoint(root, location.current.input);
 
               // Set offset (in model coordinates) relative to center.
@@ -97,22 +105,29 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
               // Calculate offset relative to top-left corner.
               const [topLeft] = projection.toScreen([
                 pointSubtract(shape.center, {
-                  x: (shape.size.width + previewBorder) / 2,
-                  y: (shape.size.height + previewBorder) / 2,
+                  x: shape.size.width / 2 + previewBorder,
+                  y: shape.size.height / 2 + previewBorder,
                 }),
               ]);
               return pointSubtract(pos, topLeft);
             },
             render: ({ container }) => {
-              // TODO(burdon): Render directly but set-up new context.
-              // https://atlassian.design/components/pragmatic-drag-and-drop/core-package/adapters/element/drag-previews#approach-1-use-a-custom-native-drag-preview
               setPreview(container);
-              return () => setPreview(undefined);
+              return () => {
+                setPreview(undefined);
+              };
             },
             nativeSetDragImage,
           });
         },
-        onDragStart: () => {
+        onDragStart: ({ location }) => {
+          if (!nativeDrag) {
+            // Set offset (in model coordinates) relative to center.
+            const pos = getInputPoint(root, location.current.input);
+            const [p] = projection.toModel([pos]);
+            dragMonitor.setOffset(pointSubtract(shape.center, p));
+          }
+
           dragMonitor.start({ type: 'frame', shape });
         },
       }),
@@ -129,7 +144,6 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
   };
 
   // Custom anchors.
-  // TODO(burdon): Position relative to frame.
   const anchors = useMemo(
     () => registry.getShapeDef(shape.type)?.getAnchors?.(shape) ?? {},
     [shape.center, shape.size],
@@ -140,7 +154,9 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
       <FrameContent
         {...baseProps}
         ref={draggingRef}
-        dragging={isDragging}
+        shape={(isDragging || isResizing) && !nativeDrag ? dragging.shape : shape}
+        dragging={isDragging && nativeDrag}
+        resizing={isResizing}
         active={active}
         anchors={anchors}
         onEdit={() => setEditing({ shape })}
@@ -165,8 +181,8 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
 export type FrameContentProps = PropsWithChildren<
   ThemedClassName<
     {
-      resize?: boolean;
       dragging?: boolean;
+      resizing?: boolean;
       preview?: boolean;
       anchors: Record<string, Anchor>;
       active?: boolean;
@@ -187,8 +203,8 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
       debug,
       selected,
       editing,
-      resize,
       dragging,
+      resizing,
       preview,
       anchors,
       active,
@@ -214,19 +230,20 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
     };
 
     return (
-      <div>
+      <div className='absolute' style={{ left: shape.center.x, top: shape.center.y }}>
         {/*
          * Background.
          * NOTE: We create an expanded background to ensure that the preview contains the anchors for the native image snapshot.
          */}
         {(preview || debug) && (
           <div
+            className={mx('absolute', debug && 'border border-dashed border-primary-500')}
             style={getBoundsProperties({
-              ...shape.center,
-              width: shape.size.width + previewBorder,
-              height: shape.size.height + previewBorder,
+              x: 0,
+              y: 0,
+              width: shape.size.width + previewBorder * 2,
+              height: shape.size.height + previewBorder * 2,
             })}
-            className={mx('absolute pointer-events-none', debug && 'border border-dashed border-primary-500')}
           />
         )}
 
@@ -234,9 +251,9 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
         <div
           ref={ref}
           {...shapeAttrs(shape)}
-          style={getBoundsProperties({ ...shape.center, ...shape.size })}
+          style={getBoundsProperties({ x: 0, y: 0, ...shape.size })}
           className={mx(
-            'overflow-hidden',
+            'absolute overflow-hidden box-border',
             styles.frameContainer,
             styles.frameHover,
             styles.frameBorder,
@@ -255,23 +272,23 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
         </div>
 
         {/* Anchors. */}
-        {!dragging && (
+        {!dragging && !selected && !resizing && (
           <div>
             {Object.values(anchors).map((anchor) => (
-              <AnchorComponent key={anchor.id} shape={shape} anchor={anchor} size={defaultAnchorSize} />
+              <AnchorComponent key={anchor.id} type='anchor' shape={shape} anchor={anchor} />
             ))}
           </div>
         )}
 
-        {/* TODO(burdon): Resize handles (shift key). */}
-        {resize && (
+        {/* Resize handles. */}
+        {(selected || resizing) && (
           <div>
+            <div
+              style={getBoundsProperties({ x: 0, y: 0, ...shape.size })}
+              className={mx('absolute pointer-events-none', styles.resizeBorder)}
+            />
             {Object.values(createAnchorMap(shape, resizeAnchors)).map((anchor) => (
-              <div
-                key={anchor.id}
-                style={getBoundsProperties({ ...anchor.pos, ...defaultAnchorSize })}
-                className='absolute border border-primary-500'
-              />
+              <AnchorComponent key={anchor.id} type='resize' shape={shape} anchor={anchor} />
             ))}
           </div>
         )}

@@ -6,7 +6,7 @@ import React from 'react';
 
 import { AST, S } from '@dxos/echo-schema';
 
-import { FunctionBody, getAnchors, getHeight } from './Function';
+import { FunctionBody, createFunctionAnchors, getHeight } from './Function';
 import { ComputeShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { GptFunction, GptInput } from '../graph';
@@ -42,5 +42,5 @@ export const gptShape: ShapeDef<GptShape> = {
   icon: 'ph--brain--regular',
   component: GptComponent,
   createShape: createGpt,
-  getAnchors: (shape) => getAnchors(shape, shape.node.inputSchema, shape.node.outputSchema),
+  getAnchors: (shape) => createFunctionAnchors(shape, shape.node.inputSchema, shape.node.outputSchema),
 };

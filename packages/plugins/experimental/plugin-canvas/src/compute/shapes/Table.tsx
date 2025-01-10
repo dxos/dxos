@@ -6,7 +6,7 @@ import React from 'react';
 
 import { S } from '@dxos/echo-schema';
 
-import { getAnchors } from './Function';
+import { createFunctionAnchors } from './Function';
 import { Box } from './components';
 import { ComputeShape, createInputSchema, createOutputSchema, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
@@ -44,5 +44,5 @@ export const tableShape: ShapeDef<TableShape> = {
   icon: 'ph--table--regular',
   component: TableComponent,
   createShape: createTable,
-  getAnchors: (shape) => getAnchors(shape, InputSchema, OutputSchema),
+  getAnchors: (shape) => createFunctionAnchors(shape, InputSchema, OutputSchema),
 };

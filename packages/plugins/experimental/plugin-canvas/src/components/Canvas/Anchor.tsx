@@ -4,9 +4,8 @@
 
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { dropTargetForElements, draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
+import { disableNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/disable-native-drag-preview';
 import React, { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -15,13 +14,25 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { type DragDropPayload, useEditorContext } from '../../hooks';
 import { getBoundsProperties } from '../../layout';
-import { type Polygon } from '../../types';
-import { type Anchor } from '../anchors';
+import { type Polygon, type Shape } from '../../types';
+import { type Anchor, resizeCursor } from '../anchors';
 import { styles } from '../styles';
 
 export const defaultAnchorSize: Dimension = { width: 12, height: 12 };
 
+export const DATA_ANCHOR_ID = 'data-anchor-id';
+
+export const anchorAttrs = (shape: Shape, anchor: Anchor) => {
+  return {
+    [DATA_ANCHOR_ID]: `${shape.id}-${anchor.id}`,
+  };
+};
+
+export const getAnchorElement = (root: HTMLElement, shapeId: string, anchorId: string): Element | null =>
+  root.querySelector(`[${DATA_ANCHOR_ID}="${shapeId}-${anchorId}"]`);
+
 export type AnchorProps = ThemedClassName<{
+  type: 'anchor' | 'resize';
   shape: Polygon;
   anchor: Anchor;
   size?: Dimension;
@@ -30,11 +41,10 @@ export type AnchorProps = ThemedClassName<{
 /**
  * Anchor points for attaching links.
  */
-export const AnchorComponent = ({ classNames, shape, anchor, size = defaultAnchorSize }: AnchorProps) => {
+export const AnchorComponent = ({ classNames, type, shape, anchor, size = defaultAnchorSize }: AnchorProps) => {
   const { dragMonitor } = useEditorContext();
   const { root, projection } = useProjection();
 
-  const [preview, setPreview] = useState<HTMLElement>();
   const [active, setActive] = useState(false);
 
   // Dragging.
@@ -54,16 +64,10 @@ export const AnchorComponent = ({ classNames, shape, anchor, size = defaultAncho
         element: ref.current,
         getInitialData: () => ({ type: 'anchor', shape, anchor }) satisfies DragDropPayload,
         onGenerateDragPreview: ({ nativeSetDragImage }) => {
-          setCustomNativeDragPreview({
-            render: ({ container }) => {
-              setPreview(container);
-              return () => setPreview(undefined);
-            },
-            nativeSetDragImage,
-          });
+          disableNativeDragPreview({ nativeSetDragImage });
         },
         onDragStart: () => {
-          dragMonitor.start({ type: 'anchor', shape, anchor });
+          dragMonitor.start({ type, shape, anchor, initialSize: shape.size });
         },
       }),
     );
@@ -73,18 +77,17 @@ export const AnchorComponent = ({ classNames, shape, anchor, size = defaultAncho
     <>
       <div
         ref={ref}
+        {...anchorAttrs(shape, anchor)}
         style={getBoundsProperties({ ...anchor.pos, ...size })}
-        className={mx('absolute', styles.anchor, classNames, active && styles.anchorActive)}
+        className={mx(
+          'absolute',
+          type === 'anchor' && styles.anchor,
+          type === 'resize' && [styles.resizeBorder, styles.resizeAnchor, resizeCursor[anchor.id]],
+          classNames,
+          active && styles.anchorActive,
+        )}
         title={anchor.id}
       />
-
-      {preview &&
-        createPortal(
-          <div style={{ transform: `scale(${projection.scale})` }}>
-            <div style={getBoundsProperties({ ...anchor.pos, ...size })} />
-          </div>,
-          preview,
-        )}
     </>
   );
 };

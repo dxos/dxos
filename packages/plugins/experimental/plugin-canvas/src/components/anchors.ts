@@ -4,7 +4,6 @@
 
 import { type Point } from '@antv/layout';
 
-import { pointAdd } from '../layout';
 import { type Polygon } from '../types';
 
 export const rowHeight = 20;
@@ -31,22 +30,29 @@ export const defaultAnchors: Record<string, Point> = {
 };
 
 export const resizeAnchors: Record<string, Point> = {
-  nw: { x: -1, y: 1 },
-  ne: { x: 1, y: 1 },
-  sw: { x: -1, y: -1 },
-  se: { x: 1, y: -1 },
+  nw: { x: -1, y: -1 },
+  ne: { x: 1, y: -1 },
+  sw: { x: -1, y: 1 },
+  se: { x: 1, y: 1 },
+};
+
+export const resizeCursor: Record<string, string> = {
+  nw: 'cursor-nwse-resize',
+  ne: 'cursor-nesw-resize',
+  sw: 'cursor-nesw-resize',
+  se: 'cursor-nwse-resize',
 };
 
 export const createAnchorMap = (
-  { id, center, size: { width, height } }: Polygon,
+  { id, size: { width, height } }: Polygon,
   anchors: Record<string, Point> = defaultAnchors,
 ): Record<string, Anchor> => {
   return Object.entries(anchors).reduce(
-    (map, [anchor, pos]) => {
+    (map, [anchor, { x, y }]) => {
       map[anchor] = {
         id: anchor,
         shape: id,
-        pos: pointAdd(center, { x: (pos.x * width) / 2, y: (pos.y * height) / 2 }),
+        pos: { x: (x * width) / 2, y: (y * height) / 2 },
       };
 
       return map;
@@ -59,7 +65,7 @@ export const createAnchors = ({
   shape,
   inputs,
   outputs,
-  center = shape.center,
+  center = { x: 0, y: 0 },
 }: {
   shape: Polygon;
   inputs: string[];

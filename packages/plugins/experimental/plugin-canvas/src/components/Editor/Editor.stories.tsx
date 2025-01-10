@@ -6,7 +6,7 @@ import '@dxos-theme';
 
 import type { Meta, StoryObj } from '@storybook/react';
 import ollamaClient from 'ollama';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 
 import { AIServiceClientImpl } from '@dxos/assistant';
 import { type ReactiveEchoObject } from '@dxos/echo-db';
@@ -31,6 +31,7 @@ import { doLayout } from '../../layout';
 import { RectangleShape, type Shape } from '../../types';
 import { AttentionContainer } from '../AttentionContainer';
 import { ShapeRegistry } from '../Canvas';
+import { DragTest } from '../Canvas/DragTest';
 
 const generator: ValueGenerator = faker as any;
 
@@ -39,15 +40,26 @@ const types = [Testing.OrgType, Testing.ProjectType, Testing.ContactType];
 // TODO(burdon): Ref expando breaks the form.
 const RectangleShapeWithoutRef = S.omit<any, any, ['object']>('object')(RectangleShape);
 
-type RenderProps = EditorRootProps & {
-  init?: boolean;
-  sidebar?: 'json' | 'selected' | 'state-machine';
-  machine?: StateMachine;
-  model?: StateMachineContext['model'];
-  gpt?: StateMachineContext['gpt'];
-};
+type RenderProps = EditorRootProps &
+  PropsWithChildren<{
+    init?: boolean;
+    sidebar?: 'json' | 'selected' | 'state-machine';
+    machine?: StateMachine;
+    model?: StateMachineContext['model'];
+    gpt?: StateMachineContext['gpt'];
+  }>;
 
-const Render = ({ id = 'test', graph: _graph, machine, model, gpt, init, sidebar, ...props }: RenderProps) => {
+const Render = ({
+  id = 'test',
+  children,
+  graph: _graph,
+  machine,
+  model,
+  gpt,
+  init,
+  sidebar,
+  ...props
+}: RenderProps) => {
   const editorRef = useRef<EditorController>(null);
   const { space } = useClientProvider();
 
@@ -128,7 +140,7 @@ const Render = ({ id = 'test', graph: _graph, machine, model, gpt, init, sidebar
           autoZoom
           {...props}
         >
-          <Editor.Canvas />
+          <Editor.Canvas>{children}</Editor.Canvas>
           <Editor.UI />
         </Editor.Root>
       </AttentionContainer>
@@ -207,12 +219,20 @@ type Story = StoryObj<RenderProps & { spec?: TypeSpec[]; registerSchema?: boolea
 
 export const Default: Story = {
   args: {
-    sidebar: 'json',
+    // sidebar: 'json',
     init: true,
-    spec: [
-      { type: Testing.OrgType, count: 2 },
-      { type: Testing.ContactType, count: 4 },
-    ],
+    // showGrid: false,
+    snapToGrid: false,
+    spec: [{ type: Testing.OrgType, count: 1 }],
+  },
+};
+
+export const DraggingTest: Story = {
+  args: {
+    // sidebar: 'json',
+    // showGrid: false,
+    snapToGrid: false,
+    children: <DragTest />,
   },
 };
 

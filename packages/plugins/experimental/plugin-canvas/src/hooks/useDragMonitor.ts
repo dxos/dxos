@@ -9,17 +9,19 @@ import { useEffect } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { useProjection } from '@dxos/react-ui-canvas';
+import { type Dimension, useProjection } from '@dxos/react-ui-canvas';
 
 import { useEditorContext } from './useEditorContext';
 import { getClosestAnchor } from './useLayout';
 import { useSnap } from './useSnap';
-import { type Anchor } from '../components';
+import { type Anchor, resizeAnchors } from '../components';
 import { parseAnchorId } from '../compute';
-import { getInputPoint, pointAdd } from '../layout';
+import { getInputPoint, pointAdd, pointSubtract } from '../layout';
 import { createRectangle } from '../shapes';
 import { createId, itemSize } from '../testing';
 import { isPolygon, type Polygon } from '../types';
+
+export const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
 /**
  * Data property associated with a `draggable` and `dropTargetForElements`.
@@ -55,7 +57,6 @@ export type DraggingState =
   | {
       type: 'tool';
       shape: Polygon;
-      // TODO(burdon): Remove (see frame handling).
       container: HTMLElement;
     }
   | {
@@ -66,10 +67,15 @@ export type DraggingState =
       type: 'anchor';
       shape: Polygon;
       anchor: Anchor;
-      /** Snap target. */
-      target?: DragDropPayload;
-      /** Current pointer. */
       pointer?: Point;
+      snapTarget?: DragDropPayload;
+    }
+  | {
+      type: 'resize';
+      shape: Polygon;
+      anchor: Anchor;
+      pointer?: Point;
+      initialSize: Dimension;
     };
 
 /**
@@ -85,8 +91,7 @@ export class DragMonitor {
   }
 
   get offset(): Point {
-    invariant(this._offset);
-    return this._offset;
+    return this._offset ?? { x: 0, y: 0 };
   }
 
   /**
@@ -182,26 +187,48 @@ export const useDragMonitor = () => {
       // Drag
       //
       onDrag: async ({ location }) => {
-        invariant(dragMonitor.dragging);
+        if (!dragMonitor.dragging) {
+          return;
+        }
+
         const [pos] = projection.toModel([getInputPoint(root, location.current.input)]);
 
         switch (state.value.type) {
           case 'frame': {
             dragMonitor.update({
               shape: { ...state.value.shape, center: pointAdd(pos, dragMonitor.offset) },
-              // shape: { ...state.value.shape, center: pos },
+            });
+            break;
+          }
+
+          case 'resize': {
+            const delta = pointSubtract(
+              getInputPoint(root, location.current.input),
+              getInputPoint(root, location.initial.input),
+            );
+            const anchor = resizeAnchors[state.value.anchor.id];
+            dragMonitor.update({
+              shape: {
+                ...state.value.shape,
+                size: {
+                  // TODO(burdon): Defaults.
+                  width: clamp(state.value.initialSize.width + delta.x * anchor.x * 2, 160, 640),
+                  height: clamp(state.value.initialSize.height + delta.y * anchor.y * 2, 160, 640),
+                },
+              },
             });
             break;
           }
 
           case 'anchor': {
             // Snap to closest anchor.
-            // TODO(burdon): Update layout to use anchor.
             const target = getClosestAnchor(graph, registry, pos, (shape, anchor, d) => {
               return d < 32 && dragMonitor.canDrop({ type: 'anchor', shape, anchor });
             });
-
-            dragMonitor.update({ target, pointer: target?.anchor.pos ?? pos });
+            dragMonitor.update({
+              snapTarget: target,
+              pointer: target?.anchor.pos ?? pos,
+            });
             break;
           }
         }
@@ -211,9 +238,11 @@ export const useDragMonitor = () => {
       // Drop
       //
       onDrop: async ({ location }) => {
-        invariant(dragMonitor.dragging);
-        const [pos] = projection.toModel([getInputPoint(root, location.current.input)]);
+        if (!dragMonitor.dragging) {
+          return;
+        }
 
+        const [pos] = projection.toModel([getInputPoint(root, location.current.input)]);
         switch (state.value.type) {
           //
           // Create shape from tool.
@@ -237,9 +266,19 @@ export const useDragMonitor = () => {
             } else {
               invariant(isPolygon(node.data));
               node.data.center = snapPoint(pointAdd(pos, dragMonitor.offset));
-              // node.data.center = snapPoint(pos);
             }
+            break;
+          }
 
+          //
+          // Resize
+          //
+          case 'resize': {
+            const node = graph.getNode(state.value.shape.id);
+            if (node) {
+              invariant(isPolygon(node.data));
+              node.data.size = state.value.shape.size;
+            }
             break;
           }
 
@@ -248,7 +287,7 @@ export const useDragMonitor = () => {
           //
           case 'anchor': {
             const source = state.value;
-            const target = state.value.target ?? (location.current.dropTargets?.[0]?.data as DragDropPayload);
+            const target = state.value.snapTarget ?? (location.current.dropTargets?.[0]?.data as DragDropPayload);
 
             switch (target?.type) {
               case 'frame': {

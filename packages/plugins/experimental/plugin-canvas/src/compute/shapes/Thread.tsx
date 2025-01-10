@@ -8,7 +8,7 @@ import { S } from '@dxos/echo-schema';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { getAnchors } from './Function';
+import { createFunctionAnchors } from './Function';
 import { Box } from './components';
 import { ComputeShape, createInputSchema, createOutputSchema, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
@@ -87,5 +87,5 @@ export const threadShape: ShapeDef<ThreadShape> = {
   icon: 'ph--chats-circle--regular',
   component: ThreadComponent,
   createShape: createThread,
-  getAnchors: (shape) => getAnchors(shape, InputSchema, OutputSchema),
+  getAnchors: (shape) => createFunctionAnchors(shape, InputSchema, OutputSchema),
 };

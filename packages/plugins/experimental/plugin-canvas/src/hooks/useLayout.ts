@@ -24,9 +24,11 @@ export const useLayout = (): Layout => {
   const { dragMonitor, graph, registry } = useEditorContext();
 
   // TODO(burdon): Use to trigger state update.
-  const dragging = dragMonitor.state(({ type }) => type === 'frame' || type === 'anchor').value;
+  const dragging = dragMonitor.state(({ type }) => type === 'frame' || type === 'resize' || type === 'anchor').value;
   const getShape = (shape: Polygon) =>
-    dragging.type === 'frame' && dragging.shape.id === shape.id ? dragging.shape : shape;
+    (dragging.type === 'frame' || dragging.type === 'resize') && dragging.shape.id === shape.id
+      ? dragging.shape
+      : shape;
 
   type LinkProps = { id: string; source: Polygon; target: Polygon; connection?: Connection };
   const createPathForEdge = ({ id, source, target, connection }: LinkProps): PathShape | undefined => {
@@ -79,8 +81,8 @@ export const useLayout = (): Layout => {
         const sourceAnchor = getAnchorPoint(registry, dragging.shape, dragging.anchor.id);
         if (sourceAnchor) {
           let targetAnchor =
-            dragging.target?.type === 'anchor' &&
-            getAnchorPoint(registry, dragging.target.shape, dragging.target.anchor.id);
+            dragging.snapTarget?.type === 'anchor' &&
+            getAnchorPoint(registry, dragging.snapTarget.shape, dragging.snapTarget.anchor.id);
           if (!targetAnchor) {
             targetAnchor = dragging.pointer;
           }
@@ -153,11 +155,10 @@ const createCurve = (source: Point, target: Point) => [
   target,
 ];
 
-// TODO(burdon): Cache anchor positions? (runtime representation of shapes and paths).
 const getAnchorPoint = (registry: ShapeRegistry, shape: Polygon, anchorId: string): Point | undefined => {
   const anchors = registry.getShapeDef(shape.type)?.getAnchors?.(shape);
   const anchor = anchors?.[anchorId];
-  return anchor?.pos;
+  return pointAdd(shape.center, anchor?.pos ?? { x: 0, y: 0 });
 };
 
 export const getClosestAnchor = (
@@ -172,7 +173,7 @@ export const getClosestAnchor = (
     const anchors = registry.getShapeDef(shape.type)?.getAnchors?.(shape);
     if (anchors) {
       for (const anchor of Object.values(anchors)) {
-        const d = getDistance(pos, anchor.pos);
+        const d = getDistance(pos, pointAdd(shape.center, anchor.pos));
         if (min > d && test(shape, anchor, d)) {
           min = d;
           closest = { type: 'anchor', shape, anchor };

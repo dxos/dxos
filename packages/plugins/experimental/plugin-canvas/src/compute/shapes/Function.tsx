@@ -10,7 +10,6 @@ import { Box } from './components';
 import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { createAnchors, rowHeight } from '../../components';
-import { pointAdd } from '../../layout';
 import { type Polygon } from '../../types';
 import { DEFAULT_INPUT, DEFAULT_OUTPUT, Function } from '../graph';
 
@@ -48,7 +47,7 @@ export const functionShape: ShapeDef<FunctionShape> = {
   icon: 'ph--function--regular',
   component: FunctionComponent,
   createShape: createFunction,
-  getAnchors: (shape) => getAnchors(shape, shape.node.inputSchema, shape.node.outputSchema),
+  getAnchors: (shape) => createFunctionAnchors(shape, shape.node.inputSchema, shape.node.outputSchema),
 };
 
 //
@@ -78,13 +77,8 @@ export const getHeight = (input: S.Schema<any>) => {
   return headerHeight + bodyPadding * 2 + properties.length * rowHeight + 2; // Incl. borders.
 };
 
-export const getAnchors = (shape: Polygon, input: S.Schema<any>, output: S.Schema<any>) => {
+export const createFunctionAnchors = (shape: Polygon, input: S.Schema<any>, output: S.Schema<any>) => {
   const inputs = AST.getPropertySignatures(input.ast).map(({ name }) => createAnchorId('input', name.toString()));
   const outputs = AST.getPropertySignatures(output.ast).map(({ name }) => createAnchorId('output', name.toString()));
-  return createAnchors({
-    shape,
-    inputs,
-    outputs,
-    center: pointAdd(shape.center, { x: 0, y: headerHeight / 2 }),
-  });
+  return createAnchors({ shape, inputs, outputs, center: { x: 0, y: headerHeight / 2 } });
 };
