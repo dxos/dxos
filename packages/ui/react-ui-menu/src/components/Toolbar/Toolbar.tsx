@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type MouseEvent, useCallback } from 'react';
+import React, { useCallback } from 'react';
 
 import { Toolbar as NaturalToolbar } from '@dxos/react-ui';
 
@@ -14,17 +14,13 @@ import { ActionLabel } from '../ActionLabel';
 const ToolbarItem = ({
   iconSize,
   action,
-  onClick,
-}: Pick<ToolbarProps, 'iconSize'> & {
+  onAction,
+}: Pick<ToolbarProps, 'iconSize' | 'onAction'> & {
   action: ToolbarAction;
-  onClick: (action: ToolbarAction, event: MouseEvent) => void;
 }) => {
-  const handleClick = useCallback(
-    (event: MouseEvent) => {
-      onClick(action, event);
-    },
-    [action, onClick],
-  );
+  const handleClick = useCallback(() => {
+    onAction?.(action);
+  }, [action, onAction]);
   const { icon, iconOnly = true, disabled, testId } = action.properties;
   return (
     <NaturalToolbar.IconButton
@@ -42,12 +38,6 @@ const ToolbarItem = ({
 };
 
 export const Toolbar = ({ actions: items, onAction, iconSize = 5, graph, ...props }: ToolbarProps) => {
-  const handleActionClick = useCallback((action: ToolbarAction) => {
-    if (action.properties?.disabled) {
-      return;
-    }
-    onAction?.(action);
-  }, []);
   return (
     <NaturalToolbar.Root {...props}>
       {items?.map((item, i) =>
@@ -58,7 +48,7 @@ export const Toolbar = ({ actions: items, onAction, iconSize = 5, graph, ...prop
             <ToolbarDropdownMenu
               key={item.id}
               actionGroup={item}
-              onClick={handleActionClick}
+              onAction={onAction}
               iconSize={iconSize}
               graph={graph}
             />
@@ -66,13 +56,13 @@ export const Toolbar = ({ actions: items, onAction, iconSize = 5, graph, ...prop
             <ToolbarToggleGroup
               key={item.id}
               actionGroup={item}
-              onClick={handleActionClick}
+              onAction={onAction}
               iconSize={iconSize}
               graph={graph}
             />
           )
         ) : (
-          <ToolbarItem key={item.id} action={item as ToolbarAction} onClick={handleActionClick} iconSize={iconSize} />
+          <ToolbarItem key={item.id} action={item as ToolbarAction} onAction={onAction} iconSize={iconSize} />
         ),
       )}
     </NaturalToolbar.Root>

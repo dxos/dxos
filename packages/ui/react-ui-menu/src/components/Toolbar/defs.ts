@@ -32,7 +32,7 @@ export type ToolbarProps = ToolbarRootProps &
   MenuProps<ToolbarItem> & { iconSize?: IconButtonProps['size']; graph?: Graph };
 
 export type ToolbarActionGroupProps = Pick<ToolbarProps, 'iconSize'> &
-  Omit<MenuProps, 'actions'> & {
+  Omit<MenuProps<ToolbarAction>, 'actions'> & {
     actionGroup: ToolbarActionGroup;
     graph?: Graph;
   };
