@@ -158,7 +158,7 @@ export const DebugSpace: FC<{
           <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' size={5} onClick={handleUpdate} />
           <IconButton icon='ph--download-simple--regular' iconOnly label='Download' size={5} onClick={handleDownload} />
 
-          <Toolbar.Expander />
+          <Toolbar.Separator variant='gap' />
           <IconButton
             icon='ph--flag-pennant--regular'
             iconOnly
