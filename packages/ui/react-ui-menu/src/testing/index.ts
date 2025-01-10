@@ -62,7 +62,11 @@ export const createNestedActionGraph = (groupParams?: CreateActionsParams, param
   const actionGroups = createActions({ type: ACTION_GROUP_TYPE, ...groupParams });
   actionGroups.forEach((group) => {
     const actions = createActions(params);
+    // TODO(thure): these methods exist on `graph` but are marked as `@internal`; how should consumers properly build
+    //  graph “islands” for the purposes of these components?
+    // @ts-ignore
     graph._addNodes([group as NodeArg<any>, ...(actions as NodeArg<any>[])]);
+    // @ts-ignore
     graph._addEdges(actions.map((action) => ({ source: group.id, target: action.id })));
     void graph.expand(group);
   });
