@@ -25,25 +25,20 @@ const points: Point[] = [0, (2 * Math.PI) / 3, (2 * Math.PI * 2) / 3].map((a, i)
 const Render = (props: GridProps) => {
   return (
     <Canvas>
-      <Content {...props} />
+      <Grid {...props} />
+      <Content />
     </Canvas>
   );
 };
 
-const Content = (props: GridProps) => {
-  const { scale, offset } = useProjection();
+const Content = () => {
   useWheel();
-
-  // TODO(burdon): Doesn't update until moved.
   return (
-    <>
-      <Grid scale={scale} offset={offset} {...props} />
-      <div>
-        {points.map(({ x, y }, i) => (
-          <Item key={i} x={x} y={y} />
-        ))}
-      </div>
-    </>
+    <div>
+      {points.map(({ x, y }, i) => (
+        <Item key={i} x={x} y={y} />
+      ))}
+    </div>
   );
 };
 

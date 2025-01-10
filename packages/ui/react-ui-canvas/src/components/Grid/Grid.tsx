@@ -7,25 +7,30 @@ import React, { forwardRef, useMemo } from 'react';
 import { useForwardedRef, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
+import { useProjection } from '../../hooks';
 import { type Point } from '../../types';
 import { GridPattern, testId } from '../../util';
 
 const gridRatios = [1 / 4, 1, 4, 16];
 
+const defaultGridSize = 16;
 const defaultOffset: Point = { x: 0, y: 0 };
 
 const createId = (parent: string, grid: number) => `dx-canvas-grid-${parent}-${grid}`;
 
 export type GridProps = ThemedClassName<{
   id: string;
-  size: number;
+  size?: number;
   scale?: number;
   offset?: Point;
   showAxes?: boolean;
 }>;
 
-export const Grid = forwardRef<SVGSVGElement, GridProps>(
-  ({ id: parentId, size: gridSize, scale = 1, offset = defaultOffset, showAxes = true, classNames }, forwardedRef) => {
+export const GridComponent = forwardRef<SVGSVGElement, GridProps>(
+  (
+    { id: parentId, size: gridSize = defaultGridSize, scale = 1, offset = defaultOffset, showAxes = true, classNames },
+    forwardedRef,
+  ) => {
     const svgRef = useForwardedRef(forwardedRef);
     const grids = useMemo(
       () =>
@@ -74,3 +79,9 @@ export const Grid = forwardRef<SVGSVGElement, GridProps>(
     );
   },
 );
+
+// TODO(burdon): Use id of parent canvas.
+export const Grid = (props: GridProps) => {
+  const { scale, offset } = useProjection();
+  return <GridComponent {...props} scale={scale} offset={offset} />;
+};

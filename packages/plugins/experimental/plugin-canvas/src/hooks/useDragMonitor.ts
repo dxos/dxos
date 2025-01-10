@@ -2,14 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Point } from '@antv/layout';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { type Signal, signal } from '@preact/signals-core';
 import { useEffect } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type Dimension, useProjection } from '@dxos/react-ui-canvas';
+import { type Dimension, type Point, useProjection } from '@dxos/react-ui-canvas';
 
 import { useEditorContext } from './useEditorContext';
 import { getClosestAnchor } from './useLayout';
@@ -186,7 +185,7 @@ export const useDragMonitor = () => {
       //
       // Drag
       //
-      onDrag: async ({ location, source }) => {
+      onDrag: async ({ location }) => {
         if (!dragMonitor.dragging) {
           return;
         }
@@ -203,10 +202,9 @@ export const useDragMonitor = () => {
           }
 
           case 'resize': {
-            // TODO(burdon): Defaults sizes.
-            // TODO(burdon): Don't resize functions.
+            // TODO(burdon): Default sizes.
             const min = 160;
-            const max = 640;
+            const max = 960;
             const delta = pointSubtract(
               getInputPoint(root, location.current.input),
               getInputPoint(root, location.initial.input),

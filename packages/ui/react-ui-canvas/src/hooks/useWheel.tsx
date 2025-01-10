@@ -9,10 +9,18 @@ import { getZoomTransform } from './projection';
 import { useProjection } from './useProjection';
 import { getRelativePoint } from '../util';
 
+export type WheelOptions = {
+  zoom?: boolean;
+};
+
+const defaultOptions: WheelOptions = {
+  zoom: true,
+};
+
 /**
  * Handle wheel events to update the transform state (zoom and offset).
  */
-export const useWheel = () => {
+export const useWheel = (options: WheelOptions = defaultOptions) => {
   const { root, setProjection } = useProjection();
   useEffect(() => {
     if (!root) {
@@ -24,12 +32,15 @@ export const useWheel = () => {
         type: 'wheel',
         options: { capture: true, passive: false },
         listener: (ev: WheelEvent) => {
-          if (!hasFocus(root) && !isWheelZooming(ev)) {
+          const zooming = isWheelZooming(ev);
+          if (!hasFocus(root) && !zooming) {
             return;
           }
 
-          // Prevent scrolling.
           ev.preventDefault();
+          if (zooming && !options.zoom) {
+            return;
+          }
 
           // Zoom or pan.
           if (ev.ctrlKey) {

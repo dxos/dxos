@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Point } from '@antv/layout';
+import { type Point } from '@dxos/react-ui-canvas';
 
 import { type Polygon } from '../types';
 
@@ -23,17 +23,17 @@ export const getAnchorPoints = (center: Point, n: number): Point[] => {
 };
 
 export const defaultAnchors: Record<string, Point> = {
+  n: { x: 0, y: -1 },
+  s: { x: 0, y: 1 },
   w: { x: -1, y: 0 },
   e: { x: 1, y: 0 },
-  n: { x: 0, y: 1 },
-  s: { x: 0, y: -1 },
 };
 
 export const resizeAnchors: Record<string, Point> = {
   n: { x: 0, y: -1 },
+  s: { x: 0, y: 1 },
   w: { x: -1, y: 0 },
   e: { x: 1, y: 0 },
-  s: { x: 0, y: 1 },
   nw: { x: -1, y: -1 },
   ne: { x: 1, y: -1 },
   sw: { x: -1, y: 1 },
@@ -41,6 +41,10 @@ export const resizeAnchors: Record<string, Point> = {
 };
 
 export const resizeCursor: Record<string, string> = {
+  n: 'cursor-ns-resize',
+  s: 'cursor-ns-resize',
+  w: 'cursor-ew-resize',
+  e: 'cursor-ew-resize',
   nw: 'cursor-nwse-resize',
   ne: 'cursor-nesw-resize',
   sw: 'cursor-nesw-resize',
