@@ -19,6 +19,8 @@ export const ToolbarDropdownMenu = ({ actionGroup, graph, onAction, applyActiveI
     <DropdownMenu.Root actions={menuActions} onAction={onAction}>
       <DropdownMenu.Trigger asChild>
         <NaturalToolbar.IconButton
+          size={5}
+          variant='ghost'
           iconOnly={iconOnly}
           disabled={disabled}
           icon={(applyActiveIcon && menuActions.find((action) => !!action.properties.checked)?.properties.icon) || icon}

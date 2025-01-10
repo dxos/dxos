@@ -4,14 +4,16 @@
 
 import { useEffect } from 'react';
 
-import { type Action } from '@dxos/app-graph';
+import { type Action, Graph, type NodeArg, ACTION_TYPE, ACTION_GROUP_TYPE, actionGroupSymbol } from '@dxos/app-graph';
 import { create } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { type DeepWriteable } from '@dxos/util';
 
+import { type ToolbarItem } from '../components';
 import { type MenuAction } from '../defs';
 
 export type CreateActionsParams = Partial<{
+  type?: typeof ACTION_TYPE | typeof ACTION_GROUP_TYPE;
   callback: () => void;
   count: number;
 }>;
@@ -36,21 +38,35 @@ const icons = {
 };
 
 export const createActions = (params?: CreateActionsParams) => {
-  const { callback = () => console.log('invoke'), count = 12 } = params ?? {};
+  const { callback = () => console.log('invoke'), count = 12, type = ACTION_TYPE } = params ?? {};
   return faker.helpers.multiple(
     () =>
-      create<MenuAction>({
+      create({
         id: faker.string.uuid(),
-        type: 'action',
-        data: callback,
+        type,
+        data: type === ACTION_GROUP_TYPE ? actionGroupSymbol : callback,
         properties: {
           label: faker.lorem.words(2),
           icon: faker.helpers.arrayElement(icons[faker.helpers.arrayElement(Object.keys(icons)) as keyof typeof icons]),
           disabled: faker.helpers.arrayElement([true, false]),
+          ...(type === ACTION_GROUP_TYPE && { variant: 'dropdownMenu' }),
         },
       }),
     { count },
   );
+};
+
+export const createNestedActionGraph = (groupParams?: CreateActionsParams, params?: CreateActionsParams) => {
+  const graph = new Graph();
+  const actionGroups = createActions({ type: ACTION_GROUP_TYPE, ...groupParams });
+  actionGroups.forEach((group) => {
+    const actions = createActions(params);
+    graph._addNodes([group as NodeArg<any>, ...(actions as NodeArg<any>[])]);
+    graph._addEdges(actions.map((action) => ({ source: group.id, target: action.id })));
+    void graph.expand(group);
+  });
+  console.log('[graph]', graph.toJSON());
+  return { graph, topLevelActions: actionGroups as ToolbarItem[] };
 };
 
 export const mutateActionsOnInterval = (actions: Action[]) => {
@@ -65,7 +81,7 @@ export const mutateActionsOnInterval = (actions: Action[]) => {
   }, 1_000);
 };
 
-export const useMutateActions = (actions: Action[]) =>
+export const useMutateActions = (actions: MenuAction[]) =>
   useEffect(() => {
     const interval = mutateActionsOnInterval(actions);
     return () => clearInterval(interval);

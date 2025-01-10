@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Node, type ActionGroup, type Graph } from '@dxos/app-graph';
+import { type Node, type ActionGroup, type Graph, ACTION_GROUP_TYPE } from '@dxos/app-graph';
 import { type ToolbarRootProps, type ToolbarSeparatorProps, type IconButtonProps } from '@dxos/react-ui';
 
 import { type MenuAction, type MenuActionProperties, type MenuProps } from '../../defs';
@@ -15,14 +15,13 @@ export type ToolbarSeparatorNode = Node<never, Pick<ToolbarSeparatorProps, 'vari
 
 export const isSeparator = (node: Node): node is ToolbarSeparatorNode => node.type === ToolbarSeparatorType;
 
-export type ToolbarActionGroup = ActionGroup<
-  Omit<MenuActionProperties, 'variant'> & { variant: 'dropdownMenu' | 'toggleGroup' } & (
-      | { selectCardinality?: 'single'; value?: string }
-      | { selectCardinality?: 'multiple'; value?: string[] }
-    )
->;
+export type ToolbarActionGroupProperties = Omit<MenuActionProperties, 'variant'> & {
+  variant: 'dropdownMenu' | 'toggleGroup';
+} & ({ selectCardinality?: 'single'; value?: string } | { selectCardinality?: 'multiple'; value?: string[] });
 
-export const isMenu = (node: Node): node is ToolbarActionGroup => node.type === 'actionGroup';
+export type ToolbarActionGroup = ActionGroup<ToolbarActionGroupProperties>;
+
+export const isMenu = (node: Node): node is ToolbarActionGroup => node.type === ACTION_GROUP_TYPE;
 
 export type ToolbarItem = ToolbarSeparatorNode | MenuAction | ToolbarActionGroup;
 
