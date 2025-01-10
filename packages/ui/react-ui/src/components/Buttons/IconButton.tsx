@@ -14,6 +14,7 @@ type IconButtonProps = Omit<ButtonProps, 'children'> &
   Pick<IconProps, 'icon' | 'size'> & {
     label: NonNullable<ReactNode>;
     iconOnly?: boolean;
+    caretDown?: boolean;
     // TODO(burdon): Create slots abstraction?
     iconClassNames?: ThemedClassName<any>['classNames'];
     tooltipPortal?: boolean;
@@ -40,12 +41,13 @@ const IconOnlyButton = forwardRef<HTMLButtonElement, IconButtonProps>(
 );
 
 const LabelledIconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
-  ({ icon, size, iconOnly, label, classNames, iconClassNames, ...props }, forwardedRef) => {
+  ({ icon, size, iconOnly, label, classNames, iconClassNames, caretDown, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
       <Button {...props} classNames={tx('iconButton.root', 'iconButton', {}, classNames)} ref={forwardedRef}>
         <Icon icon={icon} size={size} classNames={iconClassNames} />
         <span className={iconOnly ? 'sr-only' : undefined}>{label}</span>
+        {caretDown && <Icon size={3} icon='ph--caret-down--bold' />}
       </Button>
     );
   },

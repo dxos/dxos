@@ -33,4 +33,5 @@ export type ToolbarActionGroupProps = Pick<ToolbarProps, 'iconSize'> &
   Omit<MenuProps<MenuAction>, 'actions'> & {
     actionGroup: ToolbarActionGroup;
     graph?: Graph;
+    applyActiveIcon?: boolean;
   };
