@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type MutableRefObject, useRef, useState } from 'react';
+import React, { type MutableRefObject, useRef } from 'react';
 
 import { type Action, type Node } from '@dxos/app-graph';
-import { Button, Tooltip, useTranslation, toLocalizedString, Icon, IconButton } from '@dxos/react-ui';
+import { useTranslation, toLocalizedString, IconButton } from '@dxos/react-ui';
 import { DropdownMenu, type MenuAction } from '@dxos/react-ui-menu';
 import { hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
 
@@ -18,110 +18,87 @@ export type NavTreeItemActionMenuProps = ActionProperties & {
   monolithic?: boolean;
   menuActions?: Action[];
   suppressNextTooltip?: MutableRefObject<boolean>;
-  menuOpen?: boolean;
-  defaultMenuOpen?: boolean;
-  onChangeMenuOpen?: (nextOpen: boolean) => void;
   onAction?: (action: Action) => void;
 };
 
 const fallbackIcon = 'ph--placeholder--regular';
+
+const actionButtonProps = {
+  iconOnly: true,
+  size: 4 as const,
+  variant: 'ghost' as const,
+  density: 'fine' as const,
+  classNames: mx('shrink-0 !pli-2 pointer-fine:!pli-1', hoverableControlItem, hoverableOpenControlItem),
+};
 
 export const NavTreeItemActionDropdownMenu = ({
   label,
   icon,
   testId,
   menuActions,
-  ...menuProps
+  onAction,
 }: NavTreeItemActionMenuProps) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
+  const suppressNextTooltip = useRef<boolean>(false);
 
   return (
-    <DropdownMenu.Root actions={menuActions as MenuAction[]} {...menuProps}>
-      <Tooltip.Trigger asChild>
-        <DropdownMenu.Trigger asChild>
-          <IconButton
-            variant='ghost'
-            density='fine'
-            classNames={mx('shrink-0 !pli-2 pointer-fine:!pli-1', hoverableControlItem, hoverableOpenControlItem)}
-            data-testid={testId}
-            label={t('tree item actions label')}
-            icon={icon ?? fallbackIcon}
-            size={4}
-          />
-        </DropdownMenu.Trigger>
-      </Tooltip.Trigger>
+    <DropdownMenu.Root
+      actions={menuActions as MenuAction[]}
+      onAction={onAction}
+      suppressNextTooltip={suppressNextTooltip}
+    >
+      <DropdownMenu.Trigger asChild>
+        <IconButton
+          {...actionButtonProps}
+          icon={icon ?? fallbackIcon}
+          label={toLocalizedString(label, t)}
+          data-testid={testId}
+          suppressNextTooltip={suppressNextTooltip}
+        />
+      </DropdownMenu.Trigger>
     </DropdownMenu.Root>
   );
 };
 
 export const NavTreeItemMonolithicAction = ({
   parent,
-  properties: { disabled, caller, testId, label, icon } = { label: 'never' },
+  properties: { disabled, caller, testId, icon } = { label: 'never' },
   data: invoke,
-}: Action & { parent: Node; onAction?: (action: Action) => void }) => {
-  const { t } = useTranslation(NAVTREE_PLUGIN);
+  baseLabel,
+}: Action & { parent: Node; onAction?: (action: Action) => void; baseLabel: string }) => {
   return (
-    <Tooltip.Trigger asChild>
-      <Button
-        variant='ghost'
-        density='fine'
-        classNames={mx('shrink-0 !pli-2 pointer-fine:!pli-1', hoverableControlItem, hoverableOpenControlItem)}
-        disabled={disabled}
-        onClick={(event) => {
-          if (disabled) {
-            return;
-          }
-          event.stopPropagation();
-          void invoke?.(caller ? { node: parent, caller } : { node: parent });
-        }}
-        data-testid={testId}
-      >
-        <span className='sr-only'>{toLocalizedString(label, t)}</span>
-        <Icon icon={icon ?? fallbackIcon} size={4} />
-      </Button>
-    </Tooltip.Trigger>
+    <IconButton
+      {...actionButtonProps}
+      icon={icon ?? fallbackIcon}
+      label={baseLabel}
+      disabled={disabled}
+      onClick={(event) => {
+        if (disabled) {
+          return;
+        }
+        event.stopPropagation();
+        void invoke?.(caller ? { node: parent, caller } : { node: parent });
+      }}
+      data-testid={testId}
+    />
   );
 };
 
 export const NavTreeItemAction = ({ monolithic, menuActions, parent: node, ...props }: NavTreeItemActionMenuProps) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
-  const suppressNextTooltip = useRef<boolean>(false);
-  const [triggerTooltipOpen, setTriggerTooltipOpen] = useState(false);
 
   const monolithicAction = menuActions?.length === 1 && menuActions[0];
   const baseLabel = toLocalizedString(monolithicAction ? monolithicAction.properties!.label : props.label, t);
 
-  return (
-    <Tooltip.Root
-      open={triggerTooltipOpen}
-      onOpenChange={(nextOpen) => {
-        if (suppressNextTooltip.current) {
-          setTriggerTooltipOpen(false);
-          suppressNextTooltip.current = false;
-        } else {
-          setTriggerTooltipOpen(nextOpen);
-        }
-      }}
-    >
-      {baseLabel && (
-        <Tooltip.Portal>
-          <Tooltip.Content classNames='z-[31]' side='bottom'>
-            {baseLabel}
-            <Tooltip.Arrow />
-          </Tooltip.Content>
-        </Tooltip.Portal>
-      )}
-      {monolithic && menuActions?.length === 1 ? (
-        <NavTreeItemMonolithicAction parent={node} {...menuActions[0]} />
-      ) : (
-        <NavTreeItemActionDropdownMenu
-          {...props}
-          parent={node}
-          menuActions={menuActions}
-          suppressNextTooltip={suppressNextTooltip}
-          onAction={(action) => action.data?.(props.caller ? { node, caller: props.caller } : { node })}
-        />
-      )}
-    </Tooltip.Root>
+  return monolithic && menuActions?.length === 1 ? (
+    <NavTreeItemMonolithicAction baseLabel={baseLabel} parent={node} {...menuActions[0]} />
+  ) : (
+    <NavTreeItemActionDropdownMenu
+      {...props}
+      label={baseLabel}
+      parent={node}
+      menuActions={menuActions}
+      onAction={(action) => action.data?.(props.caller ? { node, caller: props.caller } : { node })}
+    />
   );
 };

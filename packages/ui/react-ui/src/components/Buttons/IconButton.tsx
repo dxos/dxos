@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { forwardRef, type ReactNode } from 'react';
+import React, { forwardRef, type ReactNode, type MutableRefObject, useState } from 'react';
 
 import { Button, type ButtonProps } from './Button';
 import { useThemeContext } from '../../hooks';
@@ -19,10 +19,12 @@ type IconButtonProps = Omit<ButtonProps, 'children'> &
     iconClassNames?: ThemedClassName<any>['classNames'];
     tooltipPortal?: boolean;
     tooltipZIndex?: string;
+    suppressNextTooltip?: MutableRefObject<boolean>;
   };
 
 const IconOnlyButton = forwardRef<HTMLButtonElement, IconButtonProps>(
-  ({ tooltipPortal = true, tooltipZIndex: zIndex, ...props }, forwardedRef) => {
+  ({ tooltipPortal = true, tooltipZIndex: zIndex, suppressNextTooltip, ...props }, forwardedRef) => {
+    const [triggerTooltipOpen, setTriggerTooltipOpen] = useState(false);
     const content = (
       <Tooltip.Content {...(zIndex && { style: { zIndex } })}>
         {props.label}
@@ -30,7 +32,17 @@ const IconOnlyButton = forwardRef<HTMLButtonElement, IconButtonProps>(
       </Tooltip.Content>
     );
     return (
-      <Tooltip.Root>
+      <Tooltip.Root
+        open={triggerTooltipOpen}
+        onOpenChange={(nextOpen) => {
+          if (suppressNextTooltip?.current) {
+            setTriggerTooltipOpen(false);
+            suppressNextTooltip.current = false;
+          } else {
+            setTriggerTooltipOpen(nextOpen);
+          }
+        }}
+      >
         <Tooltip.Trigger asChild>
           <LabelledIconButton {...props} ref={forwardedRef} />
         </Tooltip.Trigger>
