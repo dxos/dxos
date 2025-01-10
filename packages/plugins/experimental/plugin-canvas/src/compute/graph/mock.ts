@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { string } from 'effect/Equivalence';
 import { test } from 'vitest';
 
 export type GPTConfig = {

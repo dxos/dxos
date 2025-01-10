@@ -2430,6 +2430,9 @@ importers:
 
   packages/core/conductor:
     dependencies:
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../experimental/assistant
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -2451,6 +2454,9 @@ importers:
       effect:
         specifier: ^3.12.1
         version: 3.12.1
+      ollama:
+        specifier: ^0.5.11
+        version: 0.5.11
 
   packages/core/echo/automerge:
     dependencies:

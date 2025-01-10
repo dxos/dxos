@@ -32,13 +32,15 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/assistant": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@effect/schema": "^0.75.5",
-    "effect": "^3.12.1"
+    "effect": "^3.12.1",
+    "ollama": "^0.5.11"
   },
   "publishConfig": {
     "access": "public"
