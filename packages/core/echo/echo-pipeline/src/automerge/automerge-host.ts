@@ -143,17 +143,27 @@ export class AutomergeHost extends Resource {
       ],
     });
 
-    Event.wrap(this._echoNetworkAdapter, 'peer-candidate').on(this._ctx, ((e: PeerCandidatePayload) =>
-      this._onPeerConnected(e.peerId)) as any);
-    Event.wrap(this._echoNetworkAdapter, 'peer-disconnected').on(this._ctx, ((e: PeerDisconnectedPayload) =>
-      this._onPeerDisconnected(e.peerId)) as any);
+    let updatingAuthScope = false;
+    Event.wrap(this._echoNetworkAdapter, 'peer-candidate').on(
+      this._ctx,
+      ((e: PeerCandidatePayload) => !updatingAuthScope && this._onPeerConnected(e.peerId)) as any,
+    );
+    Event.wrap(this._echoNetworkAdapter, 'peer-disconnected').on(
+      this._ctx,
+      ((e: PeerDisconnectedPayload) => !updatingAuthScope && this._onPeerDisconnected(e.peerId)) as any,
+    );
 
     this._collectionSynchronizer.remoteStateUpdated.on(this._ctx, ({ collectionId, peerId, newDocsAppeared }) => {
       this._onRemoteCollectionStateUpdated(collectionId, peerId);
       this.collectionStateUpdated.emit({ collectionId: collectionId as CollectionId });
       // We use collection lookups during share policy check, so we might need to update share policy for the new doc
       if (newDocsAppeared) {
-        this._echoNetworkAdapter.onConnectionAuthScopeChanged(peerId);
+        updatingAuthScope = true;
+        try {
+          this._echoNetworkAdapter.onConnectionAuthScopeChanged(peerId);
+        } finally {
+          updatingAuthScope = false;
+        }
       }
     });
 
