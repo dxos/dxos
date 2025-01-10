@@ -102,7 +102,10 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     return this._sorting.sortedRows;
   }
 
-  public get sorting(): ReadonlySignal<SortConfig | undefined> {
+  /**
+   * @reactive
+   */
+  public get sorting(): SortConfig | undefined {
     return this._sorting.sorting;
   }
 

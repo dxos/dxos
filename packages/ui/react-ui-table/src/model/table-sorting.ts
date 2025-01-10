@@ -51,6 +51,25 @@ export class TableSorting<T extends BaseTableRow> {
     this.sortedRows = this.initialiseSortedRows();
   }
 
+  /**
+   * @reactive
+   */
+  public get sorting(): SortConfig | undefined {
+    return this._sorting.value;
+  }
+
+  public getDataIndex(displayIndex: number): number {
+    return this._displayToDataIndex.get(displayIndex) ?? displayIndex;
+  }
+
+  public setSort(fieldId: string, direction: SortDirection): void {
+    this._sorting.value = { fieldId, direction };
+  }
+
+  //
+  // Initialisation.
+  //
+
   private initialiseSortedRows(): ReadonlySignal<T[]> {
     return computed(() => {
       this._displayToDataIndex.clear();
@@ -83,18 +102,6 @@ export class TableSorting<T extends BaseTableRow> {
 
       return ordered.map(({ item }) => item);
     });
-  }
-
-  public get sorting(): ReadonlySignal<SortConfig | undefined> {
-    return this._sorting;
-  }
-
-  public getDataIndex(displayIndex: number): number {
-    return this._displayToDataIndex.get(displayIndex) ?? displayIndex;
-  }
-
-  public setSort(fieldId: string, direction: SortDirection): void {
-    this._sorting.value = { fieldId, direction };
   }
 
   private getSortValue(props: PropertyType, field: FieldType, item: T) {
