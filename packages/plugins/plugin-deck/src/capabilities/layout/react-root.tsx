@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { Capabilities, contributes, useCapabilities } from '@dxos/app-framework/next';
+import { Capabilities, contributes, useCapabilities, useCapability } from '@dxos/app-framework/next';
 
 import { DeckLayout } from '../../components';
 import { DECK_PLUGIN } from '../../meta';
@@ -15,14 +15,11 @@ export default () =>
   contributes(Capabilities.ReactRoot, {
     id: DECK_PLUGIN,
     root: () => {
-      const [{ settings }] = useCapabilities(
-        Capabilities.Settings,
-        (c): c is { plugin: typeof DECK_PLUGIN; settings: DeckSettingsProps } => c.plugin === DECK_PLUGIN,
-      );
-      const [layout] = useCapabilities(Capabilities.Layout);
-      const [location] = useCapabilities(Capabilities.Location);
-      const [deck] = useCapabilities(DeckCapabilities.MutableDeckState);
-      const panels: any[] = [];
+      const layout = useCapability(Capabilities.Layout);
+      const location = useCapability(Capabilities.Location);
+      const deck = useCapability(DeckCapabilities.MutableDeckState);
+      const settings = useCapability(Capabilities.SettingsStore).getStore<DeckSettingsProps>(DECK_PLUGIN)!.value;
+      const panels = useCapabilities(DeckCapabilities.ComplementaryPanel);
 
       const handleDismissToast = useCallback(
         (id: string) => {

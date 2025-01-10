@@ -34,7 +34,7 @@ export const IntentPlugin = definePlugin(IntentMeta, [
         registerResolver: () => () => {},
       });
 
-      const resolvers = context.requestCapability(Capabilities.IntentResolver).flat();
+      const resolvers = context.requestCapabilities(Capabilities.IntentResolver).flat();
       // TODO(wittjosiah): Dispatcher will lose its ability to filter by plugin id.
       const { dispatch, dispatchPromise, undo, undoPromise, registerResolver } = createDispatcher({ '': resolvers });
 

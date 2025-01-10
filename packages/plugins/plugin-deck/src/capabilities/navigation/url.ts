@@ -12,10 +12,10 @@ import { NAV_ID } from '../../components';
 import { mergeLayoutParts, removePart, soloPartToUri, uriToSoloPart } from '../../layout';
 
 export default async (context: PluginsContext) => {
-  const [{ dispatchPromise: dispatch }] = context.requestCapability(Capabilities.IntentDispatcher);
-  const [location] = context.requestCapability(Capabilities.MutableLocation);
-  const [layout] = context.requestCapability(Capabilities.MutableLayout);
-  const [attention] = context.requestCapability(AttentionCapabilities.Attention);
+  const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher) ?? {};
+  const location = context.requestCapability(Capabilities.MutableLocation);
+  const layout = context.requestCapability(Capabilities.MutableLayout);
+  const attention = context.requestCapability(AttentionCapabilities.Attention);
 
   const handleNavigation = async () => {
     const setLocation = (next: LayoutParts) => naturalSetLocation({ next, layout, location, attention });

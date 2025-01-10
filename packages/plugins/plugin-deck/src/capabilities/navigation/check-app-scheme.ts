@@ -34,12 +34,9 @@ const checkAppScheme = (url: string) => {
 };
 
 export default async (context: PluginsContext) => {
-  const [{ settings }] = context.requestCapability(
-    Capabilities.Settings,
-    (c): c is { plugin: typeof DECK_PLUGIN; settings: DeckSettingsProps } => c.plugin === DECK_PLUGIN,
-  );
-
-  if (!isSocket && settings.enableNativeRedirect) {
+  const settingsStore = context.requestCapability(Capabilities.SettingsStore);
+  const settings = settingsStore.getStore<DeckSettingsProps>(DECK_PLUGIN)?.value;
+  if (!isSocket && settings?.enableNativeRedirect) {
     checkAppScheme(appScheme);
   }
 

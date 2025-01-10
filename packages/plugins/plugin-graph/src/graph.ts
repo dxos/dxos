@@ -15,7 +15,7 @@ export default async (context: PluginsContext) => {
     localStorage.setItem(`${GRAPH_PLUGIN}/graph`, builder.graph.pickle());
   }, 5_000);
 
-  context.requestCapability(Capabilities.AppGraphBuilder).forEach((extension) => builder.addExtension(extension));
+  context.requestCapabilities(Capabilities.AppGraphBuilder).forEach((extension) => builder.addExtension(extension));
 
   await builder.initialize();
   await builder.graph.expand(builder.graph.root);

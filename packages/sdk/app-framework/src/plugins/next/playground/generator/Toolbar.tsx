@@ -27,7 +27,7 @@ export const Toolbar = () => {
     }
   }, [manager]);
 
-  const count = manager.context.requestCapability(Number).reduce((acc, curr) => acc + curr, 0);
+  const count = manager.context.requestCapabilities(Number).reduce((acc, curr) => acc + curr, 0);
 
   return (
     <>

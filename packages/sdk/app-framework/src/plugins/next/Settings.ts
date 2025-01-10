@@ -12,8 +12,18 @@ import SettingsMeta from '../plugin-settings/meta';
 export const SettingsPlugin = definePlugin(SettingsMeta, [
   defineModule({
     id: `${SettingsMeta.id}/store`,
+    dependentEvents: [eventKey(Events.SetupSettings)],
     activationEvents: [eventKey(Events.Startup)],
     triggeredEvents: [eventKey(Events.SettingsReady)],
-    activate: () => contributes(Capabilities.SettingsStore, new RootSettingsStore()),
+    activate: (context) => {
+      const allSettings = context.requestCapabilities(Capabilities.Settings);
+      const settingsStore = new RootSettingsStore();
+
+      allSettings.forEach((setting) => {
+        settingsStore.createStore(setting as any);
+      });
+
+      return contributes(Capabilities.SettingsStore, settingsStore);
+    },
   }),
 ]);

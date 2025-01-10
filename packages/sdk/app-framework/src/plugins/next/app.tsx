@@ -106,8 +106,8 @@ const App = ({ placeholder, manager, state }: AppProps) => {
     return <>{placeholder}</>;
   }
 
-  const reactContexts = manager.context.requestCapability(Capabilities.ReactContext);
-  const reactRoots = manager.context.requestCapability(Capabilities.ReactRoot);
+  const reactContexts = manager.context.requestCapabilities(Capabilities.ReactContext);
+  const reactRoots = manager.context.requestCapabilities(Capabilities.ReactRoot);
 
   const ComposedContext = composeContexts(reactContexts);
   return (

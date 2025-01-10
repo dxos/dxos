@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework/next';
+import { Capabilities, contributes } from '@dxos/app-framework/next';
 import { create } from '@dxos/live-object';
 
 import { DECK_PLUGIN } from '../../meta';
-import { type DeckSettingsProps } from '../../types';
+import { DeckSettingsSchema, type DeckSettingsProps } from '../../types';
 
-export default (context: PluginsContext) => {
+export default () => {
   const settings = create<DeckSettingsProps>({
     showHints: false,
     customSlots: false,
@@ -18,12 +18,5 @@ export default (context: PluginsContext) => {
     overscroll: 'centering',
   });
 
-  // const [settingsStore] = context.requestCapability(Capabilities.SettingsStore);
-  // settingsStore.createStore({
-  //   schema: DeckSettingsSchema,
-  //   prefix: DECK_PLUGIN,
-  //   value: settings,
-  // });
-
-  return contributes(Capabilities.Settings, { plugin: DECK_PLUGIN, settings });
+  return contributes(Capabilities.Settings, { schema: DeckSettingsSchema, prefix: DECK_PLUGIN, value: settings });
 };

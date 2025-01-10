@@ -10,10 +10,10 @@ import { Keyboard } from '@dxos/keyboard';
 import { AttentionCapabilities } from './capabilities';
 
 export default (context: PluginsContext) => {
-  const [{ graph }] = context.requestCapability(AppCapabilities.AppGraph);
+  const { graph } = context.requestCapability(AppCapabilities.AppGraph);
+  const attention = context.requestCapability(AttentionCapabilities.Attention);
 
   const unsubscribe = effect(() => {
-    const [attention] = context.requestCapability(AttentionCapabilities.Attention);
     const id = Array.from(attention.current)[0];
     const path = id && graph.getPath({ target: id });
     if (path) {

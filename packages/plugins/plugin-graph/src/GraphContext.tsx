@@ -4,7 +4,7 @@
 
 import React, { type Context, createContext, type PropsWithChildren, useContext } from 'react';
 
-import { Capabilities, contributes, useCapabilities } from '@dxos/app-framework/next';
+import { Capabilities, contributes, useCapability } from '@dxos/app-framework/next';
 import { type GraphBuilder } from '@dxos/app-graph';
 import { raise } from '@dxos/debug';
 
@@ -19,7 +19,7 @@ export default () =>
   contributes(Capabilities.ReactContext, {
     id: GRAPH_PLUGIN,
     context: (props: PropsWithChildren) => {
-      const [value] = useCapabilities(Capabilities.AppGraph);
+      const value = useCapability(Capabilities.AppGraph);
       return <GraphContext.Provider value={value}>{props.children}</GraphContext.Provider>;
     },
   });

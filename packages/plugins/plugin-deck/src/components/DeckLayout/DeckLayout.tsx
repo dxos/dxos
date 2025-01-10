@@ -75,7 +75,7 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
   useEffect(() => {
     // NOTE: Not `useAttended` so that the layout component is not re-rendered when the attended list changes.
     const attended = untracked(() => {
-      const [attention] = pluginManager.context.requestCapability(AttentionCapabilities.Attention);
+      const attention = pluginManager.context.requestCapability(AttentionCapabilities.Attention);
       return attention.current;
     });
     const firstId = isSoloModeLoaded ? firstIdInPart(layoutParts, 'solo') : firstIdInPart(layoutParts, 'main');

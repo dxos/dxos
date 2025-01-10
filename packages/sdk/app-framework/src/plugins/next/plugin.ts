@@ -5,6 +5,7 @@
 import { untracked } from '@preact/signals-core';
 import { type Effect } from 'effect';
 
+import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';
@@ -128,7 +129,7 @@ export class PluginsContext {
   /**
    *
    */
-  requestCapability<T, U extends T = T>(
+  requestCapabilities<T, U extends T = T>(
     interfaceDef: InterfaceDef<T>,
     filter?: (capability: T) => capability is U,
   ): U[] {
@@ -146,6 +147,15 @@ export class PluginsContext {
     } else {
       return capabilities as U[];
     }
+  }
+
+  /**
+   *
+   */
+  requestCapability<T, U extends T = T>(interfaceDef: InterfaceDef<T>, filter?: (capability: T) => capability is U): U {
+    const capability = this.requestCapabilities(interfaceDef, filter)[0];
+    invariant(capability, `No capability found for ${interfaceDef.identifier}`);
+    return capability;
   }
 }
 

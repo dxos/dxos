@@ -31,14 +31,13 @@ import { getEffectivePart } from '../../util';
 export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver(NavigationAction.Open, (data) => {
-      const [{ settings }] = context.requestCapability(
-        Capabilities.Settings,
-        (c): c is { plugin: typeof DECK_PLUGIN; settings: DeckSettingsProps } => c.plugin === DECK_PLUGIN,
-      );
-      const [location] = context.requestCapability(Capabilities.MutableLocation);
-      const [layout] = context.requestCapability(Capabilities.MutableLayout);
-      const [{ graph }] = context.requestCapability(Capabilities.AppGraph);
-      const [attention] = context.requestCapability(AttentionCapabilities.Attention);
+      const { graph } = context.requestCapability(Capabilities.AppGraph);
+      const location = context.requestCapability(Capabilities.MutableLocation);
+      const layout = context.requestCapability(Capabilities.MutableLayout);
+      const attention = context.requestCapability(AttentionCapabilities.Attention);
+      const settings = context
+        .requestCapability(Capabilities.SettingsStore)
+        .getStore<DeckSettingsProps>(DECK_PLUGIN)?.value;
 
       const previouslyOpenIds = new Set<string>(openIds(location.active));
       const layoutMode = layout.layoutMode;
@@ -60,7 +59,7 @@ export default (context: PluginsContext) =>
             return closeEntry(currentLayout, { part: effectivePart as LayoutPart, entryId: id });
           } else {
             return openEntry(currentLayout, effectivePart, layoutEntry, {
-              positioning: settings.newPlankPositioning,
+              positioning: settings?.newPlankPositioning,
             });
           }
         };
@@ -103,20 +102,19 @@ export default (context: PluginsContext) =>
       };
     }),
     createResolver(NavigationAction.AddToActive, (data) => {
-      const [{ settings }] = context.requestCapability(
-        Capabilities.Settings,
-        (c): c is { plugin: typeof DECK_PLUGIN; settings: DeckSettingsProps } => c.plugin === DECK_PLUGIN,
-      );
-      const [location] = context.requestCapability(Capabilities.MutableLocation);
-      const [layout] = context.requestCapability(Capabilities.MutableLayout);
-      const [attention] = context.requestCapability(AttentionCapabilities.Attention);
+      const location = context.requestCapability(Capabilities.MutableLocation);
+      const layout = context.requestCapability(Capabilities.MutableLayout);
+      const attention = context.requestCapability(AttentionCapabilities.Attention);
+      const settings = context
+        .requestCapability(Capabilities.SettingsStore)
+        .getStore<DeckSettingsProps>(DECK_PLUGIN)?.value;
 
       const layoutEntry = { id: data.id };
       const effectivePart = getEffectivePart(data.part, layout.layoutMode);
 
       setLocation({
         next: openEntry(location.active, effectivePart, layoutEntry, {
-          positioning: data.positioning ?? settings.newPlankPositioning,
+          positioning: data.positioning ?? settings?.newPlankPositioning,
           pivotId: data.pivotId,
         }),
         layout,
@@ -132,9 +130,9 @@ export default (context: PluginsContext) =>
       return { intents };
     }),
     createResolver(NavigationAction.Close, (data) => {
-      const [location] = context.requestCapability(Capabilities.MutableLocation);
-      const [layout] = context.requestCapability(Capabilities.MutableLayout);
-      const [attention] = context.requestCapability(AttentionCapabilities.Attention);
+      const location = context.requestCapability(Capabilities.MutableLocation);
+      const layout = context.requestCapability(Capabilities.MutableLayout);
+      const attention = context.requestCapability(AttentionCapabilities.Attention);
 
       let newLayout = location.active;
       const layoutMode = layout.layoutMode;
@@ -156,9 +154,9 @@ export default (context: PluginsContext) =>
       return { intents: [createIntent(LayoutAction.ScrollIntoView, { id: toAttend })] };
     }),
     createResolver(NavigationAction.Set, (data) => {
-      const [layout] = context.requestCapability(Capabilities.MutableLayout);
-      const [location] = context.requestCapability(Capabilities.MutableLocation);
-      const [attention] = context.requestCapability(AttentionCapabilities.Attention);
+      const layout = context.requestCapability(Capabilities.MutableLayout);
+      const location = context.requestCapability(Capabilities.MutableLocation);
+      const attention = context.requestCapability(AttentionCapabilities.Attention);
 
       return batch(() => {
         const toAttend = setLocation({ next: data.activeParts, layout, location, attention });
@@ -166,9 +164,9 @@ export default (context: PluginsContext) =>
       });
     }),
     createResolver(NavigationAction.Adjust, (adjustment) => {
-      const [location] = context.requestCapability(Capabilities.MutableLocation);
-      const [layout] = context.requestCapability(Capabilities.MutableLayout);
-      const [attention] = context.requestCapability(AttentionCapabilities.Attention);
+      const location = context.requestCapability(Capabilities.MutableLocation);
+      const layout = context.requestCapability(Capabilities.MutableLayout);
+      const attention = context.requestCapability(AttentionCapabilities.Attention);
 
       return batch(() => {
         if (adjustment.type === 'increment-end' || adjustment.type === 'increment-start') {

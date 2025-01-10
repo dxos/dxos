@@ -11,12 +11,32 @@ import { type InterfaceDef } from './plugin';
 
 const PluginManagerContext = createContext<PluginManager | undefined>(undefined);
 
+/**
+ *
+ */
 export const usePluginManager = (): PluginManager =>
   useContext(PluginManagerContext) ?? raise(new Error('Missing PluginManagerContext'));
 
+/**
+ *
+ */
 export const PluginManagerProvider = PluginManagerContext.Provider;
 
+/**
+ *
+ */
 export const useCapabilities = <T, U extends T = T>(
+  interfaceDef: InterfaceDef<T>,
+  filter?: (capability: T) => capability is U,
+) => {
+  const manager = usePluginManager();
+  return manager.context.requestCapabilities(interfaceDef, filter);
+};
+
+/**
+ *
+ */
+export const useCapability = <T, U extends T = T>(
   interfaceDef: InterfaceDef<T>,
   filter?: (capability: T) => capability is U,
 ) => {

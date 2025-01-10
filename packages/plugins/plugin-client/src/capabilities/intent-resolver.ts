@@ -19,7 +19,7 @@ type IntentResolverOptions = Pick<ClientPluginOptions, 'onReset'> & {
 export default ({ context, onReset }: IntentResolverOptions) =>
   contributes(Capabilities.IntentResolver, [
     createResolver(ClientAction.CreateIdentity, async () => {
-      const [client] = context.requestCapability(ClientCapabilities.Client);
+      const client = context.requestCapability(ClientCapabilities.Client);
       const data = await client.halo.createIdentity();
       return { data, intents: [createIntent(ObservabilityAction.SendEvent, { name: 'identity.create' })] };
     }),
@@ -67,12 +67,12 @@ export default ({ context, onReset }: IntentResolverOptions) =>
       return {};
     }),
     createResolver(ClientAction.CreateAgent, async () => {
-      const [client] = context.requestCapability(ClientCapabilities.Client);
+      const client = context.requestCapability(ClientCapabilities.Client);
       invariant(client.services.services.EdgeAgentService, 'Missing EdgeAgentService');
       await client.services.services.EdgeAgentService.createAgent(null as any, { timeout: 10_000 });
     }),
     createResolver(ClientAction.CreateRecoveryCode, async () => {
-      const [client] = context.requestCapability(ClientCapabilities.Client);
+      const client = context.requestCapability(ClientCapabilities.Client);
       invariant(client.services.services.IdentityService, 'IdentityService not available');
       // TODO(wittjosiah): This needs a proper api. Rename property.
       const { seedphrase } = await client.services.services.IdentityService.createRecoveryPhrase();

@@ -5,6 +5,7 @@
 import type { FC, PropsWithChildren } from 'react';
 
 import { type GraphBuilder } from '@dxos/app-graph';
+import { type S } from '@dxos/echo-schema';
 import { type RootSettingsStore } from '@dxos/local-storage';
 import { type DeepReadonly } from '@dxos/util';
 
@@ -40,15 +41,6 @@ export namespace Capabilities {
     'dxos.org/app-framework/capabilities/intent-dispatcher',
   );
 
-  export const SettingsStore = defineCapability<RootSettingsStore>(
-    'dxos.org/app-framework/capabilities/settings-store',
-  );
-
-  export type MutableSettings = { plugin: string; settings: Record<string, any> };
-  export type Settings = DeepReadonly<MutableSettings>;
-  export const Settings = defineCapability<Settings>('dxos.org/app-framework/capabilities/settings');
-  export const MutableSettings = defineCapability<MutableSettings>('dxos.org/app-framework/capabilities/settings');
-
   export const Layout = defineCapability<Readonly<Layout>>('dxos.org/app-framework/capabilities/layout');
   export const MutableLayout = defineCapability<Layout>('dxos.org/app-framework/capabilities/layout');
 
@@ -68,6 +60,23 @@ export namespace Capabilities {
   export const AppGraphBuilder = defineCapability<Parameters<GraphBuilder['addExtension']>[0]>(
     'dxos.org/app-framework/capabilities/app-graph-builder',
   );
+
+  export const SettingsStore = defineCapability<RootSettingsStore>(
+    'dxos.org/app-framework/capabilities/settings-store',
+  );
+
+  // TODO(wittjosiah): The generics caused type inference issues for schemas when contributing settings.
+  // export type Settings = Parameters<RootSettingsStore['createStore']>[0];
+  // export type Settings<T extends SettingsValue = SettingsValue> = SettingsProps<T>;
+  export type Settings = {
+    schema: S.Schema.All;
+    prefix: string;
+    value?: Record<string, any>;
+  };
+  export const Settings = defineCapability<Settings>('dxos.org/app-framework/capabilities/settings');
+
+  export type Metadata = Readonly<{ plugin: string; metadata: Record<string, any> }>;
+  export const Metadata = defineCapability<Metadata>('dxos.org/app-framework/capabilities/metadata');
 }
 
 //
@@ -88,6 +97,11 @@ export namespace Events {
    * Fired before the intent dispatcher is activated.
    */
   export const SetupIntents = defineEvent('dxos.org/app-framework/events/setup-intents');
+
+  /**
+   * Fired before the settings store is activated.
+   */
+  export const SetupSettings = defineEvent('dxos.org/app-framework/events/setup-settings');
 
   /**
    * Fired before the graph is created.

@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { Capabilities as AppCapabilities, contributes, useCapabilities } from '@dxos/app-framework/next';
+import { Capabilities as AppCapabilities, contributes, useCapability } from '@dxos/app-framework/next';
 import { RootAttentionProvider } from '@dxos/react-ui-attention';
 
 import { AttentionCapabilities } from './capabilities';
@@ -14,7 +14,7 @@ export default () =>
   contributes(AppCapabilities.ReactContext, {
     id: ATTENTION_PLUGIN,
     context: (props: PropsWithChildren) => {
-      const [attention] = useCapabilities(AttentionCapabilities.Attention);
+      const attention = useCapability(AttentionCapabilities.Attention);
 
       return (
         <RootAttentionProvider

@@ -5,7 +5,7 @@
 import { effect } from '@preact/signals-core';
 
 import { AST, type S } from '@dxos/echo-schema';
-import { findNode, isSimpleType, type Path } from '@dxos/effect';
+import { findNode, isLiteralUnion, isSimpleType, type Path } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { create, isReactiveObject, type ReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
@@ -155,6 +155,8 @@ export class SettingsStore<T extends SettingsValue> {
             if (v !== undefined) {
               setDeep(this.value, path, v[1]);
             }
+          } else if (isLiteralUnion(node)) {
+            setDeep(this.value, path, value);
           } else if (AST.isTupleType(node)) {
             setDeep(this.value, path, JSON.parse(value));
           } else if (AST.isTypeLiteral(node)) {
@@ -188,6 +190,8 @@ export class SettingsStore<T extends SettingsValue> {
         } else if (AST.isBooleanKeyword(node)) {
           this._storage.setItem(key, String(value));
         } else if (AST.isEnums(node)) {
+          this._storage.setItem(key, String(value));
+        } else if (isLiteralUnion(node)) {
           this._storage.setItem(key, String(value));
         } else if (AST.isTupleType(node)) {
           this._storage.setItem(key, JSON.stringify(value));

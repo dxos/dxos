@@ -23,13 +23,13 @@ import { DeckCapabilities } from '../capabilities';
 export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver(DeckAction.UpdatePlankSize, (data) => {
-      const [deck] = context.requestCapability(DeckCapabilities.MutableDeckState);
+      const deck = context.requestCapability(DeckCapabilities.MutableDeckState);
       deck.plankSizing[data.id] = data.size;
     }),
     createResolver(IntentAction.ShowUndo, (data) => {
-      const [deck] = context.requestCapability(DeckCapabilities.MutableDeckState);
-      const [layout] = context.requestCapability(Capabilities.MutableLayout);
-      const [{ undoPromise: undo }] = context.requestCapability(Capabilities.IntentDispatcher);
+      const deck = context.requestCapability(DeckCapabilities.MutableDeckState);
+      const layout = context.requestCapability(Capabilities.MutableLayout);
+      const { undoPromise: undo } = context.requestCapability(Capabilities.IntentDispatcher);
 
       // TODO(wittjosiah): Support undoing further back than the last action.
       if (deck.currentUndoId) {
@@ -52,7 +52,7 @@ export default (context: PluginsContext) =>
     createResolver(
       LayoutAction.SetLayout,
       ({ element, state, component, subject, anchorId, dialogBlockAlign, dialogType }) => {
-        const [layout] = context.requestCapability(Capabilities.MutableLayout);
+        const layout = context.requestCapability(Capabilities.MutableLayout);
         switch (element) {
           case 'sidebar': {
             layout.sidebarOpen = state ?? !layout.sidebarOpen;
@@ -91,9 +91,9 @@ export default (context: PluginsContext) =>
       },
     ),
     createResolver(LayoutAction.SetLayoutMode, (data) => {
-      const [layout] = context.requestCapability(Capabilities.MutableLayout);
-      const [location] = context.requestCapability(Capabilities.MutableLocation);
-      const [deck] = context.requestCapability(DeckCapabilities.MutableDeckState);
+      const layout = context.requestCapability(Capabilities.MutableLayout);
+      const location = context.requestCapability(Capabilities.MutableLocation);
+      const deck = context.requestCapability(DeckCapabilities.MutableDeckState);
 
       const setMode = (mode: LayoutMode) => {
         const main = openIds(location.active, ['main']);
@@ -120,7 +120,7 @@ export default (context: PluginsContext) =>
       });
     }),
     createResolver(LayoutAction.ScrollIntoView, ({ id }) => {
-      const [layout] = context.requestCapability(Capabilities.MutableLayout);
+      const layout = context.requestCapability(Capabilities.MutableLayout);
       layout.scrollIntoView = id;
     }),
   ]);

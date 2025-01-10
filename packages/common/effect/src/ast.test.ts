@@ -143,6 +143,12 @@ describe('AST', () => {
     visit(TestSchema.ast, (_, path) => props.push(path.join('.')));
   });
 
+  test('literal unions', ({ expect }) => {
+    const TestSchema = S.Literal('inactive', 'active');
+    const node = findNode(TestSchema.ast, isSimpleType);
+    expect(node).to.exist;
+  });
+
   test('discriminated unions', ({ expect }) => {
     const TestUnionSchema = S.Union(
       S.Struct({ kind: S.Literal('a'), label: S.String }),

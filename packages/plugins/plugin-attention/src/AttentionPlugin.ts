@@ -27,7 +27,7 @@ export const AttentionPlugin = definePlugin(meta, [
   }),
   defineModule({
     id: `${meta.id}/keyboard`,
-    activationEvents: [eventKey(AppEvents.GraphReady)],
+    activationEvents: [eventKey(AppEvents.GraphReady), eventKey(AttentionEvents.AttentionReady)],
     activate: lazy(() => import('./keyboard')),
   }),
 ]);

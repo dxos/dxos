@@ -255,7 +255,7 @@ describe('PluginManager', () => {
   it('should be able to disable and re-enable an active plugin', async () => {
     const state = { total: 0 };
     const computeTotal = (context: PluginsContext) => {
-      const numbers = context.requestCapability(Number);
+      const numbers = context.requestCapabilities(Number);
       state.total = numbers.reduce((acc, n) => acc + n.number, 0);
     };
 
@@ -298,7 +298,7 @@ describe('PluginManager', () => {
       expect(manager.active).toEqual([...Test.modules.map((m) => m.id), Count.meta.id]);
       expect(manager.pendingReset).toEqual([]);
 
-      const totals = manager.context.requestCapability(Total);
+      const totals = manager.context.requestCapabilities(Total);
       expect(totals).toHaveLength(1);
       expect(totals[0].total).toEqual(6);
     }
@@ -308,7 +308,7 @@ describe('PluginManager', () => {
       expect(manager.active).toEqual([...Test.modules.map((m) => m.id), Count.meta.id]);
       expect(manager.pendingReset).toEqual([CountEvent.id, Events.Startup.id]);
 
-      const totals = manager.context.requestCapability(Total);
+      const totals = manager.context.requestCapabilities(Total);
       expect(totals).toHaveLength(1);
       expect(totals[0].total).toEqual(6);
     }
@@ -318,7 +318,7 @@ describe('PluginManager', () => {
       expect(manager.active).toEqual([Count.meta.id]);
       expect(manager.pendingReset).toEqual([Events.Startup.id]);
 
-      const totals = manager.context.requestCapability(Total);
+      const totals = manager.context.requestCapabilities(Total);
       expect(totals).toHaveLength(1);
       expect(totals[0].total).toEqual(6);
     }
@@ -328,7 +328,7 @@ describe('PluginManager', () => {
       expect(manager.active).toEqual([Count.meta.id]);
       expect(manager.pendingReset).toEqual([]);
 
-      const totals = manager.context.requestCapability(Total);
+      const totals = manager.context.requestCapabilities(Total);
       expect(totals).toHaveLength(1);
       expect(totals[0].total).toEqual(0);
     }
@@ -338,7 +338,7 @@ describe('PluginManager', () => {
       expect(manager.active).toEqual([Count.meta.id]);
       expect(manager.pendingReset).toEqual([CountEvent.id, Events.Startup.id]);
 
-      const totals = manager.context.requestCapability(Total);
+      const totals = manager.context.requestCapabilities(Total);
       expect(totals).toHaveLength(1);
       expect(totals[0].total).toEqual(0);
     }
@@ -348,7 +348,7 @@ describe('PluginManager', () => {
       expect(manager.active).toEqual([Count.meta.id, ...Test.modules.map((m) => m.id)]);
       expect(manager.pendingReset).toEqual([Events.Startup.id]);
 
-      const totals = manager.context.requestCapability(Total);
+      const totals = manager.context.requestCapabilities(Total);
       expect(totals).toHaveLength(1);
       expect(totals[0].total).toEqual(0);
     }
@@ -358,7 +358,7 @@ describe('PluginManager', () => {
       expect(manager.active).toEqual([...Test.modules.map((m) => m.id), Count.meta.id]);
       expect(manager.pendingReset).toEqual([]);
 
-      const totals = manager.context.requestCapability(Total);
+      const totals = manager.context.requestCapabilities(Total);
       expect(totals).toHaveLength(1);
       expect(totals[0].total).toEqual(6);
     }
@@ -379,7 +379,7 @@ describe('PluginManager', () => {
         id: 'dxos.org/test/doubler',
         activationEvents: [eventKey(stateEvent)],
         activate: (context) => {
-          const [counter] = context.requestCapability(Number);
+          const counter = context.requestCapability(Number);
           const state = create({ total: counter.number * 2 });
           const unsubscribe = effect(() => {
             state.total = counter.number * 2;
@@ -395,8 +395,8 @@ describe('PluginManager', () => {
     await manager.activate(Events.Startup);
     expect(manager.active).toEqual(Test.modules.map((m) => m.id));
 
-    const [counter] = manager.context.requestCapability(Number);
-    const [doubler] = manager.context.requestCapability(Total);
+    const counter = manager.context.requestCapability(Number);
+    const doubler = manager.context.requestCapability(Total);
     expect(counter.number).toEqual(1);
     expect(doubler.total).toEqual(2);
 

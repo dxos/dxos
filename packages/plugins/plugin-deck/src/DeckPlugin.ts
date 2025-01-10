@@ -38,8 +38,7 @@ export const DeckPlugin = definePlugin(meta, [
 
   defineModule({
     id: `${meta.id}/settings`,
-    activationEvents: [eventKey(Events.SettingsReady)],
-    triggeredEvents: [eventKey(DeckEvents.SettingsReady)],
+    activationEvents: [eventKey(Events.SetupSettings)],
     activate: Settings,
   }),
 
@@ -102,7 +101,7 @@ export const DeckPlugin = definePlugin(meta, [
   }),
   defineModule({
     id: `${meta.id}/check-app-scheme`,
-    activationEvents: [eventKey(DeckEvents.SettingsReady)],
+    activationEvents: [eventKey(Events.SettingsReady)],
     activate: CheckAppScheme,
   }),
   defineModule({

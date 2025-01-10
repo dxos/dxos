@@ -19,8 +19,8 @@ export default (context: PluginsContext) =>
         {
           id: `${CLIENT_PLUGIN}/open-shell`,
           data: async () => {
-            const dispatch = context.requestCapability(Capabilities.IntentDispatcher)[0]?.dispatchPromise;
-            await dispatch?.(createIntent(ClientAction.ShareIdentity));
+            const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+            await dispatch(createIntent(ClientAction.ShareIdentity));
           },
           properties: {
             label: ['open shell label', { ns: CLIENT_PLUGIN }],

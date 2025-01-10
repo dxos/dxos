@@ -98,9 +98,9 @@ describe('PluginsContext', () => {
     implementation.example = 'updated';
     expect(updates.count).toEqual(1);
 
-    const capabilities = context.requestCapability(interfaceDef);
-    expect(capabilities).toEqual([implementation]);
-    expect(capabilities[0].example).toEqual('updated');
+    const capability = context.requestCapability(interfaceDef);
+    expect(capability).toEqual([implementation]);
+    expect(capability.example).toEqual('updated');
     expect(updates.count).toEqual(1);
   });
 });
