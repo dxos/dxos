@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import type { ToggleGroupItemProps as ToggleGroupItemPrimitiveProps } from '@radix-ui/react-toggle-group';
 import * as ToolbarPrimitive from '@radix-ui/react-toolbar';
 import React, { forwardRef } from 'react';
 
@@ -100,6 +101,18 @@ const ToolbarToggleGroupItem = forwardRef<HTMLButtonElement, ToolbarToggleGroupI
   },
 );
 
+type ToolbarToggleGroupIconItemProps = Omit<ToggleGroupItemPrimitiveProps, 'className'> & IconButtonProps;
+
+const ToolbarToggleGroupIconItem = forwardRef<HTMLButtonElement, ToolbarToggleGroupIconItemProps>(
+  ({ variant, density, elevation, classNames, icon, label, iconOnly, ...props }, forwardedRef) => {
+    return (
+      <ToolbarPrimitive.ToolbarToggleItem {...props} asChild>
+        <IconButton {...{ variant, density, elevation, classNames, icon, label, iconOnly }} ref={forwardedRef} />
+      </ToolbarPrimitive.ToolbarToggleItem>
+    );
+  },
+);
+
 type ToolbarSeparatorProps = SeparatorProps & { variant?: 'gap' | 'line' };
 
 const ToolbarSeparator = ({ variant = 'line', ...props }: ToolbarSeparatorProps) => {
@@ -120,6 +133,7 @@ export const Toolbar = {
   Toggle: ToolbarToggle,
   ToggleGroup: ToolbarToggleGroup,
   ToggleGroupItem: ToolbarToggleGroupItem,
+  ToggleGroupIconItem: ToolbarToggleGroupIconItem,
   Separator: ToolbarSeparator,
 };
 
@@ -131,5 +145,6 @@ export type {
   ToolbarToggleProps,
   ToolbarToggleGroupProps,
   ToolbarToggleGroupItemProps,
+  ToolbarToggleGroupIconItemProps,
   ToolbarSeparatorProps,
 };
