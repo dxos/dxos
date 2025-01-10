@@ -148,6 +148,7 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
         readonly: true,
         resizeHandle: 'col',
         accessoryHtml: tableButtons.columnSettings.render({ fieldId: field.id }),
+        className: '!bg-gridHeader',
       };
     }
 
@@ -189,13 +190,14 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
   private getSelectAllCell(): DxGridPlaneCells {
     return {
       [toPlaneCellIndex({ col: 0, row: 0 })]: {
-        value: '',
         accessoryHtml: tableControls.checkbox.render({
           rowIndex: 0,
           header: true,
           checked: this.model.selection.allRowsSeleted.value,
         }),
+        className: '!bg-gridHeader',
         readonly: true,
+        value: '',
       },
     };
   }
@@ -203,11 +205,12 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
   private getNewColumnCell(): DxGridPlaneCells {
     return {
       [toPlaneCellIndex({ col: 0, row: 0 })]: {
-        value: '',
         accessoryHtml: tableButtons.addColumn.render({
           disabled: (this.model.table.view?.target?.fields?.length ?? 0) >= VIEW_FIELD_LIMIT,
         }),
+        className: '!bg-gridHeader',
         readonly: true,
+        value: '',
       },
     };
   }
