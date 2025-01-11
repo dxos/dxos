@@ -8,8 +8,6 @@ import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { createApp, IntentPlugin, SettingsPlugin } from '@dxos/app-framework/next';
-import { createClientServices } from '@dxos/client';
-import { defs, SaveConfig } from '@dxos/config';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { getObservabilityGroup, isObservabilityDisabled, initializeAppObservability } from '@dxos/observability';
 import { AttentionPlugin } from '@dxos/plugin-attention';
@@ -22,15 +20,27 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { Status, Tooltip, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { ResetDialog } from './components';
 import { setupConfig } from './config';
 import { appKey } from './constants';
+import { type PluginConfig } from './plugins';
+import { WelcomePlugin } from './plugins/welcome';
 import translations from './translations';
-import { defaultStorageIsEmpty } from './util';
+import { defaultStorageIsEmpty, isTrue, isFalse } from './util';
 
 const main = async () => {
+  TRACE_PROCESSOR.setInstanceTag('app');
+
   registerSignalsRuntime();
+
+  const { defs, SaveConfig } = await import('@dxos/config');
+  const { createClientServices } = await import('@dxos/react-client');
+  const { Migrations } = await import('@dxos/migrations');
+  const { __COMPOSER_MIGRATIONS__ } = await import('./migrations');
+
+  Migrations.define(appKey, __COMPOSER_MIGRATIONS__);
 
   // Namespace for global Composer test & debug hooks.
   (window as any).composer = {};
@@ -69,9 +79,50 @@ const main = async () => {
     !observabilityDisabled,
   );
 
+  const conf: PluginConfig = {
+    appKey,
+    config,
+    services,
+    observability,
+
+    isDev: !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT),
+    isPwa: !isFalse(config.values.runtime?.app?.env?.DX_PWA),
+    isSocket: !!(globalThis as any).__args,
+    isLabs: isTrue(config.values.runtime?.app?.env?.DX_LABS),
+    isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
+  };
+
   const plugins = [
     AttentionPlugin(),
-    ClientPlugin({ config, services }),
+    ClientPlugin({
+      config,
+      services,
+      onClientInitialized: async (_, client) => {
+        const { LegacyTypes } = await import('./migrations');
+        client.addTypes([
+          LegacyTypes.DocumentType,
+          LegacyTypes.FileType,
+          LegacyTypes.FolderType,
+          LegacyTypes.MessageType,
+          LegacyTypes.SectionType,
+          LegacyTypes.StackType,
+          LegacyTypes.TableType,
+          LegacyTypes.TextType,
+          LegacyTypes.ThreadType,
+        ]);
+      },
+      onReset: ({ target }) => {
+        localStorage.clear();
+
+        if (target === 'deviceInvitation') {
+          window.location.assign(new URL('/?deviceInvitationCode=', window.location.origin));
+        } else if (target === 'recoverIdentity') {
+          window.location.assign(new URL('/?recoverIdentity=true', window.location.origin));
+        } else {
+          window.location.pathname = '/';
+        }
+      },
+    }),
     DeckPlugin(),
     GraphPlugin(),
     IntentPlugin(),
@@ -79,7 +130,8 @@ const main = async () => {
     NavTreePlugin(),
     SettingsPlugin(),
     SpacePlugin(),
-    ThemePlugin({ appName: 'Composer' }),
+    ThemePlugin({ appName: 'Composer', noCache: conf.isDev }),
+    WelcomePlugin(),
   ];
 
   const App = createApp({

@@ -12,7 +12,6 @@ import {
   type PluginMeta,
   resolvePlugin,
 } from '@dxos/app-framework';
-import { type Trigger } from '@dxos/async';
 import { type Config, type ClientServicesProvider } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
 import AttentionMeta from '@dxos/plugin-attention/meta';
@@ -68,7 +67,6 @@ import { queryAllCredentials } from './util';
 
 export type State = {
   appKey: string;
-  firstRun: Trigger;
   config: Config;
   services: ClientServicesProvider;
   observability: Promise<Observability>;

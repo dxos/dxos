@@ -10,6 +10,7 @@ import { type JoinPanelProps } from '@dxos/shell/react';
 
 import { ClientCapabilities } from './capabilities';
 import { IDENTITY_DIALOG, JOIN_DIALOG, RECOVER_CODE_DIALOG } from '../components';
+import { ClientEvents } from '../events';
 import { ClientAction, type ClientPluginOptions } from '../types';
 
 type IntentResolverOptions = Pick<ClientPluginOptions, 'onReset'> & {
@@ -19,8 +20,10 @@ type IntentResolverOptions = Pick<ClientPluginOptions, 'onReset'> & {
 export default ({ context, onReset }: IntentResolverOptions) =>
   contributes(Capabilities.IntentResolver, [
     createResolver(ClientAction.CreateIdentity, async () => {
+      const manager = context.requestCapability(Capabilities.PluginManager);
       const client = context.requestCapability(ClientCapabilities.Client);
       const data = await client.halo.createIdentity();
+      await manager.activate(ClientEvents.IdentityCreated);
       return { data, intents: [createIntent(ObservabilityAction.SendEvent, { name: 'identity.create' })] };
     }),
     createResolver(ClientAction.JoinIdentity, async (data) => {

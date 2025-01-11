@@ -1,101 +1,40 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import { allOf, Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework/next';
+import { ClientEvents } from '@dxos/plugin-client';
 
-import {
-  type SurfaceProvides,
-  type TranslationsProvides,
-  parseIntentPlugin,
-  resolvePlugin,
-  type PluginDefinition,
-  LayoutAction,
-  parseLayoutPlugin,
-  createSurface,
-  createIntent,
-} from '@dxos/app-framework';
-import { type Trigger } from '@dxos/async';
-import { parseClientPlugin } from '@dxos/plugin-client/types';
-
-import { BETA_DIALOG, BetaDialog, WELCOME_SCREEN, WelcomeScreen } from './components';
-import { meta, WELCOME_PLUGIN } from './meta';
-import { OnboardingManager } from './onboarding-manager';
+import { IdentityCreated, Onboarding, ReactSurface } from './capabilities';
+import { WELCOME_PLUGIN, meta } from './meta';
 import translations from './translations';
 
-const url = new URL(window.location.href);
-const TEST_DEPRECATION = /beta_notice/.test(url.href);
-const DEPRECATED_DEPLOYMENT =
-  url.hostname === 'composer.dxos.org' || url.hostname === 'composer.staging.dxos.org' || TEST_DEPRECATION;
-
-export const WelcomePlugin = ({
-  firstRun,
-}: {
-  firstRun?: Trigger;
-}): PluginDefinition<SurfaceProvides & TranslationsProvides> => {
-  let hubUrl: string | undefined;
-  let manager: OnboardingManager | undefined;
-
-  return {
-    meta,
-    ready: async ({ plugins }) => {
-      const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatchPromise;
-      const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
-      const layout = resolvePlugin(plugins, parseLayoutPlugin)?.provides.layout;
-      if (!client || !dispatch || !layout) {
-        // NOTE: This will skip the welcome dialog but app is pretty much unusable without client.
-        // Generally, if the client is not available, the global error boundary should be triggered.
-        return;
-      }
-
-      if (DEPRECATED_DEPLOYMENT) {
-        await dispatch(
-          createIntent(LayoutAction.SetLayout, {
-            element: 'dialog',
-            state: true,
-            component: BETA_DIALOG,
-          }),
-        );
-
-        return;
-      }
-
-      const searchParams = new URLSearchParams(window.location.search);
-      hubUrl = client.config.values?.runtime?.app?.env?.DX_HUB_URL;
-      manager = new OnboardingManager({
-        dispatch,
-        client,
-        layout,
-        firstRun,
-        hubUrl,
-        token: searchParams.get('token') ?? undefined,
-        recoverIdentity: searchParams.get('recoverIdentity') === 'true',
-        deviceInvitationCode: searchParams.get('deviceInvitationCode') ?? undefined,
-        spaceInvitationCode: searchParams.get('spaceInvitationCode') ?? undefined,
-      });
-      await manager.initialize();
-    },
-    unload: async () => {
-      await manager?.destroy();
-    },
-    provides: {
-      surface: {
-        definitions: () => [
-          createSurface({
-            id: BETA_DIALOG,
-            role: 'dialog',
-            filter: (data): data is any => data.component === BETA_DIALOG,
-            component: () => <BetaDialog />,
-          }),
-          createSurface({
-            id: `${WELCOME_PLUGIN}/welcome`,
-            role: 'main',
-            filter: (data): data is any => data.component === WELCOME_SCREEN,
-            component: () => <WelcomeScreen hubUrl={hubUrl!} firstRun={firstRun} />,
-          }),
-        ],
-      },
-      translations,
-    },
-  };
-};
+export const WelcomePlugin = () =>
+  definePlugin(meta, [
+    defineModule({
+      id: `${WELCOME_PLUGIN}/module/onboarding`,
+      activatesOn: allOf(
+        Events.DispatcherReady,
+        Events.SettingsReady,
+        Events.LayoutReady,
+        Events.LocationReady,
+        ClientEvents.ClientReady,
+      ),
+      activate: Onboarding,
+    }),
+    defineModule({
+      id: `${WELCOME_PLUGIN}/module/translations`,
+      activatesOn: Events.SetupTranslations,
+      activate: () => contributes(Capabilities.Translations, translations),
+    }),
+    defineModule({
+      id: `${WELCOME_PLUGIN}/module/react-surface`,
+      activatesOn: Events.Startup,
+      activate: ReactSurface,
+    }),
+    defineModule({
+      id: `${WELCOME_PLUGIN}/module/identity-created`,
+      activatesOn: ClientEvents.IdentityCreated,
+      activate: IdentityCreated,
+    }),
+  ]);

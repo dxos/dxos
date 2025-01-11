@@ -14,5 +14,5 @@ export namespace NavTreeCapabilities {
     setItem: (path: string[], key: 'open' | 'current', next: boolean) => void;
     isOpen: (path: string[]) => boolean;
     isCurrent: (path: string[]) => boolean;
-  }>(`${NAVTREE_PLUGIN}/state`);
+  }>(`${NAVTREE_PLUGIN}/capability/state`);
 }

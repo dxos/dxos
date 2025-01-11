@@ -92,7 +92,7 @@ export type ClientPluginOptions = ClientOptions & {
   /**
    * Called when the client is reset.
    */
-  onReset?: (params: { target?: string }) => Promise<void>;
+  onReset?: (params: { target?: string }) => MaybePromise<void>;
 };
 
 export type ClientPluginProvides = IntentResolverProvides &

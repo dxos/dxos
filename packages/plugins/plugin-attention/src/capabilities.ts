@@ -8,5 +8,5 @@ import { type AttentionManager } from '@dxos/react-ui-attention';
 import { ATTENTION_PLUGIN } from './meta';
 
 export namespace AttentionCapabilities {
-  export const Attention = defineCapability<AttentionManager>(`${ATTENTION_PLUGIN}/capabilities/attention`);
+  export const Attention = defineCapability<AttentionManager>(`${ATTENTION_PLUGIN}/capability/attention`);
 }
