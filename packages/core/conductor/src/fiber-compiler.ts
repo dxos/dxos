@@ -142,9 +142,9 @@ export const compile = async ({
           }),
         );
         // log.info('output', { output });
-        if ('text' in output) {
-          log.info('text in fiber', { text: getDebugName(output.text) });
-        }
+        // if ('text' in output) {
+        //   log.info('text in fiber', { text: getDebugName(output.text) });
+        // }
 
         // const decodedOutput = yield* S.decode(node.meta.output)(output);
 
