@@ -11,9 +11,9 @@ import { log } from '@dxos/log';
 import { getDebugName } from '@dxos/util';
 
 import { NodeType, type ComputeEdge, type ComputeGraph, type ComputeNode } from '../schema';
+import { EdgeGpt } from '../services/gpt/edge-gpt';
 import { createEdge, TestRuntime } from '../testing';
 import { testServices } from '../testing/test-services';
-import { EdgeGpt } from '../services/gpt/edge-gpt';
 
 const ENABLE_LOGGING = false;
 const AI_SERVICE_ENDPOINT = 'http://localhost:8787';
@@ -22,14 +22,14 @@ const SKIP_AI_SERVICE_TESTS = true;
 describe('Gpt pipelines', () => {
   test('text output', async ({ expect }) => {
     const runtime = new TestRuntime();
-    runtime.registerGraph('dxn:graph:gpt1', gpt1());
+    runtime.registerGraph('dxn:compute:gpt1', gpt1());
 
     await Effect.runPromise(
       Effect.gen(function* () {
         const scope = yield* Scope.make();
 
         const computeResult = runtime
-          .runGraph('dxn:graph:gpt1', {
+          .runGraph('dxn:compute:gpt1', {
             prompt: 'What is the meaning of life?',
           })
           .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Scope.extend(scope));
@@ -45,7 +45,7 @@ describe('Gpt pipelines', () => {
 
   test('stream output', { timeout: 1000 }, async ({ expect }) => {
     const runtime = new TestRuntime();
-    runtime.registerGraph('dxn:graph:gpt2', gpt2());
+    runtime.registerGraph('dxn:compute:gpt2', gpt2());
 
     await Effect.runPromise(
       Effect.gen(function* () {
@@ -53,7 +53,7 @@ describe('Gpt pipelines', () => {
 
         const { tokenStream, text }: { tokenStream: Stream.Stream<ResultStreamEvent>; text: Effect.Effect<string> } =
           yield* runtime
-            .runGraph('dxn:graph:gpt2', {
+            .runGraph('dxn:compute:gpt2', {
               prompt: 'What is the meaning of life?',
             })
             .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Scope.extend(scope));
@@ -108,14 +108,14 @@ describe('Gpt pipelines', () => {
 
   test.skipIf(SKIP_AI_SERVICE_TESTS)('edge gpt output only', async ({ expect }) => {
     const runtime = new TestRuntime();
-    runtime.registerGraph('dxn:graph:gpt1', gpt1());
+    runtime.registerGraph('dxn:compute:gpt1', gpt1());
 
     await Effect.runPromise(
       Effect.gen(function* () {
         const scope = yield* Scope.make();
 
         const computeResult = runtime
-          .runGraph('dxn:graph:gpt1', {
+          .runGraph('dxn:compute:gpt1', {
             prompt: 'What is the meaning of life?',
           })
           .pipe(
@@ -141,7 +141,7 @@ describe('Gpt pipelines', () => {
 
   test.skipIf(SKIP_AI_SERVICE_TESTS)('edge gpt stream', async ({ expect }) => {
     const runtime = new TestRuntime();
-    runtime.registerGraph('dxn:graph:gpt2', gpt2());
+    runtime.registerGraph('dxn:compute:gpt2', gpt2());
 
     await Effect.runPromise(
       Effect.gen(function* () {
@@ -149,7 +149,7 @@ describe('Gpt pipelines', () => {
 
         const { tokenStream, text }: { tokenStream: Stream.Stream<ResultStreamEvent>; text: Effect.Effect<string> } =
           yield* runtime
-            .runGraph('dxn:graph:gpt2', {
+            .runGraph('dxn:compute:gpt2', {
               prompt: 'What is the meaning of life?',
             })
             .pipe(

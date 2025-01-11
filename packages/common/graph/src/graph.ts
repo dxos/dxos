@@ -3,9 +3,11 @@
 //
 
 import { inspectCustom } from '@dxos/debug';
+import { invariant } from '@dxos/invariant';
 import { getSnapshot } from '@dxos/live-object';
-import { removeBy } from '@dxos/util';
+import { isNotFalsy, removeBy } from '@dxos/util';
 
+import { createEdgeId } from './buidler';
 import { type Graph, type GraphNode, type GraphEdge } from './types';
 
 /**
@@ -51,7 +53,7 @@ export class ReadonlyGraphModel<Node extends GraphNode<any> = any, Edge extends 
     return this.nodes.find((node) => node.id === id);
   }
 
-  getNodes({ type }: Partial<Node> = {}): Node[] {
+  getNodes({ type }: Partial<GraphNode> = {}): Node[] {
     return this.nodes.filter((node) => !type || type === node.type);
   }
 
@@ -59,11 +61,28 @@ export class ReadonlyGraphModel<Node extends GraphNode<any> = any, Edge extends 
     return this.edges.find((edge) => edge.id === id);
   }
 
-  getEdges({ type, source, target }: Partial<Edge> = {}): Edge[] {
+  getEdges({ type, source, target }: Partial<GraphEdge> = {}): Edge[] {
     return this.edges.filter(
       (edge) =>
         (!type || type === edge.type) && (!source || source === edge.source) && (!target || target === edge.target),
     );
+  }
+
+  traverse(root: Node): Node[] {
+    return this._traverse(root);
+  }
+
+  _traverse(root: Node, visited: Set<string> = new Set()): Node[] {
+    if (visited.has(root.id)) {
+      return [];
+    }
+
+    visited.add(root.id);
+    const targets = this.getEdges({ source: root.id })
+      .map((edge) => this.getNode(edge.target))
+      .filter(isNotFalsy);
+
+    return [root, ...targets.flatMap((target) => this._traverse(target, visited))];
   }
 }
 
@@ -95,6 +114,8 @@ export class GraphModel<
   }
 
   addNode(node: Node): this {
+    invariant(node.id);
+    invariant(!this.getNode(node.id));
     this._graph.nodes.push(node);
     return this;
   }
@@ -105,6 +126,12 @@ export class GraphModel<
   }
 
   addEdge(edge: Edge): this {
+    invariant(edge.source);
+    invariant(edge.target);
+    if (!edge.id) {
+      edge = { ...edge, id: createEdgeId(edge) };
+    }
+    invariant(!this.getEdge(edge.id));
     this._graph.edges.push(edge);
     return this;
   }

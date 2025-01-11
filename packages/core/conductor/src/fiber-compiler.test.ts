@@ -7,7 +7,6 @@ import { describe, test } from 'vitest';
 
 import { S } from '@dxos/echo-schema';
 import { GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
-import { log } from '@dxos/log';
 
 import { defineComputeNode, NodeType, type ComputeEdge, type ComputeGraph, type ComputeNode } from './schema';
 import { logCustomEvent } from './services';
@@ -18,82 +17,185 @@ const ENABLE_LOGGING = false;
 
 describe('Graph as a fiber runtime', () => {
   test('simple adder node', async ({ expect }) => {
-    const runtime = new TestRuntime();
-    runtime.registerNode('dxn:test:add', addNode);
-    runtime.registerGraph('dxn:graph:adder', adder());
-
-    // const { input, output } = await runtime.compileGraph(adder());
-    // console.log('input', input.toString());
-    // console.log('output', output.toString());
+    const runtime = new TestRuntime()
+      //
+      .registerNode('dxn:compute:sum', sum)
+      .registerGraph('dxn:compute:g1', g1());
 
     const result = await Effect.runPromise(
       runtime
-        .runGraph('dxn:graph:adder', { number1: 1, number2: 2 })
+        .runGraph('dxn:compute:adder', { number1: 1, number2: 2 })
         .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Effect.scoped),
     );
     expect(result).toEqual({ sum: 3 });
   });
 
   test('composition', async ({ expect }) => {
-    const runtime = new TestRuntime();
-    runtime.registerNode('dxn:test:add', addNode);
-    runtime.registerGraph('dxn:graph:adder', adder());
-    runtime.registerGraph('dxn:graph:add3', add3());
+    const runtime = new TestRuntime()
+      .registerNode('dxn:compute:sum', sum)
+      .registerGraph('dxn:compute:g1', g1())
+      .registerGraph('dxn:compute:g2', g2());
 
-    try {
-      const result = await Effect.runPromise(
-        runtime
-          .runGraph('dxn:graph:add3', { a: 1, b: 2, c: 3 })
-          .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Effect.scoped),
-      );
-      expect(result).toEqual({ result: 6 });
-    } catch (err) {
-      log.catch(err);
-    }
+    const result = await Effect.runPromise(
+      runtime
+        .runGraph('dxn:compute:add3', { a: 1, b: 2, c: 3 })
+        .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Effect.scoped),
+    );
+    expect(result).toEqual({ result: 6 });
   });
 });
 
 /**
- * dxn:graph:adder
- * number1, number2 -> sum
+ * Compute node.
  */
-const adder = (): ComputeGraph => {
-  return new GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>()
-    .addNode({ id: 'adder-X', data: { type: NodeType.Input } })
-    .addNode({ id: 'adder-Y', data: { type: 'dxn:test:add' } })
-    .addNode({ id: 'adder-Z', data: { type: NodeType.Output } })
-    .addEdge(createEdge({ source: 'adder-X', output: 'number1', target: 'adder-Y', input: 'a' }))
-    .addEdge(createEdge({ source: 'adder-X', output: 'number2', target: 'adder-Y', input: 'b' }))
-    .addEdge(createEdge({ source: 'adder-Y', output: 'result', target: 'adder-Z', input: 'sum' }));
-};
-
-/**
- * dxn:graph:add3
- * a, b, c -> result
- * Uses adder node.
- */
-const add3 = (): ComputeGraph => {
-  return new GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>()
-    .addNode({ id: 'add3-X', data: { type: NodeType.Input } })
-    .addNode({ id: 'add3-Y', data: { type: 'dxn:graph:adder' } })
-    .addNode({ id: 'add3-Z1', data: { type: 'dxn:graph:adder' } })
-    .addNode({ id: 'add3-Z2', data: { type: NodeType.Output } })
-    .addEdge(createEdge({ source: 'add3-X', output: 'a', target: 'add3-Y', input: 'number1' }))
-    .addEdge(createEdge({ source: 'add3-X', output: 'b', target: 'add3-Y', input: 'number2' }))
-    .addEdge(createEdge({ source: 'add3-X', output: 'c', target: 'add3-Z1', input: 'number1' }))
-    .addEdge(createEdge({ source: 'add3-Y', output: 'sum', target: 'add3-Z1', input: 'number2' }))
-    .addEdge(createEdge({ source: 'add3-Z1', output: 'sum', target: 'add3-Z2', input: 'result' }));
-};
-
-const addNode = defineComputeNode({
+const sum = defineComputeNode({
   input: S.Struct({ a: S.Number, b: S.Number }),
   output: S.Struct({ result: S.Number }),
   compute: ({ a, b }) =>
     Effect.gen(function* () {
       yield* logCustomEvent({
-        operation: 'add',
+        operation: 'sum',
         operands: { a, b },
       });
       return { result: a + b };
     }),
 });
+
+/**
+ * dxn:compute:g1
+ * number1, number2 -> sum
+ */
+const g1 = (): ComputeGraph => {
+  return new GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>()
+    .addNode({ id: 'I', data: { type: NodeType.Input } })
+    .addNode({ id: 'X', data: { type: 'dxn:compute:sum' } })
+    .addNode({ id: 'O', data: { type: NodeType.Output } })
+    .addEdge(createEdge({ source: 'I', output: 'number1', target: 'X', input: 'a' }))
+    .addEdge(createEdge({ source: 'I', output: 'number2', target: 'X', input: 'b' }))
+    .addEdge(createEdge({ source: 'X', output: 'result', target: 'O', input: 'sum' }));
+};
+
+/**
+ * dxn:compute:g2
+ * a, b, c -> result
+ * Uses adder node.
+ */
+const g2 = (): ComputeGraph => {
+  return new GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>()
+    .addNode({ id: 'I', data: { type: NodeType.Input } })
+    .addNode({ id: 'X', data: { type: 'dxn:compute:g1' } })
+    .addNode({ id: 'Y', data: { type: 'dxn:compute:g1' } })
+    .addNode({ id: 'O', data: { type: NodeType.Output } })
+    .addEdge(createEdge({ source: 'I', output: 'a', target: 'X', input: 'number1' }))
+    .addEdge(createEdge({ source: 'I', output: 'b', target: 'X', input: 'number2' }))
+    .addEdge(createEdge({ source: 'I', output: 'c', target: 'Y', input: 'number1' }))
+    .addEdge(createEdge({ source: 'X', output: 'sum', target: 'Y', input: 'number2' }))
+    .addEdge(createEdge({ source: 'Y', output: 'sum', target: 'O', input: 'result' }));
+};
+
+//
+//
+//
+
+interface Node<I, O> {
+  compute(input: I): Promise<O>;
+}
+
+type Input<T> = { node?: Node<any, T> | string; prop: keyof T };
+type Output<T> = { node?: Node<T, any> | string; prop: keyof T };
+
+interface Graph<I, O> extends Node<I, O> {
+  add(id: string): this;
+  link(source: Input<I>, target: Output<O>): this;
+}
+
+const g: Graph<any, any> = {};
+
+g.add('A')
+  .add('B')
+  .link({ prop: 'a' }, { node: 'A', prop: 'input' })
+  .link({ node: 'A', prop: 'output' }, { node: 'B', prop: 'input' })
+  .link({ node: 'B', prop: 'output' }, { prop: 'b' });
+
+namespace OnDisk {
+  type ObjectId = string;
+
+  type Node = {
+    id: ObjectId;
+    type: string;
+  };
+
+  type Edge = {
+    source: { node: ObjectId | 'self'; prop: string };
+    target: { node: ObjectId | 'self'; prop: string };
+  };
+
+  type Graph = {
+    nodes: Node[];
+    edges: Edge[];
+  };
+
+  const graph: Graph = {
+    nodes: [
+      { id: 'A', type: 'dxn:compute:sum' },
+      { id: 'B', type: 'dxn:compute:sum' },
+    ],
+    edges: [
+      { source: { node: 'self', prop: 'output' }, target: { node: 'A', prop: 'input' } },
+      { source: { node: 'A', prop: 'output' }, target: { node: 'B', prop: 'input' } },
+      { source: { node: 'B', prop: 'output' }, target: { node: 'self', prop: 'b' } },
+    ],
+  };
+}
+
+const x1 = [
+  {
+    id: 'a',
+    nodes: [
+      {
+        id: 'a',
+      },
+    ],
+    edges: [
+      {
+        source: { prop: 'a' },
+        target: { prop: 'input', node: 'a' },
+      },
+      {
+        source: { prop: 'output', node: 'a' },
+        target: { prop: 'b' },
+      },
+    ],
+  },
+];
+
+const x2 = [
+  {
+    id: 'a',
+    nodes: [
+      {
+        id: '1',
+        kind: 'input',
+      },
+      {
+        id: '2',
+        kind: 'normal',
+        type: 'dxn:graph:gpt',
+      },
+      {
+        id: '3',
+        kind: 'output',
+      },
+    ],
+    edges: [
+      {
+        source: { prop: 'a', node: 'input' },
+        target: { prop: 'input', node: 'a' },
+      },
+      {
+        source: { prop: 'output', node: 'a' },
+        target: { prop: 'b', node: 'output' },
+      },
+    ],
+  },
+];

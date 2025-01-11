@@ -6,18 +6,22 @@ import { type D3DragEvent } from 'd3';
 import * as d3 from 'd3';
 import { useEffect, useMemo, useState } from 'react';
 
-import { GraphModel } from '@dxos/graph';
+import { GraphModel, type GraphNode } from '@dxos/graph';
 import { type Point } from '@dxos/react-ui-canvas';
 
 import { pointAdd, pointDivide, pointSubtract } from '../layout';
-
-// TODO(burdon): Create <spring /> element (shared simulation).
 
 // export type RopeProps = {
 //   start: Point;
 //   end: Point;
 //   options?: Partial<RopeOptions>;
 // };
+
+export type Rope = {
+  id: string;
+  start: Point;
+  end?: Point;
+};
 
 export type RopeOptions = {
   nodes: number;
@@ -27,15 +31,14 @@ export type RopeOptions = {
 };
 
 export const defaultOptions: RopeOptions = {
-  nodes: 10,
-  linkLength: 1,
+  nodes: 11,
+  linkLength: 16,
   linkStrength: 0.5,
-  gravity: 0.5,
+  gravity: 0.8,
 };
 
-// TODO(burdon): Options (incl. class).
 const endSize = 8;
-const midSize = 0;
+const midSize = 3;
 
 export type RopeResult = {
   simulation: d3.Simulation<any, any>;
@@ -43,30 +46,20 @@ export type RopeResult = {
 
 export const useRope = (
   g: SVGGElement | null,
-  start: Point,
-  end: Point,
+  elements: Rope[],
   _options: Partial<RopeOptions> = defaultOptions,
 ): RopeResult | undefined => {
   const options = useMemo(() => ({ ...defaultOptions, ..._options }), [_options]);
 
+  // TODO(burdon): Add/delete elements.
   const graph = useMemo(() => {
-    const d = options.nodes > 1 ? pointDivide(pointSubtract(end, start), options.nodes - 1) : { x: 0, y: -1 };
-
     const graph = new GraphModel();
-    let source = { id: 0 };
-    Object.assign(source, { ...start, fx: start.x, fy: start.y });
-    graph.addNode(source);
-    Array.from({ length: options.nodes - 1 }).forEach((_, i) => {
-      const p = pointAdd(source as any as Point, d);
-      const target = { id: i + 1, ...p, vx: 0, vy: 0 };
-      graph.addNode(target);
-      graph.addEdge({ id: `${source.id}-${target.id}`, source: source.id, target: target.id });
-      source = target;
-    });
+    for (const { id, start, end } of elements) {
+      createGraph(graph, id, start, end, options);
+    }
 
-    Object.assign(source, { fx: end.x, fy: end.y });
     return graph;
-  }, []);
+  }, [elements]);
 
   const [result, setResult] = useState<RopeResult | undefined>();
   useEffect(() => {
@@ -75,23 +68,35 @@ export const useRope = (
     }
 
     const group = d3.select(g);
-    const path = group.append('path').attr('class', 'fill-none stroke-primary-500');
+
+    const paths = group
+      .selectAll('path')
+      .data(elements)
+      .enter()
+      .append('path')
+      .attr('class', 'fill-none stroke-primary-500');
+
     const nodes = group
       .selectAll('circle')
       .data(graph.nodes)
       .enter()
       .append('circle')
-      .attr('class', (_, i) => (i === 0 || i === options.nodes - 1 ? 'fill-primary-800' : 'fill-primary-500'))
-      .attr('r', (_, i) => (i === 0 || i === options.nodes - 1 ? endSize : midSize))
+      .attr('class', (d) =>
+        d.type === 'start' || d.type === 'end'
+          ? 'stroke-[4px] stroke-primary-500 fill-primary-800'
+          : 'fill-primary-500',
+      )
+      .attr('r', (d) => (d.type === 'start' || d.type === 'end' ? endSize : midSize))
       .attr('cx', (d: any) => d.x)
       .attr('cy', (d: any) => d.y);
 
     const simulation = createSimulation(graph, options).on('tick', () => {
       nodes.attr('cx', (d: any) => d.x).attr('cy', (d: any) => d.y);
-      path.attr(
-        'd',
-        graph.nodes.map((node, i) => (i === 0 ? `M ${node.x},${node.y}` : `L ${node.x},${node.y}`)).join(' '),
-      );
+      paths.attr('d', ({ id }) => {
+        const root = graph.getNode(`${id}-0`);
+        const nodes = graph.traverse(root);
+        return nodes.map((node, i) => (i === 0 ? `M ${node.x},${node.y}` : `L ${node.x},${node.y}`)).join(' ');
+      });
     });
 
     nodes.call(
@@ -109,7 +114,7 @@ export const useRope = (
       simulation.stop();
       d3.select(g).selectAll('*').remove();
     };
-  }, [g, graph]);
+  }, [g, graph, elements]);
 
   return result;
 };
@@ -119,11 +124,13 @@ export const useRope = (
  */
 export const createSimulation = (graph: GraphModel, options: RopeOptions) =>
   d3
+    // NOTE: THe simulation updates the nodes.
     .forceSimulation(graph.nodes)
     .force(
       'link',
       d3
-        .forceLink(graph.edges)
+        // Copy edges since the source/target ids are converted to objects by the simulation.
+        .forceLink(graph.edges.map((edge) => ({ ...edge })))
         .distance(options.linkLength)
         .strength(options.linkStrength)
         .id((d: any) => d.id),
@@ -166,3 +173,31 @@ export const createDrag = (cb: (event: 'start' | 'stop') => void) =>
         event.subject.fy = null;
       }
     });
+
+/**
+ * Create subgraph for spring.
+ */
+const createGraph = (
+  graph: GraphModel,
+  id: string,
+  p1: Point,
+  p2: Point | undefined,
+  options: RopeOptions,
+): GraphNode => {
+  const d = p2 && options.nodes > 1 ? pointDivide(pointSubtract(p2, p1), options.nodes - 1) : { x: 0, y: -1 };
+
+  let source: GraphNode = { id: `${id}-0`, type: 'start' };
+  Object.assign(source, { ...p1, fx: p1.x, fy: p1.y });
+  graph.addNode(source);
+
+  Array.from({ length: options.nodes - 1 }).forEach((_, i) => {
+    const p = pointAdd(source as any as Point, d);
+    const target = { id: `${id}-${i + 1}`, ...p, vx: 0, vy: 0 };
+    graph.addNode(target);
+    graph.addEdge({ id: `${source.id}_${target.id}`, source: source.id, target: target.id });
+    source = target;
+  });
+
+  Object.assign(source, { type: 'end' }, p2 && { fx: p2.x, fy: p2.y });
+  return source;
+};

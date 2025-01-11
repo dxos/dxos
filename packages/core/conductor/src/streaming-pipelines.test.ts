@@ -19,11 +19,11 @@ describe('Streaming pipelines', () => {
   test('synchronous stream sum pipeline', async ({ expect }) => {
     const runtime = new TestRuntime();
     runtime.registerNode('dxn:test:sum-aggregator', sumAggregator);
-    runtime.registerGraph('dxn:graph:stream-sum', streamSum());
+    runtime.registerGraph('dxn:compute:stream-sum', streamSum());
 
     const { result } = await Effect.runPromise(
       runtime
-        .runGraph('dxn:graph:stream-sum', {
+        .runGraph('dxn:compute:stream-sum', {
           stream: Stream.range(1, 10),
         })
         .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Effect.scoped),
@@ -35,7 +35,7 @@ describe('Streaming pipelines', () => {
   test('asynchronous stream sum pipeline', async ({ expect }) => {
     const runtime = new TestRuntime();
     runtime.registerNode('dxn:test:sum-aggregator', sumAggregator);
-    runtime.registerGraph('dxn:graph:stream-sum', streamSum());
+    runtime.registerGraph('dxn:compute:stream-sum', streamSum());
 
     const delayedStream = Stream.range(1, 10).pipe(
       Stream.mapEffect((n) => Effect.succeed(n).pipe(Effect.delay('50 millis'))),
@@ -43,7 +43,7 @@ describe('Streaming pipelines', () => {
 
     const { result } = await Effect.runPromise(
       runtime
-        .runGraph('dxn:graph:stream-sum', {
+        .runGraph('dxn:compute:stream-sum', {
           stream: delayedStream,
         })
         .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Effect.scoped),
@@ -69,7 +69,7 @@ const sumAggregator = defineComputeNode({
 });
 
 /**
- * dxn:graph:stream-sum
+ * dxn:compute:stream-sum
  * stream -> result
  * Sums all elements in the stream.
  */

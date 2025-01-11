@@ -4,13 +4,10 @@
 
 import { useMemo } from 'react';
 
-import type { GraphMonitor } from './context';
-import { type ComputeNode, type StateMachine } from '../compute';
-import type { BaseComputeShape, ComputeShape } from '../compute/shapes/defs';
-import type { Connection } from '../types';
+import { type GraphMonitor } from './context';
+import { type ComputeNode, type StateMachine, type BaseComputeShape, type ComputeShape } from '../compute';
+import { type Connection } from '../types';
 
-// TODO(burdon): Figure out sync.
-// TODO(burdon): Make state machine reactive.
 export const useGraphMonitor = (machine?: StateMachine): GraphMonitor => {
   return useMemo<GraphMonitor>(() => {
     return {

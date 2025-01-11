@@ -79,9 +79,9 @@ export const defineComputeNode = <SI extends S.Schema.AnyNoContext, SO extends S
  * Well-known node types.
  */
 export const NodeType = Object.freeze({
-  Input: 'dxn:graph:input',
-  Output: 'dxn:graph:output',
-  Gpt: 'dxn:graph:gpt',
+  Input: 'dxn:compute:input',
+  Output: 'dxn:compute:output',
+  Gpt: 'dxn:compute:gpt',
 });
 
 export type ComputeGraph = GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;

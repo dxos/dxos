@@ -54,4 +54,33 @@ describe('Graph', () => {
     expect(graph.nodes).to.have.length(0);
     expect(graph.edges).to.have.length(0);
   });
+
+  test('traverse', ({ expect }) => {
+    const graph = new GraphModel<GraphNode<TestData>>()
+      .addNode({ id: 'node1' })
+      .addNode({ id: 'node2' })
+      .addNode({ id: 'node3' })
+      .addNode({ id: 'node4' })
+      .addNode({ id: 'node5' })
+      .addNode({ id: 'node6' })
+      .addNode({ id: 'node7' })
+      .addNode({ id: 'node8' })
+      .addEdge({ source: 'node1', target: 'node2' })
+      .addEdge({ source: 'node1', target: 'node3' })
+      .addEdge({ source: 'node3', target: 'node4' })
+      .addEdge({ source: 'node4', target: 'node5' })
+      .addEdge({ source: 'node4', target: 'node1' })
+      .addEdge({ source: 'node6', target: 'node7' })
+      .addEdge({ source: 'node7', target: 'node8' });
+
+    {
+      const nodes = graph.traverse(graph.getNode('node1')!);
+      expect(nodes).to.have.length(5);
+    }
+
+    {
+      const nodes = graph.traverse(graph.getNode('node6')!);
+      expect(nodes).to.have.length(3);
+    }
+  });
 });

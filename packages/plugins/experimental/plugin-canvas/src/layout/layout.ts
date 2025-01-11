@@ -41,7 +41,6 @@ export const defaultLayoutOptions: LayoutOptions = {
   shapeSize: { width: 128, height: 64 },
 };
 
-// TODO(burdon): N should be an referenceable object.
 export const doLayout = async <N extends object>(
   data: GraphModel<GraphNode<N>>,
   options: Partial<LayoutOptions> = defaultLayoutOptions,

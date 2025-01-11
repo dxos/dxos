@@ -22,12 +22,14 @@ export class TestRuntime {
   nodes = new Map<string, ComputeImplementation>();
   graphs = new Map<string, GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>>();
 
-  registerNode(id: string, node: ComputeImplementation) {
+  registerNode(id: string, node: ComputeImplementation): this {
     this.nodes.set(id, node);
+    return this;
   }
 
-  registerGraph(id: string, graph: GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>) {
+  registerGraph(id: string, graph: GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>): this {
     this.graphs.set(id, graph);
+    return this;
   }
 
   runGraph(id: string, input: any): Effect.Effect<any, Error, ComputeRequirements> {

@@ -12,21 +12,21 @@ import { getSchemaProperties } from '@dxos/schema';
 import { GraphModel } from './graph';
 import { Graph, type GraphNode } from './types';
 
-// NOTE: The `relation` is different from the `type`.
-type Edge = { source: string; target: string; relation: string };
-
 const KEY_REGEX = /\w+/;
 
-export const createEdgeId = ({ source, target, relation = 'x' }: Edge) => {
+// NOTE: The `relation` is different from the `type`.
+type EdgeMeta = { source: string; target: string; relation?: string };
+
+export const createEdgeId = ({ source, target, relation }: EdgeMeta) => {
   invariant(source.match(KEY_REGEX), `invalid source: ${source}`);
   invariant(target.match(KEY_REGEX), `invalid target: ${target}`);
-  return `${source}-${relation}-${target}`;
+  return [source, relation, target].join('_');
 };
 
-export const parseEdgeId = (id: string): Edge => {
-  const [source, relation, target] = id.split('-');
-  invariant(source && target && relation);
-  return { source, relation, target };
+export const parseEdgeId = (id: string): EdgeMeta => {
+  const [source, relation, target] = id.split('_');
+  invariant(source.length && target.length);
+  return { source, relation: relation.length ? relation : undefined, target };
 };
 
 /**

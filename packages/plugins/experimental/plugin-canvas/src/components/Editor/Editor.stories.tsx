@@ -92,6 +92,7 @@ const Render = ({
       return;
     }
 
+    // Load objects.
     const t = setTimeout(async () => {
       const { objects } = await space.db
         .query((object: ReactiveEchoObject<any>) => types.some((type) => type.typename === getTypename(object)))
