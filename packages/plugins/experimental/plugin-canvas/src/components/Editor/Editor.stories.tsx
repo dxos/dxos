@@ -69,7 +69,6 @@ const Render = ({
       return;
     }
 
-    // TODO(burdon): Better abstraction for context?
     machine.setContext({ space, model, gpt });
     void machine.open();
     const off = machine.update.on((ev) => {

@@ -1,5 +1,10 @@
-import { createEdgeId, type GraphEdge } from "@dxos/graph";
-import type { ComputeEdge } from "../schema";
+//
+// Copyright 2025 DXOS.org
+//
+
+import { createEdgeId, type GraphEdge } from '@dxos/graph';
+
+import type { ComputeEdge } from '../schema';
 
 export const createEdge = (params: {
   source: string;

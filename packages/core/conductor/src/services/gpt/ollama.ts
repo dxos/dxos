@@ -1,11 +1,15 @@
-import { GptOutput } from '../gpt';
+//
+// Copyright 2025 DXOS.org
+//
 
 import type { Context } from 'effect';
-import type { GptInput, GptService } from '../gpt';
-import { ObjectId, type MessageImageContentBlock } from '@dxos/assistant';
-import { type Ollama } from 'ollama';
 import { Effect, Stream } from 'effect';
+import { type Ollama } from 'ollama';
+
+import { ObjectId, type MessageImageContentBlock } from '@dxos/assistant';
 import { log } from '@dxos/log';
+
+import { type GptOutput, type GptInput, type GptService } from '../gpt';
 
 export class OllamaGpt implements Context.Tag.Service<GptService> {
   // Images are not supported.

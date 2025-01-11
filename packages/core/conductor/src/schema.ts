@@ -5,12 +5,9 @@
 import { type Effect, type Scope } from 'effect';
 
 import { S } from '@dxos/echo-schema';
+import type { GraphModel, GraphEdge, GraphNode } from '@dxos/graph';
 
-import type { EventLogger } from './services/event-logger';
-import type { GraphModel } from '@dxos/graph';
-import type { GraphEdge } from '@dxos/graph';
-import type { GraphNode } from '@dxos/graph';
-import type { GptService } from './services/gpt';
+import type { EventLogger, GptService } from './services';
 
 /**
  * GraphNode payload.

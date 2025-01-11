@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, type Context } from 'effect';
+import { Effect } from 'effect';
 import { describe, test } from 'vitest';
 
 import { S } from '@dxos/echo-schema';
-import { createEdgeId, GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
+import { GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
 import { log } from '@dxos/log';
 
-import { EventLogger, logCustomEvent, type ComputeEvent } from './services/event-logger';
 import { defineComputeNode, NodeType, type ComputeEdge, type ComputeGraph, type ComputeNode } from './schema';
-import { consoleLogger, createEdge, noopLogger, TestRuntime } from './testing';
+import { logCustomEvent } from './services';
+import { createEdge, TestRuntime } from './testing';
 import { testServices } from './testing/test-services';
 
 const ENABLE_LOGGING = false;

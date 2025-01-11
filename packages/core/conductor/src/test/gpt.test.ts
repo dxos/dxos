@@ -1,9 +1,15 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Chunk, Console, Effect, Exit, Option, Scope, Stream } from 'effect';
+import { describe, test } from 'vitest';
+
 import { AIServiceClientImpl, type ResultStreamEvent } from '@dxos/assistant';
 import { GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
 import { log } from '@dxos/log';
 import { getDebugName } from '@dxos/util';
-import { Chunk, Console, Effect, Exit, Option, Scope, Stream } from 'effect';
-import { describe, test } from 'vitest';
+
 import { NodeType, type ComputeEdge, type ComputeGraph, type ComputeNode } from '../schema';
 import { createEdge, TestRuntime } from '../testing';
 import { testServices } from '../testing/test-services';
