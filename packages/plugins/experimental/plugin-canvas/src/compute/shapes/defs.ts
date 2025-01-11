@@ -5,7 +5,7 @@
 import { AST } from '@effect/schema';
 
 import { S } from '@dxos/echo-schema';
-import { type Optional, type Specialize } from '@dxos/graph';
+import { type MakeOptional, type Specialize } from '@dxos/util';
 
 import { Polygon } from '../../types';
 import { DEFAULT_INPUT, DEFAULT_OUTPUT, type ComputeNode } from '../graph';
@@ -42,11 +42,11 @@ export type OutputType<OUTPUT = any> = {
   [DEFAULT_OUTPUT]: OUTPUT;
 };
 
-// \
+//
 // Shapes
 //
 
-export type CreateShapeProps<S extends Polygon> = Omit<Optional<S, 'size'>, 'type' | 'node'>;
+export type CreateShapeProps<S extends Polygon> = Omit<MakeOptional<S, 'size'>, 'type' | 'node'>;
 
 export const ComputeShape = S.extend(
   Polygon,

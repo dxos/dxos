@@ -3,14 +3,7 @@
 //
 
 import { S } from '@dxos/echo-schema';
-
-import { type Specialize } from './util';
-
-// Prior art:
-// - https://graphology.github.io (TS, tree-shakable, multiple packages for extensions)
-// - https://github.com/dagrejs/graphlib (mature, extensive)
-// - https://github.com/avoidwork/tiny-graph
-// - levelgraph, oxigraph (Rust WASM)
+import { type Specialize } from '@dxos/util';
 
 export const BaseGraphNode = S.Struct({
   id: S.String,
@@ -18,7 +11,10 @@ export const BaseGraphNode = S.Struct({
   data: S.optional(S.Any),
 });
 
+/** Raw base type. */
 export type BaseGraphNode = S.Schema.Type<typeof BaseGraphNode>;
+
+/** Typed node data. */
 export type GraphNode<Data = any, Optional extends boolean = false> = Specialize<
   BaseGraphNode,
   Optional extends true ? { data?: Data } : { data: Data }
@@ -32,15 +28,17 @@ export const BaseGraphEdge = S.Struct({
   data: S.optional(S.Any),
 });
 
+/** Raw base type. */
 export type BaseGraphEdge = S.Schema.Type<typeof BaseGraphEdge>;
-export type GraphEdge<Data = any, Optional extends boolean = false> = Omit<BaseGraphEdge, 'data'> & {
-  [K in 'data']: Optional extends true ? Data | undefined : Data;
-};
 
-// Optional extends true ? { data?: Data } : { data: Data }
+/** Typed edge data. */
+export type GraphEdge<Data = any, Optional extends boolean = false> = Specialize<
+  BaseGraphEdge,
+  Optional extends true ? { data?: Data } : { data: Data }
+>;
 
 /**
- * Generic graph abstraction.
+ * Generic graph.
  */
 export const Graph = S.Struct({
   nodes: S.mutable(S.Array(BaseGraphNode)),

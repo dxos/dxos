@@ -5,13 +5,13 @@
 import { inspectCustom } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { getSnapshot } from '@dxos/live-object';
-import { isNotFalsy, type MakeOptional, removeBy } from '@dxos/util';
+import { type MakeOptional, isNotFalsy, removeBy } from '@dxos/util';
 
 import { createEdgeId } from './buidler';
 import { type Graph, type GraphNode, type GraphEdge, type BaseGraphNode, type BaseGraphEdge } from './types';
 
 /**
- * Typed reactive object graph.
+ * Wrapper class contains reactive nodes and edges.
  */
 export class ReadonlyGraphModel<
   Node extends BaseGraphNode = BaseGraphNode,
@@ -56,7 +56,7 @@ export class ReadonlyGraphModel<
     return this.nodes.find((node) => node.id === id);
   }
 
-  getNodes({ type }: Partial<GraphNode<any>> = {}): Node[] {
+  getNodes({ type }: Partial<GraphNode> = {}): Node[] {
     return this.nodes.filter((node) => !type || type === node.type);
   }
 
@@ -64,7 +64,7 @@ export class ReadonlyGraphModel<
     return this.edges.find((edge) => edge.id === id);
   }
 
-  getEdges({ type, source, target }: Partial<GraphEdge<any>> = {}): Edge[] {
+  getEdges({ type, source, target }: Partial<GraphEdge> = {}): Edge[] {
     return this.edges.filter(
       (edge) =>
         (!type || type === edge.type) && (!source || source === edge.source) && (!target || target === edge.target),
