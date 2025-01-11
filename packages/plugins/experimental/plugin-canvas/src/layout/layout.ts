@@ -86,8 +86,8 @@ export const doLayout = async <N extends object>(
     }
   }
 
-  for (const edge of edges) {
-    graph.addEdge(edge);
+  for (const { id, source, target } of edges) {
+    graph.addEdge({ id: id as string, source: source as string, target: target as string });
   }
 
   return graph;

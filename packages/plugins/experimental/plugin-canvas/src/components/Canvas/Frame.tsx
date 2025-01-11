@@ -274,7 +274,7 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
         </div>
 
         {/* Anchors. */}
-        {!dragging && !selected && !resizing && (
+        {!dragging && (!selected || !resizeable) && !resizing && (
           <div>
             {Object.values(anchors).map((anchor) => (
               <AnchorComponent key={anchor.id} type='anchor' shape={shape} anchor={anchor} />

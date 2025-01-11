@@ -10,13 +10,12 @@ import { type ComputeNode } from './compute-node';
  * Dependency graph of compute nodes.
  * Each compute node has an INPUT and OUTPUT type.
  */
-// TODO(burdon): The node and edge types should be schema (not the runtime class)?
+// TODO(burdon): The node and edge types should be schema (not the runtime class).
 // TODO(burdon): Can GraphModel manage this binding?
-// TODO(burdon): Initially leave as runtime and sync on startup.
-export type ComputeGraph = GraphModel<GraphNode<ComputeNode<any, any>>, GraphEdge<ComputeEdge>>;
+export type ComputeGraph = GraphModel<GraphNode<ComputeNode<any, any>, false>, GraphEdge<ComputeEdge, false>>;
 
 export const createComputeGraph = (graph?: Graph): ComputeGraph => {
-  return new GraphModel<GraphNode<ComputeNode<any, any>>, GraphEdge<ComputeEdge>>(graph);
+  return new GraphModel(graph);
 };
 
 /**

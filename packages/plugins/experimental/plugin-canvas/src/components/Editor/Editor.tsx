@@ -81,7 +81,7 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
 
     // External state.
     const graph = useMemo<GraphModel<GraphNode<Shape>>>(() => _graph ?? new GraphModel<GraphNode<Shape>>(), [_graph]);
-    const clipboard = useMemo<GraphModel>(() => new GraphModel<GraphNode<Shape>>(), []);
+    const clipboard = useMemo(() => new GraphModel<GraphNode<Shape>>(), []);
     const selection = useMemo(() => _selection ?? new SelectionModel(), [_selection]);
     const registry = useMemo(() => _registry ?? new ShapeRegistry(defaultShapes), [_registry]);
 

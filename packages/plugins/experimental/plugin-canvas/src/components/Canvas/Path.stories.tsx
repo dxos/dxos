@@ -29,7 +29,7 @@ const Rope = () => {
     return [
       {
         id: 's1',
-        start: { x: 0, y: 0 },
+        start: { x: -128, y: 0 },
         end: { x: 128, y: 0 },
       },
       {
@@ -39,7 +39,7 @@ const Rope = () => {
       },
       {
         id: 's3',
-        start: { x: 512, y: 0 },
+        start: { x: -256, y: 0 },
       },
     ];
   }, []);

@@ -2,20 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type D3DragEvent } from 'd3';
+import { type D3DragEvent, type SimulationNodeDatum } from 'd3';
 import * as d3 from 'd3';
 import { useEffect, useMemo, useState } from 'react';
 
 import { GraphModel, type GraphNode } from '@dxos/graph';
 import { type Point } from '@dxos/react-ui-canvas';
+import { range } from '@dxos/util';
 
 import { pointAdd, pointDivide, pointSubtract } from '../layout';
-
-// export type RopeProps = {
-//   start: Point;
-//   end: Point;
-//   options?: Partial<RopeOptions>;
-// };
 
 export type Rope = {
   id: string;
@@ -34,7 +29,7 @@ export const defaultOptions: RopeOptions = {
   nodes: 11,
   linkLength: 16,
   linkStrength: 0.5,
-  gravity: 0.8,
+  gravity: 0.9,
 };
 
 const endSize = 8;
@@ -53,7 +48,7 @@ export const useRope = (
 
   // TODO(burdon): Add/delete elements.
   const graph = useMemo(() => {
-    const graph = new GraphModel();
+    const graph = new GraphModel<GraphNode<SimulationNodeDatum>>();
     for (const { id, start, end } of elements) {
       createGraph(graph, id, start, end, options);
     }
@@ -76,28 +71,32 @@ export const useRope = (
       .append('path')
       .attr('class', 'fill-none stroke-primary-500');
 
-    const nodes = group
-      .selectAll('circle')
-      .data(graph.nodes)
-      .enter()
-      .append('circle')
-      .attr('class', (d) =>
-        d.type === 'start' || d.type === 'end'
-          ? 'stroke-[4px] stroke-primary-500 fill-primary-800'
-          : 'fill-primary-500',
-      )
-      .attr('r', (d) => (d.type === 'start' || d.type === 'end' ? endSize : midSize))
-      .attr('cx', (d: any) => d.x)
-      .attr('cy', (d: any) => d.y);
-
     const simulation = createSimulation(graph, options).on('tick', () => {
       nodes.attr('cx', (d: any) => d.x).attr('cy', (d: any) => d.y);
       paths.attr('d', ({ id }) => {
-        const root = graph.getNode(`${id}-0`);
-        const nodes = graph.traverse(root);
-        return nodes.map((node, i) => (i === 0 ? `M ${node.x},${node.y}` : `L ${node.x},${node.y}`)).join(' ');
+        const find = (id: string) => simulation.nodes().find((d: any) => d.id === id)!;
+        const root = graph.getNode(`${id}-0`)!;
+        return graph
+          .traverse(root)
+          .map(({ id }, i) => {
+            const node = find(id);
+            return i === 0 ? `M ${node.x},${node.y}` : `L ${node.x},${node.y}`;
+          })
+          .join(' ');
       });
     });
+
+    const nodes = group
+      .selectAll('circle')
+      .data(simulation.nodes())
+      .enter()
+      .append('circle')
+      .attr('class', (d) =>
+        d.data.type === 'start' || d.data.type === 'end'
+          ? 'stroke-[4px] stroke-primary-500 fill-primary-800'
+          : 'fill-primary-500',
+      )
+      .attr('r', (d) => (d.data.type === 'start' || d.data.type === 'end' ? endSize : midSize));
 
     nodes.call(
       createDrag((ev) => {
@@ -120,32 +119,71 @@ export const useRope = (
 };
 
 /**
- * Create force simulation.
+ * Create subgraph for spring.
  */
-export const createSimulation = (graph: GraphModel, options: RopeOptions) =>
-  d3
-    // NOTE: THe simulation updates the nodes.
-    .forceSimulation(graph.nodes)
+const createGraph = (
+  graph: GraphModel<GraphNode<SimulationNodeDatum>>,
+  id: string,
+  p1: Point,
+  p2: Point | undefined,
+  options: RopeOptions,
+): GraphNode<SimulationNodeDatum> => {
+  const d = p2 && options.nodes > 1 ? pointDivide(pointSubtract(p2, p1), options.nodes - 1) : { x: 0, y: -1 };
+
+  let source: GraphNode<SimulationNodeDatum> = {
+    id: `${id}-0`,
+    type: 'start',
+    data: { ...p1, fx: p1.x, fy: p1.y },
+  };
+  graph.addNode(source);
+
+  range(options.nodes - 1).forEach((_, i) => {
+    const last = i === options.nodes - 2;
+    const p = pointAdd(source as any as Point, d);
+    const target: GraphNode<SimulationNodeDatum> = {
+      id: `${id}-${i + 1}`,
+      type: last ? 'end' : undefined,
+      data: last && p2 ? { ...p2, fx: p2.x, fy: p2.y } : { ...p },
+    };
+
+    graph.addNode(target);
+    graph.addEdge({ source: source.id, target: target.id });
+    source = target;
+  });
+
+  return source;
+};
+
+/**
+ * Create force simulation.
+ * Each graph node data property contains the starting datum for the simulation.
+ * The graph nodes are copied into the simulation since the simulation mutates them.
+ */
+export const createSimulation = (graph: GraphModel<GraphNode<SimulationNodeDatum>>, options: RopeOptions) => {
+  const simulation = d3
+    .forceSimulation<any>(graph.nodes.map((node) => ({ id: node.id, ...node.data, data: node })))
     .force(
       'link',
       d3
-        // Copy edges since the source/target ids are converted to objects by the simulation.
         .forceLink(graph.edges.map((edge) => ({ ...edge })))
+        .id((d: any) => d.id)
         .distance(options.linkLength)
-        .strength(options.linkStrength)
-        .id((d: any) => d.id),
+        .strength(options.linkStrength),
     )
     .force('gravity', (alpha) => {
-      graph.nodes.forEach((node) => {
+      simulation.nodes().forEach((node) => {
         if (!node.fx) {
-          node.vy += options.gravity * alpha;
-          node.y += node.vy;
+          node.vy = (node.vy ?? 0) + options.gravity * alpha;
+          node.y = (node.y ?? 0) + node.vy;
         }
       });
     })
     .velocityDecay(0.05) // Lower decay for more elastic movement.
     .alphaMin(0.001)
     .alphaDecay(0.001); // Slower decay for longer-lasting movement.
+
+  return simulation;
+};
 
 /**
  * Drag behavior.
@@ -173,31 +211,3 @@ export const createDrag = (cb: (event: 'start' | 'stop') => void) =>
         event.subject.fy = null;
       }
     });
-
-/**
- * Create subgraph for spring.
- */
-const createGraph = (
-  graph: GraphModel,
-  id: string,
-  p1: Point,
-  p2: Point | undefined,
-  options: RopeOptions,
-): GraphNode => {
-  const d = p2 && options.nodes > 1 ? pointDivide(pointSubtract(p2, p1), options.nodes - 1) : { x: 0, y: -1 };
-
-  let source: GraphNode = { id: `${id}-0`, type: 'start' };
-  Object.assign(source, { ...p1, fx: p1.x, fy: p1.y });
-  graph.addNode(source);
-
-  Array.from({ length: options.nodes - 1 }).forEach((_, i) => {
-    const p = pointAdd(source as any as Point, d);
-    const target = { id: `${id}-${i + 1}`, ...p, vx: 0, vy: 0 };
-    graph.addNode(target);
-    graph.addEdge({ id: `${source.id}_${target.id}`, source: source.id, target: target.id });
-    source = target;
-  });
-
-  Object.assign(source, { type: 'end' }, p2 && { fx: p2.x, fy: p2.y });
-  return source;
-};

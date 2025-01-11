@@ -50,7 +50,7 @@ export type EditorContextType = {
   snapToGrid: boolean;
   setSnapToGrid: Dispatch<SetStateAction<boolean>>;
 
-  graph: GraphModel<GraphNode<Shape>>;
+  graph: GraphModel<GraphNode<Shape, false>>;
   graphMonitor?: GraphMonitor;
   clipboard: GraphModel<GraphNode<Shape>>;
   selection: SelectionModel;

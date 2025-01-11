@@ -8,7 +8,7 @@ import { raise } from '@dxos/debug';
 import { type GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
 
 import { compile } from '../fiber-compiler';
-import { inputNode, outputNode } from '../nodes/base-nodes';
+import { inputNode, outputNode } from '../nodes';
 import { gptNode } from '../nodes/gpt-node';
 import {
   NodeType,
@@ -65,7 +65,7 @@ export class TestRuntime {
     throw new Error(`Unknown node type: ${node.type}`);
   }
 
-  async compileGraph(graph: GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>) {
+  async compileGraph(graph: GraphModel<GraphNode<ComputeNode, false>, GraphEdge<ComputeEdge, false>>) {
     const inputNode =
       graph.getNodes({}).find((node) => node.data.type === NodeType.Input) ?? raise(new Error('Input node not found'));
     const outputNode =

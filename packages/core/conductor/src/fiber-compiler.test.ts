@@ -97,6 +97,8 @@ const g2 = (): ComputeGraph => {
 //
 //
 
+/*
+
 interface Node<I, O> {
   compute(input: I): Promise<O>;
 }
@@ -199,3 +201,5 @@ const x2 = [
     ],
   },
 ];
+
+*/

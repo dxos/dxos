@@ -4,6 +4,8 @@
 
 import { S } from '@dxos/echo-schema';
 
+import { type Specialize } from './util';
+
 // Prior art:
 // - https://graphology.github.io (TS, tree-shakable, multiple packages for extensions)
 // - https://github.com/dagrejs/graphlib (mature, extensive)
@@ -17,7 +19,10 @@ export const BaseGraphNode = S.Struct({
 });
 
 export type BaseGraphNode = S.Schema.Type<typeof BaseGraphNode>;
-export type GraphNode<Data extends object | void = void> = Omit<BaseGraphNode, 'data'> & { data?: Data };
+export type GraphNode<Data = any, Optional extends boolean = false> = Specialize<
+  BaseGraphNode,
+  Optional extends true ? { data?: Data } : { data: Data }
+>;
 
 export const BaseGraphEdge = S.Struct({
   id: S.String,
@@ -28,7 +33,11 @@ export const BaseGraphEdge = S.Struct({
 });
 
 export type BaseGraphEdge = S.Schema.Type<typeof BaseGraphEdge>;
-export type GraphEdge<Data extends object | void = void> = Omit<BaseGraphEdge, 'data'> & { data?: Data };
+export type GraphEdge<Data = any, Optional extends boolean = false> = Omit<BaseGraphEdge, 'data'> & {
+  [K in 'data']: Optional extends true ? Data | undefined : Data;
+};
+
+// Optional extends true ? { data?: Data } : { data: Data }
 
 /**
  * Generic graph abstraction.

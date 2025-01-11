@@ -12,8 +12,6 @@ import { log } from '@dxos/log';
 
 import { type AsyncUpdate, type StateMachineContext } from './state-machine';
 
-export type Binding = Record<string, any>;
-
 export const DEFAULT_INPUT = 'input';
 export const DEFAULT_OUTPUT = 'result';
 
@@ -25,6 +23,8 @@ export const NoOutput = S.Struct({});
 
 export type NoInput = S.Schema.Type<typeof NoInput>;
 export type NoOutput = S.Schema.Type<typeof NoOutput>;
+
+export type Binding = Record<string, any>;
 
 /**
  * Represents a compute element, which may take inputs from multiple other nodes, and output a value to other nodes.

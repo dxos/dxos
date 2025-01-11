@@ -5,15 +5,18 @@
 import { inspectCustom } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { getSnapshot } from '@dxos/live-object';
-import { isNotFalsy, removeBy } from '@dxos/util';
+import { isNotFalsy, type MakeOptional, removeBy } from '@dxos/util';
 
 import { createEdgeId } from './buidler';
-import { type Graph, type GraphNode, type GraphEdge } from './types';
+import { type Graph, type GraphNode, type GraphEdge, type BaseGraphNode, type BaseGraphEdge } from './types';
 
 /**
  * Typed reactive object graph.
  */
-export class ReadonlyGraphModel<Node extends GraphNode<any> = any, Edge extends GraphEdge<any> = any> {
+export class ReadonlyGraphModel<
+  Node extends BaseGraphNode = BaseGraphNode,
+  Edge extends BaseGraphEdge = BaseGraphEdge,
+> {
   protected readonly _graph: Graph;
 
   /**
@@ -53,7 +56,7 @@ export class ReadonlyGraphModel<Node extends GraphNode<any> = any, Edge extends 
     return this.nodes.find((node) => node.id === id);
   }
 
-  getNodes({ type }: Partial<GraphNode> = {}): Node[] {
+  getNodes({ type }: Partial<GraphNode<any>> = {}): Node[] {
     return this.nodes.filter((node) => !type || type === node.type);
   }
 
@@ -61,7 +64,7 @@ export class ReadonlyGraphModel<Node extends GraphNode<any> = any, Edge extends 
     return this.edges.find((edge) => edge.id === id);
   }
 
-  getEdges({ type, source, target }: Partial<GraphEdge> = {}): Edge[] {
+  getEdges({ type, source, target }: Partial<GraphEdge<any>> = {}): Edge[] {
     return this.edges.filter(
       (edge) =>
         (!type || type === edge.type) && (!source || source === edge.source) && (!target || target === edge.target),
@@ -90,8 +93,8 @@ export class ReadonlyGraphModel<Node extends GraphNode<any> = any, Edge extends 
  * Typed wrapper.
  */
 export class GraphModel<
-  Node extends GraphNode<any> = any,
-  Edge extends GraphEdge<any> = any,
+  Node extends BaseGraphNode = BaseGraphNode,
+  Edge extends BaseGraphEdge = BaseGraphEdge,
 > extends ReadonlyGraphModel<Node, Edge> {
   clear(): this {
     this._graph.nodes.length = 0;
@@ -125,14 +128,14 @@ export class GraphModel<
     return this;
   }
 
-  addEdge(edge: Edge): this {
+  addEdge(edge: MakeOptional<Edge, 'id'>): this {
     invariant(edge.source);
     invariant(edge.target);
     if (!edge.id) {
       edge = { ...edge, id: createEdgeId(edge) };
     }
-    invariant(!this.getEdge(edge.id));
-    this._graph.edges.push(edge);
+    invariant(!this.getEdge(edge.id!));
+    this._graph.edges.push(edge as Edge);
     return this;
   }
 

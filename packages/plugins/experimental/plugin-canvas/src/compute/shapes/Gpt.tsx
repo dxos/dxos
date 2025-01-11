@@ -27,14 +27,15 @@ export const createGpt = ({ id, ...rest }: CreateGptProps): GptShape => {
     id,
     type: 'gpt',
     node: new GptFunction(),
-    size: { width: 192, height: getHeight(GptInput) },
+    size: { width: 256, height: getHeight(GptInput) },
     ...rest,
   };
 };
 
 export const GptComponent = ({ shape }: ShapeComponentProps<GptShape>) => {
   const inputs = AST.getPropertySignatures(shape.node.inputSchema.ast).map(({ name }) => name.toString());
-  return <FunctionBody name={shape.node.name} inputs={inputs} />;
+  const outputs = AST.getPropertySignatures(shape.node.outputSchema.ast).map(({ name }) => name.toString());
+  return <FunctionBody name={shape.node.name} inputs={inputs} outputs={outputs} />;
 };
 
 export const gptShape: ShapeDef<GptShape> = {

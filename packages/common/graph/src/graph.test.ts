@@ -4,7 +4,6 @@
 
 import { describe, test } from 'vitest';
 
-import { createEdgeId } from './buidler';
 import { GraphModel } from './graph';
 import { type GraphNode } from './types';
 
@@ -23,16 +22,8 @@ describe('Graph', () => {
       .addNode({ id: 'node1', data: { value: 'test' } })
       .addNode({ id: 'node2', data: { value: 'test' } })
       .addNode({ id: 'node3', data: { value: 'test' } })
-      .addEdge({
-        id: createEdgeId({ source: 'node1', target: 'node2', relation: 'test' }),
-        source: 'node1',
-        target: 'node2',
-      })
-      .addEdge({
-        id: createEdgeId({ source: 'node2', target: 'node3', relation: 'test' }),
-        source: 'node2',
-        target: 'node3',
-      });
+      .addEdge({ source: 'node1', target: 'node2' })
+      .addEdge({ source: 'node2', target: 'node3' });
     expect(graph.nodes).to.have.length(3);
     expect(graph.edges).to.have.length(2);
     const pre = graph.toJSON();
@@ -56,7 +47,7 @@ describe('Graph', () => {
   });
 
   test('traverse', ({ expect }) => {
-    const graph = new GraphModel<GraphNode<TestData>>()
+    const graph = new GraphModel()
       .addNode({ id: 'node1' })
       .addNode({ id: 'node2' })
       .addNode({ id: 'node3' })

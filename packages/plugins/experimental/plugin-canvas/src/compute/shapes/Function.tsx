@@ -39,7 +39,8 @@ export const createFunction = ({ id, ...rest }: CreateFunctionProps): FunctionSh
 
 export const FunctionComponent = ({ shape }: ShapeComponentProps<FunctionShape>) => {
   const inputs = AST.getPropertySignatures(shape.node.inputSchema.ast).map(({ name }) => name.toString());
-  return <FunctionBody name={shape.node.name} inputs={inputs} />;
+  const outputs = AST.getPropertySignatures(shape.node.outputSchema.ast).map(({ name }) => name.toString());
+  return <FunctionBody name={shape.node.name} inputs={inputs} outputs={outputs} />;
 };
 
 export const functionShape: ShapeDef<FunctionShape> = {
@@ -57,16 +58,29 @@ export const functionShape: ShapeDef<FunctionShape> = {
 const headerHeight = 32;
 const bodyPadding = 8;
 
-export const FunctionBody = ({ name, inputs }: { name: string; inputs: string[] }) => {
+export const FunctionBody = ({ name, inputs, outputs }: { name: string; inputs?: string[]; outputs?: string[] }) => {
   // TODO(burdon): Consider moving property labels to the Anchor component? Or use anchor positions.
   return (
     <Box name={name}>
-      <div className='flex flex-col' style={{ padding: bodyPadding }}>
-        {inputs.map((name) => (
-          <div key={name} className='flex text-sm font-mono items-center' style={{ height: rowHeight }}>
-            <div>{name}</div>
-          </div>
-        ))}
+      <div className='grid grid-cols-2 items-center'>
+        <div className='flex flex-col' style={{ padding: bodyPadding }}>
+          {inputs?.map((name) => (
+            <div key={name} className='truncate text-sm font-mono items-center' style={{ height: rowHeight }}>
+              {name}
+            </div>
+          ))}
+        </div>
+        <div className='flex flex-col' style={{ padding: bodyPadding }}>
+          {outputs?.map((name) => (
+            <div
+              key={name}
+              className='truncate  text-sm font-mono items-center text-right'
+              style={{ height: rowHeight }}
+            >
+              {name}
+            </div>
+          ))}
+        </div>
       </div>
     </Box>
   );

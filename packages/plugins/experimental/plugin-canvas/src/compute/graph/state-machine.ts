@@ -129,7 +129,7 @@ export class StateMachine extends Resource {
   /**
    * Execute node and possibly recursive chain.
    */
-  async exec(node?: GraphNode<ComputeNode<any, any>> | undefined) {
+  async exec(node?: GraphNode<ComputeNode<any, any>, false> | undefined) {
     if (node) {
       // Update root node.
       await this._exec(node);
@@ -153,7 +153,7 @@ export class StateMachine extends Resource {
       .finally(() => {
         const idx = this._activeTasks.indexOf(promise);
         if (idx !== -1) {
-          this._activeTasks.splice(idx, 1);
+          this._activeTasks.splice(idx, 1); // TODO(burdon): ???
         }
       });
 
@@ -164,8 +164,8 @@ export class StateMachine extends Resource {
   /**
    * Exec node and propagate output to downstream nodes.
    */
-  private async _exec(node: GraphNode<ComputeNode<any, any>>) {
-    if (node.data.getOutputs().length === 0) {
+  private async _exec(node: GraphNode<ComputeNode<any, any>, false>) {
+    if (!node.data.getOutputs().length) {
       return;
     }
 
@@ -187,13 +187,13 @@ export class StateMachine extends Resource {
 
         // Get output.
         let value = output;
-        if (edge.data?.output) {
+        if (edge.data.output) {
           invariant(typeof output === 'object');
-          value = (output as any)[edge.data?.output];
+          value = (output as any)[edge.data.output];
         }
 
         // Set input.
-        invariant(edge.data?.input);
+        invariant(edge.data.input);
         const inboundEdges = this._graph
           .getEdges({ target: target.id })
           .filter((e) => e.data.input === edge.data.input);
