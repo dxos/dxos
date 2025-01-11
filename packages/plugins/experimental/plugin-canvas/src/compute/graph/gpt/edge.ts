@@ -23,6 +23,9 @@ export class EdgeGptExecutor implements GptExecutor {
     log.info('callEdge', { systemPrompt, prompt, toolsInput, history });
 
     let tools: LLMTool[] = (toolsInput as any) ?? [];
+    if (!Array.isArray(tools)) {
+      tools = [tools];
+    }
     tools = tools.filter(isNotNullOrUndefined);
 
     const spaceId = SpaceId.random(); // TODO(dmaretskyi): Use spaceId from the context.
@@ -70,7 +73,7 @@ export class EdgeGptExecutor implements GptExecutor {
         log.info('event', { event });
         switch (event.type) {
           case 'message': {
-            messages.push(event.message);
+            // messages.push(event.message);
             for (const content of event.message.content) {
               if (content.type === 'image' && content.id != null && content.source != null) {
                 log.info('image', { id: content.id });
