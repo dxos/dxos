@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useControlledValue } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { StackItem } from '@dxos/react-ui-stack';
 
 import { GlobeControl } from './GlobeControl';
 import { type MapCanvasProps } from './Map';
@@ -24,10 +24,10 @@ const MapContainer = ({ role, type: _type = 'map', map, ...props }: MapContainer
   const [type, setType] = useControlledValue(_type);
   const markers = useMarkers(map);
   return (
-    <div role='none' className={mx('flex overflow-hidden', role === 'article' && 'row-span-2')}>
+    <StackItem.Content toolbar={false}>
       {type === 'map' && <MapControl markers={markers} onToggle={() => setType('globe')} {...props} />}
       {type === 'globe' && <GlobeControl markers={markers} onToggle={() => setType('map')} {...props} />}
-    </div>
+    </StackItem.Content>
   );
 };
 

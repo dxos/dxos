@@ -6,11 +6,12 @@ import React from 'react';
 
 import { useGlobalSearch } from '@dxos/plugin-search';
 import { getSpace } from '@dxos/react-client/echo';
+import { StackItem } from '@dxos/react-ui-stack';
 
 import { Graph } from './Graph';
 import { type ViewType } from '../types';
 
-const ExplorerArticle = ({ view }: { view: ViewType }) => {
+const ExplorerContainer = ({ view, role }: { view: ViewType; role: string }) => {
   const space = getSpace(view);
   const { match } = useGlobalSearch();
 
@@ -19,10 +20,10 @@ const ExplorerArticle = ({ view }: { view: ViewType }) => {
   }
 
   return (
-    <div role='none' className='row-span-2 overflow-auto'>
+    <StackItem.Content>
       <Graph space={space} match={match} />
-    </div>
+    </StackItem.Content>
   );
 };
 
-export default ExplorerArticle;
+export default ExplorerContainer;

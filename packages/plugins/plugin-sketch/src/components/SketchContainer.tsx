@@ -7,14 +7,25 @@ import React, { useCallback } from 'react';
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { ThreadAction } from '@dxos/plugin-thread/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { useAttendableAttributes, useAttention } from '@dxos/react-ui-attention';
+import { useAttention } from '@dxos/react-ui-attention';
 
-import { Sketch, type SketchProps } from './Sketch';
+import { Sketch } from './Sketch';
+import { type DiagramType, type SketchSettingsProps } from '../types';
 
-// TODO(burdon): Standardize plugin component containers.
-const SketchContainer = ({ classNames, sketch, ...props }: SketchProps) => {
+export type SketchContainerProps = {
+  sketch: DiagramType;
+  role: string;
+  settings: SketchSettingsProps;
+};
+
+export const SketchContainer = ({ sketch, role, settings }: SketchContainerProps) => {
+  const props = {
+    readonly: role === 'slide',
+    maxZoom: role === 'slide' ? 1.5 : undefined,
+    autoZoom: role === 'section',
+    grid: settings.gridType,
+  };
   const id = fullyQualifiedId(sketch);
-  const attentionAttrs = useAttendableAttributes(id);
   const { hasAttention } = useAttention(id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
@@ -30,9 +41,8 @@ const SketchContainer = ({ classNames, sketch, ...props }: SketchProps) => {
       key={id}
       sketch={sketch}
       hideUi={!hasAttention}
-      classNames={[classNames, 'attention-surface']}
+      classNames='attention-surface'
       onThreadCreate={onThreadCreate}
-      {...attentionAttrs}
       {...props}
     />
   );

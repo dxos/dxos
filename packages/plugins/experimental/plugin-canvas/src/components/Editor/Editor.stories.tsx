@@ -5,16 +5,19 @@
 import '@dxos-theme';
 
 import type { Meta, StoryObj } from '@storybook/react';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { type ComponentPropsWithoutRef, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type ReactiveEchoObject } from '@dxos/echo-db';
 import { S, getTypename } from '@dxos/echo-schema';
 import { createGraph, type GraphModel, type GraphNode } from '@dxos/graph';
 import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { useAttendableAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Form, TupleInput } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { mx } from '@dxos/react-ui-theme';
 import { type TypeSpec, createObjectFactory, type ValueGenerator, Testing } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -22,7 +25,7 @@ import { Editor, type EditorController, type EditorRootProps } from './Editor';
 import { SelectionModel } from '../../hooks';
 import { doLayout } from '../../layout';
 import { RectangleShape, type Shape } from '../../types';
-import { AttentionContainer } from '../AttentionContainer';
+import { KeyboardContainer } from '../KeyboardContainer';
 
 const generator: ValueGenerator = faker as any;
 
@@ -32,6 +35,25 @@ type RenderProps = Omit<EditorRootProps, 'graph'> & { init?: boolean; sidebar?: 
 
 // TODO(burdon): Ref expando breaks the form.
 const RectangleShapeWithoutRef = S.omit<any, any, ['object']>('object')(RectangleShape);
+
+const AttentionContainer = ({
+  id,
+  classNames,
+  children,
+  ...props
+}: ThemedClassName<ComponentPropsWithoutRef<'div'> & { id: string }>) => {
+  const attendableAttrs = useAttendableAttributes(id);
+  return (
+    <div
+      role='none'
+      {...attendableAttrs}
+      {...props}
+      className={mx('attention-surface', props.tabIndex === 0 && 'ch-focus-ring-inset-over-all', classNames)}
+    >
+      <KeyboardContainer id={id}>{children}</KeyboardContainer>
+    </div>
+  );
+};
 
 const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
   const editorRef = useRef<EditorController>(null);

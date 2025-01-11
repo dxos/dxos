@@ -7,7 +7,7 @@ import React from 'react';
 import { type PluginDefinition, createSurface, createIntent, createResolver } from '@dxos/app-framework';
 import { create, makeRef, RefArray } from '@dxos/live-object';
 
-import { OutlinerMain, TreeSection } from './components';
+import { OutlinerContainer } from './components';
 import meta, { OUTLINER_PLUGIN } from './meta';
 import translations from './translations';
 import { TreeItemType, TreeType } from './types';
@@ -41,15 +41,9 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
         definitions: () => [
           createSurface({
             id: `${OUTLINER_PLUGIN}/article`,
-            role: 'article',
+            role: ['article', 'section'],
             filter: (data): data is { subject: TreeType } => data.subject instanceof TreeType,
-            component: ({ data }) => <OutlinerMain tree={data.subject} />,
-          }),
-          createSurface({
-            id: `${OUTLINER_PLUGIN}/section`,
-            role: 'section',
-            filter: (data): data is { subject: TreeType } => data.subject instanceof TreeType,
-            component: ({ data }) => <TreeSection tree={data.subject} />,
+            component: ({ data, role }) => <OutlinerContainer tree={data.subject} role={role} />,
           }),
         ],
       },

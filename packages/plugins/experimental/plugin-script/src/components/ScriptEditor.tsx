@@ -164,7 +164,7 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
   }, [existingFunctionUrl, space]);
 
   return (
-    <div role='none' className={mx('flex flex-col w-full overflow-hidden divide-y divide-separator', classNames)}>
+    <>
       <Toolbar
         deployed={Boolean(existingFunctionUrl) && !script.changed}
         functionUrl={functionUrl}
@@ -177,17 +177,18 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
         onTemplateSelect={handleTemplateChange}
       />
 
-      {view !== 'preview' && (
-        <TypescriptEditor
-          id={script.id}
-          env={env}
-          initialValue={script.source?.target?.content}
-          extensions={extensions}
-          className='flex is-full bs-full overflow-hidden ch-focus-ring-inset-over-all'
-        />
-      )}
-
-      {view !== 'editor' && <DebugPanel functionUrl={functionUrl} />}
-    </div>
+      <div role='none' className={mx('flex flex-col w-full overflow-hidden divide-y divide-separator', classNames)}>
+        {view !== 'preview' && (
+          <TypescriptEditor
+            id={script.id}
+            env={env}
+            initialValue={script.source?.target?.content}
+            extensions={extensions}
+            className='flex is-full bs-full overflow-hidden ch-focus-ring-inset-over-all'
+          />
+        )}
+        {view !== 'editor' && <DebugPanel functionUrl={functionUrl} />}
+      </div>
+    </>
   );
 };
