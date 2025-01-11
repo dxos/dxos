@@ -42,17 +42,19 @@ export type StateMachineContext = {
  * Compute Nodes are invoked when all of their inputs are provided.
  * Root Nodes have a Void input type and are processed first.
  */
-// TODO(burdon): Move to compute (without hyperformula dependency). Maps onto hyperformula as client runtime?
-// TODO(burdon): Extend Resource.
 export class StateMachine extends Resource {
   private _autoRun = true;
 
   // TODO(dmaretskyi): Will be replaced by a sync function that does propagation.
   private _activeTasks: Promise<void>[] = [];
 
-  public readonly update = new Event<{ node: GraphNode<ComputeNode<any, any>>; value: any }>();
+  /** Runtime context enables deferred initialization. */
+  private _context?: Partial<StateMachineContext>;
 
+  /** Persistent state. */
   private readonly _graph: ComputeGraph;
+
+  public readonly update = new Event<{ node: GraphNode<ComputeNode<any, any>>; value: any }>();
 
   constructor(graph?: ComputeGraph) {
     super();
@@ -82,8 +84,6 @@ export class StateMachine extends Resource {
     return this._graph;
   }
 
-  // TODO(burdon): Clean this up.
-  private _context?: Partial<StateMachineContext>;
   setContext(context?: Partial<StateMachineContext>): this {
     this._context = context;
     return this;

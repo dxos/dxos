@@ -10,6 +10,7 @@ export * from './useDragMonitor';
 export * from './useEditorContext';
 export * from './useGraphMonitor';
 export * from './useLayout';
+export * from './useRope';
 export * from './useSelectionEvents';
 export * from './useShortcuts';
 export * from './useSnap';

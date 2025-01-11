@@ -1,23 +1,22 @@
-import { Effect, type Context } from 'effect';
-import { describe, test } from 'vitest';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Effect } from 'effect';
 
 import { raise } from '@dxos/debug';
-import { S } from '@dxos/echo-schema';
-import { createEdgeId, GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
-import { log } from '@dxos/log';
+import { type GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
 
-import { inputNode, outputNode } from '../nodes/base-nodes';
-import { EventLogger, logCustomEvent, type ComputeEvent } from '../services/event-logger';
 import { compile } from '../fiber-compiler';
+import { inputNode, outputNode } from '../nodes/base-nodes';
+import { gptNode } from '../nodes/gpt-node';
 import {
-  defineComputeNode,
   NodeType,
   type ComputeEdge,
   type ComputeImplementation,
   type ComputeNode,
   type ComputeRequirements,
 } from '../schema';
-import { gptNode } from '../nodes/gpt-node';
 
 export class TestRuntime {
   nodes = new Map<string, ComputeImplementation>();

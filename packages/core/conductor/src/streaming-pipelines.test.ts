@@ -1,12 +1,16 @@
-import { S } from '@dxos/echo-schema';
-import { defineComputeNode, NodeType, type ComputeEdge, type ComputeGraph, type ComputeNode } from './schema';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Effect, Stream } from 'effect';
-import { EventLogger, logCustomEvent } from './services/event-logger';
-import { StreamSchema } from './schema-dsl';
-import { consoleLogger, createEdge, noopLogger, TestRuntime } from './testing';
 import { describe, test } from 'vitest';
+
+import { S } from '@dxos/echo-schema';
 import { GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
-import { stream } from 'effect/FastCheck';
+
+import { defineComputeNode, NodeType, type ComputeEdge, type ComputeGraph, type ComputeNode } from './schema';
+import { StreamSchema } from './schema-dsl';
+import { createEdge, TestRuntime } from './testing';
 import { testServices } from './testing/test-services';
 
 const ENABLE_LOGGING = false;

@@ -1,5 +1,10 @@
-import { describe, test } from 'vitest';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Schema as S } from '@effect/schema';
+import { describe, test } from 'vitest';
+
 import { pickProperty } from './ast';
 
 describe('ast', () => {

@@ -1,15 +1,16 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import type { Context, Scope } from 'effect';
-
-import type { GptOutput } from '../gpt';
-
-import type { GptService } from '../gpt';
-
 import { Effect, Stream } from 'effect';
-import type { GptInput } from '../gpt';
+
 import { ObjectId, type ResultStreamEvent } from '@dxos/assistant';
 import { log } from '@dxos/log';
-import type { OutputBag } from '../../schema';
 import { getDebugName } from '@dxos/util';
+
+import type { OutputBag } from '../../schema';
+import type { GptInput, GptService, GptOutput } from '../gpt';
 
 export type GPTConfig = {
   initDelay?: number;

@@ -5,10 +5,9 @@
 import { Effect, Stream } from 'effect';
 import { describe, test } from 'vitest';
 
-import { isStream } from './schema-dsl/stream';
-import { GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
-import { NodeType, type ComputeEdge, type ComputeGraph, type ComputeNode } from './schema';
 import { log } from '@dxos/log';
+
+import { isStream } from './schema-dsl';
 
 describe('effect-basics', () => {
   describe('streams', () => {

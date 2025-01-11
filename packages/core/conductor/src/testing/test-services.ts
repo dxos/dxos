@@ -1,10 +1,13 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Layer, type Context, type Scope } from 'effect';
-import { GptService } from '../services/gpt';
-import { MockGpt } from '../services/gpt/mock';
-import { consoleLogger } from './logger';
-import { noopLogger } from './logger';
+
+import { consoleLogger, noopLogger } from './logger';
 import type { ComputeRequirements } from '../schema';
-import { EventLogger } from '../services/event-logger';
+import { EventLogger, GptService } from '../services';
+import { MockGpt } from '../services/gpt/mock';
 
 export type TestServiceOptions = {
   enableLogging?: boolean;

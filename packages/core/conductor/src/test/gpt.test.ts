@@ -1,14 +1,18 @@
-import { GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
-import { Chunk, Console, Effect, Exit, Option, pipe, Scope, Stream } from 'effect';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Chunk, Console, Effect, Exit, Option, Scope, Stream } from 'effect';
 import { describe, test } from 'vitest';
-import { NodeType, type ComputeEdge, type ComputeGraph, type ComputeNode, type OutputBag } from '../schema';
-import { createEdge, TestRuntime } from '../testing';
-import { testServices } from '../testing/test-services';
+
 import type { ResultStreamEvent } from '@dxos/assistant';
-import { MockGpt } from '../services/gpt/mock';
+import { GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
 import { log } from '@dxos/log';
 import { getDebugName } from '@dxos/util';
-import type { GptOutput } from '../services/gpt';
+
+import { NodeType, type ComputeEdge, type ComputeGraph, type ComputeNode } from '../schema';
+import { createEdge, TestRuntime } from '../testing';
+import { testServices } from '../testing/test-services';
 
 const ENABLE_LOGGING = false;
 
@@ -52,7 +56,7 @@ describe('Gpt pipelines', () => {
             })
             .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Scope.extend(scope));
 
-        log.info('text in test', { text: getDebugName(text) }) ;
+        log.info('text in test', { text: getDebugName(text) });
 
         const p = Effect.runPromise(text).then((x) => {
           console.log({ x });

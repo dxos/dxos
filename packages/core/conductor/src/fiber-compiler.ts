@@ -7,8 +7,9 @@ import { Effect } from 'effect';
 import { S } from '@dxos/echo-schema';
 import type { GraphEdge, GraphModel, GraphNode } from '@dxos/graph';
 import { failedInvariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
+import { getDebugName } from '@dxos/util';
 
-import { EventLogger } from './services/event-logger';
 import type {
   ComputeNode,
   ComputeEdge,
@@ -17,9 +18,8 @@ import type {
   ComputeRequirements,
   OutputBag,
 } from './schema';
+import { EventLogger } from './services';
 import { createTopology, type GraphDiagnostic, type TopologyNode } from './topology';
-import { log } from '@dxos/log';
-import { getDebugName } from '@dxos/util';
 
 export type ValidateParams = {
   graph: GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;
