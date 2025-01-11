@@ -16,6 +16,7 @@ import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { DeckPlugin } from '@dxos/plugin-deck';
 import { GraphPlugin } from '@dxos/plugin-graph';
+import { NavTreePlugin } from '@dxos/plugin-navtree';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { Status, Tooltip, ThemeProvider } from '@dxos/react-ui';
@@ -73,6 +74,7 @@ const main = async () => {
     DeckPlugin,
     GraphPlugin,
     IntentPlugin,
+    NavTreePlugin,
     SettingsPlugin,
     SpacePlugin(),
     ThemePlugin({ appName: 'Composer' }),

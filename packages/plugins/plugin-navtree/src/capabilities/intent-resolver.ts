@@ -1,0 +1,26 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { NavigationAction, createResolver } from '@dxos/app-framework';
+import { contributes, type PluginsContext, Capabilities } from '@dxos/app-framework/next';
+
+import { NavTreeCapabilities } from './capabilities';
+
+export default (context: PluginsContext) =>
+  contributes(
+    Capabilities.IntentResolver,
+    createResolver(NavigationAction.Expose, async ({ id }) => {
+      const { graph } = context.requestCapability(Capabilities.AppGraph);
+      const { getItem, setItem } = context.requestCapability(NavTreeCapabilities.State);
+
+      const path = await graph.waitForPath({ target: id });
+      [...Array(path.length)].forEach((_, index) => {
+        const subpath = path.slice(0, index);
+        const value = getItem(subpath);
+        if (!value.open) {
+          setItem(subpath, 'open', true);
+        }
+      });
+    }),
+  );

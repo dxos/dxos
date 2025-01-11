@@ -52,7 +52,7 @@ export const ClientPlugin = ({
     }),
     defineModule({
       id: `${meta.id}/module/translations`,
-      activationEvents: [eventKey(Events.Startup)],
+      activationEvents: [eventKey(Events.SetupTranslations)],
       activate: () => contributes(Capabilities.Translations, translations),
     }),
   ]);
