@@ -11,6 +11,8 @@ import { type Point } from '@dxos/react-ui-canvas';
 
 import { pointAdd, pointDivide, pointSubtract } from '../layout';
 
+// TODO(burdon): Create <spring /> element (shared simulation).
+
 // export type RopeProps = {
 //   start: Point;
 //   end: Point;
