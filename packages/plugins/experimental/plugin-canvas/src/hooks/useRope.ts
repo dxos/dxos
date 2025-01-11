@@ -139,7 +139,7 @@ const createGraph = (
 
   range(options.nodes - 1).forEach((_, i) => {
     const last = i === options.nodes - 2;
-    const p = pointAdd(source as any as Point, d);
+    const p = pointAdd({ x: source.data.x ?? 0, y: source.data.y ?? 0 }, d);
     const target: GraphNode<SimulationNodeDatum> = {
       id: `${id}-${i + 1}`,
       type: last ? 'end' : undefined,
