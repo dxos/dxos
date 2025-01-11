@@ -15,7 +15,7 @@ import { LoggerPlugin } from './logger';
 import { IntentPlugin } from '../Intent';
 import { createApp } from '../app';
 
-const plugins = [IntentPlugin, LayoutPlugin, DebugPlugin, LoggerPlugin, GeneratorPlugin];
+const plugins = [IntentPlugin(), LayoutPlugin(), DebugPlugin(), LoggerPlugin(), GeneratorPlugin()];
 
 const Story = createApp({
   pluginLoader: (id) => createNumberPlugin(id),

@@ -8,10 +8,11 @@ import { defineModule, definePlugin, lazy } from '../../plugin';
 const Main = lazy(() => import('./Main'));
 const Toolbar = lazy(() => import('./Toolbar'));
 
-export const GeneratorPlugin = definePlugin({ id: 'dxos.org/test/generator' }, [
-  defineModule({
-    id: 'dxos.org/test/generator/main',
-    activationEvents: [Events.Startup.id],
-    activate: async () => [await Main(), await Toolbar()],
-  }),
-]);
+export const GeneratorPlugin = () =>
+  definePlugin({ id: 'dxos.org/test/generator' }, [
+    defineModule({
+      id: 'dxos.org/test/generator/main',
+      activationEvents: [Events.Startup.id],
+      activate: async () => [await Main(), await Toolbar()],
+    }),
+  ]);

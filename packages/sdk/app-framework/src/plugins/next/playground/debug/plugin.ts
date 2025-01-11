@@ -7,10 +7,11 @@ import { defineModule, definePlugin, lazy } from '../../plugin';
 
 const Debug = lazy(() => import('./Debug'));
 
-export const DebugPlugin = definePlugin({ id: 'dxos.org/test/debug' }, [
-  defineModule({
-    id: 'dxos.org/test/debug/main',
-    activationEvents: [Events.Startup.id],
-    activate: () => Debug(),
-  }),
-]);
+export const DebugPlugin = () =>
+  definePlugin({ id: 'dxos.org/test/debug' }, [
+    defineModule({
+      id: 'dxos.org/test/debug/main',
+      activationEvents: [Events.Startup.id],
+      activate: () => Debug(),
+    }),
+  ]);

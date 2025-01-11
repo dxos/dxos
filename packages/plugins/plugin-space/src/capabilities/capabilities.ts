@@ -12,3 +12,12 @@ export namespace SpaceCapabilities {
   export const State = defineCapability<DeepReadonly<PluginState>>(`${SPACE_PLUGIN}/state`);
   export const MutableState = defineCapability<PluginState>(`${SPACE_PLUGIN}/state`);
 }
+
+// TODO(wittjosiah): Factor out.
+export namespace ThreadCapabilities {
+  type ThreadCapability<T = any> = {
+    predicate: (obj: any) => obj is T;
+    createSort: (obj: T) => (anchorA: string | undefined, anchorB: string | undefined) => number;
+  };
+  export const Thread = defineCapability<ThreadCapability>(`${SPACE_PLUGIN}/thread`);
+}

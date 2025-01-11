@@ -12,7 +12,7 @@ import type {
 } from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
 import { type SchemaProvides } from '@dxos/plugin-space';
-import { type Extension, type EditorInputMode, EditorViewMode } from '@dxos/react-ui-editor';
+import { type Extension, EditorInputMode, EditorViewMode } from '@dxos/react-ui-editor';
 
 import { DocumentType } from './schema';
 import { MARKDOWN_PLUGIN } from '../meta';
@@ -62,17 +62,21 @@ export type MarkdownPluginState = {
   viewMode: Record<string, EditorViewMode>;
 };
 
-export type MarkdownSettingsProps = {
-  defaultViewMode: EditorViewMode;
-  editorInputMode?: EditorInputMode;
-  experimental?: boolean;
-  debug?: boolean;
-  toolbar?: boolean;
-  typewriter?: string;
-  // TODO(burdon): Per document settings.
-  numberedHeadings?: boolean;
-  folding?: boolean;
-};
+export const MarkdownSettingsSchema = S.mutable(
+  S.Struct({
+    defaultViewMode: EditorViewMode,
+    editorInputMode: S.optional(EditorInputMode),
+    experimental: S.optional(S.Boolean),
+    debug: S.optional(S.Boolean),
+    toolbar: S.optional(S.Boolean),
+    typewriter: S.optional(S.String),
+    // TODO(burdon): Per document settings.
+    numberedHeadings: S.optional(S.Boolean),
+    folding: S.optional(S.Boolean),
+  }),
+);
+
+export type MarkdownSettingsProps = S.Schema.Type<typeof MarkdownSettingsSchema>;
 
 // TODO(Zan): Move this to the plugin-space plugin or another common location when we implement comments in sheets.
 type ThreadProvides<T> = {

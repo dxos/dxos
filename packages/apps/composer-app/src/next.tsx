@@ -16,6 +16,7 @@ import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { DeckPlugin } from '@dxos/plugin-deck';
 import { GraphPlugin } from '@dxos/plugin-graph';
+import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { NavTreePlugin } from '@dxos/plugin-navtree';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
@@ -69,13 +70,14 @@ const main = async () => {
   );
 
   const plugins = [
-    AttentionPlugin,
+    AttentionPlugin(),
     ClientPlugin({ config, services }),
-    DeckPlugin,
-    GraphPlugin,
-    IntentPlugin,
-    NavTreePlugin,
-    SettingsPlugin,
+    DeckPlugin(),
+    GraphPlugin(),
+    IntentPlugin(),
+    MarkdownPlugin(),
+    NavTreePlugin(),
+    SettingsPlugin(),
     SpacePlugin(),
     ThemePlugin({ appName: 'Composer' }),
   ];
