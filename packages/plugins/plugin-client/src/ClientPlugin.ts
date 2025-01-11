@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, defineModule, definePlugin, eventKey, Events } from '@dxos/app-framework/next';
+import { Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework/next';
 
 import { Client, AppGraphBuilder, IntentResolver, ReactContext, ReactSurface } from './capabilities';
 import { ClientEvents } from './events';
@@ -25,34 +25,34 @@ export const ClientPlugin = ({
   return definePlugin(meta, [
     defineModule({
       id: `${meta.id}/module/client`,
-      activationEvents: [eventKey(Events.Startup)],
-      dependentEvents: [eventKey(ClientEvents.SetupClient)],
-      triggeredEvents: [eventKey(ClientEvents.ClientReady)],
+      activatesOn: Events.Startup,
+      dependsOn: [ClientEvents.SetupClient],
+      triggers: [ClientEvents.ClientReady],
       activate: (context) => Client({ ...options, context }),
     }),
     defineModule({
       id: `${meta.id}/module/react-context`,
-      activationEvents: [eventKey(Events.Startup)],
+      activatesOn: Events.Startup,
       activate: ReactContext,
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activationEvents: [eventKey(Events.Startup)],
+      activatesOn: Events.Startup,
       activate: () => ReactSurface({ createInvitationUrl }),
     }),
     defineModule({
       id: `${meta.id}/module/app-graph-builder`,
-      activationEvents: [eventKey(Events.SetupAppGraph)],
+      activatesOn: Events.SetupAppGraph,
       activate: AppGraphBuilder,
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activationEvents: [eventKey(Events.SetupIntents)],
+      activatesOn: Events.SetupIntents,
       activate: (context) => IntentResolver({ context, onReset }),
     }),
     defineModule({
       id: `${meta.id}/module/translations`,
-      activationEvents: [eventKey(Events.SetupTranslations)],
+      activatesOn: Events.SetupTranslations,
       activate: () => contributes(Capabilities.Translations, translations),
     }),
   ]);

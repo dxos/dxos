@@ -3,7 +3,7 @@
 //
 
 import { createIntent } from '@dxos/app-framework';
-import { Capabilities, contributes, defineModule, definePlugin, eventKey, Events } from '@dxos/app-framework/next';
+import { allOf, Capabilities, contributes, defineModule, definePlugin, Events, oneOf } from '@dxos/app-framework/next';
 import { RefArray } from '@dxos/live-object';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
@@ -51,23 +51,23 @@ export const SpacePlugin = ({
   return definePlugin(meta, [
     defineModule({
       id: `${meta.id}/module/state`,
-      activationEvents: [eventKey(Events.Startup)],
-      triggeredEvents: [eventKey(SpaceEvents.StateReady)],
+      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
+      triggers: [SpaceEvents.StateReady],
       activate: SpaceState,
     }),
     defineModule({
       id: `${meta.id}/module/settings`,
-      activationEvents: [eventKey(Events.Startup)],
+      activatesOn: Events.Startup,
       activate: SpaceSettings,
     }),
     defineModule({
       id: `${meta.id}/module/translations`,
-      activationEvents: [eventKey(Events.SetupTranslations)],
+      activatesOn: Events.SetupTranslations,
       activate: () => contributes(Capabilities.Translations, [...translations, osTranslations]),
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
-      activationEvents: [eventKey(Events.Startup)],
+      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
       activate: () =>
         contributes(Capabilities.Metadata, {
           id: CollectionType.typename,
@@ -83,7 +83,7 @@ export const SpacePlugin = ({
     }),
     defineModule({
       id: `${meta.id}/module/complementary-panel`,
-      activationEvents: [eventKey(Events.Startup)],
+      activatesOn: Events.Startup,
       activate: () =>
         contributes(DeckCapabilities.ComplementaryPanel, {
           id: 'settings',
@@ -93,51 +93,51 @@ export const SpacePlugin = ({
     }),
     defineModule({
       id: `${meta.id}/module/schema`,
-      activationEvents: [eventKey(ClientEvents.SetupClient)],
+      activatesOn: ClientEvents.SetupClient,
       activate: () => contributes(ClientCapabilities.Schema, [CollectionType]),
     }),
     defineModule({
       id: `${meta.id}/module/react-root`,
-      activationEvents: [eventKey(Events.Startup)],
+      activatesOn: Events.Startup,
       activate: ReactRoot,
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
-      activationEvents: [eventKey(Events.Startup)],
+      activatesOn: Events.Startup,
       activate: () => ReactSurface({ createInvitationUrl }),
     }),
     defineModule({
       id: `${meta.id}/module/intent-resolver`,
-      activationEvents: [eventKey(Events.SetupIntents)],
+      activatesOn: Events.SetupIntents,
       activate: (context) => IntentResolver({ createInvitationUrl, context }),
     }),
     defineModule({
       id: `${meta.id}/module/app-graph-builder`,
-      activationEvents: [eventKey(Events.SetupAppGraph)],
+      activatesOn: Events.SetupAppGraph,
       activate: AppGraphBuilder,
     }),
     // TODO(wittjosiah): This could probably be deferred.
     defineModule({
       id: `${meta.id}/module/app-graph-serializer`,
-      activationEvents: [eventKey(Events.Startup)],
+      activatesOn: Events.Startup,
       activate: AppGraphSerializer,
     }),
     defineModule({
       id: `${meta.id}/module/identity-created`,
-      activationEvents: [eventKey(ClientEvents.IdentityCreated)],
+      activatesOn: ClientEvents.IdentityCreated,
       activate: IdentityCreated,
     }),
     defineModule({
       id: `${meta.id}/module/spaces-ready`,
-      activationEvents: [
-        eventKey(Events.DispatcherReady),
-        eventKey(Events.LayoutReady),
-        eventKey(Events.LocationReady),
-        eventKey(Events.AppGraphReady),
-        eventKey(AttentionEvents.AttentionReady),
-        eventKey(SpaceEvents.StateReady),
-        eventKey(ClientEvents.SpacesReady),
-      ],
+      activatesOn: allOf(
+        Events.DispatcherReady,
+        Events.LayoutReady,
+        Events.LocationReady,
+        Events.AppGraphReady,
+        AttentionEvents.AttentionReady,
+        SpaceEvents.StateReady,
+        ClientEvents.SpacesReady,
+      ),
       activate: SpacesReady,
     }),
   ]);

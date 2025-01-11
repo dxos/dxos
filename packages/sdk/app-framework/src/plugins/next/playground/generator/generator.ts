@@ -16,7 +16,7 @@ export const createNumberPlugin = (id: string) => {
   return definePlugin({ id }, [
     defineModule({
       id: `${id}/main`,
-      activationEvents: [CountEvent.id],
+      activatesOn: CountEvent,
       activate: () => contributes(Number, number),
     }),
   ]);

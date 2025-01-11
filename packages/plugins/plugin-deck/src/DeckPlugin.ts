@@ -4,7 +4,7 @@
 
 import { setAutoFreeze } from 'immer';
 
-import { Capabilities, contributes, defineModule, definePlugin, eventKey, Events } from '@dxos/app-framework/next';
+import { allOf, Capabilities, contributes, defineModule, definePlugin, Events, oneOf } from '@dxos/app-framework/next';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 
@@ -39,7 +39,7 @@ export const DeckPlugin = () =>
 
     defineModule({
       id: `${meta.id}/module/settings`,
-      activationEvents: [eventKey(Events.SetupSettings)],
+      activatesOn: Events.SetupSettings,
       activate: Settings,
     }),
 
@@ -49,44 +49,44 @@ export const DeckPlugin = () =>
 
     defineModule({
       id: `${meta.id}/module/layout`,
-      activationEvents: [eventKey(Events.Startup)],
-      triggeredEvents: [eventKey(Events.LayoutReady)],
+      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
+      triggers: [Events.LayoutReady],
       activate: LayoutState,
     }),
     defineModule({
       id: `${meta.id}/module/deck`,
-      activationEvents: [eventKey(Events.Startup)],
-      triggeredEvents: [eventKey(DeckEvents.StateReady)],
+      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
+      triggers: [DeckEvents.StateReady],
       activate: DeckState,
     }),
     defineModule({
       id: `${meta.id}/module/translations`,
-      activationEvents: [eventKey(Events.SetupTranslations)],
+      activatesOn: Events.SetupTranslations,
       activate: () => contributes(Capabilities.Translations, [...translations, ...stackTranslations]),
     }),
     defineModule({
       id: `${meta.id}/module/react-context`,
-      activationEvents: [eventKey(Events.Startup)],
+      activatesOn: Events.Startup,
       activate: ReactContext,
     }),
     defineModule({
       id: `${meta.id}/module/root`,
-      activationEvents: [eventKey(Events.Startup)],
+      activatesOn: Events.Startup,
       activate: ReactRoot,
     }),
     defineModule({
       id: `${meta.id}/module/surface`,
-      activationEvents: [eventKey(Events.Startup)],
+      activatesOn: Events.Startup,
       activate: Surface,
     }),
     defineModule({
       id: `${meta.id}/module/layout-intents`,
-      activationEvents: [eventKey(Events.SetupIntents)],
+      activatesOn: Events.SetupIntents,
       activate: LayoutIntents,
     }),
     defineModule({
-      id: `${meta.id}/module/graph-builder`,
-      activationEvents: [eventKey(Events.SetupAppGraph)],
+      id: `${meta.id}/module/app-graph-builder`,
+      activatesOn: Events.SetupAppGraph,
       activate: GraphBuilder,
     }),
 
@@ -96,28 +96,28 @@ export const DeckPlugin = () =>
 
     defineModule({
       id: `${meta.id}/module/location`,
-      activationEvents: [eventKey(Events.Startup)],
-      triggeredEvents: [eventKey(Events.LocationReady)],
+      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
+      triggers: [Events.LocationReady],
       activate: LocationState,
     }),
     defineModule({
       id: `${meta.id}/module/check-app-scheme`,
-      activationEvents: [eventKey(Events.SettingsReady)],
+      activatesOn: Events.SettingsReady,
       activate: CheckAppScheme,
     }),
     defineModule({
       id: `${meta.id}/module/url`,
-      activationEvents: [
-        eventKey(Events.DispatcherReady),
-        eventKey(Events.LayoutReady),
-        eventKey(Events.LocationReady),
-        eventKey(AttentionEvents.AttentionReady),
-      ],
+      activatesOn: allOf(
+        Events.DispatcherReady,
+        Events.LayoutReady,
+        Events.LocationReady,
+        AttentionEvents.AttentionReady,
+      ),
       activate: Url,
     }),
     defineModule({
       id: `${meta.id}/module/navigation-intents`,
-      activationEvents: [eventKey(Events.SetupIntents)],
+      activatesOn: Events.SetupIntents,
       activate: NavigationIntents,
     }),
   ]);

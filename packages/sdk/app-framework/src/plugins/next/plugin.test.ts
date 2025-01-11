@@ -20,7 +20,7 @@ describe('PluginsContext', () => {
   it('should return empty array if no capabilities are contributed', () => {
     const context = new PluginsContext(defaultOptions);
     const interfaceDef = defineCapability<{ example: string }>('@dxos/app-framework/test/example');
-    expect(context.requestCapability(interfaceDef)).toEqual([]);
+    expect(context.requestCapabilities(interfaceDef)).toEqual([]);
   });
 
   it('should be able to contribute and request capabilities', () => {
@@ -28,7 +28,7 @@ describe('PluginsContext', () => {
     const interfaceDef = defineCapability<{ example: string }>('@dxos/app-framework/test/example');
     const implementation = { example: 'identifier' };
     context.contributeCapability(interfaceDef, implementation);
-    expect(context.requestCapability(interfaceDef)).toEqual([implementation]);
+    expect(context.requestCapabilities(interfaceDef)).toEqual([implementation]);
   });
 
   it('should be able to remove capabilities', () => {
@@ -36,9 +36,9 @@ describe('PluginsContext', () => {
     const interfaceDef = defineCapability<{ example: string }>('@dxos/app-framework/test/example');
     const implementation = { example: 'identifier' };
     context.contributeCapability(interfaceDef, implementation);
-    expect(context.requestCapability(interfaceDef)).toEqual([implementation]);
+    expect(context.requestCapabilities(interfaceDef)).toEqual([implementation]);
     context.removeCapability(interfaceDef, implementation);
-    expect(context.requestCapability(interfaceDef)).toEqual([]);
+    expect(context.requestCapabilities(interfaceDef)).toEqual([]);
   });
 
   it('should be able to contribute and request multiple implementations', () => {
@@ -48,7 +48,7 @@ describe('PluginsContext', () => {
     const implementation2 = { example: 'second' };
     context.contributeCapability(interfaceDef, implementation1);
     context.contributeCapability(interfaceDef, implementation2);
-    expect(context.requestCapability(interfaceDef)).toEqual([implementation1, implementation2]);
+    expect(context.requestCapabilities(interfaceDef)).toEqual([implementation1, implementation2]);
   });
 
   it('should be able to request multiple capabilities', () => {
@@ -59,8 +59,8 @@ describe('PluginsContext', () => {
     const implementation2 = { two: 2 };
     context.contributeCapability(interfaceDef1, implementation1);
     context.contributeCapability(interfaceDef2, implementation2);
-    expect(context.requestCapability(interfaceDef1)).toEqual([implementation1]);
-    expect(context.requestCapability(interfaceDef2)).toEqual([implementation2]);
+    expect(context.requestCapabilities(interfaceDef1)).toEqual([implementation1]);
+    expect(context.requestCapabilities(interfaceDef2)).toEqual([implementation2]);
   });
 
   it('should be reactive', () => {
@@ -68,7 +68,7 @@ describe('PluginsContext', () => {
     const interfaceDef = defineCapability<{ example: string }>('@dxos/app-framework/test/example');
 
     using updates = updateCounter(() => {
-      context.requestCapability(interfaceDef);
+      context.requestCapabilities(interfaceDef);
     });
 
     expect(updates.count).toEqual(0);
@@ -86,7 +86,7 @@ describe('PluginsContext', () => {
     const interfaceDef = defineCapability<{ example: string }>('@dxos/app-framework/test/example');
 
     using updates = updateCounter(() => {
-      context.requestCapability(interfaceDef);
+      context.requestCapabilities(interfaceDef);
     });
 
     expect(updates.count).toEqual(0);
@@ -98,9 +98,9 @@ describe('PluginsContext', () => {
     implementation.example = 'updated';
     expect(updates.count).toEqual(1);
 
-    const capability = context.requestCapability(interfaceDef);
-    expect(capability).toEqual([implementation]);
-    expect(capability.example).toEqual('updated');
+    const capabilities = context.requestCapabilities(interfaceDef);
+    expect(capabilities).toEqual([implementation]);
+    expect(capabilities[0].example).toEqual('updated');
     expect(updates.count).toEqual(1);
   });
 });

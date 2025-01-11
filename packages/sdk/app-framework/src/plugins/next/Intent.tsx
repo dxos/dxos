@@ -8,7 +8,6 @@ import React from 'react';
 import { create } from '@dxos/live-object';
 
 import { Capabilities, Events } from './common';
-import { eventKey } from './manager';
 import { contributes, defineModule, definePlugin } from './plugin';
 import { createDispatcher, type IntentContext, IntentProvider } from '../plugin-intent';
 import IntentMeta from '../plugin-intent/meta';
@@ -23,9 +22,9 @@ export const IntentPlugin = () =>
       // TODO(wittjosiah): This will mean that startup needs to be reset when intents are added or removed.
       //   This is fine for now because it's how it worked prior to capabilities api anyways.
       //   In the future, the intent dispatcher should be able to be reset without resetting the entire app.
-      activationEvents: [eventKey(Events.Startup)],
-      dependentEvents: [eventKey(Events.SetupIntents)],
-      triggeredEvents: [eventKey(Events.DispatcherReady)],
+      activatesOn: Events.Startup,
+      dependsOn: [Events.SetupIntents],
+      triggers: [Events.DispatcherReady],
       activate: (context) => {
         const state = create<IntentContext>({
           dispatch: defaultEffect,

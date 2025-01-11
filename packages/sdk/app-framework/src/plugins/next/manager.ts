@@ -10,14 +10,21 @@ import { create, type ReactiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';
 
-import { type ActivationEvent, type AnyCapability, type Plugin, type PluginModule, PluginsContext } from './plugin';
+import {
+  type ActivationEvent,
+  type AnyCapability,
+  eventKey,
+  getEvents,
+  isAllOf,
+  type Plugin,
+  type PluginModule,
+  PluginsContext,
+} from './plugin';
 
 // TODO(wittjosiah): Factor out?
 const isPromise = (value: unknown): value is Promise<unknown> => {
   return value !== null && typeof value === 'object' && 'then' in value;
 };
-
-export const eventKey = (event: ActivationEvent) => (event.specifier ? `${event.id}:${event.specifier}` : event.id);
 
 export type PluginManagerOptions = {
   pluginLoader: (id: string) => MaybePromise<Plugin>;
@@ -294,20 +301,22 @@ export class PluginManager {
     return this._state.modules.filter((module) => !this._state.active.includes(module.id));
   }
 
-  private _getActiveModulesByEvent(eventKey: string) {
-    return this._getActiveModules().filter((module) => module.activationEvents.includes(eventKey));
+  private _getActiveModulesByEvent(key: string) {
+    return this._getActiveModules().filter((module) => getEvents(module.activatesOn).map(eventKey).includes(key));
   }
 
-  private _getInactiveModulesByEvent(eventKey: string) {
-    return this._getInactiveModules().filter((module) => module.activationEvents.includes(eventKey));
+  private _getInactiveModulesByEvent(key: string) {
+    return this._getInactiveModules().filter((module) => getEvents(module.activatesOn).map(eventKey).includes(key));
   }
 
   private _setPendingResetByModule(module: PluginModule) {
     return untracked(() => {
-      const activationEvents = module.activationEvents.filter((event) => this._state.eventsFired.includes(event));
+      const activationEvents = getEvents(module.activatesOn)
+        .map(eventKey)
+        .filter((key) => this._state.eventsFired.includes(key));
       const parentEvents = activationEvents.flatMap((event) => {
-        const modules = this._getActiveModules().filter((module) => module.dependentEvents?.includes(event));
-        return modules.flatMap((module) => module.activationEvents);
+        const modules = this._getActiveModules().filter((module) => module.dependsOn?.map(eventKey).includes(event));
+        return modules.flatMap((module) => getEvents(module.activatesOn)).map(eventKey);
       });
 
       const pendingReset = Array.from(new Set([...activationEvents, ...parentEvents])).filter(
@@ -340,14 +349,15 @@ export class PluginManager {
 
       for (const module of modules) {
         if (
-          !module.activationEvents
-            .filter((event) => event !== key)
-            .every((event) => self._state.eventsFired.includes(event))
+          isAllOf(module.activatesOn) &&
+          !module.activatesOn.events
+            .filter((event) => eventKey(event) !== key)
+            .every((event) => self._state.eventsFired.includes(eventKey(event)))
         ) {
           continue;
         }
 
-        yield* Effect.all(module.dependentEvents?.map((event) => self._activate(event)) ?? []);
+        yield* Effect.all(module.dependsOn?.map((event) => self._activate(event)) ?? []);
 
         const result = yield* self._activateModule(module).pipe(Effect.either);
         if (Either.isLeft(result)) {
@@ -355,7 +365,7 @@ export class PluginManager {
           yield* Effect.fail(result.left);
         }
 
-        yield* Effect.all(module.triggeredEvents?.map((event) => self._activate(event)) ?? []);
+        yield* Effect.all(module.triggers?.map((event) => self._activate(event)) ?? []);
       }
 
       if (!self._state.eventsFired.includes(key)) {

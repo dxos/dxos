@@ -14,7 +14,7 @@ import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
 
 import { Events } from './common';
-import { eventKey, PluginManager } from './manager';
+import { PluginManager } from './manager';
 import {
   contributes,
   definePlugin,
@@ -23,6 +23,8 @@ import {
   type PluginsContext,
   type Plugin,
   defineEvent,
+  allOf,
+  oneOf,
 } from './plugin';
 
 registerSignalsRuntime();
@@ -62,7 +64,7 @@ describe('PluginManager', () => {
   it('should be able to enable and disable plugins', async () => {
     const Hello = defineModule({
       id: 'dxos.org/test/hello',
-      activationEvents: [Events.Startup.id],
+      activatesOn: Events.Startup,
       activate: () => contributes(String, { string: 'hello' }),
     });
     const Test = definePlugin(testMeta, [Hello]);
@@ -79,7 +81,7 @@ describe('PluginManager', () => {
   it('should be able to activate plugins', async () => {
     const Hello = defineModule({
       id: 'dxos.org/test/hello',
-      activationEvents: [Events.Startup.id],
+      activatesOn: Events.Startup,
       activate: () => contributes(String, { string: 'hello' }),
     });
     const Test = definePlugin(testMeta, [Hello]);
@@ -98,7 +100,7 @@ describe('PluginManager', () => {
   it('should propagate errors thrown by module activate callbacks', async () => {
     const Fail = defineModule({
       id: 'dxos.org/test/fail',
-      activationEvents: [FailEvent.id],
+      activatesOn: FailEvent,
       activate: () => raise(new Error('test')),
     });
     plugins = [definePlugin(testMeta, [Fail])];
@@ -111,12 +113,12 @@ describe('PluginManager', () => {
   it('should fire activation events', async () => {
     const Hello = defineModule({
       id: 'dxos.org/test/hello',
-      activationEvents: [Events.Startup.id],
+      activatesOn: Events.Startup,
       activate: () => contributes(String, { string: 'hello' }),
     });
     const Fail = defineModule({
       id: 'dxos.org/test/fail',
-      activationEvents: [FailEvent.id],
+      activatesOn: FailEvent,
       activate: async () => raise(new Error('test')),
     });
     plugins = [definePlugin(testMeta, [Hello, Fail])];
@@ -148,7 +150,7 @@ describe('PluginManager', () => {
     let count = 0;
     const Hello = defineModule({
       id: 'dxos.org/test/hello',
-      activationEvents: [Events.Startup.id],
+      activatesOn: Events.Startup,
       activate: () => {
         count++;
         return contributes(String, { string: 'hello' });
@@ -188,21 +190,21 @@ describe('PluginManager', () => {
     const One = definePlugin({ id: 'dxos.org/test/one' }, [
       defineModule({
         id: 'dxos.org/test/one',
-        activationEvents: [CountEvent.id],
+        activatesOn: CountEvent,
         activate: () => [contributes(Number, { number: 1 })],
       }),
     ]);
     const Two = definePlugin({ id: 'dxos.org/test/two' }, [
       defineModule({
         id: 'dxos.org/test/two',
-        activationEvents: [CountEvent.id],
+        activatesOn: CountEvent,
         activate: () => [contributes(Number, { number: 2 })],
       }),
     ]);
     const Three = definePlugin({ id: 'dxos.org/test/three' }, [
       defineModule({
         id: 'dxos.org/test/three',
-        activationEvents: [CountEvent.id],
+        activatesOn: CountEvent,
         activate: () => [contributes(Number, { number: 3 })],
       }),
     ]);
@@ -210,28 +212,28 @@ describe('PluginManager', () => {
 
     const manager = new PluginManager({ pluginLoader });
     expect(manager.active).toEqual([]);
-    expect(manager.context.requestCapability(Number)).toHaveLength(0);
+    expect(manager.context.requestCapabilities(Number)).toHaveLength(0);
 
     await manager.add(One.meta.id);
     await manager.activate(CountEvent);
     expect(manager.active).toEqual([One.meta.id]);
-    expect(manager.context.requestCapability(Number)).toHaveLength(1);
+    expect(manager.context.requestCapabilities(Number)).toHaveLength(1);
 
     await manager.add(Two.meta.id);
     await manager.activate(CountEvent);
     expect(manager.active).toEqual([One.meta.id, Two.meta.id]);
-    expect(manager.context.requestCapability(Number)).toHaveLength(2);
+    expect(manager.context.requestCapabilities(Number)).toHaveLength(2);
 
     await manager.add(Three.meta.id);
     await manager.activate(CountEvent);
     expect(manager.active).toEqual([One.meta.id, Two.meta.id, Three.meta.id]);
-    expect(manager.context.requestCapability(Number)).toHaveLength(3);
+    expect(manager.context.requestCapabilities(Number)).toHaveLength(3);
   });
 
   it('should only activate modules after all activatation events have been fired', async () => {
     const Hello = defineModule({
       id: 'dxos.org/test/hello',
-      activationEvents: [Events.Startup.id, CountEvent.id],
+      activatesOn: allOf(Events.Startup, CountEvent),
       activate: () => {
         return contributes(String, { string: 'hello' });
       },
@@ -240,16 +242,45 @@ describe('PluginManager', () => {
 
     const manager = new PluginManager({ pluginLoader });
     expect(manager.active).toEqual([]);
-    expect(manager.context.requestCapability(Number)).toHaveLength(0);
+    expect(manager.context.requestCapabilities(String)).toHaveLength(0);
 
     await manager.add(testMeta.id);
     await manager.activate(Events.Startup);
     expect(manager.active).toEqual([]);
-    expect(manager.context.requestCapability(String)).toHaveLength(0);
+    expect(manager.context.requestCapabilities(String)).toHaveLength(0);
 
     await manager.activate(CountEvent);
     expect(manager.active).toEqual([Hello.id]);
-    expect(manager.context.requestCapability(String)).toHaveLength(1);
+    expect(manager.context.requestCapabilities(String)).toHaveLength(1);
+  });
+
+  it('should only activate modules once when multiple activatation events have been fired', async () => {
+    let count = 0;
+    const Hello = defineModule({
+      id: 'dxos.org/test/hello',
+      activatesOn: oneOf(Events.Startup, CountEvent),
+      activate: () => {
+        count++;
+        return contributes(String, { string: 'hello' });
+      },
+    });
+    plugins = [definePlugin(testMeta, [Hello])];
+
+    const manager = new PluginManager({ pluginLoader });
+    expect(manager.active).toEqual([]);
+    expect(manager.context.requestCapabilities(String)).toHaveLength(0);
+    expect(count).toEqual(0);
+
+    await manager.add(testMeta.id);
+    await manager.activate(CountEvent);
+    expect(manager.active).toEqual([Hello.id]);
+    expect(manager.context.requestCapabilities(String)).toHaveLength(1);
+    expect(count).toEqual(1);
+
+    await manager.activate(Events.Startup);
+    expect(manager.active).toEqual([Hello.id]);
+    expect(manager.context.requestCapabilities(String)).toHaveLength(1);
+    expect(count).toEqual(1);
   });
 
   it('should be able to disable and re-enable an active plugin', async () => {
@@ -262,8 +293,8 @@ describe('PluginManager', () => {
     const Count = definePlugin({ id: 'dxos.org/test/count' }, [
       defineModule({
         id: 'dxos.org/test/count',
-        activationEvents: [Events.Startup.id],
-        dependentEvents: [CountEvent.id],
+        activatesOn: Events.Startup,
+        dependsOn: [CountEvent],
         activate: (context) => {
           computeTotal(context);
           return contributes(Total, state);
@@ -274,17 +305,17 @@ describe('PluginManager', () => {
     const Test = definePlugin(testMeta, [
       defineModule({
         id: 'dxos.org/test/one',
-        activationEvents: [CountEvent.id],
+        activatesOn: CountEvent,
         activate: () => contributes(Number, { number: 1 }),
       }),
       defineModule({
         id: 'dxos.org/test/two',
-        activationEvents: [CountEvent.id],
+        activatesOn: CountEvent,
         activate: () => contributes(Number, { number: 2 }),
       }),
       defineModule({
         id: 'dxos.org/test/three',
-        activationEvents: [CountEvent.id],
+        activatesOn: CountEvent,
         activate: () => contributes(Number, { number: 3 }),
       }),
     ]);
@@ -371,13 +402,13 @@ describe('PluginManager', () => {
     const Test = definePlugin(testMeta, [
       defineModule({
         id,
-        activationEvents: [Events.Startup.id],
-        triggeredEvents: [eventKey(stateEvent)],
+        activatesOn: Events.Startup,
+        triggers: [stateEvent],
         activate: () => contributes(Number, create({ number: 1 })),
       }),
       defineModule({
         id: 'dxos.org/test/doubler',
-        activationEvents: [eventKey(stateEvent)],
+        activatesOn: stateEvent,
         activate: (context) => {
           const counter = context.requestCapability(Number);
           const state = create({ total: counter.number * 2 });
@@ -408,21 +439,21 @@ describe('PluginManager', () => {
     const One = definePlugin({ id: 'dxos.org/test/one' }, [
       defineModule({
         id: 'dxos.org/test/one',
-        activationEvents: [CountEvent.id],
+        activatesOn: CountEvent,
         activate: () => [contributes(Number, { number: 1 })],
       }),
     ]);
     const Two = definePlugin({ id: 'dxos.org/test/two' }, [
       defineModule({
         id: 'dxos.org/test/two',
-        activationEvents: [CountEvent.id],
+        activatesOn: CountEvent,
         activate: () => [contributes(Number, { number: 2 })],
       }),
     ]);
     const Three = definePlugin({ id: 'dxos.org/test/three' }, [
       defineModule({
         id: 'dxos.org/test/three',
-        activationEvents: [CountEvent.id],
+        activatesOn: CountEvent,
         activate: () => [contributes(Number, { number: 3 })],
       }),
     ]);

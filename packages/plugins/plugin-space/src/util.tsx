@@ -408,9 +408,11 @@ export const createObjectNode = ({
 export const constructObjectActions = ({
   node,
   dispatch,
+  navigable = false,
 }: {
   node: Node<ReactiveEchoObject<any>>;
   dispatch: PromiseIntentDispatcher;
+  navigable?: boolean;
 }) => {
   const object = node.data;
   const getId = (id: string) => `${id}/${fullyQualifiedId(object)}`;
@@ -469,19 +471,23 @@ export const constructObjectActions = ({
         testId: 'spacePlugin.deleteObject',
       },
     },
-    {
-      id: getId('copy-link'),
-      type: ACTION_TYPE,
-      data: async () => {
-        const url = `${window.location.origin}/${fullyQualifiedId(object)}`;
-        await navigator.clipboard.writeText(url);
-      },
-      properties: {
-        label: ['copy link label', { ns: SPACE_PLUGIN }],
-        icon: 'ph--link--regular',
-        testId: 'spacePlugin.copyLink',
-      },
-    },
+    ...(navigable || !(object instanceof CollectionType)
+      ? [
+          {
+            id: getId('copy-link'),
+            type: ACTION_TYPE,
+            data: async () => {
+              const url = `${window.location.origin}/${fullyQualifiedId(object)}`;
+              await navigator.clipboard.writeText(url);
+            },
+            properties: {
+              label: ['copy link label', { ns: SPACE_PLUGIN }],
+              icon: 'ph--link--regular',
+              testId: 'spacePlugin.copyLink',
+            },
+          },
+        ]
+      : []),
     // TODO(wittjosiah): Factor out and apply to all nodes.
     {
       id: NavigationAction.Expose._tag,

@@ -15,7 +15,7 @@ export const LoggerPlugin = () =>
   definePlugin({ id: 'dxos.org/test/logger' }, [
     defineModule({
       id: 'dxos.org/test/logger/intents',
-      activationEvents: [Events.SetupIntents.id],
+      activatesOn: Events.SetupIntents,
       activate: () => [
         contributes(
           Capabilities.IntentResolver,
@@ -27,7 +27,7 @@ export const LoggerPlugin = () =>
     }),
     defineModule({
       id: 'dxos.org/test/logger/surfaces',
-      activationEvents: [Events.Startup.id],
+      activatesOn: Events.Startup,
       activate: () => Toolbar(),
     }),
   ]);

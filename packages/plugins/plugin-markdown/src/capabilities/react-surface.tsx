@@ -11,7 +11,7 @@ import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { MarkdownCapabilities } from './capabilities';
 import { MarkdownContainer, MarkdownSettings } from '../components';
 import { MARKDOWN_PLUGIN } from '../meta';
-import { isEditorModel, type MarkdownSettingsProps } from '../types';
+import { DocumentType, isEditorModel, type MarkdownSettingsProps } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [

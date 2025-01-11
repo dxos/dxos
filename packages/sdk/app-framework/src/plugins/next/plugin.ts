@@ -55,11 +55,51 @@ export type ActivationEvent = {
 };
 
 /**
+ * An activation event that can be a single event, or a combination of events.
+ */
+export type ActivationEvents =
+  | ActivationEvent
+  | { type: 'one-of'; events: ActivationEvent[] }
+  | { type: 'all-of'; events: ActivationEvent[] };
+
+/**
  * Helper to define an activation event.
  */
 export const defineEvent = (id: string, specifier?: string) => {
   return { id, specifier } as ActivationEvent;
 };
+
+/**
+ * Helper to create an activation event key.
+ */
+export const eventKey = (event: ActivationEvent) => (event.specifier ? `${event.id}:${event.specifier}` : event.id);
+
+/**
+ * Helper to create an activation event that triggers when any of the given events are activated.
+ */
+export const oneOf = (...events: ActivationEvent[]) => ({ type: 'one-of' as const, events });
+
+/**
+ * Helper to create an activation event that triggers when all of the given events are activated.
+ */
+export const allOf = (...events: ActivationEvent[]) => ({ type: 'all-of' as const, events });
+
+/**
+ * Helper to check if an activation event is a one-of event.
+ */
+export const isOneOf = (events: ActivationEvents): events is { type: 'one-of'; events: ActivationEvent[] } =>
+  'type' in events && events.type === 'one-of';
+
+/**
+ * Helper to check if an activation event is an all-of event.
+ */
+export const isAllOf = (events: ActivationEvents): events is { type: 'all-of'; events: ActivationEvent[] } =>
+  'type' in events && events.type === 'all-of';
+
+/**
+ * Helper to get the events from an activation event.
+ */
+export const getEvents = (events: ActivationEvents) => ('type' in events ? events.events : [events]);
 
 type PluginsContextOptions = {
   activate: (event: ActivationEvent) => MaybePromise<boolean>;
@@ -127,7 +167,9 @@ export class PluginsContext {
   }
 
   /**
-   *
+   * Requests capabilities from the plugin context.
+   * @returns An array of capabilities.
+   * @reactive
    */
   requestCapabilities<T, U extends T = T>(
     interfaceDef: InterfaceDef<T>,
@@ -150,7 +192,10 @@ export class PluginsContext {
   }
 
   /**
-   *
+   * Requests a single capability from the plugin context.
+   * @returns The capability.
+   * @throws If no capability is found.
+   * @reactive
    */
   requestCapability<T, U extends T = T>(interfaceDef: InterfaceDef<T>, filter?: (capability: T) => capability is U): U {
     const capability = this.requestCapabilities(interfaceDef, filter)[0];
@@ -186,19 +231,19 @@ interface PluginModuleInterface {
   /**
    * Events for which the module will be activated.
    */
-  activationEvents: string[];
+  activatesOn: ActivationEvents;
 
   /**
    * Events which the plugin depends on being activated.
    * Plugin is marked as needing reset a plugin activated by a dependent event is removed.
    * Events are automatically activated before activation of the plugin.
    */
-  dependentEvents?: string[];
+  dependsOn?: ActivationEvent[];
 
   /**
    * Events which this plugin triggers upon activation.
    */
-  triggeredEvents?: string[];
+  triggers?: ActivationEvent[];
 
   /**
    * Called when the module is activated.
@@ -217,16 +262,16 @@ interface PluginModuleInterface {
 // NOTE: This is implemented as a class to prevent it from being proxied by PluginManager state.
 export class PluginModule implements PluginModuleInterface {
   readonly id: PluginModuleInterface['id'];
-  readonly activationEvents: PluginModuleInterface['activationEvents'];
-  readonly dependentEvents?: PluginModuleInterface['dependentEvents'];
-  readonly triggeredEvents?: PluginModuleInterface['triggeredEvents'];
+  readonly activatesOn: PluginModuleInterface['activatesOn'];
+  readonly dependsOn?: PluginModuleInterface['dependsOn'];
+  readonly triggers?: PluginModuleInterface['triggers'];
   readonly activate: PluginModuleInterface['activate'];
 
   constructor(options: PluginModuleInterface) {
     this.id = options.id;
-    this.activationEvents = options.activationEvents;
-    this.dependentEvents = options.dependentEvents;
-    this.triggeredEvents = options.triggeredEvents;
+    this.activatesOn = options.activatesOn;
+    this.dependsOn = options.dependsOn;
+    this.triggers = options.triggers;
     this.activate = options.activate;
   }
 }

@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect } from 'react';
 
-import { useResolvePlugin, parseFileManagerPlugin } from '@dxos/app-framework';
-import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
 import { useExtensions } from '../extensions';
@@ -73,7 +72,7 @@ type DocumentEditorProps = Omit<MarkdownContainerProps, 'object' | 'extensionPro
   };
 
 export const DocumentEditor = ({ id, document: doc, settings, viewMode, ...props }: DocumentEditorProps) => {
-  const space = getSpace(doc);
+  // const space = getSpace(doc);
 
   // Migrate gradually to `fallbackName`.
   useEffect(() => {
@@ -83,15 +82,16 @@ export const DocumentEditor = ({ id, document: doc, settings, viewMode, ...props
   }, [doc, doc.content]);
 
   // File dragging.
-  const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
-  const handleFileUpload = useMemo(() => {
-    if (space === undefined || fileManagerPlugin?.provides.file.upload === undefined) {
-      return undefined;
-    }
+  // TODO(wittjosiah): Restore.
+  // const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
+  // const handleFileUpload = useMemo(() => {
+  //   if (space === undefined || fileManagerPlugin?.provides.file.upload === undefined) {
+  //     return undefined;
+  //   }
 
-    // TODO(burdon): Re-order props: space, file.
-    return async (file: File) => fileManagerPlugin?.provides?.file?.upload?.(file, space);
-  }, [space, fileManagerPlugin]);
+  //   // TODO(burdon): Re-order props: space, file.
+  //   return async (file: File) => fileManagerPlugin?.provides?.file?.upload?.(file, space);
+  // }, [space, fileManagerPlugin]);
 
   return (
     <MarkdownEditor
@@ -100,7 +100,7 @@ export const DocumentEditor = ({ id, document: doc, settings, viewMode, ...props
       viewMode={viewMode}
       toolbar={settings.toolbar}
       inputMode={settings.editorInputMode}
-      onFileUpload={handleFileUpload}
+      // onFileUpload={handleFileUpload}
       {...props}
     />
   );

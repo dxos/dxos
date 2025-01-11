@@ -11,7 +11,7 @@ export const LayoutPlugin = () =>
   definePlugin({ id: 'dxos.org/test/layout' }, [
     defineModule({
       id: 'dxos.org/test/layout/root',
-      activationEvents: [Events.Startup.id],
+      activatesOn: Events.Startup,
       activate: () => Layout(),
     }),
   ]);

@@ -12,7 +12,7 @@ const KEY = `${GRAPH_PLUGIN}/app-graph`;
 export default async (context: PluginsContext) => {
   const builder = GraphBuilder.from(localStorage.getItem(KEY) ?? undefined);
   const interval = setInterval(() => {
-    localStorage.setItem(`${GRAPH_PLUGIN}/graph`, builder.graph.pickle());
+    localStorage.setItem(KEY, builder.graph.pickle());
   }, 5_000);
 
   context.requestCapabilities(Capabilities.AppGraphBuilder).forEach((extension) => builder.addExtension(extension));
@@ -29,8 +29,6 @@ export default async (context: PluginsContext) => {
   return contributes(
     Capabilities.AppGraph,
     { graph: builder.graph, explore: (options) => builder.explore(options) },
-    () => {
-      clearInterval(interval);
-    },
+    () => clearInterval(interval),
   );
 };

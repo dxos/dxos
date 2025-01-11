@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { signal } from '@preact/signals-core';
-
 import { createIntent } from '@dxos/app-framework';
 import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework/next';
 import {
@@ -15,7 +13,6 @@ import {
   isSpace,
   OBJECT_ID_LENGTH,
   parseId,
-  QueryOptions,
   type ReactiveEchoObject,
   SPACE_ID_LENGTH,
   SpaceState,
@@ -24,7 +21,7 @@ import {
 import { getTypename, isDeleted } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { createExtension, memoize, toSignal, type Node } from '@dxos/plugin-graph';
+import { createExtension, toSignal, type Node } from '@dxos/plugin-graph';
 import { nonNullable } from '@dxos/util';
 
 import { SpaceCapabilities } from './capabilities';
@@ -303,17 +300,7 @@ export default (context: PluginsContext) => {
           return;
         }
 
-        const store = memoize(() => signal(space.db.getObjectById(objectId)), id);
-        memoize(() => {
-          if (!store.value) {
-            void space.db
-              .query({ id: objectId }, { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED })
-              .first()
-              .then((o) => (store.value = o))
-              .catch((err) => log.catch(err, { objectId }));
-          }
-        }, id);
-        const object = store.value;
+        const [object] = memoizeQuery(space, { id: objectId });
         if (!object) {
           return;
         }
@@ -333,7 +320,8 @@ export default (context: PluginsContext) => {
       filter: (node): node is Node<ReactiveEchoObject<any>> => isEchoObject(node.data),
       actions: ({ node }) => {
         const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
-        return constructObjectActions({ node, dispatch });
+        const state = context.requestCapability(SpaceCapabilities.State);
+        return constructObjectActions({ node, dispatch, navigable: state.navigableCollections });
       },
     }),
 

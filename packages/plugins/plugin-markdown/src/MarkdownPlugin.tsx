@@ -3,7 +3,7 @@
 //
 
 import { createIntent } from '@dxos/app-framework';
-import { Capabilities, contributes, defineModule, definePlugin, eventKey, Events } from '@dxos/app-framework/next';
+import { Capabilities, contributes, defineModule, definePlugin, Events, oneOf } from '@dxos/app-framework/next';
 import { type BaseObject } from '@dxos/echo-schema';
 import { RefArray } from '@dxos/live-object';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
@@ -26,22 +26,22 @@ export const MarkdownPlugin = () =>
   definePlugin(meta, [
     defineModule({
       id: `${MARKDOWN_PLUGIN}/module/settings`,
-      activationEvents: [eventKey(Events.SetupSettings)],
+      activatesOn: Events.SetupSettings,
       activate: MarkdownSettings,
     }),
     defineModule({
       id: `${MARKDOWN_PLUGIN}/module/state`,
-      activationEvents: [eventKey(Events.Startup)],
+      activatesOn: Events.Startup,
       activate: MarkdownState,
     }),
     defineModule({
       id: `${MARKDOWN_PLUGIN}/module/translations`,
-      activationEvents: [eventKey(Events.SetupTranslations)],
+      activatesOn: Events.SetupTranslations,
       activate: () => contributes(Capabilities.Translations, [...translations, ...editorTranslations]),
     }),
     defineModule({
       id: `${MARKDOWN_PLUGIN}/module/metadata`,
-      activationEvents: [eventKey(Events.Startup)],
+      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
       activate: () =>
         contributes(Capabilities.Metadata, {
           id: DocumentType.typename,
@@ -62,7 +62,7 @@ export const MarkdownPlugin = () =>
     }),
     defineModule({
       id: `${MARKDOWN_PLUGIN}/module/schema`,
-      activationEvents: [eventKey(ClientEvents.SetupClient)],
+      activatesOn: ClientEvents.SetupClient,
       activate: () => [
         contributes(ClientCapabilities.SystemSchema, [TextType]),
         contributes(ClientCapabilities.Schema, [DocumentType]),
@@ -70,22 +70,22 @@ export const MarkdownPlugin = () =>
     }),
     defineModule({
       id: `${MARKDOWN_PLUGIN}/module/react-surface`,
-      activationEvents: [eventKey(Events.Startup)],
+      activatesOn: Events.Startup,
       activate: ReactSurface,
     }),
     defineModule({
       id: `${MARKDOWN_PLUGIN}/module/intent-resolver`,
-      activationEvents: [eventKey(Events.SetupIntents)],
+      activatesOn: Events.SetupIntents,
       activate: IntentResolver,
     }),
     defineModule({
       id: `${MARKDOWN_PLUGIN}/module/app-graph-serializer`,
-      activationEvents: [eventKey(Events.Startup)],
+      activatesOn: Events.Startup,
       activate: AppGraphSerializer,
     }),
     defineModule({
       id: `${MARKDOWN_PLUGIN}/module/thread`,
-      activationEvents: [eventKey(Events.Startup)],
+      activatesOn: Events.Startup,
       activate: Thread,
     }),
   ]);

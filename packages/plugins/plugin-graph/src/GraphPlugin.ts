@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defineModule, eventKey, lazy, Events, definePlugin } from '@dxos/app-framework/next';
+import { defineModule, lazy, Events, definePlugin } from '@dxos/app-framework/next';
 
 import meta from './meta';
 
@@ -15,14 +15,14 @@ export const GraphPlugin = () =>
   definePlugin(meta, [
     defineModule({
       id: `${meta.id}/module/react-context`,
-      activationEvents: [eventKey(Events.Startup)],
+      activatesOn: Events.Startup,
       activate: lazy(() => import('./GraphContext')),
     }),
     defineModule({
       id: `${meta.id}/module/graph`,
-      activationEvents: [eventKey(Events.Startup)],
-      dependentEvents: [eventKey(Events.SetupAppGraph)],
-      triggeredEvents: [eventKey(Events.AppGraphReady)],
+      activatesOn: Events.Startup,
+      dependsOn: [Events.SetupAppGraph],
+      triggers: [Events.AppGraphReady],
       activate: lazy(() => import('./graph')),
     }),
   ]);
