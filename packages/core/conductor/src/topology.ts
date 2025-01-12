@@ -16,10 +16,6 @@ import { log } from '@dxos/log';
  * Is used to run the computation.
  */
 export type Topology = {
-  inputNodeId: string;
-  outputNodeId: string;
-  inputSchema: S.Schema.AnyNoContext;
-  outputSchema: S.Schema.AnyNoContext;
   // TODO(burdon): Map?
   nodes: TopologyNode[];
   // TODO(burdon): Part of topology?
@@ -56,8 +52,6 @@ export type GraphDiagnostic = {
 
 export type CreateTopologyParams = {
   graph: GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;
-  inputNodeId: string;
-  outputNodeId: string;
   computeMetaResolver: (node: ComputeNode) => Promise<ComputeMeta>;
 };
 
@@ -68,15 +62,8 @@ export type CreateTopologyParams = {
  * @param outputNodeId
  * @param computeMetaResolver
  */
-export const createTopology = async ({
-  graph,
-  inputNodeId,
-  outputNodeId,
-  computeMetaResolver,
-}: CreateTopologyParams): Promise<Topology> => {
+export const createTopology = async ({ graph, computeMetaResolver }: CreateTopologyParams): Promise<Topology> => {
   const topology: Omit<Topology, 'inputSchema' | 'outputSchema'> = {
-    inputNodeId,
-    outputNodeId,
     nodes: [],
     diagnostics: [],
   };
@@ -163,19 +150,5 @@ export const createTopology = async ({
     }
   }
 
-  const inputNode = topology.nodes.find((node) => node.id === inputNodeId) ?? failedInvariant();
-  const inputSchema = S.Struct(
-    Object.fromEntries(inputNode.outputs.map((output) => [output.name, output.schema] as const)),
-  );
-
-  const outputNode = topology.nodes.find((node) => node.id === outputNodeId) ?? failedInvariant();
-  const outputSchema = S.Struct(
-    Object.fromEntries(outputNode.inputs.map((input) => [input.name, input.schema] as const)),
-  );
-
-  return {
-    ...topology,
-    inputSchema,
-    outputSchema,
-  };
+  return topology;
 };

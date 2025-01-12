@@ -24,26 +24,29 @@ export type ComputeNode = S.Schema.Type<typeof ComputeNode>;
  * GraphEdge payload.
  */
 export const ComputeEdge = S.Struct({
-  /** Input property. */
-  input: S.String,
-
-  /** Output property. */
+  /** Output property from source. */
   output: S.String,
+
+  /** Input property to target. */
+  input: S.String,
 });
 
 export type ComputeEdge = S.Schema.Type<typeof ComputeEdge>;
 
 /**
- * Bag of effects. One per output property.
+ * Bag of effects (i.e., one effect per output property.)
  */
 export type OutputBag<O> = { [K in keyof O]: O[K] | Effect.Effect<O[K], Error, never> };
 
 /**
- * Node function.
+ *
+ */
+export type ComputeRequirements = EventLogger | GptService | Scope.Scope;
+
+/**
+ * Implements the work done by a compute node.
  */
 export type ComputeFunction<I, O> = (input: I) => Effect.Effect<OutputBag<O>, Error, ComputeRequirements>;
-
-export type ComputeRequirements = EventLogger | GptService | Scope.Scope;
 
 // TODO(dmaretskyi): To effect schema.
 export type ComputeMeta = {

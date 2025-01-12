@@ -19,12 +19,12 @@ describe('Graph as a fiber runtime', () => {
   test('simple adder node', async ({ expect }) => {
     const runtime = new TestRuntime()
       //
-      .registerNode('dxn:compute:sum', sum)
-      .registerGraph('dxn:compute:g1', g1());
+      .registerNode('dxn:test:sum', sum)
+      .registerGraph('dxn:test:g1', g1());
 
     const result = await Effect.runPromise(
       runtime
-        .runGraph('dxn:compute:adder', { number1: 1, number2: 2 })
+        .runGraph('dxn:test:g1', { number1: 1, number2: 2 })
         .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Effect.scoped),
     );
     expect(result).toEqual({ sum: 3 });
@@ -32,13 +32,13 @@ describe('Graph as a fiber runtime', () => {
 
   test('composition', async ({ expect }) => {
     const runtime = new TestRuntime()
-      .registerNode('dxn:compute:sum', sum)
-      .registerGraph('dxn:compute:g1', g1())
-      .registerGraph('dxn:compute:g2', g2());
+      .registerNode('dxn:test:sum', sum)
+      .registerGraph('dxn:test:g1', g1())
+      .registerGraph('dxn:test:g2', g2());
 
     const result = await Effect.runPromise(
       runtime
-        .runGraph('dxn:compute:add3', { a: 1, b: 2, c: 3 })
+        .runGraph('dxn:test:g2', { a: 1, b: 2, c: 3 })
         .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Effect.scoped),
     );
     expect(result).toEqual({ result: 6 });
@@ -68,7 +68,7 @@ const sum = defineComputeNode({
 const g1 = (): ComputeGraph => {
   return new GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>()
     .addNode({ id: 'I', data: { type: NodeType.Input } })
-    .addNode({ id: 'X', data: { type: 'dxn:compute:sum' } })
+    .addNode({ id: 'X', data: { type: 'dxn:test:sum' } })
     .addNode({ id: 'O', data: { type: NodeType.Output } })
     .addEdge(createEdge({ source: 'I', output: 'number1', target: 'X', input: 'a' }))
     .addEdge(createEdge({ source: 'I', output: 'number2', target: 'X', input: 'b' }))
@@ -83,8 +83,8 @@ const g1 = (): ComputeGraph => {
 const g2 = (): ComputeGraph => {
   return new GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>()
     .addNode({ id: 'I', data: { type: NodeType.Input } })
-    .addNode({ id: 'X', data: { type: 'dxn:compute:g1' } })
-    .addNode({ id: 'Y', data: { type: 'dxn:compute:g1' } })
+    .addNode({ id: 'X', data: { type: 'dxn:test:g1' } })
+    .addNode({ id: 'Y', data: { type: 'dxn:test:g1' } })
     .addNode({ id: 'O', data: { type: NodeType.Output } })
     .addEdge(createEdge({ source: 'I', output: 'a', target: 'X', input: 'number1' }))
     .addEdge(createEdge({ source: 'I', output: 'b', target: 'X', input: 'number2' }))
