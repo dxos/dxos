@@ -4,6 +4,7 @@
 
 export * from './defs';
 
+export * from './Array';
 export * from './Beacon';
 export * from './Counter';
 export * from './Database';

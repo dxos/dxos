@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+export * from './Array';
 export * from './Beacon';
 export * from './Counter';
 export * from './Database';
