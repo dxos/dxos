@@ -4,6 +4,7 @@
 
 import { Chunk, Console, Effect, Exit, Option, Scope, Stream } from 'effect';
 import { describe, test } from 'vitest';
+import { it } from '@effect/vitest';
 
 import { AIServiceClientImpl, type ResultStreamEvent } from '@dxos/assistant';
 import { GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
@@ -28,26 +29,26 @@ const AI_SERVICE_ENDPOINT = 'http://localhost:8787';
 const SKIP_AI_SERVICE_TESTS = true;
 
 describe('Gpt pipelines', () => {
-  test('text output', async ({ expect }) => {
-    const runtime = new TestRuntime();
-    runtime.registerGraph('dxn:compute:gpt1', gpt1());
+  it.effect('text output', ({ expect }) =>
+    Effect.gen(function* () {
+      const runtime = new TestRuntime();
+      runtime.registerGraph('dxn:compute:gpt1', gpt1());
 
-    await Effect.runPromise(
-      Effect.gen(function* () {
+      yield* Effect.gen(function* () {
         const scope = yield* Scope.make();
 
-        const computeResult = runtime
+        const computeResult = yield* runtime
           .runGraph('dxn:compute:gpt1', makeValueBag({ prompt: 'What is the meaning of life?' }))
-          .pipe(Effect.flatMap(unwrapValueBag), Scope.extend(scope));
+          .pipe(Scope.extend(scope), Effect.withSpan('runGraph'));
 
-        const { text }: { text: Effect.Effect<string, Error | NotExecuted, never> } = yield* computeResult;
+        const text: string = yield* computeResult.values.text;
 
-        expect(yield* text).toEqual('This is a mock response that simulates a GPT-like output.');
+        expect(text).toEqual('This is a mock response that simulates a GPT-like output.');
 
-        yield* Scope.close(scope, Exit.void);
-      }).pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }))),
-    );
-  });
+        yield* Scope.close(scope, Exit.void).pipe(Effect.withSpan('closeScope'));
+      }).pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Effect.withSpan('test'));
+    }),
+  );
 
   test('stream output', { timeout: 1000 }, async ({ expect }) => {
     const runtime = new TestRuntime();
@@ -57,25 +58,22 @@ describe('Gpt pipelines', () => {
       Effect.gen(function* () {
         const scope = yield* Scope.make();
 
-        const { tokenStream, text }: { tokenStream: Stream.Stream<ResultStreamEvent>; text: Effect.Effect<string> } =
-          yield* runtime
-            .runGraph(
-              'dxn:compute:gpt2',
-              makeValueBag({
-                prompt: 'What is the meaning of life?',
-              }),
-            )
-            .pipe(
-              Effect.flatMap(unwrapValueBag),
-              Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })),
-              Scope.extend(scope),
-            );
+        const output = yield* runtime
+          .runGraph(
+            'dxn:compute:gpt2',
+            makeValueBag({
+              prompt: 'What is the meaning of life?',
+            }),
+          )
+          .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Scope.extend(scope));
 
         // log.info('text in test', { text: getDebugName(text) });
 
-        const p = Effect.runPromise(text).then((x) => {
+        const p = Effect.runPromise(output.values.text).then((x) => {
           console.log({ x });
         });
+
+        const tokenStream: Stream.Stream<ResultStreamEvent> = yield* output.values.tokenStream;
 
         const tokens = yield* tokenStream.pipe(
           Stream.filterMap((ev) =>
