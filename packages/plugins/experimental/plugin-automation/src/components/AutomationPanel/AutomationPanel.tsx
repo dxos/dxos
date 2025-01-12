@@ -9,6 +9,7 @@ import {
   FunctionType,
   FunctionTrigger,
   FunctionTriggerSchema,
+  TriggerKind,
   type FunctionTriggerType,
   ScriptType,
 } from '@dxos/functions';
@@ -29,7 +30,7 @@ export type AutomationPanelProps = {
 };
 
 // TODO(burdon): Factor out common layout with ViewEditor.
-export const AutomationPanel = ({ space }: AutomationPanelProps) => {
+export const AutomationPanel = ({ space, object }: AutomationPanelProps) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
   const client = useClient();
   const triggers = useQuery(space, Filter.schema(FunctionTrigger));
@@ -60,7 +61,13 @@ export const AutomationPanel = ({ space }: AutomationPanelProps) => {
     if (selected) {
       Object.assign(selected, trigger);
     } else {
-      space.db.add(create(FunctionTrigger, trigger));
+      const automationTargetId = object?.id;
+      space.db.add(
+        create(
+          FunctionTrigger,
+          automationTargetId ? { ...trigger, meta: { ...trigger.meta, automationTargetId } } : trigger,
+        ),
+      );
     }
 
     setTrigger(undefined);
@@ -76,30 +83,38 @@ export const AutomationPanel = ({ space }: AutomationPanelProps) => {
       <List.Root<FunctionTrigger> items={triggers} isItem={S.is(FunctionTrigger)} getId={(field) => field.id}>
         {({ items: triggers }) => (
           <div role='list' className='flex flex-col w-full'>
-            {triggers?.map((trigger) => (
-              <List.Item<FunctionTrigger>
-                key={trigger.id}
-                item={trigger}
-                classNames={mx(grid, ghostHover, 'items-center')}
-              >
-                <Input.Root>
-                  <Input.Switch checked={trigger.enabled} onCheckedChange={(checked) => (trigger.enabled = checked)} />
-                </Input.Root>
+            {triggers?.map((trigger) => {
+              const copyAction = getCopyAction(client, trigger);
+              return (
+                <List.Item<FunctionTrigger>
+                  key={trigger.id}
+                  item={trigger}
+                  classNames={mx(grid, ghostHover, 'items-center')}
+                >
+                  <Input.Root>
+                    <Input.Switch
+                      checked={trigger.enabled}
+                      onCheckedChange={(checked) => (trigger.enabled = checked)}
+                    />
+                  </Input.Root>
 
-                <div className={'flex'}>
-                  <List.ItemTitle classNames='px-2 cursor-pointer w-0 shrink' onClick={() => handleSelect(trigger)}>
-                    {getFunctionName(scripts, functions, trigger)}
-                  </List.ItemTitle>
+                  <div className={'flex'}>
+                    <List.ItemTitle classNames='px-2 cursor-pointer w-0 shrink' onClick={() => handleSelect(trigger)}>
+                      {getFunctionName(scripts, functions, trigger)}
+                    </List.ItemTitle>
 
-                  {/* TODO: a better way to expose URL copy action */}
-                  <Button onClick={() => navigator.clipboard.writeText(getWebhookUrl(client, trigger))}>
-                    Copy URL
-                  </Button>
-                </div>
+                    {/* TODO: a better way to expose URL copy action */}
+                    {copyAction && (
+                      <Button onClick={() => navigator.clipboard.writeText(copyAction.contentProvider())}>
+                        {copyAction.text}
+                      </Button>
+                    )}
+                  </div>
 
-                <List.ItemDeleteButton onClick={() => handleDelete(trigger)} />
-              </List.Item>
-            ))}
+                  <List.ItemDeleteButton onClick={() => handleDelete(trigger)} />
+                </List.Item>
+              );
+            })}
           </div>
         )}
       </List.Root>
@@ -121,6 +136,18 @@ export const AutomationPanel = ({ space }: AutomationPanelProps) => {
       )}
     </div>
   );
+};
+
+const getCopyAction = (client: Client, trigger: FunctionTrigger | undefined) => {
+  if (trigger?.spec?.type === TriggerKind.Email) {
+    return { text: 'Copy Email', contentProvider: () => `${getSpace(trigger)!.id}@dxos.network` };
+  }
+
+  if (trigger?.spec?.type === TriggerKind.Webhook) {
+    return { text: 'Copy URL', contentProvider: () => getWebhookUrl(client, trigger) };
+  }
+
+  return undefined;
 };
 
 const getWebhookUrl = (client: Client, trigger: FunctionTrigger) => {
