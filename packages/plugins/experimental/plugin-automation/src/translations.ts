@@ -29,6 +29,7 @@ export default [
         'trigger type webhook': 'Webhook',
         'trigger type websocket': 'Websocket',
         'trigger type subscription': 'Subscription',
+        'trigger type email': 'Email',
 
         'trigger filter': 'Filter',
         'trigger cron': 'Cron',

@@ -13,6 +13,7 @@ export enum TriggerKind {
   Timer = 'timer',
   Webhook = 'webhook',
   Subscription = 'subscription',
+  Email = 'email',
 }
 
 // TODO(burdon): Rename prop kind.
@@ -30,6 +31,12 @@ const TimerTriggerSchema = S.Struct({
 }).pipe(S.mutable);
 
 export type TimerTrigger = S.Schema.Type<typeof TimerTriggerSchema>;
+
+const EmailTriggerSchema = S.Struct({
+  type: S.Literal(TriggerKind.Email).annotations(typeLiteralAnnotations),
+}).pipe(S.mutable);
+
+export type EmailTrigger = S.Schema.Type<typeof EmailTriggerSchema>;
 
 /**
  * Webhook.
@@ -84,6 +91,7 @@ export const TriggerSchema = S.Union(
   TimerTriggerSchema,
   WebhookTriggerSchema,
   SubscriptionTriggerSchema,
+  EmailTriggerSchema,
 ).annotations({
   [AST.TitleAnnotationId]: 'Trigger',
 });
