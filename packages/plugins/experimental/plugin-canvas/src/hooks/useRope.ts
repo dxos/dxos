@@ -23,6 +23,7 @@ export type RopeOptions = {
   linkLength: number;
   linkStrength: number;
   gravity: number;
+  alphaTarget: number;
 };
 
 export const defaultOptions: RopeOptions = {
@@ -30,6 +31,7 @@ export const defaultOptions: RopeOptions = {
   linkLength: 16,
   linkStrength: 0.5,
   gravity: 0.9,
+  alphaTarget: 0.3,
 };
 
 const endSize = 8;
@@ -100,9 +102,13 @@ export const useRope = (
 
     nodes.call(
       createDrag((ev) => {
-        simulation.alphaTarget(ev === 'start' ? 0.3 : 0);
-        if (ev === 'start') {
-          simulation.restart();
+        if (ev === 'end') {
+          simulation.alphaTarget(0);
+        } else {
+          simulation
+            .alpha(options.alphaTarget * 2)
+            .alphaTarget(options.alphaTarget)
+            .restart();
         }
       }),
     );
@@ -178,9 +184,10 @@ export const createSimulation = (graph: GraphModel<GraphNode<SimulationNodeDatum
         }
       });
     })
-    .velocityDecay(0.05) // Lower decay for more elastic movement.
-    .alphaMin(0.001)
-    .alphaDecay(0.001); // Slower decay for longer-lasting movement.
+    .alphaTarget(options.alphaTarget)
+    .alphaMin(0.01)
+    .alphaDecay(0.001) // Slower decay for longer-lasting movement.
+    .velocityDecay(0.05); // Lower decay for more elastic movement.
 
   return simulation;
 };
@@ -188,24 +195,21 @@ export const createSimulation = (graph: GraphModel<GraphNode<SimulationNodeDatum
 /**
  * Drag behavior.
  */
-export const createDrag = (cb: (event: 'start' | 'stop') => void) =>
+export const createDrag = (cb: (event: 'start' | 'drag' | 'end') => void) =>
   d3
     .drag<SVGCircleElement, any>()
     .on('start', ((event: D3DragEvent<SVGCircleElement, any, any>) => {
-      if (!event.active) {
-        cb('start');
-      }
+      cb('start');
       event.subject.fx = event.subject.x;
       event.subject.fy = event.subject.y;
     }) as any)
     .on('drag', (event) => {
+      cb('drag');
       event.subject.fx = event.x;
       event.subject.fy = event.y;
     })
     .on('end', (event) => {
-      if (!event.active) {
-        cb('stop');
-      }
+      cb('end');
       if (!event.sourceEvent.shiftKey) {
         event.subject.fx = null;
         event.subject.fy = null;

@@ -8,8 +8,7 @@ import { raise } from '@dxos/debug';
 import { type GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
 
 import { compile } from '../fiber-compiler';
-import { inputNode, outputNode } from '../nodes';
-import { gptNode } from '../nodes/gpt-node';
+import { inputNode, outputNode, gptNode } from '../nodes';
 import {
   NodeType,
   type ComputeEdge,
@@ -70,10 +69,9 @@ export class TestRuntime {
 
   async compileGraph(graph: GraphModel<GraphNode<ComputeNode, false>, GraphEdge<ComputeEdge, false>>) {
     const inputNode =
-      graph.getNodes({}).find((node) => node.data.type === NodeType.Input) ?? raise(new Error('Input node not found'));
+      graph.nodes.find((node) => node.data.type === NodeType.Input) ?? raise(new Error('Input node not found'));
     const outputNode =
-      graph.getNodes({}).find((node) => node.data.type === NodeType.Output) ??
-      raise(new Error('Output node not found'));
+      graph.nodes.find((node) => node.data.type === NodeType.Output) ?? raise(new Error('Output node not found'));
     const { computation, diagnostics } = await compile({
       graph,
       inputNodeId: inputNode.id,
@@ -81,9 +79,9 @@ export class TestRuntime {
       computeResolver: this.resolveNode.bind(this),
     });
 
-    for (const { severity, message, ...rest } of diagnostics) {
-      console.log(severity, message, rest);
-    }
+    // for (const { severity, message, ...rest } of diagnostics) {
+    //   console.log(severity, message, rest);
+    // }
     if (diagnostics.some(({ severity }) => severity === 'error')) {
       throw new Error('Graph compilation failed');
     }

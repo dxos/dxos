@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Either, type Scope } from 'effect';
+import { Effect, type Scope } from 'effect';
 
 import { S } from '@dxos/echo-schema';
 import type { GraphModel, GraphEdge, GraphNode } from '@dxos/graph';
+import { mapValues } from '@dxos/util';
 
 import type { EventLogger, GptService } from './services';
-import { mapValues } from '@dxos/util';
 
 /**
  * GraphNode payload.
@@ -25,11 +25,11 @@ export type ComputeNode = S.Schema.Type<typeof ComputeNode>;
  * GraphEdge payload.
  */
 export const ComputeEdge = S.Struct({
-  /** Input property. */
-  input: S.String,
-
-  /** Output property. */
+  /** Output property from source. */
   output: S.String,
+
+  /** Input property to target. */
+  input: S.String,
 });
 
 export type ComputeEdge = S.Schema.Type<typeof ComputeEdge>;

@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AST, S } from '@dxos/echo-schema';
+import { AST, type S } from '@dxos/echo-schema';
 import type { GraphEdge, GraphModel, GraphNode } from '@dxos/graph';
-import { failedInvariant, invariant } from '@dxos/invariant';
-
-import { pickProperty } from './util/ast';
-import type { ComputeNode, ComputeEdge, ComputeMeta } from './schema';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+
+import type { ComputeNode, ComputeEdge, ComputeMeta } from './schema';
+import { pickProperty } from './util';
 
 /**
  * Structure derived from the compute graph.
@@ -69,7 +69,7 @@ export const createTopology = async ({ graph, computeMetaResolver }: CreateTopol
   };
 
   // Process nodes.
-  for (const node of graph.getNodes()) {
+  for (const node of graph.nodes) {
     const meta = await computeMetaResolver(node.data);
     if (!meta) {
       throw new Error(`No meta for node: ${node.data.type}`);
@@ -85,7 +85,7 @@ export const createTopology = async ({ graph, computeMetaResolver }: CreateTopol
   }
 
   // Process edges.
-  for (const edge of graph.getEdges()) {
+  for (const edge of graph.edges) {
     const sourceNode = topology.nodes.find((node) => node.id === edge.source);
     const targetNode = topology.nodes.find((node) => node.id === edge.target);
     if (sourceNode == null || targetNode == null) {

@@ -6,7 +6,7 @@ import React from 'react';
 
 import { AST, S } from '@dxos/echo-schema';
 
-import { Box } from './components';
+import { Box, footerHeight, headerHeight } from './components';
 import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { createAnchors, rowHeight } from '../../components';
@@ -55,11 +55,10 @@ export const functionShape: ShapeDef<FunctionShape> = {
 // Common function components.
 //
 
-const headerHeight = 32;
 const bodyPadding = 8;
 
+// TODO(burdon): Move labels to anchor?
 export const FunctionBody = ({ name, inputs, outputs }: { name: string; inputs?: string[]; outputs?: string[] }) => {
-  // TODO(burdon): Consider moving property labels to the Anchor component? Or use anchor positions.
   return (
     <Box name={name}>
       <div className='grid grid-cols-2 items-center'>
@@ -88,11 +87,11 @@ export const FunctionBody = ({ name, inputs, outputs }: { name: string; inputs?:
 
 export const getHeight = (input: S.Schema<any>) => {
   const properties = AST.getPropertySignatures(input.ast);
-  return headerHeight + bodyPadding * 2 + properties.length * rowHeight + 2; // Incl. borders.
+  return headerHeight + footerHeight + bodyPadding * 2 + properties.length * rowHeight + 2; // Incl. borders.
 };
 
 export const createFunctionAnchors = (shape: Polygon, input: S.Schema<any>, output: S.Schema<any>) => {
   const inputs = AST.getPropertySignatures(input.ast).map(({ name }) => createAnchorId('input', name.toString()));
   const outputs = AST.getPropertySignatures(output.ast).map(({ name }) => createAnchorId('output', name.toString()));
-  return createAnchors({ shape, inputs, outputs, center: { x: 0, y: headerHeight / 2 } });
+  return createAnchors({ shape, inputs, outputs, center: { x: 0, y: (headerHeight - footerHeight) / 2 + 1 } });
 };

@@ -153,7 +153,8 @@ export class StateMachine extends Resource {
       .finally(() => {
         const idx = this._activeTasks.indexOf(promise);
         if (idx !== -1) {
-          this._activeTasks.splice(idx, 1); // TODO(burdon): ???
+          // eslint-disable-next-line @typescript-eslint/no-floating-promises
+          this._activeTasks.splice(idx, 1);
         }
       });
 
@@ -181,7 +182,7 @@ export class StateMachine extends Resource {
    */
   private async _propagate<T extends Binding>(node: GraphNode<ComputeNode<any, T>>, output: T) {
     try {
-      for (const edge of this._graph.getEdges({ source: node.id })) {
+      for (const edge of this._graph.filterEdges({ source: node.id })) {
         const target = this._graph.getNode(edge.target);
         invariant(target, `invalid target: ${edge.target}`);
 
@@ -195,7 +196,7 @@ export class StateMachine extends Resource {
         // Set input.
         invariant(edge.data.input);
         const inboundEdges = this._graph
-          .getEdges({ target: target.id })
+          .filterEdges({ target: target.id })
           .filter((e) => e.data.input === edge.data.input);
 
         let shouldPropagate;
