@@ -10,7 +10,14 @@ import { ObjectId, type MessageImageContentBlock } from '@dxos/assistant';
 import { log } from '@dxos/log';
 
 import { type GptOutput, type GptInput, type GptService } from '../gpt';
-import { makeValueBag, unwrapValueBag, type ComputeRequirements, type NotExecuted, type ValueBag } from '../../schema';
+import {
+  makeValueBag,
+  unwrapValueBag,
+  type ComputeEffect,
+  type ComputeRequirements,
+  type NotExecuted,
+  type ValueBag,
+} from '../../schema';
 
 export class OllamaGpt implements Context.Tag.Service<GptService> {
   // Images are not supported.
@@ -18,9 +25,7 @@ export class OllamaGpt implements Context.Tag.Service<GptService> {
 
   constructor(private readonly _ollama: Ollama) {}
 
-  public invoke(
-    inputs: ValueBag<GptInput>,
-  ): Effect.Effect<ValueBag<GptOutput>, NotExecuted | Error, ComputeRequirements> {
+  public invoke(inputs: ValueBag<GptInput>): ComputeEffect<ValueBag<GptOutput>> {
     return Effect.gen(this, function* () {
       const { systemPrompt, prompt, history = [] } = yield* unwrapValueBag(inputs);
 

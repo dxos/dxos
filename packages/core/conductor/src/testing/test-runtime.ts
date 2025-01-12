@@ -41,7 +41,7 @@ export class TestRuntime {
       const graph = self.graphs.get(id) ?? raise(new Error(`Graph not found: ${id}`));
       const computation = yield* Effect.promise(() => self.compileGraph(graph));
       return yield* computation.compute!(input);
-    });
+    }).pipe(Effect.withSpan('compute-graph'));
   }
 
   async resolveNode(node: ComputeNode): Promise<ComputeImplementation> {

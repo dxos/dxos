@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect } from 'effect';
+import { Cause, Effect, Fiber, Logger, Tracer } from 'effect';
 import { describe, test } from 'vitest';
 
 import { S } from '@dxos/echo-schema';
@@ -21,27 +21,30 @@ import {
 import { logCustomEvent } from './services';
 import { createEdge, TestRuntime } from './testing';
 import { testServices } from './testing/test-services';
+import { it } from '@effect/vitest';
 
 const ENABLE_LOGGING = false;
 
 describe('Graph as a fiber runtime', () => {
-  test('simple adder node', async ({ expect }) => {
-    const runtime = new TestRuntime()
-      //
-      .registerNode('dxn:test:sum', sum)
-      .registerGraph('dxn:test:g1', g1());
+  it.effect('simple adder node', ({ expect }) =>
+    Effect.gen(function* () {
+      const runtime = new TestRuntime()
+        //
+        .registerNode('dxn:test:sum', sum)
+        .registerGraph('dxn:test:g1', g1());
 
-    const result = await Effect.runPromise(
-      runtime
-        .runGraph('dxn:test:g1', makeValueBag({ number1: 1, number2: 2 }))
-        .pipe(
-          Effect.flatMap(unwrapValueBag),
-          Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })),
-          Effect.scoped,
-        ),
-    );
-    expect(result).toEqual({ sum: 3 });
-  });
+      const result = yield* runtime.runGraph('dxn:test:g1', makeValueBag({ number1: 1, number2: 2 })).pipe(
+        Effect.withSpan('runGraph'),
+        Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })),
+        Effect.scoped,
+
+        // Unwrapping without services to test that computing values doesn't require services.
+        Effect.flatMap(unwrapValueBag),
+        Effect.withSpan('test'),
+      );
+      expect(result).toEqual({ sum: 3 });
+    }),
+  );
 
   test('composition', async ({ expect }) => {
     const runtime = new TestRuntime()
@@ -50,13 +53,13 @@ describe('Graph as a fiber runtime', () => {
       .registerGraph('dxn:test:g2', g2());
 
     const result = await Effect.runPromise(
-      runtime
-        .runGraph('dxn:test:g2', makeValueBag({ a: 1, b: 2, c: 3 }))
-        .pipe(
-          Effect.flatMap(unwrapValueBag),
-          Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })),
-          Effect.scoped,
-        ),
+      runtime.runGraph('dxn:test:g2', makeValueBag({ a: 1, b: 2, c: 3 })).pipe(
+        Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })),
+        Effect.scoped,
+
+        // Unwrapping without services to test that computing values doesn't require services.
+        Effect.flatMap(unwrapValueBag),
+      ),
     );
     expect(result).toEqual({ result: 6 });
   });

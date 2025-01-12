@@ -9,7 +9,7 @@ import { ObjectId, type ResultStreamEvent } from '@dxos/assistant';
 import { log } from '@dxos/log';
 import { getDebugName } from '@dxos/util';
 
-import { makeValueBag, NotExecuted, unwrapValueBag, type ComputeRequirements, type ValueBag } from '../../schema';
+import { makeValueBag, NotExecuted, unwrapValueBag, type ComputeEffect, type ComputeRequirements, type ValueBag } from '../../schema';
 import type { GptInput, GptService, GptOutput } from '../gpt';
 
 export type GPTConfig = {
@@ -35,7 +35,7 @@ export class MockGpt implements Context.Tag.Service<GptService> {
     };
   }
 
-  public invoke(inputs: ValueBag<GptInput>): Effect.Effect<ValueBag<GptOutput>, NotExecuted | Error, ComputeRequirements> {
+  public invoke(inputs: ValueBag<GptInput>): ComputeEffect<ValueBag<GptOutput>> {
     return Effect.gen(this, function* () {
       const { systemPrompt, prompt, history = [] } = yield* unwrapValueBag(inputs);
       const response = this.config.responses[prompt] || this.config.responses.default;

@@ -6,7 +6,7 @@ import { LLMTool, ObjectId, type AIServiceClient, type Message, type MessageImag
 import { Console, Effect, Stream } from 'effect';
 import { log } from '@dxos/log';
 import { SpaceId } from '@dxos/keys';
-import { makeValueBag, unwrapValueBag, type ComputeRequirements, type NotExecuted, type ValueBag } from '../../schema';
+import { makeValueBag, unwrapValueBag, type ComputeEffect, type ComputeRequirements, type NotExecuted, type ValueBag } from '../../schema';
 
 export class EdgeGpt implements Context.Tag.Service<GptService> {
   // Images are not supported.
@@ -14,7 +14,7 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
 
   constructor(private readonly _client: AIServiceClient) {}
 
-  public invoke(input: ValueBag<GptInput>): Effect.Effect<ValueBag<GptOutput>, Error | NotExecuted, ComputeRequirements> {
+  public invoke(input: ValueBag<GptInput>): ComputeEffect<ValueBag<GptOutput>> {
     return Effect.gen(this, function* () {
       const { systemPrompt, prompt, history = [], tools = [] } = yield* unwrapValueBag(input);
 

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect } from 'effect';
+import { Effect, Layer, Scope } from 'effect';
 
 import { S } from '@dxos/echo-schema';
 import type { GraphEdge, GraphModel, GraphNode } from '@dxos/graph';
@@ -22,7 +22,7 @@ import {
   isValueBag,
   makeValueBag,
 } from './schema';
-import { EventLogger } from './services';
+import { EventLogger, GptService } from './services';
 import { createTopology, type GraphDiagnostic, type Topology } from './topology';
 
 export type ValidateParams = {
@@ -106,7 +106,7 @@ export const compile = async ({
           // Log the output node inputs.
           logger.log({ type: 'begin-compute', nodeId: outputNodeId, inputs: outputs });
           return outputs;
-        });
+        }).pipe(Effect.withSpan('compile/compute'));
       },
     },
 
@@ -204,6 +204,12 @@ export class GraphExecutor {
     return Effect.gen(this, function* () {
       const node = this._topology!.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
 
+      const layer = Layer.mergeAll(
+        Layer.succeed(Scope.Scope, yield* Scope.Scope),
+        Layer.succeed(EventLogger, yield* EventLogger),
+        Layer.succeed(GptService, yield* GptService),
+      );
+
       const entries = node.inputs.map(
         (input) =>
           [
@@ -213,11 +219,14 @@ export class GraphExecutor {
                 this._topology!.nodes.find((node) => node.id === input.sourceNodeId) ?? failedInvariant();
               const output = yield* this.computeOutput(sourceNode.id, input.sourceNodeOutput!);
               return output;
-            }),
+            }).pipe(
+              Effect.withSpan('compute-input', { attributes: { nodeId, inputName: input.name } }),
+              Effect.provide(layer),
+            ),
           ] as const,
       );
       return makeValueBag(Object.fromEntries(entries));
-    });
+    }).pipe(Effect.withSpan('compute-inputs', { attributes: { nodeId } }));
   }
 
   computeOutput(nodeId: string, prop: string): Effect.Effect<any, Error | NotExecuted, ComputeRequirements> {
@@ -228,7 +237,7 @@ export class GraphExecutor {
         return yield* Effect.fail(NotExecuted);
       }
       return yield* output.values[prop];
-    });
+    }).pipe(Effect.withSpan('compute-output', { attributes: { nodeId, prop } }));
   }
 
   /**
@@ -259,6 +268,7 @@ export class GraphExecutor {
         }
 
         const logger = yield* EventLogger;
+
         logger.log({
           type: 'begin-compute',
           nodeId: node.id,
@@ -269,6 +279,7 @@ export class GraphExecutor {
         // TODO(dmaretskyi): Figure out schema validation on value bags.
         invariant(isValueBag(inputValues), 'Input must be a value bag');
         const output = yield* nodeSpec.compute(inputValues).pipe(
+          Effect.withSpan('call-node'),
           Effect.provideService(EventLogger, {
             log: logger.log,
             nodeId: node.id,
@@ -282,13 +293,21 @@ export class GraphExecutor {
 
         // const decodedOutput = yield* S.decode(node.meta.output)(output);
 
+        const res: ValueBag<any>['values'] = {};
+        for (const key of Object.keys(output.values)) {
+          res[key] = yield* Effect.cached(output.values[key]).pipe(
+            Effect.withSpan('cached-output', { attributes: { key } }),
+          );
+        }
+        const resBag = makeValueBag(res);
+
         logger.log({
           type: 'end-compute',
           nodeId: node.id,
-          outputs: output,
+          outputs: resBag,
         });
-        return output;
-      });
+        return resBag;
+      }).pipe(Effect.withSpan('node-compute', { attributes: { nodeId } }));
 
       const cachedCompute = yield* compute.pipe(Effect.cached);
       this._computeCache.set(node.id, cachedCompute);
@@ -296,6 +315,6 @@ export class GraphExecutor {
       const result = yield* cachedCompute;
       invariant(isValueBag(result), 'Output must be a value bag');
       return result;
-    });
+    }).pipe(Effect.withSpan('compute-outputs', { attributes: { nodeId } }));
   }
 }

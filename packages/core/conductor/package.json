@@ -47,5 +47,8 @@
   "publishConfig": {
     "access": "public"
   },
-  "beast": {}
+  "beast": {},
+  "devDependencies": {
+    "@effect/vitest": "^0.16.1"
+  }
 }

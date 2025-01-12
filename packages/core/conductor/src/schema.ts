@@ -48,45 +48,28 @@ type ValueRecord = Record<string, any>;
 export type ValueBag<T extends ValueRecord = ValueRecord> = {
   type: 'bag';
   values: {
-    [K in keyof T]: Effect.Effect<T[K], Error | NotExecuted, ComputeRequirements>;
+    [K in keyof T]: ValueEffect<T[K]>;
   };
 };
 export const isValueBag = (value: any): value is ValueBag => value.type === 'bag';
 
 export const makeValueBag = <T extends ValueRecord>(values: {
-  [K in keyof T]: T[K] | Effect.Effect<T[K], Error | NotExecuted, ComputeRequirements>;
+  [K in keyof T]: T[K] | ValueEffect<T[K]>;
 }): ValueBag<T> => ({
   type: 'bag',
   values: mapValues(values as any, (value) => (Effect.isEffect(value) ? value : Effect.succeed(value))) as any,
 });
 
-export const unwrapValueBag = <T extends ValueRecord>(
-  bag: ValueBag<T>,
-): Effect.Effect<T, Error | NotExecuted, ComputeRequirements> => {
+export const unwrapValueBag = <T extends ValueRecord>(bag: ValueBag<T>): ValueEffect<T> => {
   if (isNotExecuted(bag)) {
     return Effect.fail(NotExecuted);
   }
 
   return Effect.all(
-    Object.entries(bag.values as Record<string, Effect.Effect<any, Error | NotExecuted, ComputeRequirements>>).map(
-      ([key, eff]) => eff.pipe(Effect.map((value) => [key, value] as const)),
+    Object.entries(bag.values as Record<string, ValueEffect<any>>).map(([key, eff]) =>
+      eff.pipe(Effect.map((value) => [key, value] as const)),
     ),
   ).pipe(Effect.map((entries) => Object.fromEntries(entries) as T));
-};
-
-/**
- * Lifts a compute function that takes all inputs together and returns all outputs together.
- */
-// TODO(dmaretskyi): output schema needs to be passed in in-case the node does not execute to know the output property names to propagate not-executed marker further.
-export const synchronizedComputeFunction = <I extends ValueRecord, O extends ValueRecord>(
-  fn: (input: I) => Effect.Effect<O, Error, ComputeRequirements>,
-): ComputeFunction<I, O> => {
-  return (inputBag) =>
-    Effect.gen(function* () {
-      const input = yield* unwrapValueBag(inputBag);
-      const output = yield* fn(input);
-      return makeValueBag<O>(output);
-    });
 };
 
 /**
@@ -95,13 +78,38 @@ export const synchronizedComputeFunction = <I extends ValueRecord, O extends Val
  */
 export type ComputeFunction<I extends ValueRecord, O extends ValueRecord> = (
   input: ValueBag<I>,
-) => Effect.Effect<ValueBag<O>, Error | NotExecuted, ComputeRequirements>;
+) => ComputeEffect<ValueBag<O>>;
 
 export type NotExecuted = { kind: 'not-executed' };
 export const NotExecuted: NotExecuted = { kind: 'not-executed' };
 export const isNotExecuted = (value: any): value is NotExecuted => value.kind === 'not-executed';
 
 export type ComputeRequirements = EventLogger | GptService | Scope.Scope;
+
+/**
+ * For results of compute functions.
+ */
+export type ComputeEffect<T> = Effect.Effect<T, Error | NotExecuted, ComputeRequirements>;
+
+/**
+ * For individual values passed through the compute function.
+ */
+export type ValueEffect<T> = Effect.Effect<T, Error | NotExecuted, never>;
+
+/**
+ * Lifts a compute function that takes all inputs together and returns all outputs together.
+ */
+// TODO(dmaretskyi): output schema needs to be passed in in-case the node does not execute to know the output property names to propagate not-executed marker further.
+export const synchronizedComputeFunction = <I extends ValueRecord, O extends ValueRecord>(
+  fn: (input: I) => ComputeEffect<O>,
+): ComputeFunction<I, O> => {
+  return (inputBag) =>
+    Effect.gen(function* () {
+      const input = yield* unwrapValueBag(inputBag);
+      const output = yield* fn(input);
+      return makeValueBag<O>(output);
+    });
+};
 
 // TODO(dmaretskyi): To effect schema.
 export type ComputeMeta = {

@@ -8,6 +8,7 @@ import { describe, test } from 'vitest';
 import { log } from '@dxos/log';
 
 import { isStream } from './schema-dsl';
+import { EventLogger } from './services';
 
 describe('effect-basics', () => {
   describe('streams', () => {
