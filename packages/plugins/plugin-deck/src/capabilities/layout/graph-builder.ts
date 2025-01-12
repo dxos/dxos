@@ -2,8 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createIntent, LayoutAction, NavigationAction, openIds } from '@dxos/app-framework';
-import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework/next';
+import {
+  Capabilities,
+  contributes,
+  createIntent,
+  LayoutAction,
+  NavigationAction,
+  openIds,
+  type PluginsContext,
+} from '@dxos/app-framework';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { createExtension, type Node, ROOT_ID } from '@dxos/plugin-graph';
 

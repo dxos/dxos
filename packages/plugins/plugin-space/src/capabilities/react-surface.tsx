@@ -4,15 +4,15 @@
 
 import React, { useCallback } from 'react';
 
-import { createSurface } from '@dxos/app-framework';
 import {
-  contributes,
   Capabilities,
+  contributes,
+  createSurface,
   Surface,
   useCapability,
   useCapabilities,
   usePluginManager,
-} from '@dxos/app-framework/next';
+} from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import {
   getSpace,

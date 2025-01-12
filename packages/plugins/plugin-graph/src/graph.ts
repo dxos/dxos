@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework/next';
+import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
 import { GraphBuilder } from '@dxos/app-graph';
 
 import { GRAPH_PLUGIN } from './meta';

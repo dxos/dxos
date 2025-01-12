@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { lazy } from '@dxos/app-framework/next';
+import { lazy } from '@dxos/app-framework';
 
 export const AppGraphSerializer = lazy(() => import('./app-graph-serializer'));
 export const IntentResolver = lazy(() => import('./intent-resolver'));

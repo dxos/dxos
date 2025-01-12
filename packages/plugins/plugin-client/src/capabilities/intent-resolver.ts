@@ -2,8 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { LayoutAction, createIntent, createResolver } from '@dxos/app-framework';
-import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework/next';
+import {
+  Capabilities,
+  contributes,
+  createIntent,
+  createResolver,
+  LayoutAction,
+  type PluginsContext,
+} from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { type JoinPanelProps } from '@dxos/shell/react';

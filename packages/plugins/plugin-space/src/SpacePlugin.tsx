@@ -2,8 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createIntent } from '@dxos/app-framework';
-import { allOf, Capabilities, contributes, defineModule, definePlugin, Events, oneOf } from '@dxos/app-framework/next';
+import {
+  allOf,
+  Capabilities,
+  contributes,
+  createIntent,
+  defineModule,
+  definePlugin,
+  Events,
+  oneOf,
+} from '@dxos/app-framework';
 import { RefArray } from '@dxos/live-object';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
@@ -22,7 +30,7 @@ import {
   SpaceState,
 } from './capabilities';
 import { SpaceEvents } from './events';
-import meta, { SPACE_PLUGIN } from './meta';
+import { meta, SPACE_PLUGIN } from './meta';
 import translations from './translations';
 import { CollectionAction, CollectionType } from './types';
 

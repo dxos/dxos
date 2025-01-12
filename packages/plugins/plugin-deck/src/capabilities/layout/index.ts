@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { lazy } from '@dxos/app-framework/next';
+import { lazy } from '@dxos/app-framework';
 
 export const DeckState = lazy(() => import('./deck'));
 export const GraphBuilder = lazy(() => import('./graph-builder'));

@@ -4,3 +4,4 @@
 
 export { DeckCapabilities } from './capabilities';
 export * from './DeckPlugin';
+export * from './meta';

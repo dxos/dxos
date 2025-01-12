@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { openIds, type Layout, type LayoutParts } from '@dxos/app-framework';
-import { type Capabilities } from '@dxos/app-framework/next';
+import { openIds, type Layout, type LayoutParts, type Capabilities } from '@dxos/app-framework';
 import { type AttentionManager } from '@dxos/plugin-attention';
 
 export type SetLocationOptions = {

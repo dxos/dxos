@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes } from '@dxos/app-framework/next';
+import { Capabilities, contributes } from '@dxos/app-framework';
 import { create } from '@dxos/live-object';
 
 import { MARKDOWN_PLUGIN } from '../meta';

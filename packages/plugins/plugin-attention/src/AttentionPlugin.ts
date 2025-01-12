@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defineModule, definePlugin, Events, contributes, lazy, allOf } from '@dxos/app-framework/next';
+import { defineModule, definePlugin, Events, contributes, allOf } from '@dxos/app-framework';
 import { AttentionManager } from '@dxos/react-ui-attention';
 
-import { AttentionCapabilities } from './capabilities';
+import { AttentionCapabilities, Keyboard, ReactContext } from './capabilities';
 import { AttentionEvents } from './events';
-import meta from './meta';
+import { meta } from './meta';
 
 export const AttentionPlugin = () =>
   definePlugin(meta, [
@@ -24,12 +24,12 @@ export const AttentionPlugin = () =>
     defineModule({
       id: `${meta.id}/module/react-context`,
       activatesOn: Events.Startup,
-      activate: lazy(() => import('./react-context')),
+      activate: ReactContext,
     }),
     defineModule({
       id: `${meta.id}/module/keyboard`,
       activatesOn: allOf(Events.AppGraphReady, AttentionEvents.AttentionReady),
-      activate: lazy(() => import('./keyboard')),
+      activate: Keyboard,
     }),
   ]);
 

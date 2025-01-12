@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, type PluginsContext, Capabilities } from '@dxos/app-framework/next';
+import { contributes, type PluginsContext, Capabilities } from '@dxos/app-framework';
 import { create, makeRef } from '@dxos/live-object';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';

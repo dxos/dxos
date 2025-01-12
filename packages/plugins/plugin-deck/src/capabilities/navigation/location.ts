@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type LayoutParts } from '@dxos/app-framework';
-import { Capabilities, contributes } from '@dxos/app-framework/next';
+import { Capabilities, contributes, type LayoutParts } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 
 import { NAV_ID } from '../../components';

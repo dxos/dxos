@@ -2,8 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createIntent, LayoutAction, type LayoutParts } from '@dxos/app-framework';
-import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework/next';
+import {
+  Capabilities,
+  contributes,
+  createIntent,
+  LayoutAction,
+  type LayoutParts,
+  type PluginsContext,
+} from '@dxos/app-framework';
 import { scheduledEffect } from '@dxos/echo-signals/core';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 

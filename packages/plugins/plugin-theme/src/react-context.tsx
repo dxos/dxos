@@ -4,12 +4,12 @@
 
 import React, { useMemo } from 'react';
 
-import { Capabilities, contributes, useCapabilities } from '@dxos/app-framework/next';
+import { Capabilities, contributes, useCapabilities } from '@dxos/app-framework';
 import { create } from '@dxos/live-object';
 import { type ThemeContextValue, type ThemeMode, ThemeProvider, Toast, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
-import meta from './meta';
+import { THEME_PLUGIN } from './meta';
 import compositeEnUs from './translations/en-US';
 
 export type ThemePluginOptions = Partial<Pick<ThemeContextValue, 'tx' | 'noCache'>> & {
@@ -31,7 +31,7 @@ export default ({ appName, tx: propsTx = defaultTx, ...rest }: ThemePluginOption
   return contributes(
     Capabilities.ReactContext,
     {
-      id: meta.id,
+      id: THEME_PLUGIN,
       context: ({ children }) => {
         const _resources = useCapabilities(Capabilities.Translations).flat();
         const resources = useMemo(() => [compositeEnUs(appName), ..._resources], [_resources]);

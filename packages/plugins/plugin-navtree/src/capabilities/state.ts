@@ -4,8 +4,7 @@
 
 import { effect } from '@preact/signals-core';
 
-import { createIntent, NavigationAction } from '@dxos/app-framework';
-import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework/next';
+import { Capabilities, contributes, type PluginsContext, createIntent, NavigationAction } from '@dxos/app-framework';
 import { type ReactiveObject, create } from '@dxos/live-object';
 import { Path } from '@dxos/react-ui-mosaic';
 

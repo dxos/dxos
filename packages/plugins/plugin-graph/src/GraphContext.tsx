@@ -4,7 +4,7 @@
 
 import React, { type Context, createContext, type PropsWithChildren, useContext } from 'react';
 
-import { Capabilities, contributes, useCapability } from '@dxos/app-framework/next';
+import { Capabilities, contributes, useCapability } from '@dxos/app-framework';
 import { type GraphBuilder } from '@dxos/app-graph';
 import { raise } from '@dxos/debug';
 

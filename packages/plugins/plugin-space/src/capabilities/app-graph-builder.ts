@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createIntent } from '@dxos/app-framework';
-import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework/next';
+import { Capabilities, contributes, createIntent, type PluginsContext } from '@dxos/app-framework';
 import {
   Expando,
   Filter,

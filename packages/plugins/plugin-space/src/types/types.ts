@@ -2,19 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  type GraphBuilderProvides,
-  type GraphSerializerProvides,
-  type IntentResolverProvides,
-  type MetadataRecordsProvides,
-  type SettingsProvides,
-  type SurfaceProvides,
-  type TranslationsProvides,
-  type Plugin,
-  ActiveParts,
-} from '@dxos/app-framework';
-import { AST, S, type TypedObject, type Expando } from '@dxos/echo-schema';
-import { type PanelProvides } from '@dxos/plugin-deck/types';
+import { ActiveParts } from '@dxos/app-framework';
+import { AST, S, type Expando } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/react-client';
 import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';
 import { type ComplexMap } from '@dxos/util';
@@ -81,30 +70,6 @@ export const SpaceSettingsSchema = S.mutable(
 );
 
 export type SpaceSettingsProps = S.Schema.Type<typeof SpaceSettingsSchema>;
-
-export type SchemaProvides = {
-  echo: {
-    schema?: TypedObject[];
-    system?: TypedObject[];
-  };
-};
-
-export const parseSchemaPlugin = (plugin?: Plugin) =>
-  Array.isArray((plugin?.provides as any).echo?.schema) || Array.isArray((plugin?.provides as any).echo?.system)
-    ? (plugin as Plugin<SchemaProvides>)
-    : undefined;
-
-export type SpacePluginProvides = SurfaceProvides &
-  IntentResolverProvides &
-  GraphBuilderProvides &
-  GraphSerializerProvides &
-  MetadataRecordsProvides &
-  SettingsProvides<SpaceSettingsProps> &
-  TranslationsProvides &
-  SchemaProvides &
-  PanelProvides & {
-    space: Readonly<PluginState>;
-  };
 
 // TODO(wittjosiah): Reconcile with graph export serializers.
 

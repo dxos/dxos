@@ -2,12 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  createIntent,
-  type PromiseIntentDispatcher,
-  type MetadataResolver,
-  NavigationAction,
-} from '@dxos/app-framework';
+import { createIntent, type PromiseIntentDispatcher, NavigationAction } from '@dxos/app-framework';
 import { EXPANDO_TYPENAME, getObjectAnnotation, getTypename, type Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { getSchema, isReactiveObject, makeRef } from '@dxos/live-object';
@@ -102,7 +97,7 @@ const getCollectionGraphNodePartials = ({
   navigable: boolean;
   collection: CollectionType;
   space: Space;
-  resolve: MetadataResolver;
+  resolve: (typename: string) => Record<string, any>;
 }) => {
   return {
     disabled: !navigable,
@@ -191,7 +186,7 @@ export const constructSpaceNode = ({
   navigable?: boolean;
   personal?: boolean;
   namesCache?: Record<string, string>;
-  resolve: MetadataResolver;
+  resolve: (typename: string) => Record<string, any>;
 }) => {
   const hasPendingMigration = checkPendingMigration(space);
   const collection = space.state.get() === SpaceState.SPACE_READY && space.properties[CollectionType.typename]?.target;
@@ -370,7 +365,7 @@ export const createObjectNode = ({
   object: ReactiveEchoObject<any>;
   space: Space;
   navigable?: boolean;
-  resolve: MetadataResolver;
+  resolve: (typename: string) => Record<string, any>;
 }) => {
   const type = getTypename(object);
   if (!type) {

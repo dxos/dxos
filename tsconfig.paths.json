@@ -128,9 +128,6 @@
       "@dxos/plugin-attention": [
         "packages/plugins/plugin-attention/src/index.ts"
       ],
-      "@dxos/plugin-attention/meta": [
-        "packages/plugins/plugin-attention/src/meta.ts"
-      ],
       "@dxos/plugin-chess": [
         "packages/plugins/plugin-chess/src/index.ts"
       ],
@@ -142,9 +139,6 @@
       ],
       "@dxos/plugin-client": [
         "packages/plugins/plugin-client/src/index.ts"
-      ],
-      "@dxos/plugin-client/meta": [
-        "packages/plugins/plugin-client/src/meta.ts"
       ],
       "@dxos/plugin-client/types": [
         "packages/plugins/plugin-client/src/types.ts"
@@ -158,9 +152,6 @@
       "@dxos/plugin-deck": [
         "packages/plugins/plugin-deck/src/index.ts"
       ],
-      "@dxos/plugin-deck/meta": [
-        "packages/plugins/plugin-deck/src/meta.ts"
-      ],
       "@dxos/plugin-deck/types": [
         "packages/plugins/plugin-deck/src/types.ts"
       ],
@@ -172,9 +163,6 @@
       ],
       "@dxos/plugin-graph": [
         "packages/plugins/plugin-graph/src/index.ts"
-      ],
-      "@dxos/plugin-graph/meta": [
-        "packages/plugins/plugin-graph/src/meta.ts"
       ],
       "@dxos/plugin-help": [
         "packages/plugins/plugin-help/src/index.ts"
@@ -194,9 +182,6 @@
       "@dxos/plugin-markdown": [
         "packages/plugins/plugin-markdown/src/index.ts"
       ],
-      "@dxos/plugin-markdown/meta": [
-        "packages/plugins/plugin-markdown/src/meta.ts"
-      ],
       "@dxos/plugin-markdown/types": [
         "packages/plugins/plugin-markdown/src/types/index.ts"
       ],
@@ -206,23 +191,11 @@
       "@dxos/plugin-mermaid/meta": [
         "packages/plugins/plugin-mermaid/src/meta.ts"
       ],
-      "@dxos/plugin-metadata": [
-        "packages/plugins/plugin-metadata/src/index.ts"
-      ],
-      "@dxos/plugin-metadata/meta": [
-        "packages/plugins/plugin-metadata/src/meta.ts"
-      ],
       "@dxos/plugin-navtree": [
         "packages/plugins/plugin-navtree/src/index.ts"
       ],
-      "@dxos/plugin-navtree/meta": [
-        "packages/plugins/plugin-navtree/src/meta.ts"
-      ],
       "@dxos/plugin-observability": [
         "packages/plugins/plugin-observability/src/index.ts"
-      ],
-      "@dxos/plugin-observability/meta": [
-        "packages/plugins/plugin-observability/src/meta.ts"
       ],
       "@dxos/plugin-observability/types": [
         "packages/plugins/plugin-observability/src/types.ts"
@@ -269,9 +242,6 @@
       "@dxos/plugin-space": [
         "packages/plugins/plugin-space/src/index.ts"
       ],
-      "@dxos/plugin-space/meta": [
-        "packages/plugins/plugin-space/src/meta.ts"
-      ],
       "@dxos/plugin-space/types": [
         "packages/plugins/plugin-space/src/types/index.ts"
       ],
@@ -286,9 +256,6 @@
       ],
       "@dxos/plugin-status-bar": [
         "packages/plugins/plugin-status-bar/src/index.ts"
-      ],
-      "@dxos/plugin-status-bar/meta": [
-        "packages/plugins/plugin-status-bar/src/meta.ts"
       ],
       "@dxos/plugin-table": [
         "packages/plugins/plugin-table/src/index.ts"
@@ -322,9 +289,6 @@
       ],
       "@dxos/app-framework": [
         "packages/sdk/app-framework/src/index.ts"
-      ],
-      "@dxos/app-framework/plugins/next": [
-        "packages/sdk/app-framework/src/plugins/next/index.ts"
       ],
       "@dxos/app-graph": [
         "packages/sdk/app-graph/src/index.ts"

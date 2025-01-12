@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework/next';
+import { Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
 
 import { Client, AppGraphBuilder, IntentResolver, ReactContext, ReactSurface } from './capabilities';
 import { ClientEvents } from './events';
-import meta from './meta';
+import { meta } from './meta';
 import translations from './translations';
 import { type ClientPluginOptions } from './types';
 

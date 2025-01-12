@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, useCapability } from '@dxos/app-framework/next';
+import { Capabilities, contributes, useCapability } from '@dxos/app-framework';
 
 import { LayoutSettings } from '../../components';
 import { DECK_PLUGIN } from '../../meta';

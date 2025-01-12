@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes } from '@dxos/app-framework/next';
+import { contributes } from '@dxos/app-framework';
 import { ThreadCapabilities } from '@dxos/plugin-space';
 import { createDocAccessor, getRangeFromCursor } from '@dxos/react-client/echo';
 

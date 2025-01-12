@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { NavigationAction, createResolver } from '@dxos/app-framework';
-import { contributes, type PluginsContext, Capabilities } from '@dxos/app-framework/next';
+import { contributes, type PluginsContext, Capabilities, NavigationAction, createResolver } from '@dxos/app-framework';
 
 import { NavTreeCapabilities } from './capabilities';
 

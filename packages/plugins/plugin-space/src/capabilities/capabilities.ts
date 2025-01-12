@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defineCapability } from '@dxos/app-framework/next';
+import { defineCapability } from '@dxos/app-framework';
 import { type DeepReadonly } from '@dxos/util';
 
 import { SPACE_PLUGIN } from '../meta';

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { lazy } from '@dxos/app-framework/next';
+import { lazy } from '@dxos/app-framework';
 
 export const AppGraphBuilder = lazy(async () => import('./app-graph-builder'));
 export const Client = lazy(async () => import('./client'));

@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createResolver } from '@dxos/app-framework';
-import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework/next';
+import { Capabilities, contributes, createResolver, type PluginsContext } from '@dxos/app-framework';
 import { makeRef, create } from '@dxos/live-object';
 
 import { MarkdownCapabilities } from './capabilities';

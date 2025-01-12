@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { Capabilities, contributes, useCapabilities } from '@dxos/app-framework/next';
+import { Capabilities, contributes, useCapabilities } from '@dxos/app-framework';
 
 import { DeckContext, LayoutContext } from '../../components';
 import { DECK_PLUGIN } from '../../meta';

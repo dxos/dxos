@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defineEvent } from '@dxos/app-framework/next';
+import { defineEvent } from '@dxos/app-framework';
 
 import { ATTENTION_PLUGIN } from './meta';
 

@@ -6,17 +6,19 @@ import { batch } from '@preact/signals-core';
 import { pipe } from 'effect';
 
 import {
+  Capabilities,
   chain,
+  contributes,
   createIntent,
   createResolver,
   LayoutAction,
-  type LayoutEntry,
-  type LayoutPart,
   NavigationAction,
   openIds,
   SLUG_PATH_SEPARATOR,
+  type LayoutEntry,
+  type LayoutPart,
+  type PluginsContext,
 } from '@dxos/app-framework';
-import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework/next';
 import { isReactiveObject, getTypename } from '@dxos/live-object';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';

@@ -4,8 +4,7 @@
 
 import React from 'react';
 
-import { createSurface } from '@dxos/app-framework';
-import { Capabilities, contributes } from '@dxos/app-framework/next';
+import { createSurface, Capabilities, contributes } from '@dxos/app-framework';
 import { type IdentityPanelProps, type JoinPanelProps } from '@dxos/shell/react';
 
 import {

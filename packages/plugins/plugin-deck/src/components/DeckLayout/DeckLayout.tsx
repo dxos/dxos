@@ -6,8 +6,13 @@ import { Sidebar as MenuIcon } from '@phosphor-icons/react';
 import { untracked } from '@preact/signals-core';
 import React, { useCallback, useEffect, useMemo, useRef, type UIEvent, Fragment } from 'react';
 
-import { type LayoutParts, type Toast as ToastSchema, firstIdInPart } from '@dxos/app-framework';
-import { Surface, usePluginManager } from '@dxos/app-framework/next';
+import {
+  firstIdInPart,
+  Surface,
+  usePluginManager,
+  type LayoutParts,
+  type Toast as ToastSchema,
+} from '@dxos/app-framework';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import {
   AlertDialog,

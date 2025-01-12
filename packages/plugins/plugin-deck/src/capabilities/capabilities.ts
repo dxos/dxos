@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Label } from '@dxos/app-framework';
-import { defineCapability } from '@dxos/app-framework/next';
+import { defineCapability, type Label } from '@dxos/app-framework';
 import { type DeepReadonly } from '@dxos/util';
 
 import { type DeckContextType } from '../components';

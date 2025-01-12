@@ -2,16 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type {
-  GraphSerializerProvides,
-  IntentResolverProvides,
-  MetadataRecordsProvides,
-  SettingsProvides,
-  SurfaceProvides,
-  TranslationsProvides,
-} from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
-import { type SchemaProvides } from '@dxos/plugin-space';
 import { type Extension, EditorInputMode, EditorViewMode } from '@dxos/react-ui-editor';
 
 import { DocumentType } from './schema';
@@ -46,13 +37,6 @@ export type MarkdownExtensionProvider = (props: { document?: DocumentType }) => 
 
 export type OnChange = (text: string) => void;
 
-export type MarkdownExtensionProvides = {
-  // TODO(burdon): Rename.
-  markdown: {
-    extensions: MarkdownExtensionProvider;
-  };
-};
-
 export type MarkdownPluginState = {
   // Codemirror extensions provided by other plugins.
   extensionProviders?: MarkdownExtensionProvider[];
@@ -77,20 +61,3 @@ export const MarkdownSettingsSchema = S.mutable(
 );
 
 export type MarkdownSettingsProps = S.Schema.Type<typeof MarkdownSettingsSchema>;
-
-// TODO(Zan): Move this to the plugin-space plugin or another common location when we implement comments in sheets.
-type ThreadProvides<T> = {
-  thread: {
-    predicate: (obj: any) => obj is T;
-    createSort: (obj: T) => (anchorA: string | undefined, anchorB: string | undefined) => number;
-  };
-};
-
-export type MarkdownPluginProvides = SurfaceProvides &
-  IntentResolverProvides &
-  GraphSerializerProvides &
-  MetadataRecordsProvides &
-  SettingsProvides<MarkdownSettingsProps> &
-  TranslationsProvides &
-  SchemaProvides &
-  ThreadProvides<DocumentType>;

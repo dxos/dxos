@@ -589,11 +589,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-metadata/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-navtree/package.json",
           "jsonpath": "$.version"
         },

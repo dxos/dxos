@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { lazy } from '@dxos/app-framework/next';
+import { lazy } from '@dxos/app-framework';
 
 export const IdentityCreated = lazy(() => import('./identity-created'));
 export const Onboarding = lazy(() => import('./onboarding'));

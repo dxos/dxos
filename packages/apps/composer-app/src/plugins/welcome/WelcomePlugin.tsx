@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { allOf, Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework/next';
+import { allOf, Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { ClientEvents } from '@dxos/plugin-client';
 
 import { IdentityCreated, Onboarding, ReactSurface } from './capabilities';

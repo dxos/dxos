@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/next';
+import { Surface } from '@dxos/app-framework';
 import { Main } from '@dxos/react-ui';
 
 import { useLayout } from '../LayoutContext';

@@ -5,18 +5,18 @@
 import React, { type KeyboardEvent, memo, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 
 import {
+  createIntent,
+  indexInPart,
+  LayoutAction,
+  partLength,
+  Surface,
+  useIntentDispatcher,
+  type Layout,
   type LayoutCoordinate,
   type LayoutEntry,
   type LayoutPart,
   type LayoutParts,
-  useIntentDispatcher,
-  type Layout,
-  indexInPart,
-  partLength,
-  LayoutAction,
-  createIntent,
 } from '@dxos/app-framework';
-import { Surface } from '@dxos/app-framework/next';
 import { debounce } from '@dxos/async';
 import { useGraph } from '@dxos/plugin-graph';
 import { useAttendableAttributes } from '@dxos/react-ui-attention';

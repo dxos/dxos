@@ -4,8 +4,7 @@
 
 import { pipe } from 'effect';
 
-import { chain, createIntent } from '@dxos/app-framework';
-import { contributes, Capabilities, type PluginsContext } from '@dxos/app-framework/next';
+import { contributes, Capabilities, type PluginsContext, chain, createIntent } from '@dxos/app-framework';
 import { SpaceAction, CollectionType } from '@dxos/plugin-space';
 import { isSpace } from '@dxos/react-client/echo';
 

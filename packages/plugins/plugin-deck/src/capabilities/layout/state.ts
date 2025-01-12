@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type LayoutMode, type Layout } from '@dxos/app-framework';
-import { Capabilities, contributes } from '@dxos/app-framework/next';
+import { Capabilities, contributes, type LayoutMode, type Layout } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 
 // NOTE: The key is this currently for backwards compatibility of storage.

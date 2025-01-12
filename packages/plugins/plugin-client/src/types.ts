@@ -2,16 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import {
-  type GraphBuilderProvides,
-  type IntentResolverProvides,
-  type Plugin,
-  type SurfaceProvides,
-  type TranslationsProvides,
-} from '@dxos/app-framework';
-import { type PluginsContext } from '@dxos/app-framework/next';
+import { type PluginsContext } from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
-import { Client, PublicKey, type ClientOptions } from '@dxos/react-client';
+import { type Client, PublicKey, type ClientOptions } from '@dxos/react-client';
 import { type MaybePromise } from '@dxos/util';
 
 import { CLIENT_PLUGIN } from './meta';
@@ -94,13 +87,3 @@ export type ClientPluginOptions = ClientOptions & {
    */
   onReset?: (params: { target?: string }) => MaybePromise<void>;
 };
-
-export type ClientPluginProvides = IntentResolverProvides &
-  GraphBuilderProvides &
-  SurfaceProvides &
-  TranslationsProvides & {
-    client: Client;
-  };
-
-export const parseClientPlugin = (plugin?: Plugin) =>
-  (plugin?.provides as any).client instanceof Client ? (plugin as Plugin<ClientPluginProvides>) : undefined;

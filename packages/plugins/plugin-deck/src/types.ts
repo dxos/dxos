@@ -2,16 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import type {
-  Plugin,
-  GraphBuilderProvides,
-  IntentResolverProvides,
-  LayoutProvides,
-  LocationProvides,
-  SettingsProvides,
-  SurfaceProvides,
-  TranslationsProvides,
-} from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
 import { type Label } from '@dxos/react-ui';
 
@@ -27,16 +17,6 @@ export type Overscroll = (typeof OverscrollOptions)[number];
 // TODO(wittjosiah): Include a predicate for whether the panel is visible for the current subject.
 export type Panel = { id: string; label: Label; icon: string };
 
-// TODO(wittjosiah): Is this generic enough to be in the app framework?
-export type PanelProvides = {
-  complementary: {
-    panels: Panel[];
-  };
-};
-
-export const parsePanelPlugin = (plugin?: Plugin) =>
-  Array.isArray((plugin?.provides as any).complementary?.panels) ? (plugin as Plugin<PanelProvides>) : undefined;
-
 export const DeckSettingsSchema = S.mutable(
   S.Struct({
     showHints: S.Boolean,
@@ -49,14 +29,6 @@ export const DeckSettingsSchema = S.mutable(
 );
 
 export type DeckSettingsProps = S.Schema.Type<typeof DeckSettingsSchema>;
-
-export type DeckPluginProvides = SurfaceProvides &
-  IntentResolverProvides &
-  GraphBuilderProvides &
-  TranslationsProvides &
-  SettingsProvides<DeckSettingsProps> &
-  LayoutProvides &
-  LocationProvides;
 
 export const DECK_ACTION = `${DECK_PLUGIN}/action`;
 

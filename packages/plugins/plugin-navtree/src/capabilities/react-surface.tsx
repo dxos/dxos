@@ -4,8 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { createSurface } from '@dxos/app-framework';
-import { Capabilities, contributes, useCapability } from '@dxos/app-framework/next';
+import { createSurface, Capabilities, contributes, useCapability } from '@dxos/app-framework';
 import { isGraphNode, type Node } from '@dxos/plugin-graph';
 
 import { NavTreeCapabilities } from './capabilities';

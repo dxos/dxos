@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defineCapability } from '@dxos/app-framework/next';
+import { defineCapability } from '@dxos/app-framework';
 import { type EditorViewMode, type EditorStateStore } from '@dxos/react-ui-editor';
 
 import { MARKDOWN_PLUGIN } from '../meta';

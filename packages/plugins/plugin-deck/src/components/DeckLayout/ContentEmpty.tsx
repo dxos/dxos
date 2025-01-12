@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/next';
+import { Surface } from '@dxos/app-framework';
 
 export const ContentEmpty = () => {
   return (

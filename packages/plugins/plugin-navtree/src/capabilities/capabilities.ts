@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defineCapability } from '@dxos/app-framework/next';
+import { defineCapability } from '@dxos/app-framework';
 import { type ReactiveObject } from '@dxos/live-object';
 
 import { NAVTREE_PLUGIN } from '../meta';

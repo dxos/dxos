@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defineModule, definePlugin, Events, lazy } from '@dxos/app-framework/next';
+import { defineModule, definePlugin, Events, lazy } from '@dxos/app-framework';
 
-import meta from './meta';
+import { meta } from './meta';
 import { type ThemePluginOptions } from './react-context';
 
 export const ThemePlugin = (options: ThemePluginOptions) =>

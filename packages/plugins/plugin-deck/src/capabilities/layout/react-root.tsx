@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { Capabilities, contributes, useCapabilities, useCapability } from '@dxos/app-framework/next';
+import { Capabilities, contributes, useCapabilities, useCapability } from '@dxos/app-framework';
 
 import { DeckLayout } from '../../components';
 import { DECK_PLUGIN } from '../../meta';

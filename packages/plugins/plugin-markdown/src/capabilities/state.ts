@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework/next';
+import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type EditorViewMode, createEditorStateStore } from '@dxos/react-ui-editor';
 

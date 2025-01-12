@@ -9,9 +9,9 @@ import {
   type LayoutCoordinate,
   NavigationAction,
   SLUG_PATH_SEPARATOR,
+  Surface,
   useIntentDispatcher,
 } from '@dxos/app-framework';
-import { Surface } from '@dxos/app-framework/next';
 import { useGraph } from '@dxos/plugin-graph';
 import { Main, ScrollArea } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';

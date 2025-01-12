@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, type PluginsContext } from '@dxos/app-framework/next';
+import { contributes, type PluginsContext } from '@dxos/app-framework';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { Client } from '@dxos/react-client';
 

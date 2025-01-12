@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Events } from '@dxos/app-framework/next';
+import { Events } from '@dxos/app-framework';
 
 import { DECK_PLUGIN } from './meta';
 

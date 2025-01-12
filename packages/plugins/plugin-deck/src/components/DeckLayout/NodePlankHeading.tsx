@@ -9,10 +9,10 @@ import {
   LayoutAction,
   NavigationAction,
   SLUG_PATH_SEPARATOR,
+  Surface,
   useIntentDispatcher,
   type LayoutCoordinate,
 } from '@dxos/app-framework';
-import { Surface } from '@dxos/app-framework/next';
 import { type Node, useGraph } from '@dxos/plugin-graph';
 import { Icon, Popover, toLocalizedString, useMediaQuery, useTranslation, IconButton } from '@dxos/react-ui';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';

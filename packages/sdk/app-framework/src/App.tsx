@@ -45,9 +45,10 @@ export const createApp = ({
     });
 
   const state = create({ ready: false, error: null });
-  const plugins = getEnabledPlugins({ available, core, defaults, cacheEnabled });
-  const manager = new PluginManager({ pluginLoader, plugins, core });
-  manager.context.contributeCapability(Capabilities.PluginManager, manager);
+  const cached: string[] = JSON.parse(localStorage.getItem(ENABLED_KEY) ?? '[]');
+  const enabled = cacheEnabled && cached.length > 0 ? cached : defaults;
+  const plugins = available.filter((plugin) => enabled.includes(plugin.meta.id) || core.includes(plugin.meta.id));
+  const manager = new PluginManager({ pluginLoader, plugins, core, enabled });
 
   manager.activation.on(({ event, state: _state, error }) => {
     if (event === Events.Startup.id) {
@@ -63,6 +64,8 @@ export const createApp = ({
     cacheEnabled && localStorage.setItem(ENABLED_KEY, JSON.stringify(manager.enabled));
   });
 
+  manager.context.contributeCapability(Capabilities.PluginManager, manager);
+  setupDevtools(manager);
   void manager.activate(Events.Startup);
 
   return () => (
@@ -70,22 +73,6 @@ export const createApp = ({
       <App placeholder={placeholder} manager={manager} state={state} />
     </ErrorBoundary>
   );
-};
-
-const getEnabledPlugins = ({
-  available,
-  core,
-  defaults,
-  cacheEnabled,
-}: {
-  available: Plugin[];
-  core: string[];
-  defaults: string[];
-  cacheEnabled: boolean;
-}) => {
-  const cached: string[] = JSON.parse(localStorage.getItem(ENABLED_KEY) ?? '[]');
-  const enabled = cacheEnabled && cached.length > 0 ? cached : defaults;
-  return available.filter((plugin) => enabled.includes(plugin.meta.id) || core.includes(plugin.meta.id));
 };
 
 type AppProps = Required<Pick<HostPluginParams, 'placeholder'>> & {
@@ -140,4 +127,9 @@ const composeContexts = (contexts: Capabilities.ReactContext[]) => {
         <Next>{children}</Next>
       </Acc>
     ));
+};
+
+const setupDevtools = (manager: PluginManager) => {
+  (globalThis as any).composer ??= {};
+  (globalThis as any).composer.manager = manager;
 };

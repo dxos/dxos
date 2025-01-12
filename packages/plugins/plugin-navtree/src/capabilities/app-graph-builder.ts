@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createIntent, LayoutAction } from '@dxos/app-framework';
-import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework/next';
+import { Capabilities, contributes, type PluginsContext, createIntent, LayoutAction } from '@dxos/app-framework';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 
 import { COMMANDS_DIALOG, NAVTREE_PLUGIN } from '../meta';

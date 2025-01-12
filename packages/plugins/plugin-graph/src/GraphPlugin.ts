@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defineModule, lazy, Events, definePlugin } from '@dxos/app-framework/next';
+import { defineModule, lazy, Events, definePlugin } from '@dxos/app-framework';
 
-import meta from './meta';
+import { meta } from './meta';
 
 /**
  * Manages the state of the graph for the application.

@@ -5,14 +5,16 @@
 import { batch } from '@preact/signals-core';
 
 import {
+  Capabilities,
   createResolver,
+  contributes,
   IntentAction,
   LayoutAction,
-  type LayoutMode,
   openIds,
   Toast as ToastSchema,
+  type LayoutMode,
+  type PluginsContext,
 } from '@dxos/app-framework';
-import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework/next';
 import { S } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defineCapability } from '@dxos/app-framework/next';
+import { defineCapability } from '@dxos/app-framework';
 import { type TypedObject } from '@dxos/echo-schema';
 import { type Client } from '@dxos/react-client';
 

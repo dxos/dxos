@@ -4,8 +4,7 @@
 
 import React from 'react';
 
-import { createSurface } from '@dxos/app-framework';
-import { contributes, Capabilities, useCapability } from '@dxos/app-framework/next';
+import { createSurface, contributes, Capabilities, useCapability } from '@dxos/app-framework';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { MarkdownCapabilities } from './capabilities';

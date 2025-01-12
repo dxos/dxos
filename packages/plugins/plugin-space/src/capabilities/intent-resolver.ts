@@ -3,14 +3,16 @@
 //
 
 import {
+  Capabilities,
+  contributes,
   createIntent,
-  LayoutAction,
   createResolver,
   firstIdInPart,
-  openIds,
+  LayoutAction,
   NavigationAction,
+  openIds,
+  type PluginsContext,
 } from '@dxos/app-framework';
-import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework/next';
 import { type Expando, getTypename, type HasId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { create, makeRef, type ReactiveObject } from '@dxos/live-object';

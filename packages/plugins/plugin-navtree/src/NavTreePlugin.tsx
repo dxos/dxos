@@ -2,19 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { definePlugin, defineModule, Events, contributes, Capabilities } from '@dxos/app-framework/next';
+import { definePlugin, defineModule, Events, contributes, Capabilities, allOf } from '@dxos/app-framework';
 import { type TreeData } from '@dxos/react-ui-list';
 
 import { AppGraphBuilder, IntentResolver, ReactSurface, State } from './capabilities';
 import { NODE_TYPE } from './components';
-import meta from './meta';
+import { meta } from './meta';
 import translations from './translations';
 
 export const NavTreePlugin = () =>
   definePlugin(meta, [
     defineModule({
       id: `${meta.id}/state`,
-      activatesOn: Events.Startup,
+      activatesOn: allOf(Events.DispatcherReady, Events.LayoutReady, Events.LocationReady),
       activate: State,
     }),
     defineModule({

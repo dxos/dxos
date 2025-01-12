@@ -4,7 +4,7 @@
 
 import { setAutoFreeze } from 'immer';
 
-import { allOf, Capabilities, contributes, defineModule, definePlugin, Events, oneOf } from '@dxos/app-framework/next';
+import { allOf, Capabilities, contributes, defineModule, definePlugin, Events, oneOf } from '@dxos/app-framework';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 
@@ -23,7 +23,7 @@ import {
   Surface,
 } from './capabilities';
 import { DeckEvents } from './events';
-import meta from './meta';
+import { meta } from './meta';
 import translations from './translations';
 
 // NOTE(Zan): When producing values with immer, we shouldn't auto-freeze them because

@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createIntent, openIds } from '@dxos/app-framework';
-import { contributes, type PluginsContext, Capabilities } from '@dxos/app-framework/next';
+import { contributes, createIntent, openIds, type PluginsContext, Capabilities } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { Expando } from '@dxos/echo-schema';
 import { scheduledEffect } from '@dxos/echo-signals/core';

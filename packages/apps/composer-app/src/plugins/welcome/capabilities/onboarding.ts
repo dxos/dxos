@@ -3,7 +3,7 @@
 //
 
 import { createIntent } from '@dxos/app-framework';
-import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework/next';
+import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientAction } from '@dxos/plugin-client/types';
 import { DeviceType } from '@dxos/react-client/halo';

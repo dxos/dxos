@@ -6,8 +6,13 @@ import { ArrowSquareOut, GearSix, Warning } from '@phosphor-icons/react';
 import { formatDistance } from 'date-fns/formatDistance';
 import React from 'react';
 
-import { type LayoutPart, SettingsAction, useIntentDispatcher, createIntent } from '@dxos/app-framework';
-import { usePluginManager } from '@dxos/app-framework/next';
+import {
+  type LayoutPart,
+  SettingsAction,
+  useIntentDispatcher,
+  createIntent,
+  usePluginManager,
+} from '@dxos/app-framework';
 import { useConfig } from '@dxos/react-client';
 import {
   Button,

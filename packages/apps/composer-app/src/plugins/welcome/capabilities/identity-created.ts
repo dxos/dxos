@@ -3,7 +3,7 @@
 //
 
 import { createIntent, LayoutAction, NavigationAction } from '@dxos/app-framework';
-import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework/next';
+import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { makeRef } from '@dxos/react-client/echo';
 

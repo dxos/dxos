@@ -5,7 +5,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework/next';
+import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
 
 import { DECK_PLUGIN } from '../../meta';
 import { type DeckSettingsProps } from '../../types';

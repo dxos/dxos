@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { useCapability } from '@dxos/app-framework/next';
+import { useCapability } from '@dxos/app-framework';
 import { generateName } from '@dxos/display-name';
 import { type Expando } from '@dxos/echo-schema';
 import { useGraph } from '@dxos/plugin-graph';

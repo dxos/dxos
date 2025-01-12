@@ -3,7 +3,7 @@
 //
 
 import { createIntent } from '@dxos/app-framework';
-import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework/next';
+import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 
 import { CLIENT_PLUGIN } from '../meta';
