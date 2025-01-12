@@ -45,11 +45,11 @@
     "effect": "^3.12.1",
     "ollama": "^0.5.11"
   },
+  "devDependencies": {
+    "@effect/vitest": "^0.16.1"
+  },
   "publishConfig": {
     "access": "public"
   },
-  "beast": {},
-  "devDependencies": {
-    "@effect/vitest": "^0.16.1"
-  }
+  "beast": {}
 }
