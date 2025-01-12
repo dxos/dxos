@@ -7,8 +7,6 @@ import { Effect } from 'effect';
 import { S } from '@dxos/echo-schema';
 import type { GraphEdge, GraphModel, GraphNode } from '@dxos/graph';
 import { failedInvariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
-import { getDebugName } from '@dxos/util';
 
 import type {
   ComputeNode,

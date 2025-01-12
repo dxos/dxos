@@ -22,7 +22,6 @@ export const testServices = ({
 }: TestServiceOptions = {}): Layer.Layer<Exclude<ComputeRequirements, Scope.Scope>> => {
   const logLayer = Layer.succeed(EventLogger, logger);
   const gptLayer = Layer.succeed(GptService, gpt);
-
   return Layer.mergeAll(logLayer, gptLayer);
 };
 

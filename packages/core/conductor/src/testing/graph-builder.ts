@@ -12,6 +12,7 @@ export const createEdge = (params: {
   target: string;
   input: string;
 }): GraphEdge<ComputeEdge> => ({
+  // TODO(burdon): Reverse: source_output-input_target
   id: createEdgeId({ source: params.source, target: params.target, relation: `${params.input}-${params.output}` }),
   source: params.source,
   target: params.target,
