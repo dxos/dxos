@@ -8,7 +8,16 @@ import { describe, test } from 'vitest';
 import { S } from '@dxos/echo-schema';
 import { GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
 
-import { defineComputeNode, NodeType, type ComputeEdge, type ComputeGraph, type ComputeNode } from './schema';
+import {
+  defineComputeNode,
+  makeValueBag,
+  NodeType,
+  synchronizedComputeFunction,
+  unwrapValueBag,
+  type ComputeEdge,
+  type ComputeGraph,
+  type ComputeNode,
+} from './schema';
 import { logCustomEvent } from './services';
 import { createEdge, TestRuntime } from './testing';
 import { testServices } from './testing/test-services';
@@ -24,8 +33,12 @@ describe('Graph as a fiber runtime', () => {
 
     const result = await Effect.runPromise(
       runtime
-        .runGraph('dxn:test:g1', { number1: 1, number2: 2 })
-        .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Effect.scoped),
+        .runGraph('dxn:test:g1', makeValueBag({ number1: 1, number2: 2 }))
+        .pipe(
+          Effect.flatMap(unwrapValueBag),
+          Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })),
+          Effect.scoped,
+        ),
     );
     expect(result).toEqual({ sum: 3 });
   });
@@ -38,8 +51,12 @@ describe('Graph as a fiber runtime', () => {
 
     const result = await Effect.runPromise(
       runtime
-        .runGraph('dxn:test:g2', { a: 1, b: 2, c: 3 })
-        .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Effect.scoped),
+        .runGraph('dxn:test:g2', makeValueBag({ a: 1, b: 2, c: 3 }))
+        .pipe(
+          Effect.flatMap(unwrapValueBag),
+          Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })),
+          Effect.scoped,
+        ),
     );
     expect(result).toEqual({ result: 6 });
   });
@@ -51,7 +68,7 @@ describe('Graph as a fiber runtime', () => {
 const sum = defineComputeNode({
   input: S.Struct({ a: S.Number, b: S.Number }),
   output: S.Struct({ result: S.Number }),
-  compute: ({ a, b }) =>
+  compute: synchronizedComputeFunction(({ a, b }) =>
     Effect.gen(function* () {
       yield* logCustomEvent({
         operation: 'sum',
@@ -59,6 +76,7 @@ const sum = defineComputeNode({
       });
       return { result: a + b };
     }),
+  ),
 });
 
 /**

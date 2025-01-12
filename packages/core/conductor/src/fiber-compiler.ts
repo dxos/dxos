@@ -9,14 +9,18 @@ import type { GraphEdge, GraphModel, GraphNode } from '@dxos/graph';
 import { failedInvariant, invariant } from '@dxos/invariant';
 
 import { raise } from '@dxos/debug';
-import type {
-  ComputeEdge,
-  ComputeGraph,
-  ComputeImplementation,
-  ComputeMeta,
-  ComputeNode,
-  ComputeRequirements,
-  OutputBag,
+import {
+  type ComputeEdge,
+  type ComputeGraph,
+  type ComputeImplementation,
+  type ComputeMeta,
+  type ComputeNode,
+  type ComputeRequirements,
+  NotExecuted,
+  type ValueBag,
+  isNotExecuted,
+  isValueBag,
+  makeValueBag,
 } from './schema';
 import { EventLogger } from './services';
 import { createTopology, type GraphDiagnostic, type Topology } from './topology';
@@ -119,7 +123,7 @@ export class GraphExecutor {
   private readonly _computeMetaResolver: (node: ComputeNode) => Promise<ComputeMeta>;
   private readonly _computeNodeResolver: (node: ComputeNode) => Promise<ComputeImplementation>;
   private _topology?: Topology = undefined;
-  private _computeCache = new Map<string, Effect.Effect<any, any, ComputeRequirements>>();
+  private _computeCache = new Map<string, Effect.Effect<ValueBag<any>, Error | NotExecuted, ComputeRequirements>>();
 
   constructor(params: GraphExecutorParams) {
     this._computeNodeResolver =
@@ -182,50 +186,76 @@ export class GraphExecutor {
    * Set outputs for a node.
    * When values are polled, this node will not be computed.
    */
-  setOutputs(nodeId: string, outputs: OutputBag<any>) {
+  setOutputs(nodeId: string, outputs: ValueBag<any>) {
+    invariant(isValueBag(outputs), 'Outputs must be a value bag');
     this._computeCache.set(nodeId, Effect.succeed(outputs));
   }
 
-  setInputs(nodeId: string, inputs: Record<string, any>) {
-    throw new Error('Not implemented');
+  setInputs(nodeId: string, inputs: ValueBag<any>) {
+    invariant(isValueBag(inputs), 'Inputs must be a value bag');
+    this._computeCache.set(nodeId, Effect.succeed(inputs));
   }
 
   /**
    * Compute inputs for a node using a pull-based computation.
    */
-  computeInputs(nodeId: string): Effect.Effect<OutputBag<any>, Error, ComputeRequirements> {
+  computeInputs(nodeId: string): Effect.Effect<ValueBag<any>, Error | NotExecuted, ComputeRequirements> {
     invariant(this._topology, 'Graph not loaded');
     return Effect.gen(this, function* () {
       const node = this._topology!.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
-      return yield* Effect.forEach(node.inputs, (input) => {
-        const sourceNode = this._topology!.nodes.find((node) => node.id === input.sourceNodeId) ?? failedInvariant();
-        return this.computeOutputs(sourceNode.id).pipe(
-          Effect.map((value) => [input.name, value[input.sourceNodeOutput!]] as const),
-        );
-      }).pipe(Effect.map((inputs) => Object.fromEntries(inputs)));
+
+      const entries = node.inputs.map(
+        (input) =>
+          [
+            input.name,
+            Effect.gen(this, function* () {
+              const sourceNode =
+                this._topology!.nodes.find((node) => node.id === input.sourceNodeId) ?? failedInvariant();
+              const output = yield* this.computeOutput(sourceNode.id, input.sourceNodeOutput!);
+              return output;
+            }),
+          ] as const,
+      );
+      return makeValueBag(Object.fromEntries(entries));
+    });
+  }
+
+  computeOutput(nodeId: string, prop: string): Effect.Effect<any, Error | NotExecuted, ComputeRequirements> {
+    return Effect.gen(this, function* () {
+      const output = yield* this.computeOutputs(nodeId);
+      invariant(output.type === 'bag', 'Output must be a value bag');
+      if (isNotExecuted(output)) {
+        return yield* Effect.fail(NotExecuted);
+      }
+      return yield* output.values[prop];
     });
   }
 
   /**
    * Compute outputs for a node using a pull-based computation.
    */
-  computeOutputs(nodeId: string): Effect.Effect<any, any, ComputeRequirements> {
-    const result = Effect.gen(this, function* () {
+  computeOutputs(nodeId: string): Effect.Effect<ValueBag<any>, Error | NotExecuted, ComputeRequirements> {
+    return Effect.gen(this, function* () {
       invariant(this._topology, 'Graph not loaded');
       if (this._computeCache.has(nodeId)) {
-        return yield* this._computeCache.get(nodeId)!;
+        const result = yield* this._computeCache.get(nodeId)!;
+        try {
+          invariant(result.type === 'bag', 'Output must be a value bag');
+        } catch (e) {
+          console.log({ result });
+          throw e;
+        }
+        return result;
       }
 
       const node = this._topology!.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
 
       const compute = Effect.gen(this, function* () {
-        const inputValuesBag = yield* this.computeInputs(nodeId);
-        const inputValues = yield* unwrapOutputBag(inputValuesBag);
+        const inputValues = yield* this.computeInputs(nodeId);
         // TODO(dmaretskyi): Consider resolving the node implementation at the start of the computation.
         const nodeSpec = yield* Effect.promise(() => this._computeNodeResolver(node.graphNode));
         if (nodeSpec.compute == null) {
-          yield* Effect.fail(new Error(`No compute function for node type: ${node.graphNode.type}`));
-          return;
+          throw new Error(`No compute function for node type: ${node.graphNode.type}`);
         }
 
         const logger = yield* EventLogger;
@@ -235,13 +265,16 @@ export class GraphExecutor {
           inputs: inputValues,
         });
 
-        const sanitizedInputs = yield* S.decode(node.meta.input)(inputValues);
-        const output = yield* nodeSpec.compute(sanitizedInputs).pipe(
+        // const sanitizedInputs = yield* S.decode(node.meta.input)(inputValues);
+        // TODO(dmaretskyi): Figure out schema validation on value bags.
+        invariant(isValueBag(inputValues), 'Input must be a value bag');
+        const output = yield* nodeSpec.compute(inputValues).pipe(
           Effect.provideService(EventLogger, {
             log: logger.log,
             nodeId: node.id,
           }),
         );
+        invariant(isValueBag(output), 'Output must be a value bag');
         // log.info('output', { output });
         // if ('text' in output) {
         //   log.info('text in fiber', { text: getDebugName(output.text) });
@@ -259,19 +292,10 @@ export class GraphExecutor {
 
       const cachedCompute = yield* compute.pipe(Effect.cached);
       this._computeCache.set(node.id, cachedCompute);
-      return yield* cachedCompute;
-    });
 
-    return result;
+      const result = yield* cachedCompute;
+      invariant(isValueBag(result), 'Output must be a value bag');
+      return result;
+    });
   }
 }
-
-const unwrapOutputBag = <T>(output: OutputBag<T>): Effect.Effect<T, Error, ComputeRequirements> => {
-  return Effect.gen(function* () {
-    const res = {} as any;
-    for (const [key, value] of Object.entries(output)) {
-      res[key] = Effect.isEffect(value) ? yield* value : value;
-    }
-    return res;
-  }) as any;
-};

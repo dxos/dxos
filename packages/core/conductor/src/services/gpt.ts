@@ -7,7 +7,7 @@ import { Context, type Effect, type Scope } from 'effect';
 import { LLMTool, Message, type ResultStreamEvent } from '@dxos/assistant';
 import { S } from '@dxos/echo-schema';
 
-import type { OutputBag } from '../schema';
+import type { ComputeRequirements, NotExecuted, ValueBag } from '../schema';
 import { StreamSchema } from '../schema-dsl';
 
 const GptStreamEventSchema = S.Any as S.Schema<ResultStreamEvent>;
@@ -34,5 +34,9 @@ export type GptOutput = S.Schema.Type<typeof GptOutput>;
 
 export class GptService extends Context.Tag('GptService')<
   GptService,
-  { readonly invoke: (input: GptInput) => Effect.Effect<OutputBag<GptOutput>, any, Scope.Scope> }
+  {
+    readonly invoke: (
+      input: ValueBag<GptInput>,
+    ) => Effect.Effect<ValueBag<GptOutput>, Error | NotExecuted, ComputeRequirements>;
+  }
 >() {}

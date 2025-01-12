@@ -21,6 +21,7 @@ describe('effect-basics', () => {
 
     test('stream instanceof checks', ({ expect }) => {
       expect(isStream(Stream.range(1, 10))).toBe(true);
+      expect(isStream(Effect.succeed(1))).toBe(false);
       expect(isStream({})).toBe(false);
       expect(isStream(1)).toBe(false);
       expect(isStream('')).toBe(false);
@@ -29,6 +30,10 @@ describe('effect-basics', () => {
       expect(isStream(true)).toBe(false);
       expect(isStream(false)).toBe(false);
       expect(isStream(new ReadableStream())).toBe(false);
+    });
+
+    test('stream is not an effect', ({ expect }) => {
+      expect(Effect.isEffect(Stream.range(1, 10))).toBe(false);
     });
   });
 

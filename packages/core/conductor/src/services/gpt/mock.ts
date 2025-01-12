@@ -9,7 +9,7 @@ import { ObjectId, type ResultStreamEvent } from '@dxos/assistant';
 import { log } from '@dxos/log';
 import { getDebugName } from '@dxos/util';
 
-import type { OutputBag } from '../../schema';
+import { makeValueBag, NotExecuted, unwrapValueBag, type ComputeRequirements, type ValueBag } from '../../schema';
 import type { GptInput, GptService, GptOutput } from '../gpt';
 
 export type GPTConfig = {
@@ -35,14 +35,10 @@ export class MockGpt implements Context.Tag.Service<GptService> {
     };
   }
 
-  public invoke({
-    systemPrompt,
-    prompt,
-    history = [],
-  }: GptInput): Effect.Effect<OutputBag<GptOutput>, any, Scope.Scope> {
-    const self = this;
-    return Effect.gen(function* () {
-      const response = self.config.responses[prompt] || self.config.responses.default;
+  public invoke(inputs: ValueBag<GptInput>): Effect.Effect<ValueBag<GptOutput>, NotExecuted | Error, ComputeRequirements> {
+    return Effect.gen(this, function* () {
+      const { systemPrompt, prompt, history = [] } = yield* unwrapValueBag(inputs);
+      const response = this.config.responses[prompt] || this.config.responses.default;
 
       let onDone!: () => void;
       const textResult = new Promise<string>((resolve) => {
@@ -53,7 +49,7 @@ export class MockGpt implements Context.Tag.Service<GptService> {
       });
 
       const tokenStream = Stream.fromAsyncIterable(
-        self.createStream(response, onDone),
+        this.createStream(response, onDone),
         (err) => new Error(String(err)),
       );
 
@@ -62,9 +58,9 @@ export class MockGpt implements Context.Tag.Service<GptService> {
       const text = Effect.promise(() => textResult);
       log.info('text in gpt', { text: getDebugName(text) });
 
-      return {
+      return makeValueBag<GptOutput>({
         text,
-        messages: [
+        messages: Effect.succeed([
           {
             id: ObjectId.random(),
             role: 'user',
@@ -75,10 +71,10 @@ export class MockGpt implements Context.Tag.Service<GptService> {
             role: 'assistant',
             content: [{ type: 'text', text: response }],
           },
-        ],
-        tokenStream: stream1,
-        tokenCount: 0,
-      } satisfies OutputBag<GptOutput>;
+        ]),
+        tokenStream: Effect.succeed(stream1),
+        tokenCount: Effect.fail(NotExecuted),
+      });
     });
   }
 

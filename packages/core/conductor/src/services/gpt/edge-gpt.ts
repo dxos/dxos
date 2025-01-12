@@ -6,7 +6,7 @@ import { LLMTool, ObjectId, type AIServiceClient, type Message, type MessageImag
 import { Console, Effect, Stream } from 'effect';
 import { log } from '@dxos/log';
 import { SpaceId } from '@dxos/keys';
-import type { OutputBag } from '../../schema';
+import { makeValueBag, unwrapValueBag, type ComputeRequirements, type NotExecuted, type ValueBag } from '../../schema';
 
 export class EdgeGpt implements Context.Tag.Service<GptService> {
   // Images are not supported.
@@ -14,14 +14,10 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
 
   constructor(private readonly _client: AIServiceClient) {}
 
-  public invoke({
-    systemPrompt,
-    prompt,
-    history = [],
-    tools = [],
-  }: GptInput): Effect.Effect<OutputBag<GptOutput>, never, Scope.Scope> {
-    const self = this;
-    return Effect.gen(function* () {
+  public invoke(input: ValueBag<GptInput>): Effect.Effect<ValueBag<GptOutput>, Error | NotExecuted, ComputeRequirements> {
+    return Effect.gen(this, function* () {
+      const { systemPrompt, prompt, history = [], tools = [] } = yield* unwrapValueBag(input);
+
       const messages: Message[] = [
         ...history,
         {
@@ -35,11 +31,11 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
       // TODO(dmaretskyi): Allow to pass messages into the generate method directly.
       const spaceId = SpaceId.random();
       const threadId = ObjectId.random();
-      yield* Effect.promise(() => self._client.insertMessages(messages.map((msg) => ({ ...msg, threadId, spaceId }))));
+      yield* Effect.promise(() => this._client.insertMessages(messages.map((msg) => ({ ...msg, threadId, spaceId }))));
 
       log.info('generating', { systemPrompt, prompt, tools: tools.map((tool) => tool.name) });
       const result = yield* Effect.promise(() =>
-        self._client.generate({
+        this._client.generate({
           model: '@anthropic/claude-3-5-sonnet-20241022',
           threadId,
           spaceId,
@@ -64,14 +60,14 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
         return messages.map((msg) => msg.content.flatMap((c) => (c.type === 'text' ? [c.text] : []))).join('');
       });
 
-      return {
+      return makeValueBag<GptOutput>({
         messages: outputMessages,
         tokenCount: 0,
         text,
         tokenStream: stream2,
         cot: undefined,
         artifact: undefined,
-      } satisfies OutputBag<GptOutput>;
+      });
     });
   }
 }
