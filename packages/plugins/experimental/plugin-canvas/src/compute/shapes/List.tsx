@@ -14,6 +14,7 @@ import { ComputeShape, createInputSchema, createOutputSchema, type CreateShapePr
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { GptMessage, List } from '../graph';
 
+// TODO(burdon): Type-specific.
 const InputSchema = createInputSchema(GptMessage);
 const OutputSchema = createOutputSchema(S.mutable(S.Array(GptMessage)));
 

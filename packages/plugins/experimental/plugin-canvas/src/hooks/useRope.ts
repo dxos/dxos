@@ -105,10 +105,10 @@ export const useRope = (
         if (ev === 'end') {
           simulation.alphaTarget(0);
         } else {
-          simulation
-            .alpha(options.alphaTarget * 2)
-            .alphaTarget(options.alphaTarget)
-            .restart();
+          // TODO(burdon): Custom forces.
+          // Resetting the alpha target causes previously settled nodes to start moving.
+          // Call filter on force to determine which forces apply to which subgroup.
+          simulation.alpha(1).alphaTarget(options.alphaTarget).restart();
         }
       }),
     );
@@ -136,6 +136,7 @@ const createGraph = (
 ): GraphNode<SimulationNodeDatum> => {
   const d = p2 && options.nodes > 1 ? pointDivide(pointSubtract(p2, p1), options.nodes - 1) : { x: 0, y: -1 };
 
+  // Create start of chain.
   let source: GraphNode<SimulationNodeDatum> = {
     id: `${id}-0`,
     type: 'start',
@@ -143,6 +144,7 @@ const createGraph = (
   };
   graph.addNode(source);
 
+  // Create chain.
   range(options.nodes - 1).forEach((_, i) => {
     const last = i === options.nodes - 2;
     const p = pointAdd({ x: source.data.x ?? 0, y: source.data.y ?? 0 }, d);

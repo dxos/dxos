@@ -38,9 +38,9 @@ export const createFunction = ({ id, ...rest }: CreateFunctionProps): FunctionSh
 };
 
 export const FunctionComponent = ({ shape }: ShapeComponentProps<FunctionShape>) => {
-  const inputs = AST.getPropertySignatures(shape.node.inputSchema.ast).map(({ name }) => name.toString());
-  const outputs = AST.getPropertySignatures(shape.node.outputSchema.ast).map(({ name }) => name.toString());
-  return <FunctionBody name={shape.node.name} inputs={inputs} outputs={outputs} />;
+  return (
+    <FunctionBody name={shape.node.name} inputSchema={shape.node.inputSchema} outputSchema={shape.node.outputSchema} />
+  );
 };
 
 export const functionShape: ShapeDef<FunctionShape> = {
@@ -58,28 +58,33 @@ export const functionShape: ShapeDef<FunctionShape> = {
 const bodyPadding = 8;
 
 // TODO(burdon): Move labels to anchor?
-export const FunctionBody = ({ name, inputs, outputs }: { name: string; inputs?: string[]; outputs?: string[] }) => {
+export const FunctionBody = ({
+  name,
+  inputSchema,
+  outputSchema,
+}: {
+  name: string;
+  inputSchema: S.Schema.Any;
+  outputSchema: S.Schema.Any;
+}) => {
+  const inputs = AST.getPropertySignatures(inputSchema.ast).map(({ name }) => name.toString());
+  const outputs = AST.getPropertySignatures(outputSchema.ast).map(({ name }) => name.toString());
+
   return (
-    <Box name={name}>
-      <div className='grid grid-cols-2 items-center'>
-        <div className='flex flex-col' style={{ padding: bodyPadding }}>
-          {inputs?.map((name) => (
-            <div key={name} className='truncate text-sm font-mono items-center' style={{ height: rowHeight }}>
-              {name}
-            </div>
-          ))}
-        </div>
-        <div className='flex flex-col' style={{ padding: bodyPadding }}>
-          {outputs?.map((name) => (
-            <div
-              key={name}
-              className='truncate  text-sm font-mono items-center text-right'
-              style={{ height: rowHeight }}
-            >
-              {name}
-            </div>
-          ))}
-        </div>
+    <Box name={name} classNames='grid grid-cols-2 items-center'>
+      <div className='flex flex-col' style={{ padding: bodyPadding }}>
+        {inputs?.map((name) => (
+          <div key={name} className='truncate text-sm font-mono items-center' style={{ height: rowHeight }}>
+            {name}
+          </div>
+        ))}
+      </div>
+      <div className='flex flex-col' style={{ padding: bodyPadding }}>
+        {outputs?.map((name) => (
+          <div key={name} className='truncate  text-sm font-mono items-center text-right' style={{ height: rowHeight }}>
+            {name}
+          </div>
+        ))}
       </div>
     </Box>
   );

@@ -11,6 +11,7 @@ import {
   functionShape,
   gptShape,
   listShape,
+  ifShape,
   notShape,
   orShape,
   switchShape,
@@ -19,9 +20,9 @@ import {
   threadShape,
   timerShape,
   textToImageShape,
+  viewShape,
 } from './shapes';
 import type { ShapeDef } from '../components';
-import { viewShape } from './shapes/View';
 
 /**
  * Order used by toolbar.
@@ -35,6 +36,7 @@ export const computeShapes: ShapeDef<any>[] = [
   textToImageShape,
   switchShape,
   timerShape,
+  ifShape,
   andShape,
   orShape,
   notShape,

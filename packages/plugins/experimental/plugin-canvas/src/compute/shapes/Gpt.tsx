@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { AST, S } from '@dxos/echo-schema';
+import { S } from '@dxos/echo-schema';
 
 import { FunctionBody, createFunctionAnchors, getHeight } from './Function';
 import { ComputeShape, type CreateShapeProps } from './defs';
@@ -33,9 +33,9 @@ export const createGpt = ({ id, ...rest }: CreateGptProps): GptShape => {
 };
 
 export const GptComponent = ({ shape }: ShapeComponentProps<GptShape>) => {
-  const inputs = AST.getPropertySignatures(shape.node.inputSchema.ast).map(({ name }) => name.toString());
-  const outputs = AST.getPropertySignatures(shape.node.outputSchema.ast).map(({ name }) => name.toString());
-  return <FunctionBody name={shape.node.name} inputs={inputs} outputs={outputs} />;
+  return (
+    <FunctionBody name={shape.node.name} inputSchema={shape.node.inputSchema} outputSchema={shape.node.outputSchema} />
+  );
 };
 
 export const gptShape: ShapeDef<GptShape> = {

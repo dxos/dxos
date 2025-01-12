@@ -109,11 +109,15 @@ const Render = ({
   const selection = useMemo(() => new SelectionModel(), []);
   const [selected, setSelected] = useState<Shape | undefined>();
   useEffect(() => {
+    if (!graph) {
+      return;
+    }
+
     return selection.selected.subscribe((selected) => {
       if (selection.size) {
         // Selection included nodes and edges.
         for (const id of Array.from(selected.values())) {
-          const node = graph?.getNode(id);
+          const node = graph.findNode(id);
           if (node) {
             const data = omit(node.data as any, ['node']);
             setSelected(data as any);
