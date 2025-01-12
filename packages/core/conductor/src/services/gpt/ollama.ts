@@ -10,6 +10,7 @@ import { ObjectId, type MessageImageContentBlock } from '@dxos/assistant';
 import { log } from '@dxos/log';
 
 import { type GptOutput, type GptInput, type GptService } from '../gpt';
+import { makeValueBag, unwrapValueBag, type ComputeRequirements, type NotExecuted, type ValueBag } from '../../schema';
 
 export class OllamaGpt implements Context.Tag.Service<GptService> {
   // Images are not supported.
@@ -17,8 +18,12 @@ export class OllamaGpt implements Context.Tag.Service<GptService> {
 
   constructor(private readonly _ollama: Ollama) {}
 
-  public invoke({ systemPrompt, prompt, history = [] }: GptInput): Effect.Effect<GptOutput, never, never> {
-    return Effect.promise<GptOutput>(async () => {
+  public invoke(
+    inputs: ValueBag<GptInput>,
+  ): Effect.Effect<ValueBag<GptOutput>, NotExecuted | Error, ComputeRequirements> {
+    return Effect.gen(this, function* () {
+      const { systemPrompt, prompt, history = [] } = yield* unwrapValueBag(inputs);
+
       const messages = [
         ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
         ...history.flatMap(({ role, content }) =>
@@ -27,11 +32,11 @@ export class OllamaGpt implements Context.Tag.Service<GptService> {
         { role: 'user', content: prompt },
       ];
 
-      const result = await this._ollama.chat({ model: 'llama3.2', messages });
+      const result = yield* Effect.promise(() => this._ollama.chat({ model: 'llama3.2', messages }));
       log.info('gpt', { prompt, result });
       const { message, eval_count } = result;
 
-      return {
+      return makeValueBag<GptOutput>({
         messages: [
           {
             id: ObjectId.random(),
@@ -49,7 +54,7 @@ export class OllamaGpt implements Context.Tag.Service<GptService> {
         tokenStream: Stream.empty,
         cot: undefined,
         artifact: undefined,
-      } satisfies GptOutput;
+      });
     });
   }
 }

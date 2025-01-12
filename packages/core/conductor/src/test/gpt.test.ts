@@ -10,12 +10,20 @@ import { GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
 import { log } from '@dxos/log';
 import { getDebugName } from '@dxos/util';
 
-import { NodeType, type ComputeEdge, type ComputeGraph, type ComputeNode } from '../schema';
+import {
+  makeValueBag,
+  NodeType,
+  unwrapValueBag,
+  type ComputeEdge,
+  type ComputeGraph,
+  type ComputeNode,
+  type NotExecuted,
+} from '../schema';
 import { EdgeGpt } from '../services/gpt/edge-gpt';
 import { createEdge, TestRuntime } from '../testing';
 import { testServices } from '../testing/test-services';
 
-const ENABLE_LOGGING = false;
+const ENABLE_LOGGING = true;
 const AI_SERVICE_ENDPOINT = 'http://localhost:8787';
 const SKIP_AI_SERVICE_TESTS = true;
 
@@ -29,17 +37,15 @@ describe('Gpt pipelines', () => {
         const scope = yield* Scope.make();
 
         const computeResult = runtime
-          .runGraph('dxn:compute:gpt1', {
-            prompt: 'What is the meaning of life?',
-          })
-          .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Scope.extend(scope));
+          .runGraph('dxn:compute:gpt1', makeValueBag({ prompt: 'What is the meaning of life?' }))
+          .pipe(Effect.flatMap(unwrapValueBag), Scope.extend(scope));
 
-        const { text }: { text: Effect.Effect<string, Error, never> } = yield* computeResult;
+        const { text }: { text: Effect.Effect<string, Error | NotExecuted, never> } = yield* computeResult;
 
         expect(yield* text).toEqual('This is a mock response that simulates a GPT-like output.');
 
         yield* Scope.close(scope, Exit.void);
-      }),
+      }).pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING }))),
     );
   });
 
@@ -53,12 +59,19 @@ describe('Gpt pipelines', () => {
 
         const { tokenStream, text }: { tokenStream: Stream.Stream<ResultStreamEvent>; text: Effect.Effect<string> } =
           yield* runtime
-            .runGraph('dxn:compute:gpt2', {
-              prompt: 'What is the meaning of life?',
-            })
-            .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Scope.extend(scope));
+            .runGraph(
+              'dxn:compute:gpt2',
+              makeValueBag({
+                prompt: 'What is the meaning of life?',
+              }),
+            )
+            .pipe(
+              Effect.flatMap(unwrapValueBag),
+              Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })),
+              Scope.extend(scope),
+            );
 
-        log.info('text in test', { text: getDebugName(text) });
+        // log.info('text in test', { text: getDebugName(text) });
 
         const p = Effect.runPromise(text).then((x) => {
           console.log({ x });
@@ -115,10 +128,14 @@ describe('Gpt pipelines', () => {
         const scope = yield* Scope.make();
 
         const computeResult = runtime
-          .runGraph('dxn:compute:gpt1', {
-            prompt: 'What is the meaning of life?',
-          })
+          .runGraph(
+            'dxn:compute:gpt1',
+            makeValueBag({
+              prompt: 'What is the meaning of life?',
+            }),
+          )
           .pipe(
+            Effect.flatMap(unwrapValueBag),
             Effect.provide(
               testServices({
                 enableLogging: ENABLE_LOGGING,
@@ -149,10 +166,14 @@ describe('Gpt pipelines', () => {
 
         const { tokenStream, text }: { tokenStream: Stream.Stream<ResultStreamEvent>; text: Effect.Effect<string> } =
           yield* runtime
-            .runGraph('dxn:compute:gpt2', {
-              prompt: 'What is the meaning of life?',
-            })
+            .runGraph(
+              'dxn:compute:gpt2',
+              makeValueBag({
+                prompt: 'What is the meaning of life?',
+              }),
+            )
             .pipe(
+              Effect.flatMap(unwrapValueBag),
               Effect.provide(
                 testServices({
                   enableLogging: ENABLE_LOGGING,

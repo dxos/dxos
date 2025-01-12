@@ -8,7 +8,16 @@ import { describe, test } from 'vitest';
 import { S } from '@dxos/echo-schema';
 import { GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
 
-import { defineComputeNode, NodeType, type ComputeEdge, type ComputeGraph, type ComputeNode } from './schema';
+import {
+  defineComputeNode,
+  makeValueBag,
+  NodeType,
+  synchronizedComputeFunction,
+  unwrapValueBag,
+  type ComputeEdge,
+  type ComputeGraph,
+  type ComputeNode,
+} from './schema';
 import { StreamSchema } from './schema-dsl';
 import { createEdge, TestRuntime } from './testing';
 import { testServices } from './testing/test-services';
@@ -23,10 +32,12 @@ describe('Streaming pipelines', () => {
 
     const { result } = await Effect.runPromise(
       runtime
-        .runGraph('dxn:compute:stream-sum', {
-          stream: Stream.range(1, 10),
-        })
-        .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Effect.scoped),
+        .runGraph('dxn:compute:stream-sum', makeValueBag({ stream: Effect.succeed(Stream.range(1, 10)) }))
+        .pipe(
+          Effect.flatMap(unwrapValueBag),
+          Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })),
+          Effect.scoped,
+        ),
     );
 
     expect(result).toEqual(55);
@@ -43,10 +54,12 @@ describe('Streaming pipelines', () => {
 
     const { result } = await Effect.runPromise(
       runtime
-        .runGraph('dxn:compute:stream-sum', {
-          stream: delayedStream,
-        })
-        .pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Effect.scoped),
+        .runGraph('dxn:compute:stream-sum', makeValueBag({ stream: Effect.succeed(delayedStream) }))
+        .pipe(
+          Effect.flatMap(unwrapValueBag),
+          Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })),
+          Effect.scoped,
+        ),
     );
 
     expect(result).toEqual(55);
@@ -61,11 +74,12 @@ describe('Streaming pipelines', () => {
 const sumAggregator = defineComputeNode({
   input: S.Struct({ stream: StreamSchema(S.Number) }),
   output: S.Struct({ result: S.Number }),
-  compute: ({ stream }) =>
+  compute: synchronizedComputeFunction(({ stream }) =>
     Effect.gen(function* () {
       const result = yield* stream.pipe(Stream.runFold(0, (acc, x) => acc + x));
       return { result };
     }),
+  ),
 });
 
 /**

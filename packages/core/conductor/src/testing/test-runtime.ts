@@ -15,7 +15,10 @@ import {
   type ComputeImplementation,
   type ComputeNode,
   type ComputeRequirements,
+  type NotExecuted,
+  type ValueBag,
 } from '../schema';
+import type { Value } from 'effect/FastCheck';
 
 export class TestRuntime {
   nodes = new Map<string, ComputeImplementation>();
@@ -31,7 +34,7 @@ export class TestRuntime {
     return this;
   }
 
-  runGraph(id: string, input: any): Effect.Effect<any, Error, ComputeRequirements> {
+  runGraph(id: string, input: ValueBag<any>): Effect.Effect<ValueBag<any>, Error | NotExecuted, ComputeRequirements> {
     const self = this;
     return Effect.gen(function* () {
       const graph = self.graphs.get(id) ?? raise(new Error(`Graph not found: ${id}`));
