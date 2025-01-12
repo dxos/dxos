@@ -3,7 +3,7 @@
 //
 
 import { inspectCustom } from '@dxos/debug';
-import { invariant } from '@dxos/invariant';
+import { failedInvariant, invariant } from '@dxos/invariant';
 import { getSnapshot } from '@dxos/live-object';
 import { type MakeOptional, isNotFalsy, removeBy } from '@dxos/util';
 
@@ -52,24 +52,44 @@ export class ReadonlyGraphModel<
     return this._graph.edges as Edge[];
   }
 
-  getNode(id: string): Node | undefined {
+  //
+  // Nodes
+  //
+
+  findNode(id: string): Node | undefined {
     return this.nodes.find((node) => node.id === id);
   }
 
-  getNodes({ type }: Partial<GraphNode> = {}): Node[] {
+  getNode(id: string): Node {
+    return this.findNode(id) ?? failedInvariant();
+  }
+
+  filterNodes({ type }: Partial<GraphNode> = {}): Node[] {
     return this.nodes.filter((node) => !type || type === node.type);
   }
 
-  getEdge(id: string): Edge | undefined {
+  //
+  // Edges
+  //
+
+  findEdge(id: string): Edge | undefined {
     return this.edges.find((edge) => edge.id === id);
   }
 
-  getEdges({ type, source, target }: Partial<GraphEdge> = {}): Edge[] {
+  getEdge(id: string): Edge {
+    return this.findEdge(id) ?? failedInvariant();
+  }
+
+  filterEdges({ type, source, target }: Partial<GraphEdge> = {}): Edge[] {
     return this.edges.filter(
       (edge) =>
         (!type || type === edge.type) && (!source || source === edge.source) && (!target || target === edge.target),
     );
   }
+
+  //
+  // Traverse
+  //
 
   traverse(root: Node): Node[] {
     return this._traverse(root);
@@ -81,7 +101,7 @@ export class ReadonlyGraphModel<
     }
 
     visited.add(root.id);
-    const targets = this.getEdges({ source: root.id })
+    const targets = this.filterEdges({ source: root.id })
       .map((edge) => this.getNode(edge.target))
       .filter(isNotFalsy);
 
@@ -118,7 +138,7 @@ export class GraphModel<
 
   addNode(node: Node): this {
     invariant(node.id);
-    invariant(!this.getNode(node.id));
+    invariant(!this.findNode(node.id));
     this._graph.nodes.push(node);
     return this;
   }
@@ -134,7 +154,7 @@ export class GraphModel<
     if (!edge.id) {
       edge = { ...edge, id: createEdgeId(edge) };
     }
-    invariant(!this.getEdge(edge.id!));
+    invariant(!this.findNode(edge.id!));
     this._graph.edges.push(edge as Edge);
     return this;
   }
