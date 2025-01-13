@@ -27,7 +27,7 @@ export const EventsContainer = ({ calendar }: EventsContainerProps) => {
   objects.sort(byDate());
 
   return (
-    <StackItem.Content>
+    <StackItem.Content toolbar={false}>
       <MasterDetail>
         <EventList events={objects} selected={selected?.id} onSelect={setSelected} />
       </MasterDetail>

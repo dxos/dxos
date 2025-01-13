@@ -39,7 +39,7 @@ import { templates } from '../templates';
 
 export type ScriptEditorProps = ThemedClassName<{
   script: ScriptType;
-  role: string;
+  role?: string;
 }> &
   Pick<TypescriptEditorProps, 'env'>;
 
