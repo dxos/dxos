@@ -59,9 +59,7 @@ export const ComputeShape = S.extend(
 
 export type BaseComputeShape = S.Schema.Type<typeof ComputeShape>;
 
-export type ComputeShape<S extends BaseComputeShape, Node extends ComputeNode<any, any>> = Specialize<
-  S,
-  {
-    node: Node;
-  }
+export type ComputeShape<Shape extends BaseComputeShape, Node extends ComputeNode<any, any>> = Specialize<
+  Shape,
+  { node: Node }
 >;
