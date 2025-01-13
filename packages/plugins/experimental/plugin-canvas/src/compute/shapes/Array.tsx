@@ -12,6 +12,19 @@ import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { Reduce, ReduceInput, ReduceOutput } from '../graph';
 
 //
+// Data
+//
+
+export const ReduceShape = S.extend(
+  ComputeShape,
+  S.Struct({
+    type: S.Literal('reduce'),
+  }),
+);
+
+export type ReduceShape = ComputeShape<S.Schema.Type<typeof ReduceShape>, Reduce>;
+
+//
 // Components
 //
 

@@ -41,7 +41,7 @@ export const getShapeBounds = (root: HTMLElement, id: string): DOMRect | undefin
 /**
  * Runtime representations of shape.
  */
-export type ShapeComponentProps<S extends Shape> = PropsWithChildren<
+export type ShapeComponentProps<S extends Shape = Shape> = PropsWithChildren<
   ThemedClassName<{
     shape: S;
     debug?: boolean;

@@ -24,7 +24,7 @@ export class ComputeGraph extends TypedObject({
   output: S.optional(ComputeNode),
 }) {}
 
-// TODO(burdon): Reconcile/merge with computeNode.
+// TODO(burdon): Reconcile/merge with ComputeNode.
 export const ComputeGraphNode = S.Struct({
   node: S.optional(ComputeNode),
   subgraph: S.optional(Ref(ComputeGraph)),
