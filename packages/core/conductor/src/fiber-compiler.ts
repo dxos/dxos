@@ -11,6 +11,7 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { raise } from '@dxos/debug';
 import {
   type ComputeEdge,
+  type ComputeEffect,
   type ComputeGraph,
   type ComputeImplementation,
   type ComputeMeta,
@@ -23,7 +24,7 @@ import {
   makeValueBag,
 } from './schema';
 import { EventLogger, GptService } from './services';
-import { createTopology, type GraphDiagnostic, type Topology } from './topology';
+import { createTopology, type GraphDiagnostic, type Topology, type TopologyNode } from './topology';
 
 export type ValidateParams = {
   graph: GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;
@@ -199,7 +200,7 @@ export class GraphExecutor {
   /**
    * Compute inputs for a node using a pull-based computation.
    */
-  computeInputs(nodeId: string): Effect.Effect<ValueBag<any>, Error | NotExecuted, ComputeRequirements> {
+  computeInputs(nodeId: string): ComputeEffect<ValueBag<any>> {
     invariant(this._topology, 'Graph not loaded');
     return Effect.gen(this, function* () {
       const node = this._topology!.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
@@ -316,5 +317,32 @@ export class GraphExecutor {
       invariant(isValueBag(result), 'Output must be a value bag');
       return result;
     }).pipe(Effect.withSpan('compute-outputs', { attributes: { nodeId } }));
+  }
+
+  /**
+   * Returns node ids of all nodes that depend on the given node.
+   */
+  getAllDependantNodes(nodeId: string): string[] {
+    const visited = new Set<string>();
+
+    const recurse = (node: TopologyNode) => {
+      if (visited.has(node.id)) {
+        return;
+      }
+      visited.add(node.id);
+
+      for (const output of node.outputs) {
+        for (const bound of output.boundTo) {
+          recurse(this._topology!.nodes.find((node) => node.id === bound.nodeId) ?? failedInvariant());
+        }
+      }
+    };
+
+    invariant(this._topology, 'Graph not loaded');
+    const node = this._topology!.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
+    recurse(node);
+
+    visited.delete(nodeId);
+    return Array.from(visited);
   }
 }

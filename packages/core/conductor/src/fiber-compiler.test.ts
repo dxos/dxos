@@ -22,6 +22,7 @@ import { logCustomEvent } from './services';
 import { createEdge, TestRuntime } from './testing';
 import { testServices } from './testing/test-services';
 import { it } from '@effect/vitest';
+import { mapValues } from '@dxos/util';
 
 const ENABLE_LOGGING = false;
 
@@ -63,6 +64,31 @@ describe('Graph as a fiber runtime', () => {
     );
     expect(result).toEqual({ result: 6 });
   });
+
+  it.effect('runFromInput', ({ expect }) =>
+    Effect.gen(function* () {
+      const runtime = new TestRuntime()
+        //
+        .registerNode('dxn:test:sum', sum)
+        .registerNode('dxn:test:viewer', viewer)
+        .registerGraph('dxn:test:g3', g3());
+
+      const result = yield* Effect.promise(() =>
+        runtime.runFromInput('dxn:test:g3', 'I', makeValueBag({ a: 1, b: 2 })),
+      ).pipe(
+        Effect.map((results) =>
+          mapValues(results, (eff) =>
+            eff.pipe(Effect.provide(testServices({ enableLogging: ENABLE_LOGGING })), Effect.scoped),
+          ),
+        ),
+      );
+
+      const v1 = yield* unwrapValueBag(yield* result.V1);
+      const v2 = yield* unwrapValueBag(yield* result.V2);
+      expect(v1).toEqual({ result: 3 });
+      expect(v2).toEqual({ result: 3 });
+    }),
+  );
 });
 
 /**
@@ -80,6 +106,14 @@ const sum = defineComputeNode({
       return { result: a + b };
     }),
   ),
+});
+
+/**
+ * Viewer node.
+ */
+const viewer = defineComputeNode({
+  input: S.Struct({ result: S.Number }),
+  output: S.Struct({}),
 });
 
 /**
@@ -112,6 +146,19 @@ const g2 = (): ComputeGraph => {
     .addEdge(createEdge({ source: 'I', output: 'c', target: 'Y', input: 'number1' }))
     .addEdge(createEdge({ source: 'X', output: 'sum', target: 'Y', input: 'number2' }))
     .addEdge(createEdge({ source: 'Y', output: 'sum', target: 'O', input: 'result' }));
+};
+
+// Branching computations.
+const g3 = (): ComputeGraph => {
+  return new GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>()
+    .addNode({ id: 'I', data: { type: NodeType.Input } })
+    .addNode({ id: 'X', data: { type: 'dxn:test:sum' } })
+    .addNode({ id: 'V1', data: { type: 'dxn:test:viewer' } })
+    .addNode({ id: 'V2', data: { type: 'dxn:test:viewer' } })
+    .addEdge(createEdge({ source: 'I', output: 'a', target: 'X', input: 'a' }))
+    .addEdge(createEdge({ source: 'I', output: 'b', target: 'X', input: 'b' }))
+    .addEdge(createEdge({ source: 'X', output: 'result', target: 'V1', input: 'result' }))
+    .addEdge(createEdge({ source: 'X', output: 'result', target: 'V2', input: 'result' }));
 };
 
 //

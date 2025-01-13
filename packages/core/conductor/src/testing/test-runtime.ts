@@ -7,11 +7,12 @@ import { Effect } from 'effect';
 import { raise } from '@dxos/debug';
 import { type GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
 
-import { compile } from '../fiber-compiler';
+import { compile, GraphExecutor } from '../fiber-compiler';
 import { inputNode, outputNode, gptNode } from '../nodes';
 import {
   NodeType,
   type ComputeEdge,
+  type ComputeEffect,
   type ComputeImplementation,
   type ComputeNode,
   type ComputeRequirements,
@@ -35,10 +36,9 @@ export class TestRuntime {
   }
 
   runGraph(id: string, input: ValueBag<any>): Effect.Effect<ValueBag<any>, Error | NotExecuted, ComputeRequirements> {
-    const self = this;
-    return Effect.gen(function* () {
-      const graph = self.graphs.get(id) ?? raise(new Error(`Graph not found: ${id}`));
-      const computation = yield* Effect.promise(() => self.compileGraph(graph));
+    return Effect.gen(this, function* () {
+      const graph = this.graphs.get(id) ?? raise(new Error(`Graph not found: ${id}`));
+      const computation = yield* Effect.promise(() => this.compileGraph(graph));
       return yield* computation.compute!(input);
     }).pipe(Effect.withSpan('compute-graph'));
   }
@@ -72,6 +72,7 @@ export class TestRuntime {
       graph.nodes.find((node) => node.data.type === NodeType.Input) ?? raise(new Error('Input node not found'));
     const outputNode =
       graph.nodes.find((node) => node.data.type === NodeType.Output) ?? raise(new Error('Output node not found'));
+    // TODO(dmaretskyi): Use GraphExecutor directly.
     const { computation, diagnostics } = await compile({
       graph,
       inputNodeId: inputNode.id,
@@ -87,5 +88,25 @@ export class TestRuntime {
     }
 
     return computation;
+  }
+
+  // TODO(dmaretskyi): Support cases where the are no or multiple "input" nodes.
+  //                   There can be a graph which starts evaluating from constant nodes.
+  async runFromInput(
+    graphId: string,
+    inputNodeId: string,
+    input: ValueBag<any>,
+  ): Promise<Record<string, ComputeEffect<ValueBag<any>>>> {
+    const graph = this.graphs.get(graphId) ?? raise(new Error(`Graph not found: ${graphId}`));
+
+    const executor = new GraphExecutor({ computeNodeResolver: this.resolveNode.bind(this) });
+    await executor.load(graph);
+    executor.setOutputs(inputNodeId, input);
+    const dependantNodes = executor.getAllDependantNodes(inputNodeId);
+    const result: Record<string, ComputeEffect<ValueBag<any>>> = {};
+    for (const nodeId of dependantNodes) {
+      result[nodeId] = executor.computeInputs(nodeId);
+    }
+    return result;
   }
 }
