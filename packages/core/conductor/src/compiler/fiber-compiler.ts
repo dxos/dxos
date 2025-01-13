@@ -14,7 +14,7 @@ import {
   type ComputeEdge,
   type ComputeEffect,
   type ComputeGraph,
-  type ComputeImplementation,
+  type Executable,
   type ComputeMeta,
   type ComputeNode,
   type ComputeRequirements,
@@ -33,6 +33,11 @@ export type ValidateParams = {
   computeMetaResolver: (node: ComputeNode) => Promise<ComputeMeta>;
 };
 
+export type ValidateResult = {
+  meta: ComputeMeta;
+  diagnostics: GraphDiagnostic[];
+};
+
 /**
  *
  * @param graph
@@ -40,13 +45,12 @@ export type ValidateParams = {
  * @param outputNodeId
  * @param computeMetaResolver
  */
-// TODO(burdon): Remove? Just wraps createTopology?
 export const validate = async ({
   graph,
   inputNodeId,
   outputNodeId,
   computeMetaResolver,
-}: ValidateParams): Promise<{ meta: ComputeMeta; diagnostics: GraphDiagnostic[] }> => {
+}: ValidateParams): Promise<ValidateResult> => {
   const executor = new GraphExecutor({ computeMetaResolver });
   await executor.load(graph);
   return {
@@ -71,11 +75,19 @@ export type CompileParams = {
    */
   outputNodeId: string;
 
-  computeResolver: (node: ComputeNode) => Promise<ComputeImplementation>;
+  /**
+   *
+   */
+  computeResolver: (node: ComputeNode) => Promise<Executable>;
+};
+
+export type CompileResult = {
+  executable: Executable;
+  diagnostics: GraphDiagnostic[];
 };
 
 /**
- * @returns A new compute implementation that takes input from the specific entrypoint node
+ * @returns A compiled function that takes input from the specific entrypoint node
  * and returns the output from the specific output node computing all intermediate nodes.
  */
 export const compile = async ({
@@ -83,18 +95,18 @@ export const compile = async ({
   inputNodeId,
   outputNodeId,
   computeResolver,
-}: CompileParams): Promise<{ computation: ComputeImplementation; diagnostics: GraphDiagnostic[] }> => {
+}: CompileParams): Promise<CompileResult> => {
   const executor = new GraphExecutor({ computeNodeResolver: computeResolver });
   await executor.load(graph);
 
   return {
-    computation: {
+    executable: {
       meta: {
         input: executor.getInputSchema(inputNodeId),
         output: executor.getOutputSchema(outputNodeId),
       },
 
-      compute: (input) => {
+      exec: (input) => {
         return Effect.gen(function* () {
           const instance = executor.clone();
           const logger = yield* EventLogger;
@@ -117,23 +129,25 @@ export const compile = async ({
 
 type GraphExecutorParams = {
   computeMetaResolver?: (node: ComputeNode) => Promise<ComputeMeta>;
-  computeNodeResolver?: (node: ComputeNode) => Promise<ComputeImplementation>;
+  computeNodeResolver?: (node: ComputeNode) => Promise<Executable>;
 };
 
+/**
+ *
+ */
 export class GraphExecutor {
   private readonly _computeMetaResolver: (node: ComputeNode) => Promise<ComputeMeta>;
-  private readonly _computeNodeResolver: (node: ComputeNode) => Promise<ComputeImplementation>;
+  private readonly _computeNodeResolver: (node: ComputeNode) => Promise<Executable>;
   private _topology?: Topology = undefined;
   private _computeCache = new Map<string, Effect.Effect<ValueBag<any>, Error | NotExecuted, ComputeRequirements>>();
 
-  constructor(params: GraphExecutorParams) {
-    this._computeNodeResolver =
-      params.computeNodeResolver ?? (() => raise(new Error('Compute node resolver not provided')));
+  constructor({ computeMetaResolver, computeNodeResolver }: GraphExecutorParams) {
+    this._computeNodeResolver = computeNodeResolver ?? (() => raise(new Error('Compute node resolver not provided')));
     this._computeMetaResolver =
-      params.computeMetaResolver ??
-      (params.computeNodeResolver
+      computeMetaResolver ??
+      (computeNodeResolver
         ? async (node) => {
-            const compute = await params.computeNodeResolver!(node);
+            const compute = await computeNodeResolver!(node);
             return compute.meta;
           }
         : () => raise(new Error('Either compute node resolver or compute meta resolver must be provided')));
@@ -289,12 +303,11 @@ export class GraphExecutor {
         const inputValues = yield* this.computeInputs(nodeId);
         // TODO(dmaretskyi): Consider resolving the node implementation at the start of the computation.
         const nodeSpec = yield* Effect.promise(() => this._computeNodeResolver(node.graphNode));
-        if (nodeSpec.compute == null) {
+        if (nodeSpec.exec == null) {
           throw new Error(`No compute function for node type: ${node.graphNode.type}`);
         }
 
         const logger = yield* EventLogger;
-
         logger.log({
           type: 'begin-compute',
           nodeId: node.id,
@@ -304,7 +317,7 @@ export class GraphExecutor {
         // const sanitizedInputs = yield* S.decode(node.meta.input)(inputValues);
         // TODO(dmaretskyi): Figure out schema validation on value bags.
         invariant(isValueBag(inputValues), 'Input must be a value bag');
-        const output = yield* nodeSpec.compute(inputValues).pipe(
+        const output = yield* nodeSpec.exec(inputValues).pipe(
           Effect.withSpan('call-node'),
           Effect.provideService(EventLogger, {
             log: logger.log,

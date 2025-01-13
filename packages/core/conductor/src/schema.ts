@@ -34,7 +34,35 @@ export const ComputeEdge = S.Struct({
 
 export type ComputeEdge = S.Schema.Type<typeof ComputeEdge>;
 
-type ValueRecord = Record<string, any>;
+/**
+ * Well-known node types.
+ */
+export const NodeType = Object.freeze({
+  Input: 'dxn:compute:input',
+  Output: 'dxn:compute:output',
+  Gpt: 'dxn:compute:gpt',
+});
+
+export type ComputeGraph = GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;
+
+//
+//
+//
+
+export type NotExecuted = { kind: 'not-executed' };
+export const NotExecuted: NotExecuted = { kind: 'not-executed' };
+export const isNotExecuted = (value: any): value is NotExecuted => value.kind === 'not-executed';
+
+//
+// Values
+//
+
+export type ValueRecord = Record<string, any>;
+
+/**
+ * For individual values passed through the compute function.
+ */
+export type ValueEffect<T> = Effect.Effect<T, Error | NotExecuted, never>;
 
 /**
  * Bag of effects that defines node's inputs or outputs.
@@ -72,6 +100,10 @@ export const unwrapValueBag = <T extends ValueRecord>(bag: ValueBag<T>): ValueEf
   ).pipe(Effect.map((entries) => Object.fromEntries(entries) as T));
 };
 
+//
+// Functions
+//
+
 /**
  * Node function.
  * Note that not-executed markers must be in the output bag.
@@ -80,21 +112,12 @@ export type ComputeFunction<I extends ValueRecord, O extends ValueRecord> = (
   input: ValueBag<I>,
 ) => ComputeEffect<ValueBag<O>>;
 
-export type NotExecuted = { kind: 'not-executed' };
-export const NotExecuted: NotExecuted = { kind: 'not-executed' };
-export const isNotExecuted = (value: any): value is NotExecuted => value.kind === 'not-executed';
-
 export type ComputeRequirements = EventLogger | GptService | Scope.Scope;
 
 /**
  * For results of compute functions.
  */
 export type ComputeEffect<T> = Effect.Effect<T, Error | NotExecuted, ComputeRequirements>;
-
-/**
- * For individual values passed through the compute function.
- */
-export type ValueEffect<T> = Effect.Effect<T, Error | NotExecuted, never>;
 
 /**
  * Lifts a compute function that takes all inputs together and returns all outputs together.
@@ -117,37 +140,28 @@ export type ComputeMeta = {
   output: S.Schema.AnyNoContext;
 };
 
-export type ComputeImplementation<
+/**
+ *
+ */
+export type Executable<
   SI extends S.Schema.AnyNoContext = S.Schema.AnyNoContext,
   SO extends S.Schema.AnyNoContext = S.Schema.AnyNoContext,
 > = {
-  // TODO(burdon): Why meta?
   meta: ComputeMeta;
 
   /** Undefined for meta nodes like input/output. */
-  compute?: ComputeFunction<S.Schema.Type<SI>, S.Schema.Type<SO>>;
+  exec?: ComputeFunction<S.Schema.Type<SI>, S.Schema.Type<SO>>;
 };
 
+/**
+ * Type-safe constructor for function definition.
+ */
 export const defineComputeNode = <SI extends S.Schema.AnyNoContext, SO extends S.Schema.AnyNoContext>({
   input,
   output,
-  compute,
+  exec,
 }: {
   input: SI;
   output: SO;
-  compute?: ComputeFunction<S.Schema.Type<SI>, S.Schema.Type<SO>>;
-}): ComputeImplementation => ({
-  meta: { input, output },
-  compute,
-});
-
-/**
- * Well-known node types.
- */
-export const NodeType = Object.freeze({
-  Input: 'dxn:compute:input',
-  Output: 'dxn:compute:output',
-  Gpt: 'dxn:compute:gpt',
-});
-
-export type ComputeGraph = GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;
+  exec?: ComputeFunction<S.Schema.Type<SI>, S.Schema.Type<SO>>;
+}): Executable => ({ meta: { input, output }, exec });

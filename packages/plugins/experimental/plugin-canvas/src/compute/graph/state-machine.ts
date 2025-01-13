@@ -9,8 +9,8 @@ import { Event, synchronized } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import {
   type ComputeEdge,
-  type ComputeImplementation,
   type ComputeNode,
+  type Executable,
   GraphExecutor,
   Model,
   makeValueBag,
@@ -125,7 +125,7 @@ export class StateMachine extends Resource {
     this._forcedOutputs.set([nodeId, property], value);
     queueMicrotask(async () => {
       try {
-        await this.compute();
+        await this.exec();
       } catch (error) {
         console.error('Error computing graph', error);
       }
@@ -133,7 +133,7 @@ export class StateMachine extends Resource {
   }
 
   @synchronized
-  async compute() {
+  async exec() {
     this._runtimeState = {};
     const executor = this._executor.clone();
     await executor.load(this._graph.model as any);
@@ -187,7 +187,7 @@ export class StateMachine extends Resource {
     this.update.emit();
   }
 
-  private async _resolveComputeNode(node: ComputeNode): Promise<ComputeImplementation> {
+  private async _resolveComputeNode(node: ComputeNode): Promise<Executable> {
     const impl = nodeDefs[node.type];
     invariant(impl, `Unknown node type: ${node.type}`);
     return impl;

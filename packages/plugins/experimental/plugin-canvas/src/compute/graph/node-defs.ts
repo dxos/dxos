@@ -4,19 +4,14 @@
 
 import { Effect } from 'effect';
 
-import {
-  type ComputeImplementation,
-  type Model,
-  defineComputeNode,
-  synchronizedComputeFunction,
-} from '@dxos/conductor';
+import { type Executable, type Model, defineComputeNode, synchronizedComputeFunction } from '@dxos/conductor';
 import { raise } from '@dxos/debug';
 import { S, ObjectId } from '@dxos/echo-schema';
 import { type GraphNode } from '@dxos/graph';
 import { failedInvariant } from '@dxos/invariant';
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './compute-node';
-import type { ComputeShape } from '../shapes';
+import { type ComputeShape } from '../shapes';
 
 // TODO(burdon): Just pass in type? Or can the shape specialize the node?
 export const createComputeNode = (shape: GraphNode<ComputeShape>): GraphNode<Model.ComputeGraphNode> => {
@@ -73,7 +68,7 @@ const nodeFactory: Record<string, (shape: GraphNode<ComputeShape>) => GraphNode<
 };
 
 // TODO(burdon): Consolidate with factory above.
-export const nodeDefs: Record<string, ComputeImplementation> = {
+export const nodeDefs: Record<string, Executable> = {
   switch: defineComputeNode({
     input: S.Struct({}),
     output: S.Struct({ [DEFAULT_OUTPUT]: S.Boolean }),
@@ -90,16 +85,16 @@ export const nodeDefs: Record<string, ComputeImplementation> = {
   and: defineComputeNode({
     input: S.Struct({ a: S.Boolean, b: S.Boolean }),
     output: S.Struct({ [DEFAULT_OUTPUT]: S.Boolean }),
-    compute: synchronizedComputeFunction(({ a, b }) => Effect.succeed({ [DEFAULT_OUTPUT]: a && b })),
+    exec: synchronizedComputeFunction(({ a, b }) => Effect.succeed({ [DEFAULT_OUTPUT]: a && b })),
   }),
   or: defineComputeNode({
     input: S.Struct({ a: S.Boolean, b: S.Boolean }),
     output: S.Struct({ [DEFAULT_OUTPUT]: S.Boolean }),
-    compute: synchronizedComputeFunction(({ a, b }) => Effect.succeed({ [DEFAULT_OUTPUT]: a || b })),
+    exec: synchronizedComputeFunction(({ a, b }) => Effect.succeed({ [DEFAULT_OUTPUT]: a || b })),
   }),
   not: defineComputeNode({
     input: S.Struct({ [DEFAULT_INPUT]: S.Boolean }),
     output: S.Struct({ [DEFAULT_OUTPUT]: S.Boolean }),
-    compute: synchronizedComputeFunction(({ [DEFAULT_INPUT]: input }) => Effect.succeed({ [DEFAULT_OUTPUT]: !input })),
+    exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: input }) => Effect.succeed({ [DEFAULT_OUTPUT]: !input })),
   }),
 };

@@ -13,7 +13,7 @@ import {
   NodeType,
   type ComputeEdge,
   type ComputeEffect,
-  type ComputeImplementation,
+  type Executable,
   type ComputeNode,
   type ComputeRequirements,
   type NotExecuted,
@@ -21,10 +21,12 @@ import {
 } from '../schema';
 
 export class TestRuntime {
-  nodes = new Map<string, ComputeImplementation>();
-  graphs = new Map<string, GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>>();
+  readonly nodes = new Map<string, Executable>();
 
-  registerNode(id: string, node: ComputeImplementation): this {
+  // TODO(burdon): Remove (make hierarchical?).
+  readonly graphs = new Map<string, GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>>();
+
+  registerNode(id: string, node: Executable): this {
     this.nodes.set(id, node);
     return this;
   }
@@ -37,12 +39,12 @@ export class TestRuntime {
   runGraph(id: string, input: ValueBag<any>): Effect.Effect<ValueBag<any>, Error | NotExecuted, ComputeRequirements> {
     return Effect.gen(this, function* () {
       const graph = this.graphs.get(id) ?? raise(new Error(`Graph not found: ${id}`));
-      const computation = yield* Effect.promise(() => this.compileGraph(graph));
-      return yield* computation.compute!(input);
+      const program = yield* Effect.promise(() => this.compileGraph(graph));
+      return yield* program.exec!(input);
     }).pipe(Effect.withSpan('compute-graph'));
   }
 
-  async resolveNode(node: ComputeNode): Promise<ComputeImplementation> {
+  async resolveNode(node: ComputeNode): Promise<Executable> {
     if (this.nodes.has(node.type)) {
       return this.nodes.get(node.type)!;
     }
@@ -72,7 +74,7 @@ export class TestRuntime {
     const outputNode =
       graph.nodes.find((node) => node.data.type === NodeType.Output) ?? raise(new Error('Output node not found'));
     // TODO(dmaretskyi): Use GraphExecutor directly.
-    const { computation, diagnostics } = await compile({
+    const { executable, diagnostics } = await compile({
       graph,
       inputNodeId: inputNode.id,
       outputNodeId: outputNode.id,
@@ -86,7 +88,7 @@ export class TestRuntime {
       throw new Error('Graph compilation failed');
     }
 
-    return computation;
+    return executable;
   }
 
   // TODO(dmaretskyi): Support cases where the are no or multiple "input" nodes.

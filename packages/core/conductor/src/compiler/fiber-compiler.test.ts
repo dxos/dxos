@@ -96,7 +96,7 @@ describe('Graph as a fiber runtime', () => {
 const sum = defineComputeNode({
   input: S.Struct({ a: S.Number, b: S.Number }),
   output: S.Struct({ result: S.Number }),
-  compute: synchronizedComputeFunction(({ a, b }) =>
+  exec: synchronizedComputeFunction(({ a, b }) =>
     Effect.gen(function* () {
       yield* logCustomEvent({
         operation: 'sum',

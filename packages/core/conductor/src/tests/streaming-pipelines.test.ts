@@ -74,7 +74,7 @@ describe('Streaming pipelines', () => {
 const sumAggregator = defineComputeNode({
   input: S.Struct({ stream: StreamSchema(S.Number) }),
   output: S.Struct({ result: S.Number }),
-  compute: synchronizedComputeFunction(({ stream }) =>
+  exec: synchronizedComputeFunction(({ stream }) =>
     Effect.gen(function* () {
       const result = yield* stream.pipe(Stream.runFold(0, (acc, x) => acc + x));
       return { result };
