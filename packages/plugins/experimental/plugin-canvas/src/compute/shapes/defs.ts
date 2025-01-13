@@ -51,15 +51,8 @@ export type CreateShapeProps<S extends Polygon> = Omit<MakeOptional<S, 'size'>, 
 export const ComputeShape = S.extend(
   Polygon,
   S.Struct({
-    // Runtime-only compute node (not persistent).
-    // TODO(burdon): Remove.
-    node: S.Any as S.Schema<ComputeNode<any, any>, unknown, never>,
+    node: S.String,
   }),
 );
 
-export type BaseComputeShape = S.Schema.Type<typeof ComputeShape>;
-
-export type ComputeShape<Shape extends BaseComputeShape, Node extends ComputeNode<any, any>> = Specialize<
-  Shape,
-  { node: Node }
->;
+export type ComputeShape = S.Schema.Type<typeof ComputeShape>;
