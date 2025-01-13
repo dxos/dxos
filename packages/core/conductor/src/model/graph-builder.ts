@@ -27,7 +27,17 @@ export class ComputeGraph extends TypedObject({
 // TODO(burdon): Reconcile/merge with computeNode.
 export const ComputeGraphNode = S.Struct({
   node: S.optional(ComputeNode),
+
+  /**
+   * For composition nodes.
+   */
   subgraph: S.optional(Ref(ComputeGraph)),
+
+  /**
+   * For switch nodes.
+   */
+  // TODO(dmaretskyi): Move to constants.
+  enabled: S.optional(S.Boolean),
 });
 
 const isComputeGraph = S.is(ComputeGraph);

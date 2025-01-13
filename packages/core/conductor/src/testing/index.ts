@@ -4,4 +4,4 @@
 
 export { TestRuntime } from './test-runtime';
 export { noopLogger, consoleLogger } from './logger';
-export { createEdge } from './graph-builder';
+export { createEdge } from '../model/graph-builder';
