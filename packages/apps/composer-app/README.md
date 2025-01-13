@@ -39,6 +39,21 @@ ssc build -r --port 5173
 
 To reset the app, inspect and delete local storage properties.
 
+## iOS Development
+
+- TODO(burdon): Create profile.
+- TODO(burdon): Create cert in keychain.
+
+Tether device via USB cable.
+
+```bash
+# Socket bug: need to create directory.
+mkdir -p /Users/burdon/Library/MobileDevice/Provisioning\ Profiles
+ssc build --platform=ios -p -c
+ssc list-devices --platform ios
+ssc install-app --platform ios
+```
+
 ## Dependencies
 
 To view dependencies and build sizes using bundle buddy, upload pairs of javascript and source map files from
