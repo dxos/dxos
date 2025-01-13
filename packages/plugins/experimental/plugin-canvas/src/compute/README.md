@@ -1,6 +1,6 @@
 # Compute
 
-- This folder represents a Canvas plugin.
+- This folder represents a "compute plugin" for the Canvas component.
 - It defines a set of Shapes that implement a state machine.
 
 ### Notes (dmaretskyi)

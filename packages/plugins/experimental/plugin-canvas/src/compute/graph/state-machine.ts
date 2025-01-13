@@ -24,8 +24,8 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
+import { nodeDefs } from './node-defs';
 import type { FunctionCallback, GptInput, GptOutput } from './nodes';
-import { nodeDefs } from './nodes-defs';
 
 export const InvalidStateError = Error;
 
