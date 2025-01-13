@@ -25,7 +25,7 @@ export const ListShape = S.extend(
   }),
 );
 
-export type ListShape = ComputeShape<S.Schema.Type<typeof ListShape>, List<any>>;
+export type ListShape = S.Schema.Type<typeof ListShape>;
 
 export type CreateListProps = CreateShapeProps<ListShape> & { onlyLast?: boolean };
 

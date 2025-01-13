@@ -7,13 +7,14 @@ import { Event } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { type Context, Resource } from '@dxos/context';
 import { inspectCustom } from '@dxos/debug';
-import { type GraphNode } from '@dxos/graph';
+import { type GraphEdge, type GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { type ComputeGraph, createComputeGraph } from './compute-graph';
 import { type Binding, type ComputeNode } from './compute-node';
 import type { FunctionCallback, GptInput, GptOutput } from './nodes';
+import { Model, ComputeEdge } from '@dxos/conductor';
 
 export const InvalidStateError = Error;
 
@@ -43,192 +44,17 @@ export type StateMachineContext = {
  * Root Nodes have a Void input type and are processed first.
  */
 export class StateMachine extends Resource {
-  private _autoRun = true;
-
-  // TODO(dmaretskyi): Will be replaced by a sync function that does propagation.
-  private _activeTasks: Promise<void>[] = [];
-
-  /** Runtime context enables deferred initialization. */
-  private _context?: Partial<StateMachineContext>;
-
-  /** Persistent state. */
-  private readonly _graph: ComputeGraph;
-
-  public readonly update = new Event<{ node: GraphNode<ComputeNode<any, any>>; value: any }>();
-
-  constructor(graph?: ComputeGraph) {
-    super();
-    this._graph = graph ?? createComputeGraph();
-  }
-
-  [inspectCustom]() {
-    return this.toJSON();
-  }
-
-  override toString() {
-    return `StateMachine({ nodes: ${this._graph.nodes.length} })`;
-  }
-
-  toJSON() {
-    return {
-      // TODO(burdon): Error if graph.toJSON.
-      //  Converting circular structure to JSON --> starting at object with constructor 'Object' --- property 'native' closes the circle
-      graph: {
-        nodes: this._graph.nodes.length,
-        edges: this._graph.edges.length,
-      },
-    };
-  }
+  private readonly _graph = Model.ComputeGraphModel.create();
 
   get graph() {
     return this._graph;
   }
 
-  setContext(context?: Partial<StateMachineContext>): this {
-    this._context = context;
-    return this;
+  addNode(node: GraphNode<Model.ComputeGraphNode>) {
+    this._graph.model.addNode(node);
   }
 
-  setAutoRun(autoRun: boolean): this {
-    this._autoRun = autoRun;
-    return this;
-  }
-
-  protected override async _open(ctx: Context) {
-    log.info('opening...');
-    await Promise.all(
-      this._graph.nodes.map(async (node) => {
-        await node.data.initialize(this._ctx!, this._context!, (output: any) => {
-          if (!this._ctx) {
-            log.warn('not running');
-            return;
-          }
-
-          if (this._autoRun) {
-            this.update.emit({ node, value: output });
-            void this._addToActiveTasks(() => this._propagate(node, output));
-          }
-        });
-      }),
-    );
-  }
-
-  protected override async _close(ctx: Context): Promise<void> {
-    log.info('closing...');
-  }
-
-  /**
-   * Run all state updates until the graph state has settled.
-   */
-  async runToCompletion() {
-    while (this._activeTasks.length > 0) {
-      await Promise.all(this._activeTasks);
-    }
-  }
-
-  /**
-   * Execute node and possibly recursive chain.
-   */
-  async exec(node?: GraphNode<ComputeNode<any, any>, false> | undefined) {
-    if (node) {
-      // Update root node.
-      await this._exec(node);
-    } else {
-      // Fire root notes.
-      for (const node of this._graph.nodes) {
-        if (node.data.getInputs().length === 0) {
-          await this._exec(node);
-        }
-      }
-    }
-
-    await this.runToCompletion();
-  }
-
-  private async _addToActiveTasks(fn: () => Promise<void>) {
-    const promise = fn()
-      .catch((err) => {
-        log.catch(err);
-      })
-      .finally(() => {
-        const idx = this._activeTasks.indexOf(promise);
-        if (idx !== -1) {
-          // eslint-disable-next-line @typescript-eslint/no-floating-promises
-          this._activeTasks.splice(idx, 1);
-        }
-      });
-
-    this._activeTasks.push(promise);
-    return promise;
-  }
-
-  /**
-   * Exec node and propagate output to downstream nodes.
-   */
-  private async _exec(node: GraphNode<ComputeNode<any, any>, false>) {
-    if (!node.data.getOutputs().length) {
-      return;
-    }
-
-    // TODO(burdon): Use inspect to stringify.
-    log.info('exec', { node });
-    const output = await node.data.exec();
-    this.update.emit({ node, value: output });
-    void this._addToActiveTasks(() => this._propagate(node, output));
-  }
-
-  /**
-   * Depth first propagation of compute events.
-   */
-  private async _propagate<T extends Binding>(node: GraphNode<ComputeNode<any, T>>, output: T) {
-    try {
-      for (const edge of this._graph.filterEdges({ source: node.id })) {
-        const target = this._graph.getNode(edge.target);
-        invariant(target, `invalid target: ${edge.target}`);
-
-        // Get output.
-        let value = output;
-        if (edge.data.output) {
-          invariant(typeof output === 'object');
-          value = (output as any)[edge.data.output];
-        }
-
-        // Set input.
-        invariant(edge.data.input);
-        const inboundEdges = this._graph
-          .filterEdges({ target: target.id })
-          .filter((e) => e.data.input === edge.data.input);
-
-        let shouldPropagate;
-        if (inboundEdges.length > 1) {
-          log('composite edge', { target, inboundEdges });
-          const position = inboundEdges.findIndex((e) => e.id === edge.id);
-          if (position === -1) {
-            log.warn('unable to determine edge position in aggregated node input');
-            continue;
-          }
-
-          const prevOutput = target.data.getInput(edge.data.input) ?? [];
-          const newOutput = [...prevOutput];
-          newOutput[position] = value;
-          shouldPropagate = !target.data.setInput(edge.data.input, newOutput);
-        } else {
-          shouldPropagate = !target.data.setInput(edge.data.input, value);
-        }
-
-        // Check if ready.
-        if (target.data.getOutputs().length === 0) {
-          this.update.emit({ node: target, value: output });
-        } else {
-          // TODO(burdon): Don't fire if optional (breaks feedback loop). Need trigger props.
-          if (shouldPropagate && target.data.ready) {
-            await this._exec(target);
-          }
-        }
-      }
-    } catch (err) {
-      log.catch(err);
-      await this.close();
-    }
+  addEdge(edge: GraphEdge<ComputeEdge>) {
+    this._graph.model.addEdge(edge);
   }
 }

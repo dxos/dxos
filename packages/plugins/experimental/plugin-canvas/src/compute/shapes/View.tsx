@@ -19,14 +19,13 @@ export const ViewShape = S.extend(
   }),
 );
 
-export type ViewShape = ComputeShape<S.Schema.Type<typeof ViewShape>, View>;
+export type ViewShape = S.Schema.Type<typeof ViewShape>;
 
 export type CreateViewProps = CreateShapeProps<ViewShape>;
 
 export const createView = ({ id, ...rest }: CreateViewProps): ViewShape => ({
   id,
   type: 'view',
-  node: new View(),
   size: { width: 320, height: 512 },
   ...rest,
 });

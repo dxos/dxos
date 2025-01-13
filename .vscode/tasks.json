@@ -18,6 +18,23 @@
         "kind": "build",
         "isDefault": true
       }
+    },
+    {
+      "label": "build current tsconfig",
+      "type": "typescript",
+      "tsconfig": "${relativeFile}",
+      "isBackground": true,
+      "problemMatcher": ["$tsc-watch"],
+      "option": "watch",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared"
+      },
+      "group": {
+        "kind": "build"
+      }
     }
   ]
 }

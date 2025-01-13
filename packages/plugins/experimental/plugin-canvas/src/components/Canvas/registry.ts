@@ -9,6 +9,8 @@ import { invariant } from '@dxos/invariant';
 import { type ShapeComponentProps } from './Shape';
 import { type Polygon } from '../../types';
 import { type Anchor } from '../anchors';
+import type { GraphNode } from '@dxos/graph';
+import type { Model } from '@dxos/conductor';
 
 /**
  * Shape definition.

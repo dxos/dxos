@@ -24,14 +24,13 @@ export const ThreadShape = S.extend(
   }),
 );
 
-export type ThreadShape = ComputeShape<S.Schema.Type<typeof ThreadShape>, List<any>>;
+export type ThreadShape = S.Schema.Type<typeof ThreadShape>;
 
 export type CreateThreadProps = CreateShapeProps<ThreadShape>;
 
 export const createThread = ({ id, ...rest }: CreateThreadProps): ThreadShape => ({
   id,
   type: 'thread',
-  node: new List(GptMessage),
   size: { width: 384, height: 768 },
   ...rest,
 });

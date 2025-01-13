@@ -132,7 +132,7 @@ export const AndShape = GateShape;
 export type AndShape = GateShape;
 
 export const createAnd = (props: Omit<CreateGateProps, 'type' | 'node'>) => {
-  return createGate({ ...props, type: 'and', node: new AndGate() });
+  return createGate({ ...props, type: 'and' });
 };
 export const andShape = defineShape({
   type: 'and',
@@ -165,7 +165,7 @@ export const OrShape = GateShape;
 export type OrShape = GateShape;
 
 export const createOr = (props: Omit<CreateGateProps, 'type' | 'node'>) => {
-  return createGate({ ...props, type: 'or', node: new OrGate() });
+  return createGate({ ...props, type: 'or' });
 };
 export const orShape = defineShape({
   type: 'or',
@@ -200,7 +200,7 @@ export const NotShape = GateShape;
 export type NotShape = GateShape;
 
 export const createNot = (props: Omit<CreateGateProps, 'type' | 'node'>) => {
-  return createGate({ ...props, type: 'not', node: new NotGate() });
+  return createGate({ ...props, type: 'not' });
 };
 export const notShape = defineShape({
   type: 'not',

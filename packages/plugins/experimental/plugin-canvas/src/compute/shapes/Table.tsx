@@ -22,14 +22,13 @@ export const TableShape = S.extend(
   }),
 );
 
-export type TableShape = ComputeShape<S.Schema.Type<typeof TableShape>, List<any>>;
+export type TableShape = S.Schema.Type<typeof TableShape>;
 
 export type CreateTableProps = CreateShapeProps<TableShape>;
 
 export const createTable = ({ id, ...rest }: CreateTableProps): TableShape => ({
   id,
   type: 'table',
-  node: new List(GptMessage),
   size: { width: 320, height: 512 },
   ...rest,
 });

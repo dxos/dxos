@@ -14,3 +14,4 @@ export * from './useRope';
 export * from './useSelectionEvents';
 export * from './useShortcuts';
 export * from './useSnap';
+export * from './useComputeShapeState';

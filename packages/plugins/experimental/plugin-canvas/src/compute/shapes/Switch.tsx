@@ -19,23 +19,22 @@ export const SwitchShape = S.extend(
   }),
 );
 
-export type SwitchShape = ComputeShape<S.Schema.Type<typeof SwitchShape>, Switch>;
+export type SwitchShape = S.Schema.Type<typeof SwitchShape>;
 
 export type CreateSwitchProps = CreateShapeProps<SwitchShape>;
 
 export const createSwitch = ({ id, ...rest }: CreateSwitchProps): SwitchShape => ({
   id,
   type: 'switch',
-  node: new Switch(),
   size: { width: 64, height: 64 },
   ...rest,
 });
 
 export const SwitchComponent = ({ shape }: ShapeComponentProps<SwitchShape>) => {
   const [value, setValue] = useState(false);
-  useEffect(() => {
-    shape.node.setEnabled(value);
-  }, [value]);
+  // useEffect(() => {
+  //   shape.node.setEnabled(value);
+  // }, [value]);
 
   return (
     <div className='flex w-full justify-center items-center' onClick={(ev) => ev.stopPropagation()}>

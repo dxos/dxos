@@ -11,7 +11,8 @@ import { mx } from '@dxos/react-ui-theme';
 import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { createAnchorMap } from '../../components';
-import { Beacon } from '../graph';
+import { Beacon, DEFAULT_OUTPUT } from '../graph';
+import { useComputeShapeState } from '../../hooks';
 
 export const BeaconShape = S.extend(
   ComputeShape,
@@ -20,21 +21,22 @@ export const BeaconShape = S.extend(
   }),
 );
 
-export type BeaconShape = ComputeShape<S.Schema.Type<typeof BeaconShape>, Beacon>;
+export type BeaconShape = S.Schema.Type<typeof BeaconShape>;
 
 export type CreateBeaconProps = CreateShapeProps<BeaconShape>;
 
 export const createBeacon = ({ id, ...rest }: CreateBeaconProps): BeaconShape => ({
   id,
   type: 'beacon',
-  node: new Beacon(),
   size: { width: 64, height: 64 },
   ...rest,
 });
 
 export const BeaconComponent = ({ shape }: ShapeComponentProps<BeaconShape>) => {
   // Signals value.
-  const value = shape.node.state.value;
+  const { runtime } = useComputeShapeState(shape);
+  const output = runtime?.outputs[DEFAULT_OUTPUT];
+  const value = output?.type === 'executed' ? output.value : 0;
 
   return (
     <div className='flex w-full justify-center items-center'>
