@@ -47,7 +47,7 @@ export const AutomationPanel = ({ space, object }: AutomationPanelProps) => {
   };
 
   const handleAdd = () => {
-    setTrigger(create(FunctionTriggerSchema, {}));
+    setTrigger(create(FunctionTriggerSchema, { meta: {} }));
     setSelected(undefined);
   };
 
@@ -61,13 +61,7 @@ export const AutomationPanel = ({ space, object }: AutomationPanelProps) => {
     if (selected) {
       Object.assign(selected, trigger);
     } else {
-      const automationTargetId = object?.id;
-      space.db.add(
-        create(
-          FunctionTrigger,
-          automationTargetId ? { ...trigger, meta: { ...trigger.meta, automationTargetId } } : trigger,
-        ),
-      );
+      space.db.add(create(FunctionTrigger, trigger));
     }
 
     setTrigger(undefined);
@@ -89,7 +83,7 @@ export const AutomationPanel = ({ space, object }: AutomationPanelProps) => {
                 <List.Item<FunctionTrigger>
                   key={trigger.id}
                   item={trigger}
-                  classNames={mx(grid, ghostHover, 'items-center')}
+                  classNames={mx(grid, ghostHover, 'items-center', 'px-2')}
                 >
                   <Input.Root>
                     <Input.Switch
@@ -99,14 +93,17 @@ export const AutomationPanel = ({ space, object }: AutomationPanelProps) => {
                   </Input.Root>
 
                   <div className={'flex'}>
-                    <List.ItemTitle classNames='px-2 cursor-pointer w-0 shrink' onClick={() => handleSelect(trigger)}>
-                      {getFunctionName(scripts, functions, trigger)}
+                    <List.ItemTitle
+                      classNames='px-1 cursor-pointer w-0 shrink truncate'
+                      onClick={() => handleSelect(trigger)}
+                    >
+                      {getFunctionName(scripts, functions, trigger) ?? '∅'}
                     </List.ItemTitle>
 
-                    {/* TODO: a better way to expose URL copy action */}
+                    {/* TODO: a better way to expose copy action */}
                     {copyAction && (
                       <Button onClick={() => navigator.clipboard.writeText(copyAction.contentProvider())}>
-                        {copyAction.text}
+                        {t(copyAction.translationKey)}
                       </Button>
                     )}
                   </div>
@@ -119,15 +116,7 @@ export const AutomationPanel = ({ space, object }: AutomationPanelProps) => {
         )}
       </List.Root>
 
-      {trigger && (
-        <TriggerEditor
-          space={space}
-          storedTrigger={selected}
-          trigger={trigger}
-          onSave={handleSave}
-          onCancel={handleCancel}
-        />
-      )}
+      {trigger && <TriggerEditor space={space} trigger={trigger} onSave={handleSave} onCancel={handleCancel} />}
 
       {!trigger && (
         <div className='flex p-2 justify-center'>
@@ -140,11 +129,11 @@ export const AutomationPanel = ({ space, object }: AutomationPanelProps) => {
 
 const getCopyAction = (client: Client, trigger: FunctionTrigger | undefined) => {
   if (trigger?.spec?.type === TriggerKind.Email) {
-    return { text: 'Copy Email', contentProvider: () => `${getSpace(trigger)!.id}@dxos.network` };
+    return { translationKey: 'trigger copy email', contentProvider: () => `${getSpace(trigger)!.id}@dxos.network` };
   }
 
   if (trigger?.spec?.type === TriggerKind.Webhook) {
-    return { text: 'Copy URL', contentProvider: () => getWebhookUrl(client, trigger) };
+    return { translationKey: 'trigger copy url', contentProvider: () => getWebhookUrl(client, trigger) };
   }
 
   return undefined;
@@ -159,9 +148,10 @@ const getWebhookUrl = (client: Client, trigger: FunctionTrigger) => {
 };
 
 const getFunctionName = (scripts: ScriptType[], functions: FunctionType[], trigger: FunctionTriggerType) => {
+  const shortId = trigger.function && `${trigger.function?.slice(0, 16)}…`;
   const functionObject = functions.find((fn) => fn.name === trigger.function);
   if (!functionObject) {
-    return trigger.function;
+    return shortId;
   }
-  return scripts.find((s) => functionObject.source?.target?.id === s.id)?.name ?? functionObject.name;
+  return scripts.find((s) => functionObject.source?.target?.id === s.id)?.name ?? shortId;
 };
