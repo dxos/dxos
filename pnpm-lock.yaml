@@ -5843,6 +5843,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
+      '@dxos/conductor':
+        specifier: workspace:*
+        version: link:../../../core/conductor
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
@@ -5924,6 +5927,9 @@ importers:
       d3:
         specifier: ^7.9.0
         version: 7.9.0
+      effect:
+        specifier: ^3.12.1
+        version: 3.12.1
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1

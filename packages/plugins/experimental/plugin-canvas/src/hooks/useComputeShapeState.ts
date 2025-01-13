@@ -2,6 +2,7 @@ import type { GraphNode } from '@dxos/graph';
 import type { ComputeShape } from '../compute/shapes/defs';
 import type { ComputeMeta, Model } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
+import { useComputeContext } from '../compute/graph/ComputeContext';
 
 export type RuntimeValue =
   | {
@@ -25,10 +26,13 @@ export type ComputeShapeState = {
   runtime?: {
     inputs: Record<string, RuntimeValue>;
     outputs: Record<string, RuntimeValue>;
+
+    setOutput: (nodeId: string, property: string, value: any) => void;
   };
 };
 
 export const useComputeShapeState = (shape: ComputeShape): ComputeShapeState => {
+  const { stateMachine } = useComputeContext();
   // TODO(dmaretskyi): Get from context.
   return {
     node: {
@@ -40,5 +44,14 @@ export const useComputeShapeState = (shape: ComputeShape): ComputeShapeState => 
       input: S.Struct({}),
       output: S.Struct({}),
     },
+    runtime: !stateMachine
+      ? undefined
+      : {
+          inputs: {},
+          outputs: {},
+          setOutput(property, value) {
+            stateMachine.setOutput(shape.node!, property, value);
+          },
+        },
   };
 };
