@@ -26,7 +26,6 @@ const MarkdownContainer = ({
   id,
   role,
   object,
-  extensionProviders,
   settings,
   viewMode,
   editorStateStore,
@@ -34,7 +33,7 @@ const MarkdownContainer = ({
 }: MarkdownContainerProps) => {
   const scrollPastEnd = role === 'article';
   const doc = object instanceof DocumentType ? object : undefined;
-  const extensions = useExtensions({ extensionProviders, document: doc, settings, viewMode, editorStateStore });
+  const extensions = useExtensions({ document: doc, settings, viewMode, editorStateStore });
 
   if (doc) {
     return (

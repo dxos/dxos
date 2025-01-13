@@ -16,5 +16,5 @@ export namespace MarkdownCapabilities {
     setViewMode: (id: string, viewMode: EditorViewMode) => void;
   }>(`${MARKDOWN_PLUGIN}/capability/state`);
 
-  export const Extensions = defineCapability<MarkdownExtensionProvider>(`${MARKDOWN_PLUGIN}/capability/extensions`);
+  export const Extensions = defineCapability<MarkdownExtensionProvider[]>(`${MARKDOWN_PLUGIN}/capability/extensions`);
 }

@@ -15,7 +15,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientAction } from '@dxos/plugin-client/types';
 import { HelpAction } from '@dxos/plugin-help/types';
-import { SpaceAction } from '@dxos/plugin-space';
+import { SpaceAction } from '@dxos/plugin-space/types';
 import { type Client } from '@dxos/react-client';
 import { type Credential, type Identity } from '@dxos/react-client/halo';
 

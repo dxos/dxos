@@ -7453,6 +7453,9 @@ importers:
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../common/local-storage
@@ -7651,6 +7654,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-schema
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../common/local-storage
@@ -8213,9 +8219,12 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
-      '@dxos/local-storage':
+      '@dxos/echo-schema':
         specifier: workspace:*
-        version: link:../../common/local-storage
+        version: link:../../core/echo/echo-schema
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability

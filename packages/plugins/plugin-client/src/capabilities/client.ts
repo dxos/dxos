@@ -21,8 +21,8 @@ export default async ({ context, onClientInitialized, ...options }: ClientCapabi
   await client.initialize();
   await onClientInitialized?.(context, client);
 
-  const systemSchemas = context.requestCapabilities(ClientCapabilities.SystemSchema).flat();
-  const schemas = context.requestCapabilities(ClientCapabilities.Schema).flat();
+  const systemSchemas = Array.from(new Set(context.requestCapabilities(ClientCapabilities.SystemSchema).flat()));
+  const schemas = Array.from(new Set(context.requestCapabilities(ClientCapabilities.Schema).flat()));
   client.addTypes(systemSchemas);
   client.addTypes(schemas);
 

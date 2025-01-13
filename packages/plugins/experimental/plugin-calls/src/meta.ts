@@ -6,7 +6,7 @@ import { type PluginMeta } from '@dxos/app-framework';
 
 export const CALLS_PLUGIN = 'dxos.org/plugin/calls';
 
-export default {
+export const meta = {
   id: CALLS_PLUGIN,
   name: 'Calls',
   description: 'Perform video calls.',

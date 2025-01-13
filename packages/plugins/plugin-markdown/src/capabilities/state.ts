@@ -27,9 +27,5 @@ export default (context: PluginsContext) => {
 
   const setViewMode = (id: string, viewMode: EditorViewMode) => (state.values.viewMode[id] = viewMode);
 
-  // TODO(wittjosiah): Defer this until when first editor opens.
-  const extensions = context.requestCapabilities(MarkdownCapabilities.Extensions);
-  state.values.extensionProviders = extensions;
-
   return contributes(MarkdownCapabilities.State, { state: state.values, editorState, getViewMode, setViewMode });
 };

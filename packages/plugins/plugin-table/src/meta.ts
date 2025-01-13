@@ -6,7 +6,7 @@ import { type PluginMeta } from '@dxos/app-framework';
 
 export const TABLE_PLUGIN = 'dxos.org/plugin/table';
 
-export default {
+export const meta = {
   id: TABLE_PLUGIN,
   name: 'Tables',
   description: 'Create and manage tables.',

@@ -5,10 +5,12 @@
 import { type FC, type PropsWithChildren } from 'react';
 
 import { type GraphBuilder } from '@dxos/app-graph';
+import { type Space } from '@dxos/client-protocol';
 import { type S } from '@dxos/echo-schema';
 import { type RootSettingsStore } from '@dxos/local-storage';
 import { type DeepReadonly } from '@dxos/util';
 
+import { type FileInfo } from './file';
 import { type NodeSerializer } from './graph';
 import { type Layout } from './layout';
 import { type LayoutParts } from './navigation';
@@ -34,8 +36,7 @@ export namespace Capabilities {
   export type IntentResolver = AnyIntentResolver | readonly AnyIntentResolver[];
   export const IntentResolver = defineCapability<IntentResolver>('dxos.org/app-framework/capability/intent-resolver');
 
-  export type IntentDispatcher = Readonly<Omit<IntentContext, 'registerResolver'>>;
-  export const IntentDispatcher = defineCapability<IntentDispatcher>(
+  export const IntentDispatcher = defineCapability<IntentContext>(
     'dxos.org/app-framework/capability/intent-dispatcher',
   );
 
@@ -75,4 +76,7 @@ export namespace Capabilities {
 
   export type Metadata = Readonly<{ id: string; metadata: Record<string, any> }>;
   export const Metadata = defineCapability<Metadata>('dxos.org/app-framework/capability/metadata');
+
+  export type FileUploader = (file: File, space: Space) => Promise<FileInfo | undefined>;
+  export const FileUploader = defineCapability<FileUploader>('dxos.org/app-framework/capability/file-uploader');
 }

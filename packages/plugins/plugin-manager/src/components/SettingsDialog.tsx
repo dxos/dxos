@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { type PluginMeta, Surface, usePlugins } from '@dxos/app-framework';
+import { Capabilities, type PluginMeta, Surface, useCapability, usePluginManager } from '@dxos/app-framework';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 import { Tabs, type TabsActivePart } from '@dxos/react-ui-tabs';
 import { nonNullable } from '@dxos/util';
@@ -33,17 +33,20 @@ export type SettingsDialogProps = {
 
 export const SettingsDialog = ({ selected, onSelected }: SettingsDialogProps) => {
   const { t } = useTranslation(MANAGER_PLUGIN);
-  const { plugins, enabled } = usePlugins();
+  const manager = usePluginManager();
 
   const corePlugins = core
-    .map((id) => plugins.find((plugin) => plugin.meta.id === id)?.meta)
+    .map((id) => manager.plugins.find((plugin) => plugin.meta.id === id)?.meta)
     .filter(nonNullable)
     .sort(sortPlugin);
 
-  const filteredPlugins = enabled
+  const settingsStore = useCapability(Capabilities.SettingsStore);
+
+  const filteredPlugins = manager.enabled
     .filter((id) => !core.includes(id))
-    .map((id) => plugins.find((plugin) => plugin.meta.id === id))
-    .filter((plugin) => (plugin?.provides as any)?.settings)
+    .map((id) => manager.plugins.find((plugin) => plugin.meta.id === id))
+    .filter(nonNullable)
+    .filter((plugin) => settingsStore.getStore(plugin.meta.id))
     .map((plugin) => plugin!.meta)
     .sort(sortPlugin);
 

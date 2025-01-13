@@ -27,7 +27,7 @@ export default async (context: PluginsContext) => {
     threads: [],
   });
 
-  const defaultSpaceCollection = defaultSpace.properties[CollectionType.typename].target as CollectionType;
+  const defaultSpaceCollection = defaultSpace.properties[CollectionType.typename].target;
   defaultSpaceCollection?.objects.push(makeRef(readme));
 
   await dispatch(createIntent(LayoutAction.SetLayoutMode, { layoutMode: 'solo' }));

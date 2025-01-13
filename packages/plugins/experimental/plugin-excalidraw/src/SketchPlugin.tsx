@@ -2,89 +2,56 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import { createIntent, defineModule, contributes, Capabilities, Events, definePlugin } from '@dxos/app-framework';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
 
-import { type PluginDefinition, createSurface, createIntent, createResolver } from '@dxos/app-framework';
-import { LocalStorageStore } from '@dxos/local-storage';
-import { EXCALIDRAW_SCHEMA, CanvasType, DiagramType, isDiagramType } from '@dxos/plugin-sketch/types';
-import { create, fullyQualifiedId, makeRef } from '@dxos/react-client/echo';
-
-import { SketchComponent, SketchSettings } from './components';
-import meta, { SKETCH_PLUGIN } from './meta';
+import { ExcalidrawSettings, IntentResolvers, ReactSurface } from './capabilities';
+import { meta, EXCALIDRAW_PLUGIN } from './meta';
 import translations from './translations';
-import { SketchAction, type SketchGridType, type SketchPluginProvides, type SketchSettingsProps } from './types';
+import { SketchAction } from './types';
 
-export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
-  const settings = new LocalStorageStore<Partial<SketchSettingsProps>>(SKETCH_PLUGIN);
-
-  return {
-    meta,
-    ready: async () => {
-      settings
-        .prop({
-          key: 'autoHideControls',
-          type: LocalStorageStore.bool({ allowUndefined: true }),
-        })
-        .prop({
-          key: 'gridType',
-          type: LocalStorageStore.enum<SketchGridType>({ allowUndefined: true }),
-        });
-    },
-    provides: {
-      metadata: {
-        records: {
-          [DiagramType.typename]: {
+export const ExcalidrawPlugin = () =>
+  definePlugin(meta, [
+    defineModule({
+      id: `${meta.id}/module/settings`,
+      activatesOn: Events.SetupSettings,
+      activate: ExcalidrawSettings,
+    }),
+    defineModule({
+      id: `${meta.id}/module/translations`,
+      activatesOn: Events.SetupTranslations,
+      activate: () => contributes(Capabilities.Translations, translations),
+    }),
+    defineModule({
+      id: `${meta.id}/module/metadata`,
+      activatesOn: Events.Startup,
+      activate: () =>
+        contributes(Capabilities.Metadata, {
+          id: DiagramType.typename,
+          metadata: {
             createObject: (props: { name?: string }) => createIntent(SketchAction.Create, props),
-            placeholder: ['object title placeholder', { ns: SKETCH_PLUGIN }],
+            placeholder: ['object title placeholder', { ns: EXCALIDRAW_PLUGIN }],
             icon: 'ph--compass-tool--regular',
           },
-        },
-      },
-      settings: settings.values,
-      translations,
-      echo: {
-        schema: [DiagramType],
-        system: [CanvasType],
-      },
-      surface: {
-        definitions: () => [
-          createSurface({
-            id: `${SKETCH_PLUGIN}/sketch`,
-            role: ['article', 'section', 'slide'],
-            filter: (data): data is { subject: DiagramType } => isDiagramType(data.subject, EXCALIDRAW_SCHEMA),
-            component: ({ data, role }) => (
-              <SketchComponent
-                key={fullyQualifiedId(data.subject)} // Force instance per sketch object. Otherwise, sketch shares the same instance.
-                sketch={data.subject}
-                readonly={role === 'slide'}
-                maxZoom={role === 'slide' ? 1.5 : undefined}
-                autoZoom={role === 'section'}
-                autoHideControls={settings.values.autoHideControls}
-                className={role === 'article' ? 'row-span-2' : role === 'section' ? 'aspect-square' : 'p-16'}
-                grid={settings.values.gridType}
-              />
-            ),
-          }),
-          createSurface({
-            id: `${SKETCH_PLUGIN}/settings`,
-            role: 'settings',
-            filter: (data): data is any => data.subject === SKETCH_PLUGIN,
-            component: () => <SketchSettings settings={settings.values} />,
-          }),
-        ],
-      },
-      intent: {
-        resolvers: () =>
-          createResolver(SketchAction.Create, ({ name, schema = EXCALIDRAW_SCHEMA, content = {} }) => ({
-            data: {
-              object: create(DiagramType, {
-                name,
-                canvas: makeRef(create(CanvasType, { schema, content })),
-                threads: [],
-              }),
-            },
-          })),
-      },
-    },
-  };
-};
+        }),
+    }),
+    defineModule({
+      id: `${meta.id}/module/schema`,
+      activatesOn: ClientEvents.SetupClient,
+      activate: () => [
+        contributes(ClientCapabilities.SystemSchema, [CanvasType]),
+        contributes(ClientCapabilities.Schema, [DiagramType]),
+      ],
+    }),
+    defineModule({
+      id: `${meta.id}/module/react-surface`,
+      activatesOn: Events.Startup,
+      activate: ReactSurface,
+    }),
+    defineModule({
+      id: `${meta.id}/module/intent-resolver`,
+      activatesOn: Events.SetupIntents,
+      activate: IntentResolvers,
+    }),
+  ]);

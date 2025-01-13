@@ -5,15 +5,14 @@
 import React, { forwardRef, useCallback, useState } from 'react';
 
 import {
-  useResolvePlugin,
-  parseNavigationPlugin,
-  parseGraphPlugin,
   NavigationAction,
   LayoutAction,
   type LayoutCoordinate,
   isLayoutParts,
   useIntentDispatcher,
   createIntent,
+  useCapability,
+  Capabilities,
 } from '@dxos/app-framework';
 import { type Node } from '@dxos/plugin-graph';
 import { useClient } from '@dxos/react-client';
@@ -54,14 +53,13 @@ export type SearchDialogProps = {
 
 export const SearchDialog = ({ layoutCoordinate }: SearchDialogProps) => {
   const { t } = useTranslation(SEARCH_PLUGIN);
-  const graphPlugin = useResolvePlugin(parseGraphPlugin);
-  const graph = graphPlugin?.provides.graph;
-  const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
-  const providedClosed = navigationPlugin?.provides.location.closed ?? [];
+  const location = useCapability(Capabilities.Location);
+  const { graph } = useCapability(Capabilities.AppGraph);
+  const providedClosed = location.closed ?? [];
   const closed = (Array.isArray(providedClosed) ? providedClosed : [providedClosed])
     .map((id) => graph?.findNode(id))
     .filter(Boolean);
-  const active = navigationPlugin?.provides.location.active;
+  const active = location.active;
   const [queryString, setQueryString] = useState('');
   const client = useClient();
   const dangerouslyLoadAllObjects = useQuery(client.spaces, Filter.all());

@@ -2,48 +2,47 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import { createIntent, Capabilities, contributes, Events, defineModule, definePlugin } from '@dxos/app-framework';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
-import { type PluginDefinition, createSurface, createIntent, createResolver } from '@dxos/app-framework';
-import { create, type ReactiveEchoObject } from '@dxos/react-client/echo';
-
-import { TemplateMain } from './components';
-import meta, { TEMPLATE_PLUGIN } from './meta';
+import { ReactSurface, IntentResolver } from './capabilities';
+import { meta, TEMPLATE_PLUGIN } from './meta';
 import translations from './translations';
-import { TemplateAction, type TemplatePluginProvides, isObject } from './types';
+import { TemplateAction, TemplateType } from './types';
 
-const typename = 'template'; // Type.schema.typename
-
-export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
-  return {
-    meta,
-    provides: {
-      metadata: {
-        records: {
-          [typename]: {
+export const TemplatePlugin = () =>
+  definePlugin(meta, [
+    defineModule({
+      id: `${meta.id}/module/translations`,
+      activatesOn: Events.SetupTranslations,
+      activate: () => contributes(Capabilities.Translations, translations),
+    }),
+    defineModule({
+      id: `${meta.id}/module/metadata`,
+      activatesOn: Events.Startup,
+      activate: () =>
+        contributes(Capabilities.Metadata, {
+          id: TemplateType.typename,
+          metadata: {
             createObject: (props: { name?: string }) => createIntent(TemplateAction.Create, props),
             placeholder: ['object placeholder', { ns: TEMPLATE_PLUGIN }],
             icon: 'ph--asterisk--regular',
           },
-        },
-      },
-      translations,
-      surface: {
-        definitions: () =>
-          createSurface({
-            id: TEMPLATE_PLUGIN,
-            role: 'article',
-            filter: (data): data is { subject: ReactiveEchoObject<any> } => isObject(data.subject),
-            component: ({ data }) => <TemplateMain object={data.subject} />,
-          }),
-      },
-      intent: {
-        resolvers: () =>
-          createResolver(TemplateAction.Create, ({ name }) => ({
-            // TODO(burdon): Set typename.
-            data: { object: create({ type: 'template', name }) },
-          })),
-      },
-    },
-  };
-};
+        }),
+    }),
+    defineModule({
+      id: `${meta.id}/module/schema`,
+      activatesOn: ClientEvents.SetupClient,
+      activate: () => contributes(ClientCapabilities.Schema, [TemplateType]),
+    }),
+    defineModule({
+      id: `${meta.id}/module/react-surface`,
+      activatesOn: Events.Startup,
+      activate: ReactSurface,
+    }),
+    defineModule({
+      id: `${meta.id}/module/intent-resolver`,
+      activatesOn: Events.SetupIntents,
+      activate: IntentResolver,
+    }),
+  ]);

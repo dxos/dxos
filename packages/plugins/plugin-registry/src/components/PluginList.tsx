@@ -11,9 +11,9 @@ import { descriptionText, fineBlockSize, mx } from '@dxos/react-ui-theme';
 import { REGISTRY_PLUGIN } from '../meta';
 
 export type PluginListProps = {
-  plugins?: PluginMeta[];
-  loaded?: string[];
-  enabled?: string[];
+  plugins?: readonly PluginMeta[];
+  loaded?: readonly string[];
+  enabled?: readonly string[];
   onChange?: (id: string, enabled: boolean) => void;
   onReload?: () => void;
 };

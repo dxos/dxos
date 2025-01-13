@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './capabilities';
+export { SpaceCapabilities, ThreadCapabilities } from './capabilities';
 export * from './components';
+export * from './events';
 export * from './meta';
 export * from './SpacePlugin';
-export * from './types';
 export * from './util';

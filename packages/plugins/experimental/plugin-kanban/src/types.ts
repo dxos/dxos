@@ -2,14 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type {
-  IntentResolverProvides,
-  MetadataRecordsProvides,
-  SurfaceProvides,
-  TranslationsProvides,
-} from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
-import { type SchemaProvides } from '@dxos/plugin-space';
 import { type Space, SpaceSchema } from '@dxos/react-client/echo';
 import { KanbanType } from '@dxos/react-ui-kanban';
 import { initializeKanban } from '@dxos/react-ui-kanban/testing';
@@ -57,12 +50,6 @@ export namespace KanbanAction {
     output: S.Void,
   }) {}
 }
-
-export type KanbanPluginProvides = SurfaceProvides &
-  IntentResolverProvides &
-  MetadataRecordsProvides &
-  TranslationsProvides &
-  SchemaProvides;
 
 // TODO(burdon): Undo?
 // TODO(burdon): Typescript types (replace proto with annotations?)

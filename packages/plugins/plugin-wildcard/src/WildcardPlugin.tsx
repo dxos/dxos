@@ -4,28 +4,27 @@
 
 import React, { type Ref } from 'react';
 
-import {
-  createSurface,
-  type PluginDefinition,
-  type SurfaceProvides,
-  type TranslationsProvides,
-} from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
 import { Wildcard } from './components';
-import meta from './meta';
+import { meta } from './meta';
 import translations from './translations';
 
-export type WildcardPluginProvides = SurfaceProvides & TranslationsProvides;
-
 // TODO(burdon): Rename CardPlugin?
-export const WildcardPlugin = (): PluginDefinition<WildcardPluginProvides> => {
-  return {
-    meta,
-    provides: {
-      translations,
-      surface: {
-        definitions: () =>
+export const WildcardPlugin = () =>
+  definePlugin(meta, [
+    defineModule({
+      id: `${meta.id}/module/translations`,
+      activatesOn: Events.SetupTranslations,
+      activate: () => contributes(Capabilities.Translations, translations),
+    }),
+    defineModule({
+      id: `${meta.id}/module/react-surface`,
+      activatesOn: Events.Startup,
+      activate: () =>
+        contributes(
+          Capabilities.ReactSurface,
           createSurface({
             id: meta.id,
             role: 'card',
@@ -39,7 +38,6 @@ export const WildcardPlugin = (): PluginDefinition<WildcardPluginProvides> => {
               ) : null;
             },
           }),
-      },
-    },
-  };
-};
+        ),
+    }),
+  ]);

@@ -4,17 +4,15 @@
 
 import React, { useEffect, useMemo } from 'react';
 
-import { createIntent, LayoutAction, type Plugin, useIntentDispatcher, useResolvePlugins } from '@dxos/app-framework';
-import { type ThreadType } from '@dxos/plugin-space';
+import { createIntent, LayoutAction, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
+import { ThreadCapabilities } from '@dxos/plugin-space';
+import { type ThreadType } from '@dxos/plugin-space/types';
 import { fullyQualifiedId, RefArray } from '@dxos/react-client/echo';
 import { useAttended } from '@dxos/react-ui-attention';
 import { nonNullable } from '@dxos/util';
 
 import { CommentsContainer } from '../components';
-import { ThreadAction, type ThreadProvides } from '../types';
-
-const providesThreadsConfig = (plugin: any): Plugin<ThreadProvides<any>> | undefined =>
-  'thread' in plugin.provides ? (plugin as Plugin<ThreadProvides<any>>) : undefined;
+import { ThreadAction } from '../types';
 
 export const ThreadComplementary = ({
   subject,
@@ -29,11 +27,10 @@ export const ThreadComplementary = ({
 }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
-  const threadsIntegrators = useResolvePlugins(providesThreadsConfig);
-  const threadProvides = useMemo(() => threadsIntegrators.map((p) => p.provides.thread), [threadsIntegrators]);
+  const threadsIntegrators = useCapabilities(ThreadCapabilities.Thread);
   const createSort = useMemo(
-    () => threadProvides.find((p) => p.predicate(subject))?.createSort,
-    [threadProvides, subject],
+    () => threadsIntegrators.find((p) => p.predicate(subject))?.createSort,
+    [threadsIntegrators, subject],
   );
   const sort = useMemo(() => createSort?.(subject), [createSort, subject]);
 

@@ -5,7 +5,7 @@
 import { pipe } from 'effect';
 
 import { contributes, Capabilities, type PluginsContext, chain, createIntent } from '@dxos/app-framework';
-import { SpaceAction, CollectionType } from '@dxos/plugin-space';
+import { SpaceAction, CollectionType } from '@dxos/plugin-space/types';
 import { isSpace } from '@dxos/react-client/echo';
 
 import { MARKDOWN_PLUGIN } from '../meta';

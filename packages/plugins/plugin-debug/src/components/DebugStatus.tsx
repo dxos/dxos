@@ -4,7 +4,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { firstIdInPart, parseGraphPlugin, parseNavigationPlugin, useResolvePlugin } from '@dxos/app-framework';
+import { Capabilities, firstIdInPart, useCapability } from '@dxos/app-framework';
 import { TimeoutError } from '@dxos/async';
 import { StatsPanel, useStats } from '@dxos/devtools';
 import { log } from '@dxos/log';
@@ -140,10 +140,8 @@ const SwarmIndicator = () => {
 // TODO(burdon): Merge with SaveStatus.
 const SavingIndicator = () => {
   const [state, _setState] = useState(0);
-  const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
-  const graphPlugin = useResolvePlugin(parseGraphPlugin);
-  const location = navigationPlugin?.provides.location;
-  const graph = graphPlugin?.provides.graph;
+  const location = useCapability(Capabilities.Location);
+  const { graph } = useCapability(Capabilities.AppGraph);
   const _space = location && graph ? getActiveSpace(graph, firstIdInPart(location.active, 'main')) : undefined;
   // TODO(dmaretskyi): Fix this when we have save status for automerge.
   // useEffect(() => {
