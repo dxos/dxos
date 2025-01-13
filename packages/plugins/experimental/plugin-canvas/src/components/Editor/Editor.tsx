@@ -43,6 +43,7 @@ export const defaultEditorOptions: EditorOptions = {
 interface EditorController {
   action?: ActionHandler;
   zoomToFit(): void;
+  update(): void;
 }
 
 type EditorRootProps = ThemedClassName<
@@ -148,6 +149,7 @@ const EditorRoot = forwardRef<EditorController, EditorRootProps>(
               void actionHandler?.({ type: 'zoom-to-fit', duration: 0 });
             });
           },
+          update: () => forceUpdate({}),
         };
       },
       [actionHandler],

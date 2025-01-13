@@ -22,7 +22,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { omit } from '@dxos/util';
 
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
-import { computeShapes, type StateMachine, type StateMachineContext } from '../../compute';
+import { computeShapes, type ComputeShape, type StateMachine, type StateMachineContext } from '../../compute';
 import { EdgeGptExecutor } from '../../compute/graph/gpt/edge';
 import { OllamaGpt } from '../../compute/graph/gpt/ollama';
 import { createMachine, createTest1, createTest2, createTest3 } from '../../compute/testing';
@@ -72,16 +72,21 @@ const Render = ({
       return;
     }
 
-    // machine.setContext({ space, model, gpt });
     void machine.open();
-    // const off = machine.update.on((ev) => {
-    //   const { node } = ev;
-    //   void editorRef.current?.action?.({ type: 'trigger', ids: [node.id] });
-    // });
+    // TODO(dmaretskyi): bullets.
+    const off = machine.update.on(() => {
+      void editorRef.current?.update();
+    });
+    const off2 = machine.outputComputed.on(({ nodeId, property }) => {
+      const shape = graph?.nodes.find((node) => (node.data as ComputeShape).node === nodeId);
+
+      void editorRef.current?.action?.({ type: 'trigger', ids: [shape?.id!] });
+    });
 
     return () => {
       void machine.close();
-      // off();
+      off();
+      off2();
     };
   }, [machine]);
 
@@ -169,7 +174,12 @@ const Render = ({
         <AttentionContainer id='sidebar' tabIndex={0} classNames='flex grow overflow-hidden'>
           <SyntaxHighlighter language='json' classNames='text-xs'>
             {JSON.stringify(
-              { graph: graph?.graph, computeGraph: machine?.graph.model, state: machine?.userState },
+              {
+                graph: graph?.graph,
+                computeGraph: machine?.graph.model,
+                userState: machine?.userState,
+                executedState: machine?.executedState,
+              },
               null,
               2,
             )}

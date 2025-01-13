@@ -3,22 +3,7 @@ import type { ComputeShape } from '../compute/shapes/defs';
 import type { ComputeMeta, Model } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 import { useComputeContext } from '../compute/graph/ComputeContext';
-
-export type RuntimeValue =
-  | {
-      type: 'executed';
-      value: any;
-    }
-  | {
-      type: 'error';
-      error: string;
-    }
-  | {
-      type: 'pending';
-    }
-  | {
-      type: 'not-executed';
-    };
+import type { RuntimeValue } from '../compute';
 
 export type ComputeShapeState = {
   node: GraphNode<Model.ComputeGraphNode>;
@@ -47,8 +32,8 @@ export const useComputeShapeState = (shape: ComputeShape): ComputeShapeState => 
     runtime: !stateMachine
       ? undefined
       : {
-          inputs: {},
-          outputs: {},
+          inputs: stateMachine.getInputs(shape.node!),
+          outputs: stateMachine.getOutputs(shape.node!),
           setOutput(property, value) {
             stateMachine.setOutput(shape.node!, property, value);
           },

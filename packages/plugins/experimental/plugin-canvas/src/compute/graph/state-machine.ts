@@ -3,12 +3,8 @@
 //
 
 import { type LLMModel, type MessageImageContentBlock } from '@dxos/assistant';
-import { synchronized } from '@dxos/async';
+import { Event, synchronized } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
-import { Resource } from '@dxos/context';
-import { type GraphEdge, type GraphNode } from '@dxos/graph';
-import { log } from '@dxos/log';
-import { testServices } from '@dxos/conductor/testing';
 import {
   ComputeEdge,
   type ComputeImplementation,
@@ -20,7 +16,11 @@ import {
   synchronizedComputeFunction,
   unwrapValueBag,
 } from '@dxos/conductor';
+import { testServices } from '@dxos/conductor/testing';
+import { Resource } from '@dxos/context';
 import { type ObjectId, S } from '@dxos/echo-schema';
+import { type GraphEdge, type GraphNode } from '@dxos/graph';
+import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 import { Effect } from 'effect';
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './compute-node';
@@ -48,12 +48,31 @@ export type StateMachineContext = {
   model?: LLMModel; // TODO(burdon): Evolve.
 };
 
+export type RuntimeValue =
+  | {
+      type: 'executed';
+      value: any;
+    }
+  | {
+      type: 'error';
+      error: string;
+    }
+  | {
+      type: 'pending';
+    }
+  | {
+      type: 'not-executed';
+    };
+
 /**
  * Manages the dependency graph and async propagation of computed values.
  * Compute Nodes are invoked when all of their inputs are provided.
  * Root Nodes have a Void input type and are processed first.
  */
 export class StateMachine extends Resource {
+  public readonly update = new Event();
+  public readonly outputComputed = new Event<{ nodeId: ObjectId; property: string }>();
+
   private readonly _graph = Model.ComputeGraphModel.create();
 
   private readonly _forcedOutputs = new ComplexMap<[nodeId: ObjectId, property: string], any>(
@@ -63,6 +82,8 @@ export class StateMachine extends Resource {
   private readonly _executor = new GraphExecutor({
     computeNodeResolver: this._resolveComputeNode.bind(this),
   });
+
+  private _runtimeState: Record<string, Record<string, RuntimeValue>> = {};
 
   get graph() {
     return this._graph;
@@ -74,12 +95,24 @@ export class StateMachine extends Resource {
     );
   }
 
+  get executedState() {
+    return this._runtimeState;
+  }
+
   addNode(node: GraphNode<Model.ComputeGraphNode>) {
     this._graph.model.addNode(node);
   }
 
   addEdge(edge: GraphEdge<ComputeEdge>) {
     this._graph.model.addEdge(edge);
+  }
+
+  getInputs(nodeId: string) {
+    return this._runtimeState[nodeId] ?? {};
+  }
+
+  getOutputs(nodeId: string) {
+    return {};
   }
 
   @log.method()
@@ -96,6 +129,7 @@ export class StateMachine extends Resource {
 
   @synchronized
   async compute() {
+    this._runtimeState = {};
     const executor = this._executor.clone();
     await executor.load(this._graph.model as any);
 
@@ -115,18 +149,36 @@ export class StateMachine extends Resource {
     const tasks: Promise<unknown>[] = [];
     for (const node of allAffectedNodes) {
       // TODO(dmaretskyi): Check if the node has a compute function and run computeOutputs if it does.
-      const eff = executor
-        .computeInputs(node)
-        .pipe(
-          Effect.withSpan('runGraph'),
-          Effect.provide(testServices({ enableLogging: true })),
-          Effect.scoped,
-          Effect.flatMap(unwrapValueBag),
-          Effect.withSpan('test'),
-        );
+      const eff = executor.computeInputs(node).pipe(
+        Effect.withSpan('runGraph'),
+        Effect.provide(
+          testServices({
+            logger: {
+              log: (event) => {
+                console.log('log', event);
+                switch (event.type) {
+                  case 'compute-input':
+                    this._runtimeState[event.nodeId] ??= {};
+                    this._runtimeState[event.nodeId][event.property] = { type: 'executed', value: event.value };
+                    break;
+                  case 'compute-output':
+                    // event.nodeId event.property
+                    this.outputComputed.emit({ nodeId: event.nodeId, property: event.property });
+                    break;
+                }
+              },
+              nodeId: undefined,
+            },
+          }),
+        ),
+        Effect.scoped,
+        Effect.flatMap(unwrapValueBag),
+        Effect.withSpan('test'),
+      );
       tasks.push(Effect.runPromise(eff));
     }
     await Promise.all(tasks);
+    this.update.emit();
   }
 
   private async _resolveComputeNode(node: ComputeNode): Promise<ComputeImplementation> {
