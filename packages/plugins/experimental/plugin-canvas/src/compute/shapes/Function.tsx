@@ -23,7 +23,7 @@ export const FunctionShape = S.extend(
   }),
 );
 
-export type FunctionShape = ComputeShape<S.Schema.Type<typeof FunctionShape>, Function<any, any>>;
+export type FunctionShape = S.Schema.Type<typeof FunctionShape>;
 
 export type CreateFunctionProps = CreateShapeProps<FunctionShape>;
 
@@ -31,7 +31,6 @@ export const createFunction = ({ id, ...rest }: CreateFunctionProps): FunctionSh
   return {
     id,
     type: 'function',
-    node: new Function(DefaultInput, DefaultOutput),
     size: { width: 192, height: getHeight(DefaultInput) },
     ...rest,
   };

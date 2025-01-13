@@ -18,7 +18,7 @@ export const GptShape = S.extend(
   }),
 );
 
-export type GptShape = ComputeShape<S.Schema.Type<typeof GptShape>, GptFunction>;
+export type GptShape = S.Schema.Type<typeof GptShape>;
 
 export type CreateGptProps = CreateShapeProps<GptShape>;
 

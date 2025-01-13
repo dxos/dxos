@@ -19,14 +19,13 @@ export const DatabaseShape = S.extend(
   }),
 );
 
-export type DatabaseShape = ComputeShape<S.Schema.Type<typeof DatabaseShape>, Database>;
+export type DatabaseShape = S.Schema.Type<typeof DatabaseShape>;
 
 export type CreateDatabaseProps = CreateShapeProps<DatabaseShape>;
 
 export const createDatabase = ({ id, ...rest }: CreateDatabaseProps): DatabaseShape => ({
   id,
   type: 'database',
-  node: new Database(),
   size: { width: 128, height: 64 },
   ...rest,
 });

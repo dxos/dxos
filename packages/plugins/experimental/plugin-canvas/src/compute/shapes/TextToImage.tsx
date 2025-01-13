@@ -19,14 +19,13 @@ export const TextToImageShape = S.extend(
   }),
 );
 
-export type TextToImageShape = ComputeShape<S.Schema.Type<typeof TextToImageShape>, TextToImage>;
+export type TextToImageShape = S.Schema.Type<typeof TextToImageShape>;
 
 export type CreateTextToImageProps = CreateShapeProps<TextToImageShape>;
 
 export const createTextToImage = ({ id, ...rest }: CreateTextToImageProps): TextToImageShape => ({
   id,
   type: 'text-to-image',
-  node: new TextToImage(),
   size: { width: 128, height: 64 },
   ...rest,
 });

@@ -2,10 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { GraphModel, type GraphNode, type GraphEdge, createEdgeId } from '@dxos/graph';
-import { type Point, type Dimension } from '@dxos/react-ui-canvas';
+import { type GraphEdge, GraphModel, type GraphNode, createEdgeId } from '@dxos/graph';
+import { type Dimension, type Point } from '@dxos/react-ui-canvas';
 
-import { type ComputeNode, DEFAULT_INPUT, DEFAULT_OUTPUT, StateMachine } from './graph';
+import { log } from '@dxos/log';
+import { createNodeFromShape } from '../hooks';
+import { pointMultiply, pointsToRect, rectToPoints } from '../layout';
+import type { Connection, Shape } from '../types';
+import { DEFAULT_INPUT, DEFAULT_OUTPUT, StateMachine } from './graph';
 import {
   createAnd,
   createBeacon,
@@ -23,9 +27,9 @@ import {
   createTimer,
 } from './shapes';
 import { createView } from './shapes/View';
-import { type BaseComputeShape, type ComputeShape } from './shapes/defs';
-import { pointMultiply, pointsToRect, rectToPoints } from '../layout';
-import type { Connection, Shape } from '../types';
+import { type ComputeShape } from './shapes/defs';
+import { failedInvariant } from '@dxos/invariant';
+import { ObjectId } from '@dxos/echo-schema';
 
 // TODO(burdon): LayoutBuilder.
 const layout = (rect: Point & Partial<Dimension>, snap = 32): { center: Point; size?: Dimension } => {
@@ -40,7 +44,7 @@ const layout = (rect: Point & Partial<Dimension>, snap = 32): { center: Point; s
 
 // TODO(burdon): GraphBuilder.
 export const createTest1 = () => {
-  const nodes: Shape[] = [
+  const nodes: ComputeShape[] = [
     createSwitch({ id: 'a1', center: { x: -256, y: -256 } }),
     createSwitch({ id: 'a2', center: { x: -256, y: -92 } }),
     createSwitch({ id: 'a3', center: { x: -256, y: 92 } }),
@@ -49,7 +53,7 @@ export const createTest1 = () => {
     createBeacon({ id: 'd1', center: { x: 512, y: 0 } }),
   ];
 
-  const edges = [
+  const edges: Omit<GraphEdge<Partial<Connection>>, 'id'>[] = [
     { source: 'a1', target: 'b1', data: { input: 'a' } },
     { source: 'a2', target: 'b1', data: { input: 'b' } },
     { source: 'b1', target: 'c1', data: { input: 'a' } },
@@ -57,13 +61,13 @@ export const createTest1 = () => {
     { source: 'c1', target: 'd1', data: {} },
   ];
 
-  return new GraphModel<GraphNode<Shape>, GraphEdge<Connection>>({
+  return new GraphModel<GraphNode<ComputeShape>, GraphEdge<Connection>>({
     nodes: nodes.map((data) => ({ id: data.id, data })),
-    edges: edges.map(({ source, target, data }) => ({
-      id: createEdgeId({ source, target, relation: 'invokes' }),
+    edges: edges.map(({ source, target, data: { output = DEFAULT_OUTPUT, input = DEFAULT_INPUT } }) => ({
+      id: createEdgeId({ source: `${source}/${output}`, target: `${target}/${input}` }),
       source,
       target,
-      data,
+      data: { output, input },
     })),
   });
 };
@@ -87,7 +91,7 @@ export const createTest2 = () => {
   return new GraphModel<GraphNode<Shape>, GraphEdge<Connection>>({
     nodes: nodes.map((data) => ({ id: data.id, data })),
     edges: edges.map(({ source, target, data }) => ({
-      id: createEdgeId({ source, target, relation: 'invokes' }),
+      id: createEdgeId({ source, target }),
       source,
       target,
       data,
@@ -187,7 +191,7 @@ export const createTest3 = ({
   return new GraphModel<GraphNode<Shape>, GraphEdge<Connection>>({
     nodes: nodes.map((data) => ({ id: data.id, data })),
     edges: edges.map(({ source, target, data }) => ({
-      id: createEdgeId({ source, target, relation: 'invokes' }),
+      id: createEdgeId({ source, target }),
       source,
       target,
       data,
@@ -195,19 +199,34 @@ export const createTest3 = ({
   });
 };
 
-export const createMachine = (graph?: GraphModel<GraphNode<Shape>, GraphEdge<Connection>>) => {
-  const machine = new StateMachine(undefined);
+export const createMachine = (graph?: GraphModel<GraphNode<ComputeShape>, GraphEdge<Connection>>) => {
+  const machine = new StateMachine();
 
-  // TODO(burdon): Factor out mapping (reconcile with Editor.stories).
+  // // TODO(burdon): Factor out mapping (reconcile with Editor.stories).
   if (graph) {
-    for (const node of graph.nodes) {
-      const data = node.data as ComputeShape<BaseComputeShape, ComputeNode<any, any>>;
-      machine.graph.addNode({ id: data.id, data: data.node });
+    for (const shape of graph.nodes) {
+      // const data = node.data as ComputeShape<BaseComputeShape, ComputeNode<any, any>>;
+      log.info('createMachine', { shape });
+      const node = createNodeFromShape(shape);
+      machine.addNode(node);
+      shape.data.node = node.id;
     }
     for (const edge of graph.edges) {
       const data = (edge.data ?? {}) as Connection;
-      const { input, output } = data;
-      machine.graph.addEdge({ id: edge.id, source: edge.source, target: edge.target, data: { input, output } });
+      const { output, input } = data;
+
+      const source = graph.getNode(edge.source);
+      const target = graph.getNode(edge.target);
+
+      const sourceId = source.data.node ?? failedInvariant();
+      const targetId = target.data.node ?? failedInvariant();
+
+      machine.addEdge({
+        id: ObjectId.random(),
+        source: sourceId,
+        target: targetId,
+        data: { output, input },
+      });
     }
   }
 

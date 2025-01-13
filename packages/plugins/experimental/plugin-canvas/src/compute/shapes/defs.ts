@@ -4,11 +4,11 @@
 
 import { AST } from '@effect/schema';
 
-import { S } from '@dxos/echo-schema';
-import { type MakeOptional, type Specialize } from '@dxos/util';
+import { ObjectId, S } from '@dxos/echo-schema';
+import { type MakeOptional } from '@dxos/util';
 
 import { Polygon } from '../../types';
-import { DEFAULT_INPUT, DEFAULT_OUTPUT, type ComputeNode } from '../graph';
+import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '../graph';
 
 //
 // Properties
@@ -51,8 +51,8 @@ export type CreateShapeProps<S extends Polygon> = Omit<MakeOptional<S, 'size'>, 
 export const ComputeShape = S.extend(
   Polygon,
   S.Struct({
-    node: S.String,
-  }),
+    node: S.optional(ObjectId),
+  }).pipe(S.mutable),
 );
 
 export type ComputeShape = S.Schema.Type<typeof ComputeShape>;

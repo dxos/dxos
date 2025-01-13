@@ -22,7 +22,7 @@ export const IfShape = S.extend(
   }),
 );
 
-export type IfShape = ComputeShape<S.Schema.Type<typeof IfShape>, If>;
+export type IfShape = S.Schema.Type<typeof IfShape>;
 
 export const IfElseShape = S.extend(
   ComputeShape,
@@ -31,7 +31,7 @@ export const IfElseShape = S.extend(
   }),
 );
 
-export type IfElseShape = ComputeShape<S.Schema.Type<typeof IfElseShape>, IfElse>;
+export type IfElseShape = S.Schema.Type<typeof IfElseShape>;
 
 //
 // Components
@@ -62,7 +62,6 @@ export const createIf = ({
 }: CreateIfProps): IfShape => ({
   id,
   type: 'if',
-  node: new If(),
   size,
   ...rest,
 });
@@ -84,7 +83,6 @@ export const createIfElse = ({
 }: CreateIfElseProps): IfElseShape => ({
   id,
   type: 'if-else',
-  node: new IfElse(),
   size,
   ...rest,
 });

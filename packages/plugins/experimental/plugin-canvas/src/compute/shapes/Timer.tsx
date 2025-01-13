@@ -19,14 +19,13 @@ export const TimerShape = S.extend(
   }),
 );
 
-export type TimerShape = ComputeShape<S.Schema.Type<typeof TimerShape>, Timer>;
+export type TimerShape = S.Schema.Type<typeof TimerShape>;
 
 export type CreateTimerProps = CreateShapeProps<TimerShape>;
 
 export const createTimer = (props: CreateTimerProps): TimerShape => ({
   ...props,
   type: 'timer',
-  node: new Timer(),
   size: { width: 64, height: 64 },
 });
 

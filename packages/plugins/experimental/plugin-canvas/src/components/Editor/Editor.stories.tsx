@@ -11,7 +11,7 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } f
 import { AIServiceClientImpl } from '@dxos/assistant';
 import { type ReactiveEchoObject } from '@dxos/echo-db';
 import { S, getSchemaTypename, getTypename } from '@dxos/echo-schema';
-import { createGraph, type GraphModel, type GraphNode } from '@dxos/graph';
+import { createGraph, type GraphEdge, type GraphModel, type GraphNode } from '@dxos/graph';
 import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
@@ -28,10 +28,11 @@ import { OllamaGpt } from '../../compute/graph/gpt/ollama';
 import { createMachine, createTest1, createTest2, createTest3 } from '../../compute/testing';
 import { SelectionModel, useGraphMonitor } from '../../hooks';
 import { doLayout } from '../../layout';
-import { RectangleShape, type Shape } from '../../types';
+import { RectangleShape, type Connection, type Shape } from '../../types';
 import { AttentionContainer } from '../AttentionContainer';
 import { ShapeRegistry } from '../Canvas';
 import { DragTest } from '../Canvas/DragTest';
+import type { ComputeEdge, Model } from '@dxos/conductor';
 
 const generator: ValueGenerator = faker as any;
 
@@ -45,6 +46,7 @@ type RenderProps = EditorRootProps &
     init?: boolean;
     sidebar?: 'json' | 'selected' | 'state-machine';
     machine?: StateMachine;
+    computeGraph?: GraphModel<GraphNode<Model.ComputeGraphNode>, GraphEdge<ComputeEdge>>;
     model?: StateMachineContext['model'];
     gpt?: StateMachineContext['gpt'];
   }>;
@@ -69,16 +71,16 @@ const Render = ({
       return;
     }
 
-    machine.setContext({ space, model, gpt });
+    // machine.setContext({ space, model, gpt });
     void machine.open();
-    const off = machine.update.on((ev) => {
-      const { node } = ev;
-      void editorRef.current?.action?.({ type: 'trigger', ids: [node.id] });
-    });
+    // const off = machine.update.on((ev) => {
+    //   const { node } = ev;
+    //   void editorRef.current?.action?.({ type: 'trigger', ids: [node.id] });
+    // });
 
     return () => {
       void machine.close();
-      off();
+      // off();
     };
   }, [machine]);
 
@@ -163,7 +165,7 @@ const Render = ({
       {sidebar === 'json' && (
         <AttentionContainer id='sidebar' tabIndex={0} classNames='flex grow overflow-hidden'>
           <SyntaxHighlighter language='json' classNames='text-xs'>
-            {JSON.stringify({ graph: graph?.graph }, null, 2)}
+            {JSON.stringify({ graph: graph?.graph, computeGraph: machine?.graph.model }, null, 2)}
           </SyntaxHighlighter>
         </AttentionContainer>
       )}
@@ -266,81 +268,81 @@ export const Compute1: Story = {
     // debug: true,
     showGrid: false,
     snapToGrid: false,
-    sidebar: 'selected',
+    sidebar: 'json',
     registry: new ShapeRegistry(computeShapes),
     ...createMachine(createTest1()),
   },
 };
 
-export const Compute2: Story = {
-  args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    sidebar: 'state-machine',
-    registry: new ShapeRegistry(computeShapes),
-    ...createMachine(createTest2()),
-  },
-};
+// export const Compute2: Story = {
+//   args: {
+//     // debug: true,
+//     showGrid: false,
+//     snapToGrid: false,
+//     sidebar: 'state-machine',
+//     registry: new ShapeRegistry(computeShapes),
+//     ...createMachine(createTest2()),
+//   },
+// };
 
-export const Ollama: Story = {
-  args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    sidebar: 'state-machine',
-    registry: new ShapeRegistry(computeShapes),
-    ...createMachine(createTest3()),
-    gpt: new OllamaGpt(ollamaClient),
-  },
-};
+// export const Ollama: Story = {
+//   args: {
+//     // debug: true,
+//     showGrid: false,
+//     snapToGrid: false,
+//     sidebar: 'state-machine',
+//     registry: new ShapeRegistry(computeShapes),
+//     ...createMachine(createTest3()),
+//     gpt: new OllamaGpt(ollamaClient),
+//   },
+// };
 
-export const GPT: Story = {
-  args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    // sidebar: 'json',
-    // sidebar: 'state-machine',
-    registry: new ShapeRegistry(computeShapes),
-    spec: [
-      { type: Testing.OrgType, count: 2 },
-      { type: Testing.ProjectType, count: 4 },
-      { type: Testing.ContactType, count: 8 },
-    ],
-    registerSchema: true,
-    ...createMachine(createTest3({ db: true })),
-    model: '@anthropic/claude-3-5-sonnet-20241022',
-    gpt: new EdgeGptExecutor(
-      new AIServiceClientImpl({
-        // endpoint: 'https://ai-service.dxos.workers.dev',
-        endpoint: 'http://localhost:8787',
-      }),
-    ),
-  },
-};
+// export const GPT: Story = {
+//   args: {
+//     // debug: true,
+//     showGrid: false,
+//     snapToGrid: false,
+//     // sidebar: 'json',
+//     // sidebar: 'state-machine',
+//     registry: new ShapeRegistry(computeShapes),
+//     spec: [
+//       { type: Testing.OrgType, count: 2 },
+//       { type: Testing.ProjectType, count: 4 },
+//       { type: Testing.ContactType, count: 8 },
+//     ],
+//     registerSchema: true,
+//     ...createMachine(createTest3({ db: true })),
+//     model: '@anthropic/claude-3-5-sonnet-20241022',
+//     gpt: new EdgeGptExecutor(
+//       new AIServiceClientImpl({
+//         // endpoint: 'https://ai-service.dxos.workers.dev',
+//         endpoint: 'http://localhost:8787',
+//       }),
+//     ),
+//   },
+// };
 
-export const GPTArtifact: Story = {
-  args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    sidebar: 'selected',
-    // sidebar: 'state-machine',
-    registry: new ShapeRegistry(computeShapes),
-    spec: [
-      { type: Testing.OrgType, count: 2 },
-      { type: Testing.ProjectType, count: 4 },
-      { type: Testing.ContactType, count: 8 },
-    ],
-    registerSchema: true,
-    ...createMachine(createTest3({ cot: true, artifact: true, history: true, db: true, textToImage: true })),
-    model: '@anthropic/claude-3-5-sonnet-20241022',
-    gpt: new EdgeGptExecutor(
-      new AIServiceClientImpl({
-        // endpoint: 'https://ai-service.dxos.workers.dev',
-        endpoint: 'http://localhost:8787',
-      }),
-    ),
-  },
-};
+// export const GPTArtifact: Story = {
+//   args: {
+//     // debug: true,
+//     showGrid: false,
+//     snapToGrid: false,
+//     sidebar: 'selected',
+//     // sidebar: 'state-machine',
+//     registry: new ShapeRegistry(computeShapes),
+//     spec: [
+//       { type: Testing.OrgType, count: 2 },
+//       { type: Testing.ProjectType, count: 4 },
+//       { type: Testing.ContactType, count: 8 },
+//     ],
+//     registerSchema: true,
+//     ...createMachine(createTest3({ cot: true, artifact: true, history: true, db: true, textToImage: true })),
+//     model: '@anthropic/claude-3-5-sonnet-20241022',
+//     gpt: new EdgeGptExecutor(
+//       new AIServiceClientImpl({
+//         // endpoint: 'https://ai-service.dxos.workers.dev',
+//         endpoint: 'http://localhost:8787',
+//       }),
+//     ),
+//   },
+// };

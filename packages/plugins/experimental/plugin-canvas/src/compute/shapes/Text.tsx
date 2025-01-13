@@ -23,7 +23,7 @@ export const TextShape = S.extend(
   }),
 );
 
-export type TextShape = ComputeShape<S.Schema.Type<typeof TextShape>, Text>;
+export type TextShape = S.Schema.Type<typeof TextShape>;
 
 export const ChatShape = S.extend(
   ComputeShape,
@@ -32,7 +32,7 @@ export const ChatShape = S.extend(
   }),
 );
 
-export type ChatShape = ComputeShape<S.Schema.Type<typeof ChatShape>, Text>;
+export type ChatShape = S.Schema.Type<typeof ChatShape>;
 
 //
 // Component
@@ -74,7 +74,6 @@ export type CreateTextProps = CreateShapeProps<TextShape> & { text?: string };
 export const createText = ({ id, text, size = { width: 256, height: 128 }, ...rest }: CreateTextProps): TextShape => ({
   id,
   type: 'text',
-  node: new Text().setText(text ?? ''),
   size,
   ...rest,
 });
@@ -84,7 +83,6 @@ export type CreateChatProps = CreateShapeProps<TextShape>;
 export const createChat = ({ id, ...rest }: CreateChatProps): ChatShape => ({
   id,
   type: 'chat',
-  node: new Text(),
   size: { width: 256, height: 128 },
   ...rest,
 });
