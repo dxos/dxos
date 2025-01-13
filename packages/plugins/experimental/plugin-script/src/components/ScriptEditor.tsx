@@ -22,7 +22,13 @@ import { useClient } from '@dxos/react-client';
 import { create, createDocAccessor, Filter, getMeta, getSpace, makeRef, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useTranslation, type ThemedClassName } from '@dxos/react-ui';
-import { createDataExtensions, listener, stackItemContentEditorClassNames } from '@dxos/react-ui-editor';
+import {
+  createDataExtensions,
+  listener,
+  stackItemContentEditorClassNames,
+  stackItemContentToolbarClassNames,
+} from '@dxos/react-ui-editor';
+import { mx } from '@dxos/react-ui-theme';
 
 import { DebugPanel } from './DebugPanel';
 import { type TemplateSelectProps, Toolbar, type ViewType } from './Toolbar';
@@ -37,7 +43,7 @@ export type ScriptEditorProps = ThemedClassName<{
 }> &
   Pick<TypescriptEditorProps, 'env'>;
 
-export const ScriptEditor = ({ role, script, env }: ScriptEditorProps) => {
+export const ScriptEditor = ({ role, classNames, script, env }: ScriptEditorProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
   const client = useClient();
   const identity = useIdentity();
@@ -146,7 +152,7 @@ export const ScriptEditor = ({ role, script, env }: ScriptEditorProps) => {
 
       setUserFunctionUrlInMetadata(getMeta(deployedFunction), `/${space.id}/${functionId}`);
 
-      setView('debug');
+      setView('split');
     } catch (err: any) {
       log.catch(err);
       setError(t('upload failed label'));
@@ -165,30 +171,33 @@ export const ScriptEditor = ({ role, script, env }: ScriptEditorProps) => {
 
   return (
     <>
-      <Toolbar
-        deployed={Boolean(existingFunctionUrl) && !script.changed}
-        functionUrl={functionUrl}
-        error={error}
-        view={view}
-        templates={templates}
-        onDeploy={handleDeploy}
-        onFormat={handleFormat}
-        onViewChange={setView}
-        onTemplateSelect={handleTemplateChange}
-      />
-
-      {view === 'debug' ? (
-        <DebugPanel functionUrl={functionUrl} />
-      ) : (
-        <TypescriptEditor
-          id={script.id}
-          env={env}
-          initialValue={script.source?.target?.content}
-          extensions={extensions}
-          className={stackItemContentEditorClassNames(role)}
-          toolbar
+      <div role='none' className={stackItemContentToolbarClassNames(role)}>
+        <Toolbar
+          deployed={Boolean(existingFunctionUrl) && !script.changed}
+          functionUrl={functionUrl}
+          error={error}
+          view={view}
+          templates={templates}
+          onDeploy={handleDeploy}
+          onFormat={handleFormat}
+          onViewChange={setView}
+          onTemplateSelect={handleTemplateChange}
         />
-      )}
+      </div>
+      <div role='none' className={mx('flex flex-col w-full overflow-hidden divide-y divide-separator', classNames)}>
+        {view !== 'debug' && (
+          <TypescriptEditor
+            id={script.id}
+            env={env}
+            initialValue={script.source?.target?.content}
+            extensions={extensions}
+            className={stackItemContentEditorClassNames(role)}
+            toolbar
+          />
+        )}
+
+        {view !== 'editor' && <DebugPanel functionUrl={functionUrl} />}
+      </div>
     </>
   );
 };

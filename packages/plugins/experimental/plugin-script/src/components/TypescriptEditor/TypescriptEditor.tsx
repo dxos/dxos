@@ -12,7 +12,7 @@ import {
   autocomplete,
   createBasicExtensions,
   createThemeExtensions,
-  editorFullWidth,
+  editorContent,
   editorGutter,
   editorMonospace,
   InputModeExtensions,
@@ -54,9 +54,7 @@ export const TypescriptEditor = ({
         createThemeExtensions({
           themeMode,
           syntaxHighlighting: true,
-          slots: {
-            content: { className: editorFullWidth },
-          },
+          slots: { content: { className: editorContent } },
         }),
         editorGutter,
         // TODO(burdon): Factor out.
@@ -75,7 +73,9 @@ export const TypescriptEditor = ({
     [id, extensions, themeMode, selection, scrollTo],
   );
 
-  return <div ref={parentRef} data-toolbar={!!toolbar} className={className} {...focusAttributes} />;
+  return (
+    <div ref={parentRef} data-toolbar={toolbar ? 'enabled' : 'disabled'} className={className} {...focusAttributes} />
+  );
 };
 
 export default TypescriptEditor;
