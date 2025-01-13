@@ -12,7 +12,7 @@ import { createFunctionAnchors } from './Function';
 import { Box } from './components';
 import { ComputeShape, createInputSchema, createOutputSchema, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
-import { GptMessage, List } from '../graph';
+import { GptMessage } from '../graph';
 
 const InputSchema = createInputSchema(GptMessage);
 const OutputSchema = createOutputSchema(S.mutable(S.Array(GptMessage)));
@@ -36,7 +36,8 @@ export const createThread = ({ id, ...rest }: CreateThreadProps): ThreadShape =>
 });
 
 export const ThreadComponent = ({ shape }: ShapeComponentProps<ThreadShape>) => {
-  const items = shape.node.items.value;
+  // const items = shape.node.items.value;
+  const items: any[] = [];
   const scrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (scrollRef.current) {

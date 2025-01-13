@@ -10,7 +10,6 @@ import { Input } from '@dxos/react-ui';
 import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { createAnchorMap } from '../../components';
-import { Timer } from '../graph';
 
 export const TimerShape = S.extend(
   ComputeShape,
@@ -33,9 +32,9 @@ export const TimerComponent = ({ shape }: ShapeComponentProps<TimerShape>) => {
   const [value, setValue] = useState(false);
   useEffect(() => {
     if (value) {
-      shape.node.start();
+      // shape.node.start();
     } else {
-      shape.node.stop();
+      // shape.node.stop();
     }
   }, [value]);
 

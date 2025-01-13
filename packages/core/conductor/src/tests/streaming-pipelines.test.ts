@@ -8,19 +8,19 @@ import { describe, test } from 'vitest';
 import { S } from '@dxos/echo-schema';
 import { GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
 
+import { createEdge } from '../model';
 import {
   defineComputeNode,
   makeValueBag,
-  NodeType,
   synchronizedComputeFunction,
   unwrapValueBag,
   type ComputeEdge,
   type ComputeGraph,
   type ComputeNode,
-} from './schema';
-import { StreamSchema } from './schema-dsl';
-import { createEdge, TestRuntime } from './testing';
-import { testServices } from './testing/test-services';
+  NodeType,
+} from '../schema';
+import { StreamSchema } from '../schema-dsl';
+import { TestRuntime, testServices } from '../testing';
 
 const ENABLE_LOGGING = false;
 

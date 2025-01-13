@@ -9,7 +9,6 @@ import { S } from '@dxos/echo-schema';
 import { ComputeShape, createAnchorId } from './defs';
 import { type ShapeDef } from '../../components';
 import { createAnchors, getAnchorPoints } from '../../components';
-import { AndGate, NotGate, OrGate } from '../graph';
 
 //
 // Gate utils.

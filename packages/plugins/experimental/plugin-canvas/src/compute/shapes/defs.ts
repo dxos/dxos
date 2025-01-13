@@ -48,6 +48,7 @@ export type OutputType<OUTPUT = any> = {
 
 export type CreateShapeProps<S extends Polygon> = Omit<MakeOptional<S, 'size'>, 'type' | 'node'>;
 
+// TODO(burdon): Marker type for detection?
 export const ComputeShape = S.extend(
   Polygon,
   S.Struct({

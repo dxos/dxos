@@ -7,8 +7,8 @@ import type { GraphEdge, GraphModel, GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import type { ComputeNode, ComputeEdge, ComputeMeta } from './schema';
-import { pickProperty } from './util';
+import type { ComputeNode, ComputeEdge, ComputeMeta } from '../schema';
+import { pickProperty } from '../util';
 
 /**
  * Structure derived from the compute graph.

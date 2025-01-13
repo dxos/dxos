@@ -8,11 +8,9 @@ import { S } from '@dxos/echo-schema';
 import { Input } from '@dxos/react-ui';
 
 import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
-import { type ShapeComponentProps, type ShapeDef } from '../../components';
-import { createAnchorMap } from '../../components';
-import { DEFAULT_OUTPUT, Switch } from '../graph';
-import { useComputeContext } from '../graph/ComputeContext';
-import { useComputeShapeState } from '../../hooks';
+import { createAnchorMap, type ShapeComponentProps, type ShapeDef } from '../../components';
+import { DEFAULT_OUTPUT } from '../graph';
+import { useComputeNodeState } from '../hooks';
 
 export const SwitchShape = S.extend(
   ComputeShape,
@@ -34,10 +32,10 @@ export const createSwitch = ({ id, ...rest }: CreateSwitchProps): SwitchShape =>
 
 export const SwitchComponent = ({ shape }: ShapeComponentProps<SwitchShape>) => {
   const [value, setValue] = useState(false);
-  const { runtime } = useComputeShapeState(shape);
+  const { runtime } = useComputeNodeState(shape);
   useEffect(() => {
-    runtime?.setOutput(DEFAULT_OUTPUT, value);
-  }, [value]);
+    runtime.setOutput(DEFAULT_OUTPUT, value);
+  }, [runtime, value]);
 
   return (
     <div className='flex w-full justify-center items-center' onClick={(ev) => ev.stopPropagation()}>

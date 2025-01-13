@@ -3,5 +3,6 @@
 //
 
 export * from './graph';
-export * from './shapes';
+export * from './hooks';
 export * from './registry';
+export * from './shapes';

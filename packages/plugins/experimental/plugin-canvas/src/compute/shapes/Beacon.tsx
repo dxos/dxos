@@ -9,10 +9,9 @@ import { Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
-import { type ShapeComponentProps, type ShapeDef } from '../../components';
-import { createAnchorMap } from '../../components';
-import { Beacon, DEFAULT_INPUT, DEFAULT_OUTPUT } from '../graph';
-import { useComputeShapeState } from '../../hooks';
+import { createAnchorMap, type ShapeComponentProps, type ShapeDef } from '../../components';
+import { DEFAULT_INPUT } from '../graph';
+import { useComputeNodeState } from '../hooks';
 
 export const BeaconShape = S.extend(
   ComputeShape,
@@ -33,12 +32,9 @@ export const createBeacon = ({ id, ...rest }: CreateBeaconProps): BeaconShape =>
 });
 
 export const BeaconComponent = ({ shape }: ShapeComponentProps<BeaconShape>) => {
-  // Signals value.
-  const { runtime } = useComputeShapeState(shape);
-  const input = runtime?.inputs[DEFAULT_INPUT];
+  const { runtime } = useComputeNodeState(shape);
+  const input = runtime.inputs[DEFAULT_INPUT];
   const value = input?.type === 'executed' ? input.value : 0;
-
-  console.log('BeaconComponent', { value, inputs: runtime?.inputs });
 
   return (
     <div className='flex w-full justify-center items-center'>
@@ -56,5 +52,8 @@ export const beaconShape: ShapeDef<BeaconShape> = {
   icon: 'ph--sun--regular',
   component: BeaconComponent,
   createShape: createBeacon,
-  getAnchors: (shape) => createAnchorMap(shape, { [createAnchorId('input')]: { x: -1, y: 0 } }),
+  getAnchors: (shape) =>
+    createAnchorMap(shape, {
+      [createAnchorId('input')]: { x: -1, y: 0 },
+    }),
 };

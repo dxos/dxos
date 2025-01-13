@@ -10,7 +10,6 @@ import { Box } from './components';
 import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef, TextBox, type TextBoxProps } from '../../components';
 import { createAnchorMap } from '../../components';
-import { Text } from '../graph';
 
 //
 // Data
@@ -45,7 +44,7 @@ export const TextComponent = ({ shape, title, chat, ...props }: TextComponentPro
   const handleEnter: TextBoxProps['onEnter'] = (value) => {
     if (value.trim().length) {
       // TODO(burdon): Standardize.
-      shape.node.setText(value);
+      // shape.node.setText(value);
       if (chat) {
         setReset({});
       }
@@ -58,7 +57,7 @@ export const TextComponent = ({ shape, title, chat, ...props }: TextComponentPro
         classNames='flex grow p-2 overflow-hidden'
         {...props}
         reset={reset}
-        value={chat ? '' : shape.node.getText()}
+        // value={chat ? '' : shape.node.getText()}
         onEnter={handleEnter}
       />
     </Box>

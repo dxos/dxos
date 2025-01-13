@@ -2,29 +2,30 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Effect } from 'effect';
+
 import { type LLMModel, type MessageImageContentBlock } from '@dxos/assistant';
 import { Event, synchronized } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import {
-  ComputeEdge,
+  type ComputeEdge,
   type ComputeImplementation,
-  ComputeNode,
-  defineComputeNode,
+  type ComputeNode,
   GraphExecutor,
-  makeValueBag,
   Model,
-  synchronizedComputeFunction,
+  makeValueBag,
   unwrapValueBag,
 } from '@dxos/conductor';
 import { testServices } from '@dxos/conductor/testing';
 import { Resource } from '@dxos/context';
-import { type ObjectId, S } from '@dxos/echo-schema';
+import { type ObjectId } from '@dxos/echo-schema';
 import { type GraphEdge, type GraphNode } from '@dxos/graph';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
-import { Effect } from 'effect';
-import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './compute-node';
+
 import type { FunctionCallback, GptInput, GptOutput } from './nodes';
+import { nodeDefs } from './nodes-defs';
 
 export const InvalidStateError = Error;
 
@@ -42,46 +43,50 @@ export interface GptExecutor {
 
 export type StateMachineContext = {
   space?: Space;
-  gpt?: GptExecutor;
 
-  // TODO(dmaretskyi): Not used.
-  model?: LLMModel; // TODO(burdon): Evolve.
+  // TODO(burdon): Remove.
+  gpt?: GptExecutor;
+  model?: LLMModel;
 };
 
 export type RuntimeValue =
+  | {
+      type: 'not-executed'; // TODO(burdon): Different from pending?
+    }
   | {
       type: 'executed';
       value: any;
     }
   | {
-      type: 'error';
-      error: string;
-    }
-  | {
       type: 'pending';
     }
   | {
-      type: 'not-executed';
+      type: 'error';
+      error: string;
     };
 
 /**
- * Manages the dependency graph and async propagation of computed values.
- * Compute Nodes are invoked when all of their inputs are provided.
- * Root Nodes have a Void input type and are processed first.
+ * Client proxy to the state machine.
  */
+// TODO(burdon): Rename ComputeProxy?
 export class StateMachine extends Resource {
   public readonly update = new Event();
-  public readonly outputComputed = new Event<{ nodeId: ObjectId; property: string }>();
 
+  /** Computed result. */
+  public readonly output = new Event<{ nodeId: ObjectId; property: string }>();
+
+  /** Persistent compute graph. */
   private readonly _graph = Model.ComputeGraphModel.create();
 
-  private readonly _forcedOutputs = new ComplexMap<[nodeId: ObjectId, property: string], any>(
-    ([nodeId, property]) => `${nodeId}/${property}`,
-  );
-
+  // TODO(burdon): Proxy?
   private readonly _executor = new GraphExecutor({
     computeNodeResolver: this._resolveComputeNode.bind(this),
   });
+
+  // TODO(burdon): Document.
+  private readonly _forcedOutputs = new ComplexMap<[nodeId: ObjectId, property: string], any>(
+    ([nodeId, property]) => `${nodeId}/${property}`,
+  );
 
   private _runtimeState: Record<string, Record<string, RuntimeValue>> = {};
 
@@ -155,15 +160,16 @@ export class StateMachine extends Resource {
           testServices({
             logger: {
               log: (event) => {
-                console.log('log', event);
+                log.info('log', { event });
                 switch (event.type) {
                   case 'compute-input':
                     this._runtimeState[event.nodeId] ??= {};
                     this._runtimeState[event.nodeId][event.property] = { type: 'executed', value: event.value };
                     break;
+
                   case 'compute-output':
                     // event.nodeId event.property
-                    this.outputComputed.emit({ nodeId: event.nodeId, property: event.property });
+                    this.output.emit({ nodeId: event.nodeId, property: event.property });
                     break;
                 }
               },
@@ -182,36 +188,8 @@ export class StateMachine extends Resource {
   }
 
   private async _resolveComputeNode(node: ComputeNode): Promise<ComputeImplementation> {
-    console.log('resolveComputeNode', node.type);
-    if (nodes[node.type]) {
-      return nodes[node.type];
-    }
-    throw new Error(`Unknown node type: ${node.type}`);
+    const impl = nodeDefs[node.type];
+    invariant(impl, `Unknown node type: ${node.type}`);
+    return impl;
   }
 }
-
-const nodes: Record<string, ComputeImplementation> = {
-  switch: defineComputeNode({
-    input: S.Struct({}),
-    output: S.Struct({ [DEFAULT_OUTPUT]: S.Boolean }),
-  }),
-  and: defineComputeNode({
-    input: S.Struct({ a: S.Boolean, b: S.Boolean }),
-    output: S.Struct({ [DEFAULT_OUTPUT]: S.Boolean }),
-    compute: synchronizedComputeFunction(({ a, b }) => Effect.succeed({ [DEFAULT_OUTPUT]: a && b })),
-  }),
-  or: defineComputeNode({
-    input: S.Struct({ a: S.Boolean, b: S.Boolean }),
-    output: S.Struct({ [DEFAULT_OUTPUT]: S.Boolean }),
-    compute: synchronizedComputeFunction(({ a, b }) => Effect.succeed({ [DEFAULT_OUTPUT]: a || b })),
-  }),
-  not: defineComputeNode({
-    input: S.Struct({ [DEFAULT_INPUT]: S.Boolean }),
-    output: S.Struct({ [DEFAULT_OUTPUT]: S.Boolean }),
-    compute: synchronizedComputeFunction(({ [DEFAULT_INPUT]: input }) => Effect.succeed({ [DEFAULT_OUTPUT]: !input })),
-  }),
-  beacon: defineComputeNode({
-    input: S.Struct({ [DEFAULT_INPUT]: S.Boolean }),
-    output: S.Struct({}),
-  }),
-};

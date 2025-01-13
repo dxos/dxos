@@ -2,27 +2,26 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Cause, Effect, Fiber, Logger, Tracer } from 'effect';
+import { it } from '@effect/vitest';
+import { Effect } from 'effect';
 import { describe, test } from 'vitest';
 
 import { S } from '@dxos/echo-schema';
 import { GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
+import { mapValues } from '@dxos/util';
 
 import {
   defineComputeNode,
   makeValueBag,
-  NodeType,
   synchronizedComputeFunction,
   unwrapValueBag,
   type ComputeEdge,
   type ComputeGraph,
   type ComputeNode,
-} from './schema';
-import { logCustomEvent } from './services';
-import { createEdge, TestRuntime } from './testing';
-import { testServices } from './testing/test-services';
-import { it } from '@effect/vitest';
-import { mapValues } from '@dxos/util';
+  NodeType,
+} from '../schema';
+import { logCustomEvent } from '../services';
+import { createEdge, TestRuntime, testServices } from '../testing';
 
 const ENABLE_LOGGING = false;
 

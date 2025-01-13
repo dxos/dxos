@@ -1,8 +1,14 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { type Ollama } from 'ollama';
-import type { GptExecutor } from '../state-machine';
-import { log } from '@dxos/log';
-import type { GptInput, GptOutput } from '../nodes/GptFunction';
+
 import type { MessageImageContentBlock } from '@dxos/assistant';
+import { log } from '@dxos/log';
+
+import type { GptInput, GptOutput } from '../nodes';
+import type { GptExecutor } from '../state-machine';
 
 export class OllamaGpt implements GptExecutor {
   // Images are not supported.

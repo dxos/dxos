@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { describe, test } from 'vitest';
+import { describe } from 'vitest';
 
 describe('state machine', () => {
   // test('construct', async ({ expect }) => {});

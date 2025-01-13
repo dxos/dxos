@@ -11,11 +11,9 @@ import { isStream } from '../schema-dsl';
 
 describe('effect-basics', () => {
   describe('streams', () => {
-    test('should work', async ({ expect }) => {
+    test('stream', async ({ expect }) => {
       const stream = Stream.range(1, 10);
-
       const sum = stream.pipe(Stream.runFold(0, (acc, x) => acc + x));
-
       await expect(Effect.runPromise(sum)).resolves.toBe(55);
     });
 

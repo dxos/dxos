@@ -5,10 +5,9 @@
 import '@dxos-theme';
 
 import type { Meta, StoryObj } from '@storybook/react';
-import ollamaClient from 'ollama';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 
-import { AIServiceClientImpl } from '@dxos/assistant';
+import type { ComputeEdge, Model } from '@dxos/conductor';
 import { type ReactiveEchoObject } from '@dxos/echo-db';
 import { S, getSchemaTypename, getTypename } from '@dxos/echo-schema';
 import { createGraph, type GraphEdge, type GraphModel, type GraphNode } from '@dxos/graph';
@@ -22,18 +21,21 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { omit } from '@dxos/util';
 
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
-import { computeShapes, type ComputeShape, type StateMachine, type StateMachineContext } from '../../compute';
-import { EdgeGptExecutor } from '../../compute/graph/gpt/edge';
-import { OllamaGpt } from '../../compute/graph/gpt/ollama';
-import { createMachine, createTest1, createTest2, createTest3 } from '../../compute/testing';
-import { SelectionModel, useGraphMonitor } from '../../hooks';
+import {
+  computeShapes,
+  type ComputeShape,
+  type StateMachine,
+  type StateMachineContext,
+  useGraphMonitor,
+} from '../../compute';
+import { ComputeContext } from '../../compute';
+import { createMachine, createTest1 } from '../../compute/testing';
+import { SelectionModel } from '../../hooks';
 import { doLayout } from '../../layout';
-import { RectangleShape, type Connection, type Shape } from '../../types';
+import { RectangleShape, type Shape } from '../../types';
 import { AttentionContainer } from '../AttentionContainer';
 import { ShapeRegistry } from '../Canvas';
 import { DragTest } from '../Canvas/DragTest';
-import type { ComputeEdge, Model } from '@dxos/conductor';
-import { ComputeContext } from '../../compute/graph/ComputeContext';
 
 const generator: ValueGenerator = faker as any;
 
@@ -65,36 +67,39 @@ const Render = ({
 }: RenderProps) => {
   const editorRef = useRef<EditorController>(null);
   const { space } = useClientProvider();
+  const [graph, setGraph] = useState<GraphModel<GraphNode<Shape>> | undefined>(_graph);
 
   // State machine.
   useEffect(() => {
-    if (!machine) {
+    if (!machine || !graph) {
       return;
     }
 
+    // TODO(burdon): Combine handlers pattern.
     void machine.open();
-    // TODO(dmaretskyi): bullets.
-    const off = machine.update.on(() => {
+
+    const sub1 = machine.update.on(() => {
       void editorRef.current?.update();
     });
-    const off2 = machine.outputComputed.on(({ nodeId, property }) => {
-      const shape = graph?.nodes.find((node) => (node.data as ComputeShape).node === nodeId);
 
-      void editorRef.current?.action?.({ type: 'trigger', ids: [shape?.id!] });
+    const sub2 = machine.output.on(({ nodeId, property }) => {
+      const shape = graph.nodes.find((node) => (node.data as ComputeShape).node === nodeId);
+      if (shape) {
+        void editorRef.current?.action?.({ type: 'trigger', ids: [shape.id] });
+      }
     });
 
     return () => {
       void machine.close();
-      off();
-      off2();
+      sub1();
+      sub2();
     };
-  }, [machine]);
+  }, [graph, machine]);
 
   // Monitor.
   const graphMonitor = useGraphMonitor(machine);
 
   // Layout.
-  const [graph, setGraph] = useState<GraphModel<GraphNode<Shape>> | undefined>(_graph);
   useEffect(() => {
     if (!space || !init) {
       return;
@@ -140,7 +145,7 @@ const Render = ({
 
   return (
     <div className='grid grid-cols-[1fr,360px] w-full h-full'>
-      <ComputeContext.Provider value={{ stateMachine: machine }}>
+      <ComputeContext.Provider value={{ stateMachine: machine! }}>
         <AttentionContainer id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
           <Editor.Root
             ref={editorRef}

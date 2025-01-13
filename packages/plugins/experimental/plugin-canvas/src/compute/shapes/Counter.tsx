@@ -6,10 +6,9 @@ import React from 'react';
 
 import { S } from '@dxos/echo-schema';
 
-import { ComputeShape, createAnchorId, createComputeShape, type CreateShapeProps } from './defs';
-import { type ShapeComponentProps, type ShapeDef } from '../../components';
-import { createAnchorMap } from '../../components';
-import { useComputeShapeState } from '../../hooks';
+import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
+import { createAnchorMap, type ShapeComponentProps, type ShapeDef } from '../../components';
+import { useComputeNodeState } from '../hooks';
 
 export const CounterShape = S.extend(
   ComputeShape,
@@ -30,8 +29,8 @@ export const createCounter = ({ id, ...rest }: CreateCounterProps): CounterShape
 });
 
 export const CounterComponent = ({ shape }: ShapeComponentProps<CounterShape>) => {
-  const { runtime } = useComputeShapeState(shape);
-  const output = runtime?.outputs.value;
+  const { runtime } = useComputeNodeState(shape);
+  const output = runtime.outputs.value;
   const value = output?.type === 'executed' ? output.value : 0;
 
   return <div className='flex w-full justify-center items-center'>{value}</div>;

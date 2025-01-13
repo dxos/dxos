@@ -10,7 +10,6 @@ import { Box } from './components';
 import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { createAnchorMap } from '../../components';
-import { Database } from '../graph';
 
 export const DatabaseShape = S.extend(
   ComputeShape,

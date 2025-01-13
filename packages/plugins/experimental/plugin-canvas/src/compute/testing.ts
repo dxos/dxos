@@ -2,21 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
+import { ObjectId } from '@dxos/echo-schema';
 import { type GraphEdge, GraphModel, type GraphNode, createEdgeId } from '@dxos/graph';
+import { failedInvariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { type Dimension, type Point } from '@dxos/react-ui-canvas';
 
-import { log } from '@dxos/log';
-import { createNodeFromShape } from '../hooks';
-import { pointMultiply, pointsToRect, rectToPoints } from '../layout';
-import type { Connection, Shape } from '../types';
-import { DEFAULT_INPUT, DEFAULT_OUTPUT, StateMachine } from './graph';
+import { createComputeNode, DEFAULT_INPUT, DEFAULT_OUTPUT, StateMachine } from './graph';
 import {
   createAnd,
   createBeacon,
   createChat,
   createCounter,
   createDatabase,
-  createFunction,
   createGpt,
   createList,
   createOr,
@@ -24,12 +22,11 @@ import {
   createText,
   createTextToImage,
   createThread,
-  createTimer,
+  createView,
 } from './shapes';
-import { createView } from './shapes/View';
-import { type ComputeShape } from './shapes/defs';
-import { failedInvariant } from '@dxos/invariant';
-import { ObjectId } from '@dxos/echo-schema';
+import { type ComputeShape } from './shapes';
+import { pointMultiply, pointsToRect, rectToPoints } from '../layout';
+import type { Connection, Shape } from '../types';
 
 // TODO(burdon): LayoutBuilder.
 const layout = (rect: Point & Partial<Dimension>, snap = 32): { center: Point; size?: Dimension } => {
@@ -74,8 +71,8 @@ export const createTest1 = () => {
 
 export const createTest2 = () => {
   const nodes: Shape[] = [
-    createTimer({ id: 'a', center: { x: -256, y: 0 } }),
-    createFunction({ id: 'b', center: { x: 0, y: 0 } }),
+    // createTimer({ id: 'a', center: { x: -256, y: 0 } }),
+    // createFunction({ id: 'b', center: { x: 0, y: 0 } }),
     createAnd({ id: 'c', center: { x: 0, y: -256 } }),
     createBeacon({ id: 'd', center: { x: 256, y: -256 } }),
     createSwitch({ id: 'e', center: { x: -256, y: -256 } }),
@@ -206,11 +203,12 @@ export const createMachine = (graph?: GraphModel<GraphNode<ComputeShape>, GraphE
   if (graph) {
     for (const shape of graph.nodes) {
       // const data = node.data as ComputeShape<BaseComputeShape, ComputeNode<any, any>>;
-      log.info('createMachine', { shape });
-      const node = createNodeFromShape(shape);
+      log.info('create', { shape });
+      const node = createComputeNode(shape);
       machine.addNode(node);
       shape.data.node = node.id;
     }
+
     for (const edge of graph.edges) {
       const data = (edge.data ?? {}) as Connection;
       const { output, input } = data;

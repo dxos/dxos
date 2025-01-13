@@ -10,7 +10,7 @@ import { createFunctionAnchors } from './Function';
 import { Box } from './components';
 import { ComputeShape, createInputSchema, createOutputSchema, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
-import { GptMessage, List } from '../graph';
+import { GptMessage } from '../graph';
 
 const InputSchema = createInputSchema(GptMessage);
 const OutputSchema = createOutputSchema(S.mutable(S.Array(GptMessage)));
@@ -34,7 +34,8 @@ export const createTable = ({ id, ...rest }: CreateTableProps): TableShape => ({
 });
 
 export const TableComponent = ({ shape }: ShapeComponentProps<TableShape>) => {
-  const items = shape.node.items.value;
+  // const items = shape.node.items.value;
+
   return <Box name={'Table'}></Box>;
 };
 

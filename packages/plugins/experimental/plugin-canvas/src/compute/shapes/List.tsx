@@ -12,7 +12,7 @@ import { createFunctionAnchors } from './Function';
 import { Box } from './components';
 import { ComputeShape, createInputSchema, createOutputSchema, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
-import { GptMessage, List } from '../graph';
+import { GptMessage } from '../graph';
 
 // TODO(burdon): Type-specific.
 const InputSchema = createInputSchema(GptMessage);
@@ -27,18 +27,18 @@ export const ListShape = S.extend(
 
 export type ListShape = S.Schema.Type<typeof ListShape>;
 
-export type CreateListProps = CreateShapeProps<ListShape> & { onlyLast?: boolean };
+export type CreateListProps = CreateShapeProps<ListShape>;
 
-export const createList = ({ id, onlyLast, ...rest }: CreateListProps): ListShape => ({
+export const createList = ({ id, ...rest }: CreateListProps): ListShape => ({
   id,
   type: 'list',
-  node: new List(GptMessage, { onlyLast }),
   size: { width: 256, height: 512 },
   ...rest,
 });
 
 export const ListComponent = ({ shape }: ShapeComponentProps<ListShape>) => {
-  const items = shape.node.items.value;
+  const items: any[] = [];
+  // const items = shape.node.items.value;
   // TODO(dmaretskyi): Unused ref.
   const ref = useRef<HTMLDivElement>(null);
 

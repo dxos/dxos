@@ -10,7 +10,6 @@ import { Box } from './components';
 import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
 import { TextBox, type ShapeComponentProps, type ShapeDef } from '../../components';
 import { createAnchorMap } from '../../components';
-import { View } from '../graph';
 
 export const ViewShape = S.extend(
   ComputeShape,
@@ -31,28 +30,29 @@ export const createView = ({ id, ...rest }: CreateViewProps): ViewShape => ({
 });
 
 export const ViewComponent = ({ shape }: ShapeComponentProps<ViewShape>) => {
-  let value = shape.node.state;
-  if (typeof value !== 'string') {
-    value = JSON.stringify(value, null, 2);
-  }
+  const value = '';
+  // let value = shape.node.state;
+  // if (typeof value !== 'string') {
+  //   value = JSON.stringify(value, null, 2);
+  // }
 
   const imageMatch = (value as string)?.match(/<image id="([^"]+)"(?:\s+prompt="([^"]+)")?\s*\/>/);
   if (imageMatch) {
-    const [, id, prompt] = imageMatch;
-    const image = shape.node.resolveImage(id);
-    if (image?.source) {
-      return (
-        <Box name={'Artifact'}>
-          <img
-            src={`data:image/jpeg;base64,${image.source.data}`}
-            className='grow object-cover'
-            alt={prompt || 'Generated image'}
-          />
-        </Box>
-      );
-    } else {
-      value += 'image not found.';
-    }
+    // const [, id, prompt] = imageMatch;
+    // const image = shape.node.resolveImage(id);
+    // if (image?.source) {
+    //   return (
+    //     <Box name={'Artifact'}>
+    //       <img
+    //         src={`data:image/jpeg;base64,${image.source.data}`}
+    //         className='grow object-cover'
+    //         alt={prompt || 'Generated image'}
+    //       />
+    //     </Box>
+    //   );
+    // } else {
+    //   value += 'image not found.';
+    // }
   }
 
   return (

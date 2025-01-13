@@ -11,7 +11,7 @@ import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { createAnchors, rowHeight } from '../../components';
 import { type Polygon } from '../../types';
-import { DEFAULT_INPUT, DEFAULT_OUTPUT, Function } from '../graph';
+import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '../graph';
 
 const DefaultInput = S.Struct({ [DEFAULT_INPUT]: S.Any });
 const DefaultOutput = S.Struct({ [DEFAULT_OUTPUT]: S.Any });
@@ -37,9 +37,10 @@ export const createFunction = ({ id, ...rest }: CreateFunctionProps): FunctionSh
 };
 
 export const FunctionComponent = ({ shape }: ShapeComponentProps<FunctionShape>) => {
-  return (
-    <FunctionBody name={shape.node.name} inputSchema={shape.node.inputSchema} outputSchema={shape.node.outputSchema} />
-  );
+  return null;
+  // return (
+  // <FunctionBody name={shape.node.name} inputSchema={shape.node.inputSchema} outputSchema={shape.node.outputSchema} />
+  // )
 };
 
 export const functionShape: ShapeDef<FunctionShape> = {
@@ -47,7 +48,7 @@ export const functionShape: ShapeDef<FunctionShape> = {
   icon: 'ph--function--regular',
   component: FunctionComponent,
   createShape: createFunction,
-  getAnchors: (shape) => createFunctionAnchors(shape, shape.node.inputSchema, shape.node.outputSchema),
+  // getAnchors: (shape) => createFunctionAnchors(shape, shape.node.inputSchema, shape.node.outputSchema),
 };
 
 //

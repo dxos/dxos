@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { string } from 'effect/Equivalence';
 import { test } from 'vitest';
+
+// TODO(burdon): Move to conductor.
 
 export type GPTConfig = {
   initDelay?: number;

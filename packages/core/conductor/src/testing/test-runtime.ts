@@ -7,7 +7,7 @@ import { Effect } from 'effect';
 import { raise } from '@dxos/debug';
 import { type GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
 
-import { compile, GraphExecutor } from '../fiber-compiler';
+import { compile, GraphExecutor } from '../compiler';
 import { inputNode, outputNode, gptNode } from '../nodes';
 import {
   NodeType,
@@ -19,7 +19,6 @@ import {
   type NotExecuted,
   type ValueBag,
 } from '../schema';
-import type { Value } from 'effect/FastCheck';
 
 export class TestRuntime {
   nodes = new Map<string, ComputeImplementation>();

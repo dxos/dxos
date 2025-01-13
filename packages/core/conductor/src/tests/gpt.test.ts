@@ -2,27 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
+import { it } from '@effect/vitest';
 import { Chunk, Console, Effect, Exit, Option, Scope, Stream } from 'effect';
 import { describe, test } from 'vitest';
-import { it } from '@effect/vitest';
 
 import { AIServiceClientImpl, type ResultStreamEvent } from '@dxos/assistant';
 import { GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
-import { log } from '@dxos/log';
-import { getDebugName } from '@dxos/util';
 
 import {
   makeValueBag,
-  NodeType,
   unwrapValueBag,
   type ComputeEdge,
   type ComputeGraph,
   type ComputeNode,
-  type NotExecuted,
+  NodeType,
 } from '../schema';
 import { EdgeGpt } from '../services/gpt/edge-gpt';
-import { createEdge, TestRuntime } from '../testing';
-import { testServices } from '../testing/test-services';
+import { createEdge, TestRuntime, testServices } from '../testing';
 
 const ENABLE_LOGGING = true;
 const AI_SERVICE_ENDPOINT = 'http://localhost:8787';

@@ -4,11 +4,12 @@
 
 import { Effect, Layer, Scope } from 'effect';
 
+import { raise } from '@dxos/debug';
 import { S } from '@dxos/echo-schema';
 import type { GraphEdge, GraphModel, GraphNode } from '@dxos/graph';
 import { failedInvariant, invariant } from '@dxos/invariant';
 
-import { raise } from '@dxos/debug';
+import { createTopology, type GraphDiagnostic, type Topology, type TopologyNode } from './topology';
 import {
   type ComputeEdge,
   type ComputeEffect,
@@ -22,9 +23,8 @@ import {
   isNotExecuted,
   isValueBag,
   makeValueBag,
-} from './schema';
-import { EventLogger, GptService } from './services';
-import { createTopology, type GraphDiagnostic, type Topology, type TopologyNode } from './topology';
+} from '../schema';
+import { EventLogger, GptService } from '../services';
 
 export type ValidateParams = {
   graph: GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;
@@ -261,6 +261,7 @@ export class GraphExecutor {
         property: prop,
         value,
       });
+
       return value;
     }).pipe(Effect.withSpan('compute-output', { attributes: { nodeId, prop } }));
   }
@@ -275,9 +276,9 @@ export class GraphExecutor {
         const result = yield* this._computeCache.get(nodeId)!;
         try {
           invariant(result.type === 'bag', 'Output must be a value bag');
-        } catch (e) {
+        } catch (err) {
           console.log({ result });
-          throw e;
+          throw err;
         }
         return result;
       }
@@ -353,8 +354,8 @@ export class GraphExecutor {
       if (visited.has(node.id)) {
         return;
       }
-      visited.add(node.id);
 
+      visited.add(node.id);
       for (const output of node.outputs) {
         for (const bound of output.boundTo) {
           recurse(this._topology!.nodes.find((node) => node.id === bound.nodeId) ?? failedInvariant());
