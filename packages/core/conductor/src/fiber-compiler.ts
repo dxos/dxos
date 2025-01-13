@@ -163,6 +163,12 @@ export class GraphExecutor {
     return this._topology?.diagnostics ?? [];
   }
 
+  getMeta(nodeId: string): ComputeMeta {
+    invariant(this._topology, 'Graph not loaded');
+    const node = this._topology!.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
+    return node.meta;
+  }
+
   /**
    * Get resolved schema for inputs of the node.
    * The schema will depend on other nodes this node is connected to.
@@ -219,6 +225,15 @@ export class GraphExecutor {
               const sourceNode =
                 this._topology!.nodes.find((node) => node.id === input.sourceNodeId) ?? failedInvariant();
               const output = yield* this.computeOutput(sourceNode.id, input.sourceNodeOutput!);
+
+              const logger = yield* EventLogger;
+              logger.log({
+                type: 'compute-input',
+                nodeId,
+                property: input.name,
+                value: output,
+              });
+
               return output;
             }).pipe(
               Effect.withSpan('compute-input', { attributes: { nodeId, inputName: input.name } }),
@@ -237,7 +252,16 @@ export class GraphExecutor {
       if (isNotExecuted(output)) {
         return yield* Effect.fail(NotExecuted);
       }
-      return yield* output.values[prop];
+      const value = yield* output.values[prop];
+
+      const logger = yield* EventLogger;
+      logger.log({
+        type: 'compute-output',
+        nodeId,
+        property: prop,
+        value,
+      });
+      return value;
     }).pipe(Effect.withSpan('compute-output', { attributes: { nodeId, prop } }));
   }
 

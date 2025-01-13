@@ -55,26 +55,36 @@ const nodeFactory: Record<string, (shape: GraphNode<ComputeShape>) => GraphNode<
   switch: (shape) => ({
     id: ObjectId.random(),
     type: 'switch',
-    data: {},
+    data: {
+      type: 'switch',
+    },
   }),
   and: (shape) => ({
     id: ObjectId.random(),
     type: 'and',
-    data: {},
+    data: {
+      type: 'and',
+    },
   }),
   or: (shape) => ({
     id: ObjectId.random(),
     type: 'or',
-    data: {},
+    data: {
+      type: 'or',
+    },
   }),
   not: (shape) => ({
     id: ObjectId.random(),
     type: 'not',
-    data: {},
+    data: {
+      type: 'not',
+    },
   }),
   beacon: (shape) => ({
     id: ObjectId.random(),
     type: 'beacon',
-    data: {},
+    data: {
+      type: 'beacon',
+    },
   }),
 };

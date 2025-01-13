@@ -16,6 +16,18 @@ export type ComputeEvent =
       outputs: Record<string, any>;
     }
   | {
+      type: 'compute-input';
+      nodeId: string;
+      property: string;
+      value: any;
+    }
+  | {
+      type: 'compute-output';
+      nodeId: string;
+      property: string;
+      value: any;
+    }
+  | {
       type: 'custom';
       nodeId: string;
       event: any;

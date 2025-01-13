@@ -33,6 +33,7 @@ import { AttentionContainer } from '../AttentionContainer';
 import { ShapeRegistry } from '../Canvas';
 import { DragTest } from '../Canvas/DragTest';
 import type { ComputeEdge, Model } from '@dxos/conductor';
+import { ComputeContext } from '../../compute/graph/ComputeContext';
 
 const generator: ValueGenerator = faker as any;
 
@@ -134,20 +135,22 @@ const Render = ({
 
   return (
     <div className='grid grid-cols-[1fr,360px] w-full h-full'>
-      <AttentionContainer id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
-        <Editor.Root
-          ref={editorRef}
-          id={id}
-          graph={graph}
-          graphMonitor={graphMonitor}
-          selection={selection}
-          autoZoom
-          {...props}
-        >
-          <Editor.Canvas>{children}</Editor.Canvas>
-          <Editor.UI />
-        </Editor.Root>
-      </AttentionContainer>
+      <ComputeContext.Provider value={{ stateMachine: machine }}>
+        <AttentionContainer id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
+          <Editor.Root
+            ref={editorRef}
+            id={id}
+            graph={graph}
+            graphMonitor={graphMonitor}
+            selection={selection}
+            autoZoom
+            {...props}
+          >
+            <Editor.Canvas>{children}</Editor.Canvas>
+            <Editor.UI />
+          </Editor.Root>
+        </AttentionContainer>
+      </ComputeContext.Provider>
 
       {/* TODO(burdon): Need to set schema based on what is selected. */}
       {sidebar === 'selected' && selected && (
@@ -165,7 +168,11 @@ const Render = ({
       {sidebar === 'json' && (
         <AttentionContainer id='sidebar' tabIndex={0} classNames='flex grow overflow-hidden'>
           <SyntaxHighlighter language='json' classNames='text-xs'>
-            {JSON.stringify({ graph: graph?.graph, computeGraph: machine?.graph.model }, null, 2)}
+            {JSON.stringify(
+              { graph: graph?.graph, computeGraph: machine?.graph.model, state: machine?.userState },
+              null,
+              2,
+            )}
           </SyntaxHighlighter>
         </AttentionContainer>
       )}
