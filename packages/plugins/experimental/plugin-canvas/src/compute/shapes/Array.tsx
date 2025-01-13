@@ -6,10 +6,10 @@ import React from 'react';
 
 import { S } from '@dxos/echo-schema';
 
-import { type ShapeComponentProps, type ShapeDef } from '../../components';
-import { ReduceInput, ReduceOutput } from '../graph';
 import { createFunctionAnchors, FunctionBody, getHeight } from './Function';
 import { ComputeShape, type CreateShapeProps } from './defs';
+import { type ShapeComponentProps, type ShapeDef } from '../../components';
+import { ReduceInput, ReduceOutput } from '../graph';
 
 //
 // Data

@@ -18,6 +18,7 @@ import { pickProperty } from './util';
 export type Topology = {
   // TODO(burdon): Map?
   nodes: TopologyNode[];
+
   // TODO(burdon): Part of topology?
   diagnostics: GraphDiagnostic[];
 };

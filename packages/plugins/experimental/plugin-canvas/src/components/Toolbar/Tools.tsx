@@ -43,6 +43,7 @@ const Tool = ({ type, icon }: ToolProps) => {
     return draggable({
       element: ref.current,
       getInitialData: () => {
+        // Create shape from registry.
         const shape = registry.createShape(type, { id: createId(), center: { x: 0, y: 0 } });
         return { type: 'tool', tool: type, shape } satisfies DragDropPayload;
       },
