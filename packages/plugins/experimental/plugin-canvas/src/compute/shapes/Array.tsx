@@ -6,10 +6,10 @@ import React from 'react';
 
 import { S } from '@dxos/echo-schema';
 
-import { type ShapeComponentProps, type ShapeDef } from '../../components';
-import { ReduceInput, ReduceOutput } from '../graph';
 import { createFunctionAnchors, FunctionBody, getHeight } from './Function';
 import { ComputeShape, type CreateShapeProps } from './defs';
+import { type ShapeComponentProps, type ShapeDef } from '../../components';
+import { ReduceInput, ReduceOutput } from '../graph';
 
 //
 // Data
@@ -23,19 +23,6 @@ export const ReduceShape = S.extend(
 );
 
 export type ReduceShape = S.Schema.Type<typeof ReduceShape>;
-
-//
-// Data
-//
-
-export const ReduceShape = S.extend(
-  ComputeShape,
-  S.Struct({
-    type: S.Literal('reduce'),
-  }),
-);
-
-export type ReduceShape = ComputeShape<S.Schema.Type<typeof ReduceShape>, Reduce>;
 
 //
 // Components
