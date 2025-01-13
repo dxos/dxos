@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { useState } from 'react';
 
 import {
   FunctionType,
@@ -13,21 +13,21 @@ import {
   TriggerKind,
 } from '@dxos/functions';
 import { Filter, useQuery, type Space } from '@dxos/react-client/echo';
-import { useTranslation } from '@dxos/react-ui';
-import { Form, SelectInput } from '@dxos/react-ui-form';
+import { IconButton, Input, useTranslation } from '@dxos/react-ui';
+import { Form, SelectInput, TextInput } from '@dxos/react-ui-form';
 
 import { AUTOMATION_PLUGIN } from '../../meta';
 
 export type TriggerEditorProps = {
   space: Space;
   trigger: FunctionTriggerType;
-  storedTrigger?: FunctionTrigger;
   onSave?: (trigger: Omit<FunctionTrigger, 'id'>) => void;
   onCancel?: () => void;
 };
 
-export const TriggerEditor = ({ space, trigger, onSave, onCancel, storedTrigger }: TriggerEditorProps) => {
+export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEditorProps) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
+
   const functions = useQuery(space, Filter.schema(FunctionType));
   const scripts = useQuery(space, Filter.schema(ScriptType));
 
@@ -39,7 +39,6 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel, storedTrigger 
     <Form<FunctionTriggerType>
       schema={FunctionTriggerSchema}
       values={trigger}
-      filter={(props) => props.filter((p) => p.name !== 'meta')}
       onSave={handleSave}
       onCancel={onCancel}
       Custom={{
@@ -61,6 +60,64 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel, storedTrigger 
             }))}
           />
         ),
+        ['meta' as const]: (props) => {
+          const meta = props.getValue('meta')!;
+
+          const [newMetaFieldName, setNewMetaFieldName] = useState('');
+
+          React.useEffect(() => props.onValueChange('meta', 'object', { ...meta }), []);
+
+          return (
+            <>
+              <div>{props.label}</div>
+              {[...Object.keys(meta)].map((key) => {
+                const compositeKey: any = `meta.${key}`;
+                return (
+                  <div key={compositeKey} role='none' className='flex items-center mt-2 gap-1'>
+                    <div role='none' className='flex-1'>
+                      <TextInput {...props} property={compositeKey} type={'string'} label={key} />
+                    </div>
+                    <IconButton
+                      icon='ph--trash--regular'
+                      iconOnly
+                      classNames={'mt-6'}
+                      label={'Remove'}
+                      onClick={() => {
+                        const newValues: any = { ...props.getValue('meta') };
+                        delete newValues[key];
+                        props.onValueChange('meta', 'object', newValues);
+                      }}
+                    />
+                  </div>
+                );
+              })}
+              <div role='none' className='flex items-center mt-2 gap-1 plb-1'>
+                <div role='none' className='flex-1'>
+                  <Input.Root>
+                    <Input.TextInput
+                      placeholder={'New meta property name'}
+                      value={newMetaFieldName}
+                      onChange={(event) => setNewMetaFieldName(event.target.value)}
+                    />
+                  </Input.Root>
+                </div>
+                <IconButton
+                  icon='ph--plus--regular'
+                  iconOnly
+                  label={'Add'}
+                  onClick={() => {
+                    if (newMetaFieldName.length) {
+                      const meta = props.getValue('meta') ?? {};
+                      const metaWithNewProp = { ...meta, [newMetaFieldName]: '' };
+                      setNewMetaFieldName('');
+                      props.onValueChange('meta', 'object', metaWithNewProp);
+                    }
+                  }}
+                />
+              </div>
+            </>
+          );
+        },
       }}
     />
   );

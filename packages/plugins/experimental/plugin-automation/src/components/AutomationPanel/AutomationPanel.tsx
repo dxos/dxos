@@ -47,7 +47,7 @@ export const AutomationPanel = ({ space, object }: AutomationPanelProps) => {
   };
 
   const handleAdd = () => {
-    setTrigger(create(FunctionTriggerSchema, {}));
+    setTrigger(create(FunctionTriggerSchema, { meta: {} }));
     setSelected(undefined);
   };
 
@@ -61,13 +61,7 @@ export const AutomationPanel = ({ space, object }: AutomationPanelProps) => {
     if (selected) {
       Object.assign(selected, trigger);
     } else {
-      const automationTargetId = object?.id;
-      space.db.add(
-        create(
-          FunctionTrigger,
-          automationTargetId ? { ...trigger, meta: { ...trigger.meta, automationTargetId } } : trigger,
-        ),
-      );
+      space.db.add(create(FunctionTrigger, trigger));
     }
 
     setTrigger(undefined);
@@ -119,15 +113,7 @@ export const AutomationPanel = ({ space, object }: AutomationPanelProps) => {
         )}
       </List.Root>
 
-      {trigger && (
-        <TriggerEditor
-          space={space}
-          storedTrigger={selected}
-          trigger={trigger}
-          onSave={handleSave}
-          onCancel={handleCancel}
-        />
-      )}
+      {trigger && <TriggerEditor space={space} trigger={trigger} onSave={handleSave} onCancel={handleCancel} />}
 
       {!trigger && (
         <div className='flex p-2 justify-center'>
