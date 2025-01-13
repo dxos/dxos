@@ -24,7 +24,7 @@ const MapContainer = ({ role, type: _type = 'map', map, ...props }: MapContainer
   const [type, setType] = useControlledValue(_type);
   const markers = useMarkers(map);
   return (
-    <StackItem.Content toolbar={false}>
+    <StackItem.Content toolbar={false} size={role === 'section' ? 'square' : 'intrinsic'}>
       {type === 'map' && <MapControl markers={markers} onToggle={() => setType('globe')} {...props} />}
       {type === 'globe' && <GlobeControl markers={markers} onToggle={() => setType('map')} {...props} />}
     </StackItem.Content>

@@ -8,6 +8,7 @@ import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { ThreadAction } from '@dxos/plugin-thread/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
+import { StackItem } from '@dxos/react-ui-stack';
 
 import { Sketch } from './Sketch';
 import { type DiagramType, type SketchSettingsProps } from '../types';
@@ -34,17 +35,19 @@ export const SketchContainer = ({ sketch, role, settings }: SketchContainerProps
     void dispatch(createIntent(ThreadAction.Create, { subject: sketch, cursor: Date.now().toString() }));
   }, [dispatch, sketch]);
 
-  // NOTE: Min 500px height (for tools palette to be visible).
   return (
-    <Sketch
-      // Force instance per sketch object. Otherwise, sketch shares the same instance.
-      key={id}
-      sketch={sketch}
-      hideUi={!hasAttention}
-      classNames='attention-surface'
-      onThreadCreate={onThreadCreate}
-      {...props}
-    />
+    // NOTE: Min 500px height (for tools palette to be visible).
+    <StackItem.Content toolbar={false} size={role === 'section' ? 'square' : 'intrinsic'} classNames='min-bs-[32rem]'>
+      <Sketch
+        // Force instance per sketch object. Otherwise, sketch shares the same instance.
+        key={id}
+        sketch={sketch}
+        hideUi={!hasAttention}
+        classNames='attention-surface'
+        onThreadCreate={onThreadCreate}
+        {...props}
+      />
+    </StackItem.Content>
   );
 };
 

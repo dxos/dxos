@@ -22,8 +22,7 @@ import { useClient } from '@dxos/react-client';
 import { create, createDocAccessor, Filter, getMeta, getSpace, makeRef, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useTranslation, type ThemedClassName } from '@dxos/react-ui';
-import { createDataExtensions, listener } from '@dxos/react-ui-editor';
-import { mx } from '@dxos/react-ui-theme';
+import { createDataExtensions, listener, stackItemContentEditorClassNames } from '@dxos/react-ui-editor';
 
 import { DebugPanel } from './DebugPanel';
 import { type TemplateSelectProps, Toolbar, type ViewType } from './Toolbar';
@@ -34,10 +33,11 @@ import { templates } from '../templates';
 
 export type ScriptEditorProps = ThemedClassName<{
   script: ScriptType;
+  role: string;
 }> &
   Pick<TypescriptEditorProps, 'env'>;
 
-export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => {
+export const ScriptEditor = ({ role, script, env }: ScriptEditorProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
   const client = useClient();
   const identity = useIdentity();
@@ -146,7 +146,7 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
 
       setUserFunctionUrlInMetadata(getMeta(deployedFunction), `/${space.id}/${functionId}`);
 
-      setView('split');
+      setView('debug');
     } catch (err: any) {
       log.catch(err);
       setError(t('upload failed label'));
@@ -177,18 +177,18 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
         onTemplateSelect={handleTemplateChange}
       />
 
-      <div role='none' className={mx('flex flex-col w-full overflow-hidden divide-y divide-separator', classNames)}>
-        {view !== 'preview' && (
-          <TypescriptEditor
-            id={script.id}
-            env={env}
-            initialValue={script.source?.target?.content}
-            extensions={extensions}
-            className='flex is-full bs-full overflow-hidden ch-focus-ring-inset-over-all'
-          />
-        )}
-        {view !== 'editor' && <DebugPanel functionUrl={functionUrl} />}
-      </div>
+      {view === 'debug' ? (
+        <DebugPanel functionUrl={functionUrl} />
+      ) : (
+        <TypescriptEditor
+          id={script.id}
+          env={env}
+          initialValue={script.source?.target?.content}
+          extensions={extensions}
+          className={stackItemContentEditorClassNames(role)}
+          toolbar
+        />
+      )}
     </>
   );
 };

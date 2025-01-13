@@ -11,10 +11,10 @@ import { Editor } from './Editor';
 import { KeyboardContainer } from './KeyboardContainer';
 import { type CanvasBoardType } from '../types';
 
-export const CanvasContainer = ({ canvas }: { canvas: CanvasBoardType }) => {
+export const CanvasContainer = ({ canvas, role }: { canvas: CanvasBoardType; role: string }) => {
   const id = fullyQualifiedId(canvas);
   return (
-    <StackItem.Content toolbar={false}>
+    <StackItem.Content toolbar={false} size={role === 'section' ? 'square' : 'intrinsic'}>
       <KeyboardContainer id={id}>
         <Editor.Root id={id}>
           <Editor.Canvas />

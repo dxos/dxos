@@ -34,9 +34,9 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
         definitions: () =>
           createSurface({
             id: `${EXPLORER_PLUGIN}/article`,
-            role: 'article',
+            role: ['article', 'section'],
             filter: (data): data is { subject: ViewType } => data.subject instanceof ViewType,
-            component: ({ data }) => <ExplorerContainer view={data.subject} role='article' />,
+            component: ({ data, role }) => <ExplorerContainer view={data.subject} role={role} />,
           }),
       },
       intent: {

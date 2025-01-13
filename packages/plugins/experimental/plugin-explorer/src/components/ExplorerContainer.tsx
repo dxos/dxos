@@ -20,7 +20,7 @@ const ExplorerContainer = ({ view, role }: { view: ViewType; role: string }) => 
   }
 
   return (
-    <StackItem.Content>
+    <StackItem.Content toolbar={false} size={role === 'section' ? 'square' : 'intrinsic'}>
       <Graph space={space} match={match} />
     </StackItem.Content>
   );

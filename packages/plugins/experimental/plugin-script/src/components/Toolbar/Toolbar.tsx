@@ -128,7 +128,7 @@ const ToolbarIconButton = ({
   );
 };
 
-export type ViewType = 'editor' | 'split' | 'preview';
+export type ViewType = 'editor' | 'debug';
 
 export type TemplateSelectProps = {
   templates?: Template[];
@@ -163,14 +163,11 @@ export type ViewSelectorProps = {
 export const ViewSelector = ({ view, onViewChange }: ViewSelectorProps) => {
   return (
     <ToggleGroup type='single' value={view} onValueChange={(value) => onViewChange?.(value as ViewType)}>
-      <ToggleGroupItem value='editor' classNames='bg-transparent text-subdued'>
+      <ToggleGroupItem value='editor' variant='ghost'>
         <Icon icon='ph--code--regular' size={4} />
       </ToggleGroupItem>
-      <ToggleGroupItem value='split' classNames='bg-transparent text-subdued'>
-        <Icon icon='ph--square-split-vertical--regular' size={4} />
-      </ToggleGroupItem>
-      <ToggleGroupItem value='preview' classNames='bg-transparent text-subdued'>
-        <Icon icon='ph--eye--regular' size={4} />
+      <ToggleGroupItem value='debug' variant='ghost'>
+        <Icon icon='ph--bug--regular' size={4} />
       </ToggleGroupItem>
     </ToggleGroup>
   );

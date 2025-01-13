@@ -30,6 +30,7 @@ import {
   useCommentClickListener,
   useFormattingState,
   useTextEditor,
+  stackItemContentEditorClassNames,
 } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { mx, textBlockWidth } from '@dxos/react-ui-theme';
@@ -168,7 +169,7 @@ export const MarkdownEditor = ({
   };
 
   return (
-    <StackItem.Content toolbar={toolbar}>
+    <StackItem.Content toolbar={!!toolbar}>
       {toolbar && (
         <div
           role='none'
@@ -195,10 +196,7 @@ export const MarkdownEditor = ({
         ref={parentRef}
         data-testid='composer.markdownRoot'
         data-toolbar={toolbar ? 'enabled' : 'disabled'}
-        className={mx(
-          'ch-focus-ring-inset data-[toolbar=disabled]:pbs-2 attention-surface',
-          role === 'article' ? 'min-bs-0' : '[&_.cm-scroller]:overflow-hidden [&_.cm-scroller]:min-bs-24',
-        )}
+        className={stackItemContentEditorClassNames(role)}
         {...focusAttributes}
       />
     </StackItem.Content>
