@@ -39,6 +39,7 @@ export const createList = ({ id, onlyLast, ...rest }: CreateListProps): ListShap
 
 export const ListComponent = ({ shape }: ShapeComponentProps<ListShape>) => {
   const items = shape.node.items.value;
+  // TODO(dmaretskyi): Unused ref.
   const ref = useRef<HTMLDivElement>(null);
 
   return (
