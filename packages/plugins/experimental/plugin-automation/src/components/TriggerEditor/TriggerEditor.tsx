@@ -81,7 +81,7 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
                       icon='ph--trash--regular'
                       iconOnly
                       classNames={'mt-6'}
-                      label={'Remove'}
+                      label={t('trigger meta remove')}
                       onClick={() => {
                         const newValues: any = { ...props.getValue('meta') };
                         delete newValues[key];
@@ -95,7 +95,7 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
                 <div role='none' className='flex-1'>
                   <Input.Root>
                     <Input.TextInput
-                      placeholder={'New meta property name'}
+                      placeholder={t('trigger meta prop name placeholder')}
                       value={newMetaFieldName}
                       onChange={(event) => setNewMetaFieldName(event.target.value)}
                     />
@@ -104,7 +104,7 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
                 <IconButton
                   icon='ph--plus--regular'
                   iconOnly
-                  label={'Add'}
+                  label={t('trigger meta add')}
                   onClick={() => {
                     if (newMetaFieldName.length) {
                       const meta = props.getValue('meta') ?? {};
