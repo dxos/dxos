@@ -23,11 +23,12 @@ export type SketchContainerProps = {
  * https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/props
  */
 export const SketchContainer = ({ sketch, role, settings }: SketchContainerProps) => {
-  const _readonly = role === 'slide';
-  const _maxZoom = role === 'slide' ? 1.5 : undefined;
-  const _autoZoom = role === 'section';
-  const _autoHideControls = settings.autoHideControls;
-  const _grid = settings.gridType;
+  const _props = {
+    readonly: role === 'slide',
+    maxZoom: role === 'slide' ? 1.5 : undefined,
+    autoZoom: role === 'section',
+    grid: settings.gridType,
+  };
 
   const containerRef = useRef<HTMLDivElement>(null);
   const { themeMode } = useThemeContext();
@@ -97,7 +98,13 @@ export const SketchContainer = ({ sketch, role, settings }: SketchContainerProps
   // TODO(burdon): Show live collaborators.
   //  https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/children-components/live-collaboration-trigger
   return (
-    <StackItem.Content toolbar={false} ref={containerRef}>
+    // NOTE: Min 500px height (for tools palette to be visible).
+    <StackItem.Content
+      toolbar={false}
+      size={role === 'section' ? 'square' : 'intrinsic'}
+      classNames='min-bs-[32rem]'
+      ref={containerRef}
+    >
       <Excalidraw
         excalidrawAPI={(api) => (excalidrawAPIRef.current = api)}
         initialData={{ elements: adapter.getElements() }}
