@@ -40,6 +40,14 @@ export type TopologyNode = {
   outputs: {
     name: string;
     schema: S.Schema.AnyNoContext;
+
+    /**
+     * Nodes that this output is bound to.
+     */
+    boundTo: {
+      nodeId: string;
+      property: string;
+    }[];
   }[];
 };
 
@@ -97,6 +105,7 @@ export const createTopology = async ({ graph, computeMetaResolver }: CreateTopol
       sourceNode.outputs.push({
         name: edge.data.output,
         schema,
+        boundTo: [],
       });
       if (AST.isNeverKeyword(schema.ast)) {
         log.info('setting never output on node:', {
@@ -124,6 +133,11 @@ export const createTopology = async ({ graph, computeMetaResolver }: CreateTopol
     invariant(output);
     const input = targetNode.inputs.find((input) => input.name === edge.data.input);
     invariant(input);
+
+    output.boundTo.push({
+      nodeId: targetNode.id,
+      property: input.name,
+    });
 
     // TODO(burdon): Output first?
     if (AST.isNeverKeyword(output.schema.ast)) {
