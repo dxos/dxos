@@ -8,25 +8,21 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { type DiagramType } from '@dxos/plugin-sketch/types';
 import { useThemeContext } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { StackItem } from '@dxos/react-ui-stack';
 
 import { useStoreAdapter } from '../../hooks';
-import { type SketchGridType } from '../../types';
+import { type SketchSettingsProps } from '../../types';
 
-export type SketchComponentProps = {
+export type SketchContainerProps = {
   sketch: DiagramType;
-  readonly?: boolean;
-  className?: string;
-  autoZoom?: boolean;
-  maxZoom?: number;
-  autoHideControls?: boolean;
-  grid?: SketchGridType;
+  role: string;
+  settings: SketchSettingsProps;
 };
 
 /**
  * https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/props
  */
-export const SketchComponent = ({ sketch, className }: SketchComponentProps) => {
+export const SketchContainer = ({ sketch, role, settings }: SketchContainerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { themeMode } = useThemeContext();
   const [down, setDown] = useState<boolean>(false);
@@ -95,7 +91,13 @@ export const SketchComponent = ({ sketch, className }: SketchComponentProps) => 
   // TODO(burdon): Show live collaborators.
   //  https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/children-components/live-collaboration-trigger
   return (
-    <div ref={containerRef} className={mx('flex grow', className)}>
+    // NOTE: Min 500px height (for tools palette to be visible).
+    <StackItem.Content
+      toolbar={false}
+      size={role === 'section' ? 'square' : 'intrinsic'}
+      classNames='min-bs-[32rem]'
+      ref={containerRef}
+    >
       <Excalidraw
         excalidrawAPI={(api) => (excalidrawAPIRef.current = api)}
         initialData={{ elements: adapter.getElements() }}
@@ -109,6 +111,6 @@ export const SketchComponent = ({ sketch, className }: SketchComponentProps) => 
           <MainMenu.Item onSelect={handleRefresh}>Refresh</MainMenu.Item>
         </MainMenu>
       </Excalidraw>
-    </div>
+    </StackItem.Content>
   );
 };

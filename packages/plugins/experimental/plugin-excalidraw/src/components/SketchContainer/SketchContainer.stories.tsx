@@ -12,7 +12,7 @@ import { create } from '@dxos/live-object';
 import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { SketchComponent } from './SketchComponent';
+import { SketchContainer } from './SketchContainer';
 
 const createSketch = () => {
   return createObject(create(DiagramType, { canvas: createObject(create(CanvasType, { content: {} })) }));
@@ -24,7 +24,7 @@ const DefaultStory = () => {
   return (
     <div className='flex flex-col grow overflow-hidden'>
       <div className='flex grow overflow-hidden'>
-        <SketchComponent sketch={sketch} />
+        <SketchContainer sketch={sketch} role='article' settings={{}} />
       </div>
     </div>
   );
@@ -34,7 +34,7 @@ export const Default = {};
 
 const meta: Meta = {
   title: 'plugins/plugin-excalidraw/SketchComponent',
-  component: SketchComponent,
+  component: SketchContainer,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {

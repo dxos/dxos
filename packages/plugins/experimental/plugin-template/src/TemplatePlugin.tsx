@@ -7,7 +7,7 @@ import React from 'react';
 import { type PluginDefinition, createSurface, createIntent, createResolver } from '@dxos/app-framework';
 import { create, type ReactiveEchoObject } from '@dxos/react-client/echo';
 
-import { TemplateMain } from './components';
+import { TemplateContainer } from './components';
 import meta, { TEMPLATE_PLUGIN } from './meta';
 import translations from './translations';
 import { TemplateAction, type TemplatePluginProvides, isObject } from './types';
@@ -34,7 +34,7 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
             id: TEMPLATE_PLUGIN,
             role: 'article',
             filter: (data): data is { subject: ReactiveEchoObject<any> } => isObject(data.subject),
-            component: ({ data }) => <TemplateMain object={data.subject} />,
+            component: ({ data, role }) => <TemplateContainer role={role} object={data.subject} />,
           }),
       },
       intent: {
