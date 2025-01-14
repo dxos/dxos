@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Mutex, scheduleTask, scheduleMicroTask, Trigger } from '@dxos/async';
+import { Mutex, scheduleTask, scheduleMicroTask } from '@dxos/async';
 import { cbor } from '@dxos/automerge/automerge-repo';
 import { Context, Resource } from '@dxos/context';
 import { randomUUID } from '@dxos/crypto';
@@ -19,6 +19,7 @@ import {
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { bufferToArray } from '@dxos/util';
 
+import { InflightRequestLimiter } from './inflight-request-limiter';
 import {
   getSpaceIdFromCollectionId,
   type EchoReplicator,
@@ -184,6 +185,7 @@ type EdgeReplicatorConnectionsParams = {
 };
 
 const MAX_INFLIGHT_REQUESTS = 5;
+const MAX_RATE_LIMIT_WAIT_TIME_MS = 3000;
 
 class EdgeReplicatorConnection extends Resource implements ReplicatorConnection {
   private readonly _edgeConnection: EdgeConnection;
@@ -196,15 +198,10 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
   private readonly _onRemoteDisconnected: () => Promise<void>;
   private readonly _onRestartRequested: () => void;
 
-  /**
-   * Prevents sending too many messages to edge over this connection so that we don't overwhelm
-   * a replicator durable object.
-   * inflightRequests counter is incremented on outgoing sync messages and decremented on incoming messages.
-   * The trigger is waiting while the counter is above MAX_INFLIGHT_REQUESTS.
-   * The counter can go negative because we receive edge-initiated sync messages on doc change broadcasts.
-   */
-  private _outgoingRequestsBarrier = new Trigger();
-  private _inflightRequests = 0;
+  private _requestLimiter = new InflightRequestLimiter({
+    maxInflightRequests: MAX_INFLIGHT_REQUESTS,
+    resetBalanceTimeoutMs: MAX_RATE_LIMIT_WAIT_TIME_MS,
+  });
 
   private _readableStreamController!: ReadableStreamDefaultController<AutomergeProtocolMessage>;
 
@@ -235,8 +232,6 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     this._onRemoteDisconnected = onRemoteDisconnected;
     this._onRestartRequested = onRestartRequested;
 
-    this._outgoingRequestsBarrier.wake();
-
     this.readable = new ReadableStream<AutomergeProtocolMessage>({
       start: (controller) => {
         this._readableStreamController = controller;
@@ -245,12 +240,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
 
     this.writable = new WritableStream<AutomergeProtocolMessage>({
       write: async (message: AutomergeProtocolMessage, controller) => {
-        await this._outgoingRequestsBarrier.wait();
-
-        this._inflightRequests++;
-        if (this._inflightRequests === MAX_INFLIGHT_REQUESTS) {
-          this._outgoingRequestsBarrier.reset();
-        }
+        await this._requestLimiter.rateLimit(message);
 
         await this._sendMessage(message);
       },
@@ -259,6 +249,9 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
 
   protected override async _open(ctx: Context): Promise<void> {
     log('open');
+
+    await this._requestLimiter.open();
+
     // TODO: handle reconnects
     this._ctx.onDispose(
       this._edgeConnection.onMessage((msg: RouterMessage) => {
@@ -273,7 +266,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     log('close');
     this._readableStreamController.close();
 
-    this._outgoingRequestsBarrier.throw(new Error('Connection closed.'));
+    await this._requestLimiter.close();
 
     await this._onRemoteDisconnected();
   }
@@ -343,12 +336,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
       return;
     }
 
-    if (message.type === 'sync') {
-      this._inflightRequests--;
-      if (this._inflightRequests === MAX_INFLIGHT_REQUESTS - 1) {
-        this._outgoingRequestsBarrier.wake();
-      }
-    }
+    this._requestLimiter.handleResponse(message);
 
     this._readableStreamController.enqueue(message);
   }
