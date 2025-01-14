@@ -173,18 +173,16 @@ type Story = StoryObj<RenderProps & { spec?: TypeSpec[]; registerSchema?: boolea
 
 export const Default: Story = {
   args: {
-    // sidebar: 'json',
+    sidebar: 'json',
     init: true,
-    // showGrid: false,
-    snapToGrid: false,
     spec: [{ type: Testing.OrgType, count: 1 }],
   },
 };
 
-export const DraggingTest: Story = {
+export const Dragging: Story = {
   args: {
-    // sidebar: 'json',
-    // showGrid: false,
+    sidebar: 'json',
+    showGrid: false,
     snapToGrid: false,
     children: <DragTest />,
   },

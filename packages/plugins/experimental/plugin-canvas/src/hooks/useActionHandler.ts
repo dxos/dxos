@@ -16,7 +16,7 @@ import { type TestId } from '../components';
 import { doLayout, getCenter, getRect, rectUnion, fireBullet } from '../layout';
 import { createRectangle } from '../shapes';
 import { createId, itemSize } from '../testing';
-import { type Connection, isPolygon, type Shape } from '../types';
+import { isPolygon, type Shape } from '../types';
 
 // TODO(burdon): Handle multiple actions.
 export const useActionHandler = () => {
@@ -194,9 +194,8 @@ export const useActionHandler = () => {
         }
         case 'link': {
           const { source, target, connection } = action;
-          invariant(connection);
           const id = createId();
-          const edge: GraphEdge<Connection> = { id, source, target, data: connection };
+          const edge: GraphEdge = { id, source, target, data: connection };
           graph.addEdge(edge);
           graphMonitor?.onLink(edge);
           selection.setSelected([id]);

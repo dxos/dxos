@@ -33,10 +33,12 @@ export const useLayout = (): Layout => {
   type LinkProps = { id: string; source: Polygon; target: Polygon; connection?: Connection };
   const createPathForEdge = ({ id, source, target, connection }: LinkProps): PathShape | undefined => {
     // TODO(burdon): Custom logic for function anchors. Generalize.
-    const sourceAnchor = getAnchorPoint(registry, source, createAnchorId('output', connection?.output));
-    const targetAnchor = getAnchorPoint(registry, target, createAnchorId('input', connection?.input));
-    if (sourceAnchor && targetAnchor) {
-      return createPath({ id, points: createCurve(sourceAnchor, targetAnchor) });
+    if (connection) {
+      const sourceAnchor = getAnchorPoint(registry, source, createAnchorId('output', connection.output));
+      const targetAnchor = getAnchorPoint(registry, target, createAnchorId('input', connection.input));
+      if (sourceAnchor && targetAnchor) {
+        return createPath({ id, points: createCurve(sourceAnchor, targetAnchor) });
+      }
     }
 
     const sourceBounds = getNodeBounds(source);
