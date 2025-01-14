@@ -102,6 +102,7 @@ const main = async () => {
     plugins: plugins(conf),
     core: core(conf),
     defaults: defaults(conf),
+    cacheEnabled: true,
   });
 
   const root = document.getElementById('root')!;

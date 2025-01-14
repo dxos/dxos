@@ -2,7 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import {
+  Capabilities,
+  contributes,
+  createIntent,
+  defineModule,
+  definePlugin,
+  Events,
+  oneOf,
+} from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
 import { IntentResolver, ReactSurface } from './capabilities';
@@ -19,7 +27,7 @@ export const ExplorerPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
-      activatesOn: Events.Startup,
+      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
       activate: () =>
         contributes(Capabilities.Metadata, {
           id: ViewType.typename,

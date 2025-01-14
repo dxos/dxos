@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
+import { Capabilities, Events, contributes, defineModule, definePlugin, oneOf } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
 import { FileUploader, ReactSurface } from './capabilities';
@@ -19,7 +19,7 @@ export const IpfsPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
-      activatesOn: Events.Startup,
+      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
       activate: () =>
         contributes(Capabilities.Metadata, {
           id: FileType.typename,

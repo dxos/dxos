@@ -18,9 +18,9 @@ export default (context: PluginsContext) =>
       id: PRESENTER_PLUGIN,
       filter: (node): node is Node<CollectionType | DocumentType> => {
         const settings = context
-          .requestCapability(Capabilities.SettingsStore)
-          .getStore<PresenterSettingsProps>(PRESENTER_PLUGIN)!.value;
-        return settings.presentCollections
+          .requestCapabilities(Capabilities.SettingsStore)[0]
+          ?.getStore<PresenterSettingsProps>(PRESENTER_PLUGIN)?.value;
+        return settings?.presentCollections
           ? node.data instanceof CollectionType || node.data instanceof DocumentType
           : node.data instanceof DocumentType;
       },

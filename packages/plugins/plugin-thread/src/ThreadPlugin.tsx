@@ -10,6 +10,7 @@ import {
   defineModule,
   definePlugin,
   Events,
+  oneOf,
   type PluginsContext,
 } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
@@ -44,7 +45,7 @@ export const ThreadPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
-      activatesOn: Events.Startup,
+      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
       activate: () => [
         contributes(Capabilities.Metadata, {
           id: ChannelType.typename,
@@ -103,7 +104,9 @@ export const ThreadPlugin = () =>
         if (settings.standalone) {
           // TODO(wittjosiah): Requires reload to disable.
           client.addTypes([ChannelType]);
+          return contributes(ClientCapabilities.Schema, [ChannelType]);
         }
+
         return [];
       },
     }),

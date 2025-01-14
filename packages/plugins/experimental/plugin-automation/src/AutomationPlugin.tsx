@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import { Capabilities, contributes, defineModule, definePlugin, Events, oneOf } from '@dxos/app-framework';
 import { FunctionTrigger } from '@dxos/functions';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { DeckCapabilities } from '@dxos/plugin-deck';
@@ -22,7 +22,7 @@ export const AutomationPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
-      activatesOn: Events.Startup,
+      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
       activate: () =>
         contributes(Capabilities.Metadata, {
           id: ChainType.typename,

@@ -7,7 +7,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Capabilities, firstIdInPart, useCapability } from '@dxos/app-framework';
 import { TimeoutError } from '@dxos/async';
 import { StatsPanel, useStats } from '@dxos/devtools';
-import { log } from '@dxos/log';
 import { getActiveSpace } from '@dxos/plugin-space';
 import { StatusBar } from '@dxos/plugin-status-bar';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
@@ -67,10 +66,7 @@ const ErrorIndicator = () => {
   useEffect(() => {
     const errorListener = (event: any) => {
       const error: Error = event.error ?? event.reason;
-      // event.preventDefault();
       if (errorRef.current !== error) {
-        // eslint-disable-next-line no-console
-        log.error('onError', { event });
         errorRef.current = error;
         forceUpdate({});
       }

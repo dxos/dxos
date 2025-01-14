@@ -5,13 +5,25 @@
 import { allOf, Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { type Observability } from '@dxos/observability';
 
-import { ClientReady, IntentResolver, ObservabilitySettings, ObservabilityState, ReactSurface } from './capabilities';
+import {
+  ClientReady,
+  IntentResolver,
+  ObservabilityCapabilities,
+  ObservabilitySettings,
+  ObservabilityState,
+  ReactSurface,
+} from './capabilities';
 import { ObservabilityEvents, ClientReadyEvent } from './events';
 import { meta } from './meta';
 import translations from './translations';
 
 export const ObservabilityPlugin = (options: { namespace: string; observability: () => Promise<Observability> }) =>
   definePlugin(meta, [
+    defineModule({
+      id: `${meta.id}/module/observability`,
+      activatesOn: Events.Startup,
+      activate: async () => contributes(ObservabilityCapabilities.Observability, await options.observability()),
+    }),
     defineModule({
       id: `${meta.id}/module/settings`,
       activatesOn: Events.SetupSettings,

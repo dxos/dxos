@@ -9,18 +9,18 @@ import { AttentionEvents } from '@dxos/plugin-attention';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 
 import {
+  AppGraphBuilder,
+  CheckAppScheme,
   DeckState,
-  GraphBuilder,
-  LayoutIntents,
+  LayoutIntentResolver,
   LayoutState,
+  LocationState,
+  NavigationIntentResolver,
   ReactContext,
   ReactRoot,
-  CheckAppScheme,
-  LocationState,
-  NavigationIntents,
-  Url,
   Settings,
   Surface,
+  UrlHandler,
 } from './capabilities';
 import { DeckEvents } from './events';
 import { meta } from './meta';
@@ -82,12 +82,12 @@ export const DeckPlugin = () =>
     defineModule({
       id: `${meta.id}/module/layout-intents`,
       activatesOn: Events.SetupIntents,
-      activate: LayoutIntents,
+      activate: LayoutIntentResolver,
     }),
     defineModule({
       id: `${meta.id}/module/app-graph-builder`,
       activatesOn: Events.SetupAppGraph,
-      activate: GraphBuilder,
+      activate: AppGraphBuilder,
     }),
 
     //
@@ -113,11 +113,11 @@ export const DeckPlugin = () =>
         Events.LocationReady,
         AttentionEvents.AttentionReady,
       ),
-      activate: Url,
+      activate: UrlHandler,
     }),
     defineModule({
       id: `${meta.id}/module/navigation-intents`,
       activatesOn: Events.SetupIntents,
-      activate: NavigationIntents,
+      activate: NavigationIntentResolver,
     }),
   ]);

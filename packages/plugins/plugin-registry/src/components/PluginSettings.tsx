@@ -30,8 +30,8 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettings }) => 
         .sort(sortPluginMeta),
     [],
   );
+  const pluginIds = useMemo(() => installed.map((meta) => meta.id), [installed]);
 
-  const pluginIds = manager.plugins.map(({ meta }) => meta.id);
   const available = useMemo(
     () =>
       manager.plugins
@@ -70,7 +70,7 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettings }) => 
       <Section label={t('settings section installed label')}>
         <PluginList
           plugins={installed}
-          loaded={pluginIds}
+          installed={pluginIds}
           enabled={manager.enabled}
           onChange={handleChange}
           onReload={handleReload}
@@ -80,7 +80,7 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettings }) => 
       <Section label={t('settings section recommended label')}>
         <PluginList
           plugins={recommended}
-          loaded={pluginIds}
+          installed={pluginIds}
           enabled={manager.enabled}
           onChange={handleChange}
           onReload={handleReload}
@@ -91,7 +91,7 @@ export const PluginSettings = ({ settings }: { settings: RegistrySettings }) => 
         <Section label={t('settings section experimental label')}>
           <PluginList
             plugins={experimental}
-            loaded={pluginIds}
+            installed={pluginIds}
             enabled={manager.enabled}
             onChange={handleChange}
             onReload={handleReload}

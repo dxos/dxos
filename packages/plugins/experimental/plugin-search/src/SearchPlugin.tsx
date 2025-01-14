@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { contributes, Events, defineModule, definePlugin, Capabilities } from '@dxos/app-framework';
+import { contributes, Events, defineModule, definePlugin, Capabilities, oneOf } from '@dxos/app-framework';
 
 import { AppGraphBuilder, IntentResolver, ReactSurface, ReactContext } from './capabilities';
 import { meta, SEARCH_RESULT } from './meta';
@@ -18,7 +18,7 @@ export const SearchPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
-      activatesOn: Events.Startup,
+      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
       activate: () =>
         contributes(Capabilities.Metadata, {
           id: SEARCH_RESULT,

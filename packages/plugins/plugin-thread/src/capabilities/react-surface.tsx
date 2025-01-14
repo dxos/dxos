@@ -65,7 +65,7 @@ export default () =>
     createSurface({
       id: `${THREAD_PLUGIN}/settings`,
       role: 'settings',
-      filter: (data): data is any => data.plugin === THREAD_PLUGIN,
+      filter: (data): data is any => data.subject === THREAD_PLUGIN,
       component: () => {
         const settings = useCapability(Capabilities.SettingsStore).getStore<ThreadSettingsProps>(THREAD_PLUGIN)!.value;
         return <ThreadSettings settings={settings} />;

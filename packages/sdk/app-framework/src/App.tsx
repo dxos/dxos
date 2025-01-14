@@ -28,7 +28,7 @@ export type HostPluginParams = {
 
 export const createApp = ({
   pluginLoader: _pluginLoader,
-  plugins: available = [],
+  plugins = [],
   core = [],
   defaults = [],
   fallback = DefaultFallback,
@@ -39,7 +39,7 @@ export const createApp = ({
   const pluginLoader =
     _pluginLoader ??
     ((id: string) => {
-      const plugin = available.find((plugin) => plugin.meta.id === id);
+      const plugin = plugins.find((plugin) => plugin.meta.id === id);
       invariant(plugin, `Plugin not found: ${id}`);
       return plugin;
     });
@@ -47,7 +47,6 @@ export const createApp = ({
   const state = create({ ready: false, error: null });
   const cached: string[] = JSON.parse(localStorage.getItem(ENABLED_KEY) ?? '[]');
   const enabled = cacheEnabled && cached.length > 0 ? cached : defaults;
-  const plugins = available.filter((plugin) => enabled.includes(plugin.meta.id) || core.includes(plugin.meta.id));
   const manager = new PluginManager({ pluginLoader, plugins, core, enabled });
 
   manager.activation.on(({ event, state: _state, error }) => {

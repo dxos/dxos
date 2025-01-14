@@ -4,7 +4,15 @@
 
 // @ts-ignore
 
-import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import {
+  Capabilities,
+  contributes,
+  createIntent,
+  defineModule,
+  definePlugin,
+  Events,
+  oneOf,
+} from '@dxos/app-framework';
 import { FunctionType, ScriptType } from '@dxos/functions';
 import { RefArray } from '@dxos/live-object';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
@@ -28,7 +36,7 @@ export const ScriptPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
-      activatesOn: Events.Startup,
+      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
       activate: () =>
         contributes(Capabilities.Metadata, {
           id: ScriptType.typename,

@@ -379,7 +379,7 @@ export class PluginManager {
       const program = module.activate(self.context);
       const maybeCapabilities = yield* Match.value(program).pipe(
         Match.when(Effect.isEffect, (effect) => effect),
-        Match.when(isPromise, (promise) => Effect.tryPromise(() => promise)),
+        Match.when(isPromise, (promise) => Effect.promise(() => promise)),
         Match.orElse((program) => Effect.succeed(program)),
       );
       const capabilities = Match.value(maybeCapabilities).pipe(

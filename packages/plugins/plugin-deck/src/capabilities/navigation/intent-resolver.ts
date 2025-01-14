@@ -39,7 +39,7 @@ export default (context: PluginsContext) =>
       const attention = context.requestCapability(AttentionCapabilities.Attention);
       const settings = context
         .requestCapability(Capabilities.SettingsStore)
-        .getStore<DeckSettingsProps>(DECK_PLUGIN)?.value;
+        .getStore<DeckSettingsProps>(DECK_PLUGIN)!.value;
 
       const previouslyOpenIds = new Set<string>(openIds(location.active));
       const layoutMode = layout.layoutMode;
@@ -61,7 +61,7 @@ export default (context: PluginsContext) =>
             return closeEntry(currentLayout, { part: effectivePart as LayoutPart, entryId: id });
           } else {
             return openEntry(currentLayout, effectivePart, layoutEntry, {
-              positioning: settings?.newPlankPositioning,
+              positioning: settings.newPlankPositioning,
             });
           }
         };

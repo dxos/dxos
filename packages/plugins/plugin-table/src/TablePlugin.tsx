@@ -2,7 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createIntent, definePlugin, defineModule, Events, contributes, Capabilities } from '@dxos/app-framework';
+import {
+  createIntent,
+  definePlugin,
+  defineModule,
+  Events,
+  contributes,
+  Capabilities,
+  oneOf,
+} from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { type Space } from '@dxos/react-client/echo';
 import { translations as formTranslations } from '@dxos/react-ui-form';
@@ -25,7 +33,7 @@ export const TablePlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
-      activatesOn: Events.Startup,
+      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
       activate: () =>
         contributes(Capabilities.Metadata, {
           id: TableType.typename,

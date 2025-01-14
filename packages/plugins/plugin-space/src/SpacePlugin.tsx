@@ -65,7 +65,7 @@ export const SpacePlugin = ({
     }),
     defineModule({
       id: `${meta.id}/module/settings`,
-      activatesOn: Events.Startup,
+      activatesOn: Events.SetupSettings,
       activate: SpaceSettings,
     }),
     defineModule({

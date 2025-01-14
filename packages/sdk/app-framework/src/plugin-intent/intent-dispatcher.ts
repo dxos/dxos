@@ -192,7 +192,7 @@ export const createDispatcher = (
       }
 
       const effect = candidates[0].effect(intent.data, intent.undo ?? false);
-      const result = Effect.isEffect(effect) ? yield* effect : yield* Effect.tryPromise(async () => effect);
+      const result = Effect.isEffect(effect) ? yield* effect : yield* Effect.promise(async () => effect);
       return { _intent: intent, ...result } satisfies AnyIntentResult;
     });
   };
