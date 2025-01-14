@@ -120,6 +120,11 @@ export type AttendableContainerProps = ThemedClassName<
   ComponentPropsWithRef<'div'> & { id: string; asChild?: boolean }
 >;
 
+/**
+ * Note that DeckPlugin and StackPlugin both handle attention on their own, and when rendering content in those cases it
+ * is not necessary to also render an `AttendableContainer`. This component is primarily for Storybook stories and other
+ * testing scenarios, or the rare cases where an attendable entity is rendered outside of either of those plugins.
+ */
 const AttendableContainer = forwardRef<HTMLDivElement, AttendableContainerProps>(
   ({ id, classNames, children, asChild, ...props }, forwardedRef) => {
     const attendableAttrs = useAttendableAttributes(id);
