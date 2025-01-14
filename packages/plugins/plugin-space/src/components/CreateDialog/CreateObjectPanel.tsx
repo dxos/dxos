@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { type TypedObject, getObjectAnnotation, S } from '@dxos/echo-schema';
 import { type SpaceId, type Space, isSpace } from '@dxos/react-client/echo';
@@ -60,6 +60,13 @@ export const CreateObjectPanel = ({
     [onCreateObject, schema, target],
   );
 
+  const metadata = useMemo(() => {
+    if (!typename) {
+      return;
+    }
+    return resolve?.(typename);
+  }, [resolve, typename]);
+
   // TODO(wittjosiah): All of these inputs should be rolled into a `Form` once it supports the necessary variants.
   const schemaInput = (
     <SearchList.Root label={t('schema input label')} classNames='flex flex-col grow overflow-hidden'>
@@ -112,15 +119,23 @@ export const CreateObjectPanel = ({
     </SearchList.Root>
   );
 
-  const form = (
-    <Form
-      autoFocus
-      values={{ name: initialName }}
-      schema={S.Struct({ name: S.optional(S.String) })}
-      testId='create-object-form'
-      onSave={handleCreateObject}
-    />
-  );
+  const form = useMemo(() => {
+    let schema = S.Struct({ name: S.optional(S.String) }) as S.Schema<any>;
+    if (metadata?.creationSchema) {
+      const creationSchema = metadata.creationSchema as S.Schema<any>;
+      schema = S.extend(schema, creationSchema);
+    }
+
+    return (
+      <Form
+        autoFocus
+        values={{ name: initialName }}
+        schema={schema}
+        testId='create-object-form'
+        onSave={handleCreateObject}
+      />
+    );
+  }, [initialName, handleCreateObject, metadata]);
 
   return (
     <div role='form' className='flex flex-col gap-2'>

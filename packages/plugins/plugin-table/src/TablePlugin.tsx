@@ -11,6 +11,7 @@ import {
   Capabilities,
   oneOf,
 } from '@dxos/app-framework';
+import { S } from '@dxos/echo-schema';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { type Space } from '@dxos/react-client/echo';
 import { translations as formTranslations } from '@dxos/react-ui-form';
@@ -38,6 +39,7 @@ export const TablePlugin = () =>
         contributes(Capabilities.Metadata, {
           id: TableType.typename,
           metadata: {
+            creationSchema: S.Struct({ typename: S.optional(S.String) }).pipe(S.mutable),
             createObject: (props: { name?: string; space: Space }) => createIntent(TableAction.Create, props),
             label: (object: any) => (object instanceof TableType ? object.name : undefined),
             placeholder: ['object placeholder', { ns: TABLE_PLUGIN }],
