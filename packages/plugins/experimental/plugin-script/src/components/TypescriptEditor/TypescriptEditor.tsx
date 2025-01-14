@@ -12,7 +12,7 @@ import {
   autocomplete,
   createBasicExtensions,
   createThemeExtensions,
-  editorContent,
+  editorFullWidth,
   editorGutter,
   editorMonospace,
   InputModeExtensions,
@@ -54,7 +54,9 @@ export const TypescriptEditor = ({
         createThemeExtensions({
           themeMode,
           syntaxHighlighting: true,
-          slots: { content: { className: editorContent } },
+          slots: {
+            content: { className: editorFullWidth },
+          },
         }),
         editorGutter,
         // TODO(burdon): Factor out.
