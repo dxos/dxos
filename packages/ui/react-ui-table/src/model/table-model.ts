@@ -5,7 +5,14 @@
 import { computed, effect, signal, type ReadonlySignal } from '@preact/signals-core';
 
 import { Resource } from '@dxos/context';
-import { getValue, setValue, FormatEnum, type JsonProp, SortDirectionType } from '@dxos/echo-schema';
+import {
+  type FieldSortType,
+  FormatEnum,
+  getValue,
+  setValue,
+  type JsonProp,
+  type SortDirectionType,
+} from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { isReactiveObject, makeRef } from '@dxos/live-object';
 import { PublicKey } from '@dxos/react-client';
@@ -19,7 +26,7 @@ import {
 import { type ViewProjection } from '@dxos/schema';
 
 import { SelectionModel } from './selection-model';
-import { type SortConfig, type SortDirection, TableSorting } from './table-sorting';
+import { TableSorting } from './table-sorting';
 import { type TableType } from '../types';
 import { touch } from '../util';
 
@@ -28,7 +35,7 @@ export type BaseTableRow = Record<JsonProp, any> & { id: string };
 export type TableModelProps<T extends BaseTableRow = { id: string }> = {
   table: TableType;
   projection: ViewProjection;
-  sorting?: SortConfig[];
+  sorting?: FieldSortType[];
   pinnedRows?: { top: number[]; bottom: number[] };
   onInsertRow?: (index?: number) => void;
   onDeleteRows?: (index: number, obj: T[]) => void;
@@ -105,7 +112,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
   /**
    * @reactive
    */
-  public get sorting(): SortDirectionType | undefined {
+  public get sorting(): FieldSortType | undefined {
     return this._sorting.sorting;
   }
 
@@ -322,7 +329,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
   // Sorting
   //
 
-  public setSort(fieldId: string, direction: SortDirection): void {
+  public setSort(fieldId: string, direction: SortDirectionType): void {
     this._sorting.setSort(fieldId, direction);
   }
 
