@@ -23,13 +23,6 @@ export type SketchContainerProps = {
  * https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/props
  */
 export const SketchContainer = ({ sketch, role, settings }: SketchContainerProps) => {
-  const _props = {
-    readonly: role === 'slide',
-    maxZoom: role === 'slide' ? 1.5 : undefined,
-    autoZoom: role === 'section',
-    grid: settings.gridType,
-  };
-
   const containerRef = useRef<HTMLDivElement>(null);
   const { themeMode } = useThemeContext();
   const [down, setDown] = useState<boolean>(false);
