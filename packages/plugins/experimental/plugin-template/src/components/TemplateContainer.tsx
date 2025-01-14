@@ -15,7 +15,7 @@ export const TemplateContainer = ({ object }: { object: ReactiveEchoObject<any>;
     // TODO(burdon): Boilerplate.
     <StackItem.Content toolbar={false}>
       <pre className='m-4 p-2 ring'>
-        <span>{space?.key.truncate()}</span>/<span>{PublicKey.from(object.id).truncate()}</span>
+        <span>{fullyQualifiedId(object)}</span>
       </pre>
     </StackItem.Content>
   );
