@@ -35,7 +35,7 @@ export const SketchContainer = ({ sketch, role, settings }: SketchContainerProps
 
   // TODO(burdon): The mouse position gets offset within the deck, so we trigger a resize, which resets the component.
   //  https://github.com/excalidraw/excalidraw/issues/7312
-  //  https://github.com/excalidraw/excalidbraw/blob/master/packages/excalidraw/components/App.tsx
+  //  https://github.com/excalidraw/excalidraw/blob/master/packages/excalidraw/components/App.tsx
   useEffect(() => {
     const flash = () => {
       setTimeout(() => {
