@@ -7,7 +7,14 @@ import { Effect } from 'effect';
 import { type LLMModel, type MessageImageContentBlock } from '@dxos/assistant';
 import { Event, synchronized } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
-import { type ComputeEdge, GraphExecutor, Model, makeValueBag, unwrapValueBag } from '@dxos/conductor';
+import {
+  type ComputeEdge,
+  type ComputeEvent,
+  GraphExecutor,
+  type Model,
+  makeValueBag,
+  unwrapValueBag,
+} from '@dxos/conductor';
 import { testServices } from '@dxos/conductor/testing';
 import { Resource } from '@dxos/context';
 import { type ObjectId } from '@dxos/echo-schema';
@@ -61,14 +68,6 @@ export type RuntimeValue =
  */
 // TODO(burdon): Rename ComputeProxy?
 export class StateMachine extends Resource {
-  public readonly update = new Event();
-
-  /** Computed result. */
-  public readonly output = new Event<{ nodeId: ObjectId; property: string }>();
-
-  /** Persistent compute graph. */
-  private readonly _graph = Model.ComputeGraphModel.create();
-
   // TODO(burdon): Proxy?
   private readonly _executor = new GraphExecutor({
     computeNodeResolver: (node) => resolveComputeNode(node),
@@ -80,6 +79,26 @@ export class StateMachine extends Resource {
   );
 
   private _runtimeState: Record<string, Record<string, RuntimeValue>> = {};
+
+  // TODO(burdon): Remove? Make state reactive?
+  public readonly update = new Event();
+
+  /** Computed result. */
+  public readonly output = new Event<Extract<ComputeEvent, { type: 'compute-output' }>>();
+
+  constructor(
+    /** Persistent compute graph. */
+    private readonly _graph: Model.ComputeGraphModel,
+  ) {
+    super();
+  }
+
+  toJSON() {
+    return {
+      graph: this._graph,
+      state: this._runtimeState,
+    };
+  }
 
   get graph() {
     return this._graph;
@@ -117,8 +136,8 @@ export class StateMachine extends Resource {
     queueMicrotask(async () => {
       try {
         await this.exec();
-      } catch (error) {
-        console.error('Error computing graph', error);
+      } catch (err) {
+        log.catch(err);
       }
     });
   }
@@ -142,10 +161,11 @@ export class StateMachine extends Resource {
     const allSwitches = this._graph.model.filterNodes().filter((node) => node.data.type === 'switch');
     const allAffectedNodes = [...new Set(allSwitches.flatMap((node) => executor.getAllDependantNodes(node.id)))];
 
+    // TODO(burdon): Return map?
     const tasks: Promise<unknown>[] = [];
     for (const node of allAffectedNodes) {
       // TODO(dmaretskyi): Check if the node has a compute function and run computeOutputs if it does.
-      const eff = executor.computeInputs(node).pipe(
+      const effect = executor.computeInputs(node).pipe(
         Effect.withSpan('runGraph'),
         Effect.provide(
           testServices({
@@ -159,8 +179,8 @@ export class StateMachine extends Resource {
                     break;
 
                   case 'compute-output':
-                    // event.nodeId event.property
-                    this.output.emit({ nodeId: event.nodeId, property: event.property });
+                    // TODO(burdon): Only fire if changed?
+                    this.output.emit(event);
                     break;
                 }
               },
@@ -172,8 +192,10 @@ export class StateMachine extends Resource {
         Effect.flatMap(unwrapValueBag),
         Effect.withSpan('test'),
       );
-      tasks.push(Effect.runPromise(eff));
+
+      tasks.push(Effect.runPromise(effect));
     }
+
     await Promise.all(tasks);
     this.update.emit();
   }

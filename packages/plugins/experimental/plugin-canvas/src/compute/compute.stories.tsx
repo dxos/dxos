@@ -24,6 +24,7 @@ import { createMachine, createTest1 } from './testing';
 import { Editor, type EditorController, type EditorRootProps } from '../components';
 import { AttentionContainer, ShapeRegistry } from '../components';
 import { useSelection } from '../testing';
+import { type Connection } from '../types';
 
 type RenderProps = EditorRootProps &
   PropsWithChildren<{
@@ -87,11 +88,16 @@ const Render = ({
       machine.update.on(() => {
         void editorRef.current?.update();
       }),
+
+      // TODO(burdon): Every node is called on every update.
       machine.output.on(({ nodeId, property }) => {
-        const shape = graph.nodes.find((node) => (node.data as ComputeShape).node === nodeId);
-        if (shape) {
-          // TODO(burdon): Convert to edges.
-          void editorRef.current?.action?.({ type: 'trigger', ids: [shape.id] });
+        const edge = graph.edges.find((edge) => {
+          const source = graph.getNode(edge.source);
+          return (source.data as ComputeShape).node === nodeId && (edge.data as Connection).output === property;
+        });
+
+        if (edge) {
+          void editorRef.current?.action?.({ type: 'trigger', edges: [edge] });
         }
       }),
     );
@@ -102,7 +108,7 @@ const Render = ({
     };
   }, [graph, machine]);
 
-  // Monitor.
+  // Sync monitor.
   const graphMonitor = useGraphMonitor(machine);
 
   // Selection.

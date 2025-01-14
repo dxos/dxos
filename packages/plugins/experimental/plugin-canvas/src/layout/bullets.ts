@@ -5,7 +5,7 @@
 import * as d3 from 'd3';
 import { type Selection } from 'd3';
 
-import type { BaseGraphEdge, GraphModel, GraphNode } from '@dxos/graph';
+import type { BaseGraphEdge, GraphEdge, GraphModel, GraphNode } from '@dxos/graph';
 import { isNotFalsy } from '@dxos/util';
 
 import { DATA_SHAPE_ID, getShapeElements } from '../components';
@@ -51,15 +51,15 @@ export const defaultBulletOptions: BulletOptions = {
  * @param root Root container for path elements.
  * @param g Container for bullets.
  * @param graph
- * @param id
+ * @param edge
  * @param propagate
  */
-// TODO(burdon): Stop method.
+// TODO(burdon): Return cancel function.
 export const fireBullet = (
   root: HTMLElement,
   g: SVGGElement,
   graph: GraphModel<GraphNode<Shape>>,
-  id: string,
+  edge: Partial<GraphEdge>,
   propagate = false,
 ) => {
   const cb = (edge: BaseGraphEdge) => {
@@ -72,7 +72,7 @@ export const fireBullet = (
     }
   };
 
-  const paths = getPaths(graph, root, { source: id });
+  const paths = getPaths(graph, root, edge);
   for (const { edge, el } of paths) {
     d3.select(g).call(createBullet(edge, el, defaultBulletOptions), propagate ? cb : undefined);
   }

@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type GraphEdge } from '@dxos/graph';
+
 import { type LayoutKind } from '../layout';
 import { type Connection, type Shape } from '../types';
 
@@ -34,6 +36,6 @@ export type Action =
   | { type: 'delete'; ids?: string[]; all?: boolean }
 
   //
-  | { type: 'trigger'; ids?: string[] };
+  | { type: 'trigger'; edges?: Partial<GraphEdge>[] };
 
 export type ActionHandler = (action: Action) => Promise<boolean>;

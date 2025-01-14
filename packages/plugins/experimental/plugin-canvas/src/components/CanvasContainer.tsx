@@ -39,14 +39,9 @@ export const CanvasContainer = ({ canvas }: { canvas: CanvasBoardType }) => {
     //   ),
     // });
     void machine.open();
-    // const off = machine.update.on((ev) => {
-    //   const { node } = ev;
-    //   void editorRef.current?.action?.({ type: 'trigger', ids: [node.id] });
-    // });
 
     return () => {
       void machine.close();
-      // off();
     };
   }, [machine]);
   const graphMonitor = useGraphMonitor(machine);

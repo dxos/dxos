@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Model } from '@dxos/conductor';
 import { ObjectId } from '@dxos/echo-schema';
 import { type GraphEdge, GraphModel, type GraphNode, createEdgeId } from '@dxos/graph';
 import { failedInvariant } from '@dxos/invariant';
@@ -197,7 +198,7 @@ export const createTest3 = ({
 };
 
 export const createMachine = (graph?: GraphModel<GraphNode<ComputeShape>, GraphEdge<Connection>>) => {
-  const machine = new StateMachine();
+  const machine = new StateMachine(Model.ComputeGraphModel.create());
 
   // // TODO(burdon): Factor out mapping (reconcile with Editor.stories).
   if (graph) {

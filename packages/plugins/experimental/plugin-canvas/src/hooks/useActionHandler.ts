@@ -216,14 +216,13 @@ export const useActionHandler = () => {
         }
 
         case 'trigger': {
-          const { ids = selection.selected.value } = action;
-          for (const id of ids) {
-            const g = overlayRef.current!.querySelector<SVGGElement>(
-              `g[${DATA_TEST_ID}="${'dx-overlay-bullets' satisfies TestId}"]`,
-            );
-            if (g && id) {
-              // TODO(burdon): Return cancel.
-              fireBullet(root, g, graph, id);
+          const g = overlayRef.current!.querySelector<SVGGElement>(
+            `g[${DATA_TEST_ID}="${'dx-overlay-bullets' satisfies TestId}"]`,
+          );
+          if (g) {
+            const { edges = selection.selected.value.map((source) => ({ source })) } = action;
+            for (const edge of edges) {
+              fireBullet(root, g, graph, edge);
             }
           }
           return true;

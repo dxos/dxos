@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context, type Effect, type Scope } from 'effect';
+import { Context } from 'effect';
 
 import { LLMTool, Message, type ResultStreamEvent } from '@dxos/assistant';
 import { S } from '@dxos/echo-schema';
 
-import type { ComputeEffect, ComputeRequirements, NotExecuted, ValueBag } from '../schema';
+import type { ComputeEffect, ValueBag } from '../schema';
 import { StreamSchema } from '../schema-dsl';
 
 const GptStreamEventSchema = S.Any as S.Schema<ResultStreamEvent>;
