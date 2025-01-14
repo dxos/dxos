@@ -6,7 +6,6 @@ import { Schema as S } from '@effect/schema';
 
 import { ObjectId, Ref, TypedObject } from '@dxos/echo-schema';
 import { createEdgeId, type GraphEdge, Graph, GraphModel, type GraphNode } from '@dxos/graph';
-import { invariant } from '@dxos/invariant';
 import { create, makeRef } from '@dxos/live-object';
 
 import { ComputeNode, type ComputeEdge } from '../schema';
@@ -14,7 +13,7 @@ import { ComputeNode, type ComputeEdge } from '../schema';
 // TODO(burdon): Graph of graphs: Inline node or reference to other graph.
 
 // TODO(burdon): Reconcile type with plugin-canvas.
-export class ComputeGraph extends TypedObject({
+export class ComputeGraphType extends TypedObject({
   typename: 'dxos.org/type/ComputeGraph',
   version: '0.1.0',
 })({
@@ -23,6 +22,8 @@ export class ComputeGraph extends TypedObject({
   output: S.optional(ComputeNode),
 }) {}
 
+const isComputeGraph = S.is(ComputeGraphType);
+
 // TODO(burdon): Reconcile/merge with ComputeNode.
 export const ComputeGraphNode = S.Struct({
   type: S.optional(S.String),
@@ -30,7 +31,7 @@ export const ComputeGraphNode = S.Struct({
   /**
    * For composition nodes.
    */
-  subgraph: S.optional(Ref(ComputeGraph)),
+  subgraph: S.optional(Ref(ComputeGraphType)),
 
   /**
    * For switch nodes.
@@ -39,32 +40,35 @@ export const ComputeGraphNode = S.Struct({
   enabled: S.optional(S.Boolean),
 });
 
-const isComputeGraph = S.is(ComputeGraph);
-
 export type ComputeGraphNode = S.Schema.Type<typeof ComputeGraphNode>;
 
-export type Binding = { node: GraphNode<ComputeGraphNode> | ComputeGraph; property: string };
+// TODO(burdon): Reconcile types.
+// export type ComputeGraphModel = GraphModel<GraphNode<ComputeGraphNode>, GraphEdge<ComputeEdge>>;
 
 /**
  * Wrapper/builder.
  */
+// TODO(burdon): Rename.
 export class ComputeGraphModel {
+  /**
+   * Create new model.
+   */
   static create = (): ComputeGraphModel => {
     return new ComputeGraphModel(
-      create(ComputeGraph, {
+      create(ComputeGraphType, {
         graph: { nodes: [], edges: [] },
       }),
     );
   };
 
-  toJSON() {
-    return this._model.toJSON();
-  }
-
   private readonly _model: GraphModel<GraphNode<ComputeGraphNode>, GraphEdge<ComputeEdge>>;
 
-  constructor(private readonly _graph: ComputeGraph) {
+  constructor(private readonly _graph: ComputeGraphType) {
     this._model = new GraphModel(this._graph.graph);
+  }
+
+  toJSON() {
+    return this._model.toJSON();
   }
 
   get graph() {
@@ -90,8 +94,10 @@ export class ComputeGraphModel {
     return node;
   }
 
-  link(source: Binding, target: Binding): GraphEdge<ComputeEdge> {
-    invariant(!isComputeGraph(source.node));
+  link(
+    source: { node: GraphNode<ComputeGraphNode>; property: string },
+    target: { node: GraphNode<ComputeGraphNode> | ComputeGraphType; property: string },
+  ): GraphEdge<ComputeEdge> {
     if (isComputeGraph(target.node)) {
       // Create local intermediate node linked to the subgraph.
       target = { ...target, node: this.create(ObjectId.random(), { subgraph: makeRef(target.node) }) };
@@ -112,7 +118,7 @@ export class ComputeGraphModel {
   }
 }
 
-export class ComputeGraphBuilder {
+class ComputeGraphBuilder {
   constructor(private readonly _graph: ComputeGraphModel) {}
 
   call(cb: (graph: ComputeGraphModel) => void): this {

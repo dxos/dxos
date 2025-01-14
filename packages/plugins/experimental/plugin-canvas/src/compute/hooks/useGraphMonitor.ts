@@ -12,6 +12,7 @@ import { createComputeNode } from '../graph';
 import { type StateMachine } from '../graph';
 import { type ComputeShape } from '../shapes';
 
+// TODO(burdon): Conflates StateMachine and GraphModel.
 export const useGraphMonitor = (machine?: StateMachine): GraphMonitor => {
   return useMemo<GraphMonitor>(() => {
     return {
@@ -23,6 +24,7 @@ export const useGraphMonitor = (machine?: StateMachine): GraphMonitor => {
         // TODO(burdon): Check type (e.g., ignore comments).
         const computeNode = createComputeNode(shape as GraphNode<ComputeShape>);
         machine.addNode(computeNode);
+
         // TODO(burdon): Create node first then remove optional node.id from shape?
         (shape as GraphNode<ComputeShape>).data.node = computeNode.id;
       },

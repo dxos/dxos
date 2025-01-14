@@ -43,6 +43,7 @@ export const NodeType = Object.freeze({
   Gpt: 'dxn:compute:gpt',
 });
 
+// TODO(burdon): Rename ComputeGraphModel
 export type ComputeGraph = GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;
 
 //

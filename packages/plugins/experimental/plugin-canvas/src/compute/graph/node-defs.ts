@@ -5,9 +5,9 @@
 import { Effect } from 'effect';
 
 import {
+  type ComputeGraphNode,
   type ComputeNode,
   type Executable,
-  type Model,
   defineComputeNode,
   synchronizedComputeFunction,
 } from '@dxos/conductor';
@@ -22,7 +22,7 @@ import { type ComputeShape } from '../shapes';
 type NodeType = 'switch' | 'text' | 'beacon' | 'and' | 'or' | 'not' | 'if' | 'if-else';
 
 // TODO(burdon): Just pass in type? Or can the shape specialize the node?
-export const createComputeNode = (shape: GraphNode<ComputeShape>): GraphNode<Model.ComputeGraphNode> => {
+export const createComputeNode = (shape: GraphNode<ComputeShape>): GraphNode<ComputeGraphNode> => {
   const type = shape.data.type as NodeType;
   const factory = nodeFactory[type ?? raise(new Error(`Unknown shape type: ${type}`))] ?? failedInvariant();
   return factory(shape);
@@ -38,7 +38,7 @@ const createNode = (type: string) => ({
 });
 
 // TODO(burdon): Reconcile with ShapeRegistry.
-const nodeFactory: Record<NodeType, (shape: GraphNode<ComputeShape>) => GraphNode<Model.ComputeGraphNode>> = {
+const nodeFactory: Record<NodeType, (shape: GraphNode<ComputeShape>) => GraphNode<ComputeGraphNode>> = {
   // Controls.
   ['switch' as const]: () => createNode('switch'),
   ['text' as const]: () => createNode('text'),

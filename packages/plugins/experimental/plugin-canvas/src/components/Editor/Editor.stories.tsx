@@ -7,7 +7,7 @@ import '@dxos-theme';
 import type { Meta, StoryObj } from '@storybook/react';
 import React, { type PropsWithChildren, useEffect, useRef, useState } from 'react';
 
-import type { ComputeEdge, Model } from '@dxos/conductor';
+import { type ComputeGraphNode, type ComputeEdge } from '@dxos/conductor';
 import { type ReactiveEchoObject } from '@dxos/echo-db';
 import { S, getSchemaTypename, getTypename } from '@dxos/echo-schema';
 import { createGraph, type GraphEdge, type GraphModel, type GraphNode } from '@dxos/graph';
@@ -37,7 +37,7 @@ type RenderProps = EditorRootProps &
   PropsWithChildren<{
     init?: boolean;
     sidebar?: 'json' | 'selected' | 'state-machine';
-    computeGraph?: GraphModel<GraphNode<Model.ComputeGraphNode>, GraphEdge<ComputeEdge>>;
+    computeGraph?: GraphModel<GraphNode<ComputeGraphNode>, GraphEdge<ComputeEdge>>;
   }>;
 
 const Render = ({ id = 'test', children, graph: _graph, init, sidebar, ...props }: RenderProps) => {

@@ -10,8 +10,9 @@ import { type Space } from '@dxos/client/echo';
 import {
   type ComputeEdge,
   type ComputeEvent,
+  type ComputeGraphModel,
+  type ComputeGraphNode,
   GraphExecutor,
-  type Model,
   makeValueBag,
   unwrapValueBag,
 } from '@dxos/conductor';
@@ -25,6 +26,7 @@ import { ComplexMap } from '@dxos/util';
 import { resolveComputeNode } from './node-defs';
 import type { FunctionCallback, GptInput, GptOutput } from './nodes';
 
+// TODO(burdon): API package for conductor.
 export const InvalidStateError = Error;
 
 /**
@@ -88,7 +90,7 @@ export class StateMachine extends Resource {
 
   constructor(
     /** Persistent compute graph. */
-    private readonly _graph: Model.ComputeGraphModel,
+    private readonly _graph: ComputeGraphModel,
   ) {
     super();
   }
@@ -114,7 +116,7 @@ export class StateMachine extends Resource {
     return this._runtimeState;
   }
 
-  addNode(node: GraphNode<Model.ComputeGraphNode>) {
+  addNode(node: GraphNode<ComputeGraphNode>) {
     this._graph.model.addNode(node);
   }
 

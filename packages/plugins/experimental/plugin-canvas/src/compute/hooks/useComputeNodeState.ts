@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 
-import type { ComputeMeta, Model } from '@dxos/conductor';
+import type { ComputeGraphNode, ComputeMeta } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 import type { GraphNode } from '@dxos/graph';
 
@@ -13,7 +13,7 @@ import { type RuntimeValue } from '../graph';
 import { type ComputeShape } from '../shapes';
 
 export type ComputeNodeState = {
-  node: GraphNode<Model.ComputeGraphNode>;
+  node: GraphNode<ComputeGraphNode>;
   meta: ComputeMeta;
   runtime: {
     inputs: Record<string, RuntimeValue>;
