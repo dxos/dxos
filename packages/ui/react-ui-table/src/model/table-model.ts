@@ -5,7 +5,7 @@
 import { computed, effect, signal, type ReadonlySignal } from '@preact/signals-core';
 
 import { Resource } from '@dxos/context';
-import { getValue, setValue, FormatEnum, type JsonProp } from '@dxos/echo-schema';
+import { getValue, setValue, FormatEnum, type JsonProp, SortDirectionType } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { isReactiveObject, makeRef } from '@dxos/live-object';
 import { PublicKey } from '@dxos/react-client';
@@ -75,7 +75,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     super();
     this._table = table;
     this._projection = projection;
-    this._sorting = new TableSorting(this._rows, table, projection);
+    this._sorting = new TableSorting(this._rows, table.view?.target, projection);
 
     if (sorting.length > 0) {
       const [sort] = sorting;
@@ -105,7 +105,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
   /**
    * @reactive
    */
-  public get sorting(): SortConfig | undefined {
+  public get sorting(): SortDirectionType | undefined {
     return this._sorting.sorting;
   }
 
