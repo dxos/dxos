@@ -6,9 +6,12 @@
 
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { createContext, type Scope, type CreateScope } from '@radix-ui/react-context';
-import React, { useMemo, type FocusEvent, type PropsWithChildren } from 'react';
+import { Primitive } from '@radix-ui/react-primitive';
+import { Slot } from '@radix-ui/react-slot';
+import React, { useMemo, type FocusEvent, type PropsWithChildren, type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { useDefaultValue } from '@dxos/react-ui';
+import { useDefaultValue, type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 import { type Attention, AttentionManager, getAttendables } from '../attention';
 
@@ -113,9 +116,32 @@ const AttentionProvider = ({ id, children }: PropsWithChildren<{ id: string }>) 
   );
 };
 
+export type AttendableContainerProps = ThemedClassName<
+  ComponentPropsWithRef<'div'> & { id: string; asChild?: boolean }
+>;
+
+const AttendableContainer = forwardRef<HTMLDivElement, AttendableContainerProps>(
+  ({ id, classNames, children, asChild, ...props }, forwardedRef) => {
+    const attendableAttrs = useAttendableAttributes(id);
+    const Root = asChild ? Slot : Primitive.div;
+    return (
+      <Root
+        role='none'
+        {...attendableAttrs}
+        {...props}
+        className={mx('attention-surface', props.tabIndex === 0 && 'ch-focus-ring-inset-over-all', classNames)}
+        ref={forwardedRef}
+      >
+        {children}
+      </Root>
+    );
+  },
+);
+
 export {
   RootAttentionProvider,
   AttentionProvider,
+  AttendableContainer,
   useAttentionContext,
   useAttention,
   useAttended,
