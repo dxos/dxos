@@ -7,13 +7,14 @@ import '@dxos-theme';
 import type { Meta, StoryObj } from '@storybook/react';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 
+import { type UnsubscribeCallback } from '@dxos/async';
 import type { ComputeEdge, Model } from '@dxos/conductor';
 import { type GraphEdge, type GraphModel, type GraphNode } from '@dxos/graph';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { Select } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
-import { omit } from '@dxos/util';
 
 import { type StateMachine, type StateMachineContext } from './graph';
 import { ComputeContext, useGraphMonitor } from './hooks';
@@ -22,21 +23,58 @@ import { type ComputeShape } from './shapes';
 import { createMachine, createTest1 } from './testing';
 import { Editor, type EditorController, type EditorRootProps } from '../components';
 import { AttentionContainer, ShapeRegistry } from '../components';
-import { SelectionModel } from '../hooks';
-import { type Shape } from '../types';
+import { useSelection } from '../testing';
 
 type RenderProps = EditorRootProps &
   PropsWithChildren<{
     init?: boolean;
-    sidebar?: 'json' | 'selected' | 'state-machine';
-    machine?: StateMachine;
+    sidebar?: 'canvas' | 'compute' | 'state-machine' | 'selected';
     computeGraph?: GraphModel<GraphNode<Model.ComputeGraphNode>, GraphEdge<ComputeEdge>>;
+    machine?: StateMachine;
     model?: StateMachineContext['model'];
     gpt?: StateMachineContext['gpt'];
   }>;
 
-const Render = ({ id = 'test', children, graph, machine, model, gpt, init, sidebar, ...props }: RenderProps) => {
+const sidebarTypes: NonNullable<RenderProps['sidebar']>[] = ['canvas', 'compute', 'state-machine', 'selected'] as const;
+
+// TODO(burdon): Move to async/context?
+const combine = (...cbs: UnsubscribeCallback[]) => {
+  return () => {
+    for (const cb of cbs) {
+      cb();
+    }
+  };
+};
+
+const Render = ({
+  id = 'test',
+  children,
+  graph,
+  machine,
+  model,
+  gpt,
+  init,
+  sidebar: _sidebar,
+  ...props
+}: RenderProps) => {
   const editorRef = useRef<EditorController>(null);
+  const [sidebar, setSidebar] = useState(_sidebar);
+  const json = useMemo(() => {
+    switch (sidebar) {
+      case 'canvas':
+        return { graph };
+      case 'compute':
+        return { machine, model, gpt };
+      case 'state-machine':
+        return {
+          graph: machine?.graph.model,
+          user: machine?.userState,
+          executed: machine?.executedState,
+        };
+      case 'selected':
+        return { selected };
+    }
+  }, [sidebar]);
 
   // State machine.
   useEffect(() => {
@@ -44,24 +82,23 @@ const Render = ({ id = 'test', children, graph, machine, model, gpt, init, sideb
       return;
     }
 
-    // TODO(burdon): Combine handlers pattern.
     void machine.open();
-
-    const sub1 = machine.update.on(() => {
-      void editorRef.current?.update();
-    });
-
-    const sub2 = machine.output.on(({ nodeId, property }) => {
-      const shape = graph.nodes.find((node) => (node.data as ComputeShape).node === nodeId);
-      if (shape) {
-        void editorRef.current?.action?.({ type: 'trigger', ids: [shape.id] });
-      }
-    });
+    const off = combine(
+      machine.update.on(() => {
+        void editorRef.current?.update();
+      }),
+      machine.output.on(({ nodeId, property }) => {
+        const shape = graph.nodes.find((node) => (node.data as ComputeShape).node === nodeId);
+        if (shape) {
+          // TODO(burdon): Convert to edges.
+          void editorRef.current?.action?.({ type: 'trigger', ids: [shape.id] });
+        }
+      }),
+    );
 
     return () => {
       void machine.close();
-      sub1();
-      sub2();
+      off();
     };
   }, [graph, machine]);
 
@@ -69,29 +106,7 @@ const Render = ({ id = 'test', children, graph, machine, model, gpt, init, sideb
   const graphMonitor = useGraphMonitor(machine);
 
   // Selection.
-  const selection = useMemo(() => new SelectionModel(), []);
-  const [selected, setSelected] = useState<Shape | undefined>();
-  useEffect(() => {
-    if (!graph) {
-      return;
-    }
-
-    return selection.selected.subscribe((selected) => {
-      if (selection.size) {
-        // Selection included nodes and edges.
-        for (const id of Array.from(selected.values())) {
-          const node = graph.findNode(id);
-          if (node) {
-            const data = omit(node.data as any, ['node']);
-            setSelected(data as any);
-            break;
-          }
-        }
-      } else {
-        setSelected(undefined);
-      }
-    });
-  }, [graph, selection]);
+  const [selection, selected] = useSelection(graph);
 
   return (
     <div className='grid grid-cols-[1fr,360px] w-full h-full'>
@@ -112,28 +127,28 @@ const Render = ({ id = 'test', children, graph, machine, model, gpt, init, sideb
         </AttentionContainer>
       </ComputeContext.Provider>
 
-      {sidebar === 'json' && (
-        <AttentionContainer id='sidebar' tabIndex={0} classNames='flex grow overflow-hidden'>
-          <SyntaxHighlighter language='json' classNames='text-xs'>
-            {JSON.stringify(
-              {
-                graph: graph?.graph,
-                computeGraph: machine?.graph.model,
-                userState: machine?.userState,
-                executedState: machine?.executedState,
-              },
-              null,
-              2,
-            )}
-          </SyntaxHighlighter>
-        </AttentionContainer>
-      )}
+      {sidebar && (
+        <AttentionContainer id='test' classNames='flex flex-col h-full overflow-hidden'>
+          <Select.Root value={sidebar} onValueChange={(value) => setSidebar(value as RenderProps['sidebar'])}>
+            <Select.TriggerButton classNames='is-full'>{sidebar}</Select.TriggerButton>
+            <Select.Portal>
+              <Select.Content>
+                <Select.Viewport>
+                  {sidebarTypes.map((type) => (
+                    <Select.Item key={type} value={type}>
+                      {type}
+                    </Select.Item>
+                  ))}
+                </Select.Viewport>
+              </Select.Content>
+            </Select.Portal>
+          </Select.Root>
 
-      {sidebar === 'state-machine' && (
-        <AttentionContainer id='sidebar' tabIndex={0} classNames='flex grow overflow-hidden'>
-          <SyntaxHighlighter language='json' classNames='text-xs'>
-            {JSON.stringify({ machine, selected }, null, 2)}
-          </SyntaxHighlighter>
+          <div className='flex flex-col h-full overflow-hidden'>
+            <SyntaxHighlighter language='json' classNames='text-xs'>
+              {JSON.stringify(json, null, 2)}
+            </SyntaxHighlighter>
+          </div>
         </AttentionContainer>
       )}
     </div>
@@ -172,7 +187,7 @@ export const Compute1: Story = {
     // debug: true,
     showGrid: false,
     snapToGrid: false,
-    sidebar: 'json',
+    sidebar: 'compute',
     registry: new ShapeRegistry(computeShapes),
     ...createMachine(createTest1()),
   },

@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import type { Meta, StoryObj } from '@storybook/react';
-import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type PropsWithChildren, useEffect, useRef, useState } from 'react';
 
 import type { ComputeEdge, Model } from '@dxos/conductor';
 import { type ReactiveEchoObject } from '@dxos/echo-db';
@@ -18,11 +18,10 @@ import { Form, TupleInput } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { createObjectFactory, Testing, type TypeSpec, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
-import { omit } from '@dxos/util';
 
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
-import { SelectionModel } from '../../hooks';
 import { doLayout } from '../../layout';
+import { useSelection } from '../../testing';
 import { RectangleShape, type Shape } from '../../types';
 import { AttentionContainer } from '../AttentionContainer';
 import { DragTest } from '../Canvas/DragTest';
@@ -66,29 +65,7 @@ const Render = ({ id = 'test', children, graph: _graph, init, sidebar, ...props 
   }, [space, init]);
 
   // Selection.
-  const selection = useMemo(() => new SelectionModel(), []);
-  const [selected, setSelected] = useState<Shape | undefined>();
-  useEffect(() => {
-    if (!graph) {
-      return;
-    }
-
-    return selection.selected.subscribe((selected) => {
-      if (selection.size) {
-        // Selection included nodes and edges.
-        for (const id of Array.from(selected.values())) {
-          const node = graph.findNode(id);
-          if (node) {
-            const data = omit(node.data as any, ['node']);
-            setSelected(data as any);
-            break;
-          }
-        }
-      } else {
-        setSelected(undefined);
-      }
-    });
-  }, [graph, selection]);
+  const [selection, selected] = useSelection(graph);
 
   return (
     <div className='grid grid-cols-[1fr,360px] w-full h-full'>

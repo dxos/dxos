@@ -151,7 +151,7 @@ export class StateMachine extends Resource {
           testServices({
             logger: {
               log: (event) => {
-                log.info('log', { event });
+                log('log', { event });
                 switch (event.type) {
                   case 'compute-input':
                     this._runtimeState[event.nodeId] ??= {};
