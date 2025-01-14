@@ -21,20 +21,10 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { omit } from '@dxos/util';
 
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
-import {
-  computeShapes,
-  type ComputeShape,
-  type StateMachine,
-  type StateMachineContext,
-  useGraphMonitor,
-} from '../../compute';
-import { ComputeContext } from '../../compute';
-import { createMachine, createTest1 } from '../../compute/testing';
 import { SelectionModel } from '../../hooks';
 import { doLayout } from '../../layout';
 import { RectangleShape, type Shape } from '../../types';
 import { AttentionContainer } from '../AttentionContainer';
-import { ShapeRegistry } from '../Canvas';
 import { DragTest } from '../Canvas/DragTest';
 
 const generator: ValueGenerator = faker as any;
@@ -48,56 +38,13 @@ type RenderProps = EditorRootProps &
   PropsWithChildren<{
     init?: boolean;
     sidebar?: 'json' | 'selected' | 'state-machine';
-    machine?: StateMachine;
     computeGraph?: GraphModel<GraphNode<Model.ComputeGraphNode>, GraphEdge<ComputeEdge>>;
-    model?: StateMachineContext['model'];
-    gpt?: StateMachineContext['gpt'];
   }>;
 
-const Render = ({
-  id = 'test',
-  children,
-  graph: _graph,
-  machine,
-  model,
-  gpt,
-  init,
-  sidebar,
-  ...props
-}: RenderProps) => {
+const Render = ({ id = 'test', children, graph: _graph, init, sidebar, ...props }: RenderProps) => {
   const editorRef = useRef<EditorController>(null);
   const { space } = useClientProvider();
   const [graph, setGraph] = useState<GraphModel<GraphNode<Shape>> | undefined>(_graph);
-
-  // State machine.
-  useEffect(() => {
-    if (!machine || !graph) {
-      return;
-    }
-
-    // TODO(burdon): Combine handlers pattern.
-    void machine.open();
-
-    const sub1 = machine.update.on(() => {
-      void editorRef.current?.update();
-    });
-
-    const sub2 = machine.output.on(({ nodeId, property }) => {
-      const shape = graph.nodes.find((node) => (node.data as ComputeShape).node === nodeId);
-      if (shape) {
-        void editorRef.current?.action?.({ type: 'trigger', ids: [shape.id] });
-      }
-    });
-
-    return () => {
-      void machine.close();
-      sub1();
-      sub2();
-    };
-  }, [graph, machine]);
-
-  // Monitor.
-  const graphMonitor = useGraphMonitor(machine);
 
   // Layout.
   useEffect(() => {
@@ -145,22 +92,12 @@ const Render = ({
 
   return (
     <div className='grid grid-cols-[1fr,360px] w-full h-full'>
-      <ComputeContext.Provider value={{ stateMachine: machine! }}>
-        <AttentionContainer id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
-          <Editor.Root
-            ref={editorRef}
-            id={id}
-            graph={graph}
-            graphMonitor={graphMonitor}
-            selection={selection}
-            autoZoom
-            {...props}
-          >
-            <Editor.Canvas>{children}</Editor.Canvas>
-            <Editor.UI />
-          </Editor.Root>
-        </AttentionContainer>
-      </ComputeContext.Provider>
+      <AttentionContainer id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
+        <Editor.Root ref={editorRef} id={id} graph={graph} selection={selection} autoZoom {...props}>
+          <Editor.Canvas>{children}</Editor.Canvas>
+          <Editor.UI />
+        </Editor.Root>
+      </AttentionContainer>
 
       {/* TODO(burdon): Need to set schema based on what is selected. */}
       {sidebar === 'selected' && selected && (
@@ -178,16 +115,7 @@ const Render = ({
       {sidebar === 'json' && (
         <AttentionContainer id='sidebar' tabIndex={0} classNames='flex grow overflow-hidden'>
           <SyntaxHighlighter language='json' classNames='text-xs'>
-            {JSON.stringify(
-              {
-                graph: graph?.graph,
-                computeGraph: machine?.graph.model,
-                userState: machine?.userState,
-                executedState: machine?.executedState,
-              },
-              null,
-              2,
-            )}
+            {JSON.stringify({ graph: graph?.graph }, null, 2)}
           </SyntaxHighlighter>
         </AttentionContainer>
       )}
@@ -195,7 +123,7 @@ const Render = ({
       {sidebar === 'state-machine' && (
         <AttentionContainer id='sidebar' tabIndex={0} classNames='flex grow overflow-hidden'>
           <SyntaxHighlighter language='json' classNames='text-xs'>
-            {JSON.stringify({ machine, selected }, null, 2)}
+            {JSON.stringify({ selected }, null, 2)}
           </SyntaxHighlighter>
         </AttentionContainer>
       )}
@@ -273,98 +201,3 @@ export const Query: Story = {
     ],
   },
 };
-
-export const Compute: Story = {
-  args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    sidebar: 'state-machine',
-    registry: new ShapeRegistry(computeShapes),
-    ...createMachine(),
-  },
-};
-
-export const Compute1: Story = {
-  args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    sidebar: 'json',
-    registry: new ShapeRegistry(computeShapes),
-    ...createMachine(createTest1()),
-  },
-};
-
-// export const Compute2: Story = {
-//   args: {
-//     // debug: true,
-//     showGrid: false,
-//     snapToGrid: false,
-//     sidebar: 'state-machine',
-//     registry: new ShapeRegistry(computeShapes),
-//     ...createMachine(createTest2()),
-//   },
-// };
-
-// export const Ollama: Story = {
-//   args: {
-//     // debug: true,
-//     showGrid: false,
-//     snapToGrid: false,
-//     sidebar: 'state-machine',
-//     registry: new ShapeRegistry(computeShapes),
-//     ...createMachine(createTest3()),
-//     gpt: new OllamaGpt(ollamaClient),
-//   },
-// };
-
-// export const GPT: Story = {
-//   args: {
-//     // debug: true,
-//     showGrid: false,
-//     snapToGrid: false,
-//     // sidebar: 'json',
-//     // sidebar: 'state-machine',
-//     registry: new ShapeRegistry(computeShapes),
-//     spec: [
-//       { type: Testing.OrgType, count: 2 },
-//       { type: Testing.ProjectType, count: 4 },
-//       { type: Testing.ContactType, count: 8 },
-//     ],
-//     registerSchema: true,
-//     ...createMachine(createTest3({ db: true })),
-//     model: '@anthropic/claude-3-5-sonnet-20241022',
-//     gpt: new EdgeGptExecutor(
-//       new AIServiceClientImpl({
-//         // endpoint: 'https://ai-service.dxos.workers.dev',
-//         endpoint: 'http://localhost:8787',
-//       }),
-//     ),
-//   },
-// };
-
-// export const GPTArtifact: Story = {
-//   args: {
-//     // debug: true,
-//     showGrid: false,
-//     snapToGrid: false,
-//     sidebar: 'selected',
-//     // sidebar: 'state-machine',
-//     registry: new ShapeRegistry(computeShapes),
-//     spec: [
-//       { type: Testing.OrgType, count: 2 },
-//       { type: Testing.ProjectType, count: 4 },
-//       { type: Testing.ContactType, count: 8 },
-//     ],
-//     registerSchema: true,
-//     ...createMachine(createTest3({ cot: true, artifact: true, history: true, db: true, textToImage: true })),
-//     model: '@anthropic/claude-3-5-sonnet-20241022',
-//     gpt: new EdgeGptExecutor(
-//       new AIServiceClientImpl({
-//         // endpoint: 'https://ai-service.dxos.workers.dev',
-//         endpoint: 'http://localhost:8787',
-//       }),
-//     ),
-//   },
-// };
