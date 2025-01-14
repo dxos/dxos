@@ -6,19 +6,12 @@ import { type Event } from '@dxos/async';
 import { type Lifecycle } from '@dxos/context';
 import { type PublicKey } from '@dxos/keys';
 import { type Peer } from '@dxos/protocols/proto/dxos/edge/messenger';
+import { type Message, type SwarmEvent } from '@dxos/protocols/proto/dxos/edge/signal';
 import { type SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
 
+export type { Message, SwarmEvent };
 export type PeerInfo = Peer;
 export const PeerInfoHash = ({ peerKey }: PeerInfo) => peerKey;
-
-export interface Message {
-  author: PeerInfo;
-  recipient: PeerInfo;
-  payload: {
-    type_url: string;
-    value: Uint8Array;
-  };
-}
 
 export type SignalStatus = {
   host: string;
@@ -27,25 +20,6 @@ export type SignalStatus = {
   reconnectIn: number;
   connectionStarted: Date;
   lastStateChange: Date;
-};
-
-export type SwarmEvent = {
-  topic: PublicKey;
-
-  /**
-   * The peer was announced as available on the swarm.
-   */
-  peerAvailable?: {
-    peer: PeerInfo;
-    since: Date;
-  };
-
-  /**
-   * The peer left, or their announcement timed out.
-   */
-  peerLeft?: {
-    peer: PeerInfo;
-  };
 };
 
 /**
@@ -66,7 +40,7 @@ export interface SignalMethods {
    * Join topic on signal network, to be discoverable by other peers.
    */
   join: (params: { topic: PublicKey; peer: PeerInfo }) => Promise<void>;
-
+ 
   /**
    * Leave topic on signal network, to stop being discoverable by other peers.
    */
@@ -91,6 +65,8 @@ export interface SignalMethods {
 
 /**
  * Signaling client.
+ * TODO(mykola): Delete.
+ * @deprecated
  */
 export interface SignalClientMethods extends SignalMethods, Required<Lifecycle> {
   getStatus(): SignalStatus;
