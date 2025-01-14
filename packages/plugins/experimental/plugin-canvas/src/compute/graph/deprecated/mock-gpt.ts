@@ -74,6 +74,7 @@ export class MockGPT {
     const tokens = this.tokenize(response);
 
     let control: GPTControl | undefined;
+    // @ts-ignore
     for (const token of tokens) {
       // Check for cancellation.
       if (control?.cancel) {

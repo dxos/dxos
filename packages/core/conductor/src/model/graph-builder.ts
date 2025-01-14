@@ -24,6 +24,7 @@ export class ComputeGraphModel {
     );
   };
 
+  // TODO(burdon): Extend GraphModel.
   private readonly _model: GraphModel<GraphNode<ComputeGraphNode>, GraphEdge<ComputeEdge>>;
 
   constructor(private readonly _graph: ComputeGraphType) {
@@ -42,9 +43,18 @@ export class ComputeGraphModel {
     return this._model;
   }
 
-  // TODO(burdon): Consider same pattern for GraphModel.
   get builder() {
-    return new ComputeGraphBuilder(this);
+    return new ComputeGraphBuilder(this._model);
+  }
+}
+
+// TODO(burdon): Consider same pattern for GraphModel.
+class ComputeGraphBuilder {
+  constructor(private readonly _model: GraphModel<GraphNode<ComputeGraphNode>, GraphEdge<ComputeEdge>>) {}
+
+  call(cb: (graph: ComputeGraphBuilder) => void): this {
+    cb(this);
+    return this;
   }
 
   get(id: string): GraphNode<ComputeGraphNode> {
@@ -78,20 +88,6 @@ export class ComputeGraphModel {
 
     this._model.addEdge(edge);
     return edge;
-  }
-}
-
-class ComputeGraphBuilder {
-  constructor(private readonly _graph: ComputeGraphModel) {}
-
-  call(cb: (graph: ComputeGraphModel) => void): this {
-    cb(this._graph);
-    return this;
-  }
-
-  create(id: string, data: ComputeGraphNode = {}): this {
-    this._graph.create(id, data);
-    return this;
   }
 }
 

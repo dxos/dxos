@@ -24,10 +24,12 @@ import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
 import { resolveComputeNode } from './node-defs';
-import type { FunctionCallback, GptInput, GptOutput } from './nodes';
+import type { GptInput, GptOutput } from './types';
 
 // TODO(burdon): API package for conductor.
 export const InvalidStateError = Error;
+
+export type FunctionCallback<INPUT, OUTPUT> = (input: INPUT) => Promise<OUTPUT>;
 
 /**
  * Callback to notify the state machine of a scheduled update.

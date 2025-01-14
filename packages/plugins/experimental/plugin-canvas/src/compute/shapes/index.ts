@@ -6,10 +6,10 @@ export * from './defs';
 
 export * from './Array';
 export * from './Beacon';
+export * from './Boolean';
 export * from './Counter';
 export * from './Database';
 export * from './Function';
-export * from './Gate';
 export * from './Gpt';
 export * from './List';
 export * from './Logic';

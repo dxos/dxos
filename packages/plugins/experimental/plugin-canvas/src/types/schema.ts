@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S, TypedObject, Ref } from '@dxos/echo-schema';
+import { S, TypedObject } from '@dxos/echo-schema';
 import { Graph } from '@dxos/graph';
 import { Point, Dimension } from '@dxos/react-ui-canvas';
 
@@ -87,13 +87,6 @@ export const isPath = S.is(PathShape);
 
 export type Layout = S.Schema.Type<typeof Layout>;
 
-export class ComputeGraph extends TypedObject({
-  typename: 'dxos.org/type/ComputeGraph',
-  version: '0.1.0',
-})({
-  graph: Graph,
-}) {}
-
 export class CanvasBoardType extends TypedObject({
   typename: 'dxos.org/type/CanvasBoard',
   version: '0.1.0',
@@ -103,10 +96,4 @@ export class CanvasBoardType extends TypedObject({
    * Graph of shapes positioned on the canvas.
    */
   shapes: Graph,
-
-  /**
-   * Reference to the object containing the data graph.
-   */
-  // TODO(dmaretskyi): Generalize not to depend on ComputeGraph.
-  data: Ref(ComputeGraph),
 }) {}

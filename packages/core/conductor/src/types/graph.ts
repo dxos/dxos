@@ -38,15 +38,16 @@ export const NodeType = Object.freeze({
   Gpt: 'dxn:compute:gpt',
 });
 
-// TODO(burdon): Rename ComputeGraphModel
+// TODO(burdon): Reconcile with ComputeGraphModel.
 export type ComputeGraph = GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;
 
-// TODO(burdon): Reconcile type with plugin-canvas.
 export class ComputeGraphType extends TypedObject({
   typename: 'dxos.org/type/ComputeGraph',
   version: '0.1.0',
 })({
   graph: Graph,
+
+  // TODO(burdon): Are these required or just used for references?
   input: S.optional(ComputeNode),
   output: S.optional(ComputeNode),
 }) {}
@@ -70,6 +71,3 @@ export const ComputeGraphNode = S.Struct({
 });
 
 export type ComputeGraphNode = S.Schema.Type<typeof ComputeGraphNode>;
-
-// TODO(burdon): Reconcile types.
-// export type ComputeGraphModel = GraphModel<GraphNode<ComputeGraphNode>, GraphEdge<ComputeEdge>>;

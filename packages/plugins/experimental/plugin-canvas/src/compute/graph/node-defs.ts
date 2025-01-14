@@ -16,7 +16,7 @@ import { S, ObjectId } from '@dxos/echo-schema';
 import { type GraphNode } from '@dxos/graph';
 import { failedInvariant, invariant } from '@dxos/invariant';
 
-import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './compute-node';
+import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './types';
 import { type ComputeShape } from '../shapes';
 
 type NodeType = 'switch' | 'text' | 'beacon' | 'and' | 'or' | 'not' | 'if' | 'if-else';

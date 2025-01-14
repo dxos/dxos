@@ -8,8 +8,10 @@ import { SpaceId } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { isNotNullOrUndefined } from '@dxos/util';
 
-import type { GptInput, GptOutput } from '../nodes';
+import type { GptInput, GptOutput } from '../types';
 import { type GptExecutor } from '../state-machine';
+
+// TODO(burdon): Move to conductor.
 
 /**
  * Remote GPT execution.

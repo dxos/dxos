@@ -7,8 +7,10 @@ import { type Ollama } from 'ollama';
 import type { MessageImageContentBlock } from '@dxos/assistant';
 import { log } from '@dxos/log';
 
-import type { GptInput, GptOutput } from '../nodes';
+import type { GptInput, GptOutput } from '../types';
 import type { GptExecutor } from '../state-machine';
+
+// TODO(burdon): Move to conductor.
 
 export class OllamaGpt implements GptExecutor {
   // Images are not supported.
