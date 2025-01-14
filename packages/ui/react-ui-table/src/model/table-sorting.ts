@@ -63,6 +63,12 @@ export class TableSorting<T extends BaseTableRow> {
     }
   }
 
+  public clearSort(): void {
+    if (this._view) {
+      this._view.query.sort = [];
+    }
+  }
+
   //
   // Initialisation.
   //

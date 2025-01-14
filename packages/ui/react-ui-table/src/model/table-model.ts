@@ -5,14 +5,7 @@
 import { computed, effect, signal, type ReadonlySignal } from '@preact/signals-core';
 
 import { Resource } from '@dxos/context';
-import {
-  type FieldSortType,
-  FormatEnum,
-  getValue,
-  setValue,
-  type JsonProp,
-  type SortDirectionType,
-} from '@dxos/echo-schema';
+import { type FieldSortType, FormatEnum, getValue, setValue, type JsonProp } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { isReactiveObject, makeRef } from '@dxos/live-object';
 import { PublicKey } from '@dxos/react-client';
@@ -112,8 +105,8 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
   /**
    * @reactive
    */
-  public get sorting(): FieldSortType | undefined {
-    return this._sorting.sorting;
+  public get sorting(): TableSorting<T> | undefined {
+    return this._sorting;
   }
 
   public get pinnedRows(): NonNullable<TableModelProps<T>['pinnedRows']> {
@@ -323,18 +316,6 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
         field.size = newWidth;
       }
     }
-  }
-
-  //
-  // Sorting
-  //
-
-  public setSort(fieldId: string, direction: SortDirectionType): void {
-    this._sorting.setSort(fieldId, direction);
-  }
-
-  public clearSort(): void {
-    this._sorting.setSort('', 'asc');
   }
 
   //
