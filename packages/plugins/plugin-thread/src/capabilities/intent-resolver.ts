@@ -31,7 +31,7 @@ export default (context: PluginsContext) =>
             // Static schema will throw an error if subject does not support threads array property.
             subject.threads = [];
           } catch (err) {
-            log.error('Subject does not support threads array', subject?.typename);
+            log.error('Subject does not support threads array', { typename: subject?.typename });
             return;
           }
         }

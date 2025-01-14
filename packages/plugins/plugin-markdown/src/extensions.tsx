@@ -80,14 +80,14 @@ export const useExtensions = ({ document, settings, viewMode, editorStateStore }
     ],
   );
 
-  const extensionProviders = useCapabilities(MarkdownCapabilities.Extensions).flat();
+  const extensionProviders = useCapabilities(MarkdownCapabilities.Extensions);
 
   //
   // External extensions from other plugins.
   //
   const pluginExtensions = useMemo<Extension[] | undefined>(
     () =>
-      extensionProviders?.reduce((acc: Extension[], provider) => {
+      extensionProviders.flat().reduce((acc: Extension[], provider) => {
         const extension = typeof provider === 'function' ? provider({ document }) : provider;
         if (extension) {
           acc.push(extension);

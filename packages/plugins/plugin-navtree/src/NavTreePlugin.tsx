@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { definePlugin, defineModule, Events, contributes, Capabilities, allOf } from '@dxos/app-framework';
+import { definePlugin, defineModule, Events, contributes, Capabilities, allOf, oneOf } from '@dxos/app-framework';
 import { type TreeData } from '@dxos/react-ui-list';
 
-import { AppGraphBuilder, IntentResolver, ReactSurface, State } from './capabilities';
+import { AppGraphBuilder, IntentResolver, Keyboard, ReactSurface, State } from './capabilities';
 import { NODE_TYPE } from './components';
 import { meta } from './meta';
 import translations from './translations';
@@ -13,18 +13,18 @@ import translations from './translations';
 export const NavTreePlugin = () =>
   definePlugin(meta, [
     defineModule({
-      id: `${meta.id}/state`,
+      id: `${meta.id}/module/state`,
       activatesOn: allOf(Events.DispatcherReady, Events.LayoutReady, Events.LocationReady),
       activate: State,
     }),
     defineModule({
-      id: `${meta.id}/translations`,
+      id: `${meta.id}/module/translations`,
       activatesOn: Events.SetupTranslations,
       activate: () => contributes(Capabilities.Translations, translations),
     }),
     defineModule({
-      id: `${meta.id}/metadata`,
-      activatesOn: Events.Startup,
+      id: `${meta.id}/module/metadata`,
+      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
       activate: () =>
         contributes(Capabilities.Metadata, {
           id: NODE_TYPE,
@@ -43,18 +43,23 @@ export const NavTreePlugin = () =>
         }),
     }),
     defineModule({
-      id: `${meta.id}/react-surface`,
+      id: `${meta.id}/module/keyboard`,
+      activatesOn: Events.AppGraphReady,
+      activate: Keyboard,
+    }),
+    defineModule({
+      id: `${meta.id}/module/react-surface`,
       activatesOn: Events.Startup,
       activate: ReactSurface,
     }),
     defineModule({
-      id: `${meta.id}/intent-resolver`,
-      activatesOn: Events.Startup,
+      id: `${meta.id}/module/intent-resolver`,
+      activatesOn: Events.SetupIntents,
       activate: IntentResolver,
     }),
     defineModule({
-      id: `${meta.id}/app-graph-builder`,
-      activatesOn: Events.Startup,
+      id: `${meta.id}/module/app-graph-builder`,
+      activatesOn: Events.SetupAppGraph,
       activate: AppGraphBuilder,
     }),
   ]);

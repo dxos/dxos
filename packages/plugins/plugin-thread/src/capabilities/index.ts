@@ -10,3 +10,5 @@ export const Markdown = lazy(() => import('./markdown'));
 export const ReactSurface = lazy(() => import('./react-surface'));
 export const ThreadSettings = lazy(() => import('./settings'));
 export const ThreadState = lazy(() => import('./state'));
+
+export * from './capabilities';

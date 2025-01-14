@@ -15,6 +15,7 @@ export const WelcomePlugin = () =>
       id: `${WELCOME_PLUGIN}/module/onboarding`,
       activatesOn: allOf(
         Events.DispatcherReady,
+        Events.AppGraphReady,
         Events.SettingsReady,
         Events.LayoutReady,
         Events.LocationReady,

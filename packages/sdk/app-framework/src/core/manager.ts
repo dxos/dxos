@@ -322,6 +322,7 @@ export class PluginManager {
     });
   }
 
+  // TODO(wittjosiah): Improve error typing.
   private _activate(event: ActivationEvent | string): Effect.Effect<boolean, Error> {
     const self = this;
     return Effect.gen(function* () {
@@ -379,7 +380,12 @@ export class PluginManager {
       const program = module.activate(self.context);
       const maybeCapabilities = yield* Match.value(program).pipe(
         Match.when(Effect.isEffect, (effect) => effect),
-        Match.when(isPromise, (promise) => Effect.promise(() => promise)),
+        Match.when(isPromise, (promise) =>
+          Effect.tryPromise({
+            try: () => promise,
+            catch: (error) => error as Error,
+          }),
+        ),
         Match.orElse((program) => Effect.succeed(program)),
       );
       const capabilities = Match.value(maybeCapabilities).pipe(
@@ -421,7 +427,12 @@ export class PluginManager {
           const program = capability.deactivate?.();
           yield* Match.value(program).pipe(
             Match.when(Effect.isEffect, (effect) => effect),
-            Match.when(isPromise, (promise) => Effect.tryPromise(() => promise)),
+            Match.when(isPromise, (promise) =>
+              Effect.tryPromise({
+                try: () => promise,
+                catch: (error) => error as Error,
+              }),
+            ),
             Match.orElse((program) => Effect.succeed(program)),
           );
         }
