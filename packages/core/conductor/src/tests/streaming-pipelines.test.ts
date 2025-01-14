@@ -9,6 +9,7 @@ import { S } from '@dxos/echo-schema';
 import { GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
 
 import { createEdge } from '../model';
+import { TestRuntime, testServices } from '../testing';
 import {
   defineComputeNode,
   makeValueBag,
@@ -18,9 +19,8 @@ import {
   type ComputeGraph,
   type ComputeNode,
   NodeType,
-} from '../schema';
-import { StreamSchema } from '../schema-dsl';
-import { TestRuntime, testServices } from '../testing';
+} from '../types';
+import { StreamSchema } from '../util';
 
 const ENABLE_LOGGING = false;
 

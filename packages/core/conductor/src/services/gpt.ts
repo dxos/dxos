@@ -7,8 +7,8 @@ import { Context } from 'effect';
 import { LLMTool, Message, type ResultStreamEvent } from '@dxos/assistant';
 import { S } from '@dxos/echo-schema';
 
-import type { ComputeEffect, ValueBag } from '../schema';
-import { StreamSchema } from '../schema-dsl';
+import type { ComputeEffect, ValueBag } from '../types';
+import { StreamSchema } from '../util';
 
 const GptStreamEventSchema = S.Any as S.Schema<ResultStreamEvent>;
 

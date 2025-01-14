@@ -7,7 +7,7 @@ import type { GraphEdge, GraphModel, GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import type { ComputeNode, ComputeEdge, ComputeMeta } from '../schema';
+import type { ComputeNode, ComputeEdge, ComputeMeta } from '../types';
 import { pickProperty } from '../util';
 
 /**

@@ -1,7 +1,12 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Effect } from 'effect';
-import { describe, expect, test } from 'vitest';
-import { makeValueBag, unwrapValueBag } from './schema';
-import { testServices } from './testing/test-services';
+import { describe, test } from 'vitest';
+
+import { makeValueBag, unwrapValueBag } from './compute';
+import { testServices } from '../testing';
 
 describe('ValueBag', () => {
   test('unwrapValueBag', async ({ expect }) => {

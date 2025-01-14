@@ -3,3 +3,4 @@
 //
 
 export * from './ast';
+export * from './stream';

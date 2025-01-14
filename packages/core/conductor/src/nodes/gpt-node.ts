@@ -6,8 +6,8 @@ import { Effect } from 'effect';
 
 import { log } from '@dxos/log';
 
-import { defineComputeNode } from '../schema';
 import { GptOutput, GptService, GptInput } from '../services';
+import { defineComputeNode } from '../types';
 
 export const gptNode = defineComputeNode({
   input: GptInput,

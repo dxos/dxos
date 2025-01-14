@@ -2,48 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema as S } from '@effect/schema';
-
-import { ObjectId, Ref, TypedObject } from '@dxos/echo-schema';
-import { createEdgeId, type GraphEdge, Graph, GraphModel, type GraphNode } from '@dxos/graph';
+import { ObjectId } from '@dxos/echo-schema';
+import { createEdgeId, type GraphEdge, GraphModel, type GraphNode } from '@dxos/graph';
 import { create, makeRef } from '@dxos/live-object';
 
-import { ComputeNode, type ComputeEdge } from '../schema';
-
-// TODO(burdon): Graph of graphs: Inline node or reference to other graph.
-
-// TODO(burdon): Reconcile type with plugin-canvas.
-export class ComputeGraphType extends TypedObject({
-  typename: 'dxos.org/type/ComputeGraph',
-  version: '0.1.0',
-})({
-  graph: Graph,
-  input: S.optional(ComputeNode),
-  output: S.optional(ComputeNode),
-}) {}
-
-const isComputeGraph = S.is(ComputeGraphType);
-
-// TODO(burdon): Reconcile/merge with ComputeNode.
-export const ComputeGraphNode = S.Struct({
-  type: S.optional(S.String),
-
-  /**
-   * For composition nodes.
-   */
-  subgraph: S.optional(Ref(ComputeGraphType)),
-
-  /**
-   * For switch nodes.
-   */
-  // TODO(dmaretskyi): Move to constants.
-  enabled: S.optional(S.Boolean),
-});
-
-export type ComputeGraphNode = S.Schema.Type<typeof ComputeGraphNode>;
-
-// TODO(burdon): Reconcile types.
-// export type ComputeGraphModel = GraphModel<GraphNode<ComputeGraphNode>, GraphEdge<ComputeEdge>>;
+import { type ComputeGraphNode, ComputeGraphType, type ComputeEdge, isComputeGraph } from '../types';
 
 /**
  * Wrapper/builder.
@@ -132,6 +95,7 @@ class ComputeGraphBuilder {
   }
 }
 
+// TODO(burdon): Move into builder.
 export const createEdge = (params: {
   source: string;
   output: string;

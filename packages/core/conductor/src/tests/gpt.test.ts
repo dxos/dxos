@@ -9,6 +9,8 @@ import { describe, test } from 'vitest';
 import { AIServiceClientImpl, type ResultStreamEvent } from '@dxos/assistant';
 import { GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
 
+import { EdgeGpt } from '../services/gpt/edge-gpt';
+import { createEdge, TestRuntime, testServices } from '../testing';
 import {
   makeValueBag,
   unwrapValueBag,
@@ -16,9 +18,7 @@ import {
   type ComputeGraph,
   type ComputeNode,
   NodeType,
-} from '../schema';
-import { EdgeGpt } from '../services/gpt/edge-gpt';
-import { createEdge, TestRuntime, testServices } from '../testing';
+} from '../types';
 
 const ENABLE_LOGGING = true;
 const AI_SERVICE_ENDPOINT = 'http://localhost:8787';

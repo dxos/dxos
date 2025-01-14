@@ -4,51 +4,11 @@
 
 import { Effect, type Scope } from 'effect';
 
-import { S } from '@dxos/echo-schema';
-import type { GraphModel, GraphEdge, GraphNode } from '@dxos/graph';
+import { type S } from '@dxos/echo-schema';
 import { mapValues } from '@dxos/util';
 
-import type { EventLogger, GptService } from './services';
-
-/**
- * GraphNode payload.
- */
-export const ComputeNode = S.Struct({
-  /** DXN of the node specifier. */
-  // TODO(burdon): Type property exists on base GraphNode.
-  type: S.String,
-});
-
-export type ComputeNode = S.Schema.Type<typeof ComputeNode>;
-
-/**
- * GraphEdge payload.
- */
-export const ComputeEdge = S.Struct({
-  /** Output property from source. */
-  output: S.String,
-
-  /** Input property to target. */
-  input: S.String,
-});
-
-export type ComputeEdge = S.Schema.Type<typeof ComputeEdge>;
-
-/**
- * Well-known node types.
- */
-export const NodeType = Object.freeze({
-  Input: 'dxn:compute:input',
-  Output: 'dxn:compute:output',
-  Gpt: 'dxn:compute:gpt',
-});
-
-// TODO(burdon): Rename ComputeGraphModel
-export type ComputeGraph = GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;
-
-//
-//
-//
+// TODO(burdon): Move to types to untangle circular deps.
+import type { EventLogger, GptService } from '../services';
 
 export type NotExecuted = { kind: 'not-executed' };
 export const NotExecuted: NotExecuted = { kind: 'not-executed' };

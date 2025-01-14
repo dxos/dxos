@@ -4,7 +4,7 @@
 
 import { Schema as S } from '@effect/schema';
 
-import { defineComputeNode } from '../schema';
+import { defineComputeNode } from '../types';
 
 export const inputNode = defineComputeNode({
   input: S.Struct({}),

@@ -18,7 +18,7 @@ import {
   type ComputeRequirements,
   type NotExecuted,
   type ValueBag,
-} from '../schema';
+} from '../types';
 
 export class TestRuntime {
   readonly nodes = new Map<string, Executable>();

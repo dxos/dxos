@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { Context, Scope } from 'effect';
+import type { Context } from 'effect';
 import { Effect, Stream } from 'effect';
 
 import { ObjectId, type ResultStreamEvent } from '@dxos/assistant';
 import { log } from '@dxos/log';
 import { getDebugName } from '@dxos/util';
 
-import { makeValueBag, NotExecuted, unwrapValueBag, type ComputeEffect, type ComputeRequirements, type ValueBag } from '../../schema';
+import { makeValueBag, NotExecuted, unwrapValueBag, type ComputeEffect, type ValueBag } from '../../types';
 import type { GptInput, GptService, GptOutput } from '../gpt';
 
 export type GPTConfig = {

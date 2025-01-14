@@ -5,9 +5,9 @@
 import { Layer, type Context, type Scope } from 'effect';
 
 import { consoleLogger, noopLogger } from './logger';
-import type { ComputeRequirements } from '../schema';
 import { EventLogger, GptService } from '../services';
 import { MockGpt } from '../services/gpt/mock';
+import type { ComputeRequirements } from '../types';
 
 export type TestServiceOptions = {
   enableLogging?: boolean;

@@ -1,12 +1,22 @@
-import { GptOutput } from '../gpt';
+//
+// Copyright 2025 DXOS.org
+//
 
-import type { Context, Scope } from 'effect';
-import type { GptInput, GptService } from '../gpt';
-import { LLMTool, ObjectId, type AIServiceClient, type Message, type MessageImageContentBlock } from '@dxos/assistant';
-import { Console, Effect, Stream } from 'effect';
-import { log } from '@dxos/log';
+import type { Context } from 'effect';
+import { Effect, Stream } from 'effect';
+
+import {
+  type LLMTool,
+  ObjectId,
+  type AIServiceClient,
+  type Message,
+  type MessageImageContentBlock,
+} from '@dxos/assistant';
 import { SpaceId } from '@dxos/keys';
-import { makeValueBag, unwrapValueBag, type ComputeEffect, type ComputeRequirements, type NotExecuted, type ValueBag } from '../../schema';
+import { log } from '@dxos/log';
+
+import { makeValueBag, unwrapValueBag, type ComputeEffect, type ValueBag } from '../../types';
+import { type GptOutput, type GptInput, type GptService } from '../gpt';
 
 export class EdgeGpt implements Context.Tag.Service<GptService> {
   // Images are not supported.

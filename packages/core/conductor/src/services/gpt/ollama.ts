@@ -9,15 +9,8 @@ import { type Ollama } from 'ollama';
 import { ObjectId, type MessageImageContentBlock } from '@dxos/assistant';
 import { log } from '@dxos/log';
 
+import { makeValueBag, unwrapValueBag, type ComputeEffect, type ValueBag } from '../../types';
 import { type GptOutput, type GptInput, type GptService } from '../gpt';
-import {
-  makeValueBag,
-  unwrapValueBag,
-  type ComputeEffect,
-  type ComputeRequirements,
-  type NotExecuted,
-  type ValueBag,
-} from '../../schema';
 
 export class OllamaGpt implements Context.Tag.Service<GptService> {
   // Images are not supported.

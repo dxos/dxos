@@ -10,6 +10,7 @@ import type { GraphEdge, GraphModel, GraphNode } from '@dxos/graph';
 import { failedInvariant, invariant } from '@dxos/invariant';
 
 import { createTopology, type GraphDiagnostic, type Topology, type TopologyNode } from './topology';
+import { EventLogger, GptService } from '../services';
 import {
   type ComputeEdge,
   type ComputeEffect,
@@ -23,8 +24,7 @@ import {
   isNotExecuted,
   isValueBag,
   makeValueBag,
-} from '../schema';
-import { EventLogger, GptService } from '../services';
+} from '../types';
 
 export type ValidateParams = {
   graph: GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;

@@ -10,6 +10,8 @@ import { S } from '@dxos/echo-schema';
 import { GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
 import { mapValues } from '@dxos/util';
 
+import { logCustomEvent } from '../services';
+import { createEdge, TestRuntime, testServices } from '../testing';
 import {
   defineComputeNode,
   makeValueBag,
@@ -19,9 +21,7 @@ import {
   type ComputeGraph,
   type ComputeNode,
   NodeType,
-} from '../schema';
-import { logCustomEvent } from '../services';
-import { createEdge, TestRuntime, testServices } from '../testing';
+} from '../types';
 
 const ENABLE_LOGGING = false;
 
