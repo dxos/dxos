@@ -12,9 +12,9 @@
     ]
   },
   "exclude": [
+    "**/deprecated/**",
     "*.t.ts",
-    "vite.config.ts",
-    "**/deprecated/**"
+    "vite.config.ts"
   ],
   "include": [
     "src/**/*.ts",

@@ -41,6 +41,7 @@ export const NodeType = Object.freeze({
 // TODO(burdon): Reconcile with ComputeGraphModel.
 export type ComputeGraph = GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;
 
+// TODO(burdon): Rename.
 export class ComputeGraphType extends TypedObject({
   typename: 'dxos.org/type/ComputeGraph',
   version: '0.1.0',
@@ -58,14 +59,10 @@ export const isComputeGraph = S.is(ComputeGraphType);
 export const ComputeGraphNode = S.Struct({
   type: S.optional(S.String),
 
-  /**
-   * For composition nodes.
-   */
+  /** For composition nodes. */
   subgraph: S.optional(Ref(ComputeGraphType)),
 
-  /**
-   * For switch nodes.
-   */
+  /** For switch nodes. */
   // TODO(dmaretskyi): Move to constants.
   enabled: S.optional(S.Boolean),
 });
