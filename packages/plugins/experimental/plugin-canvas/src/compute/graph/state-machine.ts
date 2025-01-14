@@ -7,24 +7,15 @@ import { Effect } from 'effect';
 import { type LLMModel, type MessageImageContentBlock } from '@dxos/assistant';
 import { Event, synchronized } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
-import {
-  type ComputeEdge,
-  type ComputeNode,
-  type Executable,
-  GraphExecutor,
-  Model,
-  makeValueBag,
-  unwrapValueBag,
-} from '@dxos/conductor';
+import { type ComputeEdge, GraphExecutor, Model, makeValueBag, unwrapValueBag } from '@dxos/conductor';
 import { testServices } from '@dxos/conductor/testing';
 import { Resource } from '@dxos/context';
 import { type ObjectId } from '@dxos/echo-schema';
 import { type GraphEdge, type GraphNode } from '@dxos/graph';
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
-import { nodeDefs } from './node-defs';
+import { resolveComputeNode } from './node-defs';
 import type { FunctionCallback, GptInput, GptOutput } from './nodes';
 
 export const InvalidStateError = Error;
@@ -80,7 +71,7 @@ export class StateMachine extends Resource {
 
   // TODO(burdon): Proxy?
   private readonly _executor = new GraphExecutor({
-    computeNodeResolver: this._resolveComputeNode.bind(this),
+    computeNodeResolver: (node) => resolveComputeNode(node),
   });
 
   // TODO(burdon): Document.
@@ -185,11 +176,5 @@ export class StateMachine extends Resource {
     }
     await Promise.all(tasks);
     this.update.emit();
-  }
-
-  private async _resolveComputeNode(node: ComputeNode): Promise<Executable> {
-    const impl = nodeDefs[node.type];
-    invariant(impl, `Unknown node type: ${node.type}`);
-    return impl;
   }
 }

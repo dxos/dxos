@@ -2,14 +2,22 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 import { S } from '@dxos/echo-schema';
 
 import { Box } from './components';
 import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
-import { type ShapeComponentProps, type ShapeDef, TextBox, type TextBoxProps } from '../../components';
+import {
+  type ShapeComponentProps,
+  type ShapeDef,
+  TextBox,
+  type TextBoxControl,
+  type TextBoxProps,
+} from '../../components';
 import { createAnchorMap } from '../../components';
+import { DEFAULT_OUTPUT } from '../graph';
+import { useComputeNodeState } from '../hooks';
 
 //
 // Data
@@ -41,19 +49,24 @@ export type TextComponentProps = ShapeComponentProps<TextShape> & TextBoxProps &
 
 export const TextComponent = ({ shape, title, chat, ...props }: TextComponentProps) => {
   const [reset, setReset] = useState({});
-  const handleEnter: TextBoxProps['onEnter'] = (value) => {
-    if (value.trim().length) {
-      // TODO(burdon): Standardize.
-      // shape.node.setText(value);
+  const inputRef = useRef<TextBoxControl>(null);
+  const { runtime } = useComputeNodeState(shape);
+  const handleEnter: TextBoxProps['onEnter'] = (text) => {
+    const value = text.trim();
+    if (value.length) {
+      runtime.setOutput(DEFAULT_OUTPUT, value);
       if (chat) {
         setReset({});
       }
+
+      inputRef.current?.focus();
     }
   };
 
   return (
     <Box name={title ?? 'Text'}>
       <TextBox
+        ref={inputRef}
         classNames='flex grow p-2 overflow-hidden'
         {...props}
         reset={reset}

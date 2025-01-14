@@ -11,10 +11,9 @@ import { create, makeRef } from '@dxos/live-object';
 
 import { ComputeNode, type ComputeEdge } from '../schema';
 
-// TODO(burdon): Graph of graphs.
-// TODO(burdon): Inline node or reference to other graph.
+// TODO(burdon): Graph of graphs: Inline node or reference to other graph.
 
-// TODO(burdon): Reconcile with plugin-canvas.
+// TODO(burdon): Reconcile type with plugin-canvas.
 export class ComputeGraph extends TypedObject({
   typename: 'dxos.org/type/ComputeGraph',
   version: '0.1.0',

@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S, TypedObject } from '@dxos/echo-schema';
+import { S, TypedObject, Ref } from '@dxos/echo-schema';
 import { Graph } from '@dxos/graph';
 import { Point, Dimension } from '@dxos/react-ui-canvas';
-import { Ref } from '@dxos/echo-schema';
 
 // TODO(burdon): Consider interop with TLDraw and GeoJSON standards?
 

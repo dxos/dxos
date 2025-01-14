@@ -29,7 +29,7 @@ export type Binding = Record<string, any>;
 /**
  * Represents a compute element, which may take inputs from multiple other nodes, and output a value to other nodes.
  */
-// TODO(burdon): Node id.
+// TODO(burdon): Reconcile with Conductor ComputeNode.
 export abstract class ComputeNode<Input extends Binding, Output extends Binding> {
   abstract readonly type: string;
 

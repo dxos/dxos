@@ -6,8 +6,6 @@ import { describe, test } from 'vitest';
 
 import { ComputeGraphModel } from './graph-builder';
 
-// TODO(burdon): Input/output bindings.
-
 describe('graph builder', () => {
   test.only('graph', ({ expect }) => {
     const g1 = ComputeGraphModel.create();
