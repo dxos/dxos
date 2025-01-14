@@ -11,7 +11,17 @@ import type { UserMedia } from './useUserMedia';
 import { CALLS_URL } from '../../types';
 import type { ClientMessage, RoomState, ServerMessage } from '../types';
 
-export default ({ roomName, userMedia, username }: { roomName: string; userMedia: UserMedia; username: string }) => {
+export const useRoom = ({
+  roomName,
+  userMedia,
+  username,
+  edgeConnection,
+}: {
+  roomName: string;
+  userMedia: UserMedia;
+  username: string;
+  edgeConnection: 
+}) => {
   const [roomState, setRoomState] = useState<RoomState>({ users: [] });
 
   const userLeftFunctionRef = useRef(() => {});

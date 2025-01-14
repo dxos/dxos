@@ -7,7 +7,7 @@ import { of } from 'rxjs';
 
 import { useStateObservable, useSubscribedState } from './hooks/rxjsHooks';
 import { usePeerConnection } from './hooks/usePeerConnection';
-import useRoom from './hooks/useRoom';
+import { useRoom } from './hooks/useRoom';
 import { RoomContext, type RoomContextType } from './hooks/useRoomContext';
 import { useStablePojo } from './hooks/useStablePojo';
 import useUserMedia from './hooks/useUserMedia';

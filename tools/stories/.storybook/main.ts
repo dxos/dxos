@@ -29,7 +29,7 @@ export const config = (
   framework: {
     name: '@storybook/react-vite',
     options: {
-      strictMode: true,
+      strictMode: false,
     },
   },
   typescript: {
