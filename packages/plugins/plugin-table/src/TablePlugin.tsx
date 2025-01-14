@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { type PluginDefinition, createSurface, createIntent, createResolver } from '@dxos/app-framework';
+import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
 import { getSpace, type Space } from '@dxos/react-client/echo';
@@ -25,6 +26,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
       metadata: {
         records: {
           [TableType.typename]: {
+            creationSchema: S.Struct({ typename: S.optional(S.String) }).pipe(S.mutable),
             createObject: (props: { name?: string; space: Space }) => createIntent(TableAction.Create, props),
             label: (object: any) => (object instanceof TableType ? object.name : undefined),
             placeholder: ['object placeholder', { ns: TABLE_PLUGIN }],
