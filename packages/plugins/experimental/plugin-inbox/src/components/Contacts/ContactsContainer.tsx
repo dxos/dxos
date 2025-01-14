@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { ContactType } from '@dxos/plugin-space/types';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
-import { mx } from '@dxos/react-ui-theme';
+import { StackItem } from '@dxos/react-ui-stack';
 
 import { ContactList } from './ContactList';
 import { type ContactsType } from '../../types';
@@ -41,10 +41,10 @@ export const ContactsContainer = ({ contacts }: ContactsContainerProps) => {
   objects.sort(byName());
 
   return (
-    <div role='none' className={mx('flex row-span-2 overflow-hidden')}>
+    <StackItem.Content toolbar={false}>
       <MasterDetail>
         <ContactList contacts={objects} selected={selected?.id} onSelect={setSelected} />
       </MasterDetail>
-    </div>
+    </StackItem.Content>
   );
 };

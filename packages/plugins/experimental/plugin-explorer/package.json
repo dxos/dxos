@@ -53,6 +53,7 @@
     "@dxos/plugin-search": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/schema": "^0.75.5",
     "@observablehq/plot": "^0.6.11",
