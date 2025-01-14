@@ -9,7 +9,7 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { EXCALIDRAW_SCHEMA, CanvasType, DiagramType, isDiagramType } from '@dxos/plugin-sketch/types';
 import { create, fullyQualifiedId, makeRef } from '@dxos/react-client/echo';
 
-import { SketchComponent, SketchSettings } from './components';
+import { SketchContainer, SketchSettings } from './components';
 import meta, { SKETCH_PLUGIN } from './meta';
 import translations from './translations';
 import { SketchAction, type SketchGridType, type SketchPluginProvides, type SketchSettingsProps } from './types';
@@ -53,15 +53,11 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             role: ['article', 'section', 'slide'],
             filter: (data): data is { subject: DiagramType } => isDiagramType(data.subject, EXCALIDRAW_SCHEMA),
             component: ({ data, role }) => (
-              <SketchComponent
+              <SketchContainer
                 key={fullyQualifiedId(data.subject)} // Force instance per sketch object. Otherwise, sketch shares the same instance.
                 sketch={data.subject}
-                readonly={role === 'slide'}
-                maxZoom={role === 'slide' ? 1.5 : undefined}
-                autoZoom={role === 'section'}
-                autoHideControls={settings.values.autoHideControls}
-                className={role === 'article' ? 'row-span-2' : role === 'section' ? 'aspect-square' : 'p-16'}
-                grid={settings.values.gridType}
+                role={role}
+                settings={settings.values}
               />
             ),
           }),

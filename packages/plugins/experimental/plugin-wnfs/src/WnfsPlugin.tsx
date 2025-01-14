@@ -12,7 +12,7 @@ import { type DocumentType } from '@dxos/plugin-markdown/types';
 import { type Space, getSpace } from '@dxos/react-client/echo';
 
 import * as Blockstore from './blockstore';
-import { FileMain, FileSection, FileSlide } from './components';
+import { FileContainer } from './components';
 import { image as imageExtension } from './extensions';
 import meta, { WNFS_PLUGIN } from './meta';
 import translations from './translations';
@@ -73,21 +73,9 @@ export const WnfsPlugin = (): PluginDefinition<WnfsPluginProvides> => {
         definitions: () => [
           createSurface({
             id: `${WNFS_PLUGIN}/article`,
-            role: 'article',
+            role: ['article', 'section', 'slide'],
             filter: (data): data is { subject: FileType } => data.subject instanceof FileType,
-            component: ({ data }) => <FileMain file={data.subject} />,
-          }),
-          createSurface({
-            id: `${WNFS_PLUGIN}/section`,
-            role: 'section',
-            filter: (data): data is { subject: FileType } => data.subject instanceof FileType,
-            component: ({ data }) => <FileSection file={data.subject} />,
-          }),
-          createSurface({
-            id: `${WNFS_PLUGIN}/slide`,
-            role: 'slide',
-            filter: (data): data is { subject: FileType } => data.subject instanceof FileType,
-            component: ({ data }) => <FileSlide file={data.subject} cover={false} />,
+            component: ({ data, role }) => <FileContainer role={role} file={data.subject} />,
           }),
         ],
       },

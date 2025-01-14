@@ -93,8 +93,10 @@ export const ScriptBlock = ({ script, hideSelector, containerUrl }: ScriptBlockP
         </Toolbar.Root>
       )}
 
-      <div className='flex'>
-        <ScriptEditor script={script} />
+      <div role='none' className='flex'>
+        <div role='none' className='flex flex-col'>
+          <ScriptEditor script={script} />
+        </div>
         {result && <FrameContainer key={script.id} result={result} containerUrl={containerUrl} />}
       </div>
     </div>

@@ -4,8 +4,7 @@
 
 import { lazy } from 'react';
 
-export const ExplorerMain = lazy(() => import('./ExplorerMain'));
-export const ExplorerArticle = lazy(() => import('./ExplorerArticle'));
+export const ExplorerContainer = lazy(() => import('./ExplorerContainer'));
 
 export * from './Chart';
 export * from './Globe';
