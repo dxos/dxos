@@ -170,7 +170,7 @@ export const MarkdownEditor = ({
   };
 
   return (
-    <StackItem.Content toolbar={!!toolbar} classNames='max-is-full'>
+    <StackItem.Content toolbar={!!toolbar}>
       {toolbar && (
         <div role='none' className={stackItemContentToolbarClassNames(role)}>
           <Toolbar.Root
