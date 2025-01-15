@@ -7,8 +7,9 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { type TypedObject, getObjectAnnotation, S } from '@dxos/echo-schema';
 import { type SpaceId, type Space, isSpace } from '@dxos/react-client/echo';
 import { Icon, IconButton, Input, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Form, InputHeader } from '@dxos/react-ui-form';
+import { Form, type InputComponent, InputHeader, SelectInput } from '@dxos/react-ui-form';
 import { SearchList } from '@dxos/react-ui-searchlist';
+import { type PropertyType } from '@dxos/schema';
 import { nonNullable, type MaybePromise } from '@dxos/util';
 
 import { SPACE_PLUGIN } from '../../meta';
@@ -126,6 +127,16 @@ export const CreateObjectPanel = ({
       schema = S.extend(schema, creationSchema);
     }
 
+    const Custom: Partial<Record<string, InputComponent<any>>> = {
+      schema: (props) => (
+        <SelectInput<any>
+          {...props}
+          property={props.property as keyof PropertyType}
+          options={schemas.map((schema) => ({ value: schema.typename }))}
+        />
+      ),
+    };
+
     return (
       <Form
         autoFocus
@@ -133,6 +144,7 @@ export const CreateObjectPanel = ({
         schema={schema}
         testId='create-object-form'
         onSave={handleCreateObject}
+        Custom={Custom as any}
       />
     );
   }, [initialName, handleCreateObject, metadata]);
