@@ -6,15 +6,15 @@ import React, { useState } from 'react';
 
 import { Expando } from '@dxos/echo-schema';
 import { create } from '@dxos/live-object';
-import { useThemeContext } from '@dxos/react-ui';
+import { useThemeContext, ElevationProvider } from '@dxos/react-ui';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
   formattingKeymap,
-  Toolbar,
   useActionHandler,
+  EditorToolbar,
   useFormattingState,
   useTextEditor,
 } from '@dxos/react-ui-editor';
@@ -47,14 +47,14 @@ export const EditorContent = ({ data: { content = '' } }: { data: StackItemConte
   return (
     <StackItem.Content toolbar>
       <div {...focusAttributes} className={mx(textBlockWidth, focusRing, 'rounded-sm order-last')} ref={parentRef} />
-      <Toolbar.Root
-        onAction={handleAction}
-        state={formattingState}
-        classNames='sticky block-start-0 bg-[--sticky-bg] z-10'
-      >
-        <Toolbar.Markdown />
-        <Toolbar.Separator />
-      </Toolbar.Root>
+      <ElevationProvider elevation='positioned'>
+        <EditorToolbar
+          onAction={handleAction}
+          state={formattingState ?? {}}
+          mode='source'
+          classNames='sticky block-start-0 bg-[--sticky-bg] z-10'
+        />
+      </ElevationProvider>
     </StackItem.Content>
   );
 };

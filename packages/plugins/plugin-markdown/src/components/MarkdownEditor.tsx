@@ -10,7 +10,7 @@ import { createIntent, type FileInfo, LayoutAction, NavigationAction, useIntentD
 import { useThemeContext, useTranslation, ElevationProvider } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
-  type Action,
+  type EditorAction,
   type DNDOptions,
   type EditorViewMode,
   type EditorInputMode,
@@ -24,7 +24,7 @@ import {
   dropFile,
   editorContent,
   editorGutter,
-  processAction,
+  processEditorPayload,
   useActionHandler,
   useCommentState,
   useCommentClickListener,
@@ -102,7 +102,7 @@ export const MarkdownEditor = ({
     const file = files[0];
     const info = file && onFileUpload ? await onFileUpload(file) : undefined;
     if (info) {
-      processAction(view, { id: 'image', properties: { label: '', icon: '', type: 'image', data: info.url } });
+      processEditorPayload(view, { type: 'image', data: info.url });
     }
   };
 
@@ -150,8 +150,8 @@ export const MarkdownEditor = ({
 
   // Toolbar handler.
   const handleToolbarAction = useActionHandler(editorView);
-  const handleAction = (action: Action) => {
-    switch (action.type) {
+  const handleAction = (action: EditorAction) => {
+    switch (action.properties.type) {
       case 'search': {
         if (editorView) {
           openSearchPanel(editorView);
@@ -159,7 +159,7 @@ export const MarkdownEditor = ({
         return;
       }
       case 'view-mode': {
-        onViewModeChange?.(id, action.data);
+        onViewModeChange?.(id, action.properties.data);
         return;
       }
     }
@@ -175,6 +175,7 @@ export const MarkdownEditor = ({
             <EditorToolbar
               classNames={[textBlockWidth, !hasAttention && 'opacity-20']}
               state={formattingState ? { ...formattingState, ...commentsState } : {}}
+              mode={viewMode ?? 'source'}
               onAction={handleAction}
             />
           </ElevationProvider>
