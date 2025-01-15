@@ -37,6 +37,7 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-stack": "workspace:*",
     "@preact/signals-core": "^1.6.0"
   },
   "devDependencies": {

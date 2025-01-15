@@ -45,7 +45,7 @@ export const PathComponent = ({ shape, selected, onSelect }: ShapeComponentProps
               fill={'none'}
               strokeWidth={8}
               className={mx('stroke-transparent', eventsAuto)}
-              onClick={(ev) => onSelect?.(shape.id, ev.shiftKey)}
+              onClick={(ev) => onSelect?.(shape.id, { toggle: true, shift: ev.shiftKey })}
             />
           )}
           {/* TODO(burdon): Document if this is required. */}

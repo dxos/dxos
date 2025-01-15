@@ -33,9 +33,9 @@ export const CanvasPlugin = (): PluginDefinition<CanvasPluginProvides> => {
         definitions: () => [
           createSurface({
             id: CANVAS_PLUGIN,
-            role: 'article',
+            role: ['article', 'section'],
             filter: (data): data is { subject: CanvasBoardType } => data.subject instanceof CanvasBoardType,
-            component: ({ data }) => <CanvasContainer canvas={data.subject} />,
+            component: ({ data, role }) => <CanvasContainer canvas={data.subject} role={role} />,
           }),
         ],
       },

@@ -8,7 +8,6 @@ export * from './anchors';
 export * from './defs';
 export * from './styles';
 
-export * from './AttentionContainer';
 export * from './Canvas';
 export * from './Editor';
 export * from './TextBox';

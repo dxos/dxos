@@ -2456,11 +2456,11 @@ importers:
         version: 3.12.1
       ollama:
         specifier: ^0.5.11
-        version: 0.5.11
+        version: 0.5.12
     devDependencies:
       '@effect/vitest':
         specifier: ^0.16.1
-        version: 0.16.1(effect@3.12.1)(vitest@2.1.3)
+        version: 0.16.3(effect@3.12.1)(vitest@2.1.3)
 
   packages/core/echo/automerge:
     dependencies:
@@ -5751,6 +5751,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-stack
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -5963,10 +5966,10 @@ importers:
         version: link:../../../common/storybook-utils
       '@effect/ai':
         specifier: ^0.5.1
-        version: 0.5.1(@effect/platform@0.72.1(effect@3.12.1))(effect@3.12.1)
+        version: 0.5.2(@effect/platform@0.72.2(effect@3.12.1))(effect@3.12.1)
       '@effect/platform':
         specifier: ^0.72.1
-        version: 0.72.1(effect@3.12.1)
+        version: 0.72.2(effect@3.12.1)
       '@types/d3':
         specifier: ^7.4.3
         version: 7.4.3
@@ -5981,7 +5984,7 @@ importers:
         version: 18.2.25
       ollama:
         specifier: ^0.5.11
-        version: 0.5.11
+        version: 0.5.12
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -6045,6 +6048,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../../ui/react-ui-form
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-stack
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -6136,6 +6142,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-stack
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -6251,6 +6260,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../../ui/react-ui-attention
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-stack
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -6330,6 +6342,9 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-stack
       '@effect/schema':
         specifier: ^0.75.5
         version: 0.75.5(effect@3.12.1)
@@ -6494,6 +6509,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-stack
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -6607,6 +6625,9 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-stack
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -6752,6 +6773,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../../ui/react-ui-form
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-stack
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../../ui/react-ui-syntax-highlighter
@@ -6931,6 +6955,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-stack
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -7010,6 +7037,9 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-stack
       blockstore-core:
         specifier: ^5.0.1
         version: 5.0.2
@@ -7123,6 +7153,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-stack
       '@effect/schema':
         specifier: ^0.75.5
         version: 0.75.5(effect@3.12.1)
@@ -7547,6 +7580,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-stack
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -8628,6 +8664,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-stack
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -14622,26 +14661,26 @@ packages:
   '@dxos/web-auth@0.4.80':
     resolution: {integrity: sha512-yRIGQRJd1KrNqdwZGxFvDpi2ioMy2I+RJbif1YCF9T9eKqiyJDuZe6IGBfwiY/ew1bTW0m88D4hnH81NA1iCdg==}
 
-  '@effect/ai@0.5.1':
-    resolution: {integrity: sha512-daKAnSQ60yGPUQWD5Y1otRGSM02NoektyQUC21GF6vkfEv+D0L06yirJ9CFMaUVcZI1oi7NSZgGoGeVWB9m6DA==}
+  '@effect/ai@0.5.2':
+    resolution: {integrity: sha512-W1vtDvvsKnM1CC/j0L4yg8EQo51bEvecV2UhpSpqdr32IuSvwkN5TVG6G1aNzJ2RXODAuVLOqDF+KinyiT/OzA==}
     peerDependencies:
-      '@effect/platform': ^0.72.1
-      effect: ^3.12.1
+      '@effect/platform': ^0.72.2
+      effect: ^3.12.2
 
-  '@effect/platform@0.72.1':
-    resolution: {integrity: sha512-hCnO9cWsz0yns5lYVxCPBEmy9RAqcTZ7USYgwpFBLpcpNo3uzzVnU69gfBxyq2sYvTHF7yYvH1J42NfOdnof0w==}
+  '@effect/platform@0.72.2':
+    resolution: {integrity: sha512-7oWNTyrlkDoopA2kEm2s3M1VAJETnIK/bVlW4qqEVbKLern8znPotIx1fRNtTIUANPKhUMclC3Jt+R+3UEUdUw==}
     peerDependencies:
-      effect: ^3.12.1
+      effect: ^3.12.2
 
   '@effect/schema@0.75.5':
     resolution: {integrity: sha512-TQInulTVCuF+9EIbJpyLP6dvxbQJMphrnRqgexm/Ze39rSjfhJuufF7XvU3SxTgg3HnL7B/kpORTJbHhlE6thw==}
     peerDependencies:
       effect: ^3.9.2
 
-  '@effect/vitest@0.16.1':
-    resolution: {integrity: sha512-a0ODFz6LUip7q7XITDUe0BH6Ot6/V2uE40C+WOlYHK/CNb1rkinJcMz5edqDy74Lm6sd3zelfY4k7wNAzgiePA==}
+  '@effect/vitest@0.16.3':
+    resolution: {integrity: sha512-r3hjCi/mKP1gDiWMkrHESKRObh7npV0MKgq2RZANSzcSqTW3naR2TdggdAS7yakRVE/Rx+hihj/VvQSg+V3W/A==}
     peerDependencies:
-      effect: ^3.12.1
+      effect: ^3.12.3
       vitest: ^2.0.5
 
   '@emnapi/core@1.2.0':
@@ -21489,7 +21528,6 @@ packages:
 
   acorn-import-assertions@1.9.0:
     resolution: {integrity: sha512-cmMwop9x+8KFhxvKrKfPYmN6/pKTYYHBqLa0DfvVZcKMJWNyWLnaqND7dx/qn66R7ewM1UX5XMaDVP5wlVTaVA==}
-    deprecated: package has been renamed to acorn-import-attributes
     peerDependencies:
       acorn: ^8
 
@@ -28629,8 +28667,8 @@ packages:
   ohash@1.1.4:
     resolution: {integrity: sha512-FlDryZAahJmEF3VR3w1KogSEdWX3WhA5GPakFx4J81kEAiHyLMpdLLElS8n8dfNadMgAne/MywcvmogzscVt4g==}
 
-  ollama@0.5.11:
-    resolution: {integrity: sha512-lDAKcpmBU3VAOGF05NcQipHNKTdpKfAHpZ7bjCsElkUkmX7SNZImi6lwIxz/l1zQtLq0S3wuLneRuiXxX2KIew==}
+  ollama@0.5.12:
+    resolution: {integrity: sha512-flVH1fn1c9NF7VV3bW9kSu0E+bYc40b4DxL/gS2Debhao35osJFRDiPOj9sIWTMvcyj78Paw1OuhfIe7uhDWfQ==}
 
   on-finished@2.3.0:
     resolution: {integrity: sha512-ikqdkGAAyf/X/gPhXGvfgAytDZtDbr+bkNUJ0N9h5MI/dmdgCs3l6hoHrcUv41sRKew3jIwrp4qQDXiK99Utww==}
@@ -37818,12 +37856,12 @@ snapshots:
       lodash.isequal: 4.5.0
       lodash.pick: 4.4.0
 
-  '@effect/ai@0.5.1(@effect/platform@0.72.1(effect@3.12.1))(effect@3.12.1)':
+  '@effect/ai@0.5.2(@effect/platform@0.72.2(effect@3.12.1))(effect@3.12.1)':
     dependencies:
-      '@effect/platform': 0.72.1(effect@3.12.1)
+      '@effect/platform': 0.72.2(effect@3.12.1)
       effect: 3.12.1
 
-  '@effect/platform@0.72.1(effect@3.12.1)':
+  '@effect/platform@0.72.2(effect@3.12.1)':
     dependencies:
       effect: 3.12.1
       find-my-way-ts: 0.1.5
@@ -37834,7 +37872,7 @@ snapshots:
       effect: 3.12.1
       fast-check: 3.23.1
 
-  '@effect/vitest@0.16.1(effect@3.12.1)(vitest@2.1.3)':
+  '@effect/vitest@0.16.3(effect@3.12.1)(vitest@2.1.3)':
     dependencies:
       effect: 3.12.1
       vitest: 2.1.3(@types/node@22.10.2)(@vitest/browser@2.1.3)(@vitest/ui@2.1.3)(happy-dom@13.3.4)(jsdom@24.0.0(canvas@2.11.2(encoding@0.1.13)))(less@4.1.3)(msw@2.4.6(typescript@5.7.2))(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
@@ -54853,7 +54891,7 @@ snapshots:
 
   ohash@1.1.4: {}
 
-  ollama@0.5.11:
+  ollama@0.5.12:
     dependencies:
       whatwg-fetch: 3.6.20
 

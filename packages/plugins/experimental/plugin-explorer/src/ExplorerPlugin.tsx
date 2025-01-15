@@ -7,7 +7,7 @@ import React from 'react';
 import { createIntent, createResolver, createSurface, type PluginDefinition } from '@dxos/app-framework';
 import { create } from '@dxos/react-client/echo';
 
-import { ExplorerArticle } from './components';
+import { ExplorerContainer } from './components';
 import meta, { EXPLORER_PLUGIN } from './meta';
 import translations from './translations';
 import { ViewType } from './types';
@@ -34,9 +34,9 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
         definitions: () =>
           createSurface({
             id: `${EXPLORER_PLUGIN}/article`,
-            role: 'article',
+            role: ['article', 'section'],
             filter: (data): data is { subject: ViewType } => data.subject instanceof ViewType,
-            component: ({ data }) => <ExplorerArticle view={data.subject} />,
+            component: ({ data, role }) => <ExplorerContainer view={data.subject} role={role} />,
           }),
       },
       intent: {

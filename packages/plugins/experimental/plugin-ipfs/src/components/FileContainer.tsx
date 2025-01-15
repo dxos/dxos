@@ -2,15 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC } from 'react';
+import React from 'react';
 
 import { useConfig } from '@dxos/react-client';
+import { StackItem } from '@dxos/react-ui-stack';
 
 import { FilePreview } from './FilePreview';
 import { getIpfsUrl } from '../get-ipfs-url';
 import { type FileType } from '../types';
 
-const FileSection: FC<{ file: FileType; height?: number }> = ({ file, height = 400 }) => {
+const FileContainer = ({ file, role }: { file: FileType; role: string }) => {
   const config = useConfig();
   if (!file.cid) {
     return null;
@@ -18,10 +19,10 @@ const FileSection: FC<{ file: FileType; height?: number }> = ({ file, height = 4
 
   const url = getIpfsUrl(config, file.cid);
   return (
-    <div style={{ height }} className='flex w-full p-2 justify-center align-center'>
-      <FilePreview type={file.type} url={url} className='object-contain' />
-    </div>
+    <StackItem.Content toolbar={false}>
+      <FilePreview type={file.type} url={url} />
+    </StackItem.Content>
   );
 };
 
-export default FileSection;
+export default FileContainer;

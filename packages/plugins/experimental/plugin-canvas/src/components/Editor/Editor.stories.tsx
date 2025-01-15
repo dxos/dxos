@@ -13,6 +13,7 @@ import { S, getSchemaTypename, getTypename } from '@dxos/echo-schema';
 import { createGraph, type GraphEdge, type GraphModel, type GraphNode } from '@dxos/graph';
 import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { AttendableContainer, type AttendableContainerProps } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Form, TupleInput } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -23,12 +24,18 @@ import { Editor, type EditorController, type EditorRootProps } from './Editor';
 import { doLayout } from '../../layout';
 import { useSelection } from '../../testing';
 import { RectangleShape, type Shape } from '../../types';
-import { AttentionContainer } from '../AttentionContainer';
 import { DragTest } from '../Canvas/DragTest';
+import { KeyboardContainer } from '../KeyboardContainer';
 
 const generator: ValueGenerator = faker as any;
 
 const types = [Testing.OrgType, Testing.ProjectType, Testing.ContactType];
+
+const AttentionContainer = ({ id, children, ...props }: AttendableContainerProps) => (
+  <AttendableContainer {...props} id={id}>
+    <KeyboardContainer id={id}>{children}</KeyboardContainer>
+  </AttendableContainer>
+);
 
 // TODO(burdon): Ref expando breaks the form.
 const RectangleShapeWithoutRef = S.omit<any, any, ['object']>('object')(RectangleShape);
@@ -40,10 +47,10 @@ type RenderProps = EditorRootProps &
     computeGraph?: GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;
   }>;
 
-const Render = ({ id = 'test', children, graph: _graph, init, sidebar, ...props }: RenderProps) => {
+const Render = ({ id = 'test', init, sidebar, children, ...props }: RenderProps) => {
   const editorRef = useRef<EditorController>(null);
   const { space } = useClientProvider();
-  const [graph, setGraph] = useState<GraphModel<GraphNode<Shape>> | undefined>(_graph);
+  const [graph, setGraph] = useState<GraphModel<GraphNode<Shape>> | undefined>();
 
   // Layout.
   useEffect(() => {

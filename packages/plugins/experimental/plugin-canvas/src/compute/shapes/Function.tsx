@@ -39,7 +39,7 @@ export const createFunction = ({ id, ...rest }: CreateFunctionProps): FunctionSh
 export const FunctionComponent = ({ shape }: ShapeComponentProps<FunctionShape>) => {
   return null;
   // return (
-  // <FunctionBody name={shape.node.name} inputSchema={shape.node.inputSchema} outputSchema={shape.node.outputSchema} />
+  // <FunctionBody shape={shape} name={shape.node.name} inputSchema={shape.node.inputSchema} outputSchema={shape.node.outputSchema} />
   // )
 };
 
