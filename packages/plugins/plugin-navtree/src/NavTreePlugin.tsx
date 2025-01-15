@@ -2,11 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import { definePlugin, defineModule, Events, contributes, Capabilities, allOf, oneOf } from '@dxos/app-framework';
+import {
+  definePlugin,
+  defineModule,
+  Events,
+  contributes,
+  Capabilities,
+  allOf,
+  oneOf,
+  NavigationAction,
+  createIntent,
+} from '@dxos/app-framework';
 import { type TreeData } from '@dxos/react-ui-list';
 
 import { AppGraphBuilder, IntentResolver, Keyboard, ReactSurface, State } from './capabilities';
 import { NODE_TYPE } from './components';
+import { NavTreeEvents } from './events';
 import { meta } from './meta';
 import translations from './translations';
 
@@ -14,7 +25,8 @@ export const NavTreePlugin = () =>
   definePlugin(meta, [
     defineModule({
       id: `${meta.id}/module/state`,
-      activatesOn: allOf(Events.DispatcherReady, Events.LayoutReady, Events.LocationReady),
+      activatesOn: allOf(Events.LayoutReady, Events.LocationReady),
+      triggers: [NavTreeEvents.StateReady],
       activate: State,
     }),
     defineModule({
@@ -41,6 +53,21 @@ export const NavTreePlugin = () =>
             },
           },
         }),
+    }),
+    defineModule({
+      id: `${meta.id}/module/expose`,
+      activatesOn: allOf(Events.DispatcherReady, Events.LayoutReady, Events.LocationReady, NavTreeEvents.StateReady),
+      activate: async (context) => {
+        const location = context.requestCapability(Capabilities.Location);
+        const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
+
+        const soloPart = location.active.solo?.[0];
+        if (dispatch && soloPart) {
+          await dispatch(createIntent(NavigationAction.Expose, { id: soloPart.id }));
+        }
+
+        return [];
+      },
     }),
     defineModule({
       id: `${meta.id}/module/keyboard`,

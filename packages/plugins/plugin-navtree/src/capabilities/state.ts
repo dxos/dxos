@@ -4,7 +4,7 @@
 
 import { effect } from '@preact/signals-core';
 
-import { Capabilities, contributes, type PluginsContext, createIntent, NavigationAction } from '@dxos/app-framework';
+import { Capabilities, contributes, type PluginsContext } from '@dxos/app-framework';
 import { type ReactiveObject, create } from '@dxos/live-object';
 import { Path } from '@dxos/react-ui-mosaic';
 
@@ -69,12 +69,6 @@ export default (context: PluginsContext) => {
 
   const location = context.requestCapability(Capabilities.Location);
   const layout = context.requestCapability(Capabilities.Layout);
-  const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
-
-  const soloPart = location.active.solo?.[0];
-  if (dispatch && soloPart) {
-    void dispatch(createIntent(NavigationAction.Expose, { id: soloPart.id }));
-  }
 
   let previous: string[] = [];
   const unsubscribe = effect(() => {
