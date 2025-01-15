@@ -70,7 +70,9 @@ export const ScriptPlugin = (): PluginDefinition<ScriptPluginProvides> => {
             id: `${SCRIPT_PLUGIN}/article`,
             role: 'article',
             filter: (data): data is { subject: ScriptType } => data.subject instanceof ScriptType,
-            component: ({ data }) => <ScriptContainer script={data.subject} env={compiler.environment} />,
+            component: ({ data, role }) => (
+              <ScriptContainer role={role} script={data.subject} env={compiler.environment} />
+            ),
           }),
           createSurface({
             id: `${SCRIPT_PLUGIN}/automation`,

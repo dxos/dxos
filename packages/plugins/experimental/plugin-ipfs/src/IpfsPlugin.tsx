@@ -10,7 +10,7 @@ import { type Plugin, type PluginDefinition, createSurface, resolvePlugin } from
 import { log } from '@dxos/log';
 import { type ClientPluginProvides, parseClientPlugin } from '@dxos/plugin-client/types';
 
-import { FileMain, FileSection, FileSlide } from './components';
+import { FileContainer } from './components';
 import meta, { IPFS_PLUGIN } from './meta';
 import translations from './translations';
 import { FileType } from './types';
@@ -97,21 +97,9 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
         definitions: () => [
           createSurface({
             id: `${IPFS_PLUGIN}/article`,
-            role: 'article',
+            role: ['article', 'section', 'slide'],
             filter: (data): data is { subject: FileType } => data.subject instanceof FileType,
-            component: ({ data }) => <FileMain file={data.subject} />,
-          }),
-          createSurface({
-            id: `${IPFS_PLUGIN}/section`,
-            role: 'section',
-            filter: (data): data is { subject: FileType } => data.subject instanceof FileType,
-            component: ({ data }) => <FileSection file={data.subject} />,
-          }),
-          createSurface({
-            id: `${IPFS_PLUGIN}/slide`,
-            role: 'slide',
-            filter: (data): data is { subject: FileType } => data.subject instanceof FileType,
-            component: ({ data }) => <FileSlide file={data.subject} cover={false} />,
+            component: ({ data, role }) => <FileContainer file={data.subject} role={role} />,
           }),
         ],
       },

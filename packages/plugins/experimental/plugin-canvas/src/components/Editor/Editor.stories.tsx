@@ -12,6 +12,7 @@ import { S, getTypename } from '@dxos/echo-schema';
 import { createGraph, type GraphModel, type GraphNode } from '@dxos/graph';
 import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { AttendableContainer, type AttendableContainerProps } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Form, TupleInput } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -22,7 +23,7 @@ import { Editor, type EditorController, type EditorRootProps } from './Editor';
 import { SelectionModel } from '../../hooks';
 import { doLayout } from '../../layout';
 import { RectangleShape, type Shape } from '../../types';
-import { AttentionContainer } from '../AttentionContainer';
+import { KeyboardContainer } from '../KeyboardContainer';
 
 const generator: ValueGenerator = faker as any;
 
@@ -32,6 +33,12 @@ type RenderProps = Omit<EditorRootProps, 'graph'> & { init?: boolean; sidebar?: 
 
 // TODO(burdon): Ref expando breaks the form.
 const RectangleShapeWithoutRef = S.omit<any, any, ['object']>('object')(RectangleShape);
+
+const AttentionContainer = ({ id, children, ...props }: AttendableContainerProps) => (
+  <AttendableContainer {...props} id={id}>
+    <KeyboardContainer id={id}>{children}</KeyboardContainer>
+  </AttendableContainer>
+);
 
 const Render = ({ id = 'test', init, sidebar, ...props }: RenderProps) => {
   const editorRef = useRef<EditorController>(null);
