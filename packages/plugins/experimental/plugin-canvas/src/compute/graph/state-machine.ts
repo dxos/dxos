@@ -77,11 +77,14 @@ export class StateMachine extends Resource {
     computeNodeResolver: (node) => resolveComputeNode(node),
   });
 
-  // TODO(burdon): Document.
-  private readonly _forcedOutputs = new ComplexMap<[nodeId: ObjectId, property: string], any>(
-    ([nodeId, property]) => `${nodeId}/${property}`,
-  );
+  /**
+   * Canvas force-sets outputs of those nodes.
+   */
+  private _forcedOutputs: Record<string, Record<string, unknown>> = {};
 
+  /**
+   * Runtime state of the execution graph.
+   */
   private _runtimeState: Record<string, Record<string, RuntimeValue>> = {};
 
   // TODO(burdon): Remove? Make state reactive?
@@ -109,9 +112,7 @@ export class StateMachine extends Resource {
   }
 
   get userState() {
-    return Object.fromEntries(
-      [...this._forcedOutputs.entries()].map(([[node, property], value]) => [`${node}/${property}`, value]),
-    );
+    return this._forcedOutputs;
   }
 
   get executedState() {
@@ -127,6 +128,7 @@ export class StateMachine extends Resource {
   }
 
   getInputs(nodeId: string) {
+    console.log({ st: this._runtimeState }, nodeId);
     return this._runtimeState[nodeId] ?? {};
   }
 
@@ -136,7 +138,9 @@ export class StateMachine extends Resource {
 
   @log.method()
   setOutput(nodeId: string, property: string, value: any) {
-    this._forcedOutputs.set([nodeId, property], value);
+    this._forcedOutputs[nodeId] ??= {};
+    this._forcedOutputs[nodeId][property] = value;
+
     queueMicrotask(async () => {
       try {
         await this.exec();
@@ -152,12 +156,7 @@ export class StateMachine extends Resource {
     const executor = this._executor.clone();
     await executor.load(this._graph.model as any);
 
-    const outputsByNode: Record<string, Record<string, any>> = {};
-    for (const [[nodeId, property], value] of this._forcedOutputs.entries()) {
-      outputsByNode[nodeId] ??= {};
-      outputsByNode[nodeId][property] = value;
-    }
-    for (const [nodeId, outputs] of Object.entries(outputsByNode)) {
+    for (const [nodeId, outputs] of Object.entries(this._forcedOutputs)) {
       executor.setOutputs(nodeId, makeValueBag(outputs));
     }
 

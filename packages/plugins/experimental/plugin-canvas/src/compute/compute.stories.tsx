@@ -58,6 +58,8 @@ const Render = ({
   sidebar: _sidebar,
   ...props
 }: RenderProps) => {
+  const [, forceUpdate] = useState({});
+
   const editorRef = useRef<EditorController>(null);
   const [sidebar, setSidebar] = useState(_sidebar);
   const json = useMemo(() => {
@@ -87,6 +89,7 @@ const Render = ({
     const off = combine(
       machine.update.on(() => {
         void editorRef.current?.update();
+        forceUpdate({});
       }),
 
       // TODO(burdon): Every node is called on every update.

@@ -28,29 +28,26 @@ export type ComputeNodeState = {
 export const useComputeNodeState = (shape: ComputeShape): ComputeNodeState => {
   const { stateMachine } = useComputeContext();
 
-  // TODO(dmaretskyi): Get from context.
-  return useMemo(
-    () => ({
-      // TODO(burdon): ???
-      node: {
-        id: shape.id,
-        type: shape.type,
-        data: {},
+  
+  return {
+    // TODO(burdon): ???
+    node: {
+      id: shape.id,
+      type: shape.type,
+      data: {},
+    },
+    // TODO(burdon): ???
+    meta: {
+      input: S.Struct({}),
+      output: S.Struct({}),
+    },
+    // TODO(burdon): Rename proxy?
+    runtime: {
+      inputs: stateMachine.getInputs(shape.node!),
+      outputs: stateMachine.getOutputs(shape.node!),
+      setOutput: (property: string, value: any) => {
+        stateMachine.setOutput(shape.node!, property, value);
       },
-      // TODO(burdon): ???
-      meta: {
-        input: S.Struct({}),
-        output: S.Struct({}),
-      },
-      // TODO(burdon): Rename proxy?
-      runtime: {
-        inputs: stateMachine.getInputs(shape.node!),
-        outputs: stateMachine.getOutputs(shape.node!),
-        setOutput: (property: string, value: any) => {
-          stateMachine.setOutput(shape.node!, property, value);
-        },
-      },
-    }),
-    [stateMachine, shape],
-  );
+    },
+  };
 };

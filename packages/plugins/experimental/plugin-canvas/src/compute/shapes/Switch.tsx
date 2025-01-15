@@ -35,7 +35,7 @@ export const SwitchComponent = ({ shape }: ShapeComponentProps<SwitchShape>) => 
   const { runtime } = useComputeNodeState(shape);
   useEffect(() => {
     runtime.setOutput(DEFAULT_OUTPUT, value);
-  }, [runtime, value]);
+  }, [value]);
 
   return (
     <div className='flex w-full justify-center items-center' onClick={(ev) => ev.stopPropagation()}>
