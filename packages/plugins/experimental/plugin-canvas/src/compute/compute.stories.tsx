@@ -139,7 +139,7 @@ const Render = ({
       </ComputeContext.Provider>
 
       {sidebar && (
-        <Container id='test' classNames='flex flex-col h-full overflow-hidden'>
+        <Container id='sidebar' classNames='flex flex-col h-full overflow-hidden'>
           <Select.Root value={sidebar} onValueChange={(value) => setSidebar(value as RenderProps['sidebar'])}>
             <Select.TriggerButton classNames='is-full'>{sidebar}</Select.TriggerButton>
             <Select.Portal>

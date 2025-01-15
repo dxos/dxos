@@ -8,6 +8,9 @@ import { AttendableContainer, type AttendableContainerProps } from '@dxos/react-
 
 import { KeyboardContainer } from './KeyboardContainer';
 
+/**
+ * Test container.
+ */
 export const Container = ({ id, children, ...props }: AttendableContainerProps) => (
   <AttendableContainer {...props} id={id} tabIndex={0}>
     <KeyboardContainer id={id}>{children}</KeyboardContainer>
