@@ -11,7 +11,7 @@ import { type MenuAction } from '../../defs';
 import { ActionLabel } from '../ActionLabel';
 import { DropdownMenu } from '../DropdownMenu';
 
-export const ToolbarDropdownMenu = ({ actionGroup, graph, onAction, applyActiveIcon }: ToolbarActionGroupProps) => {
+export const ToolbarDropdownMenu = ({ actionGroup, graph, onAction }: ToolbarActionGroupProps) => {
   const menuActions = useMemo(() => (graph ? graph.actions(actionGroup) : []) as MenuAction[], [actionGroup, graph]);
   const { icon, iconOnly = true, disabled, testId } = actionGroup.properties;
   const suppressNextTooltip = useRef(false);
@@ -24,7 +24,11 @@ export const ToolbarDropdownMenu = ({ actionGroup, graph, onAction, applyActiveI
           variant='ghost'
           iconOnly={iconOnly}
           disabled={disabled}
-          icon={(applyActiveIcon && menuActions.find((action) => !!action.properties.checked)?.properties.icon) || icon}
+          icon={
+            ((actionGroup.properties as any).applyActiveIcon &&
+              menuActions.find((action) => !!action.properties.checked)?.properties.icon) ||
+            icon
+          }
           label={<ActionLabel action={actionGroup} />}
           {...(testId && { 'data-testid': testId })}
           suppressNextTooltip={suppressNextTooltip}

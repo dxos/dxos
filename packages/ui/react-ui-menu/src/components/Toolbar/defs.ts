@@ -15,9 +15,16 @@ export type ToolbarSeparatorNode = Node<never, Pick<ToolbarSeparatorProps, 'vari
 
 export const isSeparator = (node: Node): node is ToolbarSeparatorNode => node.type === ToolbarSeparatorType;
 
-export type ToolbarActionGroupProperties = Omit<MenuActionProperties, 'variant'> & {
-  variant: 'dropdownMenu' | 'toggleGroup';
-} & ({ selectCardinality?: 'single'; value?: string } | { selectCardinality?: 'multiple'; value?: string[] });
+export type ToolbarActionGroupProperties = Omit<MenuActionProperties, 'variant' | 'icon'> &
+  (
+    | {
+        variant: 'dropdownMenu';
+        icon: string;
+        applyActiveIcon?: boolean;
+      }
+    | { variant: 'toggleGroup' }
+  ) &
+  ({ selectCardinality: 'single'; value: string } | { selectCardinality: 'multiple'; value: string[] });
 
 export type ToolbarActionGroup = ActionGroup<ToolbarActionGroupProperties>;
 

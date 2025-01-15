@@ -4,9 +4,9 @@
 
 import { type EditorView } from '@codemirror/view';
 
-import { type ToolbarProps } from '../components';
-import { processAction } from '../extensions';
+import { type EditorToolbarProps } from '../components';
+import { processEditorPayload } from '../extensions';
 
-export const useActionHandler = (view?: EditorView | null): ToolbarProps['onAction'] => {
-  return (action) => view && processAction(view, action);
+export const useActionHandler = (view?: EditorView | null): EditorToolbarProps['onAction'] => {
+  return (action) => view && processEditorPayload(view, action.properties);
 };
