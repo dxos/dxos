@@ -54,6 +54,10 @@ ssc list-devices --platform ios
 ssc install-app --platform ios
 ```
 
+## Logos and image assets
+
+
+
 ## Dependencies
 
 To view dependencies and build sizes using bundle buddy, upload pairs of javascript and source map files from
