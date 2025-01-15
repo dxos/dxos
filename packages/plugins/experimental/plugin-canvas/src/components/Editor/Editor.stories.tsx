@@ -13,7 +13,6 @@ import { S, getSchemaTypename, getTypename } from '@dxos/echo-schema';
 import { createGraph, type GraphEdge, type GraphModel, type GraphNode } from '@dxos/graph';
 import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
-import { AttendableContainer, type AttendableContainerProps } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Form, TupleInput } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -25,17 +24,11 @@ import { doLayout } from '../../layout';
 import { useSelection } from '../../testing';
 import { RectangleShape, type Shape } from '../../types';
 import { DragTest } from '../Canvas/DragTest';
-import { KeyboardContainer } from '../KeyboardContainer';
+import { Container } from '../Container';
 
 const generator: ValueGenerator = faker as any;
 
 const types = [Testing.OrgType, Testing.ProjectType, Testing.ContactType];
-
-const AttentionContainer = ({ id, children, ...props }: AttendableContainerProps) => (
-  <AttendableContainer {...props} id={id}>
-    <KeyboardContainer id={id}>{children}</KeyboardContainer>
-  </AttendableContainer>
-);
 
 // TODO(burdon): Ref expando breaks the form.
 const RectangleShapeWithoutRef = S.omit<any, any, ['object']>('object')(RectangleShape);
@@ -76,40 +69,40 @@ const Render = ({ id = 'test', init, sidebar, children, ...props }: RenderProps)
 
   return (
     <div className='grid grid-cols-[1fr,360px] w-full h-full'>
-      <AttentionContainer id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
+      <Container id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
         <Editor.Root ref={editorRef} id={id} graph={graph} selection={selection} autoZoom {...props}>
           <Editor.Canvas>{children}</Editor.Canvas>
           <Editor.UI />
         </Editor.Root>
-      </AttentionContainer>
+      </Container>
 
       {/* TODO(burdon): Need to set schema based on what is selected. */}
-      {sidebar === 'selected' && selected && (
-        <Form
-          schema={RectangleShapeWithoutRef}
-          values={selected}
-          Custom={{
-            // TODO(burdon): Replace by type.
-            ['center' as const]: (props) => <TupleInput {...props} binding={['x', 'y']} />,
-            ['size' as const]: (props) => <TupleInput {...props} binding={['width', 'height']} />,
-          }}
-        />
-      )}
+      {sidebar && (
+        <Container id='sidebar' classNames='flex grow overflow-hidden'>
+          {sidebar === 'selected' && selected && (
+            <Form
+              schema={RectangleShapeWithoutRef}
+              values={selected}
+              Custom={{
+                // TODO(burdon): Replace by type.
+                ['center' as const]: (props) => <TupleInput {...props} binding={['x', 'y']} />,
+                ['size' as const]: (props) => <TupleInput {...props} binding={['width', 'height']} />,
+              }}
+            />
+          )}
 
-      {sidebar === 'json' && (
-        <AttentionContainer id='sidebar' tabIndex={0} classNames='flex grow overflow-hidden'>
-          <SyntaxHighlighter language='json' classNames='text-xs'>
-            {JSON.stringify({ graph: graph?.graph }, null, 2)}
-          </SyntaxHighlighter>
-        </AttentionContainer>
-      )}
+          {sidebar === 'json' && (
+            <SyntaxHighlighter language='json' classNames='text-xs'>
+              {JSON.stringify({ graph: graph?.graph }, null, 2)}
+            </SyntaxHighlighter>
+          )}
 
-      {sidebar === 'state-machine' && (
-        <AttentionContainer id='sidebar' tabIndex={0} classNames='flex grow overflow-hidden'>
-          <SyntaxHighlighter language='json' classNames='text-xs'>
-            {JSON.stringify({ selected }, null, 2)}
-          </SyntaxHighlighter>
-        </AttentionContainer>
+          {sidebar === 'state-machine' && (
+            <SyntaxHighlighter language='json' classNames='text-xs'>
+              {JSON.stringify({ selected }, null, 2)}
+            </SyntaxHighlighter>
+          )}
+        </Container>
       )}
     </div>
   );

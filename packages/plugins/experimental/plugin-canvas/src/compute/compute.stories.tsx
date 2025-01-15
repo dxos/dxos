@@ -13,7 +13,6 @@ import { EdgeGpt, type ComputeEdge, type ComputeNode } from '@dxos/conductor';
 import { type GraphEdge, type GraphModel, type GraphNode } from '@dxos/graph';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select } from '@dxos/react-ui';
-import { AttendableContainer } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -25,6 +24,7 @@ import { type ComputeShape } from './shapes';
 import { createMachine, createTest1, createTest3 } from './testing';
 import { Editor, type EditorController, type EditorRootProps } from '../components';
 import { ShapeRegistry } from '../components';
+import { Container } from '../components/Container';
 import { useSelection } from '../testing';
 import { type Connection } from '../types';
 
@@ -122,7 +122,7 @@ const Render = ({
   return (
     <div className='grid grid-cols-[1fr,360px] w-full h-full'>
       <ComputeContext.Provider value={{ stateMachine: machine! }}>
-        <AttendableContainer id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
+        <Container id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
           <Editor.Root
             ref={editorRef}
             id={id}
@@ -135,11 +135,11 @@ const Render = ({
             <Editor.Canvas>{children}</Editor.Canvas>
             <Editor.UI />
           </Editor.Root>
-        </AttendableContainer>
+        </Container>
       </ComputeContext.Provider>
 
       {sidebar && (
-        <AttendableContainer id='test' classNames='flex flex-col h-full overflow-hidden'>
+        <Container id='test' classNames='flex flex-col h-full overflow-hidden'>
           <Select.Root value={sidebar} onValueChange={(value) => setSidebar(value as RenderProps['sidebar'])}>
             <Select.TriggerButton classNames='is-full'>{sidebar}</Select.TriggerButton>
             <Select.Portal>
@@ -160,7 +160,7 @@ const Render = ({
               {JSON.stringify(json, null, 2)}
             </SyntaxHighlighter>
           </div>
-        </AttendableContainer>
+        </Container>
       )}
     </div>
   );
