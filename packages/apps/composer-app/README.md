@@ -58,6 +58,8 @@ ssc install-app --platform ios
 
 ## Logos and image assets
 
+NOTE: We tried "@vite-pwa/assets-generator", but it isn't fully implemented, so using pwa-asset-generator.
+
 ```bash
 pnpm run icons
 ```

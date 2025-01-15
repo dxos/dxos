@@ -6,7 +6,6 @@
     <meta name="description" content="DXOS Composer Application">
     <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,interactive-widget=resizes-content,viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="msapplication-TileColor" content="#003E70">
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f7f8f9">
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#252529">
@@ -19,7 +18,6 @@
         child-src 'none';
         object-src 'none';
       ">
-
     <link rel="manifest" href="/site.webmanifest">
 
     <!--
@@ -28,11 +26,15 @@
     -->
 
     <!-- Copied from pwa-assets output. -->
+
+    <!--
     <link rel="icon" href="/favicon.ico" sizes="any">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png">
+    -->
 
     <!-- TODO(wittjosiah): Add hash/nonce and remove unsafe-inline from content security policy. -->
+
     <!-- TODO(nf): blob in worker-src needed for Sentry replay. -->
     <script>
       function setTheme(darkMode) {
@@ -53,6 +55,11 @@
         }
       }
     </style>
+
+    <!-- Generated from icons:pwa -->
+    <link rel="icon" type="image/png" sizes="196x196" href="//public/favicon-196.png">
+    <link rel="apple-touch-icon" href="//public/apple-icon-180.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
   </head>
   <body>
     <div id="root"></div>

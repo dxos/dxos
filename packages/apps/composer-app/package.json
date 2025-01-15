@@ -13,11 +13,10 @@
     "build:functions": "esbuild ./src/functions/_worker.ts --bundle --format=esm --outfile=./out/composer/_worker.js",
     "copy:assets": "mkdir -p ./public/assets/plugin-sketch && cp -R node_modules/@dxos/plugin-sketch/dist/assets/* ./public/assets/plugin-sketch",
     "demo": "node -r ts-node/register/transpile-only ./playwright/demos/grid.ts",
-    "icons": "npm run icons:cp && npm run icons:pwa && npm run icons:vite && npm run icons:mstile",
+    "icons": "npm run icons:cp && npm run icons:pwa && npm run icons:mstile",
     "icons:cp": "cp ./assets/favicon.svg ./public/icon.svg",
     "icons:mstile": "sips -z 150 150 ./assets/icon-1024x1024.png --out ./public/mstile-icon-150x150.png",
-    "icons:pwa": "pwa-asset-generator ./public/icon.svg --icon-only",
-    "icons:vite": "pwa-assets-generator"
+    "icons:pwa": "pwa-asset-generator --path=/ --icon-only --favicon --index=index.html --manifest=public/site.webmanifest ./public/icon.svg ./public"
   },
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
@@ -111,7 +110,6 @@
     "@socketsupply/socket": "^0.5.4",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
-    "@vite-pwa/assets-generator": "^0.2.6",
     "@vitejs/plugin-react": "^4.2.1",
     "pwa-asset-generator": "^6.4.0",
     "rollup-plugin-visualizer": "^5.12.0",
