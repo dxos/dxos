@@ -58,8 +58,6 @@ ssc install-app --platform ios
 
 ## Logos and image assets
 
-NOTE: This updates the index.html file:
-
 ```bash
 pnpm run icons
 ```
