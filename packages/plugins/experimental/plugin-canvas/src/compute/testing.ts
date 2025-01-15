@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ComputeGraphModel } from '@dxos/conductor';
+import { ComputeGraphModel, type GptService } from '@dxos/conductor';
 import { ObjectId } from '@dxos/echo-schema';
 import { type GraphEdge, GraphModel, type GraphNode, createEdgeId } from '@dxos/graph';
 import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Dimension, type Point } from '@dxos/react-ui-canvas';
 
-import { createComputeNode, DEFAULT_INPUT, DEFAULT_OUTPUT, StateMachine } from './graph';
+import { createComputeNode, DEFAULT_INPUT, DEFAULT_OUTPUT, StateMachine, type Services } from './graph';
 import {
   createAnd,
   createBeacon,
@@ -28,6 +28,7 @@ import {
 import { type ComputeShape } from './shapes';
 import { pointMultiply, pointsToRect, rectToPoints } from '../layout';
 import type { Connection, Shape } from '../types';
+import type { Context } from 'effect';
 
 // TODO(burdon): LayoutBuilder.
 const layout = (rect: Point & Partial<Dimension>, snap = 32): { center: Point; size?: Dimension } => {
@@ -103,12 +104,14 @@ export const createTest3 = ({
   artifact = false,
   db = false,
   textToImage = false,
+  viewText = false,
 }: {
   db?: boolean;
   cot?: boolean;
   artifact?: boolean;
   history?: boolean;
   textToImage?: boolean;
+  viewText?: boolean;
 } = {}) => {
   const nodes: Shape[] = [
     createChat({ id: 'a', ...layout({ x: -12, y: 0 }) }),
@@ -123,8 +126,9 @@ export const createTest3 = ({
         ]
       : []),
     createGpt({ id: 'b', ...layout({ x: 0, y: 0 }) }),
-    createThread({ id: 'c', ...layout({ x: 13, y: -4, width: 10, height: 24 }) }),
-    createCounter({ id: 'd', ...layout({ x: 5, y: 7 }) }),
+    // createThread({ id: 'c', ...layout({ x: 13, y: -4, width: 10, height: 24 }) }),
+    // createCounter({ id: 'd', ...layout({ x: 5, y: 7 }) }),
+    ...(viewText ? [createView({ id: 'g', ...layout({ x: 26, y: -10, width: 12, height: 12 }) })] : []),
     ...(db ? [createDatabase({ id: 'e', ...layout({ x: -10, y: 4 }) })] : []),
     ...(textToImage ? [createTextToImage({ id: 'j', ...layout({ x: -10, y: 7 }) })] : []),
     ...(cot ? [createList({ id: 'f', ...layout({ x: 0, y: -10, width: 8, height: 12 }) })] : []),
@@ -133,8 +137,9 @@ export const createTest3 = ({
   const edges: Omit<GraphEdge<Connection>, 'id'>[] = [
     { source: 'a', target: 'b', data: { input: 'prompt', output: DEFAULT_OUTPUT } },
     ...(artifact ? [{ source: 'h', target: 'b', data: { output: DEFAULT_OUTPUT, input: 'systemPrompt' } }] : []),
-    { source: 'b', target: 'c', data: { output: 'result', input: DEFAULT_INPUT } },
-    { source: 'b', target: 'd', data: { output: 'tokens', input: DEFAULT_INPUT } },
+    // { source: 'b', target: 'c', data: { output: 'result', input: DEFAULT_INPUT } },
+    // { source: 'b', target: 'd', data: { output: 'tokens', input: DEFAULT_INPUT } },
+    ...(viewText ? [{ source: 'b', target: 'g', data: { output: 'text', input: DEFAULT_INPUT } }] : []),
     ...(history ? [{ source: 'c', target: 'b', data: { output: DEFAULT_OUTPUT, input: 'history' } }] : []),
     ...(db ? [{ source: 'e', target: 'b', data: { input: 'tools', output: DEFAULT_OUTPUT } }] : []),
     ...(textToImage ? [{ source: 'j', target: 'b', data: { input: 'tools', output: DEFAULT_OUTPUT } }] : []),
@@ -142,7 +147,7 @@ export const createTest3 = ({
     ...(artifact ? [{ source: 'b', target: 'g', data: { output: 'artifact', input: DEFAULT_INPUT } }] : []),
   ];
 
-  return new GraphModel<GraphNode<Shape>, GraphEdge<Connection>>({
+  return new GraphModel<GraphNode<ComputeShape>, GraphEdge<Connection>>({
     nodes: nodes.map((data) => ({ id: data.id, data })),
     edges: edges.map(({ source, target, data }) => ({
       id: createEdgeId({ source, target }),
@@ -154,8 +159,12 @@ export const createTest3 = ({
 };
 
 // TODO(burdon): Break-apart state machine and graph.
-export const createMachine = (graph?: GraphModel<GraphNode<ComputeShape>, GraphEdge<Connection>>) => {
+export const createMachine = (
+  graph?: GraphModel<GraphNode<ComputeShape>, GraphEdge<Connection>>,
+  services?: Partial<Services>,
+) => {
   const machine = new StateMachine(ComputeGraphModel.create());
+  machine.setServices(services ?? {});
 
   // TODO(burdon): Factor out mapping (reconcile with Editor.stories).
   if (graph) {

@@ -8,7 +8,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type UnsubscribeCallback } from '@dxos/async';
-import type { ComputeEdge, ComputeNode } from '@dxos/conductor';
+import { EdgeGpt, type ComputeEdge, type ComputeNode } from '@dxos/conductor';
 import { type GraphEdge, type GraphModel, type GraphNode } from '@dxos/graph';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select } from '@dxos/react-ui';
@@ -20,11 +20,12 @@ import { type StateMachine, type StateMachineContext } from './graph';
 import { ComputeContext, useGraphMonitor } from './hooks';
 import { computeShapes } from './registry';
 import { type ComputeShape } from './shapes';
-import { createMachine, createTest1 } from './testing';
+import { createMachine, createTest1, createTest3 } from './testing';
 import { Editor, type EditorController, type EditorRootProps } from '../components';
 import { AttentionContainer, ShapeRegistry } from '../components';
 import { useSelection } from '../testing';
 import { type Connection } from '../types';
+import { AIServiceClientImpl } from '@dxos/assistant';
 
 type RenderProps = EditorRootProps &
   PropsWithChildren<{
@@ -221,34 +222,34 @@ export const Compute1: Story = {
 //     sidebar: 'state-machine',
 //     registry: new ShapeRegistry(computeShapes),
 //     ...createMachine(createTest3()),
-//     gpt: new OllamaGpt(ollamaClient),
+//     // gpt: new OllamaGpt(ollamaClient),
 //   },
 // };
 
-// export const GPT: Story = {
-//   args: {
-//     // debug: true,
-//     showGrid: false,
-//     snapToGrid: false,
-//     // sidebar: 'json',
-//     // sidebar: 'state-machine',
-//     registry: new ShapeRegistry(computeShapes),
-//     spec: [
-//       { type: Testing.OrgType, count: 2 },
-//       { type: Testing.ProjectType, count: 4 },
-//       { type: Testing.ContactType, count: 8 },
-//     ],
-//     registerSchema: true,
-//     ...createMachine(createTest3({ db: true })),
-//     model: '@anthropic/claude-3-5-sonnet-20241022',
-//     gpt: new EdgeGptExecutor(
-//       new AIServiceClientImpl({
-//         // endpoint: 'https://ai-service.dxos.workers.dev',
-//         endpoint: 'http://localhost:8787',
-//       }),
-//     ),
-//   },
-// };
+export const GPT: Story = {
+  args: {
+    // debug: true,
+    showGrid: false,
+    snapToGrid: false,
+    // sidebar: 'json',
+    sidebar: 'state-machine',
+    registry: new ShapeRegistry(computeShapes),
+    // spec: [
+    //   { type: Testing.OrgType, count: 2 },
+    //   { type: Testing.ProjectType, count: 4 },
+    //   { type: Testing.ContactType, count: 8 },
+    // ],
+    // registerSchema: true,
+    ...createMachine(createTest3({ db: false, viewText: true }), {
+      gpt: new EdgeGpt(
+        new AIServiceClientImpl({
+          // endpoint: 'https://ai-service.dxos.workers.dev',
+          endpoint: 'http://localhost:8787',
+        }),
+      ),
+    }),
+  },
+};
 
 // export const GPTArtifact: Story = {
 //   args: {

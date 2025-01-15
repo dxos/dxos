@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Effect } from 'effect';
+import { Effect, Exit } from 'effect';
 
 import { type LLMModel, type MessageImageContentBlock } from '@dxos/assistant';
 import { Event, synchronized } from '@dxos/async';
@@ -13,6 +13,9 @@ import {
   type ComputeGraphModel,
   type ComputeMeta,
   type ComputeNode,
+  type ComputeRequirements,
+  EventLogger,
+  GptService,
   GraphExecutor,
   makeValueBag,
   unwrapValueBag,
@@ -24,6 +27,8 @@ import { log } from '@dxos/log';
 
 import { resolveComputeNode } from './node-defs';
 import type { GptInput, GptOutput } from './types';
+import { Context, Layer, Scope } from 'effect';
+import { MockGpt } from '@dxos/conductor';
 
 // TODO(burdon): API package for conductor.
 export const InvalidStateError = Error;
@@ -66,6 +71,10 @@ export type RuntimeValue =
       error: string;
     };
 
+export type Services = {
+  gpt: Context.Tag.Service<GptService>;
+};
+
 /**
  * Client proxy to the state machine.
  */
@@ -75,6 +84,8 @@ export class StateMachine extends Resource {
   private readonly _executor = new GraphExecutor({
     computeNodeResolver: (node) => resolveComputeNode(node),
   });
+
+  private _services: Partial<Services> = {};
 
   /**
    * Canvas force-sets outputs of those nodes.
@@ -106,6 +117,10 @@ export class StateMachine extends Resource {
     };
   }
 
+  setServices(services: Partial<Services>) {
+    Object.assign(this._services, services);
+  }
+
   get graph() {
     return this._graph;
   }
@@ -131,7 +146,6 @@ export class StateMachine extends Resource {
   }
 
   getInputs(nodeId: string) {
-    console.log({ st: this._runtimeState }, nodeId);
     return this._runtimeState[nodeId] ?? {};
   }
 
@@ -160,6 +174,7 @@ export class StateMachine extends Resource {
 
   @synchronized
   async exec() {
+    console.log('begin execution');
     this._runtimeState = {};
     const executor = this._executor.clone();
     await executor.load(this._graph);
@@ -169,45 +184,69 @@ export class StateMachine extends Resource {
     }
 
     // TODO(dmaretskyi): Stop hardcoding.
-    const allSwitches = this._graph.nodes.filter((node) => node.data.type === 'switch');
+    const allSwitches = this._graph.nodes.filter((node) => node.data.type === 'switch' || node.data.type === 'chat');
     const allAffectedNodes = [...new Set(allSwitches.flatMap((node) => executor.getAllDependantNodes(node.id)))];
 
-    // TODO(burdon): Return map?
-    const tasks: Promise<unknown>[] = [];
-    for (const node of allAffectedNodes) {
-      // TODO(dmaretskyi): Check if the node has a compute function and run computeOutputs if it does.
-      const effect = executor.computeInputs(node).pipe(
-        Effect.withSpan('runGraph'),
-        Effect.provide(
-          testServices({
-            logger: {
-              log: (event) => {
-                log('log', { event });
-                switch (event.type) {
-                  case 'compute-input':
-                    this._runtimeState[event.nodeId] ??= {};
-                    this._runtimeState[event.nodeId][event.property] = { type: 'executed', value: event.value };
-                    break;
+    const services = this._createServiceLayer();
+    await Effect.runPromise(
+      Effect.gen(this, function* () {
+        const scope = yield* Scope.make();
 
-                  case 'compute-output':
-                    // TODO(burdon): Only fire if changed?
-                    this.output.emit(event);
-                    break;
-                }
-              },
-              nodeId: undefined,
-            },
-          }),
-        ),
-        Effect.scoped,
-        Effect.flatMap(unwrapValueBag),
-        Effect.withSpan('test'),
-      );
+        // TODO(burdon): Return map?
+        const tasks: Effect.Effect<unknown, any, never>[] = [];
+        for (const node of allAffectedNodes) {
+          console.log('will compute inputs', node);
+          // TODO(dmaretskyi): Check if the node has a compute function and run computeOutputs if it does.
+          const effect = executor.computeInputs(node).pipe(
+            Effect.withSpan('runGraph'),
+            Effect.provide(services),
+            Scope.extend(scope),
 
-      tasks.push(Effect.runPromise(effect));
-    }
+            Effect.flatMap(unwrapValueBag),
+            Effect.withSpan('test'),
+          );
 
-    await Promise.all(tasks);
+          tasks.push(effect);
+        }
+
+        yield* Effect.all(tasks);
+
+        yield* Scope.close(scope, Exit.void);
+      }),
+    );
+    console.log('done executing');
+
     this.update.emit();
   }
+
+  private _createLogger(): Context.Tag.Service<EventLogger> {
+    return {
+      log: (event) => {
+        log.info('log', { event });
+        switch (event.type) {
+          case 'compute-input':
+            this._runtimeState[event.nodeId] ??= {};
+            this._runtimeState[event.nodeId][event.property] = { type: 'executed', value: event.value };
+            break;
+
+          case 'compute-output':
+            // TODO(burdon): Only fire if changed?
+            this.output.emit(event);
+            break;
+        }
+      },
+      nodeId: undefined, // Not in a context of a specific node.
+    };
+  }
+
+  private _createServiceLayer(): Layer.Layer<Exclude<ComputeRequirements, Scope.Scope>> {
+    const services = { ...DEFAULT_SERVICES, ...this._services };
+    const logLayer = Layer.succeed(EventLogger, this._createLogger());
+    const gptLayer = Layer.succeed(GptService, services.gpt!);
+    return Layer.mergeAll(logLayer, gptLayer);
+  }
 }
+
+const DEFAULT_SERVICES: Services = {
+  gpt: new MockGpt(),
+};

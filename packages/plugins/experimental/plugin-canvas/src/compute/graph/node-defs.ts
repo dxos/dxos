@@ -4,7 +4,13 @@
 
 import { Effect } from 'effect';
 
-import { type ComputeNode, type Executable, defineComputeNode, gptNode, synchronizedComputeFunction } from '@dxos/conductor';
+import {
+  type ComputeNode,
+  type Executable,
+  defineComputeNode,
+  gptNode,
+  synchronizedComputeFunction,
+} from '@dxos/conductor';
 import { raise } from '@dxos/debug';
 import { ObjectId, S } from '@dxos/echo-schema';
 import { type GraphNode } from '@dxos/graph';
@@ -13,12 +19,13 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { type ComputeShape } from '../shapes';
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './types';
 
-type NodeType = 'switch' | 'text' | 'beacon' | 'and' | 'or' | 'not' | 'if' | 'if-else' | 'gpt';
+type NodeType = 'switch' | 'text' | 'beacon' | 'and' | 'or' | 'not' | 'if' | 'if-else' | 'gpt' | 'chat' | 'view';
 
 // TODO(burdon): Just pass in type? Or can the shape specialize the node?
 export const createComputeNode = (shape: GraphNode<ComputeShape>): GraphNode<ComputeNode> => {
   const type = shape.data.type as NodeType;
-  const factory = nodeFactory[type ?? raise(new Error(`Unknown shape type: ${type}`))] ?? failedInvariant();
+  const factory =
+    nodeFactory[type ?? raise(new Error('Type not specified'))] ?? raise(new Error(`Unknown shape type: ${type}`));
   return factory(shape);
 };
 
@@ -50,6 +57,8 @@ const nodeFactory: Record<NodeType, (shape: GraphNode<ComputeShape>) => GraphNod
   ['if-else' as const]: () => createNode('if-else'),
 
   ['gpt' as const]: () => createNode('gpt'),
+  ['chat' as const]: () => createNode('chat'),
+  ['view' as const]: () => createNode('view'),
 };
 
 export const resolveComputeNode = async (node: ComputeNode): Promise<Executable> => {
@@ -114,4 +123,12 @@ const nodeDefs: Record<NodeType, Executable> = {
 
   // TODO(dmaretskyi): Consider moving gpt out of conductor.
   ['gpt' as const]: gptNode,
+  ['chat' as const]: defineComputeNode({
+    input: S.Struct({}),
+    output: S.Struct({ [DEFAULT_OUTPUT]: S.String }),
+  }),
+  ['view' as const]: defineComputeNode({
+    input: S.Struct({ [DEFAULT_INPUT]: S.String }),
+    output: S.Struct({}),
+  }),
 };

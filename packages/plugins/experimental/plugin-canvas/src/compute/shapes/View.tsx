@@ -10,6 +10,8 @@ import { Box } from './components';
 import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
 import { TextBox, type ShapeComponentProps, type ShapeDef } from '../../components';
 import { createAnchorMap } from '../../components';
+import { DEFAULT_INPUT } from '../graph/types';
+import { useComputeNodeState } from '../hooks';
 
 export const ViewShape = S.extend(
   ComputeShape,
@@ -30,13 +32,12 @@ export const createView = ({ id, ...rest }: CreateViewProps): ViewShape => ({
 });
 
 export const ViewComponent = ({ shape }: ShapeComponentProps<ViewShape>) => {
-  const value = '';
-  // let value = shape.node.state;
-  // if (typeof value !== 'string') {
-  //   value = JSON.stringify(value, null, 2);
-  // }
+  const { runtime } = useComputeNodeState(shape);
+  const input = runtime.inputs[DEFAULT_INPUT];
+  const value = input?.type === 'executed' ? input.value : 0;
 
-  const imageMatch = (value as string)?.match(/<image id="([^"]+)"(?:\s+prompt="([^"]+)")?\s*\/>/);
+  const imageMatch =
+    typeof value === 'string' ? (value as string)?.match(/<image id="([^"]+)"(?:\s+prompt="([^"]+)")?\s*\/>/) : null;
   if (imageMatch) {
     // const [, id, prompt] = imageMatch;
     // const image = shape.node.resolveImage(id);
