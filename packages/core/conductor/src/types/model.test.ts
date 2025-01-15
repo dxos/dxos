@@ -23,7 +23,7 @@ describe('graph builder', () => {
       })
       .call((graph) => {
         const c = graph.get('c');
-        graph.link({ node: c, property: 'result' }, { node: g1.computeGraph, property: 'value' });
+        graph.link({ node: c, property: 'result' }, { node: g1.root, property: 'value' });
       });
 
     expect(g2.nodes).to.have.length(4);

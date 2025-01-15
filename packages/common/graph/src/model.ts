@@ -7,8 +7,8 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { getSnapshot } from '@dxos/live-object';
 import { type MakeOptional, isNotFalsy, removeBy } from '@dxos/util';
 
-import { createEdgeId } from './buidler';
 import { type Graph, type GraphNode, type GraphEdge, type BaseGraphNode, type BaseGraphEdge } from './types';
+import { createEdgeId } from './util';
 
 /**
  * Wrapper class contains reactive nodes and edges.
@@ -23,7 +23,7 @@ export class ReadonlyGraphModel<
    * NOTE: Pass in simple Graph or ReactiveObject.
    */
   constructor(graph?: Graph) {
-    this._graph = graph ?? { nodes: [], edges: [] }; // TODO(burdon): Create.
+    this._graph = graph ?? { nodes: [], edges: [] };
   }
 
   [inspectCustom]() {
