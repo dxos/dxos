@@ -26,8 +26,9 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
       metadata: {
         records: {
           [TableType.typename]: {
-            creationSchema: S.Struct({ typename: S.optional(S.String) }).pipe(S.mutable),
-            createObject: (props: { name?: string; space: Space }) => createIntent(TableAction.Create, props),
+            creationSchema: S.Struct({ schema: S.optional(S.String) }).pipe(S.mutable),
+            createObject: (props: { name?: string; schema?: string; space: Space }) =>
+              createIntent(TableAction.Create, props),
             label: (object: any) => (object instanceof TableType ? object.name : undefined),
             placeholder: ['object placeholder', { ns: TABLE_PLUGIN }],
             icon: 'ph--table--regular',
@@ -60,7 +61,8 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
       },
       intent: {
         resolvers: () => [
-          createResolver(TableAction.Create, async ({ space, name }) => {
+          createResolver(TableAction.Create, async ({ space, name, schema }) => {
+            console.log('TableAction.Create', { space, name, schema });
             const table = create(TableType, { name, threads: [] });
             await initializeTable({ space, table });
             return { data: { object: table } };
