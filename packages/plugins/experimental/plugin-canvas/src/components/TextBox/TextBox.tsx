@@ -4,7 +4,7 @@
 
 import { Prec } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
-import React, { forwardRef, useEffect, useImperativeHandle } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 import { useThemeContext, type ThemedClassName } from '@dxos/react-ui';
 import {
@@ -34,6 +34,13 @@ export type TextBoxProps = ThemedClassName<
 export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
   ({ classNames, value = '', reset, centered, onEnter, onCancel, ...rest }, forwardedRef) => {
     const { themeMode } = useThemeContext();
+    const [modified, setModified] = useState(false);
+    const doc = useRef(value);
+    useEffect(() => {
+      setModified(false);
+      doc.current = value;
+    }, [value]);
+
     const { parentRef, view, focusAttributes } = useTextEditor(() => {
       return {
         id: 'text',
@@ -49,8 +56,15 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
               content: { className: mx(centered && 'text-center') },
             },
           }),
+          // Detect changes.
+          EditorView.updateListener.of((update) => {
+            if (update.docChanged) {
+              setModified(doc.current !== update.state.doc.toString());
+            }
+          }),
+          // TODO(burdon): Only fire if modified.
           EditorView.focusChangeEffect.of((state, focusing) => {
-            if (!focusing) {
+            if (!focusing && modified) {
               onEnter?.(state.doc.toString());
             }
 
@@ -63,6 +77,7 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
                 preventDefault: true,
                 run: (view) => {
                   onEnter?.(view.state.doc.toString());
+                  setModified(false);
                   return true;
                 },
               },
@@ -70,6 +85,7 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
                 key: 'Shift-Enter',
                 run: (view) => {
                   view.dispatch(view.state.replaceSelection('\n'));
+                  setModified(false);
                   return true;
                 },
               },
@@ -77,6 +93,7 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
                 key: 'Escape',
                 run: () => {
                   onCancel?.();
+                  setModified(false);
                   return true;
                 },
               },
@@ -104,6 +121,7 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
       }
     }, [view, value, reset]);
 
+    // Scroll to bottom.
     useEffect(() => {
       view?.dispatch({ selection: { anchor: view.state.doc.length } });
     }, [view]);

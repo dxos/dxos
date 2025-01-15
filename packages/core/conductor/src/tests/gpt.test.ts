@@ -62,7 +62,6 @@ describe('Gpt pipelines', () => {
         });
 
         const tokenStream: Stream.Stream<ResultStreamEvent> = yield* output.values.tokenStream;
-
         const tokens = yield* tokenStream.pipe(
           Stream.filterMap((ev) =>
             ev.type === 'content_block_delta' && ev.delta.type === 'text_delta'

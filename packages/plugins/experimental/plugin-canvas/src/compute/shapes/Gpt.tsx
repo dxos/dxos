@@ -35,13 +35,14 @@ export const createGpt = ({ id, ...rest }: CreateGptProps): GptShape => {
 
 export const GptComponent = ({ shape }: ShapeComponentProps<GptShape>) => {
   const { meta, runtime } = useComputeNodeState(shape);
-  const [tokens, setTokens] = useState<string>('');
+  const [text, setText] = useState('');
+  const [tokens, setTokens] = useState(0);
 
   useEffect(() => {
     return runtime.subscribeToEventLog((ev) => {
       switch (ev.type) {
         case 'begin-compute': {
-          setTokens('');
+          setText('');
           break;
         }
         case 'custom': {
@@ -51,7 +52,12 @@ export const GptComponent = ({ shape }: ShapeComponentProps<GptShape>) => {
               switch (token.delta.type) {
                 case 'text_delta': {
                   const delta = token.delta.text;
-                  setTokens((prev) => prev + delta);
+                  setText((prev) => {
+                    const text = prev + delta;
+                    // TODO(burdon): Get token count.
+                    setTokens(text.split(' ').length);
+                    return text;
+                  });
                   break;
                 }
               }
@@ -69,9 +75,9 @@ export const GptComponent = ({ shape }: ShapeComponentProps<GptShape>) => {
     <FunctionBody
       shape={shape}
       name={'GPT'}
-      // TODO(burdon): Pin to bottom.
-      content={<div className='p-1 overflow-y-scroll'>{tokens}</div>}
-      status={`${tokens.length} tokens`}
+      // TODO(burdon): Pin to bottom?
+      content={<div className='p-1 overflow-y-scroll'>{text}</div>}
+      status={`${tokens} tokens`}
       inputSchema={meta.input}
       outputSchema={meta.output}
     />

@@ -60,6 +60,7 @@ export const TextComponent = ({ shape, title, chat, ...props }: TextComponentPro
         setReset({});
       }
 
+      console.log(shape.id, '==', value);
       inputRef.current?.focus();
     }
   };
@@ -68,10 +69,10 @@ export const TextComponent = ({ shape, title, chat, ...props }: TextComponentPro
     <Box name={title ?? 'Text'}>
       <TextBox
         ref={inputRef}
-        {...props}
         reset={reset}
-        // value={chat ? '' : shape.node.getText()}
         onEnter={handleEnter}
+        // value={chat ? '' : shape.node.getText()}
+        {...props}
       />
     </Box>
   );

@@ -23,10 +23,10 @@ export type GptInput = S.Schema.Type<typeof GptInput>;
 
 export const GptOutput = S.Struct({
   messages: S.Array(Message),
-  cot: S.optional(S.String),
   artifact: S.optional(S.Any),
-  tokenStream: StreamSchema(GptStreamEventSchema),
   text: S.String,
+  cot: S.optional(S.String),
+  tokenStream: StreamSchema(GptStreamEventSchema),
   tokenCount: S.Number,
 });
 
