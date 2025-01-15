@@ -8,6 +8,7 @@ import { type Meta } from '@storybook/react';
 import React from 'react';
 
 import { type AnyIntentChain, type IntentContext, IntentProvider } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { todo } from '@dxos/debug';
 import { useSpace, create } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -78,6 +79,7 @@ const meta: Meta = {
       tooltips: true,
       classNames: 'grid',
     }),
+    withPluginManager(),
   ],
   parameters: { translations },
 };
