@@ -15,16 +15,21 @@ export type ToolbarSeparatorNode = Node<never, Pick<ToolbarSeparatorProps, 'vari
 
 export const isSeparator = (node: Node): node is ToolbarSeparatorNode => node.type === ToolbarSeparatorType;
 
-export type ToolbarActionGroupProperties = Omit<MenuActionProperties, 'variant' | 'icon'> &
-  (
-    | {
-        variant: 'dropdownMenu';
-        icon: string;
-        applyActiveIcon?: boolean;
-      }
-    | { variant: 'toggleGroup' }
-  ) &
-  ({ selectCardinality: 'single'; value: string } | { selectCardinality: 'multiple'; value: string[] });
+export type ToolbarActionGroupDropdownMenu = Omit<MenuActionProperties, 'variant' | 'icon'> & {
+  variant: 'dropdownMenu';
+  icon: string;
+  applyActiveIcon?: boolean;
+};
+
+export type ToolbarActionGroupToggleGroup = Omit<MenuActionProperties, 'variant'> & {
+  variant: 'toggleGroup';
+};
+
+export type ToolbarActionGroupSingleSelect = { selectCardinality: 'single'; value: string };
+export type ToolbarActionGroupMultipleSelect = { selectCardinality: 'multiple'; value: string[] };
+
+export type ToolbarActionGroupProperties = (ToolbarActionGroupDropdownMenu | ToolbarActionGroupToggleGroup) &
+  (ToolbarActionGroupSingleSelect | ToolbarActionGroupMultipleSelect);
 
 export type ToolbarActionGroup = ActionGroup<ToolbarActionGroupProperties>;
 
@@ -38,6 +43,7 @@ export type ToolbarProps = ToolbarRootProps &
 export type ToolbarActionGroupProps = Pick<ToolbarProps, 'iconSize'> &
   Omit<MenuProps<MenuAction>, 'actions'> & {
     actionGroup: ToolbarActionGroup;
+    // TODO(thure): use callback for getting children instead of graph.
     graph?: Graph;
     applyActiveIcon?: boolean;
   };

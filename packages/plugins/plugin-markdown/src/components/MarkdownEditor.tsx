@@ -7,7 +7,7 @@ import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect, useCallback } from 'react';
 
 import { createIntent, type FileInfo, LayoutAction, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
-import { useThemeContext, useTranslation } from '@dxos/react-ui';
+import { useThemeContext, useTranslation, ElevationProvider } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type Action,
@@ -16,7 +16,7 @@ import {
   type EditorInputMode,
   type EditorSelectionState,
   type EditorStateStore,
-  Toolbar,
+  EditorToolbar,
   type UseTextEditorProps,
   createBasicExtensions,
   createMarkdownExtensions,
@@ -40,8 +40,6 @@ import { isNotFalsy, nonNullable } from '@dxos/util';
 import { useSelectCurrentThread } from '../hooks';
 import { MARKDOWN_PLUGIN } from '../meta';
 import { type MarkdownPluginState } from '../types';
-
-const DEFAULT_VIEW_MODE: EditorViewMode = 'preview';
 
 export type MarkdownEditorProps = {
   id: string;
@@ -104,7 +102,7 @@ export const MarkdownEditor = ({
     const file = files[0];
     const info = file && onFileUpload ? await onFileUpload(file) : undefined;
     if (info) {
-      processAction(view, { type: 'image', data: info.url });
+      processAction(view, { id: 'image', properties: { label: '', icon: '', type: 'image', data: info.url } });
     }
   };
 
@@ -173,17 +171,13 @@ export const MarkdownEditor = ({
     <StackItem.Content toolbar={!!toolbar}>
       {toolbar && (
         <div role='none' className={stackItemContentToolbarClassNames(role)}>
-          <Toolbar.Root
-            classNames={[textBlockWidth, !hasAttention && 'opacity-20']}
-            state={formattingState && { ...formattingState, ...commentsState }}
-            onAction={handleAction}
-          >
-            <Toolbar.Markdown />
-            {onFileUpload && <Toolbar.Custom onUpload={onFileUpload} />}
-            <Toolbar.Separator />
-            <Toolbar.View mode={viewMode ?? DEFAULT_VIEW_MODE} />
-            <Toolbar.Actions />
-          </Toolbar.Root>
+          <ElevationProvider elevation='positioned'>
+            <EditorToolbar
+              classNames={[textBlockWidth, !hasAttention && 'opacity-20']}
+              state={formattingState ? { ...formattingState, ...commentsState } : {}}
+              onAction={handleAction}
+            />
+          </ElevationProvider>
         </div>
       )}
       <div

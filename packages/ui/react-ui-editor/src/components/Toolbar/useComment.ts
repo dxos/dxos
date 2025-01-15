@@ -22,6 +22,7 @@ const commentAction = createEditorAction({ type: 'comment' }, 'ph--chat-text--re
 
 export const useComment = (graph: Graph, state: EditorToolbarState) => {
   useEffect(() => {
+    // @ts-ignore
     graph._addNodes([commentAction]);
   }, [graph]);
 

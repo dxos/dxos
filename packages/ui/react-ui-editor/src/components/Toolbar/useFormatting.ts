@@ -31,7 +31,9 @@ const formattingActionsMap = Object.fromEntries(
 
 export const useFormatting = (graph: Graph, state: EditorToolbarState) => {
   useEffect(() => {
+    // @ts-ignore
     graph._addNodes([formattingGroupAction as NodeArg<any>, ...Object.values(formattingActionsMap)]);
+    // @ts-ignore
     graph._addEdges(
       Object.values(formattingActionsMap).map(({ id }) => ({ source: formattingGroupAction.id, target: id })),
     );

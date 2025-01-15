@@ -29,7 +29,9 @@ const blockActionsMap = Object.fromEntries(
 
 export const useBlocks = (graph: Graph, state: EditorToolbarState) => {
   useEffect(() => {
+    // @ts-ignore
     graph._addNodes([blockGroupAction as NodeArg<any>, ...Object.values(blockActionsMap)]);
+    // @ts-ignore
     graph._addEdges(Object.values(blockActionsMap).map(({ id }) => ({ source: blockGroupAction.id, target: id })));
   }, [graph]);
 
@@ -41,6 +43,9 @@ export const useBlocks = (graph: Graph, state: EditorToolbarState) => {
     (block as DeepWriteable<ToolbarActionGroup>).properties.value = value;
     graph.actions(block)?.forEach((blockAction) => {
       (blockAction as DeepWriteable<EditorAction>).properties.checked = blockAction.id === value;
+      if (blockAction.id === 'table') {
+        (blockAction as DeepWriteable<EditorAction>).properties.disabled = !state.blankLine;
+      }
     });
   }, [graph, state.blockType, state.blockQuote, state.blankLine]);
 

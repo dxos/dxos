@@ -32,7 +32,9 @@ const viewModeActions = Object.entries({
 
 export const useViewModes = (graph: Graph, mode: EditorViewMode) => {
   useEffect(() => {
+    // @ts-ignore
     graph._addNodes([viewModeGroupAction as NodeArg<any>, ...viewModeActions]);
+    // @ts-ignore
     graph._addEdges(viewModeActions.map(({ id }) => ({ source: viewModeGroupAction.id, target: id })));
   }, [graph]);
 

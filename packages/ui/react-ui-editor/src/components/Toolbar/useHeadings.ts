@@ -43,7 +43,9 @@ const headingActions = Object.entries({
 
 export const useHeadings = (graph: Graph, state: EditorToolbarState) => {
   useEffect(() => {
+    // @ts-ignore
     graph._addNodes([headingGroupAction as NodeArg<any>, ...headingActions]);
+    // @ts-ignore
     graph._addEdges(headingActions.map(({ id }) => ({ source: headingGroupAction.id, target: id })));
   }, [graph]);
 

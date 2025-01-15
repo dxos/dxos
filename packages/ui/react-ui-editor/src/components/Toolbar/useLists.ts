@@ -29,7 +29,9 @@ const listActionsMap = Object.fromEntries(
 
 export const useLists = (graph: Graph, state: EditorToolbarState) => {
   useEffect(() => {
+    // @ts-ignore
     graph._addNodes([listGroupAction as NodeArg<any>, ...Object.values(listActionsMap)]);
+    // @ts-ignore
     graph._addEdges(Object.values(listActionsMap).map(({ id }) => ({ source: listGroupAction.id, target: id })));
   }, [graph]);
 

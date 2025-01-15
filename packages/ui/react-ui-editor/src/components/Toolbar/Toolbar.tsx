@@ -18,7 +18,7 @@ import { type EditorToolbarActionGraphProps, editorToolbarGap, type EditorToolba
 //
 // Root
 //
-
+// TODO(thure): Make `state` a live object derived from EditorView et al, since it is created in this package.
 const useEditorToolbarActionGraph = ({ state, mode }: EditorToolbarActionGraphProps) => {
   const [graph] = useState(new Graph());
   const headings = useHeadings(graph, state);
