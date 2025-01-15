@@ -14,6 +14,10 @@ export * from './components';
 export * from './defaults';
 export * from './extensions';
 export * from './hooks';
+export {
+  stackItemContentEditorClassNames,
+  stackItemContentToolbarClassNames,
+} from './styles/stack-item-content-class-names';
 export * from './types';
 export * from './util';
 

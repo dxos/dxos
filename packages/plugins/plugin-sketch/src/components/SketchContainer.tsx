@@ -7,14 +7,26 @@ import React, { useCallback } from 'react';
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { ThreadAction } from '@dxos/plugin-thread/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { useAttendableAttributes, useAttention } from '@dxos/react-ui-attention';
+import { useAttention } from '@dxos/react-ui-attention';
+import { StackItem } from '@dxos/react-ui-stack';
 
-import { Sketch, type SketchProps } from './Sketch';
+import { Sketch } from './Sketch';
+import { type DiagramType, type SketchSettingsProps } from '../types';
 
-// TODO(burdon): Standardize plugin component containers.
-const SketchContainer = ({ classNames, sketch, ...props }: SketchProps) => {
+export type SketchContainerProps = {
+  sketch: DiagramType;
+  role: string;
+  settings: SketchSettingsProps;
+};
+
+export const SketchContainer = ({ sketch, role, settings }: SketchContainerProps) => {
+  const props = {
+    readonly: role === 'slide',
+    maxZoom: role === 'slide' ? 1.5 : undefined,
+    autoZoom: role === 'section',
+    grid: settings.gridType,
+  };
   const id = fullyQualifiedId(sketch);
-  const attentionAttrs = useAttendableAttributes(id);
   const { hasAttention } = useAttention(id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
@@ -23,18 +35,19 @@ const SketchContainer = ({ classNames, sketch, ...props }: SketchProps) => {
     void dispatch(createIntent(ThreadAction.Create, { subject: sketch, cursor: Date.now().toString() }));
   }, [dispatch, sketch]);
 
-  // NOTE: Min 500px height (for tools palette to be visible).
   return (
-    <Sketch
-      // Force instance per sketch object. Otherwise, sketch shares the same instance.
-      key={id}
-      sketch={sketch}
-      hideUi={!hasAttention}
-      classNames={[classNames, 'attention-surface']}
-      onThreadCreate={onThreadCreate}
-      {...attentionAttrs}
-      {...props}
-    />
+    // NOTE: Min 500px height (for tools palette to be visible).
+    <StackItem.Content toolbar={false} size={role === 'section' ? 'square' : 'intrinsic'} classNames='min-bs-[32rem]'>
+      <Sketch
+        // Force instance per sketch object. Otherwise, sketch shares the same instance.
+        key={id}
+        sketch={sketch}
+        hideUi={!hasAttention}
+        classNames='attention-surface'
+        onThreadCreate={onThreadCreate}
+        {...props}
+      />
+    </StackItem.Content>
   );
 };
 

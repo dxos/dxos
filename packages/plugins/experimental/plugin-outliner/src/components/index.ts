@@ -4,5 +4,4 @@
 
 import { lazy } from 'react';
 
-export const OutlinerMain = lazy(() => import('./OutlinerMain'));
-export const TreeSection = lazy(() => import('./TreeSection'));
+export const OutlinerContainer = lazy(() => import('./OutlinerContainer'));

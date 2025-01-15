@@ -41,7 +41,7 @@ import {
 } from '@dxos/react-client/echo';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 
-import { ThreadArticle, ThreadComplementary, ThreadSettings } from './components';
+import { ThreadContainer, ThreadComplementary, ThreadSettings } from './components';
 import { threads } from './extensions';
 import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
@@ -264,11 +264,11 @@ export const ThreadPlugin = (): PluginDefinition<
                   if (currentPosition > 0) {
                     const objectToTheLeft = layoutEntries[currentPosition - 1];
                     const context = getSpace(channel)?.db.getObjectById(objectToTheLeft.id);
-                    return <ThreadArticle thread={thread} context={context} />;
+                    return <ThreadContainer role='article' thread={thread} context={context} />;
                   }
                 }
 
-                return <ThreadArticle thread={thread} />;
+                return <ThreadContainer role='article' thread={thread} />;
               },
             }),
             createSurface({

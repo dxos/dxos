@@ -47,6 +47,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
     "@excalidraw/excalidraw": "^0.17.6",
     "@preact/signals-core": "^1.6.0",

@@ -4,10 +4,12 @@
 
 import React from 'react';
 
+import { StackItem } from '@dxos/react-ui-stack';
+
 import { Mailbox, type MailboxProps } from './Mailbox';
 
 export const MailboxContainer = ({ mailbox, options = {} }: MailboxProps) => (
-  <div role='none' className='flex row-span-2 overflow-hidden'>
+  <StackItem.Content toolbar={false}>
     <Mailbox mailbox={mailbox} options={options} />
-  </div>
+  </StackItem.Content>
 );
