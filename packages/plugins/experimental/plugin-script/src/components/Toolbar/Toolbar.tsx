@@ -65,7 +65,7 @@ export const Toolbar = ({
   // TODO(burdon): Factor out common toolbar components with sheet/editor?
   return (
     <ElevationProvider elevation='positioned'>
-      <NaturalToolbar.Root classNames={['p-1', classNames]} style={{ contain: 'layout' }}>
+      <NaturalToolbar.Root classNames={['p-1 attention-surface', classNames]} style={{ contain: 'layout' }}>
         {templates && <TemplateSelect templates={templates} onTemplateSelect={onTemplateSelect} />}
         {onFormat && <ToolbarIconButton icon='ph--magic-wand--regular' text={t('format label')} onClick={onFormat} />}
 
@@ -128,7 +128,7 @@ const ToolbarIconButton = ({
   );
 };
 
-export type ViewType = 'editor' | 'split' | 'preview';
+export type ViewType = 'editor' | 'split' | 'debug';
 
 export type TemplateSelectProps = {
   templates?: Template[];
@@ -163,14 +163,14 @@ export type ViewSelectorProps = {
 export const ViewSelector = ({ view, onViewChange }: ViewSelectorProps) => {
   return (
     <ToggleGroup type='single' value={view} onValueChange={(value) => onViewChange?.(value as ViewType)}>
-      <ToggleGroupItem value='editor' classNames='bg-transparent text-subdued'>
+      <ToggleGroupItem value='editor' variant='ghost'>
         <Icon icon='ph--code--regular' size={4} />
       </ToggleGroupItem>
-      <ToggleGroupItem value='split' classNames='bg-transparent text-subdued'>
+      <ToggleGroupItem value='split' variant='ghost'>
         <Icon icon='ph--square-split-vertical--regular' size={4} />
       </ToggleGroupItem>
-      <ToggleGroupItem value='preview' classNames='bg-transparent text-subdued'>
-        <Icon icon='ph--eye--regular' size={4} />
+      <ToggleGroupItem value='debug' variant='ghost'>
+        <Icon icon='ph--bug--regular' size={4} />
       </ToggleGroupItem>
     </ToggleGroup>
   );

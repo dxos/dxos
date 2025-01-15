@@ -23,9 +23,9 @@ export default () =>
       id: `${SCRIPT_PLUGIN}/article`,
       role: 'article',
       filter: (data): data is { subject: ScriptType } => data.subject instanceof ScriptType,
-      component: ({ data }) => {
+      component: ({ data, role }) => {
         const compiler = useCapability(ScriptCapabilities.Compiler);
-        return <ScriptContainer script={data.subject} env={compiler.environment} />;
+        return <ScriptContainer role={role} script={data.subject} env={compiler.environment} />;
       },
     }),
     createSurface({

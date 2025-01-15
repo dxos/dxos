@@ -22,6 +22,8 @@ export type DeepReadonly<T> = {
       : T[P];
 };
 
+export type DeepWriteable<T> = { -readonly [K in keyof T]: T[K] extends object ? DeepWriteable<T[K]> : T[K] };
+
 /**
  * All types that evaluate to false when cast to a boolean.
  */

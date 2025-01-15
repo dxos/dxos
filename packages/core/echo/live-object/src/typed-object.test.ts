@@ -17,7 +17,7 @@ class Org extends TypedObject({
   name: S.String,
 }) {}
 
-class Contact extends TypedObject<Contact>({
+class Contact extends TypedObject({
   typename: 'example.com/type/Contact',
   version: '0.1.0',
 })(

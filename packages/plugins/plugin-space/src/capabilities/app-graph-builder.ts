@@ -141,8 +141,8 @@ export default (context: PluginsContext) => {
 
         const state = context.requestCapability(SpaceCapabilities.State);
         const settings = context
-          .requestCapability(Capabilities.SettingsStore)
-          .getStore<SpaceSettingsProps>(SPACE_PLUGIN)?.value;
+          .requestCapabilities(Capabilities.SettingsStore)[0]
+          ?.getStore<SpaceSettingsProps>(SPACE_PLUGIN)?.value;
 
         // TODO(wittjosiah): During client reset, accessing default space throws.
         try {

@@ -9,7 +9,7 @@ import { type Ref } from '@dxos/echo-schema';
 import { ChannelType, type ThreadType } from '@dxos/plugin-space/types';
 import { getSpace } from '@dxos/react-client/echo';
 
-import { ThreadArticle, ThreadComplementary, ThreadSettings } from '../components';
+import { ThreadContainer, ThreadComplementary, ThreadSettings } from '../components';
 import { THREAD_PLUGIN } from '../meta';
 import { type ThreadSettingsProps } from '../types';
 
@@ -20,7 +20,7 @@ export default () =>
       role: 'article',
       filter: (data): data is { subject: ChannelType } =>
         data.subject instanceof ChannelType && !!data.subject.threads[0],
-      component: ({ data }) => {
+      component: ({ data, role }) => {
         const location = useCapability(Capabilities.Location);
         const channel = data.subject;
         const thread = channel.threads[0].target!;
@@ -31,11 +31,11 @@ export default () =>
           if (currentPosition > 0) {
             const objectToTheLeft = layoutEntries[currentPosition - 1];
             const context = getSpace(channel)?.db.getObjectById(objectToTheLeft.id);
-            return <ThreadArticle thread={thread} context={context} />;
+            return <ThreadContainer role={role} thread={thread} context={context} />;
           }
         }
 
-        return <ThreadArticle thread={thread} />;
+        return <ThreadContainer role={role} thread={thread} />;
       },
     }),
     createSurface({

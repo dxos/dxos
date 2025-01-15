@@ -154,6 +154,7 @@ export class ServiceContext extends Resource {
     this.echoHost = new EchoHost({
       kv: this.level,
       peerIdProvider: () => this.identityManager.identity?.deviceKey?.toHex(),
+      getSpaceKeyByRootDocumentId: (documentId) => this.spaceManager.findSpaceByRootDocumentId(documentId)?.key,
     });
 
     this._meshReplicator = new MeshEchoReplicator();

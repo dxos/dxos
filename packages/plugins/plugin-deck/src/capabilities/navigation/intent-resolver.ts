@@ -38,8 +38,8 @@ export default (context: PluginsContext) =>
       const layout = context.requestCapability(Capabilities.MutableLayout);
       const attention = context.requestCapability(AttentionCapabilities.Attention);
       const settings = context
-        .requestCapability(Capabilities.SettingsStore)
-        .getStore<DeckSettingsProps>(DECK_PLUGIN)!.value;
+        .requestCapabilities(Capabilities.SettingsStore)[0]
+        ?.getStore<DeckSettingsProps>(DECK_PLUGIN)?.value;
 
       const previouslyOpenIds = new Set<string>(openIds(location.active));
       const layoutMode = layout.layoutMode;
@@ -61,7 +61,7 @@ export default (context: PluginsContext) =>
             return closeEntry(currentLayout, { part: effectivePart as LayoutPart, entryId: id });
           } else {
             return openEntry(currentLayout, effectivePart, layoutEntry, {
-              positioning: settings.newPlankPositioning,
+              positioning: settings?.newPlankPositioning,
             });
           }
         };
@@ -108,8 +108,8 @@ export default (context: PluginsContext) =>
       const layout = context.requestCapability(Capabilities.MutableLayout);
       const attention = context.requestCapability(AttentionCapabilities.Attention);
       const settings = context
-        .requestCapability(Capabilities.SettingsStore)
-        .getStore<DeckSettingsProps>(DECK_PLUGIN)?.value;
+        .requestCapabilities(Capabilities.SettingsStore)[0]
+        ?.getStore<DeckSettingsProps>(DECK_PLUGIN)?.value;
 
       const layoutEntry = { id: data.id };
       const effectivePart = getEffectivePart(data.part, layout.layoutMode);

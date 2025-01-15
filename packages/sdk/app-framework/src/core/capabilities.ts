@@ -5,9 +5,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { untracked } from '@preact/signals-core';
+import { effect, untracked } from '@preact/signals-core';
 import { type Effect } from 'effect';
 
+import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
 import { log } from '@dxos/log';
@@ -173,6 +174,22 @@ export class PluginsContext {
   requestCapability<T, U extends T = T>(interfaceDef: InterfaceDef<T>, filter?: (capability: T) => capability is U): U {
     const capability = this.requestCapabilities(interfaceDef, filter)[0];
     invariant(capability, `No capability found for ${interfaceDef.identifier}`);
+    return capability;
+  }
+
+  async waitForCapability<T, U extends T = T>(
+    interfaceDef: InterfaceDef<T>,
+    filter?: (capability: T) => capability is U,
+  ): Promise<U> {
+    const trigger = new Trigger<U>();
+    const unsubscribe = effect(() => {
+      const capabilities = this.requestCapabilities(interfaceDef, filter);
+      if (capabilities[0]) {
+        trigger.wake(capabilities[0]);
+      }
+    });
+    const capability = await trigger.wait();
+    unsubscribe();
     return capability;
   }
 }

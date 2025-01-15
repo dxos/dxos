@@ -18,17 +18,7 @@ export default () =>
       filter: (data): data is { subject: DiagramType } => isDiagramType(data.subject, TLDRAW_SCHEMA),
       component: ({ data, role }) => {
         const settings = useCapability(Capabilities.SettingsStore).getStore<SketchSettingsProps>(SKETCH_PLUGIN)!.value;
-
-        return (
-          <SketchContainer
-            sketch={data.subject}
-            readonly={role === 'slide'}
-            maxZoom={role === 'slide' ? 1.5 : undefined}
-            autoZoom={role === 'section'}
-            classNames={role === 'article' ? 'row-span-2' : role === 'section' ? 'aspect-square' : 'p-16'}
-            grid={settings.gridType}
-          />
-        );
+        return <SketchContainer sketch={data.subject} role={role} settings={settings} />;
       },
     }),
     createSurface({
@@ -37,7 +27,6 @@ export default () =>
       filter: (data): data is any => data.subject === SKETCH_PLUGIN,
       component: () => {
         const settings = useCapability(Capabilities.SettingsStore).getStore<SketchSettingsProps>(SKETCH_PLUGIN)!.value;
-
         return <SketchSettings settings={settings} />;
       },
     }),

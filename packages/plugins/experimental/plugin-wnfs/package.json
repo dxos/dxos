@@ -44,6 +44,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
+    "@dxos/react-ui-stack": "workspace:*",
     "blockstore-core": "^5.0.1",
     "blockstore-idb": "^2.0.0",
     "interface-blockstore": "^5.2.10",

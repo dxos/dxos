@@ -76,7 +76,7 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
                 return ''; // TODO(burdon): Show error.
               }
 
-              return getValue(value, field.referencePath);
+              return getValue(value.target, field.referencePath);
             }
 
             default: {
@@ -99,12 +99,14 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
         cell.className = mx(classes.flat());
       }
 
-      if (cell.value && props.format === FormatEnum.Ref && props.referenceSchema) {
-        const targetObj = getValue(obj, field.path);
-        cell.accessoryHtml = tableButtons.referencedCell.render({
-          targetId: targetObj.id as any as string,
-          schemaId: props.referenceSchema,
-        });
+      if (props.format === FormatEnum.Ref && props.referenceSchema) {
+        const targetObj = getValue(obj, field.path)?.target;
+        if (targetObj) {
+          cell.accessoryHtml = tableButtons.referencedCell.render({
+            targetId: targetObj.id as any as string,
+            schemaId: props.referenceSchema,
+          });
+        }
       }
 
       if (props.format === FormatEnum.Boolean) {
@@ -146,6 +148,7 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
         readonly: true,
         resizeHandle: 'col',
         accessoryHtml: tableButtons.columnSettings.render({ fieldId: field.id }),
+        className: '!bg-gridHeader',
       };
     }
 
@@ -187,13 +190,14 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
   private getSelectAllCell(): DxGridPlaneCells {
     return {
       [toPlaneCellIndex({ col: 0, row: 0 })]: {
-        value: '',
         accessoryHtml: tableControls.checkbox.render({
           rowIndex: 0,
           header: true,
           checked: this.model.selection.allRowsSeleted.value,
         }),
+        className: '!bg-gridHeader',
         readonly: true,
+        value: '',
       },
     };
   }
@@ -201,11 +205,12 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
   private getNewColumnCell(): DxGridPlaneCells {
     return {
       [toPlaneCellIndex({ col: 0, row: 0 })]: {
-        value: '',
         accessoryHtml: tableButtons.addColumn.render({
           disabled: (this.model.table.view?.target?.fields?.length ?? 0) >= VIEW_FIELD_LIMIT,
         }),
+        className: '!bg-gridHeader',
         readonly: true,
+        value: '',
       },
     };
   }

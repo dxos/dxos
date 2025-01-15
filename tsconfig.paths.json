@@ -1,3 +1,5 @@
+// Paths mappings for composer HMR.
+// The included projects will be built from source when running composer-app:serve.
 {
   "compilerOptions": {
     "baseUrl": ".",

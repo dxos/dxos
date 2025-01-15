@@ -35,7 +35,7 @@ export class CollectionSynchronizer extends Resource {
 
   private readonly _connectedPeers = new Set<PeerId>();
 
-  public readonly remoteStateUpdated = new Event<{ collectionId: string; peerId: PeerId }>();
+  public readonly remoteStateUpdated = new Event<{ collectionId: string; peerId: PeerId; newDocsAppeared: boolean }>();
 
   constructor(params: CollectionSynchronizerParams) {
     super();
@@ -121,7 +121,7 @@ export class CollectionSynchronizer extends Resource {
         return;
       }
       for (const [collectionId, state] of this._perCollectionStates.entries()) {
-        if (this._shouldSyncCollection(collectionId, peerId)) {
+        if (this._activeCollections.has(collectionId) && this._shouldSyncCollection(collectionId, peerId)) {
           state.interestedPeers.add(peerId);
           state.lastQueried.set(peerId, Date.now());
           this._queryCollectionState(collectionId, peerId);
@@ -159,8 +159,12 @@ export class CollectionSynchronizer extends Resource {
     log('onRemoteStateReceived', { collectionId, peerId, state });
     validateCollectionState(state);
     const perCollectionState = this._getOrCreatePerCollectionState(collectionId);
-    perCollectionState.remoteStates.set(peerId, state);
-    this.remoteStateUpdated.emit({ peerId, collectionId });
+    const existingState = perCollectionState.remoteStates.get(peerId) ?? { documents: {} };
+    const diff = diffCollectionState(existingState, state);
+    if (diff.missingOnLocal.length > 0 || diff.different.length > 0) {
+      perCollectionState.remoteStates.set(peerId, state);
+      this.remoteStateUpdated.emit({ peerId, collectionId, newDocsAppeared: diff.missingOnLocal.length > 0 });
+    }
   }
 
   private _getOrCreatePerCollectionState(collectionId: string): PerCollectionState {

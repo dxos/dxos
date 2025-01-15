@@ -3,13 +3,14 @@
 //
 
 import { S } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 
-import { getTypename } from './typename';
+import { makeTypedEntityClass, type TypedObjectFields, type TypedObjectOptions } from './common';
 import {
+  EntityKind,
   type HasId,
   type ObjectAnnotation,
   ObjectAnnotationId,
-  schemaVariance,
   TYPENAME_REGEX,
   VERSION_REGEX,
 } from '../ast';
@@ -41,44 +42,20 @@ export interface TypedObjectPrototype<A = any, I = any> extends TypedObject<A, I
   new (): HasId & A;
 }
 
-type TypedObjectProps = ObjectAnnotation & {
+export type TypedObjectProps = {
+  typename: string;
+  version: string;
+
   // TODO(dmaretskyi): Remove after all legacy types has been removed. (burdon): Can do this now (after 0.7).
   skipTypenameFormatCheck?: boolean;
 };
-
-export type TypedObjectOptions = {
-  partial?: true;
-  record?: true;
-};
-
-/**
- *
- */
-// TODO(burdon): Comment required.
-type SimplifiedSchemaFields<
-  SchemaFields extends S.Struct.Fields,
-  Options extends TypedObjectOptions,
-> = Options['partial'] extends boolean
-  ? S.SimplifyMutable<Partial<S.Struct.Type<SchemaFields>>>
-  : S.SimplifyMutable<S.Struct.Type<SchemaFields>>;
-
-/**
- *
- */
-// TODO(burdon): Comment required.
-type TypedObjectFields<
-  SchemaFields extends S.Struct.Fields,
-  Options extends TypedObjectOptions,
-> = SimplifiedSchemaFields<SchemaFields, Options> & { id: string } & (Options['record'] extends boolean
-    ? S.SimplifyMutable<S.IndexSignature.Type<S.IndexSignature.Records>>
-    : {});
 
 /**
  * Base class factory for typed objects.
  */
 // TODO(burdon): Can this be flattened into a single function (e.g., `class X extends TypedObject({})`).
 // TODO(burdon): Support pipe(S.default({}))
-export const TypedObject = <ClassType>({ typename, version, skipTypenameFormatCheck }: TypedObjectProps) => {
+export const TypedObject = ({ typename, version, skipTypenameFormatCheck }: TypedObjectProps) => {
   if (!skipTypenameFormatCheck) {
     if (!TYPENAME_REGEX.test(typename)) {
       throw new TypeError(`Invalid typename: ${typename}`);
@@ -102,8 +79,9 @@ export const TypedObject = <ClassType>({ typename, version, skipTypenameFormatCh
     const typeSchema = S.extend(S.mutable(options?.partial ? S.partial(schema) : schema), S.Struct({ id: S.String }));
 
     // Set ECHO annotations.
+    invariant(typeof EntityKind.Object === 'string');
     const annotatedSchema = typeSchema.annotations({
-      [ObjectAnnotationId]: { typename, version },
+      [ObjectAnnotationId]: { kind: EntityKind.Object, typename, version } satisfies ObjectAnnotation,
     });
 
     /**
@@ -111,28 +89,6 @@ export const TypedObject = <ClassType>({ typename, version, skipTypenameFormatCh
      * NOTE: Actual reactive ECHO objects must be created via the `create(Type)` function.
      */
     // TODO(burdon): This is missing fields required by TypedObject (e.g., Type, Encoded, Context)?
-    return class {
-      // Implement TypedObject properties.
-      static readonly typename = typename;
-
-      static readonly version = version;
-
-      // TODO(burdon): Comment required.
-      static [Symbol.hasInstance](obj: unknown): obj is ClassType {
-        return obj != null && getTypename(obj) === typename;
-      }
-
-      // Implement S.Schema properties.
-      // TODO(burdon): Comment required.
-      static readonly [S.TypeId] = schemaVariance;
-      static readonly ast = annotatedSchema.ast;
-      static readonly annotations = annotatedSchema.annotations.bind(annotatedSchema);
-      static readonly pipe = annotatedSchema.pipe.bind(annotatedSchema);
-
-      // TODO(burdon): Throw APIError.
-      private constructor() {
-        throw new Error('Use create(Typename, { ...fields }) to instantiate an object.');
-      }
-    } as any;
+    return class TypedObject extends makeTypedEntityClass(typename, version, annotatedSchema as any) {} as any;
   };
 };

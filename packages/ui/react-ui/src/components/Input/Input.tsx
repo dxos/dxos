@@ -286,12 +286,19 @@ type SwitchProps = ThemedClassName<
 
 const Switch = forwardRef<HTMLInputElement, InputScopedProps<SwitchProps>>(
   (
-    { __inputScope, checked: propsChecked, onCheckedChange: propsOnCheckedChange, classNames, ...props },
+    {
+      __inputScope,
+      checked: propsChecked,
+      defaultChecked: propsDefaultChecked,
+      onCheckedChange: propsOnCheckedChange,
+      classNames,
+      ...props
+    },
     forwardedRef,
   ) => {
     const [checked, onCheckedChange] = useControllableState({
       prop: propsChecked,
-      defaultProp: props.defaultChecked ?? false,
+      defaultProp: propsDefaultChecked ?? false,
       onChange: propsOnCheckedChange,
     });
 

@@ -36,9 +36,10 @@
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
-    "effect": "^3.9.2",
+    "effect": "^3.12.1",
     "localforage": "^1.10.0"
   },
   "devDependencies": {

@@ -3,38 +3,25 @@
 //
 
 import { computed, effect, signal, type ReadonlySignal } from '@preact/signals-core';
-import orderBy from 'lodash.orderby';
 
 import { Resource } from '@dxos/context';
 import { getValue, setValue, FormatEnum, type JsonProp } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { isReactiveObject, makeRef } from '@dxos/live-object';
 import { PublicKey } from '@dxos/react-client';
-import {
-  cellClassesForFieldType,
-  cellClassesForRowSelection,
-  formatForDisplay,
-  formatForEditing,
-  parseValue,
-} from '@dxos/react-ui-form';
+import { formatForEditing, parseValue } from '@dxos/react-ui-form';
 import {
   type DxGridAxisMeta,
   type DxGridPlaneRange,
   type DxGridPlanePosition,
   type DxGridPosition,
-  type DxGridPlaneCells,
-  type DxGridPlane,
-  type DxGridCellValue,
-  toPlaneCellIndex,
 } from '@dxos/react-ui-grid';
-import { mx } from '@dxos/react-ui-theme';
-import { VIEW_FIELD_LIMIT, type FieldType, type ViewProjection } from '@dxos/schema';
+import { type ViewProjection } from '@dxos/schema';
 
 import { SelectionModel } from './selection-model';
+import { type SortConfig, type SortDirection, TableSorting } from './table-sorting';
 import { type TableType } from '../types';
-import { tableButtons, tableControls, touch } from '../util';
-
-export type SortDirection = 'asc' | 'desc';
-export type SortConfig = { fieldId: string; direction: SortDirection };
+import { touch } from '../util';
 
 export type BaseTableRow = Record<JsonProp, any> & { id: string };
 
@@ -61,25 +48,16 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     end: { row: 0, col: 0 },
   });
 
-  /**
-   * Maps display indices to data indices.
-   * Used for translating between sorted/displayed order and original data order.
-   * Keys are display indices, values are corresponding data indices.
-   */
-  private readonly _displayToDataIndex: Map<number, number> = new Map();
-
   private readonly _onInsertRow?: TableModelProps<T>['onInsertRow'];
   private readonly _onDeleteRows?: TableModelProps<T>['onDeleteRows'];
   private readonly _onDeleteColumn?: TableModelProps<T>['onDeleteColumn'];
   private readonly _onCellUpdate?: TableModelProps<T>['onCellUpdate'];
   private readonly _onRowOrderChanged?: TableModelProps<T>['onRowOrderChanged'];
 
-  private readonly _sorting = signal<SortConfig | undefined>(undefined);
-  private _sortedRows!: ReadonlySignal<T[]>;
-  private _rows = signal<T[]>([]);
+  private readonly _rows = signal<T[]>([]);
+  private readonly _sorting: TableSorting<T>;
 
   private _pinnedRows: NonNullable<TableModelProps<T>['pinnedRows']>;
-
   private _selection!: SelectionModel<T>;
   private _columnMeta?: ReadonlySignal<DxGridAxisMeta>;
 
@@ -97,8 +75,13 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     super();
     this._table = table;
     this._projection = projection;
+    this._sorting = new TableSorting(this._rows, table, projection);
 
-    this._sorting.value = sorting.at(0);
+    if (sorting.length > 0) {
+      const [sort] = sorting;
+      this._sorting.setSort(sort.fieldId, sort.direction);
+    }
+
     this._pinnedRows = pinnedRows;
     this._onInsertRow = onInsertRow;
     this._onDeleteRows = onDeleteRows;
@@ -116,7 +99,14 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
   }
 
   public get rows(): ReadonlySignal<T[]> {
-    return this._sortedRows;
+    return this._sorting.sortedRows;
+  }
+
+  /**
+   * @reactive
+   */
+  public get sorting(): SortConfig | undefined {
+    return this._sorting.sorting;
   }
 
   public get pinnedRows(): NonNullable<TableModelProps<T>['pinnedRows']> {
@@ -126,10 +116,6 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
   public get columnMeta(): ReadonlySignal<DxGridAxisMeta> {
     invariant(this._columnMeta);
     return this._columnMeta;
-  }
-
-  public get sorting(): SortConfig | undefined {
-    return this._sorting.value;
   }
 
   public get selection() {
@@ -142,9 +128,8 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
 
   protected override async _open() {
     this.initializeColumnMeta();
-    this.initializeSorting();
     this.initializeEffects();
-    this._selection = new SelectionModel(this._sortedRows, () => this._onRowOrderChanged?.());
+    this._selection = new SelectionModel(this._sorting.sortedRows, () => this._onRowOrderChanged?.());
     await this._selection.open(this._ctx);
   }
 
@@ -163,59 +148,9 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     });
   }
 
-  private initializeSorting(): void {
-    this._sortedRows = computed(() => {
-      this._displayToDataIndex.clear();
-      const sort = this._sorting.value;
-      if (!sort) {
-        return this._rows.value;
-      }
-
-      const field = this._table.view?.target?.fields.find((field) => field.id === sort.fieldId);
-      if (!field) {
-        return this._rows.value;
-      }
-
-      const { props } = this._projection.getFieldProjection(field.id);
-
-      const dataWithIndices = this._rows.value.map((item, index) => {
-        const rawValue = getValue(item, field.path);
-        let sortValue = rawValue;
-
-        if (props.type.startsWith('boolean')) {
-          sortValue = !!rawValue; // Coerce null/undefined/false to false for booleans
-        } else if (rawValue != null) {
-          if (props.format === FormatEnum.Ref && field.referencePath) {
-            sortValue = getValue(rawValue, field.referencePath);
-          } else {
-            sortValue = formatForDisplay({ type: props.type, format: props.format, value: rawValue });
-          }
-        }
-
-        return {
-          item,
-          index,
-          value: sortValue,
-          isEmpty: !props.type.startsWith('boolean') && (sortValue == null || sortValue === ''),
-        };
-      });
-
-      const sorted = orderBy(dataWithIndices, ['isEmpty', 'value'], ['asc', sort.direction]);
-
-      for (let displayIndex = 0; displayIndex < sorted.length; displayIndex++) {
-        const { index: dataIndex } = sorted[displayIndex];
-        if (displayIndex !== dataIndex) {
-          this._displayToDataIndex.set(displayIndex, dataIndex);
-        }
-      }
-
-      return sorted.map(({ item }) => item);
-    });
-  }
-
   private initializeEffects(): void {
     const rowOrderWatcher = effect(() => {
-      touch(this._sortedRows.value);
+      touch(this._sorting.sortedRows.value);
       this._onRowOrderChanged?.();
     });
     this._ctx.onDispose(rowOrderWatcher);
@@ -231,7 +166,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
       for (let row = start.row; row <= end.row; row++) {
         rowEffects.push(
           effect(() => {
-            const obj = this._sortedRows.value[row];
+            const obj = this._sorting.sortedRows.value[row];
             this?._table?.view?.target?.fields.forEach((field) => touch(getValue(obj, field.path)));
             this._onCellUpdate?.({ row, col: start.col, plane: 'grid' });
           }),
@@ -242,181 +177,6 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     });
     this._ctx.onDispose(rowEffectManager);
   }
-
-  //
-  // Get Cells
-  //
-
-  public getCells = (range: DxGridPlaneRange, plane: DxGridPlane): DxGridPlaneCells => {
-    switch (plane) {
-      case 'grid': {
-        this._visibleRange.value = range;
-        return this.getMainGridCells(range);
-      }
-      case 'frozenRowsStart': {
-        return this.getHeaderCells(range);
-      }
-      case 'frozenColsStart': {
-        return this.getSelectionColumnCells(range);
-      }
-      case 'frozenColsEnd': {
-        return this.getActionColumnCells(range);
-      }
-      case 'fixedStartStart': {
-        return this.getSelectAllCell();
-      }
-      case 'fixedStartEnd': {
-        return this.getNewColumnCell();
-      }
-      default: {
-        return {};
-      }
-    }
-  };
-
-  private getMainGridCells = (range: DxGridPlaneRange): DxGridPlaneCells => {
-    const cells: DxGridPlaneCells = {};
-    const fields = this._table.view?.target?.fields ?? [];
-
-    const addCell = (obj: T, field: FieldType, colIndex: number, displayIndex: number): void => {
-      const { props } = this._projection.getFieldProjection(field.id);
-
-      const cell: DxGridCellValue = {
-        get value() {
-          const value = getValue(obj, field.path);
-          if (value == null) {
-            return '';
-          }
-
-          switch (props.format) {
-            case FormatEnum.Ref: {
-              if (!field.referencePath) {
-                return ''; // TODO(burdon): Show error.
-              }
-
-              return getValue(value, field.referencePath);
-            }
-
-            default: {
-              return formatForDisplay({ type: props.type, format: props.format, value });
-            }
-          }
-        },
-      };
-
-      const classes = [];
-      const formatClasses = cellClassesForFieldType({ type: props.type, format: props.format });
-      if (formatClasses) {
-        classes.push(formatClasses);
-      }
-      const rowSelectionClasses = cellClassesForRowSelection(this._selection.isObjectSelected(obj));
-      if (rowSelectionClasses) {
-        classes.push(rowSelectionClasses);
-      }
-      if (classes.length > 0) {
-        cell.className = mx(classes.flat());
-      }
-
-      if (cell.value && props.format === FormatEnum.Ref && props.referenceSchema) {
-        const targetObj = getValue(obj, field.path);
-        cell.accessoryHtml = tableButtons.referencedCell.render({
-          targetId: targetObj.id,
-          schemaId: props.referenceSchema,
-        });
-      }
-
-      const idx = toPlaneCellIndex({ col: colIndex, row: displayIndex });
-      cells[idx] = cell;
-    };
-
-    for (let row = range.start.row; row <= range.end.row && row < this._sortedRows.value.length; row++) {
-      for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
-        const field = fields[col];
-        if (!field) {
-          continue;
-        }
-
-        addCell(this._sortedRows.value[row], field, col, row);
-      }
-    }
-
-    return cells;
-  };
-
-  private getHeaderCells = (range: DxGridPlaneRange): DxGridPlaneCells => {
-    const cells: DxGridPlaneCells = {};
-    const fields = this.table.view?.target?.fields ?? [];
-    for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
-      const { field, props } = this._projection.getFieldProjection(fields[col].id);
-      cells[toPlaneCellIndex({ col, row: 0 })] = {
-        // TODO(burdon): Use same logic as form for fallback title.
-        value: props.title ?? field.path,
-        readonly: true,
-        resizeHandle: 'col',
-        accessoryHtml: tableButtons.columnSettings.render({ fieldId: field.id }),
-      };
-    }
-
-    return cells;
-  };
-
-  private getSelectionColumnCells = (range: DxGridPlaneRange): DxGridPlaneCells => {
-    const cells: DxGridPlaneCells = {};
-    for (let row = range.start.row; row <= range.end.row && row < this._rows.value.length; row++) {
-      const isSelected = this._selection.isRowIndexSelected(row);
-      const classes = cellClassesForRowSelection(isSelected);
-      cells[toPlaneCellIndex({ col: 0, row })] = {
-        value: '',
-        readonly: true,
-        className: classes ? mx(classes) : undefined,
-        accessoryHtml: tableControls.checkbox.render({ rowIndex: row, checked: isSelected }),
-      };
-    }
-
-    return cells;
-  };
-
-  private getActionColumnCells = (range: DxGridPlaneRange): DxGridPlaneCells => {
-    const cells: DxGridPlaneCells = {};
-    for (let row = range.start.row; row <= range.end.row && row < this._rows.value.length; row++) {
-      const isSelected = this._selection.isRowIndexSelected(row);
-      const classes = cellClassesForRowSelection(isSelected);
-      cells[toPlaneCellIndex({ col: 0, row })] = {
-        value: '',
-        readonly: true,
-        className: classes ? mx(classes) : undefined,
-        accessoryHtml: tableButtons.rowMenu.render({ rowIndex: row }),
-      };
-    }
-
-    return cells;
-  };
-
-  private getSelectAllCell = (): DxGridPlaneCells => {
-    return {
-      [toPlaneCellIndex({ col: 0, row: 0 })]: {
-        value: '',
-        accessoryHtml: tableControls.checkbox.render({
-          rowIndex: 0,
-          header: true,
-          checked: this._selection.allRowsSeleted.value,
-        }),
-        readonly: true,
-      },
-    };
-  };
-
-  private getNewColumnCell = (): DxGridPlaneCells => {
-    return {
-      [toPlaneCellIndex({ col: 0, row: 0 })]: {
-        value: '',
-        accessoryHtml: tableButtons.addColumn.render({
-          disabled: (this._table.view?.target?.fields?.length ?? 0) >= VIEW_FIELD_LIMIT,
-        }),
-        readonly: true,
-      },
-    };
-  };
 
   //
   // Data
@@ -431,12 +191,12 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
   public getColumnCount = (): number => this.table.view?.target?.fields.length ?? 0;
 
   public insertRow = (rowIndex?: number): void => {
-    const row = rowIndex !== undefined ? this._displayToDataIndex.get(rowIndex) ?? rowIndex : this._rows.value.length;
+    const row = rowIndex !== undefined ? this._sorting.getDataIndex(rowIndex) : this._rows.value.length;
     this._onInsertRow?.(row);
   };
 
   public deleteRow = (rowIndex: number): void => {
-    const row = this._displayToDataIndex.get(rowIndex) ?? rowIndex;
+    const row = this._sorting.getDataIndex(rowIndex);
     const obj = this._rows.value[row];
     const objectsToDelete = [];
 
@@ -457,7 +217,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     }
 
     const field = fields[col];
-    const dataIndex = this._displayToDataIndex.get(row) ?? row;
+    const dataIndex = this._sorting.getDataIndex(row);
     const value = getValue(this._rows.value[dataIndex], field.path);
     if (value == null) {
       return '';
@@ -470,7 +230,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
           return ''; // TODO(burdon): Show error.
         }
 
-        return getValue(value, field.referencePath);
+        return getValue(value.target, field.referencePath);
       }
 
       default: {
@@ -480,7 +240,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
   };
 
   public setCellData = ({ col, row }: DxGridPlanePosition, value: any): void => {
-    const rowIdx = this._displayToDataIndex.get(row) ?? row;
+    const rowIdx = this._sorting.getDataIndex(row);
     const fields = this.table.view?.target?.fields ?? [];
     if (col < 0 || col >= fields.length) {
       return;
@@ -490,7 +250,11 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     const { props } = this._projection.getFieldProjection(field.id);
     switch (props.format) {
       case FormatEnum.Ref: {
-        setValue(this._rows.value[rowIdx], field.path, value);
+        // TODO(ZaymonFC): This get's called an additional time by the cell editor onBlur, but with the cell editors
+        //   plain string value. Maybe onBlur should be called with the actual value?
+        if (isReactiveObject(value)) {
+          setValue(this._rows.value[rowIdx], field.path, makeRef(value));
+        }
         break;
       }
 
@@ -515,7 +279,7 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
    * @param {(value: any) => any} update - A function that takes the current value and returns the updated value.
    */
   public updateCellData({ col, row }: DxGridPlanePosition, update: (value: any) => any): void {
-    const dataRow = this._displayToDataIndex.get(row) ?? row;
+    const dataRow = this._sorting.getDataIndex(row);
     const fields = this.table.view?.target?.fields ?? [];
     const field = fields[col];
 
@@ -535,9 +299,6 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
 
     const field = this.table.view.target?.fields.find((field) => field.id === fieldId);
     if (field && this._onDeleteColumn) {
-      if (this._sorting.value?.fieldId === fieldId) {
-        this.clearSort();
-      }
       this._onDeleteColumn(field.id);
     }
   }
@@ -562,11 +323,11 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
   //
 
   public setSort(fieldId: string, direction: SortDirection): void {
-    this._sorting.value = { fieldId, direction };
+    this._sorting.setSort(fieldId, direction);
   }
 
   public clearSort(): void {
-    this._sorting.value = undefined;
+    this._sorting.setSort('', 'asc');
   }
 
   //

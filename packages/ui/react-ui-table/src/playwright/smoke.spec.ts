@@ -38,6 +38,26 @@ test.describe('Table', () => {
     await page.close();
   });
 
+  test('selection', async ({ browser }) => {
+    const { page } = await setupPage(browser, { url: storyUrl });
+    const table = new TableManager(page);
+
+    await table.grid.ready();
+    // Select All
+    await table.toggleSelectAll();
+    await expect(table.selection(0)).toBeChecked();
+    await expect(table.selection(1)).toBeChecked();
+    await expect(table.selection(2)).toBeChecked();
+
+    // Deselect All
+    await table.toggleSelectAll();
+    await expect(table.selection(0)).not.toBeChecked();
+    await expect(table.selection(1)).not.toBeChecked();
+    await expect(table.selection(2)).not.toBeChecked();
+
+    await page.close();
+  });
+
   test('delete row', async ({ browser }) => {
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
@@ -100,6 +120,60 @@ test.describe('Table', () => {
     await table.addColumn({ label: newColumnLabel, format: 'number' });
 
     await expect(page.getByRole('gridcell', { name: newColumnLabel })).toBeVisible();
+    await page.close();
+  });
+
+  test('reference > reference / create new object', async ({ browser }) => {
+    const { page } = await setupPage(browser, { url: storyUrl });
+    const table = new TableManager(page);
+
+    await table.grid.ready();
+
+    // Reference existing object.
+    // Scroll over to the manager column.
+    await table.grid.panByWheel(10000, 0);
+
+    await table.grid.cell(4, 0, 'grid').click();
+    await page.keyboard.press('A');
+    await page.keyboard.press('N');
+    await page.getByRole('option', { name: 'Anita Mayer' }).click();
+
+    // Assert that the value is shown in the cell.
+    await expect(page.getByRole('gridcell', { name: 'Anita Mayer' })).toBeVisible();
+
+    // Create new object.
+    await table.grid.cell(4, 1, 'grid').click();
+    await page.keyboard.type('t');
+    await page.keyboard.type('e');
+    await page.keyboard.type('s');
+    await page.keyboard.type('t');
+    await page.getByText('Create new object', { exact: false }).click();
+    await page.getByTestId('save-button').click();
+
+    // Scroll to the left.
+    await page.getByRole('gridcell', { name: 'test' }).click();
+
+    await page.close();
+  });
+
+  test('test toggles', async ({ browser }) => {
+    const { page } = await setupPage(browser, { url: storyUrl });
+    const table = new TableManager(page);
+
+    await table.grid.ready();
+
+    await page.getByTestId('table-switch').first().click();
+    await page.getByTestId('table-switch').nth(7).click();
+
+    // Test that checks are durable in the data model by sorting.
+    await table.sortColumn(1, 'descending');
+
+    // Assert the first two switch checkboxes are checked.
+    await expect(page.getByTestId('table-switch').first()).toBeChecked();
+    await expect(page.getByTestId('table-switch').nth(1)).toBeChecked();
+    await expect(table.grid.cell(0, 0, 'grid')).toHaveText('Anita Mayer');
+    await expect(table.grid.cell(0, 1, 'grid')).toHaveText('Uwe Øvergård');
+
     await page.close();
   });
 });

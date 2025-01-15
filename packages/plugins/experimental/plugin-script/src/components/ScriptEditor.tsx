@@ -22,7 +22,12 @@ import { useClient } from '@dxos/react-client';
 import { create, createDocAccessor, Filter, getMeta, getSpace, makeRef, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useTranslation, type ThemedClassName } from '@dxos/react-ui';
-import { createDataExtensions, listener } from '@dxos/react-ui-editor';
+import {
+  createDataExtensions,
+  listener,
+  stackItemContentEditorClassNames,
+  stackItemContentToolbarClassNames,
+} from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
 import { DebugPanel } from './DebugPanel';
@@ -34,10 +39,11 @@ import { templates } from '../templates';
 
 export type ScriptEditorProps = ThemedClassName<{
   script: ScriptType;
+  role?: string;
 }> &
   Pick<TypescriptEditorProps, 'env'>;
 
-export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => {
+export const ScriptEditor = ({ role, classNames, script, env }: ScriptEditorProps) => {
   const { t } = useTranslation(SCRIPT_PLUGIN);
   const client = useClient();
   const identity = useIdentity();
@@ -48,19 +54,19 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
     () => [
       listener({
         onChange: (text) => {
-          if (script.source && script.source.target?.content !== text) {
+          if (script.source.target && script.source.target.content !== text) {
             script.changed = true;
           }
         },
       }),
       createDataExtensions({
         id: script.id,
-        text: script.source && createDocAccessor(script.source.target!, ['content']),
+        text: script.source.target && createDocAccessor(script.source.target, ['content']),
         space,
         identity,
       }),
     ],
-    [script, script.source, space, identity],
+    [script, script.source.target, space, identity],
   );
 
   const [view, setView] = useState<ViewType>('editor');
@@ -164,30 +170,34 @@ export const ScriptEditor = ({ classNames, script, env }: ScriptEditorProps) => 
   }, [existingFunctionUrl, space]);
 
   return (
-    <div role='none' className={mx('flex flex-col w-full overflow-hidden divide-y divide-separator', classNames)}>
-      <Toolbar
-        deployed={Boolean(existingFunctionUrl) && !script.changed}
-        functionUrl={functionUrl}
-        error={error}
-        view={view}
-        templates={templates}
-        onDeploy={handleDeploy}
-        onFormat={handleFormat}
-        onViewChange={setView}
-        onTemplateSelect={handleTemplateChange}
-      />
-
-      {view !== 'preview' && (
-        <TypescriptEditor
-          id={script.id}
-          env={env}
-          initialValue={script.source?.target?.content}
-          extensions={extensions}
-          className='flex is-full bs-full overflow-hidden ch-focus-ring-inset-over-all'
+    <>
+      <div role='none' className={stackItemContentToolbarClassNames(role)}>
+        <Toolbar
+          deployed={Boolean(existingFunctionUrl) && !script.changed}
+          functionUrl={functionUrl}
+          error={error}
+          view={view}
+          templates={templates}
+          onDeploy={handleDeploy}
+          onFormat={handleFormat}
+          onViewChange={setView}
+          onTemplateSelect={handleTemplateChange}
         />
-      )}
+      </div>
+      <div role='none' className={mx('flex flex-col w-full overflow-hidden divide-y divide-separator', classNames)}>
+        {view !== 'debug' && (
+          <TypescriptEditor
+            id={script.id}
+            env={env}
+            initialValue={script.source?.target?.content}
+            extensions={extensions}
+            className={stackItemContentEditorClassNames(role)}
+            toolbar
+          />
+        )}
 
-      {view !== 'editor' && <DebugPanel functionUrl={functionUrl} />}
-    </div>
+        {view !== 'editor' && <DebugPanel functionUrl={functionUrl} />}
+      </div>
+    </>
   );
 };

@@ -103,4 +103,14 @@ describe('PluginsContext', () => {
     expect(capabilities[0].example).toEqual('updated');
     expect(updates.count).toEqual(1);
   });
+
+  it('should be able to wait for a capability', async () => {
+    const context = new PluginsContext(defaultOptions);
+    const interfaceDef = defineCapability<{ example: string }>('@dxos/app-framework/test/example');
+    const implementation = { example: 'identifier' };
+    const promise = context.waitForCapability(interfaceDef);
+    context.contributeCapability(interfaceDef, implementation);
+    const capability = await promise;
+    expect(capability).toEqual(implementation);
+  });
 });

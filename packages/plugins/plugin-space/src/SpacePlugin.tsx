@@ -133,6 +133,7 @@ export const SpacePlugin = ({
     defineModule({
       id: `${meta.id}/module/identity-created`,
       activatesOn: ClientEvents.IdentityCreated,
+      triggers: [SpaceEvents.DefaultSpaceReady],
       activate: IdentityCreated,
     }),
     defineModule({
@@ -146,7 +147,6 @@ export const SpacePlugin = ({
         SpaceEvents.StateReady,
         ClientEvents.SpacesReady,
       ),
-      triggers: [SpaceEvents.DefaultSpaceReady],
       activate: SpacesReady,
     }),
   ]);

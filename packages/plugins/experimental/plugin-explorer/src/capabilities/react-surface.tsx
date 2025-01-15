@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 
-import { ExplorerArticle } from '../components';
+import { ExplorerContainer } from '../components';
 import { EXPLORER_PLUGIN } from '../meta';
 import { ViewType } from '../types';
 
@@ -15,8 +15,8 @@ export default () =>
     Capabilities.ReactSurface,
     createSurface({
       id: `${EXPLORER_PLUGIN}/article`,
-      role: 'article',
+      role: ['article', 'section'],
       filter: (data): data is { subject: ViewType } => data.subject instanceof ViewType,
-      component: ({ data }) => <ExplorerArticle view={data.subject} />,
+      component: ({ data, role }) => <ExplorerContainer view={data.subject} role={role} />,
     }),
   );

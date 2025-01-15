@@ -59,10 +59,24 @@ export class DXN {
     return new DXN(kind, parts);
   }
 
+  /**
+   * @example `dxn:type:example.com/type/Contact`
+   */
   static fromTypename(type: string) {
     return new DXN(DXN.kind.TYPE, [type]);
   }
 
+  /**
+   * @example `dxn:type:example.com/type/Contact:0.1.0`
+   */
+  // TODO(dmaretskyi): Consider using @ as the version separator.
+  static fromTypenameAndVersion(type: string, version: string) {
+    return new DXN(DXN.kind.TYPE, [type, version]);
+  }
+
+  /**
+   * @example `dxn:echo:@:01J00J9B45YHYSGZQTQMSKMGJ6`
+   */
   static fromLocalObjectId(id: string) {
     return new DXN(DXN.kind.ECHO, [LOCAL_SPACE_TAG, id]);
   }
@@ -77,7 +91,7 @@ export class DXN {
     // Per-type validation.
     switch (kind) {
       case DXN.kind.TYPE:
-        if (parts.length !== 1) {
+        if (parts.length > 2) {
           throw new Error('Invalid "type" DXN');
         }
         break;
@@ -107,6 +121,17 @@ export class DXN {
 
   hasTypenameOf(typename: string) {
     return this.#kind === DXN.kind.TYPE && this.#parts.length === 1 && this.#parts[0] === typename;
+  }
+
+  asTypeDXN() {
+    if (this.kind !== DXN.kind.TYPE) {
+      return undefined;
+    }
+
+    return {
+      type: this.#parts[0],
+      version: this.#parts[1] as string | undefined,
+    };
   }
 
   isLocalObjectId() {
