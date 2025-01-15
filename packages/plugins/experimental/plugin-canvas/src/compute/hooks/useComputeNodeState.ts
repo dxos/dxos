@@ -11,6 +11,7 @@ import type { GraphNode } from '@dxos/graph';
 import { useComputeContext } from './compute-context';
 import { resolveComputeNode, type RuntimeValue } from '../graph';
 import { type ComputeShape } from '../shapes';
+import { useAsyncState } from '@dxos/react-ui';
 
 export type ComputeNodeState = {
   node: GraphNode<ComputeNode>;
@@ -28,14 +29,21 @@ export type ComputeNodeState = {
 export const useComputeNodeState = (shape: ComputeShape): ComputeNodeState => {
   const { stateMachine } = useComputeContext();
 
-  const [meta, setMeta] = useState();
+  const [meta, setMeta] = useState<ComputeMeta>();
   useEffect(() => {
+    let disposed = false;
     queueMicrotask(async () => {
-      const meta = stateMachine.getMeta()
-
-
-    })
-  }, [shape.node])
+      const node = stateMachine.getComputeNode(shape.node!);
+      const meta = await stateMachine.getMeta(node.data);
+      if (disposed) {
+        return;
+      }
+      setMeta(meta);
+    });
+    return () => {
+      disposed = true;
+    };
+  }, [shape.node]);
 
   return {
     // TODO(burdon): ???
@@ -45,7 +53,7 @@ export const useComputeNodeState = (shape: ComputeShape): ComputeNodeState => {
       data: {},
     },
     // TODO(burdon): ???
-    meta: {
+    meta: meta ?? {
       input: S.Struct({}),
       output: S.Struct({}),
     },

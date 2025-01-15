@@ -11,7 +11,6 @@ import {
   type ComputeEdge,
   type ComputeEvent,
   type ComputeGraphModel,
-  type ComputeGraphNode,
   type ComputeMeta,
   type ComputeNode,
   GraphExecutor,
@@ -127,8 +126,8 @@ export class StateMachine extends Resource {
     this._graph.addEdge(edge);
   }
 
-  getComputeNode(nodeId: string): ComputeGraphNode {
-    ret
+  getComputeNode(nodeId: string): GraphNode<ComputeNode> {
+    return this._graph.getNode(nodeId);
   }
 
   getInputs(nodeId: string) {
@@ -136,11 +135,10 @@ export class StateMachine extends Resource {
     return this._runtimeState[nodeId] ?? {};
   }
 
-  
   getOutputs(nodeId: string) {
     return {};
   }
-  
+
   @log.method()
   setOutput(nodeId: string, property: string, value: any) {
     this._forcedOutputs[nodeId] ??= {};

@@ -7,8 +7,7 @@ import { S } from '@dxos/echo-schema';
 import { createFunctionAnchors, FunctionBody, getHeight } from './Function';
 import { ComputeShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
-import { GptInput } from '../graph';
-import { GptOutput } from '@dxos/conductor';
+import { GptInput, GptOutput } from '@dxos/conductor';
 import { useComputeNodeState } from '../hooks';
 import React from 'react';
 
@@ -27,7 +26,7 @@ export const createGpt = ({ id, ...rest }: CreateGptProps): GptShape => {
   return {
     id,
     type: 'gpt',
-    size: { width: 256, height: getHeight(GptInput) },
+    size: { width: 256, height: Math.max(getHeight(GptInput), getHeight(GptOutput)) },
     ...rest,
   };
 };
