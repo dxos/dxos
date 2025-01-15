@@ -23,7 +23,7 @@ export class ReadonlyGraphModel<
    * NOTE: Pass in simple Graph or ReactiveObject.
    */
   constructor(graph?: Graph) {
-    this._graph = graph ?? { nodes: [], edges: [] };
+    this._graph = graph ?? { nodes: [], edges: [] }; // TODO(burdon): Create.
   }
 
   [inspectCustom]() {
@@ -172,7 +172,7 @@ export class GraphModel<
 
   removeNodes(ids: string[]): GraphModel<Node, Edge> {
     const graphs = ids.map((id) => this.removeNode(id));
-    return new GraphModel<Node, Edge>().addGraphs(graphs);
+    return new GraphModel<Node, Edge>({ nodes: [], edges: [] }).addGraphs(graphs);
   }
 
   removeEdge(id: string): GraphModel<Node, Edge> {
@@ -182,6 +182,6 @@ export class GraphModel<
 
   removeEdges(ids: string[]): GraphModel<Node, Edge> {
     const graphs = ids.map((id) => this.removeEdge(id));
-    return new GraphModel<Node, Edge>().addGraphs(graphs);
+    return new GraphModel<Node, Edge>({ nodes: [], edges: [] }).addGraphs(graphs);
   }
 }

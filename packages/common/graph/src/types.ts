@@ -54,5 +54,3 @@ export const Graph = S.Struct({
 });
 
 export type Graph = S.Schema.Type<typeof Graph>;
-
-export const emptyGraph: Graph = { nodes: [], edges: [] };

@@ -6,70 +6,65 @@ import { ObjectId } from '@dxos/echo-schema';
 import { createEdgeId, type GraphEdge, GraphModel, type GraphNode } from '@dxos/graph';
 import { create, makeRef } from '@dxos/live-object';
 
-import { type ComputeGraphNode, ComputeGraphType, type ComputeEdge, isComputeGraph } from '../types';
+import { ComputeGraph, type ComputeEdge, type ComputeNode, isComputeGraph } from '../types';
+
+// TODO(burdon): Reconcile with ComputeGraphModelImpl.
+export type ComputeGraphModel = GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;
 
 /**
  * Wrapper/builder.
  */
-// TODO(burdon): Rename.
-export class ComputeGraphModel {
+// TODO(burdon): Generic graph?
+export class ComputeGraphModelImpl extends GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>> {
   /**
    * Create new model.
    */
-  static create = (): ComputeGraphModel => {
-    return new ComputeGraphModel(
-      create(ComputeGraphType, {
+  static create(): ComputeGraphModelImpl {
+    return new ComputeGraphModelImpl(
+      create(ComputeGraph, {
         graph: { nodes: [], edges: [] },
       }),
     );
-  };
-
-  // TODO(burdon): Extend GraphModel.
-  private readonly _model: GraphModel<GraphNode<ComputeGraphNode>, GraphEdge<ComputeEdge>>;
-
-  constructor(private readonly _graph: ComputeGraphType) {
-    this._model = new GraphModel(this._graph.graph);
   }
 
-  toJSON() {
-    return this._model.toJSON();
-  }
+  private readonly _computeGraph: ComputeGraph;
 
-  get graph() {
-    return this._graph;
-  }
-
-  get model() {
-    return this._model;
+  constructor(graph: ComputeGraph) {
+    super(graph.graph);
+    this._computeGraph = graph;
   }
 
   get builder() {
-    return new ComputeGraphBuilder(this._model);
+    return new ComputeGraphBuilder(this);
+  }
+
+  get computeGraph() {
+    return this._computeGraph;
   }
 }
 
-// TODO(burdon): Consider same pattern for GraphModel.
+// TODO(burdon): Same pattern for GraphModel?
 class ComputeGraphBuilder {
-  constructor(private readonly _model: GraphModel<GraphNode<ComputeGraphNode>, GraphEdge<ComputeEdge>>) {}
+  constructor(private readonly _model: GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>) {}
 
   call(cb: (graph: ComputeGraphBuilder) => void): this {
     cb(this);
     return this;
   }
 
-  get(id: string): GraphNode<ComputeGraphNode> {
+  get(id: string): GraphNode<ComputeNode> {
     return this._model.getNode(id);
   }
 
-  create(id?: string, data: ComputeGraphNode = {}): GraphNode<ComputeGraphNode> {
-    const node: GraphNode<ComputeGraphNode> = { id: id ?? ObjectId.random(), data };
+  create(id?: string, data: ComputeNode = {}): GraphNode<ComputeNode> {
+    const node: GraphNode<ComputeNode> = { id: id ?? ObjectId.random(), data };
     this._model.addNode(node);
     return node;
   }
 
   link(
-    source: { node: GraphNode<ComputeGraphNode>; property: string },
-    target: { node: GraphNode<ComputeGraphNode> | ComputeGraphType; property: string },
+    source: { node: GraphNode<ComputeNode>; property: string },
+    target: { node: GraphNode<ComputeNode> | ComputeGraph; property: string },
   ): GraphEdge<ComputeEdge> {
     if (isComputeGraph(target.node)) {
       // Create local intermediate node linked to the subgraph.
@@ -98,8 +93,7 @@ export const createEdge = (params: {
   target: string;
   input: string;
 }): GraphEdge<ComputeEdge> => ({
-  // TODO(burdon): Reverse: source_output-input_target
-  id: createEdgeId({ source: params.source, target: params.target, relation: `${params.input}-${params.output}` }),
+  id: createEdgeId({ source: params.source, target: params.target, relation: `${params.output}-${params.input}` }),
   source: params.source,
   target: params.target,
   data: { input: params.input, output: params.output },

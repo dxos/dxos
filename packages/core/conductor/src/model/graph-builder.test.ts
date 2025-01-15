@@ -4,14 +4,14 @@
 
 import { describe, test } from 'vitest';
 
-import { ComputeGraphModel } from './graph-builder';
+import { ComputeGraphModelImpl } from './graph-builder';
 
 describe('graph builder', () => {
   test.only('graph', ({ expect }) => {
-    const g1 = ComputeGraphModel.create();
+    const g1 = ComputeGraphModelImpl.create();
     g1.builder.create('x');
 
-    const g2 = ComputeGraphModel.create();
+    const g2 = ComputeGraphModelImpl.create();
     g2.builder
       .call((graph) => {
         graph.link({ node: graph.create('a'), property: 'result' }, { node: graph.create('b'), property: 'value' });
@@ -23,11 +23,11 @@ describe('graph builder', () => {
       })
       .call((graph) => {
         const c = graph.get('c');
-        graph.link({ node: c, property: 'result' }, { node: g1.graph, property: 'value' });
+        graph.link({ node: c, property: 'result' }, { node: g1.computeGraph, property: 'value' });
       });
 
-    expect(g2.model.nodes).to.have.length(4);
-    expect(g2.model.edges).to.have.length(3);
+    expect(g2.nodes).to.have.length(4);
+    expect(g2.edges).to.have.length(3);
 
     // TODO(burdon): Util to create composite graph.
     console.log(JSON.stringify(g1, null, 2));

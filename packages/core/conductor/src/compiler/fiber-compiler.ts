@@ -10,11 +10,11 @@ import type { GraphEdge, GraphModel, GraphNode } from '@dxos/graph';
 import { failedInvariant, invariant } from '@dxos/invariant';
 
 import { createTopology, type GraphDiagnostic, type Topology, type TopologyNode } from './topology';
+import { type ComputeGraphModelImpl } from '../model';
 import { EventLogger, GptService } from '../services';
 import {
   type ComputeEdge,
   type ComputeEffect,
-  type ComputeGraph,
   type Executable,
   type ComputeMeta,
   type ComputeNode,
@@ -165,7 +165,7 @@ export class GraphExecutor {
     return executor;
   }
 
-  async load(graph: ComputeGraph) {
+  async load(graph: ComputeGraphModelImpl) {
     this._computeCache.clear();
     this._topology = await createTopology({
       graph,

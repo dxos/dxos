@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import { S } from '@dxos/echo-schema';
 import { GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
 
-import { createEdge } from '../model';
+import { type ComputeGraphModel, createEdge } from '../model';
 import { TestRuntime, testServices } from '../testing';
 import {
   defineComputeNode,
@@ -16,7 +16,6 @@ import {
   synchronizedComputeFunction,
   unwrapValueBag,
   type ComputeEdge,
-  type ComputeGraph,
   type ComputeNode,
   NodeType,
 } from '../types';
@@ -87,7 +86,7 @@ const sumAggregator = defineComputeNode({
  * stream -> result
  * Sums all elements in the stream.
  */
-const streamSum = (): ComputeGraph => {
+const streamSum = (): ComputeGraphModel => {
   return new GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>()
     .addNode({ id: 'stream-sum-INPUT', data: { type: NodeType.Input } })
     .addNode({ id: 'stream-sum-AGGREGATOR', data: { type: 'dxn:test:sum-aggregator' } })

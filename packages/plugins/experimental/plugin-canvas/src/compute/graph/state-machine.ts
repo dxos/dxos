@@ -10,8 +10,8 @@ import { type Space } from '@dxos/client/echo';
 import {
   type ComputeEdge,
   type ComputeEvent,
-  type ComputeGraphModel,
-  type ComputeGraphNode,
+  type ComputeGraphModelImpl,
+  type ComputeNode,
   GraphExecutor,
   makeValueBag,
   unwrapValueBag,
@@ -92,7 +92,7 @@ export class StateMachine extends Resource {
 
   constructor(
     /** Persistent compute graph. */
-    private readonly _graph: ComputeGraphModel,
+    private readonly _graph: ComputeGraphModelImpl,
   ) {
     super();
   }
@@ -118,12 +118,12 @@ export class StateMachine extends Resource {
     return this._runtimeState;
   }
 
-  addNode(node: GraphNode<ComputeGraphNode>) {
-    this._graph.model.addNode(node);
+  addNode(node: GraphNode<ComputeNode>) {
+    this._graph.addNode(node);
   }
 
   addEdge(edge: GraphEdge<ComputeEdge>) {
-    this._graph.model.addEdge(edge);
+    this._graph.addEdge(edge);
   }
 
   getInputs(nodeId: string) {
@@ -150,7 +150,7 @@ export class StateMachine extends Resource {
   async exec() {
     this._runtimeState = {};
     const executor = this._executor.clone();
-    await executor.load(this._graph.model as any);
+    await executor.load(this._graph);
 
     const outputsByNode: Record<string, Record<string, any>> = {};
     for (const [[nodeId, property], value] of this._forcedOutputs.entries()) {
@@ -162,7 +162,7 @@ export class StateMachine extends Resource {
     }
 
     // TODO(dmaretskyi): Stop hardcoding.
-    const allSwitches = this._graph.model.filterNodes().filter((node) => node.data.type === 'switch');
+    const allSwitches = this._graph.nodes.filter((node) => node.data.type === 'switch');
     const allAffectedNodes = [...new Set(allSwitches.flatMap((node) => executor.getAllDependantNodes(node.id)))];
 
     // TODO(burdon): Return map?

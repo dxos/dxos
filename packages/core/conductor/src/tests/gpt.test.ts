@@ -9,16 +9,10 @@ import { describe, test } from 'vitest';
 import { AIServiceClientImpl, type ResultStreamEvent } from '@dxos/assistant';
 import { GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
 
+import { type ComputeGraphModel } from '../model';
 import { EdgeGpt } from '../services/gpt/edge-gpt';
 import { createEdge, TestRuntime, testServices } from '../testing';
-import {
-  makeValueBag,
-  unwrapValueBag,
-  type ComputeEdge,
-  type ComputeGraph,
-  type ComputeNode,
-  NodeType,
-} from '../types';
+import { makeValueBag, unwrapValueBag, type ComputeEdge, type ComputeNode, NodeType } from '../types';
 
 const ENABLE_LOGGING = true;
 const AI_SERVICE_ENDPOINT = 'http://localhost:8787';
@@ -204,7 +198,7 @@ describe('Gpt pipelines', () => {
   });
 });
 
-const gpt1 = (): ComputeGraph => {
+const gpt1 = (): ComputeGraphModel => {
   return new GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>()
     .addNode({ id: 'gpt1-INPUT', data: { type: NodeType.Input } })
     .addNode({ id: 'gpt1-GPT', data: { type: NodeType.Gpt } })
@@ -213,7 +207,7 @@ const gpt1 = (): ComputeGraph => {
     .addEdge(createEdge({ source: 'gpt1-GPT', output: 'text', target: 'gpt1-OUTPUT', input: 'text' }));
 };
 
-const gpt2 = (): ComputeGraph => {
+const gpt2 = (): ComputeGraphModel => {
   return new GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>()
     .addNode({ id: 'gpt2-INPUT', data: { type: NodeType.Input } })
     .addNode({ id: 'gpt2-GPT', data: { type: NodeType.Gpt } })

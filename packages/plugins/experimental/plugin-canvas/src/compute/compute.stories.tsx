@@ -8,7 +8,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type UnsubscribeCallback } from '@dxos/async';
-import type { ComputeEdge, ComputeGraphNode } from '@dxos/conductor';
+import type { ComputeEdge, ComputeNode } from '@dxos/conductor';
 import { type GraphEdge, type GraphModel, type GraphNode } from '@dxos/graph';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select } from '@dxos/react-ui';
@@ -30,7 +30,7 @@ type RenderProps = EditorRootProps &
   PropsWithChildren<{
     init?: boolean;
     sidebar?: 'canvas' | 'compute' | 'state-machine' | 'selected';
-    computeGraph?: GraphModel<GraphNode<ComputeGraphNode>, GraphEdge<ComputeEdge>>;
+    computeGraph?: GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;
     machine?: StateMachine;
     model?: StateMachineContext['model'];
     gpt?: StateMachineContext['gpt'];
@@ -68,7 +68,7 @@ const Render = ({
         return { machine, model, gpt };
       case 'state-machine':
         return {
-          graph: machine?.graph.model,
+          graph: machine?.graph,
           user: machine?.userState,
           executed: machine?.executedState,
         };

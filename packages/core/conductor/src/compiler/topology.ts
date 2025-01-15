@@ -3,11 +3,11 @@
 //
 
 import { AST, type S } from '@dxos/echo-schema';
-import type { GraphEdge, GraphModel, GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import type { ComputeNode, ComputeEdge, ComputeMeta } from '../types';
+import { type ComputeGraphModelImpl } from '../model';
+import type { ComputeNode, ComputeMeta } from '../types';
 import { pickProperty } from '../util';
 
 /**
@@ -60,7 +60,7 @@ export type GraphDiagnostic = {
 };
 
 export type CreateTopologyParams = {
-  graph: GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;
+  graph: ComputeGraphModelImpl;
   computeMetaResolver: (node: ComputeNode) => Promise<ComputeMeta>;
 };
 
