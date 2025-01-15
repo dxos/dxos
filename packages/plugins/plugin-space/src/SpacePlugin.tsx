@@ -146,6 +146,7 @@ export const SpacePlugin = ({
         SpaceEvents.StateReady,
         ClientEvents.SpacesReady,
       ),
+      triggers: [SpaceEvents.DefaultSpaceReady],
       activate: SpacesReady,
     }),
   ]);

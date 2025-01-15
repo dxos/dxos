@@ -7657,9 +7657,6 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../common/local-storage

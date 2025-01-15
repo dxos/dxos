@@ -16,6 +16,7 @@ export default async (context: PluginsContext) => {
     remoteFunctionUrl = url.toString();
   }
 
+  // TODO(wittjosiah): This can probably be a module level import now due to lazy capability loading.
   // Async import removes direct dependency on hyperformula.
   const { defaultPlugins, ComputeGraphRegistry } = await import('@dxos/compute');
   const computeGraphRegistry = new ComputeGraphRegistry({ plugins: defaultPlugins, remoteFunctionUrl });

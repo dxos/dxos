@@ -33,8 +33,8 @@ export default ({ appName, tx: propsTx = defaultTx, ...rest }: ThemePluginOption
     {
       id: THEME_PLUGIN,
       context: ({ children }) => {
-        const _resources = useCapabilities(Capabilities.Translations).flat();
-        const resources = useMemo(() => [compositeEnUs(appName), ..._resources], [_resources]);
+        const _resources = useCapabilities(Capabilities.Translations);
+        const resources = useMemo(() => [compositeEnUs(appName), ..._resources.flat()], [_resources]);
 
         return (
           <ThemeProvider {...{ tx: propsTx, themeMode: state.themeMode, resourceExtensions: resources, ...rest }}>

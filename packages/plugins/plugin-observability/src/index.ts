@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './capabilities';
-export * from './events';
+export { ObservabilityCapabilities } from './capabilities';
+export { ObservabilityEvents } from './events';
 export * from './meta';
 export * from './ObservabilityPlugin';

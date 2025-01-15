@@ -4,4 +4,3 @@
 
 export * from './ChessPlugin';
 export * from './meta';
-export * from './types';

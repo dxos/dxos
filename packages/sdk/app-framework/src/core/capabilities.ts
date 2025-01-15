@@ -15,12 +15,10 @@ import { type MaybePromise } from '@dxos/util';
 
 import { type ActivationEvent } from './events';
 
+const InterfaceDefTypeId: unique symbol = Symbol.for('InterfaceDefTypeId');
+
 export type InterfaceDef<T> = {
-  // TODO(dima): Pattern borrowed from effect, they use symbols which I ommited for brewity.
-  _TypeId: {
-    // This is gonna be `null` at runtime, here it's just so that the InterfaceDef holds on to the type-param
-    _T: T;
-  };
+  [InterfaceDefTypeId]: T;
   identifier: string;
 };
 
@@ -58,7 +56,7 @@ type PluginsContextOptions = {
   reset: (event: ActivationEvent) => MaybePromise<boolean>;
 };
 
-class CapabilityDef<T> {
+class CapabilityImpl<T> {
   constructor(readonly implementation: T) {}
 }
 
@@ -89,7 +87,7 @@ export const lazy =
  * Context which is passed to plugins, allowing them to interact with each other.
  */
 export class PluginsContext {
-  private readonly _definedCapabilities = new Map<string, CapabilityDef<unknown>[]>();
+  private readonly _definedCapabilities = new Map<string, CapabilityImpl<unknown>[]>();
 
   /**
    * Activates plugins based on the activation event.
@@ -116,12 +114,12 @@ export class PluginsContext {
   contributeCapability<T>(interfaceDef: InterfaceDef<T>, implementation: T) {
     let current = this._definedCapabilities.get(interfaceDef.identifier);
     if (!current) {
-      const object = create<{ value: CapabilityDef<unknown>[] }>({ value: [] });
+      const object = create<{ value: CapabilityImpl<unknown>[] }>({ value: [] });
       current = untracked(() => object.value);
       this._definedCapabilities.set(interfaceDef.identifier, current);
     }
 
-    current.push(new CapabilityDef(implementation));
+    current.push(new CapabilityImpl(implementation));
     log('capability contributed', { id: interfaceDef.identifier, count: untracked(() => current.length) });
   }
 
@@ -152,7 +150,7 @@ export class PluginsContext {
   ): U[] {
     let current = this._definedCapabilities.get(interfaceDef.identifier);
     if (!current) {
-      const object = create<{ value: CapabilityDef<unknown>[] }>({ value: [] });
+      const object = create<{ value: CapabilityImpl<unknown>[] }>({ value: [] });
       current = untracked(() => object.value);
       this._definedCapabilities.set(interfaceDef.identifier, current);
     }

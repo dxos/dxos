@@ -10,5 +10,3 @@ export const LayoutIntentResolver = lazy(() => import('./intent-resolver'));
 export const LayoutState = lazy(() => import('./state'));
 export const ReactContext = lazy(() => import('./react-context'));
 export const ReactRoot = lazy(() => import('./react-root'));
-
-export * from './deck';

@@ -12,7 +12,7 @@ import { Capabilities, type SurfaceProps } from '../common';
 
 const useSurfaces = () => {
   const surfaces = useCapabilities(Capabilities.ReactSurface);
-  return surfaces.flat();
+  return useMemo(() => surfaces.flat(), [surfaces]);
 };
 
 /**

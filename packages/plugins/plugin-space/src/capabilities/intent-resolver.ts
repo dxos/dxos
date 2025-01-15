@@ -38,6 +38,7 @@ import { SPACE_PLUGIN } from '../meta';
 import { CollectionAction, CollectionType, SpaceAction } from '../types';
 import { cloneObject, COMPOSER_SPACE_LOCK, getNestedObjects } from '../util';
 
+// TODO(wittjosiah): Remove.
 const SPACE_MAX_OBJECTS = 500;
 
 type IntentResolverOptions = {

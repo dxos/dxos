@@ -4,7 +4,7 @@
 
 import { z } from 'zod';
 
-// TODO(burdon): Replace zed with effect.
+// TODO(burdon): Replace zod with effect.
 export const ResourceKey = z.union([z.string(), z.record(z.any())]);
 export type ResourceKey = z.infer<typeof ResourceKey>;
 

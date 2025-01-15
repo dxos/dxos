@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
-import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { Capabilities, useCapabilities } from '@dxos/app-framework';
+import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 
 import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
 import { useExtensions } from '../extensions';
@@ -71,7 +72,7 @@ type DocumentEditorProps = Omit<MarkdownContainerProps, 'object' | 'extensionPro
   };
 
 export const DocumentEditor = ({ id, document: doc, settings, viewMode, ...props }: DocumentEditorProps) => {
-  // const space = getSpace(doc);
+  const space = getSpace(doc);
 
   // Migrate gradually to `fallbackName`.
   useEffect(() => {
@@ -81,16 +82,15 @@ export const DocumentEditor = ({ id, document: doc, settings, viewMode, ...props
   }, [doc, doc.content]);
 
   // File dragging.
-  // TODO(wittjosiah): Restore.
-  // const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
-  // const handleFileUpload = useMemo(() => {
-  //   if (space === undefined || fileManagerPlugin?.provides.file.upload === undefined) {
-  //     return undefined;
-  //   }
+  const [upload] = useCapabilities(Capabilities.FileUploader);
+  const handleFileUpload = useMemo(() => {
+    if (space === undefined || upload === undefined) {
+      return undefined;
+    }
 
-  //   // TODO(burdon): Re-order props: space, file.
-  //   return async (file: File) => fileManagerPlugin?.provides?.file?.upload?.(file, space);
-  // }, [space, fileManagerPlugin]);
+    // TODO(burdon): Re-order props: space, file.
+    return async (file: File) => upload!(file, space);
+  }, [space, upload]);
 
   return (
     <MarkdownEditor
@@ -99,7 +99,7 @@ export const DocumentEditor = ({ id, document: doc, settings, viewMode, ...props
       viewMode={viewMode}
       toolbar={settings.toolbar}
       inputMode={settings.editorInputMode}
-      // onFileUpload={handleFileUpload}
+      onFileUpload={handleFileUpload}
       {...props}
     />
   );

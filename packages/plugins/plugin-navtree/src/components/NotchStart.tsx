@@ -4,8 +4,9 @@
 
 import React from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, useIntentDispatcher, useCapabilities } from '@dxos/app-framework';
 import { ClientAction } from '@dxos/plugin-client/types';
+import { ObservabilityCapabilities } from '@dxos/plugin-observability';
 import { useIdentity } from '@dxos/react-client/halo';
 
 import { HaloButton } from './HaloButton';
@@ -14,7 +15,7 @@ import { HaloButton } from './HaloButton';
 export const NotchStart = () => {
   const identity = useIdentity();
   // TODO(wittjosiah): Can this be removed now?
-  // const observabilityPlugin = useResolvePlugin(parseObservabilityPlugin);
+  const [observability] = useCapabilities(ObservabilityCapabilities.Observability);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   return (
     <HaloButton
@@ -22,7 +23,7 @@ export const NotchStart = () => {
       identityKey={identity?.identityKey.toHex()}
       hue={identity?.profile?.data?.hue}
       emoji={identity?.profile?.data?.emoji}
-      // internal={observabilityPlugin?.provides?.observability?.group === 'dxos'}
+      internal={observability?.group === 'dxos'}
       onClick={() => dispatch(createIntent(ClientAction.ShareIdentity))}
     />
   );

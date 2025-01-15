@@ -5,6 +5,6 @@
 export * from '@dxos/react-ui-attention';
 
 export * from './AttentionPlugin';
-export * from './capabilities';
+export { AttentionCapabilities } from './capabilities';
 export * from './events';
 export * from './meta';

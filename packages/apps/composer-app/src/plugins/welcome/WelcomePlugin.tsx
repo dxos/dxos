@@ -4,8 +4,9 @@
 
 import { allOf, Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { ClientEvents } from '@dxos/plugin-client';
+import { SpaceEvents } from '@dxos/plugin-space';
 
-import { IdentityCreated, Onboarding, ReactSurface } from './capabilities';
+import { DefaultContent, Onboarding, ReactSurface } from './capabilities';
 import { WELCOME_PLUGIN, meta } from './meta';
 import translations from './translations';
 
@@ -34,8 +35,8 @@ export const WelcomePlugin = () =>
       activate: ReactSurface,
     }),
     defineModule({
-      id: `${WELCOME_PLUGIN}/module/identity-created`,
-      activatesOn: ClientEvents.IdentityCreated,
-      activate: IdentityCreated,
+      id: `${WELCOME_PLUGIN}/module/default-content`,
+      activatesOn: SpaceEvents.DefaultSpaceReady,
+      activate: DefaultContent,
     }),
   ]);

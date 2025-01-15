@@ -73,57 +73,73 @@ export class PluginManager {
 
   /**
    * Plugins that are currently registered.
+   *
+   * @reactive
    */
-  get plugins(): readonly Plugin[] {
+  get plugins(): ReactiveObject<readonly Plugin[]> {
     return this._state.plugins;
   }
 
   /**
    * Ids of plugins that are core and cannot be removed.
+   *
+   * @reactive
    */
-  get core(): readonly string[] {
+  get core(): ReactiveObject<readonly string[]> {
     return this._state.core;
   }
 
   /**
    * Ids of plugins that are currently enabled.
+   *
+   * @reactive
    */
-  get enabled(): readonly string[] {
+  get enabled(): ReactiveObject<readonly string[]> {
     return this._state.enabled;
   }
 
   /**
    * Modules of plugins which are currently enabled.
+   *
+   * @reactive
    */
-  get modules(): readonly PluginModule[] {
+  get modules(): ReactiveObject<readonly PluginModule[]> {
     return this._state.modules;
   }
 
   /**
    * Ids of modules which are currently active.
+   *
+   * @reactive
    */
-  get active(): readonly string[] {
+  get active(): ReactiveObject<readonly string[]> {
     return this._state.active;
   }
 
   /**
    * Ids of modules which are pending removal.
+   *
+   * @reactive
    */
-  get pendingRemoval(): readonly string[] {
+  get pendingRemoval(): ReactiveObject<readonly string[]> {
     return this._state.pendingRemoval;
   }
 
   /**
    * Ids of events which have been fired.
+   *
+   * @reactive
    */
-  get eventsFired(): readonly string[] {
+  get eventsFired(): ReactiveObject<readonly string[]> {
     return this._state.eventsFired;
   }
 
   /**
    * Ids of modules which are pending reset.
+   *
+   * @reactive
    */
-  get pendingReset(): readonly string[] {
+  get pendingReset(): ReactiveObject<readonly string[]> {
     return this._state.pendingReset;
   }
 

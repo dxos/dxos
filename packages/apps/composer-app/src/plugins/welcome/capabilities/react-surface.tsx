@@ -4,8 +4,7 @@
 
 import React from 'react';
 
-import { createSurface } from '@dxos/app-framework';
-import { Capabilities, contributes } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 

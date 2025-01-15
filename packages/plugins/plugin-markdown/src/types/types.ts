@@ -3,6 +3,7 @@
 //
 
 import { S } from '@dxos/echo-schema';
+// TODO(wittjosiah): This pulls in UI code into the types entrypoint.
 import { type Extension, EditorInputMode, EditorViewMode } from '@dxos/react-ui-editor';
 
 import { DocumentType } from './schema';

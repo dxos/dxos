@@ -3,8 +3,9 @@
 //
 
 export { SpaceCapabilities, ThreadCapabilities } from './capabilities';
+export { SpaceEvents } from './events';
+
 export * from './components';
-export * from './events';
 export * from './meta';
 export * from './SpacePlugin';
 export * from './util';

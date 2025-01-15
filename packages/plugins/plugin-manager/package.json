@@ -16,11 +16,7 @@
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
-    "*": {
-      "meta": [
-        "dist/types/src/meta.d.ts"
-      ]
-    }
+    "*": {}
   },
   "files": [
     "dist",
@@ -28,7 +24,6 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",

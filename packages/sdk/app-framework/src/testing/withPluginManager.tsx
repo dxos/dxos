@@ -11,7 +11,7 @@ import { type AnyCapability, PluginManager, type PluginManagerOptions } from '..
 import { PluginManagerProvider } from '../react';
 
 /**
- * Changes theme based on storybook toolbar toggle.
+ * Wraps a story with a plugin manager.
  */
 export const withPluginManager = (
   options: Partial<PluginManagerOptions> & { capabilities?: AnyCapability[] } = {},

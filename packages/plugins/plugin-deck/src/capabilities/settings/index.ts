@@ -4,5 +4,5 @@
 
 import { lazy } from '@dxos/app-framework';
 
-export const Settings = lazy(() => import('./settings'));
-export const Surface = lazy(() => import('./surface'));
+export const ReactSurface = lazy(() => import('./react-surface'));
+export const DeckSettings = lazy(() => import('./settings'));

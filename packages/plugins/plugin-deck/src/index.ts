@@ -3,5 +3,6 @@
 //
 
 export { DeckCapabilities } from './capabilities';
+export { DeckEvents } from './events';
 export * from './DeckPlugin';
 export * from './meta';

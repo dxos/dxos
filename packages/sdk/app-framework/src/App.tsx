@@ -21,18 +21,42 @@ export type HostPluginParams = {
   plugins?: Plugin[];
   core?: string[];
   defaults?: string[];
-  fallback?: ErrorBoundary['props']['fallback'];
   placeholder?: ReactNode;
+  fallback?: ErrorBoundary['props']['fallback'];
   cacheEnabled?: boolean;
 };
 
+/**
+ * Expected usage is for this to be the entrypoint of the application.
+ * Initializes plugins and renders the root components.
+ *
+ * @example
+ * const plugins = [LayoutPlugin(), MyPlugin()];
+ * const core = [LayoutPluginId];
+ * const default = [MyPluginId];
+ * const fallback = <div>Initializing Plugins...</div>;
+ * const App = createApp({ plugins, core, default, fallback });
+ * createRoot(document.getElementById('root')!).render(
+ *   <StrictMode>
+ *     <App />
+ *   </StrictMode>,
+ * );
+ *
+ * @param params.pluginLoader A function which loads new plugins.
+ * @param params.plugins All plugins available to the application.
+ * @param params.core Core plugins which will always be enabled.
+ * @param params.defaults Default plugins are enabled by default but can be disabled by the user.
+ * @param params.placeholder Placeholder component to render during startup.
+ * @param params.fallback Fallback component to render if an error occurs during startup.
+ * @param params.cacheEnabled Whether to cache enabled plugins in localStorage.
+ */
 export const createApp = ({
   pluginLoader: _pluginLoader,
   plugins = [],
   core = [],
   defaults = [],
-  fallback = DefaultFallback,
   placeholder = null,
+  fallback = DefaultFallback,
   cacheEnabled = false,
 }: HostPluginParams) => {
   // TODO(wittjosiah): Provide a custom plugin loader which supports loading via url.

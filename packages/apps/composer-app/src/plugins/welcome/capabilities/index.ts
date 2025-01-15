@@ -4,7 +4,7 @@
 
 import { lazy } from '@dxos/app-framework';
 
-export const IdentityCreated = lazy(() => import('./identity-created'));
+export const DefaultContent = lazy(() => import('./default-content'));
 export const Onboarding = lazy(() => import('./onboarding'));
 export const ReactSurface = lazy(() => import('./react-surface'));
 

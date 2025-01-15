@@ -18,8 +18,8 @@ import {
   NavigationIntentResolver,
   ReactContext,
   ReactRoot,
-  Settings,
-  Surface,
+  DeckSettings,
+  ReactSurface,
   UrlHandler,
 } from './capabilities';
 import { DeckEvents } from './events';
@@ -40,7 +40,12 @@ export const DeckPlugin = () =>
     defineModule({
       id: `${meta.id}/module/settings`,
       activatesOn: Events.SetupSettings,
-      activate: Settings,
+      activate: DeckSettings,
+    }),
+    defineModule({
+      id: `${meta.id}/module/react-surface`,
+      activatesOn: Events.Startup,
+      activate: ReactSurface,
     }),
 
     //
@@ -70,17 +75,12 @@ export const DeckPlugin = () =>
       activate: ReactContext,
     }),
     defineModule({
-      id: `${meta.id}/module/root`,
+      id: `${meta.id}/module/react-root`,
       activatesOn: Events.Startup,
       activate: ReactRoot,
     }),
     defineModule({
-      id: `${meta.id}/module/surface`,
-      activatesOn: Events.Startup,
-      activate: Surface,
-    }),
-    defineModule({
-      id: `${meta.id}/module/layout-intents`,
+      id: `${meta.id}/module/layout-intent-resolver`,
       activatesOn: Events.SetupIntents,
       activate: LayoutIntentResolver,
     }),
@@ -116,7 +116,7 @@ export const DeckPlugin = () =>
       activate: UrlHandler,
     }),
     defineModule({
-      id: `${meta.id}/module/navigation-intents`,
+      id: `${meta.id}/module/navigation-intent-resolver`,
       activatesOn: Events.SetupIntents,
       activate: NavigationIntentResolver,
     }),

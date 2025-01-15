@@ -10,4 +10,4 @@ export const ReactSurface = lazy(() => import('./react-surface'));
 export const ObservabilitySettings = lazy(() => import('./settings'));
 export const ObservabilityState = lazy(() => import('./state'));
 
-export { ObservabilityCapabilities } from './capabilities';
+export * from './capabilities';

@@ -5,9 +5,9 @@
 import { defineCapability } from '@dxos/app-framework';
 
 import { MANAGER_PLUGIN } from '../meta';
-import { type SettingsState } from '../types';
 
 export namespace ManagerCapabilities {
-  export const State = defineCapability<Readonly<SettingsState>>(`${MANAGER_PLUGIN}/capability/state`);
-  export const MutableState = defineCapability<SettingsState>(`${MANAGER_PLUGIN}/capability/state`);
+  export type State = { selected: string };
+  export const State = defineCapability<Readonly<State>>(`${MANAGER_PLUGIN}/capability/state`);
+  export const MutableState = defineCapability<State>(`${MANAGER_PLUGIN}/capability/state`);
 }
