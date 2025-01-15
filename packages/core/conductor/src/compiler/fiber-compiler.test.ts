@@ -13,11 +13,11 @@ import { logCustomEvent } from '../services';
 import { createEdge, TestRuntime, testServices } from '../testing';
 import {
   ComputeGraphModel,
+  NodeType,
   defineComputeNode,
   makeValueBag,
   synchronizedComputeFunction,
   unwrapValueBag,
-  NodeType,
 } from '../types';
 
 const ENABLE_LOGGING = false;

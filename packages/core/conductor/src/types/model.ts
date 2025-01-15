@@ -11,7 +11,6 @@ import { ComputeGraph, type ComputeEdge, type ComputeNode, isComputeGraph } from
 /**
  * Builder.
  */
-// TODO(burdon): Generic graph?
 export class ComputeGraphModel extends GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>> {
   /**
    * Create new model.
@@ -24,20 +23,19 @@ export class ComputeGraphModel extends GraphModel<GraphNode<ComputeNode>, GraphE
     );
   }
 
-  // TODO(burdon): Reconcile with _graph.
-  private readonly _computeGraph: ComputeGraph;
+  private readonly _root: ComputeGraph;
 
-  constructor(graph: ComputeGraph) {
-    super(graph.graph);
-    this._computeGraph = graph;
+  constructor(root: ComputeGraph) {
+    super(root.graph);
+    this._root = root;
+  }
+
+  get root() {
+    return this._root;
   }
 
   get builder() {
     return new ComputeGraphBuilder(this);
-  }
-
-  get computeGraph() {
-    return this._computeGraph;
   }
 }
 

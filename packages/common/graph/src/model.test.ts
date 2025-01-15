@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { GraphModel } from './graph';
+import { GraphModel } from './model';
 import { type GraphNode } from './types';
 
 type TestData = { value: string };

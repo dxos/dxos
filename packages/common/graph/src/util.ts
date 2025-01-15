@@ -9,7 +9,7 @@ import { getSchema, create } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getSchemaProperties } from '@dxos/schema';
 
-import { GraphModel } from './graph';
+import { GraphModel } from './model';
 import { Graph, type GraphNode } from './types';
 
 const KEY_REGEX = /\w+/;

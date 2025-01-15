@@ -3,14 +3,14 @@
 //
 
 import { Ref, type Ref$, S, TypedObject } from '@dxos/echo-schema';
-import { Graph } from '@dxos/graph';
+import { BaseGraphNode, Graph } from '@dxos/graph';
 
 /**
  * GraphNode payload.
  */
 export const ComputeNode = S.Struct({
   /** DXN of the node specifier. */
-  // TODO(burdon): Remove? Use type in base node class. Generalize type.
+  // TODO(burdon): Remove? Use type in base node class.
   type: S.optional(S.String),
 
   /** For composition nodes. */
@@ -37,25 +37,27 @@ export const ComputeEdge = S.Struct({
 export type ComputeEdge = S.Schema.Type<typeof ComputeEdge>;
 
 /**
- * Well-known node types.
+ * Persistent graph.
  */
-export const NodeType = Object.freeze({
-  Input: 'dxn:compute:input',
-  Output: 'dxn:compute:output',
-
-  // TODO(burdon): ???
-  Gpt: 'dxn:compute:gpt',
-});
-
 export class ComputeGraph extends TypedObject({
   typename: 'dxos.org/type/ComputeGraph',
   version: '0.1.0',
 })({
   graph: Graph,
 
-  // TODO(burdon): Are these required or just used for references?
-  input: S.optional(ComputeNode),
-  output: S.optional(ComputeNode),
+  // Reference nodes.
+  input: S.optional(BaseGraphNode),
+  output: S.optional(BaseGraphNode),
 }) {}
 
 export const isComputeGraph = S.is(ComputeGraph);
+
+/**
+ * Well-known node types.
+ */
+export const NodeType = Object.freeze({
+  Input: 'dxn:compute:input',
+  Output: 'dxn:compute:output',
+
+  Gpt: 'dxn:compute:gpt',
+});
