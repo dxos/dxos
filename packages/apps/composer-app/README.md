@@ -56,7 +56,9 @@ ssc install-app --platform ios
 
 ## Logos and image assets
 
-
+```bash
+pnpm run icons
+```
 
 ## Dependencies
 

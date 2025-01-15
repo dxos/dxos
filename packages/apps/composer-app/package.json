@@ -13,7 +13,7 @@
     "build:functions": "esbuild ./src/functions/_worker.ts --bundle --format=esm --outfile=./out/composer/_worker.js",
     "copy:assets": "mkdir -p ./public/assets/plugin-sketch && cp -R node_modules/@dxos/plugin-sketch/dist/assets/* ./public/assets/plugin-sketch",
     "demo": "node -r ts-node/register/transpile-only ./playwright/demos/grid.ts",
-    "icons": "pwa-asset-generator --icon-only --favicon --mstile ./assets/icon-1536x1536.png ./public/icons"
+    "icons": "pwa-asset-generator --no-splash --icon-only --favicon --mstile ./assets/icon-1536x1536.png ./public/icons"
   },
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
