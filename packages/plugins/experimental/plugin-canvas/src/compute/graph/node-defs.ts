@@ -4,16 +4,16 @@
 
 import { Effect } from 'effect';
 
-import { type ComputeNode, type Executable, defineComputeNode, synchronizedComputeFunction } from '@dxos/conductor';
+import { type ComputeNode, type Executable, defineComputeNode, gptNode, synchronizedComputeFunction } from '@dxos/conductor';
 import { raise } from '@dxos/debug';
-import { S, ObjectId } from '@dxos/echo-schema';
+import { ObjectId, S } from '@dxos/echo-schema';
 import { type GraphNode } from '@dxos/graph';
 import { failedInvariant, invariant } from '@dxos/invariant';
 
-import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './types';
 import { type ComputeShape } from '../shapes';
+import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './types';
 
-type NodeType = 'switch' | 'text' | 'beacon' | 'and' | 'or' | 'not' | 'if' | 'if-else';
+type NodeType = 'switch' | 'text' | 'beacon' | 'and' | 'or' | 'not' | 'if' | 'if-else' | 'gpt';
 
 // TODO(burdon): Just pass in type? Or can the shape specialize the node?
 export const createComputeNode = (shape: GraphNode<ComputeShape>): GraphNode<ComputeNode> => {
@@ -48,6 +48,8 @@ const nodeFactory: Record<NodeType, (shape: GraphNode<ComputeShape>) => GraphNod
   // Logic ops.
   ['if' as const]: () => createNode('if'),
   ['if-else' as const]: () => createNode('if-else'),
+
+  ['gpt' as const]: () => createNode('gpt'),
 };
 
 export const resolveComputeNode = async (node: ComputeNode): Promise<Executable> => {
@@ -91,6 +93,8 @@ const nodeDefs: Record<NodeType, Executable> = {
   }),
 
   // Logic ops.
+  // TODO(dmaretskyi): This is wrong.
+  //                   The other output should get the not-executed signal.
   ['if' as const]: defineComputeNode({
     input: S.Struct({ condition: S.Boolean, value: S.Any }),
     output: S.Struct({ true: S.optional(S.Any), false: S.optional(S.Any) }),
@@ -98,6 +102,8 @@ const nodeDefs: Record<NodeType, Executable> = {
       Effect.succeed(condition ? { true: value } : { false: value }),
     ),
   }),
+
+  // TODO(dmaretskyi): Rename select.
   ['if-else' as const]: defineComputeNode({
     input: S.Struct({ condition: S.Boolean, true: S.Any, false: S.Any }),
     output: S.Struct({ [DEFAULT_OUTPUT]: S.Any }),
@@ -105,4 +111,7 @@ const nodeDefs: Record<NodeType, Executable> = {
       Effect.succeed({ [DEFAULT_OUTPUT]: condition ? trueValue : falseValue }),
     ),
   }),
+
+  // TODO(dmaretskyi): Consider moving gpt out of conductor.
+  ['gpt' as const]: gptNode,
 };

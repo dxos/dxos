@@ -2,15 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import type { ComputeNode, ComputeMeta } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 import type { GraphNode } from '@dxos/graph';
 
 import { useComputeContext } from './compute-context';
-import { type RuntimeValue } from '../graph';
+import { resolveComputeNode, type RuntimeValue } from '../graph';
 import { type ComputeShape } from '../shapes';
+import { useAsyncState } from '@dxos/react-ui';
 
 export type ComputeNodeState = {
   node: GraphNode<ComputeNode>;
@@ -28,7 +29,22 @@ export type ComputeNodeState = {
 export const useComputeNodeState = (shape: ComputeShape): ComputeNodeState => {
   const { stateMachine } = useComputeContext();
 
-  
+  const [meta, setMeta] = useState<ComputeMeta>();
+  useEffect(() => {
+    let disposed = false;
+    queueMicrotask(async () => {
+      const node = stateMachine.getComputeNode(shape.node!);
+      const meta = await stateMachine.getMeta(node.data);
+      if (disposed) {
+        return;
+      }
+      setMeta(meta);
+    });
+    return () => {
+      disposed = true;
+    };
+  }, [shape.node]);
+
   return {
     // TODO(burdon): ???
     node: {
@@ -37,7 +53,7 @@ export const useComputeNodeState = (shape: ComputeShape): ComputeNodeState => {
       data: {},
     },
     // TODO(burdon): ???
-    meta: {
+    meta: meta ?? {
       input: S.Struct({}),
       output: S.Struct({}),
     },
