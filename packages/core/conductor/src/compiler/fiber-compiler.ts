@@ -110,12 +110,12 @@ export const compile = async ({
           const logger = yield* EventLogger;
 
           // TODO(dmaretskyi): At the start we log a synthetic end-compute event for the input node to capture it's inputs.
-          logger.log({ type: 'end-compute', nodeId: inputNodeId, outputs: input });
+          logger.log({ type: 'end-compute', nodeId: inputNodeId, outputs: Object.keys(input.values) });
           instance.setOutputs(inputNodeId, input);
           const outputs = yield* instance.computeInputs(outputNodeId);
 
           // Log the output node inputs.
-          logger.log({ type: 'begin-compute', nodeId: outputNodeId, inputs: outputs });
+          logger.log({ type: 'begin-compute', nodeId: outputNodeId, inputs: Object.keys(outputs.values) });
           return outputs;
         }).pipe(Effect.withSpan('compile/compute'));
       },
@@ -309,7 +309,7 @@ export class GraphExecutor {
         logger.log({
           type: 'begin-compute',
           nodeId: node.id,
-          inputs: inputValues,
+          inputs: Object.keys(inputValues.values),
         });
 
         // const sanitizedInputs = yield* S.decode(node.meta.input)(inputValues);
@@ -341,7 +341,7 @@ export class GraphExecutor {
         logger.log({
           type: 'end-compute',
           nodeId: node.id,
-          outputs: resBag,
+          outputs: Object.keys(resBag.values),
         });
         return resBag;
       }).pipe(Effect.withSpan('node-compute', { attributes: { nodeId } }));

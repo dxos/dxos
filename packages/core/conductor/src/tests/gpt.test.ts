@@ -10,11 +10,11 @@ import { AIServiceClientImpl, type ResultStreamEvent } from '@dxos/assistant';
 
 import { EdgeGpt } from '../services/gpt/edge-gpt';
 import { createEdge, TestRuntime, testServices } from '../testing';
-import { ComputeGraphModel, makeValueBag, unwrapValueBag, NodeType } from '../types';
+import { ComputeGraphModel, makeValueBag, unwrapValueBag, NodeType, type ValueEffect } from '../types';
 
 const ENABLE_LOGGING = true;
 const AI_SERVICE_ENDPOINT = 'http://localhost:8787';
-const SKIP_AI_SERVICE_TESTS = true;
+const SKIP_AI_SERVICE_TESTS = false;
 
 describe('Gpt pipelines', () => {
   it.effect('text output', ({ expect }) =>
@@ -105,7 +105,7 @@ describe('Gpt pipelines', () => {
     );
   });
 
-  test.skipIf(SKIP_AI_SERVICE_TESTS)('edge gpt output only', async ({ expect }) => {
+  test.skipIf(SKIP_AI_SERVICE_TESTS).only('edge gpt output only', async ({ expect }) => {
     const runtime = new TestRuntime();
     runtime.registerGraph('dxn:compute:gpt1', gpt1());
 
@@ -113,7 +113,7 @@ describe('Gpt pipelines', () => {
       Effect.gen(function* () {
         const scope = yield* Scope.make();
 
-        const computeResult = runtime
+        const computeResult = yield* runtime
           .runGraph(
             'dxn:compute:gpt1',
             makeValueBag({
@@ -121,7 +121,6 @@ describe('Gpt pipelines', () => {
             }),
           )
           .pipe(
-            Effect.flatMap(unwrapValueBag),
             Effect.provide(
               testServices({
                 enableLogging: ENABLE_LOGGING,
@@ -131,7 +130,7 @@ describe('Gpt pipelines', () => {
             Scope.extend(scope),
           );
 
-        const { text }: { text: Effect.Effect<string, Error, never> } = yield* computeResult;
+        const text: ValueEffect<string> = computeResult.values.text;
 
         const llmTextOutput = yield* text;
         console.log({ llmTextOutput });
