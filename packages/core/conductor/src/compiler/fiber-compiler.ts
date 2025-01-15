@@ -286,11 +286,8 @@ export class GraphExecutor {
       invariant(this._topology, 'Graph not loaded');
       if (this._computeCache.has(nodeId)) {
         const result = yield* this._computeCache.get(nodeId)!;
-        try {
-          invariant(result.type === 'bag', 'Output must be a value bag');
-        } catch (err) {
-          console.log({ result });
-          throw err;
+        if (result.type !== 'bag') {
+          throw new Error(`Output is not a value bag: ${JSON.stringify(result)}`);
         }
         return result;
       }

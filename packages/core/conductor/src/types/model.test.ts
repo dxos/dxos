@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { ComputeGraphModel } from './model';
 
 describe('graph builder', () => {
-  test.only('graph', ({ expect }) => {
+  test('graph', ({ expect }) => {
     const g1 = ComputeGraphModel.create();
     g1.builder.create('x');
 

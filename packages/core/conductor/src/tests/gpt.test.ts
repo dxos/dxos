@@ -14,7 +14,7 @@ import { ComputeGraphModel, makeValueBag, unwrapValueBag, NodeType, type ValueEf
 
 const ENABLE_LOGGING = true;
 const AI_SERVICE_ENDPOINT = 'http://localhost:8787';
-const SKIP_AI_SERVICE_TESTS = false;
+const SKIP_AI_SERVICE_TESTS = true;
 
 describe('Gpt pipelines', () => {
   it.effect('text output', ({ expect }) =>

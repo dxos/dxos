@@ -22,33 +22,33 @@ export type Topology = {
   diagnostics: GraphDiagnostic[];
 };
 
-/**
- *
- */
+type TopologyNodeInput = {
+  name: string;
+  schema: S.Schema.AnyNoContext;
+  sourceNodeId?: string;
+  sourceNodeOutput?: string;
+};
+
+type TopologyNodeOutputBinding = {
+  nodeId: string;
+  property: string;
+};
+
+type TopologyNodeOutput = {
+  name: string;
+  schema: S.Schema.AnyNoContext;
+  /**
+   * Nodes that this output is bound to.
+   */
+  boundTo: TopologyNodeOutputBinding[];
+};
+
 export type TopologyNode = {
   id: string;
   graphNode: ComputeNode;
   meta: ComputeMeta;
-
-  inputs: {
-    name: string;
-    schema: S.Schema.AnyNoContext;
-    sourceNodeId?: string;
-    sourceNodeOutput?: string;
-  }[];
-
-  outputs: {
-    name: string;
-    schema: S.Schema.AnyNoContext;
-
-    /**
-     * Nodes that this output is bound to.
-     */
-    boundTo: {
-      nodeId: string;
-      property: string;
-    }[];
-  }[];
+  inputs: TopologyNodeInput[];
+  outputs: TopologyNodeOutput[];
 };
 
 export type GraphDiagnostic = {
