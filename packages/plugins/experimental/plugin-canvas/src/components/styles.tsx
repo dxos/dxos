@@ -12,6 +12,7 @@ export const styles = {
   frameActive: 'border-primary-500',
   frameHover: 'hover:border-orange-500',
   frameGuide: 'border-green-500 border-dashed !opacity-50 !bg-transparent',
+  top: 'z-[100]',
   anchor: 'bg-base border border-neutral-500 rounded-[50%] hover:bg-orange-500',
   anchorActive: 'bg-orange-500',
   resizeBorder: 'border border-primary-500',

@@ -45,7 +45,7 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
           createThemeExtensions({
             themeMode,
             slots: {
-              editor: { className: 'w-full [&>.cm-scroller]:scrollbar-none' },
+              editor: { className: 'w-full [&>.cm-scroller]:scrollbar-none p-2' },
               content: { className: mx(centered && 'text-center') },
             },
           }),
@@ -53,6 +53,7 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
             if (!focusing) {
               onEnter?.(state.doc.toString());
             }
+
             return null;
           }),
           Prec.highest(
@@ -105,7 +106,6 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
 
     useEffect(() => {
       view?.dispatch({ selection: { anchor: view.state.doc.length } });
-      view?.focus();
     }, [view]);
 
     return <div ref={parentRef} {...focusAttributes} className={mx('w-full overflow-hidden', classNames)} />;

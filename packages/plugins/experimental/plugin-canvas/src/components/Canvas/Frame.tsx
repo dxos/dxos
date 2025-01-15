@@ -264,13 +264,13 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
           style={getBoundsProperties({ x: 0, y: 0, ...shape.size })}
           className={mx(
             'absolute overflow-hidden box-border',
-            styles.frameContainer,
-            styles.frameHover,
-            styles.frameBorder,
             classNames,
+            styles.frameContainer,
+            styles.frameBorder,
+            !resize && styles.frameHover,
             dragging && 'opacity-0',
             preview && styles.framePreview,
-            selected && styles.frameSelected,
+            selected && [styles.frameSelected, styles.top],
             active && styles.frameActive,
             shape.guide && styles.frameGuide,
             debug && 'opacity-30',
@@ -280,23 +280,37 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
         >
           {children}
         </div>
+
         {/* Anchors. */}
         {!dragging && (!selected || !resizeable) && !resizing && (
           <div>
             {Object.values(anchors).map((anchor) => (
-              <AnchorComponent key={anchor.id} type='anchor' shape={shape} anchor={anchor} />
+              <AnchorComponent
+                key={anchor.id}
+                classNames={selected && styles.top}
+                type='anchor'
+                shape={shape}
+                anchor={anchor}
+              />
             ))}
           </div>
         )}
+
         {/* Resize handles. */}
         {resizeable && (resize || resizing) && (
           <div>
             <div
               style={getBoundsProperties({ x: 0, y: 0, ...shape.size })}
-              className={mx('absolute pointer-events-none', styles.resizeBorder)}
+              className={mx('absolute pointer-events-none', selected && styles.top, styles.resizeBorder)}
             />
             {Object.values(createAnchorMap(shape, resizeAnchors)).map((anchor) => (
-              <AnchorComponent key={anchor.id} type='resize' shape={shape} anchor={anchor} />
+              <AnchorComponent
+                key={anchor.id}
+                classNames={selected && styles.top}
+                type='resize'
+                shape={shape}
+                anchor={anchor}
+              />
             ))}
           </div>
         )}

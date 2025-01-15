@@ -68,7 +68,6 @@ export const TextComponent = ({ shape, title, chat, ...props }: TextComponentPro
     <Box name={title ?? 'Text'}>
       <TextBox
         ref={inputRef}
-        classNames='flex grow p-2 overflow-hidden'
         {...props}
         reset={reset}
         // value={chat ? '' : shape.node.getText()}
