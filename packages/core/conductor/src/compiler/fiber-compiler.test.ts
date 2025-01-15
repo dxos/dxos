@@ -7,6 +7,8 @@ import { Effect } from 'effect';
 import { describe, test } from 'vitest';
 
 import { S } from '@dxos/echo-schema';
+import { DXN } from '@dxos/keys';
+import { refFromDXN } from '@dxos/live-object';
 import { mapValues } from '@dxos/util';
 
 import { logCustomEvent } from '../services';
@@ -43,7 +45,7 @@ describe('Graph as a fiber runtime', () => {
     }),
   );
 
-  test('composition', async ({ expect }) => {
+  test.only('composition', async ({ expect }) => {
     const runtime = new TestRuntime()
       .registerNode('dxn:test:sum', sum)
       .registerGraph('dxn:test:g1', g1())
@@ -132,10 +134,11 @@ const g1 = () => {
  * Uses adder node.
  */
 const g2 = () => {
+  const g1Dxn = DXN.parse('dxn:test:g1');
   return ComputeGraphModel.create()
     .addNode({ id: 'I', data: { type: NodeType.Input } })
-    .addNode({ id: 'X', data: { type: 'dxn:test:g1' } })
-    .addNode({ id: 'Y', data: { type: 'dxn:test:g1' } })
+    .addNode({ id: 'X', data: { type: g1Dxn.toString(), subgraph: refFromDXN(g1Dxn) } })
+    .addNode({ id: 'Y', data: { type: g1Dxn.toString(), subgraph: refFromDXN(g1Dxn) } })
     .addNode({ id: 'O', data: { type: NodeType.Output } })
     .addEdge(createEdge({ source: 'I', output: 'a', target: 'X', input: 'number1' }))
     .addEdge(createEdge({ source: 'I', output: 'b', target: 'X', input: 'number2' }))
@@ -151,6 +154,7 @@ const g3 = () => {
     .addNode({ id: 'X', data: { type: 'dxn:test:sum' } })
     .addNode({ id: 'V1', data: { type: 'dxn:test:viewer' } })
     .addNode({ id: 'V2', data: { type: 'dxn:test:viewer' } })
+    .addNode({ id: 'O', data: { type: NodeType.Output } })
     .addEdge(createEdge({ source: 'I', output: 'a', target: 'X', input: 'a' }))
     .addEdge(createEdge({ source: 'I', output: 'b', target: 'X', input: 'b' }))
     .addEdge(createEdge({ source: 'X', output: 'result', target: 'V1', input: 'result' }))
