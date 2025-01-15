@@ -11,6 +11,8 @@ import {
   type ComputeEdge,
   type ComputeEvent,
   type ComputeGraphModel,
+  type ComputeGraphNode,
+  type ComputeMeta,
   type ComputeNode,
   GraphExecutor,
   makeValueBag,
@@ -18,10 +20,8 @@ import {
 } from '@dxos/conductor';
 import { testServices } from '@dxos/conductor/testing';
 import { Resource } from '@dxos/context';
-import { type ObjectId } from '@dxos/echo-schema';
 import { type GraphEdge, type GraphNode } from '@dxos/graph';
 import { log } from '@dxos/log';
-import { ComplexMap } from '@dxos/util';
 
 import { resolveComputeNode } from './node-defs';
 import type { GptInput, GptOutput } from './types';
@@ -127,15 +127,20 @@ export class StateMachine extends Resource {
     this._graph.addEdge(edge);
   }
 
+  getComputeNode(nodeId: string): ComputeGraphNode {
+    ret
+  }
+
   getInputs(nodeId: string) {
     console.log({ st: this._runtimeState }, nodeId);
     return this._runtimeState[nodeId] ?? {};
   }
 
+  
   getOutputs(nodeId: string) {
     return {};
   }
-
+  
   @log.method()
   setOutput(nodeId: string, property: string, value: any) {
     this._forcedOutputs[nodeId] ??= {};
@@ -148,6 +153,11 @@ export class StateMachine extends Resource {
         log.catch(err);
       }
     });
+  }
+
+  async getMeta(node: ComputeNode): Promise<ComputeMeta> {
+    const { meta } = await resolveComputeNode(node);
+    return meta;
   }
 
   @synchronized

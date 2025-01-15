@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import type { ComputeNode, ComputeMeta } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 import type { GraphNode } from '@dxos/graph';
 
 import { useComputeContext } from './compute-context';
-import { type RuntimeValue } from '../graph';
+import { resolveComputeNode, type RuntimeValue } from '../graph';
 import { type ComputeShape } from '../shapes';
 
 export type ComputeNodeState = {
@@ -28,7 +28,15 @@ export type ComputeNodeState = {
 export const useComputeNodeState = (shape: ComputeShape): ComputeNodeState => {
   const { stateMachine } = useComputeContext();
 
-  
+  const [meta, setMeta] = useState();
+  useEffect(() => {
+    queueMicrotask(async () => {
+      const meta = stateMachine.getMeta()
+
+
+    })
+  }, [shape.node])
+
   return {
     // TODO(burdon): ???
     node: {

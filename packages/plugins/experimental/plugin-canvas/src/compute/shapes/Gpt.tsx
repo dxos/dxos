@@ -4,10 +4,13 @@
 
 import { S } from '@dxos/echo-schema';
 
-import { getHeight } from './Function';
+import { createFunctionAnchors, FunctionBody, getHeight } from './Function';
 import { ComputeShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { GptInput } from '../graph';
+import { GptOutput } from '@dxos/conductor';
+import { useComputeNodeState } from '../hooks';
+import React from 'react';
 
 export const GptShape = S.extend(
   ComputeShape,
@@ -30,10 +33,8 @@ export const createGpt = ({ id, ...rest }: CreateGptProps): GptShape => {
 };
 
 export const GptComponent = ({ shape }: ShapeComponentProps<GptShape>) => {
-  return null;
-  // return (
-  //   <FunctionBody name={shape.node.name} inputSchema={shape.node.inputSchema} outputSchema={shape.node.outputSchema} />
-  // );
+  const { meta } = useComputeNodeState(shape);
+  return <FunctionBody name={'GPT'} inputSchema={meta.input} outputSchema={meta.output} />;
 };
 
 export const gptShape: ShapeDef<GptShape> = {
@@ -41,5 +42,6 @@ export const gptShape: ShapeDef<GptShape> = {
   icon: 'ph--brain--regular',
   component: GptComponent,
   createShape: createGpt,
-  // getAnchors: (shape) => createFunctionAnchors(shape, shape.node.inputSchema, shape.node.outputSchema),
+  // TODO(dmaretskyi): Can we fetch the schema dynamically?
+  getAnchors: (shape) => createFunctionAnchors(shape, GptInput, GptOutput),
 };
