@@ -103,6 +103,8 @@ export class StateMachine extends Resource {
   /** Computed result. */
   public readonly output = new Event<Extract<ComputeEvent, { type: 'compute-output' }>>();
 
+  public readonly events = new Event<ComputeEvent>();
+
   constructor(
     /** Persistent compute graph. */
     private readonly _graph: ComputeGraphModel,
@@ -234,6 +236,7 @@ export class StateMachine extends Resource {
             this.output.emit(event);
             break;
         }
+        this.events.emit(event);
       },
       nodeId: undefined, // Not in a context of a specific node.
     };

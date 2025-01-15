@@ -17,6 +17,7 @@ import { log } from '@dxos/log';
 
 import { makeValueBag, unwrapValueBag, type ComputeEffect, type ValueBag } from '../../types';
 import { type GptOutput, type GptInput, type GptService } from '../gpt';
+import { EventLogger } from '../event-logger';
 
 export class EdgeGpt implements Context.Tag.Service<GptService> {
   // Images are not supported.
@@ -58,10 +59,19 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
       const [stream1, stream2] = yield* Stream.broadcast(stream, 2, { capacity: 'unbounded' });
       const outputMessages = Effect.promise(() => result.complete());
 
+      const logger = yield* EventLogger;
+
       const text = Effect.gen(function* () {
         // Drain the stream
         yield* stream1.pipe(
-          // Stream.tap((token) => Console.log(token)),
+          Stream.tap((token) => {
+            logger.log({
+              type: 'custom',
+              nodeId: logger.nodeId!,
+              event: token,
+            });
+            return Effect.void;
+          }),
           Stream.runDrain,
         );
 

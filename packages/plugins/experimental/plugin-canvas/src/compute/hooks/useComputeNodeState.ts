@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import type { ComputeNode, ComputeMeta } from '@dxos/conductor';
+import type { ComputeNode, ComputeMeta, ComputeEvent } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 import type { GraphNode } from '@dxos/graph';
 
 import { useComputeContext } from './compute-context';
 import { resolveComputeNode, type RuntimeValue } from '../graph';
 import { type ComputeShape } from '../shapes';
-import { useAsyncState } from '@dxos/react-ui';
+import { useAsyncState, useFileDownload } from '@dxos/react-ui';
 
 export type ComputeNodeState = {
   node: GraphNode<ComputeNode>;
@@ -20,6 +20,7 @@ export type ComputeNodeState = {
     inputs: Record<string, RuntimeValue>;
     outputs: Record<string, RuntimeValue>;
     setOutput: (property: string, value: any) => void;
+    subscribeToEventLog: (cb: (event: ComputeEvent) => void) => void;
   };
 };
 
@@ -45,6 +46,17 @@ export const useComputeNodeState = (shape: ComputeShape): ComputeNodeState => {
     };
   }, [shape.node]);
 
+  const subscribeToEventLog = useCallback(
+    (cb: (event: ComputeEvent) => void) => {
+      return stateMachine.events.on((ev) => {
+        if (ev.nodeId === shape.node) {
+          cb(ev);
+        }
+      });
+    },
+    [shape.node],
+  );
+
   return {
     // TODO(burdon): ???
     node: {
@@ -64,6 +76,7 @@ export const useComputeNodeState = (shape: ComputeShape): ComputeNodeState => {
       setOutput: (property: string, value: any) => {
         stateMachine.setOutput(shape.node!, property, value);
       },
+      subscribeToEventLog,
     },
   };
 };
