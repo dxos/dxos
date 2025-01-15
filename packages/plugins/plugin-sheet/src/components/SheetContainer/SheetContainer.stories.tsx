@@ -33,7 +33,6 @@ const storybookIntentValue = create<IntentContext>({
   },
   undo: () => todo(),
   undoPromise: () => todo(),
-  registerResolver: () => () => {},
 });
 
 export const Basic = () => {

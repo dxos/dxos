@@ -8,6 +8,8 @@ import { raise } from '@dxos/debug';
 import { pick } from '@dxos/util';
 
 import { type AnyIntentResolver, type IntentContext } from './intent-dispatcher';
+import { Capabilities } from '../common';
+import { usePluginManager } from '../react';
 
 const IntentContext: Context<IntentContext | undefined> = createContext<IntentContext | undefined>(undefined);
 
@@ -16,11 +18,17 @@ export const useIntentDispatcher = (): Pick<IntentContext, 'dispatch' | 'dispatc
   return pick(context, ['dispatch', 'dispatchPromise']);
 };
 
-export const useIntentResolver = (pluginId: string, resolver: AnyIntentResolver) => {
-  const { registerResolver } = useContext(IntentContext) ?? raise(new Error('IntentContext not found'));
+export const useIntentResolver = (module: string, resolver: AnyIntentResolver) => {
+  const manager = usePluginManager();
   useEffect(() => {
-    return registerResolver(pluginId, resolver);
-  }, [pluginId, resolver]);
+    manager.context.contributeCapability({
+      module,
+      interface: Capabilities.IntentResolver,
+      implementation: resolver,
+    });
+
+    return () => manager.context.removeCapability(Capabilities.IntentResolver, resolver);
+  }, [module, resolver]);
 };
 
 export const IntentProvider: Provider<IntentContext | undefined> = IntentContext.Provider;

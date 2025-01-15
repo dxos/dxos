@@ -8,11 +8,11 @@ import { describe, expect, test } from 'vitest';
 import { S } from '@dxos/echo-schema';
 
 import { chain, createIntent } from './intent';
-import { createDispatcher, createResolver } from './intent-dispatcher';
+import { type AnyIntentResolver, createDispatcher, createResolver } from './intent-dispatcher';
 
 describe('Intent dispatcher', () => {
   test('throws error if no resolver found', async () => {
-    const { dispatchPromise } = createDispatcher({});
+    const { dispatchPromise } = createDispatcher(() => []);
     const { data, error } = await dispatchPromise(createIntent(ToString, { value: 1 }));
 
     expect(data).toBe(undefined);
@@ -20,7 +20,7 @@ describe('Intent dispatcher', () => {
   });
 
   test('matches intent to resolver and executes', async () => {
-    const { dispatchPromise } = createDispatcher({ test: [toStringResolver] });
+    const { dispatchPromise } = createDispatcher(() => [toStringResolver]);
     const { data, error } = await dispatchPromise(createIntent(ToString, { value: 1 }));
 
     expect(error).toBe(undefined);
@@ -28,18 +28,19 @@ describe('Intent dispatcher', () => {
   });
 
   test('update resolvers', async () => {
-    const { dispatchPromise, registerResolver } = createDispatcher({ test: [] });
+    const resolvers: AnyIntentResolver[] = [];
+    const { dispatchPromise } = createDispatcher(() => resolvers);
     const { error } = await dispatchPromise(createIntent(ToString, { value: 1 }));
 
     expect(error).toBeInstanceOf(Error);
 
-    const removeResolver = registerResolver('test', toStringResolver);
+    resolvers.push(toStringResolver);
 
     const { data } = await dispatchPromise(createIntent(ToString, { value: 1 }));
 
     expect(data?.string).toBe('1');
 
-    removeResolver();
+    resolvers.splice(resolvers.indexOf(toStringResolver), 1);
 
     {
       const { data, error } = await dispatchPromise(createIntent(ToString, { value: 1 }));
@@ -50,7 +51,7 @@ describe('Intent dispatcher', () => {
   });
 
   test('compose intent effects', async () => {
-    const { dispatch } = createDispatcher({ test: [computeResolver] });
+    const { dispatch } = createDispatcher(() => [computeResolver]);
     const program = Effect.gen(function* () {
       const a = yield* dispatch(createIntent(Compute, { value: 1 }));
       const b = yield* dispatch(createIntent(Compute, { value: 2 }));
@@ -61,7 +62,7 @@ describe('Intent dispatcher', () => {
   });
 
   test('concurrent intent effects', async () => {
-    const { dispatch } = createDispatcher({ test: [computeResolver] });
+    const { dispatch } = createDispatcher(() => [computeResolver]);
     const program = Effect.gen(function* () {
       const fiberA = yield* Effect.fork(dispatch(createIntent(Compute, { value: 5 })));
       const fiberB = yield* Effect.fork(dispatch(createIntent(Compute, { value: 2 })));
@@ -73,7 +74,7 @@ describe('Intent dispatcher', () => {
   });
 
   test('mix & match intent effects with promises', async () => {
-    const { dispatch, dispatchPromise } = createDispatcher({ test: [toStringResolver, computeResolver] });
+    const { dispatch, dispatchPromise } = createDispatcher(() => [toStringResolver, computeResolver]);
     const program = Effect.gen(function* () {
       const a = yield* dispatch(createIntent(Compute, { value: 2 }));
       const b = yield* dispatch(createIntent(ToString, { value: a.data!.value }));
@@ -89,7 +90,7 @@ describe('Intent dispatcher', () => {
   });
 
   test('undo intent', async () => {
-    const { dispatch, undo } = createDispatcher({ test: [computeResolver] });
+    const { dispatch, undo } = createDispatcher(() => [computeResolver]);
     const program = Effect.gen(function* () {
       const a = yield* dispatch(createIntent(Compute, { value: 2 }));
 
@@ -104,7 +105,7 @@ describe('Intent dispatcher', () => {
   });
 
   test('chain intents', async () => {
-    const { dispatch } = createDispatcher({ test: [computeResolver, toStringResolver, concatResolver] });
+    const { dispatch } = createDispatcher(() => [computeResolver, toStringResolver, concatResolver]);
     const intent = pipe(createIntent(Compute, { value: 1 }), chain(ToString, {}), chain(Concat, { plus: '!' }));
 
     expect(intent.first.action).toBe(Compute._tag);
@@ -120,7 +121,7 @@ describe('Intent dispatcher', () => {
   });
 
   test('undo chained intent', async () => {
-    const { dispatch, undo } = createDispatcher({ test: [computeResolver, toStringResolver, concatResolver] });
+    const { dispatch, undo } = createDispatcher(() => [computeResolver, toStringResolver, concatResolver]);
     const intent = pipe(createIntent(Compute, { value: 1 }), chain(Compute, {}), chain(Compute, {}));
     const program = Effect.gen(function* () {
       const a = yield* dispatch(intent);
@@ -137,15 +138,15 @@ describe('Intent dispatcher', () => {
 
   test('filter resolvers by plugin', async () => {
     const otherComputeResolver = createResolver(Compute, async (data) => ({ data: { value: data?.value * 3 } }));
-    const { dispatch } = createDispatcher({ test: [computeResolver], other: [otherComputeResolver] });
+    const { dispatch } = createDispatcher((module) => (module === 'test' ? [computeResolver] : [otherComputeResolver]));
     const program = Effect.gen(function* () {
       const a = yield* dispatch(createIntent(Compute, { value: 1 }));
 
-      expect(a.data?.value).toBe(2);
+      expect(a.data?.value).toBe(3);
 
-      const b = yield* dispatch(createIntent(Compute, { value: 1 }, { plugin: 'other' }));
+      const b = yield* dispatch(createIntent(Compute, { value: 1 }, { module: 'test' }));
 
-      expect(b.data?.value).toBe(3);
+      expect(b.data?.value).toBe(2);
     });
 
     await Effect.runPromise(program);
@@ -155,7 +156,7 @@ describe('Intent dispatcher', () => {
     const conditionalComputeResolver = createResolver(Compute, async (data) => ({ data: { value: data?.value * 3 } }), {
       filter: (data): data is { value: number } => data?.value > 1,
     });
-    const { dispatch } = createDispatcher({ test: [conditionalComputeResolver, computeResolver] });
+    const { dispatch } = createDispatcher(() => [conditionalComputeResolver, computeResolver]);
     const program = Effect.gen(function* () {
       const a = yield* dispatch(createIntent(Compute, { value: 1 }));
 
@@ -173,7 +174,7 @@ describe('Intent dispatcher', () => {
     const hoistedComputeResolver = createResolver(Compute, async (data) => ({ data: { value: data?.value * 3 } }), {
       disposition: 'hoist',
     });
-    const { dispatchPromise } = createDispatcher({ test: [computeResolver, hoistedComputeResolver] });
+    const { dispatchPromise } = createDispatcher(() => [computeResolver, hoistedComputeResolver]);
     const { data } = await dispatchPromise(createIntent(Compute, { value: 1 }));
     expect(data?.value).toBe(3);
   });
@@ -185,7 +186,7 @@ describe('Intent dispatcher', () => {
     const fallbackComputeResolver = createResolver(Compute, async (data) => ({ data: { value: data?.value * 3 } }), {
       disposition: 'fallback',
     });
-    const { dispatch } = createDispatcher({ test: [fallbackComputeResolver, conditionalComputeResolver] });
+    const { dispatch } = createDispatcher(() => [fallbackComputeResolver, conditionalComputeResolver]);
     const program = Effect.gen(function* () {
       const a = yield* dispatch(createIntent(Compute, { value: 1 }));
 
@@ -200,13 +201,13 @@ describe('Intent dispatcher', () => {
   });
 
   test('non-struct inputs & outputs', async () => {
-    const { dispatchPromise } = createDispatcher({ test: [addResolver] });
+    const { dispatchPromise } = createDispatcher(() => [addResolver]);
     const { data } = await dispatchPromise(createIntent(Add, [1, 1]));
     expect(data).toBe(2);
   });
 
   test('empty inputs & outputs', async () => {
-    const { dispatchPromise } = createDispatcher({ test: [sideEffectResolver] });
+    const { dispatchPromise } = createDispatcher(() => [sideEffectResolver]);
     const { data } = await dispatchPromise(createIntent(SideEffect));
     expect(data).toBe(undefined);
   });

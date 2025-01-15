@@ -409,7 +409,7 @@ export class PluginManager {
         Match.orElse((value) => [value]),
       );
       capabilities.forEach((capability) => {
-        self.context.contributeCapability(capability.interface, capability.implementation);
+        self.context.contributeCapability({ module: module.id, ...capability });
       });
       self._state.active.push(module.id);
       self._capabilities.set(module.id, capabilities);

@@ -87,8 +87,14 @@ export const createApp = ({
     cacheEnabled && localStorage.setItem(ENABLED_KEY, JSON.stringify(manager.enabled));
   });
 
-  manager.context.contributeCapability(Capabilities.PluginManager, manager);
+  manager.context.contributeCapability({
+    interface: Capabilities.PluginManager,
+    implementation: manager,
+    module: 'dxos.org/app-framework/plugin-manager',
+  });
+
   setupDevtools(manager);
+
   void manager.activate(Events.Startup);
 
   return () => (

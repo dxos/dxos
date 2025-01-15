@@ -9,7 +9,7 @@ import { create } from '@dxos/live-object';
 
 import { IntentProvider } from './IntentContext';
 import { INTENT_PLUGIN } from './actions';
-import { createDispatcher, type IntentContext } from './intent-dispatcher';
+import { type AnyIntentResolver, createDispatcher, type IntentContext } from './intent-dispatcher';
 import { Capabilities, Events } from '../common';
 import { contributes, defineModule, definePlugin } from '../core';
 
@@ -32,18 +32,21 @@ export const IntentPlugin = () =>
           dispatchPromise: defaultPromise,
           undo: defaultEffect,
           undoPromise: defaultPromise,
-          registerResolver: () => () => {},
         });
 
-        const resolvers = context.requestCapabilities(Capabilities.IntentResolver).flat();
-        // TODO(wittjosiah): Dispatcher will lose its ability to filter by plugin id.
-        const { dispatch, dispatchPromise, undo, undoPromise, registerResolver } = createDispatcher({ '': resolvers });
+        // TODO(wittjosiah): Make getResolver callback async and allow resolvers to be requested on demand.
+        const { dispatch, dispatchPromise, undo, undoPromise } = createDispatcher((module) =>
+          context
+            .requestCapabilities(Capabilities.IntentResolver, (c, moduleId): c is AnyIntentResolver => {
+              return module ? moduleId === module : true;
+            })
+            .flat(),
+        );
 
         state.dispatch = dispatch;
         state.dispatchPromise = dispatchPromise;
         state.undo = undo;
         state.undoPromise = undoPromise;
-        state.registerResolver = registerResolver;
 
         return [
           contributes(Capabilities.IntentDispatcher, state),

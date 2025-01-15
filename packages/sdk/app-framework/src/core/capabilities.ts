@@ -58,7 +58,10 @@ type PluginsContextOptions = {
 };
 
 class CapabilityImpl<T> {
-  constructor(readonly implementation: T) {}
+  constructor(
+    readonly moduleId: string,
+    readonly implementation: T,
+  ) {}
 }
 
 /**
@@ -112,7 +115,15 @@ export class PluginsContext {
   /**
    * @internal
    */
-  contributeCapability<T>(interfaceDef: InterfaceDef<T>, implementation: T) {
+  contributeCapability<T>({
+    module: moduleId,
+    interface: interfaceDef,
+    implementation,
+  }: {
+    module: string;
+    interface: InterfaceDef<T>;
+    implementation: T;
+  }) {
     let current = this._definedCapabilities.get(interfaceDef.identifier);
     if (!current) {
       const object = create<{ value: CapabilityImpl<unknown>[] }>({ value: [] });
@@ -120,7 +131,7 @@ export class PluginsContext {
       this._definedCapabilities.set(interfaceDef.identifier, current);
     }
 
-    current.push(new CapabilityImpl(implementation));
+    current.push(new CapabilityImpl(moduleId, implementation));
     log('capability contributed', { id: interfaceDef.identifier, count: untracked(() => current.length) });
   }
 
@@ -147,7 +158,7 @@ export class PluginsContext {
    */
   requestCapabilities<T, U extends T = T>(
     interfaceDef: InterfaceDef<T>,
-    filter?: (capability: T) => capability is U,
+    filter?: (capability: T, moduleId: string) => capability is U,
   ): U[] {
     let current = this._definedCapabilities.get(interfaceDef.identifier);
     if (!current) {
@@ -157,12 +168,8 @@ export class PluginsContext {
     }
 
     // NOTE: This the type-checking for capabilities is done at the time of contribution.
-    const capabilities = current.map((i) => i.implementation) as T[];
-    if (filter) {
-      return capabilities.filter(filter);
-    } else {
-      return capabilities as U[];
-    }
+    const capabilities = filter ? current.filter((c) => filter(c.implementation as T, c.moduleId)) : current;
+    return capabilities.map((c) => c.implementation) as U[];
   }
 
   /**
@@ -177,6 +184,10 @@ export class PluginsContext {
     return capability;
   }
 
+  /**
+   * Waits for a capability to be contributed.
+   * @returns The capability.
+   */
   async waitForCapability<T, U extends T = T>(
     interfaceDef: InterfaceDef<T>,
     filter?: (capability: T) => capability is U,

@@ -23,7 +23,11 @@ export const withPluginManager = (
 
   if (options.capabilities) {
     options.capabilities.forEach((capability) => {
-      pluginManager.context.contributeCapability(capability.interface, capability.implementation);
+      pluginManager.context.contributeCapability({
+        interface: capability.interface,
+        implementation: capability.implementation,
+        module: 'test',
+      });
     });
   }
 

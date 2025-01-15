@@ -27,7 +27,7 @@ describe('PluginsContext', () => {
     const context = new PluginsContext(defaultOptions);
     const interfaceDef = defineCapability<{ example: string }>('@dxos/app-framework/test/example');
     const implementation = { example: 'identifier' };
-    context.contributeCapability(interfaceDef, implementation);
+    context.contributeCapability({ interface: interfaceDef, implementation, module: 'test' });
     expect(context.requestCapabilities(interfaceDef)).toEqual([implementation]);
   });
 
@@ -35,7 +35,7 @@ describe('PluginsContext', () => {
     const context = new PluginsContext(defaultOptions);
     const interfaceDef = defineCapability<{ example: string }>('@dxos/app-framework/test/example');
     const implementation = { example: 'identifier' };
-    context.contributeCapability(interfaceDef, implementation);
+    context.contributeCapability({ interface: interfaceDef, implementation, module: 'test' });
     expect(context.requestCapabilities(interfaceDef)).toEqual([implementation]);
     context.removeCapability(interfaceDef, implementation);
     expect(context.requestCapabilities(interfaceDef)).toEqual([]);
@@ -46,8 +46,8 @@ describe('PluginsContext', () => {
     const interfaceDef = defineCapability<{ example: string }>('@dxos/app-framework/test/example');
     const implementation1 = { example: 'first' };
     const implementation2 = { example: 'second' };
-    context.contributeCapability(interfaceDef, implementation1);
-    context.contributeCapability(interfaceDef, implementation2);
+    context.contributeCapability({ interface: interfaceDef, implementation: implementation1, module: 'test' });
+    context.contributeCapability({ interface: interfaceDef, implementation: implementation2, module: 'test' });
     expect(context.requestCapabilities(interfaceDef)).toEqual([implementation1, implementation2]);
   });
 
@@ -57,8 +57,8 @@ describe('PluginsContext', () => {
     const interfaceDef2 = defineCapability<{ two: number }>('@dxos/app-framework/test/two');
     const implementation1 = { one: 1 };
     const implementation2 = { two: 2 };
-    context.contributeCapability(interfaceDef1, implementation1);
-    context.contributeCapability(interfaceDef2, implementation2);
+    context.contributeCapability({ interface: interfaceDef1, implementation: implementation1, module: 'test' });
+    context.contributeCapability({ interface: interfaceDef2, implementation: implementation2, module: 'test' });
     expect(context.requestCapabilities(interfaceDef1)).toEqual([implementation1]);
     expect(context.requestCapabilities(interfaceDef2)).toEqual([implementation2]);
   });
@@ -74,7 +74,7 @@ describe('PluginsContext', () => {
     expect(updates.count).toEqual(0);
 
     const implementation = { example: 'identifier' };
-    context.contributeCapability(interfaceDef, implementation);
+    context.contributeCapability({ interface: interfaceDef, implementation, module: 'test' });
     expect(updates.count).toEqual(1);
 
     context.removeCapability(interfaceDef, implementation);
@@ -92,7 +92,7 @@ describe('PluginsContext', () => {
     expect(updates.count).toEqual(0);
 
     const implementation = { example: 'identifier' };
-    context.contributeCapability(interfaceDef, implementation);
+    context.contributeCapability({ interface: interfaceDef, implementation, module: 'test' });
     expect(updates.count).toEqual(1);
 
     implementation.example = 'updated';
@@ -109,7 +109,7 @@ describe('PluginsContext', () => {
     const interfaceDef = defineCapability<{ example: string }>('@dxos/app-framework/test/example');
     const implementation = { example: 'identifier' };
     const promise = context.waitForCapability(interfaceDef);
-    context.contributeCapability(interfaceDef, implementation);
+    context.contributeCapability({ interface: interfaceDef, implementation, module: 'test' });
     const capability = await promise;
     expect(capability).toEqual(implementation);
   });

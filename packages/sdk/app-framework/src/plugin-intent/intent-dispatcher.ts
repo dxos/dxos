@@ -158,7 +158,6 @@ export type IntentContext = {
   dispatchPromise: PromiseIntentDispatcher;
   undo: IntentUndo;
   undoPromise: PromiseIntentUndo;
-  registerResolver: (id: string, resolver: AnyIntentResolver) => () => void;
 };
 
 /**
@@ -169,16 +168,14 @@ export type IntentContext = {
  * @param params.executionLimit The maximum recursion depth of intent chains.
  */
 export const createDispatcher = (
-  resolvers: Record<string, AnyIntentResolver[]>,
+  getResolvers: (module?: string) => AnyIntentResolver[],
   { executionLimit = EXECUTION_LIMIT, historyLimit = HISTORY_LIMIT } = {},
 ): IntentContext => {
   const historyRef = Effect.runSync(Ref.make<AnyIntentResult[][]>([]));
 
   const handleIntent = (intent: AnyIntent) => {
     return Effect.gen(function* () {
-      const candidates = Object.entries(resolvers)
-        .filter(([id, _]) => (intent.plugin ? id === intent.plugin : true))
-        .flatMap(([_, resolvers]) => resolvers)
+      const candidates = getResolvers(intent.module)
         .filter((r) => r.action === intent.action)
         .filter((r) => !r.filter || r.filter(intent.data))
         .toSorted(({ disposition: a = 'static' }, { disposition: b = 'static' }) => {
@@ -274,12 +271,5 @@ export const createDispatcher = (
     return Effect.runPromise(program);
   };
 
-  const registerResolver = (id: string, resolver: AnyIntentResolver) => {
-    resolvers[id] = [...(resolvers[id] ?? []), resolver];
-    return () => {
-      resolvers[id] = resolvers[id].filter((r) => r !== resolver);
-    };
-  };
-
-  return { dispatch, dispatchPromise, undo, undoPromise, registerResolver };
+  return { dispatch, dispatchPromise, undo, undoPromise };
 };
