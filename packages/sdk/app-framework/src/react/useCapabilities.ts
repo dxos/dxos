@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { computed } from '@preact/signals-core';
 import { useMemo } from 'react';
 
 import { usePluginManager } from './PluginManagerProvider';
@@ -15,7 +16,11 @@ export const useCapabilities = <T, U extends T = T>(
   filter?: (capability: T) => capability is U,
 ) => {
   const manager = usePluginManager();
-  return useMemo(() => manager.context.requestCapabilities(interfaceDef, filter), [interfaceDef, filter]);
+  const signal = useMemo(
+    () => computed(() => manager.context.requestCapabilities(interfaceDef, filter)),
+    [interfaceDef, filter],
+  );
+  return signal.value;
 };
 
 /**
@@ -26,5 +31,9 @@ export const useCapability = <T, U extends T = T>(
   filter?: (capability: T) => capability is U,
 ) => {
   const manager = usePluginManager();
-  return useMemo(() => manager.context.requestCapability(interfaceDef, filter), [interfaceDef, filter]);
+  const signal = useMemo(
+    () => computed(() => manager.context.requestCapability(interfaceDef, filter)),
+    [interfaceDef, filter],
+  );
+  return signal.value;
 };
