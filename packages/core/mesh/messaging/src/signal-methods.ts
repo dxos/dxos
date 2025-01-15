@@ -40,7 +40,7 @@ export interface SignalMethods {
    * Join topic on signal network, to be discoverable by other peers.
    */
   join: (params: { topic: PublicKey; peer: PeerInfo }) => Promise<void>;
- 
+
   /**
    * Leave topic on signal network, to stop being discoverable by other peers.
    */
@@ -53,12 +53,14 @@ export interface SignalMethods {
 
   /**
    * Start receiving messages from peer.
+   * @deprecated
    */
   // TODO(burdon): Return unsubscribe function. Encapsulate callback/routing here.
   subscribeMessages: (peer: PeerInfo) => Promise<void>;
 
   /**
    * Stop receiving messages from peer.
+   * @deprecated
    */
   unsubscribeMessages: (peer: PeerInfo) => Promise<void>;
 }

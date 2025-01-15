@@ -64,6 +64,9 @@ export class EdgeSignalManager extends Resource implements SignalManager {
           identityKey: this._edgeConnection.identityKey,
         },
       });
+
+      peer.identityKey = this._edgeConnection.identityKey;
+      peer.peerKey = this._edgeConnection.peerKey;
     }
 
     this._swarmPeers.set(topic, { lastState: peer.state, joinedPeers: new ComplexSet<PeerInfo>(PeerInfoHash) });
