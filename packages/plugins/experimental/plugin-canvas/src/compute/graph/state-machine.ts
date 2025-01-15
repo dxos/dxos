@@ -10,7 +10,7 @@ import { type Space } from '@dxos/client/echo';
 import {
   type ComputeEdge,
   type ComputeEvent,
-  type ComputeGraphModelImpl,
+  type ComputeGraphModel,
   type ComputeNode,
   GraphExecutor,
   makeValueBag,
@@ -92,7 +92,7 @@ export class StateMachine extends Resource {
 
   constructor(
     /** Persistent compute graph. */
-    private readonly _graph: ComputeGraphModelImpl,
+    private readonly _graph: ComputeGraphModel,
   ) {
     super();
   }

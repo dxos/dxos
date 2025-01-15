@@ -7,12 +7,10 @@ import { Chunk, Console, Effect, Exit, Option, Scope, Stream } from 'effect';
 import { describe, test } from 'vitest';
 
 import { AIServiceClientImpl, type ResultStreamEvent } from '@dxos/assistant';
-import { GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
 
-import { type ComputeGraphModel } from '../model';
 import { EdgeGpt } from '../services/gpt/edge-gpt';
 import { createEdge, TestRuntime, testServices } from '../testing';
-import { makeValueBag, unwrapValueBag, type ComputeEdge, type ComputeNode, NodeType } from '../types';
+import { ComputeGraphModel, makeValueBag, unwrapValueBag, NodeType } from '../types';
 
 const ENABLE_LOGGING = true;
 const AI_SERVICE_ENDPOINT = 'http://localhost:8787';
@@ -191,15 +189,14 @@ describe('Gpt pipelines', () => {
         expect(tokens.length).toBeGreaterThan(2);
 
         yield* Effect.promise(() => p);
-
         yield* Scope.close(scope, Exit.void);
       }),
     );
   });
 });
 
-const gpt1 = (): ComputeGraphModel => {
-  return new GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>()
+const gpt1 = () => {
+  return ComputeGraphModel.create()
     .addNode({ id: 'gpt1-INPUT', data: { type: NodeType.Input } })
     .addNode({ id: 'gpt1-GPT', data: { type: NodeType.Gpt } })
     .addNode({ id: 'gpt1-OUTPUT', data: { type: NodeType.Output } })
@@ -207,8 +204,8 @@ const gpt1 = (): ComputeGraphModel => {
     .addEdge(createEdge({ source: 'gpt1-GPT', output: 'text', target: 'gpt1-OUTPUT', input: 'text' }));
 };
 
-const gpt2 = (): ComputeGraphModel => {
-  return new GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>()
+const gpt2 = () => {
+  return ComputeGraphModel.create()
     .addNode({ id: 'gpt2-INPUT', data: { type: NodeType.Input } })
     .addNode({ id: 'gpt2-GPT', data: { type: NodeType.Gpt } })
     .addNode({ id: 'gpt2-OUTPUT', data: { type: NodeType.Output } })

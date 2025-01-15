@@ -7,19 +7,16 @@ import { Effect } from 'effect';
 import { describe, test } from 'vitest';
 
 import { S } from '@dxos/echo-schema';
-import { GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
 import { mapValues } from '@dxos/util';
 
-import { type ComputeGraphModel } from '../model';
 import { logCustomEvent } from '../services';
 import { createEdge, TestRuntime, testServices } from '../testing';
 import {
+  ComputeGraphModel,
   defineComputeNode,
   makeValueBag,
   synchronizedComputeFunction,
   unwrapValueBag,
-  type ComputeEdge,
-  type ComputeNode,
   NodeType,
 } from '../types';
 
@@ -119,8 +116,8 @@ const viewer = defineComputeNode({
  * dxn:compute:g1
  * number1, number2 -> sum
  */
-const g1 = (): ComputeGraphModel => {
-  return new GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>()
+const g1 = () => {
+  return ComputeGraphModel.create()
     .addNode({ id: 'I', data: { type: NodeType.Input } })
     .addNode({ id: 'X', data: { type: 'dxn:test:sum' } })
     .addNode({ id: 'O', data: { type: NodeType.Output } })
@@ -134,8 +131,8 @@ const g1 = (): ComputeGraphModel => {
  * a, b, c -> result
  * Uses adder node.
  */
-const g2 = (): ComputeGraphModel => {
-  return new GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>()
+const g2 = () => {
+  return ComputeGraphModel.create()
     .addNode({ id: 'I', data: { type: NodeType.Input } })
     .addNode({ id: 'X', data: { type: 'dxn:test:g1' } })
     .addNode({ id: 'Y', data: { type: 'dxn:test:g1' } })
@@ -148,8 +145,8 @@ const g2 = (): ComputeGraphModel => {
 };
 
 // Branching computations.
-const g3 = (): ComputeGraphModel => {
-  return new GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>()
+const g3 = () => {
+  return ComputeGraphModel.create()
     .addNode({ id: 'I', data: { type: NodeType.Input } })
     .addNode({ id: 'X', data: { type: 'dxn:test:sum' } })
     .addNode({ id: 'V1', data: { type: 'dxn:test:viewer' } })

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ComputeGraphModelImpl } from '@dxos/conductor';
+import { ComputeGraphModel } from '@dxos/conductor';
 import { ObjectId } from '@dxos/echo-schema';
 import { type GraphEdge, GraphModel, type GraphNode, createEdgeId } from '@dxos/graph';
 import { failedInvariant } from '@dxos/invariant';
@@ -155,7 +155,7 @@ export const createTest3 = ({
 
 // TODO(burdon): Break-apart state machine and graph.
 export const createMachine = (graph?: GraphModel<GraphNode<ComputeShape>, GraphEdge<Connection>>) => {
-  const machine = new StateMachine(ComputeGraphModelImpl.create());
+  const machine = new StateMachine(ComputeGraphModel.create());
 
   // TODO(burdon): Factor out mapping (reconcile with Editor.stories).
   if (graph) {

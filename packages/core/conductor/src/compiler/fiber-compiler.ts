@@ -6,14 +6,12 @@ import { Effect, Layer, Scope } from 'effect';
 
 import { raise } from '@dxos/debug';
 import { S } from '@dxos/echo-schema';
-import type { GraphEdge, GraphModel, GraphNode } from '@dxos/graph';
 import { failedInvariant, invariant } from '@dxos/invariant';
 
 import { createTopology, type GraphDiagnostic, type Topology, type TopologyNode } from './topology';
-import { type ComputeGraphModelImpl } from '../model';
 import { EventLogger, GptService } from '../services';
 import {
-  type ComputeEdge,
+  type ComputeGraphModel,
   type ComputeEffect,
   type Executable,
   type ComputeMeta,
@@ -27,7 +25,7 @@ import {
 } from '../types';
 
 export type ValidateParams = {
-  graph: GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;
+  graph: ComputeGraphModel;
   inputNodeId: string;
   outputNodeId: string;
   computeMetaResolver: (node: ComputeNode) => Promise<ComputeMeta>;
@@ -63,7 +61,7 @@ export const validate = async ({
 };
 
 export type CompileParams = {
-  graph: GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;
+  graph: ComputeGraphModel;
 
   /**
    * Id of the entrypoint node.
@@ -165,7 +163,7 @@ export class GraphExecutor {
     return executor;
   }
 
-  async load(graph: ComputeGraphModelImpl) {
+  async load(graph: ComputeGraphModel) {
     this._computeCache.clear();
     this._topology = await createTopology({
       graph,

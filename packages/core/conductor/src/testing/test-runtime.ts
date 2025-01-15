@@ -5,13 +5,13 @@
 import { Effect } from 'effect';
 
 import { raise } from '@dxos/debug';
-import { type GraphModel, type GraphEdge, type GraphNode } from '@dxos/graph';
+import { invariant } from '@dxos/invariant';
 
 import { compile, GraphExecutor } from '../compiler';
 import { inputNode, outputNode, gptNode } from '../nodes';
 import {
+  type ComputeGraphModel,
   NodeType,
-  type ComputeEdge,
   type ComputeEffect,
   type Executable,
   type ComputeNode,
@@ -24,14 +24,14 @@ export class TestRuntime {
   readonly nodes = new Map<string, Executable>();
 
   // TODO(burdon): Remove (make hierarchical?).
-  readonly graphs = new Map<string, GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>>();
+  readonly graphs = new Map<string, ComputeGraphModel>();
 
   registerNode(id: string, node: Executable): this {
     this.nodes.set(id, node);
     return this;
   }
 
-  registerGraph(id: string, graph: GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>): this {
+  registerGraph(id: string, graph: ComputeGraphModel): this {
     this.graphs.set(id, graph);
     return this;
   }
@@ -45,14 +45,16 @@ export class TestRuntime {
   }
 
   async resolveNode(node: ComputeNode): Promise<Executable> {
+    invariant(node.type);
     if (this.nodes.has(node.type)) {
       return this.nodes.get(node.type)!;
     }
 
     if (this.graphs.has(node.type)) {
-      const computation = await this.compileGraph(this.graphs.get(node.type)!);
+      const graph = this.graphs.get(node.type);
+      invariant(graph);
       // TODO(dmaretskyi): Caching.
-      return computation;
+      return await this.compileGraph(graph);
     }
 
     // Built-in nodes.
@@ -68,7 +70,7 @@ export class TestRuntime {
     throw new Error(`Unknown node type: ${node.type}`);
   }
 
-  async compileGraph(graph: GraphModel<GraphNode<ComputeNode, false>, GraphEdge<ComputeEdge, false>>) {
+  async compileGraph(graph: ComputeGraphModel) {
     const inputNode =
       graph.nodes.find((node) => node.data.type === NodeType.Input) ?? raise(new Error('Input node not found'));
     const outputNode =

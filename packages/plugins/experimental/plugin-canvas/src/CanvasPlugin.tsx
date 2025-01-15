@@ -5,7 +5,6 @@
 import React from 'react';
 
 import { createIntent, createResolver, createSurface, type PluginDefinition } from '@dxos/app-framework';
-import { emptyGraph } from '@dxos/graph';
 import { create } from '@dxos/live-object';
 
 import { CanvasContainer } from './components';
@@ -46,7 +45,8 @@ export const CanvasPlugin = (): PluginDefinition<CanvasPluginProvides> => {
             data: {
               object: create(CanvasBoardType, {
                 name,
-                shapes: emptyGraph,
+                // TODO(burdon): Use util?
+                shapes: { nodes: [], edges: [] },
                 // TODO(burdon): Specialize for compute graph plugin.
                 // data: makeRef(create(ComputeGraph, { graph: emptyGraph })),
               }),

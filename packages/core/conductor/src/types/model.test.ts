@@ -4,14 +4,14 @@
 
 import { describe, test } from 'vitest';
 
-import { ComputeGraphModelImpl } from './graph-builder';
+import { ComputeGraphModel } from './model';
 
 describe('graph builder', () => {
   test.only('graph', ({ expect }) => {
-    const g1 = ComputeGraphModelImpl.create();
+    const g1 = ComputeGraphModel.create();
     g1.builder.create('x');
 
-    const g2 = ComputeGraphModelImpl.create();
+    const g2 = ComputeGraphModel.create();
     g2.builder
       .call((graph) => {
         graph.link({ node: graph.create('a'), property: 'result' }, { node: graph.create('b'), property: 'value' });

@@ -2,20 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { S } from '@dxos/echo-schema';
+import { Ref, type Ref$, S, TypedObject } from '@dxos/echo-schema';
+import { Graph } from '@dxos/graph';
 
 /**
  * GraphNode payload.
  */
 export const ComputeNode = S.Struct({
   /** DXN of the node specifier. */
-  // TODO(burdon): Remove? Use type in base node class.
-  type: S.String,
+  // TODO(burdon): Remove? Use type in base node class. Generalize type.
+  type: S.optional(S.String),
 
   /** For composition nodes. */
-  // TODO(burdon): Recursive structure? Forward declaration?
-  // subgraph: S.optional(Ref(S.suspend(() => ComputeGraph))),
-  subgraph: S.optional(S.suspend(() => ComputeGraph)),
+  subgraph: S.optional(S.suspend((): Ref$<ComputeGraph> => Ref(ComputeGraph))),
 
   /** For switch nodes. */
   // TODO(dmaretskyi): Move to constants.
@@ -48,24 +47,15 @@ export const NodeType = Object.freeze({
   Gpt: 'dxn:compute:gpt',
 });
 
-const ComputeGraph = S.Struct({
-  // graph: Graph,
+export class ComputeGraph extends TypedObject({
+  typename: 'dxos.org/type/ComputeGraph',
+  version: '0.1.0',
+})({
+  graph: Graph,
+
   // TODO(burdon): Are these required or just used for references?
-  // input: S.optional(S.suspend(() => ComputeNode)),
-  // output: S.optional(ComputeNode),
-});
-
-export type ComputeGraph = S.Schema.Type<typeof ComputeGraph>;
-
-// export class ComputeGraph extends TypedObject({
-//   typename: 'dxos.org/type/ComputeGraph',
-//   version: '0.1.0',
-// })({
-//   graph: Graph,
-//
-//   // TODO(burdon): Are these required or just used for references?
-//   input: S.optional(ComputeNode),
-//   output: S.optional(ComputeNode),
-// }) {}
+  input: S.optional(ComputeNode),
+  output: S.optional(ComputeNode),
+}) {}
 
 export const isComputeGraph = S.is(ComputeGraph);

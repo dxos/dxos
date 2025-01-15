@@ -6,27 +6,25 @@ import { ObjectId } from '@dxos/echo-schema';
 import { createEdgeId, type GraphEdge, GraphModel, type GraphNode } from '@dxos/graph';
 import { create, makeRef } from '@dxos/live-object';
 
-import { ComputeGraph, type ComputeEdge, type ComputeNode, isComputeGraph } from '../types';
-
-// TODO(burdon): Reconcile with ComputeGraphModelImpl.
-export type ComputeGraphModel = GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;
+import { ComputeGraph, type ComputeEdge, type ComputeNode, isComputeGraph } from './graph';
 
 /**
- * Wrapper/builder.
+ * Builder.
  */
 // TODO(burdon): Generic graph?
-export class ComputeGraphModelImpl extends GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>> {
+export class ComputeGraphModel extends GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>> {
   /**
    * Create new model.
    */
-  static create(): ComputeGraphModelImpl {
-    return new ComputeGraphModelImpl(
+  static create(): ComputeGraphModel {
+    return new ComputeGraphModel(
       create(ComputeGraph, {
         graph: { nodes: [], edges: [] },
       }),
     );
   }
 
+  // TODO(burdon): Reconcile with _graph.
   private readonly _computeGraph: ComputeGraph;
 
   constructor(graph: ComputeGraph) {

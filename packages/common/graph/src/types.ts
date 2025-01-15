@@ -8,6 +8,8 @@ import { type Specialize } from '@dxos/util';
 export const BaseGraphNode = S.Struct({
   id: S.String,
   type: S.optional(S.String),
+
+  // TODO(burdon): Remove. Can extend with arbitrary properties?
   data: S.optional(S.Any),
 });
 
@@ -29,6 +31,8 @@ export const BaseGraphEdge = S.Struct({
   type: S.optional(S.String),
   source: S.String,
   target: S.String,
+
+  // TODO(burdon): Remove. Can extend with arbitrary properties?
   data: S.optional(S.Any),
 });
 

@@ -1,11 +1,15 @@
-import { EchoDatabase, Filter, type ReactiveEchoObject } from '@dxos/echo-db';
-import { S } from '@dxos/echo-schema';
-import type { DataSource, Node, Relationship } from './query-executor';
-import { log } from '@dxos/log';
-import { getSchemaDXN, getSchemaTypename, StoredSchema, toJsonSchema } from '@dxos/echo-schema';
-import { getSchema } from '@dxos/live-object';
-import { formatInferredRelationshipLabel, formatNodeLabel, isReference } from './schema';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { raise } from '@dxos/debug';
+import { type EchoDatabase, Filter, type ReactiveEchoObject } from '@dxos/echo-db';
+import { type S, getSchemaTypename, StoredSchema, toJsonSchema } from '@dxos/echo-schema';
+import { getSchema } from '@dxos/live-object';
+import { log } from '@dxos/log';
+
+import type { DataSource, Node, Relationship } from './query-executor';
+import { formatInferredRelationshipLabel, formatNodeLabel, isReference } from './schema';
 
 export class EchoDataSource implements DataSource {
   constructor(private readonly _db: EchoDatabase) {}
