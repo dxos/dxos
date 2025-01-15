@@ -216,19 +216,27 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
     forwardedRef,
   ) => {
     const ref = useForwardedRef(forwardedRef);
+    const [resize, setResize] = useState(false);
+    useEffect(() => {
+      if (!selected) {
+        setResize(false);
+      }
+    }, [selected]);
 
     const clickTimer = useRef<number>();
     const handleClick: MouseEventHandler<HTMLDivElement> = (ev) => {
       if (ev.detail === 1 && !editing) {
         clickTimer.current = window.setTimeout(() => {
-          onSelect?.(shape.id, ev.shiftKey);
+          onSelect?.(shape.id, { toggle: true, shift: ev.shiftKey });
+          setResize(false);
         }, DBLCLICK_TIMEOUT);
       }
     };
 
     const handleDoubleClick: MouseEventHandler<HTMLDivElement> = () => {
       clearTimeout(clickTimer.current);
-      onEdit?.();
+      onSelect?.(shape.id);
+      setResize(true);
     };
 
     return (
@@ -272,7 +280,6 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
         >
           {children}
         </div>
-
         {/* Anchors. */}
         {!dragging && (!selected || !resizeable) && !resizing && (
           <div>
@@ -281,9 +288,8 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
             ))}
           </div>
         )}
-
         {/* Resize handles. */}
-        {resizeable && (selected || resizing) && (
+        {resizeable && (resize || resizing) && (
           <div>
             <div
               style={getBoundsProperties({ x: 0, y: 0, ...shape.size })}

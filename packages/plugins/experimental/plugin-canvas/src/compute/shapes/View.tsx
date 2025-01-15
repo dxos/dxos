@@ -57,7 +57,7 @@ export const ViewComponent = ({ shape }: ShapeComponentProps<ViewShape>) => {
   }
 
   return (
-    <Box name={'Artifact'}>
+    <Box name={'View'}>
       <TextBox value={value} />
     </Box>
   );

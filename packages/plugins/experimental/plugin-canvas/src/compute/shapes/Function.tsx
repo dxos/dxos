@@ -2,16 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { type JSX, useRef, useState } from 'react';
 
 import { AST, S } from '@dxos/echo-schema';
+import { useProjection } from '@dxos/react-ui-canvas';
 
-import { Box, footerHeight, headerHeight } from './components';
-import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
-import { type ShapeComponentProps, type ShapeDef } from '../../components';
+import { Box, type BoxProps, footerHeight, headerHeight } from './components';
+import { ComputeShape, createAnchorId, type CreateShapeProps, getProperties } from './defs';
+import { getParentShapeElement, type ShapeComponentProps, type ShapeDef } from '../../components';
 import { createAnchors, rowHeight } from '../../components';
-import { type Polygon } from '../../types';
+import { type Polygon, type Shape } from '../../types';
 import { DefaultInput } from '../graph';
+
+const expandedHeight = 200;
 
 export const FunctionShape = S.extend(
   ComputeShape,
@@ -54,35 +57,76 @@ export const functionShape: ShapeDef<FunctionShape> = {
 
 const bodyPadding = 8;
 
-// TODO(burdon): Move labels to anchor?
-export const FunctionBody = ({
-  name,
-  inputSchema,
-  outputSchema,
-}: {
+export type FunctionBodyProps = {
+  shape: Shape;
   name: string;
+  content?: JSX.Element;
   inputSchema: S.Schema.Any;
   outputSchema: S.Schema.Any;
-}) => {
-  const inputs = AST.getPropertySignatures(inputSchema.ast).map(({ name }) => name.toString());
-  const outputs = AST.getPropertySignatures(outputSchema.ast).map(({ name }) => name.toString());
+} & Pick<BoxProps, 'status'>;
+
+export const FunctionBody = ({ shape, name, content, inputSchema, outputSchema, ...props }: FunctionBodyProps) => {
+  const { scale } = useProjection();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+
+  const handleAction: BoxProps['onAction'] = (action) => {
+    if (!rootRef.current) {
+      return;
+    }
+
+    switch (action) {
+      case 'open': {
+        const el = getParentShapeElement(rootRef.current, shape.id)!;
+        const { height } = el.getBoundingClientRect();
+        el.style.height = `${height / scale + expandedHeight}px`;
+        setOpen(true);
+        break;
+      }
+      case 'close': {
+        const el = getParentShapeElement(rootRef.current, shape.id)!;
+        el.style.height = '';
+        setOpen(false);
+        break;
+      }
+    }
+  };
+
+  // TODO(burdon): Move labels to anchor?
+  const inputs = getProperties(inputSchema.ast);
+  const outputs = getProperties(outputSchema.ast);
 
   return (
-    <Box name={name} classNames='grid grid-cols-2 items-center'>
-      <div className='flex flex-col' style={{ padding: bodyPadding }}>
-        {inputs?.map((name) => (
-          <div key={name} className='truncate text-sm font-mono items-center' style={{ height: rowHeight }}>
-            {name}
-          </div>
-        ))}
+    <Box
+      ref={rootRef}
+      classNames='divide-y divide-separator'
+      name={name}
+      open={open}
+      resizable
+      onAction={handleAction}
+      {...props}
+    >
+      <div className='grid grid-cols-2 items-center'>
+        <div className='flex flex-col' style={{ padding: bodyPadding }}>
+          {inputs?.map(({ name }) => (
+            <div key={name} className='truncate text-sm font-mono items-center' style={{ height: rowHeight }}>
+              {name}
+            </div>
+          ))}
+        </div>
+        <div className='flex flex-col' style={{ padding: bodyPadding }}>
+          {outputs?.map(({ name }) => (
+            <div
+              key={name}
+              className='truncate text-sm font-mono items-center text-right'
+              style={{ height: rowHeight }}
+            >
+              {name}
+            </div>
+          ))}
+        </div>
       </div>
-      <div className='flex flex-col' style={{ padding: bodyPadding }}>
-        {outputs?.map((name) => (
-          <div key={name} className='truncate  text-sm font-mono items-center text-right' style={{ height: rowHeight }}>
-            {name}
-          </div>
-        ))}
-      </div>
+      {open && <div className='flex flex-col grow overflow-hidden'>{content}</div>}
     </Box>
   );
 };

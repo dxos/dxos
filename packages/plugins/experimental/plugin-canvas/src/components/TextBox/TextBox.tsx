@@ -89,7 +89,9 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
     useImperativeHandle(
       forwardedRef,
       () => ({
-        focus: () => view?.focus(),
+        focus: () => {
+          view?.focus();
+        },
       }),
       [view],
     );

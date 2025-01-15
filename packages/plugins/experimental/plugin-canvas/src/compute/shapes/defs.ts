@@ -16,8 +16,8 @@ import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '../graph';
 
 export type PropertyKind = 'input' | 'output';
 
-export const getProperties = (kind: PropertyKind, ast: AST.AST) =>
-  AST.getPropertySignatures(ast).map(({ name }) => createAnchorId(kind, name.toString()));
+export const getProperties = (ast: AST.AST) =>
+  AST.getPropertySignatures(ast).map(({ name }) => ({ name: name.toString() }));
 
 export const createAnchorId = (kind: PropertyKind, property = kind === 'input' ? DEFAULT_INPUT : DEFAULT_OUTPUT) =>
   [kind, property].join('.');

@@ -51,6 +51,7 @@ export const TextComponent = ({ shape, title, chat, ...props }: TextComponentPro
   const [reset, setReset] = useState({});
   const inputRef = useRef<TextBoxControl>(null);
   const { runtime } = useComputeNodeState(shape);
+
   const handleEnter: TextBoxProps['onEnter'] = (text) => {
     const value = text.trim();
     if (value.length) {

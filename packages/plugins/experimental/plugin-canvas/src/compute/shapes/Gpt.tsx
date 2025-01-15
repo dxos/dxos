@@ -2,15 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
+import React, { useEffect, useState } from 'react';
+
+import type { ResultStreamEvent } from '@dxos/assistant';
+import { GptInput, GptOutput } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 
 import { createFunctionAnchors, FunctionBody, getHeight } from './Function';
 import { ComputeShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
-import { GptInput, GptOutput } from '@dxos/conductor';
 import { useComputeNodeState } from '../hooks';
-import React, { useEffect, useState } from 'react';
-import type { ResultStreamEvent } from '@dxos/assistant';
 
 export const GptShape = S.extend(
   ComputeShape,
@@ -39,34 +40,41 @@ export const GptComponent = ({ shape }: ShapeComponentProps<GptShape>) => {
   useEffect(() => {
     return runtime.subscribeToEventLog((ev) => {
       switch (ev.type) {
-        case 'begin-compute':
+        case 'begin-compute': {
           setTokens('');
           break;
-        case 'custom':
+        }
+        case 'custom': {
           const token: ResultStreamEvent = ev.event;
-
-          // TODO(dmaretskyi): Handle other types of events.
           switch (token.type) {
             case 'content_block_delta':
               switch (token.delta.type) {
-                case 'text_delta':
+                case 'text_delta': {
                   const delta = token.delta.text;
                   setTokens((prev) => prev + delta);
                   break;
+                }
               }
               break;
+
+            // TODO(dmaretskyi): Handle other types of events.
           }
           break;
+        }
       }
     });
   }, [runtime?.subscribeToEventLog]);
 
-  // TODO(burdon): Fix layout.
   return (
-    <div className='flex flex-col gap-2'>
-      <FunctionBody name={'GPT'} inputSchema={meta.input} outputSchema={meta.output} />
-      <div>{tokens}</div>
-    </div>
+    <FunctionBody
+      shape={shape}
+      name={'GPT'}
+      // TODO(burdon): Pin to bottom.
+      content={<div className='p-1 overflow-y-scroll'>{tokens}</div>}
+      status={`${tokens.length} tokens`}
+      inputSchema={meta.input}
+      outputSchema={meta.output}
+    />
   );
 };
 

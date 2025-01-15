@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ComputeGraphModel, type GptService } from '@dxos/conductor';
+import { ComputeGraphModel } from '@dxos/conductor';
 import { ObjectId } from '@dxos/echo-schema';
 import { type GraphEdge, GraphModel, type GraphNode, createEdgeId } from '@dxos/graph';
 import { failedInvariant } from '@dxos/invariant';
@@ -14,7 +14,6 @@ import {
   createAnd,
   createBeacon,
   createChat,
-  createCounter,
   createDatabase,
   createGpt,
   createList,
@@ -22,13 +21,11 @@ import {
   createSwitch,
   createText,
   createTextToImage,
-  createThread,
   createView,
 } from './shapes';
 import { type ComputeShape } from './shapes';
 import { pointMultiply, pointsToRect, rectToPoints } from '../layout';
 import type { Connection, Shape } from '../types';
-import type { Context } from 'effect';
 
 // TODO(burdon): LayoutBuilder.
 const layout = (rect: Point & Partial<Dimension>, snap = 32): { center: Point; size?: Dimension } => {
@@ -128,7 +125,7 @@ export const createTest3 = ({
     createGpt({ id: 'b', ...layout({ x: 0, y: 0 }) }),
     // createThread({ id: 'c', ...layout({ x: 13, y: -4, width: 10, height: 24 }) }),
     // createCounter({ id: 'd', ...layout({ x: 5, y: 7 }) }),
-    ...(viewText ? [createView({ id: 'g', ...layout({ x: 26, y: -10, width: 12, height: 12 }) })] : []),
+    ...(viewText ? [createView({ id: 'g', ...layout({ x: 16, y: 0, width: 12, height: 12 }) })] : []),
     ...(db ? [createDatabase({ id: 'e', ...layout({ x: -10, y: 4 }) })] : []),
     ...(textToImage ? [createTextToImage({ id: 'j', ...layout({ x: -10, y: 7 }) })] : []),
     ...(cot ? [createList({ id: 'f', ...layout({ x: 0, y: -10, width: 8, height: 12 }) })] : []),
@@ -169,8 +166,7 @@ export const createMachine = (
   // TODO(burdon): Factor out mapping (reconcile with Editor.stories).
   if (graph) {
     for (const shape of graph.nodes) {
-      // const data = node.data as ComputeShape<BaseComputeShape, ComputeNode<any, any>>;
-      log.info('create', { shape });
+      log('create', { shape });
       const node = createComputeNode(shape);
       machine.addNode(node);
       shape.data.node = node.id;

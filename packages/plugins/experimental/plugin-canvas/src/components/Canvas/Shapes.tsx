@@ -8,7 +8,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { Markers, useProjection } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
-import { DEFS_ID, MARKER_PREFIX, ShapeComponent } from './Shape';
+import { DEFS_ID, MARKER_PREFIX, ShapeComponent, type ShapeComponentProps } from './Shape';
 import { type Layout, useEditorContext } from '../../hooks';
 
 export type ShapesProps = ThemedClassName<{ layout: Layout }> & HTMLAttributes<HTMLDivElement>;
@@ -21,8 +21,14 @@ export const Shapes = forwardRef<HTMLDivElement, ShapesProps>(
     const { debug, selection } = useEditorContext();
     const { styles: projectionStyles } = useProjection();
 
-    const handleSelection = useCallback(
-      (id: string, shift: boolean) => selection.toggleSelected([id], shift),
+    const handleSelection = useCallback<NonNullable<ShapeComponentProps['onSelect']>>(
+      (id, options) => {
+        if (options?.toggle) {
+          selection.toggleSelected([id], options?.shift);
+        } else {
+          selection.setSelected([id]);
+        }
+      },
       [selection],
     );
 

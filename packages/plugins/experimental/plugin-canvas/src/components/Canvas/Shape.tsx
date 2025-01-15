@@ -30,8 +30,11 @@ export const getShapeElements = <E extends Element>(el: HTMLElement, type: strin
   return elements;
 };
 
-export const getShapeElement = (root: HTMLElement, id: string): Element | null =>
+export const getShapeElement = (root: HTMLElement, id: string): HTMLElement | null =>
   root.querySelector(`[${DATA_SHAPE_ID}="${id}"]`);
+
+export const getParentShapeElement = (root: HTMLElement, id: string): HTMLElement | null =>
+  root.closest(`[${DATA_SHAPE_ID}="${id}"]`);
 
 export const getShapeBounds = (root: HTMLElement, id: string): DOMRect | undefined => {
   const el = getShapeElement(root, id);
@@ -46,7 +49,7 @@ export type ShapeComponentProps<S extends Shape = Shape> = PropsWithChildren<
     shape: S;
     debug?: boolean;
     selected?: boolean;
-    onSelect?: (id: string, shift: boolean) => void;
+    onSelect?: (id: string, options?: { toggle?: boolean; shift?: boolean }) => void;
   }>
 >;
 
