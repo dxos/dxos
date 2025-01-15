@@ -43,8 +43,10 @@ To reset the app, inspect and delete local storage properties.
 
 - TODO(burdon): Create profile.
 - TODO(burdon): Create cert in keychain.
+- TODO(burdon): ini template for different profiles?
 
-Tether device via USB cable.
+- Install the App Configurator from the App Store.
+- Tether device via USB cable.
 
 ```bash
 # Socket bug: need to create directory.
