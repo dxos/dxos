@@ -4,6 +4,9 @@
 
 import { Effect, Context } from 'effect';
 
+import { invariant } from '@dxos/invariant';
+import { log, LogLevel } from '@dxos/log';
+
 export type ComputeEvent =
   | {
       type: 'begin-compute';
@@ -50,3 +53,22 @@ export const logCustomEvent = (data: any) =>
       event: data,
     });
   });
+
+export const createDxosEventLogger = (level: LogLevel, message: string = 'event'): Context.Tag.Service<EventLogger> => {
+  const logFunction = (
+    {
+      [LogLevel.WARN]: log.warn,
+      [LogLevel.VERBOSE]: log.verbose,
+      [LogLevel.DEBUG]: log.debug,
+      [LogLevel.INFO]: log.info,
+      [LogLevel.ERROR]: log.error,
+    } as any
+  )[level];
+  invariant(logFunction);
+  return {
+    log: (event: ComputeEvent) => {
+      logFunction(message, event);
+    },
+    nodeId: undefined,
+  };
+};
