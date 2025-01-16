@@ -52,7 +52,7 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
           createThemeExtensions({
             themeMode,
             slots: {
-              editor: { className: 'w-full [&>.cm-scroller]:scrollbar-none p-2' },
+              editor: { className: 'w-full h-full [&>.cm-scroller]:scrollbar-none p-2' },
               content: { className: mx(centered && 'text-center') },
             },
           }),
@@ -126,7 +126,18 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
       view?.dispatch({ selection: { anchor: view.state.doc.length } });
     }, [view]);
 
-    return <div ref={parentRef} {...focusAttributes} className={mx('w-full overflow-hidden', classNames)} />;
+    return (
+      <div
+        ref={parentRef}
+        {...focusAttributes}
+        // style={
+        //   {
+        //     '--dx-cmCursor': 'red',
+        //   } as CSSProperties
+        // }
+        className={mx('h-full w-full overflow-hidden', classNames)}
+      />
+    );
   },
 );
 

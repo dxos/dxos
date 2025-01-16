@@ -2,20 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Graph, GraphModel, type GraphNode } from '@dxos/graph';
 import { type Dimension } from '@dxos/react-ui-canvas';
 import { range } from '@dxos/util';
 
 import { type PointTransform } from '../layout';
 import { createRectangle } from '../shapes';
-import { type Shape } from '../types';
+import { type CanvasGraphModel, createCanvasGraphModel } from '../types';
 
 export const itemSize: Dimension = { width: 128, height: 64 };
 
 export const createId = () => Math.random().toString(36).slice(2, 10);
 
-export const createGraph = (snap: PointTransform = (p) => p): Graph => {
-  const graph = new GraphModel<GraphNode<Shape>, any>();
+export const createGraph = (snap: PointTransform = (p) => p): CanvasGraphModel => {
+  const graph = createCanvasGraphModel();
+
   range(1).forEach((i) => {
     const a = createId();
     const b = createId();
@@ -66,23 +66,20 @@ export const createGraph = (snap: PointTransform = (p) => p): Graph => {
       id: createId(),
       source: a,
       target: b,
-      data: {},
     });
 
     graph.addEdge({
       id: createId(),
       source: a,
       target: c,
-      data: {},
     });
 
     graph.addEdge({
       id: createId(),
       source: a,
       target: d,
-      data: {},
     });
   });
 
-  return graph.graph;
+  return graph;
 };

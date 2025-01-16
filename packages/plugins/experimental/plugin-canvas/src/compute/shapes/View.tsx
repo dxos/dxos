@@ -6,7 +6,7 @@ import React from 'react';
 
 import { S } from '@dxos/echo-schema';
 
-import { Box } from './components';
+import { Box } from './common';
 import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
 import { TextBox, type ShapeComponentProps, type ShapeDef } from '../../components';
 import { createAnchorMap } from '../../components';
@@ -57,7 +57,7 @@ export const ViewComponent = ({ shape }: ShapeComponentProps<ViewShape>) => {
   }
 
   return (
-    <Box name={'View'}>
+    <Box name={'View'} resizable>
       <TextBox value={value} />
     </Box>
   );

@@ -4,9 +4,12 @@
 
 import { Effect } from 'effect';
 
+import { LLMTool, Message, ToolTypes } from '@dxos/assistant';
 import {
   type ComputeNode,
   type Executable,
+  GptService,
+  SpaceService,
   defineComputeNode,
   gptNode,
   makeValueBag,
@@ -17,10 +20,11 @@ import { ObjectId, S } from '@dxos/echo-schema';
 import { type GraphNode } from '@dxos/graph';
 import { failedInvariant, invariant } from '@dxos/invariant';
 
-import { type ComputeShape } from '../shapes';
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './types';
-import { Message } from '@dxos/assistant';
+import { type ComputeShape } from '../shapes';
 import type { ConstantShape } from '../shapes/Constant';
+import { SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 type NodeType =
   | 'switch'
@@ -35,11 +39,15 @@ type NodeType =
   | 'chat'
   | 'view'
   | 'thread'
-  | 'constant';
+  | 'constant'
+  | 'list'
+  | 'append'
+  | 'database'
+  | 'text-to-image';
 
 // TODO(burdon): Just pass in type? Or can the shape specialize the node?
 export const createComputeNode = (shape: GraphNode<ComputeShape>): GraphNode<ComputeNode> => {
-  const type = shape.data.type as NodeType;
+  const type = shape.data.type;
   const factory =
     nodeFactory[type ?? raise(new Error('Type not specified'))] ?? raise(new Error(`Unknown shape type: ${type}`));
   return factory(shape);
@@ -56,7 +64,7 @@ const createNode = (type: string, props?: Partial<ComputeNode>) => ({
 });
 
 // TODO(burdon): Reconcile with ShapeRegistry.
-const nodeFactory: Record<NodeType, (shape: GraphNode<ComputeShape>) => GraphNode<ComputeNode>> = {
+const nodeFactory: Record<string, (shape: GraphNode<ComputeShape>) => GraphNode<ComputeNode>> = {
   // Controls.
   ['switch' as const]: () => createNode('switch'),
   ['text' as const]: () => createNode('text'),
@@ -74,10 +82,16 @@ const nodeFactory: Record<NodeType, (shape: GraphNode<ComputeShape>) => GraphNod
   ['if-else' as const]: () => createNode('if-else'),
 
   ['gpt' as const]: () => createNode('gpt'),
+
+  ['json' as const]: () => createNode('view'),
   ['chat' as const]: () => createNode('chat'),
   ['view' as const]: () => createNode('view'),
   ['thread' as const]: () => createNode('thread'),
   ['constant' as const]: (shape) => createNode('constant', { constant: (shape.data as ConstantShape).constant }),
+  ['list' as const]: () => createNode('list'),
+  ['append' as const]: () => createNode('append'),
+  ['database' as const]: () => createNode('database'),
+  ['text-to-image' as const]: () => createNode('text-to-image'),
 };
 
 export const resolveComputeNode = async (node: ComputeNode): Promise<Executable> => {
@@ -85,6 +99,15 @@ export const resolveComputeNode = async (node: ComputeNode): Promise<Executable>
   invariant(impl, `Unknown node type: ${node.type}`);
   return impl;
 };
+
+export const ListInput = S.Struct({ [DEFAULT_INPUT]: ObjectId });
+export const ListOutput = S.Struct({ id: ObjectId, items: S.Array(Message) });
+
+export const AppendInput = S.Struct({ id: ObjectId, items: S.Array(Message) });
+
+export const DatabaseOutput = S.Struct({ tool: S.Array(LLMTool) });
+
+export const TextToImageOutput = S.Struct({ tool: S.Array(LLMTool) });
 
 const nodeDefs: Record<NodeType, Executable> = {
   // Controls.
@@ -140,15 +163,22 @@ const nodeDefs: Record<NodeType, Executable> = {
     ),
   }),
 
+  // Generic.
+  ['constant' as const]: defineComputeNode({
+    input: S.Struct({}),
+    output: S.Struct({ [DEFAULT_OUTPUT]: S.Any }),
+    exec: (_inputs, node) => Effect.succeed(makeValueBag({ [DEFAULT_OUTPUT]: node!.constant })),
+  }),
+  ['view' as const]: defineComputeNode({
+    input: S.Struct({ [DEFAULT_INPUT]: S.Any }),
+    output: S.Struct({ [DEFAULT_OUTPUT]: S.Any }),
+    exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: input }) => Effect.succeed({ [DEFAULT_OUTPUT]: input })),
+  }),
+
   // TODO(dmaretskyi): Consider moving gpt out of conductor.
-  ['gpt' as const]: gptNode,
   ['chat' as const]: defineComputeNode({
     input: S.Struct({}),
     output: S.Struct({ [DEFAULT_OUTPUT]: S.String }),
-  }),
-  ['view' as const]: defineComputeNode({
-    input: S.Struct({ [DEFAULT_INPUT]: S.String }),
-    output: S.Struct({}),
   }),
   ['thread' as const]: defineComputeNode({
     input: S.Struct({}),
@@ -157,9 +187,76 @@ const nodeDefs: Record<NodeType, Executable> = {
       messages: S.Array(Message),
     }),
   }),
-  ['constant' as const]: defineComputeNode({
-    input: S.Struct({}),
-    output: S.Struct({ [DEFAULT_OUTPUT]: S.String }),
-    exec: (_inputs, node) => Effect.succeed(makeValueBag({ [DEFAULT_OUTPUT]: node!.constant })),
+
+  ['list' as const]: defineComputeNode({
+    input: ListInput,
+    output: ListOutput,
+    exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: id }) =>
+      Effect.gen(function* () {
+        const gptService = yield* GptService;
+        const aiClient = (gptService.getAiServiceClient ?? failedInvariant())();
+
+        const messages = yield* Effect.promise(() => aiClient.getMessagesInThread(FAKE_SPACE_ID, id));
+
+        log.info('getMessagesInThread', { id, messages });
+
+        return {
+          id,
+          items: messages,
+        };
+      }),
+    ),
   }),
+  ['append' as const]: defineComputeNode({
+    input: AppendInput,
+    output: S.Struct({}),
+    exec: synchronizedComputeFunction(({ id, items }) =>
+      Effect.gen(function* () {
+        const gptService = yield* GptService;
+        const aiClient = (gptService.getAiServiceClient ?? failedInvariant())();
+
+        invariant(ObjectId.isValid(id), 'Invalid thread id');
+
+        const toInsert = items.map(
+          (message): Message => ({
+            ...message,
+            spaceId: FAKE_SPACE_ID,
+            threadId: id as any, // TODO(dmaretskyi): Assistant has its own object id definition.
+            foreignId: undefined,
+          }),
+        );
+
+        log.info('insertMessages', { id, toInsert });
+        yield* Effect.promise(() => aiClient.insertMessages(toInsert));
+
+        return {};
+      }),
+    ),
+  }),
+
+  ['gpt' as const]: gptNode,
+
+  ['database' as const]: defineComputeNode({
+    input: S.Struct({}),
+    output: DatabaseOutput,
+    exec: synchronizedComputeFunction(() =>
+      Effect.gen(function* () {
+        throw new Error('Not implemented');
+      }),
+    ),
+  }),
+
+  ['text-to-image' as const]: defineComputeNode({
+    input: S.Struct({}),
+    output: TextToImageOutput,
+    exec: synchronizedComputeFunction(() => Effect.succeed({ tool: [textToImageTool] })),
+  }),
+};
+
+// TODO(dmaretskyi): Have to hardcode this since ai-service requires spaceId.
+const FAKE_SPACE_ID = SpaceId.random();
+
+const textToImageTool: LLMTool = {
+  name: 'textToImage',
+  type: ToolTypes.TextToImage,
 };

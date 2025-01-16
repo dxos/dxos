@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Effect, Exit } from 'effect';
+import { Effect, Exit, type Context, Layer, Scope } from 'effect';
 
 import { type LLMModel, type MessageImageContentBlock } from '@dxos/assistant';
 import { Event, synchronized } from '@dxos/async';
@@ -18,17 +18,16 @@ import {
   GptService,
   GraphExecutor,
   makeValueBag,
+  SpaceService,
   unwrapValueBag,
 } from '@dxos/conductor';
-import { testServices } from '@dxos/conductor/testing';
+import { MockGpt } from '@dxos/conductor';
 import { Resource } from '@dxos/context';
 import { type GraphEdge, type GraphNode } from '@dxos/graph';
 import { log } from '@dxos/log';
 
 import { resolveComputeNode } from './node-defs';
 import type { GptInput, GptOutput } from './types';
-import { Context, Layer, Scope } from 'effect';
-import { MockGpt } from '@dxos/conductor';
 
 // TODO(burdon): API package for conductor.
 export const InvalidStateError = Error;
@@ -95,7 +94,9 @@ export class StateMachine extends Resource {
   /**
    * Runtime state of the execution graph.
    */
-  private _runtimeState: Record<string, Record<string, RuntimeValue>> = {};
+  private _runtimeStateInputs: Record<string, Record<string, RuntimeValue>> = {};
+
+  private _runtimeStateOutputs: Record<string, Record<string, RuntimeValue>> = {};
 
   // TODO(burdon): Remove? Make state reactive?
   public readonly update = new Event();
@@ -115,7 +116,7 @@ export class StateMachine extends Resource {
   toJSON() {
     return {
       graph: this._graph,
-      state: this._runtimeState,
+      state: this._runtimeStateInputs,
     };
   }
 
@@ -132,7 +133,7 @@ export class StateMachine extends Resource {
   }
 
   get executedState() {
-    return this._runtimeState;
+    return this._runtimeStateInputs;
   }
 
   addNode(node: GraphNode<ComputeNode>) {
@@ -148,11 +149,11 @@ export class StateMachine extends Resource {
   }
 
   getInputs(nodeId: string) {
-    return this._runtimeState[nodeId] ?? {};
+    return this._runtimeStateInputs[nodeId] ?? {};
   }
 
   getOutputs(nodeId: string) {
-    return {};
+    return this._runtimeStateOutputs[nodeId] ?? {};
   }
 
   @log.method()
@@ -177,7 +178,8 @@ export class StateMachine extends Resource {
   @synchronized
   async exec() {
     console.log('begin execution');
-    this._runtimeState = {};
+    this._runtimeStateInputs = {};
+    this._runtimeStateOutputs = {};
     const executor = this._executor.clone();
     await executor.load(this._graph);
 
@@ -186,7 +188,9 @@ export class StateMachine extends Resource {
     }
 
     // TODO(dmaretskyi): Stop hardcoding.
-    const allSwitches = this._graph.nodes.filter((node) => node.data.type === 'switch' || node.data.type === 'chat');
+    const allSwitches = this._graph.nodes.filter(
+      (node) => node.data.type === 'switch' || node.data.type === 'chat' || node.data.type === 'constant',
+    );
     const allAffectedNodes = [...new Set(allSwitches.flatMap((node) => executor.getAllDependantNodes(node.id)))];
 
     const services = this._createServiceLayer();
@@ -197,9 +201,10 @@ export class StateMachine extends Resource {
         // TODO(burdon): Return map?
         const tasks: Effect.Effect<unknown, any, never>[] = [];
         for (const node of allAffectedNodes) {
+          const executable = yield* Effect.promise(() => resolveComputeNode(this._graph.getNode(node)));
           console.log('will compute inputs', node);
           // TODO(dmaretskyi): Check if the node has a compute function and run computeOutputs if it does.
-          const effect = executor.computeInputs(node).pipe(
+          const effect = (executable.exec ? executor.computeOutputs(node) : executor.computeInputs(node)).pipe(
             Effect.withSpan('runGraph'),
             Effect.provide(services),
             Scope.extend(scope),
@@ -227,11 +232,13 @@ export class StateMachine extends Resource {
         log.info('log', { event });
         switch (event.type) {
           case 'compute-input':
-            this._runtimeState[event.nodeId] ??= {};
-            this._runtimeState[event.nodeId][event.property] = { type: 'executed', value: event.value };
+            this._runtimeStateInputs[event.nodeId] ??= {};
+            this._runtimeStateInputs[event.nodeId][event.property] = { type: 'executed', value: event.value };
             break;
 
           case 'compute-output':
+            this._runtimeStateOutputs[event.nodeId] ??= {};
+            this._runtimeStateOutputs[event.nodeId][event.property] = { type: 'executed', value: event.value };
             // TODO(burdon): Only fire if changed?
             this.output.emit(event);
             break;
@@ -246,7 +253,8 @@ export class StateMachine extends Resource {
     const services = { ...DEFAULT_SERVICES, ...this._services };
     const logLayer = Layer.succeed(EventLogger, this._createLogger());
     const gptLayer = Layer.succeed(GptService, services.gpt!);
-    return Layer.mergeAll(logLayer, gptLayer);
+    const spaceLayer = SpaceService.empty;
+    return Layer.mergeAll(logLayer, gptLayer, spaceLayer);
   }
 }
 

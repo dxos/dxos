@@ -2,21 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { Fragment, useRef } from 'react';
+import React, { Fragment } from 'react';
 
 import { S } from '@dxos/echo-schema';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { createFunctionAnchors } from './Function';
-import { Box } from './components';
-import { ComputeShape, createInputSchema, createOutputSchema, type CreateShapeProps } from './defs';
+import { Box } from './common';
+import { ComputeShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
-import { GptMessage } from '../graph';
-
-// TODO(burdon): Type-specific.
-const InputSchema = createInputSchema(GptMessage);
-const OutputSchema = createOutputSchema(S.mutable(S.Array(GptMessage)));
+import { ListInput, ListOutput } from '../graph';
+import { useComputeNodeState } from '../hooks';
 
 export const ListShape = S.extend(
   ComputeShape,
@@ -37,14 +34,13 @@ export const createList = ({ id, ...rest }: CreateListProps): ListShape => ({
 });
 
 export const ListComponent = ({ shape }: ShapeComponentProps<ListShape>) => {
-  const items: any[] = [];
-  // const items = shape.node.items.value;
-  // TODO(dmaretskyi): Unused ref.
-  const ref = useRef<HTMLDivElement>(null);
+  const { runtime } = useComputeNodeState(shape);
+
+  const items = runtime.outputs.items?.type === 'executed' ? runtime.outputs.items.value : [];
 
   return (
-    <Box name={'List'}>
-      <div ref={ref} className='flex flex-col w-full overflow-y-scroll divide-y divide-separator'>
+    <Box name={'List'} resizable>
+      <div className='flex flex-col w-full overflow-y-scroll divide-y divide-separator'>
         {[...items].map((item, i) => (
           <ListItem key={i} classNames='p-1 px-2' item={item} />
         ))}
@@ -63,7 +59,7 @@ export const ListItem = ({ classNames, item }: ThemedClassName<{ item: any }>) =
       {Object.entries(item).map(([key, value]) => (
         <Fragment key={key}>
           <div className='p-1 text-xs text-subdued'>{key}</div>
-          <div>{String(value)}</div>
+          <div>{typeof value === 'string' ? value : JSON.stringify(value)}</div>
         </Fragment>
       ))}
     </div>
@@ -75,6 +71,6 @@ export const listShape: ShapeDef<ListShape> = {
   icon: 'ph--list-dashes--regular',
   component: ListComponent,
   createShape: createList,
-  getAnchors: (shape) => createFunctionAnchors(shape, InputSchema, OutputSchema),
+  getAnchors: (shape) => createFunctionAnchors(shape, ListInput, ListOutput),
   resizeable: true,
 };

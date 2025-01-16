@@ -2424,6 +2424,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../experimental/assistant
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -5882,6 +5885,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../../core/echo/live-object
@@ -5948,6 +5954,9 @@ importers:
       effect:
         specifier: ^3.12.1
         version: 3.12.1
+      jsonpath:
+        specifier: ^1.1.1
+        version: 1.1.1
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -5988,6 +5997,9 @@ importers:
       '@types/d3':
         specifier: ^7.4.3
         version: 7.4.3
+      '@types/jsonpath':
+        specifier: ^0.2.4
+        version: 0.2.4
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -10221,7 +10233,7 @@ importers:
         specifier: workspace:*
         version: link:../../common/random
       '@types/jsonpath':
-        specifier: ~0.2.4
+        specifier: ^0.2.4
         version: 0.2.4
       fast-check:
         specifier: ^3.19.0
@@ -11170,7 +11182,7 @@ importers:
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/jsonpath':
-        specifier: ~0.2.4
+        specifier: ^0.2.4
         version: 0.2.4
       '@types/react':
         specifier: ~18.2.0

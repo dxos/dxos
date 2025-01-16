@@ -2,21 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useRef, useState } from 'react';
+import React from 'react';
 
 import { S } from '@dxos/echo-schema';
 
-import { Box } from './components';
+import { Box } from './common';
 import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
-import {
-  type ShapeComponentProps,
-  type ShapeDef,
-  TextBox,
-  type TextBoxControl,
-  type TextBoxProps,
-} from '../../components';
+import { type ShapeComponentProps, type ShapeDef, TextBox, type TextBoxProps } from '../../components';
 import { createAnchorMap } from '../../components';
-import { DEFAULT_OUTPUT } from '../graph';
 import { useComputeNodeState } from '../hooks';
 
 //
@@ -41,12 +34,11 @@ export type ConstantComponentProps = ShapeComponentProps<ConstantShape> &
   TextBoxProps & { title?: string; chat?: boolean };
 
 export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComponentProps) => {
-  const { runtime, node } = useComputeNodeState(shape);
+  const { node } = useComputeNodeState(shape);
 
   return (
-    <Box name={title ?? 'Text'}>
+    <Box name={title ?? 'Constant'}>
       <TextBox
-        classNames='flex grow p-2 overflow-hidden'
         {...props}
         value={node.data.constant}
         onEnter={(value) => {

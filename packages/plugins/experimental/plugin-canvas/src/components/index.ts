@@ -10,6 +10,7 @@ export * from './styles';
 
 export * from './Canvas';
 export * from './Editor';
+export * from './JsonFilter';
 export * from './TextBox';
 export * from './Toolbar';
 export * from './UI';

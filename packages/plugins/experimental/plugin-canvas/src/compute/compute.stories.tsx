@@ -9,12 +9,10 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } f
 
 import { AIServiceClientImpl } from '@dxos/assistant';
 import { type UnsubscribeCallback } from '@dxos/async';
-import { EdgeGpt, type ComputeEdge, type ComputeNode } from '@dxos/conductor';
-import { type GraphEdge, type GraphModel, type GraphNode } from '@dxos/graph';
+import { type ComputeGraphModel, EdgeGpt } from '@dxos/conductor';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Select } from '@dxos/react-ui';
+import { Select, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { type StateMachine, type StateMachineContext } from './graph';
@@ -23,7 +21,7 @@ import { computeShapes } from './registry';
 import { type ComputeShape } from './shapes';
 import { createMachine, createTest1, createTest3 } from './testing';
 import { Editor, type EditorController, type EditorRootProps } from '../components';
-import { ShapeRegistry } from '../components';
+import { JsonFilter, ShapeRegistry } from '../components';
 import { Container } from '../components/Container';
 import { useSelection } from '../testing';
 import { type Connection } from '../types';
@@ -32,7 +30,7 @@ type RenderProps = EditorRootProps &
   PropsWithChildren<{
     init?: boolean;
     sidebar?: 'canvas' | 'compute' | 'state-machine' | 'selected';
-    computeGraph?: GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;
+    computeGraph?: ComputeGraphModel;
     machine?: StateMachine;
     model?: StateMachineContext['model'];
     gpt?: StateMachineContext['gpt'];
@@ -63,6 +61,11 @@ const Render = ({
   const [, forceUpdate] = useState({});
 
   const editorRef = useRef<EditorController>(null);
+
+  // Selection.
+  const [selection, selected] = useSelection(graph);
+
+  // Sidebar.
   const [sidebar, setSidebar] = useState(_sidebar);
   const json = useMemo(() => {
     switch (sidebar) {
@@ -79,7 +82,7 @@ const Render = ({
       case 'selected':
         return { selected };
     }
-  }, [sidebar]);
+  }, [sidebar, selected]);
 
   // State machine.
   useEffect(() => {
@@ -114,10 +117,7 @@ const Render = ({
   }, [graph, machine]);
 
   // Sync monitor.
-  const graphMonitor = useGraphMonitor(machine);
-
-  // Selection.
-  const [selection, selected] = useSelection(graph);
+  const graphMonitor = useGraphMonitor(machine?.graph);
 
   return (
     <div className='grid grid-cols-[1fr,360px] w-full h-full'>
@@ -140,25 +140,25 @@ const Render = ({
 
       {sidebar && (
         <Container id='sidebar' classNames='flex flex-col h-full overflow-hidden'>
-          <Select.Root value={sidebar} onValueChange={(value) => setSidebar(value as RenderProps['sidebar'])}>
-            <Select.TriggerButton classNames='is-full'>{sidebar}</Select.TriggerButton>
-            <Select.Portal>
-              <Select.Content>
-                <Select.Viewport>
-                  {sidebarTypes.map((type) => (
-                    <Select.Item key={type} value={type}>
-                      {type}
-                    </Select.Item>
-                  ))}
-                </Select.Viewport>
-              </Select.Content>
-            </Select.Portal>
-          </Select.Root>
+          <Toolbar.Root classNames='p-1'>
+            <Select.Root value={sidebar} onValueChange={(value) => setSidebar(value as RenderProps['sidebar'])}>
+              <Select.TriggerButton classNames='is-full'>{sidebar}</Select.TriggerButton>
+              <Select.Portal>
+                <Select.Content>
+                  <Select.Viewport>
+                    {sidebarTypes.map((type) => (
+                      <Select.Item key={type} value={type}>
+                        {type}
+                      </Select.Item>
+                    ))}
+                  </Select.Viewport>
+                </Select.Content>
+              </Select.Portal>
+            </Select.Root>
+          </Toolbar.Root>
 
           <div className='flex flex-col h-full overflow-hidden'>
-            <SyntaxHighlighter language='json' classNames='text-xs'>
-              {JSON.stringify(json, null, 2)}
-            </SyntaxHighlighter>
+            <JsonFilter data={json} />
           </div>
         </Container>
       )}
@@ -241,7 +241,7 @@ export const GPT: Story = {
     //   { type: Testing.ContactType, count: 8 },
     // ],
     // registerSchema: true,
-    ...createMachine(createTest3({ db: false, viewText: true }), {
+    ...createMachine(createTest3({ db: false, viewText: true, history: true, textToImage: true }), {
       gpt: new EdgeGpt(
         new AIServiceClientImpl({
           // endpoint: 'https://ai-service.dxos.workers.dev',

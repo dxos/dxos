@@ -9,7 +9,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { createFunctionAnchors } from './Function';
-import { Box } from './components';
+import { Box } from './common';
 import { ComputeShape, createInputSchema, createOutputSchema, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { GptMessage } from '../graph';
@@ -46,7 +46,7 @@ export const ThreadComponent = ({ shape }: ShapeComponentProps<ThreadShape>) => 
   }, [items]);
 
   return (
-    <Box name={'Thread'}>
+    <Box name={'Thread'} resizable>
       <div ref={scrollRef} className='flex flex-col w-full overflow-y-scroll gap-2 p-2'>
         {[...items].map((item, i) => (
           <ThreadItem key={i} item={item} />

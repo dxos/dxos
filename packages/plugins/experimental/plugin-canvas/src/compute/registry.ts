@@ -13,6 +13,7 @@ import {
   listShape,
   ifElseShape,
   ifShape,
+  jsonShape,
   notShape,
   orShape,
   reduceShape,
@@ -25,6 +26,8 @@ import {
   viewShape,
 } from './shapes';
 import type { ShapeDef } from '../components';
+import { appendShape } from './shapes/Append';
+import { constantShape } from './shapes/Constant';
 
 /**
  * Order used by toolbar.
@@ -40,6 +43,7 @@ export const computeShapes: ShapeDef<any>[] = [
   timerShape,
   ifShape,
   ifElseShape,
+  jsonShape,
   reduceShape,
   andShape,
   orShape,
@@ -50,4 +54,7 @@ export const computeShapes: ShapeDef<any>[] = [
   beaconShape,
   counterShape,
   viewShape,
+  appendShape,
+  constantShape,
+  textToImageShape,
 ];
