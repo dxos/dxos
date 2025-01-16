@@ -3,6 +3,7 @@
 //
 
 import { addressToA1Notation } from '@dxos/compute';
+import { ComputeGraph, ComputeGraphModel, createEdge, NodeType } from '@dxos/conductor';
 import { type BaseObject, type TypedObject } from '@dxos/echo-schema';
 import { create, makeRef, type ReactiveObject } from '@dxos/live-object';
 import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
@@ -105,6 +106,22 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
         );
       });
 
+      cb?.(objects);
+      return objects;
+    },
+  ],
+  [
+    ComputeGraph.typename,
+    async (space, n, cb) => {
+      const objects = range(n, () => {
+        const model = ComputeGraphModel.create()
+          .addNode({ id: 'gpt-INPUT', data: { type: NodeType.Input } })
+          .addNode({ id: 'gpt-GPT', data: { type: NodeType.Gpt } })
+          .addNode({ id: 'gpt-OUTPUT', data: { type: NodeType.Output } })
+          .addEdge(createEdge({ source: 'gpt-INPUT', output: 'prompt', target: 'gpt-GPT', input: 'prompt' }))
+          .addEdge(createEdge({ source: 'gpt-GPT', output: 'text', target: 'gpt-OUTPUT', input: 'text' }));
+        return space.db.add(model.root);
+      });
       cb?.(objects);
       return objects;
     },

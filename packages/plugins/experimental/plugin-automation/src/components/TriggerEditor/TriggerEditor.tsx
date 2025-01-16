@@ -4,6 +4,7 @@
 
 import React, { useState } from 'react';
 
+import { ComputeGraph } from '@dxos/conductor';
 import {
   FunctionType,
   FunctionTriggerSchema,
@@ -29,6 +30,7 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
   const { t } = useTranslation(AUTOMATION_PLUGIN);
 
   const functions = useQuery(space, Filter.schema(FunctionType));
+  const workflows = useQuery(space, Filter.schema(ComputeGraph));
   const scripts = useQuery(space, Filter.schema(ScriptType));
 
   const handleSave = (values: FunctionTriggerType) => {
@@ -45,10 +47,7 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
         ['function' satisfies keyof FunctionTriggerType]: (props) => (
           <SelectInput<FunctionTriggerType>
             {...props}
-            options={functions.map((fn) => ({
-              value: fn.name,
-              label: getFunctionName(scripts, fn),
-            }))}
+            options={getWorkflowOptions(workflows).concat(getFunctionOptions(scripts, functions))}
           />
         ),
         ['spec.type' as const]: (props) => (
@@ -123,6 +122,11 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
   );
 };
 
-const getFunctionName = (scripts: ScriptType[], fn: FunctionType) => {
-  return scripts.find((s) => fn.source?.target?.id === s.id)?.name ?? fn.name;
+const getWorkflowOptions = (graphs: ComputeGraph[]) => {
+  return graphs.map((graph) => ({ label: `compute-${graph.id}`, value: `dxn:echo:@:${graph.id}` }));
+};
+
+const getFunctionOptions = (scripts: ScriptType[], functions: FunctionType[]) => {
+  const getLabel = (fn: FunctionType) => scripts.find((s) => fn.source?.target?.id === s.id)?.name ?? fn.name;
+  return functions.map((fn) => ({ label: getLabel(fn), value: `dxn:worker:${fn.name}` }));
 };

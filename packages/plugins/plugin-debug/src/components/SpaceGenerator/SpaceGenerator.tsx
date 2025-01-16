@@ -4,6 +4,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
+import { ComputeGraph } from '@dxos/conductor';
 import { type ReactiveObject } from '@dxos/live-object';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { SheetType } from '@dxos/plugin-sheet/types';
@@ -25,7 +26,7 @@ export type SpaceGeneratorProps = {
 
 export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) => {
   const client = useClient();
-  const staticTypes = [DocumentType, DiagramType, SheetType]; // TODO(burdon): Make extensible.
+  const staticTypes = [DocumentType, DiagramType, SheetType, ComputeGraph]; // TODO(burdon): Make extensible.
   const mutableTypes = [Testing.OrgType, Testing.ProjectType, Testing.ContactType];
   const [count, setCount] = useState(1);
   const [info, setInfo] = useState<any>({});
