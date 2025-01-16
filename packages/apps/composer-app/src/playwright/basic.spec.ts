@@ -63,7 +63,7 @@ test.describe('Basic tests', () => {
 
     await host.reset();
     // Wait for identity to be re-created.
-    await expect(host.getSpaceItems(), { timeout: 10_000 }).toHaveCount(1);
+    await expect(host.getSpaceItems()).toHaveCount(1, { timeout: 10_000 });
   });
 
   test('reset device', async ({ browserName }) => {
