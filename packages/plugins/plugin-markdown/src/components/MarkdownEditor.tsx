@@ -150,22 +150,25 @@ export const MarkdownEditor = ({
 
   // Toolbar handler.
   const handleToolbarAction = useActionHandler(editorView);
-  const handleAction = (action: EditorAction) => {
-    switch (action.properties.type) {
-      case 'search': {
-        if (editorView) {
-          openSearchPanel(editorView);
+  const handleAction = useCallback(
+    (action: EditorAction) => {
+      switch (action.properties.type) {
+        case 'search': {
+          if (editorView) {
+            openSearchPanel(editorView);
+          }
+          return;
         }
-        return;
+        case 'view-mode': {
+          onViewModeChange?.(id, action.properties.data);
+          return;
+        }
       }
-      case 'view-mode': {
-        onViewModeChange?.(id, action.properties.data);
-        return;
-      }
-    }
 
-    handleToolbarAction?.(action);
-  };
+      handleToolbarAction?.(action);
+    },
+    [editorView, onViewModeChange],
+  );
 
   return (
     <StackItem.Content toolbar={!!toolbar}>

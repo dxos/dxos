@@ -3,9 +3,11 @@
 //
 
 import { type EditorView } from '@codemirror/view';
+import { useCallback } from 'react';
 
 import { type EditorAction, processEditorPayload } from '../extensions';
 
 export const useActionHandler = (view?: EditorView | null) => {
-  return (action: EditorAction) => view && processEditorPayload(view, action.properties);
+  console.log('[use action handler]', view);
+  return useCallback((action: EditorAction) => view && processEditorPayload(view, action.properties), [view]);
 };

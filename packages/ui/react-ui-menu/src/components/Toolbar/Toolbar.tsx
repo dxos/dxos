@@ -6,20 +6,15 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Toolbar as NaturalToolbar } from '@dxos/react-ui';
 
-import { ToolbarContext } from './ToolbarContext';
+import { ToolbarContext, useToolbar } from './ToolbarContext';
 import { ToolbarDropdownMenu } from './ToolbarDropdownMenu';
 import { ToolbarToggleGroup } from './ToolbarToggleGroup';
 import { isMenu, isSeparator, type ToolbarProps } from './defs';
 import { type MenuAction } from '../../defs';
 import { ActionLabel } from '../ActionLabel';
 
-const ToolbarItem = ({
-  iconSize,
-  action,
-  onAction,
-}: Pick<ToolbarProps, 'iconSize' | 'onAction'> & {
-  action: MenuAction;
-}) => {
+const ToolbarItem = ({ action }: { action: MenuAction }) => {
+  const { onAction, iconSize } = useToolbar();
   const handleClick = useCallback(() => {
     onAction?.(action);
   }, [action, onAction]);
@@ -28,12 +23,12 @@ const ToolbarItem = ({
     <NaturalToolbar.IconButton
       key={action.id}
       iconOnly={iconOnly}
-      variant='ghost'
       icon={icon}
       size={iconSize}
       label={<ActionLabel action={action} />}
       disabled={disabled}
       onClick={handleClick}
+      variant='ghost'
       {...(testId && { 'data-testid': testId })}
     />
   );
@@ -60,12 +55,12 @@ export const Toolbar = ({
             <NaturalToolbar.Separator key={i} variant={item.properties.variant} />
           ) : isMenu(item) ? (
             item.properties.variant === 'dropdownMenu' ? (
-              <ToolbarDropdownMenu key={item.id} actionGroup={item} onAction={onAction} iconSize={iconSize} />
+              <ToolbarDropdownMenu key={item.id} actionGroup={item} />
             ) : (
-              <ToolbarToggleGroup key={item.id} actionGroup={item} onAction={onAction} iconSize={iconSize} />
+              <ToolbarToggleGroup key={item.id} actionGroup={item} />
             )
           ) : (
-            <ToolbarItem key={item.id} action={item as MenuAction} onAction={onAction} iconSize={iconSize} />
+            <ToolbarItem key={item.id} action={item as MenuAction} />
           ),
         )}
       </NaturalToolbar.Root>

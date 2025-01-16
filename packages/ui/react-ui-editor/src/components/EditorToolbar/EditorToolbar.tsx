@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Graph } from '@dxos/app-graph';
-import { Toolbar, type ToolbarActionGroup, type ToolbarItem } from '@dxos/react-ui-menu';
+import { Toolbar, type ToolbarActionGroup, type ToolbarItem, type ToolbarProps } from '@dxos/react-ui-menu';
 
 import { useBlocks } from './useBlocks';
 import { useComment } from './useComment';
@@ -49,5 +49,7 @@ const useEditorToolbarActionGraph = ({ state, mode }: EditorToolbarActionGraphPr
 
 export const EditorToolbar = ({ classNames, ...actionProps }: EditorToolbarProps) => {
   const toolbarProps = useEditorToolbarActionGraph(actionProps);
-  return <Toolbar {...toolbarProps} classNames={classNames} />;
+  return (
+    <Toolbar {...toolbarProps} onAction={actionProps.onAction as ToolbarProps['onAction']} classNames={classNames} />
+  );
 };
