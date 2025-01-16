@@ -6,11 +6,12 @@ import { useEffect } from 'react';
 
 import { type Graph, type NodeArg } from '@dxos/app-graph';
 import { invariant } from '@dxos/invariant';
+import { type ReactiveObject } from '@dxos/live-object';
 import { type ToolbarActionGroup, type ToolbarActionGroupProperties } from '@dxos/react-ui-menu';
 import { type DeepWriteable } from '@dxos/util';
 
-import { createEditorAction, createEditorActionGroup } from './util';
-import { type EditorAction, type EditorViewMode } from '../../extensions';
+import { createEditorAction, createEditorActionGroup, type EditorToolbarState } from './util';
+import { type EditorAction } from '../../extensions';
 import { translationKey } from '../../translations';
 
 const viewModeGroupAction = createEditorActionGroup(
@@ -36,7 +37,7 @@ const viewModeActions = Object.entries({
   );
 });
 
-export const useViewModes = (graph: Graph, mode: EditorViewMode) => {
+export const useViewModes = (graph: Graph, state: ReactiveObject<EditorToolbarState>) => {
   useEffect(() => {
     // @ts-ignore
     graph._addNodes([viewModeGroupAction as NodeArg<any>, ...viewModeActions]);
@@ -48,11 +49,11 @@ export const useViewModes = (graph: Graph, mode: EditorViewMode) => {
     invariant(graph);
     const viewMode = graph.findNode('viewMode');
     invariant(viewMode);
-    (viewMode as DeepWriteable<ToolbarActionGroup>).properties.value = mode;
+    (viewMode as DeepWriteable<ToolbarActionGroup>).properties.value = state.viewMode ?? 'source';
     graph.actions(viewMode)?.forEach((viewModeAction) => {
-      (viewModeAction as DeepWriteable<EditorAction>).properties.checked = mode === viewModeAction.id;
+      (viewModeAction as DeepWriteable<EditorAction>).properties.checked = state.viewMode === viewModeAction.id;
     });
-  }, [mode, graph]);
+  }, [state.viewMode, graph]);
 
   return viewModeGroupAction;
 };

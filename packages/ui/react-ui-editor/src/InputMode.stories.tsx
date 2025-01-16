@@ -10,7 +10,7 @@ import { Toolbar as NaturalToolbar, Select, useThemeContext } from '@dxos/react-
 import { attentionSurface, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { EditorToolbar } from './components';
+import { EditorToolbar, useEditorToolbarState } from './components';
 import {
   type EditorInputMode,
   decorateMarkdown,
@@ -28,7 +28,8 @@ type StoryProps = { placeholder?: string; readonly?: boolean } & UseTextEditorPr
 
 const DefaultStory = ({ autoFocus, initialValue, placeholder, readonly }: StoryProps) => {
   const { themeMode } = useThemeContext();
-  const [formattingState, trackFormatting] = useFormattingState();
+  const toolbarState = useEditorToolbarState({ viewMode: 'source' });
+  const trackFormatting = useFormattingState(toolbarState);
   const [editorInputMode, _setEditorInputMode] = useState<EditorInputMode>('default');
   const { parentRef, view } = useTextEditor(
     () => ({
@@ -54,9 +55,7 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder, readonly }: StoryP
   //  Also not sure if view is even guaranteed to exist at this point.
   return (
     <div role='none' className={mx('fixed inset-0 flex flex-col')}>
-      {formattingState && (
-        <EditorToolbar onAction={handleAction} state={formattingState} mode='preview' classNames={textBlockWidth} />
-      )}
+      {toolbarState && <EditorToolbar onAction={handleAction} state={toolbarState} classNames={textBlockWidth} />}
 
       <div role='none' className='grow overflow-hidden'>
         <div className={attentionSurface} ref={parentRef} />

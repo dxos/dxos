@@ -17,6 +17,7 @@ import {
   EditorToolbar,
   useFormattingState,
   useTextEditor,
+  useEditorToolbarState,
 } from '@dxos/react-ui-editor';
 import { focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
@@ -26,7 +27,8 @@ export const EditorContent = ({ data: { content = '' } }: { data: StackItemConte
   const { themeMode } = useThemeContext();
   const [text] = useState(create(Expando, { content }));
   const id = text.id;
-  const [formattingState, formattingObserver] = useFormattingState();
+  const toolbarState = useEditorToolbarState({ viewMode: 'source' });
+  const formattingObserver = useFormattingState(toolbarState);
   const { parentRef, view, focusAttributes } = useTextEditor(() => {
     return {
       id,
@@ -50,8 +52,7 @@ export const EditorContent = ({ data: { content = '' } }: { data: StackItemConte
       <ElevationProvider elevation='positioned'>
         <EditorToolbar
           onAction={handleAction}
-          state={formattingState ?? {}}
-          mode='source'
+          state={toolbarState ?? {}}
           classNames='sticky block-start-0 bg-[--sticky-bg] z-10'
         />
       </ElevationProvider>

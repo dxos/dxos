@@ -15,7 +15,6 @@ import { useThemeContext } from '@dxos/react-ui';
 import {
   type EditorAction,
   type Comment,
-  type EditorViewMode,
   comments,
   createBasicExtensions,
   createDataExtensions,
@@ -30,6 +29,7 @@ import {
   useComments,
   useFormattingState,
   useTextEditor,
+  useEditorToolbarState,
 } from '@dxos/react-ui-editor';
 import { textBlockWidth } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -43,15 +43,15 @@ const _onUpload = async (file: File) => ({ url: file.name });
 const DefaultStory: FC<{ content?: string }> = ({ content = '' }) => {
   const { themeMode } = useThemeContext();
   const [text] = useState(createObject(create(TextType, { content })));
-  const [formattingState, formattingObserver] = useFormattingState();
-  const [viewMode, setViewMode] = useState<EditorViewMode>('preview');
+  const toolbarState = useEditorToolbarState({ viewMode: 'preview' });
+  const formattingObserver = useFormattingState(toolbarState);
   const { parentRef, view } = useTextEditor(() => {
     return {
       id: text.id,
       initialValue: text.content,
       extensions: [
         formattingObserver,
-        createBasicExtensions({ readonly: viewMode === 'readonly' }),
+        createBasicExtensions({ readonly: toolbarState.viewMode === 'readonly' }),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode, syntaxHighlighting: true, slots: { editor: { className: editorContent } } }),
         createDataExtensions({ id: text.id, text: createDocAccessor(text, ['content']) }),
@@ -63,15 +63,15 @@ const DefaultStory: FC<{ content?: string }> = ({ content = '' }) => {
           },
         }),
         formattingKeymap(),
-        ...(viewMode !== 'source' ? [decorateMarkdown()] : []),
+        ...(toolbarState.viewMode !== 'source' ? [decorateMarkdown()] : []),
       ],
     };
-  }, [text, formattingObserver, viewMode, themeMode]);
+  }, [text, formattingObserver, toolbarState.viewMode, themeMode]);
 
   const handleToolbarAction = useActionHandler(view);
   const handleAction = (action: EditorAction) => {
     if (action.type === 'view-mode') {
-      setViewMode(action.properties.data);
+      toolbarState.viewMode = action.properties.data;
     } else {
       handleToolbarAction?.(action);
     }
@@ -82,12 +82,7 @@ const DefaultStory: FC<{ content?: string }> = ({ content = '' }) => {
 
   return (
     <div role='none' className='fixed inset-0 flex flex-col'>
-      <EditorToolbar
-        onAction={handleAction}
-        state={formattingState ?? {}}
-        mode={viewMode}
-        classNames={textBlockWidth}
-      />
+      <EditorToolbar onAction={handleAction} state={toolbarState ?? {}} classNames={textBlockWidth} />
       <div ref={parentRef} />
     </div>
   );

@@ -3,6 +3,7 @@
 //
 
 import { ACTION_GROUP_TYPE, ACTION_TYPE, actionGroupSymbol } from '@dxos/app-graph';
+import { create, type ReactiveObject } from '@dxos/live-object';
 import { type Label, type ThemedClassName } from '@dxos/react-ui';
 import {
   type ToolbarSeparatorNode,
@@ -13,11 +14,15 @@ import {
 import type { EditorAction, EditorActionPayload, EditorViewMode, Formatting } from '../../extensions';
 import { translationKey } from '../../translations';
 
-export type EditorToolbarState = Formatting & { comment?: boolean; mode?: EditorViewMode; selection?: boolean };
+export type EditorToolbarState = Formatting &
+  Partial<{ comment: boolean; viewMode: EditorViewMode; selection: boolean }>;
+
+export const useEditorToolbarState = (initialState: Partial<EditorToolbarState> = {}) => {
+  return create<EditorToolbarState>(initialState);
+};
 
 export type EditorToolbarActionGraphProps = {
-  state: EditorToolbarState;
-  mode: EditorViewMode;
+  state: ReactiveObject<EditorToolbarState>;
   onAction: (action: EditorAction) => void;
 };
 

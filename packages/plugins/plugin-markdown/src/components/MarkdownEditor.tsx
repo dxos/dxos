@@ -32,6 +32,7 @@ import {
   useTextEditor,
   stackItemContentEditorClassNames,
   stackItemContentToolbarClassNames,
+  useEditorToolbarState,
 } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { textBlockWidth } from '@dxos/react-ui-theme';
@@ -76,7 +77,8 @@ export const MarkdownEditor = ({
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const [formattingState, formattingObserver] = useFormattingState();
+  const toolbarState = useEditorToolbarState({ viewMode });
+  const formattingObserver = useFormattingState(toolbarState);
   const { hasAttention } = useAttention(id);
 
   // Restore last selection and scroll point.
@@ -90,7 +92,7 @@ export const MarkdownEditor = ({
   );
 
   // TODO(Zan): Move these into thread plugin as well?
-  const [commentsState, commentObserver] = useCommentState();
+  const commentObserver = useCommentState(toolbarState);
   const onCommentClick = useCallback(async () => {
     await dispatch(createIntent(NavigationAction.Open, { activeParts: { complementary: 'comments' } }));
     await dispatch(createIntent(LayoutAction.SetLayout, { element: 'complementary', state: true }));
@@ -177,8 +179,7 @@ export const MarkdownEditor = ({
           <ElevationProvider elevation='positioned'>
             <EditorToolbar
               classNames={[textBlockWidth, !hasAttention && 'opacity-20']}
-              state={formattingState ? { ...formattingState, ...commentsState } : {}}
-              mode={viewMode ?? 'source'}
+              state={toolbarState}
               onAction={handleAction}
             />
           </ElevationProvider>

@@ -18,15 +18,15 @@ import { type EditorToolbarActionGraphProps, editorToolbarGap, type EditorToolba
 //
 // Root
 //
-// TODO(thure): Make `state` a live object derived from EditorView et al, since it is created in this package.
-const useEditorToolbarActionGraph = ({ state, mode }: EditorToolbarActionGraphProps) => {
+// TODO(thure): Derive actions from the reactive state
+const useEditorToolbarActionGraph = ({ state }: EditorToolbarActionGraphProps) => {
   const [graph] = useState(new Graph());
   const headings = useHeadings(graph, state);
   const formatting = useFormatting(graph, state);
   const list = useLists(graph, state);
   const block = useBlocks(graph, state);
   const comment = useComment(graph, state);
-  const viewMode = useViewModes(graph, mode);
+  const viewMode = useViewModes(graph, state);
 
   const actions = useMemo(() => [headings, formatting, list, block, editorToolbarGap, comment, viewMode], []);
 
