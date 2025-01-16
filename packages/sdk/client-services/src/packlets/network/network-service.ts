@@ -3,13 +3,16 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf';
-import { type SignalManager } from '@dxos/messaging';
+import { type SwarmEvent, type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
 import {
+  type SubscribeSwarmEventsRequest,
   type NetworkService,
   type NetworkStatus,
   type UpdateConfigRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
+import { type Peer } from '@dxos/protocols/proto/dxos/edge/messenger';
+import { type LeaveRequest, type JoinRequest, type Message } from '@dxos/protocols/proto/dxos/edge/signal';
 
 export class NetworkServiceImpl implements NetworkService {
   constructor(
@@ -40,5 +43,40 @@ export class NetworkServiceImpl implements NetworkService {
 
   async updateConfig(request: UpdateConfigRequest) {
     await this.networkManager.setConnectionState(request.swarm);
+  }
+
+  async joinSwarm(request: JoinRequest): Promise<void> {
+    return this.signalManager.join(request);
+  }
+
+  async leaveSwarm(request: LeaveRequest): Promise<void> {
+    return this.signalManager.leave(request);
+  }
+
+  subscribeSwarmEvents(request: SubscribeSwarmEventsRequest): Stream<SwarmEvent> {
+    return new Stream<SwarmEvent>(({ next }) => {
+      const unsubscribe = this.signalManager.swarmEvent.on((event) => {
+        if (event.topic === request.topic) {
+          next(event);
+        }
+      });
+      return unsubscribe;
+    });
+  }
+
+  async sendMessage(message: Message): Promise<void> {
+    return this.signalManager.sendMessage(message);
+  }
+
+  subscribeMessages(peer: Peer): Stream<Message> {
+    return new Stream<Message>(({ next }) => {
+      const unsubscribe = this.signalManager.onMessage.on((message) => {
+        if (message.recipient.peerKey === peer.peerKey) {
+          next(message);
+        }
+      });
+
+      return unsubscribe;
+    });
   }
 }
