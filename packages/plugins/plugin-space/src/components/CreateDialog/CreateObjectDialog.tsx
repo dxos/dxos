@@ -5,7 +5,7 @@
 import { pipe } from 'effect';
 import React, { useCallback, useRef } from 'react';
 
-import { chain, createIntent, type MetadataResolver, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
+import { chain, createIntent, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
 import {
   getSpace,
@@ -24,7 +24,7 @@ import { CollectionType, SpaceAction } from '../../types';
 export const CREATE_OBJECT_DIALOG = `${SPACE_PLUGIN}/CreateObjectDialog`;
 
 export type CreateObjectDialogProps = Pick<CreateObjectPanelProps, 'schemas' | 'target' | 'typename' | 'name'> & {
-  resolve?: MetadataResolver;
+  resolve?: (typename: string) => Record<string, any>;
   shouldNavigate?: (object: ReactiveObject<any>) => boolean;
 };
 

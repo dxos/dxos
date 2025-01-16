@@ -3,7 +3,7 @@
 //
 
 import { Ref, ObjectId, S, TypedObject } from '@dxos/echo-schema';
-import { ThreadType } from '@dxos/plugin-space';
+import { ThreadType } from '@dxos/plugin-space/types';
 import { ViewType } from '@dxos/schema';
 
 export const TableSchema = S.Struct({

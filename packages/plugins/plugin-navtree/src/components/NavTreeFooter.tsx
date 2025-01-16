@@ -9,10 +9,9 @@ import React from 'react';
 import {
   type LayoutPart,
   SettingsAction,
-  parseNavigationPlugin,
-  useResolvePlugin,
   useIntentDispatcher,
   createIntent,
+  usePluginManager,
 } from '@dxos/app-framework';
 import { useConfig } from '@dxos/react-client';
 import {
@@ -44,7 +43,7 @@ export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
   const { navigationSidebarOpen } = useSidebars(NAVTREE_PLUGIN);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};
-  const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
+  const manager = usePluginManager();
   const [_, v] = version?.match(VERSION_REGEX) ?? [];
 
   const releaseUrl =
@@ -142,7 +141,7 @@ export const NavTreeFooter = (props: { layoutPart?: LayoutPart }) => {
       </Tooltip.Root>
 
       {/* NOTE(thure): Unpinning from the NavTree’s default position in Deck is temporarily disabled. */}
-      {navigationPlugin?.meta.id === 'dxos.org/plugin/deck' && (
+      {manager.enabled.includes('dxos.org/plugin/deck') && (
         <LayoutControls
           variant='hide-disabled'
           capabilities={{

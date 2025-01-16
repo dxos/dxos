@@ -6,7 +6,7 @@ import { type PluginMeta } from '@dxos/app-framework';
 
 export const MARKDOWN_PLUGIN = 'dxos.org/plugin/markdown';
 
-export default {
+export const meta = {
   id: MARKDOWN_PLUGIN,
   name: 'Markdown',
   description: 'Text editor supporting extended Markdown.',

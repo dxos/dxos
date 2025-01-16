@@ -2,15 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import type {
-  IntentResolverProvides,
-  MetadataRecordsProvides,
-  SurfaceProvides,
-  TranslationsProvides,
-} from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
 import { isReactiveObject } from '@dxos/live-object';
-import { type SchemaProvides } from '@dxos/plugin-space';
 
 import { GameType } from './schema';
 import { CHESS_PLUGIN } from '../meta';
@@ -27,14 +20,6 @@ export namespace ChessAction {
     }),
   }) {}
 }
-
-export type ChessProvides = {};
-
-export type ChessPluginProvides = SurfaceProvides &
-  IntentResolverProvides &
-  MetadataRecordsProvides &
-  TranslationsProvides &
-  SchemaProvides;
 
 export const isObject = (object: unknown): object is GameType => {
   return isReactiveObject(object) && object instanceof GameType;

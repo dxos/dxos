@@ -3,7 +3,7 @@
 //
 
 import { Ref, S, TypedObject } from '@dxos/echo-schema';
-import { ThreadType } from '@dxos/plugin-space';
+import { ThreadType } from '@dxos/plugin-space/types';
 
 // TODO(burdon): Move defs to plugin.
 export const EXCALIDRAW_SCHEMA = 'excalidraw.com/2';

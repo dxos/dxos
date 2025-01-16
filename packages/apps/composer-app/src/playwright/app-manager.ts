@@ -41,7 +41,7 @@ export class AppManager {
     const { page } = await setupPage(this._browser, { url: INITIAL_URL });
     this.page = page;
 
-    await this.isAuthenticated();
+    await this.isAuthenticated({ timeout: 10_000 });
     await this.confirmRecoveryCode();
 
     this.shell = new ShellManager(this.page, this._inIframe);
