@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type PluginDefinition, createSurface, createIntent, createResolver } from '@dxos/app-framework';
+import { type PluginDefinition, createSurface, createIntent, createResolver, resolvePlugin } from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { create } from '@dxos/live-object';
@@ -18,6 +18,7 @@ import meta, { TABLE_PLUGIN } from './meta';
 import { serializer } from './serializer';
 import translations from './translations';
 import { TableAction, type TablePluginProvides } from './types';
+import { parseClientPlugin } from '@dxos/plugin-client/types';
 
 export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
   return {
@@ -26,7 +27,8 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
       metadata: {
         records: {
           [TableType.typename]: {
-            creationSchema: S.Struct({ schema: S.optional(S.String) }).pipe(S.mutable),
+            // TODO(ZaymonFC): This should be shared with the create schema!
+            creationSchema: S.Struct({ initialSchema: S.optional(S.String) }).pipe(S.mutable),
             createObject: (props: { name?: string; schema?: string; space: Space }) =>
               createIntent(TableAction.Create, props),
             label: (object: any) => (object instanceof TableType ? object.name : undefined),
@@ -60,11 +62,18 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
         ],
       },
       intent: {
-        resolvers: () => [
-          createResolver(TableAction.Create, async ({ space, name, schema }) => {
-            console.log('TableAction.Create', { space, name, schema });
+        resolvers: ({ plugins }) => [
+          createResolver(TableAction.Create, async ({ space, name, creationData }) => {
+            // TODO(ZaymonFC): Remove this if we can get the system schema another way.
+            const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
+            const client = clientPlugin?.provides.client;
+            if (!client) {
+              throw new Error('Client not found');
+            }
             const table = create(TableType, { name, threads: [] });
-            await initializeTable({ space, table });
+
+            // TODO: This should take the initial schema.
+            await initializeTable({ client, space, table, initialSchema: creationData?.initialSchema });
             return { data: { object: table } };
           }),
           createResolver(TableAction.DeleteColumn, ({ table, fieldId, deletionData }, undo) => {
