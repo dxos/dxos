@@ -1,5 +1,5 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import {
@@ -11,6 +11,9 @@ import {
   Capabilities,
   oneOf,
 } from '@dxos/app-framework';
+import React from 'react';
+
+import { type PluginDefinition, createSurface, createIntent, createResolver, resolvePlugin } from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { type Space } from '@dxos/react-client/echo';
@@ -39,8 +42,10 @@ export const TablePlugin = () =>
         contributes(Capabilities.Metadata, {
           id: TableType.typename,
           metadata: {
-            creationSchema: S.Struct({ typename: S.optional(S.String) }).pipe(S.mutable),
-            createObject: (props: { name?: string; space: Space }) => createIntent(TableAction.Create, props),
+            // TODO(ZaymonFC): This should be shared with the create schema!
+            creationSchema: S.Struct({ initialSchema: S.optional(S.String) }).pipe(S.mutable),
+            createObject: (props: { name?: string; schema?: string; space: Space }) =>
+              createIntent(TableAction.Create, props),
             label: (object: any) => (object instanceof TableType ? object.name : undefined),
             placeholder: ['object placeholder', { ns: TABLE_PLUGIN }],
             icon: 'ph--table--regular',

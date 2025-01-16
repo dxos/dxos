@@ -16,6 +16,7 @@ export namespace TableAction {
     input: S.Struct({
       space: SpaceSchema,
       name: S.optional(S.String),
+      creationData: S.optional(S.Struct({ initialSchema: S.String })),
     }),
     output: S.Struct({
       object: TableType,

@@ -9,7 +9,6 @@ import { type SpaceId, type Space, isSpace } from '@dxos/react-client/echo';
 import { Icon, IconButton, Input, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Form, type InputComponent, InputHeader, SelectInput } from '@dxos/react-ui-form';
 import { SearchList } from '@dxos/react-ui-searchlist';
-import { type PropertyType } from '@dxos/schema';
 import { nonNullable, type MaybePromise } from '@dxos/util';
 
 import { SPACE_PLUGIN } from '../../meta';
@@ -28,6 +27,7 @@ export type CreateObjectPanelProps = {
     schema: TypedObject;
     target: Space | CollectionType;
     name?: string;
+    creationData?: Record<string, any>;
   }) => MaybePromise<void>;
 };
 
@@ -51,12 +51,11 @@ export const CreateObjectPanel = ({
   const handleClearTarget = useCallback(() => setTarget(undefined), []);
 
   const handleCreateObject = useCallback(
-    async ({ name }: { name?: string }) => {
+    async ({ name, ...creationData }: { name?: string } & Record<string, any>) => {
       if (!schema || !target) {
         return;
       }
-
-      await onCreateObject?.({ schema, target, name });
+      await onCreateObject?.({ schema, target, name, creationData });
     },
     [onCreateObject, schema, target],
   );
@@ -128,10 +127,10 @@ export const CreateObjectPanel = ({
     }
 
     const Custom: Partial<Record<string, InputComponent<any>>> = {
-      schema: (props) => (
+      initialSchema: (props) => (
         <SelectInput<any>
           {...props}
-          property={props.property as keyof PropertyType}
+          property={props.property as any}
           options={schemas.map((schema) => ({ value: schema.typename }))}
         />
       ),
