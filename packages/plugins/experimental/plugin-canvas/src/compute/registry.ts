@@ -25,6 +25,8 @@ import {
   viewShape,
 } from './shapes';
 import type { ShapeDef } from '../components';
+import { appendShape } from './shapes/Append';
+import { constantShape } from './shapes/Constant';
 
 /**
  * Order used by toolbar.
@@ -50,4 +52,6 @@ export const computeShapes: ShapeDef<any>[] = [
   beaconShape,
   counterShape,
   viewShape,
+  appendShape,
+  constantShape,
 ];

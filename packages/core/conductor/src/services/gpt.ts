@@ -4,7 +4,7 @@
 
 import { Context } from 'effect';
 
-import { LLMTool, Message, type ResultStreamEvent } from '@dxos/assistant';
+import { LLMTool, Message, type AIServiceClient, type ResultStreamEvent } from '@dxos/assistant';
 import { S } from '@dxos/echo-schema';
 
 import type { ComputeEffect, ValueBag } from '../types';
@@ -36,5 +36,6 @@ export class GptService extends Context.Tag('GptService')<
   GptService,
   {
     readonly invoke: (input: ValueBag<GptInput>) => ComputeEffect<ValueBag<GptOutput>>;
+    readonly getAiServiceClient?: () => AIServiceClient;
   }
 >() {}

@@ -10,6 +10,7 @@ import { Frame } from './Frame';
 import { useEditorContext } from '../../hooks';
 import { PathComponent } from '../../shapes';
 import { isPath, isPolygon, type Shape } from '../../types';
+import { raise } from '@dxos/debug';
 
 export const DEFS_ID = 'dx-defs';
 export const MARKER_PREFIX = 'dx-marker';
@@ -57,7 +58,8 @@ export const ShapeComponent = (props: ShapeComponentProps<any>) => {
   const { registry } = useEditorContext();
   const { shape } = props;
   if (isPolygon(shape)) {
-    const { component, resizeable } = registry.getShapeDef(shape.type)!;
+    const { component, resizeable } =
+      registry.getShapeDef(shape.type) ?? raise(new Error(`ShapeDef not found for ${shape.type}`));
     return <Frame {...props} resizeable={resizeable} Component={component} />;
   }
   if (isPath(shape)) {

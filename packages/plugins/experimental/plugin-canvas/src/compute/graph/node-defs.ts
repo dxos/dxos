@@ -4,9 +4,11 @@
 
 import { Effect } from 'effect';
 
+import { Message } from '@dxos/assistant';
 import {
   type ComputeNode,
   type Executable,
+  GptService,
   defineComputeNode,
   gptNode,
   makeValueBag,
@@ -18,9 +20,10 @@ import { type GraphNode } from '@dxos/graph';
 import { failedInvariant, invariant } from '@dxos/invariant';
 
 import { type ComputeShape } from '../shapes';
-import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './types';
-import { Message } from '@dxos/assistant';
 import type { ConstantShape } from '../shapes/Constant';
+import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './types';
+import { SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 type NodeType =
   | 'switch'
@@ -35,7 +38,9 @@ type NodeType =
   | 'chat'
   | 'view'
   | 'thread'
-  | 'constant';
+  | 'constant'
+  | 'list'
+  | 'append';
 
 // TODO(burdon): Just pass in type? Or can the shape specialize the node?
 export const createComputeNode = (shape: GraphNode<ComputeShape>): GraphNode<ComputeNode> => {
@@ -78,6 +83,8 @@ const nodeFactory: Record<NodeType, (shape: GraphNode<ComputeShape>) => GraphNod
   ['view' as const]: () => createNode('view'),
   ['thread' as const]: () => createNode('thread'),
   ['constant' as const]: (shape) => createNode('constant', { constant: (shape.data as ConstantShape).constant }),
+  ['list' as const]: () => createNode('list'),
+  ['append' as const]: () => createNode('append'),
 };
 
 export const resolveComputeNode = async (node: ComputeNode): Promise<Executable> => {
@@ -85,6 +92,11 @@ export const resolveComputeNode = async (node: ComputeNode): Promise<Executable>
   invariant(impl, `Unknown node type: ${node.type}`);
   return impl;
 };
+
+export const ListInput = S.Struct({ [DEFAULT_INPUT]: ObjectId });
+export const ListOutput = S.Struct({ id: ObjectId, items: S.Array(Message) });
+
+export const AppendInput = S.Struct({ id: ObjectId, items: S.Array(Message) });
 
 const nodeDefs: Record<NodeType, Executable> = {
   // Controls.
@@ -162,4 +174,52 @@ const nodeDefs: Record<NodeType, Executable> = {
     output: S.Struct({ [DEFAULT_OUTPUT]: S.String }),
     exec: (_inputs, node) => Effect.succeed(makeValueBag({ [DEFAULT_OUTPUT]: node!.constant })),
   }),
+  ['list' as const]: defineComputeNode({
+    input: ListInput,
+    output: ListOutput,
+    exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: id }) =>
+      Effect.gen(function* () {
+        const gptService = yield* GptService;
+        const aiClient = (gptService.getAiServiceClient ?? failedInvariant())();
+
+        const messages = yield* Effect.promise(() => aiClient.getMessagesInThread(FAKE_SPACE_ID, id));
+
+        log.info('getMessagesInThread', { id, messages });
+
+        return {
+          id,
+          items: messages,
+        };
+      }),
+    ),
+  }),
+  ['append' as const]: defineComputeNode({
+    input: AppendInput,
+    output: S.Struct({}),
+    exec: synchronizedComputeFunction(({ id, items }) =>
+      Effect.gen(function* () {
+        const gptService = yield* GptService;
+        const aiClient = (gptService.getAiServiceClient ?? failedInvariant())();
+
+        invariant(ObjectId.isValid(id), 'Invalid thread id');
+
+        const toInsert = items.map(
+          (message): Message => ({
+            ...message,
+            spaceId: FAKE_SPACE_ID,
+            threadId: id as any, // TODO(dmaretskyi): Assistant has its own object id definition.
+            foreignId: undefined,
+          }),
+        );
+
+        log.info('insertMessages', { id, toInsert });
+        yield* Effect.promise(() => aiClient.insertMessages(toInsert));
+
+        return {};
+      }),
+    ),
+  }),
 };
+
+// TODO(dmaretskyi): Have to hardcode this since ai-service requires spaceId.
+const FAKE_SPACE_ID = SpaceId.random();

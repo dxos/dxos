@@ -95,7 +95,9 @@ export class StateMachine extends Resource {
   /**
    * Runtime state of the execution graph.
    */
-  private _runtimeState: Record<string, Record<string, RuntimeValue>> = {};
+  private _runtimeStateInputs: Record<string, Record<string, RuntimeValue>> = {};
+
+  private _runtimeStateOutputs: Record<string, Record<string, RuntimeValue>> = {};
 
   // TODO(burdon): Remove? Make state reactive?
   public readonly update = new Event();
@@ -115,7 +117,7 @@ export class StateMachine extends Resource {
   toJSON() {
     return {
       graph: this._graph,
-      state: this._runtimeState,
+      state: this._runtimeStateInputs,
     };
   }
 
@@ -132,7 +134,7 @@ export class StateMachine extends Resource {
   }
 
   get executedState() {
-    return this._runtimeState;
+    return this._runtimeStateInputs;
   }
 
   addNode(node: GraphNode<ComputeNode>) {
@@ -148,11 +150,11 @@ export class StateMachine extends Resource {
   }
 
   getInputs(nodeId: string) {
-    return this._runtimeState[nodeId] ?? {};
+    return this._runtimeStateInputs[nodeId] ?? {};
   }
 
   getOutputs(nodeId: string) {
-    return {};
+    return this._runtimeStateOutputs[nodeId] ?? {};
   }
 
   @log.method()
@@ -177,7 +179,8 @@ export class StateMachine extends Resource {
   @synchronized
   async exec() {
     console.log('begin execution');
-    this._runtimeState = {};
+    this._runtimeStateInputs = {};
+    this._runtimeStateOutputs = {};
     const executor = this._executor.clone();
     await executor.load(this._graph);
 
@@ -197,9 +200,10 @@ export class StateMachine extends Resource {
         // TODO(burdon): Return map?
         const tasks: Effect.Effect<unknown, any, never>[] = [];
         for (const node of allAffectedNodes) {
+          const executable = yield* Effect.promise(() => resolveComputeNode(this._graph.getNode(node)));
           console.log('will compute inputs', node);
           // TODO(dmaretskyi): Check if the node has a compute function and run computeOutputs if it does.
-          const effect = executor.computeInputs(node).pipe(
+          const effect = (executable.exec ? executor.computeOutputs(node) : executor.computeInputs(node)).pipe(
             Effect.withSpan('runGraph'),
             Effect.provide(services),
             Scope.extend(scope),
@@ -227,11 +231,13 @@ export class StateMachine extends Resource {
         log.info('log', { event });
         switch (event.type) {
           case 'compute-input':
-            this._runtimeState[event.nodeId] ??= {};
-            this._runtimeState[event.nodeId][event.property] = { type: 'executed', value: event.value };
+            this._runtimeStateInputs[event.nodeId] ??= {};
+            this._runtimeStateInputs[event.nodeId][event.property] = { type: 'executed', value: event.value };
             break;
 
           case 'compute-output':
+            this._runtimeStateOutputs[event.nodeId] ??= {};
+            this._runtimeStateOutputs[event.nodeId][event.property] = { type: 'executed', value: event.value };
             // TODO(burdon): Only fire if changed?
             this.output.emit(event);
             break;

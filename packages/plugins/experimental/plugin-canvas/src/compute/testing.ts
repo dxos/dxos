@@ -26,6 +26,8 @@ import {
 import { type ComputeShape } from './shapes';
 import { pointMultiply, pointsToRect, rectToPoints } from '../layout';
 import type { Connection, Shape } from '../types';
+import { createConstant } from './shapes/Constant';
+import { createAppend } from './shapes/Append';
 
 // TODO(burdon): LayoutBuilder.
 const layout = (rect: Point & Partial<Dimension>, snap = 32): { center: Point; size?: Dimension } => {
@@ -123,8 +125,17 @@ export const createTest3 = ({
         ]
       : []),
     createGpt({ id: 'b', ...layout({ x: 0, y: 0 }) }),
-    // createThread({ id: 'c', ...layout({ x: 13, y: -4, width: 10, height: 24 }) }),
-    // createCounter({ id: 'd', ...layout({ x: 5, y: 7 }) }),
+    ...(history
+      ? [
+          createConstant({
+            id: 'h',
+            ...layout({ x: -18, y: 14, width: 8, height: 12 }),
+            constant: ObjectId.random(),
+          }),
+        ]
+      : []),
+    ...(history ? [createList({ id: 'k', ...layout({ x: -8, y: 14, width: 8, height: 12 }) })] : []),
+    ...(history ? [createAppend({ id: 'l', ...layout({ x: 20, y: 14, width: 8, height: 12 }) })] : []),
     ...(viewText ? [createView({ id: 'g', ...layout({ x: 16, y: 0, width: 12, height: 12 }) })] : []),
     ...(db ? [createDatabase({ id: 'e', ...layout({ x: -10, y: 4 }) })] : []),
     ...(textToImage ? [createTextToImage({ id: 'j', ...layout({ x: -10, y: 7 }) })] : []),
@@ -137,7 +148,10 @@ export const createTest3 = ({
     // { source: 'b', target: 'c', data: { output: 'result', input: DEFAULT_INPUT } },
     // { source: 'b', target: 'd', data: { output: 'tokens', input: DEFAULT_INPUT } },
     ...(viewText ? [{ source: 'b', target: 'g', data: { output: 'text', input: DEFAULT_INPUT } }] : []),
-    ...(history ? [{ source: 'c', target: 'b', data: { output: DEFAULT_OUTPUT, input: 'history' } }] : []),
+    ...(history ? [{ source: 'h', target: 'k', data: { output: DEFAULT_OUTPUT, input: DEFAULT_INPUT } }] : []),
+    ...(history ? [{ source: 'k', target: 'b', data: { output: 'items', input: 'history' } }] : []),
+    ...(history ? [{ source: 'k', target: 'l', data: { output: 'id', input: 'id' } }] : []),
+    ...(history ? [{ source: 'b', target: 'l', data: { output: 'messages', input: 'items' } }] : []),
     ...(db ? [{ source: 'e', target: 'b', data: { input: 'tools', output: DEFAULT_OUTPUT } }] : []),
     ...(textToImage ? [{ source: 'j', target: 'b', data: { input: 'tools', output: DEFAULT_OUTPUT } }] : []),
     ...(cot ? [{ source: 'b', target: 'f', data: { output: 'cot', input: DEFAULT_INPUT } }] : []),
