@@ -63,7 +63,7 @@ export const createEditorActionGroup = (
 export const editorToolbarGap = {
   id: 'gap',
   type: '@dxos/react-ui-toolbar/separator',
-  properties: {},
+  properties: { variant: 'gap' },
   data: undefined as never,
 } satisfies ToolbarSeparatorNode;
 

@@ -14,11 +14,12 @@ import { createDocAccessor, createObject, create } from '@dxos/react-client/echo
 import { Main } from '@dxos/react-ui';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { editorWithToolbarLayout, automerge } from '@dxos/react-ui-editor';
+import { editorWithToolbarLayout, automerge, translations as editorTranslations } from '@dxos/react-ui-editor';
 import { topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
+import translations from '../translations';
 
 const content = Array.from({ length: 100 })
   .map((_, i) => `Line ${i + 1}`)
@@ -75,7 +76,7 @@ const meta: Meta<typeof MarkdownEditor> = {
   component: MarkdownEditor,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ tooltips: true }), withAttention, withPluginManager()],
-  parameters: { layout: 'fullscreen' },
+  parameters: { layout: 'fullscreen', translations: [...translations, ...editorTranslations] },
 };
 
 export default meta;
