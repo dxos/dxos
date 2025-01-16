@@ -5705,6 +5705,9 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../../plugin-graph
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../../core/protocols
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
@@ -5717,9 +5720,6 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
-      partysocket:
-        specifier: ^1.0.1
-        version: 1.0.1
       react-flip-toolkit:
         specifier: ^7.2.4
         version: 7.2.4(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
