@@ -5,11 +5,11 @@
 import * as d3 from 'd3';
 import { type Selection } from 'd3';
 
-import type { BaseGraphEdge, GraphEdge, GraphModel, GraphNode } from '@dxos/graph';
+import type { BaseGraphEdge, GraphEdge } from '@dxos/graph';
 import { isNotFalsy } from '@dxos/util';
 
 import { DATA_SHAPE_ID, getShapeElements } from '../components';
-import type { Shape } from '../types';
+import type { CanvasGraphModel } from '../types';
 
 /**
  * Retrieve paths and edges.
@@ -18,7 +18,7 @@ import type { Shape } from '../types';
  * @param filter
  */
 export const getPaths = (
-  graph: GraphModel<GraphNode<Shape>>,
+  graph: CanvasGraphModel,
   root: HTMLElement,
   filter: { source?: string; target?: string },
 ): { edge: BaseGraphEdge; el: SVGPathElement }[] => {
@@ -58,7 +58,7 @@ export const defaultBulletOptions: BulletOptions = {
 export const fireBullet = (
   root: HTMLElement,
   g: SVGGElement,
-  graph: GraphModel<GraphNode<Shape>>,
+  graph: CanvasGraphModel,
   edge: Partial<GraphEdge>,
   propagate = false,
 ) => {

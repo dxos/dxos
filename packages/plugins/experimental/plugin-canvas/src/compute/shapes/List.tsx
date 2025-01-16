@@ -2,19 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { Fragment, useEffect, useRef, useState } from 'react';
+import React, { Fragment } from 'react';
 
 import { S } from '@dxos/echo-schema';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { createFunctionAnchors } from './Function';
-import { Box } from './components';
-import { ComputeShape, createInputSchema, createOutputSchema, type CreateShapeProps } from './defs';
+import { Box } from './common';
+import { ComputeShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
-import { GptMessage, ListInput, ListOutput } from '../graph';
+import { ListInput, ListOutput } from '../graph';
 import { useComputeNodeState } from '../hooks';
-import type { Message } from '@dxos/assistant';
 
 export const ListShape = S.extend(
   ComputeShape,

@@ -7,7 +7,7 @@ import React from 'react';
 import { S } from '@dxos/echo-schema';
 
 import { createFunctionAnchors } from './Function';
-import { Box } from './components';
+import { Box } from './common';
 import { ComputeShape, createInputSchema, createOutputSchema, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { GptMessage } from '../graph';

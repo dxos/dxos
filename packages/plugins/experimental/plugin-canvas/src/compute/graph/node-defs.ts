@@ -163,6 +163,7 @@ const nodeDefs: Record<NodeType, Executable> = {
   ['view' as const]: defineComputeNode({
     input: S.Struct({ [DEFAULT_INPUT]: S.Any }),
     output: S.Struct({ [DEFAULT_OUTPUT]: S.Any }),
+    exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: input }) => Effect.succeed({ [DEFAULT_OUTPUT]: input })),
   }),
 
   // TODO(dmaretskyi): Consider moving gpt out of conductor.

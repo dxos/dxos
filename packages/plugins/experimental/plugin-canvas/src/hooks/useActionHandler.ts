@@ -187,7 +187,7 @@ export const useActionHandler = () => {
           }
           invariant(shape);
           const node: GraphNode<Shape> = { id: shape.id, data: shape };
-          graphMonitor?.onCreate(node);
+          graphMonitor?.onCreate({ graph, node });
           graph.addNode(node);
           selection.setSelected([shape.id]);
           return true;
@@ -197,7 +197,7 @@ export const useActionHandler = () => {
           const id = createId();
           const edge: GraphEdge = { id, source, target, data: connection };
           graph.addEdge(edge);
-          graphMonitor?.onLink(edge);
+          graphMonitor?.onLink({ graph, edge });
           selection.setSelected([id]);
           return true;
         }

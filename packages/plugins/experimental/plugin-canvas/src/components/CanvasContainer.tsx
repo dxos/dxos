@@ -45,7 +45,7 @@ export const CanvasContainer = ({ canvas, role }: { canvas: CanvasBoardType; rol
     };
   }, [machine]);
 
-  const graphMonitor = useGraphMonitor(machine);
+  const graphMonitor = useGraphMonitor(machine.graph);
   const registry = useMemo(() => new ShapeRegistry(computeShapes), []);
 
   // TODO(burdon): Allow configuration of UI/Toolbar.

@@ -7,10 +7,9 @@ import '@dxos-theme';
 import type { Meta, StoryObj } from '@storybook/react';
 import React, { type PropsWithChildren, useEffect, useRef, useState } from 'react';
 
-import { type ComputeNode, type ComputeEdge } from '@dxos/conductor';
 import { type ReactiveEchoObject } from '@dxos/echo-db';
 import { S, getSchemaTypename, getTypename } from '@dxos/echo-schema';
-import { createGraph, type GraphEdge, type GraphModel, type GraphNode } from '@dxos/graph';
+import { createGraph } from '@dxos/graph';
 import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
@@ -22,7 +21,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { Editor, type EditorController, type EditorRootProps } from './Editor';
 import { doLayout } from '../../layout';
 import { useSelection } from '../../testing';
-import { RectangleShape, type Shape } from '../../types';
+import { type CanvasGraphModel, RectangleShape } from '../../types';
 import { DragTest } from '../Canvas/DragTest';
 import { Container } from '../Container';
 
@@ -37,13 +36,13 @@ type RenderProps = EditorRootProps &
   PropsWithChildren<{
     init?: boolean;
     sidebar?: 'json' | 'selected' | 'state-machine';
-    computeGraph?: GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;
+    computeGraph?: CanvasGraphModel;
   }>;
 
 const Render = ({ id = 'test', init, sidebar, children, ...props }: RenderProps) => {
   const editorRef = useRef<EditorController>(null);
   const { space } = useClientProvider();
-  const [graph, setGraph] = useState<GraphModel<GraphNode<Shape>> | undefined>();
+  const [graph, setGraph] = useState<CanvasGraphModel | undefined>();
 
   // Layout.
   useEffect(() => {

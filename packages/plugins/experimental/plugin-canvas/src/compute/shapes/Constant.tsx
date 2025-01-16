@@ -2,21 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useRef, useState } from 'react';
+import React from 'react';
 
 import { S } from '@dxos/echo-schema';
 
-import { Box } from './components';
+import { Box } from './common';
 import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
-import {
-  type ShapeComponentProps,
-  type ShapeDef,
-  TextBox,
-  type TextBoxControl,
-  type TextBoxProps,
-} from '../../components';
+import { type ShapeComponentProps, type ShapeDef, TextBox, type TextBoxProps } from '../../components';
 import { createAnchorMap } from '../../components';
-import { DEFAULT_OUTPUT } from '../graph';
 import { useComputeNodeState } from '../hooks';
 
 //

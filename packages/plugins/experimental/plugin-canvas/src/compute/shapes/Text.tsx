@@ -6,7 +6,7 @@ import React, { useRef, useState } from 'react';
 
 import { S } from '@dxos/echo-schema';
 
-import { Box } from './components';
+import { Box } from './common';
 import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
 import {
   type ShapeComponentProps,
@@ -60,7 +60,6 @@ export const TextComponent = ({ shape, title, chat, ...props }: TextComponentPro
         setReset({});
       }
 
-      console.log(shape.id, '==', value);
       inputRef.current?.focus();
     }
   };

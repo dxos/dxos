@@ -12,8 +12,10 @@ import { type Dimension, type Point } from '@dxos/react-ui-canvas';
 import { createComputeNode, DEFAULT_INPUT, DEFAULT_OUTPUT, StateMachine, type Services } from './graph';
 import {
   createAnd,
+  createAppend,
   createBeacon,
   createChat,
+  createConstant,
   createDatabase,
   createGpt,
   createList,
@@ -25,9 +27,7 @@ import {
 } from './shapes';
 import { type ComputeShape } from './shapes';
 import { pointMultiply, pointsToRect, rectToPoints } from '../layout';
-import type { Connection, Shape } from '../types';
-import { createConstant } from './shapes/Constant';
-import { createAppend } from './shapes/Append';
+import { createCanvasGraphModel, type Connection, type Shape } from '../types';
 
 // TODO(burdon): LayoutBuilder.
 const layout = (rect: Point & Partial<Dimension>, snap = 32): { center: Point; size?: Dimension } => {
@@ -86,7 +86,7 @@ export const createTest2 = () => {
     { source: 'c', target: 'd' },
   ];
 
-  return new GraphModel<GraphNode<Shape>, GraphEdge<Connection>>({
+  return createCanvasGraphModel({
     nodes: nodes.map((data) => ({ id: data.id, data })),
     edges: edges.map(({ source, target, data }) => ({
       id: createEdgeId({ source, target }),
@@ -135,7 +135,7 @@ export const createTest3 = ({
         ]
       : []),
     ...(history ? [createList({ id: 'k', ...layout({ x: -8, y: 14, width: 8, height: 12 }) })] : []),
-    ...(history ? [createAppend({ id: 'l', ...layout({ x: 20, y: 14, width: 8, height: 12 }) })] : []),
+    ...(history ? [createAppend({ id: 'l', ...layout({ x: 20, y: 14 }) })] : []),
     ...(viewText ? [createView({ id: 'g', ...layout({ x: 16, y: 0, width: 12, height: 12 }) })] : []),
     ...(db ? [createDatabase({ id: 'e', ...layout({ x: -10, y: 4 }) })] : []),
     ...(textToImage ? [createTextToImage({ id: 'j', ...layout({ x: -10, y: 7 }) })] : []),
