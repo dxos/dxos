@@ -7809,6 +7809,9 @@ importers:
         specifier: ^3.12.1
         version: 3.12.4
     devDependencies:
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -10805,6 +10808,9 @@ importers:
       '@codemirror/view':
         specifier: ^6.34.1
         version: 6.34.1
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../../sdk/app-graph
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -10838,6 +10844,9 @@ importers:
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../primitives/react-hooks
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../react-ui-menu
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
