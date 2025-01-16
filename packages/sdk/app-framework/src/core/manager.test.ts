@@ -286,7 +286,7 @@ describe('PluginManager', () => {
       defineModule({
         id: 'dxos.org/test/count',
         activatesOn: Events.Startup,
-        dependsOn: [CountEvent],
+        activatesBefore: [CountEvent],
         activate: (context) => {
           computeTotal(context);
           return contributes(Total, state);
@@ -395,7 +395,7 @@ describe('PluginManager', () => {
       defineModule({
         id,
         activatesOn: Events.Startup,
-        triggers: [stateEvent],
+        activatesAfter: [stateEvent],
         activate: () => contributes(Number, create({ number: 1 })),
       }),
       defineModule({

@@ -324,7 +324,9 @@ export class PluginManager {
         .map(eventKey)
         .filter((key) => this._state.eventsFired.includes(key));
       const parentEvents = activationEvents.flatMap((event) => {
-        const modules = this._getActiveModules().filter((module) => module.dependsOn?.map(eventKey).includes(event));
+        const modules = this._getActiveModules().filter((module) =>
+          module.activatesBefore?.map(eventKey).includes(event),
+        );
         return modules.flatMap((module) => getEvents(module.activatesOn)).map(eventKey);
       });
 
@@ -367,7 +369,7 @@ export class PluginManager {
           continue;
         }
 
-        yield* Effect.all(module.dependsOn?.map((event) => self._activate(event)) ?? []);
+        yield* Effect.all(module.activatesBefore?.map((event) => self._activate(event)) ?? []);
 
         const result = yield* self._activateModule(module).pipe(Effect.either);
         if (Either.isLeft(result)) {
@@ -375,7 +377,7 @@ export class PluginManager {
           yield* Effect.fail(result.left);
         }
 
-        yield* Effect.all(module.triggers?.map((event) => self._activate(event)) ?? []);
+        yield* Effect.all(module.activatesAfter?.map((event) => self._activate(event)) ?? []);
       }
 
       if (!self._state.eventsFired.includes(key)) {

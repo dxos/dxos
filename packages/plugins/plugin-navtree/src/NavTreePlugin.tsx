@@ -26,7 +26,7 @@ export const NavTreePlugin = () =>
     defineModule({
       id: `${meta.id}/module/state`,
       activatesOn: allOf(Events.LayoutReady, Events.LocationReady),
-      triggers: [NavTreeEvents.StateReady],
+      activatesAfter: [NavTreeEvents.StateReady],
       activate: State,
     }),
     defineModule({

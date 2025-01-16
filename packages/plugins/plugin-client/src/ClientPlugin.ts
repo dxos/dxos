@@ -26,8 +26,8 @@ export const ClientPlugin = ({
     defineModule({
       id: `${meta.id}/module/client`,
       activatesOn: Events.Startup,
-      dependsOn: [ClientEvents.SetupClient],
-      triggers: [ClientEvents.ClientReady],
+      activatesBefore: [ClientEvents.SetupClient],
+      activatesAfter: [ClientEvents.ClientReady],
       activate: (context) => Client({ ...options, context }),
     }),
     defineModule({

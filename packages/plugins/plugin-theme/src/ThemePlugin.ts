@@ -12,7 +12,7 @@ export const ThemePlugin = (options: ThemePluginOptions) =>
     defineModule({
       id: `${meta.id}/module/react-context`,
       activatesOn: Events.Startup,
-      dependsOn: [Events.SetupTranslations],
+      activatesBefore: [Events.SetupTranslations],
       activate: () => lazy(() => import('./react-context'))(options),
     }),
   ]);

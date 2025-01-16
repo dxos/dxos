@@ -14,7 +14,7 @@ export const AttentionPlugin = () =>
     defineModule({
       id: `${meta.id}/module/attention`,
       activatesOn: Events.Startup,
-      triggers: [AttentionEvents.AttentionReady],
+      activatesAfter: [AttentionEvents.AttentionReady],
       activate: () => {
         const attention = new AttentionManager();
         setupDevtools(attention);

@@ -25,12 +25,12 @@ interface PluginModuleInterface {
    * Plugin is marked as needing reset a plugin activated by a dependent event is removed.
    * Events are automatically activated before activation of the plugin.
    */
-  dependsOn?: ActivationEvent[];
+  activatesBefore?: ActivationEvent[];
 
   /**
    * Events which this plugin triggers upon activation.
    */
-  triggers?: ActivationEvent[];
+  activatesAfter?: ActivationEvent[];
 
   /**
    * Called when the module is activated.
@@ -50,15 +50,15 @@ interface PluginModuleInterface {
 export class PluginModule implements PluginModuleInterface {
   readonly id: PluginModuleInterface['id'];
   readonly activatesOn: PluginModuleInterface['activatesOn'];
-  readonly dependsOn?: PluginModuleInterface['dependsOn'];
-  readonly triggers?: PluginModuleInterface['triggers'];
+  readonly activatesBefore?: PluginModuleInterface['activatesBefore'];
+  readonly activatesAfter?: PluginModuleInterface['activatesAfter'];
   readonly activate: PluginModuleInterface['activate'];
 
   constructor(options: PluginModuleInterface) {
     this.id = options.id;
     this.activatesOn = options.activatesOn;
-    this.dependsOn = options.dependsOn;
-    this.triggers = options.triggers;
+    this.activatesBefore = options.activatesBefore;
+    this.activatesAfter = options.activatesAfter;
     this.activate = options.activate;
   }
 }

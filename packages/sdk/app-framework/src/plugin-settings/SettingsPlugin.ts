@@ -13,8 +13,8 @@ export const SettingsPlugin = () =>
     defineModule({
       id: `${SETTINGS_PLUGIN}/module/store`,
       activatesOn: Events.Startup,
-      dependsOn: [Events.SetupSettings],
-      triggers: [Events.SettingsReady],
+      activatesBefore: [Events.SetupSettings],
+      activatesAfter: [Events.SettingsReady],
       activate: (context) => {
         const allSettings = context.requestCapabilities(Capabilities.Settings);
         const settingsStore = new RootSettingsStore();

@@ -21,8 +21,8 @@ export const GraphPlugin = () =>
     defineModule({
       id: `${meta.id}/module/graph`,
       activatesOn: Events.Startup,
-      dependsOn: [Events.SetupAppGraph],
-      triggers: [Events.AppGraphReady],
+      activatesBefore: [Events.SetupAppGraph],
+      activatesAfter: [Events.AppGraphReady],
       activate: lazy(() => import('./graph')),
     }),
   ]);

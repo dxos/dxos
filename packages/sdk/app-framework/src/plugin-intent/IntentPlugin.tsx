@@ -24,8 +24,8 @@ export const IntentPlugin = () =>
       //   This is fine for now because it's how it worked prior to capabilities api anyways.
       //   In the future, the intent dispatcher should be able to be reset without resetting the entire app.
       activatesOn: Events.Startup,
-      dependsOn: [Events.SetupIntents],
-      triggers: [Events.DispatcherReady],
+      activatesBefore: [Events.SetupIntents],
+      activatesAfter: [Events.DispatcherReady],
       activate: (context) => {
         const state = create<IntentContext>({
           dispatch: defaultEffect,

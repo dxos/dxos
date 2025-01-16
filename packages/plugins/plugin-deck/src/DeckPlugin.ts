@@ -55,13 +55,13 @@ export const DeckPlugin = () =>
     defineModule({
       id: `${meta.id}/module/layout`,
       activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
-      triggers: [Events.LayoutReady],
+      activatesAfter: [Events.LayoutReady],
       activate: LayoutState,
     }),
     defineModule({
       id: `${meta.id}/module/deck`,
       activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
-      triggers: [DeckEvents.StateReady],
+      activatesAfter: [DeckEvents.StateReady],
       activate: DeckState,
     }),
     defineModule({
@@ -97,7 +97,7 @@ export const DeckPlugin = () =>
     defineModule({
       id: `${meta.id}/module/location`,
       activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
-      triggers: [Events.LocationReady],
+      activatesAfter: [Events.LocationReady],
       activate: LocationState,
     }),
     defineModule({
