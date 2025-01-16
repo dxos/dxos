@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { Toolbar as NaturalToolbar } from '@dxos/react-ui';
 
@@ -11,8 +11,17 @@ import { type MenuAction } from '../../defs';
 import { ActionLabel } from '../ActionLabel';
 import { DropdownMenu } from '../DropdownMenu';
 
-export const ToolbarDropdownMenu = ({ actionGroup, graph, onAction }: ToolbarActionGroupProps) => {
-  const menuActions = useMemo(() => (graph ? graph.actions(actionGroup) : []) as MenuAction[], [actionGroup, graph]);
+const triggerProps = {
+  size: 5 as const,
+  variant: 'ghost' as const,
+  caretDown: true,
+};
+
+export const ToolbarDropdownMenuImpl = ({
+  actionGroup,
+  menuActions,
+  onAction,
+}: Pick<ToolbarActionGroupProps, 'actionGroup' | 'onAction'> & { menuActions: MenuAction[] }) => {
   const { icon, iconOnly = true, disabled, testId } = actionGroup.properties;
   const suppressNextTooltip = useRef(false);
 
@@ -20,8 +29,7 @@ export const ToolbarDropdownMenu = ({ actionGroup, graph, onAction }: ToolbarAct
     <DropdownMenu.Root actions={menuActions} onAction={onAction} suppressNextTooltip={suppressNextTooltip}>
       <DropdownMenu.Trigger asChild>
         <NaturalToolbar.IconButton
-          size={5}
-          variant='ghost'
+          {...triggerProps}
           iconOnly={iconOnly}
           disabled={disabled}
           icon={
@@ -32,9 +40,31 @@ export const ToolbarDropdownMenu = ({ actionGroup, graph, onAction }: ToolbarAct
           label={<ActionLabel action={actionGroup} />}
           {...(testId && { 'data-testid': testId })}
           suppressNextTooltip={suppressNextTooltip}
-          caretDown
         />
       </DropdownMenu.Trigger>
     </DropdownMenu.Root>
+  );
+};
+
+// TODO(thure): Refactor to use actions getter callback (which we realize now should be async).
+export const ToolbarDropdownMenu = ({ actionGroup, graph, onAction }: ToolbarActionGroupProps) => {
+  const [actions, setActions] = useState<MenuAction[] | null>(null);
+  useEffect(() => {
+    if (graph) {
+      void graph.waitForNode(actionGroup.id).then((groupNode) => {
+        setActions((graph.actions(groupNode) ?? []) as MenuAction[]);
+      });
+    }
+  }, [graph]);
+  return Array.isArray(actions) ? (
+    <ToolbarDropdownMenuImpl actionGroup={actionGroup} menuActions={actions} onAction={onAction} />
+  ) : (
+    <NaturalToolbar.IconButton
+      {...triggerProps}
+      disabled
+      iconOnly={actionGroup.properties.iconOnly}
+      icon={actionGroup.properties.icon}
+      label={<ActionLabel action={actionGroup} />}
+    />
   );
 };
