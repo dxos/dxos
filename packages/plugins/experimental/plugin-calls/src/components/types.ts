@@ -2,27 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-export type User = {
-  id: string;
-  name: string;
-  transceiverSessionId?: string;
-  raisedHand: boolean;
-  speaking: boolean;
-  joined: boolean;
-  tracks: {
-    audio?: string;
-    audioEnabled?: boolean;
-    video?: string;
-    videoEnabled?: boolean;
-    screenshare?: string;
-    screenShareEnabled?: boolean;
-  };
-};
+import { schema } from '@dxos/protocols/proto';
+import { type RoomState, type UserState } from '@dxos/protocols/proto/dxos/edge/calls';
 
-export type RoomState = {
-  meetingId?: string;
-  users: User[];
-};
+export const codec = schema.getCodecForType('dxos.edge.calls.UserState');
 
 export type ServerMessage =
   | {
@@ -48,7 +31,7 @@ export type ServerMessage =
 export type ClientMessage =
   | {
       type: 'userUpdate';
-      user: User;
+      user: UserState;
     }
   | {
       type: 'directMessage';
