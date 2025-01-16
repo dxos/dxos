@@ -58,13 +58,7 @@ export const useComputeNodeState = (shape: ComputeShape): ComputeNodeState => {
   );
 
   return {
-    // TODO(burdon): ???
-    node: {
-      id: shape.id,
-      type: shape.type,
-      data: {},
-    },
-    // TODO(burdon): ???
+    node: stateMachine.getComputeNode(shape.node!),
     meta: meta ?? {
       input: S.Struct({}),
       output: S.Struct({}),

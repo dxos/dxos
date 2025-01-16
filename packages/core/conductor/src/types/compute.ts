@@ -9,6 +9,8 @@ import { mapValues } from '@dxos/util';
 
 // TODO(burdon): Move to types to untangle circular deps.
 import type { EventLogger, GptService } from '../services';
+import type { ComputeNode } from './graph';
+import type { GraphNode } from '@dxos/graph';
 
 export type NotExecuted = { kind: 'not-executed' };
 export const NotExecuted: NotExecuted = { kind: 'not-executed' };
@@ -71,6 +73,7 @@ export const unwrapValueBag = <T extends ValueRecord>(bag: ValueBag<T>): ValueEf
  */
 export type ComputeFunction<I extends ValueRecord, O extends ValueRecord> = (
   input: ValueBag<I>,
+  node?: ComputeNode,
 ) => ComputeEffect<ValueBag<O>>;
 
 export type ComputeRequirements = EventLogger | GptService | Scope.Scope;

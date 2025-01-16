@@ -19,7 +19,12 @@ export const ComputeNode = S.Struct({
   /** For switch nodes. */
   // TODO(dmaretskyi): Move to constants.
   enabled: S.optional(S.Boolean),
-});
+
+  /**
+   * For constant nodes.
+   */
+  constant: S.optional(S.Any),
+}).pipe(S.mutable);
 
 export type ComputeNode = S.Schema.Type<typeof ComputeNode>;
 
@@ -43,7 +48,7 @@ export class ComputeGraph extends TypedObject({
   typename: 'dxos.org/type/ComputeGraph',
   version: '0.1.0',
 })({
-  graph: Graph,
+  graph: Graph as S.Schema<Graph>, // Workaround for TS compiler bug.
 
   // Reference nodes.
   input: S.optional(BaseGraphNode),

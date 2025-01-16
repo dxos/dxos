@@ -312,7 +312,7 @@ export class GraphExecutor {
         // const sanitizedInputs = yield* S.decode(node.meta.input)(inputValues);
         // TODO(dmaretskyi): Figure out schema validation on value bags.
         invariant(isValueBag(inputValues), 'Input must be a value bag');
-        const output = yield* nodeSpec.exec(inputValues).pipe(
+        const output = yield* nodeSpec.exec(inputValues, node.graphNode).pipe(
           Effect.withSpan('call-node'),
           Effect.provideService(EventLogger, {
             log: logger.log,

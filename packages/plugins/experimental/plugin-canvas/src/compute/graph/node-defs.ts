@@ -9,6 +9,7 @@ import {
   type Executable,
   defineComputeNode,
   gptNode,
+  makeValueBag,
   synchronizedComputeFunction,
 } from '@dxos/conductor';
 import { raise } from '@dxos/debug';
@@ -18,8 +19,23 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 
 import { type ComputeShape } from '../shapes';
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './types';
+import { Message } from '@dxos/assistant';
+import type { ConstantShape } from '../shapes/Constant';
 
-type NodeType = 'switch' | 'text' | 'beacon' | 'and' | 'or' | 'not' | 'if' | 'if-else' | 'gpt' | 'chat' | 'view';
+type NodeType =
+  | 'switch'
+  | 'text'
+  | 'beacon'
+  | 'and'
+  | 'or'
+  | 'not'
+  | 'if'
+  | 'if-else'
+  | 'gpt'
+  | 'chat'
+  | 'view'
+  | 'thread'
+  | 'constant';
 
 // TODO(burdon): Just pass in type? Or can the shape specialize the node?
 export const createComputeNode = (shape: GraphNode<ComputeShape>): GraphNode<ComputeNode> => {
@@ -29,12 +45,13 @@ export const createComputeNode = (shape: GraphNode<ComputeShape>): GraphNode<Com
   return factory(shape);
 };
 
-const createNode = (type: string) => ({
+const createNode = (type: string, props?: Partial<ComputeNode>) => ({
   // TODO(burdon): Don't need to create id here?
   id: ObjectId.random(),
   type, // TODO(burdon): Don't put type on both node and data.
   data: {
     type,
+    ...props,
   },
 });
 
@@ -59,6 +76,8 @@ const nodeFactory: Record<NodeType, (shape: GraphNode<ComputeShape>) => GraphNod
   ['gpt' as const]: () => createNode('gpt'),
   ['chat' as const]: () => createNode('chat'),
   ['view' as const]: () => createNode('view'),
+  ['thread' as const]: () => createNode('thread'),
+  ['constant' as const]: (shape) => createNode('constant', { constant: (shape.data as ConstantShape).constant }),
 };
 
 export const resolveComputeNode = async (node: ComputeNode): Promise<Executable> => {
@@ -130,5 +149,17 @@ const nodeDefs: Record<NodeType, Executable> = {
   ['view' as const]: defineComputeNode({
     input: S.Struct({ [DEFAULT_INPUT]: S.String }),
     output: S.Struct({}),
+  }),
+  ['thread' as const]: defineComputeNode({
+    input: S.Struct({}),
+    output: S.Struct({
+      id: ObjectId,
+      messages: S.Array(Message),
+    }),
+  }),
+  ['constant' as const]: defineComputeNode({
+    input: S.Struct({}),
+    output: S.Struct({ [DEFAULT_OUTPUT]: S.String }),
+    exec: (_inputs, node) => Effect.succeed(makeValueBag({ [DEFAULT_OUTPUT]: node!.constant })),
   }),
 };
