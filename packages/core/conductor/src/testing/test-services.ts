@@ -5,7 +5,7 @@
 import { Layer, type Context, type Scope } from 'effect';
 
 import { consoleLogger, noopLogger } from './logger';
-import { EventLogger, GptService } from '../services';
+import { EventLogger, GptService, SpaceService } from '../services';
 import { MockGpt } from '../services/gpt/mock';
 import type { ComputeRequirements } from '../types';
 
@@ -22,7 +22,8 @@ export const testServices = ({
 }: TestServiceOptions = {}): Layer.Layer<Exclude<ComputeRequirements, Scope.Scope>> => {
   const logLayer = Layer.succeed(EventLogger, logger);
   const gptLayer = Layer.succeed(GptService, gpt);
-  return Layer.mergeAll(logLayer, gptLayer);
+  const spaceLayer = SpaceService.empty;
+  return Layer.mergeAll(logLayer, gptLayer, spaceLayer);
 };
 
 const DEFAULT_MOCK_GPT = new MockGpt({
