@@ -153,7 +153,7 @@ export const createTest3 = ({
     ...(history ? [{ source: 'k', target: 'l', data: { output: 'id', input: 'id' } }] : []),
     ...(history ? [{ source: 'b', target: 'l', data: { output: 'messages', input: 'items' } }] : []),
     ...(db ? [{ source: 'e', target: 'b', data: { input: 'tools', output: DEFAULT_OUTPUT } }] : []),
-    ...(textToImage ? [{ source: 'j', target: 'b', data: { input: 'tools', output: DEFAULT_OUTPUT } }] : []),
+    ...(textToImage ? [{ source: 'j', target: 'b', data: { input: 'tools', output: 'tool' } }] : []),
     ...(cot ? [{ source: 'b', target: 'f', data: { output: 'cot', input: DEFAULT_INPUT } }] : []),
     ...(artifact ? [{ source: 'b', target: 'g', data: { output: 'artifact', input: DEFAULT_INPUT } }] : []),
   ];

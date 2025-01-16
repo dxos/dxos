@@ -87,6 +87,7 @@ const nodeFactory: Record<string, (shape: GraphNode<ComputeShape>) => GraphNode<
   ['constant' as const]: (shape) => createNode('constant', { constant: (shape.data as ConstantShape).constant }),
   ['list' as const]: () => createNode('list'),
   ['append' as const]: () => createNode('append'),
+  ['text-to-image' as const]: () => createNode('text-to-image'),
 };
 
 export const resolveComputeNode = async (node: ComputeNode): Promise<Executable> => {
