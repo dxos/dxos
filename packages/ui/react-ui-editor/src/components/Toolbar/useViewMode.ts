@@ -13,21 +13,27 @@ import { createEditorAction, createEditorActionGroup } from './util';
 import { type EditorAction, type EditorViewMode } from '../../extensions';
 import { translationKey } from '../../translations';
 
-const viewModeGroupAction = createEditorActionGroup('viewMode', {
-  variant: 'dropdownMenu',
-  applyActiveIcon: true,
-  selectCardinality: 'single',
-} as ToolbarActionGroupProperties);
+const viewModeGroupAction = createEditorActionGroup(
+  'viewMode',
+  {
+    variant: 'dropdownMenu',
+    applyActiveIcon: true,
+    selectCardinality: 'single',
+  } as ToolbarActionGroupProperties,
+  'ph--eye--regular',
+);
 
 const viewModeActions = Object.entries({
   preview: 'ph--eye--regular',
   source: 'ph--pencil-simple--regular',
   readonly: 'ph--pencil-slash--regular',
 }).map(([viewMode, icon]) => {
-  return createEditorAction({ type: 'view-mode', data: viewMode }, icon, [
-    `${viewMode} mode label`,
-    { ns: translationKey },
-  ]);
+  return createEditorAction(
+    { type: 'view-mode', data: viewMode },
+    icon,
+    [`${viewMode} mode label`, { ns: translationKey }],
+    `view-mode--${viewMode}`,
+  );
 });
 
 export const useViewModes = (graph: Graph, mode: EditorViewMode) => {
