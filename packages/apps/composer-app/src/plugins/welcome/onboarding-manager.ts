@@ -94,7 +94,8 @@ export class OnboardingManager {
   async initialize() {
     await this.fetchCredential();
     if (this._credential && this._hubUrl) {
-      await this._upgradeCredential();
+      // Don't block app loading on network request.
+      void this._upgradeCredential();
       this._spaceInvitationCode && (await this._openJoinSpace());
       return;
     } else if (!this._skipAuth) {
