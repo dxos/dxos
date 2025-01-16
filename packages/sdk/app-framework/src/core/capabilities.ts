@@ -182,7 +182,10 @@ export class PluginsContext {
    * @throws If no capability is found.
    * @reactive
    */
-  requestCapability<T, U extends T = T>(interfaceDef: InterfaceDef<T>, filter?: (capability: T) => capability is U): U {
+  requestCapability<T, U extends T = T>(
+    interfaceDef: InterfaceDef<T>,
+    filter?: (capability: T, moduleId: string) => capability is U,
+  ): U {
     const capability = this.requestCapabilities(interfaceDef, filter)[0];
     invariant(capability, `No capability found for ${interfaceDef.identifier}`);
     return capability;

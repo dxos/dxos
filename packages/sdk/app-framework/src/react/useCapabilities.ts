@@ -14,12 +14,12 @@ import { type InterfaceDef } from '../core';
  */
 export const useCapabilities = <T, U extends T = T>(
   interfaceDef: InterfaceDef<T>,
-  filter?: (capability: T) => capability is U,
+  filter?: (capability: T, moduleId: string) => capability is U,
 ) => {
   const manager = usePluginManager();
   const signal = useMemo(
     () => computed(() => manager.context.requestCapabilities(interfaceDef, filter)),
-    [interfaceDef, filter],
+    [interfaceDef],
   );
   return signal.value;
 };
@@ -31,12 +31,9 @@ export const useCapabilities = <T, U extends T = T>(
  */
 export const useCapability = <T, U extends T = T>(
   interfaceDef: InterfaceDef<T>,
-  filter?: (capability: T) => capability is U,
+  filter?: (capability: T, moduleId: string) => capability is U,
 ) => {
   const manager = usePluginManager();
-  const signal = useMemo(
-    () => computed(() => manager.context.requestCapability(interfaceDef, filter)),
-    [interfaceDef, filter],
-  );
+  const signal = useMemo(() => computed(() => manager.context.requestCapability(interfaceDef, filter)), [interfaceDef]);
   return signal.value;
 };
