@@ -7,7 +7,9 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React, { useMemo } from 'react';
 
-import { createDocAccessor, createObject } from '@dxos/react-client/echo';
+import { IntentProvider, type AnyIntentChain, type IntentContext } from '@dxos/app-framework';
+import { todo } from '@dxos/debug';
+import { createDocAccessor, createObject, create } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { editorWithToolbarLayout, automerge } from '@dxos/react-ui-editor';
 import { topbarBlockPaddingStart } from '@dxos/react-ui-theme';
@@ -24,18 +26,30 @@ type StoryProps = MarkdownEditorProps & {
   toolbar?: boolean;
 };
 
+const storybookIntentValue = create<IntentContext>({
+  dispatch: () => todo(),
+  dispatchPromise: async (intentChain: AnyIntentChain): Promise<any> => {
+    console.log('[dispatch promise]', intentChain);
+  },
+  undo: () => todo(),
+  undoPromise: () => todo(),
+  registerResolver: () => () => {},
+});
+
 const DefaultStory = ({ content = '# Test', toolbar }: StoryProps) => {
   const doc = useMemo(() => createObject({ content }), [content]);
   const extensions = useMemo(() => [automerge(createDocAccessor(doc, ['content']))], [doc]);
 
   return (
-    <Main.Content
-      bounce
-      data-toolbar={toolbar ? 'enabled' : 'disabled'}
-      classNames={[topbarBlockPaddingStart, editorWithToolbarLayout]}
-    >
-      <MarkdownEditor id='test' initialValue={doc.content} extensions={extensions} toolbar={toolbar} />
-    </Main.Content>
+    <IntentProvider value={storybookIntentValue}>
+      <Main.Content
+        bounce
+        data-toolbar={toolbar ? 'enabled' : 'disabled'}
+        classNames={[topbarBlockPaddingStart, editorWithToolbarLayout]}
+      >
+        <MarkdownEditor id='test' initialValue={doc.content} extensions={extensions} toolbar={toolbar} />
+      </Main.Content>
+    </IntentProvider>
   );
 };
 
