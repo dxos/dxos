@@ -4,14 +4,14 @@
 
 import { createContext, type Dispatch, type RefObject, type SetStateAction } from 'react';
 
-import { type GraphEdge, type GraphModel, type GraphNode } from '@dxos/graph';
+import { type GraphEdge, type GraphNode } from '@dxos/graph';
 import { type Dimension } from '@dxos/react-ui-canvas';
 
 import { type SelectionModel } from './selection';
 import { type DragMonitor } from './useDragMonitor';
 import { type ActionHandler } from '../actions';
 import { type ShapeRegistry } from '../components';
-import type { Connection, Polygon, Shape } from '../types';
+import type { CanvasGraphModel, Connection, Polygon, Shape } from '../types';
 
 export type EditingState<S extends Polygon> = {
   shape: S;
@@ -29,8 +29,8 @@ export type EditorOptions = {
  */
 // TODO(burdon): Update, Delete, etc. Better way to keep in sync?
 export interface GraphMonitor {
-  onCreate: (node: GraphNode<Shape>) => void;
-  onLink: (edge: GraphEdge<Connection>) => void;
+  onCreate: (props: { model: CanvasGraphModel; node: GraphNode<Shape> }) => void;
+  onLink: (props: { model: CanvasGraphModel; edge: GraphEdge<Connection> }) => void;
 }
 
 export type EditorContextType = {
@@ -50,9 +50,9 @@ export type EditorContextType = {
   snapToGrid: boolean;
   setSnapToGrid: Dispatch<SetStateAction<boolean>>;
 
-  graph: GraphModel<GraphNode<Shape, false>>;
+  graph: CanvasGraphModel;
   graphMonitor?: GraphMonitor;
-  clipboard: GraphModel<GraphNode<Shape>>;
+  clipboard: CanvasGraphModel;
   selection: SelectionModel;
 
   ready: boolean;

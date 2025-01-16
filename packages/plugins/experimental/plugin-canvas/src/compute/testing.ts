@@ -25,7 +25,7 @@ import {
 } from './shapes';
 import { type ComputeShape } from './shapes';
 import { pointMultiply, pointsToRect, rectToPoints } from '../layout';
-import type { Connection, Shape } from '../types';
+import { createCanvasGraphModel, type Connection, type Shape } from '../types';
 
 // TODO(burdon): LayoutBuilder.
 const layout = (rect: Point & Partial<Dimension>, snap = 32): { center: Point; size?: Dimension } => {
@@ -84,7 +84,7 @@ export const createTest2 = () => {
     { source: 'c', target: 'd' },
   ];
 
-  return new GraphModel<GraphNode<Shape>, GraphEdge<Connection>>({
+  return createCanvasGraphModel({
     nodes: nodes.map((data) => ({ id: data.id, data })),
     edges: edges.map(({ source, target, data }) => ({
       id: createEdgeId({ source, target }),

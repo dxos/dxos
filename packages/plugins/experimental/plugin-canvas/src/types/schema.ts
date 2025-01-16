@@ -3,7 +3,7 @@
 //
 
 import { S, TypedObject } from '@dxos/echo-schema';
-import { Graph } from '@dxos/graph';
+import { Graph, type GraphEdge, GraphModel, type GraphNode } from '@dxos/graph';
 import { Point, Dimension } from '@dxos/react-ui-canvas';
 
 // TODO(burdon): Consider interop with TLDraw and GeoJSON standards?
@@ -97,3 +97,8 @@ export class CanvasBoardType extends TypedObject({
    */
   shapes: Graph,
 }) {}
+
+export type CanvasGraphModel = GraphModel<GraphNode<Shape, false>, GraphEdge<Connection>>;
+
+export const createCanvasGraphModel = (graph?: Graph): CanvasGraphModel =>
+  new GraphModel<GraphNode<Shape, false>, GraphEdge<Connection>>(graph);

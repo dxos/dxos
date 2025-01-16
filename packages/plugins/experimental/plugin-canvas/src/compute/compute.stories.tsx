@@ -9,12 +9,10 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } f
 
 import { AIServiceClientImpl } from '@dxos/assistant';
 import { type UnsubscribeCallback } from '@dxos/async';
-import { EdgeGpt, type ComputeEdge, type ComputeNode } from '@dxos/conductor';
-import { type GraphEdge, type GraphModel, type GraphNode } from '@dxos/graph';
+import { type ComputeGraphModel, EdgeGpt } from '@dxos/conductor';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { type StateMachine, type StateMachineContext } from './graph';
@@ -23,7 +21,7 @@ import { computeShapes } from './registry';
 import { type ComputeShape } from './shapes';
 import { createMachine, createTest1, createTest3 } from './testing';
 import { Editor, type EditorController, type EditorRootProps } from '../components';
-import { ShapeRegistry } from '../components';
+import { JsonFilter, ShapeRegistry } from '../components';
 import { Container } from '../components/Container';
 import { useSelection } from '../testing';
 import { type Connection } from '../types';
@@ -32,7 +30,7 @@ type RenderProps = EditorRootProps &
   PropsWithChildren<{
     init?: boolean;
     sidebar?: 'canvas' | 'compute' | 'state-machine' | 'selected';
-    computeGraph?: GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>;
+    computeGraph?: ComputeGraphModel;
     machine?: StateMachine;
     model?: StateMachineContext['model'];
     gpt?: StateMachineContext['gpt'];
@@ -156,9 +154,7 @@ const Render = ({
           </Select.Root>
 
           <div className='flex flex-col h-full overflow-hidden'>
-            <SyntaxHighlighter language='json' classNames='text-xs'>
-              {JSON.stringify(json, null, 2)}
-            </SyntaxHighlighter>
+            <JsonFilter data={json} />
           </div>
         </Container>
       )}

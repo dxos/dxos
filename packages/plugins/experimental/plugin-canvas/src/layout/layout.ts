@@ -16,12 +16,12 @@ import {
 } from '@antv/layout';
 import defaultsDeep from 'lodash.defaultsdeep';
 
-import { type Graph, GraphModel, type GraphNode } from '@dxos/graph';
+import { type Graph, type GraphModel, type GraphNode } from '@dxos/graph';
 import { type Dimension } from '@dxos/react-ui-canvas';
 import { getDeep } from '@dxos/util';
 
 import { type Intersection } from './util';
-import { type Polygon, type Shape } from '../types';
+import { type CanvasGraphModel, createCanvasGraphModel, type Polygon } from '../types';
 
 // TODO(burdon): Custom UML layout heuristics:
 //  - Layout longest chain on horizontal.
@@ -44,8 +44,8 @@ export const defaultLayoutOptions: LayoutOptions = {
 export const doLayout = async <N extends object>(
   data: GraphModel<GraphNode<N>>,
   options: Partial<LayoutOptions> = defaultLayoutOptions,
-): Promise<GraphModel<GraphNode<Shape>>> => {
-  const graph = new GraphModel<GraphNode<Shape>>();
+): Promise<CanvasGraphModel> => {
+  const graph = createCanvasGraphModel();
   const opt = defaultsDeep({}, options, defaultLayoutOptions);
 
   const defaultOptions: Intersection<[D3ForceLayoutOptions, GridLayoutOptions, RadialLayoutOptions]> = {
