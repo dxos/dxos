@@ -8,7 +8,7 @@ import { Capabilities, contributes, createSurface, useCapability } from '@dxos/a
 
 import { ManagerCapabilities } from './capabilities';
 import { SETTINGS_DIALOG, SettingsDialog, SettingsSettings } from '../components';
-import { MANAGER_PLUGIN } from '../meta';
+import { SETTINGS_INTERFACE_PLUGIN } from '../meta';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -23,9 +23,9 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${MANAGER_PLUGIN}/settings`,
+      id: `${SETTINGS_INTERFACE_PLUGIN}/settings`,
       role: 'settings',
-      filter: (data): data is any => data.subject === MANAGER_PLUGIN,
+      filter: (data): data is any => data.subject === SETTINGS_INTERFACE_PLUGIN,
       component: () => <SettingsSettings />,
     }),
   ]);

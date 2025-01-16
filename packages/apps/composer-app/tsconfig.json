@@ -141,9 +141,6 @@
       "path": "../../plugins/plugin-help"
     },
     {
-      "path": "../../plugins/plugin-manager"
-    },
-    {
       "path": "../../plugins/plugin-markdown"
     },
     {
@@ -163,6 +160,9 @@
     },
     {
       "path": "../../plugins/plugin-registry"
+    },
+    {
+      "path": "../../plugins/plugin-settings-interface"
     },
     {
       "path": "../../plugins/plugin-sheet"

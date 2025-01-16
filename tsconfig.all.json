@@ -331,9 +331,6 @@
       "path": "packages/plugins/plugin-help/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-manager/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-markdown/tsconfig.json"
     },
     {
@@ -353,6 +350,9 @@
     },
     {
       "path": "packages/plugins/plugin-registry/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-settings-interface/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-sheet/tsconfig.json"

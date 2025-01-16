@@ -130,9 +130,6 @@
       "@dxos/plugin-help/types": [
         "packages/plugins/plugin-help/src/types.ts"
       ],
-      "@dxos/plugin-manager": [
-        "packages/plugins/plugin-manager/src/index.ts"
-      ],
       "@dxos/plugin-markdown": [
         "packages/plugins/plugin-markdown/src/index.ts"
       ],
@@ -159,6 +156,9 @@
       ],
       "@dxos/plugin-registry": [
         "packages/plugins/plugin-registry/src/index.ts"
+      ],
+      "@dxos/plugin-settings-interface": [
+        "packages/plugins/plugin-settings-interface/src/index.ts"
       ],
       "@dxos/plugin-sheet": [
         "packages/plugins/plugin-sheet/src/index.ts"

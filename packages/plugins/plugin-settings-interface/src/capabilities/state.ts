@@ -6,10 +6,10 @@ import { contributes } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 
 import { ManagerCapabilities } from './capabilities';
-import { MANAGER_PLUGIN } from '../meta';
+import { SETTINGS_INTERFACE_PLUGIN } from '../meta';
 
 export default () => {
-  const state = new LocalStorageStore<ManagerCapabilities.State>(MANAGER_PLUGIN, {
+  const state = new LocalStorageStore<ManagerCapabilities.State>(SETTINGS_INTERFACE_PLUGIN, {
     selected: 'dxos.org/plugin/registry',
   });
 
