@@ -11,6 +11,8 @@ import { IntentProvider, type AnyIntentChain, type IntentContext } from '@dxos/a
 import { todo } from '@dxos/debug';
 import { createDocAccessor, createObject, create } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
+import { AttendableContainer } from '@dxos/react-ui-attention';
+import { withAttention } from '@dxos/react-ui-attention/testing';
 import { editorWithToolbarLayout, automerge } from '@dxos/react-ui-editor';
 import { topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -47,7 +49,9 @@ const DefaultStory = ({ content = '# Test', toolbar }: StoryProps) => {
         data-toolbar={toolbar ? 'enabled' : 'disabled'}
         classNames={[topbarBlockPaddingStart, editorWithToolbarLayout]}
       >
-        <MarkdownEditor id='test' initialValue={doc.content} extensions={extensions} toolbar={toolbar} />
+        <AttendableContainer id='test'>
+          <MarkdownEditor id='test' initialValue={doc.content} extensions={extensions} toolbar={toolbar} />
+        </AttendableContainer>
       </Main.Content>
     </IntentProvider>
   );
@@ -70,7 +74,7 @@ const meta: Meta<typeof MarkdownEditor> = {
   title: 'plugins/plugin-markdown/EditorMain',
   component: MarkdownEditor,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ tooltips: true })],
+  decorators: [withTheme, withLayout({ tooltips: true }), withAttention],
   parameters: { layout: 'fullscreen' },
 };
 
