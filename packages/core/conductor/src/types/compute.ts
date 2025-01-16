@@ -73,7 +73,7 @@ export const unwrapValueBag = <T extends ValueRecord>(bag: ValueBag<T>): ValueEf
  */
 export type ComputeFunction<I extends ValueRecord, O extends ValueRecord> = (
   input: ValueBag<I>,
-  node: ComputeNode,
+  node?: ComputeNode,
 ) => ComputeEffect<ValueBag<O>>;
 
 export type ComputeRequirements = EventLogger | GptService | Scope.Scope;
