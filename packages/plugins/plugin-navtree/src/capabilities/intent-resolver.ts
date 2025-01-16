@@ -13,13 +13,15 @@ export default (context: PluginsContext) =>
       const { graph } = context.requestCapability(Capabilities.AppGraph);
       const { getItem, setItem } = context.requestCapability(NavTreeCapabilities.State);
 
-      const path = await graph.waitForPath({ target: id });
-      [...Array(path.length)].forEach((_, index) => {
-        const subpath = path.slice(0, index);
-        const value = getItem(subpath);
-        if (!value.open) {
-          setItem(subpath, 'open', true);
-        }
-      });
+      try {
+        const path = await graph.waitForPath({ target: id }, { timeout: 1_000 });
+        [...Array(path.length)].forEach((_, index) => {
+          const subpath = path.slice(0, index);
+          const value = getItem(subpath);
+          if (!value.open) {
+            setItem(subpath, 'open', true);
+          }
+        });
+      } catch {}
     }),
   );
