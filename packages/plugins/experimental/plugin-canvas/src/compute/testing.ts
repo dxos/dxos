@@ -135,7 +135,7 @@ export const createTest3 = ({
         ]
       : []),
     ...(history ? [createList({ id: 'k', ...layout({ x: -8, y: 14, width: 8, height: 12 }) })] : []),
-    ...(history ? [createAppend({ id: 'l', ...layout({ x: 20, y: 14, width: 8, height: 12 }) })] : []),
+    ...(history ? [createAppend({ id: 'l', ...layout({ x: 20, y: 14 }) })] : []),
     ...(viewText ? [createView({ id: 'g', ...layout({ x: 16, y: 0, width: 12, height: 12 }) })] : []),
     ...(db ? [createDatabase({ id: 'e', ...layout({ x: -10, y: 4 }) })] : []),
     ...(textToImage ? [createTextToImage({ id: 'j', ...layout({ x: -10, y: 7 }) })] : []),

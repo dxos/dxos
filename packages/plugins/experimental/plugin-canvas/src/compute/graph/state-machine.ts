@@ -187,7 +187,9 @@ export class StateMachine extends Resource {
     }
 
     // TODO(dmaretskyi): Stop hardcoding.
-    const allSwitches = this._graph.nodes.filter((node) => node.data.type === 'switch' || node.data.type === 'chat');
+    const allSwitches = this._graph.nodes.filter(
+      (node) => node.data.type === 'switch' || node.data.type === 'chat' || node.data.type === 'constant',
+    );
     const allAffectedNodes = [...new Set(allSwitches.flatMap((node) => executor.getAllDependantNodes(node.id)))];
 
     const services = this._createServiceLayer();

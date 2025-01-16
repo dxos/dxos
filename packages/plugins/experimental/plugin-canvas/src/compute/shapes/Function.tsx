@@ -7,12 +7,12 @@ import React, { type JSX, useRef, useState } from 'react';
 import { AST, S } from '@dxos/echo-schema';
 import { useProjection } from '@dxos/react-ui-canvas';
 
-import { Box, type BoxProps, footerHeight, headerHeight } from './components';
+import { Box, type BoxProps, footerHeight, headerHeight } from './common';
 import { ComputeShape, createAnchorId, type CreateShapeProps, getProperties } from './defs';
 import { getParentShapeElement, type ShapeComponentProps, type ShapeDef } from '../../components';
 import { createAnchors, rowHeight } from '../../components';
 import { type Polygon, type Shape } from '../../types';
-import { DefaultInput } from '../graph';
+import { DefaultInput, VoidInput, VoidOutput } from '../graph';
 
 const expandedHeight = 200;
 
@@ -61,11 +61,18 @@ export type FunctionBodyProps = {
   shape: Shape;
   name: string;
   content?: JSX.Element;
-  inputSchema: S.Schema.Any;
-  outputSchema: S.Schema.Any;
-} & Pick<BoxProps, 'status'>;
+  inputSchema?: S.Schema.Any;
+  outputSchema?: S.Schema.Any;
+} & Pick<BoxProps, 'status' | 'resizable'>;
 
-export const FunctionBody = ({ shape, name, content, inputSchema, outputSchema, ...props }: FunctionBodyProps) => {
+export const FunctionBody = ({
+  shape,
+  name,
+  content,
+  inputSchema = VoidInput,
+  outputSchema = VoidOutput,
+  ...props
+}: FunctionBodyProps) => {
   const { scale } = useProjection();
   const rootRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
@@ -136,7 +143,11 @@ export const getHeight = (input: S.Schema<any>) => {
   return headerHeight + footerHeight + bodyPadding * 2 + properties.length * rowHeight + 2; // Incl. borders.
 };
 
-export const createFunctionAnchors = (shape: Polygon, input: S.Schema<any>, output: S.Schema<any>) => {
+export const createFunctionAnchors = (
+  shape: Polygon,
+  input: S.Schema<any> = VoidInput,
+  output: S.Schema<any> = VoidOutput,
+) => {
   const inputs = AST.getPropertySignatures(input.ast).map(({ name }) => createAnchorId('input', name.toString()));
   const outputs = AST.getPropertySignatures(output.ast).map(({ name }) => createAnchorId('output', name.toString()));
   return createAnchors({ shape, inputs, outputs, center: { x: 0, y: (headerHeight - footerHeight) / 2 + 1 } });
