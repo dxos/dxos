@@ -5,9 +5,11 @@
 export * from './defs';
 
 export * from './Array';
+export * from './Append';
 export * from './Beacon';
 export * from './Boolean';
 export * from './Counter';
+export * from './Constant';
 export * from './Database';
 export * from './Function';
 export * from './Gpt';

@@ -25,6 +25,8 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
 
   constructor(private readonly _client: AIServiceClient) {}
 
+  getAiServiceClient = () => this._client;
+
   public invoke(input: ValueBag<GptInput>): ComputeEffect<ValueBag<GptOutput>> {
     return Effect.gen(this, function* () {
       const { systemPrompt, prompt, history = [], tools = [] } = yield* unwrapValueBag(input);
@@ -42,9 +44,13 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
       // TODO(dmaretskyi): Allow to pass messages into the generate method directly.
       const spaceId = SpaceId.random();
       const threadId = ObjectId.random();
-      yield* Effect.promise(() => this._client.insertMessages(messages.map((msg) => ({ ...msg, threadId, spaceId }))));
+      yield* Effect.promise(() =>
+        this._client.insertMessages(
+          messages.map((msg) => ({ ...msg, id: ObjectId.random(), threadId, spaceId, foreignId: undefined })),
+        ),
+      );
 
-      log.info('generating', { systemPrompt, prompt, tools: tools.map((tool) => tool.name) });
+      log.info('generating', { systemPrompt, prompt, history, tools: tools.map((tool) => tool.name) });
       const result = yield* Effect.promise(() =>
         this._client.generate({
           model: '@anthropic/claude-3-5-sonnet-20241022',
@@ -57,7 +63,12 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
 
       const stream = Stream.fromAsyncIterable(result, (e) => new Error(String(e)));
       const [stream1, stream2] = yield* Stream.broadcast(stream, 2, { capacity: 'unbounded' });
-      const outputMessages = Effect.promise(() => result.complete());
+      const outputMessagesEffect = Effect.promise(async () => result.complete());
+
+      const outputWithAPrompt = Effect.gen(function* () {
+        const outputMessages = yield* outputMessagesEffect;
+        return [messages.at(-1)!, ...outputMessages];
+      });
 
       const logger = yield* EventLogger;
 
@@ -75,13 +86,13 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
           Stream.runDrain,
         );
 
-        const messages = yield* outputMessages;
+        const messages = yield* outputMessagesEffect;
         log.info('messages', { messages });
         return messages.map((msg) => msg.content.flatMap((c) => (c.type === 'text' ? [c.text] : []))).join('');
       });
 
       return makeValueBag<GptOutput>({
-        messages: outputMessages,
+        messages: outputWithAPrompt,
         tokenCount: 0,
         text,
         tokenStream: stream2,
