@@ -9,12 +9,12 @@ import "dxos/keys.proto";
 package dxos.edge.calls;
 
 message Tracks {
-  string audio = 1;
-  bool audio_enabled = 2;
-  string video = 3;
-  string video_enabled = 4;
-  string screenshare = 5;
-  bool screen_share_enabled = 6;
+  optional string audio = 1;
+  optional bool audio_enabled = 2;
+  optional string video = 3;
+  optional string video_enabled = 4;
+  optional string screenshare = 5;
+  optional bool screen_share_enabled = 6;
 }
 
 message UserState {
