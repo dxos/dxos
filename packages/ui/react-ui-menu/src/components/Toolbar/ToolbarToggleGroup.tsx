@@ -12,7 +12,7 @@ import { type MenuAction } from '../../defs';
 import { ActionLabel } from '../ActionLabel';
 
 const ToolbarToggleGroupItem = ({ action }: { action: MenuAction }) => {
-  const { icon, iconOnly, disabled } = action.properties;
+  const { icon, iconOnly = true, disabled } = action.properties;
   return (
     <NaturalToolbar.ToggleGroupIconItem
       key={action.id}
@@ -21,6 +21,7 @@ const ToolbarToggleGroupItem = ({ action }: { action: MenuAction }) => {
       iconOnly={iconOnly}
       disabled={disabled}
       label={<ActionLabel action={action} />}
+      variant='ghost'
     />
   );
 };
