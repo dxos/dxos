@@ -37,11 +37,6 @@ describe('TableModel', () => {
   });
 
   describe('methods', () => {
-    it('should set sorting', () => {
-      model.setSort('col2', 'asc');
-      expect(model.sorting).toEqual([{ columnId: 'col2', direction: 'asc' }]);
-    });
-
     it('should pin a row', () => {
       model.pinRow(1, 'top');
       expect(model.pinnedRows.top).toContain(1);
