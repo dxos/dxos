@@ -8,7 +8,7 @@ import "dxos/keys.proto";
 
 package dxos.edge.calls;
 
-message Track {
+message Tracks {
   string audio = 1;
   bool audio_enabled = 2;
   string video = 3;
@@ -24,7 +24,7 @@ message UserState {
   bool raised_hand = 4;
   bool speaking = 5;
   bool joined = 6;
-  repeated Track tracks = 7;
+  optional Tracks tracks = 7;
 }
 
 message RoomState {
