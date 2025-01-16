@@ -76,7 +76,7 @@ export const GptComponent = ({ shape }: ShapeComponentProps<GptShape>) => {
       shape={shape}
       name={'GPT'}
       // TODO(burdon): Pin to bottom?
-      content={<div className='p-1 overflow-y-scroll'>{text}</div>}
+      content={<div className='px-2 py-1 overflow-y-scroll'>{text}</div>}
       status={`${tokens} tokens`}
       inputSchema={meta.input}
       outputSchema={meta.output}

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Effect, Exit } from 'effect';
+import { Effect, Exit, type Context, Layer, Scope } from 'effect';
 
 import { type LLMModel, type MessageImageContentBlock } from '@dxos/assistant';
 import { Event, synchronized } from '@dxos/async';
@@ -20,15 +20,13 @@ import {
   makeValueBag,
   unwrapValueBag,
 } from '@dxos/conductor';
-import { testServices } from '@dxos/conductor/testing';
+import { MockGpt } from '@dxos/conductor';
 import { Resource } from '@dxos/context';
 import { type GraphEdge, type GraphNode } from '@dxos/graph';
 import { log } from '@dxos/log';
 
 import { resolveComputeNode } from './node-defs';
 import type { GptInput, GptOutput } from './types';
-import { Context, Layer, Scope } from 'effect';
-import { MockGpt } from '@dxos/conductor';
 
 // TODO(burdon): API package for conductor.
 export const InvalidStateError = Error;

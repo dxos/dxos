@@ -106,19 +106,19 @@ export const FunctionBody = ({ shape, name, content, inputSchema, outputSchema, 
       onAction={handleAction}
       {...props}
     >
-      <div className='grid grid-cols-2 items-center'>
-        <div className='flex flex-col' style={{ padding: bodyPadding }}>
+      <div className='grid grid-cols-2 items-center' style={{ paddingTop: bodyPadding, paddingBottom: bodyPadding }}>
+        <div className='flex flex-col'>
           {inputs?.map(({ name }) => (
-            <div key={name} className='truncate text-sm font-mono items-center' style={{ height: rowHeight }}>
+            <div key={name} className='px-2 truncate text-sm font-mono items-center' style={{ height: rowHeight }}>
               {name}
             </div>
           ))}
         </div>
-        <div className='flex flex-col' style={{ padding: bodyPadding }}>
+        <div className='flex flex-col'>
           {outputs?.map(({ name }) => (
             <div
               key={name}
-              className='truncate text-sm font-mono items-center text-right'
+              className='px-2 truncate text-sm font-mono items-center text-right'
               style={{ height: rowHeight }}
             >
               {name}

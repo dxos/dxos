@@ -19,9 +19,9 @@ import { ObjectId, S } from '@dxos/echo-schema';
 import { type GraphNode } from '@dxos/graph';
 import { failedInvariant, invariant } from '@dxos/invariant';
 
+import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './types';
 import { type ComputeShape } from '../shapes';
 import type { ConstantShape } from '../shapes/Constant';
-import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './types';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -44,7 +44,7 @@ type NodeType =
 
 // TODO(burdon): Just pass in type? Or can the shape specialize the node?
 export const createComputeNode = (shape: GraphNode<ComputeShape>): GraphNode<ComputeNode> => {
-  const type = shape.data.type as NodeType;
+  const type = shape.data.type;
   const factory =
     nodeFactory[type ?? raise(new Error('Type not specified'))] ?? raise(new Error(`Unknown shape type: ${type}`));
   return factory(shape);
@@ -61,7 +61,7 @@ const createNode = (type: string, props?: Partial<ComputeNode>) => ({
 });
 
 // TODO(burdon): Reconcile with ShapeRegistry.
-const nodeFactory: Record<NodeType, (shape: GraphNode<ComputeShape>) => GraphNode<ComputeNode>> = {
+const nodeFactory: Record<string, (shape: GraphNode<ComputeShape>) => GraphNode<ComputeNode>> = {
   // Controls.
   ['switch' as const]: () => createNode('switch'),
   ['text' as const]: () => createNode('text'),
@@ -79,6 +79,8 @@ const nodeFactory: Record<NodeType, (shape: GraphNode<ComputeShape>) => GraphNod
   ['if-else' as const]: () => createNode('if-else'),
 
   ['gpt' as const]: () => createNode('gpt'),
+
+  ['json' as const]: () => createNode('view'),
   ['chat' as const]: () => createNode('chat'),
   ['view' as const]: () => createNode('view'),
   ['thread' as const]: () => createNode('thread'),
@@ -152,15 +154,21 @@ const nodeDefs: Record<NodeType, Executable> = {
     ),
   }),
 
+  // Generic.
+  ['constant' as const]: defineComputeNode({
+    input: S.Struct({}),
+    output: S.Struct({ [DEFAULT_OUTPUT]: S.Any }),
+    exec: (_inputs, node) => Effect.succeed(makeValueBag({ [DEFAULT_OUTPUT]: node!.constant })),
+  }),
+  ['view' as const]: defineComputeNode({
+    input: S.Struct({ [DEFAULT_INPUT]: S.Any }),
+    output: S.Struct({ [DEFAULT_OUTPUT]: S.Any }),
+  }),
+
   // TODO(dmaretskyi): Consider moving gpt out of conductor.
-  ['gpt' as const]: gptNode,
   ['chat' as const]: defineComputeNode({
     input: S.Struct({}),
     output: S.Struct({ [DEFAULT_OUTPUT]: S.String }),
-  }),
-  ['view' as const]: defineComputeNode({
-    input: S.Struct({ [DEFAULT_INPUT]: S.String }),
-    output: S.Struct({}),
   }),
   ['thread' as const]: defineComputeNode({
     input: S.Struct({}),
@@ -169,11 +177,7 @@ const nodeDefs: Record<NodeType, Executable> = {
       messages: S.Array(Message),
     }),
   }),
-  ['constant' as const]: defineComputeNode({
-    input: S.Struct({}),
-    output: S.Struct({ [DEFAULT_OUTPUT]: S.String }),
-    exec: (_inputs, node) => Effect.succeed(makeValueBag({ [DEFAULT_OUTPUT]: node!.constant })),
-  }),
+
   ['list' as const]: defineComputeNode({
     input: ListInput,
     output: ListOutput,
@@ -219,6 +223,8 @@ const nodeDefs: Record<NodeType, Executable> = {
       }),
     ),
   }),
+
+  ['gpt' as const]: gptNode,
 };
 
 // TODO(dmaretskyi): Have to hardcode this since ai-service requires spaceId.
