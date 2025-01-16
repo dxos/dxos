@@ -18,13 +18,13 @@ message Tracks {
 }
 
 message UserState {
-  dxos.keys.PublicKey id = 1;
+  string id = 1;
   string name = 2;
   optional string transceiver_session_id = 3;
   bool raised_hand = 4;
   bool speaking = 5;
   bool joined = 6;
-  optional Tracks tracks = 7;
+  Tracks tracks = 7;
 }
 
 message RoomState {
