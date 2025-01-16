@@ -11,7 +11,7 @@ import { AIServiceClientImpl } from '@dxos/assistant';
 import { type UnsubscribeCallback } from '@dxos/async';
 import { type ComputeGraphModel, EdgeGpt } from '@dxos/conductor';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Select } from '@dxos/react-ui';
+import { Select, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -61,6 +61,11 @@ const Render = ({
   const [, forceUpdate] = useState({});
 
   const editorRef = useRef<EditorController>(null);
+
+  // Selection.
+  const [selection, selected] = useSelection(graph);
+
+  // Sidebar.
   const [sidebar, setSidebar] = useState(_sidebar);
   const json = useMemo(() => {
     switch (sidebar) {
@@ -77,7 +82,7 @@ const Render = ({
       case 'selected':
         return { selected };
     }
-  }, [sidebar]);
+  }, [sidebar, selected]);
 
   // State machine.
   useEffect(() => {
@@ -114,9 +119,6 @@ const Render = ({
   // Sync monitor.
   const graphMonitor = useGraphMonitor(machine?.graph);
 
-  // Selection.
-  const [selection, selected] = useSelection(graph);
-
   return (
     <div className='grid grid-cols-[1fr,360px] w-full h-full'>
       <ComputeContext.Provider value={{ stateMachine: machine! }}>
@@ -138,20 +140,22 @@ const Render = ({
 
       {sidebar && (
         <Container id='sidebar' classNames='flex flex-col h-full overflow-hidden'>
-          <Select.Root value={sidebar} onValueChange={(value) => setSidebar(value as RenderProps['sidebar'])}>
-            <Select.TriggerButton classNames='is-full'>{sidebar}</Select.TriggerButton>
-            <Select.Portal>
-              <Select.Content>
-                <Select.Viewport>
-                  {sidebarTypes.map((type) => (
-                    <Select.Item key={type} value={type}>
-                      {type}
-                    </Select.Item>
-                  ))}
-                </Select.Viewport>
-              </Select.Content>
-            </Select.Portal>
-          </Select.Root>
+          <Toolbar.Root classNames='p-1'>
+            <Select.Root value={sidebar} onValueChange={(value) => setSidebar(value as RenderProps['sidebar'])}>
+              <Select.TriggerButton classNames='is-full'>{sidebar}</Select.TriggerButton>
+              <Select.Portal>
+                <Select.Content>
+                  <Select.Viewport>
+                    {sidebarTypes.map((type) => (
+                      <Select.Item key={type} value={type}>
+                        {type}
+                      </Select.Item>
+                    ))}
+                  </Select.Viewport>
+                </Select.Content>
+              </Select.Portal>
+            </Select.Root>
+          </Toolbar.Root>
 
           <div className='flex flex-col h-full overflow-hidden'>
             <JsonFilter data={json} />

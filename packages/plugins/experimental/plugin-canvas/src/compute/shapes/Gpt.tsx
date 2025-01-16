@@ -80,6 +80,7 @@ export const GptComponent = ({ shape }: ShapeComponentProps<GptShape>) => {
       status={`${tokens} tokens`}
       inputSchema={meta.input}
       outputSchema={meta.output}
+      resizable
     />
   );
 };
@@ -91,4 +92,5 @@ export const gptShape: ShapeDef<GptShape> = {
   createShape: createGpt,
   // TODO(dmaretskyi): Can we fetch the schema dynamically?
   getAnchors: (shape) => createFunctionAnchors(shape, GptInput, GptOutput),
+  resizeable: true,
 };

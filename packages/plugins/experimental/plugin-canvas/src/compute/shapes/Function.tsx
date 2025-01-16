@@ -109,7 +109,6 @@ export const FunctionBody = ({
       classNames='divide-y divide-separator'
       name={name}
       open={open}
-      resizable
       onAction={handleAction}
       {...props}
     >

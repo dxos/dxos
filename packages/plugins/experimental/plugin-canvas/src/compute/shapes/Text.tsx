@@ -65,7 +65,7 @@ export const TextComponent = ({ shape, title, chat, ...props }: TextComponentPro
   };
 
   return (
-    <Box name={title ?? 'Text'}>
+    <Box name={title ?? 'Text'} resizable>
       <TextBox
         ref={inputRef}
         reset={reset}

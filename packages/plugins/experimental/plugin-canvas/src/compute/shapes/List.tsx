@@ -38,10 +38,8 @@ export const ListComponent = ({ shape }: ShapeComponentProps<ListShape>) => {
 
   const items = runtime.outputs.items?.type === 'executed' ? runtime.outputs.items.value : [];
 
-  console.log('items', items);
-
   return (
-    <Box name={'List'}>
+    <Box name={'List'} resizable>
       <div className='flex flex-col w-full overflow-y-scroll divide-y divide-separator'>
         {[...items].map((item, i) => (
           <ListItem key={i} classNames='p-1 px-2' item={item} />

@@ -30,8 +30,8 @@ export type ReduceShape = S.Schema.Type<typeof ReduceShape>;
 
 export type ReduceComponentProps = ShapeComponentProps<ReduceShape>;
 
-export const ReduceComponent = ({ shape, ...props }: ReduceComponentProps) => {
-  return <FunctionBody shape={shape} name={'Reduce'} inputSchema={ReduceInput} outputSchema={ReduceOutput} />;
+export const ReduceComponent = ({ shape }: ReduceComponentProps) => {
+  return <FunctionBody shape={shape} name={'Reduce'} resizable inputSchema={ReduceInput} outputSchema={ReduceOutput} />;
 };
 
 //
