@@ -4,7 +4,7 @@
 
 import { type JSX, type ForwardedRef, type PropsWithChildren, type ReactNode } from 'react';
 
-import { type GuardedType, type MakeOptional } from '@dxos/util';
+import { type GuardedType, type MakeOptional, type Disposition } from '@dxos/util';
 
 import { type ErrorBoundary } from '../react';
 
@@ -68,21 +68,12 @@ export type SurfaceComponent<T extends Record<string, any> = Record<string, unkn
 ) => JSX.Element | null;
 
 /**
- * Determines the priority of the surface when multiple components are resolved.
- *
- * - `static` - The component is rendered in the order it was resolved.
- * - `hoist` - The component is rendered before `static` components.
- * - `fallback` - The component is rendered after `static` components.
- */
-export type SurfaceDisposition = 'static' | 'hoist' | 'fallback';
-
-/**
  * Definition of when a SurfaceComponent should be rendered.
  */
 export type SurfaceDefinition<T extends Record<string, any> = any> = Readonly<{
   id: string;
   role: string | string[];
-  disposition?: SurfaceDisposition;
+  disposition?: Disposition;
   filter?: (data: Record<string, unknown>) => data is T;
   component: SurfaceComponent<GuardedType<SurfaceDefinition<T>['filter']>>;
 }>;
