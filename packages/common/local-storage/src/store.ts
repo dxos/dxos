@@ -136,7 +136,7 @@ export class SettingsStore<T extends SettingsValue> {
     this.close();
 
     for (const prop of AST.getPropertySignatures(this._schema.ast)) {
-      const node = findNode(prop.type, (node) => isSimpleType(node) || AST.isTupleType(node));
+      const node = findNode(prop.type, (node) => isSimpleType(node) || AST.isTupleType(node) || isLiteralUnion(node));
       invariant(node, `invalid prop: ${prop.name.toString()}`);
 
       const path = [prop.name.toString()];
@@ -174,7 +174,7 @@ export class SettingsStore<T extends SettingsValue> {
 
   save() {
     for (const prop of AST.getPropertySignatures(this._schema.ast)) {
-      const node = findNode(prop.type, (node) => isSimpleType(node) || AST.isTupleType(node));
+      const node = findNode(prop.type, (node) => isSimpleType(node) || AST.isTupleType(node) || isLiteralUnion(node));
       invariant(node, `invalid prop: ${prop.name.toString()}`);
 
       const path = [prop.name.toString()];

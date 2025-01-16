@@ -21,7 +21,7 @@ export type SimpleType = 'object' | 'string' | 'number' | 'boolean' | 'enum' | '
  * Get the base type; e.g., traverse through refinements.
  */
 export const getSimpleType = (node: AST.AST): SimpleType | undefined => {
-  if (AST.isObjectKeyword(node) || AST.isTypeLiteral(node) || isDiscriminatedUnion(node) || isLiteralUnion(node)) {
+  if (AST.isObjectKeyword(node) || AST.isTypeLiteral(node) || isDiscriminatedUnion(node)) {
     return 'object';
   }
 

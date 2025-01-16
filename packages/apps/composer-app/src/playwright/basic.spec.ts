@@ -62,7 +62,8 @@ test.describe('Basic tests', () => {
     await expect(host.page.getByTestId('resetDialog').locator('h2')).toHaveText('Invalid storage version');
 
     await host.reset();
-    await expect(host.getSpaceItems()).toHaveCount(1);
+    // Wait for identity to be re-created.
+    await expect(host.getSpaceItems(), { timeout: 10_000 }).toHaveCount(1);
   });
 
   test('reset device', async ({ browserName }) => {
