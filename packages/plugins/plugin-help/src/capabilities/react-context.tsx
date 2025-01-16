@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { untracked } from '@preact/signals-core';
 import React from 'react';
 
 import { Capabilities, contributes, useCapability } from '@dxos/app-framework';
@@ -16,7 +15,7 @@ export default (steps: Step[]) =>
   contributes(Capabilities.ReactContext, {
     id: HELP_PLUGIN,
     context: ({ children }) => {
-      const state = untracked(() => useCapability(HelpCapabilities.MutableState));
+      const state = useCapability(HelpCapabilities.MutableState);
       return (
         <HelpContextProvider
           steps={steps}

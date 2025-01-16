@@ -5,10 +5,8 @@
 import { type PluginMeta } from '@dxos/app-framework';
 
 export const SPACE_PLUGIN = 'dxos.org/plugin/space';
-export const SPACE_PLUGIN_SHORT_ID = 'space';
 
 export const meta = {
   id: SPACE_PLUGIN,
-  shortId: SPACE_PLUGIN_SHORT_ID,
   name: 'Spaces',
 } satisfies PluginMeta;

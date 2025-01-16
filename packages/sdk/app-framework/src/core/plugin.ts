@@ -79,14 +79,6 @@ export type PluginMeta = {
   id: string;
 
   /**
-   * Short ID for use in URLs.
-   *
-   * NOTE: This is especially experimental and likely to change.
-   */
-  // TODO(wittjosiah): How should these be managed?
-  shortId?: string;
-
-  /**
    * Human-readable name.
    */
   name?: string;

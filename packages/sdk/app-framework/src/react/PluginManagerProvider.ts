@@ -11,12 +11,12 @@ import { type PluginManager } from '../core';
 const PluginManagerContext = createContext<PluginManager | undefined>(undefined);
 
 /**
- *
+ * Get the plugin manager.
  */
 export const usePluginManager = (): PluginManager =>
   useContext(PluginManagerContext) ?? raise(new Error('Missing PluginManagerContext'));
 
 /**
- *
+ * Context provider for a plugin manager.
  */
 export const PluginManagerProvider = PluginManagerContext.Provider;

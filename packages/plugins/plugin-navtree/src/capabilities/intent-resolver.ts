@@ -3,6 +3,7 @@
 //
 
 import { contributes, type PluginsContext, Capabilities, NavigationAction, createResolver } from '@dxos/app-framework';
+import { log } from '@dxos/log';
 
 import { NavTreeCapabilities } from './capabilities';
 
@@ -22,6 +23,8 @@ export default (context: PluginsContext) =>
             setItem(subpath, 'open', true);
           }
         });
-      } catch {}
+      } catch {
+        log.warn('Path to node not found', { id });
+      }
     }),
   );

@@ -9,7 +9,8 @@ import { usePluginManager } from './PluginManagerProvider';
 import { type InterfaceDef } from '../core';
 
 /**
- *
+ * Hook to request capabilities from the plugin context.
+ * @returns An array of capabilities.
  */
 export const useCapabilities = <T, U extends T = T>(
   interfaceDef: InterfaceDef<T>,
@@ -24,7 +25,9 @@ export const useCapabilities = <T, U extends T = T>(
 };
 
 /**
- *
+ * Hook to request a capability from the plugin context.
+ * @returns The capability.
+ * @throws If no capability is found.
  */
 export const useCapability = <T, U extends T = T>(
   interfaceDef: InterfaceDef<T>,

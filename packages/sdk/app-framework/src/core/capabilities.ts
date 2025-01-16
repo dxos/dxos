@@ -18,6 +18,9 @@ import { type ActivationEvent } from './events';
 
 const InterfaceDefTypeId: unique symbol = Symbol.for('InterfaceDefTypeId');
 
+/**
+ * The interface definition of a capability.
+ */
 export type InterfaceDef<T> = {
   [InterfaceDefTypeId]: T;
   identifier: string;
@@ -57,6 +60,7 @@ type PluginsContextOptions = {
   reset: (event: ActivationEvent) => MaybePromise<boolean>;
 };
 
+// NOTE: This is implemented as a class to prevent it from being proxied by PluginManager state.
 class CapabilityImpl<T> {
   constructor(
     readonly moduleId: string,

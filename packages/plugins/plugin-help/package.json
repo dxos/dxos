@@ -42,7 +42,6 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@fluentui/react-tabster": "^9.19.0",
-    "@preact/signals-core": "^1.6.0",
     "lodash.get": "^4.4.2",
     "react-joyride": "^2.7.2"
   },

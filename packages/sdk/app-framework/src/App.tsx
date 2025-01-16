@@ -135,9 +135,7 @@ const App = ({ placeholder, manager, state }: AppProps) => {
   );
 };
 
-/**
- * Fallback does not use tailwind or theme.
- */
+// Default fallback does not use tailwind or theme.
 const DefaultFallback = ({ error }: { error: Error }) => {
   return (
     <div style={{ padding: '1rem' }}>
