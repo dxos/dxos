@@ -160,6 +160,6 @@ const nodeDefs: Record<NodeType, Executable> = {
   ['constant' as const]: defineComputeNode({
     input: S.Struct({}),
     output: S.Struct({ [DEFAULT_OUTPUT]: S.String }),
-    exec: (_inputs, node) => Effect.succeed(makeValueBag({ [DEFAULT_OUTPUT]: node.constant })),
+    exec: (_inputs, node) => Effect.succeed(makeValueBag({ [DEFAULT_OUTPUT]: node!.constant })),
   }),
 };
