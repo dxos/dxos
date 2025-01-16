@@ -39,15 +39,17 @@ export class AttentionManager {
 
   /**
    * Currently attended element.
+   *
+   * @reactive
    */
-  get current() {
+  get current(): ReactiveObject<readonly string[]> {
     return this._state.current;
   }
 
   /**
    * All attention paths.
    */
-  keys() {
+  keys(): string[][] {
     return Array.from(this._map.keys());
   }
 
@@ -67,6 +69,8 @@ export class AttentionManager {
 
   /**
    * Update the currently attended element.
+   *
+   * @internal
    */
   update(nextKey: string[]) {
     const currentKey = untracked(() => this.current);

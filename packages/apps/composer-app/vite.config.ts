@@ -70,6 +70,7 @@ export default defineConfig((env) => ({
         chunkFileNames,
         manualChunks: {
           react: ['react', 'react-dom'],
+          typescript: ['typescript'],
         },
       },
       external: [

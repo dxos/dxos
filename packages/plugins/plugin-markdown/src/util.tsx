@@ -2,12 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { type TypedObjectSerializer } from '@dxos/plugin-space/types';
 import { create, createObject, isEchoObject, loadObjectReferences, makeRef } from '@dxos/react-client/echo';
 
-import { DocumentType, type MarkdownProperties, type MarkdownExtensionProvides, TextType } from './types';
+import { DocumentType, type MarkdownProperties, TextType } from './types';
 
 export const isMarkdownProperties = (data: unknown): data is MarkdownProperties =>
   isEchoObject(data)
@@ -15,12 +14,6 @@ export const isMarkdownProperties = (data: unknown): data is MarkdownProperties 
     : data && typeof data === 'object'
       ? 'title' in data && typeof data.title === 'string'
       : false;
-
-type MarkdownExtensionPlugin = Plugin<MarkdownExtensionProvides>;
-
-export const markdownExtensionPlugins = (plugins: Plugin[]): MarkdownExtensionPlugin[] => {
-  return (plugins as MarkdownExtensionPlugin[]).filter((plugin) => Boolean(plugin.provides?.markdown));
-};
 
 const nonTitleChars = /[^\w ]/g;
 

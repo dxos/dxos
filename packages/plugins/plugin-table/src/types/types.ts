@@ -2,14 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type {
-  IntentResolverProvides,
-  MetadataRecordsProvides,
-  SurfaceProvides,
-  TranslationsProvides,
-} from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
-import { type SchemaProvides } from '@dxos/plugin-space';
 import { SpaceSchema } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table/types';
 import { FieldSchema } from '@dxos/schema';
@@ -47,13 +40,5 @@ export namespace TableAction {
     output: S.Void,
   }) {}
 }
-
-export type TableProvides = {};
-
-export type TablePluginProvides = SurfaceProvides &
-  IntentResolverProvides &
-  MetadataRecordsProvides &
-  SchemaProvides &
-  TranslationsProvides;
 
 export const isTable = (object: unknown): object is TableType => object != null && object instanceof TableType;

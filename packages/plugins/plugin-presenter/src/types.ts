@@ -4,13 +4,6 @@
 
 import { type Context, createContext } from 'react';
 
-import type {
-  GraphBuilderProvides,
-  IntentResolverProvides,
-  SettingsProvides,
-  SurfaceProvides,
-  TranslationsProvides,
-} from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { CollectionType } from '@dxos/plugin-space/types';
@@ -44,12 +37,10 @@ export const PresenterContext: Context<PresenterContextType> = createContext<Pre
   stop: () => {},
 });
 
-export type PresenterSettingsProps = {
-  presentCollections?: boolean;
-};
+export const PresenterSettingsSchema = S.mutable(
+  S.Struct({
+    presentCollections: S.optional(S.Boolean),
+  }),
+);
 
-export type PresenterPluginProvides = SurfaceProvides &
-  IntentResolverProvides &
-  GraphBuilderProvides &
-  TranslationsProvides &
-  SettingsProvides<PresenterSettingsProps>;
+export type PresenterSettingsProps = S.Schema.Type<typeof PresenterSettingsSchema>;
