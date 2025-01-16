@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { Toolbar as NaturalToolbar } from '@dxos/react-ui';
 
@@ -12,15 +12,21 @@ import { type MenuAction } from '../../defs';
 import { ActionLabel } from '../ActionLabel';
 
 const ToolbarToggleGroupItem = ({ action }: { action: MenuAction }) => {
+  const { iconSize, onAction } = useToolbar();
   const { icon, iconOnly = true, disabled } = action.properties;
+  const handleClick = useCallback(() => {
+    onAction?.(action);
+  }, [action, onAction]);
   return (
     <NaturalToolbar.ToggleGroupIconItem
       key={action.id}
       value={action.id}
       icon={icon}
+      size={iconSize}
       iconOnly={iconOnly}
       disabled={disabled}
       label={<ActionLabel action={action} />}
+      onClick={handleClick}
       variant='ghost'
     />
   );
