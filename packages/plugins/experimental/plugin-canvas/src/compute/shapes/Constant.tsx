@@ -34,12 +34,11 @@ export type ConstantComponentProps = ShapeComponentProps<ConstantShape> &
   TextBoxProps & { title?: string; chat?: boolean };
 
 export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComponentProps) => {
-  const { runtime, node } = useComputeNodeState(shape);
+  const { node } = useComputeNodeState(shape);
 
   return (
-    <Box name={title ?? 'Text'}>
+    <Box name={title ?? 'Constant'}>
       <TextBox
-        classNames='flex grow p-2 overflow-hidden'
         {...props}
         value={node.data.constant}
         onEnter={(value) => {

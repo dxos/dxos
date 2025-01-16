@@ -139,7 +139,7 @@ export const createTest3 = ({
     ...(history ? [createAppend({ id: 'l', ...layout({ x: 20, y: 14 }) })] : []),
     ...(viewText ? [createView({ id: 'g', ...layout({ x: 16, y: 0, width: 12, height: 12 }) })] : []),
     ...(db ? [createDatabase({ id: 'e', ...layout({ x: -10, y: 4 }) })] : []),
-    ...(textToImage ? [createTextToImage({ id: 'j', ...layout({ x: -10, y: 7 }) })] : []),
+    ...(textToImage ? [createTextToImage({ id: 'j', ...layout({ x: -10, y: 5 }) })] : []),
     ...(cot ? [createList({ id: 'f', ...layout({ x: 0, y: -10, width: 8, height: 12 }) })] : []),
     ...(history ? [createJson({ id: 'm', ...layout({ x: 8, y: 14, width: 10, height: 12 }) })] : []),
   ];
@@ -156,7 +156,7 @@ export const createTest3 = ({
     ...(history ? [{ source: 'm', target: 'l', data: { output: DEFAULT_OUTPUT, input: 'id' } }] : []),
     ...(history ? [{ source: 'b', target: 'l', data: { output: 'messages', input: 'items' } }] : []),
     ...(db ? [{ source: 'e', target: 'b', data: { input: 'tools', output: DEFAULT_OUTPUT } }] : []),
-    ...(textToImage ? [{ source: 'j', target: 'b', data: { input: 'tools', output: 'tool' } }] : []),
+    ...(textToImage ? [{ source: 'j', target: 'b', data: { input: 'tools', output: DEFAULT_OUTPUT } }] : []),
     ...(cot ? [{ source: 'b', target: 'f', data: { output: 'cot', input: DEFAULT_INPUT } }] : []),
     ...(artifact ? [{ source: 'b', target: 'g', data: { output: 'artifact', input: DEFAULT_INPUT } }] : []),
   ];
