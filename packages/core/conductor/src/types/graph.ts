@@ -19,7 +19,12 @@ export const ComputeNode = S.Struct({
   /** For switch nodes. */
   // TODO(dmaretskyi): Move to constants.
   enabled: S.optional(S.Boolean),
-});
+
+  /**
+   * For constant nodes.
+   */
+  constant: S.optional(S.Any),
+}).pipe(S.mutable);
 
 export type ComputeNode = S.Schema.Type<typeof ComputeNode>;
 
