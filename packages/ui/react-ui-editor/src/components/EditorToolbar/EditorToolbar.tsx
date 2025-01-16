@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { Graph } from '@dxos/app-graph';
-import { Toolbar } from '@dxos/react-ui-menu';
+import { Toolbar, type ToolbarActionGroup, type ToolbarItem } from '@dxos/react-ui-menu';
 
 import { useBlocks } from './useBlocks';
 import { useComment } from './useComment';
@@ -30,7 +30,21 @@ const useEditorToolbarActionGraph = ({ state, mode }: EditorToolbarActionGraphPr
 
   const actions = useMemo(() => [headings, formatting, list, block, editorToolbarGap, comment, viewMode], []);
 
-  return { graph, actions };
+  const resolveGroupItems = useCallback(
+    async (groupNode: ToolbarActionGroup) => {
+      if (graph) {
+        return await graph.waitForNode(groupNode.id).then(
+          (groupNode) => (graph.actions(groupNode) || null) as ToolbarItem[] | null,
+          () => null,
+        );
+      } else {
+        return null;
+      }
+    },
+    [graph],
+  );
+
+  return { resolveGroupItems, actions };
 };
 
 export const EditorToolbar = ({ classNames, ...actionProps }: EditorToolbarProps) => {

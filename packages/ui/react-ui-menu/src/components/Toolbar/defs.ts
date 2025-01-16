@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Node, type ActionGroup, type Graph, ACTION_GROUP_TYPE } from '@dxos/app-graph';
+import { type Node, type ActionGroup, ACTION_GROUP_TYPE } from '@dxos/app-graph';
 import { type ToolbarRootProps, type ToolbarSeparatorProps, type IconButtonProps } from '@dxos/react-ui';
 
 import { type MenuAction, type MenuActionProperties, type MenuProps } from '../../defs';
@@ -37,13 +37,16 @@ export const isMenu = (node: Node): node is ToolbarActionGroup => node.type === 
 
 export type ToolbarItem = ToolbarSeparatorNode | MenuAction | ToolbarActionGroup;
 
-export type ToolbarProps = ToolbarRootProps &
-  MenuProps<ToolbarItem, MenuAction> & { iconSize?: IconButtonProps['size']; graph?: Graph };
+export type ToolbarGroupItemsResolver = (group: ToolbarActionGroup) => Promise<ToolbarItem[] | null>;
+
+export type ToolbarContextValue = Pick<MenuProps<ToolbarItem, MenuAction>, 'onAction'> & {
+  resolveGroupItems: ToolbarGroupItemsResolver;
+  iconSize: IconButtonProps['size'];
+};
+
+export type ToolbarProps = Partial<ToolbarContextValue> & ToolbarRootProps & MenuProps<ToolbarItem, MenuAction>;
 
 export type ToolbarActionGroupProps = Pick<ToolbarProps, 'iconSize'> &
   Omit<MenuProps<MenuAction>, 'actions'> & {
     actionGroup: ToolbarActionGroup;
-    // TODO(thure): use callback for getting children instead of graph.
-    graph?: Graph;
-    applyActiveIcon?: boolean;
   };

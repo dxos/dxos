@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { Toolbar as NaturalToolbar } from '@dxos/react-ui';
 
+import { ToolbarContext } from './ToolbarContext';
 import { ToolbarDropdownMenu } from './ToolbarDropdownMenu';
 import { ToolbarToggleGroup } from './ToolbarToggleGroup';
 import { isMenu, isSeparator, type ToolbarProps } from './defs';
@@ -38,34 +39,36 @@ const ToolbarItem = ({
   );
 };
 
-export const Toolbar = ({ actions: items, onAction, iconSize = 5, graph, ...props }: ToolbarProps) => {
+const resolveGroupItemsNoop = async () => null;
+
+export const Toolbar = ({
+  actions: items,
+  onAction = () => {},
+  iconSize = 5,
+  resolveGroupItems = resolveGroupItemsNoop,
+  ...props
+}: ToolbarProps) => {
+  const contextValue = useMemo(
+    () => ({ resolveGroupItems, onAction, iconSize }),
+    [resolveGroupItems, onAction, iconSize],
+  );
   return (
-    <NaturalToolbar.Root {...props}>
-      {items?.map((item, i) =>
-        isSeparator(item) ? (
-          <NaturalToolbar.Separator key={i} variant={item.properties.variant} />
-        ) : isMenu(item) ? (
-          item.properties.variant === 'dropdownMenu' ? (
-            <ToolbarDropdownMenu
-              key={item.id}
-              actionGroup={item}
-              onAction={onAction}
-              iconSize={iconSize}
-              graph={graph}
-            />
+    <ToolbarContext.Provider value={contextValue}>
+      <NaturalToolbar.Root {...props}>
+        {items?.map((item, i) =>
+          isSeparator(item) ? (
+            <NaturalToolbar.Separator key={i} variant={item.properties.variant} />
+          ) : isMenu(item) ? (
+            item.properties.variant === 'dropdownMenu' ? (
+              <ToolbarDropdownMenu key={item.id} actionGroup={item} onAction={onAction} iconSize={iconSize} />
+            ) : (
+              <ToolbarToggleGroup key={item.id} actionGroup={item} onAction={onAction} iconSize={iconSize} />
+            )
           ) : (
-            <ToolbarToggleGroup
-              key={item.id}
-              actionGroup={item}
-              onAction={onAction}
-              iconSize={iconSize}
-              graph={graph}
-            />
-          )
-        ) : (
-          <ToolbarItem key={item.id} action={item as MenuAction} onAction={onAction} iconSize={iconSize} />
-        ),
-      )}
-    </NaturalToolbar.Root>
+            <ToolbarItem key={item.id} action={item as MenuAction} onAction={onAction} iconSize={iconSize} />
+          ),
+        )}
+      </NaturalToolbar.Root>
+    </ToolbarContext.Provider>
   );
 };

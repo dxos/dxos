@@ -44,12 +44,6 @@ export const DropdownMenu = {
 
 export const Toolbar = {
   render: () => {
-    return (
-      <NaturalToolbar
-        actions={nestedMenuActions.topLevelActions}
-        onAction={handleAction}
-        graph={nestedMenuActions.graph}
-      />
-    );
+    return <NaturalToolbar onAction={handleAction} {...nestedMenuActions} />;
   },
 };

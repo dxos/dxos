@@ -8,6 +8,7 @@ import { type Meta } from '@storybook/react';
 import React, { useMemo } from 'react';
 
 import { IntentProvider, type AnyIntentChain, type IntentContext } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { todo } from '@dxos/debug';
 import { createDocAccessor, createObject, create } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
@@ -35,7 +36,6 @@ const storybookIntentValue = create<IntentContext>({
   },
   undo: () => todo(),
   undoPromise: () => todo(),
-  registerResolver: () => () => {},
 });
 
 const DefaultStory = ({ content = '# Test', toolbar }: StoryProps) => {
@@ -74,7 +74,7 @@ const meta: Meta<typeof MarkdownEditor> = {
   title: 'plugins/plugin-markdown/EditorMain',
   component: MarkdownEditor,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ tooltips: true }), withAttention],
+  decorators: [withTheme, withLayout({ tooltips: true }), withAttention, withPluginManager()],
   parameters: { layout: 'fullscreen' },
 };
 
