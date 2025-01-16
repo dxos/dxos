@@ -13,6 +13,8 @@ import { isNode, type MaybePromise, nonNullable } from '@dxos/util';
 import { ACTION_GROUP_TYPE, ACTION_TYPE, Graph, ROOT_ID, type GraphParams } from './graph';
 import { type ActionData, actionGroupSymbol, type Node, type NodeArg, type Relation } from './node';
 
+const NODE_RESOLVER_TIMEOUT = 1_000;
+
 /**
  * Graph builder extension for adding nodes to the graph based on just the node id.
  * This is useful for creating the first node in a graph or for hydrating cached nodes with data.
@@ -166,7 +168,7 @@ export const toSignal = <T>(
   return thisSignal.value;
 };
 
-export type BuilderExtension = {
+export type BuilderExtension = Readonly<{
   id: string;
   resolver?: ResolverExtension;
   connector?: ConnectorExtension;
@@ -174,7 +176,7 @@ export type BuilderExtension = {
   relation?: Relation;
   type?: string;
   filter?: (node: Node) => boolean;
-};
+}>;
 
 type ExtensionArg = BuilderExtension | BuilderExtension[] | ExtensionArg[];
 
@@ -221,7 +223,16 @@ export class GraphBuilder {
       .filter((id) => id !== ROOT_ID)
       .forEach((id) => (this._initialized[id] = new Trigger()));
     Object.keys(this._graph._nodes).forEach((id) => this._onInitialNode(id));
-    await Promise.all(Object.values(this._initialized).map((trigger) => trigger.wait()));
+    await Promise.all(
+      Object.entries(this._initialized).map(async ([id, trigger]) => {
+        try {
+          await trigger.wait({ timeout: NODE_RESOLVER_TIMEOUT });
+        } catch {
+          log.error('node resolver timeout', { id });
+          this.graph._removeNodes([id]);
+        }
+      }),
+    );
   }
 
   get graph() {

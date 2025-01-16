@@ -4,7 +4,7 @@
 
 import React, { type FC, useContext, useState } from 'react';
 
-import { Surface, useIntentDispatcher, useResolvePlugin, parseLayoutPlugin, createIntent } from '@dxos/app-framework';
+import { Surface, useIntentDispatcher, createIntent, Capabilities, useCapability } from '@dxos/app-framework';
 import { type CollectionType } from '@dxos/plugin-space/types';
 import { Main } from '@dxos/react-ui';
 import {
@@ -21,8 +21,8 @@ const PresenterMain: FC<{ collection: CollectionType }> = ({ collection }) => {
   const [slide, setSlide] = useState(0);
 
   // TODO(burdon): Should not depend on split screen.
-  const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
-  const fullscreen = layoutPlugin?.provides.layout.layoutMode === 'fullscreen';
+  const layout = useCapability(Capabilities.Layout);
+  const fullscreen = layout.layoutMode === 'fullscreen';
   const { running } = useContext(PresenterContext);
 
   // TODO(burdon): Currently conflates fullscreen and running.

@@ -6,7 +6,7 @@ import { type PluginMeta } from '@dxos/app-framework';
 
 export const DEBUG_PLUGIN = 'dxos.org/plugin/debug';
 
-export default {
+export const meta = {
   id: DEBUG_PLUGIN,
   name: 'Debug',
   description: 'DXOS debugging tools.',

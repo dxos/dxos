@@ -5,7 +5,6 @@
 import React, { useCallback, useRef, useState } from 'react';
 
 import { createIntent, LayoutAction, NavigationAction, useIntentDispatcher } from '@dxos/app-framework';
-import { type Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 import { ClientAction } from '@dxos/plugin-client/types';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -19,7 +18,7 @@ import { activateAccount, signup } from '../credentials';
 
 export const WELCOME_SCREEN = 'WelcomeScreen';
 
-export const WelcomeScreen = ({ hubUrl, firstRun }: { hubUrl: string; firstRun?: Trigger }) => {
+export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   const client = useClient();
   const identity = useIdentity();
   const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -114,7 +113,6 @@ export const WelcomeScreen = ({ hubUrl, firstRun }: { hubUrl: string; firstRun?:
       }
     };
 
-    firstRun?.wake();
     await dispatch(createIntent(SpaceAction.Join, { invitationCode: spaceInvitationCode, onDone: handleDone }));
     spaceInvitationCode && removeQueryParamByValue(spaceInvitationCode);
   };

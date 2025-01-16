@@ -7,7 +7,7 @@ import { type PluginMeta } from '@dxos/app-framework';
 export const THREAD_PLUGIN = 'dxos.org/plugin/thread';
 export const THREAD_ITEM = `${THREAD_PLUGIN}/item`;
 
-export default {
+export const meta = {
   id: THREAD_PLUGIN,
   name: 'Threads',
   description: 'Add comment threads to objects.',

@@ -6,7 +6,7 @@ import { type PluginMeta } from '@dxos/app-framework';
 
 export const CANVAS_PLUGIN = 'dxos.org/plugin/canvas';
 
-export default {
+export const meta = {
   id: CANVAS_PLUGIN,
   name: 'Canvas',
   description: 'Place objects as cards on a grid.',

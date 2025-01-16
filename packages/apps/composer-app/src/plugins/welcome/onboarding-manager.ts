@@ -15,7 +15,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientAction } from '@dxos/plugin-client/types';
 import { HelpAction } from '@dxos/plugin-help/types';
-import { SpaceAction } from '@dxos/plugin-space';
+import { SpaceAction } from '@dxos/plugin-space/types';
 import { type Client } from '@dxos/react-client';
 import { type Credential, type Identity } from '@dxos/react-client/halo';
 
@@ -41,7 +41,6 @@ export class OnboardingManager {
   private readonly _dispatch: PromiseIntentDispatcher;
   private readonly _client: Client;
   private readonly _layout: Layout;
-  private readonly _firstRun?: Trigger;
   private readonly _hubUrl?: string;
   private readonly _skipAuth: boolean;
   private readonly _token?: string;
@@ -56,7 +55,6 @@ export class OnboardingManager {
     dispatch,
     client,
     layout,
-    firstRun,
     hubUrl,
     token,
     recoverIdentity,
@@ -68,7 +66,6 @@ export class OnboardingManager {
     this._dispatch = dispatch;
     this._client = client;
     this._layout = layout;
-    this._firstRun = firstRun;
     this._hubUrl = hubUrl;
     this._skipAuth = ['main', 'labs'].includes(client.config.values.runtime?.app?.env?.DX_ENVIRONMENT) || !this._hubUrl;
     this._token = token;
@@ -198,7 +195,6 @@ export class OnboardingManager {
 
   private async _createIdentity() {
     await this._dispatch(createIntent(ClientAction.CreateIdentity));
-    this._firstRun?.wake();
   }
 
   private async _createRecoveryCode() {

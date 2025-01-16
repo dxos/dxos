@@ -5,13 +5,7 @@
 import { CheckCircle, CircleDashed, CircleNotch } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import {
-  useResolvePlugin,
-  parseNavigationPlugin,
-  NavigationAction,
-  useIntentDispatcher,
-  createIntent,
-} from '@dxos/app-framework';
+import { NavigationAction, useIntentDispatcher, createIntent, useCapability, Capabilities } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
 import { Filter, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
 import { Button, Toast, useTranslation } from '@dxos/react-ui';
@@ -29,7 +23,7 @@ export const AwaitingObject = ({ id }: { id: string }) => {
   const [found, setFound] = useState(false);
   const { t } = useTranslation(SPACE_PLUGIN);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
+  const location = useCapability(Capabilities.Location);
 
   const client = useClient();
   const objects = useQuery(client.spaces, Filter.all());
@@ -50,11 +44,11 @@ export const AwaitingObject = ({ id }: { id: string }) => {
     if (objects.findIndex((object) => fullyQualifiedId(object) === id) > -1) {
       setFound(true);
 
-      if (navigationPlugin?.provides.location.active.solo?.[0].id === id) {
+      if (location.active.solo?.[0].id === id) {
         setOpen(false);
       }
     }
-  }, [id, objects, navigationPlugin]);
+  }, [id, objects, location]);
 
   const handleClose = useCallback(
     async () => dispatch(createIntent(SpaceAction.WaitForObject, { id: undefined })),

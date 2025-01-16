@@ -6,7 +6,7 @@ import { type PluginMeta } from '@dxos/app-framework';
 
 export const ATTENTION_PLUGIN = 'dxos.org/plugin/attention';
 
-export default {
+export const meta = {
   id: ATTENTION_PLUGIN,
   name: 'Attention',
 } satisfies PluginMeta;

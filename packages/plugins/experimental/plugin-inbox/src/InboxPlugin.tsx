@@ -2,82 +2,80 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import {
+  Capabilities,
+  contributes,
+  createIntent,
+  defineModule,
+  definePlugin,
+  Events,
+  oneOf,
+} from '@dxos/app-framework';
+import { RefArray } from '@dxos/live-object';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
-import { createIntent, createResolver, createSurface, type PluginDefinition } from '@dxos/app-framework';
-import { create, RefArray } from '@dxos/live-object';
-
-import { ContactsContainer, EventsContainer, MailboxContainer } from './components';
-import meta, { INBOX_PLUGIN } from './meta';
+import { IntentResolver, ReactSurface } from './capabilities';
+import { INBOX_PLUGIN, meta } from './meta';
 import translations from './translations';
-import { CalendarType, ContactsType, EventType, InboxAction, type InboxPluginProvides, MailboxType } from './types';
+import { CalendarType, ContactsType, EventType, InboxAction, MailboxType } from './types';
 
-export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
-  return {
-    meta,
-    provides: {
-      metadata: {
-        records: {
-          [MailboxType.typename]: {
+export const InboxPlugin = () =>
+  definePlugin(meta, [
+    defineModule({
+      id: `${meta.id}/module/translations`,
+      activatesOn: Events.SetupTranslations,
+      activate: () => contributes(Capabilities.Translations, translations),
+    }),
+    defineModule({
+      id: `${meta.id}/module/metadata`,
+      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
+      activate: () => [
+        contributes(Capabilities.Metadata, {
+          id: MailboxType.typename,
+          metadata: {
             createObject: (props: { name?: string }) => createIntent(InboxAction.CreateMailbox, props),
             placeholder: ['mailbox title placeholder', { ns: INBOX_PLUGIN }],
             icon: 'ph--envelope--regular',
           },
-          [ContactsType.typename]: {
+        }),
+        contributes(Capabilities.Metadata, {
+          id: ContactsType.typename,
+          metadata: {
             createObject: (props: { name?: string }) => createIntent(InboxAction.CreateContacts, props),
             placeholder: ['contacts title placeholder', { ns: INBOX_PLUGIN }],
             icon: 'ph--address-book--regular',
           },
-          [CalendarType.typename]: {
+        }),
+        contributes(Capabilities.Metadata, {
+          id: CalendarType.typename,
+          metadata: {
             createObject: (props: { name?: string }) => createIntent(InboxAction.CreateCalendar, props),
             placeholder: ['calendar title placeholder', { ns: INBOX_PLUGIN }],
             icon: 'ph--calendar--regular',
           },
-          [EventType.typename]: {
+        }),
+        contributes(Capabilities.Metadata, {
+          id: EventType.typename,
+          metadata: {
             // TODO(wittjosiah): Move out of metadata.
             loadReferences: async (event: EventType) => await RefArray.loadAll(event.links ?? []),
           },
-        },
-      },
-      translations,
-      echo: {
-        schema: [MailboxType, ContactsType, CalendarType],
-      },
-      surface: {
-        definitions: () => [
-          createSurface({
-            id: `${INBOX_PLUGIN}/mailbox`,
-            role: 'article',
-            filter: (data): data is { subject: MailboxType } => data.subject instanceof MailboxType,
-            component: ({ data }) => <MailboxContainer mailbox={data.subject} />,
-          }),
-          createSurface({
-            id: `${INBOX_PLUGIN}/contacts`,
-            role: 'article',
-            filter: (data): data is { subject: ContactsType } => data.subject instanceof ContactsType,
-            component: ({ data }) => <ContactsContainer contacts={data.subject} />,
-          }),
-          createSurface({
-            id: `${INBOX_PLUGIN}/calendar`,
-            role: 'article',
-            filter: (data): data is { subject: CalendarType } => data.subject instanceof CalendarType,
-            component: ({ data }) => <EventsContainer calendar={data.subject} />,
-          }),
-        ],
-      },
-      intent: {
-        resolvers: () => [
-          createResolver(InboxAction.CreateMailbox, () => ({
-            data: { object: create(MailboxType, { messages: [] }) },
-          })),
-          createResolver(InboxAction.CreateContacts, () => ({
-            data: { object: create(ContactsType, {}) },
-          })),
-          createResolver(InboxAction.CreateCalendar, () => ({
-            data: { object: create(CalendarType, {}) },
-          })),
-        ],
-      },
-    },
-  };
-};
+        }),
+      ],
+    }),
+    defineModule({
+      id: `${meta.id}/module/schema`,
+      activatesOn: ClientEvents.SetupClient,
+      activate: () => contributes(ClientCapabilities.Schema, [MailboxType, ContactsType, CalendarType]),
+    }),
+    defineModule({
+      id: `${meta.id}/module/react-surface`,
+      activatesOn: Events.Startup,
+      activate: ReactSurface,
+    }),
+    defineModule({
+      id: `${meta.id}/module/intent-resolver`,
+      activatesOn: Events.SetupIntents,
+      activate: IntentResolver,
+    }),
+  ]);
