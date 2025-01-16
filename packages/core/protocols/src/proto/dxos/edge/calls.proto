@@ -12,7 +12,7 @@ message Tracks {
   optional string audio = 1;
   optional bool audio_enabled = 2;
   optional string video = 3;
-  optional string video_enabled = 4;
+  optional bool video_enabled = 4;
   optional string screenshare = 5;
   optional bool screen_share_enabled = 6;
 }
