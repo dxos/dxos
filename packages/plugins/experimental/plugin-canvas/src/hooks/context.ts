@@ -29,8 +29,8 @@ export type EditorOptions = {
  */
 // TODO(burdon): Update, Delete, etc. Better way to keep in sync?
 export interface GraphMonitor {
-  onCreate: (props: { model: CanvasGraphModel; node: GraphNode<Shape> }) => void;
-  onLink: (props: { model: CanvasGraphModel; edge: GraphEdge<Connection> }) => void;
+  onCreate: (props: { graph: CanvasGraphModel; node: GraphNode<Shape> }) => void;
+  onLink: (props: { graph: CanvasGraphModel; edge: GraphEdge<Connection> }) => void;
 }
 
 export type EditorContextType = {

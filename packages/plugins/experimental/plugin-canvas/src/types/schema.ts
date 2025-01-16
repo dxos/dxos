@@ -98,7 +98,7 @@ export class CanvasBoardType extends TypedObject({
   shapes: Graph,
 }) {}
 
-export type CanvasGraphModel = GraphModel<GraphNode<Shape, false>, GraphEdge<Connection>>;
+export type CanvasGraphModel = GraphModel<GraphNode<Shape, false>, GraphEdge<Connection, true>>;
 
 export const createCanvasGraphModel = (graph?: Graph): CanvasGraphModel =>
-  new GraphModel<GraphNode<Shape, false>, GraphEdge<Connection>>(graph);
+  new GraphModel<GraphNode<Shape, false>, GraphEdge<Connection, true>>(graph);

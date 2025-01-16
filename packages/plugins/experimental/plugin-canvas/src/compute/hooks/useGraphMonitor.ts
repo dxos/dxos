@@ -34,7 +34,7 @@ export const useGraphMonitor = (graph?: ComputeGraphModel): GraphMonitor => {
         (node as GraphNode<ComputeShape>).data.node = computeNode.id;
       },
 
-      onLink: ({ model, edge }) => {
+      onLink: ({ graph: model, edge }) => {
         if (graph) {
           // TODO(burdon): Check type.
           const data = edge.data as Connection;

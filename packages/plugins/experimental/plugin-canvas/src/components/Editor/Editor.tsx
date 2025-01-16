@@ -27,7 +27,7 @@ import {
   SelectionModel,
 } from '../../hooks';
 import { defaultShapes } from '../../shapes';
-import { createCanvasGraphModel, type CanvasGraphModel, type CanvasGraphModel } from '../../types';
+import { type CanvasGraphModel, createCanvasGraphModel } from '../../types';
 import { Canvas, ShapeRegistry } from '../Canvas';
 import { UI } from '../UI';
 import { type TestId } from '../defs';

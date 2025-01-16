@@ -112,7 +112,7 @@ const Render = ({
   }, [graph, machine]);
 
   // Sync monitor.
-  const graphMonitor = useGraphMonitor(machine);
+  const graphMonitor = useGraphMonitor(machine?.graph);
 
   // Selection.
   const [selection, selected] = useSelection(graph);
