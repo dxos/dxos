@@ -6,7 +6,7 @@ import React from 'react';
 
 import { S } from '@dxos/echo-schema';
 
-import { Box } from './components';
+import { Box } from './common';
 import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { JsonFilter, createAnchorMap } from '../../components';
@@ -36,8 +36,6 @@ export const JsonComponent = ({ shape, ...props }: JsonComponentProps) => {
   const { runtime } = useComputeNodeState(shape);
   const input = runtime.inputs[DEFAULT_INPUT];
   const value = input?.type === 'executed' ? input.value : undefined;
-
-  console.log('value', value, input);
 
   return (
     <Box name={'Json'}>

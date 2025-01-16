@@ -9,7 +9,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { createFunctionAnchors } from './Function';
-import { Box } from './components';
+import { Box } from './common';
 import { ComputeShape, createInputSchema, createOutputSchema, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { GptMessage } from '../graph';
