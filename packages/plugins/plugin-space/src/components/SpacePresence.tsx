@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { usePlugin } from '@dxos/app-framework';
+import { useCapability } from '@dxos/app-framework';
 import { generateName } from '@dxos/display-name';
 import { type Expando } from '@dxos/echo-schema';
 import { useGraph } from '@dxos/plugin-graph';
@@ -26,9 +26,10 @@ import {
 import { AttentionGlyph, useAttended, useAttention, type AttentionGlyphProps } from '@dxos/react-ui-attention';
 import { ComplexMap, keyToFallback } from '@dxos/util';
 
+import { SpaceCapabilities } from '../capabilities';
 import { usePath } from '../hooks';
 import { SPACE_PLUGIN } from '../meta';
-import type { ObjectViewerProps, SpacePluginProvides } from '../types';
+import type { ObjectViewerProps } from '../types';
 
 // TODO(thure): Get/derive these values from protocol
 const REFRESH_INTERVAL = 5000;
@@ -41,7 +42,8 @@ const noViewers = new ComplexMap<PublicKey, ObjectViewerProps>(PublicKey.hash);
 const getName = (identity: Identity) => identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
 
 export const SpacePresence = ({ object, spaceKey }: { object: Expando; spaceKey?: PublicKey }) => {
-  const spacePlugin = usePlugin<SpacePluginProvides>(SPACE_PLUGIN);
+  // TODO(wittjosiah): Doesn't need to be mutable but readonly type messes with ComplexMap.
+  const spaceState = useCapability(SpaceCapabilities.MutableState);
   const client = useClient();
   const identity = useIdentity();
   const space = spaceKey ? client.spaces.get(spaceKey) : getSpace(object);
@@ -63,11 +65,10 @@ export const SpacePresence = ({ object, spaceKey }: { object: Expando; spaceKey?
 
   // TODO(thure): Could it be a smell to return early when there are interactions with `deepSignal` later, since it
   //  prevents reactivity?
-  if (!identity || !spacePlugin || !space) {
+  if (!identity || !spaceState || !space) {
     return null;
   }
 
-  const spaceState = spacePlugin.provides.space;
   const currentObjectViewers = spaceState.viewersByObject[fullyQualifiedId(object)] ?? noViewers;
 
   const membersForObject = spaceMembers

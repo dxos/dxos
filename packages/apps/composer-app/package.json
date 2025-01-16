@@ -46,7 +46,6 @@
     "@dxos/plugin-map": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-mermaid": "workspace:*",
-    "@dxos/plugin-metadata": "workspace:*",
     "@dxos/plugin-native": "workspace:*",
     "@dxos/plugin-navtree": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",

@@ -6,16 +6,16 @@ import { Plus } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
+  Capabilities,
   createIntent,
   LayoutAction,
   NavigationAction,
-  parseMetadataResolverPlugin,
+  useCapabilities,
   useIntentDispatcher,
-  useResolvePlugin,
 } from '@dxos/app-framework';
 import { create, getType, fullyQualifiedId, isReactiveObject, makeRef } from '@dxos/client/echo';
 import { useGraph } from '@dxos/plugin-graph';
-import { SpaceAction } from '@dxos/plugin-space';
+import { SpaceAction } from '@dxos/plugin-space/types';
 import { type CollectionType } from '@dxos/plugin-space/types';
 import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { AttentionProvider } from '@dxos/react-ui-attention';
@@ -43,7 +43,7 @@ const StackMain = ({ id, collection }: StackMainProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { graph } = useGraph();
   const { t } = useTranslation(STACK_PLUGIN);
-  const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
+  const allMetadata = useCapabilities(Capabilities.Metadata);
   const defaultStack = useMemo(() => create(StackViewType, { sections: {} }), [collection]);
   const stack = (collection.views[StackViewType.typename]?.target as StackViewType | undefined) ?? defaultStack;
   const [collapsedSections, setCollapsedSections] = useState<CollapsedSections>({});
@@ -61,9 +61,8 @@ const StackMain = ({ id, collection }: StackMainProps) => {
       .map((object) => object.target)
       .filter(nonNullable)
       .map((object) => {
-        const metadata = metadataPlugin?.provides.metadata.resolver(
-          getType(object)?.objectId ?? 'never',
-        ) as StackSectionMetadata;
+        const metadata = allMetadata.find((m) => m.id === (getType(object)?.objectId ?? 'never'))
+          ?.metadata as StackSectionMetadata;
         const view = {
           ...stack.sections[object.id],
           collapsed: collapsedSections[fullyQualifiedId(object)],

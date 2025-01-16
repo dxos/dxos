@@ -6,7 +6,7 @@ import { type PluginMeta } from '@dxos/app-framework';
 
 export const SCRIPT_PLUGIN = 'dxos.org/plugin/script';
 
-export default {
+export const meta = {
   id: SCRIPT_PLUGIN,
   name: 'Scripts',
   description: 'Distributed functions.',

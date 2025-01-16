@@ -4,6 +4,8 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export default {
-  id: 'dxos.org/plugin/native',
+export const NATIVE_PLUGIN = 'dxos.org/plugin/native';
+
+export const meta = {
+  id: NATIVE_PLUGIN,
 } satisfies PluginMeta;

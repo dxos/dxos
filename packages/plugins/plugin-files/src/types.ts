@@ -2,15 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  ActiveParts,
-  type GraphBuilderProvides,
-  type GraphSerializerProvides,
-  type IntentResolverProvides,
-  type SettingsProvides,
-  type SurfaceProvides,
-  type TranslationsProvides,
-} from '@dxos/app-framework';
+import { ActiveParts } from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
 
 import { FILES_PLUGIN } from './meta';
@@ -96,23 +88,21 @@ export type LocalDirectory = {
   children: LocalEntity[];
 };
 
-export type FilesSettingsProps = {
-  autoExport: boolean;
-  autoExportInterval: number;
-  rootHandle?: FileSystemDirectoryHandle;
-  openLocalFiles?: boolean;
-};
+export const FilesSettingsSchema = S.mutable(
+  S.Struct({
+    autoExport: S.Boolean,
+    autoExportInterval: S.Number,
+    openLocalFiles: S.optional(S.Boolean),
+  }),
+);
+
+export type FilesSettingsProps = S.Schema.Type<typeof FilesSettingsSchema>;
 
 export type FilesState = {
   exportRunning: boolean;
   lastExport?: number;
   files: LocalEntity[];
   current: LocalFile | undefined;
+  // TODO(wittjosiah): Should be in settings but settings store doesn't support instance types.
+  rootHandle?: FileSystemDirectoryHandle;
 };
-
-export type LocalFilesPluginProvides = SurfaceProvides &
-  IntentResolverProvides &
-  GraphBuilderProvides &
-  GraphSerializerProvides &
-  TranslationsProvides &
-  SettingsProvides<FilesSettingsProps>;

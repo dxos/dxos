@@ -5,13 +5,6 @@
 import { type IconProps } from '@phosphor-icons/react';
 import { type FC } from 'react';
 
-import type {
-  MetadataRecordsProvides,
-  SettingsProvides,
-  SurfaceProvides,
-  TranslationsProvides,
-} from '@dxos/app-framework';
-import { type SchemaProvides } from '@dxos/plugin-space';
 import { type CollectionType } from '@dxos/plugin-space/types';
 import { type ReactiveEchoObject } from '@dxos/react-client/echo';
 import { type Label } from '@dxos/react-ui';
@@ -53,9 +46,3 @@ export type StackSectionItem = {
 };
 
 export type StackSettingsProps = { separation: boolean };
-
-export type StackPluginProvides = SurfaceProvides &
-  MetadataRecordsProvides &
-  SettingsProvides<StackSettingsProps> &
-  TranslationsProvides &
-  SchemaProvides;
