@@ -4,11 +4,12 @@
 
 import { Effect } from 'effect';
 
-import { Message } from '@dxos/assistant';
+import { LLMTool, Message, ToolTypes } from '@dxos/assistant';
 import {
   type ComputeNode,
   type Executable,
   GptService,
+  SpaceService,
   defineComputeNode,
   gptNode,
   makeValueBag,
@@ -40,7 +41,9 @@ type NodeType =
   | 'thread'
   | 'constant'
   | 'list'
-  | 'append';
+  | 'append'
+  | 'database'
+  | 'text-to-image';
 
 // TODO(burdon): Just pass in type? Or can the shape specialize the node?
 export const createComputeNode = (shape: GraphNode<ComputeShape>): GraphNode<ComputeNode> => {
@@ -87,6 +90,7 @@ const nodeFactory: Record<string, (shape: GraphNode<ComputeShape>) => GraphNode<
   ['constant' as const]: (shape) => createNode('constant', { constant: (shape.data as ConstantShape).constant }),
   ['list' as const]: () => createNode('list'),
   ['append' as const]: () => createNode('append'),
+  ['database' as const]: () => createNode('database'),
   ['text-to-image' as const]: () => createNode('text-to-image'),
 };
 
@@ -100,6 +104,10 @@ export const ListInput = S.Struct({ [DEFAULT_INPUT]: ObjectId });
 export const ListOutput = S.Struct({ id: ObjectId, items: S.Array(Message) });
 
 export const AppendInput = S.Struct({ id: ObjectId, items: S.Array(Message) });
+
+export const DatabaseOutput = S.Struct({ tool: S.Array(LLMTool) });
+
+export const TextToImageOutput = S.Struct({ tool: S.Array(LLMTool) });
 
 const nodeDefs: Record<NodeType, Executable> = {
   // Controls.
@@ -227,7 +235,28 @@ const nodeDefs: Record<NodeType, Executable> = {
   }),
 
   ['gpt' as const]: gptNode,
+
+  ['database' as const]: defineComputeNode({
+    input: S.Struct({}),
+    output: DatabaseOutput,
+    exec: synchronizedComputeFunction(() =>
+      Effect.gen(function* () {
+        throw new Error('Not implemented');
+      }),
+    ),
+  }),
+
+  ['text-to-image' as const]: defineComputeNode({
+    input: S.Struct({}),
+    output: TextToImageOutput,
+    exec: synchronizedComputeFunction(() => Effect.succeed({ tool: [textToImageTool] })),
+  }),
 };
 
 // TODO(dmaretskyi): Have to hardcode this since ai-service requires spaceId.
 const FAKE_SPACE_ID = SpaceId.random();
+
+const textToImageTool: LLMTool = {
+  name: 'textToImage',
+  type: ToolTypes.TextToImage,
+};

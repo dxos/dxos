@@ -2424,6 +2424,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../experimental/assistant
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
