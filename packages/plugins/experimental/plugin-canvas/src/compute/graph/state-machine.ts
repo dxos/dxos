@@ -18,6 +18,7 @@ import {
   GptService,
   GraphExecutor,
   makeValueBag,
+  SpaceService,
   unwrapValueBag,
 } from '@dxos/conductor';
 import { MockGpt } from '@dxos/conductor';
@@ -252,7 +253,8 @@ export class StateMachine extends Resource {
     const services = { ...DEFAULT_SERVICES, ...this._services };
     const logLayer = Layer.succeed(EventLogger, this._createLogger());
     const gptLayer = Layer.succeed(GptService, services.gpt!);
-    return Layer.mergeAll(logLayer, gptLayer);
+    const spaceLayer = SpaceService.empty;
+    return Layer.mergeAll(logLayer, gptLayer, spaceLayer);
   }
 }
 

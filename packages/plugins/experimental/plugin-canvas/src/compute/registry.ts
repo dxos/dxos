@@ -56,4 +56,5 @@ export const computeShapes: ShapeDef<any>[] = [
   viewShape,
   appendShape,
   constantShape,
+  textToImageShape,
 ];
