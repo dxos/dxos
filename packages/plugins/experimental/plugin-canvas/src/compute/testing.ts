@@ -18,6 +18,7 @@ import {
   createConstant,
   createDatabase,
   createGpt,
+  createJson,
   createList,
   createOr,
   createSwitch,
@@ -129,17 +130,18 @@ export const createTest3 = ({
       ? [
           createConstant({
             id: 'h',
-            ...layout({ x: -18, y: 14, width: 8, height: 12 }),
+            ...layout({ x: -18, y: 14, width: 8, height: 4 }),
             constant: ObjectId.random(),
           }),
         ]
       : []),
-    ...(history ? [createList({ id: 'k', ...layout({ x: -8, y: 14, width: 8, height: 12 }) })] : []),
+    ...(history ? [createList({ id: 'k', ...layout({ x: -6, y: 14, width: 10, height: 12 }) })] : []),
     ...(history ? [createAppend({ id: 'l', ...layout({ x: 20, y: 14 }) })] : []),
     ...(viewText ? [createView({ id: 'g', ...layout({ x: 16, y: 0, width: 12, height: 12 }) })] : []),
     ...(db ? [createDatabase({ id: 'e', ...layout({ x: -10, y: 4 }) })] : []),
     ...(textToImage ? [createTextToImage({ id: 'j', ...layout({ x: -10, y: 7 }) })] : []),
     ...(cot ? [createList({ id: 'f', ...layout({ x: 0, y: -10, width: 8, height: 12 }) })] : []),
+    ...(history ? [createJson({ id: 'm', ...layout({ x: 8, y: 14, width: 10, height: 12 }) })] : []),
   ];
 
   const edges: Omit<GraphEdge<Connection>, 'id'>[] = [
@@ -150,7 +152,8 @@ export const createTest3 = ({
     ...(viewText ? [{ source: 'b', target: 'g', data: { output: 'text', input: DEFAULT_INPUT } }] : []),
     ...(history ? [{ source: 'h', target: 'k', data: { output: DEFAULT_OUTPUT, input: DEFAULT_INPUT } }] : []),
     ...(history ? [{ source: 'k', target: 'b', data: { output: 'items', input: 'history' } }] : []),
-    ...(history ? [{ source: 'k', target: 'l', data: { output: 'id', input: 'id' } }] : []),
+    ...(history ? [{ source: 'k', target: 'm', data: { output: 'id', input: DEFAULT_INPUT } }] : []),
+    ...(history ? [{ source: 'm', target: 'l', data: { output: DEFAULT_OUTPUT, input: 'id' } }] : []),
     ...(history ? [{ source: 'b', target: 'l', data: { output: 'messages', input: 'items' } }] : []),
     ...(db ? [{ source: 'e', target: 'b', data: { input: 'tools', output: DEFAULT_OUTPUT } }] : []),
     ...(textToImage ? [{ source: 'j', target: 'b', data: { input: 'tools', output: DEFAULT_OUTPUT } }] : []),
