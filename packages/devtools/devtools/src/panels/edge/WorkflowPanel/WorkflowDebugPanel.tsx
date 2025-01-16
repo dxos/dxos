@@ -16,6 +16,7 @@ import {
   GptService,
   makeValueBag,
   unwrapValueBag,
+  SpaceService,
 } from '@dxos/conductor';
 import { AST } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
@@ -23,6 +24,7 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { log, LogLevel } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
+import { type Space } from '@dxos/react-client/echo';
 import { Avatar, Icon, Input, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
@@ -127,7 +129,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
             .pipe(
               Effect.withSpan('runWorkflow'),
               Effect.flatMap(unwrapValueBag),
-              Effect.provide(createLocalExecutionContext()),
+              Effect.provide(createLocalExecutionContext(space)),
               Effect.scoped,
             ),
         );
@@ -227,10 +229,11 @@ const RobotAvatar = () => (
   </Avatar.Root>
 );
 
-const createLocalExecutionContext = (): Layer.Layer<Exclude<ComputeRequirements, Scope.Scope>> => {
+const createLocalExecutionContext = (space: Space): Layer.Layer<Exclude<ComputeRequirements, Scope.Scope>> => {
   const logLayer = Layer.succeed(EventLogger, createDxosEventLogger(LogLevel.INFO));
   const gptLayer = Layer.succeed(GptService, new OllamaGpt(new Ollama()));
-  return Layer.mergeAll(logLayer, gptLayer);
+  const spaceService = SpaceService.fromSpace(space);
+  return Layer.mergeAll(logLayer, gptLayer, spaceService);
 };
 
 const inputTemplateFromAst = (ast: AST.AST): string => {

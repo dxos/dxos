@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Context, Layer } from 'effect';
-import { Space } from '@dxos/client/echo';
+import { Context, Layer } from 'effect';
+
+import { type Space } from '@dxos/client/echo';
 
 // TODO(dmaretskyi): This makes conductor dependent on client.
 export class SpaceService extends Context.Tag('SpaceService')<
