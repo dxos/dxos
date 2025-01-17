@@ -5,7 +5,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 
 import { type GraphEdge, GraphModel, type GraphNode } from '@dxos/graph';
-import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { ShapeRegistry } from './Canvas';
@@ -19,8 +19,8 @@ export const CanvasContainer = ({ canvas, role }: { canvas: CanvasBoardType; rol
   const id = fullyQualifiedId(canvas);
 
   // TODO(burdon): Use canvas.graph.
-  const space = getSpace(canvas);
-  const graph = useMemo(() => new GraphModel<GraphNode<ComputeShape>, GraphEdge<Connection>>(canvas.shapes), []);
+  // const space = getSpace(canvas);
+  const graph = useMemo(() => new GraphModel<GraphNode<ComputeShape>, GraphEdge<Connection>>(canvas.layout), []);
   const { machine } = useMemo(() => createMachine(graph), []);
   const editorRef = useRef<EditorController>(null);
   useEffect(() => {

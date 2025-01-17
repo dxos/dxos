@@ -95,7 +95,7 @@ export class CanvasBoardType extends TypedObject({
   /**
    * Graph of shapes positioned on the canvas.
    */
-  shapes: Graph,
+  layout: Graph,
 }) {}
 
 export type CanvasGraphModel = GraphModel<GraphNode<Shape, false>, GraphEdge<Connection, true>>;

@@ -11,6 +11,6 @@ export default () =>
   contributes(
     Capabilities.IntentResolver,
     createResolver(CanvasAction.Create, ({ name }) => ({
-      data: { object: create(CanvasBoardType, { name, layout: { shapes: [] } }) },
+      data: { object: create(CanvasBoardType, { name, layout: { nodes: [], edges: [] } }) },
     })),
   );
