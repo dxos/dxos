@@ -21,18 +21,17 @@ export const useRoom = ({ roomId, username }: { roomId: PublicKey; username: str
   }, []);
 
   const client = useClient();
-  const initUserState = {
-    id: client.halo.identity.get()!.identityKey.toHex(),
-    name: username,
-    joined: false,
-    raisedHand: false,
-    speaking: false,
-    tracks: {},
-  };
   const peerInfo: Peer = {
     identityKey: client.halo.identity.get()!.identityKey.toHex(),
     peerKey: client.halo.device!.deviceKey.toHex(),
-    state: codec.encode(initUserState),
+    state: codec.encode({
+      id: client.halo.identity.get()!.identityKey.toHex(),
+      name: username,
+      joined: false,
+      raisedHand: false,
+      speaking: false,
+      tracks: {},
+    }),
   };
 
   useMemo(() => {
