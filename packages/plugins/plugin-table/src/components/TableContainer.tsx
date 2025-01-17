@@ -16,7 +16,7 @@ import {
   type TableController,
   TablePresentation,
   Toolbar,
-  type ToolbarAction,
+  type ToolbarActionType,
   type TableType,
   useTableModel,
 } from '@dxos/react-ui-table';
@@ -86,7 +86,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
   }, [dispatch, table]);
 
   const handleAction = useCallback(
-    (action: ToolbarAction) => {
+    (action: { type: ToolbarActionType }) => {
       switch (action.type) {
         case 'comment': {
           onThreadCreate();
@@ -96,9 +96,13 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
           handleInsertRow();
           break;
         }
+        case 'save-view': {
+          model?.saveView();
+          break;
+        }
       }
     },
-    [onThreadCreate, space, schema, handleInsertRow],
+    [onThreadCreate, space, schema, handleInsertRow, dispatch, table, model],
   );
 
   return (
@@ -106,7 +110,7 @@ const TableContainer = ({ role, table }: LayoutContainerProps<{ table: TableType
       <Toolbar.Root onAction={handleAction} classNames={!hasAttention && 'opacity-20'}>
         <Toolbar.Editing />
         <Toolbar.Separator />
-        <Toolbar.Actions />
+        <Toolbar.Actions viewDirty={model?.isViewDirty} />
       </Toolbar.Root>
       <Table.Root role={role}>
         <Table.Main key={table.id} ref={tableRef} model={model} presentation={presentation} />

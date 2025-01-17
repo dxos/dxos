@@ -23,6 +23,7 @@ export default [
         'continue label': 'Continue',
         'create stack section label': 'Create table',
         'add row': 'Add row',
+        'save view': 'Save view',
         'create comment': 'Create thread',
         'column action sort descending': 'Sort Descending',
         'column action sort ascending': 'Sort Ascending',

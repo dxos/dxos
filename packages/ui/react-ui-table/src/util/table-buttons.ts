@@ -2,20 +2,22 @@
 // Copyright 2024 DXOS.org
 //
 
-export type TableButton = 'columnSettings' | 'rowMenu' | 'newColumn' | 'referencedCell';
+export type TableButton = 'columnSettings' | 'rowMenu' | 'newColumn' | 'referencedCell' | 'sort';
 
 export const BUTTON_IDENTIFIERS: { [K in TableButton]: string } = {
   columnSettings: 'data-table-column-settings-button',
   newColumn: 'data-table-new-column-button',
   referencedCell: 'data-table-ref-cell-button',
   rowMenu: 'data-table-row-menu-button',
+  sort: 'data-table-sort-button',
 } as const;
 
 type ButtonData =
   | { type: 'columnSettings'; fieldId: string }
   | { type: 'newColumn'; disabled?: boolean }
   | { type: 'referencedCell'; schemaId: string; targetId: string }
-  | { type: 'rowMenu'; rowIndex: number };
+  | { type: 'rowMenu'; rowIndex: number }
+  | { type: 'sort'; fieldId: string; direction?: 'asc' | 'desc' };
 
 const createButton = ({
   attr,
@@ -23,18 +25,21 @@ const createButton = ({
   disabled = false,
   icon,
   testId,
+  type = 'primary',
 }: {
   attr: string;
   data: Record<string, string>;
   disabled?: boolean;
   icon: string;
   testId: string;
+  type?: 'primary' | 'secondary';
 }) => {
   const dataAttrs = Object.entries(data)
     .map(([k, v]) => `${k}="${v}"`)
     .join(' ');
 
-  return `<button ${attr} data-testid="${testId}" class="ch-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 inline-end-2" ${dataAttrs} ${disabled ? 'disabled' : ''}><svg><use href="/icons.svg#${icon}"/></svg></button>`;
+  const positionClass = type === 'primary' ? 'inline-end-2' : 'inline-end-9';
+  return `<button ${attr} data-testid="${testId}" class="ch-button is-6 pli-0.5 min-bs-0 absolute inset-block-1 ${positionClass}" ${dataAttrs} ${disabled ? 'disabled' : ''}><svg><use href="/icons.svg#${icon}"/></svg></button>`;
 };
 
 const addColumnButton = {
@@ -111,9 +116,34 @@ const rowMenuButton = {
   }),
 } as const;
 
+const sortButton = {
+  attr: BUTTON_IDENTIFIERS.sort,
+  icon: 'ph--sort-ascending--regular',
+  render: ({ fieldId, direction }: Omit<Extract<ButtonData, { type: 'sort' }>, 'type'>) => {
+    return createButton({
+      attr: BUTTON_IDENTIFIERS.sort,
+      icon: direction === 'desc' ? 'ph--sort-descending--regular' : 'ph--sort-ascending--regular',
+      data: {
+        'data-field-id': fieldId,
+        'data-direction': direction ?? '',
+      },
+      testId: 'table-sort-button',
+      // TODO(ZaymonFC): All buttons should be rendered into an absolutely positioned flex container.
+      // This is a bit hacky.
+      type: 'secondary',
+    });
+  },
+  getData: (el: HTMLElement): Extract<ButtonData, { type: 'sort' }> => ({
+    type: 'sort',
+    fieldId: el.getAttribute('data-field-id')!,
+    direction: el.getAttribute('data-direction') as 'asc' | 'desc' | undefined,
+  }),
+} as const;
+
 export const tableButtons = {
   addColumn: addColumnButton,
   columnSettings: columnSettingsButton,
   referencedCell: referencedCellButton,
   rowMenu: rowMenuButton,
+  sort: sortButton,
 } as const;

@@ -142,12 +142,18 @@ export class TablePresentation<T extends BaseTableRow = { id: string }> {
     const fields = this.model.table.view?.target?.fields ?? [];
     for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
       const { field, props } = this.model.projection.getFieldProjection(fields[col].id);
+      const sorting = this.model.sorting?.sorting;
+      const direction = sorting?.fieldId === field.id ? sorting.direction : undefined;
+
       cells[toPlaneCellIndex({ col, row: 0 })] = {
         // TODO(burdon): Use same logic as form for fallback title.
         value: props.title ?? field.path,
         readonly: true,
         resizeHandle: 'col',
-        accessoryHtml: tableButtons.columnSettings.render({ fieldId: field.id }),
+        accessoryHtml: `
+          ${direction !== undefined ? tableButtons.sort.render({ fieldId: field.id, direction }) : ''}
+          ${tableButtons.columnSettings.render({ fieldId: field.id })}
+        `,
         className: '!bg-gridHeader',
       };
     }

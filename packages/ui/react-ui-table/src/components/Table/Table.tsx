@@ -145,6 +145,10 @@ const TableMain = forwardRef<TableController, TableMainProps>(
               modals.showReferencePanel(data.targetId, data.schemaId);
               break;
             }
+            case 'sort': {
+              model?.sorting?.toggleSort(data.fieldId);
+              break;
+            }
           }
           return;
         }
