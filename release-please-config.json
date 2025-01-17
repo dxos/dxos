@@ -594,11 +594,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-metadata/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-navtree/package.json",
           "jsonpath": "$.version"
         },
@@ -865,6 +860,11 @@
         {
           "type": "json",
           "path": "tools/codemods/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/codemorph/package.json",
           "jsonpath": "$.version"
         },
         {

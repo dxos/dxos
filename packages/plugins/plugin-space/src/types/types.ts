@@ -2,19 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  type GraphBuilderProvides,
-  type GraphSerializerProvides,
-  type IntentResolverProvides,
-  type MetadataRecordsProvides,
-  type SettingsProvides,
-  type SurfaceProvides,
-  type TranslationsProvides,
-  type Plugin,
-  ActiveParts,
-} from '@dxos/app-framework';
-import { AST, S, type TypedObject, type Expando } from '@dxos/echo-schema';
-import { type PanelProvides } from '@dxos/plugin-deck/types';
+import { ActiveParts } from '@dxos/app-framework';
+import { AST, S, type Expando } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/react-client';
 import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';
 import { type ComplexMap } from '@dxos/util';
@@ -71,36 +60,16 @@ export type PluginState = {
   enabledEdgeReplication: boolean;
 };
 
-export type SpaceSettingsProps = {
-  /**
-   * Show closed spaces.
-   */
-  showHidden?: boolean;
-};
+export const SpaceSettingsSchema = S.mutable(
+  S.Struct({
+    /**
+     * Show closed spaces.
+     */
+    showHidden: S.Boolean,
+  }),
+);
 
-export type SchemaProvides = {
-  echo: {
-    schema?: TypedObject[];
-    system?: TypedObject[];
-  };
-};
-
-export const parseSchemaPlugin = (plugin?: Plugin) =>
-  Array.isArray((plugin?.provides as any).echo?.schema) || Array.isArray((plugin?.provides as any).echo?.system)
-    ? (plugin as Plugin<SchemaProvides>)
-    : undefined;
-
-export type SpacePluginProvides = SurfaceProvides &
-  IntentResolverProvides &
-  GraphBuilderProvides &
-  GraphSerializerProvides &
-  MetadataRecordsProvides &
-  SettingsProvides<SpaceSettingsProps> &
-  TranslationsProvides &
-  SchemaProvides &
-  PanelProvides & {
-    space: Readonly<PluginState>;
-  };
+export type SpaceSettingsProps = S.Schema.Type<typeof SpaceSettingsSchema>;
 
 // TODO(wittjosiah): Reconcile with graph export serializers.
 
@@ -264,13 +233,6 @@ export namespace SpaceAction {
   export class WaitForObject extends S.TaggedClass<WaitForObject>()(`${SPACE_ACTION}/wait-for-object`, {
     input: S.Struct({
       id: S.optional(S.String),
-    }),
-    output: S.Void,
-  }) {}
-
-  export class ToggleHidden extends S.TaggedClass<ToggleHidden>()(`${SPACE_ACTION}/toggle-hidden`, {
-    input: S.Struct({
-      state: S.optional(S.Boolean),
     }),
     output: S.Void,
   }) {}

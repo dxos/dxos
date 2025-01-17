@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { SPACE_PLUGIN } from '@dxos/plugin-space/meta';
+import { SPACE_PLUGIN } from '@dxos/plugin-space';
 import { Input, useTranslation } from '@dxos/react-ui';
 
 import { RangeList } from './RangeList';

@@ -2,9 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { SheetPlugin } from './SheetPlugin';
-
-export * from './types';
+export { SheetCapabilities } from './capabilities';
+export * from './meta';
 export * from './SheetPlugin';
-
-export default SheetPlugin;

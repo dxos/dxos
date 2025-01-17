@@ -11,6 +11,6 @@ export const KEY_BINDING = 'KeyBinding';
 // TODO(wittjosiah): Factor out.
 export const COMMANDS_DIALOG = `${NAVTREE_PLUGIN}/CommandsDialog`;
 
-export default {
+export const meta = {
   id: NAVTREE_PLUGIN,
 } satisfies PluginMeta;
