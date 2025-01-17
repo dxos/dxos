@@ -41,6 +41,11 @@ export type SignalRPCClientParams = {
   callbacks?: SignalCallbacks;
 };
 
+/**
+ * Signal RPC client.
+ * TODO(mykola): Delete.
+ * @deprecated
+ */
 export class SignalRPCClient {
   private readonly _socket: WebSocket;
   private readonly _rpc: ProtoRpcPeer<Services>;
