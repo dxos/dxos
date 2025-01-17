@@ -9,6 +9,7 @@ import {
   type ToolbarSeparatorNode,
   type ToolbarActionGroup,
   type ToolbarActionGroupProperties,
+  type MenuActionProperties,
 } from '@dxos/react-ui-menu';
 
 import type { EditorAction, EditorActionPayload, EditorViewMode, Formatting } from '../../extensions';
@@ -33,7 +34,7 @@ export type EditorToolbarItem = EditorAction | ToolbarActionGroup | ToolbarSepar
 const noop = () => {};
 
 export const createEditorAction = (
-  payload: EditorActionPayload,
+  payload: EditorActionPayload & Partial<MenuActionProperties>,
   icon: string,
   label: Label = [`${payload.type} label`, { ns: translationKey }],
   id: string = payload.type,
