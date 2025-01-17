@@ -35,7 +35,7 @@ export const AppendComponent = ({ shape }: ShapeComponentProps<AppendShape>) => 
 
 export const appendShape: ShapeDef<AppendShape> = {
   type: 'append',
-  icon: 'ph--image--regular',
+  icon: 'ph--list-plus--regular',
   component: AppendComponent,
   createShape: createAppend,
   getAnchors: (shape) => createFunctionAnchors(shape, AppendInput),

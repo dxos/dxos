@@ -19,11 +19,16 @@ export type ToolsProps = ThemedClassName<{
   registry: ShapeRegistry;
 }>;
 
+// TODO(burdon): Toolbar.
 export const Tools = ({ classNames, registry }: ToolsProps) => {
   return (
-    <div className={mx('flex p-1 gap-2', classNames)}>
-      {registry.shapes.map((shape) => (
-        <Tool key={shape.type} type={shape.type} icon={shape.icon} />
+    <div className={mx('flex gap-2', classNames)}>
+      {registry.defs.map(({ shapes }, i) => (
+        <div key={i} className='flex p-1 gap-2 items-center bg-base rounded-md border border-separator'>
+          {shapes.map((shape) => (
+            <Tool key={shape.type} type={shape.type} icon={shape.icon} />
+          ))}
+        </div>
       ))}
     </div>
   );
@@ -65,8 +70,9 @@ const Tool = ({ type, icon }: ToolProps) => {
     });
   }, [dragMonitor]);
 
+  // TODO(burdon): Tooltip.
   return (
-    <div ref={ref} className='flex'>
+    <div ref={ref} className='flex' title={type}>
       <Icon icon={icon} size={6} />
     </div>
   );

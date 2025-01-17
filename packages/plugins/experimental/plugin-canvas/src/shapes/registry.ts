@@ -4,9 +4,9 @@
 
 import { ellipseShape } from './Ellipse';
 import { rectangleShape } from './Rectangle';
-import { type ShapeDef } from '../components';
+import { type ShapeDefSet } from '../components';
 
 /**
  * Order used by toolbar.
  */
-export const defaultShapes: ShapeDef<any>[] = [rectangleShape, ellipseShape];
+export const defaultShapes: ShapeDefSet[] = [{ title: 'Default', shapes: [rectangleShape, ellipseShape] }];

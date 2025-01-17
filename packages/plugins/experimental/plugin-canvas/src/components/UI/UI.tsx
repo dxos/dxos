@@ -38,9 +38,7 @@ export const UI = () => {
       </div>
       <div>
         <div className='absolute top-2 left-2 right-2 flex justify-center'>
-          <div className='p-1 bg-base rounded-md border border-separator'>
-            <Tools classNames={mx(eventsAuto)} registry={registry} />
-          </div>
+          <Tools classNames={mx(eventsAuto)} registry={registry} />
         </div>
       </div>
       <div>

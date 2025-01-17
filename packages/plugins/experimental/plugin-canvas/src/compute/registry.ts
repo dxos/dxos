@@ -4,11 +4,13 @@
 
 import {
   andShape,
+  appendShape,
   beaconShape,
   chatShape,
+  constantShape,
   counterShape,
   databaseShape,
-  functionShape,
+  // functionShape,
   gptShape,
   listShape,
   ifElseShape,
@@ -16,45 +18,66 @@ import {
   jsonShape,
   notShape,
   orShape,
-  reduceShape,
+  // reduceShape,
   switchShape,
-  tableShape,
+  // tableShape,
   textShape,
   threadShape,
-  timerShape,
+  // timerShape,
   textToImageShape,
   viewShape,
 } from './shapes';
 import type { ShapeDef } from '../components';
-import { appendShape } from './shapes/Append';
-import { constantShape } from './shapes/Constant';
 
 /**
  * Order used by toolbar.
  */
-export const computeShapes: ShapeDef<any>[] = [
-  functionShape,
-  gptShape,
-  chatShape,
-  textShape,
-  databaseShape,
-  textToImageShape,
-  switchShape,
-  timerShape,
-  ifShape,
-  ifElseShape,
-  jsonShape,
-  reduceShape,
-  andShape,
-  orShape,
-  notShape,
-  listShape,
-  threadShape,
-  tableShape,
-  beaconShape,
-  counterShape,
-  viewShape,
-  appendShape,
-  constantShape,
-  textToImageShape,
+export const computeShapes: { title: string; shapes: ShapeDef<any>[] }[] = [
+  {
+    title: 'Inputs',
+    shapes: [
+      //
+      // timerShape,
+      constantShape,
+      textShape,
+      chatShape,
+      switchShape,
+    ],
+  },
+  {
+    title: 'Transform',
+    shapes: [
+      //
+      gptShape,
+      // functionShape,
+      databaseShape,
+      textToImageShape,
+    ],
+  },
+  {
+    title: 'Logic',
+    shapes: [
+      //
+      ifShape,
+      ifElseShape,
+      andShape,
+      orShape,
+      notShape,
+      // reduceShape,
+    ],
+  },
+  {
+    title: 'Outputs',
+    shapes: [
+      //
+      jsonShape,
+      appendShape,
+      listShape,
+      threadShape,
+      // tableShape,
+      viewShape,
+      counterShape,
+      beaconShape,
+    ],
+  },
 ];

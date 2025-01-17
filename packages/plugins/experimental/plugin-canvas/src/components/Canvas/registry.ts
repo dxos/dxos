@@ -22,20 +22,26 @@ export type ShapeDef<S extends Polygon> = {
   resizeable?: boolean;
 };
 
+export type ShapeDefSet = { title?: string; shapes: ShapeDef<any>[] };
+
 /**
  * Shape registry may be provided to the Editor.
  */
 export class ShapeRegistry {
-  private readonly _registry: Map<string, ShapeDef<Polygon>>;
+  private readonly _registry = new Map<string, ShapeDef<Polygon>>();
 
-  constructor(shapes: ShapeDef<any>[] = []) {
-    this._registry = new Map<string, ShapeDef<any>>(shapes.map((shape) => [shape.type, shape]));
+  constructor(private readonly _defs: ShapeDefSet[] = []) {
+    this._defs.forEach(({ shapes }) => shapes.forEach((shape) => this.registerShapeDef(shape)));
   }
 
   createShape<S extends Polygon>(type: string, props: Pick<Polygon, 'id' | 'center'>): S {
     const def = this.getShapeDef(type);
     invariant(def, `unregistered type: ${type}`);
     return def.createShape(props) as S;
+  }
+
+  get defs(): ShapeDefSet[] {
+    return this._defs;
   }
 
   get shapes(): ShapeDef<any>[] {
