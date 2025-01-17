@@ -63,6 +63,21 @@ export class TableSorting<T extends BaseTableRow> {
     }
   }
 
+  public toggleSort(fieldId: string): void {
+    if (!this._view || !this.sorting || this.sorting.fieldId !== fieldId) {
+      return;
+    }
+
+    switch (this.sorting.direction) {
+      case 'asc':
+        this.setSort(fieldId, 'desc');
+        break;
+      case 'desc':
+        this.setSort(fieldId, 'asc');
+        break;
+    }
+  }
+
   public clearSort(): void {
     if (this._view) {
       this._view.query.sort = [];
