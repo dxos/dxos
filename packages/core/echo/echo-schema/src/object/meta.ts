@@ -3,7 +3,7 @@
 //
 
 import { Schema as S } from '@effect/schema';
-import { IdentifierAnnotationId, TitleAnnotationId } from '@effect/schema/AST';
+import { IdentifierAnnotationId } from '@effect/schema/AST';
 
 //
 // ForeignKey
@@ -24,7 +24,7 @@ export const ForeignKeySchema: S.Schema<ForeignKey> = _ForeignKeySchema;
 //
 
 export const ObjectMetaSchema = S.Struct({
-  keys: S.mutable(S.Array(S.mutable(ForeignKeySchema))).annotations({ [TitleAnnotationId]: 'Foreign Keys' }),
+  keys: S.mutable(S.Array(ForeignKeySchema)),
 });
 
 export type ObjectMeta = S.Schema.Type<typeof ObjectMetaSchema>;
