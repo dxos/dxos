@@ -21,7 +21,6 @@ import { HelpPlugin, HELP_PLUGIN } from '@dxos/plugin-help';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { IpfsPlugin } from '@dxos/plugin-ipfs';
 import { KanbanPlugin } from '@dxos/plugin-kanban';
-import { ManagerPlugin, MANAGER_PLUGIN } from '@dxos/plugin-manager';
 import { MapPlugin } from '@dxos/plugin-map';
 import { MarkdownPlugin, MARKDOWN_PLUGIN } from '@dxos/plugin-markdown';
 import { MermaidPlugin } from '@dxos/plugin-mermaid';
@@ -34,6 +33,7 @@ import { PwaPlugin, PWA_PLUGIN } from '@dxos/plugin-pwa';
 import { RegistryPlugin, REGISTRY_PLUGIN } from '@dxos/plugin-registry';
 import { ScriptPlugin } from '@dxos/plugin-script';
 import { SearchPlugin } from '@dxos/plugin-search';
+import { SettingsInterfacePlugin, SETTINGS_INTERFACE_PLUGIN } from '@dxos/plugin-settings-interface';
 import { SheetPlugin, SHEET_PLUGIN } from '@dxos/plugin-sheet';
 import { SketchPlugin, SKETCH_PLUGIN } from '@dxos/plugin-sketch';
 import { SpacePlugin, SPACE_PLUGIN } from '@dxos/plugin-space';
@@ -42,6 +42,7 @@ import { StatusBarPlugin, STATUS_BAR_PLUGIN } from '@dxos/plugin-status-bar';
 import { TablePlugin, TABLE_PLUGIN } from '@dxos/plugin-table';
 import { ThemePlugin, THEME_PLUGIN } from '@dxos/plugin-theme';
 import { ThreadPlugin, THREAD_PLUGIN } from '@dxos/plugin-thread';
+import { TokenManagerPlugin, TOKEN_MANAGER_PLUGIN } from '@dxos/plugin-token-manager';
 import { WildcardPlugin, WILDCARD_PLUGIN } from '@dxos/plugin-wildcard';
 import { WnfsPlugin } from '@dxos/plugin-wnfs';
 import { isNotFalsy } from '@dxos/util';
@@ -73,16 +74,17 @@ export const core = ({ isPwa, isSocket }: PluginConfig): string[] =>
     GRAPH_PLUGIN,
     HELP_PLUGIN,
     INTENT_PLUGIN,
-    MANAGER_PLUGIN,
     isSocket && NATIVE_PLUGIN,
     NAVTREE_PLUGIN,
     OBSERVABILITY_PLUGIN,
     !isSocket && isPwa && PWA_PLUGIN,
     REGISTRY_PLUGIN,
     SETTINGS_PLUGIN,
+    SETTINGS_INTERFACE_PLUGIN,
     SPACE_PLUGIN,
     STATUS_BAR_PLUGIN,
     THEME_PLUGIN,
+    TOKEN_MANAGER_PLUGIN,
     WELCOME_PLUGIN,
     WILDCARD_PLUGIN,
   ].filter(isNotFalsy);
@@ -145,7 +147,6 @@ export const plugins = ({ appKey, config, services, observability, isDev, isPwa,
     IntentPlugin(),
     IpfsPlugin(),
     KanbanPlugin(),
-    ManagerPlugin(),
     MapPlugin(),
     MarkdownPlugin(),
     MermaidPlugin(),
@@ -159,6 +160,7 @@ export const plugins = ({ appKey, config, services, observability, isDev, isPwa,
     ScriptPlugin(),
     SearchPlugin(),
     SettingsPlugin(),
+    SettingsInterfacePlugin(),
     SheetPlugin(),
     SketchPlugin(),
     SpacePlugin(),
@@ -167,6 +169,7 @@ export const plugins = ({ appKey, config, services, observability, isDev, isPwa,
     TablePlugin(),
     ThemePlugin({ appName: 'Composer', noCache: isDev }),
     ThreadPlugin(),
+    TokenManagerPlugin(),
     WelcomePlugin(),
     WildcardPlugin(),
     WnfsPlugin(),

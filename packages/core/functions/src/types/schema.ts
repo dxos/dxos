@@ -3,11 +3,7 @@
 //
 
 import { JsonSchemaType, Ref, S, TypedObject } from '@dxos/echo-schema';
-
-// TODO(burdon): Reconcile with plugin-markdown.
-export class TextType extends TypedObject({ typename: 'dxos.org/type/Text', version: '0.1.0' })({
-  content: S.String,
-}) {}
+import { TextType } from '@dxos/schema';
 
 /**
  * Source script.

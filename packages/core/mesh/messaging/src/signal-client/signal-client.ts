@@ -31,6 +31,8 @@ const RECONCILE_INTERVAL = 5_000;
  * Establishes a websocket connection to signal server and provides RPC methods.
  * Subscription state updates are executed immediately against the local state which
  * is reconciled periodically.
+ * TODO(mykola): Delete.
+ * @deprecated
  */
 // TODO(burdon): Rename impl.
 export class SignalClient extends Resource implements SignalClientMethods {

@@ -8,9 +8,9 @@ import { type Meta } from '@storybook/react';
 import React, { useMemo } from 'react';
 
 import { ScriptType } from '@dxos/functions';
-import { TextType } from '@dxos/plugin-markdown/types';
 import { create, createObject, makeRef } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { TextType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { ScriptBlock } from './ScriptBlock';

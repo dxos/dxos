@@ -4,9 +4,10 @@
 
 import { Capabilities, contributes, createResolver, type PluginsContext } from '@dxos/app-framework';
 import { makeRef, create } from '@dxos/live-object';
+import { TextType } from '@dxos/schema';
 
 import { MarkdownCapabilities } from './capabilities';
-import { DocumentType, MarkdownAction, TextType } from '../types';
+import { DocumentType, MarkdownAction } from '../types';
 
 export default (context: PluginsContext) =>
   contributes(Capabilities.IntentResolver, [

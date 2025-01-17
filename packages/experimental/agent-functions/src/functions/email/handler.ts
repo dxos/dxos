@@ -9,11 +9,11 @@ import { Filter, hasType, matchKeys } from '@dxos/echo-db';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { TextType } from '@dxos/plugin-markdown/types';
 import { ChannelType, MessageType } from '@dxos/plugin-space/types';
+import { TextType } from '@dxos/schema';
 
-import { getKey } from '../../util';
 import { ImapProcessor } from './imap-processor';
+import { getKey } from '../../util';
 
 const types = [TextType, ChannelType, MessageType];
 
