@@ -17,7 +17,7 @@ import { MicButton } from './MicButton';
 import { Participant } from './Participant';
 import { PullAudioTracks } from './PullAudioTracks';
 import { PullVideoTrack } from './PullVideoTrack';
-import useBroadcastStatus from './hooks/useBroadcastStatus';
+import { useBroadcastStatus } from './hooks/useBroadcastStatus';
 import { useRoomContext } from './hooks/useRoomContext';
 import { calculateLayout } from './utils/calculateLayout';
 
@@ -31,7 +31,7 @@ const JoinedRoom = () => {
     peer,
     dataSaverMode,
     pushedTracks,
-    room: { otherUsers, websocket, identity },
+    room: { otherUsers, updateUserState, identity },
   } = useRoomContext()!;
 
   const [containerRef, { width: containerWidth, height: containerHeight }] = useMeasure<HTMLDivElement>();
@@ -48,7 +48,7 @@ const JoinedRoom = () => {
   useBroadcastStatus({
     userMedia,
     peer,
-    websocket,
+    updateUserState,
     identity,
     pushedTracks,
   });
@@ -98,36 +98,39 @@ const JoinedRoom = () => {
               />
             )}
 
-            {otherUsers.map((user) => (
-              <Fragment key={user.id}>
-                <PullVideoTrack video={dataSaverMode ? undefined : user.tracks.video} audio={user.tracks.audio}>
-                  {({ videoTrack, audioTrack }) => (
-                    <Participant
-                      user={user}
-                      flipId={user.id}
-                      videoTrack={videoTrack}
-                      audioTrack={audioTrack}
-                      pinnedId={pinnedId}
-                      setPinnedId={setPinnedId}
-                    ></Participant>
-                  )}
-                </PullVideoTrack>
-                {user.tracks.screenshare && user.tracks.screenShareEnabled && (
-                  <PullVideoTrack video={user.tracks.screenshare}>
-                    {({ videoTrack }) => (
-                      <Participant
-                        user={user}
-                        videoTrack={videoTrack}
-                        flipId={user.id + 'screenshare'}
-                        isScreenShare
-                        pinnedId={pinnedId}
-                        setPinnedId={setPinnedId}
-                      />
+            {otherUsers.map(
+              (user) =>
+                user.joined && (
+                  <Fragment key={user.id}>
+                    <PullVideoTrack video={dataSaverMode ? undefined : user.tracks.video} audio={user.tracks.audio}>
+                      {({ videoTrack, audioTrack }) => (
+                        <Participant
+                          user={user}
+                          flipId={user.id}
+                          videoTrack={videoTrack}
+                          audioTrack={audioTrack}
+                          pinnedId={pinnedId}
+                          setPinnedId={setPinnedId}
+                        ></Participant>
+                      )}
+                    </PullVideoTrack>
+                    {user.tracks.screenshare && user.tracks.screenShareEnabled && (
+                      <PullVideoTrack video={user.tracks.screenshare}>
+                        {({ videoTrack }) => (
+                          <Participant
+                            user={user}
+                            videoTrack={videoTrack}
+                            flipId={user.id + 'screenshare'}
+                            isScreenShare
+                            pinnedId={pinnedId}
+                            setPinnedId={setPinnedId}
+                          />
+                        )}
+                      </PullVideoTrack>
                     )}
-                  </PullVideoTrack>
-                )}
-              </Fragment>
-            ))}
+                  </Fragment>
+                ),
+            )}
           </div>
         </Flipper>
         <div className='flex flex-wrap items-center justify-center gap-2 p-2 text-sm md:gap-4 md:p-5 md:text-base'>

@@ -5,6 +5,7 @@
 import React, { memo, forwardRef, Suspense, useMemo } from 'react';
 
 import { useDefaultValue } from '@dxos/react-hooks';
+import { byDisposition } from '@dxos/util';
 
 import { ErrorBoundary } from './ErrorBoundary';
 import { useCapabilities } from './useCapabilities';
@@ -35,9 +36,7 @@ export const Surface = memo(
             Array.isArray(definition.role) ? definition.role.includes(role) : definition.role === role,
           )
           .filter(({ filter }) => (filter ? filter(data) : true))
-          .toSorted(({ disposition: a = 'static' }, { disposition: b = 'static' }) => {
-            return a === b ? 0 : a === 'hoist' || b === 'fallback' ? -1 : b === 'hoist' || a === 'fallback' ? 1 : 0;
-          });
+          .toSorted(byDisposition);
         return limit ? definitions.slice(0, limit) : definitions;
       }, [surfaces, role, data, limit]);
 
