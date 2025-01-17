@@ -635,9 +635,6 @@ importers:
       '@dxos/plugin-mermaid':
         specifier: workspace:*
         version: link:../../plugins/plugin-mermaid
-      '@dxos/plugin-metadata':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-metadata
       '@dxos/plugin-native':
         specifier: workspace:*
         version: link:../../plugins/experimental/plugin-native
@@ -5711,6 +5708,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-stack
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -5975,6 +5975,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../../ui/react-ui-form
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-stack
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -6066,6 +6069,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-stack
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -6181,6 +6187,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../../ui/react-ui-attention
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-stack
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -6260,6 +6269,9 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-stack
       '@effect/schema':
         specifier: ^0.75.5
         version: 0.75.5(effect@3.12.1)
@@ -6424,6 +6436,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-stack
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -6537,6 +6552,9 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-stack
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -6682,6 +6700,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../../ui/react-ui-form
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-stack
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../../ui/react-ui-syntax-highlighter
@@ -6861,6 +6882,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-stack
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -6940,6 +6964,9 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-stack
       blockstore-core:
         specifier: ^5.0.1
         version: 5.0.2
@@ -7053,6 +7080,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-stack
       '@effect/schema':
         specifier: ^0.75.5
         version: 0.75.5(effect@3.12.1)
@@ -7135,6 +7165,9 @@ importers:
       '@dxos/shell':
         specifier: workspace:*
         version: link:../../sdk/shell
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -7450,6 +7483,9 @@ importers:
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../common/local-storage
@@ -7477,6 +7513,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-stack
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -7862,31 +7901,6 @@ importers:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
 
-  packages/plugins/plugin-metadata:
-    dependencies:
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../sdk/app-framework
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
-    devDependencies:
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
-      '@types/react':
-        specifier: ~18.2.0
-        version: 18.2.79
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      vite:
-        specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)
-
   packages/plugins/plugin-navtree:
     dependencies:
       '@atlaskit/pragmatic-drag-and-drop':
@@ -8238,9 +8252,12 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
-      '@dxos/local-storage':
+      '@dxos/echo-schema':
         specifier: workspace:*
-        version: link:../../common/local-storage
+        version: link:../../core/echo/echo-schema
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability
@@ -8558,6 +8575,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-stack
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -8688,9 +8708,6 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@dxos/plugin-metadata':
-        specifier: workspace:*
-        version: link:../plugin-metadata
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability
@@ -9305,6 +9322,15 @@ importers:
         specifier: ^3.22.4
         version: 3.22.4
     devDependencies:
+      '@dxos/echo-signals':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-signals
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-syntax-highlighter
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
