@@ -19,10 +19,10 @@ export type ToolsProps = ThemedClassName<{
   registry: ShapeRegistry;
 }>;
 
-// TODO(burdon): Toolbar.
+// TODO(burdon): Toolbar/menu.
 export const Tools = ({ classNames, registry }: ToolsProps) => {
   return (
-    <div className={mx('flex gap-2', classNames)}>
+    <div className={mx('flex gap-4', classNames)}>
       {registry.defs.map(({ shapes }, i) => (
         <div key={i} className='flex p-1 gap-2 items-center bg-base rounded-md border border-separator'>
           {shapes.map((shape) => (

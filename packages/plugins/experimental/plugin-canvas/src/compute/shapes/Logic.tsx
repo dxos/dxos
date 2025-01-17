@@ -68,7 +68,7 @@ export const createIf = ({
 
 export const ifShape: ShapeDef<IfShape> = {
   type: 'if',
-  icon: 'ph--question--regular',
+  icon: 'ph--arrows-split--regular',
   component: (props) => <IfComponent {...props} />,
   createShape: createIf,
   getAnchors: (shape) => createFunctionAnchors(shape, IfInput, IfOutput),
@@ -89,7 +89,7 @@ export const createIfElse = ({
 
 export const ifElseShape: ShapeDef<IfElseShape> = {
   type: 'if-else',
-  icon: 'ph--question--regular',
+  icon: 'ph--arrows-merge--regular',
   component: (props) => <IfElseComponent {...props} />,
   createShape: createIfElse,
   getAnchors: (shape) => createFunctionAnchors(shape, IfElseInput, IfElseOutput),

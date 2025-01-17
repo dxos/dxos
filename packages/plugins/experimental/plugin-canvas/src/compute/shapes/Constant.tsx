@@ -37,7 +37,7 @@ export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComp
   const { node } = useComputeNodeState(shape);
 
   return (
-    <Box name={title ?? 'Constant'}>
+    <Box name={title ?? 'Value'}>
       <TextBox
         {...props}
         value={node.data.constant}
