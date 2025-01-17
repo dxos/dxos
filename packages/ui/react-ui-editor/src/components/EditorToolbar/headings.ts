@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { effect } from '@preact/signals-react';
+import { useSignalEffect } from '@preact/signals-react';
 
 import { type Graph, type NodeArg } from '@dxos/app-graph';
-import { type ToolbarActionGroup, type ToolbarActionGroupProperties } from '@dxos/react-ui-menu';
+import { type ToolbarActionGroupProperties } from '@dxos/react-ui-menu';
 
 import { createEditorAction, createEditorActionGroup, type EditorToolbarState } from './util';
 import { translationKey } from '../../translations';
@@ -47,15 +47,17 @@ const computeHeadingValue = (state: EditorToolbarState) => {
   return header ? header[1] : blockType === 'paragraph' || !blockType ? '0' : '';
 };
 
-export const mountHeadingActions = (graph: Graph, state: EditorToolbarState): [ToolbarActionGroup, () => void] => {
-  const unsubscribe = effect(() => {
+export const useHeadings = (graph: Graph, state: EditorToolbarState) => {
+  return useSignalEffect(() => {
     const headingValue = computeHeadingValue(state);
     const headingGroupAction = createHeadingGroupAction(headingValue);
     const headingActions = createHeadingActions(headingValue);
+    console.log('[adding heading actions]');
     // @ts-ignore
     graph._addNodes([headingGroupAction as NodeArg<any>, ...headingActions]);
     // @ts-ignore
     graph._addEdges(headingActions.map(({ id }) => ({ source: headingGroupAction.id, target: id })));
+    // @ts-ignore
+    graph._addEdges([{ source: 'root', target: 'heading' }]);
   });
-  return [graph.findNode('heading') as ToolbarActionGroup, unsubscribe];
 };

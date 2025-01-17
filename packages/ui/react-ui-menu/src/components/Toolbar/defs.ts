@@ -37,7 +37,7 @@ export const isMenu = (node: Node): node is ToolbarActionGroup => node.type === 
 
 export type ToolbarItem = ToolbarSeparatorNode | MenuAction | ToolbarActionGroup;
 
-export type ToolbarGroupItemsResolver = (group: ToolbarActionGroup) => ToolbarItem[] | null;
+export type ToolbarGroupItemsResolver = (group?: ToolbarActionGroup) => ToolbarItem[] | null;
 
 export type ToolbarContextValue = Pick<MenuProps<ToolbarItem, MenuAction>, 'onAction'> & {
   resolveGroupItems: ToolbarGroupItemsResolver;

@@ -37,7 +37,7 @@ const ToolbarItem = ({ action }: { action: MenuAction }) => {
 const resolveGroupItemsNoop = () => null;
 
 export const Toolbar = ({
-  actions: items,
+  actions,
   onAction = () => {},
   iconSize = 5,
   resolveGroupItems = resolveGroupItemsNoop,
@@ -47,6 +47,7 @@ export const Toolbar = ({
     () => ({ resolveGroupItems, onAction, iconSize }),
     [resolveGroupItems, onAction, iconSize],
   );
+  const items = useMemo(() => actions || resolveGroupItems(), [actions, resolveGroupItems]);
   return (
     <ToolbarContext.Provider value={contextValue}>
       <NaturalToolbar.Root {...props}>

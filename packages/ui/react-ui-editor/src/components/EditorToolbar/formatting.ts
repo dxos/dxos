@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { effect } from '@preact/signals-react';
+import { useSignalEffect } from '@preact/signals-react';
 
 import { type Graph, type NodeArg } from '@dxos/app-graph';
-import { type ToolbarActionGroup, type ToolbarActionGroupProperties } from '@dxos/react-ui-menu';
+import { type ToolbarActionGroupProperties } from '@dxos/react-ui-menu';
 
 import { createEditorAction, createEditorActionGroup, type EditorToolbarState } from './util';
 import { type Formatting, type PayloadType } from '../../extensions';
@@ -30,14 +30,15 @@ const createFormattingActions = (formatting: Formatting) =>
     createEditorAction({ type: type as PayloadType, checked: !!formatting[type as keyof Formatting] }, icon),
   );
 
-export const mountFormatting = (graph: Graph, state: EditorToolbarState): [ToolbarActionGroup, () => void] => {
-  const unsubscribe = effect(() => {
+export const useFormatting = (graph: Graph, state: EditorToolbarState) => {
+  return useSignalEffect(() => {
     const formattingGroupAction = createFormattingGroup(state);
     const formattingActions = createFormattingActions(state);
     // @ts-ignore
     graph._addNodes([formattingGroupAction as NodeArg<any>, ...formattingActions]);
     // @ts-ignore
     graph._addEdges(formattingActions.map(({ id }) => ({ source: formattingGroupAction.id, target: id })));
+    // @ts-ignore
+    graph._addEdges([{ source: 'root', target: 'formatting' }]);
   });
-  return [graph.findNode('formatting') as ToolbarActionGroup, unsubscribe];
 };

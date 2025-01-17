@@ -2,7 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ACTION_GROUP_TYPE, ACTION_TYPE, actionGroupSymbol } from '@dxos/app-graph';
+import { useSignalEffect } from '@preact/signals-react';
+
+import { ACTION_GROUP_TYPE, ACTION_TYPE, actionGroupSymbol, type NodeArg, type Graph } from '@dxos/app-graph';
 import { create, type ReactiveObject } from '@dxos/live-object';
 import { type Label, type ThemedClassName } from '@dxos/react-ui';
 import {
@@ -10,6 +12,7 @@ import {
   type ToolbarActionGroup,
   type ToolbarActionGroupProperties,
   type MenuActionProperties,
+  type ToolbarItem,
 } from '@dxos/react-ui-menu';
 
 import type { EditorAction, EditorActionPayload, EditorViewMode, Formatting } from '../../extensions';
@@ -65,6 +68,15 @@ export const createEditorActionGroup = (
     } as ToolbarActionGroupProperties,
     data: actionGroupSymbol,
   }) satisfies ToolbarActionGroup;
+
+export const useStaticItem = (graph: Graph, item: ToolbarItem, source: string = 'root') => {
+  return useSignalEffect(() => {
+    // @ts-ignore
+    graph._addNodes([item as NodeArg<any>]);
+    // @ts-ignore
+    graph._addEdges([{ source, target: item.id }]);
+  });
+};
 
 export const editorToolbarGap = {
   id: 'gap',

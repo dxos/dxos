@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { effect } from '@preact/signals-react';
+import { useSignalEffect } from '@preact/signals-react';
 
 import { type Graph, type NodeArg } from '@dxos/app-graph';
-import { type ToolbarActionGroup, type ToolbarActionGroupProperties } from '@dxos/react-ui-menu';
+import { type ToolbarActionGroupProperties } from '@dxos/react-ui-menu';
 
 import { createEditorAction, createEditorActionGroup, type EditorToolbarState } from './util';
 import { type PayloadType } from '../../extensions';
@@ -29,8 +29,8 @@ const createBlockActions = (value: string, blankLine?: boolean) =>
     );
   });
 
-export const mountBlocks = (graph: Graph, state: EditorToolbarState): [ToolbarActionGroup, () => void] => {
-  const unsubscribe = effect(() => {
+export const useBlocks = (graph: Graph, state: EditorToolbarState) => {
+  return useSignalEffect(() => {
     const value = state?.blockQuote ? 'blockquote' : state.blockType ?? '';
     const blockGroupAction = createBlockGroupAction(value);
     const blockActions = createBlockActions(value, state.blankLine);
@@ -38,6 +38,7 @@ export const mountBlocks = (graph: Graph, state: EditorToolbarState): [ToolbarAc
     graph._addNodes([blockGroupAction as NodeArg<any>, ...blockActions]);
     // @ts-ignore
     graph._addEdges(blockActions.map(({ id }) => ({ source: blockGroupAction.id, target: id })));
+    // @ts-ignore
+    graph._addEdges([{ source: 'root', target: 'block' }]);
   });
-  return [graph.findNode('block') as ToolbarActionGroup, unsubscribe];
 };

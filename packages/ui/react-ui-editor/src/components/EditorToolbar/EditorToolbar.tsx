@@ -2,23 +2,24 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { Graph } from '@dxos/app-graph';
-import { Toolbar, type ToolbarActionGroup, type ToolbarItem, type ToolbarProps } from '@dxos/react-ui-menu';
+import { Toolbar, type ToolbarItem, type ToolbarProps, type ToolbarActionGroup } from '@dxos/react-ui-menu';
 
-import { mountBlocks } from './blocks';
-import { mountComment } from './comment';
-import { mountFormatting } from './formatting';
-import { mountHeadingActions } from './headings';
-import { mountLists } from './lists';
+import { useBlocks } from './blocks';
+import { useComment } from './comment';
+import { useFormatting } from './formatting';
+import { useHeadings } from './headings';
+import { useLists } from './lists';
 import {
   type EditorToolbarActionGraphProps,
   editorToolbarGap,
   type EditorToolbarProps,
   editorToolbarSearch,
+  useStaticItem,
 } from './util';
-import { mountViewMode } from './viewMode';
+import { useViewModes } from './viewMode';
 
 //
 // Root
@@ -26,21 +27,27 @@ import { mountViewMode } from './viewMode';
 // TODO(thure): Derive actions from the reactive state
 const useEditorToolbarActionGraph = ({ state }: EditorToolbarActionGraphProps) => {
   const [graph] = useState(new Graph());
-  const [formatting] = mountFormatting(graph, state);
-  const [list] = mountLists(graph, state);
-  const [block] = mountBlocks(graph, state);
-  const [comment] = mountComment(graph, state);
-  const [viewMode] = mountViewMode(graph, state);
-  const [headings] = mountHeadingActions(graph, state);
-  const actions = useMemo(
-    () => [headings, formatting, list, block, editorToolbarGap, editorToolbarSearch, comment, viewMode],
-    [headings],
-  );
+
+  console.log('[created graph]');
+
+  // The following occurs in the order in which it should render:
+  useHeadings(graph, state);
+  useFormatting(graph, state);
+  useLists(graph, state);
+  useBlocks(graph, state);
+  useStaticItem(graph, editorToolbarGap);
+  useStaticItem(graph, editorToolbarSearch);
+  useComment(graph, state);
+  useViewModes(graph, state);
+
+  console.log('[populated graph]');
 
   const resolveGroupItems = useCallback(
-    (groupNode: ToolbarActionGroup) => {
+    (sourceNode: ToolbarActionGroup = graph.root as ToolbarActionGroup) => {
+      console.log('[resolve group items]', graph.actions(sourceNode));
       if (graph) {
-        return (graph.actions(groupNode) || null) as ToolbarItem[] | null;
+        void graph.waitForNode('formatting').then(() => console.log('[wait for node]', graph.actions(graph.root)));
+        return (graph.actions(sourceNode) || null) as ToolbarItem[] | null;
       } else {
         return null;
       }
@@ -48,7 +55,7 @@ const useEditorToolbarActionGraph = ({ state }: EditorToolbarActionGraphProps) =
     [graph],
   );
 
-  return { resolveGroupItems, actions };
+  return { resolveGroupItems };
 };
 
 export const EditorToolbar = ({ classNames, ...actionProps }: EditorToolbarProps) => {

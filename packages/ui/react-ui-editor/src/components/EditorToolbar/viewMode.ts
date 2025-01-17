@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { effect } from '@preact/signals-react';
+import { useSignalEffect } from '@preact/signals-react';
 
 import { type Graph, type NodeArg } from '@dxos/app-graph';
 import { type ReactiveObject } from '@dxos/live-object';
-import { type ToolbarActionGroup, type ToolbarActionGroupProperties } from '@dxos/react-ui-menu';
+import { type ToolbarActionGroupProperties } from '@dxos/react-ui-menu';
 
 import { createEditorAction, createEditorActionGroup, type EditorToolbarState } from './util';
 import { translationKey } from '../../translations';
@@ -37,11 +37,8 @@ const createViewModeActions = (value: string) =>
     );
   });
 
-export const mountViewMode = (
-  graph: Graph,
-  state: ReactiveObject<EditorToolbarState>,
-): [ToolbarActionGroup, () => void] => {
-  const unsubscribe = effect(() => {
+export const useViewModes = (graph: Graph, state: ReactiveObject<EditorToolbarState>) => {
+  return useSignalEffect(() => {
     const value = state.viewMode ?? 'source';
     const viewModeGroupAction = createViewModeGroupAction(value);
     const viewModeActions = createViewModeActions(value);
@@ -49,7 +46,7 @@ export const mountViewMode = (
     graph._addNodes([viewModeGroupAction as NodeArg<any>, ...viewModeActions]);
     // @ts-ignore
     graph._addEdges(viewModeActions.map(({ id }) => ({ source: viewModeGroupAction.id, target: id })));
+    // @ts-ignore
+    graph._addEdges([{ source: 'root', target: 'viewMode' }]);
   });
-
-  return [graph.findNode('viewMode') as ToolbarActionGroup, unsubscribe];
 };
