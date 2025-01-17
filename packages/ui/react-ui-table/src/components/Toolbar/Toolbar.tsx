@@ -5,7 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren } from 'react';
 
-import { Button, IconButton, Toolbar as NaturalToolbar, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { IconButton, Toolbar as NaturalToolbar, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { ToolbarButton, ToolbarSeparator } from './common';
 import { translationKey } from '../../translations';
