@@ -6,6 +6,8 @@ import React from 'react';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { HashRouter, useRoutes as useRouterRoutes } from 'react-router-dom';
 
+import { type PublicKey } from '@dxos/react-client';
+
 import { Lobby } from './Lobby';
 import { Room } from './Room';
 import { RoomContextProvider } from './RoomContextProvider';
@@ -25,7 +27,7 @@ const Routes = () => {
 const queryClient = new QueryClient();
 
 export type CallsProps = {
-  roomName: string;
+  roomId: PublicKey;
   iceServers: RTCIceServer[];
   username: string;
   noRouter?: boolean;
@@ -34,14 +36,14 @@ export type CallsProps = {
 /**
  * Entrypoint for app and extension (no direct dependency on Client).
  */
-export const Calls = ({ roomName, noRouter, iceServers, username }: CallsProps) => {
+export const Calls = ({ roomId, noRouter, iceServers, username }: CallsProps) => {
   if (noRouter) {
     return <Routes />;
   }
 
   return (
     <QueryClientProvider client={queryClient}>
-      <RoomContextProvider roomName={roomName} iceServers={iceServers} username={username}>
+      <RoomContextProvider roomId={roomId} iceServers={iceServers} username={username}>
         <HashRouter>
           <Routes />
         </HashRouter>

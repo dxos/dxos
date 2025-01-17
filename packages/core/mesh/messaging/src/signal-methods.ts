@@ -5,20 +5,14 @@
 import { type Event } from '@dxos/async';
 import { type Lifecycle } from '@dxos/context';
 import { type PublicKey } from '@dxos/keys';
+import { type SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { type Peer } from '@dxos/protocols/proto/dxos/edge/messenger';
+import { type Message, type SwarmEvent } from '@dxos/protocols/proto/dxos/edge/signal';
 import { type SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
 
+export type { Message, SwarmEvent };
 export type PeerInfo = Peer;
 export const PeerInfoHash = ({ peerKey }: PeerInfo) => peerKey;
-
-export interface Message {
-  author: PeerInfo;
-  recipient: PeerInfo;
-  payload: {
-    type_url: string;
-    value: Uint8Array;
-  };
-}
 
 export type SignalStatus = {
   host: string;
@@ -29,31 +23,14 @@ export type SignalStatus = {
   lastStateChange: Date;
 };
 
-export type SwarmEvent = {
-  topic: PublicKey;
-
-  /**
-   * The peer was announced as available on the swarm.
-   */
-  peerAvailable?: {
-    peer: PeerInfo;
-    since: Date;
-  };
-
-  /**
-   * The peer left, or their announcement timed out.
-   */
-  peerLeft?: {
-    peer: PeerInfo;
-  };
-};
-
 /**
  * Message routing interface.
  */
 export interface SignalMethods {
   /**
    * Emits when other peers join or leave the swarm.
+   * @deprecated
+   * TODO(mykola): Use swarmState in network-manager instead.
    */
   swarmEvent: Event<SwarmEvent>;
 
@@ -61,6 +38,11 @@ export interface SignalMethods {
    * Emits when a message is received.
    */
   onMessage: Event<Message>;
+
+  /**
+   * Emits when the swarm state changes.
+   */
+  swarmState?: Event<SwarmResponse>;
 
   /**
    * Join topic on signal network, to be discoverable by other peers.
@@ -79,18 +61,22 @@ export interface SignalMethods {
 
   /**
    * Start receiving messages from peer.
+   * @deprecated
    */
   // TODO(burdon): Return unsubscribe function. Encapsulate callback/routing here.
   subscribeMessages: (peer: PeerInfo) => Promise<void>;
 
   /**
    * Stop receiving messages from peer.
+   * @deprecated
    */
   unsubscribeMessages: (peer: PeerInfo) => Promise<void>;
 }
 
 /**
  * Signaling client.
+ * TODO(mykola): Delete.
+ * @deprecated
  */
 export interface SignalClientMethods extends SignalMethods, Required<Lifecycle> {
   getStatus(): SignalStatus;
