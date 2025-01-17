@@ -5,7 +5,6 @@
 import { useEffect } from 'react';
 import { useUnmount } from 'react-use';
 
-import { log } from '@dxos/log';
 import { type UserState } from '@dxos/protocols/proto/dxos/edge/calls';
 
 import { useSubscribedState } from './rxjsHooks';
