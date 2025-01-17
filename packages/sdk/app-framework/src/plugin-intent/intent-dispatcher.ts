@@ -4,7 +4,7 @@
 
 import { Effect, Ref } from 'effect';
 
-import { type MaybePromise, pick } from '@dxos/util';
+import { type MaybePromise, pick, byDisposition, type Disposition } from '@dxos/util';
 
 import { IntentAction } from './actions';
 import {
@@ -70,15 +70,6 @@ export type AnyIntentEffectResult = IntentEffectResult<any>;
 export type IntentDispatcherResult<Fields extends IntentParams> = Pick<IntentEffectResult<Fields>, 'data' | 'error'>;
 
 /**
- * Determines the priority of the effect when multiple intent resolvers are matched.
- *
- * - `static` - The effect is selected in the order it was resolved.
- * - `hoist` - The effect is selected before `static` effects.
- * - `fallback` - The effect is selected after `static` effects.
- */
-export type IntentDisposition = 'static' | 'hoist' | 'fallback';
-
-/**
  * The implementation of an intent effect.
  */
 export type IntentEffectDefinition<Fields extends IntentParams> = (
@@ -91,7 +82,7 @@ export type IntentEffectDefinition<Fields extends IntentParams> = (
  */
 export type IntentResolver<Tag extends string, Fields extends IntentParams> = Readonly<{
   action: Tag;
-  disposition?: IntentDisposition;
+  disposition?: Disposition;
   // TODO(wittjosiah): Would be nice to make this a guard for intents with optional data.
   filter?: (data: IntentData<Fields>) => boolean;
   effect: IntentEffectDefinition<Fields>;
@@ -178,9 +169,7 @@ export const createDispatcher = (
       const candidates = getResolvers(intent.module)
         .filter((r) => r.action === intent.action)
         .filter((r) => !r.filter || r.filter(intent.data))
-        .toSorted(({ disposition: a = 'static' }, { disposition: b = 'static' }) => {
-          return a === b ? 0 : a === 'hoist' || b === 'fallback' ? -1 : b === 'hoist' || a === 'fallback' ? 1 : 0;
-        });
+        .toSorted(byDisposition);
       if (candidates.length === 0) {
         return {
           _intent: intent,
