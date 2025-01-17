@@ -505,6 +505,9 @@
       "path": "tools/codemods/tsconfig.json"
     },
     {
+      "path": "tools/codemorph/tsconfig.json"
+    },
+    {
       "path": "tools/executors/esbuild/tsconfig.json"
     },
     {

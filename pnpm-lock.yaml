@@ -12252,6 +12252,12 @@ importers:
         specifier: ^0.11.5
         version: 0.11.5
 
+  tools/codemorph:
+    dependencies:
+      ts-morph:
+        specifier: ^16.0.0
+        version: 16.0.0
+
   tools/executors/esbuild: {}
 
   tools/executors/nx-protobuf-compiler: {}
@@ -45405,7 +45411,7 @@ snapshots:
       debug: 4.3.7(supports-color@5.5.0)
       globby: 11.1.0
       is-glob: 4.0.3
-      minimatch: 9.0.4
+      minimatch: 9.0.5
       semver: 7.6.3
       ts-api-utils: 1.3.0(typescript@5.7.2)
     optionalDependencies:
@@ -50695,7 +50701,7 @@ snapshots:
     dependencies:
       foreground-child: 3.1.1
       jackspeak: 3.4.3
-      minimatch: 9.0.4
+      minimatch: 9.0.5
       minipass: 7.1.2
       package-json-from-dist: 1.0.0
       path-scurry: 1.11.1
@@ -58553,7 +58559,7 @@ snapshots:
     dependencies:
       '@istanbuljs/schema': 0.1.3
       glob: 10.4.5
-      minimatch: 9.0.4
+      minimatch: 9.0.5
 
   text-hex@1.0.0: {}
 
