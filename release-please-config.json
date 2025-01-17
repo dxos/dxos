@@ -869,6 +869,11 @@
         },
         {
           "type": "json",
+          "path": "tools/codemorph/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "tools/executors/esbuild/package.json",
           "jsonpath": "$.version"
         },
