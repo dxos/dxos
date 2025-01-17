@@ -4,18 +4,9 @@
 
 import { type LatLngLiteral } from 'leaflet';
 
-import type {
-  GraphBuilderProvides,
-  IntentResolverProvides,
-  TranslationsProvides,
-  SurfaceProvides,
-  MetadataRecordsProvides,
-} from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
-import { type SchemaProvides } from '@dxos/plugin-space';
 
 import { MapType } from './map';
-import { type MapControlType } from '../components';
 import { MAP_PLUGIN } from '../meta';
 
 export namespace MapAction {
@@ -35,19 +26,6 @@ export namespace MapAction {
     output: S.Void,
   }) {}
 }
-
-export type MapSettingsProps = {
-  type: MapControlType;
-  center?: LatLngLiteral;
-  zoom?: number;
-};
-
-export type MapPluginProvides = SurfaceProvides &
-  IntentResolverProvides &
-  GraphBuilderProvides &
-  MetadataRecordsProvides &
-  TranslationsProvides &
-  SchemaProvides;
 
 export type MapMarker = {
   id: string;

@@ -6,7 +6,7 @@ import { addressToA1Notation } from '@dxos/compute';
 import { type BaseObject, type TypedObject } from '@dxos/echo-schema';
 import { create, makeRef, type ReactiveObject } from '@dxos/live-object';
 import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
-import { createSheet } from '@dxos/plugin-sheet';
+import { createSheet } from '@dxos/plugin-sheet/types';
 import { SheetType, type CellValue } from '@dxos/plugin-sheet/types';
 import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
 import { faker } from '@dxos/random';

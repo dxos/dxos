@@ -6,8 +6,14 @@ import { Sidebar as MenuIcon } from '@phosphor-icons/react';
 import { untracked } from '@preact/signals-core';
 import React, { useCallback, useEffect, useMemo, useRef, type UIEvent, Fragment } from 'react';
 
-import { type LayoutParts, Surface, type Toast as ToastSchema, firstIdInPart, usePlugin } from '@dxos/app-framework';
-import { type AttentionPluginProvides } from '@dxos/plugin-attention';
+import {
+  firstIdInPart,
+  Surface,
+  usePluginManager,
+  type LayoutParts,
+  type Toast as ToastSchema,
+} from '@dxos/app-framework';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
 import {
   AlertDialog,
   Button,
@@ -62,8 +68,7 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
   } = context;
   const { t } = useTranslation(DECK_PLUGIN);
   const { plankSizing } = useDeckContext();
-  // NOTE: Not `useAttended` so that the layout component is not re-rendered when the attended list changes.
-  const attentionPlugin = usePlugin<AttentionPluginProvides>('dxos.org/plugin/attention');
+  const pluginManager = usePluginManager();
   const fullScreenSlug = useMemo(() => firstIdInPart(layoutParts, 'fullScreen'), [layoutParts]);
 
   const scrollLeftRef = useRef<number | null>();
@@ -73,7 +78,11 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
 
   // Ensure the first plank is attended when the deck is first rendered.
   useEffect(() => {
-    const attended = untracked(() => attentionPlugin?.provides.attention.attended ?? []);
+    // NOTE: Not `useAttended` so that the layout component is not re-rendered when the attended list changes.
+    const attended = untracked(() => {
+      const attention = pluginManager.context.requestCapability(AttentionCapabilities.Attention);
+      return attention.current;
+    });
     const firstId = isSoloModeLoaded ? firstIdInPart(layoutParts, 'solo') : firstIdInPart(layoutParts, 'main');
     if (attended.length === 0 && firstId) {
       // TODO(wittjosiah): Focusing the type button is a workaround.
@@ -160,7 +169,7 @@ export const DeckLayout = ({ layoutParts, toasts, overscroll, showHints, panels,
           </Main.Notch>
 
           {/* Left sidebar. */}
-          <Sidebar layoutParts={layoutParts} />
+          <Sidebar />
 
           {/* Right sidebar. */}
           <ComplementarySidebar panels={panels} current={layoutParts.complementary?.[0].id} />

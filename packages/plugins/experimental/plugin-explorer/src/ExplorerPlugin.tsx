@@ -2,49 +2,55 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import {
+  Capabilities,
+  contributes,
+  createIntent,
+  defineModule,
+  definePlugin,
+  Events,
+  oneOf,
+} from '@dxos/app-framework';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
-import { createIntent, createResolver, createSurface, type PluginDefinition } from '@dxos/app-framework';
-import { create } from '@dxos/react-client/echo';
-
-import { ExplorerArticle } from './components';
-import meta, { EXPLORER_PLUGIN } from './meta';
+import { IntentResolver, ReactSurface } from './capabilities';
+import { EXPLORER_PLUGIN, meta } from './meta';
 import translations from './translations';
-import { ViewType } from './types';
-import { ExplorerAction, type ExplorerPluginProvides } from './types';
+import { ViewType, ExplorerAction } from './types';
 
-export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
-  return {
-    meta,
-    provides: {
-      metadata: {
-        records: {
-          [ViewType.typename]: {
+export const ExplorerPlugin = () =>
+  definePlugin(meta, [
+    defineModule({
+      id: `${meta.id}/module/translations`,
+      activatesOn: Events.SetupTranslations,
+      activate: () => contributes(Capabilities.Translations, translations),
+    }),
+    defineModule({
+      id: `${meta.id}/module/metadata`,
+      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
+      activate: () =>
+        contributes(Capabilities.Metadata, {
+          id: ViewType.typename,
+          metadata: {
             createObject: (props: { name?: string }) => createIntent(ExplorerAction.Create, props),
             placeholder: ['object title placeholder', { ns: EXPLORER_PLUGIN }],
             icon: 'ph--graph--regular',
           },
-        },
-      },
-      translations,
-      echo: {
-        schema: [ViewType],
-      },
-      surface: {
-        definitions: () =>
-          createSurface({
-            id: `${EXPLORER_PLUGIN}/article`,
-            role: 'article',
-            filter: (data): data is { subject: ViewType } => data.subject instanceof ViewType,
-            component: ({ data }) => <ExplorerArticle view={data.subject} />,
-          }),
-      },
-      intent: {
-        resolvers: () =>
-          createResolver(ExplorerAction.Create, ({ name }) => ({
-            data: { object: create(ViewType, { name, type: '' }) },
-          })),
-      },
-    },
-  };
-};
+        }),
+    }),
+    defineModule({
+      id: `${meta.id}/module/schema`,
+      activatesOn: ClientEvents.SetupClient,
+      activate: () => contributes(ClientCapabilities.Schema, [ViewType]),
+    }),
+    defineModule({
+      id: `${meta.id}/module/react-surface`,
+      activatesOn: Events.Startup,
+      activate: ReactSurface,
+    }),
+    defineModule({
+      id: `${meta.id}/module/intent-resolver`,
+      activatesOn: Events.SetupIntents,
+      activate: IntentResolver,
+    }),
+  ]);

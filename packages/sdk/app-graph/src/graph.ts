@@ -13,7 +13,7 @@ import { type MakeOptional, nonNullable, pick } from '@dxos/util';
 import { type Node, type NodeArg, type NodeFilter, type Relation, actionGroupSymbol, isActionLike } from './node';
 
 const graphSymbol = Symbol('graph');
-type DeepWriteable<T> = { -readonly [K in keyof T]: DeepWriteable<T[K]> };
+type DeepWriteable<T> = { -readonly [K in keyof T]: T[K] extends object ? DeepWriteable<T[K]> : T[K] };
 type NodeInternal = DeepWriteable<Node> & { [graphSymbol]: Graph };
 
 export const getGraph = (node: Node): Graph => {

@@ -11,20 +11,11 @@
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
-    },
-    "./meta": {
-      "types": "./dist/types/src/meta.d.ts",
-      "browser": "./dist/lib/browser/meta.mjs",
-      "node": "./dist/lib/node-esm/meta.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
-    "*": {
-      "meta": [
-        "dist/types/src/meta.d.ts"
-      ]
-    }
+    "*": {}
   },
   "files": [
     "dist",
@@ -37,6 +28,7 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
     "@radix-ui/react-visually-hidden": "^1.1.0",

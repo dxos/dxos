@@ -6,7 +6,7 @@ import { type PluginMeta } from '@dxos/app-framework';
 
 export const IPFS_PLUGIN = 'dxos.org/plugin/ipfs';
 
-export default {
+export const meta = {
   id: IPFS_PLUGIN,
   name: 'IPFS',
   description: 'Upload & view files with IPFS.',

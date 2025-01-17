@@ -4,10 +4,10 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const SKETCH_PLUGIN = 'dxos.org/plugin/excalidraw';
+export const EXCALIDRAW_PLUGIN = 'dxos.org/plugin/excalidraw';
 
-export default {
-  id: SKETCH_PLUGIN,
+export const meta = {
+  id: EXCALIDRAW_PLUGIN,
   name: 'Excalidraw',
   description: 'Diagramming tool.',
   icon: 'ph--compass-tool--regular',

@@ -36,6 +36,13 @@ export default [
         'trigger method': 'Method',
         'trigger endpoint': 'Endpoint',
 
+        'trigger copy url': 'Copy URL',
+        'trigger copy email': 'Copy Email',
+
+        'trigger meta add': 'Add',
+        'trigger meta remove': 'Remove',
+        'trigger meta prop name placeholder': 'New meta property name',
+
         'open assistant panel label': 'Show Assistant',
         'assistant panel label': 'Assistant',
       },

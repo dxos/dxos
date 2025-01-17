@@ -6,7 +6,7 @@ import { type PluginMeta } from '@dxos/app-framework';
 
 export const EXPLORER_PLUGIN = 'dxos.org/plugin/explorer';
 
-export default {
+export const meta = {
   id: EXPLORER_PLUGIN,
   name: 'Explorer',
   description: 'Explore the ECHO hypergraph.',
