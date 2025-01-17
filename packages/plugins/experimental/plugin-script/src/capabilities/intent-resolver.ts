@@ -16,6 +16,7 @@ export default () =>
     createResolver(ScriptAction.Create, ({ name }) => ({
       data: {
         object: create(ScriptType, {
+          name,
           source: makeRef(
             create(TextType, {
               content: templates[0].source,
