@@ -79,6 +79,7 @@ export default (context: PluginsContext) => {
     // Primary actions.
     createExtension({
       id: `${SPACE_PLUGIN}/primary-actions`,
+      disposition: 'hoist',
       filter: (node): node is Node<null> => node.id === 'root',
       actions: () => [
         {
@@ -114,6 +115,7 @@ export default (context: PluginsContext) => {
     // Create spaces group node.
     createExtension({
       id: `${SPACE_PLUGIN}/root`,
+      disposition: 'hoist',
       filter: (node): node is Node<null> => node.id === 'root',
       connector: () => [spacesNode],
       resolver: ({ id }) => (id === SPACES ? spacesNode : undefined),
