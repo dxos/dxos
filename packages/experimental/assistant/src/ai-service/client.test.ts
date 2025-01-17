@@ -148,6 +148,9 @@ describe('AI Service Client', () => {
         {
           name: 'text-to-image',
           type: ToolTypes.TextToImage,
+          // options: {
+          //   model: '@cf/stabilityai/stable-diffusion-xl-base-1.0',
+          // },
         },
       ],
     });
