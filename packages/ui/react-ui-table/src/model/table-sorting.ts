@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { computed, type Signal, type ReadonlySignal } from '@preact/signals-core';
+import { computed, signal, type Signal, type ReadonlySignal } from '@preact/signals-core';
 import orderBy from 'lodash.orderby';
 
 import { getValue, FormatEnum, TypeEnum, type SortDirectionType, type FieldSortType } from '@dxos/echo-schema';
@@ -35,6 +35,8 @@ import { type BaseTableRow } from './table-model';
 export class TableSorting<T extends BaseTableRow> {
   private readonly _displayToDataIndex = new Map<number, number>();
   private readonly _rows: Signal<T[]>;
+  private readonly _localSort = signal<FieldSortType | undefined>(undefined);
+  public readonly isDirty: ReadonlySignal<boolean>;
   public readonly sortedRows: ReadonlySignal<T[]>;
 
   constructor(
@@ -43,14 +45,15 @@ export class TableSorting<T extends BaseTableRow> {
     private readonly _projection: ViewProjection,
   ) {
     this._rows = rows;
+    this.isDirty = computed(() => this._localSort.value !== undefined);
     this.sortedRows = this.initialiseSortedRows();
   }
 
   /**
-   * @reactive
+   * @reactive Returns local sort if present, falls back to view sort.
    */
   public get sorting(): FieldSortType | undefined {
-    return this._view?.query.sort?.[0];
+    return this._localSort.value ?? this._view?.query.sort?.[0];
   }
 
   public getDataIndex(displayIndex: number): number {
@@ -58,9 +61,7 @@ export class TableSorting<T extends BaseTableRow> {
   }
 
   public setSort(fieldId: string, direction: SortDirectionType): void {
-    if (this._view) {
-      this._view.query.sort = [{ fieldId, direction }];
-    }
+    this._localSort.value = { fieldId, direction };
   }
 
   public toggleSort(fieldId: string): void {
@@ -69,18 +70,25 @@ export class TableSorting<T extends BaseTableRow> {
     }
 
     switch (this.sorting.direction) {
-      case 'asc':
+      case 'asc': {
         this.setSort(fieldId, 'desc');
         break;
-      case 'desc':
+      }
+      case 'desc': {
         this.setSort(fieldId, 'asc');
         break;
+      }
     }
   }
 
   public clearSort(): void {
-    if (this._view) {
-      this._view.query.sort = [];
+    this._localSort.value = undefined;
+  }
+
+  public save(): void {
+    if (this._view && this._localSort.value !== undefined) {
+      this._view.query.sort = this._localSort.value ? [this._localSort.value] : [];
+      this._localSort.value = undefined;
     }
   }
 
