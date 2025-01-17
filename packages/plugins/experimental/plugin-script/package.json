@@ -68,6 +68,7 @@
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/schema": "^0.75.5",
     "@lezer/common": "^1.2.2",

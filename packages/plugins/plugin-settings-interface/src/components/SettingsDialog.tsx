@@ -9,9 +9,9 @@ import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 import { Tabs, type TabsActivePart } from '@dxos/react-ui-tabs';
 import { nonNullable } from '@dxos/util';
 
-import { MANAGER_PLUGIN } from '../meta';
+import { SETTINGS_INTERFACE_PLUGIN } from '../meta';
 
-export const SETTINGS_DIALOG = `${MANAGER_PLUGIN}/SettingsDialog`;
+export const SETTINGS_DIALOG = `${SETTINGS_INTERFACE_PLUGIN}/SettingsDialog`;
 
 const sortPlugin = ({ name: a }: PluginMeta, { name: b }: PluginMeta) => a?.localeCompare(b ?? '') ?? 0;
 
@@ -23,6 +23,7 @@ const core = [
   'dxos.org/plugin/observability',
   'dxos.org/plugin/registry',
   'dxos.org/plugin/space',
+  'dxos.org/plugin/token-manager',
 ];
 
 export type SettingsDialogProps = {
@@ -31,7 +32,7 @@ export type SettingsDialogProps = {
 };
 
 export const SettingsDialog = ({ selected, onSelected }: SettingsDialogProps) => {
-  const { t } = useTranslation(MANAGER_PLUGIN);
+  const { t } = useTranslation(SETTINGS_INTERFACE_PLUGIN);
   const manager = usePluginManager();
 
   const corePlugins = core

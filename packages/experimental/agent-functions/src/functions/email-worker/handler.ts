@@ -8,8 +8,8 @@ import { type FunctionHandler } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
 import { create, makeRef } from '@dxos/live-object';
 import { log } from '@dxos/log';
-import { TextType } from '@dxos/plugin-markdown/types';
 import { ChannelType, MessageType, ThreadType } from '@dxos/plugin-space/types';
+import { TextType } from '@dxos/schema';
 
 import { type EmailMessage, SOURCE_ID } from './types';
 

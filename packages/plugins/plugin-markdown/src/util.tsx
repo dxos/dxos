@@ -5,8 +5,9 @@
 import { debounce } from '@dxos/async';
 import { type TypedObjectSerializer } from '@dxos/plugin-space/types';
 import { create, createObject, isEchoObject, loadObjectReferences, makeRef } from '@dxos/react-client/echo';
+import { TextType } from '@dxos/schema';
 
-import { DocumentType, type MarkdownProperties, TextType } from './types';
+import { DocumentType, type MarkdownProperties } from './types';
 
 export const isMarkdownProperties = (data: unknown): data is MarkdownProperties =>
   isEchoObject(data)

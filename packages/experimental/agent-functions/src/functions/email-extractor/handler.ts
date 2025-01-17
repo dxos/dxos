@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { TextType } from '@dxos/plugin-markdown/types';
-import { ContactType, MessageType, type ActorType } from '@dxos/plugin-space/types';
-import { Filter, hasType } from '@dxos/echo-db';
 import { create, makeRef } from '@dxos/client/echo';
+import { Filter, hasType } from '@dxos/echo-db';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { ContactType, MessageType, type ActorType } from '@dxos/plugin-space/types';
+import { TextType } from '@dxos/schema';
 
 const types = [TextType, ContactType, MessageType];
 

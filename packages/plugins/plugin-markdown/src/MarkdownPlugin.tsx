@@ -15,6 +15,7 @@ import { type BaseObject } from '@dxos/echo-schema';
 import { RefArray } from '@dxos/live-object';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
+import { TextType } from '@dxos/schema';
 
 import {
   MarkdownState,
@@ -26,7 +27,7 @@ import {
 } from './capabilities';
 import { MARKDOWN_PLUGIN, meta } from './meta';
 import translations from './translations';
-import { DocumentType, MarkdownAction, TextType } from './types';
+import { DocumentType, MarkdownAction } from './types';
 import { serializer } from './util';
 
 export const MarkdownPlugin = () =>
