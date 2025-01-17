@@ -2,16 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import type { ComputeNode, ComputeMeta, ComputeEvent } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 import type { GraphNode } from '@dxos/graph';
 
 import { useComputeContext } from './compute-context';
-import { resolveComputeNode, type RuntimeValue } from '../graph';
+import { type RuntimeValue } from '../graph';
 import { type ComputeShape } from '../shapes';
-import { useAsyncState, useFileDownload } from '@dxos/react-ui';
 
 export type ComputeNodeState = {
   node: GraphNode<ComputeNode>;

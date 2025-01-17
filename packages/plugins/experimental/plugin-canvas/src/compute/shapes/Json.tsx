@@ -38,7 +38,7 @@ export const JsonComponent = ({ shape, ...props }: JsonComponentProps) => {
   const value = input?.type === 'executed' ? input.value : undefined;
 
   return (
-    <Box name={'Json'} resizable>
+    <Box shape={shape}>
       <JsonFilter data={value} classNames='text-xs' />
     </Box>
   );
@@ -59,6 +59,7 @@ export const createJson = ({ id, json, size = { width: 256, height: 256 }, ...re
 
 export const jsonShape: ShapeDef<JsonShape> = {
   type: 'json',
+  name: 'JSON',
   icon: 'ph--code--regular',
   component: (props) => <JsonComponent {...props} />,
   createShape: createJson,

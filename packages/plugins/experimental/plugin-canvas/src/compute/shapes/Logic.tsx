@@ -40,13 +40,13 @@ export type IfElseShape = S.Schema.Type<typeof IfElseShape>;
 export type IfComponentProps = ShapeComponentProps<IfShape>;
 
 export const IfComponent = ({ shape, ...props }: IfComponentProps) => {
-  return <FunctionBody shape={shape} name={'IF'} inputSchema={IfInput} outputSchema={IfOutput} />;
+  return <FunctionBody shape={shape} inputSchema={IfInput} outputSchema={IfOutput} />;
 };
 
 export type IfElseComponentProps = ShapeComponentProps<IfElseShape>;
 
 export const IfElseComponent = ({ shape, ...props }: IfElseComponentProps) => {
-  return <FunctionBody shape={shape} name={'IF/ELSE'} inputSchema={IfElseInput} outputSchema={IfElseOutput} />;
+  return <FunctionBody shape={shape} inputSchema={IfElseInput} outputSchema={IfElseOutput} />;
 };
 
 //
@@ -68,6 +68,7 @@ export const createIf = ({
 
 export const ifShape: ShapeDef<IfShape> = {
   type: 'if',
+  name: 'IF',
   icon: 'ph--arrows-split--regular',
   component: (props) => <IfComponent {...props} />,
   createShape: createIf,
@@ -89,6 +90,7 @@ export const createIfElse = ({
 
 export const ifElseShape: ShapeDef<IfElseShape> = {
   type: 'if-else',
+  name: 'IF/ELSE',
   icon: 'ph--arrows-merge--regular',
   component: (props) => <IfElseComponent {...props} />,
   createShape: createIfElse,

@@ -8,7 +8,7 @@ import { S } from '@dxos/echo-schema';
 
 import { Box } from './common';
 import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
-import { type ShapeComponentProps, type ShapeDef, TextBox, type TextBoxProps } from '../../components';
+import { type ShapeComponentProps, type ShapeDef, type TextBoxProps } from '../../components';
 import { createAnchorMap } from '../../components';
 import { useComputeNodeState } from '../hooks';
 
@@ -20,7 +20,7 @@ export const ConstantShape = S.extend(
   ComputeShape,
   S.Struct({
     type: S.Literal('constant'),
-    constant: S.optional(S.Any),
+    value: S.optional(S.Any),
   }),
 );
 
@@ -37,14 +37,15 @@ export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComp
   const { node } = useComputeNodeState(shape);
 
   return (
-    <Box name={title ?? 'Value'}>
-      <TextBox
-        {...props}
-        value={node.data.constant}
-        onEnter={(value) => {
-          node.data.constant = value;
-        }}
-      />
+    <Box shape={shape} name={title}>
+      <div className='p-1 truncate'>{node.data.constant}</div>
+      {/* <TextBox */}
+      {/*  {...props} */}
+      {/*  value={node.data.constant} */}
+      {/*  onEnter={(value) => { */}
+      {/*    node.data.constant = value; */}
+      {/*  }} */}
+      {/* /> */}
     </Box>
   );
 };
@@ -69,6 +70,7 @@ export const createConstant = ({
 
 export const constantShape: ShapeDef<ConstantShape> = {
   type: 'constant',
+  name: 'Value',
   icon: 'ph--dots-three-circle--regular',
   component: (props) => <ConstantComponent {...props} placeholder={'Text'} />,
   createShape: createConstant,

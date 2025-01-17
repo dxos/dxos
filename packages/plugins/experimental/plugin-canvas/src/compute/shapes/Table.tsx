@@ -36,14 +36,15 @@ export const createTable = ({ id, ...rest }: CreateTableProps): TableShape => ({
 export const TableComponent = ({ shape }: ShapeComponentProps<TableShape>) => {
   // const items = shape.node.items.value;
 
-  return <Box name={'Table'} resizable></Box>;
+  return <Box shape={shape}></Box>;
 };
 
 export const tableShape: ShapeDef<TableShape> = {
   type: 'table',
+  name: 'Table',
   icon: 'ph--table--regular',
   component: TableComponent,
   createShape: createTable,
   getAnchors: (shape) => createFunctionAnchors(shape, InputSchema, OutputSchema),
-  resizeable: true,
+  resizable: true,
 };

@@ -31,7 +31,7 @@ export type ReduceShape = S.Schema.Type<typeof ReduceShape>;
 export type ReduceComponentProps = ShapeComponentProps<ReduceShape>;
 
 export const ReduceComponent = ({ shape }: ReduceComponentProps) => {
-  return <FunctionBody shape={shape} name={'Reduce'} resizable inputSchema={ReduceInput} outputSchema={ReduceOutput} />;
+  return <FunctionBody shape={shape} inputSchema={ReduceInput} outputSchema={ReduceOutput} />;
 };
 
 //
@@ -53,6 +53,7 @@ export const createReduce = ({
 
 export const reduceShape: ShapeDef<ReduceShape> = {
   type: 'reduce',
+  name: 'Reducer',
   icon: 'ph--repeat--regular',
   component: (props) => <ReduceComponent {...props} />,
   createShape: createReduce,

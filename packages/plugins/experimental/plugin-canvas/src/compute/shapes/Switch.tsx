@@ -53,6 +53,7 @@ export const SwitchComponent = ({ shape }: ShapeComponentProps<SwitchShape>) => 
 
 export const switchShape: ShapeDef<SwitchShape> = {
   type: 'switch',
+  name: 'Switch',
   icon: 'ph--toggle-left--regular',
   component: SwitchComponent,
   createShape: createSwitch,

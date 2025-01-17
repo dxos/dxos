@@ -21,8 +21,10 @@ export const RectangleComponent = ({ shape }: ShapeComponentProps<RectangleShape
 
 export const rectangleShape: ShapeDef<RectangleShape> = {
   type: 'rectangle',
+  name: 'Rectangle',
   icon: 'ph--rectangle--regular',
   component: DefaultFrameComponent,
   createShape: ({ id, center }) => createRectangle({ id, center, size: { width: 128, height: 64 } }),
   getAnchors: (shape) => createAnchorMap(shape, defaultAnchors),
+  resizable: true,
 };

@@ -49,6 +49,7 @@ export const BeaconComponent = ({ shape }: ShapeComponentProps<BeaconShape>) => 
 
 export const beaconShape: ShapeDef<BeaconShape> = {
   type: 'beacon',
+  name: 'Beacon',
   icon: 'ph--sun--regular',
   component: BeaconComponent,
   createShape: createBeacon,

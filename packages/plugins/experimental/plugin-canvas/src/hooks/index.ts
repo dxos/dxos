@@ -11,5 +11,6 @@ export * from './useEditorContext';
 export * from './useLayout';
 export * from './useRope';
 export * from './useSelectionEvents';
+export * from './useShapeDef';
 export * from './useShortcuts';
 export * from './useSnap';

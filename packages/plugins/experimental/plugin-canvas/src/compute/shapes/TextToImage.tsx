@@ -30,11 +30,12 @@ export const createTextToImage = ({ id, ...rest }: CreateTextToImageProps): Text
 });
 
 export const TextToImageComponent = ({ shape }: ShapeComponentProps<TextToImageShape>) => {
-  return <Box name={'Image Gen'}></Box>;
+  return <Box shape={shape} />;
 };
 
 export const textToImageShape: ShapeDef<TextToImageShape> = {
   type: 'text-to-image',
+  name: 'Image',
   icon: 'ph--image--regular',
   component: TextToImageComponent,
   createShape: createTextToImage,

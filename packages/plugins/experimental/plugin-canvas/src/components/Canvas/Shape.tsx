@@ -4,13 +4,13 @@
 
 import React, { type PropsWithChildren } from 'react';
 
+import { raise } from '@dxos/debug';
 import { type ThemedClassName } from '@dxos/react-ui';
 
 import { Frame } from './Frame';
 import { useEditorContext } from '../../hooks';
 import { PathComponent } from '../../shapes';
 import { isPath, isPolygon, type Shape } from '../../types';
-import { raise } from '@dxos/debug';
 
 export const DEFS_ID = 'dx-defs';
 export const MARKER_PREFIX = 'dx-marker';
@@ -58,9 +58,9 @@ export const ShapeComponent = (props: ShapeComponentProps<any>) => {
   const { registry } = useEditorContext();
   const { shape } = props;
   if (isPolygon(shape)) {
-    const { component, resizeable } =
+    const { component, resizable } =
       registry.getShapeDef(shape.type) ?? raise(new Error(`ShapeDef not found for ${shape.type}`));
-    return <Frame {...props} resizeable={resizeable} Component={component} />;
+    return <Frame {...props} resizable={resizable} Component={component} />;
   }
   if (isPath(shape)) {
     return <PathComponent {...props} />;

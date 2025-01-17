@@ -131,17 +131,17 @@ export const createTest3 = ({
           createConstant({
             id: 'h',
             ...layout({ x: -18, y: 14, width: 8, height: 4 }),
-            constant: ObjectId.random(),
+            value: ObjectId.random(),
           }),
         ]
       : []),
-    ...(history ? [createList({ id: 'k', ...layout({ x: -6, y: 14, width: 10, height: 12 }) })] : []),
+    ...(history ? [createList({ id: 'k', text: 'History', ...layout({ x: -6, y: 14, width: 8, height: 12 }) })] : []),
     ...(history ? [createAppend({ id: 'l', ...layout({ x: 20, y: 14 }) })] : []),
     ...(viewText ? [createView({ id: 'g', ...layout({ x: 16, y: 0, width: 12, height: 12 }) })] : []),
     ...(db ? [createDatabase({ id: 'e', ...layout({ x: -10, y: 4 }) })] : []),
     ...(textToImage ? [createTextToImage({ id: 'j', ...layout({ x: -10, y: 5 }) })] : []),
     ...(cot ? [createList({ id: 'f', ...layout({ x: 0, y: -10, width: 8, height: 12 }) })] : []),
-    ...(history ? [createJson({ id: 'm', ...layout({ x: 8, y: 14, width: 10, height: 12 }) })] : []),
+    ...(history ? [createJson({ id: 'm', ...layout({ x: 8, y: 14, width: 12, height: 12 }) })] : []),
   ];
 
   const edges: Omit<GraphEdge<Connection>, 'id'>[] = [

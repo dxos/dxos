@@ -44,6 +44,7 @@ const GateComponent = (Symbol: FC<GateSymbolProps>) => () => {
 // TODO(burdon): Create custom icons.
 const defineShape = <S extends GateShape>({
   type,
+  name,
   icon,
   Symbol,
   createShape,
@@ -51,13 +52,13 @@ const defineShape = <S extends GateShape>({
   outputs = [createAnchorId('output')],
 }: {
   type: GateType;
-  icon: string;
   Symbol: FC<GateSymbolProps>;
   createShape: ShapeDef<S>['createShape'];
   inputs: string[];
   outputs?: string[];
-}): ShapeDef<GateShape> => ({
+} & Pick<ShapeDef<GateShape>, 'name' | 'icon'>): ShapeDef<GateShape> => ({
   type,
+  name,
   icon,
   component: GateComponent(Symbol),
   createShape,
@@ -135,6 +136,7 @@ export const createAnd = (props: Omit<CreateGateProps, 'type' | 'node'>) => {
 };
 export const andShape = defineShape({
   type: 'and',
+  name: 'AND',
   icon: 'ph--intersection--regular',
   Symbol: AndSymbol,
   createShape: createAnd,
@@ -168,6 +170,7 @@ export const createOr = (props: Omit<CreateGateProps, 'type' | 'node'>) => {
 };
 export const orShape = defineShape({
   type: 'or',
+  name: 'OR',
   icon: 'ph--union--regular',
   Symbol: OrSymbol,
   createShape: createOr,
@@ -203,6 +206,7 @@ export const createNot = (props: Omit<CreateGateProps, 'type' | 'node'>) => {
 };
 export const notShape = defineShape({
   type: 'not',
+  name: 'NOT',
   icon: 'ph--x--regular',
   Symbol: NotSymbol,
   createShape: createNot,

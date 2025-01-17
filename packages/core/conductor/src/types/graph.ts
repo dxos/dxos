@@ -23,6 +23,7 @@ export const ComputeNode = S.Struct({
   /**
    * For constant nodes.
    */
+  // TODO(burdon): Rename value?
   constant: S.optional(S.Any),
 }).pipe(S.mutable);
 

@@ -15,11 +15,12 @@ import { type Anchor } from '../anchors';
  */
 export type ShapeDef<S extends Polygon> = {
   type: string;
+  name: string;
   icon: string;
   component: FC<ShapeComponentProps<S>>;
   createShape: (props: Pick<S, 'id' | 'center'>) => S;
   getAnchors?: (shape: S) => Record<string, Anchor>;
-  resizeable?: boolean;
+  resizable?: boolean;
 };
 
 export type ShapeDefSet = { title?: string; shapes: ShapeDef<any>[] };

@@ -49,6 +49,7 @@ export const TimerComponent = ({ shape }: ShapeComponentProps<TimerShape>) => {
 
 export const timerShape: ShapeDef<TimerShape> = {
   type: 'timer',
+  name: 'Timer',
   icon: 'ph--alarm--regular',
   component: TimerComponent,
   createShape: createTimer,

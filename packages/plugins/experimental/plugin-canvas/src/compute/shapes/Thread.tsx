@@ -46,7 +46,7 @@ export const ThreadComponent = ({ shape }: ShapeComponentProps<ThreadShape>) => 
   }, [items]);
 
   return (
-    <Box name={'Thread'} resizable>
+    <Box shape={shape}>
       <div ref={scrollRef} className='flex flex-col w-full overflow-y-scroll gap-2 p-2'>
         {[...items].map((item, i) => (
           <ThreadItem key={i} item={item} />
@@ -84,9 +84,10 @@ export const ThreadItem = ({ classNames, item }: ThemedClassName<{ item: any }>)
 
 export const threadShape: ShapeDef<ThreadShape> = {
   type: 'thread',
+  name: 'Thread',
   icon: 'ph--chats-circle--regular',
   component: ThreadComponent,
   createShape: createThread,
   getAnchors: (shape) => createFunctionAnchors(shape, InputSchema, OutputSchema),
-  resizeable: true,
+  resizable: true,
 };
