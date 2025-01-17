@@ -104,9 +104,9 @@ export const ListOutput = S.Struct({ id: ObjectId, items: S.Array(Message) });
 
 export const AppendInput = S.Struct({ id: ObjectId, items: S.Array(Message) });
 
-export const DatabaseOutput = S.Struct({ tool: S.Array(LLMTool) });
+export const DatabaseOutput = S.Struct({ [DEFAULT_OUTPUT]: S.Array(LLMTool) });
 
-export const TextToImageOutput = S.Struct({ tool: S.Array(LLMTool) });
+export const TextToImageOutput = S.Struct({ [DEFAULT_OUTPUT]: S.Array(LLMTool) });
 
 const nodeDefs: Record<NodeType, Executable> = {
   // Controls.
@@ -248,7 +248,7 @@ const nodeDefs: Record<NodeType, Executable> = {
   ['text-to-image' as const]: defineComputeNode({
     input: S.Struct({}),
     output: TextToImageOutput,
-    exec: synchronizedComputeFunction(() => Effect.succeed({ tool: [textToImageTool] })),
+    exec: synchronizedComputeFunction(() => Effect.succeed({ [DEFAULT_OUTPUT]: [textToImageTool] })),
   }),
 };
 
