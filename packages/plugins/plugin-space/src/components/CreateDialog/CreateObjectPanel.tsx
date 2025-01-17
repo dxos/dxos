@@ -4,7 +4,6 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { type MetadataResolver } from '@dxos/app-framework';
 import { type TypedObject, getObjectAnnotation, S } from '@dxos/echo-schema';
 import { type SpaceId, type Space, isSpace } from '@dxos/react-client/echo';
 import { Icon, IconButton, Input, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -23,7 +22,7 @@ export type CreateObjectPanelProps = {
   target?: Space | CollectionType;
   name?: string;
   defaultSpaceId?: SpaceId;
-  resolve?: MetadataResolver;
+  resolve?: (typename: string) => Record<string, any>;
   onCreateObject?: (params: {
     schema: TypedObject;
     target: Space | CollectionType;

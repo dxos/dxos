@@ -12,11 +12,20 @@
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./testing": {
+      "types": "./dist/types/src/testing/index.d.ts",
+      "browser": "./dist/lib/browser/testing/index.mjs",
+      "node": "./dist/lib/node-esm/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
-    "*": {}
+    "*": {
+      "./testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
+    }
   },
   "dependencies": {
     "@dxos/app-graph": "workspace:*",
@@ -38,6 +47,9 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@dxos/echo-signals": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@types/react": "~18.2.0",
     "react": "~18.2.0"
   },

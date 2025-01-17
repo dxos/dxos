@@ -7,13 +7,14 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react';
 import React, { useEffect, useState } from 'react';
 
-import { createSurface, SurfaceProvider } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { MessageType, ThreadType } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { ClientRepeater } from '@dxos/react-client/testing';
+import { withClientProvider } from '@dxos/react-client/testing';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 import { Thread } from '@dxos/react-ui-thread';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -46,24 +47,10 @@ const Story = () => {
   }
 
   return (
-    <SurfaceProvider
-      value={{
-        surfaces: {
-          ObjectMessage: createSurface({
-            id: 'test',
-            role: 'card',
-            component: ({ role }) => <span>{JSON.stringify({ role })}</span>,
-          }),
-        },
-      }}
-    >
-      <Mosaic.Root debug>
-        <main className='max-is-prose mli-auto bs-dvh overflow-hidden'>
-          {space && <ChatContainer thread={thread} />}
-        </main>
-        <Mosaic.DragOverlay />
-      </Mosaic.Root>
-    </SurfaceProvider>
+    <Mosaic.Root debug>
+      <main className='max-is-prose mli-auto bs-dvh overflow-hidden'>{space && <ChatContainer thread={thread} />}</main>
+      <Mosaic.DragOverlay />
+    </Mosaic.Root>
   );
 };
 
@@ -72,9 +59,24 @@ export const Default = {};
 const meta: Meta = {
   title: 'plugins/plugin-thread/Chat',
   component: Thread,
-  // TODO(burdon): Use decorator.
-  render: () => <ClientRepeater component={Story} createIdentity createSpace types={[ThreadType, MessageType]} />,
-  decorators: [withTheme, withLayout({ fullscreen: true, tooltips: true })],
+  render: () => <Story />,
+  decorators: [
+    withPluginManager({
+      capabilities: [
+        contributes(
+          Capabilities.ReactSurface,
+          createSurface({
+            id: 'test',
+            role: 'card',
+            component: ({ role }) => <span>{JSON.stringify({ role })}</span>,
+          }),
+        ),
+      ],
+    }),
+    withTheme,
+    withLayout({ fullscreen: true, tooltips: true }),
+    withClientProvider({ createSpace: true, types: [ThreadType, MessageType] }),
+  ],
   parameters: { translations },
 };
 

@@ -24,9 +24,9 @@ export type ThreadContainerProps = {
   autoFocusTextbox?: boolean;
   onTextboxFocus?: () => void;
   detached?: boolean;
-  onAttend?: () => void;
-  onResolve?: () => void;
-  onThreadDelete?: () => void;
-  onMessageDelete?: (messageId: string) => void;
-  onComment?: (thread: ThreadType) => void;
+  onAttend?: (thread: ThreadType) => void;
+  onComment?: (thread: ThreadType, message: string) => void;
+  onResolve?: (thread: ThreadType) => void;
+  onMessageDelete?: (thread: ThreadType, messageId: string) => void;
+  onThreadDelete?: (thread: ThreadType) => void;
 } & Pick<ThreadProps, 'current'>;

@@ -5,7 +5,7 @@
 import { Gift, DownloadSimple, FirstAidKit } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { parseFileManagerPlugin, useResolvePlugin } from '@dxos/app-framework';
+import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { type ConfigProto, defs, SaveConfig, Storage } from '@dxos/config';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
@@ -34,7 +34,7 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
   const download = useFileDownload();
   // TODO(mykola): Get updates from other places that change Config.
   const [storageConfig, setStorageConfig] = useState<ConfigProto>({});
-  const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
+  const [upload] = useCapabilities(Capabilities.FileUploader);
 
   useEffect(() => {
     void Storage().then((config) => setStorageConfig(config));
@@ -52,8 +52,8 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
     const fileName = `composer-${new Date().toISOString().replace(/\W/g, '-')}.json`;
     download(file, fileName);
 
-    if (fileManagerPlugin?.provides.file.upload) {
-      const info = await fileManagerPlugin.provides.file.upload(new File([file], fileName), client.spaces.default);
+    if (upload) {
+      const info = await upload(new File([file], fileName), client.spaces.default);
       if (!info) {
         log.error('diagnostics failed to upload to IPFS');
         return;

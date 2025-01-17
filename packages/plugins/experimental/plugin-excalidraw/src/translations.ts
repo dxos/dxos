@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { SKETCH_PLUGIN } from './meta';
+import { EXCALIDRAW_PLUGIN } from './meta';
 
 export default [
   {
     'en-US': {
-      [SKETCH_PLUGIN]: {
+      [EXCALIDRAW_PLUGIN]: {
         'plugin name': 'Sketch',
         'object title placeholder': 'New sketch',
         'create object label': 'Create sketch (Excalidraw)',

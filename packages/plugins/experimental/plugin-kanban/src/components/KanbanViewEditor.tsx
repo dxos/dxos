@@ -13,7 +13,7 @@ import { KanbanAction } from '../types';
 
 type KanbanViewEditorProps = { kanban: KanbanType };
 
-const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
+export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = getSpace(kanban);
 
@@ -68,5 +68,3 @@ const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
     </>
   );
 };
-
-export default KanbanViewEditor;
