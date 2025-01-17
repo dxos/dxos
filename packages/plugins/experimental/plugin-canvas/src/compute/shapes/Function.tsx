@@ -149,6 +149,7 @@ export const createFunctionAnchors = (
   input: S.Schema<any> = VoidInput,
   output: S.Schema<any> = VoidOutput,
 ) => {
+  // TODO(burdon): Set type.
   const inputs = AST.getPropertySignatures(input.ast).map(({ name }) => createAnchorId('input', name.toString()));
   const outputs = AST.getPropertySignatures(output.ast).map(({ name }) => createAnchorId('output', name.toString()));
   return createAnchors({ shape, inputs, outputs, center: { x: 0, y: (headerHeight - footerHeight) / 2 + 1 } });

@@ -182,10 +182,10 @@ export const Frame = ({ Component, showAnchors, ...baseProps }: FrameProps) => {
 export type FrameContentProps = PropsWithChildren<
   ThemedClassName<
     {
+      anchors: Record<string, Anchor>;
       dragging?: boolean;
       resizing?: boolean;
       preview?: boolean;
-      anchors: Record<string, Anchor>;
       active?: boolean;
       onEdit?: () => void;
     } & FrameProps
@@ -195,6 +195,7 @@ export type FrameContentProps = PropsWithChildren<
 /**
  * Content rendered by frames and tools.
  */
+// TODO(burdon): Define type of child component; e.g., onEdit callback.
 export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
   (
     {
@@ -204,11 +205,11 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
       debug,
       selected,
       editing,
+      anchors,
       dragging,
       resizable,
       resizing,
       preview,
-      anchors,
       active,
       onSelect,
       onEdit,

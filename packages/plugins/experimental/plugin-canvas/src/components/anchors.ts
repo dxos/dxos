@@ -15,6 +15,8 @@ export type Anchor = {
   shape: string;
   /** Anchor center. */
   pos: Point;
+  /** Data type. */
+  type?: string;
 };
 
 export const getAnchorPoints = (center: Point, n: number): Point[] => {

@@ -38,7 +38,8 @@ export const ConstantComponent = ({ shape, title, chat, ...props }: ConstantComp
 
   return (
     <Box shape={shape} name={title}>
-      <div className='p-1 truncate'>{node.data.constant}</div>
+      <div className='p-2 truncate'>{node.data.constant}</div>
+      {/* TODO(burdon): Editable. */}
       {/* <TextBox */}
       {/*  {...props} */}
       {/*  value={node.data.constant} */}

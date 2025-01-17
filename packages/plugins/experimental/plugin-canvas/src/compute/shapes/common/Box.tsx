@@ -40,6 +40,7 @@ export const Box = forwardRef<HTMLDivElement, BoxProps>(
             size={4}
             label='run'
             iconOnly
+            onDoubleClick={(ev) => ev.stopPropagation()}
             onClick={(ev) => {
               ev.stopPropagation();
               onAction?.('run');
