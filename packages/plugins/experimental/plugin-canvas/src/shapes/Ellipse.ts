@@ -19,7 +19,9 @@ export const EllipseComponent = ({ shape }: ShapeComponentProps<EllipseShape>) =
 
 export const ellipseShape: ShapeDef<EllipseShape> = {
   type: 'ellipse',
+  name: 'Ellipse',
   icon: 'ph--circle--regular',
   component: EllipseComponent,
   createShape: ({ id, center }) => createEllipse({ id, center, size: { width: 128, height: 128 } }),
+  resizable: true,
 };

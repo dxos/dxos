@@ -202,7 +202,6 @@ export class StateMachine extends Resource {
         const tasks: Effect.Effect<unknown, any, never>[] = [];
         for (const node of allAffectedNodes) {
           const executable = yield* Effect.promise(() => resolveComputeNode(this._graph.getNode(node)));
-          console.log('will compute inputs', node);
           // TODO(dmaretskyi): Check if the node has a compute function and run computeOutputs if it does.
           const effect = (executable.exec ? executor.computeOutputs(node) : executor.computeInputs(node)).pipe(
             Effect.withSpan('runGraph'),
@@ -221,7 +220,6 @@ export class StateMachine extends Resource {
         yield* Scope.close(scope, Exit.void);
       }),
     );
-    console.log('done executing');
 
     this.update.emit();
   }

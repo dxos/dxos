@@ -9,7 +9,6 @@ import {
   type ComputeNode,
   type Executable,
   GptService,
-  SpaceService,
   defineComputeNode,
   gptNode,
   makeValueBag,
@@ -19,12 +18,12 @@ import { raise } from '@dxos/debug';
 import { ObjectId, S } from '@dxos/echo-schema';
 import { type GraphNode } from '@dxos/graph';
 import { failedInvariant, invariant } from '@dxos/invariant';
-
-import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './types';
-import { type ComputeShape } from '../shapes';
-import type { ConstantShape } from '../shapes/Constant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+
+import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './types';
+// TODO(burdon): Push down defs to here.
+import { type ComputeShape, type ConstantShape } from '../shapes';
 
 type NodeType =
   | 'switch'
@@ -87,7 +86,7 @@ const nodeFactory: Record<string, (shape: GraphNode<ComputeShape>) => GraphNode<
   ['chat' as const]: () => createNode('chat'),
   ['view' as const]: () => createNode('view'),
   ['thread' as const]: () => createNode('thread'),
-  ['constant' as const]: (shape) => createNode('constant', { constant: (shape.data as ConstantShape).constant }),
+  ['constant' as const]: (shape) => createNode('constant', { constant: (shape.data as ConstantShape).value }),
   ['list' as const]: () => createNode('list'),
   ['append' as const]: () => createNode('append'),
   ['database' as const]: () => createNode('database'),

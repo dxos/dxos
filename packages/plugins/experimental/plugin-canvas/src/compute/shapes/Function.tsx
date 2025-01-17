@@ -45,6 +45,7 @@ export const FunctionComponent = ({ shape }: ShapeComponentProps<FunctionShape>)
 
 export const functionShape: ShapeDef<FunctionShape> = {
   type: 'function',
+  name: 'Function',
   icon: 'ph--function--regular',
   component: FunctionComponent,
   createShape: createFunction,
@@ -59,11 +60,11 @@ const bodyPadding = 8;
 
 export type FunctionBodyProps = {
   shape: Shape;
-  name: string;
+  name?: string;
   content?: JSX.Element;
   inputSchema?: S.Schema.Any;
   outputSchema?: S.Schema.Any;
-} & Pick<BoxProps, 'status' | 'resizable'>;
+} & Pick<BoxProps, 'status'>;
 
 export const FunctionBody = ({
   shape,
@@ -106,8 +107,9 @@ export const FunctionBody = ({
   return (
     <Box
       ref={rootRef}
-      classNames='divide-y divide-separator'
+      shape={shape}
       name={name}
+      classNames='divide-y divide-separator'
       open={open}
       onAction={handleAction}
       {...props}

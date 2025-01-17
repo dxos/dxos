@@ -27,9 +27,6 @@
       "path": "../../experimental/assistant"
     },
     {
-      "path": "../../sdk/client"
-    },
-    {
       "path": "../echo/echo-schema"
     },
     {

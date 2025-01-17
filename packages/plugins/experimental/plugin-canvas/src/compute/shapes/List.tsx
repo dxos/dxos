@@ -35,11 +35,10 @@ export const createList = ({ id, ...rest }: CreateListProps): ListShape => ({
 
 export const ListComponent = ({ shape }: ShapeComponentProps<ListShape>) => {
   const { runtime } = useComputeNodeState(shape);
-
   const items = runtime.outputs.items?.type === 'executed' ? runtime.outputs.items.value : [];
 
   return (
-    <Box name={'List'} resizable>
+    <Box shape={shape} status={`${items.length} items`}>
       <div className='flex flex-col w-full overflow-y-scroll divide-y divide-separator'>
         {[...items].map((item, i) => (
           <ListItem key={i} classNames='p-1 px-2' item={item} />
@@ -68,9 +67,10 @@ export const ListItem = ({ classNames, item }: ThemedClassName<{ item: any }>) =
 
 export const listShape: ShapeDef<ListShape> = {
   type: 'list',
+  name: 'List',
   icon: 'ph--list-dashes--regular',
   component: ListComponent,
   createShape: createList,
   getAnchors: (shape) => createFunctionAnchors(shape, ListInput, ListOutput),
-  resizeable: true,
+  resizable: true,
 };

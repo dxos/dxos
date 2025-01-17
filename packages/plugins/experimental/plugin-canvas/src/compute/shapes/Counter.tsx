@@ -38,6 +38,7 @@ export const CounterComponent = ({ shape }: ShapeComponentProps<CounterShape>) =
 
 export const counterShape: ShapeDef<CounterShape> = {
   type: 'counter',
+  name: 'Counter',
   icon: 'ph--calculator--regular',
   component: CounterComponent,
   createShape: createCounter,

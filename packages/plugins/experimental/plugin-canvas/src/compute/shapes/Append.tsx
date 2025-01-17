@@ -30,12 +30,13 @@ export const createAppend = ({ id, ...rest }: CreateAppendProps): AppendShape =>
 });
 
 export const AppendComponent = ({ shape }: ShapeComponentProps<AppendShape>) => {
-  return <FunctionBody shape={shape} name='Append' inputSchema={AppendInput} />;
+  return <FunctionBody shape={shape} inputSchema={AppendInput} />;
 };
 
 export const appendShape: ShapeDef<AppendShape> = {
   type: 'append',
-  icon: 'ph--image--regular',
+  name: 'Append',
+  icon: 'ph--list-plus--regular',
   component: AppendComponent,
   createShape: createAppend,
   getAnchors: (shape) => createFunctionAnchors(shape, AppendInput),

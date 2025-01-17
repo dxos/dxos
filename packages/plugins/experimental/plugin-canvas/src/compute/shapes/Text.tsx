@@ -65,7 +65,7 @@ export const TextComponent = ({ shape, title, chat, ...props }: TextComponentPro
   };
 
   return (
-    <Box name={title ?? 'Text'} resizable>
+    <Box shape={shape} name={title}>
       <TextBox
         ref={inputRef}
         reset={reset}
@@ -101,18 +101,20 @@ export const createChat = ({ id, ...rest }: CreateChatProps): ChatShape => ({
 
 export const textShape: ShapeDef<TextShape> = {
   type: 'text',
+  name: 'Text',
   icon: 'ph--article--regular',
   component: (props) => <TextComponent {...props} placeholder={'Text'} />,
   createShape: createText,
   getAnchors: (shape) => createAnchorMap(shape, { [createAnchorId('output')]: { x: 1, y: 0 } }),
-  resizeable: true,
+  resizable: true,
 };
 
 export const chatShape: ShapeDef<TextShape> = {
   type: 'chat',
+  name: 'Chat',
   icon: 'ph--textbox--regular',
   component: (props) => <TextComponent {...props} title={'Prompt'} placeholder={'Message'} chat />,
   createShape: createText,
   getAnchors: (shape) => createAnchorMap(shape, { [createAnchorId('output')]: { x: 1, y: 0 } }),
-  resizeable: true,
+  resizable: true,
 };

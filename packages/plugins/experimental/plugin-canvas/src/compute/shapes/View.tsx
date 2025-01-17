@@ -43,7 +43,7 @@ export const ViewComponent = ({ shape }: ShapeComponentProps<ViewShape>) => {
     // const image = shape.node.resolveImage(id);
     // if (image?.source) {
     //   return (
-    //     <Box name={'Artifact'}>
+    //     <Box shape={shape}>
     //       <img
     //         src={`data:image/jpeg;base64,${image.source.data}`}
     //         className='grow object-cover'
@@ -57,7 +57,7 @@ export const ViewComponent = ({ shape }: ShapeComponentProps<ViewShape>) => {
   }
 
   return (
-    <Box name={'View'} resizable>
+    <Box shape={shape}>
       <TextBox value={value} />
     </Box>
   );
@@ -65,9 +65,10 @@ export const ViewComponent = ({ shape }: ShapeComponentProps<ViewShape>) => {
 
 export const viewShape: ShapeDef<ViewShape> = {
   type: 'view',
+  name: 'View',
   icon: 'ph--eye--regular',
   component: ViewComponent,
   createShape: createView,
   getAnchors: (shape) => createAnchorMap(shape, { [createAnchorId('input')]: { x: -1, y: 0 } }),
-  resizeable: true,
+  resizable: true,
 };

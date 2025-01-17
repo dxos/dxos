@@ -15,27 +15,34 @@ import { type Anchor } from '../anchors';
  */
 export type ShapeDef<S extends Polygon> = {
   type: string;
+  name: string;
   icon: string;
   component: FC<ShapeComponentProps<S>>;
   createShape: (props: Pick<S, 'id' | 'center'>) => S;
   getAnchors?: (shape: S) => Record<string, Anchor>;
-  resizeable?: boolean;
+  resizable?: boolean;
 };
+
+export type ShapeDefSet = { title?: string; shapes: ShapeDef<any>[] };
 
 /**
  * Shape registry may be provided to the Editor.
  */
 export class ShapeRegistry {
-  private readonly _registry: Map<string, ShapeDef<Polygon>>;
+  private readonly _registry = new Map<string, ShapeDef<Polygon>>();
 
-  constructor(shapes: ShapeDef<any>[] = []) {
-    this._registry = new Map<string, ShapeDef<any>>(shapes.map((shape) => [shape.type, shape]));
+  constructor(private readonly _defs: ShapeDefSet[] = []) {
+    this._defs.forEach(({ shapes }) => shapes.forEach((shape) => this.registerShapeDef(shape)));
   }
 
   createShape<S extends Polygon>(type: string, props: Pick<Polygon, 'id' | 'center'>): S {
     const def = this.getShapeDef(type);
     invariant(def, `unregistered type: ${type}`);
     return def.createShape(props) as S;
+  }
+
+  get defs(): ShapeDefSet[] {
+    return this._defs;
   }
 
   get shapes(): ShapeDef<any>[] {

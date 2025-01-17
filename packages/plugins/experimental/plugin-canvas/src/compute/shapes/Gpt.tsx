@@ -74,23 +74,21 @@ export const GptComponent = ({ shape }: ShapeComponentProps<GptShape>) => {
   return (
     <FunctionBody
       shape={shape}
-      name={'GPT'}
-      // TODO(burdon): Pin to bottom?
       content={<div className='px-2 py-1 overflow-y-scroll'>{text}</div>}
       status={`${tokens} tokens`}
       inputSchema={meta.input}
       outputSchema={meta.output}
-      resizable
     />
   );
 };
 
 export const gptShape: ShapeDef<GptShape> = {
   type: 'gpt',
+  name: 'GPT',
   icon: 'ph--brain--regular',
   component: GptComponent,
   createShape: createGpt,
   // TODO(dmaretskyi): Can we fetch the schema dynamically?
   getAnchors: (shape) => createFunctionAnchors(shape, GptInput, GptOutput),
-  resizeable: true,
+  resizable: true,
 };

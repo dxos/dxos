@@ -33,7 +33,6 @@
   ],
   "dependencies": {
     "@dxos/assistant": "workspace:*",
-    "@dxos/client": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/graph": "workspace:*",

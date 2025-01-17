@@ -30,11 +30,12 @@ export const createDatabase = ({ id, ...rest }: CreateDatabaseProps): DatabaseSh
 });
 
 export const DatabaseComponent = ({ shape }: ShapeComponentProps<DatabaseShape>) => {
-  return <Box name={'Database'}></Box>;
+  return <Box shape={shape} />;
 };
 
 export const databaseShape: ShapeDef<DatabaseShape> = {
   type: 'database',
+  name: 'ECHO',
   icon: 'ph--database--regular',
   component: DatabaseComponent,
   createShape: createDatabase,
