@@ -17,7 +17,7 @@ type ButtonData =
   | { type: 'newColumn'; disabled?: boolean }
   | { type: 'referencedCell'; schemaId: string; targetId: string }
   | { type: 'rowMenu'; rowIndex: number }
-  | { type: 'sort'; fieldId: string };
+  | { type: 'sort'; fieldId: string; direction?: 'asc' | 'desc' };
 
 const createButton = ({
   attr,
@@ -125,6 +125,7 @@ const sortButton = {
       icon: direction === 'desc' ? 'ph--sort-descending--regular' : 'ph--sort-ascending--regular',
       data: {
         'data-field-id': fieldId,
+        'data-direction': direction ?? '',
       },
       testId: 'table-sort-button',
       // TODO(ZaymonFC): All buttons should be rendered into an absolutely positioned flex container.
@@ -135,6 +136,7 @@ const sortButton = {
   getData: (el: HTMLElement): Extract<ButtonData, { type: 'sort' }> => ({
     type: 'sort',
     fieldId: el.getAttribute('data-field-id')!,
+    direction: el.getAttribute('data-direction') as 'asc' | 'desc' | undefined,
   }),
 } as const;
 

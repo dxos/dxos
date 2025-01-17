@@ -84,21 +84,6 @@ const DefaultStory = () => {
     [table, projection],
   );
 
-  const handleAction = useCallback(
-    (action: { type: string }) => {
-      switch (action.type) {
-        case 'on-thread-create': {
-          console.log('Thread creation triggered');
-          break;
-        }
-        case 'add-row': {
-          handleInsertRow();
-        }
-      }
-    },
-    [table],
-  );
-
   const tableRef = useRef<TableController>(null);
   const handleCellUpdate = useCallback((cell: any) => {
     tableRef.current?.update?.(cell);
@@ -125,6 +110,26 @@ const DefaultStory = () => {
     }
   }, [model]);
 
+  const handleAction = useCallback(
+    (action: { type: string }) => {
+      switch (action.type) {
+        case 'on-thread-create': {
+          console.log('Thread creation triggered');
+          break;
+        }
+        case 'add-row': {
+          handleInsertRow();
+          break;
+        }
+        case 'save-view': {
+          model?.saveView();
+          break;
+        }
+      }
+    },
+    [table, model],
+  );
+
   if (!schema || !table) {
     return <div />;
   }
@@ -135,7 +140,7 @@ const DefaultStory = () => {
         <Toolbar.Root classNames='border-b border-separator' onAction={handleAction}>
           <Toolbar.Editing />
           <Toolbar.Separator />
-          <Toolbar.Actions />
+          <Toolbar.Actions viewDirty={model?.isViewDirty} />
         </Toolbar.Root>
         <Table.Root>
           <Table.Main ref={tableRef} model={model} presentation={presentation} ignoreAttention />

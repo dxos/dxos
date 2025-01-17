@@ -12,6 +12,14 @@ import type { PropertyType, FieldType, ViewProjection, ViewType } from '@dxos/sc
 import { type BaseTableRow } from './table-model';
 
 /**
+ * Represents the local sort state.
+ * - undefined: No local sort set, fallback to view sort.
+ * - cleared: Sort explicitly cleared by user.
+ * - active: Active local sort with sort configuration.
+ */
+type LocalSort = { type: 'cleared' } | { type: 'active'; sort: FieldSortType } | undefined;
+
+/**
  * Manages table sorting functionality through display and data index mapping.
  *
  * When a table is sorted, rows visually reorder but we need to maintain references
@@ -35,8 +43,8 @@ import { type BaseTableRow } from './table-model';
 export class TableSorting<T extends BaseTableRow> {
   private readonly _displayToDataIndex = new Map<number, number>();
   private readonly _rows: Signal<T[]>;
-  private readonly _localSort = signal<FieldSortType | undefined>(undefined);
-  public readonly isDirty: ReadonlySignal<boolean>;
+  private readonly _localSort = signal<LocalSort>(undefined);
+  private readonly _isDirty: ReadonlySignal<boolean>;
   public readonly sortedRows: ReadonlySignal<T[]>;
 
   constructor(
@@ -45,7 +53,20 @@ export class TableSorting<T extends BaseTableRow> {
     private readonly _projection: ViewProjection,
   ) {
     this._rows = rows;
-    this.isDirty = computed(() => this._localSort.value !== undefined);
+    this._isDirty = computed(() => {
+      const local = this._localSort.value;
+      const viewSort = this._view?.query.sort?.[0];
+      if (local?.type === 'cleared') {
+        return viewSort !== undefined;
+      }
+      if (local?.type === 'active') {
+        if (!viewSort) {
+          return true;
+        }
+        return local.sort.fieldId !== viewSort.fieldId || local.sort.direction !== viewSort.direction;
+      }
+      return false;
+    });
     this.sortedRows = this.initialiseSortedRows();
   }
 
@@ -53,7 +74,19 @@ export class TableSorting<T extends BaseTableRow> {
    * @reactive Returns local sort if present, falls back to view sort.
    */
   public get sorting(): FieldSortType | undefined {
-    return this._localSort.value ?? this._view?.query.sort?.[0];
+    const local = this._localSort.value;
+    if (local?.type === 'cleared') {
+      return undefined;
+    }
+    if (local?.type === 'active') {
+      return local.sort;
+    }
+    return this._view?.query.sort?.[0];
+  }
+
+  /** @reactive Returns whether local sort is dirty compared to view sort. */
+  public get isDirty(): boolean {
+    return this._isDirty.value;
   }
 
   public getDataIndex(displayIndex: number): number {
@@ -61,7 +94,10 @@ export class TableSorting<T extends BaseTableRow> {
   }
 
   public setSort(fieldId: string, direction: SortDirectionType): void {
-    this._localSort.value = { fieldId, direction };
+    this._localSort.value = {
+      type: 'active',
+      sort: { fieldId, direction },
+    };
   }
 
   public toggleSort(fieldId: string): void {
@@ -82,12 +118,16 @@ export class TableSorting<T extends BaseTableRow> {
   }
 
   public clearSort(): void {
-    this._localSort.value = undefined;
+    this._localSort.value = { type: 'cleared' };
   }
 
   public save(): void {
     if (this._view && this._localSort.value !== undefined) {
-      this._view.query.sort = this._localSort.value ? [this._localSort.value] : [];
+      if (this._localSort.value.type === 'active') {
+        this._view.query.sort = [this._localSort.value.sort];
+      } else {
+        this._view.query.sort = [];
+      }
       this._localSort.value = undefined;
     }
   }
