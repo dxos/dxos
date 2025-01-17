@@ -6,7 +6,7 @@ import React from 'react';
 
 import { S } from '@dxos/echo-schema';
 
-import { Box } from './common';
+import { Box, type BoxActionHandler } from './common';
 import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
 import { TextBox, type ShapeComponentProps, type ShapeDef } from '../../components';
 import { createAnchorMap } from '../../components';
@@ -57,8 +57,14 @@ export const ViewComponent = ({ shape }: ShapeComponentProps<ViewShape>) => {
     }
   }
 
+  const handleAction: BoxActionHandler = (action) => {
+    if (action === 'run') {
+      runtime.evalNode();
+    }
+  };
+
   return (
-    <Box shape={shape}>
+    <Box shape={shape} onAction={handleAction}>
       <TextBox value={value} />
     </Box>
   );
