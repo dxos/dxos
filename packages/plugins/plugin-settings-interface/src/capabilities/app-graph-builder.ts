@@ -5,23 +5,23 @@
 import { Capabilities, contributes, createIntent, type PluginsContext, SettingsAction } from '@dxos/app-framework';
 import { createExtension, type Node } from '@dxos/plugin-graph';
 
-import { MANAGER_PLUGIN } from '../meta';
+import { SETTINGS_INTERFACE_PLUGIN } from '../meta';
 
 export default (context: PluginsContext) =>
   contributes(
     Capabilities.AppGraphBuilder,
     createExtension({
-      id: MANAGER_PLUGIN,
+      id: SETTINGS_INTERFACE_PLUGIN,
       filter: (node): node is Node<null> => node.id === 'root',
       actions: () => [
         {
-          id: MANAGER_PLUGIN,
+          id: SETTINGS_INTERFACE_PLUGIN,
           data: async () => {
             const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
             await dispatch(createIntent(SettingsAction.Open));
           },
           properties: {
-            label: ['open settings label', { ns: MANAGER_PLUGIN }],
+            label: ['open settings label', { ns: SETTINGS_INTERFACE_PLUGIN }],
             icon: 'ph--gear--regular',
             keyBinding: {
               macos: 'meta+,',
