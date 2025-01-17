@@ -97,7 +97,7 @@ export class EdgeHttpClient {
     input: any,
     args?: EdgeHttpGetArgs,
   ): Promise<ExecuteWorkflowResponseBody> {
-    return this._call(`/workflows/${spaceId}/${graphId}`, { ...args, body: input, method: 'POST' });
+    return this._call(`/functions/workflows/${spaceId}/${graphId}`, { ...args, body: input, method: 'POST' });
   }
 
   public async uploadFunction(
