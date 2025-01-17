@@ -238,7 +238,7 @@ Read the users message.
 - When presenting an image, you must use an artifact.
 - Nest the <image> tag inside the <artifact> tag.
 - Image tags are always self-closing and must contain an id attribute.
-(Example: <artifact><image id="unique_identifier" /></artifact>)
+(Example: <artifact><image id="unique_identifier" prompt="..." /></artifact>)
 
 4. Artifact Rules:
 - Ensure that artifact tags are always balanced (i.e., each opening tag has a corresponding closing tag).

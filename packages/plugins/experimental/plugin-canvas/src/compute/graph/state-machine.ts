@@ -132,8 +132,25 @@ export class StateMachine extends Resource {
     return this._forcedOutputs;
   }
 
-  get executedState() {
+  get inputStates() {
     return this._runtimeStateInputs;
+  }
+
+  get outputStates() {
+    return this._runtimeStateOutputs;
+  }
+
+  /**
+   * Inputs and outputs for all nodes.
+   */
+  get nodeStates() {
+    const ids = [...new Set([...Object.keys(this._runtimeStateInputs), ...Object.keys(this._runtimeStateOutputs)])];
+    return Object.fromEntries(
+      ids.map((id) => [
+        id,
+        { node: this._graph.getNode(id), input: this._runtimeStateInputs[id], output: this._runtimeStateOutputs[id] },
+      ]),
+    );
   }
 
   addNode(node: GraphNode<ComputeNode>) {

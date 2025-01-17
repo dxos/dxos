@@ -74,11 +74,7 @@ const Render = ({
       case 'compute':
         return { machine, model, gpt };
       case 'state-machine':
-        return {
-          graph: machine?.graph,
-          user: machine?.userState,
-          executed: machine?.executedState,
-        };
+        return machine?.nodeStates;
       case 'selected':
         return { selected };
     }

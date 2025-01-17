@@ -258,4 +258,7 @@ const FAKE_SPACE_ID = SpaceId.random();
 const textToImageTool: LLMTool = {
   name: 'textToImage',
   type: ToolTypes.TextToImage,
+  options: {
+    model: '@testing/kitten-in-bubble',
+  },
 };

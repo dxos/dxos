@@ -6,18 +6,19 @@ import type { Context } from 'effect';
 import { Effect, Stream } from 'effect';
 
 import {
-  type LLMTool,
   ObjectId,
   type AIServiceClient,
+  type LLMTool,
   type Message,
   type MessageImageContentBlock,
 } from '@dxos/assistant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import { ECHO_ATTR_TYPE } from '@dxos/echo-schema';
 import { makeValueBag, unwrapValueBag, type ComputeEffect, type ValueBag } from '../../types';
 import { EventLogger } from '../event-logger';
-import { type GptOutput, type GptInput, type GptService } from '../gpt';
+import { IMAGE_TYPENAME, type GptInput, type GptOutput, type GptService } from '../gpt';
 
 export class EdgeGpt implements Context.Tag.Service<GptService> {
   // Images are not supported.
@@ -72,14 +73,14 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
 
       const logger = yield* EventLogger;
 
-      const text = Effect.gen(function* () {
+      const text = Effect.gen(this, function* () {
         // Drain the stream
         yield* stream1.pipe(
-          Stream.tap((token) => {
+          Stream.tap((event) => {
             logger.log({
               type: 'custom',
               nodeId: logger.nodeId!,
-              event: token,
+              event: event,
             });
             return Effect.void;
           }),
@@ -91,13 +92,46 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
         return messages.map((msg) => msg.content.flatMap((c) => (c.type === 'text' ? [c.text] : []))).join('');
       });
 
+      const artifact = Effect.gen(this, function* () {
+        const output = yield* outputMessagesEffect;
+
+        for (const msg of output) {
+          for (const content of msg.content) {
+            if (content.type === 'image') {
+              log.info('save image to cache', { id: content.id, mediaType: content.source?.media_type });
+              this.imageCache.set(content.id!, content);
+            }
+          }
+        }
+
+        const textContent = yield* text;
+        const begin = textContent.lastIndexOf('<artifact>');
+        const end = textContent.indexOf('</artifact>');
+        if (begin === -1 || end === -1) {
+          return undefined;
+        }
+        const artifactData = textContent.slice(begin + '<artifact>'.length, end).trim();
+
+        const imageMatch = artifactData.match(/<image id="([^"]*)" prompt="([^"]*)" \/>/);
+        if (imageMatch) {
+          const [, id, prompt] = imageMatch;
+          return {
+            [ECHO_ATTR_TYPE]: IMAGE_TYPENAME,
+            id,
+            prompt,
+            source: this.imageCache.get(id)?.source,
+          };
+        }
+        return artifactData;
+      });
+
       return makeValueBag<GptOutput>({
         messages: outputWithAPrompt,
         tokenCount: 0,
         text,
         tokenStream: stream2,
         cot: undefined,
-        artifact: undefined,
+        artifact,
       });
     });
   }
