@@ -57,7 +57,7 @@ export const ViewComponent = ({ shape }: ShapeComponentProps<ViewShape>) => {
   }
 
   return (
-    <Box name={'View'}>
+    <Box name={'View'} resizable>
       <TextBox value={value} />
     </Box>
   );

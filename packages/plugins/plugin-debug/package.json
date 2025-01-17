@@ -37,6 +37,7 @@
     "@dxos/automerge": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/conductor": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/devtools": "workspace:*",
     "@dxos/echo-generator": "workspace:*",

@@ -19,7 +19,6 @@ import {
   type Thread,
 } from './schema';
 import { iterSSEMessages } from './sse';
-import { log } from '@dxos/log';
 
 export type AIServiceClientParams = {
   endpoint: string;

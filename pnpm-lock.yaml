@@ -4209,6 +4209,9 @@ importers:
       '@dxos/codec-protobuf':
         specifier: workspace:*
         version: link:../../common/codec-protobuf
+      '@dxos/conductor':
+        specifier: workspace:*
+        version: link:../../core/conductor
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -4227,6 +4230,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../core/mesh/edge-client
       '@dxos/gem-core':
         specifier: workspace:*
         version: link:../../experimental/gem-core
@@ -4308,6 +4314,9 @@ importers:
       date-fns:
         specifier: ^3.3.1
         version: 3.3.1
+      effect:
+        specifier: ^3.12.1
+        version: 3.12.1
       flame-chart-js:
         specifier: ^2.3.1
         version: 2.3.1
@@ -4326,6 +4335,9 @@ importers:
       luxon:
         specifier: ^3.4.4
         version: 3.4.4
+      ollama:
+        specifier: ^0.5.11
+        version: 0.5.12
       react-charts:
         specifier: beta
         version: 3.0.0-beta.57(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -5615,6 +5627,9 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../../core/compute
+      '@dxos/conductor':
+        specifier: workspace:*
+        version: link:../../../core/conductor
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
@@ -7296,6 +7311,9 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute
+      '@dxos/conductor':
+        specifier: workspace:*
+        version: link:../../core/conductor
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config

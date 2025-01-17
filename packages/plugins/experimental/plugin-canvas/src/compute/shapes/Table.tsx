@@ -36,7 +36,7 @@ export const createTable = ({ id, ...rest }: CreateTableProps): TableShape => ({
 export const TableComponent = ({ shape }: ShapeComponentProps<TableShape>) => {
   // const items = shape.node.items.value;
 
-  return <Box name={'Table'}></Box>;
+  return <Box name={'Table'} resizable></Box>;
 };
 
 export const tableShape: ShapeDef<TableShape> = {

@@ -38,7 +38,7 @@ export const JsonComponent = ({ shape, ...props }: JsonComponentProps) => {
   const value = input?.type === 'executed' ? input.value : undefined;
 
   return (
-    <Box name={'Json'}>
+    <Box name={'Json'} resizable>
       <JsonFilter data={value} classNames='text-xs' />
     </Box>
   );
@@ -67,5 +67,4 @@ export const jsonShape: ShapeDef<JsonShape> = {
       [createAnchorId('input')]: { x: -1, y: 0 },
       [createAnchorId('output')]: { x: 1, y: 0 },
     }),
-  resizeable: true,
 };

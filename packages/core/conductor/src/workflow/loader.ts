@@ -111,7 +111,7 @@ export class WorkflowLoader {
       throw new Error(`Graph compilation failed:\n${formatDiagnostics(compilationResult.diagnostics)}`);
     }
 
-    const workflow = new Workflow(graphDxn, compilationResult.executable, resolvedNodes);
+    const workflow = new Workflow(graphDxn, compilationResult.executable, graph, resolvedNodes);
     compiledGraphMap.set(graphDxnStr, workflow);
     return workflow;
   }

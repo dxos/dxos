@@ -46,7 +46,7 @@ export const ThreadComponent = ({ shape }: ShapeComponentProps<ThreadShape>) => 
   }, [items]);
 
   return (
-    <Box name={'Thread'}>
+    <Box name={'Thread'} resizable>
       <div ref={scrollRef} className='flex flex-col w-full overflow-y-scroll gap-2 p-2'>
         {[...items].map((item, i) => (
           <ThreadItem key={i} item={item} />

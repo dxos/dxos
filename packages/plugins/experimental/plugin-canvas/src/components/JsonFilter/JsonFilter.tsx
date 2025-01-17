@@ -23,6 +23,7 @@ export const JsonFilter = ({ data: initialData, classNames }: JsonFilterProps) =
         setData(jp.query(initialData, text));
         setError(null);
       } catch (err) {
+        setData(initialData);
         setError(err as Error);
       }
     }
@@ -31,17 +32,12 @@ export const JsonFilter = ({ data: initialData, classNames }: JsonFilterProps) =
   return (
     <div className='flex flex-col grow overflow-hidden'>
       <Input.Root validationValence={error ? 'error' : 'success'}>
-        {error && (
-          <Input.DescriptionAndValidation classNames='p-1 px-2 truncate'>
-            <Input.Validation>{String(error)}</Input.Validation>
-          </Input.DescriptionAndValidation>
-        )}
         <Input.TextInput
-          classNames='p-1 px-2 font-mono'
+          classNames={mx('p-1 px-2 font-mono', error && 'border-red-500')}
           variant='subdued'
           value={text}
           onChange={(event) => setText(event.target.value)}
-          placeholder='JSONPath expr. (e.g., $.graph.nodes[*].id)'
+          placeholder='JSONPath (e.g., $.graph.nodes)'
         />
       </Input.Root>
       <SyntaxHighlighter language='json' classNames={mx('grow overflow-y-auto', classNames)}>

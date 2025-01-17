@@ -106,6 +106,8 @@ export const compile = async ({
 
       exec: (input) => {
         return Effect.gen(function* () {
+          invariant(isValueBag(input));
+
           const instance = executor.clone();
           const logger = yield* EventLogger;
 
