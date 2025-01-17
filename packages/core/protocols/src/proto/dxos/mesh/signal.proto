@@ -13,12 +13,14 @@ package dxos.mesh.signal;
 
 option go_package = "github.com/dxos/dxos/proto/def/dxos/mesh/signal";
 
+/// @deprecated
 message JoinRequest {
   bytes swarm = 1;
   bytes peer = 2;
   optional google.protobuf.Struct metadata = 3;
 }
 
+/// @deprecated
 message Message {
   // TODO(egor): Rename to `sender`.
   bytes author = 1;
@@ -27,11 +29,13 @@ message Message {
   optional google.protobuf.Struct metadata = 4;
 }
 
+/// @deprecated
 message ReceptionRequest {
   bytes peer = 1;
 }
 
 /// Goes on Pub/Sub swarm topic and as a Join stream in RPC.
+/// @deprecated
 message SwarmEvent {
   // Announce peer available on swarm.
   message PeerAvailable {
@@ -60,6 +64,7 @@ message SwarmEvent {
 }
 
 /// Goes on a Pub/Sub host topic.
+/// @deprecated
 message HostEvent {
   message AnnounceBack {
       bytes swarm = 1;
@@ -71,12 +76,14 @@ message HostEvent {
 }
 
 /// Goes on Pub/Sub peer topic.
+/// @deprecated
 message PeerEvent {
   oneof event {
     Message message = 1;
   }
 }
 
+/// @deprecated
 enum SignalState {
   /// Connection is being established.
   CONNECTING = 0;
@@ -93,6 +100,7 @@ enum SignalState {
 }
 
 // TOOD(burdon): Rename.
+/// @deprecated
 service Signal {
   rpc Join(JoinRequest) returns (stream SwarmEvent);
   rpc ReceiveMessages(ReceptionRequest) returns (stream Message);
