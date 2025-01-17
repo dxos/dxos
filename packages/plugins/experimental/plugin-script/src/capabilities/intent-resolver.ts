@@ -3,8 +3,9 @@
 //
 
 import { contributes, Capabilities, createResolver } from '@dxos/app-framework';
-import { ScriptType, TextType } from '@dxos/functions';
+import { ScriptType } from '@dxos/functions';
 import { create, makeRef } from '@dxos/live-object';
+import { TextType } from '@dxos/schema';
 
 import { templates } from '../templates';
 import { ScriptAction } from '../types';

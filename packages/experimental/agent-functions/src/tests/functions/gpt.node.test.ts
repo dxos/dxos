@@ -8,13 +8,12 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { waitForCondition } from '@dxos/async';
 import { getMeta, type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
-import { loadObjectReferences } from '@dxos/echo-db';
-import { create, makeRef } from '@dxos/live-object';
 import { FunctionDef, FunctionTrigger, TriggerKind } from '@dxos/functions';
 import { createInitializedClients, inviteMember, startFunctionsHost } from '@dxos/functions/testing';
+import { create, makeRef } from '@dxos/live-object';
 import { ChainInputType, ChainPromptType } from '@dxos/plugin-automation/types';
-import { TextType } from '@dxos/plugin-markdown/types';
 import { MessageType, ThreadType } from '@dxos/plugin-space/types';
+import { TextType } from '@dxos/schema';
 
 import { type ChainResources, ModelInvokerFactory } from '../../chain';
 import { StubModelInvoker } from '../../functions/gpt/testing';

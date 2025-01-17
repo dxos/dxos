@@ -75,6 +75,7 @@ export const memoizeQuery = <T extends ReactiveEchoObject<any>>(
   return query?.objects ?? EMPTY_ARRAY;
 };
 
+// TODO(wittjosiah): Factor out? Expose via capability?
 export const getSpaceDisplayName = (
   space: Space,
   { personal, namesCache = {} }: { personal?: boolean; namesCache?: Record<string, string> } = {},

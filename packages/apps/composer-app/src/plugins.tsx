@@ -42,6 +42,7 @@ import { StatusBarPlugin, STATUS_BAR_PLUGIN } from '@dxos/plugin-status-bar';
 import { TablePlugin, TABLE_PLUGIN } from '@dxos/plugin-table';
 import { ThemePlugin, THEME_PLUGIN } from '@dxos/plugin-theme';
 import { ThreadPlugin, THREAD_PLUGIN } from '@dxos/plugin-thread';
+import { TokenManagerPlugin, TOKEN_MANAGER_PLUGIN } from '@dxos/plugin-token-manager';
 import { WildcardPlugin, WILDCARD_PLUGIN } from '@dxos/plugin-wildcard';
 import { WnfsPlugin } from '@dxos/plugin-wnfs';
 import { isNotFalsy } from '@dxos/util';
@@ -83,6 +84,7 @@ export const core = ({ isPwa, isSocket }: PluginConfig): string[] =>
     SPACE_PLUGIN,
     STATUS_BAR_PLUGIN,
     THEME_PLUGIN,
+    TOKEN_MANAGER_PLUGIN,
     WELCOME_PLUGIN,
     WILDCARD_PLUGIN,
   ].filter(isNotFalsy);
@@ -167,6 +169,7 @@ export const plugins = ({ appKey, config, services, observability, isDev, isPwa,
     TablePlugin(),
     ThemePlugin({ appName: 'Composer', noCache: isDev }),
     ThreadPlugin(),
+    TokenManagerPlugin(),
     WelcomePlugin(),
     WildcardPlugin(),
     WnfsPlugin(),

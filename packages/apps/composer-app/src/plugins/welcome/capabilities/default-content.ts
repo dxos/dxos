@@ -11,8 +11,9 @@ import { INITIAL_CONTENT, INITIAL_DOC_TITLE } from '../../../constants';
 export default async (context: PluginsContext) => {
   const { fullyQualifiedId, create, makeRef } = await import('@dxos/react-client/echo');
   const { ClientCapabilities } = await import('@dxos/plugin-client');
-  const { DocumentType, TextType } = await import('@dxos/plugin-markdown/types');
+  const { DocumentType } = await import('@dxos/plugin-markdown/types');
   const { CollectionType } = await import('@dxos/plugin-space/types');
+  const { TextType } = await import('@dxos/schema');
 
   const { dispatchPromise: dispatch } = context.requestCapability(Capabilities.IntentDispatcher);
   const { graph } = context.requestCapability(Capabilities.AppGraph);

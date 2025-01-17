@@ -379,6 +379,9 @@
       "path": "packages/plugins/plugin-thread/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-token-manager/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-wildcard/tsconfig.json"
     },
     {

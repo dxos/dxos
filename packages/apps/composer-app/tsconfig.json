@@ -189,6 +189,9 @@
       "path": "../../plugins/plugin-thread"
     },
     {
+      "path": "../../plugins/plugin-token-manager"
+    },
+    {
       "path": "../../plugins/plugin-wildcard"
     },
     {
@@ -211,6 +214,9 @@
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/schema"
     },
     {
       "path": "../../sdk/shell"

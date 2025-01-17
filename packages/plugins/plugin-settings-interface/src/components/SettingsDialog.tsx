@@ -23,6 +23,7 @@ const core = [
   'dxos.org/plugin/observability',
   'dxos.org/plugin/registry',
   'dxos.org/plugin/space',
+  'dxos.org/plugin/token-manager',
 ];
 
 export type SettingsDialogProps = {
