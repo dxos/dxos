@@ -16,6 +16,7 @@ import {
   SwarmResponseSchema,
   type Message as EdgeMessage,
   type PeerSchema,
+  type SwarmResponse,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
@@ -24,6 +25,7 @@ import { type PeerInfo, type Message, type SwarmEvent, PeerInfoHash } from '../s
 
 export class EdgeSignalManager extends Resource implements SignalManager {
   public swarmEvent = new Event<SwarmEvent>();
+  public swarmState = new Event<SwarmResponse>();
   public onMessage = new Event<Message>();
 
   /**
@@ -132,6 +134,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
   private _processSwarmResponse(message: EdgeMessage) {
     invariant(protocol.getPayloadType(message) === SwarmResponseSchema.typeName, 'Wrong payload type');
     const payload = protocol.getPayload(message, SwarmResponseSchema);
+    this.swarmState.emit(payload);
     const topic = PublicKey.from(payload.swarmKey);
     if (!this._swarmPeers.has(topic)) {
       log.warn('Received message from wrong topic', { topic });

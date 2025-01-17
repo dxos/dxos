@@ -508,7 +508,7 @@ message UpdateConfigRequest {
   ConnectionState swarm = 1;
 }
 
-message SubscribeSwarmEventsRequest {
+message SubscribeSwarmStateRequest {
   dxos.keys.PublicKey topic = 1;
 }
 
@@ -518,7 +518,7 @@ service NetworkService {
   rpc QueryStatus(google.protobuf.Empty) returns (stream NetworkStatus);
   rpc JoinSwarm(dxos.edge.signal.JoinRequest) returns (google.protobuf.Empty);
   rpc LeaveSwarm(dxos.edge.signal.LeaveRequest) returns (google.protobuf.Empty);
-  rpc SubscribeSwarmEvents(SubscribeSwarmEventsRequest) returns (stream dxos.edge.signal.SwarmEvent);
+  rpc SubscribeSwarmState(SubscribeSwarmStateRequest) returns (stream dxos.edge.messenger.SwarmResponse);
   rpc SendMessage(dxos.edge.signal.Message) returns (google.protobuf.Empty);
   rpc SubscribeMessages(dxos.edge.messenger.Peer) returns (stream dxos.edge.signal.Message);
 }

@@ -5,6 +5,7 @@
 import { type Event } from '@dxos/async';
 import { type Lifecycle } from '@dxos/context';
 import { type PublicKey } from '@dxos/keys';
+import { type SwarmResponse } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { type Peer } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { type Message, type SwarmEvent } from '@dxos/protocols/proto/dxos/edge/signal';
 import { type SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
@@ -28,6 +29,8 @@ export type SignalStatus = {
 export interface SignalMethods {
   /**
    * Emits when other peers join or leave the swarm.
+   * @deprecated
+   * TODO(mykola): Use swarmState in network-manager instead.
    */
   swarmEvent: Event<SwarmEvent>;
 
@@ -35,6 +38,11 @@ export interface SignalMethods {
    * Emits when a message is received.
    */
   onMessage: Event<Message>;
+
+  /**
+   * Emits when the swarm state changes.
+   */
+  swarmState?: Event<SwarmResponse>;
 
   /**
    * Join topic on signal network, to be discoverable by other peers.

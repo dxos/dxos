@@ -2,27 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-import usePartySocket from 'partysocket/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
+import { type UserState, type RoomState } from '@dxos/protocols/proto/dxos/edge/calls';
+import { type Peer } from '@dxos/protocols/proto/dxos/edge/messenger';
+import { type PublicKey, useClient } from '@dxos/react-client';
 
-import type { UserMedia } from './useUserMedia';
-import { CALLS_URL } from '../../types';
-import type { ClientMessage, RoomState, ServerMessage } from '../types';
+import { codec } from '../types';
 
-export const useRoom = ({
-  roomName,
-  userMedia,
-  username,
-  edgeConnection,
-}: {
-  roomName: string;
-  userMedia: UserMedia;
-  username: string;
-  edgeConnection: 
-}) => {
-  const [roomState, setRoomState] = useState<RoomState>({ users: [] });
+export const useRoom = ({ roomId, username }: { roomId: PublicKey; username: string }) => {
+  const [roomState, setRoomState] = useState<RoomState>({ users: [], meetingId: roomId.toHex() });
 
   const userLeftFunctionRef = useRef(() => {});
 
@@ -30,66 +20,66 @@ export const useRoom = ({
     return () => userLeftFunctionRef.current();
   }, []);
 
-  const websocket = usePartySocket({
-    host: CALLS_URL,
-    party: 'rooms',
-    room: roomName,
-    query: { username },
-    onMessage: (e) => {
-      const message = JSON.parse(e.data) as ServerMessage;
-      switch (message.type) {
-        case 'roomState':
-          // prevent updating state if nothing has changed
-          if (JSON.stringify(message.state) === JSON.stringify(roomState)) {
-            break;
-          }
-          setRoomState(message.state);
-          break;
-        case 'error':
-          log.error('Received error message from WebSocket');
-          log.error(message.error ?? 'No error message provided');
-          break;
-        case 'directMessage':
-          break;
-        case 'muteMic':
-          userMedia.turnMicOff();
-          break;
-        case 'partyserver-pong':
-          // do nothing
-          break;
-        default:
-          throw new Error('Unhandled: ' + message);
-      }
-    },
-  });
+  const client = useClient();
+  const initUserState = {
+    id: client.halo.identity.get()!.identityKey.toHex(),
+    name: username,
+    joined: false,
+    raisedHand: false,
+    speaking: false,
+    tracks: {},
+  };
+  const peerInfo: Peer = {
+    identityKey: client.halo.identity.get()!.identityKey.toHex(),
+    peerKey: client.halo.device!.deviceKey.toHex(),
+    state: codec.encode(initUserState),
+  };
 
-  userLeftFunctionRef.current = () => websocket.send(JSON.stringify({ type: 'userLeft' } satisfies ClientMessage));
+  useMemo(() => {
+    const stream = client.services.services.NetworkService!.subscribeSwarmState({ topic: roomId });
+    stream.subscribe((event) => {
+      setRoomState({ users: event.peers?.map((p) => codec.decode(p.state!)) ?? [], meetingId: roomId.toHex() });
+    });
+
+    client.services.services.NetworkService?.joinSwarm({ topic: roomId, peer: peerInfo }).catch((err) =>
+      log.catch(err),
+    );
+    log.verbose('joined room', { roomId, peerInfo });
+  }, [roomId]);
 
   useEffect(() => {
     const onBeforeUnload = () => {
-      userLeftFunctionRef.current();
+      client.services.services.NetworkService?.leaveSwarm({ topic: roomId, peer: peerInfo }).catch((err) =>
+        log.catch(err),
+      );
     };
     window.addEventListener('beforeunload', onBeforeUnload);
     return () => {
       window.removeEventListener('beforeunload', onBeforeUnload);
     };
-  }, [websocket]);
+  }, [roomId]);
 
-  // setup a simple ping pong
-  useEffect(() => {
-    const interval = setInterval(() => {
-      websocket.send(JSON.stringify({ type: 'partyserver-ping' } satisfies ClientMessage));
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [websocket]);
-
-  const identity = useMemo(() => roomState.users.find((u) => u.id === websocket.id), [roomState.users, websocket.id]);
-
-  const otherUsers = useMemo(
-    () => roomState.users.filter((u) => u.id !== websocket.id && u.joined),
-    [roomState.users, websocket.id],
+  const identity = useMemo(
+    () => roomState.users!.find((u) => u.id === peerInfo.identityKey!),
+    [roomState.users, peerInfo.identityKey],
   );
 
-  return { identity, otherUsers, websocket, roomState };
+  const otherUsers = useMemo(
+    () => roomState.users!.filter((u) => u.id !== peerInfo.identityKey!),
+    [roomState.users, peerInfo.identityKey],
+  );
+
+  return {
+    identity,
+    otherUsers,
+    roomState,
+    updateUserState: (user: UserState) => {
+      client.services.services
+        .NetworkService!.joinSwarm({
+          topic: roomId,
+          peer: { ...peerInfo, state: codec.encode(user) },
+        })
+        .catch((err) => log.catch(err));
+    },
+  };
 };

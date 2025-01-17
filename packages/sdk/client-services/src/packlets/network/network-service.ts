@@ -3,15 +3,15 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf';
-import { type SwarmEvent, type SignalManager } from '@dxos/messaging';
+import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
 import {
-  type SubscribeSwarmEventsRequest,
+  type SubscribeSwarmStateRequest,
   type NetworkService,
   type NetworkStatus,
   type UpdateConfigRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { type Peer } from '@dxos/protocols/proto/dxos/edge/messenger';
+import { type Peer, type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { type LeaveRequest, type JoinRequest, type Message } from '@dxos/protocols/proto/dxos/edge/signal';
 
 export class NetworkServiceImpl implements NetworkService {
@@ -53,11 +53,11 @@ export class NetworkServiceImpl implements NetworkService {
     return this.signalManager.leave(request);
   }
 
-  subscribeSwarmEvents(request: SubscribeSwarmEventsRequest): Stream<SwarmEvent> {
-    return new Stream<SwarmEvent>(({ next }) => {
-      const unsubscribe = this.signalManager.swarmEvent.on((event) => {
-        if (event.topic === request.topic) {
-          next(event);
+  subscribeSwarmState(request: SubscribeSwarmStateRequest): Stream<SwarmResponse> {
+    return new Stream<SwarmResponse>(({ next }) => {
+      const unsubscribe = this.signalManager.swarmState?.on((state) => {
+        if (request.topic.equals(state.swarmKey)) {
+          next(state);
         }
       });
       return unsubscribe;

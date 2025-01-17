@@ -17,7 +17,7 @@ import { MicButton } from './MicButton';
 import { Participant } from './Participant';
 import { PullAudioTracks } from './PullAudioTracks';
 import { PullVideoTrack } from './PullVideoTrack';
-import useBroadcastStatus from './hooks/useBroadcastStatus';
+import { useBroadcastStatus } from './hooks/useBroadcastStatus';
 import { useRoomContext } from './hooks/useRoomContext';
 import { calculateLayout } from './utils/calculateLayout';
 
@@ -31,7 +31,7 @@ const JoinedRoom = () => {
     peer,
     dataSaverMode,
     pushedTracks,
-    room: { otherUsers, websocket, identity },
+    room: { otherUsers, updateUserState, identity },
   } = useRoomContext()!;
 
   const [containerRef, { width: containerWidth, height: containerHeight }] = useMeasure<HTMLDivElement>();
@@ -48,7 +48,7 @@ const JoinedRoom = () => {
   useBroadcastStatus({
     userMedia,
     peer,
-    websocket,
+    updateUserState,
     identity,
     pushedTracks,
   });
