@@ -114,51 +114,59 @@ export const createTest3 = ({
   viewText?: boolean;
 } = {}) => {
   const nodes: Shape[] = [
-    createChat({ id: 'a', ...layout({ x: -12, y: 0 }) }),
+    createChat({ id: 'chat', ...layout({ x: -12, y: 0 }) }),
     ...(artifact
       ? [
-          createText({
-            id: 'h',
-            ...layout({ x: -12, y: -10, width: 8, height: 12 }),
-            text: ARTIFACTS_SYSTEM_PROMPT,
+          createConstant({
+            id: 'systemPrompt',
+            ...layout({ x: -12, y: -10, width: 8, height: 4 }),
+            value: ARTIFACTS_SYSTEM_PROMPT,
           }),
-          createView({ id: 'g', ...layout({ x: 26, y: -10, width: 12, height: 12 }) }),
+          createView({ id: 'artifact', ...layout({ x: 26, y: -10, width: 12, height: 12 }) }),
         ]
       : []),
-    createGpt({ id: 'b', ...layout({ x: 0, y: 0 }) }),
+    createGpt({ id: 'gpt', ...layout({ x: 0, y: 0 }) }),
     ...(history
       ? [
           createConstant({
-            id: 'h',
+            id: 'history',
             ...layout({ x: -18, y: 14, width: 8, height: 4 }),
             value: ObjectId.random(),
           }),
         ]
       : []),
-    ...(history ? [createList({ id: 'k', text: 'History', ...layout({ x: -6, y: 14, width: 8, height: 12 }) })] : []),
-    ...(history ? [createAppend({ id: 'l', ...layout({ x: 20, y: 14 }) })] : []),
-    ...(viewText ? [createView({ id: 'g', ...layout({ x: 16, y: 0, width: 12, height: 12 }) })] : []),
-    ...(db ? [createDatabase({ id: 'e', ...layout({ x: -10, y: 4 }) })] : []),
-    ...(textToImage ? [createTextToImage({ id: 'j', ...layout({ x: -10, y: 5 }) })] : []),
-    ...(cot ? [createList({ id: 'f', ...layout({ x: 0, y: -10, width: 8, height: 12 }) })] : []),
-    ...(history ? [createJson({ id: 'm', ...layout({ x: 8, y: 14, width: 12, height: 12 }) })] : []),
+    ...(history
+      ? [createList({ id: 'thread', text: 'History', ...layout({ x: -6, y: 14, width: 8, height: 12 }) })]
+      : []),
+    ...(history ? [createAppend({ id: 'append', ...layout({ x: 20, y: 14 }) })] : []),
+    ...(viewText ? [createView({ id: 'text', ...layout({ x: 16, y: 0, width: 12, height: 12 }) })] : []),
+    ...(db ? [createDatabase({ id: 'db', ...layout({ x: -10, y: 4 }) })] : []),
+    ...(textToImage ? [createTextToImage({ id: 'text-to-image', ...layout({ x: -10, y: 5 }) })] : []),
+    ...(cot ? [createList({ id: 'cot', ...layout({ x: 0, y: -10, width: 8, height: 12 }) })] : []),
+    ...(history ? [createJson({ id: 'history-json', ...layout({ x: 8, y: 14, width: 12, height: 12 }) })] : []),
   ];
 
   const edges: Omit<GraphEdge<Connection>, 'id'>[] = [
-    { source: 'a', target: 'b', data: { input: 'prompt', output: DEFAULT_OUTPUT } },
-    ...(artifact ? [{ source: 'h', target: 'b', data: { output: DEFAULT_OUTPUT, input: 'systemPrompt' } }] : []),
-    // { source: 'b', target: 'c', data: { output: 'result', input: DEFAULT_INPUT } },
-    // { source: 'b', target: 'd', data: { output: 'tokens', input: DEFAULT_INPUT } },
-    ...(viewText ? [{ source: 'b', target: 'g', data: { output: 'text', input: DEFAULT_INPUT } }] : []),
-    ...(history ? [{ source: 'h', target: 'k', data: { output: DEFAULT_OUTPUT, input: DEFAULT_INPUT } }] : []),
-    ...(history ? [{ source: 'k', target: 'b', data: { output: 'items', input: 'history' } }] : []),
-    ...(history ? [{ source: 'k', target: 'm', data: { output: 'id', input: DEFAULT_INPUT } }] : []),
-    ...(history ? [{ source: 'm', target: 'l', data: { output: DEFAULT_OUTPUT, input: 'id' } }] : []),
-    ...(history ? [{ source: 'b', target: 'l', data: { output: 'messages', input: 'items' } }] : []),
-    ...(db ? [{ source: 'e', target: 'b', data: { input: 'tools', output: DEFAULT_OUTPUT } }] : []),
-    ...(textToImage ? [{ source: 'j', target: 'b', data: { input: 'tools', output: DEFAULT_OUTPUT } }] : []),
-    ...(cot ? [{ source: 'b', target: 'f', data: { output: 'cot', input: DEFAULT_INPUT } }] : []),
-    ...(artifact ? [{ source: 'b', target: 'g', data: { output: 'artifact', input: DEFAULT_INPUT } }] : []),
+    { source: 'chat', target: 'gpt', data: { input: 'prompt', output: DEFAULT_OUTPUT } },
+    ...(artifact
+      ? [{ source: 'systemPrompt', target: 'gpt', data: { output: DEFAULT_OUTPUT, input: 'systemPrompt' } }]
+      : []),
+    // { source: 'gpt', target: 'c', data: { output: 'result', input: DEFAULT_INPUT } },
+    // { source: 'gpt', target: 'd', data: { output: 'tokens', input: DEFAULT_INPUT } },
+    ...(viewText ? [{ source: 'gpt', target: 'text', data: { output: 'text', input: DEFAULT_INPUT } }] : []),
+    ...(history
+      ? [{ source: 'history', target: 'thread', data: { output: DEFAULT_OUTPUT, input: DEFAULT_INPUT } }]
+      : []),
+    ...(history ? [{ source: 'thread', target: 'gpt', data: { output: 'items', input: 'history' } }] : []),
+    ...(history ? [{ source: 'thread', target: 'history-json', data: { output: 'id', input: DEFAULT_INPUT } }] : []),
+    ...(history ? [{ source: 'history-json', target: 'append', data: { output: DEFAULT_OUTPUT, input: 'id' } }] : []),
+    ...(history ? [{ source: 'gpt', target: 'append', data: { output: 'messages', input: 'items' } }] : []),
+    ...(db ? [{ source: 'db', target: 'gpt', data: { input: 'tools', output: DEFAULT_OUTPUT } }] : []),
+    ...(textToImage
+      ? [{ source: 'text-to-image', target: 'gpt', data: { input: 'tools', output: DEFAULT_OUTPUT } }]
+      : []),
+    ...(cot ? [{ source: 'gpt', target: 'cot', data: { output: 'cot', input: DEFAULT_INPUT } }] : []),
+    ...(artifact ? [{ source: 'gpt', target: 'artifact', data: { output: 'artifact', input: DEFAULT_INPUT } }] : []),
   ];
 
   return new GraphModel<GraphNode<ComputeShape>, GraphEdge<Connection>>({
@@ -230,7 +238,7 @@ Read the users message.
 - When presenting an image, you must use an artifact.
 - Nest the <image> tag inside the <artifact> tag.
 - Image tags are always self-closing and must contain an id attribute.
-(Example: <artifact><image id="unique_identifier" /></artifact>)
+(Example: <artifact><image id="unique_identifier" prompt="..." /></artifact>)
 
 4. Artifact Rules:
 - Ensure that artifact tags are always balanced (i.e., each opening tag has a corresponding closing tag).

@@ -132,8 +132,25 @@ export class StateMachine extends Resource {
     return this._forcedOutputs;
   }
 
-  get executedState() {
+  get inputStates() {
     return this._runtimeStateInputs;
+  }
+
+  get outputStates() {
+    return this._runtimeStateOutputs;
+  }
+
+  /**
+   * Inputs and outputs for all nodes.
+   */
+  get nodeStates() {
+    const ids = [...new Set([...Object.keys(this._runtimeStateInputs), ...Object.keys(this._runtimeStateOutputs)])];
+    return Object.fromEntries(
+      ids.map((id) => [
+        id,
+        { node: this._graph.getNode(id), input: this._runtimeStateInputs[id], output: this._runtimeStateOutputs[id] },
+      ]),
+    );
   }
 
   addNode(node: GraphNode<ComputeNode>) {
@@ -175,9 +192,52 @@ export class StateMachine extends Resource {
     return meta;
   }
 
+  async evalNode(nodeId: string) {
+    const executor = this._executor.clone();
+    await executor.load(this._graph);
+
+    for (const [nodeId, outputs] of Object.entries(this._forcedOutputs)) {
+      executor.setOutputs(nodeId, makeValueBag(outputs));
+    }
+
+    const services = this._createServiceLayer();
+    await Effect.runPromise(
+      Effect.gen(this, function* () {
+        const scope = yield* Scope.make();
+
+        // TODO(dmaretskyi): Code duplication.
+        const executable = yield* Effect.promise(() => resolveComputeNode(this._graph.getNode(nodeId)));
+        const computingOutputs = executable.exec != null;
+        // TODO(dmaretskyi): Check if the node has a compute function and run computeOutputs if it does.
+        const effect = (computingOutputs ? executor.computeOutputs(nodeId) : executor.computeInputs(nodeId)).pipe(
+          Effect.withSpan('runGraph'),
+          Effect.provide(services),
+          Scope.extend(scope),
+
+          Effect.flatMap(unwrapValueBag),
+          Effect.withSpan('test'),
+          Effect.map((values) => {
+            for (const [key, value] of Object.entries(values)) {
+              if (computingOutputs) {
+                this._handleEvent({ type: 'compute-output', nodeId, property: key, value });
+              } else {
+                this._handleEvent({ type: 'compute-input', nodeId, property: key, value });
+              }
+            }
+          }),
+        );
+
+        yield* effect;
+
+        yield* Scope.close(scope, Exit.void);
+      }),
+    );
+
+    this.update.emit();
+  }
+
   @synchronized
   async exec() {
-    console.log('begin execution');
     this._runtimeStateInputs = {};
     this._runtimeStateOutputs = {};
     const executor = this._executor.clone();
@@ -201,15 +261,26 @@ export class StateMachine extends Resource {
         // TODO(burdon): Return map?
         const tasks: Effect.Effect<unknown, any, never>[] = [];
         for (const node of allAffectedNodes) {
+          // TODO(dmaretskyi): Code duplication.
           const executable = yield* Effect.promise(() => resolveComputeNode(this._graph.getNode(node)));
+          const computingOutputs = executable.exec != null;
+
           // TODO(dmaretskyi): Check if the node has a compute function and run computeOutputs if it does.
-          const effect = (executable.exec ? executor.computeOutputs(node) : executor.computeInputs(node)).pipe(
+          const effect = (computingOutputs ? executor.computeOutputs(node) : executor.computeInputs(node)).pipe(
             Effect.withSpan('runGraph'),
             Effect.provide(services),
             Scope.extend(scope),
-
             Effect.flatMap(unwrapValueBag),
             Effect.withSpan('test'),
+            Effect.map((values) => {
+              for (const [key, value] of Object.entries(values)) {
+                if (computingOutputs) {
+                  this._handleEvent({ type: 'compute-output', nodeId: node, property: key, value });
+                } else {
+                  this._handleEvent({ type: 'compute-input', nodeId: node, property: key, value });
+                }
+              }
+            }),
           );
 
           tasks.push(effect);
@@ -224,35 +295,39 @@ export class StateMachine extends Resource {
     this.update.emit();
   }
 
-  private _createLogger(): Context.Tag.Service<EventLogger> {
-    return {
-      log: (event) => {
-        log.info('log', { event });
-        switch (event.type) {
-          case 'compute-input':
-            this._runtimeStateInputs[event.nodeId] ??= {};
-            this._runtimeStateInputs[event.nodeId][event.property] = { type: 'executed', value: event.value };
-            break;
-
-          case 'compute-output':
-            this._runtimeStateOutputs[event.nodeId] ??= {};
-            this._runtimeStateOutputs[event.nodeId][event.property] = { type: 'executed', value: event.value };
-            // TODO(burdon): Only fire if changed?
-            this.output.emit(event);
-            break;
-        }
-        this.events.emit(event);
-      },
-      nodeId: undefined, // Not in a context of a specific node.
-    };
-  }
-
   private _createServiceLayer(): Layer.Layer<Exclude<ComputeRequirements, Scope.Scope>> {
     const services = { ...DEFAULT_SERVICES, ...this._services };
     const logLayer = Layer.succeed(EventLogger, this._createLogger());
     const gptLayer = Layer.succeed(GptService, services.gpt!);
     const spaceLayer = SpaceService.empty;
     return Layer.mergeAll(logLayer, gptLayer, spaceLayer);
+  }
+
+  private _createLogger(): Context.Tag.Service<EventLogger> {
+    return {
+      log: (event) => {
+        this._handleEvent(event);
+      },
+      nodeId: undefined, // Not in a context of a specific node.
+    };
+  }
+
+  private _handleEvent(event: ComputeEvent) {
+    log.info('log', { event });
+    switch (event.type) {
+      case 'compute-input':
+        this._runtimeStateInputs[event.nodeId] ??= {};
+        this._runtimeStateInputs[event.nodeId][event.property] = { type: 'executed', value: event.value };
+        break;
+
+      case 'compute-output':
+        this._runtimeStateOutputs[event.nodeId] ??= {};
+        this._runtimeStateOutputs[event.nodeId][event.property] = { type: 'executed', value: event.value };
+        // TODO(burdon): Only fire if changed?
+        this.output.emit(event);
+        break;
+    }
+    this.events.emit(event);
   }
 }
 

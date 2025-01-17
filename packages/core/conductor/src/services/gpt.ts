@@ -4,8 +4,8 @@
 
 import { Context } from 'effect';
 
-import { LLMTool, Message, type AIServiceClient, type ResultStreamEvent } from '@dxos/assistant';
-import { S } from '@dxos/echo-schema';
+import { ImageSource, LLMTool, Message, type AIServiceClient, type ResultStreamEvent } from '@dxos/assistant';
+import { ECHO_ATTR_TYPE, S } from '@dxos/echo-schema';
 
 import type { ComputeEffect, ValueBag } from '../types';
 import { StreamSchema } from '../util';
@@ -31,6 +31,18 @@ export const GptOutput = S.Struct({
 });
 
 export type GptOutput = S.Schema.Type<typeof GptOutput>;
+
+export const IMAGE_TYPENAME = 'example.org/type/Image';
+
+export const Image = S.Struct({
+  id: S.String,
+  prompt: S.String,
+  source: ImageSource,
+});
+
+export type Image = S.Schema.Type<typeof Image>;
+
+export const isImage = (value: any): value is Image => value?.[ECHO_ATTR_TYPE] === IMAGE_TYPENAME;
 
 export class GptService extends Context.Tag('GptService')<
   GptService,

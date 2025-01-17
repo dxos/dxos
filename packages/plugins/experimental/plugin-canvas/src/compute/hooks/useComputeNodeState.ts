@@ -19,6 +19,7 @@ export type ComputeNodeState = {
     inputs: Record<string, RuntimeValue>;
     outputs: Record<string, RuntimeValue>;
     setOutput: (property: string, value: any) => void;
+    evalNode: () => void;
     subscribeToEventLog: (cb: (event: ComputeEvent) => void) => void;
   };
 };
@@ -45,6 +46,10 @@ export const useComputeNodeState = (shape: ComputeShape): ComputeNodeState => {
     };
   }, [shape.node]);
 
+  const evalNode = useCallback(() => {
+    return stateMachine.evalNode(shape.node!);
+  }, [shape.node]);
+
   const subscribeToEventLog = useCallback(
     (cb: (event: ComputeEvent) => void) => {
       return stateMachine.events.on((ev) => {
@@ -69,6 +74,7 @@ export const useComputeNodeState = (shape: ComputeShape): ComputeNodeState => {
       setOutput: (property: string, value: any) => {
         stateMachine.setOutput(shape.node!, property, value);
       },
+      evalNode,
       subscribeToEventLog,
     },
   };

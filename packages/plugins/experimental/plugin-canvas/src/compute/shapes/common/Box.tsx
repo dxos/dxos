@@ -13,13 +13,15 @@ import { type Shape } from '../../../types';
 export const headerHeight = 32;
 export const footerHeight = 32;
 
+export type BoxActionHandler = (action: 'run' | 'open' | 'close') => void;
+
 export type BoxProps = PropsWithChildren<
   ThemedClassName<{
     shape: Shape;
     name?: string;
     status?: string;
     open?: boolean;
-    onAction?: (action: 'run' | 'open' | 'close') => void;
+    onAction?: BoxActionHandler;
   }>
 >;
 

@@ -9,7 +9,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { createFunctionAnchors } from './Function';
-import { Box } from './common';
+import { Box, type BoxActionHandler } from './common';
 import { ComputeShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { ListInput, ListOutput } from '../graph';
@@ -37,8 +37,14 @@ export const ListComponent = ({ shape }: ShapeComponentProps<ListShape>) => {
   const { runtime } = useComputeNodeState(shape);
   const items = runtime.outputs.items?.type === 'executed' ? runtime.outputs.items.value : [];
 
+  const handleAction: BoxActionHandler = (action) => {
+    if (action === 'run') {
+      runtime.evalNode();
+    }
+  };
+
   return (
-    <Box shape={shape} status={`${items.length} items`}>
+    <Box shape={shape} status={`${items.length} items`} onAction={handleAction}>
       <div className='flex flex-col w-full overflow-y-scroll divide-y divide-separator'>
         {[...items].map((item, i) => (
           <ListItem key={i} classNames='p-1 px-2' item={item} />

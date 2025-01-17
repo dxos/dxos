@@ -74,11 +74,7 @@ const Render = ({
       case 'compute':
         return { machine, model, gpt };
       case 'state-machine':
-        return {
-          graph: machine?.graph,
-          user: machine?.userState,
-          executed: machine?.executedState,
-        };
+        return machine?.nodeStates;
       case 'selected':
         return { selected };
     }
@@ -266,7 +262,7 @@ export const GPTImage: Story = {
     //   { type: Testing.ContactType, count: 8 },
     // ],
     // registerSchema: true,
-    ...createMachine(createTest3({ db: false, viewText: true, history: true, textToImage: true }), {
+    ...createMachine(createTest3({ db: false, viewText: true, history: true, textToImage: true, artifact: true }), {
       gpt: new EdgeGpt(
         new AIServiceClientImpl({
           // endpoint: 'https://ai-service.dxos.workers.dev',
