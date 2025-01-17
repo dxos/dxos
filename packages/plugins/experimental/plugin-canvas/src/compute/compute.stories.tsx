@@ -241,6 +241,31 @@ export const GPT: Story = {
     //   { type: Testing.ContactType, count: 8 },
     // ],
     // registerSchema: true,
+    ...createMachine(createTest3({ db: false, viewText: true, history: true }), {
+      gpt: new EdgeGpt(
+        new AIServiceClientImpl({
+          // endpoint: 'https://ai-service.dxos.workers.dev',
+          endpoint: 'http://localhost:8787',
+        }),
+      ),
+    }),
+  },
+};
+
+export const GPTImage: Story = {
+  args: {
+    // debug: true,
+    showGrid: false,
+    snapToGrid: false,
+    // sidebar: 'json',
+    sidebar: 'state-machine',
+    registry: new ShapeRegistry(computeShapes),
+    // spec: [
+    //   { type: Testing.OrgType, count: 2 },
+    //   { type: Testing.ProjectType, count: 4 },
+    //   { type: Testing.ContactType, count: 8 },
+    // ],
+    // registerSchema: true,
     ...createMachine(createTest3({ db: false, viewText: true, history: true, textToImage: true }), {
       gpt: new EdgeGpt(
         new AIServiceClientImpl({

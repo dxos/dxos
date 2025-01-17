@@ -266,6 +266,10 @@ export class GraphExecutor {
       if (isNotExecuted(output)) {
         return yield* Effect.fail(NotExecuted);
       }
+      if (output.values[prop] == null) {
+        throw new Error(`No output for node: property ${prop} on node ${nodeId}`);
+      }
+
       const value = yield* output.values[prop];
 
       const logger = yield* EventLogger;
