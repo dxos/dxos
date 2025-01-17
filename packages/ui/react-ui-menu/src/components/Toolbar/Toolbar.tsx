@@ -34,7 +34,7 @@ const ToolbarItem = ({ action }: { action: MenuAction }) => {
   );
 };
 
-const resolveGroupItemsNoop = async () => null;
+const resolveGroupItemsNoop = () => null;
 
 export const Toolbar = ({
   actions: items,

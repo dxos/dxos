@@ -38,12 +38,9 @@ const useEditorToolbarActionGraph = ({ state }: EditorToolbarActionGraphProps) =
   );
 
   const resolveGroupItems = useCallback(
-    async (groupNode: ToolbarActionGroup) => {
+    (groupNode: ToolbarActionGroup) => {
       if (graph) {
-        return await graph.waitForNode(groupNode.id).then(
-          (groupNode) => (graph.actions(groupNode) || null) as ToolbarItem[] | null,
-          () => null,
-        );
+        return (graph.actions(groupNode) || null) as ToolbarItem[] | null;
       } else {
         return null;
       }

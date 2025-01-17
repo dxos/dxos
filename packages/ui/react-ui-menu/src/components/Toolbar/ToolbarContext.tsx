@@ -9,7 +9,7 @@ import { type ToolbarContextValue } from './defs';
 export const ToolbarContext = createContext<ToolbarContextValue>({
   iconSize: 5,
   onAction: () => {},
-  resolveGroupItems: async () => [],
+  resolveGroupItems: () => [],
 });
 
 export const useToolbar = () => useContext(ToolbarContext);

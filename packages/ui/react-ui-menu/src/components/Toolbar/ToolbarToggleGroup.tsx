@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { Toolbar as NaturalToolbar } from '@dxos/react-ui';
 
 import { useToolbar } from './ToolbarContext';
-import type { ToolbarActionGroupProps, ToolbarItem } from './defs';
+import type { ToolbarActionGroupProps } from './defs';
 import { type MenuAction } from '../../defs';
 import { ActionLabel } from '../ActionLabel';
 
@@ -33,12 +33,9 @@ const ToolbarToggleGroupItem = ({ action }: { action: MenuAction }) => {
 };
 
 export const ToolbarToggleGroup = ({ actionGroup }: ToolbarActionGroupProps) => {
-  const [items, setItems] = useState<ToolbarItem[] | null>(null);
   const { resolveGroupItems } = useToolbar();
+  const items = useMemo(() => resolveGroupItems(actionGroup), [resolveGroupItems, actionGroup]);
   const { selectCardinality, value } = actionGroup.properties;
-  useEffect(() => {
-    void resolveGroupItems(actionGroup).then((items) => setItems(items));
-  }, [resolveGroupItems]);
   return Array.isArray(items) ? (
     // TODO(thure): The type here is difficult to manage, what do?
     // @ts-ignore

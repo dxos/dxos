@@ -70,7 +70,8 @@ export const createNestedActionGraph = (groupParams?: CreateActionsParams, param
     graph._addEdges(actions.map((action) => ({ source: group.id, target: action.id })));
     void graph.expand(group);
   });
-  const resolveGroupItems = async (groupNode: ToolbarActionGroup) => graph.actions(groupNode) as ToolbarItem[];
+  const resolveGroupItems = (groupNode: ToolbarActionGroup) =>
+    (graph.actions(groupNode) || null) as ToolbarItem[] | null;
   return { resolveGroupItems, actions: actionGroups as ToolbarItem[] };
 };
 
