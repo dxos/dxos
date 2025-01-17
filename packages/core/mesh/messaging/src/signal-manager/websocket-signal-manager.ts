@@ -28,6 +28,8 @@ const WSS_SIGNAL_SERVER_REBOOT_DELAY = 3_000;
 
 /**
  * Manages connection to multiple Signal Servers over WebSocket
+ * TODO(mykola): Delete.
+ * @deprecated
  */
 export class WebsocketSignalManager extends Resource implements SignalManager {
   private readonly _servers = new Map<string, SignalClientMethods>();

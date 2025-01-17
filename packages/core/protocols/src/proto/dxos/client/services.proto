@@ -14,6 +14,8 @@ import "dxos/config.proto";
 import "dxos/devtools/swarm.proto";
 import "dxos/echo/metadata.proto";
 import "dxos/echo/timeframe.proto";
+import "dxos/edge/messenger.proto";
+import "dxos/edge/signal.proto";
 import "dxos/error.proto";
 import "dxos/halo/credentials.proto";
 import "dxos/keys.proto";
@@ -506,10 +508,19 @@ message UpdateConfigRequest {
   ConnectionState swarm = 1;
 }
 
+message SubscribeSwarmStateRequest {
+  dxos.keys.PublicKey topic = 1;
+}
+
 // TODO(burdon): Widen API (too heavy for single feature: e.g., status).
 service NetworkService {
   rpc UpdateConfig(UpdateConfigRequest) returns (google.protobuf.Empty);
   rpc QueryStatus(google.protobuf.Empty) returns (stream NetworkStatus);
+  rpc JoinSwarm(dxos.edge.signal.JoinRequest) returns (google.protobuf.Empty);
+  rpc LeaveSwarm(dxos.edge.signal.LeaveRequest) returns (google.protobuf.Empty);
+  rpc SubscribeSwarmState(SubscribeSwarmStateRequest) returns (stream dxos.edge.messenger.SwarmResponse);
+  rpc SendMessage(dxos.edge.signal.Message) returns (google.protobuf.Empty);
+  rpc SubscribeMessages(dxos.edge.messenger.Peer) returns (stream dxos.edge.signal.Message);
 }
 
 service EdgeAgentService {

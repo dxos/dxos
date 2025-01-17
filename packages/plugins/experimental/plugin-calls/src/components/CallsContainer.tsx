@@ -23,7 +23,7 @@ const CallsContainer = ({ space, role }: { space: Space; role?: string }) => {
     <StackItem.Content toolbar={false}>
       <Calls
         username={identity?.profile?.displayName ?? 'No Name'}
-        roomName={space.id.slice(10)}
+        roomId={space.key}
         iceServers={config.get('runtime.services.ice') ?? []}
       />
     </StackItem.Content>
