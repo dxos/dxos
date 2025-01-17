@@ -5,9 +5,11 @@
 import React, { useState, useMemo, type ReactNode, useEffect } from 'react';
 import { of } from 'rxjs';
 
+import { type PublicKey } from '@dxos/react-client';
+
 import { useStateObservable, useSubscribedState } from './hooks/rxjsHooks';
 import { usePeerConnection } from './hooks/usePeerConnection';
-import useRoom from './hooks/useRoom';
+import { useRoom } from './hooks/useRoom';
 import { RoomContext, type RoomContextType } from './hooks/useRoomContext';
 import { useStablePojo } from './hooks/useStablePojo';
 import useUserMedia from './hooks/useUserMedia';
@@ -24,18 +26,18 @@ interface RoomData {
 
 interface RoomProps extends RoomData {
   username: string;
-  roomName: string;
+  roomId: PublicKey;
   children: ReactNode;
 }
 
 export const RoomContextProvider = ({
   username,
-  roomName,
+  roomId,
   iceServers,
   children,
 }: {
   username: string;
-  roomName: string;
+  roomId: PublicKey;
   iceServers: RTCIceServer[];
   children: ReactNode;
 }): JSX.Element => {
@@ -57,7 +59,7 @@ export const RoomContextProvider = ({
   }
 
   return (
-    <Room roomName={roomName!} {...roomData} username={username}>
+    <Room roomId={roomId!} {...roomData} username={username}>
       {children}
     </Room>
   );
@@ -65,7 +67,7 @@ export const RoomContextProvider = ({
 
 const Room = ({
   username,
-  roomName,
+  roomId,
   iceServers,
   maxWebcamBitrate,
   maxWebcamFramerate,
@@ -76,7 +78,7 @@ const Room = ({
   const [dataSaverMode, setDataSaverMode] = useState(false);
 
   const userMedia = useUserMedia();
-  const room = useRoom({ roomName, userMedia, username });
+  const room = useRoom({ roomId, username });
   const { peer, iceConnectionState } = usePeerConnection({
     // apiExtraParams,
     iceServers,
