@@ -11,7 +11,7 @@ import translations from './translations';
 /**
  * Plugin for aggregating and rendering plugin settings.
  */
-export const ManagerPlugin = () =>
+export const SettingsInterfacePlugin = () =>
   definePlugin(meta, [
     defineModule({
       id: `${meta.id}/module/state`,

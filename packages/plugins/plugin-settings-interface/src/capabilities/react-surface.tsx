@@ -6,9 +6,9 @@ import React from 'react';
 
 import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
 
-import { ManagerCapabilities } from './capabilities';
+import { SettingsInterfaceCapabilities } from './capabilities';
 import { SETTINGS_DIALOG, SettingsDialog, SettingsSettings } from '../components';
-import { MANAGER_PLUGIN } from '../meta';
+import { SETTINGS_INTERFACE_PLUGIN } from '../meta';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -17,15 +17,15 @@ export default () =>
       role: 'dialog',
       filter: (data): data is any => data.component === SETTINGS_DIALOG,
       component: () => {
-        const state = useCapability(ManagerCapabilities.MutableState);
+        const state = useCapability(SettingsInterfaceCapabilities.MutableState);
 
         return <SettingsDialog selected={state.selected} onSelected={(selected) => (state.selected = selected)} />;
       },
     }),
     createSurface({
-      id: `${MANAGER_PLUGIN}/settings`,
+      id: `${SETTINGS_INTERFACE_PLUGIN}/settings`,
       role: 'settings',
-      filter: (data): data is any => data.subject === MANAGER_PLUGIN,
+      filter: (data): data is any => data.subject === SETTINGS_INTERFACE_PLUGIN,
       component: () => <SettingsSettings />,
     }),
   ]);

@@ -10,7 +10,6 @@ import { type Client } from '@dxos/client';
 import { type ReactiveEchoObject, Filter, loadObjectReferences, makeRef } from '@dxos/client/echo';
 import { create, getMeta } from '@dxos/client/echo';
 import { type Space } from '@dxos/client-protocol';
-import { S, TypedObject } from '@dxos/echo-schema';
 import {
   getUserFunctionUrlInMetadata,
   incrementSemverPatch,
@@ -21,15 +20,11 @@ import {
 } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
+import { TextType } from '@dxos/schema';
 
 import { BaseCommand } from '../../base';
 
 // TODO: move to cli-composer
-
-// TODO(burdon): Factor out. Copied from plugin-markdown.
-export class TextType extends TypedObject({ typename: 'dxos.org/type/Text', version: '0.1.0' })({
-  content: S.String,
-}) {}
 
 export default class Upload extends BaseCommand<typeof Upload> {
   static override enableJsonFlag = true;

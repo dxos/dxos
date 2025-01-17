@@ -12,7 +12,7 @@ import {
   createIntent,
 } from '@dxos/app-framework';
 
-import { ManagerCapabilities } from './capabilities';
+import { SettingsInterfaceCapabilities } from './capabilities';
 import { SETTINGS_DIALOG } from '../components';
 
 export default (context: PluginsContext) =>
@@ -20,7 +20,7 @@ export default (context: PluginsContext) =>
     Capabilities.IntentResolver,
     createResolver(SettingsAction.Open, ({ plugin }) => {
       if (plugin) {
-        const state = context.requestCapability(ManagerCapabilities.MutableState);
+        const state = context.requestCapability(SettingsInterfaceCapabilities.MutableState);
         state.selected = plugin;
       }
 
