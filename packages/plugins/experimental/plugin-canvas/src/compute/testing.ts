@@ -19,6 +19,7 @@ import {
   createConstant,
   createDatabase,
   createGpt,
+  createGptRealtime,
   createJson,
   createList,
   createOr,
@@ -199,6 +200,15 @@ export const createTest4 = () => {
       target,
       data,
     })),
+  });
+};
+
+export const createGPTRealtime = () => {
+  const nodes: Shape[] = [createGptRealtime({ id: 'gpt-realtime', ...layout({ x: 0, y: 0 }) })];
+
+  return new GraphModel<GraphNode<ComputeShape>, GraphEdge<Connection>>({
+    nodes: nodes.map((data) => ({ id: data.id, data })),
+    edges: [],
   });
 };
 

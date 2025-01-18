@@ -2,12 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Canvas } from '@react-three/fiber';
 import React, { useEffect, useRef, useState } from 'react';
-import * as THREE from 'three';
 
 import { S } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
+import { Icon } from '@dxos/react-ui';
 
 import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
 import { createAnchorMap, type ShapeComponentProps, type ShapeDef } from '../../components';
@@ -45,24 +44,12 @@ export const AudioComponent = ({ shape }: ShapeComponentProps<AudioShape>) => {
   // https://docs.pmnd.rs/react-three-fiber/api/canvas#render-props
   return (
     <div className='flex w-full justify-center items-center'>
-      {/* <Icon
+      <Icon
         icon={active ? 'ph--microphone--regular' : 'ph--microphone-slash--regular'}
         classNames={['transition opacity-20 duration-1000', active && 'opacity-100 text-red-500']}
         size={8}
         onClick={() => setActive(!active)}
-      /> */}
-      <Canvas
-        linear={true}
-        gl={(canvas) =>
-          new THREE.WebGLRenderer({
-            canvas,
-            antialias: false,
-            alpha: true,
-          })
-        }
-      >
-        <></>
-      </Canvas>
+      />
     </div>
   );
 };

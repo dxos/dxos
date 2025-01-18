@@ -28,6 +28,7 @@ import {
   // timerShape,
   textToImageShape,
   viewShape,
+  gptRealtimeShape,
 } from './shapes';
 import type { ShapeDef } from '../components';
 
@@ -52,6 +53,7 @@ export const computeShapes: { title: string; shapes: ShapeDef<any>[] }[] = [
     shapes: [
       //
       gptShape,
+      gptRealtimeShape,
       // functionShape,
       databaseShape,
       textToImageShape,

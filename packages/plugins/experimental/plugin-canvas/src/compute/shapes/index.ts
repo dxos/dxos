@@ -26,3 +26,4 @@ export * from './Thread';
 export * from './Timer';
 export * from './TextToImage';
 export * from './View';
+export * from './GptRealtime';

@@ -71,7 +71,7 @@
     "@preact/signals-core": "^1.6.0",
     "@radix-ui/react-context": "^1.0.0",
     "@react-three/drei": "^9.121.2",
-    "@react-three/fiber": "^8.17.12",
+    "@react-three/fiber": "^8.17.10",
     "bind-event-listener": "^3.0.0",
     "d3": "^7.9.0",
     "effect": "^3.12.1",
@@ -79,7 +79,7 @@
     "lodash.defaultsdeep": "^4.6.1",
     "react-hotkeys-hook": "^4.6.1",
     "react-resize-detector": "^11.0.1",
-    "three": "^0.172.0"
+    "three": "^0.171.0"
   },
   "devDependencies": {
     "@dxos/compute": "workspace:*",
@@ -96,6 +96,7 @@
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
+    "@types/three": "^0.171.0",
     "ollama": "^0.5.11",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
