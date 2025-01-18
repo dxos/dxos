@@ -5,7 +5,6 @@
 import { type ToolbarRootProps } from '@dxos/react-ui';
 
 import {
-  type MenuContextValue,
   type MenuItemGroup,
   type MenuActionProperties,
   type MenuActionGroupMultipleSelect,
@@ -25,8 +24,8 @@ export type ToolbarActionGroupToggleGroup = Omit<MenuActionProperties, 'variant'
 export type ToolbarActionGroupProperties = (ToolbarActionGroupDropdownMenu | ToolbarActionGroupToggleGroup) &
   (MenuActionGroupSingleSelect | MenuActionGroupMultipleSelect);
 
-export type ToolbarProps = Partial<MenuContextValue> & ToolbarRootProps;
+export type ToolbarProps = ToolbarRootProps;
 
 export type ToolbarActionGroupProps = {
-  group: MenuItemGroup;
+  group: MenuItemGroup<ToolbarActionGroupProperties>;
 };

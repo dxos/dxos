@@ -6,40 +6,37 @@ import React, { useMemo, useRef } from 'react';
 
 import { Toolbar as NaturalToolbar } from '@dxos/react-ui';
 
-import { useToolbar } from './ToolbarContext';
 import { type ToolbarActionGroupProps } from './defs';
-import { type MenuAction, type MenuItem } from '../../defs';
+import { type MenuAction } from '../../defs';
 import { ActionLabel } from '../ActionLabel';
 import { DropdownMenu } from '../DropdownMenu';
+import { useMenu } from '../MenuContext';
 
 const triggerProps = {
   variant: 'ghost' as const,
   caretDown: true,
 };
 
-export const ToolbarDropdownMenuImpl = ({
-  group,
-  items,
-}: Pick<ToolbarActionGroupProps, 'group'> & { items: MenuItem[] }) => {
-  const { icon, iconOnly = true, disabled, testId } = group.properties;
+export const ToolbarDropdownMenuImpl = ({ group }: Pick<ToolbarActionGroupProps, 'group'>) => {
+  const { iconOnly = true, disabled, testId } = group.properties;
   const suppressNextTooltip = useRef(false);
-  const { onAction, iconSize } = useToolbar();
-
-  // TODO(thure): Handle other types of items.
-  const menuActions = items as MenuAction[];
-
+  const { iconSize, resolveGroupItems } = useMenu();
+  const icon = useMemo(() => {
+    const items = resolveGroupItems?.(group) as MenuAction[];
+    return (
+      ((group.properties as any).applyActiveIcon &&
+        items?.find((item) => !!item.properties.checked)?.properties.icon) ||
+      group.properties.icon
+    );
+  }, [group, resolveGroupItems]);
   return (
-    <DropdownMenu.Root items={menuActions} onAction={onAction} suppressNextTooltip={suppressNextTooltip}>
+    <DropdownMenu.Root group={group} suppressNextTooltip={suppressNextTooltip}>
       <DropdownMenu.Trigger asChild>
         <NaturalToolbar.IconButton
           {...triggerProps}
           iconOnly={iconOnly}
           disabled={disabled}
-          icon={
-            ((group.properties as any).applyActiveIcon &&
-              menuActions.find((action) => !!action.properties.checked)?.properties.icon) ||
-            icon
-          }
+          icon={icon}
           size={iconSize}
           label={<ActionLabel action={group} />}
           {...(testId && { 'data-testid': testId })}
@@ -52,7 +49,7 @@ export const ToolbarDropdownMenuImpl = ({
 
 // TODO(thure): Refactor to use actions getter callback (which we realize now should be async).
 export const ToolbarDropdownMenu = ({ group }: ToolbarActionGroupProps) => {
-  const { resolveGroupItems } = useToolbar();
+  const { resolveGroupItems } = useMenu();
   const items = useMemo(() => resolveGroupItems(group), [resolveGroupItems, group]);
-  return Array.isArray(items) ? <ToolbarDropdownMenuImpl group={group} items={items} /> : null;
+  return Array.isArray(items) ? <ToolbarDropdownMenuImpl group={group} /> : null;
 };

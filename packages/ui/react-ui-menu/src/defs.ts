@@ -4,8 +4,6 @@
 import { type Node, type Action, type ActionGroup, ACTION_GROUP_TYPE } from '@dxos/app-graph';
 import { type ToolbarSeparatorProps, type Label, type IconButtonProps } from '@dxos/react-ui';
 
-import { type ToolbarActionGroupProperties } from './components';
-
 export type MenuActionProperties = {
   label: Label;
   icon: string;
@@ -19,7 +17,7 @@ export type MenuActionProperties = {
 
 export type MenuAction = Action<MenuActionProperties>;
 
-export type MenuActionHandler<A extends Node = Node<any>> = (action: A) => void;
+export type MenuActionHandler<A extends Node = MenuAction> = (action: A) => void;
 
 export const MenuSeparatorType = '@dxos/react-ui-toolbar/separator' as const;
 
@@ -32,7 +30,7 @@ export const isSeparator = (node: Node): node is MenuSeparator => node.type === 
 export type MenuActionGroupSingleSelect = { selectCardinality: 'single'; value: string };
 export type MenuActionGroupMultipleSelect = { selectCardinality: 'multiple'; value: string[] };
 
-export type MenuItemGroup = ActionGroup<ToolbarActionGroupProperties>;
+export type MenuItemGroup<P extends Record<string, any> = Record<string, any>> = ActionGroup<P>;
 
 export const isMenuGroup = (node: Node): node is MenuItemGroup => node.type === ACTION_GROUP_TYPE;
 

@@ -3,21 +3,18 @@
 //
 
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type MouseEvent, type MutableRefObject, type PropsWithChildren, useCallback } from 'react';
+import React, { type MouseEvent, type MutableRefObject, useCallback, useMemo } from 'react';
 
-import { DropdownMenu as NaturalDropdownMenu, Icon } from '@dxos/react-ui';
+import { DropdownMenu as NaturalDropdownMenu, Icon, type DropdownMenuRootProps } from '@dxos/react-ui';
 
 import { ActionLabel } from './ActionLabel';
-import { type MenuAction, type MenuActionHandler, type MenuItem } from '../defs';
+import { useMenu } from './MenuContext';
+import { type MenuAction, type MenuItem, type MenuItemGroup } from '../defs';
 
-export type DropdownMenuProps = PropsWithChildren<
-  { items: MenuItem[]; onAction: MenuActionHandler<any> } & Partial<{
-    defaultMenuOpen: boolean;
-    menuOpen: boolean;
-    onMenuOpenChange: (nextOpen: boolean) => void;
-    suppressNextTooltip?: MutableRefObject<boolean>;
-  }>
->;
+export type DropdownMenuProps = DropdownMenuRootProps & {
+  group: MenuItemGroup;
+  suppressNextTooltip?: MutableRefObject<boolean>;
+};
 
 const DropdownMenuItem = ({
   item,
@@ -43,19 +40,21 @@ const DropdownMenuItem = ({
 };
 
 const DropdownMenuRoot = ({
-  defaultMenuOpen,
-  items,
-  menuOpen,
+  group,
+  open,
+  defaultOpen,
+  onOpenChange,
   suppressNextTooltip,
-  onMenuOpenChange,
-  onAction,
   children,
+  ...naturalProps
 }: DropdownMenuProps) => {
   const [optionsMenuOpen, setOptionsMenuOpen] = useControllableState({
-    prop: menuOpen,
-    defaultProp: defaultMenuOpen,
-    onChange: onMenuOpenChange,
+    prop: open,
+    defaultProp: defaultOpen,
+    onChange: onOpenChange,
   });
+
+  const { onAction, resolveGroupItems } = useMenu();
 
   const handleActionClick = useCallback(
     (action: MenuAction, event: MouseEvent) => {
@@ -73,6 +72,8 @@ const DropdownMenuRoot = ({
     [onAction],
   );
 
+  const items = useMemo(() => resolveGroupItems?.(group), [group, resolveGroupItems]);
+
   return (
     <NaturalDropdownMenu.Root
       {...{
@@ -84,6 +85,7 @@ const DropdownMenuRoot = ({
           return setOptionsMenuOpen(nextOpen);
         },
       }}
+      {...naturalProps}
     >
       {children}
       <NaturalDropdownMenu.Portal>

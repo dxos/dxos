@@ -66,12 +66,15 @@ export const createNestedActionGraph = (groupParams?: CreateActionsParams, param
     // @ts-ignore
     graph._addNodes([group as NodeArg<any>, ...(actions as NodeArg<any>[])]);
     // @ts-ignore
-    graph._addEdges(actions.map((action) => ({ source: group.id, target: action.id })));
+    graph._addEdges([
+      { source: 'root', target: group.id },
+      ...actions.map((action) => ({ source: group.id, target: action.id })),
+    ]);
     void graph.expand(group);
   });
   const resolveGroupItems = (groupNode?: MenuItemGroup) =>
     (graph.actions(groupNode ?? graph.root) || null) as MenuItem[] | null;
-  return { resolveGroupItems, actions: actionGroups as MenuItem[] };
+  return { resolveGroupItems };
 };
 
 export const mutateActionsOnInterval = (actions: Action[]) => {

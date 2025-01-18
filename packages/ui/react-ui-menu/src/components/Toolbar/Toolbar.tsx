@@ -6,15 +6,15 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Toolbar as NaturalToolbar } from '@dxos/react-ui';
 
-import { ToolbarContext, useToolbar } from './ToolbarContext';
 import { ToolbarDropdownMenu } from './ToolbarDropdownMenu';
 import { ToolbarToggleGroup } from './ToolbarToggleGroup';
-import { type ToolbarProps } from './defs';
-import { type MenuAction, type MenuItem, isMenuGroup, isSeparator } from '../../defs';
+import { type ToolbarActionGroupProperties, type ToolbarProps } from './defs';
+import { type MenuAction, type MenuItem, isMenuGroup, isSeparator, type MenuItemGroup } from '../../defs';
 import { ActionLabel } from '../ActionLabel';
+import { useMenu } from '../MenuContext';
 
 const ToolbarItem = ({ action }: { action: MenuAction }) => {
-  const { onAction, iconSize } = useToolbar();
+  const { onAction, iconSize } = useMenu();
   const handleClick = useCallback(() => {
     onAction?.(action);
   }, [action, onAction]);
@@ -34,36 +34,24 @@ const ToolbarItem = ({ action }: { action: MenuAction }) => {
   );
 };
 
-const resolveGroupItemsNoop = () => null;
-
-export const Toolbar = ({
-  onAction = () => {},
-  iconSize = 5,
-  resolveGroupItems = resolveGroupItemsNoop,
-  ...props
-}: ToolbarProps) => {
-  const contextValue = useMemo(
-    () => ({ resolveGroupItems, onAction, iconSize }),
-    [resolveGroupItems, onAction, iconSize],
-  );
+export const Toolbar = ({ ...props }: ToolbarProps) => {
+  const { resolveGroupItems } = useMenu();
   const items = useMemo(() => resolveGroupItems(), [resolveGroupItems]);
   return (
-    <ToolbarContext.Provider value={contextValue}>
-      <NaturalToolbar.Root {...props}>
-        {items?.map((item: MenuItem, i: number) =>
-          isSeparator(item) ? (
-            <NaturalToolbar.Separator key={i} variant={item.properties.variant} />
-          ) : isMenuGroup(item) ? (
-            item.properties.variant === 'dropdownMenu' ? (
-              <ToolbarDropdownMenu key={item.id} group={item} />
-            ) : (
-              <ToolbarToggleGroup key={item.id} group={item} />
-            )
+    <NaturalToolbar.Root {...props}>
+      {items?.map((item: MenuItem, i: number) =>
+        isSeparator(item) ? (
+          <NaturalToolbar.Separator key={i} variant={item.properties.variant} />
+        ) : isMenuGroup(item) ? (
+          item.properties.variant === 'dropdownMenu' ? (
+            <ToolbarDropdownMenu key={item.id} group={item as MenuItemGroup<ToolbarActionGroupProperties>} />
           ) : (
-            <ToolbarItem key={item.id} action={item as MenuAction} />
-          ),
-        )}
-      </NaturalToolbar.Root>
-    </ToolbarContext.Provider>
+            <ToolbarToggleGroup key={item.id} group={item as MenuItemGroup<ToolbarActionGroupProperties>} />
+          )
+        ) : (
+          <ToolbarItem key={item.id} action={item as MenuAction} />
+        ),
+      )}
+    </NaturalToolbar.Root>
   );
 };

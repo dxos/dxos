@@ -6,13 +6,13 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Toolbar as NaturalToolbar } from '@dxos/react-ui';
 
-import { useToolbar } from './ToolbarContext';
 import type { ToolbarActionGroupProps } from './defs';
 import { type MenuAction } from '../../defs';
 import { ActionLabel } from '../ActionLabel';
+import { useMenu } from '../MenuContext';
 
 const ToolbarToggleGroupItem = ({ action }: { action: MenuAction }) => {
-  const { iconSize, onAction } = useToolbar();
+  const { iconSize, onAction } = useMenu();
   const { icon, iconOnly = true, disabled } = action.properties;
   const handleClick = useCallback(() => {
     onAction?.(action);
@@ -33,7 +33,7 @@ const ToolbarToggleGroupItem = ({ action }: { action: MenuAction }) => {
 };
 
 export const ToolbarToggleGroup = ({ group }: ToolbarActionGroupProps) => {
-  const { resolveGroupItems } = useToolbar();
+  const { resolveGroupItems } = useMenu();
   const items = useMemo(() => resolveGroupItems(group), [resolveGroupItems, group]);
   const { selectCardinality, value } = group.properties;
   return Array.isArray(items) ? (
