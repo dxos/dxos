@@ -6,7 +6,7 @@ import { useSignalEffect } from '@preact/signals-react';
 import React, { useCallback, useState } from 'react';
 
 import { Graph, type NodeArg, type Node } from '@dxos/app-graph';
-import { Toolbar, type MenuItem, type ToolbarProps, type MenuItemGroup } from '@dxos/react-ui-menu';
+import { Toolbar, type MenuItem, type MenuItemGroup, MenuProvider, type MenuActionHandler } from '@dxos/react-ui-menu';
 
 import { createBlocks } from './blocks';
 import { createComment } from './comment';
@@ -100,10 +100,14 @@ const useEditorToolbarActionGraph = ({ onAction, ...props }: EditorToolbarProps)
     [graph],
   );
 
-  return { resolveGroupItems, onAction: onAction as ToolbarProps['onAction'] };
+  return { resolveGroupItems, onAction: onAction as MenuActionHandler };
 };
 
 export const EditorToolbar = ({ classNames, ...props }: EditorToolbarProps) => {
-  const toolbarProps = useEditorToolbarActionGraph(props);
-  return <Toolbar {...toolbarProps} classNames={classNames} />;
+  const menuProps = useEditorToolbarActionGraph(props);
+  return (
+    <MenuProvider {...menuProps}>
+      <Toolbar classNames={classNames} />
+    </MenuProvider>
+  );
 };

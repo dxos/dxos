@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo, useRef } from 'react';
+import { useSignalEffect } from '@preact/signals-react';
+import React, { useRef, useState } from 'react';
 
 import { Toolbar as NaturalToolbar } from '@dxos/react-ui';
 
@@ -17,18 +18,19 @@ const triggerProps = {
   caretDown: true,
 };
 
-export const ToolbarDropdownMenuImpl = ({ group }: Pick<ToolbarActionGroupProps, 'group'>) => {
+export const ToolbarDropdownMenu = ({ group }: Pick<ToolbarActionGroupProps, 'group'>) => {
   const { iconOnly = true, disabled, testId } = group.properties;
   const suppressNextTooltip = useRef(false);
   const { iconSize, resolveGroupItems } = useMenu();
-  const icon = useMemo(() => {
+  const [icon, setIcon] = useState<string>(group.properties.icon);
+  useSignalEffect(() => {
     const items = resolveGroupItems?.(group) as MenuAction[];
-    return (
+    setIcon(
       ((group.properties as any).applyActiveIcon &&
         items?.find((item) => !!item.properties.checked)?.properties.icon) ||
-      group.properties.icon
+        group.properties.icon,
     );
-  }, [group, resolveGroupItems]);
+  });
   return (
     <DropdownMenu.Root group={group} suppressNextTooltip={suppressNextTooltip}>
       <DropdownMenu.Trigger asChild>
@@ -45,11 +47,4 @@ export const ToolbarDropdownMenuImpl = ({ group }: Pick<ToolbarActionGroupProps,
       </DropdownMenu.Trigger>
     </DropdownMenu.Root>
   );
-};
-
-// TODO(thure): Refactor to use actions getter callback (which we realize now should be async).
-export const ToolbarDropdownMenu = ({ group }: ToolbarActionGroupProps) => {
-  const { resolveGroupItems } = useMenu();
-  const items = useMemo(() => resolveGroupItems(group), [resolveGroupItems, group]);
-  return Array.isArray(items) ? <ToolbarDropdownMenuImpl group={group} /> : null;
 };

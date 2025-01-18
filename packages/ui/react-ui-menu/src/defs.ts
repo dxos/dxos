@@ -38,7 +38,7 @@ export type MenuItem = MenuSeparator | MenuAction | MenuItemGroup;
 
 export type MenuItemsResolver = (group?: MenuItemGroup) => MenuItem[] | null;
 
-export type MenuContextValue<A extends Node = Node<any>> = {
+export type MenuContextValue<A extends Node = MenuAction> = {
   resolveGroupItems: MenuItemsResolver;
   iconSize: IconButtonProps['size'];
   onAction: MenuActionHandler<A>;

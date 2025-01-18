@@ -12,7 +12,7 @@ import { useMenu } from './MenuContext';
 import { type MenuAction, type MenuItem, type MenuItemGroup } from '../defs';
 
 export type DropdownMenuProps = DropdownMenuRootProps & {
-  group: MenuItemGroup;
+  group?: MenuItemGroup;
   suppressNextTooltip?: MutableRefObject<boolean>;
 };
 

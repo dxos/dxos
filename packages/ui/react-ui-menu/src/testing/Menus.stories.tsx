@@ -5,15 +5,13 @@
 import '@dxos-theme';
 import React, { useCallback } from 'react';
 
-import { ACTION_GROUP_TYPE, actionGroupSymbol } from '@dxos/app-graph';
 import { faker } from '@dxos/random';
 import { IconButton } from '@dxos/react-ui';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
 import { createActions, createNestedActionGraph, useMutateActions } from './index';
-import { DropdownMenu as NaturalDropdownMenu, Toolbar as NaturalToolbar } from '../components';
-import { MenuProvider } from '../components/MenuContext';
-import { type MenuAction, type MenuContextValue, type MenuItemGroup } from '../defs';
+import { DropdownMenu as NaturalDropdownMenu, Toolbar as NaturalToolbar, MenuProvider } from '../components';
+import { type MenuAction, type MenuActionHandler } from '../defs';
 import translations from '../translations';
 
 faker.seed(1234);
@@ -27,15 +25,6 @@ export default {
 
 const menuActions = createActions() as MenuAction[];
 const nestedMenuActions = createNestedActionGraph();
-const rootGroup = {
-  id: 'root',
-  type: ACTION_GROUP_TYPE,
-  data: actionGroupSymbol,
-  properties: {
-    icon: 'ph--list-checks--regular',
-    label: 'Options',
-  },
-} satisfies MenuItemGroup;
 
 const handleAction = (action: MenuAction) => console.log('[on action]', action);
 
@@ -44,10 +33,10 @@ export const DropdownMenu = {
     useMutateActions(menuActions);
     const resolveGroupItems = useCallback(() => menuActions, []);
     return (
-      <MenuProvider resolveGroupItems={resolveGroupItems} onAction={handleAction as MenuContextValue['onAction']}>
-        <NaturalDropdownMenu.Root group={rootGroup}>
+      <MenuProvider resolveGroupItems={resolveGroupItems} onAction={handleAction as MenuActionHandler}>
+        <NaturalDropdownMenu.Root>
           <NaturalDropdownMenu.Trigger asChild>
-            <IconButton icon={rootGroup.properties.icon} size={5} label={rootGroup.properties.label} />
+            <IconButton icon='ph--list-checks--regular' size={5} label='Options' />
           </NaturalDropdownMenu.Trigger>
         </NaturalDropdownMenu.Root>
       </MenuProvider>
@@ -58,7 +47,7 @@ export const DropdownMenu = {
 export const Toolbar = {
   render: () => {
     return (
-      <MenuProvider onAction={handleAction as MenuContextValue['onAction']} {...nestedMenuActions}>
+      <MenuProvider onAction={handleAction as MenuActionHandler} {...nestedMenuActions}>
         <NaturalToolbar />
       </MenuProvider>
     );
