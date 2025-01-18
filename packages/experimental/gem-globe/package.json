@@ -59,7 +59,7 @@
     "@types/geojson": "^7946.0.14",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
-    "@types/three": "^0.171.0",
+    "@types/three": "^0.172.0",
     "@types/topojson-client": "^3.1.4",
     "@types/topojson-simplify": "^3.0.3",
     "@types/topojson-specification": "^1.0.5",
@@ -68,7 +68,7 @@
     "leva": "^0.9.35",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
-    "three": "^0.171.0"
+    "three": "^0.172.0"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",

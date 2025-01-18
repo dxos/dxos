@@ -88,7 +88,7 @@ const Sphere = () => {
         })
       }
     >
-      <PerspectiveCamera makeDefault fov={30} position={[0, 0, 5]} zoom={1} />
+      <PerspectiveCamera makeDefault fov={100} position={[0, 0, 5]} zoom={1} />
       <Particles {...defaultOptions} />
     </Canvas>
   );
@@ -169,11 +169,11 @@ const Particles = ({ size, ...options }: Options) => {
       )}
 
       {/* The simulation buffer is forwarded into a point-cloud via data-texture. */}
+      {/* eslint-disable react/no-unknown-property */}
       <points>
         {/* @ts-ignore */}
         <dofPointsMaterial ref={renderRef} {...{ args: [options.tint] }} />
         <bufferGeometry>
-          {/* eslint-disable-next-line react/no-unknown-property */}
           <bufferAttribute attach='attributes-position' count={particles.length / 3} array={particles} itemSize={3} />
         </bufferGeometry>
       </points>

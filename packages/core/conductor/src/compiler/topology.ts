@@ -140,6 +140,7 @@ export const createTopology = async ({ graph, computeMetaResolver }: CreateTopol
     });
 
     if (AST.isNeverKeyword(output.schema.ast)) {
+      log.warn('output does not exist on node:', { source: targetNode.graphNode.type, target: output.name });
       topology.diagnostics.push({
         severity: 'error',
         edgeId: edge.id,
@@ -148,13 +149,7 @@ export const createTopology = async ({ graph, computeMetaResolver }: CreateTopol
     }
 
     if (AST.isNeverKeyword(input.schema.ast)) {
-      log.warn('input does not exist on node:', {
-        targetNode: targetNode.graphNode.type,
-        input: input.name,
-        type: input.schema.ast,
-        nodeInputType: targetNode.meta.input.ast,
-        pickProperty: pickProperty(targetNode.meta.input, input.name).ast,
-      });
+      log.warn('input does not exist on node:', { source: input.name, target: targetNode.graphNode.type });
       topology.diagnostics.push({
         severity: 'error',
         edgeId: edge.id,
