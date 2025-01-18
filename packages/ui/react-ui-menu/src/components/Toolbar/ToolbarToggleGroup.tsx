@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 
 import { Toolbar as NaturalToolbar } from '@dxos/react-ui';
 
 import type { ToolbarActionGroupProps } from './defs';
 import { type MenuAction } from '../../defs';
 import { ActionLabel } from '../ActionLabel';
-import { useMenu } from '../MenuContext';
+import { useMenu, useMenuItems } from '../MenuContext';
 
 const ToolbarToggleGroupItem = ({ action }: { action: MenuAction }) => {
   const { iconSize, onAction } = useMenu();
@@ -32,11 +32,10 @@ const ToolbarToggleGroupItem = ({ action }: { action: MenuAction }) => {
   );
 };
 
-export const ToolbarToggleGroup = ({ group }: ToolbarActionGroupProps) => {
-  const { resolveGroupItems } = useMenu();
-  const items = useMemo(() => resolveGroupItems(group), [resolveGroupItems, group]);
+export const ToolbarToggleGroup = ({ group, items: propsItems }: ToolbarActionGroupProps) => {
+  const items = useMenuItems(group, propsItems);
   const { selectCardinality, value } = group.properties;
-  return Array.isArray(items) ? (
+  return (
     // TODO(thure): The type here is difficult to manage, what do?
     // @ts-ignore
     <NaturalToolbar.ToggleGroup type={selectCardinality} value={value}>
@@ -44,5 +43,5 @@ export const ToolbarToggleGroup = ({ group }: ToolbarActionGroupProps) => {
         <ToolbarToggleGroupItem key={action.id} action={action} />
       ))}
     </NaturalToolbar.ToggleGroup>
-  ) : null;
+  );
 };

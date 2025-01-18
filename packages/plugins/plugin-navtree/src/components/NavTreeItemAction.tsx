@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type MutableRefObject, useCallback, useRef } from 'react';
+import React, { type MutableRefObject, useRef } from 'react';
 
 import { type Action, type Node } from '@dxos/app-graph';
 import { useTranslation, toLocalizedString, IconButton } from '@dxos/react-ui';
-import { DropdownMenu, MenuProvider, type MenuAction } from '@dxos/react-ui-menu';
+import { DropdownMenu, MenuProvider, type MenuItem } from '@dxos/react-ui-menu';
 import { hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
 
 import { NAVTREE_PLUGIN } from '../meta';
@@ -40,10 +40,9 @@ export const NavTreeItemActionDropdownMenu = ({
 }: NavTreeItemActionMenuProps) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const suppressNextTooltip = useRef<boolean>(false);
-  const resolveGroupItems = useCallback(() => menuActions as MenuAction[], [menuActions]);
   return (
-    <MenuProvider {...{ resolveGroupItems, onAction }}>
-      <DropdownMenu.Root suppressNextTooltip={suppressNextTooltip}>
+    <MenuProvider onAction={onAction}>
+      <DropdownMenu.Root items={menuActions as MenuItem[]} suppressNextTooltip={suppressNextTooltip}>
         <DropdownMenu.Trigger asChild>
           <IconButton
             {...actionButtonProps}

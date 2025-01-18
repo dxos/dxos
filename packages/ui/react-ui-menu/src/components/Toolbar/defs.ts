@@ -9,6 +9,7 @@ import {
   type MenuActionProperties,
   type MenuActionGroupMultipleSelect,
   type MenuActionGroupSingleSelect,
+  type MenuItem,
 } from '../../defs';
 
 export type ToolbarActionGroupDropdownMenu = Omit<MenuActionProperties, 'variant' | 'icon'> & {
@@ -28,4 +29,5 @@ export type ToolbarProps = ToolbarRootProps;
 
 export type ToolbarActionGroupProps = {
   group: MenuItemGroup<ToolbarActionGroupProperties>;
+  items?: MenuItem[];
 };

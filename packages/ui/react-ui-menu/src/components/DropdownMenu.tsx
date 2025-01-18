@@ -3,16 +3,17 @@
 //
 
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type MouseEvent, type MutableRefObject, useCallback, useMemo } from 'react';
+import React, { type MouseEvent, type MutableRefObject, useCallback } from 'react';
 
 import { DropdownMenu as NaturalDropdownMenu, Icon, type DropdownMenuRootProps } from '@dxos/react-ui';
 
 import { ActionLabel } from './ActionLabel';
-import { useMenu } from './MenuContext';
+import { useMenu, useMenuItems } from './MenuContext';
 import { type MenuAction, type MenuItem, type MenuItemGroup } from '../defs';
 
 export type DropdownMenuProps = DropdownMenuRootProps & {
   group?: MenuItemGroup;
+  items?: MenuItem[];
   suppressNextTooltip?: MutableRefObject<boolean>;
 };
 
@@ -26,6 +27,7 @@ const DropdownMenuItem = ({
   // TODO(thure): handle other items.
   const action = item as MenuAction;
   const handleClick = useCallback((event: MouseEvent) => onClick(action, event), [action, onClick]);
+  const { iconSize } = useMenu();
   return (
     <NaturalDropdownMenu.Item
       onClick={handleClick}
@@ -33,13 +35,14 @@ const DropdownMenuItem = ({
       disabled={action.properties?.disabled}
       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
     >
-      {action.properties?.icon && <Icon icon={action.properties!.icon} size={4} />}
+      {action.properties?.icon && <Icon icon={action.properties!.icon} size={iconSize} />}
       <ActionLabel action={action} />
     </NaturalDropdownMenu.Item>
   );
 };
 
 const DropdownMenuRoot = ({
+  items: propsItems,
   group,
   open,
   defaultOpen,
@@ -54,7 +57,7 @@ const DropdownMenuRoot = ({
     onChange: onOpenChange,
   });
 
-  const { onAction, resolveGroupItems } = useMenu();
+  const { onAction } = useMenu();
 
   const handleActionClick = useCallback(
     (action: MenuAction, event: MouseEvent) => {
@@ -72,7 +75,7 @@ const DropdownMenuRoot = ({
     [onAction],
   );
 
-  const items = useMemo(() => resolveGroupItems?.(group), [group, resolveGroupItems]);
+  const items = useMenuItems(group, propsItems);
 
   return (
     <NaturalDropdownMenu.Root

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 
 import { Toolbar as NaturalToolbar } from '@dxos/react-ui';
 
@@ -11,7 +11,7 @@ import { ToolbarToggleGroup } from './ToolbarToggleGroup';
 import { type ToolbarActionGroupProperties, type ToolbarProps } from './defs';
 import { type MenuAction, type MenuItem, isMenuGroup, isSeparator, type MenuItemGroup } from '../../defs';
 import { ActionLabel } from '../ActionLabel';
-import { useMenu } from '../MenuContext';
+import { useMenu, useMenuItems } from '../MenuContext';
 
 const ToolbarItem = ({ action }: { action: MenuAction }) => {
   const { onAction, iconSize } = useMenu();
@@ -35,8 +35,7 @@ const ToolbarItem = ({ action }: { action: MenuAction }) => {
 };
 
 export const Toolbar = ({ ...props }: ToolbarProps) => {
-  const { resolveGroupItems } = useMenu();
-  const items = useMemo(() => resolveGroupItems(), [resolveGroupItems]);
+  const items = useMenuItems();
   return (
     <NaturalToolbar.Root {...props}>
       {items?.map((item: MenuItem, i: number) =>

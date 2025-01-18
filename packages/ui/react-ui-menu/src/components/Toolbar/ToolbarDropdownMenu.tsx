@@ -10,24 +10,24 @@ import { type ToolbarActionGroupProps } from './defs';
 import { type MenuAction } from '../../defs';
 import { ActionLabel } from '../ActionLabel';
 import { DropdownMenu } from '../DropdownMenu';
-import { useMenu } from '../MenuContext';
+import { useMenu, useMenuItems } from '../MenuContext';
 
 const triggerProps = {
   variant: 'ghost' as const,
   caretDown: true,
 };
 
-export const ToolbarDropdownMenu = ({ group }: Pick<ToolbarActionGroupProps, 'group'>) => {
+export const ToolbarDropdownMenu = ({ group, items: propsItems }: ToolbarActionGroupProps) => {
   const { iconOnly = true, disabled, testId } = group.properties;
   const suppressNextTooltip = useRef(false);
-  const { iconSize, resolveGroupItems } = useMenu();
+  const { iconSize } = useMenu();
+  const items = useMenuItems(group, propsItems);
   const icon =
     ((group.properties as any).applyActiveIcon &&
-      (resolveGroupItems?.(group) as MenuAction[] | undefined)?.find((item) => !!item.properties.checked)?.properties
-        .icon) ||
+      (items as MenuAction[])?.find((item) => !!item.properties.checked)?.properties.icon) ||
     group.properties.icon;
   return (
-    <DropdownMenu.Root group={group} suppressNextTooltip={suppressNextTooltip}>
+    <DropdownMenu.Root group={group} items={items} suppressNextTooltip={suppressNextTooltip}>
       <DropdownMenu.Trigger asChild>
         <NaturalToolbar.IconButton
           {...triggerProps}

@@ -4,7 +4,7 @@
 
 import React, { createContext, type PropsWithChildren, useContext, useMemo } from 'react';
 
-import { type MenuContextValue } from '../defs';
+import { type MenuContextValue, type MenuItem, type MenuItemGroup } from '../defs';
 
 export const menuContextDefaults: MenuContextValue = {
   iconSize: 5,
@@ -28,3 +28,8 @@ export const MenuProvider = ({
 };
 
 export const useMenu = () => useContext(MenuContext);
+
+export const useMenuItems = (group?: MenuItemGroup, propsItems?: MenuItem[]) => {
+  const { resolveGroupItems } = useMenu();
+  return useMemo(() => propsItems ?? resolveGroupItems?.(group) ?? undefined, [propsItems, group, resolveGroupItems]);
+};
