@@ -42,7 +42,8 @@ type NodeType =
   | 'list'
   | 'append'
   | 'database'
-  | 'text-to-image';
+  | 'text-to-image'
+  | 'gpt-realtime';
 
 // TODO(burdon): Just pass in type? Or can the shape specialize the node?
 export const createComputeNode = (shape: GraphNode<ComputeShape>): GraphNode<ComputeNode> => {
@@ -81,6 +82,7 @@ const nodeFactory: Record<string, (shape: GraphNode<ComputeShape>) => GraphNode<
   ['if-else' as const]: () => createNode('if-else'),
 
   ['gpt' as const]: () => createNode('gpt'),
+  ['gpt-realtime' as const]: () => createNode('gpt-realtime'),
 
   ['json' as const]: () => createNode('view'),
   ['chat' as const]: () => createNode('chat'),
@@ -234,6 +236,13 @@ const nodeDefs: Record<NodeType, Executable> = {
   }),
 
   ['gpt' as const]: gptNode,
+  ['gpt-realtime' as const]: defineComputeNode({
+    input: S.Struct({
+      audio: S.Any,
+    }),
+    output: S.Struct({}),
+    exec: synchronizedComputeFunction(() => Effect.succeed({})),
+  }),
 
   ['database' as const]: defineComputeNode({
     input: S.Struct({}),
