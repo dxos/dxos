@@ -26,23 +26,25 @@ import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './types';
 import { type ComputeShape, type ConstantShape } from '../shapes';
 
 type NodeType =
-  | 'switch'
-  | 'text'
-  | 'beacon'
   | 'and'
-  | 'or'
-  | 'not'
+  | 'append'
+  | 'audio'
+  | 'beacon'
+  | 'chat'
+  | 'constant'
+  | 'database'
+  | 'gpt'
   | 'if'
   | 'if-else'
-  | 'gpt'
-  | 'chat'
-  | 'view'
-  | 'thread'
-  | 'constant'
   | 'list'
-  | 'append'
-  | 'database'
-  | 'text-to-image';
+  | 'not'
+  | 'or'
+  | 'scope'
+  | 'switch'
+  | 'text'
+  | 'text-to-image'
+  | 'thread'
+  | 'view';
 
 // TODO(burdon): Just pass in type? Or can the shape specialize the node?
 export const createComputeNode = (shape: GraphNode<ComputeShape>): GraphNode<ComputeNode> => {
@@ -64,33 +66,26 @@ const createNode = (type: string, props?: Partial<ComputeNode>) => ({
 
 // TODO(burdon): Reconcile with ShapeRegistry.
 const nodeFactory: Record<string, (shape: GraphNode<ComputeShape>) => GraphNode<ComputeNode>> = {
-  // Controls.
-  ['switch' as const]: () => createNode('switch'),
-  ['text' as const]: () => createNode('text'),
-
-  // Views.
-  ['beacon' as const]: () => createNode('beacon'),
-
-  // Boolean ops.
   ['and' as const]: () => createNode('and'),
-  ['or' as const]: () => createNode('or'),
-  ['not' as const]: () => createNode('not'),
-
-  // Logic ops.
+  ['append' as const]: () => createNode('append'),
+  ['audio' as const]: () => createNode('audio'),
+  ['beacon' as const]: () => createNode('beacon'),
+  ['chat' as const]: () => createNode('chat'),
+  ['constant' as const]: (shape) => createNode('constant', { constant: (shape.data as ConstantShape).value }),
+  ['database' as const]: () => createNode('database'),
+  ['gpt' as const]: () => createNode('gpt'),
   ['if' as const]: () => createNode('if'),
   ['if-else' as const]: () => createNode('if-else'),
-
-  ['gpt' as const]: () => createNode('gpt'),
-
   ['json' as const]: () => createNode('view'),
-  ['chat' as const]: () => createNode('chat'),
-  ['view' as const]: () => createNode('view'),
-  ['thread' as const]: () => createNode('thread'),
-  ['constant' as const]: (shape) => createNode('constant', { constant: (shape.data as ConstantShape).value }),
   ['list' as const]: () => createNode('list'),
-  ['append' as const]: () => createNode('append'),
-  ['database' as const]: () => createNode('database'),
+  ['not' as const]: () => createNode('not'),
+  ['or' as const]: () => createNode('or'),
+  ['scope' as const]: () => createNode('scope'),
+  ['switch' as const]: () => createNode('switch'),
+  ['text' as const]: () => createNode('text'),
   ['text-to-image' as const]: () => createNode('text-to-image'),
+  ['thread' as const]: () => createNode('thread'),
+  ['view' as const]: () => createNode('view'),
 };
 
 export const resolveComputeNode = async (node: ComputeNode): Promise<Executable> => {
@@ -115,6 +110,14 @@ const nodeDefs: Record<NodeType, Executable> = {
     output: S.Struct({ [DEFAULT_OUTPUT]: S.Boolean }),
   }),
   ['text' as const]: defineComputeNode({
+    input: S.Struct({}),
+    output: S.Struct({ [DEFAULT_OUTPUT]: S.String }),
+  }),
+  ['audio' as const]: defineComputeNode({
+    input: S.Struct({}),
+    output: S.Struct({ [DEFAULT_OUTPUT]: S.String }),
+  }),
+  ['scope' as const]: defineComputeNode({
     input: S.Struct({}),
     output: S.Struct({ [DEFAULT_OUTPUT]: S.String }),
   }),
@@ -259,6 +262,7 @@ const textToImageTool: LLMTool = {
   name: 'textToImage',
   type: ToolTypes.TextToImage,
   options: {
-    model: '@testing/kitten-in-bubble',
+    // TODO(burdon): Testing.
+    // model: '@testing/kitten-in-bubble',
   },
 };

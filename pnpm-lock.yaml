@@ -538,7 +538,7 @@ importers:
         version: 2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2))
       vuepress-theme-hope:
         specifier: 2.0.0-rc.5
-        version: 2.0.0-rc.5(markdown-it@13.0.2)(mermaid@10.6.1)(reveal.js@5.1.0)(typescript@5.7.2)(vuepress-vite@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))(vuepress@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))
+        version: 2.0.0-rc.5(hls.js@1.5.19)(markdown-it@13.0.2)(mermaid@10.6.1)(reveal.js@5.1.0)(typescript@5.7.2)(vuepress-vite@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))(vuepress@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))
 
   packages/apps/composer-app:
     dependencies:
@@ -5951,6 +5951,12 @@ importers:
       '@radix-ui/react-context':
         specifier: ^1.0.0
         version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
+      '@react-three/drei':
+        specifier: ^9.121.2
+        version: 9.121.2(@react-three/fiber@8.17.12(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(three@0.172.0))(@types/react@18.2.79)(@types/three@0.168.0)(immer@10.1.1)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(three@0.172.0)(use-sync-external-store@1.2.2(react@18.2.0))
+      '@react-three/fiber':
+        specifier: ^8.17.12
+        version: 8.17.12(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(three@0.172.0)
       bind-event-listener:
         specifier: ^3.0.0
         version: 3.0.0
@@ -5972,9 +5978,9 @@ importers:
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      transformation-matrix:
-        specifier: ^2.16.1
-        version: 2.16.1
+      three:
+        specifier: ^0.172.0
+        version: 0.172.0
     devDependencies:
       '@dxos/compute':
         specifier: workspace:*
@@ -14238,6 +14244,10 @@ packages:
     resolution: {integrity: sha512-4zpTHZ9Cm6L9L+uIqghQX8ZXg8HKFcjYO3qHoO8zTmRm6HQUJ8SSJ+KRvbMBZn0EGVlT4DRYeQ/6hjlyXBh+Kg==}
     engines: {node: '>=6.9.0'}
 
+  '@babel/runtime@7.26.0':
+    resolution: {integrity: sha512-FDSOghenHTiToteC/QRlv2q3DhPZ/oOXTBoirfWNx1Cx3TMVcGWQtMMmQcSvb/JjpNeGzx8Pq/b4fKEJuWm1sw==}
+    engines: {node: '>=6.9.0'}
+
   '@babel/template@7.20.7':
     resolution: {integrity: sha512-8SegXApWe6VoNw0r9JHpSteLKTpTiLZ4rMlGIm9JQ18KiCtyQiAMEazujAHrUS5flrcqYZa75ukev3P6QmUwUw==}
     engines: {node: '>=6.9.0'}
@@ -16659,6 +16669,9 @@ packages:
   '@mediapipe/tasks-text@0.10.8':
     resolution: {integrity: sha512-8HkBHDnxZAKvYXWBT/DW9eFBmbtGuqOt65pGtCPWM2tm8xRFcJ2zh4PvsLm0DlwhQvtkqz2EDb9oHzp4TCiEow==}
 
+  '@mediapipe/tasks-vision@0.10.17':
+    resolution: {integrity: sha512-CZWV/q6TTe8ta61cZXjfnnHsfWIdFhms03M9T7Cnd5y2mdpylJM0rF1qRq+wsQVRMLz1OYPVEBU9ph2Bx8cxrg==}
+
   '@mediapipe/tasks-vision@0.10.8':
     resolution: {integrity: sha512-Rp7ll8BHrKB3wXaRFKhrltwZl1CiXGdibPxuWXvqGnKTnv8fqa/nvftYNuSbf+pbJWKYCXdBtYTITdAUTGGh0Q==}
 
@@ -18735,16 +18748,34 @@ packages:
     peerDependencies:
       react: ~18.2.0
 
+  '@react-spring/animated@9.7.5':
+    resolution: {integrity: sha512-Tqrwz7pIlsSDITzxoLS3n/v/YCUHQdOIKtOJf4yL6kYVSDTSmVK1LI1Q3M/uu2Sx4X3pIWF3xLUhlsA6SPNTNg==}
+    peerDependencies:
+      react: ~18.2.0
+
   '@react-spring/core@9.6.1':
     resolution: {integrity: sha512-3HAAinAyCPessyQNNXe5W0OHzRfa8Yo5P748paPcmMowZ/4sMfaZ2ZB6e5x5khQI8NusOHj8nquoutd6FRY5WQ==}
+    peerDependencies:
+      react: ~18.2.0
+
+  '@react-spring/core@9.7.5':
+    resolution: {integrity: sha512-rmEqcxRcu7dWh7MnCcMXLvrf6/SDlSokLaLTxiPlAYi11nN3B5oiCUAblO72o+9z/87j2uzxa2Inm8UbLjXA+w==}
     peerDependencies:
       react: ~18.2.0
 
   '@react-spring/rafz@9.6.1':
     resolution: {integrity: sha512-v6qbgNRpztJFFfSE3e2W1Uz+g8KnIBs6SmzCzcVVF61GdGfGOuBrbjIcp+nUz301awVmREKi4eMQb2Ab2gGgyQ==}
 
+  '@react-spring/rafz@9.7.5':
+    resolution: {integrity: sha512-5ZenDQMC48wjUzPAm1EtwQ5Ot3bLIAwwqP2w2owG5KoNdNHpEJV263nGhCeKKmuA3vG2zLLOdu3or6kuDjA6Aw==}
+
   '@react-spring/shared@9.6.1':
     resolution: {integrity: sha512-PBFBXabxFEuF8enNLkVqMC9h5uLRBo6GQhRMQT/nRTnemVENimgRd+0ZT4yFnAQ0AxWNiJfX3qux+bW2LbG6Bw==}
+    peerDependencies:
+      react: ~18.2.0
+
+  '@react-spring/shared@9.7.5':
+    resolution: {integrity: sha512-wdtoJrhUeeyD/PP/zo+np2s1Z820Ohr/BbuVYv+3dVLW7WctoiN7std8rISoYoHpUXtbkpesSKuPIw/6U1w1Pw==}
     peerDependencies:
       react: ~18.2.0
 
@@ -18755,8 +18786,18 @@ packages:
       react: ~18.2.0
       three: '>=0.126'
 
+  '@react-spring/three@9.7.5':
+    resolution: {integrity: sha512-RxIsCoQfUqOS3POmhVHa1wdWS0wyHAUway73uRLp3GAL5U2iYVNdnzQsep6M2NZ994BlW8TcKuMtQHUqOsy6WA==}
+    peerDependencies:
+      '@react-three/fiber': '>=6.0'
+      react: ~18.2.0
+      three: '>=0.126'
+
   '@react-spring/types@9.6.1':
     resolution: {integrity: sha512-POu8Mk0hIU3lRXB3bGIGe4VHIwwDsQyoD1F394OK7STTiX9w4dG3cTLljjYswkQN+hDSHRrj4O36kuVa7KPU8Q==}
+
+  '@react-spring/types@9.7.5':
+    resolution: {integrity: sha512-HVj7LrZ4ReHWBimBvu2SKND3cDVUPWKLqRTmWe/fNY6o1owGOX0cAHbdPDTMelgBlVbrTKrre6lFkhqGZErK/g==}
 
   '@react-three/drei@9.112.0':
     resolution: {integrity: sha512-te+4tcNiRv3QizD04cg25oX51uUMVG5Y3iUaIX8tKi8aW3j7UM6XCFSKVYNOiT6P+d5h/ruSd5naX7oFvp3QOQ==}
@@ -18767,6 +18808,42 @@ packages:
       three: '>=0.137'
     peerDependenciesMeta:
       react-dom:
+        optional: true
+
+  '@react-three/drei@9.121.2':
+    resolution: {integrity: sha512-0oyd26wn8NAHrlqrr7oZJMq/x2wikJfMz59R/tGRaqLLI16rFP5M8sU/NFFgSiPuyV09b4NqMuo9oimToA9dgA==}
+    peerDependencies:
+      '@react-three/fiber': ^8
+      react: ~18.2.0
+      react-dom: ~18.2.0
+      three: '>=0.137'
+    peerDependenciesMeta:
+      react-dom:
+        optional: true
+
+  '@react-three/fiber@8.17.12':
+    resolution: {integrity: sha512-rjV/ZtCr69y+aWEOsAhBQzsxYyvZHUanYfo9eMXNp/dxTj3ZrRvK44DkIdSLV1xcPidq8p2YeU2oWP2czY+ZVA==}
+    peerDependencies:
+      expo: '>=43.0'
+      expo-asset: '>=8.4'
+      expo-file-system: '>=11.0'
+      expo-gl: '>=11.0'
+      react: ~18.2.0
+      react-dom: ~18.2.0
+      react-native: '>=0.64'
+      three: '>=0.133'
+    peerDependenciesMeta:
+      expo:
+        optional: true
+      expo-asset:
+        optional: true
+      expo-file-system:
+        optional: true
+      expo-gl:
+        optional: true
+      react-dom:
+        optional: true
+      react-native:
         optional: true
 
   '@react-three/fiber@8.17.7':
@@ -21278,8 +21355,16 @@ packages:
   '@use-gesture/core@10.2.27':
     resolution: {integrity: sha512-V4XV7hn9GAD2MYu8yBBVi5iuWBsAMfjPRMsEVzoTNGYH72tf0kFP+OKqGKc8YJFQIJx6yj+AOqxmEHOmx2/MEA==}
 
+  '@use-gesture/core@10.3.1':
+    resolution: {integrity: sha512-WcINiDt8WjqBdUXye25anHiNxPc0VOrlT8F6LLkU6cycrOGUDyY/yyFmsg3k8i5OLvv25llc0QC45GhR/C8llw==}
+
   '@use-gesture/react@10.2.27':
     resolution: {integrity: sha512-7E5vnWCxeslWlxwZ8uKIcnUZVMTRMZ8cvSnLLKF1NkyNb3PnNiAzoXM4G1vTKJKRhgOTeI6wK1YsEpwo9ABV5w==}
+    peerDependencies:
+      react: ~18.2.0
+
+  '@use-gesture/react@10.3.1':
+    resolution: {integrity: sha512-Yy19y6O2GJq8f7CHf7L0nxL8bf4PZCPaVOCgJrusOeFHY1LvHgYXnmnXg6N5iwAnbgbZCDjo60SiM6IPJi9C5g==}
     peerDependencies:
       react: ~18.2.0
 
@@ -23974,6 +24059,9 @@ packages:
   detect-gpu@5.0.47:
     resolution: {integrity: sha512-hxOjFbFN6/ToNzDs0SIt/P/Y1WxoxAEUXXlrw/HT2IPtDtIxSi57zP/TC6kTvWDWmwSnvfVHsPoDZihscx8OJQ==}
 
+  detect-gpu@5.0.64:
+    resolution: {integrity: sha512-KDSw4O/PhZLZG+oSYkkn1kMru4Mz++O2IkaALlYpZHvw6zL/uE7tlcy1Q5/q5jGGdIIOxQlncuTl1+ew6ZE68w==}
+
   detect-indent@6.1.0:
     resolution: {integrity: sha512-reYkTUJAZb9gUuZ2RvVCNhVHdg62RHnJ7WJl8ftMi4diZ6NWlciOzQN88pUhSELEwflJht4oQDv0F0BMlwaYtA==}
     engines: {node: '>=8'}
@@ -25766,6 +25854,9 @@ packages:
 
   hls.js@1.3.5:
     resolution: {integrity: sha512-uybAvKS6uDe0MnWNEPnO0krWVr+8m2R0hJ/viql8H3MVK+itq8gGQuIYoFHL3rECkIpNH98Lw8YuuWMKZxp3Ew==}
+
+  hls.js@1.5.19:
+    resolution: {integrity: sha512-C020dKWEJcyvLnrqsFKW4q6D/6IEzKWdhktIS5bgoyEFE8lHgrFBq4RIngdy113abJOlIruhv8qjg7UX8hwxOw==}
 
   hmac-blake2b@2.0.0:
     resolution: {integrity: sha512-JbGNtM1YRd8EQH/2vNTAP1oy5lJVPlBFYZfCJTu3k8sqOUm0rRIf/3+MCd5noVykETwTbun6jEOc+4Tu78ubHA==}
@@ -31805,8 +31896,16 @@ packages:
     peerDependencies:
       three: '>=0.128.0'
 
+  three-stdlib@2.35.7:
+    resolution: {integrity: sha512-k1oDqa1GYT4smhsN204DtmcQLfDuzSD4bbGmErTvUH40dpcwgBUgbwMzYYVWYB5tT7u0KBvAQpwuAPEXuwJVpQ==}
+    peerDependencies:
+      three: '>=0.128.0'
+
   three@0.168.0:
     resolution: {integrity: sha512-6m6jXtDwMJEK/GGMbAOTSAmxNdzKvvBzgd7q8bE/7Tr6m7PaBh5kKLrN7faWtlglXbzj7sVba48Idwx+NRsZXw==}
+
+  three@0.172.0:
+    resolution: {integrity: sha512-6HMgMlzU97MsV7D/tY8Va38b83kz8YJX+BefKjspMNAv0Vx6dxMogHOrnRl/sbMIs3BPUKijPqDqJ/+UwJbIow==}
 
   throttle-debounce@3.0.1:
     resolution: {integrity: sha512-dTEWWNu6JmeVXY0ZYoPuH5cRIwc0MeGbJwah9KUNYSJwommQpCzTySTpEe8Gs1J23aeWEuAobe4Ag7EHVt/LOg==}
@@ -32001,13 +32100,26 @@ packages:
     peerDependencies:
       three: '>=0.125.0'
 
+  troika-three-text@0.52.3:
+    resolution: {integrity: sha512-jLhiwgV8kEkwWjvK12f2fHVpbOC75p7SgPQ0cgcz+IMtN5Bdyg4EuFdwuTOVu9ga8UeYdKBpzd1AxviyixtYTQ==}
+    peerDependencies:
+      three: '>=0.125.0'
+
   troika-three-utils@0.49.0:
     resolution: {integrity: sha512-umitFL4cT+Fm/uONmaQEq4oZlyRHWwVClaS6ZrdcueRvwc2w+cpNQ47LlJKJswpqtMFWbEhOLy0TekmcPZOdYA==}
     peerDependencies:
       three: '>=0.125.0'
 
+  troika-three-utils@0.52.0:
+    resolution: {integrity: sha512-00oxqIIehtEKInOTQekgyknBuRUj1POfOUE2q1OmL+Xlpp4gIu+S0oA0schTyXsDS4d9DkR04iqCdD40rF5R6w==}
+    peerDependencies:
+      three: '>=0.125.0'
+
   troika-worker-utils@0.49.0:
     resolution: {integrity: sha512-1xZHoJrG0HFfCvT/iyN41DvI/nRykiBtHqFkGaGgJwq5iXfIZFBiPPEHFpPpgyKM3Oo5ITHXP5wM2TNQszYdVg==}
+
+  troika-worker-utils@0.52.0:
+    resolution: {integrity: sha512-W1CpvTHykaPH5brv5VHLfQo9D1OYuo0cSBEUQFFT/nBUzM8iD6Lq2/tgG/f1OelbAS1WtaTPQzE5uM49egnngw==}
 
   trough@2.1.0:
     resolution: {integrity: sha512-AqTiAOLcj85xS7vQ8QkAV41hPDIJ71XJB4RCUrzo/1GM2CQwhkJGaf9Hgr7BOugMRpgGUrqRg/DrBDl4H40+8g==}
@@ -33950,6 +34062,24 @@ packages:
       immer:
         optional: true
       react:
+        optional: true
+
+  zustand@5.0.3:
+    resolution: {integrity: sha512-14fwWQtU3pH4dE0dOpdMiWjddcH+QzKIgk1cl8epwSE7yag43k/AD/m4L6+K7DytAOr9gGBe3/EXj9g7cdostg==}
+    engines: {node: '>=12.20.0'}
+    peerDependencies:
+      '@types/react': ~18.2.0
+      immer: '>=9.0.6'
+      react: ~18.2.0
+      use-sync-external-store: '>=1.2.0'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      immer:
+        optional: true
+      react:
+        optional: true
+      use-sync-external-store:
         optional: true
 
   zwitch@1.0.5:
@@ -37137,6 +37267,10 @@ snapshots:
     dependencies:
       regenerator-runtime: 0.14.1
 
+  '@babel/runtime@7.26.0':
+    dependencies:
+      regenerator-runtime: 0.14.1
+
   '@babel/template@7.20.7':
     dependencies:
       '@babel/code-frame': 7.25.7
@@ -39417,6 +39551,8 @@ snapshots:
 
   '@mediapipe/tasks-text@0.10.8': {}
 
+  '@mediapipe/tasks-vision@0.10.17': {}
+
   '@mediapipe/tasks-vision@0.10.8': {}
 
   '@microsoft/tsdoc@0.14.2': {}
@@ -39557,6 +39693,11 @@ snapshots:
     dependencies:
       promise-worker-transferable: 1.0.4
       three: 0.168.0
+
+  '@monogrid/gainmap-js@3.0.6(three@0.172.0)':
+    dependencies:
+      promise-worker-transferable: 1.0.4
+      three: 0.172.0
 
   '@mswjs/interceptors@0.35.3':
     dependencies:
@@ -42601,6 +42742,12 @@ snapshots:
       '@react-spring/types': 9.6.1
       react: 18.2.0
 
+  '@react-spring/animated@9.7.5(react@18.2.0)':
+    dependencies:
+      '@react-spring/shared': 9.7.5(react@18.2.0)
+      '@react-spring/types': 9.7.5
+      react: 18.2.0
+
   '@react-spring/core@9.6.1(react@18.2.0)':
     dependencies:
       '@react-spring/animated': 9.6.1(react@18.2.0)
@@ -42609,12 +42756,27 @@ snapshots:
       '@react-spring/types': 9.6.1
       react: 18.2.0
 
+  '@react-spring/core@9.7.5(react@18.2.0)':
+    dependencies:
+      '@react-spring/animated': 9.7.5(react@18.2.0)
+      '@react-spring/shared': 9.7.5(react@18.2.0)
+      '@react-spring/types': 9.7.5
+      react: 18.2.0
+
   '@react-spring/rafz@9.6.1': {}
+
+  '@react-spring/rafz@9.7.5': {}
 
   '@react-spring/shared@9.6.1(react@18.2.0)':
     dependencies:
       '@react-spring/rafz': 9.6.1
       '@react-spring/types': 9.6.1
+      react: 18.2.0
+
+  '@react-spring/shared@9.7.5(react@18.2.0)':
+    dependencies:
+      '@react-spring/rafz': 9.7.5
+      '@react-spring/types': 9.7.5
       react: 18.2.0
 
   '@react-spring/three@9.6.1(@react-three/fiber@8.17.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(three@0.168.0))(react@18.2.0)(three@0.168.0)':
@@ -42627,7 +42789,19 @@ snapshots:
       react: 18.2.0
       three: 0.168.0
 
+  '@react-spring/three@9.7.5(@react-three/fiber@8.17.12(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(three@0.172.0))(react@18.2.0)(three@0.172.0)':
+    dependencies:
+      '@react-spring/animated': 9.7.5(react@18.2.0)
+      '@react-spring/core': 9.7.5(react@18.2.0)
+      '@react-spring/shared': 9.7.5(react@18.2.0)
+      '@react-spring/types': 9.7.5
+      '@react-three/fiber': 8.17.12(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(three@0.172.0)
+      react: 18.2.0
+      three: 0.172.0
+
   '@react-spring/types@9.6.1': {}
+
+  '@react-spring/types@9.7.5': {}
 
   '@react-three/drei@9.112.0(@react-three/fiber@8.17.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(three@0.168.0))(@types/react@18.2.79)(@types/three@0.168.0)(immer@10.1.1)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(three@0.168.0)':
     dependencies:
@@ -42663,6 +42837,60 @@ snapshots:
       - '@types/react'
       - '@types/three'
       - immer
+
+  '@react-three/drei@9.121.2(@react-three/fiber@8.17.12(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(three@0.172.0))(@types/react@18.2.79)(@types/three@0.168.0)(immer@10.1.1)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(three@0.172.0)(use-sync-external-store@1.2.2(react@18.2.0))':
+    dependencies:
+      '@babel/runtime': 7.26.0
+      '@mediapipe/tasks-vision': 0.10.17
+      '@monogrid/gainmap-js': 3.0.6(three@0.172.0)
+      '@react-spring/three': 9.7.5(@react-three/fiber@8.17.12(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(three@0.172.0))(react@18.2.0)(three@0.172.0)
+      '@react-three/fiber': 8.17.12(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(three@0.172.0)
+      '@use-gesture/react': 10.3.1(react@18.2.0)
+      camera-controls: 2.9.0(three@0.172.0)
+      cross-env: 7.0.3
+      detect-gpu: 5.0.64
+      glsl-noise: 0.0.0
+      hls.js: 1.5.19
+      maath: 0.10.8(@types/three@0.168.0)(three@0.172.0)
+      meshline: 3.3.1(three@0.172.0)
+      react: 18.2.0
+      react-composer: 5.0.3(react@18.2.0)
+      stats-gl: 2.2.8
+      stats.js: 0.17.0
+      suspend-react: 0.1.3(react@18.2.0)
+      three: 0.172.0
+      three-mesh-bvh: 0.7.8(three@0.172.0)
+      three-stdlib: 2.35.7(three@0.172.0)
+      troika-three-text: 0.52.3(three@0.172.0)
+      tunnel-rat: 0.1.2(@types/react@18.2.79)(immer@10.1.1)(react@18.2.0)
+      utility-types: 3.11.0
+      zustand: 5.0.3(@types/react@18.2.79)(immer@10.1.1)(react@18.2.0)(use-sync-external-store@1.2.2(react@18.2.0))
+    optionalDependencies:
+      react-dom: 18.2.0(react@18.2.0)
+    transitivePeerDependencies:
+      - '@types/react'
+      - '@types/three'
+      - immer
+      - use-sync-external-store
+
+  '@react-three/fiber@8.17.12(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(three@0.172.0)':
+    dependencies:
+      '@babel/runtime': 7.25.9
+      '@types/debounce': 1.2.4
+      '@types/react-reconciler': 0.26.7
+      '@types/webxr': 0.5.20
+      base64-js: 1.5.1
+      buffer: 6.0.3
+      debounce: 1.2.1
+      its-fine: 1.2.5(react@18.2.0)
+      react: 18.2.0
+      react-reconciler: 0.27.0(react@18.2.0)
+      scheduler: 0.21.0
+      suspend-react: 0.1.3(react@18.2.0)
+      three: 0.172.0
+      zustand: 3.7.2(react@18.2.0)
+    optionalDependencies:
+      react-dom: 18.2.0(react@18.2.0)
 
   '@react-three/fiber@8.17.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(three@0.168.0)':
     dependencies:
@@ -45577,9 +45805,16 @@ snapshots:
 
   '@use-gesture/core@10.2.27': {}
 
+  '@use-gesture/core@10.3.1': {}
+
   '@use-gesture/react@10.2.27(react@18.2.0)':
     dependencies:
       '@use-gesture/core': 10.2.27
+      react: 18.2.0
+
+  '@use-gesture/react@10.3.1(react@18.2.0)':
+    dependencies:
+      '@use-gesture/core': 10.3.1
       react: 18.2.0
 
   '@valtown/codemirror-ts@2.2.0(@codemirror/autocomplete@6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)(@lezer/common@1.2.2))(@codemirror/lint@6.8.2)(@codemirror/view@6.34.1)':
@@ -47372,6 +47607,10 @@ snapshots:
     dependencies:
       three: 0.168.0
 
+  camera-controls@2.9.0(three@0.172.0):
+    dependencies:
+      three: 0.172.0
+
   caniuse-api@3.0.0:
     dependencies:
       browserslist: 4.24.0
@@ -48953,6 +49192,10 @@ snapshots:
   detect-file@1.0.0: {}
 
   detect-gpu@5.0.47:
+    dependencies:
+      webgl-constants: 1.1.1
+
+  detect-gpu@5.0.64:
     dependencies:
       webgl-constants: 1.1.1
 
@@ -51276,6 +51519,8 @@ snapshots:
 
   hls.js@1.3.5: {}
 
+  hls.js@1.5.19: {}
+
   hmac-blake2b@2.0.0:
     dependencies:
       nanoassert: 1.1.0
@@ -53348,6 +53593,11 @@ snapshots:
       '@types/three': 0.168.0
       three: 0.168.0
 
+  maath@0.10.8(@types/three@0.168.0)(three@0.172.0):
+    dependencies:
+      '@types/three': 0.168.0
+      three: 0.172.0
+
   magic-bytes.js@1.8.0: {}
 
   magic-string@0.25.9:
@@ -53786,6 +54036,10 @@ snapshots:
   meshline@3.3.1(three@0.168.0):
     dependencies:
       three: 0.168.0
+
+  meshline@3.3.1(three@0.172.0):
+    dependencies:
+      three: 0.172.0
 
   meshoptimizer@0.18.1: {}
 
@@ -58685,6 +58939,10 @@ snapshots:
     dependencies:
       three: 0.168.0
 
+  three-mesh-bvh@0.7.8(three@0.172.0):
+    dependencies:
+      three: 0.172.0
+
   three-stdlib@2.33.0(three@0.168.0):
     dependencies:
       '@types/draco3d': 1.4.10
@@ -58695,7 +58953,19 @@ snapshots:
       potpack: 1.0.2
       three: 0.168.0
 
+  three-stdlib@2.35.7(three@0.172.0):
+    dependencies:
+      '@types/draco3d': 1.4.10
+      '@types/offscreencanvas': 2019.7.3
+      '@types/webxr': 0.5.20
+      draco3d: 1.5.7
+      fflate: 0.6.10
+      potpack: 1.0.2
+      three: 0.172.0
+
   three@0.168.0: {}
+
+  three@0.172.0: {}
 
   throttle-debounce@3.0.1: {}
 
@@ -58890,11 +59160,25 @@ snapshots:
       troika-worker-utils: 0.49.0
       webgl-sdf-generator: 1.1.1
 
+  troika-three-text@0.52.3(three@0.172.0):
+    dependencies:
+      bidi-js: 1.0.3
+      three: 0.172.0
+      troika-three-utils: 0.52.0(three@0.172.0)
+      troika-worker-utils: 0.52.0
+      webgl-sdf-generator: 1.1.1
+
   troika-three-utils@0.49.0(three@0.168.0):
     dependencies:
       three: 0.168.0
 
+  troika-three-utils@0.52.0(three@0.172.0):
+    dependencies:
+      three: 0.172.0
+
   troika-worker-utils@0.49.0: {}
+
+  troika-worker-utils@0.52.0: {}
 
   trough@2.1.0: {}
 
@@ -59820,7 +60104,7 @@ snapshots:
     optionalDependencies:
       typescript: 5.7.2
 
-  vuepress-plugin-auto-catalog@2.0.0-rc.5(typescript@5.7.2)(vuepress-vite@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))(vuepress@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2))):
+  vuepress-plugin-auto-catalog@2.0.0-rc.5(hls.js@1.5.19)(typescript@5.7.2)(vuepress-vite@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))(vuepress@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2))):
     dependencies:
       '@vuepress/client': 2.0.0-rc.0(typescript@5.7.2)
       '@vuepress/core': 2.0.0-rc.0(typescript@5.7.2)
@@ -59828,7 +60112,7 @@ snapshots:
       '@vuepress/utils': 2.0.0-rc.0
       vue: 3.4.15(typescript@5.7.2)
       vue-router: 4.2.5(vue@3.4.15(typescript@5.7.2))
-      vuepress-plugin-components: 2.0.0-rc.5(typescript@5.7.2)(vuepress-vite@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))(vuepress@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))
+      vuepress-plugin-components: 2.0.0-rc.5(hls.js@1.5.19)(typescript@5.7.2)(vuepress-vite@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))(vuepress@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))
       vuepress-plugin-sass-palette: 2.0.0-rc.5(typescript@5.7.2)(vuepress-vite@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))(vuepress@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))
       vuepress-shared: 2.0.0-rc.5(typescript@5.7.2)(vuepress-vite@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))(vuepress@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))
     optionalDependencies:
@@ -59880,7 +60164,7 @@ snapshots:
       - supports-color
       - typescript
 
-  vuepress-plugin-components@2.0.0-rc.5(typescript@5.7.2)(vuepress-vite@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))(vuepress@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2))):
+  vuepress-plugin-components@2.0.0-rc.5(hls.js@1.5.19)(typescript@5.7.2)(vuepress-vite@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))(vuepress@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2))):
     dependencies:
       '@stackblitz/sdk': 1.9.0
       '@vuepress/client': 2.0.0-rc.0(typescript@5.7.2)
@@ -59897,6 +60181,7 @@ snapshots:
       vuepress-plugin-sass-palette: 2.0.0-rc.5(typescript@5.7.2)(vuepress-vite@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))(vuepress@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))
       vuepress-shared: 2.0.0-rc.5(typescript@5.7.2)(vuepress-vite@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))(vuepress@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))
     optionalDependencies:
+      hls.js: 1.5.19
       vuepress: 2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2))
       vuepress-vite: 2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2))
     transitivePeerDependencies:
@@ -60134,7 +60419,7 @@ snapshots:
       - supports-color
       - typescript
 
-  vuepress-theme-hope@2.0.0-rc.5(markdown-it@13.0.2)(mermaid@10.6.1)(reveal.js@5.1.0)(typescript@5.7.2)(vuepress-vite@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))(vuepress@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2))):
+  vuepress-theme-hope@2.0.0-rc.5(hls.js@1.5.19)(markdown-it@13.0.2)(mermaid@10.6.1)(reveal.js@5.1.0)(typescript@5.7.2)(vuepress-vite@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))(vuepress@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2))):
     dependencies:
       '@vuepress/cli': 2.0.0-rc.0(typescript@5.7.2)
       '@vuepress/client': 2.0.0-rc.0(typescript@5.7.2)
@@ -60156,10 +60441,10 @@ snapshots:
       gray-matter: 4.0.3
       vue: 3.4.15(typescript@5.7.2)
       vue-router: 4.2.5(vue@3.4.15(typescript@5.7.2))
-      vuepress-plugin-auto-catalog: 2.0.0-rc.5(typescript@5.7.2)(vuepress-vite@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))(vuepress@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))
+      vuepress-plugin-auto-catalog: 2.0.0-rc.5(hls.js@1.5.19)(typescript@5.7.2)(vuepress-vite@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))(vuepress@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))
       vuepress-plugin-blog2: 2.0.0-rc.5(typescript@5.7.2)(vuepress-vite@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))(vuepress@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))
       vuepress-plugin-comment2: 2.0.0-rc.5(typescript@5.7.2)(vuepress-vite@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))(vuepress@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))
-      vuepress-plugin-components: 2.0.0-rc.5(typescript@5.7.2)(vuepress-vite@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))(vuepress@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))
+      vuepress-plugin-components: 2.0.0-rc.5(hls.js@1.5.19)(typescript@5.7.2)(vuepress-vite@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))(vuepress@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))
       vuepress-plugin-copy-code2: 2.0.0-rc.5(typescript@5.7.2)(vuepress-vite@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))(vuepress@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))
       vuepress-plugin-copyright2: 2.0.0-rc.5(typescript@5.7.2)(vuepress-vite@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))(vuepress@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))
       vuepress-plugin-feed2: 2.0.0-rc.5(typescript@5.7.2)(vuepress-vite@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))(vuepress@2.0.0-rc.0(@types/node@22.10.2)(@vuepress/client@2.0.0-rc.0(typescript@5.7.2))(less@4.1.3)(sass@1.70.0)(stylus@0.59.0)(terser@5.19.2)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7(@swc/helpers@0.5.1))(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(vue@3.4.15(typescript@5.7.2)))
@@ -61130,6 +61415,13 @@ snapshots:
       '@types/react': 18.2.79
       immer: 10.1.1
       react: 18.2.0
+
+  zustand@5.0.3(@types/react@18.2.79)(immer@10.1.1)(react@18.2.0)(use-sync-external-store@1.2.2(react@18.2.0)):
+    optionalDependencies:
+      '@types/react': 18.2.79
+      immer: 10.1.1
+      react: 18.2.0
+      use-sync-external-store: 1.2.2(react@18.2.0)
 
   zwitch@1.0.5: {}
 

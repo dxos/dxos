@@ -12,10 +12,10 @@ import {
   type Message,
   type MessageImageContentBlock,
 } from '@dxos/assistant';
+import { ECHO_ATTR_TYPE } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { ECHO_ATTR_TYPE } from '@dxos/echo-schema';
 import { makeValueBag, unwrapValueBag, type ComputeEffect, type ValueBag } from '../../types';
 import { EventLogger } from '../event-logger';
 import { IMAGE_TYPENAME, type GptInput, type GptOutput, type GptService } from '../gpt';
@@ -80,7 +80,7 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
             logger.log({
               type: 'custom',
               nodeId: logger.nodeId!,
-              event: event,
+              event,
             });
             return Effect.void;
           }),
@@ -110,8 +110,8 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
         if (begin === -1 || end === -1) {
           return undefined;
         }
-        const artifactData = textContent.slice(begin + '<artifact>'.length, end).trim();
 
+        const artifactData = textContent.slice(begin + '<artifact>'.length, end).trim();
         const imageMatch = artifactData.match(/<image id="([^"]*)" prompt="([^"]*)" \/>/);
         if (imageMatch) {
           const [, id, prompt] = imageMatch;
@@ -125,6 +125,7 @@ export class EdgeGpt implements Context.Tag.Service<GptService> {
         return artifactData;
       });
 
+      // TODO(burdon): Parse COT on the server (message ontology).
       return makeValueBag<GptOutput>({
         messages: outputWithAPrompt,
         tokenCount: 0,

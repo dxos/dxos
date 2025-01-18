@@ -53,8 +53,8 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@react-three/drei": "^9.112.0",
-    "@react-three/fiber": "^8.17.7",
+    "@react-three/drei": "^9.121.2",
+    "@react-three/fiber": "^8.17.12",
     "@types/d3": "^7.4.3",
     "@types/geojson": "^7946.0.14",
     "@types/react": "~18.2.0",
@@ -68,7 +68,7 @@
     "leva": "^0.9.35",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
-    "three": "^0.168.0"
+    "three": "^0.172.0"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",

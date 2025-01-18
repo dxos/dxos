@@ -5,25 +5,33 @@
 import '@dxos-theme';
 
 import type { Meta, StoryObj } from '@storybook/react';
-import React, { useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 
-import { Canvas, Grid, useProjection, useWheel } from '@dxos/react-ui-canvas';
+import { Canvas, type CanvasController, Grid, useProjection, useWheel } from '@dxos/react-ui-canvas';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { useRope } from '../../hooks';
 
 const Render = () => {
+  const canvasRef = useRef<CanvasController>(null);
+  useEffect(() => {
+    // TODO(burdon): Pan up.
+    // void canvasRef.current?.setProjection({ scale: 1, offset: { x: -128, y: -128 } });
+  }, []);
+
   return (
-    <Canvas>
+    <Canvas ref={canvasRef}>
       <Grid id={'test'} showAxes />
       <Rope />
     </Canvas>
   );
 };
 
+// TODO(burdon): Create <spring /> elements with common simulation.
 const Rope = () => {
   const { styles } = useProjection();
-  useWheel({ zoom: false });
+  useWheel();
+
   const g = useRef<SVGGElement>(null);
   const elements = useMemo(() => {
     return [
@@ -43,13 +51,14 @@ const Rope = () => {
       },
     ];
   }, []);
-  useRope(g.current, elements);
+  useRope(g.current, elements, { nodes: 7, ropeLength: 200, linkStrength: 0.1, gravity: 0.95, curve: true });
 
-  // TODO(burdon): Create <spring /> elements with common simulation.
   return (
-    <svg style={styles} className='w-full h-full overflow-visible'>
-      <g ref={g} />
-    </svg>
+    <div className='absolute' style={styles}>
+      <svg className='absolute overflow-visible'>
+        <g ref={g} />
+      </svg>
+    </div>
   );
 };
 

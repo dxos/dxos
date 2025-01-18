@@ -35,7 +35,7 @@ const RectangleShapeWithoutRef = S.omit<any, any, ['object']>('object')(Rectangl
 type RenderProps = EditorRootProps &
   PropsWithChildren<{
     init?: boolean;
-    sidebar?: 'json' | 'selected' | 'state-machine';
+    sidebar?: 'json' | 'selected';
     computeGraph?: CanvasGraphModel;
   }>;
 
@@ -95,12 +95,6 @@ const Render = ({ id = 'test', init, sidebar, children, ...props }: RenderProps)
               {JSON.stringify({ graph: graph?.graph }, null, 2)}
             </SyntaxHighlighter>
           )}
-
-          {sidebar === 'state-machine' && (
-            <SyntaxHighlighter language='json' classNames='text-xs'>
-              {JSON.stringify({ selected }, null, 2)}
-            </SyntaxHighlighter>
-          )}
         </Container>
       )}
     </div>
@@ -149,7 +143,7 @@ type Story = StoryObj<RenderProps & { spec?: TypeSpec[]; registerSchema?: boolea
 
 export const Default: Story = {
   args: {
-    // sidebar: 'json',
+    sidebar: 'selected',
     init: true,
     spec: [{ type: Testing.OrgType, count: 1 }],
   },

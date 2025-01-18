@@ -16,7 +16,7 @@ import {
   shapeAttrs,
   styles,
 } from '../components';
-import { createPathThroughPoints, createSplineThroughPoints } from '../layout';
+import { createPathThroughPoints2, createCurveThroughPoints } from '../layout';
 import { type PathShape } from '../types';
 
 const createUrl = (ref: string | undefined) => (ref ? `url(#${MARKER_PREFIX}-${ref})` : undefined);
@@ -26,7 +26,7 @@ export type CreatePathProps = Omit<PathShape, 'type' | 'path'> & { points: Point
 export const createPath = ({ id, points, ...rest }: CreatePathProps): PathShape => ({
   id,
   type: 'path',
-  path: points.length === 2 ? createPathThroughPoints(points) : createSplineThroughPoints(points),
+  path: points.length === 2 ? createPathThroughPoints2(points) : createCurveThroughPoints(points),
   ...rest,
 });
 
