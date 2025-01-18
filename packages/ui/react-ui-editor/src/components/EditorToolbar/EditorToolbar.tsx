@@ -6,7 +6,7 @@ import { useSignalEffect } from '@preact/signals-react';
 import React, { useCallback, useState } from 'react';
 
 import { Graph, type NodeArg, type Node } from '@dxos/app-graph';
-import { Toolbar, type ToolbarItem, type ToolbarProps, type ToolbarActionGroup } from '@dxos/react-ui-menu';
+import { Toolbar, type MenuItem, type ToolbarProps, type MenuItemGroup } from '@dxos/react-ui-menu';
 
 import { createBlocks } from './blocks';
 import { createComment } from './comment';
@@ -90,9 +90,9 @@ const useEditorToolbarActionGraph = ({ onAction, ...props }: EditorToolbarProps)
   });
 
   const resolveGroupItems = useCallback(
-    (sourceNode: ToolbarActionGroup = graph.root as ToolbarActionGroup) => {
+    (sourceNode: MenuItemGroup = graph.root as MenuItemGroup) => {
       if (graph) {
-        return (graph.nodes(sourceNode, { filter: (n): n is any => true }) || null) as ToolbarItem[] | null;
+        return (graph.nodes(sourceNode, { filter: (n): n is any => true }) || null) as MenuItem[] | null;
       } else {
         return null;
       }

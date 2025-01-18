@@ -8,8 +8,8 @@ import { ACTION_GROUP_TYPE, ACTION_TYPE, actionGroupSymbol } from '@dxos/app-gra
 import { create, type ReactiveObject } from '@dxos/live-object';
 import { type Label, type ThemedClassName } from '@dxos/react-ui';
 import {
-  type ToolbarSeparatorNode,
-  type ToolbarActionGroup,
+  type MenuSeparator,
+  type MenuItemGroup,
   type ToolbarActionGroupProperties,
   type MenuActionProperties,
 } from '@dxos/react-ui-menu';
@@ -41,7 +41,7 @@ export type EditorToolbarActionGraphProps = {
 
 export type EditorToolbarProps = ThemedClassName<EditorToolbarActionGraphProps & EditorToolbarFeatureFlags>;
 
-export type EditorToolbarItem = EditorAction | ToolbarActionGroup | ToolbarSeparatorNode;
+export type EditorToolbarItem = EditorAction | MenuItemGroup | MenuSeparator;
 
 const noop = () => {};
 
@@ -76,14 +76,14 @@ export const createEditorActionGroup = (
       icon,
     } as ToolbarActionGroupProperties,
     data: actionGroupSymbol,
-  }) satisfies ToolbarActionGroup;
+  }) satisfies MenuItemGroup;
 
 export const editorToolbarGap = {
   id: 'gap',
   type: '@dxos/react-ui-toolbar/separator',
   properties: { variant: 'gap' },
   data: undefined as never,
-} satisfies ToolbarSeparatorNode;
+} satisfies MenuSeparator;
 
 export const editorToolbarSearch = createEditorAction({ type: 'search' }, 'ph--magnifying-glass--regular');
 
