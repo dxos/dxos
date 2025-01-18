@@ -32,10 +32,10 @@ const ToolbarToggleGroupItem = ({ action }: { action: MenuAction }) => {
   );
 };
 
-export const ToolbarToggleGroup = ({ actionGroup }: ToolbarActionGroupProps) => {
+export const ToolbarToggleGroup = ({ group }: ToolbarActionGroupProps) => {
   const { resolveGroupItems } = useToolbar();
-  const items = useMemo(() => resolveGroupItems(actionGroup), [resolveGroupItems, actionGroup]);
-  const { selectCardinality, value } = actionGroup.properties;
+  const items = useMemo(() => resolveGroupItems(group), [resolveGroupItems, group]);
+  const { selectCardinality, value } = group.properties;
   return Array.isArray(items) ? (
     // TODO(thure): The type here is difficult to manage, what do?
     // @ts-ignore

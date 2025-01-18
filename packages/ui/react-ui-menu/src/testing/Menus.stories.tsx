@@ -11,7 +11,7 @@ import { IconButton } from '@dxos/react-ui';
 import { withTheme, withLayout, withSignals } from '@dxos/storybook-utils';
 
 import { createActions, createNestedActionGraph, useMutateActions } from './index';
-import { Toolbar as NaturalToolbar, DropdownMenu as NaturalDropdownMenu } from '../components';
+import { Toolbar as NaturalToolbar, DropdownMenu as NaturalDropdownMenu, type ToolbarProps } from '../components';
 import { type MenuAction } from '../defs';
 import translations from '../translations';
 
@@ -33,7 +33,7 @@ export const DropdownMenu = {
   render: () => {
     useMutateActions(menuActions);
     return (
-      <NaturalDropdownMenu.Root actions={menuActions} onAction={handleAction}>
+      <NaturalDropdownMenu.Root items={menuActions} onAction={handleAction}>
         <NaturalDropdownMenu.Trigger asChild>
           <IconButton icon='ph--list-checks--regular' size={5} label='Options' />
         </NaturalDropdownMenu.Trigger>
@@ -44,6 +44,6 @@ export const DropdownMenu = {
 
 export const Toolbar = {
   render: () => {
-    return <NaturalToolbar onAction={handleAction} {...nestedMenuActions} />;
+    return <NaturalToolbar onAction={handleAction as ToolbarProps['onAction']} {...nestedMenuActions} />;
   },
 };

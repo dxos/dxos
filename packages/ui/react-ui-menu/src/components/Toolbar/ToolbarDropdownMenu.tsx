@@ -8,7 +8,7 @@ import { Toolbar as NaturalToolbar } from '@dxos/react-ui';
 
 import { useToolbar } from './ToolbarContext';
 import { type ToolbarActionGroupProps } from './defs';
-import { type MenuAction } from '../../defs';
+import { type MenuAction, type MenuItem } from '../../defs';
 import { ActionLabel } from '../ActionLabel';
 import { DropdownMenu } from '../DropdownMenu';
 
@@ -18,27 +18,30 @@ const triggerProps = {
 };
 
 export const ToolbarDropdownMenuImpl = ({
-  actionGroup,
-  menuActions,
-}: Pick<ToolbarActionGroupProps, 'actionGroup'> & { menuActions: MenuAction[] }) => {
-  const { icon, iconOnly = true, disabled, testId } = actionGroup.properties;
+  group,
+  items,
+}: Pick<ToolbarActionGroupProps, 'group'> & { items: MenuItem[] }) => {
+  const { icon, iconOnly = true, disabled, testId } = group.properties;
   const suppressNextTooltip = useRef(false);
   const { onAction, iconSize } = useToolbar();
 
+  // TODO(thure): Handle other types of items.
+  const menuActions = items as MenuAction[];
+
   return (
-    <DropdownMenu.Root actions={menuActions} onAction={onAction} suppressNextTooltip={suppressNextTooltip}>
+    <DropdownMenu.Root items={menuActions} onAction={onAction} suppressNextTooltip={suppressNextTooltip}>
       <DropdownMenu.Trigger asChild>
         <NaturalToolbar.IconButton
           {...triggerProps}
           iconOnly={iconOnly}
           disabled={disabled}
           icon={
-            ((actionGroup.properties as any).applyActiveIcon &&
+            ((group.properties as any).applyActiveIcon &&
               menuActions.find((action) => !!action.properties.checked)?.properties.icon) ||
             icon
           }
           size={iconSize}
-          label={<ActionLabel action={actionGroup} />}
+          label={<ActionLabel action={group} />}
           {...(testId && { 'data-testid': testId })}
           suppressNextTooltip={suppressNextTooltip}
         />
@@ -48,10 +51,8 @@ export const ToolbarDropdownMenuImpl = ({
 };
 
 // TODO(thure): Refactor to use actions getter callback (which we realize now should be async).
-export const ToolbarDropdownMenu = ({ actionGroup }: ToolbarActionGroupProps) => {
+export const ToolbarDropdownMenu = ({ group }: ToolbarActionGroupProps) => {
   const { resolveGroupItems } = useToolbar();
-  const items = useMemo(() => resolveGroupItems(actionGroup), [resolveGroupItems, actionGroup]);
-  return Array.isArray(items) ? (
-    <ToolbarDropdownMenuImpl actionGroup={actionGroup} menuActions={items as MenuAction[]} />
-  ) : null;
+  const items = useMemo(() => resolveGroupItems(group), [resolveGroupItems, group]);
+  return Array.isArray(items) ? <ToolbarDropdownMenuImpl group={group} items={items} /> : null;
 };

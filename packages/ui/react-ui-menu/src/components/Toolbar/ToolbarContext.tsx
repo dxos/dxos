@@ -4,7 +4,7 @@
 
 import { createContext, useContext } from 'react';
 
-import { type MenuContextValue } from './defs';
+import { type MenuContextValue } from '../../defs';
 
 export const ToolbarContext = createContext<MenuContextValue>({
   iconSize: 5,

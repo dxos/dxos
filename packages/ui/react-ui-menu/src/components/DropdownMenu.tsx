@@ -8,25 +8,26 @@ import React, { type MouseEvent, type MutableRefObject, type PropsWithChildren, 
 import { DropdownMenu as NaturalDropdownMenu, Icon } from '@dxos/react-ui';
 
 import { ActionLabel } from './ActionLabel';
-import { type MenuAction, type MenuProps } from '../defs';
+import { type MenuAction, type MenuActionHandler, type MenuItem } from '../defs';
 
-export type DropdownMenuProps = MenuProps &
-  PropsWithChildren<
-    Partial<{
-      defaultMenuOpen: boolean;
-      menuOpen: boolean;
-      onMenuOpenChange: (nextOpen: boolean) => void;
-      suppressNextTooltip?: MutableRefObject<boolean>;
-    }>
-  >;
+export type DropdownMenuProps = PropsWithChildren<
+  { items: MenuItem[]; onAction: MenuActionHandler<any> } & Partial<{
+    defaultMenuOpen: boolean;
+    menuOpen: boolean;
+    onMenuOpenChange: (nextOpen: boolean) => void;
+    suppressNextTooltip?: MutableRefObject<boolean>;
+  }>
+>;
 
 const DropdownMenuItem = ({
-  action,
+  item,
   onClick,
 }: {
-  action: MenuAction;
+  item: MenuItem;
   onClick: (action: MenuAction, event: MouseEvent) => void;
 }) => {
+  // TODO(thure): handle other items.
+  const action = item as MenuAction;
   const handleClick = useCallback((event: MouseEvent) => onClick(action, event), [action, onClick]);
   return (
     <NaturalDropdownMenu.Item
@@ -43,7 +44,7 @@ const DropdownMenuItem = ({
 
 const DropdownMenuRoot = ({
   defaultMenuOpen,
-  actions,
+  items,
   menuOpen,
   suppressNextTooltip,
   onMenuOpenChange,
@@ -88,7 +89,7 @@ const DropdownMenuRoot = ({
       <NaturalDropdownMenu.Portal>
         <NaturalDropdownMenu.Content>
           <NaturalDropdownMenu.Viewport>
-            {actions?.map((action) => <DropdownMenuItem key={action.id} action={action} onClick={handleActionClick} />)}
+            {items?.map((item) => <DropdownMenuItem key={item.id} item={item} onClick={handleActionClick} />)}
           </NaturalDropdownMenu.Viewport>
           <NaturalDropdownMenu.Arrow />
         </NaturalDropdownMenu.Content>

@@ -9,8 +9,8 @@ import { Toolbar as NaturalToolbar } from '@dxos/react-ui';
 import { ToolbarContext, useToolbar } from './ToolbarContext';
 import { ToolbarDropdownMenu } from './ToolbarDropdownMenu';
 import { ToolbarToggleGroup } from './ToolbarToggleGroup';
-import { isMenuGroup, isSeparator, type ToolbarProps } from './defs';
-import { type MenuAction } from '../../defs';
+import { type ToolbarProps } from './defs';
+import { type MenuAction, type MenuItem, isMenuGroup, isSeparator } from '../../defs';
 import { ActionLabel } from '../ActionLabel';
 
 const ToolbarItem = ({ action }: { action: MenuAction }) => {
@@ -37,7 +37,6 @@ const ToolbarItem = ({ action }: { action: MenuAction }) => {
 const resolveGroupItemsNoop = () => null;
 
 export const Toolbar = ({
-  actions,
   onAction = () => {},
   iconSize = 5,
   resolveGroupItems = resolveGroupItemsNoop,
@@ -47,18 +46,18 @@ export const Toolbar = ({
     () => ({ resolveGroupItems, onAction, iconSize }),
     [resolveGroupItems, onAction, iconSize],
   );
-  const items = useMemo(() => actions || resolveGroupItems(), [actions, resolveGroupItems]);
+  const items = useMemo(() => resolveGroupItems(), [resolveGroupItems]);
   return (
     <ToolbarContext.Provider value={contextValue}>
       <NaturalToolbar.Root {...props}>
-        {items?.map((item, i) =>
+        {items?.map((item: MenuItem, i: number) =>
           isSeparator(item) ? (
             <NaturalToolbar.Separator key={i} variant={item.properties.variant} />
           ) : isMenuGroup(item) ? (
             item.properties.variant === 'dropdownMenu' ? (
-              <ToolbarDropdownMenu key={item.id} actionGroup={item} />
+              <ToolbarDropdownMenu key={item.id} group={item} />
             ) : (
-              <ToolbarToggleGroup key={item.id} actionGroup={item} />
+              <ToolbarToggleGroup key={item.id} group={item} />
             )
           ) : (
             <ToolbarItem key={item.id} action={item as MenuAction} />
