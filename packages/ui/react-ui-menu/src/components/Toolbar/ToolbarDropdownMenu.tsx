@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useSignalEffect } from '@preact/signals-react';
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 
 import { Toolbar as NaturalToolbar } from '@dxos/react-ui';
 
@@ -22,15 +21,11 @@ export const ToolbarDropdownMenu = ({ group }: Pick<ToolbarActionGroupProps, 'gr
   const { iconOnly = true, disabled, testId } = group.properties;
   const suppressNextTooltip = useRef(false);
   const { iconSize, resolveGroupItems } = useMenu();
-  const [icon, setIcon] = useState<string>(group.properties.icon);
-  useSignalEffect(() => {
-    const items = resolveGroupItems?.(group) as MenuAction[];
-    setIcon(
-      ((group.properties as any).applyActiveIcon &&
-        items?.find((item) => !!item.properties.checked)?.properties.icon) ||
-        group.properties.icon,
-    );
-  });
+  const icon =
+    ((group.properties as any).applyActiveIcon &&
+      (resolveGroupItems?.(group) as MenuAction[] | undefined)?.find((item) => !!item.properties.checked)?.properties
+        .icon) ||
+    group.properties.icon;
   return (
     <DropdownMenu.Root group={group} suppressNextTooltip={suppressNextTooltip}>
       <DropdownMenu.Trigger asChild>
