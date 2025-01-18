@@ -64,7 +64,7 @@ export const audioShape: ShapeDef<AudioShape> = {
 };
 
 // TODO(burdon): Factor out; reconcile with calls API.
-const useAudioStream = (active: boolean): (() => number) => {
+export const useAudioStream = (active?: boolean): (() => number) => {
   const audioContextRef = useRef<AudioContext>();
   const analyserRef = useRef<AnalyserNode>();
   const dataArrayRef = useRef<Uint8Array>();
