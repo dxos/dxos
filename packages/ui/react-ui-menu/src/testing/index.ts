@@ -9,8 +9,7 @@ import { create } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { type DeepWriteable } from '@dxos/util';
 
-import { type ToolbarItem } from '../components';
-import { type MenuAction } from '../defs';
+import { type MenuAction, type MenuItemGroup, type MenuItem } from '../defs';
 
 export type CreateActionsParams = Partial<{
   type?: typeof ACTION_TYPE | typeof ACTION_GROUP_TYPE;
@@ -67,10 +66,15 @@ export const createNestedActionGraph = (groupParams?: CreateActionsParams, param
     // @ts-ignore
     graph._addNodes([group as NodeArg<any>, ...(actions as NodeArg<any>[])]);
     // @ts-ignore
-    graph._addEdges(actions.map((action) => ({ source: group.id, target: action.id })));
+    graph._addEdges([
+      { source: 'root', target: group.id },
+      ...actions.map((action) => ({ source: group.id, target: action.id })),
+    ]);
     void graph.expand(group);
   });
-  return { graph, topLevelActions: actionGroups as ToolbarItem[] };
+  const resolveGroupItems = (groupNode?: MenuItemGroup) =>
+    (graph.actions(groupNode ?? graph.root) || null) as MenuItem[] | null;
+  return { resolveGroupItems };
 };
 
 export const mutateActionsOnInterval = (actions: Action[]) => {

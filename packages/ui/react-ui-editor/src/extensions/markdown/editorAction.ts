@@ -4,6 +4,9 @@
 
 import { type EditorView } from '@codemirror/view';
 
+import { type Action } from '@dxos/app-graph';
+import { type MenuActionProperties } from '@dxos/react-ui-menu';
+
 import {
   Inline,
   List,
@@ -24,7 +27,7 @@ import {
 } from './formatting';
 import { createComment } from '../comments';
 
-export type ActionType =
+export type PayloadType =
   | 'view-mode'
   | 'blockquote'
   | 'strong'
@@ -44,18 +47,20 @@ export type ActionType =
   | 'strikethrough'
   | 'table';
 
-export type Action = {
-  type: ActionType;
+export type EditorActionPayload = {
+  type: PayloadType;
   data?: any;
 };
 
-export type ActionHandler = (view: EditorView, action: Action) => void;
+export type EditorAction = Action<MenuActionProperties & EditorActionPayload>;
 
-export const processAction: ActionHandler = (view, action) => {
+export type EditorPayloadHandler = (view: EditorView, payload: EditorActionPayload) => void;
+
+export const processEditorPayload: EditorPayloadHandler = (view, { type, data }) => {
   let inlineType, listType;
-  switch (action.type) {
+  switch (type) {
     case 'heading':
-      setHeading(parseInt(action.data))(view);
+      setHeading(parseInt(data))(view);
       break;
 
     case 'strong':
@@ -63,42 +68,39 @@ export const processAction: ActionHandler = (view, action) => {
     case 'strikethrough':
     case 'code':
       inlineType =
-        action.type === 'strong'
+        type === 'strong'
           ? Inline.Strong
-          : action.type === 'emphasis'
+          : type === 'emphasis'
             ? Inline.Emphasis
-            : action.type === 'strikethrough'
+            : type === 'strikethrough'
               ? Inline.Strikethrough
               : Inline.Code;
-      (typeof action.data === 'boolean' ? setStyle(inlineType, action.data) : toggleStyle(inlineType))(view);
+      (typeof data === 'boolean' ? setStyle(inlineType, data) : toggleStyle(inlineType))(view);
       break;
 
     case 'list-ordered':
     case 'list-bullet':
     case 'list-task':
-      listType =
-        action.type === 'list-ordered' ? List.Ordered : action.type === 'list-bullet' ? List.Bullet : List.Task;
-      (action.data === false ? removeList(listType) : action.data === true ? addList(listType) : toggleList(listType))(
-        view,
-      );
+      listType = type === 'list-ordered' ? List.Ordered : type === 'list-bullet' ? List.Bullet : List.Task;
+      (data === false ? removeList(listType) : data === true ? addList(listType) : toggleList(listType))(view);
       break;
 
     case 'blockquote':
-      (action.data === false ? removeBlockquote : action.data === true ? addBlockquote : toggleBlockquote)(view);
+      (data === false ? removeBlockquote : data === true ? addBlockquote : toggleBlockquote)(view);
       break;
     case 'codeblock':
-      (action.data === false ? removeCodeblock : addCodeblock)(view);
+      (data === false ? removeCodeblock : addCodeblock)(view);
       break;
     case 'table':
       insertTable(view);
       break;
 
     case 'link':
-      (action.data === false ? removeLink : addLink())(view);
+      (data === false ? removeLink : addLink())(view);
       break;
 
     case 'image':
-      addLink({ url: action.data, image: true })(view);
+      addLink({ url: data, image: true })(view);
       break;
 
     case 'comment':

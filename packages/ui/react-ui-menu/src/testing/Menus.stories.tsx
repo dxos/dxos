@@ -3,16 +3,15 @@
 //
 
 import '@dxos-theme';
-
-import React from 'react';
+import React, { useCallback } from 'react';
 
 import { faker } from '@dxos/random';
 import { IconButton } from '@dxos/react-ui';
-import { withTheme, withLayout, withSignals } from '@dxos/storybook-utils';
+import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
 import { createActions, createNestedActionGraph, useMutateActions } from './index';
-import { Toolbar as NaturalToolbar, DropdownMenu as NaturalDropdownMenu } from '../components';
-import { type MenuAction } from '../defs';
+import { DropdownMenu as NaturalDropdownMenu, Toolbar as NaturalToolbar, MenuProvider } from '../components';
+import { type MenuAction, type MenuActionHandler } from '../defs';
 import translations from '../translations';
 
 faker.seed(1234);
@@ -32,12 +31,15 @@ const handleAction = (action: MenuAction) => console.log('[on action]', action);
 export const DropdownMenu = {
   render: () => {
     useMutateActions(menuActions);
+    const resolveGroupItems = useCallback(() => menuActions, []);
     return (
-      <NaturalDropdownMenu.Root actions={menuActions} onAction={handleAction}>
-        <NaturalDropdownMenu.Trigger asChild>
-          <IconButton icon='ph--list-checks--regular' size={5} label='Options' />
-        </NaturalDropdownMenu.Trigger>
-      </NaturalDropdownMenu.Root>
+      <MenuProvider resolveGroupItems={resolveGroupItems} onAction={handleAction as MenuActionHandler}>
+        <NaturalDropdownMenu.Root>
+          <NaturalDropdownMenu.Trigger asChild>
+            <IconButton icon='ph--list-checks--regular' size={5} label='Options' />
+          </NaturalDropdownMenu.Trigger>
+        </NaturalDropdownMenu.Root>
+      </MenuProvider>
     );
   },
 };
@@ -45,11 +47,9 @@ export const DropdownMenu = {
 export const Toolbar = {
   render: () => {
     return (
-      <NaturalToolbar
-        actions={nestedMenuActions.topLevelActions}
-        onAction={handleAction}
-        graph={nestedMenuActions.graph}
-      />
+      <MenuProvider onAction={handleAction as MenuActionHandler} {...nestedMenuActions}>
+        <NaturalToolbar />
+      </MenuProvider>
     );
   },
 };

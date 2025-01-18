@@ -2,36 +2,44 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useCallback } from 'react';
 
 import { Toolbar as NaturalToolbar } from '@dxos/react-ui';
 
 import type { ToolbarActionGroupProps } from './defs';
 import { type MenuAction } from '../../defs';
 import { ActionLabel } from '../ActionLabel';
+import { useMenu, useMenuItems } from '../MenuContext';
 
 const ToolbarToggleGroupItem = ({ action }: { action: MenuAction }) => {
-  const { icon, iconOnly, disabled } = action.properties;
+  const { iconSize, onAction } = useMenu();
+  const { icon, iconOnly = true, disabled } = action.properties;
+  const handleClick = useCallback(() => {
+    onAction?.(action);
+  }, [action, onAction]);
   return (
     <NaturalToolbar.ToggleGroupIconItem
       key={action.id}
       value={action.id}
       icon={icon}
+      size={iconSize}
       iconOnly={iconOnly}
       disabled={disabled}
       label={<ActionLabel action={action} />}
+      onClick={handleClick}
+      variant='ghost'
     />
   );
 };
 
-export const ToolbarToggleGroup = ({ actionGroup, graph }: ToolbarActionGroupProps) => {
-  const menuActions = useMemo(() => (graph ? (graph.actions(actionGroup) as MenuAction[]) : []), [actionGroup, graph]);
-  const { selectCardinality, value } = actionGroup.properties;
+export const ToolbarToggleGroup = ({ group, items: propsItems }: ToolbarActionGroupProps) => {
+  const items = useMenuItems(group, propsItems);
+  const { selectCardinality, value } = group.properties;
   return (
-    // TODO(thure): This is extremely difficult to manage, what do?
+    // TODO(thure): The type here is difficult to manage, what do?
     // @ts-ignore
     <NaturalToolbar.ToggleGroup type={selectCardinality} value={value}>
-      {menuActions.map((action) => (
+      {(items as MenuAction[]).map((action) => (
         <ToolbarToggleGroupItem key={action.id} action={action} />
       ))}
     </NaturalToolbar.ToggleGroup>
