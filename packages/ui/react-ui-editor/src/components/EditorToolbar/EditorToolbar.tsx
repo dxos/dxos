@@ -13,13 +13,23 @@ import { createComment } from './comment';
 import { createFormatting } from './formatting';
 import { createHeadings } from './headings';
 import { createLists } from './lists';
-import { edgesArrayToRecord, editorToolbarGap, type EditorToolbarProps, editorToolbarSearch } from './util';
+import {
+  edgesArrayToRecord,
+  type EditorToolbarFeatureFlags,
+  editorToolbarGap,
+  type EditorToolbarProps,
+  editorToolbarSearch,
+  type EditorToolbarState,
+} from './util';
 import { createViewMode } from './viewMode';
 
 const createToolbar = ({
   state,
   ...features
-}: EditorToolbarProps): { nodes: NodeArg<any>[]; edges: { source: string; target: string }[] } => {
+}: EditorToolbarFeatureFlags & { state: EditorToolbarState }): {
+  nodes: NodeArg<any>[];
+  edges: { source: string; target: string }[];
+} => {
   const nodes = [];
   const edges = [];
   if (features.headings ?? true) {
@@ -64,7 +74,7 @@ const createToolbar = ({
 //
 // Root
 //
-const useEditorToolbarActionGraph = (props: EditorToolbarProps) => {
+const useEditorToolbarActionGraph = ({ onAction, ...props }: EditorToolbarProps) => {
   const initialToolbar = createToolbar(props);
 
   const [graph] = useState(
@@ -81,9 +91,8 @@ const useEditorToolbarActionGraph = (props: EditorToolbarProps) => {
 
   const resolveGroupItems = useCallback(
     (sourceNode: ToolbarActionGroup = graph.root as ToolbarActionGroup) => {
-      console.log('[resolve group items]', graph.actions(sourceNode));
       if (graph) {
-        return (graph.actions(sourceNode) || null) as ToolbarItem[] | null;
+        return (graph.nodes(sourceNode, { filter: (n): n is any => true }) || null) as ToolbarItem[] | null;
       } else {
         return null;
       }
@@ -91,10 +100,10 @@ const useEditorToolbarActionGraph = (props: EditorToolbarProps) => {
     [graph],
   );
 
-  return { resolveGroupItems };
+  return { resolveGroupItems, onAction: onAction as ToolbarProps['onAction'] };
 };
 
 export const EditorToolbar = ({ classNames, ...props }: EditorToolbarProps) => {
   const toolbarProps = useEditorToolbarActionGraph(props);
-  return <Toolbar {...toolbarProps} onAction={props.onAction as ToolbarProps['onAction']} classNames={classNames} />;
+  return <Toolbar {...toolbarProps} classNames={classNames} />;
 };

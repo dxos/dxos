@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useMemo } from 'react';
+
 import { ACTION_GROUP_TYPE, ACTION_TYPE, actionGroupSymbol } from '@dxos/app-graph';
 import { create, type ReactiveObject } from '@dxos/live-object';
 import { type Label, type ThemedClassName } from '@dxos/react-ui';
@@ -19,7 +21,7 @@ export type EditorToolbarState = Formatting &
   Partial<{ comment: boolean; viewMode: EditorViewMode; selection: boolean }>;
 
 export const useEditorToolbarState = (initialState: Partial<EditorToolbarState> = {}) => {
-  return create<EditorToolbarState>(initialState);
+  return useMemo(() => create<EditorToolbarState>(initialState), []);
 };
 
 export type EditorToolbarFeatureFlags = Partial<{

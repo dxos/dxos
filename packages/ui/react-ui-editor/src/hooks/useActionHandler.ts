@@ -8,6 +8,5 @@ import { useCallback } from 'react';
 import { type EditorAction, processEditorPayload } from '../extensions';
 
 export const useActionHandler = (view?: EditorView | null) => {
-  console.log('[use action handler]', view);
   return useCallback((action: EditorAction) => view && processEditorPayload(view, action.properties), [view]);
 };
