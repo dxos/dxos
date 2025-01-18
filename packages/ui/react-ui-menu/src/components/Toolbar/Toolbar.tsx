@@ -9,7 +9,7 @@ import { Toolbar as NaturalToolbar } from '@dxos/react-ui';
 import { ToolbarContext, useToolbar } from './ToolbarContext';
 import { ToolbarDropdownMenu } from './ToolbarDropdownMenu';
 import { ToolbarToggleGroup } from './ToolbarToggleGroup';
-import { isMenu, isSeparator, type ToolbarProps } from './defs';
+import { isMenuGroup, isSeparator, type ToolbarProps } from './defs';
 import { type MenuAction } from '../../defs';
 import { ActionLabel } from '../ActionLabel';
 
@@ -54,7 +54,7 @@ export const Toolbar = ({
         {items?.map((item, i) =>
           isSeparator(item) ? (
             <NaturalToolbar.Separator key={i} variant={item.properties.variant} />
-          ) : isMenu(item) ? (
+          ) : isMenuGroup(item) ? (
             item.properties.variant === 'dropdownMenu' ? (
               <ToolbarDropdownMenu key={item.id} actionGroup={item} />
             ) : (

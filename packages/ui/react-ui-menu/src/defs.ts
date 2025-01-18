@@ -17,7 +17,7 @@ export type MenuActionProperties = {
 
 export type MenuAction = Action<MenuActionProperties>;
 
-export type MenuProps<A extends Node = Action<MenuActionProperties>, P extends Node = A> = {
-  actions?: A[];
-  onAction?: (action: P) => void;
+export type MenuProps<I extends Node = Action<MenuActionProperties>, A extends Node = I> = {
+  items?: I[];
+  onAction?: (action: A) => void;
 };
