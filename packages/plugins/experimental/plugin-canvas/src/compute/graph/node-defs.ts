@@ -21,7 +21,7 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './types';
+import { DEFAULT_INPUT, DEFAULT_OUTPUT, DefaultInput, DefaultOutput, VoidInput, VoidOutput } from './types';
 // TODO(burdon): Push down defs to here.
 import { type ComputeShape, type ConstantShape } from '../shapes';
 
@@ -100,34 +100,33 @@ export const ListInput = S.Struct({ [DEFAULT_INPUT]: ObjectId });
 export const ListOutput = S.Struct({ id: ObjectId, items: S.Array(Message) });
 
 export const AppendInput = S.Struct({ id: ObjectId, items: S.Array(Message) });
-
 export const DatabaseOutput = S.Struct({ [DEFAULT_OUTPUT]: S.Array(LLMTool) });
-
 export const TextToImageOutput = S.Struct({ [DEFAULT_OUTPUT]: S.Array(LLMTool) });
 
+// TODO(burdon): Create wrapper functions.
 const nodeDefs: Record<NodeType, Executable> = {
   // Controls.
   ['switch' as const]: defineComputeNode({
-    input: S.Struct({}),
+    input: VoidInput,
     output: S.Struct({ [DEFAULT_OUTPUT]: S.Boolean }),
   }),
   ['text' as const]: defineComputeNode({
-    input: S.Struct({}),
+    input: VoidInput,
     output: S.Struct({ [DEFAULT_OUTPUT]: S.String }),
   }),
   ['audio' as const]: defineComputeNode({
-    input: S.Struct({}),
-    output: S.Struct({ [DEFAULT_OUTPUT]: S.String }),
-  }),
-  ['scope' as const]: defineComputeNode({
-    input: S.Struct({}),
+    input: VoidInput,
     output: S.Struct({ [DEFAULT_OUTPUT]: S.String }),
   }),
 
   // Views.
   ['beacon' as const]: defineComputeNode({
     input: S.Struct({ [DEFAULT_INPUT]: S.Boolean }),
-    output: S.Struct({}),
+    output: VoidOutput,
+  }),
+  ['scope' as const]: defineComputeNode({
+    input: S.Struct({ [DEFAULT_INPUT]: S.String }),
+    output: VoidOutput,
   }),
 
   // Boolean ops.
@@ -148,8 +147,7 @@ const nodeDefs: Record<NodeType, Executable> = {
   }),
 
   // Logic ops.
-  // TODO(dmaretskyi): This is wrong.
-  //                   The other output should get the not-executed signal.
+  // TODO(dmaretskyi): This is wrong. The other output should get the not-executed signal.
   ['if' as const]: defineComputeNode({
     input: S.Struct({ condition: S.Boolean, value: S.Any }),
     output: S.Struct({ true: S.optional(S.Any), false: S.optional(S.Any) }),
@@ -169,23 +167,23 @@ const nodeDefs: Record<NodeType, Executable> = {
 
   // Generic.
   ['constant' as const]: defineComputeNode({
-    input: S.Struct({}),
-    output: S.Struct({ [DEFAULT_OUTPUT]: S.Any }),
+    input: VoidInput,
+    output: DefaultOutput,
     exec: (_inputs, node) => Effect.succeed(makeValueBag({ [DEFAULT_OUTPUT]: node!.constant })),
   }),
   ['view' as const]: defineComputeNode({
-    input: S.Struct({ [DEFAULT_INPUT]: S.Any }),
-    output: S.Struct({ [DEFAULT_OUTPUT]: S.Any }),
+    input: DefaultInput,
+    output: DefaultOutput,
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: input }) => Effect.succeed({ [DEFAULT_OUTPUT]: input })),
   }),
 
   // TODO(dmaretskyi): Consider moving gpt out of conductor.
   ['chat' as const]: defineComputeNode({
-    input: S.Struct({}),
+    input: VoidInput,
     output: S.Struct({ [DEFAULT_OUTPUT]: S.String }),
   }),
   ['thread' as const]: defineComputeNode({
-    input: S.Struct({}),
+    input: VoidInput,
     output: S.Struct({
       id: ObjectId,
       messages: S.Array(Message),
@@ -213,7 +211,7 @@ const nodeDefs: Record<NodeType, Executable> = {
   }),
   ['append' as const]: defineComputeNode({
     input: AppendInput,
-    output: S.Struct({}),
+    output: VoidOutput,
     exec: synchronizedComputeFunction(({ id, items }) =>
       Effect.gen(function* () {
         const gptService = yield* GptService;
@@ -232,7 +230,6 @@ const nodeDefs: Record<NodeType, Executable> = {
 
         log.info('insertMessages', { id, toInsert });
         yield* Effect.promise(() => aiClient.insertMessages(toInsert));
-
         return {};
       }),
     ),
@@ -243,12 +240,12 @@ const nodeDefs: Record<NodeType, Executable> = {
     input: S.Struct({
       audio: S.Any,
     }),
-    output: S.Struct({}),
+    output: VoidOutput,
     exec: synchronizedComputeFunction(() => Effect.succeed({})),
   }),
 
   ['database' as const]: defineComputeNode({
-    input: S.Struct({}),
+    input: VoidInput,
     output: DatabaseOutput,
     exec: synchronizedComputeFunction(() =>
       Effect.gen(function* () {
@@ -258,7 +255,7 @@ const nodeDefs: Record<NodeType, Executable> = {
   }),
 
   ['text-to-image' as const]: defineComputeNode({
-    input: S.Struct({}),
+    input: VoidInput,
     output: TextToImageOutput,
     exec: synchronizedComputeFunction(() => Effect.succeed({ [DEFAULT_OUTPUT]: [textToImageTool] })),
   }),
