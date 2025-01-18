@@ -2,9 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useSignalEffect } from '@preact/signals-react';
-
-import { type Graph, type NodeArg } from '@dxos/app-graph';
+import { type NodeArg } from '@dxos/app-graph';
 import { type ToolbarActionGroupProperties } from '@dxos/react-ui-menu';
 
 import { createEditorAction, createEditorActionGroup, type EditorToolbarState } from './util';
@@ -28,16 +26,15 @@ const createListActions = (value: string) =>
     createEditorAction({ type: `list-${listStyle}` as PayloadType, checked: value === listStyle }, icon),
   );
 
-export const useLists = (graph: Graph, state: EditorToolbarState) => {
-  return useSignalEffect(() => {
-    const value = state.listStyle ?? '';
-    const listGroupAction = createListGroupAction(value);
-    const listActionsMap = createListActions(value);
-    // @ts-ignore
-    graph._addNodes([listGroupAction as NodeArg<any>, ...listActionsMap]);
-    // @ts-ignore
-    graph._addEdges(listActionsMap.map(({ id }) => ({ source: listGroupAction.id, target: id })));
-    // @ts-ignore
-    graph._addEdges([{ source: 'root', target: 'list' }]);
-  });
+export const createLists = (state: EditorToolbarState) => {
+  const value = state.listStyle ?? '';
+  const listGroupAction = createListGroupAction(value);
+  const listActionsMap = createListActions(value);
+  return {
+    nodes: [listGroupAction as NodeArg<any>, ...listActionsMap],
+    edges: [
+      { source: 'root', target: 'list' },
+      ...listActionsMap.map(({ id }) => ({ source: listGroupAction.id, target: id })),
+    ],
+  };
 };

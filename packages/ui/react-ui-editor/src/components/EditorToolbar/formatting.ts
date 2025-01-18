@@ -2,9 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useSignalEffect } from '@preact/signals-react';
-
-import { type Graph, type NodeArg } from '@dxos/app-graph';
+import { type NodeArg } from '@dxos/app-graph';
 import { type ToolbarActionGroupProperties } from '@dxos/react-ui-menu';
 
 import { createEditorAction, createEditorActionGroup, type EditorToolbarState } from './util';
@@ -30,15 +28,14 @@ const createFormattingActions = (formatting: Formatting) =>
     createEditorAction({ type: type as PayloadType, checked: !!formatting[type as keyof Formatting] }, icon),
   );
 
-export const useFormatting = (graph: Graph, state: EditorToolbarState) => {
-  return useSignalEffect(() => {
-    const formattingGroupAction = createFormattingGroup(state);
-    const formattingActions = createFormattingActions(state);
-    // @ts-ignore
-    graph._addNodes([formattingGroupAction as NodeArg<any>, ...formattingActions]);
-    // @ts-ignore
-    graph._addEdges(formattingActions.map(({ id }) => ({ source: formattingGroupAction.id, target: id })));
-    // @ts-ignore
-    graph._addEdges([{ source: 'root', target: 'formatting' }]);
-  });
+export const createFormatting = (state: EditorToolbarState) => {
+  const formattingGroupAction = createFormattingGroup(state);
+  const formattingActions = createFormattingActions(state);
+  return {
+    nodes: [formattingGroupAction as NodeArg<any>, ...formattingActions],
+    edges: [
+      { source: 'root', target: 'formatting' },
+      ...formattingActions.map(({ id }) => ({ source: formattingGroupAction.id, target: id })),
+    ],
+  };
 };

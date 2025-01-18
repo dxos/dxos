@@ -2,51 +2,87 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useSignalEffect } from '@preact/signals-react';
 import React, { useCallback, useState } from 'react';
 
-import { Graph } from '@dxos/app-graph';
+import { Graph, type NodeArg, type Node } from '@dxos/app-graph';
 import { Toolbar, type ToolbarItem, type ToolbarProps, type ToolbarActionGroup } from '@dxos/react-ui-menu';
 
-import { useBlocks } from './blocks';
-import { useComment } from './comment';
-import { useFormatting } from './formatting';
-import { useHeadings } from './headings';
-import { useLists } from './lists';
-import {
-  type EditorToolbarActionGraphProps,
-  editorToolbarGap,
-  type EditorToolbarProps,
-  editorToolbarSearch,
-  useStaticItem,
-} from './util';
-import { useViewModes } from './viewMode';
+import { createBlocks } from './blocks';
+import { createComment } from './comment';
+import { createFormatting } from './formatting';
+import { createHeadings } from './headings';
+import { createLists } from './lists';
+import { edgesArrayToRecord, editorToolbarGap, type EditorToolbarProps, editorToolbarSearch } from './util';
+import { createViewMode } from './viewMode';
+
+const createToolbar = ({
+  state,
+  ...features
+}: EditorToolbarProps): { nodes: NodeArg<any>[]; edges: { source: string; target: string }[] } => {
+  const nodes = [];
+  const edges = [];
+  if (features.headings ?? true) {
+    const headings = createHeadings(state);
+    nodes.push(...headings.nodes);
+    edges.push(...headings.edges);
+  }
+  if (features.formatting ?? true) {
+    const formatting = createFormatting(state);
+    nodes.push(...formatting.nodes);
+    edges.push(...formatting.edges);
+  }
+  if (features.lists ?? true) {
+    const lists = createLists(state);
+    nodes.push(...lists.nodes);
+    edges.push(...lists.edges);
+  }
+  if (features.blocks ?? true) {
+    const blocks = createBlocks(state);
+    nodes.push(...blocks.nodes);
+    edges.push(...blocks.edges);
+  }
+  nodes.push(editorToolbarGap);
+  edges.push({ source: 'root', target: editorToolbarGap.id });
+  if (features.comment ?? true) {
+    const comment = createComment(state);
+    nodes.push(...comment.nodes);
+    edges.push(...comment.edges);
+  }
+  if (features.search ?? true) {
+    nodes.push(editorToolbarSearch);
+    edges.push({ source: 'root', target: editorToolbarSearch.id });
+  }
+  if (features.viewMode ?? true) {
+    const viewMode = createViewMode(state);
+    nodes.push(...viewMode.nodes);
+    edges.push(...viewMode.edges);
+  }
+  return { nodes, edges };
+};
 
 //
 // Root
 //
-// TODO(thure): Derive actions from the reactive state
-const useEditorToolbarActionGraph = ({ state }: EditorToolbarActionGraphProps) => {
-  const [graph] = useState(new Graph());
+const useEditorToolbarActionGraph = (props: EditorToolbarProps) => {
+  const initialToolbar = createToolbar(props);
 
-  console.log('[created graph]');
+  const [graph] = useState(
+    new Graph({ nodes: initialToolbar.nodes as Node[], edges: edgesArrayToRecord(initialToolbar.edges) }),
+  );
 
-  // The following occurs in the order in which it should render:
-  useHeadings(graph, state);
-  useFormatting(graph, state);
-  useLists(graph, state);
-  useBlocks(graph, state);
-  useStaticItem(graph, editorToolbarGap);
-  useStaticItem(graph, editorToolbarSearch);
-  useComment(graph, state);
-  useViewModes(graph, state);
-
-  console.log('[populated graph]');
+  useSignalEffect(() => {
+    const toolbar = createToolbar(props);
+    // @ts-ignore
+    graph._addNodes(toolbar.nodes);
+    // @ts-ignore
+    graph._addEdges(toolbar.edges);
+  });
 
   const resolveGroupItems = useCallback(
     (sourceNode: ToolbarActionGroup = graph.root as ToolbarActionGroup) => {
       console.log('[resolve group items]', graph.actions(sourceNode));
       if (graph) {
-        void graph.waitForNode('formatting').then(() => console.log('[wait for node]', graph.actions(graph.root)));
         return (graph.actions(sourceNode) || null) as ToolbarItem[] | null;
       } else {
         return null;
@@ -58,9 +94,7 @@ const useEditorToolbarActionGraph = ({ state }: EditorToolbarActionGraphProps) =
   return { resolveGroupItems };
 };
 
-export const EditorToolbar = ({ classNames, ...actionProps }: EditorToolbarProps) => {
-  const toolbarProps = useEditorToolbarActionGraph(actionProps);
-  return (
-    <Toolbar {...toolbarProps} onAction={actionProps.onAction as ToolbarProps['onAction']} classNames={classNames} />
-  );
+export const EditorToolbar = ({ classNames, ...props }: EditorToolbarProps) => {
+  const toolbarProps = useEditorToolbarActionGraph(props);
+  return <Toolbar {...toolbarProps} onAction={props.onAction as ToolbarProps['onAction']} classNames={classNames} />;
 };

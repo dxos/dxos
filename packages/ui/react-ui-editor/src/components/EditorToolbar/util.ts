@@ -2,9 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useSignalEffect } from '@preact/signals-react';
-
-import { ACTION_GROUP_TYPE, ACTION_TYPE, actionGroupSymbol, type NodeArg, type Graph } from '@dxos/app-graph';
+import { ACTION_GROUP_TYPE, ACTION_TYPE, actionGroupSymbol } from '@dxos/app-graph';
 import { create, type ReactiveObject } from '@dxos/live-object';
 import { type Label, type ThemedClassName } from '@dxos/react-ui';
 import {
@@ -12,7 +10,6 @@ import {
   type ToolbarActionGroup,
   type ToolbarActionGroupProperties,
   type MenuActionProperties,
-  type ToolbarItem,
 } from '@dxos/react-ui-menu';
 
 import type { EditorAction, EditorActionPayload, EditorViewMode, Formatting } from '../../extensions';
@@ -25,12 +22,22 @@ export const useEditorToolbarState = (initialState: Partial<EditorToolbarState> 
   return create<EditorToolbarState>(initialState);
 };
 
+export type EditorToolbarFeatureFlags = Partial<{
+  headings: boolean;
+  formatting: boolean;
+  lists: boolean;
+  blocks: boolean;
+  comment: boolean;
+  search: boolean;
+  viewMode: boolean;
+}>;
+
 export type EditorToolbarActionGraphProps = {
   state: ReactiveObject<EditorToolbarState>;
   onAction: (action: EditorAction) => void;
 };
 
-export type EditorToolbarProps = ThemedClassName<EditorToolbarActionGraphProps>;
+export type EditorToolbarProps = ThemedClassName<EditorToolbarActionGraphProps & EditorToolbarFeatureFlags>;
 
 export type EditorToolbarItem = EditorAction | ToolbarActionGroup | ToolbarSeparatorNode;
 
@@ -69,15 +76,6 @@ export const createEditorActionGroup = (
     data: actionGroupSymbol,
   }) satisfies ToolbarActionGroup;
 
-export const useStaticItem = (graph: Graph, item: ToolbarItem, source: string = 'root') => {
-  return useSignalEffect(() => {
-    // @ts-ignore
-    graph._addNodes([item as NodeArg<any>]);
-    // @ts-ignore
-    graph._addEdges([{ source, target: item.id }]);
-  });
-};
-
 export const editorToolbarGap = {
   id: 'gap',
   type: '@dxos/react-ui-toolbar/separator',
@@ -86,3 +84,30 @@ export const editorToolbarGap = {
 } satisfies ToolbarSeparatorNode;
 
 export const editorToolbarSearch = createEditorAction({ type: 'search' }, 'ph--magnifying-glass--regular');
+
+export const edgesArrayToRecord = (edges: { source: string; target: string }[]): Record<string, string[]> => {
+  return Object.fromEntries(
+    Object.entries(
+      edges.reduce((acc: Record<string, { inbound: string[]; outbound: string[] }>, { source, target }) => {
+        if (!acc[source]) {
+          acc[source] = { inbound: [], outbound: [] };
+        }
+        if (!acc[target]) {
+          acc[target] = { inbound: [], outbound: [] };
+        }
+
+        const sourceEdges = acc[source];
+        if (!sourceEdges.outbound.includes(target)) {
+          sourceEdges.outbound.push(target);
+        }
+
+        const targetEdges = acc[target];
+        if (!targetEdges.inbound.includes(source)) {
+          targetEdges.inbound.push(source);
+        }
+
+        return acc;
+      }, {}),
+    ).map(([id, { outbound }]): [string, string[]] => [id, outbound]),
+  );
+};

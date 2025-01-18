@@ -2,9 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useSignalEffect } from '@preact/signals-react';
-
-import { type Graph, type NodeArg } from '@dxos/app-graph';
+import { type NodeArg } from '@dxos/app-graph';
 import { type ToolbarActionGroupProperties } from '@dxos/react-ui-menu';
 
 import { createEditorAction, createEditorActionGroup, type EditorToolbarState } from './util';
@@ -29,16 +27,15 @@ const createBlockActions = (value: string, blankLine?: boolean) =>
     );
   });
 
-export const useBlocks = (graph: Graph, state: EditorToolbarState) => {
-  return useSignalEffect(() => {
-    const value = state?.blockQuote ? 'blockquote' : state.blockType ?? '';
-    const blockGroupAction = createBlockGroupAction(value);
-    const blockActions = createBlockActions(value, state.blankLine);
-    // @ts-ignore
-    graph._addNodes([blockGroupAction as NodeArg<any>, ...blockActions]);
-    // @ts-ignore
-    graph._addEdges(blockActions.map(({ id }) => ({ source: blockGroupAction.id, target: id })));
-    // @ts-ignore
-    graph._addEdges([{ source: 'root', target: 'block' }]);
-  });
+export const createBlocks = (state: EditorToolbarState) => {
+  const value = state?.blockQuote ? 'blockquote' : state.blockType ?? '';
+  const blockGroupAction = createBlockGroupAction(value);
+  const blockActions = createBlockActions(value, state.blankLine);
+  return {
+    nodes: [blockGroupAction as NodeArg<any>, ...blockActions],
+    edges: [
+      { source: 'root', target: 'block' },
+      ...blockActions.map(({ id }) => ({ source: blockGroupAction.id, target: id })),
+    ],
+  };
 };

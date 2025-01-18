@@ -2,9 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useSignalEffect } from '@preact/signals-react';
-
-import { type Graph, type NodeArg } from '@dxos/app-graph';
+import { type NodeArg } from '@dxos/app-graph';
 import { type ToolbarActionGroupProperties } from '@dxos/react-ui-menu';
 
 import { createEditorAction, createEditorActionGroup, type EditorToolbarState } from './util';
@@ -47,17 +45,15 @@ const computeHeadingValue = (state: EditorToolbarState) => {
   return header ? header[1] : blockType === 'paragraph' || !blockType ? '0' : '';
 };
 
-export const useHeadings = (graph: Graph, state: EditorToolbarState) => {
-  return useSignalEffect(() => {
-    const headingValue = computeHeadingValue(state);
-    const headingGroupAction = createHeadingGroupAction(headingValue);
-    const headingActions = createHeadingActions(headingValue);
-    console.log('[adding heading actions]');
-    // @ts-ignore
-    graph._addNodes([headingGroupAction as NodeArg<any>, ...headingActions]);
-    // @ts-ignore
-    graph._addEdges(headingActions.map(({ id }) => ({ source: headingGroupAction.id, target: id })));
-    // @ts-ignore
-    graph._addEdges([{ source: 'root', target: 'heading' }]);
-  });
+export const createHeadings = (state: EditorToolbarState) => {
+  const headingValue = computeHeadingValue(state);
+  const headingGroupAction = createHeadingGroupAction(headingValue);
+  const headingActions = createHeadingActions(headingValue);
+  return {
+    nodes: [headingGroupAction as NodeArg<any>, ...headingActions],
+    edges: [
+      { source: 'root', target: 'heading' },
+      ...headingActions.map(({ id }) => ({ source: headingGroupAction.id, target: id })),
+    ],
+  };
 };
