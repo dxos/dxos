@@ -23,13 +23,14 @@ void main() {
   if (uChaos > 0) {
     curlPos += curl(curlPos * uCurl * 2.0) * 0.5;
   }
-  if (uPerturbation < 0.3) {
-  } else {
-    if (uChaos > 1) {
-      curlPos += curl(curlPos * uCurl * 4.0) * 0.25;
-//    curlPos += curl(curlPos * uCurl * 8.0) * 0.125;
-//    curlPos += curl(curlPos * uCurl * 16.0) * 0.0625;
-    }
+  if (uChaos > 1) {
+    curlPos += curl(curlPos * uCurl * 4.0) * 0.25;
+  }
+  if (uChaos > 2) {
+    curlPos += curl(curlPos * uCurl * 8.0) * 0.125;
+  }
+  if (uChaos > 3) {
+    curlPos += curl(curlPos * uCurl * 16.0) * 0.0625;
   }
 
   vec3 chaoticPost = mix(pos, curlPos, noise(pos + t)) * 1.8;

@@ -32,7 +32,7 @@ export const createScope = ({ id, ...rest }: CreateScopeProps): ScopeShape => ({
   id,
   type: 'scope',
   size: { width: 192, height: 192 },
-  round: true,
+  classNames: 'rounded-full dark:border-none',
   ...rest,
 });
 
@@ -59,14 +59,14 @@ export const scopeShape: ShapeDef<ScopeShape> = {
 
 const defaultOptions: ShaderOptions = {
   size: 500,
-  fov: 50,
-  zoom: 2.9,
-  focus: 2.3,
-  speed: 10,
-  aperture: 5.2,
-  curl: 1.1,
-  chaos: 5,
-  tint: [0, 0.2, 0.7],
+  fov: 60,
+  zoom: 2.5,
+  focus: 2.2, // Should be close to zoom value.
+  aperture: 5.6, // Max 5.6 (sharper).
+  speed: 15,
+  curl: 1, // Highter values (e.g., 10) create more plasma-like grouping; lower values are more diffuse (e.g., 1)
+  chaos: 1, // Degree of chaos (1-5).
+  tint: [0, 0.2, 0.6],
 };
 
 const Sphere = ({ active, options = defaultOptions }: { active?: boolean; options?: ShaderOptions }) => {

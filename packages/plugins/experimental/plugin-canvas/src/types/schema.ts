@@ -25,7 +25,7 @@ export const Shape = S.mutable(
     text: S.optional(S.String),
     // TODO(burdon): Generic tag?
     guide: S.optional(S.Boolean),
-    round: S.optional(S.Boolean),
+    classNames: S.optional(S.String),
   }),
 );
 

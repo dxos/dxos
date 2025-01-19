@@ -23,8 +23,8 @@ export type ShaderOptions = {
   fov: number;
   zoom: number;
   focus: number;
-  speed: number;
   aperture: number;
+  speed: number;
   curl: number;
   chaos: number;
   tint: [number, number, number];
