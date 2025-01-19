@@ -51,6 +51,9 @@
       "path": "../../core/compute"
     },
     {
+      "path": "../../core/conductor"
+    },
+    {
       "path": "../../core/echo/automerge"
     },
     {

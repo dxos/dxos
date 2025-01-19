@@ -4,6 +4,7 @@
 
 import { useEffect } from 'react';
 
+import { type GraphEdge, type GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { DATA_TEST_ID, ProjectionMapper, useProjection, zoomTo, zoomInPlace } from '@dxos/react-ui-canvas';
@@ -12,14 +13,26 @@ import { isNotFalsy } from '@dxos/util';
 import { useEditorContext } from './useEditorContext';
 import { type ActionHandler } from '../actions';
 import { type TestId } from '../components';
-import { createRectangle, doLayout, getCenter, getRect, rectUnion, fireBullet } from '../layout';
+import { doLayout, getCenter, getRect, rectUnion, fireBullet } from '../layout';
+import { createRectangle } from '../shapes';
 import { createId, itemSize } from '../testing';
-import { isPolygon } from '../types';
+import { isPolygon, type Shape } from '../types';
 
 // TODO(burdon): Handle multiple actions.
 export const useActionHandler = () => {
-  const { options, overlaySvg, graph, clipboard, selection, setDebug, setShowGrid, setSnapToGrid, setActionHandler } =
-    useEditorContext();
+  const {
+    clipboard,
+    graph,
+    graphMonitor,
+    options,
+    overlayRef,
+    selection,
+    setDebug,
+    setShowGrid,
+    setSnapToGrid,
+    setActionHandler,
+    repaint,
+  } = useEditorContext();
   const { root, projection, setProjection } = useProjection();
 
   useEffect(() => {
@@ -57,15 +70,16 @@ export const useActionHandler = () => {
         case 'zoom-to-fit': {
           const { duration = options.zoomDuration } = action;
           const nodes = graph.nodes
-            .filter((node) => isPolygon(node.data))
-            .map((node) => getRect(node.data.center, node.data.size));
+            .map((node) => node.data)
+            .filter((data) => isPolygon(data))
+            .map((data) => getRect(data.center, data.size));
           if (!nodes.length) {
             return false;
           }
 
           const bounds = rectUnion(nodes);
           const center = getCenter(bounds);
-          const padding = 256;
+          const padding = 180;
           const newScale = Math.min(
             1,
             Math.min(
@@ -149,20 +163,13 @@ export const useActionHandler = () => {
           const { ids = selection.selected.value } = action;
           const nodes = ids.map((id) => graph.getNode(id)).filter(isNotFalsy);
           const edges = ids.map((id) => graph.getEdge(id)).filter(isNotFalsy);
-          clipboard //
-            .clear()
-            .addNodes(nodes)
-            .addEdges(edges);
+          clipboard.clear().addNodes(nodes).addEdges(edges);
           return true;
         }
         case 'paste': {
           // TODO(burdon): Change ids if pasting copy (update links).
           graph.addGraph(clipboard);
-          selection.setSelected([
-            //
-            ...clipboard.nodes.map((node) => node.id),
-            ...clipboard.edges.map((edge) => edge.id),
-          ]);
+          selection.setSelected([...clipboard.nodes.map((node) => node.id), ...clipboard.edges.map((edge) => edge.id)]);
           clipboard.clear();
           return true;
         }
@@ -179,14 +186,18 @@ export const useActionHandler = () => {
             shape = createRectangle({ id, center: { x: 0, y: 0 }, size: itemSize });
           }
           invariant(shape);
-          graph.addNode({ id: shape.id, data: shape });
+          const node: GraphNode<Shape> = { id: shape.id, data: shape };
+          graphMonitor?.onCreate({ graph, node });
+          graph.addNode(node);
           selection.setSelected([shape.id]);
           return true;
         }
         case 'link': {
-          const { source, target } = action;
+          const { source, target, connection } = action;
           const id = createId();
-          graph.addEdge({ id, source, target });
+          const edge: GraphEdge = { id, source, target, data: connection };
+          graph.addEdge(edge);
+          graphMonitor?.onLink({ graph, edge });
           selection.setSelected([id]);
           return true;
         }
@@ -200,17 +211,19 @@ export const useActionHandler = () => {
             ids?.forEach((id) => graph.removeEdge(id));
           }
           selection.clear();
+          repaint(); // TODO(burdon): Hack since graph doesn't trigger layout update.
           return true;
         }
 
-        case 'run': {
-          const { id = selection.selected.value[0] } = action;
-          const g = overlaySvg.current!.querySelector<SVGGElement>(
+        case 'trigger': {
+          const g = overlayRef.current!.querySelector<SVGGElement>(
             `g[${DATA_TEST_ID}="${'dx-overlay-bullets' satisfies TestId}"]`,
           );
-          if (g && id) {
-            // TODO(burdon): Return cancel.
-            fireBullet(root, g, graph, id);
+          if (g) {
+            const { edges = selection.selected.value.map((source) => ({ source })) } = action;
+            for (const edge of edges) {
+              fireBullet(root, g, graph, edge);
+            }
           }
           return true;
         }
@@ -221,5 +234,5 @@ export const useActionHandler = () => {
     };
 
     setActionHandler(actionHandler);
-  }, [root, overlaySvg, options, graph, selection, projection]);
+  }, [root, overlayRef, options, graph, graphMonitor, selection, projection]);
 };

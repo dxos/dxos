@@ -20,19 +20,24 @@ export type Range = { p1: Point; p2: Point }; // TODO(burdon): Array.
 
 export type PointTransform = (pos: Point) => Point;
 
-// TODO(burdon): Namespace for functions?
+// TODO(burdon): Namespace functions (e.g., Point.add(a, b)).
+// TODO(burdon): Factor out low-level SVG package.
+
+export const round = (n: number, m: number) => Math.round(n / m) * m;
 
 //
 // Point
 //
 
-export const round = (n: number, m: number) => Math.round(n / m) * m;
-
 export const pointAdd = (a: Point, b: Point): Point => ({ x: a.x + b.x, y: a.y + b.y });
 export const pointSubtract = (a: Point, b: Point): Point => ({ x: a.x - b.x, y: a.y - b.y });
+export const pointMultiply = (a: Point, b = 1): Point => ({ x: a.x * b, y: a.y * b });
+export const pointDivide = (a: Point, b = 1): Point => ({ x: a.x / b, y: a.y / b });
 export const pointMid = (a: Point, b: Point): Point => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
 
-export const distance = (p1: Point, p2: Point): number =>
+export const pointRound = (point: Point): Point => ({ x: Math.round(point.x), y: Math.round(point.y) });
+
+export const getDistance = (p1: Point, p2: Point): number =>
   Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
 
 //
@@ -82,6 +87,17 @@ export const rectContains = (b1: Rect, b2: Rect): boolean =>
   b2.x >= b1.x && b2.y >= b1.y && b2.x + b2.width <= b1.x + b1.width && b2.y + b2.height <= b1.y + b1.height;
 
 //
+// CSS
+//
+
+export const getBoundsProperties = ({ x, y, width, height }: Rect): CSSProperties => ({
+  left: `${x - width / 2}px`,
+  top: `${y - height / 2}px`,
+  width: `${width}px`,
+  height: `${height}px`,
+});
+
+//
 // Intersections
 //
 
@@ -93,8 +109,8 @@ export const findClosestIntersection = ([p1, p2]: Line, rect: Rect): Point | nul
 
   // Find the closest intersection point to the line's p1.
   return intersections.reduce((closest, point) => {
-    const closestDistance = distance(p1, closest);
-    const currentDistance = distance(p1, point);
+    const closestDistance = getDistance(p1, closest);
+    const currentDistance = getDistance(p1, point);
     return currentDistance < closestDistance ? point : closest;
   });
 };
@@ -142,24 +158,20 @@ export const findLineRectangleIntersections = (line: Line, rect: Rect): Point[] 
  * Line2 is represented as: c + s(d-c), where s is between 0 and 1.
  */
 export const findLineIntersection = ([p1, p2]: Line, [q1, q2]: Line): Point | null => {
-  // Calculate denominator first to check if lines are parallel.
+  // Calculate denominator first to check if lines are parallel; if 0, then lines are parallel.
   const denominator = (p2.x - p1.x) * (q2.y - q1.y) - (p2.y - p1.y) * (q2.x - q1.x);
-
-  // If denominator is 0, lines are parallel.
   if (Math.abs(denominator) < 1e-10) {
     return null;
   }
 
-  // Calculate intersection parameters.
+  // Check if intersection occurs within both line segments.
   const t = ((q1.x - p1.x) * (q2.y - q1.y) - (q1.y - p1.y) * (q2.x - q1.x)) / denominator;
   const s = ((q1.x - p1.x) * (p2.y - p1.y) - (q1.y - p1.y) * (p2.x - p1.x)) / denominator;
-
-  // Check if intersection occurs within both line segments.
   if (t < 0 || t > 1 || s < 0 || s > 1) {
     return null;
   }
 
-  // Calculate intersection point.
+  // Intersection point.
   return {
     x: p1.x + t * (p2.x - p1.x),
     y: p1.y + t * (p2.y - p1.y),
@@ -167,21 +179,10 @@ export const findLineIntersection = ([p1, p2]: Line, [q1, q2]: Line): Point | nu
 };
 
 //
-// CSS
-//
-
-export const getBoundsProperties = ({ x, y, width, height }: Rect): CSSProperties => ({
-  left: `${x - width / 2}px`,
-  top: `${y - height / 2}px`,
-  width: `${width}px`,
-  height: `${height}px`,
-});
-
-//
 // SVG Paths
 //
 
-export const createPathFromPoints = (points: Point[]): string => {
+export const createPathThroughPoints = (points: Point[], smooth = true): string => {
   if (points.length < 2) {
     return '';
   }
@@ -193,30 +194,30 @@ export const createPathFromPoints = (points: Point[]): string => {
     const p2 = rest[i + 1];
     const midX = (p1.x + p2.x) / 2;
     const midY = (p1.y + p2.y) / 2;
+    // Q = Quadratic Bézier curve.
     path.push(`Q ${p1.x},${p1.y} ${midX},${midY}`);
   }
 
+  // T = Smooth quadratic Bézier curve.
   const last = rest[rest.length - 1];
   path.push(`T ${last.x},${last.y}`);
-
   return path.join(' ');
 };
 
-export const createPathThroughPoints = (points: Point[]): string => {
+// TODO(burdon): Reconcile with above.
+export const createPathThroughPoints2 = (points: Point[]): string => {
   if (points.length < 2) {
     return '';
   }
 
   const [start, ...rest] = points;
   const path = [`M ${start.x},${start.y}`];
-
   for (let i = 0; i < rest.length; i++) {
-    const p0 = i === 0 ? start : points[i];
-    const p1 = rest[i];
-    const cpx = (p0.x + p1.x) / 2;
-    const cpy = (p0.y + p1.y) / 2;
-
-    path.push(`Q ${cpx},${cpy} ${p1.x},${p1.y}`);
+    const p1 = i === 0 ? start : points[i];
+    const p2 = rest[i];
+    const midX = (p1.x + p2.x) / 2;
+    const midY = (p1.y + p2.y) / 2;
+    path.push(`Q ${midX},${midY} ${p2.x},${p2.y}`);
   }
 
   return path.join(' ');
@@ -225,18 +226,20 @@ export const createPathThroughPoints = (points: Point[]): string => {
 /**
  * https://d3js.org/d3-shape/curve
  */
-const splineGenerator = d3
+const curveGenerator = d3
   .line<Point>()
+  // .curve(d3.curveBasis)
+  // .curve(d3.curveBundle)
   .curve(d3.curveCatmullRom.alpha(0.9))
   .x((d) => d.x)
   .y((d) => d.y);
 
-export const createSplineThroughPoints = (points: Point[]): string => {
+export const createCurveThroughPoints = (points: Point[]): string => {
   invariant(points.length >= 2);
-  return splineGenerator(points)!;
+  return curveGenerator(points)!;
 };
 
-export const getNormals = (r1: Rect, r2: Rect, len = 32): [Point[], Point[]] | null => {
+export const createNormalsFromRectangles = (r1: Rect, r2: Rect, len = 32): [Point[], Point[]] | undefined => {
   const sidesR1 = {
     left: [
       { x: r1.x, y: r1.y },
@@ -309,34 +312,32 @@ export const getNormals = (r1: Rect, r2: Rect, len = 32): [Point[], Point[]] | n
     }
   }
 
-  if (!distances.length) {
-    return null;
+  if (distances.length) {
+    const [side1, side2] = distances.reduce((max, curr) => (curr.distance > max.distance ? curr : max)).pair;
+
+    const isVertical1 = side1[0].x === side1[1].x;
+    const isVertical2 = side2[0].x === side2[1].x;
+
+    const direction1 = isVertical1 ? (side1[0].x < side2[0].x ? -1 : 1) : side1[0].y < side2[0].y ? -1 : 1;
+    const direction2 = isVertical2 ? (side2[0].x < side1[0].x ? -1 : 1) : side2[0].y < side1[0].y ? -1 : 1;
+
+    return [
+      createPerpendicularLine(side1, isVertical1, direction1, len),
+      createPerpendicularLine(side2, isVertical2, direction2, len),
+    ];
   }
+};
 
-  const [side1, side2] = distances.reduce((max, curr) => (curr.distance > max.distance ? curr : max)).pair;
-
-  // Generate lines perpendicular to the sides and pointing away.
-  const createPerpendicularLine = (side: Point[], vertical: boolean, away: 1 | -1, len: number): Line => {
-    const midPoint: Point = {
-      x: (side[0].x + side[1].x) / 2,
-      y: (side[0].y + side[1].y) / 2,
-    };
-
-    if (vertical) {
-      return [{ x: midPoint.x - len * away, y: midPoint.y }, midPoint];
-    } else {
-      return [{ x: midPoint.x, y: midPoint.y - len * away }, midPoint];
-    }
+// Generate lines perpendicular to the sides and pointing away.
+const createPerpendicularLine = (side: Point[], vertical: boolean, away: 1 | -1, len: number): Line => {
+  const midPoint: Point = {
+    x: (side[0].x + side[1].x) / 2,
+    y: (side[0].y + side[1].y) / 2,
   };
 
-  const isVertical1 = side1[0].x === side1[1].x;
-  const isVertical2 = side2[0].x === side2[1].x;
-
-  const direction1 = isVertical1 ? (side1[0].x < side2[0].x ? -1 : 1) : side1[0].y < side2[0].y ? -1 : 1;
-  const direction2 = isVertical2 ? (side2[0].x < side1[0].x ? -1 : 1) : side2[0].y < side1[0].y ? -1 : 1;
-
-  return [
-    createPerpendicularLine(side1, isVertical1, direction1, len),
-    createPerpendicularLine(side2, isVertical2, direction2, len),
-  ];
+  if (vertical) {
+    return [{ x: midPoint.x - len * away, y: midPoint.y }, midPoint];
+  } else {
+    return [{ x: midPoint.x, y: midPoint.y - len * away }, midPoint];
+  }
 };

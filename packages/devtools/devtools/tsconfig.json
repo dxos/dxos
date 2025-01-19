@@ -50,6 +50,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/conductor"
+    },
+    {
       "path": "../../core/echo/automerge"
     },
     {
@@ -66,6 +69,9 @@
     },
     {
       "path": "../../core/echo/live-object"
+    },
+    {
+      "path": "../../core/mesh/edge-client"
     },
     {
       "path": "../../core/mesh/messaging"

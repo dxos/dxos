@@ -124,6 +124,9 @@
       "path": "packages/core/compute/tsconfig.json"
     },
     {
+      "path": "packages/core/conductor/tsconfig.json"
+    },
+    {
       "path": "packages/core/echo/automerge/tsconfig.json"
     },
     {
@@ -503,6 +506,9 @@
     },
     {
       "path": "tools/codemods/tsconfig.json"
+    },
+    {
+      "path": "tools/codemorph/tsconfig.json"
     },
     {
       "path": "tools/executors/esbuild/tsconfig.json"

@@ -5,11 +5,14 @@
       "DOM",
       "ESNext"
     ],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "types": [
       "node"
     ]
   },
   "exclude": [
+    "**/deprecated/**",
     "*.t.ts",
     "vite.config.ts"
   ],
@@ -23,6 +26,9 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/context"
+    },
+    {
       "path": "../../../common/debug"
     },
     {
@@ -32,7 +38,13 @@
       "path": "../../../common/invariant"
     },
     {
+      "path": "../../../common/keys"
+    },
+    {
       "path": "../../../common/log"
+    },
+    {
+      "path": "../../../common/node-std"
     },
     {
       "path": "../../../common/random"
@@ -44,16 +56,31 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../../core/compute"
+    },
+    {
+      "path": "../../../core/conductor"
+    },
+    {
       "path": "../../../core/echo/echo-db"
     },
     {
       "path": "../../../core/echo/echo-schema"
     },
     {
+      "path": "../../../core/echo/echo-signals"
+    },
+    {
       "path": "../../../core/echo/live-object"
     },
     {
+      "path": "../../../experimental/assistant"
+    },
+    {
       "path": "../../../sdk/app-framework"
+    },
+    {
+      "path": "../../../sdk/client"
     },
     {
       "path": "../../../sdk/react-client"

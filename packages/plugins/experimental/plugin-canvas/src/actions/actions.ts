@@ -2,8 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type GraphEdge } from '@dxos/graph';
+
 import { type LayoutKind } from '../layout';
-import { type Shape } from '../types';
+import { type Connection, type Shape } from '../types';
 
 export type Action =
   | { type: 'debug' }
@@ -30,10 +32,10 @@ export type Action =
   | { type: 'copy'; ids?: string[] }
   | { type: 'paste' }
   | { type: 'create'; shape?: Shape }
-  | { type: 'link'; source: string; target: string }
+  | { type: 'link'; source: string; target: string; connection?: Connection }
   | { type: 'delete'; ids?: string[]; all?: boolean }
 
   //
-  | { type: 'run'; id?: string };
+  | { type: 'trigger'; edges?: Partial<GraphEdge>[] };
 
 export type ActionHandler = (action: Action) => Promise<boolean>;

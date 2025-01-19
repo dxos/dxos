@@ -21,6 +21,8 @@ import {
   type RecoverIdentityResponseBody,
   type UploadFunctionRequest,
   type UploadFunctionResponseBody,
+  type ObjectId,
+  type ExecuteWorkflowResponseBody,
 } from '@dxos/protocols';
 
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
@@ -87,6 +89,15 @@ export class EdgeHttpClient {
     args?: EdgeHttpGetArgs,
   ): Promise<RecoverIdentityResponseBody> {
     return this._call('/identity/recover', { ...args, body, method: 'POST' });
+  }
+
+  public async executeWorkflow(
+    spaceId: SpaceId,
+    graphId: ObjectId,
+    input: any,
+    args?: EdgeHttpGetArgs,
+  ): Promise<ExecuteWorkflowResponseBody> {
+    return this._call(`/workflows/${spaceId}/${graphId}`, { ...args, body: input, method: 'POST' });
   }
 
   public async uploadFunction(

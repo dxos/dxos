@@ -224,6 +224,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/conductor/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/echo/automerge/package.json",
           "jsonpath": "$.version"
         },
@@ -860,6 +865,11 @@
         {
           "type": "json",
           "path": "tools/codemods/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/codemorph/package.json",
           "jsonpath": "$.version"
         },
         {

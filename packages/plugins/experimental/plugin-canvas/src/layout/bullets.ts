@@ -5,11 +5,11 @@
 import * as d3 from 'd3';
 import { type Selection } from 'd3';
 
-import type { GraphEdge, GraphModel, GraphNode } from '@dxos/graph';
+import type { BaseGraphEdge, GraphEdge } from '@dxos/graph';
 import { isNotFalsy } from '@dxos/util';
 
 import { DATA_SHAPE_ID, getShapeElements } from '../components';
-import type { Shape } from '../types';
+import type { CanvasGraphModel } from '../types';
 
 /**
  * Retrieve paths and edges.
@@ -18,18 +18,14 @@ import type { Shape } from '../types';
  * @param filter
  */
 export const getPaths = (
-  graph: GraphModel<GraphNode<Shape>>,
+  graph: CanvasGraphModel,
   root: HTMLElement,
   filter: { source?: string; target?: string },
-): { edge: GraphEdge; el: SVGPathElement }[] => {
-  return getShapeElements<SVGPathElement>(root, 'line')
+): { edge: BaseGraphEdge; el: SVGPathElement }[] => {
+  return getShapeElements<SVGPathElement>(root, 'path')
     .map((el) => {
       const edge = graph.getEdge(el.getAttribute(DATA_SHAPE_ID)!);
-      if (edge?.source === filter.source) {
-        return { edge, el };
-      } else {
-        return null;
-      }
+      return edge && edge.source === filter.source ? { edge, el } : null;
     })
     .filter(isNotFalsy);
 };
@@ -55,11 +51,18 @@ export const defaultBulletOptions: BulletOptions = {
  * @param root Root container for path elements.
  * @param g Container for bullets.
  * @param graph
- * @param id
+ * @param edge
+ * @param propagate
  */
-// TODO(burdon): Stop method.
-export const fireBullet = (root: HTMLElement, g: SVGGElement, graph: GraphModel<GraphNode<Shape>>, id: string) => {
-  const cb = (edge: GraphEdge) => {
+// TODO(burdon): Return cancel function.
+export const fireBullet = (
+  root: HTMLElement,
+  g: SVGGElement,
+  graph: CanvasGraphModel,
+  edge: Partial<GraphEdge>,
+  propagate = false,
+) => {
+  const cb = (edge: BaseGraphEdge) => {
     const num = d3.select(g).selectAll('circle').size();
     if (num < defaultBulletOptions.max) {
       const paths = getPaths(graph, root, { source: edge.target });
@@ -69,9 +72,9 @@ export const fireBullet = (root: HTMLElement, g: SVGGElement, graph: GraphModel<
     }
   };
 
-  const paths = getPaths(graph, root, { source: id });
+  const paths = getPaths(graph, root, edge);
   for (const { edge, el } of paths) {
-    d3.select(g).call(createBullet(edge, el, defaultBulletOptions, cb));
+    d3.select(g).call(createBullet(edge, el, defaultBulletOptions), propagate ? cb : undefined);
   }
 };
 
@@ -79,10 +82,10 @@ export const fireBullet = (root: HTMLElement, g: SVGGElement, graph: GraphModel<
  * Creates a bullet animation.
  */
 export const createBullet = (
-  edge: GraphEdge,
+  edge: BaseGraphEdge,
   path: SVGPathElement,
   options: BulletOptions = defaultBulletOptions,
-  cb?: (edge: GraphEdge) => void,
+  cb?: (edge: BaseGraphEdge) => void,
 ) => {
   return (selection: Selection<any, any, any, any>) => {
     selection.each(function () {
@@ -108,7 +111,8 @@ export const createBullet = (
         // Start animation.
         .transition()
         .delay(options.delay)
-        .duration(options.minDuration + Math.random() * options.maxDuration)
+        .duration(options.minDuration)
+        // .duration(options.minDuration + Math.random() * options.maxDuration)
         .ease(d3.easeLinear)
         .tween('pathTween', function () {
           const length = path.getTotalLength();

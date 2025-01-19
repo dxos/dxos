@@ -29,7 +29,13 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/node-std"
+    },
+    {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/echo-db"
     },
     {
       "path": "../../core/echo/echo-schema"
