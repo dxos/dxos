@@ -21,29 +21,31 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './types';
+import { DEFAULT_INPUT, DEFAULT_OUTPUT, DefaultInput, DefaultOutput, VoidInput, VoidOutput } from './types';
 // TODO(burdon): Push down defs to here.
 import { type ComputeShape, type ConstantShape } from '../shapes';
 
 type NodeType =
-  | 'switch'
-  | 'text'
-  | 'beacon'
   | 'and'
-  | 'or'
-  | 'not'
+  | 'append'
+  | 'audio'
+  | 'beacon'
+  | 'chat'
+  | 'constant'
+  | 'database'
+  | 'gpt'
+  | 'gpt-realtime'
   | 'if'
   | 'if-else'
-  | 'gpt'
-  | 'chat'
-  | 'view'
-  | 'thread'
-  | 'constant'
   | 'list'
-  | 'append'
-  | 'database'
+  | 'not'
+  | 'or'
+  | 'scope'
+  | 'switch'
+  | 'text'
   | 'text-to-image'
-  | 'gpt-realtime';
+  | 'thread'
+  | 'view';
 
 // TODO(burdon): Just pass in type? Or can the shape specialize the node?
 export const createComputeNode = (shape: GraphNode<ComputeShape>): GraphNode<ComputeNode> => {
@@ -65,34 +67,27 @@ const createNode = (type: string, props?: Partial<ComputeNode>) => ({
 
 // TODO(burdon): Reconcile with ShapeRegistry.
 const nodeFactory: Record<string, (shape: GraphNode<ComputeShape>) => GraphNode<ComputeNode>> = {
-  // Controls.
-  ['switch' as const]: () => createNode('switch'),
-  ['text' as const]: () => createNode('text'),
-
-  // Views.
-  ['beacon' as const]: () => createNode('beacon'),
-
-  // Boolean ops.
   ['and' as const]: () => createNode('and'),
-  ['or' as const]: () => createNode('or'),
-  ['not' as const]: () => createNode('not'),
-
-  // Logic ops.
-  ['if' as const]: () => createNode('if'),
-  ['if-else' as const]: () => createNode('if-else'),
-
+  ['append' as const]: () => createNode('append'),
+  ['audio' as const]: () => createNode('audio'),
+  ['beacon' as const]: () => createNode('beacon'),
+  ['chat' as const]: () => createNode('chat'),
+  ['constant' as const]: (shape) => createNode('constant', { constant: (shape.data as ConstantShape).value }),
+  ['database' as const]: () => createNode('database'),
   ['gpt' as const]: () => createNode('gpt'),
   ['gpt-realtime' as const]: () => createNode('gpt-realtime'),
-
+  ['if' as const]: () => createNode('if'),
+  ['if-else' as const]: () => createNode('if-else'),
   ['json' as const]: () => createNode('view'),
-  ['chat' as const]: () => createNode('chat'),
-  ['view' as const]: () => createNode('view'),
-  ['thread' as const]: () => createNode('thread'),
-  ['constant' as const]: (shape) => createNode('constant', { constant: (shape.data as ConstantShape).value }),
   ['list' as const]: () => createNode('list'),
-  ['append' as const]: () => createNode('append'),
-  ['database' as const]: () => createNode('database'),
+  ['not' as const]: () => createNode('not'),
+  ['or' as const]: () => createNode('or'),
+  ['scope' as const]: () => createNode('scope'),
+  ['switch' as const]: () => createNode('switch'),
+  ['text' as const]: () => createNode('text'),
   ['text-to-image' as const]: () => createNode('text-to-image'),
+  ['thread' as const]: () => createNode('thread'),
+  ['view' as const]: () => createNode('view'),
 };
 
 export const resolveComputeNode = async (node: ComputeNode): Promise<Executable> => {
@@ -105,26 +100,33 @@ export const ListInput = S.Struct({ [DEFAULT_INPUT]: ObjectId });
 export const ListOutput = S.Struct({ id: ObjectId, items: S.Array(Message) });
 
 export const AppendInput = S.Struct({ id: ObjectId, items: S.Array(Message) });
-
 export const DatabaseOutput = S.Struct({ [DEFAULT_OUTPUT]: S.Array(LLMTool) });
-
 export const TextToImageOutput = S.Struct({ [DEFAULT_OUTPUT]: S.Array(LLMTool) });
 
+// TODO(burdon): Create wrapper functions.
 const nodeDefs: Record<NodeType, Executable> = {
   // Controls.
   ['switch' as const]: defineComputeNode({
-    input: S.Struct({}),
+    input: VoidInput,
     output: S.Struct({ [DEFAULT_OUTPUT]: S.Boolean }),
   }),
   ['text' as const]: defineComputeNode({
-    input: S.Struct({}),
+    input: VoidInput,
+    output: S.Struct({ [DEFAULT_OUTPUT]: S.String }),
+  }),
+  ['audio' as const]: defineComputeNode({
+    input: VoidInput,
     output: S.Struct({ [DEFAULT_OUTPUT]: S.String }),
   }),
 
   // Views.
   ['beacon' as const]: defineComputeNode({
     input: S.Struct({ [DEFAULT_INPUT]: S.Boolean }),
-    output: S.Struct({}),
+    output: VoidOutput,
+  }),
+  ['scope' as const]: defineComputeNode({
+    input: S.Struct({ [DEFAULT_INPUT]: S.String }),
+    output: VoidOutput,
   }),
 
   // Boolean ops.
@@ -145,8 +147,7 @@ const nodeDefs: Record<NodeType, Executable> = {
   }),
 
   // Logic ops.
-  // TODO(dmaretskyi): This is wrong.
-  //                   The other output should get the not-executed signal.
+  // TODO(dmaretskyi): This is wrong. The other output should get the not-executed signal.
   ['if' as const]: defineComputeNode({
     input: S.Struct({ condition: S.Boolean, value: S.Any }),
     output: S.Struct({ true: S.optional(S.Any), false: S.optional(S.Any) }),
@@ -166,23 +167,23 @@ const nodeDefs: Record<NodeType, Executable> = {
 
   // Generic.
   ['constant' as const]: defineComputeNode({
-    input: S.Struct({}),
-    output: S.Struct({ [DEFAULT_OUTPUT]: S.Any }),
+    input: VoidInput,
+    output: DefaultOutput,
     exec: (_inputs, node) => Effect.succeed(makeValueBag({ [DEFAULT_OUTPUT]: node!.constant })),
   }),
   ['view' as const]: defineComputeNode({
-    input: S.Struct({ [DEFAULT_INPUT]: S.Any }),
-    output: S.Struct({ [DEFAULT_OUTPUT]: S.Any }),
+    input: DefaultInput,
+    output: DefaultOutput,
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: input }) => Effect.succeed({ [DEFAULT_OUTPUT]: input })),
   }),
 
   // TODO(dmaretskyi): Consider moving gpt out of conductor.
   ['chat' as const]: defineComputeNode({
-    input: S.Struct({}),
+    input: VoidInput,
     output: S.Struct({ [DEFAULT_OUTPUT]: S.String }),
   }),
   ['thread' as const]: defineComputeNode({
-    input: S.Struct({}),
+    input: VoidInput,
     output: S.Struct({
       id: ObjectId,
       messages: S.Array(Message),
@@ -210,7 +211,7 @@ const nodeDefs: Record<NodeType, Executable> = {
   }),
   ['append' as const]: defineComputeNode({
     input: AppendInput,
-    output: S.Struct({}),
+    output: VoidOutput,
     exec: synchronizedComputeFunction(({ id, items }) =>
       Effect.gen(function* () {
         const gptService = yield* GptService;
@@ -229,7 +230,6 @@ const nodeDefs: Record<NodeType, Executable> = {
 
         log.info('insertMessages', { id, toInsert });
         yield* Effect.promise(() => aiClient.insertMessages(toInsert));
-
         return {};
       }),
     ),
@@ -240,12 +240,12 @@ const nodeDefs: Record<NodeType, Executable> = {
     input: S.Struct({
       audio: S.Any,
     }),
-    output: S.Struct({}),
+    output: VoidOutput,
     exec: synchronizedComputeFunction(() => Effect.succeed({})),
   }),
 
   ['database' as const]: defineComputeNode({
-    input: S.Struct({}),
+    input: VoidInput,
     output: DatabaseOutput,
     exec: synchronizedComputeFunction(() =>
       Effect.gen(function* () {
@@ -255,7 +255,7 @@ const nodeDefs: Record<NodeType, Executable> = {
   }),
 
   ['text-to-image' as const]: defineComputeNode({
-    input: S.Struct({}),
+    input: VoidInput,
     output: TextToImageOutput,
     exec: synchronizedComputeFunction(() => Effect.succeed({ [DEFAULT_OUTPUT]: [textToImageTool] })),
   }),
@@ -268,6 +268,7 @@ const textToImageTool: LLMTool = {
   name: 'textToImage',
   type: ToolTypes.TextToImage,
   options: {
-    model: '@testing/kitten-in-bubble',
+    // TODO(burdon): Testing.
+    // model: '@testing/kitten-in-bubble',
   },
 };

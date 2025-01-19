@@ -19,7 +19,7 @@ import { type StateMachine, type StateMachineContext } from './graph';
 import { ComputeContext, useGraphMonitor } from './hooks';
 import { computeShapes } from './registry';
 import { type ComputeShape } from './shapes';
-import { createGPTRealtime, createMachine, createTest1, createTest3 } from './testing';
+import { createGPTRealtime, createMachine, createTest1, createTest3, createTest4 } from './testing';
 import { Editor, type EditorController, type EditorRootProps } from '../components';
 import { JsonFilter, ShapeRegistry } from '../components';
 import { Container } from '../components/Container';
@@ -231,12 +231,6 @@ export const GPT: Story = {
     // sidebar: 'json',
     sidebar: 'state-machine',
     registry: new ShapeRegistry(computeShapes),
-    // spec: [
-    //   { type: Testing.OrgType, count: 2 },
-    //   { type: Testing.ProjectType, count: 4 },
-    //   { type: Testing.ContactType, count: 8 },
-    // ],
-    // registerSchema: true,
     ...createMachine(createTest3({ db: false, viewText: true, history: true }), {
       gpt: new EdgeGpt(
         new AIServiceClientImpl({
@@ -256,13 +250,25 @@ export const GPTImage: Story = {
     // sidebar: 'json',
     sidebar: 'state-machine',
     registry: new ShapeRegistry(computeShapes),
-    // spec: [
-    //   { type: Testing.OrgType, count: 2 },
-    //   { type: Testing.ProjectType, count: 4 },
-    //   { type: Testing.ContactType, count: 8 },
-    // ],
-    // registerSchema: true,
     ...createMachine(createTest3({ db: false, viewText: true, history: true, textToImage: true, artifact: true }), {
+      gpt: new EdgeGpt(
+        new AIServiceClientImpl({
+          // endpoint: 'https://ai-service.dxos.workers.dev',
+          endpoint: 'http://localhost:8787',
+        }),
+      ),
+    }),
+  },
+};
+
+export const GPTAudio: Story = {
+  args: {
+    // debug: true,
+    showGrid: false,
+    snapToGrid: false,
+    sidebar: 'state-machine',
+    registry: new ShapeRegistry(computeShapes),
+    ...createMachine(createTest4(), {
       gpt: new EdgeGpt(
         new AIServiceClientImpl({
           // endpoint: 'https://ai-service.dxos.workers.dev',

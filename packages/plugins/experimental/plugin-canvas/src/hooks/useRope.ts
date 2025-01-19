@@ -10,7 +10,7 @@ import { GraphModel, type GraphNode } from '@dxos/graph';
 import { type Point } from '@dxos/react-ui-canvas';
 import { range } from '@dxos/util';
 
-import { pointAdd, pointDivide, pointSubtract } from '../layout';
+import { createCurveThroughPoints, pointAdd, pointDivide, pointSubtract } from '../layout';
 
 export type Rope = {
   id: string;
@@ -22,19 +22,23 @@ export type RopeOptions = {
   nodes: number;
   linkLength: number;
   linkStrength: number;
+  ropeLength: number;
   gravity: number;
   alphaTarget: number;
+  curve?: boolean;
 };
 
 export const defaultOptions: RopeOptions = {
   nodes: 11,
-  linkLength: 16,
+  linkLength: 0,
   linkStrength: 0.5,
+  ropeLength: 200,
   gravity: 0.9,
   alphaTarget: 0.3,
+  curve: false,
 };
 
-const endSize = 8;
+const endSize = 4;
 const midSize = 3;
 
 export type RopeResult = {
@@ -46,7 +50,16 @@ export const useRope = (
   elements: Rope[],
   _options: Partial<RopeOptions> = defaultOptions,
 ): RopeResult | undefined => {
-  const options = useMemo(() => ({ ...defaultOptions, ..._options }), [_options]);
+  const options = useMemo(() => {
+    const options = { ...defaultOptions, ..._options };
+    if (options.nodes < 2) {
+      throw new Error('Invalid number of nodes.');
+    }
+    if (!options.linkLength) {
+      options.linkLength = options.ropeLength / options.nodes;
+    }
+    return options;
+  }, [_options]);
 
   // TODO(burdon): Add/delete elements.
   const graph = useMemo(() => {
@@ -78,13 +91,16 @@ export const useRope = (
       paths.attr('d', ({ id }) => {
         const find = (id: string) => simulation.nodes().find((d: any) => d.id === id)!;
         const root = graph.getNode(`${id}-0`)!;
-        return graph
-          .traverse(root)
-          .map(({ id }, i) => {
-            const node = find(id);
-            return i === 0 ? `M ${node.x},${node.y}` : `L ${node.x},${node.y}`;
-          })
-          .join(' ');
+        const points = graph.traverse(root).map(({ id }) => find(id));
+        if (options.curve) {
+          return createCurveThroughPoints(points);
+        } else {
+          return points
+            .map(({ x, y }, i) => {
+              return i === 0 ? `M ${x},${y}` : `L ${x},${y}`;
+            })
+            .join(' ');
+        }
       });
     });
 

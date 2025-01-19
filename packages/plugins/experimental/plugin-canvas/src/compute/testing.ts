@@ -13,6 +13,7 @@ import { createComputeNode, DEFAULT_INPUT, DEFAULT_OUTPUT, StateMachine, type Se
 import {
   createAnd,
   createAppend,
+  createAudio,
   createBeacon,
   createChat,
   createConstant,
@@ -22,8 +23,8 @@ import {
   createJson,
   createList,
   createOr,
+  createScope,
   createSwitch,
-  createText,
   createTextToImage,
   createView,
 } from './shapes';
@@ -168,6 +169,27 @@ export const createTest3 = ({
       : []),
     ...(cot ? [{ source: 'gpt', target: 'cot', data: { output: 'cot', input: DEFAULT_INPUT } }] : []),
     ...(artifact ? [{ source: 'gpt', target: 'artifact', data: { output: 'artifact', input: DEFAULT_INPUT } }] : []),
+  ];
+
+  return new GraphModel<GraphNode<ComputeShape>, GraphEdge<Connection>>({
+    nodes: nodes.map((data) => ({ id: data.id, data })),
+    edges: edges.map(({ source, target, data }) => ({
+      id: createEdgeId({ source, target }),
+      source,
+      target,
+      data,
+    })),
+  });
+};
+
+export const createTest4 = () => {
+  const nodes: Shape[] = [
+    createAudio({ id: 'audio', ...layout({ x: -6, y: 0 }) }),
+    createScope({ id: 'scope', ...layout({ x: 6, y: 0 }) }),
+  ];
+
+  const edges: Omit<GraphEdge<Connection>, 'id'>[] = [
+    { source: 'audio', target: 'scope', data: { input: DEFAULT_INPUT, output: DEFAULT_OUTPUT } },
   ];
 
   return new GraphModel<GraphNode<ComputeShape>, GraphEdge<Connection>>({

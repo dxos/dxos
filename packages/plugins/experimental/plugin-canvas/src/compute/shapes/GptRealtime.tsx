@@ -2,18 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
-import type { ResultStreamEvent } from '@dxos/assistant';
-import { GptInput, GptOutput } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
+import { Icon } from '@dxos/react-ui';
 
-import { createFunctionAnchors, FunctionBody, getHeight } from './Function';
+import { createFunctionAnchors } from './Function';
 import { ComputeShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { useComputeNodeState } from '../hooks';
-import { Box } from './common';
-import { Icon } from '@dxos/react-ui';
 
 export const GptRealtimeShape = S.extend(
   ComputeShape,
@@ -37,7 +34,6 @@ export const createGptRealtime = ({ id, ...rest }: CreateGptRealtimeProps): GptR
 
 export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeShape>) => {
   const { meta, runtime } = useComputeNodeState(shape);
-
   const [isLive, setIsLive] = useState(false);
   const [isReady, setIsReady] = useState(false);
 
@@ -88,7 +84,7 @@ export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeS
 
       const dataChannel = peerConnection.createDataChannel('response');
 
-      function configureData() {
+      const configureData = () => {
         console.log('Configuring data channel');
         const event = {
           type: 'session.update',
@@ -99,7 +95,7 @@ export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeS
           },
         };
         dataChannel.send(JSON.stringify(event));
-      }
+      };
 
       dataChannel.addEventListener('open', (ev) => {
         console.log('Opening data channel', ev);

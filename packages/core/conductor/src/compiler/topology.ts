@@ -139,27 +139,21 @@ export const createTopology = async ({ graph, computeMetaResolver }: CreateTopol
       property: input.name,
     });
 
-    // TODO(burdon): Output first?
     if (AST.isNeverKeyword(output.schema.ast)) {
+      log.warn('output does not exist on node:', { source: targetNode.graphNode.type, target: output.name });
       topology.diagnostics.push({
         severity: 'error',
         edgeId: edge.id,
-        message: `Output does not exist on node: [${sourceNode.graphNode.type}] -> ${output.name}`,
+        message: `output does not exist on node: [${sourceNode.graphNode.type}] -> ${output.name}`,
       });
     }
 
     if (AST.isNeverKeyword(input.schema.ast)) {
-      log.info('Input does not exist on node:', {
-        targetNode: targetNode.graphNode.type,
-        input: input.name,
-        type: input.schema.ast,
-        nodeInputType: targetNode.meta.input.ast,
-        pickProperty: pickProperty(targetNode.meta.input, input.name).ast,
-      });
+      log.warn('input does not exist on node:', { source: input.name, target: targetNode.graphNode.type });
       topology.diagnostics.push({
         severity: 'error',
         edgeId: edge.id,
-        message: `Input does not exist on node: ${input.name} -> [${targetNode.graphNode.type}]`,
+        message: `input does not exist on node: ${input.name} -> [${targetNode.graphNode.type}]`,
       });
     }
   }

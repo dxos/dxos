@@ -7,6 +7,7 @@ export * from './defs';
 
 export * from './Array';
 export * from './Append';
+export * from './Audio';
 export * from './Beacon';
 export * from './Boolean';
 export * from './Counter';
@@ -17,6 +18,7 @@ export * from './Gpt';
 export * from './Json';
 export * from './List';
 export * from './Logic';
+export * from './Scope';
 export * from './Switch';
 export * from './Table';
 export * from './Text';

@@ -182,7 +182,7 @@ export const findLineIntersection = ([p1, p2]: Line, [q1, q2]: Line): Point | nu
 // SVG Paths
 //
 
-export const createPathFromPoints = (points: Point[]): string => {
+export const createPathThroughPoints = (points: Point[], smooth = true): string => {
   if (points.length < 2) {
     return '';
   }
@@ -194,30 +194,30 @@ export const createPathFromPoints = (points: Point[]): string => {
     const p2 = rest[i + 1];
     const midX = (p1.x + p2.x) / 2;
     const midY = (p1.y + p2.y) / 2;
+    // Q = Quadratic Bézier curve.
     path.push(`Q ${p1.x},${p1.y} ${midX},${midY}`);
   }
 
+  // T = Smooth quadratic Bézier curve.
   const last = rest[rest.length - 1];
   path.push(`T ${last.x},${last.y}`);
-
   return path.join(' ');
 };
 
-export const createPathThroughPoints = (points: Point[]): string => {
+// TODO(burdon): Reconcile with above.
+export const createPathThroughPoints2 = (points: Point[]): string => {
   if (points.length < 2) {
     return '';
   }
 
   const [start, ...rest] = points;
   const path = [`M ${start.x},${start.y}`];
-
   for (let i = 0; i < rest.length; i++) {
-    const p0 = i === 0 ? start : points[i];
-    const p1 = rest[i];
-    const cpx = (p0.x + p1.x) / 2;
-    const cpy = (p0.y + p1.y) / 2;
-
-    path.push(`Q ${cpx},${cpy} ${p1.x},${p1.y}`);
+    const p1 = i === 0 ? start : points[i];
+    const p2 = rest[i];
+    const midX = (p1.x + p2.x) / 2;
+    const midY = (p1.y + p2.y) / 2;
+    path.push(`Q ${midX},${midY} ${p2.x},${p2.y}`);
   }
 
   return path.join(' ');
@@ -234,7 +234,7 @@ const curveGenerator = d3
   .x((d) => d.x)
   .y((d) => d.y);
 
-export const createSplineThroughPoints = (points: Point[]): string => {
+export const createCurveThroughPoints = (points: Point[]): string => {
   invariant(points.length >= 2);
   return curveGenerator(points)!;
 };

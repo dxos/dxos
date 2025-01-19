@@ -274,6 +274,7 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
             selected && [styles.frameSelected, styles.top],
             active && styles.frameActive,
             shape.guide && styles.frameGuide,
+            shape.classNames,
             debug && 'opacity-30',
           )}
           onClick={handleClick}

@@ -5,6 +5,7 @@
 import {
   andShape,
   appendShape,
+  audioShape,
   beaconShape,
   chatShape,
   constantShape,
@@ -19,6 +20,7 @@ import {
   notShape,
   orShape,
   // reduceShape,
+  scopeShape,
   switchShape,
   // tableShape,
   textShape,
@@ -43,6 +45,7 @@ export const computeShapes: { title: string; shapes: ShapeDef<any>[] }[] = [
       textShape,
       chatShape,
       switchShape,
+      audioShape,
     ],
   },
   {
@@ -80,6 +83,7 @@ export const computeShapes: { title: string; shapes: ShapeDef<any>[] }[] = [
       viewShape,
       counterShape,
       beaconShape,
+      scopeShape,
     ],
   },
 ];
