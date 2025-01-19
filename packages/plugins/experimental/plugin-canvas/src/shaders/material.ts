@@ -27,7 +27,7 @@ export type ShaderOptions = {
   speed: number;
   curl: number;
   chaos: number;
-  tint: [number, number, number];
+  color: [number, number, number];
 };
 
 /**
@@ -35,7 +35,7 @@ export type ShaderOptions = {
  * https://threejs.org/docs/#api/en/materials/ShaderMaterial
  */
 export class DofPointsMaterial extends THREE.ShaderMaterial {
-  constructor({ focus, tint, fov }: ShaderOptions) {
+  constructor({ focus, color, fov }: ShaderOptions) {
     super({
       fragmentShader: dofFrag,
       vertexShader: dofVert,
@@ -46,7 +46,7 @@ export class DofPointsMaterial extends THREE.ShaderMaterial {
         uBlur: { value: 1 },
         uFocus: { value: focus },
         uFov: { value: fov },
-        uMask: { value: tint },
+        uColor: { value: color },
       },
       transparent: true,
       // blending: THREE.NormalBlending,

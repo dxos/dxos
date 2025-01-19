@@ -64,9 +64,9 @@ const defaultOptions: ShaderOptions = {
   focus: 2.2, // Should be close to zoom value.
   aperture: 5.6, // Max 5.6 (sharper).
   speed: 15,
-  curl: 1, // Highter values (e.g., 10) create more plasma-like grouping; lower values are more diffuse (e.g., 1)
+  curl: 1, // Higher values (e.g., 10) create more plasma-like grouping; lower values are more diffuse (e.g., 1).
   chaos: 1, // Degree of chaos (1-5).
-  tint: [0, 0.2, 0.6],
+  color: [0, 0.2, 0.6],
 };
 
 const Sphere = ({ active, options = defaultOptions }: { active?: boolean; options?: ShaderOptions }) => {
@@ -121,7 +121,13 @@ const Particles = ({ active, options: { size, ...options } }: { active?: boolean
   const getAmplitude = useAudioStream(active);
 
   // Update FBO and point-cloud every frame.
-  useFrame(({ gl, clock }) => {
+  // https://r3f.docs.pmnd.rs/api/hooks#useframe
+  useFrame(({ gl, clock, internal }, delta) => {
+    // TODO(burdon): Pause rendering if frame rate is too low (e.g., while dragging).
+    if (delta > 0.01) {
+      return;
+    }
+
     gl.setRenderTarget(target);
     gl.clear();
     gl.render(scene, camera);
@@ -133,6 +139,7 @@ const Particles = ({ active, options: { size, ...options } }: { active?: boolean
     const sim = simRef.current;
 
     render.uniforms.positions.value = target.texture;
+    // TODO(burdon): These don't seem to affect anything?
     render.uniforms.uTime.value = clock.elapsedTime;
     render.uniforms.uFocus.value = THREE.MathUtils.lerp(render.uniforms.uFocus.value, options.focus, 0.1);
     render.uniforms.uFov.value = THREE.MathUtils.lerp(render.uniforms.uFov.value, options.fov, 0.1);
@@ -141,8 +148,8 @@ const Particles = ({ active, options: { size, ...options } }: { active?: boolean
     const amplitude = getAmplitude();
     sim.uniforms.uCurl.value = options.curl;
     sim.uniforms.uTime.value = clock.elapsedTime * options.speed;
-    // sim.uniforms.uPerturbation.value = Math.cos(clock.elapsedTime * options.speed * 0.5 * amplitude) * 0.1;
     sim.uniforms.uPerturbation.value = 2.5 + amplitude;
+    // sim.uniforms.uPerturbation.value = Math.cos(clock.elapsedTime * options.speed * 0.5 * amplitude) * 0.1;
   });
 
   return (

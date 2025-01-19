@@ -8,9 +8,8 @@ import { type S } from '@dxos/echo-schema';
 import { mapValues } from '@dxos/util';
 
 // TODO(burdon): Move to types to untangle circular deps.
-import type { EventLogger, GptService, SpaceService } from '../services';
 import type { ComputeNode } from './graph';
-import type { GraphNode } from '@dxos/graph';
+import type { EventLogger, GptService, SpaceService } from '../services';
 
 export type NotExecuted = { kind: 'not-executed' };
 export const NotExecuted: NotExecuted = { kind: 'not-executed' };
@@ -28,8 +27,8 @@ export type ValueRecord = Record<string, any>;
 export type ValueEffect<T> = Effect.Effect<T, Error | NotExecuted, never>;
 
 /**
- * Bag of effects that defines node's inputs or outputs.
- * One per property.
+ * A bag of values that can be fufulled asynchronously and independently.
+ * Represeted as a set of effects (one per property).
  * We do that so that each input or output can be resolved independently.
  * This also handles control flow by providing a "not-executed" marker.
  * NOTE: Those effects cannot access requirements (logger, services, etc.).
@@ -42,6 +41,7 @@ export type ValueBag<T extends ValueRecord = ValueRecord> = {
     [K in keyof T]: ValueEffect<T[K]>;
   };
 };
+
 export const isValueBag = (value: any): value is ValueBag => value.type === 'bag';
 
 export const makeValueBag = <T extends ValueRecord>(values: {
@@ -51,6 +51,9 @@ export const makeValueBag = <T extends ValueRecord>(values: {
   values: mapValues(values as any, (value) => (Effect.isEffect(value) ? value : Effect.succeed(value))) as any,
 });
 
+/**
+ * Unwraps the bag into a single effect.
+ */
 export const unwrapValueBag = <T extends ValueRecord>(bag: ValueBag<T>): ValueEffect<T> => {
   if (isNotExecuted(bag)) {
     return Effect.fail(NotExecuted);
@@ -87,16 +90,14 @@ export type ComputeEffect<T> = Effect.Effect<T, Error | NotExecuted, ComputeRequ
  * Lifts a compute function that takes all inputs together and returns all outputs together.
  */
 // TODO(dmaretskyi): output schema needs to be passed in in-case the node does not execute to know the output property names to propagate not-executed marker further.
-export const synchronizedComputeFunction = <I extends ValueRecord, O extends ValueRecord>(
-  fn: (input: I) => ComputeEffect<O>,
-): ComputeFunction<I, O> => {
-  return (inputBag) =>
+export const synchronizedComputeFunction =
+  <I extends ValueRecord, O extends ValueRecord>(fn: (input: I) => ComputeEffect<O>): ComputeFunction<I, O> =>
+  (inputBag) =>
     Effect.gen(function* () {
       const input = yield* unwrapValueBag(inputBag);
       const output = yield* fn(input);
       return makeValueBag<O>(output);
     });
-};
 
 // TODO(dmaretskyi): To effect schema.
 export type ComputeMeta = {
