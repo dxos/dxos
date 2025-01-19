@@ -9,10 +9,12 @@ import {
   type ComputeNode,
   type Executable,
   GptService,
+  NotExecuted,
   defineComputeNode,
   gptNode,
   makeValueBag,
   synchronizedComputeFunction,
+  unwrapValueBag,
 } from '@dxos/conductor';
 import { raise } from '@dxos/debug';
 import { ObjectId, S } from '@dxos/echo-schema';
@@ -147,13 +149,24 @@ const nodeDefs: Record<NodeType, Executable> = {
   }),
 
   // Logic ops.
-  // TODO(dmaretskyi): This is wrong. The other output should get the not-executed signal.
   ['if' as const]: defineComputeNode({
     input: S.Struct({ condition: S.Boolean, value: S.Any }),
     output: S.Struct({ true: S.optional(S.Any), false: S.optional(S.Any) }),
-    exec: synchronizedComputeFunction(({ condition, value }) =>
-      Effect.succeed(condition ? { true: value } : { false: value }),
-    ),
+    exec: (input) =>
+      Effect.gen(function* () {
+        const { value, condition } = yield* unwrapValueBag(input);
+        if (condition) {
+          return makeValueBag({
+            true: Effect.succeed(value),
+            false: Effect.fail(NotExecuted),
+          });
+        } else {
+          return makeValueBag({
+            true: Effect.fail(NotExecuted),
+            false: Effect.succeed(value),
+          });
+        }
+      }),
   }),
 
   // TODO(dmaretskyi): Rename select.
