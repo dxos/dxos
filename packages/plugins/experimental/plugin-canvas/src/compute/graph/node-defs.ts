@@ -165,12 +165,12 @@ const nodeDefs: Record<NodeType, Executable> = {
     ),
   }),
 
-  // Generic.
   ['constant' as const]: defineComputeNode({
     input: VoidInput,
     output: DefaultOutput,
     exec: (_inputs, node) => Effect.succeed(makeValueBag({ [DEFAULT_OUTPUT]: node!.constant })),
   }),
+
   ['view' as const]: defineComputeNode({
     input: DefaultInput,
     output: DefaultOutput,
@@ -182,6 +182,7 @@ const nodeDefs: Record<NodeType, Executable> = {
     input: VoidInput,
     output: S.Struct({ [DEFAULT_OUTPUT]: S.String }),
   }),
+
   ['thread' as const]: defineComputeNode({
     input: VoidInput,
     output: S.Struct({
@@ -209,6 +210,7 @@ const nodeDefs: Record<NodeType, Executable> = {
       }),
     ),
   }),
+
   ['append' as const]: defineComputeNode({
     input: AppendInput,
     output: VoidOutput,
