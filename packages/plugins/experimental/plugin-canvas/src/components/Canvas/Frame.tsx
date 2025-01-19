@@ -262,7 +262,7 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
         <div
           ref={ref}
           {...shapeAttrs(shape)}
-          style={getBoundsProperties({ x: 0, y: 0, ...shape.size })}
+          style={{ ...getBoundsProperties({ x: 0, y: 0, ...shape.size }), borderRadius: shape.round ? '50%' : '' }}
           className={mx(
             'absolute overflow-hidden box-border',
             classNames,

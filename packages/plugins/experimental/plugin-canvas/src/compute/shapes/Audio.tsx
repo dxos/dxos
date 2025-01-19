@@ -122,7 +122,8 @@ export const useAudioStream = (active?: boolean): (() => number) => {
 
     analyserRef.current.getByteFrequencyData(dataArrayRef.current);
     const average = dataArrayRef.current.reduce((a, b) => a + b) / dataArrayRef.current.length;
-    return average / 255; // Normalize to 0-1.
+    const amplitude = average / 255; // Normalize to 0-1.
+    return amplitude > 0.1 ? amplitude : 0; // Sensitivity.
   };
 
   return getAmplitude;

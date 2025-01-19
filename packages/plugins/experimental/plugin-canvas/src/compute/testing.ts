@@ -185,7 +185,7 @@ export const createTest3 = ({
 export const createTest4 = () => {
   const nodes: Shape[] = [
     createAudio({ id: 'audio', ...layout({ x: -6, y: 0 }) }),
-    createScope({ id: 'scope', ...layout({ x: 6, y: -3 }) }),
+    createScope({ id: 'scope', ...layout({ x: 6, y: 0 }) }),
   ];
 
   const edges: Omit<GraphEdge<Connection>, 'id'>[] = [

@@ -18,52 +18,50 @@ import simVert from './glsl/sim.vert';
 // gl.shaderSource(shader, source);
 // gl.compileShader(shader);
 
-export type Options = {
+export type ShaderOptions = {
   size: number;
+  fov: number;
+  zoom: number;
   focus: number;
   speed: number;
   aperture: number;
   curl: number;
   chaos: number;
   tint: [number, number, number];
-
-  fov: number;
-  zoom: number;
 };
 
 /**
  * Depth of field.
- * https://threejs.org/docs/#api/en/materials/PointsMaterial
+ * https://threejs.org/docs/#api/en/materials/ShaderMaterial
  */
 export class DofPointsMaterial extends THREE.ShaderMaterial {
-  constructor({ focus, tint, fov }: Options) {
+  constructor({ focus, tint, fov }: ShaderOptions) {
     super({
       fragmentShader: dofFrag,
       vertexShader: dofVert,
+      vertexColors: true,
       uniforms: {
         positions: { value: null },
         uTime: { value: 0 },
+        uBlur: { value: 1 },
         uFocus: { value: focus },
         uFov: { value: fov },
-        uBlur: { value: 5 },
         uMask: { value: tint },
       },
       transparent: true,
-      blending: THREE.NormalBlending,
+      // blending: THREE.NormalBlending,
+      blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
   }
 }
 
+const n = 512;
+const r = 128;
+
 export class SimulationMaterial extends THREE.ShaderMaterial {
-  constructor({ chaos, curl }: Options) {
-    const positionsTexture = new THREE.DataTexture(
-      getSphere(512 * 512, 128),
-      512,
-      512,
-      THREE.RGBAFormat,
-      THREE.FloatType,
-    );
+  constructor({ curl, chaos }: ShaderOptions) {
+    const positionsTexture = new THREE.DataTexture(getSphere(n * n, r), n, n, THREE.RGBAFormat, THREE.FloatType);
     positionsTexture.needsUpdate = true;
     super({
       fragmentShader: simFrag,
@@ -71,7 +69,7 @@ export class SimulationMaterial extends THREE.ShaderMaterial {
       uniforms: {
         positions: { value: positionsTexture },
         uTime: { value: 0 },
-        uCurlFreq: { value: curl },
+        uCurl: { value: curl },
         uChaos: { value: chaos },
         uPerturbation: { value: 1.0 },
       },
@@ -79,20 +77,28 @@ export class SimulationMaterial extends THREE.ShaderMaterial {
   }
 }
 
-const getSphere = (count: number, size: number, p = new THREE.Vector4()) => {
+/**
+ * Generates a random points on the surface a sphere.
+ */
+const getSphere = (count: number, radius: number, p = new THREE.Vector4()) => {
   const data = new Float32Array(count * 4);
   for (let i = 0; i < count * 4; i += 4) {
-    getPoint(p, size, data, i);
+    getPoint(p, radius, data, i);
   }
 
   return data;
 };
 
-const getPoint = (v: any, size: number, data: Float32Array, offset: number): any => {
-  v.set(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1);
-  if (v.length() > 1) {
-    return getPoint(v, size, data, offset);
+/**
+ * Generates a random point on the surface a sphere and writes it to the data array at offset.
+ */
+const getPoint = (p: THREE.Vector4, radius: number, data: Float32Array, offset: number): any => {
+  // Generate random point in cube, recursively try again if outside unit sphere
+  p.set(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1, 0);
+  if (p.length() > 1) {
+    return getPoint(p, radius, data, offset);
   }
 
-  return v.normalize().multiplyScalar(size).toArray(data, offset);
+  // Scale point to sphere surface and write to array.
+  return p.normalize().multiplyScalar(radius).toArray(data, offset);
 };

@@ -13,7 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { useAudioStream } from './Audio';
 import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
 import { createAnchorMap, type ShapeComponentProps, type ShapeDef } from '../../components';
-import { DofPointsMaterial, SimulationMaterial } from '../../shaders';
+import { DofPointsMaterial, type ShaderOptions, SimulationMaterial } from '../../shaders';
 import { DEFAULT_INPUT } from '../graph';
 import { useComputeNodeState } from '../hooks';
 
@@ -31,7 +31,8 @@ export type CreateScopeProps = CreateShapeProps<ScopeShape>;
 export const createScope = ({ id, ...rest }: CreateScopeProps): ScopeShape => ({
   id,
   type: 'scope',
-  size: { width: 256, height: 256 },
+  size: { width: 192, height: 192 },
+  round: true,
   ...rest,
 });
 
@@ -56,33 +57,19 @@ export const scopeShape: ShapeDef<ScopeShape> = {
   getAnchors: (shape) => createAnchorMap(shape, { [createAnchorId('input')]: { x: -1, y: 0 } }),
 };
 
-export type Options = {
-  size: number;
-  focus: number;
-  speed: number;
-  aperture: number;
-  curl: number;
-  chaos: number;
-  tint: [number, number, number];
-
-  fov: number;
-  zoom: number;
+const defaultOptions: ShaderOptions = {
+  size: 500,
+  fov: 50,
+  zoom: 2.9,
+  focus: 2.3,
+  speed: 10,
+  aperture: 5.2,
+  curl: 1.1,
+  chaos: 5,
+  tint: [0, 0.2, 0.7],
 };
 
-const defaultOptions: Options = {
-  size: 100,
-  focus: 7,
-  speed: 5,
-  aperture: 9,
-  curl: 0.9,
-  chaos: 10,
-  tint: [0, 0, 0.9],
-
-  fov: 15,
-  zoom: 7,
-};
-
-const Sphere = ({ active, options = defaultOptions }: { active?: boolean; options?: Options }) => {
+const Sphere = ({ active, options = defaultOptions }: { active?: boolean; options?: ShaderOptions }) => {
   // https://docs.pmnd.rs/react-three-fiber/api/canvas#render-props
   return (
     <Canvas
@@ -101,15 +88,18 @@ const Sphere = ({ active, options = defaultOptions }: { active?: boolean; option
   );
 };
 
-const Particles = ({ active, options: { size, ...options } }: { active?: boolean; options: Options }) => {
+const Particles = ({ active, options: { size, ...options } }: { active?: boolean; options: ShaderOptions }) => {
   // Set up frame buffer.
   const [scene] = useState(() => new THREE.Scene());
   const [camera] = useState(() => new THREE.OrthographicCamera(-1, 1, 1, -1, 1 / Math.pow(2, 53), 1));
   const [positions] = useState(() => new Float32Array([-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, -1, 0, 1, 1, 0, -1, 1, 0]));
   const [uvs] = useState(() => new Float32Array([0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0]));
 
+  // Creates a WebGL Frame Buffer Object (FBO) with dimensions size x size
   // https://drei.docs.pmnd.rs/misc/fbo-use-fbo
-  const target = useFBO(size, size, { magFilter: THREE.NearestFilter });
+  const target = useFBO(size, size, {
+    magFilter: THREE.NearestFilter, // Uses nearest neighbor sampling (pixelated look)
+  });
 
   // Particles.
   const particles = useMemo(() => {
@@ -128,7 +118,7 @@ const Particles = ({ active, options: { size, ...options } }: { active?: boolean
   const simRef = useRef<any>();
 
   // TODO(burdon): Get from stream.
-  const getAmplitude = useAudioStream(true);
+  const getAmplitude = useAudioStream(active);
 
   // Update FBO and point-cloud every frame.
   useFrame(({ gl, clock }) => {
@@ -148,10 +138,11 @@ const Particles = ({ active, options: { size, ...options } }: { active?: boolean
     render.uniforms.uFov.value = THREE.MathUtils.lerp(render.uniforms.uFov.value, options.fov, 0.1);
     render.uniforms.uBlur.value = THREE.MathUtils.lerp(render.uniforms.uBlur.value, (5.6 - options.aperture) * 9, 0.1);
 
-    sim.uniforms.uCurlFreq.value = options.curl;
+    const amplitude = getAmplitude();
+    sim.uniforms.uCurl.value = options.curl;
     sim.uniforms.uTime.value = clock.elapsedTime * options.speed;
-    // sim.uniforms.uPerturbation.value = Math.sin(clock.elapsedTime * 8) * 0.5 + 0.5;
-    sim.uniforms.uPerturbation.value = getAmplitude();
+    // sim.uniforms.uPerturbation.value = Math.cos(clock.elapsedTime * options.speed * 0.5 * amplitude) * 0.1;
+    sim.uniforms.uPerturbation.value = 2.5 + amplitude;
   });
 
   return (
