@@ -39,6 +39,7 @@ export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeS
   const { meta, runtime } = useComputeNodeState(shape);
 
   const [isLive, setIsLive] = useState(false);
+  const [isReady, setIsReady] = useState(false);
 
   const start = async () => {
     setIsLive(true);
@@ -52,8 +53,10 @@ export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeS
         const audioElement = document.createElement('audio');
         audioElement.srcObject = event.streams[0];
         audioElement.autoplay = true;
-        audioElement.controls = true;
+        audioElement.controls = false;
+        audioElement.style.display = 'none';
         document.body.appendChild(audioElement);
+        setIsReady(true);
       };
 
       // Get microphone stream
@@ -147,7 +150,7 @@ export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeS
   return (
     <div className='flex w-full justify-center items-center'>
       <Icon
-        icon={isLive ? 'ph--pulse--regular' : 'ph--play--regular'}
+        icon={isReady ? 'ph--waveform--regular' : isLive ? 'ph--pulse--regular' : 'ph--play--regular'}
         size={16}
         classNames={!isLive && 'cursor-pointer'}
         onClick={start}
