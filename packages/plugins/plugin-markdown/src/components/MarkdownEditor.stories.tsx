@@ -43,6 +43,7 @@ const DefaultStory = ({ content = '# Test', toolbar }: StoryProps) => {
   const doc = useMemo(() => createObject({ content }), [content]);
   const extensions = useMemo(() => [automerge(createDocAccessor(doc, ['content']))], [doc]);
 
+  // TODO(thure,wittjosiah): Use IntentPlugin with withPluginManager
   return (
     <IntentProvider value={storybookIntentValue}>
       <Main.Content
