@@ -13,25 +13,6 @@ import { type Specialize } from '@dxos/util';
 
 import { DofPointsMaterial, type ShaderOptions, SimulationMaterial } from './shaders';
 
-export const defaultShaderOptions2: ShaderOptions = {
-  // Camera.
-  aperture: 5.6,
-  fov: 90,
-  zoom: 4,
-  distance: 4,
-  focus: 0,
-  rotation: 0,
-
-  // Object.
-  size: 500,
-  speed: 30,
-  curl: 0.5,
-  chaos: 5,
-  alpha: 1,
-  gain: 0.25,
-  color: [0, 0.2, 0.6],
-};
-
 export const shaderPresets: Record<string, ShaderOptions> = {
   heptapod: {
     aperture: 5.6,
@@ -48,7 +29,7 @@ export const shaderPresets: Record<string, ShaderOptions> = {
     gain: 0.8,
     color: [0, 0.2, 0.6],
   },
-  heptapod2: {
+  spore: {
     aperture: 5.6,
     fov: 50,
     zoom: 0.8,
@@ -63,25 +44,25 @@ export const shaderPresets: Record<string, ShaderOptions> = {
     gain: 0.8,
     color: [0, 0.2, 0.6],
   },
-  cell: {
+  portal: {
     aperture: 5.6,
     fov: 64,
-    zoom: 1.6,
+    zoom: 1.1,
     distance: 2,
     focus: 0,
     rotation: 0,
     size: 500,
-    speed: 10,
+    speed: 30,
     curl: 0.01,
-    chaos: 2,
-    alpha: 0.39,
+    chaos: 1,
+    alpha: 0.4,
     gain: 1,
     color: [0, 0.2, 0.6],
   },
   droplet: {
     aperture: 5.6,
     fov: 82,
-    zoom: 4.0,
+    zoom: 2.7,
     distance: 2,
     focus: 0.18,
     rotation: 0,
@@ -95,7 +76,7 @@ export const shaderPresets: Record<string, ShaderOptions> = {
   },
 };
 
-export const defaultShaderOptions = shaderPresets.heptapod2;
+export const defaultShaderOptions = Object.values(shaderPresets)[0];
 
 export type ChaosProps = {
   active?: boolean;
@@ -171,24 +152,32 @@ const Particles = ({
   const renderRef = useRef<any>();
   const simRef = useRef<any>();
 
+  // Pause if options changed.
+  // TODO(burdon): Pause if re-rendering (e.g., due to dragging). Memoize?
+  const pause = useRef(false);
+  useEffect(() => {
+    pause.current = true;
+    const t = setTimeout(() => {
+      pause.current = false;
+    }, 100);
+
+    return () => clearTimeout(t);
+  }, [options]);
+
   // Update FBO and point-cloud every frame.
   // https://r3f.docs.pmnd.rs/api/hooks#useframe
   useFrame(({ gl, clock }, delta) => {
-    // TODO(burdon): Pause rendering if frame rate is too low (e.g., while dragging).
+    gl.setRenderTarget(target);
     if (!active || delta > 0.03) {
       return;
     }
 
-    gl.setRenderTarget(target);
     gl.clear();
     gl.render(scene, camera);
     gl.setRenderTarget(null);
 
     invariant(renderRef.current);
     const render = renderRef.current;
-    invariant(simRef.current);
-    const sim = simRef.current;
-
     render.uniforms.positions.value = target.texture;
     render.uniforms.uTime.value = clock.elapsedTime;
     render.uniforms.uFocus.value = THREE.MathUtils.lerp(
@@ -199,6 +188,8 @@ const Particles = ({
     render.uniforms.uFov.value = THREE.MathUtils.lerp(render.uniforms.uFov.value, options.fov, 0.1);
     render.uniforms.uBlur.value = THREE.MathUtils.lerp(render.uniforms.uBlur.value, (5.6 - options.aperture) * 9, 0.1);
 
+    invariant(simRef.current);
+    const sim = simRef.current;
     sim.uniforms.uCurl.value = options.curl / 1;
     sim.uniforms.uTime.value = clock.elapsedTime * options.speed;
     sim.uniforms.uPerturbation.value = options.gain * (getValue?.() ?? 0);
