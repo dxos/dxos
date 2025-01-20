@@ -4,12 +4,12 @@
 
 import React from 'react';
 
+import { ReducerInput, ReducerOutput } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 
 import { createFunctionAnchors, FunctionBody, getHeight } from './Function';
 import { ComputeShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
-import { ReduceInput, ReduceOutput } from '../graph';
 
 //
 // Data
@@ -31,7 +31,7 @@ export type ReduceShape = S.Schema.Type<typeof ReduceShape>;
 export type ReduceComponentProps = ShapeComponentProps<ReduceShape>;
 
 export const ReduceComponent = ({ shape }: ReduceComponentProps) => {
-  return <FunctionBody shape={shape} inputSchema={ReduceInput} outputSchema={ReduceOutput} />;
+  return <FunctionBody shape={shape} inputSchema={ReducerInput} outputSchema={ReducerOutput} />;
 };
 
 //
@@ -42,7 +42,7 @@ export type CreateReduceProps = CreateShapeProps<ReduceShape> & { reduce?: strin
 
 export const createReduce = ({
   id,
-  size = { width: 192, height: getHeight(ReduceInput) },
+  size = { width: 192, height: getHeight(ReducerInput) },
   ...rest
 }: CreateReduceProps): ReduceShape => ({
   id,
@@ -57,5 +57,5 @@ export const reduceShape: ShapeDef<ReduceShape> = {
   icon: 'ph--repeat--regular',
   component: (props) => <ReduceComponent {...props} />,
   createShape: createReduce,
-  getAnchors: (shape) => createFunctionAnchors(shape, ReduceInput, ReduceOutput),
+  getAnchors: (shape) => createFunctionAnchors(shape, ReducerInput, ReducerOutput),
 };

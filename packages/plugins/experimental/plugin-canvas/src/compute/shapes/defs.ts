@@ -4,11 +4,11 @@
 
 import { AST } from '@effect/schema';
 
+import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { ObjectId, S } from '@dxos/echo-schema';
 import { type MakeOptional } from '@dxos/util';
 
 import { Polygon } from '../../types';
-import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '../graph';
 
 //
 // Properties

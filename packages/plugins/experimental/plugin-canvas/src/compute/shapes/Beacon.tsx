@@ -4,13 +4,13 @@
 
 import React from 'react';
 
+import { DEFAULT_INPUT } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 import { Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
 import { createAnchorMap, type ShapeComponentProps, type ShapeDef } from '../../components';
-import { DEFAULT_INPUT } from '../graph';
 import { useComputeNodeState } from '../hooks';
 
 export const BeaconShape = S.extend(

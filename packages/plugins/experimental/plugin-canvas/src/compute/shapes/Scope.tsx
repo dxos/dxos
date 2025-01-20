@@ -4,12 +4,12 @@
 
 import React from 'react';
 
+import { DEFAULT_INPUT } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 
 import { useAudioStream, Chaos, shaderOptions } from './common';
 import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
 import { createAnchorMap, type ShapeComponentProps, type ShapeDef } from '../../components';
-import { DEFAULT_INPUT } from '../graph';
 import { useComputeNodeState } from '../hooks';
 
 export const ScopeShape = S.extend(

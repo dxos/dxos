@@ -16,6 +16,7 @@ import {
   synchronizedComputeFunction,
   unwrapValueBag,
 } from '@dxos/conductor';
+import { DEFAULT_INPUT, DEFAULT_OUTPUT, DefaultInput, DefaultOutput, VoidInput, VoidOutput } from '@dxos/conductor';
 import { raise } from '@dxos/debug';
 import { ObjectId, S } from '@dxos/echo-schema';
 import { type GraphNode } from '@dxos/graph';
@@ -23,7 +24,6 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { DEFAULT_INPUT, DEFAULT_OUTPUT, DefaultInput, DefaultOutput, VoidInput, VoidOutput } from './types';
 // TODO(burdon): Push down defs to here.
 import { type ComputeShape, type ConstantShape } from '../shapes';
 
@@ -49,11 +49,11 @@ type NodeType =
   | 'thread'
   | 'view';
 
-export const createComputeNode2 = (type: NodeType): GraphNode<ComputeNode> => {
-  const factory =
-    nodeFactory[type ?? raise(new Error('Type not specified'))] ?? raise(new Error(`Unknown shape type: ${type}`));
-  return factory({ id: ObjectId.random(), type, data: {} });
-};
+// export const createComputeNode2 = (type: NodeType): GraphNode<ComputeNode> => {
+//   const factory =
+//     nodeFactory[type ?? raise(new Error('Type not specified'))] ?? raise(new Error(`Unknown shape type: ${type}`));
+//   return factory({ id: ObjectId.random(), type, data: {} });
+// };
 
 // TODO(burdon): Just pass in type? Or can the shape specialize the node?
 export const createComputeNode = (shape: GraphNode<ComputeShape>): GraphNode<ComputeNode> => {

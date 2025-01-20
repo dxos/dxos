@@ -4,6 +4,7 @@
 
 import React, { type JSX, useRef, useState } from 'react';
 
+import { DefaultInput, VoidInput, VoidOutput } from '@dxos/conductor';
 import { AST, S } from '@dxos/echo-schema';
 import { useProjection } from '@dxos/react-ui-canvas';
 
@@ -12,7 +13,6 @@ import { ComputeShape, createAnchorId, type CreateShapeProps, getProperties } fr
 import { getParentShapeElement, type ShapeComponentProps, type ShapeDef } from '../../components';
 import { createAnchors, rowHeight } from '../../components';
 import { type Polygon, type Shape } from '../../types';
-import { DefaultInput, VoidInput, VoidOutput } from '../graph';
 
 const expandedHeight = 200;
 

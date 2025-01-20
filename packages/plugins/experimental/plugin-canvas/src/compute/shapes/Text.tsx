@@ -4,6 +4,7 @@
 
 import React, { useRef, useState } from 'react';
 
+import { DEFAULT_OUTPUT } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 
 import { Box } from './common';
@@ -16,7 +17,6 @@ import {
   type TextBoxProps,
 } from '../../components';
 import { createAnchorMap } from '../../components';
-import { DEFAULT_OUTPUT } from '../graph';
 import { useComputeNodeState } from '../hooks';
 
 //

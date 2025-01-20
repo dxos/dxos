@@ -20,6 +20,8 @@ import {
   makeValueBag,
   SpaceService,
   unwrapValueBag,
+  type GptInput,
+  type GptOutput,
 } from '@dxos/conductor';
 import { MockGpt } from '@dxos/conductor';
 import { Resource } from '@dxos/context';
@@ -27,7 +29,6 @@ import { type GraphEdge, type GraphNode } from '@dxos/graph';
 import { log } from '@dxos/log';
 
 import { resolveComputeNode } from './node-defs';
-import type { GptInput, GptOutput } from './types';
 
 // TODO(burdon): API package for conductor.
 export const InvalidStateError = Error;

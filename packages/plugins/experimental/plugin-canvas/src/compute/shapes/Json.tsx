@@ -4,13 +4,13 @@
 
 import React from 'react';
 
+import { DEFAULT_INPUT } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 
 import { Box } from './common';
 import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
 import { JsonFilter, createAnchorMap } from '../../components';
-import { DEFAULT_INPUT } from '../graph';
 import { useComputeNodeState } from '../hooks';
 
 //

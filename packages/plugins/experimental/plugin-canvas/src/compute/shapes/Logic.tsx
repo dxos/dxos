@@ -4,12 +4,12 @@
 
 import React from 'react';
 
+import { IfElseInput, IfElseOutput, IfInput, IfOutput } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 
 import { createFunctionAnchors, FunctionBody, getHeight } from './Function';
 import { ComputeShape, type CreateShapeProps } from './defs';
 import { type ShapeComponentProps, type ShapeDef } from '../../components';
-import { IfElseInput, IfElseOutput, IfInput, IfOutput } from '../graph';
 
 //
 // Data

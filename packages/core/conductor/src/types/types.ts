@@ -30,6 +30,8 @@ export const VoidOutput = S.Struct({});
 export type VoidInput = S.Schema.Type<typeof VoidInput>;
 export type VoidOutput = S.Schema.Type<typeof VoidOutput>;
 
+// TODO(burdon): Move types to separate lib?
+
 //
 // GPT
 //
@@ -65,6 +67,10 @@ export const GptOutput = S.Struct({
 export type GptOutput = S.Schema.Type<typeof GptOutput>;
 
 //
+// Boolean
+//
+
+//
 // Logic
 //
 
@@ -84,8 +90,8 @@ export type IfElseOutput = S.Schema.Type<typeof IfElseOutput>;
 // Reducer
 //
 
-export const ReduceInput = S.mutable(S.Struct({ values: S.Array(S.Any) }));
-export type ReduceInput = S.Schema.Type<typeof ReduceInput>;
+export const ReducerInput = S.mutable(S.Struct({ values: S.Array(S.Any) }));
+export type ReducerInput = S.Schema.Type<typeof ReducerInput>;
 
-export const ReduceOutput = S.mutable(S.Struct({ [DEFAULT_OUTPUT]: S.Any }));
-export type ReduceOutput = S.Schema.Type<typeof ReduceOutput>;
+export const ReducerOutput = S.mutable(S.Struct({ [DEFAULT_OUTPUT]: S.Any }));
+export type ReducerOutput = S.Schema.Type<typeof ReducerOutput>;

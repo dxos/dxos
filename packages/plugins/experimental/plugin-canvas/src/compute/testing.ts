@@ -2,21 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ComputeGraphModel } from '@dxos/conductor';
+import { ComputeGraphModel, DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { ObjectId } from '@dxos/echo-schema';
 import { type GraphEdge, GraphModel, type GraphNode, createEdgeId } from '@dxos/graph';
 import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Dimension, type Point } from '@dxos/react-ui-canvas';
 
-import {
-  createComputeNode,
-  DEFAULT_INPUT,
-  DEFAULT_OUTPUT,
-  StateMachine,
-  type Services,
-  createComputeNode2,
-} from './graph';
+import { createComputeNode, StateMachine, type Services } from './graph';
 import {
   createAnd,
   createAppend,
@@ -56,9 +49,9 @@ const createLayout = (rect: Point & Partial<Dimension>, snap = 32): { center: Po
 export const createTest0 = () => {
   const model = ComputeGraphModel.create();
   model.builder.call((builder) => {
-    const a = createComputeNode2('switch');
-    const b = createComputeNode2('beacon');
-    builder.link({ node: a }, { node: b });
+    // const a = createComputeNode('switch');
+    // const b = createComputeNode('beacon');
+    // builder.link({ node: a }, { node: b });
   });
 
   return model;

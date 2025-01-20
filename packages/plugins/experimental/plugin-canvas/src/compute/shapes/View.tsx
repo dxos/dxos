@@ -4,15 +4,14 @@
 
 import React from 'react';
 
+import { DEFAULT_INPUT, isImage } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 
 import { Box, type BoxActionHandler } from './common';
 import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
 import { TextBox, type ShapeComponentProps, type ShapeDef } from '../../components';
 import { createAnchorMap } from '../../components';
-import { DEFAULT_INPUT } from '../graph/types';
 import { useComputeNodeState } from '../hooks';
-import { isImage } from '@dxos/conductor';
 
 export const ViewShape = S.extend(
   ComputeShape,

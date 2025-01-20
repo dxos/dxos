@@ -4,14 +4,14 @@
 
 import { Schema as S } from '@effect/schema';
 
-import { defineComputeNode } from '../types';
+import { defineComputeNode, VoidInput, VoidOutput } from '../types';
 
 export const inputNode = defineComputeNode({
-  input: S.Struct({}),
+  input: VoidInput,
   output: S.Record({ key: S.String, value: S.Any }),
 });
 
 export const outputNode = defineComputeNode({
   input: S.Record({ key: S.String, value: S.Any }),
-  output: S.Struct({}),
+  output: VoidOutput,
 });

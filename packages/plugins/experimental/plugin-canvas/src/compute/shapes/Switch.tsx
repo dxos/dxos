@@ -4,12 +4,12 @@
 
 import React, { useEffect, useState } from 'react';
 
+import { DEFAULT_OUTPUT } from '@dxos/conductor';
 import { S } from '@dxos/echo-schema';
 import { Input } from '@dxos/react-ui';
 
 import { ComputeShape, createAnchorId, type CreateShapeProps } from './defs';
 import { createAnchorMap, type ShapeComponentProps, type ShapeDef } from '../../components';
-import { DEFAULT_OUTPUT } from '../graph';
 import { useComputeNodeState } from '../hooks';
 
 export const SwitchShape = S.extend(
