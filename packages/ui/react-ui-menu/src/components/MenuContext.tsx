@@ -2,9 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { createContext, type PropsWithChildren, useContext, useMemo } from 'react';
+import { createContextScope, type Scope } from '@radix-ui/react-context';
+import React, { type PropsWithChildren, useMemo } from 'react';
 
 import { type MenuContextValue, type MenuItem, type MenuItemGroup } from '../defs';
+
+export type MenuScopedProps<P> = P & { __menuScope?: Scope };
+
+const MENU_NAME = 'GraphMenu';
+
+const [createMenuContext, createMenuScope] = createContextScope(MENU_NAME, []);
+
+const [MenuContextProvider, useMenu] = createMenuContext<MenuContextValue>(MENU_NAME);
 
 export const menuContextDefaults: MenuContextValue = {
   iconSize: 5,
@@ -12,24 +21,30 @@ export const menuContextDefaults: MenuContextValue = {
   resolveGroupItems: () => null,
 };
 
-export const MenuContext = createContext<MenuContextValue>(menuContextDefaults);
+const useMenuScope = createMenuScope();
 
-export const MenuProvider = ({
+const MenuProvider = ({
   children,
   resolveGroupItems = menuContextDefaults.resolveGroupItems,
   onAction = menuContextDefaults.onAction,
   iconSize = menuContextDefaults.iconSize,
 }: PropsWithChildren<Partial<MenuContextValue>>) => {
-  const contextValue = useMemo(
-    () => ({ resolveGroupItems, onAction, iconSize }),
-    [resolveGroupItems, onAction, iconSize],
+  const { scope } = useMenuScope(undefined);
+  return (
+    <MenuContextProvider resolveGroupItems={resolveGroupItems} onAction={onAction} iconSize={iconSize} scope={scope}>
+      {children}
+    </MenuContextProvider>
   );
-  return <MenuContext.Provider value={contextValue}>{children}</MenuContext.Provider>;
 };
 
-export const useMenu = () => useContext(MenuContext);
-
-export const useMenuItems = (group?: MenuItemGroup, propsItems?: MenuItem[]) => {
-  const { resolveGroupItems } = useMenu();
+export const useMenuItems = (
+  group?: MenuItemGroup,
+  propsItems?: MenuItem[],
+  consumerName: string = 'useMenuItemConsumer',
+  __menuScope?: Scope,
+) => {
+  const { resolveGroupItems } = useMenu(consumerName, __menuScope);
   return useMemo(() => propsItems ?? resolveGroupItems?.(group) ?? undefined, [propsItems, group, resolveGroupItems]);
 };
+
+export { useMenu, createMenuScope, MenuProvider };

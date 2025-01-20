@@ -9,7 +9,7 @@ import { type ToolbarRootProps } from '@dxos/react-ui';
 
 import { ActionLabel } from './ActionLabel';
 import { DropdownMenu } from './DropdownMenu';
-import { useMenu, useMenuItems } from './MenuContext';
+import { type MenuScopedProps, useMenu, useMenuItems } from './MenuContext';
 import {
   type MenuAction,
   type MenuItem,
@@ -44,8 +44,8 @@ export type ToolbarMenuActionGroupProps = {
   items?: MenuItem[];
 };
 
-const ActionToolbarItem = ({ action }: { action: MenuAction }) => {
-  const { onAction, iconSize } = useMenu();
+const ActionToolbarItem = ({ action, __menuScope }: MenuScopedProps<{ action: MenuAction }>) => {
+  const { onAction, iconSize } = useMenu('ActionToolbarItem', __menuScope);
   const handleClick = useCallback(() => {
     onAction?.(action);
   }, [action, onAction]);
@@ -65,11 +65,15 @@ const ActionToolbarItem = ({ action }: { action: MenuAction }) => {
   );
 };
 
-const DropdownMenuToolbarItem = ({ group, items: propsItems }: ToolbarMenuActionGroupProps) => {
+const DropdownMenuToolbarItem = ({
+  group,
+  items: propsItems,
+  __menuScope,
+}: MenuScopedProps<ToolbarMenuActionGroupProps>) => {
   const { iconOnly = true, disabled, testId } = group.properties;
   const suppressNextTooltip = useRef(false);
-  const { iconSize } = useMenu();
-  const items = useMenuItems(group, propsItems);
+  const { iconSize } = useMenu('DropdownMenuToolbarItem', __menuScope);
+  const items = useMenuItems(group, propsItems, 'DropdownMenuToolbarItem', __menuScope);
   const icon =
     ((group.properties as any).applyActiveIcon &&
       // TODO(thure): Handle other menu item types.
@@ -94,8 +98,8 @@ const DropdownMenuToolbarItem = ({ group, items: propsItems }: ToolbarMenuAction
   );
 };
 
-const ToggleGroupItem = ({ action }: { action: MenuAction }) => {
-  const { iconSize, onAction } = useMenu();
+const ToggleGroupItem = ({ action, __menuScope }: MenuScopedProps<{ action: MenuAction }>) => {
+  const { iconSize, onAction } = useMenu('ToggleGroupItem', __menuScope);
   const { icon, iconOnly = true, disabled } = action.properties;
   const handleClick = useCallback(() => {
     onAction?.(action);
@@ -115,8 +119,12 @@ const ToggleGroupItem = ({ action }: { action: MenuAction }) => {
   );
 };
 
-const ToggleGroupToolbarItem = ({ group, items: propsItems }: ToolbarMenuActionGroupProps) => {
-  const items = useMenuItems(group, propsItems);
+const ToggleGroupToolbarItem = ({
+  group,
+  items: propsItems,
+  __menuScope,
+}: MenuScopedProps<ToolbarMenuActionGroupProps>) => {
+  const items = useMenuItems(group, propsItems, 'ToggleGroupToolbarItem', __menuScope);
   const { selectCardinality, value } = group.properties;
   return (
     // TODO(thure): The type here is difficult to manage, what do?
@@ -132,8 +140,8 @@ const ToggleGroupToolbarItem = ({ group, items: propsItems }: ToolbarMenuActionG
   );
 };
 
-export const ToolbarMenu = ({ ...props }: ToolbarMenuProps) => {
-  const items = useMenuItems();
+export const ToolbarMenu = ({ __menuScope, ...props }: MenuScopedProps<ToolbarMenuProps>) => {
+  const items = useMenuItems(undefined, undefined, 'ToolbarMenu', __menuScope);
   return (
     <NaturalToolbar.Root {...props}>
       {items?.map((item: MenuItem, i: number) =>
