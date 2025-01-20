@@ -6,7 +6,7 @@ import React, { type MutableRefObject, useRef } from 'react';
 
 import { type Action, type Node } from '@dxos/app-graph';
 import { useTranslation, toLocalizedString, IconButton } from '@dxos/react-ui';
-import { DropdownMenu, type MenuAction } from '@dxos/react-ui-menu';
+import { DropdownMenu, MenuProvider, type MenuItem } from '@dxos/react-ui-menu';
 import { hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
 
 import { NAVTREE_PLUGIN } from '../meta';
@@ -40,23 +40,20 @@ export const NavTreeItemActionDropdownMenu = ({
 }: NavTreeItemActionMenuProps) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const suppressNextTooltip = useRef<boolean>(false);
-
   return (
-    <DropdownMenu.Root
-      actions={menuActions as MenuAction[]}
-      onAction={onAction}
-      suppressNextTooltip={suppressNextTooltip}
-    >
-      <DropdownMenu.Trigger asChild>
-        <IconButton
-          {...actionButtonProps}
-          icon={icon ?? fallbackIcon}
-          label={toLocalizedString(label, t)}
-          data-testid={testId}
-          suppressNextTooltip={suppressNextTooltip}
-        />
-      </DropdownMenu.Trigger>
-    </DropdownMenu.Root>
+    <MenuProvider onAction={onAction}>
+      <DropdownMenu.Root items={menuActions as MenuItem[]} suppressNextTooltip={suppressNextTooltip}>
+        <DropdownMenu.Trigger asChild>
+          <IconButton
+            {...actionButtonProps}
+            icon={icon ?? fallbackIcon}
+            label={toLocalizedString(label, t)}
+            data-testid={testId}
+            suppressNextTooltip={suppressNextTooltip}
+          />
+        </DropdownMenu.Trigger>
+      </DropdownMenu.Root>
+    </MenuProvider>
   );
 };
 

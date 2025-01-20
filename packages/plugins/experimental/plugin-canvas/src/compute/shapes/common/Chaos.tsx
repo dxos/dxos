@@ -26,7 +26,7 @@ export const shaderPresets: Record<string, ShaderOptions> = {
     curl: 0.7,
     chaos: 1,
     alpha: 0.53,
-    gain: 0.8,
+    gain: 0.9,
     color: [0, 0.2, 0.6],
   },
   spore: {
@@ -41,7 +41,7 @@ export const shaderPresets: Record<string, ShaderOptions> = {
     curl: 1,
     chaos: 1,
     alpha: 0.53,
-    gain: 0.8,
+    gain: 0.9,
     color: [0, 0.2, 0.6],
   },
   portal: {
@@ -56,7 +56,7 @@ export const shaderPresets: Record<string, ShaderOptions> = {
     curl: 0.01,
     chaos: 1,
     alpha: 0.4,
-    gain: 1,
+    gain: 0.9,
     color: [0, 0.2, 0.6],
   },
   droplet: {
@@ -71,7 +71,7 @@ export const shaderPresets: Record<string, ShaderOptions> = {
     curl: 0.01,
     chaos: 5,
     alpha: 0.1,
-    gain: 0.53,
+    gain: 0.9,
     color: [0, 0.2, 0.6],
   },
 };

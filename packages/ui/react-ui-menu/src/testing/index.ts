@@ -9,8 +9,8 @@ import { create } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { type DeepWriteable } from '@dxos/util';
 
-import { type ToolbarItem } from '../components';
-import { type MenuAction } from '../defs';
+import { type MenuAction, type MenuItemGroup, type MenuItem } from '../defs';
+import { type ActionGraphProps } from '../hooks';
 
 export type CreateActionsParams = Partial<{
   type?: typeof ACTION_TYPE | typeof ACTION_GROUP_TYPE;
@@ -57,7 +57,21 @@ export const createActions = (params?: CreateActionsParams) => {
   );
 };
 
-export const createNestedActionGraph = (groupParams?: CreateActionsParams, params?: CreateActionsParams) => {
+export const createNestedActions = () => {
+  const result: ActionGraphProps = { edges: [], nodes: [] };
+  const actionGroups = createActions({ type: ACTION_GROUP_TYPE });
+  actionGroups.forEach((group) => {
+    const actions = createActions();
+    result.nodes.push(group, ...actions);
+    result.edges.push(
+      { source: 'root', target: group.id },
+      ...actions.map((action) => ({ source: group.id, target: action.id })),
+    );
+  });
+  return result;
+};
+
+export const createNestedActionsResolver = (groupParams?: CreateActionsParams, params?: CreateActionsParams) => {
   const graph = new Graph();
   const actionGroups = createActions({ type: ACTION_GROUP_TYPE, ...groupParams });
   actionGroups.forEach((group) => {
@@ -67,10 +81,15 @@ export const createNestedActionGraph = (groupParams?: CreateActionsParams, param
     // @ts-ignore
     graph._addNodes([group as NodeArg<any>, ...(actions as NodeArg<any>[])]);
     // @ts-ignore
-    graph._addEdges(actions.map((action) => ({ source: group.id, target: action.id })));
+    graph._addEdges([
+      { source: 'root', target: group.id },
+      ...actions.map((action) => ({ source: group.id, target: action.id })),
+    ]);
     void graph.expand(group);
   });
-  return { graph, topLevelActions: actionGroups as ToolbarItem[] };
+  const resolveGroupItems = (groupNode?: MenuItemGroup) =>
+    (graph.actions(groupNode ?? graph.root) || null) as MenuItem[] | null;
+  return { resolveGroupItems };
 };
 
 export const mutateActionsOnInterval = (actions: Action[]) => {

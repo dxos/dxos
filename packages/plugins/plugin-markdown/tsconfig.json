@@ -7,6 +7,8 @@
       "DOM",
       "ESNext"
     ],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "types": [
       "@dxos/typings",
       "node"
@@ -24,6 +26,9 @@
   "references": [
     {
       "path": "../../common/async"
+    },
+    {
+      "path": "../../common/debug"
     },
     {
       "path": "../../common/invariant"

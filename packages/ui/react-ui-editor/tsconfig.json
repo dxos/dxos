@@ -65,6 +65,9 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/config"
     },
     {
@@ -75,6 +78,9 @@
     },
     {
       "path": "../react-ui"
+    },
+    {
+      "path": "../react-ui-menu"
     },
     {
       "path": "../react-ui-theme"

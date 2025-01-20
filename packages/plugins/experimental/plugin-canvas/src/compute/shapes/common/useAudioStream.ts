@@ -11,7 +11,11 @@ export type UseAudioStream = {
   getAverage: () => number;
 };
 
-// TODO(burdon): Factor out; reconcile with calls API.
+/**
+ * Web audio data channel.
+ * https://webaudio.github.io/web-audio-api
+ */
+// TODO(burdon): Factor out; reconcile with calls API?
 export const useAudioStream = (active?: boolean): UseAudioStream => {
   const audioContextRef = useRef<AudioContext>();
   const analyserRef = useRef<AnalyserNode>();
@@ -29,6 +33,11 @@ export const useAudioStream = (active?: boolean): UseAudioStream => {
   };
 
   useEffect(() => {
+    if (!active) {
+      close();
+      return;
+    }
+
     const initAudio = async () => {
       try {
         log.info('initializing microphone');
@@ -51,11 +60,6 @@ export const useAudioStream = (active?: boolean): UseAudioStream => {
         log.error('error accessing microphone:', err);
       }
     };
-
-    if (!active) {
-      close();
-      return;
-    }
 
     void initAudio();
 
@@ -80,6 +84,7 @@ export const useAudioStream = (active?: boolean): UseAudioStream => {
       }
 
       analyserRef.current.getByteFrequencyData(dataArrayRef.current);
+      // TODO(burdon): Use https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/smoothingTimeConstant
       const average = dataArrayRef.current.reduce((a, b) => a + b) / dataArrayRef.current.length;
       const amplitude = average / 255; // Normalize to 0-1.
       return amplitude > 0.1 ? amplitude : 0; // Sensitivity.

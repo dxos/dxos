@@ -35,7 +35,7 @@ export const Waveform = ({ size = 64, n = 10, range = defaultRange, data = [], g
   const paths = useRef<string[]>([]);
   const points = data.map((value, i) => ({ x: scaleX(i), y: scaleY(value) }));
   const path = curveGenerator(points) ?? '';
-  if (i.current % 20 === 0) {
+  if (i.current % 10 === 0) {
     paths.current.splice(0, 0, path);
     paths.current.length = trail;
   } else {
