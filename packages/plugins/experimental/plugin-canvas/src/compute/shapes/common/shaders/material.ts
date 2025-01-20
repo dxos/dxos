@@ -19,14 +19,23 @@ import simVert from './glsl/sim.vert';
 // gl.compileShader(shader);
 
 export type ShaderOptions = {
-  size: number;
+  // Camera.
   fov: number;
-  zoom: number;
-  focus: number;
+  /** Max 5.6 (sharper). */
   aperture: number;
+  zoom: number;
+  distance: number;
+  focus: number;
+  rotation: number;
+
+  // Object.
+  size: number;
   speed: number;
+  /** Higher values are more diffuse. */
   curl: number;
   chaos: number;
+  alpha: number;
+  gain: number;
   color: [number, number, number];
 };
 
@@ -35,7 +44,7 @@ export type ShaderOptions = {
  * https://threejs.org/docs/#api/en/materials/ShaderMaterial
  */
 export class DofPointsMaterial extends THREE.ShaderMaterial {
-  constructor({ focus, color, fov }: ShaderOptions) {
+  constructor({ distance, focus, color, fov }: ShaderOptions) {
     super({
       fragmentShader: dofFrag,
       vertexShader: dofVert,
@@ -44,7 +53,7 @@ export class DofPointsMaterial extends THREE.ShaderMaterial {
         positions: { value: null },
         uTime: { value: 0 },
         uBlur: { value: 1 },
-        uFocus: { value: focus },
+        uFocus: { value: distance + focus },
         uFov: { value: fov },
         uColor: { value: color },
       },
@@ -60,7 +69,7 @@ const n = 512;
 const r = 128;
 
 export class SimulationMaterial extends THREE.ShaderMaterial {
-  constructor({ curl, chaos }: ShaderOptions) {
+  constructor({ curl, chaos, alpha }: ShaderOptions) {
     const positionsTexture = new THREE.DataTexture(getSphere(n * n, r), n, n, THREE.RGBAFormat, THREE.FloatType);
     positionsTexture.needsUpdate = true;
     super({
@@ -70,7 +79,10 @@ export class SimulationMaterial extends THREE.ShaderMaterial {
         positions: { value: positionsTexture },
         uTime: { value: 0 },
         uCurl: { value: curl },
+        uCurls: { value: [2.0, 4.0, 8.0, 16.0, 32.0] },
+        // uCurls: { value: [32.0, 16.0, 8.0, 4.0, 2.0] },
         uChaos: { value: chaos },
+        uAlpha: { value: alpha },
         uPerturbation: { value: 1.0 },
       },
     });

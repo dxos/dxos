@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 
 import { AIServiceClientImpl, type ResultStreamEvent } from '@dxos/assistant';
 
-import { EdgeGpt } from '../services/gpt/edge-gpt';
+import { EdgeGpt } from '../services';
 import { createEdge, TestRuntime, testServices } from '../testing';
 import { ComputeGraphModel, makeValueBag, unwrapValueBag, NodeType, type ValueEffect } from '../types';
 

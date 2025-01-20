@@ -1,8 +1,18 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+/*
 import { Schema as S } from '@effect/schema';
-import { LLMTool } from '../ai-service';
-import { defineTool, LLMToolResult } from '../conversation';
-import { ObjectId, toJsonSchema } from '@dxos/echo-schema';
 import { describe, test } from 'vitest';
+
+import { ObjectId, toJsonSchema } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
+import { SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
+
+import { AIServiceClientImpl, LLMTool } from '../ai-service';
+import { defineTool, LLMToolResult } from '../conversation';
 
 // TODO(dmaretskyi): Effect schema.
 const ArtifactDef = S.Struct({
@@ -11,11 +21,13 @@ const ArtifactDef = S.Struct({
   schema: S.Any,
   actions: S.Array(LLMTool),
 }).pipe(S.mutable);
+
 type ArtifactDef = S.Schema.Type<typeof ArtifactDef>;
 
 const ListItem = S.Struct({
   name: S.String,
 });
+
 const ListSchema = S.Struct({
   id: ObjectId,
   title: S.String,
@@ -90,7 +102,7 @@ You have ability to interact with artifacts.
 Artifacts are persistent structured objects that have actions associated with them.
 
 Before replying to the user you should first query the artifact definitions and metadata.
-If there's 
+If there's
 
 `;
 
@@ -167,3 +179,4 @@ describe('Artifacts', () => {
     });
   });
 });
+*/

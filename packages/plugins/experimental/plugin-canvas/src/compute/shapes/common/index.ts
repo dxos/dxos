@@ -3,3 +3,7 @@
 //
 
 export * from './Box';
+export * from './Chaos';
+export * from './Waveform';
+
+export * from './useAudioStream';

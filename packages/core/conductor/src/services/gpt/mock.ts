@@ -9,8 +9,16 @@ import { ObjectId, type ResultStreamEvent } from '@dxos/assistant';
 import { log } from '@dxos/log';
 import { getDebugName } from '@dxos/util';
 
-import { makeValueBag, NotExecuted, unwrapValueBag, type ComputeEffect, type ValueBag } from '../../types';
-import type { GptInput, GptService, GptOutput } from '../gpt';
+import {
+  makeValueBag,
+  NotExecuted,
+  unwrapValueBag,
+  type ComputeEffect,
+  type ValueBag,
+  type GptInput,
+  type GptOutput,
+} from '../../types';
+import type { GptService } from '../gpt';
 
 export type GPTConfig = {
   initDelay?: number;

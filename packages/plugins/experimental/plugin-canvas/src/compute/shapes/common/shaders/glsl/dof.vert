@@ -13,6 +13,6 @@ void main() {
   vec3 pos = texture2D(positions, position.xy).xyz;
   vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
   gl_Position = projectionMatrix * mvPosition;
-  vDistance = abs(uFocus - -mvPosition.z) / 0.2;
-  gl_PointSize = (step(1.0 - (1.0 / uFov), position.x)) * vDistance * uBlur;
+  vDistance = abs(uFocus - -mvPosition.z) / 0.2; // TODO(burdon): Var.
+  gl_PointSize = max((step(1.0 - (1.0 / uFov), position.x)) * vDistance * uBlur, 1.0);
 }

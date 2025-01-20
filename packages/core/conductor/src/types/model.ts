@@ -7,6 +7,7 @@ import { createEdgeId, type GraphEdge, GraphModel, type GraphNode } from '@dxos/
 import { create, makeRef } from '@dxos/live-object';
 
 import { ComputeGraph, type ComputeEdge, type ComputeNode, isComputeGraph } from './graph';
+import { DEFAULT_INPUT } from './types';
 
 /**
  * Builder.
@@ -43,6 +44,10 @@ export class ComputeGraphModel extends GraphModel<GraphNode<ComputeNode>, GraphE
 class ComputeGraphBuilder {
   constructor(private readonly _model: GraphModel<GraphNode<ComputeNode>, GraphEdge<ComputeEdge>>) {}
 
+  get model() {
+    return this._model;
+  }
+
   call(cb: (graph: ComputeGraphBuilder) => void): this {
     cb(this);
     return this;
@@ -59,8 +64,8 @@ class ComputeGraphBuilder {
   }
 
   link(
-    source: { node: GraphNode<ComputeNode>; property: string },
-    target: { node: GraphNode<ComputeNode> | ComputeGraph; property: string },
+    source: { node: GraphNode<ComputeNode>; property?: string },
+    target: { node: GraphNode<ComputeNode> | ComputeGraph; property?: string },
   ): GraphEdge<ComputeEdge> {
     if (isComputeGraph(target.node)) {
       // Create local intermediate node linked to the subgraph.
@@ -72,8 +77,8 @@ class ComputeGraphBuilder {
       source: source.node.id,
       target: target.node.id,
       data: {
-        output: source.property,
-        input: target.property,
+        output: source.property ?? DEFAULT_INPUT,
+        input: target.property ?? DEFAULT_INPUT,
       },
     };
 

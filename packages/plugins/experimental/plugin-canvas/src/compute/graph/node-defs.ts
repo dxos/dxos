@@ -49,6 +49,12 @@ type NodeType =
   | 'thread'
   | 'view';
 
+export const createComputeNode2 = (type: NodeType): GraphNode<ComputeNode> => {
+  const factory =
+    nodeFactory[type ?? raise(new Error('Type not specified'))] ?? raise(new Error(`Unknown shape type: ${type}`));
+  return factory({ id: ObjectId.random(), type, data: {} });
+};
+
 // TODO(burdon): Just pass in type? Or can the shape specialize the node?
 export const createComputeNode = (shape: GraphNode<ComputeShape>): GraphNode<ComputeNode> => {
   const type = shape.data.type;
@@ -131,7 +137,10 @@ const nodeDefs: Record<NodeType, Executable> = {
     output: VoidOutput,
   }),
 
+  //
   // Boolean ops.
+  //
+
   ['and' as const]: defineComputeNode({
     input: S.Struct({ a: S.Boolean, b: S.Boolean }),
     output: S.Struct({ [DEFAULT_OUTPUT]: S.Boolean }),
@@ -148,7 +157,10 @@ const nodeDefs: Record<NodeType, Executable> = {
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: input }) => Effect.succeed({ [DEFAULT_OUTPUT]: !input })),
   }),
 
+  //
   // Logic ops.
+  //
+
   ['if' as const]: defineComputeNode({
     input: S.Struct({ condition: S.Boolean, value: S.Any }),
     output: S.Struct({ true: S.optional(S.Any), false: S.optional(S.Any) }),

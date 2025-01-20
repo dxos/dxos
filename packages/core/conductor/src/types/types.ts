@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { LLMTool } from '@dxos/assistant';
+import { LLMTool, Message, type ResultStreamEvent } from '@dxos/assistant';
 import { S } from '@dxos/echo-schema';
 
-// TODO(burdon): Move to @dxos/conductor.
+import { StreamSchema } from '../util';
 
 //
 // Default
@@ -34,6 +34,8 @@ export type VoidOutput = S.Schema.Type<typeof VoidOutput>;
 // GPT
 //
 
+const GptStreamEventSchema = S.Any as S.Schema<ResultStreamEvent>;
+
 export const GptMessage = S.Struct({
   role: S.Union(S.Literal('system'), S.Literal('user'), S.Literal('assistant')),
   message: S.String,
@@ -45,17 +47,19 @@ export const GptInput = S.Struct({
   systemPrompt: S.optional(S.String),
   prompt: S.String,
   model: S.optional(S.String),
-  history: S.optional(S.Array(GptMessage)),
-  tools: S.optional(S.Array(S.Union(LLMTool, S.Null))),
+  tools: S.optional(S.Array(LLMTool)),
+  history: S.optional(S.Array(Message)),
 });
 
 export type GptInput = S.Schema.Type<typeof GptInput>;
 
 export const GptOutput = S.Struct({
-  result: S.Array(GptMessage),
+  messages: S.Array(Message),
   artifact: S.optional(S.Any),
+  text: S.String,
   cot: S.optional(S.String),
-  tokens: S.Number,
+  tokenStream: StreamSchema(GptStreamEventSchema),
+  tokenCount: S.Number,
 });
 
 export type GptOutput = S.Schema.Type<typeof GptOutput>;

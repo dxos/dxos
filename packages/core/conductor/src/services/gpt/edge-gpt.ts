@@ -16,9 +16,16 @@ import { ECHO_ATTR_TYPE } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { makeValueBag, unwrapValueBag, type ComputeEffect, type ValueBag } from '../../types';
+import {
+  makeValueBag,
+  unwrapValueBag,
+  type ComputeEffect,
+  type ValueBag,
+  type GptInput,
+  type GptOutput,
+} from '../../types';
 import { EventLogger } from '../event-logger';
-import { IMAGE_TYPENAME, type GptInput, type GptOutput, type GptService } from '../gpt';
+import { IMAGE_TYPENAME, type GptService } from '../gpt';
 
 export class EdgeGpt implements Context.Tag.Service<GptService> {
   // Images are not supported.
