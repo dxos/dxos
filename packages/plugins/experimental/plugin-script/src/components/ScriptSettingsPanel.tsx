@@ -3,13 +3,14 @@
 //
 
 import { Octokit } from '@octokit/core';
-import React, { type ChangeEvent, useCallback, useState } from 'react';
+import React, { type ChangeEvent, useCallback, useEffect, useState } from 'react';
 
 import { createIntent, SettingsAction, useIntentDispatcher } from '@dxos/app-framework';
 import { FunctionType, type ScriptType, getInvocationUrl, getUserFunctionUrlInMetadata } from '@dxos/functions';
+import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { Filter, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
-import { Button, Icon, Input, Separator, useControlledValue, useTranslation } from '@dxos/react-ui';
+import { Button, Clipboard, Input, Separator, useControlledValue, useTranslation } from '@dxos/react-ui';
 import { AccessTokenType } from '@dxos/schema';
 
 import { SCRIPT_PLUGIN } from '../meta';
@@ -28,6 +29,32 @@ export const ScriptSettingsPanel = ({ script }: ScriptSettingsPanelProps) => {
   const space = getSpace(script);
   const [fn] = useQuery(space, Filter.schema(FunctionType, { source: script }));
   const [githubToken] = useQuery(space, Filter.schema(AccessTokenType, { source: 'github.com' }));
+  const gistKey = getMeta(script).keys.find(({ source }) => source === 'github.com');
+  const [gistUrl, setGistUrl] = useState<string | undefined>();
+
+  useEffect(() => {
+    const token = githubToken?.token;
+    const gistId = gistKey?.id;
+    if (!token || !gistId) {
+      setGistUrl(undefined);
+      return;
+    }
+
+    const timeout = setTimeout(async () => {
+      try {
+        const octokit = new Octokit({ auth: githubToken.token });
+        const response = await octokit.request('GET /gists/{gist_id}', {
+          gist_id: gistId,
+        });
+        setGistUrl(response.data.html_url);
+      } catch (err) {
+        log.catch(err);
+        setGistUrl(undefined);
+      }
+    });
+
+    return () => clearTimeout(timeout);
+  }, [githubToken, gistKey]);
 
   const [binding, setBinding] = useControlledValue(fn?.binding ?? '');
   const handleBindingChange = useCallback(
@@ -46,9 +73,6 @@ export const ScriptSettingsPanel = ({ script }: ScriptSettingsPanelProps) => {
     getInvocationUrl(functionPath, client.config.values.runtime?.services?.edge?.url ?? '', {
       spaceId: space?.id,
     });
-
-  // TODO(wittjosiah): Use ClipboardProvider.
-  const handleCopy = useCallback(() => functionUrl && navigator.clipboard.writeText(functionUrl), [functionUrl]);
 
   const handleOpenTokenManager = useCallback(
     () => dispatch(createIntent(SettingsAction.Open, { plugin: 'dxos.org/plugin/token-manager' })),
@@ -88,7 +112,7 @@ export const ScriptSettingsPanel = ({ script }: ScriptSettingsPanelProps) => {
 
   return (
     <>
-      {fn && (
+      {fn && functionUrl && (
         <>
           <Separator />
           <div role='form' className='flex flex-col w-full p-2 gap-4'>
@@ -104,9 +128,7 @@ export const ScriptSettingsPanel = ({ script }: ScriptSettingsPanelProps) => {
                       fn.name = event.target.value;
                     }}
                   />
-                  <Button onClick={handleCopy}>
-                    <Icon icon='ph--copy--regular' size={4} />
-                  </Button>
+                  <Clipboard.IconButton value={functionUrl} />
                 </div>
               </div>
             </Input.Root>
@@ -137,7 +159,8 @@ export const ScriptSettingsPanel = ({ script }: ScriptSettingsPanelProps) => {
           </div>
         )}
         {githubToken && (
-          <div className='flex justify-end'>
+          <div className='flex justify-end gap-2'>
+            {gistUrl && <Clipboard.IconButton value={gistUrl} />}
             <Button disabled={publishing} onClick={handlePublish}>
               {t(publishing ? 'publishing label' : 'publish label')}
             </Button>

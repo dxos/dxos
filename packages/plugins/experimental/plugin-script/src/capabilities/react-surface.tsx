@@ -6,6 +6,7 @@ import React from 'react';
 
 import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
 import { ScriptType } from '@dxos/functions';
+import { Clipboard } from '@dxos/react-ui';
 
 import { ScriptCapabilities } from './capabilities';
 import { AutomationPanel, ScriptSettings, ScriptContainer, ScriptSettingsPanel } from '../components';
@@ -39,6 +40,10 @@ export default () =>
       id: `${SCRIPT_PLUGIN}/settings-panel`,
       role: 'complementary--settings',
       filter: (data): data is { subject: ScriptType } => data.subject instanceof ScriptType,
-      component: ({ data }) => <ScriptSettingsPanel script={data.subject} />,
+      component: ({ data }) => (
+        <Clipboard.Provider>
+          <ScriptSettingsPanel script={data.subject} />
+        </Clipboard.Provider>
+      ),
     }),
   ]);
