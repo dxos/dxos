@@ -122,6 +122,11 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
     return this._selection;
   }
 
+  /** @reactive */
+  public get isViewDirty(): boolean {
+    return this._sorting.isDirty;
+  }
+
   //
   // Initialisation
   //
@@ -330,5 +335,12 @@ export class TableModel<T extends BaseTableRow = { id: string }> extends Resourc
   public unpinRow(rowIndex: number): void {
     this._pinnedRows.top = this._pinnedRows.top.filter((index: number) => index !== rowIndex);
     this._pinnedRows.bottom = this._pinnedRows.bottom.filter((index: number) => index !== rowIndex);
+  }
+
+  //
+  // View operations
+  //
+  public saveView(): void {
+    this._sorting.save();
   }
 }
