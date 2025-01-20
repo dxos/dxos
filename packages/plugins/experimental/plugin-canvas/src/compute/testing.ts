@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ComputeGraphModel, DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
+import { ComputeGraphModel, DEFAULT_INPUT, DEFAULT_OUTPUT, type NodeType } from '@dxos/conductor';
 import { ObjectId } from '@dxos/echo-schema';
 import { type GraphEdge, GraphModel, type GraphNode, createEdgeId } from '@dxos/graph';
-import { failedInvariant } from '@dxos/invariant';
+import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Dimension, type Point } from '@dxos/react-ui-canvas';
 
@@ -29,10 +29,11 @@ import {
   createSwitch,
   createTextToImage,
   createView,
+  type ComputeShape,
+  type CreateShapeProps,
 } from './shapes';
-import { type ComputeShape } from './shapes';
 import { pointMultiply, pointsToRect, rectToPoints } from '../layout';
-import { createCanvasGraphModel, type Connection, type Shape } from '../types';
+import { createCanvasGraphModel, type Connection, type Shape, type Polygon } from '../types';
 
 const createLayout = (rect: Point & Partial<Dimension>, snap = 32): { center: Point; size?: Dimension } => {
   const [center, size] = rectToPoints({ width: 0, height: 0, ...rect });
@@ -44,22 +45,46 @@ const createLayout = (rect: Point & Partial<Dimension>, snap = 32): { center: Po
   }
 };
 
+const createNode = ({ type, pos }: { type: NodeType; pos: Point }): GraphNode<ComputeShape> => {
+  const id = ObjectId.random();
+  const layout = createLayout(pos);
+  const ctor = factory[type];
+  invariant(ctor);
+  return { id, data: ctor({ id, ...layout }) };
+};
+
+// TODO(burdon): Remove partial when filled.
+const factory: Partial<Record<NodeType, (props: CreateShapeProps<Polygon>) => ComputeShape>> = {
+  ['switch' as const]: createSwitch,
+  ['and' as const]: createAnd,
+  ['or' as const]: createOr,
+  ['beacon' as const]: createBeacon,
+};
+
 // TODO(burdon): Remove TypedObject (all schema should include id).
 // TODO(burdon): GraphNode id/type should not exist in generate sub type.
 // TODO(burdon): Auto-layout.
 
 export const createTest0 = () => {
   const model = ComputeGraphModel.create();
-  model.builder.call((builder) => {
-    // const a = createComputeNode('switch');
-    // const b = createComputeNode('beacon');
-    // builder.link({ node: a }, { node: b });
-  });
+  // model.builder.call((builder) => {
+  // const a = createComputeNode('switch');
+  // const b = createComputeNode('beacon');
+  // builder.link({ node: a }, { node: b });
+  // });
 
   return model;
 };
 
 export const createLogicCircuit = () => {
+  const model = ComputeGraphModel.create();
+  // model.builder.call((builder) => {
+  // const s1 = builder.create();
+  // addNode(createNode({ type: 'switch', pos: { x: -4, y: -4 } }));
+  // const s2 = createNode({ type: 'switch', pos: { x: -4, y: 0 } });
+  // const and = createNode({ type: 'and', pos: { x: 0, y: -2 } });
+  // });
+
   const nodes: ComputeShape[] = [
     createSwitch({ id: 'a1', ...createLayout({ x: -4, y: -4 }) }),
     createSwitch({ id: 'a2', ...createLayout({ x: -4, y: 0 }) }),

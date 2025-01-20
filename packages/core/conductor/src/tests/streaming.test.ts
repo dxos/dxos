@@ -85,7 +85,8 @@ const sumAggregator = defineComputeNode({
  * Sums all elements in the stream.
  */
 const streamSum = () => {
-  return ComputeGraphModel.create()
+  const model = ComputeGraphModel.create();
+  model.builder
     .addNode({ id: 'stream-sum-INPUT', data: { type: NODE_INPUT } })
     .addNode({ id: 'stream-sum-AGGREGATOR', data: { type: 'dxn:test:sum-aggregator' } })
     .addNode({ id: 'stream-sum-OUTPUT', data: { type: NODE_OUTPUT } })
@@ -95,4 +96,6 @@ const streamSum = () => {
     .addEdge(
       createEdge({ source: 'stream-sum-AGGREGATOR', output: 'result', target: 'stream-sum-OUTPUT', input: 'result' }),
     );
+
+  return model;
 };

@@ -16,6 +16,7 @@ import { logCustomEvent } from '../services';
 import { createEdge, TestRuntime, testServices } from '../testing';
 import {
   ComputeGraphModel,
+  VoidOutput,
   defineComputeNode,
   makeValueBag,
   synchronizedComputeFunction,
@@ -68,7 +69,7 @@ describe('Graph as a fiber runtime', () => {
       const runtime = new TestRuntime()
         //
         .registerNode('dxn:test:sum', sum)
-        .registerNode('dxn:test:viewer', viewer)
+        .registerNode('dxn:test:viewer', view)
         .registerGraph('dxn:test:g3', g3());
 
       const result = yield* Effect.promise(() =>
@@ -106,36 +107,28 @@ const sum = defineComputeNode({
   ),
 });
 
-/**
- * Viewer node.
- */
-const viewer = defineComputeNode({
+const view = defineComputeNode({
   input: S.Struct({ result: S.Number }),
-  output: S.Struct({}),
+  output: VoidOutput,
 });
 
-/**
- * dxn:compute:g1
- * number1, number2 -> sum
- */
 const g1 = () => {
-  return ComputeGraphModel.create()
+  const model = ComputeGraphModel.create();
+  model.builder
     .addNode({ id: 'I', data: { type: NODE_INPUT } })
     .addNode({ id: 'X', data: { type: 'dxn:test:sum' } })
     .addNode({ id: 'O', data: { type: NODE_OUTPUT } })
     .addEdge(createEdge({ source: 'I', output: 'number1', target: 'X', input: 'a' }))
     .addEdge(createEdge({ source: 'I', output: 'number2', target: 'X', input: 'b' }))
     .addEdge(createEdge({ source: 'X', output: 'result', target: 'O', input: 'sum' }));
+
+  return model;
 };
 
-/**
- * dxn:compute:g2
- * a, b, c -> result
- * Uses adder node.
- */
 const g2 = () => {
   const g1Dxn = DXN.parse('dxn:test:g1');
-  return ComputeGraphModel.create()
+  const model = ComputeGraphModel.create();
+  model.builder
     .addNode({ id: 'I', data: { type: NODE_INPUT } })
     .addNode({ id: 'X', data: { type: g1Dxn.toString(), subgraph: refFromDXN(g1Dxn) } })
     .addNode({ id: 'Y', data: { type: g1Dxn.toString(), subgraph: refFromDXN(g1Dxn) } })
@@ -145,11 +138,13 @@ const g2 = () => {
     .addEdge(createEdge({ source: 'I', output: 'c', target: 'Y', input: 'number1' }))
     .addEdge(createEdge({ source: 'X', output: 'sum', target: 'Y', input: 'number2' }))
     .addEdge(createEdge({ source: 'Y', output: 'sum', target: 'O', input: 'result' }));
+
+  return model;
 };
 
-// Branching computations.
 const g3 = () => {
-  return ComputeGraphModel.create()
+  const model = ComputeGraphModel.create();
+  model.builder
     .addNode({ id: 'I', data: { type: NODE_INPUT } })
     .addNode({ id: 'X', data: { type: 'dxn:test:sum' } })
     .addNode({ id: 'V1', data: { type: 'dxn:test:viewer' } })
@@ -159,111 +154,6 @@ const g3 = () => {
     .addEdge(createEdge({ source: 'I', output: 'b', target: 'X', input: 'b' }))
     .addEdge(createEdge({ source: 'X', output: 'result', target: 'V1', input: 'result' }))
     .addEdge(createEdge({ source: 'X', output: 'result', target: 'V2', input: 'result' }));
+
+  return model;
 };
-
-/*
-
-interface Node<I, O> {
-  compute(input: I): Promise<O>;
-}
-
-type Input<T> = { node?: Node<any, T> | string; prop: keyof T };
-type Output<T> = { node?: Node<T, any> | string; prop: keyof T };
-
-interface Graph<I, O> extends Node<I, O> {
-  add(id: string): this;
-  link(source: Input<I>, target: Output<O>): this;
-}
-
-const g: Graph<any, any> = {};
-
-g.add('A')
-  .add('B')
-  .link({ prop: 'a' }, { node: 'A', prop: 'input' })
-  .link({ node: 'A', prop: 'output' }, { node: 'B', prop: 'input' })
-  .link({ node: 'B', prop: 'output' }, { prop: 'b' });
-
-namespace OnDisk {
-  type ObjectId = string;
-
-  type Node = {
-    id: ObjectId;
-    type: string;
-  };
-
-  type Edge = {
-    source: { node: ObjectId | 'self'; prop: string };
-    target: { node: ObjectId | 'self'; prop: string };
-  };
-
-  type Graph = {
-    nodes: Node[];
-    edges: Edge[];
-  };
-
-  const graph: Graph = {
-    nodes: [
-      { id: 'A', type: 'dxn:compute:sum' },
-      { id: 'B', type: 'dxn:compute:sum' },
-    ],
-    edges: [
-      { source: { node: 'self', prop: 'output' }, target: { node: 'A', prop: 'input' } },
-      { source: { node: 'A', prop: 'output' }, target: { node: 'B', prop: 'input' } },
-      { source: { node: 'B', prop: 'output' }, target: { node: 'self', prop: 'b' } },
-    ],
-  };
-}
-
-const x1 = [
-  {
-    id: 'a',
-    nodes: [
-      {
-        id: 'a',
-      },
-    ],
-    edges: [
-      {
-        source: { prop: 'a' },
-        target: { prop: 'input', node: 'a' },
-      },
-      {
-        source: { prop: 'output', node: 'a' },
-        target: { prop: 'b' },
-      },
-    ],
-  },
-];
-
-const x2 = [
-  {
-    id: 'a',
-    nodes: [
-      {
-        id: '1',
-        kind: 'input',
-      },
-      {
-        id: '2',
-        kind: 'normal',
-        type: 'dxn:graph:gpt',
-      },
-      {
-        id: '3',
-        kind: 'output',
-      },
-    ],
-    edges: [
-      {
-        source: { prop: 'a', node: 'input' },
-        target: { prop: 'input', node: 'a' },
-      },
-      {
-        source: { prop: 'output', node: 'a' },
-        target: { prop: 'b', node: 'output' },
-      },
-    ],
-  },
-];
-
-*/

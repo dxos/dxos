@@ -189,20 +189,26 @@ describe('Gpt pipelines', () => {
 });
 
 const gpt1 = () => {
-  return ComputeGraphModel.create()
+  const model = ComputeGraphModel.create();
+  model.builder
     .addNode({ id: 'gpt1-INPUT', data: { type: NODE_INPUT } })
     .addNode({ id: 'gpt1-GPT', data: { type: 'gpt' } })
     .addNode({ id: 'gpt1-OUTPUT', data: { type: NODE_OUTPUT } })
     .addEdge(createEdge({ source: 'gpt1-INPUT', output: 'prompt', target: 'gpt1-GPT', input: 'prompt' }))
     .addEdge(createEdge({ source: 'gpt1-GPT', output: 'text', target: 'gpt1-OUTPUT', input: 'text' }));
+
+  return model;
 };
 
 const gpt2 = () => {
-  return ComputeGraphModel.create()
+  const model = ComputeGraphModel.create();
+  model.builder
     .addNode({ id: 'gpt2-INPUT', data: { type: NODE_INPUT } })
     .addNode({ id: 'gpt2-GPT', data: { type: 'gpt' } })
     .addNode({ id: 'gpt2-OUTPUT', data: { type: NODE_OUTPUT } })
     .addEdge(createEdge({ source: 'gpt2-INPUT', output: 'prompt', target: 'gpt2-GPT', input: 'prompt' }))
     .addEdge(createEdge({ source: 'gpt2-GPT', output: 'text', target: 'gpt2-OUTPUT', input: 'text' }))
     .addEdge(createEdge({ source: 'gpt2-GPT', output: 'tokenStream', target: 'gpt2-OUTPUT', input: 'tokenStream' }));
+
+  return model;
 };

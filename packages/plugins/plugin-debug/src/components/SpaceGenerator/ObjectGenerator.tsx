@@ -114,12 +114,14 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
     ComputeGraph.typename,
     async (space, n, cb) => {
       const objects = range(n, () => {
-        const model = ComputeGraphModel.create()
+        const model = ComputeGraphModel.create();
+        model.builder
           .addNode({ id: 'gpt-INPUT', data: { type: NODE_INPUT } })
           .addNode({ id: 'gpt-GPT', data: { type: 'gpt' } })
           .addNode({ id: 'gpt-OUTPUT', data: { type: NODE_OUTPUT } })
           .addEdge(createEdge({ source: 'gpt-INPUT', output: 'prompt', target: 'gpt-GPT', input: 'prompt' }))
           .addEdge(createEdge({ source: 'gpt-GPT', output: 'text', target: 'gpt-OUTPUT', input: 'text' }));
+
         return space.db.add(model.root);
       });
       cb?.(objects);

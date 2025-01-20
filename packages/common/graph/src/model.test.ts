@@ -20,19 +20,20 @@ describe('Graph', () => {
   test('optional', ({ expect }) => {
     {
       const graph = new GraphModel<GraphNode<string>>();
-      graph.addNode({ id: 'test', data: 'test' });
-      expect(graph.getNode('test').data.length).to.eq(4);
+      const node = graph.addNode({ id: 'test', data: 'test' });
+      expect(node.data.length).to.eq(4);
     }
 
     {
       const graph = new GraphModel<GraphNode.Optional<string>>();
-      graph.addNode({ id: 'test' });
-      expect(graph.getNode('test').data?.length).to.be.undefined;
+      const node = graph.addNode({ id: 'test' });
+      expect(node.data?.length).to.be.undefined;
     }
   });
 
   test('add and remove subgraphs', ({ expect }) => {
-    const graph = new GraphModel<GraphNode<TestData>>()
+    const graph = new GraphModel<GraphNode<TestData>>();
+    graph.builder
       .addNode({ id: 'node1', data: { value: 'test' } })
       .addNode({ id: 'node2', data: { value: 'test' } })
       .addNode({ id: 'node3', data: { value: 'test' } })
@@ -61,7 +62,8 @@ describe('Graph', () => {
   });
 
   test('traverse', ({ expect }) => {
-    const graph = new GraphModel()
+    const graph = new GraphModel();
+    graph.builder
       .addNode({ id: 'a' })
       .addNode({ id: 'b' })
       .addNode({ id: 'c' })

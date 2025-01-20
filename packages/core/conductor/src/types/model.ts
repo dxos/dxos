@@ -35,7 +35,8 @@ export class ComputeGraphModel extends GraphModel<GraphNode<ComputeNode>, GraphE
     return this._root;
   }
 
-  get builder() {
+  // TODO(burdon): Specialize
+  get builder2() {
     return new ComputeGraphBuilder(this);
   }
 }
@@ -48,7 +49,7 @@ class ComputeGraphBuilder {
     return this._model;
   }
 
-  call(cb: (graph: ComputeGraphBuilder) => void): this {
+  call(cb: (builder: ComputeGraphBuilder) => void): this {
     cb(this);
     return this;
   }

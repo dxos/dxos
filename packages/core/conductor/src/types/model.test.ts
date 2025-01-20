@@ -9,21 +9,24 @@ import { ComputeGraphModel } from './model';
 describe('graph builder', () => {
   test('graph', ({ expect }) => {
     const g1 = ComputeGraphModel.create();
-    g1.builder.create('x');
+    g1.builder2.create('x');
 
     const g2 = ComputeGraphModel.create();
-    g2.builder
-      .call((graph) => {
-        graph.link({ node: graph.create('a'), property: 'result' }, { node: graph.create('b'), property: 'value' });
+    g2.builder2
+      .call((builder) => {
+        builder.link(
+          { node: builder.create('a'), property: 'result' },
+          { node: builder.create('b'), property: 'value' },
+        );
       })
-      .call((graph) => {
-        const b = graph.get('b');
-        const c = graph.create('c');
-        graph.link({ node: b, property: 'result' }, { node: c, property: 'value' });
+      .call((builder) => {
+        const b = builder.get('b');
+        const c = builder.create('c');
+        builder.link({ node: b, property: 'result' }, { node: c, property: 'value' });
       })
-      .call((graph) => {
-        const c = graph.get('c');
-        graph.link({ node: c, property: 'result' }, { node: g1.root, property: 'value' });
+      .call((builder) => {
+        const c = builder.get('c');
+        builder.link({ node: c, property: 'result' }, { node: g1.root, property: 'value' });
       });
 
     expect(g2.nodes).to.have.length(4);

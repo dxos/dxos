@@ -116,6 +116,10 @@ export class GraphModel<
   Node extends BaseGraphNode = BaseGraphNode,
   Edge extends BaseGraphEdge = BaseGraphEdge,
 > extends ReadonlyGraphModel<Node, Edge> {
+  get builder() {
+    return new GraphBuilder<Node, Edge>(this);
+  }
+
   clear(): this {
     this._graph.nodes.length = 0;
     this._graph.edges.length = 0;
@@ -136,11 +140,11 @@ export class GraphModel<
     return this;
   }
 
-  addNode(node: Node): this {
+  addNode(node: Node): Node {
     invariant(node.id);
     invariant(!this.findNode(node.id));
     this._graph.nodes.push(node);
-    return this;
+    return node;
   }
 
   addNodes(nodes: Node[]): this {
@@ -148,7 +152,7 @@ export class GraphModel<
     return this;
   }
 
-  addEdge(edge: MakeOptional<Edge, 'id'>): this {
+  addEdge(edge: MakeOptional<Edge, 'id'>): Edge {
     invariant(edge.source);
     invariant(edge.target);
     if (!edge.id) {
@@ -156,7 +160,7 @@ export class GraphModel<
     }
     invariant(!this.findNode(edge.id!));
     this._graph.edges.push(edge as Edge);
-    return this;
+    return edge as Edge;
   }
 
   addEdges(edges: Edge[]): this {
@@ -191,5 +195,26 @@ export class GraphModel<
    */
   copy(graph?: Partial<GraphModel<Node, Edge>>): GraphModel<Node, Edge> {
     return new GraphModel<Node, Edge>({ nodes: graph?.nodes ?? [], edges: graph?.edges ?? [] });
+  }
+}
+
+class GraphBuilder<Node extends BaseGraphNode = BaseGraphNode, Edge extends BaseGraphEdge = BaseGraphEdge> {
+  constructor(private readonly _model: GraphModel<Node, Edge>) {}
+
+  get model() {
+    return this._model;
+  }
+
+  // TODO(burdon): Map method types?
+  // TODO(burdon): Implement other methods.
+
+  addNode(node: Node): this {
+    this._model.addNode(node);
+    return this;
+  }
+
+  addEdge(edge: MakeOptional<Edge, 'id'>): this {
+    this._model.addEdge(edge);
+    return this;
   }
 }
