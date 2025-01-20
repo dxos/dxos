@@ -6,10 +6,10 @@ import { ObjectId } from '@dxos/echo-schema';
 import {
   AbstractGraphBuilder,
   AbstractGraphModel,
-  createEdgeId,
   type Graph,
   type GraphEdge,
   type GraphNode,
+  createEdgeId,
 } from '@dxos/graph';
 import { create, makeRef } from '@dxos/live-object';
 
@@ -64,23 +64,23 @@ class ComputeGraphBuilder extends AbstractGraphBuilder<
     return this;
   }
 
-  get(id: string): GraphNode<ComputeNode> {
+  getNode(id: string): GraphNode<ComputeNode> {
     return this._model.getNode(id);
   }
 
-  create(id?: string, data: ComputeNode = {}): GraphNode<ComputeNode> {
+  createNode(id?: string, data: ComputeNode = {}): GraphNode<ComputeNode> {
     const node: GraphNode<ComputeNode> = { id: id ?? ObjectId.random(), data };
     this._model.addNode(node);
     return node;
   }
 
-  link(
+  linkNodes(
     source: { node: GraphNode<ComputeNode>; property?: string },
     target: { node: GraphNode<ComputeNode> | ComputeGraph; property?: string },
   ): GraphEdge<ComputeEdge> {
     if (isComputeGraph(target.node)) {
       // Create local intermediate node linked to the subgraph.
-      target = { ...target, node: this.create(ObjectId.random(), { subgraph: makeRef(target.node) }) };
+      target = { ...target, node: this.createNode(ObjectId.random(), { subgraph: makeRef(target.node) }) };
     }
 
     const edge: GraphEdge<ComputeEdge> = {

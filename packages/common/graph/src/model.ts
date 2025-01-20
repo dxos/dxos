@@ -203,6 +203,8 @@ export abstract class AbstractGraphBuilder<
 > {
   constructor(protected readonly _model: Model) {}
 
+  abstract call(cb: (builder: Builder) => void): this;
+
   get model(): Model {
     return this._model;
   }
@@ -219,8 +221,6 @@ export abstract class AbstractGraphBuilder<
     this._model.addEdge(edge);
     return this;
   }
-
-  abstract call(cb: (builder: Builder) => void): this;
 }
 
 export class GraphModel<
