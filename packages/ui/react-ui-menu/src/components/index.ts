@@ -3,5 +3,5 @@
 //
 
 export * from './DropdownMenu';
-export * from './Toolbar';
+export * from './ToolbarMenu';
 export * from './MenuContext';

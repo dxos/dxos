@@ -10,7 +10,7 @@ import { IconButton } from '@dxos/react-ui';
 import { withLayout, withSignals, withTheme } from '@dxos/storybook-utils';
 
 import { createActions, createNestedActionGraph, useMutateActions } from './index';
-import { DropdownMenu as NaturalDropdownMenu, Toolbar as NaturalToolbar, MenuProvider } from '../components';
+import { DropdownMenu as NaturalDropdownMenu, ToolbarMenu, MenuProvider } from '../components';
 import { type MenuAction, type MenuActionHandler } from '../defs';
 import translations from '../translations';
 
@@ -18,7 +18,7 @@ faker.seed(1234);
 
 export default {
   title: 'ui/react-ui-menu/Menus',
-  component: NaturalToolbar,
+  component: ToolbarMenu,
   decorators: [withTheme, withLayout({ tooltips: true }), withSignals],
   parameters: { translations },
 };
@@ -48,7 +48,7 @@ export const Toolbar = {
   render: () => {
     return (
       <MenuProvider onAction={handleAction as MenuActionHandler} {...nestedMenuActions}>
-        <NaturalToolbar />
+        <ToolbarMenu />
       </MenuProvider>
     );
   },
