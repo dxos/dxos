@@ -8,33 +8,20 @@ import { ObjectId } from '@dxos/echo-schema';
 import { type GraphNode } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 
-// TODO(burdon): Push down defs to here.
 import { type ComputeShape, type ConstantShape } from '../shapes';
 
-// export const createComputeNode2 = (type: NodeType): GraphNode<ComputeNode> => {
-//   const factory =
-//     nodeFactory[type ?? raise(new Error('Type not specified'))] ?? raise(new Error(`Unknown shape type: ${type}`));
-//   return factory({ id: ObjectId.random(), type, data: {} });
-// };
+export const resolveComputeNode = async (node: ComputeNode): Promise<Executable> => {
+  const impl = registry[node.type as NodeType];
+  invariant(impl, `Unknown node type: ${node.type}`);
+  return impl;
+};
 
-// TODO(burdon): Just pass in type? Or can the shape specialize the node?
 export const createComputeNode = (shape: GraphNode<ComputeShape>): GraphNode<ComputeNode> => {
   const type = shape.data.type ?? raise(new Error('Type not specified'));
   const factory = nodeFactory[type as NodeType] ?? raise(new Error(`Unknown shape type: ${type}`));
   return factory(shape);
 };
 
-const createNode = (type: string, props?: Partial<ComputeNode>) => ({
-  // TODO(burdon): Don't need to create id here?
-  id: ObjectId.random(),
-  type, // TODO(burdon): Don't put type on both node and data.
-  data: {
-    type,
-    ...props,
-  },
-});
-
-// TODO(burdon): Reconcile with ShapeRegistry.
 const nodeFactory: Record<NodeType, (shape: GraphNode<ComputeShape>) => GraphNode<ComputeNode>> = {
   ['and' as const]: () => createNode('and'),
   ['append' as const]: () => createNode('append'),
@@ -59,8 +46,13 @@ const nodeFactory: Record<NodeType, (shape: GraphNode<ComputeShape>) => GraphNod
   ['view' as const]: () => createNode('view'),
 };
 
-export const resolveComputeNode = async (node: ComputeNode): Promise<Executable> => {
-  const impl = registry[node.type as NodeType];
-  invariant(impl, `Unknown node type: ${node.type}`);
-  return impl;
-};
+const createNode = (type: string, props?: Partial<ComputeNode>) => ({
+  // TODO(burdon): Don't need to create id here?
+  id: ObjectId.random(),
+  type,
+  data: {
+    // TODO(burdon): Don't put type on both node and data.
+    type,
+    ...props,
+  },
+});
