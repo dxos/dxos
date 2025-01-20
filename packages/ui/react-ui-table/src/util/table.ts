@@ -13,15 +13,13 @@ import {
   TypedObject,
   TypeEnum,
 } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
-import { Client, PublicKey } from '@dxos/react-client';
+import { PublicKey } from '@dxos/react-client';
 import { create, makeRef, type Space } from '@dxos/react-client/echo';
 import { createFieldId, createView, getSchemaProperties, ViewProjection } from '@dxos/schema';
 
 import { type TableType } from '../types';
 
 type InitialiseTableProps = {
-  client: Client;
   space: Space;
   table: TableType;
   initialRow?: boolean;
@@ -33,20 +31,13 @@ type InitialiseTableProps = {
 // TODO(burdon): Pass in type.
 // TODO(burdon): User should determine typename.
 export const initializeTable = async ({
-  client,
   space,
   table,
   initialRow = true,
   initialSchema,
 }: InitialiseTableProps): Promise<EchoSchema> => {
-  console.log('initializeTable', { table, client, initialSchema });
-
   if (initialSchema) {
-    console.log('[Table] > Querying for schema:', initialSchema);
-    let schema = await space.db.schemaRegistry.query({ typename: initialSchema }).firstOrUndefined();
-    if (!schema) {
-      schema = await client.spaces.default.db.schemaRegistry.query({ typename: initialSchema }).firstOrUndefined();
-    }
+    const schema = await space.db.schemaRegistry.query({ typename: initialSchema }).firstOrUndefined();
 
     if (!schema) {
       throw new Error(`Schema not found: ${initialSchema}`);

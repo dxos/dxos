@@ -11,9 +11,6 @@ import {
   Capabilities,
   oneOf,
 } from '@dxos/app-framework';
-import React from 'react';
-
-import { type PluginDefinition, createSurface, createIntent, createResolver, resolvePlugin } from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { type Space } from '@dxos/react-client/echo';
