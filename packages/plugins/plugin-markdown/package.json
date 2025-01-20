@@ -62,6 +62,7 @@
     "effect": "^3.12.1"
   },
   "devDependencies": {
+    "@dxos/debug": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

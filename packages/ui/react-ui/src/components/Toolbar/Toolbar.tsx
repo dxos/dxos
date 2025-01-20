@@ -115,15 +115,17 @@ const ToolbarToggleGroupIconItem = forwardRef<HTMLButtonElement, ToolbarToggleGr
 
 type ToolbarSeparatorProps = SeparatorProps & { variant?: 'gap' | 'line' };
 
-const ToolbarSeparator = ({ variant = 'line', ...props }: ToolbarSeparatorProps) => {
-  return variant === 'line' ? (
-    <ToolbarPrimitive.Separator asChild>
-      <Separator {...props} />
-    </ToolbarPrimitive.Separator>
-  ) : (
-    <ToolbarPrimitive.Separator className='grow' />
-  );
-};
+const ToolbarSeparator = forwardRef<HTMLDivElement, ToolbarSeparatorProps>(
+  ({ variant = 'line', ...props }, forwardedRef) => {
+    return variant === 'line' ? (
+      <ToolbarPrimitive.Separator asChild>
+        <Separator {...props} ref={forwardedRef} />
+      </ToolbarPrimitive.Separator>
+    ) : (
+      <ToolbarPrimitive.Separator className='grow' ref={forwardedRef} />
+    );
+  },
+);
 
 export const Toolbar = {
   Root: ToolbarRoot,

@@ -3,31 +3,32 @@
 //
 
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type MouseEvent, type MutableRefObject, type PropsWithChildren, useCallback } from 'react';
+import React, { type MouseEvent, type MutableRefObject, useCallback } from 'react';
 
-import { DropdownMenu as NaturalDropdownMenu, Icon } from '@dxos/react-ui';
+import { DropdownMenu as NaturalDropdownMenu, Icon, type DropdownMenuRootProps } from '@dxos/react-ui';
 
 import { ActionLabel } from './ActionLabel';
-import { type MenuAction, type MenuProps } from '../defs';
+import { type MenuScopedProps, useMenu, useMenuItems } from './MenuContext';
+import { type MenuAction, type MenuItem, type MenuItemGroup } from '../defs';
 
-export type DropdownMenuProps = MenuProps &
-  PropsWithChildren<
-    Partial<{
-      defaultMenuOpen: boolean;
-      menuOpen: boolean;
-      onMenuOpenChange: (nextOpen: boolean) => void;
-      suppressNextTooltip?: MutableRefObject<boolean>;
-    }>
-  >;
+export type DropdownMenuProps = DropdownMenuRootProps & {
+  group?: MenuItemGroup;
+  items?: MenuItem[];
+  suppressNextTooltip?: MutableRefObject<boolean>;
+};
 
 const DropdownMenuItem = ({
-  action,
+  item,
   onClick,
-}: {
-  action: MenuAction;
+  __menuScope,
+}: MenuScopedProps<{
+  item: MenuItem;
   onClick: (action: MenuAction, event: MouseEvent) => void;
-}) => {
+}>) => {
+  // TODO(thure): handle other items.
+  const action = item as MenuAction;
   const handleClick = useCallback((event: MouseEvent) => onClick(action, event), [action, onClick]);
+  const { iconSize } = useMenu('DropdownMenuItem', __menuScope);
   return (
     <NaturalDropdownMenu.Item
       onClick={handleClick}
@@ -35,26 +36,30 @@ const DropdownMenuItem = ({
       disabled={action.properties?.disabled}
       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
     >
-      {action.properties?.icon && <Icon icon={action.properties!.icon} size={4} />}
+      {action.properties?.icon && <Icon icon={action.properties!.icon} size={iconSize} />}
       <ActionLabel action={action} />
     </NaturalDropdownMenu.Item>
   );
 };
 
 const DropdownMenuRoot = ({
-  defaultMenuOpen,
-  actions,
-  menuOpen,
+  items: propsItems,
+  group,
+  open,
+  defaultOpen,
+  onOpenChange,
   suppressNextTooltip,
-  onMenuOpenChange,
-  onAction,
   children,
-}: DropdownMenuProps) => {
+  __menuScope,
+  ...naturalProps
+}: MenuScopedProps<DropdownMenuProps>) => {
   const [optionsMenuOpen, setOptionsMenuOpen] = useControllableState({
-    prop: menuOpen,
-    defaultProp: defaultMenuOpen,
-    onChange: onMenuOpenChange,
+    prop: open,
+    defaultProp: defaultOpen,
+    onChange: onOpenChange,
   });
+
+  const { onAction } = useMenu('DropdownMenuRoot', __menuScope);
 
   const handleActionClick = useCallback(
     (action: MenuAction, event: MouseEvent) => {
@@ -72,6 +77,8 @@ const DropdownMenuRoot = ({
     [onAction],
   );
 
+  const items = useMenuItems(group, propsItems);
+
   return (
     <NaturalDropdownMenu.Root
       {...{
@@ -83,12 +90,13 @@ const DropdownMenuRoot = ({
           return setOptionsMenuOpen(nextOpen);
         },
       }}
+      {...naturalProps}
     >
       {children}
       <NaturalDropdownMenu.Portal>
         <NaturalDropdownMenu.Content>
           <NaturalDropdownMenu.Viewport>
-            {actions?.map((action) => <DropdownMenuItem key={action.id} action={action} onClick={handleActionClick} />)}
+            {items?.map((item) => <DropdownMenuItem key={item.id} item={item} onClick={handleActionClick} />)}
           </NaturalDropdownMenu.Viewport>
           <NaturalDropdownMenu.Arrow />
         </NaturalDropdownMenu.Content>
