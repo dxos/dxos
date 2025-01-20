@@ -11,7 +11,8 @@ const commentLabel = (comment?: boolean, selection?: boolean) =>
       ? 'select text to comment label'
       : 'comment label';
 
-const createCommentAction = (label: string) => createEditorAction({ type: 'comment' }, 'ph--chat-text--regular', label);
+const createCommentAction = (label: string) =>
+  createEditorAction({ type: 'comment', testId: 'editor.toolbar.comment' }, 'ph--chat-text--regular', label);
 
 export const createComment = (state: EditorToolbarState) => ({
   nodes: [createCommentAction(commentLabel(state.comment, state.selection))],
