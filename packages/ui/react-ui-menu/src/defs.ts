@@ -27,8 +27,8 @@ export type MenuSeparator = Node<never, Pick<ToolbarSeparatorProps, 'variant'>> 
 
 export const isSeparator = (node: Node): node is MenuSeparator => node.type === MenuSeparatorType;
 
-export type MenuActionGroupSingleSelect = { selectCardinality: 'single'; value: string };
-export type MenuActionGroupMultipleSelect = { selectCardinality: 'multiple'; value: string[] };
+export type MenuSingleSelectActionGroup = { selectCardinality: 'single'; value: string };
+export type MenuMultipleSelectActionGroup = { selectCardinality: 'multiple'; value: string[] };
 
 export type MenuItemGroup<P extends Record<string, any> = Record<string, any>> = ActionGroup<P>;
 

@@ -17,31 +17,34 @@ import {
   isSeparator,
   type MenuItemGroup,
   type MenuActionProperties,
-  type MenuActionGroupMultipleSelect,
-  type MenuActionGroupSingleSelect,
+  type MenuMultipleSelectActionGroup,
+  type MenuSingleSelectActionGroup,
 } from '../defs';
 
-export type ToolbarActionGroupDropdownMenu = Omit<MenuActionProperties, 'variant' | 'icon'> & {
+export type ToolbarMenuDropdownMenuActionGroup = Omit<MenuActionProperties, 'variant' | 'icon'> & {
   variant: 'dropdownMenu';
   icon: string;
   applyActiveIcon?: boolean;
 };
 
-export type ToolbarActionGroupToggleGroup = Omit<MenuActionProperties, 'variant'> & {
+export type ToolbarMenuToggleGroupActionGroup = Omit<MenuActionProperties, 'variant'> & {
   variant: 'toggleGroup';
 };
 
-export type ToolbarActionGroupProperties = (ToolbarActionGroupDropdownMenu | ToolbarActionGroupToggleGroup) &
-  (MenuActionGroupSingleSelect | MenuActionGroupMultipleSelect);
+export type ToolbarMenuActionGroupProperties = (
+  | ToolbarMenuDropdownMenuActionGroup
+  | ToolbarMenuToggleGroupActionGroup
+) &
+  (MenuSingleSelectActionGroup | MenuMultipleSelectActionGroup);
 
 export type ToolbarMenuProps = ToolbarRootProps;
 
-export type ToolbarActionGroupProps = {
-  group: MenuItemGroup<ToolbarActionGroupProperties>;
+export type ToolbarMenuActionGroupProps = {
+  group: MenuItemGroup<ToolbarMenuActionGroupProperties>;
   items?: MenuItem[];
 };
 
-const ToolbarItemAction = ({ action }: { action: MenuAction }) => {
+const ActionToolbarItem = ({ action }: { action: MenuAction }) => {
   const { onAction, iconSize } = useMenu();
   const handleClick = useCallback(() => {
     onAction?.(action);
@@ -62,7 +65,7 @@ const ToolbarItemAction = ({ action }: { action: MenuAction }) => {
   );
 };
 
-const ToolbarItemDropdownMenu = ({ group, items: propsItems }: ToolbarActionGroupProps) => {
+const DropdownMenuToolbarItem = ({ group, items: propsItems }: ToolbarMenuActionGroupProps) => {
   const { iconOnly = true, disabled, testId } = group.properties;
   const suppressNextTooltip = useRef(false);
   const { iconSize } = useMenu();
@@ -111,7 +114,7 @@ const ToggleGroupItem = ({ action }: { action: MenuAction }) => {
   );
 };
 
-const ToolbarItemToggleGroup = ({ group, items: propsItems }: ToolbarActionGroupProps) => {
+const ToggleGroupToolbarItem = ({ group, items: propsItems }: ToolbarMenuActionGroupProps) => {
   const items = useMenuItems(group, propsItems);
   const { selectCardinality, value } = group.properties;
   return (
@@ -134,12 +137,12 @@ export const ToolbarMenu = ({ ...props }: ToolbarMenuProps) => {
           <NaturalToolbar.Separator key={i} variant={item.properties.variant} />
         ) : isMenuGroup(item) ? (
           item.properties.variant === 'dropdownMenu' ? (
-            <ToolbarItemDropdownMenu key={item.id} group={item as MenuItemGroup<ToolbarActionGroupProperties>} />
+            <DropdownMenuToolbarItem key={item.id} group={item as MenuItemGroup<ToolbarMenuActionGroupProperties>} />
           ) : (
-            <ToolbarItemToggleGroup key={item.id} group={item as MenuItemGroup<ToolbarActionGroupProperties>} />
+            <ToggleGroupToolbarItem key={item.id} group={item as MenuItemGroup<ToolbarMenuActionGroupProperties>} />
           )
         ) : (
-          <ToolbarItemAction key={item.id} action={item as MenuAction} />
+          <ActionToolbarItem key={item.id} action={item as MenuAction} />
         ),
       )}
     </NaturalToolbar.Root>
