@@ -2,17 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import type {
-  GraphSerializerProvides,
-  IntentResolverProvides,
-  MetadataRecordsProvides,
-  SettingsProvides,
-  SurfaceProvides,
-  TranslationsProvides,
-} from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
-import { type SchemaProvides } from '@dxos/plugin-space';
-import { type Extension, type EditorInputMode, EditorViewMode } from '@dxos/react-ui-editor';
+// TODO(wittjosiah): This pulls in UI code into the types entrypoint.
+import { type Extension, EditorInputMode, EditorViewMode } from '@dxos/react-ui-editor';
 
 import { DocumentType } from './schema';
 import { MARKDOWN_PLUGIN } from '../meta';
@@ -46,13 +38,6 @@ export type MarkdownExtensionProvider = (props: { document?: DocumentType }) => 
 
 export type OnChange = (text: string) => void;
 
-export type MarkdownExtensionProvides = {
-  // TODO(burdon): Rename.
-  markdown: {
-    extensions: MarkdownExtensionProvider;
-  };
-};
-
 export type MarkdownPluginState = {
   // Codemirror extensions provided by other plugins.
   extensionProviders?: MarkdownExtensionProvider[];
@@ -62,31 +47,18 @@ export type MarkdownPluginState = {
   viewMode: Record<string, EditorViewMode>;
 };
 
-export type MarkdownSettingsProps = {
-  defaultViewMode: EditorViewMode;
-  editorInputMode?: EditorInputMode;
-  experimental?: boolean;
-  debug?: boolean;
-  toolbar?: boolean;
-  typewriter?: string;
-  // TODO(burdon): Per document settings.
-  numberedHeadings?: boolean;
-  folding?: boolean;
-};
+export const MarkdownSettingsSchema = S.mutable(
+  S.Struct({
+    defaultViewMode: EditorViewMode,
+    editorInputMode: S.optional(EditorInputMode),
+    experimental: S.optional(S.Boolean),
+    debug: S.optional(S.Boolean),
+    toolbar: S.optional(S.Boolean),
+    typewriter: S.optional(S.String),
+    // TODO(burdon): Per document settings.
+    numberedHeadings: S.optional(S.Boolean),
+    folding: S.optional(S.Boolean),
+  }),
+);
 
-// TODO(Zan): Move this to the plugin-space plugin or another common location when we implement comments in sheets.
-type ThreadProvides<T> = {
-  thread: {
-    predicate: (obj: any) => obj is T;
-    createSort: (obj: T) => (anchorA: string | undefined, anchorB: string | undefined) => number;
-  };
-};
-
-export type MarkdownPluginProvides = SurfaceProvides &
-  IntentResolverProvides &
-  GraphSerializerProvides &
-  MetadataRecordsProvides &
-  SettingsProvides<MarkdownSettingsProps> &
-  TranslationsProvides &
-  SchemaProvides &
-  ThreadProvides<DocumentType>;
+export type MarkdownSettingsProps = S.Schema.Type<typeof MarkdownSettingsSchema>;

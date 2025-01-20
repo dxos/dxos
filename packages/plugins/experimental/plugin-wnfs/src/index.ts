@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { WnfsPlugin } from './WnfsPlugin';
-
-export default WnfsPlugin;
-
+export { WnfsCapabilities } from './capabilities';
+export * from './meta';
 export * from './WnfsPlugin';

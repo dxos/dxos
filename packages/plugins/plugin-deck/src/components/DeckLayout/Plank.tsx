@@ -5,17 +5,17 @@
 import React, { type KeyboardEvent, memo, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 
 import {
+  createIntent,
+  indexInPart,
+  LayoutAction,
+  partLength,
+  Surface,
+  useIntentDispatcher,
+  type Layout,
   type LayoutCoordinate,
   type LayoutEntry,
   type LayoutPart,
   type LayoutParts,
-  Surface,
-  useIntentDispatcher,
-  type Layout,
-  indexInPart,
-  partLength,
-  LayoutAction,
-  createIntent,
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { useGraph } from '@dxos/plugin-graph';

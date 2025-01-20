@@ -6,7 +6,7 @@ import { type PluginMeta } from '@dxos/app-framework';
 
 export const AUTOMATION_PLUGIN = 'dxos.org/plugin/automation';
 
-export default {
+export const meta = {
   id: AUTOMATION_PLUGIN,
   name: 'Automation',
   description: 'Automation workflows.',

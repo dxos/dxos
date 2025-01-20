@@ -2,37 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import type {
-  IntentResolverProvides,
-  MetadataRecordsProvides,
-  SurfaceProvides,
-  TranslationsProvides,
-} from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
-import { type MarkdownExtensionProvides } from '@dxos/plugin-markdown';
-import { type SchemaProvides } from '@dxos/plugin-space';
 
 import { type CellValue, RowColumnMeta, SheetType } from './schema';
 import { SHEET_PLUGIN } from '../meta';
 import { SheetModel } from '../model';
-
-// TODO(Zan): Move this to the plugin-space plugin or another common location
-// when we implement comments in sheets.
-// This is currently duplicated in a few places.
-type ThreadProvides<T> = {
-  thread: {
-    predicate: (obj: any) => obj is T;
-    createSort: (obj: T) => (anchorA: string | undefined, anchorB: string | undefined) => number;
-  };
-};
-
-export type SheetPluginProvides = SurfaceProvides &
-  IntentResolverProvides &
-  MarkdownExtensionProvides &
-  MetadataRecordsProvides &
-  TranslationsProvides &
-  SchemaProvides &
-  ThreadProvides<SheetType>;
 
 export type SheetSize = {
   rows: number;

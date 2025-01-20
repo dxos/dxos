@@ -5,7 +5,7 @@
 import React, { type PropsWithChildren, useState, useEffect } from 'react';
 import Joyride, { ACTIONS, EVENTS } from 'react-joyride';
 
-import { usePlugins, resolvePlugin, parseLayoutPlugin } from '@dxos/app-framework';
+import { usePluginManager, useCapability, Capabilities } from '@dxos/app-framework';
 
 import { type Step, HelpContext } from '../../types';
 import { floaterProps, Tooltip } from '../Tooltip';
@@ -69,18 +69,18 @@ export const HelpContextProvider = ({
   running: runningProp,
   onRunningChanged,
 }: HelpContextProviderProps) => {
-  const { plugins } = usePlugins();
-  const layoutPlugin = resolvePlugin(plugins, parseLayoutPlugin);
+  const manager = usePluginManager();
+  const layout = useCapability(Capabilities.Layout);
   const [running, setRunning] = useState(!!runningProp && !!getTarget(initialSteps[0]));
   const [stepIndex, _setStepIndex] = useState(0);
   const [steps, setSteps] = useState(initialSteps);
 
-  const paused = layoutPlugin?.provides.layout.dialogOpen;
+  const paused = layout.dialogOpen;
 
   const setStepIndex = (index: number) => {
     if (runningProp) {
       const step = steps[index];
-      step?.before?.({ plugins, step });
+      step?.before?.(manager.context);
     }
     _setStepIndex(index);
   };

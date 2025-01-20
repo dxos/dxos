@@ -2,14 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type {
-  IntentResolverProvides,
-  TranslationsProvides,
-  SurfaceProvides,
-  MetadataRecordsProvides,
-} from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
-import type { SchemaProvides } from '@dxos/plugin-space';
 
 import { TreeType } from './tree';
 import { OUTLINER_PLUGIN } from '../meta';
@@ -33,9 +26,3 @@ export namespace OutlinerAction {
     output: S.Void,
   }) {}
 }
-
-export type OutlinerPluginProvides = SurfaceProvides &
-  IntentResolverProvides &
-  MetadataRecordsProvides &
-  TranslationsProvides &
-  SchemaProvides;

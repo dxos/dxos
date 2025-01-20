@@ -2,14 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type {
-  IntentResolverProvides,
-  MetadataRecordsProvides,
-  SurfaceProvides,
-  TranslationsProvides,
-} from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
-import { type SchemaProvides } from '@dxos/plugin-space';
 
 import { CalendarType } from './calendar';
 import { ContactsType } from './contacts';
@@ -46,9 +39,3 @@ export namespace InboxAction {
     }),
   }) {}
 }
-
-export type InboxPluginProvides = SurfaceProvides &
-  IntentResolverProvides &
-  MetadataRecordsProvides &
-  TranslationsProvides &
-  SchemaProvides;

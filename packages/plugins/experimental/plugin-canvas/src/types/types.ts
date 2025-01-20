@@ -2,14 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type {
-  IntentResolverProvides,
-  MetadataRecordsProvides,
-  SurfaceProvides,
-  TranslationsProvides,
-} from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
-import { type SchemaProvides } from '@dxos/plugin-space';
 
 import { CanvasBoardType } from './schema';
 import { CANVAS_PLUGIN } from '../meta';
@@ -26,9 +19,3 @@ export namespace CanvasAction {
     }),
   }) {}
 }
-
-export type CanvasPluginProvides = SurfaceProvides &
-  IntentResolverProvides &
-  MetadataRecordsProvides &
-  TranslationsProvides &
-  SchemaProvides;

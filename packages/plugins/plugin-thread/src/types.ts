@@ -2,18 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type {
-  GraphBuilderProvides,
-  IntentResolverProvides,
-  MetadataRecordsProvides,
-  SettingsProvides,
-  SurfaceProvides,
-  TranslationsProvides,
-} from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
-import { type PanelProvides } from '@dxos/plugin-deck/types';
-import { type MarkdownExtensionProvides } from '@dxos/plugin-markdown';
-import { type SchemaProvides } from '@dxos/plugin-space';
 import { ChannelType, MessageType, ThreadType } from '@dxos/plugin-space/types';
 import { EchoObjectSchema } from '@dxos/react-client/echo';
 
@@ -78,29 +67,21 @@ export namespace ThreadAction {
   }) {}
 }
 
-// TODO(Zan): Move this to the plugin-space plugin or another common location when we implement threads in sheets.
-export type ThreadProvides<T> = {
-  thread: {
-    predicate: (obj: any) => obj is T;
-    createSort: (obj: T) => (anchorA: string | undefined, anchorB: string | undefined) => number;
-  };
-};
+export const ThreadSettingsSchema = S.mutable(
+  S.Struct({
+    standalone: S.optional(S.Boolean),
+  }),
+);
 
-export type ThreadPluginProvides = SurfaceProvides &
-  IntentResolverProvides &
-  GraphBuilderProvides &
-  MetadataRecordsProvides &
-  SettingsProvides<ThreadSettingsProps> &
-  TranslationsProvides &
-  SchemaProvides &
-  PanelProvides &
-  MarkdownExtensionProvides;
-
-export type ThreadSettingsProps = { standalone?: boolean };
+export type ThreadSettingsProps = S.Schema.Type<typeof ThreadSettingsSchema>;
 
 export interface ThreadModel {
   root: ThreadType;
 }
+
+type SubjectId = string;
+export type ViewState = { showResolvedThreads: boolean };
+export type ViewStore = Record<SubjectId, ViewState>;
 
 export type ThreadState = {
   /** In-memory draft threads. */

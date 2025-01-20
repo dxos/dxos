@@ -1,0 +1,33 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+syntax = "proto3";
+
+import "dxos/keys.proto";
+
+package dxos.edge.calls;
+
+message Tracks {
+  optional string audio = 1;
+  optional bool audio_enabled = 2;
+  optional string video = 3;
+  optional bool video_enabled = 4;
+  optional string screenshare = 5;
+  optional bool screen_share_enabled = 6;
+}
+
+message UserState {
+  string id = 1;
+  string name = 2;
+  optional string transceiver_session_id = 3;
+  bool raised_hand = 4;
+  bool speaking = 5;
+  bool joined = 6;
+  Tracks tracks = 7;
+}
+
+message RoomState {
+  string meetingId = 1;
+  repeated UserState users = 2;
+}

@@ -9,8 +9,8 @@ import { Context } from '@dxos/context';
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { invariant } from '@dxos/invariant';
 import { ChainPromptType, ChainType } from '@dxos/plugin-automation/types';
-import { TextType } from '@dxos/plugin-markdown/types';
 import { MessageType, ThreadType } from '@dxos/plugin-space/types';
+import { TextType } from '@dxos/schema';
 
 import { type ChainResources, type ChainVariant, createChainResources } from '../../../chain';
 import { getConfig, getKey } from '../../../util';
@@ -65,7 +65,7 @@ export class TestProcessorBuilder {
   async addSchema() {
     invariant(this._space);
     const generator = createSpaceObjectGenerator(this._space);
-    generator.addSchemas();
+    await generator.addSchemas();
     await this._space.db.flush();
     return this;
   }

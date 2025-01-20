@@ -7,7 +7,7 @@ import { extractInstruction, type Instruction } from '@atlaskit/pragmatic-drag-a
 import { untracked } from '@preact/signals-core';
 import React, { memo, useCallback, useEffect } from 'react';
 
-import { createIntent, LayoutAction, NavigationAction, Surface, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, LayoutAction, NavigationAction, useIntentDispatcher, Surface } from '@dxos/app-framework';
 import { isAction, isActionLike, type Node } from '@dxos/app-graph';
 import { useGraph } from '@dxos/plugin-graph';
 import { isEchoObject, isSpace } from '@dxos/react-client/echo';

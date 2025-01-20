@@ -51,6 +51,7 @@
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@langchain/community": "^0.0.43",
     "@langchain/core": "^0.1.51",

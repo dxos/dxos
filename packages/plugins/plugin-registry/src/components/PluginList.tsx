@@ -11,22 +11,22 @@ import { descriptionText, fineBlockSize, mx } from '@dxos/react-ui-theme';
 import { REGISTRY_PLUGIN } from '../meta';
 
 export type PluginListProps = {
-  plugins?: PluginMeta[];
-  loaded?: string[];
-  enabled?: string[];
+  plugins?: readonly PluginMeta[];
+  installed?: readonly string[];
+  enabled?: readonly string[];
   onChange?: (id: string, enabled: boolean) => void;
   onReload?: () => void;
 };
 
-export const PluginList = ({ plugins = [], loaded = [], enabled = [], onChange, onReload }: PluginListProps) => {
+export const PluginList = ({ plugins = [], installed = [], enabled = [], onChange, onReload }: PluginListProps) => {
   const { t } = useTranslation(REGISTRY_PLUGIN);
 
   return (
     <List classNames='mb-4 select-none'>
       {plugins.map(({ id, name, description, homePage, source, icon = 'ph--circle--regular' }) => {
         const isEnabled = enabled.includes(id);
-        const isLoaded = loaded.includes(id);
-        const reloadRequired = isEnabled !== isLoaded;
+        const isInstalled = installed.includes(id);
+        const reloadRequired = isEnabled !== isInstalled;
         const inputId = `${id}-input`;
         const labelId = `${id}-label`;
         const descriptionId = `${id}-description`;

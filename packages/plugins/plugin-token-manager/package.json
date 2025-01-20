@@ -1,0 +1,56 @@
+{
+  "name": "@dxos/plugin-token-manager",
+  "version": "0.7.4",
+  "description": "Composer plugin for managing access tokens to remote systems.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "exports": {
+    ".": {
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
+    "@dxos/live-object": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "@dxos/util": "workspace:*"
+  },
+  "devDependencies": {
+    "@dxos/echo-generator": "workspace:*",
+    "@dxos/random": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@types/react": "~18.2.0",
+    "@types/react-dom": "~18.2.0",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0",
+    "vite": "5.4.7"
+  },
+  "peerDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "react": "~18.2.0",
+    "react-dom": "~18.2.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

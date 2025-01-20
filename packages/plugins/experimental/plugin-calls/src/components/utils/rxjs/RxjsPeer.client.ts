@@ -166,7 +166,7 @@ export class RxjsPeer {
   async createSession(peerConnection: RTCPeerConnection) {
     log.debug('🆕 creating new session');
     const { apiBase } = this.config;
-    const response = await this.fetchWithRecordedHistory(`${apiBase}/sessions/new?SESSION`, { method: 'POST' });
+    const response = await this.fetch(`${apiBase}/sessions/new?SESSION`, { method: 'POST' });
     if (response.status > 400) {
       throw new Error('Error creating Calls session');
     }
@@ -180,7 +180,7 @@ export class RxjsPeer {
   }
 
   // TODO(mykola): Rename, no history is being recorded here.
-  async fetchWithRecordedHistory(path: string, requestInit?: RequestInit) {
+  async fetch(path: string, requestInit?: RequestInit) {
     const response = await fetch(path, { ...requestInit, redirect: 'manual' });
     // handle Access redirect
     if (response.status === 0) {
@@ -224,13 +224,10 @@ export class RxjsPeer {
                   location: 'local',
                 })),
               };
-              const response = await this.fetchWithRecordedHistory(
-                `${this.config.apiBase}/sessions/${sessionId}/tracks/new?PUSHING`,
-                {
-                  method: 'POST',
-                  body: JSON.stringify(requestBody),
-                },
-              ).then((res) => res.json() as Promise<TracksResponse>);
+              const response = await this.fetch(`${this.config.apiBase}/sessions/${sessionId}/tracks/new?PUSHING`, {
+                method: 'POST',
+                body: JSON.stringify(requestBody),
+              }).then((res) => res.json() as Promise<TracksResponse>);
               invariant(response.tracks !== undefined);
               if (!response.errorCode) {
                 await peerConnection.setRemoteDescription(new RTCSessionDescription(response.sessionDescription));
@@ -345,7 +342,7 @@ export class RxjsPeer {
         pulledTrackPromise = this.pullTrackDispatcher
           .doBulkRequest(trackData, (tracks) =>
             this.taskScheduler.schedule(async () => {
-              const newTrackResponse: TracksResponse = await this.fetchWithRecordedHistory(
+              const newTrackResponse: TracksResponse = await this.fetch(
                 `${this.config.apiBase}/sessions/${sessionId}/tracks/new?PULLING`,
                 {
                   method: 'POST',
@@ -380,7 +377,7 @@ export class RxjsPeer {
                 const answer = await peerConnection.createAnswer();
                 await peerConnection.setLocalDescription(answer);
 
-                const renegotiationResponse = await this.fetchWithRecordedHistory(
+                const renegotiationResponse = await this.fetch(
                   `${this.config.apiBase}/sessions/${sessionId}/renegotiate`,
                   {
                     method: 'PUT',
@@ -476,7 +473,7 @@ export class RxjsPeer {
       },
       force: false,
     };
-    const response = await this.fetchWithRecordedHistory(`${apiBase}/sessions/${sessionId}/tracks/close`, {
+    const response = await this.fetch(`${apiBase}/sessions/${sessionId}/tracks/close`, {
       method: 'PUT',
       body: JSON.stringify(requestBody),
     }).then((res) => res.json() as Promise<TracksResponse>);

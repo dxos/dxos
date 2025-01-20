@@ -6,7 +6,7 @@ import { type PluginMeta } from '@dxos/app-framework';
 
 export const PRESENTER_PLUGIN = 'dxos.org/plugin/presenter';
 
-export default {
+export const meta = {
   id: PRESENTER_PLUGIN,
   name: 'Presenter',
   description: 'Present documents as slideshows.',

@@ -5,7 +5,13 @@
 import React, { type AnchorHTMLAttributes, type ReactNode, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { createIntent, NavigationAction, type PromiseIntentDispatcher, useIntentDispatcher } from '@dxos/app-framework';
+import {
+  createIntent,
+  NavigationAction,
+  type PromiseIntentDispatcher,
+  useCapabilities,
+  useIntentDispatcher,
+} from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { createDocAccessor, fullyQualifiedId, getSpace, type Query } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -29,7 +35,8 @@ import {
 import { defaultTx } from '@dxos/react-ui-theme';
 import { isNotFalsy } from '@dxos/util';
 
-import { type DocumentType, type MarkdownPluginState, type MarkdownSettingsProps } from './types';
+import { MarkdownCapabilities } from './capabilities';
+import { type DocumentType, type MarkdownSettingsProps } from './types';
 import { setFallbackName } from './util';
 
 type ExtensionsOptions = {
@@ -42,13 +49,7 @@ type ExtensionsOptions = {
 };
 
 // TODO(burdon): Merge with createBaseExtensions below.
-export const useExtensions = ({
-  document,
-  settings,
-  viewMode,
-  editorStateStore,
-  extensionProviders,
-}: ExtensionsOptions & Pick<MarkdownPluginState, 'extensionProviders'>): Extension[] => {
+export const useExtensions = ({ document, settings, viewMode, editorStateStore }: ExtensionsOptions): Extension[] => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const identity = useIdentity();
   const space = getSpace(document);
@@ -79,12 +80,14 @@ export const useExtensions = ({
     ],
   );
 
+  const extensionProviders = useCapabilities(MarkdownCapabilities.Extensions);
+
   //
   // External extensions from other plugins.
   //
   const pluginExtensions = useMemo<Extension[] | undefined>(
     () =>
-      extensionProviders?.reduce((acc: Extension[], provider) => {
+      extensionProviders.flat().reduce((acc: Extension[], provider) => {
         const extension = typeof provider === 'function' ? provider({ document }) : provider;
         if (extension) {
           acc.push(extension);

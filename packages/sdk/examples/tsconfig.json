@@ -51,6 +51,9 @@
     },
     {
       "path": "../react-client"
+    },
+    {
+      "path": "../schema"
     }
   ]
 }

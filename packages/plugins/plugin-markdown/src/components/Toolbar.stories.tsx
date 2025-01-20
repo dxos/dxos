@@ -32,9 +32,8 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { textBlockWidth } from '@dxos/react-ui-theme';
+import { TextType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
-
-import { TextType } from '../types';
 
 faker.seed(101);
 

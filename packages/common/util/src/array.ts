@@ -69,3 +69,15 @@ export const distinctBy = <T, K>(array: T[], selector: (item: T) => K): T[] => {
     return true;
   });
 };
+
+/**
+ * Splits an array based on a type guard predicate function.
+ * Infers the output tuple types from the guard function.
+ */
+export const partition = <T>(array: T[], guard: (item: T, index: number, array: T[]) => boolean): [T[], T[]] => {
+  return array.reduce<[T[], T[]]>(
+    ([accepted, rejected], item, index, array) =>
+      guard(item, index, array) ? [[...accepted, item], rejected] : [accepted, [...rejected, item]],
+    [[], []],
+  );
+};

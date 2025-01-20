@@ -4,34 +4,45 @@
 
 import React from 'react';
 
-import { createSurface, type PluginDefinition } from '@dxos/app-framework';
+import {
+  Capabilities,
+  contributes,
+  createSurface,
+  defineModule,
+  definePlugin,
+  Events,
+  oneOf,
+} from '@dxos/app-framework';
 import { type ReactiveEchoObject, fullyQualifiedId } from '@dxos/client/echo';
-import { LocalStorageStore } from '@dxos/local-storage';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { CollectionType } from '@dxos/plugin-space/types';
 
-import { StackMain, StackSettings } from './components';
-import meta, { SECTION_IDENTIFIER, STACK_PLUGIN } from './meta';
+import { StackMain } from './components';
+import { meta, SECTION_IDENTIFIER, STACK_PLUGIN } from './meta';
 import translations from './translations';
 import { StackViewType } from './types';
-import { type StackPluginProvides, type StackSettingsProps } from './types';
 
-export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
-  const settings = new LocalStorageStore<StackSettingsProps>(STACK_PLUGIN, { separation: true });
-
-  return {
-    meta,
-    ready: async () => {
-      settings.prop({ key: 'separation', type: LocalStorageStore.bool() });
-    },
-    provides: {
-      settings: settings.values,
-      metadata: {
-        records: {
-          [StackViewType.typename]: {
+export const StackPlugin = () =>
+  definePlugin(meta, [
+    defineModule({
+      id: `${meta.id}/module/translations`,
+      activatesOn: Events.SetupTranslations,
+      activate: () => contributes(Capabilities.Translations, translations),
+    }),
+    defineModule({
+      id: `${meta.id}/module/metadata`,
+      activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
+      activate: () => [
+        contributes(Capabilities.Metadata, {
+          id: StackViewType.typename,
+          metadata: {
             placeholder: ['stack title placeholder', { ns: STACK_PLUGIN }],
             icon: 'ph--stack-simple--regular',
           },
-          [SECTION_IDENTIFIER]: {
+        }),
+        contributes(Capabilities.Metadata, {
+          id: SECTION_IDENTIFIER,
+          metadata: {
             parse: (section: { object: ReactiveEchoObject<any> }, type: string) => {
               switch (type) {
                 case 'node':
@@ -44,14 +55,20 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
               }
             },
           },
-        },
-      },
-      translations,
-      echo: {
-        system: [StackViewType],
-      },
-      surface: {
-        definitions: () => [
+        }),
+      ],
+    }),
+    defineModule({
+      id: `${meta.id}/module/schema`,
+      activatesOn: ClientEvents.SetupClient,
+      activate: () => contributes(ClientCapabilities.SystemSchema, [StackViewType]),
+    }),
+    defineModule({
+      id: `${meta.id}/module/react-surface`,
+      activatesOn: Events.Startup,
+      activate: () =>
+        contributes(
+          Capabilities.ReactSurface,
           createSurface({
             id: `${STACK_PLUGIN}/article`,
             role: 'article',
@@ -67,14 +84,6 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
               );
             },
           }),
-          createSurface({
-            id: `${STACK_PLUGIN}/settings`,
-            role: 'settings',
-            filter: (data): data is any => data.plugin === meta.id,
-            component: () => <StackSettings settings={settings.values} />,
-          }),
-        ],
-      },
-    },
-  };
-};
+        ),
+    }),
+  ]);

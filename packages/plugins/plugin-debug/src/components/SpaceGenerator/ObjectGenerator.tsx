@@ -5,14 +5,14 @@
 import { addressToA1Notation } from '@dxos/compute';
 import { type BaseObject, type TypedObject } from '@dxos/echo-schema';
 import { create, makeRef, type ReactiveObject } from '@dxos/live-object';
-import { DocumentType, TextType } from '@dxos/plugin-markdown/types';
-import { createSheet } from '@dxos/plugin-sheet';
+import { DocumentType } from '@dxos/plugin-markdown/types';
+import { createSheet } from '@dxos/plugin-sheet/types';
 import { SheetType, type CellValue } from '@dxos/plugin-sheet/types';
 import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
 import { faker } from '@dxos/random';
 import { Filter, type Space } from '@dxos/react-client/echo';
 import { TableType } from '@dxos/react-ui-table';
-import { createView } from '@dxos/schema';
+import { createView, TextType } from '@dxos/schema';
 import { createAsyncGenerator, type ValueGenerator } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
 

@@ -6,7 +6,7 @@ import { type PluginMeta } from '@dxos/app-framework';
 
 export const WNFS_PLUGIN = 'dxos.org/plugin/WNFS';
 
-export default {
+export const meta = {
   id: WNFS_PLUGIN,
   name: 'WNFS',
   description: 'Upload & view files with WNFS.',

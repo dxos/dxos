@@ -28,8 +28,11 @@ const parseError = (t: (name: string, context?: object) => string, error: Error)
   const translatedMessage = t(`${error.name} message`, context);
   const message = translatedMessage === `${error.name} message` ? t('fatal error message') : translatedMessage;
 
+  const cause =
+    error.cause instanceof Error ? String(error.cause.stack) : error.cause ? String(error.cause) : undefined;
+
   // Removes indents.
-  const stack = String(error?.stack)
+  const stack = `${String(error.stack)}${cause ? `\nCaused by: ${cause}` : ''}`
     .split('\n')
     .map((text) => text.trim())
     .join('\n');

@@ -2,12 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  createIntent,
-  type PromiseIntentDispatcher,
-  type MetadataResolver,
-  NavigationAction,
-} from '@dxos/app-framework';
+import { createIntent, type PromiseIntentDispatcher, NavigationAction } from '@dxos/app-framework';
 import { EXPANDO_TYPENAME, getObjectAnnotation, getTypename, type Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { getSchema, isReactiveObject, makeRef } from '@dxos/live-object';
@@ -80,6 +75,7 @@ export const memoizeQuery = <T extends ReactiveEchoObject<any>>(
   return query?.objects ?? EMPTY_ARRAY;
 };
 
+// TODO(wittjosiah): Factor out? Expose via capability?
 export const getSpaceDisplayName = (
   space: Space,
   { personal, namesCache = {} }: { personal?: boolean; namesCache?: Record<string, string> } = {},
@@ -102,7 +98,7 @@ const getCollectionGraphNodePartials = ({
   navigable: boolean;
   collection: CollectionType;
   space: Space;
-  resolve: MetadataResolver;
+  resolve: (typename: string) => Record<string, any>;
 }) => {
   return {
     disabled: !navigable,
@@ -191,7 +187,7 @@ export const constructSpaceNode = ({
   navigable?: boolean;
   personal?: boolean;
   namesCache?: Record<string, string>;
-  resolve: MetadataResolver;
+  resolve: (typename: string) => Record<string, any>;
 }) => {
   const hasPendingMigration = checkPendingMigration(space);
   const collection = space.state.get() === SpaceState.SPACE_READY && space.properties[CollectionType.typename]?.target;
@@ -370,7 +366,7 @@ export const createObjectNode = ({
   object: ReactiveEchoObject<any>;
   space: Space;
   navigable?: boolean;
-  resolve: MetadataResolver;
+  resolve: (typename: string) => Record<string, any>;
 }) => {
   const type = getTypename(object);
   if (!type) {
@@ -408,9 +404,11 @@ export const createObjectNode = ({
 export const constructObjectActions = ({
   node,
   dispatch,
+  navigable = false,
 }: {
   node: Node<ReactiveEchoObject<any>>;
   dispatch: PromiseIntentDispatcher;
+  navigable?: boolean;
 }) => {
   const object = node.data;
   const getId = (id: string) => `${id}/${fullyQualifiedId(object)}`;
@@ -469,19 +467,23 @@ export const constructObjectActions = ({
         testId: 'spacePlugin.deleteObject',
       },
     },
-    {
-      id: getId('copy-link'),
-      type: ACTION_TYPE,
-      data: async () => {
-        const url = `${window.location.origin}/${fullyQualifiedId(object)}`;
-        await navigator.clipboard.writeText(url);
-      },
-      properties: {
-        label: ['copy link label', { ns: SPACE_PLUGIN }],
-        icon: 'ph--link--regular',
-        testId: 'spacePlugin.copyLink',
-      },
-    },
+    ...(navigable || !(object instanceof CollectionType)
+      ? [
+          {
+            id: getId('copy-link'),
+            type: ACTION_TYPE,
+            data: async () => {
+              const url = `${window.location.origin}/${fullyQualifiedId(object)}`;
+              await navigator.clipboard.writeText(url);
+            },
+            properties: {
+              label: ['copy link label', { ns: SPACE_PLUGIN }],
+              icon: 'ph--link--regular',
+              testId: 'spacePlugin.copyLink',
+            },
+          },
+        ]
+      : []),
     // TODO(wittjosiah): Factor out and apply to all nodes.
     {
       id: NavigationAction.Expose._tag,
@@ -521,7 +523,7 @@ export const getActiveSpace = (graph: Graph, active?: string) => {
  */
 export const getNestedObjects = async (
   object: ReactiveEchoObject<any>,
-  resolve: MetadataResolver,
+  resolve: (typename: string) => Record<string, any>,
 ): Promise<ReactiveEchoObject<any>[]> => {
   const type = getTypename(object);
   if (!type) {
@@ -529,7 +531,7 @@ export const getNestedObjects = async (
   }
 
   const metadata = resolve(type);
-  const loadReferences = metadata.loadReferences;
+  const loadReferences = metadata?.loadReferences;
   if (typeof loadReferences !== 'function') {
     return [];
   }
@@ -543,7 +545,11 @@ export const getNestedObjects = async (
  * @deprecated Workaround for ECHO not supporting clone.
  */
 // TODO(burdon): Remove.
-export const cloneObject = async (object: Expando, resolve: MetadataResolver, newSpace: Space): Promise<Expando> => {
+export const cloneObject = async (
+  object: Expando,
+  resolve: (typename: string) => Record<string, any>,
+  newSpace: Space,
+): Promise<Expando> => {
   const schema = getSchema(object);
   const typename = schema ? getObjectAnnotation(schema)?.typename ?? EXPANDO_TYPENAME : EXPANDO_TYPENAME;
   const metadata = resolve(typename);
