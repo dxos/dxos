@@ -38,15 +38,13 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
     DocumentType.typename,
     async (space, n, cb) => {
       const objects = range(n).map(() => {
-        const obj = space.db.add(
+        return space.db.add(
           create(DocumentType, {
             name: faker.commerce.productName(),
             content: makeRef(create(TextType, { content: faker.lorem.sentences(5) })),
             threads: [],
           }),
         );
-
-        return obj;
       });
 
       cb?.(objects);

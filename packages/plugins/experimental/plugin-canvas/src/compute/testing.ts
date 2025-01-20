@@ -67,11 +67,11 @@ const factory: Partial<Record<NodeType, (props: CreateShapeProps<Polygon>) => Co
 
 export const createTest0 = () => {
   const model = ComputeGraphModel.create();
-  // model.builder.call((builder) => {
-  // const a = createComputeNode('switch');
-  // const b = createComputeNode('beacon');
-  // builder.link({ node: a }, { node: b });
-  // });
+  model.builder2.call((builder) => {
+    const a = createNode({ type: 'switch', pos: { x: -4, y: 0 } });
+    const b = createNode({ type: 'beacon', pos: { x: 4, y: 0 } });
+    builder.link({ node: a }, { node: b });
+  });
 
   return model;
 };
