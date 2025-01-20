@@ -51,7 +51,7 @@ const Editing = () => {
       data-testid='table.toolbar.add-row'
       onClick={() => onAction?.({ type: 'add-row' })}
     >
-      {t('add row')}
+      {t('add row label')}
     </ToolbarButton>
   );
 };
@@ -67,12 +67,8 @@ const Actions = ({ viewDirty }: { viewDirty?: boolean }) => {
           value='save-view'
           icon='ph--floppy-disk--regular'
           data-testid='table.toolbar.save-view'
-          onClick={() => {
-            if (onAction) {
-              onAction({ type: 'save-view' });
-            }
-          }}
-          label={t('save view')}
+          onClick={() => onAction?.({ type: 'save-view' })}
+          label={t('save view label')}
         />
       )}
       <ToolbarButton

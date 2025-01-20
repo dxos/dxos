@@ -71,7 +71,8 @@ export class TableSorting<T extends BaseTableRow> {
   }
 
   /**
-   * @reactive Returns local sort if present, falls back to view sort.
+   * @reactive
+   * @returns Local sort if present, falls back to view sort.
    */
   public get sorting(): FieldSortType | undefined {
     const local = this._localSort.value;
@@ -84,7 +85,10 @@ export class TableSorting<T extends BaseTableRow> {
     return this._view?.query.sort?.[0];
   }
 
-  /** @reactive Returns whether local sort is dirty compared to view sort. */
+  /**
+   * @reactive
+   * @returns Whether local sort differs from view sort.
+   */
   public get isDirty(): boolean {
     return this._isDirty.value;
   }
