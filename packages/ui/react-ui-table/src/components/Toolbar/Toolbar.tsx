@@ -5,7 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren } from 'react';
 
-import { IconButton, Toolbar as NaturalToolbar, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, Toolbar as NaturalToolbar, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { ToolbarButton, ToolbarSeparator } from './common';
 import { translationKey } from '../../translations';
@@ -63,23 +63,19 @@ const Actions = ({ viewDirty }: { viewDirty?: boolean }) => {
   return (
     <>
       {viewDirty && (
-        <IconButton
+        <Button
           value='save-view'
-          icon='ph--floppy-disk--regular'
           data-testid='table.toolbar.save-view'
           onClick={() => onAction?.({ type: 'save-view' })}
-          label={t('save view label')}
-        />
+        >
+          {t('save view label')}
+        </Button>
       )}
       <ToolbarButton
         value='comment'
         icon='ph--chat-text--regular'
         data-testid='table.toolbar.comment'
-        onClick={() => {
-          if (onAction) {
-            onAction({ type: 'comment' });
-          }
-        }}
+        onClick={() => onAction?.({ type: 'comment' })}
       >
         {t('create comment')}
       </ToolbarButton>
