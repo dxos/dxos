@@ -317,19 +317,21 @@ export class StateMachine extends Resource {
   }
 
   private _handleEvent(event: ComputeEvent) {
-    log.info('log', { event });
+    log.info('handleEvent', { event });
     switch (event.type) {
-      case 'compute-input':
+      case 'compute-input': {
         this._runtimeStateInputs[event.nodeId] ??= {};
         this._runtimeStateInputs[event.nodeId][event.property] = { type: 'executed', value: event.value };
         break;
+      }
 
-      case 'compute-output':
+      case 'compute-output': {
         this._runtimeStateOutputs[event.nodeId] ??= {};
         this._runtimeStateOutputs[event.nodeId][event.property] = { type: 'executed', value: event.value };
         // TODO(burdon): Only fire if changed?
         this.output.emit(event);
         break;
+      }
     }
     this.events.emit(event);
   }

@@ -18,13 +18,13 @@ import {
   DefaultInput,
   DefaultOutput,
   type Executable,
-  NotExecuted,
   VoidInput,
   VoidOutput,
   defineComputeNode,
   makeValueBag,
   synchronizedComputeFunction,
   unwrapValueBag,
+  NotExecuted,
 } from '../types';
 
 // TODO(burdon): Convert to DXNs.
@@ -190,18 +190,19 @@ export const registry: Record<NodeType, Executable> = {
         if (condition) {
           return makeValueBag({
             true: Effect.succeed(value),
-            false: Effect.fail(NotExecuted),
+            // TODO(burdon): Should not call fail since that would indicate an error. Special NotExecuted value?
+            false: Effect.succeed(NotExecuted),
           });
         } else {
           return makeValueBag({
-            true: Effect.fail(NotExecuted),
+            true: Effect.succeed(NotExecuted),
             false: Effect.succeed(value),
           });
         }
       }),
   }),
 
-  // TODO(dmaretskyi): Rename select.
+  // Ternary operator.
   ['if-else' as const]: defineComputeNode({
     input: S.Struct({ condition: S.Boolean, true: S.Any, false: S.Any }),
     output: S.Struct({ [DEFAULT_OUTPUT]: S.Any }),

@@ -34,7 +34,7 @@ export const createBeacon = ({ id, ...rest }: CreateBeaconProps): BeaconShape =>
 export const BeaconComponent = ({ shape }: ShapeComponentProps<BeaconShape>) => {
   const { runtime } = useComputeNodeState(shape);
   const input = runtime.inputs[DEFAULT_INPUT];
-  const value = input?.type === 'executed' ? input.value : 0;
+  const value = input?.type === 'executed' ? input.value : false;
 
   return (
     <div className='flex w-full justify-center items-center'>

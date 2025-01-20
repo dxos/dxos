@@ -11,8 +11,14 @@ import { mapValues } from '@dxos/util';
 import type { ComputeNode } from './graph';
 import type { EventLogger, GptService, SpaceService } from '../services';
 
+//
+// Errors
+//
+
 export type NotExecuted = { kind: 'not-executed' };
+
 export const NotExecuted: NotExecuted = { kind: 'not-executed' };
+
 export const isNotExecuted = (value: any): value is NotExecuted => value.kind === 'not-executed';
 
 //
@@ -27,8 +33,8 @@ export type ValueRecord = Record<string, any>;
 export type ValueEffect<T> = Effect.Effect<T, Error | NotExecuted, never>;
 
 /**
- * A bag of values that can be fufulled asynchronously and independently.
- * Represeted as a set of effects (one per property).
+ * A bag of values that can be fulfilled asynchronously and independently.
+ * Represented as a set of effects (one per property).
  * We do that so that each input or output can be resolved independently.
  * This also handles control flow by providing a "not-executed" marker.
  * NOTE: Those effects cannot access requirements (logger, services, etc.).

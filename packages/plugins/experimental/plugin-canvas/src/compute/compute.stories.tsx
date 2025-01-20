@@ -19,7 +19,14 @@ import { type StateMachine, type StateMachineContext } from './graph';
 import { ComputeContext, useGraphMonitor } from './hooks';
 import { computeShapes } from './registry';
 import { type ComputeShape } from './shapes';
-import { createGPTRealtime, createMachine, createTest1, createTest3, createTest4 } from './testing';
+import {
+  createGPTRealtime,
+  createMachine,
+  createLogicCircuit,
+  createTest3,
+  createTest4,
+  createControlCircuit,
+} from './testing';
 import { Editor, type EditorController, type EditorRootProps } from '../components';
 import { JsonFilter, ShapeRegistry } from '../components';
 import { Container } from '../components/Container';
@@ -189,27 +196,27 @@ export const Default: Story = {
   },
 };
 
-export const Compute1: Story = {
+export const Logic: Story = {
   args: {
     // debug: true,
     showGrid: false,
     snapToGrid: false,
     sidebar: 'compute',
     registry: new ShapeRegistry(computeShapes),
-    ...createMachine(createTest1()),
+    ...createMachine(createLogicCircuit()),
   },
 };
 
-// export const Compute2: Story = {
-//   args: {
-//     // debug: true,
-//     showGrid: false,
-//     snapToGrid: false,
-//     sidebar: 'state-machine',
-//     registry: new ShapeRegistry(computeShapes),
-//     ...createMachine(createTest2()),
-//   },
-// };
+export const Control: Story = {
+  args: {
+    // debug: true,
+    showGrid: false,
+    snapToGrid: false,
+    sidebar: 'compute',
+    registry: new ShapeRegistry(computeShapes),
+    ...createMachine(createControlCircuit()),
+  },
+};
 
 // export const Ollama: Story = {
 //   args: {

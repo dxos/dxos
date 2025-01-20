@@ -20,6 +20,8 @@ import {
   createDatabase,
   createGpt,
   createGptRealtime,
+  createIf,
+  createIfElse,
   createJson,
   createList,
   createOr,
@@ -57,14 +59,14 @@ export const createTest0 = () => {
   return model;
 };
 
-export const createTest1 = () => {
+export const createLogicCircuit = () => {
   const nodes: ComputeShape[] = [
-    createSwitch({ id: 'a1', center: { x: -256, y: -256 } }),
-    createSwitch({ id: 'a2', center: { x: -256, y: -92 } }),
-    createSwitch({ id: 'a3', center: { x: -256, y: 92 } }),
-    createAnd({ id: 'b1', center: { x: 0, y: -192 } }),
-    createOr({ id: 'c1', center: { x: 256, y: 0 } }),
-    createBeacon({ id: 'd1', center: { x: 512, y: 0 } }),
+    createSwitch({ id: 'a1', ...createLayout({ x: -4, y: -4 }) }),
+    createSwitch({ id: 'a2', ...createLayout({ x: -4, y: 0 }) }),
+    createSwitch({ id: 'a3', ...createLayout({ x: -4, y: 4 }) }),
+    createAnd({ id: 'b1', ...createLayout({ x: 0, y: -2 }) }),
+    createOr({ id: 'c1', ...createLayout({ x: 4, y: 0 }) }),
+    createBeacon({ id: 'd1', ...createLayout({ x: 8, y: 0 }) }),
   ];
 
   const edges: Omit<GraphEdge<Partial<Connection>>, 'id'>[] = [
@@ -73,6 +75,41 @@ export const createTest1 = () => {
     { source: 'b1', target: 'c1', data: { input: 'a' } },
     { source: 'a3', target: 'c1', data: { input: 'b' } },
     { source: 'c1', target: 'd1', data: {} },
+  ];
+
+  return new GraphModel<GraphNode<ComputeShape>, GraphEdge<Connection>>({
+    nodes: nodes.map((data) => ({ id: data.id, data })),
+    edges: edges.map(({ source, target, data: { output = DEFAULT_OUTPUT, input = DEFAULT_INPUT } }) => ({
+      id: createEdgeId({ source: `${source}/${output}`, target: `${target}/${input}` }),
+      source,
+      target,
+      data: { output, input },
+    })),
+  });
+};
+
+export const createControlCircuit = () => {
+  const nodes: ComputeShape[] = [
+    createSwitch({ id: 's', ...createLayout({ x: -8, y: 0 }) }),
+    createConstant({ id: 'c1', ...createLayout({ x: -11, y: -10 }), value: 'hello' }),
+    createConstant({ id: 'c2', ...createLayout({ x: -11, y: -4 }), value: 'world' }),
+    createConstant({ id: 'c3', ...createLayout({ x: -11, y: 4 }), value: true }),
+    createIf({ id: 'if1', ...createLayout({ x: 0, y: 0 }) }),
+    createIfElse({ id: 'if2', ...createLayout({ x: 0, y: -8 }) }),
+    createBeacon({ id: 'b1', ...createLayout({ x: 8, y: -2 }) }),
+    createBeacon({ id: 'b2', ...createLayout({ x: 8, y: 2 }) }),
+    createJson({ id: 'j', ...createLayout({ x: 11, y: -8 }) }),
+  ];
+
+  const edges: Omit<GraphEdge<Partial<Connection>>, 'id'>[] = [
+    { source: 's', target: 'if1', data: { input: 'condition' } },
+    { source: 's', target: 'if2', data: { input: 'condition' } },
+    { source: 'c1', target: 'if2', data: { input: 'true' } },
+    { source: 'c2', target: 'if2', data: { input: 'false' } },
+    { source: 'c3', target: 'if1', data: { input: 'value' } },
+    { source: 'if1', target: 'b1', data: { output: 'true' } },
+    { source: 'if1', target: 'b2', data: { output: 'false' } },
+    { source: 'if2', target: 'j', data: {} },
   ];
 
   return new GraphModel<GraphNode<ComputeShape>, GraphEdge<Connection>>({
@@ -137,7 +174,7 @@ export const createTest3 = ({
             ...createLayout({ x: -12, y: -10, width: 8, height: 4 }),
             value: ARTIFACTS_SYSTEM_PROMPT,
           }),
-          createView({ id: 'artifact', ...createLayout({ x: 26, y: -10, width: 12, height: 12 }) }),
+          createView({ id: 'artifact', ...createLayout({ x: 16, y: -10, width: 12, height: 10 }) }),
         ]
       : []),
     createGpt({ id: 'gpt', ...createLayout({ x: 0, y: 0 }) }),
@@ -151,14 +188,14 @@ export const createTest3 = ({
         ]
       : []),
     ...(history
-      ? [createList({ id: 'thread', text: 'History', ...createLayout({ x: -6, y: 14, width: 8, height: 12 }) })]
+      ? [createList({ id: 'thread', text: 'History', ...createLayout({ x: -6, y: 14, width: 10, height: 10 }) })]
       : []),
     ...(history ? [createAppend({ id: 'append', ...createLayout({ x: 20, y: 14 }) })] : []),
-    ...(viewText ? [createView({ id: 'text', ...createLayout({ x: 16, y: 0, width: 12, height: 12 }) })] : []),
+    ...(viewText ? [createView({ id: 'text', ...createLayout({ x: 16, y: 2, width: 12, height: 10 }) })] : []),
     ...(db ? [createDatabase({ id: 'db', ...createLayout({ x: -10, y: 4 }) })] : []),
     ...(textToImage ? [createTextToImage({ id: 'text-to-image', ...createLayout({ x: -10, y: 5 }) })] : []),
-    ...(cot ? [createList({ id: 'cot', ...createLayout({ x: 0, y: -10, width: 8, height: 12 }) })] : []),
-    ...(history ? [createJson({ id: 'history-json', ...createLayout({ x: 8, y: 14, width: 12, height: 12 }) })] : []),
+    ...(cot ? [createList({ id: 'cot', ...createLayout({ x: 0, y: -10, width: 8, height: 10 }) })] : []),
+    ...(history ? [createJson({ id: 'history-json', ...createLayout({ x: 8, y: 14, width: 12, height: 10 }) })] : []),
   ];
 
   const edges: Omit<GraphEdge<Connection>, 'id'>[] = [
