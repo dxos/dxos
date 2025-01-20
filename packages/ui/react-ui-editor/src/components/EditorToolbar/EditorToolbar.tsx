@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { type NodeArg } from '@dxos/app-graph';
-import { ToolbarMenu, MenuProvider, type MenuActionHandler, useMenuGraph } from '@dxos/react-ui-menu';
+import { ToolbarMenu, MenuProvider, type MenuActionHandler, useMenuActions } from '@dxos/react-ui-menu';
 
 import { createBlocks } from './blocks';
 import { createComment } from './comment';
@@ -75,7 +75,7 @@ const createToolbar = ({
 const useEditorToolbarActionGraph = ({ onAction, ...props }: EditorToolbarProps) => {
   const menuCreator = useCallback(() => createToolbar(props), [props]);
 
-  const { resolveGroupItems } = useMenuGraph(menuCreator);
+  const { resolveGroupItems } = useMenuActions(menuCreator);
 
   return { resolveGroupItems, onAction: onAction as MenuActionHandler };
 };
